@@ -809,7 +809,7 @@
       "declarationPaper": "on paper, recorded by {who}",
       "signedByMinor": "the minor",
       "signedByGuardian": "the parent or guardian",
-      "confirmOnPaperBodyMinor": "You confirm the minor and the parent ({guardian}) both signed the declaration on paper, at the desk. Only with the paper carrying both signatures in front of you. Then the confirmation email goes out.",
+      "confirmOnPaperBodyMinor": "You confirm the minor and the parent ({guardian}) both signed the declaration on paper, at the desk. Only with the paper, both signatures on it, in front of you. Then the confirmation email goes out.",
       "emailVouched": "address vouched for by {who}",
       "journey": {
         "title": "The registration's journey",
@@ -4258,10 +4258,10 @@
       "checkedInAt": "Here since {time} · {who}",
       "bySelf": "themselves",
       "fastTrack": "This person is at the desk: I vouch for the address, and the declaration is signed on paper now.",
-      "fastTrackHelp": "Confirmed on the spot, without the email link: the participant signs on paper in front of you and you record it. Then they get the confirmation email. If full, they join the waiting list.",
-      "paperWhen": "Only at the desk, with the declaration the participant signed on paper in front of you. The declaration and the email address are recorded on your name; you never sign for them.",
-      "paperPlace": "The place is given as always: if the event is full or somebody is waiting, the person joins the waiting list, and a full waiting list refuses the press.",
-      "paperEmail": "Then the person gets the confirmation email, with the QR code, the number and the copy of the declaration. The sign-the-declaration email is not sent: there is nothing left to sign.",
+      "fastTrackHelp": "Confirmed on the spot, without the email link: the participant signs the declaration on paper in front of you; you record it. If full, they join the waiting list; else they get the confirmation.",
+      "paperWhen": "Only at the desk, with the declaration the participant signed on paper in front of you. The declaration and, if the address was not confirmed, the address are recorded on your name; you never sign.",
+      "paperPlace": "Someone without a place yet gets one as always: if the event is full or somebody is waiting, they join the waiting list, and a full waiting list refuses the press.",
+      "paperEmail": "If they get the place, they then get the confirmation email, with the QR code, the number and the copy of the declaration. On the waiting list nothing is recorded: they sign when offered a place.",
       "paperNot": "It is no shortcut before the race, without the person there. If the email did not arrive, an Administrator presses «Resend email» on the registration.",
       "saved": {
         "registrationCreated": "Added — the person is listed below, in the state they landed in.",

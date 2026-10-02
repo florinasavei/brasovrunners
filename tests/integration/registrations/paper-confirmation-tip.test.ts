@@ -12,13 +12,14 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Pune tooltip și info în back-office pt asta» (the owner, 2026-10-02, of «Confirmă pe
+ * §NNN — «Pune tooltip și info in back-office pt asta» (the owner, 2026-10-02, of «Confirmă pe
  * hârtie»): the registration's «Ziua cursei» box and the desk say what the paper confirmation is for,
  * what it does and what the person receives, in both languages.
  *
  * - the registration's page: an «i» beside the box's title and a caption under the button, only on a
  *   registration the button is for (not on a confirmed one);
  * - the desk: ONE «i», beside the line that says what the row buttons do — never one per row;
+ * - the registrations list: «Confirmă pe hârtie» in the row menu carries the same four lines as its tooltip;
  * - the four lines the «i» says are the catalogue's, in order, and the caption's three sentences too.
  *
  * Both pages are Server Components: each is called, its element tree walked, and the async tip is
@@ -66,6 +67,9 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   withdrawConsentAction: vi.fn(),
   declarationHoldAction: vi.fn(),
   undoCheckInAction: vi.fn(),
+  cancelRegistrationFromRowAction: vi.fn(),
+  eraseRegistrationFromListAction: vi.fn(),
+  setBibPrintedAction: vi.fn(),
 }));
 vi.mock("@/app/[locale]/admin/registrations/[id]/actions", () => ({
   resendFamilyEmailAction: vi.fn(),
@@ -74,6 +78,8 @@ vi.mock("@/app/[locale]/admin/registrations/[id]/actions", () => ({
 vi.mock("@/modules/notifications/send-now-choice", () => ({ sendNowChoiceFor: async () => null }));
 
 const { default: RegistrationDetailPage } = await import("@/app/[locale]/admin/registrations/[id]/page");
+const { default: AdminRegistrationsPage } = await import("@/app/[locale]/admin/registrations/(list)/page");
+const { default: RegistrationRowMenu } = await import("@/modules/registrations/ui/RegistrationRowMenu");
 const { default: DeskPage } = await import("@/app/[locale]/admin/checkin/page");
 const { default: PaperConfirmationTip } = await import("@/modules/registrations/ui/PaperConfirmationTip");
 
@@ -232,6 +238,28 @@ describe("§NNN the desk: one «i» for every row", () => {
         expect(sentences(tree).join("\n"), role).toContain(desk(locale, "rowHelp"));
         await db.delete(staffUsers);
       }
+    });
+  }
+});
+
+describe("§NNN the registrations list's row menu", () => {
+  for (const locale of ["ro", "en"] as const) {
+    it(`${locale}: «Confirmă pe hârtie» carries the four lines as its tooltip, and the other items none`, async () => {
+      state.locale = locale;
+      const race = await createRace();
+      await register(race.id, "PENDING_DECLARATION");
+      state.actor = await staff("ADMIN");
+      const tree = await AdminRegistrationsPage({ params: Promise.resolve({ locale }), searchParams: Promise.resolve({ eventId: race.id }) } as never);
+      const table = elements(tree).find((element) => typeof element.props.rowActions === "function");
+      expect(table).toBeDefined();
+      const rows = table!.props.rows as readonly unknown[];
+      const actions = table!.props.rowActions as (row: unknown) => ReactNode;
+      const menu = elements(actions(rows[0])).find((element) => element.type === RegistrationRowMenu);
+      expect(menu).toBeDefined();
+      const items = menu!.props.items as readonly { kind: string; icon: string; hint?: string }[];
+      const paper = items.find((item) => item.icon === "confirm");
+      expect(paper?.hint).toBe(KEYS.map((key) => desk(locale, key)).join("\n"));
+      expect(items.filter((item) => item.hint && item !== paper)).toHaveLength(0);
     });
   }
 });
