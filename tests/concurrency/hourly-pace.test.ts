@@ -64,7 +64,7 @@ describe("§605 two workers claiming Mailgun's hour at once, on two connections"
  * those statistics are made on purpose (a vacuum that leaves the pages), so the plan is the bad one
  * on every run rather than on one in eight: the claim must still take exactly its limit.
  */
-describe("§NNN one claim takes no more than its limit, whatever the statistics say", () => {
+describe("BR-REQ-080-02 §NNN one claim takes no more than its limit, whatever the statistics say", () => {
   const pool = new pg.Pool({ connectionString: DATABASE_URL, max: 2 });
   const db = drizzle(pool, { schema: { emailOutbox, registrations } });
   const NOW = new Date("2026-10-01T09:30:00.000Z");
