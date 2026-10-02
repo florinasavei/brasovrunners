@@ -697,8 +697,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       {/*
         Cancelling is what "remove this registration" means: the row is the record of what
         somebody agreed to, so nothing deletes it. The place is released inside the same locked
-        transaction a participant's own cancellation uses, and goes to the front of the waiting
-        list rather than to whoever registers next (AGENTS.md 15.5, 15.6).
+        transaction a participant's own cancellation uses, and is offered to the first in line or
+        kept free, by the event's waitlist_auto_offer (AGENTS.md 15.5, 15.6; §615).
       */}
       {mayManage && canCancel && (
         <Box component="section">
