@@ -1059,6 +1059,16 @@ export type TemplateData = {
    */
   familyOnAddress?: ReadonlyArray<{ name: string; state: FamilyEarlierState }>;
   /**
+   * Where the person stood in the waiting list's line when this message was rendered (§629), on
+   * `WAITLIST_JOINED` only: «Când am trimis acest email, erai pe locul 3 din 10.» while the event offers
+   * freed places in order (`autoOffer`), and without any position, «… pe lista de așteptare mai
+   * așteptau alte 9 persoane.», while the club chooses whom to offer one (§629, amending §615). Read at
+   * render time from `readWaitlistPosition` — the same reader the registration's own page uses — and
+   * worded as of that moment, since the line moves after the email is read. Absent when the
+   * registration is no longer waiting or its event is cancelled, or for any other message. Numbers only; nobody else is named.
+   */
+  waitlistStanding?: { position: number; length: number; autoOffer: boolean };
+  /**
    * A cancellation (§547): whether the person was on the waiting list rather than holding a place,
    * from the state the registration left (the row's payload), and who else the address still holds
    * at the event, each with their state — read at send time, the address's own rows only (§39).
@@ -1884,6 +1894,8 @@ const T = {
     /** After the body of a declaration request, on an address with more to sign (§471): the one link signs them all. */
     familyToSign: (names: readonly string[]) =>
       `Pe această adresă mai așteaptă semnătura declarațiile pentru: ${names.join(", ")}. Le poți semna pe toate din acest link, una după alta: câte o persoană la fiecare pas.`,
+    /** `WAITLIST_JOINED`'s one added sentence (§629): the place in the line, as of the moment the message was rendered. */
+    waitlistPosition: (standing: { position: number; length: number; autoOffer: boolean }) => waitlistPositionLine("ro", standing),
     // A cancellation (§547): what the cancelled person held, and who else the address still holds.
     cancelledReleased: (name: string, fromWaitlist: boolean) =>
       fromWaitlist ? `${name || "Persoana"} nu mai este pe lista de așteptare.` : "Locul a fost eliberat.",
@@ -2421,6 +2433,7 @@ const T = {
     /** After the body of a declaration request, on an address with more to sign (§471): the one link signs them all. */
     familyToSign: (names: readonly string[]) =>
       `The declarations of ${names.join(", ")} on this address are waiting for a signature too. You can sign them all from this link, one after the other: one person per step.`,
+    waitlistPosition: (standing: { position: number; length: number; autoOffer: boolean }) => waitlistPositionLine("en", standing),
     cancelledReleased: (name: string, fromWaitlist: boolean) =>
       fromWaitlist ? `${name || "The person"} is no longer on the waiting list.` : "The place has been released.",
     verifyCoversFamily: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
@@ -2530,6 +2543,45 @@ function participantsPhrase(locale: EmailLocale, count: number): string {
   const form = countForm(count, locale);
   if (locale === "ro") return form === "one" ? "un participant" : form === "few" ? `${count} participanți` : `${count} de participanți`;
   return form === "one" ? "one participant" : `${count} participants`;
+}
+
+/**
+ * What the `WAITLIST_JOINED` email adds about the line (§629, amending §615), worded as of the moment
+ * the message was rendered, because an email is read later and the line moves — never «ești», which
+ * would be a promise the line has already broken.
+ *
+ * - **Offers go out in order** (`autoOffer`): «Când am trimis acest email, erai pe locul 3 din 10.» /
+ *   "When we sent this email, you were number 3 of 10."
+ * - **The club chooses** (the owner: nobody learns an order the club does not keep): no position, only
+ *   how many others waited — «Când am trimis acest email, pe lista de așteptare mai așteptau alte 9
+ *   persoane.» / "When we sent this email, 9 other people were on the waiting list." — or, alone,
+ *   «… erai singura persoană pe lista de așteptare.»
+ *
+ * Counted words through `countForm`, no ICU plural.
+ */
+function waitlistPositionLine(locale: EmailLocale, standing: { position: number; length: number; autoOffer: boolean }): string {
+  const ro = locale === "ro";
+  const others = standing.length - 1;
+  // Alone in the line, in either reading of the setting (the page's wording too): never «locul 1 din 1».
+  if (others <= 0) {
+    return ro
+      ? "Când am trimis acest email, erai singura persoană pe lista de așteptare."
+      : "When we sent this email, you were the only person on the waiting list.";
+  }
+  if (standing.autoOffer) {
+    return ro
+      ? `Când am trimis acest email, erai pe locul ${standing.position} din ${standing.length}.`
+      : `When we sent this email, you were number ${standing.position} of ${standing.length}.`;
+  }
+  const form = countForm(others, locale);
+  if (ro) {
+    return form === "one"
+      ? "Când am trimis acest email, pe lista de așteptare mai aștepta o altă persoană."
+      : `Când am trimis acest email, pe lista de așteptare mai așteptau alte ${others}${form === "other" ? " de" : ""} persoane.`;
+  }
+  return form === "one"
+    ? "When we sent this email, 1 other person was on the waiting list."
+    : `When we sent this email, ${others} other people were on the waiting list.`;
 }
 
 /** "12 abonați", "un abonat" / "12 subscribers", "one subscriber" — a newsletter copy's count (§445). */
@@ -2941,6 +2993,8 @@ export function buildTemplateContent(
       ...(messageType === "COMPLETE_DECLARATION" && data.familyToSign && data.familyToSign.length > 0
         ? [copy.familyToSign(data.familyToSign)]
         : []),
+      // Where the person stood in the line when this was rendered (§629), after the body whoever wrote it.
+      ...(messageType === "WAITLIST_JOINED" && data.waitlistStanding ? [copy.waitlistPosition(data.waitlistStanding)] : []),
       // The verification link's other people on the address (§588): its one click confirms everybody waiting.
       ...(messageType === "VERIFY_REGISTRATION_EMAIL" && data.familyOnAddress && data.familyOnAddress.length > 0
         ? [copy.verifyCoversFamily(data.familyOnAddress)]

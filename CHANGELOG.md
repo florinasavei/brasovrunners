@@ -8,6 +8,11 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.58-2026-10-02
+
+- **«Ești pe locul 3 din 10 persoane de pe lista de așteptare»** — while the event offers freed places in order, each person waiting sees their place in the line on their own page, in «Toate înscrierile mele» and, as of the moment it was sent, in the waiting-list email; while the club chooses whom to offer a place, they see only how many others wait and that the club chooses, never a position; the event page's places line ends with how many wait. §629.
+- **«Locurile din lista de așteptare se alocă automat», and «BIB» everywhere** — the setting says what it does; the backoffice spells the race number's term one way. §630.
+- **The cancel dialog says the person is emailed** — and what the reason does, and where the place goes by the event's setting. §631.
 ## BR-V2.57-2026-10-02
 
 - **The race number's column says «BIB»** — on «Cine vine» and the desk's printed list, the technical term the backoffice already uses. §625.

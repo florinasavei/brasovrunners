@@ -207,8 +207,8 @@ describe("BR-REQ-041-01 the race's card carries the page's registration door, th
 
   /**
    * §615 — the three states of an open race, in both languages: nobody waiting (today's count and
-   * door — an open offer alone included); somebody waiting with places free while offers go out on
-   * their own (the moment before the job's sweep); somebody waiting with places free while the
+   * door — an open offer alone included); somebody waiting with places free while places from the waiting list are allocated
+   * automatically (the moment before the job's sweep); somebody waiting with places free while the
    * organizer hands them out («Nu»: a raise offered nobody). The card and the page read the line, not
    * the setting, so the last two say the same — places given from the line, the line's door.
    */

@@ -312,7 +312,7 @@ function eventFieldsFrom(form: FormData) {
     // «Kit de participare» → «Tricou» (§554): a checkbox, read only when the form carried its marker,
     // so a form without the card is "not editing it" rather than "no shirt".
     kitShirt: form.get("event.kitShirt.present") === "1" ? form.get("event.kitShirt") === "on" : undefined,
-    // «Ofertele din lista de așteptare pleacă automat» (§615): a «Da»/«Nu» select, read only when the
+    // «Locurile din lista de așteptare se alocă automat» (§615): a «Da»/«Nu» select, read only when the
     // form carried it — anything but its two values is "not editing it", never a switch.
     waitlistAutoOffer: form.get("event.waitlistAutoOffer") === "true" ? true : form.get("event.waitlistAutoOffer") === "false" ? false : undefined,
     // «Condiții de participare» → «Informații medicale» (§557), by the same marker.

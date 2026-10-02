@@ -93,7 +93,7 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
     kind: "KNOWN",
     cta: registrationCta({ ...event, availablePlaces, waitlistRoom, waitlistCapacity, waiting, offered, waitlisted }, now),
     // In progress is counted from the occupied places, in every state (§615).
-    fill: publicFill(capacity, availablePlaces, { occupied, confirmed }),
+    fill: publicFill(capacity, availablePlaces, { occupied, confirmed, waitlisted }),
   };
 }
 
@@ -137,7 +137,7 @@ export async function draftRegistrationDoor<T extends Record<string, unknown>>(
   return {
     kind: "KNOWN",
     cta: registrationCta({ ...event, availablePlaces, waitlistRoom, waitlistCapacity: limits.waitlistCapacity, waiting, offered, waitlisted }, now),
-    fill: publicFill(limits.capacity, availablePlaces, { occupied, confirmed }),
+    fill: publicFill(limits.capacity, availablePlaces, { occupied, confirmed, waitlisted }),
   };
 }
 

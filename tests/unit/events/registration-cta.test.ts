@@ -277,6 +277,20 @@ describe("§615 publicFill — in progress counted from the occupied places, nev
   });
 });
 
+describe("§629 publicFill — the people waiting ride on the fill, from the count the door already read", () => {
+  it("carries the waiting count beside the places, whatever else the entry knows", () => {
+    expect(publicFill(150, 0, { occupied: 150, confirmed: 133, waitlisted: 10 })).toEqual({ taken: 150, capacity: 150, confirmed: 133, waitlisted: 10 });
+    expect(publicFill(10, 0, { occupied: 6, confirmed: 4, waitlisted: 4 })).toEqual({ taken: 6, capacity: 10, confirmed: 4, kept: 4, waitlisted: 4 });
+    // An entry from before the occupied count: the plain line, with the waiting count still on it.
+    expect(publicFill(150, 45, { waitlisted: 2 })).toEqual({ taken: 105, capacity: 150, waitlisted: 2 });
+  });
+
+  it("says nothing of a line nobody is in, and is null for an uncapped event whatever waits", () => {
+    expect(publicFill(150, 45, { occupied: 105, confirmed: 105, waitlisted: 0 })).toEqual({ taken: 105, capacity: 150, confirmed: 105 });
+    expect(publicFill(null, null, { waitlisted: 3 })).toBeNull();
+  });
+});
+
 /**
  * §346 — how full a capped event is, read from the exact two numbers the button already uses:
  * never a second query, never a second formula.

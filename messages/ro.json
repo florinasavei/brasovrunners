@@ -670,9 +670,9 @@
       "cancelTitle": "Anulează înscrierea",
       "cancelReason": "Motivul",
       "cancelAction": "Anulează înscrierea",
-      "cancelHelp": "Înscrierea nu se șterge niciodată — rămâne ca dovadă a ce a acceptat persoana și când. Anularea eliberează locul, iar acesta merge la primul de pe lista de așteptare.",
+      "cancelHelp": "Înscrierea nu se șterge, rămâne ca dovadă. Persoana primește acum un email; motivul rămâne în jurnal. Locul se oferă primului de pe lista de așteptare sau rămâne liber, după setarea evenimentului.",
       "refusedByOrganizer": "Clubul refuză înscrierea, potrivit termenilor: motivul scris mai sus îi este trimis persoanei pe e-mail",
-      "refusedByOrganizerHelp": "Doar pe un motiv obiectiv din termeni: condiții neîndeplinite, date false, capacitate sau siguranță, conduită. Niciodată pe un criteriu interzis de lege. Nebifat, motivul rămâne doar în jurnal.",
+      "refusedByOrganizerHelp": "Doar pe un motiv obiectiv din termeni: condiții neîndeplinite, date false, capacitate sau siguranță, conduită. Niciodată pe un criteriu interzis de lege. Nebifat, emailul pleacă fără motiv.",
       "withdraw": {
         "title": "Retrage consimțământul",
         "help": "Pentru cine a cerut în scris ștergerea datelor date cu acord. Se șterge doar ce bifezi; înscrierea rămâne, iar persoana nu primește niciun mesaj.",
@@ -702,8 +702,8 @@
           "promoted_by_staff": "Loc dat înaintea listei de așteptare",
           "checked_in": "Marcat prezent",
           "checkin_undone": "Prezență anulată",
-          "bibs_printed": "BID marcat ca printat",
-          "bibs_unprinted": "BID marcat ca neprintat",
+          "bibs_printed": "BIB marcat ca printat",
+          "bibs_unprinted": "BIB marcat ca neprintat",
           "list_consent_changed": "Alegerea pentru lista publică schimbată de participant",
           "resubmitted": "S-a înscris din nou cu aceeași adresă",
           "health_viewed": "Urgențele și nota medicală deschise",
@@ -747,7 +747,7 @@
       "emptyFiltered": "Nicio înscriere nu corespunde filtrelor. Șterge filtrele ca să le vezi pe toate.",
       "selectRow": "Selectează înscrierea lui {name}",
       "bulkCancelTitle": "Anulează înscrierile bifate",
-      "bulkCancelHelp": "Fiecare înscriere bifată se anulează separat, cu același motiv; locul merge la primul de pe listă. Nu se șterge în grup. Un refuz potrivit termenilor se face din pagina înscrierii.",
+      "bulkCancelHelp": "Fiecare e anulat, același motiv în jurnal, și anunțat fără motiv. Locurile se oferă primului de pe listă sau rămân libere, după setare. Un refuz potrivit termenilor se face din pagina înscrierii.",
       "bulkCancelAction": "Anulează cele bifate",
       "bulkCancelPending": "Se anulează…",
       "bulkCancelPrinted": "Pe această pagină sunt numere deja tipărite: {numbers}. Dacă le bifezi, după anulare rămân retrase — nu se dau altcuiva — și trebuie scoase din teanc.",
@@ -820,25 +820,25 @@
       "bibSettledPrinted": "Numărul de concurs: {number}. E tipărit, deci nu se mai schimbă.",
       "bibNone": "Nu are încă un număr de concurs.",
       "bibChange": "Schimbă numărul",
-      "bibPrinted": "BID printat",
-      "bibPrintedOn": "BID printat {date}",
-      "bibMarkPrinted": "Marchează BID-ul ca printat",
-      "bibMarkUnprinted": "BID-ul nu e printat",
-      "bibsPrintedCount": "BID-uri: {printed} din {total} printate — doar înscrierile confirmate",
+      "bibPrinted": "BIB printat",
+      "bibPrintedOn": "BIB printat {date}",
+      "bibMarkPrinted": "Marchează BIB-ul ca printat",
+      "bibMarkUnprinted": "BIB-ul nu e printat",
+      "bibsPrintedCount": "BIB-uri: {printed} din {total} printate — doar înscrierile confirmate",
       "bibsVoid": "Numere tipărite ale unor înscrieri anulate sau expirate — de scos din teanc ({count}):",
       "bibsVoidCancelled": "Numărul {number}: {name}, înscriere anulată {date}",
       "bibsVoidExpired": "Numărul {number}: {name}, înscriere expirată {date}",
-      "bibVoid": "BID {number} tipărit — de retras",
-      "bibsDownloadUnprinted": "Descarcă BID-urile neprintate ({count})",
-      "bibsDownloadAll": "Descarcă toate BID-urile ({count})",
+      "bibVoid": "BIB {number} tipărit — de retras",
+      "bibsDownloadUnprinted": "Descarcă BIB-urile neprintate ({count})",
+      "bibsDownloadAll": "Descarcă toate BIB-urile ({count})",
       "bibsMarkPrinted": "Marchează cele {count} ca printate",
       "bibsMarkPrintedPending": "Se marchează…",
       "bibsMarkAllUnprinted": "Niciunul nu e printat",
-      "bibsPrintedAlert": "{count, plural, one {# BID marcat ca printat.} few {# BID-uri marcate ca printate.} other {# de BID-uri marcate ca printate.}}",
-      "bibsUnprintedAlert": "{count, plural, one {# BID nu mai e marcat ca printat.} few {# BID-uri nu mai sunt marcate ca printate.} other {# de BID-uri nu mai sunt marcate ca printate.}}",
+      "bibsPrintedAlert": "{count, plural, one {# BIB marcat ca printat.} few {# BIB-uri marcate ca printate.} other {# de BIB-uri marcate ca printate.}}",
+      "bibsUnprintedAlert": "{count, plural, one {# BIB nu mai e marcat ca printat.} few {# BIB-uri nu mai sunt marcate ca printate.} other {# de BIB-uri nu mai sunt marcate ca printate.}}",
       "openRow": "Deschide înscrierea",
       "cancel": "Anulează înscrierea",
-      "cancelBody": "Locul se eliberează și se oferă primei persoane de pe lista de așteptare. Nu se poate desface: persoana se poate înscrie din nou. Un refuz potrivit termenilor se face din pagina înscrierii.",
+      "cancelBody": "Persoana primește un email. Nu se poate desface. Locul se oferă primului de pe lista de așteptare sau rămâne liber, după setare. Refuzul, cu motivul lui, se face din pagina înscrierii.",
       "confirmOnPaperBody": "Confirmi că participantul a semnat declarația pe hârtie, la masă. Primește locul și numărul. Doar cu hârtia semnată în față.",
       "downloadBib": "Descarcă numărul de concurs (BIB)",
       "notOnPublicList": "Nu apare public",
@@ -1011,7 +1011,7 @@
       "removeTestTitle": "Ștergi înscrierile de test?",
       "removeTestBody": "Se șterg toate înscrierile de test ale acestui eveniment și participanții sintetici din spatele lor. Înscrierile reale rămân neatinse.",
       "cancelRegistrationTitle": "Anulezi înscrierea?",
-      "cancelRegistrationBody": "Locul se eliberează imediat și este oferit primei persoane de pe lista de așteptare. Înscrierea rămâne înregistrată, cu starea „anulată”.",
+      "cancelRegistrationBody": "Persoana primește un email. Motivul rămâne în jurnal; îl primește doar dacă bifezi refuzul. Nu se poate desface. Locul se oferă primului de pe lista de așteptare sau rămâne liber, după setare.",
       "cancelRegistrationPrintedBody": "Numărul {number} e deja tipărit; după anulare rămâne retras — nu se dă altcuiva — și trebuie scos din teanc.",
       "repeatTitle": "Creezi datele?",
       "repeatBody": "Se creează evenimentele următoare, la intervalul ales, fiecare cu adresa lui. Le poți edita sau șterge apoi una câte una.",
@@ -1065,7 +1065,7 @@
       "eraseRegistrationTitle": "Ștergi definitiv înscrierea?",
       "eraseRegistrationBody": "Nu se poate anula. Locul se eliberează prin lista de așteptare, iar datele persoanei dispar din evidență.",
       "bulkCancelTitle": "Anulezi înscrierile bifate?",
-      "bulkCancelBody": "Fiecare loc se eliberează și este oferit listei de așteptare. Înscrierile rămân înregistrate, cu starea „anulată”.",
+      "bulkCancelBody": "Fiecare persoană primește un email de anulare, fără motiv. Fiecare loc se oferă primului de pe lista de așteptare sau rămâne liber, după setarea evenimentului. Înscrierile rămân, ca „anulate”.",
       "sendNowTitle": "Trimiți emailurile acum?",
       "sendNowBody": "Coada pleacă acum, fără să aștepți monitorul, și se oprește la limita zilei.",
       "interestWithdrawTitle": "Retragi adresa?",
@@ -2063,10 +2063,10 @@
       "membersOnly": "Doar pentru membrii BVR",
       "membersOnlyHelp": "Îl văd doar membrii autentificați, nu apare pe site. Înscrierile făcute rămân.",
       "membersOnlyShort": "Doar membri",
-      "waitlistAutoOffer": "Ofertele din lista de așteptare pleacă automat",
+      "waitlistAutoOffer": "Locurile din lista de așteptare se alocă automat",
       "waitlistAutoOfferYes": "Da",
       "waitlistAutoOfferNo": "Nu",
-      "waitlistAutoOfferHelp": "Pe „Da”, un loc eliberat sau adăugat se oferă pe loc primului din lista de așteptare. Pe „Nu”, locurile rămân libere până le dai tu.",
+      "waitlistAutoOfferHelp": "Pe „Da”, un loc eliberat sau adăugat se alocă pe loc primului de pe lista de așteptare: primește oferta pe email și o confirmă până la termen. Pe „Nu”, locurile rămân libere până le dai tu.",
       "waitlistAutoOfferHelpMore": "Le dai din «Coada de înscrieri», cu «Trimite-i oferta», sau, la masă, cu «Dă-i un loc». Cât timp cineva așteaptă, cei noi intră tot pe listă."
     },
     "preview": {
@@ -4124,12 +4124,12 @@
         "Nu a primit emailul sau nu găsește QR-ul: caută după nume.",
         "Dacă scrie „Așteaptă semnarea declarației”, îi dai declarația pe hârtie să o semneze, apeși „Confirmă pe hârtie”, apoi „Marchează prezent”.",
         "Nu s-a înscris deloc: „Adaugă pe cineva”. Nume și email.",
-        "Bifa „Persoana este la masă” e deja pusă, iar „Numărul dat acum” propune următorul număr de rezervă: îi dai BID-ul acela și îi scrii numele cu markerul.",
+        "Bifa „Persoana este la masă” e deja pusă, iar „Numărul dat acum” propune următorul număr de rezervă: îi dai BIB-ul acela și îi scrii numele cu markerul.",
         "Semnează declarația pe hârtie, apoi „Marchează prezent”. Dacă evenimentul e plin intră pe lista de așteptare; „Dă-i un loc” merge doar dacă s-a eliberat unul.",
         "Ai greșit? „Anulează prezența” o scoate. Orice apăsare rămâne în istoricul înscrierii, cu numele tău.",
         "La final, cifrele de pe această pagină sunt cifrele cursei: câți confirmați, câți prezenți. Cine nu a venit rămâne fără „prezent”.",
         "Apare un chenar roșu „Înscriere anulată” sau „expirată”? Persoana nu mai are loc, chiar dacă are emailul în mână: nu i se dă număr și nu se marchează prezentă.",
-        "Dacă scrie că numărul a fost tipărit, scoate BID-ul acela din teanc — numerele nu se refolosesc."
+        "Dacă scrie că numărul a fost tipărit, scoate BIB-ul acela din teanc — numerele nu se refolosesc."
       ],
       "noEvents": "Niciun eveniment cu înscriere locală în perioada asta.",
       "event": "Eveniment",
@@ -4173,16 +4173,16 @@
         "registrationConfirmed": "Confirmat. Poți da numărul și marca prezența.",
         "registrationWaitlisted": "Evenimentul este plin: persoana a intrat pe lista de așteptare. Dacă se eliberează un loc, apasă „Dă-i un loc”.",
         "bibSet": "Numărul a fost salvat.",
-        "bibsPrinted": "BID-urile sunt marcate ca printate.",
-        "bibsUnprinted": "BID-urile nu mai sunt marcate ca printate.",
+        "bibsPrinted": "BIB-urile sunt marcate ca printate.",
+        "bibsUnprinted": "BIB-urile nu mai sunt marcate ca printate.",
         "checkedIn": "Marcat prezent.",
         "checkinUndone": "Prezența a fost anulată."
       },
       "bibFree": "Numere libere la acest eveniment: {numbers}. Numărul salvat ajunge la participant pe email, cu codul QR; un număr deja purtat de altcineva este refuzat.",
       "guardian": "Minor — părinte/tutore: {name}",
       "confirmOnPaper": "Confirmă pe hârtie",
-      "showBib": "Vezi numărul de concurs (BID)",
-      "bibAlt": "Numărul de concurs (BID) {number}",
+      "showBib": "Vezi numărul de concurs (BIB)",
+      "bibAlt": "Numărul de concurs (BIB) {number}",
       "voidCancelled": "Înscriere anulată {date}",
       "voidExpired": "Înscriere expirată {date}",
       "voidPrinted": "Numărul {number} a fost tipărit — nu se dă. Numerele nu se refolosesc.",
@@ -4902,7 +4902,7 @@
                 "Apasă «Scanează» și ține codul în cadru (merge pe Android). Pe iPhone: deschide aplicația Cameră, îndreapt-o spre cod și atinge linkul care apare.",
                 "Se deschide rândul persoanei: verifică numele cu ea.",
                 "Apasă «Marchează prezent». Nu te întreabă nimic; jos apare un mesaj.",
-                "Dă-i numărul de concurs din teanc — numărul e scris mare pe rând. Ca să vezi numărul desenat: «Vezi numărul de concurs (BID)».",
+                "Dă-i numărul de concurs din teanc — numărul e scris mare pe rând. Ca să vezi numărul desenat: «Vezi numărul de concurs (BIB)».",
                 "Pentru următorul: «Înapoi la masă»."
               ]
             },
@@ -4937,9 +4937,9 @@
                 "Completează numele, prenumele, data nașterii, telefonul și «Adresa de e-mail a participantului».",
                 "Bifa «Persoana este la masă…» e deja pusă — las-o așa.",
                 "Bifează «Confirm că această persoană mi-a cerut să o înscriu…».",
-                "În «Numărul dat acum» e deja scris următorul număr de rezervă. Ia BID-ul acela din teancul de rezervă și scrie-i numele cu markerul pe linia goală. Dai alt număr? Schimbă-l în căsuță. Nu mai sunt rezerve? Scrie numărul pe care i-l dai sau las-o goală, și site-ul alege unul.",
+                "În «Numărul dat acum» e deja scris următorul număr de rezervă. Ia BIB-ul acela din teancul de rezervă și scrie-i numele cu markerul pe linia goală. Dai alt număr? Schimbă-l în căsuță. Nu mai sunt rezerve? Scrie numărul pe care i-l dai sau las-o goală, și site-ul alege unul.",
                 "Apasă «Adaugă înscrierea» și confirmă în fereastră.",
-                "Îi dai declarația pe hârtie s-o semneze, apoi «Marchează prezent» și îi dai BID-ul.",
+                "Îi dai declarația pe hârtie s-o semneze, apoi «Marchează prezent» și îi dai BIB-ul.",
                 "Evenimentul e plin, sau așteaptă deja cineva pe lista de așteptare? Persoana intră pe listă, ca oricine. «Dă-i un loc» merge doar când e un loc liber, și o confirmă pe declarația de hârtie pe care o semnează ea, la masă."
               ]
             },
@@ -4954,7 +4954,7 @@
               "title": "Un chenar roșu: înscriere anulată sau expirată",
               "steps": [
                 "Persoana nu mai are loc, chiar dacă are emailul în mână: nu-i da număr și nu o marca prezentă.",
-                "Dacă scrie că numărul a fost tipărit, scoate BID-ul acela din teanc — numerele nu se refolosesc.",
+                "Dacă scrie că numărul a fost tipărit, scoate BIB-ul acela din teanc — numerele nu se refolosesc.",
                 "Cheamă un organizator. Dacă mai sunt locuri, o înscrieți din nou cu «Adaugă pe cineva»."
               ]
             },
@@ -5045,7 +5045,7 @@
                 "Coloana «Unde a ajuns» spune pasul fiecăruia. Apasă pe nume ca să deschizi înscrierea: «Parcursul înscrierii» și «Cronologie» spun tot ce s-a întâmplat.",
                 "Sus scrie o dată ce nu poți modifica aici. Rolul Tehnic nu vede înscrierile deloc.",
                 "Pe pagina publică a evenimentului, prima cifră numără înscrierile care țin un loc: confirmații plus cei încă în curs — o declarație nesemnată, o ofertă din lista de așteptare neacceptată, locul ținut de o familie. După liniuță, linia spune doar ce există: câți sunt confirmați și câți în curs, și câte locuri libere sunt păstrate pentru lista de așteptare, de exemplu „6 înscriși din 10 locuri — 4 confirmați, 2 în curs de confirmare, 4 locuri păstrate pentru lista de așteptare”.",
-                "Locurile păstrate sunt locuri libere pe care le cere lista de așteptare, iar cardul le arată în două feluri. Dacă sunt mai multe locuri libere decât oameni care așteaptă, cardul spune «Locurile se dau din lista de așteptare» și nu numără niciun loc liber. Dacă lista cere toate locurile libere, ca în exemplu, cardul spune că locurile s-au ocupat — „Mulțumim! Toate cele 10 locuri s-au ocupat — … așteaptă deja un loc.” — și oferă «Intră pe lista de așteptare», deși linia locurilor numește încă „4 locuri păstrate pentru lista de așteptare”. În ambele cazuri locurile acelea sunt libere: cu «Ofertele din lista de așteptare pleacă automat» pe «Nu» le dă clubul, cu «Trimite-i oferta»; pe «Da» le dă coada, primilor de pe listă.",
+                "Locurile păstrate sunt locuri libere pe care le cere lista de așteptare, iar cardul le arată în două feluri. Dacă sunt mai multe locuri libere decât oameni care așteaptă, cardul spune «Locurile se dau din lista de așteptare» și nu numără niciun loc liber. Dacă lista cere toate locurile libere, ca în exemplu, cardul spune că locurile s-au ocupat — „Mulțumim! Toate cele 10 locuri s-au ocupat — … așteaptă deja un loc.” — și oferă «Intră pe lista de așteptare», deși linia locurilor numește încă „4 locuri păstrate pentru lista de așteptare”. În ambele cazuri locurile acelea sunt libere: cu «Locurile din lista de așteptare se alocă automat» pe «Nu» le dă clubul, cu «Trimite-i oferta»; pe «Da» le dă coada, primilor de pe listă.",
                 "Lista «Cine vine» are doar pe cei care au bifat că vor să apară pe ea, mai ales confirmații, așa că prima cifră și lista diferă. Pe card, „1 loc oferit din lista de așteptare” e un loc trimis cuiva de pe listă, care încă nu l-a acceptat."
               ]
             },
@@ -5249,7 +5249,7 @@
               "steps": [
                 "«Evenimente» → «Editează» → cardul «Participare și înscrieri».",
                 "«Modul de înscriere» → «Înscrieri pe site».",
-                "«Număr de locuri» și «Lungimea maximă a listei de așteptare» (gol = fără limită, 0 = fără listă). Sub ele, «Ofertele din lista de așteptare pleacă automat»: «Da» dă fiecare loc eliberat sau adăugat primului de pe listă; «Nu», dacă vrei să alegi tu (vezi „Alege tu cine primește un loc eliberat”).",
+                "«Număr de locuri» și «Lungimea maximă a listei de așteptare» (gol = fără limită, 0 = fără listă). Sub ele, «Locurile din lista de așteptare se alocă automat»: «Da» dă fiecare loc eliberat sau adăugat primului de pe listă; «Nu», dacă vrei să alegi tu (vezi „Alege tu cine primește un loc eliberat”).",
                 "«Perioada de înscriere»: «Înscrierile se deschid» și «Înscrierile se închid».",
                 "«Fereastra de confirmare»: «Confirmarea participării: cu câte zile înainte se cere» și, în căsuța de lângă, cu câte zile înainte expiră (0 = locul nu expiră până la start).",
                 "«Program, regulament și declarație» → «Regulamentul»: «Vârsta minimă de participare» (14 dacă nu o schimbi, niciodată sub 14), la orice tip de eveniment. Declarația: «Program, regulament și declarație» → «Declarația pe propria răspundere» → «Declarația pe care o semnează participantul».",
@@ -5261,7 +5261,7 @@
               "title": "Alege tu cine primește un loc eliberat",
               "steps": [
                 "«Evenimente» → «Editează» pe rândul cursei → cardul «Participare și înscrieri».",
-                "La «Ofertele din lista de așteptare pleacă automat» alege «Nu» și apasă «Salvează». Pe «Nu», un loc eliberat sau adăugat rămâne liber până îl dai tu.",
+                "La «Locurile din lista de așteptare se alocă automat» alege «Nu» și apasă «Salvează». Pe «Nu», un loc eliberat sau adăugat rămâne liber până îl dai tu.",
                 "Abia apoi mărește «Număr de locuri», cu atâtea locuri câte vrei să dai acum. Pe «Da», locurile adăugate pleacă pe loc, ca oferte, la primii de pe listă.",
                 "Cardul «Înscrierile primite» → «Coada de înscrieri»: pe rândul persoanei alese din lista de așteptare apasă «Trimite-i oferta». Același buton e și pe pagina înscrierii ei.",
                 "Fereastra spune până când are timp; apasă din nou «Trimite-i oferta». Primește emailul obișnuit «S-a eliberat un loc», cu termenul obișnuit, {offer}: din email apasă «Confirmă locul» și semnează declarația, dacă nu a semnat-o încă.",
@@ -5296,7 +5296,7 @@
               "steps": [
                 "«Înscrieri» → caută persoana → apasă pe numele ei.",
                 "Nume greșit: la «Corectează numele» scrie numele bun → «Salvează numele».",
-                "Nu mai vine: «Anulează înscrierea», scrie «Motivul», apasă «Anulează înscrierea» și confirmă. Locul trece la primul de pe lista de așteptare; dacă la eveniment ofertele nu pleacă automat, rămâne liber până îl dai tu.",
+                "Nu mai vine: «Anulează înscrierea», scrie «Motivul», apasă «Anulează înscrierea» și confirmă. Locul trece la primul de pe lista de așteptare; dacă la eveniment locurile nu se alocă automat, rămâne liber până îl dai tu.",
                 "Nu a primit emailul: «Retrimite emailul» → «Trimite acum, fără să aștepte trecerea programată».",
                 "Cere ștergerea datelor: «Șterge definitiv», scrie «Motivul ștergerii», bifează «Confirm că această ștergere este definitivă» și apasă «Șterge definitiv».",
                 "Mai multe deodată: pe listă bifează rândurile → «Anulează cele bifate»."
@@ -5599,7 +5599,7 @@
               "steps": [
                 "Din orice email despre înscrierea lui: «Nu mai pot ajunge» → la «De ce anulezi?» alege motivul (pentru «Alt motiv» îl scrie pe scurt) → «Anulează înscrierea pentru…» (cu numele persoanei) → «Da, anulează».",
                 "Pe emailul unei familii, butonul deschide «Înscrierile mele», cu fiecare persoană: «Renunț la această înscriere», tot cu motivul ales. Tot așa oricând, de pe site, cu adresa lui.",
-                "În declarațiile unei familii: «Renunț la înscrierea pentru…», tot cu motivul ales. Locul trece imediat la lista de așteptare, sau rămâne liber pentru club, dacă ofertele nu pleacă automat la acel eveniment.",
+                "În declarațiile unei familii: «Renunț la înscrierea pentru…», tot cu motivul ales. Locul trece imediat la lista de așteptare, sau rămâne liber pentru club, dacă locurile nu se alocă automat la acel eveniment.",
                 "Motivul apare pe pagina înscrierii, în export și în copia clubului a emailului de anulare."
               ]
             },
@@ -6914,6 +6914,21 @@
         "few": "Cu această adresă, la acest eveniment: {count} din cel mult {max} persoane.",
         "other": "Cu această adresă, la acest eveniment: {count} din cel mult {max} de persoane."
       }
+    },
+    "waitlist": {
+      "position": {
+        "one": "Ești pe locul {position} din {length} persoană de pe lista de așteptare.",
+        "few": "Ești pe locul {position} din {length} persoane de pe lista de așteptare.",
+        "other": "Ești pe locul {position} din {length} de persoane de pe lista de așteptare."
+      },
+      "others": {
+        "one": "Ești pe lista de așteptare, împreună cu o altă persoană.",
+        "few": "Ești pe lista de așteptare, împreună cu alte {others} persoane.",
+        "other": "Ești pe lista de așteptare, împreună cu alte {others} de persoane."
+      },
+      "alone": "Ești singura persoană pe lista de așteptare.",
+      "orderAuto": "Locurile eliberate se oferă în ordine.",
+      "orderClub": "Clubul alege cui oferă un loc eliberat."
     },
     "manage": {
       "title": "Gestionează înscrierea",

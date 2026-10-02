@@ -41,6 +41,7 @@ import {
 import { declarationStateKey, isSignable } from "@/modules/registrations/domain/family-signing";
 import { DENSITY } from "@/theme/density";
 import FamilyChip from "@/modules/registrations/ui/FamilyChip";
+import { waitlistStandingPhrase } from "@/modules/registrations/ui/waitlist-position-words";
 import { replacedLinkWords } from "@/modules/registrations/ui/link-wait-words";
 import { readReplacedActionLink } from "@/modules/registrations/token-actions";
 import QrWithName, { type QrWords } from "@/modules/registrations/ui/QrWithName";
@@ -360,6 +361,12 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
               <Typography variant="body2" color="text.secondary" sx={{ mb: declarationLine(item) ? 0.5 : 1.5 }}>
                 {formatDay(item.eventStartsAt, { locale, timeZone: item.eventTimezone, style: "long", withTime: true })}
               </Typography>
+              {/* Where a waiting person stands (§629): «Ești pe locul 3 din 10 persoane…», under the state and the date; none on a cancelled event, whose row the reader leaves out. */}
+              {item.status === "WAITLISTED" && item.waitlistStanding && (
+                <Typography variant="body2" sx={{ mb: 1.5 }} data-testid="waitlist-position">
+                  {waitlistStandingPhrase(t, locale, item.waitlistStanding)}
+                </Typography>
+              )}
               {/*
                 Where this person's declaration stands (§519; the owner: «pagina „Toate înscrierile
                 mele” arată starea declarației fiecăruia»): signed with its day, to sign, asked after

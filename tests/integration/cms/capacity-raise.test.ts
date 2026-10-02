@@ -437,7 +437,7 @@ describe("BR-REQ-034-02 criterion 5 a raised capacity offers places to the waiti
   });
 
   /**
-   * §615 — «Ofertele din lista de așteptare pleacă automat» (the owner, 2026-10-01: 200 medals, 150
+   * §615 — «Locurile din lista de așteptare se alocă automat» (the owner, 2026-10-01: 200 medals, 150
    * places announced, the places past 150 handed out by the organizer). The editor saves the setting;
    * a save that does not post it keeps it; the trail names the change; and with «Nu» a raise adds free
    * places and offers nobody — the gate inside `fillAvailableSpots`, which the raise calls as before.

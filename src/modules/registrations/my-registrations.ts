@@ -15,7 +15,8 @@ import { enqueueEmail } from "@/modules/notifications/outbox";
 import { emailBucketKey } from "@/modules/rate-limit/domain/key";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { DomainError } from "@/shared/errors/domain-error";
-import { findRegistrationById } from "./repository";
+import type { WaitlistStanding } from "./domain/waitlist-standing";
+import { findRegistrationById, readWaitlistPosition } from "./repository";
 import { checkIn, type EventForRegistration, unregister } from "./service";
 import type { CancelReason } from "./domain/cancel-reason";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
@@ -116,6 +117,11 @@ export type MyRegistration = {
    * declaration, the owner's «pagina arată starea declarației fiecăruia»).
    */
   declarationSignedAt: Date | null;
+  /**
+   * Where a waiting person stands in the event's line (§629, `readWaitlistPosition`): the place, the
+   * line's length and how freed places are given. Null unless the registration is `WAITLISTED`.
+   */
+  waitlistStanding: WaitlistStanding | null;
 };
 
 /**
@@ -176,8 +182,13 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
 
   // "I am here" opens the club's hours before the start (§377), read once for the whole list.
   const deadlines = rows.length > 0 ? await currentDeadlines(db) : null;
+  // Only a waiting row asks where it stands (§629): one read each, the one reader the other pages use.
+  const standings = new Map<string, WaitlistStanding | null>(
+    await Promise.all(rows.filter((row) => row.status === "WAITLISTED").map(async (row) => [row.id, await readWaitlistPosition(db, row.id)] as const)),
+  );
   return rows.map(({ listOptOut, eventStatus, ...row }) => ({
     ...row,
+    waitlistStanding: standings.get(row.id) ?? null,
     listed: !listOptOut,
     eventCancelled: eventStatus === "CANCELLED",
     selfCheckinOpen:
