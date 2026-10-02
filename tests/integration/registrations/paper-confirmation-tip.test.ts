@@ -2,6 +2,9 @@ import { isValidElement, type ReactElement, type ReactNode } from "react";
 import { createTranslator } from "next-intl";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { eq } from "drizzle-orm";
+import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
+import { emailOutbox } from "@/db/schema/email-outbox";
 import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
@@ -77,6 +80,7 @@ vi.mock("@/app/[locale]/admin/registrations/[id]/actions", () => ({
 }));
 vi.mock("@/modules/notifications/send-now-choice", () => ({ sendNowChoiceFor: async () => null }));
 
+const { confirmRegistrationByStaff } = await import("@/modules/registrations/admin-service");
 const { default: RegistrationDetailPage } = await import("@/app/[locale]/admin/registrations/[id]/page");
 const { default: AdminRegistrationsPage } = await import("@/app/[locale]/admin/registrations/(list)/page");
 const { default: RegistrationRowMenu } = await import("@/modules/registrations/ui/RegistrationRowMenu");
@@ -117,7 +121,7 @@ const desk = (locale: "ro" | "en", key: string) => (catalogues[locale].Admin.des
 let db: TestDatabase;
 let close: () => Promise<void>;
 
-async function createRace() {
+async function createRace(capacity = 150) {
   const [event] = await db
     .insert(events)
     .values({
@@ -125,7 +129,7 @@ async function createRace() {
       surface: "ASPHALT",
       startsAt: new Date("2099-11-21T08:00:00.000Z"),
       timezone: "Europe/Bucharest",
-      capacity: 150,
+      capacity,
       registrationMode: "INTERNAL",
       editorialStatus: "PUBLISHED",
       publishedAt: new Date("2026-09-01T10:00:00.000Z"),
@@ -200,25 +204,53 @@ describe("§NNN the tip's four lines", () => {
 });
 
 describe("§NNN the lines are true of every row the press is offered on", () => {
-  const waiting = { ro: "listei de așteptare", en: "waiting list" } as const;
+  // What the press queues on the waiting list is nothing: the allocator sends no email, and the declaration stays unrecorded.
+  const waitingPhrase = {
+    ro: { email: "niciun email acum", dialog: "fără email acum", guide: "nu primește niciun email acum și primește oferta pe email când se eliberează un loc" },
+    en: { email: "no email now", dialog: "no email yet", guide: "get no email now, and are offered the place by email when one frees" },
+  } as const;
   for (const locale of ["ro", "en"] as const) {
-    it(`${locale}: the email lines say the waiting list gets its own email; none says nothing is recorded or promises the confirmation unconditionally`, () => {
+    it(`${locale}: the lines say the waiting list gets no email now and the offer when a place frees; none promises a waiting-list email or a confirmation unconditionally`, () => {
       const email = desk(locale, "paperEmail");
+      const phrase = waitingPhrase[locale];
       // A row waiting for its address gets it recorded on the staff member's name before the allocator may waitlist it.
       expect(email, "the address is recorded either way").toMatch(locale === "ro" ? /oricum/ : /either way/);
-      expect(email, "the waiting list is named").toContain(locale === "ro" ? "lista de așteptare" : waiting[locale]);
+      expect(email, "the waiting list is named, with no email").toContain(phrase.email);
       expect(email.toLowerCase(), "never «nothing is recorded»").not.toMatch(/nu se înregistrează nimic|nothing is recorded/);
+      expect(email, "never its own email").not.toMatch(/emailul ei|its own email/);
       expect(email.length).toBeLessThan(200);
       const dialog = catalogues[locale].Admin.registrations as unknown as Record<string, string>;
       for (const key of ["confirmOnPaperBody", "confirmOnPaperBodyMinor"]) {
         expect(dialog[key].length, `${key} length`).toBeLessThan(200);
-        expect(dialog[key], key).toContain(waiting[locale]);
-        expect(dialog[key], key).not.toMatch(/pleacă emailul de confirmare\.|confirmation email goes out\./);
+        expect(dialog[key], key).toContain(phrase.dialog);
+        expect(dialog[key], key).not.toMatch(/sau al listei de așteptare|or the waiting list's/);
       }
       const guide = JSON.stringify(catalogues[locale]);
-      expect(guide).toContain(locale === "ro" ? "sau pe cel de pe lista de așteptare dacă nu e loc. Emailul de semnare" : "or the waiting-list one if there is no place. The sign-the-declaration email");
+      expect(guide, "the guide says nothing is sent on the waiting list").toContain(phrase.guide);
+      expect(guide, "the guide never promises a waiting-list email").not.toMatch(/sau pe cel de pe lista de așteptare|or the waiting-list one/);
     });
   }
+
+  // The words above are checked against the code: a registration waiting for its address, on a full event,
+  // goes through the allocator to the waiting list and queues nothing.
+  it("on a full event the press on a registration waiting for its address lands on the waiting list, queues no email, records the address on the staff member and no declaration", async () => {
+    const race = await createRace(1);
+    await register(race.id, "CONFIRMED");
+    const waiting = await register(race.id, "PENDING_EMAIL_CONFIRMATION");
+    const admin = await staff("ADMIN");
+    const before = await db.select().from(emailOutbox);
+
+    const result = await confirmRegistrationByStaff(db, admin, waiting, new Date());
+
+    expect(result.status).toBe("WAITLISTED");
+    const after = await db.select().from(emailOutbox);
+    expect(after.length, "the press queued no email").toBe(before.length);
+    const row = (await db.select().from(registrations).where(eq(registrations.id, waiting)))[0];
+    expect(row.emailConfirmedByStaffUserId, "the address is on the staff member's name").toBe(admin.id);
+    expect(row.emailConfirmedAt).not.toBeNull();
+    const acceptances = await db.select().from(declarationAcceptances).where(eq(declarationAcceptances.registrationId, waiting));
+    expect(acceptances, "no declaration is recorded").toHaveLength(0);
+  });
 });
 
 describe("§NNN the registration's «Ziua cursei» box", () => {

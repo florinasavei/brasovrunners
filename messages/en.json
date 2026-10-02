@@ -809,7 +809,7 @@
       "declarationPaper": "on paper, recorded by {who}",
       "signedByMinor": "the minor",
       "signedByGuardian": "the parent or guardian",
-      "confirmOnPaperBodyMinor": "You confirm the minor and parent ({guardian}) both signed on paper. Only with the two-signature paper in front of you. Then they get the confirmation email, or the waiting list's if no place.",
+      "confirmOnPaperBodyMinor": "You confirm the minor and parent ({guardian}) both signed on paper. Only with the two-signature paper in front of you. Then the confirmation email; if no place, the waiting list, no email yet.",
       "emailVouched": "address vouched for by {who}",
       "journey": {
         "title": "The registration's journey",
@@ -857,7 +857,7 @@
       "openRow": "Open the registration",
       "cancel": "Cancel the registration",
       "cancelBody": "The person is emailed. It cannot be undone. The place is offered to the first on the waiting list or stays free, by the setting. A refusal, with its reason, is made from the registration's page.",
-      "confirmOnPaperBody": "You confirm the participant signed the declaration on paper, at the desk. Only with the signed paper in front of you. Then they get the confirmation email, or the waiting list's if there is no place.",
+      "confirmOnPaperBody": "You confirm the participant signed the declaration on paper, at the desk. Only with the signed paper in front of you. Then the confirmation email; if no place, the waiting list, with no email yet.",
       "downloadBib": "Download the race number (BIB)",
       "notOnPublicList": "Not shown publicly",
       "erase": "Erase permanently",
@@ -4261,7 +4261,7 @@
       "fastTrackHelp": "Confirmed on the spot, without the email link: the participant signs the declaration on paper in front of you; you record it. If full, they join the waiting list; else they get the confirmation.",
       "paperWhen": "Only at the desk, with the declaration the participant signed on paper in front of you. The declaration and, if the address was not confirmed, the address are recorded on your name; you never sign.",
       "paperPlace": "Someone without a place yet gets one as always: if the event is full or somebody is waiting, they join the waiting list, and a full waiting list refuses the press.",
-      "paperEmail": "An unconfirmed address stays on your name either way. With a place: the confirmation email, with QR code, number and declaration copy. On the waiting list: its own email; declaration not recorded.",
+      "paperEmail": "With a place: confirmation email, with QR code, number and declaration copy. On the waiting list: no email now; offer when a place frees; declaration not recorded. Address on your name either way.",
       "paperNot": "It is no shortcut before the race, without the person there. If the email did not arrive, an Administrator presses «Resend email» on the registration.",
       "saved": {
         "registrationCreated": "Added — the person is listed below, in the state they landed in.",
@@ -5015,7 +5015,7 @@
                 "The row says «Așteaptă semnarea declarației» (awaiting the declaration) or «Așteaptă confirmarea emailului» (awaiting the email confirmation).",
                 "Give them the printed declaration form. They read it and sign it themselves. A minor: the parent or guardian signs too, each with their own document.",
                 "Press «Confirm on paper», then «Confirm on paper» again in the window.",
-                "The person then gets the confirmation email, with the QR code, the number and the copy of the declaration, or the waiting-list one if there is no place. The sign-the-declaration email is not sent.",
+                "If the person gets the place, they get the confirmation email, with the QR code, the number and the copy of the declaration; the sign-the-declaration email is not sent. If there is no place, they go on the waiting list, get no email now, and are offered the place by email when one frees.",
                 "Then «Mark present» and the number. Keep the signed sheet for the organizer."
               ]
             },
