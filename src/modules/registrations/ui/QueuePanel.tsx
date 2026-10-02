@@ -266,6 +266,8 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
                   <input type="hidden" name="registrationId" value={row.id} />
                   <input type="hidden" name="eventId" value={event.id} />
                   <input type="hidden" name="back" value="event" />
+                  {/* The capacity the question named (§NNN): the server adds that one place and no other, and none unasked. */}
+                  {offerForecast.raisedTo !== null && <input type="hidden" name="addPlace" value={offerForecast.raisedTo} />}
                   {/* A full event adds a place rather than refusing (§NNN): the dialog says so, no «i». */}
                   <OfferPlaceButton size="small" />
                 </ActionForm>

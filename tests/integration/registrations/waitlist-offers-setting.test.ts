@@ -395,7 +395,8 @@ describe("§615 «Trimite-i oferta»: the ordinary offer, to the person chosen, 
     const event = await oneHeldTwoWaiting();
     await cancelRegistrationByStaff(db, admin, (await rowOf("Ana")).id, "nu mai vine", at(10));
     expect((await offerPlaceByStaff(db, admin, (await rowOf("Luca")).id, at(11))).capacityRaisedTo).toBeNull();
-    const second = await offerPlaceByStaff(db, admin, (await rowOf("Elena")).id, at(12));
+    // The page drawn after the first offer asks «capacitatea devine 2», and the form posts it.
+    const second = await offerPlaceByStaff(db, admin, (await rowOf("Elena")).id, at(12), { addPlaceTo: 2 });
     expect(second.status).toBe("WAITLIST_OFFERED");
     expect(second.capacityRaisedTo).toBe(2);
     const [row] = await db.select({ capacity: events.capacity }).from(events).where(eq(events.id, event.id));
@@ -483,6 +484,9 @@ describe("§615 «Trimite-i oferta»: the ordinary offer, to the person chosen, 
       expect(say("confirm.givePlaceNowFull", { n: "151" })).toContain("151");
       expect(say("confirm.givePlaceNowFull", { n: "151" }).length).toBeLessThanOrEqual(200);
       expect(say("confirm.givePlaceNowRaiseConfirm")).toBe(locale === "ro" ? "Adaugă un loc și dă-i locul" : "Add a place and give it to them");
+      // A press the question did not confirm is refused, and says to press again from the page drawn now (§NNN).
+      expect(say("errors.SUPPLEMENTARY_PLACE_UNCONFIRMED").length).toBeLessThanOrEqual(200);
+      expect(say("registrations.placeGivenRaised", { n: "151", deadline: "joi, 1 oct., 10:00" })).toContain("151");
       expect(say("desk.offerPlace")).toBe(locale === "ro" ? "Trimite-i oferta" : "Send them the offer");
       expect(say("confirm.offerPlaceTitle")).toBe(locale === "ro" ? "Îi trimiți oferta?" : "Send them the offer?");
     }

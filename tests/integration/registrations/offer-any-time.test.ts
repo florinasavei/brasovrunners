@@ -8,7 +8,7 @@ import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
-import { computeOccupied } from "@/modules/registrations/domain/capacity";
+import { computeOccupied, SUPPLEMENTARY_PLACE_UNCONFIRMED, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTranslator } from "next-intl";
 import { signingInput } from "../../helpers/declaration-signing";
@@ -215,7 +215,7 @@ describe("§NNN «Trimite-i oferta» after the close: capped by the start alone;
 
   it("made after the close, it is accepted by signing the declaration, as any offer", async () => {
     const event = await fullWithTwoWaiting({ closesAt: at(12) });
-    const offered = await offerPlaceByStaff(db, admin, (await rowOf("Luca")).id, at(15));
+    const offered = await offerPlaceByStaff(db, admin, (await rowOf("Luca")).id, at(15), { addPlaceTo: 2 });
     expect(offered.capacityRaisedTo).toBe(2);
     const confirmed = await signDeclaration(db, event, offered.id, await signingInput(db, at(30), "Luca Munteanu"), at(30));
     expect(confirmed.status).toBe("CONFIRMED");
@@ -234,7 +234,7 @@ describe("§NNN «Trimite-i oferta» on a full event: one supplementary place, e
   it("raises the capacity by one, writes who and for whom, offers the chosen person, and the public count reads 2 of 2 with the offer", async () => {
     const event = await fullWithTwoWaiting();
     const luca = await rowOf("Luca");
-    const offered = await offerPlaceByStaff(db, admin, luca.id, at(5));
+    const offered = await offerPlaceByStaff(db, admin, luca.id, at(5), { addPlaceTo: 2 });
     expect(offered.status).toBe("WAITLIST_OFFERED");
     expect(offered.capacityRaisedTo).toBe(2);
     expect(await capacityOf(event.id)).toBe(2);
@@ -257,7 +257,7 @@ describe("§NNN «Trimite-i oferta» on a full event: one supplementary place, e
 
   it("with «Da», the chosen person gets the new place, not the head of the line", async () => {
     const event = await fullWithTwoWaiting({ auto: true });
-    await offerPlaceByStaff(db, admin, (await rowOf("Luca")).id, at(5));
+    await offerPlaceByStaff(db, admin, (await rowOf("Luca")).id, at(5), { addPlaceTo: 2 });
     expect([(await rowOf("Elena")).status, (await rowOf("Luca")).status]).toEqual(["WAITLISTED", "WAITLIST_OFFERED"]);
     expect(await capacityOf(event.id)).toBe(2);
     expect(computeOccupied(await countOccupied(db, event.id, at(5)))).toBe(2);
@@ -279,8 +279,8 @@ describe("§NNN «Trimite-i oferta» on a full event: one supplementary place, e
   it("a second press for the same person refuses, and adds nothing", async () => {
     const event = await fullWithTwoWaiting();
     const luca = (await rowOf("Luca")).id;
-    await offerPlaceByStaff(db, admin, luca, at(5));
-    const again = await refusalOf(offerPlaceByStaff(db, admin, luca, at(6)));
+    await offerPlaceByStaff(db, admin, luca, at(5), { addPlaceTo: 2 });
+    const again = await refusalOf(offerPlaceByStaff(db, admin, luca, at(6), { addPlaceTo: 3 }));
     expect(isDomainError(again) && again.code).toBe("CONFLICT");
     expect(await capacityOf(event.id)).toBe(2);
     expect(await raises(event.id)).toHaveLength(1);
@@ -325,13 +325,49 @@ describe("§NNN «Trimite-i oferta» on a full event: one supplementary place, e
     const [before] = await db.select({ version: events.version }).from(events).where(eq(events.id, date.id));
     await confirmedAddress(date, "Ana", 0);
     expect((await confirmedAddress(date, "Elena", 1)).status).toBe("WAITLISTED");
-    await offerPlaceByStaff(db, admin, (await rowOf("Elena")).id, at(5));
+    await offerPlaceByStaff(db, admin, (await rowOf("Elena")).id, at(5), { addPlaceTo: 2 });
     expect(await capacityOf(date.id)).toBe(2);
     expect(await capacityOf(source.id)).toBe(1);
     const [after] = await db.select({ version: events.version, updatedBy: events.updatedByStaffUserId }).from(events).where(eq(events.id, date.id));
     // An editor opened before the press is told the event changed, rather than writing 1 back (AGENTS.md §11.5).
     expect(after.version).toBe(before.version + 1);
     expect(after.updatedBy).toBe(admin.id);
+  });
+
+  it("a press the dialog did not confirm adds no place: refused, and nothing is written (the page was read while a place was free)", async () => {
+    const event = await fullWithTwoWaiting();
+    const elena = (await rowOf("Elena")).id;
+    expired.length = 0;
+    // The plain question and the plain button: the form posts no `addPlace`.
+    const unasked = await refusalOf(offerPlaceByStaff(db, admin, elena, at(5)));
+    expect(supplementaryPlaceRefusalOutcome(unasked)).toEqual({ error: SUPPLEMENTARY_PLACE_UNCONFIRMED });
+    expect(await capacityOf(event.id)).toBe(1);
+    expect(await raises(event.id)).toHaveLength(0);
+    expect((await rowOf("Elena")).status).toBe("WAITLISTED");
+    expect(await offersQueued()).toHaveLength(0);
+    expect(expired).not.toContainEqual(["places"]);
+    // Pressed again from the page now drawn — the question names 2 — it adds that one place.
+    expect((await offerPlaceByStaff(db, admin, elena, at(6), { addPlaceTo: 2 })).capacityRaisedTo).toBe(2);
+  });
+
+  it("a confirmation of another capacity is refused: another Administrator's raise since the page was read is not this one", async () => {
+    const event = await fullWithTwoWaiting();
+    // The page said «capacitatea devine 2»; meanwhile somebody else raised it to 2 and took that place.
+    await offerPlaceByStaff(db, admin, (await rowOf("Luca")).id, at(5), { addPlaceTo: 2 });
+    const stale = await refusalOf(offerPlaceByStaff(db, admin, (await rowOf("Elena")).id, at(6), { addPlaceTo: 2 }));
+    expect(supplementaryPlaceRefusalOutcome(stale)).toEqual({ error: SUPPLEMENTARY_PLACE_UNCONFIRMED });
+    expect(await capacityOf(event.id)).toBe(2);
+    expect(await raises(event.id)).toHaveLength(1);
+    expect((await rowOf("Elena")).status).toBe("WAITLISTED");
+  });
+
+  it("a confirmed raise no longer needed adds nothing: a place freed since the page was read is used", async () => {
+    const event = await fullWithTwoWaiting();
+    await cancelRegistrationByStaff(db, admin, (await rowOf("Ana")).id, "nu mai vine", at(4));
+    const offered = await offerPlaceByStaff(db, admin, (await rowOf("Luca")).id, at(5), { addPlaceTo: 2 });
+    expect(offered.capacityRaisedTo).toBeNull();
+    expect(await capacityOf(event.id)).toBe(1);
+    expect(await raises(event.id)).toHaveLength(0);
   });
 
   it("is the Administrator's: the Organizer is refused and nothing is raised", async () => {
@@ -363,7 +399,7 @@ describe("§NNN «Trimite-i oferta» on a full event: one supplementary place, e
       const event = await createEvent(1);
       await confirmedAddress(event, "Ana", 0, holder);
       await confirmedAddress(event, "Elena", 1, chosen);
-      const offered = await offerPlaceByStaff(db, admin, (await rowOf("Elena")).id, at(5));
+      const offered = await offerPlaceByStaff(db, admin, (await rowOf("Elena")).id, at(5), { addPlaceTo: 2 });
       outcomes.push([offered.status, offered.capacityRaisedTo, computeOccupied(await countOccupied(db, event.id, at(5)))]);
     }
     expect(outcomes).toEqual([
@@ -388,7 +424,8 @@ describe("§NNN the question before the press: «vreau confirmare când depășe
       expect(question.body).toContain("Luca Munteanu");
     }
     // The press agrees with the question.
-    expect((await offerPlaceByStaff(db, admin, (await rowOf("Luca")).id, at(15))).capacityRaisedTo).toBe(2);
+    // The form posts the capacity the question named (`addPlace`), and the server adds that one place.
+    expect((await offerPlaceByStaff(db, admin, (await rowOf("Luca")).id, at(15), { addPlaceTo: forecast!.raisedTo })).capacityRaisedTo).toBe(2);
   });
 
   it("with a place free and registration open, it says neither, and the button is the plain «Trimite-i oferta»", async () => {

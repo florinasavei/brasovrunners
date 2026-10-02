@@ -48,7 +48,14 @@ import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { env } from "@/shared/config/env";
 import { CLUB_NAME } from "@/theme/brand";
 import { DomainError } from "@/shared/errors/domain-error";
-import { computeOccupied, computePublicAvailability, hasDirectAvailability, NoFreePlaceError } from "./domain/capacity";
+import {
+  computeOccupied,
+  computePublicAvailability,
+  confirmsSupplementaryPlace,
+  hasDirectAvailability,
+  NoFreePlaceError,
+  supplementaryPlaceUnconfirmedError,
+} from "./domain/capacity";
 import { computeDeclarationHoldExpiry, computeFamilyReservationExpiry, computeVouchedPlaceExpiry, computeWaitlistOfferExpiry, confirmationWindow } from "./domain/hold-deadlines";
 import { newcomerJoinsLine, occupiedForNewcomer, waitlistFullError, waitlistHasRoom, waitlistLength, waitlistRoom } from "./domain/waitlist";
 import { canManageRegistrations, type StaffRole } from "@/modules/staff-identity/domain/roles";
@@ -2756,8 +2763,13 @@ type SupplementaryPlaceAction = "event.capacity_raised_for_offer" | "event.capac
  * One supplementary place (§NNN; the owner, 2026-10-02: «Vreau să pot „oferi loc” în orice moment,
  * chiar și pe liste suplimentare»), for an Administrator's press that gives one chosen person a place
  * on a capped event with none free. Called under the event lock the caller holds, after the stale holds
- * were expired and the places counted (`counts`), and only when `computeOccupied(counts) >= capacity`:
- * `capacity + 1` on this one event row (`addSupplementaryPlace`; a series' other dates keep theirs),
+ * were expired and the places counted (`counts`), and only when `computeOccupied(counts) >= capacity`.
+ * **Only on a confirmed press** («vreau confirmare când depășesc limita»): `confirmedTo` is the capacity
+ * the dialog named and the Administrator pressed through («capacitatea devine {n}», the form's
+ * `addPlace`); unless it is exactly `capacity + 1` of the locked row — the page was read while a place
+ * was free, so the question and its button were the plain ones, or before another Administrator's raise
+ * — the press is refused with `SUPPLEMENTARY_PLACE_UNCONFIRMED` before anything is written, and the
+ * page it lands on asks again with the numbers of now. Then `capacity + 1` on this one event row (`addSupplementaryPlace`; a series' other dates keep theirs),
  * the trail row naming the Administrator (the actor), the event (the entity), from, to and the
  * registration the place is for (an id, never a person, §12.12) — in the caller's transaction, whose
  * transition then occupies the place before `fillAvailableSpots` runs. Never overbooking: should the
@@ -2767,11 +2779,21 @@ type SupplementaryPlaceAction = "event.capacity_raised_for_offer" | "event.capac
  */
 async function addOneSupplementaryPlace<T extends Record<string, unknown>>(
   tx: Transaction<T>,
-  input: { eventId: string; capacity: number; counts: repo.OccupiedCountsRow; registrationId: string; action: SupplementaryPlaceAction },
+  input: {
+    eventId: string;
+    capacity: number;
+    counts: repo.OccupiedCountsRow;
+    registrationId: string;
+    action: SupplementaryPlaceAction;
+    /** The capacity the dialog named and the press confirmed, or null when it named none. */
+    confirmedTo: number | null;
+  },
   actorStaffUserId: string,
   now: Date,
 ): Promise<number> {
   const from = input.capacity;
+  // Never a raise the Administrator was not asked about (§NNN): the question must have named this one.
+  if (!confirmsSupplementaryPlace(from, input.confirmedTo)) throw supplementaryPlaceUnconfirmedError(from, input.confirmedTo);
   const to = await repo.addSupplementaryPlace(tx, input.eventId, actorStaffUserId, now);
   if (to === null) throw new DomainError("CONFLICT", "the event's capacity changed concurrently");
   if (computeOccupied(input.counts) >= to) throw new NoFreePlaceError(from, input.counts);
@@ -2793,6 +2815,14 @@ async function addOneSupplementaryPlace<T extends Record<string, unknown>>(
  * a supplementary place raised it to — null when the place was already free or the event uncapped.
  */
 export type PlacedByStaff = Registration & { capacityRaisedTo: number | null };
+
+/**
+ * What the Administrator's press confirmed (§NNN): `addPlaceTo`, the capacity the dialog named when it
+ * said a supplementary place would be added — the form posts it only then. Absent or null, the press
+ * adds no place: a full event refuses it with `SUPPLEMENTARY_PLACE_UNCONFIRMED`. A place found free under
+ * the lock is used whatever the press confirmed; a confirmed raise that is no longer needed adds nothing.
+ */
+export type StaffPlaceOptions = { addPlaceTo?: number | null };
 
 /**
  * «Dă-i un loc acum» (§637; the owner, 2026-10-02: «Nu vreau să mai facă ea nimic!! Nu mai vreau să
@@ -2829,8 +2859,11 @@ export type PlacedByStaff = Registration & { capacityRaisedTo: number | null };
  * 4. **No counted free place** (§NNN): one supplementary place, as «Trimite-i oferta» adds it —
  *    `addOneSupplementaryPlace`, `capacity + 1` on this one event row, the trail row
  *    `event.capacity_raised_for_place_now` with who and for which registration — in this transaction,
- *    under this lock, and the transition below occupies it at once, before `fillAvailableSpots`. The
- *    question said so before the press and its button named the added place.
+ *    under this lock, and the transition below occupies it at once, before `fillAvailableSpots`. Only
+ *    when the press confirmed it: the question said so before the press, its button named the added
+ *    place, and the form posted the capacity it named (`options.addPlaceTo`); a press through the plain
+ *    question on a race that filled since the page was read is refused (`SUPPLEMENTARY_PLACE_UNCONFIRMED`)
+ *    and writes nothing.
  * 5. The row becomes `PENDING_DECLARATION` with `computeVouchedPlaceExpiry`'s deadline, the ordinary
  *    `COMPLETE_DECLARATION` email is queued — `STARTS_DEADLINE` as anybody's (§513), marked to leave
  *    now and sent by the caller's drain after the response (§596) — one audit row names who vouched,
@@ -2850,6 +2883,8 @@ export async function givePlaceNowByStaff<T extends Record<string, unknown>>(
   now: Date,
   /** The club's deadlines (§377); read here when the caller has none. */
   given?: Deadlines,
+  /** The capacity the question named and the press confirmed (§NNN; the form's `addPlace`), or none. */
+  options: StaffPlaceOptions = {},
 ): Promise<PlacedByStaff> {
   if (!canManageRegistrations(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not give a place to an unconfirmed registration`);
@@ -2886,7 +2921,14 @@ export async function givePlaceNowByStaff<T extends Record<string, unknown>>(
       // None free (§NNN): one supplementary place, explicit and audited, which this row takes below.
       capacityRaisedTo = await addOneSupplementaryPlace(
         tx,
-        { eventId: event.id, capacity: locked.capacity, counts, registrationId: current.id, action: "event.capacity_raised_for_place_now" },
+        {
+          eventId: event.id,
+          capacity: locked.capacity,
+          counts,
+          registrationId: current.id,
+          action: "event.capacity_raised_for_place_now",
+          confirmedTo: options.addPlaceTo ?? null,
+        },
         actor.id,
         now,
       );
@@ -3477,8 +3519,10 @@ export async function promoteFromWaitlistByStaff<T extends Record<string, unknow
  * `WAITLISTED`. Then the offer's deadline — the club's offer window (§377) capped by the **start
  * alone** (`capByClose: false`): a staff-chosen offer made after the close is never born lapsed, while
  * the automatic offers keep §420's cap by the close and make none after it. Then a counted place —
- * `computeOccupied(counts) < capacity`, the allocator's own count. **None free** on a capped event:
- * one supplementary place, `capacity + 1` on this one event row (`addSupplementaryPlace`, never a
+ * `computeOccupied(counts) < capacity`, the allocator's own count. **None free** on a capped event, and
+ * the press confirmed it — the dialog named the new capacity and the form posted it
+ * (`options.addPlaceTo`, exactly `capacity + 1` of the locked row; otherwise `SUPPLEMENTARY_PLACE_UNCONFIRMED`
+ * refuses and nothing is written): one supplementary place, `capacity + 1` on this one event row (`addSupplementaryPlace`, never a
  * series' other dates), in this transaction, under this lock, with the trail row
  * `event.capacity_raised_for_offer` (from, to, who, for which registration) and the public count told —
  * and the offer below occupies that place at once, before `fillAvailableSpots` runs, so on «Da» the
@@ -3493,8 +3537,9 @@ export async function promoteFromWaitlistByStaff<T extends Record<string, unknow
  * offer — the paper confirmation is «Dă-i un loc»'s, which still needs a free place (§589).
  *
  * Never two promises for one place: the offer occupies the place it was given (`countOccupied` counts
- * an open offer), so a second press for another person meets the full count under the same lock and
- * adds its own place; a second press for the same person meets a row that is no longer `WAITLISTED`.
+ * an open offer), so a second press for another person meets the full count under the same lock and is
+ * refused unless its own dialog named the place it would add; a second press for the same person meets a
+ * row that is no longer `WAITLISTED`.
  * `kind` is in no condition here (§30). The Administrator's (`canManageRegistrations`, §289): it
  * changes a registration and the event's capacity, which the Organizer reads and does not change —
  * asserted here and again by the action.
@@ -3505,6 +3550,8 @@ export async function offerPlaceToByStaff<T extends Record<string, unknown>>(
   registrationId: string,
   actor: { id: string; role: StaffRole },
   now: Date,
+  /** The capacity the question named and the press confirmed (§NNN; the form's `addPlace`), or none. */
+  options: StaffPlaceOptions = {},
 ): Promise<PlacedByStaff> {
   if (!canManageRegistrations(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not send a waiting-list offer`);
@@ -3538,7 +3585,14 @@ export async function offerPlaceToByStaff<T extends Record<string, unknown>>(
     if (locked.capacity !== null && computeOccupied(counts) >= locked.capacity) {
       capacityRaisedTo = await addOneSupplementaryPlace(
         tx,
-        { eventId: event.id, capacity: locked.capacity, counts, registrationId: current.id, action: "event.capacity_raised_for_offer" },
+        {
+          eventId: event.id,
+          capacity: locked.capacity,
+          counts,
+          registrationId: current.id,
+          action: "event.capacity_raised_for_offer",
+          confirmedTo: options.addPlaceTo ?? null,
+        },
         actor.id,
         now,
       );

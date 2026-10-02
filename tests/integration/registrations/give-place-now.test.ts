@@ -16,6 +16,7 @@ import { SENT_NOW_FLAG } from "@/modules/notifications/domain/send-at-once";
 import type { OutgoingEmail } from "@/infrastructure/email/adapter";
 import type { EmailSender } from "@/infrastructure/email/delivery";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { SUPPLEMENTARY_PLACE_UNCONFIRMED, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
 import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -289,7 +290,8 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     // The forecast the question reads: full, and what the capacity becomes.
     expect(await atTheClock(at(4), () => givePlaceNowAhead(event.id))).toEqual({ full: true, raisedTo: 2 });
 
-    const placed = await givePlaceToUnconfirmedByStaff(db, admin, mara.id, at(5));
+    // The form posts the capacity the question named (`addPlace`).
+    const placed = await givePlaceToUnconfirmedByStaff(db, admin, mara.id, at(5), undefined, { addPlaceTo: 2 });
     expect(placed.status).toBe("PENDING_DECLARATION");
     expect(placed.capacityRaisedTo).toBe(2);
     expect(await capacityOf(event.id)).toBe(2);
@@ -310,11 +312,28 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     expect((await confirmedAddress(event, "Elena", 1)).status).toBe("WAITLISTED");
     const mara = await unconfirmed(event, "Mara", 2);
 
-    const placed = await givePlaceToUnconfirmedByStaff(db, admin, mara.id, at(5));
+    const placed = await givePlaceToUnconfirmedByStaff(db, admin, mara.id, at(5), undefined, { addPlaceTo: 2 });
     expect(placed.status).toBe("PENDING_DECLARATION");
     expect(placed.capacityRaisedTo).toBe(2);
     expect((await rowOf("Elena")).status).toBe("WAITLISTED");
     expect(await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "WAITLIST_SPOT_OFFER"))).toEqual([]);
+  });
+
+  it("a press the question did not confirm adds no place on a full race: refused, her row and link untouched (§NNN)", async () => {
+    const event = await createEvent(1);
+    await confirmedAddress(event, "Ana", 0);
+    const mara = await unconfirmed(event, "Mara", 1);
+    // The page was read while a place was free: the plain question, no `addPlace`.
+    const unasked = await refusal(givePlaceToUnconfirmedByStaff(db, admin, mara.id, at(5)));
+    expect(supplementaryPlaceRefusalOutcome(unasked)).toEqual({ error: SUPPLEMENTARY_PLACE_UNCONFIRMED });
+    // A question that named another capacity is not this raise either.
+    const stale = await refusal(givePlaceToUnconfirmedByStaff(db, admin, mara.id, at(5), undefined, { addPlaceTo: 3 }));
+    expect(supplementaryPlaceRefusalOutcome(stale)).toEqual({ error: SUPPLEMENTARY_PLACE_UNCONFIRMED });
+    expect(await capacityOf(event.id)).toBe(1);
+    expect(await raises(event.id)).toEqual([]);
+    expect((await rowOf("Mara")).status).toBe("PENDING_EMAIL_CONFIRMATION");
+    expect(await vouchedTrail(mara.id)).toEqual([]);
+    expect(await declarationEmails(mara.id)).toEqual([]);
   });
 
   it("an uncapped event never lacks a place: nothing is raised", async () => {
@@ -418,7 +437,7 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     expect(placed.holdExpiresAt?.toISOString()).toBe(WINDOW_DEADLINE.toISOString());
     // …and it occupies the place like a real one: the next person finds the race full, and his press adds a place.
     const radu = await unconfirmed(event, "Radu", 6);
-    expect((await givePlaceToUnconfirmedByStaff(db, admin, radu.id, at(7))).capacityRaisedTo).toBe(2);
+    expect((await givePlaceToUnconfirmedByStaff(db, admin, radu.id, at(7), undefined, { addPlaceTo: 2 })).capacityRaisedTo).toBe(2);
   });
 
   it("inside the window, or with none, the place waits for the window's deadline or the start — never the club's minutes", async () => {
@@ -446,7 +465,7 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     expect(second.sittingPlace).toBe("reserved");
     // Both places are the family's: a stranger meets a full race — his press adds a place (§NNN), never takes theirs.
     const radu = await unconfirmed(event, "Radu", 2);
-    expect((await givePlaceToUnconfirmedByStaff(db, admin, radu.id, at(3))).capacityRaisedTo).toBe(3);
+    expect((await givePlaceToUnconfirmedByStaff(db, admin, radu.id, at(3), undefined, { addPlaceTo: 3 })).capacityRaisedTo).toBe(3);
 
     const ioana = await rowOf("Ioana");
     const placed = await givePlaceToUnconfirmedByStaff(db, admin, ioana.id, at(3));

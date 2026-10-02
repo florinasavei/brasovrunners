@@ -1303,9 +1303,12 @@ Rules:
 - increasing capacity allocates the queue first;
 - the capacity changes in three places only: the event editor's save, and an Administrator's
   press for one chosen person on a full event — «Trimite-i oferta» or «Dă-i un loc acum» — which,
-  after the dialog said so and its button named the added place, adds exactly one supplementary
-  place to that one event row under the event lock, in the transaction whose offer or place then
-  occupies it, audited with who and for whom (`DECISIONS.md` §NNN) — never the allocator on its own;
+  when the dialog said so, its button named the added place and the form carried the capacity it
+  named (`addPlace`, exactly the locked capacity + 1), adds exactly one supplementary place to that
+  one event row under the event lock, in the transaction whose offer or place then occupies it,
+  audited with who and for whom (`DECISIONS.md` §NNN) — never the allocator on its own, and never a
+  press that did not confirm it: one made through the plain question on a race that filled since the
+  page was read is refused (`SUPPLEMENTARY_PLACE_UNCONFIRMED`) and writes nothing;
 - decreasing capacity below occupied places is rejected;
 - no cached free count is a source of truth;
 - no capacity or queue decision may depend on the maintenance job having run; every read
@@ -2651,8 +2654,11 @@ BR-REQ-037-05):
      under the event lock, in the transaction that makes the offer, audited as
      `event.capacity_raised_for_offer` with who and for whom; the offer occupies that place before
      the queue is filled. The dialog says so before the press and its button names the added place
-     («Adaugă un loc și trimite oferta»): a raise is never silent. It confirms nothing: the runner
-     signs from the email. The desk's «Dă-i un loc» still needs a free place (§589).
+     («Adaugă un loc și trimite oferta»), and the form posts the capacity it named; the server adds
+     the place only for that confirmation, so a raise is never silent — a press through the plain
+     question on a race that filled since the page was read is refused
+     (`SUPPLEMENTARY_PLACE_UNCONFIRMED`), nothing written. It confirms nothing: the runner signs from
+     the email. The desk's «Dă-i un loc» still needs a free place (§589).
    - **A number by hand** (BR-REQ-038-01 criterion 7) and **check-in** (`checked_in_at`, by
      whom or by the participant from their own link). The code the QR encodes is
      `registrations.checkin_code`: an identifier, stored in clear, that confers nothing — the

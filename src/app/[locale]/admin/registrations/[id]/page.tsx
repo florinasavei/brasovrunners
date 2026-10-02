@@ -75,7 +75,7 @@ import { givePlaceNowAhead, staffOfferIfMadeNow, staffOfferQuestion } from "@/mo
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ resent?: string; saved?: string; error?: string; health?: string } & Partial<Record<keyof PlacesTaken, string>>>;
+  searchParams: Promise<{ resent?: string; saved?: string; error?: string; health?: string; count?: string } & Partial<Record<keyof PlacesTaken, string>>>;
 };
 
 export const dynamic = "force-dynamic";
@@ -284,7 +284,10 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {/* «Dă-i un loc acum» (§637): the place given, and until when it waits for the declaration. */}
         {(saved === "placeGiven" || saved === "placeGivenRaised") && registration.holdExpiresAt ? (
           <Alert severity="success" data-testid="place-given">
-            {tr("registrations.placeGiven", { deadline: dtInline(registration.holdExpiresAt) ?? "" })}
+            {/* On a supplementary place (§NNN) the alert names the capacity it raised, as the toast does. */}
+            {saved === "placeGivenRaised" && typeof query.count === "string" && /^\d{1,6}$/.test(query.count)
+              ? tr("registrations.placeGivenRaised", { n: query.count, deadline: dtInline(registration.holdExpiresAt) ?? "" })
+              : tr("registrations.placeGiven", { deadline: dtInline(registration.holdExpiresAt) ?? "" })}
           </Alert>
         ) : (
           saved && <Alert severity="success">{tr("saved")}</Alert>
@@ -456,6 +459,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           data-testid="give-place-now-form"
         >
           {deskHidden}
+          {/* The capacity the question named (§NNN): the server adds that one place and no other, and none unasked. */}
+          {givePlaceNow.raisedTo !== null && <input type="hidden" name="addPlace" value={givePlaceNow.raisedTo} />}
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" } }}>
             <GlyphButton icon="place" type="submit" variant="outlined" sx={{ minHeight: 44, flexShrink: 0 }}>
               {tr("registrations.givePlaceNow")}
@@ -595,6 +600,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               data-testid="offer-place-form"
             >
               {deskHidden}
+              {/* The capacity the question named (§NNN): the server adds that one place and no other, and none unasked. */}
+              {offerForecast.raisedTo !== null && <input type="hidden" name="addPlace" value={offerForecast.raisedTo} />}
               <OfferPlaceButton />
             </ActionForm>
           )}

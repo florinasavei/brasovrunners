@@ -28,7 +28,7 @@ import { effectiveMinimumAge, yearsPhrase } from "@/modules/registrations/domain
 import { UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
 import { waitlistRefusalCode } from "@/modules/registrations/domain/waitlist";
-import { noFreePlaceOutcome } from "@/modules/registrations/domain/capacity";
+import { confirmedCapacityOf, noFreePlaceOutcome, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { SendNowRefused, sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
@@ -181,8 +181,9 @@ export async function promoteRegistrationAction(_previous: FormOutcome | null, f
  * «Trimite-i oferta» (§615): the ordinary offer, with its email and its deadline, to the waiting-list
  * registration the organizer pressed it on — from «Coada de înscrieri» on the event's page or from the
  * registration's own page. The Administrator's (`canManageRegistrations`), asserted here and again in
- * the service. A full event says who holds the places (§589's sentence); a closed registration says
- * that an offer would already be lapsed.
+ * the service. On a full event it adds one supplementary place only when the dialog said so: the form
+ * posts `addPlace`, the capacity the question named (§NNN), and a press through the plain question on a
+ * race that filled since the page was read is refused (`SUPPLEMENTARY_PLACE_UNCONFIRMED`), nothing written.
  */
 export async function offerPlaceAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
@@ -191,12 +192,13 @@ export async function offerPlaceAction(_previous: FormOutcome | null, form: Form
   let outcome: Record<string, string | undefined>;
   try {
     const actor = await requireStaffCapability(canManageRegistrations);
-    const offered = await offerPlaceByStaff(getDb(), actor, registrationId, new Date());
+    const offered = await offerPlaceByStaff(getDb(), actor, registrationId, new Date(), { addPlaceTo: confirmedCapacityOf(form.get("addPlace")) });
     // The server decided under the lock whether a supplementary place was needed (§NNN); the toast says which.
     outcome = offered.capacityRaisedTo === null ? { saved: "registrationOffered" } : { saved: "registrationOfferedRaised", count: String(offered.capacityRaisedTo) };
   } catch (error) {
-    // A full count after the one place added (no path writes one) keeps §589's sentence; nothing was written.
-    outcome = noFreePlaceOutcome(error) ?? outcomeOf(error);
+    // An unconfirmed raise says the race filled since the page was read (§NNN); a full count after the
+    // one place added (no path writes one) keeps §589's sentence. Either way nothing was written.
+    outcome = supplementaryPlaceRefusalOutcome(error) ?? noFreePlaceOutcome(error) ?? outcomeOf(error);
   }
   return backToDesk(form, locale, registrationId, outcome);
 }
@@ -205,8 +207,9 @@ export async function offerPlaceAction(_previous: FormOutcome | null, form: Form
  * «Dă-i un loc acum» (§637): on a registration still waiting for its address, the Administrator
  * vouches for the address and gives the place now, ahead of the waiting list; the declaration email
  * leaves at once. The Administrator's (`canManageRegistrations`), asserted here and again in the
- * service. On a full event it adds one supplementary place (§NNN), as its question said; the banner
- * names the new capacity.
+ * service. On a full event it adds one supplementary place (§NNN) only when its question said so — the
+ * form posts `addPlace`, the capacity it named — and the banner names the new capacity; a press through
+ * the plain question on a race that filled since is refused (`SUPPLEMENTARY_PLACE_UNCONFIRMED`).
  */
 export async function givePlaceNowAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
@@ -215,11 +218,11 @@ export async function givePlaceNowAction(_previous: FormOutcome | null, form: Fo
   let outcome: Record<string, string | undefined>;
   try {
     const actor = await requireStaffCapability(canManageRegistrations);
-    const placed = await givePlaceToUnconfirmedByStaff(getDb(), actor, registrationId, new Date());
+    const placed = await givePlaceToUnconfirmedByStaff(getDb(), actor, registrationId, new Date(), undefined, { addPlaceTo: confirmedCapacityOf(form.get("addPlace")) });
     // The server decided under the lock whether a supplementary place was needed (§NNN); the banner says which.
     outcome = placed.capacityRaisedTo === null ? { saved: "placeGiven" } : { saved: "placeGivenRaised", count: String(placed.capacityRaisedTo) };
   } catch (error) {
-    outcome = noFreePlaceOutcome(error) ?? outcomeOf(error);
+    outcome = supplementaryPlaceRefusalOutcome(error) ?? noFreePlaceOutcome(error) ?? outcomeOf(error);
   }
   return backTo(detailPath(locale, registrationId), outcome);
 }

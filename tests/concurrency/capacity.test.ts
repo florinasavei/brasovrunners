@@ -11,6 +11,7 @@ import { computeContentHash, type LegalDocumentTranslationInput } from "@/module
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { WAITLIST_FULL, waitlistRefusalOf } from "@/modules/registrations/domain/waitlist";
+import { SUPPLEMENTARY_PLACE_UNCONFIRMED, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
 import {
   confirmEmail,
   type EventForRegistration,
@@ -343,7 +344,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
   );
 
   it(
-    "§615, §NNN: offers by hand («Nu») and one free place — two staff offers racing for it: one takes the free place, the other adds exactly one supplementary place, never two on one place",
+    "§615, §NNN: offers by hand («Nu») and one free place — two staff offers racing for it, both read while it was free: one takes it, the other is refused unasked and adds no place; pressed again, confirmed, it adds exactly one",
     async () => {
       const event = await createInternalEvent(1);
       await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, event.id));
@@ -363,24 +364,37 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
           .where(eq(registrations.id, row.id));
       }
 
-      // Two organizers press «Trimite-i oferta» at once, each on a different person.
+      // Two Administrators press «Trimite-i oferta» at once, each on a different person. Both pages were
+      // read while the place was free: the plain question, so neither form posts `addPlace`.
       const outcomes = await Promise.allSettled(waiting.map((row) => offerPlaceToByStaff(db, event, row.id, actor, NOW)));
 
-      // Both are made (§NNN): the second under the lock met the full count the first left, and added one place.
+      // One takes the free place; the other meets the full count under the lock and, unasked, adds nothing (§NNN).
       const made = outcomes.filter((outcome) => outcome.status === "fulfilled") as PromiseFulfilledResult<Awaited<ReturnType<typeof offerPlaceToByStaff>>>[];
-      expect(made).toHaveLength(2);
-      expect(made.map((outcome) => outcome.value.capacityRaisedTo).sort()).toEqual([2, null]);
+      expect(made).toHaveLength(1);
+      expect(made[0].value.capacityRaisedTo).toBeNull();
+      const refused = outcomes.filter((outcome) => outcome.status === "rejected") as PromiseRejectedResult[];
+      expect(refused).toHaveLength(1);
+      expect(supplementaryPlaceRefusalOutcome(refused[0].reason)).toEqual({ error: SUPPLEMENTARY_PLACE_UNCONFIRMED });
 
-      const rows = await statusesFor(event.id);
+      let rows = await statusesFor(event.id);
+      expect(rows.filter((r) => r.status === "WAITLIST_OFFERED")).toHaveLength(1);
+      expect(rows.filter((r) => r.status === "WAITLISTED")).toHaveLength(1);
+      const capacityNow = async () => (await db.select({ capacity: events.capacity }).from(events).where(eq(events.id, event.id)))[0].capacity;
+      expect(await capacityNow()).toBe(1);
+      const raisedRows = async () => (await db.select().from(auditLogs).where(eq(auditLogs.entityId, event.id))).filter((row) => row.action === "event.capacity_raised_for_offer");
+      expect(await raisedRows()).toHaveLength(0);
+
+      // The loser's page, drawn again, asks «capacitatea devine 2»; confirmed, the press adds exactly that one place.
+      const loser = waiting.find((row) => !made.some((outcome) => outcome.value.id === row.id))!;
+      const again = await offerPlaceToByStaff(db, event, loser.id, actor, NOW, { addPlaceTo: 2 });
+      expect(again.capacityRaisedTo).toBe(2);
+      rows = await statusesFor(event.id);
       expect(rows.filter((r) => r.status === "WAITLIST_OFFERED")).toHaveLength(2);
-      // Two promises, two places: the capacity grew by exactly one, never by two, and never was exceeded.
-      const [after] = await db.select({ capacity: events.capacity }).from(events).where(eq(events.id, event.id));
-      expect(after.capacity).toBe(2);
-      // Two trail rows for the offers, and one for the one supplementary place.
+      // Two promises, two places: the capacity grew by exactly one, by a confirmed press, and never was exceeded.
+      expect(await capacityNow()).toBe(2);
       const trail = await db.select().from(auditLogs).where(inArray(auditLogs.entityId, waiting.map((row) => row.id)));
       expect(trail.filter((row) => row.action === "registration.offered_by_staff")).toHaveLength(2);
-      const raised = await db.select().from(auditLogs).where(eq(auditLogs.entityId, event.id));
-      expect(raised.filter((row) => row.action === "event.capacity_raised_for_offer")).toHaveLength(1);
+      expect(await raisedRows()).toHaveLength(1);
     },
     30_000,
   );
