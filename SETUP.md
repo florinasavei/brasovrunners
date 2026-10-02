@@ -1416,6 +1416,11 @@ languages go live together; that is the rule, not a setting.
    race opens to a crowd, one month of **Basic** is $15 and is a setting on that screen — no
    deployment.
 4. `/admin/tasks` → the row for this item turns green by itself once the event exists.
+5. The club's own runners — organizers, pacemakers, invited runners — register like anybody (or
+   are entered from «Înscrierile primite»), then an Administrator opens each registration →
+   «Locurile evenimentului» → «Pune în afara locurilor». They keep a declaration, a race number
+   and their row on the public list if they ticked, and take none of the announced places; a
+   place one of them held is given back to the line (§NNN, `AGENTS.md` §15.11).
 
 ### If somebody says the site is blocked at work
 

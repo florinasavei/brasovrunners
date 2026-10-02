@@ -58,6 +58,7 @@ import { isUuid } from "@/shared/ids";
 import { dayIn, MIN_PARTICIPANT_AGE } from "./domain/age";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS, ANOTHER_LINK_INVALID, decideSubmission } from "./domain/family";
 import { registrationNameKey } from "./domain/name-key";
+import { forgetRegisteredBadgeCount } from "./nav-count";
 import { currentAddressCap } from "./address-cap";
 import { familyEntryFields, insertFamilyEntry, liveSittingEntries, personOfEntry, replaceFamilyEntry } from "./family-entries";
 import {
@@ -715,8 +716,15 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
     had lapsed. It goes before the count, so the person's own held place is never counted against them.
   */
   await releaseOwnFamilyPlaceHold(db, event.id, registrationId);
+  /*
+    «În afara locurilor» (§NNN): a registration the club seats outside the places consumes none, so it
+    is given its place directly whatever the counts — never waitlisted for want of one, never refused by
+    a full line. The stale holds still expire and the line is still served first (`placeForNewcomer`),
+    as in every capacity-changing transaction; the column is the one condition, `kind` none (§30).
+  */
+  const outside = await repo.isOutsideCapacity(db, registrationId);
   const { free, counts, eligibleWaitlisted } = await placeForNewcomer(db, event, now, settings);
-  let direct = reserved || free;
+  let direct = outside || reserved || free;
 
   // No place: this registration would join the line, and the line may be full (§348).
   if (
@@ -746,6 +754,8 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
     ? await repo.transitionRegistration(db, {
         id: registrationId,
         to: "PENDING_DECLARATION",
+        // Out of the line straight to a declaration only outside the places (§NNN): a counted place reaches the line as an offer.
+        fromStatuses: allowedFromStatuses("PENDING_DECLARATION").filter((from) => outside || from !== "WAITLISTED"),
         changes: {
           holdExpiresAt: computeDeclarationHoldExpiry({
             now,
@@ -3487,6 +3497,97 @@ export async function offerPlaceToByStaff<T extends Record<string, unknown>>(
   drainOutboxRowsAfterResponse(result.leaveNow);
   wakeMaintenance(event, now, settings, result.holdExpiresAt);
   return result.offered;
+}
+
+/**
+ * Whether a registration in this state holds, or would hold once counted, one of the event's places:
+ * confirmed, a declaration to sign, an offer, or a family's live reservation (§543) — what
+ * `countOccupied` counts for a row that is not «În afara locurilor» (§NNN).
+ */
+function wouldHoldACountedPlace(registration: Pick<Registration, "status" | "holdExpiresAt">, now: Date): boolean {
+  if (registration.status === "CONFIRMED" || registration.status === "PENDING_DECLARATION" || registration.status === "WAITLIST_OFFERED") return true;
+  return registration.status === "PENDING_EMAIL_CONFIRMATION" && registration.holdExpiresAt !== null && registration.holdExpiresAt.getTime() > now.getTime();
+}
+
+/**
+ * «În afara locurilor» set or cleared by an Administrator (§NNN; the owner, 2026-10-02: «Vreau și o
+ * bifă de „ascunde la numărare” per fiecare participant» — for organizers, pacemakers, invited
+ * runners). Everything under the event lock, after the stale holds expire (§10.6), in one transaction
+ * with its audit row (`registration.outside_capacity_changed`, from → to, who):
+ *
+ * - **Marking** releases a counted place, if the row held one (confirmed, a declaration, an offer, a
+ *   family's reservation), and the usual refill follows (`fillAvailableSpots`: with «Da» the first in
+ *   line is offered it; with «Nu» it stays free). The person keeps their state, number and emails.
+ *   A `WAITLISTED` row leaves the line and is given a place outside the places now, through the one
+ *   allocator (`allocateOrWaitlist`): a declaration to sign with the ordinary deadline and email. A row
+ *   waiting for its address is seated outside when the address is confirmed.
+ * - **Unmarking** a row that would then hold a counted place is allowed only while one is free —
+ *   `computeOccupied(counts) < capacity`, the allocator's own count — else `NoFreePlaceError` and
+ *   §589's sentence; the row then takes it.
+ * - A cancelled or expired row's flag is read, never changed; nor anything on an event not scheduled.
+ *
+ * The column is the one condition (`kind` none, §30): a `TEST` row is marked exactly as a real one.
+ */
+export async function setOutsideCapacityByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  event: EventForRegistration,
+  registrationId: string,
+  outside: boolean,
+  actor: { id: string; role: StaffRole },
+  now: Date,
+): Promise<Registration> {
+  if (!canManageRegistrations(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not seat a registration outside the places`);
+  }
+  const settings = await currentDeadlines(db);
+  const result = await db.transaction(async (tx) => {
+    const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
+    if (!lockedEvent) throw new DomainError("NOT_FOUND", "no such event");
+    const locked = withLockedRow(event, lockedEvent);
+    if (locked.eventStatus !== "SCHEDULED") {
+      throw new DomainError("VALIDATION_ERROR", `the event is ${locked.eventStatus}`);
+    }
+    // Stale holds first, as in every capacity-changing transaction (§10.6).
+    await repo.expireStaleHolds(tx, locked, now);
+
+    const current = await repo.findRegistrationById(tx, registrationId);
+    if (!current || current.eventId !== event.id) throw new DomainError("NOT_FOUND", "no such registration");
+    if (!isActiveStatus(current.status)) {
+      throw new DomainError("CONFLICT", `a ${current.status} registration's place cannot be changed`);
+    }
+    if (current.outsideCapacity === outside) return { registration: current, offered: 0 };
+
+    if (!outside && lockedEvent.capacity !== null && wouldHoldACountedPlace(current, now)) {
+      const counts = await repo.countOccupied(tx, event.id, now);
+      if (computeOccupied(counts) >= lockedEvent.capacity) throw new NoFreePlaceError(lockedEvent.capacity, counts);
+    }
+
+    let registration = await repo.writeOutsideCapacity(tx, current.id, outside, now);
+    if (!registration) throw new DomainError("CONFLICT", "this registration changed state concurrently");
+
+    // Out of the line, into a place outside the places: the one allocator, then its declaration email.
+    if (outside && registration.status === "WAITLISTED") {
+      registration = await allocateOrWaitlist(tx, locked, registration.id, now, settings);
+      await enqueueAllocationEmail(tx, registration, await deliveryEmailOf(tx, registration.participantId), `registration:${registration.id}:outside:${now.toISOString()}`, now);
+    }
+
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      participantId: current.participantId,
+      action: "registration.outside_capacity_changed",
+      entityType: "registration",
+      entityId: current.id,
+      metadata: { from: current.outsideCapacity, to: outside, status: current.status, ...(registration.status !== current.status ? { statusAfter: registration.status } : {}) },
+      now,
+    });
+
+    // A place the row held is free now: the line's, with «Da»; the organizer's, with «Nu» (§615).
+    const offered = outside ? await fillAvailableSpots(tx, locked, now, settings) : 0;
+    return { registration, offered };
+  });
+  forgetRegisteredBadgeCount();
+  wakeMaintenance(event, now, settings, result.registration.holdExpiresAt, result.offered > 0 ? offerDeadline(event, now, settings) : null);
+  return result.registration;
 }
 
 /**

@@ -215,10 +215,11 @@ describe("§562 the exports", () => {
 
   it("the registrations CSV ends with «Offers and benefits»: the moment of the yes, or empty", () => {
     const [header, yes, no] = buildRegistrationsCsv([row("2026-09-29T10:00:00.000Z"), row("")]).split("\r\n");
-    expect(header.split(",").at(-1)).toBe("Offers and benefits");
-    expect(yes.split(",").at(-1)).toBe("2026-09-29T10:00:00.000Z");
-    expect(no.split(",").at(-1)).toBe("");
-    expect(REGISTRATION_SHEET_HEADERS.at(-1)).toBe("Offers and benefits");
+    // Followed only by «Outside the places» (§NNN), which came after it.
+    expect(header.split(",").at(-2)).toBe("Offers and benefits");
+    expect(yes.split(",").at(-2)).toBe("2026-09-29T10:00:00.000Z");
+    expect(no.split(",").at(-2)).toBe("");
+    expect(REGISTRATION_SHEET_HEADERS.at(-2)).toBe("Offers and benefits");
   });
 
   it("the offers-and-benefits CSV neutralizes formulas, carries a BOM and CRLF — the sponsor list's five columns since §570", () => {

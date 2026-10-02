@@ -22,7 +22,7 @@ import { buildListHref } from "@/modules/staff-identity/domain/admin-list-query"
  *
  * Pure, so the toggle and the allowlist are tested without a page.
  */
-export const SUMMARY_KEPT_KEYS = ["eventId", "clubMember", "bounced", "promo", "q", "sort", "dir", "perPage"] as const;
+export const SUMMARY_KEPT_KEYS = ["eventId", "clubMember", "bounced", "promo", "outside", "q", "sort", "dir", "perPage"] as const;
 
 /** The keys of the page's query a pill reads: the ones it keeps and `status`. */
 export type SummaryQuery = Partial<Record<(typeof SUMMARY_KEPT_KEYS)[number] | "status", string | undefined>> &
@@ -37,4 +37,15 @@ export function summaryPillHref(basePath: string, current: SummaryQuery, status:
   for (const key of SUMMARY_KEPT_KEYS) kept[key] = current[key];
   const next = status !== null && current.status !== status ? status : undefined;
   return buildListHref(basePath, kept, { status: next });
+}
+
+/**
+ * Where the «În afara locurilor» pill leads (§NNN): the same list with `outside=1`, a filter like the
+ * state pills and kept beside whichever state is in force; pressed again, the list without it. The
+ * same allowlist as the state pills, so no flash and no page number travel.
+ */
+export function outsidePillHref(basePath: string, current: SummaryQuery): string {
+  const kept: Record<string, string | undefined> = {};
+  for (const key of SUMMARY_KEPT_KEYS) kept[key] = current[key];
+  return buildListHref(basePath, { ...kept, status: current.status }, { outside: current.outside === "1" ? undefined : "1" });
 }

@@ -19,6 +19,7 @@ import {
   promoteRegistrationByStaff,
   bulkDeleteRegistrationsByStaff,
   setBibNumberByStaff,
+  setOutsideCapacity,
   withdrawOptionalData,
 } from "@/modules/registrations/admin-service";
 import { markBibsPrinted, setBibPrinted } from "@/modules/registrations/bibs";
@@ -215,6 +216,27 @@ export async function givePlaceNowAction(_previous: FormOutcome | null, form: Fo
     const actor = await requireStaffCapability(canManageRegistrations);
     await givePlaceToUnconfirmedByStaff(getDb(), actor, registrationId, new Date());
     outcome = { saved: "placeGiven" };
+  } catch (error) {
+    outcome = noFreePlaceOutcome(error) ?? outcomeOf(error);
+  }
+  return backTo(detailPath(locale, registrationId), outcome);
+}
+
+/**
+ * «În afara locurilor» (§NNN): the registration's own page marks or unmarks the row. The
+ * Administrator's (`canManageRegistrations`), asserted here and again in the service. Unmarking on a
+ * full event says who holds the places (§589's sentence).
+ */
+export async function setOutsideCapacityAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const registrationId = text(form, "registrationId");
+  const outside = text(form, "outside") === "true";
+
+  let outcome: Record<string, string | undefined>;
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    await setOutsideCapacity(getDb(), actor, registrationId, outside, new Date());
+    outcome = outside ? { saved: "outsideMarked" } : { saved: "outsideUnmarked" };
   } catch (error) {
     outcome = noFreePlaceOutcome(error) ?? outcomeOf(error);
   }

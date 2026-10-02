@@ -20,6 +20,10 @@ export const TRANSITIONS: readonly Transition[] = [
   { from: "PENDING_DECLARATION", to: "CANCELLED" },
   { from: "PENDING_DECLARATION", to: "EXPIRED" },
   { from: "WAITLISTED", to: "WAITLIST_OFFERED" },
+  // Only when an Administrator seats a waiting runner «În afara locurilor» (§NNN): the allocator gives
+  // them a place outside the places at once, a declaration to sign with the ordinary deadline. Never
+  // for a counted place — a counted place reaches the line only as an offer.
+  { from: "WAITLISTED", to: "PENDING_DECLARATION" },
   { from: "WAITLISTED", to: "CANCELLED" },
   { from: "WAITLIST_OFFERED", to: "CONFIRMED" },
   { from: "WAITLIST_OFFERED", to: "CANCELLED" },

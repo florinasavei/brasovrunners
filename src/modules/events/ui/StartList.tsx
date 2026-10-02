@@ -173,7 +173,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   // leaving the list expires them, so a name is never shown after its owner withdrew it. The
   // hidden rows (§346) are drawn from the anonymous count alone — the cache holds a number for
   // them, never a row, a position or an initial.
-  const { named, anonymous } = await cachedStartListCounts(event.id);
+  const { named, anonymous, outsideNamed } = await cachedStartListCounts(event.id);
   // The gate (§396): the notice in force, in every language, describes the states. Off, nothing
   // below reads a pending or waiting row at all — not even their count.
   const statesOn = await cachedListStatesDisclosed(now);
@@ -195,7 +195,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   */
   const waitlistOn = event.waitlistPublic === true;
   const others =
-    firstStatesNotice !== null ? await cachedStartListOthersCounts(event.id, firstStatesNotice, waitlistOn) : { pending: 0, waitlisted: 0 };
+    firstStatesNotice !== null ? await cachedStartListOthersCounts(event.id, firstStatesNotice, waitlistOn) : { pending: 0, waitlisted: 0, outsidePending: 0 };
   const view = startListPage(named, anonymous, requestedPage, START_LIST_PAGE_SIZE, others.pending + others.waitlisted);
   /*
     The title's number and the line under it (§632): the confirmed, plus — on a capped event — those the
@@ -208,7 +208,18 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
     open, and threading the card's door down to the list would couple two islands for a log line.
   */
   const door = await readRegistrationDoor(event, now);
-  const headline = startListHeadline(t, locale, { confirmed: view.confirmed, named }, door.kind === "KNOWN" ? door.fill : null);
+  /*
+    «În afara locurilor» (§NNN): a runner the club seated outside the places keeps their row in the table
+    when they ticked — the list is a disclosure they chose, and nothing marks them there — and leaves the
+    title's and the summary line's numbers, which count the places, as the places line does.
+  */
+  const headline = startListHeadline(
+    t,
+    locale,
+    { confirmed: Math.max(view.confirmed - outsideNamed, 0), named: Math.max(named - outsideNamed, 0) },
+    door.kind === "KNOWN" ? door.fill : null,
+  );
+  const outsideShown = outsideNamed + (others.outsidePending ?? 0) > 0;
   const [participants, otherRows] = await Promise.all([
     view.namedLimit > 0 ? cachedStartListPage(event.id, view.namedOffset, view.namedLimit, socialsOn, numbersOn) : [],
     firstStatesNotice !== null && view.othersLimit > 0
@@ -225,7 +236,8 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
         instagramLabel={t("startList.socials.instagram", { name: row.displayName })}
       />
     ) : null;
-  const extra = statesOn ? othersPhrases(t, locale, others) : [];
+  // The pending seated outside the places (§NNN) are rows below, not part of the counted words.
+  const extra = statesOn ? othersPhrases(t, locale, { pending: Math.max(others.pending - (others.outsidePending ?? 0), 0), waitlisted: others.waitlisted }) : [];
   /*
     What each word means (§556), for the states this list shows — a confirmed row, named or hidden,
     and the pending and waiting rows it reads — from the event's own window and the club's deadlines.
@@ -486,6 +498,8 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2, pb: 2 }}>
             {statesOn ? t(waitlistOn ? "startList.noteStates" : "startList.noteStatesNoWaitlist") : t("startList.note")}
             {socialsOn ? ` ${t("startList.socialsNote")}` : null}
+            {/* Only while the table holds somebody seated outside the places (§NNN): one sentence, no row marked. */}
+            {outsideShown ? ` ${t("startList.outsideNote")}` : null}
           </Typography>
         </>
       )}

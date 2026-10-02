@@ -105,6 +105,11 @@ export type RegistrationCsvRow = {
    * asked, said no, or withdrawn. One cell says both whether and since when.
    */
   promoConsentAt?: string;
+  /**
+   * «În afara locurilor» (§NNN): "Yes" when the club seated the person outside the event's places —
+   * an organizer, a pacemaker, an invited runner — empty otherwise, like the member claim.
+   */
+  outsideCapacity?: boolean;
 };
 
 const HEADER = [
@@ -145,6 +150,8 @@ const HEADER = [
   "Cancellation reason",
   // Last (§562), for the same reason: the consent to offers and benefits, its moment or empty.
   "Offers and benefits",
+  // Last (§NNN), for the same reason: seated outside the event's places, "Yes" or empty.
+  "Outside the places",
 ];
 
 export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): string {
@@ -182,6 +189,7 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         row.family ?? "",
         row.cancelReason ?? "",
         row.promoConsentAt ?? "",
+        row.outsideCapacity ? "Yes" : "",
       ]
         .map(csvCell)
         .join(","),

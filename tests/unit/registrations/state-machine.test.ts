@@ -31,6 +31,8 @@ describe("registration state machine", () => {
       ["PENDING_DECLARATION", "CANCELLED"],
       ["PENDING_DECLARATION", "EXPIRED"],
       ["WAITLISTED", "WAITLIST_OFFERED"],
+      // Only by seating a waiting runner «În afara locurilor» (§NNN); the allocator guards it on the column.
+      ["WAITLISTED", "PENDING_DECLARATION"],
       ["WAITLISTED", "CANCELLED"],
       ["WAITLIST_OFFERED", "CONFIRMED"],
       ["WAITLIST_OFFERED", "CANCELLED"],
@@ -84,9 +86,9 @@ describe("registration state machine", () => {
         else refused += 1;
       }
     }
-    // 49 possible pairs (7x7); 20 are named transitions per §10.5's list.
-    expect(named).toBe(20);
-    expect(refused).toBe(49 - 20);
+    // 49 possible pairs (7x7); 21 are named transitions per §10.5's list (WAITLISTED -> PENDING_DECLARATION since §NNN).
+    expect(named).toBe(21);
+    expect(refused).toBe(49 - 21);
   });
 
   it("a status can never transition to itself", () => {

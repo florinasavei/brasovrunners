@@ -260,6 +260,7 @@
       "captionStatesNumbers": "First the confirmed participants, with their race number — those whose name is shown, in the order they confirmed, then the others — then those registered who have not confirmed yet and those on the waiting list, in the list's order.",
       "noteStates": "The number in the title counts the confirmed and, while registration is open at an event with a set number of places, those completing their registration. A name is shown only for those who ticked “I want to appear on the participants & results list”; the other confirmed participants appear as “Participant (name hidden)”, with nothing else about them. Those registered who have not confirmed yet and those on the waiting list appear only if they ticked it, with the registration's stage beside the name; a cancelled or expired registration does not appear. The choice can be changed at any time from the confirmation email or from “My registrations”.",
       "socialsNote": "Strava and Instagram appear only beside the names of those who chose it when registering.",
+      "outsideNote": "The club's organizers and invited runners appear in the table without being counted: the numbers above count the places.",
       "othersLead": "Also listed by name:",
       "pendingCount": {
         "one": "{count} registered, awaiting confirmation",
@@ -593,6 +594,7 @@
       "registeredWithPlaceOf": "{count} of {capacity} places taken",
       "registeredAwaitingEmail": "{count} awaiting the email confirmation",
       "registeredWaitlisted": "{count} on the waiting list",
+      "registeredOutside": "{count} outside the places",
       "registeredMoreEvents": "+{count} more",
       "newsletter": "Newsletter"
     },
@@ -621,6 +623,16 @@
       "statusLabel": "Status",
       "summaryTotal": "Registrations: {count} (all states, cancelled and expired included)",
       "summaryTest": "Test: {count}",
+      "outside": {
+        "pill": "Outside the places: {count}",
+        "chip": "Outside the places",
+        "title": "The event's places",
+        "isOutside": "Outside the places: takes none of the event's places and is in no public number.",
+        "isCounted": "Counted among the event's places, like anybody.",
+        "mark": "Seat outside the places",
+        "unmark": "Count among the places",
+        "help": "For organizers, pacemakers, invited runners: a declaration, a number and a row on the list if they ticked, without taking a place."
+      },
       "export": "Export CSV",
       "personLink": "Everything held about a person",
       "personThis": "Everything held about this person",
@@ -730,7 +742,8 @@
           "promo_consent_changed": "Consent to offers and benefits changed",
           "family_resent": "Email resent to the family",
           "offered_by_staff": "Offer sent ahead of the waiting list (“Send them the offer”)",
-          "address_vouched_by_staff": "Address vouched for by the team; place given ahead of the waiting list (“Give them a place now”)"
+          "address_vouched_by_staff": "Address vouched for by the team; place given ahead of the waiting list (“Give them a place now”)",
+          "outside_capacity_changed": "Seated outside the places, or counted among them again"
         }
       },
       "locale": {
@@ -1211,7 +1224,13 @@
       "givePlaceNowTitle": "Give them a place now?",
       "givePlaceNowBody": "You vouch for the address {email} and give them a place ahead of the waiting list.",
       "givePlaceNowBodyMore": "They get the declaration email at once and sign it online any time before the deadline, or on paper at the desk. They have nothing else to confirm.",
-      "givePlaceNowFull": "No place is free. On «Yes» for automatic offers, an added place goes to the waiting list first: set «No», raise «Capacity» by 1, then press again."
+      "givePlaceNowFull": "No place is free. On «Yes» for automatic offers, an added place goes to the waiting list first: set «No», raise «Capacity» by 1, then press again.",
+      "outsideMarkTitle": "Seat this registration outside the places?",
+      "outsideMarkBody": "{name} no longer takes a place; the freed place goes to the first in line if offers go out automatically. State, number and emails stay.",
+      "outsideMarkBodyWaitlisted": "{name} leaves the waiting list and gets a place outside the places now: the email “{message}”, with the usual deadline.",
+      "outsideMarkBodyPendingEmail": "{name} gets a place outside the places once they confirm their address; nothing changes until then.",
+      "outsideUnmarkTitle": "Count this registration among the places?",
+      "outsideUnmarkBody": "{name} will take one of the event's places. If none is free, nothing changes."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -1911,7 +1930,8 @@
         "received": {
           "title": "Registrations received",
           "summary": "real registrations: {count} · on the waiting list: {waiting}",
-          "summaryPlaces": "real registrations: {count} · on the waiting list: {waiting} · places taken: {occupied} of {capacity}"
+          "summaryPlaces": "real registrations: {count} · on the waiting list: {waiting} · places taken: {occupied} of {capacity}",
+          "outside": "outside the places: {count}"
         },
         "queue": {
           "title": "Registration queue",
@@ -5391,6 +5411,18 @@
               ]
             },
             {
+              "title": "A place outside the places: organizers, pacemakers, invited runners",
+              "steps": [
+                "For whoever runs on the club's side: organizers, pacemakers, invited runners. They take none of the announced places.",
+                "Open the person's registration → «The event's places» → «Seat outside the places» and confirm.",
+                "If they held a place, it frees up: on «Yes» it goes to the first on the waiting list; on «No» it stays free until you hand it out.",
+                "From the waiting list they get a place now, outside the places: the declaration email, with the usual deadline.",
+                "They keep their state, number and emails. On the site they are in no number; they appear on the list only if they ticked, unmarked.",
+                "«Count among the places» turns it back only if a place is free; otherwise the press is refused and says who holds the places.",
+                "In the registrations list, the pill «Outside the places» shows them all; the export has a column for them."
+              ]
+            },
+            {
               "title": "Tell the participants about a change",
               "steps": [
                 "Change the place, the time or the programme in their card.",
@@ -7966,6 +7998,8 @@
       "menuOrder": "The menu order was saved.",
       "registrationOffered": "The offer is sent: they have the usual time to sign the declaration.",
       "placeGiven": "Place given; the declaration email has left.",
+      "outsideMarked": "The registration is outside the places: it takes none of the event's places now.",
+      "outsideUnmarked": "The registration counts among the event's places again.",
       "failedRetried": {
         "one": "{count} failed email put back in the queue.",
         "few": "{count} failed emails put back in the queue.",

@@ -173,6 +173,7 @@ export async function GET(request: Request): Promise<Response> {
         cancelReason: cancelReasonCell(row.cancelReasonKind, row.cancelReason),
         // The consent to offers and benefits (§562): its moment, blank for no.
         promoConsentAt: row.promoConsent ? row.promoConsentAt : null,
+        outsideCapacity: row.outsideCapacity,
       })),
       eventTitle ?? "Participants",
     );
@@ -224,6 +225,7 @@ export async function GET(request: Request): Promise<Response> {
       cancelReason: cancelReasonCell(row.cancelReasonKind, row.cancelReason),
       // «Oferte și beneficii» (§562): the moment of the yes, empty for no — last, like the family.
       promoConsentAt: row.promoConsent ? (row.promoConsentAt?.toISOString() ?? "") : "",
+      outsideCapacity: row.outsideCapacity,
     })),
   );
 

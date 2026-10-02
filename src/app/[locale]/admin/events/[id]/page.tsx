@@ -92,7 +92,7 @@ import { countBibs, spareCardState } from "@/modules/registrations/bibs";
 import { SPARE_BIBS_PER_PRINT, spareRangeOfQuery } from "@/modules/registrations/domain/spare-bibs";
 import { countInterests } from "@/modules/registrations/interest";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
-import { countEligibleWaitlisted, countOccupied, countRegistrationsForEvent, countTestRegistrationsForEvent } from "@/modules/registrations/repository";
+import { countEligibleWaitlisted, countOccupied, countOutsideCapacity, countRegistrationsForEvent, countTestRegistrationsForEvent } from "@/modules/registrations/repository";
 import QueuePanel from "@/modules/registrations/ui/QueuePanel";
 import PlaceDeadlines from "@/modules/registrations/ui/PlaceDeadlines";
 import { readPlaceDeadlines } from "@/modules/registrations/admin-repository";
@@ -254,6 +254,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const occupiedCounts =
     internal && event.capacity !== null && canReadRegistrations(staffUser.role) ? await countOccupied(db, event.id, now) : null;
   const placesTaken = occupiedCounts === null ? null : computeOccupied(occupiedCounts);
+  // Seated «În afara locurilor» (§NNN): beside the occupied places, which leave them out; read only where those are said.
+  const outsideCount = occupiedCounts === null ? 0 : await countOutsideCapacity(db, event.id);
   // «Când se pierde un loc» (§635): the real rows waiting on each deadline, one grouped count, for the box and the queue panel.
   const placeDeadlines = internal && canReadRegistrations(staffUser.role) ? await readPlaceDeadlines(db, event.id, now) : null;
 
@@ -1003,7 +1005,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     title={t("editor.boxes.received.title")}
                     aside={
                       placesTaken !== null && event.capacity !== null
-                        ? t("editor.boxes.received.summaryPlaces", { count: realCount, waiting, occupied: placesTaken, capacity: event.capacity })
+                        ? `${t("editor.boxes.received.summaryPlaces", { count: realCount, waiting, occupied: placesTaken, capacity: event.capacity })}${
+                            outsideCount > 0 ? ` · ${t("editor.boxes.received.outside", { count: outsideCount })}` : ""
+                          }`
                         : t("editor.boxes.received.summary", { count: realCount, waiting })
                     }
                     openWhen={{ attention: thanksDue && !event.thanksSentAt }}

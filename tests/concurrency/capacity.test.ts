@@ -7,7 +7,8 @@ import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
-import { NoFreePlaceError } from "@/modules/registrations/domain/capacity";
+import { computeOccupied, NoFreePlaceError } from "@/modules/registrations/domain/capacity";
+import { countOccupied } from "@/modules/registrations/repository";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
@@ -16,6 +17,7 @@ import {
   confirmEmail,
   type EventForRegistration,
   offerPlaceToByStaff,
+  setOutsideCapacityByStaff,
   submitRegistration,
   unregister,
 } from "@/modules/registrations/service";
@@ -55,6 +57,8 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
   const createdParticipantIds: string[] = [];
   /** The Administrator who sends the offers of §615's case, made by that case and removed after. */
   let staffId: string | null = null;
+  /** The Administrator of the «În afara locurilor» case (§NNN), made by that case and removed after. */
+  let outsideStaffId: string | null = null;
 
   beforeAll(async () => {
     const translations: LegalDocumentTranslationInput[] = [
@@ -94,9 +98,10 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
     await db.delete(registrations).where(inArray(registrations.eventId, createdEventIds));
     await db.delete(events).where(inArray(events.id, createdEventIds));
     await db.delete(participants).where(inArray(participants.id, createdParticipantIds));
-    if (staffId) {
-      await db.delete(auditLogs).where(eq(auditLogs.actorStaffUserId, staffId));
-      await db.delete(staffUsers).where(eq(staffUsers.id, staffId));
+    for (const id of [staffId, outsideStaffId]) {
+      if (!id) continue;
+      await db.delete(auditLogs).where(eq(auditLogs.actorStaffUserId, id));
+      await db.delete(staffUsers).where(eq(staffUsers.id, id));
     }
     await pool.end();
   });
@@ -380,6 +385,48 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
       // One trail row, for the one offer made.
       const trail = await db.select().from(auditLogs).where(inArray(auditLogs.entityId, waiting.map((row) => row.id)));
       expect(trail.filter((row) => row.action === "registration.offered_by_staff")).toHaveLength(1);
+    },
+    30_000,
+  );
+
+  it(
+    "§NNN «În afara locurilor»: the last counted place, ten newcomers and an unmarking racing for it — never above capacity",
+    async () => {
+      // Two places: one counted runner confirmed, one guest confirmed outside the places — one place free.
+      const event = await createInternalEvent(2);
+      const [staff] = await db
+        .insert(staffUsers)
+        .values({ email: `outside.race.${Date.now()}@example.ro`, displayName: "Outside", role: "ADMIN" })
+        .returning();
+      outsideStaffId = staff.id;
+      const actor = { id: staff.id, role: staff.role };
+      const holder = await createPendingRegistration(event.id, "outside-holder");
+      await db.update(registrations).set({ status: "CONFIRMED", confirmedAt: NOW }).where(eq(registrations.id, holder.id));
+      const guest = await createPendingRegistration(event.id, "outside-guest");
+      await db.update(registrations).set({ status: "CONFIRMED", confirmedAt: NOW, outsideCapacity: true }).where(eq(registrations.id, guest.id));
+
+      const newcomers = await Promise.all(Array.from({ length: 10 }, (_, i) => createPendingRegistration(event.id, `outside-new${i}`)));
+      const outcomes = await Promise.allSettled([
+        setOutsideCapacityByStaff(db, event, guest.id, false, actor, NOW),
+        ...newcomers.map((row) => confirmEmail(db, event, row.id, NOW)),
+      ]);
+
+      // Whoever won the free place, the counted places never exceed the capacity.
+      expect(computeOccupied(await countOccupied(db, event.id, NOW))).toBe(2);
+      const [unmarked] = await db.select().from(registrations).where(eq(registrations.id, guest.id));
+      const rows = await statusesFor(event.id);
+      const held = rows.filter((r) => r.status === "PENDING_DECLARATION").length;
+      if (outcomes[0].status === "fulfilled") {
+        // The guest took the place back: every newcomer waits.
+        expect(unmarked.outsideCapacity).toBe(false);
+        expect(held).toBe(0);
+      } else {
+        // A newcomer took it first; the unmarking met the full count and changed nothing.
+        expect((outcomes[0] as PromiseRejectedResult).reason).toBeInstanceOf(NoFreePlaceError);
+        expect(unmarked.outsideCapacity).toBe(true);
+        expect(held).toBe(1);
+      }
+      expect(rows.filter((r) => r.status === "WAITLISTED")).toHaveLength(10 - held);
     },
     30_000,
   );

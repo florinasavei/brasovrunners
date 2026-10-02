@@ -132,7 +132,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   if (!canReadRegistrations(actor.role)) notFound();
 
   const current = await searchParams;
-  const { eventId, status, clubMember, bounced, promo, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test } = current;
+  const { eventId, status, clubMember, bounced, promo, outside, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test } = current;
   // What «Trimite acum» said about Mailgun's stop (§622): from the action's own address; unreadable says nothing.
   const untilParsed = current.until ? new Date(current.until) : null;
   const untilAt = untilParsed && !Number.isNaN(untilParsed.getTime()) ? untilParsed : null;
@@ -160,6 +160,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     clubMemberDeclared?: true;
     emailBounced?: true;
     promoConsented?: true;
+    outsideCapacity?: true;
     search?: string;
   } = {
     status: isRegistrationStatus(status) ? status : undefined,
@@ -169,6 +170,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     emailBounced: bounced === "1" || undefined,
     // «Doar cu oferte și beneficii» (§581): who said yes, by the one condition of §570 (`promoListed`).
     promoConsented: promo === "1" || undefined,
+    // «În afara locurilor» (§NNN): the strip's own pill, narrowing to the rows seated outside the places.
+    outsideCapacity: outside === "1" || undefined,
     search: q || undefined,
   };
 
@@ -204,7 +207,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       filtered by "confirmate" would answer a question nobody asked. One grouped query, the
       same `WHERE` as the list, so the page costs one round trip more rather than five.
     */
-    summariseRegistrationsForAdmin(db, { ...filters, status: undefined }),
+    // …and blind to «În afara locurilor» (§NNN) the same way: its pill is one more filter of the strip.
+    summariseRegistrationsForAdmin(db, { ...filters, status: undefined, outsideCapacity: undefined }),
     /*
       How many bibs this event has and how many are still unprinted (§264). One grouped count,
       and only when the list is about a single event — "all events" has no sheet to print, and
@@ -273,6 +277,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     bounced,
     // Rides with every sort, page and export link (§581): the file is the rows on screen.
     promo: promo === "1" ? "1" : undefined,
+    outside: outside === "1" ? "1" : undefined,
     q,
     sort: current.sort,
     dir: current.dir,
@@ -287,7 +292,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     `defaultEventFilter` over it, so `all` and a bookmarked link mean there what they mean here.
   */
   const exportQueryString = buildListHref("", listParams, { eventId: eventFilter.eventId ?? ALL_EVENTS }).replace(/^\?/, "");
-  const hasFilters = Boolean(eventId || status || clubMember || bounced || promo === "1" || q);
+  const hasFilters = Boolean(eventId || status || clubMember || bounced || promo === "1" || outside === "1" || q);
   /*
     Nobody chose a filter, yet the list is still narrowed: `defaultEventFilter` scoped it to the
     featured event with no URL parameter to show for it (§178). This is the shape §277 named —
@@ -366,6 +371,10 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               read as real sign-ups (`DECISIONS.md` §30). The export omits these rows entirely. */}
           {row.kind === "TEST" && (
             <Chip size="small" color="warning" label={t("registrations.testKind")} />
+          )}
+          {/* Seated outside the places (§NNN): counted in no place, for every role that reads the list. */}
+          {row.outsideCapacity && (
+            <Chip size="small" color="secondary" variant="outlined" label={t("registrations.outside.chip")} data-testid="outside-chip" />
           )}
           {/* A family on one address (§543): who else is registered with it, each a link to their row. */}
           <FamilyChip
@@ -953,6 +962,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         totalLabel={t("registrations.summaryTotal", { count: summary.real })}
         testLabel={t("registrations.summaryTest", { count: summary.test })}
         statusLabel={REGISTRATION_STATUS_LABEL}
+        outsideLabel={t("registrations.outside.pill", { count: summary.outside })}
       >
         {/* For the members alone (§552): the chip the events list wears, on the event this list shows. */}
         {events.find((event) => event.id === filters.eventId)?.membersOnly && (
@@ -1075,6 +1085,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         <input type="hidden" name="sort" value={query.sort} />
         <input type="hidden" name="dir" value={query.dir} />
         <input type="hidden" name="perPage" value={String(query.perPage)} />
+        {/* The «În afara locurilor» pill's filter (§NNN) survives «Filtrează»; the pill itself clears it. */}
+        {outside === "1" && <input type="hidden" name="outside" value="1" />}
         <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap", gap: 2, alignItems: "flex-start" }}>
           {/* BR-REQ-041-01 criterion 7. First, and widest, because on race morning it is the
               only one that gets used. */}

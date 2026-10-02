@@ -60,6 +60,7 @@ import {
   offerPlaceAction,
   promoteRegistrationAction,
   setBibNumberAction,
+  setOutsideCapacityAction,
   withdrawConsentAction,
   declarationHoldAction,
 } from "../actions";
@@ -295,6 +296,10 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {registration.kind === "TEST" && (
           <Chip size="small" color="warning" label={tr("registrations.testKind")} />
         )}
+        {/* Seated outside the places (§NNN): read by every role that reads this page. */}
+        {registration.outsideCapacity && (
+          <Chip size="small" color="secondary" variant="outlined" label={tr("registrations.outside.chip")} data-testid="outside-chip" />
+        )}
         <FamilyChip
           label={tr("registrations.familyChip")}
           members={family.map((member) => ({
@@ -514,6 +519,61 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             </Typography>
           </Stack>
         )}
+      </Box>
+
+      {/*
+        «În afara locurilor» (§NNN; the owner, 2026-10-02: «Vreau și o bifă de „ascunde la numărare” per
+        fiecare participant»): whether this registration takes one of the event's places. Every role that
+        reads the page reads the line; only the Administrator marks or unmarks (`canManageRegistrations`,
+        asserted again by the action and the service), and only while the registration is active — an
+        ended row's flag is read, never changed. The dialog says what the press does in this row's state.
+      */}
+      <Box component="section" data-testid="outside-capacity">
+        <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
+          {tr("registrations.outside.title")}
+        </Typography>
+        <Stack spacing={1} sx={{ alignItems: "flex-start" }}>
+          <Typography variant="body2">
+            {tr(registration.outsideCapacity ? "registrations.outside.isOutside" : "registrations.outside.isCounted")}
+          </Typography>
+          {mayManage && !isTerminalStatus(registration.status) && (
+            <ActionForm
+              action={setOutsideCapacityAction}
+              confirm={
+                registration.outsideCapacity
+                  ? {
+                      title: tr("confirm.outsideUnmarkTitle"),
+                      body: tr("confirm.outsideUnmarkBody", { name: registration.registeredName }),
+                      confirmLabel: tr("registrations.outside.unmark"),
+                      cancelLabel: words.cancel,
+                    }
+                  : {
+                      title: tr("confirm.outsideMarkTitle"),
+                      body:
+                        registration.status === "WAITLISTED"
+                          ? tr("confirm.outsideMarkBodyWaitlisted", { name: registration.registeredName, message: tr("emails.types.COMPLETE_DECLARATION") })
+                          : registration.status === "PENDING_EMAIL_CONFIRMATION"
+                            ? tr("confirm.outsideMarkBodyPendingEmail", { name: registration.registeredName })
+                            : tr("confirm.outsideMarkBody", { name: registration.registeredName }),
+                      // The declaration's email goes only to a waiting runner seated now; a TEST row names none (§384).
+                      ...(registration.status !== "WAITLISTED" ? {} : registration.kind === "TEST" ? {} : { email: words.email(1) }),
+                      confirmLabel: tr("registrations.outside.mark"),
+                      cancelLabel: words.cancel,
+                    }
+              }
+              data-testid="outside-capacity-form"
+            >
+              {deskHidden}
+              <input type="hidden" name="outside" value={registration.outsideCapacity ? "false" : "true"} />
+              <GlyphButton icon={registration.outsideCapacity ? "turnOff" : "turnOn"} type="submit" variant="outlined" sx={{ minHeight: 44 }}>
+                {tr(registration.outsideCapacity ? "registrations.outside.unmark" : "registrations.outside.mark")}
+              </GlyphButton>
+            </ActionForm>
+          )}
+          <Typography variant="caption" color="text.secondary">
+            {tr("registrations.outside.help")}
+          </Typography>
+        </Stack>
       </Box>
 
       <Divider />
