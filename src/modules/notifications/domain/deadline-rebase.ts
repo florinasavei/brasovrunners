@@ -41,7 +41,7 @@ import { capHoldExpiry } from "@/modules/registrations/domain/hold-deadlines";
  *   of «Termene» never moves a deadline already given), counted from the send instead.
  * - **Capped as the allocator caps it** (`capHoldExpiry`): a hold or an offer never outlives the
  *   close or the start, re-based or not — except «Trimite-i oferta»'s offer, which the allocator
- *   caps by the start alone and the re-base likewise (`OFFER_UNTIL_START`, §NNN).
+ *   caps by the start alone and the re-base likewise (`OFFER_UNTIL_START`, §642).
  * - **A wait under a minute changes nothing**: the deadlines are stated to the minute, and under the
  *   `immediate` timing a message leaves within seconds — no write, no lock, as before.
  * - **Nothing is revived that the queue had already let go**: a deadline already behind the moment
@@ -91,7 +91,7 @@ export function startsItsDeadline(payload: unknown): boolean {
 }
 
 /**
- * The payload key of «Trimite-i oferta»'s first message (§NNN): the offer the Administrator chose to
+ * The payload key of «Trimite-i oferta»'s first message (§642): the offer the Administrator chose to
  * make is capped by the event's start alone, never by the close — made after the close, it is the
  * club's offer window from the send, up to the start. Read by the send's re-base (`rebasedDeadline`'s
  * `capByClose`) and by the lapsed-offer guard (`registrations/repository.ts#offerAwaitingItsFirstEmail`),
@@ -100,7 +100,7 @@ export function startsItsDeadline(payload: unknown): boolean {
  */
 export const OFFER_UNTIL_START = "untilStart";
 
-/** Whether a queued offer's message is a staff-chosen offer's, capped by the start alone (§NNN). */
+/** Whether a queued offer's message is a staff-chosen offer's, capped by the start alone (§642). */
 export function offerLastsUntilStart(payload: unknown): boolean {
   return typeof payload === "object" && payload !== null && (payload as Record<string, unknown>)[OFFER_UNTIL_START] === true;
 }
@@ -123,7 +123,7 @@ export function rebasedDeadline(input: {
   queuedAt: Date;
   sentAt: Date;
   event?: { registrationClosesAt: Date | null; startsAt: Date } | null;
-  /** False for a staff-chosen offer (`OFFER_UNTIL_START`, §NNN): capped by the start alone. */
+  /** False for a staff-chosen offer (`OFFER_UNTIL_START`, §642): capped by the start alone. */
   capByClose?: boolean;
 }): Date | null {
   const { kind, stored, queuedAt, sentAt, event } = input;

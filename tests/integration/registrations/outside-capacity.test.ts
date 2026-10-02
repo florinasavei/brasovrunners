@@ -20,7 +20,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * «În afara locurilor» (§NNN; the owner, 2026-10-02: «Vreau și o bifă de „ascunde la numărare” per
+ * «În afara locurilor» (§643; the owner, 2026-10-02: «Vreau și o bifă de „ascunde la numărare” per
  * fiecare participant») — a registration the club seats outside the event's places: an organizer, a
  * pacemaker, an invited runner. The capacity formula's one explicit exclusion (`AGENTS.md` §10.6):
  *
@@ -41,7 +41,7 @@ let organizer: StaffUser;
 const state = vi.hoisted(() => ({ cookie: undefined as string | undefined }));
 
 vi.mock("@/db/client", () => ({ getDb: () => db }));
-// The export route's own door (§NNN, the review of 2026-10-02, finding 2): a staff session by cookie, as `sponsor-list.test.ts` reaches it.
+// The export route's own door (§643, the review of 2026-10-02, finding 2): a staff session by cookie, as `sponsor-list.test.ts` reaches it.
 vi.mock("next/headers", () => ({
   cookies: async () => ({ get: () => (state.cookie ? { value: state.cookie } : undefined), set: () => {}, delete: () => {} }),
   headers: async () => new Headers(),
@@ -170,7 +170,7 @@ async function refusal(promise: Promise<unknown>) {
   throw new Error("expected a refusal");
 }
 
-describe("§NNN the allocator: a registration outside the places consumes none", () => {
+describe("§643 the allocator: a registration outside the places consumes none", () => {
   it("a full event still gives an outside registration a place when its address is confirmed — the places line unchanged", async () => {
     const event = await createEvent(1);
     expect((await confirmedAddress(event, "Ana", 0)).status).toBe("PENDING_DECLARATION");
@@ -228,7 +228,7 @@ describe("§NNN the allocator: a registration outside the places consumes none",
   });
 });
 
-describe("§NNN marking and unmarking, under the event lock", () => {
+describe("§643 marking and unmarking, under the event lock", () => {
   async function fullWithLine(auto: boolean) {
     const event = await createEvent(1, { auto });
     await confirmedAddress(event, "Ana", 0);
@@ -328,7 +328,7 @@ describe("§NNN marking and unmarking, under the event lock", () => {
   });
 });
 
-describe("§NNN the counts: public apart, backoffice joined apart", () => {
+describe("§643 the counts: public apart, backoffice joined apart", () => {
   it("the public list keeps a ticked outside runner's row and leaves them out of its numbers; an unticked one is in neither", async () => {
     const event = await createEvent(5);
     for (const [name, minute, optOut] of [["Ana", 0, false], ["Ioana", 2, false], ["Mihai", 4, true]] as const) {
@@ -378,7 +378,7 @@ describe("§NNN the counts: public apart, backoffice joined apart", () => {
   });
 });
 
-describe("§NNN the review of 2026-10-02: the line first, the other doors, the other readers", () => {
+describe("§643 the review of 2026-10-02: the line first, the other doors, the other readers", () => {
   it("unmarking serves the line before it counts: a kept hold released for a waiting runner is offered to them, never taken by the unmarked row", async () => {
     const event = await createEvent(2);
     await confirmedAddress(event, "Ana", 0);
@@ -533,7 +533,7 @@ describe("§NNN the review of 2026-10-02: the line first, the other doors, the o
   });
 });
 
-describe("§NNN the review of 2026-10-02, round two: an open offer seated outside the places", () => {
+describe("§643 the review of 2026-10-02, round two: an open offer seated outside the places", () => {
   /** Ana confirmed on a one-place event, Radu and Maria waiting; Ana cancels, and Radu is offered her place. */
   async function offeredRadu() {
     const event = await createEvent(1);

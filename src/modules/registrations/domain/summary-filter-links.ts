@@ -40,7 +40,7 @@ export function summaryPillHref(basePath: string, current: SummaryQuery, status:
 }
 
 /**
- * Where the «În afara locurilor» pill leads (§NNN): the same list with `outside=1`, a filter like the
+ * Where the «În afara locurilor» pill leads (§643): the same list with `outside=1`, a filter like the
  * state pills and kept beside whichever state is in force; pressed again, the list without it. The
  * same allowlist as the state pills, so no flash and no page number travel.
  */

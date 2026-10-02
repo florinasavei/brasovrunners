@@ -37,7 +37,7 @@ export type RegistrationListRow = {
   participantId: string;
   status: RegistrationStatus;
   kind: RegistrationKind;
-  /** «În afara locurilor» (§NNN): seated outside the event's places — the row's chip and the export's column. */
+  /** «În afara locurilor» (§643): seated outside the event's places — the row's chip and the export's column. */
   outsideCapacity: boolean;
   /** PUBLIC when the participant submitted it, STAFF when an organizer entered it for them. */
   source: RegistrationSource;
@@ -132,7 +132,7 @@ export type RegistrationListFilters = {
    * on a real registration that still stands, the one truth of who consented. Narrows only.
    */
   promoConsented?: boolean;
-  /** «În afara locurilor» (§NNN): only the rows seated outside the places — the summary strip's pill. Narrows only. */
+  /** «În afara locurilor» (§643): only the rows seated outside the places — the summary strip's pill. Narrows only. */
   outsideCapacity?: boolean;
 };
 
@@ -425,7 +425,7 @@ export type RegistrationSummary = {
   /** Test registrations in any state (§12.6): shown apart, and only when there are any. */
   test: number;
   /**
-   * Real registrations seated «În afara locurilor» (§NNN), in any state — counted in `real` and
+   * Real registrations seated «În afara locurilor» (§643), in any state — counted in `real` and
    * `byStatus` like anybody (they are registrations), and apart here, as the strip's own pill.
    */
   outside: number;
@@ -538,7 +538,7 @@ export type RegistrationDetail = {
   id: string;
   status: RegistrationStatus;
   kind: RegistrationKind;
-  /** «În afara locurilor» (§NNN): read by every role that reads the page, changed by the Administrator only. */
+  /** «În afara locurilor» (§643): read by every role that reads the page, changed by the Administrator only. */
   outsideCapacity: boolean;
   /** PUBLIC when the participant submitted it, STAFF when an organizer entered it for them. */
   source: RegistrationSource;
@@ -1313,7 +1313,7 @@ export async function listQueueForEvent<T extends Record<string, unknown>>(db: D
  * hold counts as past its deadline as the sweep reads it — not while its first declaration email is
  * still queued, since the send re-bases the deadline (§513, `lapsedDeclarationHoldsToRelease`); an
  * offer counts while its deadline is ahead or its email is still queued (§520), as the queue lists it.
- * A row «În afara locurilor» (§NNN) is in no place's count — it holds none to lose, and no sweep
+ * A row «În afara locurilor» (§643) is in no place's count — it holds none to lose, and no sweep
  * releases its hold for anybody — though its address link still lapses like anyone's (`awaitingEmail`).
  * Null when the event does not exist.
  */

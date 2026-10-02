@@ -355,7 +355,7 @@ export async function resendDeclarationToAllPending<T extends Record<string, unk
  * - everybody else confirmed: one confirmation with each confirmed person's QR, desk code and number
  *   (the family's confirmation of §519, for the address's confirmed people rather than a sitting's).
  * A family of waiting-list people only has no message that covers everybody: each person's own
- * «Retrimite emailul» sends that person's standing (§NNN).
+ * «Retrimite emailul» sends that person's standing (§641).
  */
 export async function resendFamilyMessage<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -725,7 +725,7 @@ export async function confirmRegistrationByStaff<T extends Record<string, unknow
  * «Dă-i un loc acum» (§637): an Administrator vouches for the address of a registration still waiting
  * for it and gives the place now, ahead of the line — `service.ts#givePlaceNowByStaff` says how, and
  * writes the audit row in the same transaction — with one supplementary place when none is free
- * and the press confirmed it (`options.addPlaceTo`, §NNN). The Administrator's (`canManageRegistrations`, §289), asserted here before anything is read,
+ * and the press confirmed it (`options.addPlaceTo`, §642). The Administrator's (`canManageRegistrations`, §289), asserted here before anything is read,
  * and again in the service.
  */
 export async function givePlaceToUnconfirmedByStaff<T extends Record<string, unknown>>(
@@ -771,10 +771,10 @@ export async function promoteRegistrationByStaff<T extends Record<string, unknow
 }
 
 /**
- * «Trimite-i oferta» (§615, §NNN): a place offered to the waiting-list registration the organizer
+ * «Trimite-i oferta» (§615, §642): a place offered to the waiting-list registration the organizer
  * chose — the ordinary offer and its email, never a confirmation — at any moment before the start,
  * with one supplementary place added to the event when none is free and the press confirmed it
- * (`options.addPlaceTo`, §NNN). The Administrator's
+ * (`options.addPlaceTo`, §642). The Administrator's
  * (`canManageRegistrations`, §289), not the desk's: it changes a registration and the capacity the
  * Organizer only reads. Asserted here, before anything is read, and again in the service, which
  * writes the audit rows in the offer's own transaction.
@@ -796,7 +796,7 @@ export async function offerPlaceByStaff<T extends Record<string, unknown>>(
 }
 
 /**
- * «În afara locurilor» (§NNN): an Administrator seats a registration outside the event's places, or
+ * «În afara locurilor» (§643): an Administrator seats a registration outside the event's places, or
  * back inside them. `canManageRegistrations` (§289), asserted here before anything is read and again
  * in the service, which does the rest under the event lock and writes the audit row in the same
  * transaction. The Organizer reads the chip and the pill and changes nothing.

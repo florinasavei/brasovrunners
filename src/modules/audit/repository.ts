@@ -90,7 +90,7 @@ export type AuditAction =
    */
   | "registration.address_vouched_by_staff"
   /**
-   * «În afara locurilor» set or cleared by an Administrator (§NNN): `from` and `to` (the flag before
+   * «În afara locurilor» set or cleared by an Administrator (§643): `from` and `to` (the flag before
    * and after), the state the row was in and, when the change moved it, the state after — never a name.
    */
   | "registration.outside_capacity_changed"
@@ -251,13 +251,13 @@ export type AuditAction =
    */
   | "event.waitlist_auto_offer_changed"
   /**
-   * One supplementary place added by «Trimite-i oferta» on a full event (§NNN): the capacity from and
+   * One supplementary place added by «Trimite-i oferta» on a full event (§642): the capacity from and
    * to, the Administrator (the actor), the event (the entity) and the registration offered the place
    * (`registrationId`, an id, never a name) — written in the transaction that makes the offer, under
    * the event lock. Shown on that registration's page among «Ce a făcut echipa» (`listAuditTrail`).
    */
   | "event.capacity_raised_for_offer"
-  /** The same supplementary place, added by «Dă-i un loc acum» on a full event (§637, §NNN): same metadata. */
+  /** The same supplementary place, added by «Dă-i un loc acum» on a full event (§637, §642): same metadata. */
   | "event.capacity_raised_for_place_now"
   /**
    * «Arată public câți așteaptă» switched (§634): from and to, on every date a save changed it — the
@@ -600,7 +600,7 @@ export async function listPartnerShares<T extends Record<string, unknown>>(db: D
 /**
  * Everything that happened to one entity, newest first, with the actor named where there is one —
  * and, for a registration, the supplementary place «Trimite-i oferta» or «Dă-i un loc acum» added to
- * the event for it (`event.capacity_raised_for_offer`, `event.capacity_raised_for_place_now`, §NNN): a
+ * the event for it (`event.capacity_raised_for_offer`, `event.capacity_raised_for_place_now`, §642): a
  * row about the event that names the registration in its metadata, so the registration's page says who
  * added the place and from how many to how many.
  *
@@ -614,7 +614,7 @@ export async function listAuditTrail<T extends Record<string, unknown>>(
   db: Database<T>,
   entityType: "registration",
   entityId: string,
-  /** The registration's event: the entity of the raise rows that name it (§NNN). */
+  /** The registration's event: the entity of the raise rows that name it (§642). */
   eventId: string,
 ): Promise<AuditEntry[]> {
   return db

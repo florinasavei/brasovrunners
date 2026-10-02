@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.61-2026-10-02 -->
+<!-- PROJECT_BASELINE: BR-V2.62-2026-10-02 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V2.61-2026-10-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.62-2026-10-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -321,7 +321,7 @@ For a capped event:
   club's organizers, pacemakers and invited runners run without taking one of the announced places.
   It still has a declaration, a race number and — if the person ticked — a row on the public list,
   and it enters no public number. Only an Administrator marks or unmarks one, and every change is
-  written to the journal (`DECISIONS.md` §NNN).
+  written to the journal (`DECISIONS.md` §643).
 
 The initial direct declaration hold is the club's setting (30 minutes by default, "Termene"), capped by registration closing and event start. For an event further away than its **participation window** (per event; default: asked 7 days before, due 2 days before the start), the place is instead held until the window's deadline and the declaration is the participant's confirmation that they are still coming — the race is free, and a place taken in June by somebody who forgot by October is a place nobody ran on (`DECISIONS.md` §104). Either deadline is enforced only when it protects somebody: with nobody on the waiting list, the person who forgot keeps the place and their number, and signs on race day at the desk; the declaration is asked once more two days before the start, and a race called off refuses the signature and releases the place (`DECISIONS.md` §160).
 

@@ -166,7 +166,7 @@ export function noFreePlaceValues(error: string | undefined, query: Readonly<Rec
 }
 
 /**
- * A supplementary place nobody confirmed (§NNN; the owner, 2026-10-02: «vreau confirmare când depășesc
+ * A supplementary place nobody confirmed (§642; the owner, 2026-10-02: «vreau confirmare când depășesc
  * limita»). «Trimite-i oferta» and «Dă-i un loc acum» add one place to a full event only when the
  * dialog the Administrator pressed through said so: the form posts `addPlace` with the capacity the
  * question named («capacitatea devine {n}»), and the service raises the capacity under the lock only

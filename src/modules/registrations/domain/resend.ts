@@ -32,7 +32,7 @@ export type BulkResendCounts = { queued: number; skippedRecent: number; skippedL
  * type from state" and "refuse meaningless/unsafe resend." Pure, so the refusal for a status
  * with nothing to resend is a fact about the state machine, not a route's judgment call.
  *
- * `WAITLISTED` resends the message that put the person on the list (§NNN): there
+ * `WAITLISTED` resends the message that put the person on the list (§641): there
  * is no link to hand them again, but the email says where they stand and that the club chooses or
  * offers in order (§619, §629), and a person who lost it asks the club for it. Every other
  * message stays the state's own: a declaration link to a confirmed person, or a verification to a

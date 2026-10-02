@@ -28,7 +28,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  *
  * An Administrator vouches for the address of a `PENDING_EMAIL_CONFIRMATION` row and gives it a place
  * now, ahead of the waiting list, under the event lock — from a counted free place, or, on a full race,
- * from one supplementary place the press adds, audited (§NNN, as «Trimite-i oferta»); the person
+ * from one supplementary place the press adds, audited (§642, as «Trimite-i oferta»); the person
  * receives the ordinary declaration email and signs it herself — online, or on paper at the desk.
  */
 const NOW = new Date("2026-09-25T10:00:00.000Z");
@@ -282,7 +282,7 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     expect((await readPublicPlaces(db, { id: event.id, capacity: 2, waitlistCapacity: null }, at(3))).availablePlaces).toBe(0);
   });
 
-  it("no counted free place (§NNN): one supplementary place, on this event alone, audited with who and for whom, and she takes it", async () => {
+  it("no counted free place (§642): one supplementary place, on this event alone, audited with who and for whom, and she takes it", async () => {
     const event = await createEvent(1);
     await confirmedAddress(event, "Ana", 0);
     const other = await createEvent(1);
@@ -306,7 +306,7 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     expect(places).toMatchObject({ occupied: 2, availablePlaces: 0 });
   });
 
-  it("with «Da» and people waiting, the added place is hers, not the first in line's (§NNN)", async () => {
+  it("with «Da» and people waiting, the added place is hers, not the first in line's (§642)", async () => {
     const event = await createEvent(1, { auto: true });
     await confirmedAddress(event, "Ana", 0);
     expect((await confirmedAddress(event, "Elena", 1)).status).toBe("WAITLISTED");
@@ -319,7 +319,7 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     expect(await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "WAITLIST_SPOT_OFFER"))).toEqual([]);
   });
 
-  it("a press the question did not confirm adds no place on a full race: refused, her row and link untouched (§NNN)", async () => {
+  it("a press the question did not confirm adds no place on a full race: refused, her row and link untouched (§642)", async () => {
     const event = await createEvent(1);
     await confirmedAddress(event, "Ana", 0);
     const mara = await unconfirmed(event, "Mara", 1);
@@ -476,7 +476,7 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     expect(pressed.place).toBe("reserved");
     const second = await submitRegistration(db, event, submission("Mihai", "familia@example.ro", at(1)), at(1), "REAL", { ...PUBLIC, sitting: { id: pressed.sittingId ?? cookieId, joined: true, newPerson: true } });
     expect(second.sittingPlace).toBe("reserved");
-    // Both places are the family's: a stranger meets a full race — his press adds a place (§NNN), never takes theirs.
+    // Both places are the family's: a stranger meets a full race — his press adds a place (§642), never takes theirs.
     const radu = await unconfirmed(event, "Radu", 2);
     expect((await givePlaceToUnconfirmedByStaff(db, admin, radu.id, at(3), undefined, { addPlaceTo: 3 })).capacityRaisedTo).toBe(3);
 

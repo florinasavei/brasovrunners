@@ -177,7 +177,7 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
         isNotNull(events.capacity),
         inArray(registrations.status, ["WAITLIST_OFFERED", "PENDING_DECLARATION"]),
         /*
-          Not a hold «În afara locurilor» (§NNN): it holds no counted place, so its lapse offers the
+          Not a hold «În afara locurilor» (§643): it holds no counted place, so its lapse offers the
           line nothing and the job never releases it for anybody (`lapsedDeclarationHoldsToRelease`) —
           its own last call is sent, as anybody's whose hold is not consumed.
         */

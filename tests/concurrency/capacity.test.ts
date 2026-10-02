@@ -56,9 +56,9 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
   let eventCounter = 0;
   const createdEventIds: string[] = [];
   const createdParticipantIds: string[] = [];
-  /** The Administrator who sends the offers of §615's and §NNN's cases, made once by the first and removed after. */
+  /** The Administrator who sends the offers of §615's and §642's cases, made once by the first and removed after. */
   let staffId: string | null = null;
-  /** The Administrator of the «În afara locurilor» case (§NNN), made by that case and removed after. */
+  /** The Administrator of the «În afara locurilor» case (§643), made by that case and removed after. */
   let outsideStaffId: string | null = null;
   async function administrator(): Promise<{ id: string; role: "ADMIN" }> {
     if (!staffId) {
@@ -360,7 +360,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
   );
 
   it(
-    "§615, §NNN: offers by hand («Nu») and one free place — two staff offers racing for it, both read while it was free: one takes it, the other is refused unasked and adds no place; pressed again, confirmed, it adds exactly one",
+    "§615, §642: offers by hand («Nu») and one free place — two staff offers racing for it, both read while it was free: one takes it, the other is refused unasked and adds no place; pressed again, confirmed, it adds exactly one",
     async () => {
       const event = await createInternalEvent(1);
       await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, event.id));
@@ -379,7 +379,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
       // read while the place was free: the plain question, so neither form posts `addPlace`.
       const outcomes = await Promise.allSettled(waiting.map((row) => offerPlaceToByStaff(db, event, row.id, actor, NOW)));
 
-      // One takes the free place; the other meets the full count under the lock and, unasked, adds nothing (§NNN).
+      // One takes the free place; the other meets the full count under the lock and, unasked, adds nothing (§642).
       const made = outcomes.filter((outcome) => outcome.status === "fulfilled") as PromiseFulfilledResult<Awaited<ReturnType<typeof offerPlaceToByStaff>>>[];
       expect(made).toHaveLength(1);
       expect(made[0].value.capacityRaisedTo).toBeNull();
@@ -411,7 +411,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
   );
 
   it(
-    "§NNN: a full race and two Administrators confirming the same supplementary place at once — «capacitatea devine 2» on both pages: one raise and one offer, the other refused, never 3",
+    "§642: a full race and two Administrators confirming the same supplementary place at once — «capacitatea devine 2» on both pages: one raise and one offer, the other refused, never 3",
     async () => {
       const event = await createInternalEvent(1);
       await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, event.id));
@@ -456,7 +456,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
   );
 
   it(
-    "§NNN «În afara locurilor»: the last counted place, ten newcomers and an unmarking racing for it — never above capacity",
+    "§643 «În afara locurilor»: the last counted place, ten newcomers and an unmarking racing for it — never above capacity",
     async () => {
       // Two places: one counted runner confirmed, one guest confirmed outside the places — one place free.
       const event = await createInternalEvent(2);

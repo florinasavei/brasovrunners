@@ -67,7 +67,7 @@ export async function GET(request: Request): Promise<Response> {
   const search = url.searchParams.get("q");
   // «Doar cu oferte și beneficii» (§581): the list's filter, so the file is the rows on screen.
   const promo = url.searchParams.get("promo");
-  // «În afara locurilor» (§NNN): the list's pill filters the rows on screen, so it filters the file too.
+  // «În afara locurilor» (§643): the list's pill filters the rows on screen, so it filters the file too.
   const outside = url.searchParams.get("outside");
 
   /*

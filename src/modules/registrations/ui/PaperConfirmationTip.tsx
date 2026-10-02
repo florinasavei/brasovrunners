@@ -3,7 +3,7 @@ import InfoTip from "@/shared/ui/InfoTip";
 
 /**
  * The «i» that says what the desk's paper confirmation is for, what it does and what the person
- * receives (§NNN; the owner, 2026-10-02: «Pune tooltip și info in back-office pt asta»). Four short
+ * receives (§640; the owner, 2026-10-02: «Pune tooltip și info in back-office pt asta»). Four short
  * lines, one per fact, each from the catalogue and each true of the code:
  *
  * - when: at the desk, with the declaration the participant signed on paper in front of staff, on

@@ -86,7 +86,7 @@ export function forgetRegisteredBadgeCount(): void {
  * person, are in no part. `capacity` is `null` for an
  * event without a limit.
  *
- * `outside` (§NNN): a registration seated «În afara locurilor» that is confirmed, holds a declaration or an
+ * `outside` (§643): a registration seated «În afara locurilor» that is confirmed, holds a declaration or an
  * offer — in no place, as the allocator counts none for it, so neither in `withPlace` nor in `confirmed`;
  * a part of `count` of its own, said in the tooltip's event line when above zero. One waiting for its
  * address is still `awaitingEmail`. `count` is `withPlace + awaitingEmail + waitlisted + outside`.
@@ -100,7 +100,7 @@ export type RegisteredOnEvent = {
   withPlace: number;
   awaitingEmail: number;
   waitlisted: number;
-  /** Seated outside the places (§NNN), with a place outside them: confirmed, a declaration, an offer. */
+  /** Seated outside the places (§643), with a place outside them: confirmed, a declaration, an offer. */
   outside?: number;
   capacity: number | null;
 };
@@ -246,7 +246,7 @@ export type BadgeHintWords = {
   withPlaceOf: (count: number, capacity: number) => string;
   awaitingEmail: (count: number) => string;
   waitlisted: (count: number) => string;
-  /** «N în afara locurilor» (§NNN): the event line's last part, only above zero. Optional for a caller that predates it. */
+  /** «N în afara locurilor» (§643): the event line's last part, only above zero. Optional for a caller that predates it. */
   outside?: (count: number) => string;
   more: (count: number) => string;
 };

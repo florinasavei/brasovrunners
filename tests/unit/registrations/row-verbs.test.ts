@@ -170,7 +170,7 @@ describe("BR-REQ-037-05 the verbs a registration row offers", () => {
    * so the row and the registration's own page can never disagree about whether there is
    * anything to send. Note what that means: a cancelled or expired registration *does* have a
    * message — the state notice telling the person where they stand — and so does somebody on the
-   * waiting list: the email that says where they stand (§NNN).
+   * waiting list: the email that says where they stand (§641).
    */
   it("offers resend exactly where a message exists to resend", () => {
     for (const status of ALL) {

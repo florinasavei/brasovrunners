@@ -163,7 +163,7 @@ export const registrations = pgTable(
     // by the ordinary public form — is somebody's registration without anything having to say so.
     kind: registrationKind("kind").notNull().default("REAL"),
     /**
-     * «În afara locurilor» (§NNN): a registration the club seats outside the event's places — an
+     * «În afara locurilor» (§643): a registration the club seats outside the event's places — an
      * organizer, a pacemaker, an invited runner. It consumes no place in any state (the capacity
      * formula's one explicit exclusion, `AGENTS.md` §10.6: `countOccupied` leaves it out), is never
      * waitlisted and never offered anything, and enters no public number; it still has a

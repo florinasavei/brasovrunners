@@ -97,7 +97,7 @@ describe("AGENTS.md §15.8 admin resend", () => {
     expect(registration.status).toBe("PENDING_EMAIL_CONFIRMATION");
   });
 
-  it("sends the waiting list's own email to a waiting row, and never another state's message (§NNN)", async () => {
+  it("sends the waiting list's own email to a waiting row, and never another state's message (§641)", async () => {
     await db.update(registrations).set({ status: "WAITLISTED", waitlistedAt: NOW }).where(eq(registrations.id, registrationId));
 
     await resendRegistrationMessage(db, { id: adminId, role: "ADMIN" }, registrationId, NOW);

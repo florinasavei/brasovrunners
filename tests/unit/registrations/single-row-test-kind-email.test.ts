@@ -48,11 +48,11 @@ describe("§384 a TEST row's dialog names no participant email", () => {
     const page = read("src/app/[locale]/admin/registrations/[id]/page.tsx");
     expect(singleEmailCalls(page).every((call) => call.includes('registration.kind === "TEST"'))).toBe(true);
     const gated = (page.match(/registration\.kind === "TEST" \? \{\} : \{ email: words\.email\(1\) \}/g) ?? []).length;
-    expect(gated).toBe(9); // resend, reminder, give-a-place-now (§637), confirm-on-paper, give-a-place, send-the-offer (§615), set-bib, cancel, a waiting row or an open offer seated outside the places (§NNN)
+    expect(gated).toBe(9); // resend, reminder, give-a-place-now (§637), confirm-on-paper, give-a-place, send-the-offer (§615), set-bib, cancel, a waiting row or an open offer seated outside the places (§643)
   });
 
   /*
-    «În afara locurilor» (§NNN; the review of 2026-10-02): a waiting runner or an open offer is seated
+    «În afara locurilor» (§643; the review of 2026-10-02): a waiting runner or an open offer is seated
     now, and the dialog's body named the declaration's email «{message}» even for a TEST row whose bold
     email line was dropped — the dialog contradicting itself. A TEST row gets a body that names none.
   */

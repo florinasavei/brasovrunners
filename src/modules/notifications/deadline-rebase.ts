@@ -92,7 +92,7 @@ export async function planDeadlineRebase<T extends Record<string, unknown>>(
     queuedAt: row.createdAt,
     sentAt,
     event: { registrationClosesAt: found.registrationClosesAt, startsAt: found.startsAt },
-    // «Trimite-i oferta»'s offer (§NNN): the start is its one cap, at the send as when it was made.
+    // «Trimite-i oferta»'s offer (§642): the start is its one cap, at the send as when it was made.
     capByClose: !(kind === "offer" && offerLastsUntilStart(row.payloadJson)),
   });
   return to ? { kind, registrationId: row.registrationId, eventId: found.eventId, from: stored, to, waitMs } : null;

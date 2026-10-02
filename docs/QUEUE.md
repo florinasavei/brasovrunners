@@ -130,6 +130,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.62` | the paper confirmation says what it is for, what it does and what the person receives (§640) · «Retrimite emailul» covers the waiting list and the dialog says which email each state sends (§641) · «Trimite-i oferta» at any moment, adding one confirmed supplementary place on a full race (and «Dă-i un loc acum» too) (§642) · «În afara locurilor»: a registration that consumes no place and enters no public number (§643) · the outbox claim takes no more than its limit, whatever plan the statistics pick (§644) |
 | `BR-V2.61` | the person whose held place lapses is told by email (§638) · the Administrators are emailed when a release moves a legal template (§639) |
 | `BR-V2.60` | «Dă-i un loc acum»: an Administrator vouches for an unconfirmed address and gives the place ahead of the line (§637) |
 | `BR-V2.59` | the headline numbers count everyone with a place: «Cine vine (N)» and the «Înscrieri» badge with a pill per group in progress (§632) · the waiting list's length is a choice in words; a typed 0 never closes a list (§633) · «Arată public câți așteaptă»: a per-event tick that keeps the waiting list's count — and each person's place in it — off the public pages and the waiting person's own sentences (§634) · the backoffice says when each person loses the place (§635) · the club's right to refuse is on the form and the steps once the terms in force carry it (§636) |

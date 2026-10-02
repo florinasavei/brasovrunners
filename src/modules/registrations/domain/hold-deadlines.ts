@@ -137,7 +137,7 @@ export function computeDeclarationHoldExpiry(params: {
  * When a waiting-list offer made now lapses: the club's offer window, capped by the close and the
  * start (§420) — the automatic offer's rule (`fillAvailableSpots`, the maintenance job's sweep).
  *
- * `capByClose: false` is «Trimite-i oferta»'s alone (§NNN): an offer the Administrator chose to make
+ * `capByClose: false` is «Trimite-i oferta»'s alone (§642): an offer the Administrator chose to make
  * is capped by the start only, so one made after the close is never born lapsed. Nothing else passes it.
  */
 export function computeWaitlistOfferExpiry(params: {

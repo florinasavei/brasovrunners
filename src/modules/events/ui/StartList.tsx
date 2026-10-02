@@ -209,7 +209,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   */
   const door = await readRegistrationDoor(event, now);
   /*
-    «În afara locurilor» (§NNN): a runner the club seated outside the places keeps their row in the table
+    «În afara locurilor» (§643): a runner the club seated outside the places keeps their row in the table
     when they ticked — the list is a disclosure they chose, and nothing marks them there — and leaves the
     title's and the summary line's numbers, which count the places, as the places line does.
   */
@@ -236,7 +236,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
         instagramLabel={t("startList.socials.instagram", { name: row.displayName })}
       />
     ) : null;
-  // The pending seated outside the places (§NNN) are rows below, not part of the counted words.
+  // The pending seated outside the places (§643) are rows below, not part of the counted words.
   const extra = statesOn ? othersPhrases(t, locale, { pending: Math.max(others.pending - (others.outsidePending ?? 0), 0), waitlisted: others.waitlisted }) : [];
   /*
     What each word means (§556), for the states this list shows — a confirmed row, named or hidden,
@@ -498,7 +498,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2, pb: 2 }}>
             {statesOn ? t(waitlistOn ? "startList.noteStates" : "startList.noteStatesNoWaitlist") : t("startList.note")}
             {socialsOn ? ` ${t("startList.socialsNote")}` : null}
-            {/* Only while the table holds somebody seated outside the places (§NNN): one sentence, no row marked. */}
+            {/* Only while the table holds somebody seated outside the places (§643): one sentence, no row marked. */}
             {outsideShown ? ` ${t("startList.outsideNote")}` : null}
           </Typography>
         </>

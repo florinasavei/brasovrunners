@@ -31,11 +31,11 @@ describe("registration state machine", () => {
       ["PENDING_DECLARATION", "CANCELLED"],
       ["PENDING_DECLARATION", "EXPIRED"],
       ["WAITLISTED", "WAITLIST_OFFERED"],
-      // Only by seating a waiting runner «În afara locurilor» (§NNN); the allocator guards it on the column.
+      // Only by seating a waiting runner «În afara locurilor» (§643); the allocator guards it on the column.
       ["WAITLISTED", "PENDING_DECLARATION"],
       ["WAITLISTED", "CANCELLED"],
       ["WAITLIST_OFFERED", "CONFIRMED"],
-      // …and an open offer the same (§NNN, the review of 2026-10-02), so it never lapses for the line.
+      // …and an open offer the same (§643, the review of 2026-10-02), so it never lapses for the line.
       ["WAITLIST_OFFERED", "PENDING_DECLARATION"],
       ["WAITLIST_OFFERED", "CANCELLED"],
       ["WAITLIST_OFFERED", "EXPIRED"],
@@ -88,7 +88,7 @@ describe("registration state machine", () => {
         else refused += 1;
       }
     }
-    // 49 possible pairs (7x7); 22 are named transitions per §10.5's list (WAITLISTED and WAITLIST_OFFERED -> PENDING_DECLARATION since §NNN).
+    // 49 possible pairs (7x7); 22 are named transitions per §10.5's list (WAITLISTED and WAITLIST_OFFERED -> PENDING_DECLARATION since §643).
     expect(named).toBe(22);
     expect(refused).toBe(49 - 22);
   });

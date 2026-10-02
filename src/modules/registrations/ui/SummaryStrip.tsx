@@ -22,7 +22,7 @@ import { outsidePillHref, summaryPillHref, type SummaryQuery } from "../domain/s
  * pill pressed. A state with nobody in it is not drawn, as before — unless it is the one in force, so the filter that emptied the list can always be pressed off. The test rows' pill is a label, not a
  * filter: `kind` is no status.
  *
- * «În afara locurilor» (§NNN) is a pill of its own after the states, a filter like them (`outside=1`,
+ * «În afara locurilor» (§643) is a pill of its own after the states, a filter like them (`outside=1`,
  * kept beside the state in force): the real rows seated outside the places, drawn while there are
  * any or while it is pressed. They are inside the total and the state pills too — they are
  * registrations — and outside every count of places.
@@ -51,7 +51,7 @@ export default function SummaryStrip({
   /** The test rows' label, or `null` to leave them out. */
   testLabel: string | null;
   statusLabel: Record<RegistrationStatus, string>;
-  /** «În afara locurilor: N» (§NNN), worded by the page; `null` leaves the pill out. */
+  /** «În afara locurilor: N» (§643), worded by the page; `null` leaves the pill out. */
   outsideLabel?: string | null;
   /** What comes before the pills — the event's «Doar pentru membri» chip. */
   children?: ReactNode;

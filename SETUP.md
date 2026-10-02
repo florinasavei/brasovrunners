@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.61-2026-10-02 -->
+<!-- PROJECT_BASELINE: BR-V2.62-2026-10-02 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.61-2026-10-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.62-2026-10-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1420,7 +1420,7 @@ languages go live together; that is the rule, not a setting.
    are entered from «Înscrierile primite»), then an Administrator opens each registration →
    «Locurile evenimentului» → «Pune în afara locurilor». They keep a declaration, a race number
    and their row on the public list if they ticked, and take none of the announced places; a
-   place one of them held is given back to the line (§NNN, `AGENTS.md` §15.11).
+   place one of them held is given back to the line (§643, `AGENTS.md` §15.11).
 
 ### If somebody says the site is blocked at work
 

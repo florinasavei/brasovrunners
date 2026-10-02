@@ -1055,7 +1055,7 @@ async function renderRow(
       now,
       /*
         A declaration link for a registration that holds a declaration replaces any earlier offer link
-        of it (§619, §NNN): an open offer an Administrator seated «În afara locurilor» became this hold,
+        of it (§619, §643): an open offer an Administrator seated «În afara locurilor» became this hold,
         and the offer's email must not stay a second working link — its page says a newer email has it.
       */
       ...(purpose === "COMPLETE_DECLARATION" && registration?.status === "PENDING_DECLARATION" ? { alsoReplaces: ["WAITLIST_OFFER"] as const } : {}),

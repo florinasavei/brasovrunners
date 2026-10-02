@@ -355,7 +355,7 @@ export type PublicAvailability = {
 
 /**
  * The two counts the public start list pages by (§250): named, and left off at their request — and,
- * of the named, those seated «În afara locurilor» (§NNN), whom the title and the summary line leave
+ * of the named, those seated «În afara locurilor» (§643), whom the title and the summary line leave
  * out while the table keeps their rows. The key gained `"outside"` with the shape, so no entry written
  * without the third count is read by code that asks for it.
  */
@@ -401,7 +401,7 @@ export async function cachedStartListOthersCounts(
   includeWaitlisted: boolean,
 ): Promise<{ pending: number; waitlisted: number; outsidePending: number }> {
   return publicRead(
-    // `"outside"`: the entry carries `outsidePending` (§NNN), so none written without it is read.
+    // `"outside"`: the entry carries `outsidePending` (§643), so none written without it is read.
     ["places.start-list-others-counts", eventId, firstStatesNoticeVersion, includeWaitlisted ? "waitlist" : "no-waitlist", "outside"],
     ["places", "events"],
     () => countPublicStartListOthers(getDb(), eventId, firstStatesNoticeVersion, includeWaitlisted),

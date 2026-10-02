@@ -160,7 +160,7 @@ export async function lockEventForCapacity<T extends Record<string, unknown>>(
 }
 
 /**
- * «Trimite-i oferta» on a full event (§NNN): one supplementary place, on this one event row — never a
+ * «Trimite-i oferta» on a full event (§642): one supplementary place, on this one event row — never a
  * series' other dates — written by the caller under the event lock it already holds, in the
  * transaction that then makes the offer into it. `capacity + 1` in SQL, so the number written is the
  * locked row's plus one whatever the caller's copy says; the row's `version` moves like any save's
@@ -610,7 +610,7 @@ export async function countAnonymousStartListEntries<T extends Record<string, un
         eq(registrations.status, "CONFIRMED"),
         eq(registrations.kind, "REAL"),
         eq(registrations.listOptOut, true),
-        // A runner seated outside the places (§NNN) appears only as a ticked runner does: unticked, not at all.
+        // A runner seated outside the places (§643) appears only as a ticked runner does: unticked, not at all.
         eq(registrations.outsideCapacity, false),
       ),
     );
@@ -618,7 +618,7 @@ export async function countAnonymousStartListEntries<T extends Record<string, un
 }
 
 /**
- * Of `countPublicStartList`'s named rows, those seated «În afara locurilor» (§NNN): they stay in the
+ * Of `countPublicStartList`'s named rows, those seated «În afara locurilor» (§643): they stay in the
  * table — the person ticked, and the list is a disclosure they chose — and leave the title's and the
  * summary line's numbers, which count the places. A number, never a row: which rows they are is not said.
  */
@@ -730,7 +730,7 @@ export async function countPublicStartListOthers<T extends Record<string, unknow
     .select({
       pending: sql<number>`cast(count(*) filter (where ${inArray(registrations.status, [...PENDING_LIST_STATUSES])}) as int)`,
       waitlisted: sql<number>`cast(count(*) filter (where ${inArray(registrations.status, [...WAITLISTED_LIST_STATUSES])}) as int)`,
-      // Of the pending, those seated outside the places (§NNN): rows of the table, out of its counted words.
+      // Of the pending, those seated outside the places (§643): rows of the table, out of its counted words.
       outsidePending: sql<number>`cast(count(*) filter (where ${inArray(registrations.status, [...PENDING_LIST_STATUSES])} and ${registrations.outsideCapacity}) as int)`,
     })
     .from(registrations)
@@ -962,7 +962,7 @@ export function awaitingItsFirstEmail(): SQL {
 }
 
 function firstEmailQueued(messageType: "COMPLETE_DECLARATION" | "WAITLIST_SPOT_OFFER", { untilStart = false }: { untilStart?: boolean } = {}): SQL {
-  // `untilStart`: only «Trimite-i oferta»'s message, the offer capped by the start alone (§NNN).
+  // `untilStart`: only «Trimite-i oferta»'s message, the offer capped by the start alone (§642).
   const staffChosen = untilStart ? sql` and (${emailOutbox.payloadJson} ->> ${OFFER_UNTIL_START}) = 'true'` : sql``;
   return sql`exists (select 1 from ${emailOutbox} where ${emailOutbox.registrationId} = ${registrations.id} and ${emailOutbox.messageType} = ${messageType} and ${emailOutbox.participantId} is not null and ${emailOutbox.status} in ('PENDING', 'PROCESSING') and (${emailOutbox.payloadJson} ->> ${STARTS_DEADLINE}) = 'true'${staffChosen})`;
 }
@@ -972,7 +972,7 @@ function firstEmailQueued(messageType: "COMPLETE_DECLARATION" | "WAITLIST_SPOT_O
  * still move the deadline. An automatic offer never outlives the close or the start (`capHoldExpiry`),
  * so from that instant on its send re-bases nothing and keeping it would only delay a lapse that is
  * final: at the close it lapses and is handed to nobody (§420), as before. «Trimite-i oferta»'s offer
- * is capped by the start alone (§NNN, `OFFER_UNTIL_START` in its message), so its guard holds until
+ * is capped by the start alone (§642, `OFFER_UNTIL_START` in its message), so its guard holds until
  * the start: made after the close, its send still moves its deadline.
  */
 export function offerAwaitingItsFirstEmail(now: Date): SQL {
@@ -993,7 +993,7 @@ export function holdAwaitingItsFirstEmail(now: Date): SQL {
  * offer is a promise to the queue and still occupies only while its deadline is ahead — or while
  * the email that starts that deadline is still queued (§520, `offerAwaitingItsFirstEmail`).
  *
- * **A registration «În afara locurilor» is in no bucket (§NNN, `AGENTS.md` §10.6):** an organizer, a
+ * **A registration «În afara locurilor» is in no bucket (§643, `AGENTS.md` §10.6):** an organizer, a
  * pacemaker, an invited runner the club seats outside the places consumes none, in any state — confirmed,
  * held, offered or reserved. The formula's one explicit exclusion, on that audited column alone; `kind`
  * stays in no condition (§30), so a `TEST` row is counted unless it too is marked outside.
@@ -1017,7 +1017,7 @@ export async function countOccupied<T extends Record<string, unknown>>(
       familyPlaceHolds: familyPlaceHoldsCount(eventId, now),
     })
     .from(registrations)
-    // Outside the places (§NNN): counted in no bucket.
+    // Outside the places (§643): counted in no bucket.
     .where(and(eq(registrations.eventId, eventId), eq(registrations.outsideCapacity, false)));
 
   return row ?? { confirmed: 0, pendingDeclarationHolds: 0, unexpiredWaitlistOfferedHolds: 0, lapsedDeclarationHolds: 0, familyReservations: 0, familyPlaceHolds: 0 };
@@ -1049,7 +1049,7 @@ export async function listPlaceCountInstants<T extends Record<string, unknown>>(
     .where(
       and(
         eq(registrations.eventId, eventId),
-        // A row outside the places (§NNN) changes no count when its deadline passes.
+        // A row outside the places (§643) changes no count when its deadline passes.
         eq(registrations.outsideCapacity, false),
         or(
           eq(registrations.status, "WAITLIST_OFFERED"),
@@ -1077,19 +1077,19 @@ export async function countEligibleWaitlisted<T extends Record<string, unknown>>
   const [row] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(registrations)
-    // A row outside the places (§NNN) is never in the line; the condition only says so.
+    // A row outside the places (§643) is never in the line; the condition only says so.
     .where(and(eq(registrations.eventId, eventId), eq(registrations.status, "WAITLISTED"), eq(registrations.outsideCapacity, false)));
   return row?.count ?? 0;
 }
 
-/** Whether a registration is seated outside the places (§NNN), read under the caller's event lock. */
+/** Whether a registration is seated outside the places (§643), read under the caller's event lock. */
 export async function isOutsideCapacity<T extends Record<string, unknown>>(db: Database<T>, registrationId: string): Promise<boolean> {
   const [row] = await db.select({ outside: registrations.outsideCapacity }).from(registrations).where(eq(registrations.id, registrationId)).limit(1);
   return row?.outside ?? false;
 }
 
 /**
- * The real registrations of an event seated outside the places with a place outside them (§NNN):
+ * The real registrations of an event seated outside the places with a place outside them (§643):
  * confirmed, a declaration to sign, an offer — the editor's «în afara locurilor: N» beside the occupied
  * places, which leave them out. A display count, never the allocator's: a test row is in no number the
  * club is given (§12.6).
@@ -1110,7 +1110,7 @@ export async function countOutsideCapacity<T extends Record<string, unknown>>(db
 }
 
 /**
- * «În afara locurilor» set or cleared (§NNN), under the caller's event lock, after the caller decided
+ * «În afara locurilor» set or cleared (§643), under the caller's event lock, after the caller decided
  * the change is allowed. Only on a registration still active: an ended row's flag is read, never
  * changed. Tells the public cache — the counts move, the person's row does not.
  */
@@ -1252,7 +1252,7 @@ async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>
         lte(registrations.holdExpiresAt, now),
         // A hold whose first email is still queued has not started (§513) — unless the race has.
         over ? undefined : not(awaitingItsFirstEmail()),
-        // A hold outside the places (§NNN) holds no counted place, so releasing it gives nobody one:
+        // A hold outside the places (§643) holds no counted place, so releasing it gives nobody one:
         // it is kept until the start, like any hold nobody wants (§160).
         over ? undefined : eq(registrations.outsideCapacity, false),
       ),
@@ -1303,7 +1303,7 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
   // The offers first: each one released is a place the queue can have without touching a
   // kept declaration hold, and the count below must see it as free. Not an offer whose email is
   // still queued (§520) — unless the race has started or the event is no longer scheduled. No
-  // offer here is «În afara locurilor» (§NNN): marking an open offer makes it a declaration hold in
+  // offer here is «În afara locurilor» (§643): marking an open offer makes it a declaration hold in
   // the same transaction (`setOutsideCapacityByStaff`), and the line never offers an outside row.
   const over = event.eventStatus !== "SCHEDULED" || event.startsAt <= now;
   const lapsedOffers = await db
@@ -1393,7 +1393,7 @@ export async function lockOldestWaitlisted<T extends Record<string, unknown>>(
   return db
     .select()
     .from(registrations)
-    // Never a row outside the places (§NNN): it is not in the line, so it is offered nothing.
+    // Never a row outside the places (§643): it is not in the line, so it is offered nothing.
     .where(and(eq(registrations.eventId, eventId), eq(registrations.status, "WAITLISTED"), eq(registrations.outsideCapacity, false)))
     .orderBy(asc(registrations.waitlistedAt), asc(registrations.id))
     .limit(limit)
@@ -1446,7 +1446,7 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
             lte(registrations.holdExpiresAt, now),
             not(offerAwaitingItsFirstEmail(now)),
           ),
-          // Not a hold outside the places (§NNN): the sweep would release nothing for it.
+          // Not a hold outside the places (§643): the sweep would release nothing for it.
           and(
             eq(registrations.status, "PENDING_DECLARATION"),
             lte(registrations.holdExpiresAt, now),

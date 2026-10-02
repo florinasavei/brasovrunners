@@ -90,7 +90,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   offerPlaceAction: ["offerAction"],
   // «Dă-i un loc acum» (§637): a place and the declaration email, asked first on the registration's page.
   givePlaceNowAction: [],
-  // «În afara locurilor» (§NNN): moves a place, and seats a waiting runner with an email — asked first, saying which.
+  // «În afara locurilor» (§643): moves a place, and seats a waiting runner with an email — asked first, saying which.
   setOutsideCapacityAction: [],
   setBibNumberAction: [],
   createRegistrationAction: [],

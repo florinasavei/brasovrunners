@@ -451,7 +451,7 @@ async function claimOutboxBatchWithStop(
 
   return db.transaction(async (tx) => {
     /*
-      Two statements, never `UPDATE … WHERE id IN (SELECT … LIMIT n FOR UPDATE SKIP LOCKED)` (§NNN).
+      Two statements, never `UPDATE … WHERE id IN (SELECT … LIMIT n FOR UPDATE SKIP LOCKED)` (§644).
       In one statement the planner may put the sub-select on the inner side of a nested-loop semi
       join — it does when the table's statistics say it is nearly empty, as after autovacuum on a
       drained outbox — and re-run it for every outer row; each re-run skips the rows this same

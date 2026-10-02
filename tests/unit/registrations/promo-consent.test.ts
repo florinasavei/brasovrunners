@@ -215,7 +215,7 @@ describe("§562 the exports", () => {
 
   it("the registrations CSV ends with «Offers and benefits»: the moment of the yes, or empty", () => {
     const [header, yes, no] = buildRegistrationsCsv([row("2026-09-29T10:00:00.000Z"), row("")]).split("\r\n");
-    // Followed only by «Outside the places» (§NNN), which came after it.
+    // Followed only by «Outside the places» (§643), which came after it.
     expect(header.split(",").at(-2)).toBe("Offers and benefits");
     expect(yes.split(",").at(-2)).toBe("2026-09-29T10:00:00.000Z");
     expect(no.split(",").at(-2)).toBe("");

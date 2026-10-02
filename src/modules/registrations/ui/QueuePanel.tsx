@@ -43,7 +43,7 @@ import { queueOrderFor } from "../domain/waitlist";
  * Each waiting row carries «Trimite-i oferta» for the Administrator (`offerAction`, §615): the ordinary
  * offer to the person chosen, ahead of the line — the way places are handed out on an event where
  * places from the waiting list are allocated by hand. Drawn at any moment before the start, before the
- * close and after it (§NNN): on a full event the press adds one supplementary place, and the dialog
+ * close and after it (§642): on a full event the press adds one supplementary place, and the dialog
  * says so; the service asserts the role and decides again under the lock.
  */
 export default async function QueuePanel<T extends Record<string, unknown>>({
@@ -118,7 +118,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
     the limit's box holds.
   */
   const limit = event.capacity === null ? null : event.waitlistCapacity;
-  // «Trimite-i oferta»'s deadline, the supplementary place and the close (§615, §NNN), read once for
+  // «Trimite-i oferta»'s deadline, the supplementary place and the close (§615, §642), read once for
   // every row, and only where a row can carry the button: null once the event has started.
   const offerForecast = offerAction && line.some((row) => row.status === "WAITLISTED") ? await staffOfferIfMadeNow(event.id, locale) : null;
   const dialog = offerForecast ? await confirmWords() : null;
@@ -266,9 +266,9 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
                   <input type="hidden" name="registrationId" value={row.id} />
                   <input type="hidden" name="eventId" value={event.id} />
                   <input type="hidden" name="back" value="event" />
-                  {/* The capacity the question named (§NNN): the server adds that one place and no other, and none unasked. */}
+                  {/* The capacity the question named (§642): the server adds that one place and no other, and none unasked. */}
                   {offerForecast.raisedTo !== null && <input type="hidden" name="addPlace" value={offerForecast.raisedTo} />}
-                  {/* A full event adds a place rather than refusing (§NNN): the dialog says so, no «i». */}
+                  {/* A full event adds a place rather than refusing (§642): the dialog says so, no «i». */}
                   <OfferPlaceButton size="small" />
                 </ActionForm>
               )}

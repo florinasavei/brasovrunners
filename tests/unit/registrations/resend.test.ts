@@ -9,7 +9,7 @@ describe("admin resend message derivation", () => {
   const expected: Record<RegistrationStatus, string | null> = {
     PENDING_EMAIL_CONFIRMATION: "VERIFY_REGISTRATION_EMAIL",
     PENDING_DECLARATION: "COMPLETE_DECLARATION",
-    // The waiting list's own email (§NNN): where the person stands, read when it is sent.
+    // The waiting list's own email (§641): where the person stands, read when it is sent.
     WAITLISTED: "WAITLIST_JOINED",
     WAITLIST_OFFERED: "WAITLIST_SPOT_OFFER",
     CONFIRMED: "REGISTRATION_CONFIRMED",
@@ -25,7 +25,7 @@ describe("admin resend message derivation", () => {
 });
 
 /**
- * §NNN — the confirmation of «Retrimite emailul» says which email the press sends, one sentence per
+ * §641 — the confirmation of «Retrimite emailul» says which email the press sends, one sentence per
  * state, in both languages, so the Administrator knows what leaves before it does.
  */
 describe("the resend dialog's words", () => {

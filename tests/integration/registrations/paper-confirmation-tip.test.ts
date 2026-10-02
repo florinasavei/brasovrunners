@@ -15,7 +15,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Pune tooltip și info in back-office pt asta» (the owner, 2026-10-02, of «Confirmă pe
+ * §640 — «Pune tooltip și info in back-office pt asta» (the owner, 2026-10-02, of «Confirmă pe
  * hârtie»): the registration's «Ziua cursei» box and the desk say what the paper confirmation is for,
  * what it does and what the person receives, in both languages.
  *
@@ -194,7 +194,7 @@ beforeEach(async () => {
   state.locale = "ro";
 });
 
-describe("§NNN the tip's four lines", () => {
+describe("§640 the tip's four lines", () => {
   for (const locale of ["ro", "en"] as const) {
     it(`${locale}: when, the place, the email, what it is not — in that order, from the catalogue`, async () => {
       state.locale = locale;
@@ -206,7 +206,7 @@ describe("§NNN the tip's four lines", () => {
   }
 });
 
-describe("§NNN the lines are true of every row the press is offered on", () => {
+describe("§640 the lines are true of every row the press is offered on", () => {
   // What the press queues on the waiting list is nothing: the allocator sends no email, and the declaration stays unrecorded.
   const waitingPhrase = {
     ro: { email: "niciun email acum", dialog: "fără email acum", guide: "nu primește niciun email acum și oferta vine pe email dacă i se oferă loc" },
@@ -259,7 +259,7 @@ describe("§NNN the lines are true of every row the press is offered on", () => 
   });
 });
 
-describe("§NNN the registration's «Ziua cursei» box", () => {
+describe("§640 the registration's «Ziua cursei» box", () => {
   for (const locale of ["ro", "en"] as const) {
     it(`${locale}: the «i» beside the title and the caption under the button, on a registration the button is for`, async () => {
       state.locale = locale;
@@ -284,7 +284,7 @@ describe("§NNN the registration's «Ziua cursei» box", () => {
   });
 });
 
-describe("§NNN the desk: one «i» for every row", () => {
+describe("§640 the desk: one «i» for every row", () => {
   for (const locale of ["ro", "en"] as const) {
     it(`${locale}: beside the line that says what the row buttons do, however many rows there are`, async () => {
       state.locale = locale;
@@ -302,7 +302,7 @@ describe("§NNN the desk: one «i» for every row", () => {
   }
 });
 
-describe("§NNN the registrations list's row menu", () => {
+describe("§640 the registrations list's row menu", () => {
   for (const locale of ["ro", "en"] as const) {
     it(`${locale}: «Confirmă pe hârtie» carries the four lines as its tooltip, and the other items none`, async () => {
       state.locale = locale;

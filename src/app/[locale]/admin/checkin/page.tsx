@@ -205,7 +205,7 @@ export default async function DeskPage({ params, searchParams }: Props) {
           <Typography variant="body2" color="text.secondary">
             {t("desk.rowHelp")}
           </Typography>
-          {/* What the paper confirmation does, once for every row rather than an «i» on each (§NNN). */}
+          {/* What the paper confirmation does, once for every row rather than an «i» on each (§640). */}
           <PaperConfirmationTip />
         </Stack>
       )}

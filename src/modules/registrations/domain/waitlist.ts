@@ -161,7 +161,7 @@ export function waitlistRefusalCode(error: unknown): "WAITLIST_FULL" | "NO_WAITL
 }
 
 /*
-  `OFFER_AFTER_CLOSE` (§615) is retired (§NNN): «Trimite-i oferta» was its one thrower, and its offer is
+  `OFFER_AFTER_CLOSE` (§615) is retired (§642): «Trimite-i oferta» was its one thrower, and its offer is
   now capped by the start alone, so it is never refused after the close. The automatic offers never
   threw it — after the close they simply make none (`fillAvailableSpots`).
 */

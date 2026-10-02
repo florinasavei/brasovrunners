@@ -15,7 +15,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (amending §79, §629; the owner, 2026-10-02: «vreau să pot retrimite orice pas») — «Retrimite
+ * §641 (amending §79, §629; the owner, 2026-10-02: «vreau să pot retrimite orice pas») — «Retrimite
  * emailul» covers the waiting list: one `WAITLIST_JOINED`, rendered at send time with the standing
  * of that moment, in the registration's own language, and nothing else changes. The registration's
  * page offers the button for a waiting row and the dialog says which email the press sends.
@@ -150,7 +150,7 @@ const admin = () => ({ id: (state.actor as StaffUser).id, role: "ADMIN" as const
 
 const outboxOf = (registrationId: string) => db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, registrationId)).orderBy(emailOutbox.createdAt);
 
-describe("§NNN the resend of a waiting row", () => {
+describe("§641 the resend of a waiting row", () => {
   it("queues one WAITLIST_JOINED, marked as a manual resend, in the registration's language, and changes nothing", async () => {
     await person("WAITLISTED", at(-3));
     const mine = await person("WAITLISTED", at(-2), "en");
@@ -277,7 +277,7 @@ describe("§NNN the resend of a waiting row", () => {
   });
 });
 
-describe("§NNN the registration's page", () => {
+describe("§641 the registration's page", () => {
   async function resendForm(id: string, locale: "ro" | "en") {
     state.locale = locale;
     const tree = await RegistrationDetailPage({ params: Promise.resolve({ locale, id }), searchParams: Promise.resolve({}) } as never);

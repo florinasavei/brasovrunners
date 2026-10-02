@@ -423,7 +423,7 @@ describe("the counter above the list (§246)", () => {
       byStatus: { CONFIRMED: 2, WAITLISTED: 1, CANCELLED: 1 },
       real: 4,
       test: 1,
-      // Nobody seated «În afara locurilor» (§NNN): the strip's own pill counts them apart.
+      // Nobody seated «În afara locurilor» (§643): the strip's own pill counts them apart.
       outside: 0,
     });
   });

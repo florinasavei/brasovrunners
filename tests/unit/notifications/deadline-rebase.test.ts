@@ -65,7 +65,7 @@ describe("§513 rebasedDeadline", () => {
     ).toBeNull();
   });
 
-  it("re-bases «Trimite-i oferta»'s offer past the close, capped by the start alone (§NNN); the automatic offer keeps the close", () => {
+  it("re-bases «Trimite-i oferta»'s offer past the close, capped by the start alone (§642); the automatic offer keeps the close", () => {
     const closed = { registrationClosesAt: QUEUED, startsAt: at(30 * HOUR) };
     // Made after the close: stored 24 hours on, sent two hours late — 26 hours, still before the start.
     expect(rebasedDeadline({ kind: "offer", stored: at(24 * HOUR), queuedAt: QUEUED, sentAt: at(2 * HOUR), event: closed, capByClose: false })).toEqual(at(26 * HOUR));
@@ -77,7 +77,7 @@ describe("§513 rebasedDeadline", () => {
     expect(rebasedDeadline({ kind: "declarationHold", stored: at(30 * MINUTE), queuedAt: QUEUED, sentAt: at(HOUR), event: { registrationClosesAt: at(40 * MINUTE), startsAt: at(30 * HOUR) }, capByClose: false })).toEqual(at(40 * MINUTE));
   });
 
-  it("reads the staff offer's mark from the message's payload, and nothing else carries it (§NNN)", () => {
+  it("reads the staff offer's mark from the message's payload, and nothing else carries it (§642)", () => {
     expect(offerLastsUntilStart(startingDeadline({ [OFFER_UNTIL_START]: true }))).toBe(true);
     expect(offerLastsUntilStart(startingDeadline())).toBe(false);
     expect(offerLastsUntilStart({ [OFFER_UNTIL_START]: "true" })).toBe(false);

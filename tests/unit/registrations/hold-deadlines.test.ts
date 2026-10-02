@@ -61,7 +61,7 @@ describe("hold deadlines", () => {
     expect(expiry).toEqual(eventStartsAt);
   });
 
-  it("caps «Trimite-i oferta»'s offer by the start alone (§NNN): after the close it is the club's window, never lapsed", () => {
+  it("caps «Trimite-i oferta»'s offer by the start alone (§642): after the close it is the club's window, never lapsed", () => {
     const registrationClosesAt = new Date(NOW.getTime() - HOUR);
     const eventStartsAt = new Date(NOW.getTime() + 30 * HOUR);
     // The automatic offer, made now, would be born lapsed: its cap, the close, is behind.

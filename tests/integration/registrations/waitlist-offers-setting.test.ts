@@ -391,7 +391,7 @@ describe("§615 «Trimite-i oferta»: the ordinary offer, to the person chosen, 
     }
   });
 
-  it("two offers in a row for one free place: the first takes it, the second adds a supplementary place (§NNN) — never two on one place", async () => {
+  it("two offers in a row for one free place: the first takes it, the second adds a supplementary place (§642) — never two on one place", async () => {
     const event = await oneHeldTwoWaiting();
     await cancelRegistrationByStaff(db, admin, (await rowOf("Ana")).id, "nu mai vine", at(10));
     expect((await offerPlaceByStaff(db, admin, (await rowOf("Luca")).id, at(11))).capacityRaisedTo).toBeNull();
@@ -406,7 +406,7 @@ describe("§615 «Trimite-i oferta»: the ordinary offer, to the person chosen, 
     expect(await offersQueued()).toHaveLength(2);
   });
 
-  it("refuses a row that is not waiting and a cancelled event; a full event and an event past its close no longer refuse (§NNN)", async () => {
+  it("refuses a row that is not waiting and a cancelled event; a full event and an event past its close no longer refuse (§642)", async () => {
     const event = await oneHeldTwoWaiting();
     // Not waiting: Ana's own row.
     const notWaiting = await offerPlaceByStaff(db, admin, (await rowOf("Ana")).id, at(5)).then(() => null, (error: unknown) => error);
@@ -475,7 +475,7 @@ describe("§615 «Trimite-i oferta»: the ordinary offer, to the person chosen, 
       expect(body).toContain("Elena Munteanu");
       expect(body).toContain(say("emails.types.WAITLIST_SPOT_OFFER"));
       expect(body.length).toBeLessThanOrEqual(200);
-      // §NNN: the two sentences a full event and a closed registration add, each its own string.
+      // §642: the two sentences a full event and a closed registration add, each its own string.
       expect(say("confirm.offerPlaceRaise", { n: "151" })).toContain("151");
       expect(say("confirm.offerPlaceRaise", { n: "151" }).length).toBeLessThanOrEqual(200);
       expect(say("confirm.offerPlaceAfterClose").length).toBeLessThanOrEqual(200);
@@ -484,7 +484,7 @@ describe("§615 «Trimite-i oferta»: the ordinary offer, to the person chosen, 
       expect(say("confirm.givePlaceNowFull", { n: "151" })).toContain("151");
       expect(say("confirm.givePlaceNowFull", { n: "151" }).length).toBeLessThanOrEqual(200);
       expect(say("confirm.givePlaceNowRaiseConfirm")).toBe(locale === "ro" ? "Adaugă un loc și dă-i locul" : "Add a place and give it to them");
-      // A press the question did not confirm is refused, and says to press again from the page drawn now (§NNN).
+      // A press the question did not confirm is refused, and says to press again from the page drawn now (§642).
       expect(say("errors.SUPPLEMENTARY_PLACE_UNCONFIRMED").length).toBeLessThanOrEqual(200);
       expect(say("registrations.placeGivenRaised", { n: "151", deadline: "joi, 1 oct., 10:00" })).toContain("151");
       expect(say("desk.offerPlace")).toBe(locale === "ro" ? "Trimite-i oferta" : "Send them the offer");

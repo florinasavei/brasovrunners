@@ -17,7 +17,7 @@ import ro from "../../../messages/ro.json";
 import en from "../../../messages/en.json";
 
 /**
- * §NNN (amending §615 and §420) — the owner, 2026-10-02: «Vreau să pot „oferi loc" în orice moment,
+ * §642 (amending §615 and §420) — the owner, 2026-10-02: «Vreau să pot „oferi loc" în orice moment,
  * chiar și pe liste suplimentare». «Trimite-i oferta» (`offerPlaceToByStaff`):
  *
  * - **after the close** the offer goes, its deadline the club's window capped by the start alone, and
@@ -170,7 +170,7 @@ async function atTheClock<R>(now: Date, work: () => Promise<R>): Promise<R> {
   }
 }
 
-describe("§NNN «Trimite-i oferta» after the close: capped by the start alone; the automatic offers still make none", () => {
+describe("§642 «Trimite-i oferta» after the close: capped by the start alone; the automatic offers still make none", () => {
   it("the automatic sweep offers nobody after the close; the staff offer goes, with the club's 24 hours", async () => {
     const event = await fullWithTwoWaiting({ auto: true, closesAt: at(12) });
     // Ana's place freed after the close: «Da», yet nothing is offered (§420).
@@ -230,7 +230,7 @@ describe("§NNN «Trimite-i oferta» after the close: capped by the start alone;
   });
 });
 
-describe("§NNN «Trimite-i oferta» on a full event: one supplementary place, explicit and audited", () => {
+describe("§642 «Trimite-i oferta» on a full event: one supplementary place, explicit and audited", () => {
   it("raises the capacity by one, writes who and for whom, offers the chosen person, and the public count reads 2 of 2 with the offer", async () => {
     const event = await fullWithTwoWaiting();
     const luca = await rowOf("Luca");
@@ -255,7 +255,7 @@ describe("§NNN «Trimite-i oferta» on a full event: one supplementary place, e
     expect((await rowOf("Elena")).status).toBe("WAITLISTED");
   });
 
-  it("the registration's page reads its own event's raises only: another event's are never listed (§NNN)", async () => {
+  it("the registration's page reads its own event's raises only: another event's are never listed (§642)", async () => {
     const event = await fullWithTwoWaiting();
     const luca = await rowOf("Luca");
     await offerPlaceByStaff(db, admin, luca.id, at(5), { addPlaceTo: 2 });
@@ -436,7 +436,7 @@ describe("§NNN «Trimite-i oferta» on a full event: one supplementary place, e
   });
 });
 
-describe("§NNN the question before the press: «vreau confirmare când depășesc limita»", () => {
+describe("§642 the question before the press: «vreau confirmare când depășesc limita»", () => {
   it("on a full race after the close, the dialog says a place is added and what the capacity becomes, and its button names the added place", async () => {
     const event = await fullWithTwoWaiting({ closesAt: at(12) });
     const forecast = await atTheClock(at(15), () => staffOfferIfMadeNow(event.id, "ro"));

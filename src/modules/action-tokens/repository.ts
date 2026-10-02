@@ -66,7 +66,7 @@ const CONTEXT_COLUMNS = {
  * exists — and only those rows: an invalidation from anywhere else is a revocation, and stays generic.
  *
  * `alsoReplaces` names other purposes of the same registration whose live links the new one replaces
- * the same way (§NNN). One caller: the renderer, for a declaration link minted while the registration
+ * the same way (§643). One caller: the renderer, for a declaration link minted while the registration
  * holds a declaration, which replaces any earlier offer link of it — both open the same page and sign
  * the same registration, and that offer is over: an Administrator seated it outside the places, where
  * it became this declaration, or it ended before the registration was restarted. Never for a
@@ -83,7 +83,7 @@ export async function issueActionToken<T extends Record<string, unknown>>(
     purpose: EmailActionTokenPurpose;
     expiresAt: Date;
     now: Date;
-    /** Other purposes, of this same registration, whose live links this one replaces (§NNN). */
+    /** Other purposes, of this same registration, whose live links this one replaces (§643). */
     alsoReplaces?: readonly EmailActionTokenPurpose[];
   },
 ): Promise<IssuedActionToken> {

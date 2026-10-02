@@ -171,7 +171,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     emailBounced: bounced === "1" || undefined,
     // «Doar cu oferte și beneficii» (§581): who said yes, by the one condition of §570 (`promoListed`).
     promoConsented: promo === "1" || undefined,
-    // «În afara locurilor» (§NNN): the strip's own pill, narrowing to the rows seated outside the places.
+    // «În afara locurilor» (§643): the strip's own pill, narrowing to the rows seated outside the places.
     outsideCapacity: outside === "1" || undefined,
     search: q || undefined,
   };
@@ -208,7 +208,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       filtered by "confirmate" would answer a question nobody asked. One grouped query, the
       same `WHERE` as the list, so the page costs one round trip more rather than five.
     */
-    // …and blind to «În afara locurilor» (§NNN) the same way: its pill is one more filter of the strip.
+    // …and blind to «În afara locurilor» (§643) the same way: its pill is one more filter of the strip.
     summariseRegistrationsForAdmin(db, { ...filters, status: undefined, outsideCapacity: undefined }),
     /*
       How many bibs this event has and how many are still unprinted (§264). One grouped count,
@@ -373,7 +373,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {row.kind === "TEST" && (
             <Chip size="small" color="warning" label={t("registrations.testKind")} />
           )}
-          {/* Seated outside the places (§NNN): counted in no place, for every role that reads the list. */}
+          {/* Seated outside the places (§643): counted in no place, for every role that reads the list. */}
           {row.outsideCapacity && (
             <Chip size="small" color="secondary" variant="outlined" label={t("registrations.outside.chip")} data-testid="outside-chip" />
           )}
@@ -1086,7 +1086,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         <input type="hidden" name="sort" value={query.sort} />
         <input type="hidden" name="dir" value={query.dir} />
         <input type="hidden" name="perPage" value={String(query.perPage)} />
-        {/* The «În afara locurilor» pill's filter (§NNN) survives «Filtrează»; the pill itself clears it. */}
+        {/* The «În afara locurilor» pill's filter (§643) survives «Filtrează»; the pill itself clears it. */}
         {outside === "1" && <input type="hidden" name="outside" value="1" />}
         <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap", gap: 2, alignItems: "flex-start" }}>
           {/* BR-REQ-041-01 criterion 7. First, and widest, because on race morning it is the
@@ -1354,7 +1354,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   icon: "confirm",
                   label: t("desk.confirmOnPaper"),
                   formId: `confirm-${row.id}`,
-                  // What the press is for and what the person receives: the registration page's «i», word for word (§NNN).
+                  // What the press is for and what the person receives: the registration page's «i», word for word (§640).
                   hint: paperConfirmationText(t),
                 });
               }

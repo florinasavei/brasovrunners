@@ -254,7 +254,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const occupiedCounts =
     internal && event.capacity !== null && canReadRegistrations(staffUser.role) ? await countOccupied(db, event.id, now) : null;
   const placesTaken = occupiedCounts === null ? null : computeOccupied(occupiedCounts);
-  // Seated «În afara locurilor» (§NNN): beside the occupied places, which leave them out; read only where those are said.
+  // Seated «În afara locurilor» (§643): beside the occupied places, which leave them out; read only where those are said.
   const outsideCount = occupiedCounts === null ? 0 : await countOutsideCapacity(db, event.id);
   // «Când se pierde un loc» (§635): the real rows waiting on each deadline, one grouped count, for the box and the queue panel.
   const placeDeadlines = internal && canReadRegistrations(staffUser.role) ? await readPlaceDeadlines(db, event.id, now) : null;

@@ -34,7 +34,7 @@ export const placesTakenIfFull = cache(async (eventId: string): Promise<PlacesTa
  * whether the question must say no place is free. Full reads as the service decides under the lock:
  * the allocator's counts against the capacity, except that one lapsed declaration hold may go for
  * this person (§160), so a full race with a lapsed hold is not "full" here. Once per event per
- * request; a forecast only, the server decides. Since §NNN a full race does not refuse the press — it
+ * request; a forecast only, the server decides. Since §642 a full race does not refuse the press — it
  * adds one supplementary place — so `raisedTo` is the capacity the question names, null when not full.
  */
 export const givePlaceNowAhead = cache(async (eventId: string): Promise<{ full: boolean; raisedTo: number | null } | null> => {
@@ -71,7 +71,7 @@ export async function givePlaceRefusalAhead(eventId: string): Promise<string | n
 }
 
 /**
- * The capacity one supplementary place would raise a full event to (§NNN), read before the press of
+ * The capacity one supplementary place would raise a full event to (§642), read before the press of
  * «Trimite-i oferta» or «Dă-i un loc acum»: the allocator's counts against the capacity, as the service
  * compares them under the lock after expiring the stale holds — where a lapsed declaration hold is
  * released for the one person chosen (§160; the line or the newcomer wants it), so a full race with a
@@ -96,7 +96,7 @@ export type StaffOfferForecast = {
 };
 
 /**
- * «Trimite-i oferta»'s question (§615, §NNN), read before the press: until when the runner would have
+ * «Trimite-i oferta»'s question (§615, §642), read before the press: until when the runner would have
  * to sign if the press were made now — the staff offer's deadline (`computeWaitlistOfferExpiry` with
  * `capByClose: false`: the club's window from «Termene», capped by the start alone), in the event's
  * own zone and the page's words, as the email names it; whether registration has closed (the offer
@@ -132,7 +132,7 @@ export const staffOfferIfMadeNow = cache(async (eventId: string, locale: string)
 type Translate = (key: string, values?: Record<string, string>) => string;
 
 /**
- * The dialog for one person (§NNN; the owner, 2026-10-02: «vreau confirmare când depășesc limita»):
+ * The dialog for one person (§642; the owner, 2026-10-02: «vreau confirmare când depășesc limita»):
  * the offer and its deadline, then — each its own catalogue string, under §511's 200 characters — the
  * supplementary place a full event gets and that registration has closed; and a confirm button that
  * names the added place when there is one («Adaugă un loc și trimite oferta»), so a raise is never

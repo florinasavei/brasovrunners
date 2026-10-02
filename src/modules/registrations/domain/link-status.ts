@@ -55,7 +55,7 @@ import type { TokenRejectionReason } from "@/modules/action-tokens/domain/token-
  *   which email to open. It says no state and shows nothing of the registration: one sentence,
  *   the replacing email's time, and the resend path — which carries the event's slug, as the spent
  *   page's does, so the form narrows to it (`mayReportReplaced`; `token-actions.ts`). One row of
- *   another purpose is marked so too (§NNN): an offer link that a newer declaration link of the
+ *   another purpose is marked so too (§643): an offer link that a newer declaration link of the
  *   same registration replaced, the offer over — seated outside the places, or ended and restarted.
  * - **INVALIDATED** is now only the other half — a link revoked for cause — and stays generic on
  *   purpose: it is a decision to stop a link working, and a friendly page that coached its holder
@@ -104,7 +104,7 @@ export type SpentLinkMessage =
  *   sends nothing to a waiting person, because nothing is waiting on them; offering "send it
  *   again" would show them a success message for an email that is never queued, which is a
  *   worse lie than the one this module is fixing. (The backoffice may resend the waiting list's
- *   email, §NNN; that is the club's press, not this form's.)
+ *   email, §641; that is the club's press, not this form's.)
  */
 export type SpentLinkNext = "RESEND" | "REGISTER_AGAIN" | "NONE";
 

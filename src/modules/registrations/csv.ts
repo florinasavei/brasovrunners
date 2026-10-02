@@ -106,7 +106,7 @@ export type RegistrationCsvRow = {
    */
   promoConsentAt?: string;
   /**
-   * «În afara locurilor» (§NNN): "Yes" when the club seated the person outside the event's places —
+   * «În afara locurilor» (§643): "Yes" when the club seated the person outside the event's places —
    * an organizer, a pacemaker, an invited runner — empty otherwise, like the member claim.
    */
   outsideCapacity?: boolean;
@@ -150,7 +150,7 @@ const HEADER = [
   "Cancellation reason",
   // Last (§562), for the same reason: the consent to offers and benefits, its moment or empty.
   "Offers and benefits",
-  // Last (§NNN), for the same reason: seated outside the event's places, "Yes" or empty.
+  // Last (§643), for the same reason: seated outside the event's places, "Yes" or empty.
   "Outside the places",
 ];
 

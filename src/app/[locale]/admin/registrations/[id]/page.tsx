@@ -83,7 +83,7 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 /**
- * The numbers a trail row's label names (§NNN: «Loc suplimentar adăugat…: {from} → {to}»): `from` and
+ * The numbers a trail row's label names (§642: «Loc suplimentar adăugat…: {from} → {to}»): `from` and
  * `to` when both are whole numbers, nothing otherwise — a label with no placeholder ignores them, and a
  * name correction's `from` and `to`, which are names, never reach a label.
  */
@@ -117,7 +117,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const [acceptances, outboxHistory, auditTrail, freeBibs, minorSigns, family, partnerShares] = await Promise.all([
     listDeclarationAcceptances(db, id),
     listOutboxHistory(db, id),
-    // With its event: the supplementary place added for it is a row about the event (§NNN), found by the index.
+    // With its event: the supplementary place added for it is a row about the event (§642), found by the index.
     listAuditTrail(db, "registration", id, registration.eventId),
     // The first free numbers, for a preferential one picked rather than guessed (§105).
     suggestFreeBibNumbers(db, registration.eventId),
@@ -152,7 +152,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const givePlaceNow = givePlaceNowFacts
     ? { raisedTo: givePlaceNowFacts.full && !registration.outsideCapacity && !(registration.holdExpiresAt !== null && registration.holdExpiresAt > new Date()) ? givePlaceNowFacts.raisedTo : null }
     : null;
-  // «Trimite-i oferta»'s question (§615, §NNN): the deadline, a supplementary place, the close — read only where the button can be drawn.
+  // «Trimite-i oferta»'s question (§615, §642): the deadline, a supplementary place, the close — read only where the button can be drawn.
   const offerForecast = registration.status === "WAITLISTED" && mayManage ? await staffOfferIfMadeNow(registration.eventId, locale) : null;
   // The timeline's short form with the time (§349): a value beside its label, so capitalised;
   // `dtInline` inside a sentence.
@@ -287,7 +287,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {/* «Dă-i un loc acum» (§637): the place given, and until when it waits for the declaration. */}
         {(saved === "placeGiven" || saved === "placeGivenRaised") && registration.holdExpiresAt ? (
           <Alert severity="success" data-testid="place-given">
-            {/* On a supplementary place (§NNN) the alert names the capacity it raised, as the toast does. */}
+            {/* On a supplementary place (§642) the alert names the capacity it raised, as the toast does. */}
             {saved === "placeGivenRaised" && typeof query.count === "string" && /^\d{1,6}$/.test(query.count)
               ? tr("registrations.placeGivenRaised", { n: query.count, deadline: dtInline(registration.holdExpiresAt) ?? "" })
               : tr("registrations.placeGiven", { deadline: dtInline(registration.holdExpiresAt) ?? "" })}
@@ -312,7 +312,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {registration.kind === "TEST" && (
           <Chip size="small" color="warning" label={tr("registrations.testKind")} />
         )}
-        {/* Seated outside the places (§NNN): read by every role that reads this page. */}
+        {/* Seated outside the places (§643): read by every role that reads this page. */}
         {registration.outsideCapacity && (
           <Chip size="small" color="secondary" variant="outlined" label={tr("registrations.outside.chip")} data-testid="outside-chip" />
         )}
@@ -456,7 +456,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             body: [
               tr("confirm.givePlaceNowBody", { email: registration.participantEmail }),
               tr("confirm.givePlaceNowBodyMore"),
-              // A full race (§NNN): the press adds one supplementary place, said beforehand and named on the button.
+              // A full race (§642): the press adds one supplementary place, said beforehand and named on the button.
               ...(givePlaceNow.raisedTo !== null ? [tr("confirm.givePlaceNowFull", { n: String(givePlaceNow.raisedTo) })] : []),
             ].join(" "),
             ...(registration.kind === "TEST" ? {} : { email: words.email(1) }),
@@ -466,7 +466,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           data-testid="give-place-now-form"
         >
           {deskHidden}
-          {/* The capacity the question named (§NNN): the server adds that one place and no other, and none unasked. */}
+          {/* The capacity the question named (§642): the server adds that one place and no other, and none unasked. */}
           {givePlaceNow.raisedTo !== null && <input type="hidden" name="addPlace" value={givePlaceNow.raisedTo} />}
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" } }}>
             <GlyphButton icon="place" type="submit" variant="outlined" sx={{ minHeight: 44, flexShrink: 0 }}>
@@ -541,7 +541,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       </Box>
 
       {/*
-        «În afara locurilor» (§NNN; the owner, 2026-10-02: «Vreau și o bifă de „ascunde la numărare” per
+        «În afara locurilor» (§643; the owner, 2026-10-02: «Vreau și o bifă de „ascunde la numărare” per
         fiecare participant»): whether this registration takes one of the event's places. Every role that
         reads the page reads the line; only the Administrator marks or unmarks (`canManageRegistrations`,
         asserted again by the action and the service), and only while the registration is active — an
@@ -619,7 +619,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           <Typography variant="h3" sx={{ fontSize: "1rem" }}>
             {tr("registrations.raceDayTitle")}
           </Typography>
-          {/* What the paper confirmation is for, does and sends (§NNN): only where the button is. */}
+          {/* What the paper confirmation is for, does and sends (§640): only where the button is. */}
           {canConfirmNow && <PaperConfirmationTip />}
         </Stack>
         <Stack spacing={2}>
@@ -641,7 +641,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   {tr("desk.confirmHere")}
                 </GlyphButton>
                 <Typography variant="body2" color="text.secondary">
-                  {/* When, what the person gets, what it is not; the «i» beside the title adds the place's rule (§NNN). */}
+                  {/* When, what the person gets, what it is not; the «i» beside the title adds the place's rule (§640). */}
                   {tr("desk.paperWhen")} {tr("desk.paperEmail")} {tr("desk.paperNot")}
                   {/* A minor's paper is signed by the minor and the parent, and the press attests both
                       (§330) — where the declaration in effect asks the minor to sign. */}
@@ -664,7 +664,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           {/*
             «Trimite-i oferta» (§615): the ordinary offer, by the organizer's choice — the email and the
             deadline, no confirmation. The Administrator's; offered at any moment before the start, after
-            the close too, and on a full event it adds one supplementary place (§NNN), as the dialog says.
+            the close too, and on a full event it adds one supplementary place (§642), as the dialog says.
           */}
           {registration.status === "WAITLISTED" && mayManage && offerForecast !== null && (
             <ActionForm
@@ -678,7 +678,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               data-testid="offer-place-form"
             >
               {deskHidden}
-              {/* The capacity the question named (§NNN): the server adds that one place and no other, and none unasked. */}
+              {/* The capacity the question named (§642): the server adds that one place and no other, and none unasked. */}
               {offerForecast.raisedTo !== null && <input type="hidden" name="addPlace" value={offerForecast.raisedTo} />}
               <OfferPlaceButton />
             </ActionForm>

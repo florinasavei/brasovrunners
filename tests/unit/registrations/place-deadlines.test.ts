@@ -136,7 +136,7 @@ describe("§635 when a place is lost — the sentences", () => {
     ]);
   });
 
-  it("after the close no automatic offer is made in either setting: «Trimite-i oferta» (§NNN) or the desk's «Dă-i un loc», and no new hold to speak of", () => {
+  it("after the close no automatic offer is made in either setting: «Trimite-i oferta» (§642) or the desk's «Dă-i un loc», and no new hold to speak of", () => {
     const closed = { registrationClosesAt: new Date("2026-11-11T22:00:00.000Z") };
     const now = new Date("2026-11-15T10:00:00.000Z");
     for (const waitlistAutoOffer of [true, false]) {
