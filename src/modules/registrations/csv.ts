@@ -106,7 +106,7 @@ export type RegistrationCsvRow = {
    */
   promoConsentAt?: string;
   /**
-   * «În afara locurilor» (§643): "Yes" when the club seated the person outside the event's places —
+   * «Lista ascunsă» (§643, named by §NNN): "Yes" when the club put the person on the hidden list —
    * an organizer, a pacemaker, an invited runner — empty otherwise, like the member claim.
    */
   outsideCapacity?: boolean;
@@ -150,8 +150,8 @@ const HEADER = [
   "Cancellation reason",
   // Last (§562), for the same reason: the consent to offers and benefits, its moment or empty.
   "Offers and benefits",
-  // Last (§643), for the same reason: seated outside the event's places, "Yes" or empty.
-  "Outside the places",
+  // Last (§643), for the same reason: on the hidden list (§NNN's name), "Yes" or empty.
+  "Hidden list",
 ];
 
 export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): string {

@@ -66,6 +66,19 @@ export default async function RegistrationCta({
     in the editor's preview, which sends nothing. Read only for the two states that draw it.
   */
   const lateLine = previewDoor || (cta.kind !== "OPEN" && cta.kind !== "FULL") ? null : await emailDelayNotice({ variant: "short" });
+  /*
+    «Folosește lista ascunsă» on (§NNN, amending §643): the places line carries one sentence, so a visitor
+    who later counts the start knows how the club seats people outside the advertised places — in the
+    public's words, never the backoffice's «Lista ascunsă», and naming nobody. Only beside the places
+    line (`fill`, a capped event's known counts): an uncapped event advertises no places to be outside of.
+    The switch is the event row's, which every event save expires with the page.
+  */
+  const outsidePlacesNote =
+    fill && event.hiddenListEnabled === true ? (
+      <Typography variant="body2" color="text.secondary" data-testid="registration-outside-places">
+        {t("cta.outsidePlacesNote")}
+      </Typography>
+    ) : null;
 
   if (cta.kind === "EXTERNAL") {
     return (
@@ -98,6 +111,8 @@ export default async function RegistrationCta({
             {fillPhrase(t, locale, fill)}
           </Typography>
         )}
+
+        {outsidePlacesNote}
 
         {/* An uncapped event shows no number at all (BR-REQ-034-01 criterion 4); nor does one whose
             places are given from the waiting list (§615): they are not a newcomer's to take. */}
@@ -159,6 +174,7 @@ export default async function RegistrationCta({
             {fillPhrase(t, locale, fill, { withWaiting: false })}
           </Typography>
         )}
+        {outsidePlacesNote}
 
         {/* The room left in a capped waiting list (§348); nothing for a list with no limit. */}
         {cta.waitlistRoom !== null && (
@@ -191,6 +207,7 @@ export default async function RegistrationCta({
             {fillPhrase(t, locale, fill)}
           </Typography>
         )}
+        {outsidePlacesNote}
       </Stack>
     );
   }

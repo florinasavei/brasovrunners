@@ -17,6 +17,7 @@ import {
   cachedStartListOthersPage,
   cachedStartListPage,
 } from "@/modules/public-cache/reads";
+import { hiddenListCounting } from "@/modules/registrations/domain/hidden-list";
 import { LIST_STATE_KEYS, type PublicListGroup } from "@/modules/registrations/domain/public-list-states";
 import { START_LIST_PAGE_SIZE, startListPage } from "@/modules/registrations/domain/start-list-page";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
@@ -137,6 +138,18 @@ const NO_NUMBER = "—";
  * page's rows carry at least one number: an event that numbers nobody keeps today's table rather
  * than a column of dashes. Without that notice no number is even selected.
  *
+ * ## The hidden list's two ticks (§NNN, amending §632 and §643)
+ *
+ * The owner, 2026-10-02: «nu vreau să scot pe nimeni de pe listă, ci doar să nu se pună la socoteală;
+ * de fapt mai punem bifă pentru „afișarea numărătorii”». Two ticks of the event's «Lista ascunsă»
+ * group, acting only while its «Folosește lista ascunsă» is on (`hiddenListCounting`): «Arată public
+ * numărătoarea» off leaves the names alone — no number in the title, no counted line, no position
+ * column (a running position is a count); «Numără și lista ascunsă» on puts everybody on the hidden list
+ * with a place into the title and «confirmați» (`countHiddenListWithPlace`: ticked or not, real only;
+ * its holds into «în curs de confirmare» only where the places line is known). Neither changes a row:
+ * which names appear is the person's tick and the notice's gates alone. The places line never counts
+ * the hidden list — it takes no place.
+ *
  * ## While the database is away
  *
  * Nothing, rather than the event page's error (§447): the list is never served from a copy — a
@@ -173,7 +186,13 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   // leaving the list expires them, so a name is never shown after its owner withdrew it. The
   // hidden rows (§346) are drawn from the anonymous count alone — the cache holds a number for
   // them, never a row, a position or an initial.
-  const { named, anonymous, outsideNamed } = await cachedStartListCounts(event.id);
+  const { named, anonymous, outsideNamed, hidden } = await cachedStartListCounts(event.id);
+  /*
+    «Lista ascunsă» (§NNN): whether the list says its numbers at all («Arată public numărătoarea»), and
+    whether they count the hidden list («Numără și lista ascunsă») — the event's two ticks, acting only
+    while its switch is on. Numbers only: which rows the table holds never depends on them (§32).
+  */
+  const { countPublic, countHidden } = hiddenListCounting(event);
   // The gate (§396): the notice in force, in every language, describes the states. Off, nothing
   // below reads a pending or waiting row at all — not even their count.
   const statesOn = await cachedListStatesDisclosed(now);
@@ -209,17 +228,24 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   */
   const door = await readRegistrationDoor(event, now);
   /*
-    «În afara locurilor» (§643): a runner the club seated outside the places keeps their row in the table
-    when they ticked — the list is a disclosure they chose, and nothing marks them there — and leaves the
-    title's and the summary line's numbers, which count the places, as the places line does.
+    «Lista ascunsă» (§643): a runner the club put on the hidden list keeps their row in the table when
+    they ticked — the list is a disclosure they chose, and nothing marks them there — and leaves the
+    title's and the summary line's numbers, which count the places, as the places line does. Unless the
+    event counts the hidden list (§NNN): then those numbers are everybody on it with a place, ticked or
+    not — its confirmed among «confirmați», its holds among «în curs de confirmare» — while the places
+    line above, and the rows, stay as they are.
   */
   const headline = startListHeadline(
     t,
     locale,
-    { confirmed: Math.max(view.confirmed - outsideNamed, 0), named: Math.max(named - outsideNamed, 0) },
+    countHidden
+      ? { confirmed: Math.max(view.confirmed - outsideNamed, 0) + hidden.confirmed, named }
+      : { confirmed: Math.max(view.confirmed - outsideNamed, 0), named: Math.max(named - outsideNamed, 0) },
     door.kind === "KNOWN" ? door.fill : null,
+    countHidden ? hidden.held : 0,
   );
-  const outsideShown = outsideNamed + (others.outsidePending ?? 0) > 0;
+  // The note that the hidden list is not counted, only where it is not and the numbers are said.
+  const outsideShown = countPublic && !countHidden && outsideNamed + (others.outsidePending ?? 0) > 0;
   const [participants, otherRows] = await Promise.all([
     view.namedLimit > 0 ? cachedStartListPage(event.id, view.namedOffset, view.namedLimit, socialsOn, numbersOn) : [],
     firstStatesNotice !== null && view.othersLimit > 0
@@ -236,8 +262,10 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
         instagramLabel={t("startList.socials.instagram", { name: row.displayName })}
       />
     ) : null;
-  // The pending seated outside the places (§643) are rows below, not part of the counted words.
-  const extra = statesOn ? othersPhrases(t, locale, { pending: Math.max(others.pending - (others.outsidePending ?? 0), 0), waitlisted: others.waitlisted }) : [];
+  // The pending on the hidden list (§643) are rows below, not part of the counted words — unless the event
+  // counts the hidden list (§NNN) — and with the numbers kept private (§NNN) there are no counted words.
+  const pendingCounted = countHidden ? others.pending : Math.max(others.pending - (others.outsidePending ?? 0), 0);
+  const extra = statesOn && countPublic ? othersPhrases(t, locale, { pending: pendingCounted, waitlisted: others.waitlisted }) : [];
   /*
     What each word means (§556), for the states this list shows — a confirmed row, named or hidden,
     and the pending and waiting rows it reads — from the event's own window and the club's deadlines.
@@ -308,14 +336,15 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
     >
       <Typography component="summary" id="start-list-title" variant="h2" sx={{ fontSize: "1.25rem" }}>
         <GroupsIcon aria-hidden sx={FOLD_GLYPH_SX} />
-        {t("startList.titleCount", { count: headline.count })}
+        {/* «Arată public numărătoarea» off (§NNN): the title without its number. */}
+        {countPublic ? t("startList.titleCount", { count: headline.count }) : t("startList.title")}
       </Typography>
 
       {view.total === 0 ? (
         <>
           {/* Nobody confirmed yet, somebody completing their registration (§632): the title counts them,
               so the line says who they are before the sentence that nobody has confirmed. */}
-          {headline.inProgress > 0 && (
+          {countPublic && headline.inProgress > 0 && (
             <Typography variant="body2" data-testid="start-list-summary" sx={{ fontWeight: 600, pb: 0.5 }}>
               {headline.line}
             </Typography>
@@ -330,7 +359,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
               those completing their registration, whom the title counts too (§632) — left out when
               nobody is confirmed or in progress yet and the rows below are all pending or waiting,
               where "0 confirmed — 0 named" would only be noise above them. */}
-          {(view.confirmed > 0 || headline.inProgress > 0 || extra.length === 0) && (
+          {countPublic && (view.confirmed > 0 || headline.inProgress > 0 || extra.length === 0) && (
             <Typography variant="body2" data-testid="start-list-summary" sx={{ fontWeight: 600, pb: extra.length > 0 ? 0.5 : 1 }}>
               {headline.line}
             </Typography>
@@ -356,7 +385,8 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
                 borderCollapse: "collapse",
                 "& th, & td": { textAlign: "left", py: 1, px: 1, borderBottom: 1, borderColor: "divider", verticalAlign: "top" },
                 "& th": { fontWeight: 600, fontSize: "0.875rem", color: "text.secondary", whiteSpace: "nowrap" },
-                "& td:first-of-type, & th:first-of-type": { width: "3rem", color: "text.secondary" },
+                // The position column, only where the numbers are said (§NNN): a running position is a count.
+                ...(countPublic ? { "& td:first-of-type, & th:first-of-type": { width: "3rem", color: "text.secondary" } } : {}),
                 // The race number (§613): right-aligned figures of one width, as narrow as its widest
                 // number, so the name keeps the room it had at 320 pixels.
                 "& [data-col='number']": { textAlign: "right", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", width: "1%" },
@@ -367,9 +397,11 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
               </Box>
               <Box component="thead">
                 <Box component="tr">
-                  <Box component="th" scope="col">
-                    {t("startList.columnPosition")}
-                  </Box>
+                  {countPublic && (
+                    <Box component="th" scope="col">
+                      {t("startList.columnPosition")}
+                    </Box>
+                  )}
                   {numbersShown && (
                     // «BIB» on the screen, the whole word for a screen reader and on hover.
                     <Box component="th" scope="col" data-col="number" aria-label={t("startList.columnNumberFull")}>
@@ -391,7 +423,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
                   // The name is not unique — two people called Ana Popescu may both be running —
                   // so the position in the confirmed order is what identifies the row.
                   <Box component="tr" key={`${view.namedOffset + index}-${participant.displayName}`} data-testid="start-list-named">
-                    <Box component="td">{view.firstPosition + index}</Box>
+                    {countPublic && <Box component="td">{view.firstPosition + index}</Box>}
                     {numberCell(participant.bibNumber)}
                     <Box component="td">
                       {participant.displayName}
@@ -415,7 +447,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
                 */}
                 {Array.from({ length: view.anonymousOnPage }, (_, index) => (
                   <Box component="tr" key={`anonymous-${index}`} data-testid="start-list-anonymous">
-                    <Box component="td" />
+                    {countPublic && <Box component="td" />}
                     {/* Nothing about a hidden runner is read (§186), so no number and no «—» either. */}
                     {numbersShown && <Box component="td" data-col="number" />}
                     <Box component="td" sx={{ color: "text.secondary", fontStyle: "italic" }}>
@@ -438,7 +470,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
                     data-testid="start-list-other"
                     data-group={row.group}
                   >
-                    <Box component="td" />
+                    {countPublic && <Box component="td" />}
                     {/* Pending or waiting: no number exists before the confirmation (§548), and none is selected. */}
                     {numberCell(null)}
                     <Box component="td">
@@ -496,7 +528,14 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
               name here should be able to see, without leaving, that it was their choice and how
               to change it. */}
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2, pb: 2 }}>
-            {statesOn ? t(waitlistOn ? "startList.noteStates" : "startList.noteStatesNoWaitlist") : t("startList.note")}
+            {/* Without the numbers (§NNN), the note says nothing about the title's number. */}
+            {countPublic
+              ? statesOn
+                ? t(waitlistOn ? "startList.noteStates" : "startList.noteStatesNoWaitlist")
+                : t("startList.note")
+              : statesOn
+                ? t(waitlistOn ? "startList.noteStatesNamesOnly" : "startList.noteStatesNoWaitlistNamesOnly")
+                : t("startList.noteNamesOnly")}
             {socialsOn ? ` ${t("startList.socialsNote")}` : null}
             {/* Only while the table holds somebody seated outside the places (§643): one sentence, no row marked. */}
             {outsideShown ? ` ${t("startList.outsideNote")}` : null}

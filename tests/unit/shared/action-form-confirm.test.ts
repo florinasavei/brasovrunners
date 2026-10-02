@@ -45,7 +45,9 @@ describe("§384 ActionForm asks first", () => {
   });
 
   it("draws the one ConfirmDialog only while a question is asked", () => {
-    expect(source).toMatch(/\{asking && \(\s*<ConfirmDialog\s+spec=\{asking\.spec\}\s+open\s+onCancel=\{\(\) => setAsking\(null\)\}\s+onConfirm=\{\(\) => answer\("confirm"\)\}/);
+    expect(source).toMatch(/\{asking && \(\s*<ConfirmDialog\s+spec=\{asking\.spec\}\s+open\s+onCancel=\{cancelAsking\}\s+onConfirm=\{\(\) => answer\("confirm"\)\}/);
+    // «Anulează» closes the question and tells the form, so a control that changed first shows the stored state (§NNN).
+    expect(source).toMatch(/const cancelAsking = \(\) => \{\s*setAsking\(null\);\s*form\.current\?\.dispatchEvent\(new Event\(CONFIRM_CANCEL_EVENT\)\);\s*\};/);
     expect(source).not.toContain("@mui/material/Dialog");
   });
 

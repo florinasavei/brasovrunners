@@ -1416,11 +1416,27 @@ languages go live together; that is the rule, not a setting.
    race opens to a crowd, one month of **Basic** is $15 and is a setting on that screen — no
    deployment.
 4. `/admin/tasks` → the row for this item turns green by itself once the event exists.
-5. The club's own runners — organizers, pacemakers, invited runners — register like anybody (or
-   are entered from «Înscrierile primite»), then an Administrator opens each registration →
-   «Locurile evenimentului» → «Pune în afara locurilor». They keep a declaration, a race number
-   and their row on the public list if they ticked, and take none of the announced places; a
-   place one of them held is given back to the line (§643, `AGENTS.md` §15.11).
+5. The club's own runners — organizers, pacemakers, invited runners — go on **«Lista ascunsă»**.
+   First, in the event's settings (`/admin/events` → the race → «Lista publică a participanților»),
+   tick **«Folosește lista ascunsă»** and choose, under it:
+   - **«Numerele listei ascunse încep de la»** — empty, they draw from the race's own series like
+     everybody; set (say 900), the hidden list has its own series from there up, in confirmation
+     order. The save refuses a start inside the race's series (the first number and as many after
+     it as there are places) or inside the desk's spare numbers;
+   - **«Arată public numărătoarea»** — ticked by default; unticked, «Cine vine» shows the names only,
+     with no count and no position;
+   - **«Numără și lista ascunsă»** — unticked by default, «Cine vine» counts the race's places only;
+     ticked, it counts the hidden list too. The places line and the free places never do.
+
+   Then they register like anybody (or are entered from «Înscrierile primite»), and an
+   Administrator opens each registration → «Lista ascunsă» → chooses «Pe lista ascunsă» and
+   confirms. They keep a declaration, a race number and their row on the public list if they
+   ticked, and take none of the announced places; a place one of them held is given back to the
+   line (§643, §NNN, `AGENTS.md` §15.11). A number already given stays when somebody changes list.
+   While the switch is on, the event page's places line («N înscriși din M locuri») carries one
+   sentence in the public's words — organisers, volunteers and invited runners may be at the start
+   outside the advertised places, taking none of them; the name «Lista ascunsă» is the backoffice's
+   alone and appears on no public page and in no participant's email.
 
 ### If somebody says the site is blocked at work
 

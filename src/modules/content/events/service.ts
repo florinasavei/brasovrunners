@@ -642,6 +642,12 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     // «Arată public câți așteaptă» (§634), by the partners' discipline: a caller that did not post the
     // box writes nothing, so no save hides or shows the waiting list's count by not mentioning it.
     ...(fields.waitlistCountPublic === undefined ? {} : { waitlistCountPublic: fields.waitlistCountPublic }),
+    // «Lista ascunsă» (§NNN), each by the partners' discipline: a caller that did not post the group
+    // writes nothing, so no save switches the hidden list, its series or its two ticks by omission.
+    ...(fields.hiddenListEnabled === undefined ? {} : { hiddenListEnabled: fields.hiddenListEnabled }),
+    ...(fields.hiddenListBibStart === undefined ? {} : { hiddenListBibStart: fields.hiddenListBibStart }),
+    ...(fields.participantCountPublic === undefined ? {} : { participantCountPublic: fields.participantCountPublic }),
+    ...(fields.hiddenListCounted === undefined ? {} : { hiddenListCounted: fields.hiddenListCounted }),
     externalProvider: fields.externalProvider,
     externalRegistrationUrl: fields.externalRegistrationUrl,
   };
@@ -1662,6 +1668,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
    * landing between the count and the write waits rather than slipping past it.
    */
   const saved = await db.transaction(async (tx) => {
+    assertHiddenListClearOfSpares(fields, current);
     await assertNobodyRegisteredForUndated(tx, fields, current);
     if (fields.capacity !== null) {
       await lockEventForCapacity(tx, input.eventId);
@@ -1685,6 +1692,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
     );
     await auditWaitlistAutoOffer(tx, input.actor, current, saved, now);
     await auditWaitlistCountPublic(tx, input.actor, current, saved, now);
+    await auditHiddenList(tx, input.actor, current, saved, now);
     // The place's name in each language is the event's (§362): written with the row, under its version.
     // An older event's English name follows its Romanian one when only the Romanian moved, which
     // needs the rows as they were (`namesAfterSave`) — the notice compares the same rows.
@@ -1831,6 +1839,12 @@ const SERIES_COLUMNS = [
   "waitlistPublic",
   // Whether the waiting list's count is public (§634) travels like the line's own settings above.
   "waitlistCountPublic",
+  // «Lista ascunsă» (§NNN): one race, one hidden list — the switch, its series beside the race's own
+  // band, and the two ticks over the public counts travel together.
+  "hiddenListEnabled",
+  "hiddenListBibStart",
+  "participantCountPublic",
+  "hiddenListCounted",
   "externalProvider",
   "externalRegistrationUrl",
   // A recurring Strava club event and a Facebook event with several dates each keep one address
@@ -2060,6 +2074,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
       if (changes.waitlistCountPublic !== undefined) {
         await auditWaitlistCountPublic(tx, input.actor, member, { id: member.id, waitlistCountPublic: changes.waitlistCountPublic }, now);
       }
+      await auditHiddenList(tx, input.actor, member, { ...hiddenListOf(member), ...hiddenListChanges(changes), id: member.id }, now);
       // Each date has its own queue, checked against its own places (§147): the new capacity
       // is the source's, the raise is measured against what this date had, and the status is
       // this date's as it now stands — a cancelled date offers nothing.
@@ -2152,6 +2167,84 @@ async function auditWaitlistCountPublic<T extends Record<string, unknown>>(
     metadata: { from: before.waitlistCountPublic, to: after.waitlistCountPublic },
     now,
   });
+}
+
+/** The four «Lista ascunsă» columns of a row (§NNN), as the trail compares them. */
+type HiddenListColumns = {
+  hiddenListEnabled: boolean;
+  hiddenListBibStart: number | null;
+  participantCountPublic: boolean;
+  hiddenListCounted: boolean;
+};
+
+function hiddenListOf(row: HiddenListColumns): HiddenListColumns {
+  return {
+    hiddenListEnabled: row.hiddenListEnabled,
+    hiddenListBibStart: row.hiddenListBibStart,
+    participantCountPublic: row.participantCountPublic,
+    hiddenListCounted: row.hiddenListCounted,
+  };
+}
+
+/** Of a scoped save's changes, the «Lista ascunsă» columns it carries to a date (§NNN). */
+function hiddenListChanges(changes: Partial<HiddenListColumns>): Partial<HiddenListColumns> {
+  const out: Partial<HiddenListColumns> = {};
+  if (changes.hiddenListEnabled !== undefined) out.hiddenListEnabled = changes.hiddenListEnabled;
+  if (changes.hiddenListBibStart !== undefined) out.hiddenListBibStart = changes.hiddenListBibStart;
+  if (changes.participantCountPublic !== undefined) out.participantCountPublic = changes.participantCountPublic;
+  if (changes.hiddenListCounted !== undefined) out.hiddenListCounted = changes.hiddenListCounted;
+  return out;
+}
+
+/**
+ * The trail of «Lista ascunsă» (§NNN): who changed the event's switch, the hidden list's first number
+ * or the two public-count ticks, on which date, from and to — one row per save that moved any of the
+ * four, in the save's transaction. The switch decides who may be seated beyond the announced places,
+ * and the ticks what the public is told, so the trail says who decided them.
+ */
+async function auditHiddenList<T extends Record<string, unknown>>(
+  tx: Database<T> | Transaction<T>,
+  actor: Actor,
+  before: HiddenListColumns & { id: string },
+  after: HiddenListColumns & { id: string },
+  now: Date,
+): Promise<void> {
+  const from = hiddenListOf(before);
+  const to = hiddenListOf(after);
+  const moved = (Object.keys(from) as Array<keyof HiddenListColumns>).filter((key) => from[key] !== to[key]);
+  if (moved.length === 0) return;
+  await recordAuditEvent(tx, {
+    actorStaffUserId: actor.id,
+    action: "event.hidden_list_changed",
+    entityType: "event",
+    entityId: after.id,
+    metadata: {
+      from: Object.fromEntries(moved.map((key) => [key, from[key]])),
+      to: Object.fromEntries(moved.map((key) => [key, to[key]])),
+    },
+    now,
+  });
+}
+
+/**
+ * The desk's spares (§444) are the event row's, written only by the print, so the form cannot see
+ * them: a hidden-list series starting inside the reserved spares is refused here (§NNN), as the race's
+ * own series is in `fields.ts#hiddenListBandRule`. Only while the switch is on and a start is posted.
+ */
+function assertHiddenListClearOfSpares(
+  fields: Pick<EventFieldsInput, "hiddenListEnabled" | "hiddenListBibStart">,
+  current: { walkInBibStart: number | null; walkInBibCount: number | null },
+): void {
+  const start = fields.hiddenListBibStart;
+  if (fields.hiddenListEnabled !== true || start === null || start === undefined) return;
+  if (current.walkInBibStart === null || current.walkInBibCount === null || current.walkInBibCount <= 0) return;
+  const last = current.walkInBibStart + current.walkInBibCount - 1;
+  if (start >= current.walkInBibStart && start <= last) {
+    throw new DomainError(
+      "VALIDATION_ERROR",
+      `hiddenListBibStart: the hidden list's numbers must start outside the desk's spare numbers (${current.walkInBibStart}–${last})`,
+    );
+  }
 }
 
 /**
@@ -2283,6 +2376,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     // before this transaction do not see that write on their own.
     let discountNoteCleared = false;
     if (parsedEventFields && times) {
+      assertHiddenListClearOfSpares(parsedEventFields, current);
       await assertNobodyRegisteredForUndated(tx, parsedEventFields, current);
       /**
        * Lowering capacity below the places already taken is refused (AGENTS.md §10.6,
@@ -2313,6 +2407,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       );
       await auditWaitlistAutoOffer(tx, input.actor, current, savedEvent, now);
       await auditWaitlistCountPublic(tx, input.actor, current, savedEvent, now);
+      await auditHiddenList(tx, input.actor, current, savedEvent, now);
       // Before the words, so each row a text save writes back already carries its new name.
       await writePlaceNames(tx, input.eventId, names);
       // Before the translations loop: a settings-only save (an Organizer without text rights)
@@ -2525,6 +2620,10 @@ function blankEventRow(now: Date): EditableEvent {
     participantListVisibility: "HIDDEN",
     waitlistPublic: false,
     waitlistCountPublic: true,
+    hiddenListEnabled: false,
+    hiddenListBibStart: null,
+    participantCountPublic: true,
+    hiddenListCounted: false,
     createdByStaffUserId: null,
     updatedByStaffUserId: null,
     createdAt: now,
@@ -3132,6 +3231,12 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // Whether the line's count is public (§634) goes with the line's other settings: a copy, and every
     // date of a series. It publishes no name, so the list's rule above does not bind it.
     waitlistCountPublic: source.waitlistCountPublic,
+    // «Lista ascunsă» (§NNN): the race's settings, so a copy carries them — but nobody is on the copy's
+    // hidden list, which is a registration's mark, never the event's.
+    hiddenListEnabled: source.hiddenListEnabled,
+    hiddenListBibStart: source.hiddenListBibStart,
+    participantCountPublic: source.participantCountPublic,
+    hiddenListCounted: source.hiddenListCounted,
     externalProvider: source.externalProvider,
     externalRegistrationUrl: source.externalRegistrationUrl,
     editorialStatus: "DRAFT" as const,

@@ -1241,11 +1241,11 @@ PENDING_DECLARATION        -> CANCELLED
 PENDING_DECLARATION        -> EXPIRED
 WAITLISTED                 -> WAITLIST_OFFERED
 WAITLISTED                 -> PENDING_DECLARATION
-                              only when an Administrator seats the row «În afara locurilor» (§643)
+                              only when an Administrator puts the row on «Lista ascunsă» (§643, §NNN)
 WAITLISTED                 -> CANCELLED
 WAITLIST_OFFERED           -> CONFIRMED
 WAITLIST_OFFERED           -> PENDING_DECLARATION
-                              only when an Administrator seats the row «În afara locurilor» (§643)
+                              only when an Administrator puts the row on «Lista ascunsă» (§643, §NNN)
 WAITLIST_OFFERED           -> CANCELLED
 WAITLIST_OFFERED           -> EXPIRED
 WAITLISTED                 -> EXPIRED
@@ -1285,8 +1285,8 @@ offer past its deadline as lapsed, so nothing is overbooked by the rows staying 
 
 `WAITLISTED -> PENDING_DECLARATION` is the one move out of the line that is not an offer, and
 `WAITLIST_OFFERED -> PENDING_DECLARATION` the one way an offer ends other than signed, cancelled or
-lapsed; both exist for one reason (§643): an Administrator seats a waiting runner, or one holding an
-open offer, outside the places, which consumes no place, so the allocator gives them one at once — a
+lapsed; both exist for one reason (§643): an Administrator puts a waiting runner, or one holding an
+open offer, on «Lista ascunsă» (the hidden list, named so by §NNN), which consumes no place, so the allocator gives them one at once — a
 declaration to sign with the ordinary deadline and email. An offer kept as an offer would lapse at the
 line's short deadline, as every offer does, and end the registration; the offer's queued email never
 tried is withdrawn, and its link is replaced by the declaration's when that email leaves (§619). The
@@ -1313,9 +1313,12 @@ publicDirectAvailability =
 
 Rules:
 
-- a registration marked «În afara locurilor» consumes no place, §643 — in no term of the formula, in
-  any state; the one explicit exclusion, on that audited column only (`kind` stays in no condition,
-  §12.6). Such a row is given its place directly by the allocator whatever the counts, is never
+- a registration on «Lista ascunsă» (the hidden list; `registrations.outside_capacity`, which keeps its
+  name — §NNN renamed only the words) consumes no place, §643 — in no term of the formula, in any
+  state; the one explicit exclusion, on that audited column only (`kind` stays in no condition,
+  §12.6). Nobody is put on it while the event's «Folosește lista ascunsă» is off (§NNN; taking
+  somebody off is always open), and the event's two public-count ticks change no term here: the
+  hidden list never enters `occupied`, the places line or the free places. Such a row is given its place directly by the allocator whatever the counts, is never
   waitlisted and never offered anything, and no stale-hold sweep releases its hold for somebody
   waiting (it holds no counted place); it expires at the start like any hold — never an offer's
   lapse, because an open offer marked outside becomes that declaration hold at once (§10.5). Marking
@@ -2670,7 +2673,7 @@ BR-REQ-037-05):
      `givePlaceNowByStaff` writes the desk's vouching (`email_confirmed_by_staff_user_id`), spends
      the row's verification link, and gives the place ahead of the waiting list under the event
      lock — a counted free place, or on a full race one supplementary place added as «Trimite-i
-     oferta» adds it (`event.capacity_raised_for_place_now`, §642); a row «În afara locurilor» needs
+     oferta» adds it (`event.capacity_raised_for_place_now`, §642); a row on «Lista ascunsă» needs
      none (§643) — as `PENDING_DECLARATION` with the
      ordinary declaration email. Audited (`registration.address_vouched_by_staff`) under the
      Administrator's id. The participant still signs their own declaration, online or on paper.
@@ -2698,10 +2701,12 @@ BR-REQ-037-05):
      erase, rename, resend and the printing mark stay Administrator-only
      (`canManageRegistrations`). Each verb is audited under the volunteer's own id.
 
-6. **«În afara locurilor» (2026-10-02, §643).** The Administrator (`canManageRegistrations`; the
-   Organizer reads the chip and the pill and changes nothing) marks or unmarks a registration on its
-   own page — for organizers, pacemakers and invited runners, who run without taking one of the
-   announced places. `setOutsideCapacityByStaff`, under the event lock, after the stale holds expire
+6. **«Lista ascunsă» (2026-10-02, §643; named, drawn as a radio and given the event's switch by
+   §NNN).** The Administrator (`canManageRegistrations`; the Organizer reads the chip, the pill and
+   the radio, disabled, and changes nothing) puts a registration on the hidden list or takes it off,
+   on its own page — for organizers, pacemakers and invited runners, who run without taking one of
+   the announced places — only while the event's «Folosește lista ascunsă» is on (taking off always;
+   the refusal names the switch). `setOutsideCapacityByStaff`, under the event lock, after the stale holds expire
    and the line is served (`fillAvailableSpots`, as `placeForNewcomer`, so an unmarking takes only a
    place nobody in line is owed): marking a row that holds a counted place frees it
    (`fillAvailableSpots` offers it on «Da», keeps it free on «Nu»), a confirmed row or a declaration

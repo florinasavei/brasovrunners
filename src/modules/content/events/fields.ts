@@ -333,6 +333,32 @@ function costRule(
 }
 
 /**
+ * «Numerele listei ascunse încep de la» (§NNN): the hidden list's own series may not overlap the
+ * race's. The race's series runs from `bibStartNumber` for `capacity` numbers on a capped event; an
+ * uncapped one has no end, and the hidden series above it is its end (`bibs.ts#pickBibNumber` never
+ * draws a counted row from it). So a start equal to the race's, or inside its capped series, is
+ * refused; one below the race's series runs up to it. The desk's spares (§444) are on the event row,
+ * not in the form: the service checks those (`assertHiddenListClearOfSpares`). Judged only while the
+ * switch is on, the only time the series acts; absent fields (a caller not editing them) judge nothing.
+ */
+export function hiddenListBandRule(
+  fields: { hiddenListEnabled?: boolean; hiddenListBibStart?: number | null; bibStartNumber: number; capacity: number | null },
+  ctx: z.RefinementCtx,
+): void {
+  const start = fields.hiddenListBibStart;
+  if (fields.hiddenListEnabled !== true || start === null || start === undefined) return;
+  const raceStart = fields.bibStartNumber;
+  const raceEnd = fields.capacity === null ? raceStart : raceStart + fields.capacity - 1;
+  if (start >= raceStart && start <= raceEnd) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["hiddenListBibStart"],
+      message: `the hidden list's numbers must start outside the race's series (${raceStart}–${raceEnd})`,
+    });
+  }
+}
+
+/**
  * One partner's link row as the editor posts it (§344): a kind from the select, the address,
  * and a label in each language — the same four boxes `eventLinkRowSchema` carries for
  * "Linkuri și fișiere" (§332), one card of them per partner rather than one list for the event.
@@ -903,12 +929,24 @@ export const eventFieldsSchema = z
      * the list above: it hides a number, never a name, and is stored whatever the list says.
      */
     waitlistCountPublic: z.boolean().optional(),
+    /**
+     * «Lista ascunsă» (§NNN, amending §643): the event's switch, the hidden list's own number series,
+     * and the two ticks over the public «Cine vine» numbers. Each optional, and absent means "this
+     * caller is not editing it" (the kit's discipline, §554): the editor posts the four with one
+     * marker, and a form without the group changes none of them. Stored as posted whatever the switch
+     * says — the club's choices survive switching it off and on — and acted on only while it is on.
+     */
+    hiddenListEnabled: z.boolean().optional(),
+    hiddenListBibStart: optionalWholeNumber({ min: 1, max: 99_000 }).optional(),
+    participantCountPublic: z.boolean().optional(),
+    hiddenListCounted: z.boolean().optional(),
     externalProvider: optionalText(120),
     externalRegistrationUrl: httpsUrl("an external registration link must start with https://"),
   })
   .strict()
   .superRefine(placeRule)
-  .superRefine(costRule);
+  .superRefine(costRule)
+  .superRefine(hiddenListBandRule);
 
 export type EventFieldsInput = z.infer<typeof eventFieldsSchema>;
 

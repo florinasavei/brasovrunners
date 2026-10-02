@@ -67,6 +67,10 @@ const NOT_A_BOX = new Set([
   "waitlistPublic",
   // «Arată public câți așteaptă» (§634): a tick under it, on by default.
   "waitlistCountPublic",
+  // «Lista ascunsă» (§NNN): the switch and its two ticks, under the public list's; its number box reads the schema.
+  "hiddenListEnabled",
+  "participantCountPublic",
+  "hiddenListCounted",
 ]);
 
 describe("the event form's constraints are the schema's (§315)", () => {

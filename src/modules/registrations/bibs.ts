@@ -25,6 +25,7 @@ import {
   spareStateOf,
 } from "./domain/spare-bibs";
 import { TERMINAL_STATUSES } from "./domain/state-machine";
+import { hiddenListBibStartOf } from "./domain/hidden-list";
 
 type Actor = Pick<StaffUser, "id" | "role">;
 
@@ -38,13 +39,40 @@ async function bandOf<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
   startNumber?: number,
-): Promise<{ start: number; spare: SpareBand | null }> {
+): Promise<{ start: number; spare: SpareBand | null; hiddenStart: number | null }> {
   const [row] = await db
-    .select({ start: events.bibStartNumber, walkInBibStart: events.walkInBibStart, walkInBibCount: events.walkInBibCount })
+    .select({
+      start: events.bibStartNumber,
+      walkInBibStart: events.walkInBibStart,
+      walkInBibCount: events.walkInBibCount,
+      hiddenListEnabled: events.hiddenListEnabled,
+      hiddenListBibStart: events.hiddenListBibStart,
+    })
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
-  return { start: startNumber ?? row?.start ?? 1, spare: row ? spareBandOf(row) : null };
+  return { start: startNumber ?? row?.start ?? 1, spare: row ? spareBandOf(row) : null, hiddenStart: hiddenListBibStartOf(row) };
+}
+
+/** Which of an event's two series a draw is for (§NNN): the race's, or the hidden list's own. */
+export type BibSeries = "race" | "hidden";
+
+/**
+ * The numbers one draw may give (§173, amending it §NNN): from where to where.
+ *
+ * With no hidden-list series — the switch off, or no start set — the race's series is the whole
+ * band, as it always was, and a row on the hidden list draws from it like everybody. With one, two
+ * series that never meet: the hidden list's from its own start up to the race's start when it sits
+ * below it, or up to the ceiling when above; and the race's from its own start up to the hidden
+ * list's when that sits above it. The save refuses a hidden start inside the race's capped series or
+ * the desk's spares (`fields.ts#hiddenListBandRule`, `assertHiddenListClearOfSpares`); the spares are
+ * skipped by every draw as before.
+ */
+function seriesBounds(band: { start: number; hiddenStart: number | null }, series: BibSeries): { from: number; to: number } {
+  const { start, hiddenStart } = band;
+  if (hiddenStart === null) return { from: start, to: ceilingFor(start) };
+  if (series === "hidden") return { from: hiddenStart, to: hiddenStart < start ? start - 1 : ceilingFor(hiddenStart) };
+  return { from: start, to: hiddenStart > start ? hiddenStart - 1 : ceilingFor(start) };
 }
 
 /**
@@ -238,6 +266,11 @@ export async function pickBibNumber<T extends Record<string, unknown>>(
   eventId: string,
   taken: Set<number> = new Set(),
   startNumber?: number,
+  /**
+   * «Lista ascunsă» (§NNN): a row on the hidden list draws from the hidden list's own series when the
+   * event has one, in confirmation order like the race's; otherwise from the race's, as before.
+   */
+  series: BibSeries = "race",
 ): Promise<number> {
   for (const number of await wornNumbers(tx, eventId)) taken.add(number);
   // And the retired numbers (§311, §548), after the rows — `erasedBibNumbers` says why.
@@ -245,16 +278,30 @@ export async function pickBibNumber<T extends Record<string, unknown>>(
 
   // The caller inside a transaction that already holds the event row usually passes the start;
   // it is read when it did not, and the desk's spares always are (§444): never drawn here.
-  const { start, spare } = await bandOf(tx, eventId, startNumber);
+  const band = await bandOf(tx, eventId, startNumber);
+  const { from, to } = seriesBounds(band, series);
+  const free = (candidate: number) => !taken.has(candidate) && !isSpareNumber(band.spare, candidate);
 
-  const ceiling = ceilingFor(start);
-  for (let candidate = start; candidate <= ceiling; candidate += 1) {
-    if (!taken.has(candidate) && !isSpareNumber(spare, candidate)) {
+  for (let candidate = from; candidate <= to; candidate += 1) {
+    if (free(candidate)) {
       taken.add(candidate);
       return candidate;
     }
   }
-  throw new DomainError("VALIDATION_ERROR", `every race number from ${start} to ${ceiling} is taken at this event`);
+  /*
+    The series is full (§NNN): the race's ran into the hidden list's first number — more confirmed than
+    the room between them, or a start set below the room the save asks for. A confirmation is never
+    refused for want of a number the band before the hidden list would have given: the next free number
+    from the series' own start, as every draw was before there were two.
+  */
+  const ceiling = ceilingFor(from);
+  for (let candidate = to + 1; candidate <= ceiling; candidate += 1) {
+    if (free(candidate)) {
+      taken.add(candidate);
+      return candidate;
+    }
+  }
+  throw new DomainError("VALIDATION_ERROR", `every race number from ${from} to ${ceiling} is taken at this event`);
 }
 
 /** One confirmed runner whose number shown before §548 is kept as their race number, and what the message to them needs. */
@@ -366,7 +413,7 @@ export async function assignBibNumbers<T extends Record<string, unknown>>(
     if (!event) throw new DomainError("NOT_FOUND", "no such event");
 
     const waiting = await tx
-      .select({ id: registrations.id })
+      .select({ id: registrations.id, outsideCapacity: registrations.outsideCapacity })
       .from(registrations)
       .where(
         and(
@@ -385,12 +432,13 @@ export async function assignBibNumbers<T extends Record<string, unknown>>(
     /*
       Since §548 a confirmation draws its own number, so this finds only a registration confirmed
       before §87 or one whose old held number could not be kept (`releaseLegacyHeldNumbers`) — a
-      gap to fill, in confirmation order, never anybody moved.
+      gap to fill, in confirmation order, never anybody moved. Two sequences when the event has a
+      hidden-list series (§NNN): each row draws from its own list's, both in confirmation order.
     */
     const taken = new Set<number>();
     const given: number[] = [];
     for (const row of waiting) {
-      const number = await pickBibNumber(tx, input.eventId, taken, event.bibStartNumber);
+      const number = await pickBibNumber(tx, input.eventId, taken, event.bibStartNumber, row.outsideCapacity ? "hidden" : "race");
       taken.add(number);
       given.push(number);
       await tx.update(registrations).set({ bibNumber: number, updatedAt: now }).where(eq(registrations.id, row.id));

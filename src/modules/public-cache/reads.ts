@@ -67,6 +67,7 @@ import { findCurrentApprovedDocument, findFirstStatesNoticeVersion, listEffectiv
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
 import {
   countAnonymousStartListEntries,
+  countHiddenListWithPlace,
   countOutsideOnPublicStartList,
   countPublicStartList,
   countPublicStartListOthers,
@@ -204,9 +205,14 @@ export async function cachedPublishedEventsBetween(locale: Locale, from: Date, t
   );
 }
 
-/** `findPublishedEventBySlug`: the event page, its metadata, its pictures and its `.ics`. */
+/**
+ * `findPublishedEventBySlug`: the event page, its metadata, its pictures and its `.ics`.
+ *
+ * `"hidden-list"` (§NNN): the row gained the hidden list's switch and its two ticks, which «Cine vine»
+ * and the places line's sentence read — so no entry written without them is read by code that asks.
+ */
 export async function cachedPublishedEventBySlug(locale: Locale, slug: string) {
-  return readBySlug(slug, ["events.by-slug", locale, slug], ["events"], () => findPublishedEventBySlug(getDb(), locale, slug));
+  return readBySlug(slug, ["events.by-slug", locale, slug, "hidden-list"], ["events"], () => findPublishedEventBySlug(getDb(), locale, slug));
 }
 
 /** `findPublishedTranslations`: the event page's `hreflang` alternates. */
@@ -355,19 +361,23 @@ export type PublicAvailability = {
 
 /**
  * The two counts the public start list pages by (§250): named, and left off at their request — and,
- * of the named, those seated «În afara locurilor» (§643), whom the title and the summary line leave
- * out while the table keeps their rows. The key gained `"outside"` with the shape, so no entry written
- * without the third count is read by code that asks for it.
+ * of the named, those on «Lista ascunsă» (§643), whom the title and the summary line leave out while
+ * the table keeps their rows; and everybody on the hidden list with a place (§NNN), for an event whose
+ * «Numără și lista ascunsă» puts them back into those numbers. The key gained `"outside"` and then
+ * `"hidden-list"` with the shape, so no entry written without a count is read by code that asks for it.
  */
-export async function cachedStartListCounts(eventId: string): Promise<{ named: number; anonymous: number; outsideNamed: number }> {
-  return publicRead(["places.start-list-counts", eventId, "outside"], ["places", "events"], async () => {
+export async function cachedStartListCounts(
+  eventId: string,
+): Promise<{ named: number; anonymous: number; outsideNamed: number; hidden: { confirmed: number; held: number } }> {
+  return publicRead(["places.start-list-counts", eventId, "outside", "hidden-list"], ["places", "events"], async () => {
     const db = getDb();
-    const [named, anonymous, outsideNamed] = await Promise.all([
+    const [named, anonymous, outsideNamed, hidden] = await Promise.all([
       countPublicStartList(db, eventId),
       countAnonymousStartListEntries(db, eventId),
       countOutsideOnPublicStartList(db, eventId),
+      countHiddenListWithPlace(db, eventId),
     ]);
-    return { named, anonymous, outsideNamed };
+    return { named, anonymous, outsideNamed, hidden };
   });
 }
 

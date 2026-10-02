@@ -154,6 +154,22 @@ const eventFormFieldNames = (error: DomainError) => error.fields.map((field) => 
  * The names are namespaced `event.*` because the editor is one form carrying the event row and
  * both languages together (the editor's boxes, `ui/boxes/`, and `ui/TranslationFields.tsx`).
  */
+/**
+ * «Lista ascunsă» (§NNN): the event's switch, the hidden list's first number and the two ticks over
+ * the public counts — one marker for the four (`HiddenListBox`), so a form without the group, the
+ * create form or a fixture, edits none of them. «Arată public numărătoarea» is on by default, which is
+ * why an unticked box is read here as `false` only beside the marker.
+ */
+function hiddenListFrom(form: FormData, value: (field: string) => string) {
+  if (form.get("event.hiddenList.present") !== "1") return {};
+  return {
+    hiddenListEnabled: form.get("event.hiddenListEnabled") === "on",
+    hiddenListBibStart: value("hiddenListBibStart"),
+    participantCountPublic: form.get("event.participantCountPublic") === "on",
+    hiddenListCounted: form.get("event.hiddenListCounted") === "on",
+  };
+}
+
 function eventFieldsFrom(form: FormData) {
   const value = (field: string) => text(form, `event.${field}`);
   /**
@@ -362,6 +378,9 @@ function eventFieldsFrom(form: FormData) {
     // the kit's (§554) — on by default, so a form without the box must read "not editing it", never "hidden".
     waitlistCountPublic:
       form.get("event.waitlistCountPublic.present") === "1" ? form.get("event.waitlistCountPublic") === "on" : undefined,
+    // «Lista ascunsă» (§NNN): the group's four, read only when the form carried its marker — a form
+    // without the group is "not editing it", never "switched off" or "no series".
+    ...hiddenListFrom(form, value),
     externalProvider: value("externalProvider"),
     externalRegistrationUrl: value("externalRegistrationUrl"),
   };

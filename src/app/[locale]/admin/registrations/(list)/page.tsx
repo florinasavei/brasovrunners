@@ -83,6 +83,7 @@ import { rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
 import { givePlaceRefusalAhead } from "@/modules/registrations/give-place-tip";
 import { paperConfirmationText } from "@/modules/registrations/ui/PaperConfirmationTip";
 import RegistrationRowMenu, { type RegistrationMenuItem } from "@/modules/registrations/ui/RegistrationRowMenu";
+import HiddenListChip from "@/modules/registrations/ui/HiddenListChip";
 import { CLUB_NAME } from "@/theme/brand";
 import { actionKeyOf } from "@/shared/forms/action-key";
 
@@ -373,10 +374,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {row.kind === "TEST" && (
             <Chip size="small" color="warning" label={t("registrations.testKind")} />
           )}
-          {/* Seated outside the places (§643): counted in no place, for every role that reads the list. */}
-          {row.outsideCapacity && (
-            <Chip size="small" color="secondary" variant="outlined" label={t("registrations.outside.chip")} data-testid="outside-chip" />
-          )}
+          {/* On the hidden list (§643, §NNN): counted in no place, for every role that reads the list. */}
+          {row.outsideCapacity && <HiddenListChip label={t("registrations.outside.chip")} testId="outside-chip" />}
           {/* A family on one address (§543): who else is registered with it, each a link to their row. */}
           <FamilyChip
             label={t("registrations.familyChip")}

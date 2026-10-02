@@ -165,6 +165,11 @@ const PUBLIC_COLUMNS = {
   // from the availability entry it counts with (`cachedPublicAvailability`), so the number and its
   // switch come off one row; the editor's preview draws it from here.
   waitlistCountPublic: events.waitlistCountPublic,
+  // «Lista ascunsă» (§NNN): whether «Cine vine» says its numbers, and whether they count the hidden
+  // list — read by `StartList` through `hiddenListCounting`. Never which names it shows.
+  hiddenListEnabled: events.hiddenListEnabled,
+  participantCountPublic: events.participantCountPublic,
+  hiddenListCounted: events.hiddenListCounted,
   // The meeting point is one fact on the event row (`DECISIONS.md` §36); its *name* is read in
   // the page's language when the club gave it one (migration `0058`), else in the club's own
   // words as before. Never the other language's: a blank name reads the event, not the other
