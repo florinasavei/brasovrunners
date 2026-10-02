@@ -699,6 +699,18 @@ async function renderRow(
         : `${env.APP_BASE_URL}${getPathname({ locale, href: "/sign-in" })}`;
     payloadActionUrl = data.signInUrl;
   }
+  /*
+    «Șabloanele textelor legale s-au schimbat» (§NNN), to an Administrator or a Superadministrator:
+    the greeting's name and the texts' keys are in the payload — no participant, no token. The one
+    button is «Versiune nouă» (`/admin/legal/new`) in the recipient's language, from `APP_BASE_URL`
+    (AGENTS.md §8); the backoffice's sign-in decides who may open it.
+  */
+  if (row.messageType === "LEGAL_TEMPLATES_CHANGED") {
+    const payload = (row.payloadJson ?? {}) as { displayName?: unknown; keys?: unknown };
+    data.participantName = typeof payload.displayName === "string" ? payload.displayName : "";
+    data.legalTemplateKeys = Array.isArray(payload.keys) ? payload.keys.filter((key): key is string => typeof key === "string") : [];
+    payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: "/admin/legal/new" })}`;
+  }
   // The update's one button is the event's own page (§331): public, no token — and, like every
   // action, absent from a club copy.
   // The organizer's message too (§364): the one place a runner checks what the message is about.

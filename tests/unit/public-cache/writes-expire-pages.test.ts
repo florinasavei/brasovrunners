@@ -131,6 +131,10 @@ const WRITES: Record<string, Expected> = {
   "src/modules/legal-documents/repository.ts#retireVersionNumber": {
     nothingPublic: "the repository's bookkeeping of a deleted version's number; the delete verbs expire",
   },
+  // The Administrators' notice of a moved template (§NNN): its own settings row and the outbox, read by no page.
+  "src/modules/legal-documents/templates-notice.ts#announceLegalTemplateChanges": {
+    nothingPublic: "remembers when the job checked the templates and queues staff emails; no public page reads either",
+  },
 
   // The settings a public page reads.
   "src/modules/contact/recipients.ts#updateContactRecipients": ["settings"],

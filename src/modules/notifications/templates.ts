@@ -24,6 +24,8 @@ import { type EventForecast, forecastPlaceName } from "@/modules/weather/domain/
 import { weatherSpanWords } from "@/modules/weather/words";
 import { CANNOT_COME_GLYPH_PATH, CANNOT_COME_MESSAGES } from "./domain/cannot-come";
 import type { HoldLapsedNext } from "./domain/hold-lapsed";
+import { legalTemplateNames, legalTemplatesWords } from "./legal-templates-words";
+import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
 
 /**
  * The twelve message types of AGENTS.md §16.3 (BR-REQ-080-01), in Romanian and English.
@@ -943,6 +945,12 @@ export type TemplateData = {
   staffEmail?: string;
   signInUrl?: string;
   /**
+   * «Șabloanele textelor legale s-au schimbat» (§NNN): the keys of the texts whose template is newer
+   * than the text in force, as the maintenance job found them. Each half names them in its own
+   * language, from the catalogue `/admin/legal` lists them by (`legal-templates-words.ts`).
+   */
+  legalTemplateKeys?: readonly string[];
+  /**
    * "Detalii actualizate" (§331): which facts the save changed — the place, the start, the
    * programme, the event on again. The values are the event's as it stands at send time, in the
    * fields above; this says which of them to name as new.
@@ -1296,6 +1304,37 @@ function newsletterConfirmEmphasis(d: TemplateData, b: readonly string[]): Empha
   return { highlight: [b[1]], actionAfter: b[1] };
 }
 
+/**
+ * The texts whose template moved (§NNN), on the message's bold line: «Șablon nou: GDPR · Termeni de
+ * concurs», the chip's own words and the names `/admin/legal` lists, in this half's language. None
+ * when the payload names no text the catalogue knows.
+ */
+function legalTemplatesFacts(locale: EmailLocale, d: TemplateData): TemplateContent["facts"] {
+  const names = legalTemplateNames(locale, d.legalTemplateKeys ?? []);
+  if (names.length === 0) return undefined;
+  return { line: `${legalTemplatesWords(locale).templateNew}: ${names.join(" · ")}`, links: [] };
+}
+
+/**
+ * Whom a lawyer should read first (§NNN), from the texts that moved and nothing else: the declarations
+ * when one of them is among them, the terms when they are, and otherwise the changed texts — so a later
+ * change of the privacy notice alone never asks for the declarations or the terms. A key the catalogue
+ * does not know is ignored, as on the bold line.
+ */
+export function lawyerReads(locale: EmailLocale, keys: readonly string[]): string {
+  const moved = LEGAL_DOCUMENT_KEYS.filter((key) => keys.includes(key));
+  const declarations = moved.some((key) => key !== "TERMS" && key !== "PRIVACY_NOTICE");
+  const terms = moved.includes("TERMS");
+  const words = locale === "ro"
+    ? { declarations: "declarațiile", terms: "termenii", and: " și ", changed: "textele schimbate", first: "mai ales", lead: "Înainte de aprobare, un jurist ar trebui să citească" }
+    : { declarations: "the declarations", terms: "the terms", and: " and ", changed: "the changed texts", first: "above all", lead: "Before approving, a lawyer should read" };
+  const named = [declarations ? words.declarations : null, terms ? words.terms : null].filter((w): w is string => w !== null).join(words.and);
+  const nothingElse = moved.every((key) => key !== "PRIVACY_NOTICE");
+  if (!named) return `${words.lead} ${words.changed}.`;
+  if (nothingElse) return `${words.lead} ${named}.`;
+  return `${words.lead} ${words.changed}, ${words.first} ${named}.`;
+}
+
 const T = {
   ro: {
     hi: (name: string) => `Salut, ${name},`,
@@ -1544,6 +1583,24 @@ const T = {
       ],
       action: "Intră în zona membrilor",
       links: (d: TemplateData) => (d.privacyUrl ? [{ label: "Nota de confidențialitate", url: d.privacyUrl }] : []),
+    },
+    // To an Administrator or a Superadministrator (§NNN): a release moved a legal template. The texts are
+    // named on the bold line, the platform's (a club text for this message keeps them); the words ask a
+    // person to regenerate and approve — the platform approves nothing (§29, AGENTS.md §10.8).
+    legalTemplatesChanged: {
+      subject: "Șabloanele textelor legale s-au schimbat: regenerează și aprobă",
+      facts: (d: TemplateData) => legalTemplatesFacts("ro", d),
+      body: (d: TemplateData) => {
+        const w = legalTemplatesWords("ro");
+        return [
+          `Șabloanele textelor de mai sus nu mai spun ce spun textele în vigoare: pe «${w.documents}» au «${w.templateNew}». Textele în vigoare rămân cum sunt, cu cuvintele lor, până când clubul aprobă versiuni noi: platforma nu aprobă nimic în locul clubului.`,
+          `Ce ai de făcut: «${w.documents}» → «${w.newVersion}» → «${w.regenerateAll}» (butonul de mai jos te duce acolo). Se face câte o ciornă pentru fiecare text; deschide-le pe rând, citește-le și completează ce a rămas de forma <…>, în română și în engleză, apoi apasă «${w.approveDrafts}» pe «${w.documents}».`,
+          `Un text care are deja o ciornă în așteptare arată «${w.draftExists}»: aprob-o sau șterge-o mai întâi, apoi regenerează-l.`,
+          lawyerReads("ro", d.legalTemplateKeys ?? []),
+          `«${w.tasks}» arată aceleași rânduri până când textele sunt aprobate. Mesajul acesta vine o singură dată pentru fiecare schimbare a șabloanelor, fiecărui Administrator și Superadministrator.`,
+        ];
+      },
+      action: "Deschide documentele legale",
     },
     registrationOpened: {
       // To an address, not a participant (§146): the greeting names nobody.
@@ -2165,6 +2222,21 @@ const T = {
       action: "Open the members' area",
       links: (d: TemplateData) => (d.privacyUrl ? [{ label: "Privacy notice", url: d.privacyUrl }] : []),
     },
+    legalTemplatesChanged: {
+      subject: "The legal templates changed: regenerate and approve",
+      facts: (d: TemplateData) => legalTemplatesFacts("en", d),
+      body: (d: TemplateData) => {
+        const w = legalTemplatesWords("en");
+        return [
+          `The templates of the texts above no longer say what the texts in force say: on «${w.documents}» they show «${w.templateNew}». The texts in force keep their words until the club approves new versions: the platform approves nothing in the club's place.`,
+          `What to do: «${w.documents}» → «${w.newVersion}» → «${w.regenerateAll}» (the button below takes you there). One draft is made for each text; open each one, read it and fill in what is left written <…>, in Romanian and in English, then press «${w.approveDrafts}» on «${w.documents}».`,
+          `A text that already has a draft waiting shows «${w.draftExists}»: approve it or delete it first, then regenerate it.`,
+          lawyerReads("en", d.legalTemplateKeys ?? []),
+          `«${w.tasks}» shows the same rows until the texts are approved. This message comes once for each change of the templates, to every Administrator and Superadministrator.`,
+        ];
+      },
+      action: "Open the legal documents",
+    },
     registrationOpened: {
       subject: (d: TemplateData) => `Registration for ${d.eventTitle ?? "the event"} is open`,
       greeting: () => "Hello,",
@@ -2564,6 +2636,7 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   NEWSLETTER: "newsletter",
   NEW_EVENT_ALERT: "newEventAlert",
   MEMBER_INVITATION: "memberInvitation",
+  LEGAL_TEMPLATES_CHANGED: "legalTemplatesChanged",
 };
 
 /** The newsletter's three messages (§445): to an address, never about a registration. */
@@ -3198,7 +3271,9 @@ export function buildTemplateContent(
         messageType === "GROUP_RUN_DECLARATION_ARCHIVE" ||
         messageType === "STAFF_INVITATION" ||
         // …nor a member's invitation (§524): no event, no registration, nothing of a participant's to link.
-        messageType === "MEMBER_INVITATION"
+        messageType === "MEMBER_INVITATION" ||
+        // …nor the Administrators' notice of a moved template (§NNN): its one link is its button.
+        messageType === "LEGAL_TEMPLATES_CHANGED"
       ) {
         return own.length > 0 ? own : undefined;
       }
@@ -3300,6 +3375,8 @@ const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set([
   "STAFF_INVITATION",
   // A member's invitation (§524) says what the account keeps in its own body, as the colleague's does.
   "MEMBER_INVITATION",
+  // To the club's Administrators about its legal texts (§NNN): about nobody's data.
+  "LEGAL_TEMPLATES_CHANGED",
 ]);
 
 /**

@@ -4325,7 +4325,8 @@
         "NEWSLETTER": "Newsletter",
         "NEW_EVENT_ALERT": "Announcement: a new event on the calendar",
         "MEMBER_INVITATION": "The member invitation",
-        "DECLARATION_HOLD_EXPIRED": "The held place expired"
+        "DECLARATION_HOLD_EXPIRED": "The held place expired",
+        "LEGAL_TEMPLATES_CHANGED": "The legal templates changed"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "After the form is sent. The link lasts {confirmation}, from when the email leaves.",
@@ -4356,7 +4357,8 @@
         "NEWSLETTER": "Only when an organizer sends a newsletter from the backoffice, to the chosen topic's subscribers. It leaves after every other email, from what is left of the allowance.",
         "NEW_EVENT_ALERT": "Once for each new event published (never the weekly run), to those subscribed to new events and to its topics.",
         "MEMBER_INVITATION": "When an administrator adds somebody on Echipa with the role Membru, and on \"Resend the invitation\" until their first sign-in. No token: the button leads to the sign-in, then to the members' area.",
-        "DECLARATION_HOLD_EXPIRED": "When somebody who did not sign the declaration in time loses the place to somebody who wanted it. Once per place lost, with what they can still do. Not after the start or for a cancelled event."
+        "DECLARATION_HOLD_EXPIRED": "When somebody who did not sign the declaration in time loses the place to somebody who wanted it. Once per place lost, with what they can still do. Not after the start or for a cancelled event.",
+        "LEGAL_TEMPLATES_CHANGED": "When a new release of the site changes a legal text's template: once per change, to every Administrator and Superadministrator. No token: the button leads to «New version»."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "after the form is sent",
@@ -4387,7 +4389,8 @@
         "NEWSLETTER": "only when an organizer sends a newsletter",
         "NEW_EVENT_ALERT": "automatically, when a new event is published",
         "MEMBER_INVITATION": "when a member is added",
-        "DECLARATION_HOLD_EXPIRED": "when an unsigned place goes to somebody else"
+        "DECLARATION_HOLD_EXPIRED": "when an unsigned place goes to somebody else",
+        "LEGAL_TEMPLATES_CHANGED": "when a legal template changes"
       },
       "clubNotices": {
         "title": "The club's copies",
@@ -4893,7 +4896,8 @@
       "whenMore": {
         "COMPLETE_DECLARATION": "The place is held for {hold} from when the email leaves, or until the deadline for a distant event. The deadline counts only when somebody is waiting; otherwise it is signed at the desk too.",
         "BIB_ASSIGNED": "When an organizer types a confirmed registration's number on its page or at the desk. Otherwise, the number comes with the confirmation. With the manage link. Never for a cancelled event.",
-        "REGISTER_ANOTHER_PERSON": "No registration is created, and the screen says “check your email” as always. If the address already has {people}, the email says only that, with no link."
+        "REGISTER_ANOTHER_PERSON": "No registration is created, and the screen says “check your email” as always. If the address already has {people}, the email says only that, with no link.",
+        "LEGAL_TEMPLATES_CHANGED": "The check runs with the scheduled jobs, at most once an hour. A change approved before the check is not announced; «Tasks» shows the same rows."
       }
     },
     "guide": {
@@ -5407,7 +5411,7 @@
                 "Mind: each gets a new link, and the link in the earlier email stops working. Tell them to open the newest email.",
                 "Tell them to look for the email in Spam and in Promotions too.",
                 "At most three presses an hour per event. An “i” beside the button says when a press would be refused: the event is cancelled, finished or has started, or the hour's presses are spent.",
-                "Who loses a place, and when: in «Registrations», a race's list says under «Who has signed up» until when places are kept and what follows the deadline; the «How far» column has each one's. Whoever loses the place after the deadline gets an email that says so and what they can still do.",
+                "Who loses a place, and when: in «Registrations», a race's list says under «Who has signed up» until when places are kept and what follows the deadline; the «How far» column has each one's.",
                 "One person only: open their registration → «Resend email»."
               ]
             },
@@ -5607,6 +5611,7 @@
               "title": "The club's legal texts",
               "steps": [
                 "«Legal documents»: if the box «One step: approve the templates with the club's facts» is at the top, check the club's facts in it and press «Approve the missing texts now…»: each text not yet approved gets version 1, from its template, with the club's facts. A text already approved is not touched.",
+                "When a new release of the site changes a template, every Administrator and Superadministrator receives the email «The legal templates changed» once, naming the texts, with a button to «New version»: at the next check of the scheduled jobs, at the latest the next morning. «Tasks» shows the same rows until you approve the texts.",
                 "One text: on its card in «Legal documents» press «Regenerate from the template» and confirm. All at once: under «Every text at once» press «Regenerate from the templates», or on «New version» press «Regenerate all». One draft is made for each; nothing takes effect yet, and the list opens on «Drafts».",
                 "Open each draft (the «Drafts» filter shows them all), read it and fill in what is left written <…>, in Romanian and in English; «Save draft».",
                 "Back on «Legal documents»: «Approve the drafts» and confirm. The drafts ready to approve take effect together; what cannot be approved at once is written under the button, with the reason.",

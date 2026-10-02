@@ -834,6 +834,13 @@
       "when": 1790932978769,
       "tag": "0121_declaration_hold_expired_email",
       "breakpoints": true
+    },
+    {
+      "idx": 119,
+      "version": "7",
+      "when": 1790934459462,
+      "tag": "0122_legal_templates_changed",
+      "breakpoints": true
     }
   ]
 }

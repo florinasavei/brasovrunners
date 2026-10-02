@@ -42,6 +42,8 @@ const EVERY_MESSAGE: Record<EmailMessageType, { button: boolean; why: string }> 
   MEMBER_INVITATION: { button: false, why: "no registration" },
   // A held place that lapsed (§NNN): the registration is over; its button is the form, not a cancel.
   DECLARATION_HOLD_EXPIRED: { button: false, why: "after the fact: the place went to somebody else" },
+  // To the Administrators about the club's legal texts (§NNN).
+  LEGAL_TEMPLATES_CHANGED: { button: false, why: "no registration" },
 };
 
 const TYPES = Object.keys(EVERY_MESSAGE) as EmailMessageType[];

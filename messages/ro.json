@@ -4325,7 +4325,8 @@
         "NEWSLETTER": "Newsletter",
         "NEW_EVENT_ALERT": "Anunț: eveniment nou în calendar",
         "MEMBER_INVITATION": "Invitația de membru",
-        "DECLARATION_HOLD_EXPIRED": "Locul ținut a expirat"
+        "DECLARATION_HOLD_EXPIRED": "Locul ținut a expirat",
+        "LEGAL_TEMPLATES_CHANGED": "Șabloanele textelor legale s-au schimbat"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "După trimiterea formularului. Linkul e valabil {confirmation}, de când pleacă emailul.",
@@ -4356,7 +4357,8 @@
         "NEWSLETTER": "Doar când un organizator trimite un newsletter din backoffice, către abonații temei alese. Pleacă după celelalte emailuri, din ce rămâne din limită.",
         "NEW_EVENT_ALERT": "O dată pentru fiecare eveniment nou publicat (nu alergarea săptămânală), către abonații la evenimente noi și la temele lui.",
         "MEMBER_INVITATION": "Când un administrator adaugă pe Echipa pe cineva cu rolul Membru, și la „Retrimite invitația” până la prima autentificare. Fără token: butonul duce la autentificare, apoi în zona membrilor.",
-        "DECLARATION_HOLD_EXPIRED": "Când locul cuiva care nu a semnat declarația la termen trece la altcineva care îl voia. O singură dată pentru fiecare loc pierdut, cu ce mai poate face. Nu după start și nu la un eveniment anulat."
+        "DECLARATION_HOLD_EXPIRED": "Când locul cuiva care nu a semnat declarația la termen trece la altcineva care îl voia. O singură dată pentru fiecare loc pierdut, cu ce mai poate face. Nu după start și nu la un eveniment anulat.",
+        "LEGAL_TEMPLATES_CHANGED": "Când o versiune nouă a site-ului schimbă șablonul unui text legal: o dată pe schimbare, fiecărui Administrator și Superadministrator. Fără token: butonul duce la «Versiune nouă»."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
@@ -4387,7 +4389,8 @@
         "NEWSLETTER": "doar când un organizator trimite un newsletter",
         "NEW_EVENT_ALERT": "automat, la publicarea unui eveniment nou",
         "MEMBER_INVITATION": "când e adăugat un membru",
-        "DECLARATION_HOLD_EXPIRED": "când un loc nesemnat trece la altcineva"
+        "DECLARATION_HOLD_EXPIRED": "când un loc nesemnat trece la altcineva",
+        "LEGAL_TEMPLATES_CHANGED": "când se schimbă un șablon legal"
       },
       "clubNotices": {
         "title": "Copiile clubului",
@@ -4893,7 +4896,8 @@
       "whenMore": {
         "COMPLETE_DECLARATION": "Locul e ținut {hold} de la plecarea emailului, sau până la termen la un eveniment îndepărtat. Termenul contează doar dacă așteaptă cineva; altfel declarația se semnează și la masă.",
         "BIB_ASSIGNED": "Când un organizator scrie numărul unei înscrieri confirmate, în pagina ei sau la masă. Altfel, numărul vine cu confirmarea. Cu linkul de gestionare. Niciodată pentru un eveniment anulat.",
-        "REGISTER_ANOTHER_PERSON": "Nu se creează nicio înscriere, iar ecranul spune „verifică-ți emailul” ca oricând. Dacă adresa are deja {people}, emailul spune doar asta, fără link."
+        "REGISTER_ANOTHER_PERSON": "Nu se creează nicio înscriere, iar ecranul spune „verifică-ți emailul” ca oricând. Dacă adresa are deja {people}, emailul spune doar asta, fără link.",
+        "LEGAL_TEMPLATES_CHANGED": "Verificarea rulează cu sarcinile programate, cel mult o dată pe oră. O schimbare aprobată înainte de verificare nu mai e anunțată; «Sarcini» arată aceleași rânduri."
       }
     },
     "guide": {
@@ -5407,7 +5411,7 @@
                 "Atenție: fiecare primește un link nou, iar linkul din emailul de dinainte nu mai merge. Spune-le să deschidă emailul cel mai nou.",
                 "Spune-le să caute emailul și în Spam și în Promoții.",
                 "Cel mult trei apăsări pe oră la un eveniment. Un „i” lângă buton spune când o apăsare ar fi refuzată: evenimentul e anulat, încheiat sau a început, ori s-au consumat apăsările orei.",
-                "Cine pierde locul și când: în «Înscrieri», lista unei curse spune sub «Cine s-a înscris» până când își țin oamenii locul și ce urmează după termen; coloana «Unde a ajuns» are termenul fiecăruia. Cine pierde locul după termen primește un email care îi spune asta și ce mai poate face.",
+                "Cine pierde locul și când: în «Înscrieri», lista unei curse spune sub «Cine s-a înscris» până când își țin oamenii locul și ce urmează după termen; coloana «Unde a ajuns» are termenul fiecăruia.",
                 "O singură persoană: deschide înscrierea ei → «Retrimite emailul»."
               ]
             },
@@ -5607,6 +5611,7 @@
               "title": "Textele legale ale clubului",
               "steps": [
                 "«Documente legale»: dacă sus e caseta «Într-un pas: aprobă șabloanele cu datele clubului», verifică datele clubului din ea și apasă «Aprobă acum textele care lipsesc…»: fiecare text încă neaprobat primește versiunea 1, din șablon, cu datele clubului. Un text deja aprobat nu e atins.",
+                "Când o versiune nouă a site-ului schimbă un șablon, fiecare Administrator și Superadministrator primește o singură dată emailul «Șabloanele textelor legale s-au schimbat», cu textele schimbate și un buton spre «Versiune nouă»: la următoarea verificare a sarcinilor programate, cel târziu a doua zi dimineață. «Sarcini» arată aceleași rânduri până aprobi textele.",
                 "Un singur text: pe cardul lui din «Documente legale» apasă «Regenerează din șablon» și confirmă. Toate deodată: la «Toate textele deodată» apasă «Regenerează din șabloane», sau pe «Versiune nouă» apasă «Regenerează toate». Se face câte o ciornă; nimic nu intră încă în vigoare, iar lista se deschide la «Ciorne».",
                 "Deschide fiecare ciornă (filtrul «Ciorne» le arată pe toate), citește-o și completează ce a rămas de forma <…>, în română și în engleză; «Salvează ciorna».",
                 "Înapoi pe «Documente legale»: «Aprobă ciornele» și confirmă. Ciornele gata de aprobat intră în vigoare împreună; ce nu se poate aproba deodată e scris sub buton, cu motivul.",

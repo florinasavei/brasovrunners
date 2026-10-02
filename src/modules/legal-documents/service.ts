@@ -1080,6 +1080,12 @@ export type LegalKindOverview = {
   /** A club fact is still a `<PLACEHOLDER>` in the template's text, the deployment's facts written in. */
   hasPlaceholders: boolean;
   templateNewer: boolean;
+  /**
+   * The content hash of the template's words, the deployment's facts written in — what `templateNewer`
+   * compares with the text in force. The maintenance job's notice to the Administrators fingerprints
+   * a change of the templates by it (§NNN), so a release that moves a template is announced once.
+   */
+  filledHash: string;
   nextVersion: number;
 };
 
@@ -1103,6 +1109,7 @@ export async function readLegalOverview<T extends Record<string, unknown>>(
         regeneration: regenerationOutcome(key, filledHash, rows, inForceId),
         hasPlaceholders: translations.some((translation) => remainingPlaceholders(translation.body).length > 0),
         templateNewer: templateIsNewer(inForceRow, filledHash),
+        filledHash,
         nextVersion: await nextVersionNumber(db, key),
       };
       return [key, overview] as const;
