@@ -12,7 +12,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Coada de înscrieri» lists the people waiting in the order the club hands places out by,
+ * §627 — «Coada de înscrieri» lists the people waiting in the order the club hands places out by,
  * and says when each form was sent. With `waitlist_auto_offer` off (the club picks by hand) the order
  * is `submitted_at`; with it on, the line's own `waitlisted_at`, the order automatic offers follow.
  * «Sent» is the current cycle's: `greatest(submitted_at, privacy_acknowledged_at)`, the journey's rule,
@@ -127,7 +127,7 @@ beforeEach(async () => {
   locale = "ro";
 });
 
-describe("§NNN the queue reader's order", () => {
+describe("§627 the queue reader's order", () => {
   it("lists the waiting by when the form was sent when the club hands places out by hand", async () => {
     const event = await createEvent(false);
     await threeWaiting(event.id);
@@ -176,7 +176,7 @@ describe("§NNN the queue reader's order", () => {
   });
 });
 
-describe("§NNN the queue panel's rows", () => {
+describe("§627 the queue panel's rows", () => {
   for (const language of ["ro", "en"] as const) {
     it(`says when each waiting form was sent, beside when the person joined the line, in the shown order (${language})`, async () => {
       locale = language;

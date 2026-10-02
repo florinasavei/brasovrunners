@@ -179,7 +179,7 @@ export function offerRefusalCode(error: unknown): typeof OFFER_AFTER_CLOSE | nul
 }
 
 /**
- * The order the queue panel lists the people waiting in (§NNN; the owner: the club hands places
+ * The order the queue panel lists the people waiting in (§627; the owner: the club hands places
  * out by hand, in the order the forms were sent): a pure choice over `events.waitlist_auto_offer`,
  * so the panel and its reader cannot disagree about it.
  *

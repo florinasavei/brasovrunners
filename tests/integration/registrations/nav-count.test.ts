@@ -183,7 +183,7 @@ describe("§255 how many are signed up", () => {
     expect(split?.events[0].withPlace).toBe(computeOccupied(await countOccupied(db, upcoming, NOW)));
   });
 
-  it("§NNN the badge's figure is the confirmed alone, the pill's the waiting; a test row is in neither", async () => {
+  it("§626 the badge's figure is the confirmed alone, the pill's the waiting; a test row is in neither", async () => {
     const [later] = await db
       .insert(events)
       .values({ type: "RACE", startsAt: new Date(NOW.getTime() + 14 * DAY), registrationMode: "INTERNAL", capacity: 100 })
@@ -219,7 +219,7 @@ describe("§255 how many are signed up", () => {
     ]);
   });
 
-  it("§NNN no waiting list is a zero, never a missing figure", async () => {
+  it("§626 no waiting list is a zero, never a missing figure", async () => {
     await enter(upcoming, "CONFIRMED");
     expect(await registeredBadgeBreakdown(db, NOW, "ro")).toMatchObject({ total: 1, confirmed: 1, waitlisted: 0, inProgress: 0 });
   });

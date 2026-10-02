@@ -127,7 +127,7 @@ test.describe("§581 «Doar cu oferte și beneficii»: the list and its export",
 });
 
 /**
- * The summary strip's pills are filters (§NNN; the owner, 2026-10-01: «Și aceste pilluri trebuie
+ * The summary strip's pills are filters (§626; the owner, 2026-10-01: «Și aceste pilluri trebuie
  * să fie clickabile (filtre)»), and the panel's status select has to say what the pressed pill
  * says. The pills are `next/link`s, so a press is a soft navigation and the page's client tree
  * stays mounted — the select reads its `defaultValue` once, and without the form's key it kept
@@ -135,7 +135,7 @@ test.describe("§581 «Doar cu oferte și beneficii»: the list and its export",
  * render the strip alone and cannot see that; this walks it in the running app, at 320 px on the
  * mobile project and on the laptop's, with the same three people in the database.
  */
-test.describe("§NNN the summary's pills filter the list, and the select agrees", () => {
+test.describe("§626 the summary's pills filter the list, and the select agrees", () => {
   test("a state pill narrows the rows, is pressed, the select follows, «Filtrează» keeps it, a second press clears it", async ({ page }) => {
     test.setTimeout(120_000);
     const seeded = await seed(`${test.info().project.name}-${Date.now().toString(36)}-p`, { waiting: true });

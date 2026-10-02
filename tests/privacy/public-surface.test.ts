@@ -387,11 +387,11 @@ describe("§421 the pending and waiting rows follow the notice each runner was g
 });
 
 /**
- * §NNN (narrowing §396) — «Lista de așteptare e publică»: the waiting list is a group the event's own
+ * §628 (narrowing §396) — «Lista de așteptare e publică»: the waiting list is a group the event's own
  * switch adds, on top of the notice's gates. Off, the readers hold no waiting row and count none —
  * the pending group is unchanged; on, they are exactly §396's and §421's rows.
  */
-describe("§NNN the waiting-list rows follow the event's own switch", () => {
+describe("§628 the waiting-list rows follow the event's own switch", () => {
   const at = (hour: number) => new Date(Date.UTC(2026, 8, 3, hour));
 
   async function waitingAndPending() {

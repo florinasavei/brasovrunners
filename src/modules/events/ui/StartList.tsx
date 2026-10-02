@@ -84,7 +84,7 @@ const NO_NUMBER = "—";
  * exactly what it was: confirmed names, no words, no other rows — the same component, one
  * boolean.
  *
- * ## The waiting list, by the event's own switch (§NNN)
+ * ## The waiting list, by the event's own switch (§628)
  *
  * The owner, 2026-10-01: "Acum mai am nevoie de încă o setare cu «lista de așteptare e publică»". The
  * waiting-list group — its rows, its word, its legend sentence, its count in the line above the
@@ -176,7 +176,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   */
   const firstStatesNotice = statesOn ? await cachedFirstStatesNoticeVersion() : null;
   /*
-    …and the waiting list only where the club made it public for this event (§NNN, «Lista de așteptare
+    …and the waiting list only where the club made it public for this event (§628, «Lista de așteptare
     e publică»): a third condition on that one group, never a way round the two above. Off, no waiting
     row is read, counted, worded or explained — the list is the confirmed and the ticked pending.
   */
@@ -236,7 +236,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
       </Box>
     ) : null;
   // The caption names the number only when the column is there (§613), and the waiting list only
-  // where it is public (§NNN).
+  // where it is public (§628).
   const caption = statesOn
     ? numbersShown
       ? t(waitlistOn ? "startList.captionStatesNumbers" : "startList.captionStatesNumbersNoWaitlist")

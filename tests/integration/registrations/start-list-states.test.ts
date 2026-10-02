@@ -66,7 +66,7 @@ const OLDER_NOTICE = {
   en: { sections: [{ heading: "4. Public list", paragraphs: ["The public list shows only the names of confirmed participants who ticked."] }] },
 };
 
-/** `waitlistPublic` (§NNN): on unless said, so the tests below read §396's whole list as written. */
+/** `waitlistPublic` (§628): on unless said, so the tests below read §396's whole list as written. */
 async function createEvent(waitlistPublic = true): Promise<PublicEvent> {
   const [event] = await db
     .insert(events)
@@ -265,11 +265,11 @@ describe("§396 with a notice approved before it", () => {
 });
 
 /**
- * §NNN — «Lista de așteptare e publică» off: the same notice, the same runners, and the waiting list is
+ * §628 — «Lista de așteptare e publică» off: the same notice, the same runners, and the waiting list is
  * nowhere — no row, no word, no count, no legend sentence, no clause in the caption or the note. The
  * pending group is the notice's alone and is unchanged.
  */
-describe("§NNN with the event's waiting list private", () => {
+describe("§628 with the event's waiting list private", () => {
   it("lists the confirmed and the pending, and nobody waiting", async () => {
     await approveNotice({ ro: privacyNoticeRo, en: privacyNoticeEn });
     const event = await mixedEvent(false);

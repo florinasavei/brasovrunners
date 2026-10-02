@@ -73,7 +73,7 @@ export default async function BackofficeShell({
   const breakdown = canReadRegistrations(staffUser.role)
     ? await registeredBadgeBreakdown(getDb(), new Date(), locale)
     : null;
-  // The badge says who is confirmed, the pill beside it who waits (§NNN); the rest are in progress, and only the tooltip says them.
+  // The badge says who is confirmed, the pill beside it who waits (§626); the rest are in progress, and only the tooltip says them.
   const registered = breakdown?.confirmed ?? null;
   const waiting = breakdown?.waitlisted ?? 0;
   /*
@@ -100,7 +100,7 @@ export default async function BackofficeShell({
     ...(section === "registrations" ? {
           count: registered,
           countHint: registeredHint,
-          // Only above zero, with the words a screen reader says for the glyph and the number (§NNN).
+          // Only above zero, with the words a screen reader says for the glyph and the number (§626).
           ...(waiting > 0 ? { countWaiting: waiting, countWaitingLabel: t("nav.registeredWaitingLabel", { count: waiting }) } : {}),
         } : {}),
     // `/devs` is «Setări»'s last tab and no section of its own (§520): the bar lights «Setări» there.

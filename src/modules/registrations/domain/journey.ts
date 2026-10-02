@@ -109,7 +109,7 @@ function inCycle(value: Date | null, input: JourneyInput): Date | null {
 
 /**
  * When this cycle's form was sent: the row's submission, or the restart that reused it (a restart
- * rewrites `privacy_acknowledged_at`, never `submitted_at`; §NNN). The registration page and the queue
+ * rewrites `privacy_acknowledged_at`, never `submitted_at`; §627). The registration page and the queue
  * panel say it the same way, and the panel's SQL is `greatest(submitted_at, privacy_acknowledged_at)`.
  */
 export function formSentAt(submittedAt: Date, cycleStartedAt: Date): Date {

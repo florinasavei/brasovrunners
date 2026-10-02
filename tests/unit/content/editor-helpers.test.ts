@@ -207,11 +207,11 @@ describe("§350 normalizeForMode and the waiting list's length (the waiting-list
 });
 
 /**
- * §NNN — «Lista de așteptare e publică» as the service stores it: never a truth the list cannot act on.
+ * §628 — «Lista de așteptare e publică» as the service stores it: never a truth the list cannot act on.
  * True only beside a published list on an internal event; anything else false, whatever was posted;
  * beside a published list, a caller that did not post the box writes nothing.
  */
-describe("§NNN waitlistPublicColumn", () => {
+describe("§628 waitlistPublicColumn", () => {
   it("stores false for a ticked switch beside a hidden list, or on an event that takes no registrations here", () => {
     expect(waitlistPublicColumn({ participantListVisibility: "HIDDEN", registrationMode: "INTERNAL", waitlistPublic: true })).toEqual({ waitlistPublic: false });
     expect(waitlistPublicColumn({ participantListVisibility: "NAMES", registrationMode: "EXTERNAL", waitlistPublic: true })).toEqual({ waitlistPublic: false });

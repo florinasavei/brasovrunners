@@ -169,11 +169,11 @@ describe("§346 the participant list is refused without an approved, effective p
 });
 
 /**
- * §NNN — «Lista de așteptare e publică» is stored true only beside a published list on an event that
+ * §628 — «Lista de așteptare e publică» is stored true only beside a published list on an event that
  * takes registrations here: anything else stores false, whatever was posted, so the column never holds
  * a truth the list cannot act on and a list switched on later never finds the waiting list already public.
  */
-describe("§NNN the waiting-list switch is stored only beside a published list", () => {
+describe("§628 the waiting-list switch is stored only beside a published list", () => {
   beforeEach(async () => {
     const translations = [
       { locale: "ro" as const, title: "Confidențialitate", body: { sections: [{ paragraphs: ["Text."] }] } },

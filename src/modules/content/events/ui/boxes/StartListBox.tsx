@@ -49,7 +49,7 @@ export default async function StartListBox({ event, mayEditSettings }: Pick<BoxP
               </CheckboxField>
               <BoxNote more={t("editor.participantListHelpMore")}>{t("editor.participantListHelp")}</BoxNote>
               {/*
-                «Lista de așteptare e publică» (§NNN): a narrowing of the list above, so it sits under it,
+                «Lista de așteptare e publică» (§628): a narrowing of the list above, so it sits under it,
                 indented — the owner's "încă o setare". It adds a condition to the waiting-list rows and
                 opens no gate of the privacy notice's; the service stores it off unless the list is on.
               */}

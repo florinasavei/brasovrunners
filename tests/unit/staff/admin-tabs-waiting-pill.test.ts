@@ -6,7 +6,7 @@ import AdminTabs, { type AdminTab } from "@/modules/staff-identity/ui/AdminTabs"
 vi.mock("next/navigation", () => ({ usePathname: () => "/ro/admin/registrations" }));
 
 /**
- * BR-REQ-041-01, `DECISIONS.md` §NNN — the «Înscrieri» tab: the badge is the confirmed, and the
+ * BR-REQ-041-01, `DECISIONS.md` §626 — the «Înscrieri» tab: the badge is the confirmed, and the
  * people waiting have a pill of their own beside it, with the waiting list's hourglass and the number.
  *
  * Rendered to HTML, as the server sends it: the pill is there only above zero, it is named for a
@@ -23,7 +23,7 @@ const tab = (extra: Partial<AdminTab> = {}): AdminTab => ({
 });
 const render = (items: AdminTab[]) => renderToStaticMarkup(createElement(AdminTabs, { items })).replace(/<style\b[\s\S]*?<\/style>/g, "");
 
-describe("§NNN the tab's two pills", () => {
+describe("§626 the tab's two pills", () => {
   it("draws the confirmed figure and, beside it, the waiting pill with a glyph and its number", () => {
     const html = render([tab({ countWaiting: 10, countWaitingLabel: "10 pe lista de așteptare" })]);
     expect(html).toContain(">133<");

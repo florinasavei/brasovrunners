@@ -138,7 +138,7 @@ async function seedEvent(tag: string, waitlistPublic = true): Promise<Seeded> {
   return withDatabase(async (client) => {
     const slug = `stari-${tag}`;
     const { rows } = await client.query<{ id: string }>(
-      // «Lista de așteptare e publică» (§NNN): the waiting group below is on the list only with it on.
+      // «Lista de așteptare e publică» (§628): the waiting group below is on the list only with it on.
       `INSERT INTO events (type, starts_at, registration_mode, capacity, editorial_status, published_at, location_name, participant_list_visibility, waitlist_public)
        VALUES ('RACE', now() + interval '60 days', 'INTERNAL', 3, 'PUBLISHED', now() - interval '1 day', 'Parcul Tractorul', 'NAMES', $1)
        RETURNING id`,
@@ -324,7 +324,7 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
     await lock.connect();
     await lock.query("SELECT pg_advisory_lock($1)", [LOCK_KEY]);
     const event = await seedEvent(tag);
-    // The same list with «Lista de așteptare e publică» left at its default, off (§NNN).
+    // The same list with «Lista de așteptare e publică» left at its default, off (§628).
     const privateWaitlistTag = `${tag}-np`;
     const privateWaitlist = await seedEvent(privateWaitlistTag, false);
     try {
@@ -435,7 +435,7 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
         ).toHaveAccessibleName(`Ana Confirmata ${tag} on Strava`);
       });
 
-      await test.step("with the marker but the waiting list private (the default): the pending still listed, no waiting row, count, legend line or word (§NNN)", async () => {
+      await test.step("with the marker but the waiting list private (the default): the pending still listed, no waiting row, count, legend line or word (§628)", async () => {
         const ro = await readList(page, `/ro/evenimente/${privateWaitlist.slug}-ro`, privateWaitlistTag);
         expect(ro.states).toEqual(["CONFIRMED", "CONFIRMED", "CONFIRMED", "PENDING"]);
         await expect(ro.list).toContainText("Carmen Semneaza");

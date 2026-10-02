@@ -644,7 +644,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
 }
 
 /**
- * «Lista de așteptare e publică» (§NNN), as stored: never a truth the list cannot act on. The switch
+ * «Lista de așteptare e publică» (§628), as stored: never a truth the list cannot act on. The switch
  * means something only beside a published list on an event that takes registrations here
  * (`participantListVisibility = NAMES`, mode INTERNAL — the refusal in `assertCoherentRegistrationBlock`
  * names the same pair), so anything else stores false, whatever was posted: a list switched off and
@@ -1814,7 +1814,7 @@ const SERIES_COLUMNS = [
   "reminderHoursBefore",
   "declarationDocumentId",
   "participantListVisibility",
-  // Whether the published list also shows the waiting list (§NNN) travels with the list it qualifies.
+  // Whether the published list also shows the waiting list (§628) travels with the list it qualifies.
   "waitlistPublic",
   "externalProvider",
   "externalRegistrationUrl",
@@ -3084,7 +3084,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     registrationClosesAt: source.registrationClosesAt,
     declarationDocumentId: source.declarationDocumentId,
     participantListVisibility: "HIDDEN" as const,
-    // A copy never inherits the list (AGENTS.md §10.10), so nor the waiting list's place on it (§NNN).
+    // A copy never inherits the list (AGENTS.md §10.10), so nor the waiting list's place on it (§628).
     waitlistPublic: false,
     externalProvider: source.externalProvider,
     externalRegistrationUrl: source.externalRegistrationUrl,

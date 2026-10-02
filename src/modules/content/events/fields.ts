@@ -864,7 +864,7 @@ export const eventFieldsSchema = z
      */
     participantListVisibility: z.enum(["HIDDEN", "NAMES"]),
     /**
-     * «Lista de așteptare e publică» (§NNN): whether the published list also shows the ticked
+     * «Lista de așteptare e publică» (§628): whether the published list also shows the ticked
      * waiting-list rows, behind the privacy notice's gates as before. Optional, and absent means
      * "this caller is not editing it", the discipline `kitShirt` follows; the service stores false
      * whatever was posted unless the list itself is published on an INTERNAL event

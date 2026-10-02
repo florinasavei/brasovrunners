@@ -5,7 +5,7 @@ import type { RegistrationStatus } from "@/db/schema/registrations";
 import SummaryStrip from "@/modules/registrations/ui/SummaryStrip";
 
 /**
- * BR-REQ-041-01, `DECISIONS.md` §NNN — the registrations list's summary strip, rendered the way
+ * BR-REQ-041-01, `DECISIONS.md` §626 — the registrations list's summary strip, rendered the way
  * the server sends it: every pill an anchor with the whole filter in its address, the state in
  * force drawn pressed, the counts blind to which one that is (§246).
  */
@@ -56,7 +56,7 @@ function anchors(html: string) {
   }));
 }
 
-describe("§NNN the summary's pills are filters", () => {
+describe("§626 the summary's pills are filters", () => {
   it("draws the total and each state with somebody in it as an anchor, the test rows as a plain label", () => {
     const html = render(null);
     expect(anchors(html).map((a) => a.text)).toEqual([

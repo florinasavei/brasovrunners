@@ -86,7 +86,7 @@ async function createEvent(): Promise<PublicEvent> {
       editorialStatus: "PUBLISHED",
       publishedAt: NOW,
       participantListVisibility: "NAMES",
-      // The waiting row below is on the list only with the event's own switch (§NNN).
+      // The waiting row below is on the list only with the event's own switch (§628).
       waitlistPublic: true,
     })
     .returning();
