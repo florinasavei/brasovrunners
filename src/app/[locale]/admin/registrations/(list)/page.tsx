@@ -340,7 +340,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   */
   const mayManage = canManageRegistrations(actor.role);
   /*
-    «Curăță bifele celor care nu sunt membri» (§NNN): the preview, read only while it is open and only
+    «Bife de membru fără cont de membru» (§NNN): the preview, read only while it is open and only
     for the role that may press it — the scope the list was resolved to (one event, or every event that
     has not started), never the page of rows on screen. The service asks the role again.
   */
@@ -1222,8 +1222,9 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       )}
 
       {/*
-        «Curăță bifele celor care nu sunt membri» (§NNN; the owner, 2026-10-02: «Vreau să pot „curăța” și
-        să debifez cei care au bifat că sunt membri Brașov Runners dar nu sunt»). The button shows while
+        «Bife de membru fără cont de membru» (§NNN; the owner, 2026-10-02: «Vreau să pot „curăța” și să
+        debifez cei care au bifat că sunt membri Brașov Runners dar nu sunt», then «Nu vreau să se numească
+        „curăță”»: a plain descriptive name, never the broom). The button shows while
         the list is filtered to the people who ticked the box — the filter, or any summary pill pressed
         with it, which keeps the key (§626). It opens the preview in place: a plain link, a server-rendered
         form, the same with JavaScript and without it (§180's shape). The Administrator's alone.
@@ -1231,7 +1232,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       {mayManage && clubMember === "1" && !sweepOpen && (
         <Box>
           <GlyphButton
-            icon="sweep"
+            icon="memberCheck"
             href={`${buildListHref(basePath, listParams, { memberSweep: "1", page: current.page })}#member-sweep`}
             variant="outlined"
             size="small"
@@ -1296,7 +1297,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   {sweepRows.map((row) => (
                     <Box component="li" key={row.id} data-testid="member-sweep-row">
                       <CheckboxField name="registrationId" value={row.id} defaultChecked dense>
-                        {`${row.registeredName} · ${row.eventTitle ?? row.eventId} · ${row.participantEmail}`}
+                        {`${row.registeredName} · ${row.eventTitle ?? row.eventId} · ${row.maskedEmail}`}
                       </CheckboxField>
                     </Box>
                   ))}

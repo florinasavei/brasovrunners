@@ -5,6 +5,8 @@ import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
+import { auditLogs } from "@/db/schema/audit-logs";
+import { eq } from "drizzle-orm";
 import { resolveDisplayName } from "@/modules/registrations/names";
 import { CLUB_NAME } from "@/theme/brand";
 import en from "../../../messages/en.json";
@@ -12,12 +14,16 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-037-03 criterion 12 (§NNN) — where the member tick's verbs show, read from a real database.
+ * BR-REQ-037-03 criteria 12 and 13 (§NNN) — «Datele înscrierii» and the member tick's screens, read from
+ * a real database.
  *
- * - the registration's page carries «Bifa de membru» with «Nu e membru» (ticked) or «E membru» (not),
- *   asked first with the person's name; the Organizer reads the chip and sees no verb (§289);
- * - the list's row offers the same verb behind "⋮", with a hidden form that comes back to the list;
- * - «Curăță bifele celor care nu sunt membri» shows with the members' filter on, for the Administrator
+ * - the registration's page folds «Corectează numele» into «Datele înscrierii»: closed behind a plain
+ *   link, opened (and the read recorded) with every answer prefilled, each beside its `was.` twin, the
+ *   question naming the person and the fields changed; the address, the consents and the declaration
+ *   read-only with one line each; the Organizer reads the same answers and gets no form (§289);
+ * - the list's row offers «Nu e membru» / «E membru» behind "⋮", with a hidden form that comes back to
+ *   the list;
+ * - «Bife de membru fără cont de membru» shows with the members' filter on, for the Administrator
  *   only, and opens the preview: one ticked box per candidate, the count, the note; an empty preview
  *   says «Nicio bifă de scos».
  *
@@ -60,13 +66,15 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   cancelRegistrationAction: vi.fn(),
   checkInAction: vi.fn(),
   confirmRegistrationNowAction: vi.fn(),
-  correctRegisteredNameAction: vi.fn(),
+  // «Datele înscrierii» (§NNN), folding «Corectează numele».
+  editRegistrationAnswersAction: vi.fn(),
   deleteRegistrationAction: vi.fn(),
   givePlaceNowAction: vi.fn(),
   offerPlaceAction: vi.fn(),
   promoteRegistrationAction: vi.fn(),
   setBibNumberAction: vi.fn(),
   withdrawConsentAction: vi.fn(),
+  setOutsideCapacityAction: vi.fn(),
   declarationHoldAction: vi.fn(),
   // The member tick and its sweep (§NNN).
   setClubMemberDeclaredAction: vi.fn(),
@@ -163,8 +171,8 @@ async function listPage(searchParams: Record<string, string>) {
   return AdminRegistrationsPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve(searchParams) } as never);
 }
 
-async function detailPage(id: string) {
-  return RegistrationDetailPage({ params: Promise.resolve({ locale: "ro", id }), searchParams: Promise.resolve({}) } as never);
+async function detailPage(id: string, searchParams: Record<string, string> = {}) {
+  return RegistrationDetailPage({ params: Promise.resolve({ locale: "ro", id }), searchParams: Promise.resolve(searchParams) } as never);
 }
 
 /** What the list's "⋮" holds for each row: the table's own `rowActions`, walked. */
@@ -186,35 +194,72 @@ beforeEach(async () => {
   state.locale = "ro";
 });
 
-describe("BR-REQ-037-03 criterion 12: the registration's page", () => {
-  it("offers «Nu e membru» on a ticked row and «E membru» on an unticked one, each asked with the person's name", async () => {
+describe("BR-REQ-037-03 criterion 12: «Datele înscrierii» on the registration's page", () => {
+  it("is closed behind a plain link, and nothing is read or recorded until it is opened", async () => {
     const race = await createRace("Crosul");
     state.actor = await staff("ADMIN");
-    const ticked = await register(race.id);
-    const unticked = await register(race.id, { clubMemberDeclared: false, clubName: null });
-
-    const [clearForm] = byTestId(await detailPage(ticked), "member-tick-form");
-    expect(clearForm.props.action).toBe(actions.setClubMemberDeclaredAction);
-    expect(clearForm.props.confirm).toMatchObject({ title: "Scoți bifa de membru?", confirmLabel: "Nu e membru" });
-    expect((clearForm.props.confirm as { body: string }).body).toBe(`Scoți bifa de membru de la Runner ${serial - 1}; nimic altceva nu se schimbă, niciun email.`);
-    const clearTo = elements(clearForm).find((element) => element.props.name === "to");
-    expect(clearTo?.props.value).toBe("0");
-
-    const [setForm] = byTestId(await detailPage(unticked), "member-tick-form");
-    expect(setForm.props.confirm).toMatchObject({ title: "Pui bifa de membru?", confirmLabel: "E membru" });
-    expect(elements(setForm).find((element) => element.props.name === "to")?.props.value).toBe("1");
+    const tree = await detailPage(await register(race.id));
+    const [open] = byTestId(tree, "answers-open");
+    expect(open.props.href).toBe("/ro/admin/registrations?answers=1#answers");
+    expect(open.props.children).toBe("Modifică datele");
+    expect(byTestId(tree, "answers-form")).toHaveLength(0);
+    expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "registration.answers_viewed"))).toHaveLength(0);
   });
 
-  it("shows the Organizer the chip and no verb (§289)", async () => {
+  it("opens with every answer prefilled beside its `was.` twin, asks naming the person and the fields changed, and records the read", async () => {
+    const race = await createRace("Crosul");
+    const admin = await staff("ADMIN");
+    state.actor = admin;
+    const id = await register(race.id, { firstName: "Ana", lastName: "Pop", phone: "+40712345678", city: "Brașov" });
+
+    const tree = await detailPage(id, { answers: "1" });
+    const [form] = byTestId(tree, "answers-form");
+    expect(form.props.action).toBe(actions.editRegistrationAnswersAction);
+    const confirm = form.props.confirm as { title: string; body: string; changedFields: { labels: Record<string, string> } };
+    expect(confirm.title).toBe("Corectezi datele?");
+    // The person by name; `{fields}` is filled in the browser from the boxes that moved.
+    expect(confirm.body).toBe(`Corectezi la Runner ${serial}: {fields}. Nimic altceva nu se schimbă, niciun email; valorile vechi rămân în jurnal.`);
+    expect(confirm.changedFields.labels).toMatchObject({ firstName: "Prenume", phone: "Telefon", clubMemberDeclared: `Membru ${CLUB_NAME} (declarat)` });
+    // Never the address, a consent or the declaration: not on the form at all.
+    for (const locked of ["email", "listOptOut", "promoConsent", "healthNotes", "fitnessDeclared", "termsAccepted"]) {
+      expect(elements(form).some((element) => element.props.name === locked), locked).toBe(false);
+    }
+
+    const twin = (field: string) => elements(form).find((element) => element.props.name === `was.${field}`)?.props.value;
+    expect(twin("firstName")).toBe("Ana");
+    expect(twin("phone")).toBe("+40712345678");
+    expect(twin("clubMemberDeclared")).toBe("on");
+    expect(twin("sex")).toBe("");
+    // The event gives no T-shirt: its size is not on the form.
+    expect(twin("tshirtSize")).toBeUndefined();
+    expect(elements(form).find((element) => element.props.name === "city")?.props.defaultValue).toBe("Brașov");
+
+    expect(byTestId(tree, "answers-locked")).toHaveLength(1);
+    const [viewed] = await db.select().from(auditLogs).where(eq(auditLogs.action, "registration.answers_viewed"));
+    expect(viewed).toMatchObject({ actorStaffUserId: admin.id, entityId: id, metadataJson: {} });
+  });
+
+  it("shows the Organizer the same answers read-only, and no form (§289)", async () => {
     const race = await createRace("Crosul");
     state.actor = await staff("MODERATOR");
-    const tree = await detailPage(await register(race.id));
-    expect(byTestId(tree, "member-tick")).toHaveLength(0);
+    const id = await register(race.id, { firstName: "Ana", lastName: "Pop", city: "Brașov" });
+
+    const closed = await detailPage(id);
+    expect(byTestId(closed, "answers-open")[0].props.children).toBe("Arată datele");
+
+    const tree = await detailPage(id, { answers: "1" });
+    expect(byTestId(tree, "answers-form")).toHaveLength(0);
+    const [read] = byTestId(tree, "answers-read");
+    const lines = elements(read).filter((element) => element.type !== read.type).map((element) => (element.props.children as ReactNode[]).join(""));
+    expect(lines).toContain("Orașul: Brașov");
+    expect(lines).toContain(`Membru ${CLUB_NAME} (declarat): Da`);
+    expect(byTestId(tree, "answers-locked")).toHaveLength(1);
+    // The chip still says what the person declared.
     expect(elements(tree).some((element) => element.props.label === "Membru (declarat)")).toBe(true);
   });
 });
 
-describe("BR-REQ-037-03 criterion 12: the registrations list", () => {
+describe("BR-REQ-037-03 criterion 13: the registrations list", () => {
   it("puts the verb behind each row's ⋮ for the Administrator, coming back to the list, and nowhere for the Organizer", async () => {
     const race = await createRace("Crosul");
     const id = await register(race.id);
@@ -229,12 +274,12 @@ describe("BR-REQ-037-03 criterion 12: the registrations list", () => {
     expect(rowActionsOf(await listPage({ eventId: race.id })).filter((element) => element.props.id === `member-${id}`)).toHaveLength(0);
   });
 
-  it("offers «Curăță bifele celor care nu sunt membri» only with the members' filter on, and only to the Administrator", async () => {
+  it("offers «Bife de membru fără cont de membru» only with the members' filter on, and only to the Administrator", async () => {
     const race = await createRace("Crosul");
     await register(race.id);
     state.actor = await staff("ADMIN");
-    const label = "Curăță bifele celor care nu sunt membri";
-    const hasButton = (tree: ReactNode) => elements(tree).some((element) => element.props.icon === "sweep" && element.props.children === label);
+    const label = "Bife de membru fără cont de membru";
+    const hasButton = (tree: ReactNode) => elements(tree).some((element) => element.props.icon === "memberCheck" && element.props.children === label);
 
     expect(hasButton(await listPage({ eventId: race.id }))).toBe(false);
     expect(hasButton(await listPage({ eventId: race.id, clubMember: "1" }))).toBe(true);

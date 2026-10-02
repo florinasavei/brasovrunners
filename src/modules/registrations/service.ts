@@ -1,4 +1,4 @@
-import { and, count, eq, gt, isNull, lt, lte, sql } from "drizzle-orm";
+import { and, count, eq, gt, isNull, lt, lte } from "drizzle-orm";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { type Participant, participants } from "@/db/schema/participants";
@@ -66,6 +66,7 @@ import { isUuid } from "@/shared/ids";
 import { dayIn, MIN_PARTICIPANT_AGE } from "./domain/age";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS, ANOTHER_LINK_INVALID, decideSubmission } from "./domain/family";
 import { registrationNameKey } from "./domain/name-key";
+import { planAnswerEdit } from "./answers";
 import { forgetRegisteredBadgeCount } from "./nav-count";
 import { currentAddressCap } from "./address-cap";
 import { familyEntryFields, insertFamilyEntry, liveSittingEntries, personOfEntry, replaceFamilyEntry } from "./family-entries";
@@ -3975,62 +3976,90 @@ export async function unregister<T extends Record<string, unknown>>(
   return unregistered.registration;
 }
 
+
 /**
- * «Nu e membru» / «E membru» (§NNN; the owner, 2026-10-02: «Vreau să pot „curăța” și să debifez cei
- * care au bifat că sunt membri Brașov Runners dar nu sunt»): the self-declared member tick
- * (`club_member_declared`, BR-REQ-031-06) cleared or set by an Administrator.
+ * «Modifică datele» (§NNN; the owner, 2026-10-02: «Nu vreau să se numească „curăță”, dar practic vreau
+ * să pot modifica sau suprascrie orice dată introdusă de utilizator»): an Administrator corrects or
+ * overwrites any answer the person typed — the allowlist, its rules and the three locked kinds (the
+ * address, the consents, the declaration) are `answers.ts`.
  *
- * The tick grants nothing (§48) and the allocator never reads it, so this is a field edit like the
- * name correction, not a state change: no place moves, no status, no email. What it does carry is
- * the club's name, which the form writes into `club_name` with the tick (§215) and the public start
- * list prints — so clearing it blanks `club_name` **only** when it still holds the club's own name
- * (the tick wrote it; a name the runner typed stays), and setting it writes the club's name exactly
- * as the form does.
+ * - Administrator-only (`canManageRegistrations`), asserted here as well as in `admin-service.ts` and
+ *   the action (BR-REQ-060-01); the Organizer reads the answers and changes nothing (§289).
+ * - Under the event's lock, the lock `submitRegistration` and §67's rename take before they read the
+ *   address's rows, so a corrected name and a new runner on the same address cannot both find the name
+ *   free (§389); the row is read again under it, so the plan is decided on what is there now.
+ * - Writes only the changed columns, in one statement; one audit row per changed column,
+ *   `registration.answer_corrected` `{ field, from, to }`, and §67's `registration.name_corrected`
+ *   `{ from, to }` when the name of record follows the two names — all in the same transaction.
+ * - No email, no state, no place, no number: the allocator never reads an answer (the member tick
+ *   least of all, §48). The person sees the corrected answers on their own page and in later emails.
+ * - Any status; an erased row is gone (NOT_FOUND). A TEST row is corrected like a real one (§30).
  *
- * Administrator-only (`canManageRegistrations`), asserted here as well as in `admin-service.ts` and
- * the action (BR-REQ-060-01; the Organizer reads the chip and changes nothing, §289). Refused with
- * CONFLICT when the row already says `to` — a stale page, or a colleague's press first: the guarded
- * UPDATE is the check, so two presses cannot both write. Any status; an erased row is gone, NOT_FOUND.
- * The audit row `registration.club_member_tick_changed` `{ from, to }` is written in the same
- * transaction as the change. `db` may be a caller's transaction: the sweep runs one per row inside
- * its own (Drizzle makes the inner transaction a savepoint).
+ * `db` may be a caller's transaction: the member-tick sweep runs one per row inside its own.
  */
-export async function setClubMemberDeclaredByStaff<T extends Record<string, unknown>>(
+export async function editRegistrationAnswersByStaff<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: { id: string; role: StaffRole },
   registrationId: string,
-  to: boolean,
+  changes: Readonly<Record<string, unknown>>,
   now: Date,
-): Promise<Registration> {
+): Promise<{ registration: Registration; corrected: string[] }> {
   if (!canManageRegistrations(actor.role)) {
-    throw new DomainError("FORBIDDEN", `role ${actor.role} may not change a registration's member tick`);
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not correct a registration's answers`);
   }
   if (!isUuid(registrationId)) throw new DomainError("NOT_FOUND", "no such registration");
   return db.transaction(async (tx) => {
-    const [changed] = await tx
-      .update(registrations)
-      .set({
-        clubMemberDeclared: to,
-        // The tick's own words go with it; a club the runner typed by hand is theirs and stays.
-        clubName: to ? CLUB_NAME : sql`CASE WHEN ${registrations.clubName} = ${CLUB_NAME} THEN NULL ELSE ${registrations.clubName} END`,
-        updatedAt: now,
-      })
-      .where(and(eq(registrations.id, registrationId), eq(registrations.clubMemberDeclared, !to)))
-      .returning();
-    if (!changed) {
-      const current = await repo.findRegistrationById(tx, registrationId);
-      if (!current) throw new DomainError("NOT_FOUND", "no such registration");
-      throw new DomainError("CONFLICT", `the member tick is already ${to ? "set" : "cleared"}`);
-    }
-    await recordAuditEvent(tx, {
-      actorStaffUserId: actor.id,
-      participantId: changed.participantId,
-      action: "registration.club_member_tick_changed",
-      entityType: "registration",
-      entityId: changed.id,
-      metadata: { from: !to, to },
+    const before = await repo.findRegistrationById(tx, registrationId);
+    if (!before) throw new DomainError("NOT_FOUND", "no such registration");
+    const event = await repo.lockEventForCapacity(tx, before.eventId);
+    if (!event) throw new DomainError("NOT_FOUND", "no such event");
+    const current = await repo.findRegistrationById(tx, registrationId);
+    if (!current) throw new DomainError("NOT_FOUND", "no such registration");
+
+    const plan = planAnswerEdit(current, changes, {
+      eventDay: dayIn(event.startsAt, event.timezone ?? EVENT_TIMEZONE_DEFAULT),
+      minAge: event.minAge,
+      kitShirt: event.kitShirt,
       now,
     });
-    return changed;
+    if (plan.nameChange) {
+      // Two people on one address are told apart by their names (§389): a corrected name that is another's here makes one of two.
+      const siblings = await repo.findRegistrationsByEventAndParticipant(tx, current.eventId, current.participantId);
+      if (siblings.some((row) => row.id !== current.id && registrationNameKey(row.registeredName) === plan.set.nameKey)) {
+        throw new DomainError("VALIDATION_ERROR", "another registration on this address at this event already carries that name", ["firstName", "lastName"]);
+      }
+    }
+
+    const [updated] = await tx
+      .update(registrations)
+      .set({ ...plan.set, updatedAt: now })
+      .where(eq(registrations.id, current.id))
+      .returning();
+    for (const answer of plan.corrected) {
+      await recordAuditEvent(tx, {
+        actorStaffUserId: actor.id,
+        participantId: current.participantId,
+        action: "registration.answer_corrected",
+        entityType: "registration",
+        entityId: current.id,
+        metadata: { field: answer.field, from: answer.from, to: answer.to },
+        now,
+      });
+    }
+    if (plan.nameChange) {
+      await recordAuditEvent(tx, {
+        actorStaffUserId: actor.id,
+        participantId: current.participantId,
+        action: "registration.name_corrected",
+        entityType: "registration",
+        entityId: current.id,
+        metadata: plan.nameChange,
+        now,
+      });
+    }
+    return {
+      registration: updated,
+      corrected: [...plan.corrected.map((answer) => answer.field), ...(plan.nameChange ? ["registeredName"] : [])],
+    };
   });
 }

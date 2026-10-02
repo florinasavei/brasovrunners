@@ -690,18 +690,60 @@
       "relayConfirmation": "I confirm this person asked me to register them, and I told them the club uses their details for the race and that the privacy notice is on the site, at the foot of every page.",
       "create": "Add the registration",
       "viewForEvent": "See this event's registrations",
-      "correctName": "Correct the name",
-      "correctNameHelp": "The name is corrected here; the member tick is below. The email address is the participant's identity: for a wrong address, cancel the registration and add it again with the right one.",
+      "answers": {
+        "title": "The registration's answers",
+        "open": "Change the answers",
+        "openRead": "Show the answers",
+        "openHelp": "Everything the person typed on the form, the phone and the emergency contact included; opening it stays in the log.",
+        "hide": "Close the answers",
+        "save": "Save the answers",
+        "pending": "Saving…",
+        "viewed": "Opening these answers stayed in the log, with your name.",
+        "none": "—",
+        "yes": "Yes",
+        "no": "No",
+        "noShirt": "No T-shirt",
+        "sex": {
+          "FEMALE": "Female",
+          "MALE": "Male"
+        },
+        "displayNameHelp": "Empty: the first and last name.",
+        "phoneHelp": "With the country code (+40 712 345 678); a Romanian number also works with a leading 0.",
+        "guardianHelp": "Required for a minor.",
+        "clubNameHelp": "While the member tick is on, the club is {club}.",
+        "memberHelp": "Unticked, the club {club} also goes from the list.",
+        "lockedTitle": "What does not change here",
+        "lockedAddress": "The email address is the registration's identity: for a wrong address, cancel and add it again.",
+        "lockedConsents": "Only the person gives the consents — you can only withdraw them, with their own button.",
+        "lockedDeclaration": "Only the person signs the declaration.",
+        "fields": {
+          "firstName": "First name",
+          "lastName": "Last name",
+          "displayName": "Name on the list",
+          "birthDate": "Date of birth",
+          "sex": "Sex",
+          "nationality": "Citizenship",
+          "country": "Country of residence",
+          "city": "City",
+          "phone": "Phone",
+          "emergencyContactName": "Emergency contact",
+          "emergencyContactPhone": "Emergency contact's phone",
+          "guardianName": "Parent or guardian",
+          "clubMemberDeclared": "{club} member (declared)",
+          "clubName": "Club",
+          "stravaUrl": "Strava",
+          "instagramHandle": "Instagram",
+          "tshirtSize": "T-shirt size",
+          "listSocials": "Strava and Instagram on the list",
+          "registeredName": "Name of record"
+        }
+      },
       "memberTick": {
-        "title": "The member tick",
-        "ticked": "They ticked that they are a club member. If they are not, clear it: the club the tick set goes from the list too.",
-        "unticked": "They did not tick that they are a club member. If they are, set it: their club on the list becomes {club}.",
-        "help": "Nothing else changes: no state, no place, no email. The change stays in the log.",
         "clear": "Not a member",
         "set": "Is a member"
       },
       "memberSweep": {
-        "open": "Clear the ticks of those who are not members",
+        "open": "Member ticks with no member account",
         "title": "Member ticks with no member account",
         "count": {
           "one": "{count} registration with the member tick and no member account",
@@ -711,8 +753,7 @@
         "scopeEvent": "At {event}.",
         "scopeAll": "At every event that has not started.",
         "who": "A member is an account on Staff, with any role, matched by email address. A revoked account is no longer a member.",
-        "otherAddress": "A member registered with another address than their account's appears here too: untick them to keep their tick.",
-        "rowLabel": "Clear the tick: {name}",
+        "otherAddress": "A member registered with another address than their account's appears here too: untick their row to keep their tick («Leave the tick»).",
         "submit": {
           "one": "Clear the tick on {count} registration",
           "few": "Clear the ticks on all {count}",
@@ -728,7 +769,6 @@
           "other": "Cleared the member tick on {count} registrations. Nothing else changed."
         }
       },
-      "saveName": "Save the name",
       "cancelTitle": "Cancel the registration",
       "cancelReason": "Reason",
       "cancelAction": "Cancel the registration",
@@ -779,7 +819,9 @@
           "family_resent": "Email resent to the family",
           "offered_by_staff": "Offer sent ahead of the waiting list (“Send them the offer”)",
           "address_vouched_by_staff": "Address vouched for by the team; place given ahead of the waiting list (“Give them a place now”)",
-          "outside_capacity_changed": "Seated outside the places, or counted among them again"
+          "outside_capacity_changed": "Seated outside the places, or counted among them again",
+          "answer_corrected": "Answer corrected: {field}",
+          "answers_viewed": "Answers opened, with the phone and the emergency contact"
         },
         "event": {
           "capacity_raised_for_offer": "Supplementary place added for an offer (“Send them the offer”): {from} → {to}",
@@ -1194,12 +1236,6 @@
       "reminderBody": "{name} receives the pre-race reminder now.",
       "createRegistrationTitle": "Add the registration?",
       "createRegistrationBody": "The person is registered for the event on their behalf, at their request, and receives the email for the next step.",
-      "renameTitle": "Change the name?",
-      "renameBody": "The new name appears on the list, on the race number and in the emails; the old one stays in the log.",
-      "memberClearTitle": "Clear the member tick?",
-      "memberClearBody": "You clear the member tick from {name}; nothing else changes, no email.",
-      "memberSetTitle": "Set the member tick?",
-      "memberSetBody": "You set the member tick on {name}; their club on the list becomes {club}. Nothing else changes, no email.",
       "memberSweepTitle": "Clear the member ticks?",
       "memberSweepBody": {
         "one": "You clear the member tick on {count} registration; nothing else changes, no email.",
@@ -1296,7 +1332,13 @@
       "givePlaceNowRaiseConfirm": "Add a place and give it to them",
       "offerPlaceRaise": "No place is free: pressing adds one supplementary place over the limit; the capacity becomes {n}.",
       "offerPlaceRaiseConfirm": "Add a place and send the offer",
-      "offerPlaceAfterClose": "Registration has closed: the offer holds until the start at the latest."
+      "offerPlaceAfterClose": "Registration has closed: the offer holds until the start at the latest.",
+      "answersTitle": "Correct the answers?",
+      "answersBody": "You correct, for {name}: {fields}. Nothing else changes, no email; the old values stay in the log.",
+      "memberClearTitle": "Clear the member tick?",
+      "memberClearBody": "You clear the member tick from {name}; nothing else changes, no email.",
+      "memberSetTitle": "Set the member tick?",
+      "memberSetBody": "You set the member tick on {name}; their club on the list becomes {club}. Nothing else changes, no email."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -1354,7 +1396,9 @@
       "SEND_NOW_MAILGUN_STOPPED_FALLBACK_OFF": "Nothing was sent: Mailgun is stopped and «Gmail takes over when Mailgun stops» is set to No. Set it to Yes under «Emails», or choose «Queue it»: it leaves when Mailgun resumes.",
       "SEND_NOW_MAILGUN_STOPPED_NO_GMAIL": "Nothing was sent: Mailgun is stopped and the club's Gmail is not configured here. Choose «Queue it»: the email leaves on its own when Mailgun resumes.",
       "SEND_NOW_MAILGUN_STOPPED_GMAIL_FULL": "Nothing was sent: Mailgun is stopped and Gmail has reached its daily limit. Raise it under «Emails» (500 at most), or choose «Queue it»: it leaves when Mailgun resumes.",
-      "SEND_NOW_MAILGUN_STOPPED_NOTICE": "Nothing was sent: Mailgun is stopped, and Gmail takes over only once you approve the privacy notice from the new template. Until then choose «Queue it»."
+      "SEND_NOW_MAILGUN_STOPPED_NOTICE": "Nothing was sent: Mailgun is stopped, and Gmail takes over only once you approve the privacy notice from the new template. Until then choose «Queue it».",
+      "ANSWERS_UNCHANGED": "Nothing changed: the answers already say this. Reload the page if a colleague corrected them meanwhile.",
+      "ANSWER_UNDER_MINIMUM_AGE": "The date of birth was not saved: the person would not be {age} on race day, the event's minimum age."
     },
     "editor": {
       "draftPreview": {
@@ -5526,12 +5570,21 @@
               ]
             },
             {
-              "title": "Clear the member tick of those who are not members",
+              "title": "Correct a registration's answers",
+              "steps": [
+                "When: the person mistyped their name, date of birth, phone, city, club or anything else on the form, or ticked that they are a member without being one.",
+                "«Registrations» → press the name → «The registration's answers» → «Change the answers». Change only what is wrong → «Save the answers»; the question names the person and the fields.",
+                "Not changed here: the email address (cancel and add again), the consents (you only withdraw them, with their own button) and the declaration (only the person signs it).",
+                "No email is sent and no place moves. Every field changed stays in the log, with its old and new value."
+              ]
+            },
+            {
+              "title": "Clear the member tick of those with no account",
               "steps": [
                 "When: before a members' race, so that only the club's members stay ticked. The participant ticks it on the form; the club does not check it.",
-                "One at a time: «Registrations» → press the name → under «The member tick» press «Not a member» and confirm. On the list, the same «Not a member» is in the row's ⋮ menu.",
-                "All at once: «Registrations» → «Search and filter» → for members choose «Only those who declared membership» → «Filter» → «Clear the ticks of those who are not members».",
-                "The list shows the ticked registrations whose address is no account's on «Staff». A member registered with another address appears too: untick them. Then «Clear the ticks on all» … and confirm.",
+                "One at a time: in «The registration's answers» untick the member tick → «Save the answers». On the list, «Not a member» is in the row's ⋮ menu.",
+                "All at once: «Registrations» → «Search and filter» → for members choose «Only those who declared membership» → «Filter» → «Member ticks with no member account».",
+                "The list shows the ticked registrations whose address is no account's on «Staff». A member registered with another address appears too: untick their row. Then «Clear the ticks on all» … and confirm.",
                 "What it does not do: it cancels no registration, moves no place and sends no email. The club on the list is cleared only if the tick had set it. Every change stays in the log."
               ]
             },
@@ -7880,7 +7933,6 @@
       "checkedIn": "Present at the desk.",
       "checkinUndone": "No longer checked in.",
       "registrationCreated": "The person was added; the email is queued.",
-      "nameCorrected": "The name was changed.",
       "memberTickCleared": "Member tick cleared.",
       "memberTickSet": "Member tick set.",
       "memberTicksCleared": {
@@ -8102,7 +8154,8 @@
         "one": "Offer sent; a supplementary place added: {count} place.",
         "few": "Offer sent; a supplementary place added: {count} places.",
         "other": "Offer sent; a supplementary place added: {count} places."
-      }
+      },
+      "answersCorrected": "Answers corrected: {fields}."
     }
   },
   "Network": {

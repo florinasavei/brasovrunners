@@ -9,24 +9,26 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import {
   clearMemberTicksByStaff,
   deleteRegistrationByStaff,
+  editRegistrationAnswers,
   previewMemberTickSweep,
-  setClubMemberDeclared,
 } from "@/modules/registrations/admin-service";
-import { listMemberTickCandidates, memberCanonicalEmails } from "@/modules/registrations/member-ticks";
+import { listMemberTickCandidates, maskAddress, memberCanonicalEmails } from "@/modules/registrations/member-ticks";
 import { resolveDisplayName } from "@/modules/registrations/names";
-import { setClubMemberDeclaredByStaff } from "@/modules/registrations/service";
+import { editRegistrationAnswersByStaff } from "@/modules/registrations/service";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { CLUB_NAME } from "@/theme/brand";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-037-03 criterion 12 (§NNN) — the self-declared member tick, cleared or set by an
- * Administrator, one row at a time or in one audited sweep.
+ * BR-REQ-037-03 criterion 13 (§NNN) — the self-declared member tick, one of the answers an
+ * Administrator corrects («Modifică datele»), one row at a time or in one audited sweep
+ * («Bife de membru fără cont de membru»).
  *
  * The owner, 2026-10-02: «Vreau să pot „curăța” și să debifez cei care au bifat că sunt membri Brașov
- * Runners dar nu sunt.» What these hold:
- * - the verb writes the tick and nothing else: no state, no place, no email; the club name goes only
- *   when the tick wrote it; one audit row `{ from, to }`; an unchanged value is refused;
+ * Runners dar nu sunt.» — then «Nu vreau să se numească „curăță”». What these hold:
+ * - the correction writes the tick and what it carries: no state, no place, no email; the club name
+ *   goes only when the tick wrote it; one audit row per changed column `{ field, from, to }`; a value
+ *   that would not change is refused;
  * - the Administrator's alone — the Organizer reads the chip and changes nothing (§289);
  * - the sweep's preview is the ticked rows whose canonical address is no live account's, any role,
  *   in the list's scope; the press clears only the rows posted that are still candidates, in one
@@ -108,12 +110,12 @@ async function auditOf(action: string) {
   return db.select().from(auditLogs).where(eq(auditLogs.action, action));
 }
 
-describe("BR-REQ-037-03 criterion 12: the member tick on one registration", () => {
+describe("BR-REQ-037-03 criterion 13: the member tick on one registration", () => {
   it("clears the tick and the club name the tick wrote — no state, no place, no email — and audits { from, to }", async () => {
     const race = await createEvent(new Date("2099-11-21T08:00:00.000Z"));
     const registration = await register(race.id, "not.member@example.org", { bibNumber: 7 });
 
-    await setClubMemberDeclared(db, admin, registration.id, false, NOW);
+    await editRegistrationAnswers(db, admin, registration.id, { clubMemberDeclared: false }, NOW);
 
     const after = await rowOf(registration.id);
     expect(after.clubMemberDeclared).toBe(false);
@@ -121,38 +123,47 @@ describe("BR-REQ-037-03 criterion 12: the member tick on one registration", () =
     expect(after.status).toBe("CONFIRMED");
     expect(after.bibNumber).toBe(7);
     expect(await db.select().from(emailOutbox)).toHaveLength(0);
-    const [audit] = await auditOf("registration.club_member_tick_changed");
-    expect(audit).toMatchObject({ actorStaffUserId: admin.id, participantId: registration.participantId, entityType: "registration", entityId: registration.id });
-    expect(audit.metadataJson).toEqual({ from: true, to: false });
+    const rows = await auditOf("registration.answer_corrected");
+    for (const audit of rows) {
+      expect(audit).toMatchObject({ actorStaffUserId: admin.id, participantId: registration.participantId, entityType: "registration", entityId: registration.id });
+    }
+    expect(rows.map((row) => row.metadataJson)).toEqual(
+      expect.arrayContaining([
+        { field: "clubMemberDeclared", from: true, to: false },
+        { field: "clubName", from: CLUB_NAME, to: null },
+      ]),
+    );
+    expect(rows).toHaveLength(2);
   });
 
   it("keeps a club the runner typed by hand when clearing, and writes the club's name when setting, as the form does", async () => {
     const race = await createEvent(new Date("2099-11-21T08:00:00.000Z"));
     const typed = await register(race.id, "typed.club@example.org", { clubName: "CS Alt Club" });
-    await setClubMemberDeclared(db, admin, typed.id, false, NOW);
+    await editRegistrationAnswers(db, admin, typed.id, { clubMemberDeclared: false }, NOW);
     expect((await rowOf(typed.id)).clubName).toBe("CS Alt Club");
 
     const unticked = await register(race.id, "unticked@example.org", { clubMemberDeclared: false, clubName: null });
-    await setClubMemberDeclared(db, admin, unticked.id, true, NOW);
+    await editRegistrationAnswers(db, admin, unticked.id, { clubMemberDeclared: true }, NOW);
     const after = await rowOf(unticked.id);
     expect(after.clubMemberDeclared).toBe(true);
     expect(after.clubName).toBe(CLUB_NAME);
-    const rows = await auditOf("registration.club_member_tick_changed");
-    expect(rows.map((row) => row.metadataJson)).toContainEqual({ from: false, to: true });
+    const rows = await auditOf("registration.answer_corrected");
+    expect(rows.map((row) => row.metadataJson)).toContainEqual({ field: "clubMemberDeclared", from: false, to: true });
+    expect(rows.map((row) => row.metadataJson)).toContainEqual({ field: "clubName", from: null, to: CLUB_NAME });
   });
 
   it("works on any status: a cancelled row's tick is cleared like a confirmed one's", async () => {
     const race = await createEvent(new Date("2099-11-21T08:00:00.000Z"));
     const cancelled = await register(race.id, "cancelled@example.org", { status: "CANCELLED", cancelledAt: NOW, cancellationSource: "ADMIN" });
-    await setClubMemberDeclared(db, admin, cancelled.id, false, NOW);
+    await editRegistrationAnswers(db, admin, cancelled.id, { clubMemberDeclared: false }, NOW);
     expect(await rowOf(cancelled.id)).toMatchObject({ clubMemberDeclared: false, status: "CANCELLED" });
   });
 
   it("refuses a value that would not change, and writes nothing", async () => {
     const race = await createEvent(new Date("2099-11-21T08:00:00.000Z"));
     const registration = await register(race.id, "already@example.org");
-    expect(await codeOf(setClubMemberDeclared(db, admin, registration.id, true, NOW))).toBe("CONFLICT");
-    expect(await auditOf("registration.club_member_tick_changed")).toHaveLength(0);
+    expect(await codeOf(editRegistrationAnswers(db, admin, registration.id, { clubMemberDeclared: true }, NOW))).toBe("VALIDATION_ERROR");
+    expect(await auditOf("registration.answer_corrected")).toHaveLength(0);
     expect((await rowOf(registration.id)).clubMemberDeclared).toBe(true);
   });
 
@@ -160,7 +171,7 @@ describe("BR-REQ-037-03 criterion 12: the member tick on one registration", () =
     const race = await createEvent(new Date("2099-11-21T08:00:00.000Z"));
     const registration = await register(race.id, "erased@example.org", { status: "CANCELLED", cancelledAt: NOW, cancellationSource: "ADMIN" });
     await deleteRegistrationByStaff(db, admin, registration.id, "asked to be erased", NOW);
-    expect(await codeOf(setClubMemberDeclared(db, admin, registration.id, false, NOW))).toBe("NOT_FOUND");
+    expect(await codeOf(editRegistrationAnswers(db, admin, registration.id, { clubMemberDeclared: false }, NOW))).toBe("NOT_FOUND");
   });
 
   it("is the Administrator's alone: the Organizer and the volunteer are refused, by the wrapper and by the service", async () => {
@@ -168,15 +179,15 @@ describe("BR-REQ-037-03 criterion 12: the member tick on one registration", () =
     const registration = await register(race.id, "refused@example.org");
     const [volunteer] = await db.insert(staffUsers).values({ email: "volunteer@dev.test", displayName: "Volunteer", role: "CONTRIBUTOR" }).returning();
     for (const actor of [organizer, volunteer]) {
-      expect(await codeOf(setClubMemberDeclared(db, actor, registration.id, false, NOW)), actor.role).toBe("FORBIDDEN");
-      expect(await codeOf(setClubMemberDeclaredByStaff(db, actor, registration.id, false, NOW)), actor.role).toBe("FORBIDDEN");
+      expect(await codeOf(editRegistrationAnswers(db, actor, registration.id, { clubMemberDeclared: false }, NOW)), actor.role).toBe("FORBIDDEN");
+      expect(await codeOf(editRegistrationAnswersByStaff(db, actor, registration.id, { clubMemberDeclared: false }, NOW)), actor.role).toBe("FORBIDDEN");
     }
     expect((await rowOf(registration.id)).clubMemberDeclared).toBe(true);
-    expect(await auditOf("registration.club_member_tick_changed")).toHaveLength(0);
+    expect(await auditOf("registration.answer_corrected")).toHaveLength(0);
   });
 });
 
-describe("BR-REQ-037-03 criterion 12: who counts as a member", () => {
+describe("BR-REQ-037-03 criterion 13: who counts as a member", () => {
   it("every live account, whatever its role, through the canonicalizer; a revoked (deleted) account is nobody", async () => {
     await db.insert(staffUsers).values([
       { email: "club.member@example.org", displayName: "Member", role: "MEMBER" },
@@ -191,7 +202,7 @@ describe("BR-REQ-037-03 criterion 12: who counts as a member", () => {
   });
 });
 
-describe("BR-REQ-037-03 criterion 12: the sweep «Curăță bifele celor care nu sunt membri»", () => {
+describe("BR-REQ-037-03 criterion 13: the sweep «Bife de membru fără cont de membru»", () => {
   async function scene() {
     const race = await createEvent(new Date("2099-11-21T08:00:00.000Z"));
     const nextRun = await createEvent(new Date("2099-11-28T08:00:00.000Z"));
@@ -220,7 +231,8 @@ describe("BR-REQ-037-03 criterion 12: the sweep «Curăță bifele celor care nu
     const s = await scene();
     const byEvent = await previewMemberTickSweep(db, admin, { eventId: s.race.id }, NOW);
     expect(byEvent.map((row) => row.id).sort()).toEqual([s.stranger.id, s.another.id].sort());
-    expect(byEvent.find((row) => row.id === s.stranger.id)?.participantEmail).toBe("Stranger.One@Example.org");
+    // The address masked: the mailbox's start and the domain, never the whole address.
+    expect(byEvent.find((row) => row.id === s.stranger.id)?.maskedEmail).toBe("St•••@Example.org");
 
     const everyUpcoming = await previewMemberTickSweep(db, admin, {}, NOW);
     expect(everyUpcoming.map((row) => row.id).sort()).toEqual([s.stranger.id, s.another.id, s.atNextRun.id].sort());
@@ -241,8 +253,9 @@ describe("BR-REQ-037-03 criterion 12: the sweep «Curăță bifele celor care nu
     expect((await rowOf(s.member.id)).clubMemberDeclared).toBe(true);
     expect(await db.select().from(emailOutbox)).toHaveLength(0);
 
-    const perRow = await auditOf("registration.club_member_tick_changed");
-    expect(perRow.map((row) => row.entityId)).toEqual([s.stranger.id]);
+    const perRow = await auditOf("registration.answer_corrected");
+    expect([...new Set(perRow.map((row) => row.entityId))]).toEqual([s.stranger.id]);
+    expect(perRow.map((row) => row.metadataJson)).toContainEqual({ field: "clubMemberDeclared", from: true, to: false });
     const [summary] = await auditOf("registrations.member_ticks_cleared");
     expect(summary).toMatchObject({ actorStaffUserId: admin.id, participantId: null, entityType: "event", entityId: s.race.id });
     expect(summary.metadataJson).toEqual({ count: 1, eventId: s.race.id });
@@ -284,5 +297,13 @@ describe("BR-REQ-037-03 criterion 12: the sweep «Curăță bifele celor care nu
     const { cleared } = await clearMemberTicksByStaff(db, admin, { scope: { eventId: s.race.id }, registrationIds: [s.member.id] }, NOW);
     expect(cleared).toBe(0);
     expect(await auditOf("registrations.member_ticks_cleared")).toHaveLength(0);
+  });
+});
+
+describe("BR-REQ-037-03 criterion 13: the preview's masked address", () => {
+  it("keeps the mailbox's first two characters and the domain", () => {
+    expect(maskAddress("ana.pop@example.org")).toBe("an•••@example.org");
+    expect(maskAddress("a@example.org")).toBe("a•••@example.org");
+    expect(maskAddress("no-at-sign")).toBe("•••");
   });
 });

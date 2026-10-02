@@ -27,9 +27,11 @@ describe("§384 ActionForm asks first", () => {
     expect(source).toMatch(/const spec = pickConfirm\(confirm, \(field\) => \{/);
     expect(source).toMatch(/if \(!spec\) return;[\s\S]*?event\.preventDefault\(\);/);
     // A body that counts the ticks (§532): with none ticked nothing is asked, and the server refuses.
-    expect(source).toMatch(/const ticked = resolveBodyCount\(spec, valuesOf\);\s*if \(!ticked\) return;\s*event\.preventDefault\(\);/);
+    expect(source).toMatch(/const ticked = resolveBodyCount\(spec, valuesOf\);\s*if \(!ticked\) return;/);
+    // A body naming the fields the press changes (§NNN): none moved, the press goes through unasked.
+    expect(source).toMatch(/const named = resolveChangedFields\(ticked, [\s\S]*?\}\);\s*if \(!named\) return;\s*event\.preventDefault\(\);/);
     // A series save's email line is summed over the dates ticked at this press, then asked (§384).
-    expect(source).toMatch(/const counted = resolveEmailCount\(ticked, valuesOf\);/);
+    expect(source).toMatch(/const counted = resolveEmailCount\(named, valuesOf\);/);
     // A typed value named in the sentence is filled from the form at the press (§511), then asked.
     expect(source).toMatch(/const resolved = fillFromForm\(counted, [\s\S]*?\}\);\s*setAsking\(\{ spec: resolved, submitter \}\);/);
   });

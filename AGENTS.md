@@ -2609,7 +2609,7 @@ share the purpose. Steps 3–8 remain M4.
 
 ### 15.11 Staff-entered registration and administrative corrections
 
-The three administrative changes to a registration, and there is no fourth (BR-REQ-037-03,
+The administrative changes to a registration, and there is no other (BR-REQ-037-03,
 BR-REQ-037-05):
 
 1. **Entering one.** `createRegistrationByStaff` calls the same `submitRegistration` the public
@@ -2619,9 +2619,23 @@ BR-REQ-037-05):
    from their own link: nothing here can reach CONFIRMED, because §10.8 says nobody signs a
    declaration for somebody else. The organizer must confirm on the form that they are relaying
    a request; the service refuses the whole registration without it.
-2. **Correcting the registered name.** One text column, audited with its previous value. There
-   is no verified-email edit and no participant merge (§10.3, BR-REQ-037-03 criterion 2): the
-   verified address is the identity, and a typo is fixed by cancelling and registering again.
+2. **Correcting the answers the person typed (2026-10-02, `DECISIONS.md` §NNN, widening the
+   name-only correction).** «Datele înscrierii» → «Modifică datele»: an Administrator
+   (`canManageRegistrations`; the Organizer reads the answers and changes nothing, §289) corrects
+   or overwrites any answer from the allowlist in `registrations/answers.ts` — the two names (the
+   name of record follows them, with §389's rule), the list name, the birth date, the sex, the
+   citizenship, the country, the city, the phone, the emergency contact, the guardian, the club
+   and the member tick, the socials, the T-shirt — each met by the form's own Zod rule and the
+   form's cross-field rules. `editRegistrationAnswersByStaff`, under the event lock, writes only
+   the changed columns and one `registration.answer_corrected` `{ field, from, to }` row per
+   column (`registration.name_corrected` for the name of record); no state, no place, no email;
+   any status, a TEST row like a real one. A key outside the allowlist is refused by name. **Three
+   kinds stay the person's:** the address (the identity, §10.4 — a typo is fixed by cancelling and
+   registering again; no verified-email edit and no participant merge, BR-REQ-037-03 criterion 2),
+   the consents (staff only withdraw them, §322) and the declaration with its statements (§10.8).
+   The member-tick sweep «Bife de membru fără cont de membru» is this correction per row, after a
+   preview of the ticked addresses that match no live `staff_users` account through the
+   canonicalizer, in one transaction with one `registrations.member_ticks_cleared` row.
 3. **Cancelling.** The same `unregister` a participant's own link uses, with
    `cancellation_source = ADMIN`, so the place is released inside the locked transaction and
    offered to the front of the waiting list (§15.5, §15.6). A status §10.5 gives no edge to

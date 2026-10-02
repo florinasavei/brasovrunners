@@ -29,7 +29,11 @@ import {
   listOutboxHistory,
   termsLineKindFor,
 } from "@/modules/registrations/admin-repository";
-import { readEmergencyDetails } from "@/modules/registrations/admin-service";
+import { readEmergencyDetails, readRegistrationAnswers } from "@/modules/registrations/admin-service";
+import { EDITABLE_ANSWERS, EMERGENCY_ANSWERS } from "@/modules/registrations/answers";
+import { countryOptions } from "@/modules/registrations/countries";
+import { SHIRT_SIZES } from "@/modules/registrations/domain/kit";
+import { SEX_CHOICES, sexShown } from "@/modules/registrations/domain/sex";
 import { sealPersonLookup } from "@/modules/registrations/person-data";
 import { instagramProfileUrl } from "@/modules/registrations/social-links";
 import { suggestFreeBibNumbers } from "@/modules/registrations/bibs";
@@ -48,19 +52,19 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import { isUuid } from "@/shared/ids";
 import GlyphButton from "@/shared/ui/GlyphButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { env } from "@/shared/config/env";
 import {
   cancelRegistrationAction,
   checkInAction,
   confirmRegistrationNowAction,
-  correctRegisteredNameAction,
   deleteRegistrationAction,
+  editRegistrationAnswersAction,
   givePlaceNowAction,
   offerPlaceAction,
   promoteRegistrationAction,
   setBibNumberAction,
-  setClubMemberDeclaredAction,
   setOutsideCapacityAction,
   withdrawConsentAction,
   declarationHoldAction,
@@ -79,7 +83,7 @@ import { givePlaceNowAhead, staffOfferIfMadeNow, staffOfferQuestion } from "@/mo
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ resent?: string; saved?: string; error?: string; health?: string; count?: string } & Partial<Record<keyof PlacesTaken, string>>>;
+  searchParams: Promise<{ resent?: string; saved?: string; error?: string; health?: string; answers?: string; count?: string } & Partial<Record<keyof PlacesTaken, string>>>;
 };
 
 export const dynamic = "force-dynamic";
@@ -191,6 +195,35 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     the registrations — asserted again in the service. Never on the desk (§15.11).
   */
   const emergency = health === "1" ? await readEmergencyDetails(db, actor, registration.id, new Date()) : null;
+  /*
+    «Datele înscrierii» (§NNN): every answer the person typed, read — and the read recorded — only when
+    the section is opened (`?answers=1`, a plain link), as the emergency details above are. Each box's
+    value as the form renders it, and the same string in its `was.` twin.
+  */
+  const answers = query.answers === "1" ? await readRegistrationAnswers(db, actor, registration.id, new Date()) : null;
+  const answerFields = EDITABLE_ANSWERS.filter((field) => field !== "tshirtSize" || registration.eventKitShirt);
+  const answerLabels = Object.fromEntries(answerFields.map((field) => [field, tr(`registrations.answers.fields.${field}`, { club: CLUB_NAME })])) as Record<string, string>;
+  const answerValues: Record<string, string> = answers
+    ? Object.fromEntries(
+        answerFields.map((field) => {
+          if (field === "clubMemberDeclared") return [field, answers.clubMemberDeclared ? "on" : ""];
+          if (field === "sex") return [field, sexShown(answers.sex) ?? ""];
+          if (field === "tshirtSize") return [field, answers.tshirtSize ?? "NONE"];
+          return [field, (answers[field] as string | null) ?? ""];
+        }),
+      )
+    : {};
+  const countries = answers ? countryOptions(locale, (code) => countryName(code, locale)) : [];
+  // The Organizer's read-only list (§289): each answer in words, «—» for none.
+  const answerShown = (field: string): string => {
+    const value = answerValues[field] ?? "";
+    if (field === "clubMemberDeclared") return value === "on" ? tr("registrations.answers.yes") : tr("registrations.answers.no");
+    if (field === "sex") return value ? tr(`registrations.answers.sex.${value}`) : "";
+    if (field === "tshirtSize") return value === "NONE" ? "" : value;
+    if ((field === "nationality" || field === "country") && value) return countryName(value, locale);
+    return value;
+  };
+  const answersRefusal = await refusalMessages(answerLabels);
   const detailPath = getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: registration.id } } });
   // Everything held about this person, one link away for the Administrator (§322) — the address
   // sealed, never written into the URL (`person-data.ts`).
@@ -239,6 +272,29 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       };
     });
   const staffTrail = auditTrail.filter((entry) => entry.action !== "registration.resubmitted");
+  /*
+    A corrected answer (§NNN) names its field in words; its two values are shown, except the phone's and
+    the emergency contact's, which only beside the emergency details or the answers opened — both
+    recorded reads (§322) — so the trail is not a way round the record.
+  */
+  const emergencyOpen = emergency !== null || answers !== null;
+  const trailLabel = (action: string, metadata: unknown): string => {
+    if (action !== "registration.answer_corrected") return tr(`registrations.audit.${action}`, auditLabelValues(metadata));
+    const field = String((metadata as { field?: unknown } | null)?.field ?? "");
+    const known = (EDITABLE_ANSWERS as readonly string[]).includes(field) || field === "listSocials";
+    return tr("registrations.audit.registration.answer_corrected", { field: known ? tr(`registrations.answers.fields.${field}`, { club: CLUB_NAME }) : field });
+  };
+  const trailMetadata = (action: string, metadata: unknown): Record<string, unknown> => {
+    const shown = { ...((metadata ?? {}) as Record<string, unknown>) };
+    if (action === "registration.answer_corrected") {
+      delete shown.field;
+      if (!emergencyOpen && EMERGENCY_ANSWERS.has(String((metadata as { field?: unknown } | null)?.field ?? ""))) {
+        delete shown.from;
+        delete shown.to;
+      }
+    }
+    return shown;
+  };
 
   const canResend = deriveAllowedResendMessageType(registration.status) !== null;
   // §10.5 has no edge from PENDING_EMAIL_CONFIRMATION to CANCELLED: an unconfirmed address
@@ -264,9 +320,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       <input type="hidden" name="registrationId" value={registration.id} />
     </>
   );
-  // The three forms that carry a typed value answer a refusal with the value still in its box (§315).
+  // The forms that carry a typed value answer a refusal with the value still in its box (§315).
   const refusal = await refusalMessages({
-    registeredName: tr("registrations.participantName"),
     reason: tr("registrations.cancelReason"),
     confirm: tr("registrations.deleteConfirm"),
   });
@@ -825,99 +880,182 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       <Divider />
 
       {/*
-        The one editable field (BR-REQ-037-03 criterion 1), and the audit trail below records
-        what it was before. There is deliberately no email field here: the verified address is
-        the participant's identity (AGENTS.md 10.3), and a typo is fixed by cancelling and
-        registering again with the right one — criterion 2 asks for exactly that absence.
+        «Datele înscrierii» (§NNN; the owner, 2026-10-02: «Nu vreau să se numească „curăță”, dar practic
+        vreau să pot modifica sau suprascrie orice dată introdusă de utilizator»): every answer the person
+        typed — §67's «Corectează numele» and the member tick folded in — behind a plain link, as the
+        emergency section is, because the phone and the emergency contact are among them and opening it is
+        recorded (`readRegistrationAnswers`). Its own block: never inside «Ziua cursei», the places or the
+        offer, since a correction moves no state, no place and no email. The Administrator corrects; the
+        Organizer reads the same answers and gets no form (§289); the action and both services refuse
+        anybody else (BR-REQ-060-01). The address, the consents and the declaration are named, read-only,
+        with why — they stay the person's (`answers.ts`).
       */}
-      {mayManage && (
-      <Box component="section">
+      <Box component="section" id="answers" data-testid="answers" sx={{ scrollMarginTop: 16 }}>
         <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
-          {tr("registrations.correctName")}
+          {tr("registrations.answers.title")}
         </Typography>
-        <ActionForm
-          action={correctRegisteredNameAction}
-          messages={refusal}
-          confirm={{ title: tr("confirm.renameTitle"), body: tr("confirm.renameBody"), confirmLabel: tr("registrations.saveName"), cancelLabel: words.cancel }}
-          scope="rename"
-          data-testid="correct-name-form"
-        >
-          <input type="hidden" name="uiLocale" value={locale} />
-          <input type="hidden" name="registrationId" value={registration.id} />
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: "flex-start" }}>
-            <RecallField
-              name="registeredName"
-              label={tr("registrations.participantName")}
-              defaultValue={registration.registeredName}
-              size="small"
-              required
-              slotProps={{ htmlInput: { maxLength: 200 } }}
-              sx={{ flex: 1 }}
-            />
-            <GlyphButton icon="rename" type="submit" variant="outlined" sx={{ minHeight: 44 }}>
-              {tr("registrations.saveName")}
+        {answers === null ? (
+          <Stack spacing={0.5} sx={{ alignItems: "flex-start" }}>
+            <GlyphButton icon={mayManage ? "rename" : "preview"} href={`${detailPath}?answers=1#answers`} variant="outlined" sx={{ minHeight: 44 }} data-testid="answers-open">
+              {mayManage ? tr("registrations.answers.open") : tr("registrations.answers.openRead")}
             </GlyphButton>
+            <Typography variant="caption" color="text.secondary">
+              {tr("registrations.answers.openHelp")}
+            </Typography>
           </Stack>
-        </ActionForm>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          {tr("registrations.correctNameHelp")}
-        </Typography>
+        ) : (
+          <Stack spacing={2}>
+            {mayManage ? (
+              <ActionForm
+                action={editRegistrationAnswersAction}
+                messages={answersRefusal}
+                confirm={{
+                  title: tr("confirm.answersTitle"),
+                  body: tr("confirm.answersBody", { name: registration.registeredName, fields: "{fields}" }),
+                  changedFields: { labels: answerLabels, separator: ", " },
+                  confirmLabel: tr("registrations.answers.save"),
+                  cancelLabel: words.cancel,
+                }}
+                scope="answers"
+                data-testid="answers-form"
+              >
+                <input type="hidden" name="uiLocale" value={locale} />
+                <input type="hidden" name="registrationId" value={registration.id} />
+                {/* What the page rendered, beside each box: only what moved is corrected (`changedAnswersOf`). */}
+                {Object.entries(answerValues).map(([field, value]) => (
+                  <input key={field} type="hidden" name={`was.${field}`} value={value} />
+                ))}
+                <Stack spacing={2}>
+                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+                    <RecallField name="firstName" label={answerLabels.firstName} defaultValue={answerValues.firstName} required slotProps={{ htmlInput: { maxLength: 100 } }} />
+                    <RecallField name="lastName" label={answerLabels.lastName} defaultValue={answerValues.lastName} required slotProps={{ htmlInput: { maxLength: 100 } }} />
+                    <RecallField
+                      name="displayName"
+                      label={answerLabels.displayName}
+                      defaultValue={answerValues.displayName}
+                      helperText={tr("registrations.answers.displayNameHelp")}
+                      slotProps={{ htmlInput: { maxLength: 120 } }}
+                    />
+                    <RecallField
+                      name="birthDate"
+                      type="date"
+                      label={answerLabels.birthDate}
+                      defaultValue={answerValues.birthDate}
+                      slotProps={{ inputLabel: { shrink: true } }}
+                    />
+                    <RecallField name="sex" select label={answerLabels.sex} defaultValue={answerValues.sex} slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}>
+                      <option value="">{tr("registrations.answers.none")}</option>
+                      {SEX_CHOICES.map((sex) => (
+                        <option key={sex} value={sex}>
+                          {tr(`registrations.answers.sex.${sex}`)}
+                        </option>
+                      ))}
+                    </RecallField>
+                    <RecallField
+                      name="nationality"
+                      select
+                      label={answerLabels.nationality}
+                      defaultValue={answerValues.nationality}
+                      slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+                    >
+                      <option value="">{tr("registrations.answers.none")}</option>
+                      {countries.map((country) => (
+                        <option key={country.code} value={country.code}>
+                          {country.label}
+                        </option>
+                      ))}
+                    </RecallField>
+                    <RecallField name="country" select label={answerLabels.country} defaultValue={answerValues.country} required slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}>
+                      {countries.map((country) => (
+                        <option key={country.code} value={country.code}>
+                          {country.label}
+                        </option>
+                      ))}
+                    </RecallField>
+                    <RecallField name="city" label={answerLabels.city} defaultValue={answerValues.city} slotProps={{ htmlInput: { maxLength: 120 } }} />
+                    <RecallField
+                      name="phone"
+                      type="tel"
+                      label={answerLabels.phone}
+                      defaultValue={answerValues.phone}
+                      helperText={tr("registrations.answers.phoneHelp")}
+                      slotProps={{ htmlInput: { maxLength: 30 } }}
+                    />
+                    <RecallField name="guardianName" label={answerLabels.guardianName} defaultValue={answerValues.guardianName} helperText={tr("registrations.answers.guardianHelp")} slotProps={{ htmlInput: { maxLength: 200 } }} />
+                    <RecallField name="emergencyContactName" label={answerLabels.emergencyContactName} defaultValue={answerValues.emergencyContactName} slotProps={{ htmlInput: { maxLength: 200 } }} />
+                    <RecallField
+                      name="emergencyContactPhone"
+                      type="tel"
+                      label={answerLabels.emergencyContactPhone}
+                      defaultValue={answerValues.emergencyContactPhone}
+                      helperText={tr("registrations.answers.phoneHelp")}
+                      slotProps={{ htmlInput: { maxLength: 30 } }}
+                    />
+                    <RecallField
+                      name="clubName"
+                      label={answerLabels.clubName}
+                      defaultValue={answerValues.clubName}
+                      helperText={tr("registrations.answers.clubNameHelp", { club: CLUB_NAME })}
+                      slotProps={{ htmlInput: { maxLength: 200 } }}
+                    />
+                    <RecallField name="stravaUrl" label={answerLabels.stravaUrl} defaultValue={answerValues.stravaUrl} slotProps={{ htmlInput: { maxLength: 200 } }} />
+                    <RecallField name="instagramHandle" label={answerLabels.instagramHandle} defaultValue={answerValues.instagramHandle} slotProps={{ htmlInput: { maxLength: 40 } }} />
+                    {/* The T-shirt only for an event that gives one (§554); otherwise not on the form, and not corrected. */}
+                    {registration.eventKitShirt && (
+                      <RecallField name="tshirtSize" select label={answerLabels.tshirtSize} defaultValue={answerValues.tshirtSize} slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}>
+                        <option value="NONE">{tr("registrations.answers.noShirt")}</option>
+                        {SHIRT_SIZES.map((size) => (
+                          <option key={size} value={size}>
+                            {size}
+                          </option>
+                        ))}
+                      </RecallField>
+                    )}
+                  </Box>
+                  {/* The member tick (BR-REQ-031-06): a claim the person made, corrected here like any answer. */}
+                  <CheckboxField name="clubMemberDeclared" defaultChecked={answers.clubMemberDeclared} help={tr("registrations.answers.memberHelp", { club: CLUB_NAME })}>
+                    {answerLabels.clubMemberDeclared}
+                  </CheckboxField>
+                  <Box>
+                    <GlyphSubmitButton label={tr("registrations.answers.save")} pendingLabel={tr("registrations.answers.pending")} icon="save" variant="contained" />
+                  </Box>
+                </Stack>
+              </ActionForm>
+            ) : (
+              <Stack spacing={0.5} data-testid="answers-read">
+                {Object.entries(answerLabels).map(([field, label]) => (
+                  <Typography key={field} variant="body2">
+                    {label}: {answerShown(field) || tr("registrations.answers.none")}
+                  </Typography>
+                ))}
+              </Stack>
+            )}
+            {/* What stays the person's, and why (`answers.ts`): one line each, the same for every reader. */}
+            <Stack spacing={0.5} data-testid="answers-locked">
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                {tr("registrations.answers.lockedTitle")}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {tr("registrations.answers.lockedAddress")}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {tr("registrations.answers.lockedConsents")}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {tr("registrations.answers.lockedDeclaration")}
+              </Typography>
+            </Stack>
+            <Typography variant="caption" color="text.secondary">
+              {tr("registrations.answers.viewed")}
+            </Typography>
+            <Box>
+              <GlyphButton icon="dismiss" href={`${detailPath}#answers`} variant="text" size="small" sx={{ minHeight: 44 }}>
+                {tr("registrations.answers.hide")}
+              </GlyphButton>
+            </Box>
+          </Stack>
+        )}
       </Box>
-      )}
-
-      {/*
-        «Bifa de membru» (§NNN; the owner, 2026-10-02: «Vreau să pot „curăța” și să debifez cei care au
-        bifat că sunt membri Brașov Runners dar nu sunt»): the self-declared tick, cleared or set. Its own
-        block beside the name, never inside the desk's or the places' — it moves no place and no state,
-        and emails nobody. The Administrator's; the Organizer reads the chip above and nothing here
-        (§289), and the action and both services refuse anybody else (BR-REQ-060-01).
-      */}
-      {mayManage && (
-        <Box component="section" data-testid="member-tick">
-          <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
-            {tr("registrations.memberTick.title")}
-          </Typography>
-          <Typography variant="body2" sx={{ mb: 1 }}>
-            {registration.clubMemberDeclared
-              ? tr("registrations.memberTick.ticked")
-              : tr("registrations.memberTick.unticked", { club: CLUB_NAME })}
-          </Typography>
-          <ActionForm
-            action={setClubMemberDeclaredAction}
-            confirm={
-              registration.clubMemberDeclared
-                ? {
-                    title: tr("confirm.memberClearTitle"),
-                    body: tr("confirm.memberClearBody", { name: registration.registeredName }),
-                    confirmLabel: tr("registrations.memberTick.clear"),
-                    cancelLabel: words.cancel,
-                  }
-                : {
-                    title: tr("confirm.memberSetTitle"),
-                    body: tr("confirm.memberSetBody", { name: registration.registeredName, club: CLUB_NAME }),
-                    confirmLabel: tr("registrations.memberTick.set"),
-                    cancelLabel: words.cancel,
-                  }
-            }
-            data-testid="member-tick-form"
-          >
-            <input type="hidden" name="uiLocale" value={locale} />
-            <input type="hidden" name="registrationId" value={registration.id} />
-            <input type="hidden" name="to" value={registration.clubMemberDeclared ? "0" : "1"} />
-            <GlyphButton
-              icon={registration.clubMemberDeclared ? "memberOff" : "memberOn"}
-              type="submit"
-              variant="outlined"
-              sx={{ minHeight: 44 }}
-            >
-              {registration.clubMemberDeclared ? tr("registrations.memberTick.clear") : tr("registrations.memberTick.set")}
-            </GlyphButton>
-          </ActionForm>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            {tr("registrations.memberTick.help")}
-          </Typography>
-        </Box>
-      )}
 
       {/*
         Cancelling is what "remove this registration" means: the row is the record of what
@@ -1247,19 +1385,21 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           <Typography variant="h3" sx={{ fontSize: "1rem" }}>
             {tr("registrations.auditTrail")}
           </Typography>
-          {staffTrail.map((entry, index) => (
-            <Typography key={index} variant="body2">
-              {dt(entry.createdAt)} · {tr(`registrations.audit.${entry.action}`, auditLabelValues(entry.metadataJson))} ·{" "}
-              {entry.actorName ??
-                (entry.actorStaffUserId === null
-                  ? tr("registrations.auditActorParticipant")
-                  : tr("registrations.auditActorRemoved"))}
-              {/* Metadata is the shape of the change — a name before and after, a typed reason —
-                  never a copy of what the change was about (AGENTS.md 12.12). */}
-              {Object.keys(entry.metadataJson as object).length > 0 &&
-                ` · ${JSON.stringify(entry.metadataJson)}`}
-            </Typography>
-          ))}
+          {staffTrail.map((entry, index) => {
+            const metadata = trailMetadata(entry.action, entry.metadataJson);
+            return (
+              <Typography key={index} variant="body2">
+                {dt(entry.createdAt)} · {trailLabel(entry.action, entry.metadataJson)} ·{" "}
+                {entry.actorName ??
+                  (entry.actorStaffUserId === null
+                    ? tr("registrations.auditActorParticipant")
+                    : tr("registrations.auditActorRemoved"))}
+                {/* Metadata is the shape of the change — a name before and after, a typed reason —
+                    never a copy of what the change was about (AGENTS.md 12.12). */}
+                {Object.keys(metadata).length > 0 && ` · ${JSON.stringify(metadata)}`}
+              </Typography>
+            );
+          })}
         </Stack>
       )}
 

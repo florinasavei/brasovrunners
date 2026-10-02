@@ -1,7 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { flashOutcome } from "@/shared/feedback/flash";
+import { getTranslations } from "next-intl/server";
+import { flash, flashOutcome } from "@/shared/feedback/flash";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
@@ -11,7 +12,6 @@ import {
   checkInByStaff,
   clearMemberTicksByStaff,
   confirmRegistrationByStaff,
-  correctRegisteredName,
   createRegistrationByStaff,
   deleteRegistrationByStaff,
   givePlaceToUnconfirmedByStaff,
@@ -20,7 +20,7 @@ import {
   promoteRegistrationByStaff,
   bulkDeleteRegistrationsByStaff,
   setBibNumberByStaff,
-  setClubMemberDeclared,
+  editRegistrationAnswers,
   setOutsideCapacity,
   withdrawOptionalData,
 } from "@/modules/registrations/admin-service";
@@ -29,6 +29,7 @@ import { holdDeclarationAcceptance, releaseDeclarationAcceptance } from "@/modul
 import { findEventForRegistrationById } from "@/modules/events/repository";
 import { effectiveMinimumAge, yearsPhrase } from "@/modules/registrations/domain/age";
 import { UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
+import { ANSWERS_UNCHANGED, EDITABLE_ANSWERS } from "@/modules/registrations/answers";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
 import { waitlistRefusalCode } from "@/modules/registrations/domain/waitlist";
 import { confirmedCapacityOf, noFreePlaceOutcome, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
@@ -41,6 +42,7 @@ import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { wholeDigits } from "@/shared/forms/whole-digits";
 import { normalizeTypedDate } from "@/shared/forms/pickers/wall-values";
 import type { SexChoice } from "@/modules/registrations/domain/sex";
+import { CLUB_NAME } from "@/theme/brand";
 
 /**
  * The three administrative changes to a registration (BR-REQ-037-03, BR-REQ-037-05).
@@ -416,19 +418,62 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
   return backTo(getPathname({ locale, href: "/admin/registrations" }), outcome);
 }
 
-/** The one editable field (BR-REQ-037-03). A refused name stays in its box (§315). */
-export async function correctRegisteredNameAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+/**
+ * The answers a form posted that differ from what the page rendered (§NNN): each allowlisted answer
+ * travels with its `was.<name>` twin, and only the ones whose value moved become the correction — so a
+ * page opened before a colleague's save corrects what this Administrator changed and nothing else. The
+ * member tick is a box: ticked posts `on`, and its twin says `on` or nothing.
+ */
+function changedAnswersOf(form: FormData): Record<string, string | boolean> {
+  const changes: Record<string, string | boolean> = {};
+  for (const field of EDITABLE_ANSWERS) {
+    const was = form.get(`was.${field}`);
+    if (typeof was !== "string") continue;
+    if (field === "clubMemberDeclared") {
+      const ticked = form.get(field) === "on";
+      if (ticked !== (was === "on")) changes[field] = ticked;
+      continue;
+    }
+    const now = text(form, field).trim();
+    if (now !== was.trim()) changes[field] = now;
+  }
+  return changes;
+}
+
+/**
+ * «Modifică datele» (§NNN): an Administrator corrects the answers the person typed — the page's one
+ * form, which also holds the name (§67's «Corectează numele», folded in). The coarse gate here,
+ * `admin-service.ts` and the service assert the role again (BR-REQ-060-01). A refusal keeps every box
+ * as typed (§315); a press that changes nothing says so in its own sentence. A success flashes
+ * «Date corectate: {fields}», the fields named in the reader's language, and comes back to the page.
+ */
+export async function editRegistrationAnswersAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const registrationId = text(form, "registrationId");
 
+  let corrected: string[];
   try {
     const actor = await requireStaffCapability(canManageRegistrations);
-    await correctRegisteredName(getDb(), actor, registrationId, text(form, "registeredName"), new Date());
+    ({ corrected } = await editRegistrationAnswers(getDb(), actor, registrationId, changedAnswersOf(form), new Date()));
   } catch (error) {
-    return refused(error, form, { fieldNames: (failure) => (failure.code === "VALIDATION_ERROR" ? ["registeredName"] : failure.fields) });
+    const refusal = refused(error, form, {
+      fieldNames: (failure) => failure.fields.filter((name) => name !== UNDER_MINIMUM_AGE && name !== ANSWERS_UNCHANGED),
+    });
+    if (isDomainError(error) && error.fields.includes(ANSWERS_UNCHANGED)) return { ...refusal, error: "ANSWERS_UNCHANGED", fields: [] };
+    if (!(isDomainError(error) && error.fields.includes(UNDER_MINIMUM_AGE))) return refusal;
+    const event = await findEventForRegistrationById(getDb(), registrationId);
+    return { ...refusal, error: "ANSWER_UNDER_MINIMUM_AGE", errorValues: { age: yearsPhrase(effectiveMinimumAge(event?.minAge), locale) } };
   }
 
-  return backTo(detailPath(locale, registrationId), { saved: "nameCorrected" });
+  // The fields by their names on the form, never their values (`flash.ts`: no name, no address).
+  const t = await getTranslations({ locale, namespace: "Admin" });
+  // The name of record follows the two names (§67): the toast names the names the Administrator typed.
+  const fields = corrected
+    .filter((field) => field !== "registeredName")
+    .map((field) => t(`registrations.answers.fields.${field}`, { club: CLUB_NAME }))
+    .join(", ");
+  await flash({ kind: "success", key: "answersCorrected", values: { fields } });
+  redirect(`${detailPath(locale, registrationId)}?saved=answersCorrected#admin-alert`);
 }
 
 /**
@@ -445,30 +490,25 @@ async function backToList(locale: Locale, listQuery: string, outcome: Record<str
 }
 
 /**
- * «Nu e membru» / «E membru» (§NNN): the self-declared member tick, cleared or set on one row — from
- * the registration's page, or from the list's "⋮" (which posts `listQuery` and comes back to the
- * list). The coarse gate here, `admin-service.ts` and the service assert it again (BR-REQ-060-01).
- * Nothing typed, so nothing to keep: a refusal is a code on the page it came from.
+ * «Nu e membru» / «E membru» (§NNN): the member tick cleared or set on one row from the list's "⋮" —
+ * the same correction as «Modifică datele», of one answer (`editRegistrationAnswers`), posting
+ * `listQuery` so the press comes back to the list. A tick that already says `to` (a stale list, a
+ * colleague first) changes nothing and says so. The coarse gate here; the services assert it again.
  */
 export async function setClubMemberDeclaredAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const registrationId = text(form, "registrationId");
   const ticked = text(form, "to") === "1";
-  const listQuery = form.get("listQuery");
 
-  let outcome: { error?: string; saved?: string };
+  let outcome: Record<string, string>;
   try {
     const actor = await requireStaffCapability(canManageRegistrations);
-    await setClubMemberDeclared(getDb(), actor, registrationId, ticked, new Date());
+    await editRegistrationAnswers(getDb(), actor, registrationId, { clubMemberDeclared: ticked }, new Date());
     outcome = { saved: ticked ? "memberTickSet" : "memberTickCleared" };
   } catch (error) {
-    outcome = outcomeOf(error);
+    outcome = isDomainError(error) && error.fields.includes(ANSWERS_UNCHANGED) ? { error: "ANSWERS_UNCHANGED" } : outcomeOf(error);
   }
-
-  if (typeof listQuery === "string") {
-    return backToList(locale, listQuery, Object.fromEntries(Object.entries(outcome).filter(([, value]) => value !== undefined)) as Record<string, string>);
-  }
-  return backTo(detailPath(locale, registrationId), outcome);
+  return backToList(locale, text(form, "listQuery"), outcome);
 }
 
 /**

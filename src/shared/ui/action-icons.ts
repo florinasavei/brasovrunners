@@ -3,7 +3,6 @@ import ArchiveIcon from "@mui/icons-material/Archive";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import CardMembershipIcon from "@mui/icons-material/CardMembership";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import CleaningServicesIcon from "@mui/icons-material/CleaningServices";
 import CloseIcon from "@mui/icons-material/Close";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -19,6 +18,7 @@ import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import EventSeatIcon from "@mui/icons-material/EventSeat";
+import FactCheckIcon from "@mui/icons-material/FactCheck";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
 import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
@@ -166,10 +166,11 @@ export type ActionIconName =
   | "hold"
   | "release"
   // The self-declared member tick (§NNN): «Nu e membru» is the person taken off, «E membru» the
-  // membership card, and the sweep over the list — «Curăță bifele celor care nu sunt membri» — the broom.
+  // membership card, and «Bife de membru fără cont de membru» — the ticks checked against the
+  // members' accounts before any is taken off — the list being checked.
   | "memberOff"
   | "memberOn"
-  | "sweep"
+  | "memberCheck"
   // The bibs (§264): a PDF to keep is the PDF; the batch that goes to the printer now — only the
   // unprinted, a single reprint, the blank paper form — is the printer; saying it came out of
   // the printer is the double tick, and taking that back is the tick struck through.
@@ -257,7 +258,7 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   release: LockOpenIcon,
   memberOff: PersonRemoveIcon,
   memberOn: CardMembershipIcon,
-  sweep: CleaningServicesIcon,
+  memberCheck: FactCheckIcon,
 
   pdf: PictureAsPdfIcon,
   print: PrintIcon,

@@ -302,6 +302,23 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
         ),
       )
       .returning({ id: registrations.id });
+    /*
+      A corrected emergency contact (§NNN, «Modifică datele»): its old and new values leave the trail
+      with the contact itself — the row keeps which field was corrected, by whom and when. Only rows
+      that still hold a value, so a later pass touches nothing.
+    */
+    await tx
+      .update(auditLogs)
+      .set({ metadataJson: sql`(${auditLogs.metadataJson} - 'from' - 'to')` })
+      .where(
+        and(
+          eq(auditLogs.action, "registration.answer_corrected"),
+          eq(auditLogs.entityType, "registration"),
+          inArray(auditLogs.entityId, recent),
+          sql`${auditLogs.metadataJson} ->> 'field' in ('emergencyContactName', 'emergencyContactPhone')`,
+          sql`((${auditLogs.metadataJson} -> 'from') is not null or (${auditLogs.metadataJson} -> 'to') is not null)`,
+        ),
+      );
     counts.identityDocuments = clearedDocuments.length;
     counts.healthNotes = clearedHealth.length;
     counts.emergencyContacts = clearedContacts.length;

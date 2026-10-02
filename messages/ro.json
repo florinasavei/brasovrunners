@@ -690,18 +690,60 @@
       "relayConfirmation": "Confirm că această persoană mi-a cerut să o înscriu și i-am spus că datele ei le folosește clubul pentru cursă, iar nota de confidențialitate este pe site, jos pe fiecare pagină.",
       "create": "Adaugă înscrierea",
       "viewForEvent": "Vezi înscrierile acestui eveniment",
-      "correctName": "Corectează numele",
-      "correctNameHelp": "Aici se corectează numele; bifa de membru e mai jos. Adresa de e-mail e identitatea participantului: pentru o adresă greșită, anulează înscrierea și adaug-o din nou cu adresa corectă.",
+      "answers": {
+        "title": "Datele înscrierii",
+        "open": "Modifică datele",
+        "openRead": "Arată datele",
+        "openHelp": "Tot ce a scris persoana în formular, cu telefonul și persoana de contact; deschiderea rămâne în jurnal.",
+        "hide": "Închide datele",
+        "save": "Salvează datele",
+        "pending": "Se salvează…",
+        "viewed": "Deschiderea acestor date a rămas în jurnal, cu numele tău.",
+        "none": "—",
+        "yes": "Da",
+        "no": "Nu",
+        "noShirt": "Fără tricou",
+        "sex": {
+          "FEMALE": "Feminin",
+          "MALE": "Masculin"
+        },
+        "displayNameHelp": "Gol: prenumele și numele.",
+        "phoneHelp": "Cu prefixul țării (+40 712 345 678); un număr românesc merge și cu 0 în față.",
+        "guardianHelp": "Obligatoriu pentru un minor.",
+        "clubNameHelp": "Cât timp bifa de membru e pusă, clubul e {club}.",
+        "memberHelp": "Debifată, clubul {club} dispare și de pe listă.",
+        "lockedTitle": "Ce nu se schimbă de aici",
+        "lockedAddress": "Adresa de email e identitatea înscrierii: pentru o adresă greșită, anulează și adaugă din nou.",
+        "lockedConsents": "Consimțămintele le dă doar persoana — tu le poți doar retrage, cu butonul lor.",
+        "lockedDeclaration": "Declarația o semnează doar persoana.",
+        "fields": {
+          "firstName": "Prenume",
+          "lastName": "Nume",
+          "displayName": "Numele de pe listă",
+          "birthDate": "Data nașterii",
+          "sex": "Sex",
+          "nationality": "Cetățenie",
+          "country": "Țara de reședință",
+          "city": "Orașul",
+          "phone": "Telefon",
+          "emergencyContactName": "Persoana de contact",
+          "emergencyContactPhone": "Telefonul persoanei de contact",
+          "guardianName": "Părintele sau tutorele",
+          "clubMemberDeclared": "Membru {club} (declarat)",
+          "clubName": "Clubul",
+          "stravaUrl": "Strava",
+          "instagramHandle": "Instagram",
+          "tshirtSize": "Mărimea tricoului",
+          "listSocials": "Strava și Instagram pe listă",
+          "registeredName": "Numele oficial"
+        }
+      },
       "memberTick": {
-        "title": "Bifa de membru",
-        "ticked": "A bifat că e membru al clubului. Dacă nu e, scoate bifa: clubul pus de bifă dispare și de pe listă.",
-        "unticked": "Nu a bifat că e membru al clubului. Dacă este, pune bifa: pe listă clubul devine {club}.",
-        "help": "Nimic altceva nu se schimbă: nici starea, nici locul, niciun email. Schimbarea rămâne în jurnal.",
         "clear": "Nu e membru",
         "set": "E membru"
       },
       "memberSweep": {
-        "open": "Curăță bifele celor care nu sunt membri",
+        "open": "Bife de membru fără cont de membru",
         "title": "Bife de membru fără cont de membru",
         "count": {
           "one": "{count} înscriere cu bifa de membru fără cont de membru",
@@ -711,8 +753,7 @@
         "scopeEvent": "La {event}.",
         "scopeAll": "La toate evenimentele care nu au început.",
         "who": "Membru înseamnă un cont din Echipa, cu orice rol, comparat după adresa de email. Un cont retras nu mai e membru.",
-        "otherAddress": "Un membru înscris cu altă adresă decât cea din cont apare și el aici: debifează-l, ca să-și păstreze bifa.",
-        "rowLabel": "Scoate bifa: {name}",
+        "otherAddress": "Un membru înscris cu altă adresă decât cea din cont apare și el aici: debifează-i rândul, ca să-și păstreze bifa («Lasă bifa»).",
         "submit": {
           "one": "Scoate bifa la {count} înscriere",
           "few": "Scoate bifa la cele {count}",
@@ -728,7 +769,6 @@
           "other": "Am scos bifa de membru la {count} de înscrieri. Nimic altceva nu s-a schimbat."
         }
       },
-      "saveName": "Salvează numele",
       "cancelTitle": "Anulează înscrierea",
       "cancelReason": "Motivul",
       "cancelAction": "Anulează înscrierea",
@@ -779,7 +819,9 @@
           "family_resent": "Email retrimis familiei",
           "offered_by_staff": "Ofertă trimisă înaintea listei de așteptare («Trimite-i oferta»)",
           "address_vouched_by_staff": "Adresă garantată de echipă; loc dat înaintea listei de așteptare («Dă-i un loc acum»)",
-          "outside_capacity_changed": "Pus în afara locurilor sau numărat din nou între locuri"
+          "outside_capacity_changed": "Pus în afara locurilor sau numărat din nou între locuri",
+          "answer_corrected": "Răspuns corectat: {field}",
+          "answers_viewed": "Datele înscrierii deschise, cu telefonul și persoana de contact"
         },
         "event": {
           "capacity_raised_for_offer": "Loc suplimentar adăugat pentru o ofertă («Trimite-i oferta»): {from} → {to}",
@@ -1194,12 +1236,6 @@
       "reminderBody": "{name} primește acum reminderul dinaintea cursei.",
       "createRegistrationTitle": "Adaugi înscrierea?",
       "createRegistrationBody": "Persoana este înscrisă la eveniment în numele ei, la cererea ei, și primește emailul pasului următor.",
-      "renameTitle": "Schimbi numele?",
-      "renameBody": "Numele nou apare pe listă, pe numărul de concurs și în emailuri; cel vechi rămâne în jurnal.",
-      "memberClearTitle": "Scoți bifa de membru?",
-      "memberClearBody": "Scoți bifa de membru de la {name}; nimic altceva nu se schimbă, niciun email.",
-      "memberSetTitle": "Pui bifa de membru?",
-      "memberSetBody": "Pui bifa de membru la {name}; pe listă clubul devine {club}. Nimic altceva nu se schimbă, niciun email.",
       "memberSweepTitle": "Scoți bifele de membru?",
       "memberSweepBody": {
         "one": "Scoți bifa de membru la {count} înscriere; nimic altceva nu se schimbă, niciun email.",
@@ -1296,7 +1332,13 @@
       "givePlaceNowRaiseConfirm": "Adaugă un loc și dă-i locul",
       "offerPlaceRaise": "Nu e niciun loc liber: apăsând, adaugi un loc suplimentar peste limită, capacitatea devine {n}.",
       "offerPlaceRaiseConfirm": "Adaugă un loc și trimite oferta",
-      "offerPlaceAfterClose": "Înscrierile s-au închis: oferta e valabilă cel mult până la start."
+      "offerPlaceAfterClose": "Înscrierile s-au închis: oferta e valabilă cel mult până la start.",
+      "answersTitle": "Corectezi datele?",
+      "answersBody": "Corectezi la {name}: {fields}. Nimic altceva nu se schimbă, niciun email; valorile vechi rămân în jurnal.",
+      "memberClearTitle": "Scoți bifa de membru?",
+      "memberClearBody": "Scoți bifa de membru de la {name}; nimic altceva nu se schimbă, niciun email.",
+      "memberSetTitle": "Pui bifa de membru?",
+      "memberSetBody": "Pui bifa de membru la {name}; pe listă clubul devine {club}. Nimic altceva nu se schimbă, niciun email."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -1354,7 +1396,9 @@
       "SEND_NOW_MAILGUN_STOPPED_FALLBACK_OFF": "Nu s-a trimis nimic: Mailgun e oprit, iar «Gmail preia când Mailgun se oprește» e pe Nu. Pune-l pe Da în «Emailuri», sau alege «Pune la coadă»: pleacă singur când Mailgun reia.",
       "SEND_NOW_MAILGUN_STOPPED_NO_GMAIL": "Nu s-a trimis nimic: Mailgun e oprit, iar Gmail-ul clubului nu e configurat aici. Alege «Pune la coadă»: emailul pleacă singur când Mailgun reia.",
       "SEND_NOW_MAILGUN_STOPPED_GMAIL_FULL": "Nu s-a trimis nimic: Mailgun e oprit, iar Gmail și-a atins limita pe zi. Ridic-o în «Emailuri» (cel mult 500), sau alege «Pune la coadă»: pleacă singur când Mailgun reia.",
-      "SEND_NOW_MAILGUN_STOPPED_NOTICE": "Nu s-a trimis nimic: Mailgun e oprit, iar Gmail preia abia după ce aprobi nota de confidențialitate din șablonul nou. Până atunci alege «Pune la coadă»."
+      "SEND_NOW_MAILGUN_STOPPED_NOTICE": "Nu s-a trimis nimic: Mailgun e oprit, iar Gmail preia abia după ce aprobi nota de confidențialitate din șablonul nou. Până atunci alege «Pune la coadă».",
+      "ANSWERS_UNCHANGED": "Nu s-a schimbat nimic: datele sunt deja acestea. Reîncarcă pagina dacă un coleg le-a corectat între timp.",
+      "ANSWER_UNDER_MINIMUM_AGE": "Data nașterii nu s-a salvat: persoana nu ar avea {age} împliniți în ziua cursei, vârsta minimă a evenimentului."
     },
     "editor": {
       "draftPreview": {
@@ -5526,12 +5570,21 @@
               ]
             },
             {
-              "title": "Scoate bifa de membru celor care nu sunt membri",
+              "title": "Corectează datele unei înscrieri",
+              "steps": [
+                "Când: persoana a scris greșit numele, data nașterii, telefonul, orașul, clubul sau altceva din formular, sau a bifat că e membru fără să fie.",
+                "«Înscrieri» → apasă pe nume → «Datele înscrierii» → «Modifică datele». Schimbă doar ce e greșit → «Salvează datele»; întrebarea numește persoana și câmpurile.",
+                "Nu se schimbă de aici: adresa de email (anulează și adaugă din nou), consimțămintele (doar le retragi, cu butonul lor) și declarația (o semnează doar persoana).",
+                "Nu se trimite niciun email și nu se mută niciun loc. Fiecare câmp schimbat rămâne în jurnal, cu valoarea veche și cea nouă."
+              ]
+            },
+            {
+              "title": "Scoate bifa de membru celor fără cont",
               "steps": [
                 "Când: înainte de o cursă pentru membri, ca să rămână bifați doar membrii clubului. Bifa o pune participantul în formular; clubul nu o verifică.",
-                "Unul câte unul: «Înscrieri» → apasă pe nume → la «Bifa de membru» apasă «Nu e membru» și confirmă. Pe listă, același «Nu e membru» e în meniul ⋮ al rândului.",
-                "Toți deodată: «Înscrieri» → «Caută și filtrează» → la membri alege «Doar cei care s-au declarat membri» → «Filtrează» → «Curăță bifele celor care nu sunt membri».",
-                "Lista arată înscrierile bifate a căror adresă nu e a niciunui cont din «Echipa». Un membru înscris cu altă adresă apare și el: debifează-l. Apoi «Scoate bifa la cele» … și confirmă.",
+                "Unul câte unul: în «Datele înscrierii» debifează bifa de membru → «Salvează datele». Pe listă, «Nu e membru» e în meniul ⋮ al rândului.",
+                "Toți deodată: «Înscrieri» → «Caută și filtrează» → la membri alege «Doar cei care s-au declarat membri» → «Filtrează» → «Bife de membru fără cont de membru».",
+                "Lista arată înscrierile bifate a căror adresă nu e a niciunui cont din «Echipa». Un membru înscris cu altă adresă apare și el: debifează-i rândul. Apoi «Scoate bifa la cele» … și confirmă.",
                 "Ce nu face: nu anulează nicio înscriere, nu mută niciun loc, nu trimite niciun email. Clubul de pe listă se șterge doar dacă era cel pus de bifă. Fiecare schimbare rămâne în jurnal."
               ]
             },
@@ -7880,7 +7933,6 @@
       "checkedIn": "Prezent la masă.",
       "checkinUndone": "Nu mai e marcat prezent.",
       "registrationCreated": "Persoana a fost adăugată; emailul e pus la coadă.",
-      "nameCorrected": "Numele a fost schimbat.",
       "memberTickCleared": "Bifa de membru a fost scoasă.",
       "memberTickSet": "Bifa de membru a fost pusă.",
       "memberTicksCleared": {
@@ -8102,7 +8154,8 @@
         "one": "Loc dat; loc suplimentar adăugat: {count} loc. Emailul cu declarația a plecat.",
         "few": "Loc dat; loc suplimentar adăugat: {count} locuri. Emailul cu declarația a plecat.",
         "other": "Loc dat; loc suplimentar adăugat: {count} de locuri. Emailul cu declarația a plecat."
-      }
+      },
+      "answersCorrected": "Date corectate: {fields}."
     }
   },
   "Network": {

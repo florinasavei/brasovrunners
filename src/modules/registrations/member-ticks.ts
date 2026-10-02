@@ -7,7 +7,7 @@ import type { Database } from "@/db/types";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 
 /**
- * Who the club's members are, for «Curăță bifele celor care nu sunt membri» (§NNN), and which ticked
+ * Who the club's members are, for «Bife de membru fără cont de membru» (§NNN), and which ticked
  * registrations name nobody among them.
  *
  * **A member is any live account on the team's allowlist** (`staff_users`), whatever its role: the
@@ -45,9 +45,24 @@ export type MemberTickCandidate = {
   status: RegistrationStatus;
   eventId: string;
   eventTitle: string | null;
-  /** The address as the list shows it (the delivery address), for the Administrator to recognise. */
-  participantEmail: string;
+  /**
+   * The address masked (`maskAddress`): enough to recognise a member who registered with a family or
+   * work address, never the whole address on a page of many people.
+   */
+  maskedEmail: string;
 };
+
+/**
+ * `an•••@example.org`: the first two characters of the mailbox, then the domain whole — the part
+ * that tells a work or family address apart. A mailbox of one or two characters keeps only the first.
+ */
+export function maskAddress(address: string): string {
+  const at = address.lastIndexOf("@");
+  if (at <= 0) return "•••";
+  const mailbox = address.slice(0, at);
+  const kept = mailbox.length > 2 ? mailbox.slice(0, 2) : mailbox.slice(0, 1);
+  return `${kept}•••${address.slice(at)}`;
+}
 
 /**
  * The sweep's scope is the list's (§NNN): one event when the list is about one, otherwise every event
@@ -102,6 +117,6 @@ export async function listMemberTickCandidates<T extends Record<string, unknown>
       status: row.status,
       eventId: row.eventId,
       eventTitle: row.eventTitle,
-      participantEmail: row.participantEmail,
+      maskedEmail: maskAddress(row.participantEmail),
     }));
 }
