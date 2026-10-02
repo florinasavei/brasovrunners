@@ -1,4 +1,5 @@
 import { and, count, eq, gt, isNull, lt, lte } from "drizzle-orm";
+import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { type Participant, participants } from "@/db/schema/participants";
@@ -4016,11 +4017,18 @@ export async function editRegistrationAnswersByStaff<T extends Record<string, un
     const current = await repo.findRegistrationById(tx, registrationId);
     if (!current) throw new DomainError("NOT_FOUND", "no such registration");
 
+    // A signed declaration names the guardian (`signed-declaration.ts`): under one, the guardian stays (`GUARDIAN_SIGNED`).
+    const [signed] = await tx
+      .select({ id: declarationAcceptances.id })
+      .from(declarationAcceptances)
+      .where(eq(declarationAcceptances.registrationId, current.id))
+      .limit(1);
     const plan = planAnswerEdit(current, changes, {
       eventDay: dayIn(event.startsAt, event.timezone ?? EVENT_TIMEZONE_DEFAULT),
       minAge: event.minAge,
       kitShirt: event.kitShirt,
       now,
+      declarationSigned: signed !== undefined,
     });
     if (plan.nameChange) {
       // Two people on one address are told apart by their names (§389): a corrected name that is another's here makes one of two.

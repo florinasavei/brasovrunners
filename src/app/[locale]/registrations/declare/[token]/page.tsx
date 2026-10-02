@@ -482,8 +482,10 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const contactHref = getPathname({ locale, href: "/contact" });
   /*
     Where a parent whose own name was mistyped goes (§314, found in review): "Înscrierile mele",
-    to cancel and register again. The club's "Corectează numele" changes the participant's name
-    and nothing else, so the minor's sentence must not promise the correction the adult's does.
+    to cancel and register again. The club's «Modifică datele» (§NNN) corrects the names and, only
+    while no declaration is signed, the guardian (`answers.ts#GUARDIAN_SIGNED`) — a correction that
+    waits on somebody at the club — so the minor's sentence still sends the parent to the path that
+    needs nobody, and promises no correction.
   */
   const myRegistrationsHref = getPathname({ locale, href: "/registrations/mine" });
   // "Reply to the email" only where a reply reaches somebody (the emails' own footer, §96).

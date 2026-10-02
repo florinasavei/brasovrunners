@@ -29,7 +29,7 @@ import { holdDeclarationAcceptance, releaseDeclarationAcceptance } from "@/modul
 import { findEventForRegistrationById } from "@/modules/events/repository";
 import { effectiveMinimumAge, yearsPhrase } from "@/modules/registrations/domain/age";
 import { UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
-import { ANSWERS_UNCHANGED, EDITABLE_ANSWERS } from "@/modules/registrations/answers";
+import { ANSWERS_UNCHANGED, EDITABLE_ANSWERS, EMERGENCY_SAME, GUARDIAN_SIGNED } from "@/modules/registrations/answers";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
 import { waitlistRefusalCode } from "@/modules/registrations/domain/waitlist";
 import { confirmedCapacityOf, noFreePlaceOutcome, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
@@ -456,10 +456,14 @@ export async function editRegistrationAnswersAction(_previous: FormOutcome | nul
     const actor = await requireStaffCapability(canManageRegistrations);
     ({ corrected } = await editRegistrationAnswers(getDb(), actor, registrationId, changedAnswersOf(form), new Date()));
   } catch (error) {
+    const markers: readonly string[] = [UNDER_MINIMUM_AGE, ANSWERS_UNCHANGED, EMERGENCY_SAME, GUARDIAN_SIGNED];
     const refusal = refused(error, form, {
-      fieldNames: (failure) => failure.fields.filter((name) => name !== UNDER_MINIMUM_AGE && name !== ANSWERS_UNCHANGED),
+      fieldNames: (failure) => failure.fields.filter((name) => !markers.includes(name)),
     });
     if (isDomainError(error) && error.fields.includes(ANSWERS_UNCHANGED)) return { ...refusal, error: "ANSWERS_UNCHANGED", fields: [] };
+    // Which rule refused the box (§231's marker, and the signed declaration's guardian), never «not valid» about a real value.
+    if (isDomainError(error) && error.fields.includes(EMERGENCY_SAME)) return { ...refusal, error: "ANSWER_EMERGENCY_SAME" };
+    if (isDomainError(error) && error.fields.includes(GUARDIAN_SIGNED)) return { ...refusal, error: "ANSWER_GUARDIAN_SIGNED" };
     if (!(isDomainError(error) && error.fields.includes(UNDER_MINIMUM_AGE))) return refusal;
     const event = await findEventForRegistrationById(getDb(), registrationId);
     return { ...refusal, error: "ANSWER_UNDER_MINIMUM_AGE", errorValues: { age: yearsPhrase(effectiveMinimumAge(event?.minAge), locale) } };

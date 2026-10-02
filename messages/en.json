@@ -710,12 +710,13 @@
         "displayNameHelp": "Empty: the first and last name.",
         "phoneHelp": "With the country code (+40 712 345 678); a Romanian number also works with a leading 0.",
         "guardianHelp": "Required for a minor.",
+        "guardianSignedHelp": "The declaration is signed and names them: it does not change here.",
         "clubNameHelp": "While the member tick is on, the club is {club}.",
         "memberHelp": "Unticked, the club {club} also goes from the list.",
         "lockedTitle": "What does not change here",
         "lockedAddress": "The email address is the registration's identity: for a wrong address, cancel and add it again.",
         "lockedConsents": "Only the person gives the consents — you can only withdraw them, with their own button.",
-        "lockedDeclaration": "Only the person signs the declaration.",
+        "lockedDeclaration": "Only the person signs the declaration; once it is signed, the parent or guardian it names stays the one who signed.",
         "fields": {
           "firstName": "First name",
           "lastName": "Last name",
@@ -1398,7 +1399,9 @@
       "SEND_NOW_MAILGUN_STOPPED_GMAIL_FULL": "Nothing was sent: Mailgun is stopped and Gmail has reached its daily limit. Raise it under «Emails» (500 at most), or choose «Queue it»: it leaves when Mailgun resumes.",
       "SEND_NOW_MAILGUN_STOPPED_NOTICE": "Nothing was sent: Mailgun is stopped, and Gmail takes over only once you approve the privacy notice from the new template. Until then choose «Queue it».",
       "ANSWERS_UNCHANGED": "Nothing changed: the answers already say this. Reload the page if a colleague corrected them meanwhile.",
-      "ANSWER_UNDER_MINIMUM_AGE": "The date of birth was not saved: the person would not be {age} on race day, the event's minimum age."
+      "ANSWER_UNDER_MINIMUM_AGE": "The date of birth was not saved: the person would not be {age} on race day, the event's minimum age.",
+      "ANSWER_EMERGENCY_SAME": "The emergency contact's phone was not saved: it is the participant's own number. Type someone else's.",
+      "ANSWER_GUARDIAN_SIGNED": "The parent or guardian was not changed: the signed declaration names the one who signed it."
     },
     "editor": {
       "draftPreview": {
@@ -5562,7 +5565,7 @@
               "title": "Correct, cancel or erase a registration",
               "steps": [
                 "«Registrations» → find the person → press their name.",
-                "Wrong name: under «Correct the name» type the right one → «Save the name».",
+                "A wrong name, phone or other answer: «The registration's answers» → «Change the answers», correct the box → «Save the answers».",
                 "Not coming any more: «Cancel the registration», write the «Reason», press «Cancel the registration» and confirm. The place goes to the first on the waiting list; if the event's places are not allocated automatically, it stays free until you hand it out.",
                 "The email never arrived: «Resend email» → «Send now, without waiting for the scheduled round». It works on the waiting list too: the email says where the line stands now.",
                 "They ask for their data to be erased: «Delete permanently», write the «Reason for deletion», tick «I confirm this deletion is permanent» and press «Delete permanently».",

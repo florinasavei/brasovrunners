@@ -214,6 +214,15 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       )
     : {};
   const countries = answers ? countryOptions(locale, (code) => countryName(code, locale)) : [];
+  /*
+    A signed declaration names its declarant and its second signature from the guardian
+    (`signed-declaration.ts`), so under one the guardian is the declaration's, not an answer (§NNN,
+    `GUARDIAN_SIGNED`): the box shown greyed with why, and no twin, so nothing posts it.
+  */
+  const guardianSigned = acceptances.length > 0;
+  // An older row kept only the name of record (BR-REQ-031-04 criterion 6): its two boxes start empty and
+  // are not required, or the browser would block every other correction until both were typed.
+  const namesRequired = Boolean(answers?.firstName || answers?.lastName);
   // The Organizer's read-only list (§289): each answer in words, «—» for none.
   const answerShown = (field: string): string => {
     const value = answerValues[field] ?? "";
@@ -922,13 +931,15 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="registrationId" value={registration.id} />
                 {/* What the page rendered, beside each box: only what moved is corrected (`changedAnswersOf`). */}
-                {Object.entries(answerValues).map(([field, value]) => (
-                  <input key={field} type="hidden" name={`was.${field}`} value={value} />
-                ))}
+                {Object.entries(answerValues)
+                  .filter(([field]) => !(guardianSigned && field === "guardianName"))
+                  .map(([field, value]) => (
+                    <input key={field} type="hidden" name={`was.${field}`} value={value} />
+                  ))}
                 <Stack spacing={2}>
                   <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
-                    <RecallField name="firstName" label={answerLabels.firstName} defaultValue={answerValues.firstName} required slotProps={{ htmlInput: { maxLength: 100 } }} />
-                    <RecallField name="lastName" label={answerLabels.lastName} defaultValue={answerValues.lastName} required slotProps={{ htmlInput: { maxLength: 100 } }} />
+                    <RecallField name="firstName" label={answerLabels.firstName} defaultValue={answerValues.firstName} required={namesRequired} slotProps={{ htmlInput: { maxLength: 100 } }} />
+                    <RecallField name="lastName" label={answerLabels.lastName} defaultValue={answerValues.lastName} required={namesRequired} slotProps={{ htmlInput: { maxLength: 100 } }} />
                     <RecallField
                       name="displayName"
                       label={answerLabels.displayName}
@@ -981,7 +992,14 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                       helperText={tr("registrations.answers.phoneHelp")}
                       slotProps={{ htmlInput: { maxLength: 30 } }}
                     />
-                    <RecallField name="guardianName" label={answerLabels.guardianName} defaultValue={answerValues.guardianName} helperText={tr("registrations.answers.guardianHelp")} slotProps={{ htmlInput: { maxLength: 200 } }} />
+                    <RecallField
+                      name="guardianName"
+                      label={answerLabels.guardianName}
+                      defaultValue={answerValues.guardianName}
+                      disabled={guardianSigned}
+                      helperText={tr(guardianSigned ? "registrations.answers.guardianSignedHelp" : "registrations.answers.guardianHelp")}
+                      slotProps={{ htmlInput: { maxLength: 200 } }}
+                    />
                     <RecallField name="emergencyContactName" label={answerLabels.emergencyContactName} defaultValue={answerValues.emergencyContactName} slotProps={{ htmlInput: { maxLength: 200 } }} />
                     <RecallField
                       name="emergencyContactPhone"

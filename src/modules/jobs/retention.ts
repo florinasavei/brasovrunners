@@ -11,7 +11,8 @@ import { jobRuns } from "@/db/schema/job-runs";
 import { newsletterSubscribers, newsletterTokens } from "@/db/schema/newsletter";
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import type { Database } from "@/db/types";
-import { scrubRegistrationsFromAudit } from "@/modules/audit/repository";
+import { scrubCorrectedAnswerValues, scrubRegistrationsFromAudit } from "@/modules/audit/repository";
+import { SOCIAL_ANSWERS } from "@/modules/registrations/answers";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS } from "@/modules/group-run-declarations/domain";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
@@ -304,21 +305,9 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
       .returning({ id: registrations.id });
     /*
       A corrected emergency contact (§NNN, «Modifică datele»): its old and new values leave the trail
-      with the contact itself — the row keeps which field was corrected, by whom and when. Only rows
-      that still hold a value, so a later pass touches nothing.
+      with the contact itself — the row keeps which field was corrected, by whom and when.
     */
-    await tx
-      .update(auditLogs)
-      .set({ metadataJson: sql`(${auditLogs.metadataJson} - 'from' - 'to')` })
-      .where(
-        and(
-          eq(auditLogs.action, "registration.answer_corrected"),
-          eq(auditLogs.entityType, "registration"),
-          inArray(auditLogs.entityId, recent),
-          sql`${auditLogs.metadataJson} ->> 'field' in ('emergencyContactName', 'emergencyContactPhone')`,
-          sql`((${auditLogs.metadataJson} -> 'from') is not null or (${auditLogs.metadataJson} -> 'to') is not null)`,
-        ),
-      );
+    await scrubCorrectedAnswerValues(tx, recent, ["emergencyContactName", "emergencyContactPhone"]);
     counts.identityDocuments = clearedDocuments.length;
     counts.healthNotes = clearedHealth.length;
     counts.emergencyContacts = clearedContacts.length;
@@ -365,6 +354,12 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
         ),
       )
       .returning({ id: registrations.id });
+    // A corrected Strava link or username goes from the trail with the socials (§NNN).
+    await scrubCorrectedAnswerValues(
+      tx,
+      cleared.map((row) => row.id),
+      SOCIAL_ANSWERS,
+    );
     counts.minorSocials = cleared.length;
   });
   // After the step commits, as for the sweeps below: the public start list may have printed

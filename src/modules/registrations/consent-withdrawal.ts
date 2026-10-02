@@ -4,9 +4,10 @@ import type { Database } from "@/db/types";
 import { TOKEN_NOT_FOUND, type TokenRejection } from "@/modules/action-tokens/domain/token-state";
 import { readActionTokenContext } from "@/modules/action-tokens/repository";
 import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
-import { recordAuditEvent } from "@/modules/audit/repository";
+import { recordAuditEvent, scrubCorrectedAnswerValues } from "@/modules/audit/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { DomainError } from "@/shared/errors/domain-error";
+import { SOCIAL_ANSWERS } from "./answers";
 import { findRegistrationById } from "./repository";
 
 /**
@@ -111,6 +112,9 @@ export async function clearOptionalData<T extends Record<string, unknown>>(
         updatedAt: input.now,
       })
       .where(eq(registrations.id, current.id));
+    // A Strava link or username an Administrator corrected (§NNN) kept both values in the trail:
+    // withdrawn, they go from it in the same transaction, leaving which field, who and when.
+    if (cleared.includes("socials")) await scrubCorrectedAnswerValues(tx, [current.id], SOCIAL_ANSWERS);
 
     await recordAuditEvent(tx, {
       actorStaffUserId: input.actorStaffUserId,

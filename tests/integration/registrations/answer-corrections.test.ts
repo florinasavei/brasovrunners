@@ -1,6 +1,7 @@
 import { asc, eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
+import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
@@ -8,6 +9,8 @@ import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
+import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
+import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { CLUB_NAME } from "@/theme/brand";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -24,7 +27,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * - each value meets the form's own rule, and the form's cross-field rules hold on the row as it would be;
  * - the Administrator's alone; any status; a TEST row like a real one; an erased row NOT_FOUND;
  * - the person's own page reads the corrected answers;
- * - the values leave the trail with the row (erase) and, for the emergency contact, after the race.
+ * - the values leave the trail with the row (erase) and, for the emergency contact, after the race;
+ *   a corrected social's with the socials, withdrawn or swept for a minor (§322, §323);
+ * - once a declaration is signed, the guardian it names is the declaration's, never corrected.
  */
 const NOW = new Date("2026-10-02T10:00:00.000Z");
 const RACE_DAY = new Date("2026-11-21T08:00:00.000Z");
@@ -40,6 +45,8 @@ const { editRegistrationAnswersByStaff } = await import("@/modules/registrations
 const { readRaceDayContext } = await import("@/modules/registrations/token-actions");
 const { pruneExpiredRows } = await import("@/modules/jobs/retention");
 const { isDomainError } = await import("@/shared/errors/domain-error");
+const { clearOptionalData } = await import("@/modules/registrations/consent-withdrawal");
+const { findSignedDeclaration } = await import("@/modules/registrations/signed-declaration");
 
 let participantId: string;
 let eventId: string;
@@ -191,10 +198,10 @@ describe("BR-REQ-037-03 criterion 12: «Modifică datele» writes only what chan
       code: "VALIDATION_ERROR",
       fields: ["phone", "stravaUrl", "sex"],
     });
-    // The emergency contact is somebody else (§228).
+    // The emergency contact is somebody else (§228), refused with §231's marker so the page says which rule.
     expect(await refusal(editRegistrationAnswers(db, admin, id, { emergencyContactPhone: "+40711111111" }, NOW))).toEqual({
       code: "VALIDATION_ERROR",
-      fields: ["emergencyContactPhone"],
+      fields: ["emergencyContactPhone", "emergencySame"],
     });
     expect(await db.select().from(auditLogs)).toHaveLength(0);
   });
@@ -290,5 +297,95 @@ describe("BR-REQ-037-03 criterion 12: the person sees the corrected answers; the
     const left = await corrections();
     expect(left).toContainEqual({ field: "emergencyContactPhone" });
     expect(left).toContainEqual({ field: "city", from: "Brasov", to: "Sibiu" });
+  });
+});
+
+/** A signed declaration on the row, as the online press leaves it. */
+async function sign(registrationId: string, typedName: string, minorTypedName: string | null = null): Promise<void> {
+  const declaration: LegalDocumentTranslationInput[] = [
+    { locale: "ro", title: "Declarație", body: { sections: [{ paragraphs: ["Particip pe proprie răspundere."] }] } },
+    { locale: "en", title: "Declaration", body: { sections: [{ paragraphs: ["I take part at my own risk."] }] } },
+  ];
+  const legalDocumentId = await insertLegalDocumentVersion(db, {
+    key: "EVENT_DECLARATION",
+    version: 1,
+    effectiveAt: new Date("2026-01-01T00:00:00Z"),
+    isApproved: true,
+    contentSha256: computeContentHash(declaration),
+    translations: declaration,
+    now: NOW,
+  });
+  await db.insert(declarationAcceptances).values({
+    registrationId,
+    legalDocumentId,
+    declarationVersion: 1,
+    contentSha256: computeContentHash(declaration),
+    locale: "ro",
+    typedName,
+    minorTypedName,
+    acceptedAt: NOW,
+  });
+}
+
+describe("BR-REQ-037-03 criterion 12: a signed declaration keeps the guardian it names (§108, §330)", () => {
+  it("refuses correcting or clearing the guardian of a minor CONFIRMED on a signed declaration, and the signed text still names who signed", async () => {
+    const id = await seed({ birthDate: "2012-03-01", guardianName: "Maria Pop", clubMemberDeclared: false, clubName: null });
+    await sign(id, "Maria Pop", "Ana Pop");
+    for (const guardianName of ["Elena Pop", ""]) {
+      expect(await refusal(editRegistrationAnswers(db, admin, id, { guardianName }, NOW)), guardianName).toEqual({
+        code: "VALIDATION_ERROR",
+        fields: ["guardianName", "guardianSigned"],
+      });
+    }
+    expect((await rowOf(id)).guardianName).toBe("Maria Pop");
+    expect((await findSignedDeclaration(db, id))?.guardianName).toBe("Maria Pop");
+    expect(await corrections()).toEqual([]);
+    // The row's other answers are still corrected.
+    await editRegistrationAnswers(db, admin, id, { city: "Sibiu" }, NOW);
+    expect((await rowOf(id)).city).toBe("Sibiu");
+  });
+
+  it("corrects the guardian while no declaration is signed", async () => {
+    const id = await seed({ status: "PENDING_DECLARATION", confirmedAt: null, bibNumber: null, birthDate: "2012-03-01", guardianName: "Maria Pop", clubMemberDeclared: false, clubName: null });
+    await editRegistrationAnswers(db, admin, id, { guardianName: "Elena Pop" }, NOW);
+    expect((await rowOf(id)).guardianName).toBe("Elena Pop");
+  });
+});
+
+describe("BR-REQ-037-03 criterion 12: a corrected social leaves the trail with the socials (§322, §323)", () => {
+  it("withdrawn by the person or by staff, the corrected Strava link and username go from every correction, which field stays", async () => {
+    const surfaces = [
+      { via: "MANAGE_LINK" as const, name: { firstName: "Ana", registeredName: "Ana Pop", nameKey: "ana pop", bibNumber: 17 } },
+      { via: "STAFF" as const, name: { firstName: "Ioana", registeredName: "Ioana Pop", nameKey: "ioana pop", displayName: "Ioana Pop", bibNumber: 18 } },
+    ];
+    for (const { via, name } of surfaces) {
+      const id = await seed({ ...name, stravaUrl: "https://www.strava.com/athletes/12345", listSocials: true });
+      await editRegistrationAnswers(db, admin, id, { stravaUrl: "https://www.strava.com/athletes/67890", instagramHandle: "ana.runs", city: "Sibiu" }, NOW);
+
+      await clearOptionalData(db, { registrationId: id, fields: ["socials"], via, actorStaffUserId: via === "STAFF" ? admin.id : null, now: NOW });
+
+      const left = (
+        await db.select().from(auditLogs).where(eq(auditLogs.entityId, id))
+      )
+        .filter((row) => row.action === "registration.answer_corrected")
+        .map((row) => row.metadataJson);
+      expect(left, via).toContainEqual({ field: "stravaUrl" });
+      expect(left, via).toContainEqual({ field: "instagramHandle" });
+      expect(left, via).toContainEqual({ field: "city", from: "Brasov", to: "Sibiu" });
+      expect(JSON.stringify(left), via).not.toMatch(/strava\.com|ana\.runs/);
+    }
+  });
+
+  it("swept for a minor, the corrected socials go from the trail with them", async () => {
+    // Registered an adult; the birth date corrected later shows the row was a minor's when written.
+    const id = await seed({ createdAt: NOW });
+    await editRegistrationAnswers(db, admin, id, { instagramHandle: "ana.runs" }, NOW);
+    await db.update(registrations).set({ birthDate: "2012-03-01", guardianName: "Maria Pop" }).where(eq(registrations.id, id));
+
+    await pruneExpiredRows(db, new Date(NOW.getTime() + 3_600_000));
+
+    expect(await rowOf(id)).toMatchObject({ instagramHandle: null, listSocials: false });
+    expect(await corrections()).toContainEqual({ field: "instagramHandle" });
+    expect(JSON.stringify(await corrections())).not.toContain("ana.runs");
   });
 });

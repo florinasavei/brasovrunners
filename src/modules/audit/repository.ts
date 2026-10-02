@@ -566,6 +566,34 @@ export async function scrubRegistrationsFromAudit<T extends Record<string, unkno
 }
 
 /**
+ * A corrected answer's two values (§NNN, «Modifică datele»), gone when the answer itself goes: the
+ * emergency contact seven days after the race, the socials when the person withdraws them or the
+ * minors' sweep clears them (§322, §323). The row keeps which field was corrected, by whom and when;
+ * only rows that still hold a value are touched, so a later pass writes nothing. Run in the
+ * transaction that clears the columns, so the trail never outlives the data it described.
+ */
+export async function scrubCorrectedAnswerValues<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationIds: readonly string[] | SQLWrapper,
+  fields: readonly string[],
+): Promise<void> {
+  if (Array.isArray(registrationIds) && registrationIds.length === 0) return;
+  if (fields.length === 0) return;
+  await db
+    .update(auditLogs)
+    .set({ metadataJson: sql`(${auditLogs.metadataJson} - 'from' - 'to')` })
+    .where(
+      and(
+        eq(auditLogs.action, "registration.answer_corrected"),
+        eq(auditLogs.entityType, "registration"),
+        inArray(auditLogs.entityId, registrationIds as string[] | SQLWrapper),
+        inArray(sql<string>`${auditLogs.metadataJson} ->> 'field'`, [...fields]),
+        sql`((${auditLogs.metadataJson} -> 'from') is not null or (${auditLogs.metadataJson} -> 'to') is not null)`,
+      ),
+    );
+}
+
+/**
  * The person, when the erasure took their last registration (§322). A row about the person
  * rather than one registration — `participant.data_exported`, the one kind today — carries
  * their participant id twice: `participant_id`, which the foreign key nulls when the

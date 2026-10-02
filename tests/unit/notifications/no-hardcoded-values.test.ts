@@ -198,7 +198,13 @@ describe("§369 the club's name leaves the platform only through the constant", 
         .sort();
       expect(asking).toEqual(
         [
+          // «Pune bifa» on a row of the members' list (§NNN): the club the list will name.
+          "Admin.confirm.memberSetBody",
           "Admin.pages.intro",
+          // «Datele înscrierii» (§NNN): the club box's help, the tick's label and its help.
+          "Admin.registrations.answers.clubNameHelp",
+          "Admin.registrations.answers.fields.clubMemberDeclared",
+          "Admin.registrations.answers.memberHelp",
           "Admin.registrations.clubMemberLabel",
           "Admin.tasks.items.contactForm.how.1",
           "Admin.tasks.items.inviteKey.how.0",

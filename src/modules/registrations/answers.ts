@@ -27,7 +27,9 @@ import { composePhone, splitPhone } from "./phone";
  *   name, the offers and benefits, the results — are the person's to give; staff may only withdraw
  *   them (§322, §558), with their own button;
  * - the **declaration** and its statements — fitness, the race's conditions, the terms, the
- *   signature — are signed by the person and nobody else (`AGENTS.md` §15.11).
+ *   signature — are signed by the person and nobody else (`AGENTS.md` §15.11); once one is signed,
+ *   the guardian it names is the declaration's too (`GUARDIAN_SIGNED`), since the signed text reads
+ *   its declarant from that answer.
  * Nor is anything that is not an answer: the state, the place, the number, `kind`, the language.
  */
 export const EDITABLE_ANSWERS = [
@@ -90,8 +92,30 @@ export const LOCKED_ANSWER_KINDS: Readonly<Record<string, LockedKind>> = {
  */
 export const ANSWERS_UNCHANGED = "answersUnchanged";
 
+/**
+ * The marker a refusal carries beside `emergencyContactPhone` when the number is the participant's
+ * own — §231's `emergencySame`, the public form's word — so the page says which rule refused it
+ * rather than that a real number is invalid.
+ */
+export const EMERGENCY_SAME = "emergencySame";
+
+/**
+ * The marker a refusal carries beside `guardianName` once the registration has a signed declaration
+ * (§NNN): the signed text names its declarant and its second signature from the guardian
+ * (`signed-declaration.ts`), so correcting or clearing the guardian would rewrite who signed it — and
+ * the typed signature and the stored hash are the old text's. A wrong guardian is a new declaration.
+ */
+export const GUARDIAN_SIGNED = "guardianSigned";
+
 /** The answers whose old and new values the trail shows only beside the emergency details (§322). */
 export const EMERGENCY_ANSWERS: ReadonlySet<string> = new Set(["phone", "emergencyContactName", "emergencyContactPhone"]);
+
+/**
+ * The answers that are the socials, and the tick that printed them (§500): when the person withdraws
+ * them (`consent-withdrawal.ts`) or the minors' sweep clears them (§323), their corrected values
+ * leave the trail too (`scrubCorrectedAnswerValues`) — a withdrawal the trail outlived would not be one.
+ */
+export const SOCIAL_ANSWERS: readonly string[] = ["stravaUrl", "instagramHandle", "listSocials"];
 
 /**
  * A telephone as an Administrator types it: the international form (`+40 712 345 678`, `0040…`), or a
@@ -176,7 +200,14 @@ const same = (a: unknown, b: unknown) => (a ?? null) === (b ?? null);
 export function planAnswerEdit(
   current: Current,
   changes: Readonly<Record<string, unknown>>,
-  context: { eventDay: string; minAge: number | null; kitShirt: boolean; now: Date },
+  context: {
+    eventDay: string;
+    minAge: number | null;
+    kitShirt: boolean;
+    now: Date;
+    /** The row has a declaration acceptance (online or paper): the guardian is the signed text's, not an answer any more. */
+    declarationSigned: boolean;
+  },
 ): AnswerPlan {
   const keys = Object.keys(changes);
   if (keys.length === 0) refuse("nothing to correct", [ANSWERS_UNCHANGED]);
@@ -185,6 +216,11 @@ export function planAnswerEdit(
       const kind = LOCKED_ANSWER_KINDS[key];
       refuse(kind ? `${key} is the person's (${kind}) and staff never change it` : `${key} is not an answer staff may correct`, [key]);
     }
+  }
+
+  // The guardian named on a signed declaration is the declaration's (§108, §330): never corrected under it.
+  if (context.declarationSigned && keys.includes("guardianName")) {
+    refuse("the guardian signed the declaration and is the declaration's now", ["guardianName", GUARDIAN_SIGNED]);
   }
 
   const posted = new Map<EditableAnswer, Value>();
@@ -240,7 +276,7 @@ export function planAnswerEdit(
   // The form's cross-field rules, on the row as it would be.
   const minor = typeof next.birthDate === "string" && isMinorOn(next.birthDate, context.now);
   if ((posted.has("phone") || posted.has("emergencyContactPhone")) && next.phone && next.phone === next.emergencyContactPhone) {
-    refuse("the emergency contact must be somebody other than the participant", ["emergencyContactPhone"]);
+    refuse("the emergency contact must be somebody other than the participant", ["emergencyContactPhone", EMERGENCY_SAME]);
   }
   if ((posted.has("birthDate") || posted.has("guardianName")) && minor && !next.guardianName) {
     refuse("a participant under eighteen is registered by a parent or legal guardian", ["guardianName"]);

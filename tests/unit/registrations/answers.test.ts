@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Registration } from "@/db/schema/registrations";
-import { ANSWERS_UNCHANGED, EDITABLE_ANSWERS, LOCKED_ANSWER_KINDS, planAnswerEdit, typedPhone } from "@/modules/registrations/answers";
+import { ANSWERS_UNCHANGED, EDITABLE_ANSWERS, EMERGENCY_SAME, GUARDIAN_SIGNED, LOCKED_ANSWER_KINDS, planAnswerEdit, typedPhone } from "@/modules/registrations/answers";
 import { type ConfirmSpec, resolveChangedFields } from "@/shared/feedback/notice";
 import { CLUB_NAME } from "@/theme/brand";
 
@@ -30,7 +30,7 @@ const current = {
   tshirtSize: "NONE",
   listSocials: false,
 } as unknown as Registration;
-const context = { eventDay: "2026-11-21", minAge: 14, kitShirt: true, now: new Date("2026-10-02T10:00:00.000Z") };
+const context = { eventDay: "2026-11-21", minAge: 14, kitShirt: true, now: new Date("2026-10-02T10:00:00.000Z"), declarationSigned: false };
 
 function refusalOf(run: () => unknown): string[] {
   try {
@@ -82,6 +82,23 @@ describe("BR-REQ-037-03 criterion 12: one correction's plan", () => {
     const plan = planAnswerEdit(current, { firstName: "Ana Maria" }, context);
     expect(plan.nameChange).toEqual({ from: "Ana Pop", to: "Ana Maria Pop" });
     expect(plan.set).toMatchObject({ registeredName: "Ana Maria Pop", nameKey: "ana maria pop", displayName: "Ana Maria Pop" });
+  });
+});
+
+describe("BR-REQ-037-03 criterion 12: the rules that say which one refused", () => {
+  it("refuses the participant's own number as the emergency contact with §231's marker, not as an invalid number", () => {
+    expect(refusalOf(() => planAnswerEdit(current, { emergencyContactPhone: "0711 111 111" }, context))).toEqual(["emergencyContactPhone", EMERGENCY_SAME]);
+  });
+
+  it("keeps the guardian a signed declaration names: corrected or cleared, refused with its marker", () => {
+    const minor = { ...current, birthDate: "2012-03-01", guardianName: "Maria Pop" } as unknown as Registration;
+    const signed = { ...context, minAge: null, declarationSigned: true };
+    expect(refusalOf(() => planAnswerEdit(minor, { guardianName: "Elena Pop" }, signed))).toEqual(["guardianName", GUARDIAN_SIGNED]);
+    expect(refusalOf(() => planAnswerEdit(minor, { guardianName: "" }, signed))).toEqual(["guardianName", GUARDIAN_SIGNED]);
+    // Before any declaration it is an answer like the others.
+    expect(planAnswerEdit(minor, { guardianName: "Elena Pop" }, { ...signed, declarationSigned: false }).set).toEqual({ guardianName: "Elena Pop" });
+    // The other answers of a signed row are still corrected.
+    expect(planAnswerEdit(minor, { city: "Brașov" }, signed).set).toEqual({ city: "Brașov" });
   });
 });
 

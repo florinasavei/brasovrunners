@@ -2632,7 +2632,10 @@ BR-REQ-037-05):
    any status, a TEST row like a real one. A key outside the allowlist is refused by name. **Three
    kinds stay the person's:** the address (the identity, §10.4 — a typo is fixed by cancelling and
    registering again; no verified-email edit and no participant merge, BR-REQ-037-03 criterion 2),
-   the consents (staff only withdraw them, §322) and the declaration with its statements (§10.8).
+   the consents (staff only withdraw them, §322) and the declaration with its statements (§10.8)
+   — once one is signed, the guardian it names too, since the signed text reads its declarant from
+   that answer. A corrected value leaves the trail when the data does: the erase, the emergency
+   contact's seven days, a withdrawal of the socials and the minors' socials sweep.
    The member-tick sweep «Bife de membru fără cont de membru» is this correction per row, after a
    preview of the ticked addresses that match no live `staff_users` account through the
    canonicalizer, in one transaction with one `registrations.member_ticks_cleared` row.
