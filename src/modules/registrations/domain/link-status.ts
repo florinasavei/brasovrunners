@@ -98,10 +98,11 @@ export type SpentLinkMessage =
  *   with its QR, and neither can ask for a message their state does not allow.
  * - `REGISTER_AGAIN` is the event's own page. Once a registration is cancelled or lapsed there
  *   is no link to resend — there is a form to fill in.
- * - `NONE` is `WAITLISTED`, and it is not laziness. `deriveAllowedResendMessageType` returns
- *   null for that status because nothing is waiting on the participant; offering "send it
+ * - `NONE` is `WAITLISTED`, and it is not laziness. The form `RESEND` opens (`requestRegistrationLink`)
+ *   sends nothing to a waiting person, because nothing is waiting on them; offering "send it
  *   again" would show them a success message for an email that is never queued, which is a
- *   worse lie than the one this module is fixing.
+ *   worse lie than the one this module is fixing. (The backoffice may resend the waiting list's
+ *   email, §NNN; that is the club's press, not this form's.)
  */
 export type SpentLinkNext = "RESEND" | "REGISTER_AGAIN" | "NONE";
 

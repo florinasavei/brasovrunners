@@ -351,7 +351,8 @@ export async function resendDeclarationToAllPending<T extends Record<string, unk
  * - somebody has a declaration to sign: that person's request, whose one link signs them all (§471);
  * - everybody else confirmed: one confirmation with each confirmed person's QR, desk code and number
  *   (the family's confirmation of §519, for the address's confirmed people rather than a sitting's).
- * A family of waiting-list people only has nothing to send, as a single one has not.
+ * A family of waiting-list people only has no message that covers everybody: each person's own
+ * «Retrimite emailul» sends that person's standing (§NNN).
  */
 export async function resendFamilyMessage<T extends Record<string, unknown>>(
   db: Database<T>,

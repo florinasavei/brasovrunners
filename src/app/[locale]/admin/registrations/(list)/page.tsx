@@ -1248,7 +1248,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               <ActionForm
                 action={resendRegistrationEmailAction}
                 confirm={withSendNowChoice(
-                  { title: t("confirm.resendTitle"), body: t("confirm.resendBody", { name: row.registeredName }), ...(row.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: t("registrations.resendShort"), cancelLabel: words.cancel },
+                  { title: t("confirm.resendTitle"), body: t(`confirm.resendWhat.${row.status}`, { name: row.registeredName }), ...(row.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: t("registrations.resendShort"), cancelLabel: words.cancel },
                   sendNow,
                 )}
               >

@@ -12,7 +12,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 
 /**
  * AGENTS.md §15.8 — Admin resend. Administrator only, and it never changes state — this test
- * proves both, plus that a status with nothing to resend is refused rather than sending
+ * proves both, plus that a message that is not the state's own is refused rather than sending
  * something meaningless.
  */
 const NOW = new Date("2026-09-04T10:00:00.000Z");
@@ -97,14 +97,17 @@ describe("AGENTS.md §15.8 admin resend", () => {
     expect(registration.status).toBe("PENDING_EMAIL_CONFIRMATION");
   });
 
-  it("refuses a status with nothing to resend", async () => {
+  it("sends the waiting list's own email to a waiting row, and never another state's message (§NNN)", async () => {
     await db.update(registrations).set({ status: "WAITLISTED", waitlistedAt: NOW }).where(eq(registrations.id, registrationId));
 
-    await expect(
-      resendRegistrationMessage(db, { id: adminId, role: "ADMIN" }, registrationId, NOW),
-    ).rejects.toSatisfy((error: unknown) => isDomainError(error) && error.code === "VALIDATION_ERROR");
-
+    await resendRegistrationMessage(db, { id: adminId, role: "ADMIN" }, registrationId, NOW);
     const outboxRows = await db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, registrationId));
-    expect(outboxRows).toHaveLength(0);
+    expect(outboxRows.map((row) => row.messageType)).toEqual(["WAITLIST_JOINED"]);
+
+    // A message that is not the state's own is refused: the reminder is for a confirmed registration only (§81).
+    await expect(
+      resendRegistrationMessage(db, { id: adminId, role: "ADMIN" }, registrationId, new Date(NOW.getTime() + 60_000), "EVENT_REMINDER"),
+    ).rejects.toSatisfy((error: unknown) => isDomainError(error) && error.code === "VALIDATION_ERROR");
+    expect(await db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, registrationId))).toHaveLength(1);
   });
 });

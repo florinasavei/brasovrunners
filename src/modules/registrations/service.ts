@@ -1442,9 +1442,9 @@ async function enqueueVerificationEmail<T extends Record<string, unknown>>(
  *    returns nothing at all: not found, not active, nothing to resend, throttled — one answer,
  *    the same one, matching §15.1's generic response and §13.2's single invalid-or-expired.
  * 2. **It sends only what the current status allows**, via the same
- *    `deriveAllowedResendMessageType` the Administrator resend uses (§15.8). A participant
- *    cannot conjure a declaration link for a registration that is merely waitlisted, because
- *    nothing is waiting on them.
+ *    `deriveAllowedResendMessageType` the Administrator resend uses (§15.8), minus the waiting
+ *    list's message: a participant cannot conjure a declaration link for a registration that is
+ *    merely waitlisted, because nothing is waiting on them.
  * 3. **It never changes state.** No transition, no hold extension, no new token here — the
  *    token is minted by the renderer at send time, as it is for every other message (§14.5).
  */
@@ -1490,7 +1490,14 @@ export async function requestRegistrationLink<T extends Record<string, unknown>>
     if (!event || event.eventStatus === "CANCELLED") return;
   }
 
+  /*
+    Only a person who owes a step is sent a link here. The backoffice may resend a waiting person's
+    email (§NNN), but nothing is waiting on them, and this form answers the throttled, silent «send my
+    link» of anybody typing an address: a waiting person who fills the registration form again is
+    answered there (§217), so the waiting list is left out of this one.
+  */
   const sends = active
+    .filter((registration) => registration.status !== "WAITLISTED")
     .map((registration) => ({ registration, messageType: deriveAllowedResendMessageType(registration.status) }))
     .filter((send): send is { registration: Registration; messageType: NonNullable<typeof send.messageType> } => send.messageType !== null);
   if (sends.length === 0) return;
@@ -2319,30 +2326,26 @@ export async function submitRegistration<T extends Record<string, unknown>>(
 
         So: whatever the state can offer, it offers, through the same `deriveAllowedResendMessageType`
         the backoffice's "send it again" uses — the verification link, the declaration, the
-        waiting-list offer, or the confirmation with its QR. A state with nothing to resend
-        (WAITLISTED: nothing is waiting on the participant) still sends nothing, because there is
-        nothing to say.
+        waiting-list offer, the confirmation with its QR, or the waiting list's own email.
 
         The throttle in front of the form is what keeps this from being a mailer: the same person
         can only ask so often (§19.4), and each message goes to the address that asked for it.
       */
       /*
-        A waiting-list entry has nothing to *re-send* and still owes an answer (§217).
+        A waiting-list entry has no link to re-send and still owes an answer (§217).
 
-        `deriveAllowedResendMessageType` returns null for WAITLISTED, and it is right to: the
-        backoffice's "send it again" hands somebody a link they have to act on, and a person
-        queued for a place has no link and nothing to do. But this is not the backoffice — it
-        is somebody typing their address into the form a second time because they are not sure
-        the first time worked, and answering that with the "check your email" screen and no
-        message is the §217 failure exactly.
+        A person queued for a place has no link and nothing to do, so «send me my link»
+        (`requestRegistrationLink`) leaves them out. But this is somebody typing their address
+        into the form a second time because they are not sure the first time worked, and
+        answering that with the "check your email" screen and no message is the §217 failure
+        exactly.
 
         So the public path sends `WAITLIST_JOINED` again, which is the message that answers the
         question actually being asked: you are on the list, this is your position, nothing is
-        owed from you. The throttle above is what keeps this from becoming a mailer.
+        owed from you. The throttle above is what keeps this from becoming a mailer. The
+        backoffice's resend sends the same message to a waiting row (§NNN).
       */
-      const messageType = existing.status === "WAITLISTED"
-        ? ("WAITLIST_JOINED" as const)
-        : deriveAllowedResendMessageType(existing.status);
+      const messageType = deriveAllowedResendMessageType(existing.status);
       // Whether a row was actually queued, for the club's record below: a key already used — two
       // presses in the same millisecond — queues nothing, and the record must not say otherwise.
       let queued: OutboxRow | null = null;
