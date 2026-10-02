@@ -77,6 +77,9 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch | Notes |
 | --- | --- | --- |
+| Each person waiting is told where they stand — the position only where places are allocated automatically; by hand, how many others wait and that the club chooses («E ok să aștepte, ei nu vor afla când s-au înscris restul pe listă») — and the event page says how many wait | `feat/waiting-list-position-for-each` | fix round on the owner's narrowing, then the next batch |
+| The setting says what it does, «Locurile din lista de așteptare se alocă automat», and «BID» is spelled «BIB» everywhere | `fix/waitlist-setting-says-places-are-allocated` | fix round: the English help under 200 characters |
+| The cancel dialog says the person is emailed, what the reason does, and where the place goes by the event's setting («eu ca admin trebuie să primesc în pop-up când anulez pe cineva că se va trimite și un mail») | `fix/cancel-dialog-says-the-person-is-emailed` | words only |
 
 ## Ready for the next release
 
@@ -114,6 +117,9 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 ## Later
 
+- [ ] «Fiecare înscriere se aprobă manual» — the owner, 2026-10-01: «ne trebuie o setare de "aprobă manual fiecare înscriere"». A per-event setting, off by default: a registration whose address is confirmed becomes an application that holds no place; «Aprobă» gives the place through the allocator (the waiting list when full) and sends the declaration; «Refuză» names a ground from the terms (§618) and emails it; a «De aprobat» filter and a bulk approve. The decision section and the spec come first; whether an application should hold a place is the owner's call (proposed: no).
+- [ ] The place reserved at the form, not at the link — the launch of the 21 November race: the verification emails left at Mailgun's hourly pace, people hunted in Spam, and whoever confirmed after the 150th went to the waiting list although they had sent the form earlier. A submitted registration would hold its place until the address is confirmed or a bounded number of hours passes («Termene»), released through the allocator; a change to the allocator's opening (`AGENTS.md` §10.5–§10.6) with a concurrency test. The owner decides whether it becomes the rule for every event.
+- [ ] Three questions put to the owner on 2026-10-01, unanswered: with places handed out by hand, should the waiting list be the only door (every newcomer queues even when nobody waits)?; should the «Cine vine» fold's title read «Cine vine (133 confirmați · 17 în curs)»?; should the pending group on the public list get a switch of its own, like the waiting list's?
 
 ## Released
 

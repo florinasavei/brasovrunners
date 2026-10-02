@@ -183,8 +183,9 @@ export function offerRefusalCode(error: unknown): typeof OFFER_AFTER_CLOSE | nul
  * out by hand, in the order the forms were sent): a pure choice over `events.waitlist_auto_offer`,
  * so the panel and its reader cannot disagree about it.
  *
- * - `SUBMITTED` — `submitted_at`, when the form was sent: the criterion a club that hands places out
- *   by hand follows (`waitlist_auto_offer` false).
+ * - `SUBMITTED` — when the current form was sent: the journey's `formSentAt`, the later of
+ *   `submitted_at` and `privacy_acknowledged_at` (a restart rewrites only the second), the criterion
+ *   a club that hands places out by hand follows (`waitlist_auto_offer` false).
  * - `LINE` — `waitlisted_at`, when the person joined the line: `lockOldestWaitlisted`'s own order,
  *   the one every automatic offer follows (`waitlist_auto_offer` true), so the panel never shows an
  *   order the allocator will not honour.
