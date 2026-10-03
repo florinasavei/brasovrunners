@@ -48,6 +48,7 @@ const LAUNCHED: OwnerTaskInputs = {
   publishedEventCount: 4,
   raceDaySheetsDue: [],
   domainRenewal: { status: "ok", expiresOn: "2029-09-16", daysLeft: 1086 },
+  doorShut: "clear",
   storageConfigured: true,
   botCheckConfigured: true,
   botCheckHealth: "ok",
@@ -373,8 +374,28 @@ describe("owner tasks", () => {
       "translation",
       "contactForm",
       "domainRenewal",
+      "doorShut",
       "neonLimits",
     ]);
+  });
+
+  // §NNN: the door — red while the name is gone, open a week after a window, green otherwise.
+  it("§NNN the clock stopped while the door was shut: red while shut, open for a week after, then green", () => {
+    const row = (doorShut: OwnerTaskInputs["doorShut"]) => ownerTasks({ ...LAUNCHED, doorShut }).find((task) => task.id === "doorShut");
+    expect(row("clear")).toMatchObject({ state: "done", owner: "club", kind: "check" });
+    expect(row("recent")).toMatchObject({ state: "open" });
+    expect(row("recent")?.text).toBeUndefined();
+    expect(row("shut")).toMatchObject({ state: "broken", text: "shut" });
+  });
+
+  it("§NNN the door's sentences exist in both catalogues and fill the window's values", () => {
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.doorShut;
+      for (const key of ["{doorFrom}", "{doorUntil}", "{doorStopped}", "{doorMoved}", "{doorOutside}"]) expect(item.todo).toContain(key);
+      expect(item.shut).toContain("{doorFrom}");
+      expect(typeof item.done).toBe("string");
+      expect(item.how.length).toBeGreaterThan(0);
+    }
   });
 
   // §622: email nothing is carrying — red with the remedies, green otherwise, and always on the list.

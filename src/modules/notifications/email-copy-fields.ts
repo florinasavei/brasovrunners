@@ -110,6 +110,16 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     eventLinksUrl: `${base}/${locale}/EXAMPLE-event#links`,
     // «Șabloanele textelor legale s-au schimbat» (§639): two texts whose template moved, for its preview.
     legalTemplateKeys: ["PRIVACY_NOTICE", "TERMS"],
+    // The door's two (§NNN): a seven-hour window on a Saturday, for their previews — instants and counts only.
+    doorShut: {
+      startedAt: "2026-10-03T07:00:00.000Z",
+      endedAt: "2026-10-03T14:00:00.000Z",
+      source: "name",
+      stoppedMinutes: 420,
+      maxHours: 48,
+      moved: 12,
+      outside: 1,
+    },
     // The facts block (§392), each half in its own language, from the sample event — never a fact typed here.
     eventFacts: emailSampleEventFacts(locale),
     eventFactsOther: emailSampleEventFacts(OTHER[locale]),
@@ -332,6 +342,8 @@ const NO_EVENT: ReadonlySet<EmailMessageType> = new Set([
   "NEWSLETTER_CONFIRM",
   "NEWSLETTER",
   "LEGAL_TEMPLATES_CHANGED",
+  "DOOR_SHUT",
+  "DOOR_SHUT_DEADLINES_MOVED",
 ]);
 /** Messages about no one registration: the two above, and "registration is open". */
 // A group run's self-declaration (§393) is about a signature, never a registration: no status to state.
@@ -340,6 +352,8 @@ const NO_REGISTRATION: ReadonlySet<EmailMessageType> = new Set([
   "STAFF_INVITATION",
   "MEMBER_INVITATION",
   "LEGAL_TEMPLATES_CHANGED",
+  "DOOR_SHUT",
+  "DOOR_SHUT_DEADLINES_MOVED",
   "REGISTRATION_OPENED",
   // An invitation (§647): to an address, before any registration exists.
   "EVENT_INVITATION",

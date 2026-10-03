@@ -1346,9 +1346,11 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
 ): Promise<void> {
   // The offers first: each one released is a place the queue can have without touching a
   // kept declaration hold, and the count below must see it as free. Not an offer whose email is
-  // still queued (§520) — unless the race has started or the event is no longer scheduled. No
-  // offer here is «În afara locurilor» (§643): marking an open offer makes it a declaration hold in
-  // the same transaction (`setOutsideCapacityByStaff`), and the line never offers an outside row.
+  // still queued (§520) — unless the race has started or the event is no longer scheduled. An
+  // Administrator never leaves an offer «În afara locurilor» (§643): marking an open offer makes it a
+  // declaration hold in the same transaction (`setOutsideCapacityByStaff`), and the line never offers
+  // an outside row. The one outside offer is one the door revived after its place was given (§NNN,
+  // `door-shut.ts`): it lapses here at its moved deadline like any other, and frees no counted place.
   const over = event.eventStatus !== "SCHEDULED" || event.startsAt <= now;
   const lapsedOffers = await db
     .update(registrations)

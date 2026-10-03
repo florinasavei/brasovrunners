@@ -242,6 +242,31 @@ export async function readLastPing(job: JobName, now: Date, horizonMs: number): 
   return null;
 }
 
+/**
+ * Every ping the cache remembers between `anchor` and `now`, of every job, for the maintenance run's
+ * look at the door (§NNN, `jobs/domain/door-shut.ts`) — or null when the cache cannot be trusted to
+ * remember: the anchor is a real run of `anchor.job`, which wrote its own ping slot (`recordRealRun`),
+ * and a cache that has lost that slot (evicted, unreachable, outside a request) has lost the others
+ * too, so a silence read from it would be the cache's, not the pinger's. Missing never opens a window.
+ *
+ * Read once per real run, from the run before it: over a day the reads add up to one per slot per job
+ * whatever the number of runs. Six at a time, oldest first.
+ */
+export async function readPingHistory(anchor: { job: JobName; at: Date }, now: Date): Promise<Date[] | null> {
+  const own = await slot<PingSlot>("ping", anchor.job, anchor.at, pingTags);
+  if (!own) return null;
+  const slots = slotsBetween(anchor.at, now);
+  const found: Date[] = [new Date(own.at)];
+  const reads: (() => Promise<PingSlot | null>)[] = JOB_NAMES.flatMap((job) => slots.map((at) => () => slot<PingSlot>("ping", job, at, pingTags)));
+  for (let index = 0; index < reads.length; index += 6) {
+    const batch = await Promise.all(reads.slice(index, index + 6).map((read) => read()));
+    for (const entry of batch) {
+      if (entry && Date.parse(entry.at) <= now.getTime()) found.push(new Date(entry.at));
+    }
+  }
+  return found;
+}
+
 /** What `/devs` and the task board show for one job: the cached plan and the last ping, if the cache answers. */
 export type JobCacheState = { verdict: PingVerdict; lastPing: PingSlot | null };
 

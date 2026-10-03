@@ -109,6 +109,13 @@ export type AuditAction =
    * and after), the state the row was in and, when the change moved it, the state after — never a name.
    */
   | "registration.outside_capacity_changed"
+  /**
+   * A deadline of this registration moved later by the maintenance job because the door was shut
+   * (§NNN): the site's name did not resolve, or no scheduler call arrived. No actor; `kind` (which
+   * deadline), `from` and `to` (instants), the window's id and, when its place had been given meanwhile,
+   * `outsideCapacity: true` — never a name.
+   */
+  | "registration.deadline_moved_while_shut"
   /** The participant is here (BR-REQ-037-08); by staff, or by themselves. */
   | "registration.checked_in"
   | "registration.checkin_undone"
@@ -297,6 +304,11 @@ export type AuditAction =
   | "event.invitation_withdrawn"
   | "event.invitation_expired"
   | "event.invitation_accepted"
+  /**
+   * An invitation's deadline moved later because the door was shut (§NNN): the invitation's id, from
+   * and to, the window's id, and whether it was seated outside the places — never a name or an address.
+   */
+  | "event.invitation_deadline_moved_while_shut"
   /**
    * «Arată public câți așteaptă» switched (§634): from and to, on every date a save changed it — the
    * editor's own date and each date of a series the scoped save carried it to.

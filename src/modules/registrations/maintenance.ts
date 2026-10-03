@@ -12,6 +12,7 @@ import { releaseLegacyHeldNumbers } from "./bibs";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { queueNewEventAlerts } from "@/modules/newsletter/service";
 import { announceLegalTemplateChanges, legalFactsInForce } from "@/modules/legal-documents/templates-notice";
+import { type DoorShutDeps, stopTheClockWhileTheDoorIsShut } from "./door-shut";
 import { purgeLapsedFamilyEntries } from "./family-entries";
 import { purgeLapsedFamilySittings } from "./family-sitting";
 import { queueRegistrationOpenedMessages } from "./interest";
@@ -40,6 +41,8 @@ import { fillAvailableSpots } from "./service";
 export async function runRegistrationMaintenance<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,
+  /** The name probe and the pings' reader (§NNN): the real ones unless a test hands its own. */
+  doorDeps: DoorShutDeps = {},
 ): Promise<{
   eventsProcessed: number;
   errorCount: number;
@@ -65,6 +68,12 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
    */
   legalTemplatesNoticesQueued: number;
   /**
+   * The door (§NNN): what the site's name answered this run (`resolves`, `unresolved`, `unknown`,
+   * `skipped`), whether the door is shut now — then nothing lapsed this run — and how many deadlines a
+   * window that is over moved, and how many of those were seated outside the places.
+   */
+  door: { name: string; shut: boolean; moved: number; outside: number; noticesQueued: number };
+  /**
    * The failures the very next run could repair — an event's queue work, a reminder, a
    * confirmation, an announcement, a retention step — as opposed to the tidying ones (pictures,
    * series). Above zero, the run promises the pings no quiet, so the next ping tries again rather
@@ -84,6 +93,24 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   const settings = await readDeadlinesForRun(db);
 
   /*
+    The clock stops while the door is shut (§NNN), first — before anything below lapses an address
+    link, a hold, an offer, an invitation or a family's form: a window that is over moves the deadlines
+    that were running in it, and a window still open (the site's name does not resolve) holds every
+    lapse of this run. Caught on its own: a failure here is counted as retryable, so the next ping tries
+    again, and the run goes on as it did before the door was watched — the step never stops the job.
+  */
+  let door = { name: "unknown", shut: false, moved: 0, outside: 0, noticesQueued: 0 };
+  let doorFailed = 0;
+  try {
+    const result = await stopTheClockWhileTheDoorIsShut(db, now, settings, doorDeps);
+    door = { name: result.name, shut: result.shut, moved: result.moved, outside: result.outside, noticesQueued: result.noticesQueued };
+    doorFailed = result.failures;
+  } catch (error) {
+    console.error("[door-shut] the door could not be checked", failureKind(error));
+    doorFailed = 1;
+  }
+
+  /*
     The one data step of §548, first: a number exists only once a registration is confirmed, so
     what the old held-number column still holds is kept by a confirmed registration and cleared
     from every other one. Idempotent and cheap — the partial index holds exactly the rows it
@@ -100,7 +127,8 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     legacyFailed = true;
   }
 
-  const lapsedEmailConfirmations = await repo.expireStalePendingEmailConfirmations(db, now, settings);
+  // While the door is shut nothing lapses (§NNN): nobody can reach the page that would act on it.
+  const lapsedEmailConfirmations = door.shut ? 0 : await repo.expireStalePendingEmailConfirmations(db, now, settings);
 
   /*
     Another person's form, kept for the address to confirm from its inbox (§446), deleted with the
@@ -111,15 +139,18 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   let familyEntriesPurged = 0;
   let familyPurgeFailed = false;
   try {
-    familyEntriesPurged = await purgeLapsedFamilyEntries(db, now);
-    // …and the family sittings nobody can act on any more (§519): ids and instants only, no names.
-    await purgeLapsedFamilySittings(db, now);
+    if (!door.shut) {
+      familyEntriesPurged = await purgeLapsedFamilyEntries(db, now);
+      // …and the family sittings nobody can act on any more (§519): ids and instants only, no names.
+      await purgeLapsedFamilySittings(db, now);
+    }
   } catch {
     familyPurgeFailed = true;
   }
 
-  const eventIds = await repo.findEventsNeedingMaintenance(db, now);
-  let errorCount = (familyPurgeFailed ? 1 : 0) + (legacyFailed ? 1 : 0);
+  // The holds, the offers, the invitations and the line's offers: every one of them waits for the door too (§NNN).
+  const eventIds = door.shut ? [] : await repo.findEventsNeedingMaintenance(db, now);
+  let errorCount = (familyPurgeFailed ? 1 : 0) + (legacyFailed ? 1 : 0) + doorFailed;
   let retryableErrorCount = errorCount;
 
   for (const eventId of eventIds) {
@@ -227,7 +258,8 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   */
   let confirmationRetriesQueued = 0;
   try {
-    confirmationRetriesQueued = await queueConfirmationRetries(db, now, settings);
+    // Not while the door is shut (§NNN): the link would open the name that is gone, and spend one of the address's few nudges.
+    if (!door.shut) confirmationRetriesQueued = await queueConfirmationRetries(db, now, settings);
   } catch {
     errorCount += 1;
     retryableErrorCount += 1;
@@ -355,6 +387,8 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
         interestsNotified +
         eventAlertsQueued +
         legalTemplatesNoticesQueued +
+        door.moved +
+        door.noticesQueued +
         occurrencesCreated,
       errorCount,
       // The retention steps that failed, by name (§322) — the one error this run writes down,
@@ -376,6 +410,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     legacyNumbersKept,
     familyEntriesPurged,
     legalTemplatesNoticesQueued,
+    door,
     retryableErrorCount,
   };
 }

@@ -80,6 +80,9 @@ const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
   MEMBER_INVITATION: ["inviterName"],
   // The Administrators' notice of a moved template (§639): the texts are its bold line, not a field.
   LEGAL_TEMPLATES_CHANGED: [],
+  // The door's two (§NNN): the window's instants and counts are their paragraphs, not fields.
+  DOOR_SHUT: [],
+  DOOR_SHUT_DEADLINES_MOVED: [],
   REGISTRATION_OPENED: ["eventTitle"],
   // An invitation (§647): the event, its start and until when the place is kept.
   EVENT_INVITATION: ["eventTitle", "eventStartsAtFormatted", "holdExpiresAtFormatted"],

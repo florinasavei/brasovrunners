@@ -25,6 +25,7 @@ import { weatherSpanWords } from "@/modules/weather/words";
 import { CANNOT_COME_GLYPH_PATH, CANNOT_COME_MESSAGES } from "./domain/cannot-come";
 import type { HoldLapsedNext } from "./domain/hold-lapsed";
 import { legalTemplateNames, legalTemplatesWords } from "./legal-templates-words";
+import { type DoorShutFacts, doorShutBody, doorShutFactsLine, doorShutMovedBody, doorShutMovedFactsLine } from "./door-shut-words";
 import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
 
 /**
@@ -953,6 +954,11 @@ export type TemplateData = {
    */
   legalTemplateKeys?: readonly string[];
   /**
+   * The door's two emails to the Administrators (§NNN): the window's instants, its stop, the club's cap
+   * and the counts, as the maintenance job wrote them. Each half writes them in its own language.
+   */
+  doorShut?: DoorShutFacts;
+  /**
    * "Detalii actualizate" (§331): which facts the save changed — the place, the start, the
    * programme, the event on again. The values are the event's as it stands at send time, in the
    * fields above; this says which of them to name as new.
@@ -1640,6 +1646,20 @@ const T = {
       // The screen the button opens and what is done there (§654): «Versiune nouă» regenerates; approving is on «Documente legale».
       action: `${legalTemplatesWords("ro").newVersion}: regenerează textele`,
     },
+    // To the Administrators (§NNN): the site's name does not resolve, and nothing lapses until it does.
+    // No button: the address it would open is the one that is gone.
+    doorShut: {
+      subject: "Site-ul nu se găsește după nume: termenele stau pe loc",
+      facts: (d: TemplateData) => (d.doorShut ? { line: doorShutFactsLine("ro", d.doorShut), links: [] } : undefined),
+      body: () => doorShutBody("ro"),
+    },
+    // To the Administrators (§NNN): the door is open again and the deadlines that were running moved.
+    doorShutDeadlinesMoved: {
+      subject: "Ceasul termenelor a stat pe loc: termenele s-au mutat",
+      facts: (d: TemplateData) => (d.doorShut ? { line: doorShutMovedFactsLine("ro", d.doorShut), links: [] } : undefined),
+      body: () => doorShutMovedBody("ro"),
+      action: "Deschide «Sarcini»",
+    },
     registrationOpened: {
       // To an address, not a participant (§146): the greeting names nobody.
       subject: (d: TemplateData) => `Înscrierile la ${d.eventTitle ?? "eveniment"} s-au deschis`,
@@ -2295,6 +2315,17 @@ const T = {
       },
       action: `${legalTemplatesWords("en").newVersion}: regenerate the texts`,
     },
+    doorShut: {
+      subject: "The site's name does not resolve: the deadlines are held",
+      facts: (d: TemplateData) => (d.doorShut ? { line: doorShutFactsLine("en", d.doorShut), links: [] } : undefined),
+      body: () => doorShutBody("en"),
+    },
+    doorShutDeadlinesMoved: {
+      subject: "The deadlines' clock stood still: the deadlines moved",
+      facts: (d: TemplateData) => (d.doorShut ? { line: doorShutMovedFactsLine("en", d.doorShut), links: [] } : undefined),
+      body: () => doorShutMovedBody("en"),
+      action: "Open «Tasks»",
+    },
     registrationOpened: {
       subject: (d: TemplateData) => `Registration for ${d.eventTitle ?? "the event"} is open`,
       greeting: () => "Hello,",
@@ -2700,6 +2731,8 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   MEMBER_INVITATION: "memberInvitation",
   EVENT_INVITATION: "eventInvitation",
   LEGAL_TEMPLATES_CHANGED: "legalTemplatesChanged",
+  DOOR_SHUT: "doorShut",
+  DOOR_SHUT_DEADLINES_MOVED: "doorShutDeadlinesMoved",
 };
 
 /** The newsletter's three messages (§445): to an address, never about a registration. */
@@ -3340,7 +3373,10 @@ export function buildTemplateContent(
         // …nor a member's invitation (§524): no event, no registration, nothing of a participant's to link.
         messageType === "MEMBER_INVITATION" ||
         // …nor the Administrators' notice of a moved template (§639): its one link is its button.
-        messageType === "LEGAL_TEMPLATES_CHANGED"
+        messageType === "LEGAL_TEMPLATES_CHANGED" ||
+        // …nor the door's two (§NNN): to the Administrators, about no event and nobody's data.
+        messageType === "DOOR_SHUT" ||
+        messageType === "DOOR_SHUT_DEADLINES_MOVED"
       ) {
         return own.length > 0 ? own : undefined;
       }
@@ -3446,6 +3482,9 @@ const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set([
   "MEMBER_INVITATION",
   // To the club's Administrators about its legal texts (§639): about nobody's data.
   "LEGAL_TEMPLATES_CHANGED",
+  // The door's two (§NNN): to the Administrators, instants and counts only.
+  "DOOR_SHUT",
+  "DOOR_SHUT_DEADLINES_MOVED",
 ]);
 
 /**

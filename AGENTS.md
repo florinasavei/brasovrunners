@@ -1326,6 +1326,15 @@ Rules:
   a row that holds a counted place releases it under the event lock and the ordinary refill follows;
   unmarking serves the line first and then needs `occupied < capacity` under the lock; a restart of a
   cancelled or expired row through the form clears the mark;
+- while the door is shut — the site's public name does not resolve, or no scheduler call arrives for
+  longer than the pinger's own threshold — the maintenance job lapses nothing, and once it is over it
+  moves every hold, offer, reservation, invitation and link deadline that was running at the window's
+  start later by the window's length, capped by «Termene» (`doorShutMaxHours`) and as the allocator caps
+  it, under the event lock, audited with no actor (`DECISIONS.md` §NNN); this is the one move of an
+  invitation's deadline while somebody waits. A claim the move revives whose counted place was given
+  meanwhile is put on «Lista de invitați speciali» (`outside_capacity`) in that same transaction rather
+  than counted, so `occupied` never exceeds the capacity — the one mark no Administrator presses, set
+  only on rows that run moved;
 - an invitation by email (`event_invitations`, §647) holds one counted place from the send until it is
   accepted, withdrawn or its deadline passes — the deadline compared on every read, so the place is free
   the instant it passes — unless it was sent «Pe lista de invitați speciali» (`outside_capacity`). It is the club's choice, like a

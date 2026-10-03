@@ -25,6 +25,8 @@ import { checkJobHealth } from "@/modules/jobs/health";
 import { readJobCadence } from "@/modules/jobs/cadence";
 import { describeJob } from "@/modules/jobs/overview";
 import { DAILY_WINDOW_LABEL, type JobName } from "@/modules/jobs/schedule";
+import { readDoorWindows } from "@/modules/jobs/door-shut-windows";
+import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { countMediaAssets, ORPHAN_ASSET_DAYS } from "@/modules/media/references";
 import { readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
 import { REPO_DOCS } from "@/modules/diagnostics/repo-docs";
@@ -185,6 +187,8 @@ export default async function DevsPage({ params, searchParams }: Props) {
       describeJob(db, { job: job.jobName as JobName, now, cadenceMinutes: jobCadence.minutes, lastFinishedAt: job.lastFinishedAt }),
     ),
   );
+  // The door (§NNN): the latest window, from the table the maintenance job writes — never a lookup of the name here.
+  const [lastDoor] = await readDoorWindows(db, 1);
   const volume = await readEmailVolumeToday(db, now);
   const emailHealth = await checkEmailHealth(db, now, budget.effects.jobFloorMinutes);
   const pictures = await countMediaAssets(db, now);
@@ -828,6 +832,31 @@ export default async function DevsPage({ params, searchParams }: Props) {
                 </Typography>
               );
             })}
+            {/*
+              The clock stopped while the door was shut (§NNN): the latest window the maintenance job
+              wrote — open (red), over (its stop and what it moved), or none. The name itself is asked
+              by the job and the deep health only, never by this page.
+            */}
+            <Typography
+              variant="body2"
+              data-testid="door-shut-status"
+              color={lastDoor && lastDoor.endedAt === null ? "error.main" : "text.primary"}
+            >
+              {!lastDoor
+                ? t("door.none")
+                : lastDoor.endedAt === null
+                  ? t("door.open", {
+                      from: formatDay(lastDoor.startedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }),
+                    })
+                  : t("door.closed", {
+                      from: formatDay(lastDoor.startedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }),
+                      until: formatDay(lastDoor.endedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }),
+                      source: t(`door.source.${lastDoor.source === "pings" ? "pings" : "name"}`),
+                      stopped: minutesPhrase(locale, lastDoor.stoppedMinutes ?? 0),
+                      moved: lastDoor.movedCount,
+                      outside: lastDoor.outsideCount,
+                    })}
+            </Typography>
             <Typography variant="body2" color="text.secondary">
               {jobCadence.minutes === 0
                 ? t("jobSchedule.cadenceOnDemand", { time: DAILY_WINDOW_LABEL })

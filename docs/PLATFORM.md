@@ -577,6 +577,45 @@ yarn idle:measure --hours 1 --vercel-project <name>   plus the last hour of Verc
 | R2, Mailgun | none on a timer; the picture sweep ran on every hourly safety run | the sweep runs once a day | a photo upload; an email a person caused |
 | GitHub Actions | `scheduled-jobs.yml` said every five minutes (GitHub ran it every three to five hours) | four times a day, as the backstop it is | — |
 
+## When the name is gone — the deadlines' clock stops (2026-10-03)
+
+On 2026-10-03 the registrar held the club's domain for about seven hours. The site, the backoffice,
+QA and the email subdomain could not be reached by name, and both pingers (the external monitors and
+the GitHub backstop) call the public name, so no job ran while every participant's deadline kept
+running. Since `DECISIONS.md` §NNN the maintenance job's first step, on every real run, is to look at
+the door:
+
+- **The pings.** Every call of either job is remembered in the data cache, answered from the cache or
+  run for real. A silence longer than the pinger's own threshold — twice the cadence plus five minutes,
+  the number `/api/health` pages on (35 minutes by day on production, 125 at night) — is recorded as a
+  window that is over: from the call that should have come to the first that did. A cache that has
+  lost the last real run's own ping is not read at all; neither is a silence a real run of either job
+  sits in. Only QA and production, which have a pinger, are judged this way.
+- **The name.** The job resolves `APP_BASE_URL`'s host. Reached by another address while the name
+  answers «no such name», it opens a window that stays open until the name answers again. A timeout
+  or a failed resolver opens and closes nothing.
+
+While a window is open nothing lapses: no address link, hold, offer, invitation or family form. Once
+it is over, every deadline still running at its start moves later by its length, capped by «Termene»
+→ «Ceasul termenelor stă pe loc…» (`doorShutMaxHours`, 48 hours by default, 0 switches it off) and by
+the event's close and start as the allocator caps it; a deadline that passed before the window never
+moves. A revived offer, reservation or invitation whose place was given meanwhile is put on «Lista de
+invitați speciali» rather than counted, so no counted place is given twice. Each move is in the
+registration's history; the window, its stop and its counts are the table `door_shut_windows`.
+
+**Where it shows.** The Administrators get «Site-ul nu se găsește după nume» when a window opens on
+the name (on the club's road — Gmail by default, which does not hang on the club's domain) and «Ceasul
+termenelor a stat pe loc» once the deadlines have moved. `/api/health?deep=1` carries a `door` block —
+`name` (`resolves`, `unresolved`, `unknown`, `skipped` on a laptop), `shutSince`, `lastWindow`,
+instants only — and answers `degraded` while the name is gone or a window is open; the shallow answer
+asks nobody. `/devs` → Stare has the line «Ceasul termenelor», and «Sarcini» the row «Site-ul de
+negăsit: ceasul termenelor», red while shut and open for a week after a window. Nothing else asks the
+name: no page, no action a visitor waits on.
+
+**What it does not do.** It cannot run a job nobody calls: while the name is gone the jobs run only
+if a monitor calls the deployment's own address. Whatever the monitors call, the deadlines are moved
+at the first real run after the name is back.
+
 ## Cost
 
 Three services are paid now — Neon Launch since 2026-09-22, one Vercel Pro seat since 2026-09-30 and
