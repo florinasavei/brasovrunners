@@ -1304,6 +1304,12 @@ function newsletterConfirmEmphasis(d: TemplateData, b: readonly string[]): Empha
   return { highlight: [b[1]], actionAfter: b[1] };
 }
 
+/** An invitation's emphasis (§647): the invitation and its deadline on the band, the button under them, the "ignore it" quiet. */
+function invitationEmphasis(d: TemplateData, b: readonly string[]): Emphasis {
+  const lead = d.holdExpiresAtFormatted ? b.slice(0, 2) : b.slice(0, 1);
+  return { highlight: lead, actionAfter: lead[lead.length - 1], quiet: [b[b.length - 1]] };
+}
+
 /**
  * The texts whose template moved (§639), on the message's bold line: «Șablon nou: GDPR · Termeni de
  * concurs», the chip's own words and the names `/admin/legal` lists, in this half's language. None
@@ -1583,6 +1589,19 @@ const T = {
       ],
       action: "Intră în zona membrilor",
       links: (d: TemplateData) => (d.privacyUrl ? [{ label: "Nota de confidențialitate", url: d.privacyUrl }] : []),
+    },
+    // A personal invitation to an event (§647): the place kept until the deadline, one link to the form.
+    eventInvitation: {
+      subject: (d: TemplateData) => `Invitație la ${d.eventTitle ?? "eveniment"}`,
+      body: (d: TemplateData) => [
+        `${CLUB_NAME} te invită la ${d.eventTitle ?? "eveniment"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}: **ți-am păstrat un loc**.`,
+        // Its own paragraph, so a club text that names the deadline leaves it out with the deadline (§359).
+        ...(d.holdExpiresAtFormatted ? [`Locul e al tău dacă accepți invitația până **${d.holdExpiresAtFormatted}**; după termen se eliberează.`] : []),
+        "Apasă butonul de mai jos: se deschide formularul de înscriere cu numele și adresa ta. Completezi restul și accepți termenii; apoi primești emailul cu declarația, pe care o semnezi tu.",
+        "Dacă nu te așteptai la acest email, ignoră-l: nu se întâmplă nimic.",
+      ],
+      action: "Acceptă invitația",
+      emphasis: invitationEmphasis,
     },
     // To an Administrator or a Superadministrator (§639): a release moved a legal template. The texts are
     // named on the bold line, the platform's (a club text for this message keeps them); the words ask a
@@ -2047,6 +2066,9 @@ const T = {
     /** The same for "registration is open" (§146), which answers a request, not a registration. */
     privacyFooterInterest: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că ai cerut să fii anunțat. Cum folosim datele tale:`,
+    /** An invitation (§647): the club typed the name and the address to send it; nobody asked yet. */
+    privacyFooterInvitation: (club: string) =>
+      `Primești acest mesaj pentru că ${club} ți-a trecut numele și adresa ca să te invite la acest eveniment. Cum folosim datele tale:`,
     /** The same for a group run's self-declaration (§393): signed on a page, no registration behind it. */
     privacyFooterDeclaration: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că ai semnat o declarație pe site-ul clubului. Cum folosim datele tale:`,
@@ -2221,6 +2243,17 @@ const T = {
       ],
       action: "Open the members' area",
       links: (d: TemplateData) => (d.privacyUrl ? [{ label: "Privacy notice", url: d.privacyUrl }] : []),
+    },
+    eventInvitation: {
+      subject: (d: TemplateData) => `Invitation to ${d.eventTitle ?? "the event"}`,
+      body: (d: TemplateData) => [
+        `${CLUB_NAME} invites you to ${d.eventTitle ?? "the event"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}: **we are keeping a place for you**.`,
+        ...(d.holdExpiresAtFormatted ? [`The place is yours if you accept the invitation by **${d.holdExpiresAtFormatted}**; after the deadline it is released.`] : []),
+        "Press the button below: the registration form opens with your name and address. You fill in the rest and accept the terms; then you receive the email with the declaration, which you sign yourself.",
+        "If you were not expecting this email, ignore it: nothing happens.",
+      ],
+      action: "Accept the invitation",
+      emphasis: invitationEmphasis,
     },
     legalTemplatesChanged: {
       subject: "The legal templates changed: regenerate and approve",
@@ -2600,6 +2633,7 @@ const T = {
       `If you did not sign this declaration, write to us from the contact page${contactUrl ? ` (${contactUrl})` : ""} and we will delete it.`,
     privacyFooter: (club: string) => `You are receiving this message from ${club} about a registration made with this email address. How we use the data:`,
     privacyFooterInterest: (club: string) => `This message comes from ${club} because you asked to be told. How we use your data:`,
+    privacyFooterInvitation: (club: string) => `This message comes because ${club} entered your name and address to invite you to this event. How we use your data:`,
     privacyFooterDeclaration: (club: string) => `This message comes from ${club} because you signed a declaration on the club's website. How we use your data:`,
     privacyFooterNewsletter: (club: string) =>
       `This message comes from ${club} because you asked for the club's news at this address. Unsubscribe at any time from the link above. How we use your data:`,
@@ -2636,6 +2670,7 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   NEWSLETTER: "newsletter",
   NEW_EVENT_ALERT: "newEventAlert",
   MEMBER_INVITATION: "memberInvitation",
+  EVENT_INVITATION: "eventInvitation",
   LEGAL_TEMPLATES_CHANGED: "legalTemplatesChanged",
 };
 
@@ -3293,6 +3328,8 @@ export function buildTemplateContent(
             ? copy.privacyFooterInterest
             : messageType === "GROUP_RUN_DECLARATION_SIGNED"
               ? copy.privacyFooterDeclaration
+              : messageType === "EVENT_INVITATION"
+                ? copy.privacyFooterInvitation
               : NEWSLETTER_MESSAGES.has(messageType)
                 ? copy.privacyFooterNewsletter
                 : copy.privacyFooter)(controllerName()),

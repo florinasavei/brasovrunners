@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.62-2026-10-02 -->
+<!-- PROJECT_BASELINE: BR-V2.63-2026-10-03 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.62-2026-10-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.63-2026-10-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1384,7 +1384,7 @@ else's: they are marked **YOURS**. Everything else below is a value, not a place
 | Înscrieri | Modul de înscriere | **Înscrieri pe site** |
 | Înscrieri | Număr de locuri | **YOURS** — how many runners the club can handle. Leave it empty only if there is genuinely no limit; the page then shows no number and the waiting list never engages |
 | Înscrieri | Lista de așteptare | **Nelimitată** — the list is private (§628) and an open-ended line costs the club nothing. The other answers: **Limitată la un număr de locuri** shows a box for how many may wait (empty or **0** there switches back to Nelimitată), and **Fără listă de așteptare** turns everyone away once the places are gone — the only answer that closes the list |
-| Înscrieri | Locurile din lista de așteptare se alocă automat | **Da** (the default) offers a freed or added place to the first person waiting at once. **Nu** leaves every such place to you: hand it out from «Coada de înscrieri» on the event's page with «Trimite-i oferta» (the ordinary offer and its email, to the person you choose), or at the desk with «Dă-i un loc»; while anyone waits, newcomers join the list. The recipe for a margin (say 200 medals, 150 places announced): keep **150** and **Da**; when the list forms, press «Trimite-i oferta» on each person you choose, one by one — on a full race its window says it adds a place and its button reads «Adaugă un loc și trimite oferta»; once confirmed, the capacity grows by one (150 → 151), written in the registration's trail with who and for whom, and the place is that person's, not the first in line's. There is no need to raise **Număr de locuri** first; set **Nu** only if you also want places freed by cancellations to wait for your choice. It works at any moment before the start, after **Înscrierile se închid** too (the offer then lasts at most until the start); at the desk «Dă-i un loc» still needs a free place. Raise the places in the editor only if you want them open to everyone: once nobody is left waiting, the places still free go to whoever registers next |
+| Înscrieri | Locurile din lista de așteptare se alocă automat | **Da** (the default) offers a freed or added place to the first person waiting at once. **Nu** leaves every such place to you: hand it out from «Coada de înscrieri» on the event's page with «Trimite-i oferta» (the ordinary offer and its email, to the named person), or at the desk with «Dă-i un loc»; while anyone waits, newcomers join the list. The recipe for a margin (say 200 medals, 150 places announced): keep **150** and **Da**; when the list forms, press «Trimite-i oferta» on each named person, one by one — on a full race its window says it adds a place and its button reads «Adaugă un loc și trimite oferta»; once confirmed, the capacity grows by one (150 → 151), written in the registration's trail with who and for whom, and the place is that person's, not the first in line's. There is no need to raise **Număr de locuri** first; set **Nu** only if you also want places freed by cancellations to wait for your choice. It works at any moment before the start, after **Înscrierile se închid** too (the offer then lasts at most until the start); at the desk «Dă-i un loc» still needs a free place. Raise the places in the editor only if you want them open to everyone: once nobody is left waiting, the places still free go to whoever registers next |
 | Înscrieri | Înscrierile se deschid | leave **empty** — entries open the moment the event is published |
 | Înscrieri | Înscrierile se închid | leave **empty** for "until the start", or a date if the club wants the list closed earlier |
 | Înscrieri | Confirmarea participării: cu câte zile înainte se cere | **YOURS** — the default **7** asks everyone to confirm a week out |
@@ -1416,11 +1416,80 @@ languages go live together; that is the rule, not a setting.
    race opens to a crowd, one month of **Basic** is $15 and is a setting on that screen — no
    deployment.
 4. `/admin/tasks` → the row for this item turns green by itself once the event exists.
-5. The club's own runners — organizers, pacemakers, invited runners — register like anybody (or
-   are entered from «Înscrierile primite»), then an Administrator opens each registration →
-   «Locurile evenimentului» → «Pune în afara locurilor». They keep a declaration, a race number
-   and their row on the public list if they ticked, and take none of the announced places; a
-   place one of them held is given back to the line (§643, `AGENTS.md` §15.11).
+5. The club's own runners — organizers, pacemakers, invited runners — go on **«Lista ascunsă»**.
+   First, in the event's settings (`/admin/events` → the race → «Lista publică a participanților»),
+   tick **«Folosește lista ascunsă»** and choose, under it:
+   - **«Numerele listei ascunse încep de la»** — empty, they draw from the race's own series like
+     everybody; set (say 900), the hidden list has its own series from there up, in confirmation
+     order. The save refuses a start inside the race's series (the first number and as many after
+     it as there are places), or a start whose series would run into the desk's spare numbers; on a
+     race without a limit of places, whose series has no end, only a start below the race's first
+     number is accepted. It judges the start only when the save moves it, switches the hidden list
+     on, or moves the race's first number or its places — a place «Trimite-i oferta» added never
+     makes the next save refuse a start nobody touched. A save carried to other dates of a series
+     judges each date by its own places and spares, and a refusal says the box and the date and
+     changes no date; a duplicate or a repeat whose places have reached the hidden start is refused
+     with a sentence that says the box to move. A standing series in that state makes no new dates
+     until the start is moved: each maintenance run counts it as an error in its job record and
+     logs the event's id. Leave room above the race's places for
+     such supplementary places and for the desk's spares (say 900 for a race of 150, not 151). With
+     the hidden series above the race's, the spares printed for the desk stay between the two — a
+     print that would reach the hidden series is refused with a sentence that names this box. A
+     series with no free number left draws the next free number after it, in the other series if
+     need be; no number is ever given twice;
+   - **«Numără și lista ascunsă»** — unticked by default, «Cine vine» counts the race's places only;
+     ticked, it counts the hidden list too. The places line and the free places never do.
+
+   Beside «Arată public câți așteaptă», on this and every event whether or not the hidden list is
+   on, **«Arată public numărătoarea»** — ticked by default; unticked, «Cine vine» shows the names
+   only, with no count in its title, no «confirmați» line and no position.
+
+   Then they register like anybody (or are entered from «Înscrierile primite»), and an
+   Administrator opens each registration → «Lista ascunsă» → chooses «Pe lista ascunsă» and
+   confirms. They keep a declaration, a race number and their row on the public list if they
+   ticked, and take none of the announced places; a place one of them held is given back to the
+   line (§643, §647, `AGENTS.md` §15.11). A number already given stays when somebody changes list.
+   While the switch is on — or while anybody already on the list still holds a place, since
+   unticking it takes nobody off — the event page's places line («N înscriși din M locuri») carries one
+   sentence in the public's words — organisers, volunteers and invited runners may be at the start
+   outside the advertised places, taking none of them; the name «Lista ascunsă» is the backoffice's
+   alone and appears on no public page and in no participant's email.
+6. **Invitations by email** — members, partners, guests the club wants at the start, without asking
+   them to fight the public form (§647). «Evenimente» → «Editează» on the race → «Înscrierile primite»
+   → «Trimite invitații» opens the «Invitații» section of the race's registrations list:
+   - tick members from the members' zone (search by name or address), and/or type other people one per
+     line — the name, then the email address;
+   - «Zile până expiră» (7 by default; never past the start — invitations may go after **Înscrierile
+     se închid**, for organizers, pacemakers and volunteers invited late);
+   - «Limba invitației» (Română by default) for typed addresses the club has never seen: a member gets
+     the account's language, somebody already registered with the club the language they used;
+   - «Pe lista ascunsă (nu ocupă un loc)» for organizers, volunteers and pacemakers: their invitations
+     keep none of the announced places. The tick shows only while the race's **«Folosește lista
+     ascunsă»** (item 5) is ticked; switched off since the page was opened, the send is refused with
+     the same sentence the registration's own «Lista ascunsă» gives;
+   - «Trimite invitațiile» asks first: how many invitations, how many places are free for them, until
+     when the invitation lasts and in which language a new address gets it, and — on a full race, or
+     while anybody is on the waiting list — how many supplementary places it adds and what the capacity
+     becomes; the button names the places it adds. A free place somebody waits for is theirs, never an
+     invitation's, whether «Locurile din lista de așteptare se alocă automat» says **Da** or **Nu** and
+     after **Înscrierile se închid** too. Each person gets one email, «Acceptă invitația», which opens the form with their
+     name and address filled in; they fill in the rest, accept the terms and sign the declaration
+     themselves, from the email that follows.
+   - Each invitation keeps its place until its deadline; unaccepted, the place goes back to the line by
+     itself. On the invitation's row: «Retrimite» (a new link; the deadline stays, unless you type a
+     number of days in the box and that comes later) and «Retrage» (the place goes back at once). While
+     anybody is on the waiting list, «Retrimite» on an invitation that holds a counted place sends the
+     link and the email again but keeps the deadline — the row shows no days box, the dialog says why,
+     and the message after it says the deadline stayed: if the invitation is not accepted by then, the
+     place goes to the waiting list. An invitation «Pe lista ascunsă» can still be extended. The Organizer sees the list, not
+     the buttons.
+   - Somebody invited who registers anyway, through the public form or at the desk, takes the
+     invitation's place once their address is confirmed or a place is given to them: the invitation
+     reads «Acceptată» and links the registration, and their registration's page says «Înscriere pe
+     invitație — trimisă de …». Nobody waits behind a place kept in their own name.
+   - The privacy notice describes invitations once the club approves it from the template:
+     `/admin/tasks` shows the row «Nota de confidențialitate: invitațiile pe email» until then.
+     Invitations work meanwhile.
 
 ### If somebody says the site is blocked at work
 

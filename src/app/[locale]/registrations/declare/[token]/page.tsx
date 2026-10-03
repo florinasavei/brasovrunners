@@ -36,6 +36,7 @@ import { listSocialsMergeValues } from "@/modules/registrations/list-socials-wor
 import { listNumbersMergeValues } from "@/modules/registrations/list-number-words";
 import { promotionalMaterialsMergeValues } from "@/modules/registrations/promo-consent-words";
 import { gmailFallbackMergeValues } from "@/modules/notifications/fallback-notice-words";
+import { eventInvitationsMergeValues } from "@/modules/registrations/invitation-words";
 import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { expectedSignatures, mismatchedSignatures, type SignatureBox } from "@/modules/registrations/domain/signature-name";
@@ -482,8 +483,10 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const contactHref = getPathname({ locale, href: "/contact" });
   /*
     Where a parent whose own name was mistyped goes (§314, found in review): "Înscrierile mele",
-    to cancel and register again. The club's "Corectează numele" changes the participant's name
-    and nothing else, so the minor's sentence must not promise the correction the adult's does.
+    to cancel and register again. The club's «Modifică datele» (§645) corrects the names and, only
+    while no declaration is signed, the guardian (`answers.ts#GUARDIAN_SIGNED`) — a correction that
+    waits on somebody at the club — so the minor's sentence still sends the parent to the path that
+    needs nobody, and promises no correction.
   */
   const myRegistrationsHref = getPathname({ locale, href: "/registrations/mine" });
   // "Reply to the email" only where a reply reaches somebody (the emails' own footer, §96).
@@ -659,7 +662,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               // The club's deadlines and the public list's period (§377, §421) — as the PDF fills them.
               ...deadlineMergeValues(locale, await cachedDeadlines()),
               // The list-states marker, should the declaration name it (§396) — as the PDF fills it.
-              ...listStatesMergeValues(locale), ...listSocialsMergeValues(locale), ...listNumbersMergeValues(locale), ...gmailFallbackMergeValues(locale), ...promotionalMaterialsMergeValues(locale),
+              ...listStatesMergeValues(locale), ...listSocialsMergeValues(locale), ...listNumbersMergeValues(locale), ...gmailFallbackMergeValues(locale), ...eventInvitationsMergeValues(locale), ...promotionalMaterialsMergeValues(locale),
               ...newsletterMergeValues(locale),
             }}
           />

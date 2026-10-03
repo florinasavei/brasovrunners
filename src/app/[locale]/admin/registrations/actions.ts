@@ -1,7 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { flashOutcome } from "@/shared/feedback/flash";
+import { getTranslations } from "next-intl/server";
+import { flash, flashOutcome } from "@/shared/feedback/flash";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
@@ -9,8 +10,8 @@ import {
   bulkCancelRegistrationsByStaff,
   cancelRegistrationByStaff,
   checkInByStaff,
+  clearMemberTicksByStaff,
   confirmRegistrationByStaff,
-  correctRegisteredName,
   createRegistrationByStaff,
   deleteRegistrationByStaff,
   givePlaceToUnconfirmedByStaff,
@@ -19,6 +20,7 @@ import {
   promoteRegistrationByStaff,
   bulkDeleteRegistrationsByStaff,
   setBibNumberByStaff,
+  editRegistrationAnswers,
   setOutsideCapacity,
   withdrawOptionalData,
 } from "@/modules/registrations/admin-service";
@@ -27,6 +29,7 @@ import { holdDeclarationAcceptance, releaseDeclarationAcceptance } from "@/modul
 import { findEventForRegistrationById } from "@/modules/events/repository";
 import { effectiveMinimumAge, yearsPhrase } from "@/modules/registrations/domain/age";
 import { UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
+import { ANSWER_MARKERS, ANSWERS_UNCHANGED, answersRefusalCode, EDITABLE_ANSWERS } from "@/modules/registrations/answers";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
 import { waitlistRefusalCode } from "@/modules/registrations/domain/waitlist";
 import { confirmedCapacityOf, noFreePlaceOutcome, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
@@ -35,10 +38,12 @@ import { SendNowRefused, sendNowRefusalCode } from "@/modules/notifications/send
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
+import { HIDDEN_LIST_OFF } from "@/modules/registrations/domain/hidden-list";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { wholeDigits } from "@/shared/forms/whole-digits";
 import { normalizeTypedDate } from "@/shared/forms/pickers/wall-values";
 import type { SexChoice } from "@/modules/registrations/domain/sex";
+import { CLUB_NAME } from "@/theme/brand";
 
 /**
  * The three administrative changes to a registration (BR-REQ-037-03, BR-REQ-037-05).
@@ -244,7 +249,8 @@ export async function setOutsideCapacityAction(_previous: FormOutcome | null, fo
     await setOutsideCapacity(getDb(), actor, registrationId, outside, new Date());
     outcome = outside ? { saved: "outsideMarked" } : { saved: "outsideUnmarked" };
   } catch (error) {
-    outcome = noFreePlaceOutcome(error) ?? outcomeOf(error);
+    // «Folosește lista ascunsă» off (§647): its own sentence, naming the switch, not "check the data".
+    outcome = isDomainError(error) && error.fields.includes(HIDDEN_LIST_OFF) ? { error: HIDDEN_LIST_OFF } : (noFreePlaceOutcome(error) ?? outcomeOf(error));
   }
   return backTo(detailPath(locale, registrationId), outcome);
 }
@@ -414,19 +420,127 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
   return backTo(getPathname({ locale, href: "/admin/registrations" }), outcome);
 }
 
-/** The one editable field (BR-REQ-037-03). A refused name stays in its box (§315). */
-export async function correctRegisteredNameAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+/**
+ * The answers a form posted that differ from what the page rendered (§645): each allowlisted answer
+ * travels with its `was.<name>` twin, and only the ones whose value moved become the correction — so a
+ * page opened before a colleague's save corrects what this Administrator changed and nothing else. The
+ * member tick is a box: ticked posts `on`, and its twin says `on` or nothing.
+ */
+function changedAnswersOf(form: FormData): Record<string, string | boolean> {
+  const changes: Record<string, string | boolean> = {};
+  for (const field of EDITABLE_ANSWERS) {
+    const was = form.get(`was.${field}`);
+    if (typeof was !== "string") continue;
+    if (field === "clubMemberDeclared") {
+      const ticked = form.get(field) === "on";
+      if (ticked !== (was === "on")) changes[field] = ticked;
+      continue;
+    }
+    const now = text(form, field).trim();
+    if (now !== was.trim()) changes[field] = now;
+  }
+  return changes;
+}
+
+/**
+ * «Modifică datele» (§645): an Administrator corrects the answers the person typed — the page's one
+ * form, which also holds the name (§67's «Corectează numele», folded in). The coarse gate here,
+ * `admin-service.ts` and the service assert the role again (BR-REQ-060-01). A refusal keeps every box
+ * as typed (§315); a press that changes nothing says so in its own sentence. A success flashes
+ * «Date corectate: {fields}», the fields named in the reader's language, and comes back to the page.
+ */
+export async function editRegistrationAnswersAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const registrationId = text(form, "registrationId");
 
+  let corrected: string[];
   try {
     const actor = await requireStaffCapability(canManageRegistrations);
-    await correctRegisteredName(getDb(), actor, registrationId, text(form, "registeredName"), new Date());
+    ({ corrected } = await editRegistrationAnswers(getDb(), actor, registrationId, changedAnswersOf(form), new Date()));
   } catch (error) {
-    return refused(error, form, { fieldNames: (failure) => (failure.code === "VALIDATION_ERROR" ? ["registeredName"] : failure.fields) });
+    const refusal = refused(error, form, {
+      fieldNames: (failure) => failure.fields.filter((name) => name !== UNDER_MINIMUM_AGE && !ANSWER_MARKERS.includes(name)),
+    });
+    // Which rule refused the box (§231's marker, the signed declaration's guardian, a guardian only for a
+    // minor, no socials on a row a minor's when written), never «not valid» about a real value (`answersRefusalCode`).
+    const code = isDomainError(error) ? answersRefusalCode(error.fields) : null;
+    if (code === "ANSWERS_UNCHANGED") return { ...refusal, error: code, fields: [] };
+    if (code) return { ...refusal, error: code };
+    if (!(isDomainError(error) && error.fields.includes(UNDER_MINIMUM_AGE))) return refusal;
+    const event = await findEventForRegistrationById(getDb(), registrationId);
+    return { ...refusal, error: "ANSWER_UNDER_MINIMUM_AGE", errorValues: { age: yearsPhrase(effectiveMinimumAge(event?.minAge), locale) } };
   }
 
-  return backTo(detailPath(locale, registrationId), { saved: "nameCorrected" });
+  // The fields by their names on the form, never their values (`flash.ts`: no name, no address).
+  const t = await getTranslations({ locale, namespace: "Admin" });
+  // The name of record follows the two names (§67): the toast names the names the Administrator typed.
+  const fields = corrected
+    .filter((field) => field !== "registeredName")
+    .map((field) => t(`registrations.answers.fields.${field}`, { club: CLUB_NAME }))
+    .join(", ");
+  await flash({ kind: "success", key: "answersCorrected", values: { fields } });
+  redirect(`${detailPath(locale, registrationId)}?saved=answersCorrected#admin-alert`);
+}
+
+/**
+ * The list's own query, with the outcome in it (§180's shape): only the query travels in a field and
+ * the path is rebuilt here, so the field can choose which rows come back and never where the browser
+ * goes. The keys that would reopen a panel or repeat an old outcome are dropped first.
+ */
+async function backToList(locale: Locale, listQuery: string, outcome: Record<string, string>): Promise<never> {
+  const params = new URLSearchParams(listQuery);
+  for (const key of ["erase", "memberSweep", "error", "saved", "count", "cancelled", "erased", "failed", "test", "voided"]) params.delete(key);
+  for (const [key, value] of Object.entries(outcome)) params.set(key, value);
+  await flashOutcome(outcome);
+  redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${params.toString()}#admin-alert`);
+}
+
+/**
+ * «Nu e membru» / «E membru» (§645): the member tick cleared or set on one row from the list's "⋮" —
+ * the same correction as «Modifică datele», of one answer (`editRegistrationAnswers`), posting
+ * `listQuery` so the press comes back to the list. A tick that already says `to` (a stale list, a
+ * colleague first) changes nothing and says so. The coarse gate here; the services assert it again.
+ */
+export async function setClubMemberDeclaredAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const registrationId = text(form, "registrationId");
+  const ticked = text(form, "to") === "1";
+
+  let outcome: Record<string, string>;
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    await editRegistrationAnswers(getDb(), actor, registrationId, { clubMemberDeclared: ticked }, new Date());
+    outcome = { saved: ticked ? "memberTickSet" : "memberTickCleared" };
+  } catch (error) {
+    outcome = isDomainError(error) && error.fields.includes(ANSWERS_UNCHANGED) ? { error: "ANSWERS_UNCHANGED" } : outcomeOf(error);
+  }
+  return backToList(locale, text(form, "listQuery"), outcome);
+}
+
+/**
+ * «Scoate bifa la cele {n}» (§645): the sweep the preview on the list confirms. The rows still ticked
+ * in the preview are posted; the service reads the candidates again in its transaction and clears
+ * only those that still are (`clearMemberTicksByStaff`). The scope is the list's, posted as the
+ * event the list was resolved to (empty: every event that has not started). Back to the list with
+ * the count; a refusal stays in the preview's own summary.
+ */
+export async function clearMemberTicksAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const ids = form.getAll("registrationId").filter((value): value is string => typeof value === "string" && value !== "");
+  const eventId = text(form, "eventId") || undefined;
+
+  let cleared: number;
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    ({ cleared } = await clearMemberTicksByStaff(getDb(), actor, { scope: { eventId }, registrationIds: ids }, new Date()));
+  } catch (error) {
+    const failure = refused(error, form);
+    // Every row unticked in the preview: the list's own sentence for an empty selection.
+    const nothing = isDomainError(error) && error.code === "VALIDATION_ERROR" && error.fields.includes("registrationId");
+    return nothing ? { ...failure, error: "NOTHING_SELECTED", fields: [] } : failure;
+  }
+
+  return backToList(locale, text(form, "listQuery"), { saved: "memberTicksCleared", count: String(cleared) });
 }
 
 /**

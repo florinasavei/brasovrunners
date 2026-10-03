@@ -50,7 +50,7 @@ describe("§592 «Dă-i un loc» says why before the press", () => {
     const roHtml = await render("ro");
     expect(roHtml).toContain("Dă-i un loc");
     expect(roHtml).toContain(
-      'aria-label="Cursa e plină: locuri 3, confirmați 1, declarații de semnat 0, oferite 0, rezervate familiilor 2. Mărește întâi capacitatea evenimentului."',
+      'aria-label="Cursa e plină: locuri 3, confirmați 1, declarații de semnat 0, oferite 0, rezervate familiilor 2, invitați 0. Mărește întâi capacitatea."',
     );
     // The «i» is a plain button: a tap on it reads the sentence, it never submits the press's form.
     expect(roHtml.match(/type="button"/g)?.length ?? 0).toBeGreaterThanOrEqual(1);
@@ -58,7 +58,7 @@ describe("§592 «Dă-i un loc» says why before the press", () => {
     expect(roHtml.match(/type="submit"/g)?.length ?? 0).toBeLessThanOrEqual(1);
     const enHtml = await render("en");
     expect(enHtml).toContain("Give a place");
-    expect(enHtml).toContain("The race is full: places 3, confirmed 1, declarations to sign 0, offered 0, reserved for families 2. Raise the event&#x27;s capacity first.");
+    expect(enHtml).toContain("The race is full: places 3, confirmed 1, declarations to sign 0, offered 0, reserved for families 2, invited 0. Raise the capacity first.");
   });
 
   it("with a place free: the button alone, no «i»", async () => {
@@ -73,8 +73,8 @@ describe("§592 «Dă-i un loc» says why before the press", () => {
   it("the refusal banner ends by saying what to do first, in both languages", () => {
     const values = noFreePlaceValues("NO_FREE_PLACE", { capacity: "3", confirmed: "1", declaration: "0", offered: "0", family: "2" });
     const banner = (messages: typeof ro, locale: "ro" | "en") => createTranslator({ locale, messages, namespace: "Admin" })("errors.NO_FREE_PLACE", values);
-    expect(banner(ro, "ro").endsWith("Mărește întâi capacitatea evenimentului.")).toBe(true);
-    expect(banner(en as typeof ro, "en").endsWith("Raise the event's capacity first.")).toBe(true);
+    expect(banner(ro, "ro").endsWith("Mărește întâi capacitatea.")).toBe(true);
+    expect(banner(en as typeof ro, "en").endsWith("Raise the capacity first.")).toBe(true);
     // Plain words, inside §511's 200 characters, with the numbers in.
     expect(banner(ro, "ro").length).toBeLessThanOrEqual(200);
   });

@@ -19,6 +19,7 @@ import { findParticipantByCanonicalEmail } from "@/modules/participants/reposito
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canManageRegistrations, canReadRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
+import { isUuid } from "@/shared/ids";
 import {
   type EmergencyDetails,
   type EmergencySheetRow,
@@ -36,22 +37,31 @@ import { type BulkResendCounts, canResendDeclarationToAll, canResendReminder, de
 import { listDeclarationResendCandidates, sortCandidates, spentResendLimits } from "./bulk-resend";
 import { canTransition, isActiveStatus, isTerminalStatus } from "./domain/state-machine";
 import { waitlistRefusalOf, walkInLeftUnconfirmedError } from "./domain/waitlist";
-import { registrationNameKey, sameRunner } from "./domain/name-key";
+import { sameRunner } from "./domain/name-key";
 import { ALREADY_ON_ADDRESS } from "./domain/family";
 import { composeLegalName } from "./names";
 import {
+  countEligibleWaitlisted,
+  countOccupied,
   findEventForAllocation,
   findRegistrationById,
   findRegistrationsByEventAndParticipant,
-  lockEventForCapacity,
 } from "./repository";
+import { computeOccupied } from "./domain/capacity";
+import { invitationForecastFree } from "./domain/invitations";
 import {
   checkIn,
   confirmByStaff,
   type EventForRegistration,
   givePlaceNowByStaff,
+  type InvitationSendInput,
+  type InvitationSendResult,
+  inviteToEventByStaff,
   offerPlaceToByStaff,
+  resendInvitationByStaff,
+  withdrawInvitationByStaff,
   promoteFromWaitlistByStaff,
+  editRegistrationAnswersByStaff,
   setOutsideCapacityByStaff,
   type PlacedByStaff,
   type StaffPlaceOptions,
@@ -59,6 +69,8 @@ import {
   undoCheckIn,
   unregister,
 } from "./service";
+import { listMemberTickCandidates, type MemberTickCandidate, type MemberTickScope } from "./member-ticks";
+import { ANSWERS_UNCHANGED } from "./answers";
 
 /**
  * Admin resend (AGENTS.md §15.8; BR-REQ-060-01, BR-REQ-070-01). Administrator only — §10.2
@@ -745,6 +757,66 @@ export async function givePlaceToUnconfirmedByStaff<T extends Record<string, unk
   return givePlaceNowByStaff(db, event, registrationId, actor, now, settings, options);
 }
 
+/**
+ * «Trimite invitațiile» (§647): the Administrator's alone (`canManageRegistrations`, §289), asserted
+ * here before anything is read and again in the service, which does the whole send under the event
+ * lock (`service.ts#inviteToEventByStaff`).
+ */
+export async function inviteToEvent<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  eventId: string,
+  input: InvitationSendInput,
+  now: Date,
+): Promise<InvitationSendResult> {
+  if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not invite anybody`);
+  const event = await eventForRegistration(db, eventId);
+  return inviteToEventByStaff(db, event, input, actor, now);
+}
+
+/**
+ * The send's forecast (§647), as the dialog names it: the event's capacity now and the places free for
+ * invitations — the allocator's count against the capacity, less everyone eligible who waits
+ * (`invitationForecastFree`), as the server counts under the lock. Read by the section when the page is
+ * drawn, and again by the action when a send is refused, so the next press's question is asked on
+ * today's numbers rather than the page's. `waiting`: everyone eligible who waits, for «Retrimite»'s
+ * dialog (a counted invitation's deadline stays while it is not 0). Null `free` on an uncapped event; null altogether when there
+ * is no such event. A read with no person in it; the caller has asserted the role.
+ */
+export async function readInvitationForecast<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  now: Date,
+): Promise<{ capacity: number | null; free: number | null; waiting: number } | null> {
+  const [event] = await db.select({ capacity: events.capacity }).from(events).where(eq(events.id, eventId)).limit(1);
+  if (!event) return null;
+  const [counts, waiting] = await Promise.all([countOccupied(db, eventId, now), countEligibleWaitlisted(db, eventId)]);
+  return { capacity: event.capacity, free: invitationForecastFree({ capacity: event.capacity, occupied: computeOccupied(counts), waiting }), waiting };
+}
+
+/** «Retrimite» on an invitation (§647): the Administrator's alone, asserted here and in the service. */
+export async function resendInvitation<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  invitationId: string,
+  days: number | null,
+  now: Date,
+): Promise<{ expiresAt: Date; kept: "waiting" | null }> {
+  if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not resend an invitation`);
+  return resendInvitationByStaff(db, invitationId, { days }, actor, now);
+}
+
+/** «Retrage» an invitation (§647): the Administrator's alone, asserted here and in the service. */
+export async function withdrawInvitation<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  invitationId: string,
+  now: Date,
+): Promise<void> {
+  if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not withdraw an invitation`);
+  await withdrawInvitationByStaff(db, invitationId, actor, now);
+}
+
 /** A place ahead of the queue, into a free one (BR-REQ-037-07); refused when full. */
 export async function promoteRegistrationByStaff<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -1021,65 +1093,125 @@ export async function checkInByStaff<T extends Record<string, unknown>>(
 }
 
 /**
- * Correct the name a registration carries (BR-REQ-037-03 criterion 1).
- *
- * The one editable field, and the audit row records what it was before — which is the whole
- * requirement: a correction nobody can trace is indistinguishable from somebody quietly
- * changing who is on a start list.
+ * «Modifică datele» on one registration (§645): an Administrator corrects any answer the person typed
+ * (`answers.ts` says which, and which three kinds stay the person's). The Administrator's
+ * (`assertAdministrator` here, the service's own check and the action's gate: three times,
+ * BR-REQ-060-01). The work and its audit rows are `editRegistrationAnswersByStaff`, in one
+ * transaction; this adds the public cache, because the start list prints the start-list name, the
+ * club and the socials.
  */
-export async function correctRegisteredName<T extends Record<string, unknown>>(
+export async function editRegistrationAnswers<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Pick<StaffUser, "id" | "role">,
   registrationId: string,
-  newName: string,
+  changes: Readonly<Record<string, unknown>>,
+  now: Date,
+): Promise<{ registration: Registration; corrected: string[] }> {
+  assertAdministrator(actor);
+  const edited = await editRegistrationAnswersByStaff(db, actor, registrationId, changes, now);
+  revalidatePublicContent("places");
+  return edited;
+}
+
+/**
+ * Every answer one registration carries, for «Datele înscrierii» (§645): the Administrator's form
+ * prefilled, the Organizer's read-only list (§289). The phone and the emergency contact are among them,
+ * so the read is recorded before the row comes back — `registration.answers_viewed`, the reader as the
+ * actor, no value — as the emergency section's is (§322). Whoever may read the registrations.
+ */
+export async function readRegistrationAnswers<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  registrationId: string,
   now: Date,
 ): Promise<Registration> {
-  assertAdministrator(actor);
-
-  const trimmed = newName.trim();
-  if (trimmed.length === 0 || trimmed.length > 200) {
-    throw new DomainError("VALIDATION_ERROR", "a name is between 1 and 200 characters");
+  if (!canReadRegistrations(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not read a registration's answers`);
   }
-
   const current = await findRegistrationById(db, registrationId);
   if (!current) throw new DomainError("NOT_FOUND", "no such registration");
-  if (current.registeredName === trimmed) return current;
-
-  /*
-    The runner's key follows the name (§389): it is what tells two people on one address apart, so
-    a corrected name that is another registration's on the same address and event would make one
-    person of two. Refused with the name box's own field, before the unique index would refuse it
-    as a driver error — and read under the event's lock, the one `submitRegistration` takes before
-    it reads the address, so a rename and a new runner on the same address cannot both find the
-    name free and meet in the index.
-  */
-  const nameKey = registrationNameKey(trimmed);
-  const updated = await db.transaction(async (tx) => {
-    const locked = await lockEventForCapacity(tx, current.eventId);
-    if (!locked) throw new DomainError("NOT_FOUND", "no such event");
-    const siblings = await findRegistrationsByEventAndParticipant(tx, current.eventId, current.participantId);
-    if (siblings.some((row) => row.id !== current.id && registrationNameKey(row.registeredName) === nameKey)) {
-      throw new DomainError("VALIDATION_ERROR", "another registration on this address at this event already carries that name", ["registeredName"]);
-    }
-    const [row] = await tx
-      .update(registrations)
-      .set({ registeredName: trimmed, nameKey, updatedAt: now })
-      .where(eq(registrations.id, registrationId))
-      .returning();
-    return row;
-  });
-
   await recordAuditEvent(db, {
     actorStaffUserId: actor.id,
     participantId: current.participantId,
-    action: "registration.name_corrected",
+    action: "registration.answers_viewed",
     entityType: "registration",
-    entityId: registrationId,
-    metadata: { from: current.registeredName, to: trimmed },
+    entityId: current.id,
+    metadata: {},
     now,
   });
+  return current;
+}
 
-  return updated;
+/**
+ * The preview of «Bife de membru fără cont de membru» (§645): every ticked registration in the list's
+ * scope whose address matches no member account (`member-ticks.ts` says who counts). A read, but of
+ * addresses for a verb only the Administrator has, so it is the Administrator's too.
+ */
+export async function previewMemberTickSweep<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "role">,
+  scope: MemberTickScope,
+  now: Date,
+): Promise<MemberTickCandidate[]> {
+  assertAdministrator(actor);
+  return listMemberTickCandidates(db, scope, now);
+}
+
+/**
+ * «Scoate bifa la cele {n}» (§645): the sweep, confirmed — the shape of §606's bulk verb (preview,
+ * confirm, one transaction, the audit).
+ *
+ * `registrationIds` are the rows the preview left ticked: the Administrator unticks («Lasă bifa») a
+ * member who registered with another address. **The candidates are read again inside the
+ * transaction**, and only a posted id that is still one is cleared: a row that became a member's (an
+ * account added since the preview), was unticked meanwhile or is outside the scope is skipped, never
+ * cleared because a form said so. Each cleared row is the single correction exactly —
+ * `editRegistrationAnswersByStaff` with the tick off, its own audit rows, the club name blanked only
+ * where the tick wrote it — and one summary row `registrations.member_ticks_cleared`
+ * `{ count, eventId }` says the sweep happened. No email, no state, no place.
+ */
+export async function clearMemberTicksByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  input: { scope: MemberTickScope; registrationIds: readonly string[] },
+  now: Date,
+): Promise<{ cleared: number }> {
+  assertAdministrator(actor);
+  if (input.scope.eventId !== undefined && !isUuid(input.scope.eventId)) {
+    throw new DomainError("NOT_FOUND", "no such event");
+  }
+  const wanted = new Set(input.registrationIds.filter(isUuid));
+  if (wanted.size === 0) throw new DomainError("VALIDATION_ERROR", "nothing selected", ["registrationId"]);
+
+  const cleared = await db.transaction(async (tx) => {
+    const candidates = await listMemberTickCandidates(tx, input.scope, now);
+    let count = 0;
+    for (const candidate of candidates) {
+      if (!wanted.has(candidate.id)) continue;
+      try {
+        await editRegistrationAnswersByStaff(tx, actor, candidate.id, { clubMemberDeclared: false }, now);
+        count += 1;
+      } catch (error) {
+        // Unticked between the read and this row (nothing would change), or erased (NOT_FOUND).
+        const unchanged = isDomainError(error) && error.code === "VALIDATION_ERROR" && error.fields.includes(ANSWERS_UNCHANGED);
+        if (!unchanged && !(isDomainError(error) && error.code === "NOT_FOUND")) throw error;
+      }
+    }
+    if (count > 0) {
+      await recordAuditEvent(tx, {
+        actorStaffUserId: actor.id,
+        participantId: null,
+        action: "registrations.member_ticks_cleared",
+        entityType: "event",
+        entityId: input.scope.eventId ?? null,
+        metadata: { count, eventId: input.scope.eventId ?? null },
+        now,
+      });
+    }
+    return count;
+  });
+  if (cleared > 0) revalidatePublicContent("places");
+  return { cleared };
 }
 
 /**

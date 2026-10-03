@@ -19,6 +19,7 @@ import { checkJobHealth } from "@/modules/jobs/health";
 import { checkEmailHealth } from "@/modules/notifications/health";
 import {
   findCurrentApprovedDocument,
+  noticeDescribesEventInvitations,
   noticeDescribesListNumbers,
   noticeDescribesListSocials,
   noticeDescribesGmailFallback,
@@ -422,6 +423,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       listSocialsDescribed: await noticeDescribesListSocials(db, now),
       // §613: the same switch for the race number beside a confirmed name on the public list.
       listNumbersDescribed: await noticeDescribesListNumbers(db, now),
+      // §647: the invitations by email, described by the notice in force; nothing waits for it.
+      invitationsDescribed: await noticeDescribesEventInvitations(db, now),
       promoDescribed: await noticeDescribesPromotionalMaterials(db, now),
       // §570: the same switch for the list the club gives its partners.
       sponsorShareDescribed: await noticeDescribesPromotionalMaterialsShared(db, now),

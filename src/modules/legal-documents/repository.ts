@@ -16,6 +16,7 @@ import type { LegalDocumentTranslationInput } from "./domain/content-hash";
 import { GROUP_RUN_DECLARATION_KEYS, raceDeclarationKeysFor, RACE_DECLARATION_KEYS } from "./domain/keys";
 import {
   asksForMinorSignature,
+  describesEventInvitations,
   describesListNumbers,
   describesGmailFallback,
   describesListSocials,
@@ -259,6 +260,15 @@ export async function noticeDescribesListSocials<T extends Record<string, unknow
 export async function noticeDescribesListNumbers<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesListNumbers(notice.body));
+}
+
+/**
+ * Whether the privacy notice in force describes the club's invitations by email (§647,
+ * `describesEventInvitations`) — in every language, like `noticeDescribesListNumbers`. For `/admin/tasks`.
+ */
+export async function noticeDescribesEventInvitations<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesEventInvitations(notice.body));
 }
 
 /**

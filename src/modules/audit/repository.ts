@@ -26,6 +26,21 @@ import type { Database } from "@/db/types";
 export type AuditAction =
   | "registration.created_by_staff"
   | "registration.name_corrected"
+  /**
+   * «Modifică datele» (§645): one answer the person typed, corrected by an Administrator —
+   * `{ field, from, to }`, the column and its two values, one row per changed column (the name of
+   * record keeps its own `registration.name_corrected`). The values are the person's data, so they
+   * go with the row: the erase and the retention sweep remove `from` and `to` as they do a rename's
+   * (`scrubRegistrationsFromAudit`), and the emergency contact's seven days after the event
+   * (`jobs/retention.ts`), leaving which field was corrected, by whom and when.
+   */
+  | "registration.answer_corrected"
+  /**
+   * «Scoate bifa la cele {n}» (§645): one row per sweep of «Bife de membru fără cont de membru»,
+   * beside each registration's own `registration.answer_corrected` — `{ count, eventId }`, the event
+   * the list was scoped to or null for every event that has not started. Never who.
+   */
+  | "registrations.member_ticks_cleared"
   | "registration.cancelled_by_staff"
   /**
    * A participant cancelled their own registration (§547): from their manage link, «Înscrierile
@@ -77,8 +92,8 @@ export type AuditAction =
   /** Given a place ahead of the queue, into a free one (BR-REQ-037-07). */
   | "registration.promoted_by_staff"
   /**
-   * «Trimite-i oferta» (§615): a free place offered by the organizer to the waiting-list registration
-   * of their choice — the ordinary offer and its email, no confirmation. From and to, and how many
+   * «Trimite-i oferta» (§615): a free place offered by the organizer to a named waiting-list
+   * registration — the ordinary offer and its email, no confirmation. From and to, and how many
    * waited before this person in the line (`aheadOf`) — never a name.
    */
   | "registration.offered_by_staff"
@@ -128,6 +143,12 @@ export type AuditAction =
    * trail is how the club answers "who has seen my health note".
    */
   | "registration.health_viewed"
+  /**
+   * «Datele înscrierii» opened (§645): every answer the person typed, the phone and the emergency
+   * contact among them, so it is recorded like the emergency section beside it — the reader as the
+   * actor, no value in the metadata. The health note is not among the answers and is not shown.
+   */
+  | "registration.answers_viewed"
   /**
    * Optional data withdrawn (§322): the health note and its consent, the socials, or the
    * results consent. By the participant from their own link (no staff actor, the door in the
@@ -260,10 +281,37 @@ export type AuditAction =
   /** The same supplementary place, added by «Dă-i un loc acum» on a full event (§637, §642): same metadata. */
   | "event.capacity_raised_for_place_now"
   /**
+   * The same supplementary place, added by a send of invitations on a full event (§647, §642): from and
+   * to, and the invitation it was added for (`invitationId`, an id, never a name or an address).
+   */
+  | "event.capacity_raised_for_invitation"
+  /**
+   * Invitations (§647), each row about one invitation of the event (the entity), by its id in the
+   * metadata — never the name or the address, which the invitation row keeps and the retention erases:
+   * sent (the deadline, «În afara locurilor», whether a place was added, and the member's account when
+   * one was picked), resent (the deadline before and after), withdrawn, expired (no actor: the
+   * maintenance job), and accepted (no actor: the person, from the link; the registration's id).
+   */
+  | "event.invitation_sent"
+  | "event.invitation_resent"
+  | "event.invitation_withdrawn"
+  | "event.invitation_expired"
+  | "event.invitation_accepted"
+  /**
    * «Arată public câți așteaptă» switched (§634): from and to, on every date a save changed it — the
    * editor's own date and each date of a series the scoped save carried it to.
    */
   | "event.waitlist_count_public_changed"
+  /**
+   * «Lista ascunsă» changed on an event (§647): the switch, the hidden list's first number or «Numără și
+   * lista ascunsă» — `from` and `to` name only the ones that moved, on every date a save changed them.
+   */
+  | "event.hidden_list_changed"
+  /**
+   * «Arată public numărătoarea» switched (§647): from and to, on every date a save changed it. Its own
+   * action, not the hidden list's: the tick acts on every event, whether it uses the hidden list or not.
+   */
+  | "event.participant_count_public_changed"
   /** The Mailgun plan the club says it is on, from and to, with the note (§100). */
   | "email_plan.changed"
   /** Which road each group of emails takes, Gmail's cap and pace, the overflow (§443): from and to. */
@@ -535,12 +583,41 @@ export async function scrubRegistrationsFromAudit<T extends Record<string, unkno
   await db
     .update(auditLogs)
     .set({ metadataJson: sql`(${auditLogs.metadataJson} - 'from' - 'to')` })
-    .where(and(aboutThisRegistration, eq(auditLogs.action, "registration.name_corrected")));
+    // A rename's two names, and a corrected answer's two values (§645): the person's data, gone with the row.
+    .where(and(aboutThisRegistration, inArray(auditLogs.action, ["registration.name_corrected", "registration.answer_corrected"])));
   await db
     .update(auditLogs)
     .set({ metadataJson: sql`(${auditLogs.metadataJson} - 'reason')` })
     .where(and(aboutThisRegistration, ne(auditLogs.action, "registration.deleted_by_staff")));
   await db.update(auditLogs).set({ participantId: null }).where(aboutThisRegistration);
+}
+
+/**
+ * A corrected answer's two values (§645, «Modifică datele»), gone when the answer itself goes: the
+ * emergency contact seven days after the race, the socials when the person withdraws them or the
+ * minors' sweep clears them (§322, §323). The row keeps which field was corrected, by whom and when;
+ * only rows that still hold a value are touched, so a later pass writes nothing. Run in the
+ * transaction that clears the columns, so the trail never outlives the data it described.
+ */
+export async function scrubCorrectedAnswerValues<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationIds: readonly string[] | SQLWrapper,
+  fields: readonly string[],
+): Promise<void> {
+  if (Array.isArray(registrationIds) && registrationIds.length === 0) return;
+  if (fields.length === 0) return;
+  await db
+    .update(auditLogs)
+    .set({ metadataJson: sql`(${auditLogs.metadataJson} - 'from' - 'to')` })
+    .where(
+      and(
+        eq(auditLogs.action, "registration.answer_corrected"),
+        eq(auditLogs.entityType, "registration"),
+        inArray(auditLogs.entityId, registrationIds as string[] | SQLWrapper),
+        inArray(sql<string>`${auditLogs.metadataJson} ->> 'field'`, [...fields]),
+        sql`((${auditLogs.metadataJson} -> 'from') is not null or (${auditLogs.metadataJson} -> 'to') is not null)`,
+      ),
+    );
 }
 
 /**

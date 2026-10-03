@@ -1,6 +1,7 @@
 import AddIcon from "@mui/icons-material/Add";
 import ArchiveIcon from "@mui/icons-material/Archive";
 import CampaignIcon from "@mui/icons-material/Campaign";
+import CardMembershipIcon from "@mui/icons-material/CardMembership";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CloseIcon from "@mui/icons-material/Close";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
@@ -17,6 +18,7 @@ import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import EventSeatIcon from "@mui/icons-material/EventSeat";
+import FactCheckIcon from "@mui/icons-material/FactCheck";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
 import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
@@ -35,6 +37,7 @@ import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
+import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
@@ -60,6 +63,7 @@ import UploadIcon from "@mui/icons-material/Upload";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
+import IncognitoIcon from "./IncognitoIcon";
 import type { ComponentType } from "react";
 
 /**
@@ -155,6 +159,10 @@ export type ActionIconName =
   | "declaration"
   // Those whose address is not confirmed yet (§632): the envelope with the tick the participant's own email step wears, in the «Înscrieri» tab's pill.
   | "emailConfirmation"
+  // «Lista ascunsă» (§647; the owner: «o iconiță specială cu un bandit (incognito)»): the hat and the
+  // round glasses, drawn here (`IncognitoIcon`, Material has none) — the registration page's block, the
+  // row's chip and the list's pill.
+  | "hiddenList"
   // The emergency details and the emergency sheet (§322): the first-aid case, never on the desk.
   | "emergency"
   // Everything held about one address (§322), the Administrator's page for an access request.
@@ -162,6 +170,12 @@ export type ActionIconName =
   // A signed declaration kept for a complaint or a dispute (§556): the padlock, and opened, its release.
   | "hold"
   | "release"
+  // The self-declared member tick (§645): «Nu e membru» is the person taken off, «E membru» the
+  // membership card, and «Bife de membru fără cont de membru» — the ticks checked against the
+  // members' accounts before any is taken off — the list being checked.
+  | "memberOff"
+  | "memberOn"
+  | "memberCheck"
   // The bibs (§264): a PDF to keep is the PDF; the batch that goes to the printer now — only the
   // unprinted, a single reprint, the blank paper form — is the printer; saying it came out of
   // the printer is the double tick, and taking that back is the tick struck through.
@@ -243,10 +257,14 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   waiting: HourglassTopIcon,
   declaration: DrawIcon,
   emailConfirmation: MarkEmailReadIcon,
+  hiddenList: IncognitoIcon,
   emergency: MedicalServicesIcon,
   personData: PersonSearchIcon,
   hold: LockIcon,
   release: LockOpenIcon,
+  memberOff: PersonRemoveIcon,
+  memberOn: CardMembershipIcon,
+  memberCheck: FactCheckIcon,
 
   pdf: PictureAsPdfIcon,
   print: PrintIcon,

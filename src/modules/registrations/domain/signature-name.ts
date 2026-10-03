@@ -51,7 +51,7 @@ export type SignatureBox = "typedName" | "minorTypedName";
  * An adult signs once, with the name they registered under. A minor's declaration is signed by
  * the parent or guardian, as the declarant (§108, §314) — and, when `minorSigns`, by the minor as
  * well, at the same press, with the name they were registered under: the name the club can
- * correct with "Corectează numele", which is why the two boxes have different ways out when the
+ * correct with «Modifică datele» (§67, §645), which is why the two boxes have different ways out when the
  * name itself is wrong. "A minor" is `guardianName` set, the same truthiness
  * `expectedSignatureName` and `declarantValues` use, so the page, the text and the rule never
  * disagree about who signs.

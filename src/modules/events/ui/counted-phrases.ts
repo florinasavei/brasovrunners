@@ -146,8 +146,15 @@ export function startListHeadline(
   locale: string,
   counts: { confirmed: number; named: number },
   fill: PublicFill | null,
+  /**
+   * «Numără și lista ascunsă» (§647): the hidden list's holds, added to the places line's «în curs de
+   * confirmare» — which never counts them, since they take no place — only where the event counts the
+   * hidden list in «Cine vine». Read only where the places line is (a capped event's known counts), so
+   * an uncapped event still publishes no head count of held places (§32). 0 by default: today's reading.
+   */
+  hiddenInProgress = 0,
 ): { count: number; inProgress: number; line: string } {
-  const inProgress = fill && fill.confirmed !== undefined ? Math.max(fill.taken - fill.confirmed, 0) : 0;
+  const inProgress = fill && fill.confirmed !== undefined ? Math.max(fill.taken - fill.confirmed, 0) + hiddenInProgress : 0;
   if (inProgress === 0) return { count: counts.confirmed, inProgress, line: confirmedPhrase(say, locale, counts) };
   const count = counts.confirmed + inProgress;
   return {

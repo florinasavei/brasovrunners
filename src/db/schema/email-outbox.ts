@@ -96,6 +96,8 @@ export const emailMessageType = pgEnum("email_message_type", [
   // address. To a colleague, like the invitation: no participant, no token; the action is
   // `/admin/legal/new`, behind the sign-in.
   "LEGAL_TEMPLATES_CHANGED",
+  /** A personal invitation to an event (§647): the place kept until a deadline, one link that opens the form prefilled. */
+  "EVENT_INVITATION",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];

@@ -566,6 +566,8 @@ export type RegistrationDetail = {
   eventKitShirt: boolean;
   /** Whether the event asks the health note (§557): the emergency section's button names the note only then. */
   eventAsksHealthNote: boolean;
+  /** «Folosește lista ascunsă» (§647): the page draws the hidden list's radio only then, or for a row already on it. */
+  eventHiddenListEnabled: boolean;
   /** The registration's language, as on the list row: the declaration translation it signs (§330). */
   locale: Locale;
   participantEmail: string;
@@ -674,6 +676,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       tshirtSize: registrations.tshirtSize,
       eventKitShirt: events.kitShirt,
       eventAsksHealthNote: events.askHealthNote,
+      eventHiddenListEnabled: events.hiddenListEnabled,
       locale: registrations.locale,
       submittedAt: registrations.submittedAt,
       emailConfirmedAt: registrations.emailConfirmedAt,
@@ -1274,7 +1277,7 @@ export async function listFamilyReservationsForEvent<T extends Record<string, un
  * `formSentAt` is `greatest(submitted_at, privacy_acknowledged_at)`, the journey's own rule
  * (`domain/journey.ts`, `formSentAt`): a restart rewrites `privacy_acknowledged_at` and never
  * `submitted_at`, so a person who sent the form again after their link lapsed is dated by the
- * second form, not the first, and does not jump to the head of a hand-picked line.
+ * second form, not the first, and does not jump to the head of a line the organizers hand out by the form's time.
  */
 export async function listQueueForEvent<T extends Record<string, unknown>>(db: Database<T>, eventId: string, now: Date, order: QueueOrder) {
   const formSentAt = sql<Date>`greatest(${registrations.submittedAt}, ${registrations.privacyAcknowledgedAt})`.mapWith(registrations.submittedAt);

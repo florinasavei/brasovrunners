@@ -87,55 +87,74 @@ export function spareStateOf(band: SpareBand | null, free: readonly number[]): S
 }
 
 /**
+ * The first number a spare may not reach (§647, amending §444), or null: the hidden list's own series
+ * when it sits above the race's (`hidden-list.ts#hiddenListBibStartOf`). The spares then stay between
+ * the race's numbers and the hidden list's, so an invitation's number is never pushed up by a print and
+ * a walk-in never wears a number inside the hidden list's series. A hidden series below the race's is
+ * no bound: the spares come after the race's numbers, far from it.
+ */
+export function spareStopOf(bibStartNumber: number, hiddenStart: number | null): number | null {
+  return hiddenStart !== null && hiddenStart > bibStartNumber ? hiddenStart : null;
+}
+
+/**
  * The numbers the next print would reserve, lowest first, at most `limit` of them: after the
  * highest number anybody has — or the band's own start less one, before anybody has one — on a
  * first print; the next free numbers after the band's end on a second. Every one of them free by
  * construction: the first print starts above everything taken, and the extension skips what is.
  * `limit` is how many the caller may ask for, so the card can say the exact range of every count
  * from the same function the write uses.
+ *
+ * `stop` (§647, `spareStopOf`): the hidden list's first number when its series sits above the race's.
+ * The first print's «highest» is then taken over the numbers below it only, and no candidate reaches
+ * it, so fewer than asked — or none — come back when the room between the two series is short.
  */
 export function nextSpareCandidates(input: {
   band: SpareBand | null;
   taken: ReadonlySet<number>;
   bibStartNumber: number;
   limit: number;
+  stop?: number | null;
 }): number[] {
+  const end = input.stop != null ? Math.min(BIB_NUMBER_MAX, input.stop - 1) : BIB_NUMBER_MAX;
   let candidate: number;
   if (input.band) {
     candidate = input.band.to + 1;
   } else {
     let highest = Math.max(0, input.bibStartNumber - 1);
-    for (const number of input.taken) if (number > highest) highest = number;
+    for (const number of input.taken) if (number > highest && number <= end) highest = number;
     candidate = highest + 1;
   }
   const out: number[] = [];
-  for (; out.length < input.limit && candidate <= BIB_NUMBER_MAX; candidate += 1) {
+  for (; out.length < input.limit && candidate <= end; candidate += 1) {
     if (!input.taken.has(candidate)) out.push(candidate);
   }
   return out;
 }
 
 /** Why a print could not reserve what it was asked for, in words the card turns into a sentence. */
-export type SpareRefusal = "count" | "ceiling" | "size";
+export type SpareRefusal = "count" | "ceiling" | "size" | "hiddenList";
 
 /**
  * What a print of `count` spares reserves (§444), or why it cannot: the numbers to print (all of
  * them free), and the event's reservation after it — the same start on an extension, the count
  * grown to reach the last new number. Refused for a count outside 1–`SPARE_BIBS_PER_PRINT`
- * (`count`), for too few numbers left under 99 999 (`ceiling`), and for a reservation that would
- * pass `SPARE_BIBS_MAX` (`size`).
+ * (`count`), for too few numbers left under 99 999 (`ceiling`), for too few left before the hidden
+ * list's own series (`hiddenList`, `stop`, §647), and for a reservation that would pass
+ * `SPARE_BIBS_MAX` (`size`).
  */
 export function planSpareReservation(input: {
   band: SpareBand | null;
   taken: ReadonlySet<number>;
   bibStartNumber: number;
   count: number;
+  stop?: number | null;
 }):
   | { ok: true; printed: number[]; skipped: number[]; walkInBibStart: number; walkInBibCount: number }
   | { ok: false; reason: SpareRefusal } {
   if (!Number.isInteger(input.count) || input.count < 1 || input.count > SPARE_BIBS_PER_PRINT) return { ok: false, reason: "count" };
   const printed = nextSpareCandidates({ ...input, limit: input.count });
-  if (printed.length < input.count) return { ok: false, reason: "ceiling" };
+  if (printed.length < input.count) return { ok: false, reason: input.stop != null && input.stop <= BIB_NUMBER_MAX ? "hiddenList" : "ceiling" };
   const start = input.band?.from ?? printed[0];
   const last = printed[printed.length - 1];
   const total = last - start + 1;

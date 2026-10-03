@@ -848,6 +848,27 @@
       "when": 1790944115471,
       "tag": "0123_registration_outside_capacity",
       "breakpoints": true
+    },
+    {
+      "idx": 121,
+      "version": "7",
+      "when": 1790968442110,
+      "tag": "0124_event_invitations",
+      "breakpoints": true
+    },
+    {
+      "idx": 122,
+      "version": "7",
+      "when": 1790968461635,
+      "tag": "0125_invitation_enums",
+      "breakpoints": true
+    },
+    {
+      "idx": 123,
+      "version": "7",
+      "when": 1790971504638,
+      "tag": "0126_hidden_list",
+      "breakpoints": true
     }
   ]
 }

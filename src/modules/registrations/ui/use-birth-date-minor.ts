@@ -47,7 +47,12 @@ export function useBirthDateValue(birthDateId: string): string {
   return birthDate;
 }
 
-export function useBirthDateSaysMinor(birthDateId: string): boolean {
+/**
+ * `minorOn` asks about another instant than today, as an ISO string so a Server Component may pass it:
+ * the registration page's correction asks whether the typed date made the person a minor on the day
+ * the row was written, the server's own test for a guardian (`answers.ts#GUARDIAN_ADULT`, §645).
+ */
+export function useBirthDateSaysMinor(birthDateId: string, minorOn?: string): boolean {
   const birthDate = useBirthDateValue(birthDateId);
-  return birthDate !== "" && isMinorOn(birthDate, new Date());
+  return birthDate !== "" && isMinorOn(birthDate, minorOn ? new Date(minorOn) : new Date());
 }

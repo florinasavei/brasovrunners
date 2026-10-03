@@ -1,0 +1,267 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { createTranslator } from "next-intl";
+import { renderToStaticMarkup } from "react-dom/server";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { events, eventTranslations } from "@/db/schema/events";
+import { participants } from "@/db/schema/participants";
+import { registrations } from "@/db/schema/registrations";
+import { findPublishedEventBySlug, type PublicEvent } from "@/modules/events/repository";
+import { resolveDisplayName } from "@/modules/registrations/names";
+import en from "../../../messages/en.json";
+import ro from "../../../messages/ro.json";
+import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+
+/**
+ * §647 — «Lista ascunsă»'s two ticks over the public «Cine vine» (amending §632 and §643), on the
+ * rendered list, as `start-list-render.test.ts` renders it:
+ *
+ * - «Numără și lista ascunsă» off (the default): the title and the line count the places — a ticked
+ *   runner on the hidden list is a row of the table, out of the numbers, with the note under it;
+ * - on: the numbers count everybody on the hidden list with a place, ticked or not, and the note goes;
+ * - «Arată public numărătoarea» off: the title has no number, no counted line and no position column —
+ *   only the names;
+ * - the rows never change with either tick (§32: the ticks change numbers, never which names appear),
+ *   an event whose switch is off never counts the hidden list, and «Arată public numărătoarea» acts
+ *   on every event, the hidden list on or off.
+ */
+let db: TestDatabase;
+let close: () => Promise<void>;
+
+vi.mock("@/db/client", () => ({ getDb: () => db }));
+vi.mock("next-intl/server", () => ({
+  getTranslations: async (namespace: string) => {
+    const messages = (ro as Record<string, object>)[namespace] as Record<string, string>;
+    return createTranslator({ locale: "ro", messages, namespace: undefined });
+  },
+  getLocale: async () => "ro",
+}));
+
+const { default: StartList } = await import("@/modules/events/ui/StartList");
+
+const NOW = new Date("2026-09-24T10:00:00.000Z");
+
+type Ticks = { hiddenListEnabled: boolean; participantCountPublic: boolean; hiddenListCounted: boolean };
+
+async function createEvent(): Promise<string> {
+  const [event] = await db
+    .insert(events)
+    .values({
+      type: "RACE",
+      startsAt: new Date("2026-11-21T07:00:00.000Z"),
+      registrationMode: "INTERNAL",
+      editorialStatus: "PUBLISHED",
+      publishedAt: NOW,
+      participantListVisibility: "NAMES",
+    })
+    .returning();
+  await db.insert(eventTranslations).values([
+    { eventId: event.id, locale: "ro", slug: `cros-${event.id.slice(0, 8)}`, title: "Cros" },
+    { eventId: event.id, locale: "en", slug: `cross-${event.id.slice(0, 8)}`, title: "Cross" },
+  ]);
+  return event.id;
+}
+
+/** The fields `StartList` reads, the ticks as given: a cast stands in for the full public query. */
+const asPublic = (id: string, ticks: Ticks) =>
+  ({ id, participantListVisibility: "NAMES", startsAt: new Date("2026-11-21T07:00:00.000Z"), endsAt: null, ...ticks }) as unknown as PublicEvent;
+
+let counter = 0;
+async function register(eventId: string, name: string, input: { listOptOut?: boolean; hidden?: boolean; status?: "CONFIRMED" | "PENDING_DECLARATION" } = {}) {
+  counter += 1;
+  const email = `runner${counter}@example.org`;
+  const [participant] = await db
+    .insert(participants)
+    .values({ deliveryEmail: email, normalizedEmail: email, canonicalEmail: email, canonicalizationVersion: 1, defaultName: name, preferredLocale: "ro" })
+    .returning();
+  const status = input.status ?? "CONFIRMED";
+  await db.insert(registrations).values({
+    eventId,
+    participantId: participant.id,
+    status,
+    kind: "REAL",
+    locale: "ro",
+    registeredName: name,
+    displayName: resolveDisplayName({ legalName: name }),
+    privacyNoticeVersion: 1,
+    privacyAcknowledgedAt: NOW,
+    resultsNameConsent: false,
+    resultsConsentVersion: 1,
+    listOptOut: input.listOptOut ?? false,
+    outsideCapacity: input.hidden ?? false,
+    confirmedAt: status === "CONFIRMED" ? new Date(NOW.getTime() + counter * 1000) : null,
+    emailConfirmedAt: NOW,
+  });
+}
+
+/** Two counted confirmed (one named), a named and an unnamed one on the hidden list, and a hidden-list hold. */
+async function seeded(): Promise<string> {
+  const id = await createEvent();
+  await register(id, "Ana Popescu");
+  await register(id, "Secret Runner", { listOptOut: true });
+  await register(id, "Ioana Pacemaker", { hidden: true });
+  await register(id, "Dan Invitat", { hidden: true, listOptOut: true });
+  await register(id, "Elena Organizator", { hidden: true, status: "PENDING_DECLARATION" });
+  return id;
+}
+
+/** The backoffice's name for the list (§647), which no public page says, in either language. */
+const BACKOFFICE_NAME = /lista ascuns|hidden list/i;
+
+/** The rendered list — and, every time, the proof it never names the hidden list. */
+const render = async (event: PublicEvent) => {
+  const html = renderToStaticMarkup(await StartList({ event }));
+  expect(html).not.toMatch(BACKOFFICE_NAME);
+  return html;
+};
+const summary = (html: string) => /data-testid="start-list-summary"[^>]*>([^<]*)</.exec(html)?.[1];
+const rows = (html: string) => (html.match(/data-testid="start-list-(named|anonymous)"/g) ?? []).length;
+
+beforeAll(async () => {
+  ({ db, close } = await createTestDatabase());
+});
+afterAll(async () => close());
+beforeEach(async () => resetTables(db));
+
+describe("§647 «Cine vine» and the hidden list's two ticks", () => {
+  it("by default counts the places: the ticked hidden-list runner is a row, out of the numbers, with the note", async () => {
+    const id = await seeded();
+    const html = await render(asPublic(id, { hiddenListEnabled: true, participantCountPublic: true, hiddenListCounted: false }));
+    expect(html).toContain("Cine vine (2)");
+    expect(html).toContain("2 participanți confirmați");
+    expect(html).toContain("1 cu numele afișat");
+    expect(html).toContain("Ioana Pacemaker");
+    expect(html).not.toContain("Dan Invitat");
+    expect(rows(html)).toBe(3);
+    expect(html).toContain(ro.Event.startList.outsideNote);
+    expect(html).not.toContain(ro.Event.startList.outsideCountedNote);
+  });
+
+  it("«Numără și lista ascunsă» counts everybody on the hidden list with a place, ticked or not — the rows unchanged", async () => {
+    const id = await seeded();
+    const html = await render(asPublic(id, { hiddenListEnabled: true, participantCountPublic: true, hiddenListCounted: true }));
+    // Confirmed: Ana, the anonymous one, Ioana and Dan. The uncapped event has no «în curs» (§32).
+    expect(html).toContain("Cine vine (4)");
+    expect(html).toContain("4 participanți confirmați");
+    expect(html).toContain("2 cu numele afișat");
+    expect(html).toContain("Ioana Pacemaker");
+    expect(html).not.toContain("Dan Invitat");
+    expect(rows(html)).toBe(3);
+    expect(html).not.toContain(ro.Event.startList.outsideNote);
+    // Title 4, rows 3: Dan, unticked, is counted and has no row — and the note says so (§647), so the
+    // title, the rows and the note agree.
+    expect(html).toContain(ro.Event.startList.outsideCountedNote);
+  });
+
+  it("on an uncapped event a hidden-list hold alone is in no number, so the note does not speak of it", async () => {
+    const id = await createEvent();
+    await register(id, "Ana Popescu");
+    await register(id, "Elena Organizator", { hidden: true, listOptOut: true, status: "PENDING_DECLARATION" });
+    const html = await render(asPublic(id, { hiddenListEnabled: true, participantCountPublic: true, hiddenListCounted: true }));
+    // The headline adds holds only where the places line is (§32): the title counts Ana alone.
+    expect(html).toContain("Cine vine (1)");
+    expect(html).not.toContain(ro.Event.startList.outsideCountedNote);
+  });
+
+  it("on a capped, open event a hidden-list hold alone is counted «în curs», raises the title and brings the note", async () => {
+    // Open now, read as the page reads it: the door's counts are KNOWN only for an open internal event (§632).
+    const DAY = 86_400_000;
+    const [event] = await db
+      .insert(events)
+      .values({
+        type: "RACE",
+        startsAt: new Date(Date.now() + 60 * DAY),
+        registrationMode: "INTERNAL",
+        capacity: 10,
+        editorialStatus: "PUBLISHED",
+        publishedAt: new Date(Date.now() - DAY),
+        participantListVisibility: "NAMES",
+        hiddenListEnabled: true,
+        participantCountPublic: true,
+        hiddenListCounted: true,
+      })
+      .returning();
+    await db.insert(eventTranslations).values([
+      { eventId: event.id, locale: "ro", slug: "cros-cu-locuri-ascunse", title: "Cros" },
+      { eventId: event.id, locale: "en", slug: "cross-with-hidden-places", title: "Cross" },
+    ]);
+    await register(event.id, "Ana Popescu");
+    // On the hidden list, holding a place with the declaration to sign, «Vreau să apar» unticked: no row, no confirmed.
+    await register(event.id, "Elena Organizator", { hidden: true, listOptOut: true, status: "PENDING_DECLARATION" });
+    const page = await findPublishedEventBySlug(db, "ro", "cros-cu-locuri-ascunse");
+    if (!page) throw new Error("the event did not publish");
+
+    const html = await render(page as unknown as PublicEvent);
+    // Ana, and Elena's hold among «în curs de confirmare», which only a capped event's known counts add.
+    expect(html).toContain("Cine vine (2)");
+    expect(summary(html)).toMatch(/^2 înscriși — 1 confirma\S* \(1 cu numele afișat\), 1 în curs de confirmare$/);
+    // The title counts somebody the table does not show, so the note says so.
+    expect(html).toContain(ro.Event.startList.outsideCountedNote);
+    expect(html).not.toContain(ro.Event.startList.outsideNote);
+    expect(html).not.toContain("Elena Organizator");
+    expect(rows(html)).toBe(1);
+  });
+
+  it("«Arată public numărătoarea» off: only the names — no number in the title, no counted line, no position", async () => {
+    const id = await seeded();
+    const html = await render(asPublic(id, { hiddenListEnabled: true, participantCountPublic: false, hiddenListCounted: true }));
+    expect(html).toContain(`>${ro.Event.startList.title}</`);
+    expect(html).not.toMatch(/Cine vine \(\d+\)/);
+    expect(html).not.toContain('data-testid="start-list-summary"');
+    expect(html).not.toContain("participanți confirmați");
+    expect(html).not.toContain(`>${ro.Event.startList.columnPosition}<`);
+    expect(html).not.toContain(ro.Event.startList.outsideNote);
+    // The note without its sentence about the title's number (its own text up to the escaped «&»).
+    expect(html).toContain(ro.Event.startList.noteNamesOnly.split("&")[0]);
+    expect(html).not.toContain(ro.Event.startList.note.split(";")[0]);
+    // The same rows as with the numbers on.
+    expect(html).toContain("Ana Popescu");
+    expect(html).toContain("Ioana Pacemaker");
+    expect(rows(html)).toBe(3);
+  });
+
+  it("an event whose switch is off never counts the hidden list, whatever «Numără și lista ascunsă» says", async () => {
+    const id = await seeded();
+    const html = await render(asPublic(id, { hiddenListEnabled: false, participantCountPublic: true, hiddenListCounted: true }));
+    expect(html).toContain("Cine vine (2)");
+    expect(html).toContain("2 participanți confirmați");
+    expect(html).toContain(`>${ro.Event.startList.columnPosition}<`);
+    expect(rows(html)).toBe(3);
+  });
+
+  it("«Arată public numărătoarea» acts on every event: the hidden list off and the tick off leave only the names", async () => {
+    const id = await seeded();
+    const html = await render(asPublic(id, { hiddenListEnabled: false, participantCountPublic: false, hiddenListCounted: false }));
+    expect(html).toContain(`>${ro.Event.startList.title}</`);
+    expect(html).not.toMatch(/Cine vine \(\d+\)/);
+    expect(html).not.toContain('data-testid="start-list-summary"');
+    expect(html).not.toContain("participanți confirmați");
+    expect(html).not.toContain(`>${ro.Event.startList.columnPosition}<`);
+    expect(html).toContain("Ana Popescu");
+    expect(html).toContain("Ioana Pacemaker");
+    expect(rows(html)).toBe(3);
+  });
+
+  it("names the hidden list in no public string: only the backoffice's namespaces say it", () => {
+    const found: string[] = [];
+    const walk = (node: unknown, at: string) => {
+      if (typeof node === "string") {
+        if (BACKOFFICE_NAME.test(node)) found.push(at);
+      } else if (node && typeof node === "object") {
+        for (const [key, value] of Object.entries(node)) walk(value, at ? `${at}.${key}` : key);
+      }
+    };
+    for (const [locale, catalogue] of [["ro", ro], ["en", en]] as const) {
+      for (const [namespace, messages] of Object.entries(catalogue)) {
+        if (namespace === "Admin" || namespace === "Feedback") continue;
+        walk(messages, `${locale}.${namespace}`);
+      }
+    }
+    expect(found).toEqual([]);
+  });
+
+  it("the cached counts are keyed for the hidden list's shape", () => {
+    const reads = readFileSync(path.resolve(__dirname, "../../../src/modules/public-cache/reads.ts"), "utf8");
+    expect(reads).toContain('["places.start-list-counts", eventId, "outside", "hidden-list"]');
+  });
+});

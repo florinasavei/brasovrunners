@@ -260,7 +260,11 @@
       "captionStatesNumbers": "First the confirmed participants, with their race number — those whose name is shown, in the order they confirmed, then the others — then those registered who have not confirmed yet and those on the waiting list, in the list's order.",
       "noteStates": "The number in the title counts the confirmed and, while registration is open at an event with a set number of places, those completing their registration. A name is shown only for those who ticked “I want to appear on the participants & results list”; the other confirmed participants appear as “Participant (name hidden)”, with nothing else about them. Those registered who have not confirmed yet and those on the waiting list appear only if they ticked it, with the registration's stage beside the name; a cancelled or expired registration does not appear. The choice can be changed at any time from the confirmation email or from “My registrations”.",
       "socialsNote": "Strava and Instagram appear only beside the names of those who chose it when registering.",
-      "outsideNote": "The club's organizers and invited runners appear in the table without being counted: the numbers above count the places.",
+      "outsideNote": "Those at the start outside the advertised places (organisers, volunteers, invited runners) appear in the table without being counted: the numbers above count the places.",
+      "outsideCountedNote": "The numbers above also count those at the start outside the advertised places (organisers, volunteers, invited runners); of them, only those who chose to appear are in the table.",
+      "noteNamesOnly": "The table lists the confirmed. A name is shown only for those who ticked “I want to appear on the participants & results list”; the others appear as “Participant (name hidden)”, with nothing else about them. The choice can be changed at any time from the confirmation email or from “My registrations”.",
+      "noteStatesNamesOnly": "A name is shown only for those who ticked “I want to appear on the participants & results list”; the other confirmed participants appear as “Participant (name hidden)”, with nothing else about them. Those registered who have not confirmed yet and those on the waiting list appear only if they ticked it, with the registration's stage beside the name; a cancelled or expired registration does not appear. The choice can be changed at any time from the confirmation email or from “My registrations”.",
+      "noteStatesNoWaitlistNamesOnly": "A name is shown only for those who ticked “I want to appear on the participants & results list”; the other confirmed participants appear as “Participant (name hidden)”, with nothing else about them. Those registered who have not confirmed yet appear only if they ticked it, with the registration's stage beside the name; the waiting list is not public for this event, and a cancelled or expired registration does not appear. The choice can be changed at any time from the confirmation email or from “My registrations”.",
       "othersLead": "Also listed by name:",
       "pendingCount": {
         "one": "{count} registered, awaiting confirmation",
@@ -290,6 +294,7 @@
       "external": "Register on the organiser's site",
       "externalWithProvider": "Register on {provider}",
       "placesRemaining": "{count, plural, one {# place left} other {# places left}}",
+      "outsidePlacesNote": "Organisers, volunteers and invited runners may be at the start outside the advertised places; they take none of them.",
       "fill": "{taken} of {places} taken",
       "fillTaken": {
         "one": "{count}",
@@ -594,7 +599,7 @@
       "registeredWithPlaceOf": "{count} of {capacity} places taken",
       "registeredAwaitingEmail": "{count} awaiting the email confirmation",
       "registeredWaitlisted": "{count} on the waiting list",
-      "registeredOutside": "{count} outside the places",
+      "registeredOutside": "{count} on the hidden list",
       "registeredMoreEvents": "+{count} more",
       "newsletter": "Newsletter"
     },
@@ -624,14 +629,15 @@
       "summaryTotal": "Registrations: {count} (all states, cancelled and expired included)",
       "summaryTest": "Test: {count}",
       "outside": {
-        "pill": "Outside the places: {count}",
-        "chip": "Outside the places",
-        "title": "The event's places",
-        "isOutside": "Outside the places: takes none of the event's places and is in no public number.",
-        "isCounted": "Counted among the event's places, like anybody.",
-        "mark": "Seat outside the places",
-        "unmark": "Count among the places",
-        "help": "For organizers, pacemakers, invited runners: a declaration, a number and a row on the list if they ticked, without taking a place."
+        "pill": "Hidden list: {count}",
+        "chip": "Hidden list",
+        "title": "Hidden list",
+        "optionCounted": "Counted among the event's places",
+        "optionHidden": "On the hidden list",
+        "switchOff": "The hidden list is off for this event: the registration can only come off it.",
+        "mark": "Put on the hidden list",
+        "unmark": "Take off the hidden list",
+        "help": "For organizers, pacemakers, invited runners: a declaration, a number and a row on the public list if they ticked, without taking a place."
       },
       "export": "Export CSV",
       "personLink": "Everything held about a person",
@@ -679,7 +685,6 @@
       "newExplanation": "For somebody who asked in person. It enters like any registration; the person gets the confirmation email and signs the declaration themselves.",
       "noEventsAcceptingRegistrations": "No event takes registrations on the site. Set the registration mode to \"Register here\" on the event page.",
       "event": "Event",
-      "participantName": "Participant name",
       "participantEmail": "Participant email address",
       "participantEmailHelp": "The confirmation and the declaration link go here. It must be their address, not the club's.",
       "birthDateMinimumAge": "Optional here. When given, the person must be at least the chosen event's minimum age on the day of the race — the number with a “+” beside its name; otherwise the registration is refused.",
@@ -690,9 +695,6 @@
       "relayConfirmation": "I confirm this person asked me to register them, and I told them the club uses their details for the race and that the privacy notice is on the site, at the foot of every page.",
       "create": "Add the registration",
       "viewForEvent": "See this event's registrations",
-      "correctName": "Correct the name",
-      "correctNameHelp": "Only the name can be corrected. The email address is the participant's identity and is never changed here: for a wrong address, cancel the registration and add it again with the right one.",
-      "saveName": "Save the name",
       "cancelTitle": "Cancel the registration",
       "cancelReason": "Reason",
       "cancelAction": "Cancel the registration",
@@ -743,7 +745,9 @@
           "family_resent": "Email resent to the family",
           "offered_by_staff": "Offer sent ahead of the waiting list (“Send them the offer”)",
           "address_vouched_by_staff": "Address vouched for by the team; place given ahead of the waiting list (“Give them a place now”)",
-          "outside_capacity_changed": "Seated outside the places, or counted among them again"
+          "outside_capacity_changed": "Put on the hidden list, or taken off it",
+          "answer_corrected": "Answer corrected: {field}",
+          "answers_viewed": "Answers opened, with the phone and the emergency contact"
         },
         "event": {
           "capacity_raised_for_offer": "Supplementary place added for an offer (“Send them the offer”): {from} → {to}",
@@ -966,7 +970,88 @@
       "givePlaceNow": "Give them a place now",
       "givePlaceNowHelp": "For someone who did not manage to confirm the address: you vouch for it, and they get the place and the declaration email.",
       "placeGiven": "Place given; the declaration email has left. Deadline: {deadline}.",
-      "placeGivenRaised": "Place given, on a supplementary place: the capacity is now {n}. The declaration email has left. Deadline: {deadline}."
+      "placeGivenRaised": "Place given, on a supplementary place: the capacity is now {n}. The declaration email has left. Deadline: {deadline}.",
+      "invitedBy": "Registered by invitation — sent by {who}, {when}",
+      "answers": {
+        "title": "The registration's answers",
+        "open": "Change the answers",
+        "openRead": "Show the answers",
+        "openHelp": "Everything the person typed on the form, the phone and the emergency contact included; opening it stays in the log.",
+        "hide": "Close the answers",
+        "save": "Save the answers",
+        "pending": "Saving…",
+        "viewed": "Opening these answers stayed in the log, with your name.",
+        "none": "—",
+        "yes": "Yes",
+        "no": "No",
+        "noShirt": "No T-shirt",
+        "sex": {
+          "FEMALE": "Female",
+          "MALE": "Male"
+        },
+        "displayNameHelp": "Empty: the first and last name.",
+        "phoneHelp": "With the country code (+40 712 345 678); a Romanian number also works with a leading 0.",
+        "guardianHelp": "Only for someone who was a minor when they registered, and then required. A birth date corrected to an adult's clears it.",
+        "guardianSignedHelp": "The declaration is signed and names them: it does not change here.",
+        "clubNameHelp": "While the member tick is on, the club is {club}.",
+        "memberHelp": "Unticked, the club {club} also goes from the list.",
+        "lockedTitle": "What does not change here",
+        "lockedAddress": "The email address is the registration's identity: for a wrong address, cancel and add it again.",
+        "lockedConsents": "Only the person gives the consents — you can only withdraw them, with their own button.",
+        "lockedDeclaration": "Only the person signs the declaration; once it is signed, the parent or guardian it names stays the one who signed.",
+        "fields": {
+          "firstName": "First name",
+          "lastName": "Last name",
+          "displayName": "Name on the list",
+          "birthDate": "Date of birth",
+          "sex": "Sex",
+          "nationality": "Citizenship",
+          "country": "Country of residence",
+          "city": "City",
+          "phone": "Phone",
+          "emergencyContactName": "Emergency contact",
+          "emergencyContactPhone": "Emergency contact's phone",
+          "guardianName": "Parent or guardian",
+          "clubMemberDeclared": "{club} member (declared)",
+          "clubName": "Club",
+          "stravaUrl": "Strava",
+          "instagramHandle": "Instagram",
+          "tshirtSize": "T-shirt size",
+          "listSocials": "Strava and Instagram on the list"
+        }
+      },
+      "memberTick": {
+        "clear": "Not a member",
+        "set": "Is a member"
+      },
+      "memberSweep": {
+        "open": "Member ticks with no member account",
+        "title": "Member ticks with no member account",
+        "count": {
+          "one": "{count} registration with the member tick and no member account",
+          "few": "{count} registrations with the member tick and no member account",
+          "other": "{count} registrations with the member tick and no member account"
+        },
+        "scopeEvent": "At {event}.",
+        "scopeAll": "At every event that has not started.",
+        "who": "A member is an account on Staff, with any role, matched by email address. A revoked account is no longer a member.",
+        "otherAddress": "A member registered with another address than their account's appears here too: untick their row to keep their tick («Leave the tick»).",
+        "submit": {
+          "one": "Clear the tick on {count} registration",
+          "few": "Clear the ticks on all {count}",
+          "other": "Clear the ticks on all {count}"
+        },
+        "pending": "Clearing the ticks…",
+        "empty": "No tick to clear",
+        "emptyHelp": "Every ticked registration has a member account with the same address.",
+        "ticked": "The ticked registrations",
+        "rowHelp": "Ticked = cleared · unticked = Leave the tick",
+        "cleared": {
+          "one": "Cleared the member tick on {count} registration. Nothing else changed.",
+          "few": "Cleared the member tick on {count} registrations. Nothing else changed.",
+          "other": "Cleared the member tick on {count} registrations. Nothing else changed."
+        }
+      }
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -1158,8 +1243,6 @@
       "reminderBody": "{name} receives the pre-race reminder now.",
       "createRegistrationTitle": "Add the registration?",
       "createRegistrationBody": "The person is registered for the event on their behalf, at their request, and receives the email for the next step.",
-      "renameTitle": "Change the name?",
-      "renameBody": "The new name appears on the list, on the race number and in the emails; the old one stays in the log.",
       "withdrawConsentTitle": "Erase the ticked data?",
       "withdrawConsentBody": "The ticked data disappears from the registration for good; the reason stays in the log, without the person's name.",
       "eraseRegistrationTitle": "Erase the registration for good?",
@@ -1238,19 +1321,31 @@
       "givePlaceNowBody": "You vouch for the address {email} and give them a place ahead of the waiting list.",
       "givePlaceNowBodyMore": "They get the declaration email at once and sign it online any time before the deadline, or on paper at the desk. They have nothing else to confirm.",
       "givePlaceNowFull": "No place is free: pressing adds one supplementary place over the limit; the capacity becomes {n}.",
-      "outsideMarkTitle": "Seat this registration outside the places?",
-      "outsideMarkBody": "{name} no longer takes a place; the freed place goes to the first in line if offers go out automatically. State, number and emails stay.",
-      "outsideMarkBodyWaitlisted": "{name} leaves the waiting list and gets a place outside the places now: the email “{message}”, with the usual deadline.",
-      "outsideMarkBodyWaitlistedTest": "{name} leaves the waiting list and gets a place outside the places now: the declaration to sign, with the usual deadline.",
-      "outsideMarkBodyOffered": "Instead of the offer, {name} gets a place outside the places now: the email “{message}”, with the usual deadline. The offer's place is freed.",
-      "outsideMarkBodyOfferedTest": "Instead of the offer, {name} gets a place outside the places now: the declaration to sign, with the usual deadline. The offer's place is freed.",
-      "outsideMarkBodyPendingEmail": "{name} gets a place outside the places once they confirm their address; nothing changes until then.",
-      "outsideUnmarkTitle": "Count this registration among the places?",
+      "outsideMarkTitle": "Put this registration on the hidden list?",
+      "outsideMarkBody": "{name} goes on the hidden list and no longer takes a place; the freed place goes to the first in line if offers go out automatically. State, number and emails stay.",
+      "outsideMarkBodyWaitlisted": "{name} leaves the waiting list and gets a place on the hidden list now: the email “{message}”, with the usual deadline.",
+      "outsideMarkBodyWaitlistedTest": "{name} leaves the waiting list and gets a place on the hidden list now: the declaration to sign, with the usual deadline.",
+      "outsideMarkBodyOffered": "Instead of the offer, {name} gets a place on the hidden list now: the email “{message}”, with the usual deadline. The offer's place is freed.",
+      "outsideMarkBodyOfferedTest": "Instead of the offer, {name} gets a place on the hidden list now: the declaration to sign, with the usual deadline. The offer's place is freed.",
+      "outsideMarkBodyPendingEmail": "{name} goes on the hidden list once they confirm their address; nothing changes until then.",
+      "outsideUnmarkTitle": "Take this registration off the hidden list?",
       "outsideUnmarkBody": "{name} will take one of the event's places. If none is free, nothing changes.",
       "givePlaceNowRaiseConfirm": "Add a place and give it to them",
       "offerPlaceRaise": "No place is free: pressing adds one supplementary place over the limit; the capacity becomes {n}.",
       "offerPlaceRaiseConfirm": "Add a place and send the offer",
-      "offerPlaceAfterClose": "Registration has closed: the offer holds until the start at the latest."
+      "offerPlaceAfterClose": "Registration has closed: the offer holds until the start at the latest.",
+      "memberSweepTitle": "Clear the member ticks?",
+      "memberSweepBody": {
+        "one": "You clear the member tick on {count} registration; nothing else changes, no email.",
+        "few": "You clear the member tick on {count} registrations; nothing else changes, no email.",
+        "other": "You clear the member tick on {count} registrations; nothing else changes, no email."
+      },
+      "answersTitle": "Correct the answers?",
+      "answersBody": "You correct, for {name}: {fields}. Nothing else changes, no email; the old values stay in the log.",
+      "memberClearTitle": "Clear the member tick?",
+      "memberClearBody": "You clear the member tick from {name}; nothing else changes, no email.",
+      "memberSetTitle": "Set the member tick?",
+      "memberSetBody": "You set the member tick on {name}; their club on the list becomes {club}. Nothing else changes, no email."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -1259,6 +1354,12 @@
       "FORBIDDEN": "Your role does not allow this.",
       "NOT_FOUND": "That record no longer exists.",
       "VALIDATION_ERROR": "Check what you entered; something is not valid.",
+      "HIDDEN_LIST_OFF": "The hidden list is off for this event. Tick «Use the hidden list» in the event's settings first.",
+      "SPARES_BEFORE_HIDDEN_LIST": "The spare numbers no longer fit before the hidden list's series. Move «The hidden list's numbers start at» higher in the event's settings, or print fewer.",
+      "HIDDEN_LIST_IN_RACE_SERIES": "«The hidden list's numbers start at» falls inside the race's series, or the places have reached it. Move it outside the race's series in the event's settings. Nothing was done.",
+      "HIDDEN_LIST_IN_RACE_SERIES_DATED": "On one of the dates ({date}), «The hidden list's numbers start at» would fall inside the race's series. Move it outside the series, or save without that date. Nothing was saved, on any date.",
+      "HIDDEN_LIST_ON_SPARES": "The hidden list's series would run through the desk's spare numbers. Move «The hidden list's numbers start at» above them in the event's settings. Nothing was done.",
+      "HIDDEN_LIST_ON_SPARES_DATED": "On one of the dates ({date}), the hidden list's series would run through the desk's spares. Move «The hidden list's numbers start at» above them, or save without that date. Nothing was saved.",
       "INVALID_ADDRESSES": "Not email addresses: {addresses}. Separate the addresses with commas, spaces or line breaks. Nothing was saved.",
       "TOO_MANY_ADDRESSES": "At most {max} addresses in one box. Nothing was saved.",
       "ONE_ADDRESS_ONLY": "“Signed declarations go to” takes one address — the archive mailbox. Put the others under “Visible copy (Cc)” or “Hidden copy (Bcc)”. Nothing was saved.",
@@ -1282,7 +1383,7 @@
       "WAITLIST_FULL": "The places and the waiting list are full, so nothing changed. Try again once a slot on the list frees up.",
       "NO_WAITLIST": "Every place is taken and the event has no waiting list, so nothing changed.",
       "WALK_IN_LEFT_UNCONFIRMED": "The person is entered, but the last place just went, so they are unconfirmed and got no email. Confirm them on paper once a place frees up.",
-      "NO_FREE_PLACE": "The race is full: places {capacity}, confirmed {confirmed}, declarations to sign {declaration}, offered {offered}, reserved for families {family}. Raise the event's capacity first.",
+      "NO_FREE_PLACE": "The race is full: places {capacity}, confirmed {confirmed}, declarations to sign {declaration}, offered {offered}, reserved for families {family}, invited {invited}. Raise the capacity first.",
       "SUPPLEMENTARY_PLACE_UNCONFIRMED": "Nothing was changed: the places changed since you opened the page, and the question did not say this supplementary place would be added. Press again: the question now says what the capacity becomes.",
       "NO_RECIPIENTS": "Nothing was sent: nobody is in the chosen group right now. Choose another group.",
       "MESSAGE_UNKNOWN_PLACEHOLDER": "Nothing was sent: {names} is not a field we can fill in this message. The fields you can use are listed under the boxes.",
@@ -1308,7 +1409,19 @@
       "SEND_NOW_MAILGUN_STOPPED_FALLBACK_OFF": "Nothing was sent: Mailgun is stopped and «Gmail takes over when Mailgun stops» is set to No. Set it to Yes under «Emails», or choose «Queue it»: it leaves when Mailgun resumes.",
       "SEND_NOW_MAILGUN_STOPPED_NO_GMAIL": "Nothing was sent: Mailgun is stopped and the club's Gmail is not configured here. Choose «Queue it»: the email leaves on its own when Mailgun resumes.",
       "SEND_NOW_MAILGUN_STOPPED_GMAIL_FULL": "Nothing was sent: Mailgun is stopped and Gmail has reached its daily limit. Raise it under «Emails» (500 at most), or choose «Queue it»: it leaves when Mailgun resumes.",
-      "SEND_NOW_MAILGUN_STOPPED_NOTICE": "Nothing was sent: Mailgun is stopped, and Gmail takes over only once you approve the privacy notice from the new template. Until then choose «Queue it»."
+      "SEND_NOW_MAILGUN_STOPPED_NOTICE": "Nothing was sent: Mailgun is stopped, and Gmail takes over only once you approve the privacy notice from the new template. Until then choose «Queue it».",
+      "INVITATION_NOT_OPEN": "The invitation is no longer waiting: it was accepted, withdrawn or has expired.",
+      "INVITATION_EVENT_CLOSED": "The event takes no more invitations: it is cancelled, has started, or is not published.",
+      "INVITATION_BAD_DAYS": "Days until it expires: a whole number from 1 to 60.",
+      "ANSWERS_UNCHANGED": "Nothing changed: the answers already say this. Reload the page if a colleague corrected them meanwhile.",
+      "ANSWER_UNDER_MINIMUM_AGE": "The date of birth was not saved: the person would not be {age} on race day, the event's minimum age.",
+      "ANSWER_EMERGENCY_SAME": "The emergency contact's phone was not saved: it is the participant's own number. Type someone else's.",
+      "ANSWER_GUARDIAN_SIGNED": "The parent or guardian was not changed: the signed declaration names the one who signed it.",
+      "ANSWER_SOCIALS_MINOR_AT_REGISTRATION": "Strava and Instagram were not saved: the person was a minor when they registered, and the maintenance sweep would delete them. Leave them empty.",
+      "ANSWER_BIRTH_DATE_MINOR_AT_REGISTRATION": "The birth date was not saved: the person would have been a minor when they registered; empty Strava and Instagram first.",
+      "ANSWER_BIRTH_DATE_GUARDIAN_SIGNED": "The birth date was not saved: it would make the person a minor, and the declaration was signed with no parent or guardian, who cannot be added now.",
+      "ANSWER_BIRTH_DATE_GUARDIAN_SIGNED_ADULT": "The birth date was not saved: it would make the person an adult when they registered, and the declaration was signed by the parent or guardian it names, who cannot be removed now.",
+      "ANSWER_GUARDIAN_ADULT": "The parent or guardian was not saved: the person was not a minor when they registered. Only a minor's registration names a parent or guardian."
     },
     "editor": {
       "draftPreview": {
@@ -1951,7 +2064,8 @@
           "title": "Registrations received",
           "summary": "real registrations: {count} · on the waiting list: {waiting}",
           "summaryPlaces": "real registrations: {count} · on the waiting list: {waiting} · places taken: {occupied} of {capacity}",
-          "outside": "outside the places: {count}"
+          "outside": "on the hidden list: {count}",
+          "invitations": "invitations waiting: {count}"
         },
         "queue": {
           "title": "Registration queue",
@@ -2027,7 +2141,7 @@
             "unlimited": "unlimited places",
             "declaration": "declaration v{version}",
             "noDeclaration": "declaration missing",
-            "listHidden": "list hidden",
+            "listHidden": "public list off",
             "listShown": "list public",
             "external": "With the organiser: {provider}",
             "externalUnnamed": "With the organiser"
@@ -2070,7 +2184,7 @@
             "footer": "footer: {parts}"
           },
           "startList": {
-            "hidden": "Hidden",
+            "hidden": "Not public",
             "shown": "Public — only the names of those confirmed who chose to appear",
             "shownWithWaitlist": "Public · with the waiting list — only the names of those who chose to appear"
           },
@@ -2195,7 +2309,17 @@
       "waitlistAutoOfferHelp": "On “Yes”, a freed or added place is offered at once, by email and with a deadline, to the first on the waiting list. On “No”, places stay free until you hand them out.",
       "waitlistAutoOfferHelpMore": "You hand them out from the “Registration queue” with “Send them the offer”, or at the desk with “Give a place”. While anyone waits, newcomers join the list too.",
       "waitlistCountPublic": "Show publicly how many are waiting",
-      "waitlistCountPublicHelp": "Ticked: the card, the page and each person on the list learn how many are waiting. Unticked: the pages say only that there is a waiting list and how to join it; the club sees it in the backoffice."
+      "waitlistCountPublicHelp": "Ticked: the card, the page and each person on the list learn how many are waiting. Unticked: the pages say only that there is a waiting list and how to join it; the club sees it in the backoffice.",
+      "hiddenListTitle": "Hidden list",
+      "hiddenListEnabled": "Use the hidden list",
+      "hiddenListEnabledHelp": "Ticked: registrations can be put on it. Unticked: nobody new goes on it; those on it stay, and the page mentions them while they hold a place; their series and the counting stop.",
+      "hiddenListBibStart": "The hidden list's numbers start at",
+      "hiddenListBibStartHelp": "Empty: everybody's series. Set: its own series, from here up, outside the race's series; leave room above it, say 900 for 150 places. Without a limit of places, only below the race's first number.",
+      "hiddenListBibStartHelpMore": "The room above the race's series holds supplementary places and the desk's spares. A full series takes the next free number after it, from the other series if need be; no number is given twice.",
+      "participantCountPublic": "Show the count publicly",
+      "participantCountPublicHelp": "Ticked: the page says how many are coming and how many are confirmed. Unticked: the list shows only the names, no numbers; the club sees the numbers in the backoffice.",
+      "hiddenListCounted": "Count the hidden list too",
+      "hiddenListCountedHelp": "Ticked: “Who's coming” and “confirmed” count those on the hidden list too. Unticked: the numbers count only the race's places; the hidden list comes on top."
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -2503,7 +2627,8 @@
         "promotionalMaterials": "Only in the privacy notice: the optional box for offers and benefits from the club and its partners. Without it in the notice in force, the form does not offer it",
         "promotionalMaterialsShared": "Only in the privacy notice: what data the club's partners may receive from those who ticked offers and benefits. Without it in the notice in force, the list for sponsors is off",
         "registrationsPerAddress": "Terms only: how many people may register with the same email address for one event, with the unit (“4 people”), from Settings → “Deadlines”",
-        "gmailFallback": "Only in the privacy notice: the name of the switch «Gmail takes over when Mailgun stops», quoted. Without it in the notice in force, the switch is off and messages wait for Mailgun"
+        "gmailFallback": "Only in the privacy notice: the name of the switch «Gmail takes over when Mailgun stops», quoted. Without it in the notice in force, the switch is off and messages wait for Mailgun",
+        "eventInvitations": "Privacy notice only: the Invitations section's name, in quotation marks. With it in the notice in force, /admin/tasks counts the invitations as described"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -3285,6 +3410,15 @@
             "An email refused for now (5xx, 404) is retried on its own every hour; its reason is on its row in the queue. A 404 that does not pass: check MAILGUN_API_BASE_URL and MAILGUN_DOMAIN on Vercel.",
             "If Mailgun asked for the pause for the pace (the probation): «Settings» → «Emails» → the Mailgun plan → «Hourly limit» — 90 while the probation lasts.",
             "The queue's header says until when Mailgun is stopped and who takes over."
+          ]
+        },
+        "invitationsNotice": {
+          "title": "Privacy notice: invitations by email",
+          "todo": "The notice in force does not yet describe invitations by email. The club may send invitations now; the notice must say what data it keeps for them.",
+          "done": "The notice in force describes the invitations: the invited person's name and address, the basis and how long they are kept.",
+          "how": [
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 2 describes the invitations.",
+            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”. The row closes by itself once the notice takes effect."
           ]
         }
       },
@@ -4378,7 +4512,8 @@
         "NEW_EVENT_ALERT": "Announcement: a new event on the calendar",
         "MEMBER_INVITATION": "The member invitation",
         "DECLARATION_HOLD_EXPIRED": "The held place expired",
-        "LEGAL_TEMPLATES_CHANGED": "The legal templates changed"
+        "LEGAL_TEMPLATES_CHANGED": "The legal templates changed",
+        "EVENT_INVITATION": "Invitation to an event"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "After the form is sent. The link lasts {confirmation}, from when the email leaves.",
@@ -4410,7 +4545,8 @@
         "NEW_EVENT_ALERT": "Once for each new event published (never the weekly run), to those subscribed to new events and to its topics.",
         "MEMBER_INVITATION": "When an administrator adds somebody on Echipa with the role Membru, and on \"Resend the invitation\" until their first sign-in. No token: the button leads to the sign-in, then to the members' area.",
         "DECLARATION_HOLD_EXPIRED": "When somebody who did not sign the declaration in time loses the place to somebody who wanted it. Once per place lost, with what they can still do. Not after the start or for a cancelled event.",
-        "LEGAL_TEMPLATES_CHANGED": "When a new release of the site changes a legal text's template: once per change, to every Administrator and Superadministrator. No token: the button leads to «New version»."
+        "LEGAL_TEMPLATES_CHANGED": "When a new release of the site changes a legal text's template: once per change, to every Administrator and Superadministrator. No token: the button leads to «New version».",
+        "EVENT_INVITATION": "When an administrator sends invitations from an event's registrations list, and on Resend. One link to the form, with the name and address filled in; the place is kept until the deadline."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "after the form is sent",
@@ -4442,7 +4578,8 @@
         "NEW_EVENT_ALERT": "automatically, when a new event is published",
         "MEMBER_INVITATION": "when a member is added",
         "DECLARATION_HOLD_EXPIRED": "when an unsigned place goes to somebody else",
-        "LEGAL_TEMPLATES_CHANGED": "when a legal template changes"
+        "LEGAL_TEMPLATES_CHANGED": "when a legal template changes",
+        "EVENT_INVITATION": "when an administrator invites somebody"
       },
       "clubNotices": {
         "title": "The club's copies",
@@ -5415,9 +5552,9 @@
                 "«Events» → «Edit» on the race's row → the «Taking part and registration» card.",
                 "Under «Places from the waiting list are allocated automatically» choose «No» and press «Save». On «No», a freed or added place stays free until you hand it out.",
                 "No need to raise «Capacity»: when no place is free, «Send them the offer» adds one supplementary place once you confirm (the capacity grows by one, and the registration's trail says who added it and for whom).",
-                "The «Registrations received» card → «Registration queue»: on the chosen person's waiting-list row press «Send them the offer». The same button is on their registration's page too.",
+                "The «Registrations received» card → «Registration queue»: on the named person's waiting-list row press «Send them the offer». The same button is on their registration's page too.",
                 "The window says until when they have and, when no place is free, that you add one; press «Send them the offer» or, on a full event, «Add a place and send the offer». They get the ordinary «A place has freed up» email, with the ordinary deadline, {offer}: from the email they press «Confirm the place» and sign the declaration, if they have not yet.",
-                "Not accepted in time? The offer lapses and the place is free again, for whoever you choose.",
+                "Not accepted in time? The offer lapses and the place is free again until you give it.",
                 "A place added with «Add a place and send the offer» stays in the capacity: unused, on «Yes» and before registration closes it goes to the first in line; otherwise it stays free until you give it.",
                 "It works at any moment until the start, after registration closes too: the offer then holds until the start at the latest. At the desk, with the person there, «Give a place» confirms them on the paper declaration, but only into a free place; on a full event an “i” beside it says why.",
                 "The others stay on the waiting list and receive nothing. On the site, the card says «Places are given from the waiting list», and newcomers join the list too while anyone waits. How many may wait is «Waiting list», beside «Capacity».",
@@ -5437,15 +5574,32 @@
               ]
             },
             {
-              "title": "A place outside the places: organizers, pacemakers, invited runners",
+              "title": "Hidden list: organizers, pacemakers, invited runners",
               "steps": [
                 "For whoever runs on the club's side: organizers, pacemakers, invited runners. They take none of the announced places.",
-                "Open the person's registration → «The event's places» → «Seat outside the places» and confirm.",
+                "First, in the event's settings, under «Public participant list», tick «Use the hidden list».",
+                "Open the person's registration → «Hidden list» → choose «On the hidden list» and confirm.",
                 "If they held a place, it frees up: on «Yes» it goes to the first on the waiting list; on «No» it stays free until you hand it out.",
-                "From the waiting list or an open offer they get a place now, outside the places: the declaration email, with the usual deadline, not the offer's.",
-                "Confirmed or with a declaration to sign, they keep their state, number and emails. On the site they are in no number; they appear on the list only if they ticked, unmarked.",
-                "«Count among the places» turns it back only if a place is free; otherwise the press is refused and says who holds the places.",
-                "In the registrations list, the pill «Outside the places» shows them all; the export has a column for them."
+                "From the waiting list or an open offer they get a place now, on the hidden list: the declaration email, with the usual deadline, not the offer's.",
+                "Confirmed or with a declaration to sign, they keep their state, number and emails. They appear on the public list only if they ticked, unmarked.",
+                "With «The hidden list's numbers start at» the hidden list has its own series of race numbers, in confirmation order; a number already given stays.",
+                "On the site, «Who's coming» counts them only with «Count the hidden list too» ticked; the places and the free places never count them.",
+                "«Show the count publicly», beside «Show publicly how many are waiting», is on every event: unticked, «Who's coming» shows only the names, no numbers.",
+                "While the list is in use or anybody on it holds a place, the page says beside the places, naming nobody, that organisers and invited runners may start outside the advertised places.",
+                "«Counted among the event's places» turns it back only if a place is free; otherwise the press is refused and says who holds the places.",
+                "In the registrations list, the pill «Hidden list» shows them all; the export has a column for them."
+              ]
+            },
+            {
+              "title": "Invite somebody to an event, by email",
+              "steps": [
+                "For members, partners and guests: each gets an email with a link to the form, with the name and address already filled in.",
+                "«Events» → «Edit» on the race's row → the «Registrations received» card → «Send invitations»: the list's «Invitations» section opens.",
+                "Tick members from the list or type other people, one per line: the name, then the address. Choose «Days until it expires» and «Language of the invitation» (for new addresses); tick «On the hidden list (takes no place)» for organizers, volunteers and pacemakers. You can send after registration closes too, until the start.",
+                "«Send the invitations» asks first: how many invitations, how many places are free and, on a full race, how many supplementary places are added and what the capacity becomes.",
+                "Each invitation holds a place until its deadline; if it is not accepted, the place frees up by itself. The person fills in the rest and signs the declaration themselves.",
+                "On the invitation's row: «Resend» sends a new link; the deadline stays, unless you type a number of days that moves it later. «Withdraw» closes it and frees the place.",
+                "If somebody invited registers anyway, through the public form or at the desk, their registration takes the invitation's place once their address is confirmed or they are given a place: the invitation reads «Accepted»."
               ]
             },
             {
@@ -5472,11 +5626,30 @@
               "title": "Correct, cancel or erase a registration",
               "steps": [
                 "«Registrations» → find the person → press their name.",
-                "Wrong name: under «Correct the name» type the right one → «Save the name».",
+                "A wrong name, phone or other answer: «The registration's answers» → «Change the answers», correct the box → «Save the answers».",
                 "Not coming any more: «Cancel the registration», write the «Reason», press «Cancel the registration» and confirm. The place goes to the first on the waiting list; if the event's places are not allocated automatically, it stays free until you hand it out.",
                 "The email never arrived: «Resend email» → «Send now, without waiting for the scheduled round». It works on the waiting list too: the email says where the line stands now.",
                 "They ask for their data to be erased: «Delete permanently», write the «Reason for deletion», tick «I confirm this deletion is permanent» and press «Delete permanently».",
                 "Several at once: tick the rows on the list → «Cancel the ticked ones»."
+              ]
+            },
+            {
+              "title": "Correct a registration's answers",
+              "steps": [
+                "When: the person mistyped their name, date of birth, phone, city, club or anything else on the form, or ticked that they are a member without being one.",
+                "«Registrations» → press the name → «The registration's answers» → «Change the answers». Change only what is wrong → «Save the answers»; the question names the person and the fields.",
+                "Not changed here: the email address (cancel and add again), the consents (you only withdraw them, with their own button) and the declaration (only the person signs it).",
+                "No email is sent and no place moves. Every field changed stays in the log, with its old and new value."
+              ]
+            },
+            {
+              "title": "Clear the member tick of those with no account",
+              "steps": [
+                "When: before a members' race, so that only the club's members stay ticked. The participant ticks it on the form; the club does not check it.",
+                "One at a time: in «The registration's answers» untick the member tick → «Save the answers». On the list, «Not a member» is in the row's ⋮ menu.",
+                "All at once: «Registrations» → «Search and filter» → for members choose «Only those who declared membership» → «Filter» → «Member ticks with no member account».",
+                "The list shows the ticked registrations whose address is no account's on «Staff». A member registered with another address appears too: untick their row. Then «Clear the ticks on all» … and confirm.",
+                "What it does not do: it cancels no registration, moves no place and sends no email. The club on the list is cleared only if the tick had set it. Every change stays in the log."
               ]
             },
             {
@@ -6450,6 +6623,106 @@
           "CONFIRMED": "Confirmed"
         }
       }
+    },
+    "invitations": {
+      "link": "Send invitations",
+      "title": "Invitations",
+      "intro": "A place kept for a chosen person until a deadline: they get an email with a link to the form.",
+      "aside": {
+        "one": "{count} waiting",
+        "few": "{count} waiting",
+        "other": "{count} waiting"
+      },
+      "empty": "No invitation sent for this event.",
+      "membersLegend": "Members from the members' area",
+      "membersSearch": "Search by name or address",
+      "membersNone": "No member account yet.",
+      "typedLabel": "Other people: name and address, one per line",
+      "typedHelp": "One person per line: the name, then the email address. Blank lines are skipped.",
+      "daysLabel": "Days until it expires",
+      "daysHelp": "The place is kept this many days, at most until the start; from 1 to {max}.",
+      "outsideLabel": "On the hidden list (takes no place)",
+      "outsideHelp": "For organizers, volunteers, pacemakers and invited runners who take none of the advertised places: the invitation holds no place, and the registration will be on the hidden list.",
+      "localeLegend": "Language of the invitation",
+      "localeRo": "Română",
+      "localeEn": "English",
+      "localeHelp": "For typed addresses the club does not know yet. A member gets the invitation in the account's language, and somebody who has registered with the club before in the language they registered in.",
+      "submit": "Send the invitations",
+      "dialog": {
+        "title": "Send the invitations?",
+        "count": {
+          "one": "One invitation.",
+          "few": "{count} invitations.",
+          "other": "{count} invitations."
+        },
+        "free": "Places free for invitations now: {free} — whoever waits on the list comes first.",
+        "raise": {
+          "one": "{count} supplementary place is added: the capacity becomes {capacity}.",
+          "few": "{count} supplementary places are added: the capacity becomes {capacity}.",
+          "other": "{count} supplementary places are added: the capacity becomes {capacity}."
+        },
+        "noRaise": "No new place: they fit in the free places.",
+        "days": {
+          "one": "The invitation expires in one day, at the latest at the start.",
+          "few": "The invitation expires in {count} days, at the latest at the start.",
+          "other": "The invitation expires in {count} days, at the latest at the start."
+        },
+        "locale": "Language for addresses the club does not know: {language}.",
+        "outside": "On the hidden list: they hold no place.",
+        "confirmRaise": {
+          "one": "Add {count} place and send",
+          "few": "Add {count} places and send",
+          "other": "Add {count} places and send"
+        },
+        "confirm": "Send the invitations"
+      },
+      "state": {
+        "sent": "Sent",
+        "accepted": "Accepted",
+        "expired": "Expired",
+        "withdrawn": "Withdrawn"
+      },
+      "until": "Deadline: {deadline}",
+      "acceptedAt": "Accepted: {at}",
+      "withdrawnAt": "Withdrawn: {at}",
+      "expiredAt": "Expired: {at}",
+      "by": "sent by {name}",
+      "byNobody": "a deleted account",
+      "resent": {
+        "one": "resent once",
+        "few": "resent {count} times",
+        "other": "resent {count} times"
+      },
+      "raised": "with a supplementary place added",
+      "openRegistration": "Open the registration",
+      "resendTitle": "Resend the invitation?",
+      "resendBody": "{name} gets the invitation again, with a new link; the old link stops working. The deadline moves to {days} days from now, if that is later than the current one.",
+      "resendBodyWaiting": "{name} gets the invitation again with a new link; the old one stops working. The deadline stays: someone is waiting, and if the invitation is not accepted by then, the place goes to the waiting list.",
+      "resendBodyKept": "{name} gets the invitation again, with a new link; the old link stops working. The deadline stays as it is; to move it later, type a number of days.",
+      "resendDays": "Days (optional)",
+      "resend": "Resend",
+      "resending": "Sending…",
+      "withdrawTitle": "Withdraw the invitation?",
+      "withdrawBody": "The link {name} received registers nobody any more, and the kept place is released.",
+      "withdraw": "Withdraw",
+      "withdrawing": "Withdrawing…",
+      "errors": {
+        "INVITATION_ALREADY_REGISTERED": "{name} is already registered for this event: no invitation was sent.",
+        "INVITATION_ALREADY_INVITED": "{name} already has an invitation waiting: no invitation was sent.",
+        "INVITATION_BAD_ADDRESS": "The address of {name} is not a valid email address: no invitation was sent.",
+        "INVITATION_DUPLICATE": "{name} appears twice in the list: no invitation was sent.",
+        "INVITATION_NO_NAME": "A line has no name: no invitation was sent.",
+        "INVITATION_NOBODY": "Tick at least one member or type a line.",
+        "INVITATION_TOO_MANY": "At most 50 people per press: split the list.",
+        "INVITATION_EVENT_CLOSED": "The event takes no more invitations: it is cancelled, has started, or is not published.",
+        "INVITATION_NOT_OPEN": "The invitation is no longer waiting: it was accepted, withdrawn or has expired.",
+        "INVITATION_BAD_DAYS": "Days until it expires: a whole number from 1 to 60.",
+        "INVITATION_UNREAD_LINE": "Lines {lines} are not a name and an address: no invitation was sent.",
+        "SUPPLEMENTARY_PLACE_UNCONFIRMED": "Nothing was sent: the places changed since you opened the page. Press again: the question now says how many places are added.",
+        "FORBIDDEN": "Only an administrator sends invitations.",
+        "NOT_FOUND": "The event no longer exists.",
+        "generic": "Nothing was sent: check the list and try again."
+      }
     }
   },
   "NotFound": {
@@ -6864,6 +7137,28 @@
         "few": "{count} people",
         "other": "{count} people"
       }
+    },
+    "invitation": {
+      "addressLabel": "The invitation's address",
+      "addressHelp": "The invitation is for this address: the emails about the registration come here.",
+      "banner": "Invitation for {name} to {event}, valid until {deadline}.",
+      "bannerHelp": "The name and address come from the invitation; you fill in the rest. After sending you get the email with the declaration, with no other address confirmation.",
+      "doneTitle": "Done: the place is yours",
+      "done": "You are registered. We have sent you the email with the self-declaration: sign it from its link, by the deadline in the email.",
+      "endedTitle": "The invitation is no longer valid",
+      "replacedTitle": "There is a newer email",
+      "invalidTitle": "The link does not work",
+      "used": "The invitation has already been used: the registration is made. Look for the email with the declaration, in Spam too.",
+      "withdrawn": "The club withdrew this invitation.",
+      "expired": "The invitation's deadline has passed, and the kept place was released.",
+      "cancelled": "The event was cancelled, so the invitation is no longer valid.",
+      "replaced": "The club resent your invitation: use the link in the newest email.",
+      "invalid": "The link is not valid or no longer works.",
+      "askClub": "If you would still like to come, write to us:",
+      "contact": "Contact page",
+      "alreadyRegistered": "This address already has a registration with this name: nothing was registered. Address not confirmed? Press the link in the confirmation email to get the invitation's place.",
+      "addressAtCap": "This address already has the most registrations allowed for the event: nothing was registered.",
+      "notYou": "Not expecting this invitation? Ignore it or write to us:"
     }
   },
   "Registrations": {
@@ -7824,7 +8119,6 @@
       "checkedIn": "Present at the desk.",
       "checkinUndone": "No longer checked in.",
       "registrationCreated": "The person was added; the email is queued.",
-      "nameCorrected": "The name was changed.",
       "registrationCancelled": "The registration was cancelled; the email is queued.",
       "consentWithdrawn": "The ticked data was erased.",
       "bibsPrinted": "Marked as printed.",
@@ -8023,8 +8317,8 @@
       "menuOrder": "The menu order was saved.",
       "registrationOffered": "The offer is sent: they have the usual time to sign the declaration.",
       "placeGiven": "Place given; the declaration email has left.",
-      "outsideMarked": "The registration is outside the places: it takes none of the event's places now.",
-      "outsideUnmarked": "The registration counts among the event's places again.",
+      "outsideMarked": "The registration is on the hidden list: it takes none of the event's places now.",
+      "outsideUnmarked": "The registration is off the hidden list and counts among the event's places again.",
       "failedRetried": {
         "one": "{count} failed email put back in the queue.",
         "few": "{count} failed emails put back in the queue.",
@@ -8039,7 +8333,28 @@
         "one": "Offer sent; a supplementary place added: {count} place.",
         "few": "Offer sent; a supplementary place added: {count} places.",
         "other": "Offer sent; a supplementary place added: {count} places."
-      }
+      },
+      "invitationsSent": {
+        "one": "{count} invitation sent.",
+        "few": "{count} invitations sent.",
+        "other": "{count} invitations sent."
+      },
+      "invitationsSentRaised": {
+        "one": "{count} invitation sent; the capacity is now {capacity}.",
+        "few": "{count} invitations sent; the capacity is now {capacity}.",
+        "other": "{count} invitations sent; the capacity is now {capacity}."
+      },
+      "invitationResent": "Invitation resent, with a new link.",
+      "invitationResentKept": "Invitation resent, with a new link. The deadline stayed as it was: someone is on the waiting list.",
+      "invitationWithdrawn": "Invitation withdrawn; the place was released.",
+      "memberTickCleared": "Member tick cleared.",
+      "memberTickSet": "Member tick set.",
+      "memberTicksCleared": {
+        "one": "Member tick cleared on {count} registration.",
+        "few": "Member tick cleared on {count} registrations.",
+        "other": "Member tick cleared on {count} registrations."
+      },
+      "answersCorrected": "Answers corrected: {fields}."
     }
   },
   "Network": {
