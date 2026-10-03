@@ -679,6 +679,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
           >
             <AdminTable
               caption={t("legal.tableCaptionOf", { kind: kindName })}
+              tableId={`legal-${key.toLowerCase().replaceAll("_", "-")}`}
               columns={columns}
               rows={rows}
               rowKey={(version) => version.id}

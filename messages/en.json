@@ -562,6 +562,12 @@
       "clear": "Clear filters",
       "actions": "Actions"
     },
+    "columns": {
+      "resize": "Width of the “{column}” column",
+      "resizeHow": "Drag the edge to widen or narrow the column; from the keyboard, the left and right arrows. A double click puts it back to its original width.",
+      "reset": "Default widths",
+      "widthValue": "{width} px"
+    },
     "backToEvents": "Back to the event list",
     "legalNotice": {
       "title": "How legal-text versions work",
@@ -626,6 +632,7 @@
       "filterAll": "All events",
       "filter": "Filter",
       "statusLabel": "Status",
+      "statusAll": "All statuses",
       "summaryTotal": "Registrations: {count} (all states, cancelled and expired included)",
       "summaryTest": "Test: {count}",
       "outside": {
@@ -771,14 +778,25 @@
       "registrationDeleted": "The registration was permanently deleted.",
       "eraseLeftovers": "Also delete by hand: the “Signed declaration” messages in the archive, their row in downloaded exports and PDFs, printed sheets, and the address in Mailgun → Suppressions.",
       "rowActions": "Actions for {name}",
-      "clubMemberLabel": "{club} members",
-      "bouncedLabel": "Email",
-      "bouncedOnly": "Email bounced only",
-      "clubMemberOnly": "Only those who declared membership",
+      "clubMemberOnly": "Only {club} members (declared)",
+      "clubMemberOnlyHelp": "Those who ticked “I am a member of the {club} group” when registering. The club does not check; the row reads “Member (declared)”.",
+      "bouncedOnly": "Only those the email never reached",
+      "bouncedOnlyHelp": "The address bounced the message or the provider refused it; the row reads “Email rejected”. These are the people to call before the race.",
       "clubMemberChip": "Member (declared)",
       "columnName": "Name",
       "columnStatus": "Status",
       "columnJourney": "How far",
+      "columnUntilWhen": "Until when",
+      "untilWhenHint": "Until when the person can sign the declaration, accept the offer or confirm the address from the email, to the minute. Grey: passed. «—»: nothing is due. As in the registration's timeline.",
+      "untilWhen": {
+        "hold": "Can sign until {instant}",
+        "kept": "{instant} — the deadline has passed, the place is kept",
+        "offer": "Can accept until {instant}",
+        "offerLapsed": "{instant} — the offer's deadline has passed",
+        "reserved": "The place is reserved until {instant}",
+        "link": "The link is valid until {instant}",
+        "linkLapsed": "{instant} — the link has expired"
+      },
       "columnEvent": "Event",
       "columnEmail": "Email",
       "columnSubmitted": "Submitted",
@@ -5340,6 +5358,7 @@
                 "Under «Events» pick the event (or «All events»), under «Status» what you need, then «Filter».",
                 "Looking for someone: type part of the name in «Search by name» and press «Filter». With no event chosen, it looks in every event.",
                 "The «How far» column says each person's step. Press a name to open the registration: «The registration's journey» and «Timeline» say everything that happened.",
+                "The «Until when» column says until when each one can sign, accept or confirm — the same time as the registration's timeline.",
                 "The top says once what you cannot change here. The Tehnic role does not see registrations at all.",
                 "On the event's public page, the first number counts the registrations holding a place: the confirmed plus those still in progress — a declaration not signed yet, a waiting-list offer not accepted yet, a place a family holds. After the dash the line names only what exists: how many are confirmed and how many in progress, and how many free places are kept for the waiting list, for example “6 registered of 10 places — 4 confirmed, 2 completing their registration, 4 places kept for the waiting list”.",
                 "Places kept are free places the waiting list claims, and the card shows them in two ways. With more places free than people waiting, the card says «Places are given from the waiting list» and counts no free place. When the list claims every free place, as in the example, the card says the places are taken — “Thank you! All 10 places are taken — … already waiting.” — and offers «Join the waiting list», while the places line still names “4 places kept for the waiting list”. Either way those places are free: with «Places from the waiting list are allocated automatically» on «No» the club hands them out, with «Send them the offer»; on «Yes» the queue does, to the first on the list. With «Show publicly how many are waiting» unticked on the event, neither the card, nor the page, nor the people on the list learn how many wait: the card says “Thank you! All 10 places are taken. Join the waiting list.”, and the places line no longer says how many are on the list.",
@@ -5655,7 +5674,7 @@
               "steps": [
                 "When: before a members' race, so that only the club's members stay ticked. The participant ticks it on the form; the club does not check it.",
                 "One at a time: in «The registration's answers» untick the member tick → «Save the answers». On the list, «Not a member» is in the row's ⋮ menu.",
-                "All at once: «Registrations» → «Search and filter» → for members choose «Only those who declared membership» → «Filter» → «Member ticks with no member account».",
+                "All at once: «Registrations» → «Search and filter» → tick «Only {club} members (declared)» → «Filter» → «Member ticks with no member account».",
                 "The list shows the ticked registrations whose address is no account's on «Staff». A member registered with another address appears too: untick their row. Then «Clear the ticks on all» … and confirm.",
                 "What it does not do: it cancels no registration, moves no place and sends no email. The club on the list is cleared only if the tick had set it. Every change stays in the log."
               ]
@@ -5670,7 +5689,7 @@
                 "Mind: each gets a new link, and the link in the earlier email stops working. Tell them to open the newest email.",
                 "Tell them to look for the email in Spam and in Promotions too.",
                 "At most three presses an hour per event. An “i” beside the button says when a press would be refused: the event is cancelled, finished or has started, or the hour's presses are spent.",
-                "Who loses a place, and when: in «Registrations», a race's list says under «Who has signed up» until when places are kept and what follows the deadline; the «How far» column has each one's.",
+                "Who loses a place, and when: a race's list in «Registrations» says under «Who has signed up» how long people keep a place and what follows the deadline; «Until when» has each one's day and time.",
                 "One person only: open their registration → «Resend email»."
               ]
             },

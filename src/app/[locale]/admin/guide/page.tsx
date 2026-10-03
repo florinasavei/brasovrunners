@@ -20,6 +20,7 @@ import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { orderGuideSections } from "@/modules/staff-identity/domain/guide-order";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
+import { CLUB_NAME } from "@/theme/brand";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -84,7 +85,8 @@ export default async function GuidePage({ params }: Props) {
   const db = getDb();
   const [{ cap }, familyOpen] = await Promise.all([readAddressCap(db), familyRegistrationOpen(db)]);
   const people = t(`emails.addressCap.people.${countForm(cap.registrationsPerAddress, locale)}`, { count: cap.registrationsPerAddress });
-  const values = { confirmation: words.confirmation, hold: words.hold, offer: words.offer, checkin: words.checkin, horizon: words.horizon, people };
+  // The club's name for a step that quotes a label naming it (the members' tick, §650) — the constant, never a literal.
+  const values = { club: CLUB_NAME, confirmation: words.confirmation, hold: words.hold, offer: words.offer, checkin: words.checkin, horizon: words.horizon, people };
 
   return (
     <Stack spacing={3}>

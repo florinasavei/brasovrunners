@@ -109,6 +109,8 @@ export type RegistrationListRow = {
   holdExpiresAt: Date | null;
   /** When the first email's link lapses (§377): the journey's «linkul expiră …» on a row waiting for it (§635). A column of the row, no join. */
   emailLinkExpiresAt: Date | null;
+  /** The offer's `WAITLIST_SPOT_OFFER` still queued (§520): past its stored deadline it has not lapsed (§650, `rowDeadlineOf`). */
+  offerEmailQueued?: boolean;
   declarationAcceptedAt: Date | null;
   cancelledAt: Date | null;
   /** The participant's own reason for cancelling (§558): the export's «Cancellation reason». Null on a staff cancellation. */
@@ -142,7 +144,7 @@ export type RegistrationListFilters = {
  * An allowlist rather than a mapping built from the request: `?sort=` arrives from a URL anybody
  * can type, and the one thing that must not be possible is for it to name a column.
  */
-export const REGISTRATION_SORT_KEYS = ["name", "status", "event", "submitted", "bib"] as const;
+export const REGISTRATION_SORT_KEYS = ["name", "status", "event", "submitted", "bib", "untilWhen"] as const;
 export type RegistrationSortKey = (typeof REGISTRATION_SORT_KEYS)[number];
 
 /**
@@ -286,7 +288,25 @@ function registrationConditions(filters: RegistrationListFilters): SQL[] {
   ].filter((condition) => condition !== undefined);
 }
 
-function registrationOrderBy(sort: RegistrationSortKey, dir: "asc" | "desc") {
+/**
+ * «Până când» (§650): the deadline the row waits on, as `domain/row-deadline.ts#rowDeadlineOf` reads it —
+ * the hold's or the offer's, a family's reservation while it holds, else the first email's link — and
+ * null for every other state. The same cases, so the order is the order of the dates on screen.
+ */
+function rowDeadlineOrder(now: Date): SQL {
+  return sql`(case
+    when ${registrations.status} in ('PENDING_DECLARATION', 'WAITLIST_OFFERED') then ${registrations.holdExpiresAt}
+    when ${registrations.status} = 'PENDING_EMAIL_CONFIRMATION' and ${registrations.holdExpiresAt} > ${now} then ${registrations.holdExpiresAt}
+    when ${registrations.status} = 'PENDING_EMAIL_CONFIRMATION' then ${registrations.emailLinkExpiresAt}
+  end)`;
+}
+
+/** Whether the row is an offer whose `WAITLIST_SPOT_OFFER` is still queued (§520, `offerAwaitingItsFirstEmail`). */
+function offerEmailQueuedAt(now: Date): SQL<boolean> {
+  return sql<boolean>`(${registrations.status} = 'WAITLIST_OFFERED' and ${offerAwaitingItsFirstEmail(now)})`.mapWith(Boolean);
+}
+
+function registrationOrderBy(sort: RegistrationSortKey, dir: "asc" | "desc", now: Date) {
   const direction = dir === "asc" ? asc : desc;
 
   switch (sort) {
@@ -302,6 +322,9 @@ function registrationOrderBy(sort: RegistrationSortKey, dir: "asc" | "desc") {
     // not "before 1", it is not in the list the sort is about.
     case "bib":
       return dir === "asc" ? sql`${registrations.bibNumber} asc nulls last` : sql`${registrations.bibNumber} desc nulls last`;
+    // The soonest deadline first (§650); a row that waits on none comes after every dated one, either way.
+    case "untilWhen":
+      return dir === "asc" ? sql`${rowDeadlineOrder(now)} asc nulls last` : sql`${rowDeadlineOrder(now)} desc nulls last`;
   }
 }
 
@@ -324,6 +347,8 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
   db: Database<T>,
   filters: RegistrationListFilters = {},
   page?: { limit: number; offset: number; sort: RegistrationSortKey; dir: "asc" | "desc" },
+  /** The clock of «Până când» (§650): a family's reservation against its link in the order, a queued offer's email (§520). */
+  now: Date = new Date(),
 ): Promise<RegistrationListRow[]> {
   const conditions = registrationConditions(filters);
 
@@ -369,6 +394,8 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       offerCreatedAt: registrations.offerCreatedAt,
       holdExpiresAt: registrations.holdExpiresAt,
       emailLinkExpiresAt: registrations.emailLinkExpiresAt,
+      // «Până când» (§650): an offer whose first email is still queued has not lapsed (§520) — one correlated `EXISTS`.
+      offerEmailQueued: offerEmailQueuedAt(now),
       declarationAcceptedAt: latestDeclarationAcceptedAt,
       cancelledAt: registrations.cancelledAt,
       cancelReasonKind: registrations.cancelReasonKind,
@@ -397,7 +424,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
     what makes `LIMIT`/`OFFSET` mean anything.
   */
   return query
-    .orderBy(registrationOrderBy(page.sort, page.dir), desc(registrations.submittedAt), asc(registrations.id))
+    .orderBy(registrationOrderBy(page.sort, page.dir, now), desc(registrations.submittedAt), asc(registrations.id))
     .limit(page.limit)
     .offset(page.offset);
 }
@@ -583,6 +610,8 @@ export type RegistrationDetail = {
   holdExpiresAt: Date | null;
   /** When the first email's link lapses (§377), for the timeline's «Linkul din email expiră» on a row still waiting for it (§635). */
   emailLinkExpiresAt: Date | null;
+  /** The offer's `WAITLIST_SPOT_OFFER` still queued (§520): past its stored deadline it has not lapsed (§650, `rowDeadlineOf`). */
+  offerEmailQueued?: boolean;
   confirmedAt: Date | null;
   cancelledAt: Date | null;
   cancellationSource: string | null;
@@ -640,6 +669,7 @@ const emailConfirmedBy = alias(staffUsers, "email_confirmed_by");
 export async function findRegistrationDetailForAdmin<T extends Record<string, unknown>>(
   db: Database<T>,
   id: string,
+  now: Date = new Date(),
 ): Promise<RegistrationDetail | undefined> {
   const [row] = await db
     .select({
@@ -684,6 +714,8 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       offerCreatedAt: registrations.offerCreatedAt,
       holdExpiresAt: registrations.holdExpiresAt,
       emailLinkExpiresAt: registrations.emailLinkExpiresAt,
+      // The timeline's deadline (§650): an offer whose first email is still queued has not lapsed (§520).
+      offerEmailQueued: offerEmailQueuedAt(now),
       confirmedAt: registrations.confirmedAt,
       cancelledAt: registrations.cancelledAt,
       cancellationSource: registrations.cancellationSource,
@@ -1290,7 +1322,7 @@ export async function listQueueForEvent<T extends Record<string, unknown>>(db: D
       formSentAt,
       waitlistedAt: registrations.waitlistedAt,
       holdExpiresAt: registrations.holdExpiresAt,
-      offerEmailQueued: sql<boolean>`(${registrations.status} = 'WAITLIST_OFFERED' and ${offerAwaitingItsFirstEmail(now)})`,
+      offerEmailQueued: offerEmailQueuedAt(now),
     })
     .from(registrations)
     .where(

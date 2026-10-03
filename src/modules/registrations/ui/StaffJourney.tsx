@@ -92,12 +92,9 @@ export default async function StaffJourney({ journey, bibNumber, variant }: Prop
     // says what comes next.
     const word = journey.done === total ? (detailOf(last) ?? label[last.key]) : label[journey.reached];
     /*
-      «Când pierde lumea locul?» (§635): after the step, the deadline the row's state waits on — the
-      hold («ține locul până …», or kept past it, §160), the offer, the email's link or a family's
-      reservation. Only on a live row: how an ended one ended is the status chip's and the title's.
+      The deadline the row waits on (§635) is the list's own column now, «Până când» (§650,
+      `RowDeadlineCell`): to the minute and sortable, so this cell says the step alone.
     */
-    const pending = journey.outcome ? undefined : journey.steps.find((step) => step.detail === "held" || step.detail === "offered" || step.detail === "link");
-    const due = pending ? detailOf(pending) : null;
     const title = journey.outcome
       ? `${t("registrations.journey.progress", { done: journey.done, total })} · ${outcome}`
       : journey.current
@@ -106,11 +103,9 @@ export default async function StaffJourney({ journey, bibNumber, variant }: Prop
 
     return (
       <Box component="span" title={title} sx={{ color: journey.outcome ? "text.secondary" : "text.primary" }}>
-        {/* The step stays on one line; the deadline after it may wrap at 320 px (§635). */}
         <Box component="span" sx={{ whiteSpace: "nowrap" }}>
           {journey.done}/{total} · {word}
         </Box>
-        {due && ` · ${due}`}
       </Box>
     );
   }
