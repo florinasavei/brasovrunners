@@ -628,6 +628,8 @@ describe("retention sweep", () => {
       instagramHandle: "runner",
       listSocials: true,
       createdAt: new Date("2026-09-01T09:00:00.000Z"),
+      // Written on the day of their creation: a fixture never restarted (§NNN).
+      answersWrittenAt: new Date("2026-09-01T09:00:00.000Z"),
     };
     vi.stubEnv("NEXT_RUNTIME", "nodejs");
     vi.mocked(revalidateTag).mockClear();
@@ -654,5 +656,47 @@ describe("retention sweep", () => {
     vi.unstubAllEnvs();
     // Nothing else on the minor's row moved.
     expect(minorAfter.status).toBe("CONFIRMED");
+  });
+
+  /**
+   * §NNN — "the day the row was written" is when its answers were written: a row created while the
+   * person was a minor and restarted after the eighteenth birthday was judged an adult's by the form,
+   * so the sweep keeps its socials. A row the restart did not reach is judged on its creation, as before.
+   */
+  it("judges a restarted row on its answers' instant, not its creation", async () => {
+    const [{ eventId }] = await db.select({ eventId: registrations.eventId }).from(registrations).where(eq(registrations.id, registrationId));
+    const base = {
+      eventId,
+      status: "CONFIRMED" as const,
+      locale: "ro" as const,
+      privacyNoticeVersion: 1,
+      privacyAcknowledgedAt: NOW,
+      resultsNameConsent: false,
+      listOptOut: true,
+      resultsConsentVersion: 1,
+      stravaUrl: "https://www.strava.com/athletes/1",
+      instagramHandle: "runner",
+      listSocials: true,
+      // Eighteen on 2026-08-15: a minor when the row was created, an adult when it was restarted.
+      birthDate: "2008-08-15",
+      createdAt: new Date("2026-08-01T09:00:00.000Z"),
+    };
+    const [restarted] = await db
+      .insert(registrations)
+      .values({ ...base, participantId: await participant("restarted@example.ro"), registeredName: "Restarted", displayName: "Restarted", answersWrittenAt: new Date("2026-09-01T09:00:00.000Z") })
+      .returning();
+    const [notRestarted] = await db
+      .insert(registrations)
+      .values({ ...base, participantId: await participant("first@example.ro"), registeredName: "First", displayName: "First", answersWrittenAt: base.createdAt })
+      .returning();
+
+    const counts = await pruneExpiredRows(db, NOW);
+
+    expect(counts.failures).toEqual([]);
+    expect(counts.minorSocials).toBe(1);
+    const [restartedAfter] = await db.select().from(registrations).where(eq(registrations.id, restarted.id));
+    expect([restartedAfter.stravaUrl, restartedAfter.instagramHandle, restartedAfter.listSocials]).toEqual(["https://www.strava.com/athletes/1", "runner", true]);
+    const [notRestartedAfter] = await db.select().from(registrations).where(eq(registrations.id, notRestarted.id));
+    expect([notRestartedAfter.stravaUrl, notRestartedAfter.instagramHandle, notRestartedAfter.listSocials]).toEqual([null, null, false]);
   });
 });

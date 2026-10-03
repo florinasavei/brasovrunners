@@ -254,8 +254,11 @@ export function planAnswerEdit(
     minAge: number | null;
     kitShirt: boolean;
     now: Date;
-    /** When the row was written: the minors' sweep keeps no socials on a row written before the eighteenth birthday (§323). */
-    createdAt: Date;
+    /**
+     * When the row's answers were written (`answersWrittenAt`, §NNN — a restart's instant, not the creation's):
+     * the minors' sweep keeps no socials on a row written before the eighteenth birthday (§323).
+     */
+    answersWrittenAt: Date;
     /** The row has a declaration acceptance (online or paper): the guardian is the signed text's, not an answer any more. */
     declarationSigned: boolean;
   },
@@ -327,7 +330,7 @@ export function planAnswerEdit(
   // The form's cross-field rules, on the row as it would be.
   const minor = typeof next.birthDate === "string" && isMinorOn(next.birthDate, context.now);
   // The minors' sweep's own test (`jobs/retention.ts`, `minor-socials`): a minor on the day the row was written.
-  const minorAtRegistration = typeof next.birthDate === "string" && isMinorOn(next.birthDate, context.createdAt);
+  const minorAtRegistration = typeof next.birthDate === "string" && isMinorOn(next.birthDate, context.answersWrittenAt);
   if ((posted.has("phone") || posted.has("emergencyContactPhone")) && next.phone && next.phone === next.emergencyContactPhone) {
     refuse("the emergency contact must be somebody other than the participant", ["emergencyContactPhone", EMERGENCY_SAME]);
   }

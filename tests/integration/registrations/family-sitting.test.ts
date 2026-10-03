@@ -343,6 +343,8 @@ describe("§519 a family in one sitting", () => {
       ["Maria Pop", "2010-07-11", "PENDING_EMAIL_CONFIRMATION"],
       ["Ion Pop", "1987-02-15", "PENDING_EMAIL_CONFIRMATION"],
     ]);
+    // The correction rewrote Ion's answers on its own instant (§NNN): `answers_written_at` moves, `created_at` stays.
+    expect([registered[2].createdAt, registered[2].answersWrittenAt]).toEqual([at(4), at(6)]);
     expect(await db.select().from(pendingFamilyEntries)).toHaveLength(0);
     const [sitting] = await db.select().from(familySittings);
     expect(sitting.registrationIds).toEqual(registered.map((row) => row.id));

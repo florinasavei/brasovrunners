@@ -245,7 +245,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     and stays open when the row is a minor's or holds a guardian already, so a guardian a corrected date
     will clear is in view. Without JavaScript it is always there (`GuardianForMinor`).
   */
-  const guardianOpen = Boolean(answers?.guardianName) || (typeof answers?.birthDate === "string" && isMinorOn(answers.birthDate, answers.createdAt));
+  const guardianOpen = Boolean(answers?.guardianName) || (typeof answers?.birthDate === "string" && isMinorOn(answers.birthDate, answers.answersWrittenAt));
   // An older row kept only the name of record (BR-REQ-031-04 criterion 6): its two boxes start empty and
   // are not required, or the browser would block every other correction until both were typed.
   const namesRequired = Boolean(answers?.firstName || answers?.lastName);
@@ -1060,7 +1060,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                       helperText={tr("registrations.answers.phoneHelp")}
                       slotProps={{ htmlInput: { maxLength: 30 } }}
                     />
-                    <GuardianForMinor birthDateId={fieldId("birthDate", "answers")} forceOpen={guardianOpen} minorOn={answers.createdAt.toISOString()}>
+                    <GuardianForMinor birthDateId={fieldId("birthDate", "answers")} forceOpen={guardianOpen} minorOn={answers.answersWrittenAt.toISOString()}>
                       <RecallField
                         name="guardianName"
                         label={answerLabels.guardianName}

@@ -408,9 +408,9 @@ describe("BR-REQ-037-03 criterion 12: only a minor's row names a guardian (§108
   });
 
   it("owes a guardian on the day it allows one: a row a minor's when written, the person an adult today", async () => {
-    // Eighteen on 2026-09-15: a minor on 2026-09-01, when the row was written; an adult on NOW.
+    // Eighteen on 2026-09-15: a minor on 2026-09-01, when the row and its answers were written (§NNN); an adult on NOW.
     const written = new Date("2026-09-01T10:00:00.000Z");
-    const pending = { status: "PENDING_DECLARATION", confirmedAt: null, bibNumber: null, clubMemberDeclared: false, clubName: null, createdAt: written } as const;
+    const pending = { status: "PENDING_DECLARATION", confirmedAt: null, bibNumber: null, clubMemberDeclared: false, clubName: null, createdAt: written, answersWrittenAt: written } as const;
     // A: clearing the guardian of such a row.
     const grownUp = await seed({ ...pending, birthDate: "2008-09-15", guardianName: "Maria Pop" });
     expect(await refusal(editRegistrationAnswers(db, admin, grownUp, { guardianName: "" }, NOW))).toEqual({ code: "VALIDATION_ERROR", fields: ["guardianName"] });
@@ -420,7 +420,7 @@ describe("BR-REQ-037-03 criterion 12: only a minor's row names a guardian (§108
     expect(await refusal(editRegistrationAnswers(db, admin, adult, { birthDate: "2008-09-10" }, NOW))).toEqual({ code: "VALIDATION_ERROR", fields: ["guardianName"] });
     expect((await rowOf(adult)).birthDate).toBe("1990-05-01");
     // C: the same date on an adult's signed row, refused on the birth date.
-    const signed = await seed({ createdAt: written, registeredName: "Elena Pop", nameKey: "elena pop", firstName: "Elena", displayName: "Elena Pop", clubMemberDeclared: false, clubName: null });
+    const signed = await seed({ createdAt: written, answersWrittenAt: written, registeredName: "Elena Pop", nameKey: "elena pop", firstName: "Elena", displayName: "Elena Pop", clubMemberDeclared: false, clubName: null });
     await sign(signed, "Elena Pop");
     expect(await refusal(editRegistrationAnswers(db, admin, signed, { birthDate: "2008-09-10" }, NOW))).toEqual({ code: "VALIDATION_ERROR", fields: ["birthDate", "guardianSigned"] });
     expect((await rowOf(signed)).birthDate).toBe("1990-05-01");
@@ -478,7 +478,7 @@ describe("BR-REQ-037-03 criterion 12: a corrected social leaves the trail with t
 
   it("swept for a minor, the corrected socials go from the trail with them", async () => {
     // Registered an adult; the birth date corrected later shows the row was a minor's when written.
-    const id = await seed({ createdAt: NOW });
+    const id = await seed({ createdAt: NOW, answersWrittenAt: NOW });
     await editRegistrationAnswers(db, admin, id, { instagramHandle: "ana.runs" }, NOW);
     await db.update(registrations).set({ birthDate: "2012-03-01", guardianName: "Maria Pop" }).where(eq(registrations.id, id));
 
