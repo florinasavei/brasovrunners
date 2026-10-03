@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, lt, or, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, lt, lte, or, type SQL } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { eventInvitations } from "@/db/schema/event-invitations";
@@ -73,7 +73,14 @@ import { countOccupied, emailLinkLapseSql, lockEventForCapacity } from "./reposi
  * lock, after the moves of what never lapsed, each revived claim is moved alone and the event's places
  * counted again (`countOccupied`, the allocator's own count); a claim that would take the count past
  * the capacity is not revived: its deadline is put back as it was, the run's own sweep lapses it as it
- * would have lapsed, and the window names it to the Administrators (`not_revived`). Neither house
+ * would have lapsed, and the window names it to the Administrators (`not_revived`). The commoner case
+ * is a claim the allocator had already lapsed before this run — every transaction that gives a place
+ * first lapses what is past its deadline (`expireStaleHolds`): an offer or a declaration hold made
+ * EXPIRED, a family's reservation cleared, an invitation stamped expired — or an address link the
+ * sweep ended. The same step reads those too, under the same lock, when their deadline lay inside the
+ * window and the move would have revived them, and records each as not revived (`lapsedBy:
+ * "allocator"`) without touching it: the state machine and the person's emails have moved on, so only
+ * an Administrator re-seats them («Trimite-i oferta», «Dă-i un loc acum»). Neither house
  * mechanism that seats a person beyond the counted places is the job's to use: a supplementary place
  * needs an Administrator's confirmed press (§642), and a row that consumes no place an Administrator's
  * verb while the event's own switch is on (§643, §648) — a job has neither a person to confirm nor a
@@ -122,7 +129,7 @@ export type OutageGraceRun = {
   windowClosed: boolean;
   /** Deadlines moved this run. */
   moved: number;
-  /** Claims this run did not revive: their counted place had been given meanwhile. */
+  /** Claims this run did not revive: their counted place had been given meanwhile, or the allocator had already lapsed them inside the window. */
   notRevived: number;
   /** Administrators' emails queued this run. */
   noticesQueued: number;
@@ -352,9 +359,9 @@ async function moveTheDeadlines<T extends Record<string, unknown>>(
       const since = new Date(current.startedAt.getTime() + current.appliedMs);
       if (current.linksMovedAt === null) total.moved += await moveTheLinks(db, current, step, since, amount, now, settings);
       const done = new Set(current.eventsMoved);
-      for (const eventId of await eventsToMove(db, since)) {
+      for (const eventId of await eventsToMove(db, since, spanOf(current, since, now), settings)) {
         if (done.has(eventId)) continue;
-        const result = await moveOneEvent(db, current, step, eventId, since, amount, now);
+        const result = await moveOneEvent(db, current, step, eventId, since, amount, now, settings);
         total.moved += result.moved;
         total.notRevived += result.notRevived;
       }
@@ -533,8 +540,78 @@ async function moveTheLinks<T extends Record<string, unknown>>(
   });
 }
 
-/** The scheduled events, not started at `since`, with a hold, an offer, a reservation, a held place or an invitation running then. */
-async function eventsToMove<T extends Record<string, unknown>>(db: Database<T>, since: Date): Promise<string[]> {
+/**
+ * The stretch of a step in which a deadline that passed lapsed while the door was shut: after `since`,
+ * up to the window's end (or this run, while it is open) — and lapsed by the platform after the window
+ * began, never before it.
+ */
+type LapsedSpan = { startedAt: Date; since: Date; until: Date };
+
+function spanOf(window: UnreachableWindow, since: Date, now: Date): LapsedSpan {
+  return { startedAt: window.startedAt, since, until: window.endedAt ?? now };
+}
+
+/** An offer or a declaration hold the allocator lapsed (`expireStaleHolds`) whose deadline lay in the span. */
+function lapsedHoldWhere(span: LapsedSpan): SQL {
+  return and(
+    eq(registrations.status, "EXPIRED"),
+    inArray(registrations.expiryReason, ["WAITLIST_OFFER_LAPSED", "DECLARATION_HOLD_LAPSED"]),
+    gt(registrations.expiredAt, span.startedAt),
+    gt(registrations.holdExpiresAt, span.since),
+    lte(registrations.holdExpiresAt, span.until),
+  ) as SQL;
+}
+
+/** An address link the sweep ended (`expireStalePendingEmailConfirmations`) whose lapse lay in the span. */
+function lapsedLinkWhere(span: LapsedSpan, confirmationHours: number): SQL {
+  const lapse = emailLinkLapseSql(confirmationHours);
+  return and(
+    eq(registrations.status, "EXPIRED"),
+    eq(registrations.expiryReason, "EMAIL_CONFIRMATION_LAPSED"),
+    gt(registrations.expiredAt, span.startedAt),
+    sql`${lapse} > ${span.since.toISOString()}::timestamptz`,
+    sql`${lapse} <= ${span.until.toISOString()}::timestamptz`,
+  ) as SQL;
+}
+
+/** A family's sitting, joined to a registration it wrote or began from. */
+const sittingOfRegistration = and(
+  eq(familySittings.eventId, registrations.eventId),
+  or(eq(familySittings.registrationId, registrations.id), sql`${familySittings.registrationIds} @> jsonb_build_array(${registrations.id}::text)`),
+) as SQL;
+
+/**
+ * A family's reservation the allocator cleared (`hold_expires_at` set to null at or after its sitting's
+ * `reserved_until`, which lay in the span): the registration still waits for its address, with no place.
+ */
+function clearedReservationWhere(span: LapsedSpan): SQL {
+  return and(
+    eq(registrations.status, "PENDING_EMAIL_CONFIRMATION"),
+    isNull(registrations.holdExpiresAt),
+    gt(registrations.updatedAt, span.startedAt),
+    gt(familySittings.reservedUntil, span.since),
+    lte(familySittings.reservedUntil, span.until),
+    sql`${registrations.updatedAt} >= ${familySittings.reservedUntil}`,
+  ) as SQL;
+}
+
+/** An invitation the allocator stamped expired (`expireLapsedInvitations`) whose deadline lay in the span. */
+function lapsedInvitationWhere(span: LapsedSpan): SQL {
+  return and(
+    isNotNull(eventInvitations.expiredAt),
+    gt(eventInvitations.expiredAt, span.startedAt),
+    isNull(eventInvitations.acceptedAt),
+    isNull(eventInvitations.withdrawnAt),
+    gt(eventInvitations.expiresAt, span.since),
+    lte(eventInvitations.expiresAt, span.until),
+  ) as SQL;
+}
+
+/**
+ * The scheduled events, not started at `since`, with a hold, an offer, a reservation, a held place or an
+ * invitation running then — or one of them the allocator already lapsed inside the span.
+ */
+async function eventsToMove<T extends Record<string, unknown>>(db: Database<T>, since: Date, span: LapsedSpan, settings: Deadlines): Promise<string[]> {
   const live = and(sql`${events.eventStatus} = 'SCHEDULED'`, gt(events.startsAt, since));
   const held = await db
     .selectDistinct({ eventId: registrations.eventId })
@@ -557,7 +634,23 @@ async function eventsToMove<T extends Record<string, unknown>>(db: Database<T>, 
     .from(eventInvitations)
     .innerJoin(events, eq(events.id, eventInvitations.eventId))
     .where(and(live, invitationOpen(), gt(eventInvitations.expiresAt, since)));
-  return [...new Set([...held, ...places, ...invited].map((row) => row.eventId))];
+  const lapsed = await db
+    .selectDistinct({ eventId: registrations.eventId })
+    .from(registrations)
+    .innerJoin(events, eq(events.id, registrations.eventId))
+    .where(and(live, or(lapsedHoldWhere(span), lapsedLinkWhere(span, settings.confirmationHours))));
+  const cleared = await db
+    .selectDistinct({ eventId: registrations.eventId })
+    .from(registrations)
+    .innerJoin(events, eq(events.id, registrations.eventId))
+    .innerJoin(familySittings, sittingOfRegistration)
+    .where(and(live, clearedReservationWhere(span)));
+  const lapsedInvited = await db
+    .selectDistinct({ eventId: eventInvitations.eventId })
+    .from(eventInvitations)
+    .innerJoin(events, eq(events.id, eventInvitations.eventId))
+    .where(and(live, lapsedInvitationWhere(span)));
+  return [...new Set([...held, ...places, ...invited, ...lapsed, ...cleared, ...lapsedInvited].map((row) => row.eventId))];
 }
 
 type RegistrationStatusMoved = "PENDING_DECLARATION" | "WAITLIST_OFFERED" | "PENDING_EMAIL_CONFIRMATION";
@@ -598,6 +691,7 @@ async function moveOneEvent<T extends Record<string, unknown>>(
   since: Date,
   amount: number,
   now: Date,
+  settings: Deadlines,
 ): Promise<Moved> {
   const windowId = window.id;
   return db.transaction(async (tx) => {
@@ -785,6 +879,96 @@ async function moveOneEvent<T extends Record<string, unknown>>(
       left.push({ kind: claim.kind === "registration" ? (claim.status === "WAITLIST_OFFERED" ? "offer" : "familyReservation") : claim.kind, id: claim.id, eventId });
     };
 
+    /*
+      What the platform had already lapsed inside the span before this run (`expireStaleHolds`, and the
+      sweep's address links): read under the same lock and left exactly as it is — never revived: its
+      state, its emails and its token have moved on — but recorded as not revived when the step would
+      have revived it (`movedDeadline`, the same rule as above), once per window, so the Administrators
+      are told about the person who lost a place to the outage. Only an Administrator re-seats them.
+    */
+    const recordWhatTheAllocatorLapsed = async () => {
+      const span = spanOf(window, since, now);
+      const known = new Set([...locked.notRevived.map((claim) => claim.id), ...left.map((claim) => claim.id)]);
+      const record = async (claim: { kind: NotRevivedClaim["kind"]; id: string; participantId: string | null; deadline: Date }) => {
+        if (known.has(claim.id)) return;
+        known.add(claim.id);
+        if (claim.kind === "invitation") {
+          await recordAuditEvent(tx, {
+            actorStaffUserId: null,
+            participantId: null,
+            action: "event.invitation_not_revived_for_outage",
+            entityType: "event",
+            entityId: eventId,
+            metadata: { invitationId: claim.id, windowId, deadline: claim.deadline.toISOString(), lapsedBy: "allocator" },
+            now,
+          });
+        } else {
+          await recordAuditEvent(tx, {
+            actorStaffUserId: null,
+            participantId: claim.participantId,
+            action: "registration.not_revived_for_outage",
+            entityType: "registration",
+            entityId: claim.id,
+            metadata: { kind: claim.kind, windowId, deadline: claim.deadline.toISOString(), lapsedBy: "allocator" },
+            now,
+          });
+        }
+        left.push({ kind: claim.kind, id: claim.id, eventId });
+      };
+      const wouldMove = (stored: Date, writtenAt: Date | null, cap: { registrationClosesAt: Date | null; startsAt: Date } | null) =>
+        movedDeadline({ stored, since, grantedMs: amount, now, cap, writtenAt, endedAt }) !== null;
+
+      for (const row of await tx
+        .select({
+          id: registrations.id,
+          participantId: registrations.participantId,
+          expiryReason: registrations.expiryReason,
+          holdExpiresAt: registrations.holdExpiresAt,
+          submittedAt: registrations.submittedAt,
+          emailConfirmedAt: registrations.emailConfirmedAt,
+          offerCreatedAt: registrations.offerCreatedAt,
+        })
+        .from(registrations)
+        .where(and(eq(registrations.eventId, eventId), lapsedHoldWhere(span)))
+        .orderBy(asc(registrations.holdExpiresAt), asc(registrations.id))) {
+        if (!row.holdExpiresAt) continue;
+        const status: RegistrationStatusMoved = row.expiryReason === "WAITLIST_OFFER_LAPSED" ? "WAITLIST_OFFERED" : "PENDING_DECLARATION";
+        if (!wouldMove(row.holdExpiresAt, holdWrittenAt({ ...row, status }), holdCap)) continue;
+        await record({ kind: status === "WAITLIST_OFFERED" ? "offer" : "declarationHold", id: row.id, participantId: row.participantId, deadline: row.holdExpiresAt });
+      }
+
+      const lapse = emailLinkLapseSql(settings.confirmationHours);
+      for (const row of await tx
+        .select({ id: registrations.id, participantId: registrations.participantId, submittedAt: registrations.submittedAt, lapse })
+        .from(registrations)
+        .where(and(eq(registrations.eventId, eventId), lapsedLinkWhere(span, settings.confirmationHours)))
+        .orderBy(asc(registrations.submittedAt), asc(registrations.id))) {
+        const stored = new Date(row.lapse);
+        // A link is never capped by the event (`moveTheLinks`).
+        if (!wouldMove(stored, row.submittedAt, null)) continue;
+        await record({ kind: "emailLink", id: row.id, participantId: row.participantId, deadline: stored });
+      }
+
+      for (const row of await tx
+        .select({ id: registrations.id, participantId: registrations.participantId, submittedAt: registrations.submittedAt, reservedUntil: familySittings.reservedUntil })
+        .from(registrations)
+        .innerJoin(familySittings, sittingOfRegistration)
+        .where(and(eq(registrations.eventId, eventId), clearedReservationWhere(span)))
+        .orderBy(asc(familySittings.reservedUntil), asc(registrations.id))) {
+        if (!row.reservedUntil || !wouldMove(row.reservedUntil, row.submittedAt, holdCap)) continue;
+        await record({ kind: "familyReservation", id: row.id, participantId: row.participantId, deadline: row.reservedUntil });
+      }
+
+      for (const row of await tx
+        .select({ id: eventInvitations.id, expiresAt: eventInvitations.expiresAt, lastSentAt: eventInvitations.lastSentAt })
+        .from(eventInvitations)
+        .where(and(eq(eventInvitations.eventId, eventId), lapsedInvitationWhere(span)))
+        .orderBy(asc(eventInvitations.expiresAt), asc(eventInvitations.id))) {
+        if (!wouldMove(row.expiresAt, row.lastSentAt, invitationCap)) continue;
+        await record({ kind: "invitation", id: row.id, participantId: null, deadline: row.expiresAt });
+      }
+    };
+
     // First what never lapsed, or changes no count: moving it later takes no place from anybody.
     for (const claim of claims.filter((item) => !revives(item))) {
       if (await write(claim, claim.to)) await moved(claim);
@@ -812,6 +996,8 @@ async function moveOneEvent<T extends Record<string, unknown>>(
       }
       await putBack(claim);
     }
+
+    await recordWhatTheAllocatorLapsed();
     return finish();
   });
 }

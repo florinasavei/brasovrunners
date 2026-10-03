@@ -40,7 +40,7 @@ export async function countNotRevivedWaiting<T extends Record<string, unknown>>(
     .reduce<UnreachableWindow | null>((latest, window) => (!latest || (window.endedAt as Date) > (latest.endedAt as Date) ? window : latest), null);
   if (!newest || newest.notRevived.length === 0) return 0;
   const ahead = and(eq(events.eventStatus, "SCHEDULED"), gt(events.startsAt, now));
-  const registrationIds = newest.notRevived.filter((claim) => claim.kind === "offer" || claim.kind === "familyReservation").map((claim) => claim.id);
+  const registrationIds = [...new Set(newest.notRevived.filter((claim) => claim.kind !== "invitation" && claim.kind !== "placeHold").map((claim) => claim.id))];
   const invitationIds = newest.notRevived.filter((claim) => claim.kind === "invitation").map((claim) => claim.id);
   let waiting = 0;
   if (registrationIds.length > 0) {

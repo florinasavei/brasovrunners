@@ -618,7 +618,12 @@ loc…» (`outageGraceMaxHours`, 48 hours by default; 0 switches the moving off 
 recorded and announced) and by the event's close and start as the allocator caps it; a deadline that
 passed before the window never moves. A claim whose deadline passed while the door was shut is revived
 only while its counted place is still free: otherwise it lapses as it would have and the closed email
-names the person, the event and the backoffice page. The job seats nobody beyond the advertised places
+names the person, the event and the backoffice page. So is — the commoner case — a claim the platform
+had already lapsed inside the window before the run saw it: every transaction that gives a place first
+lapses what is past its deadline, so an offer or a declaration hold already `EXPIRED`, a family's
+reservation already cleared, an invitation already stamped expired or an address link already ended is
+read, left exactly as it is (never revived: the person's state and emails have moved on), audited as
+not revived and named. The job seats nobody beyond the advertised places
 — a supplementary place is an Administrator's confirmed press, «Trimite-i oferta» or «Dă-i un loc
 acum». Each move is in the registration's history; the window, what it gave back and its counts are
 the table `unreachable_windows`.

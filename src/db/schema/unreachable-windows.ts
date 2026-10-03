@@ -16,8 +16,15 @@ import { bigint, check, index, integer, jsonb, pgTable, text, timestamp, uniqueI
 export const UNREACHABLE_SOURCES = ["dns", "pings"] as const;
 export type UnreachableSource = (typeof UNREACHABLE_SOURCES)[number];
 
-/** A claim the outage grace did not revive because its counted place was no longer free (§NNN). */
-export type NotRevivedClaim = { kind: "offer" | "familyReservation" | "invitation" | "placeHold"; id: string; eventId: string };
+/**
+ * A claim the outage grace did not revive (§NNN): its counted place was no longer free — or the
+ * allocator had already lapsed it before the run (a declaration hold, an address link among them).
+ */
+export type NotRevivedClaim = {
+  kind: "offer" | "familyReservation" | "invitation" | "placeHold" | "declarationHold" | "emailLink";
+  id: string;
+  eventId: string;
+};
 
 export const unreachableWindows = pgTable(
   "unreachable_windows",
@@ -59,8 +66,10 @@ export const unreachableWindows = pgTable(
     movedKeys: jsonb("moved_keys").notNull().$type<string[]>().default([]),
     /**
      * How many claims it did not revive: an offer, a family's reservation or held place, or an
-     * invitation that lapsed while the door was shut and whose counted place was given meanwhile. The
-     * job seats nobody (§NNN): they lapse as they would have, and an Administrator decides.
+     * invitation that lapsed while the door was shut and whose counted place was given meanwhile — and
+     * every claim the allocator had already lapsed inside the window before the run saw it (an offer, a
+     * declaration hold, a family's reservation, an address link, an invitation), read and left as it is.
+     * The job seats nobody (§NNN): they lapse as they would have, and an Administrator decides.
      */
     claimsNotRevived: integer("claims_not_revived").notNull().default(0),
     /** Those claims, by kind, id and event — ids only: the email names them at its send, «Sarcini» reads whether they still wait. */

@@ -774,7 +774,7 @@ async function renderRow(
     for (const claim of readNotRevivedRefs(row.payloadJson)) {
       const event = eventNotificationDetailsIn(await eventRows(db, claim.eventId), locale)?.title ?? "";
       const list = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/admin/registrations", query: { eventId: claim.eventId } } })}`;
-      if (claim.kind === "offer" || claim.kind === "familyReservation") {
+      if (claim.kind === "offer" || claim.kind === "familyReservation" || claim.kind === "declarationHold" || claim.kind === "emailLink") {
         const [person] = await db.select({ name: registrations.registeredName }).from(registrations).where(eq(registrations.id, claim.id)).limit(1);
         if (!person) continue;
         const url = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: claim.id } } })}`;

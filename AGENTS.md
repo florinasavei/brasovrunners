@@ -1340,7 +1340,10 @@ Rules:
   waits. A claim whose deadline passed while the door was shut is revived only while its counted place
   is still free, counted again under the lock (`occupied ≤ capacity`): otherwise its deadline is put
   back, it lapses as it would have, it is audited (`registration.not_revived_for_outage`,
-  `event.invitation_not_revived_for_outage`) and named to the Administrators. The job never marks a
+  `event.invitation_not_revived_for_outage`) and named to the Administrators — and so is a claim the
+  allocator had already lapsed inside the window before the run (an offer or a declaration hold made
+  `EXPIRED`, a family's reservation cleared, an invitation stamped expired, an address link ended),
+  read under the same lock and left as it is (`lapsedBy: "allocator"`), never revived. The job never marks a
   row outside the places and never raises a capacity — a supplementary place needs an Administrator's
   confirmed press (§642), a row that consumes no place an Administrator's verb under the event's
   own switch (§643, §648) — so the Administrator presses «Trimite-i oferta» or «Dă-i un loc acum», if

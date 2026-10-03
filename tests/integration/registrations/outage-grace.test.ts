@@ -21,7 +21,8 @@ import { computeOccupied } from "@/modules/registrations/domain/capacity";
 import { applyOutageGrace, type OutageGraceDeps } from "@/modules/registrations/outage-grace";
 import type { NameProbeStatus } from "@/modules/resilience/domain/name-probe";
 import { runRegistrationMaintenance } from "@/modules/registrations/maintenance";
-import { countOccupied } from "@/modules/registrations/repository";
+import { countOccupied, expireStaleHolds, expireStalePendingEmailConfirmations, lockEventForCapacity } from "@/modules/registrations/repository";
+import { countNotRevivedWaiting, readUnreachableWindows } from "@/modules/jobs/unreachable-windows";
 import { nextMaintenanceWork } from "@/modules/jobs/next-work";
 import { type EventForRegistration, submitRegistration } from "@/modules/registrations/service";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -787,5 +788,152 @@ describe("§NNN a window seen late moves only what was running inside it, and is
     await expect(db.insert(unreachableWindows).values(row)).rejects.toThrow();
     expect(await db.insert(unreachableWindows).values(row).onConflictDoNothing().returning()).toHaveLength(0);
     expect(await windows()).toHaveLength(1);
+  });
+});
+
+describe("§NNN a claim the allocator already lapsed inside the window: recorded as not revived, never revived", () => {
+  // Inside the pings window (09:15–16:00): a newcomer's transaction at 15:30, while the name answered a visitor, lapses what was past its deadline first.
+  const NEWCOMER = new Date("2026-10-03T15:30:00.000Z");
+
+  /** What every capacity-changing transaction does first, under the event lock (`placeForNewcomer` → `expireStaleHolds`). */
+  async function allocatorLapsesAt(event: EventForRegistration, at: Date, wanting = 0) {
+    await db.transaction(async (tx) => {
+      const locked = await lockEventForCapacity(tx, event.id);
+      await expireStaleHolds(tx, locked, at, { wanting });
+    });
+  }
+
+  const notRevivedAudit = (action: "registration.not_revived_for_outage" | "event.invitation_not_revived_for_outage") =>
+    db.select().from(auditLogs).where(eq(auditLogs.action, action));
+
+  it("an offer lapsed by a newcomer's registration: still EXPIRED after the run, audited, named in the closed email, counted on the window and on «Sarcini»", async () => {
+    const event = await createEvent({ capacity: 1 });
+    const offered = await register(event, { status: "WAITLIST_OFFERED", holdExpiresAt: new Date("2026-10-03T10:00:00.000Z"), waitlistedAt: ANCHOR, offerCreatedAt: ANCHOR });
+    await allocatorLapsesAt(event, NEWCOMER);
+    expect((await rowOf(offered)).status).toBe("EXPIRED");
+    await register(event, { status: "CONFIRMED", confirmedAt: NEWCOMER });
+
+    const result = await runRegistrationMaintenance(db, NOW, deps("resolves"));
+
+    const row = await rowOf(offered);
+    expect(row.status).toBe("EXPIRED");
+    expect(row.expiryReason).toBe("WAITLIST_OFFER_LAPSED");
+    expect(row.expiredAt).toEqual(NEWCOMER);
+    expect(row.holdExpiresAt).toEqual(new Date("2026-10-03T10:00:00.000Z"));
+    expect(row.outsideCapacity).toBe(false);
+    expect((await db.select().from(events).where(eq(events.id, event.id)))[0].capacity).toBe(1);
+    expect(computeOccupied(await countOccupied(db, event.id, NOW))).toBe(1);
+
+    const [window] = await windows();
+    const [audit] = await notRevivedAudit("registration.not_revived_for_outage");
+    expect(audit.entityId).toBe(offered);
+    expect(audit.actorStaffUserId).toBeNull();
+    expect(audit.metadataJson).toEqual({ kind: "offer", windowId: window.id, deadline: "2026-10-03T10:00:00.000Z", lapsedBy: "allocator" });
+    expect(window.notRevived).toEqual([{ kind: "offer", id: offered, eventId: event.id }]);
+    expect(window.claimsNotRevived).toBe(1);
+    expect(result.outageGrace.notRevived).toBe(1);
+    const [closed] = await outbox("UNREACHABLE_WINDOW_CLOSED");
+    expect(closed.payloadJson).toMatchObject({ notRevived: 1, claims: [{ kind: "offer", id: offered, eventId: event.id }] });
+    expect(await countNotRevivedWaiting(db, await readUnreachableWindows(db), NOW)).toBe(1);
+
+    // A second run records nothing twice.
+    await runRegistrationMaintenance(db, new Date(NOW.getTime() + 15 * MINUTE), deps("resolves", async () => byJob([ANCHOR, NOW])));
+    expect(await notRevivedAudit("registration.not_revived_for_outage")).toHaveLength(1);
+    expect((await windows())[0].claimsNotRevived).toBe(1);
+  });
+
+  it("a declaration hold released for somebody who wanted the place: still EXPIRED, recorded as a declaration hold", async () => {
+    const event = await createEvent({ capacity: 1 });
+    const hold = await register(event, { status: "PENDING_DECLARATION", holdExpiresAt: new Date("2026-10-03T11:00:00.000Z") });
+    await allocatorLapsesAt(event, NEWCOMER, 1);
+    expect((await rowOf(hold)).expiryReason).toBe("DECLARATION_HOLD_LAPSED");
+    await register(event, { status: "CONFIRMED", confirmedAt: NEWCOMER });
+
+    await runRegistrationMaintenance(db, NOW, deps("resolves"));
+
+    const row = await rowOf(hold);
+    expect(row.status).toBe("EXPIRED");
+    expect(row.holdExpiresAt).toEqual(new Date("2026-10-03T11:00:00.000Z"));
+    const [window] = await windows();
+    expect(window.notRevived).toEqual([{ kind: "declarationHold", id: hold, eventId: event.id }]);
+    const [audit] = await notRevivedAudit("registration.not_revived_for_outage");
+    expect(audit.metadataJson).toEqual({ kind: "declarationHold", windowId: window.id, deadline: "2026-10-03T11:00:00.000Z", lapsedBy: "allocator" });
+    expect(await db.select().from(auditLogs).where(and(eq(auditLogs.action, "registration.deadline_moved_for_outage"), eq(auditLogs.entityId, hold)))).toHaveLength(0);
+  });
+
+  it("an invitation stamped expired: its deadline and its stamp as they were, audited on the event, named", async () => {
+    const event = await createEvent({ capacity: 1 });
+    const invitation = await invite(event, new Date("2026-10-03T10:30:00.000Z"));
+    await allocatorLapsesAt(event, NEWCOMER);
+    await register(event, { status: "CONFIRMED", confirmedAt: NEWCOMER });
+
+    await runRegistrationMaintenance(db, NOW, deps("resolves"));
+
+    const [later] = await db.select().from(eventInvitations).where(eq(eventInvitations.id, invitation.id));
+    expect(later.expiresAt).toEqual(new Date("2026-10-03T10:30:00.000Z"));
+    expect(later.expiredAt).toEqual(NEWCOMER);
+    const [window] = await windows();
+    const [audit] = await notRevivedAudit("event.invitation_not_revived_for_outage");
+    expect(audit.entityId).toBe(event.id);
+    expect(audit.metadataJson).toEqual({ invitationId: invitation.id, windowId: window.id, deadline: "2026-10-03T10:30:00.000Z", lapsedBy: "allocator" });
+    expect(window.notRevived).toEqual([{ kind: "invitation", id: invitation.id, eventId: event.id }]);
+    expect(computeOccupied(await countOccupied(db, event.id, NOW))).toBe(1);
+  });
+
+  it("a family's reservation cleared to null: left cleared, recorded from its sitting's deadline", async () => {
+    const event = await createEvent({ capacity: 1 });
+    const reservedUntil = new Date("2026-10-03T10:00:00.000Z");
+    const reservation = await register(event, { status: "PENDING_EMAIL_CONFIRMATION", holdExpiresAt: reservedUntil, emailLinkExpiresAt: new Date(NOW.getTime() + DAY) });
+    const own = await rowOf(reservation);
+    await db.insert(familySittings).values({
+      eventId: event.id,
+      participantId: own.participantId,
+      registrationId: reservation,
+      registrationIds: [reservation],
+      locale: "ro",
+      heldUntil: ANCHOR,
+      expiresAt: new Date(NOW.getTime() + DAY),
+      reservedUntil,
+      createdAt: ANCHOR,
+    });
+    await allocatorLapsesAt(event, NEWCOMER);
+    expect((await rowOf(reservation)).holdExpiresAt).toBeNull();
+    await register(event, { status: "CONFIRMED", confirmedAt: NEWCOMER });
+
+    await runRegistrationMaintenance(db, NOW, deps("resolves"));
+
+    const row = await rowOf(reservation);
+    expect(row.status).toBe("PENDING_EMAIL_CONFIRMATION");
+    expect(row.holdExpiresAt).toBeNull();
+    const [window] = await windows();
+    expect(window.notRevived).toEqual([{ kind: "familyReservation", id: reservation, eventId: event.id }]);
+    const [audit] = await notRevivedAudit("registration.not_revived_for_outage");
+    expect(audit.metadataJson).toEqual({ kind: "familyReservation", windowId: window.id, deadline: reservedUntil.toISOString(), lapsedBy: "allocator" });
+    expect(computeOccupied(await countOccupied(db, event.id, NOW))).toBe(1);
+  });
+
+  it("an address link the sweep ended inside the window: recorded, left EXPIRED", async () => {
+    const event = await createEvent();
+    const link = await register(event, { status: "PENDING_EMAIL_CONFIRMATION", emailLinkExpiresAt: new Date("2026-10-03T11:00:00.000Z") });
+    await expireStalePendingEmailConfirmations(db, NEWCOMER, DEFAULT_DEADLINES);
+    expect((await rowOf(link)).status).toBe("EXPIRED");
+
+    await runRegistrationMaintenance(db, NOW, deps("resolves"));
+
+    expect((await rowOf(link)).status).toBe("EXPIRED");
+    expect((await rowOf(link)).emailLinkExpiresAt).toEqual(new Date("2026-10-03T11:00:00.000Z"));
+    const [window] = await windows();
+    expect(window.notRevived).toEqual([{ kind: "emailLink", id: link, eventId: event.id }]);
+  });
+
+  it("never records what lapsed before the window, nor a claim the move would not have revived", async () => {
+    const event = await createEvent({ capacity: 1 });
+    // Lapsed before the window began: not the outage's.
+    const before = await register(event, { status: "WAITLIST_OFFERED", holdExpiresAt: new Date("2026-10-03T08:30:00.000Z"), waitlistedAt: ANCHOR, offerCreatedAt: ANCHOR });
+    await allocatorLapsesAt(event, new Date("2026-10-03T08:45:00.000Z"));
+    expect((await rowOf(before)).status).toBe("EXPIRED");
+    await runRegistrationMaintenance(db, NOW, deps("resolves"));
+    expect((await windows())[0].notRevived).toEqual([]);
+    expect(await notRevivedAudit("registration.not_revived_for_outage")).toHaveLength(0);
   });
 });

@@ -758,7 +758,7 @@
           "address_vouched_by_staff": "Address vouched for by the team; place given ahead of the waiting list (“Give them a place now”)",
           "outside_capacity_changed": "Put on the special guests list, or taken off it",
           "deadline_moved_for_outage": "Deadline moved: the site could not be reached, the clock stood still",
-          "not_revived_for_outage": "Not revived after the outage: the deadline had passed while the site could not be reached, and the place had been given meanwhile",
+          "not_revived_for_outage": "Not revived after the outage: the deadline had passed while the site could not be reached, and the place had been given meanwhile or the claim had already lapsed",
           "answer_corrected": "Answer corrected: {field}",
           "answers_viewed": "Answers opened, with the phone and the emergency contact"
         },
@@ -3286,11 +3286,11 @@
           "done": "No outage needs a look: the newest one, if any, left nobody without the place they had.",
           "open": "The site's name has not resolved since {windowFrom}. On every run the running deadlines move by the time elapsed, so nothing lapses until it is back.",
           "stuck": "The outage from {windowFrom} to {windowUntil} is over, but its deadlines could not be moved yet: the scheduled job keeps trying; its last error is on /devs.",
-          "notRevived": "The outage from {windowFrom} to {windowUntil} left claims lapsed whose place had been given meanwhile; still waiting for a decision: {windowNotRevived}.",
+          "notRevived": "The outage from {windowFrom} to {windowUntil} left claims lapsed that were not revived; still waiting for a decision: {windowNotRevived}.",
           "how": [
             "Check the domain at the registrar: the account, the contact verification emails, the renewal payment.",
             "While the name is gone, nothing lapses. When it is back, the scheduled jobs move the deadlines by themselves and send «The deadlines' clock stood still».",
-            "The email names each person whose place had been given meanwhile: nobody is seated beyond the advertised places by itself; an administrator decides.",
+            "The email names each person whose claim was not revived: nobody is seated beyond the advertised places by itself; an administrator decides.",
             "With one confirmed extra place: «Send them the offer» to somebody on the waiting list, «Give them a place now» to an unconfirmed address; an invitation can be sent again.",
             "The row stays red while one of them is still waiting and the event has not started."
           ]

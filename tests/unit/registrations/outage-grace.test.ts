@@ -397,6 +397,14 @@ describe("§NNN the Administrators' two emails", () => {
     // The payload carries ids only; anything unreadable is left out.
     expect(readNotRevivedRefs({ claims: [{ kind: "offer", id: "r", eventId: "e" }, { kind: "seated", id: "x", eventId: "e" }, "junk"] })).toEqual([{ kind: "offer", id: "r", eventId: "e" }]);
     expect(readNotRevivedRefs(null)).toEqual([]);
+    // What the allocator had already lapsed (§NNN): a declaration hold and an address link are named too.
+    expect(readNotRevivedRefs({ claims: [{ kind: "declarationHold", id: "d", eventId: "e" }, { kind: "emailLink", id: "l", eventId: "e" }] }).map((ref) => ref.kind)).toEqual(["declarationHold", "emailLink"]);
+    const lapsed = { ...facts(), claims: [
+      { kind: "declarationHold" as const, name: "Ion Pop", event: "Crosul", url: "https://example.test/ro/admin/registrations/d" },
+      { kind: "emailLink" as const, name: "Ion Pop", event: "Crosul", url: "https://example.test/ro/admin/registrations/l" },
+    ] };
+    expect(notRevivedLinks("ro", lapsed).map((link) => link.label)).toEqual(["Ion Pop — Crosul (loc ținut pentru declarație)", "Ion Pop — Crosul (link de confirmare a adresei)"]);
+    expect(notRevivedLinks("en", lapsed).map((link) => link.label)).toEqual(["Ion Pop — Crosul (place held for the declaration)", "Ion Pop — Crosul (address confirmation link)"]);
   });
 
   it("reads a payload it cannot read as empty, never throwing", () => {

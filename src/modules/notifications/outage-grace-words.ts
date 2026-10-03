@@ -16,8 +16,8 @@ import { hoursPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-
  * never stores a date, a count or a name.
  */
 export type NotRevivedLine = { kind: NotRevivedKind; name: string | null; event: string; url: string };
-export type NotRevivedKind = "offer" | "familyReservation" | "invitation" | "placeHold";
-const NOT_REVIVED_KINDS: readonly NotRevivedKind[] = ["offer", "familyReservation", "invitation", "placeHold"];
+export type NotRevivedKind = "offer" | "familyReservation" | "invitation" | "placeHold" | "declarationHold" | "emailLink";
+const NOT_REVIVED_KINDS: readonly NotRevivedKind[] = ["offer", "familyReservation", "invitation", "placeHold", "declarationHold", "emailLink"];
 
 export type UnreachableWindowFacts = {
   startedAt: string;
@@ -51,8 +51,22 @@ const NOT_REVIVED: Record<Lang, Forms> = {
 
 /** What each claim was, in the link's label. */
 const KIND_WORDS: Record<Lang, Record<NotRevivedKind, string>> = {
-  ro: { offer: "ofertă", familyReservation: "rezervare de familie", invitation: "invitație", placeHold: "loc ținut pentru un formular de familie" },
-  en: { offer: "offer", familyReservation: "family reservation", invitation: "invitation", placeHold: "place held for a family form" },
+  ro: {
+    offer: "ofertă",
+    familyReservation: "rezervare de familie",
+    invitation: "invitație",
+    placeHold: "loc ținut pentru un formular de familie",
+    declarationHold: "loc ținut pentru declarație",
+    emailLink: "link de confirmare a adresei",
+  },
+  en: {
+    offer: "offer",
+    familyReservation: "family reservation",
+    invitation: "invitation",
+    placeHold: "place held for a family form",
+    declarationHold: "place held for the declaration",
+    emailLink: "address confirmation link",
+  },
 };
 
 /** One claim's link label: who (when the claim has a person), the event, and what it was. */
@@ -148,7 +162,7 @@ export function windowClosedBody(locale: Lang, facts?: UnreachableWindowFacts): 
         : "The participants' deadlines that were running then moved later by the time above, at most what «Deadlines» says.",
       ...(left
         ? [
-            "The claims listed above had lapsed while the site could not be reached and their place had been given meanwhile: they were not revived, and lapsed as they would have.",
+            "The claims listed above lapsed while the site could not be reached, and their place was given meanwhile or they had already been ended: they were not revived.",
             "The platform seats nobody beyond the advertised places. An administrator may, with one confirmed extra place: «Send them the offer» (waiting list) or «Give them a place now» (unconfirmed address).",
             "A lapsed offer is back on the waiting list once the person registers again with the same address; an invitation can be sent again.",
           ]
@@ -172,7 +186,7 @@ export function windowClosedBody(locale: Lang, facts?: UnreachableWindowFacts): 
       : "Termenele participanților care curgeau atunci s-au mutat mai târziu cu timpul de mai sus, cel mult cât spune «Termene».",
     ...(left
       ? [
-          "Cererile de mai sus expiraseră cât site-ul nu putea fi accesat, iar locul lor fusese dat între timp: nu au fost reluate și au expirat cum ar fi expirat oricum.",
+          "Cererile de mai sus expiraseră cât site-ul nu putea fi accesat, iar locul lor fusese dat între timp sau fuseseră deja încheiate: nu au fost reluate.",
           "Platforma nu așază pe nimeni peste locurile anunțate. Un administrator poate, cu un loc suplimentar confirmat: «Trimite-i oferta» (lista de așteptare) sau «Dă-i un loc acum» (adresă neconfirmată).",
           "O ofertă expirată revine pe lista de așteptare când persoana se înscrie din nou cu aceeași adresă; o invitație se poate trimite din nou.",
         ]
