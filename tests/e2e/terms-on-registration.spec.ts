@@ -113,17 +113,17 @@ test.describe("§425 the accepted terms on the registration's page and in the ex
       const [header, ...lines] = (await response.text()).split("\r\n");
       // The terms' two columns, then the declaration's two (§499), then the family column (§543),
       // then the participant's reason for cancelling (§558), then the offers and benefits (§562), then
-      // «Special guest» (§643, named by §647, renamed since), then the list's «Termen» (§NNN), the last.
-      expect(header.split(",").slice(-9, -5)).toEqual(["Terms version", "Terms accepted", "Declaration version", "Declaration signed"]);
-      expect(header.split(",").at(-5)).toBe("family");
-      expect(header.split(",").at(-4)).toBe("Cancellation reason");
-      expect(header.split(",").at(-3)).toBe("Offers and benefits");
-      expect(header.split(",").at(-2)).toBe("Special guest");
-      expect(header.split(",").at(-1)).toBe("Deadline");
+      // «Special guest» (§643, named by §647, renamed since), then the list's «Până când» (§NNN): the moment and what for, the last two.
+      expect(header.split(",").slice(-10, -6)).toEqual(["Terms version", "Terms accepted", "Declaration version", "Declaration signed"]);
+      expect(header.split(",").at(-6)).toBe("family");
+      expect(header.split(",").at(-5)).toBe("Cancellation reason");
+      expect(header.split(",").at(-4)).toBe("Offers and benefits");
+      expect(header.split(",").at(-3)).toBe("Special guest");
+      expect(header.split(",").slice(-2)).toEqual(["Until when", "Waiting on"]);
       const publicLine = lines.find((line) => line.includes("Termeni public"));
       const staffLine = lines.find((line) => line.includes("Termeni staff"));
-      expect(publicLine?.split(",").slice(-9, -7)).toEqual(["1", ACCEPTED_AT]);
-      expect(staffLine?.split(",").slice(-9, -7)).toEqual(["", ""]);
+      expect(publicLine?.split(",").slice(-10, -8)).toEqual(["1", ACCEPTED_AT]);
+      expect(staffLine?.split(",").slice(-10, -8)).toEqual(["", ""]);
     } finally {
       await cleanup(seeded);
     }

@@ -111,10 +111,15 @@ export type RegistrationCsvRow = {
    */
   outsideCapacity?: boolean;
   /**
-   * «Termen» (§NNN): the moment the row waits on (`rowDeadlineOf`) — the declaration's, the offer's, a
+   * «Până când» (§NNN): the moment the row waits on (`rowDeadlineOf`) — the declaration's, the offer's, a
    * family's reservation or the email's link (ISO 8601) — empty on a row that waits on none.
    */
   deadline?: string;
+  /**
+   * What that moment is for: the kind, a stable token a script can match — `hold`, `kept`, `offer`,
+   * `offerLapsed`, `reserved`, `link`, `linkLapsed` (`RowDeadlineKind`) — empty with the moment.
+   */
+  deadlineFor?: string;
 };
 
 const HEADER = [
@@ -157,8 +162,12 @@ const HEADER = [
   "Offers and benefits",
   // Last (§643), for the same reason: a special guest (§649's name; §647's "Hidden list"), "Yes" or empty.
   "Special guest",
-  // Last (§NNN), for the same reason: the list's «Termen», the moment the row waits on, or empty.
-  "Deadline",
+  /*
+    Last (§NNN), for the same reason: the list's «Până când» — the moment the row waits on, then what it
+    is for, as the kind's token. The spreadsheet puts the two beside «Status»; it is matched by header.
+  */
+  "Until when",
+  "Waiting on",
 ];
 
 export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): string {
@@ -198,6 +207,7 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         row.promoConsentAt ?? "",
         row.outsideCapacity ? "Yes" : "",
         row.deadline ?? "",
+        row.deadlineFor ?? "",
       ]
         .map(csvCell)
         .join(","),

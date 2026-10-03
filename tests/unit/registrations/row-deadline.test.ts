@@ -3,14 +3,20 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { buildRegistrationsCsv } from "@/modules/registrations/csv";
-import { deadlineHoldsAPlace, deadlinePassed, rowDeadlineOf, type RowDeadlineInput } from "@/modules/registrations/domain/row-deadline";
+import {
+  deadlineHoldsAPlace,
+  deadlinePassed,
+  ROW_DEADLINE_EXPORT_WORDS,
+  rowDeadlineOf,
+  type RowDeadlineInput,
+} from "@/modules/registrations/domain/row-deadline";
 import { REGISTRATION_SHEET_HEADERS } from "@/modules/registrations/workbook";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
  * §NNN — «Vreau să văd exact pe fiecare candidat până când poate semna declarația» (the owner,
- * 2026-10-03): the registrations list's «Termen» column says, on every live row, the moment it waits on
+ * 2026-10-03): the registrations list's «Până când» column says, on every live row, the moment it waits on
  * — the declaration's, the offer's, a family's reservation or the email's link — read from the row by
  * one helper that the column, its sort, the export and the registration's timeline share.
  */
@@ -42,6 +48,8 @@ async function cell(row: RowDeadlineInput): Promise<string> {
   return renderToStaticMarkup(await RowDeadlineCell({ deadline: rowDeadlineOf(row, NOW) }));
 }
 
+// Inside the sentence with the hour's «la» (§452); at its start, capitalised.
+const inline = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
 const day = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });
 
 beforeEach(() => {
@@ -59,6 +67,13 @@ describe("§NNN rowDeadlineOf: the one moment a live row waits on", () => {
   it("a waiting-list offer, open and lapsed", () => {
     expect(rowDeadlineOf(input({ status: "WAITLIST_OFFERED", holdExpiresAt: AHEAD }), NOW)).toEqual({ kind: "offer", at: AHEAD });
     expect(rowDeadlineOf(input({ status: "WAITLIST_OFFERED", holdExpiresAt: PAST }), NOW)).toEqual({ kind: "offerLapsed", at: PAST });
+  });
+
+  it("an offer whose first email is still queued has not lapsed, whatever its stored deadline says (§520)", () => {
+    expect(rowDeadlineOf(input({ status: "WAITLIST_OFFERED", holdExpiresAt: PAST, offerEmailQueued: true }), NOW)).toEqual({ kind: "offer", at: PAST });
+    expect(deadlineHoldsAPlace(rowDeadlineOf(input({ status: "WAITLIST_OFFERED", holdExpiresAt: PAST, offerEmailQueued: true }), NOW))).toBe(true);
+    // The queue says nothing of any other state.
+    expect(rowDeadlineOf(input({ holdExpiresAt: PAST, offerEmailQueued: true }), NOW)?.kind).toBe("kept");
   });
 
   it("a row waiting for its address: a family's reservation while it holds (§543), else the email's link", () => {
@@ -81,28 +96,33 @@ describe("§NNN rowDeadlineOf: the one moment a live row waits on", () => {
     expect(deadlineHoldsAPlace(rowDeadlineOf(input({ holdExpiresAt: PAST }), NOW))).toBe(true);
     expect(deadlineHoldsAPlace(rowDeadlineOf(input({ status: "PENDING_EMAIL_CONFIRMATION", emailLinkExpiresAt: LINK }), NOW))).toBe(false);
     expect(deadlineHoldsAPlace(null)).toBe(false);
+    // A lapsed offer holds nothing any more (`countOccupied`): the timeline does not say «Ține locul».
+    expect(deadlineHoldsAPlace(rowDeadlineOf(input({ status: "WAITLIST_OFFERED", holdExpiresAt: PAST }), NOW))).toBe(false);
     expect(deadlinePassed(rowDeadlineOf(input({ holdExpiresAt: PAST }), NOW))).toBe(true);
     expect(deadlinePassed(rowDeadlineOf(input({ holdExpiresAt: AHEAD }), NOW))).toBe(false);
   });
 });
 
-describe("§NNN the «Termen» cell", () => {
-  it("the day and the time, then what it is the deadline of", async () => {
-    expect(text(await cell(input({ holdExpiresAt: AHEAD })))).toBe(`${day(AHEAD)}\nare de semnat declarația`);
-    expect(text(await cell(input({ status: "WAITLIST_OFFERED", holdExpiresAt: AHEAD })))).toBe(`${day(AHEAD)}\nloc oferit: are de semnat declarația`);
+describe("§NNN the «Până când» cell", () => {
+  it("one sentence with the exact moment: until when the person can sign, accept or confirm", async () => {
+    expect(text(await cell(input({ holdExpiresAt: AHEAD })))).toBe(`Poate semna până ${inline(AHEAD)}`);
+    expect(text(await cell(input({ status: "WAITLIST_OFFERED", holdExpiresAt: AHEAD })))).toBe(`Poate accepta până ${inline(AHEAD)}`);
     expect(text(await cell(input({ status: "PENDING_EMAIL_CONFIRMATION", holdExpiresAt: AHEAD, emailLinkExpiresAt: LINK })))).toBe(
-      `${day(AHEAD)}\nloc rezervat: are de confirmat adresa`,
+      `Locul e rezervat până ${inline(AHEAD)}`,
     );
-    expect(text(await cell(input({ status: "PENDING_EMAIL_CONFIRMATION", emailLinkExpiresAt: LINK })))).toBe(`${day(LINK)}\nare de confirmat adresa din email`);
+    expect(text(await cell(input({ status: "PENDING_EMAIL_CONFIRMATION", emailLinkExpiresAt: LINK })))).toBe(`Linkul e valabil până ${inline(LINK)}`);
+    // No «până la» before a date with its hour (§452): the hour says its own «la».
+    expect(inline(AHEAD)).toMatch(/, la \d\d:\d\d$/);
   });
 
-  it("a passed deadline keeps its date, with what it means (§160)", async () => {
-    expect(text(await cell(input({ holdExpiresAt: PAST })))).toBe(`${day(PAST)}\ntermen depășit, locul se ține cât nu-l cere nimeni`);
-    expect(text(await cell(input({ status: "WAITLIST_OFFERED", holdExpiresAt: PAST })))).toBe(`${day(PAST)}\noferta a expirat`);
-    expect(text(await cell(input({ status: "PENDING_EMAIL_CONFIRMATION", emailLinkExpiresAt: PAST })))).toBe(`${day(PAST)}\nlinkul a expirat`);
-    // The kept words are the journey's, word for word (§635).
-    expect(ro.Admin.registrations.deadline.kept).toBe(ro.Admin.registrations.journey.heldKept);
-    expect(en.Admin.registrations.deadline.kept).toBe(en.Admin.registrations.journey.heldKept);
+  it("a passed deadline starts with its moment, then what it means (§160)", async () => {
+    expect(text(await cell(input({ holdExpiresAt: PAST })))).toBe(`${day(PAST)} — termenul a trecut, locul e păstrat`);
+    expect(text(await cell(input({ status: "WAITLIST_OFFERED", holdExpiresAt: PAST })))).toBe(`${day(PAST)} — termenul ofertei a trecut`);
+    expect(text(await cell(input({ status: "PENDING_EMAIL_CONFIRMATION", emailLinkExpiresAt: PAST })))).toBe(`${day(PAST)} — linkul a expirat`);
+  });
+
+  it("an offer whose email is still queued reads as open, not lapsed (§520)", async () => {
+    expect(text(await cell(input({ status: "WAITLIST_OFFERED", holdExpiresAt: PAST, offerEmailQueued: true })))).toBe(`Poate accepta până ${inline(PAST)}`);
   });
 
   it("«—» on a row that waits on nothing, and a handle for each kind", async () => {
@@ -112,23 +132,30 @@ describe("§NNN the «Termen» cell", () => {
 
   it("in English", async () => {
     locale = "en";
-    expect(text(await cell(input({ holdExpiresAt: AHEAD })))).toBe(`${day(AHEAD)}\nto sign the declaration`);
-    expect(text(await cell(input({ holdExpiresAt: PAST })))).toBe(`${day(PAST)}\ndeadline passed, the place is kept while nobody asks for it`);
+    expect(text(await cell(input({ holdExpiresAt: AHEAD })))).toBe(`Can sign until ${inline(AHEAD)}`);
+    expect(text(await cell(input({ holdExpiresAt: PAST })))).toBe(`${day(PAST)} — the deadline has passed, the place is kept`);
+    expect(text(await cell(input({ status: "PENDING_EMAIL_CONFIRMATION", emailLinkExpiresAt: LINK })))).toBe(`The link is valid until ${inline(LINK)}`);
   });
 
-  it("every word in both catalogues, each under 200 characters (§511)", () => {
+  it("every word in both catalogues, each under 200 characters (§511); the hint names the timeline", () => {
     const kinds = ["hold", "kept", "offer", "offerLapsed", "reserved", "link", "linkLapsed"];
     for (const catalogue of [ro, en]) {
       const words = catalogue.Admin.registrations;
-      expect(Object.keys(words.deadline).sort()).toEqual([...kinds].sort());
-      for (const value of [words.columnDeadline, words.deadlineColumnHint, ...Object.values(words.deadline)]) {
+      expect(Object.keys(words.untilWhen).sort()).toEqual([...kinds].sort());
+      for (const value of [words.columnUntilWhen, words.untilWhenHint, ...Object.values(words.untilWhen)]) {
         expect(value.length).toBeLessThan(200);
       }
+      for (const value of Object.values(words.untilWhen)) expect(value).toContain("{instant}");
     }
+    expect(ro.Admin.registrations.columnUntilWhen).toBe("Până când");
+    expect(en.Admin.registrations.columnUntilWhen).toBe("Until when");
+    expect(ro.Admin.registrations.untilWhenHint).toContain("cronologia înscrierii");
+    expect(en.Admin.registrations.untilWhenHint).toContain("timeline");
+    expect(Object.keys(ROW_DEADLINE_EXPORT_WORDS).sort()).toEqual([...kinds].sort());
   });
 });
 
-describe("§NNN the export carries the deadline, last", () => {
+describe("§NNN the export carries the moment and what it is for", () => {
   const base = {
     eventTitle: "Test",
     registeredName: "Ana",
@@ -149,14 +176,15 @@ describe("§NNN the export carries the deadline, last", () => {
     emailBounced: false,
   };
 
-  it("the CSV: the moment in ISO 8601, or an empty cell", () => {
-    const [header, held, none] = buildRegistrationsCsv([{ ...base, deadline: AHEAD.toISOString() }, base]).split("\r\n");
-    expect(header.split(",").at(-1)).toBe("Deadline");
-    expect(held.split(",").at(-1)).toBe(AHEAD.toISOString());
-    expect(none.split(",").at(-1)).toBe("");
+  it("the CSV, last: the moment in ISO 8601 and the kind's token, or two empty cells", () => {
+    const [header, held, none] = buildRegistrationsCsv([{ ...base, deadline: AHEAD.toISOString(), deadlineFor: "hold" }, base]).split("\r\n");
+    expect(header.split(",").slice(-2)).toEqual(["Until when", "Waiting on"]);
+    expect(held.split(",").slice(-2)).toEqual([AHEAD.toISOString(), "hold"]);
+    expect(none.split(",").slice(-2)).toEqual(["", ""]);
   });
 
-  it("the spreadsheet: a «Deadline» column, last", () => {
-    expect(REGISTRATION_SHEET_HEADERS.at(-1)).toBe("Deadline");
+  it("the spreadsheet: «Until when» and «Waiting on» right after «Status», as on the list", () => {
+    const status = REGISTRATION_SHEET_HEADERS.indexOf("Status");
+    expect(REGISTRATION_SHEET_HEADERS.slice(status, status + 3)).toEqual(["Status", "Until when", "Waiting on"]);
   });
 });

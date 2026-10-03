@@ -47,7 +47,7 @@ const NOT_A_DATE_AFTER_PE = new Set(["host", "provider", "count", "baseUrl", "em
 const MONTHLY_DAY = "Event.series.monthly";
 
 /** The placeholders a caller fills with a date from the helper; the hour inside one already has its word. */
-const DATE_PLACEHOLDERS = "date|when|day|until|deadline|due|last|first|end|resumesAt|checked|checkedOn|opens";
+const DATE_PLACEHOLDERS = "date|when|day|until|deadline|due|last|first|end|resumesAt|checked|checkedOn|opens|instant";
 
 describe("§452 the hour inside a sentence takes «la» / «at»", () => {
   it("writes the owner's sentence the grammatical way", () => {

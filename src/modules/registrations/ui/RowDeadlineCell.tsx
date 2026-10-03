@@ -4,13 +4,14 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { deadlinePassed, type RowDeadline } from "@/modules/registrations/domain/row-deadline";
 
 /**
- * «Termen» on the registrations list (§NNN): the exact moment one row waits on — until when the person
- * can sign the declaration, or confirm the address — and under it what it is the deadline of. A moment
- * already passed reads quieter, with what it means (§160: a held place is kept while nobody asks for
- * it). «—» on a row that waits on nothing, as the race number's column says it.
+ * «Până când» on the registrations list (§NNN): one sentence with the exact moment the row waits on —
+ * «Poate semna până …», «Poate accepta până …», «Linkul e valabil până …» — or, past it, the moment
+ * first and what it means (§160: a held place is kept while nobody asks for it). A moment already
+ * passed reads quieter. «—» on a row that waits on nothing, as the race number's column says it.
  *
- * Rendered on the server, from `rowDeadlineOf`, in both of `AdminTable`'s layouts: the date stays on
- * one line, the words under it may wrap at 320 px.
+ * The moment is the timeline's (`formatDay`, short, with the time): inside the sentence with the hour's
+ * «la» (§452), at its start capitalised. Rendered on the server, from `rowDeadlineOf`, in both of
+ * `AdminTable`'s layouts; the sentence may wrap at 320 px.
  */
 export default async function RowDeadlineCell({ deadline }: { deadline: RowDeadline | null }) {
   if (!deadline) {
@@ -23,17 +24,16 @@ export default async function RowDeadlineCell({ deadline }: { deadline: RowDeadl
   const t = await getTranslations("Admin");
   const locale = await getLocale();
   const passed = deadlinePassed(deadline);
+  // A passed deadline's sentence starts with the moment; a live one says it after «până».
+  const instant = formatDay(deadline.at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: passed ? "start" : "inline" });
   return (
-    <Box component="span" data-testid="row-deadline" data-deadline-kind={deadline.kind} sx={{ display: "block" }}>
-      <Box
-        component="span"
-        sx={{ display: "block", whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums", fontWeight: passed ? 400 : 600, color: passed ? "text.secondary" : "text.primary" }}
-      >
-        {formatDay(deadline.at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true })}
-      </Box>
-      <Box component="span" sx={{ display: "block", color: "text.secondary", fontSize: "0.8125rem" }}>
-        {t(`registrations.deadline.${deadline.kind}`)}
-      </Box>
+    <Box
+      component="span"
+      data-testid="row-deadline"
+      data-deadline-kind={deadline.kind}
+      sx={{ display: "block", fontVariantNumeric: "tabular-nums", color: passed ? "text.secondary" : "text.primary" }}
+    >
+      {t(`registrations.untilWhen.${deadline.kind}`, { instant })}
     </Box>
   );
 }

@@ -71,7 +71,7 @@ describe("CSV formula neutralization", () => {
 
   it("includes the header row and uses CRLF line endings", () => {
     const csv = buildRegistrationsCsv([]);
-    expect(csv).toBe("Event,Name,First name,Last name,Identity document,Email,Status,Club member (declared),Medically fit (declared),Strava,Instagram,Socials on the public list,Public list & results,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Cancellation reason,Offers and benefits,Special guest,Deadline");
+    expect(csv).toBe("Event,Name,First name,Last name,Identity document,Email,Status,Club member (declared),Medically fit (declared),Strava,Instagram,Socials on the public list,Public list & results,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Cancellation reason,Offers and benefits,Special guest,Until when,Waiting on");
 
     const withRow = buildRegistrationsCsv([
       {
@@ -130,20 +130,20 @@ describe("CSV formula neutralization", () => {
     ]);
     // Race day and the provider's verdict as the last two columns (§83): a time, and Yes or empty.
     expect(member.split("\r\n")[1]).toBe(
-      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,CONFIRMED,Yes,,https://www.strava.com/athletes/12345,ana.pop,,,,,2026-09-04T10:00:00.000Z,,17,2026-10-11T06:40:00.000Z,Yes,,,,,,,,,",
+      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,CONFIRMED,Yes,,https://www.strava.com/athletes/12345,ana.pop,,,,,2026-09-04T10:00:00.000Z,,17,2026-10-11T06:40:00.000Z,Yes,,,,,,,,,,",
     );
 
     // No number yet is an empty cell, never 0 (BR-REQ-038-01).
     const other = buildRegistrationsCsv([row]);
     expect(other.split("\r\n")[1]).toBe(
-      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,CONFIRMED,,,,,,,,,2026-09-04T10:00:00.000Z,,,,,,,,,,,,,",
+      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,CONFIRMED,,,,,,,,,2026-09-04T10:00:00.000Z,,,,,,,,,,,,,,",
     );
     expect(other).not.toContain("No");
 
     // Not confirmed yet: an empty cell, whatever the row holds (§548) — the number comes with the confirmation.
     const pending = buildRegistrationsCsv([{ ...row, status: "PENDING_DECLARATION", bibNumber: 17 }]);
     expect(pending.split("\r\n")[1]).toBe(
-      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,PENDING_DECLARATION,,,,,,,,,2026-09-04T10:00:00.000Z,,,,,,,,,,,,,",
+      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,PENDING_DECLARATION,,,,,,,,,2026-09-04T10:00:00.000Z,,,,,,,,,,,,,,",
     );
   });
 
@@ -214,10 +214,10 @@ describe("CSV formula neutralization", () => {
     const [header, accepted, staff, older] = csv.split("\r\n");
     const columns = header.split(",");
     // §425's two, now followed by the declaration's two (§499), the family column (§543), the cancellation reason (§558) and the offers and benefits (§562).
-    expect(columns.slice(-9, -7)).toEqual(["Terms version", "Terms accepted"]);
-    expect(accepted.split(",").slice(-9, -7)).toEqual(["3", "2026-09-25T10:00:00.000Z"]);
-    expect(staff.split(",").slice(-9, -7)).toEqual(["", ""]);
-    expect(older.split(",").slice(-9, -7)).toEqual(["", ""]);
+    expect(columns.slice(-10, -8)).toEqual(["Terms version", "Terms accepted"]);
+    expect(accepted.split(",").slice(-10, -8)).toEqual(["3", "2026-09-25T10:00:00.000Z"]);
+    expect(staff.split(",").slice(-10, -8)).toEqual(["", ""]);
+    expect(older.split(",").slice(-10, -8)).toEqual(["", ""]);
   });
 
   /**
@@ -252,10 +252,10 @@ describe("CSV formula neutralization", () => {
     ]);
     const [header, signed, unsigned, older] = csv.split("\r\n");
     // Before the family column (§543), the cancellation reason (§558) and the offers and benefits (§562), which is last.
-    expect(header.split(",").slice(-7, -5)).toEqual(["Declaration version", "Declaration signed"]);
-    expect(signed.split(",").slice(-9, -5)).toEqual(["3", "2026-09-25T10:00:00.000Z", "2", "2026-09-26T08:30:00.000Z"]);
-    expect(unsigned.split(",").slice(-7, -5)).toEqual(["", ""]);
-    expect(older.split(",").slice(-7, -5)).toEqual(["", ""]);
+    expect(header.split(",").slice(-8, -6)).toEqual(["Declaration version", "Declaration signed"]);
+    expect(signed.split(",").slice(-10, -6)).toEqual(["3", "2026-09-25T10:00:00.000Z", "2", "2026-09-26T08:30:00.000Z"]);
+    expect(unsigned.split(",").slice(-8, -6)).toEqual(["", ""]);
+    expect(older.split(",").slice(-8, -6)).toEqual(["", ""]);
   });
 
   // §500 — whether the public list prints the socials: right after Instagram, as on the spreadsheet, "Yes" or empty.
@@ -291,7 +291,7 @@ describe("CSV formula neutralization", () => {
     expect(listed.split(",")[at + 1]).toBe("Yes");
     expect(unlisted.split(",")[at + 1]).toBe("");
     // The declaration's pair stays after the terms (§499), then the family column (§543), the cancellation reason (§558) and the offers and benefits, last (§562).
-    expect(header.split(",").slice(-7)).toEqual(["Declaration version", "Declaration signed", "family", "Cancellation reason", "Offers and benefits", "Special guest", "Deadline"]);
+    expect(header.split(",").slice(-8)).toEqual(["Declaration version", "Declaration signed", "family", "Cancellation reason", "Offers and benefits", "Special guest", "Until when", "Waiting on"]);
   });
 
   // §543 — the family marker in the export: the other people on the same address at the event, last, «; »-joined.
@@ -317,8 +317,8 @@ describe("CSV formula neutralization", () => {
     };
     const [header, family, alone] = buildRegistrationsCsv([{ ...base, family: "Mihai Pop; Ioana Pop" }, base]).split("\r\n");
     // Just before the cancellation reason (§558) and the offers and benefits, which came last with §562.
-    expect(header.split(",").at(-5)).toBe("family");
-    expect(family.split(",").at(-5)).toBe("Mihai Pop; Ioana Pop");
-    expect(alone.split(",").at(-5)).toBe("");
+    expect(header.split(",").at(-6)).toBe("family");
+    expect(family.split(",").at(-6)).toBe("Mihai Pop; Ioana Pop");
+    expect(alone.split(",").at(-6)).toBe("");
   });
 });

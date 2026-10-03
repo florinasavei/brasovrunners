@@ -149,7 +149,7 @@ describe("BR-REQ-060-01 the start list as a spreadsheet (§172)", () => {
   /** §425 — the terms accepted on the form (§421), the CSV's two columns, last and in the same order. */
   it("ends with the accepted terms version as a number and its moment as a date", async () => {
     // Followed by the declaration's two since §499, the family column since §543, the cancellation reason since §558 and the offers and benefits since §562.
-    expect(REGISTRATION_SHEET_HEADERS.slice(-9, -7)).toEqual(["Terms version", "Terms accepted"]);
+    expect(REGISTRATION_SHEET_HEADERS.slice(-8, -6)).toEqual(["Terms version", "Terms accepted"]);
     const parts = unzip(
       await buildRegistrationsWorkbook([row({ bibNumber: null, termsVersion: 42, termsAcceptedAt: new Date("2026-09-25T10:00:00.000Z") })], "Test"),
     );
@@ -163,19 +163,19 @@ describe("BR-REQ-060-01 the start list as a spreadsheet (§172)", () => {
   /** §499 — the signed declaration's version as a number and its moment, the CSV's last two columns. */
   it("ends with the signed declaration's version as a number and its moment as a date", async () => {
     // The family column (§543) comes after them, then the cancellation reason (§558) and the offers and benefits, last (§562).
-    expect(REGISTRATION_SHEET_HEADERS.slice(-7)).toEqual(["Declaration version", "Declaration signed", "family", "Cancellation reason", "Offers and benefits", "Special guest", "Deadline"]);
+    expect(REGISTRATION_SHEET_HEADERS.slice(-6)).toEqual(["Declaration version", "Declaration signed", "family", "Cancellation reason", "Offers and benefits", "Special guest"]);
     const parts = unzip(
       await buildRegistrationsWorkbook([row({ bibNumber: null, declarationVersion: 37, declarationSignedAt: new Date("2026-09-26T08:30:00.000Z") })], "Test"),
     );
     // The version's cell, by the column's own letter: a number, with no shared-string marker.
-    const cell = `${columnLetter(REGISTRATION_SHEET_HEADERS.length - 7)}2`;
+    const cell = `${columnLetter(REGISTRATION_SHEET_HEADERS.length - 6)}2`;
     expect(parts.get("xl/worksheets/sheet1.xml") ?? "").toContain(`<c r="${cell}"><v>37</v></c>`);
     // The two stamps side by side read one clock (§439): the same moment is the same cell value, never three hours apart.
     const moment = new Date("2026-09-26T08:30:00.000Z");
     const both = unzip(await buildRegistrationsWorkbook([row({ termsVersion: 1, termsAcceptedAt: moment, declarationVersion: 1, declarationSignedAt: moment })], "Test"));
     const stamp = (index: number) => new RegExp(`<c r="${columnLetter(index)}2"[^>]*><v>([^<]+)</v>`).exec(both.get("xl/worksheets/sheet1.xml") ?? "")?.[1];
-    expect(stamp(REGISTRATION_SHEET_HEADERS.length - 8)).toBeDefined();
-    expect(stamp(REGISTRATION_SHEET_HEADERS.length - 8)).toBe(stamp(REGISTRATION_SHEET_HEADERS.length - 6));
+    expect(stamp(REGISTRATION_SHEET_HEADERS.length - 7)).toBeDefined();
+    expect(stamp(REGISTRATION_SHEET_HEADERS.length - 7)).toBe(stamp(REGISTRATION_SHEET_HEADERS.length - 5));
     // Nothing signed: the cell is not written, never 0.
     const blank = unzip(await buildRegistrationsWorkbook([row({ declarationVersion: null, declarationSignedAt: null })], "Test"));
     expect(blank.get("xl/worksheets/sheet1.xml") ?? "").not.toContain(`<c r="${cell}"><v>`);
