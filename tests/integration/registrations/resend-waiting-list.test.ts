@@ -174,14 +174,14 @@ describe("§641 the resend of a waiting row", () => {
     expect(await db.select().from(emailOutbox)).toHaveLength(1);
   });
 
-  it("§NNN opens with «still on the waiting list», never «we added you», in both halves", async () => {
+  it("§NNN opens by saying it is sent again and «still on the waiting list», never «we added you», in both halves", async () => {
     const mine = await person("WAITLISTED", at(-2));
     await resendRegistrationMessage(db, admin(), mine.id, NOW);
     const [row] = await outboxOf(mine.id);
     expect(row.isManualResend).toBe(true);
     const message = await renderOutboxMessage(row, db, NOW);
-    expect(message.text).toContain("Ești în continuare pe lista de așteptare la ");
-    expect(message.text).toContain("You are still on the waiting list for ");
+    expect(message.text).toContain("Îți retrimitem emailul: ești în continuare pe lista de așteptare la ");
+    expect(message.text).toContain("We are sending this again: you are still on the waiting list for ");
     expect(message.text).not.toContain("te-am adăugat");
     expect(message.text).not.toContain("we added you");
     // The rest of the email is the first send's: the promise and the standing of the moment.

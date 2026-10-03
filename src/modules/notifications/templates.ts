@@ -1403,7 +1403,7 @@ const T = {
       subject: "Ești pe lista de așteptare",
       body: (d: TemplateData) => [
         d.waitlistResent
-          ? `Ești în continuare **pe lista de așteptare** la ${d.eventTitle ?? "eveniment"}. Te vom anunța dacă se eliberează un loc.`
+          ? `Îți retrimitem emailul: ești în continuare **pe lista de așteptare** la ${d.eventTitle ?? "eveniment"}. Te vom anunța dacă se eliberează un loc.`
           : `${d.eventTitle ?? "Evenimentul"} este complet momentan, așa că te-am adăugat **pe lista de așteptare**. Te vom anunța dacă se eliberează un loc.`,
       ],
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
@@ -1627,8 +1627,8 @@ const T = {
           `«${w.tasks}» arată aceleași rânduri până când textele sunt aprobate. Mesajul acesta vine o singură dată pentru fiecare schimbare a șabloanelor, fiecărui Administrator și Superadministrator.`,
         ];
       },
-      // What the press is for, not where it lands (§NNN): the button opens «Versiune nouă», where both happen.
-      action: "Regenerează și aprobă textele",
+      // The screen the button opens and what is done there (§NNN): «Versiune nouă» regenerates; approving is on «Documente legale».
+      action: `${legalTemplatesWords("ro").newVersion}: regenerează textele`,
     },
     registrationOpened: {
       // To an address, not a participant (§146): the greeting names nobody.
@@ -2127,7 +2127,7 @@ const T = {
       subject: "You're on the waiting list",
       body: (d: TemplateData) => [
         d.waitlistResent
-          ? `You are still on **the waiting list** for ${d.eventTitle ?? "the event"}. We'll let you know if a place opens up.`
+          ? `We are sending this again: you are still on **the waiting list** for ${d.eventTitle ?? "the event"}. We'll let you know if a place opens up.`
           : `${d.eventTitle ?? "The event"} is full right now, so we added you to **the waiting list**. We'll let you know if a place opens up.`,
       ],
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
@@ -2280,7 +2280,7 @@ const T = {
           `«${w.tasks}» shows the same rows until the texts are approved. This message comes once for each change of the templates, to every Administrator and Superadministrator.`,
         ];
       },
-      action: "Regenerate and approve the texts",
+      action: `${legalTemplatesWords("en").newVersion}: regenerate the texts`,
     },
     registrationOpened: {
       subject: (d: TemplateData) => `Registration for ${d.eventTitle ?? "the event"} is open`,

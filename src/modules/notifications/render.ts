@@ -745,7 +745,7 @@ async function renderRow(
     payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug: eventDetails.slug } } })}`;
   }
   /*
-    «Locul tău la … a expirat» (§638): the deadline that passed, from the payload `expireStaleHolds`
+    `DECLARATION_HOLD_EXPIRED` (§638): the deadline that passed, from the payload `expireStaleHolds`
     wrote (the row's own column otherwise), each half in its own words (§377: a stated deadline says
     the date); whether the place went to the waiting list, a fact of the release; and what the person
     can do now, read off the event as it stands at the send (`holdLapsedNext` says why not at the
