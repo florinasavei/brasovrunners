@@ -45,7 +45,11 @@ import { countOccupied, emailLinkLapseSql, lockEventForCapacity } from "./reposi
  * window on every real run while it is open — by the time since the run before, so a running deadline
  * never reads as lapsed and never frees its place while the name is gone — and once more when it
  * closes. A step from `since` (the start plus what earlier steps gave) moves every deadline still
- * running at `since`:
+ * running at `since` — and, of a closed window, only what was running inside it: a `pings` window is
+ * written by the first real run after it, which may come hours after the pings came back (answered
+ * from the cache meanwhile), so a deadline written after its end is not moved, and one written inside
+ * it is moved by what was left of it (`movedDeadline`, from each row's own instant: `holdWrittenAt`,
+ * an invitation's `last_sent_at`, a family row's `created_at`, a link's submission):
  *
  * - per event, under its lock (`lockEventForCapacity`, the allocator's serialization point — AGENTS.md
  *   §10.6), one transaction each: a declaration hold, a waiting-list offer, a family's reservation
@@ -98,7 +102,7 @@ export type OutageGraceDeps = {
   /** Whether the site's name resolves; the real lookup by default. */
   probe?: () => Promise<NameProbe>;
   /** The remembered pings since the anchor, by job, or null when the cache cannot say; the cache by default. */
-  readPings?: (anchor: { job: "registration-maintenance"; at: Date }, now: Date) => Promise<Partial<Record<JobName, Date[]>> | null>;
+  readPings?: (anchor: { job: "registration-maintenance"; at: Date }, now: Date, dayCadence: number) => Promise<Partial<Record<JobName, Date[]>> | null>;
   /** Where the probe's answer is kept for `/devs`, which never asks the name itself; the cache by default. */
   recordReading?: (reading: NameReadingSlot) => Promise<void>;
   /** The pinger's day cadence (`PINGER_CADENCE_MINUTES`). */
@@ -190,16 +194,25 @@ export async function applyOutageGrace<T extends Record<string, unknown>>(
     windowsOpened += confirmed.length;
   }
   for (const gap of plan.record) {
-    await db.insert(unreachableWindows).values({
-      source: "pings",
-      startedAt: gap.startedAt,
-      endedAt: gap.endedAt,
-      confirmedAt: now,
-      grantedMs: grantedMsFor(gap, maxMs),
-      createdAt: now,
-      updatedAt: now,
-    });
-    windowsOpened += 1;
+    /*
+      Once, whoever writes it first (§NNN): two runs at the same moment read the same silence before
+      either writes it — nothing above is locked — and `unreachable_windows_pings_once` refuses the
+      second row, so the deadlines move once. The moves themselves serialize on the one row.
+    */
+    const written = await db
+      .insert(unreachableWindows)
+      .values({
+        source: "pings",
+        startedAt: gap.startedAt,
+        endedAt: gap.endedAt,
+        confirmedAt: now,
+        grantedMs: grantedMsFor(gap, maxMs),
+        createdAt: now,
+        updatedAt: now,
+      })
+      .onConflictDoNothing()
+      .returning({ id: unreachableWindows.id });
+    windowsOpened += written.length;
   }
 
   let noticesQueued = 0;
@@ -292,7 +305,7 @@ async function pingSilences<T extends Record<string, unknown>>(
   // No run before this one, or one so old that the health check has paged for a day: nothing to read here.
   if (!last || now.getTime() - last.startedAt.getTime() > lookbackMs(maxMs)) return [];
   const anchor = last.startedAt;
-  const pings = await readPings({ job: "registration-maintenance", at: anchor }, now);
+  const pings = await readPings({ job: "registration-maintenance", at: anchor }, now, dayCadence);
   if (pings === null) return [];
   const runs = await db
     .select({ jobName: jobRuns.jobName, startedAt: jobRuns.startedAt })
@@ -420,12 +433,19 @@ async function moveTheLinks<T extends Record<string, unknown>>(
     // The address links still waiting for a click — a row written before the column (null) by its lapse, materialised by the move.
     const lapse = emailLinkLapseSql(settings.confirmationHours);
     const waiting = await tx
-      .select({ id: registrations.id, participantId: registrations.participantId, written: registrations.emailLinkExpiresAt, lapse })
+      .select({
+        id: registrations.id,
+        participantId: registrations.participantId,
+        written: registrations.emailLinkExpiresAt,
+        submittedAt: registrations.submittedAt,
+        lapse,
+      })
       .from(registrations)
       .where(and(eq(registrations.status, "PENDING_EMAIL_CONFIRMATION"), sql`${lapse} > ${since.toISOString()}::timestamptz`));
     for (const row of waiting) {
       const stored = new Date(row.lapse);
-      const to = movedDeadline({ stored, since, grantedMs: amount, now });
+      // Written at the submission or later (a resend, a restart): the submission is the instant the row can vouch for.
+      const to = movedDeadline({ stored, since, grantedMs: amount, now, writtenAt: row.submittedAt, endedAt: window.endedAt });
       if (!to) continue;
       // Compare-and-set on the value read: a link a resend or a restart wrote meanwhile is left as that left it.
       const written = await tx
@@ -448,11 +468,11 @@ async function moveTheLinks<T extends Record<string, unknown>>(
         /*
           A row written before the column: its deadline was the submission plus the club's hours, its
           token's the send plus the same — never the same instant. Every live token of it still running
-          at `since` moves by the same amount, so the button keeps opening what the move kept.
+          at `since` moves by what its row moved, so the button keeps opening what the move kept.
         */
         await tx
           .update(emailActionTokens)
-          .set({ expiresAt: sql`${emailActionTokens.expiresAt} + make_interval(secs => ${amount / 1000})` })
+          .set({ expiresAt: sql`${emailActionTokens.expiresAt} + make_interval(secs => ${(to.getTime() - stored.getTime()) / 1000})` })
           .where(
             and(
               verify,
@@ -475,10 +495,10 @@ async function moveTheLinks<T extends Record<string, unknown>>(
 
     // A family's kept forms and its sittings' links: no place behind them, no person's row to audit; each one's own token with it.
     for (const entry of await tx
-      .select({ id: pendingFamilyEntries.id, expiresAt: pendingFamilyEntries.expiresAt, tokenId: pendingFamilyEntries.actionTokenId })
+      .select({ id: pendingFamilyEntries.id, expiresAt: pendingFamilyEntries.expiresAt, tokenId: pendingFamilyEntries.actionTokenId, createdAt: pendingFamilyEntries.createdAt })
       .from(pendingFamilyEntries)
       .where(gt(pendingFamilyEntries.expiresAt, since))) {
-      const to = movedDeadline({ stored: entry.expiresAt, since, grantedMs: amount, now });
+      const to = movedDeadline({ stored: entry.expiresAt, since, grantedMs: amount, now, writtenAt: entry.createdAt, endedAt: window.endedAt });
       if (!to) continue;
       const written = await tx
         .update(pendingFamilyEntries)
@@ -490,10 +510,10 @@ async function moveTheLinks<T extends Record<string, unknown>>(
       if (entry.tokenId) await moveTokenWith(tx, eq(emailActionTokens.id, entry.tokenId), entry.expiresAt, to);
     }
     for (const sitting of await tx
-      .select({ id: familySittings.id, expiresAt: familySittings.expiresAt, tokenId: familySittings.actionTokenId })
+      .select({ id: familySittings.id, expiresAt: familySittings.expiresAt, tokenId: familySittings.actionTokenId, createdAt: familySittings.createdAt })
       .from(familySittings)
       .where(and(gt(familySittings.expiresAt, since), isNull(familySittings.confirmedAt), isNull(familySittings.releasedAt)))) {
-      const to = movedDeadline({ stored: sitting.expiresAt, since, grantedMs: amount, now });
+      const to = movedDeadline({ stored: sitting.expiresAt, since, grantedMs: amount, now, writtenAt: sitting.createdAt, endedAt: window.endedAt });
       if (!to) continue;
       const written = await tx
         .update(familySittings)
@@ -542,6 +562,20 @@ async function eventsToMove<T extends Record<string, unknown>>(db: Database<T>, 
 
 type RegistrationStatusMoved = "PENDING_DECLARATION" | "WAITLIST_OFFERED" | "PENDING_EMAIL_CONFIRMATION";
 
+/**
+ * The instant a registration's hold or offer deadline was written at, or before — never after, so a
+ * deadline running inside a closed window is never denied its move (`movedDeadline`): an offer at its
+ * making (`offer_created_at`, written with it); a declaration hold no earlier than the submission, the
+ * address's confirmation or the offer it came from; a family's reservation no earlier than the
+ * submission. Not `updated_at`: any later change of the row writes it, and would refuse a move that was due.
+ */
+function holdWrittenAt(row: { status: RegistrationStatusMoved; submittedAt: Date; emailConfirmedAt: Date | null; offerCreatedAt: Date | null }): Date {
+  if (row.status === "WAITLIST_OFFERED") return row.offerCreatedAt ?? row.submittedAt;
+  if (row.status === "PENDING_EMAIL_CONFIRMATION") return row.submittedAt;
+  const instants = [row.submittedAt, row.emailConfirmedAt, row.offerCreatedAt].filter((at): at is Date => at !== null);
+  return new Date(Math.max(...instants.map((at) => at.getTime())));
+}
+
 type Claim =
   | { kind: "registration"; id: string; participantId: string; status: RegistrationStatusMoved; stored: Date; to: Date; updatedAt: Date }
   | { kind: "placeHold"; id: string; stored: Date; to: Date; holdsPlace: boolean }
@@ -589,6 +623,8 @@ async function moveOneEvent<T extends Record<string, unknown>>(
     // A cancelled event stays as it was cancelled (§331), a completed one as it finished (§82).
     if (!event || event.eventStatus !== "SCHEDULED") return finish();
     const holdCap = { registrationClosesAt: event.registrationClosesAt, startsAt: event.startsAt };
+    // A closed window moves only what was running inside it (`movedDeadline`); an open one has no end yet.
+    const endedAt = window.endedAt;
     // An invitation is capped by the start alone, as it was given (§647).
     const invitationCap = { registrationClosesAt: null, startsAt: event.startsAt };
 
@@ -600,6 +636,9 @@ async function moveOneEvent<T extends Record<string, unknown>>(
         status: registrations.status,
         holdExpiresAt: registrations.holdExpiresAt,
         updatedAt: registrations.updatedAt,
+        submittedAt: registrations.submittedAt,
+        emailConfirmedAt: registrations.emailConfirmedAt,
+        offerCreatedAt: registrations.offerCreatedAt,
       })
       .from(registrations)
       .where(
@@ -610,13 +649,14 @@ async function moveOneEvent<T extends Record<string, unknown>>(
         ),
       )) {
       if (!row.holdExpiresAt) continue;
-      const to = movedDeadline({ stored: row.holdExpiresAt, since, grantedMs: amount, now, cap: holdCap });
+      const status = row.status as RegistrationStatusMoved;
+      const to = movedDeadline({ stored: row.holdExpiresAt, since, grantedMs: amount, now, cap: holdCap, writtenAt: holdWrittenAt({ ...row, status }), endedAt });
       if (to) {
         claims.push({
           kind: "registration",
           id: row.id,
           participantId: row.participantId,
-          status: row.status as RegistrationStatusMoved,
+          status,
           stored: row.holdExpiresAt,
           to,
           updatedAt: row.updatedAt,
@@ -624,17 +664,19 @@ async function moveOneEvent<T extends Record<string, unknown>>(
       }
     }
     for (const row of await tx
-      .select({ id: familyPlaceHolds.id, expiresAt: familyPlaceHolds.expiresAt, holdsPlace: familyPlaceHolds.holdsPlace })
+      .select({ id: familyPlaceHolds.id, expiresAt: familyPlaceHolds.expiresAt, holdsPlace: familyPlaceHolds.holdsPlace, createdAt: familyPlaceHolds.createdAt })
       .from(familyPlaceHolds)
       .where(and(eq(familyPlaceHolds.eventId, eventId), gt(familyPlaceHolds.expiresAt, since)))) {
-      const to = movedDeadline({ stored: row.expiresAt, since, grantedMs: amount, now, cap: holdCap });
+      // Written once, when the sitting held it (§543): its own instant.
+      const to = movedDeadline({ stored: row.expiresAt, since, grantedMs: amount, now, cap: holdCap, writtenAt: row.createdAt, endedAt });
       if (to) claims.push({ kind: "placeHold", id: row.id, stored: row.expiresAt, to, holdsPlace: row.holdsPlace });
     }
     for (const row of await tx
-      .select({ id: eventInvitations.id, expiresAt: eventInvitations.expiresAt })
+      .select({ id: eventInvitations.id, expiresAt: eventInvitations.expiresAt, lastSentAt: eventInvitations.lastSentAt })
       .from(eventInvitations)
       .where(and(eq(eventInvitations.eventId, eventId), invitationOpen(), gt(eventInvitations.expiresAt, since)))) {
-      const to = movedDeadline({ stored: row.expiresAt, since, grantedMs: amount, now, cap: invitationCap });
+      // A send or a resend writes the deadline and `last_sent_at` together (§647).
+      const to = movedDeadline({ stored: row.expiresAt, since, grantedMs: amount, now, cap: invitationCap, writtenAt: row.lastSentAt, endedAt });
       if (to) claims.push({ kind: "invitation", id: row.id, stored: row.expiresAt, to });
     }
 

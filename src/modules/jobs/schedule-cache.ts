@@ -13,9 +13,11 @@ import {
   dueSlotsFor,
   hourSlotStart,
   slotStart,
+  SLOT_MINUTES,
   slotsBack,
   slotsBetween,
 } from "./schedule";
+import { jobStalenessThresholdMs, pingerCadenceMinutes } from "./quiet-hours";
 
 /**
  * Where a job's "nothing due until" lives between two serverless invocations without the
@@ -243,29 +245,94 @@ export async function readLastPing(job: JobName, now: Date, horizonMs: number): 
 }
 
 /**
- * Every ping the cache remembers between `anchor` and `now`, by job, for the maintenance run's outage
- * grace (§NNN, `registrations/domain/outage-grace.ts`) — or null when the cache cannot be trusted to
- * remember: the anchor is a real run of `anchor.job`, which wrote its own ping slot (`recordRealRun`),
- * and a cache that has lost that slot (evicted, unreachable, outside a request) has lost the others
- * too, so a silence read from it would be the cache's, not the pinger's. Missing never opens a window;
- * by job, so a silence counts only where both pingers' calls are missing together (`findPingGaps`).
+ * The pings the cache remembers between `anchor` and `now`, by job, enough to find every silence the
+ * full record would show, for the maintenance run's outage grace (§NNN,
+ * `registrations/domain/outage-grace.ts`) — or null when the cache cannot be trusted to remember: the
+ * anchor is a real run of `anchor.job`, which wrote its own ping slot (`recordRealRun`), and a cache
+ * that has lost that slot (evicted, unreachable, outside a request) has lost the others too, so a
+ * silence read from it would be the cache's, not the pinger's. Missing never opens a window; by job,
+ * so a silence counts only where both pingers' calls are missing together (`findPingGaps`).
  *
- * Read once per real run, from the run before it: over a day the reads add up to one per slot per job
- * whatever the number of runs. Six at a time, oldest first.
+ * **Bounded, not every slot.** The quiet before this run can last a day (§577), and every slot of
+ * both jobs would be about 650 reads after a night. So the anchor's job is walked back from `now`
+ * along its pinger's cadence: the slot where the call before should be, six guesses to a round trip,
+ * each hit no further back than the smaller threshold of its two ends — then no silence can lie
+ * between them, whatever the slots skipped hold. Only where a guess misses is every slot read, back
+ * to the latest call or to the anchor; a stretch with no call longer than the threshold is a
+ * candidate, and only there are the other job's slots read, with its latest call before the stretch
+ * (`findPingGaps` wants each job heard before a silence). After a quiet day: about one read per
+ * call of one job and a few dozen more where night turns to day — some 125 reads where every slot
+ * of both jobs is 576 (`tests/unit/jobs/ping-history.test.ts`) — and every slot of both jobs only
+ * across a real silence, which is when they are worth reading.
  */
-export async function readPingHistory(anchor: { job: JobName; at: Date }, now: Date): Promise<Record<JobName, Date[]> | null> {
+export async function readPingHistory(
+  anchor: { job: JobName; at: Date },
+  now: Date,
+  dayCadence: number,
+): Promise<Record<JobName, Date[]> | null> {
   const own = await slot<PingSlot>("ping", anchor.job, anchor.at, pingTags);
   if (!own) return null;
-  const slots = slotsBetween(anchor.at, now);
+  const floor = slotStart(anchor.at).getTime();
+  const known = Date.parse(own.at);
+  const threshold = (a: number, b: number) =>
+    Math.min(jobStalenessThresholdMs(new Date(a), dayCadence), jobStalenessThresholdMs(new Date(b), dayCadence));
+  /** The call remembered in the slot of `at`, if it lies in (`after`, `before`). */
+  const callIn = async (job: JobName, at: number, after: number, before: number): Promise<number | null> => {
+    const entry = await slot<PingSlot>("ping", job, new Date(at), pingTags);
+    const instant = entry ? Date.parse(entry.at) : Number.NaN;
+    return instant > after && instant < before ? instant : null;
+  };
+  /** The latest call of `job` in (`after`, `before`), every slot read newest first, six at a time; null when there is none. */
+  const latestCall = async (job: JobName, before: number, after: number): Promise<number | null> => {
+    const slots: number[] = [];
+    for (let at = slotStart(new Date(before)).getTime(); at >= Math.max(floor, slotStart(new Date(after)).getTime()); at -= SLOT_MINUTES * 60_000) slots.push(at);
+    for (let index = 0; index < slots.length; index += 6) {
+      const batch = await Promise.all(slots.slice(index, index + 6).map((at) => callIn(job, at, after, before)));
+      const hits = batch.filter((instant): instant is number => instant !== null);
+      if (hits.length > 0) return Math.max(...hits);
+    }
+    return null;
+  };
+
   const found = Object.fromEntries(JOB_NAMES.map((job) => [job, [] as Date[]])) as Record<JobName, Date[]>;
-  found[anchor.job].push(new Date(own.at));
-  const reads: (() => Promise<{ job: JobName; entry: PingSlot | null }>)[] = JOB_NAMES.flatMap((job) =>
-    slots.map((at) => async () => ({ job, entry: await slot<PingSlot>("ping", job, at, pingTags) })),
-  );
-  for (let index = 0; index < reads.length; index += 6) {
-    const batch = await Promise.all(reads.slice(index, index + 6).map((read) => read()));
-    for (const { job, entry } of batch) {
-      if (entry && Date.parse(entry.at) <= now.getTime()) found[job].push(new Date(entry.at));
+  found[anchor.job].push(new Date(known));
+  const stretches: [number, number][] = [];
+  let cursor = now.getTime();
+  while (cursor - known > threshold(known, cursor)) {
+    // Where the pinger's calls before `cursor` should be, at its cadence: six guesses, one round trip.
+    const guesses: number[] = [];
+    for (let at = cursor, step = 0; step < 6; step += 1) {
+      at -= pingerCadenceMinutes(new Date(at), dayCadence) * 60_000;
+      if (at <= known) break;
+      guesses.push(at);
+    }
+    const hits = await Promise.all(guesses.map((at) => callIn(anchor.job, slotStart(new Date(at)).getTime(), known, cursor)));
+    let advanced = false;
+    for (const hit of hits) {
+      if (hit === null || hit >= cursor || cursor - hit > threshold(hit, cursor)) break;
+      found[anchor.job].push(new Date(hit));
+      cursor = hit;
+      advanced = true;
+    }
+    if (advanced) continue;
+    // A guess missed: every slot back to the latest call, or to the anchor's.
+    const latest = await latestCall(anchor.job, cursor, known);
+    const older = latest ?? known;
+    if (cursor - older > threshold(older, cursor)) stretches.push([older, cursor]);
+    if (latest !== null) found[anchor.job].push(new Date(latest));
+    cursor = older;
+  }
+
+  // The other jobs, only across a stretch of the anchor's job with no call: every slot of it, and their latest call before it.
+  for (const job of JOB_NAMES.filter((name) => name !== anchor.job)) {
+    for (const [older, newer] of stretches) {
+      const inside = slotsBetween(new Date(older), new Date(newer));
+      for (let index = 0; index < inside.length; index += 6) {
+        const batch = await Promise.all(inside.slice(index, index + 6).map((at) => callIn(job, at.getTime(), older - 1, newer + 1)));
+        for (const instant of batch) if (instant !== null) found[job].push(new Date(instant));
+      }
+      const before = await latestCall(job, older + 1, floor - 1);
+      if (before !== null) found[job].push(new Date(before));
     }
   }
   return found;

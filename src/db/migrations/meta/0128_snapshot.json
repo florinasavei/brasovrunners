@@ -1,5 +1,5 @@
 {
-  "id": "cae27632-4787-4ccf-941d-5814c743bb39",
+  "id": "7916dda4-30c5-4f23-b7a5-734408dfda27",
   "prevId": "99f328f8-806f-446f-b570-765fc0ce73b9",
   "version": "7",
   "dialect": "postgresql",
@@ -6315,6 +6315,28 @@
           ],
           "isUnique": true,
           "where": "\"unreachable_windows\".\"ended_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "unreachable_windows_pings_once": {
+          "name": "unreachable_windows_pings_once",
+          "columns": [
+            {
+              "expression": "source",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "started_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"unreachable_windows\".\"source\" = 'pings'",
           "concurrently": false,
           "method": "btree",
           "with": {}

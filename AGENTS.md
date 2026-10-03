@@ -1331,7 +1331,9 @@ Rules:
   maintenance job moves every hold, offer, reservation, invitation and link deadline that was running
   later by the time the door was shut: while a `dns` window is open, on every real run by the time
   since the run before (so none reads as lapsed, and the sweeps are held too); a `pings` window, seen
-  once it is over, in one step. Capped by «Termene» (`outageGraceMaxHours`; 0 switches the moving off,
+  once it is over, in one step and only what was running inside it (a deadline written after it ended
+  is not moved; one written inside it by what was left of it), recorded once however many runs read
+  it at once. Capped by «Termene» (`outageGraceMaxHours`; 0 switches the moving off,
   the windows are still recorded and announced) and as the allocator caps it, under the event lock,
   compare-and-set, each link's live token in lockstep, audited with no actor (`DECISIONS.md` §NNN,
   `registrations/outage-grace.ts`); this is the one move of an invitation's deadline while somebody

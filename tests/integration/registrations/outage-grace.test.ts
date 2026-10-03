@@ -18,7 +18,7 @@ import { forgetCachedDeadlines } from "@/modules/deadlines/memo";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
-import type { OutageGraceDeps } from "@/modules/registrations/outage-grace";
+import { applyOutageGrace, type OutageGraceDeps } from "@/modules/registrations/outage-grace";
 import type { NameProbeStatus } from "@/modules/resilience/domain/name-probe";
 import { runRegistrationMaintenance } from "@/modules/registrations/maintenance";
 import { countOccupied } from "@/modules/registrations/repository";
@@ -254,16 +254,16 @@ describe("§NNN the pings fall silent: the window is seen once it is over, and t
     const sittingToken = await token({ participantId: own.participantId, registrationId: reservation, purpose: "REGISTER_ANOTHER_PERSON", expiresAt: new Date("2026-10-03T11:00:00.000Z") });
     const [sitting] = await db
       .insert(familySittings)
-      .values({ eventId: event.id, participantId: own.participantId, registrationId: reservation, locale: "ro", heldUntil: ANCHOR, expiresAt: new Date("2026-10-03T11:00:00.000Z"), actionTokenId: sittingToken.id })
+      .values({ eventId: event.id, participantId: own.participantId, registrationId: reservation, locale: "ro", heldUntil: ANCHOR, expiresAt: new Date("2026-10-03T11:00:00.000Z"), actionTokenId: sittingToken.id, createdAt: ANCHOR })
       .returning();
     const [placeHold] = await db
       .insert(familyPlaceHolds)
-      .values({ eventId: event.id, sittingKey: randomUUID(), slot: "1", expiresAt: new Date("2026-10-03T12:30:00.000Z") })
+      .values({ eventId: event.id, sittingKey: randomUUID(), slot: "1", expiresAt: new Date("2026-10-03T12:30:00.000Z"), createdAt: ANCHOR })
       .returning();
     const formToken = await token({ participantId: own.participantId, registrationId: reservation, purpose: "REGISTER_ANOTHER_PERSON", expiresAt: new Date("2026-10-03T11:15:00.000Z") });
     const [form] = await db
       .insert(pendingFamilyEntries)
-      .values({ eventId: event.id, participantId: own.participantId, registrationId: reservation, locale: "ro", fields: {}, expiresAt: new Date("2026-10-03T11:15:00.000Z"), actionTokenId: formToken.id })
+      .values({ eventId: event.id, participantId: own.participantId, registrationId: reservation, locale: "ro", fields: {}, expiresAt: new Date("2026-10-03T11:15:00.000Z"), actionTokenId: formToken.id, createdAt: ANCHOR })
       .returning();
     const invitation = await invite(event, new Date("2026-10-03T13:00:00.000Z"));
 
@@ -438,7 +438,7 @@ describe("§NNN the pings fall silent: the window is seen once it is over, and t
     const reservation = await register(event, { status: "PENDING_EMAIL_CONFIRMATION", holdExpiresAt: new Date("2026-10-03T10:00:00.000Z"), emailLinkExpiresAt: new Date(NOW.getTime() + DAY) });
     const [placeHold] = await db
       .insert(familyPlaceHolds)
-      .values({ eventId: event.id, sittingKey: randomUUID(), slot: "1", expiresAt: new Date("2026-10-03T10:30:00.000Z") })
+      .values({ eventId: event.id, sittingKey: randomUUID(), slot: "1", expiresAt: new Date("2026-10-03T10:30:00.000Z"), createdAt: ANCHOR })
       .returning();
     await register(event, { status: "CONFIRMED", confirmedAt: new Date("2026-10-03T15:30:00.000Z") });
 
@@ -613,6 +613,9 @@ describe("§NNN the name does not resolve: two probes ten minutes apart, the win
     expect(open.appliedMs).toBe(HOUR);
     // An hour given, no more: the offer's deadline, 11:30 at most, is behind this run, and the sweep ends it.
     expect((await rowOf(offered)).status).toBe("EXPIRED");
+    // Past the cap a real run would move nothing, so the plan asks for none: the window stays open and recorded, the ordinary quiet holds.
+    expect((await windows())[0].endedAt).toBeNull();
+    expect(await nextMaintenanceWork(db, at("11:30"))).toBeNull();
   });
 
   it("plans the job's next real run ten minutes after a suspicion, and at the next ping while a window is open — and nothing for a closed one", async () => {
@@ -719,5 +722,70 @@ describe("§NNN the name does not resolve: two probes ten minutes apart, the win
     await runRegistrationMaintenance(db, at, deps("unknown", everyQuarter));
     expect(await windows()).toHaveLength(0);
     expect((await rowOf(offered)).status).toBe("EXPIRED");
+  });
+});
+
+describe("§NNN a window seen late moves only what was running inside it, and is recorded once", () => {
+  // Brașov's 11:19 to 18:30: the last call at 11:04, the first back at 18:30, answered from the cache until this 19:30 run.
+  const at = (iso: string) => new Date(`2026-10-03T${iso}:00.000Z`);
+  const SHUT = at("08:19");
+  const OPEN = at("15:30");
+  const RUN = at("16:30");
+  const GAP = OPEN.getTime() - SHUT.getTime();
+  const lateRecord: OutageGraceDeps["readPings"] = async () => byJob([ANCHOR, at("08:04"), OPEN, at("15:45"), at("16:00"), at("16:15")]);
+
+  it("moves a hold running at the window's start by its length, one written inside it by what was left, and none written after it — reviving nothing", async () => {
+    const event = await createEvent();
+    const running = await register(event, { status: "PENDING_DECLARATION", holdExpiresAt: at("10:00") });
+    const inside = await register(event, { status: "WAITLIST_OFFERED", waitlistedAt: ANCHOR, offerCreatedAt: at("12:00"), holdExpiresAt: at("14:00") });
+    const offeredAfter = await register(event, { status: "WAITLIST_OFFERED", waitlistedAt: ANCHOR, offerCreatedAt: at("16:00"), holdExpiresAt: new Date(at("16:00").getTime() + DAY) });
+    const linkAfter = await register(event, { status: "PENDING_EMAIL_CONFIRMATION", submittedAt: at("16:10"), emailLinkExpiresAt: new Date(at("16:10").getTime() + 2 * DAY) });
+    // Held by a family's sitting at 19:05 in Brașov, lapsed at 19:20: nothing the door took from it.
+    const [lapsedAfter] = await db
+      .insert(familyPlaceHolds)
+      .values({ eventId: event.id, sittingKey: randomUUID(), slot: "1", expiresAt: at("16:20"), createdAt: at("16:05") })
+      .returning();
+    const invitedAfter = await invite(event, new Date(at("15:50").getTime() + DAY));
+    await db.update(eventInvitations).set({ lastSentAt: at("15:50") }).where(eq(eventInvitations.id, invitedAfter.id));
+    const occupiedBefore = computeOccupied(await countOccupied(db, event.id, RUN));
+
+    await runRegistrationMaintenance(db, RUN, deps("resolves", lateRecord));
+
+    const [window] = await windows();
+    expect(window.endedAt).toEqual(OPEN);
+    expect(window.grantedMs).toBe(GAP);
+    expect((await rowOf(running)).holdExpiresAt).toEqual(new Date(at("10:00").getTime() + GAP));
+    // Written at 15:00 in Brașov, three and a half hours before the door opened: moved by those, not by seven.
+    expect((await rowOf(inside)).holdExpiresAt).toEqual(new Date(at("14:00").getTime() + (OPEN.getTime() - at("12:00").getTime())));
+    expect((await rowOf(offeredAfter)).holdExpiresAt).toEqual(new Date(at("16:00").getTime() + DAY));
+    expect((await rowOf(linkAfter)).emailLinkExpiresAt).toEqual(new Date(at("16:10").getTime() + 2 * DAY));
+    expect((await db.select().from(eventInvitations).where(eq(eventInvitations.id, invitedAfter.id)))[0].expiresAt).toEqual(new Date(at("15:50").getTime() + DAY));
+    // Not revived: its deadline as it was, and the place it held still free — the one place more counted is the offer written inside the window, revived.
+    expect((await db.select().from(familyPlaceHolds).where(eq(familyPlaceHolds.id, lapsedAfter.id)))[0]?.expiresAt ?? at("16:20")).toEqual(at("16:20"));
+    expect(computeOccupied(await countOccupied(db, event.id, RUN))).toBe(occupiedBefore + 1);
+    const trail = await db.select().from(auditLogs).where(eq(auditLogs.action, "registration.deadline_moved_for_outage"));
+    expect(trail.map((row) => row.entityId).sort()).toEqual([running, inside].sort());
+  });
+
+  it("records a silence once when two runs read it at the same moment, and moves its deadlines once", async () => {
+    const event = await createEvent();
+    const hold = await register(event, { status: "PENDING_DECLARATION", holdExpiresAt: at("12:00") });
+    const settings = { ...DEFAULT_DEADLINES };
+
+    // Both read the windows before either writes: the unique index lets one row in.
+    const [first, second] = await Promise.all([applyOutageGrace(db, NOW, settings, deps("resolves")), applyOutageGrace(db, NOW, settings, deps("resolves"))]);
+
+    expect(await windows()).toHaveLength(1);
+    expect(first.windowsOpened + second.windowsOpened).toBe(1);
+    expect((await rowOf(hold)).holdExpiresAt).toEqual(after("2026-10-03T12:00:00.000Z"));
+    expect(await db.select().from(auditLogs).where(and(eq(auditLogs.action, "registration.deadline_moved_for_outage"), eq(auditLogs.entityId, hold)))).toHaveLength(1);
+  });
+
+  it("refuses a second row for the same silence, whoever writes it", async () => {
+    const row = { source: "pings" as const, startedAt: SHUT, endedAt: OPEN, confirmedAt: RUN, grantedMs: GAP };
+    await db.insert(unreachableWindows).values(row);
+    await expect(db.insert(unreachableWindows).values(row)).rejects.toThrow();
+    expect(await db.insert(unreachableWindows).values(row).onConflictDoNothing().returning()).toHaveLength(0);
+    expect(await windows()).toHaveLength(1);
   });
 });

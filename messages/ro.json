@@ -5023,7 +5023,7 @@
           "familySittingMinutes": "După „Da, încă o persoană”, emailul familiei așteaptă „Gata” cel mult atâtea minute de la ultimul formular și pleacă o singură dată, pentru toți; la 0, fiecare email pleacă imediat.",
           "verificationRetryHours": "Socotit de când a plecat ultimul email de confirmare, către cine nu a confirmat încă. Termenul linkului nu se mută.",
           "verificationRetries": "Fiecare email de confirmare se socotește, și «Retrimite» sau o retrimitere din backoffice. 0 = nu se retrimite singur. Termenul nu se mută.",
-          "outageGraceMaxHours": "Cât numele nu se găsește nu expiră nimic. După o tăcere a verificărilor programate, termenele se mută ulterior, acolo unde locul e încă liber. Cel mult atâtea ore; 0 = fără mutare."
+          "outageGraceMaxHours": "Cât numele nu se găsește, termenele care curg se mută la fiecare rulare; după o tăcere a verificărilor, ulterior. Cel mult atâtea ore; 0 = fără mutare, întreruperile se înregistrează totuși."
         },
         "legal": "Textele legale aprobate deja păstrează numerele scrise în ele până aprobi o versiune nouă din șablon, care le citește de aici.",
         "updatedAt": "Setat {when}.",

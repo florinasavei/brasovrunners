@@ -593,7 +593,11 @@ then sweep.
   calls must be missing together, and each job must have a call remembered before the silence, so one
   evicted cache slot opens nothing. A cache that has lost the last real run's own ping is not read at
   all; neither is a silence a real run of either job sits in. Only QA and production, which have a pinger, are judged this way. It cannot tell a dead
-  pinger from a dead name, and takes the participant's side; the cap bounds it.
+  pinger from a dead name, and takes the participant's side; the cap bounds it. The run does not read
+  every five-minute slot since the last real run (after a quiet night that was some 650 cache reads):
+  it walks one job's calls back along the pinger's cadence and reads every slot of both jobs only where
+  a call is missing — about 125 reads after a quiet day. Two runs that read the same silence at once
+  record it once (a unique index), so its deadlines move once.
 - **The name.** The job resolves `APP_BASE_URL`'s host. One «no such name» is only a suspicion; a
   second one at least ten minutes later opens a `dns` window at the first probe's instant, and it stays
   open until the name answers again. A timeout or a failed resolver opens and closes nothing. **This
@@ -605,8 +609,11 @@ then sweep.
 While a `dns` window is open every real run moves the running deadlines — address links, holds,
 offers, invitations, family forms — later by the time since the run before, so nothing reads as
 lapsed, and the sweeps are held as well; the job's plan keeps every ping running for real meanwhile,
-and confirms a first «no such name» ten minutes after it. A `pings` window moves them once it is
-seen. Either way the total is the window's length, capped by «Termene» → «Ceasul termenelor stă pe
+until the window has given back the cap (then a real run would move nothing, so the ordinary quiet
+holds and the next real run closes it), and confirms a first «no such name» ten minutes after it. A
+`pings` window moves them once it is seen — only what was running inside it: it is seen at the first
+real run after it, which can come hours after the pings came back, so a deadline written after its end
+is not moved and one written inside it is moved by what was left of it. Either way the total is the window's length, capped by «Termene» → «Ceasul termenelor stă pe
 loc…» (`outageGraceMaxHours`, 48 hours by default; 0 switches the moving off and the windows are still
 recorded and announced) and by the event's close and start as the allocator caps it; a deadline that
 passed before the window never moves. A claim whose deadline passed while the door was shut is revived

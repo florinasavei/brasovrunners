@@ -180,6 +180,23 @@ describe("§NNN where a deadline moves", () => {
     expect(movedDeadline({ stored: since, since, grantedMs, now: NOON })).toBeNull();
   });
 
+  it("moves only what was running inside a closed window: nothing written after its end, what was left of it for one written inside", () => {
+    // The window 11:19 to 18:30 in Brașov, seen by a 19:30 run: here 05:00 to 12:11 before a 13:11 run.
+    const endedAt = at(NOON, -60);
+    const run = at(NOON, 0);
+    const shut = { since: at(NOON, -491), grantedMs: 431 * MINUTE, now: run, endedAt };
+    // An offer made at 19:00 for a day: not moved. A hold made at 19:05 that lapsed at 19:20: not revived.
+    expect(movedDeadline({ ...shut, stored: at(NOON, 1410), writtenAt: at(NOON, -30) })).toBeNull();
+    expect(movedDeadline({ ...shut, stored: at(NOON, -10), writtenAt: at(NOON, -25) })).toBeNull();
+    // A hold running at the window's start: the whole window.
+    expect(movedDeadline({ ...shut, stored: at(NOON, -300), writtenAt: at(NOON, -600) })).toEqual(at(NOON, 131));
+    // Written inside it, three hours before its end: three hours.
+    expect(movedDeadline({ ...shut, stored: at(NOON, -100), writtenAt: at(NOON, -240) })).toEqual(at(NOON, 80));
+    // A row that cannot say when (null), or a window still open: the step's whole amount, as before.
+    expect(movedDeadline({ ...shut, stored: at(NOON, 1410), writtenAt: null })).toEqual(at(NOON, 1841));
+    expect(movedDeadline({ ...shut, endedAt: null, stored: at(NOON, 1410), writtenAt: at(NOON, -30) })).toEqual(at(NOON, 1841));
+  });
+
   it("caps a hold by the close and the start, and writes nothing that would still be behind now", () => {
     const cap = { registrationClosesAt: at(NOON, 60), startsAt: at(NOON, 600) };
     expect(movedDeadline({ stored: at(NOON, -300), since, grantedMs, now: NOON, cap })).toEqual(at(NOON, 60));
@@ -308,13 +325,19 @@ describe("§NNN the Administrators' two emails", () => {
     }
   });
 
-  it("says in «Termene» that nothing lapses while the name is gone, that a silence is moved afterwards where the place is free, and that 0 switches it off", () => {
-    expect(en.Admin.emails.deadlines.help.outageGraceMaxHours).toContain("While the name is not found nothing lapses");
-    expect(en.Admin.emails.deadlines.help.outageGraceMaxHours).toContain("where the place is still free");
-    expect(en.Admin.emails.deadlines.help.outageGraceMaxHours).toContain("0 = no moving");
-    expect(ro.Admin.emails.deadlines.help.outageGraceMaxHours).toContain("Cât numele nu se găsește nu expiră nimic");
-    expect(ro.Admin.emails.deadlines.help.outageGraceMaxHours).toContain("acolo unde locul e încă liber");
-    expect(ro.Admin.emails.deadlines.help.outageGraceMaxHours).toContain("0 = fără mutare");
+  it("says in «Termene» that running deadlines move on every run while the name is gone, a silence afterwards, and that at 0 nothing moves but the outages are still recorded", () => {
+    const help = { en: en.Admin.emails.deadlines.help.outageGraceMaxHours, ro: ro.Admin.emails.deadlines.help.outageGraceMaxHours };
+    expect(help.en).toContain("running deadlines move on every run");
+    expect(help.en).toContain("after a silence of the scheduled calls, afterwards");
+    expect(help.en).toContain("0 = no moving, the outages are still recorded");
+    expect(help.ro).toContain("termenele care curg se mută la fiecare rulare");
+    expect(help.ro).toContain("după o tăcere a verificărilor, ulterior");
+    expect(help.ro).toContain("0 = fără mutare, întreruperile se înregistrează totuși");
+    // Neither the claim that nothing lapses (false at 0) nor that every move waits for a free place (only a revival does).
+    expect(help.en).not.toContain("nothing lapses");
+    expect(help.en).not.toContain("where the place is still free");
+    expect(help.ro).not.toContain("nu expiră nimic");
+    expect(help.ro).not.toContain("acolo unde locul e încă liber");
   });
 
   it("say every paragraph and the bold line in under 200 characters, in every case, the counts on the bold line only", () => {

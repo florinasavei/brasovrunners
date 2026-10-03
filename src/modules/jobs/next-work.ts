@@ -15,7 +15,7 @@ import { PLACE_HOLDING_STATUSES } from "@/modules/registrations/domain/state-mac
 import { emailLinkLapseSql } from "@/modules/registrations/repository";
 import { nextFamilyEntryLapse } from "@/modules/registrations/family-entries";
 import { nextInvitationLapse } from "@/modules/registrations/invitation-repository";
-import { DNS_CONFIRM_MS } from "@/modules/registrations/domain/outage-grace";
+import { DNS_CONFIRM_MS, outageGraceMaxMs } from "@/modules/registrations/domain/outage-grace";
 import type { JobName } from "./schedule";
 
 /**
@@ -249,7 +249,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
   const invitationLapse = await nextInvitationLapse(db, now);
   // `queueConfirmationRetries` (§653): the verification email re-sent, the club's hours after the last one left.
   const confirmationRetry = await nextConfirmationRetry(db, now, settings);
-  const outage = await nextOutageWork(db, now);
+  const outage = await nextOutageWork(db, now, outageGraceMaxMs(settings));
 
   return earliest([
     emailLapses,
@@ -271,18 +271,23 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
  * minutes after it, so the run then is due — and so is the next ping, when that instant has passed
  * already (the probe said nothing in between). While a window is open every ping runs for real: each
  * run moves the running deadlines by the time since the one before, which is what keeps them from
- * reading as lapsed, and the probe that closes the window is a real run's. A closed window plans
- * nothing: its moves are done in the run that closes it, or that run reports a failure and promises no
- * quiet (`planQuiet`).
+ * reading as lapsed, and the probe that closes the window is a real run's — until the window has given
+ * back the club's cap (`granted_ms` at `maxMs`, or the cap at 0): past it nothing moves any more, so
+ * the plan falls back to its ordinary quiet. The window stays open and recorded; the next real run
+ * the ordinary plan makes, or a wake, probes the name and closes it. A closed window plans nothing:
+ * its moves are done in the run that closes it, or that run reports a failure and promises no quiet
+ * (`planQuiet`).
  */
-async function nextOutageWork<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<Date | null> {
+async function nextOutageWork<T extends Record<string, unknown>>(db: Database<T>, now: Date, maxMs: number): Promise<Date | null> {
   const any = db as unknown as AnyDb;
   const [open] = await any
-    .select({ startedAt: unreachableWindows.startedAt, confirmedAt: unreachableWindows.confirmedAt })
+    .select({ startedAt: unreachableWindows.startedAt, confirmedAt: unreachableWindows.confirmedAt, grantedMs: unreachableWindows.grantedMs })
     .from(unreachableWindows)
     .where(isNull(unreachableWindows.endedAt))
     .limit(1);
   if (!open) return null;
+  // A window that has given back all the cap allows: a real run would move nothing, so none is asked for.
+  if (open.confirmedAt !== null && Number(open.grantedMs) >= maxMs) return null;
   // The next ping, whenever it comes: a minute on, so the plan is ahead of this run and the ping after it runs.
   const soon = new Date(now.getTime() + MINUTE);
   const startedAt = toDate(open.startedAt);

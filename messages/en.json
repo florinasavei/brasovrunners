@@ -5023,7 +5023,7 @@
           "familySittingMinutes": "After “Yes, one more person”, the family's email waits for “Done” at most this many minutes after the last form and leaves once, for everybody; at 0, each email leaves at once.",
           "verificationRetryHours": "Counted from when the last confirmation email left, to whoever has not confirmed yet. The link's deadline does not move.",
           "verificationRetries": "Every confirmation email counts, “Resend” and a backoffice resend included. 0 = never re-sent by itself. The deadline does not move.",
-          "outageGraceMaxHours": "While the name is not found nothing lapses. After a silence of the scheduled calls, the deadlines are moved afterwards, where the place is still free. At most this many hours; 0 = no moving."
+          "outageGraceMaxHours": "While the name is not found, running deadlines move on every run; after a silence of the scheduled calls, afterwards. At most this many hours; 0 = no moving, the outages are still recorded."
         },
         "legal": "Legal texts already approved keep the numbers written in them until you approve a new version from the template, which reads them from here.",
         "updatedAt": "Set {when}.",

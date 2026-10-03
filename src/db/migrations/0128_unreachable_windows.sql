@@ -28,4 +28,5 @@ CREATE TABLE "unreachable_windows" (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX "unreachable_windows_one_open" ON "unreachable_windows" USING btree (("ended_at" is null)) WHERE "unreachable_windows"."ended_at" is null;--> statement-breakpoint
+CREATE UNIQUE INDEX "unreachable_windows_pings_once" ON "unreachable_windows" USING btree ("source","started_at") WHERE "unreachable_windows"."source" = 'pings';--> statement-breakpoint
 CREATE INDEX "unreachable_windows_started_at_idx" ON "unreachable_windows" USING btree ("started_at");

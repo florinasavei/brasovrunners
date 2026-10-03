@@ -81,6 +81,12 @@ export const unreachableWindows = pgTable(
   (t) => [
     // At most one window open (or suspected) at a time: a second run that finds the name gone again keeps the first.
     uniqueIndex("unreachable_windows_one_open").on(sql`(${t.endedAt} is null)`).where(sql`${t.endedAt} is null`),
+    /*
+      A silence of the pings is recorded once (§NNN): two maintenance runs at the same moment (the
+      backstop and the monitor landing together after a silence) read the same silence, and the second
+      insert is refused here rather than moving every deadline twice.
+    */
+    uniqueIndex("unreachable_windows_pings_once").on(t.source, t.startedAt).where(sql`${t.source} = 'pings'`),
     index("unreachable_windows_started_at_idx").on(t.startedAt),
     check("unreachable_windows_source_known", sql`${t.source} in ('dns', 'pings')`),
     check("unreachable_windows_ends_after_start", sql`${t.endedAt} is null or ${t.endedAt} >= ${t.startedAt}`),

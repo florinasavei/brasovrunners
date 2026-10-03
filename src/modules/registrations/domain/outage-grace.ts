@@ -31,8 +31,8 @@ import { capHoldExpiry } from "./hold-deadlines";
  * the run before (`grownGrant`), within the club's «Termene» number, so none reads as lapsed and none
  * frees its place while nobody can reach the page that would act on it; the sweeps are held as well,
  * belt and braces. **Once a window is over**, every deadline still running at its start has been moved
- * later by its length, within the same cap; a deadline that passed before the window started never
- * moves. A claim whose deadline passed while the door was shut and whose counted place was given
+ * later by its length, within the same cap, one written inside it by what was left of it, and one
+ * written after it not at all; a deadline that passed before the window started never moves. A claim whose deadline passed while the door was shut and whose counted place was given
  * meanwhile is not revived (`registrations/outage-grace.ts`): the job seats nobody.
  */
 
@@ -193,6 +193,13 @@ export function grownGrant(window: { startedAt: Date; grantedMs: number }, until
  *
  * - A deadline that passed at or before `since` never moves: the door was open then, or the deadline
  *   was not revived by an earlier step.
+ * - Of a closed window (`endedAt`), only what was running inside it: a deadline written after the
+ *   window ended (`writtenAt`, the row's own instant) never moves — a `pings` window is seen at the
+ *   first real run after it, which may come hours later, when the pings went on being answered from
+ *   the cache — and one written inside it moves by what was left of it (`endedAt − writtenAt`), never
+ *   by more. `writtenAt` is an instant at or before the deadline's write, never after it, so a deadline
+ *   that was running is never denied its move. An open window has no end yet: its steps move what is
+ *   running at `since`, as before.
  * - Later, never earlier, by the step's amount alone, then capped as the allocator caps it —
  *   a hold or an offer by the close and the start (`capHoldExpiry`), an invitation by the start alone
  *   (§647); a link is not capped by the event, as it never was (§513).
@@ -204,8 +211,14 @@ export function movedDeadline(input: {
   grantedMs: number;
   now: Date;
   cap?: { registrationClosesAt: Date | null; startsAt: Date } | null;
+  /** When the deadline was written, or an instant before it — never after; null when the row cannot say (then the step's whole amount). */
+  writtenAt?: Date | null;
+  /** The window's end, once it is over; null while it is open. */
+  endedAt?: Date | null;
 }): Date | null {
-  const { stored, since, grantedMs, now, cap } = input;
+  const { stored, since, now, cap, writtenAt, endedAt } = input;
+  let grantedMs = input.grantedMs;
+  if (endedAt && writtenAt && writtenAt.getTime() > since.getTime()) grantedMs = Math.min(grantedMs, endedAt.getTime() - writtenAt.getTime());
   if (grantedMs < OUTAGE_MIN_MS) return null;
   if (stored.getTime() <= since.getTime()) return null;
   let next = new Date(stored.getTime() + grantedMs);
