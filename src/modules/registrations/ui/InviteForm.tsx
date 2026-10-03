@@ -111,7 +111,7 @@ export default function InviteForm({
   free: number | null;
   daysDefault: number;
   daysMax: number;
-  /** The event's «Folosește lista ascunsă» (§NNN): off, the tick is not drawn and the server refuses it anyway. */
+  /** The event's «Folosește lista ascunsă» (§648; the send obeys it, §647): off, the tick is not drawn and the server refuses it anyway. */
   hiddenListEnabled: boolean;
   words: InviteFormWords;
 }) {
@@ -180,12 +180,12 @@ export default function InviteForm({
     }
     setLocalError(null);
     const { capacity: nowCapacity, free: nowFree } = forecast;
-    const raises = !outside && nowCapacity !== null && nowFree !== null ? Math.max(count - nowFree, 0) : 0;
+    const raises = !(hiddenListEnabled && outside) && nowCapacity !== null && nowFree !== null ? Math.max(count - nowFree, 0) : 0;
     const raisedTo = raises > 0 && nowCapacity !== null ? nowCapacity + raises : null;
     const body = [
       counted(words.dialogCount, count),
-      outside ? words.dialogOutside : nowFree === null ? null : fill(words.dialogFree, { free: nowFree }),
-      outside || nowFree === null ? null : raisedTo !== null ? counted(words.dialogRaise, raises, { capacity: raisedTo }) : words.dialogNoRaise,
+      hiddenListEnabled && outside ? words.dialogOutside : nowFree === null ? null : fill(words.dialogFree, { free: nowFree }),
+      (hiddenListEnabled && outside) || nowFree === null ? null : raisedTo !== null ? counted(words.dialogRaise, raises, { capacity: raisedTo }) : words.dialogNoRaise,
       counted(words.dialogDays, dayCount),
       fill(words.dialogLocale, { language: inviteLocale === "en" ? words.localeEn : words.localeRo }),
     ]
@@ -219,7 +219,7 @@ export default function InviteForm({
       <input type="hidden" name="uiLocale" value={locale} />
       <input type="hidden" name="eventId" value={eventId} />
       <input type="hidden" name="addPlace" value={addPlace} />
-      {outside && <input type="hidden" name="outside" value="1" />}
+      {hiddenListEnabled && outside && <input type="hidden" name="outside" value="1" />}
       <Stack spacing={2}>
         {(localError ?? serverError) && (
           <Alert severity="error" role="alert" data-testid="invite-error">

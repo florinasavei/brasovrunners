@@ -1,6 +1,6 @@
 {
   "id": "3fb57de7-cfa3-4178-b6c8-a4a0e15c882e",
-  "prevId": "b4c632b3-5324-472d-8481-1a7cae3c2101",
+  "prevId": "9d3a78ce-67a4-4ef5-a7a5-4fa41126a64f",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -399,6 +399,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "invitation_id": {
+          "name": "invitation_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "token_hash": {
           "name": "token_hash",
           "type": "text",
@@ -477,7 +483,23 @@
             }
           ],
           "isUnique": true,
-          "where": "\"used_at\" IS NULL AND \"invalidated_at\" IS NULL AND \"registration_id\" IS NULL",
+          "where": "\"used_at\" IS NULL AND \"invalidated_at\" IS NULL AND \"registration_id\" IS NULL AND \"invitation_id\" IS NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "email_action_tokens_one_active_per_invitation": {
+          "name": "email_action_tokens_one_active_per_invitation",
+          "columns": [
+            {
+              "expression": "invitation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"used_at\" IS NULL AND \"invalidated_at\" IS NULL AND \"invitation_id\" IS NOT NULL",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -580,6 +602,19 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
+        "email_action_tokens_invitation_id_event_invitations_id_fk": {
+          "name": "email_action_tokens_invitation_id_event_invitations_id_fk",
+          "tableFrom": "email_action_tokens",
+          "tableTo": "event_invitations",
+          "columnsFrom": [
+            "invitation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
         "email_action_tokens_superseded_by_token_id_email_action_tokens_id_fk": {
           "name": "email_action_tokens_superseded_by_token_id_email_action_tokens_id_fk",
           "tableFrom": "email_action_tokens",
@@ -616,7 +651,11 @@
         },
         "email_action_tokens_registration_scope_matches_purpose": {
           "name": "email_action_tokens_registration_scope_matches_purpose",
-          "value": "(\"email_action_tokens\".\"purpose\" = 'MANAGE_PROFILE') = (\"email_action_tokens\".\"registration_id\" IS NULL)"
+          "value": "(\"email_action_tokens\".\"purpose\"::text in ('MANAGE_PROFILE', 'ACCEPT_INVITATION')) = (\"email_action_tokens\".\"registration_id\" IS NULL)"
+        },
+        "email_action_tokens_invitation_scope_matches_purpose": {
+          "name": "email_action_tokens_invitation_scope_matches_purpose",
+          "value": "(\"email_action_tokens\".\"purpose\"::text = 'ACCEPT_INVITATION') = (\"email_action_tokens\".\"invitation_id\" IS NOT NULL)"
         }
       },
       "isRLSEnabled": false
@@ -887,6 +926,305 @@
           "value": "(\"email_outbox\".\"status\" <> 'SENT' OR \"email_outbox\".\"sent_at\" IS NOT NULL)\n          AND (\"email_outbox\".\"status\" NOT IN ('PENDING', 'PROCESSING', 'FAILED') OR \"email_outbox\".\"sent_at\" IS NULL)"
         }
       },
+      "isRLSEnabled": false
+    },
+    "public.event_invitations": {
+      "name": "event_invitations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "participant_id": {
+          "name": "participant_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "canonical_email": {
+          "name": "canonical_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "locale": {
+          "name": "locale",
+          "type": "locale",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ro'"
+        },
+        "member_staff_user_id": {
+          "name": "member_staff_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "invited_by_staff_user_id": {
+          "name": "invited_by_staff_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "sent_at": {
+          "name": "sent_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "outside_capacity": {
+          "name": "outside_capacity",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "supplementary_raise": {
+          "name": "supplementary_raise",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "accepted_at": {
+          "name": "accepted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "accepted_registration_id": {
+          "name": "accepted_registration_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "withdrawn_at": {
+          "name": "withdrawn_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "withdrawn_by_staff_user_id": {
+          "name": "withdrawn_by_staff_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "expired_at": {
+          "name": "expired_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "resend_count": {
+          "name": "resend_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "last_sent_at": {
+          "name": "last_sent_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "event_invitations_live_address_unique": {
+          "name": "event_invitations_live_address_unique",
+          "columns": [
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "canonical_email",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"event_invitations\".\"accepted_at\" IS NULL AND \"event_invitations\".\"withdrawn_at\" IS NULL AND \"event_invitations\".\"expired_at\" IS NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "event_invitations_event_expires_idx": {
+          "name": "event_invitations_event_expires_idx",
+          "columns": [
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "event_invitations_participant_idx": {
+          "name": "event_invitations_participant_idx",
+          "columns": [
+            {
+              "expression": "participant_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "event_invitations_accepted_registration_idx": {
+          "name": "event_invitations_accepted_registration_idx",
+          "columns": [
+            {
+              "expression": "accepted_registration_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "event_invitations_event_id_events_id_fk": {
+          "name": "event_invitations_event_id_events_id_fk",
+          "tableFrom": "event_invitations",
+          "tableTo": "events",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "event_invitations_participant_id_participants_id_fk": {
+          "name": "event_invitations_participant_id_participants_id_fk",
+          "tableFrom": "event_invitations",
+          "tableTo": "participants",
+          "columnsFrom": [
+            "participant_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "event_invitations_member_staff_user_id_staff_users_id_fk": {
+          "name": "event_invitations_member_staff_user_id_staff_users_id_fk",
+          "tableFrom": "event_invitations",
+          "tableTo": "staff_users",
+          "columnsFrom": [
+            "member_staff_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "event_invitations_invited_by_staff_user_id_staff_users_id_fk": {
+          "name": "event_invitations_invited_by_staff_user_id_staff_users_id_fk",
+          "tableFrom": "event_invitations",
+          "tableTo": "staff_users",
+          "columnsFrom": [
+            "invited_by_staff_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "event_invitations_accepted_registration_id_registrations_id_fk": {
+          "name": "event_invitations_accepted_registration_id_registrations_id_fk",
+          "tableFrom": "event_invitations",
+          "tableTo": "registrations",
+          "columnsFrom": [
+            "accepted_registration_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "event_invitations_withdrawn_by_staff_user_id_staff_users_id_fk": {
+          "name": "event_invitations_withdrawn_by_staff_user_id_staff_users_id_fk",
+          "tableFrom": "event_invitations",
+          "tableTo": "staff_users",
+          "columnsFrom": [
+            "withdrawn_by_staff_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.event_translations": {
@@ -5848,7 +6186,8 @@
         "WAITLIST_OFFER",
         "MANAGE_PROFILE",
         "LIST_CONSENT",
-        "REGISTER_ANOTHER_PERSON"
+        "REGISTER_ANOTHER_PERSON",
+        "ACCEPT_INVITATION"
       ]
     },
     "public.email_message_type": {
@@ -5884,7 +6223,8 @@
         "NEW_EVENT_ALERT",
         "MEMBER_INVITATION",
         "DECLARATION_HOLD_EXPIRED",
-        "LEGAL_TEMPLATES_CHANGED"
+        "LEGAL_TEMPLATES_CHANGED",
+        "EVENT_INVITATION"
       ]
     },
     "public.email_outbox_status": {

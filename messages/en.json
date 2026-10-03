@@ -1357,9 +1357,9 @@
       "HIDDEN_LIST_OFF": "The hidden list is off for this event. Tick «Use the hidden list» in the event's settings first.",
       "SPARES_BEFORE_HIDDEN_LIST": "The spare numbers no longer fit before the hidden list's series. Move «The hidden list's numbers start at» higher in the event's settings, or print fewer.",
       "HIDDEN_LIST_IN_RACE_SERIES": "«The hidden list's numbers start at» falls inside the race's series, or the places have reached it. Move it outside the race's series in the event's settings. Nothing was done.",
-      "HIDDEN_LIST_IN_RACE_SERIES_DATED": "On {date}, «The hidden list's numbers start at» would fall inside the race's series: that date has more places. Move it higher, or save without that date. Nothing was saved, on any date.",
+      "HIDDEN_LIST_IN_RACE_SERIES_DATED": "On one of the dates ({date}), «The hidden list's numbers start at» would fall inside the race's series. Move it outside the series, or save without that date. Nothing was saved, on any date.",
       "HIDDEN_LIST_ON_SPARES": "The hidden list's series would run through the desk's spare numbers. Move «The hidden list's numbers start at» above them in the event's settings. Nothing was done.",
-      "HIDDEN_LIST_ON_SPARES_DATED": "On {date}, the hidden list's series would run through the desk's spare numbers. Move «The hidden list's numbers start at» above them, or save without that date. Nothing was saved.",
+      "HIDDEN_LIST_ON_SPARES_DATED": "On one of the dates ({date}), the hidden list's series would run through the desk's spares. Move «The hidden list's numbers start at» above them, or save without that date. Nothing was saved.",
       "INVALID_ADDRESSES": "Not email addresses: {addresses}. Separate the addresses with commas, spaces or line breaks. Nothing was saved.",
       "TOO_MANY_ADDRESSES": "At most {max} addresses in one box. Nothing was saved.",
       "ONE_ADDRESS_ONLY": "“Signed declarations go to” takes one address — the archive mailbox. Put the others under “Visible copy (Cc)” or “Hidden copy (Bcc)”. Nothing was saved.",
@@ -5552,9 +5552,9 @@
                 "«Events» → «Edit» on the race's row → the «Taking part and registration» card.",
                 "Under «Places from the waiting list are allocated automatically» choose «No» and press «Save». On «No», a freed or added place stays free until you hand it out.",
                 "No need to raise «Capacity»: when no place is free, «Send them the offer» adds one supplementary place once you confirm (the capacity grows by one, and the registration's trail says who added it and for whom).",
-                "The «Registrations received» card → «Registration queue»: on the chosen person's waiting-list row press «Send them the offer». The same button is on their registration's page too.",
+                "The «Registrations received» card → «Registration queue»: on the named person's waiting-list row press «Send them the offer». The same button is on their registration's page too.",
                 "The window says until when they have and, when no place is free, that you add one; press «Send them the offer» or, on a full event, «Add a place and send the offer». They get the ordinary «A place has freed up» email, with the ordinary deadline, {offer}: from the email they press «Confirm the place» and sign the declaration, if they have not yet.",
-                "Not accepted in time? The offer lapses and the place is free again, for whoever you choose.",
+                "Not accepted in time? The offer lapses and the place is free again until you give it.",
                 "A place added with «Add a place and send the offer» stays in the capacity: unused, on «Yes» and before registration closes it goes to the first in line; otherwise it stays free until you give it.",
                 "It works at any moment until the start, after registration closes too: the offer then holds until the start at the latest. At the desk, with the person there, «Give a place» confirms them on the paper declaration, but only into a free place; on a full event an “i” beside it says why.",
                 "The others stay on the waiting list and receive nothing. On the site, the card says «Places are given from the waiting list», and newcomers join the list too while anyone waits. How many may wait is «Waiting list», beside «Capacity».",
@@ -5574,15 +5574,32 @@
               ]
             },
             {
-              "title": "A place outside the places: organizers, pacemakers, invited runners",
+              "title": "Hidden list: organizers, pacemakers, invited runners",
               "steps": [
                 "For whoever runs on the club's side: organizers, pacemakers, invited runners. They take none of the announced places.",
-                "Open the person's registration → «The event's places» → «Seat outside the places» and confirm.",
+                "First, in the event's settings, under «Public participant list», tick «Use the hidden list».",
+                "Open the person's registration → «Hidden list» → choose «On the hidden list» and confirm.",
                 "If they held a place, it frees up: on «Yes» it goes to the first on the waiting list; on «No» it stays free until you hand it out.",
-                "From the waiting list or an open offer they get a place now, outside the places: the declaration email, with the usual deadline, not the offer's.",
-                "Confirmed or with a declaration to sign, they keep their state, number and emails. On the site they are in no number; they appear on the list only if they ticked, unmarked.",
-                "«Count among the places» turns it back only if a place is free; otherwise the press is refused and says who holds the places.",
-                "In the registrations list, the pill «Outside the places» shows them all; the export has a column for them."
+                "From the waiting list or an open offer they get a place now, on the hidden list: the declaration email, with the usual deadline, not the offer's.",
+                "Confirmed or with a declaration to sign, they keep their state, number and emails. They appear on the public list only if they ticked, unmarked.",
+                "With «The hidden list's numbers start at» the hidden list has its own series of race numbers, in confirmation order; a number already given stays.",
+                "On the site, «Who's coming» counts them only with «Count the hidden list too» ticked; the places and the free places never count them.",
+                "«Show the count publicly», beside «Show publicly how many are waiting», is on every event: unticked, «Who's coming» shows only the names, no numbers.",
+                "While the list is in use or anybody on it holds a place, the page says beside the places, naming nobody, that organisers and invited runners may start outside the advertised places.",
+                "«Counted among the event's places» turns it back only if a place is free; otherwise the press is refused and says who holds the places.",
+                "In the registrations list, the pill «Hidden list» shows them all; the export has a column for them."
+              ]
+            },
+            {
+              "title": "Invite somebody to an event, by email",
+              "steps": [
+                "For members, partners and guests: each gets an email with a link to the form, with the name and address already filled in.",
+                "«Events» → «Edit» on the race's row → the «Registrations received» card → «Send invitations»: the list's «Invitations» section opens.",
+                "Tick members from the list or type other people, one per line: the name, then the address. Choose «Days until it expires» and «Language of the invitation» (for new addresses); tick «On the hidden list (takes no place)» for organizers, volunteers and pacemakers. You can send after registration closes too, until the start.",
+                "«Send the invitations» asks first: how many invitations, how many places are free and, on a full race, how many supplementary places are added and what the capacity becomes.",
+                "Each invitation holds a place until its deadline; if it is not accepted, the place frees up by itself. The person fills in the rest and signs the declaration themselves.",
+                "On the invitation's row: «Resend» sends a new link; the deadline stays, unless you type a number of days that moves it later. «Withdraw» closes it and frees the place.",
+                "If somebody invited registers anyway, through the public form or at the desk, their registration takes the invitation's place once their address is confirmed or they are given a place: the invitation reads «Accepted»."
               ]
             },
             {

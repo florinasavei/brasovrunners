@@ -106,7 +106,7 @@ async function createEvent(
       capacity,
       registrationClosesAt: options.closesAt ?? null,
       waitlistAutoOffer: options.auto ?? false,
-      // «Folosește lista ascunsă» (§NNN): off by default, as migration 0126 leaves every event.
+      // «Folosește lista ascunsă» (§648): off by default, as migration 0126 leaves every event.
       hiddenListEnabled: options.hidden ?? false,
       eventStatus: options.status ?? "SCHEDULED",
       locationName: "Parcul Tractorul",
@@ -262,6 +262,7 @@ describe("§NNN BR-REQ-034-01 a send holds one counted place per invitation, unt
     expect(isDomainError(refused) && refused.fields).toContain(HIDDEN_LIST_OFF);
     expect(await invitationsOf(event.id)).toHaveLength(0);
     expect(await invitationEmails()).toHaveLength(0);
+    expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "event.invitation_sent"))).toHaveLength(0);
     expect(await capacityOf(event.id)).toBe(1);
     // The same press with the switch on goes through: the switch is all that refused it.
     await db.update(events).set({ hiddenListEnabled: true }).where(eq(events.id, event.id));

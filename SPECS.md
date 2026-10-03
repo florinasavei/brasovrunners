@@ -1477,9 +1477,10 @@ registration — and it lists registrations and never changes an address.
 - **Priority:** MUST
 - **Release:** M1
 - **Status:** built, and recorded in `DECISIONS.md` §33. The administrative changes to a
-  registration are entering one, correcting its name, cancelling it, and — since `DECISIONS.md`
-  §44 — erasing it (BR-REQ-037-06). There is deliberately no fifth: no verified-email edit and
-  no participant merge.
+  registration are entering one, correcting the answers the participant typed — the name among
+  them, each field audited («Modifică datele», `DECISIONS.md` §645) — cancelling it, and — since
+  `DECISIONS.md` §44 — erasing it (BR-REQ-037-06). There is deliberately no more: no verified-email
+  edit, no consent granted by staff and no participant merge.
 
 **Acceptance criteria**
 

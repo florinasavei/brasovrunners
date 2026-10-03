@@ -1357,9 +1357,9 @@
       "HIDDEN_LIST_OFF": "Lista ascunsă e oprită la acest eveniment. Bifează întâi «Folosește lista ascunsă» în setările evenimentului.",
       "SPARES_BEFORE_HIDDEN_LIST": "Numerele de rezervă nu mai încap înainte de seria listei ascunse. Mută mai sus «Numerele listei ascunse încep de la», în setările evenimentului, sau tipărește mai puține.",
       "HIDDEN_LIST_IN_RACE_SERIES": "«Numerele listei ascunse încep de la» cade în seria cursei sau locurile au ajuns până la el. Mută-l în afara seriei cursei, în setările evenimentului. Nu s-a făcut nimic.",
-      "HIDDEN_LIST_IN_RACE_SERIES_DATED": "Pe {date}, «Numerele listei ascunse încep de la» ar cădea în seria cursei: data aceea are mai multe locuri. Mută-l mai sus sau salvează fără data aceea. Nu s-a salvat nimic, la nicio dată.",
+      "HIDDEN_LIST_IN_RACE_SERIES_DATED": "La una dintre date ({date}), «Numerele listei ascunse încep de la» ar cădea în seria cursei. Mută-l în afara ei sau salvează fără data aceea. Nu s-a salvat nimic, la nicio dată.",
       "HIDDEN_LIST_ON_SPARES": "Seria listei ascunse ar trece prin numerele de rezervă ale mesei. Mută «Numerele listei ascunse încep de la» deasupra lor, în setările evenimentului. Nu s-a făcut nimic.",
-      "HIDDEN_LIST_ON_SPARES_DATED": "Pe {date}, seria listei ascunse ar trece prin numerele de rezervă ale mesei. Mută «Numerele listei ascunse încep de la» deasupra lor sau salvează fără data aceea. Nu s-a salvat nimic.",
+      "HIDDEN_LIST_ON_SPARES_DATED": "La una dintre date ({date}), seria listei ascunse ar trece prin rezervele mesei. Mută «Numerele listei ascunse încep de la» peste ele sau salvează fără acea dată. Nu s-a salvat nimic.",
       "INVALID_ADDRESSES": "Nu sunt adrese de email: {addresses}. Scrie adresele despărțite prin virgulă, spațiu sau pe rânduri separate. Nu s-a salvat nimic.",
       "TOO_MANY_ADDRESSES": "Cel mult {max} adrese într-o căsuță. Nu s-a salvat nimic.",
       "ONE_ADDRESS_ONLY": "La „Declarațiile semnate merg la” încape o singură adresă — cutia de arhivă. Pune-le pe celelalte la „Copie vizibilă (Cc)” sau „Copie ascunsă (Bcc)”. Nu s-a salvat nimic.",
@@ -5552,9 +5552,9 @@
                 "«Evenimente» → «Editează» pe rândul cursei → cardul «Participare și înscrieri».",
                 "La «Locurile din lista de așteptare se alocă automat» alege «Nu» și apasă «Salvează». Pe «Nu», un loc eliberat sau adăugat rămâne liber până îl dai tu.",
                 "Nu e nevoie să mărești «Număr de locuri»: dacă nu e niciun loc liber, «Trimite-i oferta» adaugă un loc suplimentar, după ce confirmi (capacitatea crește cu unu, iar jurnalul înscrierii spune cine l-a adăugat și pentru cine).",
-                "Cardul «Înscrierile primite» → «Coada de înscrieri»: pe rândul persoanei alese din lista de așteptare apasă «Trimite-i oferta». Același buton e și pe pagina înscrierii ei.",
+                "Cardul «Înscrierile primite» → «Coada de înscrieri»: pe rândul persoanei numite din lista de așteptare apasă «Trimite-i oferta». Același buton e și pe pagina înscrierii ei.",
                 "Fereastra spune până când are timp și, dacă nu e niciun loc liber, că adaugi unul; apasă «Trimite-i oferta» sau, pe un eveniment plin, «Adaugă un loc și trimite oferta». Primește emailul obișnuit «S-a eliberat un loc», cu termenul obișnuit, {offer}: din email apasă «Confirmă locul» și semnează declarația, dacă nu a semnat-o încă.",
-                "Nu acceptă la timp? Oferta expiră și locul e din nou liber, pentru cine alegi tu.",
+                "Nu acceptă la timp? Oferta expiră și locul e din nou liber, până îl dai tu.",
                 "Un loc adăugat cu «Adaugă un loc și trimite oferta» rămâne în capacitate: nefolosit, pe «Da» și înainte de închiderea înscrierilor merge la primul de pe listă; altfel stă liber până îl dai tu.",
                 "Merge oricând până la start, și după închiderea înscrierilor: oferta e valabilă atunci cel mult până la start. La masă, cu persoana de față, «Dă-i un loc» o confirmă pe declarația de hârtie, dar doar într-un loc liber; pe un eveniment plin un „i” lângă el spune de ce.",
                 "Ceilalți rămân pe lista de așteptare și nu primesc nimic. Pe site, cardul spune «Locurile se dau din lista de așteptare», iar cine se înscrie acum intră tot pe listă cât timp așteaptă cineva. Câți pot aștepta spune «Lista de așteptare», lângă «Număr de locuri».",
@@ -5574,15 +5574,32 @@
               ]
             },
             {
-              "title": "Un loc în afara locurilor: organizatori, pacemakeri, invitați",
+              "title": "Lista ascunsă: organizatori, pacemakeri, invitați",
               "steps": [
                 "Pentru cine aleargă din partea clubului: organizatori, pacemakeri, invitați. Nu iau niciunul dintre locurile anunțate.",
-                "Deschide înscrierea persoanei → «Locurile evenimentului» → «Pune în afara locurilor» și confirmă.",
+                "Întâi, în setările evenimentului, la «Lista publică a participanților», bifează «Folosește lista ascunsă».",
+                "Deschide înscrierea persoanei → «Lista ascunsă» → alege «Pe lista ascunsă» și confirmă.",
                 "Dacă ocupa un loc, locul se eliberează: pe «Da» merge primului de pe lista de așteptare; pe «Nu» rămâne liber până îl dai tu.",
-                "De pe lista de așteptare sau dintr-o ofertă deschisă primește un loc acum, în afara locurilor: emailul declarației, cu termenul obișnuit, nu al ofertei.",
-                "Confirmat sau cu declarația de semnat, își păstrează starea, numărul și emailurile. Pe site nu intră în niciun număr; apare pe listă doar dacă a bifat, fără niciun semn.",
-                "«Numără între locuri» o întoarce doar dacă e un loc liber; altfel apăsarea e refuzată și spune cine ține locurile.",
-                "În lista înscrierilor, pilula «În afara locurilor» îi arată pe toți; exportul are o coloană pentru ei."
+                "De pe lista de așteptare sau dintr-o ofertă deschisă primește un loc acum, pe lista ascunsă: emailul declarației, cu termenul obișnuit, nu al ofertei.",
+                "Confirmat sau cu declarația de semnat, își păstrează starea, numărul și emailurile. Apare pe lista publică doar dacă a bifat, fără niciun semn.",
+                "Cu «Numerele listei ascunse încep de la» lista ascunsă are seria ei de numere de concurs, în ordinea confirmării; un număr deja dat rămâne.",
+                "Pe site, «Cine vine» îi numără doar cu «Numără și lista ascunsă» bifat; locurile și locurile libere nu îi numără niciodată.",
+                "«Arată public numărătoarea», lângă «Arată public câți așteaptă», e pe orice eveniment: debifat, «Cine vine» arată doar numele, fără numere.",
+                "Cât timp lista e folosită sau cineva de pe ea are loc, pagina spune lângă locuri, fără nume, că organizatorii și invitații pot fi la start în afara locurilor anunțate.",
+                "«Se numără între locurile evenimentului» o întoarce doar dacă e un loc liber; altfel apăsarea e refuzată și spune cine ține locurile.",
+                "În lista înscrierilor, pilula «Lista ascunsă» îi arată pe toți; exportul are o coloană pentru ei."
+              ]
+            },
+            {
+              "title": "Invită pe cineva la un eveniment, pe email",
+              "steps": [
+                "Pentru membri, parteneri și oaspeți: fiecare primește un email cu un link spre formular, cu numele și adresa deja completate.",
+                "«Evenimente» → «Editează» pe rândul cursei → cardul «Înscrierile primite» → «Trimite invitații»: se deschide secțiunea «Invitații» a listei.",
+                "Bifează membrii din listă sau scrie alte persoane, câte una pe rând: numele, apoi adresa. Alege «Zile până expiră» și «Limba invitației» (pentru adresele noi); bifează «Pe lista ascunsă (nu ocupă un loc)» pentru organizatori, voluntari și pacemakeri. Se poate trimite și după închiderea înscrierilor, până la start.",
+                "«Trimite invitațiile» întreabă întâi: câte invitații, câte locuri libere și, pe o cursă plină, câte locuri suplimentare se adaugă și cât devine capacitatea.",
+                "Fiecare invitație ține un loc până la termen; dacă nu e acceptată, locul se eliberează singur. Persoana completează restul și semnează ea declarația.",
+                "Pe rândul invitației: «Retrimite» trimite un link nou; termenul rămâne, dacă nu scrii un număr de zile care îl mută mai târziu. «Retrage» o închide și eliberează locul.",
+                "Dacă cineva invitat se înscrie oricum, din formularul public sau la masă, înscrierea lui ia locul invitației când i se confirmă adresa sau primește un loc: invitația apare «Acceptată»."
               ]
             },
             {

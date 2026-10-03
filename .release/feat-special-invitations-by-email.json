@@ -51,6 +51,10 @@
     {
       "requirement": "BR-REQ-036-02",
       "text": "An invitation's link to an event called off since the send (`CANCELLED`) — the GET and the press alike — says the event was cancelled («Evenimentul a fost anulat, așa că invitația nu mai e valabilă.»), never that the deadline passed; a race already started, or an event marked «Încheiat» (`COMPLETED`) even with its start ahead, says expired, never cancelled; the token stays unspent (2026-10-03, `DECISIONS.md` §NNN)."
+    },
+    {
+      "requirement": "BR-REQ-037-07",
+      "text": "A send of invitations «Pe lista ascunsă» to an event whose «Folosește lista ascunsă» is off is refused under the event lock with `HIDDEN_LIST_OFF` — the registration page's own sentence — before any invitation is written or any email queued, and the invitation form draws the tick only while the switch is on; the same send goes through once the switch is on (2026-10-03, `DECISIONS.md` §NNN)."
     }
   ],
   "docsNotes": "",

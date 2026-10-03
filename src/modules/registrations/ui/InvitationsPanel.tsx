@@ -111,7 +111,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
       nobody: t("invitations.errors.INVITATION_NOBODY"),
       errors: {
         ...Object.fromEntries([...INVITATION_REFUSALS, "SUPPLEMENTARY_PLACE_UNCONFIRMED", "FORBIDDEN", "NOT_FOUND"].map((code) => [code, t.raw(`invitations.errors.${code}`) as string])),
-        // The switch turned off after the page was drawn: the registration page's own sentence (§NNN).
+        // The switch turned off after the page was drawn: the registration page's own sentence (§648; the send obeys the switch, §647).
         [HIDDEN_LIST_OFF]: t("errors.HIDDEN_LIST_OFF"),
       },
       errorGeneric: t("invitations.errors.generic"),

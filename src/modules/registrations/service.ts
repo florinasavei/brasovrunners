@@ -4219,7 +4219,7 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
     if (!deadline) throw new InvitationRefusal("INVITATION_EVENT_CLOSED");
     /*
       «Pe lista ascunsă» follows the event's «Folosește lista ascunsă» as the registration page's radio does
-      (§NNN): off, nobody is invited onto the hidden list — read under the lock, so a save switching it off
+      («Folosește lista ascunsă», §648; the send obeys it, §647): off, nobody is invited onto the hidden list — read under the lock, so a save switching it off
       and a send racing it cannot both win, and refused before anything is written or anyone emailed.
     */
     if (input.outsideCapacity && !lockedEvent.hiddenListEnabled) {
@@ -4540,6 +4540,7 @@ export async function seatInvitedRegistration<T extends Record<string, unknown>>
   // The hold's deadline, for the job (§334) — as `confirmEmail` wakes it from inside a caller's transaction.
   wakeMaintenance(event, now, settings, allocated.holdExpiresAt);
   return allocated;
+}
 
 /**
  * «Modifică datele» (§NNN; the owner, 2026-10-02: «Nu vreau să se numească „curăță”, dar practic vreau
