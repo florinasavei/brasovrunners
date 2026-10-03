@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.64-2026-10-03
+
+- **«Lista de invitați speciali» instead of «Lista ascunsă»** — the backoffice calls it what it is for (organizers, volunteers, pacemakers, invited runners at the start without taking an announced place); the registration's block has an «i» that explains it, the editor's switch a «?» that says how it differs from an invitation by email, and the chip and the pill a one-line hint. Nothing else changes, and the public pages keep their words. §649.
 ## BR-V2.63-2026-10-03
 
 - **An Administrator corrects any answer a participant typed** — «Datele înscrierii» → «Modifică datele» on a registration's page corrects the names, birth date, phone, city, emergency contact, club, member tick and the rest, audited field by field with the old and new value, no email and no place moved; a guardian only on a minor's registration; the address, the consents and the declaration stay the person's. «Bife de membru fără cont de membru» on the members' list previews the ticked registrations whose address is no club account's and clears them in one audited press. §645.

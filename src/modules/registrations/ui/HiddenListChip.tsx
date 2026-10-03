@@ -7,7 +7,7 @@ import IncognitoIcon from "@/shared/ui/IncognitoIcon";
 
 /**
  * «Invitat special» as a chip (§647, amending §643; the list «Lista ascunsă» there, «Lista de invitați
- * speciali» since §NNN, with a one-line `hint`): the incognito glyph beside the words, on a
+ * speciali» since §649, with a one-line `hint`): the incognito glyph beside the words, on a
  * registration's row and page, and — given an `href` — the registrations list's pill, a filter link
  * inside a 44-pixel target like every other pill (`ChipLink`, BR-REQ-041-01 criterion 6).
  *
@@ -27,7 +27,7 @@ export default function HiddenListChip({
 }: {
   label: string;
   /**
-   * What a special guest is, in one line (§NNN): the chip's `title` and, after the label, the pill link's
+   * What a special guest is, in one line (§649): the chip's `title` and, after the label, the pill link's
    * accessible name; the registration page's «i» is the touch-friendly explanation.
    */
   hint?: string;

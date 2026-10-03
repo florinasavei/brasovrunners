@@ -12,7 +12,7 @@ import IncognitoIcon from "@/shared/ui/IncognitoIcon";
 
 /**
  * §647 — «Lista ascunsă» (amending §643): the name, the incognito glyph, the radio, and the event's
- * settings as the rest of the code reads them. §NNN — on screen it is «Lista de invitați speciali»
+ * settings as the rest of the code reads them. §649 — on screen it is «Lista de invitați speciali»
  * («Special guests list»), each screen saying what it does; the column, the identifiers and the audit
  * action keep their names.
  */
@@ -35,7 +35,7 @@ describe("§647 the event's settings, as read", () => {
   });
 });
 
-describe("§NNN the name, in both languages: «Lista de invitați speciali»", () => {
+describe("§649 the name, in both languages: «Lista de invitați speciali»", () => {
   it("says «Invitat special» / «Lista de invitați speciali» on the chip, the pill, the radio, the verbs, the column, the audit label and the guide", () => {
     expect(ro.Admin.registrations.outside.title).toBe("Lista de invitați speciali");
     expect(en.Admin.registrations.outside.title).toBe("Special guests list");

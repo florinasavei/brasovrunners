@@ -18,7 +18,7 @@ type Choice = "counted" | "hidden";
  * «Lista ascunsă» on a registration's page (§647, amending §643; the owner, 2026-10-02: «Nu îmi place
  * deloc cum arată bifa asta, trebuia să fie doar radio»): two radios — «Se numără între locurile
  * evenimentului» and «Pe lista ascunsă» — the one the server said checked, under a heading wearing the
- * incognito glyph. On screen it is «Lista de invitați speciali» since §NNN (the code keeps `hiddenList`),
+ * incognito glyph. On screen it is «Lista de invitați speciali» since §649 (the code keeps `hiddenList`),
  * and the heading has an «i» beside it (`info`, §640's touch-friendly pattern): what the list is for, what
  * the person keeps, and that an ordinary participant does not go there. Beside the heading, not inside
  * it, so the radio group's name stays the heading's words.

@@ -352,7 +352,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       <input type="hidden" name="registrationId" value={registration.id} />
     </>
   );
-  // «Lista de invitați speciali»'s «i» (§NNN): who it is for, what they keep, who does not go there — a line each.
+  // «Lista de invitați speciali»'s «i» (§649): who it is for, what they keep, who does not go there — a line each.
   const hiddenListInfo = [tr("registrations.outside.infoFor"), tr("registrations.outside.infoKeeps"), tr("registrations.outside.infoNot")].join("\n");
   // The forms that carry a typed value answer a refusal with the value still in its box (§315).
   const refusal = await refusalMessages({
@@ -645,7 +645,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         that reads the page reads the state; only the Administrator changes it (`canManageRegistrations`,
         asserted again by the action and the service), and only while the registration is active — an ended
         row's mark is read, never changed. A change asks the dialog that says what it does in this row's state.
-        Named «Lista de invitați speciali» on screen since §NNN, with an «i» beside its heading; the code's
+        Named «Lista de invitați speciali» on screen since §649, with an «i» beside its heading; the code's
         `hiddenList` / `outsideCapacity` names stay.
       */}
       {(registration.eventHiddenListEnabled || registration.outsideCapacity) && (

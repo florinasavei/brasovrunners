@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.63-2026-10-03 -->
+<!-- PROJECT_BASELINE: BR-V2.64-2026-10-03 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V2.63-2026-10-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.64-2026-10-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -2747,7 +2747,7 @@ BR-REQ-037-05):
      (`canManageRegistrations`). Each verb is audited under the volunteer's own id.
 
 6. **«Lista de invitați speciali» (2026-10-02, §643; named «Lista ascunsă», drawn as a radio and given
-   the event's switch by §647; renamed «Lista de invitați speciali», and explained on every screen that shows it, by §NNN on 2026-10-03).** The Administrator (`canManageRegistrations`; the Organizer reads the chip, the pill and
+   the event's switch by §647; renamed «Lista de invitați speciali», and explained on every screen that shows it, by §649 on 2026-10-03).** The Administrator (`canManageRegistrations`; the Organizer reads the chip, the pill and
    the radio, disabled, and changes nothing) puts a registration on the special guests list or takes it off,
    on its own page — for organizers, pacemakers and invited runners, who run without taking one of
    the announced places — only while the event's «Folosește lista de invitați speciali» is on (taking off always;

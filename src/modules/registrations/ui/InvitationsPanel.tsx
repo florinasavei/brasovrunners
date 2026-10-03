@@ -168,7 +168,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                       {row.email}
                     </Typography>
                     <Chip size="small" color={STATE_COLOR[state]} label={t(`invitations.state.${state}`)} />
-                    {/* «Invitat special» (§NNN): the registrations' own chip, glyph and hint, not a bare word. */}
+                    {/* «Invitat special» (§649): the registrations' own chip, glyph and hint, not a bare word. */}
                     {row.outsideCapacity && <HiddenListChip label={t("registrations.outside.chip")} hint={t("registrations.outside.hint")} testId="invitation-outside-chip" />}
                   </Stack>
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>

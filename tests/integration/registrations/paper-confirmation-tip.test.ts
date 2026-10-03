@@ -399,7 +399,7 @@ describe("§647 the registration's «Lista ascunsă» block", () => {
   });
 
   /*
-    §NNN — «Lista de invitați speciali»: the block says what it does. Its heading carries an «i» (the §640
+    §649 — «Lista de invitați speciali»: the block says what it does. Its heading carries an «i» (the §640
     pattern) with who the list is for, what the person keeps and that an ordinary participant does not go
     there; the caption under the radios says the essentials in one line. For every role that reads it.
   */

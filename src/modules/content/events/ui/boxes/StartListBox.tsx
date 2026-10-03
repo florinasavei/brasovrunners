@@ -109,7 +109,7 @@ export default async function StartListBox({ event, mayEditSettings }: Pick<BoxP
                   {t("editor.hiddenListEnabled")}
                 </CheckboxField>
                 {/*
-                  «Lista de invitați speciali» (§NNN): the switch's sentence says what ticking shows and what
+                  «Lista de invitați speciali» (§649): the switch's sentence says what ticking shows and what
                   unticking keeps; its «?» says who the list is for, the two settings under it, and how it
                   differs from «Invitații» by email — one line each, each under 200 characters.
                 */}
