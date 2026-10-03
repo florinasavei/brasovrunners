@@ -20,6 +20,7 @@ import type { FormOutcome } from "@/shared/forms/outcome";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import { readInvitationForecast } from "../admin-service";
+import { HIDDEN_LIST_OFF } from "../domain/hidden-list";
 import { INVITATION_DAYS_DEFAULT, INVITATION_DAYS_MAX, INVITATION_REFUSALS, invitationState } from "../domain/invitations";
 import { listEventInvitations } from "../invitation-repository";
 import InviteForm, { type InviteFormState, type InviteFormWords } from "./InviteForm";
@@ -62,7 +63,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
   const t = await getTranslations("Admin");
   const dialog = await confirmWords();
   const [event] = await db
-    .select({ capacity: events.capacity, timezone: events.timezone })
+    .select({ capacity: events.capacity, timezone: events.timezone, hiddenListEnabled: events.hiddenListEnabled })
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
@@ -108,7 +109,11 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
       confirm: t("invitations.dialog.confirm"),
       cancel: dialog.cancel,
       nobody: t("invitations.errors.INVITATION_NOBODY"),
-      errors: Object.fromEntries([...INVITATION_REFUSALS, "SUPPLEMENTARY_PLACE_UNCONFIRMED", "FORBIDDEN", "NOT_FOUND"].map((code) => [code, t.raw(`invitations.errors.${code}`) as string])),
+      errors: {
+        ...Object.fromEntries([...INVITATION_REFUSALS, "SUPPLEMENTARY_PLACE_UNCONFIRMED", "FORBIDDEN", "NOT_FOUND"].map((code) => [code, t.raw(`invitations.errors.${code}`) as string])),
+        // The switch turned off after the page was drawn: the registration page's own sentence (§NNN).
+        [HIDDEN_LIST_OFF]: t("errors.HIDDEN_LIST_OFF"),
+      },
       errorGeneric: t("invitations.errors.generic"),
     };
     form = (
@@ -121,6 +126,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
         free={free}
         daysDefault={INVITATION_DAYS_DEFAULT}
         daysMax={INVITATION_DAYS_MAX}
+        hiddenListEnabled={event.hiddenListEnabled}
         words={words}
       />
     );

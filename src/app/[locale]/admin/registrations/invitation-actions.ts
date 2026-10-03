@@ -6,6 +6,7 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { inviteToEvent, readInvitationForecast, resendInvitation, withdrawInvitation } from "@/modules/registrations/admin-service";
 import { confirmedCapacityOf, SUPPLEMENTARY_PLACE_UNCONFIRMED, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
+import { HIDDEN_LIST_OFF } from "@/modules/registrations/domain/hidden-list";
 import { INVITATION_DAYS_DEFAULT, InvitationRefusal, parseInvitationLines } from "@/modules/registrations/domain/invitations";
 import type { InvitationInvitee } from "@/modules/registrations/service";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -91,9 +92,11 @@ export async function inviteAction(_previous: InvitationSendState, form: FormDat
       ? { error: error.refusal, person: error.person }
       : supplementaryPlaceRefusalOutcome(error)
         ? { error: SUPPLEMENTARY_PLACE_UNCONFIRMED }
-        : isDomainError(error)
-          ? { error: error.code }
-          : null;
+        : isDomainError(error) && error.fields.includes(HIDDEN_LIST_OFF)
+          ? { error: HIDDEN_LIST_OFF }
+          : isDomainError(error)
+            ? { error: error.code }
+            : null;
     if (!refused) throw error;
     // The numbers the next dialog asks on, read now — for the role that may send, asserted above.
     return { ...refused, forecast: await readInvitationForecast(db, eventId, new Date()) };

@@ -11,6 +11,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { computeOccupied, SUPPLEMENTARY_PLACE_UNCONFIRMED } from "@/modules/registrations/domain/capacity";
+import { HIDDEN_LIST_OFF } from "@/modules/registrations/domain/hidden-list";
 import { InvitationRefusal } from "@/modules/registrations/domain/invitations";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { signingInput } from "../../helpers/declaration-signing";
@@ -94,7 +95,7 @@ const PUBLIC = { source: "PUBLIC" as const, createdByStaffUserId: null };
 
 async function createEvent(
   capacity: number | null,
-  options: { auto?: boolean; closesAt?: Date | null; status?: "SCHEDULED" | "CANCELLED"; startsAt?: Date } = {},
+  options: { auto?: boolean; closesAt?: Date | null; status?: "SCHEDULED" | "CANCELLED"; startsAt?: Date; hidden?: boolean } = {},
 ): Promise<EventInput> {
   const [event] = await db
     .insert(events)
@@ -105,6 +106,8 @@ async function createEvent(
       capacity,
       registrationClosesAt: options.closesAt ?? null,
       waitlistAutoOffer: options.auto ?? false,
+      // «Folosește lista ascunsă» (§NNN): off by default, as migration 0126 leaves every event.
+      hiddenListEnabled: options.hidden ?? false,
       eventStatus: options.status ?? "SCHEDULED",
       locationName: "Parcul Tractorul",
       editorialStatus: "PUBLISHED",
@@ -243,12 +246,26 @@ describe("§NNN BR-REQ-034-01 a send holds one counted place per invitation, unt
   });
 
   it("«În afara locurilor» holds no counted place and needs none on a full race", async () => {
-    const event = await createEvent(1);
+    const event = await createEvent(1, { hidden: true });
     await registered(event, "Ioana", 0);
     const sent = await inviteToEventByStaff(db, event, { people: [{ name: "Pace Maker", email: "pace@example.invalid" }], days: 7, outsideCapacity: true }, admin, NOW);
     expect(sent.capacityRaisedTo).toBeNull();
     expect((await countOccupied(db, event.id, at(1))).invitationHolds).toBe(0);
     expect(await capacityOf(event.id)).toBe(1);
+  });
+
+  it("«Pe lista ascunsă» is refused while the event's «Folosește lista ascunsă» is off, writing nothing and emailing nobody", async () => {
+    const event = await createEvent(1);
+    await registered(event, "Ioana", 0);
+    const refused = await refusalOf(inviteToEventByStaff(db, event, { people: [{ name: "Pace Maker", email: "pace@example.invalid" }], days: 7, outsideCapacity: true }, admin, at(1)));
+    expect(isDomainError(refused) && refused.code).toBe("VALIDATION_ERROR");
+    expect(isDomainError(refused) && refused.fields).toContain(HIDDEN_LIST_OFF);
+    expect(await invitationsOf(event.id)).toHaveLength(0);
+    expect(await invitationEmails()).toHaveLength(0);
+    expect(await capacityOf(event.id)).toBe(1);
+    // The same press with the switch on goes through: the switch is all that refused it.
+    await db.update(events).set({ hiddenListEnabled: true }).where(eq(events.id, event.id));
+    expect((await inviteToEventByStaff(db, event, { people: [{ name: "Pace Maker", email: "pace@example.invalid" }], days: 7, outsideCapacity: true }, admin, at(2))).sent).toBe(1);
   });
 });
 
@@ -449,7 +466,7 @@ describe("§NNN BR-REQ-036-02 the link: the GET reads, the press spends it once 
   });
 
   it("an invitation «În afara locurilor» seats its registration outside the places", async () => {
-    const event = await createEvent(1);
+    const event = await createEvent(1, { hidden: true });
     await registered(event, "Ioana", 0);
     await inviteToEventByStaff(db, event, { people: [{ name: "Pace Maker", email: "pace@example.invalid" }], days: 7, outsideCapacity: true }, admin, at(1));
     const accepted = await acceptInvitation(db, await linkOf("pace@example.invalid", at(2)), form("Pace", at(3)), at(3));
@@ -510,7 +527,7 @@ describe("§NNN the invited address registered by another route takes the invita
   });
 
   it("an invitation on the hidden list taken over seats the registration outside the places", async () => {
-    const event = await createEvent(1);
+    const event = await createEvent(1, { hidden: true });
     await registered(event, "Ioana", 0);
     await inviteToEventByStaff(db, event, { people: [{ name: "Pace Maker", email: "ana@example.invalid" }], days: 7, outsideCapacity: true }, admin, at(1));
     const pending = await viaPublicForm(event, 2);
@@ -737,7 +754,7 @@ describe("§NNN expiry, «Retrimite» and «Retrage»", () => {
   });
 
   it("«Retrimite» with days on a hidden-list invitation while somebody waits: it holds no counted place, so the deadline moves", async () => {
-    const event = await createEvent(1, { auto: true });
+    const event = await createEvent(1, { auto: true, hidden: true });
     await registered(event, "Ioana", 0);
     await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 3, outsideCapacity: true }, admin, at(1));
     expect((await registered(event, "Elena", 2)).status).toBe("WAITLISTED");
