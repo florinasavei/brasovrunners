@@ -7,10 +7,11 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §635 — every row of «Cine s-a înscris» says, after its step, the deadline its state waits on: a held
+ * §635 — the registration's page says, in its full journey, the deadline the row's state waits on: a held
  * place «ține locul până …», or past it the kept words (§160); an open offer; the first email's link;
- * a family's reservation (§543). The cell keeps its hover title; the registration's page says the same
- * in the full journey. `next-intl/server` is the real translator over the real catalogues.
+ * a family's reservation (§543). Since §650 the list says it in its own column, «Până când»
+ * (`row-deadline.test.ts`), and the list's step cell says the step alone, with its hover title.
+ * `next-intl/server` is the real translator over the real catalogues.
  */
 let locale: "ro" | "en" = "ro";
 
@@ -69,32 +70,26 @@ beforeEach(() => {
 });
 afterEach(() => vi.useRealTimers());
 
-describe("§635 the list's step cell names the deadline the row waits on", () => {
-  it("a held place, before its deadline: «ține locul până …»", async () => {
-    const text = await cell(row({ status: "PENDING_DECLARATION", emailVerifiedAt: VERIFIED, holdExpiresAt: DUE }));
-    expect(text).toBe(`3/6 · Loc rezervat · ține locul până ${day(DUE)}`);
+describe("§635, §650 the list's step cell says the step; its deadline is the «Până când» column's", () => {
+  it("a held place, before and past its deadline, an open offer: the step alone", async () => {
+    expect(await cell(row({ status: "PENDING_DECLARATION", emailVerifiedAt: VERIFIED, holdExpiresAt: DUE }))).toBe("3/6 · Loc rezervat");
+    expect(await cell(row({ status: "PENDING_DECLARATION", emailVerifiedAt: VERIFIED, holdExpiresAt: PAST }))).toBe("3/6 · Loc rezervat");
+    expect(await cell(row({ status: "WAITLIST_OFFERED", emailVerifiedAt: VERIFIED, waitlistedAt: VERIFIED, offerCreatedAt: SUBMITTED, holdExpiresAt: DUE }))).toBe(
+      "3/6 · Loc rezervat",
+    );
   });
 
-  it("a held place past its deadline: kept while nobody asks for it (§160)", async () => {
-    const text = await cell(row({ status: "PENDING_DECLARATION", emailVerifiedAt: VERIFIED, holdExpiresAt: PAST }));
-    expect(text).toBe("3/6 · Loc rezervat · termen depășit, locul se ține cât nu-l cere nimeni");
+  it("an address not confirmed yet, a family's reservation: the step alone", async () => {
+    expect(await cell(row({ emailLinkExpiresAt: LINK }))).toBe("1/6 · Înscriere trimisă");
+    expect(await cell(row({ emailLinkExpiresAt: LINK, holdExpiresAt: RESERVED }))).toBe("1/6 · Înscriere trimisă");
   });
 
-  it("an open offer", async () => {
-    const text = await cell(row({ status: "WAITLIST_OFFERED", emailVerifiedAt: VERIFIED, waitlistedAt: VERIFIED, offerCreatedAt: SUBMITTED, holdExpiresAt: DUE }));
-    expect(text).toBe(`3/6 · Loc rezervat · loc oferit, până ${day(DUE)}`);
-  });
-
-  it("an address not confirmed yet: when its link lapses, and that it has", async () => {
-    expect(await cell(row({ emailLinkExpiresAt: LINK }))).toBe(`1/6 · Înscriere trimisă · linkul expiră ${day(LINK)}`);
-    expect(await cell(row({ emailLinkExpiresAt: PAST }))).toBe("1/6 · Înscriere trimisă · linkul a expirat");
-    // A row written before the column (§377): nothing to say rather than a wrong date.
-    expect(await cell(row({}))).toBe("1/6 · Înscriere trimisă");
-  });
-
-  it("a family's reservation: the place is reserved until its deadline, then the link again (§543)", async () => {
-    expect(await cell(row({ emailLinkExpiresAt: LINK, holdExpiresAt: RESERVED }))).toBe(`1/6 · Înscriere trimisă · loc rezervat până ${day(RESERVED)}`);
-    expect(await cell(row({ emailLinkExpiresAt: LINK, holdExpiresAt: PAST }))).toBe(`1/6 · Înscriere trimisă · linkul expiră ${day(LINK)}`);
+  it("the full journey still says the reservation and the link (§543)", async () => {
+    expect(await cell(row({ emailLinkExpiresAt: LINK, holdExpiresAt: RESERVED }), "full")).toContain(`loc rezervat până ${day(RESERVED)}`);
+    expect(await cell(row({ emailLinkExpiresAt: PAST }), "full")).toContain("linkul a expirat");
+    expect(await cell(row({ status: "PENDING_DECLARATION", emailVerifiedAt: VERIFIED, holdExpiresAt: PAST }), "full")).toContain(
+      "termen depășit, locul se ține cât nu-l cere nimeni",
+    );
   });
 
   it("an ended row names no deadline, and the hover title stays", async () => {
@@ -104,13 +99,10 @@ describe("§635 the list's step cell names the deadline the row waits on", () =>
     expect(html).toContain('title="3 din 6 pași · urmează: Declarație semnată"');
   });
 
-  it("in English", async () => {
+  it("in English, the full journey", async () => {
     locale = "en";
-    expect(await cell(row({ status: "PENDING_DECLARATION", emailVerifiedAt: VERIFIED, holdExpiresAt: DUE }))).toBe(`3/6 · Loc rezervat · holds the place until ${day(DUE)}`);
-    expect(await cell(row({ status: "PENDING_DECLARATION", emailVerifiedAt: VERIFIED, holdExpiresAt: PAST }))).toBe(
-      "3/6 · Loc rezervat · deadline passed, the place is kept while nobody asks for it",
-    );
-    expect(await cell(row({ emailLinkExpiresAt: LINK }))).toBe(`1/6 · Înscriere trimisă · the link expires ${day(LINK)}`);
+    expect(await cell(row({ status: "PENDING_DECLARATION", emailVerifiedAt: VERIFIED, holdExpiresAt: DUE }), "full")).toContain(`holds the place until ${day(DUE)}`);
+    expect(await cell(row({ emailLinkExpiresAt: LINK }), "full")).toContain(`the link expires ${day(LINK)}`);
   });
 
   it("the registration's page says the same in the full journey", async () => {

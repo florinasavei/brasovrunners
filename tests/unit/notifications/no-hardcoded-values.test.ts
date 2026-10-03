@@ -205,7 +205,10 @@ describe("§369 the club's name leaves the platform only through the constant", 
           "Admin.registrations.answers.clubNameHelp",
           "Admin.registrations.answers.fields.clubMemberDeclared",
           "Admin.registrations.answers.memberHelp",
-          "Admin.registrations.clubMemberLabel",
+          // The list's members' tick and its help (§650), and the guide's step that names it.
+          "Admin.registrations.clubMemberOnly",
+          "Admin.registrations.clubMemberOnlyHelp",
+          "Admin.guide.sections.4.tasks.16.steps.2",
           "Admin.tasks.items.contactForm.how.1",
           "Admin.tasks.items.inviteKey.how.0",
           // «Beneficiile membrilor» without the club's words (§524).
@@ -237,7 +240,8 @@ describe("§369 the club's name leaves the platform only through the constant", 
       clubMemberDeclared: 2,
       "disclosure.race": 1,
       "disclosure.raceNoShirt": 1,
-      "registrations.clubMemberLabel": 1,
+      "registrations.clubMemberOnly": 1,
+      "registrations.clubMemberOnlyHelp": 1,
       "pages.intro": 1,
       "page.report.heading": 1,
       // «Echipa» (§459), «Întrebări frecvente» (§525) and «Beneficiile membrilor» (§524): each page and its description for search engines.
@@ -257,6 +261,9 @@ describe("§369 the club's name leaves the platform only through the constant", 
     // The task steps are read raw and filled by the page from its own values.
     const tasks = readFileSync(path.join(process.cwd(), "src/app/[locale]/admin/tasks/page.tsx"), "utf8");
     expect(tasks).toMatch(/club:\s*CLUB_NAME,/);
+    // So are the guide's (§650: the members' filter is named by its tick, which names the club).
+    const guide = readFileSync(path.join(process.cwd(), "src/app/[locale]/admin/guide/page.tsx"), "utf8");
+    expect(guide).toMatch(/club:\s*CLUB_NAME[,\s}]/);
     // And a filled sentence reads the name in both languages.
     for (const [locale, messages] of [
       ["ro", ro],

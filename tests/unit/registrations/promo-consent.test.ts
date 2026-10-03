@@ -215,10 +215,10 @@ describe("§562 the exports", () => {
 
   it("the registrations CSV ends with «Offers and benefits»: the moment of the yes, or empty", () => {
     const [header, yes, no] = buildRegistrationsCsv([row("2026-09-29T10:00:00.000Z"), row("")]).split("\r\n");
-    // Followed only by «Special guest» (§643, named by §647, renamed since), which came after it.
-    expect(header.split(",").at(-2)).toBe("Offers and benefits");
-    expect(yes.split(",").at(-2)).toBe("2026-09-29T10:00:00.000Z");
-    expect(no.split(",").at(-2)).toBe("");
+    // Followed by «Special guest» (§643, named by §647, renamed since) and, in the CSV, the list's «Până când» (§650).
+    expect(header.split(",").at(-4)).toBe("Offers and benefits");
+    expect(yes.split(",").at(-4)).toBe("2026-09-29T10:00:00.000Z");
+    expect(no.split(",").at(-4)).toBe("");
     expect(REGISTRATION_SHEET_HEADERS.at(-2)).toBe("Offers and benefits");
   });
 

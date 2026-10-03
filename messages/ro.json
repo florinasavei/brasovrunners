@@ -562,6 +562,12 @@
       "clear": "Șterge filtrele",
       "actions": "Acțiuni"
     },
+    "columns": {
+      "resize": "Lățimea coloanei „{column}”",
+      "resizeHow": "Trage marginea ca să lărgești sau să îngustezi coloana; cu tastatura, săgețile stânga și dreapta. Dublu clic o readuce la lățimea inițială.",
+      "reset": "Lățimi implicite",
+      "widthValue": "{width} px"
+    },
     "backToEvents": "Înapoi la lista de evenimente",
     "legalNotice": {
       "title": "Cum funcționează versiunile textelor legale",
@@ -626,6 +632,7 @@
       "filterAll": "Toate evenimentele",
       "filter": "Filtrează",
       "statusLabel": "Stare",
+      "statusAll": "Toate stările",
       "summaryTotal": "Înscrieri: {count} (toate stările, anulate și expirate incluse)",
       "summaryTest": "De test: {count}",
       "outside": {
@@ -771,14 +778,25 @@
       "registrationDeleted": "Înscrierea a fost ștearsă definitiv.",
       "eraseLeftovers": "Șterge și manual: mesajele „Declarație semnată” din arhivă, rândul din exporturile și PDF-urile descărcate, foile tipărite și adresa din Mailgun → Suppressions.",
       "rowActions": "Acțiuni pentru {name}",
-      "clubMemberLabel": "Membri {club}",
-      "bouncedLabel": "Email",
-      "bouncedOnly": "Doar email respins",
-      "clubMemberOnly": "Doar cei care s-au declarat membri",
+      "clubMemberOnly": "Doar membrii {club} (declarați)",
+      "clubMemberOnlyHelp": "Cine a bifat la înscriere „Sunt membru al grupului {club}”. Clubul nu verifică; pe rând scrie „Membru (declarat)”.",
+      "bouncedOnly": "Doar cine nu a primit emailul",
+      "bouncedOnlyHelp": "Adresa a respins mesajul sau furnizorul l-a refuzat; pe rând scrie „Email respins”. Pe ei îi suni înainte de cursă.",
       "clubMemberChip": "Membru (declarat)",
       "columnName": "Nume",
       "columnStatus": "Stare",
       "columnJourney": "Unde a ajuns",
+      "columnUntilWhen": "Până când",
+      "untilWhenHint": "Până când poate semna declarația, accepta oferta sau confirma adresa din email, la minut. Gri: termen trecut. «—»: nu așteaptă nimic. La fel ca în cronologia înscrierii.",
+      "untilWhen": {
+        "hold": "Poate semna până {instant}",
+        "kept": "{instant} — termenul a trecut, locul e păstrat",
+        "offer": "Poate accepta până {instant}",
+        "offerLapsed": "{instant} — termenul ofertei a trecut",
+        "reserved": "Locul e rezervat până {instant}",
+        "link": "Linkul e valabil până {instant}",
+        "linkLapsed": "{instant} — linkul a expirat"
+      },
       "columnEvent": "Eveniment",
       "columnEmail": "E-mail",
       "columnSubmitted": "Trimisă",
@@ -5340,6 +5358,7 @@
                 "La «Evenimente» alege evenimentul (sau «Toate evenimentele»), la «Stare» ce te interesează, apoi «Filtrează».",
                 "Cauți pe cineva: scrie o parte din nume în «Caută după nume» și apasă «Filtrează». Fără un eveniment ales, caută în toate.",
                 "Coloana «Unde a ajuns» spune pasul fiecăruia. Apasă pe nume ca să deschizi înscrierea: «Parcursul înscrierii» și «Cronologie» spun tot ce s-a întâmplat.",
+                "Coloana «Până când» spune până când poate semna, accepta sau confirma fiecare — aceeași oră ca în cronologia înscrierii.",
                 "Sus scrie o dată ce nu poți modifica aici. Rolul Tehnic nu vede înscrierile deloc.",
                 "Pe pagina publică a evenimentului, prima cifră numără înscrierile care țin un loc: confirmații plus cei încă în curs — o declarație nesemnată, o ofertă din lista de așteptare neacceptată, locul ținut de o familie. După liniuță, linia spune doar ce există: câți sunt confirmați și câți în curs, și câte locuri libere sunt păstrate pentru lista de așteptare, de exemplu „6 înscriși din 10 locuri — 4 confirmați, 2 în curs de confirmare, 4 locuri păstrate pentru lista de așteptare”.",
                 "Locurile păstrate sunt locuri libere pe care le cere lista de așteptare, iar cardul le arată în două feluri. Dacă sunt mai multe locuri libere decât oameni care așteaptă, cardul spune «Locurile se dau din lista de așteptare» și nu numără niciun loc liber. Dacă lista cere toate locurile libere, ca în exemplu, cardul spune că locurile s-au ocupat — „Mulțumim! Toate cele 10 locuri s-au ocupat — … așteaptă deja un loc.” — și oferă «Intră pe lista de așteptare», deși linia locurilor numește încă „4 locuri păstrate pentru lista de așteptare”. În ambele cazuri locurile acelea sunt libere: cu «Locurile din lista de așteptare se alocă automat» pe «Nu» le dă clubul, cu «Trimite-i oferta»; pe «Da» le dă coada, primilor de pe listă. Cu «Arată public câți așteaptă» debifat la eveniment, nici cardul, nici pagina, nici cei de pe listă nu află câți așteaptă: cardul spune „Mulțumim! Toate cele 10 locuri s-au ocupat. Intră pe lista de așteptare.”, iar linia locurilor nu mai spune câți sunt pe listă.",
@@ -5655,7 +5674,7 @@
               "steps": [
                 "Când: înainte de o cursă pentru membri, ca să rămână bifați doar membrii clubului. Bifa o pune participantul în formular; clubul nu o verifică.",
                 "Unul câte unul: în «Datele înscrierii» debifează bifa de membru → «Salvează datele». Pe listă, «Nu e membru» e în meniul ⋮ al rândului.",
-                "Toți deodată: «Înscrieri» → «Caută și filtrează» → la membri alege «Doar cei care s-au declarat membri» → «Filtrează» → «Bife de membru fără cont de membru».",
+                "Toți deodată: «Înscrieri» → «Caută și filtrează» → bifează «Doar membrii {club} (declarați)» → «Filtrează» → «Bife de membru fără cont de membru».",
                 "Lista arată înscrierile bifate a căror adresă nu e a niciunui cont din «Echipa». Un membru înscris cu altă adresă apare și el: debifează-i rândul. Apoi «Scoate bifa la cele» … și confirmă.",
                 "Ce nu face: nu anulează nicio înscriere, nu mută niciun loc, nu trimite niciun email. Clubul de pe listă se șterge doar dacă era cel pus de bifă. Fiecare schimbare rămâne în jurnal."
               ]
@@ -5670,7 +5689,7 @@
                 "Atenție: fiecare primește un link nou, iar linkul din emailul de dinainte nu mai merge. Spune-le să deschidă emailul cel mai nou.",
                 "Spune-le să caute emailul și în Spam și în Promoții.",
                 "Cel mult trei apăsări pe oră la un eveniment. Un „i” lângă buton spune când o apăsare ar fi refuzată: evenimentul e anulat, încheiat sau a început, ori s-au consumat apăsările orei.",
-                "Cine pierde locul și când: în «Înscrieri», lista unei curse spune sub «Cine s-a înscris» până când își țin oamenii locul și ce urmează după termen; coloana «Unde a ajuns» are termenul fiecăruia.",
+                "Cine pierde locul și când: lista unei curse din «Înscrieri» spune sub «Cine s-a înscris» până când își țin oamenii locul și ce urmează după termen; coloana «Până când» are ziua și ora fiecăruia.",
                 "O singură persoană: deschide înscrierea ei → «Retrimite emailul»."
               ]
             },

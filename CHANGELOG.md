@@ -8,6 +8,11 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.65-2026-10-03
+
+- **Members and bounced filters are ticks.** On «Înscrieri», «Doar membrii {club} (declarați)» and «Doar cine nu a primit emailul» are checkboxes with a help line, like «Doar cu oferte și beneficii», instead of selects whose closed box showed the label as if it were a chosen value; the filtering, the export and the member sweep are unchanged.; a row whose email bounced carries the «Email respins» chip in the list too, as at the desk, and the «Stare» select's empty option says «Toate stările». §650.
+- **Every registration says until when** — the registrations list has a «Până când» column: to the minute, until when each person can sign the declaration, accept an offer or confirm the address, and what a passed deadline means; sortable, on the phone too, and in the export beside the status as «Until when» and «Waiting on». §651.
+- **The backoffice tables' columns can be resized** — drag a column's edge in any list (or focus it and use the arrow keys); a column never goes narrower than its heading's longest word, this browser remembers the widths per table and draws them from the first paint, and «Lățimi implicite» puts them back. The tables are still drawn on the server and still work without JavaScript. §652.
 ## BR-V2.64-2026-10-03
 
 - **«Lista de invitați speciali» instead of «Lista ascunsă»** — the backoffice calls it what it is for (organizers, volunteers, pacemakers, invited runners at the start without taking an announced place); the registration's block has an «i» that explains it, the editor's switch a «?» that says how it differs from an invitation by email, and the chip and the pill a one-line hint. Nothing else changes, and the public pages keep their words. §649.
