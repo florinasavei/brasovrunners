@@ -35,6 +35,7 @@ import { seriesRhythmPhrase } from "@/modules/group-run-declarations/series";
 import { generateTokenSecret, hashTokenSecret } from "@/modules/action-tokens/domain/token-secret";
 import { bulkCopyRecipients, declarationPdfAudience, isClubCopy, isParticipantMessage } from "./domain/club-notices";
 import { CANNOT_COME_MESSAGES, cannotComeApplies, cannotComeUrlOf } from "./domain/cannot-come";
+import { CONFIRMATION_RETRY_LEAST_LEFT_MS, isConfirmationRetry } from "./domain/automatic-sends";
 import { type HoldLapsedNext, holdLapsedNext } from "./domain/hold-lapsed";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { declarationAsksMinorToSign } from "@/modules/legal-documents/repository";
@@ -42,6 +43,7 @@ import { readOrganizerMessagePayload } from "./domain/organizer-message";
 import { registrationStatusWords } from "./domain/registration-status-words";
 import { readEmailCopyForSending } from "./email-copy";
 import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
+import { formatDeadlineInSentence } from "./domain/deadline-in-sentence";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { emailLinkExpiresAt, reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
 import {
@@ -474,6 +476,9 @@ async function renderRow(
     const standing = await readWaitlistPosition(db, registration.id);
     // With the count kept private (§634) the sentence says what the page says: `countPublic` travels with the rest.
     if (standing) data.waitlistStanding = { position: standing.position, length: standing.length, autoOffer: standing.autoOffer, countPublic: standing.countPublic };
+    // An Administrator's resend (§641) opens with «still on the waiting list», never «we added you» (§654).
+    // A resend rendered after the person left the list says nothing of a standing it no longer has.
+    if (row.isManualResend && standing) data.waitlistResent = true;
   }
   /*
     One cancellation email per person (§547): whether the person held a place or waited in line —
@@ -698,6 +703,37 @@ async function renderRow(
   if ((row.payloadJson as { alreadyRegistered?: unknown } | null)?.alreadyRegistered === true) {
     data.alreadyRegistered = true;
   }
+  /*
+    The verification email re-sent by the maintenance job (§653) to whoever had not confirmed. Read
+    again at the send: confirmed, cancelled or lapsed since it was queued — or the event no longer run,
+    or under an hour left on the link — there is nothing left to ask, and it is withdrawn rather than
+    sent (§331). Otherwise its one sentence says why it came and the deadline its first email started
+    (§513: it does not move), in the event's zone, each half in its own words; and «valabil
+    {confirmationHours}» says the link's whole hours left, never the club's full length. The inbox's
+    alone, like every advice to the address.
+  */
+  if (row.messageType === "VERIFY_REGISTRATION_EMAIL" && isConfirmationRetry(row.payloadJson) && !clubCopy) {
+    const lapsesAt = registration?.emailLinkExpiresAt ?? null;
+    const [eventState] = registration
+      ? await db.select({ startsAt: events.startsAt, eventStatus: events.eventStatus }).from(events).where(eq(events.id, registration.eventId)).limit(1)
+      : [];
+    if (
+      !registration ||
+      registration.status !== "PENDING_EMAIL_CONFIRMATION" ||
+      !lapsesAt ||
+      lapsesAt.getTime() - now.getTime() < CONFIRMATION_RETRY_LEAST_LEFT_MS ||
+      !eventState ||
+      eventState.eventStatus !== "SCHEDULED" ||
+      eventState.startsAt.getTime() <= now.getTime()
+    ) {
+      throw new OutboxMessageWithdrawn("the re-sent verification email has nothing left to ask: confirmed, moved on, under an hour left or the event started");
+    }
+    const linkZone = eventDetails?.timezone ?? CLUB_TIME_ZONE;
+    data.confirmationRetry = true;
+    data.confirmationRetryDeadline = formatDeadlineInSentence(lapsesAt, linkZone, locale);
+    data.confirmationRetryDeadlineOther = formatDeadlineInSentence(lapsesAt, linkZone, otherLocale(locale));
+    if (data.timings) data.timings = { ...data.timings, confirmationHours: Math.floor((lapsesAt.getTime() - now.getTime()) / (60 * 60_000)) };
+  }
   // …re-sent for a slip (§446): the name or the birth date matched a registration, not both — so the
   // message says how to register somebody else. Never on a club copy: it is advice to the address.
   if ((row.payloadJson as { anotherPersonHint?: unknown } | null)?.anotherPersonHint === true && !clubCopy) {
@@ -743,7 +779,7 @@ async function renderRow(
     payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug: eventDetails.slug } } })}`;
   }
   /*
-    «Locul tău la … a expirat» (§638): the deadline that passed, from the payload `expireStaleHolds`
+    `DECLARATION_HOLD_EXPIRED` (§638): the deadline that passed, from the payload `expireStaleHolds`
     wrote (the row's own column otherwise), each half in its own words (§377: a stated deadline says
     the date); whether the place went to the waiting list, a fact of the release; and what the person
     can do now, read off the event as it stands at the send (`holdLapsedNext` says why not at the
@@ -1402,15 +1438,6 @@ function formatEventStart(event: { startsAt: Date; timezone: string } | undefine
 /** The long form with its time, inside a sentence of a message (§349). */
 function formatInSentence(at: Date, timeZone: string, locale: Locale): string {
   return formatDay(at, { locale, timeZone, style: "long", withTime: true, position: "inline" });
-}
-
-/**
- * A deadline to act by, inside a sentence (§580; the owner, 2026-09-30: more bold in the emails):
- * the month spelled out — "vineri, 2 octombrie 2026, la 18:30" / "Friday, 2 October 2026, at 18:30"
- * — so the one date a runner must not miss reads whole, never as "2 oct.".
- */
-export function formatDeadlineInSentence(at: Date, timeZone: string, locale: Locale): string {
-  return formatDay(at, { locale, timeZone, style: "long", month: "long", withTime: true, position: "inline" });
 }
 
 /**

@@ -1073,6 +1073,30 @@
           "few": "Am scos bifa de membru la {count} înscrieri. Nimic altceva nu s-a schimbat.",
           "other": "Am scos bifa de membru la {count} de înscrieri. Nimic altceva nu s-a schimbat."
         }
+      },
+      "tell": {
+        "title": "Ce îi spui",
+        "help": "Propoziția pe care i-o spui cuiva care întreabă unde e înscrierea lui; aceleași cuvinte pe care le-a citit și el.",
+        "inLanguage": {
+          "ro": "În română, limba în care s-a înscris.",
+          "en": "În engleză, limba în care s-a înscris."
+        },
+        "copy": "Copiază",
+        "copied": "Copiat",
+        "state": "Înscrierea ta: {state}.",
+        "PENDING_EMAIL_CONFIRMATION": "Apasă butonul ca să confirmi adresa. Dacă mai e loc, semnezi apoi declarația și primești codul QR.",
+        "linkLapsed": "Linkul din emailul de confirmare a expirat, așa că adresa nu e confirmată și nu îți ținem niciun loc.",
+        "kept": "Termenul de semnare a trecut, dar încă îți păstrăm locul: semnează declarația din email cât mai repede.",
+        "WAITLISTED": "Te vom anunța dacă se eliberează un loc.",
+        "offer": "S-a eliberat un loc pentru tine. Este al tău dacă semnezi declarația pe propria răspundere până {due}.",
+        "offerQueued": "Ți-am oferit un loc; emailul cu oferta e pe drum, iar termenul de semnare se socotește de când pleacă.",
+        "offerLapsed": "Termenul ofertei a trecut, așa că locul nu mai e ținut pentru tine.",
+        "CONFIRMED": "Codul QR pentru ridicarea numărului e în emailul de confirmare și în pagina înscrierii tale.",
+        "bib": "Numărul tău de concurs: {number}.",
+        "CANCELLED": "Înscrierea a fost anulată. Locul tău a fost eliberat.",
+        "EXPIRED": "Înscrierea a expirat, așa că nu îți mai ținem niciun loc.",
+        "holdLapsed": "Locul tău a expirat: declarația nu a fost semnată la timp.",
+        "linkUntil": "Linkul din email e valabil până {instant}."
       }
     },
     "events": {
@@ -4959,7 +4983,9 @@
           "raceWeekDays": "Numărătoarea inversă de pe prima pagină începe cu (zile înainte)",
           "seriesHorizonDays": "O serie își are datele create înainte cu (zile)",
           "publicListDays": "Lista publică de participanți rămâne pe site după eveniment (zile)",
-          "familySittingMinutes": "Emailul unei înscrieri de familie așteaptă „Gata” cel mult (minute)"
+          "familySittingMinutes": "Emailul unei înscrieri de familie așteaptă „Gata” cel mult (minute)",
+          "verificationRetryHours": "Linkul de confirmare a adresei se retrimite după (ore)",
+          "verificationRetries": "De câte ori se retrimite linkul (0–3)"
         },
         "help": {
           "confirmationHours": "Cât are cineva ca să apese linkul din primul email; după, înscrierea expiră.",
@@ -4970,7 +4996,9 @@
           "raceWeekDays": "0 = doar în ziua cursei. Din aceeași zi, cardul de tipărire a numerelor din editor se deschide singur.",
           "seriesHorizonDays": "Datele deja create rămân dacă micșorezi numărul; se completează singure dacă îl mărești.",
           "publicListDays": "Apoi lista se închide singură, chiar dacă evenimentul o are încă pornită. Nota de confidențialitate din șablon spune acest număr.",
-          "familySittingMinutes": "După „Da, încă o persoană”, emailul familiei așteaptă „Gata” cel mult atâtea minute de la ultimul formular și pleacă o singură dată, pentru toți; la 0, fiecare email pleacă imediat."
+          "familySittingMinutes": "După „Da, încă o persoană”, emailul familiei așteaptă „Gata” cel mult atâtea minute de la ultimul formular și pleacă o singură dată, pentru toți; la 0, fiecare email pleacă imediat.",
+          "verificationRetryHours": "Socotit de când a plecat ultimul email de confirmare, către cine nu a confirmat încă. Termenul linkului nu se mută.",
+          "verificationRetries": "Fiecare email de confirmare se socotește, și «Retrimite» sau o retrimitere din backoffice. 0 = nu se retrimite singur. Termenul nu se mută."
         },
         "legal": "Textele legale aprobate deja păstrează numerele scrise în ele până aprobi o versiune nouă din șablon, care le citește de aici.",
         "updatedAt": "Setat {when}.",
@@ -5009,7 +5037,8 @@
           "holdLapsed": "expiră un loc ținut; celui care nu a semnat, că locul a trecut la altcineva",
           "registrationOpened": "se deschid înscrierile, către adresele lăsate pe pagina evenimentului",
           "newEventAlert": "anunțul de eveniment nou, către abonații temelor lui",
-          "newsletter": "newsletterul, către abonații temei"
+          "newsletter": "newsletterul, către abonații temei",
+          "confirmationRetry": "linkul de confirmare a adresei, retrimis către cei care nu au confirmat încă"
         },
         "zone": "ora din {zone}",
         "untitled": "(eveniment fără titlu)",
@@ -5102,6 +5131,16 @@
         "saved": "Momentul trimiterii emailurilor a fost salvat.",
         "bypassHelp": "Asta e pentru emailurile automate. O retrimitere sau un mesaj din backoffice poate pleca imediat: la apăsare alegi «Trimite acum»."
       },
+      "retryTimes": {
+        "one": "o dată",
+        "few": "de {count} ori",
+        "other": "de {count} de ori"
+      },
+      "confirmationRetryPreview": {
+        "name": "Confirmă adresa de email — retrimis automat",
+        "whenShort": "la {retry} după ultimul email, dacă nu a confirmat",
+        "platformWords": "Același text ca «Confirmă adresa de email», cu o propoziție în față, care spune termenul. Se modifică acolo."
+      },
       "familyConfirmed": {
         "name": "Înscriere confirmată — familie (mai multe persoane)",
         "whenShort": "după ultima declarație a unei familii",
@@ -5113,7 +5152,9 @@
         "BIB_ASSIGNED": "Când un organizator scrie numărul unei înscrieri confirmate, în pagina ei sau la masă. Altfel, numărul vine cu confirmarea. Cu linkul de gestionare. Niciodată pentru un eveniment anulat.",
         "REGISTER_ANOTHER_PERSON": "Nu se creează nicio înscriere, iar ecranul spune „verifică-ți emailul” ca oricând. Dacă adresa are deja {people}, emailul spune doar asta, fără link.",
         "LEGAL_TEMPLATES_CHANGED": "Verificarea rulează cu sarcinile programate, cel mult o dată pe oră. O schimbare aprobată înainte de verificare nu mai e anunțată; «Sarcini» arată aceleași rânduri."
-      }
+      },
+      "confirmationRetry": "Cui nu a confirmat, linkul pleacă singur din nou la {retry} după ultimul email, cel mult {times}; se socotește și «Retrimite». Termenul nu se mută.",
+      "confirmationRetryOff": "Nu se retrimite singur: în „Termene”, numărul de retrimiteri e 0."
     },
     "guide": {
       "title": "Ghid de utilizare",
@@ -5359,10 +5400,19 @@
                 "Cauți pe cineva: scrie o parte din nume în «Caută după nume» și apasă «Filtrează». Fără un eveniment ales, caută în toate.",
                 "Coloana «Unde a ajuns» spune pasul fiecăruia. Apasă pe nume ca să deschizi înscrierea: «Parcursul înscrierii» și «Cronologie» spun tot ce s-a întâmplat.",
                 "Coloana «Până când» spune până când poate semna, accepta sau confirma fiecare — aceeași oră ca în cronologia înscrierii.",
+                "Cineva întreabă unde e înscrierea lui: deschide-o și spune-i ce scrie la «Ce îi spui» — aceleași cuvinte pe care le-a citit și el. «Copiază» le pune în clipboard, pentru un mesaj.",
                 "Sus scrie o dată ce nu poți modifica aici. Rolul Tehnic nu vede înscrierile deloc.",
                 "Pe pagina publică a evenimentului, prima cifră numără înscrierile care țin un loc: confirmații plus cei încă în curs — o declarație nesemnată, o ofertă din lista de așteptare neacceptată, locul ținut de o familie. După liniuță, linia spune doar ce există: câți sunt confirmați și câți în curs, și câte locuri libere sunt păstrate pentru lista de așteptare, de exemplu „6 înscriși din 10 locuri — 4 confirmați, 2 în curs de confirmare, 4 locuri păstrate pentru lista de așteptare”.",
                 "Locurile păstrate sunt locuri libere pe care le cere lista de așteptare, iar cardul le arată în două feluri. Dacă sunt mai multe locuri libere decât oameni care așteaptă, cardul spune «Locurile se dau din lista de așteptare» și nu numără niciun loc liber. Dacă lista cere toate locurile libere, ca în exemplu, cardul spune că locurile s-au ocupat — „Mulțumim! Toate cele 10 locuri s-au ocupat — … așteaptă deja un loc.” — și oferă «Intră pe lista de așteptare», deși linia locurilor numește încă „4 locuri păstrate pentru lista de așteptare”. În ambele cazuri locurile acelea sunt libere: cu «Locurile din lista de așteptare se alocă automat» pe «Nu» le dă clubul, cu «Trimite-i oferta»; pe «Da» le dă coada, primilor de pe listă. Cu «Arată public câți așteaptă» debifat la eveniment, nici cardul, nici pagina, nici cei de pe listă nu află câți așteaptă: cardul spune „Mulțumim! Toate cele 10 locuri s-au ocupat. Intră pe lista de așteptare.”, iar linia locurilor nu mai spune câți sunt pe listă.",
                 "La un eveniment cu număr de locuri, titlul «Cine vine» numără, ca prima cifră, pe toți cei cu loc cât timp înscrierile sunt deschise. În tabel apar doar cei care au bifat că vor să apară, mai ales confirmații, așa că titlul și rândurile diferă. Pe card, „1 loc oferit din lista de așteptare” e un loc trimis cuiva de pe listă, care încă nu l-a acceptat."
+              ]
+            },
+            {
+              "title": "Ce îi spui cuiva care întreabă",
+              "steps": [
+                "Cineva întreabă unde e înscrierea lui — la telefon, pe mesaj sau la masă: «Înscrieri» → caută numele → deschide înscrierea. Administratorul și Organizatorul o văd la fel.",
+                "Sub «Parcursul înscrierii», «Ce îi spui» are propozițiile de spus, în limba în care s-a înscris: aceleași cuvinte pe care le-a citit el pe pagina lui și în emailuri, cu termenul lui — și până când e valabil linkul din email, doar când e altă oră decât termenul.",
+                "«Copiază» le pune în clipboard, pentru un mesaj. Blocul nu arată nicio adresă și niciun link: un link nou pleacă doar pe email; dacă trebuie retrimis, îl retrimite Administratorul."
               ]
             },
             {
@@ -5677,6 +5727,14 @@
                 "Toți deodată: «Înscrieri» → «Caută și filtrează» → bifează «Doar membrii {club} (declarați)» → «Filtrează» → «Bife de membru fără cont de membru».",
                 "Lista arată înscrierile bifate a căror adresă nu e a niciunui cont din «Echipa». Un membru înscris cu altă adresă apare și el: debifează-i rândul. Apoi «Scoate bifa la cele» … și confirmă.",
                 "Ce nu face: nu anulează nicio înscriere, nu mută niciun loc, nu trimite niciun email. Clubul de pe listă se șterge doar dacă era cel pus de bifă. Fiecare schimbare rămâne în jurnal."
+              ]
+            },
+            {
+              "title": "Ce îi spui cuiva care întreabă",
+              "steps": [
+                "Cineva întreabă unde e înscrierea lui — la telefon, pe mesaj sau la masă: «Înscrieri» → caută numele → deschide înscrierea. Administratorul și Organizatorul o văd la fel.",
+                "Sub «Parcursul înscrierii», «Ce îi spui» are propozițiile de spus, în limba în care s-a înscris: aceleași cuvinte pe care le-a citit el pe pagina lui și în emailuri, cu termenul lui — și până când e valabil linkul din email, doar când e altă oră decât termenul.",
+                "«Copiază» le pune în clipboard, pentru un mesaj. Blocul nu arată nicio adresă și niciun link: un link nou pleacă doar pe email; dacă trebuie retrimis, îl retrimite Administratorul."
               ]
             },
             {
@@ -7221,8 +7279,8 @@
       "doneTitle": "Adresa a fost confirmată",
       "doneWaitlist": "Ești pe lista de așteptare. Dacă se eliberează un loc, îți scriem pe email cu ce ai de făcut.",
       "eventOff": "Evenimentul a fost anulat sau s-a încheiat, așa că înscrierea nu mai continuă: nu ți-am rezervat un loc și nu trebuie să faci nimic.",
-      "waitlistFull": "Locurile și lista de așteptare sunt pline, așa că adresa nu a fost confirmată și nu ți-am rezervat nimic. Linkul din email rămâne valabil {confirmation} de la trimiterea formularului: dacă între timp se eliberează un loc pe lista de așteptare, deschide-l din nou.",
-      "noWaitlist": "Toate locurile au fost ocupate și evenimentul nu are listă de așteptare, așa că adresa nu a fost confirmată și nu ți-am rezervat nimic. Linkul din email rămâne valabil {confirmation} de la trimiterea formularului: dacă între timp se eliberează un loc, deschide-l din nou.",
+      "waitlistFull": "Locurile și lista de așteptare sunt pline: adresa nu e confirmată și nu ți-am rezervat nimic. Linkul e valabil {confirmation} de când a plecat primul email; dacă se eliberează un loc pe listă, redeschide-l.",
+      "noWaitlist": "Toate locurile s-au ocupat și nu e listă de așteptare: adresa nu e confirmată și nu ți-am rezervat nimic. Linkul e valabil {confirmation} de când a plecat primul email; dacă se eliberează un loc, redeschide-l.",
       "doneFor": "Adresa e confirmată pentru:",
       "next": {
         "PENDING_DECLARATION": "semnează declarația din emailul care vine acum",

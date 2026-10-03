@@ -7,6 +7,7 @@ import { sweepOrphanAssets } from "@/modules/media/references";
 import { queueEventReminders, queueParticipationConfirmations } from "@/modules/notifications/event-mail";
 import { AUTOMATIC_SEND_KEYS } from "@/modules/notifications/domain/automatic-sends";
 import { enqueueEmail } from "@/modules/notifications/outbox";
+import { queueConfirmationRetries } from "@/modules/notifications/confirmation-retry";
 import { releaseLegacyHeldNumbers } from "./bibs";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { queueNewEventAlerts } from "@/modules/newsletter/service";
@@ -47,6 +48,8 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   remindersQueued: number;
   /** "Confirm your participation" messages queued this run (§104). */
   confirmationsQueued: number;
+  /** Verification emails re-sent by the job this run, to whoever has not confirmed their address yet (§653). */
+  confirmationRetriesQueued: number;
   /** "Registration is open" messages queued this run to the addresses left ahead of the window (§146). */
   interestsNotified: number;
   /**
@@ -217,6 +220,18 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     errorCount += 1;
     retryableErrorCount += 1;
   }
+  /*
+    The verification email re-sent (§653): the club's hours after the last one left, to whoever has
+    not confirmed, while the address got fewer than one plus the club's number of them — after the
+    lapse above, so a link that just died is never asked again. A failure is a late nudge, not a failed run.
+  */
+  let confirmationRetriesQueued = 0;
+  try {
+    confirmationRetriesQueued = await queueConfirmationRetries(db, now, settings);
+  } catch {
+    errorCount += 1;
+    retryableErrorCount += 1;
+  }
   // "Registration is open" (§146): to every address left on the event's page while the window
   // was ahead, once, the row gone with the message; the rows of an event that will never open
   // go too. A failure is a late announcement, not a failed run.
@@ -336,6 +351,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
         orphanPicturesDeleted +
         remindersQueued +
         confirmationsQueued +
+        confirmationRetriesQueued +
         interestsNotified +
         eventAlertsQueued +
         legalTemplatesNoticesQueued +
@@ -355,6 +371,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     orphanPicturesDeleted,
     remindersQueued,
     confirmationsQueued,
+    confirmationRetriesQueued,
     interestsNotified,
     legacyNumbersKept,
     familyEntriesPurged,

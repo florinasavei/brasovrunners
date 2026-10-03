@@ -43,7 +43,7 @@ const current = {
   tshirtSize: "NONE",
   listSocials: false,
 } as unknown as Registration;
-const context = { eventDay: "2026-11-21", minAge: 14, kitShirt: true, now: new Date("2026-10-02T10:00:00.000Z"), createdAt: new Date("2026-09-01T10:00:00.000Z"), declarationSigned: false };
+const context = { eventDay: "2026-11-21", minAge: 14, kitShirt: true, now: new Date("2026-10-02T10:00:00.000Z"), answersWrittenAt: new Date("2026-09-01T10:00:00.000Z"), declarationSigned: false };
 
 function refusalOf(run: () => unknown): string[] {
   try {
@@ -123,7 +123,7 @@ describe("BR-REQ-037-03 criterion 12: the rules that say which one refused", () 
     const minor = { ...current, birthDate: "2012-03-01", guardianName: "Maria Pop" } as unknown as Registration;
     expect(refusalOf(() => planAnswerEdit(minor, { instagramHandle: "ana.pop" }, { ...context, minAge: null }))).toEqual(["instagramHandle"]);
     // The same person's row written after the eighteenth birthday keeps them.
-    const later = { ...context, createdAt: new Date("2026-09-20T10:00:00.000Z") };
+    const later = { ...context, answersWrittenAt: new Date("2026-09-20T10:00:00.000Z") };
     expect(planAnswerEdit(grownUp, { instagramHandle: "@ana.pop" }, later).set).toEqual({ instagramHandle: "ana.pop" });
     // Clearing them is always allowed.
     const withSocials = { ...grownUp, instagramHandle: "ana.pop" } as unknown as Registration;

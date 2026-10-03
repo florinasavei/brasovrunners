@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.65-2026-10-03 -->
+<!-- PROJECT_BASELINE: BR-V2.66-2026-10-03 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V2.65-2026-10-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.66-2026-10-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -2801,6 +2801,12 @@ confirmation that bypasses the allocator or the approved declaration, a staff-en
 allocated ahead of anybody already waiting, or a delete that skips the allocator and strands the
 place it held.
 
+What sits beside the seven and is none of them: «Ce îi spui» on the registration's page (§654) — the
+sentences a staff member tells a person who asks where their registration stands, in the
+registration's language — reads nothing beyond the page's own query and stores nothing:
+no audit row, no address, no link (only the expiry of the one the state waits on), shown alike to
+every role that reads the page and never at the desk.
+
 ---
 
 ## 16. Email
@@ -2844,6 +2850,14 @@ Registration maintenance:
 - expire waiting-list offers;
 - queue the reminder two days before an event, and with it the declaration once more to
   whoever still owes a signature (`DECISIONS.md` §160);
+- queue the verification email once more (`DECISIONS.md` §653): the address link, the club's hours
+  after the last one left («Termene» `verificationRetryHours`, 20 by default), to a
+  `PENDING_EMAIL_CONFIRMATION` registration of a scheduled event whose link still has an hour — while
+  fewer than one plus `verificationRetries` (1 by default; 0 switches it off) verification emails
+  count for the address and the event — every one that left, and every one the job re-sent whatever
+  became of it, the person's «Retrimite» and a staff resend included (`registration:<id>:verify-retry:<n>`); one per address and event, at most 50 a run oldest
+  first, none while the outbox is behind (§623) or an email for them waits to leave, never to an address
+  that bounced or complained on any message; no deadline moves and the allocator is not called;
 - close remaining waiting-list entries for events that have started, with
   `expiry_reason = EVENT_STARTED`;
 - call fill available spots;

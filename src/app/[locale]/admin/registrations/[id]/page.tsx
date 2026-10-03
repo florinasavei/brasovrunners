@@ -85,6 +85,8 @@ import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
 import GivePlaceButton from "@/modules/registrations/ui/GivePlaceButton";
 import PaperConfirmationTip from "@/modules/registrations/ui/PaperConfirmationTip";
 import OfferPlaceButton from "@/modules/registrations/ui/OfferPlaceButton";
+import WhatToTell from "@/modules/registrations/ui/WhatToTell";
+import { whatToTell } from "@/modules/registrations/ui/tell-words";
 import { givePlaceNowAhead, staffOfferIfMadeNow, staffOfferQuestion } from "@/modules/registrations/give-place-tip";
 import { findInvitationOfRegistration, findLiveInvitationOfParticipant } from "@/modules/registrations/invitation-repository";
 
@@ -243,7 +245,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     and stays open when the row is a minor's or holds a guardian already, so a guardian a corrected date
     will clear is in view. Without JavaScript it is always there (`GuardianForMinor`).
   */
-  const guardianOpen = Boolean(answers?.guardianName) || (typeof answers?.birthDate === "string" && isMinorOn(answers.birthDate, answers.createdAt));
+  const guardianOpen = Boolean(answers?.guardianName) || (typeof answers?.birthDate === "string" && isMinorOn(answers.birthDate, answers.answersWrittenAt));
   // An older row kept only the name of record (BR-REQ-031-04 criterion 6): its two boxes start empty and
   // are not required, or the browser would block every other correction until both were typed.
   const namesRequired = Boolean(answers?.firstName || answers?.lastName);
@@ -492,6 +494,21 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             : tr("registrations.promo.no")}
         </Typography>
       )}
+
+      {/*
+        «Ce îi spui» (§654; the owner: «oamenii mai pierd mailuri, le mai intră în SPAM»): what to tell
+        somebody who asks where their registration stands — the participant's own words, in the
+        registration's language, under the state and above the verbs. Every role that reads the page.
+      */}
+      <WhatToTell
+        title={tr("registrations.tell.title")}
+        help={tr("registrations.tell.help")}
+        languageNote={registration.locale === locale ? null : tr(`registrations.tell.inLanguage.${registration.locale}`)}
+        lang={registration.locale}
+        lines={whatToTell(registration.locale, registration, timelineNow)}
+        copyLabel={tr("registrations.tell.copy")}
+        copiedLabel={tr("registrations.tell.copied")}
+      />
 
       {/* Sending a participant a message is the Administrator's (§15.8, §289). */}
       <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
@@ -1043,7 +1060,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                       helperText={tr("registrations.answers.phoneHelp")}
                       slotProps={{ htmlInput: { maxLength: 30 } }}
                     />
-                    <GuardianForMinor birthDateId={fieldId("birthDate", "answers")} forceOpen={guardianOpen} minorOn={answers.createdAt.toISOString()}>
+                    <GuardianForMinor birthDateId={fieldId("birthDate", "answers")} forceOpen={guardianOpen} minorOn={answers.answersWrittenAt.toISOString()}>
                       <RecallField
                         name="guardianName"
                         label={answerLabels.guardianName}

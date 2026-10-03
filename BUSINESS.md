@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.65-2026-10-03 -->
+<!-- PROJECT_BASELINE: BR-V2.66-2026-10-03 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V2.65-2026-10-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.66-2026-10-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -409,7 +409,8 @@ The backoffice shows, for each registration:
 - place-hold deadline;
 - confirmation/cancellation times;
 - email delivery and resend history;
-- administrative audit history.
+- administrative audit history;
+- «Ce îi spui»: what to tell the person if they ask where their registration stands — their own words, in their language, with no address and no link.
 
 An administrator can:
 

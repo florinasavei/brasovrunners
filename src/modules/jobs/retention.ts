@@ -353,7 +353,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
 
   /*
     No Strava or Instagram for a minor (§323): new submissions store none, decided on the day of
-    registering — somebody under eighteen on the day the row was written. Rows written before
+    registering — somebody under eighteen on the day the row's answers were written (`answers_written_at`, §654). Rows written before
     that rule kept what they were given, and the privacy notice says the club keeps none, so the
     sweep makes it true for them (§324) and keeps it true for any row written some other way.
     The same calendar rule as `isMinorOn`: the eighteenth birthday at midnight UTC.
@@ -368,7 +368,8 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
         and(
           or(isNotNull(registrations.stravaUrl), isNotNull(registrations.instagramHandle), eq(registrations.listSocials, true)),
           isNotNull(registrations.birthDate),
-          sql`${registrations.createdAt} < ((${registrations.birthDate} + interval '18 years') AT TIME ZONE 'UTC')`,
+          // The day the answers were written (§654): a restart's, not the creation's.
+          sql`${registrations.answersWrittenAt} < ((${registrations.birthDate} + interval '18 years') AT TIME ZONE 'UTC')`,
         ),
       )
       .returning({ id: registrations.id });

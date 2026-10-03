@@ -47,7 +47,7 @@ describe("§638 the DECLARATION_HOLD_EXPIRED email's words", () => {
   it("says the place expired, the deadline that passed, and that it went to the waiting list — in both languages", () => {
     const mail = render("ro", { holdLapsedToWaitlist: true, holdLapsedNext: "waitlist" });
     const sample = emailSampleFor("DECLARATION_HOLD_EXPIRED", "ro");
-    expect(mail.subject.startsWith(`Locul tău la ${sample.eventTitle} a expirat`)).toBe(true);
+    expect(mail.subject.startsWith(`Locul pentru ${sample.participantName} la ${sample.eventTitle} a expirat`)).toBe(true);
     expect(mail.text).toContain("a expirat: declarația nu a fost semnată la timp.");
     expect(mail.text).toContain(`Termenul pentru semnare a fost ${sample.holdExpiresAtFormatted}.`);
     expect(mail.text).toContain("Altcineva aștepta un loc, așa că locul tău a trecut la lista de așteptare.");
@@ -62,10 +62,19 @@ describe("§638 the DECLARATION_HOLD_EXPIRED email's words", () => {
     expect(mail.text).not.toContain("Nu mai pot ajunge");
   });
 
+  it("§654 the subject names the person and the event, and keeps «Locul tău» when no name is known", () => {
+    const sample = emailSampleFor("DECLARATION_HOLD_EXPIRED", "ro");
+    expect(render("ro", { participantName: "Ioana Pop", holdLapsedNext: "waitlist" }).subject).toContain(`Locul pentru Ioana Pop la ${sample.eventTitle} a expirat`);
+    const english = emailSampleFor("DECLARATION_HOLD_EXPIRED", "en");
+    expect(render("en", { participantName: "Ioana Pop", holdLapsedNext: "waitlist" }).subject).toContain(`The place for Ioana Pop at ${english.eventTitle} has expired`);
+    expect(render("ro", { participantName: "", holdLapsedNext: "waitlist" }).subject).toContain(`Locul tău la ${sample.eventTitle} a expirat`);
+    expect(render("en", { participantName: "", holdLapsedNext: "waitlist" }).subject).toContain(`Your place at ${english.eventTitle} has expired`);
+  });
+
   it("an English registration reads English first", () => {
     const mail = render("en", { holdLapsedToWaitlist: false, holdLapsedNext: "register" }, "https://example.test/en/events/race/register");
     const sample = emailSampleFor("DECLARATION_HOLD_EXPIRED", "en");
-    expect(mail.subject.startsWith(`Your place at ${sample.eventTitle} has expired`)).toBe(true);
+    expect(mail.subject.startsWith(`The place for ${sample.participantName} at ${sample.eventTitle} has expired`)).toBe(true);
     expect(mail.text.indexOf("has expired: the declaration was not signed in time.")).toBeLessThan(mail.text.indexOf("a expirat: declarația"));
     expect(mail.text).toContain("Somebody else asked for a place, so yours has been released.");
     expect(mail.text).toContain("If you still want to come, you can register again: there are places free.");

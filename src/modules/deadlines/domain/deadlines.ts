@@ -36,11 +36,14 @@ export const DEADLINE_KEYS = [
   "seriesHorizonDays",
   "publicListDays",
   "familySittingMinutes",
+  "verificationRetryHours",
+  "verificationRetries",
 ] as const;
 
 export type DeadlineKey = (typeof DEADLINE_KEYS)[number];
 
-export type DeadlineUnit = "minutes" | "hours" | "days";
+/** `count` is a number of times, not a duration (§653: how many times the address link is re-sent). */
+export type DeadlineUnit = "minutes" | "hours" | "days" | "count";
 
 export type DeadlineRule = {
   unit: DeadlineUnit;
@@ -83,6 +86,14 @@ export type DeadlineRule = {
  *   sitting (the screen still offers the next person, saying the email has left); an hour is the
  *   most a verification email should wait, and the outbox's health reads a row held longer than
  *   that as stalled.
+ * - the **verification email re-sent** (§653) 2 to 72 hours after the last one left, 20 by default:
+ *   the address link once more, by itself, to whoever has not confirmed — under a day, so a link of
+ *   the default 48 hours still has a day left when it arrives; two hours at least, so the person had
+ *   time to look; three days is longer than the default link lives;
+ * - **how many times** 0 to 3, 1 by default (a `count`, not a duration): every verification email for
+ *   the address and the event counts toward one plus this number, the person's own «Retrimite» and a
+ *   staff resend included, so nobody is nudged twice by a resend; 0 switches the mechanism off; three
+ *   nudges is the most a reminder may be before it is a mailer. Neither moves the link's deadline.
  */
 export const DEADLINE_RULES: Record<DeadlineKey, DeadlineRule> = {
   confirmationHours: { unit: "hours", min: 12, max: 168, default: 48 },
@@ -94,6 +105,8 @@ export const DEADLINE_RULES: Record<DeadlineKey, DeadlineRule> = {
   seriesHorizonDays: { unit: "days", min: 14, max: 182, default: 56 },
   publicListDays: { unit: "days", min: 1, max: 365, default: 30 },
   familySittingMinutes: { unit: "minutes", min: 0, max: 60, default: 10 },
+  verificationRetryHours: { unit: "hours", min: 2, max: 72, default: 20 },
+  verificationRetries: { unit: "count", min: 0, max: 3, default: 1 },
 };
 
 export type Deadlines = Record<DeadlineKey, number>;
@@ -140,6 +153,8 @@ export const deadlinesSettingSchema = z
     seriesHorizonDays: bounded("seriesHorizonDays"),
     publicListDays: bounded("publicListDays"),
     familySittingMinutes: bounded("familySittingMinutes"),
+    verificationRetryHours: bounded("verificationRetryHours"),
+    verificationRetries: bounded("verificationRetries"),
   })
   .strict();
 

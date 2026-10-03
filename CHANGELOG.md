@@ -8,6 +8,12 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.66-2026-10-03
+
+- **The verification email is re-sent by itself** — to whoever has not confirmed, 20 hours after the last one left and at most once by default (two numbers in «Termene», 0 switches it off; every confirmation email counts, «Retrimite» included); it states the deadline, which does not move, and «Emailuri» shows its row and its own preview. §653.
+- **Four sentences say what happens** — the confirmation page's «full» refusals count the link's time from the first email, not the form; the lapsed-place email's subject names whose place it was; the legal-templates email's button says «Versiune nouă: regenerează textele»; a waiting-list email resent by hand opens «Îți retrimitem emailul: ești în continuare pe lista de așteptare». §654.
+- **«Ce îi spui» on a registration's page** — the sentences to tell somebody who asks where their registration stands, the same words they read on their page and in the emails, each state said once, in their language, with their deadline written as the email writes it (the email link's expiry only where it is another, still-live instant), the spam hint and a «Copiază» button. §655.
+- **A restarted registration is judged on the day it was restarted** — a row first written while the person was a minor and restarted as an adult no longer loses its Strava and Instagram at the next maintenance run, and «Modifică datele» no longer asks it for a parent or guardian; a new column records when the answers were written, backfilled from the creation date. §656.
 ## BR-V2.65-2026-10-03
 
 - **Members and bounced filters are ticks.** On «Înscrieri», «Doar membrii {club} (declarați)» and «Doar cine nu a primit emailul» are checkboxes with a help line, like «Doar cu oferte și beneficii», instead of selects whose closed box showed the label as if it were a chosen value; the filtering, the export and the member sweep are unchanged.; a row whose email bounced carries the «Email respins» chip in the list too, as at the desk, and the «Stare» select's empty option says «Toate stările». §650.
