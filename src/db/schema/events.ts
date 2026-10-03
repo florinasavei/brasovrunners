@@ -567,7 +567,7 @@ export const events = pgTable(
      * capacity. True, the default and every event before the column, is what `fillAvailableSpots`
      * has always done: the place goes to the head of the line in the transaction that frees it. False,
      * `fillAvailableSpots` offers nothing — the one gate, read off the locked row — and the organizer
-     * hands each place to a person of their choice («Trimite-i oferta», `offerPlaceToByStaff`) or seats
+     * hands each place to a named person («Trimite-i oferta», `offerPlaceToByStaff`) or seats
      * a walk-in at the desk («Dă-i un loc»). Newcomers queue while anyone waits, under either value.
      */
     waitlistAutoOffer: boolean("waitlist_auto_offer").notNull().default(true),

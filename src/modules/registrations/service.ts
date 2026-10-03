@@ -911,7 +911,7 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
   if (event.eventStatus !== "SCHEDULED") return 0;
   /*
     «Locurile din lista de așteptare se alocă automat» — «Nu» (§615, amending §104, §587 and §589): the
-    organizer hands out every freed or added place, to the person of their choice («Trimite-i oferta»,
+    organizer hands out every freed or added place, to a named person («Trimite-i oferta»,
     `offerPlaceToByStaff`) or to a walk-in at the desk («Dă-i un loc»). The one gate, here and nowhere
     else: every path that frees or adds a place — a cancellation, an offer's expiry or decline, an
     erasure, a late signature's release, the capacity raised in the editor (§147), the maintenance
@@ -2416,8 +2416,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       /*
         …and the club learns it too (§312).
 
-        A colleague registered with her browser's autofill, twice; she was told in the second
-        message that she already was (§235), and the club was told nothing — "she says she
+        A colleague registered with the browser's autofill, twice; the second message said
+        the registration already existed (§235), and the club was told nothing — "they say they
         registered but I cannot find anything" had no answer on any screen. So every pass through
         this branch leaves one audit row on the registration it found, whatever the state and
         whether or not anything went out: the state it found and the message type re-sent, or
@@ -2797,7 +2797,7 @@ type SupplementaryPlaceAction = "event.capacity_raised_for_offer" | "event.capac
 
 /**
  * One supplementary place (§642; the owner, 2026-10-02: «Vreau să pot „oferi loc” în orice moment,
- * chiar și pe liste suplimentare»), for an Administrator's press that gives one chosen person a place
+ * chiar și pe liste suplimentare»), for an Administrator's press that gives one named person a place
  * on a capped event with none free. Called under the event lock the caller holds, after the stale holds
  * were expired and the places counted (`counts`), and only when `computeOccupied(counts) >= capacity`.
  * **Only on a confirmed press** («vreau confirmare când depășesc limita»): `confirmedTo` is the capacity
@@ -2847,7 +2847,7 @@ async function addOneSupplementaryPlace<T extends Record<string, unknown>>(
 }
 
 /**
- * What an Administrator's press for one chosen person did (§642): the registration, and the capacity
+ * What an Administrator's press for one named person did (§642): the registration, and the capacity
  * a supplementary place raised it to — null when the place was already free or the event uncapped.
  */
 export type PlacedByStaff = Registration & { capacityRaisedTo: number | null };
@@ -2861,8 +2861,8 @@ export type PlacedByStaff = Registration & { capacityRaisedTo: number | null };
 export type StaffPlaceOptions = { addPlaceTo?: number | null };
 
 /**
- * «Dă-i un loc acum» (§637; the owner, 2026-10-02: «Nu vreau să mai facă ea nimic!! Nu mai vreau să
- * risc»; «trebuie să avem mereu portițe și scurtături din back-office»). A registration still waiting
+ * «Dă-i un loc acum» (§637; the owner, 2026-10-02: no further step from the person, and a
+ * back-office way round when an email goes wrong). A registration still waiting
  * for its address — the verification email late, in Spam, or pressed when the line was already full
  * (§348) — is given a place by an Administrator, remotely, in one press: the first half of the desk's
  * «Confirmă pe hârtie» (§67), without the paper.
@@ -2908,7 +2908,7 @@ export type StaffPlaceOptions = { addPlaceTo?: number | null };
  *    and the maintenance job is told the deadline. Any other place the expiry released goes to the
  *    line in the same transaction (`fillAvailableSpots`, a no-op on «Nu»), as after an offer.
  *
- * Nobody signs for the participant (`AGENTS.md` §15.11): she signs online from the email, or on
+ * Nobody signs for the participant (`AGENTS.md` §15.11): the person signs online from the email, or on
  * paper at the desk, where «Confirmă pe hârtie» on a `PENDING_DECLARATION` row works as for anybody.
  * `kind` is in no condition here (§30). The Administrator's (`canManageRegistrations`), asserted here
  * and by the action: the Organizer reads registrations and changes none (§289).
@@ -2955,7 +2955,7 @@ export async function givePlaceNowByStaff<T extends Record<string, unknown>>(
     let counts = await repo.countOccupied(tx, event.id, now);
     const hasRoom = () => locked.capacity === null || computeOccupied(counts) < locked.capacity;
     if (!needsNoRoom && !hasRoom() && counts.lapsedDeclarationHolds > 0) {
-      // One more person wanting a place who is not in the line (§160): one lapsed hold may go for her.
+      // One more person wanting a place who is not in the line (§160): one lapsed hold may go for them.
       await repo.expireStaleHolds(tx, locked, now, { wanting: 1 });
       counts = await repo.countOccupied(tx, event.id, now);
     }
@@ -3011,8 +3011,8 @@ export async function givePlaceNowByStaff<T extends Record<string, unknown>>(
     /*
       And a verification email not yet sent is withdrawn (the review of 2026-10-02, finding 2): one the
       outage, a Mailgun pause, the daily allowance or a family sitting (`SITTING_HELD`) kept waiting would
-      mint its link at render time and ask her, after the declaration's email, to confirm an address the
-      club has vouched for — the very step the owner wanted gone («Nu vreau să mai facă ea nimic»). Only
+      mint its link at render time and ask the person, after the declaration's email, to confirm an address the
+      club has vouched for — the very step the owner wanted gone (no further step from the person). Only
       rows still waiting and never tried, as `family-sitting.ts` takes one back: a message that may have
       left is not taken back here; the renderer withdraws a retry of it (`render.ts`, `OutboxMessageWithdrawn`).
       Its club copy goes with it. A family sitting that held it reads the missing row as gone.
@@ -3552,8 +3552,8 @@ export async function promoteFromWaitlistByStaff<T extends Record<string, unknow
 }
 
 /**
- * «Trimite-i oferta» (§615, amended by §642): the Administrator sends a place to the waiting-list
- * registration of their choice — the ordinary offer and its email, ahead of the people before them in
+ * «Trimite-i oferta» (§615, amended by §642): the Administrator offers a place to one named registration on the
+ * waiting list — the ordinary offer and its email, ahead of the people before them in
  * the line — at any moment before the start, and on a full event by adding the place it needs. The
  * owner, 2026-10-02: «Vreau să pot „oferi loc” în orice moment, chiar și pe liste suplimentare».
  *

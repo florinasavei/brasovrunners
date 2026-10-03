@@ -183,7 +183,7 @@ export function computeFamilyReservationExpiry(params: {
  * Before the participation window opens it is exactly what a public confirmation gets
  * (`computeDeclarationHoldExpiry`: the window's deadline, never after the start). From then on the
  * public door would give the club's minutes («Termene»), which are made for a person who has just
- * pressed the link and is reading the email — not for one the club chose because her emails went
+ * pressed the link and is reading the email — not for one whose emails went
  * astray. So the place waits for the window's deadline while it is still ahead, and otherwise — an
  * event with no window, or a window whose deadline has passed — for the start, the latest a
  * declaration can be signed anyway (on paper at the desk). Not capped by the registration close: the

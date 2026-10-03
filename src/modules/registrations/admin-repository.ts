@@ -1274,7 +1274,7 @@ export async function listFamilyReservationsForEvent<T extends Record<string, un
  * `formSentAt` is `greatest(submitted_at, privacy_acknowledged_at)`, the journey's own rule
  * (`domain/journey.ts`, `formSentAt`): a restart rewrites `privacy_acknowledged_at` and never
  * `submitted_at`, so a person who sent the form again after their link lapsed is dated by the
- * second form, not the first, and does not jump to the head of a hand-picked line.
+ * second form, not the first, and does not jump to the head of a line the organizers hand out by the form's time.
  */
 export async function listQueueForEvent<T extends Record<string, unknown>>(db: Database<T>, eventId: string, now: Date, order: QueueOrder) {
   const formSentAt = sql<Date>`greatest(${registrations.submittedAt}, ${registrations.privacyAcknowledgedAt})`.mapWith(registrations.submittedAt);
