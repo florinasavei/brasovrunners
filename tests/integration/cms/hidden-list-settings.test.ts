@@ -5,13 +5,14 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { auditLogs } from "@/db/schema/audit-logs";
 import { eventTranslations, events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import { eventFieldsSchema } from "@/modules/content/events/fields";
+import { eventFieldsSchema, hiddenListBandIssue } from "@/modules/content/events/fields";
 import { previewPageOf } from "@/modules/content/events/preview-view";
 import { findEventForEditing } from "@/modules/content/events/repository";
 import { createEvent, duplicateEvent, repeatEvent, saveEventAndTranslations } from "@/modules/content/events/service";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
+import { addSupplementaryPlace } from "@/modules/registrations/repository";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -239,24 +240,52 @@ describe("§NNN «Lista ascunsă» on the event", () => {
     expect((await reloadEvent(source.id)).hiddenListBibStart).toBe(151);
   });
 
-  it("judges the band in the schema: the race's capped series, its first number uncapped, and nothing while the switch is off", () => {
-    const parse = (extra: Record<string, unknown>) => eventFieldsSchema.safeParse({ ...FIELDS, ...extra });
-    const issue = (extra: Record<string, unknown>) => {
-      const result = parse(extra);
-      return result.success ? null : result.error.issues.find((entry) => entry.path[0] === "hiddenListBibStart")?.message ?? null;
-    };
-    expect(issue({ hiddenListEnabled: true, hiddenListBibStart: "1" })).toMatch(/outside the race's series \(1–150\)/);
-    expect(issue({ hiddenListEnabled: true, hiddenListBibStart: "150" })).not.toBeNull();
-    expect(issue({ hiddenListEnabled: true, hiddenListBibStart: "151" })).toBeNull();
-    expect(issue({ hiddenListEnabled: true, hiddenListBibStart: "500", bibStartNumber: "600" })).toBeNull();
+  it("judges the band: the race's capped series, its first number uncapped, and nothing while the switch is off", () => {
+    const issue = (extra: Partial<Parameters<typeof hiddenListBandIssue>[0]>) =>
+      hiddenListBandIssue({ hiddenListEnabled: true, hiddenListBibStart: null, bibStartNumber: 1, capacity: 150, ...extra });
+    expect(issue({ hiddenListBibStart: 1 })).toMatch(/outside the race's series \(1–150\)/);
+    expect(issue({ hiddenListBibStart: 150 })).not.toBeNull();
+    expect(issue({ hiddenListBibStart: 151 })).toBeNull();
+    expect(issue({ hiddenListBibStart: 500, bibStartNumber: 600 })).toBeNull();
     // Uncapped: the race's series has no end, so the hidden list's must start below the race's first number.
-    expect(issue({ hiddenListEnabled: true, hiddenListBibStart: "1", capacity: "" })).toMatch(/below the race's first number \(1\)/);
-    expect(issue({ hiddenListEnabled: true, hiddenListBibStart: "2", capacity: "" })).not.toBeNull();
-    expect(issue({ hiddenListEnabled: true, hiddenListBibStart: "5000", capacity: "", bibStartNumber: "100" })).not.toBeNull();
-    expect(issue({ hiddenListEnabled: true, hiddenListBibStart: "1", capacity: "", bibStartNumber: "100" })).toBeNull();
-    expect(issue({ hiddenListEnabled: true, hiddenListBibStart: "99", capacity: "", bibStartNumber: "100" })).toBeNull();
+    expect(issue({ hiddenListBibStart: 1, capacity: null })).toMatch(/below the race's first number \(1\)/);
+    expect(issue({ hiddenListBibStart: 2, capacity: null })).not.toBeNull();
+    expect(issue({ hiddenListBibStart: 5000, capacity: null, bibStartNumber: 100 })).not.toBeNull();
+    expect(issue({ hiddenListBibStart: 1, capacity: null, bibStartNumber: 100 })).toBeNull();
+    expect(issue({ hiddenListBibStart: 99, capacity: null, bibStartNumber: 100 })).toBeNull();
     // The switch off: the box is not judged — it acts only while on.
-    expect(issue({ hiddenListEnabled: false, hiddenListBibStart: "10" })).toBeNull();
+    expect(issue({ hiddenListEnabled: false, hiddenListBibStart: 10 })).toBeNull();
+    // Not a refinement of the schema any more: the service judges it against the event as it stands.
+    expect(eventFieldsSchema.safeParse({ ...FIELDS, hiddenListEnabled: true, hiddenListBibStart: "1" }).success).toBe(true);
+  });
+
+  it("a place «Trimite-i oferta» added past a hidden start set just above the series never refuses a save that does not move it", async () => {
+    const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
+    const group = { enabled: true, start: "151", countPublic: true };
+    expect(await postSave(settingsForm(source.id, (await reloadEvent(source.id)).version, group))).toBe("redirected");
+    // §642: one supplementary place, without a save — the race's series is now 1–151, the hidden start inside it.
+    expect(await addSupplementaryPlace(db, source.id, admin.id, NOW)).toBe(151);
+    const withCapacity = async (capacity: string) => {
+      const form = settingsForm(source.id, (await reloadEvent(source.id)).version, group);
+      form.set("event.capacity", capacity);
+      return postSave(form);
+    };
+    // An ordinary save posting what the event holds — the 151 places and the start nobody touched — passes.
+    expect(await withCapacity("151")).toBe("redirected");
+    expect((await reloadEvent(source.id)).hiddenListBibStart).toBe(151);
+    // A save that moves the places is judged: 152 places reach past the start, and the box is named.
+    expect(await withCapacity("152")).toMatchObject({ error: "VALIDATION_ERROR", fields: ["event.hiddenListBibStart"] });
+    expect((await reloadEvent(source.id)).capacity).toBe(151);
+    // A save that moves the start is judged too: 151 is inside 1–151 now.
+    const moved = settingsForm(source.id, (await reloadEvent(source.id)).version, { ...group, start: "150" });
+    moved.set("event.capacity", "151");
+    expect(await postSave(moved)).toMatchObject({ error: "VALIDATION_ERROR", fields: ["event.hiddenListBibStart"] });
+    // Switching the hidden list on again with that start is judged as well: off then on, refused.
+    const off = settingsForm(source.id, (await reloadEvent(source.id)).version, { ...group, enabled: false });
+    off.set("event.capacity", "151");
+    expect(await postSave(off)).toBe("redirected");
+    expect(await withCapacity("151")).toMatchObject({ error: "VALIDATION_ERROR", fields: ["event.hiddenListBibStart"] });
+    expect((await reloadEvent(source.id)).hiddenListEnabled).toBe(false);
   });
 
   it("refuses a series that runs into the desk's spares, which only the event row knows", async () => {

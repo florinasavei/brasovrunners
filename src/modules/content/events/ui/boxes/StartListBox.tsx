@@ -113,6 +113,7 @@ export default async function StartListBox({ event, mayEditSettings }: Pick<BoxP
                       name="event.hiddenListBibStart"
                       label={t("editor.hiddenListBibStart")}
                       helperText={t("editor.hiddenListBibStartHelp")}
+                      helpMore={t("editor.hiddenListBibStartHelpMore")}
                       defaultValue={event?.hiddenListBibStart ?? ""}
                       {...textFieldConstraints(eventInputConstraints("hiddenListBibStart"), { inputMode: "numeric" })}
                       sx={{ width: { xs: "100%", sm: 320 }, my: 1 }}

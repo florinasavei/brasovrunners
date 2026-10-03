@@ -337,36 +337,33 @@ function costRule(
  * race's. The race's series runs from `bibStartNumber` for `capacity` numbers on a capped event, so a
  * start inside it is refused and one below it or past it is accepted. An uncapped event's series has
  * no end — every number from its first upward is the race's — so there the hidden list's start must
- * sit below the race's first number. The desk's spares (§444) are on the event row, not in the form:
- * the service checks those (`assertHiddenListClearOfSpares`), and the print keeps the spares below a
- * hidden series above the race's (`bibs.ts#spareCardState`). Judged only while the switch is on, the
- * only time the series acts; absent fields (a caller not editing them) judge nothing.
+ * sit below the race's first number. The sentence, or null when the start is acceptable or the switch
+ * is off (the only time the series acts).
+ *
+ * Not a refinement of the schema: the service judges it, with the desk's spares (§444), only on a save
+ * that moves the hidden start, switches the hidden list on, or moves the race's first number or its
+ * places (`service.ts#assertHiddenListNumbers`). «Trimite-i oferta» adds a place (§642) without a
+ * save, and can carry the race's series up to a hidden start set just above it; a later save that
+ * changes none of those then passes rather than refusing every edit of the event until the start moves.
  */
-export function hiddenListBandRule(
-  fields: { hiddenListEnabled?: boolean; hiddenListBibStart?: number | null; bibStartNumber: number; capacity: number | null },
-  ctx: z.RefinementCtx,
-): void {
+export function hiddenListBandIssue(fields: {
+  hiddenListEnabled: boolean;
+  hiddenListBibStart: number | null;
+  bibStartNumber: number;
+  capacity: number | null;
+}): string | null {
   const start = fields.hiddenListBibStart;
-  if (fields.hiddenListEnabled !== true || start === null || start === undefined) return;
+  if (!fields.hiddenListEnabled || start === null) return null;
   const raceStart = fields.bibStartNumber;
   if (fields.capacity === null) {
-    if (start >= raceStart) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["hiddenListBibStart"],
-        message: `without a limit of places, the hidden list's numbers must start below the race's first number (${raceStart})`,
-      });
-    }
-    return;
+    return start >= raceStart
+      ? `without a limit of places, the hidden list's numbers must start below the race's first number (${raceStart})`
+      : null;
   }
   const raceEnd = raceStart + fields.capacity - 1;
-  if (start >= raceStart && start <= raceEnd) {
-    ctx.addIssue({
-      code: "custom",
-      path: ["hiddenListBibStart"],
-      message: `the hidden list's numbers must start outside the race's series (${raceStart}–${raceEnd})`,
-    });
-  }
+  return start >= raceStart && start <= raceEnd
+    ? `the hidden list's numbers must start outside the race's series (${raceStart}–${raceEnd})`
+    : null;
 }
 
 /**
@@ -947,7 +944,8 @@ export const eventFieldsSchema = z
      * group's three with one marker and the count's tick with its own, and a form without them changes
      * none of them. Stored as posted whatever the switch says — the club's choices survive switching it
      * off and on. The group's three act only while the switch is on; «Arată public numărătoarea» on
-     * every event (`hiddenListCounting`).
+     * every event (`hiddenListCounting`). The series' start is judged by the service against the
+     * event as it stands (`service.ts#assertHiddenListNumbers`), not here.
      */
     hiddenListEnabled: z.boolean().optional(),
     hiddenListBibStart: optionalWholeNumber({ min: 1, max: 99_000 }).optional(),
@@ -958,8 +956,7 @@ export const eventFieldsSchema = z
   })
   .strict()
   .superRefine(placeRule)
-  .superRefine(costRule)
-  .superRefine(hiddenListBandRule);
+  .superRefine(costRule);
 
 export type EventFieldsInput = z.infer<typeof eventFieldsSchema>;
 

@@ -63,6 +63,7 @@ import { attachYoutubePosters } from "@/modules/media/video-poster";
 import {
   type EventFieldsInput,
   eventFieldsSchema,
+  hiddenListBandIssue,
   missingPublicFields,
   newEventSchema,
   type TranslationFields,
@@ -1669,8 +1670,10 @@ export async function saveEventFields<T extends Record<string, unknown>>(
    * the event row's lock — the serialization point every allocation takes — so a confirmation
    * landing between the count and the write waits rather than slipping past it.
    */
+  const hiddenListNumbers = hiddenListNumbersToJudge(fields, current);
   const saved = await db.transaction(async (tx) => {
-    assertHiddenListClearOfSpares(fields, current);
+    // Under the event lock, on an uncapped event too, so the spares it reads are the ones in force (§NNN).
+    if (hiddenListNumbers) assertHiddenListNumbers(hiddenListNumbers, await lockEventForCapacity(tx, input.eventId));
     await assertNobodyRegisteredForUndated(tx, fields, current);
     if (fields.capacity !== null) {
       await lockEventForCapacity(tx, input.eventId);
@@ -2243,29 +2246,69 @@ async function auditHiddenList<T extends Record<string, unknown>>(
   }
 }
 
+/** The event's columns «Numerele listei ascunse încep de la» is judged against (§NNN). */
+type HiddenListNumbersRow = {
+  hiddenListEnabled: boolean;
+  hiddenListBibStart: number | null;
+  bibStartNumber: number;
+  capacity: number | null;
+};
+
 /**
- * The desk's spares (§444) are the event row's, written only by the print, so the form cannot see
- * them: a hidden-list series that would hold any of the reserved spares is refused here (§NNN), as the
- * race's own series is in `fields.ts#hiddenListBandRule`. The series is the one the draw uses
- * (`bibs.ts#seriesBounds`): from the start up to the race's first number less one when it sits below
- * it, otherwise up to the ceiling — so a start below a spare band that sits above the race is refused
- * too, not only one inside it. Only while the switch is on and a start is posted.
+ * The hidden list's series as this save leaves it — each column as posted, or as stored when the
+ * caller did not post the group — and whether the save moves anything it is judged on (§NNN): the
+ * hidden start, the switch turned on, the race's first number or its places. A save that moves none
+ * of them is not judged: «Trimite-i oferta» adds a place without a save (§642) and can carry the
+ * race's series up to a hidden start set just above it, and the event's every later save must not be
+ * refused for a start nobody touched. A new event (`before` null) is always judged.
  */
-function assertHiddenListClearOfSpares(
-  fields: Pick<EventFieldsInput, "hiddenListEnabled" | "hiddenListBibStart" | "bibStartNumber">,
-  current: { walkInBibStart: number | null; walkInBibCount: number | null },
+function hiddenListNumbersToJudge(
+  fields: Pick<EventFieldsInput, "hiddenListEnabled" | "hiddenListBibStart" | "bibStartNumber" | "capacity">,
+  before: HiddenListNumbersRow | null,
+): HiddenListNumbersRow | null {
+  const after: HiddenListNumbersRow = {
+    hiddenListEnabled: fields.hiddenListEnabled ?? before?.hiddenListEnabled ?? false,
+    hiddenListBibStart: fields.hiddenListBibStart === undefined ? (before?.hiddenListBibStart ?? null) : fields.hiddenListBibStart,
+    bibStartNumber: fields.bibStartNumber,
+    capacity: fields.capacity,
+  };
+  if (!after.hiddenListEnabled || after.hiddenListBibStart === null) return null;
+  if (before === null) return after;
+  const moved =
+    !before.hiddenListEnabled ||
+    before.hiddenListBibStart !== after.hiddenListBibStart ||
+    before.bibStartNumber !== after.bibStartNumber ||
+    before.capacity !== after.capacity;
+  return moved ? after : null;
+}
+
+/**
+ * «Numerele listei ascunse încep de la» (§NNN), judged only when `hiddenListNumbersToJudge` says the
+ * save moves it: a start inside the race's series (`fields.ts#hiddenListBandIssue`), or a series that
+ * would hold any of the desk's reserved spares (§444). The spares are the event row's, written only by
+ * the print, so they are read from `locked` — the row as `lockEventForCapacity` returned it inside the
+ * save's transaction, so a print committing between the editor's read and this write cannot reserve
+ * numbers inside the series being saved. The series is the one the draw uses (`bibs.ts#seriesBounds`):
+ * from the start up to the race's first number less one when it sits below it, otherwise up to the
+ * ceiling — so a start below a spare band that sits above the race is refused too, not only one inside
+ * it. Each refusal names the box, so the editor points at it rather than only «Verifică datele introduse».
+ */
+function assertHiddenListNumbers(
+  series: HiddenListNumbersRow,
+  locked: { walkInBibStart: number | null; walkInBibCount: number | null } | null,
 ): void {
-  const start = fields.hiddenListBibStart;
-  if (fields.hiddenListEnabled !== true || start === null || start === undefined) return;
-  if (current.walkInBibStart === null || current.walkInBibCount === null || current.walkInBibCount <= 0) return;
-  const first = current.walkInBibStart;
-  const last = first + current.walkInBibCount - 1;
-  const series = seriesBounds({ start: fields.bibStartNumber, hiddenStart: start }, "hidden");
-  if (series.from <= last && first <= series.to) {
+  const band = hiddenListBandIssue(series);
+  if (band !== null) throw new DomainError("VALIDATION_ERROR", `hiddenListBibStart: ${band}`, ["hiddenListBibStart"]);
+  const start = series.hiddenListBibStart;
+  if (start === null || !locked) return;
+  if (locked.walkInBibStart === null || locked.walkInBibCount === null || locked.walkInBibCount <= 0) return;
+  const first = locked.walkInBibStart;
+  const last = first + locked.walkInBibCount - 1;
+  const bounds = seriesBounds({ start: series.bibStartNumber, hiddenStart: start }, "hidden");
+  if (bounds.from <= last && first <= bounds.to) {
     throw new DomainError(
       "VALIDATION_ERROR",
       `hiddenListBibStart: the hidden list's numbers may not run into the desk's spare numbers (${first}–${last})`,
-      // The box, so the editor names it beside the sentence rather than only «Verifică datele introduse».
       ["hiddenListBibStart"],
     );
   }
@@ -2400,7 +2443,9 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     // before this transaction do not see that write on their own.
     let discountNoteCleared = false;
     if (parsedEventFields && times) {
-      assertHiddenListClearOfSpares(parsedEventFields, current);
+      // Under the event lock, on an uncapped event too, so the spares it reads are the ones in force (§NNN).
+      const hiddenListNumbers = hiddenListNumbersToJudge(parsedEventFields, current);
+      if (hiddenListNumbers) assertHiddenListNumbers(hiddenListNumbers, await lockEventForCapacity(tx, input.eventId));
       await assertNobodyRegisteredForUndated(tx, parsedEventFields, current);
       /**
        * Lowering capacity below the places already taken is refused (AGENTS.md §10.6,
@@ -2882,6 +2927,9 @@ async function prepareEventCreate<T extends Record<string, unknown>>(
   await assertCoherentRegistrationBlock(db, parsed, now);
   // A new event has nobody registered and repeats only after it exists (`repeatEvent` asks then).
   await assertDateToBeAnnouncedAllowed(db, parsed, null);
+  // A new event has no spares yet (§444): only the race's own series is judged (§NNN).
+  const hiddenListNumbers = hiddenListNumbersToJudge(parsed, null);
+  if (hiddenListNumbers) assertHiddenListNumbers(hiddenListNumbers, null);
   const times = resolveTimes(parsed, switchesAfterSave(parsed, null));
   // Created cancelled or completed (§448): judged before any fetch, like every other refusal here.
   const cancelledBecause = readCreateStatus(input.actor, parsed.eventStatus, times.startsAt, input.cancellation, now);

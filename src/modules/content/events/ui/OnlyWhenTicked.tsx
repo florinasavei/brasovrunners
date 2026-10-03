@@ -14,7 +14,7 @@ function tick(name: string): HTMLInputElement | null {
  * the three fields that mean something only with it on). `OnlyForMode`'s twin, over a checkbox: the
  * same `ShownWhen`, so the children stay in the DOM — hidden, never removed, still posted, read-only
  * while hidden so a box out of range never blocks the save — and a refusal about one of them reveals
- * the block. The server validates them independently of this (`fields.ts#hiddenListBandRule`).
+ * the block. The server validates them independently of this (`service.ts#assertHiddenListNumbers`).
  *
  * A native checkbox fires `change`, which is the subscription; it is renewed on every answer of a
  * kept form (§315), because the box re-mounts from what was posted.

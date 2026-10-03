@@ -1422,10 +1422,16 @@ languages go live together; that is the rule, not a setting.
    - **«Numerele listei ascunse încep de la»** — empty, they draw from the race's own series like
      everybody; set (say 900), the hidden list has its own series from there up, in confirmation
      order. The save refuses a start inside the race's series (the first number and as many after
-     it as there are places), or inside the desk's spare numbers; on a race without a limit of
-     places, whose series has no end, only a start below the race's first number is accepted. With
+     it as there are places), or a start whose series would run into the desk's spare numbers; on a
+     race without a limit of places, whose series has no end, only a start below the race's first
+     number is accepted. It judges the start only when the save moves it, switches the hidden list
+     on, or moves the race's first number or its places — a place «Trimite-i oferta» added never
+     makes the next save refuse a start nobody touched. Leave room above the race's places for
+     such supplementary places and for the desk's spares (say 900 for a race of 150, not 151). With
      the hidden series above the race's, the spares printed for the desk stay between the two — a
-     print that would reach the hidden series is refused with a sentence that names this box;
+     print that would reach the hidden series is refused with a sentence that names this box. A
+     series with no free number left draws the next free number after it, in the other series if
+     need be; no number is ever given twice;
    - **«Numără și lista ascunsă»** — unticked by default, «Cine vine» counts the race's places only;
      ticked, it counts the hidden list too. The places line and the free places never do.
 

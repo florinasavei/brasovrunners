@@ -6,11 +6,11 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
+import { findPublishedEventBySlug, type PublicEvent } from "@/modules/events/repository";
 import { resolveDisplayName } from "@/modules/registrations/names";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
-import type { PublicEvent } from "@/modules/events/repository";
 
 /**
  * §NNN — «Lista ascunsă»'s two ticks over the public «Cine vine» (amending §632 and §643), on the
@@ -114,6 +114,7 @@ const render = async (event: PublicEvent) => {
   expect(html).not.toMatch(BACKOFFICE_NAME);
   return html;
 };
+const summary = (html: string) => /data-testid="start-list-summary"[^>]*>([^<]*)</.exec(html)?.[1];
 const rows = (html: string) => (html.match(/data-testid="start-list-(named|anonymous)"/g) ?? []).length;
 
 beforeAll(async () => {
@@ -160,6 +161,45 @@ describe("§NNN «Cine vine» and the hidden list's two ticks", () => {
     // The headline adds holds only where the places line is (§32): the title counts Ana alone.
     expect(html).toContain("Cine vine (1)");
     expect(html).not.toContain(ro.Event.startList.outsideCountedNote);
+  });
+
+  it("on a capped, open event a hidden-list hold alone is counted «în curs», raises the title and brings the note", async () => {
+    // Open now, read as the page reads it: the door's counts are KNOWN only for an open internal event (§632).
+    const DAY = 86_400_000;
+    const [event] = await db
+      .insert(events)
+      .values({
+        type: "RACE",
+        startsAt: new Date(Date.now() + 60 * DAY),
+        registrationMode: "INTERNAL",
+        capacity: 10,
+        editorialStatus: "PUBLISHED",
+        publishedAt: new Date(Date.now() - DAY),
+        participantListVisibility: "NAMES",
+        hiddenListEnabled: true,
+        participantCountPublic: true,
+        hiddenListCounted: true,
+      })
+      .returning();
+    await db.insert(eventTranslations).values([
+      { eventId: event.id, locale: "ro", slug: "cros-cu-locuri-ascunse", title: "Cros" },
+      { eventId: event.id, locale: "en", slug: "cross-with-hidden-places", title: "Cross" },
+    ]);
+    await register(event.id, "Ana Popescu");
+    // On the hidden list, holding a place with the declaration to sign, «Vreau să apar» unticked: no row, no confirmed.
+    await register(event.id, "Elena Organizator", { hidden: true, listOptOut: true, status: "PENDING_DECLARATION" });
+    const page = await findPublishedEventBySlug(db, "ro", "cros-cu-locuri-ascunse");
+    if (!page) throw new Error("the event did not publish");
+
+    const html = await render(page as unknown as PublicEvent);
+    // Ana, and Elena's hold among «în curs de confirmare», which only a capped event's known counts add.
+    expect(html).toContain("Cine vine (2)");
+    expect(summary(html)).toMatch(/^2 înscriși — 1 confirma\S* \(1 cu numele afișat\), 1 în curs de confirmare$/);
+    // The title counts somebody the table does not show, so the note says so.
+    expect(html).toContain(ro.Event.startList.outsideCountedNote);
+    expect(html).not.toContain(ro.Event.startList.outsideNote);
+    expect(html).not.toContain("Elena Organizator");
+    expect(rows(html)).toBe(1);
   });
 
   it("«Arată public numărătoarea» off: only the names — no number in the title, no counted line, no position", async () => {
