@@ -1052,6 +1052,11 @@ export type TemplateData = {
    */
   anotherPersonHint?: boolean;
   /**
+   * The second verification email (§NNN): the maintenance job's, to whoever had not confirmed. One
+   * sentence in front of the body says why it came. Only ever in the inbox.
+   */
+  confirmationRetry?: boolean;
+  /**
    * The slip was another name on a registered birth date (§493): twins, perhaps, whom "send the form
    * again" cannot help — the sentence says what can (another address, or the club at the desk).
    */
@@ -1996,6 +2001,9 @@ const T = {
     },
     /** Under "you are already registered", on a re-send for a slip (§446): the one way to register somebody else. */
     anotherPersonHint: "Dacă vrei să înscrii pe altcineva, trimite formularul cu numele complet și data de naștere a acelei persoane.",
+    /** In front of the second verification email (§NNN): why it came, and where the first one may be. */
+    confirmationRetry:
+      "Îți scriem încă o dată pentru că adresa nu e confirmată încă. Dacă emailurile noastre ajung în Spam, mută-l pe acesta în Inbox.",
     /** In its place when the slip was another name on a registered birth date (§493): how twins are registered. */
     sameBirthDateHint:
       "Pe aceeași adresă de email nu pot fi înscrise din formular două persoane născute în aceeași zi. Pentru un frate geamăn sau o soră geamănă, trimite formularul de pe altă adresă de email, ori răspunde la acest email și facem noi înscrierea.",
@@ -2587,6 +2595,8 @@ const T = {
       note: "Your place goes to someone else.",
     },
     anotherPersonHint: "If you want to register someone else, send the form with that person's full name and birth date.",
+    /** In front of the second verification email (§NNN): why it came, and where the first one may be. */
+    confirmationRetry: "We are writing once more because your address is not confirmed yet. If our emails land in Spam, move this one to your Inbox.",
     sameBirthDateHint:
       "Two people born on the same day cannot both be registered from one email address through the form. For a twin, send the form from another email address, or reply to this email and we will register them.",
     /** After the body of a declaration request, on an address with more to sign (§471): the one link signs them all. */
@@ -3097,6 +3107,8 @@ export function buildTemplateContent(
       ...(data.alreadyRegistered ? [copy.alreadyRegistered(data.bibNumber ?? null)] : []),
       // …and, on a re-send for a slip (§446), how to register somebody else — the inbox's alone.
       ...(data.anotherPersonHint ? [data.sameBirthDateHint ? copy.sameBirthDateHint : copy.anotherPersonHint] : []),
+      // …and the second verification email says why it came (§NNN) — a fact of this send, whoever wrote the body.
+      ...(messageType === "VERIFY_REGISTRATION_EMAIL" && data.confirmationRetry && !clubCopy ? [copy.confirmationRetry] : []),
       /*
         Another person on the address (§446): who the address holds and who the form named, before
         the question — facts of this send, like "you were already registered" above, so a club that

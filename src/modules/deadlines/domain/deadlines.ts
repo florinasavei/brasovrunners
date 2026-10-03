@@ -36,6 +36,8 @@ export const DEADLINE_KEYS = [
   "seriesHorizonDays",
   "publicListDays",
   "familySittingMinutes",
+  "confirmationRetryHours",
+  "confirmationRetryLeftHours",
 ] as const;
 
 export type DeadlineKey = (typeof DEADLINE_KEYS)[number];
@@ -83,6 +85,14 @@ export type DeadlineRule = {
  *   sitting (the screen still offers the next person, saying the email has left); an hour is the
  *   most a verification email should wait, and the outbox's health reads a row held longer than
  *   that as stalled.
+ * - the **second verification email** (§NNN) 0 to 72 hours after the last one left, 24 by default:
+ *   the address link once more, by itself, to whoever has not confirmed — a day is the night's
+ *   Spam folder looked at once; 0 sends none, as before; three days is longer than the default
+ *   link lives, so a larger number would never send anything;
+ * - the **link time left** for it 1 to 48 hours, 6 by default: the second email goes only while the
+ *   link still has at least this long — an email that arrives with minutes left is a registration
+ *   lost twice. A pair that never meets (a second email after the link's own hours) sends nothing,
+ *   which the panel's help says rather than refusing the save.
  */
 export const DEADLINE_RULES: Record<DeadlineKey, DeadlineRule> = {
   confirmationHours: { unit: "hours", min: 12, max: 168, default: 48 },
@@ -94,6 +104,8 @@ export const DEADLINE_RULES: Record<DeadlineKey, DeadlineRule> = {
   seriesHorizonDays: { unit: "days", min: 14, max: 182, default: 56 },
   publicListDays: { unit: "days", min: 1, max: 365, default: 30 },
   familySittingMinutes: { unit: "minutes", min: 0, max: 60, default: 10 },
+  confirmationRetryHours: { unit: "hours", min: 0, max: 72, default: 24 },
+  confirmationRetryLeftHours: { unit: "hours", min: 1, max: 48, default: 6 },
 };
 
 export type Deadlines = Record<DeadlineKey, number>;
@@ -140,6 +152,8 @@ export const deadlinesSettingSchema = z
     seriesHorizonDays: bounded("seriesHorizonDays"),
     publicListDays: bounded("publicListDays"),
     familySittingMinutes: bounded("familySittingMinutes"),
+    confirmationRetryHours: bounded("confirmationRetryHours"),
+    confirmationRetryLeftHours: bounded("confirmationRetryLeftHours"),
   })
   .strict();
 

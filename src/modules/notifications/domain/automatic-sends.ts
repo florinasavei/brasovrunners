@@ -31,7 +31,150 @@ export const AUTOMATIC_SEND_KEYS = {
   participation: (registrationId: string) => `registration:${registrationId}:confirm-participation`,
   // The number a confirmation before §548 was shown as «provizoriu», told once when it was kept (`bibs.ts#releaseLegacyHeldNumbers`).
   bibs: (registrationId: string) => `registration:${registrationId}:bib-settled`,
+  /**
+   * The second verification email (§NNN): once per email that started or re-sent the link — the
+   * anchor, a participant's own `VERIFY_REGISTRATION_EMAIL` that is not itself a second email — so a
+   * restarted registration, or a link the person or the club re-sent, may get one more, and a second
+   * email never begets a third.
+   */
+  confirmationRetry: (registrationId: string, anchorId: string) => `registration:${registrationId}:verify-retry:${anchorId}`,
 } as const;
+
+/** The payload key that marks the second verification email (§NNN): the renderer adds its one sentence. */
+export const CONFIRMATION_RETRY = "confirmationRetry";
+
+/** Whether a queued row's payload is a second verification email. */
+export function isConfirmationRetry(payload: unknown): boolean {
+  return typeof payload === "object" && payload !== null && (payload as Record<string, unknown>)[CONFIRMATION_RETRY] === true;
+}
+
+// --- The second verification email (§NNN) ----------------------------------------------------
+
+const HOUR = 60 * 60_000;
+
+/** A registration still waiting for its address at a scheduled event with internal registration. */
+export type ConfirmationRetryCandidate = {
+  registrationId: string;
+  participantId: string;
+  eventId: string;
+  /** When its link lapses (`emailLinkLapseSql`): after it, nothing can be confirmed. */
+  linkExpiresAt: Date;
+  startsAt: Date;
+};
+
+/**
+ * A participant's own `VERIFY_REGISTRATION_EMAIL` row (never a club copy) for the address and the
+ * event of a candidate — the candidate's own, or another person's on the same address, whose link
+ * confirms everybody waiting there (§588).
+ */
+export type VerificationEmailRow = {
+  id: string;
+  registrationId: string;
+  participantId: string;
+  eventId: string;
+  status: "PENDING" | "PROCESSING" | "SENT" | "FAILED" | "BOUNCED" | "COMPLAINED";
+  sentAt: Date | null;
+  createdAt: Date;
+  /** Itself a second email (`CONFIRMATION_RETRY` in its payload). */
+  retry: boolean;
+};
+
+export type ConfirmationRetryPlan = {
+  registrationId: string;
+  participantId: string;
+  eventId: string;
+  /** The email the second one follows: its key (`AUTOMATIC_SEND_KEYS.confirmationRetry`). */
+  anchorId: string;
+  /** The first instant it is due: the club's hours after the last email the address got for the event. */
+  at: Date;
+  /** The last instant it may still go: the link's lapse less the club's least time left, and before the start. */
+  latest: Date;
+};
+
+/**
+ * Who is owed a second verification email, and from when to when (§NNN). One formula for the job,
+ * its plan (`jobs/next-work.ts`) and the forecast on «Emailuri» (§383); the instant is a question
+ * the caller asks (`isConfirmationRetryDue`), never answered here.
+ *
+ * Nobody, at 0 hours. Otherwise a candidate is planned when:
+ * - an email of its own has **left** (`SENT`) and is not itself a second email — the anchor, the
+ *   latest such. An email still queued is no email at all yet: nobody can have missed it, and its
+ *   departure is what starts the link's hours (§513);
+ * - nothing for the address and the event is waiting to leave (`PENDING`, `PROCESSING`): a link on
+ *   its way — the person's own «Retrimite», a family's held email — says it already;
+ * - the address never bounced or complained there (§76, §83): a second email to an address that
+ *   refused the first harms the sending domain and reaches nobody;
+ * - no second email for the address and the event was queued since the anchor left: one person's
+ *   link confirms everybody waiting on the address (§588), so a family gets one, not one each.
+ *
+ * It is due the club's hours after the **last** email the address got for the event — the anchor, or
+ * a sibling's sent later — and only while the link still has the club's least time left and the
+ * event has not started. A plan whose window is empty is left out.
+ */
+export function planConfirmationRetries(
+  candidates: readonly ConfirmationRetryCandidate[],
+  rows: readonly VerificationEmailRow[],
+  deadlines: Pick<Deadlines, "confirmationRetryHours" | "confirmationRetryLeftHours">,
+): ConfirmationRetryPlan[] {
+  if (deadlines.confirmationRetryHours <= 0) return [];
+  const groupOf = (participantId: string, eventId: string) => `${participantId}|${eventId}`;
+  const byGroup = new Map<string, VerificationEmailRow[]>();
+  for (const row of rows) {
+    const key = groupOf(row.participantId, row.eventId);
+    byGroup.set(key, [...(byGroup.get(key) ?? []), row]);
+  }
+  const plans: ConfirmationRetryPlan[] = [];
+  for (const candidate of candidates) {
+    const group = byGroup.get(groupOf(candidate.participantId, candidate.eventId)) ?? [];
+    if (group.some((row) => row.status === "PENDING" || row.status === "PROCESSING")) continue;
+    if (group.some((row) => row.status === "BOUNCED" || row.status === "COMPLAINED")) continue;
+    const anchor = group
+      .filter((row) => row.registrationId === candidate.registrationId && row.status === "SENT" && !row.retry && row.sentAt !== null)
+      .sort((a, b) => (b.sentAt?.getTime() ?? 0) - (a.sentAt?.getTime() ?? 0))[0];
+    if (!anchor?.sentAt) continue;
+    const anchorAt = anchor.sentAt.getTime();
+    if (group.some((row) => row.retry && row.createdAt.getTime() >= anchorAt)) continue;
+    const lastSent = Math.max(anchorAt, ...group.flatMap((row) => (row.status === "SENT" && row.sentAt ? [row.sentAt.getTime()] : [])));
+    const at = lastSent + deadlines.confirmationRetryHours * HOUR;
+    const latest = Math.min(candidate.linkExpiresAt.getTime() - deadlines.confirmationRetryLeftHours * HOUR, candidate.startsAt.getTime() - 1);
+    if (at > latest) continue;
+    plans.push({
+      registrationId: candidate.registrationId,
+      participantId: candidate.participantId,
+      eventId: candidate.eventId,
+      anchorId: anchor.id,
+      at: new Date(at),
+      latest: new Date(latest),
+    });
+  }
+  return plans;
+}
+
+/** Whether the job, running at `now`, queues this second email. */
+export function isConfirmationRetryDue(plan: Pick<ConfirmationRetryPlan, "at" | "latest">, now: Date): boolean {
+  return plan.at.getTime() <= now.getTime() && now.getTime() <= plan.latest.getTime();
+}
+
+/**
+ * The plans one run queues: those due at `now`, one per address and event — the earliest, then by
+ * registration — since the one email's link confirms everybody waiting there (§588).
+ */
+export function dueConfirmationRetries(plans: readonly ConfirmationRetryPlan[], now: Date): ConfirmationRetryPlan[] {
+  return onePerAddress(plans.filter((plan) => isConfirmationRetryDue(plan, now)));
+}
+
+/** One plan per address and event: the earliest, then by registration. */
+export function onePerAddress(plans: readonly ConfirmationRetryPlan[]): ConfirmationRetryPlan[] {
+  const seen = new Set<string>();
+  return [...plans]
+    .sort((a, b) => a.at.getTime() - b.at.getTime() || a.registrationId.localeCompare(b.registrationId))
+    .filter((plan) => {
+      const key = `${plan.participantId}|${plan.eventId}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
 
 // --- The reminder (§81, §126, §377) ------------------------------------------------------------
 

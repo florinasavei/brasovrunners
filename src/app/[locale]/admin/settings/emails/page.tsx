@@ -21,7 +21,7 @@ import {
 } from "@/modules/notifications/email-copy-fields";
 import { getDb } from "@/db/client";
 import { readDeadlines } from "@/modules/deadlines/deadlines";
-import { deadlineWords } from "@/modules/deadlines/domain/duration-words";
+import { deadlineWords, hoursPhrase } from "@/modules/deadlines/domain/duration-words";
 import { replyToHeader, resolveShownContactAddresses } from "@/modules/contact/domain/shown-address";
 import { readShownContactAddress } from "@/modules/contact/shown-address";
 import { readClubNotices } from "@/modules/notifications/club-notices";
@@ -214,6 +214,15 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   const whenOf = (type: EmailMessageType): string => {
     if (type === "EVENT_REMINDER" && reminderOff) return t("emails.reminderOff.when");
     const line = t(`emails.when.${type}`, whenValues);
+    // The second verification email (§NNN), in the club's numbers — or that it is off.
+    if (type === "VERIFY_REGISTRATION_EMAIL") {
+      const { confirmationRetryHours, confirmationRetryLeftHours } = deadlines.deadlines;
+      return `${line} ${
+        confirmationRetryHours > 0
+          ? t("emails.confirmationRetry", { retry: hoursPhrase(locale, confirmationRetryHours), left: hoursPhrase(locale, confirmationRetryLeftHours) })
+          : t("emails.confirmationRetryOff")
+      }`;
+    }
     if (type !== "COMPLETE_DECLARATION") return line;
     return `${line} ${reminderOff ? t("emails.lastCallOff") : t("emails.lastCall", whenValues)}`;
   };

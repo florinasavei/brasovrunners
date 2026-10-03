@@ -4941,7 +4941,9 @@
           "raceWeekDays": "Numărătoarea inversă de pe prima pagină începe cu (zile înainte)",
           "seriesHorizonDays": "O serie își are datele create înainte cu (zile)",
           "publicListDays": "Lista publică de participanți rămâne pe site după eveniment (zile)",
-          "familySittingMinutes": "Emailul unei înscrieri de familie așteaptă „Gata” cel mult (minute)"
+          "familySittingMinutes": "Emailul unei înscrieri de familie așteaptă „Gata” cel mult (minute)",
+          "confirmationRetryHours": "Al doilea email de confirmare a adresei pleacă după (ore)",
+          "confirmationRetryLeftHours": "Al doilea email pleacă doar dacă linkul mai e valabil cel puțin (ore)"
         },
         "help": {
           "confirmationHours": "Cât are cineva ca să apese linkul din primul email; după, înscrierea expiră.",
@@ -4952,7 +4954,9 @@
           "raceWeekDays": "0 = doar în ziua cursei. Din aceeași zi, cardul de tipărire a numerelor din editor se deschide singur.",
           "seriesHorizonDays": "Datele deja create rămân dacă micșorezi numărul; se completează singure dacă îl mărești.",
           "publicListDays": "Apoi lista se închide singură, chiar dacă evenimentul o are încă pornită. Nota de confidențialitate din șablon spune acest număr.",
-          "familySittingMinutes": "După „Da, încă o persoană”, emailul familiei așteaptă „Gata” cel mult atâtea minute de la ultimul formular și pleacă o singură dată, pentru toți; la 0, fiecare email pleacă imediat."
+          "familySittingMinutes": "După „Da, încă o persoană”, emailul familiei așteaptă „Gata” cel mult atâtea minute de la ultimul formular și pleacă o singură dată, pentru toți; la 0, fiecare email pleacă imediat.",
+          "confirmationRetryHours": "Socotit de când a plecat ultimul email, către cine nu a confirmat încă; o singură dată pentru fiecare email. 0 = fără al doilea email.",
+          "confirmationRetryLeftHours": "Cu mai puțin timp rămas nu se mai trimite. Dacă cele două numere adunate depășesc valabilitatea linkului, nu pleacă niciodată."
         },
         "legal": "Textele legale aprobate deja păstrează numerele scrise în ele până aprobi o versiune nouă din șablon, care le citește de aici.",
         "updatedAt": "Setat {when}.",
@@ -4991,7 +4995,8 @@
           "holdLapsed": "expiră un loc ținut; celui care nu a semnat, că locul a trecut la altcineva",
           "registrationOpened": "se deschid înscrierile, către adresele lăsate pe pagina evenimentului",
           "newEventAlert": "anunțul de eveniment nou, către abonații temelor lui",
-          "newsletter": "newsletterul, către abonații temei"
+          "newsletter": "newsletterul, către abonații temei",
+          "confirmationRetry": "al doilea email de confirmare a adresei, către cei care nu au confirmat încă"
         },
         "zone": "ora din {zone}",
         "untitled": "(eveniment fără titlu)",
@@ -5095,7 +5100,9 @@
         "BIB_ASSIGNED": "Când un organizator scrie numărul unei înscrieri confirmate, în pagina ei sau la masă. Altfel, numărul vine cu confirmarea. Cu linkul de gestionare. Niciodată pentru un eveniment anulat.",
         "REGISTER_ANOTHER_PERSON": "Nu se creează nicio înscriere, iar ecranul spune „verifică-ți emailul” ca oricând. Dacă adresa are deja {people}, emailul spune doar asta, fără link.",
         "LEGAL_TEMPLATES_CHANGED": "Verificarea rulează cu sarcinile programate, cel mult o dată pe oră. O schimbare aprobată înainte de verificare nu mai e anunțată; «Sarcini» arată aceleași rânduri."
-      }
+      },
+      "confirmationRetry": "Cui nu a confirmat, pleacă singur încă o dată la {retry} după ultimul email, dacă linkul mai are cel puțin {left}.",
+      "confirmationRetryOff": "Nu pleacă singur a doua oară: în „Termene”, al doilea email e oprit (0)."
     },
     "guide": {
       "title": "Ghid de utilizare",

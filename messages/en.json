@@ -4941,7 +4941,9 @@
           "raceWeekDays": "The homepage countdown starts (days before)",
           "seriesHorizonDays": "A series keeps its dates created ahead by (days)",
           "publicListDays": "The public participant list stays up after the event (days)",
-          "familySittingMinutes": "A family registration's email waits for “Done” at most (minutes)"
+          "familySittingMinutes": "A family registration's email waits for “Done” at most (minutes)",
+          "confirmationRetryHours": "The second address-confirmation email goes after (hours)",
+          "confirmationRetryLeftHours": "The second email goes only while the link is still valid for at least (hours)"
         },
         "help": {
           "confirmationHours": "How long somebody has to press the link in the first email; after it, the registration lapses.",
@@ -4952,7 +4954,9 @@
           "raceWeekDays": "0 = on race day only. From the same day, the editor's bib printing card opens by itself.",
           "seriesHorizonDays": "Dates already created stay if you lower it; the missing ones are filled in if you raise it.",
           "publicListDays": "Then the list closes by itself, even while the event still has it switched on. The privacy notice from the template states this number.",
-          "familySittingMinutes": "After “Yes, one more person”, the family's email waits for “Done” at most this many minutes after the last form and leaves once, for everybody; at 0, each email leaves at once."
+          "familySittingMinutes": "After “Yes, one more person”, the family's email waits for “Done” at most this many minutes after the last form and leaves once, for everybody; at 0, each email leaves at once.",
+          "confirmationRetryHours": "Counted from when the last email left, to whoever has not confirmed yet; once per email. 0 = no second email.",
+          "confirmationRetryLeftHours": "With less time left it is not sent. If the two numbers added up exceed the link's validity, it never goes."
         },
         "legal": "Legal texts already approved keep the numbers written in them until you approve a new version from the template, which reads them from here.",
         "updatedAt": "Set {when}.",
@@ -4991,7 +4995,8 @@
           "holdLapsed": "a held place lapses; to the one who did not sign, that it went to somebody else",
           "registrationOpened": "registration opens, to the addresses left on the event's page",
           "newEventAlert": "the new-event announcement, to the subscribers of its topics",
-          "newsletter": "the newsletter, to the topic's subscribers"
+          "newsletter": "the newsletter, to the topic's subscribers",
+          "confirmationRetry": "the second address-confirmation email, to those who have not confirmed yet"
         },
         "zone": "{zone} time",
         "untitled": "(untitled event)",
@@ -5095,7 +5100,9 @@
         "BIB_ASSIGNED": "When an organizer types a confirmed registration's number on its page or at the desk. Otherwise, the number comes with the confirmation. With the manage link. Never for a cancelled event.",
         "REGISTER_ANOTHER_PERSON": "No registration is created, and the screen says “check your email” as always. If the address already has {people}, the email says only that, with no link.",
         "LEGAL_TEMPLATES_CHANGED": "The check runs with the scheduled jobs, at most once an hour. A change approved before the check is not announced; «Tasks» shows the same rows."
-      }
+      },
+      "confirmationRetry": "To whoever has not confirmed, it goes once more by itself {retry} after the last email, if the link still has at least {left}.",
+      "confirmationRetryOff": "It does not go a second time by itself: in “Deadlines”, the second email is off (0)."
     },
     "guide": {
       "title": "User guide",
