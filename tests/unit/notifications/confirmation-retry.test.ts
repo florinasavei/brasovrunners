@@ -23,7 +23,7 @@ function candidate(overrides: Partial<ConfirmationRetryCandidate> = {}): Confirm
 }
 
 function email(overrides: Partial<VerificationEmailRow> = {}): VerificationEmailRow {
-  return { id: "m1", registrationId: "r1", participantId: "p1", eventId: "e1", status: "SENT", sentAt: T, createdAt: T, startsDeadline: true, ...overrides };
+  return { id: "m1", registrationId: "r1", participantId: "p1", eventId: "e1", status: "SENT", sentAt: T, createdAt: T, startsDeadline: true, isRetry: false, ...overrides };
 }
 
 /** A later email for the address: a re-sent one, the person's «Retrimite» or a staff resend — all the same to the count. */
@@ -65,6 +65,17 @@ describe("§NNN the verification email re-sent: the formula", () => {
     expect(plan).toMatchObject({ attempt: 2, at: at(25) });
     // …and the step stops at one plus the club's number.
     expect(planConfirmationRetries([candidate()], [email(), later("m2", 5), later("m3", 25)], { ...settings, verificationRetries: 2 })).toEqual([]);
+  });
+
+  it("a re-sent email that ended FAILED used up its attempt: nothing is owed, and a later key never repeats it", () => {
+    const failed = later("m2", 20, { status: "FAILED", sentAt: null, isRetry: true });
+    // One allowed, and the failed one was it: no plan, so nothing for the job's plan to wake for.
+    expect(planConfirmationRetries([candidate()], [email(), failed], settings)).toEqual([]);
+    // Two allowed: the next one, the club's hours after the failed one was queued, under the next key.
+    const [plan] = planConfirmationRetries([candidate()], [email(), failed], { ...settings, verificationRetries: 2 });
+    expect(plan).toMatchObject({ attempt: 2, at: at(40) });
+    // A FAILED email that was not a re-send (the first, a «Retrimite») still counts as nothing.
+    expect(planConfirmationRetries([candidate()], [email(), later("m2", 5, { status: "FAILED", sentAt: null })], settings)).toHaveLength(1);
   });
 
   it("three at most, each the club's hours after the last", () => {

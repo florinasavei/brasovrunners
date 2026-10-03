@@ -43,6 +43,9 @@ import { readEmailDelayFacts } from "./public-delay";
 
 type Row = Record<string, unknown>;
 
+/** Every key `AUTOMATIC_SEND_KEYS.confirmationRetry` writes, as a `like` pattern. */
+const RETRY_KEY_PATTERN = "%:verify-retry:%";
+
 function toDate(value: unknown): Date | null {
   if (value === null || value === undefined) return null;
   const date = value instanceof Date ? value : new Date(String(value));
@@ -89,6 +92,8 @@ export async function selectConfirmationRetryRows<T extends Row>(
     .where(
       and(
         eq(registrations.status, "PENDING_EMAIL_CONFIRMATION"),
+        // A row without a link deadline is never due: there is no deadline for the email to state.
+        isNotNull(registrations.emailLinkExpiresAt),
         eq(events.eventStatus, "SCHEDULED"),
         eq(events.registrationMode, "INTERNAL"),
         gt(events.startsAt, from),
@@ -115,6 +120,7 @@ export async function selectConfirmationRetryRows<T extends Row>(
         sentAt: emailOutbox.sentAt,
         createdAt: emailOutbox.createdAt,
         startsDeadline: sql<boolean>`coalesce((${emailOutbox.payloadJson}->>${STARTS_DEADLINE}::text) = 'true', false)`,
+        isRetry: sql<boolean>`(${emailOutbox.idempotencyKey} like ${RETRY_KEY_PATTERN})`,
       })
       .from(emailOutbox)
       .innerJoin(registrations, eq(registrations.id, emailOutbox.registrationId))
@@ -128,7 +134,12 @@ export async function selectConfirmationRetryRows<T extends Row>(
       );
     for (const row of rows) {
       if (!row.participantId) continue;
-      emails.push({ ...row, participantId: row.participantId, startsDeadline: row.startsDeadline === true || String(row.startsDeadline) === "true" });
+      emails.push({
+        ...row,
+        participantId: row.participantId,
+        startsDeadline: row.startsDeadline === true || String(row.startsDeadline) === "true",
+        isRetry: row.isRetry === true || String(row.isRetry) === "true",
+      });
     }
   }
   return { candidates, emails, refused: await refusedAddresses(db, participantIds) };

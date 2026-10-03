@@ -11,7 +11,7 @@ import { hoursPhrase } from "@/modules/deadlines/domain/duration-words";
 import { nextMaintenanceWork } from "@/modules/jobs/next-work";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
-import { queueConfirmationRetries } from "@/modules/notifications/confirmation-retry";
+import { nextConfirmationRetry, queueConfirmationRetries } from "@/modules/notifications/confirmation-retry";
 import { forecastAutomaticEmails } from "@/modules/notifications/forecast";
 import { type OutboxRow, processOutboxBatch } from "@/modules/notifications/outbox";
 import { createOutboxRenderer } from "@/modules/notifications/render";
@@ -222,11 +222,68 @@ describe("§NNN the verification email re-sent by itself", () => {
     expect(await queueConfirmationRetries(db, new Date(T.getTime() + 46 * HOUR), two)).toBe(0);
   });
 
-  it("a test registration gets it like a real one (§12.6)", async () => {
+  it("a test registration gets it like a real one, to where its test emails go (§12.6)", async () => {
+    const race = await event();
+    await submitRegistration(db, race, submission("ana@example.ro", T), T);
+    await submitRegistration(db, race, submission("ioana@example.ro", T, "Ioana"), T);
+    await processOutboxBatch(db, { sender: sender(), render: stub, now: T });
+    const test = await registrationOf(race.id, "ana@example.ro");
+    const real = await registrationOf(race.id, "ioana@example.ro");
+    await db.update(registrations).set({ kind: "TEST" }).where(eq(registrations.id, test.id));
+    expect(await queueConfirmationRetries(db, new Date(T.getTime() + 20 * HOUR + MINUTE), DEFAULT_DEADLINES)).toBe(2);
+    const firstOf = async (registrationId: string) =>
+      (await db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, registrationId))).find((row) => !row.idempotencyKey.includes(":verify-retry:"));
+    const queued = await retries();
+    const retryOf = (registrationId: string) => queued.find((row) => row.registrationId === registrationId);
+    // The same path as a real one: the same message, payload and recipient its own first email had.
+    for (const registration of [test, real]) {
+      expect(retryOf(registration.id)).toMatchObject({
+        messageType: "VERIFY_REGISTRATION_EMAIL",
+        payloadJson: { confirmationRetry: true },
+        recipientEmail: (await firstOf(registration.id))?.recipientEmail,
+        participantId: registration.participantId,
+      });
+    }
+    expect(retryOf(test.id)?.recipientEmail).toBe("ana@example.ro");
+  });
+
+  it("a confirmed registration whose email left long ago gets nothing", async () => {
     const race = await event();
     const pending = await submittedAndSent(race);
-    await db.update(registrations).set({ kind: "TEST" }).where(eq(registrations.id, pending.id));
-    expect(await queueConfirmationRetries(db, new Date(T.getTime() + 20 * HOUR + MINUTE), DEFAULT_DEADLINES)).toBe(1);
+    await confirmEmail(db, race, pending.id, new Date(T.getTime() + HOUR));
+    expect(await queueConfirmationRetries(db, new Date(T.getTime() + 20 * HOUR + MINUTE), DEFAULT_DEADLINES)).toBe(0);
+    expect(await retries()).toHaveLength(0);
+  });
+
+  it("two runs at the same instant queue it once: 1, then 0", async () => {
+    const race = await event();
+    await submittedAndSent(race);
+    const at = new Date(T.getTime() + 20 * HOUR + MINUTE);
+    expect(await queueConfirmationRetries(db, at, DEFAULT_DEADLINES)).toBe(1);
+    expect(await queueConfirmationRetries(db, at, DEFAULT_DEADLINES)).toBe(0);
+    expect(await retries()).toHaveLength(1);
+  });
+
+  it("a re-sent email that ended FAILED used up its attempt: the next run queues nothing and the job's plan goes quiet", async () => {
+    const race = await event();
+    const pending = await submittedAndSent(race);
+    const at = new Date(T.getTime() + 20 * HOUR + MINUTE);
+    expect(await queueConfirmationRetries(db, at, DEFAULT_DEADLINES)).toBe(1);
+    // A permanent refusal, a render error or the retries used up: FAILED, never sent.
+    await db.update(emailOutbox).set({ status: "FAILED" }).where(like(emailOutbox.idempotencyKey, "%:verify-retry:%"));
+    const later = new Date(at.getTime() + HOUR);
+    expect(await queueConfirmationRetries(db, later, DEFAULT_DEADLINES)).toBe(0);
+    expect(await nextConfirmationRetry(db, later, DEFAULT_DEADLINES)).toBeNull();
+    // Two allowed: the next one is genuinely due, under the next key, the club's hours after the failed one.
+    const two = { ...DEFAULT_DEADLINES, verificationRetries: 2 };
+    const [failed] = await retries();
+    const next = await nextConfirmationRetry(db, later, two);
+    expect(next).toEqual(new Date(failed.createdAt.getTime() + 20 * HOUR));
+    expect(await queueConfirmationRetries(db, new Date(T.getTime() + 41 * HOUR), two)).toBe(1);
+    expect((await retries()).map((row) => row.idempotencyKey).sort()).toEqual([
+      `registration:${pending.id}:verify-retry:1`,
+      `registration:${pending.id}:verify-retry:2`,
+    ]);
   });
 
   it("waits while the outbox is behind: nothing is queued, and the job looks again at the pinger's next call", async () => {

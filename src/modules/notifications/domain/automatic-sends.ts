@@ -90,6 +90,8 @@ export type VerificationEmailRow = {
   createdAt: Date;
   /** The email that started its link's deadline (`startsDeadline`, §513): the first of a round. */
   startsDeadline: boolean;
+  /** One the job re-sent by itself (its key is `AUTOMATIC_SEND_KEYS.confirmationRetry`): it uses up its attempt whatever became of it. */
+  isRetry: boolean;
 };
 
 export type ConfirmationRetryPlan = {
@@ -115,6 +117,9 @@ export type ConfirmationRetryPlan = {
  *   that started the link's current deadline counts — the first, each one re-sent by the job, the
  *   person's own «Retrimite» and a staff resend — and the plan stands only while that count is under
  *   one plus the club's number: a resend uses up an attempt, and nobody is nudged twice by one;
+ * - an email the job re-sent counts **whatever its status** — one that ended `FAILED` (a permanent
+ *   refusal, a render error, retries used up) used up its attempt too: planning it again would ask for
+ *   the same key, queue nothing, and keep the job's plan waking at every pinger call (§334);
  * - nothing for the address and the event is waiting to leave (`PENDING`, `PROCESSING`): an email
  *   still queued is no email yet, nobody can have missed it, and a link on its way says it already;
  * - the address never bounced or complained, for any message (`refused`, §76, §83): a nudge to an
@@ -142,16 +147,18 @@ export function planConfirmationRetries(
     const group = byGroup.get(groupOf(candidate.participantId, candidate.eventId)) ?? [];
     if (group.some((row) => row.status === "PENDING" || row.status === "PROCESSING")) continue;
     if (group.some((row) => row.status === "BOUNCED" || row.status === "COMPLAINED")) continue;
-    const sent = group.filter((row): row is VerificationEmailRow & { sentAt: Date } => row.status === "SENT" && row.sentAt !== null);
-    if (sent.length === 0) continue;
+    if (!group.some((row) => row.status === "SENT" && row.sentAt !== null)) continue;
+    // What counts: every email that left, and every one the job re-sent whatever became of it.
+    const counted = group.filter((row) => (row.status === "SENT" && row.sentAt !== null) || row.isRetry);
+    const when = (row: VerificationEmailRow) => (row.sentAt ?? row.createdAt).getTime();
     // The round: from the newest email that started a deadline (a restarted registration's first email) on.
     const roundStart = Math.max(
       Number.NEGATIVE_INFINITY,
       ...group.filter((row) => row.startsDeadline).map((row) => (row.sentAt ?? row.createdAt).getTime()),
     );
-    const inRound = sent.filter((row) => row.sentAt.getTime() >= roundStart);
+    const inRound = counted.filter((row) => when(row) >= roundStart);
     if (inRound.length === 0 || inRound.length >= 1 + deadlines.verificationRetries) continue;
-    const lastSent = Math.max(...sent.map((row) => row.sentAt.getTime()));
+    const lastSent = Math.max(...counted.map(when));
     const at = lastSent + deadlines.verificationRetryHours * HOUR;
     const latest = Math.min(candidate.linkExpiresAt.getTime() - CONFIRMATION_RETRY_LEAST_LEFT_MS, candidate.startsAt.getTime() - 1);
     if (at > latest) continue;
@@ -159,8 +166,9 @@ export function planConfirmationRetries(
       registrationId: candidate.registrationId,
       participantId: candidate.participantId,
       eventId: candidate.eventId,
-      // Every email the address ever got for the event, so a restarted round never reuses a key.
-      attempt: sent.length,
+      // Every email counted for the address and the event, ever, so neither a restarted round nor a
+      // failed re-send ever reuses a key.
+      attempt: counted.length,
       at: new Date(at),
       latest: new Date(latest),
     });
