@@ -161,6 +161,17 @@ export const EMERGENCY_ANSWERS: ReadonlySet<string> = new Set(["phone", "emergen
 export const SOCIAL_ANSWERS: readonly string[] = ["stravaUrl", "instagramHandle", "listSocials"];
 
 /**
+ * «The day the row was written» (§NNN): when the form last wrote the person's answers — the insert, or
+ * a restart of a cancelled or expired row, which rewrites every answer at its own instant and keeps
+ * `createdAt` (`AGENTS.md` §10.5). The guardian and socials rules of a correction (§645) and the minors' sweep
+ * (`jobs/retention.ts`, `minor-socials`, §323, the same fallback in SQL) read it. A row the previous
+ * release wrote during the deploy has no value yet and is judged on its creation, as before.
+ */
+export function answersWrittenAt(row: Pick<Registration, "answersWrittenAt" | "createdAt">): Date {
+  return row.answersWrittenAt ?? row.createdAt;
+}
+
+/**
  * A telephone as an Administrator types it: the international form (`+40 712 345 678`, `0040…`), or a
  * Romanian national number (`0712 345 678`) — composed into E.164 the way the form composes it
  * (`phone.ts`), or left as typed for the form's rule to refuse.
@@ -254,8 +265,11 @@ export function planAnswerEdit(
     minAge: number | null;
     kitShirt: boolean;
     now: Date;
-    /** When the row was written: the minors' sweep keeps no socials on a row written before the eighteenth birthday (§323). */
-    createdAt: Date;
+    /**
+     * When the row's answers were written (`answersWrittenAt`, §NNN — a restart's instant, not the creation's):
+     * the minors' sweep keeps no socials on a row written before the eighteenth birthday (§323).
+     */
+    answersWrittenAt: Date;
     /** The row has a declaration acceptance (online or paper): the guardian is the signed text's, not an answer any more. */
     declarationSigned: boolean;
   },
@@ -327,7 +341,7 @@ export function planAnswerEdit(
   // The form's cross-field rules, on the row as it would be.
   const minor = typeof next.birthDate === "string" && isMinorOn(next.birthDate, context.now);
   // The minors' sweep's own test (`jobs/retention.ts`, `minor-socials`): a minor on the day the row was written.
-  const minorAtRegistration = typeof next.birthDate === "string" && isMinorOn(next.birthDate, context.createdAt);
+  const minorAtRegistration = typeof next.birthDate === "string" && isMinorOn(next.birthDate, context.answersWrittenAt);
   if ((posted.has("phone") || posted.has("emergencyContactPhone")) && next.phone && next.phone === next.emergencyContactPhone) {
     refuse("the emergency contact must be somebody other than the participant", ["emergencyContactPhone", EMERGENCY_SAME]);
   }

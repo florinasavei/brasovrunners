@@ -71,7 +71,7 @@ import { isUuid } from "@/shared/ids";
 import { dayIn, MIN_PARTICIPANT_AGE } from "./domain/age";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS, ANOTHER_LINK_INVALID, decideSubmission } from "./domain/family";
 import { registrationNameKey } from "./domain/name-key";
-import { planAnswerEdit } from "./answers";
+import { answersWrittenAt, planAnswerEdit } from "./answers";
 import { forgetRegisteredBadgeCount } from "./nav-count";
 import { currentAddressCap } from "./address-cap";
 import { familyEntryFields, insertFamilyEntry, liveSittingEntries, personOfEntry, replaceFamilyEntry } from "./family-entries";
@@ -2430,6 +2430,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
             nameKey: registrationNameKey(legalName),
             displayName: resolveDisplayName({ displayName: input.displayName, firstName: input.firstName, lastName: input.lastName, legalName }),
             ...(corrected.fitnessDeclaredAt === null ? { listOptOut: true } : {}),
+            // The corrected answers were judged on this instant, as a restart's are (§NNN).
+            answersWrittenAt: now,
             updatedAt: now,
           })
           .where(eq(registrations.id, existing.id));
@@ -2627,6 +2629,12 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         again if it still wants to.
       */
       outsideCapacity: false,
+      /*
+        The answers above were judged on this instant — a guardian kept only for a minor today, no
+        socials for one (`rowDetails`) — so the row says so (§NNN): on a restart `created_at` stays
+        (`AGENTS.md` §10.5), and the minors' sweep and a staff correction judge against this, never the old row's day.
+      */
+      answersWrittenAt: now,
     };
 
     if (existing) {
@@ -4592,7 +4600,7 @@ export async function editRegistrationAnswersByStaff<T extends Record<string, un
       minAge: event.minAge,
       kitShirt: event.kitShirt,
       now,
-      createdAt: current.createdAt,
+      answersWrittenAt: answersWrittenAt(current),
       declarationSigned: signed !== undefined,
     });
     if (plan.nameChange) {

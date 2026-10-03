@@ -510,6 +510,17 @@ export const registrations = pgTable(
       { onDelete: "set null" },
     ),
 
+    /*
+      When the person's answers were last written by the form (§NNN): the insert's instant, and a
+      restart's — a cancelled or expired row restarted rewrites every answer at its own `now` and keeps
+      `created_at`. "Minor on the day the row was written" is judged here: the form's guardian rule
+      (§108), the minors' sweep (`jobs/retention.ts`, `minor-socials`, §323) and the staff correction's
+      guardian and socials rules (§645). A staff correction does not move it: it judges against it.
+      Null on a row written before the column by the previous release; read through
+      `answers.ts#answersWrittenAt`, which falls back to `created_at`.
+    */
+    answersWrittenAt: timestamp("answers_written_at", { withTimezone: true }),
+
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
