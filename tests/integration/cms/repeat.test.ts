@@ -175,7 +175,7 @@ describe("BR-REQ-050-02 criterion 7 repeating an event", () => {
     expect(made.created).toBe(1);
     // The job, five weeks later: the horizon now reaches 15 January, two more months.
     const run = await materializeStandingRepeats(db, new Date("2026-11-20T10:00:00Z"), DEFAULT_DEADLINES);
-    expect(run).toEqual({ sources: 1, created: 2 });
+    expect(run).toEqual({ sources: 1, created: 2, refused: [] });
     // And again the same day: nothing new — two reads, no write.
     expect((await materializeStandingRepeats(db, new Date("2026-11-20T11:00:00Z"), DEFAULT_DEADLINES)).created).toBe(0);
     expect((await copiesOf(source.id)).map((copy) => toWallTimeInput(copy.startsAt, "Europe/Bucharest"))).toEqual([

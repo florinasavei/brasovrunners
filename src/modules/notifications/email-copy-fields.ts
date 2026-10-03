@@ -341,6 +341,8 @@ const NO_REGISTRATION: ReadonlySet<EmailMessageType> = new Set([
   "MEMBER_INVITATION",
   "LEGAL_TEMPLATES_CHANGED",
   "REGISTRATION_OPENED",
+  // An invitation (§647): to an address, before any registration exists.
+  "EVENT_INVITATION",
   "GROUP_RUN_DECLARATION_SIGNED",
   "GROUP_RUN_DECLARATION_ARCHIVE",
   // The newsletter's (§445): a subscription, never a registration.
@@ -354,7 +356,8 @@ const ONLY_IN: Partial<Record<EmailCopyPlaceholder, readonly EmailMessageType[]>
   checkinCode: ["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "BIB_ASSIGNED"],
   // The offer's own deadline on the freed place too (§419): the same column, the offer's hold.
   // …and the deadline that passed on a held place that lapsed (§638).
-  holdExpiresAtFormatted: ["COMPLETE_DECLARATION", "WAITLIST_SPOT_OFFER", "DECLARATION_HOLD_EXPIRED"],
+  // …and until when an invitation keeps its place (§647).
+  holdExpiresAtFormatted: ["COMPLETE_DECLARATION", "WAITLIST_SPOT_OFFER", "DECLARATION_HOLD_EXPIRED", "EVENT_INVITATION"],
   signedAtFormatted: ["REGISTRATION_CONFIRMED", "DECLARATION_SIGNED", "DECLARATION_ARCHIVE", "GROUP_RUN_DECLARATION_SIGNED", "GROUP_RUN_DECLARATION_ARCHIVE"],
   staffRole: ["STAFF_INVITATION"],
   inviterName: ["STAFF_INVITATION", "MEMBER_INVITATION"],

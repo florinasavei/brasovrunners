@@ -1,11 +1,16 @@
 import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { EVENT_TYPES, takesRegistrations } from "@/modules/events/domain/event-type";
+import { textFieldConstraints } from "@/shared/forms/constraints";
+import RecallField from "@/shared/forms/recall";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import Panel from "@/shared/ui/Panel";
 import { startListSummary } from "../box-summaries";
 import OnlyForMode from "../OnlyForMode";
 import OnlyForType from "../OnlyForType";
+import OnlyWhenTicked from "../OnlyWhenTicked";
+import { eventInputConstraints } from "../../constraints";
 import { BoxNote, type BoxProps, summaryWords } from "./box-kit";
 
 /**
@@ -71,6 +76,54 @@ export default async function StartListBox({ event, mayEditSettings }: Pick<BoxP
                   {t("editor.waitlistCountPublic")}
                 </CheckboxField>
                 <BoxNote>{t("editor.waitlistCountPublicHelp")}</BoxNote>
+              </Box>
+              {/*
+                «Arată public numărătoarea» (§647): «Cine vine»'s own numbers — the title's «(N)», «N confirmați
+                — M cu numele afișat», «în curs» — on every event, whatever the hidden list's switch says (the
+                owner: «mai punem bifă pentru afișarea numărătorii»). It hides numbers, never a name, so it sits
+                beside «Arată public câți așteaptă», not indented. On by default; its own marker tells "unticked"
+                from "a form without the box".
+              */}
+              <Box data-testid="participant-count-public" sx={{ mt: 1 }}>
+                <input type="hidden" name="event.participantCountPublic.present" value="1" />
+                <CheckboxField name="event.participantCountPublic" defaultChecked={event?.participantCountPublic ?? true}>
+                  {t("editor.participantCountPublic")}
+                </CheckboxField>
+                <BoxNote>{t("editor.participantCountPublicHelp")}</BoxNote>
+              </Box>
+              {/*
+                «Lista ascunsă» (§647; the owner, 2026-10-02: «direct din setările evenimentului să pot avea
+                „folosește lista ascunsă” dedicată pentru BIB-uri date pe invitații»): the switch that lets the
+                registrations be put on the hidden list, and — shown only while it is ticked — the hidden list's
+                own number series and «Numără și lista ascunsă». One marker for the three, so a
+                form without the group edits none of them; the service validates them whatever this shows.
+              */}
+              <Box data-testid="hidden-list-settings" sx={{ mt: 2 }}>
+                <Typography variant="subtitle2" component="h4" sx={{ mb: 0.5 }}>
+                  {t("editor.hiddenListTitle")}
+                </Typography>
+                <input type="hidden" name="event.hiddenList.present" value="1" />
+                <CheckboxField name="event.hiddenListEnabled" defaultChecked={event?.hiddenListEnabled ?? false}>
+                  {t("editor.hiddenListEnabled")}
+                </CheckboxField>
+                <BoxNote>{t("editor.hiddenListEnabledHelp")}</BoxNote>
+                <OnlyWhenTicked name="event.hiddenListEnabled" initiallyTicked={event?.hiddenListEnabled ?? false}>
+                  <Box data-testid="hidden-list-details" sx={{ mt: 1, pl: { xs: 1.5, sm: 3.5 }, borderLeft: 2, borderColor: "divider", minWidth: 0 }}>
+                    <RecallField
+                      name="event.hiddenListBibStart"
+                      label={t("editor.hiddenListBibStart")}
+                      helperText={t("editor.hiddenListBibStartHelp")}
+                      helpMore={t("editor.hiddenListBibStartHelpMore")}
+                      defaultValue={event?.hiddenListBibStart ?? ""}
+                      {...textFieldConstraints(eventInputConstraints("hiddenListBibStart"), { inputMode: "numeric" })}
+                      sx={{ width: { xs: "100%", sm: 320 }, my: 1 }}
+                    />
+                    <CheckboxField name="event.hiddenListCounted" defaultChecked={event?.hiddenListCounted ?? false}>
+                      {t("editor.hiddenListCounted")}
+                    </CheckboxField>
+                    <BoxNote>{t("editor.hiddenListCountedHelp")}</BoxNote>
+                  </Box>
+                </OnlyWhenTicked>
               </Box>
             </Box>
           </OnlyForMode>

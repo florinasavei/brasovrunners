@@ -125,20 +125,20 @@ describe("BR-REQ-037-07 «Dă-i un loc» on a full race (§589)", () => {
     );
     expect(refusal).toBeInstanceOf(NoFreePlaceError);
     // Three places: one confirmed, two reserved for the family until it confirms the address.
-    expect((refusal as NoFreePlaceError).places).toEqual({ capacity: 3, confirmed: 1, declaration: 0, offered: 0, family: 2 });
+    expect((refusal as NoFreePlaceError).places).toEqual({ capacity: 3, confirmed: 1, declaration: 0, offered: 0, family: 2, invited: 0 });
     const [after] = await db.select().from(registrations).where(eq(registrations.id, waiting.id));
     expect(after.status).toBe("WAITLISTED");
 
     // What the action puts on the redirect, and what the page reads back from it.
     const outcome = noFreePlaceOutcome(refusal)!;
-    expect(outcome).toEqual({ error: "NO_FREE_PLACE", capacity: "3", confirmed: "1", declaration: "0", offered: "0", family: "2" });
+    expect(outcome).toEqual({ error: "NO_FREE_PLACE", capacity: "3", confirmed: "1", declaration: "0", offered: "0", family: "2", invited: "0" });
     const values = noFreePlaceValues(outcome.error, { ...outcome, family: "<b>2</b>" });
     expect(values).toMatchObject({ capacity: "3", family: "0" });
     expect(noFreePlaceValues("VALIDATION_ERROR", outcome)).toBeUndefined();
     const sentence = (messages: typeof ro, locale: "ro" | "en") =>
       createTranslator({ locale, messages, namespace: "Admin" })("errors.NO_FREE_PLACE", noFreePlaceValues(outcome.error, outcome));
-    expect(sentence(ro, "ro")).toContain("locuri 3, confirmați 1, declarații de semnat 0, oferite 0, rezervate familiilor 2.");
-    expect(sentence(en as typeof ro, "en")).toContain("places 3, confirmed 1, declarations to sign 0, offered 0, reserved for families 2.");
+    expect(sentence(ro, "ro")).toContain("locuri 3, confirmați 1, declarații de semnat 0, oferite 0, rezervate familiilor 2, invitați 0.");
+    expect(sentence(en as typeof ro, "en")).toContain("places 3, confirmed 1, declarations to sign 0, offered 0, reserved for families 2, invited 0.");
   });
 
   it("gives the place once one is free: the family's deadline passed and no job has run since", async () => {

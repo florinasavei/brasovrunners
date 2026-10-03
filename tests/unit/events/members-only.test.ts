@@ -139,6 +139,8 @@ describe("§552 no public read path meets a members' row or a code (source walk)
     expect(callers.sort()).toEqual(
       [
         "src/app/[locale]/registrations/resend/actions.ts",
+        // An invitation's link (§647): the token is the door, read live, never through the public cache.
+        "src/app/[locale]/registrations/invitation/[token]/page.tsx",
         "src/modules/events/members-only.ts",
         "src/modules/events/repository.ts",
         "src/modules/notifications/render.ts",

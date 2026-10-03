@@ -388,6 +388,7 @@ describe("BR-REQ-036-02 email action tokens", () => {
         "id",
         "participantId",
         "registrationId",
+        "invitationId",
         "purpose",
         "expiresAt",
       ]);

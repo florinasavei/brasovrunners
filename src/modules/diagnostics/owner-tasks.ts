@@ -58,6 +58,7 @@ export type TaskId =
   | "listStatesNotice"
   | "listSocialsNotice"
   | "listNumbersNotice"
+  | "invitationsNotice"
   | "promoNotice"
   | "sponsorNotice"
   | "newsletterNotice"
@@ -92,6 +93,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   listStatesNotice: "text",
   listSocialsNotice: "text",
   listNumbersNotice: "text",
+  invitationsNotice: "text",
   promoNotice: "text",
   sponsorNotice: "text",
   newsletterNotice: "text",
@@ -186,6 +188,12 @@ export type OwnerTaskInputs = {
    * on the public list (§613, `noticeDescribesListNumbers`)? Until it does, the list shows no number.
    */
   listNumbersDescribed: boolean;
+  /**
+   * Does the notice in force, in every language, describe the club's invitations by email (§647,
+   * `noticeDescribesEventInvitations`)? The club may invite meanwhile (§389's precedent); the row says
+   * what the notice owes.
+   */
+  invitationsDescribed: boolean;
   /**
    * Does the notice in force, in every language, describe the offers and benefits (§562,
    * `noticeDescribesPromotionalMaterials`)? Until it does, no form offers the box and nothing is kept.
@@ -396,6 +404,15 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     push("listNumbersNotice", {
       owner: "club",
       state: input.listNumbersDescribed ? "done" : "open",
+    });
+    /*
+      The invitations by email (§647), the same shape: open, never blocking — nothing is refused, the
+      club may invite while the notice is the older one, as it registers another person on one's own
+      address (§389) — and done by itself the day a notice naming `{{eventInvitations}}` takes effect.
+    */
+    push("invitationsNotice", {
+      owner: "club",
+      state: input.invitationsDescribed ? "done" : "open",
     });
     /*
       The offers and benefits (§562), the same shape: open, never blocking — nothing is refused,

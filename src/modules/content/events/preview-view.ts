@@ -67,6 +67,10 @@ export function previewPageOf(event: EditableEvent, translation: EditableTransla
     waitlistPublic: event.waitlistPublic,
     // «Arată public câți așteaptă» (§634): the preview's door says the count only as the page would.
     waitlistCountPublic: event.waitlistCountPublic,
+    // «Lista ascunsă» (§647): the preview's «Cine vine» counts as the page would.
+    hiddenListEnabled: event.hiddenListEnabled,
+    participantCountPublic: event.participantCountPublic,
+    hiddenListCounted: event.hiddenListCounted,
     // The place's name in this language (§362), else the event's, exactly as `PUBLIC_COLUMNS`
     // reads it — one rule, `placeNameIn`; the address and the rest from the event row (§36).
     locationName: placeLater ? null : placeNameIn(event, translation.locationName),

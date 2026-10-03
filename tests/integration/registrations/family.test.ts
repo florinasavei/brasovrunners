@@ -48,7 +48,7 @@ const { runRegistrationMaintenance } = await import("@/modules/registrations/mai
 const { renderOutboxMessage } = await import("@/modules/notifications/render");
 const { updateAddressCap } = await import("@/modules/registrations/address-cap");
 const { listActiveRegistrationsForParticipant } = await import("@/modules/registrations/my-registrations");
-const { deleteRegistrationByStaff, correctRegisteredName } = await import("@/modules/registrations/admin-service");
+const { deleteRegistrationByStaff, editRegistrationAnswers } = await import("@/modules/registrations/admin-service");
 
 type EventInput = Parameters<typeof submitRegistration>[1];
 
@@ -600,8 +600,9 @@ describe("§389 each person is their own registration afterwards", () => {
     await press(await offer(event, "Maria", 5), at(7));
     const [, maria] = await rowsOf(event.id);
     const staff = await admin();
-    expect(await refusal(correctRegisteredName(db, staff, maria.id, "ANA POP", at(8)))).toEqual({ code: "VALIDATION_ERROR", fields: ["registeredName"] });
-    const renamed = await correctRegisteredName(db, staff, maria.id, "Maria Ioana Pop", at(9));
+    // «Modifică datele» (§645) carries §67's correction: the two names, and the name of record follows them.
+    expect(await refusal(editRegistrationAnswers(db, staff, maria.id, { firstName: "ANA", lastName: "POP" }, at(8)))).toEqual({ code: "VALIDATION_ERROR", fields: ["firstName", "lastName"] });
+    const { registration: renamed } = await editRegistrationAnswers(db, staff, maria.id, { firstName: "Maria Ioana" }, at(9));
     expect(renamed).toMatchObject({ registeredName: "Maria Ioana Pop", nameKey: "maria ioana pop" });
   });
 

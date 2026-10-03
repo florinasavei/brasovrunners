@@ -12,6 +12,7 @@ import { confirmationWindow } from "@/modules/registrations/domain/hold-deadline
 import { PLACE_HOLDING_STATUSES } from "@/modules/registrations/domain/state-machine";
 import { emailLinkLapseSql } from "@/modules/registrations/repository";
 import { nextFamilyEntryLapse } from "@/modules/registrations/family-entries";
+import { nextInvitationLapse } from "@/modules/registrations/invitation-repository";
 import type { JobName } from "./schedule";
 
 /**
@@ -241,8 +242,10 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
 
   // `purgeLapsedFamilyEntries` (§446): another person's kept form, deleted once its window passes.
   const familyLapse = await nextFamilyEntryLapse(db, now);
+  // An invitation's deadline (§647): the sweep ends it and the place it kept goes to the line.
+  const invitationLapse = await nextInvitationLapse(db, now);
 
-  return earliest([emailLapses, toDate(holds?.next), toDate(placeHolds?.next), ...eventInstants, ...lateReminders, ...interestInstants, familyLapse]);
+  return earliest([emailLapses, toDate(holds?.next), toDate(placeHolds?.next), ...eventInstants, ...lateReminders, ...interestInstants, familyLapse, toDate(invitationLapse)]);
 }
 
 /**

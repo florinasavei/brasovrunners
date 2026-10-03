@@ -26,21 +26,26 @@ import { useBirthDateSaysMinor } from "./use-birth-date-minor";
  * block renders open whatever the date box currently holds, so an error never points at something
  * invisible.
  *
+ * `minorOn` is the instant the date is judged against, today when absent: the registration page's
+ * correction («Modifică datele», §645) asks about the day the row was written, as the server does.
+ *
  * The date is read by `useBirthDateSaysMinor`, which says why it subscribes to the input rather
  * than owning it; the socials block uses the same reading the other way round (`HiddenForMinor`).
  */
 export default function GuardianForMinor({
   birthDateId,
   forceOpen = false,
+  minorOn,
   children,
 }: {
   birthDateId: string;
   forceOpen?: boolean;
+  minorOn?: string;
   children: ReactNode;
 }) {
   // On the server there is no input and nothing typed, so the block renders closed — and the
   // `<noscript>` rule below is what keeps it reachable when that markup is all there will be.
-  const minor = useBirthDateSaysMinor(birthDateId);
+  const minor = useBirthDateSaysMinor(birthDateId, minorOn);
   const open = forceOpen || minor;
 
   return (

@@ -6,9 +6,10 @@ import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import { type CSSProperties, type FormEvent, type ReactNode, useActionState, useEffect, useMemo, useRef, useState } from "react";
 import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
-import { choiceAnswer, type ConfirmSpec, fillFromForm, pickConfirm, resolveBodyCount, resolveEmailCount } from "@/shared/feedback/notice";
+import { choiceAnswer, type ConfirmSpec, fillFromForm, pickConfirm, resolveBodyCount, resolveChangedFields, resolveEmailCount } from "@/shared/feedback/notice";
 import { useToast } from "@/shared/feedback/toast-context";
 import { openFoldsAround, REVEAL_EVENT } from "@/shared/ui/fold";
+import { CONFIRM_CANCEL_EVENT } from "./confirm-cancel";
 import { fieldId, type FormOutcome } from "./outcome";
 import { RecallProvider } from "./recall";
 import { describeSubmission, replayNatively, transportFailureOf } from "./save-fallback";
@@ -224,9 +225,15 @@ export default function ActionFormIsland({
     // A body that counts the ticks (§532): with none ticked, nothing to ask — the server refuses.
     const ticked = resolveBodyCount(spec, valuesOf);
     if (!ticked) return;
+    // A body naming the fields the press changes (§645): none changed, nothing to ask — the server says so.
+    const named = resolveChangedFields(ticked, (field) => {
+      const value = data.get(field);
+      return typeof value === "string" ? value : null;
+    });
+    if (!named) return;
     event.preventDefault();
     // A series save's email line, summed over the dates ticked at this press (§384).
-    const counted = resolveEmailCount(ticked, valuesOf);
+    const counted = resolveEmailCount(named, valuesOf);
     // A typed value named in the sentence (§511): «Limita nouă: 100 ore-CU.».
     const resolved = fillFromForm(counted, (field) => {
       const value = data.get(field);
@@ -252,6 +259,13 @@ export default function ActionFormIsland({
     const ownButton = (button instanceof HTMLButtonElement || button instanceof HTMLInputElement) && button.form === element;
     if (ownButton) element.requestSubmit(button);
     else element.requestSubmit();
+  };
+
+  // «Anulează»: nothing is sent, and a control that changed before the question — the «Lista ascunsă»
+  // radio (§647) — hears it on the form and shows the server's state again.
+  const cancelAsking = () => {
+    setAsking(null);
+    form.current?.dispatchEvent(new Event(CONFIRM_CANCEL_EVENT));
   };
 
   // "It worked" without a redirect: the notice, after the answer painted — never in the press.
@@ -358,7 +372,7 @@ export default function ActionFormIsland({
         <ConfirmDialog
           spec={asking.spec}
           open
-          onCancel={() => setAsking(null)}
+          onCancel={cancelAsking}
           onConfirm={() => answer("confirm")}
           // A two-way question (§540): the quiet answer beside the primary one, never on Enter.
           alternative={asking.spec.choice ? { label: asking.spec.choice.alternativeLabel, onClick: () => answer("alternative") } : null}

@@ -70,6 +70,8 @@ import {
 import { env } from "@/shared/config/env";
 import { readBibDesignForm } from "@/modules/registrations/bib-design-query";
 import { assignBibNumbers, reserveSpareBibs } from "@/modules/registrations/bibs";
+import { hiddenListRefusalOf, SPARES_BEFORE_HIDDEN_LIST } from "@/modules/registrations/domain/hidden-list";
+import { formatCalendarDay } from "@/i18n/dates";
 import { withdrawInterest } from "@/modules/registrations/interest";
 import { eraseGroupRunDeclaration, eraseGroupRunDeclarations, setGroupRunDeclarationHold } from "@/modules/group-run-declarations/service";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
@@ -145,6 +147,35 @@ function editorPath(locale: Locale, eventId: string): string {
  * run's own box in «Traseul» (§440, §495) is gone, so no type needs its own name any more.
  */
 const eventFormFieldNames = (error: DomainError) => error.fields.map((field) => eventFormFieldName(field));
+
+/**
+ * A refused «Numerele listei ascunse încep de la» (§647) as its own sentence rather than «Verifică
+ * datele introduse»: inside the race's series or on the desk's spares, naming the box — and the date,
+ * in the reader's language, when another date of the series refused it (a scoped save). Nothing for any
+ * other error, so the caller's outcome stands. The editor's save and create, the repeat panel and the
+ * events list's duplicate all read it.
+ */
+function hiddenListOutcome(error: unknown, locale: Locale): { error: string; errorValues?: Record<string, string> } | null {
+  const refusal = hiddenListRefusalOf(error);
+  if (!refusal) return null;
+  if (refusal.date === null) return { error: refusal.code };
+  return { error: refusal.code, errorValues: { date: formatCalendarDay(refusal.date, { locale, position: "inline" }) } };
+}
+
+/**
+ * «Lista ascunsă» (§647): the event's switch, the hidden list's first number and «Numără și lista
+ * ascunsă» — one marker for the three (`StartListBox`), so a form without the group, the create form
+ * or a fixture, edits none of them. «Arată public numărătoarea» is not in the group — it acts on every
+ * event — and carries its own marker, read beside «Arată public câți așteaptă».
+ */
+function hiddenListFrom(form: FormData, value: (field: string) => string) {
+  if (form.get("event.hiddenList.present") !== "1") return {};
+  return {
+    hiddenListEnabled: form.get("event.hiddenListEnabled") === "on",
+    hiddenListBibStart: value("hiddenListBibStart"),
+    hiddenListCounted: form.get("event.hiddenListCounted") === "on",
+  };
+}
 
 /**
  * The whole event row as the form sends it — one reader, so the create form and the edit form
@@ -362,6 +393,12 @@ function eventFieldsFrom(form: FormData) {
     // the kit's (§554) — on by default, so a form without the box must read "not editing it", never "hidden".
     waitlistCountPublic:
       form.get("event.waitlistCountPublic.present") === "1" ? form.get("event.waitlistCountPublic") === "on" : undefined,
+    // «Arată public numărătoarea» (§647): on by default, so an unticked box is `false` only beside its marker.
+    participantCountPublic:
+      form.get("event.participantCountPublic.present") === "1" ? form.get("event.participantCountPublic") === "on" : undefined,
+    // «Lista ascunsă» (§647): the group's three, read only when the form carried its marker — a form
+    // without the group is "not editing it", never "switched off" or "no series".
+    ...hiddenListFrom(form, value),
     externalProvider: value("externalProvider"),
     externalRegistrationUrl: value("externalRegistrationUrl"),
   };
@@ -669,7 +706,7 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
       ...(notice?.kind === "cancelledNobodyToTell" ? { notice: "cancelledNobody" } : {}),
     };
   } catch (error) {
-    return refused(error, form, { fieldNames: eventFormFieldNames });
+    return { ...refused(error, form, { fieldNames: eventFormFieldNames }), ...hiddenListOutcome(error, locale) };
   }
 
   return backTo(path, outcome);
@@ -790,7 +827,7 @@ export async function createEventAction(_previous: FormOutcome | null, form: For
   } catch (error) {
     // Nothing was written — the create, the publication and the series are one transaction —
     // so the form comes back with everything typed.
-    return refused(error, form, { fieldNames: eventFormFieldNames });
+    return { ...refused(error, form, { fieldNames: eventFormFieldNames }), ...hiddenListOutcome(error, locale) };
   }
 
   return backTo(editorPath(locale, createdId), outcome);
@@ -806,7 +843,8 @@ export async function duplicateEventAction(_previous: FormOutcome | null, form: 
     const copy = await duplicateEvent(getDb(), { actor, eventId: text(form, "eventId") });
     copyId = copy.id;
   } catch (error) {
-    outcome = outcomeOf(error);
+    // A copy is refused by the source's hidden list (§647): its sentence, which names the box — never a date.
+    outcome = hiddenListOutcome(error, locale) ?? outcomeOf(error);
   }
 
   if (outcome) return backTo(eventListPath(form, locale), outcome);
@@ -849,7 +887,10 @@ export async function repeatEventAction(_previous: FormOutcome | null, form: For
     });
     outcome = { saved: "eventsRepeated", created: String(result.created) };
   } catch (error) {
-    return refused(error, form);
+    // Every date carries the source's hidden list (§647): a refusal of it says which box to move — a
+    // box of the event's settings, not of this panel, so the summary links none of the panel's.
+    const hidden = hiddenListOutcome(error, locale);
+    return hidden ? { ...refused(error, form), ...hidden, fields: [] } : refused(error, form);
   }
 
   // Back to the source: it now says how it repeats, and the list has the dates.
@@ -952,7 +993,8 @@ export async function reserveSpareBibsAction(_previous: FormOutcome | null, form
     });
     outcome = { saved: "sparesReserved", count: String(result.count), from: String(result.from), to: String(result.to) };
   } catch (error) {
-    outcome = outcomeOf(error);
+    // No room before the hidden list's own series (§647): its sentence, which names the box to move.
+    outcome = isDomainError(error) && error.fields.includes(SPARES_BEFORE_HIDDEN_LIST) ? { error: SPARES_BEFORE_HIDDEN_LIST } : outcomeOf(error);
   }
   return backTo(editorPath(locale, eventId), outcome);
 }

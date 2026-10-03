@@ -94,7 +94,11 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   setOutsideCapacityAction: [],
   setBibNumberAction: [],
   createRegistrationAction: [],
-  correctRegisteredNameAction: [],
+  // «Modifică datele» (§645): asks, naming the person and the fields the press changes.
+  editRegistrationAnswersAction: [],
+  // «Nu e membru» / «E membru» from the list's ⋮ and the sweep «Scoate bifa la cele {n}» (§645): each names whom it changes.
+  setClubMemberDeclaredAction: [],
+  clearMemberTicksAction: [],
   cancelRegistrationAction: [],
   cancelRegistrationFromRowAction: [],
   withdrawConsentAction: [],

@@ -205,7 +205,7 @@ describe("§289 the Organizer's row", () => {
         });
 
         expect(verbs, `${status}/${checkedIn}`).toContain("open");
-        for (const verb of ["resend", "cancel", "erase", "givePlace", "confirmOnPaper", "markBibPrinted", "unmarkBibPrinted"] as const) {
+        for (const verb of ["resend", "cancel", "erase", "givePlace", "confirmOnPaper", "markBibPrinted", "unmarkBibPrinted", "memberTick"] as const) {
           expect(verbs, `${status}/${checkedIn} must not offer ${verb}`).not.toContain(verb);
         }
       }
@@ -262,5 +262,29 @@ describe("§264 the bib's printing mark", () => {
   it("stays before erase, which is always last (§180)", () => {
     const verbs = rowVerbsFor("CONFIRMED", "ADMIN", { checkedIn: false, bib: { settled: true, printed: false } });
     expect(verbs.indexOf("markBibPrinted")).toBeLessThan(verbs.indexOf("erase"));
+  });
+});
+
+/**
+ * BR-REQ-037-03 criterion 12 (§645) — «Nu e membru» / «E membru» on the row: the self-declared member
+ * tick is a field edit like the name, so every state offers it, and only to the Administrator.
+ */
+describe("BR-REQ-037-03 the member tick on the row", () => {
+  it("is offered to the Administrator in every state, above the erase", () => {
+    for (const status of ALL) {
+      for (const checkedIn of [false, true]) {
+        const verbs = rowVerbsFor(status, "ADMIN", { checkedIn });
+        expect(verbs, `${status}/${checkedIn}`).toContain("memberTick");
+        expect(verbs.at(-1), `${status}/${checkedIn}`).toBe("erase");
+      }
+    }
+  });
+
+  it("is never offered to a role that may not manage registrations — the Organizer reads the chip", () => {
+    for (const role of ["MEMBER", "CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV"] as const) {
+      for (const status of ALL) {
+        expect(rowVerbsFor(status, role, { checkedIn: false }), `${role}/${status}`).not.toContain("memberTick");
+      }
+    }
   });
 });
