@@ -379,14 +379,14 @@ describe("owner tasks", () => {
     ]);
   });
 
-  // §NNN: the outage grace — red while a window is open, while one is stuck, and while the newest seated anybody outside the places.
-  it("§NNN the unreachable window: red while open, stuck or seating anybody outside the places, green otherwise", () => {
+  // §NNN: the outage grace — blocking while a window is open or a claim it did not revive still waits, broken while one is stuck.
+  it("§NNN the unreachable window: blocking while open or while a claim not revived waits, broken while stuck, done otherwise", () => {
     const row = (unreachableWindow: OwnerTaskInputs["unreachableWindow"]) => ownerTasks({ ...LAUNCHED, unreachableWindow }).find((task) => task.id === "unreachableWindow");
     expect(row("clear")).toMatchObject({ state: "done", owner: "club", kind: "check" });
     expect(row("clear")?.text).toBeUndefined();
-    expect(row("open")).toMatchObject({ state: "broken", text: "open" });
+    expect(row("open")).toMatchObject({ state: "blocking", text: "open" });
+    expect(row("notRevived")).toMatchObject({ state: "blocking", text: "notRevived" });
     expect(row("stuck")).toMatchObject({ state: "broken", text: "stuck" });
-    expect(row("outside")).toMatchObject({ state: "broken", text: "outside" });
   });
 
   it("§NNN the unreachable window's sentences exist in both catalogues and fill the window's values", () => {
@@ -395,7 +395,9 @@ describe("owner tasks", () => {
       for (const key of ["{windowFrom}", "{windowUntil}", "{windowGranted}", "{windowMoved}"]) expect(item.todo).toContain(key);
       expect(item.open).toContain("{windowFrom}");
       expect(item.stuck).toContain("{windowUntil}");
-      expect(item.outside).toContain("{windowOutside}");
+      expect(item.notRevived).toContain("{windowNotRevived}");
+      // The job seats nobody: no word of the special list in the row.
+      expect(JSON.stringify(item)).not.toMatch(/invitați speciali|special guests/i);
       expect(typeof item.done).toBe("string");
       expect(item.how.length).toBeGreaterThan(0);
     }

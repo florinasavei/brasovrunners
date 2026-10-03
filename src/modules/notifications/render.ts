@@ -56,6 +56,7 @@ import {
   registeredOnAddressWithStates,
 } from "@/modules/registrations/family-entries";
 import { familyReservationHoldsAt, reservedUntilPhrase } from "@/modules/registrations/domain/family-reservation";
+import { eventInvitations } from "@/db/schema/event-invitations";
 import { events } from "@/db/schema/events";
 import { countEligibleWaitlisted, countOccupied, readWaitlistPosition } from "@/modules/registrations/repository";
 import { computeOccupied, computePublicAvailability } from "@/modules/registrations/domain/capacity";
@@ -80,7 +81,7 @@ import { forecastForEvent } from "@/modules/weather/source";
 import { renderNewsletterRow } from "@/modules/newsletter/render";
 import { renderInvitationRow } from "./invitation-render";
 import { buildOutgoingEmail, type TemplateData } from "./templates";
-import { readUnreachableWindowFacts } from "./outage-grace-words";
+import { readNotRevivedRefs, readUnreachableWindowFacts } from "./outage-grace-words";
 import { emailEventFacts } from "./event-facts-row";
 import { type EmailRenderer, OutboxMessageWithdrawn, type OutboxRow } from "./outbox";
 import type { DeadlineRebase } from "./deadline-rebase";
@@ -759,22 +760,42 @@ async function renderRow(
     payloadActionUrl = data.signInUrl;
   }
   /*
+    The outage grace's two (§NNN), to an Administrator or a Superadministrator: the window's instants and
+    counts are in the payload — no participant, no token. «Site-ul nu se găsește după nume» has no
+    button: the address it would open is the one that is gone. The second opens «Sarcini», where the
+    window stands, and names each claim it did not revive — read here, at the send, from the ids the
+    payload carries: the person's name and the event, for the staff, with the backoffice page that
+    seats them. A registration erased since is left out; nothing of a person is kept in the outbox.
+  */
+  if (row.messageType === "UNREACHABLE_WINDOW_OPENED" || row.messageType === "UNREACHABLE_WINDOW_CLOSED") {
+    const payload = (row.payloadJson ?? {}) as { displayName?: unknown };
+    data.participantName = typeof payload.displayName === "string" ? payload.displayName : "";
+    const facts = readUnreachableWindowFacts(row.payloadJson);
+    for (const claim of readNotRevivedRefs(row.payloadJson)) {
+      const event = eventNotificationDetailsIn(await eventRows(db, claim.eventId), locale)?.title ?? "";
+      const list = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/admin/registrations", query: { eventId: claim.eventId } } })}`;
+      if (claim.kind === "offer" || claim.kind === "familyReservation") {
+        const [person] = await db.select({ name: registrations.registeredName }).from(registrations).where(eq(registrations.id, claim.id)).limit(1);
+        if (!person) continue;
+        const url = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: claim.id } } })}`;
+        facts.claims.push({ kind: claim.kind, name: person.name, event, url });
+      } else if (claim.kind === "invitation") {
+        const [guest] = await db.select({ name: eventInvitations.name }).from(eventInvitations).where(eq(eventInvitations.id, claim.id)).limit(1);
+        if (!guest) continue;
+        facts.claims.push({ kind: claim.kind, name: guest.name, event, url: list });
+      } else {
+        facts.claims.push({ kind: claim.kind, name: null, event, url: list });
+      }
+    }
+    data.unreachableWindow = facts;
+    if (row.messageType === "UNREACHABLE_WINDOW_CLOSED") payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: "/admin/tasks" })}`;
+  }
+  /*
     «Șabloanele textelor legale s-au schimbat» (§639), to an Administrator or a Superadministrator:
     the greeting's name and the texts' keys are in the payload — no participant, no token. The one
     button is «Versiune nouă» (`/admin/legal/new`) in the recipient's language, from `APP_BASE_URL`
     (AGENTS.md §8); the backoffice's sign-in decides who may open it.
   */
-  /*
-    The outage grace's two (§NNN), to an Administrator or a Superadministrator: the window's instants and counts
-    are in the payload — no participant, no token. «Site-ul nu se găsește după nume» has no button: the
-    address it would open is the one that is gone. The second opens «Sarcini», where the window stands.
-  */
-  if (row.messageType === "UNREACHABLE_WINDOW_OPENED" || row.messageType === "UNREACHABLE_WINDOW_CLOSED") {
-    const payload = (row.payloadJson ?? {}) as { displayName?: unknown };
-    data.participantName = typeof payload.displayName === "string" ? payload.displayName : "";
-    data.unreachableWindow = readUnreachableWindowFacts(row.payloadJson);
-    if (row.messageType === "UNREACHABLE_WINDOW_CLOSED") payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: "/admin/tasks" })}`;
-  }
   if (row.messageType === "LEGAL_TEMPLATES_CHANGED") {
     const payload = (row.payloadJson ?? {}) as { displayName?: unknown; keys?: unknown };
     data.participantName = typeof payload.displayName === "string" ? payload.displayName : "";

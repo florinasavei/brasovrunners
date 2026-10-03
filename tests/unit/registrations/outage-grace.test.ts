@@ -5,6 +5,7 @@ import {
   DNS_CONFIRM_MS,
   findPingGaps,
   grantedMsFor,
+  grownGrant,
   type KnownWindow,
   movedDeadline,
   outageGraceMaxMs,
@@ -18,6 +19,8 @@ import { isWaitedFor } from "@/modules/notifications/domain/email-delay";
 import { isParticipantMessage } from "@/modules/notifications/domain/club-notices";
 import { NEVER_QUEUED_MESSAGE_TYPES } from "@/modules/notifications/domain/never-queued";
 import {
+  notRevivedLinks,
+  readNotRevivedRefs,
   readUnreachableWindowFacts,
   windowClosedBody,
   windowClosedFactsLine,
@@ -50,26 +53,46 @@ describe("§NNN the pinger's silences", () => {
     expect(jobStalenessThresholdMs(NIGHT, 15)).toBe(125 * MINUTE);
   });
 
+  // Both jobs' calls, as two pingers make them: the same instants unless a case says otherwise.
+  const both = (instants: Date[]) => [instants, instants];
+
   it("is no window while the calls come on time, by day and by night", () => {
-    expect(findPingGaps([NOON, at(NOON, 15), at(NOON, 30), at(NOON, 45)], 15)).toEqual([]);
+    expect(findPingGaps(both([NOON, at(NOON, 15), at(NOON, 30), at(NOON, 45)]), 15)).toEqual([]);
     // At night the pinger calls hourly, and two hours without a call is still inside the threshold.
-    expect(findPingGaps([NIGHT, at(NIGHT, 60), at(NIGHT, 180)], 15)).toEqual([]);
+    expect(findPingGaps(both([NIGHT, at(NIGHT, 60), at(NIGHT, 180)]), 15)).toEqual([]);
   });
 
   it("is the silence less the call not yet due: gap − cadence", () => {
-    expect(findPingGaps([NOON, at(NOON, 120)], 15)).toEqual([{ startedAt: at(NOON, 15), endedAt: at(NOON, 120) }]);
+    expect(findPingGaps(both([NOON, at(NOON, 120)]), 15)).toEqual([{ startedAt: at(NOON, 15), endedAt: at(NOON, 120) }]);
     // At night the cadence is the hour: a silence of 130 minutes is a window of 70.
-    expect(findPingGaps([NIGHT, at(NIGHT, 130)], 15)).toEqual([{ startedAt: at(NIGHT, 60), endedAt: at(NIGHT, 130) }]);
+    expect(findPingGaps(both([NIGHT, at(NIGHT, 130)]), 15)).toEqual([{ startedAt: at(NIGHT, 60), endedAt: at(NIGHT, 130) }]);
   });
 
   it("judges a silence across the quiet hours' start as the night would", () => {
     // 22:30 to 23:40 Brașov: seventy minutes, over the day's 35 but under the night's 125.
     const evening = new Date("2026-10-03T19:30:00.000Z");
-    expect(findPingGaps([evening, at(evening, 70)], 15)).toEqual([]);
+    expect(findPingGaps(both([evening, at(evening, 70)]), 15)).toEqual([]);
   });
 
   it("orders and dedupes what it is given", () => {
-    expect(findPingGaps([at(NOON, 120), NOON, NOON], 15)).toHaveLength(1);
+    expect(findPingGaps(both([at(NOON, 120), NOON, NOON]), 15)).toHaveLength(1);
+  });
+
+  it("reads no silence from evicted slots: both jobs' calls must be missing together, and each heard before", () => {
+    const quarters = (from: number, to: number) => Array.from({ length: (to - from) / 15 + 1 }, (_, index) => at(NOON, from + index * 15));
+    // One slot of the maintenance evicted (12:15): the outbox's call at 12:15 covers it.
+    const maintenance = quarters(0, 120).filter((instant) => instant.getTime() !== at(NOON, 15).getTime());
+    expect(findPingGaps([maintenance, quarters(0, 120)], 15)).toEqual([]);
+    // Both jobs' slots of one quarter evicted: a gap of thirty minutes, under the threshold.
+    const holed = quarters(0, 120).filter((instant) => instant.getTime() !== at(NOON, 30).getTime());
+    expect(findPingGaps([holed, holed], 15)).toEqual([]);
+    // Two quarters of one job evicted while the other job was heard: nothing either.
+    const twoGone = quarters(0, 120).filter((instant) => ![30, 45].some((minutes) => instant.getTime() === at(NOON, minutes).getTime()));
+    expect(findPingGaps([twoGone, quarters(0, 120)], 15)).toEqual([]);
+    // A job whose calls the cache holds none of before the silence: the cache fell silent, not the door.
+    expect(findPingGaps([[NOON, at(NOON, 120)], [at(NOON, 120)]], 15)).toEqual([]);
+    // Both silent together, both heard before: a window.
+    expect(findPingGaps([[NOON, at(NOON, 120)], [at(NOON, -5), at(NOON, 121)]], 15)).toEqual([{ startedAt: at(NOON, 15), endedAt: at(NOON, 120) }]);
   });
 });
 
@@ -148,29 +171,46 @@ describe("§NNN what a run does with the name's answer", () => {
 });
 
 describe("§NNN where a deadline moves", () => {
-  const windowStartedAt = at(NOON, -420);
+  const since = at(NOON, -420);
   const grantedMs = 420 * MINUTE;
 
   it("moves a deadline running at the window's start by the stop, and never one that passed before it", () => {
-    expect(movedDeadline({ stored: at(NOON, -300), windowStartedAt, grantedMs, now: NOON })).toEqual(at(NOON, 120));
-    expect(movedDeadline({ stored: at(NOON, -421), windowStartedAt, grantedMs, now: NOON })).toBeNull();
-    expect(movedDeadline({ stored: windowStartedAt, windowStartedAt, grantedMs, now: NOON })).toBeNull();
+    expect(movedDeadline({ stored: at(NOON, -300), since, grantedMs, now: NOON })).toEqual(at(NOON, 120));
+    expect(movedDeadline({ stored: at(NOON, -421), since, grantedMs, now: NOON })).toBeNull();
+    expect(movedDeadline({ stored: since, since, grantedMs, now: NOON })).toBeNull();
   });
 
   it("caps a hold by the close and the start, and writes nothing that would still be behind now", () => {
     const cap = { registrationClosesAt: at(NOON, 60), startsAt: at(NOON, 600) };
-    expect(movedDeadline({ stored: at(NOON, -300), windowStartedAt, grantedMs, now: NOON, cap })).toEqual(at(NOON, 60));
+    expect(movedDeadline({ stored: at(NOON, -300), since, grantedMs, now: NOON, cap })).toEqual(at(NOON, 60));
     // An invitation is capped by the start alone.
-    expect(movedDeadline({ stored: at(NOON, -300), windowStartedAt, grantedMs, now: NOON, cap: { registrationClosesAt: null, startsAt: at(NOON, 600) } })).toEqual(at(NOON, 120));
+    expect(movedDeadline({ stored: at(NOON, -300), since, grantedMs, now: NOON, cap: { registrationClosesAt: null, startsAt: at(NOON, 600) } })).toEqual(at(NOON, 120));
     // A close already behind: the cap would move it earlier, so it stays.
-    expect(movedDeadline({ stored: at(NOON, -300), windowStartedAt, grantedMs, now: NOON, cap: { registrationClosesAt: at(NOON, -310), startsAt: at(NOON, 600) } })).toBeNull();
-    expect(movedDeadline({ stored: at(NOON, -400), windowStartedAt, grantedMs: 60 * MINUTE, now: NOON })).toBeNull();
+    expect(movedDeadline({ stored: at(NOON, -300), since, grantedMs, now: NOON, cap: { registrationClosesAt: at(NOON, -310), startsAt: at(NOON, 600) } })).toBeNull();
+    expect(movedDeadline({ stored: at(NOON, -400), since, grantedMs: 60 * MINUTE, now: NOON })).toBeNull();
   });
 
   it("stops the clock for the window's length, capped by the club's number", () => {
     expect(grantedMsFor({ startedAt: at(NOON, -420), endedAt: NOON }, 48 * HOUR)).toBe(420 * MINUTE);
     expect(grantedMsFor({ startedAt: at(NOON, -420), endedAt: NOON }, 2 * HOUR)).toBe(2 * HOUR);
     expect(grantedMsFor({ startedAt: at(NOON, -420), endedAt: NOON }, 0)).toBe(0);
+  });
+
+  it("grows an open window's grant run by run, within the cap, and never takes back what it gave", () => {
+    const window = { startedAt: at(NOON, -60), grantedMs: 45 * MINUTE };
+    expect(grownGrant(window, NOON, 48 * HOUR)).toBe(60 * MINUTE);
+    expect(grownGrant(window, NOON, 50 * MINUTE)).toBe(50 * MINUTE);
+    // The club lowered the cap meanwhile: what was given stays given.
+    expect(grownGrant(window, NOON, 30 * MINUTE)).toBe(45 * MINUTE);
+  });
+
+  it("moves a step of an open window from where the last step stopped, so each run gives the time since the one before", () => {
+    // The window opened at 11:00; a run at 11:30 gave thirty minutes; this run at 12:00 gives thirty more, from 11:30.
+    const after = at(NOON, -30);
+    expect(movedDeadline({ stored: at(NOON, -10), since: after, grantedMs: 30 * MINUTE, now: NOON })).toEqual(at(NOON, 20));
+    expect(movedDeadline({ stored: at(NOON, 25), since: after, grantedMs: 30 * MINUTE, now: NOON })).toEqual(at(NOON, 55));
+    // Passed before the last step's instant: it was not revived then, and is not moved now.
+    expect(movedDeadline({ stored: at(NOON, -40), since: after, grantedMs: 30 * MINUTE, now: NOON })).toBeNull();
   });
 
   it("is a «Termene» number in hours, 0 to a week, 48 by default", () => {
@@ -180,33 +220,31 @@ describe("§NNN where a deadline moves", () => {
 });
 
 describe("§NNN what «Sarcini» says of the windows", () => {
-  const closed = (overrides: Partial<{ endedAt: Date | null; confirmedAt: Date | null; appliedAt: Date | null; placesOutside: number }> = {}) => ({
+  const closed = (overrides: Partial<{ endedAt: Date | null; confirmedAt: Date | null; appliedAt: Date | null }> = {}) => ({
     endedAt: at(NOON, -300),
     confirmedAt: at(NOON, -300),
     appliedAt: at(NOON, -300),
-    placesOutside: 0,
     ...overrides,
   });
 
   it("is open while a window is open, and a suspicion is no window", () => {
-    expect(unreachableWindowState([closed({ endedAt: null })], NOON)).toBe("open");
-    expect(unreachableWindowState([closed({ endedAt: null, confirmedAt: null })], NOON)).toBe("clear");
+    expect(unreachableWindowState([closed({ endedAt: null })], NOON, 0)).toBe("open");
+    expect(unreachableWindowState([closed({ endedAt: null, confirmedAt: null })], NOON, 0)).toBe("clear");
   });
 
-  it("is outside while the newest window over seated anybody outside the places, however long ago", () => {
-    expect(unreachableWindowState([closed({ placesOutside: 2, endedAt: at(NOON, -30 * 24 * 60) })], NOON)).toBe("outside");
-    // A newer window that seated nobody: clear.
-    expect(unreachableWindowState([closed({ placesOutside: 2, endedAt: at(NOON, -900) }), closed({ endedAt: at(NOON, -60) })], NOON)).toBe("clear");
+  it("is notRevived while a claim the newest window left lapsed still waits on an event not started", () => {
+    expect(unreachableWindowState([closed({ endedAt: at(NOON, -30 * 24 * 60) })], NOON, 2)).toBe("notRevived");
+    expect(unreachableWindowState([closed()], NOON, 0)).toBe("clear");
   });
 
   it("is stuck while a window over for longer than the hold still has deadlines it could not move", () => {
-    expect(unreachableWindowState([closed({ endedAt: at(NOON, -(PENDING_HOLD_MS / MINUTE) - 1), appliedAt: null })], NOON)).toBe("stuck");
-    expect(unreachableWindowState([closed({ endedAt: at(NOON, -10), appliedAt: null })], NOON)).toBe("clear");
+    expect(unreachableWindowState([closed({ endedAt: at(NOON, -(PENDING_HOLD_MS / MINUTE) - 1), appliedAt: null })], NOON, 0)).toBe("stuck");
+    expect(unreachableWindowState([closed({ endedAt: at(NOON, -10), appliedAt: null })], NOON, 0)).toBe("clear");
   });
 
-  it("is clear with no window at all, or one that seated nobody", () => {
-    expect(unreachableWindowState([], NOON)).toBe("clear");
-    expect(unreachableWindowState([closed()], NOON)).toBe("clear");
+  it("is clear with no window at all, or one that left nobody waiting", () => {
+    expect(unreachableWindowState([], NOON, 0)).toBe("clear");
+    expect(unreachableWindowState([closed()], NOON, 0)).toBe("clear");
   });
 });
 
@@ -225,7 +263,8 @@ describe("§NNN the name probe", () => {
 
   it("reads only «no such name» as unresolved; a timeout or a failed server says nothing", () => {
     expect(probeStatusOf({ code: "ENOTFOUND" })).toBe("unresolved");
-    expect(probeStatusOf({ code: "ENODATA" })).toBe("unresolved");
+    // The name exists with no address of the kind asked: a record being edited, not a shut door.
+    expect(probeStatusOf({ code: "ENODATA" })).toBe("unknown");
     expect(probeStatusOf({ code: "EAI_AGAIN" })).toBe("unknown");
     expect(probeStatusOf({ code: "ESERVFAIL" })).toBe("unknown");
     expect(probeStatusOf(new Error("boom"))).toBe("unknown");
@@ -245,7 +284,7 @@ describe("§NNN the name probe", () => {
 describe("§NNN the Administrators' two emails", () => {
   const TYPES = ["UNREACHABLE_WINDOW_OPENED", "UNREACHABLE_WINDOW_CLOSED"] as const;
   const facts = (overrides: Record<string, unknown> = {}) =>
-    readUnreachableWindowFacts({ startedAt: "2026-10-03T07:00:00.000Z", endedAt: "2026-10-04T07:00:00.000Z", source: "pings", grantedMinutes: 2880, maxHours: 48, moved: 21, outside: 2, ...overrides });
+    readUnreachableWindowFacts({ startedAt: "2026-10-03T07:00:00.000Z", endedAt: "2026-10-04T07:00:00.000Z", source: "pings", grantedMinutes: 2880, maxHours: 48, moved: 21, notRevived: 2, ...overrides });
 
   it("are values of the enum, queued, on the club's road, waited for by nobody, to no participant", () => {
     for (const type of TYPES) {
@@ -269,19 +308,21 @@ describe("§NNN the Administrators' two emails", () => {
     }
   });
 
-  it("says in «Termene» what moves, that 0 switches the moving off, and that the windows are still recorded", () => {
+  it("says in «Termene» that nothing lapses while the name is gone, that a silence is moved afterwards where the place is free, and that 0 switches it off", () => {
+    expect(en.Admin.emails.deadlines.help.outageGraceMaxHours).toContain("While the name is not found nothing lapses");
+    expect(en.Admin.emails.deadlines.help.outageGraceMaxHours).toContain("where the place is still free");
     expect(en.Admin.emails.deadlines.help.outageGraceMaxHours).toContain("0 = no moving");
-    expect(en.Admin.emails.deadlines.help.outageGraceMaxHours).toContain("still recorded");
+    expect(ro.Admin.emails.deadlines.help.outageGraceMaxHours).toContain("Cât numele nu se găsește nu expiră nimic");
+    expect(ro.Admin.emails.deadlines.help.outageGraceMaxHours).toContain("acolo unde locul e încă liber");
     expect(ro.Admin.emails.deadlines.help.outageGraceMaxHours).toContain("0 = fără mutare");
-    expect(ro.Admin.emails.deadlines.help.outageGraceMaxHours).toContain("tot se înregistrează");
   });
 
   it("say every paragraph and the bold line in under 200 characters, in every case, the counts on the bold line only", () => {
     for (const locale of ["ro", "en"] as const) {
       for (const source of ["pings", "dns"]) {
-        for (const outside of [0, 2]) {
+        for (const notRevived of [0, 2]) {
           for (const maxHours of [0, 48]) {
-            const each = facts({ source, outside, maxHours, grantedMinutes: maxHours === 0 ? 0 : 2880 });
+            const each = facts({ source, notRevived, maxHours, grantedMinutes: maxHours === 0 ? 0 : 2880 });
             const lines = [...windowOpenedBody(locale, each), ...windowClosedBody(locale, each), windowOpenedFactsLine(locale, each), windowClosedFactsLine(locale, each)];
             for (const line of lines) expect(line.length, line).toBeLessThan(200);
             for (const line of [...windowOpenedBody(locale, each), ...windowClosedBody(locale, each)]) expect(line, line).not.toMatch(/\d/);
@@ -290,37 +331,62 @@ describe("§NNN the Administrators' two emails", () => {
       }
     }
     expect(windowClosedFactsLine("ro", facts())).toContain("21 de termene mutate");
-    expect(windowClosedFactsLine("ro", facts())).toContain("2 înscrieri pe «Lista de invitați speciali»");
-    expect(windowClosedFactsLine("en", facts())).toContain("2 registrations on «Special guests list»");
-    expect(windowClosedFactsLine("ro", facts({ outside: 0 }))).not.toContain("Lista de invitați speciali");
+    expect(windowClosedFactsLine("ro", facts())).toContain("2 cereri nereluate");
+    expect(windowClosedFactsLine("en", facts())).toContain("2 claims not revived");
+    expect(windowClosedFactsLine("ro", facts({ notRevived: 0 }))).not.toContain("nereluat");
     expect(windowClosedFactsLine("ro", facts())).toContain("nicio verificare programată");
   });
 
-  it("names the special guests list in the paragraphs only when somebody was seated there, and says what to do in each case", () => {
-    const outsideLine = (locale: "ro" | "en", overrides: Record<string, unknown>) => windowClosedBody(locale, facts(overrides)).filter((line) => line.includes(locale === "en" ? "Special guests list" : "Lista de invitați speciali"));
-    expect(outsideLine("en", { outside: 0 })).toEqual([]);
-    expect(outsideLine("ro", { outside: 0 })).toEqual([]);
-    expect(outsideLine("en", { outside: 1 }).length).toBeGreaterThan(0);
+  it("says the job seats nobody and names the two verbs only when a claim was not revived, and what to do in each case", () => {
+    const verbs = (locale: "ro" | "en", overrides: Record<string, unknown>) =>
+      windowClosedBody(locale, facts(overrides)).filter((line) => line.includes(locale === "en" ? "«Send them the offer»" : "«Trimite-i oferta»"));
+    expect(verbs("en", { notRevived: 0 })).toEqual([]);
+    expect(verbs("ro", { notRevived: 0 })).toEqual([]);
+    expect(verbs("en", { notRevived: 1 })[0]).toContain("«Give them a place now»");
+    expect(verbs("ro", { notRevived: 1 })[0]).toContain("«Dă-i un loc acum»");
+    expect(verbs("ro", { notRevived: 1 })[0]).toContain("loc suplimentar confirmat");
+    // Never the special list: the job puts nobody there.
+    for (const locale of ["ro", "en"] as const) {
+      for (const source of ["pings", "dns"]) {
+        expect(windowClosedBody(locale, facts({ source, notRevived: 2 })).join(" ")).not.toMatch(/invitați speciali|special guests|În afara|outside/i);
+      }
+    }
     const last = (overrides: Record<string, unknown>) => windowClosedBody("en", facts(overrides)).at(-1);
-    expect(last({ source: "pings", outside: 0 })).toContain("unless the hours above look wrong");
-    expect(last({ source: "dns", outside: 0 })).toContain("registrar");
-    expect(last({ source: "pings", outside: 2 })).toContain("Special guests list");
-    expect(last({ source: "dns", outside: 2 })).toContain("Special guests list");
+    expect(last({ source: "pings", notRevived: 0 })).toContain("unless the hours above look wrong");
+    expect(last({ source: "dns", notRevived: 0 })).toContain("registrar");
+    expect(last({ source: "pings", notRevived: 2 })).toContain("decide whether to give them a place");
+    expect(last({ source: "dns", notRevived: 2 })).toContain("decide whether to give them a place");
     // The moving switched off: the email says so instead of a move that did not happen.
-    expect(windowClosedBody("en", facts({ maxHours: 0, grantedMinutes: 0, moved: 0, outside: 0 })).join(" ")).toContain("switched off");
+    expect(windowClosedBody("en", facts({ maxHours: 0, grantedMinutes: 0, moved: 0, notRevived: 0 })).join(" ")).toContain("switched off");
     expect(windowOpenedBody("ro", facts({ maxHours: 0 })).join(" ")).toContain("mutarea oprită");
   });
 
+  it("names each claim not revived under the bold line: the person, the event, what it was, its backoffice page", () => {
+    const named = { ...facts(), claims: [
+      { kind: "offer" as const, name: "Ana Pop", event: "Crosul", url: "https://example.test/ro/admin/registrations/a" },
+      { kind: "placeHold" as const, name: null, event: "Crosul", url: "https://example.test/ro/admin/registrations?eventId=e" },
+    ] };
+    expect(notRevivedLinks("ro", named)).toEqual([
+      { label: "Ana Pop — Crosul (ofertă)", url: "https://example.test/ro/admin/registrations/a" },
+      { label: "Crosul (loc ținut pentru un formular de familie)", url: "https://example.test/ro/admin/registrations?eventId=e" },
+    ]);
+    expect(notRevivedLinks("en", named)[0].label).toBe("Ana Pop — Crosul (offer)");
+    // The payload carries ids only; anything unreadable is left out.
+    expect(readNotRevivedRefs({ claims: [{ kind: "offer", id: "r", eventId: "e" }, { kind: "seated", id: "x", eventId: "e" }, "junk"] })).toEqual([{ kind: "offer", id: "r", eventId: "e" }]);
+    expect(readNotRevivedRefs(null)).toEqual([]);
+  });
+
   it("reads a payload it cannot read as empty, never throwing", () => {
-    expect(readUnreachableWindowFacts(null)).toMatchObject({ startedAt: "", endedAt: null, moved: 0, outside: 0 });
-    expect(readUnreachableWindowFacts({ moved: "x", outside: 1.5 })).toMatchObject({ moved: 0, outside: 0 });
+    expect(readUnreachableWindowFacts(null)).toMatchObject({ startedAt: "", endedAt: null, moved: 0, notRevived: 0, claims: [] });
+    expect(readUnreachableWindowFacts({ moved: "x", notRevived: 1.5 })).toMatchObject({ moved: 0, notRevived: 0 });
   });
 
   it("previews in both halves: the window, what it gave back, the counts, and no participant's privacy line", () => {
     const closed = renderBilingual("UNREACHABLE_WINDOW_CLOSED", "ro", emailSampleFor("UNREACHABLE_WINDOW_CLOSED", "ro"), "https://example.test/ro/admin/tasks", null);
     expect(closed.text).toContain("dat înapoi 7 ore");
     expect(closed.text).toContain("12 termene mutate");
-    expect(closed.text).toContain("o înscriere pe «Lista de invitați speciali»");
+    expect(closed.text).toContain("o cerere nereluată");
+    expect(closed.text).toContain("«Trimite-i oferta»");
     expect(closed.text).toContain("given back 7 hours");
     expect(closed.text).not.toContain("Nota de confidențialitate");
     const opened = renderBilingual("UNREACHABLE_WINDOW_OPENED", "en", emailSampleFor("UNREACHABLE_WINDOW_OPENED", "en"), undefined, null);

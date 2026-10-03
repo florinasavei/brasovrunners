@@ -27,10 +27,13 @@ import { capHoldExpiry } from "./hold-deadlines";
  *   a suspicion: it holds nothing and tells nobody, so one transient «no such name» from a resolver
  *   moves no deadline.
  *
- * **While a `dns` window is open** the run lapses nothing — no address link, no hold, no offer, no
- * invitation, no family form — because nobody can reach the page that would act on them. **Once a
- * window is over**, every deadline still running at its start moves later by its length, capped by
- * the club's «Termene» number; a deadline that passed before the window started never moves.
+ * **While a `dns` window is open** every real run moves the running deadlines later by the time since
+ * the run before (`grownGrant`), within the club's «Termene» number, so none reads as lapsed and none
+ * frees its place while nobody can reach the page that would act on it; the sweeps are held as well,
+ * belt and braces. **Once a window is over**, every deadline still running at its start has been moved
+ * later by its length, within the same cap; a deadline that passed before the window started never
+ * moves. A claim whose deadline passed while the door was shut and whose counted place was given
+ * meanwhile is not revived (`registrations/outage-grace.ts`): the job seats nobody.
  */
 
 /** A window's span, closed. */
@@ -53,21 +56,31 @@ export function outageGraceMaxMs(deadlines: { outageGraceMaxHours: number }): nu
 }
 
 /**
- * The silences in the pings longer than the pinger's threshold. `evidence` is every instant the
- * platform is known to have been reached between the anchor and now, both included: the remembered
- * pings of both jobs and the real runs of both. A silence between two of them is judged with the
- * larger of the two thresholds and the larger of the two cadences, so a stretch that spans the
- * quiet hours' start is measured as the night would — the conservative reading: fewer windows,
- * shorter ones.
+ * The silences in the pings longer than the pinger's threshold. `byJob` holds, for each job, every
+ * instant the platform is known to have been reached by that job's calls between the anchor and now:
+ * its remembered pings and its real runs (the maintenance's own anchor and this run among them). A
+ * silence between two instants of all of them together is judged with the larger of the two
+ * thresholds and the larger of the two cadences, so a stretch that spans the quiet hours' start is
+ * measured as the night would — the conservative reading: fewer windows, shorter ones.
+ *
+ * **Both pingers' calls must be missing together** (two independent monitors call the two jobs), and
+ * each job must have a call remembered before the silence: a silence read where one job's calls are
+ * absent altogether is the cache's, not the door's. So one evicted slot opens nothing — the other
+ * job's call covers it, and even both jobs' slots of one quarter of an hour leave a gap of two
+ * cadences, under the threshold — and the cache must lose both jobs' calls for longer than the
+ * threshold in a row, or a whole job's, to be read as a silence, which the second rule refuses.
  */
-export function findPingGaps(evidence: readonly Date[], dayCadence: number): WindowSpan[] {
-  const sorted = [...new Set(evidence.map((at) => at.getTime()))].sort((a, b) => a - b);
+export function findPingGaps(byJob: readonly (readonly Date[])[], dayCadence: number): WindowSpan[] {
+  const series = byJob.map((instants) => instants.map((at) => at.getTime()));
+  const sorted = [...new Set(series.flat())].sort((a, b) => a - b);
   const gaps: WindowSpan[] = [];
   for (let index = 1; index < sorted.length; index += 1) {
     const from = new Date(sorted[index - 1]);
     const to = new Date(sorted[index]);
     const threshold = Math.max(jobStalenessThresholdMs(from, dayCadence), jobStalenessThresholdMs(to, dayCadence));
     if (to.getTime() - from.getTime() <= threshold) continue;
+    // Each job heard before the silence: otherwise the cache, not the pinger, is what fell silent.
+    if (!series.every((instants) => instants.some((at) => at <= from.getTime()))) continue;
     const cadence = Math.max(pingerCadenceMinutes(from, dayCadence), pingerCadenceMinutes(to, dayCadence));
     // The window is the silence less the one call that was not yet due: `gap − cadence`.
     gaps.push({ startedAt: new Date(from.getTime() + cadence * MINUTE), endedAt: to });
@@ -165,24 +178,36 @@ export function grantedMsFor(window: WindowSpan, maxMs: number): number {
 }
 
 /**
- * Where one deadline moves for a window, or null when it stays as it is.
+ * What a window gives back once it has lasted until `until` — while a `dns` window is open, `until` is
+ * this run; once closed, its end — never less than it already gave: time given is never taken back,
+ * even when the club lowers the cap meanwhile.
+ */
+export function grownGrant(window: { startedAt: Date; grantedMs: number }, until: Date, maxMs: number): number {
+  return Math.max(window.grantedMs, grantedMsFor({ startedAt: window.startedAt, endedAt: until }, maxMs));
+}
+
+/**
+ * Where one deadline moves for one step of a window, or null when it stays as it is. `since` is the
+ * window's start plus what earlier steps already gave back (`applied_ms`), `grantedMs` this step's
+ * amount: a `pings` window has one step, from its start; an open `dns` window one per run.
  *
- * - A deadline that passed at or before the window started never moves: the door was open then.
- * - Later, never earlier, by what the window gives back alone, then capped as the allocator caps it —
+ * - A deadline that passed at or before `since` never moves: the door was open then, or the deadline
+ *   was not revived by an earlier step.
+ * - Later, never earlier, by the step's amount alone, then capped as the allocator caps it —
  *   a hold or an offer by the close and the start (`capHoldExpiry`), an invitation by the start alone
  *   (§647); a link is not capped by the event, as it never was (§513).
  * - A move that still leaves the deadline behind `now` writes nothing: it would change no answer.
  */
 export function movedDeadline(input: {
   stored: Date;
-  windowStartedAt: Date;
+  since: Date;
   grantedMs: number;
   now: Date;
   cap?: { registrationClosesAt: Date | null; startsAt: Date } | null;
 }): Date | null {
-  const { stored, windowStartedAt, grantedMs, now, cap } = input;
+  const { stored, since, grantedMs, now, cap } = input;
   if (grantedMs < OUTAGE_MIN_MS) return null;
-  if (stored.getTime() <= windowStartedAt.getTime()) return null;
+  if (stored.getTime() <= since.getTime()) return null;
   let next = new Date(stored.getTime() + grantedMs);
   if (cap) next = capHoldExpiry({ naiveExpiresAt: next, registrationClosesAt: cap.registrationClosesAt, eventStartsAt: cap.startsAt });
   if (next.getTime() <= stored.getTime() || next.getTime() <= now.getTime()) return null;
@@ -196,24 +221,23 @@ export function movedDeadline(input: {
  */
 export const PENDING_HOLD_MS = 2 * 60 * MINUTE;
 
-export type UnreachableWindowState = "open" | "stuck" | "outside" | "clear";
+export type UnreachableWindowState = "open" | "stuck" | "notRevived" | "clear";
 
 /**
- * What «Sarcini» says of the windows (§NNN): `open` while a window is open; `stuck` while a window
- * closed more than `PENDING_HOLD_MS` ago still has deadlines it could not move; `outside` while the
- * newest closed window seated anyone outside the places — somebody must look at them; `clear`
- * otherwise. A suspicion is no window and changes nothing here.
+ * What «Sarcini» says of the windows (§NNN): `open` while a window is open — nobody reaches the site
+ * by its name; `stuck` while a window closed more than `PENDING_HOLD_MS` ago still has deadlines it
+ * could not move; `notRevived` while the newest closed window left a claim it did not revive still
+ * lapsed on an event that has not started (`notRevivedWaiting`, read by `jobs/unreachable-windows.ts`)
+ * — an Administrator decides whether to seat that person through a confirmed supplementary place;
+ * `clear` otherwise. A suspicion is no window and changes nothing here.
  */
 export function unreachableWindowState(
-  windows: readonly { endedAt: Date | null; confirmedAt: Date | null; appliedAt: Date | null; placesOutside: number }[],
+  windows: readonly { endedAt: Date | null; confirmedAt: Date | null; appliedAt: Date | null }[],
   now: Date,
+  notRevivedWaiting: number,
 ): UnreachableWindowState {
   const confirmed = windows.filter((window) => window.confirmedAt !== null);
   if (confirmed.some((window) => window.endedAt === null)) return "open";
   if (confirmed.some((window) => window.endedAt && window.appliedAt === null && now.getTime() - window.endedAt.getTime() >= PENDING_HOLD_MS)) return "stuck";
-  const newest = confirmed.reduce<(typeof confirmed)[number] | null>(
-    (latest, window) => (window.endedAt && (!latest?.endedAt || window.endedAt > latest.endedAt) ? window : latest),
-    null,
-  );
-  return newest && newest.placesOutside > 0 ? "outside" : "clear";
+  return notRevivedWaiting > 0 ? "notRevived" : "clear";
 }

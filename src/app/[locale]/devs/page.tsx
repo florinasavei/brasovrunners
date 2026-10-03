@@ -25,8 +25,7 @@ import { checkJobHealth } from "@/modules/jobs/health";
 import { readJobCadence } from "@/modules/jobs/cadence";
 import { describeJob } from "@/modules/jobs/overview";
 import { DAILY_WINDOW_LABEL, type JobName } from "@/modules/jobs/schedule";
-import { readUnreachableWindows } from "@/modules/jobs/unreachable-windows";
-import { probePublicName } from "@/modules/resilience/name-probe";
+import { readLastNameReading, readUnreachableWindows } from "@/modules/jobs/unreachable-windows";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { countMediaAssets, ORPHAN_ASSET_DAYS } from "@/modules/media/references";
 import { readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
@@ -189,10 +188,11 @@ export default async function DevsPage({ params, searchParams }: Props) {
     ),
   );
   /*
-    The outage grace (§NNN): the site's name, asked now — a staff page, bounded like the deep health's
-    probe and never throwing — and the last three windows the maintenance job wrote.
+    The outage grace (§NNN): what the site's name answered at the maintenance job's last real run, as
+    the run kept it — this page never asks the name: the probe runs in the job and the deep health
+    only — and the last three windows the job wrote.
   */
-  const [nameNow, outageWindows] = await Promise.all([probePublicName({ now }), readUnreachableWindows(db, 3)]);
+  const [nameReading, outageWindows] = await Promise.all([readLastNameReading(db), readUnreachableWindows(db, 3)]);
   const volume = await readEmailVolumeToday(db, now);
   const emailHealth = await checkEmailHealth(db, now, budget.effects.jobFloorMinutes);
   const pictures = await countMediaAssets(db, now);
@@ -837,17 +837,24 @@ export default async function DevsPage({ params, searchParams }: Props) {
               );
             })}
             {/*
-              The outage grace (§NNN): the site's name as it answers now, then the last three windows the
-              maintenance job wrote — open (red), over (what it gave back and what it moved), or none.
+              The outage grace (§NNN): the site's name as the maintenance job's last real run found it,
+              then the last three windows the job wrote — open (red), over (what it gave back, what it
+              moved and what it did not revive), or none.
             */}
             <Typography
               variant="body2"
               data-testid="outage-domain"
-              color={nameNow.status === "unresolved" ? "error.main" : "text.primary"}
+              color={nameReading?.status === "unresolved" ? "error.main" : "text.primary"}
             >
-              {nameNow.host
-                ? t("unreachable.domain", { host: nameNow.host, answer: t(`unreachable.answer.${nameNow.status}`) })
-                : t("unreachable.domainSkipped")}
+              {nameReading === null
+                ? t("unreachable.domainUnknown")
+                : nameReading.host
+                  ? t("unreachable.domain", {
+                      host: nameReading.host,
+                      answer: t(`unreachable.answer.${nameReading.status === "resolves" || nameReading.status === "unresolved" || nameReading.status === "skipped" ? nameReading.status : "unknown"}`),
+                      when: formatDay(new Date(nameReading.at), { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }),
+                    })
+                  : t("unreachable.domainSkipped")}
             </Typography>
             <Typography variant="body2" data-testid="outage-windows" color="text.primary">
               {t(outageWindows.length === 0 ? "unreachable.none" : "unreachable.windows")}
@@ -869,7 +876,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
                         source: t(`unreachable.source.${window.source === "pings" ? "pings" : "dns"}`),
                         granted: minutesPhrase(locale, Math.round(window.grantedMs / 60_000)),
                         moved: window.rowsMoved,
-                        outside: window.placesOutside,
+                        notRevived: window.claimsNotRevived,
                       })}
                 </Typography>
               );

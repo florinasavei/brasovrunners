@@ -530,8 +530,8 @@ describe("§359 \"Înlocuiește cu câmpurile\" rewrites a saved text to its fie
   // follow-up (§373), so the declaration's three messages come back as today's starting text too.
   // The legal templates' message (§639) names whom a lawyer should read from the texts that moved: the
   // sample's two texts ask for "the terms above all", the starting text, which names none, the changed texts.
-  // The outage grace's closed notice (§NNN) chooses its paragraphs by the case: the sample's window seated
-  // somebody outside the places, the starting text, which has no window, nobody.
+  // The outage grace's closed notice (§NNN) chooses its paragraphs by the case: the sample's window left
+  // a claim it did not revive, the starting text, which has no window, none.
   const STRUCTURAL = new Set<EmailMessageType>(["EVENT_THANKS", "LEGAL_TEMPLATES_CHANGED", "UNREACHABLE_WINDOW_CLOSED"]);
 
   /** What the old editor handed a Redactor: the platform's words rendered with the page's sample. */

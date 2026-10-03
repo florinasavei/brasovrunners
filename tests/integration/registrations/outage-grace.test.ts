@@ -22,6 +22,7 @@ import type { OutageGraceDeps } from "@/modules/registrations/outage-grace";
 import type { NameProbeStatus } from "@/modules/resilience/domain/name-probe";
 import { runRegistrationMaintenance } from "@/modules/registrations/maintenance";
 import { countOccupied } from "@/modules/registrations/repository";
+import { nextMaintenanceWork } from "@/modules/jobs/next-work";
 import { type EventForRegistration, submitRegistration } from "@/modules/registrations/service";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -32,9 +33,10 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * ways — the pings fall silent (a window seen once it is over), and the job, reached by another
  * address, finds the name gone on two probes ten minutes apart (a window held open until it answers) —
  * and the maintenance run must move what was running, never what had passed before, never past the
- * close or the start, never onto a place somebody else holds: a revived offer or invitation whose place
- * was given meanwhile is seated outside the places, audited, a family's claim is left to lapse, and the
- * counted places stay within the capacity.
+ * close or the start, never onto a place somebody else holds: a lapsed claim whose place was given
+ * meanwhile is not revived — it lapses as it would have, audited and named to the Administrators — and
+ * the job seats nobody: no row marked outside the places, no capacity raised, the counted places within
+ * the capacity.
  */
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
@@ -148,12 +150,20 @@ async function register(event: EventForRegistration, changes: Partial<typeof reg
 
 const rowOf = async (id: string) => (await db.select().from(registrations).where(eq(registrations.id, id)))[0];
 
-/** The pings the cache remembers: the 08:00 run's, then every quarter of an hour to 09:00, then nothing. */
-const silentAfterNine: OutageGraceDeps["readPings"] = async () =>
-  [0, 15, 30, 45, 60].map((minutes) => new Date(ANCHOR.getTime() + minutes * MINUTE));
+/** Both pingers' calls at the same instants, as the cache returns them: by job. */
+const byJob = (instants: Date[]) => ({ "registration-maintenance": instants, "email-outbox": instants });
+
+/** The pings the cache remembers: the 08:00 run's, then every quarter of an hour to 09:00, then nothing — of both jobs. */
+const silentAfterNine: OutageGraceDeps["readPings"] = async () => byJob([0, 15, 30, 45, 60].map((minutes) => new Date(ANCHOR.getTime() + minutes * MINUTE)));
 
 function deps(probe: NameProbeStatus, readPings: OutageGraceDeps["readPings"] = silentAfterNine): OutageGraceDeps {
-  return { probe: async () => ({ status: probe, host: "club.example.com", checkedAt: NOW.toISOString() }), readPings, dayCadence: 15, pinger: true };
+  return {
+    probe: async () => ({ status: probe, host: "club.example.com", checkedAt: NOW.toISOString() }),
+    readPings,
+    recordReading: async () => undefined,
+    dayCadence: 15,
+    pinger: true,
+  };
 }
 
 async function setOutageCap(hours: number) {
@@ -313,6 +323,17 @@ describe("§NNN the pings fall silent: the window is seen once it is over, and t
     expect((await rowOf(id)).emailLinkExpiresAt).toEqual(after("2026-10-03T12:00:00.000Z"));
   });
 
+  it("moves a legacy link's live token by the same amount, though it ends at the send's instant, not the submission's", async () => {
+    const event = await createEvent();
+    const id = await register(event, { status: "PENDING_EMAIL_CONFIRMATION", emailLinkExpiresAt: null, submittedAt: new Date("2026-10-01T12:00:00.000Z") });
+    const participantId = (await rowOf(id)).participantId;
+    // Minted when the email left, two minutes after the submission: never the row's instant, moved all the same.
+    const live = await token({ participantId, registrationId: id, purpose: "VERIFY_REGISTRATION_EMAIL", expiresAt: new Date("2026-10-03T12:02:00.000Z") });
+    await runRegistrationMaintenance(db, NOW, deps("resolves"));
+    expect((await rowOf(id)).emailLinkExpiresAt).toEqual(after("2026-10-03T12:00:00.000Z"));
+    expect((await tokenOf(live.id)).expiresAt).toEqual(after("2026-10-03T12:02:00.000Z"));
+  });
+
   it("moves a test registration exactly like a real one", async () => {
     const event = await createEvent();
     const real = await register(event, { status: "PENDING_DECLARATION", holdExpiresAt: new Date("2026-10-03T12:00:00.000Z") });
@@ -342,32 +363,57 @@ describe("§NNN the pings fall silent: the window is seen once it is over, and t
     expect((await db.select().from(eventInvitations).where(eq(eventInvitations.id, invitation.id)))[0].expiresAt).toEqual(startsAt);
   });
 
-  it("seats a revived offer outside the places when its place was given meanwhile, and overbooks nothing", async () => {
+  it("does not revive an offer whose place was given meanwhile: it lapses as it would have, audited and named, and the job seats nobody", async () => {
     const event = await createEvent({ capacity: 1 });
     // The offer lapsed at 10:00, in the window; on the next read its place was free, and it was given.
     const offered = await register(event, { status: "WAITLIST_OFFERED", holdExpiresAt: new Date("2026-10-03T10:00:00.000Z"), waitlistedAt: ANCHOR });
+    const offerToken = await token({ participantId: (await rowOf(offered)).participantId, registrationId: offered, purpose: "WAITLIST_OFFER", expiresAt: new Date("2026-10-03T10:00:00.000Z") });
     await register(event, { status: "CONFIRMED", confirmedAt: new Date("2026-10-03T15:30:00.000Z") });
 
     const result = await runRegistrationMaintenance(db, NOW, deps("resolves"));
 
     const row = await rowOf(offered);
-    expect(row.status).toBe("WAITLIST_OFFERED");
-    expect(row.holdExpiresAt).toEqual(after("2026-10-03T10:00:00.000Z"));
-    expect(row.outsideCapacity).toBe(true);
-    expect(result.outageGrace.outside).toBe(1);
-    expect(computeOccupied(await countOccupied(db, event.id, NOW))).toBeLessThanOrEqual(1);
-    const marks = await db.select().from(auditLogs).where(and(eq(auditLogs.action, "registration.seated_outside_for_outage_grace"), eq(auditLogs.entityId, offered)));
-    expect(marks).toHaveLength(1);
-    expect(marks[0].actorStaffUserId).toBeNull();
-    expect(marks[0].metadataJson).toMatchObject({ from: false, to: true });
+    // Lapsed by the run's own sweep, from its own deadline: never revived, never seated outside, the capacity untouched.
+    expect(row.status).toBe("EXPIRED");
+    expect(row.expiryReason).toBe("WAITLIST_OFFER_LAPSED");
+    expect(row.holdExpiresAt).toEqual(new Date("2026-10-03T10:00:00.000Z"));
+    expect(row.outsideCapacity).toBe(false);
+    expect((await tokenOf(offerToken.id)).expiresAt).toEqual(new Date("2026-10-03T10:00:00.000Z"));
+    expect((await db.select().from(events).where(eq(events.id, event.id)))[0].capacity).toBe(1);
+    expect(computeOccupied(await countOccupied(db, event.id, NOW))).toBe(1);
+    expect(result.outageGrace.notRevived).toBe(1);
+
+    const left = await db.select().from(auditLogs).where(and(eq(auditLogs.action, "registration.not_revived_for_outage"), eq(auditLogs.entityId, offered)));
+    expect(left).toHaveLength(1);
+    expect(left[0].actorStaffUserId).toBeNull();
     const [window] = await windows();
-    expect(window.placesOutside).toBe(1);
-    // The closed email counts it, and its paragraphs say to look at the list.
+    expect(left[0].metadataJson).toEqual({ kind: "offer", windowId: window.id, deadline: "2026-10-03T10:00:00.000Z" });
+    expect(await db.select().from(auditLogs).where(and(eq(auditLogs.action, "registration.deadline_moved_for_outage"), eq(auditLogs.entityId, offered)))).toHaveLength(0);
+    expect(window.claimsNotRevived).toBe(1);
+    expect(window.notRevived).toEqual([{ kind: "offer", id: offered, eventId: event.id }]);
+    // The closed email carries the claim by id; the send names the person.
     const [closed] = await outbox("UNREACHABLE_WINDOW_CLOSED");
-    expect(closed.payloadJson).toMatchObject({ outside: 1, moved: 1 });
+    expect(closed.payloadJson).toMatchObject({ notRevived: 1, claims: [{ kind: "offer", id: offered, eventId: event.id }] });
+    expect(JSON.stringify(closed.payloadJson)).not.toContain("Pop");
   });
 
-  it("seats a revived invitation outside the places when its place was given meanwhile", async () => {
+  it("puts a not-revived claim back exactly as it was, its updated_at too, when the sweep will not lapse it this run", async () => {
+    // A family's reservation: its lapse clears the deadline, so put back first and then cleared.
+    const event = await createEvent({ capacity: 1 });
+    // Its link passed before the window: only the reservation is the grace's to look at.
+    const reservation = await register(event, { status: "PENDING_EMAIL_CONFIRMATION", holdExpiresAt: new Date("2026-10-03T10:00:00.000Z"), emailLinkExpiresAt: new Date("2026-10-03T09:00:00.000Z") });
+    await db.update(registrations).set({ updatedAt: new Date("2026-10-03T08:05:00.000Z") }).where(eq(registrations.id, reservation));
+    await register(event, { status: "CONFIRMED", confirmedAt: new Date("2026-10-03T15:30:00.000Z") });
+    const { applyOutageGrace } = await import("@/modules/registrations/outage-grace");
+    // The grace alone, without the sweep: the claim is as it was before the run.
+    await applyOutageGrace(db, NOW, DEFAULT_DEADLINES, deps("resolves"));
+    const row = await rowOf(reservation);
+    expect(row.holdExpiresAt).toEqual(new Date("2026-10-03T10:00:00.000Z"));
+    expect(row.updatedAt).toEqual(new Date("2026-10-03T08:05:00.000Z"));
+    expect(row.outsideCapacity).toBe(false);
+  });
+
+  it("does not revive an invitation whose place was given meanwhile: it lapses, audited on the event, and the free count never counts a place twice", async () => {
     const event = await createEvent({ capacity: 1 });
     const lapsedAt = new Date("2026-10-03T10:00:00.000Z");
     const invitation = await invite(event, lapsedAt);
@@ -376,15 +422,18 @@ describe("§NNN the pings fall silent: the window is seen once it is over, and t
     await runRegistrationMaintenance(db, NOW, deps("resolves"));
 
     const [later] = await db.select().from(eventInvitations).where(eq(eventInvitations.id, invitation.id));
-    expect(later.expiredAt).toBeNull();
-    expect(later.expiresAt).toEqual(new Date(lapsedAt.getTime() + STOP));
-    expect(later.outsideCapacity).toBe(true);
+    expect(later.expiresAt).toEqual(lapsedAt);
+    expect(later.expiredAt).not.toBeNull();
+    expect(later.outsideCapacity).toBe(false);
     expect(computeOccupied(await countOccupied(db, event.id, NOW))).toBe(1);
-    const [moved] = await db.select().from(auditLogs).where(eq(auditLogs.action, "event.invitation_deadline_moved_for_outage"));
-    expect(moved.metadataJson).toMatchObject({ invitationId: invitation.id, outsideCapacity: true });
+    const [left] = await db.select().from(auditLogs).where(eq(auditLogs.action, "event.invitation_not_revived_for_outage"));
+    expect(left.metadataJson).toMatchObject({ invitationId: invitation.id, deadline: lapsedAt.toISOString() });
+    expect(left.entityId).toBe(event.id);
+    const [window] = await windows();
+    expect(window.notRevived).toEqual([{ kind: "invitation", id: invitation.id, eventId: event.id }]);
   });
 
-  it("leaves a family's reservation and held place to lapse when their place was given meanwhile — never seated outside", async () => {
+  it("does not revive a family's reservation or held place whose place was given meanwhile — and never marks or raises anything", async () => {
     const event = await createEvent({ capacity: 1 });
     const reservation = await register(event, { status: "PENDING_EMAIL_CONFIRMATION", holdExpiresAt: new Date("2026-10-03T10:00:00.000Z"), emailLinkExpiresAt: new Date(NOW.getTime() + DAY) });
     const [placeHold] = await db
@@ -397,15 +446,29 @@ describe("§NNN the pings fall silent: the window is seen once it is over, and t
 
     const row = await rowOf(reservation);
     expect(row.outsideCapacity).toBe(false);
-    // Put back as it was (or already cleared by the sweep): lapsed, never moved — the address, once confirmed, joins the line.
+    // Put back as it was (or already cleared by the sweep): lapsed from its own deadline, never moved — the address, once confirmed, joins the line.
     expect([null, Date.parse("2026-10-03T10:00:00.000Z")]).toContain(row.holdExpiresAt?.getTime() ?? null);
     expect(row.status).toBe("PENDING_EMAIL_CONFIRMATION");
     const [held] = await db.select().from(familyPlaceHolds).where(eq(familyPlaceHolds.id, placeHold.id));
     expect(held === undefined || held.expiresAt.getTime() === Date.parse("2026-10-03T10:30:00.000Z")).toBe(true);
-    expect(await db.select().from(auditLogs).where(and(eq(auditLogs.action, "registration.deadline_moved_for_outage"), eq(auditLogs.entityId, reservation)))).toHaveLength(1);
-    expect(result.outageGrace.outside).toBe(0);
+    expect(await db.select().from(auditLogs).where(and(eq(auditLogs.action, "registration.not_revived_for_outage"), eq(auditLogs.entityId, reservation)))).toHaveLength(1);
+    expect(result.outageGrace.notRevived).toBe(2);
     expect(computeOccupied(await countOccupied(db, event.id, NOW))).toBe(1);
-    expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "registration.seated_outside_for_outage_grace"))).toHaveLength(0);
+    expect((await db.select().from(events).where(eq(events.id, event.id)))[0].capacity).toBe(1);
+    const [window] = await windows();
+    expect(window.notRevived.map((claim) => claim.kind).sort()).toEqual(["familyReservation", "placeHold"]);
+  });
+
+  it("revives the oldest claim into the one place left, and leaves the next one lapsed", async () => {
+    const event = await createEvent({ capacity: 2 });
+    await register(event, { status: "CONFIRMED", confirmedAt: ANCHOR });
+    const first = await register(event, { status: "WAITLIST_OFFERED", holdExpiresAt: new Date("2026-10-03T10:00:00.000Z"), waitlistedAt: ANCHOR });
+    const second = await register(event, { status: "WAITLIST_OFFERED", holdExpiresAt: new Date("2026-10-03T11:00:00.000Z"), waitlistedAt: ANCHOR });
+    await runRegistrationMaintenance(db, NOW, deps("resolves"));
+    expect((await rowOf(first)).status).toBe("WAITLIST_OFFERED");
+    expect((await rowOf(first)).holdExpiresAt).toEqual(after("2026-10-03T10:00:00.000Z"));
+    expect((await rowOf(second)).status).toBe("EXPIRED");
+    expect(computeOccupied(await countOccupied(db, event.id, NOW))).toBe(2);
   });
 
   it("revives an offer into its own place when nobody took it, counted as before", async () => {
@@ -424,14 +487,14 @@ describe("§NNN the pings fall silent: the window is seen once it is over, and t
     await runRegistrationMaintenance(db, NOW, deps("resolves"));
     const movedOnce = (await rowOf(id)).holdExpiresAt;
     // A second run a quarter of an hour on: the window is done, nothing moves twice, nobody is told twice.
-    const second = await runRegistrationMaintenance(db, new Date(NOW.getTime() + 15 * MINUTE), deps("resolves", async () => [ANCHOR, NOW]));
+    const second = await runRegistrationMaintenance(db, new Date(NOW.getTime() + 15 * MINUTE), deps("resolves", async () => byJob([ANCHOR, NOW])));
     expect(second.outageGrace.moved).toBe(0);
     expect((await rowOf(id)).holdExpiresAt).toEqual(movedOnce);
     const notices = await outbox("UNREACHABLE_WINDOW_CLOSED");
     expect(notices.map((row) => row.recipientEmail)).toEqual(["admin@club.test"]);
     expect(notices[0].participantId).toBeNull();
     expect(notices[0].idempotencyKey).toMatch(/^unreachable:[0-9a-f-]+:closed:[0-9a-f-]+$/);
-    expect(notices[0].payloadJson).toMatchObject({ source: "pings", moved: 1, outside: 0, grantedMinutes: STOP / MINUTE });
+    expect(notices[0].payloadJson).toMatchObject({ source: "pings", moved: 1, notRevived: 0, claims: [], grantedMinutes: STOP / MINUTE });
     expect(await windows()).toHaveLength(1);
     expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "registration.deadline_moved_for_outage"))).toHaveLength(1);
     expect(await outbox("UNREACHABLE_WINDOW_OPENED")).toHaveLength(0);
@@ -457,14 +520,21 @@ describe("§NNN the pings fall silent: the window is seen once it is over, and t
     const ahead = await register(event, { status: "PENDING_DECLARATION", holdExpiresAt: new Date(NOW.getTime() + DAY) });
     await runRegistrationMaintenance(db, NOW, deps("resolves"));
     const [window] = await windows();
-    expect(window).toMatchObject({ source: "pings", startedAt: WINDOW_START, endedAt: NOW, grantedMs: 0, rowsMoved: 0, placesOutside: 0 });
+    expect(window).toMatchObject({ source: "pings", startedAt: WINDOW_START, endedAt: NOW, grantedMs: 0, appliedMs: 0, rowsMoved: 0, claimsNotRevived: 0 });
     expect(window.appliedAt).not.toBeNull();
     expect((await rowOf(offered)).status).toBe("EXPIRED");
     expect((await rowOf(ahead)).holdExpiresAt).toEqual(new Date(NOW.getTime() + DAY));
-    await runRegistrationMaintenance(db, new Date(NOW.getTime() + 15 * MINUTE), deps("resolves", async () => [ANCHOR, NOW]));
+    await runRegistrationMaintenance(db, new Date(NOW.getTime() + 15 * MINUTE), deps("resolves", async () => byJob([ANCHOR, NOW])));
     const closed = await outbox("UNREACHABLE_WINDOW_CLOSED");
     expect(closed).toHaveLength(1);
     expect(closed[0].payloadJson).toMatchObject({ grantedMinutes: 0, maxHours: 0, moved: 0 });
+  });
+
+  it("reads no silence where the outbox's calls went on while the maintenance's slots were lost: both must be missing together", async () => {
+    const quarters: Date[] = [];
+    for (let at = ANCHOR.getTime(); at < NOW.getTime(); at += 15 * MINUTE) quarters.push(new Date(at));
+    await runRegistrationMaintenance(db, NOW, deps("resolves", async () => ({ "registration-maintenance": quarters.slice(0, 5), "email-outbox": quarters })));
+    expect(await windows()).toHaveLength(0);
   });
 
   it("reads no silence from a cache that has forgotten the last run's own ping", async () => {
@@ -478,7 +548,7 @@ describe("§NNN the pings fall silent: the window is seen once it is over, and t
   it("reads no silence where a real run of either job happened in it", async () => {
     await db.insert(jobRuns).values({ jobName: "email-outbox", startedAt: new Date("2026-10-03T12:30:00.000Z"), finishedAt: new Date("2026-10-03T12:30:01.000Z") });
     await db.insert(jobRuns).values({ jobName: "email-outbox", startedAt: new Date("2026-10-03T13:00:00.000Z"), finishedAt: new Date("2026-10-03T13:00:01.000Z") });
-    await runRegistrationMaintenance(db, NOW, deps("resolves", async () => [ANCHOR, new Date("2026-10-03T08:30:00.000Z"), LAST_PING, new Date("2026-10-03T09:30:00.000Z"), new Date("2026-10-03T10:00:00.000Z"), new Date("2026-10-03T10:30:00.000Z"), new Date("2026-10-03T11:00:00.000Z"), new Date("2026-10-03T11:30:00.000Z"), new Date("2026-10-03T12:00:00.000Z"), new Date("2026-10-03T13:30:00.000Z"), new Date("2026-10-03T14:00:00.000Z"), new Date("2026-10-03T14:30:00.000Z"), new Date("2026-10-03T15:00:00.000Z"), new Date("2026-10-03T15:30:00.000Z")]));
+    await runRegistrationMaintenance(db, NOW, deps("resolves", async () => byJob([ANCHOR, new Date("2026-10-03T08:30:00.000Z"), LAST_PING, new Date("2026-10-03T09:30:00.000Z"), new Date("2026-10-03T10:00:00.000Z"), new Date("2026-10-03T10:30:00.000Z"), new Date("2026-10-03T11:00:00.000Z"), new Date("2026-10-03T11:30:00.000Z"), new Date("2026-10-03T12:00:00.000Z"), new Date("2026-10-03T13:30:00.000Z"), new Date("2026-10-03T14:00:00.000Z"), new Date("2026-10-03T14:30:00.000Z"), new Date("2026-10-03T15:00:00.000Z"), new Date("2026-10-03T15:30:00.000Z")])));
     expect(await windows()).toHaveLength(0);
   });
 });
@@ -488,8 +558,82 @@ describe("§NNN the name does not resolve: two probes ten minutes apart, the win
   const everyQuarter: OutageGraceDeps["readPings"] = async (_anchor, now) => {
     const pings: Date[] = [];
     for (let at = ANCHOR.getTime(); at <= now.getTime(); at += 15 * MINUTE) pings.push(new Date(at));
-    return pings;
+    return byJob(pings);
   };
+  const at = (iso: string) => new Date(`2026-10-03T${iso}:00.000Z`);
+
+  it("moves the running deadlines on every run while the window is open: nothing lapses, no place is freed, the grant adds up", async () => {
+    const event = await createEvent({ capacity: 1 });
+    const offered = await register(event, { status: "WAITLIST_OFFERED", holdExpiresAt: at("10:30"), waitlistedAt: ANCHOR });
+    const link = await register(event, { status: "PENDING_EMAIL_CONFIRMATION", emailLinkExpiresAt: at("10:45") });
+    const waiting = await register(event, { status: "WAITLISTED", waitlistedAt: new Date(ANCHOR.getTime() + MINUTE) });
+
+    await runRegistrationMaintenance(db, at("10:00"), deps("unresolved", everyQuarter));
+    for (const [run, granted] of [["10:12", 12], ["10:35", 35], ["11:00", 60]] as const) {
+      const result = await runRegistrationMaintenance(db, at(run), deps("unresolved", everyQuarter));
+      expect(result.outageGrace.holding).toBe(true);
+      const [open] = await windows();
+      expect(open.endedAt).toBeNull();
+      expect(open.grantedMs).toBe(granted * MINUTE);
+      expect(open.appliedMs).toBe(granted * MINUTE);
+      expect(open.stepMs).toBeNull();
+      // Each deadline as far ahead of this run as it was of the window's start: the clock stood still for it.
+      expect((await rowOf(offered)).holdExpiresAt).toEqual(new Date(at("10:30").getTime() + granted * MINUTE));
+      expect((await rowOf(link)).emailLinkExpiresAt).toEqual(new Date(at("10:45").getTime() + granted * MINUTE));
+      expect((await rowOf(offered)).status).toBe("WAITLIST_OFFERED");
+      // Just before the next run, the offer still holds its place: nothing freed, nobody waiting offered it.
+      expect(computeOccupied(await countOccupied(db, event.id, new Date(at(run).getTime() + 20 * MINUTE)))).toBe(1);
+      expect((await rowOf(waiting)).status).toBe("WAITLISTED");
+    }
+    // Moved on three runs, counted once each.
+    const [window] = await windows();
+    expect(window.rowsMoved).toBe(2);
+    expect(await db.select().from(auditLogs).where(and(eq(auditLogs.action, "registration.deadline_moved_for_outage"), eq(auditLogs.entityId, offered)))).toHaveLength(3);
+
+    // The name is back at 11:20: twenty more minutes, and the window is over and announced once.
+    await runRegistrationMaintenance(db, at("11:20"), deps("resolves", everyQuarter));
+    const [closed] = await windows();
+    expect(closed.endedAt).toEqual(at("11:20"));
+    expect(closed.grantedMs).toBe(80 * MINUTE);
+    expect(closed.appliedMs).toBe(80 * MINUTE);
+    expect((await rowOf(offered)).holdExpiresAt).toEqual(at("11:50"));
+    expect((await outbox("UNREACHABLE_WINDOW_CLOSED"))[0].payloadJson).toMatchObject({ moved: 2, notRevived: 0 });
+  });
+
+  it("stops giving back at the club's cap while the window stays open: the clock runs again, as the cap says", async () => {
+    await setOutageCap(1);
+    const event = await createEvent();
+    const offered = await register(event, { status: "WAITLIST_OFFERED", holdExpiresAt: at("10:30"), waitlistedAt: ANCHOR });
+    for (const run of ["10:00", "10:12", "10:40"]) await runRegistrationMaintenance(db, at(run), deps("unresolved", everyQuarter));
+    expect((await rowOf(offered)).holdExpiresAt).toEqual(at("11:10"));
+    const capped = await runRegistrationMaintenance(db, at("11:30"), deps("unresolved", everyQuarter));
+    expect(capped.outageGrace.holding).toBe(false);
+    const [open] = await windows();
+    expect(open.grantedMs).toBe(HOUR);
+    expect(open.appliedMs).toBe(HOUR);
+    // An hour given, no more: the offer's deadline, 11:30 at most, is behind this run, and the sweep ends it.
+    expect((await rowOf(offered)).status).toBe("EXPIRED");
+  });
+
+  it("plans the job's next real run ten minutes after a suspicion, and at the next ping while a window is open — and nothing for a closed one", async () => {
+    await runRegistrationMaintenance(db, at("10:00"), deps("unresolved", everyQuarter));
+    const afterSuspicion = await nextMaintenanceWork(db, at("10:00"));
+    expect(afterSuspicion).toEqual(at("10:10"));
+    // A probe at 10:05 that said nothing: still ten minutes after the first.
+    expect(await nextMaintenanceWork(db, at("10:05"))).toEqual(at("10:10"));
+    // The ten minutes are behind and the suspicion stands: the next ping.
+    expect((await nextMaintenanceWork(db, at("10:20")))?.getTime()).toBeLessThanOrEqual(at("10:20").getTime() + 15 * MINUTE);
+
+    await runRegistrationMaintenance(db, at("10:12"), deps("unresolved", everyQuarter));
+    const whileOpen = await nextMaintenanceWork(db, at("10:12"));
+    expect(whileOpen).not.toBeNull();
+    expect(whileOpen?.getTime() ?? 0).toBeGreaterThan(at("10:12").getTime());
+    expect(whileOpen?.getTime() ?? Infinity).toBeLessThanOrEqual(at("10:12").getTime() + 15 * MINUTE);
+
+    await runRegistrationMaintenance(db, at("10:30"), deps("resolves", everyQuarter));
+    expect((await windows())[0].endedAt).toEqual(at("10:30"));
+    expect(await nextMaintenanceWork(db, at("10:30"))).toBeNull();
+  });
 
   it("opens nothing on the first «no such name»: the sweeps run, nobody is told", async () => {
     const event = await createEvent();

@@ -5,9 +5,10 @@ import { isIP } from "node:net";
  * what a resolver's error means. The lookup itself is `resilience/name-probe.ts`.
  *
  * Only an answer that the name does not exist is `unresolved` — `ENOTFOUND` (the zone has no such
- * name: a registrar's hold takes the domain out of its zone) and `ENODATA` (the name exists with no
- * address). Everything else a resolver can say — a timeout, a refused or failed server, a busy
- * resolver — is `unknown`: it says nothing about the door, so nothing opens or closes on it.
+ * name: a registrar's hold takes the domain out of its zone). Everything else a resolver can say — a
+ * timeout, a refused or failed server, a busy resolver, and `ENODATA` (the name exists with no address
+ * of the kind asked: a record being edited, not a door shut) — is `unknown`: it says nothing about the
+ * door, so nothing opens or closes on it.
  */
 
 /** What one probe of the name answered: `skipped` where nothing is asked (a laptop, a test, an address that is a number). */
@@ -33,5 +34,5 @@ export function probedHost(baseUrl: string, appEnv: string): string | null {
 /** What a resolver's error says about the name. */
 export function probeStatusOf(error: unknown): Exclude<NameProbeStatus, "resolves" | "skipped"> {
   const code = typeof error === "object" && error !== null ? (error as { code?: unknown }).code : undefined;
-  return code === "ENOTFOUND" || code === "ENODATA" ? "unresolved" : "unknown";
+  return code === "ENOTFOUND" ? "unresolved" : "unknown";
 }

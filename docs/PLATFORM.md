@@ -589,9 +589,10 @@ then sweep.
 - **The pings.** Every call of either job is remembered in the data cache, answered from the cache or
   run for real. A silence longer than the pinger's own threshold — twice the cadence plus five minutes,
   the number `/api/health` pages on (35 minutes by day on production, 125 at night) — is recorded as a
-  `pings` window that is over: from the call that should have come to the first that did. A cache that
-  has lost the last real run's own ping is not read at all; neither is a silence a real run of either
-  job sits in. Only QA and production, which have a pinger, are judged this way. It cannot tell a dead
+  `pings` window that is over: from the call that should have come to the first that did. Both jobs'
+  calls must be missing together, and each job must have a call remembered before the silence, so one
+  evicted cache slot opens nothing. A cache that has lost the last real run's own ping is not read at
+  all; neither is a silence a real run of either job sits in. Only QA and production, which have a pinger, are judged this way. It cannot tell a dead
   pinger from a dead name, and takes the participant's side; the cap bounds it.
 - **The name.** The job resolves `APP_BASE_URL`'s host. One «no such name» is only a suspicion; a
   second one at least ten minutes later opens a `dns` window at the first probe's instant, and it stays
@@ -601,25 +602,31 @@ then sweep.
   public name cannot reach the job while the name is gone, and the window is then seen by the pings,
   once the name is back.
 
-While a `dns` window is open nothing lapses: no address link, hold, offer, invitation or family form.
-Once a window is over, every deadline still running at its start moves later by its length, capped by
-«Termene» → «Ceasul termenelor stă pe loc…» (`outageGraceMaxHours`, 48 hours by default; 0 switches the
-moving off and the windows are still recorded and announced) and by the event's close and start as the
-allocator caps it; a deadline that passed before the window never moves. A revived offer or invitation
-whose place was given meanwhile is put on «Lista de invitați speciali» rather than counted, so no counted
-place is given twice; a family's reservation or held place in that case lapses as it would have. Each
-move is in the registration's history; the window, what it gave back and its counts are the table
-`unreachable_windows`.
+While a `dns` window is open every real run moves the running deadlines — address links, holds,
+offers, invitations, family forms — later by the time since the run before, so nothing reads as
+lapsed, and the sweeps are held as well; the job's plan keeps every ping running for real meanwhile,
+and confirms a first «no such name» ten minutes after it. A `pings` window moves them once it is
+seen. Either way the total is the window's length, capped by «Termene» → «Ceasul termenelor stă pe
+loc…» (`outageGraceMaxHours`, 48 hours by default; 0 switches the moving off and the windows are still
+recorded and announced) and by the event's close and start as the allocator caps it; a deadline that
+passed before the window never moves. A claim whose deadline passed while the door was shut is revived
+only while its counted place is still free: otherwise it lapses as it would have and the closed email
+names the person, the event and the backoffice page. The job seats nobody beyond the advertised places
+— a supplementary place is an Administrator's confirmed press, «Trimite-i oferta» or «Dă-i un loc
+acum». Each move is in the registration's history; the window, what it gave back and its counts are
+the table `unreachable_windows`.
 
 **Where it shows.** The Administrators get «Site-ul nu se găsește după nume» when a `dns` window opens
 (on the club's road — Gmail by default, which does not hang on the club's domain) and «Ceasul
 termenelor a stat pe loc» once any window is over, with what to check. `/api/health?deep=1` carries in
 its `domain` block `host`, `resolves` (`true`, `false`, or `null` for no answer or not asked),
 `checkedAt`, `unreachableSince` and `lastUnreachable` — instants only — and answers `degraded` while the
-name is gone or a window is open; the shallow answer asks nobody. `/devs` → Stare asks the name when it
-opens and lists the last three windows, and «Sarcini» has the row «Site-ul de negăsit: ceasul
+name is gone or a window is open; the shallow answer asks nobody. `/devs` → Stare shows what the name
+answered at the maintenance job's last real run (kept beside its ping in the data cache; the page asks
+nobody) and lists the last three windows, and «Sarcini» has the row «Site-ul de negăsit: ceasul
 termenelor», red while a window is open, while a window's moves are stuck, and while the newest window
-seated anybody outside the places. No public page and no action a visitor waits on asks the name.
+left a claim it did not revive still lapsed on an event that has not started. No page and no action a
+visitor waits on asks the name.
 
 **What it does not do.** It cannot run a job nobody calls: while the name is gone the jobs run only
 if a monitor calls the deployment's own address. Whatever the monitors call, the deadlines are moved

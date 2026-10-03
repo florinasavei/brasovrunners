@@ -79,7 +79,7 @@ const PING_TAG = `${TAG}:ping`;
 class NotRecorded extends Error {}
 
 /** `dueHour` is the hour-wide "nothing due until" beyond a run's first hour (§577, `dueSlotsFor`). */
-type Family = "due" | "dueHour" | "floor" | "ping";
+type Family = "due" | "dueHour" | "floor" | "ping" | "name";
 
 /** A writer's value, or a reader's refusal to invent one. Always called bound, never directly. */
 async function produce(value: unknown): Promise<unknown> {
@@ -243,28 +243,47 @@ export async function readLastPing(job: JobName, now: Date, horizonMs: number): 
 }
 
 /**
- * Every ping the cache remembers between `anchor` and `now`, of every job, for the maintenance run's
- * outage grace (§NNN, `registrations/domain/outage-grace.ts`) — or null when the cache cannot be trusted to
+ * Every ping the cache remembers between `anchor` and `now`, by job, for the maintenance run's outage
+ * grace (§NNN, `registrations/domain/outage-grace.ts`) — or null when the cache cannot be trusted to
  * remember: the anchor is a real run of `anchor.job`, which wrote its own ping slot (`recordRealRun`),
  * and a cache that has lost that slot (evicted, unreachable, outside a request) has lost the others
- * too, so a silence read from it would be the cache's, not the pinger's. Missing never opens a window.
+ * too, so a silence read from it would be the cache's, not the pinger's. Missing never opens a window;
+ * by job, so a silence counts only where both pingers' calls are missing together (`findPingGaps`).
  *
  * Read once per real run, from the run before it: over a day the reads add up to one per slot per job
  * whatever the number of runs. Six at a time, oldest first.
  */
-export async function readPingHistory(anchor: { job: JobName; at: Date }, now: Date): Promise<Date[] | null> {
+export async function readPingHistory(anchor: { job: JobName; at: Date }, now: Date): Promise<Record<JobName, Date[]> | null> {
   const own = await slot<PingSlot>("ping", anchor.job, anchor.at, pingTags);
   if (!own) return null;
   const slots = slotsBetween(anchor.at, now);
-  const found: Date[] = [new Date(own.at)];
-  const reads: (() => Promise<PingSlot | null>)[] = JOB_NAMES.flatMap((job) => slots.map((at) => () => slot<PingSlot>("ping", job, at, pingTags)));
+  const found = Object.fromEntries(JOB_NAMES.map((job) => [job, [] as Date[]])) as Record<JobName, Date[]>;
+  found[anchor.job].push(new Date(own.at));
+  const reads: (() => Promise<{ job: JobName; entry: PingSlot | null }>)[] = JOB_NAMES.flatMap((job) =>
+    slots.map((at) => async () => ({ job, entry: await slot<PingSlot>("ping", job, at, pingTags) })),
+  );
   for (let index = 0; index < reads.length; index += 6) {
     const batch = await Promise.all(reads.slice(index, index + 6).map((read) => read()));
-    for (const entry of batch) {
-      if (entry && Date.parse(entry.at) <= now.getTime()) found.push(new Date(entry.at));
+    for (const { job, entry } of batch) {
+      if (entry && Date.parse(entry.at) <= now.getTime()) found[job].push(new Date(entry.at));
     }
   }
   return found;
+}
+
+/** What the maintenance job's name probe answered at one of its real runs (§NNN): `/devs` shows it, never asking the name itself. */
+export type NameReadingSlot = { at: string; status: string; host: string | null };
+
+const nameTags = [`${TAG}:name`];
+
+/** The name probe's answer of this real run, beside its ping: write-once in its five minutes, like every slot here. */
+export async function recordNameReading(reading: NameReadingSlot): Promise<void> {
+  await slot<NameReadingSlot>("name", "registration-maintenance", new Date(reading.at), nameTags, reading);
+}
+
+/** The answer the real run at `ranAt` recorded, or null when the cache does not remember it. */
+export async function readNameReading(ranAt: Date): Promise<NameReadingSlot | null> {
+  return slot<NameReadingSlot>("name", "registration-maintenance", ranAt, nameTags);
 }
 
 /** What `/devs` and the task board show for one job: the cached plan and the last ping, if the cache answers. */

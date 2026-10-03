@@ -348,10 +348,11 @@ export type OwnerTaskInputs = {
   /**
    * The outage grace (§NNN, `unreachable_windows`, `unreachableWindowState`): `open` while a window is
    * open — the site's name does not resolve and the deadlines are held; `stuck` while a window over for
-   * more than two hours still has deadlines it could not move; `outside` while the newest window over
-   * seated anybody outside the places — somebody must look at them; `clear` otherwise.
+   * more than two hours still has deadlines it could not move; `notRevived` while the newest window over
+   * left a claim it did not revive — its place was given meanwhile — still lapsed on an event that has
+   * not started, for an Administrator to decide; `clear` otherwise.
    */
-  unreachableWindow: "open" | "stuck" | "outside" | "clear";
+  unreachableWindow: "open" | "stuck" | "notRevived" | "clear";
   /**
    * This environment's monthly compute-time quota and this period's spend against it, both read
    * from the same Neon project row the consumption panel already fetches (§335) — never a
@@ -710,10 +711,19 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
    */
   const quota = input.neonQuota?.quotaCuHours ?? null;
   const nearLimit = quota !== null && isNeonQuotaNearLimit(input.neonQuota?.usedCuHours ?? 0, quota);
-  // The clock stopped while the door was shut (§NNN): red while a window is open, while one's moves are stuck, and while the newest seated anybody outside the places; green otherwise.
+  /*
+    The clock stopped while the door was shut (§NNN): blocking while a window is open — nobody reaches
+    the form by its name — and while the newest left somebody's claim lapsed whom only an Administrator
+    can seat; broken while a window's moves are stuck; done otherwise.
+  */
   push("unreachableWindow", {
     owner: "club",
-    state: input.unreachableWindow === "clear" ? "done" : "broken",
+    state:
+      input.unreachableWindow === "clear"
+        ? "done"
+        : input.unreachableWindow === "stuck"
+          ? "broken"
+          : "blocking",
     ...(input.unreachableWindow === "clear" ? {} : { text: input.unreachableWindow }),
   });
 

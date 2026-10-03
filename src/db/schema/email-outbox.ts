@@ -105,7 +105,7 @@ export const emailMessageType = pgEnum("email_message_type", [
   // the club's road (Gmail: the club's own domain may be the thing that is gone). No participant, no token.
   "UNREACHABLE_WINDOW_OPENED",
   // «Ceasul termenelor a stat pe loc» (§NNN): a window is over — when, how it was seen, how long was
-  // given back, how many deadlines moved, how many were seated outside the places, and what to check.
+  // given back, how many deadlines moved, which claims were not revived, and what to check.
   // Once per window (a `pings` one too), to the same people.
   "UNREACHABLE_WINDOW_CLOSED",
 ]);

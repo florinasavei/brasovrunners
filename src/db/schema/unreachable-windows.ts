@@ -4,9 +4,10 @@ import { bigint, check, index, integer, jsonb, pgTable, text, timestamp, uniqueI
 /**
  * The stretches during which the platform could not be reached (§NNN, «the clock stops while the door
  * is shut»): the site's name did not resolve, or no scheduler call reached the platform for longer than
- * the pinger's own threshold. While a `dns` window is open the maintenance job lapses nothing; once a
- * window is over, every participant deadline that was running in it is moved later by its length,
- * capped by the club's «Termene» number (`outageGraceMaxHours`) — the grace for the outage.
+ * the pinger's own threshold. While a `dns` window is open its running deadlines are moved on every
+ * real run by the time since the last one; once a window is over, every participant deadline that was
+ * running in it has been moved later by its length, capped by the club's «Termene» number
+ * (`outageGraceMaxHours`) — the grace for the outage.
  *
  * One row per stretch, written by the maintenance job alone (`registrations/outage-grace.ts`). Ids,
  * instants and counts only: no name, no address, nothing about a person. The moves themselves are in
@@ -14,6 +15,9 @@ import { bigint, check, index, integer, jsonb, pgTable, text, timestamp, uniqueI
  */
 export const UNREACHABLE_SOURCES = ["dns", "pings"] as const;
 export type UnreachableSource = (typeof UNREACHABLE_SOURCES)[number];
+
+/** A claim the outage grace did not revive because its counted place was no longer free (§NNN). */
+export type NotRevivedClaim = { kind: "offer" | "familyReservation" | "invitation" | "placeHold"; id: string; eventId: string };
 
 export const unreachableWindows = pgTable(
   "unreachable_windows",
@@ -38,19 +42,34 @@ export const unreachableWindows = pgTable(
     confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
     /**
      * The time given back to the deadlines, in milliseconds: the window's length capped by «Termene»,
-     * decided once when the window closes — a retried run moves by the same amount whatever the setting
-     * says by then. 0 while it is open, and 0 when the club has switched the moving off.
+     * never lowered once given. A `pings` window decides it when it is written; a `dns` window grows it
+     * on every real run while it is open — by the time since the last run, within the cap — so a running
+     * deadline never reads as lapsed while the name is gone, and decides the rest when it closes. A
+     * retried run moves by what is stored, whatever the setting says by then. 0 when the club has
+     * switched the moving off.
      */
     grantedMs: bigint("granted_ms", { mode: "number" }).notNull().default(0),
-    /** How many deadlines were moved. */
+    /** How much of `granted_ms` the moves have applied: every deadline running after `started_at + applied_ms` has been moved by it. */
+    appliedMs: bigint("applied_ms", { mode: "number" }).notNull().default(0),
+    /** The step in progress, `applied_ms` → this; null when none. A retried run finishes it by the same amount before another starts. */
+    stepMs: bigint("step_ms", { mode: "number" }),
+    /** How many deadlines were moved, each counted once however many steps moved it (`moved_keys`). */
     rowsMoved: integer("rows_moved").notNull().default(0),
-    /** How many of them, revived after their place was given meanwhile, were seated outside the places (§643, §648). */
-    placesOutside: integer("places_outside").notNull().default(0),
-    /** The event-blind deadlines (address links, a family's links, their tokens) moved, in their own transaction. */
+    /** The deadlines moved, as kind and id (`r:<id>:hold`, `r:<id>:link`, `i:<id>`, `p:<id>`, `f:<id>`, `s:<id>`): ids only, so each is counted once. */
+    movedKeys: jsonb("moved_keys").notNull().$type<string[]>().default([]),
+    /**
+     * How many claims it did not revive: an offer, a family's reservation or held place, or an
+     * invitation that lapsed while the door was shut and whose counted place was given meanwhile. The
+     * job seats nobody (§NNN): they lapse as they would have, and an Administrator decides.
+     */
+    claimsNotRevived: integer("claims_not_revived").notNull().default(0),
+    /** Those claims, by kind, id and event — ids only: the email names them at its send, «Sarcini» reads whether they still wait. */
+    notRevived: jsonb("not_revived").notNull().$type<NotRevivedClaim[]>().default([]),
+    /** The step's event-blind deadlines (address links, a family's links, their tokens) moved, in their own transaction. */
     linksMovedAt: timestamp("links_moved_at", { withTimezone: true }),
-    /** The events whose holds, offers and invitations were moved, each in its own locked transaction: a retried run skips them. */
+    /** The events whose holds, offers and invitations the step moved, each in its own locked transaction: a retried run skips them. */
     eventsMoved: jsonb("events_moved").notNull().$type<string[]>().default([]),
-    /** Every deadline of the window moved (or none to move): nothing left to do for it. */
+    /** When `applied_ms` last caught up with `granted_ms`: null while there is something left to move (or, closed, to announce). */
     appliedAt: timestamp("applied_at", { withTimezone: true }),
     /** When the Administrators were told it opened (a `dns` window only: a `pings` one is seen once it is over). */
     openedAnnouncedAt: timestamp("opened_announced_at", { withTimezone: true }),
@@ -67,7 +86,9 @@ export const unreachableWindows = pgTable(
     check("unreachable_windows_ends_after_start", sql`${t.endedAt} is null or ${t.endedAt} >= ${t.startedAt}`),
     // A `pings` window is over when it is seen; only a `dns` one is ever suspected.
     check("unreachable_windows_pings_confirmed", sql`${t.source} = 'dns' or ${t.confirmedAt} is not null`),
-    check("unreachable_windows_counts_non_negative", sql`${t.grantedMs} >= 0 and ${t.rowsMoved} >= 0 and ${t.placesOutside} >= 0`),
+    check("unreachable_windows_counts_non_negative", sql`${t.grantedMs} >= 0 and ${t.rowsMoved} >= 0 and ${t.claimsNotRevived} >= 0`),
+    // What is applied, or being applied, never exceeds what is given back.
+    check("unreachable_windows_applied_within_granted", sql`${t.appliedMs} >= 0 and ${t.appliedMs} <= ${t.grantedMs} and (${t.stepMs} is null or (${t.stepMs} >= ${t.appliedMs} and ${t.stepMs} <= ${t.grantedMs}))`),
   ],
 );
 

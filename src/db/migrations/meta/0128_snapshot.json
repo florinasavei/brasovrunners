@@ -1,5 +1,5 @@
 {
-  "id": "8658551a-05c5-48a7-a3dd-05fcf2f8cb38",
+  "id": "cae27632-4787-4ccf-941d-5814c743bb39",
   "prevId": "99f328f8-806f-446f-b570-765fc0ce73b9",
   "version": "7",
   "dialect": "postgresql",
@@ -6215,6 +6215,19 @@
           "notNull": true,
           "default": 0
         },
+        "applied_ms": {
+          "name": "applied_ms",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "step_ms": {
+          "name": "step_ms",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
         "rows_moved": {
           "name": "rows_moved",
           "type": "integer",
@@ -6222,12 +6235,26 @@
           "notNull": true,
           "default": 0
         },
-        "places_outside": {
-          "name": "places_outside",
+        "moved_keys": {
+          "name": "moved_keys",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "claims_not_revived": {
+          "name": "claims_not_revived",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "default": 0
+        },
+        "not_revived": {
+          "name": "not_revived",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
         },
         "links_moved_at": {
           "name": "links_moved_at",
@@ -6327,7 +6354,11 @@
         },
         "unreachable_windows_counts_non_negative": {
           "name": "unreachable_windows_counts_non_negative",
-          "value": "\"unreachable_windows\".\"granted_ms\" >= 0 and \"unreachable_windows\".\"rows_moved\" >= 0 and \"unreachable_windows\".\"places_outside\" >= 0"
+          "value": "\"unreachable_windows\".\"granted_ms\" >= 0 and \"unreachable_windows\".\"rows_moved\" >= 0 and \"unreachable_windows\".\"claims_not_revived\" >= 0"
+        },
+        "unreachable_windows_applied_within_granted": {
+          "name": "unreachable_windows_applied_within_granted",
+          "value": "\"unreachable_windows\".\"applied_ms\" >= 0 and \"unreachable_windows\".\"applied_ms\" <= \"unreachable_windows\".\"granted_ms\" and (\"unreachable_windows\".\"step_ms\" is null or (\"unreachable_windows\".\"step_ms\" >= \"unreachable_windows\".\"applied_ms\" and \"unreachable_windows\".\"step_ms\" <= \"unreachable_windows\".\"granted_ms\"))"
         }
       },
       "isRLSEnabled": false

@@ -1328,18 +1328,21 @@ Rules:
   cancelled or expired row through the form clears the mark;
 - while the door is shut — the site's public name answers «no such name» on two probes at least ten
   minutes apart, or no scheduler call arrives for longer than the pinger's own threshold — the
-  maintenance job lapses nothing while a `dns` window is open, and once a window is over it moves every hold,
-  offer, reservation, invitation and link deadline that was running at its start later by its length,
-  capped by «Termene» (`outageGraceMaxHours`; 0 switches the moving off, the windows are still recorded
-  and announced) and as the allocator caps it, under the event lock, compare-and-set, each link's live
-  token in lockstep, audited with no actor (`DECISIONS.md` §NNN, `registrations/outage-grace.ts`); this
-  is the one move of an invitation's deadline while somebody waits. A revived offer or invitation whose
-  counted place was given meanwhile is put on «Lista de invitați speciali» (`outside_capacity`) in that
-  same transaction rather than counted, so `occupied` never exceeds the capacity — the existing
-  exclusion, audited (`registration.seated_outside_for_outage_grace`), the one mark no Administrator
-  presses, set only on rows that run moved and whatever the event's «Folosește lista de invitați
-  speciali» (that switch governs the Administrators' verb, not this grace). A family's reservation or
-  held place in the same case is left to lapse, never seated outside;
+  maintenance job moves every hold, offer, reservation, invitation and link deadline that was running
+  later by the time the door was shut: while a `dns` window is open, on every real run by the time
+  since the run before (so none reads as lapsed, and the sweeps are held too); a `pings` window, seen
+  once it is over, in one step. Capped by «Termene» (`outageGraceMaxHours`; 0 switches the moving off,
+  the windows are still recorded and announced) and as the allocator caps it, under the event lock,
+  compare-and-set, each link's live token in lockstep, audited with no actor (`DECISIONS.md` §NNN,
+  `registrations/outage-grace.ts`); this is the one move of an invitation's deadline while somebody
+  waits. A claim whose deadline passed while the door was shut is revived only while its counted place
+  is still free, counted again under the lock (`occupied ≤ capacity`): otherwise its deadline is put
+  back, it lapses as it would have, it is audited (`registration.not_revived_for_outage`,
+  `event.invitation_not_revived_for_outage`) and named to the Administrators. The job never marks a
+  row outside the places and never raises a capacity — a supplementary place needs an Administrator's
+  confirmed press (§642), a row that consumes no place an Administrator's verb under the event's
+  own switch (§643, §648) — so the Administrator presses «Trimite-i oferta» or «Dă-i un loc acum», if
+  anybody does;
 - an invitation by email (`event_invitations`, §647) holds one counted place from the send until it is
   accepted, withdrawn or its deadline passes — the deadline compared on every read, so the place is free
   the instant it passes — unless it was sent «Pe lista de invitați speciali» (`outside_capacity`). It is the club's choice, like a

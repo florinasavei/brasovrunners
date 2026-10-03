@@ -72,7 +72,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { PINGER_CADENCE_MINUTES } from "@/modules/jobs/quiet-hours";
-import { readUnreachableWindows } from "@/modules/jobs/unreachable-windows";
+import { countNotRevivedWaiting, readUnreachableWindows } from "@/modules/jobs/unreachable-windows";
 import { unreachableWindowState } from "@/modules/registrations/domain/outage-grace";
 import { getPathname } from "@/i18n/navigation";
 import SubNav from "@/shared/ui/SubNav";
@@ -353,9 +353,10 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     !/vercel\.app$/i.test(hostname) && !/^(localhost|127\.0\.0\.1|\[::1\])$/i.test(hostname);
   // When the domain expires (§435): the two dates from the environment, the arithmetic pure.
   const domain = domainRenewal(env.DOMAIN_REGISTERED_ON, env.DOMAIN_RENEWAL_YEARS, now);
-  // The outage grace (§NNN): the latest windows, and what the row says of them.
+  // The outage grace (§NNN): the latest windows, the claims the newest left lapsed still waiting, and what the row says of them.
   const outageWindows = await readUnreachableWindows(db, 5);
-  const outage = unreachableWindowState(outageWindows, now);
+  const notRevivedWaiting = await countNotRevivedWaiting(db, outageWindows, now);
+  const outage = unreachableWindowState(outageWindows, now, notRevivedWaiting);
   const lastWindow = outageWindows[0] ?? null;
   const windowAt = (value: Date | null) => (value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }) : "—");
 
@@ -393,7 +394,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     windowUntil: windowAt(lastWindow?.endedAt ?? null),
     windowGranted: minutesPhrase(locale, Math.round((lastWindow?.grantedMs ?? 0) / 60_000)),
     windowMoved: String(lastWindow?.rowsMoved ?? 0),
-    windowOutside: String(lastWindow?.placesOutside ?? 0),
+    windowNotRevived: String(notRevivedWaiting),
   };
   /** `t.raw` returns the catalogue's array untouched, so the values are filled in here. */
   const fill = (step: string) =>

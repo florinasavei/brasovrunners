@@ -8,11 +8,17 @@ import { hoursPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-
  * deadlines have moved.
  *
  * The window's facts — its instants, what it gave back, the club's cap, the counts, from the payload
- * the job wrote (`registrations/outage-grace.ts`) — are the message's bold line; the paragraphs are the
- * platform's sentences alone, chosen by the case (how it was seen, whether the moving is off, whether
- * anybody was seated outside the places), so the club's own wording of them (§247, §359) never stores a
- * date or a count. Nothing about a person.
+ * the job wrote (`registrations/outage-grace.ts`) — are the message's bold line, and under it one link
+ * per claim the window did not revive (the person's name, the event, the backoffice page), resolved at
+ * the send from the ids the payload carries (`render.ts`): the staff see names, the outbox keeps none.
+ * The paragraphs are the platform's sentences alone, chosen by the case (how it was seen, whether the
+ * moving is off, whether any claim was not revived), so the club's own wording of them (§247, §359)
+ * never stores a date, a count or a name.
  */
+export type NotRevivedLine = { kind: NotRevivedKind; name: string | null; event: string; url: string };
+export type NotRevivedKind = "offer" | "familyReservation" | "invitation" | "placeHold";
+const NOT_REVIVED_KINDS: readonly NotRevivedKind[] = ["offer", "familyReservation", "invitation", "placeHold"];
+
 export type UnreachableWindowFacts = {
   startedAt: string;
   endedAt: string | null;
@@ -20,7 +26,9 @@ export type UnreachableWindowFacts = {
   grantedMinutes: number | null;
   maxHours: number;
   moved: number;
-  outside: number;
+  notRevived: number;
+  /** The claims not revived, named — filled at the send; empty in the payload itself. */
+  claims: NotRevivedLine[];
 };
 
 type Lang = "ro" | "en";
@@ -36,10 +44,22 @@ const MOVED: Record<Lang, Forms> = {
   ro: { one: "un termen mutat", few: "{n} termene mutate", other: "{n} de termene mutate" },
   en: { one: "one deadline moved", few: "{n} deadlines moved", other: "{n} deadlines moved" },
 };
-const OUTSIDE: Record<Lang, Forms> = {
-  ro: { one: "o înscriere pe «Lista de invitați speciali»", few: "{n} înscrieri pe «Lista de invitați speciali»", other: "{n} de înscrieri pe «Lista de invitați speciali»" },
-  en: { one: "one registration on «Special guests list»", few: "{n} registrations on «Special guests list»", other: "{n} registrations on «Special guests list»" },
+const NOT_REVIVED: Record<Lang, Forms> = {
+  ro: { one: "o cerere nereluată", few: "{n} cereri nereluate", other: "{n} de cereri nereluate" },
+  en: { one: "one claim not revived", few: "{n} claims not revived", other: "{n} claims not revived" },
 };
+
+/** What each claim was, in the link's label. */
+const KIND_WORDS: Record<Lang, Record<NotRevivedKind, string>> = {
+  ro: { offer: "ofertă", familyReservation: "rezervare de familie", invitation: "invitație", placeHold: "loc ținut pentru un formular de familie" },
+  en: { offer: "offer", familyReservation: "family reservation", invitation: "invitation", placeHold: "place held for a family form" },
+};
+
+/** One claim's link label: who (when the claim has a person), the event, and what it was. */
+export function notRevivedLabel(locale: Lang, line: NotRevivedLine): string {
+  const what = KIND_WORDS[locale][line.kind];
+  return line.name ? `${line.name} — ${line.event} (${what})` : `${line.event} (${what})`;
+}
 
 function counted(words: Record<Lang, Forms>, locale: Lang, n: number): string {
   return words[locale][countForm(n, locale)].replace("{n}", String(n));
@@ -58,6 +78,11 @@ export function windowOpenedFactsLine(locale: Lang, facts: UnreachableWindowFact
     : `Negăsit din ${at(facts.startedAt, locale)} · ceasul stă pe loc cel mult ${max}`;
 }
 
+/** The claims a window did not revive, one link each under the bold line: name, event, what it was, its backoffice page. */
+export function notRevivedLinks(locale: Lang, facts: UnreachableWindowFacts): { label: string; url: string }[] {
+  return facts.claims.map((line) => ({ label: notRevivedLabel(locale, line), url: line.url }));
+}
+
 /** «Ceasul termenelor a stat pe loc»'s bold line: from when to when, how it was seen, what was given back and the counts. */
 export function windowClosedFactsLine(locale: Lang, facts: UnreachableWindowFacts): string {
   const granted = minutesPhrase(locale, facts.grantedMinutes ?? 0);
@@ -73,7 +98,7 @@ export function windowClosedFactsLine(locale: Lang, facts: UnreachableWindowFact
     `${at(facts.startedAt, locale)} – ${at(facts.endedAt, locale)} (${seen})`,
     locale === "en" ? `given back ${granted}` : `dat înapoi ${granted}`,
     counted(MOVED, locale, facts.moved),
-    ...(facts.outside > 0 ? [counted(OUTSIDE, locale, facts.outside)] : []),
+    ...(facts.notRevived > 0 ? [counted(NOT_REVIVED, locale, facts.notRevived)] : []),
   ];
   return parts.join(" · ");
 }
@@ -106,13 +131,13 @@ export function windowOpenedBody(locale: Lang, facts?: UnreachableWindowFacts): 
 
 /**
  * «Ceasul termenelor a stat pe loc»'s paragraphs: how it was seen, what moved (or that the moving is
- * off), who is above the advertised places — only when anybody is — and what the reader should do, one
- * fixed sentence per case (`pings` or `dns`; nobody outside, or somebody).
+ * off), the claims not revived and the two verbs that can seat them — only when there are any — and
+ * what the reader should do, one fixed sentence per case (`pings` or `dns`; none left, or some).
  */
 export function windowClosedBody(locale: Lang, facts?: UnreachableWindowFacts): string[] {
   const pings = facts?.source === "pings";
   const off = (facts?.maxHours ?? 1) <= 0 || (facts?.grantedMinutes ?? 1) <= 0;
-  const outside = (facts?.outside ?? 0) > 0;
+  const left = (facts?.notRevived ?? 0) > 0;
   if (locale === "en") {
     return [
       pings
@@ -121,14 +146,20 @@ export function windowClosedBody(locale: Lang, facts?: UnreachableWindowFacts): 
       off
         ? "«Deadlines» has the moving switched off: no deadline moved. The outage is recorded on «Tasks»."
         : "The participants' deadlines that were running then moved later by the time above, at most what «Deadlines» says.",
-      ...(outside ? ["Whoever had lost the place to somebody else meanwhile is on «Special guests list», above the advertised places."] : []),
+      ...(left
+        ? [
+            "The claims listed above had lapsed while the site could not be reached and their place had been given meanwhile: they were not revived, and lapsed as they would have.",
+            "The platform seats nobody beyond the advertised places. An administrator may, with one confirmed extra place: «Send them the offer» (waiting list) or «Give them a place now» (unconfirmed address).",
+            "A lapsed offer is back on the waiting list once the person registers again with the same address; an invitation can be sent again.",
+          ]
+        : []),
       "Nobody was emailed about it: the new deadline is on the person's own page and in each registration's history.",
       pings
-        ? outside
-          ? "Check that the hours above look right, then «Registrations» → «Special guests list»: those people hold a place above the advertised ones."
+        ? left
+          ? "Check that the hours above look right, then open each person above and decide whether to give them a place."
           : "Nothing to do, unless the hours above look wrong: then check that the monitors call the site."
-        : outside
-          ? "Check at the registrar why the name was gone, then «Registrations» → «Special guests list»: those people hold a place above the advertised ones."
+        : left
+          ? "Check at the registrar why the name was gone, then open each person above and decide whether to give them a place."
           : "Nothing to do for the participants. Check at the registrar why the name was gone, so it does not happen again.",
     ];
   }
@@ -139,19 +170,25 @@ export function windowClosedBody(locale: Lang, facts?: UnreachableWindowFacts): 
     off
       ? "«Termene» are mutarea oprită: niciun termen nu s-a mutat. Întreruperea e înregistrată în «Sarcini»."
       : "Termenele participanților care curgeau atunci s-au mutat mai târziu cu timpul de mai sus, cel mult cât spune «Termene».",
-    ...(outside ? ["Cine își pierduse între timp locul în favoarea altcuiva e pe «Lista de invitați speciali», peste locurile anunțate."] : []),
+    ...(left
+      ? [
+          "Cererile de mai sus expiraseră cât site-ul nu putea fi accesat, iar locul lor fusese dat între timp: nu au fost reluate și au expirat cum ar fi expirat oricum.",
+          "Platforma nu așază pe nimeni peste locurile anunțate. Un administrator poate, cu un loc suplimentar confirmat: «Trimite-i oferta» (lista de așteptare) sau «Dă-i un loc acum» (adresă neconfirmată).",
+          "O ofertă expirată revine pe lista de așteptare când persoana se înscrie din nou cu aceeași adresă; o invitație se poate trimite din nou.",
+        ]
+      : []),
     "Participanților nu li s-a trimis nimic: termenul nou e în pagina lor și în istoricul fiecărei înscrieri.",
     pings
-      ? outside
-        ? "Verifică dacă orele de mai sus par corecte, apoi «Înscrieri» → «Lista de invitați speciali»: acolo sunt cei cu loc peste cele anunțate."
+      ? left
+        ? "Verifică dacă orele de mai sus par corecte, apoi deschide fiecare persoană de mai sus și decide dacă îi dai un loc."
         : "Nimic de făcut, doar dacă orele de mai sus par greșite: atunci verifică dacă monitoarele apelează site-ul."
-      : outside
-        ? "Verifică la registrar de ce lipsea numele, apoi «Înscrieri» → «Lista de invitați speciali»: acolo sunt cei cu loc peste cele anunțate."
+      : left
+        ? "Verifică la registrar de ce lipsea numele, apoi deschide fiecare persoană de mai sus și decide dacă îi dai un loc."
         : "Nimic de făcut pentru participanți. Verifică la registrar de ce lipsea numele, ca să nu se repete.",
   ];
 }
 
-/** The payload as the job wrote it, read leniently: a field it cannot read is the empty one. */
+/** The payload as the job wrote it, read leniently: a field it cannot read is the empty one. The claims are filled at the send. */
 export function readUnreachableWindowFacts(payload: unknown): UnreachableWindowFacts {
   const value = (payload ?? {}) as Record<string, unknown>;
   const text = (key: string) => (typeof value[key] === "string" ? (value[key] as string) : null);
@@ -163,6 +200,18 @@ export function readUnreachableWindowFacts(payload: unknown): UnreachableWindowF
     grantedMinutes: whole("grantedMinutes"),
     maxHours: whole("maxHours") ?? 0,
     moved: whole("moved") ?? 0,
-    outside: whole("outside") ?? 0,
+    notRevived: whole("notRevived") ?? 0,
+    claims: [],
   };
+}
+
+/** The claims' ids the payload carries (`registrations/outage-grace.ts`), read leniently: anything unreadable is left out. */
+export function readNotRevivedRefs(payload: unknown): { kind: NotRevivedKind; id: string; eventId: string }[] {
+  const claims = ((payload ?? {}) as { claims?: unknown }).claims;
+  if (!Array.isArray(claims)) return [];
+  return claims.flatMap((claim) => {
+    const item = (claim ?? {}) as Record<string, unknown>;
+    const kind = NOT_REVIVED_KINDS.find((known) => known === item.kind);
+    return kind && typeof item.id === "string" && typeof item.eventId === "string" ? [{ kind, id: item.id, eventId: item.eventId }] : [];
+  });
 }

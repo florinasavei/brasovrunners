@@ -25,7 +25,14 @@ import { weatherSpanWords } from "@/modules/weather/words";
 import { CANNOT_COME_GLYPH_PATH, CANNOT_COME_MESSAGES } from "./domain/cannot-come";
 import type { HoldLapsedNext } from "./domain/hold-lapsed";
 import { legalTemplateNames, legalTemplatesWords } from "./legal-templates-words";
-import { type UnreachableWindowFacts, windowClosedBody, windowClosedFactsLine, windowOpenedBody, windowOpenedFactsLine } from "./outage-grace-words";
+import {
+  notRevivedLinks,
+  type UnreachableWindowFacts,
+  windowClosedBody,
+  windowClosedFactsLine,
+  windowOpenedBody,
+  windowOpenedFactsLine,
+} from "./outage-grace-words";
 import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
 
 /**
@@ -1656,7 +1663,7 @@ const T = {
     // To the Administrators (§NNN): the window is over, what moved, and what to check.
     unreachableWindowClosed: {
       subject: "Ceasul termenelor a stat pe loc: ce s-a mutat",
-      facts: (d: TemplateData) => (d.unreachableWindow ? { line: windowClosedFactsLine("ro", d.unreachableWindow), links: [] } : undefined),
+      facts: (d: TemplateData) => (d.unreachableWindow ? { line: windowClosedFactsLine("ro", d.unreachableWindow), links: notRevivedLinks("ro", d.unreachableWindow) } : undefined),
       body: (d: TemplateData) => windowClosedBody("ro", d.unreachableWindow),
       action: "Deschide «Sarcini»",
     },
@@ -2322,7 +2329,7 @@ const T = {
     },
     unreachableWindowClosed: {
       subject: "The deadlines' clock stood still: what moved",
-      facts: (d: TemplateData) => (d.unreachableWindow ? { line: windowClosedFactsLine("en", d.unreachableWindow), links: [] } : undefined),
+      facts: (d: TemplateData) => (d.unreachableWindow ? { line: windowClosedFactsLine("en", d.unreachableWindow), links: notRevivedLinks("en", d.unreachableWindow) } : undefined),
       body: (d: TemplateData) => windowClosedBody("en", d.unreachableWindow),
       action: "Open «Tasks»",
     },

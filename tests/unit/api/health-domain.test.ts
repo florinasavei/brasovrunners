@@ -60,8 +60,8 @@ describe("§NNN the domain block of /api/health", () => {
 
   it("is degraded while the job holds a window open, and names the latest one over by its instants alone", async () => {
     readUnreachableWindows.mockResolvedValue([
-      { id: "a", source: "dns", startedAt: new Date("2026-10-03T14:00:00.000Z"), endedAt: null, rowsMoved: 4, placesOutside: 1 },
-      { id: "b", source: "pings", startedAt: new Date("2026-10-01T07:00:00.000Z"), endedAt: new Date("2026-10-01T09:00:00.000Z"), rowsMoved: 2, placesOutside: 0 },
+      { id: "a", source: "dns", startedAt: new Date("2026-10-03T14:00:00.000Z"), endedAt: null, rowsMoved: 4, claimsNotRevived: 1 },
+      { id: "b", source: "pings", startedAt: new Date("2026-10-01T07:00:00.000Z"), endedAt: new Date("2026-10-01T09:00:00.000Z"), rowsMoved: 2, claimsNotRevived: 0 },
     ]);
     const response = await deep();
     const body = await response.json();
@@ -72,7 +72,7 @@ describe("§NNN the domain block of /api/health", () => {
       lastUnreachable: { startedAt: "2026-10-01T07:00:00.000Z", endedAt: "2026-10-01T09:00:00.000Z" },
     });
     // A public body: no counts of anybody's registrations.
-    expect(JSON.stringify(body.domain)).not.toMatch(/rowsMoved|placesOutside|moved/);
+    expect(JSON.stringify(body.domain)).not.toMatch(/rowsMoved|claimsNotRevived|moved|Revived/);
   });
 
   it("reads an unknown answer as nothing known, never as a shut door", async () => {

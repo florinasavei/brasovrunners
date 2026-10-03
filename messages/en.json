@@ -758,7 +758,7 @@
           "address_vouched_by_staff": "Address vouched for by the team; place given ahead of the waiting list (“Give them a place now”)",
           "outside_capacity_changed": "Put on the special guests list, or taken off it",
           "deadline_moved_for_outage": "Deadline moved: the site could not be reached, the clock stood still",
-          "seated_outside_for_outage_grace": "Put on the special guests list by the outage grace: the place had been given meanwhile",
+          "not_revived_for_outage": "Not revived after the outage: the deadline had passed while the site could not be reached, and the place had been given meanwhile",
           "answer_corrected": "Answer corrected: {field}",
           "answers_viewed": "Answers opened, with the phone and the emergency contact"
         },
@@ -3283,15 +3283,16 @@
         "unreachableWindow": {
           "title": "The site unreachable: the deadlines' clock",
           "todo": "The site could not be reached from {windowFrom} to {windowUntil}: {windowGranted} given back, deadlines moved: {windowMoved}.",
-          "done": "No outage needs a look: the newest one, if any, seated nobody above the advertised places.",
-          "open": "The site's name has not resolved since {windowFrom}. Nothing lapses until it is back; then the deadlines move by as long as it lasted.",
+          "done": "No outage needs a look: the newest one, if any, left nobody without the place they had.",
+          "open": "The site's name has not resolved since {windowFrom}. On every run the running deadlines move by the time elapsed, so nothing lapses until it is back.",
           "stuck": "The outage from {windowFrom} to {windowUntil} is over, but its deadlines could not be moved yet: the scheduled job keeps trying; its last error is on /devs.",
-          "outside": "The outage from {windowFrom} to {windowUntil} gave back {windowGranted}. Registrations seated above the advertised places because of it: {windowOutside}.",
+          "notRevived": "The outage from {windowFrom} to {windowUntil} left claims lapsed whose place had been given meanwhile; still waiting for a decision: {windowNotRevived}.",
           "how": [
             "Check the domain at the registrar: the account, the contact verification emails, the renewal payment.",
             "While the name is gone, nothing lapses. When it is back, the scheduled jobs move the deadlines by themselves and send «The deadlines' clock stood still».",
-            "Open «Events» → the event's registrations → the «Special guests list» filter: whoever is there because of the outage has «Put on the special guests list by the outage grace» in their history.",
-            "The row stays red while the newest outage has registrations above the advertised places, and turns green once an outage seats nobody."
+            "The email names each person whose place had been given meanwhile: nobody is seated beyond the advertised places by itself; an administrator decides.",
+            "With one confirmed extra place: «Send them the offer» to somebody on the waiting list, «Give them a place now» to an unconfirmed address; an invitation can be sent again.",
+            "The row stays red while one of them is still waiting and the event has not started."
           ]
         },
         "contactForm": {
@@ -5022,7 +5023,7 @@
           "familySittingMinutes": "After “Yes, one more person”, the family's email waits for “Done” at most this many minutes after the last form and leaves once, for everybody; at 0, each email leaves at once.",
           "verificationRetryHours": "Counted from when the last confirmation email left, to whoever has not confirmed yet. The link's deadline does not move.",
           "verificationRetries": "Every confirmation email counts, “Resend” and a backoffice resend included. 0 = never re-sent by itself. The deadline does not move.",
-          "outageGraceMaxHours": "Name not found, or no scheduled call: nothing lapses, then the running deadlines move by as long as it lasted, at most this many hours. 0 = no moving; outages are still recorded and emailed."
+          "outageGraceMaxHours": "While the name is not found nothing lapses. After a silence of the scheduled calls, the deadlines are moved afterwards, where the place is still free. At most this many hours; 0 = no moving."
         },
         "legal": "Legal texts already approved keep the numbers written in them until you approve a new version from the template, which reads them from here.",
         "updatedAt": "Set {when}.",
@@ -5177,7 +5178,7 @@
         "REGISTER_ANOTHER_PERSON": "No registration is created, and the screen says “check your email” as always. If the address already has {people}, the email says only that, with no link.",
         "LEGAL_TEMPLATES_CHANGED": "The check runs with the scheduled jobs, at most once an hour. A change approved before the check is not announced; «Tasks» shows the same rows.",
         "UNREACHABLE_WINDOW_OPENED": "While the name does not resolve nothing lapses. It leaves on the club's road, which does not depend on the club's domain.",
-        "UNREACHABLE_WINDOW_CLOSED": "The deadlines move by as long as the outage lasted, at most what «Deadlines» says. Whoever lost the place meanwhile is put on the special guests list."
+        "UNREACHABLE_WINDOW_CLOSED": "The deadlines move by as long as the outage lasted, at most what «Deadlines» says. Whoever lost the place meanwhile is named in the email; an administrator decides."
       },
       "confirmationRetry": "To whoever has not confirmed, the link goes again by itself {retry} after the last email, at most {times}; “Resend” counts too. The deadline does not move.",
       "confirmationRetryOff": "It is not re-sent by itself: in “Deadlines”, the number of resends is 0."
@@ -7927,7 +7928,8 @@
       "cadenceEvery": "Minimum interval: {minutes} min between two real runs (Settings → Costs)."
     },
     "unreachable": {
-      "domain": "The site's name: {host} — {answer}, asked now. The maintenance job asks it on every real run.",
+      "domain": "The site's name: {host} — {answer}, at the maintenance job's last real run ({when}). This page does not ask it.",
+      "domainUnknown": "The site's name: no answer remembered from the maintenance job's last real run. This page does not ask it.",
       "domainSkipped": "The site's name is not asked on this deployment: a laptop, a test, or an address that is a number.",
       "answer": {
         "resolves": "resolves",
@@ -7937,8 +7939,8 @@
       },
       "none": "The deadlines' clock: no outage recorded.",
       "windows": "The deadlines' clock — the last outages, newest first:",
-      "open": "since {from}: the site's name does not resolve; nothing lapses until it is back.",
-      "closed": "{from} – {until} ({source}): given back {granted}; deadlines moved: {moved}; seated above the advertised places: {outside}.",
+      "open": "since {from}: the site's name does not resolve; the deadlines move on every run, nothing lapses until it is back.",
+      "closed": "{from} – {until} ({source}): given back {granted}; deadlines moved: {moved}; claims not revived, the place given meanwhile: {notRevived}.",
       "source": {
         "dns": "the name not found",
         "pings": "no scheduled call"

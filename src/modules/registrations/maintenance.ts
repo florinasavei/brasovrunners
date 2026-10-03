@@ -69,10 +69,11 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   legalTemplatesNoticesQueued: number;
   /**
    * The outage grace (§NNN): what the site's name answered this run (`resolves`, `unresolved`,
-   * `unknown`, `skipped`), whether this run held every lapse — a `dns` window is open — and how many
-   * deadlines a window that is over moved, and how many of those were seated outside the places.
+   * `unknown`, `skipped`), whether this run held every lapse — a `dns` window is open — how many
+   * deadlines a window moved, and how many lapsed claims it did not revive because their place was
+   * given meanwhile.
    */
-  outageGrace: { domain: string; holding: boolean; moved: number; outside: number; noticesQueued: number };
+  outageGrace: { domain: string; holding: boolean; moved: number; notRevived: number; noticesQueued: number };
   /**
    * The failures the very next run could repair — an event's queue work, a reminder, a
    * confirmation, an announcement, a retention step — as opposed to the tidying ones (pictures,
@@ -94,18 +95,18 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
 
   /*
     The clock stops while the door is shut (§NNN), first — detect, move, then sweep: before anything
-    below lapses an address link, a hold, an offer, an invitation or a family's form, a window that is
-    over moves the deadlines that were running in it, and a `dns` window still open (the site's name
-    does not resolve) holds every lapse of this run. Caught on its own: a failure here is counted, as
+    below lapses an address link, a hold, an offer, an invitation or a family's form, a window moves
+    the deadlines that were running in it — a `dns` window still open (the site's name does not
+    resolve) by the time since the last run, and holds every lapse of this run besides. Caught on its own: a failure here is counted, as
     retryable while the next ping may still repair it, and the run goes on as it did before the door
     was watched — the step never stops the job.
   */
-  let outageGrace = { domain: "unknown", holding: false, moved: 0, outside: 0, noticesQueued: 0 };
+  let outageGrace = { domain: "unknown", holding: false, moved: 0, notRevived: 0, noticesQueued: 0 };
   let outageFailed = 0;
   let outageRetryable = 0;
   try {
     const result = await applyOutageGrace(db, now, settings, outageDeps);
-    outageGrace = { domain: result.domain, holding: result.holding, moved: result.moved, outside: result.outside, noticesQueued: result.noticesQueued };
+    outageGrace = { domain: result.domain, holding: result.holding, moved: result.moved, notRevived: result.notRevived, noticesQueued: result.noticesQueued };
     outageFailed = result.failures;
     outageRetryable = result.retryableFailures;
   } catch (error) {

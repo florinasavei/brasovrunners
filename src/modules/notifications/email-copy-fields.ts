@@ -118,7 +118,9 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
       grantedMinutes: 420,
       maxHours: 48,
       moved: 12,
-      outside: 1,
+      notRevived: 1,
+      // One offer the window did not revive, named as the send names it: the sample's person and event.
+      claims: [{ kind: "offer", name: sample.participantName, event: sample.eventTitle, url: `${base}/${locale}/admin/registrations/EXAMPLE` }],
     },
     // The facts block (§392), each half in its own language, from the sample event — never a fact typed here.
     eventFacts: emailSampleEventFacts(locale),
