@@ -72,10 +72,13 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
   const deadline = (at: Date) => formatDay(at, { locale, timeZone: event.timezone, style: "short", withTime: true });
 
   let form: ReactNode = null;
+  // Everyone eligible who waits: while it is not 0, «Retrimite» keeps a counted invitation's deadline (§10.6).
+  let waiting = 0;
   if (mayManage) {
     // The waiting always subtracted, as the server does under the lock — whatever the auto-offer setting or the close.
     const [members, forecast] = await Promise.all([listStaffUsers(db), readInvitationForecast(db, eventId, now)]);
     const free = forecast?.free ?? null;
+    waiting = forecast?.waiting ?? 0;
     const counted = (key: string) => ({ one: t.raw(`${key}.one`) as string, few: t.raw(`${key}.few`) as string, other: t.raw(`${key}.other`) as string });
     const words: InviteFormWords = {
       membersLegend: t("invitations.membersLegend"),
@@ -144,6 +147,12 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
           <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }} data-testid="invitations-list">
             {invitations.map((row) => {
               const state = invitationState(row, now);
+              /*
+                A counted place while somebody waits: the deadline cannot move later (the server keeps it
+                under the lock whatever is typed), so no days box and the dialog says so. The hidden list
+                holds no counted place and keeps both.
+              */
+              const deadlineFixed = !row.outsideCapacity && waiting > 0;
               return (
                 <Box component="li" key={row.id} sx={{ py: 1.5, borderTop: 1, borderColor: "divider" }} data-testid="invitation-row">
                   <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ alignItems: { sm: "center" }, flexWrap: "wrap" }}>
@@ -176,7 +185,13 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                     <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mt: 1, alignItems: { sm: "flex-end" } }}>
                       <ActionForm
                         action={resendAction}
-                        confirm={[
+                        confirm={deadlineFixed ? {
+                          title: t("invitations.resendTitle"),
+                          body: t("invitations.resendBodyWaiting", { name: row.name }),
+                          email: dialog.email(1),
+                          confirmLabel: t("invitations.resend"),
+                          cancelLabel: dialog.cancel,
+                        } : [
                           // The box left empty keeps the deadline: only a number typed in it moves it, and the dialog says which.
                           {
                             title: t("invitations.resendTitle"),
@@ -201,14 +216,14 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                         <input type="hidden" name="eventId" value={eventId} />
                         <input type="hidden" name="invitationId" value={row.id} />
                         <Stack direction="row" spacing={1} sx={{ alignItems: "flex-end" }}>
-                          <TextField
+                          {!deadlineFixed && <TextField
                             name="days"
                             label={t("invitations.resendDays")}
                             type="number"
                             size="small"
                             slotProps={{ htmlInput: { min: 1, max: INVITATION_DAYS_MAX, step: 1, inputMode: "numeric" } }}
                             sx={{ width: 150 }}
-                          />
+                          />}
                           <GlyphSubmitButton icon="resend" label={t("invitations.resend")} pendingLabel={t("invitations.resending")} variant="outlined" size="small" />
                         </Stack>
                       </ActionForm>

@@ -24,8 +24,9 @@ function text(form: FormData, name: string): string {
  * - `error=<code>&fields=<names>` — the form refused (a field, the terms changed since the page was
  *   read, this runner on the address already), the spend rolled back with it, what was typed kept in
  *   the draft cookie (§142) and the same link still working;
- * - nothing — the link no longer accepts (spent, withdrawn, past its deadline, replaced): the page
- *   reads it again and says which.
+ * - `refused=<kind>` — the link no longer accepts (spent, withdrawn, past its deadline, the event
+ *   called off or started, replaced): nothing was spent (every check runs before the token is), and
+ *   the page says the press's own answer rather than a second read's.
  *
  * Markers and field names only, never a value (§14.5). The address is never read from the form: it is
  * the invitation's, as the token names it.
@@ -49,7 +50,7 @@ export async function acceptInvitationAction(form: FormData): Promise<void> {
     }
     throw error;
   }
-  if (!accepted.ok) redirect(path);
+  if (!accepted.ok) redirect(`${path}?refused=${accepted.kind}`);
   await clearFormDraft(path);
   redirect(`${path}?done=1`);
 }

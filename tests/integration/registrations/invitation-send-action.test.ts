@@ -1,5 +1,6 @@
 import { eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventInvitations } from "@/db/schema/event-invitations";
 import { events, eventTranslations } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
@@ -20,7 +21,11 @@ vi.mock("@/modules/staff-identity/session", () => ({
   requireStaff: async () => state.actor,
   requireStaffCapability: async () => state.actor,
 }));
-vi.mock("@/i18n/navigation", () => ({ getPathname: () => "/ro/admin/registrations" }));
+vi.mock("@/i18n/navigation", () => ({
+  // The route's own name, its token in place: enough for a link to be found in an email and a redirect to be read.
+  getPathname: ({ href }: { href: string | { pathname: string; params: Record<string, string> } }) =>
+    typeof href === "string" ? `/ro${href}` : `/ro${href.pathname.replace(/\[(\w+)\]/g, (_, key: string) => href.params[key])}`,
+}));
 vi.mock("@/shared/feedback/flash", () => ({ flashOutcome: async () => undefined }));
 vi.mock("next/navigation", () => ({
   redirect: (to: string) => {
@@ -38,6 +43,9 @@ vi.mock("@/modules/notifications/drain", () => ({
 
 const { inviteAction } = await import("@/app/[locale]/admin/registrations/invitation-actions");
 const { readInvitationForecast } = await import("@/modules/registrations/admin-service");
+const { acceptInvitationAction } = await import("@/app/[locale]/registrations/invitation/[token]/actions");
+const { withdrawInvitationByStaff } = await import("@/modules/registrations/service");
+const { renderOutboxMessage } = await import("@/modules/notifications/render");
 
 let db: TestDatabase;
 let close: () => Promise<void>;
@@ -95,7 +103,7 @@ describe("§NNN a refused send hands the next dialog the server's numbers", () =
   it("the page drawn with a free place, the place taken since: refused with the new numbers, and the second press goes through", async () => {
     const eventId = await createEvent(1);
     const drawn = await readInvitationForecast(db, eventId, new Date());
-    expect(drawn).toEqual({ capacity: 1, free: 1 });
+    expect(drawn).toEqual({ capacity: 1, free: 1, waiting: 0 });
 
     // Another Administrator's invitation takes the free place after the page was drawn.
     await expect(inviteAction(null, press(eventId, "Ana Pop <ana@example.invalid>", named(drawn!, 1)))).rejects.toThrow(/REDIRECT .*saved=invitationsSent/);
@@ -119,5 +127,25 @@ describe("§NNN a refused send hands the next dialog the server's numbers", () =
     const refused = await inviteAction(null, press(eventId, "Ana Pop <ana@example.invalid>\nAna P. <ana@example.invalid>", null));
     expect(refused).toMatchObject({ error: "INVITATION_DUPLICATE", forecast: { capacity: 3, free: 3 } });
     expect(await db.execute(sql`select count(*)::int as n from event_invitations`)).toMatchObject({ rows: [{ n: 0 }] });
+  });
+});
+
+describe("§NNN a refused press of the invitation's form says the press's own answer", () => {
+  it("withdrawn before the press: the action lands on the link's page with `refused=withdrawn`, the token unspent", async () => {
+    const eventId = await createEvent(3);
+    await expect(inviteAction(null, press(eventId, "Ana Pop <ana@example.invalid>", null))).rejects.toThrow(/REDIRECT .*saved=invitationsSent/);
+    const [mail] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "EVENT_INVITATION"));
+    const message = await renderOutboxMessage({ ...mail, status: "PROCESSING", attemptCount: 1, lockedAt: new Date() }, db, new Date());
+    const secret = /\/registrations\/invitation\/([A-Za-z0-9_-]{43})(?![A-Za-z0-9_-])/.exec(message.text)?.[1];
+    expect(secret).toBeDefined();
+    const [invitation] = await db.select().from(eventInvitations).where(eq(eventInvitations.eventId, eventId));
+    await withdrawInvitationByStaff(db, invitation.id, admin, new Date());
+
+    const form = new FormData();
+    form.set("locale", "ro");
+    form.set("invitationToken", secret!);
+    form.set("firstName", "Ana");
+    await expect(acceptInvitationAction(form)).rejects.toThrow(/REDIRECT \/ro\/registrations\/invitation\/[A-Za-z0-9_-]{43}\?refused=withdrawn$/);
+    expect(await db.execute(sql`select count(*)::int as n from email_action_tokens where purpose = 'ACCEPT_INVITATION' and used_at is not null`)).toMatchObject({ rows: [{ n: 0 }] });
   });
 });

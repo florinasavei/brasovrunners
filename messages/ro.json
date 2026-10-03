@@ -6554,6 +6554,7 @@
       "openRegistration": "Deschide înscrierea",
       "resendTitle": "Retrimiți invitația?",
       "resendBody": "{name} primește invitația din nou, cu un link nou; linkul vechi nu mai merge. Termenul devine peste {days} zile de acum, dacă e mai târziu decât cel de acum.",
+      "resendBodyWaiting": "{name} primește invitația din nou, cu un link nou; linkul vechi nu mai merge. Termenul rămâne cel de acum: cineva așteaptă pe lista de așteptare, iar locul e al lor la termen.",
       "resendBodyKept": "{name} primește invitația din nou, cu un link nou; linkul vechi nu mai merge. Termenul rămâne cel de acum; ca să-l muți mai târziu, scrie numărul de zile.",
       "resendDays": "Zile (opțional)",
       "resend": "Retrimite",
@@ -8201,6 +8202,7 @@
         "other": "{count} de invitații trimise; capacitatea e acum {capacity}."
       },
       "invitationResent": "Invitație retrimisă, cu un link nou.",
+      "invitationResentKept": "Invitație retrimisă, cu un link nou. Termenul a rămas cel de acum: cineva așteaptă pe lista de așteptare.",
       "invitationWithdrawn": "Invitație retrasă; locul s-a eliberat."
     }
   },

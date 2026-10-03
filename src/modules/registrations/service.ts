@@ -4363,6 +4363,14 @@ async function lockOpenInvitation<T extends Record<string, unknown>>(tx: Transac
  * (§619: its page says a newer email has it) — and the deadline kept (no `days`) or moved to `days` from
  * now, capped by the start as at the send. Never earlier than it was: a resend does not take time back.
  * `resend_count + 1`, audited. The Administrator's alone.
+ *
+ * Never later while anyone eligible waits, for an invitation that holds a counted place (the
+ * invitations review of 2026-10-03): the place goes back «only at the deadline» (AGENTS.md §10.6), and
+ * that deadline is the one the waiting queued behind — moving it would keep a counted place ahead of
+ * them, again at every resend, without the confirmed supplementary place a send would need. Asked under
+ * the lock (`countEligibleWaitlisted`); the link and the email are re-issued, the deadline kept, and the
+ * result says so (`kept: "waiting"`). An invitation «Pe lista ascunsă» holds no counted place and may
+ * be extended whoever waits.
  */
 export async function resendInvitationByStaff<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -4370,7 +4378,7 @@ export async function resendInvitationByStaff<T extends Record<string, unknown>>
   input: { days: number | null },
   actor: { id: string; role: StaffRole },
   now: Date,
-): Promise<{ expiresAt: Date }> {
+): Promise<{ expiresAt: Date; kept: "waiting" | null }> {
   if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not resend an invitation`);
   if (input.days !== null && !validInvitationDays(input.days)) throw new InvitationRefusal("INVITATION_BAD_DAYS");
   const settings = await currentDeadlines(db);
@@ -4378,7 +4386,10 @@ export async function resendInvitationByStaff<T extends Record<string, unknown>>
     const { invitation, lockedEvent } = await lockOpenInvitation(tx, invitationId, now);
     if (lockedEvent.eventStatus !== "SCHEDULED" || lockedEvent.startsAt.getTime() <= now.getTime()) throw new InvitationRefusal("INVITATION_EVENT_CLOSED", invitation.name);
     const moved = input.days === null ? null : invitationDeadline({ now, days: input.days, startsAt: lockedEvent.startsAt });
-    const expiresAt = moved && moved.getTime() > invitation.expiresAt.getTime() ? moved : invitation.expiresAt;
+    const later = moved !== null && moved.getTime() > invitation.expiresAt.getTime();
+    // A counted place is never held longer while anybody eligible waits for one; the hidden list holds none.
+    const waitingBlocks = later && !invitation.outsideCapacity && (await repo.countEligibleWaitlisted(tx, invitation.eventId)) > 0;
+    const expiresAt = later && !waitingBlocks ? moved : invitation.expiresAt;
     await tx
       .update(eventInvitations)
       .set({ expiresAt, lastSentAt: now, resendCount: invitation.resendCount + 1 })
@@ -4401,15 +4412,15 @@ export async function resendInvitationByStaff<T extends Record<string, unknown>>
       action: "event.invitation_resent",
       entityType: "event",
       entityId: invitation.eventId,
-      metadata: { invitationId: invitation.id, from: invitation.expiresAt.toISOString(), to: expiresAt.toISOString() },
+      metadata: { invitationId: invitation.id, from: invitation.expiresAt.toISOString(), to: expiresAt.toISOString(), ...(waitingBlocks ? { keptForWaiting: true } : {}) },
       now,
     });
-    return { expiresAt, lockedEvent };
+    return { expiresAt, lockedEvent, kept: waitingBlocks ? ("waiting" as const) : null };
   });
   // The kept place's deadline may have moved: the public count's instants with it (§333).
   revalidatePublicContent("places");
   wakeMaintenance(publicFormEvent(result.lockedEvent, result.lockedEvent.publishedAt), now, settings, result.expiresAt);
-  return { expiresAt: result.expiresAt };
+  return { expiresAt: result.expiresAt, kept: result.kept };
 }
 
 /**

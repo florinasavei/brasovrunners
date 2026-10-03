@@ -23,7 +23,7 @@ import { yearsPhrase } from "@/modules/registrations/domain/age";
 import { ERROR_SUMMARY_ID, parseInvalidFields } from "@/modules/registrations/form-errors";
 import { readFormDraft } from "@/modules/registrations/form-draft";
 import { fieldId, formViewOf } from "@/modules/registrations/form-view";
-import { readInvitationLink } from "@/modules/registrations/invitations";
+import { type InvitationLink, isRefusedKind, readInvitationLink, type RefusedKind } from "@/modules/registrations/invitations";
 import { registrationFacts, registrationForm } from "@/modules/registrations/ui/registration-form";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { spamHintWords } from "@/modules/registrations/ui/link-wait-words";
@@ -35,7 +35,7 @@ import { acceptInvitationAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
-  searchParams: Promise<{ done?: string; error?: string; fields?: string }>;
+  searchParams: Promise<{ done?: string; error?: string; fields?: string; refused?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -58,7 +58,7 @@ export default async function InvitationPage({ params, searchParams }: Props) {
   const { locale, token } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
-  const { done, error, fields } = await searchParams;
+  const { done, error, fields, refused } = await searchParams;
   const t = await getTranslations("Registration");
   const contactHref = getPathname({ locale, href: "/contact" });
   const contactLink = (
@@ -92,7 +92,12 @@ export default async function InvitationPage({ params, searchParams }: Props) {
   }
 
   const now = new Date();
-  const link = await readInvitationLink(getDb(), token, locale, now);
+  /*
+    A press the link refused (`acceptInvitationAction`'s `refused=<kind>`) is said as the press answered
+    it — withdrawn, past its deadline, the event called off — with no second read (and no second attempt
+    charged, §39). A marker only, one of the closed list; anything else reads the link.
+  */
+  const link: InvitationLink | { kind: RefusedKind } = isRefusedKind(refused) ? { kind: refused } : await readInvitationLink(getDb(), token, locale, now);
   if (link.kind !== "open") {
     const titleKey = link.kind === "replaced" ? "replacedTitle" : link.kind === "invalid" ? "invalidTitle" : "endedTitle";
     const sentence =

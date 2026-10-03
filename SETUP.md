@@ -1442,8 +1442,12 @@ languages go live together; that is the rule, not a setting.
      themselves, from the email that follows.
    - Each invitation keeps its place until its deadline; unaccepted, the place goes back to the line by
      itself. On the invitation's row: «Retrimite» (a new link; the deadline stays, unless you type a
-     number of days in the box and that comes later) and «Retrage» (the place goes back at once). The
-     Organizer sees the list, not the buttons.
+     number of days in the box and that comes later) and «Retrage» (the place goes back at once). While
+     anybody is on the waiting list, «Retrimite» on an invitation that holds a counted place sends the
+     link and the email again but keeps the deadline — the row shows no days box, the dialog says why,
+     and the message after it says the deadline stayed: the place is the waiting person's at that
+     deadline. An invitation «Pe lista ascunsă» can still be extended. The Organizer sees the list, not
+     the buttons.
    - Somebody invited who registers anyway, through the public form or at the desk, takes the
      invitation's place once their address is confirmed or a place is given to them: the invitation
      reads «Acceptată» and links the registration, and their registration's page says «Înscriere pe

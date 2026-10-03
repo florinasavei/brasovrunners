@@ -628,6 +628,85 @@ describe("§NNN expiry, «Retrimite» and «Retrage»", () => {
     expect(again).toBeInstanceOf(InvitationRefusal);
   });
 
+  /** Whether the link's token is still unspent: a refused press never spends it (the invitations review of 2026-10-03). */
+  const unspent = async () => (await db.select().from(emailActionTokens).where(eq(emailActionTokens.purpose, "ACCEPT_INVITATION"))).every((token) => token.usedAt === null);
+
+  it("a press after «Retrage» spends nothing: refused as withdrawn, and the link's page then says withdrawn, never «used»", async () => {
+    const event = await createEvent(3);
+    await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 7, outsideCapacity: false }, admin, NOW);
+    // The person opened the form; the Administrator withdrew the invitation before the press.
+    const secret = await linkOf("ana@example.invalid", at(1));
+    expect(await readInvitationLink(db, secret, "ro", at(2))).toMatchObject({ kind: "open" });
+    const [invitation] = await invitationsOf(event.id);
+    await withdrawInvitationByStaff(db, invitation.id, admin, at(3));
+    expect(await acceptInvitation(db, secret, form("Ana", at(4)), at(4))).toEqual({ ok: false, kind: "withdrawn" });
+    expect(await unspent()).toBe(true);
+    expect(await readInvitationLink(db, secret, "ro", at(5))).toMatchObject({ kind: "withdrawn" });
+    expect(await db.select().from(registrations)).toHaveLength(0);
+  });
+
+  it("a press past the deadline, before the sweep, spends nothing: refused as expired, and the page then says expired", async () => {
+    const event = await createEvent(3);
+    await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 1, outsideCapacity: false }, admin, NOW);
+    const secret = await linkOf("ana@example.invalid", at(1));
+    const after = new Date(NOW.getTime() + DAY + 60_000);
+    expect(await acceptInvitation(db, secret, form("Ana", after), after)).toEqual({ ok: false, kind: "expired" });
+    expect(await unspent()).toBe(true);
+    expect(await readInvitationLink(db, secret, "ro", after)).toMatchObject({ kind: "expired" });
+    expect(await db.select().from(registrations)).toHaveLength(0);
+  });
+
+  it("a press after the event was called off spends nothing: refused as expired, and the page then says expired", async () => {
+    const event = await createEvent(3);
+    await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 7, outsideCapacity: false }, admin, NOW);
+    const secret = await linkOf("ana@example.invalid", at(1));
+    await db.update(events).set({ eventStatus: "CANCELLED" }).where(eq(events.id, event.id));
+    expect(await acceptInvitation(db, secret, form("Ana", at(2)), at(2))).toEqual({ ok: false, kind: "expired" });
+    expect(await unspent()).toBe(true);
+    expect(await readInvitationLink(db, secret, "ro", at(3))).toMatchObject({ kind: "expired" });
+  });
+
+  it("«Retrimite» with days on a counted invitation while somebody waits: the link and the email again, the deadline kept", async () => {
+    const event = await createEvent(1, { auto: true });
+    await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 3, outsideCapacity: false }, admin, NOW);
+    // Elena queued behind the invitation's place, and its deadline.
+    expect((await registered(event, "Elena", 1)).status).toBe("WAITLISTED");
+    const first = await linkOf("ana@example.invalid", at(2));
+    const [before] = await invitationsOf(event.id);
+    const resent = await resendInvitationByStaff(db, before.id, { days: 10 }, admin, at(3));
+    expect(resent).toEqual({ expiresAt: before.expiresAt, kept: "waiting" });
+    const [after] = await invitationsOf(event.id);
+    expect(after).toMatchObject({ expiresAt: before.expiresAt, resendCount: 1, lastSentAt: at(3) });
+    // The new link and the email all the same; the old link is superseded.
+    expect(await invitationEmails()).toHaveLength(2);
+    const second = await linkOf("ana@example.invalid", at(4));
+    expect(second).not.toBe(first);
+    expect(await readInvitationLink(db, first, "ro", at(5))).toEqual({ kind: "replaced" });
+    const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "event.invitation_resent"));
+    expect(audit.metadataJson).toMatchObject({ from: before.expiresAt.toISOString(), to: before.expiresAt.toISOString(), keptForWaiting: true });
+    // At the deadline the place is Elena's, as she queued for.
+    const deadline = new Date(before.expiresAt.getTime() + 60_000);
+    await runRegistrationMaintenance(db, deadline);
+    const [elena] = await db.select().from(registrations).where(eq(registrations.registeredName, "Elena Munteanu"));
+    expect(elena.status).toBe("WAITLIST_OFFERED");
+  });
+
+  it("«Retrimite» with days on a counted invitation and nobody waiting: the deadline moves later", async () => {
+    const event = await createEvent(1, { auto: true });
+    await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 3, outsideCapacity: false }, admin, NOW);
+    const [before] = await invitationsOf(event.id);
+    expect(await resendInvitationByStaff(db, before.id, { days: 10 }, admin, at(3))).toEqual({ expiresAt: new Date(at(3).getTime() + 10 * DAY), kept: null });
+  });
+
+  it("«Retrimite» with days on a hidden-list invitation while somebody waits: it holds no counted place, so the deadline moves", async () => {
+    const event = await createEvent(1, { auto: true });
+    await registered(event, "Ioana", 0);
+    await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 3, outsideCapacity: true }, admin, at(1));
+    expect((await registered(event, "Elena", 2)).status).toBe("WAITLISTED");
+    const [before] = await invitationsOf(event.id);
+    expect(await resendInvitationByStaff(db, before.id, { days: 10 }, admin, at(3))).toEqual({ expiresAt: new Date(at(3).getTime() + 10 * DAY), kept: null });
+  });
+
   it("the retention erases an invitation thirty days after it ended, and the address with it", async () => {
     const event = await createEvent(3);
     await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 1, outsideCapacity: false }, admin, NOW);

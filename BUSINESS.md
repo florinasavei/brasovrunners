@@ -329,7 +329,7 @@ For a capped event:
   choice. It is not a registration: the invited person opens the form from the link, fills in the rest
   and signs the declaration themselves; accepting moves the kept place to their registration, and so
   does a registration of the invited address made another way, once it gets its place. On a full
-  race each invitation that needs a place adds one supplementary place, which the Administrator
+  race, or while anyone waits, each invitation that needs a place adds one supplementary place, which the Administrator
   confirms before the send; one sent «pe lista ascunsă» keeps none (`DECISIONS.md` §NNN).
 
 The initial direct declaration hold is the club's setting (30 minutes by default, "Termene"), capped by registration closing and event start. For an event further away than its **participation window** (per event; default: asked 7 days before, due 2 days before the start), the place is instead held until the window's deadline and the declaration is the participant's confirmation that they are still coming — the race is free, and a place taken in June by somebody who forgot by October is a place nobody ran on (`DECISIONS.md` §104). Either deadline is enforced only when it protects somebody: with nobody on the waiting list, the person who forgot keeps the place and their number, and signs on race day at the desk; the declaration is asked once more two days before the start, and a race called off refuses the signature and releases the place (`DECISIONS.md` §160).

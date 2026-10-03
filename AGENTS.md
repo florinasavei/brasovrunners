@@ -1327,7 +1327,9 @@ Rules:
   accepted, withdrawn or its deadline passes — the deadline compared on every read, so the place is free
   the instant it passes — unless it was sent «Pe lista ascunsă» (`outside_capacity`). It is the club's choice, like a
   family's reservation (§543): **never released for somebody waiting before its deadline**, only at the
-  deadline (the sweep stamps it and offers the place to the line) or at «Retrage». **A place free for an
+  deadline (the sweep stamps it and offers the place to the line) or at «Retrage» — and that deadline
+  is never moved later while anyone eligible waits: «Retrimite» re-issues the link and the email and keeps
+  it (the hidden list, holding no counted place, may be extended). **A place free for an
   invitation is one free after everyone eligible who waits** — `max(capacity - occupied - eligible
   WAITLISTED, 0)` (`invitationFreePlaces`), whatever «Oferte automate» says and whether the registration
   has closed: with offers off (§615) or after the close nobody is offered the free place on the send's
@@ -2753,7 +2755,13 @@ BR-REQ-037-05):
    A registration of the invited address that reaches its place by another route takes the invitation
    over in the same transaction (`event.invitation_accepted` with `adopted`).
    «Retrimite» mints a new link (the old one superseded, §619) and moves the deadline only when days
-   are typed and the result is later;
+   are typed and the result is later — **and never, for an invitation that holds a counted place, while
+   anyone eligible waits** (`countEligibleWaitlisted > 0` under the lock): the waiting row queued behind
+   that deadline, and moving it would keep a counted place ahead of them at every resend without the
+   confirmed supplementary place a send would need. Then the link and the email are re-issued and the
+   deadline kept; the dialog says so before the press (no days box), the toast after it
+   (`invitationResentKept`), the audit row carries `keptForWaiting`. One «Pe lista ascunsă» may be
+   extended whoever waits;
    «Retrage» ends it and the place goes to the line. Audited as `event.invitation_sent`,
    `event.invitation_resent`, `event.invitation_withdrawn`, `event.invitation_expired`,
    `event.invitation_accepted` and `event.capacity_raised_for_invitation`, by the invitation's id, never

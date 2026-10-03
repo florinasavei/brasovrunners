@@ -112,15 +112,18 @@ function refusalOf(error: unknown): { error: string } {
   throw error;
 }
 
-/** «Retrimite» (§NNN): a new email and link; the deadline kept, or moved to the days typed when that is later. */
+/**
+ * «Retrimite» (§NNN): a new email and link; the deadline kept, or moved to the days typed when that is
+ * later — but kept for a counted invitation while anyone eligible waits, and the toast says which.
+ */
 export async function resendInvitationAction(_previous: unknown, form: FormData): Promise<null> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
   let outcome: Record<string, string | undefined>;
   try {
     const actor = await requireStaffCapability(canManageRegistrations);
-    await resendInvitation(getDb(), actor, text(form, "invitationId"), wholeDigits(text(form, "days")), new Date());
-    outcome = { saved: "invitationResent" };
+    const resent = await resendInvitation(getDb(), actor, text(form, "invitationId"), wholeDigits(text(form, "days")), new Date());
+    outcome = { saved: resent.kept === "waiting" ? "invitationResentKept" : "invitationResent" };
   } catch (error) {
     outcome = refusalOf(error);
   }

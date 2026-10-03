@@ -6554,6 +6554,7 @@
       "openRegistration": "Open the registration",
       "resendTitle": "Resend the invitation?",
       "resendBody": "{name} gets the invitation again, with a new link; the old link stops working. The deadline moves to {days} days from now, if that is later than the current one.",
+      "resendBodyWaiting": "{name} gets the invitation again, with a new link; the old link stops working. The deadline stays as it is: someone is on the waiting list, and the place is theirs at the deadline.",
       "resendBodyKept": "{name} gets the invitation again, with a new link; the old link stops working. The deadline stays as it is; to move it later, type a number of days.",
       "resendDays": "Days (optional)",
       "resend": "Resend",
@@ -8201,6 +8202,7 @@
         "other": "{count} invitations sent; the capacity is now {capacity}."
       },
       "invitationResent": "Invitation resent, with a new link.",
+      "invitationResentKept": "Invitation resent, with a new link. The deadline stayed as it was: someone is on the waiting list.",
       "invitationWithdrawn": "Invitation withdrawn; the place was released."
     }
   },
