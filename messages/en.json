@@ -3286,13 +3286,14 @@
           "done": "No outage needs a look: the newest one, if any, left nobody without the place they had.",
           "open": "The site's name has not resolved since {windowFrom}. On every run the running deadlines move by the time elapsed, so nothing lapses until it is back.",
           "stuck": "The outage from {windowFrom} to {windowUntil} is over, but its deadlines could not be moved yet: the scheduled job keeps trying; its last error is on /devs.",
-          "notRevived": "The outage from {windowFrom} to {windowUntil} left claims lapsed that were not revived; still waiting for a decision: {windowNotRevived}.",
+          "notRevived": "The outage from {windowFrom} to {windowUntil} left claims lapsed that were not revived; still waiting, with the verb the email names: {windowNotRevived}.",
           "how": [
             "Check the domain at the registrar: the account, the contact verification emails, the renewal payment.",
             "While the name is gone, nothing lapses. When it is back, the scheduled jobs move the deadlines by themselves and send «The deadlines' clock stood still».",
-            "The email names each person whose claim was not revived: nobody is seated beyond the advertised places by itself; an administrator decides.",
-            "With one confirmed extra place: «Send them the offer» to somebody on the waiting list, «Give them a place now» to an unconfirmed address; an invitation can be sent again.",
-            "The row stays red while one of them is still waiting and the event has not started."
+            "The email names each person whose claim was not revived and what can be done for them: nobody is seated beyond the advertised places by itself.",
+            "A lapsed offer, declaration hold or address link: the person registers again (or «Add the registration»); once they wait, «Send them the offer» seats them.",
+            "A family reservation: «Give them a place now» on its registration, the address being still unconfirmed. An expired invitation: a new one to the same address, from «Send invitations».",
+            "The row stays red only while one of them is unresolved: until they register again, get a new invitation or a place, or the event starts."
           ]
         },
         "contactForm": {
@@ -7940,7 +7941,7 @@
       "none": "The deadlines' clock: no outage recorded.",
       "windows": "The deadlines' clock — the last outages, newest first:",
       "open": "since {from}: the site's name does not resolve; the deadlines move on every run, nothing lapses until it is back.",
-      "closed": "{from} – {until} ({source}): given back {granted}; deadlines moved: {moved}; claims not revived, the place given meanwhile: {notRevived}.",
+      "closed": "{from} – {until} ({source}): given back {granted}; deadlines moved: {moved}; claims not revived: {notRevived}.",
       "source": {
         "dns": "the name not found",
         "pings": "no scheduled call"

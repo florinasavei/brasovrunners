@@ -144,14 +144,61 @@ export function windowOpenedBody(locale: Lang, facts?: UnreachableWindowFacts): 
 }
 
 /**
+ * What an Administrator can do for each kind of claim not revived — one sentence per kind present in
+ * the email, both languages, each under 200 characters — naming only the verbs that exist for the
+ * state the claim is in now (§NNN): a lapsed offer, declaration hold or address link is an `EXPIRED`
+ * registration, which no verb seats, so the person registers again (or the staff adds the registration)
+ * and «Trimite-i oferta» seats them once they wait; a cleared family reservation still waits for its
+ * address, which «Dă-i un loc acum» is for; an expired invitation cannot be re-sent («Retrimite» is for
+ * an open one), so a new one goes to the same address; a family form's held place is nobody's yet.
+ */
+type RemedyGroup = "registerAgain" | "familyReservation" | "invitation" | "placeHold";
+const REMEDY_GROUP: Record<NotRevivedKind, RemedyGroup> = {
+  offer: "registerAgain",
+  declarationHold: "registerAgain",
+  emailLink: "registerAgain",
+  familyReservation: "familyReservation",
+  invitation: "invitation",
+  placeHold: "placeHold",
+};
+const REMEDY_ORDER: readonly RemedyGroup[] = ["registerAgain", "familyReservation", "invitation", "placeHold"];
+export const REMEDY_WORDS: Record<Lang, Record<RemedyGroup, string>> = {
+  ro: {
+    registerAgain:
+      "Ofertă, loc pentru declarație sau link expirat: persoana se înscrie din nou (sau «Adaugă înscrierea»); cât așteaptă, «Trimite-i oferta» o așază.",
+    familyReservation:
+      "Rezervare de familie: adresa e încă neconfirmată, deci «Dă-i un loc acum» pe înscrierea ei o așază, cu un loc suplimentar confirmat dacă nu e niciunul liber.",
+    invitation:
+      "Invitație expirată: nu se mai poate retrimite; trimite una nouă la aceeași adresă din «Trimite invitații», cu un loc suplimentar confirmat dacă nu e niciunul liber.",
+    placeHold: "Loc ținut pentru un formular de familie: nu e încă înscrierea nimănui; persoana completează formularul din nou.",
+  },
+  en: {
+    registerAgain:
+      "A lapsed offer, declaration hold or address link: the person registers again (or «Add the registration»); once they wait, «Send them the offer» seats them.",
+    familyReservation:
+      "A family reservation: the address is still unconfirmed, so «Give them a place now» on its registration seats them, with one confirmed extra place if none is free.",
+    invitation:
+      "An expired invitation cannot be re-sent: send a new one to the same address from «Send invitations», with one confirmed extra place if none is free.",
+    placeHold: "A place held for a family form is nobody's registration yet: the person fills in the form again.",
+  },
+};
+
+/** The remedy sentences for the kinds named above, in a fixed order, each once. */
+export function remedyLines(locale: Lang, kinds: readonly NotRevivedKind[]): string[] {
+  const present = new Set(kinds.map((kind) => REMEDY_GROUP[kind]));
+  return REMEDY_ORDER.filter((group) => present.has(group)).map((group) => REMEDY_WORDS[locale][group]);
+}
+
+/**
  * «Ceasul termenelor a stat pe loc»'s paragraphs: how it was seen, what moved (or that the moving is
- * off), the claims not revived and the two verbs that can seat them — only when there are any — and
+ * off), the claims not revived and what can re-seat each kind of them — only when there are any — and
  * what the reader should do, one fixed sentence per case (`pings` or `dns`; none left, or some).
  */
 export function windowClosedBody(locale: Lang, facts?: UnreachableWindowFacts): string[] {
   const pings = facts?.source === "pings";
   const off = (facts?.maxHours ?? 1) <= 0 || (facts?.grantedMinutes ?? 1) <= 0;
   const left = (facts?.notRevived ?? 0) > 0;
+  const remedies = remedyLines(locale, (facts?.claims ?? []).map((claim) => claim.kind));
   if (locale === "en") {
     return [
       pings
@@ -162,18 +209,18 @@ export function windowClosedBody(locale: Lang, facts?: UnreachableWindowFacts): 
         : "The participants' deadlines that were running then moved later by the time above, at most what «Deadlines» says.",
       ...(left
         ? [
-            "The claims listed above lapsed while the site could not be reached, and their place was given meanwhile or they had already been ended: they were not revived.",
-            "The platform seats nobody beyond the advertised places. An administrator may, with one confirmed extra place: «Send them the offer» (waiting list) or «Give them a place now» (unconfirmed address).",
-            "A lapsed offer is back on the waiting list once the person registers again with the same address; an invitation can be sent again.",
+            "The claims listed above lapsed while the site could not be reached, and their place was given meanwhile or they had already ended: they were not revived.",
+            "The platform seats nobody beyond the advertised places. An administrator may, with the verb that fits the claim's state now, confirmed and audited:",
+            ...remedies,
           ]
         : []),
       "Nobody was emailed about it: the new deadline is on the person's own page and in each registration's history.",
       pings
         ? left
-          ? "Check that the hours above look right, then open each person above and decide whether to give them a place."
+          ? "Check that the hours above look right, then decide for each person above, once they are back where a verb applies."
           : "Nothing to do, unless the hours above look wrong: then check that the monitors call the site."
         : left
-          ? "Check at the registrar why the name was gone, then open each person above and decide whether to give them a place."
+          ? "Check at the registrar why the name was gone, then decide for each person above, once they are back where a verb applies."
           : "Nothing to do for the participants. Check at the registrar why the name was gone, so it does not happen again.",
     ];
   }
@@ -186,18 +233,18 @@ export function windowClosedBody(locale: Lang, facts?: UnreachableWindowFacts): 
       : "Termenele participanților care curgeau atunci s-au mutat mai târziu cu timpul de mai sus, cel mult cât spune «Termene».",
     ...(left
       ? [
-          "Cererile de mai sus expiraseră cât site-ul nu putea fi accesat, iar locul lor fusese dat între timp sau fuseseră deja încheiate: nu au fost reluate.",
-          "Platforma nu așază pe nimeni peste locurile anunțate. Un administrator poate, cu un loc suplimentar confirmat: «Trimite-i oferta» (lista de așteptare) sau «Dă-i un loc acum» (adresă neconfirmată).",
-          "O ofertă expirată revine pe lista de așteptare când persoana se înscrie din nou cu aceeași adresă; o invitație se poate trimite din nou.",
+          "Cererile de mai sus expiraseră cât site-ul nu putea fi accesat, iar locul lor fusese dat între timp sau se încheiaseră deja: nu au fost reluate.",
+          "Platforma nu așază pe nimeni peste locurile anunțate. Un administrator poate, cu verbul potrivit stării de acum a cererii, confirmat și scris în jurnal:",
+          ...remedies,
         ]
       : []),
     "Participanților nu li s-a trimis nimic: termenul nou e în pagina lor și în istoricul fiecărei înscrieri.",
     pings
       ? left
-        ? "Verifică dacă orele de mai sus par corecte, apoi deschide fiecare persoană de mai sus și decide dacă îi dai un loc."
+        ? "Verifică dacă orele de mai sus par corecte, apoi decide pentru fiecare persoană de mai sus, când e din nou acolo unde un verb se aplică."
         : "Nimic de făcut, doar dacă orele de mai sus par greșite: atunci verifică dacă monitoarele apelează site-ul."
       : left
-        ? "Verifică la registrar de ce lipsea numele, apoi deschide fiecare persoană de mai sus și decide dacă îi dai un loc."
+        ? "Verifică la registrar de ce lipsea numele, apoi decide pentru fiecare persoană de mai sus, când e din nou acolo unde un verb se aplică."
         : "Nimic de făcut pentru participanți. Verifică la registrar de ce lipsea numele, ca să nu se repete.",
   ];
 }

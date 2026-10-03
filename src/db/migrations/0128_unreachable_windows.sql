@@ -27,6 +27,7 @@ CREATE TABLE "unreachable_windows" (
 	CONSTRAINT "unreachable_windows_applied_within_granted" CHECK ("unreachable_windows"."applied_ms" >= 0 and "unreachable_windows"."applied_ms" <= "unreachable_windows"."granted_ms" and ("unreachable_windows"."step_ms" is null or ("unreachable_windows"."step_ms" >= "unreachable_windows"."applied_ms" and "unreachable_windows"."step_ms" <= "unreachable_windows"."granted_ms")))
 );
 --> statement-breakpoint
+ALTER TABLE "registrations" ADD COLUMN "reservation_lapsed_at" timestamp with time zone;--> statement-breakpoint
 CREATE UNIQUE INDEX "unreachable_windows_one_open" ON "unreachable_windows" USING btree (("ended_at" is null)) WHERE "unreachable_windows"."ended_at" is null;--> statement-breakpoint
 CREATE UNIQUE INDEX "unreachable_windows_pings_once" ON "unreachable_windows" USING btree ("source","started_at") WHERE "unreachable_windows"."source" = 'pings';--> statement-breakpoint
 CREATE INDEX "unreachable_windows_started_at_idx" ON "unreachable_windows" USING btree ("started_at");

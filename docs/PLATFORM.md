@@ -624,8 +624,11 @@ lapses what is past its deadline, so an offer or a declaration hold already `EXP
 reservation already cleared, an invitation already stamped expired or an address link already ended is
 read, left exactly as it is (never revived: the person's state and emails have moved on), audited as
 not revived and named. The job seats nobody beyond the advertised places
-— a supplementary place is an Administrator's confirmed press, «Trimite-i oferta» or «Dă-i un loc
-acum». Each move is in the registration's history; the window, what it gave back and its counts are
+— a supplementary place is an Administrator's confirmed press — and the email says, per kind, the verb
+the claim's state has now: a lapsed offer, declaration hold or address link is `EXPIRED`, so the person
+registers again (or the staff adds the registration) and «Trimite-i oferta» seats them once they wait;
+a family's cleared reservation still waits for its address, which «Dă-i un loc acum» is for; an
+expired invitation cannot be re-sent, so a new one goes to the same address. Each move is in the registration's history; the window, what it gave back and its counts are
 the table `unreachable_windows`.
 
 **Where it shows.** The Administrators get «Site-ul nu se găsește după nume» when a `dns` window opens
@@ -637,7 +640,9 @@ name is gone or a window is open; the shallow answer asks nobody. `/devs` → St
 answered at the maintenance job's last real run (kept beside its ping in the data cache; the page asks
 nobody) and lists the last three windows, and «Sarcini» has the row «Site-ul de negăsit: ceasul
 termenelor», red while a window is open, while a window's moves are stuck, and while the newest window
-left a claim it did not revive still lapsed on an event that has not started. No page and no action a
+left a claim it did not revive that is not handled yet on an event that has not started — handled once
+the same person has a newer registration on the event, the invitation was sent again or accepted, or
+the family's reservation holds a place again or its address was confirmed and placed. No page and no action a
 visitor waits on asks the name.
 
 **What it does not do.** It cannot run a job nobody calls: while the name is gone the jobs run only

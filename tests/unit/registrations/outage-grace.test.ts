@@ -19,9 +19,12 @@ import { isWaitedFor } from "@/modules/notifications/domain/email-delay";
 import { isParticipantMessage } from "@/modules/notifications/domain/club-notices";
 import { NEVER_QUEUED_MESSAGE_TYPES } from "@/modules/notifications/domain/never-queued";
 import {
+  type NotRevivedKind,
   notRevivedLinks,
   readNotRevivedRefs,
   readUnreachableWindowFacts,
+  REMEDY_WORDS,
+  remedyLines,
   windowClosedBody,
   windowClosedFactsLine,
   windowOpenedBody,
@@ -360,25 +363,57 @@ describe("§NNN the Administrators' two emails", () => {
     expect(windowClosedFactsLine("ro", facts())).toContain("nicio verificare programată");
   });
 
-  it("says the job seats nobody and names the two verbs only when a claim was not revived, and what to do in each case", () => {
-    const verbs = (locale: "ro" | "en", overrides: Record<string, unknown>) =>
-      windowClosedBody(locale, facts(overrides)).filter((line) => line.includes(locale === "en" ? "«Send them the offer»" : "«Trimite-i oferta»"));
-    expect(verbs("en", { notRevived: 0 })).toEqual([]);
-    expect(verbs("ro", { notRevived: 0 })).toEqual([]);
-    expect(verbs("en", { notRevived: 1 })[0]).toContain("«Give them a place now»");
-    expect(verbs("ro", { notRevived: 1 })[0]).toContain("«Dă-i un loc acum»");
-    expect(verbs("ro", { notRevived: 1 })[0]).toContain("loc suplimentar confirmat");
+  it("says the job seats nobody and, per kind of claim not revived, the verb that fits its state now — and what to do in each case", () => {
+    const line = (kind: NotRevivedKind) => ({ kind, name: "Ana Pop", event: "Crosul", url: "https://example.test/ro/admin/registrations/a" });
+    const withClaims = (kinds: NotRevivedKind[], overrides: Record<string, unknown> = {}) => ({ ...facts({ notRevived: kinds.length, ...overrides }), claims: kinds.map(line) });
+    const body = (locale: "ro" | "en", kinds: NotRevivedKind[], overrides: Record<string, unknown> = {}) => windowClosedBody(locale, withClaims(kinds, overrides));
+    // None left: no verb at all.
+    for (const locale of ["ro", "en"] as const) {
+      expect(windowClosedBody(locale, facts({ notRevived: 0 })).join(" ")).not.toMatch(/Trimite-i oferta|Send them the offer|Dă-i un loc acum|Give them a place now/);
+    }
+    // An EXPIRED registration has no verb: the person registers again, then «Trimite-i oferta» — never «Dă-i un loc acum».
+    for (const kind of ["offer", "declarationHold", "emailLink"] as const) {
+      const ro = body("ro", [kind]).join(" ");
+      expect(ro).toContain("persoana se înscrie din nou");
+      expect(ro).toContain("«Adaugă înscrierea»");
+      expect(ro).toContain("«Trimite-i oferta»");
+      expect(ro).not.toContain("«Dă-i un loc acum»");
+      expect(body("en", [kind]).join(" ")).toContain("the person registers again");
+    }
+    // Three such claims: the sentence once.
+    expect(body("en", ["offer", "declarationHold", "emailLink"]).filter((text) => text.includes("registers again"))).toHaveLength(1);
+    // A cleared family reservation still waits for its address: «Dă-i un loc acum».
+    expect(body("ro", ["familyReservation"]).join(" ")).toContain("«Dă-i un loc acum»");
+    expect(body("en", ["familyReservation"]).join(" ")).toContain("«Give them a place now»");
+    expect(body("ro", ["familyReservation"]).join(" ")).not.toContain("«Trimite-i oferta»");
+    // An expired invitation cannot be re-sent: a new one to the same address.
+    expect(body("ro", ["invitation"]).join(" ")).toContain("nu se mai poate retrimite");
+    expect(body("ro", ["invitation"]).join(" ")).toContain("«Trimite invitații»");
+    expect(body("en", ["invitation"]).join(" ")).toContain("«Send invitations»");
+    // Every remedy sentence, in both languages, under 200 characters and with no digit.
+    for (const locale of ["ro", "en"] as const) {
+      for (const text of Object.values(REMEDY_WORDS[locale])) {
+        expect(text.length, text).toBeLessThan(200);
+        expect(text, text).not.toMatch(/\d/);
+      }
+      expect(remedyLines(locale, ["invitation", "offer", "placeHold", "familyReservation"])).toEqual([
+        REMEDY_WORDS[locale].registerAgain,
+        REMEDY_WORDS[locale].familyReservation,
+        REMEDY_WORDS[locale].invitation,
+        REMEDY_WORDS[locale].placeHold,
+      ]);
+    }
     // Never the special list: the job puts nobody there.
     for (const locale of ["ro", "en"] as const) {
       for (const source of ["pings", "dns"]) {
-        expect(windowClosedBody(locale, facts({ source, notRevived: 2 })).join(" ")).not.toMatch(/invitați speciali|special guests|În afara|outside/i);
+        expect(body(locale, ["offer", "familyReservation", "invitation", "placeHold"], { source }).join(" ")).not.toMatch(/invitați speciali|special guests|În afara|outside/i);
       }
     }
     const last = (overrides: Record<string, unknown>) => windowClosedBody("en", facts(overrides)).at(-1);
     expect(last({ source: "pings", notRevived: 0 })).toContain("unless the hours above look wrong");
     expect(last({ source: "dns", notRevived: 0 })).toContain("registrar");
-    expect(last({ source: "pings", notRevived: 2 })).toContain("decide whether to give them a place");
-    expect(last({ source: "dns", notRevived: 2 })).toContain("decide whether to give them a place");
+    expect(last({ source: "pings", notRevived: 2 })).toContain("once they are back where a verb applies");
+    expect(last({ source: "dns", notRevived: 2 })).toContain("once they are back where a verb applies");
     // The moving switched off: the email says so instead of a move that did not happen.
     expect(windowClosedBody("en", facts({ maxHours: 0, grantedMinutes: 0, moved: 0, notRevived: 0 })).join(" ")).toContain("switched off");
     expect(windowOpenedBody("ro", facts({ maxHours: 0 })).join(" ")).toContain("mutarea oprită");

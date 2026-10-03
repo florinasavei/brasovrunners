@@ -3286,13 +3286,14 @@
           "done": "Nicio întrerupere de verificat: cea mai nouă, dacă a fost una, nu a lăsat pe nimeni fără locul pe care îl avea.",
           "open": "Numele site-ului nu se găsește de la {windowFrom}. La fiecare rulare termenele care curg se mută cu timpul scurs, ca nimic să nu expire până revine.",
           "stuck": "Întreruperea de la {windowFrom} până la {windowUntil} s-a încheiat, dar termenele ei nu s-au putut muta încă: sarcina programată reîncearcă; ultima eroare e pe /devs.",
-          "notRevived": "Întreruperea de la {windowFrom} până la {windowUntil} a lăsat expirate cereri care nu au fost reluate; așteaptă încă o decizie: {windowNotRevived}.",
+          "notRevived": "Întreruperea de la {windowFrom} până la {windowUntil} a lăsat expirate cereri care nu au fost reluate; așteaptă încă, cu verbul spus în email: {windowNotRevived}.",
           "how": [
             "Verifică domeniul la registrar: contul, emailurile de verificare a datelor de contact, plata reînnoirii.",
             "Cât lipsește numele, nu expiră nimic. Când revine, sarcinile programate mută singure termenele și trimit emailul «Ceasul termenelor a stat pe loc».",
-            "Emailul numește fiecare persoană a cărei cerere nu a fost reluată: nimeni nu e așezat de la sine peste locurile anunțate, decizia e a unui administrator.",
-            "Cu un loc suplimentar confirmat: «Trimite-i oferta» cuiva de pe lista de așteptare, «Dă-i un loc acum» unei adrese neconfirmate; o invitație se poate trimite din nou.",
-            "Rândul rămâne roșu cât una dintre ele așteaptă încă, iar evenimentul nu a început."
+            "Emailul numește fiecare persoană a cărei cerere nu a fost reluată și ce se poate face pentru ea: nimeni nu e așezat de la sine peste locurile anunțate.",
+            "Ofertă, loc pentru declarație sau link expirat: persoana se înscrie din nou (sau «Adaugă înscrierea»); cât așteaptă, «Trimite-i oferta» o așază.",
+            "Rezervare de familie: «Dă-i un loc acum» pe înscrierea ei, adresa fiind încă neconfirmată. Invitație expirată: una nouă la aceeași adresă, din «Trimite invitații».",
+            "Rândul rămâne roșu doar cât una dintre ele nu e rezolvată: până se înscrie din nou, primește o invitație nouă sau un loc, ori până începe evenimentul."
           ]
         },
         "contactForm": {
@@ -7940,7 +7941,7 @@
       "none": "Ceasul termenelor: nicio întrerupere înregistrată.",
       "windows": "Ceasul termenelor — ultimele întreruperi, cea mai nouă întâi:",
       "open": "de la {from}: numele site-ului nu se găsește; termenele se mută la fiecare rulare, nu expiră nimic până revine.",
-      "closed": "{from} – {until} ({source}): dat înapoi {granted}; termene mutate: {moved}; cereri nereluate, locul dat între timp: {notRevived}.",
+      "closed": "{from} – {until} ({source}): dat înapoi {granted}; termene mutate: {moved}; cereri nereluate: {notRevived}.",
       "source": {
         "dns": "numele negăsit",
         "pings": "nicio verificare programată"

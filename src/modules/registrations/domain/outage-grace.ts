@@ -240,8 +240,9 @@ export type UnreachableWindowState = "open" | "stuck" | "notRevived" | "clear";
  * What «Sarcini» says of the windows (§NNN): `open` while a window is open — nobody reaches the site
  * by its name; `stuck` while a window closed more than `PENDING_HOLD_MS` ago still has deadlines it
  * could not move; `notRevived` while the newest closed window left a claim it did not revive still
- * lapsed on an event that has not started (`notRevivedWaiting`, read by `jobs/unreachable-windows.ts`)
- * — an Administrator decides whether to seat that person through a confirmed supplementary place;
+ * unhandled on an event that has not started (`notRevivedWaiting`, read by `jobs/unreachable-windows.ts`:
+ * until the person registers again, the invitation goes again or the reservation is placed) — an
+ * Administrator re-seats them with the verb the claim's state has now, if anybody does;
  * `clear` otherwise. A suspicion is no window and changes nothing here.
  */
 export function unreachableWindowState(

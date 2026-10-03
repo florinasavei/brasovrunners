@@ -80,7 +80,7 @@ import { countOccupied, emailLinkLapseSql, lockEventForCapacity } from "./reposi
  * sweep ended. The same step reads those too, under the same lock, when their deadline lay inside the
  * window and the move would have revived them, and records each as not revived (`lapsedBy:
  * "allocator"`) without touching it: the state machine and the person's emails have moved on, so only
- * an Administrator re-seats them («Trimite-i oferta», «Dă-i un loc acum»). Neither house
+ * an Administrator re-seats them, with the verb the claim's state has now (the closed email says which). Neither house
  * mechanism that seats a person beyond the counted places is the job's to use: a supplementary place
  * needs an Administrator's confirmed press (§642), and a row that consumes no place an Administrator's
  * verb while the event's own switch is on (§643, §648) — a job has neither a person to confirm nor a
@@ -541,14 +541,17 @@ async function moveTheLinks<T extends Record<string, unknown>>(
 }
 
 /**
- * The stretch of a step in which a deadline that passed lapsed while the door was shut: after `since`,
- * up to the window's end (or this run, while it is open) — and lapsed by the platform after the window
- * began, never before it.
+ * The stretch of a step in which a claim the platform already lapsed is looked for: a deadline after
+ * `since` and at or before this run — open window or closed alike — lapsed by the platform after the
+ * window began, never before it. Not the window's end: a running claim whose deadline falls between
+ * the end and the run is moved when it was written inside the window, so one the allocator lapsed in
+ * that interval lost the same time; `movedDeadline` (with the row's own instant and the end) decides
+ * which of them the step would have revived, exactly as it does for a running claim.
  */
 type LapsedSpan = { startedAt: Date; since: Date; until: Date };
 
 function spanOf(window: UnreachableWindow, since: Date, now: Date): LapsedSpan {
-  return { startedAt: window.startedAt, since, until: window.endedAt ?? now };
+  return { startedAt: window.startedAt, since, until: now };
 }
 
 /** An offer or a declaration hold the allocator lapsed (`expireStaleHolds`) whose deadline lay in the span. */
@@ -581,17 +584,22 @@ const sittingOfRegistration = and(
 ) as SQL;
 
 /**
- * A family's reservation the allocator cleared (`hold_expires_at` set to null at or after its sitting's
- * `reserved_until`, which lay in the span): the registration still waits for its address, with no place.
+ * A family's reservation the allocator cleared (`expireStaleHolds` wrote `reservation_lapsed_at` in the
+ * statement that set `hold_expires_at` to null) after the window began, its sitting's `reserved_until`
+ * in the span: the registration still waits for its address, with no place. The evidence is that
+ * column alone, never `updated_at` — a family form sent while no place was free never had a
+ * reservation, has a null `hold_expires_at` from the start, and is touched by any later write (the
+ * link's own move among them), so it is never named.
  */
 function clearedReservationWhere(span: LapsedSpan): SQL {
   return and(
     eq(registrations.status, "PENDING_EMAIL_CONFIRMATION"),
     isNull(registrations.holdExpiresAt),
-    gt(registrations.updatedAt, span.startedAt),
+    isNotNull(registrations.reservationLapsedAt),
+    gt(registrations.reservationLapsedAt, span.startedAt),
     gt(familySittings.reservedUntil, span.since),
     lte(familySittings.reservedUntil, span.until),
-    sql`${registrations.updatedAt} >= ${familySittings.reservedUntil}`,
+    sql`${registrations.reservationLapsedAt} >= ${familySittings.reservedUntil}`,
   ) as SQL;
 }
 
