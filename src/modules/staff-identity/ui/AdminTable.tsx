@@ -17,6 +17,10 @@ import {
   PER_PAGE_OPTIONS,
   sortHref,
 } from "@/modules/staff-identity/domain/admin-list-query";
+import { ACTIONS_COLUMN, TABLE_ID_PATTERN } from "@/modules/staff-identity/domain/column-widths";
+import ColumnResizeHandle from "./ColumnResizeHandle";
+import ColumnWidths from "./ColumnWidths";
+import ColumnWidthsScript from "./ColumnWidthsScript";
 
 /**
  * The one table every backoffice list is built from.
@@ -39,9 +43,29 @@ import {
  *     browser at once.
  *   - The lists would stop working with JavaScript off, which today they do.
  *
- * What that costs is real and worth naming: no column resizing, no drag-reordering, no keyboard
- * navigation between cells, and sorting and paging are round-trips rather than instant. That is
- * the trade; the `loading.tsx` boundaries are what make the round-trip legible rather than dead.
+ * What that costs is real and worth naming: no drag-reordering, no keyboard navigation between
+ * cells, and sorting and paging are round-trips rather than instant. That is the trade; the
+ * `loading.tsx` boundaries are what make the round-trip legible rather than dead.
+ *
+ * ## Resizable columns, without the grid (§NNN)
+ *
+ * The refusal above first named "no column resizing" as a price too, and resizing is what the
+ * owner then asked for — so it is paid here, inside this table, and every reason above still
+ * holds. The table stays server-rendered; a `<colgroup>` gives each column a `<col data-column>`,
+ * and one small island per heading (`ColumnResizeHandle`) is the column's right edge, dragged by a
+ * pointer or moved by the arrow keys, never narrower than its heading's longest word. It receives
+ * strings — the table's id, the column's key, its heading — and lays the table out through the
+ * DOM, so no row ever crosses to the client. The widths are this browser's own, per `tableId`, in
+ * `localStorage`: a preference about one screen, not something the server or the URL needs to
+ * know. Right after `</table>`, `ColumnWidthsScript` applies them as a `<style>` before the first
+ * paint, so a resized table does not jump on load; under the table, `ColumnWidths` takes over once
+ * hydrated (removing that style), lays the table out again when its frame changes width, and
+ * offers «Lățimi implicite» while any is stored. With JavaScript off neither island draws anything, and the table is the
+ * automatic one it always was.
+ *
+ * A resized table switches to `table-layout: fixed` at the sum of its columns' widths: wider
+ * than the frame, the frame scrolls sideways inside its border; narrower, it stops short. The
+ * phone layout has no columns and is untouched.
  *
  * ## Two layouts, one definition
  *
@@ -91,6 +115,12 @@ export type AdminTableLabels = {
 type Props<Row> = {
   /** Names the table for anybody who cannot see the heading above it. */
   caption: string;
+  /**
+   * The table's name for the column widths this browser keeps (§NNN): lowercase letters, digits
+   * and hyphens, one per list — two tables sharing one would share their widths. Never anything
+   * about a row or a person: it is written into the browser's storage.
+   */
+  tableId: string;
   columns: readonly AdminColumn<Row>[];
   rows: readonly Row[];
   rowKey: (row: Row) => string;
@@ -132,6 +162,29 @@ const HIDE = {
 } as const;
 
 /**
+ * The same breakpoints for a column's `<col>` (§NNN). A `<col>` hidden with its cells keeps the
+ * colgroup and the cells counting the same columns: a cell hidden while its `<col>` stayed would
+ * shift every cell after it under the wrong width.
+ */
+const HIDE_COL = {
+  sm: { display: { xs: "none", sm: "table-column" } },
+  md: { display: { xs: "none", md: "table-column" } },
+  lg: { display: { xs: "none", lg: "table-column" } },
+} as const;
+
+/**
+ * A resized table (`data-resized`, set by the islands) has fixed widths, so a long value wraps
+ * inside its column rather than pushing the column wider, and a body cell clips what still does
+ * not fit. A heading wraps between its words only, never inside one: no column goes narrower than
+ * its heading's longest word (`headingFloor`). A heading cell does not clip: its resize handle
+ * reaches past its edge.
+ */
+const RESIZED = {
+  "&[data-resized] > thead > tr > th": { whiteSpace: "normal" },
+  "&[data-resized] > tbody > tr > td": { overflow: "hidden", overflowWrap: "anywhere" },
+} as const;
+
+/**
  * Every link here is a `next/link` element wrapping a styled `<span>`, never
  * `<Box component={Link}>`.
  *
@@ -167,6 +220,7 @@ const VISUALLY_HIDDEN = {
 
 export default function AdminTable<Row>({
   caption,
+  tableId,
   columns,
   rows,
   rowKey,
@@ -178,6 +232,8 @@ export default function AdminTable<Row>({
   rowActions,
   empty,
 }: Props<Row>) {
+  // It becomes part of a storage key and a CSS selector, so its shape is checked, not trusted.
+  if (!TABLE_ID_PATTERN.test(tableId)) throw new Error(`AdminTable: tableId "${tableId}" is not lowercase-hyphenated`);
   if (rows.length === 0) return <>{empty}</>;
 
   const pages = pageCount(total, query.perPage);
@@ -193,21 +249,36 @@ export default function AdminTable<Row>({
           border: 1,
           borderColor: "divider",
           borderRadius: 1,
-          overflow: "hidden",
+          // A resized table wider than the frame scrolls inside it (§NNN), never the page.
+          overflowX: "auto",
+          overflowY: "hidden",
         }}
       >
-        <Table size="small">
+        <Table size="small" data-table-id={tableId} sx={RESIZED}>
           <Box component="caption" sx={VISUALLY_HIDDEN}>
             {caption}
           </Box>
+          <colgroup>
+            {columns.map((column) => (
+              <Box
+                key={column.key}
+                component="col"
+                data-column={column.key}
+                sx={column.hideBelow ? HIDE_COL[column.hideBelow] : undefined}
+              />
+            ))}
+            {rowActions && <col data-column={ACTIONS_COLUMN} />}
+          </colgroup>
           <TableHead>
             <TableRow sx={{ bgcolor: "action.hover" }}>
-              {columns.map((column) => (
+              {columns.map((column, index) => (
                 <TableCell
                   key={column.key}
                   align={column.align}
                   aria-sort={column.sortable ? ariaSortFor(query, column.key) : undefined}
+                  data-column={column.key}
                   sx={{
+                    position: "relative",
                     fontWeight: 700,
                     whiteSpace: "nowrap",
                     ...HEAD_RULE,
@@ -237,7 +308,7 @@ export default function AdminTable<Row>({
                           "&:hover": { textDecoration: "underline" },
                         }}
                       >
-                        {column.label}
+                        <span data-column-heading="">{column.label}</span>
                         {/* Decorative: `aria-sort` on the cell reports the state, and repeating
                             it in text would announce it twice. */}
                         <Box
@@ -250,13 +321,19 @@ export default function AdminTable<Row>({
                       </Box>
                     </Link>
                   ) : (
-                    column.label
+                    <span data-column-heading="">{column.label}</span>
                   )}
                   {column.hint && <Hint text={column.hint} />}
+                  <ColumnResizeHandle
+                    tableId={tableId}
+                    column={column.key}
+                    label={column.label}
+                    last={!rowActions && index === columns.length - 1}
+                  />
                 </TableCell>
               ))}
               {rowActions && (
-                <TableCell align="right" sx={{ fontWeight: 700, ...HEAD_RULE }}>
+                <TableCell align="right" data-column={ACTIONS_COLUMN} sx={{ fontWeight: 700, ...HEAD_RULE }}>
                   {labels.actions}
                 </TableCell>
               )}
@@ -284,6 +361,8 @@ export default function AdminTable<Row>({
             ))}
           </TableBody>
         </Table>
+        {/* Right after the table: its stored widths, before the first paint (§NNN). */}
+        <ColumnWidthsScript tableId={tableId} />
       </Box>
 
       {/*
@@ -345,9 +424,12 @@ export default function AdminTable<Row>({
         direction="row"
         sx={{ justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 1 }}
       >
-        <Typography variant="body2" color="text.secondary">
-          {labels.results}
-        </Typography>
+        <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+          <Typography variant="body2" color="text.secondary">
+            {labels.results}
+          </Typography>
+          <ColumnWidths tableId={tableId} />
+        </Stack>
 
         <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
           <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>

@@ -278,6 +278,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
 
       <AdminTable
         caption={t("pages.tableCaption")}
+        tableId="pages"
         columns={columns}
         rows={rows}
         rowKey={(row) => row.id}

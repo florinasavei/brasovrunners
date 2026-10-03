@@ -2,6 +2,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import AdminTable from "@/modules/staff-identity/ui/AdminTable";
+import { withClientWords } from "../../helpers/client-words";
 
 /**
  * §453 — every backoffice table row but the last carries a visible separator; the last one
@@ -16,9 +17,11 @@ const rows: Row[] = [
 
 describe("AdminTable row separators (§453)", () => {
   it("marks a line under every body row but the last", () => {
-    const html = renderToStaticMarkup(
+    // The column-edge islands (§NNN) read their words through `useTranslations`.
+    const html = renderToStaticMarkup(withClientWords(
       createElement(AdminTable<Row>, {
         caption: "Evenimente",
+        tableId: "events",
         columns: [{ key: "name", label: "Nume", primary: true, render: (r: Row) => r.name }],
         rows,
         rowKey: (r: Row) => r.id,
@@ -37,7 +40,7 @@ describe("AdminTable row separators (§453)", () => {
         },
         empty: null,
       }),
-    );
+    ));
     const marks = [...html.matchAll(/data-row-separator="(\w+)"/g)].map((m) => m[1]);
     expect(marks).toEqual(["line", "line", "none"]);
   });

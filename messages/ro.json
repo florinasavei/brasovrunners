@@ -562,6 +562,12 @@
       "clear": "Șterge filtrele",
       "actions": "Acțiuni"
     },
+    "columns": {
+      "resize": "Lățimea coloanei „{column}”",
+      "resizeHow": "Trage marginea ca să lărgești sau să îngustezi coloana; cu tastatura, săgețile stânga și dreapta. Dublu clic o readuce la lățimea inițială.",
+      "reset": "Lățimi implicite",
+      "widthValue": "{width} px"
+    },
     "backToEvents": "Înapoi la lista de evenimente",
     "legalNotice": {
       "title": "Cum funcționează versiunile textelor legale",

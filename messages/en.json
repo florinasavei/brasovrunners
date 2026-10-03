@@ -562,6 +562,12 @@
       "clear": "Clear filters",
       "actions": "Actions"
     },
+    "columns": {
+      "resize": "Width of the “{column}” column",
+      "resizeHow": "Drag the edge to widen or narrow the column; from the keyboard, the left and right arrows. A double click puts it back to its original width.",
+      "reset": "Default widths",
+      "widthValue": "{width} px"
+    },
     "backToEvents": "Back to the event list",
     "legalNotice": {
       "title": "How legal-text versions work",

@@ -708,6 +708,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
 
       <AdminTable
         caption={t("events.tableCaption")}
+        tableId="events"
         columns={columns}
         rows={pageLines}
         rowKey={({ key }) => key}
