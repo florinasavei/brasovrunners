@@ -1,6 +1,7 @@
 import { and, asc, count, desc, eq, inArray, max, sql, type SQL } from "drizzle-orm";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
+import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventTranslations, events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
@@ -305,6 +306,54 @@ function rowDeadlineOrder(now: Date): SQL {
 function offerEmailQueuedAt(now: Date): SQL<boolean> {
   return sql<boolean>`(${registrations.status} = 'WAITLIST_OFFERED' and ${offerAwaitingItsFirstEmail(now)})`.mapWith(Boolean);
 }
+
+/**
+ * The purposes whose link moves the person's own registration on (§NNN, «Ce îi spui»): confirm the
+ * address, sign the declaration, accept an offer, manage the registration. Not the public list's switch
+ * nor the form for another person on the address: neither says where this registration stands.
+ */
+const TELL_LINK_PURPOSES = ["VERIFY_REGISTRATION_EMAIL", "COMPLETE_DECLARATION", "WAITLIST_OFFER", "MANAGE_REGISTRATION"] as const;
+
+/**
+ * When the newest live link of those purposes lapses (§NNN): unused, not superseded or revoked, still
+ * ahead of `now`. One probe on `email_action_tokens_registration_purpose_expiry_idx`, inside the page's
+ * own query, so «Ce îi spui» costs no round trip. Null when no such link is alive.
+ */
+function liveLinkExpiresAtFor(now: Date): SQL<Date | null> {
+  return sql<Date | null>`(
+    select ${emailActionTokens.expiresAt}
+    from ${emailActionTokens}
+    where ${emailActionTokens.registrationId} = ${registrations.id}
+      and ${emailActionTokens.purpose} in (${sql.join(
+        TELL_LINK_PURPOSES.map((purpose) => sql`${purpose}`),
+        sql`, `,
+      )})
+      and ${emailActionTokens.usedAt} is null
+      and ${emailActionTokens.invalidatedAt} is null
+      and ${emailActionTokens.expiresAt} > ${now}
+    order by ${emailActionTokens.createdAt} desc
+    limit 1
+  )`.mapWith(emailActionTokens.expiresAt);
+}
+
+/**
+ * Where a waiting row stands in its event's line (§629, §NNN), in the page's own query: the same
+ * numbers as `repository.ts#readWaitlistPosition` — the position in `lockOldestWaitlisted`'s order
+ * `(waitlisted_at, id)`, written as the count of the `WAITLISTED` rows at or ahead of this one, and
+ * the line's length — null on a row that is not waiting and on a cancelled event, as that reader is.
+ * A test holds the two equal (`tests/integration/registrations/what-to-tell.test.ts`).
+ */
+const waitingNow = sql`(${registrations.status} = 'WAITLISTED' and ${events.eventStatus} <> 'CANCELLED')`;
+const waitlistPositionOfRow = sql<number | null>`(case when ${waitingNow} then (
+    select count(*)::int from "registrations" as "ahead"
+    where "ahead"."event_id" = ${registrations.eventId}
+      and "ahead"."status" = 'WAITLISTED'
+      and ("ahead"."waitlisted_at", "ahead"."id") <= (${registrations.waitlistedAt}, ${registrations.id})
+  ) end)`.mapWith(Number);
+const waitlistLengthOfRow = sql<number | null>`(case when ${waitingNow} then (
+    select count(*)::int from "registrations" as "line"
+    where "line"."event_id" = ${registrations.eventId} and "line"."status" = 'WAITLISTED'
+  ) end)`.mapWith(Number);
 
 function registrationOrderBy(sort: RegistrationSortKey, dir: "asc" | "desc", now: Date) {
   const direction = dir === "asc" ? asc : desc;
@@ -612,6 +661,18 @@ export type RegistrationDetail = {
   emailLinkExpiresAt: Date | null;
   /** The offer's `WAITLIST_SPOT_OFFER` still queued (§520): past its stored deadline it has not lapsed (§650, `rowDeadlineOf`). */
   offerEmailQueued?: boolean;
+  /** The event's clock: «Ce îi spui» says an instant as the participant's own page does (§NNN). */
+  eventTimezone: string;
+  /** The event is cancelled: «Ce îi spui» says the cancellation rather than a deadline (§NNN). */
+  eventCancelled: boolean;
+  /** «Ofertele din lista de așteptare pleacă automat» (§615) and «Arată public câți așteaptă» (§634), for the waiting sentence. */
+  waitlistAutoOffer: boolean;
+  waitlistCountPublic: boolean;
+  /** Where a waiting row stands and how long the line is (§629): null unless `WAITLISTED` on an event not cancelled. */
+  waitlistPosition: number | null;
+  waitlistLength: number | null;
+  /** When the newest live link that moves this registration on lapses (§NNN); null when none is alive. */
+  liveLinkExpiresAt: Date | null;
   confirmedAt: Date | null;
   cancelledAt: Date | null;
   cancellationSource: string | null;
@@ -716,6 +777,14 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       emailLinkExpiresAt: registrations.emailLinkExpiresAt,
       // The timeline's deadline (§650): an offer whose first email is still queued has not lapsed (§520).
       offerEmailQueued: offerEmailQueuedAt(now),
+      // «Ce îi spui» (§NNN): the event's clock, whether it is cancelled, the line's two settings and numbers, the live link.
+      eventTimezone: events.timezone,
+      eventCancelled: sql<boolean>`(${events.eventStatus} = 'CANCELLED')`.mapWith(Boolean),
+      waitlistAutoOffer: events.waitlistAutoOffer,
+      waitlistCountPublic: events.waitlistCountPublic,
+      waitlistPosition: waitlistPositionOfRow,
+      waitlistLength: waitlistLengthOfRow,
+      liveLinkExpiresAt: liveLinkExpiresAtFor(now),
       confirmedAt: registrations.confirmedAt,
       cancelledAt: registrations.cancelledAt,
       cancellationSource: registrations.cancellationSource,
