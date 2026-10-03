@@ -31,12 +31,20 @@ export const LAID_OUT = "br:admin-table-layout";
 /** What a fixed layout gave every visible column, and each one's floor. */
 export type Laid = { widths: ColumnWidths; floors: ColumnWidths };
 
+/**
+ * What this page itself was told, per table, while the browser's storage refused (a private
+ * window, a policy): without it, the second arrow press or drag would lay the table out from the
+ * empty storage and snap every column back. It lives as long as the page, which is all a refused
+ * storage allows; a write the storage accepts drops it, so the storage stays the one truth.
+ */
+const unsaved = new Map<string, ColumnWidths>();
+
 export function readWidths(tableId: string): ColumnWidths {
   try {
     return parseWidths(window.localStorage.getItem(storageKey(tableId)));
   } catch {
-    // Storage blocked (a private window, a policy): the table simply keeps its automatic layout.
-    return {};
+    // Storage blocked: what this page was told, else nothing (the table keeps its automatic layout).
+    return { ...(unsaved.get(tableId) ?? {}) };
   }
 }
 
@@ -44,10 +52,39 @@ export function writeWidths(tableId: string, widths: ColumnWidths): void {
   try {
     if (Object.keys(widths).length === 0) window.localStorage.removeItem(storageKey(tableId));
     else window.localStorage.setItem(storageKey(tableId), JSON.stringify(widths));
+    unsaved.delete(tableId);
   } catch {
-    // Not kept past this page, but the drag itself still worked.
+    // Not kept past this page, but kept on it: the next press or drag starts from here.
+    if (Object.keys(widths).length === 0) unsaved.delete(tableId);
+    else unsaved.set(tableId, { ...widths });
   }
   window.dispatchEvent(new CustomEvent(WIDTHS_CHANGED, { detail: tableId }));
+}
+
+/**
+ * Each column's floor as the last fixed layout measured it, per table. Once a table is resized
+ * its headings may wrap, so a floor can no longer be measured there; a handle that mounts or is
+ * told of a layout after that (a reload with stored widths) reads it here instead, so its
+ * `aria-valuemin` is the column's own floor and not the table-wide least.
+ */
+const floorsByTable = new WeakMap<object, ColumnWidths>();
+
+export function recordFloors(table: object, floors: ColumnWidths): void {
+  floorsByTable.set(table, { ...floors });
+}
+
+/** The floor the last fixed layout measured for `key`, or `undefined` before any. */
+export function recordedFloor(table: object, key: string): number | undefined {
+  return floorsByTable.get(table)?.[key];
+}
+
+/**
+ * The `<style>` the inline script under the table wrote before the first paint
+ * (`column-widths-script.ts`), removed the moment an island lays the table out itself, so that
+ * after hydration the islands are the one source of the table's widths.
+ */
+export function dropEarlyStyle(tableId: string): void {
+  for (const style of document.head.querySelectorAll(`style[data-column-widths="${tableId}"]`)) style.remove();
 }
 
 export function tablesOf(tableId: string): HTMLTableElement[] {
@@ -63,6 +100,8 @@ function headerCell(table: HTMLTableElement, key: string): HTMLTableCellElement 
 }
 
 function unfix(table: HTMLTableElement): void {
+  // Whatever lays the table out from here on, the pre-paint style is no longer its source.
+  if (table.dataset.tableId) dropEarlyStyle(table.dataset.tableId);
   for (const col of columns(table)) col.style.width = "";
   table.style.tableLayout = "";
   table.style.width = "";
@@ -158,6 +197,7 @@ export function layOut(table: HTMLTableElement, stored: ColumnWidths, force = fa
 
   const floors: ColumnWidths = {};
   for (const { key, th } of visible) floors[key] = headingFloor(th);
+  recordFloors(table, floors);
   const { widths, total } = fixedLayout(
     visible.map(({ key, measured }) => ({ key, measured, floor: floors[key] })),
     stored,

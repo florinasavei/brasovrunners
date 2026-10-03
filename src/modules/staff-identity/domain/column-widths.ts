@@ -13,12 +13,14 @@
  */
 
 /**
- * The floor under every column, however short its heading: wide enough to keep its handle and a
- * few letters. Each column also has a floor of its own — its heading's longest word, the sort
- * arrow and the cell's padding, measured in the browser (`headingFloor` in `column-widths-dom.ts`)
- * — so no heading word is ever cut; this constant is only the least of those floors.
+ * The floor under every column, however short its heading: 64 px, the least the brief allowed —
+ * a 16-px edge to grab, the cell's 16 px of padding on each side and a few letters between them.
+ * Each column also has a floor of its own — its heading's longest word, the sort arrow and the
+ * cell's padding, measured in the browser (`headingFloor` in `column-widths-dom.ts`) — so no
+ * heading word is ever cut; that floor nearly always dominates, and this constant is only the
+ * least of those floors.
  */
-export const MIN_COLUMN_WIDTH = 56;
+export const MIN_COLUMN_WIDTH = 64;
 /** Wider than any column needs on a desktop screen; a stored value past it is a broken one. */
 export const MAX_COLUMN_WIDTH = 960;
 /** One press of an arrow key on a column's edge, and one with Shift held. */

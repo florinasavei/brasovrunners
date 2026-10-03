@@ -19,7 +19,14 @@ import {
   touchesVisible,
 } from "@/modules/staff-identity/domain/column-widths";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
-import { readWidths, WIDTHS_CHANGED, writeWidths } from "@/modules/staff-identity/ui/column-widths-dom";
+import {
+  readWidths,
+  recordedFloor,
+  recordFloors,
+  WIDTHS_CHANGED,
+  writeWidths,
+} from "@/modules/staff-identity/ui/column-widths-dom";
+import { earlyWidthsScript } from "@/modules/staff-identity/ui/column-widths-script";
 import { withClientWords } from "../../helpers/client-words";
 
 /**
@@ -163,11 +170,121 @@ describe("§NNN AdminTable's columns, as the server draws them", () => {
 
   it("refuses a table id that could not be a storage name or a selector", () => {
     expect(() => render({ tableId: 'a"] , b' })).toThrow(/tableId/);
+    expect(() => earlyWidthsScript("</script><script>")).toThrow(/tableId/);
+  });
+
+  it("carries exactly one pre-paint script per table, right after it, static but for the table's id", () => {
+    const html = render();
+    const scripts = [...html.matchAll(/<script([^>]*)>([\s\S]*?)<\/script>/g)];
+    expect(scripts).toHaveLength(1);
+    expect(scripts[0][1]).toContain('data-column-widths-script="registrations"');
+    expect(html).toMatch(/<\/table><script[^>]*>/);
+    const body = scripts[0][2];
+    expect(body).toBe(earlyWidthsScript("registrations"));
+    // The id is the only thing that varies, and it appears once, as a JSON string literal.
+    expect(body.split('"registrations"')).toHaveLength(2);
+    expect(body.replace('"registrations"', '"staff"')).toBe(earlyWidthsScript("staff"));
+    expect(body).toContain('"br.table."+i+".widths"');
+    expect(body).not.toContain("</");
+    // It writes one <style> into <head> and touches no attribute React owns.
+    expect(body).toContain("document.head.appendChild");
+    expect(body).toContain("'data-column-widths'");
+    expect(body).not.toMatch(/\.style\.|setAttribute\('(?!data-column-widths')|dataset/);
+    expect(body).toContain(`Math.max(${MIN_COLUMN_WIDTH},`);
   });
 });
 
 const ROOT = process.cwd();
 const read = (...parts: string[]) => readFileSync(path.join(ROOT, ...parts), "utf8").replace(/\r\n/g, "\n");
+
+describe("§NNN the pre-paint script, run against a stand-in for the page", () => {
+  type Element = { display: string; width: number };
+  function run(
+    stored: string | null,
+    headings: Record<string, Element>,
+    options: { hiddenFrames?: number; connected?: boolean } = {},
+  ) {
+    const appended: { attributes: Record<string, string>; textContent?: string }[] = [];
+    const cols = Object.keys(headings).map((key) => ({ getAttribute: () => key }));
+    let hiddenFrames = options.hiddenFrames ?? 0;
+    const frames: (() => void)[] = [];
+    const table = {
+      get offsetParent() {
+        return hiddenFrames > 0 ? null : {};
+      },
+      querySelectorAll: () => cols,
+      querySelector: (selector: string) => {
+        const heading = headings[/data-column="([^"]+)"/.exec(selector)?.[1] ?? ""];
+        return heading && { display: heading.display, getBoundingClientRect: () => ({ width: heading.width }) };
+      },
+    };
+    const document = {
+      currentScript: { isConnected: options.connected ?? true },
+      querySelector: () => table,
+      createElement: () => {
+        const element = { attributes: {} as Record<string, string>, setAttribute: (n: string, v: string) => void (element.attributes[n] = v) };
+        return element;
+      },
+      head: { appendChild: (element: (typeof appended)[number]) => void appended.push(element) },
+    };
+    const localStorage = { getItem: () => stored };
+    const getComputedStyle = (heading: Element) => ({ display: heading.display });
+    const requestAnimationFrame = (callback: () => void) => void frames.push(callback);
+    new Function("document", "localStorage", "getComputedStyle", "requestAnimationFrame", earlyWidthsScript("registrations"))(
+      document,
+      localStorage,
+      getComputedStyle,
+      requestAnimationFrame,
+    );
+    // Each frame, as the browser would run it: the streamed list is revealed after a few.
+    let ran = 0;
+    while (frames.length > 0) {
+      hiddenFrames -= 1;
+      ran += 1;
+      (frames.shift() as () => void)();
+    }
+    return Object.assign(appended, { frames: ran });
+  }
+  const headings = {
+    name: { display: "table-cell", width: 100.4 },
+    club: { display: "none", width: 0 },
+    state: { display: "table-cell", width: 90 },
+    [ACTIONS_COLUMN]: { display: "table-cell", width: 70 },
+  };
+
+  it("writes one style: the stored widths, the others as measured, the table at their sum", () => {
+    const appended = run(JSON.stringify({ name: 300, club: 500, [ACTIONS_COLUMN]: 10 }), headings);
+    expect(appended).toHaveLength(1);
+    expect(appended[0].attributes).toEqual({ "data-column-widths": "registrations" });
+    const css = appended[0].textContent ?? "";
+    const q = 'table[data-table-id="registrations"]';
+    expect(css).toContain(`${q}{table-layout:fixed;width:460px}`);
+    expect(css).toContain(`${q}>colgroup>col[data-column="name"]{width:300px}`);
+    expect(css).toContain(`${q}>colgroup>col[data-column="state"]{width:90px}`);
+    expect(css).toContain(`${q}>colgroup>col[data-column="${ACTIONS_COLUMN}"]{width:70px}`);
+    expect(css).not.toContain('"club"');
+  });
+
+  it("waits for a list streamed in hidden to be revealed, and stops once hydration removed it", () => {
+    const revealed = run(JSON.stringify({ name: 300 }), headings, { hiddenFrames: 3 });
+    expect(revealed.frames).toBe(3);
+    expect(revealed).toHaveLength(1);
+    expect(revealed[0].textContent).toContain('col[data-column="name"]{width:300px}');
+    expect(run(JSON.stringify({ name: 300 }), headings, { connected: false })).toHaveLength(0);
+  });
+
+  it("writes nothing when nothing stored touches a column on screen, or the table is not displayed", () => {
+    expect(run(null, headings)).toHaveLength(0);
+    expect(run("not json", headings)).toHaveLength(0);
+    expect(run(JSON.stringify({ club: 500 }), headings)).toHaveLength(0);
+    // A table that never shows (the phone layout) is looked for a few seconds' frames, then left.
+    const never = run(JSON.stringify({ name: 300 }), headings, { hiddenFrames: Number.POSITIVE_INFINITY });
+    expect(never).toHaveLength(0);
+    expect(never.frames).toBe(300);
+    // A width under the least floor is raised to it, as the islands would.
+    expect(run(JSON.stringify({ name: 10 }), headings)[0].textContent).toContain(`{width:${MIN_COLUMN_WIDTH}px}`);
+  });
+});
 
 describe("§NNN no row crosses to the client (§14.5)", () => {
   it("hands each island strings and a flag, never a row or a render function", () => {
@@ -186,6 +303,9 @@ describe("§NNN no row crosses to the client (§14.5)", () => {
     ]);
     const widthsSource = read("src", "modules", "staff-identity", "ui", "ColumnWidths.tsx");
     expect(widthsSource).toContain("export default function ColumnWidths({ tableId }: { tableId: string })");
+    expect(table).toMatch(/<ColumnWidthsScript tableId=\{tableId\} \/>/);
+    const scriptSource = read("src", "modules", "staff-identity", "ui", "ColumnWidthsScript.tsx");
+    expect(scriptSource).toContain("export default function ColumnWidthsScript({ tableId }: { tableId: string })");
   });
 });
 
@@ -246,12 +366,26 @@ describe("§NNN the widths in this browser's storage", () => {
     expect(readWidths("registrations")).toEqual({});
   });
 
-  it("reads nothing and throws nothing when storage is blocked", () => {
+  it("reads nothing and throws nothing when storage is blocked, and keeps this page's changes", () => {
     const fake = stub({ throws: true });
     expect(readWidths("registrations")).toEqual({});
     expect(() => writeWidths("registrations", { name: 240 })).not.toThrow();
     // The drag still worked on this page, and the reset control still hears of it.
     expect(fake.events).toHaveLength(1);
+    // A second change starts from the first, as the handle's commit does, rather than from nothing.
+    writeWidths("registrations", { ...readWidths("registrations"), state: 180 });
+    expect(readWidths("registrations")).toEqual({ name: 240, state: 180 });
+    expect(readWidths("events")).toEqual({});
+    writeWidths("registrations", {});
+    expect(readWidths("registrations")).toEqual({});
+  });
+
+  it("remembers each column's floor as its last fixed layout measured it", () => {
+    const table = {};
+    expect(recordedFloor(table, "name")).toBeUndefined();
+    recordFloors(table, { name: 119, state: MIN_COLUMN_WIDTH });
+    expect(recordedFloor(table, "name")).toBe(119);
+    expect(recordedFloor({}, "name")).toBeUndefined();
   });
 
   it("says which table changed, for its reset control", () => {

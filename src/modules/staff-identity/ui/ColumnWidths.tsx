@@ -1,11 +1,18 @@
 "use client";
 
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import Button from "@mui/material/Button";
 import { useTranslations } from "next-intl";
 import { useCallback, useLayoutEffect, useSyncExternalStore } from "react";
 import { storageKey } from "@/modules/staff-identity/domain/column-widths";
-import { layOut, readWidths, releaseLayout, tablesOf, WIDTHS_CHANGED, writeWidths } from "./column-widths-dom";
+import GlyphButton from "@/shared/ui/GlyphButton";
+import {
+  dropEarlyStyle,
+  layOut,
+  readWidths,
+  releaseLayout,
+  tablesOf,
+  WIDTHS_CHANGED,
+  writeWidths,
+} from "./column-widths-dom";
 
 /**
  * One per table, under it (§NNN): lays the table out with the widths this browser stored for it
@@ -16,12 +23,13 @@ import { layOut, readWidths, releaseLayout, tablesOf, WIDTHS_CHANGED, writeWidth
  * button that does nothing — and only from `md` up, where the table is (the phone layout has no
  * columns). With JavaScript off it renders nothing at all, and nothing was stored either.
  *
- * Widths are applied in a layout effect, in the same frame the handles appear, but after the
- * server's HTML has painted once, so a resized table can be seen to settle on the first load.
- * Applying them before that first paint would need the server to know them, which means a cookie
- * per table read on every request, for a preference about one screen. Another tab that changes
- * this table's widths lays it out here too (`storage`), and the reset hands the keyboard's focus
- * to the table's first column edge rather than dropping it with the button.
+ * Before the first paint the table already wears its stored widths: the inline script right after
+ * `</table>` (`ColumnWidthsScript`) wrote them into one `<style>` in `<head>`. This island, in its
+ * layout effect — the hydration commit, before it paints — removes that style and lays the table
+ * out itself (each column's floor measured, a stored width under it raised), so from here on it is
+ * the one source of the widths and the table moves by no more than that floor. Another tab that
+ * changes this table's widths lays it out here too (`storage`), and the reset hands the keyboard's
+ * focus to the table's first column edge rather than dropping it with the button.
  */
 export default function ColumnWidths({ tableId }: { tableId: string }) {
   const t = useTranslations("Admin");
@@ -48,6 +56,8 @@ export default function ColumnWidths({ tableId }: { tableId: string }) {
 
   useLayoutEffect(() => {
     const apply = () => {
+      // The pre-paint style goes even when nothing is left to lay out: the islands own it now.
+      dropEarlyStyle(tableId);
       const widths = readWidths(tableId);
       if (Object.keys(widths).length === 0) return;
       for (const table of tablesOf(tableId)) layOut(table, widths);
@@ -95,16 +105,16 @@ export default function ColumnWidths({ tableId }: { tableId: string }) {
   }
 
   return (
-    <Button
+    <GlyphButton
+      icon="reset"
       type="button"
       size="small"
       variant="text"
       onClick={reset}
-      startIcon={<RestartAltIcon fontSize="small" />}
       data-testid="admin-table-reset-widths"
       sx={{ display: { xs: "none", md: "inline-flex" }, minHeight: 44 }}
     >
       {t("columns.reset")}
-    </Button>
+    </GlyphButton>
   );
 }

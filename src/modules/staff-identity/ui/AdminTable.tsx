@@ -20,6 +20,7 @@ import {
 import { ACTIONS_COLUMN, TABLE_ID_PATTERN } from "@/modules/staff-identity/domain/column-widths";
 import ColumnResizeHandle from "./ColumnResizeHandle";
 import ColumnWidths from "./ColumnWidths";
+import ColumnWidthsScript from "./ColumnWidthsScript";
 
 /**
  * The one table every backoffice list is built from.
@@ -56,8 +57,10 @@ import ColumnWidths from "./ColumnWidths";
  * strings — the table's id, the column's key, its heading — and lays the table out through the
  * DOM, so no row ever crosses to the client. The widths are this browser's own, per `tableId`, in
  * `localStorage`: a preference about one screen, not something the server or the URL needs to
- * know. Under the table, `ColumnWidths` re-applies them on load and offers «Lățimi implicite»
- * while any is stored. With JavaScript off neither island draws anything, and the table is the
+ * know. Right after `</table>`, `ColumnWidthsScript` applies them as a `<style>` before the first
+ * paint, so a resized table does not jump on load; under the table, `ColumnWidths` takes over once
+ * hydrated (removing that style), lays the table out again when its frame changes width, and
+ * offers «Lățimi implicite» while any is stored. With JavaScript off neither island draws anything, and the table is the
  * automatic one it always was.
  *
  * A resized table switches to `table-layout: fixed` at the sum of its columns' widths: wider
@@ -358,6 +361,8 @@ export default function AdminTable<Row>({
             ))}
           </TableBody>
         </Table>
+        {/* Right after the table: its stored widths, before the first paint (§NNN). */}
+        <ColumnWidthsScript tableId={tableId} />
       </Box>
 
       {/*

@@ -5,9 +5,10 @@ import { FEATURED, hydrated, signIn } from "./support/featured-event";
 
 /**
  * §NNN, BR-REQ-041-01 — a backoffice table's columns can be resized: on the registrations list at
- * desktop width, a column's edge is dragged, the width survives a reload, «Lățimi implicite» puts
- * the table back to its automatic layout, and the edge is a separator whose `aria-valuenow` the
- * arrow keys move by 16. At 320 px the phone layout has no columns, so no edge and no reset.
+ * desktop width, a column's edge is dragged, the width survives a reload — drawn before the page
+ * hydrates, by the inline script's `<style>` — «Lățimi implicite» puts the table back to its
+ * automatic layout, and the edge is a named vertical separator, one per column but the row verbs',
+ * whose `aria-valuenow` the arrow keys move by 16 and whose `aria-valuemin` is its heading's floor. At 320 px the phone layout has no columns, so no edge and no reset.
  *
  * Everything here is the browser's own layout — `col` alignment under `table-layout: fixed` with
  * collapsed borders, pointer capture, the restore after a reload — which no unit test can reach.
@@ -80,6 +81,8 @@ async function inlineWidth(page: Page, key: string): Promise<string> {
 }
 
 async function drag(page: Page, handle: Locator, by: number) {
+  // The mouse moves in the viewport's coordinates: the list sits below the filters and the counts.
+  await handle.scrollIntoViewIfNeeded();
   const box = await handle.boundingBox();
   if (!box) throw new Error("the column's edge has no box");
   const y = box.y + box.height / 2;
@@ -108,9 +111,19 @@ test.describe("§NNN a backoffice table's columns can be resized", () => {
       const reset = main.getByTestId("admin-table-reset-widths");
       await expect(handle).toBeVisible();
       await expect(handle).toHaveAttribute("role", "separator");
+      await expect(handle).toHaveAttribute("aria-label", "Lățimea coloanei „Nume”");
+      await expect(handle).toHaveAttribute("aria-orientation", "vertical");
+      // One edge per visible column, none for the row verbs' column.
+      const table = main.locator('table[data-table-id="registrations"]');
+      const headings = await table.locator("th[data-column]").filter({ visible: true }).count();
+      const verbs = await table.locator('th[data-column="__actions"]').filter({ visible: true }).count();
+      await expect(table.locator("[data-column-resize]").filter({ visible: true })).toHaveCount(headings - verbs);
       await expect(reset).toHaveCount(0);
       // A focusable separator says its value from the start, not only after a drag.
       await expect(handle).toHaveAttribute("aria-valuenow", /^\d+$/);
+      // Its floor is the heading's own, measured: «Nume», its arrow and padding, over the least 64.
+      await expect.poll(async () => Number(await handle.getAttribute("aria-valuemin"))).toBeGreaterThan(64);
+      const floor = await handle.getAttribute("aria-valuemin");
 
       const before = await columnWidth(page, "name");
       await drag(page, handle, 120);
@@ -121,11 +134,28 @@ test.describe("§NNN a backoffice table's columns can be resized", () => {
       // Wider than the frame, the frame scrolls sideways; the page never does.
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
+      // Before any island runs, the stored width is already drawn: the inline script after
+      // </table> wrote it into one <style>. Holding the page's scripts back keeps it un-hydrated.
+      await page.route("**/_next/static/chunks/**", (route) => route.abort());
+      await page.reload();
+      await expect(main.locator('table[data-table-id="registrations"]')).toBeVisible();
+      expect(
+        await page.evaluate(() => document.head.querySelectorAll('style[data-column-widths="registrations"]').length),
+      ).toBe(1);
+      expect(await columnWidth(page, "name")).toBe(widened);
+      expect(await inlineWidth(page, "name")).toBe("");
+      await page.unroute("**/_next/static/chunks/**");
+
       await page.reload();
       await hydrated(page);
       await expect.poll(() => columnWidth(page, "name")).toBe(widened);
       await expect(reset).toBeVisible();
       await expect(handle).toHaveAttribute("aria-valuenow", String(widened));
+      // Hydrated, the islands own the widths: the pre-paint style is gone, the floor is the column's own.
+      expect(
+        await page.evaluate(() => document.head.querySelectorAll('style[data-column-widths="registrations"]').length),
+      ).toBe(0);
+      await expect(handle).toHaveAttribute("aria-valuemin", floor as string);
 
       // «Lățimi implicite»: the table is automatic again, and the focus lands on a column edge.
       await reset.click();

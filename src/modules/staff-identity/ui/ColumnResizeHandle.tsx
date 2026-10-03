@@ -25,6 +25,7 @@ import {
   LAID_OUT,
   layOut,
   readWidths,
+  recordedFloor,
   setColumnWidth,
   writeWidths,
 } from "./column-widths-dom";
@@ -91,8 +92,10 @@ export default function ColumnResizeHandle({ tableId, column, label, last }: Pro
       if (drag.current) return;
       setWidth(columnWidthNow(table, column));
       const th = self.current?.closest("th");
-      // Measured only while the heading is one line: a fixed layout may already have wrapped it.
-      if (th && !table.dataset.resized) setFloor(headingFloor(th));
+      // Measured only while the heading is one line: a fixed layout may already have wrapped it,
+      // so a resized table's floor is the one its layout measured before fixing it.
+      if (table.dataset.resized) setFloor(recordedFloor(table, column) ?? MIN_COLUMN_WIDTH);
+      else if (th) setFloor(headingFloor(th));
     };
     const frame = requestAnimationFrame(measure);
     table.addEventListener(LAID_OUT, measure);
@@ -190,7 +193,7 @@ export default function ColumnResizeHandle({ tableId, column, label, last }: Pro
       aria-valuemin={floor}
       aria-valuemax={MAX_COLUMN_WIDTH}
       aria-valuenow={width ?? undefined}
-      aria-valuetext={width === null ? undefined : `${width} px`}
+      aria-valuetext={width === null ? undefined : t("columns.widthValue", { width })}
       title={t("columns.resizeHow")}
       ref={self}
       data-column-resize={column}
