@@ -2627,8 +2627,10 @@ BR-REQ-037-05):
    citizenship, the country, the city, the phone, the emergency contact, the guardian, the club
    and the member tick, the socials, the T-shirt — each met by the form's own Zod rule and the
    form's cross-field rules, the socials judged as the minors' sweep judges them: a row written
-   before the eighteenth birthday keeps none; the guardian judged as the form judges it, on the
-   same day: only a minor's row names one, and a birth date corrected to an adult's clears it. `editRegistrationAnswersByStaff`, under the event lock, writes only
+   before the eighteenth birthday keeps none; the guardian judged as the form judges it, on that
+   one day too, both for owing and for allowing one: a row written while the person was a minor
+   must name a guardian, though the person is an adult today, only such a row may, and a birth
+   date corrected to an adult's clears it. `editRegistrationAnswersByStaff`, under the event lock, writes only
    the changed columns and one `registration.answer_corrected` `{ field, from, to }` row per
    column (`registration.name_corrected` for the name of record); no state, no place, no email;
    any status, a TEST row like a real one. A key outside the allowlist is refused by name. **Three

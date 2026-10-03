@@ -157,6 +157,18 @@ describe("BR-REQ-037-03 criterion 12: only a minor's row names a guardian (§108
     expect(planAnswerEdit(grownUp, { guardianName: "Elena Pop" }, context).set).toEqual({ guardianName: "Elena Pop" });
   });
 
+  it("owes a guardian on the day it allows one: a row a minor's when written, the person an adult today", () => {
+    // Eighteen on 2026-09-15: a minor on 2026-09-01, when the row was written; an adult on 2026-10-02.
+    const grownUp = { ...current, birthDate: "2008-09-15", guardianName: "Maria Pop" } as unknown as Registration;
+    // A: clearing the guardian leaves a minor's row with none.
+    expect(refusalOf(() => planAnswerEdit(grownUp, { guardianName: "" }, context))).toEqual(["guardianName"]);
+    // B: an adult's row corrected to a birth date a minor's when written, with no guardian.
+    expect(refusalOf(() => planAnswerEdit(current, { birthDate: "2008-09-10" }, context))).toEqual(["guardianName"]);
+    expect(planAnswerEdit(current, { birthDate: "2008-09-10", guardianName: "Maria Pop" }, context).set).toEqual({ birthDate: "2008-09-10", guardianName: "Maria Pop" });
+    // C: the same date on an adult's signed row, refused on the birth date: no guardian can be added.
+    expect(refusalOf(() => planAnswerEdit(current, { birthDate: "2008-09-10" }, { ...context, declarationSigned: true }))).toEqual(["birthDate", GUARDIAN_SIGNED]);
+  });
+
   it("under a signed declaration the guardian stays, and a birth date that would need one is refused on the birth date", () => {
     const signed = { ...noMinAge, declarationSigned: true };
     // An adult's date on a signed minor's row: the declaration still names the guardian who signed.

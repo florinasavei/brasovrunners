@@ -225,9 +225,10 @@ const same = (a: unknown, b: unknown) => (a ?? null) === (b ?? null);
  * rule is tested without a database. Refuses (VALIDATION_ERROR naming the key): a key outside the
  * allowlist, an invalid value, an empty change, a change that changes nothing (`ANSWERS_UNCHANGED`),
  * and the form's cross-field rules on the row as it would be — the emergency contact is somebody
- * else (§228), a minor has a guardian (§108) and only a minor has one (`GUARDIAN_ADULT`), a minor has
- * no socials (§323) — the socials judged, as the minors' sweep judges them, against the day the row
- * was written (`MINOR_AT_REGISTRATION`) — and the event's minimum age (§321).
+ * else (§228), a minor has a guardian (§108) and only a minor has one (`GUARDIAN_ADULT`) — both judged
+ * against the one day the row was written, as the form does — a minor has no socials (§323) — the
+ * socials judged, as the minors' sweep judges them, against the same day (`MINOR_AT_REGISTRATION`) —
+ * and the event's minimum age (§321).
  *
  * Carried with the answers, as the form carries them:
  * - the **name of record** is composed from the two names (BR-REQ-031-04 criterion 6), with its key
@@ -334,7 +335,9 @@ export function planAnswerEdit(
     }
     if (posted.has("birthDate")) next.guardianName = null;
   }
-  if ((posted.has("birthDate") || posted.has("guardianName")) && minor && !next.guardianName) {
+  // Owed on the same day it is allowed: the form asks a guardian of whoever was a minor when the row was
+  // written, so a row written while the person was a minor keeps one though they are an adult today.
+  if ((posted.has("birthDate") || posted.has("guardianName")) && minorAtRegistration && !next.guardianName) {
     // Under a signed declaration no guardian can be added (the box is the declaration's): say so on the
     // birth date, the box that moved, rather than point at the greyed guardian.
     if (context.declarationSigned) refuse("a minor's birth date on a declaration signed with no guardian", ["birthDate", GUARDIAN_SIGNED]);

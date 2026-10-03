@@ -403,6 +403,26 @@ describe("BR-REQ-037-03 criterion 12: only a minor's row names a guardian (§108
     expect(await db.select().from(auditLogs)).toHaveLength(0);
   });
 
+  it("owes a guardian on the day it allows one: a row a minor's when written, the person an adult today", async () => {
+    // Eighteen on 2026-09-15: a minor on 2026-09-01, when the row was written; an adult on NOW.
+    const written = new Date("2026-09-01T10:00:00.000Z");
+    const pending = { status: "PENDING_DECLARATION", confirmedAt: null, bibNumber: null, clubMemberDeclared: false, clubName: null, createdAt: written } as const;
+    // A: clearing the guardian of such a row.
+    const grownUp = await seed({ ...pending, birthDate: "2008-09-15", guardianName: "Maria Pop" });
+    expect(await refusal(editRegistrationAnswers(db, admin, grownUp, { guardianName: "" }, NOW))).toEqual({ code: "VALIDATION_ERROR", fields: ["guardianName"] });
+    expect((await rowOf(grownUp)).guardianName).toBe("Maria Pop");
+    // B: an adult's row corrected to a birth date a minor's when written, with no guardian.
+    const adult = await seed({ ...pending, registeredName: "Ioana Pop", nameKey: "ioana pop", firstName: "Ioana", displayName: "Ioana Pop" });
+    expect(await refusal(editRegistrationAnswers(db, admin, adult, { birthDate: "2008-09-10" }, NOW))).toEqual({ code: "VALIDATION_ERROR", fields: ["guardianName"] });
+    expect((await rowOf(adult)).birthDate).toBe("1990-05-01");
+    // C: the same date on an adult's signed row, refused on the birth date.
+    const signed = await seed({ createdAt: written, registeredName: "Elena Pop", nameKey: "elena pop", firstName: "Elena", displayName: "Elena Pop", clubMemberDeclared: false, clubName: null });
+    await sign(signed, "Elena Pop");
+    expect(await refusal(editRegistrationAnswers(db, admin, signed, { birthDate: "2008-09-10" }, NOW))).toEqual({ code: "VALIDATION_ERROR", fields: ["birthDate", "guardianSigned"] });
+    expect((await rowOf(signed)).birthDate).toBe("1990-05-01");
+    expect(await corrections()).toHaveLength(0);
+  });
+
   it("clears the guardian when a birth date corrected before any declaration makes the row an adult's, with its own audit row", async () => {
     const id = await seed({ status: "PENDING_DECLARATION", confirmedAt: null, bibNumber: null, birthDate: "2012-03-01", guardianName: "Maria Pop", clubMemberDeclared: false, clubName: null });
     const { corrected } = await editRegistrationAnswers(db, admin, id, { birthDate: "1990-05-01" }, NOW);
