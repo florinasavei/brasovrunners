@@ -1422,7 +1422,10 @@ languages go live together; that is the rule, not a setting.
    - **«Numerele listei ascunse încep de la»** — empty, they draw from the race's own series like
      everybody; set (say 900), the hidden list has its own series from there up, in confirmation
      order. The save refuses a start inside the race's series (the first number and as many after
-     it as there are places) or inside the desk's spare numbers;
+     it as there are places), or inside the desk's spare numbers; on a race without a limit of
+     places, whose series has no end, only a start below the race's first number is accepted. With
+     the hidden series above the race's, the spares printed for the desk stay between the two — a
+     print that would reach the hidden series is refused with a sentence that names this box;
    - **«Numără și lista ascunsă»** — unticked by default, «Cine vine» counts the race's places only;
      ticked, it counts the hidden list too. The places line and the free places never do.
 
@@ -1435,7 +1438,8 @@ languages go live together; that is the rule, not a setting.
    confirms. They keep a declaration, a race number and their row on the public list if they
    ticked, and take none of the announced places; a place one of them held is given back to the
    line (§643, §NNN, `AGENTS.md` §15.11). A number already given stays when somebody changes list.
-   While the switch is on, the event page's places line («N înscriși din M locuri») carries one
+   While the switch is on — or while anybody already on the list still holds a place, since
+   unticking it takes nobody off — the event page's places line («N înscriși din M locuri») carries one
    sentence in the public's words — organisers, volunteers and invited runners may be at the start
    outside the advertised places, taking none of them; the name «Lista ascunsă» is the backoffice's
    alone and appears on no public page and in no participant's email.

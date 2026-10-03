@@ -261,6 +261,7 @@
       "noteStates": "The number in the title counts the confirmed and, while registration is open at an event with a set number of places, those completing their registration. A name is shown only for those who ticked “I want to appear on the participants & results list”; the other confirmed participants appear as “Participant (name hidden)”, with nothing else about them. Those registered who have not confirmed yet and those on the waiting list appear only if they ticked it, with the registration's stage beside the name; a cancelled or expired registration does not appear. The choice can be changed at any time from the confirmation email or from “My registrations”.",
       "socialsNote": "Strava and Instagram appear only beside the names of those who chose it when registering.",
       "outsideNote": "Those at the start outside the advertised places (organisers, volunteers, invited runners) appear in the table without being counted: the numbers above count the places.",
+      "outsideCountedNote": "The numbers above also count those at the start outside the advertised places (organisers, volunteers, invited runners); of them, only those who chose to appear are in the table.",
       "noteNamesOnly": "The table lists the confirmed. A name is shown only for those who ticked “I want to appear on the participants & results list”; the others appear as “Participant (name hidden)”, with nothing else about them. The choice can be changed at any time from the confirmation email or from “My registrations”.",
       "noteStatesNamesOnly": "A name is shown only for those who ticked “I want to appear on the participants & results list”; the other confirmed participants appear as “Participant (name hidden)”, with nothing else about them. Those registered who have not confirmed yet and those on the waiting list appear only if they ticked it, with the registration's stage beside the name; a cancelled or expired registration does not appear. The choice can be changed at any time from the confirmation email or from “My registrations”.",
       "noteStatesNoWaitlistNamesOnly": "A name is shown only for those who ticked “I want to appear on the participants & results list”; the other confirmed participants appear as “Participant (name hidden)”, with nothing else about them. Those registered who have not confirmed yet appear only if they ticked it, with the registration's stage beside the name; the waiting list is not public for this event, and a cancelled or expired registration does not appear. The choice can be changed at any time from the confirmation email or from “My registrations”.",
@@ -1265,6 +1266,7 @@
       "NOT_FOUND": "That record no longer exists.",
       "VALIDATION_ERROR": "Check what you entered; something is not valid.",
       "HIDDEN_LIST_OFF": "The hidden list is off for this event. Tick «Use the hidden list» in the event's settings first.",
+      "SPARES_BEFORE_HIDDEN_LIST": "The spare numbers no longer fit before the hidden list's series. Move «The hidden list's numbers start at» higher in the event's settings, or print fewer.",
       "INVALID_ADDRESSES": "Not email addresses: {addresses}. Separate the addresses with commas, spaces or line breaks. Nothing was saved.",
       "TOO_MANY_ADDRESSES": "At most {max} addresses in one box. Nothing was saved.",
       "ONE_ADDRESS_ONLY": "“Signed declarations go to” takes one address — the archive mailbox. Put the others under “Visible copy (Cc)” or “Hidden copy (Bcc)”. Nothing was saved.",
@@ -2033,7 +2035,7 @@
             "unlimited": "unlimited places",
             "declaration": "declaration v{version}",
             "noDeclaration": "declaration missing",
-            "listHidden": "list hidden",
+            "listHidden": "public list off",
             "listShown": "list public",
             "external": "With the organiser: {provider}",
             "externalUnnamed": "With the organiser"
@@ -2076,7 +2078,7 @@
             "footer": "footer: {parts}"
           },
           "startList": {
-            "hidden": "Hidden",
+            "hidden": "Not public",
             "shown": "Public — only the names of those confirmed who chose to appear",
             "shownWithWaitlist": "Public · with the waiting list — only the names of those who chose to appear"
           },
@@ -2204,9 +2206,9 @@
       "waitlistCountPublicHelp": "Ticked: the card, the page and each person on the list learn how many are waiting. Unticked: the pages say only that there is a waiting list and how to join it; the club sees it in the backoffice.",
       "hiddenListTitle": "Hidden list",
       "hiddenListEnabled": "Use the hidden list",
-      "hiddenListEnabledHelp": "Ticked: registrations offer «Put on the hidden list»: people at the start who take none of the race's places (organizers, pacemakers, invited runners). Unticked: nothing changes for those on it.",
+      "hiddenListEnabledHelp": "Ticked: registrations can be put on it. Unticked: nobody new goes on it; those on it stay, and the page mentions them while they hold a place; their series and the counting stop.",
       "hiddenListBibStart": "The hidden list's numbers start at",
-      "hiddenListBibStartHelp": "Empty: they get numbers from the same series as everybody. Set: the hidden list has its own series, from here up; it cannot overlap the race's series or the spare numbers.",
+      "hiddenListBibStartHelp": "Empty: the same series as everybody. Set: its own series, from here up, outside the race's series; the spares stay below it. Without a limit of places, only below the race's first number.",
       "participantCountPublic": "Show the count publicly",
       "participantCountPublicHelp": "Ticked: the page says how many are coming and how many are confirmed. Unticked: the list shows only the names, no numbers; the club sees the numbers in the backoffice.",
       "hiddenListCounted": "Count the hidden list too",
@@ -5461,8 +5463,9 @@
                 "From the waiting list or an open offer they get a place now, on the hidden list: the declaration email, with the usual deadline, not the offer's.",
                 "Confirmed or with a declaration to sign, they keep their state, number and emails. They appear on the public list only if they ticked, unmarked.",
                 "With «The hidden list's numbers start at» the hidden list has its own series of race numbers, in confirmation order; a number already given stays.",
-                "On the site, «Who's coming» counts them only with «Count the hidden list too»; the places and the free places never count them. «Show the count publicly», beside «Show publicly how many are waiting», is on every event, with or without the hidden list: unticked, it leaves only the names.",
-                "With «Use the hidden list» ticked, the event page says beside the places, naming nobody, that organisers, volunteers and invited runners may be at the start outside the advertised places.",
+                "On the site, «Who's coming» counts them only with «Count the hidden list too» ticked; the places and the free places never count them.",
+                "«Show the count publicly», beside «Show publicly how many are waiting», is on every event: unticked, «Who's coming» shows only the names, no numbers.",
+                "While the list is in use or anybody on it holds a place, the page says beside the places, naming nobody, that organisers and invited runners may start outside the advertised places.",
                 "«Counted among the event's places» turns it back only if a place is free; otherwise the press is refused and says who holds the places.",
                 "In the registrations list, the pill «Hidden list» shows them all; the export has a column for them."
               ]

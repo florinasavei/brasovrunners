@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { createFormatter, createTranslator } from "next-intl";
 import { renderToStaticMarkup } from "react-dom/server";
+import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
@@ -15,7 +16,8 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * §NNN «Lista ascunsă», the public side: while an event's «Folosește lista ascunsă» is on, the places
  * line beside the register button carries one sentence — organisers, volunteers and invited runners may
  * be at the start outside the advertised places, taking none of them — in the visitor's words, never
- * the backoffice's «Lista ascunsă». Off, nothing; an uncapped event, which advertises no places, nothing.
+ * the backoffice's «Lista ascunsă». Off, nothing — unless somebody already on the list still holds a
+ * place, who still starts outside the advertised places; an uncapped event, which advertises no places, nothing.
  */
 let db: TestDatabase;
 let close: () => Promise<void>;
@@ -118,14 +120,33 @@ describe("§NNN the places line's sentence while the event uses the hidden list"
     expect(english).not.toMatch(/hidden list/i);
   });
 
-  it("is not said with the switch off, even with somebody already on the list", async () => {
+  it("is not said with the switch off while nobody on the list holds a place", async () => {
     const event = await openRace(10, false);
     await confirmed(event.id, 3);
+    // On the list once, cancelled since: they start nowhere.
     await confirmed(event.id, 1, true, 3);
+    await db.update(registrations).set({ status: "CANCELLED", cancelledAt: NOW, cancellationSource: "ADMIN" }).where(eq(registrations.outsideCapacity, true));
     const html = await render("cros");
     expect(html).toContain("3 înscriși din 10 locuri");
     expect(html).not.toContain('data-testid="registration-outside-places"');
     expect(html).not.toContain(ro.Event.cta.outsidePlacesNote);
+  });
+
+  it("is still said with the switch off while somebody already on the list holds a place — confirmed or a hold", async () => {
+    // Unticking the switch changes nothing for those already on the list: they still start outside the
+    // advertised places, so the page that reads «10 din 10» must still say so.
+    const event = await openRace(10, false);
+    await confirmed(event.id, 10);
+    await confirmed(event.id, 1, true, 10);
+    const html = await render("cros");
+    expect(html).toContain("10 înscriși din 10 locuri");
+    expect(html).toContain('data-testid="registration-outside-places"');
+    expect(html).toContain(ro.Event.cta.outsidePlacesNote);
+    expect(html).not.toMatch(/lista ascunsă/i);
+
+    // A hold on the list counts the same.
+    await db.update(registrations).set({ status: "PENDING_DECLARATION", confirmedAt: null, holdExpiresAt: new Date("2026-11-19T07:00:00.000Z") }).where(eq(registrations.outsideCapacity, true));
+    expect(await render("cros")).toContain(ro.Event.cta.outsidePlacesNote);
   });
 
   it("is not said on an uncapped event, which advertises no places", async () => {

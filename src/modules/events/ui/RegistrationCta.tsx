@@ -10,7 +10,7 @@ import ButtonLink from "@/shared/ui/ButtonLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import type { PublicEventPage } from "../repository";
-import { cachedDeadlines } from "@/modules/public-cache/reads";
+import { cachedDeadlines, cachedStartListCounts } from "@/modules/public-cache/reads";
 import { emailDelayNotice } from "@/modules/registrations/ui/email-delay-notice";
 import { fillPhrase, fullThanksPhrase, offeredPhrase, waitingPhrase, waitlistOfferPhrase, waitlistRoomPhrase } from "./counted-phrases";
 import { type PreviewDoor, readRegistrationDoor } from "./registration-door";
@@ -71,14 +71,19 @@ export default async function RegistrationCta({
     who later counts the start knows how the club seats people outside the advertised places — in the
     public's words, never the backoffice's «Lista ascunsă», and naming nobody. Only beside the places
     line (`fill`, a capped event's known counts): an uncapped event advertises no places to be outside of.
-    The switch is the event row's, which every event save expires with the page.
+    The switch is the event row's, which every event save expires with the page. And while anybody real
+    on the hidden list still holds a place with the switch off — unticking it changes nothing for those
+    already on it — the sentence stays: they still start outside the advertised places, and the page
+    must not read «150 înscriși din 150 locuri» as if nobody else were at the start. That count is the
+    start list's cached one (`places` expires it with every registration change); the editor's preview,
+    which neither fills nor reads the public cache (§579), says it by the switch alone.
   */
-  const outsidePlacesNote =
-    fill && event.hiddenListEnabled === true ? (
-      <Typography variant="body2" color="text.secondary" data-testid="registration-outside-places">
-        {t("cta.outsidePlacesNote")}
-      </Typography>
-    ) : null;
+  const outsidePlaces = fill !== null && (event.hiddenListEnabled === true || (!previewDoor && (await hiddenListHoldsPlaces(event.id))));
+  const outsidePlacesNote = outsidePlaces ? (
+    <Typography variant="body2" color="text.secondary" data-testid="registration-outside-places">
+      {t("cta.outsidePlacesNote")}
+    </Typography>
+  ) : null;
 
   if (cta.kind === "EXTERNAL") {
     return (
@@ -280,4 +285,18 @@ async function CapacityUnknown({ slug }: { slug: string }) {
       {t("capacityUnknown")}
     </Alert>
   );
+}
+
+/**
+ * Whether anybody real on the hidden list holds a place at this event — confirmed, or a hold (§NNN):
+ * the start list's cached counts, keyed `"hidden-list"`. A read that cannot be answered says no — the
+ * sentence is a courtesy beside the places line, never a reason for the page to fail (§281).
+ */
+async function hiddenListHoldsPlaces(eventId: string): Promise<boolean> {
+  try {
+    const { hidden } = await cachedStartListCounts(eventId);
+    return hidden.confirmed + hidden.held > 0;
+  } catch {
+    return false;
+  }
 }

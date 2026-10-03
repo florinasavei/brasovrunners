@@ -202,7 +202,7 @@ describe("§350 each box's summary, empty and filled", () => {
       costType: "FREE",
     };
     const options = { takesRegistrations: true, declarationVersion: 3, locale: "ro", creating: false };
-    expect(registrationSummary(words, internal as never, options)).toBe("Pe site · 150 de locuri · declarația v3 · lista ascunsă");
+    expect(registrationSummary(words, internal as never, options)).toBe("Pe site · 150 de locuri · declarația v3 · listă nepublică");
     expect(registrationSummary(words, { ...internal, capacity: 1 } as never, options)).toContain("1 loc");
     expect(registrationSummary(words, { ...internal, capacity: 12 } as never, { ...options, declarationVersion: null })).toContain("12 locuri · lipsește declarația");
     expect(registrationSummary(words, { ...internal, registrationMode: "EXTERNAL", externalProvider: "Asociația X" } as never, options)).toBe(
@@ -247,13 +247,13 @@ describe("§350 each box's summary, empty and filled", () => {
     // §444: the desk's spares, when the club set a band.
     expect(bibsSummary(words, 1, null, null, { from: 900, to: 949 })).toBe("De la 1 · culoarea clubului · rezervă 900–949");
     expect(bibsSummary(wordsEn, 1, null, null, { from: 900, to: 949 })).toMatch(/spares 900–949$/);
-    expect(startListSummary(words, "HIDDEN")).toBe("Ascunsă");
+    expect(startListSummary(words, "HIDDEN")).toBe("Nepublică");
     expect(startListSummary(words, "NAMES")).toBe(words.startList.shown);
     // §628: «Lista de așteptare e publică» adds its words to a published list, and to nothing else.
     expect(startListSummary(words, "NAMES", true)).toBe("Publică · cu lista de așteptare — doar numele celor care au ales să apară");
     expect(startListSummary(wordsEn, "NAMES", true)).toBe("Public · with the waiting list — only the names of those who chose to appear");
     expect(startListSummary(words, "NAMES", false)).toBe(words.startList.shown);
-    expect(startListSummary(words, "HIDDEN", true)).toBe("Ascunsă");
+    expect(startListSummary(words, "HIDDEN", true)).toBe("Nepublică");
   });
 
   it("Traseul, Linkuri, Parteneri, Evidențiere — and the empty state of each", () => {

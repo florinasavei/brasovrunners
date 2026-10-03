@@ -70,6 +70,7 @@ import {
 import { env } from "@/shared/config/env";
 import { readBibDesignForm } from "@/modules/registrations/bib-design-query";
 import { assignBibNumbers, reserveSpareBibs } from "@/modules/registrations/bibs";
+import { SPARES_BEFORE_HIDDEN_LIST } from "@/modules/registrations/domain/hidden-list";
 import { withdrawInterest } from "@/modules/registrations/interest";
 import { eraseGroupRunDeclaration, eraseGroupRunDeclarations, setGroupRunDeclarationHold } from "@/modules/group-run-declarations/service";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
@@ -147,14 +148,6 @@ function editorPath(locale: Locale, eventId: string): string {
 const eventFormFieldNames = (error: DomainError) => error.fields.map((field) => eventFormFieldName(field));
 
 /**
- * The whole event row as the form sends it — one reader, so the create form and the edit form
- * cannot drift apart in what they post. Every value stays a string here; `fields.ts` is what
- * turns "" into "not stated" and refuses the rest.
- *
- * The names are namespaced `event.*` because the editor is one form carrying the event row and
- * both languages together (the editor's boxes, `ui/boxes/`, and `ui/TranslationFields.tsx`).
- */
-/**
  * «Lista ascunsă» (§NNN): the event's switch, the hidden list's first number and «Numără și lista
  * ascunsă» — one marker for the three (`StartListBox`), so a form without the group, the create form
  * or a fixture, edits none of them. «Arată public numărătoarea» is not in the group — it acts on every
@@ -169,6 +162,14 @@ function hiddenListFrom(form: FormData, value: (field: string) => string) {
   };
 }
 
+/**
+ * The whole event row as the form sends it — one reader, so the create form and the edit form
+ * cannot drift apart in what they post. Every value stays a string here; `fields.ts` is what
+ * turns "" into "not stated" and refuses the rest.
+ *
+ * The names are namespaced `event.*` because the editor is one form carrying the event row and
+ * both languages together (the editor's boxes, `ui/boxes/`, and `ui/TranslationFields.tsx`).
+ */
 function eventFieldsFrom(form: FormData) {
   const value = (field: string) => text(form, `event.${field}`);
   /**
@@ -380,7 +381,7 @@ function eventFieldsFrom(form: FormData) {
     // «Arată public numărătoarea» (§NNN): on by default, so an unticked box is `false` only beside its marker.
     participantCountPublic:
       form.get("event.participantCountPublic.present") === "1" ? form.get("event.participantCountPublic") === "on" : undefined,
-    // «Lista ascunsă» (§NNN): the group's four, read only when the form carried its marker — a form
+    // «Lista ascunsă» (§NNN): the group's three, read only when the form carried its marker — a form
     // without the group is "not editing it", never "switched off" or "no series".
     ...hiddenListFrom(form, value),
     externalProvider: value("externalProvider"),
@@ -973,7 +974,8 @@ export async function reserveSpareBibsAction(_previous: FormOutcome | null, form
     });
     outcome = { saved: "sparesReserved", count: String(result.count), from: String(result.from), to: String(result.to) };
   } catch (error) {
-    outcome = outcomeOf(error);
+    // No room before the hidden list's own series (§NNN): its sentence, which names the box to move.
+    outcome = isDomainError(error) && error.fields.includes(SPARES_BEFORE_HIDDEN_LIST) ? { error: SPARES_BEFORE_HIDDEN_LIST } : outcomeOf(error);
   }
   return backTo(editorPath(locale, eventId), outcome);
 }

@@ -246,6 +246,12 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   );
   // The note that the hidden list is not counted, only where it is not and the numbers are said.
   const outsideShown = countPublic && !countHidden && outsideNamed + (others.outsidePending ?? 0) > 0;
+  /*
+    Where it is counted (§NNN), the title and «confirmați» may hold people with no row at all — somebody
+    on the hidden list who did not tick is not even a «Participant (nume ascuns)» row (§32) — so the note
+    says so in one sentence, and the title, the rows and the note agree.
+  */
+  const countedNotListed = countPublic && countHidden && hidden.confirmed + hidden.held > 0;
   const [participants, otherRows] = await Promise.all([
     view.namedLimit > 0 ? cachedStartListPage(event.id, view.namedOffset, view.namedLimit, socialsOn, numbersOn) : [],
     firstStatesNotice !== null && view.othersLimit > 0
@@ -539,6 +545,8 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
             {socialsOn ? ` ${t("startList.socialsNote")}` : null}
             {/* Only while the table holds somebody seated outside the places (§643): one sentence, no row marked. */}
             {outsideShown ? ` ${t("startList.outsideNote")}` : null}
+            {/* Counted, and not every one of them listed (§NNN): one sentence, no row marked. */}
+            {countedNotListed ? ` ${t("startList.outsideCountedNote")}` : null}
           </Typography>
         </>
       )}

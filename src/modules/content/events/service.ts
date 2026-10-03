@@ -2199,10 +2199,18 @@ function hiddenListChanges(changes: Partial<HiddenListColumns>): Partial<HiddenL
 }
 
 /**
- * The trail of «Lista ascunsă» (§NNN): who changed the event's switch, the hidden list's first number
- * or the two public-count ticks, on which date, from and to — one row per save that moved any of the
- * four, in the save's transaction. The switch decides who may be seated beyond the announced places,
- * and the ticks what the public is told, so the trail says who decided them.
+ * The «Lista ascunsă» group's three columns (§NNN), audited as `event.hidden_list_changed`; «Arată public
+ * numărătoarea» acts on every event, so it has its own action, `event.participant_count_public_changed`,
+ * and an event that never uses the hidden list does not read in its trail as if the hidden list had moved.
+ */
+const HIDDEN_LIST_GROUP: ReadonlyArray<keyof HiddenListColumns> = ["hiddenListEnabled", "hiddenListBibStart", "hiddenListCounted"];
+
+/**
+ * The trail of «Lista ascunsă» and «Arată public numărătoarea» (§NNN): who changed the event's switch, the
+ * hidden list's first number, «Numără și lista ascunsă» or the public count's tick, on which date, from
+ * and to — one row per action for a save that moved any of its columns, in the save's transaction. The
+ * switch decides who may be seated beyond the announced places, and the ticks what the public is told,
+ * so the trail says who decided them.
  */
 async function auditHiddenList<T extends Record<string, unknown>>(
   tx: Database<T> | Transaction<T>,
@@ -2213,19 +2221,25 @@ async function auditHiddenList<T extends Record<string, unknown>>(
 ): Promise<void> {
   const from = hiddenListOf(before);
   const to = hiddenListOf(after);
-  const moved = (Object.keys(from) as Array<keyof HiddenListColumns>).filter((key) => from[key] !== to[key]);
-  if (moved.length === 0) return;
-  await recordAuditEvent(tx, {
-    actorStaffUserId: actor.id,
-    action: "event.hidden_list_changed",
-    entityType: "event",
-    entityId: after.id,
-    metadata: {
-      from: Object.fromEntries(moved.map((key) => [key, from[key]])),
-      to: Object.fromEntries(moved.map((key) => [key, to[key]])),
-    },
-    now,
-  });
+  const trails = [
+    { action: "event.hidden_list_changed" as const, keys: HIDDEN_LIST_GROUP },
+    { action: "event.participant_count_public_changed" as const, keys: ["participantCountPublic"] as ReadonlyArray<keyof HiddenListColumns> },
+  ];
+  for (const { action, keys } of trails) {
+    const moved = keys.filter((key) => from[key] !== to[key]);
+    if (moved.length === 0) continue;
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action,
+      entityType: "event",
+      entityId: after.id,
+      metadata: {
+        from: Object.fromEntries(moved.map((key) => [key, from[key]])),
+        to: Object.fromEntries(moved.map((key) => [key, to[key]])),
+      },
+      now,
+    });
+  }
 }
 
 /**
@@ -2245,6 +2259,8 @@ function assertHiddenListClearOfSpares(
     throw new DomainError(
       "VALIDATION_ERROR",
       `hiddenListBibStart: the hidden list's numbers must start outside the desk's spare numbers (${current.walkInBibStart}–${last})`,
+      // The box, so the editor names it beside the sentence rather than only «Verifică datele introduse».
+      ["hiddenListBibStart"],
     );
   }
 }

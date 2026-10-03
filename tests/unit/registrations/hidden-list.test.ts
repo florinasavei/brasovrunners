@@ -53,6 +53,29 @@ describe("§NNN the name, in both languages", () => {
     expect(read("src/modules/registrations/workbook.ts")).toContain('header: "Hidden list"');
   });
 
+  it("calls the public participant list «nepublică» in the editor's summaries, never «lista ascunsă»", () => {
+    expect(ro.Admin.editor.boxes.summary.registration.listHidden).toBe("listă nepublică");
+    expect(en.Admin.editor.boxes.summary.registration.listHidden).toBe("public list off");
+    expect(ro.Admin.editor.boxes.summary.startList.hidden).toBe("Nepublică");
+    expect(en.Admin.editor.boxes.summary.startList.hidden).toBe("Not public");
+  });
+
+  it("splits the guide's counting into two steps, each under 200 characters", () => {
+    for (const catalogue of [ro, en]) {
+      const steps = catalogue.Admin.guide.sections[4].tasks[10].steps as string[];
+      for (const step of steps) expect(step.length, step).toBeLessThan(200);
+    }
+    const steps = ro.Admin.guide.sections[4].tasks[10].steps as string[];
+    expect(steps.findIndex((step) => step.includes("«Numără și lista ascunsă»"))).toBeLessThan(steps.findIndex((step) => step.startsWith("«Arată public numărătoarea»")));
+  });
+
+  it("says in the switch's help what unticking stops and what it keeps", () => {
+    expect(ro.Admin.editor.hiddenListEnabledHelp).toContain("nimeni nou nu intră pe ea");
+    expect(ro.Admin.editor.hiddenListEnabledHelp).toContain("pagina îi anunță cât timp au loc");
+    expect(en.Admin.editor.hiddenListEnabledHelp).toContain("nobody new goes on it");
+    expect(en.Admin.editor.hiddenListEnabledHelp).toContain("the page mentions them while they hold a place");
+  });
+
   it("keeps the four editor helps under 200 characters, in both languages", () => {
     for (const catalogue of [ro, en]) {
       for (const key of ["hiddenListEnabledHelp", "hiddenListBibStartHelp", "participantCountPublicHelp", "hiddenListCountedHelp"] as const) {
@@ -81,6 +104,14 @@ describe("§NNN the glyph and the radio", () => {
     const pill = renderToStaticMarkup(createElement(HiddenListChip, { label: "Lista ascunsă: 2", href: "/ro/admin/registrations?outside=1", active: true }));
     expect(pill).toMatch(/<a [^>]*href="\/ro\/admin\/registrations\?outside=1"/);
     expect(pill).toContain('aria-current="page"');
+    expect(pill).toContain("MuiChip-colorPrimary");
+    // Unpressed, it looks like every other summary pill (`ChipLink`): the default colour, outlined.
+    const unpressed = renderToStaticMarkup(createElement(HiddenListChip, { label: "Lista ascunsă: 2", href: "/ro/admin/registrations?outside=1" }));
+    expect(unpressed).toContain("MuiChip-colorDefault");
+    expect(unpressed).toContain("MuiChip-outlined");
+    expect(unpressed).not.toContain("MuiChip-colorSecondary");
+    // The row's plain chip keeps the secondary colour that marks the row.
+    expect(chip).toContain("MuiChip-colorSecondary");
   });
 
   it("is two radios, the server's state checked, under a heading with the glyph; the Organizer's are disabled", () => {

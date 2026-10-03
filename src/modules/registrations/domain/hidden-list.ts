@@ -13,6 +13,12 @@
 /** The marker a refusal carries when somebody is put on the list of an event whose switch is off. */
 export const HIDDEN_LIST_OFF = "HIDDEN_LIST_OFF";
 
+/**
+ * The marker a refused print of the desk's spares carries when they no longer fit before the hidden
+ * list's own series (`spare-bibs.ts#spareStopOf`): the editor turns it into a sentence naming the box.
+ */
+export const SPARES_BEFORE_HIDDEN_LIST = "SPARES_BEFORE_HIDDEN_LIST";
+
 /** The event's four columns, as stored. */
 export type HiddenListSettings = {
   hiddenListEnabled: boolean;

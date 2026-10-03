@@ -6,6 +6,8 @@ import { auditLogs } from "@/db/schema/audit-logs";
 import { eventTranslations, events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { eventFieldsSchema } from "@/modules/content/events/fields";
+import { previewPageOf } from "@/modules/content/events/preview-view";
+import { findEventForEditing } from "@/modules/content/events/repository";
 import { createEvent, duplicateEvent, repeatEvent, saveEventAndTranslations } from "@/modules/content/events/service";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
@@ -110,12 +112,16 @@ beforeEach(async () => {
 
 const reloadEvent = async (id: string) => (await db.select().from(events).where(eq(events.id, id)))[0];
 const translationsOf = (id: string) => db.select().from(eventTranslations).where(eq(eventTranslations.eventId, id));
-const trail = (eventId: string) =>
+const trailOf = (action: "event.hidden_list_changed" | "event.participant_count_public_changed") => (eventId: string) =>
   db
     .select()
     .from(auditLogs)
-    .where(and(eq(auditLogs.action, "event.hidden_list_changed"), eq(auditLogs.entityId, eventId)))
+    .where(and(eq(auditLogs.action, action), eq(auditLogs.entityId, eventId)))
     .orderBy(asc(auditLogs.createdAt));
+/** The hidden list's group: the switch, its series, «Numără și lista ascunsă». */
+const trail = trailOf("event.hidden_list_changed");
+/** «Arată public numărătoarea», on every event: its own action (§NNN), never the hidden list's. */
+const countTrail = trailOf("event.participant_count_public_changed");
 
 type Group = { enabled?: boolean; start?: string; countPublic?: boolean; counted?: boolean } | "absent";
 
@@ -187,10 +193,12 @@ describe("§NNN «Lista ascunsă» on the event", () => {
       actorStaffUserId: admin.id,
       entityType: "event",
       metadataJson: {
-        from: { hiddenListEnabled: false, hiddenListBibStart: null, participantCountPublic: true, hiddenListCounted: false },
-        to: { hiddenListEnabled: true, hiddenListBibStart: 900, participantCountPublic: false, hiddenListCounted: true },
+        from: { hiddenListEnabled: false, hiddenListBibStart: null, hiddenListCounted: false },
+        to: { hiddenListEnabled: true, hiddenListBibStart: 900, hiddenListCounted: true },
       },
     });
+    // The count's tick moved in the same save: its own row, under its own action.
+    expect((await countTrail(source.id)).map((entry) => entry.metadataJson)).toEqual([{ from: { participantCountPublic: true }, to: { participantCountPublic: false } }]);
 
     // No marker: "not editing it", and no trail row.
     expect(await postSave(settingsForm(source.id, (await reloadEvent(source.id)).version, "absent"))).toBe("redirected");
@@ -210,7 +218,9 @@ describe("§NNN «Lista ascunsă» on the event", () => {
     form.set("event.participantCountPublic.present", "1");
     expect(await postSave(form)).toBe("redirected");
     expect(settled(await reloadEvent(source.id))).toEqual({ enabled: false, start: null, countPublic: false, counted: false });
-    expect((await trail(source.id)).at(-1)?.metadataJson).toEqual({ from: { participantCountPublic: true }, to: { participantCountPublic: false } });
+    // Its own action: on an event that never uses the hidden list, the trail says nothing of the hidden list.
+    expect((await countTrail(source.id)).at(-1)?.metadataJson).toEqual({ from: { participantCountPublic: true }, to: { participantCountPublic: false } });
+    expect(await trail(source.id)).toHaveLength(0);
     // Ticked again by the same marker.
     const again = settingsForm(source.id, (await reloadEvent(source.id)).version, "absent");
     again.set("event.participantCountPublic.present", "1");
@@ -239,9 +249,12 @@ describe("§NNN «Lista ascunsă» on the event", () => {
     expect(issue({ hiddenListEnabled: true, hiddenListBibStart: "150" })).not.toBeNull();
     expect(issue({ hiddenListEnabled: true, hiddenListBibStart: "151" })).toBeNull();
     expect(issue({ hiddenListEnabled: true, hiddenListBibStart: "500", bibStartNumber: "600" })).toBeNull();
-    // Uncapped: only the race's own first number is refused; a start above it ends the race's series there.
-    expect(issue({ hiddenListEnabled: true, hiddenListBibStart: "1", capacity: "" })).not.toBeNull();
-    expect(issue({ hiddenListEnabled: true, hiddenListBibStart: "2", capacity: "" })).toBeNull();
+    // Uncapped: the race's series has no end, so the hidden list's must start below the race's first number.
+    expect(issue({ hiddenListEnabled: true, hiddenListBibStart: "1", capacity: "" })).toMatch(/below the race's first number \(1\)/);
+    expect(issue({ hiddenListEnabled: true, hiddenListBibStart: "2", capacity: "" })).not.toBeNull();
+    expect(issue({ hiddenListEnabled: true, hiddenListBibStart: "5000", capacity: "", bibStartNumber: "100" })).not.toBeNull();
+    expect(issue({ hiddenListEnabled: true, hiddenListBibStart: "1", capacity: "", bibStartNumber: "100" })).toBeNull();
+    expect(issue({ hiddenListEnabled: true, hiddenListBibStart: "99", capacity: "", bibStartNumber: "100" })).toBeNull();
     // The switch off: the box is not judged — it acts only while on.
     expect(issue({ hiddenListEnabled: false, hiddenListBibStart: "10" })).toBeNull();
   });
@@ -250,7 +263,8 @@ describe("§NNN «Lista ascunsă» on the event", () => {
     const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
     await db.update(events).set({ walkInBibStart: 200, walkInBibCount: 20 }).where(eq(events.id, source.id));
     const refused = await postSave(settingsForm(source.id, (await reloadEvent(source.id)).version, { enabled: true, start: "210", countPublic: true }));
-    expect(refused).toMatchObject({ error: "VALIDATION_ERROR" });
+    // The box is named, so the editor points at it rather than only saying «Verifică datele introduse».
+    expect(refused).toMatchObject({ error: "VALIDATION_ERROR", fields: ["event.hiddenListBibStart"] });
     expect((await reloadEvent(source.id)).hiddenListBibStart).toBeNull();
     expect(await postSave(settingsForm(source.id, (await reloadEvent(source.id)).version, { enabled: true, start: "220", countPublic: true }))).toBe("redirected");
     expect((await reloadEvent(source.id)).hiddenListBibStart).toBe(220);
@@ -263,6 +277,18 @@ describe("§NNN «Lista ascunsă» on the event", () => {
     );
     await db.update(events).set({ editorialStatus: "PUBLISHED", publishedAt: NOW }).where(eq(events.id, source.id));
     expect(await findPublishedEventBySlug(db, "ro", "crosul-ascuns")).toMatchObject({ hiddenListEnabled: true, participantCountPublic: false, hiddenListCounted: true });
+  });
+
+  it("the editor's preview carries the switch and the two ticks, as the page reads them", async () => {
+    const source = await createEvent(
+      db,
+      { actor: admin, fields: { ...FIELDS, hiddenListEnabled: true, participantCountPublic: false, hiddenListCounted: true, translations: TRANSLATIONS }, now: NOW },
+    );
+    const record = await findEventForEditing(db, source.id);
+    if (!record) throw new Error("no event");
+    for (const translation of record.translations) {
+      expect(previewPageOf(record.event, translation), translation.locale).toMatchObject({ hiddenListEnabled: true, participantCountPublic: false, hiddenListCounted: true });
+    }
   });
 
   it("is carried to every date a series makes and kept by a duplicate", async () => {

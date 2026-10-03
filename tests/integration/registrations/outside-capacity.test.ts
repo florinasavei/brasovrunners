@@ -16,7 +16,7 @@ import { computeOccupied, NoFreePlaceError, SUPPLEMENTARY_PLACE_UNCONFIRMED, sup
 import { publicFill } from "@/modules/events/domain/registration-cta";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { computeDeclarationHoldExpiry, confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
-import { HIDDEN_LIST_OFF } from "@/modules/registrations/domain/hidden-list";
+import { HIDDEN_LIST_OFF, SPARES_BEFORE_HIDDEN_LIST } from "@/modules/registrations/domain/hidden-list";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -68,7 +68,7 @@ const { cancelRegistrationByStaff, confirmRegistrationByStaff, givePlaceToUnconf
 const { countOccupied, expireStaleHolds, countHiddenListWithPlace, countOutsideOnPublicStartList, countPublicStartList, countAnonymousStartListEntries, countOutsideCapacity, findEventsNeedingMaintenance } =
   await import("@/modules/registrations/repository");
 const { renderOutboxMessage } = await import("@/modules/notifications/render");
-const { assignBibNumbers } = await import("@/modules/registrations/bibs");
+const { assignBibNumbers, reserveSpareBibs, spareCardState } = await import("@/modules/registrations/bibs");
 const { forgetCachedDeadlines } = await import("@/modules/deadlines/memo");
 const { summariseRegistrationsForAdmin, listRegistrationsForAdmin, readPlaceDeadlines } = await import("@/modules/registrations/admin-repository");
 const { forecastAutomaticEmails } = await import("@/modules/notifications/forecast");
@@ -711,6 +711,52 @@ describe("§NNN «Lista ascunsă»: the event's switch and the hidden list's own
     await confirmedAddress(event, "Elena", 30);
     await confirmRegistrationByStaff(db, admin, (await rowOf("Elena")).id, at(31));
     expect((await rowOf("Elena")).bibNumber).toBe(5);
+  });
+
+  it("two series with the desk's spares reserved: the spares stay below the hidden list's series, and both draws skip them", async () => {
+    const event = await createEvent(5);
+    await db.update(events).set({ bibStartNumber: 1, hiddenListBibStart: 900 }).where(eq(events.id, event.id));
+    const confirmAt = async (name: string, minute: number, hidden = false) => {
+      await confirmedAddress(event, name, minute);
+      if (hidden) await setOutsideCapacity(db, admin, (await rowOf(name)).id, true, at(minute));
+      await confirmRegistrationByStaff(db, admin, (await rowOf(name)).id, at(minute + 1));
+      return (await rowOf(name)).bibNumber;
+    };
+    expect(await confirmAt("Ana", 0)).toBe(1);
+    // Invitations: 900 and 901, on the hidden list's own series.
+    expect(await confirmAt("Ioana", 2, true)).toBe(900);
+    expect(await confirmAt("Dan", 4, true)).toBe(901);
+
+    // The first print's «highest» is the race's 1, not the hidden list's 901: the spares are 2–4, never 902–904.
+    expect((await spareCardState(db, event.id)).candidates.slice(0, 3)).toEqual([2, 3, 4]);
+    expect(await reserveSpareBibs(db, { actor: admin, eventId: event.id, count: 3, now: at(6) })).toMatchObject({ from: 2, to: 4 });
+
+    // Each series skips the spares: the race's goes on at 5, the hidden list's at 902 — no number jumps.
+    expect(await confirmAt("Bogdan", 8)).toBe(5);
+    expect(await confirmAt("Elena", 10, true)).toBe(902);
+    // A second print extends the spares, still below the hidden list's series.
+    expect(await reserveSpareBibs(db, { actor: admin, eventId: event.id, count: 2, now: at(12) })).toMatchObject({ from: 6, to: 7 });
+  });
+
+  it("refuses a print of spares that would reach the hidden list's series, with its sentence", async () => {
+    const event = await createEvent(5);
+    await db.update(events).set({ bibStartNumber: 1, hiddenListBibStart: 8 }).where(eq(events.id, event.id));
+    await confirmedAddress(event, "Ana", 0);
+    await confirmRegistrationByStaff(db, admin, (await rowOf("Ana")).id, at(1));
+    // Between 1 (Ana) and 8 there is room for six: 2–7.
+    expect((await spareCardState(db, event.id)).candidates).toEqual([2, 3, 4, 5, 6, 7]);
+    const error = await refusal(reserveSpareBibs(db, { actor: admin, eventId: event.id, count: 7, now: at(2) }));
+    expect(isDomainError(error) && error.code).toBe("VALIDATION_ERROR");
+    expect(isDomainError(error) && error.fields).toContain(SPARES_BEFORE_HIDDEN_LIST);
+    expect((await db.select().from(events).where(eq(events.id, event.id)))[0].walkInBibCount).toBeNull();
+    expect(ro.Admin.errors.SPARES_BEFORE_HIDDEN_LIST).toContain("«Numerele listei ascunse încep de la»");
+    expect(en.Admin.errors.SPARES_BEFORE_HIDDEN_LIST).toContain("«The hidden list's numbers start at»");
+    // Six fit; the hidden list's first number is never a spare.
+    expect(await reserveSpareBibs(db, { actor: admin, eventId: event.id, count: 6, now: at(3) })).toMatchObject({ from: 2, to: 7 });
+    // A hidden series below the race's bounds nothing: the spares come after the race's numbers as before.
+    await db.update(events).set({ bibStartNumber: 100, hiddenListBibStart: 1, walkInBibStart: null, walkInBibCount: null }).where(eq(events.id, event.id));
+    await db.update(registrations).set({ bibNumber: 100 }).where(eq(registrations.eventId, event.id));
+    expect((await spareCardState(db, event.id)).candidates.slice(0, 2)).toEqual([101, 102]);
   });
 
   it("counts everybody on the hidden list with a place for «Numără și lista ascunsă», ticked or not, real only", async () => {

@@ -23,9 +23,10 @@ import {
   spareBandOf,
   type SpareState,
   spareStateOf,
+  spareStopOf,
 } from "./domain/spare-bibs";
 import { TERMINAL_STATUSES } from "./domain/state-machine";
-import { hiddenListBibStartOf } from "./domain/hidden-list";
+import { hiddenListBibStartOf, SPARES_BEFORE_HIDDEN_LIST } from "./domain/hidden-list";
 
 type Actor = Pick<StaffUser, "id" | "role">;
 
@@ -64,9 +65,10 @@ export type BibSeries = "race" | "hidden";
  * band, as it always was, and a row on the hidden list draws from it like everybody. With one, two
  * series that never meet: the hidden list's from its own start up to the race's start when it sits
  * below it, or up to the ceiling when above; and the race's from its own start up to the hidden
- * list's when that sits above it. The save refuses a hidden start inside the race's capped series or
- * the desk's spares (`fields.ts#hiddenListBandRule`, `assertHiddenListClearOfSpares`); the spares are
- * skipped by every draw as before.
+ * list's when that sits above it. The save refuses a hidden start inside the race's capped series, at
+ * or above an uncapped race's first number, or inside the desk's spares (`fields.ts#hiddenListBandRule`,
+ * `assertHiddenListClearOfSpares`); the print keeps new spares below a hidden series above the race's
+ * (`spareStopOf`); the spares are skipped by every draw as before.
  */
 function seriesBounds(band: { start: number; hiddenStart: number | null }, series: BibSeries): { from: number; to: number } {
   const { start, hiddenStart } = band;
@@ -564,12 +566,13 @@ export async function spareCardState<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
 ): Promise<{ band: SpareBand | null; free: number; candidates: number[] }> {
-  const { start, spare } = await bandOf(db, eventId);
+  const { start, spare, hiddenStart } = await bandOf(db, eventId);
   const taken = await numbersInUse(db, eventId);
   return {
     band: spare,
     free: freeSpareNumbers(spare, taken).length,
-    candidates: nextSpareCandidates({ band: spare, taken, bibStartNumber: start, limit: SPARE_BIBS_PER_PRINT }),
+    // Below the hidden list's own series when it sits above the race's (§NNN): never inside it.
+    candidates: nextSpareCandidates({ band: spare, taken, bibStartNumber: start, limit: SPARE_BIBS_PER_PRINT, stop: spareStopOf(start, hiddenStart) }),
   };
 }
 
@@ -597,17 +600,33 @@ export async function reserveSpareBibs<T extends Record<string, unknown>>(
   }
   return db.transaction(async (tx) => {
     const [event] = await tx
-      .select({ id: events.id, bibStartNumber: events.bibStartNumber, walkInBibStart: events.walkInBibStart, walkInBibCount: events.walkInBibCount })
+      .select({
+        id: events.id,
+        bibStartNumber: events.bibStartNumber,
+        walkInBibStart: events.walkInBibStart,
+        walkInBibCount: events.walkInBibCount,
+        hiddenListEnabled: events.hiddenListEnabled,
+        hiddenListBibStart: events.hiddenListBibStart,
+      })
       .from(events)
       .where(eq(events.id, input.eventId))
       .for("update");
     if (!event) throw new DomainError("NOT_FOUND", "no such event");
     const band = spareBandOf(event);
-    const plan = planSpareReservation({ band, taken: await numbersInUse(tx, input.eventId), bibStartNumber: event.bibStartNumber, count: input.count });
+    const plan = planSpareReservation({
+      band,
+      taken: await numbersInUse(tx, input.eventId),
+      bibStartNumber: event.bibStartNumber,
+      count: input.count,
+      // The spares stop before the hidden list's own series when it sits above the race's (§NNN).
+      stop: spareStopOf(event.bibStartNumber, hiddenListBibStartOf(event)),
+    });
     if (!plan.ok) {
       throw plan.reason === "count"
         ? new DomainError("VALIDATION_ERROR", `between 1 and ${SPARE_BIBS_PER_PRINT} spares at a time`, ["spareCount"])
-        : new DomainError("VALIDATION_ERROR", `no room for ${input.count} more spares (${plan.reason})`, [plan.reason === "size" ? "spareTotal" : "spareCeiling"]);
+        : plan.reason === "hiddenList"
+          ? new DomainError("VALIDATION_ERROR", `no room for ${input.count} more spares before the hidden list's numbers`, [SPARES_BEFORE_HIDDEN_LIST])
+          : new DomainError("VALIDATION_ERROR", `no room for ${input.count} more spares (${plan.reason})`, [plan.reason === "size" ? "spareTotal" : "spareCeiling"]);
     }
     const from = plan.printed[0];
     const to = plan.printed[plan.printed.length - 1];

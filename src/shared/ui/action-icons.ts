@@ -158,7 +158,7 @@ export type ActionIconName =
   | "emailConfirmation"
   // «Lista ascunsă» (§NNN; the owner: «o iconiță specială cu un bandit (incognito)»): the hat and the
   // round glasses, drawn here (`IncognitoIcon`, Material has none) — the registration page's block, the
-  // row's chip, the list's pill and the confirm that puts somebody on it.
+  // row's chip and the list's pill.
   | "hiddenList"
   // The emergency details and the emergency sheet (§322): the first-aid case, never on the desk.
   | "emergency"

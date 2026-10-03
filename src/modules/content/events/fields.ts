@@ -334,12 +334,13 @@ function costRule(
 
 /**
  * «Numerele listei ascunse încep de la» (§NNN): the hidden list's own series may not overlap the
- * race's. The race's series runs from `bibStartNumber` for `capacity` numbers on a capped event; an
- * uncapped one has no end, and the hidden series above it is its end (`bibs.ts#pickBibNumber` never
- * draws a counted row from it). So a start equal to the race's, or inside its capped series, is
- * refused; one below the race's series runs up to it. The desk's spares (§444) are on the event row,
- * not in the form: the service checks those (`assertHiddenListClearOfSpares`). Judged only while the
- * switch is on, the only time the series acts; absent fields (a caller not editing them) judge nothing.
+ * race's. The race's series runs from `bibStartNumber` for `capacity` numbers on a capped event, so a
+ * start inside it is refused and one below it or past it is accepted. An uncapped event's series has
+ * no end — every number from its first upward is the race's — so there the hidden list's start must
+ * sit below the race's first number. The desk's spares (§444) are on the event row, not in the form:
+ * the service checks those (`assertHiddenListClearOfSpares`), and the print keeps the spares below a
+ * hidden series above the race's (`bibs.ts#spareCardState`). Judged only while the switch is on, the
+ * only time the series acts; absent fields (a caller not editing them) judge nothing.
  */
 export function hiddenListBandRule(
   fields: { hiddenListEnabled?: boolean; hiddenListBibStart?: number | null; bibStartNumber: number; capacity: number | null },
@@ -348,7 +349,17 @@ export function hiddenListBandRule(
   const start = fields.hiddenListBibStart;
   if (fields.hiddenListEnabled !== true || start === null || start === undefined) return;
   const raceStart = fields.bibStartNumber;
-  const raceEnd = fields.capacity === null ? raceStart : raceStart + fields.capacity - 1;
+  if (fields.capacity === null) {
+    if (start >= raceStart) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["hiddenListBibStart"],
+        message: `without a limit of places, the hidden list's numbers must start below the race's first number (${raceStart})`,
+      });
+    }
+    return;
+  }
+  const raceEnd = raceStart + fields.capacity - 1;
   if (start >= raceStart && start <= raceEnd) {
     ctx.addIssue({
       code: "custom",

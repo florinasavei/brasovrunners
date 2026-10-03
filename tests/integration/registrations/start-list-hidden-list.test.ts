@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { createTranslator } from "next-intl";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -5,6 +7,7 @@ import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { resolveDisplayName } from "@/modules/registrations/names";
+import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 import type { PublicEvent } from "@/modules/events/repository";
@@ -102,7 +105,15 @@ async function seeded(): Promise<string> {
   return id;
 }
 
-const render = async (event: PublicEvent) => renderToStaticMarkup(await StartList({ event }));
+/** The backoffice's name for the list (§NNN), which no public page says, in either language. */
+const BACKOFFICE_NAME = /lista ascuns|hidden list/i;
+
+/** The rendered list — and, every time, the proof it never names the hidden list. */
+const render = async (event: PublicEvent) => {
+  const html = renderToStaticMarkup(await StartList({ event }));
+  expect(html).not.toMatch(BACKOFFICE_NAME);
+  return html;
+};
 const rows = (html: string) => (html.match(/data-testid="start-list-(named|anonymous)"/g) ?? []).length;
 
 beforeAll(async () => {
@@ -122,6 +133,7 @@ describe("§NNN «Cine vine» and the hidden list's two ticks", () => {
     expect(html).not.toContain("Dan Invitat");
     expect(rows(html)).toBe(3);
     expect(html).toContain(ro.Event.startList.outsideNote);
+    expect(html).not.toContain(ro.Event.startList.outsideCountedNote);
   });
 
   it("«Numără și lista ascunsă» counts everybody on the hidden list with a place, ticked or not — the rows unchanged", async () => {
@@ -135,6 +147,9 @@ describe("§NNN «Cine vine» and the hidden list's two ticks", () => {
     expect(html).not.toContain("Dan Invitat");
     expect(rows(html)).toBe(3);
     expect(html).not.toContain(ro.Event.startList.outsideNote);
+    // Title 4, rows 3: Dan, unticked, is counted and has no row — and the note says so (§NNN), so the
+    // title, the rows and the note agree.
+    expect(html).toContain(ro.Event.startList.outsideCountedNote);
   });
 
   it("«Arată public numărătoarea» off: only the names — no number in the title, no counted line, no position", async () => {
@@ -175,5 +190,28 @@ describe("§NNN «Cine vine» and the hidden list's two ticks", () => {
     expect(html).toContain("Ana Popescu");
     expect(html).toContain("Ioana Pacemaker");
     expect(rows(html)).toBe(3);
+  });
+
+  it("names the hidden list in no public string: only the backoffice's namespaces say it", () => {
+    const found: string[] = [];
+    const walk = (node: unknown, at: string) => {
+      if (typeof node === "string") {
+        if (BACKOFFICE_NAME.test(node)) found.push(at);
+      } else if (node && typeof node === "object") {
+        for (const [key, value] of Object.entries(node)) walk(value, at ? `${at}.${key}` : key);
+      }
+    };
+    for (const [locale, catalogue] of [["ro", ro], ["en", en]] as const) {
+      for (const [namespace, messages] of Object.entries(catalogue)) {
+        if (namespace === "Admin" || namespace === "Feedback") continue;
+        walk(messages, `${locale}.${namespace}`);
+      }
+    }
+    expect(found).toEqual([]);
+  });
+
+  it("the cached counts are keyed for the hidden list's shape", () => {
+    const reads = readFileSync(path.resolve(__dirname, "../../../src/modules/public-cache/reads.ts"), "utf8");
+    expect(reads).toContain('["places.start-list-counts", eventId, "outside", "hidden-list"]');
   });
 });
