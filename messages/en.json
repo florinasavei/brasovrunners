@@ -1404,6 +1404,7 @@
       "ANSWER_SOCIALS_MINOR_AT_REGISTRATION": "Strava and Instagram were not saved: the person was a minor when they registered, and the maintenance sweep would delete them. Leave them empty.",
       "ANSWER_BIRTH_DATE_MINOR_AT_REGISTRATION": "The birth date was not saved: the person would have been a minor when they registered; empty Strava and Instagram first.",
       "ANSWER_BIRTH_DATE_GUARDIAN_SIGNED": "The birth date was not saved: it would make the person a minor, and the declaration was signed with no parent or guardian, who cannot be added now.",
+      "ANSWER_BIRTH_DATE_GUARDIAN_SIGNED_ADULT": "The birth date was not saved: it would make the person an adult when they registered, and the declaration was signed by the parent or guardian it names, who cannot be removed now.",
       "ANSWER_GUARDIAN_ADULT": "The parent or guardian was not saved: the person was not a minor when they registered. Only a minor's registration names a parent or guardian."
     },
     "editor": {

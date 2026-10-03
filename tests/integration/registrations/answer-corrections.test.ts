@@ -383,12 +383,16 @@ describe("BR-REQ-037-03 criterion 12: a signed declaration keeps the guardian it
     expect((await rowOf(adult)).birthDate).toBe("1990-05-01");
   });
 
-  it("keeps a signed minor's guardian when the birth date is corrected to an adult's", async () => {
+  it("refuses an adult's birth date on a signed minor's row, keeping the guardian the declaration names", async () => {
     const minor = await seed({ birthDate: "2012-03-01", guardianName: "Maria Pop", registeredName: "Ioana Pop", nameKey: "ioana pop", firstName: "Ioana", displayName: "Ioana Pop", clubMemberDeclared: false, clubName: null });
     await sign(minor, "Maria Pop", "Ioana Pop");
-    await editRegistrationAnswers(db, admin, minor, { birthDate: "2008-01-01" }, NOW);
-    expect(await rowOf(minor)).toMatchObject({ birthDate: "2008-01-01", guardianName: "Maria Pop" });
+    expect(await refusal(editRegistrationAnswers(db, admin, minor, { birthDate: "1990-05-01" }, NOW))).toEqual({
+      code: "VALIDATION_ERROR",
+      fields: ["birthDate", "guardianSigned", "guardianAdult"],
+    });
+    expect(await rowOf(minor)).toMatchObject({ birthDate: "2012-03-01", guardianName: "Maria Pop" });
     expect((await findSignedDeclaration(db, minor))?.guardianName).toBe("Maria Pop");
+    expect(await corrections()).toEqual([]);
   });
 });
 
@@ -421,6 +425,16 @@ describe("BR-REQ-037-03 criterion 12: only a minor's row names a guardian (§108
     expect(await refusal(editRegistrationAnswers(db, admin, signed, { birthDate: "2008-09-10" }, NOW))).toEqual({ code: "VALIDATION_ERROR", fields: ["birthDate", "guardianSigned"] });
     expect((await rowOf(signed)).birthDate).toBe("1990-05-01");
     expect(await corrections()).toHaveLength(0);
+    // D: the grown-up's own row corrected to an adult's birth date before any declaration: the guardian goes, audited.
+    await editRegistrationAnswers(db, admin, grownUp, { birthDate: "1990-05-01" }, NOW);
+    expect(await rowOf(grownUp)).toMatchObject({ birthDate: "1990-05-01", guardianName: null });
+    expect(await corrections()).toEqual(
+      expect.arrayContaining([
+        { field: "birthDate", from: "2008-09-15", to: "1990-05-01" },
+        { field: "guardianName", from: "Maria Pop", to: null },
+      ]),
+    );
+    expect(await corrections()).toHaveLength(2);
   });
 
   it("clears the guardian when a birth date corrected before any declaration makes the row an adult's, with its own audit row", async () => {

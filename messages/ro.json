@@ -1404,6 +1404,7 @@
       "ANSWER_SOCIALS_MINOR_AT_REGISTRATION": "Strava și Instagram nu s-au salvat: persoana era minoră la înscriere, iar curățenia de întreținere le-ar șterge. Lasă-le goale.",
       "ANSWER_BIRTH_DATE_MINOR_AT_REGISTRATION": "Data nașterii nu s-a salvat: persoana ar fi fost minoră la înscriere; golește întâi Strava și Instagram.",
       "ANSWER_BIRTH_DATE_GUARDIAN_SIGNED": "Data nașterii nu s-a salvat: ar face din persoană un minor, iar declarația e semnată fără părinte sau tutore, care nu se mai poate adăuga.",
+      "ANSWER_BIRTH_DATE_GUARDIAN_SIGNED_ADULT": "Data nașterii nu s-a salvat: persoana ar fi fost majoră la înscriere, iar declarația e semnată de părintele sau tutorele pe care îl numește, care nu se mai poate scoate.",
       "ANSWER_GUARDIAN_ADULT": "Părintele sau tutorele nu s-a salvat: persoana nu era minoră la înscriere. Doar înscrierea unui minor numește un părinte sau tutore."
     },
     "editor": {

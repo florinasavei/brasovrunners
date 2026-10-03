@@ -167,12 +167,22 @@ describe("BR-REQ-037-03 criterion 12: only a minor's row names a guardian (§108
     expect(planAnswerEdit(current, { birthDate: "2008-09-10", guardianName: "Maria Pop" }, context).set).toEqual({ birthDate: "2008-09-10", guardianName: "Maria Pop" });
     // C: the same date on an adult's signed row, refused on the birth date: no guardian can be added.
     expect(refusalOf(() => planAnswerEdit(current, { birthDate: "2008-09-10" }, { ...context, declarationSigned: true }))).toEqual(["birthDate", GUARDIAN_SIGNED]);
+    // D: the row itself corrected to an adult's birth date before any declaration: the guardian goes, audited.
+    const plan = planAnswerEdit(grownUp, { birthDate: "1990-05-01" }, context);
+    expect(plan.set).toEqual({ birthDate: "1990-05-01", guardianName: null });
+    expect(plan.corrected).toEqual([
+      { field: "birthDate", from: "2008-09-15", to: "1990-05-01" },
+      { field: "guardianName", from: "Maria Pop", to: null },
+    ]);
   });
 
-  it("under a signed declaration the guardian stays, and a birth date that would need one is refused on the birth date", () => {
+  it("under a signed declaration the guardian stays, and a birth date that would need one or drop one is refused on the birth date", () => {
     const signed = { ...noMinAge, declarationSigned: true };
-    // An adult's date on a signed minor's row: the declaration still names the guardian who signed.
-    expect(planAnswerEdit(minor, { birthDate: "1990-05-01" }, signed).set).toEqual({ birthDate: "1990-05-01" });
+    // An adult's date on a signed minor's row: the guardian can neither go (the declaration names them)
+    // nor stay on an adult's row, so the birth date is refused with both markers.
+    expect(refusalOf(() => planAnswerEdit(minor, { birthDate: "1990-05-01" }, signed))).toEqual(["birthDate", GUARDIAN_SIGNED, GUARDIAN_ADULT]);
+    // A minor's date that stays a minor's on the same signed row is still corrected.
+    expect(planAnswerEdit(minor, { birthDate: "2012-04-01" }, signed).set).toEqual({ birthDate: "2012-04-01" });
     // A minor's date on an adult's signed row: no guardian can be added under the signature.
     expect(refusalOf(() => planAnswerEdit(current, { birthDate: "2012-03-01" }, signed))).toEqual(["birthDate", GUARDIAN_SIGNED]);
   });
@@ -192,6 +202,7 @@ describe("BR-REQ-037-03 criterion 12: the page's sentence names the rule, and th
     expect(answersRefusalCode(["emergencyContactPhone", EMERGENCY_SAME])).toBe("ANSWER_EMERGENCY_SAME");
     expect(answersRefusalCode(["guardianName", GUARDIAN_SIGNED])).toBe("ANSWER_GUARDIAN_SIGNED");
     expect(answersRefusalCode(["birthDate", GUARDIAN_SIGNED])).toBe("ANSWER_BIRTH_DATE_GUARDIAN_SIGNED");
+    expect(answersRefusalCode(["birthDate", GUARDIAN_SIGNED, GUARDIAN_ADULT])).toBe("ANSWER_BIRTH_DATE_GUARDIAN_SIGNED_ADULT");
     expect(answersRefusalCode(["guardianName", GUARDIAN_ADULT])).toBe("ANSWER_GUARDIAN_ADULT");
     expect(answersRefusalCode(["stravaUrl", MINOR_AT_REGISTRATION])).toBe("ANSWER_SOCIALS_MINOR_AT_REGISTRATION");
     expect(answersRefusalCode(["birthDate", MINOR_AT_REGISTRATION])).toBe("ANSWER_BIRTH_DATE_MINOR_AT_REGISTRATION");
@@ -199,7 +210,7 @@ describe("BR-REQ-037-03 criterion 12: the page's sentence names the rule, and th
   });
 
   it("has every sentence in both languages, under 200 characters, the birth date's naming it", () => {
-    const codes = ["ANSWER_GUARDIAN_SIGNED", "ANSWER_BIRTH_DATE_GUARDIAN_SIGNED", "ANSWER_GUARDIAN_ADULT", "ANSWER_SOCIALS_MINOR_AT_REGISTRATION", "ANSWER_BIRTH_DATE_MINOR_AT_REGISTRATION"];
+    const codes = ["ANSWER_GUARDIAN_SIGNED", "ANSWER_BIRTH_DATE_GUARDIAN_SIGNED", "ANSWER_BIRTH_DATE_GUARDIAN_SIGNED_ADULT", "ANSWER_GUARDIAN_ADULT", "ANSWER_SOCIALS_MINOR_AT_REGISTRATION", "ANSWER_BIRTH_DATE_MINOR_AT_REGISTRATION"];
     for (const [catalogue, word] of [[ro, "Data nașterii"], [en, "birth date"]] as const) {
       const errors = catalogue.Admin.errors as Record<string, string>;
       for (const code of codes) {
@@ -208,6 +219,7 @@ describe("BR-REQ-037-03 criterion 12: the page's sentence names the rule, and th
       }
       expect(errors.ANSWER_BIRTH_DATE_MINOR_AT_REGISTRATION).toContain(word);
       expect(errors.ANSWER_BIRTH_DATE_GUARDIAN_SIGNED).toContain(word);
+      expect(errors.ANSWER_BIRTH_DATE_GUARDIAN_SIGNED_ADULT).toContain(word);
     }
   });
 });

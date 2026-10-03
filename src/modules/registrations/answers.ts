@@ -105,7 +105,9 @@ export const EMERGENCY_SAME = "emergencySame";
  * (`signed-declaration.ts`), so correcting or clearing the guardian would rewrite who signed it — and
  * the typed signature and the stored hash are the old text's. A wrong guardian is a new declaration.
  * Beside `birthDate` it says the other way round: a birth date that would make the signer of an
- * adult's declaration a minor, who would then need a guardian the signed text cannot gain.
+ * adult's declaration a minor, who would then need a guardian the signed text cannot gain — and, with
+ * `GUARDIAN_ADULT` beside it too, a birth date that would make a signed minor's row an adult's, which
+ * would then hold a guardian only a minor's row names while the signed text cannot lose them.
  */
 export const GUARDIAN_SIGNED = "guardianSigned";
 
@@ -139,7 +141,10 @@ export const ANSWER_MARKERS: readonly string[] = [ANSWERS_UNCHANGED, EMERGENCY_S
 export function answersRefusalCode(fields: readonly string[]): string | null {
   if (fields.includes(ANSWERS_UNCHANGED)) return "ANSWERS_UNCHANGED";
   if (fields.includes(EMERGENCY_SAME)) return "ANSWER_EMERGENCY_SAME";
-  if (fields.includes(GUARDIAN_SIGNED)) return fields.includes("birthDate") ? "ANSWER_BIRTH_DATE_GUARDIAN_SIGNED" : "ANSWER_GUARDIAN_SIGNED";
+  if (fields.includes(GUARDIAN_SIGNED)) {
+    if (!fields.includes("birthDate")) return "ANSWER_GUARDIAN_SIGNED";
+    return fields.includes(GUARDIAN_ADULT) ? "ANSWER_BIRTH_DATE_GUARDIAN_SIGNED_ADULT" : "ANSWER_BIRTH_DATE_GUARDIAN_SIGNED";
+  }
   if (fields.includes(GUARDIAN_ADULT)) return "ANSWER_GUARDIAN_ADULT";
   if (fields.includes(MINOR_AT_REGISTRATION)) return fields.includes("birthDate") ? "ANSWER_BIRTH_DATE_MINOR_AT_REGISTRATION" : "ANSWER_SOCIALS_MINOR_AT_REGISTRATION";
   return null;
@@ -239,7 +244,7 @@ const same = (a: unknown, b: unknown) => (a ?? null) === (b ?? null);
  * - the **T-shirt** is kept only where the event gives one (`shirtSizeKept`);
  * - the **guardian** goes when a corrected birth date makes the row an adult's on the day it was
  *   written, as the form never keeps one for an adult (§NNN) — audited like any other column; under a
- *   signed declaration it stays, the declaration's (`GUARDIAN_SIGNED`).
+ *   signed declaration it is the declaration's (`GUARDIAN_SIGNED`), so such a birth date is refused.
  */
 export function planAnswerEdit(
   current: Current,
@@ -328,7 +333,11 @@ export function planAnswerEdit(
   }
   // Only a minor has a guardian (§108): the form's own test, a minor on the day the row was written
   // (`submitRegistration`). A guardian typed on an adult's row is refused; a birth date corrected to an
-  // adult's takes the guardian with it — unless a declaration names them (`GUARDIAN_SIGNED`).
+  // adult's takes the guardian with it — unless a declaration names them (`GUARDIAN_SIGNED`): then the
+  // guardian cannot go and cannot stay on an adult's row, so the birth date is refused, the box that moved.
+  if (context.declarationSigned && posted.has("birthDate") && !minorAtRegistration && current.guardianName) {
+    refuse("an adult's birth date on a declaration a guardian signed", ["birthDate", GUARDIAN_SIGNED, GUARDIAN_ADULT]);
+  }
   if (!context.declarationSigned && !minorAtRegistration) {
     if (posted.has("guardianName") && posted.get("guardianName") !== null) {
       refuse("only a minor's registration names a parent or guardian", ["guardianName", GUARDIAN_ADULT]);
