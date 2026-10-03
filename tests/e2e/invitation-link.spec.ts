@@ -69,8 +69,12 @@ const fitsTheWidth = () => document.documentElement.scrollWidth <= document.docu
 test.describe("§NNN an invitation's link: the form prefilled, the press, the done view", () => {
   test.describe.configure({ timeout: 120_000 });
 
-  // The places this spec's registrations hold go back, so the featured race is not filled for the specs after it.
-  test.afterAll(async () => cancelRegistrationsByEmailPrefix(PREFIX));
+  /*
+    The places this spec's registrations hold go back, so the featured race is not filled for the specs
+    after it — this project's alone: the two projects run at once, and a prefix both share would cancel
+    the other's registration between its press and its check.
+  */
+  test.afterAll(async ({}, testInfo) => cancelRegistrationsByEmailPrefix(`${PREFIX}${testInfo.project.name}-`));
 
   test("opens prefilled, registers on the press with no address confirmation, and says used afterwards", async ({ page }) => {
     await signIn(page, "Dev Administrator");
