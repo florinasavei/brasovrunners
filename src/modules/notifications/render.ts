@@ -42,6 +42,7 @@ import { readOrganizerMessagePayload } from "./domain/organizer-message";
 import { registrationStatusWords } from "./domain/registration-status-words";
 import { readEmailCopyForSending } from "./email-copy";
 import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
+import { formatDeadlineInSentence } from "./domain/deadline-in-sentence";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { emailLinkExpiresAt, reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
 import {
@@ -1402,15 +1403,6 @@ function formatEventStart(event: { startsAt: Date; timezone: string } | undefine
 /** The long form with its time, inside a sentence of a message (§349). */
 function formatInSentence(at: Date, timeZone: string, locale: Locale): string {
   return formatDay(at, { locale, timeZone, style: "long", withTime: true, position: "inline" });
-}
-
-/**
- * A deadline to act by, inside a sentence (§580; the owner, 2026-09-30: more bold in the emails):
- * the month spelled out — "vineri, 2 octombrie 2026, la 18:30" / "Friday, 2 October 2026, at 18:30"
- * — so the one date a runner must not miss reads whole, never as "2 oct.".
- */
-export function formatDeadlineInSentence(at: Date, timeZone: string, locale: Locale): string {
-  return formatDay(at, { locale, timeZone, style: "long", month: "long", withTime: true, position: "inline" });
 }
 
 /**

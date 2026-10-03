@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { formatDay } from "@/i18n/dates";
+import { formatDeadlineInSentence } from "@/modules/notifications/domain/deadline-in-sentence";
 import { buildOutgoingEmail, type TemplateData } from "@/modules/notifications/templates";
+import { confirmationDueMoment } from "@/modules/registrations/domain/hold-deadlines";
 import { whatToTell, type TellFacts } from "@/modules/registrations/ui/tell-words";
 import { waitlistStandingPhrase } from "@/modules/registrations/ui/waitlist-position-words";
 
@@ -11,8 +13,8 @@ import { waitlistStandingPhrase } from "@/modules/registrations/ui/waitlist-posi
  * BR-REQ-037-01 (§NNN) — «Ce îi spui»: the sentences a staff member tells somebody who asks where
  * their registration stands, in the registration's language, from the real catalogues.
  *
- * What it holds: every state says the participant's own state words first, a confirmed row the
- * confirmation page's sentence, once; the deadline, the reservation and the waiting line are the
+ * What it holds: every open state says the participant's own state words first, a confirmed row the
+ * confirmation page's sentence, a cancelled or expired row its own sentence — each state once; the deadline, the reservation and the waiting line are the
  * participant's page's own sentences (the same keys and the same `waitlistStandingPhrase`), not a copy;
  * the spam hint only where an email link is the next step; a cancelled event says only the
  * cancellation; the live link's expiry only where it adds an instant the block has not given — never on
@@ -28,6 +30,9 @@ type Say = (key: string, values?: Record<string, string | number>) => string;
 const say = (locale: "ro" | "en") => createTranslator({ locale, messages: catalogues[locale], namespace: "Registrations" }) as unknown as Say;
 const ours = (locale: "ro" | "en", key: string) => (catalogues[locale].Admin.registrations.tell as Record<string, unknown>)[key] as string;
 const instant = (locale: "ro" | "en", at: Date) => formatDay(at, { locale, timeZone: ZONE, style: "long", withTime: true, position: "inline" });
+const START = new Date("2026-11-21T08:00:00.000Z");
+/** An offer's deadline as the offer email writes `holdExpiresAtFormatted` (`render.ts`): the same two helpers. */
+const offerDue = (locale: "ro" | "en", at: Date) => confirmationDueMoment(locale, { at, startsAt: START }, formatDeadlineInSentence(at, ZONE, locale));
 
 function facts(overrides: Partial<TellFacts>): TellFacts {
   return {
@@ -35,7 +40,7 @@ function facts(overrides: Partial<TellFacts>): TellFacts {
     holdExpiresAt: null,
     emailLinkExpiresAt: null,
     offerEmailQueued: false,
-    eventStartsAt: new Date("2026-11-21T08:00:00.000Z"),
+    eventStartsAt: START,
     eventTimezone: ZONE,
     eventCancelled: false,
     waitlistAutoOffer: true,
@@ -55,7 +60,7 @@ describe("§NNN whatToTell — what to tell a person who asks where their regist
     const stateLine = (status: string) => say(locale)("mine.status." + status);
 
     it(`opens with the participant's own state words (${locale})`, () => {
-      for (const status of ["PENDING_EMAIL_CONFIRMATION", "PENDING_DECLARATION", "WAITLISTED", "WAITLIST_OFFERED", "CANCELLED", "EXPIRED"] as const) {
+      for (const status of ["PENDING_EMAIL_CONFIRMATION", "PENDING_DECLARATION", "WAITLISTED", "WAITLIST_OFFERED"] as const) {
         const [first] = whatToTell(locale, facts({ status }), NOW);
         expect(first).toContain(stateLine(status));
       }
@@ -111,9 +116,13 @@ describe("§NNN whatToTell — what to tell a person who asks where their regist
     it(`an offer says its deadline once, and once lapsed says so without the spam hint (${locale})`, () => {
       // The offer's link lapses with the offer: its expiry is the instant already said, so not again.
       expect(whatToTell(locale, facts({ status: "WAITLIST_OFFERED", holdExpiresAt: LATER, liveLinkExpiresAt: LATER }), NOW).slice(1)).toEqual([
-        ours(locale, "offer").replace("{due}", instant(locale, LATER)),
+        ours(locale, "offer").replace("{due}", offerDue(locale, LATER)),
         spam,
       ]);
+      // An offer capped at the start says «la start, …», as its email does.
+      expect(whatToTell(locale, facts({ status: "WAITLIST_OFFERED", holdExpiresAt: START, liveLinkExpiresAt: START }), NOW)[1]).toBe(
+        ours(locale, "offer").replace("{due}", `${locale === "ro" ? "la start" : "the start"}, ${formatDeadlineInSentence(START, ZONE, locale)}`),
+      );
       // Still queued, the offer has not lapsed whatever its stored deadline (§520) — and the send re-bases
       // that deadline, so the block says the email is on its way, no instant, and no spam hint yet.
       for (const stored of [EARLIER, LATER]) {
@@ -124,6 +133,14 @@ describe("§NNN whatToTell — what to tell a person who asks where their regist
       const lapsed = whatToTell(locale, facts({ status: "WAITLIST_OFFERED", holdExpiresAt: EARLIER }), NOW);
       expect(lapsed[1]).toBe(ours(locale, "offerLapsed"));
       expect(lapsed).not.toContain(spam);
+    });
+
+    it(`a lapsed offer whose resend minted a live link says no link line (${locale})`, () => {
+      // A WAITLIST_SPOT_OFFER resend after the deadline mints the link for the default lifetime; until the
+      // sweep expires the row, «the place is no longer held» must not be followed by «valid until …».
+      const lines = whatToTell(locale, facts({ status: "WAITLIST_OFFERED", holdExpiresAt: EARLIER, liveLinkExpiresAt: LATER }), NOW);
+      expect(lines.slice(1)).toEqual([ours(locale, "offerLapsed")]);
+      expect(lines.join(" ")).not.toContain(instant(locale, LATER));
     });
 
     it(`a confirmed row says it is confirmed once, where the QR code is, its number and its check-in (${locale})`, () => {
@@ -137,12 +154,24 @@ describe("§NNN whatToTell — what to tell a person who asks where their regist
       expect(lines.join(" ")).not.toContain(stateLine("CONFIRMED"));
     });
 
-    it(`an ended row says it ended and offers no link (${locale})`, () => {
-      expect(whatToTell(locale, facts({ status: "CANCELLED", liveLinkExpiresAt: LATER }), NOW).slice(1)).toEqual([ours(locale, "CANCELLED")]);
-      expect(whatToTell(locale, facts({ status: "EXPIRED" }), NOW).slice(1)).toEqual([ours(locale, "EXPIRED")]);
-      expect(whatToTell(locale, facts({ status: "EXPIRED", expiryReason: "WAITLIST_OFFER_LAPSED" }), NOW).slice(1)).toEqual([ours(locale, "EXPIRED")]);
+    it(`an ended row says it ended, once, and offers no link (${locale})`, () => {
+      expect(whatToTell(locale, facts({ status: "CANCELLED", liveLinkExpiresAt: LATER }), NOW)).toEqual([ours(locale, "CANCELLED")]);
+      expect(whatToTell(locale, facts({ status: "EXPIRED" }), NOW)).toEqual([ours(locale, "EXPIRED")]);
+      expect(whatToTell(locale, facts({ status: "EXPIRED", expiryReason: "WAITLIST_OFFER_LAPSED" }), NOW)).toEqual([ours(locale, "EXPIRED")]);
       // A lapsed declaration hold: what its email told the person (§638).
-      expect(whatToTell(locale, facts({ status: "EXPIRED", expiryReason: "DECLARATION_HOLD_LAPSED" }), NOW).slice(1)).toEqual([ours(locale, "holdLapsed")]);
+      expect(whatToTell(locale, facts({ status: "EXPIRED", expiryReason: "DECLARATION_HOLD_LAPSED" }), NOW)).toEqual([ours(locale, "holdLapsed")]);
+    });
+
+    it(`a cancelled or expired row says its state once, never framed as «Înscrierea ta: …» (${locale})`, () => {
+      for (const [status, expiryReason] of [
+        ["CANCELLED", null],
+        ["EXPIRED", null],
+        ["EXPIRED", "DECLARATION_HOLD_LAPSED"],
+      ] as const) {
+        const lines = whatToTell(locale, facts({ status, expiryReason }), NOW);
+        expect(lines.join(" "), `${status} ${expiryReason}`).not.toContain(stateLine(status));
+        expect(lines, `${status} ${expiryReason}`).toHaveLength(1);
+      }
     });
 
     it(`a cancelled event says only the cancellation, the participant page's words (${locale})`, () => {
@@ -188,11 +217,15 @@ describe("§NNN whatToTell — what to tell a person who asks where their regist
     });
 
     it(`an offer says the offer email's subject and its sentence up to the deadline (${locale})`, () => {
-      const due = "21 noiembrie 2026, 10:00";
-      const sent = email("WAITLIST_SPOT_OFFER", { eventTitle: "Crosul", holdExpiresAtFormatted: due, offerHours: "24 de ore" });
-      const [subject, rest] = ours(locale, "offer").replace("{due}", due).split(/(?<=\.) /);
-      expect(sent.subject).toContain(subject.replace(/\.$/, ""));
-      expect(plain(sent.text)).toContain(rest.replace(/\.$/, ""));
+      // {due} built through the helpers `render.ts` fills `holdExpiresAtFormatted` with, and the block's own
+      // line compared, so a drift between the two fails here — a plain deadline and one capped at the start.
+      for (const at of [LATER, START]) {
+        const sent = email("WAITLIST_SPOT_OFFER", { eventTitle: "Crosul", holdExpiresAtFormatted: offerDue(locale, at), offerHours: "24 de ore" });
+        const said = whatToTell(locale, facts({ status: "WAITLIST_OFFERED", holdExpiresAt: at }), NOW)[1];
+        const [subject, rest] = said.split(/(?<=\.) /);
+        expect(sent.subject).toContain(subject.replace(/\.$/, ""));
+        expect(plain(sent.text)).toContain(rest.replace(/\.$/, ""));
+      }
     });
 
     it(`the race number is the confirmation email's own sentence (${locale})`, () => {

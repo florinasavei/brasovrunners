@@ -81,7 +81,7 @@ function sampleMoment(at: Date, locale: EmailLocale): string {
 }
 
 /**
- * A deadline of the sample as a message writes it (§580, `render.ts`, `formatDeadlineInSentence`):
+ * A deadline of the sample as a message writes it (§580, `domain/deadline-in-sentence.ts`, `formatDeadlineInSentence`):
  * the month spelled out — "vineri, 2 octombrie 2026, la 18:30", "Friday, 2 October 2026, at 18:30".
  */
 function sampleDeadline(at: Date, locale: EmailLocale): string {

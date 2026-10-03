@@ -5395,7 +5395,7 @@
               "steps": [
                 "Cineva întreabă unde e înscrierea lui — la telefon, pe mesaj sau la masă: «Înscrieri» → caută numele → deschide înscrierea. Administratorul și Organizatorul o văd la fel.",
                 "Sub «Parcursul înscrierii», «Ce îi spui» are propozițiile de spus, în limba în care s-a înscris: aceleași cuvinte pe care le-a citit el pe pagina lui și în emailuri, cu termenul lui — și până când e valabil linkul din email, doar când e altă oră decât termenul.",
-                "«Copiază» le pune în clipboard, pentru un mesaj. Blocul nu arată nicio adresă și niciun link: linkul pleacă doar pe email, cu «Retrimite emailul»."
+                "«Copiază» le pune în clipboard, pentru un mesaj. Blocul nu arată nicio adresă și niciun link: un link nou pleacă doar pe email; dacă trebuie retrimis, îl retrimite Administratorul."
               ]
             },
             {
@@ -5717,7 +5717,7 @@
               "steps": [
                 "Cineva întreabă unde e înscrierea lui — la telefon, pe mesaj sau la masă: «Înscrieri» → caută numele → deschide înscrierea. Administratorul și Organizatorul o văd la fel.",
                 "Sub «Parcursul înscrierii», «Ce îi spui» are propozițiile de spus, în limba în care s-a înscris: aceleași cuvinte pe care le-a citit el pe pagina lui și în emailuri, cu termenul lui — și până când e valabil linkul din email, doar când e altă oră decât termenul.",
-                "«Copiază» le pune în clipboard, pentru un mesaj. Blocul nu arată nicio adresă și niciun link: linkul pleacă doar pe email, cu «Retrimite emailul»."
+                "«Copiază» le pune în clipboard, pentru un mesaj. Blocul nu arată nicio adresă și niciun link: un link nou pleacă doar pe email; dacă trebuie retrimis, îl retrimite Administratorul."
               ]
             },
             {

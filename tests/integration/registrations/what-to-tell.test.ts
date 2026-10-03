@@ -10,6 +10,7 @@ import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { formatDay } from "@/i18n/dates";
 import { issueActionToken } from "@/modules/action-tokens/repository";
+import { formatDeadlineInSentence } from "@/modules/notifications/domain/deadline-in-sentence";
 import { findRegistrationDetailForAdmin } from "@/modules/registrations/admin-repository";
 import { resolveDisplayName } from "@/modules/registrations/names";
 import { readWaitlistPosition } from "@/modules/registrations/repository";
@@ -342,7 +343,9 @@ describe("§NNN «Ce îi spui» — every state on the page, for the Administrat
         await issueActionToken(db, { participantId: row.participantId, registrationId: row.id, purpose: "WAITLIST_OFFER", expiresAt: due, now });
         await issueActionToken(db, { participantId: row.participantId, registrationId: row.id, purpose: "MANAGE_REGISTRATION", expiresAt: new Date(now.getTime() + 14 * 24 * HOUR), now });
         // The offer's link lapses with the offer: its instant is said once.
-        return { id: row.id, expected: [stateLine("WAITLIST_OFFERED"), tell.offer.replace("{due}", at(due)), spam] };
+        // Its deadline as the offer email writes it (`render.ts`, `holdExpiresAtFormatted`).
+        const said = confirmationDueMoment("ro", { at: due, startsAt: race.startsAt }, formatDeadlineInSentence(due, "Europe/Bucharest", "ro"));
+        return { id: row.id, expected: [stateLine("WAITLIST_OFFERED"), tell.offer.replace("{due}", said), spam] };
       },
     },
     {
@@ -350,6 +353,16 @@ describe("§NNN «Ce îi spui» — every state on the page, for the Administrat
       setup: async () => {
         const race = await createRace();
         const row = await register(race.id, "Ana", { status: "WAITLIST_OFFERED", holdExpiresAt: new Date(Date.now() - HOUR), waitlistedAt: new Date(Date.now() - 30 * HOUR) });
+        return { id: row.id, expected: [stateLine("WAITLIST_OFFERED"), tell.offerLapsed] };
+      },
+    },
+    {
+      name: "an offer lapsed, a resend having minted a live offer link: no link line",
+      setup: async () => {
+        const race = await createRace();
+        const now = new Date();
+        const row = await register(race.id, "Ana", { status: "WAITLIST_OFFERED", holdExpiresAt: new Date(now.getTime() - HOUR), waitlistedAt: new Date(now.getTime() - 30 * HOUR) });
+        await issueActionToken(db, { participantId: row.participantId, registrationId: row.id, purpose: "WAITLIST_OFFER", expiresAt: new Date(now.getTime() + 48 * HOUR), now });
         return { id: row.id, expected: [stateLine("WAITLIST_OFFERED"), tell.offerLapsed] };
       },
     },
@@ -374,7 +387,8 @@ describe("§NNN «Ce îi spui» — every state on the page, for the Administrat
       setup: async () => {
         const race = await createRace();
         const row = await register(race.id, "Ana", { status: "CANCELLED", cancelledAt: new Date(), cancellationSource: "PARTICIPANT" });
-        return { id: row.id, expected: [stateLine("CANCELLED"), tell.CANCELLED] };
+        // Its own sentence names the state: said once, not framed «Înscrierea ta: Anulată.» first.
+        return { id: row.id, expected: [tell.CANCELLED] };
       },
     },
     {
@@ -382,7 +396,7 @@ describe("§NNN «Ce îi spui» — every state on the page, for the Administrat
       setup: async () => {
         const race = await createRace();
         const row = await register(race.id, "Ana", { status: "EXPIRED", expiredAt: new Date(), expiryReason: "DECLARATION_HOLD_LAPSED" });
-        return { id: row.id, expected: [stateLine("EXPIRED"), tell.holdLapsed] };
+        return { id: row.id, expected: [tell.holdLapsed] };
       },
     },
     {
@@ -390,7 +404,7 @@ describe("§NNN «Ce îi spui» — every state on the page, for the Administrat
       setup: async () => {
         const race = await createRace();
         const row = await register(race.id, "Ana", { status: "EXPIRED", expiredAt: new Date(), expiryReason: "EMAIL_CONFIRMATION_LAPSED" });
-        return { id: row.id, expected: [stateLine("EXPIRED"), tell.EXPIRED] };
+        return { id: row.id, expected: [tell.EXPIRED] };
       },
     },
     {

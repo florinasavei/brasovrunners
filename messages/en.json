@@ -5395,7 +5395,7 @@
               "steps": [
                 "Someone asks where their registration stands — on the phone, by message or at the desk: «Registrations» → search the name → open the registration. The Administrator and the Organizer see it alike.",
                 "Under «The registration's journey», «What to tell them» has the sentences to say, in the language they registered in: the same words they read on their page and in the emails, with their deadline — and until when the email's link is valid, only when that is another time than the deadline.",
-                "«Copy» puts them on the clipboard, for a message. The block shows no address and no link: a link goes only by email, with «Resend email»."
+                "«Copy» puts them on the clipboard, for a message. The block shows no address and no link: a new link goes only by email; if it must be resent, the Administrator resends it."
               ]
             },
             {
@@ -5717,7 +5717,7 @@
               "steps": [
                 "Someone asks where their registration stands — on the phone, by message or at the desk: «Registrations» → search the name → open the registration. The Administrator and the Organizer see it alike.",
                 "Under «The registration's journey», «What to tell them» has the sentences to say, in the language they registered in: the same words they read on their page and in the emails, with their deadline — and until when the email's link is valid, only when that is another time than the deadline.",
-                "«Copy» puts them on the clipboard, for a message. The block shows no address and no link: a link goes only by email, with «Resend email»."
+                "«Copy» puts them on the clipboard, for a message. The block shows no address and no link: a new link goes only by email; if it must be resent, the Administrator resends it."
               ]
             },
             {
