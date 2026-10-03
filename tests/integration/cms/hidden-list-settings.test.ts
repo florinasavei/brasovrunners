@@ -8,7 +8,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { eventFieldsSchema, hiddenListBandIssue } from "@/modules/content/events/fields";
 import { previewPageOf } from "@/modules/content/events/preview-view";
 import { findEventForEditing } from "@/modules/content/events/repository";
-import { createEvent, duplicateEvent, repeatEvent, saveEventAndTranslations } from "@/modules/content/events/service";
+import { createEvent, duplicateEvent, materializeStandingRepeats, repeatEvent, saveEventAndTranslations } from "@/modules/content/events/service";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
@@ -276,7 +276,7 @@ describe("§NNN «Lista ascunsă» on the event", () => {
     // A save that moves the places is judged: 152 places reach past the start, and the box is named.
     expect(await withCapacity("152")).toMatchObject({ error: "VALIDATION_ERROR", fields: ["event.hiddenListBibStart"] });
     expect((await reloadEvent(source.id)).capacity).toBe(151);
-    // A save that moves the start is judged too: 151 is inside 1–151 now.
+    // A save that moves the start is judged too: 150 is inside 1–151.
     const moved = settingsForm(source.id, (await reloadEvent(source.id)).version, { ...group, start: "150" });
     moved.set("event.capacity", "151");
     expect(await postSave(moved)).toMatchObject({ error: "VALIDATION_ERROR", fields: ["event.hiddenListBibStart"] });
@@ -337,6 +337,92 @@ describe("§NNN «Lista ascunsă» on the event", () => {
 
     const copy = await duplicateEvent(db, { actor: admin, eventId: source.id });
     expect(settled(await reloadEvent(copy.id))).toEqual({ enabled: true, start: 900, countPublic: false, counted: true });
+  });
+
+  /** A source with two later dates (14 and 21 October), and a scoped save of its hidden list to them. */
+  async function seriesWithDates() {
+    const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
+    await repeatEvent(db, { actor: admin, eventId: source.id, rule: { cadence: "WEEKLY", weekdays: [], until: "2026-10-21", publish: false }, now: NOW });
+    const dates = await db.select().from(events).where(eq(events.repeatOf, source.id)).orderBy(asc(events.startsAt));
+    expect(dates.length).toBe(2);
+    const saveFollowing = async (start: string) => {
+      const row = await reloadEvent(source.id);
+      const translations = await translationsOf(source.id);
+      const ro = translations.find((t) => t.locale === "ro")!;
+      const en = translations.find((t) => t.locale === "en")!;
+      return saveEventAndTranslations(db, {
+        actor: admin,
+        eventId: source.id,
+        fields: { ...FIELDS, hiddenListEnabled: true, hiddenListBibStart: start, participantCountPublic: true, hiddenListCounted: false },
+        expectedVersion: row.version,
+        translations: [
+          { translationId: ro.id, expectedVersion: ro.version, fields: wordsFor(ro) },
+          { translationId: en.id, expectedVersion: en.version, fields: wordsFor(en) },
+        ],
+        scope: "following",
+        now: NOW,
+      });
+    };
+    return { source, dates, saveFollowing };
+  }
+
+  it("a scoped series save judges each later date against its own spares, names the date, and writes nothing", async () => {
+    const { source, dates, saveFollowing } = await seriesWithDates();
+    // Only the 14 October date printed spares (§444): the saved date has none, so its own judgement passes.
+    await db.update(events).set({ walkInBibStart: 200, walkInBibCount: 20 }).where(eq(events.id, dates[0].id));
+    await expect(saveFollowing("210")).rejects.toMatchObject({
+      code: "VALIDATION_ERROR",
+      fields: ["hiddenListBibStart"],
+      message: expect.stringMatching(/desk's spare numbers \(200–219\) on 2026-10-14$/),
+    });
+    // The whole save is one transaction: no date — the saved one included — took the start.
+    for (const id of [source.id, ...dates.map((date) => date.id)]) {
+      expect(settled(await reloadEvent(id)), id).toEqual({ enabled: false, start: null, countPublic: true, counted: false });
+      expect(await trail(id), id).toHaveLength(0);
+    }
+    // Past the spares, every date takes it.
+    await saveFollowing("220");
+    for (const id of [source.id, ...dates.map((date) => date.id)]) expect((await reloadEvent(id)).hiddenListBibStart, id).toBe(220);
+  });
+
+  it("a scoped series save judges each later date against its own places, naming the date", async () => {
+    const { source, dates, saveFollowing } = await seriesWithDates();
+    // The 21 October date holds ten places more than the others (supplementary ones, §642): its series is 1–160.
+    await db.update(events).set({ capacity: 160 }).where(eq(events.id, dates[1].id));
+    await expect(saveFollowing("155")).rejects.toMatchObject({
+      code: "VALIDATION_ERROR",
+      fields: ["hiddenListBibStart"],
+      message: expect.stringMatching(/outside the race's series \(1–160\) on 2026-10-21$/),
+    });
+    for (const id of [source.id, ...dates.map((date) => date.id)]) expect((await reloadEvent(id)).hiddenListBibStart, id).toBeNull();
+    await saveFollowing("161");
+    for (const id of [source.id, ...dates.map((date) => date.id)]) expect((await reloadEvent(id)).hiddenListBibStart, id).toBe(161);
+  });
+
+  it("a copy is refused, naming its date, when the source's places have reached its hidden start", async () => {
+    const source = await createEvent(db, {
+      actor: admin,
+      fields: { ...FIELDS, hiddenListEnabled: true, hiddenListBibStart: "151", translations: TRANSLATIONS },
+      now: NOW,
+    });
+    // §642: a supplementary place without a save — the source's series is 1–151, its hidden start inside it.
+    expect(await addSupplementaryPlace(db, source.id, admin.id, NOW)).toBe(151);
+    const before = (await db.select().from(events)).length;
+    await expect(duplicateEvent(db, { actor: admin, eventId: source.id })).rejects.toMatchObject({
+      code: "VALIDATION_ERROR",
+      fields: ["hiddenListBibStart"],
+      message: expect.stringMatching(/\(1–151\) on 2026-10-07$/),
+    });
+    await expect(
+      repeatEvent(db, { actor: admin, eventId: source.id, rule: { cadence: "WEEKLY", weekdays: [], until: "2026-10-21", publish: false }, now: NOW }),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["hiddenListBibStart"] });
+    // Nothing made, and no standing rule left behind for the job.
+    expect((await db.select().from(events)).length).toBe(before);
+    expect((await reloadEvent(source.id)).repeatRule).toBeNull();
+    // A rule stored before the place was added: the maintenance job skips this source and fails nothing.
+    await db.update(events).set({ repeatRule: { cadence: "WEEKLY", weekdays: [], until: "2026-10-21", publish: false } }).where(eq(events.id, source.id));
+    expect(await materializeStandingRepeats(db, NOW, { seriesHorizonDays: 60 })).toEqual({ sources: 1, created: 0 });
+    expect((await db.select().from(events)).length).toBe(before);
   });
 
   it("a series edit with the 'following' scope carries it to the later dates, each date's trail naming it", async () => {

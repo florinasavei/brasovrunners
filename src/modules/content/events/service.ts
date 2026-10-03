@@ -2052,6 +2052,28 @@ async function applyToSeries<T extends Record<string, unknown>>(
       changes.locationAddress = after.locationAddress;
     }
 
+    /*
+      «Numerele listei ascunse încep de la» on this date (§NNN): the saved date's judgement is not this
+      one's — a date may hold its own places (a supplementary one, §642) or its own spares (§444). So a
+      save that carries the switch, the start, the first number or the places is judged against this
+      date's row as the save leaves it, by the same rule (moved, or not judged), the spares read under
+      this date's lock; a refusal names the date and, thrown in the save's transaction, writes nothing.
+    */
+    if (HIDDEN_LIST_NUMBER_KEYS.some((key) => changes[key] !== undefined)) {
+      const judged = hiddenListNumbersToJudge(
+        {
+          hiddenListEnabled: changes.hiddenListEnabled ?? member.hiddenListEnabled,
+          hiddenListBibStart: changes.hiddenListBibStart === undefined ? member.hiddenListBibStart : changes.hiddenListBibStart,
+          bibStartNumber: changes.bibStartNumber ?? member.bibStartNumber,
+          capacity: changes.capacity === undefined ? member.capacity : changes.capacity,
+        },
+        member,
+      );
+      if (judged) {
+        assertHiddenListNumbers(judged, await lockEventForCapacity(tx, member.id), toWallTimeInput(member.startsAt, zone).slice(0, 10));
+      }
+    }
+
     if (typeof changes.capacity === "number") {
       await lockEventForCapacity(tx, member.id);
       const occupied = computeOccupied(await countOccupied(tx, member.id, now));
@@ -2246,6 +2268,9 @@ async function auditHiddenList<T extends Record<string, unknown>>(
   }
 }
 
+/** The columns whose change a series' other dates are judged on (§NNN, `applyToSeries`). */
+const HIDDEN_LIST_NUMBER_KEYS = ["hiddenListEnabled", "hiddenListBibStart", "bibStartNumber", "capacity"] as const;
+
 /** The event's columns «Numerele listei ascunse încep de la» is judged against (§NNN). */
 type HiddenListNumbersRow = {
   hiddenListEnabled: boolean;
@@ -2292,13 +2317,17 @@ function hiddenListNumbersToJudge(
  * from the start up to the race's first number less one when it sits below it, otherwise up to the
  * ceiling — so a start below a spare band that sits above the race is refused too, not only one inside
  * it. Each refusal names the box, so the editor points at it rather than only «Verifică datele introduse».
+ * `on` is the date judged when it is not the one saved — another date of a series a scoped save reaches
+ * (`applyToSeries`), or a date a copy makes (`assertCopiedHiddenList`) — and the refusal names it.
  */
 function assertHiddenListNumbers(
   series: HiddenListNumbersRow,
   locked: { walkInBibStart: number | null; walkInBibCount: number | null } | null,
+  on?: string,
 ): void {
+  const where = on ? ` on ${on}` : "";
   const band = hiddenListBandIssue(series);
-  if (band !== null) throw new DomainError("VALIDATION_ERROR", `hiddenListBibStart: ${band}`, ["hiddenListBibStart"]);
+  if (band !== null) throw new DomainError("VALIDATION_ERROR", `hiddenListBibStart: ${band}${where}`, ["hiddenListBibStart"]);
   const start = series.hiddenListBibStart;
   if (start === null || !locked) return;
   if (locked.walkInBibStart === null || locked.walkInBibCount === null || locked.walkInBibCount <= 0) return;
@@ -2308,10 +2337,22 @@ function assertHiddenListNumbers(
   if (bounds.from <= last && first <= bounds.to) {
     throw new DomainError(
       "VALIDATION_ERROR",
-      `hiddenListBibStart: the hidden list's numbers may not run into the desk's spare numbers (${first}–${last})`,
+      `hiddenListBibStart: the hidden list's numbers may not run into the desk's spare numbers (${first}–${last})${where}`,
       ["hiddenListBibStart"],
     );
   }
+}
+
+/**
+ * A copy's hidden list (§NNN): a duplicate and every date a series makes carry the source's switch, start,
+ * places and first number (`copiedEventValues`) and none of its spares, so only the band is judged — but
+ * judged, since «Trimite-i oferta» can have carried the source's places up to a start set just above them
+ * (§642), and a copy would then be born with a hidden series inside its race's. Refused naming the date,
+ * before anything is written.
+ */
+function assertCopiedHiddenList(source: HiddenListNumbersRow, startsAt: Date, zone: string): void {
+  const series = hiddenListNumbersToJudge(source, null);
+  if (series) assertHiddenListNumbers(series, null, toWallTimeInput(startsAt, zone).slice(0, 10));
 }
 
 /**
@@ -3164,6 +3205,8 @@ export async function duplicateEvent<T extends Record<string, unknown>>(
 
   const [source] = await db.select().from(events).where(eq(events.id, input.eventId)).limit(1);
   if (!source) throw new DomainError("NOT_FOUND", "no such event");
+  // The copy keeps the source's date and its hidden list, and no spares (§NNN).
+  assertCopiedHiddenList(source, source.startsAt, source.timezone);
 
   const sourceTranslations = await listTranslationsForEvent(db, input.eventId);
 
@@ -3423,6 +3466,9 @@ export async function repeatEvent<T extends Record<string, unknown>>(
   if (end && end.getTime() <= source.startsAt.getTime()) {
     throw new DomainError("VALIDATION_ERROR", "until: the end must be after this event", ["until"]);
   }
+  // Every date carries the source's hidden list (§NNN): judged before the rule is stored, so a refused
+  // series leaves no standing rule for the job to keep failing on.
+  assertCopiedHiddenList(source, source.startsAt, source.timezone);
 
   await db.update(events).set({ repeatRule: rule.data, updatedAt: now, updatedByStaffUserId: input.actor.id }).where(eq(events.id, source.id));
   // As far ahead as the club keeps its series (§377), read as the job reads it.
@@ -3486,6 +3532,8 @@ async function materializeSeries<T extends Record<string, unknown>>(
     (occurrence) => !sourceTranslations.some((translation) => taken.has(`${translation.locale}:${occurrence.slugs.get(translation.id)}`)),
   );
   if (fresh.length === 0) return 0;
+  // A source whose hidden list no longer fits its places (§NNN, §642) makes no date until it is saved right.
+  assertCopiedHiddenList(source, fresh[0].startsAt, source.timezone);
 
   // The shift is on the wall clock: the same interval the start moved by, applied to every
   // other time the source carries (§64), so an occurrence four weeks on keeps its 08:00 across
@@ -3557,7 +3605,13 @@ export async function materializeStandingRepeats<T extends Record<string, unknow
   for (const source of sources) {
     const rule = readRepeatRule(source.repeatRule);
     if (!rule) continue;
-    created += await materializeSeries(db, source, rule, null, now, deadlines);
+    try {
+      created += await materializeSeries(db, source, rule, null, now, deadlines);
+    } catch (error) {
+      // One source refused for its hidden list (§NNN) holds back its own dates, never the other series'.
+      if (error instanceof DomainError && error.code === "VALIDATION_ERROR") continue;
+      throw error;
+    }
   }
   return { sources: sources.length, created };
 }
