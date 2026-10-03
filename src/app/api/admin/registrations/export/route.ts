@@ -14,6 +14,7 @@ import {
 } from "@/modules/registrations/admin-repository";
 import { defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { identityDocumentsOf } from "@/modules/registrations/domain/identity-documents";
+import { rowDeadlineOf } from "@/modules/registrations/domain/row-deadline";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -120,6 +121,9 @@ export async function GET(request: Request): Promise<Response> {
   const declarations = await listLatestDeclarationAcceptances(db, rows.map((row) => row.id));
   // The other people on each row's address (§543), the `family` column of both formats: one query.
   const family = await familyOf(db, rows);
+  // The list's «Termen» (§NNN), one clock for the whole file: the moment each row waits on, or none.
+  const deadlinesNow = new Date();
+  const deadlineOf = (row: (typeof rows)[number]) => rowDeadlineOf(row, deadlinesNow)?.at ?? null;
 
   /*
     The export is recorded (§322): who took a file of the club's participants, of which event, in
@@ -177,6 +181,7 @@ export async function GET(request: Request): Promise<Response> {
         // The consent to offers and benefits (§562): its moment, blank for no.
         promoConsentAt: row.promoConsent ? row.promoConsentAt : null,
         outsideCapacity: row.outsideCapacity,
+        deadline: deadlineOf(row),
       })),
       eventTitle ?? "Participants",
     );
@@ -229,6 +234,8 @@ export async function GET(request: Request): Promise<Response> {
       // «Oferte și beneficii» (§562): the moment of the yes, empty for no — last, like the family.
       promoConsentAt: row.promoConsent ? (row.promoConsentAt?.toISOString() ?? "") : "",
       outsideCapacity: row.outsideCapacity,
+      // The list's «Termen» (§NNN): the moment the row waits on, empty when none — last, like the special guest.
+      deadline: deadlineOf(row)?.toISOString() ?? "",
     })),
   );
 

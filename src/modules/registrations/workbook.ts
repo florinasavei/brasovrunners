@@ -34,8 +34,10 @@ import { sexCell } from "./domain/sex";
 /** A row as the sheet wants it: the same data the CSV carries, with the dates still dates. */
 export type RegistrationSheetRow = Omit<
   RegistrationCsvRow,
-  "submittedAt" | "confirmedAt" | "checkedInAt" | "fitnessDeclaredAt" | "termsAcceptedAt" | "declarationSignedAt" | "promoConsentAt"
+  "submittedAt" | "confirmedAt" | "checkedInAt" | "fitnessDeclaredAt" | "termsAcceptedAt" | "declarationSignedAt" | "promoConsentAt" | "deadline"
 > & {
+  /** «Termen» (§NNN): the moment the row waits on (`rowDeadlineOf`), a date like the others; null when none. */
+  deadline?: Date | null;
   /** «Oferte și beneficii» (§562): the moment of the yes, a date like the others; null for no. */
   promoConsentAt?: Date | null;
   /** The moment the terms were accepted (§421, §425), a date like the others; null when not recorded. */
@@ -188,6 +190,8 @@ const COLUMNS: Array<SheetColumn<RegistrationSheetRow>> = [
   { header: "Offers and benefits", width: 18, cell: (row) => ({ value: onClubClock(row.promoConsentAt ?? null), type: Date, format: STAMP_FORMAT }) },
   // A special guest (§643; §649's name, §647's "Hidden list"), last like the CSV's: true or false.
   { header: "Special guest", width: 12, cell: (row) => ({ value: row.outsideCapacity ?? false, type: Boolean }) },
+  // The list's «Termen» (§NNN), last like the CSV's: the moment the row waits on, blank when none.
+  { header: "Deadline", width: 18, cell: (row) => ({ value: onClubClock(row.deadline ?? null), type: Date, format: STAMP_FORMAT }) },
 ];
 
 /** The header row, exactly as the export writes it — what a re-import matches its columns by. */

@@ -142,7 +142,7 @@ export type RegistrationListFilters = {
  * An allowlist rather than a mapping built from the request: `?sort=` arrives from a URL anybody
  * can type, and the one thing that must not be possible is for it to name a column.
  */
-export const REGISTRATION_SORT_KEYS = ["name", "status", "event", "submitted", "bib"] as const;
+export const REGISTRATION_SORT_KEYS = ["name", "status", "event", "submitted", "bib", "deadline"] as const;
 export type RegistrationSortKey = (typeof REGISTRATION_SORT_KEYS)[number];
 
 /**
@@ -286,7 +286,20 @@ function registrationConditions(filters: RegistrationListFilters): SQL[] {
   ].filter((condition) => condition !== undefined);
 }
 
-function registrationOrderBy(sort: RegistrationSortKey, dir: "asc" | "desc") {
+/**
+ * «Termen» (§NNN): the deadline the row waits on, as `domain/row-deadline.ts#rowDeadlineOf` reads it —
+ * the hold's or the offer's, a family's reservation while it holds, else the first email's link — and
+ * null for every other state. The same cases, so the order is the order of the dates on screen.
+ */
+function rowDeadlineOrder(now: Date): SQL {
+  return sql`(case
+    when ${registrations.status} in ('PENDING_DECLARATION', 'WAITLIST_OFFERED') then ${registrations.holdExpiresAt}
+    when ${registrations.status} = 'PENDING_EMAIL_CONFIRMATION' and ${registrations.holdExpiresAt} > ${now} then ${registrations.holdExpiresAt}
+    when ${registrations.status} = 'PENDING_EMAIL_CONFIRMATION' then ${registrations.emailLinkExpiresAt}
+  end)`;
+}
+
+function registrationOrderBy(sort: RegistrationSortKey, dir: "asc" | "desc", now: Date) {
   const direction = dir === "asc" ? asc : desc;
 
   switch (sort) {
@@ -302,6 +315,9 @@ function registrationOrderBy(sort: RegistrationSortKey, dir: "asc" | "desc") {
     // not "before 1", it is not in the list the sort is about.
     case "bib":
       return dir === "asc" ? sql`${registrations.bibNumber} asc nulls last` : sql`${registrations.bibNumber} desc nulls last`;
+    // The soonest deadline first (§NNN); a row that waits on none comes after every dated one, either way.
+    case "deadline":
+      return dir === "asc" ? sql`${rowDeadlineOrder(now)} asc nulls last` : sql`${rowDeadlineOrder(now)} desc nulls last`;
   }
 }
 
@@ -323,7 +339,8 @@ function registrationOrderBy(sort: RegistrationSortKey, dir: "asc" | "desc") {
 export async function listRegistrationsForAdmin<T extends Record<string, unknown>>(
   db: Database<T>,
   filters: RegistrationListFilters = {},
-  page?: { limit: number; offset: number; sort: RegistrationSortKey; dir: "asc" | "desc" },
+  /** `now` decides a family's reservation against its link in the deadline's order (§NNN); the clock by default. */
+  page?: { limit: number; offset: number; sort: RegistrationSortKey; dir: "asc" | "desc"; now?: Date },
 ): Promise<RegistrationListRow[]> {
   const conditions = registrationConditions(filters);
 
@@ -397,7 +414,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
     what makes `LIMIT`/`OFFSET` mean anything.
   */
   return query
-    .orderBy(registrationOrderBy(page.sort, page.dir), desc(registrations.submittedAt), asc(registrations.id))
+    .orderBy(registrationOrderBy(page.sort, page.dir, page.now ?? new Date()), desc(registrations.submittedAt), asc(registrations.id))
     .limit(page.limit)
     .offset(page.offset);
 }

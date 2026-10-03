@@ -110,6 +110,11 @@ export type RegistrationCsvRow = {
    * an organizer, a pacemaker, an invited runner — empty otherwise, like the member claim.
    */
   outsideCapacity?: boolean;
+  /**
+   * «Termen» (§NNN): the moment the row waits on (`rowDeadlineOf`) — the declaration's, the offer's, a
+   * family's reservation or the email's link (ISO 8601) — empty on a row that waits on none.
+   */
+  deadline?: string;
 };
 
 const HEADER = [
@@ -152,6 +157,8 @@ const HEADER = [
   "Offers and benefits",
   // Last (§643), for the same reason: a special guest (§649's name; §647's "Hidden list"), "Yes" or empty.
   "Special guest",
+  // Last (§NNN), for the same reason: the list's «Termen», the moment the row waits on, or empty.
+  "Deadline",
 ];
 
 export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): string {
@@ -190,6 +197,7 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         row.cancelReason ?? "",
         row.promoConsentAt ?? "",
         row.outsideCapacity ? "Yes" : "",
+        row.deadline ?? "",
       ]
         .map(csvCell)
         .join(","),

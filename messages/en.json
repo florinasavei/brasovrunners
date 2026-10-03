@@ -779,6 +779,17 @@
       "columnName": "Name",
       "columnStatus": "Status",
       "columnJourney": "How far",
+      "columnDeadline": "Deadline",
+      "deadlineColumnHint": "Until when the next step is due: signing the declaration, on a held or offered place, or confirming the address from the email. Grey: passed. «—»: nothing is due.",
+      "deadline": {
+        "hold": "to sign the declaration",
+        "kept": "deadline passed, the place is kept while nobody asks for it",
+        "offer": "place offered: to sign the declaration",
+        "offerLapsed": "the offer has lapsed",
+        "reserved": "place reserved: to confirm the address",
+        "link": "to confirm the address from the email",
+        "linkLapsed": "the link has expired"
+      },
       "columnEvent": "Event",
       "columnEmail": "Email",
       "columnSubmitted": "Submitted",
@@ -5670,7 +5681,7 @@
                 "Mind: each gets a new link, and the link in the earlier email stops working. Tell them to open the newest email.",
                 "Tell them to look for the email in Spam and in Promotions too.",
                 "At most three presses an hour per event. An “i” beside the button says when a press would be refused: the event is cancelled, finished or has started, or the hour's presses are spent.",
-                "Who loses a place, and when: in «Registrations», a race's list says under «Who has signed up» until when places are kept and what follows the deadline; the «How far» column has each one's.",
+                "Who loses a place, and when: a race's list in «Registrations» says under «Who has signed up» what follows the deadline; the «Deadline» column has each one's day and time.",
                 "One person only: open their registration → «Resend email»."
               ]
             },

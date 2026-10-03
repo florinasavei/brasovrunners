@@ -38,6 +38,7 @@ import { sealPersonLookup } from "@/modules/registrations/person-data";
 import { instagramProfileUrl } from "@/modules/registrations/social-links";
 import { suggestFreeBibNumbers } from "@/modules/registrations/bibs";
 import { formSentAt, journeyOf } from "@/modules/registrations/domain/journey";
+import { deadlineHoldsAPlace, deadlinePassed, rowDeadlineOf } from "@/modules/registrations/domain/row-deadline";
 import { countryName } from "@/modules/registrations/names";
 import SexAndShirtLine from "@/modules/registrations/ui/SexAndShirtLine";
 import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
@@ -186,16 +187,16 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     declaration, an open offer or a family's reservation — past a declaration's deadline with the
     journey's kept words, since the place is released only when somebody wants it (§160) — and the
     first email's link on a row still waiting for its address. An ended row keeps «Rezervarea expiră».
+    The list's «Termen» reads the same helper (§NNN, `rowDeadlineOf`); a passed deadline adds its words.
   */
   const timelineNow = new Date();
-  const holdIsLive =
-    registration.status === "PENDING_DECLARATION" ||
-    registration.status === "WAITLIST_OFFERED" ||
-    (registration.status === "PENDING_EMAIL_CONFIRMATION" && registration.holdExpiresAt !== null && registration.holdExpiresAt > timelineNow);
-  const holdKept = registration.status === "PENDING_DECLARATION" && registration.holdExpiresAt !== null && registration.holdExpiresAt <= timelineNow;
+  const rowDeadline = rowDeadlineOf(registration, timelineNow);
+  const holdIsLive = deadlineHoldsAPlace(rowDeadline);
   const holdLine: [string, string | null] = [
     tr(holdIsLive ? "registrations.holdKeeps" : "registrations.holdExpires"),
-    holdKept ? `${dt(registration.holdExpiresAt)} — ${tr("registrations.journey.heldKept")}` : dt(registration.holdExpiresAt),
+    holdIsLive && rowDeadline && deadlinePassed(rowDeadline)
+      ? `${dt(registration.holdExpiresAt)} — ${tr(`registrations.deadline.${rowDeadline.kind}`)}`
+      : dt(registration.holdExpiresAt),
   ];
   const linkLine: [string, string | null] = [
     tr("registrations.linkExpires"),

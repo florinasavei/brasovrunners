@@ -37,6 +37,8 @@ import StaffJourney from "@/modules/registrations/ui/StaffJourney";
 import FamilyChip from "@/modules/registrations/ui/FamilyChip";
 import SummaryStrip from "@/modules/registrations/ui/SummaryStrip";
 import PlaceDeadlines from "@/modules/registrations/ui/PlaceDeadlines";
+import RowDeadlineCell from "@/modules/registrations/ui/RowDeadlineCell";
+import { rowDeadlineOf } from "@/modules/registrations/domain/row-deadline";
 import { deadlinesForThisRequest } from "@/modules/deadlines/request";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { familiesTogether, familyOf } from "@/modules/registrations/family-marker";
@@ -207,6 +209,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       offset: query.offset,
       sort: query.sort as RegistrationSortKey,
       dir: query.dir,
+      // The same clock as the «Termen» cells (§NNN), so the order is the order of the dates on screen.
+      now: deadlinesNow,
     }),
     countRegistrationsForAdmin(db, filters),
     /*
@@ -466,6 +470,19 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       hint: t("registrations.journey.legend"),
       // The number once the registration is confirmed (§548): the chip says "nr. 42".
       render: (row) => <StaffJourney journey={journeyOf(row)} bibNumber={raceNumberOf(row)} variant="compact" />,
+    },
+    {
+      /*
+        «Termen» (§NNN): until when each person can sign the declaration — or confirm the address —
+        to the minute, read from the row (`rowDeadlineOf`, no query per row) and sorted by the same
+        cases in SQL. Beside the step it is the deadline of; the step's cell no longer repeats it.
+      */
+      key: "deadline",
+      label: t("registrations.columnDeadline"),
+      hint: t("registrations.deadlineColumnHint"),
+      sortable: true,
+      initialDir: "asc",
+      render: (row) => <RowDeadlineCell deadline={rowDeadlineOf(row, deadlinesNow)} />,
     },
     {
       /*
