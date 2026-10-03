@@ -2,10 +2,11 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   ACTIONS_COLUMN,
   clampWidth,
+  columnFloor,
   fixedLayout,
   KEY_STEP,
   KEY_STEP_LARGE,
@@ -18,6 +19,7 @@ import {
   touchesVisible,
 } from "@/modules/staff-identity/domain/column-widths";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
+import { readWidths, WIDTHS_CHANGED, writeWidths } from "@/modules/staff-identity/ui/column-widths-dom";
 import { withClientWords } from "../../helpers/client-words";
 
 /**
@@ -84,7 +86,7 @@ describe("§NNN the widths' arithmetic", () => {
   });
 
   it("names the storage by table, and accepts only a short lowercase id", () => {
-    expect(storageKey("registrations")).toBe("br.admin-table.registrations.widths");
+    expect(storageKey("registrations")).toBe("br.table.registrations.widths");
     expect(TABLE_ID_PATTERN.test("legal-event-declaration")).toBe(true);
     for (const bad of ["", "Registrations", "a b", 'x"]', "a".repeat(41)]) expect(TABLE_ID_PATTERN.test(bad)).toBe(false);
   });
@@ -102,6 +104,25 @@ describe("§NNN the widths' arithmetic", () => {
     // A width stored for a column the breakpoint hides does not, alone, fix the table.
     expect(touchesVisible(visible, { email: 400 })).toBe(false);
     expect(touchesVisible(visible, { state: 200 })).toBe(true);
+  });
+
+  it("keeps each column above its own floor, so no heading word is cut", () => {
+    // «Evenimentul» measured at 118.2 px with its arrow and padding: that column never goes under 119.
+    expect(columnFloor(118.2)).toBe(119);
+    expect(columnFloor(undefined)).toBe(MIN_COLUMN_WIDTH);
+    expect(columnFloor(20)).toBe(MIN_COLUMN_WIDTH);
+    expect(columnFloor(5000)).toBe(MAX_COLUMN_WIDTH);
+    expect(clampWidth(60, 119)).toBe(119);
+    expect(clampWidth(240, 119)).toBe(240);
+    // The keys respect it: Home goes to the floor, not to the table-wide least.
+    expect(keyboardWidth(200, "Home", false, 119)).toBe(119);
+    expect(keyboardWidth(130, "ArrowLeft", false, 119)).toBe(119);
+    expect(keyboardWidth(130, "ArrowRight", false, 119)).toBe(130 + KEY_STEP);
+    // A stored width under a heading's floor (the other language's longer word) is raised to it.
+    expect(fixedLayout([{ key: "event", measured: 150, floor: 119 }], { event: 60 })).toEqual({
+      widths: { event: 119 },
+      total: 119,
+    });
   });
 
   it("moves an edge by the splitter's keys and leaves every other key to the browser", () => {
@@ -187,5 +208,57 @@ describe("§NNN every list names its table", () => {
     });
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids).toEqual(["events", "pages", "albums-", "pictures", "staff", "registrations", "legal-"]);
+  });
+});
+
+describe("§NNN the widths in this browser's storage", () => {
+  type Fake = { store: Map<string, string>; events: Event[] };
+  function stub(options: { throws?: boolean } = {}): Fake {
+    const fake: Fake = { store: new Map(), events: [] };
+    const fail = () => {
+      throw new Error("SecurityError: storage is blocked");
+    };
+    const localStorage = {
+      getItem: options.throws ? fail : (key: string) => fake.store.get(key) ?? null,
+      setItem: options.throws ? fail : (key: string, value: string) => void fake.store.set(key, value),
+      removeItem: options.throws ? fail : (key: string) => void fake.store.delete(key),
+    };
+    vi.stubGlobal("window", { localStorage, dispatchEvent: (event: Event) => fake.events.push(event) });
+    return fake;
+  }
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("round-trips a write and a read under br.table.<id>.widths", () => {
+    const fake = stub();
+    writeWidths("registrations", { name: 240, event: 180 });
+    expect([...fake.store.keys()]).toEqual(["br.table.registrations.widths"]);
+    expect(readWidths("registrations")).toEqual({ name: 240, event: 180 });
+    expect(readWidths("events")).toEqual({});
+  });
+
+  it("removes the entry when nothing is left to keep", () => {
+    const fake = stub();
+    writeWidths("registrations", { name: 240 });
+    writeWidths("registrations", {});
+    expect(fake.store.has("br.table.registrations.widths")).toBe(false);
+    expect(readWidths("registrations")).toEqual({});
+  });
+
+  it("reads nothing and throws nothing when storage is blocked", () => {
+    const fake = stub({ throws: true });
+    expect(readWidths("registrations")).toEqual({});
+    expect(() => writeWidths("registrations", { name: 240 })).not.toThrow();
+    // The drag still worked on this page, and the reset control still hears of it.
+    expect(fake.events).toHaveLength(1);
+  });
+
+  it("says which table changed, for its reset control", () => {
+    const fake = stub();
+    writeWidths("staff", { email: 300 });
+    expect(fake.events).toHaveLength(1);
+    expect(fake.events[0].type).toBe(WIDTHS_CHANGED);
+    expect((fake.events[0] as CustomEvent<string>).detail).toBe("staff");
   });
 });

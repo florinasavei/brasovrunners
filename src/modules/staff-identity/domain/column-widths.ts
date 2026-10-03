@@ -12,7 +12,12 @@
  * proportion would move every other column the moment one was dragged.
  */
 
-/** Narrow enough to tuck a column away, wide enough to keep its handle and a few letters. */
+/**
+ * The floor under every column, however short its heading: wide enough to keep its handle and a
+ * few letters. Each column also has a floor of its own — its heading's longest word, the sort
+ * arrow and the cell's padding, measured in the browser (`headingFloor` in `column-widths-dom.ts`)
+ * — so no heading word is ever cut; this constant is only the least of those floors.
+ */
 export const MIN_COLUMN_WIDTH = 56;
 /** Wider than any column needs on a desktop screen; a stored value past it is a broken one. */
 export const MAX_COLUMN_WIDTH = 960;
@@ -29,11 +34,21 @@ export const ACTIONS_COLUMN = "__actions";
 export type ColumnWidths = Record<string, number>;
 
 export function storageKey(tableId: string): string {
-  return `br.admin-table.${tableId}.widths`;
+  return `br.table.${tableId}.widths`;
 }
 
-export function clampWidth(width: number): number {
-  return Math.round(Math.min(MAX_COLUMN_WIDTH, Math.max(MIN_COLUMN_WIDTH, width)));
+/**
+ * One column's floor: its own measured one (the heading's longest word, its arrow and padding),
+ * never below `MIN_COLUMN_WIDTH`, never past `MAX_COLUMN_WIDTH`, whole.
+ */
+export function columnFloor(measured: number | undefined): number {
+  if (measured === undefined || !Number.isFinite(measured)) return MIN_COLUMN_WIDTH;
+  return Math.round(Math.min(MAX_COLUMN_WIDTH, Math.max(MIN_COLUMN_WIDTH, Math.ceil(measured))));
+}
+
+/** A width brought inside the limits — `floor` is the column's own, from `columnFloor`. */
+export function clampWidth(width: number, floor: number = MIN_COLUMN_WIDTH): number {
+  return Math.round(Math.min(MAX_COLUMN_WIDTH, Math.max(columnFloor(floor), width)));
 }
 
 /**
@@ -63,16 +78,19 @@ export function parseWidths(raw: string | null | undefined): ColumnWidths {
 /**
  * The fixed layout for the columns on screen now: each one's stored width when it has one,
  * otherwise the width the automatic layout measured, and the table as wide as their sum.
- * `visible` is in column order and leaves out a column the breakpoint hides.
+ * `visible` is in column order and leaves out a column the breakpoint hides. A stored width under
+ * the column's own `floor` is raised to it: a heading that grew (the other language, a new word)
+ * still never has a word cut.
  */
 export function fixedLayout(
-  visible: readonly { key: string; measured: number }[],
+  visible: readonly { key: string; measured: number; floor?: number }[],
   stored: ColumnWidths,
 ): { widths: ColumnWidths; total: number } {
   const widths: ColumnWidths = {};
   let total = 0;
-  for (const { key, measured } of visible) {
-    const width = key in stored && key !== ACTIONS_COLUMN ? stored[key] : Math.round(measured);
+  for (const { key, measured, floor } of visible) {
+    const width =
+      key in stored && key !== ACTIONS_COLUMN ? clampWidth(stored[key], floor) : Math.round(measured);
     widths[key] = width;
     total += width;
   }
@@ -86,18 +104,23 @@ export function touchesVisible(visible: readonly { key: string }[], stored: Colu
 
 /**
  * The width after one key press on a column's edge (the window-splitter pattern): the arrows
- * move it by a step, Shift by a larger one, Home and End to the limits. Any other key is
- * `null`, so the caller leaves it to the browser.
+ * move it by a step, Shift by a larger one, Home to the column's own floor and End to the
+ * widest. Any other key is `null`, so the caller leaves it to the browser.
  */
-export function keyboardWidth(current: number, key: string, shift: boolean): number | null {
+export function keyboardWidth(
+  current: number,
+  key: string,
+  shift: boolean,
+  floor: number = MIN_COLUMN_WIDTH,
+): number | null {
   const step = shift ? KEY_STEP_LARGE : KEY_STEP;
   switch (key) {
     case "ArrowRight":
-      return clampWidth(current + step);
+      return clampWidth(current + step, floor);
     case "ArrowLeft":
-      return clampWidth(current - step);
+      return clampWidth(current - step, floor);
     case "Home":
-      return MIN_COLUMN_WIDTH;
+      return columnFloor(floor);
     case "End":
       return MAX_COLUMN_WIDTH;
     default:

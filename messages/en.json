@@ -565,7 +565,7 @@
     "columns": {
       "resize": "Width of the “{column}” column",
       "resizeHow": "Drag the edge to widen or narrow the column; from the keyboard, the left and right arrows. A double click puts it back to its original width.",
-      "reset": "Reset the column widths"
+      "reset": "Default widths"
     },
     "backToEvents": "Back to the event list",
     "legalNotice": {

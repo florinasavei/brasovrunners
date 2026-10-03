@@ -1,6 +1,8 @@
 import {
+  columnFloor,
   type ColumnWidths,
   fixedLayout,
+  MIN_COLUMN_WIDTH,
   parseWidths,
   storageKey,
   touchesVisible,
@@ -19,6 +21,15 @@ import {
 
 /** Said on `window` whenever a table's stored widths change, so its reset control can appear. */
 export const WIDTHS_CHANGED = "br:admin-table-widths";
+
+/**
+ * Said on a `<table>` itself each time it is laid out or let go, so each of its handles can say
+ * its column's width now (`aria-valuenow`) — after a reload, a reset, a double click, a breakpoint.
+ */
+export const LAID_OUT = "br:admin-table-layout";
+
+/** What a fixed layout gave every visible column, and each one's floor. */
+export type Laid = { widths: ColumnWidths; floors: ColumnWidths };
 
 export function readWidths(tableId: string): ColumnWidths {
   try {
@@ -51,42 +62,112 @@ function headerCell(table: HTMLTableElement, key: string): HTMLTableCellElement 
   return table.querySelector<HTMLTableCellElement>(`:scope > thead th[data-column="${CSS.escape(key)}"]`);
 }
 
-/** Back to the browser's own layout: no widths on the columns, the table at its natural width. */
-export function releaseLayout(table: HTMLTableElement): void {
+function unfix(table: HTMLTableElement): void {
   for (const col of columns(table)) col.style.width = "";
   table.style.tableLayout = "";
   table.style.width = "";
   delete table.dataset.resized;
 }
 
+function announce(table: HTMLTableElement): void {
+  table.dispatchEvent(new Event(LAID_OUT));
+}
+
+/** Back to the browser's own layout: no widths on the columns, the table at its natural width. */
+export function releaseLayout(table: HTMLTableElement): void {
+  unfix(table);
+  announce(table);
+}
+
 /**
- * Lays `table` out with `stored`, and returns every visible column's width in that layout — or
- * `null` when the table is left automatic: nothing stored for a column on screen and `force`
- * unset, or the table not displayed at all (below `md` the phone layout shows instead, and a
- * hidden table measures zero).
+ * The narrowest a column may go so that no word of its heading is cut: the heading's longest word,
+ * plus whatever sits beside the words on the heading's line (the sort arrow, a hint) and the cell's
+ * padding. Measured in the automatic layout, where a heading is one line (`nowrap`): the line's
+ * width less the words' width is what stays beside them once the heading wraps between words.
+ */
+export function headingFloor(th: HTMLTableCellElement): number {
+  const heading = th.querySelector<HTMLElement>("[data-column-heading]");
+  const words = (heading?.textContent ?? "").split(/\s+/).filter(Boolean);
+  if (!heading || words.length === 0) return MIN_COLUMN_WIDTH;
+
+  const range = document.createRange();
+  range.selectNodeContents(th);
+  const handle = th.querySelector("[data-column-resize]");
+  if (handle) range.setEndBefore(handle);
+  const line = range.getBoundingClientRect().width;
+  const label = heading.getBoundingClientRect().width;
+
+  // A probe inside the heading inherits its font; absolute, so it moves nothing while it is there.
+  const probe = document.createElement("span");
+  probe.style.cssText = "position:absolute;visibility:hidden;white-space:pre;";
+  heading.appendChild(probe);
+  let longest = 0;
+  for (const word of words) {
+    probe.textContent = word;
+    longest = Math.max(longest, probe.getBoundingClientRect().width);
+  }
+  probe.remove();
+
+  const style = getComputedStyle(th);
+  const padding = (Number.parseFloat(style.paddingLeft) || 0) + (Number.parseFloat(style.paddingRight) || 0);
+  // Two pixels for the subpixel rounding of the words and the border between the cells.
+  return columnFloor(Math.max(0, line - label) + longest + padding + 2);
+}
+
+/**
+ * A column's width as laid out now, whole — the width a fixed layout set on its `<col>`, else the
+ * heading's measured one — or `null` while the table is not displayed.
+ */
+export function columnWidthNow(table: HTMLTableElement, key: string): number | null {
+  const col = table.querySelector<HTMLTableColElement>(`:scope > colgroup > col[data-column="${CSS.escape(key)}"]`);
+  const set = Number.parseFloat(col?.style.width ?? "");
+  if (table.dataset.resized && Number.isFinite(set) && set > 0) return Math.round(set);
+  const th = headerCell(table, key);
+  const width = th?.getBoundingClientRect().width ?? 0;
+  return width > 0 ? Math.round(width) : null;
+}
+
+/**
+ * Lays `table` out with `stored`, and returns every visible column's width in that layout and its
+ * floor — or `null` when the table is left automatic: nothing stored for a column on screen and
+ * `force` unset, or the table not displayed at all (below `md` the phone layout shows instead,
+ * and a hidden table measures zero).
  *
  * It always measures from the automatic layout first, so a column nobody dragged gets the width
- * the browser would give it today, on today's rows, and not one remembered from another page.
+ * the browser would give it today, on today's rows, and not one remembered from another page —
+ * and each heading's floor (`headingFloor`) is measured there too, while the heading is one line.
  */
-export function layOut(table: HTMLTableElement, stored: ColumnWidths, force = false): ColumnWidths | null {
-  releaseLayout(table);
-  if (table.offsetParent === null) return null;
+export function layOut(table: HTMLTableElement, stored: ColumnWidths, force = false): Laid | null {
+  unfix(table);
+  if (table.offsetParent === null) {
+    announce(table);
+    return null;
+  }
 
-  const visible: { key: string; col: HTMLTableColElement; measured: number }[] = [];
+  const visible: { key: string; col: HTMLTableColElement; th: HTMLTableCellElement; measured: number }[] = [];
   for (const col of columns(table)) {
     const key = col.dataset.column as string;
     const th = headerCell(table, key);
     if (!th || getComputedStyle(th).display === "none") continue;
-    visible.push({ key, col, measured: th.getBoundingClientRect().width });
+    visible.push({ key, col, th, measured: th.getBoundingClientRect().width });
   }
-  if (!force && !touchesVisible(visible, stored)) return null;
+  if (!force && !touchesVisible(visible, stored)) {
+    announce(table);
+    return null;
+  }
 
-  const { widths, total } = fixedLayout(visible, stored);
+  const floors: ColumnWidths = {};
+  for (const { key, th } of visible) floors[key] = headingFloor(th);
+  const { widths, total } = fixedLayout(
+    visible.map(({ key, measured }) => ({ key, measured, floor: floors[key] })),
+    stored,
+  );
   for (const { key, col } of visible) col.style.width = `${widths[key]}px`;
   table.style.tableLayout = "fixed";
   table.style.width = `${total}px`;
   table.dataset.resized = "true";
-  return widths;
+  announce(table);
+  return { widths, floors };
 }
 
 /** During a drag: one column's new width, and the table's width moved by the same amount. */

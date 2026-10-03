@@ -7,6 +7,7 @@ import {
   type MouseEvent,
   type PointerEvent,
   useCallback,
+  useEffect,
   useRef,
   useState,
   useSyncExternalStore,
@@ -18,7 +19,15 @@ import {
   MAX_COLUMN_WIDTH,
   MIN_COLUMN_WIDTH,
 } from "@/modules/staff-identity/domain/column-widths";
-import { layOut, readWidths, setColumnWidth, writeWidths } from "./column-widths-dom";
+import {
+  columnWidthNow,
+  headingFloor,
+  LAID_OUT,
+  layOut,
+  readWidths,
+  setColumnWidth,
+  writeWidths,
+} from "./column-widths-dom";
 
 type Props = {
   /** The table's name in storage; `AdminTable` checks its shape. */
@@ -34,6 +43,7 @@ type Props = {
 type Drag = {
   table: HTMLTableElement;
   widths: ColumnWidths;
+  floor: number;
   startX: number;
   start: number;
   moved: boolean;
@@ -47,13 +57,17 @@ type Drag = {
  * reaches the server-rendered table through the DOM (`column-widths-dom.ts`). No participant's
  * name or address crosses into it (§14.5).
  *
- * The window-splitter pattern: `role="separator"`, focusable, its width as the value — the
- * arrows move it by 16 pixels, Shift by 64, Home and End to the limits. A double press puts that
- * one column back to its automatic width. Drawn only once hydrated: with JavaScript off the
+ * The window-splitter pattern: `role="separator"`, focusable, its column's width now as the value
+ * (said again each time the table is laid out — after a reload, a reset, a double click) — the
+ * arrows move it by 16 pixels, Shift by 64, Home to the column's own floor (its heading's longest
+ * word, so no heading word is cut) and End to the widest. A double press puts that one column back
+ * to its automatic width. Drawn only once hydrated: with JavaScript off the
  * table is exactly what it was, and a handle that did nothing would be a lie.
  *
- * Reach: 16 pixels under a mouse, 44 under a finger (BR-REQ-041-01 criterion 6), centred on the
- * edge so the heading's sort link keeps its own pixels.
+ * Reach: 16 pixels under a mouse, centred on the edge, inside the next cell's padding; 44 under a
+ * finger (BR-REQ-041-01 criterion 6), 28 of them on its own side of the edge and 16 past it, so it
+ * stays inside the next heading's padding too and that heading's sort link keeps its own pixels.
+ * The visible line is drawn for a mouse only; a finger finds the edge by its reach.
  */
 export default function ColumnResizeHandle({ tableId, column, label, last }: Props) {
   const t = useTranslations("Admin");
@@ -63,17 +77,43 @@ export default function ColumnResizeHandle({ tableId, column, label, last }: Pro
     () => false,
   );
   const [width, setWidth] = useState<number | null>(null);
+  const [floor, setFloor] = useState<number>(MIN_COLUMN_WIDTH);
   const drag = useRef<Drag | null>(null);
+  const self = useRef<HTMLSpanElement | null>(null);
+
+  // The value a focusable separator owes: the column's width as laid out now, read once hydrated
+  // and again each time the table says it was laid out or let go. Not while a drag is under way,
+  // which says its own width.
+  useEffect(() => {
+    const table = self.current?.closest("table");
+    if (!hydrated || !table) return;
+    const measure = () => {
+      if (drag.current) return;
+      setWidth(columnWidthNow(table, column));
+      const th = self.current?.closest("th");
+      // Measured only while the heading is one line: a fixed layout may already have wrapped it.
+      if (th && !table.dataset.resized) setFloor(headingFloor(th));
+    };
+    const frame = requestAnimationFrame(measure);
+    table.addEventListener(LAID_OUT, measure);
+    return () => {
+      cancelAnimationFrame(frame);
+      table.removeEventListener(LAID_OUT, measure);
+    };
+  }, [hydrated, column]);
 
   /** The table this edge belongs to, laid out fixed with what is stored, and every column's width. */
   const freeze = useCallback(
     (element: HTMLElement) => {
       const table = element.closest("table");
       if (!table) return null;
-      const widths = layOut(table, readWidths(tableId), true);
-      return widths ? { table, widths } : null;
+      const laid = layOut(table, readWidths(tableId), true);
+      if (!laid) return null;
+      const columnFloorNow = laid.floors[column] ?? MIN_COLUMN_WIDTH;
+      setFloor(columnFloorNow);
+      return { table, widths: laid.widths, floor: columnFloorNow };
     },
-    [tableId],
+    [tableId, column],
   );
 
   const commit = useCallback(
@@ -93,7 +133,7 @@ export default function ColumnResizeHandle({ tableId, column, label, last }: Pro
     event.preventDefault();
     event.stopPropagation();
     event.currentTarget.setPointerCapture(event.pointerId);
-    const start = frozen.widths[column] ?? MIN_COLUMN_WIDTH;
+    const start = frozen.widths[column] ?? frozen.floor;
     drag.current = { ...frozen, startX: event.clientX, start, moved: false };
     setWidth(start);
   }
@@ -101,7 +141,7 @@ export default function ColumnResizeHandle({ tableId, column, label, last }: Pro
   function onPointerMove(event: PointerEvent<HTMLSpanElement>) {
     const current = drag.current;
     if (!current) return;
-    const next = clampWidth(current.start + event.clientX - current.startX);
+    const next = clampWidth(current.start + event.clientX - current.startX, current.floor);
     current.moved = true;
     setColumnWidth(current.table, column, current.widths, next);
     setWidth(next);
@@ -124,7 +164,7 @@ export default function ColumnResizeHandle({ tableId, column, label, last }: Pro
     if (keyboardWidth(MIN_COLUMN_WIDTH, event.key, event.shiftKey) === null) return;
     const frozen = freeze(event.currentTarget);
     if (!frozen) return;
-    const next = keyboardWidth(frozen.widths[column] ?? MIN_COLUMN_WIDTH, event.key, event.shiftKey);
+    const next = keyboardWidth(frozen.widths[column] ?? frozen.floor, event.key, event.shiftKey, frozen.floor);
     if (next === null) return;
     event.preventDefault();
     commit(next);
@@ -136,7 +176,7 @@ export default function ColumnResizeHandle({ tableId, column, label, last }: Pro
     const rest = { ...readWidths(tableId) };
     delete rest[column];
     writeWidths(tableId, rest);
-    setWidth(null);
+    // The layout says the column's automatic width back to this handle (`LAID_OUT`).
     if (table) layOut(table, rest);
   }
 
@@ -147,10 +187,12 @@ export default function ColumnResizeHandle({ tableId, column, label, last }: Pro
       tabIndex={0}
       aria-orientation="vertical"
       aria-label={t("columns.resize", { column: label })}
-      aria-valuemin={MIN_COLUMN_WIDTH}
+      aria-valuemin={floor}
       aria-valuemax={MAX_COLUMN_WIDTH}
       aria-valuenow={width ?? undefined}
+      aria-valuetext={width === null ? undefined : `${width} px`}
       title={t("columns.resizeHow")}
+      ref={self}
       data-column-resize={column}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -170,16 +212,19 @@ export default function ColumnResizeHandle({ tableId, column, label, last }: Pro
         userSelect: "none",
         display: "flex",
         justifyContent: "center",
-        "@media (pointer: coarse)": { width: 44, right: last ? 0 : -22 },
-        // The line itself: the frame's divider at rest, the brand colour under the pointer or focus.
-        "&::after": {
-          content: '""',
-          width: "2px",
-          my: 1,
-          borderRadius: 1,
-          bgcolor: "divider",
+        "@media (pointer: coarse)": { width: 44, right: last ? 0 : -16 },
+        // The line itself, for a mouse: the frame's divider at rest, the brand colour under the
+        // pointer or focus.
+        "@media (pointer: fine)": {
+          "&::after": {
+            content: '""',
+            width: "2px",
+            my: 1,
+            borderRadius: 1,
+            bgcolor: "divider",
+          },
+          "&:hover::after, &:focus-visible::after": { bgcolor: "primary.main" },
         },
-        "&:hover::after, &:focus-visible::after": { bgcolor: "primary.main" },
         "&:focus-visible": {
           outlineStyle: "solid",
           outlineWidth: "2px",

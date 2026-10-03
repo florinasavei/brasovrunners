@@ -52,12 +52,13 @@ import ColumnWidths from "./ColumnWidths";
  * owner then asked for — so it is paid here, inside this table, and every reason above still
  * holds. The table stays server-rendered; a `<colgroup>` gives each column a `<col data-column>`,
  * and one small island per heading (`ColumnResizeHandle`) is the column's right edge, dragged by a
- * pointer or moved by the arrow keys. It receives strings — the table's id, the column's key, its
- * heading — and lays the table out through the DOM, so no row ever crosses to the client. The
- * widths are this browser's own, per `tableId`, in `localStorage`: a preference about one screen,
- * not something the server or the URL needs to know. Under the table, `ColumnWidths` re-applies
- * them on load and offers «Readu coloanele la lățimea inițială» while any is stored. With JavaScript off neither
- * island draws anything, and the table is the automatic one it always was.
+ * pointer or moved by the arrow keys, never narrower than its heading's longest word. It receives
+ * strings — the table's id, the column's key, its heading — and lays the table out through the
+ * DOM, so no row ever crosses to the client. The widths are this browser's own, per `tableId`, in
+ * `localStorage`: a preference about one screen, not something the server or the URL needs to
+ * know. Under the table, `ColumnWidths` re-applies them on load and offers «Lățimi implicite»
+ * while any is stored. With JavaScript off neither island draws anything, and the table is the
+ * automatic one it always was.
  *
  * A resized table switches to `table-layout: fixed` at the sum of its columns' widths: wider
  * than the frame, the frame scrolls sideways inside its border; narrower, it stops short. The
@@ -171,10 +172,12 @@ const HIDE_COL = {
 /**
  * A resized table (`data-resized`, set by the islands) has fixed widths, so a long value wraps
  * inside its column rather than pushing the column wider, and a body cell clips what still does
- * not fit. A heading cell does not clip: its resize handle reaches past its edge.
+ * not fit. A heading wraps between its words only, never inside one: no column goes narrower than
+ * its heading's longest word (`headingFloor`). A heading cell does not clip: its resize handle
+ * reaches past its edge.
  */
 const RESIZED = {
-  "&[data-resized] > thead > tr > th": { whiteSpace: "normal", overflowWrap: "anywhere" },
+  "&[data-resized] > thead > tr > th": { whiteSpace: "normal" },
   "&[data-resized] > tbody > tr > td": { overflow: "hidden", overflowWrap: "anywhere" },
 } as const;
 
@@ -302,7 +305,7 @@ export default function AdminTable<Row>({
                           "&:hover": { textDecoration: "underline" },
                         }}
                       >
-                        {column.label}
+                        <span data-column-heading="">{column.label}</span>
                         {/* Decorative: `aria-sort` on the cell reports the state, and repeating
                             it in text would announce it twice. */}
                         <Box
@@ -315,7 +318,7 @@ export default function AdminTable<Row>({
                       </Box>
                     </Link>
                   ) : (
-                    column.label
+                    <span data-column-heading="">{column.label}</span>
                   )}
                   {column.hint && <Hint text={column.hint} />}
                   <ColumnResizeHandle
