@@ -417,6 +417,9 @@ describe("§647 the registration's «Lista ascunsă» block", () => {
         ro.Admin.registrations.outside.infoNot,
       ]);
       expect(sentences(tree).join("\n"), role).toContain(ro.Admin.registrations.outside.help);
+      // The caption itself names the public list and the public count, not only the place and the declaration.
+      expect(ro.Admin.registrations.outside.help, role).toMatch(/lista publică dacă a bifat/);
+      expect(ro.Admin.registrations.outside.help, role).toMatch(/numărătoarea publică doar cu bifa evenimentului/);
     }
   });
 });

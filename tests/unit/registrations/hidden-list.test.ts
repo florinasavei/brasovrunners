@@ -53,6 +53,15 @@ describe("§NNN the name, in both languages: «Lista de invitați speciali»", (
     expect(en.Admin.registrations.outside.unmark).toBe("Take off the special guests list");
     expect(ro.Admin.registrations.outside.hint).toBe("Invitat special: nu ocupă unul dintre locurile anunțate");
     expect(en.Admin.registrations.outside.hint).toBe("Special guest: takes none of the announced places");
+    // The caption under the radios says all three facts, not only the place: the declaration and number kept,
+    // the public list unchanged, the public count only with the event's tick.
+    expect(ro.Admin.registrations.outside.help).toContain("își păstrează declarația și numărul");
+    expect(ro.Admin.registrations.outside.help).toContain("rămâne pe lista publică dacă a bifat");
+    expect(ro.Admin.registrations.outside.help).toContain("intră în numărătoarea publică doar cu bifa evenimentului");
+    expect(en.Admin.registrations.outside.help).toContain("keeps the declaration and the race number");
+    expect(en.Admin.registrations.outside.help).toContain("stays on the public list if they ticked it");
+    expect(en.Admin.registrations.outside.help).toContain("enters the public count only with the event's tick");
+    for (const help of [ro.Admin.registrations.outside.help, en.Admin.registrations.outside.help]) expect(help.length).toBeLessThan(200);
     expect(ro.Admin.editor.boxes.received.outside).toBe("invitați speciali: {count}");
     expect(ro.Admin.guide.sections[4].tasks[10].title).toBe("Invitați speciali: organizatori, pacemakeri, voluntari");
     expect(en.Admin.guide.sections[4].tasks[10].title).toBe("Special guests: organizers, pacemakers, volunteers");

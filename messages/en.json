@@ -637,7 +637,7 @@
         "switchOff": "The special guests list is off for this event: the registration can only come off it.",
         "mark": "Put on the special guests list",
         "unmark": "Take off the special guests list",
-        "help": "Special guest: at the start without taking one of the announced places, keeping the declaration and the race number.",
+        "help": "Special guest: takes no announced place; keeps the declaration and the race number, stays on the public list if they ticked it, and enters the public count only with the event's tick.",
         "hint": "Special guest: takes none of the announced places",
         "infoFor": "For organizers, volunteers, pacemakers and invited runners: they are at the start without taking one of the announced places.",
         "infoKeeps": "They keep the declaration and the race number; they appear on the public list if they ticked; the public count leaves them out unless the event ticks «Count the special guests too».",

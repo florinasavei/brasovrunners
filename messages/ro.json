@@ -637,7 +637,7 @@
         "switchOff": "Lista de invitați speciali e oprită la acest eveniment: înscrierea poate doar ieși de pe ea.",
         "mark": "Pune pe lista de invitați speciali",
         "unmark": "Scoate de pe lista de invitați speciali",
-        "help": "Invitat special: e la start fără să ocupe unul dintre locurile anunțate și își păstrează declarația și numărul de concurs.",
+        "help": "Invitat special: nu ocupă un loc anunțat; își păstrează declarația și numărul, rămâne pe lista publică dacă a bifat și intră în numărătoarea publică doar cu bifa evenimentului.",
         "hint": "Invitat special: nu ocupă unul dintre locurile anunțate",
         "infoFor": "Pentru organizatori, voluntari, pacemakeri și sportivi invitați: sunt la start fără să ocupe unul dintre locurile anunțate.",
         "infoKeeps": "Păstrează declarația și numărul de concurs; apar pe lista publică dacă au bifat; nu intră în numărătoarea publică decât dacă bifezi la eveniment «Numără și invitații speciali».",

@@ -1286,7 +1286,7 @@ offer past its deadline as lapsed, so nothing is overbooked by the rows staying 
 `WAITLISTED -> PENDING_DECLARATION` is the one move out of the line that is not an offer, and
 `WAITLIST_OFFERED -> PENDING_DECLARATION` the one way an offer ends other than signed, cancelled or
 lapsed; both exist for one reason (§643): an Administrator puts a waiting runner, or one holding an
-open offer, on «Lista de invitați speciali» (the special guests list; «Lista de invitați speciali» as §647 named it), which consumes no place, so the allocator gives them one at once — a
+open offer, on «Lista de invitați speciali» (the special guests list; «Lista ascunsă» as §647 named it), which consumes no place, so the allocator gives them one at once — a
 declaration to sign with the ordinary deadline and email. An offer kept as an offer would lapse at the
 line's short deadline, as every offer does, and end the registration; the offer's queued email never
 tried is withdrawn, and its link is replaced by the declaration's when that email leaves (§619). The
@@ -2746,8 +2746,8 @@ BR-REQ-037-05):
      erase, rename, resend and the printing mark stay Administrator-only
      (`canManageRegistrations`). Each verb is audited under the volunteer's own id.
 
-6. **«Lista de invitați speciali» (2026-10-02, §643; named «Lista de invitați speciali», drawn as a radio and given
-   the event's switch by §647; renamed, and explained on every screen that shows it, on 2026-10-03).** The Administrator (`canManageRegistrations`; the Organizer reads the chip, the pill and
+6. **«Lista de invitați speciali» (2026-10-02, §643; named «Lista ascunsă», drawn as a radio and given
+   the event's switch by §647; renamed «Lista de invitați speciali», and explained on every screen that shows it, by §NNN on 2026-10-03).** The Administrator (`canManageRegistrations`; the Organizer reads the chip, the pill and
    the radio, disabled, and changes nothing) puts a registration on the special guests list or takes it off,
    on its own page — for organizers, pacemakers and invited runners, who run without taking one of
    the announced places — only while the event's «Folosește lista de invitați speciali» is on (taking off always;
