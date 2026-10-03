@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { inviteToEvent, resendInvitation, withdrawInvitation } from "@/modules/registrations/admin-service";
+import { inviteToEvent, readInvitationForecast, resendInvitation, withdrawInvitation } from "@/modules/registrations/admin-service";
 import { confirmedCapacityOf, SUPPLEMENTARY_PLACE_UNCONFIRMED, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
 import { INVITATION_DAYS_DEFAULT, InvitationRefusal, parseInvitationLines } from "@/modules/registrations/domain/invitations";
 import type { InvitationInvitee } from "@/modules/registrations/service";
@@ -44,8 +44,17 @@ async function backToSection(locale: Locale, eventId: string, outcome: Record<st
  * What the send's island is handed back on a refusal: the marker and, when the refusal is about one
  * person of the list, that person's name as the Administrator typed it or the member's account carries
  * it — in the response, never in a URL (§14.5). `lines`: the typed lines that could not be read.
+ * `forecast`: the capacity and the places free for invitations read again after the refusal
+ * (`readInvitationForecast`), so the next press's dialog asks on the server's numbers — a refused send
+ * is answered with state, not a redirect, and the page's own props would otherwise stay as they were
+ * when it was drawn (the invitations review of 2026-10-03: «Apasă din nou» refused again until a reload).
  */
-export type InvitationSendState = { error: string; person?: string | null; lines?: string } | null;
+export type InvitationSendState = {
+  error: string;
+  person?: string | null;
+  lines?: string;
+  forecast?: { capacity: number | null; free: number | null } | null;
+} | null;
 
 /**
  * «Trimite invitațiile» (§NNN): the members ticked and the lines typed, one send. A line that is not a
@@ -66,20 +75,28 @@ export async function inviteAction(_previous: InvitationSendState, form: FormDat
   ];
   const days = wholeDigits(text(form, "days")) ?? INVITATION_DAYS_DEFAULT;
   let sent: { sent: number; capacityRaisedTo: number | null };
+  const db = getDb();
   try {
     const actor = await requireStaffCapability(canManageRegistrations);
     sent = await inviteToEvent(
-      getDb(),
+      db,
       actor,
       eventId,
       { people, days, outsideCapacity: form.get("outside") === "1", locale: form.get("inviteLocale") === "en" ? "en" : "ro", addPlaceTo: confirmedCapacityOf(form.get("addPlace")) },
       new Date(),
     );
   } catch (error) {
-    if (error instanceof InvitationRefusal) return { error: error.refusal, person: error.person };
-    if (supplementaryPlaceRefusalOutcome(error)) return { error: SUPPLEMENTARY_PLACE_UNCONFIRMED };
-    if (isDomainError(error)) return { error: error.code };
-    throw error;
+    if (isDomainError(error) && error.code === "FORBIDDEN") return { error: error.code };
+    const refused = error instanceof InvitationRefusal
+      ? { error: error.refusal, person: error.person }
+      : supplementaryPlaceRefusalOutcome(error)
+        ? { error: SUPPLEMENTARY_PLACE_UNCONFIRMED }
+        : isDomainError(error)
+          ? { error: error.code }
+          : null;
+    if (!refused) throw error;
+    // The numbers the next dialog asks on, read now — for the role that may send, asserted above.
+    return { ...refused, forecast: await readInvitationForecast(db, eventId, new Date()) };
   }
   return backToSection(
     locale,

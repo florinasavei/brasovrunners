@@ -6512,13 +6512,19 @@
           "few": "{count} invitations.",
           "other": "{count} invitations."
         },
-        "free": "Free places now: {free}.",
+        "free": "Places free for invitations now: {free} — whoever waits on the list comes first.",
         "raise": {
           "one": "{count} supplementary place is added: the capacity becomes {capacity}.",
           "few": "{count} supplementary places are added: the capacity becomes {capacity}.",
           "other": "{count} supplementary places are added: the capacity becomes {capacity}."
         },
         "noRaise": "No new place: they fit in the free places.",
+        "days": {
+          "one": "The invitation expires in one day, at the latest at the start.",
+          "few": "The invitation expires in {count} days, at the latest at the start.",
+          "other": "The invitation expires in {count} days, at the latest at the start."
+        },
+        "locale": "Language for addresses the club does not know: {language}.",
         "outside": "On the hidden list: they hold no place.",
         "confirmRaise": {
           "one": "Add {count} place and send",
@@ -7005,7 +7011,7 @@
       "invalid": "The link is not valid or no longer works.",
       "askClub": "If you would still like to come, write to us:",
       "contact": "Contact page",
-      "alreadyRegistered": "This address already has a registration with this name for the event: nothing was registered. If you have not confirmed your address yet, press the link in the confirmation email: your registration then gets the place the invitation keeps. Write to us if it is a mistake.",
+      "alreadyRegistered": "This address already has a registration with this name: nothing was registered. Address not confirmed? Press the link in the confirmation email to get the invitation's place.",
       "addressAtCap": "This address already has the most registrations allowed for the event: nothing was registered.",
       "notYou": "Not expecting this invitation? Ignore it or write to us:"
     }

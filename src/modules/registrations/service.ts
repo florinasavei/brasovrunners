@@ -108,7 +108,7 @@ import {
 } from "./names";
 import * as repo from "./repository";
 import { findInvitationById, findLiveInvitationOfParticipant, findOpenInvitation, invitationOpen } from "./invitation-repository";
-import { confirmsInvitationRaises, INVITATION_BATCH_MAX, InvitationRefusal, invitationDeadline, invitationRaises, invitationState, validInvitationDays } from "./domain/invitations";
+import { confirmsInvitationRaises, INVITATION_BATCH_MAX, InvitationRefusal, invitationDeadline, invitationFreePlaces, invitationRaises, invitationState, validInvitationDays } from "./domain/invitations";
 import { waitlistRefusalOf } from "./domain/waitlist";
 
 /**
@@ -4249,22 +4249,29 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
       invitees.push({ ...person, locale, identity, known });
     }
 
-    // The places: one supplementary place per invitation that needs a counted one and finds none (§642).
+    /*
+      The places: one supplementary place per invitation that needs a counted one and finds none free
+      for it (§642). Free for an invitation means free after everyone eligible who waits — whatever
+      «Oferte automate» says and whether the registration has closed: with offers off (§615) or after the
+      close `fillAvailableSpots` above offered nobody, and a place a waiting row is owed is still never
+      an invitation's (AGENTS.md §15.11). The line does not move during the send — an invitation is no
+      registration — so the count is read once.
+    */
     const counts = await repo.countOccupied(tx, event.id, now);
+    const waiting = await repo.countEligibleWaitlisted(tx, event.id);
     const needed = input.outsideCapacity ? 0 : invitees.length;
-    const raises = invitationRaises({ capacity: locked.capacity, occupied: computeOccupied(counts), needed });
+    const raises = invitationRaises({ capacity: locked.capacity, occupied: computeOccupied(counts), waiting, needed });
     if (locked.capacity !== null && !confirmsInvitationRaises(locked.capacity, raises, input.addPlaceTo ?? null)) {
       throw supplementaryPlaceUnconfirmedError(locked.capacity, input.addPlaceTo ?? null);
     }
 
     let capacityRaisedTo: number | null = null;
-    const leaveAfter: string[] = [];
     for (const person of invitees) {
       const invitationId = randomUUID();
       let raised = false;
       if (!input.outsideCapacity && locked.capacity !== null) {
         const before = await repo.countOccupied(tx, event.id, now);
-        if (computeOccupied(before) >= locked.capacity) {
+        if (invitationFreePlaces({ capacity: locked.capacity, occupied: computeOccupied(before), waiting }) === 0) {
           capacityRaisedTo = await addOneSupplementaryPlace(
             tx,
             { eventId: event.id, capacity: locked.capacity, counts: before, invitationId, action: "event.capacity_raised_for_invitation", confirmedTo: locked.capacity + 1 },
@@ -4310,7 +4317,6 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
         idempotencyKey,
         now,
       });
-      leaveAfter.push(idempotencyKey);
       await recordAuditEvent(tx, {
         actorStaffUserId: actor.id,
         participantId: null,

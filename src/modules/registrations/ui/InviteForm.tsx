@@ -40,12 +40,16 @@ export type InviteFormWords = {
   dialogTitle: string;
   /** «{count} invitații», counted. */
   dialogCount: Counted;
-  /** «Locuri libere acum: {free}.» */
+  /** «Locuri libere pentru invitații acum: {free} — cine așteaptă pe listă are întâietate.» */
   dialogFree: string;
   /** «Se adaugă {count} locuri suplimentare: capacitatea devine {capacity}.», counted. */
   dialogRaise: Counted;
   dialogNoRaise: string;
   dialogOutside: string;
+  /** «Invitația expiră în {count} zile, cel mult la start.», counted: the deadline the press sends. */
+  dialogDays: Counted;
+  /** «Limba pentru adresele pe care clubul nu le cunoaște: {language}.»: the language the press sends. */
+  dialogLocale: string;
   dialogEmail: Counted;
   /** «Adaugă {count} locuri și trimite», counted. */
   confirmRaise: Counted;
@@ -57,7 +61,19 @@ export type InviteFormWords = {
   errorGeneric: string;
 };
 
-export type InviteFormState = { error: string; person?: string | null; lines?: string } | null;
+/**
+ * A refusal handed back by the action: the marker, whose line it is, and — read again by the server
+ * after the refusal (`readInvitationForecast`) — the capacity and the places free for invitations, which
+ * the next dialog asks on instead of the page's (the page is not redrawn on a refusal).
+ */
+export type InviteFormState = {
+  error: string;
+  person?: string | null;
+  lines?: string;
+  forecast?: { capacity: number | null; free: number | null } | null;
+} | null;
+
+type Forecast = { capacity: number | null; free: number | null };
 
 function fill(template: string, values: Record<string, string | number>): string {
   return template.replace(/\{(\w+)\}/g, (whole, name: string) => (values[name] === undefined ? whole : String(values[name])));
@@ -103,6 +119,28 @@ export default function InviteForm({
   const [ticked, setTicked] = useState<ReadonlySet<string>>(new Set());
   const [typed, setTyped] = useState("");
   const [outside, setOutside] = useState(false);
+  /*
+    Controlled, as the ticks and the lines are: React resets an uncontrolled field of a form once its
+    action completes, and a refusal answered with state completes it — the corrected second press would
+    otherwise go in Romanian with the default days whatever was chosen (the invitations review of 2026-10-03).
+  */
+  const [days, setDays] = useState(String(daysDefault));
+  const [inviteLocale, setInviteLocale] = useState<"ro" | "en">("ro");
+  /*
+    The numbers the dialog asks on: the page's when it was drawn, the server's newer read after a
+    refusal, and the page's again whenever it is redrawn with different ones (after a send).
+  */
+  const [forecast, setForecast] = useState<Forecast>({ capacity, free });
+  const [drawn, setDrawn] = useState<Forecast>({ capacity, free });
+  const [answered, setAnswered] = useState<InviteFormState>(null);
+  if (drawn.capacity !== capacity || drawn.free !== free) {
+    setDrawn({ capacity, free });
+    setForecast({ capacity, free });
+  }
+  if (state !== answered) {
+    setAnswered(state);
+    if (state?.forecast) setForecast(state.forecast);
+  }
   const [addPlace, setAddPlace] = useState("");
   const [dialog, setDialog] = useState<{ spec: ConfirmSpec; addPlace: string } | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -131,13 +169,22 @@ export default function InviteForm({
       setLocalError(words.nobody);
       return;
     }
+    // The days as the action reads them: empty is the default; anything else a whole number in range.
+    const dayCount = days.trim() === "" ? daysDefault : /^\d+$/.test(days.trim()) ? Number(days.trim()) : NaN;
+    if (!Number.isInteger(dayCount) || dayCount < 1 || dayCount > daysMax) {
+      setLocalError(words.errors.INVITATION_BAD_DAYS ?? words.errorGeneric);
+      return;
+    }
     setLocalError(null);
-    const raises = !outside && capacity !== null && free !== null ? Math.max(count - free, 0) : 0;
-    const raisedTo = raises > 0 && capacity !== null ? capacity + raises : null;
+    const { capacity: nowCapacity, free: nowFree } = forecast;
+    const raises = !outside && nowCapacity !== null && nowFree !== null ? Math.max(count - nowFree, 0) : 0;
+    const raisedTo = raises > 0 && nowCapacity !== null ? nowCapacity + raises : null;
     const body = [
       counted(words.dialogCount, count),
-      outside ? words.dialogOutside : free === null ? null : fill(words.dialogFree, { free }),
-      outside || free === null ? null : raisedTo !== null ? counted(words.dialogRaise, raises, { capacity: raisedTo }) : words.dialogNoRaise,
+      outside ? words.dialogOutside : nowFree === null ? null : fill(words.dialogFree, { free: nowFree }),
+      outside || nowFree === null ? null : raisedTo !== null ? counted(words.dialogRaise, raises, { capacity: raisedTo }) : words.dialogNoRaise,
+      counted(words.dialogDays, dayCount),
+      fill(words.dialogLocale, { language: inviteLocale === "en" ? words.localeEn : words.localeRo }),
     ]
       .filter((sentence): sentence is string => sentence !== null)
       .join(" ");
@@ -232,7 +279,8 @@ export default function InviteForm({
           name="days"
           label={words.daysLabel}
           helperText={words.daysHelp}
-          defaultValue={String(daysDefault)}
+          value={days}
+          onChange={(event) => setDays(event.target.value)}
           type="number"
           slotProps={{ htmlInput: { min: 1, max: daysMax, step: 1, inputMode: "numeric" } }}
           sx={{ maxWidth: 240 }}
@@ -241,7 +289,7 @@ export default function InviteForm({
           <Typography component="legend" variant="subtitle2">
             {words.localeLegend}
           </Typography>
-          <RadioGroup name="inviteLocale" defaultValue="ro" row>
+          <RadioGroup name="inviteLocale" value={inviteLocale} onChange={(event) => setInviteLocale(event.target.value === "en" ? "en" : "ro")} row>
             <FormControlLabel sx={{ minHeight: TAP_TARGET.minHeight }} value="ro" control={<Radio />} label={words.localeRo} />
             <FormControlLabel sx={{ minHeight: TAP_TARGET.minHeight }} value="en" control={<Radio />} label={words.localeEn} />
           </RadioGroup>

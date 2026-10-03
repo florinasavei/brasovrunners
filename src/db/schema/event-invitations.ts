@@ -47,7 +47,11 @@ export const eventInvitations = pgTable(
     email: text("email").notNull(),
     /** The identity (`canonicalizeEmail`, §10.4): what «already invited» and «already registered» compare. */
     canonicalEmail: text("canonical_email").notNull(),
-    /** The email's language: the member account's own, else Romanian (the event page's default). */
+    /**
+     * The email's language: a member's account's own; else, for an address the club knows, its
+     * participant's (the language that person registered in); else the «Limba invitației» the
+     * Administrator chose at the send (Romanian by default).
+     */
     locale: locale("locale").notNull().default("ro"),
     /** A member picked from the members' zone (§524): the form presets «Sunt membru». Null for a typed address. */
     memberStaffUserId: uuid("member_staff_user_id").references(() => staffUsers.id, { onDelete: "set null" }),
@@ -55,7 +59,7 @@ export const eventInvitations = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     /** When the first email was queued: the send's instant. */
     sentAt: timestamp("sent_at", { withTimezone: true }).notNull(),
-    /** Until when the place is kept: min(the days chosen, the registration close, the start). */
+    /** Until when the place is kept: min(now + the days chosen, the start) — never capped by the registration close. */
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     /** «În afara locurilor» at the send (§643): the invitation holds no counted place, and its registration is outside too. */
     outsideCapacity: boolean("outside_capacity").notNull().default(false),

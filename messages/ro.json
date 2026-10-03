@@ -6512,13 +6512,19 @@
           "few": "{count} invitații.",
           "other": "{count} de invitații."
         },
-        "free": "Locuri libere acum: {free}.",
+        "free": "Locuri libere pentru invitații acum: {free} — cine așteaptă pe listă are întâietate.",
         "raise": {
           "one": "Se adaugă {count} loc suplimentar: capacitatea devine {capacity}.",
           "few": "Se adaugă {count} locuri suplimentare: capacitatea devine {capacity}.",
           "other": "Se adaugă {count} de locuri suplimentare: capacitatea devine {capacity}."
         },
         "noRaise": "Niciun loc nou: încap în locurile libere.",
+        "days": {
+          "one": "Invitația expiră într-o zi, cel mult la start.",
+          "few": "Invitația expiră în {count} zile, cel mult la start.",
+          "other": "Invitația expiră în {count} de zile, cel mult la start."
+        },
+        "locale": "Limba pentru adresele pe care clubul nu le cunoaște: {language}.",
         "outside": "Pe lista ascunsă: nu țin niciun loc.",
         "confirmRaise": {
           "one": "Adaugă {count} loc și trimite",
@@ -7005,7 +7011,7 @@
       "invalid": "Linkul nu e valid sau nu mai funcționează.",
       "askClub": "Dacă vrei totuși să vii, scrie-ne:",
       "contact": "Pagina de contact",
-      "alreadyRegistered": "Pe această adresă e deja o înscriere cu acest nume la eveniment: nu s-a înregistrat nimic. Dacă nu ți-ai confirmat încă adresa, apasă linkul din emailul de confirmare: înscrierea ta primește locul păstrat de invitație. Scrie-ne dacă e o greșeală.",
+      "alreadyRegistered": "Pe această adresă e deja o înscriere cu acest nume: nu s-a înregistrat nimic. Adresa neconfirmată? Apasă linkul din emailul de confirmare și primești locul invitației.",
       "addressAtCap": "Adresa aceasta are deja numărul maxim de înscrieri la eveniment: nu s-a înregistrat nimic.",
       "notYou": "Nu te așteptai la această invitație? Ignor-o sau scrie-ne:"
     }

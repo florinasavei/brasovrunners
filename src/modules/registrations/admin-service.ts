@@ -40,11 +40,15 @@ import { registrationNameKey, sameRunner } from "./domain/name-key";
 import { ALREADY_ON_ADDRESS } from "./domain/family";
 import { composeLegalName } from "./names";
 import {
+  countEligibleWaitlisted,
+  countOccupied,
   findEventForAllocation,
   findRegistrationById,
   findRegistrationsByEventAndParticipant,
   lockEventForCapacity,
 } from "./repository";
+import { computeOccupied } from "./domain/capacity";
+import { invitationForecastFree } from "./domain/invitations";
 import {
   checkIn,
   confirmByStaff,
@@ -765,6 +769,25 @@ export async function inviteToEvent<T extends Record<string, unknown>>(
   if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not invite anybody`);
   const event = await eventForRegistration(db, eventId);
   return inviteToEventByStaff(db, event, input, actor, now);
+}
+
+/**
+ * The send's forecast (§NNN), as the dialog names it: the event's capacity now and the places free for
+ * invitations — the allocator's count against the capacity, less everyone eligible who waits
+ * (`invitationForecastFree`), as the server counts under the lock. Read by the section when the page is
+ * drawn, and again by the action when a send is refused, so the next press's question is asked on
+ * today's numbers rather than the page's. Null `free` on an uncapped event; null altogether when there
+ * is no such event. A read with no person in it; the caller has asserted the role.
+ */
+export async function readInvitationForecast<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  now: Date,
+): Promise<{ capacity: number | null; free: number | null } | null> {
+  const [event] = await db.select({ capacity: events.capacity }).from(events).where(eq(events.id, eventId)).limit(1);
+  if (!event) return null;
+  const [counts, waiting] = await Promise.all([countOccupied(db, eventId, now), countEligibleWaitlisted(db, eventId)]);
+  return { capacity: event.capacity, free: invitationForecastFree({ capacity: event.capacity, occupied: computeOccupied(counts), waiting }) };
 }
 
 /** «Retrimite» on an invitation (§NNN): the Administrator's alone, asserted here and in the service. */

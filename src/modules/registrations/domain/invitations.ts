@@ -66,29 +66,41 @@ export function invitationDeadline(input: { now: Date; days: number; startsAt: D
 }
 
 /**
- * How many supplementary places a send needs (§642, one per invitation that needs a counted place and
- * finds none): the people who need one beyond the places free now. Zero on an uncapped event, and
- * zero for invitations «În afara locurilor», which need none. The dialog's forecast and the server's
- * check under the lock are this one function, so the capacity the question names is the one the
- * server accepts — «capacitatea devine {capacity + raises}».
+ * The places free for invitations (§NNN): the allocator's count against the capacity, **less everyone
+ * eligible who waits** (`countEligibleWaitlisted`: `WAITLISTED`, no offer yet) — whatever the event's
+ * «Oferte automate» and whether the registration has closed. A free place somebody waits for is never
+ * an invitation's: with automatic offers on and before the close the send's first step offers it to the
+ * line (`fillAvailableSpots`), and with them off («Nu», §615) or after the close nothing offers it, yet
+ * the place is still the waiting row's to be given — a staff-made allocation never goes ahead of anyone
+ * waiting (AGENTS.md §15.11), and a newcomer queues while anybody waits (§615). Never below zero.
  */
-export function invitationRaises(input: { capacity: number | null; occupied: number; needed: number }): number {
-  if (input.capacity === null || input.needed <= 0) return 0;
-  const free = Math.max(input.capacity - input.occupied, 0);
-  return Math.max(input.needed - free, 0);
+export function invitationFreePlaces(input: { capacity: number; occupied: number; waiting: number }): number {
+  return Math.max(input.capacity - input.occupied - Math.max(input.waiting, 0), 0);
 }
 
 /**
- * The places free for invitations, read before the press (§NNN): the allocator's count against the
- * capacity, less the places the send's own first step would offer the line — with automatic offers on
- * and before the close the send serves the line first (`fillAvailableSpots`), so a free place somebody
- * waits for is not the invitations'. Null on an uncapped event. A forecast for the dialog; the server
- * counts again under the lock, and a different number refuses the send rather than raising unasked.
+ * How many supplementary places a send needs (§642, one per invitation that needs a counted place and
+ * finds none free for it — `invitationFreePlaces`, the waiting subtracted): the people who need one
+ * beyond those places. Zero on an uncapped event, and zero for invitations «În afara locurilor», which
+ * need none. The dialog's forecast and the server's check under the lock are this one function, so the
+ * capacity the question names is the one the server accepts — «capacitatea devine {capacity + raises}».
  */
-export function invitationForecastFree(input: { capacity: number | null; occupied: number; waiting: number; offersNow: boolean }): number | null {
+export function invitationRaises(input: { capacity: number | null; occupied: number; waiting: number; needed: number }): number {
+  if (input.capacity === null || input.needed <= 0) return 0;
+  return Math.max(input.needed - invitationFreePlaces({ capacity: input.capacity, occupied: input.occupied, waiting: input.waiting }), 0);
+}
+
+/**
+ * The places free for invitations, read before the press (§NNN): `invitationFreePlaces` on the page's
+ * counts — the waiting always subtracted, as the server subtracts them under the lock whatever the
+ * auto-offer setting or the close. (With offers on and before the close the send's first step offers
+ * the line the free places it is owed; the count comes out the same: each place offered is one fewer
+ * free and one fewer waiting.) Null on an uncapped event. A forecast for the dialog; the server counts
+ * again under the lock, and a different number refuses the send rather than raising unasked.
+ */
+export function invitationForecastFree(input: { capacity: number | null; occupied: number; waiting: number }): number | null {
   if (input.capacity === null) return null;
-  const free = Math.max(input.capacity - input.occupied, 0);
-  return input.offersNow ? Math.max(free - input.waiting, 0) : free;
+  return invitationFreePlaces({ capacity: input.capacity, occupied: input.occupied, waiting: input.waiting });
 }
 
 /** Whether the press confirmed exactly the places the send needs: the question named `capacity + raises`. */

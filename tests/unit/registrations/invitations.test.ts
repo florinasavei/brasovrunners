@@ -12,6 +12,7 @@ import {
   INVITATION_REFUSALS,
   invitationDeadline,
   invitationForecastFree,
+  invitationFreePlaces,
   invitationRaises,
   invitationState,
   parseInvitationLines,
@@ -29,13 +30,21 @@ describe("§NNN BR-REQ-034-01 the invitation's bucket in the one formula", () =>
   });
 
   it("raises one supplementary place per invitation beyond the free places, none outside the places or uncapped", () => {
-    expect(invitationRaises({ capacity: 150, occupied: 150, needed: 3 })).toBe(3);
-    expect(invitationRaises({ capacity: 150, occupied: 148, needed: 3 })).toBe(1);
-    expect(invitationRaises({ capacity: 150, occupied: 140, needed: 3 })).toBe(0);
-    expect(invitationRaises({ capacity: 150, occupied: 150, needed: 0 })).toBe(0);
-    expect(invitationRaises({ capacity: null, occupied: 999, needed: 3 })).toBe(0);
+    expect(invitationRaises({ capacity: 150, occupied: 150, waiting: 0, needed: 3 })).toBe(3);
+    expect(invitationRaises({ capacity: 150, occupied: 148, waiting: 0, needed: 3 })).toBe(1);
+    expect(invitationRaises({ capacity: 150, occupied: 140, waiting: 0, needed: 3 })).toBe(0);
+    expect(invitationRaises({ capacity: 150, occupied: 150, waiting: 0, needed: 0 })).toBe(0);
+    expect(invitationRaises({ capacity: null, occupied: 999, waiting: 4, needed: 3 })).toBe(0);
     // A count above the capacity (no path writes one) needs no more than the people invited.
-    expect(invitationRaises({ capacity: 150, occupied: 152, needed: 2 })).toBe(2);
+    expect(invitationRaises({ capacity: 150, occupied: 152, waiting: 0, needed: 2 })).toBe(2);
+  });
+
+  it("never takes a free place somebody waits for: the waiting are subtracted before the invitations count", () => {
+    expect(invitationRaises({ capacity: 150, occupied: 148, waiting: 1, needed: 3 })).toBe(2);
+    expect(invitationRaises({ capacity: 150, occupied: 148, waiting: 2, needed: 3 })).toBe(3);
+    expect(invitationRaises({ capacity: 150, occupied: 148, waiting: 9, needed: 1 })).toBe(1);
+    expect(invitationFreePlaces({ capacity: 10, occupied: 8, waiting: 1 })).toBe(1);
+    expect(invitationFreePlaces({ capacity: 10, occupied: 8, waiting: 5 })).toBe(0);
   });
 
   it("accepts exactly the capacity the question named, or no raise at all", () => {
@@ -46,11 +55,11 @@ describe("§NNN BR-REQ-034-01 the invitation's bucket in the one formula", () =>
     expect(confirmsInvitationRaises(150, 1, null)).toBe(false);
   });
 
-  it("forecasts the free places as the send will find them: the line served first while offers go by themselves", () => {
-    expect(invitationForecastFree({ capacity: 10, occupied: 8, waiting: 1, offersNow: true })).toBe(1);
-    expect(invitationForecastFree({ capacity: 10, occupied: 8, waiting: 1, offersNow: false })).toBe(2);
-    expect(invitationForecastFree({ capacity: 10, occupied: 12, waiting: 0, offersNow: false })).toBe(0);
-    expect(invitationForecastFree({ capacity: null, occupied: 0, waiting: 0, offersNow: true })).toBeNull();
+  it("forecasts the free places as the send will find them: the waiting always subtracted, offers on or off, before or after the close", () => {
+    expect(invitationForecastFree({ capacity: 10, occupied: 8, waiting: 1 })).toBe(1);
+    expect(invitationForecastFree({ capacity: 10, occupied: 8, waiting: 0 })).toBe(2);
+    expect(invitationForecastFree({ capacity: 10, occupied: 12, waiting: 0 })).toBe(0);
+    expect(invitationForecastFree({ capacity: null, occupied: 0, waiting: 3 })).toBeNull();
   });
 });
 

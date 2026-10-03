@@ -1025,9 +1025,10 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                         <GlyphButton icon="registrations" href={`${getPathname({ locale, href: "/admin/registrations" })}?eventId=${event.id}`} variant="text" size="small" sx={{ minHeight: 44 }}>
                           {t("registrations.viewForEvent")}
                         </GlyphButton>
-                        {/* Invitations by email (§NNN): the section on this event's registrations list. */}
+                        {/* Invitations by email (§NNN): the section on this event's registrations list — «Trimite invitații»
+                            for the Administrator, «Invitații» for a role that only reads it (§289). */}
                         <GlyphButton icon="send" href={`${getPathname({ locale, href: "/admin/registrations" })}?eventId=${event.id}#registrations-invitations`} variant="text" size="small" sx={{ minHeight: 44 }}>
-                          {t("invitations.link")}
+                          {canManageRegistrations(staffUser.role) ? t("invitations.link") : t("invitations.title")}
                         </GlyphButton>
                         {/* A message of the organizer's own to this event's registrants (§364): bad
                             weather, a changed start — its own page, with the preview and the history. */}

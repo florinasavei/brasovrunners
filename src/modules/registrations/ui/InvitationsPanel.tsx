@@ -19,10 +19,9 @@ import ActionForm from "@/shared/forms/ActionForm";
 import type { FormOutcome } from "@/shared/forms/outcome";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
-import { computeOccupied } from "../domain/capacity";
-import { INVITATION_DAYS_DEFAULT, INVITATION_DAYS_MAX, INVITATION_REFUSALS, invitationForecastFree, invitationState } from "../domain/invitations";
+import { readInvitationForecast } from "../admin-service";
+import { INVITATION_DAYS_DEFAULT, INVITATION_DAYS_MAX, INVITATION_REFUSALS, invitationState } from "../domain/invitations";
 import { listEventInvitations } from "../invitation-repository";
-import { countEligibleWaitlisted, countOccupied } from "../repository";
 import InviteForm, { type InviteFormState, type InviteFormWords } from "./InviteForm";
 
 type RowAction = (state: FormOutcome | null, form: FormData) => Promise<FormOutcome | null>;
@@ -37,9 +36,9 @@ const STATE_COLOR = { sent: "info", accepted: "success", expired: "default", wit
  * every verb asserts the role on the server whatever this draws.
  *
  * The send's forecast — how many places are free for invitations — is the allocator's count
- * (`countOccupied` → `computeOccupied`) against the capacity, as the server counts it under the lock
- * (`invitationForecastFree`); the dialog names the capacity a raise would make, and the server adds
- * exactly that or refuses.
+ * (`countOccupied` → `computeOccupied`) against the capacity, less everyone eligible who waits, as the
+ * server counts it under the lock (`readInvitationForecast`); the dialog names the capacity a raise
+ * would make, and the server adds exactly that or refuses.
  */
 export default async function InvitationsPanel<T extends Record<string, unknown>>({
   db,
@@ -63,7 +62,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
   const t = await getTranslations("Admin");
   const dialog = await confirmWords();
   const [event] = await db
-    .select({ capacity: events.capacity, timezone: events.timezone, autoOffer: events.waitlistAutoOffer, closesAt: events.registrationClosesAt, startsAt: events.startsAt })
+    .select({ capacity: events.capacity, timezone: events.timezone })
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
@@ -74,9 +73,9 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
 
   let form: ReactNode = null;
   if (mayManage) {
-    const [members, counts, waiting] = await Promise.all([listStaffUsers(db), countOccupied(db, eventId, now), countEligibleWaitlisted(db, eventId)]);
-    const closesAt = Math.min(event.closesAt?.getTime() ?? event.startsAt.getTime(), event.startsAt.getTime());
-    const free = invitationForecastFree({ capacity: event.capacity, occupied: computeOccupied(counts), waiting, offersNow: event.autoOffer && now.getTime() < closesAt });
+    // The waiting always subtracted, as the server does under the lock — whatever the auto-offer setting or the close.
+    const [members, forecast] = await Promise.all([listStaffUsers(db), readInvitationForecast(db, eventId, now)]);
+    const free = forecast?.free ?? null;
     const counted = (key: string) => ({ one: t.raw(`${key}.one`) as string, few: t.raw(`${key}.few`) as string, other: t.raw(`${key}.other`) as string });
     const words: InviteFormWords = {
       membersLegend: t("invitations.membersLegend"),
@@ -99,6 +98,8 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
       dialogRaise: counted("invitations.dialog.raise"),
       dialogNoRaise: t("invitations.dialog.noRaise"),
       dialogOutside: t("invitations.dialog.outside"),
+      dialogDays: counted("invitations.dialog.days"),
+      dialogLocale: t.raw("invitations.dialog.locale") as string,
       dialogEmail: counted("confirm.email"),
       confirmRaise: counted("invitations.dialog.confirmRaise"),
       confirm: t("invitations.dialog.confirm"),

@@ -1327,8 +1327,13 @@ Rules:
   accepted, withdrawn or its deadline passes — the deadline compared on every read, so the place is free
   the instant it passes — unless it was sent «Pe lista ascunsă» (`outside_capacity`). It is the club's choice, like a
   family's reservation (§543): **never released for somebody waiting before its deadline**, only at the
-  deadline (the sweep stamps it and offers the place to the line) or at «Retrage». On a full race a send
-  adds one supplementary place per invitation that needs it, under the rule of the bullet below. At the
+  deadline (the sweep stamps it and offers the place to the line) or at «Retrage». **A place free for an
+  invitation is one free after everyone eligible who waits** — `max(capacity - occupied - eligible
+  WAITLISTED, 0)` (`invitationFreePlaces`), whatever «Oferte automate» says and whether the registration
+  has closed: with offers off (§615) or after the close nobody is offered the free place on the send's
+  way, yet it is still the waiting row's, never an invitation's. Each invitation that needs a counted
+  place and finds none free in that sense — a full race, or anyone waiting — adds one supplementary place,
+  under the rule of the bullet below, or the send is refused. At the
   acceptance the allocator seats the registration in the invitation's place while the invitation still
   counts, then marks it accepted, in one transaction: the count moves from the invitation to the
   declaration hold with no instant where the place is free; an invitation never takes a lapsed
@@ -2737,8 +2742,10 @@ BR-REQ-037-05):
    address typed, one per line. `inviteToEventByStaff`, under the event lock, in one transaction for the
    whole list: the line served first, every address canonicalized (§10.4), a person already registered
    or already invited refused by name with nothing written; each invitation holds a counted place until
-   its deadline (`min(now + days, start)`, §10.6 — the public close is not asked) unless sent «Pe lista ascunsă», and on a full
-   race adds one supplementary place only on the press that named the capacity. **It creates no
+   its deadline (`min(now + days, start)`, §10.6 — the public close is not asked) unless sent «Pe lista ascunsă», and where no
+   place is free after everyone eligible who waits — a full race, or anyone on the waiting list, offers
+   on or off, before or after the close — adds one supplementary place only on the press that named the
+   capacity: an invitation never takes a counted free place ahead of anyone waiting. **It creates no
    registration**: the person registers themselves, from the `EVENT_INVITATION` email's link
    (`ACCEPT_INVITATION`, §12.8 — hashed, single use, GET only reads) — the form prefilled with the name
    and the address, locked, every consent and the declaration theirs. The press proves the inbox (no

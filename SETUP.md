@@ -1431,10 +1431,13 @@ languages go live together; that is the rule, not a setting.
    - «Limba invitației» (Română by default) for typed addresses the club has never seen: a member gets
      the account's language, somebody already registered with the club the language they used;
    - «Pe lista ascunsă (nu ocupă un loc)» for organizers, volunteers and pacemakers: their invitations
-     keep none of the 150;
-   - «Trimite invitațiile» asks first: how many invitations, how many places are free and — on a full
-     race — how many supplementary places it adds and what the capacity becomes; the button names the
-     places it adds. Each person gets one email, «Acceptă invitația», which opens the form with their
+     keep none of the announced places;
+   - «Trimite invitațiile» asks first: how many invitations, how many places are free for them, until
+     when the invitation lasts and in which language a new address gets it, and — on a full race, or
+     while anybody is on the waiting list — how many supplementary places it adds and what the capacity
+     becomes; the button names the places it adds. A free place somebody waits for is theirs, never an
+     invitation's, whether «Locurile din lista de așteptare se alocă automat» says **Da** or **Nu** and
+     after **Înscrierile se închid** too. Each person gets one email, «Acceptă invitația», which opens the form with their
      name and address filled in; they fill in the rest, accept the terms and sign the declaration
      themselves, from the email that follows.
    - Each invitation keeps its place until its deadline; unaccepted, the place goes back to the line by

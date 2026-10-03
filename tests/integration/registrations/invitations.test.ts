@@ -293,6 +293,61 @@ describe("§NNN §642 on a full race: one supplementary place per invitation, on
   });
 });
 
+describe("§NNN AGENTS.md §15.11 a free place somebody waits for is never an invitation's, offers on or off, before or after the close", () => {
+  const bogdan = [{ name: "Bogdan Pop", email: "bogdan@example.invalid" }];
+
+  /** A free place with Elena waiting for it: Ana's invitation held the only one, Elena queued behind it, and «Retrage» freed it. */
+  async function freePlaceWithAWaiter(event: EventInput, withdrawAt: Date) {
+    await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 7, outsideCapacity: false }, admin, NOW);
+    expect((await registered(event, "Elena", 1)).status).toBe("WAITLISTED");
+    const [ana] = await invitationsOf(event.id);
+    await withdrawInvitationByStaff(db, ana.id, admin, withdrawAt);
+    expect(await occupied(event.id, withdrawAt)).toBe(0);
+    const [elena] = await db.select().from(registrations).where(eq(registrations.registeredName, "Elena Munteanu"));
+    expect(elena.status).toBe("WAITLISTED");
+  }
+
+  async function expectRaisedPastTheWaiter(event: EventInput, when: Date) {
+    // The place is Elena's: the plain press is refused and writes nothing.
+    const refused = await refusalOf(inviteToEventByStaff(db, event, { people: bogdan, days: 7, outsideCapacity: false }, admin, when));
+    expect(isDomainError(refused) && refused.fields).toEqual([SUPPLEMENTARY_PLACE_UNCONFIRMED]);
+    expect((await invitationsOf(event.id)).filter((row) => row.canonicalEmail === "bogdan@example.invalid")).toHaveLength(0);
+    expect(await capacityOf(event.id)).toBe(1);
+
+    // The press that named «capacitatea devine 2» invites Bogdan on a supplementary place; Elena's stays free for her.
+    const sent = await inviteToEventByStaff(db, event, { people: bogdan, days: 7, outsideCapacity: false, addPlaceTo: 2 }, admin, when);
+    expect(sent.capacityRaisedTo).toBe(2);
+    const [invitation] = (await invitationsOf(event.id)).filter((row) => row.canonicalEmail === "bogdan@example.invalid");
+    expect(invitation.supplementaryRaise).toBe(true);
+    expect(await occupied(event.id, when)).toBe(1);
+    const [elena] = await db.select().from(registrations).where(eq(registrations.registeredName, "Elena Munteanu"));
+    expect(elena.status).toBe("WAITLISTED");
+    expect(await readPublicPlaces(db, { id: event.id, capacity: 2, waitlistCapacity: null }, when)).toMatchObject({ availablePlaces: 0 });
+  }
+
+  it("automatic offers off («Nu», §615): the send adds a supplementary place rather than take the waiting row's", async () => {
+    const event = await createEvent(1, { auto: false });
+    await freePlaceWithAWaiter(event, at(2));
+    await expectRaisedPastTheWaiter(event, at(3));
+  });
+
+  it("after the registration close, offers on: nothing offered the place on the way, and it is still not the invitation's", async () => {
+    const closesAt = at(60);
+    const event = await createEvent(1, { auto: true, closesAt });
+    const later = new Date(closesAt.getTime() + 60_000);
+    await freePlaceWithAWaiter(event, later);
+    await expectRaisedPastTheWaiter(event, new Date(later.getTime() + 60_000));
+  });
+
+  it("nobody waiting: a free place is the invitation's, offers off and after the close alike, with no raise", async () => {
+    const off = await createEvent(1, { auto: false });
+    expect(await inviteToEventByStaff(db, off, { people: bogdan, days: 7, outsideCapacity: false }, admin, NOW)).toMatchObject({ sent: 1, capacityRaisedTo: null });
+    const closed = await createEvent(1, { auto: true, closesAt: at(-60) });
+    expect(await inviteToEventByStaff(db, closed, { people: bogdan, days: 7, outsideCapacity: false }, admin, NOW)).toMatchObject({ sent: 1, capacityRaisedTo: null });
+    expect((await invitationsOf(closed.id))[0].supplementaryRaise).toBe(false);
+  });
+});
+
 describe("§NNN the send refuses, naming the person, and writes nothing", () => {
   const refusal = async (promise: Promise<unknown>) => {
     const error = await refusalOf(promise);
