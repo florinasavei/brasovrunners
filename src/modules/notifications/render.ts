@@ -476,7 +476,7 @@ async function renderRow(
     const standing = await readWaitlistPosition(db, registration.id);
     // With the count kept private (§634) the sentence says what the page says: `countPublic` travels with the rest.
     if (standing) data.waitlistStanding = { position: standing.position, length: standing.length, autoOffer: standing.autoOffer, countPublic: standing.countPublic };
-    // An Administrator's resend (§641) opens with «still on the waiting list», never «we added you» (§NNN).
+    // An Administrator's resend (§641) opens with «still on the waiting list», never «we added you» (§654).
     // A resend rendered after the person left the list says nothing of a standing it no longer has.
     if (row.isManualResend && standing) data.waitlistResent = true;
   }
@@ -704,7 +704,7 @@ async function renderRow(
     data.alreadyRegistered = true;
   }
   /*
-    The verification email re-sent by the maintenance job (§NNN) to whoever had not confirmed. Read
+    The verification email re-sent by the maintenance job (§653) to whoever had not confirmed. Read
     again at the send: confirmed, cancelled or lapsed since it was queued — or the event no longer run,
     or under an hour left on the link — there is nothing left to ask, and it is withdrawn rather than
     sent (§331). Otherwise its one sentence says why it came and the deadline its first email started

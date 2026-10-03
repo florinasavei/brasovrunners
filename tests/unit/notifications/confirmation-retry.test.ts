@@ -13,7 +13,7 @@ import {
 } from "@/modules/notifications/domain/automatic-sends";
 import { buildTemplateContent } from "@/modules/notifications/templates";
 
-/** §NNN — who is owed the verification email once more, and from when to when: the pure formula. */
+/** §653 — who is owed the verification email once more, and from when to when: the pure formula. */
 const T = new Date("2026-10-03T08:00:00.000Z");
 const HOUR = 60 * 60_000;
 const at = (hours: number) => new Date(T.getTime() + hours * HOUR);
@@ -32,7 +32,7 @@ const later = (id: string, hours: number, overrides: Partial<VerificationEmailRo
 
 const settings = { verificationRetryHours: 20, verificationRetries: 1 };
 
-describe("§NNN the verification email re-sent: the formula", () => {
+describe("§653 the verification email re-sent: the formula", () => {
   it("is due the club's hours after the email left, until the link has an hour left", () => {
     const [plan] = planConfirmationRetries([candidate()], [email()], settings);
     expect(plan).toMatchObject({ registrationId: "r1", attempt: 1, at: at(20), latest: at(47) });
@@ -137,7 +137,7 @@ describe("§NNN the verification email re-sent: the formula", () => {
 const text = (content: ReturnType<typeof buildTemplateContent>) =>
   content.paragraphs.map((part) => (typeof part === "string" ? part : JSON.stringify(part))).join("\n");
 
-describe("§NNN the re-sent email's sentence", () => {
+describe("§653 the re-sent email's sentence", () => {
   it("says why it came and the deadline its first email started, in the inbox only", () => {
     const data = {
       participantName: "Ana",
@@ -159,7 +159,7 @@ describe("§NNN the re-sent email's sentence", () => {
   });
 });
 
-describe("§NNN the two «Termene» numbers", () => {
+describe("§653 the two «Termene» numbers", () => {
   it("default to twenty hours and once, within their bounds", () => {
     expect(DEFAULT_DEADLINES.verificationRetryHours).toBe(20);
     expect(DEFAULT_DEADLINES.verificationRetries).toBe(1);

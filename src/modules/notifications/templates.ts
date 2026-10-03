@@ -667,7 +667,7 @@ export function renderBilingual(
     // A family's reservations, in the second half's own words (§543).
     ...(data.familyReservedUntilFormattedOther ? { familyReservedUntilFormatted: data.familyReservedUntilFormattedOther } : {}),
     ...(data.signedAtFormattedOther ? { signedAtFormatted: data.signedAtFormattedOther } : {}),
-    // The re-sent verification email's deadline (§NNN), in the second half's own words.
+    // The re-sent verification email's deadline (§653), in the second half's own words.
     ...(data.confirmationRetryDeadlineOther ? { confirmationRetryDeadline: data.confirmationRetryDeadlineOther } : {}),
     // A group run series' rhythm in the second half's language (§523).
     ...(data.seriesRhythmOther ? { seriesRhythm: data.seriesRhythmOther } : {}),
@@ -1054,7 +1054,7 @@ export type TemplateData = {
    */
   anotherPersonHint?: boolean;
   /**
-   * The verification email re-sent by the maintenance job (§NNN), to whoever had not confirmed. One
+   * The verification email re-sent by the maintenance job (§653), to whoever had not confirmed. One
    * sentence in front of the body says why it came and the deadline its first email started
    * (`confirmationRetryDeadline`, in the event's zone; `…Other` for the second half). Only ever in the inbox.
    */
@@ -1096,7 +1096,7 @@ export type TemplateData = {
    */
   waitlistStanding?: WaitlistStandingLine;
   /**
-   * `WAITLIST_JOINED` sent again by an Administrator's «Retrimite emailul» (§641, §NNN): the row's
+   * `WAITLIST_JOINED` sent again by an Administrator's «Retrimite emailul» (§641, §654): the row's
    * `isManualResend`. The person joined earlier, so the opening says they are still waiting rather than
    * that we just added them. Absent on the first send and on the form sent again (§217).
    */
@@ -1637,7 +1637,7 @@ const T = {
           `«${w.tasks}» arată aceleași rânduri până când textele sunt aprobate. Mesajul acesta vine o singură dată pentru fiecare schimbare a șabloanelor, fiecărui Administrator și Superadministrator.`,
         ];
       },
-      // The screen the button opens and what is done there (§NNN): «Versiune nouă» regenerates; approving is on «Documente legale».
+      // The screen the button opens and what is done there (§654): «Versiune nouă» regenerates; approving is on «Documente legale».
       action: `${legalTemplatesWords("ro").newVersion}: regenerează textele`,
     },
     registrationOpened: {
@@ -1677,7 +1677,7 @@ const T = {
       (`holdLapsed`, `holdLapsedNext`), facts of this send whoever wrote the words.
     */
     declarationHoldExpired: {
-      // The person named when known (§NNN): on an address that registers a family, the subject says whose place it was.
+      // The person named when known (§654): on an address that registers a family, the subject says whose place it was.
       subject: (d: TemplateData) => `${d.participantName ? `Locul pentru ${d.participantName}` : "Locul tău"} la ${d.eventTitle ?? "eveniment"} a expirat`,
       body: (d: TemplateData) => [
         `Locul tău la ${d.eventTitle ?? "eveniment"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted},` : ""} **a expirat**: declarația nu a fost semnată la timp.`,
@@ -2016,7 +2016,7 @@ const T = {
     },
     /** Under "you are already registered", on a re-send for a slip (§446): the one way to register somebody else. */
     anotherPersonHint: "Dacă vrei să înscrii pe altcineva, trimite formularul cu numele complet și data de naștere a acelei persoane.",
-    /** In front of the verification email re-sent by itself (§NNN): why it came, and that the deadline did not move. */
+    /** In front of the verification email re-sent by itself (§653): why it came, and that the deadline did not move. */
     confirmationRetry: (deadline: string) =>
       `Nu am primit încă confirmarea adresei tale, așa că îți retrimitem linkul. Termenul curge de la primul email: **${deadline}**.`,
     /** In its place when the slip was another name on a registered birth date (§493): how twins are registered. */
@@ -2612,7 +2612,7 @@ const T = {
       note: "Your place goes to someone else.",
     },
     anotherPersonHint: "If you want to register someone else, send the form with that person's full name and birth date.",
-    /** In front of the verification email re-sent by itself (§NNN): why it came, and that the deadline did not move. */
+    /** In front of the verification email re-sent by itself (§653): why it came, and that the deadline did not move. */
     confirmationRetry: (deadline: string) =>
       `We have not received your address confirmation yet, so we are sending you the link again. The deadline runs from the first email: **${deadline}**.`,
     sameBirthDateHint:
@@ -3125,7 +3125,7 @@ export function buildTemplateContent(
       ...(data.alreadyRegistered ? [copy.alreadyRegistered(data.bibNumber ?? null)] : []),
       // …and, on a re-send for a slip (§446), how to register somebody else — the inbox's alone.
       ...(data.anotherPersonHint ? [data.sameBirthDateHint ? copy.sameBirthDateHint : copy.anotherPersonHint] : []),
-      // …and the verification email re-sent by itself says why it came and its deadline (§NNN) — a fact of this send, whoever wrote the body.
+      // …and the verification email re-sent by itself says why it came and its deadline (§653) — a fact of this send, whoever wrote the body.
       ...(messageType === "VERIFY_REGISTRATION_EMAIL" && data.confirmationRetry && data.confirmationRetryDeadline && !clubCopy
         ? [copy.confirmationRetry(data.confirmationRetryDeadline)]
         : []),

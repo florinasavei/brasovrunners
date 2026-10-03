@@ -130,6 +130,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.66` | the verification email re-sent by itself to whoever has not confirmed, at most a configurable number of times — two «Termene» numbers (§653) · four sentences say what happens: the link's time from the first email, the lapsed place names whose, the templates email's button, the waiting-list resend (§654) · «Ce îi spui»: what to tell a person who asks where their registration stands (§655) · a restart rewrites the day the answers were written (§656) |
 | `BR-V2.65` | the members and bounced filters are ticks (§650) · each registration says until when, in the list's «Până când» column and the export (§651) · a backoffice table's columns can be resized (§652) |
 | `BR-V2.64` | «Lista de invitați speciali»: the hidden list renamed and explained on every screen (§649) |
 | `BR-V2.63` | an Administrator corrects any answer a participant typed, and clears false member ticks in one audited sweep (§645) · the club's discretion over places, in neutral words (§646) (§646) · invitations by email: a place kept for a named person until a deadline, accepted through the form (§647) · «Lista ascunsă»: the name, an incognito glyph, a radio, the event's switch, the hidden list's own numbers and its count tick, and «Arată public numărătoarea» on every event (§648) |

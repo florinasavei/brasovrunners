@@ -48,7 +48,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   remindersQueued: number;
   /** "Confirm your participation" messages queued this run (§104). */
   confirmationsQueued: number;
-  /** Verification emails re-sent by the job this run, to whoever has not confirmed their address yet (§NNN). */
+  /** Verification emails re-sent by the job this run, to whoever has not confirmed their address yet (§653). */
   confirmationRetriesQueued: number;
   /** "Registration is open" messages queued this run to the addresses left ahead of the window (§146). */
   interestsNotified: number;
@@ -221,7 +221,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     retryableErrorCount += 1;
   }
   /*
-    The verification email re-sent (§NNN): the club's hours after the last one left, to whoever has
+    The verification email re-sent (§653): the club's hours after the last one left, to whoever has
     not confirmed, while the address got fewer than one plus the club's number of them — after the
     lapse above, so a link that just died is never asked again. A failure is a late nudge, not a failed run.
   */

@@ -47,7 +47,7 @@ import { planConfirmationRetriesFrom } from "./confirmation-retry";
  * closes (§160, AGENTS.md §10.5, §420), the «Locul tău … a expirat» to the person whose declaration
  * hold that lapse releases, before the start (§638 — never for a lapsed offer, §331),
  * "registration is open" to the addresses left on the
- * event's page (§146), and the verification email re-sent to whoever has not confirmed (§NNN). No race number is sent on its own since §548: it rides on the confirmation.
+ * event's page (§146), and the verification email re-sent to whoever has not confirmed (§653). No race number is sent on its own since §548: it rides on the confirmation.
  *
  * **And what already waits for the subscribers** (§445): a newsletter or a new-event alert that
  * is queued and not yet sent — the reserve (`domain/bulk.ts`) may hold it until the allowance
@@ -75,7 +75,7 @@ export type AutomaticSend =
   // The person whose declaration hold a lapse releases to somebody waiting (§638).
   | "holdLapsed"
   | "registrationOpened"
-  // The verification email re-sent by itself, to whoever has not confirmed the address yet (§NNN).
+  // The verification email re-sent by itself, to whoever has not confirmed the address yet (§653).
   | "confirmationRetry"
   // The subscribers' sends, already queued (§445).
   | "newsletter"
@@ -292,7 +292,7 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
   pending.push(...nextInLinePending);
 
   /*
-    The verification email re-sent (§NNN): the job's own plan (`planConfirmationRetriesFrom`), one per
+    The verification email re-sent (§653): the job's own plan (`planConfirmationRetriesFrom`), one per
     address and event, each at its instant — or the job's next run when already due. Only the next one:
     whether a further one is owed depends on whether the person confirms meanwhile.
   */

@@ -37,7 +37,7 @@ const WAITS_ON_AN_EMAIL: ReadonlySet<RegistrationStatus> = new Set(["PENDING_EMA
 const ENDED: ReadonlySet<RegistrationStatus> = new Set(["CANCELLED", "EXPIRED"]);
 
 /**
- * «Ce îi spui» (§NNN; the owner: «oamenii mai pierd mailuri, le mai intră în SPAM»): the sentences a
+ * «Ce îi spui» (§654; the owner: «oamenii mai pierd mailuri, le mai intră în SPAM»): the sentences a
  * staff member tells somebody who asks where their registration stands, in the registration's own
  * language, so the club tells one story. Each line is the participant's own words wherever the public
  * pages already have them — read here from the same keys, never a copy:
@@ -155,7 +155,7 @@ export function tellLines(say: Say, ours: Say, locale: string, facts: TellFacts,
 }
 
 /**
- * The lines in the registration's own language (§NNN), whatever the staff member reads the page in:
+ * The lines in the registration's own language (§654), whatever the staff member reads the page in:
  * the two catalogues' words resolved outside the request's locale, as `promo-consent-words.ts` does,
  * through the same `tellLines`.
  */

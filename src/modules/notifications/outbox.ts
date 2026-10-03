@@ -816,7 +816,7 @@ export async function processOutboxBatch(
         summary.sent += 1;
         if (carrying && result.transport === "gmail") viaGmail += 1;
         /*
-          A participant's verification email that left starts the club's hours to the next one (§NNN):
+          A participant's verification email that left starts the club's hours to the next one (§653):
           the maintenance job planned its quiet before this send, so it is told when to look — a
           re-sent one too, while the club allows more than one. The plan decides whether anything is
           owed then; a setting that cannot be read wakes nothing, and the daily window finds the work

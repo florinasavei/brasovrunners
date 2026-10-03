@@ -45,7 +45,7 @@ describe("§377 the club's deadlines, unset", () => {
       publicListDays: 30,
       // The family sitting's window (§519): ten minutes after the last form, unless «Gata» first.
       familySittingMinutes: 10,
-      // The verification email re-sent by itself (§NNN): twenty hours after the last one, once.
+      // The verification email re-sent by itself (§653): twenty hours after the last one, once.
       verificationRetryHours: 20,
       verificationRetries: 1,
     });

@@ -174,7 +174,7 @@ describe("§641 the resend of a waiting row", () => {
     expect(await db.select().from(emailOutbox)).toHaveLength(1);
   });
 
-  it("§NNN opens by saying it is sent again and «still on the waiting list», never «we added you», in both halves", async () => {
+  it("§654 opens by saying it is sent again and «still on the waiting list», never «we added you», in both halves", async () => {
     const mine = await person("WAITLISTED", at(-2));
     await resendRegistrationMessage(db, admin(), mine.id, NOW);
     const [row] = await outboxOf(mine.id);

@@ -27,7 +27,7 @@ import { enqueueEmail } from "./outbox";
 import { readEmailDelayFacts } from "./public-delay";
 
 /**
- * The verification email re-sent by itself (§NNN; the owner, 2026-10-03: «Pe viitor ne trebuie
+ * The verification email re-sent by itself (§653; the owner, 2026-10-03: «Pe viitor ne trebuie
  * mecanism și setare de retry de confirmare email»): the address link once more, to whoever has not
  * confirmed and still can — the club's hours after the last email left, at most the club's number of
  * times, every verification email for the address and the event counting («Termene»). Who and when
@@ -187,7 +187,7 @@ export async function outboxIsBehind<T extends Row>(db: Database<T>, now: Date):
 }
 
 /**
- * The maintenance job's step (§NNN): queue each re-sent email due at `now`, one per address and event,
+ * The maintenance job's step (§653): queue each re-sent email due at `now`, one per address and event,
  * oldest due first and at most `CONFIRMATION_RETRY_RUN_CAP`, by its own key, so a run repeated or
  * overlapping queues nothing twice — and nothing at all while the outbox is behind. Returns how many it queued.
  */

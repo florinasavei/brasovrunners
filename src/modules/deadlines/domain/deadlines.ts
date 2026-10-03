@@ -42,7 +42,7 @@ export const DEADLINE_KEYS = [
 
 export type DeadlineKey = (typeof DEADLINE_KEYS)[number];
 
-/** `count` is a number of times, not a duration (§NNN: how many times the address link is re-sent). */
+/** `count` is a number of times, not a duration (§653: how many times the address link is re-sent). */
 export type DeadlineUnit = "minutes" | "hours" | "days" | "count";
 
 export type DeadlineRule = {
@@ -86,7 +86,7 @@ export type DeadlineRule = {
  *   sitting (the screen still offers the next person, saying the email has left); an hour is the
  *   most a verification email should wait, and the outbox's health reads a row held longer than
  *   that as stalled.
- * - the **verification email re-sent** (§NNN) 2 to 72 hours after the last one left, 20 by default:
+ * - the **verification email re-sent** (§653) 2 to 72 hours after the last one left, 20 by default:
  *   the address link once more, by itself, to whoever has not confirmed — under a day, so a link of
  *   the default 48 hours still has a day left when it arrives; two hours at least, so the person had
  *   time to look; three days is longer than the default link lives;

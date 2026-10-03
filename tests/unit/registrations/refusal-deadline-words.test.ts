@@ -3,7 +3,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN, amending the words of §348 after §513 — the confirmation page's two refusals («the places and the
+ * §654, amending the words of §348 after §513 — the confirmation page's two refusals («the places and the
  * waiting list are full», «no waiting list») say how long the link stays good. Since §513 the link's
  * deadline runs from the departure of the first email that carried it, not from the form: a person who
  * confirms late was told a deadline that had already moved. The sentence now counts from the email, as
@@ -12,7 +12,7 @@ import ro from "../../../messages/ro.json";
 const KEYS = ["waitlistFull", "noWaitlist"] as const;
 const length = (text: string) => text.replace(/\{\w+\}/g, "X").length;
 
-describe("§NNN the confirmation page's refusals count the deadline from the first email", () => {
+describe("§654 the confirmation page's refusals count the deadline from the first email", () => {
   it("says the email's departure, never the form's, in both languages", () => {
     for (const key of KEYS) {
       expect(ro.Registrations.confirm[key]).toContain("{confirmation} de când a plecat primul email");

@@ -369,7 +369,7 @@ describe("§383 the forecast of automatic emails", () => {
         const { queued: count } = await queueRegistrationOpenedMessages(db, when);
         return { ids: [], count };
       }
-      // The second verification email (§NNN): the job's own step.
+      // The second verification email (§653): the job's own step.
       case "confirmationRetry":
         await queueConfirmationRetries(db, when, DEFAULT_DEADLINES);
         return participantOnly("VERIFY_REGISTRATION_EMAIL", ":verify-retry:%");

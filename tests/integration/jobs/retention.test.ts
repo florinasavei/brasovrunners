@@ -628,7 +628,7 @@ describe("retention sweep", () => {
       instagramHandle: "runner",
       listSocials: true,
       createdAt: new Date("2026-09-01T09:00:00.000Z"),
-      // Written on the day of their creation: a fixture never restarted (§NNN).
+      // Written on the day of their creation: a fixture never restarted (§654).
       answersWrittenAt: new Date("2026-09-01T09:00:00.000Z"),
     };
     vi.stubEnv("NEXT_RUNTIME", "nodejs");
@@ -659,7 +659,7 @@ describe("retention sweep", () => {
   });
 
   /**
-   * §NNN — "the day the row was written" is when its answers were written: a row created while the
+   * §654 — "the day the row was written" is when its answers were written: a row created while the
    * person was a minor and restarted after the eighteenth birthday was judged an adult's by the form,
    * so the sweep keeps its socials. A row the restart did not reach is judged on its creation, as before.
    */

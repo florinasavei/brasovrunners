@@ -65,7 +65,7 @@ const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
   REGISTRATION_CANCELLED: ["participantName", "eventTitle", "eventStartsAtFormatted"],
   WAITLIST_OFFER_EXPIRED: ["eventTitle"],
   // A held place that lapsed (§638): the event and its start; the deadline that passed is the platform's line after the words.
-  // …and whose place it was, in the subject (§NNN).
+  // …and whose place it was, in the subject (§654).
   DECLARATION_HOLD_EXPIRED: ["participantName", "eventTitle", "eventStartsAtFormatted"],
   REGISTRATION_MANAGE_LINK: [],
   PROFILE_MANAGE_LINK: [],

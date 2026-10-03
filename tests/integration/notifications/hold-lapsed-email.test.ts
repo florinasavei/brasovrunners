@@ -178,7 +178,7 @@ describe("§638 the person whose held place lapses is told by email", () => {
 
     // Bogdan holds the offer, nobody else waits, the line takes more: the waiting list.
     const waitlist = await renderOutboxMessage(row, db, at);
-    // The person named (§NNN): on a family address the subject says whose place it was.
+    // The person named (§654): on a family address the subject says whose place it was.
     expect(waitlist.subject.startsWith("Locul pentru ana Pop la Crosul de toamnă a expirat")).toBe(true);
     expect(waitlist.text).toContain(`Termenul pentru semnare a fost ${formatDeadlineInSentence(held.holdExpiresAt!, ZONE, "ro")}.`);
     expect(waitlist.text).toContain("Altcineva aștepta un loc, așa că locul tău a trecut la lista de așteptare.");

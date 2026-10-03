@@ -16,7 +16,7 @@ import {
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-033-04 (§NNN) — "the day the row was written" is the day its answers were written.
+ * BR-REQ-033-04 (§654) — "the day the row was written" is the day its answers were written.
  *
  * A restart of a cancelled or expired row writes every answer again at its own instant, judged on that
  * instant — a guardian kept only for a minor today, no socials for one — and keeps `created_at` (`AGENTS.md` §10.5).
@@ -78,7 +78,7 @@ function submissionInput(now: Date, overrides: Partial<Record<string, unknown>> 
   };
 }
 
-describe("BR-REQ-033-04: a restart rewrites the instant the answers were written (§NNN)", () => {
+describe("BR-REQ-033-04: a restart rewrites the instant the answers were written (§654)", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let event: EventForRegistration;

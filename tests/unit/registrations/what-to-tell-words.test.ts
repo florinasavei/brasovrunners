@@ -10,7 +10,7 @@ import { whatToTell, type TellFacts } from "@/modules/registrations/ui/tell-word
 import { waitlistStandingPhrase } from "@/modules/registrations/ui/waitlist-position-words";
 
 /**
- * BR-REQ-037-01 (§NNN) — «Ce îi spui»: the sentences a staff member tells somebody who asks where
+ * BR-REQ-037-01 (§654) — «Ce îi spui»: the sentences a staff member tells somebody who asks where
  * their registration stands, in the registration's language, from the real catalogues.
  *
  * What it holds: every open state says the participant's own state words first, a confirmed row the
@@ -54,7 +54,7 @@ function facts(overrides: Partial<TellFacts>): TellFacts {
   };
 }
 
-describe("§NNN whatToTell — what to tell a person who asks where their registration stands", () => {
+describe("§654 whatToTell — what to tell a person who asks where their registration stands", () => {
   for (const locale of ["ro", "en"] as const) {
     const spam = say(locale)("spamHint.body");
     const stateLine = (status: string) => say(locale)("mine.status." + status);
@@ -194,7 +194,7 @@ describe("§NNN whatToTell — what to tell a person who asks where their regist
   }
 
   /*
-    One story (§NNN): where a public page or an email already says it, the backoffice's line is that text
+    One story (§654): where a public page or an email already says it, the backoffice's line is that text
     word for word, so the volunteer never tells what the person did not read.
   */
   for (const locale of ["ro", "en"] as const) {

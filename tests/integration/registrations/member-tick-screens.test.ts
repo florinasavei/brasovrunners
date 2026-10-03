@@ -279,7 +279,7 @@ describe("BR-REQ-037-03 criterion 12: «Datele înscrierii» on the registration
     expect((await guardianBox(minor)).forceOpen).toBe(true);
   });
 
-  it("asks the day the answers were written, not the row's creation: a minor's row restarted as an adult stays closed (§NNN)", async () => {
+  it("asks the day the answers were written, not the row's creation: a minor's row restarted as an adult stays closed (§654)", async () => {
     const race = await createRace("Crosul");
     state.actor = await staff("ADMIN");
     const guardianBox = async (id: string) => {

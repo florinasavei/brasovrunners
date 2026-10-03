@@ -22,7 +22,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-037-01 (§NNN) — «Ce îi spui» on the registration's page, from a real database:
+ * BR-REQ-037-01 (§654) — «Ce îi spui» on the registration's page, from a real database:
  *
  * - the page's own query carries what the block says — where a waiting row stands, equal to the
  *   participant's reader (`readWaitlistPosition`), and the newest live link's expiry — no other read;
@@ -171,7 +171,7 @@ beforeEach(async () => {
   state.locale = "ro";
 });
 
-describe("§NNN «Ce îi spui» — the page's own query", () => {
+describe("§654 «Ce îi spui» — the page's own query", () => {
   it("says where a waiting row stands exactly as the participant's reader does, a test row in the line too", async () => {
     for (const autoOffer of [true, false]) {
       const race = await createRace({ autoOffer });
@@ -227,7 +227,7 @@ describe("§NNN «Ce îi spui» — the page's own query", () => {
   });
 });
 
-describe("§NNN «Ce îi spui» — the link the state waits on, never the «Nu mai pot veni» one", () => {
+describe("§654 «Ce îi spui» — the link the state waits on, never the «Nu mai pot veni» one", () => {
   /*
     `render.ts` mints the fourteen-day `MANAGE_REGISTRATION` link (§547) in the same send as the address's,
     the declaration's and the offer's emails, at the same `now` — and any later message mints a newer one.
@@ -266,7 +266,7 @@ describe("§NNN «Ce îi spui» — the link the state waits on, never the «Nu 
   });
 });
 
-describe("§NNN «Ce îi spui» — every state on the page, for the Administrator and the Organizer", () => {
+describe("§654 «Ce îi spui» — every state on the page, for the Administrator and the Organizer", () => {
   const roR = createTranslator({ locale: "ro", messages: ro, namespace: "Registrations" }) as unknown as (key: string, values?: Record<string, string | number>) => string;
   const tell = ro.Admin.registrations.tell;
   const at = (instant: Date) => formatDay(instant, { locale: "ro", timeZone: "Europe/Bucharest", style: "long", withTime: true, position: "inline" });
@@ -448,7 +448,7 @@ describe("§NNN «Ce îi spui» — every state on the page, for the Administrat
   }
 });
 
-describe("§NNN «Ce îi spui» — on the registration's page", () => {
+describe("§654 «Ce îi spui» — on the registration's page", () => {
   it("under the state and above the verbs, for the Administrator and the Organizer, in the registration's language", async () => {
     const race = await createRace();
     const hold = new Date(Date.now() + 48 * HOUR);

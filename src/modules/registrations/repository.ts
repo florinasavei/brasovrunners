@@ -401,7 +401,7 @@ export async function insertPendingEmailRegistration<T extends Record<string, un
       listOptOut: input.listOptOut,
       submittedAt: input.now,
       emailLinkExpiresAt: input.emailLinkExpiresAt ?? null,
-      // The answers' own instant (§NNN): a restart moves it, `created_at` stays.
+      // The answers' own instant (§654): a restart moves it, `created_at` stays.
       answersWrittenAt: input.now,
       createdAt: input.now,
       updatedAt: input.now,

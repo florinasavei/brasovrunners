@@ -308,7 +308,7 @@ function offerEmailQueuedAt(now: Date): SQL<boolean> {
 }
 
 /**
- * When the live link the row's state is waiting on lapses (§NNN, «Ce îi spui»): the address's
+ * When the live link the row's state is waiting on lapses (§654, «Ce îi spui»): the address's
  * confirmation on `PENDING_EMAIL_CONFIRMATION`, the declaration on `PENDING_DECLARATION`, the offer on
  * `WAITLIST_OFFERED` — and nothing on any other state. Chosen by purpose, never by recency across
  * purposes: the «Nu mai pot veni» link (§547) is a fourteen-day `MANAGE_REGISTRATION` token minted in
@@ -337,7 +337,7 @@ function liveLinkExpiresAtFor(now: Date): SQL<Date | null> {
 }
 
 /**
- * Where a waiting row stands in its event's line (§629, §NNN), in the page's own query: the same
+ * Where a waiting row stands in its event's line (§629, §654), in the page's own query: the same
  * numbers as `repository.ts#readWaitlistPosition` — the position in `lockOldestWaitlisted`'s order
  * `(waitlisted_at, id)`, written as the count of the `WAITLISTED` rows at or ahead of this one, and
  * the line's length — null on a row that is not waiting and on a cancelled event, as that reader is.
@@ -661,9 +661,9 @@ export type RegistrationDetail = {
   emailLinkExpiresAt: Date | null;
   /** The offer's `WAITLIST_SPOT_OFFER` still queued (§520): past its stored deadline it has not lapsed (§650, `rowDeadlineOf`). */
   offerEmailQueued?: boolean;
-  /** The event's clock: «Ce îi spui» says an instant as the participant's own page does (§NNN). */
+  /** The event's clock: «Ce îi spui» says an instant as the participant's own page does (§654). */
   eventTimezone: string;
-  /** The event is cancelled: «Ce îi spui» says the cancellation rather than a deadline (§NNN). */
+  /** The event is cancelled: «Ce îi spui» says the cancellation rather than a deadline (§654). */
   eventCancelled: boolean;
   /** «Ofertele din lista de așteptare pleacă automat» (§615) and «Arată public câți așteaptă» (§634), for the waiting sentence. */
   waitlistAutoOffer: boolean;
@@ -671,7 +671,7 @@ export type RegistrationDetail = {
   /** Where a waiting row stands and how long the line is (§629): null unless `WAITLISTED` on an event not cancelled. */
   waitlistPosition: number | null;
   waitlistLength: number | null;
-  /** When the live link the row's state waits on lapses — address, declaration or offer (§NNN); null when none is alive. */
+  /** When the live link the row's state waits on lapses — address, declaration or offer (§654); null when none is alive. */
   liveLinkExpiresAt: Date | null;
   confirmedAt: Date | null;
   cancelledAt: Date | null;
@@ -777,7 +777,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       emailLinkExpiresAt: registrations.emailLinkExpiresAt,
       // The timeline's deadline (§650): an offer whose first email is still queued has not lapsed (§520).
       offerEmailQueued: offerEmailQueuedAt(now),
-      // «Ce îi spui» (§NNN): the event's clock, whether it is cancelled, the line's two settings and numbers, the live link.
+      // «Ce îi spui» (§654): the event's clock, whether it is cancelled, the line's two settings and numbers, the live link.
       eventTimezone: events.timezone,
       eventCancelled: sql<boolean>`(${events.eventStatus} = 'CANCELLED')`.mapWith(Boolean),
       waitlistAutoOffer: events.waitlistAutoOffer,

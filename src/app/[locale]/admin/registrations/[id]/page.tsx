@@ -496,7 +496,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       )}
 
       {/*
-        «Ce îi spui» (§NNN; the owner: «oamenii mai pierd mailuri, le mai intră în SPAM»): what to tell
+        «Ce îi spui» (§654; the owner: «oamenii mai pierd mailuri, le mai intră în SPAM»): what to tell
         somebody who asks where their registration stands — the participant's own words, in the
         registration's language, under the state and above the verbs. Every role that reads the page.
       */}

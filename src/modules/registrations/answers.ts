@@ -255,7 +255,7 @@ export function planAnswerEdit(
     kitShirt: boolean;
     now: Date;
     /**
-     * When the row's answers were written (`answersWrittenAt`, §NNN — a restart's instant, not the creation's):
+     * When the row's answers were written (`answersWrittenAt`, §654 — a restart's instant, not the creation's):
      * the minors' sweep keeps no socials on a row written before the eighteenth birthday (§323).
      */
     answersWrittenAt: Date;

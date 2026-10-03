@@ -408,7 +408,7 @@ describe("BR-REQ-037-03 criterion 12: only a minor's row names a guardian (§108
   });
 
   it("owes a guardian on the day it allows one: a row a minor's when written, the person an adult today", async () => {
-    // Eighteen on 2026-09-15: a minor on 2026-09-01, when the row and its answers were written (§NNN); an adult on NOW.
+    // Eighteen on 2026-09-15: a minor on 2026-09-01, when the row and its answers were written (§654); an adult on NOW.
     const written = new Date("2026-09-01T10:00:00.000Z");
     const pending = { status: "PENDING_DECLARATION", confirmedAt: null, bibNumber: null, clubMemberDeclared: false, clubName: null, createdAt: written, answersWrittenAt: written } as const;
     // A: clearing the guardian of such a row.

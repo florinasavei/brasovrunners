@@ -7,7 +7,7 @@ import { migrate } from "drizzle-orm/pglite/migrator";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 /**
- * Migration `0127_answers_written_at` (`DECISIONS.md` §NNN), proven on real PostgreSQL (PGlite): the
+ * Migration `0127_answers_written_at` (`DECISIONS.md` §654), proven on real PostgreSQL (PGlite): the
  * database is built up to the migration before it, registrations are written the way the previous
  * release wrote them — without the column — and then the rest of the migrations run over them, as
  * `yarn db:migrate:env` runs them over production.
@@ -83,7 +83,7 @@ afterAll(async () => {
   if (folder) rmSync(folder, { recursive: true, force: true });
 });
 
-describe("§NNN migration 0127_answers_written_at — the day the answers were written", () => {
+describe("§654 migration 0127_answers_written_at — the day the answers were written", () => {
   it("backfills every existing row from its created_at, so none is judged differently", async () => {
     const { rows } = await client.query<{ created_at: Date; answers_written_at: Date }>(
       "SELECT created_at, answers_written_at FROM registrations ORDER BY created_at",

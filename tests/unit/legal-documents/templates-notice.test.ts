@@ -137,7 +137,7 @@ describe("§639 the message type", () => {
     const email = renderBilingual("LEGAL_TEMPLATES_CHANGED", "ro", emailSampleFor("LEGAL_TEMPLATES_CHANGED", "ro"), "https://example.test/ro/admin/legal/new", null);
     expect(email.text).toContain("Șablon nou: GDPR · Termeni de concurs");
     expect(email.text).toContain("New template: GDPR · Racing TOS");
-    // The button names the screen it opens and what is done there (§NNN), not the generic «open the documents».
+    // The button names the screen it opens and what is done there (§654), not the generic «open the documents».
     expect(email.text).toContain("Versiune nouă: regenerează textele: https://example.test/ro/admin/legal/new");
     expect(email.text).toContain("New version: regenerate the texts");
     expect(email.text).not.toContain("aprobă textele:");

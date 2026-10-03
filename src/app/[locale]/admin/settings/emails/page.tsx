@@ -218,7 +218,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   const whenOf = (type: EmailMessageType): string => {
     if (type === "EVENT_REMINDER" && reminderOff) return t("emails.reminderOff.when");
     const line = t(`emails.when.${type}`, whenValues);
-    // The verification email re-sent by itself (§NNN), in the club's numbers — or that it is off.
+    // The verification email re-sent by itself (§653), in the club's numbers — or that it is off.
     if (type === "VERIFY_REGISTRATION_EMAIL") return `${line} ${retryLine}`;
     if (type !== "COMPLETE_DECLARATION") return line;
     return `${line} ${reminderOff ? t("emails.lastCallOff") : t("emails.lastCall", whenValues)}`;
@@ -307,7 +307,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   familySample.familyConfirmed = emailSampleFamilyConfirmed();
   const familyConfirmed = renderBilingual("REGISTRATION_CONFIRMED", emailLocale, familySample, actionUrl, written.copy);
   /*
-    The verification email as the job re-sends it (§NNN): the club's words for «Confirmă adresa de
+    The verification email as the job re-sends it (§653): the club's words for «Confirmă adresa de
     email» with the platform's one sentence in front, the link's deadline in it, and «valabil» the
     hours left at the club's interval — previewed right after the first email, so the club sees the
     sentence a person who has not confirmed reads.

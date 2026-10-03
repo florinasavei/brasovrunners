@@ -2430,7 +2430,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
             nameKey: registrationNameKey(legalName),
             displayName: resolveDisplayName({ displayName: input.displayName, firstName: input.firstName, lastName: input.lastName, legalName }),
             ...(corrected.fitnessDeclaredAt === null ? { listOptOut: true } : {}),
-            // The corrected answers were judged on this instant, as a restart's are (§NNN).
+            // The corrected answers were judged on this instant, as a restart's are (§654).
             answersWrittenAt: now,
             updatedAt: now,
           })
@@ -2631,7 +2631,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       outsideCapacity: false,
       /*
         The answers above were judged on this instant — a guardian kept only for a minor today, no
-        socials for one (`rowDetails`) — so the row says so (§NNN): on a restart `created_at` stays
+        socials for one (`rowDetails`) — so the row says so (§654): on a restart `created_at` stays
         (`AGENTS.md` §10.5), and the minors' sweep and a staff correction judge against this, never the old row's day.
       */
       answersWrittenAt: now,

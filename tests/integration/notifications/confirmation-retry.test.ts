@@ -21,7 +21,7 @@ import { confirmEmail, type EventForRegistration, requestRegistrationLink, submi
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the verification email re-sent by itself: the address link once more, the club's hours after
+ * §653 — the verification email re-sent by itself: the address link once more, the club's hours after
  * the last email left («Termene», 20 by default), to whoever has not confirmed, while the address got
  * fewer than one plus the club's number of verification emails for the event (1 by default) and the
  * link still has an hour. The request path is the real one — `submitRegistration` queues the first
@@ -89,7 +89,7 @@ async function stub(row: OutboxRow): Promise<OutgoingEmail> {
   return { to: row.recipientEmail, subject: row.messageType, html: `<p>${row.messageType}</p>`, text: row.messageType, locale: row.locale, idempotencyKey: row.idempotencyKey };
 }
 
-describe("§NNN the verification email re-sent by itself", () => {
+describe("§653 the verification email re-sent by itself", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 

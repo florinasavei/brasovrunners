@@ -32,14 +32,14 @@ export const AUTOMATIC_SEND_KEYS = {
   // The number a confirmation before §548 was shown as «provizoriu», told once when it was kept (`bibs.ts#releaseLegacyHeldNumbers`).
   bibs: (registrationId: string) => `registration:${registrationId}:bib-settled`,
   /**
-   * The verification email re-sent by itself (§NNN): `n` is how many verification emails the address
+   * The verification email re-sent by itself (§653): `n` is how many verification emails the address
    * already got for the event — the attempt this one follows — so each nudge has its own key, a run
    * repeated or overlapping queues nothing twice, and the count only grows.
    */
   confirmationRetry: (registrationId: string, attempt: number) => `registration:${registrationId}:verify-retry:${attempt}`,
 } as const;
 
-/** The payload key that marks a verification email the job re-sent by itself (§NNN): the renderer adds its one sentence. */
+/** The payload key that marks a verification email the job re-sent by itself (§653): the renderer adds its one sentence. */
 export const CONFIRMATION_RETRY = "confirmationRetry";
 
 /** Whether a queued row's payload is a verification email the job re-sent by itself. */
@@ -47,7 +47,7 @@ export function isConfirmationRetry(payload: unknown): boolean {
   return typeof payload === "object" && payload !== null && (payload as Record<string, unknown>)[CONFIRMATION_RETRY] === true;
 }
 
-// --- The verification email re-sent by itself (§NNN) -------------------------------------------
+// --- The verification email re-sent by itself (§653) -------------------------------------------
 
 const HOUR = 60 * 60_000;
 
@@ -59,7 +59,7 @@ const HOUR = 60 * 60_000;
 export const CONFIRMATION_RETRY_LEAST_LEFT_MS = HOUR;
 
 /**
- * At most this many re-sent emails are queued by one run, oldest due first (§NNN): at a launch they
+ * At most this many re-sent emails are queued by one run, oldest due first (§653): at a launch they
  * would otherwise compete in one batch with the first emails of people registering right now. The
  * rest go at the next run.
  */
@@ -107,7 +107,7 @@ export type ConfirmationRetryPlan = {
 };
 
 /**
- * Who is owed the verification email once more, and from when to when (§NNN). One formula for the
+ * Who is owed the verification email once more, and from when to when (§653). One formula for the
  * job, its plan (`jobs/next-work.ts`) and the forecast on «Emailuri» (§383); the instant is a
  * question the caller asks (`isConfirmationRetryDue`), never answered here.
  *

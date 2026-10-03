@@ -6,7 +6,7 @@ import CopyCodeButton from "@/modules/content/member-codes/ui/CopyCodeButton";
 type Props = {
   title: string;
   help: string;
-  /** Which language the lines are in, said only when it is not the staff member's own (§NNN). */
+  /** Which language the lines are in, said only when it is not the staff member's own (§654). */
   languageNote: string | null;
   /** The registration's language: the lines' `lang`, so a screen reader reads them in it. */
   lang: string;
@@ -16,7 +16,7 @@ type Props = {
 };
 
 /**
- * «Ce îi spui» (§NNN): the sentences somebody is told when they ask where their registration stands,
+ * «Ce îi spui» (§654): the sentences somebody is told when they ask where their registration stands,
  * on the registration's page, under the state and above the verbs. Server-rendered words; the one
  * client island is the copy button, which takes the same text as a string (`CopyCodeButton`, §552) —
  * without JavaScript the lines are there to select. No address and no verb: every role that reads the

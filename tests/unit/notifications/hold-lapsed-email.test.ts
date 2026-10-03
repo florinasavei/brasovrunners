@@ -62,7 +62,7 @@ describe("§638 the DECLARATION_HOLD_EXPIRED email's words", () => {
     expect(mail.text).not.toContain("Nu mai pot ajunge");
   });
 
-  it("§NNN the subject names the person and the event, and keeps «Locul tău» when no name is known", () => {
+  it("§654 the subject names the person and the event, and keeps «Locul tău» when no name is known", () => {
     const sample = emailSampleFor("DECLARATION_HOLD_EXPIRED", "ro");
     expect(render("ro", { participantName: "Ioana Pop", holdLapsedNext: "waitlist" }).subject).toContain(`Locul pentru Ioana Pop la ${sample.eventTitle} a expirat`);
     const english = emailSampleFor("DECLARATION_HOLD_EXPIRED", "en");

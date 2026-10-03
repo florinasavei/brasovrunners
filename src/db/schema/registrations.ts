@@ -511,7 +511,7 @@ export const registrations = pgTable(
     ),
 
     /*
-      When the person's answers were last written by the form (§NNN): the insert's instant, and a
+      When the person's answers were last written by the form (§654): the insert's instant, and a
       restart's — a cancelled or expired row restarted rewrites every answer at its own `now` and keeps
       `created_at`. "Minor on the day the row was written" is judged here: the form's guardian rule
       (§108), the minors' sweep (`jobs/retention.ts`, `minor-socials`, §323) and the staff correction's

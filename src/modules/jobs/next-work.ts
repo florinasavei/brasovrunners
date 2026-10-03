@@ -245,7 +245,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
   const familyLapse = await nextFamilyEntryLapse(db, now);
   // An invitation's deadline (§647): the sweep ends it and the place it kept goes to the line.
   const invitationLapse = await nextInvitationLapse(db, now);
-  // `queueConfirmationRetries` (§NNN): the verification email re-sent, the club's hours after the last one left.
+  // `queueConfirmationRetries` (§653): the verification email re-sent, the club's hours after the last one left.
   const confirmationRetry = await nextConfirmationRetry(db, now, settings);
 
   return earliest([
