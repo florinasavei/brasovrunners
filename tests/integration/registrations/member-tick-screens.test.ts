@@ -311,6 +311,49 @@ describe("BR-REQ-037-03 criterion 13: the registrations list", () => {
     expect(byTestId(await listPage({ eventId: race.id, clubMember: "1", memberSweep: "1" }), "member-sweep")).toHaveLength(0);
   });
 
+  /*
+    The members' filter and the bounced filter are ticks of the promo filter's kind (§NNN): a
+    two-option select showed its label inside the closed box, so «Membri …» read as a chosen value,
+    and its empty option spoke of events. Same parameters, `1` when ticked, nothing otherwise.
+  */
+  it("draws the members' and the bounced filters as ticks named by what they keep, in both languages (§NNN)", async () => {
+    const race = await createRace("Crosul");
+    await register(race.id);
+    state.actor = await staff("ADMIN");
+    const ticks = (tree: ReactNode) =>
+      Object.fromEntries(
+        elements(tree)
+          .filter((element) => element.props.name === "clubMember" || element.props.name === "bounced")
+          .map((element) => [element.props.name as string, element]),
+      );
+    const text = (node: unknown): string =>
+      typeof node === "string" ? node : Array.isArray(node) ? node.map(text).join("") : isValidElement(node) ? text((node.props as Props).children) : "";
+
+    for (const locale of ["ro", "en"] as const) {
+      state.locale = locale;
+      const words = (locale === "ro" ? ro : en).Admin.registrations;
+      const off = ticks(await listPage({ eventId: race.id }));
+      expect(Object.keys(off).sort()).toEqual(["bounced", "clubMember"]);
+      for (const tick of Object.values(off)) {
+        // Not a select: no `select` prop, no options, a value of `1` and nothing ticked by default.
+        expect(tick.props.select, locale).toBeUndefined();
+        expect(tick.props.value, locale).toBe("1");
+        expect(tick.props.defaultChecked, locale).toBe(false);
+      }
+      expect(text(off.clubMember.props.children)).toBe(words.clubMemberOnly.replace("{club}", CLUB_NAME));
+      expect(off.clubMember.props.help).toBe(words.clubMemberOnlyHelp.replaceAll("{club}", CLUB_NAME));
+      expect(text(off.bounced.props.children)).toBe(words.bouncedOnly);
+      expect(off.bounced.props.help).toBe(words.bouncedOnlyHelp);
+      // The empty option of the events select is not read by these two any more.
+      expect(text(off.clubMember.props.children)).not.toContain(words.filterAll);
+
+      const on = ticks(await listPage({ eventId: race.id, clubMember: "1", bounced: "1" }));
+      expect(on.clubMember.props.defaultChecked).toBe(true);
+      expect(on.bounced.props.defaultChecked).toBe(true);
+    }
+    state.locale = "ro";
+  });
+
   it("opens the preview: one ticked box per candidate, the count, the event's scope — members and unticked rows left out", async () => {
     const race = await createRace("Crosul");
     const stranger = await register(race.id);

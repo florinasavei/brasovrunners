@@ -1172,27 +1172,31 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               </MenuItem>
             ))}
           </TextField>
-          <TextField
-            select
-            name="clubMember"
-            label={t("registrations.clubMemberLabel", { club: CLUB_NAME })}
-            defaultValue={clubMember === "1" ? "1" : ""}
-            sx={{ minWidth: 220 }}
-          >
-            <MenuItem value="">{t("registrations.filterAll")}</MenuItem>
-            <MenuItem value="1">{t("registrations.clubMemberOnly")}</MenuItem>
-          </TextField>
+          {/*
+            The members' filter and the bounced filter are ticks, like the promo one beside them
+            (§NNN): as two-option selects, MUI showed the label inside the closed box, so «Membri …»
+            read as a value already chosen, and the empty option spoke of events («Toate
+            evenimentele»). Ticked submits `1`, unticked submits nothing — the same parameters as
+            before, so the filter, the export and the member sweep (it opens with `clubMember=1`) are
+            untouched.
+          */}
+          <Box sx={{ minWidth: 220, maxWidth: 320, pt: 0.5 }} data-testid="registrations-filter-member">
+            <CheckboxField
+              name="clubMember"
+              value="1"
+              defaultChecked={clubMember === "1"}
+              dense
+              help={t("registrations.clubMemberOnlyHelp", { club: CLUB_NAME })}
+            >
+              {t("registrations.clubMemberOnly", { club: CLUB_NAME })}
+            </CheckboxField>
+          </Box>
           {/* Who never got the email (§76, §83): the rows to call. */}
-          <TextField
-            select
-            name="bounced"
-            label={t("registrations.bouncedLabel")}
-            defaultValue={bounced === "1" ? "1" : ""}
-            sx={{ minWidth: 220 }}
-          >
-            <MenuItem value="">{t("registrations.filterAll")}</MenuItem>
-            <MenuItem value="1">{t("registrations.bouncedOnly")}</MenuItem>
-          </TextField>
+          <Box sx={{ minWidth: 220, maxWidth: 320, pt: 0.5 }} data-testid="registrations-filter-bounced">
+            <CheckboxField name="bounced" value="1" defaultChecked={bounced === "1"} dense help={t("registrations.bouncedOnlyHelp")}>
+              {t("registrations.bouncedOnly")}
+            </CheckboxField>
+          </Box>
           {/*
             «Doar cu oferte și beneficii» (§581; the owner: «doar cei care au bifat că vor datele
             publicate pentru parteneri»): the people who said yes, on screen, by §570's one condition —
