@@ -397,4 +397,26 @@ describe("§647 the registration's «Lista ascunsă» block", () => {
     expect(radios(tree)[0].props.onList).toBe(true);
     expect(outsideInput(tree)).toBeUndefined();
   });
+
+  /*
+    §NNN — «Lista de invitați speciali»: the block says what it does. Its heading carries an «i» (the §640
+    pattern) with who the list is for, what the person keeps and that an ordinary participant does not go
+    there; the caption under the radios says the essentials in one line. For every role that reads it.
+  */
+  it("explains itself: the heading's «i» says who it is for, what they keep and what it is not; the caption says it in one line", async () => {
+    const eventId = await race(true);
+    for (const role of ["ADMIN", "MODERATOR"] as const) {
+      state.actor = await staff(role);
+      const tree = await detailPage(await row("CONFIRMED", { switchOn: true, onList: false, eventId }));
+      const [radio] = radios(tree);
+      expect(radio.props.heading, role).toBe("Lista de invitați speciali");
+      expect(radio.props.hiddenLabel, role).toBe("Invitat special — nu ocupă un loc");
+      expect((radio.props.info as string).split("\n"), role).toEqual([
+        ro.Admin.registrations.outside.infoFor,
+        ro.Admin.registrations.outside.infoKeeps,
+        ro.Admin.registrations.outside.infoNot,
+      ]);
+      expect(sentences(tree).join("\n"), role).toContain(ro.Admin.registrations.outside.help);
+    }
+  });
 });

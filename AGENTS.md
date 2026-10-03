@@ -1219,7 +1219,7 @@ Core invariants:
 2. unique database constraint;
 3. no place consumed before email confirmation — except an Administrator vouching for the address with «Dă-i un loc acum» (`DECISIONS.md` §637), audited by name, into a counted free place or, on a full race, one supplementary place the press adds, confirmed and audited (`DECISIONS.md` §642), the declaration still the participant's to sign;
 4. declaration required before Confirmed;
-5. Confirmed plus holds consume capacity: every `PENDING_DECLARATION` hold, and every unexpired `WAITLIST_OFFERED` hold — a declaration hold past its deadline is kept, and keeps its place, until a place is wanted for somebody waiting, or the event starts or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing, like the rest of its queue (§331); one waiter releases one hold, the oldest deadline first, never the event's whole stock of kept places — and a registration on «Lista ascunsă» (the hidden list; `registrations.outside_capacity`, §643, §647) consumes none, in any state, so no hold of its is released for somebody waiting;
+5. Confirmed plus holds consume capacity: every `PENDING_DECLARATION` hold, and every unexpired `WAITLIST_OFFERED` hold — a declaration hold past its deadline is kept, and keeps its place, until a place is wanted for somebody waiting, or the event starts or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing, like the rest of its queue (§331); one waiter releases one hold, the oldest deadline first, never the event's whole stock of kept places — and a registration on «Lista de invitați speciali» (the special guests list; `registrations.outside_capacity`, §643, §647) consumes none, in any state, so no hold of its is released for somebody waiting;
 6. Pending email and Waitlisted do not occupy capacity, but eligible Waitlisted entries have allocation priority over later registrations — the one exception is rule 3's «Dă-i un loc acum», an Administrator's audited press into a counted free place or the one supplementary place it adds (§642), which moves nobody in the line;
 7. no capacity-changing transaction may let a later registration bypass that queue;
 8. cancellation is idempotent;
@@ -1241,11 +1241,11 @@ PENDING_DECLARATION        -> CANCELLED
 PENDING_DECLARATION        -> EXPIRED
 WAITLISTED                 -> WAITLIST_OFFERED
 WAITLISTED                 -> PENDING_DECLARATION
-                              only when an Administrator puts the row on «Lista ascunsă» (§643, §647)
+                              only when an Administrator puts the row on «Lista de invitați speciali» (§643, §647)
 WAITLISTED                 -> CANCELLED
 WAITLIST_OFFERED           -> CONFIRMED
 WAITLIST_OFFERED           -> PENDING_DECLARATION
-                              only when an Administrator puts the row on «Lista ascunsă» (§643, §647)
+                              only when an Administrator puts the row on «Lista de invitați speciali» (§643, §647)
 WAITLIST_OFFERED           -> CANCELLED
 WAITLIST_OFFERED           -> EXPIRED
 WAITLISTED                 -> EXPIRED
@@ -1286,7 +1286,7 @@ offer past its deadline as lapsed, so nothing is overbooked by the rows staying 
 `WAITLISTED -> PENDING_DECLARATION` is the one move out of the line that is not an offer, and
 `WAITLIST_OFFERED -> PENDING_DECLARATION` the one way an offer ends other than signed, cancelled or
 lapsed; both exist for one reason (§643): an Administrator puts a waiting runner, or one holding an
-open offer, on «Lista ascunsă» (the hidden list, named so by §647), which consumes no place, so the allocator gives them one at once — a
+open offer, on «Lista de invitați speciali» (the special guests list; «Lista de invitați speciali» as §647 named it), which consumes no place, so the allocator gives them one at once — a
 declaration to sign with the ordinary deadline and email. An offer kept as an offer would lapse at the
 line's short deadline, as every offer does, and end the registration; the offer's queued email never
 tried is withdrawn, and its link is replaced by the declaration's when that email leaves (§619). The
@@ -1314,12 +1314,12 @@ publicDirectAvailability =
 
 Rules:
 
-- a registration on «Lista ascunsă» (the hidden list; `registrations.outside_capacity`, which keeps its
-  name — §647 renamed only the words) consumes no place, §643 — in no term of the formula, in any
+- a registration on «Lista de invitați speciali» (the special guests list; `registrations.outside_capacity`, which keeps its
+  name — §647 and the special guests' rename changed only the words) consumes no place, §643 — in no term of the formula, in any
   state; the one explicit exclusion, on that audited column only (`kind` stays in no condition,
-  §12.6). Nobody is put on it while the event's «Folosește lista ascunsă» is off (§647; taking
+  §12.6). Nobody is put on it while the event's «Folosește lista de invitați speciali» is off (§647; taking
   somebody off is always open), and the event's two public-count ticks change no term here: the
-  hidden list never enters `occupied`, the places line or the free places. Such a row is given its place directly by the allocator whatever the counts, is never
+  special guests list never enters `occupied`, the places line or the free places. Such a row is given its place directly by the allocator whatever the counts, is never
   waitlisted and never offered anything, and no stale-hold sweep releases its hold for somebody
   waiting (it holds no counted place); it expires at the start like any hold — never an offer's
   lapse, because an open offer marked outside becomes that declaration hold at once (§10.5). Marking
@@ -1328,11 +1328,11 @@ Rules:
   cancelled or expired row through the form clears the mark;
 - an invitation by email (`event_invitations`, §647) holds one counted place from the send until it is
   accepted, withdrawn or its deadline passes — the deadline compared on every read, so the place is free
-  the instant it passes — unless it was sent «Pe lista ascunsă» (`outside_capacity`). It is the club's choice, like a
+  the instant it passes — unless it was sent «Pe lista de invitați speciali» (`outside_capacity`). It is the club's choice, like a
   family's reservation (§543): **never released for somebody waiting before its deadline**, only at the
   deadline (the sweep stamps it and offers the place to the line) or at «Retrage» — and that deadline
   is never moved later while anyone eligible waits: «Retrimite» re-issues the link and the email and keeps
-  it (the hidden list, holding no counted place, may be extended). **A place free for an
+  it (the special guests list, holding no counted place, may be extended). **A place free for an
   invitation is one free after everyone eligible who waits** — `max(capacity - occupied - eligible
   WAITLISTED, 0)` (`invitationFreePlaces`), whatever «Oferte automate» says and whether the registration
   has closed: with offers off (§615) or after the close nobody is offered the free place on the send's
@@ -2718,7 +2718,7 @@ BR-REQ-037-05):
      `givePlaceNowByStaff` writes the desk's vouching (`email_confirmed_by_staff_user_id`), spends
      the row's verification link, and gives the place ahead of the waiting list under the event
      lock — a counted free place, or on a full race one supplementary place added as «Trimite-i
-     oferta» adds it (`event.capacity_raised_for_place_now`, §642); a row on «Lista ascunsă» needs
+     oferta» adds it (`event.capacity_raised_for_place_now`, §642); a row on «Lista de invitați speciali» needs
      none (§643) — as `PENDING_DECLARATION` with the
      ordinary declaration email. Audited (`registration.address_vouched_by_staff`) under the
      Administrator's id. The participant still signs their own declaration, online or on paper.
@@ -2746,11 +2746,11 @@ BR-REQ-037-05):
      erase, rename, resend and the printing mark stay Administrator-only
      (`canManageRegistrations`). Each verb is audited under the volunteer's own id.
 
-6. **«Lista ascunsă» (2026-10-02, §643; named, drawn as a radio and given the event's switch by
-   §647).** The Administrator (`canManageRegistrations`; the Organizer reads the chip, the pill and
-   the radio, disabled, and changes nothing) puts a registration on the hidden list or takes it off,
+6. **«Lista de invitați speciali» (2026-10-02, §643; named «Lista de invitați speciali», drawn as a radio and given
+   the event's switch by §647; renamed, and explained on every screen that shows it, on 2026-10-03).** The Administrator (`canManageRegistrations`; the Organizer reads the chip, the pill and
+   the radio, disabled, and changes nothing) puts a registration on the special guests list or takes it off,
    on its own page — for organizers, pacemakers and invited runners, who run without taking one of
-   the announced places — only while the event's «Folosește lista ascunsă» is on (taking off always;
+   the announced places — only while the event's «Folosește lista de invitați speciali» is on (taking off always;
    the refusal names the switch). `setOutsideCapacityByStaff`, under the event lock, after the stale holds expire
    and the line is served (`fillAvailableSpots`, as `placeForNewcomer`, so an unmarking takes only a
    place nobody in line is owed): marking a row that holds a counted place frees it
@@ -2770,8 +2770,8 @@ BR-REQ-037-05):
    address typed, one per line. `inviteToEventByStaff`, under the event lock, in one transaction for the
    whole list: the line served first, every address canonicalized (§10.4), a person already registered
    or already invited refused by name with nothing written; each invitation holds a counted place until
-   its deadline (`min(now + days, start)`, §10.6 — the public close is not asked) unless sent «Pe lista ascunsă»
-   — which only an event whose «Folosește lista ascunsă» is on accepts, read under the lock and refused
+   its deadline (`min(now + days, start)`, §10.6 — the public close is not asked) unless sent «Pe lista de invitați speciali»
+   — which only an event whose «Folosește lista de invitați speciali» is on accepts, read under the lock and refused
    otherwise with `HIDDEN_LIST_OFF` before anything is written, as verb 6's radio — and where no
    place is free after everyone eligible who waits — a full race, or anyone on the waiting list, offers
    on or off, before or after the close — adds one supplementary place only on the press that named the
@@ -2788,7 +2788,7 @@ BR-REQ-037-05):
    that deadline, and moving it would keep a counted place ahead of them at every resend without the
    confirmed supplementary place a send would need. Then the link and the email are re-issued and the
    deadline kept; the dialog says so before the press (no days box), the toast after it
-   (`invitationResentKept`), the audit row carries `keptForWaiting`. One «Pe lista ascunsă» may be
+   (`invitationResentKept`), the audit row carries `keptForWaiting`. One «Pe lista de invitați speciali» may be
    extended whoever waits;
    «Retrage» ends it and the place goes to the line. Audited as `event.invitation_sent`,
    `event.invitation_resent`, `event.invitation_withdrawn`, `event.invitation_expired`,

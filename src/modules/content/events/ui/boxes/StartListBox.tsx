@@ -5,6 +5,7 @@ import { EVENT_TYPES, takesRegistrations } from "@/modules/events/domain/event-t
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
 import CheckboxField from "@/shared/ui/CheckboxField";
+import IncognitoIcon from "@/shared/ui/IncognitoIcon";
 import Panel from "@/shared/ui/Panel";
 import { startListSummary } from "../box-summaries";
 import OnlyForMode from "../OnlyForMode";
@@ -99,14 +100,25 @@ export default async function StartListBox({ event, mayEditSettings }: Pick<BoxP
                 form without the group edits none of them; the service validates them whatever this shows.
               */}
               <Box data-testid="hidden-list-settings" sx={{ mt: 2 }}>
-                <Typography variant="subtitle2" component="h4" sx={{ mb: 0.5 }}>
+                <Typography variant="subtitle2" component="h4" sx={{ mb: 0.5, display: "flex", alignItems: "center", gap: 0.75 }}>
+                  <IncognitoIcon fontSize="small" aria-hidden />
                   {t("editor.hiddenListTitle")}
                 </Typography>
                 <input type="hidden" name="event.hiddenList.present" value="1" />
                 <CheckboxField name="event.hiddenListEnabled" defaultChecked={event?.hiddenListEnabled ?? false}>
                   {t("editor.hiddenListEnabled")}
                 </CheckboxField>
-                <BoxNote>{t("editor.hiddenListEnabledHelp")}</BoxNote>
+                {/*
+                  «Lista de invitați speciali» (§NNN): the switch's sentence says what ticking shows and what
+                  unticking keeps; its «?» says who the list is for, the two settings under it, and how it
+                  differs from «Invitații» by email — one line each, each under 200 characters.
+                */}
+                <BoxNote
+                  testId="hidden-list-enabled-help"
+                  more={[t("editor.hiddenListEnabledMoreFor"), t("editor.hiddenListEnabledMoreSettings"), t("editor.hiddenListEnabledMoreEmail"), t("editor.hiddenListEnabledMoreDifference")].join("\n")}
+                >
+                  {t("editor.hiddenListEnabledHelp")}
+                </BoxNote>
                 <OnlyWhenTicked name="event.hiddenListEnabled" initiallyTicked={event?.hiddenListEnabled ?? false}>
                   <Box data-testid="hidden-list-details" sx={{ mt: 1, pl: { xs: 1.5, sm: 3.5 }, borderLeft: 2, borderColor: "divider", minWidth: 0 }}>
                     <RecallField

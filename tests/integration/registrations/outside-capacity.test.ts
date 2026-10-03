@@ -374,11 +374,11 @@ describe("§643 the counts: public apart, backoffice joined apart", () => {
         withPlaceOf: (count, capacity) => `${count} cu loc din ${capacity}`,
         awaitingEmail: (count) => `${count} email`,
         waitlisted: (count) => `${count} așteaptă`,
-        outside: (count) => `${count} pe lista ascunsă`,
+        outside: (count) => `invitați speciali: ${count}`,
         more: (count) => `+${count}`,
       },
     );
-    expect(hint.split("\n")[1]).toBe("Crosul: 2 — 1 cu loc din 5, 1 pe lista ascunsă");
+    expect(hint.split("\n")[1]).toBe("Crosul: 2 — 1 cu loc din 5, invitați speciali: 1");
   });
 });
 
@@ -644,8 +644,8 @@ describe("§647 «Lista ascunsă»: the event's switch and the hidden list's own
     expect((await rowOf("Bogdan")).outsideCapacity).toBe(false);
     expect(await db.select().from(auditLogs).where(and(eq(auditLogs.action, "registration.outside_capacity_changed"), eq(auditLogs.entityId, (await rowOf("Bogdan")).id)))).toHaveLength(0);
     // The words the page shows for it, in both languages, name the switch.
-    expect(ro.Admin.errors.HIDDEN_LIST_OFF).toContain("«Folosește lista ascunsă»");
-    expect(en.Admin.errors.HIDDEN_LIST_OFF).toContain("«Use the hidden list»");
+    expect(ro.Admin.errors.HIDDEN_LIST_OFF).toContain("«Folosește lista de invitați speciali»");
+    expect(en.Admin.errors.HIDDEN_LIST_OFF).toContain("«Use the special guests list»");
 
     // Nothing changed for the one already on it, and they can still come off.
     expect((await rowOf("Ana")).outsideCapacity).toBe(true);
@@ -749,8 +749,8 @@ describe("§647 «Lista ascunsă»: the event's switch and the hidden list's own
     expect(isDomainError(error) && error.code).toBe("VALIDATION_ERROR");
     expect(isDomainError(error) && error.fields).toContain(SPARES_BEFORE_HIDDEN_LIST);
     expect((await db.select().from(events).where(eq(events.id, event.id)))[0].walkInBibCount).toBeNull();
-    expect(ro.Admin.errors.SPARES_BEFORE_HIDDEN_LIST).toContain("«Numerele listei ascunse încep de la»");
-    expect(en.Admin.errors.SPARES_BEFORE_HIDDEN_LIST).toContain("«The hidden list's numbers start at»");
+    expect(ro.Admin.errors.SPARES_BEFORE_HIDDEN_LIST).toContain("«Numerele invitaților speciali încep de la»");
+    expect(en.Admin.errors.SPARES_BEFORE_HIDDEN_LIST).toContain("«The special guests' numbers start at»");
     // Six fit; the hidden list's first number is never a spare.
     expect(await reserveSpareBibs(db, { actor: admin, eventId: event.id, count: 6, now: at(3) })).toMatchObject({ from: 2, to: 7 });
     // A hidden series below the race's bounds nothing: the spares come after the race's numbers as before.

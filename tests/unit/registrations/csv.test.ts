@@ -71,7 +71,7 @@ describe("CSV formula neutralization", () => {
 
   it("includes the header row and uses CRLF line endings", () => {
     const csv = buildRegistrationsCsv([]);
-    expect(csv).toBe("Event,Name,First name,Last name,Identity document,Email,Status,Club member (declared),Medically fit (declared),Strava,Instagram,Socials on the public list,Public list & results,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Cancellation reason,Offers and benefits,Hidden list");
+    expect(csv).toBe("Event,Name,First name,Last name,Identity document,Email,Status,Club member (declared),Medically fit (declared),Strava,Instagram,Socials on the public list,Public list & results,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Cancellation reason,Offers and benefits,Special guest");
 
     const withRow = buildRegistrationsCsv([
       {
@@ -291,7 +291,7 @@ describe("CSV formula neutralization", () => {
     expect(listed.split(",")[at + 1]).toBe("Yes");
     expect(unlisted.split(",")[at + 1]).toBe("");
     // The declaration's pair stays after the terms (§499), then the family column (§543), the cancellation reason (§558) and the offers and benefits, last (§562).
-    expect(header.split(",").slice(-6)).toEqual(["Declaration version", "Declaration signed", "family", "Cancellation reason", "Offers and benefits", "Hidden list"]);
+    expect(header.split(",").slice(-6)).toEqual(["Declaration version", "Declaration signed", "family", "Cancellation reason", "Offers and benefits", "Special guest"]);
   });
 
   // §543 — the family marker in the export: the other people on the same address at the event, last, «; »-joined.

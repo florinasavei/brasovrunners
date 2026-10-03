@@ -105,8 +105,8 @@ async function seeded(): Promise<string> {
   return id;
 }
 
-/** The backoffice's name for the list (§647), which no public page says, in either language. */
-const BACKOFFICE_NAME = /lista ascuns|hidden list/i;
+/** The backoffice's names for the list (§647's, and the special guests' since), which no public page says, in either language. */
+const BACKOFFICE_NAME = /lista ascuns|hidden list|invitați speciali|invitat special|special guest/i;
 
 /** The rendered list — and, every time, the proof it never names the hidden list. */
 const render = async (event: PublicEvent) => {
