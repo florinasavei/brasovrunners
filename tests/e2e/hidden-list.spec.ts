@@ -65,7 +65,7 @@ async function seed(tag: string): Promise<{ eventId: string; registrationId: str
   });
 }
 
-test.describe("§647 «Lista ascunsă» as a radio", () => {
+test.describe("§647 «Lista de invitați speciali» (named so since) as a radio", () => {
   test.describe.configure({ timeout: 60_000 });
 
   test("two radios inside the page, 44-pixel targets; «Anulează» puts it back, «Da» puts the runner on the list", async ({ page }) => {
@@ -76,24 +76,28 @@ test.describe("§647 «Lista ascunsă» as a radio", () => {
     await hydrated(page);
 
     const section = page.getByTestId("outside-capacity");
-    await expect(section.getByRole("heading", { name: "Lista ascunsă" })).toBeVisible();
-    const group = section.getByRole("radiogroup", { name: "Lista ascunsă" });
+    await expect(section.getByRole("heading", { name: "Lista de invitați speciali" })).toBeVisible();
+    const group = section.getByRole("radiogroup", { name: "Lista de invitați speciali" });
     const counted = group.getByRole("radio", { name: "Se numără între locurile evenimentului" });
-    const hidden = group.getByRole("radio", { name: "Pe lista ascunsă" });
+    const hidden = group.getByRole("radio", { name: "Invitat special — nu ocupă un loc" });
     await expect(counted).toBeChecked();
     await expect(hidden).not.toBeChecked();
     // No outlined button any more: the radio is the control.
-    await expect(section.getByRole("button", { name: /Pune pe lista ascunsă|afara locurilor/i })).toHaveCount(0);
+    await expect(section.getByRole("button", { name: /Pune pe lista|afara locurilor/i })).toHaveCount(0);
 
     // Inside the screen at 320 pixels: the section, its caption and the page never scroll sideways.
     const width = await page.evaluate(() => document.documentElement.clientWidth);
     const box = await section.boundingBox();
     expect(box).not.toBeNull();
     expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(width + 1);
-    const caption = section.getByText("Pentru organizatori, pacemakeri, invitați", { exact: false });
+    const caption = section.getByText("Invitat special: nu ocupă un loc anunțat", { exact: false });
     const captionBox = await caption.boundingBox();
     expect((captionBox?.x ?? 0) + (captionBox?.width ?? 0)).toBeLessThanOrEqual(width + 1);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+    // The «i» beside the heading says what the list is for, on a tap too: a 44-pixel button named by its text.
+    const info = section.getByRole("button", { name: /^Pentru organizatori, voluntari, pacemakeri și sportivi invitați/ });
+    await expect(info).toBeVisible();
+    expect((await info.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     // A thumb's target: each radio's row is at least 44 pixels tall (BR-REQ-041-01 criterion 6).
     for (const testId of ["hidden-list-counted", "hidden-list-hidden"]) {
       const target = await section.getByTestId(testId).boundingBox();
@@ -102,21 +106,21 @@ test.describe("§647 «Lista ascunsă» as a radio", () => {
 
     // A change asks; «Anulează» sends nothing and the radio shows the server's state again.
     await hidden.check();
-    await cancelDialog(page, "Pui înscrierea pe lista ascunsă?");
+    await cancelDialog(page, "Pui înscrierea pe lista de invitați speciali?");
     await expect(counted).toBeChecked();
     await expect(page.getByTestId("outside-chip")).toHaveCount(0);
 
-    // «Da»: on the hidden list, the chip with the glyph beside the name, the other radio checked.
+    // «Da»: a special guest, the chip with the glyph beside the name, the other radio checked.
     await hidden.check();
-    await confirmDialog(page, "Pui înscrierea pe lista ascunsă?");
+    await confirmDialog(page, "Pui înscrierea pe lista de invitați speciali?");
     await expect(page).toHaveURL(/[?&]saved=outsideMarked/, { timeout: 15_000 });
-    await expect(page.getByTestId("toast")).toContainText("Înscrierea e pe lista ascunsă");
+    await expect(page.getByTestId("toast")).toContainText("Înscrierea e pe lista de invitați speciali");
     await hydrated(page);
-    await expect(page.getByTestId("outside-chip")).toContainText("Lista ascunsă");
-    await expect(page.getByTestId("outside-capacity").getByRole("radio", { name: "Pe lista ascunsă" })).toBeChecked();
+    await expect(page.getByTestId("outside-chip")).toContainText("Invitat special");
+    await expect(page.getByTestId("outside-capacity").getByRole("radio", { name: "Invitat special — nu ocupă un loc" })).toBeChecked();
   });
 
-  test("the event's group: the two settings under «Folosește lista ascunsă» show only while it is ticked, «Arată public numărătoarea» always", async ({ page }) => {
+  test("the event's group: the two settings under «Folosește lista de invitați speciali» show only while it is ticked, «Arată public numărătoarea» always", async ({ page }) => {
     const tag = `${test.info().project.name}-editor-${Date.now().toString(36)}`;
     const { eventId } = await seed(tag);
     await withDatabase((client) => client.query("UPDATE events SET hidden_list_enabled = false WHERE id = $1", [eventId]));
@@ -125,20 +129,22 @@ test.describe("§647 «Lista ascunsă» as a radio", () => {
     await hydrated(page);
     const box = await openEditorBox(page, "Lista publică a participanților");
     const group = box.getByTestId("hidden-list-settings");
-    const start = group.getByLabel("Numerele listei ascunse încep de la");
-    await expect(group.getByText("Folosește lista ascunsă", { exact: true })).toBeVisible();
+    const start = group.getByLabel("Numerele invitaților speciali încep de la");
+    await expect(group.getByText("Folosește lista de invitați speciali", { exact: true })).toBeVisible();
     await expect(start).toBeHidden();
+    // The switch's «?» explains the list and how it differs from «Invitații» by email.
+    await expect(group.getByTestId("hidden-list-enabled-help").getByRole("button", { name: /O invitație pe email/ })).toBeVisible();
     // «Arată public numărătoarea» (§647) acts on every event: shown and ticked with the switch off, outside the group.
     const countTick = box.getByTestId("participant-count-public").getByRole("checkbox", { name: "Arată public numărătoarea" });
     await expect(countTick).toBeVisible();
     await expect(countTick).toBeChecked();
     await expect(group.getByRole("checkbox", { name: "Arată public numărătoarea" })).toHaveCount(0);
-    await group.getByRole("checkbox", { name: "Folosește lista ascunsă" }).check();
+    await group.getByRole("checkbox", { name: "Folosește lista de invitați speciali" }).check();
     await expect(start).toBeVisible();
-    await expect(group.getByRole("checkbox", { name: "Numără și lista ascunsă" })).not.toBeChecked();
+    await expect(group.getByRole("checkbox", { name: "Numără și invitații speciali" })).not.toBeChecked();
     // Inside the screen at every width the projects use, 320 pixels included.
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
-    await group.getByRole("checkbox", { name: "Folosește lista ascunsă" }).uncheck();
+    await group.getByRole("checkbox", { name: "Folosește lista de invitați speciali" }).uncheck();
     await expect(start).toBeHidden();
   });
 });

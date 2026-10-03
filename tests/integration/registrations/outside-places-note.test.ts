@@ -113,11 +113,11 @@ describe("§647 the places line's sentence while the event uses the hidden list"
     expect(html).toContain("3 înscriși din 10 locuri");
     expect(html.indexOf("3 înscriși din 10 locuri")).toBeLessThan(html.indexOf(ro.Event.cta.outsidePlacesNote));
     // The backoffice's name is never on a public page.
-    expect(html).not.toMatch(/lista ascunsă/i);
+    expect(html).not.toMatch(/lista ascunsă|invitați speciali|invitat special/i);
     locale = "en";
     const english = await render("cross");
     expect(english).toContain(en.Event.cta.outsidePlacesNote);
-    expect(english).not.toMatch(/hidden list/i);
+    expect(english).not.toMatch(/hidden list|special guest/i);
   });
 
   it("is not said with the switch off while nobody on the list holds a place", async () => {
@@ -142,7 +142,7 @@ describe("§647 the places line's sentence while the event uses the hidden list"
     expect(html).toContain("10 înscriși din 10 locuri");
     expect(html).toContain('data-testid="registration-outside-places"');
     expect(html).toContain(ro.Event.cta.outsidePlacesNote);
-    expect(html).not.toMatch(/lista ascunsă/i);
+    expect(html).not.toMatch(/lista ascunsă|invitați speciali|invitat special/i);
 
     // A hold on the list counts the same.
     await db.update(registrations).set({ status: "PENDING_DECLARATION", confirmedAt: null, holdExpiresAt: new Date("2026-11-19T07:00:00.000Z") }).where(eq(registrations.outsideCapacity, true));
@@ -158,7 +158,7 @@ describe("§647 the places line's sentence while the event uses the hidden list"
   it("is one short sentence in both catalogues, and the event page's cached row is keyed for the switch", () => {
     for (const catalogue of [ro, en]) {
       expect(catalogue.Event.cta.outsidePlacesNote.length).toBeLessThan(200);
-      expect(catalogue.Event.cta.outsidePlacesNote).not.toMatch(/ascuns|hidden/i);
+      expect(catalogue.Event.cta.outsidePlacesNote).not.toMatch(/ascuns|hidden|special/i);
     }
     expect(ro.Event.cta.outsidePlacesNote).toContain("în afara locurilor anunțate");
     expect(en.Event.cta.outsidePlacesNote).toContain("outside the advertised places");

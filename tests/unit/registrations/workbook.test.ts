@@ -163,7 +163,7 @@ describe("BR-REQ-060-01 the start list as a spreadsheet (§172)", () => {
   /** §499 — the signed declaration's version as a number and its moment, the CSV's last two columns. */
   it("ends with the signed declaration's version as a number and its moment as a date", async () => {
     // The family column (§543) comes after them, then the cancellation reason (§558) and the offers and benefits, last (§562).
-    expect(REGISTRATION_SHEET_HEADERS.slice(-6)).toEqual(["Declaration version", "Declaration signed", "family", "Cancellation reason", "Offers and benefits", "Hidden list"]);
+    expect(REGISTRATION_SHEET_HEADERS.slice(-6)).toEqual(["Declaration version", "Declaration signed", "family", "Cancellation reason", "Offers and benefits", "Special guest"]);
     const parts = unzip(
       await buildRegistrationsWorkbook([row({ bibNumber: null, declarationVersion: 37, declarationSignedAt: new Date("2026-09-26T08:30:00.000Z") })], "Test"),
     );

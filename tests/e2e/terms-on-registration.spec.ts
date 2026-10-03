@@ -113,12 +113,12 @@ test.describe("§425 the accepted terms on the registration's page and in the ex
       const [header, ...lines] = (await response.text()).split("\r\n");
       // The terms' two columns, then the declaration's two (§499), then the family column (§543),
       // then the participant's reason for cancelling (§558), then the offers and benefits (§562), then
-      // «Hidden list» (§643, renamed by §647), the last.
+      // «Special guest» (§643, named by §647, renamed since), the last.
       expect(header.split(",").slice(-8, -4)).toEqual(["Terms version", "Terms accepted", "Declaration version", "Declaration signed"]);
       expect(header.split(",").at(-4)).toBe("family");
       expect(header.split(",").at(-3)).toBe("Cancellation reason");
       expect(header.split(",").at(-2)).toBe("Offers and benefits");
-      expect(header.split(",").at(-1)).toBe("Hidden list");
+      expect(header.split(",").at(-1)).toBe("Special guest");
       const publicLine = lines.find((line) => line.includes("Termeni public"));
       const staffLine = lines.find((line) => line.includes("Termeni staff"));
       expect(publicLine?.split(",").slice(-8, -6)).toEqual(["1", ACCEPTED_AT]);

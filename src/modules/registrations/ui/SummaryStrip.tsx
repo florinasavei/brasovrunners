@@ -23,7 +23,7 @@ import HiddenListChip from "./HiddenListChip";
  * pill pressed. A state with nobody in it is not drawn, as before — unless it is the one in force, so the filter that emptied the list can always be pressed off. The test rows' pill is a label, not a
  * filter: `kind` is no status.
  *
- * «Lista ascunsă» (§643, named and given the incognito glyph by §647) is a pill of its own after the
+ * «Invitați speciali» (§643, named and given the incognito glyph by §647, renamed by §649) is a pill of its own after the
  * states, a filter like them (`outside=1`, kept beside the state in force): the real rows on the
  * hidden list, drawn while there are any or while it is pressed. They are inside the total and the state pills too — they are
  * registrations — and outside every count of places.
@@ -38,6 +38,7 @@ export default function SummaryStrip({
   testLabel,
   statusLabel,
   outsideLabel = null,
+  outsideHint,
   children,
 }: {
   basePath: string;
@@ -52,8 +53,10 @@ export default function SummaryStrip({
   /** The test rows' label, or `null` to leave them out. */
   testLabel: string | null;
   statusLabel: Record<RegistrationStatus, string>;
-  /** «Lista ascunsă: N» (§643, §647), worded by the page; `null` leaves the pill out. */
+  /** «Invitați speciali: N» (§643, §647, §649), worded by the page; `null` leaves the pill out. */
   outsideLabel?: string | null;
+  /** The pill's one-line explanation (§649): its `title`, and its link's name after the label. */
+  outsideHint?: string;
   /** What comes before the pills — the event's «Doar pentru membri» chip. */
   children?: ReactNode;
 }) {
@@ -81,7 +84,7 @@ export default function SummaryStrip({
           />
         ))}
       {outsideLabel !== null && ((summary.outside ?? 0) > 0 || query.outside === "1") && (
-        <HiddenListChip href={outsidePillHref(basePath, query)} label={outsideLabel} active={query.outside === "1"} testId="hidden-list-pill" />
+        <HiddenListChip href={outsidePillHref(basePath, query)} label={outsideLabel} hint={outsideHint} active={query.outside === "1"} testId="hidden-list-pill" />
       )}
       {testLabel !== null && summary.test > 0 && <Chip size="small" variant="outlined" color="warning" label={testLabel} />}
     </Stack>

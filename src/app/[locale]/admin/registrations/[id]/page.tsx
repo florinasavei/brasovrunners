@@ -352,6 +352,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       <input type="hidden" name="registrationId" value={registration.id} />
     </>
   );
+  // «Lista de invitați speciali»'s «i» (§649): who it is for, what they keep, who does not go there — a line each.
+  const hiddenListInfo = [tr("registrations.outside.infoFor"), tr("registrations.outside.infoKeeps"), tr("registrations.outside.infoNot")].join("\n");
   // The forms that carry a typed value answer a refusal with the value still in its box (§315).
   const refusal = await refusalMessages({
     reason: tr("registrations.cancelReason"),
@@ -402,7 +404,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           <Chip size="small" color="warning" label={tr("registrations.testKind")} />
         )}
         {/* On the hidden list (§643, §647): read by every role that reads this page. */}
-        {registration.outsideCapacity && <HiddenListChip label={tr("registrations.outside.chip")} testId="outside-chip" />}
+        {registration.outsideCapacity && <HiddenListChip label={tr("registrations.outside.chip")} hint={tr("registrations.outside.hint")} testId="outside-chip" />}
         <FamilyChip
           label={tr("registrations.familyChip")}
           members={family.map((member) => ({
@@ -643,6 +645,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         that reads the page reads the state; only the Administrator changes it (`canManageRegistrations`,
         asserted again by the action and the service), and only while the registration is active — an ended
         row's mark is read, never changed. A change asks the dialog that says what it does in this row's state.
+        Named «Lista de invitați speciali» on screen since §649, with an «i» beside its heading; the code's
+        `hiddenList` / `outsideCapacity` names stay.
       */}
       {(registration.eventHiddenListEnabled || registration.outsideCapacity) && (
         <Box component="section" data-testid="outside-capacity" sx={{ minWidth: 0, maxWidth: "100%" }}>
@@ -692,6 +696,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                 heading={tr("registrations.outside.title")}
                 countedLabel={tr("registrations.outside.optionCounted")}
                 hiddenLabel={tr("registrations.outside.optionHidden")}
+                info={hiddenListInfo}
               />
             </ActionForm>
           ) : (
@@ -701,6 +706,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               heading={tr("registrations.outside.title")}
               countedLabel={tr("registrations.outside.optionCounted")}
               hiddenLabel={tr("registrations.outside.optionHidden")}
+              info={hiddenListInfo}
               disabled
             />
           )}
