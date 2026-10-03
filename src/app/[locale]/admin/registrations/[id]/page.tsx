@@ -124,7 +124,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const mayManage = canManageRegistrations(actor.role);
 
   const db = getDb();
-  const registration = await findRegistrationDetailForAdmin(db, id);
+  // One clock for the page: the detail's «offer email queued» reading and the timeline agree (the batch review of 2026-10-03).
+  const timelineNow = new Date();
+  const registration = await findRegistrationDetailForAdmin(db, id, timelineNow);
   if (!registration) notFound();
 
   const [acceptances, outboxHistory, auditTrail, freeBibs, minorSigns, family, partnerShares, invitedBy] = await Promise.all([
@@ -191,7 +193,6 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     still queued keeps «Ține locul până» past its stored deadline (§520), and a lapsed one, which holds
     nothing any more (`countOccupied`), reads «Rezervarea expiră» like an ended row.
   */
-  const timelineNow = new Date();
   const rowDeadline = rowDeadlineOf(registration, timelineNow);
   const holdLine: [string, string | null] = [
     tr(deadlineHoldsAPlace(rowDeadline) ? "registrations.holdKeeps" : "registrations.holdExpires"),

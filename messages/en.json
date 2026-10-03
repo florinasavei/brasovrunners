@@ -5358,6 +5358,7 @@
                 "Under «Events» pick the event (or «All events»), under «Status» what you need, then «Filter».",
                 "Looking for someone: type part of the name in «Search by name» and press «Filter». With no event chosen, it looks in every event.",
                 "The «How far» column says each person's step. Press a name to open the registration: «The registration's journey» and «Timeline» say everything that happened.",
+                "The «Until when» column says until when each one can sign, accept or confirm — the same time as the registration's timeline.",
                 "The top says once what you cannot change here. The Tehnic role does not see registrations at all.",
                 "On the event's public page, the first number counts the registrations holding a place: the confirmed plus those still in progress — a declaration not signed yet, a waiting-list offer not accepted yet, a place a family holds. After the dash the line names only what exists: how many are confirmed and how many in progress, and how many free places are kept for the waiting list, for example “6 registered of 10 places — 4 confirmed, 2 completing their registration, 4 places kept for the waiting list”.",
                 "Places kept are free places the waiting list claims, and the card shows them in two ways. With more places free than people waiting, the card says «Places are given from the waiting list» and counts no free place. When the list claims every free place, as in the example, the card says the places are taken — “Thank you! All 10 places are taken — … already waiting.” — and offers «Join the waiting list», while the places line still names “4 places kept for the waiting list”. Either way those places are free: with «Places from the waiting list are allocated automatically» on «No» the club hands them out, with «Send them the offer»; on «Yes» the queue does, to the first on the list. With «Show publicly how many are waiting» unticked on the event, neither the card, nor the page, nor the people on the list learn how many wait: the card says “Thank you! All 10 places are taken. Join the waiting list.”, and the places line no longer says how many are on the list.",
@@ -5688,7 +5689,7 @@
                 "Mind: each gets a new link, and the link in the earlier email stops working. Tell them to open the newest email.",
                 "Tell them to look for the email in Spam and in Promotions too.",
                 "At most three presses an hour per event. An “i” beside the button says when a press would be refused: the event is cancelled, finished or has started, or the hour's presses are spent.",
-                "Who loses a place, and when: a race's list in «Registrations» says under «Who has signed up» what follows the deadline; the «Until when» column has each one's day and time.",
+                "Who loses a place, and when: a race's list in «Registrations» says under «Who has signed up» how long people keep a place and what follows the deadline; «Until when» has each one's day and time.",
                 "One person only: open their registration → «Resend email»."
               ]
             },

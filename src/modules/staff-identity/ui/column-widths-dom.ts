@@ -40,11 +40,15 @@ export type Laid = { widths: ColumnWidths; floors: ColumnWidths };
 const unsaved = new Map<string, ColumnWidths>();
 
 export function readWidths(tableId: string): ColumnWidths {
+  // What this page was told and storage refused to keep comes first (a read may work while a write
+  // throws: a full store, an old private window); a successful write deletes the entry, so storage
+  // is the one truth otherwise. Storage blocked for reading too: nothing, the automatic layout.
+  const kept = unsaved.get(tableId);
+  if (kept) return { ...kept };
   try {
     return parseWidths(window.localStorage.getItem(storageKey(tableId)));
   } catch {
-    // Storage blocked: what this page was told, else nothing (the table keeps its automatic layout).
-    return { ...(unsaved.get(tableId) ?? {}) };
+    return {};
   }
 }
 

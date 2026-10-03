@@ -1,11 +1,3 @@
-import {
-  ACTIONS_COLUMN,
-  MAX_COLUMN_WIDTH,
-  MIN_COLUMN_WIDTH,
-  storageKey,
-  TABLE_ID_PATTERN,
-} from "@/modules/staff-identity/domain/column-widths";
-
 /**
  * The few lines that put a resized table at its stored widths before the first paint (§NNN).
  *
@@ -27,6 +19,14 @@ import {
  * digits and hyphens into — checked again here, because it is written into a script. No row and
  * nothing about a person is in it.
  */
+import {
+  ACTIONS_COLUMN,
+  MAX_COLUMN_WIDTH,
+  MIN_COLUMN_WIDTH,
+  storageKey,
+  TABLE_ID_PATTERN,
+} from "@/modules/staff-identity/domain/column-widths";
+
 /**
  * How many frames the script waits for its table to be displayed. A list streamed in behind a
  * `loading.tsx` boundary is parsed inside a hidden template and revealed by React a moment later,

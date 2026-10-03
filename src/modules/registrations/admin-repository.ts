@@ -669,6 +669,7 @@ const emailConfirmedBy = alias(staffUsers, "email_confirmed_by");
 export async function findRegistrationDetailForAdmin<T extends Record<string, unknown>>(
   db: Database<T>,
   id: string,
+  now: Date = new Date(),
 ): Promise<RegistrationDetail | undefined> {
   const [row] = await db
     .select({
@@ -714,7 +715,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       holdExpiresAt: registrations.holdExpiresAt,
       emailLinkExpiresAt: registrations.emailLinkExpiresAt,
       // The timeline's deadline (§NNN): an offer whose first email is still queued has not lapsed (§520).
-      offerEmailQueued: offerEmailQueuedAt(new Date()),
+      offerEmailQueued: offerEmailQueuedAt(now),
       confirmedAt: registrations.confirmedAt,
       cancelledAt: registrations.cancelledAt,
       cancellationSource: registrations.cancellationSource,
@@ -1321,7 +1322,7 @@ export async function listQueueForEvent<T extends Record<string, unknown>>(db: D
       formSentAt,
       waitlistedAt: registrations.waitlistedAt,
       holdExpiresAt: registrations.holdExpiresAt,
-      offerEmailQueued: sql<boolean>`(${registrations.status} = 'WAITLIST_OFFERED' and ${offerAwaitingItsFirstEmail(now)})`,
+      offerEmailQueued: offerEmailQueuedAt(now),
     })
     .from(registrations)
     .where(

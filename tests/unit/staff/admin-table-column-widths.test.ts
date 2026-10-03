@@ -380,6 +380,20 @@ describe("§NNN the widths in this browser's storage", () => {
     expect(readWidths("registrations")).toEqual({});
   });
 
+  it("keeps this page's changes when storage reads but refuses to write", () => {
+    const fake = stub();
+    (window.localStorage as { setItem: unknown }).setItem = () => {
+      throw new Error("QuotaExceededError");
+    };
+    writeWidths("registrations", { name: 240 });
+    expect(fake.store.has("br.table.registrations.widths")).toBe(false);
+    // The page keeps what it was told, ahead of what storage still says.
+    expect(readWidths("registrations")).toEqual({ name: 240 });
+    writeWidths("registrations", { ...readWidths("registrations"), state: 180 });
+    expect(readWidths("registrations")).toEqual({ name: 240, state: 180 });
+    expect(readWidths("events")).toEqual({});
+  });
+
   it("remembers each column's floor as its last fixed layout measured it", () => {
     const table = {};
     expect(recordedFloor(table, "name")).toBeUndefined();
