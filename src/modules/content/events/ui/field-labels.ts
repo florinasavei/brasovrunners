@@ -79,6 +79,8 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.waitlistPublic": inProgrammeRules("startList", t("editor.waitlistPublic")),
     // «Arată public câți așteaptă» (§634), under it, in the same card.
     "event.waitlistCountPublic": inProgrammeRules("startList", t("editor.waitlistCountPublic")),
+    // «Lista ascunsă» (§NNN): the hidden list's own series, refused when it overlaps the race's or the spares.
+    "event.hiddenListBibStart": inProgrammeRules("startList", t("editor.hiddenListBibStart")),
     "event.externalProvider": inBox("registration", t("editor.externalProvider")),
     "event.externalRegistrationUrl": inBox("registration", t("editor.externalRegistrationUrl")),
     // Both in «Ce fel de eveniment», side by side (§526).

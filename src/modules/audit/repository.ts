@@ -264,6 +264,16 @@ export type AuditAction =
    * editor's own date and each date of a series the scoped save carried it to.
    */
   | "event.waitlist_count_public_changed"
+  /**
+   * «Lista ascunsă» changed on an event (§NNN): the switch, the hidden list's first number or «Numără și
+   * lista ascunsă» — `from` and `to` name only the ones that moved, on every date a save changed them.
+   */
+  | "event.hidden_list_changed"
+  /**
+   * «Arată public numărătoarea» switched (§NNN): from and to, on every date a save changed it. Its own
+   * action, not the hidden list's: the tick acts on every event, whether it uses the hidden list or not.
+   */
+  | "event.participant_count_public_changed"
   /** The Mailgun plan the club says it is on, from and to, with the note (§100). */
   | "email_plan.changed"
   /** Which road each group of emails takes, Gmail's cap and pace, the overflow (§443): from and to. */

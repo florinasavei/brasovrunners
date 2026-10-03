@@ -35,6 +35,7 @@ import { SendNowRefused, sendNowRefusalCode } from "@/modules/notifications/send
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
+import { HIDDEN_LIST_OFF } from "@/modules/registrations/domain/hidden-list";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { wholeDigits } from "@/shared/forms/whole-digits";
 import { normalizeTypedDate } from "@/shared/forms/pickers/wall-values";
@@ -244,7 +245,8 @@ export async function setOutsideCapacityAction(_previous: FormOutcome | null, fo
     await setOutsideCapacity(getDb(), actor, registrationId, outside, new Date());
     outcome = outside ? { saved: "outsideMarked" } : { saved: "outsideUnmarked" };
   } catch (error) {
-    outcome = noFreePlaceOutcome(error) ?? outcomeOf(error);
+    // «Folosește lista ascunsă» off (§NNN): its own sentence, naming the switch, not "check the data".
+    outcome = isDomainError(error) && error.fields.includes(HIDDEN_LIST_OFF) ? { error: HIDDEN_LIST_OFF } : (noFreePlaceOutcome(error) ?? outcomeOf(error));
   }
   return backTo(detailPath(locale, registrationId), outcome);
 }

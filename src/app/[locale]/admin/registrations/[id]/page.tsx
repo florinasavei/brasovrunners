@@ -41,6 +41,8 @@ import { canResendReminder, deriveAllowedResendMessageType } from "@/modules/reg
 import { canTransition, isTerminalStatus } from "@/modules/registrations/domain/state-machine";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
 import FamilyChip from "@/modules/registrations/ui/FamilyChip";
+import HiddenListChip from "@/modules/registrations/ui/HiddenListChip";
+import HiddenListRadio from "@/modules/registrations/ui/HiddenListRadio";
 import { familyOf } from "@/modules/registrations/family-marker";
 import { canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
@@ -312,10 +314,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {registration.kind === "TEST" && (
           <Chip size="small" color="warning" label={tr("registrations.testKind")} />
         )}
-        {/* Seated outside the places (§643): read by every role that reads this page. */}
-        {registration.outsideCapacity && (
-          <Chip size="small" color="secondary" variant="outlined" label={tr("registrations.outside.chip")} data-testid="outside-chip" />
-        )}
+        {/* On the hidden list (§643, §NNN): read by every role that reads this page. */}
+        {registration.outsideCapacity && <HiddenListChip label={tr("registrations.outside.chip")} testId="outside-chip" />}
         <FamilyChip
           label={tr("registrations.familyChip")}
           members={family.map((member) => ({
@@ -541,21 +541,19 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       </Box>
 
       {/*
-        «În afara locurilor» (§643; the owner, 2026-10-02: «Vreau și o bifă de „ascunde la numărare” per
-        fiecare participant»): whether this registration takes one of the event's places. Every role that
-        reads the page reads the line; only the Administrator marks or unmarks (`canManageRegistrations`,
-        asserted again by the action and the service), and only while the registration is active — an
-        ended row's flag is read, never changed. The dialog says what the press does in this row's state.
+        «Lista ascunsă» (§643, named and redrawn by §NNN; the owner, 2026-10-02: «Nu îmi place deloc cum arată
+        bifa asta, trebuia să fie doar radio» and «Trebuie ca acest feature să se numească „Pune pe lista
+        ascunsă” cu o iconiță specială cu un bandit (incognito)»): whether this registration takes one of the
+        event's places, as two radios. Drawn while the event's «Folosește lista ascunsă» is on, or for a row
+        already on the list — then only «Se numără între locurile evenimentului» means anything, and the line
+        says so; the server refuses putting anybody on the list of an event whose switch is off. Every role
+        that reads the page reads the state; only the Administrator changes it (`canManageRegistrations`,
+        asserted again by the action and the service), and only while the registration is active — an ended
+        row's mark is read, never changed. A change asks the dialog that says what it does in this row's state.
       */}
-      <Box component="section" data-testid="outside-capacity">
-        <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
-          {tr("registrations.outside.title")}
-        </Typography>
-        <Stack spacing={1} sx={{ alignItems: "flex-start" }}>
-          <Typography variant="body2">
-            {tr(registration.outsideCapacity ? "registrations.outside.isOutside" : "registrations.outside.isCounted")}
-          </Typography>
-          {mayManage && !isTerminalStatus(registration.status) && (
+      {(registration.eventHiddenListEnabled || registration.outsideCapacity) && (
+        <Box component="section" data-testid="outside-capacity" sx={{ minWidth: 0, maxWidth: "100%" }}>
+          {mayManage && !isTerminalStatus(registration.status) ? (
             <ActionForm
               action={setOutsideCapacityAction}
               confirm={
@@ -595,16 +593,35 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             >
               {deskHidden}
               <input type="hidden" name="outside" value={registration.outsideCapacity ? "false" : "true"} />
-              <GlyphButton icon={registration.outsideCapacity ? "turnOff" : "turnOn"} type="submit" variant="outlined" sx={{ minHeight: 44 }}>
-                {tr(registration.outsideCapacity ? "registrations.outside.unmark" : "registrations.outside.mark")}
-              </GlyphButton>
+              <HiddenListRadio
+                onList={registration.outsideCapacity}
+                headingId="hidden-list-title"
+                heading={tr("registrations.outside.title")}
+                countedLabel={tr("registrations.outside.optionCounted")}
+                hiddenLabel={tr("registrations.outside.optionHidden")}
+              />
             </ActionForm>
+          ) : (
+            <HiddenListRadio
+              onList={registration.outsideCapacity}
+              headingId="hidden-list-title"
+              heading={tr("registrations.outside.title")}
+              countedLabel={tr("registrations.outside.optionCounted")}
+              hiddenLabel={tr("registrations.outside.optionHidden")}
+              disabled
+            />
           )}
-          <Typography variant="caption" color="text.secondary">
+          {!registration.eventHiddenListEnabled && (
+            <Typography variant="body2" sx={{ mt: 0.5, overflowWrap: "anywhere" }} data-testid="hidden-list-switch-off">
+              {tr("registrations.outside.switchOff")}
+            </Typography>
+          )}
+          {/* A block, so the caption wraps at 320 pixels rather than running past the screen's edge. */}
+          <Typography variant="caption" color="text.secondary" component="p" sx={{ mt: 0.5, mb: 0, overflowWrap: "anywhere" }}>
             {tr("registrations.outside.help")}
           </Typography>
-        </Stack>
-      </Box>
+        </Box>
+      )}
 
       <Divider />
 

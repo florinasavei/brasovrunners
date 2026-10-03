@@ -260,7 +260,11 @@
       "captionStatesNumbers": "Întâi participanții confirmați, cu numărul de concurs — cei cu numele afișat, în ordinea confirmării, apoi ceilalți —, apoi cei înscriși care nu au confirmat încă și cei de pe lista de așteptare, în ordinea listei.",
       "noteStates": "Numărul din titlu îi cuprinde pe confirmați și, cât timp înscrierile sunt deschise la un eveniment cu număr de locuri, pe cei în curs de confirmare. Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți confirmați apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Cei înscriși care nu au confirmat încă și cei de pe lista de așteptare apar doar dacă au bifat, cu stadiul înscrierii lângă nume; o înscriere anulată sau expirată nu apare. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
       "socialsNote": "Strava și Instagram apar doar lângă numele celor care au ales asta la înscriere.",
-      "outsideNote": "Organizatorii și invitații clubului apar în tabel fără să fie numărați: numerele de mai sus numără locurile.",
+      "outsideNote": "Cei la start în afara locurilor anunțate (organizatori, voluntari, sportivi invitați) apar în tabel fără să fie numărați: numerele de mai sus numără locurile.",
+      "outsideCountedNote": "Numerele de mai sus îi numără și pe cei la start în afara locurilor anunțate (organizatori, voluntari, sportivi invitați); dintre ei, în tabel apar doar cei care au ales să apară.",
+      "noteNamesOnly": "În tabel apar confirmații. Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
+      "noteStatesNamesOnly": "Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți confirmați apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Cei înscriși care nu au confirmat încă și cei de pe lista de așteptare apar doar dacă au bifat, cu stadiul înscrierii lângă nume; o înscriere anulată sau expirată nu apare. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
+      "noteStatesNoWaitlistNamesOnly": "Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți confirmați apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Cei înscriși care nu au confirmat încă apar doar dacă au bifat, cu stadiul înscrierii lângă nume; lista de așteptare nu e publică la acest eveniment, iar o înscriere anulată sau expirată nu apare. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
       "othersLead": "Apar cu numele și:",
       "pendingCount": {
         "one": "{count} înscris în așteptarea confirmării",
@@ -290,6 +294,7 @@
       "external": "Înscrie-te pe site-ul organizatorului",
       "externalWithProvider": "Înscrie-te pe {provider}",
       "placesRemaining": "{count, plural, one {# loc liber} few {# locuri libere} other {# de locuri libere}}",
+      "outsidePlacesNote": "Organizatorii, voluntarii și sportivii invitați pot fi la start în afara locurilor anunțate; ei nu ocupă din aceste locuri.",
       "fill": "{taken} din {places}",
       "fillTaken": {
         "one": "{count} înscris",
@@ -594,7 +599,7 @@
       "registeredWithPlaceOf": "{count} cu loc din {capacity}",
       "registeredAwaitingEmail": "{count} așteaptă confirmarea emailului",
       "registeredWaitlisted": "{count} pe lista de așteptare",
-      "registeredOutside": "{count} în afara locurilor",
+      "registeredOutside": "{count} pe lista ascunsă",
       "registeredMoreEvents": "+{count} altele",
       "newsletter": "Newsletter"
     },
@@ -624,14 +629,15 @@
       "summaryTotal": "Înscrieri: {count} (toate stările, anulate și expirate incluse)",
       "summaryTest": "De test: {count}",
       "outside": {
-        "pill": "În afara locurilor: {count}",
-        "chip": "În afara locurilor",
-        "title": "Locurile evenimentului",
-        "isOutside": "În afara locurilor: nu ocupă niciunul dintre locurile evenimentului și nu intră în niciun număr public.",
-        "isCounted": "Se numără între locurile evenimentului, ca oricine.",
-        "mark": "Pune în afara locurilor",
-        "unmark": "Numără între locuri",
-        "help": "Pentru organizatori, pacemakeri, invitați: au declarație, număr și apar pe listă dacă au bifat, fără să ia un loc."
+        "pill": "Lista ascunsă: {count}",
+        "chip": "Lista ascunsă",
+        "title": "Lista ascunsă",
+        "optionCounted": "Se numără între locurile evenimentului",
+        "optionHidden": "Pe lista ascunsă",
+        "switchOff": "Lista ascunsă e oprită la acest eveniment: înscrierea poate doar ieși de pe ea.",
+        "mark": "Pune pe lista ascunsă",
+        "unmark": "Scoate de pe lista ascunsă",
+        "help": "Pentru organizatori, pacemakeri, invitați: au declarație, număr și apar pe lista publică dacă au bifat, fără să ia un loc."
       },
       "export": "Exportă CSV",
       "personLink": "Toate datele unei persoane",
@@ -743,7 +749,7 @@
           "family_resent": "Email retrimis familiei",
           "offered_by_staff": "Ofertă trimisă înaintea listei de așteptare («Trimite-i oferta»)",
           "address_vouched_by_staff": "Adresă garantată de echipă; loc dat înaintea listei de așteptare («Dă-i un loc acum»)",
-          "outside_capacity_changed": "Pus în afara locurilor sau numărat din nou între locuri"
+          "outside_capacity_changed": "Pus pe lista ascunsă sau scos de pe ea"
         },
         "event": {
           "capacity_raised_for_offer": "Loc suplimentar adăugat pentru o ofertă («Trimite-i oferta»): {from} → {to}",
@@ -1238,14 +1244,14 @@
       "givePlaceNowBody": "Garantezi adresa {email} și îi dai un loc înaintea listei de așteptare.",
       "givePlaceNowBodyMore": "Primește pe loc emailul cu declarația; o semnează online oricând până la termen, sau pe hârtie la masă. Nu mai are de confirmat nimic.",
       "givePlaceNowFull": "Nu e niciun loc liber: apăsând, adaugi un loc suplimentar peste limită, capacitatea devine {n}.",
-      "outsideMarkTitle": "Pui înscrierea în afara locurilor?",
-      "outsideMarkBody": "{name} nu mai ocupă un loc; locul eliberat merge primului din listă dacă ofertele pleacă automat. Starea, numărul și emailurile rămân.",
-      "outsideMarkBodyWaitlisted": "{name} iese de pe lista de așteptare și primește acum un loc în afara locurilor: emailul «{message}», cu termenul obișnuit.",
-      "outsideMarkBodyWaitlistedTest": "{name} iese de pe lista de așteptare și primește acum un loc în afara locurilor: declarația de semnat, cu termenul obișnuit.",
-      "outsideMarkBodyOffered": "În locul ofertei, {name} primește acum un loc în afara locurilor: emailul «{message}», cu termenul obișnuit. Locul ofertei se eliberează.",
-      "outsideMarkBodyOfferedTest": "În locul ofertei, {name} primește acum un loc în afara locurilor: declarația de semnat, cu termenul obișnuit. Locul ofertei se eliberează.",
-      "outsideMarkBodyPendingEmail": "{name} primește un loc în afara locurilor când își confirmă adresa; până atunci nu se schimbă nimic.",
-      "outsideUnmarkTitle": "Numeri înscrierea între locuri?",
+      "outsideMarkTitle": "Pui înscrierea pe lista ascunsă?",
+      "outsideMarkBody": "{name} trece pe lista ascunsă și nu mai ocupă un loc; locul eliberat merge primului care așteaptă dacă ofertele pleacă automat. Starea, numărul și emailurile rămân.",
+      "outsideMarkBodyWaitlisted": "{name} iese de pe lista de așteptare și primește acum un loc pe lista ascunsă: emailul «{message}», cu termenul obișnuit.",
+      "outsideMarkBodyWaitlistedTest": "{name} iese de pe lista de așteptare și primește acum un loc pe lista ascunsă: declarația de semnat, cu termenul obișnuit.",
+      "outsideMarkBodyOffered": "În locul ofertei, {name} primește acum un loc pe lista ascunsă: emailul «{message}», cu termenul obișnuit. Locul ofertei se eliberează.",
+      "outsideMarkBodyOfferedTest": "În locul ofertei, {name} primește acum un loc pe lista ascunsă: declarația de semnat, cu termenul obișnuit. Locul ofertei se eliberează.",
+      "outsideMarkBodyPendingEmail": "{name} trece pe lista ascunsă când își confirmă adresa; până atunci nu se schimbă nimic.",
+      "outsideUnmarkTitle": "Scoți înscrierea de pe lista ascunsă?",
       "outsideUnmarkBody": "{name} va ocupa unul dintre locurile evenimentului. Dacă niciunul nu e liber, nu se schimbă nimic.",
       "givePlaceNowRaiseConfirm": "Adaugă un loc și dă-i locul",
       "offerPlaceRaise": "Nu e niciun loc liber: apăsând, adaugi un loc suplimentar peste limită, capacitatea devine {n}.",
@@ -1259,6 +1265,12 @@
       "FORBIDDEN": "Rolul tău nu permite această acțiune.",
       "NOT_FOUND": "Înregistrarea nu mai există.",
       "VALIDATION_ERROR": "Verifică datele introduse; ceva nu este valid.",
+      "HIDDEN_LIST_OFF": "Lista ascunsă e oprită la acest eveniment. Bifează întâi «Folosește lista ascunsă» în setările evenimentului.",
+      "SPARES_BEFORE_HIDDEN_LIST": "Numerele de rezervă nu mai încap înainte de seria listei ascunse. Mută mai sus «Numerele listei ascunse încep de la», în setările evenimentului, sau tipărește mai puține.",
+      "HIDDEN_LIST_IN_RACE_SERIES": "«Numerele listei ascunse încep de la» cade în seria cursei sau locurile au ajuns până la el. Mută-l în afara seriei cursei, în setările evenimentului. Nu s-a făcut nimic.",
+      "HIDDEN_LIST_IN_RACE_SERIES_DATED": "Pe {date}, «Numerele listei ascunse încep de la» ar cădea în seria cursei: data aceea are mai multe locuri. Mută-l mai sus sau salvează fără data aceea. Nu s-a salvat nimic, la nicio dată.",
+      "HIDDEN_LIST_ON_SPARES": "Seria listei ascunse ar trece prin numerele de rezervă ale mesei. Mută «Numerele listei ascunse încep de la» deasupra lor, în setările evenimentului. Nu s-a făcut nimic.",
+      "HIDDEN_LIST_ON_SPARES_DATED": "Pe {date}, seria listei ascunse ar trece prin numerele de rezervă ale mesei. Mută «Numerele listei ascunse încep de la» deasupra lor sau salvează fără data aceea. Nu s-a salvat nimic.",
       "INVALID_ADDRESSES": "Nu sunt adrese de email: {addresses}. Scrie adresele despărțite prin virgulă, spațiu sau pe rânduri separate. Nu s-a salvat nimic.",
       "TOO_MANY_ADDRESSES": "Cel mult {max} adrese într-o căsuță. Nu s-a salvat nimic.",
       "ONE_ADDRESS_ONLY": "La „Declarațiile semnate merg la” încape o singură adresă — cutia de arhivă. Pune-le pe celelalte la „Copie vizibilă (Cc)” sau „Copie ascunsă (Bcc)”. Nu s-a salvat nimic.",
@@ -1951,7 +1963,7 @@
           "title": "Înscrierile primite",
           "summary": "înscrieri reale: {count} · pe lista de așteptare: {waiting}",
           "summaryPlaces": "înscrieri reale: {count} · pe lista de așteptare: {waiting} · locuri ocupate: {occupied} din {capacity}",
-          "outside": "în afara locurilor: {count}"
+          "outside": "pe lista ascunsă: {count}"
         },
         "queue": {
           "title": "Coada de înscrieri",
@@ -2027,7 +2039,7 @@
             "unlimited": "locuri nelimitate",
             "declaration": "declarația v{version}",
             "noDeclaration": "lipsește declarația",
-            "listHidden": "lista ascunsă",
+            "listHidden": "listă nepublică",
             "listShown": "lista publică",
             "external": "La organizator: {provider}",
             "externalUnnamed": "La organizator"
@@ -2070,7 +2082,7 @@
             "footer": "subsol: {parts}"
           },
           "startList": {
-            "hidden": "Ascunsă",
+            "hidden": "Nepublică",
             "shown": "Publică — doar numele celor confirmați care au ales să apară",
             "shownWithWaitlist": "Publică · cu lista de așteptare — doar numele celor care au ales să apară"
           },
@@ -2195,7 +2207,17 @@
       "waitlistAutoOfferHelp": "Pe „Da”, un loc eliberat sau adăugat se alocă pe loc primului de pe lista de așteptare: primește oferta pe email și o confirmă până la termen. Pe „Nu”, locurile rămân libere până le dai tu.",
       "waitlistAutoOfferHelpMore": "Le dai din «Coada de înscrieri», cu «Trimite-i oferta», sau, la masă, cu «Dă-i un loc». Cât timp cineva așteaptă, cei noi intră tot pe listă.",
       "waitlistCountPublic": "Arată public câți așteaptă",
-      "waitlistCountPublicHelp": "Bifat: cardul, pagina și fiecare persoană de pe listă află câți așteaptă. Debifat: paginile spun doar că există o listă de așteptare și cum intri pe ea; clubul vede numărul în administrare."
+      "waitlistCountPublicHelp": "Bifat: cardul, pagina și fiecare persoană de pe listă află câți așteaptă. Debifat: paginile spun doar că există o listă de așteptare și cum intri pe ea; clubul vede numărul în administrare.",
+      "hiddenListTitle": "Lista ascunsă",
+      "hiddenListEnabled": "Folosește lista ascunsă",
+      "hiddenListEnabledHelp": "Bifat: înscrierile pot fi puse pe ea. Debifat: nimeni nou nu intră pe ea; cei deja pe ea rămân, iar pagina îi anunță cât timp au loc; seria lor și numărătoarea se opresc.",
+      "hiddenListBibStart": "Numerele listei ascunse încep de la",
+      "hiddenListBibStartHelp": "Gol: aceeași serie ca toți. Pus: seria ei, de aici în sus, în afara seriei cursei; lasă loc deasupra ei, de exemplu 900 la 150 de locuri. Fără limită de locuri, doar sub primul număr al cursei.",
+      "hiddenListBibStartHelpMore": "Deasupra seriei cursei încap locurile suplimentare și numerele de rezervă ale mesei. O serie plină ia următorul număr liber de după ea, chiar din cealaltă serie; niciun număr nu se dă de două ori.",
+      "participantCountPublic": "Arată public numărătoarea",
+      "participantCountPublicHelp": "Bifat: pagina spune câți vin și câți sunt confirmați. Debifat: lista arată doar numele, fără numere; clubul vede numerele în administrare.",
+      "hiddenListCounted": "Numără și lista ascunsă",
+      "hiddenListCountedHelp": "Bifat: „Cine vine” și „confirmați” îi numără și pe cei de pe lista ascunsă. Debifat: numerele spun doar locurile cursei; lista ascunsă e pe deasupra."
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",
@@ -5437,15 +5459,20 @@
               ]
             },
             {
-              "title": "Un loc în afara locurilor: organizatori, pacemakeri, invitați",
+              "title": "Lista ascunsă: organizatori, pacemakeri, invitați",
               "steps": [
                 "Pentru cine aleargă din partea clubului: organizatori, pacemakeri, invitați. Nu iau niciunul dintre locurile anunțate.",
-                "Deschide înscrierea persoanei → «Locurile evenimentului» → «Pune în afara locurilor» și confirmă.",
+                "Întâi, în setările evenimentului, la «Lista publică a participanților», bifează «Folosește lista ascunsă».",
+                "Deschide înscrierea persoanei → «Lista ascunsă» → alege «Pe lista ascunsă» și confirmă.",
                 "Dacă ocupa un loc, locul se eliberează: pe «Da» merge primului de pe lista de așteptare; pe «Nu» rămâne liber până îl dai tu.",
-                "De pe lista de așteptare sau dintr-o ofertă deschisă primește un loc acum, în afara locurilor: emailul declarației, cu termenul obișnuit, nu al ofertei.",
-                "Confirmat sau cu declarația de semnat, își păstrează starea, numărul și emailurile. Pe site nu intră în niciun număr; apare pe listă doar dacă a bifat, fără niciun semn.",
-                "«Numără între locuri» o întoarce doar dacă e un loc liber; altfel apăsarea e refuzată și spune cine ține locurile.",
-                "În lista înscrierilor, pilula «În afara locurilor» îi arată pe toți; exportul are o coloană pentru ei."
+                "De pe lista de așteptare sau dintr-o ofertă deschisă primește un loc acum, pe lista ascunsă: emailul declarației, cu termenul obișnuit, nu al ofertei.",
+                "Confirmat sau cu declarația de semnat, își păstrează starea, numărul și emailurile. Apare pe lista publică doar dacă a bifat, fără niciun semn.",
+                "Cu «Numerele listei ascunse încep de la» lista ascunsă are seria ei de numere de concurs, în ordinea confirmării; un număr deja dat rămâne.",
+                "Pe site, «Cine vine» îi numără doar cu «Numără și lista ascunsă» bifat; locurile și locurile libere nu îi numără niciodată.",
+                "«Arată public numărătoarea», lângă «Arată public câți așteaptă», e pe orice eveniment: debifat, «Cine vine» arată doar numele, fără numere.",
+                "Cât timp lista e folosită sau cineva de pe ea are loc, pagina spune lângă locuri, fără nume, că organizatorii și invitații pot fi la start în afara locurilor anunțate.",
+                "«Se numără între locurile evenimentului» o întoarce doar dacă e un loc liber; altfel apăsarea e refuzată și spune cine ține locurile.",
+                "În lista înscrierilor, pilula «Lista ascunsă» îi arată pe toți; exportul are o coloană pentru ei."
               ]
             },
             {
@@ -8023,8 +8050,8 @@
       "menuOrder": "Ordinea meniului a fost salvată.",
       "registrationOffered": "Oferta e trimisă: are termenul obișnuit ca să semneze declarația.",
       "placeGiven": "Loc dat; emailul cu declarația a plecat.",
-      "outsideMarked": "Înscrierea e în afara locurilor: nu mai ocupă niciun loc al evenimentului.",
-      "outsideUnmarked": "Înscrierea se numără din nou între locurile evenimentului.",
+      "outsideMarked": "Înscrierea e pe lista ascunsă: nu mai ocupă niciun loc al evenimentului.",
+      "outsideUnmarked": "Înscrierea a ieșit de pe lista ascunsă și se numără din nou între locurile evenimentului.",
       "failedRetried": {
         "one": "{count} email eșuat pus înapoi în coadă.",
         "few": "{count} emailuri eșuate puse înapoi în coadă.",

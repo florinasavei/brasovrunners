@@ -642,6 +642,34 @@ export async function countOutsideOnPublicStartList<T extends Record<string, unk
 }
 
 /**
+ * Everybody on the hidden list with a place outside the places (§NNN, amending §643): the confirmed
+ * and the holds (a declaration to sign; an offer, which marking turns into one), real rows only,
+ * ticked «Vreau să apar» or not. Two numbers, never a row: they enter «Cine vine» and «confirmați»
+ * only where the event's «Numără și lista ascunsă» is on, and the table never gains a row for them —
+ * an unticked runner on the hidden list is not even a «Participant (nume ascuns)» row (§643).
+ */
+export async function countHiddenListWithPlace<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+): Promise<{ confirmed: number; held: number }> {
+  const [row] = await db
+    .select({
+      confirmed: sql<number>`cast(count(*) filter (where ${registrations.status} = 'CONFIRMED') as int)`,
+      held: sql<number>`cast(count(*) filter (where ${inArray(registrations.status, ["PENDING_DECLARATION", "WAITLIST_OFFERED"])}) as int)`,
+    })
+    .from(registrations)
+    .where(
+      and(
+        eq(registrations.eventId, eventId),
+        eq(registrations.kind, "REAL"),
+        eq(registrations.outsideCapacity, true),
+        inArray(registrations.status, ["CONFIRMED", "PENDING_DECLARATION", "WAITLIST_OFFERED"]),
+      ),
+    );
+  return { confirmed: Number(row?.confirmed ?? 0), held: Number(row?.held ?? 0) };
+}
+
+/**
  * The rows the public list gains once the privacy notice in force describes the states
  * (`DECISIONS.md` §396, amending §32 and §143): the registered who have not confirmed yet, then
  * the waiting list.

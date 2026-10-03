@@ -1416,11 +1416,44 @@ languages go live together; that is the rule, not a setting.
    race opens to a crowd, one month of **Basic** is $15 and is a setting on that screen — no
    deployment.
 4. `/admin/tasks` → the row for this item turns green by itself once the event exists.
-5. The club's own runners — organizers, pacemakers, invited runners — register like anybody (or
-   are entered from «Înscrierile primite»), then an Administrator opens each registration →
-   «Locurile evenimentului» → «Pune în afara locurilor». They keep a declaration, a race number
-   and their row on the public list if they ticked, and take none of the announced places; a
-   place one of them held is given back to the line (§643, `AGENTS.md` §15.11).
+5. The club's own runners — organizers, pacemakers, invited runners — go on **«Lista ascunsă»**.
+   First, in the event's settings (`/admin/events` → the race → «Lista publică a participanților»),
+   tick **«Folosește lista ascunsă»** and choose, under it:
+   - **«Numerele listei ascunse încep de la»** — empty, they draw from the race's own series like
+     everybody; set (say 900), the hidden list has its own series from there up, in confirmation
+     order. The save refuses a start inside the race's series (the first number and as many after
+     it as there are places), or a start whose series would run into the desk's spare numbers; on a
+     race without a limit of places, whose series has no end, only a start below the race's first
+     number is accepted. It judges the start only when the save moves it, switches the hidden list
+     on, or moves the race's first number or its places — a place «Trimite-i oferta» added never
+     makes the next save refuse a start nobody touched. A save carried to other dates of a series
+     judges each date by its own places and spares, and a refusal says the box and the date and
+     changes no date; a duplicate or a repeat whose places have reached the hidden start is refused
+     with a sentence that says the box to move. A standing series in that state makes no new dates
+     until the start is moved: each maintenance run counts it as an error in its job record and
+     logs the event's id. Leave room above the race's places for
+     such supplementary places and for the desk's spares (say 900 for a race of 150, not 151). With
+     the hidden series above the race's, the spares printed for the desk stay between the two — a
+     print that would reach the hidden series is refused with a sentence that names this box. A
+     series with no free number left draws the next free number after it, in the other series if
+     need be; no number is ever given twice;
+   - **«Numără și lista ascunsă»** — unticked by default, «Cine vine» counts the race's places only;
+     ticked, it counts the hidden list too. The places line and the free places never do.
+
+   Beside «Arată public câți așteaptă», on this and every event whether or not the hidden list is
+   on, **«Arată public numărătoarea»** — ticked by default; unticked, «Cine vine» shows the names
+   only, with no count in its title, no «confirmați» line and no position.
+
+   Then they register like anybody (or are entered from «Înscrierile primite»), and an
+   Administrator opens each registration → «Lista ascunsă» → chooses «Pe lista ascunsă» and
+   confirms. They keep a declaration, a race number and their row on the public list if they
+   ticked, and take none of the announced places; a place one of them held is given back to the
+   line (§643, §NNN, `AGENTS.md` §15.11). A number already given stays when somebody changes list.
+   While the switch is on — or while anybody already on the list still holds a place, since
+   unticking it takes nobody off — the event page's places line («N înscriși din M locuri») carries one
+   sentence in the public's words — organisers, volunteers and invited runners may be at the start
+   outside the advertised places, taking none of them; the name «Lista ascunsă» is the backoffice's
+   alone and appears on no public page and in no participant's email.
 
 ### If somebody says the site is blocked at work
 

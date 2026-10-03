@@ -566,6 +566,8 @@ export type RegistrationDetail = {
   eventKitShirt: boolean;
   /** Whether the event asks the health note (§557): the emergency section's button names the note only then. */
   eventAsksHealthNote: boolean;
+  /** «Folosește lista ascunsă» (§NNN): the page draws the hidden list's radio only then, or for a row already on it. */
+  eventHiddenListEnabled: boolean;
   /** The registration's language, as on the list row: the declaration translation it signs (§330). */
   locale: Locale;
   participantEmail: string;
@@ -674,6 +676,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       tshirtSize: registrations.tshirtSize,
       eventKitShirt: events.kitShirt,
       eventAsksHealthNote: events.askHealthNote,
+      eventHiddenListEnabled: events.hiddenListEnabled,
       locale: registrations.locale,
       submittedAt: registrations.submittedAt,
       emailConfirmedAt: registrations.emailConfirmedAt,

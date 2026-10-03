@@ -60,6 +60,7 @@ import UploadIcon from "@mui/icons-material/Upload";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
+import IncognitoIcon from "./IncognitoIcon";
 import type { ComponentType } from "react";
 
 /**
@@ -155,6 +156,10 @@ export type ActionIconName =
   | "declaration"
   // Those whose address is not confirmed yet (§632): the envelope with the tick the participant's own email step wears, in the «Înscrieri» tab's pill.
   | "emailConfirmation"
+  // «Lista ascunsă» (§NNN; the owner: «o iconiță specială cu un bandit (incognito)»): the hat and the
+  // round glasses, drawn here (`IncognitoIcon`, Material has none) — the registration page's block, the
+  // row's chip and the list's pill.
+  | "hiddenList"
   // The emergency details and the emergency sheet (§322): the first-aid case, never on the desk.
   | "emergency"
   // Everything held about one address (§322), the Administrator's page for an access request.
@@ -243,6 +248,7 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   waiting: HourglassTopIcon,
   declaration: DrawIcon,
   emailConfirmation: MarkEmailReadIcon,
+  hiddenList: IncognitoIcon,
   emergency: MedicalServicesIcon,
   personData: PersonSearchIcon,
   hold: LockIcon,

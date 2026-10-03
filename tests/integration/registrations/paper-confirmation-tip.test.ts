@@ -89,6 +89,7 @@ const { default: AdminRegistrationsPage } = await import("@/app/[locale]/admin/r
 const { default: RegistrationRowMenu } = await import("@/modules/registrations/ui/RegistrationRowMenu");
 const { default: DeskPage } = await import("@/app/[locale]/admin/checkin/page");
 const { default: PaperConfirmationTip } = await import("@/modules/registrations/ui/PaperConfirmationTip");
+const { default: HiddenListRadio } = await import("@/modules/registrations/ui/HiddenListRadio");
 
 type Props = Record<string, unknown> & { children?: ReactNode };
 
@@ -147,7 +148,9 @@ async function createRace(capacity = 150) {
 }
 
 let serial = 0;
-async function register(eventId: string, status: "PENDING_DECLARATION" | "PENDING_EMAIL_CONFIRMATION" | "CONFIRMED") {
+type ActiveStatus = "PENDING_EMAIL_CONFIRMATION" | "PENDING_DECLARATION" | "WAITLISTED" | "WAITLIST_OFFERED" | "CONFIRMED";
+
+async function register(eventId: string, status: ActiveStatus) {
   serial += 1;
   const email = `runner${serial}@example.org`;
   const [participant] = await db
@@ -170,12 +173,14 @@ async function register(eventId: string, status: "PENDING_DECLARATION" | "PENDIN
       status,
       ...(status === "PENDING_DECLARATION" ? { holdExpiresAt: new Date("2099-11-19T08:00:00.000Z") } : {}),
       ...(status === "PENDING_EMAIL_CONFIRMATION" ? { emailLinkExpiresAt: new Date(Date.now() + 2 * 24 * 60 * 60_000) } : {}),
+      ...(status === "WAITLISTED" || status === "WAITLIST_OFFERED" ? { waitlistedAt: new Date() } : {}),
+      ...(status === "WAITLIST_OFFERED" ? { offerCreatedAt: new Date(), holdExpiresAt: new Date("2099-11-19T08:00:00.000Z") } : {}),
     })
     .returning({ id: registrations.id });
   return created.id;
 }
 
-async function staff(role: "ADMIN" | "CONTRIBUTOR"): Promise<StaffUser> {
+async function staff(role: "ADMIN" | "CONTRIBUTOR" | "MODERATOR"): Promise<StaffUser> {
   const [user] = await db.insert(staffUsers).values({ email: `${role.toLowerCase()}@dev.test`, displayName: role, role }).returning();
   return user;
 }
@@ -322,4 +327,70 @@ describe("§640 the registrations list's row menu", () => {
       expect(items.filter((item) => item.hint && item !== paper)).toHaveLength(0);
     });
   }
+});
+
+/**
+ * §NNN — «Lista ascunsă» on the registration's own page: the block is drawn while the event's «Folosește
+ * lista ascunsă» is on, or for a row already on the list (then with the line that the switch is off); the
+ * Administrator gets the two radios inside the form that posts the hidden `outside` value — the opposite
+ * of the stored state — and the Organizer (MODERATOR, §289) the same radios disabled, with no form.
+ */
+describe("§NNN the registration's «Lista ascunsă» block", () => {
+  const section = (tree: ReactNode) => elements(tree).find((element) => element.props["data-testid"] === "outside-capacity");
+  const radios = (tree: ReactNode) => elements(section(tree)).filter((element) => element.type === HiddenListRadio);
+  const outsideInput = (tree: ReactNode) => elements(section(tree)).find((element) => element.type === "input" && element.props.name === "outside");
+  const switchOffLine = (tree: ReactNode) => elements(section(tree)).find((element) => element.props["data-testid"] === "hidden-list-switch-off");
+
+  async function race(switchOn: boolean) {
+    const created = await createRace();
+    await db.update(events).set({ hiddenListEnabled: switchOn }).where(eq(events.id, created.id));
+    return created.id;
+  }
+  async function row(status: ActiveStatus, input: { switchOn: boolean; onList: boolean; eventId?: string }) {
+    const id = await register(input.eventId ?? (await race(input.switchOn)), status);
+    if (input.onList) await db.update(registrations).set({ outsideCapacity: true }).where(eq(registrations.id, id));
+    return id;
+  }
+
+  it("is not drawn when the switch is off and the row is not on the list", async () => {
+    state.actor = await staff("ADMIN");
+    const tree = await detailPage(await row("CONFIRMED", { switchOn: false, onList: false }));
+    expect(section(tree)).toBeUndefined();
+  });
+
+  it("is drawn for a row already on the list with the switch off: the radios and the line that the switch is off", async () => {
+    state.actor = await staff("ADMIN");
+    const tree = await detailPage(await row("CONFIRMED", { switchOn: false, onList: true }));
+    expect(section(tree)).toBeDefined();
+    expect(radios(tree)).toHaveLength(1);
+    expect(radios(tree)[0].props.onList).toBe(true);
+    expect(switchOffLine(tree)).toBeDefined();
+    expect(sentences(tree).join("\n")).toContain(ro.Admin.registrations.outside.switchOff);
+    // Taking somebody off is the only thing that means anything: the form posts `false`.
+    expect(outsideInput(tree)?.props.value).toBe("false");
+  });
+
+  it("with the switch on, the Administrator's form posts the opposite of the stored state, in every active state", async () => {
+    state.actor = await staff("ADMIN");
+    const eventId = await race(true);
+    for (const status of ["PENDING_EMAIL_CONFIRMATION", "PENDING_DECLARATION", "WAITLISTED", "WAITLIST_OFFERED", "CONFIRMED"] as const) {
+      for (const onList of [false, true]) {
+        const tree = await detailPage(await row(status, { switchOn: true, onList, eventId }));
+        expect(radios(tree), `${status} ${onList}`).toHaveLength(1);
+        expect(radios(tree)[0].props.onList, `${status} ${onList}`).toBe(onList);
+        expect(radios(tree)[0].props.disabled ?? false, `${status} ${onList}`).toBe(false);
+        expect(outsideInput(tree)?.props.value, `${status} ${onList}`).toBe(onList ? "false" : "true");
+        expect(switchOffLine(tree), `${status} ${onList}`).toBeUndefined();
+      }
+    }
+  });
+
+  it("the Organizer reads the radios disabled, with no form and no hidden value", async () => {
+    state.actor = await staff("MODERATOR");
+    const tree = await detailPage(await row("CONFIRMED", { switchOn: true, onList: true }));
+    expect(radios(tree)).toHaveLength(1);
+    expect(radios(tree)[0].props.disabled).toBe(true);
+    expect(radios(tree)[0].props.onList).toBe(true);
+    expect(outsideInput(tree)).toBeUndefined();
+  });
 });

@@ -27,6 +27,7 @@ import { enqueueEmail, type OutboxRow } from "@/modules/notifications/outbox";
 import { outboxIdsForKey } from "@/modules/notifications/send-at-once";
 import { bibNumberInUse, isEventSpareNumber, pickBibNumber } from "./bibs";
 import { handsSpareAtConfirm } from "./domain/spare-bibs";
+import { HIDDEN_LIST_OFF } from "./domain/hidden-list";
 import type { CancelReason } from "./domain/cancel-reason";
 import { shirtSizeKept } from "./domain/kit";
 import { healthNoteKept, withoutHealthNote } from "./domain/health-note";
@@ -277,7 +278,9 @@ async function bibAtConfirmation<T extends Record<string, unknown>>(
 ): Promise<{ bibNumber: number | null }> {
   if (current.bibNumber !== null) return { bibNumber: current.bibNumber };
   if (current.kind !== "REAL") return { bibNumber: null };
-  return { bibNumber: await pickBibNumber(tx, current.eventId) };
+  // A row on the hidden list draws from the hidden list's own series when the event has one (§NNN).
+  // A row that changes list after this keeps its number: a number once given is never moved (§173).
+  return { bibNumber: await pickBibNumber(tx, current.eventId, new Set(), undefined, current.outsideCapacity ? "hidden" : "race") };
 }
 
 /**
@@ -3752,6 +3755,14 @@ export async function setOutsideCapacityByStaff<T extends Record<string, unknown
       throw new DomainError("CONFLICT", `a ${current.status} registration's place cannot be changed`);
     }
     if (current.outsideCapacity === outside) return { registration: current, offered: servedFirst };
+    /*
+      «Lista ascunsă» is the event's to switch on (§NNN): «Folosește lista ascunsă» off, nobody is put on
+      it — read under the lock, so a save switching it off and a press racing it cannot both win. Taking
+      somebody off stays open whatever the switch says: the switch off changes nothing for those already on.
+    */
+    if (outside && !lockedEvent.hiddenListEnabled) {
+      throw new DomainError("VALIDATION_ERROR", "the hidden list is off for this event: tick «Folosește lista ascunsă» in the event's settings first", [HIDDEN_LIST_OFF]);
+    }
 
     if (!outside && lockedEvent.capacity !== null && wouldHoldACountedPlace(current, now)) {
       const counts = await repo.countOccupied(tx, event.id, now);

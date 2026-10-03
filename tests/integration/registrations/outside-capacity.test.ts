@@ -16,6 +16,7 @@ import { computeOccupied, NoFreePlaceError, SUPPLEMENTARY_PLACE_UNCONFIRMED, sup
 import { publicFill } from "@/modules/events/domain/registration-cta";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { computeDeclarationHoldExpiry, confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
+import { HIDDEN_LIST_OFF, SPARES_BEFORE_HIDDEN_LIST } from "@/modules/registrations/domain/hidden-list";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -64,9 +65,10 @@ vi.mock("@/modules/notifications/drain", () => ({
 
 const { submitRegistration, confirmEmail, readPublicPlaces } = await import("@/modules/registrations/service");
 const { cancelRegistrationByStaff, confirmRegistrationByStaff, givePlaceToUnconfirmedByStaff, setOutsideCapacity } = await import("@/modules/registrations/admin-service");
-const { countOccupied, expireStaleHolds, countOutsideOnPublicStartList, countPublicStartList, countAnonymousStartListEntries, countOutsideCapacity, findEventsNeedingMaintenance } =
+const { countOccupied, expireStaleHolds, countHiddenListWithPlace, countOutsideOnPublicStartList, countPublicStartList, countAnonymousStartListEntries, countOutsideCapacity, findEventsNeedingMaintenance } =
   await import("@/modules/registrations/repository");
 const { renderOutboxMessage } = await import("@/modules/notifications/render");
+const { assignBibNumbers, reserveSpareBibs, spareCardState } = await import("@/modules/registrations/bibs");
 const { forgetCachedDeadlines } = await import("@/modules/deadlines/memo");
 const { summariseRegistrationsForAdmin, listRegistrationsForAdmin, readPlaceDeadlines } = await import("@/modules/registrations/admin-repository");
 const { forecastAutomaticEmails } = await import("@/modules/notifications/forecast");
@@ -108,6 +110,8 @@ async function createEvent(capacity: number, options: { auto?: boolean } = {}): 
       registrationMode: "INTERNAL",
       capacity,
       waitlistAutoOffer: options.auto ?? true,
+      // «Folosește lista ascunsă» (§NNN): on, or nobody may be put on the list.
+      hiddenListEnabled: true,
       locationName: "Parcul Tractorul",
       editorialStatus: "PUBLISHED",
       publishedAt: NOW,
@@ -370,11 +374,11 @@ describe("§643 the counts: public apart, backoffice joined apart", () => {
         withPlaceOf: (count, capacity) => `${count} cu loc din ${capacity}`,
         awaitingEmail: (count) => `${count} email`,
         waitlisted: (count) => `${count} așteaptă`,
-        outside: (count) => `${count} în afara locurilor`,
+        outside: (count) => `${count} pe lista ascunsă`,
         more: (count) => `+${count}`,
       },
     );
-    expect(hint.split("\n")[1]).toBe("Crosul: 2 — 1 cu loc din 5, 1 în afara locurilor");
+    expect(hint.split("\n")[1]).toBe("Crosul: 2 — 1 cu loc din 5, 1 pe lista ascunsă");
   });
 });
 
@@ -462,7 +466,7 @@ describe("§643 the review of 2026-10-02: the line first, the other doors, the o
     expect(supplementaryPlaceRefusalOutcome(await refusal(givePlaceToUnconfirmedByStaff(db, admin, counted.id, at(6))))).toEqual({ error: SUPPLEMENTARY_PLACE_UNCONFIRMED });
   });
 
-  it("the export follows the «În afara locurilor» pill: the file is the rows on screen", async () => {
+  it("the export follows the «Lista ascunsă» pill: the file is the rows on screen", async () => {
     const event = await createEvent(5);
     await confirmedAddress(event, "Ana", 0);
     await confirmedAddress(event, "Ioana", 1);
@@ -617,5 +621,160 @@ describe("§643 the review of 2026-10-02, round two: an open offer seated outsid
     expect(await participantEmails(radu.id, "WAITLIST_SPOT_OFFER")).toHaveLength(0);
     expect(await participantEmails(radu.id, "COMPLETE_DECLARATION")).toHaveLength(1);
     expect(await occupied(event.id, at(31))).toBe(1);
+  });
+});
+
+/**
+ * §NNN — «Lista ascunsă» on top of §643: the event's switch decides who may be put on the list, and the
+ * hidden list may have its own race-number series (§173 amended), drawn in confirmation order beside
+ * the race's; the public «Cine vine» may count it (`countHiddenListWithPlace`).
+ */
+describe("§NNN «Lista ascunsă»: the event's switch and the hidden list's own numbers", () => {
+  it("with «Folosește lista ascunsă» off nobody is put on the list — the refusal names the switch — and taking somebody off stays open", async () => {
+    const event = await createEvent(3);
+    await confirmedAddress(event, "Ana", 0);
+    const ana = await rowOf("Ana");
+    await setOutsideCapacity(db, admin, ana.id, true, at(1));
+    await db.update(events).set({ hiddenListEnabled: false }).where(eq(events.id, event.id));
+
+    await confirmedAddress(event, "Bogdan", 2);
+    const error = await refusal(setOutsideCapacity(db, admin, (await rowOf("Bogdan")).id, true, at(3)));
+    expect(isDomainError(error) && error.code).toBe("VALIDATION_ERROR");
+    expect(isDomainError(error) && error.fields).toContain(HIDDEN_LIST_OFF);
+    expect((await rowOf("Bogdan")).outsideCapacity).toBe(false);
+    expect(await db.select().from(auditLogs).where(and(eq(auditLogs.action, "registration.outside_capacity_changed"), eq(auditLogs.entityId, (await rowOf("Bogdan")).id)))).toHaveLength(0);
+    // The words the page shows for it, in both languages, name the switch.
+    expect(ro.Admin.errors.HIDDEN_LIST_OFF).toContain("«Folosește lista ascunsă»");
+    expect(en.Admin.errors.HIDDEN_LIST_OFF).toContain("«Use the hidden list»");
+
+    // Nothing changed for the one already on it, and they can still come off.
+    expect((await rowOf("Ana")).outsideCapacity).toBe(true);
+    expect((await setOutsideCapacity(db, admin, ana.id, false, at(4))).outsideCapacity).toBe(false);
+  });
+
+  it("two series: the race's from its start, the hidden list's from its own, each in confirmation order; a number once given stays", async () => {
+    const event = await createEvent(5);
+    await db.update(events).set({ bibStartNumber: 1, hiddenListBibStart: 900 }).where(eq(events.id, event.id));
+    const confirmAt = async (name: string, minute: number, hidden = false) => {
+      await confirmedAddress(event, name, minute);
+      if (hidden) await setOutsideCapacity(db, admin, (await rowOf(name)).id, true, at(minute));
+      await confirmRegistrationByStaff(db, admin, (await rowOf(name)).id, at(minute + 1));
+      return (await rowOf(name)).bibNumber;
+    };
+    expect(await confirmAt("Ana", 0)).toBe(1);
+    expect(await confirmAt("Ioana", 2, true)).toBe(900);
+    expect(await confirmAt("Bogdan", 4)).toBe(2);
+    expect(await confirmAt("Dan", 6, true)).toBe(901);
+
+    // Off the list after the number: the number stays (§173), and the race's series goes on from 3.
+    await setOutsideCapacity(db, admin, (await rowOf("Ioana")).id, false, at(10));
+    expect((await rowOf("Ioana")).bibNumber).toBe(900);
+    expect(await confirmAt("Elena", 12)).toBe(3);
+
+    // The switch off: the series stops acting, and a row still on the list draws from the race's.
+    await confirmedAddress(event, "Filip", 14);
+    await setOutsideCapacity(db, admin, (await rowOf("Filip")).id, true, at(14));
+    await db.update(events).set({ hiddenListEnabled: false }).where(eq(events.id, event.id));
+    await confirmRegistrationByStaff(db, admin, (await rowOf("Filip")).id, at(15));
+    expect((await rowOf("Filip")).bibNumber).toBe(4);
+  });
+
+  it("without a series of its own the hidden list draws from the race's, as before", async () => {
+    const event = await createEvent(3);
+    await db.update(events).set({ bibStartNumber: 100 }).where(eq(events.id, event.id));
+    await confirmedAddress(event, "Ana", 0);
+    await confirmRegistrationByStaff(db, admin, (await rowOf("Ana")).id, at(1));
+    await confirmedAddress(event, "Ioana", 2);
+    await setOutsideCapacity(db, admin, (await rowOf("Ioana")).id, true, at(2));
+    await confirmRegistrationByStaff(db, admin, (await rowOf("Ioana")).id, at(3));
+    expect([(await rowOf("Ana")).bibNumber, (await rowOf("Ioana")).bibNumber]).toEqual([100, 101]);
+  });
+
+  it("«Alocă numerele» fills each row from its own list's series, and the race's series never reaches the hidden list's", async () => {
+    const event = await createEvent(5);
+    await db.update(events).set({ bibStartNumber: 1, hiddenListBibStart: 3 }).where(eq(events.id, event.id));
+    for (const [name, minute, hidden] of [["Ana", 0, false], ["Ioana", 2, true], ["Bogdan", 4, false], ["Dan", 6, true]] as const) {
+      await confirmedAddress(event, name, minute);
+      if (hidden) await setOutsideCapacity(db, admin, (await rowOf(name)).id, true, at(minute));
+      await confirmRegistrationByStaff(db, admin, (await rowOf(name)).id, at(minute + 1));
+    }
+    // Numbers cleared, as on a row confirmed before numbers were drawn at confirmation (§548).
+    await db.update(registrations).set({ bibNumber: null }).where(eq(registrations.eventId, event.id));
+    const result = await assignBibNumbers(db, { actor: admin, eventId: event.id, now: at(20) });
+    expect(result.assigned).toBe(4);
+    const numbers = Object.fromEntries(
+      await Promise.all(["Ana", "Ioana", "Bogdan", "Dan"].map(async (name) => [name, (await rowOf(name)).bibNumber] as const)),
+    );
+    // The race's series is 1–2 (it ends where the hidden list's begins); the hidden list's 3, 4.
+    expect(numbers).toEqual({ Ana: 1, Ioana: 3, Bogdan: 2, Dan: 4 });
+    // A third counted row finds the race's series full: never refused for a number, it takes the next free one.
+    await confirmedAddress(event, "Elena", 30);
+    await confirmRegistrationByStaff(db, admin, (await rowOf("Elena")).id, at(31));
+    expect((await rowOf("Elena")).bibNumber).toBe(5);
+  });
+
+  it("two series with the desk's spares reserved: the spares stay below the hidden list's series, and both draws skip them", async () => {
+    const event = await createEvent(5);
+    await db.update(events).set({ bibStartNumber: 1, hiddenListBibStart: 900 }).where(eq(events.id, event.id));
+    const confirmAt = async (name: string, minute: number, hidden = false) => {
+      await confirmedAddress(event, name, minute);
+      if (hidden) await setOutsideCapacity(db, admin, (await rowOf(name)).id, true, at(minute));
+      await confirmRegistrationByStaff(db, admin, (await rowOf(name)).id, at(minute + 1));
+      return (await rowOf(name)).bibNumber;
+    };
+    expect(await confirmAt("Ana", 0)).toBe(1);
+    // Invitations: 900 and 901, on the hidden list's own series.
+    expect(await confirmAt("Ioana", 2, true)).toBe(900);
+    expect(await confirmAt("Dan", 4, true)).toBe(901);
+
+    // The first print's «highest» is the race's 1, not the hidden list's 901: the spares are 2–4, never 902–904.
+    expect((await spareCardState(db, event.id)).candidates.slice(0, 3)).toEqual([2, 3, 4]);
+    expect(await reserveSpareBibs(db, { actor: admin, eventId: event.id, count: 3, now: at(6) })).toMatchObject({ from: 2, to: 4 });
+
+    // Each series skips the spares: the race's goes on at 5, the hidden list's at 902 — no number jumps.
+    expect(await confirmAt("Bogdan", 8)).toBe(5);
+    expect(await confirmAt("Elena", 10, true)).toBe(902);
+    // A second print extends the spares, still below the hidden list's series.
+    expect(await reserveSpareBibs(db, { actor: admin, eventId: event.id, count: 2, now: at(12) })).toMatchObject({ from: 6, to: 7 });
+  });
+
+  it("refuses a print of spares that would reach the hidden list's series, with its sentence", async () => {
+    const event = await createEvent(5);
+    await db.update(events).set({ bibStartNumber: 1, hiddenListBibStart: 8 }).where(eq(events.id, event.id));
+    await confirmedAddress(event, "Ana", 0);
+    await confirmRegistrationByStaff(db, admin, (await rowOf("Ana")).id, at(1));
+    // Between 1 (Ana) and 8 there is room for six: 2–7.
+    expect((await spareCardState(db, event.id)).candidates).toEqual([2, 3, 4, 5, 6, 7]);
+    const error = await refusal(reserveSpareBibs(db, { actor: admin, eventId: event.id, count: 7, now: at(2) }));
+    expect(isDomainError(error) && error.code).toBe("VALIDATION_ERROR");
+    expect(isDomainError(error) && error.fields).toContain(SPARES_BEFORE_HIDDEN_LIST);
+    expect((await db.select().from(events).where(eq(events.id, event.id)))[0].walkInBibCount).toBeNull();
+    expect(ro.Admin.errors.SPARES_BEFORE_HIDDEN_LIST).toContain("«Numerele listei ascunse încep de la»");
+    expect(en.Admin.errors.SPARES_BEFORE_HIDDEN_LIST).toContain("«The hidden list's numbers start at»");
+    // Six fit; the hidden list's first number is never a spare.
+    expect(await reserveSpareBibs(db, { actor: admin, eventId: event.id, count: 6, now: at(3) })).toMatchObject({ from: 2, to: 7 });
+    // A hidden series below the race's bounds nothing: the spares come after the race's numbers as before.
+    await db.update(events).set({ bibStartNumber: 100, hiddenListBibStart: 1, walkInBibStart: null, walkInBibCount: null }).where(eq(events.id, event.id));
+    await db.update(registrations).set({ bibNumber: 100 }).where(eq(registrations.eventId, event.id));
+    expect((await spareCardState(db, event.id)).candidates.slice(0, 2)).toEqual([101, 102]);
+  });
+
+  it("counts everybody on the hidden list with a place for «Numără și lista ascunsă», ticked or not, real only", async () => {
+    const event = await createEvent(2);
+    await confirmedAddress(event, "Ana", 0);
+    await confirmRegistrationByStaff(db, admin, (await rowOf("Ana")).id, at(1));
+    for (const [name, minute, listOptOut] of [["Ioana", 2, false], ["Dan", 4, true]] as const) {
+      const row = await submitted(event, name, minute, "REAL", listOptOut);
+      await setOutsideCapacity(db, admin, row.id, true, at(minute));
+      await confirmEmail(db, event, row.id, at(minute));
+    }
+    await confirmRegistrationByStaff(db, admin, (await rowOf("Ioana")).id, at(6));
+    // A TEST row on the list is in no public number (§30).
+    const test = await submitted(event, "Tudor", 8, "TEST");
+    await setOutsideCapacity(db, admin, test.id, true, at(8));
+    await confirmEmail(db, event, test.id, at(8));
+    expect(await countHiddenListWithPlace(db, event.id)).toEqual({ confirmed: 1, held: 1 });
+    // The places line is the same either way: the hidden list takes no place.
+    expect((await readPublicPlaces(db, { id: event.id, capacity: 2, waitlistCapacity: null }, at(9))).occupied).toBe(1);
   });
 });

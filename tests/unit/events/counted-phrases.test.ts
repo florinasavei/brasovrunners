@@ -219,3 +219,21 @@ describe("§632 startListHeadline — the «Cine vine» title and line count eve
     }
   });
 });
+
+describe("§NNN startListHeadline — «Numără și lista ascunsă» adds the hidden list's holds to «în curs»", () => {
+  it("adds them where the places line is known, and never on an uncapped event", () => {
+    const say = translator("ro");
+    // 134 counted confirmed + 2 on the hidden list; 16 counted in progress + 1 hidden-list hold.
+    expect(startListHeadline(say, "ro", { confirmed: 136, named: 121 }, { taken: 150, capacity: 150, confirmed: 134 }, 1)).toEqual({
+      count: 153,
+      inProgress: 17,
+      line: "153 de înscriși — 136 de confirmați (121 cu numele afișat), 17 în curs de confirmare",
+    });
+    // Uncapped: no head count of held places (§32), the hidden list's neither.
+    expect(startListHeadline(say, "ro", { confirmed: 3, named: 3 }, null, 2)).toEqual({ count: 3, inProgress: 0, line: confirmedPhrase(say, "ro", { confirmed: 3, named: 3 }) });
+    // 0 is today's reading.
+    expect(startListHeadline(say, "ro", { confirmed: 4, named: 3 }, { taken: 6, capacity: 10, confirmed: 4 }, 0)).toEqual(
+      startListHeadline(say, "ro", { confirmed: 4, named: 3 }, { taken: 6, capacity: 10, confirmed: 4 }),
+    );
+  });
+});

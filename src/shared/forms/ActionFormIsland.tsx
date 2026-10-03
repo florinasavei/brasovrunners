@@ -9,6 +9,7 @@ import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
 import { choiceAnswer, type ConfirmSpec, fillFromForm, pickConfirm, resolveBodyCount, resolveEmailCount } from "@/shared/feedback/notice";
 import { useToast } from "@/shared/feedback/toast-context";
 import { openFoldsAround, REVEAL_EVENT } from "@/shared/ui/fold";
+import { CONFIRM_CANCEL_EVENT } from "./confirm-cancel";
 import { fieldId, type FormOutcome } from "./outcome";
 import { RecallProvider } from "./recall";
 import { describeSubmission, replayNatively, transportFailureOf } from "./save-fallback";
@@ -254,6 +255,13 @@ export default function ActionFormIsland({
     else element.requestSubmit();
   };
 
+  // «Anulează»: nothing is sent, and a control that changed before the question — the «Lista ascunsă»
+  // radio (§NNN) — hears it on the form and shows the server's state again.
+  const cancelAsking = () => {
+    setAsking(null);
+    form.current?.dispatchEvent(new Event(CONFIRM_CANCEL_EVENT));
+  };
+
   // "It worked" without a redirect: the notice, after the answer painted — never in the press.
   useEffect(() => {
     if (state?.notice) toast.show(state.notice);
@@ -358,7 +366,7 @@ export default function ActionFormIsland({
         <ConfirmDialog
           spec={asking.spec}
           open
-          onCancel={() => setAsking(null)}
+          onCancel={cancelAsking}
           onConfirm={() => answer("confirm")}
           // A two-way question (§540): the quiet answer beside the primary one, never on Enter.
           alternative={asking.spec.choice ? { label: asking.spec.choice.alternativeLabel, onClick: () => answer("alternative") } : null}

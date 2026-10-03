@@ -333,6 +333,40 @@ function costRule(
 }
 
 /**
+ * «Numerele listei ascunse încep de la» (§NNN): the hidden list's own series may not overlap the
+ * race's. The race's series runs from `bibStartNumber` for `capacity` numbers on a capped event, so a
+ * start inside it is refused and one below it or past it is accepted. An uncapped event's series has
+ * no end — every number from its first upward is the race's — so there the hidden list's start must
+ * sit below the race's first number. The sentence, or null when the start is acceptable or the switch
+ * is off (the only time the series acts).
+ *
+ * Not a refinement of the schema: the service judges it, with the desk's spares (§444), only on a save
+ * that moves the hidden start, switches the hidden list on, or moves the race's first number or its
+ * places (`service.ts#assertHiddenListNumbers`). «Trimite-i oferta» adds a place (§642) without a
+ * save, and can carry the race's series up to a hidden start set just above it; a later save that
+ * changes none of those then passes rather than refusing every edit of the event until the start moves.
+ */
+export function hiddenListBandIssue(fields: {
+  hiddenListEnabled: boolean;
+  hiddenListBibStart: number | null;
+  bibStartNumber: number;
+  capacity: number | null;
+}): string | null {
+  const start = fields.hiddenListBibStart;
+  if (!fields.hiddenListEnabled || start === null) return null;
+  const raceStart = fields.bibStartNumber;
+  if (fields.capacity === null) {
+    return start >= raceStart
+      ? `without a limit of places, the hidden list's numbers must start below the race's first number (${raceStart})`
+      : null;
+  }
+  const raceEnd = raceStart + fields.capacity - 1;
+  return start >= raceStart && start <= raceEnd
+    ? `the hidden list's numbers must start outside the race's series (${raceStart}–${raceEnd})`
+    : null;
+}
+
+/**
  * One partner's link row as the editor posts it (§344): a kind from the select, the address,
  * and a label in each language — the same four boxes `eventLinkRowSchema` carries for
  * "Linkuri și fișiere" (§332), one card of them per partner rather than one list for the event.
@@ -903,6 +937,20 @@ export const eventFieldsSchema = z
      * the list above: it hides a number, never a name, and is stored whatever the list says.
      */
     waitlistCountPublic: z.boolean().optional(),
+    /**
+     * «Lista ascunsă» (§NNN, amending §643): the event's switch, the hidden list's own number series
+     * and «Numără și lista ascunsă», with «Arată public numărătoarea» beside them. Each optional, and
+     * absent means "this caller is not editing it" (the kit's discipline, §554): the editor posts the
+     * group's three with one marker and the count's tick with its own, and a form without them changes
+     * none of them. Stored as posted whatever the switch says — the club's choices survive switching it
+     * off and on. The group's three act only while the switch is on; «Arată public numărătoarea» on
+     * every event (`hiddenListCounting`). The series' start is judged by the service against the
+     * event as it stands (`service.ts#assertHiddenListNumbers`), not here.
+     */
+    hiddenListEnabled: z.boolean().optional(),
+    hiddenListBibStart: optionalWholeNumber({ min: 1, max: 99_000 }).optional(),
+    participantCountPublic: z.boolean().optional(),
+    hiddenListCounted: z.boolean().optional(),
     externalProvider: optionalText(120),
     externalRegistrationUrl: httpsUrl("an external registration link must start with https://"),
   })
