@@ -42,6 +42,12 @@ export type RowVerb =
   | "markBibPrinted"
   | "unmarkBibPrinted"
   /**
+   * «Nu e membru» / «E membru» (§NNN): the self-declared member tick cleared or set — a field edit
+   * like the name, in every state, the Administrator's alone. Which of the two words the row shows is
+   * the row's own tick; the verb is one.
+   */
+  | "memberTick"
+  /**
    * Erase the registration, and the person behind it when it was their last (BR-REQ-037-06, §180).
    *
    * Last, always, and the only verb here that offers itself in *every* state. That is the point
@@ -106,6 +112,9 @@ export function rowVerbsFor(
   if (mayManage && status === "CONFIRMED" && options.bib?.settled) {
     verbs.push(options.bib.printed ? "unmarkBibPrinted" : "markBibPrinted");
   }
+
+  // The member tick (§NNN): changes no state and no place, so every state offers it.
+  if (mayManage) verbs.push("memberTick");
 
   // Cancelling releases the place through the allocator and leaves an audit row (§67, §88).
   if (mayManage && canTransition(status, "CANCELLED")) verbs.push("cancel");

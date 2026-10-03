@@ -315,7 +315,37 @@ export type ConfirmSpec = {
    * the hidden input posts what the page wrote in it — the primary's value.
    */
   choice?: ConfirmChoice;
+  /**
+   * The fields the press changes, named in `body`'s `{fields}` (§NNN, «Modifică datele»): each listed
+   * field whose value at the press differs from its `was.<name>` twin — the value the page rendered —
+   * by its label, in the form's order. Nothing changed, no question: the press goes to the server,
+   * which says nothing would change (`resolveChangedFields`).
+   */
+  changedFields?: ChangedFields;
 };
+
+/** `ConfirmSpec.changedFields`: each field's label, in the form's order, and how the names are joined. */
+export type ChangedFields = {
+  labels: Readonly<Record<string, string>>;
+  separator: string;
+};
+
+/**
+ * The dialog with `{fields}` filled from the form as posted, or `null` when no listed field moved —
+ * the caller then lets the press through unasked. A field compares trimmed, as the server does; a
+ * field with no `was.` twin on the form is not on it, and never named. A spec without it, unchanged.
+ */
+export function resolveChangedFields(spec: ConfirmSpec, valueOf: (field: string) => string | null): ConfirmSpec | null {
+  const changed = spec.changedFields;
+  if (!changed) return spec;
+  const names = Object.keys(changed.labels).filter((field) => {
+    const was = valueOf(`was.${field}`);
+    return was !== null && (valueOf(field) ?? "").trim() !== was.trim();
+  });
+  if (names.length === 0) return null;
+  const fields = names.map((field) => changed.labels[field]).join(changed.separator);
+  return { ...spec, changedFields: undefined, body: spec.body.split("{fields}").join(fields) };
+}
 
 /** `ConfirmSpec.choice`: the hidden field both answers set, and the quiet answer's words. */
 export type ConfirmChoice = {

@@ -685,7 +685,6 @@
       "newExplanation": "For somebody who asked in person. It enters like any registration; the person gets the confirmation email and signs the declaration themselves.",
       "noEventsAcceptingRegistrations": "No event takes registrations on the site. Set the registration mode to \"Register here\" on the event page.",
       "event": "Event",
-      "participantName": "Participant name",
       "participantEmail": "Participant email address",
       "participantEmailHelp": "The confirmation and the declaration link go here. It must be their address, not the club's.",
       "birthDateMinimumAge": "Optional here. When given, the person must be at least the chosen event's minimum age on the day of the race — the number with a “+” beside its name; otherwise the registration is refused.",
@@ -696,9 +695,6 @@
       "relayConfirmation": "I confirm this person asked me to register them, and I told them the club uses their details for the race and that the privacy notice is on the site, at the foot of every page.",
       "create": "Add the registration",
       "viewForEvent": "See this event's registrations",
-      "correctName": "Correct the name",
-      "correctNameHelp": "Only the name can be corrected. The email address is the participant's identity and is never changed here: for a wrong address, cancel the registration and add it again with the right one.",
-      "saveName": "Save the name",
       "cancelTitle": "Cancel the registration",
       "cancelReason": "Reason",
       "cancelAction": "Cancel the registration",
@@ -749,7 +745,9 @@
           "family_resent": "Email resent to the family",
           "offered_by_staff": "Offer sent ahead of the waiting list (“Send them the offer”)",
           "address_vouched_by_staff": "Address vouched for by the team; place given ahead of the waiting list (“Give them a place now”)",
-          "outside_capacity_changed": "Put on the hidden list, or taken off it"
+          "outside_capacity_changed": "Put on the hidden list, or taken off it",
+          "answer_corrected": "Answer corrected: {field}",
+          "answers_viewed": "Answers opened, with the phone and the emergency contact"
         },
         "event": {
           "capacity_raised_for_offer": "Supplementary place added for an offer (“Send them the offer”): {from} → {to}",
@@ -973,7 +971,87 @@
       "givePlaceNowHelp": "For someone who did not manage to confirm the address: you vouch for it, and they get the place and the declaration email.",
       "placeGiven": "Place given; the declaration email has left. Deadline: {deadline}.",
       "placeGivenRaised": "Place given, on a supplementary place: the capacity is now {n}. The declaration email has left. Deadline: {deadline}.",
-      "invitedBy": "Registered by invitation — sent by {who}, {when}"
+      "invitedBy": "Registered by invitation — sent by {who}, {when}",
+      "answers": {
+        "title": "The registration's answers",
+        "open": "Change the answers",
+        "openRead": "Show the answers",
+        "openHelp": "Everything the person typed on the form, the phone and the emergency contact included; opening it stays in the log.",
+        "hide": "Close the answers",
+        "save": "Save the answers",
+        "pending": "Saving…",
+        "viewed": "Opening these answers stayed in the log, with your name.",
+        "none": "—",
+        "yes": "Yes",
+        "no": "No",
+        "noShirt": "No T-shirt",
+        "sex": {
+          "FEMALE": "Female",
+          "MALE": "Male"
+        },
+        "displayNameHelp": "Empty: the first and last name.",
+        "phoneHelp": "With the country code (+40 712 345 678); a Romanian number also works with a leading 0.",
+        "guardianHelp": "Only for someone who was a minor when they registered, and then required. A birth date corrected to an adult's clears it.",
+        "guardianSignedHelp": "The declaration is signed and names them: it does not change here.",
+        "clubNameHelp": "While the member tick is on, the club is {club}.",
+        "memberHelp": "Unticked, the club {club} also goes from the list.",
+        "lockedTitle": "What does not change here",
+        "lockedAddress": "The email address is the registration's identity: for a wrong address, cancel and add it again.",
+        "lockedConsents": "Only the person gives the consents — you can only withdraw them, with their own button.",
+        "lockedDeclaration": "Only the person signs the declaration; once it is signed, the parent or guardian it names stays the one who signed.",
+        "fields": {
+          "firstName": "First name",
+          "lastName": "Last name",
+          "displayName": "Name on the list",
+          "birthDate": "Date of birth",
+          "sex": "Sex",
+          "nationality": "Citizenship",
+          "country": "Country of residence",
+          "city": "City",
+          "phone": "Phone",
+          "emergencyContactName": "Emergency contact",
+          "emergencyContactPhone": "Emergency contact's phone",
+          "guardianName": "Parent or guardian",
+          "clubMemberDeclared": "{club} member (declared)",
+          "clubName": "Club",
+          "stravaUrl": "Strava",
+          "instagramHandle": "Instagram",
+          "tshirtSize": "T-shirt size",
+          "listSocials": "Strava and Instagram on the list"
+        }
+      },
+      "memberTick": {
+        "clear": "Not a member",
+        "set": "Is a member"
+      },
+      "memberSweep": {
+        "open": "Member ticks with no member account",
+        "title": "Member ticks with no member account",
+        "count": {
+          "one": "{count} registration with the member tick and no member account",
+          "few": "{count} registrations with the member tick and no member account",
+          "other": "{count} registrations with the member tick and no member account"
+        },
+        "scopeEvent": "At {event}.",
+        "scopeAll": "At every event that has not started.",
+        "who": "A member is an account on Staff, with any role, matched by email address. A revoked account is no longer a member.",
+        "otherAddress": "A member registered with another address than their account's appears here too: untick their row to keep their tick («Leave the tick»).",
+        "submit": {
+          "one": "Clear the tick on {count} registration",
+          "few": "Clear the ticks on all {count}",
+          "other": "Clear the ticks on all {count}"
+        },
+        "pending": "Clearing the ticks…",
+        "empty": "No tick to clear",
+        "emptyHelp": "Every ticked registration has a member account with the same address.",
+        "ticked": "The ticked registrations",
+        "rowHelp": "Ticked = cleared · unticked = Leave the tick",
+        "cleared": {
+          "one": "Cleared the member tick on {count} registration. Nothing else changed.",
+          "few": "Cleared the member tick on {count} registrations. Nothing else changed.",
+          "other": "Cleared the member tick on {count} registrations. Nothing else changed."
+        }
+      }
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -1165,8 +1243,6 @@
       "reminderBody": "{name} receives the pre-race reminder now.",
       "createRegistrationTitle": "Add the registration?",
       "createRegistrationBody": "The person is registered for the event on their behalf, at their request, and receives the email for the next step.",
-      "renameTitle": "Change the name?",
-      "renameBody": "The new name appears on the list, on the race number and in the emails; the old one stays in the log.",
       "withdrawConsentTitle": "Erase the ticked data?",
       "withdrawConsentBody": "The ticked data disappears from the registration for good; the reason stays in the log, without the person's name.",
       "eraseRegistrationTitle": "Erase the registration for good?",
@@ -1257,7 +1333,19 @@
       "givePlaceNowRaiseConfirm": "Add a place and give it to them",
       "offerPlaceRaise": "No place is free: pressing adds one supplementary place over the limit; the capacity becomes {n}.",
       "offerPlaceRaiseConfirm": "Add a place and send the offer",
-      "offerPlaceAfterClose": "Registration has closed: the offer holds until the start at the latest."
+      "offerPlaceAfterClose": "Registration has closed: the offer holds until the start at the latest.",
+      "memberSweepTitle": "Clear the member ticks?",
+      "memberSweepBody": {
+        "one": "You clear the member tick on {count} registration; nothing else changes, no email.",
+        "few": "You clear the member tick on {count} registrations; nothing else changes, no email.",
+        "other": "You clear the member tick on {count} registrations; nothing else changes, no email."
+      },
+      "answersTitle": "Correct the answers?",
+      "answersBody": "You correct, for {name}: {fields}. Nothing else changes, no email; the old values stay in the log.",
+      "memberClearTitle": "Clear the member tick?",
+      "memberClearBody": "You clear the member tick from {name}; nothing else changes, no email.",
+      "memberSetTitle": "Set the member tick?",
+      "memberSetBody": "You set the member tick on {name}; their club on the list becomes {club}. Nothing else changes, no email."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -1324,7 +1412,16 @@
       "SEND_NOW_MAILGUN_STOPPED_NOTICE": "Nothing was sent: Mailgun is stopped, and Gmail takes over only once you approve the privacy notice from the new template. Until then choose «Queue it».",
       "INVITATION_NOT_OPEN": "The invitation is no longer waiting: it was accepted, withdrawn or has expired.",
       "INVITATION_EVENT_CLOSED": "The event takes no more invitations: it is cancelled, has started, or is not published.",
-      "INVITATION_BAD_DAYS": "Days until it expires: a whole number from 1 to 60."
+      "INVITATION_BAD_DAYS": "Days until it expires: a whole number from 1 to 60.",
+      "ANSWERS_UNCHANGED": "Nothing changed: the answers already say this. Reload the page if a colleague corrected them meanwhile.",
+      "ANSWER_UNDER_MINIMUM_AGE": "The date of birth was not saved: the person would not be {age} on race day, the event's minimum age.",
+      "ANSWER_EMERGENCY_SAME": "The emergency contact's phone was not saved: it is the participant's own number. Type someone else's.",
+      "ANSWER_GUARDIAN_SIGNED": "The parent or guardian was not changed: the signed declaration names the one who signed it.",
+      "ANSWER_SOCIALS_MINOR_AT_REGISTRATION": "Strava and Instagram were not saved: the person was a minor when they registered, and the maintenance sweep would delete them. Leave them empty.",
+      "ANSWER_BIRTH_DATE_MINOR_AT_REGISTRATION": "The birth date was not saved: the person would have been a minor when they registered; empty Strava and Instagram first.",
+      "ANSWER_BIRTH_DATE_GUARDIAN_SIGNED": "The birth date was not saved: it would make the person a minor, and the declaration was signed with no parent or guardian, who cannot be added now.",
+      "ANSWER_BIRTH_DATE_GUARDIAN_SIGNED_ADULT": "The birth date was not saved: it would make the person an adult when they registered, and the declaration was signed by the parent or guardian it names, who cannot be removed now.",
+      "ANSWER_GUARDIAN_ADULT": "The parent or guardian was not saved: the person was not a minor when they registered. Only a minor's registration names a parent or guardian."
     },
     "editor": {
       "draftPreview": {
@@ -5489,18 +5586,6 @@
               ]
             },
             {
-              "title": "Invite somebody to an event, by email",
-              "steps": [
-                "For members, partners and guests: each gets an email with a link to the form, with the name and address already filled in.",
-                "«Events» → «Edit» on the race's row → the «Registrations received» card → «Send invitations»: the list's «Invitations» section opens.",
-                "Tick members from the list or type other people, one per line: the name, then the address. Choose «Days until it expires» and «Language of the invitation» (for new addresses); tick «On the hidden list (takes no place)» for organizers, volunteers and pacemakers. You can send after registration closes too, until the start.",
-                "«Send the invitations» asks first: how many invitations, how many places are free and, on a full race, how many supplementary places are added and what the capacity becomes.",
-                "Each invitation holds a place until its deadline; if it is not accepted, the place frees up by itself. The person fills in the rest and signs the declaration themselves.",
-                "On the invitation's row: «Resend» sends a new link; the deadline stays, unless you type a number of days that moves it later. «Withdraw» closes it and frees the place.",
-                "If somebody invited registers anyway, through the public form or at the desk, their registration takes the invitation's place once their address is confirmed or they are given a place: the invitation reads «Accepted»."
-              ]
-            },
-            {
               "title": "Tell the participants about a change",
               "steps": [
                 "Change the place, the time or the programme in their card.",
@@ -5524,11 +5609,30 @@
               "title": "Correct, cancel or erase a registration",
               "steps": [
                 "«Registrations» → find the person → press their name.",
-                "Wrong name: under «Correct the name» type the right one → «Save the name».",
+                "A wrong name, phone or other answer: «The registration's answers» → «Change the answers», correct the box → «Save the answers».",
                 "Not coming any more: «Cancel the registration», write the «Reason», press «Cancel the registration» and confirm. The place goes to the first on the waiting list; if the event's places are not allocated automatically, it stays free until you hand it out.",
                 "The email never arrived: «Resend email» → «Send now, without waiting for the scheduled round». It works on the waiting list too: the email says where the line stands now.",
                 "They ask for their data to be erased: «Delete permanently», write the «Reason for deletion», tick «I confirm this deletion is permanent» and press «Delete permanently».",
                 "Several at once: tick the rows on the list → «Cancel the ticked ones»."
+              ]
+            },
+            {
+              "title": "Correct a registration's answers",
+              "steps": [
+                "When: the person mistyped their name, date of birth, phone, city, club or anything else on the form, or ticked that they are a member without being one.",
+                "«Registrations» → press the name → «The registration's answers» → «Change the answers». Change only what is wrong → «Save the answers»; the question names the person and the fields.",
+                "Not changed here: the email address (cancel and add again), the consents (you only withdraw them, with their own button) and the declaration (only the person signs it).",
+                "No email is sent and no place moves. Every field changed stays in the log, with its old and new value."
+              ]
+            },
+            {
+              "title": "Clear the member tick of those with no account",
+              "steps": [
+                "When: before a members' race, so that only the club's members stay ticked. The participant ticks it on the form; the club does not check it.",
+                "One at a time: in «The registration's answers» untick the member tick → «Save the answers». On the list, «Not a member» is in the row's ⋮ menu.",
+                "All at once: «Registrations» → «Search and filter» → for members choose «Only those who declared membership» → «Filter» → «Member ticks with no member account».",
+                "The list shows the ticked registrations whose address is no account's on «Staff». A member registered with another address appears too: untick their row. Then «Clear the ticks on all» … and confirm.",
+                "What it does not do: it cancels no registration, moves no place and sends no email. The club on the list is cleared only if the tick had set it. Every change stays in the log."
               ]
             },
             {
@@ -7998,7 +8102,6 @@
       "checkedIn": "Present at the desk.",
       "checkinUndone": "No longer checked in.",
       "registrationCreated": "The person was added; the email is queued.",
-      "nameCorrected": "The name was changed.",
       "registrationCancelled": "The registration was cancelled; the email is queued.",
       "consentWithdrawn": "The ticked data was erased.",
       "bibsPrinted": "Marked as printed.",
@@ -8226,7 +8329,15 @@
       },
       "invitationResent": "Invitation resent, with a new link.",
       "invitationResentKept": "Invitation resent, with a new link. The deadline stayed as it was: someone is on the waiting list.",
-      "invitationWithdrawn": "Invitation withdrawn; the place was released."
+      "invitationWithdrawn": "Invitation withdrawn; the place was released.",
+      "memberTickCleared": "Member tick cleared.",
+      "memberTickSet": "Member tick set.",
+      "memberTicksCleared": {
+        "one": "Member tick cleared on {count} registration.",
+        "few": "Member tick cleared on {count} registrations.",
+        "other": "Member tick cleared on {count} registrations."
+      },
+      "answersCorrected": "Answers corrected: {fields}."
     }
   },
   "Network": {

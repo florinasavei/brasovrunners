@@ -685,7 +685,6 @@
       "newExplanation": "Pentru cineva care a cerut personal. Intră ca orice înscriere; persoana primește emailul de confirmare și semnează singură declarația.",
       "noEventsAcceptingRegistrations": "Niciun eveniment nu primește înscrieri pe site. Setează modul de înscriere pe „Înscrieri pe site” în pagina evenimentului.",
       "event": "Evenimentul",
-      "participantName": "Numele participantului",
       "participantEmail": "Adresa de e-mail a participantului",
       "participantEmailHelp": "Aici ajung confirmarea și linkul pentru declarație. Trebuie să fie adresa persoanei, nu a clubului.",
       "birthDateMinimumAge": "Opțional aici. Dacă o scrii, persoana trebuie să aibă, în ziua cursei, cel puțin vârsta minimă a evenimentului ales (numărul cu „+” de lângă nume); altfel înscrierea este refuzată.",
@@ -696,9 +695,6 @@
       "relayConfirmation": "Confirm că această persoană mi-a cerut să o înscriu și i-am spus că datele ei le folosește clubul pentru cursă, iar nota de confidențialitate este pe site, jos pe fiecare pagină.",
       "create": "Adaugă înscrierea",
       "viewForEvent": "Vezi înscrierile acestui eveniment",
-      "correctName": "Corectează numele",
-      "correctNameHelp": "Se poate corecta doar numele. Adresa de e-mail este identitatea participantului și nu se schimbă de aici: pentru o adresă greșită, anulează înscrierea și adaug-o din nou cu adresa corectă.",
-      "saveName": "Salvează numele",
       "cancelTitle": "Anulează înscrierea",
       "cancelReason": "Motivul",
       "cancelAction": "Anulează înscrierea",
@@ -749,7 +745,9 @@
           "family_resent": "Email retrimis familiei",
           "offered_by_staff": "Ofertă trimisă înaintea listei de așteptare («Trimite-i oferta»)",
           "address_vouched_by_staff": "Adresă garantată de echipă; loc dat înaintea listei de așteptare («Dă-i un loc acum»)",
-          "outside_capacity_changed": "Pus pe lista ascunsă sau scos de pe ea"
+          "outside_capacity_changed": "Pus pe lista ascunsă sau scos de pe ea",
+          "answer_corrected": "Răspuns corectat: {field}",
+          "answers_viewed": "Datele înscrierii deschise, cu telefonul și persoana de contact"
         },
         "event": {
           "capacity_raised_for_offer": "Loc suplimentar adăugat pentru o ofertă («Trimite-i oferta»): {from} → {to}",
@@ -973,7 +971,87 @@
       "givePlaceNowHelp": "Pentru cine nu a apucat să confirme adresa: o garantezi tu, iar persoana primește locul și emailul cu declarația.",
       "placeGiven": "Loc dat; emailul cu declarația a plecat. Termen: {deadline}.",
       "placeGivenRaised": "Loc dat, pe un loc suplimentar: capacitatea e acum {n}. Emailul cu declarația a plecat. Termen: {deadline}.",
-      "invitedBy": "Înscriere pe invitație — trimisă de {who}, {when}"
+      "invitedBy": "Înscriere pe invitație — trimisă de {who}, {when}",
+      "answers": {
+        "title": "Datele înscrierii",
+        "open": "Modifică datele",
+        "openRead": "Arată datele",
+        "openHelp": "Tot ce a scris persoana în formular, cu telefonul și persoana de contact; deschiderea rămâne în jurnal.",
+        "hide": "Închide datele",
+        "save": "Salvează datele",
+        "pending": "Se salvează…",
+        "viewed": "Deschiderea acestor date a rămas în jurnal, cu numele tău.",
+        "none": "—",
+        "yes": "Da",
+        "no": "Nu",
+        "noShirt": "Fără tricou",
+        "sex": {
+          "FEMALE": "Feminin",
+          "MALE": "Masculin"
+        },
+        "displayNameHelp": "Gol: prenumele și numele.",
+        "phoneHelp": "Cu prefixul țării (+40 712 345 678); un număr românesc merge și cu 0 în față.",
+        "guardianHelp": "Doar pentru cine era minor la înscriere, și atunci obligatoriu. O dată a nașterii corectată la a unui major îl șterge.",
+        "guardianSignedHelp": "Declarația e semnată și îl numește: nu se schimbă de aici.",
+        "clubNameHelp": "Cât timp bifa de membru e pusă, clubul e {club}.",
+        "memberHelp": "Debifată, clubul {club} dispare și de pe listă.",
+        "lockedTitle": "Ce nu se schimbă de aici",
+        "lockedAddress": "Adresa de email e identitatea înscrierii: pentru o adresă greșită, anulează și adaugă din nou.",
+        "lockedConsents": "Consimțămintele le dă doar persoana — tu le poți doar retrage, cu butonul lor.",
+        "lockedDeclaration": "Declarația o semnează doar persoana; odată semnată, și părintele sau tutorele numit în ea rămâne cel care a semnat.",
+        "fields": {
+          "firstName": "Prenume",
+          "lastName": "Nume",
+          "displayName": "Numele de pe listă",
+          "birthDate": "Data nașterii",
+          "sex": "Sex",
+          "nationality": "Cetățenie",
+          "country": "Țara de reședință",
+          "city": "Orașul",
+          "phone": "Telefon",
+          "emergencyContactName": "Persoana de contact",
+          "emergencyContactPhone": "Telefonul persoanei de contact",
+          "guardianName": "Părintele sau tutorele",
+          "clubMemberDeclared": "Membru {club} (declarat)",
+          "clubName": "Clubul",
+          "stravaUrl": "Strava",
+          "instagramHandle": "Instagram",
+          "tshirtSize": "Mărimea tricoului",
+          "listSocials": "Strava și Instagram pe listă"
+        }
+      },
+      "memberTick": {
+        "clear": "Nu e membru",
+        "set": "E membru"
+      },
+      "memberSweep": {
+        "open": "Bife de membru fără cont de membru",
+        "title": "Bife de membru fără cont de membru",
+        "count": {
+          "one": "{count} înscriere cu bifa de membru fără cont de membru",
+          "few": "{count} înscrieri cu bifa de membru fără cont de membru",
+          "other": "{count} de înscrieri cu bifa de membru fără cont de membru"
+        },
+        "scopeEvent": "La {event}.",
+        "scopeAll": "La toate evenimentele care nu au început.",
+        "who": "Membru înseamnă un cont din Echipa, cu orice rol, comparat după adresa de email. Un cont retras nu mai e membru.",
+        "otherAddress": "Un membru înscris cu altă adresă decât cea din cont apare și el aici: debifează-i rândul, ca să-și păstreze bifa («Lasă bifa»).",
+        "submit": {
+          "one": "Scoate bifa la {count} înscriere",
+          "few": "Scoate bifa la cele {count}",
+          "other": "Scoate bifa la cele {count}"
+        },
+        "pending": "Se scot bifele…",
+        "empty": "Nicio bifă de scos",
+        "emptyHelp": "Fiecare înscriere bifată are un cont de membru cu aceeași adresă.",
+        "ticked": "Înscrierile bifate",
+        "rowHelp": "Bifat = se scoate bifa · debifat = Lasă bifa",
+        "cleared": {
+          "one": "Am scos bifa de membru la {count} înscriere. Nimic altceva nu s-a schimbat.",
+          "few": "Am scos bifa de membru la {count} înscrieri. Nimic altceva nu s-a schimbat.",
+          "other": "Am scos bifa de membru la {count} de înscrieri. Nimic altceva nu s-a schimbat."
+        }
+      }
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -1165,8 +1243,6 @@
       "reminderBody": "{name} primește acum reminderul dinaintea cursei.",
       "createRegistrationTitle": "Adaugi înscrierea?",
       "createRegistrationBody": "Persoana este înscrisă la eveniment în numele ei, la cererea ei, și primește emailul pasului următor.",
-      "renameTitle": "Schimbi numele?",
-      "renameBody": "Numele nou apare pe listă, pe numărul de concurs și în emailuri; cel vechi rămâne în jurnal.",
       "withdrawConsentTitle": "Ștergi datele bifate?",
       "withdrawConsentBody": "Datele bifate dispar definitiv din înscriere; motivul rămâne în jurnal, fără numele persoanei.",
       "eraseRegistrationTitle": "Ștergi definitiv înscrierea?",
@@ -1257,7 +1333,19 @@
       "givePlaceNowRaiseConfirm": "Adaugă un loc și dă-i locul",
       "offerPlaceRaise": "Nu e niciun loc liber: apăsând, adaugi un loc suplimentar peste limită, capacitatea devine {n}.",
       "offerPlaceRaiseConfirm": "Adaugă un loc și trimite oferta",
-      "offerPlaceAfterClose": "Înscrierile s-au închis: oferta e valabilă cel mult până la start."
+      "offerPlaceAfterClose": "Înscrierile s-au închis: oferta e valabilă cel mult până la start.",
+      "memberSweepTitle": "Scoți bifele de membru?",
+      "memberSweepBody": {
+        "one": "Scoți bifa de membru la {count} înscriere; nimic altceva nu se schimbă, niciun email.",
+        "few": "Scoți bifa de membru la {count} înscrieri; nimic altceva nu se schimbă, niciun email.",
+        "other": "Scoți bifa de membru la {count} de înscrieri; nimic altceva nu se schimbă, niciun email."
+      },
+      "answersTitle": "Corectezi datele?",
+      "answersBody": "Corectezi la {name}: {fields}. Nimic altceva nu se schimbă, niciun email; valorile vechi rămân în jurnal.",
+      "memberClearTitle": "Scoți bifa de membru?",
+      "memberClearBody": "Scoți bifa de membru de la {name}; nimic altceva nu se schimbă, niciun email.",
+      "memberSetTitle": "Pui bifa de membru?",
+      "memberSetBody": "Pui bifa de membru la {name}; pe listă clubul devine {club}. Nimic altceva nu se schimbă, niciun email."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -1324,7 +1412,16 @@
       "SEND_NOW_MAILGUN_STOPPED_NOTICE": "Nu s-a trimis nimic: Mailgun e oprit, iar Gmail preia abia după ce aprobi nota de confidențialitate din șablonul nou. Până atunci alege «Pune la coadă».",
       "INVITATION_NOT_OPEN": "Invitația nu mai e în așteptare: a fost acceptată, retrasă sau a expirat.",
       "INVITATION_EVENT_CLOSED": "Evenimentul nu mai primește invitații: e anulat, a început sau nu e publicat.",
-      "INVITATION_BAD_DAYS": "Zilele până expiră: un număr întreg de la 1 la 60."
+      "INVITATION_BAD_DAYS": "Zilele până expiră: un număr întreg de la 1 la 60.",
+      "ANSWERS_UNCHANGED": "Nu s-a schimbat nimic: datele sunt deja acestea. Reîncarcă pagina dacă un coleg le-a corectat între timp.",
+      "ANSWER_UNDER_MINIMUM_AGE": "Data nașterii nu s-a salvat: persoana nu ar avea {age} împliniți în ziua cursei, vârsta minimă a evenimentului.",
+      "ANSWER_EMERGENCY_SAME": "Telefonul persoanei de contact nu s-a salvat: e chiar numărul participantului. Scrie numărul altcuiva.",
+      "ANSWER_GUARDIAN_SIGNED": "Părintele sau tutorele nu s-a schimbat: declarația semnată îl numește pe cel care a semnat-o.",
+      "ANSWER_SOCIALS_MINOR_AT_REGISTRATION": "Strava și Instagram nu s-au salvat: persoana era minoră la înscriere, iar curățenia de întreținere le-ar șterge. Lasă-le goale.",
+      "ANSWER_BIRTH_DATE_MINOR_AT_REGISTRATION": "Data nașterii nu s-a salvat: persoana ar fi fost minoră la înscriere; golește întâi Strava și Instagram.",
+      "ANSWER_BIRTH_DATE_GUARDIAN_SIGNED": "Data nașterii nu s-a salvat: ar face din persoană un minor, iar declarația e semnată fără părinte sau tutore, care nu se mai poate adăuga.",
+      "ANSWER_BIRTH_DATE_GUARDIAN_SIGNED_ADULT": "Data nașterii nu s-a salvat: persoana ar fi fost majoră la înscriere, iar declarația e semnată de părintele sau tutorele pe care îl numește, care nu se mai poate scoate.",
+      "ANSWER_GUARDIAN_ADULT": "Părintele sau tutorele nu s-a salvat: persoana nu era minoră la înscriere. Doar înscrierea unui minor numește un părinte sau tutore."
     },
     "editor": {
       "draftPreview": {
@@ -5489,18 +5586,6 @@
               ]
             },
             {
-              "title": "Invită pe cineva la un eveniment, pe email",
-              "steps": [
-                "Pentru membri, parteneri și oaspeți: fiecare primește un email cu un link spre formular, cu numele și adresa deja completate.",
-                "«Evenimente» → «Editează» pe rândul cursei → cardul «Înscrierile primite» → «Trimite invitații»: se deschide secțiunea «Invitații» a listei.",
-                "Bifează membrii din listă sau scrie alte persoane, câte una pe rând: numele, apoi adresa. Alege «Zile până expiră» și «Limba invitației» (pentru adresele noi); bifează «Pe lista ascunsă (nu ocupă un loc)» pentru organizatori, voluntari și pacemakeri. Se poate trimite și după închiderea înscrierilor, până la start.",
-                "«Trimite invitațiile» întreabă întâi: câte invitații, câte locuri libere și, pe o cursă plină, câte locuri suplimentare se adaugă și cât devine capacitatea.",
-                "Fiecare invitație ține un loc până la termen; dacă nu e acceptată, locul se eliberează singur. Persoana completează restul și semnează ea declarația.",
-                "Pe rândul invitației: «Retrimite» trimite un link nou; termenul rămâne, dacă nu scrii un număr de zile care îl mută mai târziu. «Retrage» o închide și eliberează locul.",
-                "Dacă cineva invitat se înscrie oricum, din formularul public sau la masă, înscrierea lui ia locul invitației când i se confirmă adresa sau primește un loc: invitația apare «Acceptată»."
-              ]
-            },
-            {
               "title": "Anunță participanții despre o schimbare",
               "steps": [
                 "Schimbă locul, ora sau programul în cardul lor.",
@@ -5524,11 +5609,30 @@
               "title": "Corectează, anulează sau șterge o înscriere",
               "steps": [
                 "«Înscrieri» → caută persoana → apasă pe numele ei.",
-                "Nume greșit: la «Corectează numele» scrie numele bun → «Salvează numele».",
+                "Un nume, un telefon sau altă dată greșită: «Datele înscrierii» → «Modifică datele», corectează căsuța → «Salvează datele».",
                 "Nu mai vine: «Anulează înscrierea», scrie «Motivul», apasă «Anulează înscrierea» și confirmă. Locul trece la primul de pe lista de așteptare; dacă la eveniment locurile nu se alocă automat, rămâne liber până îl dai tu.",
                 "Nu a primit emailul: «Retrimite emailul» → «Trimite acum, fără să aștepte trecerea programată». Merge și pe lista de așteptare: pleacă emailul cu situația cozii de acum.",
                 "Cere ștergerea datelor: «Șterge definitiv», scrie «Motivul ștergerii», bifează «Confirm că această ștergere este definitivă» și apasă «Șterge definitiv».",
                 "Mai multe deodată: pe listă bifează rândurile → «Anulează cele bifate»."
+              ]
+            },
+            {
+              "title": "Corectează datele unei înscrieri",
+              "steps": [
+                "Când: persoana a scris greșit numele, data nașterii, telefonul, orașul, clubul sau altceva din formular, sau a bifat că e membru fără să fie.",
+                "«Înscrieri» → apasă pe nume → «Datele înscrierii» → «Modifică datele». Schimbă doar ce e greșit → «Salvează datele»; întrebarea numește persoana și câmpurile.",
+                "Nu se schimbă de aici: adresa de email (anulează și adaugă din nou), consimțămintele (doar le retragi, cu butonul lor) și declarația (o semnează doar persoana).",
+                "Nu se trimite niciun email și nu se mută niciun loc. Fiecare câmp schimbat rămâne în jurnal, cu valoarea veche și cea nouă."
+              ]
+            },
+            {
+              "title": "Scoate bifa de membru celor fără cont",
+              "steps": [
+                "Când: înainte de o cursă pentru membri, ca să rămână bifați doar membrii clubului. Bifa o pune participantul în formular; clubul nu o verifică.",
+                "Unul câte unul: în «Datele înscrierii» debifează bifa de membru → «Salvează datele». Pe listă, «Nu e membru» e în meniul ⋮ al rândului.",
+                "Toți deodată: «Înscrieri» → «Caută și filtrează» → la membri alege «Doar cei care s-au declarat membri» → «Filtrează» → «Bife de membru fără cont de membru».",
+                "Lista arată înscrierile bifate a căror adresă nu e a niciunui cont din «Echipa». Un membru înscris cu altă adresă apare și el: debifează-i rândul. Apoi «Scoate bifa la cele» … și confirmă.",
+                "Ce nu face: nu anulează nicio înscriere, nu mută niciun loc, nu trimite niciun email. Clubul de pe listă se șterge doar dacă era cel pus de bifă. Fiecare schimbare rămâne în jurnal."
               ]
             },
             {
@@ -7998,7 +8102,6 @@
       "checkedIn": "Prezent la masă.",
       "checkinUndone": "Nu mai e marcat prezent.",
       "registrationCreated": "Persoana a fost adăugată; emailul e pus la coadă.",
-      "nameCorrected": "Numele a fost schimbat.",
       "registrationCancelled": "Înscrierea a fost anulată; emailul e pus la coadă.",
       "consentWithdrawn": "Datele bifate au fost șterse.",
       "bibsPrinted": "Marcat ca printat.",
@@ -8226,7 +8329,15 @@
       },
       "invitationResent": "Invitație retrimisă, cu un link nou.",
       "invitationResentKept": "Invitație retrimisă, cu un link nou. Termenul a rămas cel de acum: cineva așteaptă pe lista de așteptare.",
-      "invitationWithdrawn": "Invitație retrasă; locul s-a eliberat."
+      "invitationWithdrawn": "Invitație retrasă; locul s-a eliberat.",
+      "memberTickCleared": "Bifa de membru a fost scoasă.",
+      "memberTickSet": "Bifa de membru a fost pusă.",
+      "memberTicksCleared": {
+        "one": "Bifa de membru scoasă la {count} înscriere.",
+        "few": "Bifa de membru scoasă la {count} înscrieri.",
+        "other": "Bifa de membru scoasă la {count} de înscrieri."
+      },
+      "answersCorrected": "Date corectate: {fields}."
     }
   },
   "Network": {

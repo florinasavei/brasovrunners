@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { and, count, eq, gt, isNull, lt, lte } from "drizzle-orm";
+import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { eventInvitations } from "@/db/schema/event-invitations";
 import { staffUsers } from "@/db/schema/staff-users";
@@ -70,6 +71,7 @@ import { isUuid } from "@/shared/ids";
 import { dayIn, MIN_PARTICIPANT_AGE } from "./domain/age";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS, ANOTHER_LINK_INVALID, decideSubmission } from "./domain/family";
 import { registrationNameKey } from "./domain/name-key";
+import { planAnswerEdit } from "./answers";
 import { forgetRegisteredBadgeCount } from "./nav-count";
 import { currentAddressCap } from "./address-cap";
 import { familyEntryFields, insertFamilyEntry, liveSittingEntries, personOfEntry, replaceFamilyEntry } from "./family-entries";
@@ -4530,4 +4532,98 @@ export async function seatInvitedRegistration<T extends Record<string, unknown>>
   // The hold's deadline, for the job (§334) — as `confirmEmail` wakes it from inside a caller's transaction.
   wakeMaintenance(event, now, settings, allocated.holdExpiresAt);
   return allocated;
+
+/**
+ * «Modifică datele» (§NNN; the owner, 2026-10-02: «Nu vreau să se numească „curăță”, dar practic vreau
+ * să pot modifica sau suprascrie orice dată introdusă de utilizator»): an Administrator corrects or
+ * overwrites any answer the person typed — the allowlist, its rules and the three locked kinds (the
+ * address, the consents, the declaration) are `answers.ts`.
+ *
+ * - Administrator-only (`canManageRegistrations`), asserted here as well as in `admin-service.ts` and
+ *   the action (BR-REQ-060-01); the Organizer reads the answers and changes nothing (§289).
+ * - Under the event's lock, the lock `submitRegistration` and §67's rename take before they read the
+ *   address's rows, so a corrected name and a new runner on the same address cannot both find the name
+ *   free (§389); the row is read again under it, so the plan is decided on what is there now.
+ * - Writes only the changed columns, in one statement; one audit row per changed column,
+ *   `registration.answer_corrected` `{ field, from, to }`, and §67's `registration.name_corrected`
+ *   `{ from, to }` when the name of record follows the two names — all in the same transaction.
+ * - No email, no state, no place, no number: the allocator never reads an answer (the member tick
+ *   least of all, §48). The person sees the corrected answers on their own page and in later emails.
+ * - Any status; an erased row is gone (NOT_FOUND). A TEST row is corrected like a real one (§30).
+ *
+ * `db` may be a caller's transaction: the member-tick sweep runs one per row inside its own.
+ */
+export async function editRegistrationAnswersByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: { id: string; role: StaffRole },
+  registrationId: string,
+  changes: Readonly<Record<string, unknown>>,
+  now: Date,
+): Promise<{ registration: Registration; corrected: string[] }> {
+  if (!canManageRegistrations(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not correct a registration's answers`);
+  }
+  if (!isUuid(registrationId)) throw new DomainError("NOT_FOUND", "no such registration");
+  return db.transaction(async (tx) => {
+    const before = await repo.findRegistrationById(tx, registrationId);
+    if (!before) throw new DomainError("NOT_FOUND", "no such registration");
+    const event = await repo.lockEventForCapacity(tx, before.eventId);
+    if (!event) throw new DomainError("NOT_FOUND", "no such event");
+    const current = await repo.findRegistrationById(tx, registrationId);
+    if (!current) throw new DomainError("NOT_FOUND", "no such registration");
+
+    // A signed declaration names the guardian (`signed-declaration.ts`): under one, the guardian stays (`GUARDIAN_SIGNED`).
+    const [signed] = await tx
+      .select({ id: declarationAcceptances.id })
+      .from(declarationAcceptances)
+      .where(eq(declarationAcceptances.registrationId, current.id))
+      .limit(1);
+    const plan = planAnswerEdit(current, changes, {
+      eventDay: dayIn(event.startsAt, event.timezone ?? EVENT_TIMEZONE_DEFAULT),
+      minAge: event.minAge,
+      kitShirt: event.kitShirt,
+      now,
+      createdAt: current.createdAt,
+      declarationSigned: signed !== undefined,
+    });
+    if (plan.nameChange) {
+      // Two people on one address are told apart by their names (§389): a corrected name that is another's here makes one of two.
+      const siblings = await repo.findRegistrationsByEventAndParticipant(tx, current.eventId, current.participantId);
+      if (siblings.some((row) => row.id !== current.id && registrationNameKey(row.registeredName) === plan.set.nameKey)) {
+        throw new DomainError("VALIDATION_ERROR", "another registration on this address at this event already carries that name", ["firstName", "lastName"]);
+      }
+    }
+
+    const [updated] = await tx
+      .update(registrations)
+      .set({ ...plan.set, updatedAt: now })
+      .where(eq(registrations.id, current.id))
+      .returning();
+    for (const answer of plan.corrected) {
+      await recordAuditEvent(tx, {
+        actorStaffUserId: actor.id,
+        participantId: current.participantId,
+        action: "registration.answer_corrected",
+        entityType: "registration",
+        entityId: current.id,
+        metadata: { field: answer.field, from: answer.from, to: answer.to },
+        now,
+      });
+    }
+    if (plan.nameChange) {
+      await recordAuditEvent(tx, {
+        actorStaffUserId: actor.id,
+        participantId: current.participantId,
+        action: "registration.name_corrected",
+        entityType: "registration",
+        entityId: current.id,
+        metadata: plan.nameChange,
+        now,
+      });
+    }
+    return {
+      registration: updated,
+      corrected: [...plan.corrected.map((answer) => answer.field), ...(plan.nameChange ? ["registeredName"] : [])],
+    };
+  });
 }

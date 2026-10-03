@@ -26,6 +26,21 @@ import type { Database } from "@/db/types";
 export type AuditAction =
   | "registration.created_by_staff"
   | "registration.name_corrected"
+  /**
+   * «Modifică datele» (§NNN): one answer the person typed, corrected by an Administrator —
+   * `{ field, from, to }`, the column and its two values, one row per changed column (the name of
+   * record keeps its own `registration.name_corrected`). The values are the person's data, so they
+   * go with the row: the erase and the retention sweep remove `from` and `to` as they do a rename's
+   * (`scrubRegistrationsFromAudit`), and the emergency contact's seven days after the event
+   * (`jobs/retention.ts`), leaving which field was corrected, by whom and when.
+   */
+  | "registration.answer_corrected"
+  /**
+   * «Scoate bifa la cele {n}» (§NNN): one row per sweep of «Bife de membru fără cont de membru»,
+   * beside each registration's own `registration.answer_corrected` — `{ count, eventId }`, the event
+   * the list was scoped to or null for every event that has not started. Never who.
+   */
+  | "registrations.member_ticks_cleared"
   | "registration.cancelled_by_staff"
   /**
    * A participant cancelled their own registration (§547): from their manage link, «Înscrierile
@@ -128,6 +143,12 @@ export type AuditAction =
    * trail is how the club answers "who has seen my health note".
    */
   | "registration.health_viewed"
+  /**
+   * «Datele înscrierii» opened (§NNN): every answer the person typed, the phone and the emergency
+   * contact among them, so it is recorded like the emergency section beside it — the reader as the
+   * actor, no value in the metadata. The health note is not among the answers and is not shown.
+   */
+  | "registration.answers_viewed"
   /**
    * Optional data withdrawn (§322): the health note and its consent, the socials, or the
    * results consent. By the participant from their own link (no staff actor, the door in the
@@ -562,12 +583,41 @@ export async function scrubRegistrationsFromAudit<T extends Record<string, unkno
   await db
     .update(auditLogs)
     .set({ metadataJson: sql`(${auditLogs.metadataJson} - 'from' - 'to')` })
-    .where(and(aboutThisRegistration, eq(auditLogs.action, "registration.name_corrected")));
+    // A rename's two names, and a corrected answer's two values (§NNN): the person's data, gone with the row.
+    .where(and(aboutThisRegistration, inArray(auditLogs.action, ["registration.name_corrected", "registration.answer_corrected"])));
   await db
     .update(auditLogs)
     .set({ metadataJson: sql`(${auditLogs.metadataJson} - 'reason')` })
     .where(and(aboutThisRegistration, ne(auditLogs.action, "registration.deleted_by_staff")));
   await db.update(auditLogs).set({ participantId: null }).where(aboutThisRegistration);
+}
+
+/**
+ * A corrected answer's two values (§NNN, «Modifică datele»), gone when the answer itself goes: the
+ * emergency contact seven days after the race, the socials when the person withdraws them or the
+ * minors' sweep clears them (§322, §323). The row keeps which field was corrected, by whom and when;
+ * only rows that still hold a value are touched, so a later pass writes nothing. Run in the
+ * transaction that clears the columns, so the trail never outlives the data it described.
+ */
+export async function scrubCorrectedAnswerValues<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationIds: readonly string[] | SQLWrapper,
+  fields: readonly string[],
+): Promise<void> {
+  if (Array.isArray(registrationIds) && registrationIds.length === 0) return;
+  if (fields.length === 0) return;
+  await db
+    .update(auditLogs)
+    .set({ metadataJson: sql`(${auditLogs.metadataJson} - 'from' - 'to')` })
+    .where(
+      and(
+        eq(auditLogs.action, "registration.answer_corrected"),
+        eq(auditLogs.entityType, "registration"),
+        inArray(auditLogs.entityId, registrationIds as string[] | SQLWrapper),
+        inArray(sql<string>`${auditLogs.metadataJson} ->> 'field'`, [...fields]),
+        sql`((${auditLogs.metadataJson} -> 'from') is not null or (${auditLogs.metadataJson} -> 'to') is not null)`,
+      ),
+    );
 }
 
 /**

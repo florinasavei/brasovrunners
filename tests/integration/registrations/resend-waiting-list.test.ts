@@ -57,12 +57,16 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   cancelRegistrationAction: vi.fn(),
   checkInAction: vi.fn(),
   confirmRegistrationNowAction: vi.fn(),
-  correctRegisteredNameAction: vi.fn(),
+  // «Datele înscrierii» (§NNN), folding «Corectează numele».
+  editRegistrationAnswersAction: vi.fn(),
   deleteRegistrationAction: vi.fn(),
   offerPlaceAction: vi.fn(),
   promoteRegistrationAction: vi.fn(),
   setBibNumberAction: vi.fn(),
   withdrawConsentAction: vi.fn(),
+  // The member tick and its sweep (§NNN).
+  setClubMemberDeclaredAction: vi.fn(),
+  clearMemberTicksAction: vi.fn(),
   declarationHoldAction: vi.fn(),
 }));
 vi.mock("@/app/[locale]/admin/registrations/[id]/actions", () => ({

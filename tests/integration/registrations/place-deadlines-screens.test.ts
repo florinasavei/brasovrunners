@@ -65,7 +65,11 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   cancelRegistrationAction: vi.fn(),
   checkInAction: vi.fn(),
   confirmRegistrationNowAction: vi.fn(),
-  correctRegisteredNameAction: vi.fn(),
+  // «Datele înscrierii» (§NNN), folding «Corectează numele».
+  editRegistrationAnswersAction: vi.fn(),
+  // The member tick and its sweep (§NNN).
+  setClubMemberDeclaredAction: vi.fn(),
+  clearMemberTicksAction: vi.fn(),
   deleteRegistrationAction: vi.fn(),
   givePlaceNowAction: vi.fn(),
   offerPlaceAction: vi.fn(),

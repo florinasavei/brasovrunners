@@ -14,9 +14,9 @@ import {
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import {
   cancelRegistrationByStaff,
-  correctRegisteredName,
   createRegistrationByStaff,
   deleteRegistrationByStaff,
+  editRegistrationAnswers,
 } from "@/modules/registrations/admin-service";
 import {
   confirmEmail,
@@ -416,7 +416,8 @@ describe("BR-REQ-037-03 corrections are bounded and audited", () => {
     const event = await createInternalEvent(10);
     const registration = await addByStaff(event, "desk@example.org");
 
-    const updated = await correctRegisteredName(db, admin, registration.id, "  Ana Popescu  ", NOW);
+    // «Modifică datele» (§NNN) carries the correction: the two names, the name of record following them.
+    const { registration: updated } = await editRegistrationAnswers(db, admin, registration.id, { firstName: "  Ana ", lastName: " Popescu  " }, NOW);
     expect(updated.registeredName).toBe("Ana Popescu");
 
     const trail = await db
@@ -434,7 +435,7 @@ describe("BR-REQ-037-03 corrections are bounded and audited", () => {
     const event = await createInternalEvent(10);
     const registration = await addByStaff(event, "desk@example.org");
 
-    expect(await codeOf(correctRegisteredName(db, admin, registration.id, "   ", NOW))).toBe(
+    expect(await codeOf(editRegistrationAnswers(db, admin, registration.id, { firstName: "   " }, NOW))).toBe(
       "VALIDATION_ERROR",
     );
   });
@@ -443,7 +444,7 @@ describe("BR-REQ-037-03 corrections are bounded and audited", () => {
     const event = await createInternalEvent(10);
     const registration = await addByStaff(event, "desk@example.org");
 
-    expect(await codeOf(correctRegisteredName(db, editor, registration.id, "Ana", NOW))).toBe(
+    expect(await codeOf(editRegistrationAnswers(db, editor, registration.id, { firstName: "Ana" }, NOW))).toBe(
       "FORBIDDEN",
     );
   });
@@ -700,16 +701,20 @@ describe("BR-REQ-037-06 an Administrator erases a registration", () => {
     await registerPublicly(second, "renamed@example.ro");
     const oldName = erased.registeredName;
 
-    await correctRegisteredName(db, admin, erased.id, "Numele Corectat", NOW);
+    await editRegistrationAnswers(db, admin, erased.id, { firstName: "Numele", lastName: "Corectat" }, NOW);
     await cancelRegistrationByStaff(db, admin, erased.id, "a asked by phone", NOW);
     await deleteRegistrationByStaff(db, admin, erased.id, "erasure request", NOW);
 
     const rows = await db.select().from(auditLogs).where(eq(auditLogs.entityId, erased.id));
-    expect(rows.map((row) => row.action).sort()).toEqual([
+    // The two corrected names (§NNN) keep which field and lose both values, like the rename beside them.
+    expect(rows.map((row) => row.action).filter((action) => action !== "registration.answer_corrected").sort()).toEqual([
       "registration.cancelled_by_staff",
       "registration.deleted_by_staff",
       "registration.name_corrected",
     ]);
+    const corrected = rows.filter((row) => row.action === "registration.answer_corrected").map((row) => row.metadataJson);
+    expect(corrected).toEqual(expect.arrayContaining([{ field: "firstName" }, { field: "lastName" }]));
+    for (const metadata of corrected) expect(Object.keys(metadata as object)).toEqual(["field"]);
     for (const row of rows) {
       expect(row.participantId, `${row.action} still names the participant`).toBeNull();
       const metadata = JSON.stringify(row.metadataJson);
