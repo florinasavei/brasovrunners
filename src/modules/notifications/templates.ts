@@ -1086,6 +1086,12 @@ export type TemplateData = {
    */
   waitlistStanding?: WaitlistStandingLine;
   /**
+   * `WAITLIST_JOINED` sent again by an Administrator's «Retrimite emailul» (§641, §NNN): the row's
+   * `isManualResend`. The person joined earlier, so the opening says they are still waiting rather than
+   * that we just added them. Absent on the first send and on the form sent again (§217).
+   */
+  waitlistResent?: boolean;
+  /**
    * A cancellation (§547): whether the person was on the waiting list rather than holding a place,
    * from the state the registration left (the row's payload), and who else the address still holds
    * at the event, each with their state — read at send time, the address's own rows only (§39).
@@ -1396,7 +1402,9 @@ const T = {
     waitlistJoined: {
       subject: "Ești pe lista de așteptare",
       body: (d: TemplateData) => [
-        `${d.eventTitle ?? "Evenimentul"} este complet momentan, așa că te-am adăugat **pe lista de așteptare**. Te vom anunța dacă se eliberează un loc.`,
+        d.waitlistResent
+          ? `Ești în continuare **pe lista de așteptare** la ${d.eventTitle ?? "eveniment"}. Te vom anunța dacă se eliberează un loc.`
+          : `${d.eventTitle ?? "Evenimentul"} este complet momentan, așa că te-am adăugat **pe lista de așteptare**. Te vom anunța dacă se eliberează un loc.`,
       ],
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
@@ -1619,7 +1627,8 @@ const T = {
           `«${w.tasks}» arată aceleași rânduri până când textele sunt aprobate. Mesajul acesta vine o singură dată pentru fiecare schimbare a șabloanelor, fiecărui Administrator și Superadministrator.`,
         ];
       },
-      action: "Deschide documentele legale",
+      // What the press is for, not where it lands (§NNN): the button opens «Versiune nouă», where both happen.
+      action: "Regenerează și aprobă textele",
     },
     registrationOpened: {
       // To an address, not a participant (§146): the greeting names nobody.
@@ -1658,7 +1667,8 @@ const T = {
       (`holdLapsed`, `holdLapsedNext`), facts of this send whoever wrote the words.
     */
     declarationHoldExpired: {
-      subject: (d: TemplateData) => `Locul tău la ${d.eventTitle ?? "eveniment"} a expirat`,
+      // The person named when known (§NNN): on an address that registers a family, the subject says whose place it was.
+      subject: (d: TemplateData) => `${d.participantName ? `Locul pentru ${d.participantName}` : "Locul tău"} la ${d.eventTitle ?? "eveniment"} a expirat`,
       body: (d: TemplateData) => [
         `Locul tău la ${d.eventTitle ?? "eveniment"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted},` : ""} **a expirat**: declarația nu a fost semnată la timp.`,
       ],
@@ -2116,7 +2126,9 @@ const T = {
     waitlistJoined: {
       subject: "You're on the waiting list",
       body: (d: TemplateData) => [
-        `${d.eventTitle ?? "The event"} is full right now, so we added you to **the waiting list**. We'll let you know if a place opens up.`,
+        d.waitlistResent
+          ? `You are still on **the waiting list** for ${d.eventTitle ?? "the event"}. We'll let you know if a place opens up.`
+          : `${d.eventTitle ?? "The event"} is full right now, so we added you to **the waiting list**. We'll let you know if a place opens up.`,
       ],
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
@@ -2268,7 +2280,7 @@ const T = {
           `«${w.tasks}» shows the same rows until the texts are approved. This message comes once for each change of the templates, to every Administrator and Superadministrator.`,
         ];
       },
-      action: "Open the legal documents",
+      action: "Regenerate and approve the texts",
     },
     registrationOpened: {
       subject: (d: TemplateData) => `Registration for ${d.eventTitle ?? "the event"} is open`,
@@ -2322,7 +2334,7 @@ const T = {
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
     declarationHoldExpired: {
-      subject: (d: TemplateData) => `Your place at ${d.eventTitle ?? "the event"} has expired`,
+      subject: (d: TemplateData) => `${d.participantName ? `The place for ${d.participantName}` : "Your place"} at ${d.eventTitle ?? "the event"} has expired`,
       body: (d: TemplateData) => [
         `Your place at ${d.eventTitle ?? "the event"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted},` : ""} **has expired**: the declaration was not signed in time.`,
       ],

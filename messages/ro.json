@@ -7221,8 +7221,8 @@
       "doneTitle": "Adresa a fost confirmată",
       "doneWaitlist": "Ești pe lista de așteptare. Dacă se eliberează un loc, îți scriem pe email cu ce ai de făcut.",
       "eventOff": "Evenimentul a fost anulat sau s-a încheiat, așa că înscrierea nu mai continuă: nu ți-am rezervat un loc și nu trebuie să faci nimic.",
-      "waitlistFull": "Locurile și lista de așteptare sunt pline, așa că adresa nu a fost confirmată și nu ți-am rezervat nimic. Linkul din email rămâne valabil {confirmation} de la trimiterea formularului: dacă între timp se eliberează un loc pe lista de așteptare, deschide-l din nou.",
-      "noWaitlist": "Toate locurile au fost ocupate și evenimentul nu are listă de așteptare, așa că adresa nu a fost confirmată și nu ți-am rezervat nimic. Linkul din email rămâne valabil {confirmation} de la trimiterea formularului: dacă între timp se eliberează un loc, deschide-l din nou.",
+      "waitlistFull": "Locurile și lista de așteptare sunt pline: adresa nu e confirmată și nu ți-am rezervat nimic. Linkul e valabil {confirmation} de când a plecat primul email; dacă se eliberează un loc pe listă, redeschide-l.",
+      "noWaitlist": "Toate locurile s-au ocupat și nu e listă de așteptare: adresa nu e confirmată și nu ți-am rezervat nimic. Linkul e valabil {confirmation} de când a plecat primul email; dacă se eliberează un loc, redeschide-l.",
       "doneFor": "Adresa e confirmată pentru:",
       "next": {
         "PENDING_DECLARATION": "semnează declarația din emailul care vine acum",
