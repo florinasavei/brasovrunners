@@ -5,6 +5,7 @@ import type { RegistrationCsvRow } from "./csv";
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import type { WorkbookDetails } from "./admin-repository";
 import { ageOnRaceDay } from "./domain/age";
+import { ROW_DEADLINE_EXPORT_WORDS, type RowDeadlineKind } from "./domain/row-deadline";
 import { shirtSizeShown } from "./domain/kit";
 import { raceNumberOf } from "./domain/race-number";
 import { sexCell } from "./domain/sex";
@@ -34,8 +35,12 @@ import { sexCell } from "./domain/sex";
 /** A row as the sheet wants it: the same data the CSV carries, with the dates still dates. */
 export type RegistrationSheetRow = Omit<
   RegistrationCsvRow,
-  "submittedAt" | "confirmedAt" | "checkedInAt" | "fitnessDeclaredAt" | "termsAcceptedAt" | "declarationSignedAt" | "promoConsentAt"
+  "submittedAt" | "confirmedAt" | "checkedInAt" | "fitnessDeclaredAt" | "termsAcceptedAt" | "declarationSignedAt" | "promoConsentAt" | "deadline" | "deadlineFor"
 > & {
+  /** «Până când» (§NNN): the moment the row waits on (`rowDeadlineOf`), a date like the others; null when none. */
+  deadline?: Date | null;
+  /** What that moment is for (§NNN): its kind, written out in the sheet's words; null when none. */
+  deadlineFor?: RowDeadlineKind | null;
   /** «Oferte și beneficii» (§562): the moment of the yes, a date like the others; null for no. */
   promoConsentAt?: Date | null;
   /** The moment the terms were accepted (§421, §425), a date like the others; null when not recorded. */
@@ -152,6 +157,12 @@ const COLUMNS: Array<SheetColumn<RegistrationSheetRow>> = [
   { header: "City", width: 18, cell: (row) => ({ value: row.city ?? "", type: String }) },
   { header: "T-shirt size", width: 12, cell: (row) => ({ value: row.tshirtSize && row.tshirtSize !== "NONE" ? row.tshirtSize : "", type: String }) },
   { header: "Status", width: 22, cell: (row) => ({ value: row.status, type: String }) },
+  /*
+    The list's «Până când» (§NNN), beside the state it is the deadline of, as on the list: the moment on the
+    club's clock, then what it is for in words — the CSV has the two last, as a token. Blank when none.
+  */
+  { header: "Until when", width: 18, cell: (row) => ({ value: onClubClock(row.deadline ?? null), type: Date, format: STAMP_FORMAT }) },
+  { header: "Waiting on", width: 30, cell: (row) => ({ value: row.deadlineFor ? ROW_DEADLINE_EXPORT_WORDS[row.deadlineFor] : "", type: String }) },
   { header: "Email", width: 30, cell: (row) => ({ value: row.email, type: String }) },
   { header: "Identity document", width: 18, cell: (row) => ({ value: row.idDocument, type: String }) },
   { header: "Club member (declared)", width: 12, cell: (row) => ({ value: row.clubMemberDeclared, type: Boolean }) },

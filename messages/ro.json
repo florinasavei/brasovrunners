@@ -780,6 +780,17 @@
       "columnName": "Nume",
       "columnStatus": "Stare",
       "columnJourney": "Unde a ajuns",
+      "columnUntilWhen": "Până când",
+      "untilWhenHint": "Până când poate semna declarația, accepta oferta sau confirma adresa din email, la minut. Gri: termen trecut. «—»: nu așteaptă nimic. La fel ca în cronologia înscrierii.",
+      "untilWhen": {
+        "hold": "Poate semna până {instant}",
+        "kept": "{instant} — termenul a trecut, locul e păstrat",
+        "offer": "Poate accepta până {instant}",
+        "offerLapsed": "{instant} — termenul ofertei a trecut",
+        "reserved": "Locul e rezervat până {instant}",
+        "link": "Linkul e valabil până {instant}",
+        "linkLapsed": "{instant} — linkul a expirat"
+      },
       "columnEvent": "Eveniment",
       "columnEmail": "E-mail",
       "columnSubmitted": "Trimisă",
@@ -5671,7 +5682,7 @@
                 "Atenție: fiecare primește un link nou, iar linkul din emailul de dinainte nu mai merge. Spune-le să deschidă emailul cel mai nou.",
                 "Spune-le să caute emailul și în Spam și în Promoții.",
                 "Cel mult trei apăsări pe oră la un eveniment. Un „i” lângă buton spune când o apăsare ar fi refuzată: evenimentul e anulat, încheiat sau a început, ori s-au consumat apăsările orei.",
-                "Cine pierde locul și când: în «Înscrieri», lista unei curse spune sub «Cine s-a înscris» până când își țin oamenii locul și ce urmează după termen; coloana «Unde a ajuns» are termenul fiecăruia.",
+                "Cine pierde locul și când: lista unei curse din «Înscrieri» spune sub «Cine s-a înscris» ce urmează după termen; coloana «Până când» are ziua și ora fiecăruia.",
                 "O singură persoană: deschide înscrierea ei → «Retrimite emailul»."
               ]
             },

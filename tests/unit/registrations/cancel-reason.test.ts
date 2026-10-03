@@ -60,10 +60,10 @@ describe("§558 the cancellation reason", () => {
       cancelReason: cancelReasonCell("OTHER", "=cmd, nunta"),
     };
     const [header, line] = buildRegistrationsCsv([row]).split("\r\n");
-    // Followed only by the offers and benefits (§562), which came after it.
-    expect(header.split(",").slice(-3, -1)).toEqual(["Cancellation reason", "Offers and benefits"]);
+    // Followed by the offers and benefits (§562), the special guest (§643) and, in the CSV, «Până când»'s two (§NNN).
+    expect(header.split(",").slice(-5, -3)).toEqual(["Cancellation reason", "Offers and benefits"]);
     // A reason is typed on a public form: neutralized and quoted like every other cell — then the offers' cell, empty here.
-    expect(line.endsWith(',"Another reason: =cmd, nunta",,')).toBe(true);
+    expect(line.endsWith(',"Another reason: =cmd, nunta",,,,')).toBe(true);
     expect(REGISTRATION_SHEET_HEADERS.slice(-3, -1)).toEqual(["Cancellation reason", "Offers and benefits"]);
   });
 });

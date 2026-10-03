@@ -39,6 +39,8 @@ import StaffJourney from "@/modules/registrations/ui/StaffJourney";
 import FamilyChip from "@/modules/registrations/ui/FamilyChip";
 import SummaryStrip from "@/modules/registrations/ui/SummaryStrip";
 import PlaceDeadlines from "@/modules/registrations/ui/PlaceDeadlines";
+import RowDeadlineCell from "@/modules/registrations/ui/RowDeadlineCell";
+import { rowDeadlineOf } from "@/modules/registrations/domain/row-deadline";
 import { deadlinesForThisRequest } from "@/modules/deadlines/request";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { familiesTogether, familyOf } from "@/modules/registrations/family-marker";
@@ -204,12 +206,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
 
   const deadlinesNow = new Date();
   const [sortedRows, total, summary, bibs, voidBibs, sponsors, placeDeadlines] = await Promise.all([
-    listRegistrationsForAdmin(db, filters, {
-      limit: query.limit,
-      offset: query.offset,
-      sort: query.sort as RegistrationSortKey,
-      dir: query.dir,
-    }),
+    listRegistrationsForAdmin(
+      db,
+      filters,
+      { limit: query.limit, offset: query.offset, sort: query.sort as RegistrationSortKey, dir: query.dir },
+      // The same clock as the «Până când» cells (§NNN), so the order is the order of the dates on screen.
+      deadlinesNow,
+    ),
     countRegistrationsForAdmin(db, filters),
     /*
       The counter (§246). Deliberately blind to the *status* filter: the strip's job is to say
@@ -481,6 +484,20 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       hint: t("registrations.journey.legend"),
       // The number once the registration is confirmed (§548): the chip says "nr. 42".
       render: (row) => <StaffJourney journey={journeyOf(row)} bibNumber={raceNumberOf(row)} variant="compact" />,
+    },
+    {
+      /*
+        «Până când» (§NNN): until when each person can sign the declaration, accept the offer or confirm
+        the address, to the minute, read from the row (`rowDeadlineOf`, no query per row; a queued offer's
+        email is one `EXISTS` in the list's query, §520) and sorted by the same cases in SQL. Beside the
+        step it is the deadline of; the step's cell no longer repeats it.
+      */
+      key: "untilWhen",
+      label: t("registrations.columnUntilWhen"),
+      hint: t("registrations.untilWhenHint"),
+      sortable: true,
+      initialDir: "asc",
+      render: (row) => <RowDeadlineCell deadline={rowDeadlineOf(row, deadlinesNow)} />,
     },
     {
       /*
