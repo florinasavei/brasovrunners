@@ -477,7 +477,8 @@ async function renderRow(
     // With the count kept private (§634) the sentence says what the page says: `countPublic` travels with the rest.
     if (standing) data.waitlistStanding = { position: standing.position, length: standing.length, autoOffer: standing.autoOffer, countPublic: standing.countPublic };
     // An Administrator's resend (§641) opens with «still on the waiting list», never «we added you» (§NNN).
-    if (row.isManualResend) data.waitlistResent = true;
+    // A resend rendered after the person left the list says nothing of a standing it no longer has.
+    if (row.isManualResend && standing) data.waitlistResent = true;
   }
   /*
     One cancellation email per person (§547): whether the person held a place or waited in line —
