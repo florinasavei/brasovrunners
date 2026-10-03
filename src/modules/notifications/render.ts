@@ -35,6 +35,7 @@ import { seriesRhythmPhrase } from "@/modules/group-run-declarations/series";
 import { generateTokenSecret, hashTokenSecret } from "@/modules/action-tokens/domain/token-secret";
 import { bulkCopyRecipients, declarationPdfAudience, isClubCopy, isParticipantMessage } from "./domain/club-notices";
 import { CANNOT_COME_MESSAGES, cannotComeApplies, cannotComeUrlOf } from "./domain/cannot-come";
+import { CONFIRMATION_RETRY_LEAST_LEFT_MS, isConfirmationRetry } from "./domain/automatic-sends";
 import { type HoldLapsedNext, holdLapsedNext } from "./domain/hold-lapsed";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { declarationAsksMinorToSign } from "@/modules/legal-documents/repository";
@@ -697,6 +698,37 @@ async function renderRow(
   */
   if ((row.payloadJson as { alreadyRegistered?: unknown } | null)?.alreadyRegistered === true) {
     data.alreadyRegistered = true;
+  }
+  /*
+    The verification email re-sent by the maintenance job (§NNN) to whoever had not confirmed. Read
+    again at the send: confirmed, cancelled or lapsed since it was queued — or the event no longer run,
+    or under an hour left on the link — there is nothing left to ask, and it is withdrawn rather than
+    sent (§331). Otherwise its one sentence says why it came and the deadline its first email started
+    (§513: it does not move), in the event's zone, each half in its own words; and «valabil
+    {confirmationHours}» says the link's whole hours left, never the club's full length. The inbox's
+    alone, like every advice to the address.
+  */
+  if (row.messageType === "VERIFY_REGISTRATION_EMAIL" && isConfirmationRetry(row.payloadJson) && !clubCopy) {
+    const lapsesAt = registration?.emailLinkExpiresAt ?? null;
+    const [eventState] = registration
+      ? await db.select({ startsAt: events.startsAt, eventStatus: events.eventStatus }).from(events).where(eq(events.id, registration.eventId)).limit(1)
+      : [];
+    if (
+      !registration ||
+      registration.status !== "PENDING_EMAIL_CONFIRMATION" ||
+      !lapsesAt ||
+      lapsesAt.getTime() - now.getTime() < CONFIRMATION_RETRY_LEAST_LEFT_MS ||
+      !eventState ||
+      eventState.eventStatus !== "SCHEDULED" ||
+      eventState.startsAt.getTime() <= now.getTime()
+    ) {
+      throw new OutboxMessageWithdrawn("the re-sent verification email has nothing left to ask: confirmed, moved on, under an hour left or the event started");
+    }
+    const linkZone = eventDetails?.timezone ?? CLUB_TIME_ZONE;
+    data.confirmationRetry = true;
+    data.confirmationRetryDeadline = formatDeadlineInSentence(lapsesAt, linkZone, locale);
+    data.confirmationRetryDeadlineOther = formatDeadlineInSentence(lapsesAt, linkZone, otherLocale(locale));
+    if (data.timings) data.timings = { ...data.timings, confirmationHours: Math.floor((lapsesAt.getTime() - now.getTime()) / (60 * 60_000)) };
   }
   // …re-sent for a slip (§446): the name or the birth date matched a registration, not both — so the
   // message says how to register somebody else. Never on a club copy: it is advice to the address.

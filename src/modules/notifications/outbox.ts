@@ -34,6 +34,8 @@ import {
 import { GMAIL_CAP_DEFERRED_ERROR } from "./domain/email-transport";
 import { heldByMailgunCondition, readMailgunStop, recordMailgunStop } from "./mailgun-stop";
 import { applyDeadlineRebase, type DeadlineRebase, planDeadlineRebase } from "./deadline-rebase";
+import { currentDeadlines } from "@/modules/deadlines/deadlines";
+import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { BULK_MESSAGE_TYPES, isBulkMessage } from "./domain/bulk";
 import { drainOutboxAfterResponse } from "./drain";
 import {
@@ -813,6 +815,20 @@ export async function processOutboxBatch(
         await markSent(db);
         summary.sent += 1;
         if (carrying && result.transport === "gmail") viaGmail += 1;
+        /*
+          A participant's verification email that left starts the club's hours to the next one (§NNN):
+          the maintenance job planned its quiet before this send, so it is told when to look — a
+          re-sent one too, while the club allows more than one. The plan decides whether anything is
+          owed then; a setting that cannot be read wakes nothing, and the daily window finds the work
+          a day late at most.
+        */
+        if (row.messageType === "VERIFY_REGISTRATION_EMAIL" && row.participantId) {
+          const retryHours = await currentDeadlines(db).then(
+            (settings) => (settings.verificationRetries > 0 ? settings.verificationRetryHours : 0),
+            () => 0,
+          );
+          if (retryHours > 0) wakeJobs("registration-maintenance", new Date(sentValues.sentAt.getTime() + retryHours * 60 * 60_000), clock());
+        }
         if (rebase) {
           // The message is out whatever happens here: a write that fails leaves the deadline it was
           // queued with — what every message had before §513 — and never the send unrecorded.

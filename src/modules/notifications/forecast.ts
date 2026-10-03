@@ -14,8 +14,10 @@ import {
   declarationLastCallDueAt,
   eventReminderDueAt,
   isDeclarationLastCallDue,
+  isConfirmationRetryDue,
   isEventReminderDue,
   nextInLineOffers,
+  onePerAddress,
   nextInLineReleases,
   participationConfirmationDueAt,
   registrationOpenedDueAt,
@@ -23,6 +25,7 @@ import {
 import { BULK_MESSAGE_TYPES } from "./domain/bulk";
 import { CLUB_COPY_FLAG } from "./domain/club-notices";
 import { selectDeclarationCandidates, selectReminderCandidates } from "./event-mail";
+import { planConfirmationRetriesFrom } from "./confirmation-retry";
 
 /**
  * "Următoarele emailuri automate" on `/admin/emails` (§383; the owner, 2026-09-24: "I need to know
@@ -42,9 +45,9 @@ import { selectDeclarationCandidates, selectReminderCandidates } from "./event-m
  * (§104), the last call to sign at the reminder's lead (§160), the offer to the next in line when
  * a waiting-list offer or a declaration hold lapses with somebody waiting, before registration
  * closes (§160, AGENTS.md §10.5, §420), the «Locul tău … a expirat» to the person whose declaration
- * hold that lapse releases, before the start (§638 — never for a lapsed offer, §331), and
+ * hold that lapse releases, before the start (§638 — never for a lapsed offer, §331),
  * "registration is open" to the addresses left on the
- * event's page (§146). No race number is sent on its own since §548: it rides on the confirmation.
+ * event's page (§146), and the verification email re-sent to whoever has not confirmed (§NNN). No race number is sent on its own since §548: it rides on the confirmation.
  *
  * **And what already waits for the subscribers** (§445): a newsletter or a new-event alert that
  * is queued and not yet sent — the reserve (`domain/bulk.ts`) may hold it until the allowance
@@ -72,6 +75,8 @@ export type AutomaticSend =
   // The person whose declaration hold a lapse releases to somebody waiting (§638).
   | "holdLapsed"
   | "registrationOpened"
+  // The verification email re-sent by itself, to whoever has not confirmed the address yet (§NNN).
+  | "confirmationRetry"
   // The subscribers' sends, already queued (§445).
   | "newsletter"
   | "newEventAlert";
@@ -112,6 +117,7 @@ const TYPE_OF: Record<AutomaticSend, EmailMessageType> = {
   nextInLine: "WAITLIST_SPOT_OFFER",
   holdLapsed: "DECLARATION_HOLD_EXPIRED",
   registrationOpened: "REGISTRATION_OPENED",
+  confirmationRetry: "VERIFY_REGISTRATION_EMAIL",
   newsletter: "NEWSLETTER",
   newEventAlert: "NEW_EVENT_ALERT",
 };
@@ -124,6 +130,8 @@ const RUN_ORDER: AutomaticSend[] = [
   "reminder",
   "lastCall",
   "participation",
+  // After the queue work and the declaration emails, as `maintenance.ts` queues it.
+  "confirmationRetry",
   "registrationOpened",
   "newEventAlert",
   "newsletter",
@@ -134,7 +142,11 @@ type Due = { at: Date; eventId: string; send: AutomaticSend; registrationId?: st
 
 export async function forecastAutomaticEmails<T extends Record<string, unknown>>(
   db: Database<T>,
-  input: { now: Date; horizonDays?: number; deadlines: Pick<Deadlines, "reminderHours"> },
+  input: {
+    now: Date;
+    horizonDays?: number;
+    deadlines: Pick<Deadlines, "reminderHours" | "confirmationHours" | "verificationRetryHours" | "verificationRetries">;
+  },
 ): Promise<ForecastRow[]> {
   const { now, deadlines } = input;
   const until = new Date(now.getTime() + (input.horizonDays ?? FORECAST_HORIZON_DAYS) * DAY);
@@ -278,6 +290,19 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
   }
   const pending: Due[] = keyed.filter((item) => !queued.has(keyOf(item)));
   pending.push(...nextInLinePending);
+
+  /*
+    The verification email re-sent (§NNN): the job's own plan (`planConfirmationRetriesFrom`), one per
+    address and event, each at its instant — or the job's next run when already due. Only the next one:
+    whether a further one is owed depends on whether the person confirms meanwhile.
+  */
+  const retries = await planConfirmationRetriesFrom(db, now, deadlines);
+  const kindOf = new Map(retries.candidates.map((row) => [row.registrationId, row.kind]));
+  for (const plan of onePerAddress(retries.plans.map((item) => ({ ...item, at: notBeforeNow(item.at) })))) {
+    if (inHorizon(plan.at) && isConfirmationRetryDue(plan, plan.at)) {
+      pending.push({ at: plan.at, eventId: plan.eventId, send: "confirmationRetry", registrationId: plan.registrationId, kind: kindOf.get(plan.registrationId) });
+    }
+  }
 
   // "Registration is open" (§146), to the addresses left on the event's page — no registration yet.
   const interested = await db

@@ -8,6 +8,7 @@ import { type RegistrationStatus, registrations } from "@/db/schema/registration
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { AUTOMATIC_SEND_KEYS } from "@/modules/notifications/domain/automatic-sends";
 import { startingDeadline } from "@/modules/notifications/domain/deadline-rebase";
+import { queueConfirmationRetries } from "@/modules/notifications/confirmation-retry";
 import { queueEventReminders, queueParticipationConfirmations } from "@/modules/notifications/event-mail";
 import { type ForecastRow, forecastAutomaticEmails } from "@/modules/notifications/forecast";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
@@ -368,6 +369,10 @@ describe("§383 the forecast of automatic emails", () => {
         const { queued: count } = await queueRegistrationOpenedMessages(db, when);
         return { ids: [], count };
       }
+      // The second verification email (§NNN): the job's own step.
+      case "confirmationRetry":
+        await queueConfirmationRetries(db, when, DEFAULT_DEADLINES);
+        return participantOnly("VERIFY_REGISTRATION_EMAIL", ":verify-retry:%");
       // The subscribers' sends are already in the outbox (§445): no job decides them, and this fixture queues none.
       case "newsletter":
       case "newEventAlert":

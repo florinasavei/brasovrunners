@@ -667,6 +667,8 @@ export function renderBilingual(
     // A family's reservations, in the second half's own words (§543).
     ...(data.familyReservedUntilFormattedOther ? { familyReservedUntilFormatted: data.familyReservedUntilFormattedOther } : {}),
     ...(data.signedAtFormattedOther ? { signedAtFormatted: data.signedAtFormattedOther } : {}),
+    // The re-sent verification email's deadline (§NNN), in the second half's own words.
+    ...(data.confirmationRetryDeadlineOther ? { confirmationRetryDeadline: data.confirmationRetryDeadlineOther } : {}),
     // A group run series' rhythm in the second half's language (§523).
     ...(data.seriesRhythmOther ? { seriesRhythm: data.seriesRhythmOther } : {}),
     ...(data.eventLocationNameOther ? { eventLocationName: data.eventLocationNameOther } : {}),
@@ -1051,6 +1053,14 @@ export type TemplateData = {
    * both (§446): one sentence says how to register somebody else. Only ever in the inbox.
    */
   anotherPersonHint?: boolean;
+  /**
+   * The verification email re-sent by the maintenance job (§NNN), to whoever had not confirmed. One
+   * sentence in front of the body says why it came and the deadline its first email started
+   * (`confirmationRetryDeadline`, in the event's zone; `…Other` for the second half). Only ever in the inbox.
+   */
+  confirmationRetry?: boolean;
+  confirmationRetryDeadline?: string;
+  confirmationRetryDeadlineOther?: string;
   /**
    * The slip was another name on a registered birth date (§493): twins, perhaps, whom "send the form
    * again" cannot help — the sentence says what can (another address, or the club at the desk).
@@ -1996,6 +2006,9 @@ const T = {
     },
     /** Under "you are already registered", on a re-send for a slip (§446): the one way to register somebody else. */
     anotherPersonHint: "Dacă vrei să înscrii pe altcineva, trimite formularul cu numele complet și data de naștere a acelei persoane.",
+    /** In front of the verification email re-sent by itself (§NNN): why it came, and that the deadline did not move. */
+    confirmationRetry: (deadline: string) =>
+      `Nu am primit încă confirmarea adresei tale, așa că îți retrimitem linkul. Termenul curge de la primul email: **${deadline}**.`,
     /** In its place when the slip was another name on a registered birth date (§493): how twins are registered. */
     sameBirthDateHint:
       "Pe aceeași adresă de email nu pot fi înscrise din formular două persoane născute în aceeași zi. Pentru un frate geamăn sau o soră geamănă, trimite formularul de pe altă adresă de email, ori răspunde la acest email și facem noi înscrierea.",
@@ -2587,6 +2600,9 @@ const T = {
       note: "Your place goes to someone else.",
     },
     anotherPersonHint: "If you want to register someone else, send the form with that person's full name and birth date.",
+    /** In front of the verification email re-sent by itself (§NNN): why it came, and that the deadline did not move. */
+    confirmationRetry: (deadline: string) =>
+      `We have not received your address confirmation yet, so we are sending you the link again. The deadline runs from the first email: **${deadline}**.`,
     sameBirthDateHint:
       "Two people born on the same day cannot both be registered from one email address through the form. For a twin, send the form from another email address, or reply to this email and we will register them.",
     /** After the body of a declaration request, on an address with more to sign (§471): the one link signs them all. */
@@ -3097,6 +3113,10 @@ export function buildTemplateContent(
       ...(data.alreadyRegistered ? [copy.alreadyRegistered(data.bibNumber ?? null)] : []),
       // …and, on a re-send for a slip (§446), how to register somebody else — the inbox's alone.
       ...(data.anotherPersonHint ? [data.sameBirthDateHint ? copy.sameBirthDateHint : copy.anotherPersonHint] : []),
+      // …and the verification email re-sent by itself says why it came and its deadline (§NNN) — a fact of this send, whoever wrote the body.
+      ...(messageType === "VERIFY_REGISTRATION_EMAIL" && data.confirmationRetry && data.confirmationRetryDeadline && !clubCopy
+        ? [copy.confirmationRetry(data.confirmationRetryDeadline)]
+        : []),
       /*
         Another person on the address (§446): who the address holds and who the form named, before
         the question — facts of this send, like "you were already registered" above, so a club that

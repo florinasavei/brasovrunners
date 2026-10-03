@@ -8,6 +8,7 @@ import type { Database } from "@/db/types";
 import { PROCESSING_LOCK_TIMEOUT_MS } from "@/modules/notifications/domain/retry";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { declarationLastCallDueAt, eventReminderDueAt } from "@/modules/notifications/domain/automatic-sends";
+import { nextConfirmationRetry } from "@/modules/notifications/confirmation-retry";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { PLACE_HOLDING_STATUSES } from "@/modules/registrations/domain/state-machine";
 import { emailLinkLapseSql } from "@/modules/registrations/repository";
@@ -244,8 +245,20 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
   const familyLapse = await nextFamilyEntryLapse(db, now);
   // An invitation's deadline (§647): the sweep ends it and the place it kept goes to the line.
   const invitationLapse = await nextInvitationLapse(db, now);
+  // `queueConfirmationRetries` (§NNN): the verification email re-sent, the club's hours after the last one left.
+  const confirmationRetry = await nextConfirmationRetry(db, now, settings);
 
-  return earliest([emailLapses, toDate(holds?.next), toDate(placeHolds?.next), ...eventInstants, ...lateReminders, ...interestInstants, familyLapse, toDate(invitationLapse)]);
+  return earliest([
+    emailLapses,
+    toDate(holds?.next),
+    toDate(placeHolds?.next),
+    ...eventInstants,
+    ...lateReminders,
+    ...interestInstants,
+    familyLapse,
+    toDate(invitationLapse),
+    confirmationRetry,
+  ]);
 }
 
 /**

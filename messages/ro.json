@@ -4959,7 +4959,9 @@
           "raceWeekDays": "Numărătoarea inversă de pe prima pagină începe cu (zile înainte)",
           "seriesHorizonDays": "O serie își are datele create înainte cu (zile)",
           "publicListDays": "Lista publică de participanți rămâne pe site după eveniment (zile)",
-          "familySittingMinutes": "Emailul unei înscrieri de familie așteaptă „Gata” cel mult (minute)"
+          "familySittingMinutes": "Emailul unei înscrieri de familie așteaptă „Gata” cel mult (minute)",
+          "verificationRetryHours": "Linkul de confirmare a adresei se retrimite după (ore)",
+          "verificationRetries": "De câte ori se retrimite linkul (0–3)"
         },
         "help": {
           "confirmationHours": "Cât are cineva ca să apese linkul din primul email; după, înscrierea expiră.",
@@ -4970,7 +4972,9 @@
           "raceWeekDays": "0 = doar în ziua cursei. Din aceeași zi, cardul de tipărire a numerelor din editor se deschide singur.",
           "seriesHorizonDays": "Datele deja create rămân dacă micșorezi numărul; se completează singure dacă îl mărești.",
           "publicListDays": "Apoi lista se închide singură, chiar dacă evenimentul o are încă pornită. Nota de confidențialitate din șablon spune acest număr.",
-          "familySittingMinutes": "După „Da, încă o persoană”, emailul familiei așteaptă „Gata” cel mult atâtea minute de la ultimul formular și pleacă o singură dată, pentru toți; la 0, fiecare email pleacă imediat."
+          "familySittingMinutes": "După „Da, încă o persoană”, emailul familiei așteaptă „Gata” cel mult atâtea minute de la ultimul formular și pleacă o singură dată, pentru toți; la 0, fiecare email pleacă imediat.",
+          "verificationRetryHours": "Socotit de când a plecat ultimul email de confirmare, către cine nu a confirmat încă. Termenul linkului nu se mută.",
+          "verificationRetries": "Fiecare email de confirmare se socotește, și «Retrimite» sau o retrimitere din backoffice. 0 = nu se retrimite singur. Termenul nu se mută."
         },
         "legal": "Textele legale aprobate deja păstrează numerele scrise în ele până aprobi o versiune nouă din șablon, care le citește de aici.",
         "updatedAt": "Setat {when}.",
@@ -5009,7 +5013,8 @@
           "holdLapsed": "expiră un loc ținut; celui care nu a semnat, că locul a trecut la altcineva",
           "registrationOpened": "se deschid înscrierile, către adresele lăsate pe pagina evenimentului",
           "newEventAlert": "anunțul de eveniment nou, către abonații temelor lui",
-          "newsletter": "newsletterul, către abonații temei"
+          "newsletter": "newsletterul, către abonații temei",
+          "confirmationRetry": "linkul de confirmare a adresei, retrimis către cei care nu au confirmat încă"
         },
         "zone": "ora din {zone}",
         "untitled": "(eveniment fără titlu)",
@@ -5102,6 +5107,16 @@
         "saved": "Momentul trimiterii emailurilor a fost salvat.",
         "bypassHelp": "Asta e pentru emailurile automate. O retrimitere sau un mesaj din backoffice poate pleca imediat: la apăsare alegi «Trimite acum»."
       },
+      "retryTimes": {
+        "one": "o dată",
+        "few": "de {count} ori",
+        "other": "de {count} de ori"
+      },
+      "confirmationRetryPreview": {
+        "name": "Confirmă adresa de email — retrimis automat",
+        "whenShort": "la {retry} după ultimul email, dacă nu a confirmat",
+        "platformWords": "Același text ca «Confirmă adresa de email», cu o propoziție în față, care spune termenul. Se modifică acolo."
+      },
       "familyConfirmed": {
         "name": "Înscriere confirmată — familie (mai multe persoane)",
         "whenShort": "după ultima declarație a unei familii",
@@ -5113,7 +5128,9 @@
         "BIB_ASSIGNED": "Când un organizator scrie numărul unei înscrieri confirmate, în pagina ei sau la masă. Altfel, numărul vine cu confirmarea. Cu linkul de gestionare. Niciodată pentru un eveniment anulat.",
         "REGISTER_ANOTHER_PERSON": "Nu se creează nicio înscriere, iar ecranul spune „verifică-ți emailul” ca oricând. Dacă adresa are deja {people}, emailul spune doar asta, fără link.",
         "LEGAL_TEMPLATES_CHANGED": "Verificarea rulează cu sarcinile programate, cel mult o dată pe oră. O schimbare aprobată înainte de verificare nu mai e anunțată; «Sarcini» arată aceleași rânduri."
-      }
+      },
+      "confirmationRetry": "Cui nu a confirmat, linkul pleacă singur din nou la {retry} după ultimul email, cel mult {times}; se socotește și «Retrimite». Termenul nu se mută.",
+      "confirmationRetryOff": "Nu se retrimite singur: în „Termene”, numărul de retrimiteri e 0."
     },
     "guide": {
       "title": "Ghid de utilizare",
