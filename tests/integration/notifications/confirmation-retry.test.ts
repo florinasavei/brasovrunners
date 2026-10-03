@@ -21,11 +21,11 @@ import { confirmEmail, type EventForRegistration, requestRegistrationLink, submi
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the second verification email: the address link once more, by itself, the club's hours
- * after the last email left («Termene», 24 by default), to whoever has not confirmed and whose link
- * still has the club's least time left (6 hours by default). The request path is the real one —
- * `submitRegistration` queues the first email, `processOutboxBatch` sends it — and the job's step is
- * the maintenance run's.
+ * §NNN — the verification email re-sent by itself: the address link once more, the club's hours after
+ * the last email left («Termene», 20 by default), to whoever has not confirmed, while the address got
+ * fewer than one plus the club's number of verification emails for the event (1 by default) and the
+ * link still has an hour. The request path is the real one — `submitRegistration` queues the first
+ * email, `processOutboxBatch` sends it — and the job's step is the maintenance run's.
  */
 const T = new Date("2026-09-04T08:05:00.000Z");
 const MINUTE = 60_000;
@@ -89,7 +89,7 @@ async function stub(row: OutboxRow): Promise<OutgoingEmail> {
   return { to: row.recipientEmail, subject: row.messageType, html: `<p>${row.messageType}</p>`, text: row.messageType, locale: row.locale, idempotencyKey: row.idempotencyKey };
 }
 
-describe("§NNN the second verification email", () => {
+describe("§NNN the verification email re-sent by itself", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 
@@ -104,7 +104,7 @@ describe("§NNN the second verification email", () => {
 
   async function event(startsAt = new Date("2026-10-01T09:00:00.000Z")): Promise<EventForRegistration> {
     const [row] = await db.insert(events).values({ type: "GROUP_RUN", startsAt, registrationMode: "INTERNAL", capacity: 10 }).returning();
-    await db.insert(eventTranslations).values({ eventId: row.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
+    await db.insert(eventTranslations).values({ eventId: row.id, locale: "ro", slug: `crosul-${startsAt.getTime()}`, title: "Crosul", excerpt: "x" });
     return {
       id: row.id,
       eventStatus: row.eventStatus,
@@ -138,35 +138,39 @@ describe("§NNN the second verification email", () => {
     return registrationOf(race.id, email);
   }
 
-  it("goes once, the club's hours after the first email left, with its sentence and the link's hours left", async () => {
+  it("goes once, the club's hours after the first email left, with its sentence, the deadline and the link's hours left", async () => {
     const race = await event();
     const pending = await submittedAndSent(race);
     expect(pending.emailLinkExpiresAt).toEqual(new Date(T.getTime() + 48 * HOUR));
 
-    // The send's own clock is a few milliseconds past T: a minute either side of the day.
-    expect((await runRegistrationMaintenance(db, new Date(T.getTime() + 24 * HOUR - MINUTE))).confirmationRetriesQueued).toBe(0);
-    expect((await runRegistrationMaintenance(db, new Date(T.getTime() + 24 * HOUR + MINUTE))).confirmationRetriesQueued).toBe(1);
-    expect((await runRegistrationMaintenance(db, new Date(T.getTime() + 25 * HOUR))).confirmationRetriesQueued).toBe(0);
+    // The send's own clock is a few milliseconds past T: a minute either side of twenty hours.
+    expect((await runRegistrationMaintenance(db, new Date(T.getTime() + 20 * HOUR - MINUTE))).confirmationRetriesQueued).toBe(0);
+    expect((await runRegistrationMaintenance(db, new Date(T.getTime() + 20 * HOUR + MINUTE))).confirmationRetriesQueued).toBe(1);
+    expect((await runRegistrationMaintenance(db, new Date(T.getTime() + 21 * HOUR))).confirmationRetriesQueued).toBe(0);
 
     const [retry] = await retries();
     expect(retry.registrationId).toBe(pending.id);
+    expect(retry.idempotencyKey).toBe(`registration:${pending.id}:verify-retry:1`);
     // No deadline mark (§513): the link keeps the deadline its first email started.
     expect(retry.payloadJson).toEqual({ confirmationRetry: true });
 
     const mail = sender();
-    const at = new Date(T.getTime() + 25 * HOUR);
+    const at = new Date(T.getTime() + 21 * HOUR);
     await processOutboxBatch(db, { sender: mail, render: createOutboxRenderer(), now: at });
     const sent = mail.calls.find((call) => call.to === "ana@example.ro");
-    expect(sent?.text).toContain("Îți scriem încă o dată pentru că adresa nu e confirmată încă.");
-    expect(sent?.text).toContain("We are writing once more because your address is not confirmed yet.");
-    // Twenty-three hours left on the link, and the club's full forty-eight said nowhere.
-    expect(sent?.text).toContain(hoursPhrase("ro", 23));
+    expect(sent?.text).toContain("Nu am primit încă confirmarea adresei tale, așa că îți retrimitem linkul. Termenul curge de la primul email:");
+    expect(sent?.text).toContain("We have not received your address confirmation yet, so we are sending you the link again.");
+    // The deadline the first email started, in the event's zone: 6 September 2026, 11:05 in Brașov.
+    expect(sent?.text).toContain("6 septembrie 2026, la 11:05");
+    expect(sent?.text).toContain("6 September 2026, at 11:05");
+    // Twenty-seven hours left on the link, and the club's full forty-eight said nowhere.
+    expect(sent?.text).toContain(hoursPhrase("ro", 27));
     expect(sent?.text).not.toContain(hoursPhrase("ro", 48));
     // The link did not move.
     expect((await registrationOf(race.id, "ana@example.ro")).emailLinkExpiresAt).toEqual(new Date(T.getTime() + 48 * HOUR));
 
-    // A second email begets no third.
-    expect((await runRegistrationMaintenance(db, new Date(T.getTime() + 47 * HOUR))).confirmationRetriesQueued).toBe(0);
+    // One plus the club's one: no third email.
+    expect((await runRegistrationMaintenance(db, new Date(T.getTime() + 45 * HOUR))).confirmationRetriesQueued).toBe(0);
   });
 
   it("waits for the first email to leave: one still queued is no email yet", async () => {
@@ -175,51 +179,91 @@ describe("§NNN the second verification email", () => {
     expect(await queueConfirmationRetries(db, new Date(T.getTime() + 30 * HOUR), DEFAULT_DEADLINES)).toBe(0);
   });
 
-  it("never once the link has less than the club's least time left, never at 0 hours, never to a bounced address", async () => {
+  it("never once the link has under an hour, never at 0 times, never to an address that bounced on any message", async () => {
     const race = await event();
-    const pending = await submittedAndSent(race);
-    // 48 − 6 = 42 hours: a run after that sends nothing.
-    expect(await queueConfirmationRetries(db, new Date(T.getTime() + 42 * HOUR + MINUTE), DEFAULT_DEADLINES)).toBe(0);
-    expect(await queueConfirmationRetries(db, new Date(T.getTime() + 30 * HOUR), { ...DEFAULT_DEADLINES, confirmationRetryHours: 0 })).toBe(0);
-    await db.update(emailOutbox).set({ status: "BOUNCED" }).where(eq(emailOutbox.registrationId, pending.id));
+    await submittedAndSent(race);
+    // 48 − 1 = 47 hours: a run after that sends nothing.
+    expect(await queueConfirmationRetries(db, new Date(T.getTime() + 47 * HOUR + MINUTE), DEFAULT_DEADLINES)).toBe(0);
+    expect(await queueConfirmationRetries(db, new Date(T.getTime() + 30 * HOUR), { ...DEFAULT_DEADLINES, verificationRetries: 0 })).toBe(0);
+    // The same address bounced on another event's email: no nudge for this one either.
+    const other = await event(new Date("2026-10-08T09:00:00.000Z"));
+    const elsewhere = await submittedAndSent(other);
+    await db.update(emailOutbox).set({ status: "BOUNCED" }).where(eq(emailOutbox.registrationId, elsewhere.id));
     expect(await queueConfirmationRetries(db, new Date(T.getTime() + 30 * HOUR), DEFAULT_DEADLINES)).toBe(0);
   });
 
   it("is withdrawn at the send when the address was confirmed in the meantime", async () => {
     const race = await event();
     const pending = await submittedAndSent(race);
-    const at = new Date(T.getTime() + 24 * HOUR + MINUTE);
+    const at = new Date(T.getTime() + 20 * HOUR + MINUTE);
     expect(await queueConfirmationRetries(db, at, DEFAULT_DEADLINES)).toBe(1);
     await confirmEmail(db, race, pending.id, new Date(at.getTime() + MINUTE));
     const mail = sender();
     await processOutboxBatch(db, { sender: mail, render: createOutboxRenderer(), now: new Date(at.getTime() + 2 * MINUTE) });
     expect(await retries()).toHaveLength(0);
-    expect(mail.calls.some((call) => /încă o dată pentru că adresa/.test(call.text))).toBe(false);
+    expect(mail.calls.some((call) => /îți retrimitem linkul/.test(call.text))).toBe(false);
   });
 
-  it("counts from the last email: the person's own «Retrimite» moves it, and gets one more after it", async () => {
+  it("the person's own «Retrimite» uses up an attempt: the step stops at one plus the club's number", async () => {
     const race = await event();
-    await submittedAndSent(race);
+    const pending = await submittedAndSent(race);
     const resent = new Date(T.getTime() + 10 * HOUR);
     await requestRegistrationLink(db, { email: "ana@example.ro", eventId: race.id }, resent);
-    expect(await queueConfirmationRetries(db, new Date(T.getTime() + 30 * HOUR), DEFAULT_DEADLINES)).toBe(0);
     await processOutboxBatch(db, { sender: sender(), render: stub, now: resent });
-    expect(await queueConfirmationRetries(db, new Date(T.getTime() + 30 * HOUR), DEFAULT_DEADLINES)).toBe(0);
-    expect(await queueConfirmationRetries(db, new Date(resent.getTime() + 24 * HOUR + MINUTE), DEFAULT_DEADLINES)).toBe(1);
+    // One allowed, and the resend was it.
+    expect(await queueConfirmationRetries(db, new Date(resent.getTime() + 20 * HOUR + MINUTE), DEFAULT_DEADLINES)).toBe(0);
+    // Two allowed: one more, the club's hours after the resend — the third email, and the last.
+    const two = { ...DEFAULT_DEADLINES, verificationRetries: 2 };
+    const due = new Date(resent.getTime() + 20 * HOUR + MINUTE);
+    expect(await queueConfirmationRetries(db, due, two)).toBe(1);
+    const [retry] = await retries();
+    expect(retry.idempotencyKey).toBe(`registration:${pending.id}:verify-retry:2`);
+    await processOutboxBatch(db, { sender: sender(), render: stub, now: due });
+    expect(await queueConfirmationRetries(db, new Date(T.getTime() + 46 * HOUR), two)).toBe(0);
   });
 
   it("a test registration gets it like a real one (§12.6)", async () => {
     const race = await event();
     const pending = await submittedAndSent(race);
     await db.update(registrations).set({ kind: "TEST" }).where(eq(registrations.id, pending.id));
-    expect(await queueConfirmationRetries(db, new Date(T.getTime() + 24 * HOUR + MINUTE), DEFAULT_DEADLINES)).toBe(1);
+    expect(await queueConfirmationRetries(db, new Date(T.getTime() + 20 * HOUR + MINUTE), DEFAULT_DEADLINES)).toBe(1);
+  });
+
+  it("waits while the outbox is behind: nothing is queued, and the job looks again at the pinger's next call", async () => {
+    const race = await event();
+    await submittedAndSent(race);
+    // Somebody else's first email, queued at T and still waiting twenty hours later: the queue is late (§623).
+    await submitRegistration(db, race, submission("ioana@example.ro", T, "Ioana"), T);
+    const at = new Date(T.getTime() + 20 * HOUR + MINUTE);
+    expect(await queueConfirmationRetries(db, at, DEFAULT_DEADLINES)).toBe(0);
+    expect(await retries()).toHaveLength(0);
+    const next = await nextMaintenanceWork(db, at);
+    expect(next && next.getTime() > at.getTime() && next.getTime() <= at.getTime() + HOUR).toBe(true);
+  });
+
+  it("queues at most fifty in one run, oldest due first; the rest at the next", async () => {
+    const race = await event();
+    for (let i = 0; i < 52; i += 1) {
+      await submitRegistration(db, race, submission(`p${i}@example.ro`, new Date(T.getTime() + i * MINUTE)), new Date(T.getTime() + i * MINUTE));
+    }
+    // Each first email left at its submission, a minute apart.
+    const firsts = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "VERIFY_REGISTRATION_EMAIL"));
+    for (const row of firsts) await db.update(emailOutbox).set({ status: "SENT", sentAt: row.createdAt }).where(eq(emailOutbox.id, row.id));
+    const at = new Date(T.getTime() + 21 * HOUR);
+    expect(await queueConfirmationRetries(db, at, DEFAULT_DEADLINES)).toBe(50);
+    const queued = new Set((await retries()).map((row) => row.recipientEmail));
+    expect(queued.has("p0@example.ro")).toBe(true);
+    expect(queued.has("p51@example.ro")).toBe(false);
+    // The fifty sent, the two left go at the next run.
+    await db.update(emailOutbox).set({ status: "SENT", sentAt: at }).where(like(emailOutbox.idempotencyKey, "%:verify-retry:%"));
+    expect(await queueConfirmationRetries(db, new Date(at.getTime() + 15 * MINUTE), DEFAULT_DEADLINES)).toBe(2);
   });
 
   it("the job's plan wakes for it, and the forecast lists it at the same instant", async () => {
     const race = await event();
     await submittedAndSent(race);
     const [first] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "VERIFY_REGISTRATION_EMAIL"));
-    const due = new Date((first.sentAt as Date).getTime() + 24 * HOUR);
+    const due = new Date((first.sentAt as Date).getTime() + 20 * HOUR);
     expect(await nextMaintenanceWork(db, new Date(T.getTime() + HOUR))).toEqual(due);
     const rows = await forecastAutomaticEmails(db, { now: new Date(T.getTime() + HOUR), horizonDays: 14, deadlines: DEFAULT_DEADLINES });
     const retry = rows.find((row) => row.send === "confirmationRetry");

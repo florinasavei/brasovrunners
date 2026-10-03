@@ -4942,8 +4942,8 @@
           "seriesHorizonDays": "A series keeps its dates created ahead by (days)",
           "publicListDays": "The public participant list stays up after the event (days)",
           "familySittingMinutes": "A family registration's email waits for “Done” at most (minutes)",
-          "confirmationRetryHours": "The second address-confirmation email goes after (hours)",
-          "confirmationRetryLeftHours": "The second email goes only while the link is still valid for at least (hours)"
+          "verificationRetryHours": "The address-confirmation link is re-sent after (hours)",
+          "verificationRetries": "How many times the link is re-sent (0–3)"
         },
         "help": {
           "confirmationHours": "How long somebody has to press the link in the first email; after it, the registration lapses.",
@@ -4955,8 +4955,8 @@
           "seriesHorizonDays": "Dates already created stay if you lower it; the missing ones are filled in if you raise it.",
           "publicListDays": "Then the list closes by itself, even while the event still has it switched on. The privacy notice from the template states this number.",
           "familySittingMinutes": "After “Yes, one more person”, the family's email waits for “Done” at most this many minutes after the last form and leaves once, for everybody; at 0, each email leaves at once.",
-          "confirmationRetryHours": "Counted from when the last email left, to whoever has not confirmed yet; once per email. 0 = no second email.",
-          "confirmationRetryLeftHours": "With less time left it is not sent. If the two numbers added up exceed the link's validity, it never goes."
+          "verificationRetryHours": "Counted from when the last confirmation email left, to whoever has not confirmed yet. The link's deadline does not move.",
+          "verificationRetries": "Every confirmation email counts, “Resend” and a backoffice resend included. 0 = never re-sent by itself. The deadline does not move."
         },
         "legal": "Legal texts already approved keep the numbers written in them until you approve a new version from the template, which reads them from here.",
         "updatedAt": "Set {when}.",
@@ -4996,7 +4996,7 @@
           "registrationOpened": "registration opens, to the addresses left on the event's page",
           "newEventAlert": "the new-event announcement, to the subscribers of its topics",
           "newsletter": "the newsletter, to the topic's subscribers",
-          "confirmationRetry": "the second address-confirmation email, to those who have not confirmed yet"
+          "confirmationRetry": "the address-confirmation link, re-sent to those who have not confirmed yet"
         },
         "zone": "{zone} time",
         "untitled": "(untitled event)",
@@ -5089,6 +5089,16 @@
         "saved": "When emails leave was saved.",
         "bypassHelp": "This is for the automatic emails. A resend or a message from the backoffice may leave at once: at the press, choose «Send now»."
       },
+      "retryTimes": {
+        "one": "once",
+        "few": "{count} times",
+        "other": "{count} times"
+      },
+      "confirmationRetryPreview": {
+        "name": "Confirm your email address — re-sent automatically",
+        "whenShort": "{retry} after the last email, if not confirmed",
+        "platformWords": "The same text as «Confirm your email address», with one sentence in front that states the deadline. Edit it there."
+      },
       "familyConfirmed": {
         "name": "Registration confirmed — family (several people)",
         "whenShort": "after a family's last declaration",
@@ -5101,8 +5111,8 @@
         "REGISTER_ANOTHER_PERSON": "No registration is created, and the screen says “check your email” as always. If the address already has {people}, the email says only that, with no link.",
         "LEGAL_TEMPLATES_CHANGED": "The check runs with the scheduled jobs, at most once an hour. A change approved before the check is not announced; «Tasks» shows the same rows."
       },
-      "confirmationRetry": "To whoever has not confirmed, it goes once more by itself {retry} after the last email, if the link still has at least {left}.",
-      "confirmationRetryOff": "It does not go a second time by itself: in “Deadlines”, the second email is off (0)."
+      "confirmationRetry": "To whoever has not confirmed, the link goes again by itself {retry} after the last email, at most {times}; “Resend” counts too. The deadline does not move.",
+      "confirmationRetryOff": "It is not re-sent by itself: in “Deadlines”, the number of resends is 0."
     },
     "guide": {
       "title": "User guide",

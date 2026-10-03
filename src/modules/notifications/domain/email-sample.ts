@@ -109,6 +109,26 @@ export function emailSampleFormerValuesOf(name: EmailCopyPlaceholder, locale: Em
   return [];
 }
 
+/** Until when the sample runner's address link is valid — Thursday 1 October 2026, 18:30 in Brașov (§NNN). */
+export const EMAIL_SAMPLE_LINK_EXPIRES_AT = new Date("2026-10-01T15:30:00Z");
+
+/**
+ * The verification email as the job re-sends it (§NNN), for its own preview on «Emailuri»: the one
+ * sentence in front of the body with the link's deadline, each half in its own words, as `render.ts`
+ * fills them at the send.
+ */
+export function emailSampleConfirmationRetry(locale: EmailLocale): {
+  confirmationRetry: true;
+  confirmationRetryDeadline: string;
+  confirmationRetryDeadlineOther: string;
+} {
+  return {
+    confirmationRetry: true,
+    confirmationRetryDeadline: sampleDeadline(EMAIL_SAMPLE_LINK_EXPIRES_AT, locale),
+    confirmationRetryDeadlineOther: sampleDeadline(EMAIL_SAMPLE_LINK_EXPIRES_AT, locale === "ro" ? "en" : "ro"),
+  };
+}
+
 /** The sample start as a message writes it inside a sentence (§349): "duminică, 4 oct. 2026, 09:00". */
 export function emailSampleWhen(locale: EmailLocale): string {
   return sampleMoment(EMAIL_SAMPLE_STARTS_AT, locale);

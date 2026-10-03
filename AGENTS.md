@@ -2844,12 +2844,14 @@ Registration maintenance:
 - expire waiting-list offers;
 - queue the reminder two days before an event, and with it the declaration once more to
   whoever still owes a signature (`DECISIONS.md` §160);
-- queue the second verification email (`DECISIONS.md` §NNN): the address link once more, the
-  club's hours after the last one left («Termene», 24 by default; 0 sends none), to a
-  `PENDING_EMAIL_CONFIRMATION` registration of a scheduled event whose link still has the club's
-  least time left (6 hours by default) — once per email it follows (`registration:<id>:verify-retry:<outbox id>`),
-  one per address and event, never while an email for them waits to leave, never after a bounce
-  or a complaint, never following a second email; no deadline moves and the allocator is not called;
+- queue the verification email once more (`DECISIONS.md` §NNN): the address link, the club's hours
+  after the last one left («Termene» `verificationRetryHours`, 20 by default), to a
+  `PENDING_EMAIL_CONFIRMATION` registration of a scheduled event whose link still has an hour — while
+  the address got fewer than one plus `verificationRetries` (1 by default; 0 switches it off)
+  verification emails for the event, every one counting, the person's «Retrimite» and a staff resend
+  included (`registration:<id>:verify-retry:<n>`); one per address and event, at most 50 a run oldest
+  first, none while the outbox is behind (§623) or an email for them waits to leave, never to an address
+  that bounced or complained on any message; no deadline moves and the allocator is not called;
 - close remaining waiting-list entries for events that have started, with
   `expiry_reason = EVENT_STARTED`;
 - call fill available spots;
