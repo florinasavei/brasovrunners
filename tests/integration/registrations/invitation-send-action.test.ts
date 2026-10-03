@@ -5,6 +5,9 @@ import { eventInvitations } from "@/db/schema/event-invitations";
 import { events, eventTranslations } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { SUPPLEMENTARY_PLACE_UNCONFIRMED } from "@/modules/registrations/domain/capacity";
+import { HIDDEN_LIST_OFF } from "@/modules/registrations/domain/hidden-list";
+import en from "../../../messages/en.json";
+import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -127,6 +130,16 @@ describe("§NNN a refused send hands the next dialog the server's numbers", () =
     const refused = await inviteAction(null, press(eventId, "Ana Pop <ana@example.invalid>\nAna P. <ana@example.invalid>", null));
     expect(refused).toMatchObject({ error: "INVITATION_DUPLICATE", forecast: { capacity: 3, free: 3 } });
     expect(await db.execute(sql`select count(*)::int as n from event_invitations`)).toMatchObject({ rows: [{ n: 0 }] });
+  });
+
+  it("«Pe lista ascunsă» posted on an event whose «Folosește lista ascunsă» is off: refused with HIDDEN_LIST_OFF, the registration page's sentence", async () => {
+    const eventId = await createEvent(3);
+    const form = press(eventId, "Ana Pop <ana@example.invalid>", null);
+    form.set("outside", "1");
+    expect(await inviteAction(null, form)).toMatchObject({ error: HIDDEN_LIST_OFF, forecast: { capacity: 3, free: 3 } });
+    expect(await db.execute(sql`select count(*)::int as n from event_invitations`)).toMatchObject({ rows: [{ n: 0 }] });
+    expect(ro.Admin.errors.HIDDEN_LIST_OFF).toContain("«Folosește lista ascunsă»");
+    expect(en.Admin.errors.HIDDEN_LIST_OFF).toContain("«Use the hidden list»");
   });
 });
 

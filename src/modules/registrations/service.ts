@@ -4215,6 +4215,14 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
     }
     const deadline = invitationDeadline({ now, days: input.days, startsAt: locked.startsAt });
     if (!deadline) throw new InvitationRefusal("INVITATION_EVENT_CLOSED");
+    /*
+      «Pe lista ascunsă» follows the event's «Folosește lista ascunsă» as the registration page's radio does
+      (§NNN): off, nobody is invited onto the hidden list — read under the lock, so a save switching it off
+      and a send racing it cannot both win, and refused before anything is written or anyone emailed.
+    */
+    if (input.outsideCapacity && !lockedEvent.hiddenListEnabled) {
+      throw new DomainError("VALIDATION_ERROR", "the hidden list is off for this event: tick «Folosește lista ascunsă» in the event's settings first", [HIDDEN_LIST_OFF]);
+    }
 
     // The line first, and every stale hold — an invitation past its deadline among them — expired (§10.6).
     const offersMade = await fillAvailableSpots(tx, locked, now, settings);

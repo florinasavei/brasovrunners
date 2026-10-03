@@ -100,6 +100,7 @@ export default function InviteForm({
   free,
   daysDefault,
   daysMax,
+  hiddenListEnabled,
   words,
 }: {
   action: (state: InviteFormState, form: FormData) => Promise<InviteFormState>;
@@ -110,6 +111,8 @@ export default function InviteForm({
   free: number | null;
   daysDefault: number;
   daysMax: number;
+  /** The event's «Folosește lista ascunsă» (§NNN): off, the tick is not drawn and the server refuses it anyway. */
+  hiddenListEnabled: boolean;
   words: InviteFormWords;
 }) {
   const [state, formAction, pending] = useActionState(action, null);
@@ -297,16 +300,18 @@ export default function InviteForm({
             {words.localeHelp}
           </Typography>
         </Box>
-        <Box>
-          <FormControlLabel
-            sx={{ minHeight: TAP_TARGET.minHeight }}
-            control={<Checkbox checked={outside} onChange={(event) => setOutside(event.target.checked)} />}
-            label={words.outsideLabel}
-          />
-          <Typography variant="body2" color="text.secondary">
-            {words.outsideHelp}
-          </Typography>
-        </Box>
+        {hiddenListEnabled && (
+          <Box>
+            <FormControlLabel
+              sx={{ minHeight: TAP_TARGET.minHeight }}
+              control={<Checkbox checked={outside} onChange={(event) => setOutside(event.target.checked)} />}
+              label={words.outsideLabel}
+            />
+            <Typography variant="body2" color="text.secondary">
+              {words.outsideHelp}
+            </Typography>
+          </Box>
+        )}
         <Box>
           <Button type="submit" variant="contained" startIcon={<SendIcon fontSize="small" />} disabled={pending} sx={{ minHeight: TAP_TARGET.minHeight }} data-testid="invite-submit">
             {words.submit}

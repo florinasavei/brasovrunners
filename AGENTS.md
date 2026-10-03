@@ -2749,7 +2749,9 @@ BR-REQ-037-05):
    address typed, one per line. `inviteToEventByStaff`, under the event lock, in one transaction for the
    whole list: the line served first, every address canonicalized (§10.4), a person already registered
    or already invited refused by name with nothing written; each invitation holds a counted place until
-   its deadline (`min(now + days, start)`, §10.6 — the public close is not asked) unless sent «Pe lista ascunsă», and where no
+   its deadline (`min(now + days, start)`, §10.6 — the public close is not asked) unless sent «Pe lista ascunsă»
+   — which only an event whose «Folosește lista ascunsă» is on accepts, read under the lock and refused
+   otherwise with `HIDDEN_LIST_OFF` before anything is written, as verb 6's radio — and where no
    place is free after everyone eligible who waits — a full race, or anyone on the waiting list, offers
    on or off, before or after the close — adds one supplementary place only on the press that named the
    capacity: an invitation never takes a counted free place ahead of anyone waiting. **It creates no
