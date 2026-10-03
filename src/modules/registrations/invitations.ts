@@ -22,7 +22,7 @@ import { seatInvitedRegistration, submitRegistration } from "./service";
  * - `readInvitationLink` is the GET: the token read — charged one attempt (§39), never spent — and the
  *   invitation it is scoped to, in one read-only transaction (GET never mutates, §12.8). It says what
  *   the page shows: the form, prefilled with the invited name and the address, locked; or why not —
- *   accepted already, withdrawn, past its deadline, replaced by a newer email (§619), or a link that
+ *   accepted already, withdrawn, past its deadline, the event called off, replaced by a newer email (§619), or a link that
  *   does not work.
  * - `acceptInvitation` is the press: under the event lock, the invitation asked again — open and before
  *   its deadline, the event scheduled and not started — and only then the token spent (single use; a
@@ -50,7 +50,8 @@ export type InvitationLink =
       eventTitle: string;
       expiresAt: Date;
     }
-  | { kind: "accepted" | "withdrawn" | "expired"; eventTitle: string | null; slug: string | null }
+  /** `cancelled`: the event was called off since the send — not the deadline, which may well be ahead still. */
+  | { kind: "accepted" | "withdrawn" | "expired" | "cancelled"; eventTitle: string | null; slug: string | null }
   /** A newer email carries the working link (§619). */
   | { kind: "replaced" }
   /** Spent: the form was sent with it already. */
@@ -73,8 +74,13 @@ export async function readInvitationLink<T extends Record<string, unknown>>(db: 
     const title = details?.title ?? null;
     const slug = details?.slug ?? null;
     if (state !== "sent") return { kind: state, eventTitle: title, slug };
-    // A race called off or started since the send: the invitation keeps nothing any more.
-    if (!event || event.eventStatus !== "SCHEDULED" || event.startsAt.getTime() <= now.getTime() || !slug || !title) {
+    /*
+      A race called off since the send says so (the invitations review of 2026-10-03): cancelling an event
+      leaves `event_invitations` as it was, so this page is the only thing that tells the invitee, and
+      «the deadline has passed» would be a false reason. A race started since says the deadline passed.
+    */
+    if (event && event.eventStatus !== "SCHEDULED") return { kind: "cancelled" as const, eventTitle: title, slug };
+    if (!event || event.startsAt.getTime() <= now.getTime() || !slug || !title) {
       return { kind: "expired" as const, eventTitle: title, slug };
     }
     return {
@@ -91,7 +97,7 @@ export async function readInvitationLink<T extends Record<string, unknown>>(db: 
   });
 }
 
-const REFUSED_KINDS = ["accepted", "withdrawn", "expired", "replaced", "used", "invalid"] as const;
+const REFUSED_KINDS = ["accepted", "withdrawn", "expired", "cancelled", "replaced", "used", "invalid"] as const;
 export type RefusedKind = (typeof REFUSED_KINDS)[number];
 
 export type InvitationAcceptance = { ok: true; registration: Registration } | { ok: false; kind: RefusedKind };
@@ -137,7 +143,9 @@ export async function acceptInvitation<T extends Record<string, unknown>>(db: Da
     if (!invitation || invitation.participantId !== peek.token.participantId) return { ok: false as const, kind: "invalid" as const };
     const state = invitationState(invitation, now);
     if (state !== "sent") return { ok: false as const, kind: state };
-    if (lockedEvent.eventStatus !== "SCHEDULED" || lockedEvent.startsAt.getTime() <= now.getTime()) return { ok: false as const, kind: "expired" as const };
+    // Called off: said as such, never as a passed deadline; started: the deadline (capped by the start) has passed.
+    if (lockedEvent.eventStatus !== "SCHEDULED") return { ok: false as const, kind: "cancelled" as const };
+    if (lockedEvent.startsAt.getTime() <= now.getTime()) return { ok: false as const, kind: "expired" as const };
 
     // Single use (BR-REQ-036-02): one UPDATE, so of two presses at once only one spends it.
     const consumed = await consumeActionToken(tx, { secret, purpose: "ACCEPT_INVITATION", now });

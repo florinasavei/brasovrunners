@@ -51,7 +51,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * which event, until when. Every other field, consent and the declaration stay the person's. Only the
  * POST registers (`acceptInvitationAction`), with no confirmation email: the link proved the inbox.
  *
- * A link that no longer works says why — accepted, withdrawn, past its deadline, replaced by a newer
+ * A link that no longer works says why — accepted, withdrawn, past its deadline, the event called off, replaced by a newer
  * email (§619) — with the club's contact page. No family flow: one person per invitation.
  */
 export default async function InvitationPage({ params, searchParams }: Props) {
@@ -107,7 +107,9 @@ export default async function InvitationPage({ params, searchParams }: Props) {
           ? t("invitation.withdrawn")
           : link.kind === "expired"
             ? t("invitation.expired")
-            : link.kind === "replaced"
+            : link.kind === "cancelled"
+              ? t("invitation.cancelled")
+              : link.kind === "replaced"
               ? t("invitation.replaced")
               : t("invitation.invalid");
     return shell(

@@ -656,14 +656,35 @@ describe("§NNN expiry, «Retrimite» and «Retrage»", () => {
     expect(await db.select().from(registrations)).toHaveLength(0);
   });
 
-  it("a press after the event was called off spends nothing: refused as expired, and the page then says expired", async () => {
+  it("a press after the event was called off spends nothing: refused as cancelled, never as a passed deadline, and the page then says cancelled", async () => {
     const event = await createEvent(3);
     await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 7, outsideCapacity: false }, admin, NOW);
     const secret = await linkOf("ana@example.invalid", at(1));
     await db.update(events).set({ eventStatus: "CANCELLED" }).where(eq(events.id, event.id));
-    expect(await acceptInvitation(db, secret, form("Ana", at(2)), at(2))).toEqual({ ok: false, kind: "expired" });
+    expect(await acceptInvitation(db, secret, form("Ana", at(2)), at(2))).toEqual({ ok: false, kind: "cancelled" });
     expect(await unspent()).toBe(true);
-    expect(await readInvitationLink(db, secret, "ro", at(3))).toMatchObject({ kind: "expired" });
+    expect(await readInvitationLink(db, secret, "ro", at(3))).toMatchObject({ kind: "cancelled" });
+    expect(await db.select().from(registrations)).toHaveLength(0);
+  });
+
+  it("the link's page of an event called off says cancelled, while the deadline is still ahead", async () => {
+    const event = await createEvent(3);
+    await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 7, outsideCapacity: false }, admin, NOW);
+    const secret = await linkOf("ana@example.invalid", at(1));
+    const [invitation] = await invitationsOf(event.id);
+    expect(invitation.expiresAt.getTime()).toBeGreaterThan(at(3).getTime());
+    await db.update(events).set({ eventStatus: "CANCELLED" }).where(eq(events.id, event.id));
+    expect(await readInvitationLink(db, secret, "en", at(3))).toMatchObject({ kind: "cancelled" });
+    expect(await unspent()).toBe(true);
+  });
+
+  it("a press after the race started spends nothing: refused as expired", async () => {
+    const event = await createEvent(3, { startsAt: new Date(NOW.getTime() + 2 * DAY) });
+    await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 7, outsideCapacity: false }, admin, NOW);
+    const secret = await linkOf("ana@example.invalid", at(1));
+    const after = new Date(NOW.getTime() + 2 * DAY + 60_000);
+    expect(await acceptInvitation(db, secret, form("Ana", after), after)).toEqual({ ok: false, kind: "expired" });
+    expect(await unspent()).toBe(true);
   });
 
   it("«Retrimite» with days on a counted invitation while somebody waits: the link and the email again, the deadline kept", async () => {
