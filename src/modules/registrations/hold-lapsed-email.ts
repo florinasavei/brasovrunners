@@ -24,7 +24,7 @@ export function holdLapsedIdempotencyKey(registrationId: string, holdExpiresAt: 
 }
 
 /**
- * «Locul tău la {event} a expirat» (§638; the owner, 2026-10-02: «Da, fă emailul pentru cel care pierde
+ * `DECLARATION_HOLD_EXPIRED` (§638; the owner, 2026-10-02: «Da, fă emailul pentru cel care pierde
  * locul»): one `DECLARATION_HOLD_EXPIRED` per declaration hold `expireStaleHolds` released to somebody
  * who wanted the place (§160), queued in the transaction that released it, under the same event lock.
  *
