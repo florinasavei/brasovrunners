@@ -25,7 +25,7 @@ import { weatherSpanWords } from "@/modules/weather/words";
 import { CANNOT_COME_GLYPH_PATH, CANNOT_COME_MESSAGES } from "./domain/cannot-come";
 import type { HoldLapsedNext } from "./domain/hold-lapsed";
 import { legalTemplateNames, legalTemplatesWords } from "./legal-templates-words";
-import { type DoorShutFacts, doorShutBody, doorShutFactsLine, doorShutMovedBody, doorShutMovedFactsLine } from "./door-shut-words";
+import { type UnreachableWindowFacts, windowClosedBody, windowClosedFactsLine, windowOpenedBody, windowOpenedFactsLine } from "./outage-grace-words";
 import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
 
 /**
@@ -954,10 +954,10 @@ export type TemplateData = {
    */
   legalTemplateKeys?: readonly string[];
   /**
-   * The door's two emails to the Administrators (§NNN): the window's instants, its stop, the club's cap
+   * The outage grace's two emails to the Administrators (§NNN): the window's instants, what it gave back, the club's cap
    * and the counts, as the maintenance job wrote them. Each half writes them in its own language.
    */
-  doorShut?: DoorShutFacts;
+  unreachableWindow?: UnreachableWindowFacts;
   /**
    * "Detalii actualizate" (§331): which facts the save changed — the place, the start, the
    * programme, the event on again. The values are the event's as it stands at send time, in the
@@ -1648,16 +1648,16 @@ const T = {
     },
     // To the Administrators (§NNN): the site's name does not resolve, and nothing lapses until it does.
     // No button: the address it would open is the one that is gone.
-    doorShut: {
+    unreachableWindowOpened: {
       subject: "Site-ul nu se găsește după nume: termenele stau pe loc",
-      facts: (d: TemplateData) => (d.doorShut ? { line: doorShutFactsLine("ro", d.doorShut), links: [] } : undefined),
-      body: () => doorShutBody("ro"),
+      facts: (d: TemplateData) => (d.unreachableWindow ? { line: windowOpenedFactsLine("ro", d.unreachableWindow), links: [] } : undefined),
+      body: (d: TemplateData) => windowOpenedBody("ro", d.unreachableWindow),
     },
-    // To the Administrators (§NNN): the door is open again and the deadlines that were running moved.
-    doorShutDeadlinesMoved: {
-      subject: "Ceasul termenelor a stat pe loc: termenele s-au mutat",
-      facts: (d: TemplateData) => (d.doorShut ? { line: doorShutMovedFactsLine("ro", d.doorShut), links: [] } : undefined),
-      body: () => doorShutMovedBody("ro"),
+    // To the Administrators (§NNN): the window is over, what moved, and what to check.
+    unreachableWindowClosed: {
+      subject: "Ceasul termenelor a stat pe loc: ce s-a mutat",
+      facts: (d: TemplateData) => (d.unreachableWindow ? { line: windowClosedFactsLine("ro", d.unreachableWindow), links: [] } : undefined),
+      body: (d: TemplateData) => windowClosedBody("ro", d.unreachableWindow),
       action: "Deschide «Sarcini»",
     },
     registrationOpened: {
@@ -2315,15 +2315,15 @@ const T = {
       },
       action: `${legalTemplatesWords("en").newVersion}: regenerate the texts`,
     },
-    doorShut: {
+    unreachableWindowOpened: {
       subject: "The site's name does not resolve: the deadlines are held",
-      facts: (d: TemplateData) => (d.doorShut ? { line: doorShutFactsLine("en", d.doorShut), links: [] } : undefined),
-      body: () => doorShutBody("en"),
+      facts: (d: TemplateData) => (d.unreachableWindow ? { line: windowOpenedFactsLine("en", d.unreachableWindow), links: [] } : undefined),
+      body: (d: TemplateData) => windowOpenedBody("en", d.unreachableWindow),
     },
-    doorShutDeadlinesMoved: {
-      subject: "The deadlines' clock stood still: the deadlines moved",
-      facts: (d: TemplateData) => (d.doorShut ? { line: doorShutMovedFactsLine("en", d.doorShut), links: [] } : undefined),
-      body: () => doorShutMovedBody("en"),
+    unreachableWindowClosed: {
+      subject: "The deadlines' clock stood still: what moved",
+      facts: (d: TemplateData) => (d.unreachableWindow ? { line: windowClosedFactsLine("en", d.unreachableWindow), links: [] } : undefined),
+      body: (d: TemplateData) => windowClosedBody("en", d.unreachableWindow),
       action: "Open «Tasks»",
     },
     registrationOpened: {
@@ -2731,8 +2731,8 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   MEMBER_INVITATION: "memberInvitation",
   EVENT_INVITATION: "eventInvitation",
   LEGAL_TEMPLATES_CHANGED: "legalTemplatesChanged",
-  DOOR_SHUT: "doorShut",
-  DOOR_SHUT_DEADLINES_MOVED: "doorShutDeadlinesMoved",
+  UNREACHABLE_WINDOW_OPENED: "unreachableWindowOpened",
+  UNREACHABLE_WINDOW_CLOSED: "unreachableWindowClosed",
 };
 
 /** The newsletter's three messages (§445): to an address, never about a registration. */
@@ -3374,9 +3374,9 @@ export function buildTemplateContent(
         messageType === "MEMBER_INVITATION" ||
         // …nor the Administrators' notice of a moved template (§639): its one link is its button.
         messageType === "LEGAL_TEMPLATES_CHANGED" ||
-        // …nor the door's two (§NNN): to the Administrators, about no event and nobody's data.
-        messageType === "DOOR_SHUT" ||
-        messageType === "DOOR_SHUT_DEADLINES_MOVED"
+        // …nor the outage grace's two (§NNN): to the Administrators, about no event and nobody's data.
+        messageType === "UNREACHABLE_WINDOW_OPENED" ||
+        messageType === "UNREACHABLE_WINDOW_CLOSED"
       ) {
         return own.length > 0 ? own : undefined;
       }
@@ -3482,9 +3482,9 @@ const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set([
   "MEMBER_INVITATION",
   // To the club's Administrators about its legal texts (§639): about nobody's data.
   "LEGAL_TEMPLATES_CHANGED",
-  // The door's two (§NNN): to the Administrators, instants and counts only.
-  "DOOR_SHUT",
-  "DOOR_SHUT_DEADLINES_MOVED",
+  // The outage grace's two (§NNN): to the Administrators, instants and counts only.
+  "UNREACHABLE_WINDOW_OPENED",
+  "UNREACHABLE_WINDOW_CLOSED",
 ]);
 
 /**

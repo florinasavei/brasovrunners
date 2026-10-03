@@ -1,8 +1,7 @@
 import { isIP } from "node:net";
-import type { NameProbeStatus } from "@/modules/jobs/domain/door-shut";
 
 /**
- * Whether the site's public name resolves (§NNN), as pure rules: which host is asked at all, and
+ * Whether the site's public name resolves (§NNN, the outage grace), as pure rules: which host is asked at all, and
  * what a resolver's error means. The lookup itself is `resilience/name-probe.ts`.
  *
  * Only an answer that the name does not exist is `unresolved` — `ENOTFOUND` (the zone has no such
@@ -10,6 +9,9 @@ import type { NameProbeStatus } from "@/modules/jobs/domain/door-shut";
  * address). Everything else a resolver can say — a timeout, a refused or failed server, a busy
  * resolver — is `unknown`: it says nothing about the door, so nothing opens or closes on it.
  */
+
+/** What one probe of the name answered: `skipped` where nothing is asked (a laptop, a test, an address that is a number). */
+export type NameProbeStatus = "resolves" | "unresolved" | "unknown" | "skipped";
 
 /** The hosts never asked: a laptop, a test, an address that is a number, a name no public resolver knows. */
 const PRIVATE_SUFFIXES = [".localhost", ".local", ".test", ".internal", ".invalid", ".example"];

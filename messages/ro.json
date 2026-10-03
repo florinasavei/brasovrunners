@@ -757,7 +757,8 @@
           "offered_by_staff": "Ofertă trimisă înaintea listei de așteptare («Trimite-i oferta»)",
           "address_vouched_by_staff": "Adresă garantată de echipă; loc dat înaintea listei de așteptare («Dă-i un loc acum»)",
           "outside_capacity_changed": "Pus pe lista de invitați speciali sau scos de pe ea",
-          "deadline_moved_while_shut": "Termen mutat: site-ul nu s-a putut deschide, ceasul a stat pe loc",
+          "deadline_moved_for_outage": "Termen mutat: site-ul nu a putut fi accesat, ceasul a stat pe loc",
+          "seated_outside_for_outage_grace": "Pus pe lista de invitați speciali de ceasul oprit: locul fusese dat între timp",
           "answer_corrected": "Răspuns corectat: {field}",
           "answers_viewed": "Datele înscrierii deschise, cu telefonul și persoana de contact"
         },
@@ -3279,16 +3280,18 @@
             "Verifică: rândul acesta arată noua dată de expirare și devine verde când mai sunt peste 90 de zile."
           ]
         },
-        "doorShut": {
+        "unreachableWindow": {
           "title": "Site-ul de negăsit: ceasul termenelor",
-          "todo": "Site-ul nu s-a putut deschide de la {doorFrom} până la {doorUntil}: termenele s-au mutat cu {doorStopped} ({doorMoved}), iar {doorOutside} înscrieri au trecut pe lista de invitați speciali.",
-          "done": "Nicio întrerupere în ultimele 7 zile: numele site-ului și verificările programate au răspuns.",
-          "shut": "Numele site-ului nu se găsește de la {doorFrom}. Nu expiră nimic până revine; apoi termenele se mută cu cât a durat.",
+          "todo": "Site-ul nu a putut fi accesat de la {windowFrom} până la {windowUntil}: s-au dat înapoi {windowGranted}, termene mutate: {windowMoved}.",
+          "done": "Nicio întrerupere de verificat: cea mai nouă, dacă a fost una, nu a așezat pe nimeni peste locurile anunțate.",
+          "open": "Numele site-ului nu se găsește de la {windowFrom}. Nu expiră nimic până revine; apoi termenele se mută cu cât a durat.",
+          "stuck": "Întreruperea de la {windowFrom} până la {windowUntil} s-a încheiat, dar termenele ei nu s-au putut muta încă: sarcina programată reîncearcă; ultima eroare e pe /devs.",
+          "outside": "Întreruperea de la {windowFrom} până la {windowUntil} a dat înapoi {windowGranted}. Înscrieri așezate din cauza ei peste locurile anunțate: {windowOutside}.",
           "how": [
             "Verifică domeniul la registrar: contul, emailurile de verificare a datelor de contact, plata reînnoirii.",
-            "Cât e închis, nu expiră nimic. Când numele revine, sarcinile programate mută singure termenele și trimit emailul «Ceasul termenelor a stat pe loc».",
-            "Deschide «Înscrieri» → filtrul «Lista de invitați speciali»: cine e acolo din cauza întreruperii are în istoric «Termen mutat».",
-            "Rândul se face verde singur la 7 zile după întrerupere."
+            "Cât lipsește numele, nu expiră nimic. Când revine, sarcinile programate mută singure termenele și trimit emailul «Ceasul termenelor a stat pe loc».",
+            "Deschide «Evenimente» → înscrierile evenimentului → filtrul «Lista de invitați speciali»: cine e acolo din cauza întreruperii are în istoric «Pus pe lista de invitați speciali de ceasul oprit».",
+            "Rândul rămâne roșu cât cea mai nouă întrerupere are înscrieri peste locurile anunțate și se face verde când o întrerupere nu așază pe nimeni."
           ]
         },
         "contactForm": {
@@ -4576,8 +4579,8 @@
         "MEMBER_INVITATION": "Invitația de membru",
         "DECLARATION_HOLD_EXPIRED": "Locul ținut a expirat",
         "LEGAL_TEMPLATES_CHANGED": "Șabloanele textelor legale s-au schimbat",
-        "DOOR_SHUT": "Site-ul nu se găsește după nume",
-        "DOOR_SHUT_DEADLINES_MOVED": "Ceasul termenelor a stat pe loc",
+        "UNREACHABLE_WINDOW_OPENED": "Site-ul nu se găsește după nume",
+        "UNREACHABLE_WINDOW_CLOSED": "Ceasul termenelor a stat pe loc",
         "EVENT_INVITATION": "Invitația la un eveniment"
       },
       "when": {
@@ -4611,8 +4614,8 @@
         "MEMBER_INVITATION": "Când un administrator adaugă pe Echipa pe cineva cu rolul Membru, și la „Retrimite invitația” până la prima autentificare. Fără token: butonul duce la autentificare, apoi în zona membrilor.",
         "DECLARATION_HOLD_EXPIRED": "Când locul cuiva care nu a semnat declarația la termen trece la altcineva care îl voia. O singură dată pentru fiecare loc pierdut, cu ce mai poate face. Nu după start și nu la un eveniment anulat.",
         "LEGAL_TEMPLATES_CHANGED": "Când o versiune nouă a site-ului schimbă șablonul unui text legal: o dată pe schimbare, fiecărui Administrator și Superadministrator. Fără token: butonul duce la «Versiune nouă».",
-        "DOOR_SHUT": "Când sarcinile programate, ajunse pe altă adresă, găsesc că numele site-ului nu se mai găsește: o dată pe întrerupere, fiecărui Administrator și Superadministrator. Fără buton.",
-        "DOOR_SHUT_DEADLINES_MOVED": "După o întrerupere — numele site-ului negăsit sau nicio verificare programată ajunsă: ce termene s-au mutat și cu cât. O dată pe întrerupere, acelorași.",
+        "UNREACHABLE_WINDOW_OPENED": "Când sarcinile programate, ajunse pe altă adresă, găsesc de două ori, la zece minute distanță, că numele site-ului nu se mai găsește: o dată pe întrerupere, fiecărui Administrator. Fără buton.",
+        "UNREACHABLE_WINDOW_CLOSED": "După o întrerupere — numele site-ului negăsit sau nicio verificare programată ajunsă: cât a durat, ce s-a mutat, ce e de verificat. O dată pe întrerupere, acelorași, și cu mutarea oprită.",
         "EVENT_INVITATION": "Când un administrator trimite invitații din lista înscrierilor unui eveniment, și la Retrimite. Un link spre formular, cu numele și adresa completate; locul e păstrat până la termen."
       },
       "whenShort": {
@@ -4646,8 +4649,8 @@
         "MEMBER_INVITATION": "când e adăugat un membru",
         "DECLARATION_HOLD_EXPIRED": "când un loc nesemnat trece la altcineva",
         "LEGAL_TEMPLATES_CHANGED": "când se schimbă un șablon legal",
-        "DOOR_SHUT": "când numele site-ului nu se găsește",
-        "DOOR_SHUT_DEADLINES_MOVED": "după o întrerupere a site-ului",
+        "UNREACHABLE_WINDOW_OPENED": "când numele site-ului nu se găsește",
+        "UNREACHABLE_WINDOW_CLOSED": "după o întrerupere a site-ului",
         "EVENT_INVITATION": "când un administrator invită pe cineva"
       },
       "clubNotices": {
@@ -5005,7 +5008,7 @@
           "familySittingMinutes": "Emailul unei înscrieri de familie așteaptă „Gata” cel mult (minute)",
           "verificationRetryHours": "Linkul de confirmare a adresei se retrimite după (ore)",
           "verificationRetries": "De câte ori se retrimite linkul (0–3)",
-          "doorShutMaxHours": "Ceasul termenelor stă pe loc cât site-ul nu se poate deschide, cel mult (ore)"
+          "outageGraceMaxHours": "Ceasul termenelor stă pe loc cât site-ul nu poate fi accesat, cel mult (ore)"
         },
         "help": {
           "confirmationHours": "Cât are cineva ca să apese linkul din primul email; după, înscrierea expiră.",
@@ -5019,7 +5022,7 @@
           "familySittingMinutes": "După „Da, încă o persoană”, emailul familiei așteaptă „Gata” cel mult atâtea minute de la ultimul formular și pleacă o singură dată, pentru toți; la 0, fiecare email pleacă imediat.",
           "verificationRetryHours": "Socotit de când a plecat ultimul email de confirmare, către cine nu a confirmat încă. Termenul linkului nu se mută.",
           "verificationRetries": "Fiecare email de confirmare se socotește, și «Retrimite» sau o retrimitere din backoffice. 0 = nu se retrimite singur. Termenul nu se mută.",
-          "doorShutMaxHours": "Numele site-ului negăsit sau nicio verificare programată ajunsă: nu expiră nimic, apoi termenele se mută cu cât a durat, cel mult atâtea ore. 0 = oprit."
+          "outageGraceMaxHours": "Numele negăsit sau nicio verificare programată: nu expiră nimic, apoi termenele care curg se mută cu cât a durat, cel mult atâtea ore. 0 = fără mutare; întreruperile tot se înregistrează."
         },
         "legal": "Textele legale aprobate deja păstrează numerele scrise în ele până aprobi o versiune nouă din șablon, care le citește de aici.",
         "updatedAt": "Setat {when}.",
@@ -5173,8 +5176,8 @@
         "BIB_ASSIGNED": "Când un organizator scrie numărul unei înscrieri confirmate, în pagina ei sau la masă. Altfel, numărul vine cu confirmarea. Cu linkul de gestionare. Niciodată pentru un eveniment anulat.",
         "REGISTER_ANOTHER_PERSON": "Nu se creează nicio înscriere, iar ecranul spune „verifică-ți emailul” ca oricând. Dacă adresa are deja {people}, emailul spune doar asta, fără link.",
         "LEGAL_TEMPLATES_CHANGED": "Verificarea rulează cu sarcinile programate, cel mult o dată pe oră. O schimbare aprobată înainte de verificare nu mai e anunțată; «Sarcini» arată aceleași rânduri.",
-        "DOOR_SHUT": "Cât timp numele nu se găsește nu expiră nimic. Pleacă pe drumul clubului, care nu depinde de domeniul clubului.",
-        "DOOR_SHUT_DEADLINES_MOVED": "Termenele se mută cu cât a durat întreruperea, cel mult cât spune «Termene». Cine își pierduse locul între timp e pus pe lista de invitați speciali."
+        "UNREACHABLE_WINDOW_OPENED": "Cât timp numele nu se găsește nu expiră nimic. Pleacă pe drumul clubului, care nu depinde de domeniul clubului.",
+        "UNREACHABLE_WINDOW_CLOSED": "Termenele se mută cu cât a durat întreruperea, cel mult cât spune «Termene». Cine își pierduse locul între timp e pus pe lista de invitați speciali."
       },
       "confirmationRetry": "Cui nu a confirmat, linkul pleacă singur din nou la {retry} după ultimul email, cel mult {times}; se socotește și «Retrimite». Termenul nu se mută.",
       "confirmationRetryOff": "Nu se retrimite singur: în „Termene”, numărul de retrimiteri e 0."
@@ -7923,12 +7926,21 @@
       "cadenceOnDemand": "Interval minim: la nevoie — cel puțin o rulare reală pe zi, la {time} (Setări → Costuri).",
       "cadenceEvery": "Interval minim: {minutes} min între două rulări reale (Setări → Costuri)."
     },
-    "door": {
+    "unreachable": {
+      "domain": "Numele site-ului: {host} — {answer}, întrebat acum. Sarcina de întreținere îl întreabă la fiecare rulare reală.",
+      "domainSkipped": "Numele site-ului nu e întrebat pe această instalare: un laptop, un test sau o adresă numerică.",
+      "answer": {
+        "resolves": "se găsește",
+        "unresolved": "negăsit",
+        "unknown": "niciun răspuns la timp",
+        "skipped": "neîntrebat"
+      },
       "none": "Ceasul termenelor: nicio întrerupere înregistrată.",
-      "open": "Ceasul termenelor: oprit de la {from} — numele site-ului nu se găsește; nu expiră nimic până revine.",
-      "closed": "Ceasul termenelor: ultima întrerupere {from} – {until} ({source}); mutate cu {stopped}: {moved}; așezate peste locurile anunțate: {outside}.",
+      "windows": "Ceasul termenelor — ultimele întreruperi, cea mai nouă întâi:",
+      "open": "de la {from}: numele site-ului nu se găsește; nu expiră nimic până revine.",
+      "closed": "{from} – {until} ({source}): dat înapoi {granted}; termene mutate: {moved}; așezate peste locurile anunțate: {outside}.",
       "source": {
-        "name": "numele nu se găsea",
+        "dns": "numele negăsit",
         "pings": "nicio verificare programată"
       }
     }

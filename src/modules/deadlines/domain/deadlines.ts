@@ -38,7 +38,7 @@ export const DEADLINE_KEYS = [
   "familySittingMinutes",
   "verificationRetryHours",
   "verificationRetries",
-  "doorShutMaxHours",
+  "outageGraceMaxHours",
 ] as const;
 
 export type DeadlineKey = (typeof DEADLINE_KEYS)[number];
@@ -95,11 +95,12 @@ export type DeadlineRule = {
  *   the address and the event counts toward one plus this number, the person's own «Retrimite» and a
  *   staff resend included, so nobody is nudged twice by a resend; 0 switches the mechanism off; three
  *   nudges is the most a reminder may be before it is a mailer. Neither moves the link's deadline.
- * - **the clock stopped while the door is shut** (§NNN) 0 to 168 hours, 48 by default: the longest
- *   stretch by which one window — the site's name not resolving, or no scheduler call reaching the
- *   platform — moves the participants' deadlines that were running in it (`jobs/domain/door-shut.ts`).
- *   0 switches it off; a week is the most a deadline should be carried for a door nobody reopened,
- *   and two days covers a registrar's hold of a weekend.
+ * - **the outage grace** (§NNN) 0 to 168 hours, 48 by default: the longest stretch by which one
+ *   window the platform could not be reached — the site's name not resolving, or no scheduler call
+ *   reaching it — moves the participants' deadlines that were running in it
+ *   (`registrations/domain/outage-grace.ts`). 0 switches the moving off while the windows are still
+ *   recorded and announced; a week is the most a deadline should be carried for a door nobody
+ *   reopened, and two days covers a registrar's hold over a weekend.
  */
 export const DEADLINE_RULES: Record<DeadlineKey, DeadlineRule> = {
   confirmationHours: { unit: "hours", min: 12, max: 168, default: 48 },
@@ -113,7 +114,7 @@ export const DEADLINE_RULES: Record<DeadlineKey, DeadlineRule> = {
   familySittingMinutes: { unit: "minutes", min: 0, max: 60, default: 10 },
   verificationRetryHours: { unit: "hours", min: 2, max: 72, default: 20 },
   verificationRetries: { unit: "count", min: 0, max: 3, default: 1 },
-  doorShutMaxHours: { unit: "hours", min: 0, max: 168, default: 48 },
+  outageGraceMaxHours: { unit: "hours", min: 0, max: 168, default: 48 },
 };
 
 export type Deadlines = Record<DeadlineKey, number>;
@@ -162,7 +163,7 @@ export const deadlinesSettingSchema = z
     familySittingMinutes: bounded("familySittingMinutes"),
     verificationRetryHours: bounded("verificationRetryHours"),
     verificationRetries: bounded("verificationRetries"),
-    doorShutMaxHours: bounded("doorShutMaxHours"),
+    outageGraceMaxHours: bounded("outageGraceMaxHours"),
   })
   .strict();
 

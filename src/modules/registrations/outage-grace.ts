@@ -1,42 +1,45 @@
-import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, lt, or, sql } from "drizzle-orm";
-import { type DoorShutWindow, doorShutWindows } from "@/db/schema/door-shut-windows";
+import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, lt, or, type SQL } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { eventInvitations } from "@/db/schema/event-invitations";
 import { events } from "@/db/schema/events";
 import { familyPlaceHolds, familySittings, pendingFamilyEntries } from "@/db/schema/family-entries";
 import { jobRuns } from "@/db/schema/job-runs";
 import { registrations } from "@/db/schema/registrations";
+import { type UnreachableWindow, unreachableWindows } from "@/db/schema/unreachable-windows";
 import type { Database, Transaction } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
-import {
-  DOOR_SHUT_MIN_MS,
-  doorShutMaxMs,
-  findPingGaps,
-  type KnownWindow,
-  movedDeadline,
-  type NameProbeStatus,
-  planDoor,
-  stoppedMs,
-} from "@/modules/jobs/domain/door-shut";
 import { readPingHistory } from "@/modules/jobs/schedule-cache";
+import { INVITATION_LINK_GRACE_DAYS } from "@/modules/notifications/invitation-render";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
+import type { NameProbeStatus } from "@/modules/resilience/domain/name-probe";
 import { type NameProbe, probePublicName } from "@/modules/resilience/name-probe";
 import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
 import { listStaffUsers } from "@/modules/staff-identity/repository";
 import { env } from "@/shared/config/env";
 import { computeOccupied } from "./domain/capacity";
+import {
+  findPingGaps,
+  grantedMsFor,
+  type KnownWindow,
+  movedDeadline,
+  OUTAGE_MIN_MS,
+  outageGraceMaxMs,
+  PENDING_HOLD_MS,
+  planOutage,
+} from "./domain/outage-grace";
 import { invitationOpen } from "./invitation-repository";
 import { countOccupied, emailLinkLapseSql, lockEventForCapacity } from "./repository";
 
 /**
- * The clock stops while the door is shut (§NNN) — the first step of every real maintenance run,
- * before anything lapses (`maintenance.ts`). The rules are `jobs/domain/door-shut.ts`'s; this reads,
- * writes and tells the Administrators.
+ * The clock stops while the door is shut (§NNN) — the outage grace, the first step of every real
+ * maintenance run, before anything lapses (`maintenance.ts`). The rules are `domain/outage-grace.ts`'s;
+ * this reads, writes and tells the Administrators.
  *
  * **What moves, and how.** Every participant deadline still running when the window started, later by
- * the window's stop (its length, capped by «Termene»):
+ * what the window gives back (`granted_ms`: its length, capped by «Termene», decided when it closed):
  *
  * - per event, under its lock (`lockEventForCapacity`, the allocator's serialization point — AGENTS.md
  *   §10.6), one transaction each: a declaration hold, a waiting-list offer, a family's reservation
@@ -45,18 +48,24 @@ import { countOccupied, emailLinkLapseSql, lockEventForCapacity } from "./reposi
  *   on the value read, with one audit row each;
  * - event-blind, in one transaction: an address link (`registrations.email_link_expires_at`), a
  *   family's kept form and its sitting's link (`pending_family_entries`, `family_sittings.expires_at`),
- *   and the live links' tokens that end with them (`email_action_tokens`), never capped by the event.
+ *   compare-and-set on the value read, never capped by the event.
+ *
+ * Each link's live token (`email_action_tokens`) moves with its row, in the same transaction and only
+ * when its `expires_at` still equals the row's old deadline (an invitation's: the deadline plus the
+ * link's grace): a token whose row did not move — a lost compare-and-set, a cancelled event, a move
+ * capped away — keeps its instant.
  *
  * **No overbooking, ever.** A deadline that passed while the door was shut is revived by the move —
  * and an offer, a reservation, a held place or an invitation occupies its place again only once its
  * deadline is ahead. The place may have been given meanwhile: every read treats a lapsed offer as free
  * (§10.6), and the name may have answered a visitor before this run. So under the same lock, after the
  * moves of what never lapsed, each revived claim is moved alone and the event's places counted again
- * (`countOccupied`, the allocator's own count); one that would take the count past the capacity is
- * seated «În afara locurilor» (`outside_capacity`, §643 — a registration or an invitation, audited,
- * no actor) rather than left lapsed, so nobody loses a place to the outage and no counted place is
- * given twice. A family's held place, which has no row to seat, is left to lapse instead. Only rows this
- * run moved are ever marked.
+ * (`countOccupied`, the allocator's own count); an offer or an invitation that would take the count
+ * past the capacity is seated «În afara locurilor» (`outside_capacity`, §643 — audited, no actor)
+ * rather than left lapsed, so nobody loses a place to the outage and no counted place is given twice.
+ * A family's reservation and a family's held place are left to lapse instead, as they would have: a
+ * reservation seated outside would keep a seat above the advertised places long after its own deadline.
+ * Only rows this run moved are ever marked.
  *
  * **Idempotent and resumable.** A window remembers the events it finished (`events_moved`) and its
  * links (`links_moved_at`); a retried run does neither twice. The window row is locked inside each of
@@ -64,6 +73,7 @@ import { countOccupied, emailLinkLapseSql, lockEventForCapacity } from "./reposi
  */
 
 const MINUTE = 60_000;
+const INVITATION_LINK_GRACE_MS = INVITATION_LINK_GRACE_DAYS * 24 * 60 * MINUTE;
 
 /** The deployments that have a pinger to fall silent (§513's rule: QA and production). Elsewhere the pings say nothing. */
 function hasPinger(appEnv: string): boolean {
@@ -75,13 +85,7 @@ function lookbackMs(maxMs: number): number {
   return maxMs + 26 * 60 * MINUTE;
 }
 
-/**
- * A window closed this long ago and still not moved stops holding the sweeps: a step that fails on
- * every run must not freeze every deadline for good (the failure is counted on every run meanwhile).
- */
-const PENDING_HOLD_MS = 2 * 60 * MINUTE;
-
-export type DoorShutDeps = {
+export type OutageGraceDeps = {
   /** Whether the site's name resolves; the real lookup by default. */
   probe?: () => Promise<NameProbe>;
   /** The remembered pings since the anchor, or null when the cache cannot say; the cache by default. */
@@ -92,12 +96,12 @@ export type DoorShutDeps = {
   pinger?: boolean;
 };
 
-export type DoorShutRun = {
+export type OutageGraceRun = {
   /** What the name answered this run. */
-  name: NameProbeStatus;
-  /** Whether the door is shut now: the run lapses nothing. */
-  shut: boolean;
-  /** Windows written this run (opened, or past silences recorded). */
+  domain: NameProbeStatus;
+  /** Whether this run holds every lapse: a `dns` window is open (within the cap), or a window's moves failed a moment ago. */
+  holding: boolean;
+  /** Windows written this run (opened, or past silences recorded) — never a suspicion. */
   windowsOpened: number;
   /** Whether an open window was closed this run. */
   windowClosed: boolean;
@@ -107,94 +111,133 @@ export type DoorShutRun = {
   outside: number;
   /** Administrators' emails queued this run. */
   noticesQueued: number;
-  /** Windows whose moves failed this run (each counted as a retryable error by the caller). */
+  /** Windows whose moves failed this run. */
   failures: number;
+  /** Of them, those the next ping may still repair (closed less than `PENDING_HOLD_MS` ago); the rest are «Sarcini»'s. */
+  retryableFailures: number;
 };
 
-export async function stopTheClockWhileTheDoorIsShut<T extends Record<string, unknown>>(
+export async function applyOutageGrace<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,
   settings: Deadlines,
-  deps: DoorShutDeps = {},
-): Promise<DoorShutRun> {
-  const maxMs = doorShutMaxMs(settings);
+  deps: OutageGraceDeps = {},
+): Promise<OutageGraceRun> {
+  const maxMs = outageGraceMaxMs(settings);
   const probe = await (deps.probe ?? (() => probePublicName({ now })))();
 
-  // The silences of the pings since the last real run, when the deployment has a pinger and the cache remembers.
+  // The silences of the pings since the last real run, when the deployment has a pinger and the cache remembers — whatever the cap: 0 switches the moving off, never the seeing.
   const gaps =
-    maxMs > 0 && (deps.pinger ?? hasPinger(env.APP_ENV))
+    (deps.pinger ?? hasPinger(env.APP_ENV))
       ? await pingSilences(db, now, maxMs, deps.readPings ?? readPingHistory, deps.dayCadence ?? env.PINGER_CADENCE_MINUTES)
       : [];
 
   const since = new Date(Math.min(now.getTime() - lookbackMs(maxMs), ...gaps.map((gap) => gap.startedAt.getTime())));
   const known: KnownWindow[] = await db
-    .select({ id: doorShutWindows.id, startedAt: doorShutWindows.startedAt, endedAt: doorShutWindows.endedAt })
-    .from(doorShutWindows)
-    .where(or(isNull(doorShutWindows.endedAt), gt(doorShutWindows.endedAt, since)));
+    .select({
+      id: unreachableWindows.id,
+      source: unreachableWindows.source,
+      startedAt: unreachableWindows.startedAt,
+      endedAt: unreachableWindows.endedAt,
+      confirmedAt: unreachableWindows.confirmedAt,
+    })
+    .from(unreachableWindows)
+    .where(or(isNull(unreachableWindows.endedAt), gt(unreachableWindows.endedAt, since)));
 
-  const plan = planDoor({ now, probe: probe.status, windows: known, gaps, maxMs });
+  const plan = planOutage({ now, probe: probe.status, windows: known, gaps, maxMs });
   let windowsOpened = 0;
-  if (plan.close) {
+  if (plan.clear) {
+    // One «no such name», then an answer: it never happened.
     await db
-      .update(doorShutWindows)
-      .set({ endedAt: plan.close.endedAt, updatedAt: now })
-      .where(and(eq(doorShutWindows.id, plan.close.id), isNull(doorShutWindows.endedAt)));
+      .delete(unreachableWindows)
+      .where(and(eq(unreachableWindows.id, plan.clear.id), isNull(unreachableWindows.confirmedAt), isNull(unreachableWindows.endedAt)));
   }
-  if (plan.open) {
-    const inserted = await db
-      .insert(doorShutWindows)
-      .values({ startedAt: plan.open.startedAt, source: plan.open.source, createdAt: now, updatedAt: now })
-      .onConflictDoNothing()
-      .returning({ id: doorShutWindows.id });
-    windowsOpened += inserted.length;
+  if (plan.close) {
+    const open = known.find((window) => window.id === plan.close?.id);
+    const grantedMs = open ? grantedMsFor({ startedAt: open.startedAt, endedAt: plan.close.endedAt }, maxMs) : 0;
+    await db
+      .update(unreachableWindows)
+      .set({ endedAt: plan.close.endedAt, grantedMs, updatedAt: now })
+      .where(and(eq(unreachableWindows.id, plan.close.id), isNull(unreachableWindows.endedAt)));
+  }
+  if (plan.suspect) {
+    await db
+      .insert(unreachableWindows)
+      .values({ source: "dns", startedAt: plan.suspect.startedAt, createdAt: now, updatedAt: now })
+      .onConflictDoNothing();
+  }
+  if (plan.confirm) {
+    const confirmed = await db
+      .update(unreachableWindows)
+      .set({ confirmedAt: now, startedAt: plan.confirm.startedAt, updatedAt: now })
+      .where(and(eq(unreachableWindows.id, plan.confirm.id), isNull(unreachableWindows.confirmedAt), isNull(unreachableWindows.endedAt)))
+      .returning({ id: unreachableWindows.id });
+    windowsOpened += confirmed.length;
   }
   for (const gap of plan.record) {
-    await db.insert(doorShutWindows).values({ startedAt: gap.startedAt, endedAt: gap.endedAt, source: "pings", createdAt: now, updatedAt: now });
+    await db.insert(unreachableWindows).values({
+      source: "pings",
+      startedAt: gap.startedAt,
+      endedAt: gap.endedAt,
+      confirmedAt: now,
+      grantedMs: grantedMsFor(gap, maxMs),
+      createdAt: now,
+      updatedAt: now,
+    });
     windowsOpened += 1;
   }
 
   let noticesQueued = 0;
-  // The Administrators are told the door is shut, once per window that the name opened.
-  const [openWindow] = await db.select().from(doorShutWindows).where(isNull(doorShutWindows.endedAt)).limit(1);
-  if (openWindow && openWindow.openedNoticeAt === null && maxMs > 0) {
-    noticesQueued += await tellTheAdministrators(db, openWindow, "DOOR_SHUT", now, maxMs);
+  // The Administrators are told a `dns` window opened, once — a suspicion tells nobody.
+  const [openWindow] = await db
+    .select()
+    .from(unreachableWindows)
+    .where(and(isNull(unreachableWindows.endedAt), isNotNull(unreachableWindows.confirmedAt)))
+    .limit(1);
+  if (openWindow && openWindow.openedAnnouncedAt === null) {
+    noticesQueued += await tellTheAdministrators(db, openWindow, "UNREACHABLE_WINDOW_OPENED", now, maxMs);
   }
 
-  // Every window over and not yet moved, oldest first.
+  // Every window over and not yet applied, oldest first.
   const pending = await db
     .select()
-    .from(doorShutWindows)
-    .where(and(isNotNull(doorShutWindows.endedAt), isNull(doorShutWindows.appliedAt)))
-    .orderBy(asc(doorShutWindows.startedAt));
+    .from(unreachableWindows)
+    .where(and(isNotNull(unreachableWindows.endedAt), isNull(unreachableWindows.appliedAt)))
+    .orderBy(asc(unreachableWindows.startedAt));
   let moved = 0;
   let outside = 0;
   let failures = 0;
-  let holding = false;
+  let retryableFailures = 0;
+  let holdingForFailure = false;
   for (const window of pending) {
     try {
-      const result = await moveTheDeadlines(db, window, now, maxMs, settings);
+      const result = await moveTheDeadlines(db, window, now, settings);
       moved += result.moved;
       outside += result.outside;
-      const [done] = await db.select().from(doorShutWindows).where(eq(doorShutWindows.id, window.id)).limit(1);
-      if (done && done.closedNoticeAt === null) noticesQueued += await tellTheAdministrators(db, done, "DOOR_SHUT_DEADLINES_MOVED", now, maxMs);
+      const [done] = await db.select().from(unreachableWindows).where(eq(unreachableWindows.id, window.id)).limit(1);
+      if (done && done.closedAnnouncedAt === null) noticesQueued += await tellTheAdministrators(db, done, "UNREACHABLE_WINDOW_CLOSED", now, maxMs);
     } catch (error) {
-      console.error("[door-shut] the deadlines of a window could not be moved", window.id, error instanceof Error ? error.name : "error");
+      console.error("[outage-grace] the deadlines of a window could not be moved", window.id, error instanceof Error ? error.name : "error");
       failures += 1;
-      // Until it is moved, nothing it was meant to save may lapse — for a while (`PENDING_HOLD_MS`).
-      if (window.endedAt && now.getTime() - window.endedAt.getTime() < PENDING_HOLD_MS) holding = true;
+      // Until it is moved, nothing it was meant to save may lapse — for a while (`PENDING_HOLD_MS`); then «Sarcini» says so.
+      if (window.endedAt && now.getTime() - window.endedAt.getTime() < PENDING_HOLD_MS) {
+        holdingForFailure = maxMs > 0;
+        retryableFailures += 1;
+      }
     }
   }
   if (moved > 0) revalidatePublicContent("places");
 
   return {
-    name: probe.status,
-    shut: plan.shut || holding,
+    domain: probe.status,
+    holding: plan.holding || holdingForFailure,
     windowsOpened,
     windowClosed: plan.close !== null,
     moved,
     outside,
     noticesQueued,
     failures,
+    retryableFailures,
   };
 }
 
@@ -208,7 +251,7 @@ async function pingSilences<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,
   maxMs: number,
-  readPings: NonNullable<DoorShutDeps["readPings"]>,
+  readPings: NonNullable<OutageGraceDeps["readPings"]>,
   dayCadence: number,
 ) {
   const [last] = await db
@@ -231,58 +274,68 @@ async function pingSilences<T extends Record<string, unknown>>(
 
 type Moved = { moved: number; outside: number };
 
-/** Every deadline of one window that is over, moved — the links once, then each event once. */
+/** Every deadline of one window that is over, moved — the links once, then each event once. With nothing given back (the cap at 0), nothing moves and the window is done. */
 async function moveTheDeadlines<T extends Record<string, unknown>>(
   db: Database<T>,
-  window: DoorShutWindow,
+  window: UnreachableWindow,
   now: Date,
-  maxMs: number,
   settings: Deadlines,
 ): Promise<Moved> {
-  const endedAt = window.endedAt ?? now;
-  const stopMs = stoppedMs({ startedAt: window.startedAt, endedAt }, maxMs);
-  if (window.stoppedMinutes === null) {
-    await db
-      .update(doorShutWindows)
-      .set({ stoppedMinutes: Math.round(stopMs / MINUTE), updatedAt: now })
-      .where(eq(doorShutWindows.id, window.id));
-  }
+  // What this window gives back was decided when it closed: a retry moves by the same amount, whatever «Termene» says by then.
+  const grantedMs = window.grantedMs;
   const total: Moved = { moved: 0, outside: 0 };
-  // Switched off, or a window too short to say in minutes: nothing to move, and nobody to tell.
-  if (stopMs < DOOR_SHUT_MIN_MS) {
-    await db
-      .update(doorShutWindows)
-      .set({ appliedAt: now, ...(window.closedNoticeAt === null ? { closedNoticeAt: now } : {}), updatedAt: now })
-      .where(eq(doorShutWindows.id, window.id));
-    return total;
+  if (grantedMs >= OUTAGE_MIN_MS) {
+    if (window.linksMovedAt === null) {
+      total.moved += await moveTheLinks(db, window, grantedMs, now, settings);
+    }
+    const done = new Set(window.eventsMoved);
+    for (const eventId of await eventsToMove(db, window.startedAt)) {
+      if (done.has(eventId)) continue;
+      const result = await moveOneEvent(db, window.id, eventId, window.startedAt, grantedMs, now);
+      total.moved += result.moved;
+      total.outside += result.outside;
+    }
   }
-  if (window.linksMovedAt === null) {
-    total.moved += await moveTheLinks(db, window, stopMs, now, settings);
-  }
-  const done = new Set(window.eventsMoved);
-  for (const eventId of await eventsToMove(db, window.startedAt)) {
-    if (done.has(eventId)) continue;
-    const result = await moveOneEvent(db, window.id, eventId, window.startedAt, stopMs, now);
-    total.moved += result.moved;
-    total.outside += result.outside;
-  }
-  await db.update(doorShutWindows).set({ appliedAt: now, updatedAt: now }).where(eq(doorShutWindows.id, window.id));
+  await db.update(unreachableWindows).set({ appliedAt: now, updatedAt: now }).where(eq(unreachableWindows.id, window.id));
   return total;
 }
 
 /** The window's row, locked in the caller's transaction: two runs at once wait on each other here. */
-async function lockWindow<T extends Record<string, unknown>>(tx: Transaction<T>, id: string): Promise<DoorShutWindow | undefined> {
-  const [row] = await tx.select().from(doorShutWindows).where(eq(doorShutWindows.id, id)).for("update");
+async function lockWindow<T extends Record<string, unknown>>(tx: Transaction<T>, id: string): Promise<UnreachableWindow | undefined> {
+  const [row] = await tx.select().from(unreachableWindows).where(eq(unreachableWindows.id, id)).for("update");
   return row;
 }
 
-/** The token purposes whose life is a participant's deadline: the address link, the offer, a family's link, an invitation. */
-const DEADLINE_TOKEN_PURPOSES = ["VERIFY_REGISTRATION_EMAIL", "WAITLIST_OFFER", "REGISTER_ANOTHER_PERSON", "ACCEPT_INVITATION"] as const;
+/**
+ * A link's live token, in lockstep with the deadline it ends with: only a token unused, not replaced,
+ * whose `expires_at` is still the old instant (plus `offsetMs`: an invitation's link lives a grace past
+ * its deadline), moved to the new one (plus the same). Called in the transaction of its row's move,
+ * after that move was written — a token whose row did not move keeps its instant.
+ */
+async function moveTokenWith<T extends Record<string, unknown>>(
+  tx: Transaction<T>,
+  scope: SQL,
+  from: Date,
+  to: Date,
+  offsetMs = 0,
+): Promise<void> {
+  await tx
+    .update(emailActionTokens)
+    .set({ expiresAt: new Date(to.getTime() + offsetMs) })
+    .where(
+      and(
+        scope,
+        isNull(emailActionTokens.usedAt),
+        isNull(emailActionTokens.invalidatedAt),
+        eq(emailActionTokens.expiresAt, new Date(from.getTime() + offsetMs)),
+      ),
+    );
+}
 
 async function moveTheLinks<T extends Record<string, unknown>>(
   db: Database<T>,
-  window: DoorShutWindow,
-  stopMs: number,
+  window: UnreachableWindow,
+  grantedMs: number,
   now: Date,
   settings: Deadlines,
 ): Promise<number> {
@@ -291,81 +344,78 @@ async function moveTheLinks<T extends Record<string, unknown>>(
     if (!locked || locked.linksMovedAt !== null) return 0;
     let moved = 0;
 
-    // The address links still waiting for a click.
+    // The address links still waiting for a click — a row written before the column (null) by its lapse, materialised by the move.
     const lapse = emailLinkLapseSql(settings.confirmationHours);
     const waiting = await tx
-      .select({ id: registrations.id, participantId: registrations.participantId, lapse })
+      .select({ id: registrations.id, participantId: registrations.participantId, written: registrations.emailLinkExpiresAt, lapse })
       .from(registrations)
       .where(and(eq(registrations.status, "PENDING_EMAIL_CONFIRMATION"), sql`${lapse} > ${window.startedAt.toISOString()}::timestamptz`));
     for (const row of waiting) {
       const stored = new Date(row.lapse);
-      const to = movedDeadline({ stored, windowStartedAt: window.startedAt, stopMs, now });
+      const to = movedDeadline({ stored, windowStartedAt: window.startedAt, grantedMs, now });
       if (!to) continue;
+      // Compare-and-set on the value read: a link a resend or a restart wrote meanwhile is left as that left it.
       const written = await tx
         .update(registrations)
         .set({ emailLinkExpiresAt: to, updatedAt: now })
-        .where(and(eq(registrations.id, row.id), eq(registrations.status, "PENDING_EMAIL_CONFIRMATION")))
+        .where(
+          and(
+            eq(registrations.id, row.id),
+            eq(registrations.status, "PENDING_EMAIL_CONFIRMATION"),
+            row.written ? eq(registrations.emailLinkExpiresAt, row.written) : isNull(registrations.emailLinkExpiresAt),
+          ),
+        )
         .returning({ id: registrations.id });
       if (written.length === 0) continue;
       moved += 1;
+      await moveTokenWith(tx, and(eq(emailActionTokens.purpose, "VERIFY_REGISTRATION_EMAIL"), eq(emailActionTokens.registrationId, row.id)) as SQL, stored, to);
       await recordAuditEvent(tx, {
         actorStaffUserId: null,
         participantId: row.participantId,
-        action: "registration.deadline_moved_while_shut",
+        action: "registration.deadline_moved_for_outage",
         entityType: "registration",
         entityId: row.id,
-        metadata: { kind: "emailLink", from: stored.toISOString(), to: to.toISOString(), windowId: window.id },
+        metadata: { kind: "emailLink", from: stored.toISOString(), to: to.toISOString(), windowId: window.id, source: window.source },
         now,
       });
     }
 
-    // A family's kept forms and its sittings' links: no place behind them, no person's row to audit.
+    // A family's kept forms and its sittings' links: no place behind them, no person's row to audit; each one's own token with it.
     for (const entry of await tx
-      .select({ id: pendingFamilyEntries.id, expiresAt: pendingFamilyEntries.expiresAt })
+      .select({ id: pendingFamilyEntries.id, expiresAt: pendingFamilyEntries.expiresAt, tokenId: pendingFamilyEntries.actionTokenId })
       .from(pendingFamilyEntries)
       .where(gt(pendingFamilyEntries.expiresAt, window.startedAt))) {
-      const to = movedDeadline({ stored: entry.expiresAt, windowStartedAt: window.startedAt, stopMs, now });
+      const to = movedDeadline({ stored: entry.expiresAt, windowStartedAt: window.startedAt, grantedMs, now });
       if (!to) continue;
       const written = await tx
         .update(pendingFamilyEntries)
         .set({ expiresAt: to })
         .where(and(eq(pendingFamilyEntries.id, entry.id), eq(pendingFamilyEntries.expiresAt, entry.expiresAt)))
         .returning({ id: pendingFamilyEntries.id });
-      moved += written.length;
+      if (written.length === 0) continue;
+      moved += 1;
+      if (entry.tokenId) await moveTokenWith(tx, eq(emailActionTokens.id, entry.tokenId), entry.expiresAt, to);
     }
     for (const sitting of await tx
-      .select({ id: familySittings.id, expiresAt: familySittings.expiresAt })
+      .select({ id: familySittings.id, expiresAt: familySittings.expiresAt, tokenId: familySittings.actionTokenId })
       .from(familySittings)
       .where(and(gt(familySittings.expiresAt, window.startedAt), isNull(familySittings.confirmedAt), isNull(familySittings.releasedAt)))) {
-      const to = movedDeadline({ stored: sitting.expiresAt, windowStartedAt: window.startedAt, stopMs, now });
+      const to = movedDeadline({ stored: sitting.expiresAt, windowStartedAt: window.startedAt, grantedMs, now });
       if (!to) continue;
       const written = await tx
         .update(familySittings)
         .set({ expiresAt: to })
         .where(and(eq(familySittings.id, sitting.id), eq(familySittings.expiresAt, sitting.expiresAt)))
         .returning({ id: familySittings.id });
-      moved += written.length;
+      if (written.length === 0) continue;
+      moved += 1;
+      if (sitting.tokenId) await moveTokenWith(tx, eq(emailActionTokens.id, sitting.tokenId), sitting.expiresAt, to);
     }
 
-    // The live links that end with those deadlines: the click must still open what the move kept.
-    const stopSeconds = Math.round(stopMs / 1000);
     await tx
-      .update(emailActionTokens)
-      .set({ expiresAt: sql`${emailActionTokens.expiresAt} + make_interval(secs => ${stopSeconds})` })
-      .where(
-        and(
-          inArray(emailActionTokens.purpose, [...DEADLINE_TOKEN_PURPOSES]),
-          isNull(emailActionTokens.usedAt),
-          isNull(emailActionTokens.invalidatedAt),
-          gt(emailActionTokens.expiresAt, window.startedAt),
-          sql`${emailActionTokens.expiresAt} + make_interval(secs => ${stopSeconds}) > ${now.toISOString()}::timestamptz`,
-        ),
-      );
-
-    await tx
-      .update(doorShutWindows)
-      .set({ linksMovedAt: now, movedCount: sql`${doorShutWindows.movedCount} + ${moved}`, updatedAt: now })
-      .where(eq(doorShutWindows.id, window.id));
+      .update(unreachableWindows)
+      .set({ linksMovedAt: now, rowsMoved: sql`${unreachableWindows.rowsMoved} + ${moved}`, updatedAt: now })
+      .where(eq(unreachableWindows.id, window.id));
     return moved;
   });
 }
@@ -397,12 +447,14 @@ async function eventsToMove<T extends Record<string, unknown>>(db: Database<T>, 
   return [...new Set([...held, ...places, ...invited].map((row) => row.eventId))];
 }
 
+type RegistrationStatusMoved = "PENDING_DECLARATION" | "WAITLIST_OFFERED" | "PENDING_EMAIL_CONFIRMATION";
+
 type Claim =
-  | { kind: "registration"; id: string; participantId: string; status: string; stored: Date; to: Date; outside: boolean }
+  | { kind: "registration"; id: string; participantId: string; status: RegistrationStatusMoved; stored: Date; to: Date; outside: boolean }
   | { kind: "placeHold"; id: string; stored: Date; to: Date; holdsPlace: boolean }
   | { kind: "invitation"; id: string; stored: Date; to: Date; outside: boolean };
 
-const REGISTRATION_DEADLINE_KIND: Record<string, string> = {
+const REGISTRATION_DEADLINE_KIND: Record<RegistrationStatusMoved, string> = {
   PENDING_DECLARATION: "declarationHold",
   WAITLIST_OFFERED: "offer",
   PENDING_EMAIL_CONFIRMATION: "familyReservation",
@@ -414,7 +466,7 @@ async function moveOneEvent<T extends Record<string, unknown>>(
   windowId: string,
   eventId: string,
   startedAt: Date,
-  stopMs: number,
+  grantedMs: number,
   now: Date,
 ): Promise<Moved> {
   return db.transaction(async (tx) => {
@@ -423,14 +475,14 @@ async function moveOneEvent<T extends Record<string, unknown>>(
     if (!window || window.eventsMoved.includes(eventId)) return { moved: 0, outside: 0 };
     const finish = async (result: Moved) => {
       await tx
-        .update(doorShutWindows)
+        .update(unreachableWindows)
         .set({
-          eventsMoved: sql`${doorShutWindows.eventsMoved} || ${JSON.stringify([eventId])}::jsonb`,
-          movedCount: sql`${doorShutWindows.movedCount} + ${result.moved}`,
-          outsideCount: sql`${doorShutWindows.outsideCount} + ${result.outside}`,
+          eventsMoved: sql`${unreachableWindows.eventsMoved} || ${JSON.stringify([eventId])}::jsonb`,
+          rowsMoved: sql`${unreachableWindows.rowsMoved} + ${result.moved}`,
+          placesOutside: sql`${unreachableWindows.placesOutside} + ${result.outside}`,
           updatedAt: now,
         })
-        .where(eq(doorShutWindows.id, windowId));
+        .where(eq(unreachableWindows.id, windowId));
       return result;
     };
     // A cancelled event stays as it was cancelled (§331), a completed one as it finished (§82).
@@ -457,21 +509,31 @@ async function moveOneEvent<T extends Record<string, unknown>>(
         ),
       )) {
       if (!row.holdExpiresAt) continue;
-      const to = movedDeadline({ stored: row.holdExpiresAt, windowStartedAt: startedAt, stopMs, now, cap: holdCap });
-      if (to) claims.push({ kind: "registration", id: row.id, participantId: row.participantId, status: row.status, stored: row.holdExpiresAt, to, outside: row.outside });
+      const to = movedDeadline({ stored: row.holdExpiresAt, windowStartedAt: startedAt, grantedMs, now, cap: holdCap });
+      if (to) {
+        claims.push({
+          kind: "registration",
+          id: row.id,
+          participantId: row.participantId,
+          status: row.status as RegistrationStatusMoved,
+          stored: row.holdExpiresAt,
+          to,
+          outside: row.outside,
+        });
+      }
     }
     for (const row of await tx
       .select({ id: familyPlaceHolds.id, expiresAt: familyPlaceHolds.expiresAt, holdsPlace: familyPlaceHolds.holdsPlace })
       .from(familyPlaceHolds)
       .where(and(eq(familyPlaceHolds.eventId, eventId), gt(familyPlaceHolds.expiresAt, startedAt)))) {
-      const to = movedDeadline({ stored: row.expiresAt, windowStartedAt: startedAt, stopMs, now, cap: holdCap });
+      const to = movedDeadline({ stored: row.expiresAt, windowStartedAt: startedAt, grantedMs, now, cap: holdCap });
       if (to) claims.push({ kind: "placeHold", id: row.id, stored: row.expiresAt, to, holdsPlace: row.holdsPlace });
     }
     for (const row of await tx
       .select({ id: eventInvitations.id, expiresAt: eventInvitations.expiresAt, outside: eventInvitations.outsideCapacity })
       .from(eventInvitations)
       .where(and(eq(eventInvitations.eventId, eventId), invitationOpen(), gt(eventInvitations.expiresAt, startedAt)))) {
-      const to = movedDeadline({ stored: row.expiresAt, windowStartedAt: startedAt, stopMs, now, cap: invitationCap });
+      const to = movedDeadline({ stored: row.expiresAt, windowStartedAt: startedAt, grantedMs, now, cap: invitationCap });
       if (to) claims.push({ kind: "invitation", id: row.id, stored: row.expiresAt, to, outside: row.outside });
     }
 
@@ -487,6 +549,8 @@ async function moveOneEvent<T extends Record<string, unknown>>(
         : claim.kind === "invitation"
           ? !claim.outside
           : !claim.outside && claim.status !== "PENDING_DECLARATION");
+    /** A claim with no room is seated outside the places — an offer or an invitation — or left to lapse: a family's reservation or held place. */
+    const seatable = (claim: Claim) => claim.kind === "invitation" || (claim.kind === "registration" && claim.status === "WAITLIST_OFFERED");
 
     let moved = 0;
     let outside = 0;
@@ -495,7 +559,7 @@ async function moveOneEvent<T extends Record<string, unknown>>(
         const written = await tx
           .update(registrations)
           .set({ holdExpiresAt: to, updatedAt: now })
-          .where(and(eq(registrations.id, claim.id), eq(registrations.holdExpiresAt, claim.stored), eq(registrations.status, claim.status as "PENDING_DECLARATION")))
+          .where(and(eq(registrations.id, claim.id), eq(registrations.holdExpiresAt, claim.stored), eq(registrations.status, claim.status)))
           .returning({ id: registrations.id });
         return written.length > 0;
       }
@@ -514,19 +578,34 @@ async function moveOneEvent<T extends Record<string, unknown>>(
         .returning({ id: eventInvitations.id });
       return written.length > 0;
     };
+    /** Its link's token with it: an offer's (`WAITLIST_OFFER`) and an invitation's (`ACCEPT_INVITATION`, a grace past the deadline). */
+    const moveToken = async (claim: Claim) => {
+      if (claim.kind === "registration" && claim.status === "WAITLIST_OFFERED") {
+        await moveTokenWith(tx, and(eq(emailActionTokens.purpose, "WAITLIST_OFFER"), eq(emailActionTokens.registrationId, claim.id)) as SQL, claim.stored, claim.to);
+      } else if (claim.kind === "invitation") {
+        await moveTokenWith(
+          tx,
+          and(eq(emailActionTokens.purpose, "ACCEPT_INVITATION"), eq(emailActionTokens.invitationId, claim.id)) as SQL,
+          claim.stored,
+          claim.to,
+          INVITATION_LINK_GRACE_MS,
+        );
+      }
+    };
     const audit = async (claim: Claim, seatedOutside: boolean) => {
       if (claim.kind === "registration") {
         await recordAuditEvent(tx, {
           actorStaffUserId: null,
           participantId: claim.participantId,
-          action: "registration.deadline_moved_while_shut",
+          action: "registration.deadline_moved_for_outage",
           entityType: "registration",
           entityId: claim.id,
           metadata: {
-            kind: REGISTRATION_DEADLINE_KIND[claim.status] ?? claim.status,
+            kind: REGISTRATION_DEADLINE_KIND[claim.status],
             from: claim.stored.toISOString(),
             to: claim.to.toISOString(),
             windowId,
+            source: window.source,
             ...(seatedOutside ? { outsideCapacity: true } : {}),
           },
           now,
@@ -536,10 +615,10 @@ async function moveOneEvent<T extends Record<string, unknown>>(
           await recordAuditEvent(tx, {
             actorStaffUserId: null,
             participantId: claim.participantId,
-            action: "registration.outside_capacity_changed",
+            action: "registration.seated_outside_for_outage_grace",
             entityType: "registration",
             entityId: claim.id,
-            metadata: { from: false, to: true, status: claim.status, doorShutWindowId: windowId },
+            metadata: { from: false, to: true, status: claim.status, windowId },
             now,
           });
         }
@@ -547,10 +626,17 @@ async function moveOneEvent<T extends Record<string, unknown>>(
         await recordAuditEvent(tx, {
           actorStaffUserId: null,
           participantId: null,
-          action: "event.invitation_deadline_moved_while_shut",
+          action: "event.invitation_deadline_moved_for_outage",
           entityType: "event",
           entityId: eventId,
-          metadata: { invitationId: claim.id, from: claim.stored.toISOString(), to: claim.to.toISOString(), windowId, outsideCapacity: claim.outside || seatedOutside },
+          metadata: {
+            invitationId: claim.id,
+            from: claim.stored.toISOString(),
+            to: claim.to.toISOString(),
+            windowId,
+            source: window.source,
+            outsideCapacity: claim.outside || seatedOutside,
+          },
           now,
         });
       }
@@ -560,17 +646,23 @@ async function moveOneEvent<T extends Record<string, unknown>>(
     for (const claim of claims.filter((item) => !revives(item))) {
       if (await write(claim, claim.to)) {
         moved += 1;
+        await moveToken(claim);
         await audit(claim, false);
       }
     }
 
-    // Then each revived claim alone, oldest deadline first, counted again under the lock.
+    /*
+      Then each revived claim alone, oldest deadline first, counted again under the lock. The lock is the
+      allocator's own (§10.6): every path that gives a place takes it first, so between this count and
+      this write no other transaction can give the place this claim takes back.
+    */
     const counted = async () => computeOccupied(await countOccupied(tx, eventId, now));
     let before = event.capacity === null ? 0 : await counted();
     for (const claim of claims.filter(revives).sort((a, b) => a.stored.getTime() - b.stored.getTime())) {
       if (!(await write(claim, claim.to))) continue;
       if (event.capacity === null) {
         moved += 1;
+        await moveToken(claim);
         await audit(claim, false);
         continue;
       }
@@ -578,14 +670,29 @@ async function moveOneEvent<T extends Record<string, unknown>>(
       if (after <= event.capacity || after <= before) {
         before = after;
         moved += 1;
+        await moveToken(claim);
         await audit(claim, false);
         continue;
       }
-      // Its place went to somebody else meanwhile: seated outside the places, or — a family's held place, which has no row to seat — left lapsed.
-      if (claim.kind === "placeHold") {
-        await tx.update(familyPlaceHolds).set({ expiresAt: claim.stored }).where(eq(familyPlaceHolds.id, claim.id));
+      if (!seatable(claim)) {
+        /*
+          Its place went to somebody else meanwhile, and a family's reservation or held place is never
+          seated outside: put back as it was, it lapses as it would have, and the reservation's address,
+          once confirmed, is allocated like any other (§543) — never above the advertised places.
+        */
+        if (claim.kind === "placeHold") {
+          await tx.update(familyPlaceHolds).set({ expiresAt: claim.stored }).where(eq(familyPlaceHolds.id, claim.id));
+        } else if (claim.kind === "registration") {
+          await tx.update(registrations).set({ holdExpiresAt: claim.stored }).where(eq(registrations.id, claim.id));
+        }
         continue;
       }
+      /*
+        Seated «În afara locurilor» (§643, §648) — whatever the event's «Folosește lista de invitați
+        speciali»: that switch governs the Administrators' own verb, and this mark is the platform's,
+        given only to a claim the outage revived. An outside offer lapses at its moved deadline like any
+        other and ends `EXPIRED`; an outside invitation, accepted, seats its registration outside (§647).
+      */
       if (claim.kind === "registration") {
         await tx.update(registrations).set({ outsideCapacity: true, updatedAt: now }).where(eq(registrations.id, claim.id));
       } else {
@@ -593,6 +700,7 @@ async function moveOneEvent<T extends Record<string, unknown>>(
       }
       moved += 1;
       outside += 1;
+      await moveToken(claim);
       await audit(claim, true);
       before = await counted();
     }
@@ -602,21 +710,23 @@ async function moveOneEvent<T extends Record<string, unknown>>(
 
 /**
  * One email per Administrator and Superadministrator with an address, in their own language, once per
- * window and message (its idempotency key), and the window remembers it was sent. On the club's road:
- * when the club's own domain is what is gone, Mailgun's sending subdomain may be gone with it.
+ * window and message (its idempotency key, `unreachable:<window>:opened|closed:<staff id>`), and the
+ * window remembers it was sent. On the club's road: when the club's own domain is what is gone,
+ * Mailgun's sending subdomain may be gone with it.
  */
 async function tellTheAdministrators<T extends Record<string, unknown>>(
   db: Database<T>,
-  window: DoorShutWindow,
-  messageType: "DOOR_SHUT" | "DOOR_SHUT_DEADLINES_MOVED",
+  window: UnreachableWindow,
+  messageType: "UNREACHABLE_WINDOW_OPENED" | "UNREACHABLE_WINDOW_CLOSED",
   now: Date,
   maxMs: number,
 ): Promise<number> {
+  const opened = messageType === "UNREACHABLE_WINDOW_OPENED";
   const recipients = (await listStaffUsers(db)).filter((member) => canManageClubSettings(member.role) && member.email.trim() !== "");
   return db.transaction(async (tx) => {
     const locked = await lockWindow(tx, window.id);
     if (!locked) return 0;
-    if (messageType === "DOOR_SHUT" ? locked.openedNoticeAt !== null : locked.closedNoticeAt !== null) return 0;
+    if (opened ? locked.openedAnnouncedAt !== null : locked.closedAnnouncedAt !== null) return 0;
     let queued = 0;
     for (const member of recipients) {
       const row = await enqueueEmail(tx, {
@@ -630,20 +740,20 @@ async function tellTheAdministrators<T extends Record<string, unknown>>(
           startedAt: locked.startedAt.toISOString(),
           endedAt: locked.endedAt ? locked.endedAt.toISOString() : null,
           source: locked.source,
-          stoppedMinutes: locked.stoppedMinutes,
+          grantedMinutes: Math.round(locked.grantedMs / MINUTE),
           maxHours: Math.round(maxMs / (60 * MINUTE)),
-          moved: locked.movedCount,
-          outside: locked.outsideCount,
+          moved: locked.rowsMoved,
+          outside: locked.placesOutside,
         },
-        idempotencyKey: `door-shut:${locked.id}:${messageType === "DOOR_SHUT" ? "shut" : "moved"}:${member.id}`,
+        idempotencyKey: `unreachable:${locked.id}:${opened ? "opened" : "closed"}:${member.id}`,
         now,
       });
       if (row) queued += 1;
     }
     await tx
-      .update(doorShutWindows)
-      .set(messageType === "DOOR_SHUT" ? { openedNoticeAt: now, updatedAt: now } : { closedNoticeAt: now, updatedAt: now })
-      .where(eq(doorShutWindows.id, locked.id));
+      .update(unreachableWindows)
+      .set(opened ? { openedAnnouncedAt: now, updatedAt: now } : { closedAnnouncedAt: now, updatedAt: now })
+      .where(eq(unreachableWindows.id, locked.id));
     return queued;
   });
 }

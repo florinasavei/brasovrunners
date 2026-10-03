@@ -82,7 +82,7 @@ export type TaskId =
   | "translation"
   | "contactForm"
   | "domainRenewal"
-  | "doorShut"
+  | "unreachableWindow"
   | "neonLimits";
 
 /**
@@ -118,7 +118,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   translation: "account",
   contactForm: "account",
   domainRenewal: "decision",
-  doorShut: "check",
+  unreachableWindow: "check",
   neonLimits: "decision",
 };
 
@@ -346,11 +346,12 @@ export type OwnerTaskInputs = {
    */
   domainRenewal: DomainRenewal;
   /**
-   * The door (§NNN, `door_shut_windows`): `shut` while the site's name does not resolve and the
-   * deadlines are held; `recent` for seven days after a window was over and its deadlines moved — the
-   * club reads what moved and who was seated on «Lista de invitați speciali»; `clear` otherwise.
+   * The outage grace (§NNN, `unreachable_windows`, `unreachableWindowState`): `open` while a window is
+   * open — the site's name does not resolve and the deadlines are held; `stuck` while a window over for
+   * more than two hours still has deadlines it could not move; `outside` while the newest window over
+   * seated anybody outside the places — somebody must look at them; `clear` otherwise.
    */
-  doorShut: "shut" | "recent" | "clear";
+  unreachableWindow: "open" | "stuck" | "outside" | "clear";
   /**
    * This environment's monthly compute-time quota and this period's spend against it, both read
    * from the same Neon project row the consumption panel already fetches (§335) — never a
@@ -709,11 +710,11 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
    */
   const quota = input.neonQuota?.quotaCuHours ?? null;
   const nearLimit = quota !== null && isNeonQuotaNearLimit(input.neonQuota?.usedCuHours ?? 0, quota);
-  // The clock stopped while the door was shut (§NNN): red while it is shut, open a week after, then green.
-  push("doorShut", {
+  // The clock stopped while the door was shut (§NNN): red while a window is open, while one's moves are stuck, and while the newest seated anybody outside the places; green otherwise.
+  push("unreachableWindow", {
     owner: "club",
-    state: input.doorShut === "shut" ? "broken" : input.doorShut === "recent" ? "open" : "done",
-    text: input.doorShut === "shut" ? "shut" : undefined,
+    state: input.unreachableWindow === "clear" ? "done" : "broken",
+    ...(input.unreachableWindow === "clear" ? {} : { text: input.unreachableWindow }),
   });
 
   push("neonLimits", {

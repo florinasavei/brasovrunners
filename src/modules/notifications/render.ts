@@ -80,7 +80,7 @@ import { forecastForEvent } from "@/modules/weather/source";
 import { renderNewsletterRow } from "@/modules/newsletter/render";
 import { renderInvitationRow } from "./invitation-render";
 import { buildOutgoingEmail, type TemplateData } from "./templates";
-import { readDoorShutFacts } from "./door-shut-words";
+import { readUnreachableWindowFacts } from "./outage-grace-words";
 import { emailEventFacts } from "./event-facts-row";
 import { type EmailRenderer, OutboxMessageWithdrawn, type OutboxRow } from "./outbox";
 import type { DeadlineRebase } from "./deadline-rebase";
@@ -765,15 +765,15 @@ async function renderRow(
     (AGENTS.md §8); the backoffice's sign-in decides who may open it.
   */
   /*
-    The door's two (§NNN), to an Administrator or a Superadministrator: the window's instants and counts
+    The outage grace's two (§NNN), to an Administrator or a Superadministrator: the window's instants and counts
     are in the payload — no participant, no token. «Site-ul nu se găsește după nume» has no button: the
     address it would open is the one that is gone. The second opens «Sarcini», where the window stands.
   */
-  if (row.messageType === "DOOR_SHUT" || row.messageType === "DOOR_SHUT_DEADLINES_MOVED") {
+  if (row.messageType === "UNREACHABLE_WINDOW_OPENED" || row.messageType === "UNREACHABLE_WINDOW_CLOSED") {
     const payload = (row.payloadJson ?? {}) as { displayName?: unknown };
     data.participantName = typeof payload.displayName === "string" ? payload.displayName : "";
-    data.doorShut = readDoorShutFacts(row.payloadJson);
-    if (row.messageType === "DOOR_SHUT_DEADLINES_MOVED") payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: "/admin/tasks" })}`;
+    data.unreachableWindow = readUnreachableWindowFacts(row.payloadJson);
+    if (row.messageType === "UNREACHABLE_WINDOW_CLOSED") payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: "/admin/tasks" })}`;
   }
   if (row.messageType === "LEGAL_TEMPLATES_CHANGED") {
     const payload = (row.payloadJson ?? {}) as { displayName?: unknown; keys?: unknown };

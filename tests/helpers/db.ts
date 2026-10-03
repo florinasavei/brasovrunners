@@ -3,7 +3,6 @@ import { drizzle, type PgliteDatabase } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
-import { doorShutWindows } from "@/db/schema/door-shut-windows";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventInvitations } from "@/db/schema/event-invitations";
@@ -28,6 +27,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import { teamMembers } from "@/db/schema/team";
 import { faqQuestions } from "@/db/schema/faq";
 import { memberDiscountCodes } from "@/db/schema/member-discount-codes";
+import { unreachableWindows } from "@/db/schema/unreachable-windows";
 import { forgetCachedDeadlines } from "@/modules/deadlines/memo";
 import { forgetCachedAddressCap } from "@/modules/registrations/address-cap-memo";
 
@@ -142,8 +142,8 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(pages);
   await db.delete(participants);
   await db.delete(jobRuns);
-  // The door's windows (§NNN): ids, instants and counts, referencing nothing.
-  await db.delete(doorShutWindows);
+  // The unreachable windows (§NNN): ids, instants and counts, referencing nothing.
+  await db.delete(unreachableWindows);
   await db.delete(rateLimitBuckets);
   await db.delete(platformSettings);
   // Last: events, translations and legal documents reference staff users, and although the

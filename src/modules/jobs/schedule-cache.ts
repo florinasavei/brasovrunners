@@ -244,7 +244,7 @@ export async function readLastPing(job: JobName, now: Date, horizonMs: number): 
 
 /**
  * Every ping the cache remembers between `anchor` and `now`, of every job, for the maintenance run's
- * look at the door (§NNN, `jobs/domain/door-shut.ts`) — or null when the cache cannot be trusted to
+ * outage grace (§NNN, `registrations/domain/outage-grace.ts`) — or null when the cache cannot be trusted to
  * remember: the anchor is a real run of `anchor.job`, which wrote its own ping slot (`recordRealRun`),
  * and a cache that has lost that slot (evicted, unreachable, outside a request) has lost the others
  * too, so a silence read from it would be the cache's, not the pinger's. Missing never opens a window.

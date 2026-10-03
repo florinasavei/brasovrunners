@@ -56,6 +56,8 @@ export const TASK_TARGETS: Partial<Record<TaskId, TaskTarget>> = {
   domainRenewal: { kind: "settings", tab: "costs", hash: "month-costs" },
   // The database's brakes (§335).
   neonLimits: { kind: "settings", tab: "costs", hash: "neon-limits" },
+  // The outage grace (§NNN): the events, whose registrations list has the «Lista de invitați speciali» filter.
+  unreachableWindow: { kind: "section", section: "events" },
 };
 
 /** The internal route a section target opens. */

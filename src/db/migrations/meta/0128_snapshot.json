@@ -1,5 +1,5 @@
 {
-  "id": "57aa46d9-75ba-4088-ae29-23a42da016e3",
+  "id": "8658551a-05c5-48a7-a3dd-05fcf2f8cb38",
   "prevId": "99f328f8-806f-446f-b570-765fc0ce73b9",
   "version": "7",
   "dialect": "postgresql",
@@ -365,154 +365,6 @@
         "declaration_acceptances_paper_is_attested": {
           "name": "declaration_acceptances_paper_is_attested",
           "value": "(\"declaration_acceptances\".\"method\" = 'PAPER') = (\"declaration_acceptances\".\"attested_by_staff_user_id\" IS NOT NULL)"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.door_shut_windows": {
-      "name": "door_shut_windows",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "started_at": {
-          "name": "started_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "ended_at": {
-          "name": "ended_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "source": {
-          "name": "source",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "stopped_minutes": {
-          "name": "stopped_minutes",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "links_moved_at": {
-          "name": "links_moved_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "events_moved": {
-          "name": "events_moved",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'[]'::jsonb"
-        },
-        "applied_at": {
-          "name": "applied_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "moved_count": {
-          "name": "moved_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "outside_count": {
-          "name": "outside_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "opened_notice_at": {
-          "name": "opened_notice_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "closed_notice_at": {
-          "name": "closed_notice_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "door_shut_windows_one_open": {
-          "name": "door_shut_windows_one_open",
-          "columns": [
-            {
-              "expression": "(\"ended_at\" is null)",
-              "asc": true,
-              "isExpression": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"door_shut_windows\".\"ended_at\" is null",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "door_shut_windows_started_at_idx": {
-          "name": "door_shut_windows_started_at_idx",
-          "columns": [
-            {
-              "expression": "started_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "door_shut_windows_source_known": {
-          "name": "door_shut_windows_source_known",
-          "value": "\"door_shut_windows\".\"source\" in ('name', 'pings')"
-        },
-        "door_shut_windows_ends_after_start": {
-          "name": "door_shut_windows_ends_after_start",
-          "value": "\"door_shut_windows\".\"ended_at\" is null or \"door_shut_windows\".\"ended_at\" >= \"door_shut_windows\".\"started_at\""
-        },
-        "door_shut_windows_counts_non_negative": {
-          "name": "door_shut_windows_counts_non_negative",
-          "value": "\"door_shut_windows\".\"moved_count\" >= 0 and \"door_shut_windows\".\"outside_count\" >= 0"
         }
       },
       "isRLSEnabled": false
@@ -6320,6 +6172,165 @@
         }
       },
       "isRLSEnabled": false
+    },
+    "public.unreachable_windows": {
+      "name": "unreachable_windows",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ended_at": {
+          "name": "ended_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "confirmed_at": {
+          "name": "confirmed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "granted_ms": {
+          "name": "granted_ms",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "rows_moved": {
+          "name": "rows_moved",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "places_outside": {
+          "name": "places_outside",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "links_moved_at": {
+          "name": "links_moved_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "events_moved": {
+          "name": "events_moved",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "applied_at": {
+          "name": "applied_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "opened_announced_at": {
+          "name": "opened_announced_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "closed_announced_at": {
+          "name": "closed_announced_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "unreachable_windows_one_open": {
+          "name": "unreachable_windows_one_open",
+          "columns": [
+            {
+              "expression": "(\"ended_at\" is null)",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"unreachable_windows\".\"ended_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "unreachable_windows_started_at_idx": {
+          "name": "unreachable_windows_started_at_idx",
+          "columns": [
+            {
+              "expression": "started_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "unreachable_windows_source_known": {
+          "name": "unreachable_windows_source_known",
+          "value": "\"unreachable_windows\".\"source\" in ('dns', 'pings')"
+        },
+        "unreachable_windows_ends_after_start": {
+          "name": "unreachable_windows_ends_after_start",
+          "value": "\"unreachable_windows\".\"ended_at\" is null or \"unreachable_windows\".\"ended_at\" >= \"unreachable_windows\".\"started_at\""
+        },
+        "unreachable_windows_pings_confirmed": {
+          "name": "unreachable_windows_pings_confirmed",
+          "value": "\"unreachable_windows\".\"source\" = 'dns' or \"unreachable_windows\".\"confirmed_at\" is not null"
+        },
+        "unreachable_windows_counts_non_negative": {
+          "name": "unreachable_windows_counts_non_negative",
+          "value": "\"unreachable_windows\".\"granted_ms\" >= 0 and \"unreachable_windows\".\"rows_moved\" >= 0 and \"unreachable_windows\".\"places_outside\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
     }
   },
   "enums": {
@@ -6380,8 +6391,8 @@
         "DECLARATION_HOLD_EXPIRED",
         "LEGAL_TEMPLATES_CHANGED",
         "EVENT_INVITATION",
-        "DOOR_SHUT",
-        "DOOR_SHUT_DEADLINES_MOVED"
+        "UNREACHABLE_WINDOW_OPENED",
+        "UNREACHABLE_WINDOW_CLOSED"
       ]
     },
     "public.email_outbox_status": {

@@ -1,19 +1,19 @@
 import { lookup } from "node:dns/promises";
-import type { NameProbeStatus } from "@/modules/jobs/domain/door-shut";
 import { env } from "@/shared/config/env";
-import { probedHost, probeStatusOf } from "./domain/name-probe";
+import { type NameProbeStatus, probedHost, probeStatusOf } from "./domain/name-probe";
 
 /**
  * Does the site's public name — `APP_BASE_URL`'s host — still resolve (§NNN)?
  *
- * Asked by the maintenance job at the start of each real run and by the deep health check, and by
+ * Asked by the maintenance job at the start of each real run (`registrations/outage-grace.ts`) and by the deep health check, and by
  * nothing else: never the shallow health (which wakes nothing and asks nobody, §577) and never a page
  * or an action a visitor waits on. One lookup through the system's resolver, given at most
  * `timeoutMs`; it never throws — a failure of any kind is an answer (`unknown`), and the caller goes on.
  */
-export type NameProbe = { status: NameProbeStatus; checkedAt: string };
+/** `host` is the name asked, or null where nothing is asked (`skipped`). */
+export type NameProbe = { status: NameProbeStatus; host: string | null; checkedAt: string };
 
-export const NAME_PROBE_TIMEOUT_MS = 2_000;
+export const NAME_PROBE_TIMEOUT_MS = 2_500;
 
 export async function probePublicName(
   options: {
@@ -26,7 +26,7 @@ export async function probePublicName(
 ): Promise<NameProbe> {
   const checkedAt = (options.now ?? new Date()).toISOString();
   const host = probedHost(options.baseUrl ?? env.APP_BASE_URL, options.appEnv ?? env.APP_ENV);
-  if (!host) return { status: "skipped", checkedAt };
+  if (!host) return { status: "skipped", host: null, checkedAt };
   const resolve = options.resolve ?? ((name: string) => lookup(name, { all: true }));
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
@@ -39,9 +39,9 @@ export async function probePublicName(
         timer = setTimeout(() => done("unknown"), options.timeoutMs ?? NAME_PROBE_TIMEOUT_MS);
       }),
     ]);
-    return { status: answer, checkedAt };
+    return { status: answer, host, checkedAt };
   } catch {
-    return { status: "unknown", checkedAt };
+    return { status: "unknown", host, checkedAt };
   } finally {
     clearTimeout(timer);
   }

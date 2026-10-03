@@ -15,7 +15,7 @@ import { probeTurnstileSecret } from "@/modules/registrations/turnstile";
 import { type BotCheckSignalLevels, botCheckSignalLevels, countBotCheckSignals } from "@/modules/registrations/bot-check-signals";
 import { readTranslationCredit } from "@/modules/translate/credit";
 import { creditHealth } from "@/modules/translate/domain/credit";
-import { readDoorWindows } from "@/modules/jobs/door-shut-windows";
+import { readUnreachableWindows } from "@/modules/jobs/unreachable-windows";
 import { probePublicName } from "@/modules/resilience/name-probe";
 import { buildInfo } from "@/shared/config/build-info";
 import { env } from "@/shared/config/env";
@@ -75,7 +75,7 @@ async function askTheDatabase(
   governorFloorMinutes: number,
 ): Promise<DatabaseHalf | null> {
   try {
-    const [schema, jobs, email, botCheck, door] = await Promise.all([
+    const [schema, jobs, email, botCheck, outage] = await Promise.all([
       checkSchemaVersion(db),
       // The budget governor's floor widens what a real run is allowed, as the Administrator's own
       // interval always has (§447): the platform's own throttle must never page the owner.
@@ -88,23 +88,23 @@ async function askTheDatabase(
         console.error("[health] the bot-check counts could not be read", error);
         return null;
       }),
-      // The door (§NNN): the open window and the latest one over, as instants — never the reason this half fails.
-      readDoorWindows(db, 2).then(
-        (windows): DoorHalf => {
+      // The outage grace (§NNN): the open window and the latest one over, as instants — never the reason this half fails.
+      readUnreachableWindows(db, 2).then(
+        (windows): OutageHalf => {
           const open = windows.find((window) => window.endedAt === null) ?? null;
           const over = windows.find((window) => window.endedAt !== null) ?? null;
           return {
-            shutSince: open ? open.startedAt.toISOString() : null,
-            lastWindow: over && over.endedAt ? { startedAt: over.startedAt.toISOString(), endedAt: over.endedAt.toISOString() } : null,
+            unreachableSince: open ? open.startedAt.toISOString() : null,
+            lastUnreachable: over && over.endedAt ? { startedAt: over.startedAt.toISOString(), endedAt: over.endedAt.toISOString() } : null,
           };
         },
         (error: unknown) => {
-          console.error("[health] the door's windows could not be read", error);
+          console.error("[health] the unreachable windows could not be read", error);
           return null;
         },
       ),
     ]);
-    return { schema, jobs, email, botCheck, door };
+    return { schema, jobs, email, botCheck, outage };
   } catch (error) {
     // The message is logged, never returned: a driver's error carries the SQL it was running and
     // sometimes the connection string, and this body is readable by anyone (§14.3).
@@ -131,9 +131,9 @@ export const dynamic = "force-dynamic";
 
 type SchemaCheck = Awaited<ReturnType<typeof checkSchemaVersion>>;
 type EmailCheck = Awaited<ReturnType<typeof checkEmailHealth>>;
-/** The door's windows (§NNN), as instants a monitor can log: kept in the reused half as strings, never dates. */
-type DoorHalf = { shutSince: string | null; lastWindow: { startedAt: string; endedAt: string } | null };
-type DatabaseHalf = { schema: SchemaCheck; jobs: JobHealth[]; email: EmailCheck; botCheck: BotCheckSignalLevels | null; door?: DoorHalf | null };
+/** The unreachable windows (§NNN), as instants a monitor can log: kept in the reused half as strings, never dates. */
+type OutageHalf = { unreachableSince: string | null; lastUnreachable: { startedAt: string; endedAt: string } | null };
+type DatabaseHalf = { schema: SchemaCheck; jobs: JobHealth[]; email: EmailCheck; botCheck: BotCheckSignalLevels | null; outage?: OutageHalf | null };
 
 class NotStored extends Error {}
 
@@ -193,7 +193,7 @@ const BUDGET_NOTE: Record<NeonQuotaHealth["level"], string | null> = {
 const HEALTH_BUDGET_WAIT_MS = 2_500;
 
 /** The name probe's answer when it did not answer in time (§NNN): nothing is known, nothing is degraded. */
-const NAME_NOT_ASKED = { status: "unknown" as const, checkedAt: "" };
+const NAME_NOT_ASKED = { status: "unknown" as const, host: null, checkedAt: "" };
 
 
 function withinWait<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
@@ -328,13 +328,13 @@ async function deepHealth(now: Date): Promise<Response> {
   const domain = domainRenewal(env.DOMAIN_REGISTERED_ON, env.DOMAIN_RENEWAL_YEARS, now);
   const domainDue = domain.status === "urgent" || domain.status === "expired";
   /*
-    The door (§NNN): the name does not resolve, or the job holds a window open — nobody can reach the
-    site by its name, and the deadlines are held. `degraded`, so the 503 reaches a monitor that calls by
-    another address; a monitor that calls by the name cannot reach this line at all, which is why the
-    job also emails the Administrators.
+    The outage grace (§NNN): the name does not resolve, or the job holds a window open — nobody can
+    reach the site by its name, and the deadlines are held. `degraded`, so the 503 reaches a monitor that
+    calls by another address; a monitor that calls by the name cannot reach this line at all, which is
+    why the job also emails the Administrators.
   */
-  const door = checks?.door ?? null;
-  const doorShut = name.status === "unresolved" || Boolean(door?.shutSince);
+  const outage = checks?.outage ?? null;
+  const unreachable = name.status === "unresolved" || Boolean(outage?.unreachableSince);
 
   const status =
     database === "down" || schemaDown
@@ -348,7 +348,7 @@ async function deepHealth(now: Date): Promise<Response> {
           neonQuota.status === "near-limit" ||
           turnstile === "misconfigured" ||
           domainDue ||
-          doorShut
+          unreachable
         ? "degraded"
         : "ok";
 
@@ -404,14 +404,20 @@ async function deepHealth(now: Date): Promise<Response> {
       // used or left, which are the club's account figures (Costuri, §479). No effect on `status`.
       translation: creditHealth(translationCredit),
       // The domain's expiry (§435) is public at any registrar, so the day and the days left are
-      // published; the domain's name is not repeated — it is the host this answer came from.
-      domain:
-        domain.status === "unknown"
+      // published. And whether its name resolves (§NNN): `host` — the name asked, `APP_BASE_URL`'s, which
+      // a monitor calling by another address cannot see otherwise; null where nothing is asked —
+      // `resolves` (true, false, or null for no answer or not asked), `checkedAt`, the open unreachable
+      // window's start and the latest one over: instants only, no counts.
+      domain: {
+        ...(domain.status === "unknown"
           ? { status: domain.status }
-          : { status: domain.status, expiresOn: domain.expiresOn, daysLeft: domain.daysLeft },
-      // The door (§NNN): what the name answered now (`resolves`, `unresolved`, `unknown`, `skipped` where
-      // nothing is asked), the open window's start and the latest window over — instants only, no counts.
-      door: { name: name.status, shutSince: door?.shutSince ?? null, lastWindow: door?.lastWindow ?? null },
+          : { status: domain.status, expiresOn: domain.expiresOn, daysLeft: domain.daysLeft }),
+        host: name.host,
+        resolves: name.status === "resolves" ? true : name.status === "unresolved" ? false : null,
+        checkedAt: name.checkedAt,
+        unreachableSince: outage?.unreachableSince ?? null,
+        lastUnreachable: outage?.lastUnreachable ?? null,
+      },
       checkedAt: now.toISOString(),
       // When the database half was asked: `checkedAt` itself, or the start of the window whose
       // answer this one reuses while the budget is red (§447).

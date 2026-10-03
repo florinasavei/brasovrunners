@@ -48,7 +48,7 @@ const LAUNCHED: OwnerTaskInputs = {
   publishedEventCount: 4,
   raceDaySheetsDue: [],
   domainRenewal: { status: "ok", expiresOn: "2029-09-16", daysLeft: 1086 },
-  doorShut: "clear",
+  unreachableWindow: "clear",
   storageConfigured: true,
   botCheckConfigured: true,
   botCheckHealth: "ok",
@@ -374,25 +374,28 @@ describe("owner tasks", () => {
       "translation",
       "contactForm",
       "domainRenewal",
-      "doorShut",
+      "unreachableWindow",
       "neonLimits",
     ]);
   });
 
-  // §NNN: the door — red while the name is gone, open a week after a window, green otherwise.
-  it("§NNN the clock stopped while the door was shut: red while shut, open for a week after, then green", () => {
-    const row = (doorShut: OwnerTaskInputs["doorShut"]) => ownerTasks({ ...LAUNCHED, doorShut }).find((task) => task.id === "doorShut");
+  // §NNN: the outage grace — red while a window is open, while one is stuck, and while the newest seated anybody outside the places.
+  it("§NNN the unreachable window: red while open, stuck or seating anybody outside the places, green otherwise", () => {
+    const row = (unreachableWindow: OwnerTaskInputs["unreachableWindow"]) => ownerTasks({ ...LAUNCHED, unreachableWindow }).find((task) => task.id === "unreachableWindow");
     expect(row("clear")).toMatchObject({ state: "done", owner: "club", kind: "check" });
-    expect(row("recent")).toMatchObject({ state: "open" });
-    expect(row("recent")?.text).toBeUndefined();
-    expect(row("shut")).toMatchObject({ state: "broken", text: "shut" });
+    expect(row("clear")?.text).toBeUndefined();
+    expect(row("open")).toMatchObject({ state: "broken", text: "open" });
+    expect(row("stuck")).toMatchObject({ state: "broken", text: "stuck" });
+    expect(row("outside")).toMatchObject({ state: "broken", text: "outside" });
   });
 
-  it("§NNN the door's sentences exist in both catalogues and fill the window's values", () => {
+  it("§NNN the unreachable window's sentences exist in both catalogues and fill the window's values", () => {
     for (const catalogue of [ro, en]) {
-      const item = catalogue.Admin.tasks.items.doorShut;
-      for (const key of ["{doorFrom}", "{doorUntil}", "{doorStopped}", "{doorMoved}", "{doorOutside}"]) expect(item.todo).toContain(key);
-      expect(item.shut).toContain("{doorFrom}");
+      const item = catalogue.Admin.tasks.items.unreachableWindow;
+      for (const key of ["{windowFrom}", "{windowUntil}", "{windowGranted}", "{windowMoved}"]) expect(item.todo).toContain(key);
+      expect(item.open).toContain("{windowFrom}");
+      expect(item.stuck).toContain("{windowUntil}");
+      expect(item.outside).toContain("{windowOutside}");
       expect(typeof item.done).toBe("string");
       expect(item.how.length).toBeGreaterThan(0);
     }

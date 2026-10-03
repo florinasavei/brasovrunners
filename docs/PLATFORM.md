@@ -579,38 +579,47 @@ yarn idle:measure --hours 1 --vercel-project <name>   plus the last hour of Verc
 
 ## When the name is gone — the deadlines' clock stops (2026-10-03)
 
-On 2026-10-03 the registrar held the club's domain for about seven hours. The site, the backoffice,
-QA and the email subdomain could not be reached by name, and both pingers (the external monitors and
-the GitHub backstop) call the public name, so no job ran while every participant's deadline kept
-running. Since `DECISIONS.md` §NNN the maintenance job's first step, on every real run, is to look at
-the door:
+On 2026-10-03 a registrar hold for the domain's contact verification took the club's name away from
+about 11:04 to 18:24 UTC. The site, the backoffice, QA and the email subdomain could not be reached by
+name, and both pingers (the external monitors and the GitHub backstop) call the public name, so no job
+ran while every participant's deadline kept running. Since `DECISIONS.md` §NNN the maintenance job's
+first step, on every real run, is the outage grace (`registrations/outage-grace.ts`): detect, move,
+then sweep.
 
 - **The pings.** Every call of either job is remembered in the data cache, answered from the cache or
   run for real. A silence longer than the pinger's own threshold — twice the cadence plus five minutes,
   the number `/api/health` pages on (35 minutes by day on production, 125 at night) — is recorded as a
-  window that is over: from the call that should have come to the first that did. A cache that has
-  lost the last real run's own ping is not read at all; neither is a silence a real run of either job
-  sits in. Only QA and production, which have a pinger, are judged this way.
-- **The name.** The job resolves `APP_BASE_URL`'s host. Reached by another address while the name
-  answers «no such name», it opens a window that stays open until the name answers again. A timeout
-  or a failed resolver opens and closes nothing.
+  `pings` window that is over: from the call that should have come to the first that did. A cache that
+  has lost the last real run's own ping is not read at all; neither is a silence a real run of either
+  job sits in. Only QA and production, which have a pinger, are judged this way. It cannot tell a dead
+  pinger from a dead name, and takes the participant's side; the cap bounds it.
+- **The name.** The job resolves `APP_BASE_URL`'s host. One «no such name» is only a suspicion; a
+  second one at least ten minutes later opens a `dns` window at the first probe's instant, and it stays
+  open until the name answers again. A timeout or a failed resolver opens and closes nothing. **This
+  signal works only while the job pings reach the platform by an address that does not hang on the
+  public name** — the deployment's own `vercel.app` address (`SETUP.md` §40); a pinger that calls the
+  public name cannot reach the job while the name is gone, and the window is then seen by the pings,
+  once the name is back.
 
-While a window is open nothing lapses: no address link, hold, offer, invitation or family form. Once
-it is over, every deadline still running at its start moves later by its length, capped by «Termene»
-→ «Ceasul termenelor stă pe loc…» (`doorShutMaxHours`, 48 hours by default, 0 switches it off) and by
-the event's close and start as the allocator caps it; a deadline that passed before the window never
-moves. A revived offer, reservation or invitation whose place was given meanwhile is put on «Lista de
-invitați speciali» rather than counted, so no counted place is given twice. Each move is in the
-registration's history; the window, its stop and its counts are the table `door_shut_windows`.
+While a `dns` window is open nothing lapses: no address link, hold, offer, invitation or family form.
+Once a window is over, every deadline still running at its start moves later by its length, capped by
+«Termene» → «Ceasul termenelor stă pe loc…» (`outageGraceMaxHours`, 48 hours by default; 0 switches the
+moving off and the windows are still recorded and announced) and by the event's close and start as the
+allocator caps it; a deadline that passed before the window never moves. A revived offer or invitation
+whose place was given meanwhile is put on «Lista de invitați speciali» rather than counted, so no counted
+place is given twice; a family's reservation or held place in that case lapses as it would have. Each
+move is in the registration's history; the window, what it gave back and its counts are the table
+`unreachable_windows`.
 
-**Where it shows.** The Administrators get «Site-ul nu se găsește după nume» when a window opens on
-the name (on the club's road — Gmail by default, which does not hang on the club's domain) and «Ceasul
-termenelor a stat pe loc» once the deadlines have moved. `/api/health?deep=1` carries a `door` block —
-`name` (`resolves`, `unresolved`, `unknown`, `skipped` on a laptop), `shutSince`, `lastWindow`,
-instants only — and answers `degraded` while the name is gone or a window is open; the shallow answer
-asks nobody. `/devs` → Stare has the line «Ceasul termenelor», and «Sarcini» the row «Site-ul de
-negăsit: ceasul termenelor», red while shut and open for a week after a window. Nothing else asks the
-name: no page, no action a visitor waits on.
+**Where it shows.** The Administrators get «Site-ul nu se găsește după nume» when a `dns` window opens
+(on the club's road — Gmail by default, which does not hang on the club's domain) and «Ceasul
+termenelor a stat pe loc» once any window is over, with what to check. `/api/health?deep=1` carries in
+its `domain` block `host`, `resolves` (`true`, `false`, or `null` for no answer or not asked),
+`checkedAt`, `unreachableSince` and `lastUnreachable` — instants only — and answers `degraded` while the
+name is gone or a window is open; the shallow answer asks nobody. `/devs` → Stare asks the name when it
+opens and lists the last three windows, and «Sarcini» has the row «Site-ul de negăsit: ceasul
+termenelor», red while a window is open, while a window's moves are stuck, and while the newest window
+seated anybody outside the places. No public page and no action a visitor waits on asks the name.
 
 **What it does not do.** It cannot run a job nobody calls: while the name is gone the jobs run only
 if a monitor calls the deployment's own address. Whatever the monitors call, the deadlines are moved
