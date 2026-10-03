@@ -138,8 +138,8 @@ describe("§647 a refused send hands the next dialog the server's numbers", () =
     form.set("outside", "1");
     expect(await inviteAction(null, form)).toMatchObject({ error: HIDDEN_LIST_OFF, forecast: { capacity: 3, free: 3 } });
     expect(await db.execute(sql`select count(*)::int as n from event_invitations`)).toMatchObject({ rows: [{ n: 0 }] });
-    expect(ro.Admin.errors.HIDDEN_LIST_OFF).toContain("«Folosește lista ascunsă»");
-    expect(en.Admin.errors.HIDDEN_LIST_OFF).toContain("«Use the hidden list»");
+    expect(ro.Admin.errors.HIDDEN_LIST_OFF).toContain("«Folosește lista de invitați speciali»");
+    expect(en.Admin.errors.HIDDEN_LIST_OFF).toContain("«Use the special guests list»");
   });
 });
 

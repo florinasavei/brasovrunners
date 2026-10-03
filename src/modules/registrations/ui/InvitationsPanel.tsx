@@ -23,6 +23,7 @@ import { readInvitationForecast } from "../admin-service";
 import { HIDDEN_LIST_OFF } from "../domain/hidden-list";
 import { INVITATION_DAYS_DEFAULT, INVITATION_DAYS_MAX, INVITATION_REFUSALS, invitationState } from "../domain/invitations";
 import { listEventInvitations } from "../invitation-repository";
+import HiddenListChip from "./HiddenListChip";
 import InviteForm, { type InviteFormState, type InviteFormWords } from "./InviteForm";
 
 type RowAction = (state: FormOutcome | null, form: FormData) => Promise<FormOutcome | null>;
@@ -167,7 +168,8 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                       {row.email}
                     </Typography>
                     <Chip size="small" color={STATE_COLOR[state]} label={t(`invitations.state.${state}`)} />
-                    {row.outsideCapacity && <Chip size="small" variant="outlined" label={t("registrations.outside.chip")} />}
+                    {/* «Invitat special» (§649): the registrations' own chip, glyph and hint, not a bare word. */}
+                    {row.outsideCapacity && <HiddenListChip label={t("registrations.outside.chip")} hint={t("registrations.outside.hint")} testId="invitation-outside-chip" />}
                   </Stack>
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                     {state === "sent"

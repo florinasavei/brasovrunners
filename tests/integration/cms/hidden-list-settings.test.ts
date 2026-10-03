@@ -480,8 +480,8 @@ describe("§647 «Lista ascunsă» on the event", () => {
   describe("the refusal's own sentence (§647)", () => {
     it("names the box in both languages, and the date where the sentence is a date's", () => {
       for (const [code, box] of [
-        ["HIDDEN_LIST_IN_RACE_SERIES", ["«Numerele listei ascunse încep de la»", "«The hidden list's numbers start at»"]],
-        ["HIDDEN_LIST_ON_SPARES", ["«Numerele listei ascunse încep de la»", "«The hidden list's numbers start at»"]],
+        ["HIDDEN_LIST_IN_RACE_SERIES", ["«Numerele invitaților speciali încep de la»", "«The special guests' numbers start at»"]],
+        ["HIDDEN_LIST_ON_SPARES", ["«Numerele invitaților speciali încep de la»", "«The special guests' numbers start at»"]],
       ] as const) {
         expect(ro.Admin.errors[code]).toContain(box[0]);
         expect(en.Admin.errors[code]).toContain(box[1]);

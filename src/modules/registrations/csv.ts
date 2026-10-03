@@ -150,8 +150,8 @@ const HEADER = [
   "Cancellation reason",
   // Last (§562), for the same reason: the consent to offers and benefits, its moment or empty.
   "Offers and benefits",
-  // Last (§643), for the same reason: on the hidden list (§647's name), "Yes" or empty.
-  "Hidden list",
+  // Last (§643), for the same reason: a special guest (§649's name; §647's "Hidden list"), "Yes" or empty.
+  "Special guest",
 ];
 
 export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): string {

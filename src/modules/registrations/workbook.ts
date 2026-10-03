@@ -186,8 +186,8 @@ const COLUMNS: Array<SheetColumn<RegistrationSheetRow>> = [
   { header: "Cancellation reason", width: 30, cell: (row) => ({ value: row.cancelReason ?? "", type: String }) },
   // The consent to offers and benefits (§562), last like the CSV's: its moment, blank for no.
   { header: "Offers and benefits", width: 18, cell: (row) => ({ value: onClubClock(row.promoConsentAt ?? null), type: Date, format: STAMP_FORMAT }) },
-  // On the hidden list (§643, §647's name), last like the CSV's: true or false.
-  { header: "Hidden list", width: 12, cell: (row) => ({ value: row.outsideCapacity ?? false, type: Boolean }) },
+  // A special guest (§643; §649's name, §647's "Hidden list"), last like the CSV's: true or false.
+  { header: "Special guest", width: 12, cell: (row) => ({ value: row.outsideCapacity ?? false, type: Boolean }) },
 ];
 
 /** The header row, exactly as the export writes it — what a re-import matches its columns by. */

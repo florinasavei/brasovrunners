@@ -393,7 +393,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             <Chip size="small" color="warning" label={t("registrations.testKind")} />
           )}
           {/* On the hidden list (§643, §647): counted in no place, for every role that reads the list. */}
-          {row.outsideCapacity && <HiddenListChip label={t("registrations.outside.chip")} testId="outside-chip" />}
+          {row.outsideCapacity && <HiddenListChip label={t("registrations.outside.chip")} hint={t("registrations.outside.hint")} testId="outside-chip" />}
           {/* A family on one address (§543): who else is registered with it, each a link to their row. */}
           <FamilyChip
             label={t("registrations.familyChip")}
@@ -988,6 +988,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         testLabel={t("registrations.summaryTest", { count: summary.test })}
         statusLabel={REGISTRATION_STATUS_LABEL}
         outsideLabel={t("registrations.outside.pill", { count: summary.outside })}
+        outsideHint={t("registrations.outside.hint")}
       >
         {/* For the members alone (§552): the chip the events list wears, on the event this list shows. */}
         {events.find((event) => event.id === filters.eventId)?.membersOnly && (
