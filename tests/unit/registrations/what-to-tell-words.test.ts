@@ -11,11 +11,12 @@ import { waitlistStandingPhrase } from "@/modules/registrations/ui/waitlist-posi
  * BR-REQ-037-01 (§NNN) — «Ce îi spui»: the sentences a staff member tells somebody who asks where
  * their registration stands, in the registration's language, from the real catalogues.
  *
- * What it holds: every state says the participant's own state words first; the deadline, the
- * reservation and the waiting line are the participant's page's own sentences (the same keys and the
- * same `waitlistStandingPhrase`), not a copy; the spam hint only where an email link is the next step;
- * a cancelled event says only the cancellation; the live link's expiry when one exists; and every line
- * stays under 200 characters (§511) in both languages.
+ * What it holds: every state says the participant's own state words first, a confirmed row the
+ * confirmation page's sentence, once; the deadline, the reservation and the waiting line are the
+ * participant's page's own sentences (the same keys and the same `waitlistStandingPhrase`), not a copy;
+ * the spam hint only where an email link is the next step; a cancelled event says only the
+ * cancellation; the live link's expiry only where it adds an instant the block has not given — never on
+ * a held place; and every line stays under 200 characters (§511) in both languages.
  */
 const NOW = new Date("2026-10-03T09:00:00.000Z");
 const LATER = new Date("2026-10-05T09:00:00.000Z");
@@ -54,23 +55,34 @@ describe("§NNN whatToTell — what to tell a person who asks where their regist
     const stateLine = (status: string) => say(locale)("mine.status." + status);
 
     it(`opens with the participant's own state words (${locale})`, () => {
-      for (const status of ["PENDING_EMAIL_CONFIRMATION", "PENDING_DECLARATION", "WAITLISTED", "WAITLIST_OFFERED", "CONFIRMED", "CANCELLED", "EXPIRED"] as const) {
+      for (const status of ["PENDING_EMAIL_CONFIRMATION", "PENDING_DECLARATION", "WAITLISTED", "WAITLIST_OFFERED", "CANCELLED", "EXPIRED"] as const) {
         const [first] = whatToTell(locale, facts({ status }), NOW);
         expect(first).toContain(stateLine(status));
       }
     });
 
-    it(`a held place says the participant page's own «confirm by» sentence, the link and the spam hint (${locale})`, () => {
-      const lines = whatToTell(locale, facts({ status: "PENDING_DECLARATION", holdExpiresAt: LATER, liveLinkExpiresAt: LATER }), NOW);
-      expect(lines[1]).toBe(say(locale)("mine.confirmBy", { due: instant(locale, LATER) }));
-      expect(lines).toContain(ours(locale, "linkUntil").replace("{instant}", instant(locale, LATER)));
-      expect(lines.at(-1)).toBe(spam);
+    it(`a held place says the participant page's own «confirm by» sentence and the spam hint — not the declaration link's later expiry (${locale})`, () => {
+      // `render.ts` mints the declaration's link until the race's start, later than the hold: the hold is the deadline to tell.
+      const start = new Date("2026-11-21T08:00:00.000Z");
+      const lines = whatToTell(locale, facts({ status: "PENDING_DECLARATION", holdExpiresAt: LATER, liveLinkExpiresAt: start }), NOW);
+      expect(lines.slice(1)).toEqual([say(locale)("mine.confirmBy", { due: instant(locale, LATER) }), spam]);
+      expect(lines.join(" ")).not.toContain(instant(locale, start));
     });
 
-    it(`past the hold's deadline, the place is still kept (${locale})`, () => {
-      const lines = whatToTell(locale, facts({ status: "PENDING_DECLARATION", holdExpiresAt: EARLIER }), NOW);
-      expect(lines[1]).toBe(ours(locale, "kept"));
-      expect(lines).toContain(spam);
+    it(`past the hold's deadline, the place is still kept, and the link's expiry is not said (${locale})`, () => {
+      const lines = whatToTell(locale, facts({ status: "PENDING_DECLARATION", holdExpiresAt: EARLIER, liveLinkExpiresAt: LATER }), NOW);
+      expect(lines.slice(1)).toEqual([ours(locale, "kept"), spam]);
+    });
+
+    it(`an address's link says its expiry once, and a family's reservation adds it only when it is another instant (${locale})`, () => {
+      const linkLine = ours(locale, "linkUntil").replace("{instant}", instant(locale, LATER));
+      const own = whatToTell(locale, facts({ status: "PENDING_EMAIL_CONFIRMATION", emailLinkExpiresAt: LATER, liveLinkExpiresAt: LATER }), NOW);
+      expect(own.slice(1)).toEqual([ours(locale, "PENDING_EMAIL_CONFIRMATION"), linkLine, spam]);
+      const reserved = new Date("2026-10-04T09:00:00.000Z");
+      const family = whatToTell(locale, facts({ status: "PENDING_EMAIL_CONFIRMATION", holdExpiresAt: reserved, liveLinkExpiresAt: LATER }), NOW);
+      expect(family.slice(1)).toEqual([say(locale)("mine.reservedUntil", { until: instant(locale, reserved) }), linkLine, spam]);
+      const same = whatToTell(locale, facts({ status: "PENDING_EMAIL_CONFIRMATION", holdExpiresAt: LATER, liveLinkExpiresAt: LATER }), NOW);
+      expect(same.slice(1)).toEqual([say(locale)("mine.reservedUntil", { until: instant(locale, LATER) }), spam]);
     });
 
     it(`an address not confirmed: the button in the email, or a family's reservation; nothing to look for once the link lapsed (${locale})`, () => {
@@ -96,10 +108,12 @@ describe("§NNN whatToTell — what to tell a person who asks where their regist
       }
     });
 
-    it(`an offer says its deadline, and once lapsed says so without the spam hint (${locale})`, () => {
-      expect(whatToTell(locale, facts({ status: "WAITLIST_OFFERED", holdExpiresAt: LATER }), NOW)[1]).toBe(
+    it(`an offer says its deadline once, and once lapsed says so without the spam hint (${locale})`, () => {
+      // The offer's link lapses with the offer: its expiry is the instant already said, so not again.
+      expect(whatToTell(locale, facts({ status: "WAITLIST_OFFERED", holdExpiresAt: LATER, liveLinkExpiresAt: LATER }), NOW).slice(1)).toEqual([
         ours(locale, "offer").replace("{due}", instant(locale, LATER)),
-      );
+        spam,
+      ]);
       // Still queued, the offer has not lapsed whatever its stored deadline (§520) — and the send re-bases
       // that deadline, so the block says the email is on its way, no instant, and no spam hint yet.
       for (const stored of [EARLIER, LATER]) {
@@ -112,9 +126,15 @@ describe("§NNN whatToTell — what to tell a person who asks where their regist
       expect(lapsed).not.toContain(spam);
     });
 
-    it(`a confirmed row says where the QR code is, its number and its check-in (${locale})`, () => {
+    it(`a confirmed row says it is confirmed once, where the QR code is, its number and its check-in (${locale})`, () => {
       const lines = whatToTell(locale, facts({ status: "CONFIRMED", bibNumber: 42, checkedInAt: EARLIER }), NOW);
-      expect(lines.slice(1)).toEqual([ours(locale, "CONFIRMED"), ours(locale, "bib").replace("{number}", "42"), say(locale)("manage.selfCheckInDone")]);
+      expect(lines).toEqual([
+        `${say(locale)("spent.CONFIRMED.title")}.`,
+        ours(locale, "CONFIRMED"),
+        ours(locale, "bib").replace("{number}", "42"),
+        say(locale)("manage.selfCheckInDone"),
+      ]);
+      expect(lines.join(" ")).not.toContain(stateLine("CONFIRMED"));
     });
 
     it(`an ended row says it ended and offers no link (${locale})`, () => {
@@ -155,6 +175,36 @@ describe("§NNN whatToTell — what to tell a person who asks where their regist
       expect(ours(locale, "CANCELLED")).toBe(`${mine.cancelledTitle}. ${firstSentence}`);
     });
 
+    const email = (messageType: string, data: Partial<TemplateData>) =>
+      buildOutgoingEmail({ to: "runner@example.org", locale, idempotencyKey: `tell-${messageType}`, messageType: messageType as never, data: data as TemplateData });
+    const plain = (text: string) => text.replace(/\*\*/g, "");
+
+    it(`an address to confirm says the address email's first line (${locale})`, () => {
+      expect(plain(email("VERIFY_REGISTRATION_EMAIL", { eventTitle: "Crosul", participantName: "Ana" }).text)).toContain(ours(locale, "PENDING_EMAIL_CONFIRMATION"));
+    });
+
+    it(`a waiting row says the waiting-list email's own sentence (${locale})`, () => {
+      expect(plain(email("WAITLIST_JOINED", { eventTitle: "Crosul" }).text)).toContain(ours(locale, "WAITLISTED"));
+    });
+
+    it(`an offer says the offer email's subject and its sentence up to the deadline (${locale})`, () => {
+      const due = "21 noiembrie 2026, 10:00";
+      const sent = email("WAITLIST_SPOT_OFFER", { eventTitle: "Crosul", holdExpiresAtFormatted: due, offerHours: "24 de ore" });
+      const [subject, rest] = ours(locale, "offer").replace("{due}", due).split(/(?<=\.) /);
+      expect(sent.subject).toContain(subject.replace(/\.$/, ""));
+      expect(plain(sent.text)).toContain(rest.replace(/\.$/, ""));
+    });
+
+    it(`the race number is the confirmation email's own sentence (${locale})`, () => {
+      expect(plain(email("REGISTRATION_CONFIRMED", { eventTitle: "Crosul", bibNumber: 42 }).text)).toContain(ours(locale, "bib").replace("{number}", "42"));
+    });
+
+    it(`a confirmed row opens with the confirmation's own sentence, the public page's and the email's (${locale})`, () => {
+      const title = catalogues[locale].Registrations.spent.CONFIRMED.title;
+      expect(whatToTell(locale, facts({ status: "CONFIRMED" }), NOW)[0]).toBe(`${title}.`);
+      expect(email("REGISTRATION_CONFIRMED", { eventTitle: "Crosul" }).subject.toLowerCase()).toContain(title.toLowerCase().replace(/^(înscrierea ta|your registration) /, ""));
+    });
+
     it(`a lapsed declaration hold says what its email said, without the event's name (${locale})`, () => {
       const title = "Crosul";
       const email = buildOutgoingEmail({
@@ -171,7 +221,7 @@ describe("§NNN whatToTell — what to tell a person who asks where their regist
   }
 
   it("speaks the registration's language, not the reader's", () => {
-    expect(whatToTell("en", facts({ status: "CONFIRMED" }), NOW)[0]).toBe("Your registration: Confirmed.");
-    expect(whatToTell("ro", facts({ status: "CONFIRMED" }), NOW)[0]).toBe("Înscrierea ta: Confirmată.");
+    expect(whatToTell("en", facts({ status: "CONFIRMED" }), NOW)[0]).toBe("Your registration is confirmed.");
+    expect(whatToTell("ro", facts({ status: "CONFIRMED" }), NOW)[0]).toBe("Înscrierea ta este confirmată.");
   });
 });

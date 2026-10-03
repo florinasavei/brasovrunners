@@ -205,7 +205,8 @@ describe("§NNN «Ce îi spui» — the page's own query", () => {
     const now = new Date();
     expect((await findRegistrationDetailForAdmin(db, row.id, now))?.liveLinkExpiresAt).toBeNull();
 
-    const first = new Date(now.getTime() + 24 * HOUR);
+    // As `render.ts` mints it: until the race's start, whatever the hold.
+    const first = race.startsAt;
     await issueActionToken(db, { participantId: row.participantId, registrationId: row.id, purpose: "COMPLETE_DECLARATION", expiresAt: first, now });
     expect((await findRegistrationDetailForAdmin(db, row.id, now))?.liveLinkExpiresAt?.getTime()).toBe(first.getTime());
 
@@ -213,8 +214,8 @@ describe("§NNN «Ce îi spui» — the page's own query", () => {
     await issueActionToken(db, { participantId: row.participantId, registrationId: row.id, purpose: "LIST_CONSENT", expiresAt: new Date(now.getTime() + 90 * 24 * HOUR), now: new Date(now.getTime() + 1000) });
     expect((await findRegistrationDetailForAdmin(db, row.id, now))?.liveLinkExpiresAt?.getTime()).toBe(first.getTime());
 
-    // A resend supersedes the earlier link: the newer one's expiry.
-    const second = new Date(now.getTime() + 30 * HOUR);
+    // A resend supersedes the earlier link: the newer one's expiry (the race moved an hour later meanwhile).
+    const second = new Date(race.startsAt.getTime() + HOUR);
     await issueActionToken(db, { participantId: row.participantId, registrationId: row.id, purpose: "COMPLETE_DECLARATION", expiresAt: second, now: new Date(now.getTime() + 2000) });
     expect((await findRegistrationDetailForAdmin(db, row.id, now))?.liveLinkExpiresAt?.getTime()).toBe(second.getTime());
 
@@ -233,7 +234,8 @@ describe("§NNN «Ce îi spui» — the link the state waits on, never the «Nu 
   */
   const cases = [
     { status: "PENDING_EMAIL_CONFIRMATION", purpose: "VERIFY_REGISTRATION_EMAIL", hours: 48, row: { emailLinkExpiresAt: new Date(Date.now() + 48 * HOUR) } },
-    { status: "PENDING_DECLARATION", purpose: "COMPLETE_DECLARATION", hours: 48, row: { holdExpiresAt: new Date(Date.now() + 48 * HOUR) } },
+    // `render.ts` mints the declaration's link until the race's start (`createRace`: 2099), not the hold's 48 hours.
+    { status: "PENDING_DECLARATION", purpose: "COMPLETE_DECLARATION", hours: null, row: { holdExpiresAt: new Date(Date.now() + 48 * HOUR) } },
     { status: "WAITLIST_OFFERED", purpose: "WAITLIST_OFFER", hours: 24, row: { holdExpiresAt: new Date(Date.now() + 24 * HOUR), waitlistedAt: new Date() } },
   ] as const;
   for (const one of cases) {
@@ -241,7 +243,7 @@ describe("§NNN «Ce îi spui» — the link the state waits on, never the «Nu 
       const race = await createRace();
       const row = await register(race.id, "Ana", { status: one.status, ...one.row });
       const now = new Date();
-      const action = new Date(now.getTime() + one.hours * HOUR);
+      const action = one.hours === null ? race.startsAt : new Date(now.getTime() + one.hours * HOUR);
       const manage = new Date(now.getTime() + 14 * 24 * HOUR);
       await issueActionToken(db, { participantId: row.participantId, registrationId: row.id, purpose: one.purpose, expiresAt: action, now });
       await issueActionToken(db, { participantId: row.participantId, registrationId: row.id, purpose: "MANAGE_REGISTRATION", expiresAt: manage, now });
@@ -270,6 +272,8 @@ describe("§NNN «Ce îi spui» — every state on the page, for the Administrat
   const stateLine = (status: string) => tell.state.replace("{state}", roR(`mine.status.${status}`));
   const linkUntil = (instant: Date) => tell.linkUntil.replace("{instant}", at(instant));
   const spam = roR("spamHint.body");
+  // A confirmed row says its state once, in the confirmation's own sentence.
+  const confirmed = `${roR("spent.CONFIRMED.title")}.`;
 
   type Case = { name: string; setup: () => Promise<{ id: string; expected: string[] }> };
   const cases: Case[] = [
@@ -280,6 +284,7 @@ describe("§NNN «Ce îi spui» — every state on the page, for the Administrat
         const link = new Date(Date.now() + 48 * HOUR);
         const row = await register(race.id, "Ana", { status: "PENDING_EMAIL_CONFIRMATION", emailLinkExpiresAt: link });
         await issueActionToken(db, { participantId: row.participantId, registrationId: row.id, purpose: "VERIFY_REGISTRATION_EMAIL", expiresAt: link, now: new Date() });
+        // The link is the only instant this row has: said once.
         return { id: row.id, expected: [stateLine("PENDING_EMAIL_CONFIRMATION"), tell.PENDING_EMAIL_CONFIRMATION, linkUntil(link), spam] };
       },
     },
@@ -301,17 +306,16 @@ describe("§NNN «Ce îi spui» — every state on the page, for the Administrat
       },
     },
     {
-      name: "a declaration to sign, with the manage link minted beside it",
+      name: "a declaration to sign, its link minted until the start as `render.ts` does: the hold's deadline, not the link's",
       setup: async () => {
         const race = await createRace();
         const hold = new Date(Date.now() + 48 * HOUR);
         const row = await register(race.id, "Ana", { status: "PENDING_DECLARATION", holdExpiresAt: hold });
         const now = new Date();
-        const link = new Date(now.getTime() + 24 * HOUR);
-        await issueActionToken(db, { participantId: row.participantId, registrationId: row.id, purpose: "COMPLETE_DECLARATION", expiresAt: link, now });
+        await issueActionToken(db, { participantId: row.participantId, registrationId: row.id, purpose: "COMPLETE_DECLARATION", expiresAt: race.startsAt, now });
         await issueActionToken(db, { participantId: row.participantId, registrationId: row.id, purpose: "MANAGE_REGISTRATION", expiresAt: new Date(now.getTime() + 14 * 24 * HOUR), now });
         const due = confirmationDueMoment("ro", { at: hold, startsAt: race.startsAt }, at(hold));
-        return { id: row.id, expected: [stateLine("PENDING_DECLARATION"), roR("mine.confirmBy", { due }), linkUntil(link), spam] };
+        return { id: row.id, expected: [stateLine("PENDING_DECLARATION"), roR("mine.confirmBy", { due }), spam] };
       },
     },
     ...([
@@ -337,7 +341,8 @@ describe("§NNN «Ce îi spui» — every state on the page, for the Administrat
         const row = await register(race.id, "Ana", { status: "WAITLIST_OFFERED", holdExpiresAt: due, waitlistedAt: new Date(now.getTime() - HOUR) });
         await issueActionToken(db, { participantId: row.participantId, registrationId: row.id, purpose: "WAITLIST_OFFER", expiresAt: due, now });
         await issueActionToken(db, { participantId: row.participantId, registrationId: row.id, purpose: "MANAGE_REGISTRATION", expiresAt: new Date(now.getTime() + 14 * 24 * HOUR), now });
-        return { id: row.id, expected: [stateLine("WAITLIST_OFFERED"), tell.offer.replace("{due}", at(due)), linkUntil(due), spam] };
+        // The offer's link lapses with the offer: its instant is said once.
+        return { id: row.id, expected: [stateLine("WAITLIST_OFFERED"), tell.offer.replace("{due}", at(due)), spam] };
       },
     },
     {
@@ -353,7 +358,7 @@ describe("§NNN «Ce îi spui» — every state on the page, for the Administrat
       setup: async () => {
         const race = await createRace();
         const row = await register(race.id, "Ion", { status: "CONFIRMED", bibNumber: 9, checkedInAt: new Date() });
-        return { id: row.id, expected: [stateLine("CONFIRMED"), tell.CONFIRMED, tell.bib.replace("{number}", "9"), roR("manage.selfCheckInDone")] };
+        return { id: row.id, expected: [confirmed, tell.CONFIRMED, tell.bib.replace("{number}", "9"), roR("manage.selfCheckInDone")] };
       },
     },
     {
@@ -361,7 +366,7 @@ describe("§NNN «Ce îi spui» — every state on the page, for the Administrat
       setup: async () => {
         const race = await createRace();
         const row = await register(race.id, "Invitat", { status: "CONFIRMED", outsideCapacity: true, bibNumber: 3 });
-        return { id: row.id, expected: [stateLine("CONFIRMED"), tell.CONFIRMED, tell.bib.replace("{number}", "3")] };
+        return { id: row.id, expected: [confirmed, tell.CONFIRMED, tell.bib.replace("{number}", "3")] };
       },
     },
     {
@@ -393,7 +398,7 @@ describe("§NNN «Ce îi spui» — every state on the page, for the Administrat
       setup: async () => {
         const race = await createRace({ cancelled: true });
         const row = await register(race.id, "Ana", { status: "PENDING_DECLARATION", holdExpiresAt: new Date(Date.now() + 48 * HOUR) });
-        await issueActionToken(db, { participantId: row.participantId, registrationId: row.id, purpose: "COMPLETE_DECLARATION", expiresAt: new Date(Date.now() + 24 * HOUR), now: new Date() });
+        await issueActionToken(db, { participantId: row.participantId, registrationId: row.id, purpose: "COMPLETE_DECLARATION", expiresAt: race.startsAt, now: new Date() });
         return { id: row.id, expected: [stateLine("PENDING_DECLARATION"), roR("manage.eventCancelled")] };
       },
     },
@@ -410,6 +415,9 @@ describe("§NNN «Ce îi spui» — every state on the page, for the Administrat
           expect(block, `${role} ${reader}`).toBeDefined();
           const props = block!.props as unknown as { languageNote: string | null; lang: string; lines: string[] };
           expect(props.lines, `${role} ${reader}`).toEqual(expected);
+          // The link's expiry at most once, and never beside a held place's deadline.
+          const linkLines = props.lines.filter((line) => line.startsWith(tell.linkUntil.slice(0, tell.linkUntil.indexOf("{"))));
+          expect(linkLines.length, `${role} ${reader}`).toBeLessThanOrEqual(1);
           expect(props.lang).toBe("ro");
           // The registration is Romanian: a Romanian reader gets no caption, an English one is told the language.
           expect(props.languageNote).toBe(reader === "ro" ? null : en.Admin.registrations.tell.inLanguage.ro);
@@ -431,7 +439,8 @@ describe("§NNN «Ce îi spui» — on the registration's page", () => {
     const race = await createRace();
     const hold = new Date(Date.now() + 48 * HOUR);
     const row = await register(race.id, "Ana Semnează", { status: "PENDING_DECLARATION", holdExpiresAt: hold, locale: "en" });
-    const link = new Date(Date.now() + 24 * HOUR);
+    // As `render.ts` mints it: the declaration's link lives until the race's start.
+    const link = race.startsAt;
     await issueActionToken(db, { participantId: row.participantId, registrationId: row.id, purpose: "COMPLETE_DECLARATION", expiresAt: link, now: new Date() });
 
     for (const role of ["ADMIN", "MODERATOR"] as const) {
@@ -449,7 +458,9 @@ describe("§NNN «Ce îi spui» — on the registration's page", () => {
       expect(props.lines).toEqual(whatToTell("en", detail!, new Date()));
       expect(props.lines[0]).toBe("Your registration: Awaiting the declaration.");
       const at = formatDay(link, { locale: "en", timeZone: "Europe/Bucharest", style: "long", withTime: true, position: "inline" });
-      expect(props.lines).toContain(`The link in the email is valid until ${at}.`);
+      // The hold's deadline is the one to tell: the link's later expiry is not said.
+      expect(props.lines.join(" ")).not.toContain(at);
+      expect(props.lines.some((line) => line.startsWith("The link in the email is valid until"))).toBe(false);
 
       // Under the journey, above the first verb.
       const index = (predicate: (element: ReactElement<Props>) => boolean) => all.findIndex(predicate);
@@ -470,6 +481,6 @@ describe("§NNN «Ce îi spui» — on the registration's page", () => {
     const block = (await page(row.id)).find((element) => element.type === WhatToTell);
     const props = block!.props as unknown as { languageNote: string | null; lines: string[] };
     expect(props.languageNote).toBeNull();
-    expect(props.lines).toEqual(["Înscrierea ta: Confirmată.", ro.Admin.registrations.tell.CONFIRMED, "Numărul tău de concurs: 17."]);
+    expect(props.lines).toEqual(["Înscrierea ta este confirmată.", ro.Admin.registrations.tell.CONFIRMED, "Numărul tău de concurs: 17."]);
   });
 });

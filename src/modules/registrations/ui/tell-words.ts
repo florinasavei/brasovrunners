@@ -41,7 +41,8 @@ const ENDED: ReadonlySet<RegistrationStatus> = new Set(["CANCELLED", "EXPIRED"])
  * language, so the club tells one story. Each line is the participant's own words wherever the public
  * pages already have them — read here from the same keys, never a copy:
  *
- * - the state, as «Toate înscrierile mele» names it (`Registrations.mine.status.*`), in one framing line;
+ * - the state, as «Toate înscrierile mele» names it (`Registrations.mine.status.*`), in one framing line —
+ *   on a confirmed row the confirmation page's own sentence instead (`spent.CONFIRMED.title`), said once;
  * - a family's reservation (`mine.reservedUntil`) and a held place's deadline (`mine.confirmBy`, with
  *   `confirmationDueMoment`'s «la start»), as the participant's page says them;
  * - the waiting line (`waitlistStandingPhrase`, §629, §634): a position only with automatic offers and
@@ -51,18 +52,25 @@ const ENDED: ReadonlySet<RegistrationStatus> = new Set(["CANCELLED", "EXPIRED"])
  *
  * - a check-in as the participant's page says it (`manage.selfCheckInDone`).
  *
- * The rest — a past deadline, an offer, a confirmed or ended row, the live link's expiry — are the
- * backoffice's own lines (`Admin.registrations.tell.*`), worded to the person in the same register;
- * where a public page or an email already says the same thing, the key is that text word for word
- * (`CANCELLED` is `mine.cancelledTitle` and the first sentence of `mine.cancelled`; `holdLapsed` is the
- * `DECLARATION_HOLD_EXPIRED` email's sentence without the event's name), and a unit test keeps them
- * equal. The live link is the one the state waits on (`admin-repository.ts#liveLinkExpiresAtFor`).
+ * The rest are the backoffice's own lines (`Admin.registrations.tell.*`). Where an email or a public page
+ * already words the thing, the key is that text word for word and a unit test keeps each pair equal:
+ * `PENDING_EMAIL_CONFIRMATION` is the address email's first line; `WAITLISTED` the waiting-list email's
+ * last sentence; `offer` the offer email's subject and its sentence up to the deadline; `bib` the
+ * confirmation email's number sentence; `CANCELLED` is `mine.cancelledTitle` and the first sentence of
+ * `mine.cancelled`; `holdLapsed` the `DECLARATION_HOLD_EXPIRED` email's sentence without the event's name.
+ * Nothing public words a past deadline kept (`kept`), a lapsed link or offer, a queued offer, where the
+ * QR code is (`CONFIRMED`), a plain expiry or the link's expiry (`linkUntil`): those are the backoffice's.
+ *
+ * The live link (`admin-repository.ts#liveLinkExpiresAtFor`) is said only when it adds something true:
+ * never on a held place (`hold` / `kept`), whose declaration link lives until the start (`render.ts`)
+ * while the hold's deadline is the one to tell; and never when its instant is the one the block already
+ * gave (an open offer's link lapses with the offer).
  * `say` is `Registrations` and `ours` is `Admin.registrations.tell`, both in the registration's
  * language. Never an address, nobody else's data: the line's numbers only, as the person reads them.
  */
 export function tellLines(say: Say, ours: Say, locale: string, facts: TellFacts, now: Date): string[] {
   const at = (instant: Date) => formatDay(instant, { locale, timeZone: facts.eventTimezone, style: "long", withTime: true, position: "inline" });
-  const lines = [ours("state", { state: say(`mine.status.${facts.status}`) })];
+  const lines = [facts.status === "CONFIRMED" ? `${say("spent.CONFIRMED.title")}.` : ours("state", { state: say(`mine.status.${facts.status}`) })];
   const active = !ENDED.has(facts.status);
 
   // A cancelled event voids every deadline and every next step: the participant's page says only that (§331).
@@ -72,10 +80,14 @@ export function tellLines(say: Say, ours: Say, locale: string, facts: TellFacts,
   }
 
   const deadline = rowDeadlineOf(facts, now);
+  // The instant the block already gave the person, so the link's expiry is not said twice.
+  let stated: Date | null = null;
   switch (facts.status) {
     case "PENDING_EMAIL_CONFIRMATION":
-      if (deadline?.kind === "reserved") lines.push(say("mine.reservedUntil", { until: at(deadline.at) }));
-      else lines.push(ours(deadline?.kind === "linkLapsed" ? "linkLapsed" : "PENDING_EMAIL_CONFIRMATION"));
+      if (deadline?.kind === "reserved") {
+        lines.push(say("mine.reservedUntil", { until: at(deadline.at) }));
+        stated = deadline.at;
+      } else lines.push(ours(deadline?.kind === "linkLapsed" ? "linkLapsed" : "PENDING_EMAIL_CONFIRMATION"));
       break;
     case "PENDING_DECLARATION":
       if (deadline?.kind === "hold") {
@@ -102,8 +114,10 @@ export function tellLines(say: Say, ours: Say, locale: string, facts: TellFacts,
         lines.push(ours("offerQueued"));
         return lines;
       }
-      if (deadline?.kind === "offer") lines.push(ours("offer", { due: at(deadline.at) }));
-      else lines.push(ours("offerLapsed"));
+      if (deadline?.kind === "offer") {
+        lines.push(ours("offer", { due: at(deadline.at) }));
+        stated = deadline.at;
+      } else lines.push(ours("offerLapsed"));
       break;
     case "CONFIRMED":
       lines.push(ours("CONFIRMED"));
@@ -119,7 +133,9 @@ export function tellLines(say: Say, ours: Say, locale: string, facts: TellFacts,
       lines.push(ours(facts.status));
   }
 
-  if (active && facts.liveLinkExpiresAt) lines.push(ours("linkUntil", { instant: at(facts.liveLinkExpiresAt) }));
+  const link = facts.liveLinkExpiresAt;
+  const held = deadline?.kind === "hold" || deadline?.kind === "kept";
+  if (active && link && !held && link.getTime() !== stated?.getTime()) lines.push(ours("linkUntil", { instant: at(link) }));
   // Not once the link or the offer has lapsed: there is no email left to look for.
   if (WAITS_ON_AN_EMAIL.has(facts.status) && deadline?.kind !== "linkLapsed" && deadline?.kind !== "offerLapsed") lines.push(say("spamHint.body"));
   return lines;
