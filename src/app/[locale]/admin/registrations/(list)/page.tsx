@@ -1,5 +1,7 @@
 import CampaignIcon from "@mui/icons-material/Campaign";
+import CardMembershipIcon from "@mui/icons-material/CardMembership";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
+import UnsubscribeIcon from "@mui/icons-material/Unsubscribe";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Checkbox from "@mui/material/Checkbox";
@@ -410,6 +412,19 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               color="info"
               variant="outlined"
               label={t("registrations.clubMemberChip")}
+            />
+          )}
+          {/* The provider said no (§76, §83): the same chip the desk and the registration's page draw,
+              so a row kept by «Doar cine nu a primit emailul» says why it is there (BR-REQ-038-01
+              criterion 8). The reason is the hover text, as at the desk. */}
+          {row.emailRejectedReason && (
+            <Chip
+              size="small"
+              color="error"
+              variant="outlined"
+              label={t("registrations.emailRejected")}
+              title={row.emailRejectedReason}
+              data-testid="email-rejected"
             />
           )}
           {/* "Is my name on the site?" is asked of the club, not of the platform (§186). Marked
@@ -1172,27 +1187,34 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               </MenuItem>
             ))}
           </TextField>
-          <TextField
-            select
-            name="clubMember"
-            label={t("registrations.clubMemberLabel", { club: CLUB_NAME })}
-            defaultValue={clubMember === "1" ? "1" : ""}
-            sx={{ minWidth: 220 }}
-          >
-            <MenuItem value="">{t("registrations.filterAll")}</MenuItem>
-            <MenuItem value="1">{t("registrations.clubMemberOnly")}</MenuItem>
-          </TextField>
+          {/*
+            The members' filter and the bounced filter are ticks, like the promo one beside them
+            (§NNN): as two-option selects, MUI showed the label inside the closed box, so «Membri …»
+            read as a value already chosen, and the empty option spoke of events («Toate
+            evenimentele»). Ticked submits `1`, unticked submits nothing — the same parameters as
+            before, so the filter, the export and the member sweep (it opens with `clubMember=1`) are
+            untouched.
+          */}
+          <Box sx={{ minWidth: 220, maxWidth: 320, pt: 0.5 }} data-testid="registrations-filter-member">
+            <CheckboxField
+              name="clubMember"
+              value="1"
+              defaultChecked={clubMember === "1"}
+              dense
+              help={t("registrations.clubMemberOnlyHelp", { club: CLUB_NAME })}
+            >
+              {/* The members' glyph the site uses wherever it means the club's members (§552, §645). */}
+              <CardMembershipIcon aria-hidden data-testid="registrations-filter-member-glyph" />
+              {t("registrations.clubMemberOnly", { club: CLUB_NAME })}
+            </CheckboxField>
+          </Box>
           {/* Who never got the email (§76, §83): the rows to call. */}
-          <TextField
-            select
-            name="bounced"
-            label={t("registrations.bouncedLabel")}
-            defaultValue={bounced === "1" ? "1" : ""}
-            sx={{ minWidth: 220 }}
-          >
-            <MenuItem value="">{t("registrations.filterAll")}</MenuItem>
-            <MenuItem value="1">{t("registrations.bouncedOnly")}</MenuItem>
-          </TextField>
+          <Box sx={{ minWidth: 220, maxWidth: 320, pt: 0.5 }} data-testid="registrations-filter-bounced">
+            <CheckboxField name="bounced" value="1" defaultChecked={bounced === "1"} dense help={t("registrations.bouncedOnlyHelp")}>
+              <UnsubscribeIcon aria-hidden data-testid="registrations-filter-bounced-glyph" />
+              {t("registrations.bouncedOnly")}
+            </CheckboxField>
+          </Box>
           {/*
             «Doar cu oferte și beneficii» (§581; the owner: «doar cei care au bifat că vor datele
             publicate pentru parteneri»): the people who said yes, on screen, by §570's one condition —
@@ -1212,7 +1234,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             defaultValue={isRegistrationStatus(status) ? status : ""}
             sx={{ minWidth: 220 }}
           >
-            <MenuItem value="">{t("registrations.filterAll")}</MenuItem>
+            {/* Its own words for "no state chosen" (§NNN): «Toate evenimentele» is the events select's alone. */}
+            <MenuItem value="">{t("registrations.statusAll")}</MenuItem>
             {registrationStatus.enumValues.map((value) => (
               <MenuItem key={value} value={value}>
                 {REGISTRATION_STATUS_LABEL[value]}

@@ -96,6 +96,18 @@ test.describe("§581 «Doar cu oferte și beneficii»: the list and its export",
       const target = await filter.locator(".MuiCheckbox-root").boundingBox();
       expect(target?.width ?? 0).toBeGreaterThanOrEqual(44);
       expect(target?.height ?? 0).toBeGreaterThanOrEqual(44);
+      // Its two neighbours are ticks of the same kind (§NNN), not selects whose closed box shows the label as a value.
+      for (const [id, name] of [
+        ["registrations-filter-member", /^Doar membrii .+ \(declarați\)$/],
+        ["registrations-filter-bounced", /^Doar cine nu a primit emailul$/],
+      ] as const) {
+        const tick = main.getByTestId(id);
+        await expect(tick.getByRole("checkbox", { name })).not.toBeChecked();
+        const area = await tick.locator(".MuiCheckbox-root").boundingBox();
+        expect(area?.height ?? 0, id).toBeGreaterThanOrEqual(44);
+      }
+      await expect(main.getByRole("combobox", { name: /^Membri / })).toHaveCount(0);
+      await expect(main.getByRole("combobox", { name: /^Email$/ })).toHaveCount(0);
       await box.check();
       await main.getByRole("button", { name: "Filtrează" }).click();
       await expect(page).toHaveURL(/[?&]promo=1/);

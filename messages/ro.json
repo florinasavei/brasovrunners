@@ -626,6 +626,7 @@
       "filterAll": "Toate evenimentele",
       "filter": "Filtrează",
       "statusLabel": "Stare",
+      "statusAll": "Toate stările",
       "summaryTotal": "Înscrieri: {count} (toate stările, anulate și expirate incluse)",
       "summaryTest": "De test: {count}",
       "outside": {
@@ -771,10 +772,10 @@
       "registrationDeleted": "Înscrierea a fost ștearsă definitiv.",
       "eraseLeftovers": "Șterge și manual: mesajele „Declarație semnată” din arhivă, rândul din exporturile și PDF-urile descărcate, foile tipărite și adresa din Mailgun → Suppressions.",
       "rowActions": "Acțiuni pentru {name}",
-      "clubMemberLabel": "Membri {club}",
-      "bouncedLabel": "Email",
-      "bouncedOnly": "Doar email respins",
-      "clubMemberOnly": "Doar cei care s-au declarat membri",
+      "clubMemberOnly": "Doar membrii {club} (declarați)",
+      "clubMemberOnlyHelp": "Cine a bifat la înscriere „Sunt membru al grupului {club}”. Clubul nu verifică; pe rând scrie „Membru (declarat)”.",
+      "bouncedOnly": "Doar cine nu a primit emailul",
+      "bouncedOnlyHelp": "Adresa a respins mesajul sau furnizorul l-a refuzat; pe rând scrie „Email respins”. Pe ei îi suni înainte de cursă.",
       "clubMemberChip": "Membru (declarat)",
       "columnName": "Nume",
       "columnStatus": "Stare",
@@ -5655,7 +5656,7 @@
               "steps": [
                 "Când: înainte de o cursă pentru membri, ca să rămână bifați doar membrii clubului. Bifa o pune participantul în formular; clubul nu o verifică.",
                 "Unul câte unul: în «Datele înscrierii» debifează bifa de membru → «Salvează datele». Pe listă, «Nu e membru» e în meniul ⋮ al rândului.",
-                "Toți deodată: «Înscrieri» → «Caută și filtrează» → la membri alege «Doar cei care s-au declarat membri» → «Filtrează» → «Bife de membru fără cont de membru».",
+                "Toți deodată: «Înscrieri» → «Caută și filtrează» → bifează «Doar membrii {club} (declarați)» → «Filtrează» → «Bife de membru fără cont de membru».",
                 "Lista arată înscrierile bifate a căror adresă nu e a niciunui cont din «Echipa». Un membru înscris cu altă adresă apare și el: debifează-i rândul. Apoi «Scoate bifa la cele» … și confirmă.",
                 "Ce nu face: nu anulează nicio înscriere, nu mută niciun loc, nu trimite niciun email. Clubul de pe listă se șterge doar dacă era cel pus de bifă. Fiecare schimbare rămâne în jurnal."
               ]
