@@ -76,6 +76,7 @@ import GivePlaceButton from "@/modules/registrations/ui/GivePlaceButton";
 import PaperConfirmationTip from "@/modules/registrations/ui/PaperConfirmationTip";
 import OfferPlaceButton from "@/modules/registrations/ui/OfferPlaceButton";
 import { givePlaceNowAhead, staffOfferIfMadeNow, staffOfferQuestion } from "@/modules/registrations/give-place-tip";
+import { findInvitationOfRegistration, findLiveInvitationOfParticipant } from "@/modules/registrations/invitation-repository";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -116,7 +117,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const registration = await findRegistrationDetailForAdmin(db, id);
   if (!registration) notFound();
 
-  const [acceptances, outboxHistory, auditTrail, freeBibs, minorSigns, family, partnerShares] = await Promise.all([
+  const [acceptances, outboxHistory, auditTrail, freeBibs, minorSigns, family, partnerShares, invitedBy] = await Promise.all([
     listDeclarationAcceptances(db, id),
     listOutboxHistory(db, id),
     // With its event: the supplementary place added for it is a row about the event (§642), found by the index.
@@ -133,6 +134,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     familyOf(db, [registration]).then((members) => members.get(registration.id) ?? []),
     // Every list for sponsors this registration was in (§570): which partner received it, and when.
     listPartnerShares(db, id),
+    // The invitation it came from (§NNN): who sent it and when, for every role that reads this page.
+    findInvitationOfRegistration(db, id),
   ]);
 
   const query = await searchParams;
@@ -151,8 +154,16 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     nor is a row «În afara locurilor» (§643), which needs no counted place. The server decides.
   */
   const givePlaceNowFacts = mayManage && registration.status === "PENDING_EMAIL_CONFIRMATION" ? await givePlaceNowAhead(registration.eventId) : null;
+  // The address's open invitation (§NNN) is the row's own place: the press takes it over and adds none.
+  const heldByInvitation =
+    givePlaceNowFacts !== null && (await findLiveInvitationOfParticipant(db, registration.eventId, registration.participantId, new Date())) !== undefined;
   const givePlaceNow = givePlaceNowFacts
-    ? { raisedTo: givePlaceNowFacts.full && !registration.outsideCapacity && !(registration.holdExpiresAt !== null && registration.holdExpiresAt > new Date()) ? givePlaceNowFacts.raisedTo : null }
+    ? {
+        raisedTo:
+          givePlaceNowFacts.full && !heldByInvitation && !registration.outsideCapacity && !(registration.holdExpiresAt !== null && registration.holdExpiresAt > new Date())
+            ? givePlaceNowFacts.raisedTo
+            : null,
+      }
     : null;
   // «Trimite-i oferta»'s question (§615, §642): the deadline, a supplementary place, the close — read only where the button can be drawn.
   const offerForecast = registration.status === "WAITLISTED" && mayManage ? await staffOfferIfMadeNow(registration.eventId, locale) : null;
@@ -348,6 +359,12 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       <Typography variant="body2" color="text.secondary">
         {registration.participantEmail} · {registration.eventTitle ?? registration.eventId}
       </Typography>
+      {/* From an invitation by email (§NNN): who sent it and when, read by every role that reads this page. */}
+      {invitedBy && (
+        <Typography variant="body2" color="text.secondary" data-testid="registration-invited">
+          {tr("registrations.invitedBy", { who: invitedBy.invitedByName ?? tr("invitations.byNobody"), when: dtInline(invitedBy.sentAt) ?? "" })}
+        </Typography>
+      )}
       {registration.guardianName && (
         <Typography variant="body2" color="text.secondary">
           {tr("desk.guardian", { name: registration.guardianName })}

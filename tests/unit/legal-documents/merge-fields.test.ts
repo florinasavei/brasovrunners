@@ -153,6 +153,8 @@ describe("the declaration's merge fields", () => {
         // The terms have their own since §3 says when the club may refuse or cancel a registration (§618): one paragraph.
         // The notice grew once more when its history paragraph came to describe both modes of the waiting list (§NNN).
         const ceiling = key === "EVENT_DECLARATION" ? 10300 : key === "PRIVACY_NOTICE" ? 31500 : key === "TERMS" ? 12000 : 11000;
+        // The notice grew once more by a paragraph in section 2 for the invitations by email (§NNN).
+        const ceiling = key === "EVENT_DECLARATION" ? 10300 : key === "PRIVACY_NOTICE" ? 31800 : key === "TERMS" ? 12000 : 11000;
         expect(text.length, `${key} ${locale}`).toBeGreaterThan(key === "EVENT_DECLARATION" ? 1500 : 2500);
         expect(text.length, `${key} ${locale}`).toBeLessThan(ceiling);
       }

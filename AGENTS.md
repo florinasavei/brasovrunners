@@ -1306,6 +1306,7 @@ occupied =
   + PENDING_DECLARATION holds (kept past their deadline while nobody waits — §160)
   + unexpired WAITLIST_OFFERED holds
   (each term: registrations NOT marked outside_capacity)
+  + live invitations NOT sent outside_capacity, before their deadline (§NNN)
 
 publicDirectAvailability =
   max(capacity - occupied - eligible WAITLISTED registrations, 0)
@@ -1325,20 +1326,43 @@ Rules:
   a row that holds a counted place releases it under the event lock and the ordinary refill follows;
   unmarking serves the line first and then needs `occupied < capacity` under the lock; a restart of a
   cancelled or expired row through the form clears the mark;
+- an invitation by email (`event_invitations`, §NNN) holds one counted place from the send until it is
+  accepted, withdrawn or its deadline passes — the deadline compared on every read, so the place is free
+  the instant it passes — unless it was sent «Pe lista ascunsă» (`outside_capacity`). It is the club's choice, like a
+  family's reservation (§543): **never released for somebody waiting before its deadline**, only at the
+  deadline (the sweep stamps it and offers the place to the line) or at «Retrage» — and that deadline
+  is never moved later while anyone eligible waits: «Retrimite» re-issues the link and the email and keeps
+  it (the hidden list, holding no counted place, may be extended). **A place free for an
+  invitation is one free after everyone eligible who waits** — `max(capacity - occupied - eligible
+  WAITLISTED, 0)` (`invitationFreePlaces`), whatever «Oferte automate» says and whether the registration
+  has closed: with offers off (§615) or after the close nobody is offered the free place on the send's
+  way, yet it is still the waiting row's, never an invitation's. Each invitation that needs a counted
+  place and finds none free in that sense — a full race, or anyone waiting — adds one supplementary place,
+  under the rule of the bullet below, or the send is refused. At the
+  acceptance the allocator seats the registration in the invitation's place while the invitation still
+  counts, then marks it accepted, in one transaction: the count moves from the invitation to the
+  declaration hold with no instant where the place is free; an invitation never takes a lapsed
+  declaration hold's place (§160) — that runner may still sign. A registration of the invited address
+  that reaches its place by another route — the public form's confirmation, a staff entry, the desk, a
+  restart, «Dă-i un loc acum» — takes the invitation's place over in the same way and marks it accepted,
+  so no place stays held in the name of somebody already seated;
 - public count means places a new registrant can receive after active holds and existing waiting-list priority;
 - every capacity-changing transaction expires stale holds and calls the queue allocator before giving a place to a later registration; a lapsed declaration hold is stale only as far as the queue wants its place, or once the event has started or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing (§331) — and a registration that waits behind a kept hold is offered that place in the same transaction;
 - event row lock or equivalent safe serialization protects capacity and FIFO allocation;
 - public read may subtract eligible waiting entries as a conservative safeguard while maintenance is catching up, but it never mutates state;
 - scheduled maintenance expires holds and allocates released places;
 - increasing capacity allocates the queue first;
-- the capacity changes in three places only: the event editor's save, and an Administrator's
+- the capacity changes in four places only: the event editor's save, and an Administrator's
   press for one named person on a full event — «Trimite-i oferta» or «Dă-i un loc acum» — which,
   when the dialog said so, its button named the added place and the form carried the capacity it
   named (`addPlace`, exactly the locked capacity + 1), adds exactly one supplementary place to that
   one event row under the event lock, in the transaction whose offer or place then occupies it,
   audited with who and for whom (`DECISIONS.md` §642) — never the allocator on its own, and never a
   press that did not confirm it: one made through the plain question on a race that filled since the
-  page was read is refused (`SUPPLEMENTARY_PLACE_UNCONFIRMED`) and writes nothing;
+  page was read is refused (`SUPPLEMENTARY_PLACE_UNCONFIRMED`) and writes nothing; and a send of
+  invitations (§NNN), which adds one place per invitation that finds none free, only when the form
+  carried exactly the locked capacity plus that number (`invitationRaises`), each raise audited with
+  the invitation it is for;
 - decreasing capacity below occupied places is rejected;
 - no cached free count is a source of truth;
 - no capacity or queue decision may depend on the maintenance job having run; every read
@@ -2020,7 +2044,7 @@ WAITLIST_OFFER
 MANAGE_PROFILE
 ```
 
-Never store raw token. Minting a token supersedes the live one of the same registration and purpose (the partial unique index) — except `REGISTER_ANOTHER_PERSON`, whose links are never superseded: each stays live for its window (`DECISIONS.md` §420).
+Never store raw token. Minting a token supersedes the live one of the same registration and purpose (the partial unique index) — except `REGISTER_ANOTHER_PERSON`, whose links are never superseded: each stays live for its window (`DECISIONS.md` §420). `ACCEPT_INVITATION` (§NNN) is scoped to an invitation (`invitation_id`) rather than a registration, which does not exist yet: a resend supersedes the invitation's earlier link, never another invitation's, and whether the press may still register is the invitation's own state, asked under the event lock.
 
 A token is only ever sent to the participant: the club's copies of their messages are separate club-copy rows with no token minted, no action link, no QR and no attachment (`DECISIONS.md` §320).
 
@@ -2719,7 +2743,36 @@ BR-REQ-037-05):
    restart of it through the form clears it (the club marks the new cycle again if it wants). Audited
    as `registration.outside_capacity_changed` with `from` and `to`.
 
-Every one of the six writes an `audit_logs` row (§12.12). MUST NOT: a second write path into
+7. **Invitations by email (2026-10-02, §NNN).** The Administrator (`canManageRegistrations`; the
+   Organizer reads the section and is offered no verb) invites named people to one event from its
+   registrations list: members picked from the members' zone (read from the account) or a name and an
+   address typed, one per line. `inviteToEventByStaff`, under the event lock, in one transaction for the
+   whole list: the line served first, every address canonicalized (§10.4), a person already registered
+   or already invited refused by name with nothing written; each invitation holds a counted place until
+   its deadline (`min(now + days, start)`, §10.6 — the public close is not asked) unless sent «Pe lista ascunsă», and where no
+   place is free after everyone eligible who waits — a full race, or anyone on the waiting list, offers
+   on or off, before or after the close — adds one supplementary place only on the press that named the
+   capacity: an invitation never takes a counted free place ahead of anyone waiting. **It creates no
+   registration**: the person registers themselves, from the `EVENT_INVITATION` email's link
+   (`ACCEPT_INVITATION`, §12.8 — hashed, single use, GET only reads) — the form prefilled with the name
+   and the address, locked, every consent and the declaration theirs. The press proves the inbox (no
+   verification email) and seats the registration in the invitation's place through the one allocator.
+   A registration of the invited address that reaches its place by another route takes the invitation
+   over in the same transaction (`event.invitation_accepted` with `adopted`).
+   «Retrimite» mints a new link (the old one superseded, §619) and moves the deadline only when days
+   are typed and the result is later — **and never, for an invitation that holds a counted place, while
+   anyone eligible waits** (`countEligibleWaitlisted > 0` under the lock): the waiting row queued behind
+   that deadline, and moving it would keep a counted place ahead of them at every resend without the
+   confirmed supplementary place a send would need. Then the link and the email are re-issued and the
+   deadline kept; the dialog says so before the press (no days box), the toast after it
+   (`invitationResentKept`), the audit row carries `keptForWaiting`. One «Pe lista ascunsă» may be
+   extended whoever waits;
+   «Retrage» ends it and the place goes to the line. Audited as `event.invitation_sent`,
+   `event.invitation_resent`, `event.invitation_withdrawn`, `event.invitation_expired`,
+   `event.invitation_accepted` and `event.capacity_raised_for_invitation`, by the invitation's id, never
+   a name or an address.
+
+Every one of the seven writes an `audit_logs` row (§12.12). MUST NOT: a second write path into
 `registrations`, a staff-signed declaration (a paper one is the participant's, recorded), a
 confirmation that bypasses the allocator or the approved declaration, a staff-entered row that is
 allocated ahead of anybody already waiting, or a delete that skips the allocator and strands the
@@ -2844,6 +2897,7 @@ CLUB_CONFIRMATION_NOTICE
 EVENT_UPDATE_NOTICE
 EVENT_CANCELLED
 DECLARATION_HOLD_EXPIRED
+EVENT_INVITATION
 ```
 
 `DECLARATION_HOLD_EXPIRED` (§638) is queued by `expireStaleHolds` in the transaction that
@@ -2854,6 +2908,14 @@ the place went to the waiting list, and what the person can do now, read at send
 waiting list, register again, or nothing online — the desk gives free places on the day. No token,
 no «Nu mai pot ajunge»: the registration is over. Not for a hold the start releases, not for a
 cancelled event (§331), and never for a lapsed waiting-list offer, which stays silent.
+
+`EVENT_INVITATION` (§NNN) is queued by an Administrator's send of invitations, and again by
+«Retrimite» (`invitation:<id>:sent:<instant>`, `…:resent:<instant>`), to an address before any
+registration exists: its payload is the invitation's id alone. Rendered by its own path
+(`notifications/invitation-render.ts`): the `ACCEPT_INVITATION` link minted then (§12.8), the event,
+its start and until when the place is kept, «Acceptă invitația». Withdrawn at the send when the
+invitation is no longer open or the event is over or cancelled. On the links' road; not a
+participant's message — no club copy, no «Nu mai pot ajunge» — with a privacy line of its own.
 
 `EVENT_UPDATE_NOTICE` and `EVENT_CANCELLED` are never automatic (§331): the first goes only
 when an organizer ticks "Anunță participanții despre schimbare" on a save that moved the place,

@@ -4,6 +4,8 @@ import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
 import { familyPlaceHolds } from "@/db/schema/family-entries";
+import { eventInvitations } from "@/db/schema/event-invitations";
+import { eventsWithLapsedInvitations, expireLapsedInvitations, invitationHoldsCount, invitationOpen } from "./invitation-repository";
 import {
   ACTIVE_REGISTRATION_STATUSES,
   type Registration,
@@ -797,6 +799,8 @@ export type OccupiedCountsRow = {
   familyReservations: number;
   /** A family sitting's holds for forms that wrote no registration (§543): `domain/capacity.ts#OccupiedCounts.familyPlaceHolds`. */
   familyPlaceHolds: number;
+  /** Live invitations holding a counted place (§NNN): `domain/capacity.ts#OccupiedCounts.invitationHolds`. */
+  invitationHolds: number;
 };
 
 /**
@@ -1043,12 +1047,15 @@ export async function countOccupied<T extends Record<string, unknown>>(
       familyReservations: sql<number>`count(*) filter (where ${familyReservationHolds(now)})::int`,
       // …and the sitting's holds for forms that wrote no registration (§543), counted the same.
       familyPlaceHolds: familyPlaceHoldsCount(eventId, now),
+      // …and the places the club keeps for the people it invited (§NNN), until each deadline.
+      invitationHolds: invitationHoldsCount(eventId, now),
     })
     .from(registrations)
     // Outside the places (§643): counted in no bucket.
     .where(and(eq(registrations.eventId, eventId), eq(registrations.outsideCapacity, false)));
 
-  return row ?? { confirmed: 0, pendingDeclarationHolds: 0, unexpiredWaitlistOfferedHolds: 0, lapsedDeclarationHolds: 0, familyReservations: 0, familyPlaceHolds: 0 };
+  // An aggregate without a grouping always answers one row; the fallback is the type's, never a read.
+  return row ?? { confirmed: 0, pendingDeclarationHolds: 0, unexpiredWaitlistOfferedHolds: 0, lapsedDeclarationHolds: 0, familyReservations: 0, familyPlaceHolds: 0, invitationHolds: 0 };
 }
 
 /**
@@ -1094,6 +1101,13 @@ export async function listPlaceCountInstants<T extends Record<string, unknown>>(
         .select({ holdExpiresAt: familyPlaceHolds.expiresAt })
         .from(familyPlaceHolds)
         .where(and(eq(familyPlaceHolds.eventId, eventId), eq(familyPlaceHolds.holdsPlace, true))),
+    )
+    // …and an invitation's held place, at its deadline (§NNN): not one «În afara locurilor», which holds none.
+    .unionAll(
+      db
+        .select({ holdExpiresAt: eventInvitations.expiresAt })
+        .from(eventInvitations)
+        .where(and(eq(eventInvitations.eventId, eventId), eq(eventInvitations.outsideCapacity, false), invitationOpen())),
     );
   return rows.flatMap((row) => (row.holdExpiresAt ? [new Date(row.holdExpiresAt)] : []));
 }
@@ -1370,6 +1384,13 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
     .where(and(eq(familyPlaceHolds.eventId, event.id), lte(familyPlaceHolds.expiresAt, now)))
     .returning({ id: familyPlaceHolds.id, holdsPlace: familyPlaceHolds.holdsPlace });
 
+  /*
+    …and an invitation past its deadline (§NNN): stamped expired, its place free for the count below — the
+    club's word to a named person ends at its deadline and not before (the club's choice, like a family's
+    reservation: never released for somebody waiting while it runs).
+  */
+  const lapsedInvitations = await expireLapsedInvitations(db, event.id, now);
+
   const releasing = await lapsedDeclarationHoldsToRelease(db, event, now, wanting);
   if (releasing.length > 0) {
     const released = await db
@@ -1401,7 +1422,7 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
   }
   // A bulk sweep, beside `transitionRegistration` rather than through it, so it tells the public
   // cache itself (§333): the places these rows held are counted as free from now on.
-  if (lapsedOffers.length > 0 || releasing.length > 0 || lapsedReservations.length > 0 || lapsedPlaceHolds.some((row) => row.holdsPlace)) revalidatePublicContent("places");
+  if (lapsedOffers.length > 0 || releasing.length > 0 || lapsedReservations.length > 0 || lapsedPlaceHolds.some((row) => row.holdsPlace) || lapsedInvitations > 0) revalidatePublicContent("places");
 }
 
 /**
@@ -1496,6 +1517,8 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
       ),
     );
   const due = new Set(rows.map((row) => row.eventId));
+  // An invitation past its deadline (§NNN): the sweep stamps it and offers its place to the line.
+  for (const eventId of await eventsWithLapsedInvitations(db, now)) due.add(eventId);
 
   /*
     A free place while somebody waits (§612, amending §104 and §587): a scheduled, capped event,

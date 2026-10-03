@@ -53,6 +53,8 @@ import {
 } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import Panel from "@/shared/ui/Panel";
+import InvitationsPanel from "@/modules/registrations/ui/InvitationsPanel";
+import { inviteAction, resendInvitationAction, withdrawInvitationAction } from "../invitation-actions";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import GlyphButton from "@/shared/ui/GlyphButton";
@@ -991,6 +993,23 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         </Typography>
       )}
       </Panel>
+
+      {/*
+        «Invitații» (§NNN): who the club invited to this event and where each stands; the send and each
+        invitation's verbs for the Administrator. Only on a list about one event: an invitation is to one.
+      */}
+      {filters.eventId && (
+        <InvitationsPanel
+          db={db}
+          locale={locale}
+          eventId={filters.eventId}
+          mayManage={mayManage}
+          sendAction={inviteAction}
+          resendAction={resendInvitationAction}
+          withdrawAction={withdrawInvitationAction}
+          now={new Date()}
+        />
+      )}
 
       {/*
         The outbox, and the day's Mailgun counter (`DECISIONS.md` §80): what is waiting, what

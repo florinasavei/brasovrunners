@@ -28,6 +28,7 @@ export const TASK_TARGETS: Partial<Record<TaskId, TaskTarget>> = {
   listStatesNotice: { kind: "section", section: "legal" },
   listSocialsNotice: { kind: "section", section: "legal" },
   listNumbersNotice: { kind: "section", section: "legal" },
+  invitationsNotice: { kind: "section", section: "legal" },
   promoNotice: { kind: "section", section: "legal" },
   sponsorNotice: { kind: "section", section: "legal" },
   newsletterNotice: { kind: "section", section: "legal" },

@@ -40,17 +40,26 @@ import { registrationNameKey, sameRunner } from "./domain/name-key";
 import { ALREADY_ON_ADDRESS } from "./domain/family";
 import { composeLegalName } from "./names";
 import {
+  countEligibleWaitlisted,
+  countOccupied,
   findEventForAllocation,
   findRegistrationById,
   findRegistrationsByEventAndParticipant,
   lockEventForCapacity,
 } from "./repository";
+import { computeOccupied } from "./domain/capacity";
+import { invitationForecastFree } from "./domain/invitations";
 import {
   checkIn,
   confirmByStaff,
   type EventForRegistration,
   givePlaceNowByStaff,
+  type InvitationSendInput,
+  type InvitationSendResult,
+  inviteToEventByStaff,
   offerPlaceToByStaff,
+  resendInvitationByStaff,
+  withdrawInvitationByStaff,
   promoteFromWaitlistByStaff,
   setOutsideCapacityByStaff,
   type PlacedByStaff,
@@ -743,6 +752,66 @@ export async function givePlaceToUnconfirmedByStaff<T extends Record<string, unk
   if (!current) throw new DomainError("NOT_FOUND", "no such registration");
   const event = await eventForRegistration(db, current.eventId);
   return givePlaceNowByStaff(db, event, registrationId, actor, now, settings, options);
+}
+
+/**
+ * «Trimite invitațiile» (§NNN): the Administrator's alone (`canManageRegistrations`, §289), asserted
+ * here before anything is read and again in the service, which does the whole send under the event
+ * lock (`service.ts#inviteToEventByStaff`).
+ */
+export async function inviteToEvent<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  eventId: string,
+  input: InvitationSendInput,
+  now: Date,
+): Promise<InvitationSendResult> {
+  if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not invite anybody`);
+  const event = await eventForRegistration(db, eventId);
+  return inviteToEventByStaff(db, event, input, actor, now);
+}
+
+/**
+ * The send's forecast (§NNN), as the dialog names it: the event's capacity now and the places free for
+ * invitations — the allocator's count against the capacity, less everyone eligible who waits
+ * (`invitationForecastFree`), as the server counts under the lock. Read by the section when the page is
+ * drawn, and again by the action when a send is refused, so the next press's question is asked on
+ * today's numbers rather than the page's. `waiting`: everyone eligible who waits, for «Retrimite»'s
+ * dialog (a counted invitation's deadline stays while it is not 0). Null `free` on an uncapped event; null altogether when there
+ * is no such event. A read with no person in it; the caller has asserted the role.
+ */
+export async function readInvitationForecast<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  now: Date,
+): Promise<{ capacity: number | null; free: number | null; waiting: number } | null> {
+  const [event] = await db.select({ capacity: events.capacity }).from(events).where(eq(events.id, eventId)).limit(1);
+  if (!event) return null;
+  const [counts, waiting] = await Promise.all([countOccupied(db, eventId, now), countEligibleWaitlisted(db, eventId)]);
+  return { capacity: event.capacity, free: invitationForecastFree({ capacity: event.capacity, occupied: computeOccupied(counts), waiting }), waiting };
+}
+
+/** «Retrimite» on an invitation (§NNN): the Administrator's alone, asserted here and in the service. */
+export async function resendInvitation<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  invitationId: string,
+  days: number | null,
+  now: Date,
+): Promise<{ expiresAt: Date; kept: "waiting" | null }> {
+  if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not resend an invitation`);
+  return resendInvitationByStaff(db, invitationId, { days }, actor, now);
+}
+
+/** «Retrage» an invitation (§NNN): the Administrator's alone, asserted here and in the service. */
+export async function withdrawInvitation<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  invitationId: string,
+  now: Date,
+): Promise<void> {
+  if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not withdraw an invitation`);
+  await withdrawInvitationByStaff(db, invitationId, actor, now);
 }
 
 /** A place ahead of the queue, into a free one (BR-REQ-037-07); refused when full. */

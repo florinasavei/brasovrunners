@@ -76,6 +76,7 @@ import { SIGNABLE_STATUSES } from "@/modules/registrations/domain/family-signing
 import { confirmationDueMoment, participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
 import { forecastForEvent } from "@/modules/weather/source";
 import { renderNewsletterRow } from "@/modules/newsletter/render";
+import { renderInvitationRow } from "./invitation-render";
 import { buildOutgoingEmail, type TemplateData } from "./templates";
 import { emailEventFacts } from "./event-facts-row";
 import { type EmailRenderer, OutboxMessageWithdrawn, type OutboxRow } from "./outbox";
@@ -120,7 +121,8 @@ const TOKEN_PURPOSE_BY_MESSAGE_TYPE: Partial<Record<EmailMessageType, EmailActio
  * found — it is minted only then.
  */
 const ROUTE_BY_PURPOSE: Record<
-  Exclude<EmailActionTokenPurpose, "REGISTER_ANOTHER_PERSON">,
+  // An invitation's link (§NNN) is minted by its own renderer (`invitation-render.ts`), never by this table.
+  Exclude<EmailActionTokenPurpose, "REGISTER_ANOTHER_PERSON" | "ACCEPT_INVITATION">,
   | "/registrations/confirm/[token]"
   | "/registrations/declare/[token]"
   | "/registrations/manage/[token]"
@@ -201,6 +203,10 @@ async function renderRow(
   // The newsletter (§445) is about a subscriber, never a registration: its own path too.
   if (row.messageType === "NEWSLETTER_CONFIRM" || row.messageType === "NEWSLETTER" || row.messageType === "NEW_EVENT_ALERT") {
     return renderNewsletterRow(row, db, now, eventRows, replyTo);
+  }
+  // An invitation (§NNN) is about an invitation, before any registration: its own path, its own link.
+  if (row.messageType === "EVENT_INVITATION") {
+    return renderInvitationRow(row, db, now, eventRows, replyTo);
   }
 
   /*
@@ -1004,7 +1010,7 @@ async function renderRow(
       now,
     });
     actionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/registrations/mine/[token]", params: { token: mine.secret } } })}`;
-  } else if (purpose && row.participantId && !clubCopy) {
+  } else if (purpose && purpose !== "ACCEPT_INVITATION" && row.participantId && !clubCopy) {
     const route = ROUTE_BY_PURPOSE[purpose];
     const defaultExpiresAt = new Date(now.getTime() + DEFAULT_TOKEN_HOURS * 60 * 60_000);
     // Borrow the registration's own deadline so the token dies when the place does — but only
