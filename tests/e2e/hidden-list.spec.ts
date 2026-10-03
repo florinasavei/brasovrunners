@@ -90,7 +90,7 @@ test.describe("§647 «Lista de invitați speciali» (named so since) as a radio
     const box = await section.boundingBox();
     expect(box).not.toBeNull();
     expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(width + 1);
-    const caption = section.getByText("Invitat special: e la start fără să ocupe", { exact: false });
+    const caption = section.getByText("Invitat special: nu ocupă un loc anunțat", { exact: false });
     const captionBox = await caption.boundingBox();
     expect((captionBox?.x ?? 0) + (captionBox?.width ?? 0)).toBeLessThanOrEqual(width + 1);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
