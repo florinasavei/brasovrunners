@@ -317,14 +317,16 @@ For a capped event:
 - cancellations and expired holds release places; a declaration hold past its deadline expires only as far as the queue wants its place — one person waiting releases one hold, the one whose deadline passed first — or once the event has started or been cancelled (`DECISIONS.md` §160); otherwise the place stays the participant's until the start, and the declaration may still be signed online or on paper at the desk;
 - every capacity-changing action promotes eligible waiting participants before allocating a direct place to a later registrant;
 - concurrent actions must never exceed capacity or let a later registrant jump the queue;
-- a registration on the **«lista ascunsă»** (*hidden list*; called «în afara locurilor» until
-  §647) consumes no place in any state: the club's organizers, pacemakers and invited runners run
+- a registration on the **«lista de invitați speciali»** (*special guests list*; «lista ascunsă» in
+  §647, «în afara locurilor» before it) consumes no place in any state: the club's organizers, pacemakers and invited runners run
   without taking one of the announced places. It still has a declaration, a race number — from the
-  hidden list's own series when the event sets one — and, if the person ticked, a row on the public
-  list. It enters no public number unless the event ticks «Numără și lista ascunsă», and never the
+  special guests' own series when the event sets one — and, if the person ticked, a row on the public
+  list. It enters no public number unless the event ticks «Numără și invitații speciali», and never the
   places line or the free places. Only an Administrator puts somebody on it or takes them off, only
-  while the event's «Folosește lista ascunsă» is on (taking off always), and every change is written
-  to the journal (`DECISIONS.md` §643, §647). «Lista ascunsă» is the backoffice's word: publicly
+  while the event's «Folosește lista de invitați speciali» is on (taking off always), and every change is written
+  to the journal (`DECISIONS.md` §643, §647). «Lista de invitați speciali» is the backoffice's word —
+  every screen that shows it says in plain words what it does; it is not for an ordinary participant and
+  hides nobody. Publicly
   these people are «în afara locurilor anunțate» (*outside the advertised places*), and while the
   event's switch is on, or anybody on the list still holds a place, its places line says so in one
   sentence, naming nobody;
@@ -336,7 +338,7 @@ For a capped event:
   and signs the declaration themselves; accepting moves the kept place to their registration, and so
   does a registration of the invited address made another way, once it gets its place. On a full
   race, or while anyone waits, each invitation that needs a place adds one supplementary place, which the Administrator
-  confirms before the send; one sent «pe lista ascunsă» keeps none (`DECISIONS.md` §647).
+  confirms before the send; one sent «pe lista de invitați speciali» keeps none (`DECISIONS.md` §647).
 
 The initial direct declaration hold is the club's setting (30 minutes by default, "Termene"), capped by registration closing and event start. For an event further away than its **participation window** (per event; default: asked 7 days before, due 2 days before the start), the place is instead held until the window's deadline and the declaration is the participant's confirmation that they are still coming — the race is free, and a place taken in June by somebody who forgot by October is a place nobody ran on (`DECISIONS.md` §104). Either deadline is enforced only when it protects somebody: with nobody on the waiting list, the person who forgot keeps the place and their number, and signs on race day at the desk; the declaration is asked once more two days before the start, and a race called off refuses the signature and releases the place (`DECISIONS.md` §160).
 

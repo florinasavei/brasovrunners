@@ -6,7 +6,8 @@ import Link from "next/link";
 import IncognitoIcon from "@/shared/ui/IncognitoIcon";
 
 /**
- * «Lista ascunsă» as a chip (§647, amending §643): the incognito glyph beside the words, on a
+ * «Invitat special» as a chip (§647, amending §643; the list «Lista ascunsă» there, «Lista de invitați
+ * speciali» since §NNN, with a one-line `hint`): the incognito glyph beside the words, on a
  * registration's row and page, and — given an `href` — the registrations list's pill, a filter link
  * inside a 44-pixel target like every other pill (`ChipLink`, BR-REQ-041-01 criterion 6).
  *
@@ -21,17 +22,27 @@ export default function HiddenListChip({
   label,
   href,
   active = false,
+  hint,
   testId,
 }: {
   label: string;
+  /**
+   * What a special guest is, in one line (§NNN): the chip's `title` and, after the label, the pill link's
+   * accessible name; the registration page's «i» is the touch-friendly explanation.
+   */
+  hint?: string;
   /** The list's pill: where a press leads (`outside=1`, or without it while pressed). Absent, a plain chip. */
   href?: string;
   /** Pressed: filled in the brand colour, like the state pills. */
   active?: boolean;
   testId?: string;
 }) {
+  // The pill's link is named by its visible words first, then the hint; a plain chip is no control, so
+  // ARIA gives it no name of its own — its words say it, and `title` adds the hint for a pointer.
+  const named = hint === undefined ? undefined : `${label} — ${hint}`;
   const chip = (
     <Chip
+      title={hint}
       size="small"
       icon={<IncognitoIcon fontSize="small" />}
       label={label}
@@ -50,6 +61,7 @@ export default function HiddenListChip({
       prefetch={false}
       scroll={false}
       aria-current={active ? "page" : undefined}
+      aria-label={named}
       data-testid={testId}
       sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, textDecoration: "none", color: "inherit" }}
     >
