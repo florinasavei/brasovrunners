@@ -130,6 +130,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.65` | the members and bounced filters are ticks (§650) · each registration says until when, in the list's «Până când» column and the export (§651) · a backoffice table's columns can be resized (§652) |
 | `BR-V2.64` | «Lista de invitați speciali»: the hidden list renamed and explained on every screen (§649) |
 | `BR-V2.63` | an Administrator corrects any answer a participant typed, and clears false member ticks in one audited sweep (§645) · the club's discretion over places, in neutral words (§646) (§646) · invitations by email: a place kept for a named person until a deadline, accepted through the form (§647) · «Lista ascunsă»: the name, an incognito glyph, a radio, the event's switch, the hidden list's own numbers and its count tick, and «Arată public numărătoarea» on every event (§648) |
 | `BR-V2.62` | the paper confirmation says what it is for, what it does and what the person receives (§640) · «Retrimite emailul» covers the waiting list and the dialog says which email each state sends (§641) · «Trimite-i oferta» at any moment, adding one confirmed supplementary place on a full race (and «Dă-i un loc acum» too) (§642) · «În afara locurilor»: a registration that consumes no place and enters no public number (§643) · the outbox claim takes no more than its limit, whatever plan the statistics pick (§644) |

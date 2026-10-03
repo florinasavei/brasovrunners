@@ -17,7 +17,7 @@ const rows: Row[] = [
 
 describe("AdminTable row separators (§453)", () => {
   it("marks a line under every body row but the last", () => {
-    // The column-edge islands (§NNN) read their words through `useTranslations`.
+    // The column-edge islands (§650) read their words through `useTranslations`.
     const html = renderToStaticMarkup(withClientWords(
       createElement(AdminTable<Row>, {
         caption: "Evenimente",

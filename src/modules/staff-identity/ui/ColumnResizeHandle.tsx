@@ -51,7 +51,7 @@ type Drag = {
 };
 
 /**
- * A column's right edge, which a pointer drags and a keyboard moves (§NNN).
+ * A column's right edge, which a pointer drags and a keyboard moves (§650).
  *
  * This island is the whole of the resizing: a strip at the edge of one heading cell, and nothing
  * about the rows. It receives a table name, a column key and a heading — all strings — and

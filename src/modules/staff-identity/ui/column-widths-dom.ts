@@ -9,7 +9,7 @@ import {
 } from "@/modules/staff-identity/domain/column-widths";
 
 /**
- * The browser half of the resizable columns (§NNN): reading and writing the stored widths, and
+ * The browser half of the resizable columns (§650): reading and writing the stored widths, and
  * laying a server-rendered table out with them. Called only from the two islands' handlers and
  * effects, never during a render, so nothing here runs on the server.
  *

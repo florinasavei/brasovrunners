@@ -1,7 +1,7 @@
 import type { RegistrationStatus } from "@/db/schema/registrations";
 
 /**
- * The one deadline a live registration waits on (§635, §NNN): until when the person can sign the
+ * The one deadline a live registration waits on (§635, §650): until when the person can sign the
  * declaration on a held place, accept an offered one, or confirm the address on a row still waiting for it.
  *
  * - `hold` / `kept`: a place held for the declaration (§160), before and past its deadline — past it the
@@ -60,7 +60,7 @@ export function deadlinePassed(deadline: RowDeadline | null): boolean {
 }
 
 /**
- * What each deadline is for, in the export (§NNN): the spreadsheet's «Waiting on» column, in English like
+ * What each deadline is for, in the export (§650): the spreadsheet's «Waiting on» column, in English like
  * every header and value of the file. The CSV carries the kind itself, a stable token a script can match.
  */
 export const ROW_DEADLINE_EXPORT_WORDS: Record<RowDeadlineKind, string> = {

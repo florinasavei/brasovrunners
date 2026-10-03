@@ -96,7 +96,7 @@ test.describe("§581 «Doar cu oferte și beneficii»: the list and its export",
       const target = await filter.locator(".MuiCheckbox-root").boundingBox();
       expect(target?.width ?? 0).toBeGreaterThanOrEqual(44);
       expect(target?.height ?? 0).toBeGreaterThanOrEqual(44);
-      // Its two neighbours are ticks of the same kind (§NNN), not selects whose closed box shows the label as a value.
+      // Its two neighbours are ticks of the same kind (§650), not selects whose closed box shows the label as a value.
       for (const [id, name] of [
         ["registrations-filter-member", /^Doar membrii .+ \(declarați\)$/],
         ["registrations-filter-bounced", /^Doar cine nu a primit emailul$/],

@@ -15,7 +15,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — «Vreau să văd exact pe fiecare candidat până când poate semna declarația» (the owner,
+ * §650 — «Vreau să văd exact pe fiecare candidat până când poate semna declarația» (the owner,
  * 2026-10-03): the registrations list's «Până când» column says, on every live row, the moment it waits on
  * — the declaration's, the offer's, a family's reservation or the email's link — read from the row by
  * one helper that the column, its sort, the export and the registration's timeline share.
@@ -56,7 +56,7 @@ beforeEach(() => {
   locale = "ro";
 });
 
-describe("§NNN rowDeadlineOf: the one moment a live row waits on", () => {
+describe("§650 rowDeadlineOf: the one moment a live row waits on", () => {
   it("a place held for the declaration, before and past its deadline (§160)", () => {
     expect(rowDeadlineOf(input({ holdExpiresAt: AHEAD }), NOW)).toEqual({ kind: "hold", at: AHEAD });
     expect(rowDeadlineOf(input({ holdExpiresAt: PAST }), NOW)).toEqual({ kind: "kept", at: PAST });
@@ -103,7 +103,7 @@ describe("§NNN rowDeadlineOf: the one moment a live row waits on", () => {
   });
 });
 
-describe("§NNN the «Până când» cell", () => {
+describe("§650 the «Până când» cell", () => {
   it("one sentence with the exact moment: until when the person can sign, accept or confirm", async () => {
     expect(text(await cell(input({ holdExpiresAt: AHEAD })))).toBe(`Poate semna până ${inline(AHEAD)}`);
     expect(text(await cell(input({ status: "WAITLIST_OFFERED", holdExpiresAt: AHEAD })))).toBe(`Poate accepta până ${inline(AHEAD)}`);
@@ -155,7 +155,7 @@ describe("§NNN the «Până când» cell", () => {
   });
 });
 
-describe("§NNN the export carries the moment and what it is for", () => {
+describe("§650 the export carries the moment and what it is for", () => {
   const base = {
     eventTitle: "Test",
     registeredName: "Ana",

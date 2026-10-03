@@ -79,7 +79,7 @@ export const STAFF_CLIENT_MESSAGES = [
   "Network.close",
   "Network.blocked",
   "Network.retry",
-  // The resizable columns of every backoffice table (§NNN): each edge's name and how to move it,
+  // The resizable columns of every backoffice table (§650): each edge's name and how to move it,
   // and the control that puts the widths back.
   "Admin.columns",
   // «Tradu din română» (§464): the buttons beside every English box and at the top of an editor,

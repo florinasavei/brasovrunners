@@ -4,7 +4,7 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { deadlinePassed, type RowDeadline } from "@/modules/registrations/domain/row-deadline";
 
 /**
- * «Până când» on the registrations list (§NNN): one sentence with the exact moment the row waits on —
+ * «Până când» on the registrations list (§650): one sentence with the exact moment the row waits on —
  * «Poate semna până …», «Poate accepta până …», «Linkul e valabil până …» — or, past it, the moment
  * first and what it means (§160: a held place is kept while nobody asks for it). A moment already
  * passed reads quieter. «—» on a row that waits on nothing, as the race number's column says it.

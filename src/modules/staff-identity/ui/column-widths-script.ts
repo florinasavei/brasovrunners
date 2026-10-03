@@ -1,5 +1,5 @@
 /**
- * The few lines that put a resized table at its stored widths before the first paint (§NNN).
+ * The few lines that put a resized table at its stored widths before the first paint (§650).
  *
  * `ColumnWidths` lays the table out in a layout effect, which runs only once the page hydrates —
  * after the server's HTML has already painted with the automatic layout, so a column stored 120 px

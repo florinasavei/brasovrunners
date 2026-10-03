@@ -210,7 +210,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       db,
       filters,
       { limit: query.limit, offset: query.offset, sort: query.sort as RegistrationSortKey, dir: query.dir },
-      // The same clock as the «Până când» cells (§NNN), so the order is the order of the dates on screen.
+      // The same clock as the «Până când» cells (§650), so the order is the order of the dates on screen.
       deadlinesNow,
     ),
     countRegistrationsForAdmin(db, filters),
@@ -487,7 +487,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     },
     {
       /*
-        «Până când» (§NNN): until when each person can sign the declaration, accept the offer or confirm
+        «Până când» (§650): until when each person can sign the declaration, accept the offer or confirm
         the address, to the minute, read from the row (`rowDeadlineOf`, no query per row; a queued offer's
         email is one `EXISTS` in the list's query, §520) and sorted by the same cases in SQL. Beside the
         step it is the deadline of; the step's cell no longer repeats it.
@@ -1206,7 +1206,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           </TextField>
           {/*
             The members' filter and the bounced filter are ticks, like the promo one beside them
-            (§NNN): as two-option selects, MUI showed the label inside the closed box, so «Membri …»
+            (§650): as two-option selects, MUI showed the label inside the closed box, so «Membri …»
             read as a value already chosen, and the empty option spoke of events («Toate
             evenimentele»). Ticked submits `1`, unticked submits nothing — the same parameters as
             before, so the filter, the export and the member sweep (it opens with `clubMember=1`) are
@@ -1251,7 +1251,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             defaultValue={isRegistrationStatus(status) ? status : ""}
             sx={{ minWidth: 220 }}
           >
-            {/* Its own words for "no state chosen" (§NNN): «Toate evenimentele» is the events select's alone. */}
+            {/* Its own words for "no state chosen" (§650): «Toate evenimentele» is the events select's alone. */}
             <MenuItem value="">{t("registrations.statusAll")}</MenuItem>
             {registrationStatus.enumValues.map((value) => (
               <MenuItem key={value} value={value}>

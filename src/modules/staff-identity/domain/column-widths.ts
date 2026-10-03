@@ -1,5 +1,5 @@
 /**
- * The arithmetic behind a backoffice table's resizable columns (§NNN), kept apart from the DOM
+ * The arithmetic behind a backoffice table's resizable columns (§650), kept apart from the DOM
  * so it can be tested without a browser.
  *
  * What is stored is only what somebody changed: one width in CSS pixels per column key they

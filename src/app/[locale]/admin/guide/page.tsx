@@ -85,7 +85,7 @@ export default async function GuidePage({ params }: Props) {
   const db = getDb();
   const [{ cap }, familyOpen] = await Promise.all([readAddressCap(db), familyRegistrationOpen(db)]);
   const people = t(`emails.addressCap.people.${countForm(cap.registrationsPerAddress, locale)}`, { count: cap.registrationsPerAddress });
-  // The club's name for a step that quotes a label naming it (the members' tick, §NNN) — the constant, never a literal.
+  // The club's name for a step that quotes a label naming it (the members' tick, §650) — the constant, never a literal.
   const values = { club: CLUB_NAME, confirmation: words.confirmation, hold: words.hold, offer: words.offer, checkin: words.checkin, horizon: words.horizon, people };
 
   return (

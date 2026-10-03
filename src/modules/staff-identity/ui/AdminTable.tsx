@@ -47,7 +47,7 @@ import ColumnWidthsScript from "./ColumnWidthsScript";
  * cells, and sorting and paging are round-trips rather than instant. That is the trade; the
  * `loading.tsx` boundaries are what make the round-trip legible rather than dead.
  *
- * ## Resizable columns, without the grid (§NNN)
+ * ## Resizable columns, without the grid (§650)
  *
  * The refusal above first named "no column resizing" as a price too, and resizing is what the
  * owner then asked for — so it is paid here, inside this table, and every reason above still
@@ -116,7 +116,7 @@ type Props<Row> = {
   /** Names the table for anybody who cannot see the heading above it. */
   caption: string;
   /**
-   * The table's name for the column widths this browser keeps (§NNN): lowercase letters, digits
+   * The table's name for the column widths this browser keeps (§650): lowercase letters, digits
    * and hyphens, one per list — two tables sharing one would share their widths. Never anything
    * about a row or a person: it is written into the browser's storage.
    */
@@ -162,7 +162,7 @@ const HIDE = {
 } as const;
 
 /**
- * The same breakpoints for a column's `<col>` (§NNN). A `<col>` hidden with its cells keeps the
+ * The same breakpoints for a column's `<col>` (§650). A `<col>` hidden with its cells keeps the
  * colgroup and the cells counting the same columns: a cell hidden while its `<col>` stayed would
  * shift every cell after it under the wrong width.
  */
@@ -249,7 +249,7 @@ export default function AdminTable<Row>({
           border: 1,
           borderColor: "divider",
           borderRadius: 1,
-          // A resized table wider than the frame scrolls inside it (§NNN), never the page.
+          // A resized table wider than the frame scrolls inside it (§650), never the page.
           overflowX: "auto",
           overflowY: "hidden",
         }}
@@ -361,7 +361,7 @@ export default function AdminTable<Row>({
             ))}
           </TableBody>
         </Table>
-        {/* Right after the table: its stored widths, before the first paint (§NNN). */}
+        {/* Right after the table: its stored widths, before the first paint (§650). */}
         <ColumnWidthsScript tableId={tableId} />
       </Box>
 

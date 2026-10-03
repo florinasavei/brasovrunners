@@ -189,7 +189,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     declaration, an open offer or a family's reservation — past a declaration's deadline with the
     journey's kept words, since the place is released only when somebody wants it (§160) — and the
     first email's link on a row still waiting for its address. An ended row keeps «Rezervarea expiră».
-    The list's «Până când» reads the same helper (§NNN, `rowDeadlineOf`): an offer whose first email is
+    The list's «Până când» reads the same helper (§650, `rowDeadlineOf`): an offer whose first email is
     still queued keeps «Ține locul până» past its stored deadline (§520), and a lapsed one, which holds
     nothing any more (`countOccupied`), reads «Rezervarea expiră» like an ended row.
   */

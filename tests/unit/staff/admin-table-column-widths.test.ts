@@ -30,7 +30,7 @@ import { earlyWidthsScript } from "@/modules/staff-identity/ui/column-widths-scr
 import { withClientWords } from "../../helpers/client-words";
 
 /**
- * §NNN — a backoffice table's columns can be resized, and none of the reasons `AdminTable` gives
+ * §650 — a backoffice table's columns can be resized, and none of the reasons `AdminTable` gives
  * for refusing a data grid is given up for it: the table is still server-rendered, the islands receive strings and never a
  * row, the widths live in this browser only, and with JavaScript off the table is what it was.
  */
@@ -74,7 +74,7 @@ function render(props: { tableId?: string; withActions?: boolean } = {}) {
   );
 }
 
-describe("§NNN the widths' arithmetic", () => {
+describe("§650 the widths' arithmetic", () => {
   it("keeps a width inside the limits and whole", () => {
     expect(clampWidth(10)).toBe(MIN_COLUMN_WIDTH);
     expect(clampWidth(5000)).toBe(MAX_COLUMN_WIDTH);
@@ -143,7 +143,7 @@ describe("§NNN the widths' arithmetic", () => {
   });
 });
 
-describe("§NNN AdminTable's columns, as the server draws them", () => {
+describe("§650 AdminTable's columns, as the server draws them", () => {
   it("emits one <col> per column, in order, the actions' last, and marks the headings to match", () => {
     const html = render();
     const cols = [...html.matchAll(/<col[^>]*data-column="([^"]+)"/g)].map((m) => m[1]);
@@ -197,7 +197,7 @@ describe("§NNN AdminTable's columns, as the server draws them", () => {
 const ROOT = process.cwd();
 const read = (...parts: string[]) => readFileSync(path.join(ROOT, ...parts), "utf8").replace(/\r\n/g, "\n");
 
-describe("§NNN the pre-paint script, run against a stand-in for the page", () => {
+describe("§650 the pre-paint script, run against a stand-in for the page", () => {
   type Element = { display: string; width: number };
   function run(
     stored: string | null,
@@ -286,7 +286,7 @@ describe("§NNN the pre-paint script, run against a stand-in for the page", () =
   });
 });
 
-describe("§NNN no row crosses to the client (§14.5)", () => {
+describe("§650 no row crosses to the client (§14.5)", () => {
   it("hands each island strings and a flag, never a row or a render function", () => {
     const table = read("src", "modules", "staff-identity", "ui", "AdminTable.tsx");
     const handle = table.match(/<ColumnResizeHandle([\s\S]*?)\/>/)?.[1] ?? "";
@@ -309,7 +309,7 @@ describe("§NNN no row crosses to the client (§14.5)", () => {
   });
 });
 
-describe("§NNN every list names its table", () => {
+describe("§650 every list names its table", () => {
   const LISTS: Record<string, string[]> = {
     events: ["src", "app", "[locale]", "admin", "(list)", "page.tsx"],
     pages: ["src", "app", "[locale]", "admin", "pages", "(list)", "page.tsx"],
@@ -331,7 +331,7 @@ describe("§NNN every list names its table", () => {
   });
 });
 
-describe("§NNN the widths in this browser's storage", () => {
+describe("§650 the widths in this browser's storage", () => {
   type Fake = { store: Map<string, string>; events: Event[] };
   function stub(options: { throws?: boolean } = {}): Fake {
     const fake: Fake = { store: new Map(), events: [] };

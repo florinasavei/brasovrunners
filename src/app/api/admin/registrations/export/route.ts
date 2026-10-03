@@ -95,7 +95,7 @@ export async function GET(request: Request): Promise<Response> {
    * pressed it — and one that honoured the page would export whichever 25 rows were on screen.
    * Filters narrow what the file is *about*; a page is only how much of it fits.
    */
-  // «Până când» (§NNN), one clock for the whole file: the moment each row waits on, or none.
+  // «Până când» (§650), one clock for the whole file: the moment each row waits on, or none.
   const deadlinesNow = new Date();
   const rows = await listRegistrationsForAdmin(
     db,
@@ -128,7 +128,7 @@ export async function GET(request: Request): Promise<Response> {
   const declarations = await listLatestDeclarationAcceptances(db, rows.map((row) => row.id));
   // The other people on each row's address (§543), the `family` column of both formats: one query.
   const family = await familyOf(db, rows);
-  // The list's «Până când» (§NNN): the moment each row waits on and what for, or none.
+  // The list's «Până când» (§650): the moment each row waits on and what for, or none.
   const deadlineOf = (row: (typeof rows)[number]) => rowDeadlineOf(row, deadlinesNow);
 
   /*
@@ -187,7 +187,7 @@ export async function GET(request: Request): Promise<Response> {
         // The consent to offers and benefits (§562): its moment, blank for no.
         promoConsentAt: row.promoConsent ? row.promoConsentAt : null,
         outsideCapacity: row.outsideCapacity,
-        // «Până când» (§NNN), beside «Status»: the moment on the club's clock and what it is for, in words.
+        // «Până când» (§650), beside «Status»: the moment on the club's clock and what it is for, in words.
         deadline: deadlineOf(row)?.at ?? null,
         deadlineFor: deadlineOf(row)?.kind ?? null,
       })),
@@ -242,7 +242,7 @@ export async function GET(request: Request): Promise<Response> {
       // «Oferte și beneficii» (§562): the moment of the yes, empty for no — last, like the family.
       promoConsentAt: row.promoConsent ? (row.promoConsentAt?.toISOString() ?? "") : "",
       outsideCapacity: row.outsideCapacity,
-      // The list's «Până când» (§NNN): the moment the row waits on and its kind, empty when none — last, like the special guest.
+      // The list's «Până când» (§650): the moment the row waits on and its kind, empty when none — last, like the special guest.
       deadline: deadlineOf(row)?.at.toISOString() ?? "",
       deadlineFor: deadlineOf(row)?.kind ?? "",
     })),

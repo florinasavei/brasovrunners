@@ -359,11 +359,11 @@ describe("BR-REQ-037-03 criterion 13: the registrations list", () => {
 
 describe("BR-REQ-037-03 criterion 14: the members' and the bounced filters are ticks", () => {
   /*
-    The members' filter and the bounced filter are ticks of the promo filter's kind (§NNN): a
+    The members' filter and the bounced filter are ticks of the promo filter's kind (§650): a
     two-option select showed its label inside the closed box, so «Membri …» read as a chosen value,
     and its empty option spoke of events. Same parameters, `1` when ticked, nothing otherwise.
   */
-  it("draws the members' and the bounced filters as ticks named by what they keep, in both languages (§NNN)", async () => {
+  it("draws the members' and the bounced filters as ticks named by what they keep, in both languages (§650)", async () => {
     const race = await createRace("Crosul");
     await register(race.id);
     state.actor = await staff("ADMIN");

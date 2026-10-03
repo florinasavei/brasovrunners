@@ -9,7 +9,7 @@ import ro from "../../../messages/ro.json";
 /**
  * §635 — the registration's page says, in its full journey, the deadline the row's state waits on: a held
  * place «ține locul până …», or past it the kept words (§160); an open offer; the first email's link;
- * a family's reservation (§543). Since §NNN the list says it in its own column, «Până când»
+ * a family's reservation (§543). Since §650 the list says it in its own column, «Până când»
  * (`row-deadline.test.ts`), and the list's step cell says the step alone, with its hover title.
  * `next-intl/server` is the real translator over the real catalogues.
  */
@@ -70,7 +70,7 @@ beforeEach(() => {
 });
 afterEach(() => vi.useRealTimers());
 
-describe("§635, §NNN the list's step cell says the step; its deadline is the «Până când» column's", () => {
+describe("§635, §650 the list's step cell says the step; its deadline is the «Până când» column's", () => {
   it("a held place, before and past its deadline, an open offer: the step alone", async () => {
     expect(await cell(row({ status: "PENDING_DECLARATION", emailVerifiedAt: VERIFIED, holdExpiresAt: DUE }))).toBe("3/6 · Loc rezervat");
     expect(await cell(row({ status: "PENDING_DECLARATION", emailVerifiedAt: VERIFIED, holdExpiresAt: PAST }))).toBe("3/6 · Loc rezervat");

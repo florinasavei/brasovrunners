@@ -4,7 +4,7 @@ import { useCallback, useSyncExternalStore } from "react";
 import { earlyWidthsScript } from "./column-widths-script";
 
 /**
- * The pre-paint script of a resized table (§NNN, `column-widths-script.ts`), right after its
+ * The pre-paint script of a resized table (§650, `column-widths-script.ts`), right after its
  * `</table>`.
  *
  * A client component only so that it exists in the server's HTML and the hydration that adopts it,

@@ -15,7 +15,7 @@ import {
 } from "./column-widths-dom";
 
 /**
- * One per table, under it (§NNN): lays the table out with the widths this browser stored for it
+ * One per table, under it (§650): lays the table out with the widths this browser stored for it
  * when the page opens and whenever the table's frame changes width, and offers to put every column
  * back the way the server drew it.
  *

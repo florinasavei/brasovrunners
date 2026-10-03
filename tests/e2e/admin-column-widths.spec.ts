@@ -4,7 +4,7 @@ import pg from "pg";
 import { FEATURED, hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN, BR-REQ-041-01 — a backoffice table's columns can be resized: on the registrations list at
+ * §650, BR-REQ-041-01 — a backoffice table's columns can be resized: on the registrations list at
  * desktop width, a column's edge is dragged, the width survives a reload — drawn before the page
  * hydrates, by the inline script's `<style>` — «Lățimi implicite» puts the table back to its
  * automatic layout, and the edge is a named vertical separator, one per column but the row verbs',
@@ -94,7 +94,7 @@ async function drag(page: Page, handle: Locator, by: number) {
   await page.mouse.up();
 }
 
-test.describe("§NNN a backoffice table's columns can be resized", () => {
+test.describe("§650 a backoffice table's columns can be resized", () => {
   test("drag, reload, reset and the keyboard on the registrations list", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "the desktop project drives the pointer; the phone has its own test below");
     test.setTimeout(90_000);

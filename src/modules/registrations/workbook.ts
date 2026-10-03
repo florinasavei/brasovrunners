@@ -37,9 +37,9 @@ export type RegistrationSheetRow = Omit<
   RegistrationCsvRow,
   "submittedAt" | "confirmedAt" | "checkedInAt" | "fitnessDeclaredAt" | "termsAcceptedAt" | "declarationSignedAt" | "promoConsentAt" | "deadline" | "deadlineFor"
 > & {
-  /** «Până când» (§NNN): the moment the row waits on (`rowDeadlineOf`), a date like the others; null when none. */
+  /** «Până când» (§650): the moment the row waits on (`rowDeadlineOf`), a date like the others; null when none. */
   deadline?: Date | null;
-  /** What that moment is for (§NNN): its kind, written out in the sheet's words; null when none. */
+  /** What that moment is for (§650): its kind, written out in the sheet's words; null when none. */
   deadlineFor?: RowDeadlineKind | null;
   /** «Oferte și beneficii» (§562): the moment of the yes, a date like the others; null for no. */
   promoConsentAt?: Date | null;
@@ -158,7 +158,7 @@ const COLUMNS: Array<SheetColumn<RegistrationSheetRow>> = [
   { header: "T-shirt size", width: 12, cell: (row) => ({ value: row.tshirtSize && row.tshirtSize !== "NONE" ? row.tshirtSize : "", type: String }) },
   { header: "Status", width: 22, cell: (row) => ({ value: row.status, type: String }) },
   /*
-    The list's «Până când» (§NNN), beside the state it is the deadline of, as on the list: the moment on the
+    The list's «Până când» (§650), beside the state it is the deadline of, as on the list: the moment on the
     club's clock, then what it is for in words — the CSV has the two last, as a token. Blank when none.
   */
   { header: "Until when", width: 18, cell: (row) => ({ value: onClubClock(row.deadline ?? null), type: Date, format: STAMP_FORMAT }) },

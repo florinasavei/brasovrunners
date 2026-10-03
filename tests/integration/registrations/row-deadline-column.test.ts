@@ -18,7 +18,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Vreau să văd exact pe fiecare candidat până când poate semna declarația» (the owner,
+ * §650 — «Vreau să văd exact pe fiecare candidat până când poate semna declarația» (the owner,
  * 2026-10-03), from a real database:
  *
  * - the registrations list has a «Până când» column, in both of `AdminTable`'s layouts, saying each live
@@ -196,7 +196,7 @@ beforeEach(async () => {
   state.locale = "ro";
 });
 
-describe("§NNN «Până când» on the registrations list", () => {
+describe("§650 «Până când» on the registrations list", () => {
   it("a sortable column, each live row's moment from the row — for the Administrator and the Organizer", async () => {
     const { race, at } = await seed();
     const day = (value: Date) => formatDay(value, { locale: "ro", timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });

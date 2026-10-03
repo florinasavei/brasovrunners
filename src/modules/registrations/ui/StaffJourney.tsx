@@ -92,7 +92,7 @@ export default async function StaffJourney({ journey, bibNumber, variant }: Prop
     // says what comes next.
     const word = journey.done === total ? (detailOf(last) ?? label[last.key]) : label[journey.reached];
     /*
-      The deadline the row waits on (§635) is the list's own column now, «Până când» (§NNN,
+      The deadline the row waits on (§635) is the list's own column now, «Până când» (§650,
       `RowDeadlineCell`): to the minute and sortable, so this cell says the step alone.
     */
     const title = journey.outcome
