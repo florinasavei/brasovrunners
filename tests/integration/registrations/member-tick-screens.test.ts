@@ -6,6 +6,7 @@ import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { auditLogs } from "@/db/schema/audit-logs";
+import { emailOutbox } from "@/db/schema/email-outbox";
 import { eq } from "drizzle-orm";
 import { resolveDisplayName } from "@/modules/registrations/names";
 import { CLUB_NAME } from "@/theme/brand";
@@ -311,49 +312,6 @@ describe("BR-REQ-037-03 criterion 13: the registrations list", () => {
     expect(byTestId(await listPage({ eventId: race.id, clubMember: "1", memberSweep: "1" }), "member-sweep")).toHaveLength(0);
   });
 
-  /*
-    The members' filter and the bounced filter are ticks of the promo filter's kind (§NNN): a
-    two-option select showed its label inside the closed box, so «Membri …» read as a chosen value,
-    and its empty option spoke of events. Same parameters, `1` when ticked, nothing otherwise.
-  */
-  it("draws the members' and the bounced filters as ticks named by what they keep, in both languages (§NNN)", async () => {
-    const race = await createRace("Crosul");
-    await register(race.id);
-    state.actor = await staff("ADMIN");
-    const ticks = (tree: ReactNode) =>
-      Object.fromEntries(
-        elements(tree)
-          .filter((element) => element.props.name === "clubMember" || element.props.name === "bounced")
-          .map((element) => [element.props.name as string, element]),
-      );
-    const text = (node: unknown): string =>
-      typeof node === "string" ? node : Array.isArray(node) ? node.map(text).join("") : isValidElement(node) ? text((node.props as Props).children) : "";
-
-    for (const locale of ["ro", "en"] as const) {
-      state.locale = locale;
-      const words = (locale === "ro" ? ro : en).Admin.registrations;
-      const off = ticks(await listPage({ eventId: race.id }));
-      expect(Object.keys(off).sort()).toEqual(["bounced", "clubMember"]);
-      for (const tick of Object.values(off)) {
-        // Not a select: no `select` prop, no options, a value of `1` and nothing ticked by default.
-        expect(tick.props.select, locale).toBeUndefined();
-        expect(tick.props.value, locale).toBe("1");
-        expect(tick.props.defaultChecked, locale).toBe(false);
-      }
-      expect(text(off.clubMember.props.children)).toBe(words.clubMemberOnly.replace("{club}", CLUB_NAME));
-      expect(off.clubMember.props.help).toBe(words.clubMemberOnlyHelp.replaceAll("{club}", CLUB_NAME));
-      expect(text(off.bounced.props.children)).toBe(words.bouncedOnly);
-      expect(off.bounced.props.help).toBe(words.bouncedOnlyHelp);
-      // The empty option of the events select is not read by these two any more.
-      expect(text(off.clubMember.props.children)).not.toContain(words.filterAll);
-
-      const on = ticks(await listPage({ eventId: race.id, clubMember: "1", bounced: "1" }));
-      expect(on.clubMember.props.defaultChecked).toBe(true);
-      expect(on.bounced.props.defaultChecked).toBe(true);
-    }
-    state.locale = "ro";
-  });
-
   it("opens the preview: one ticked box per candidate, the count, the event's scope — members and unticked rows left out", async () => {
     const race = await createRace("Crosul");
     const stranger = await register(race.id);
@@ -396,5 +354,91 @@ describe("BR-REQ-037-03 criterion 13: the registrations list", () => {
     const tree = await listPage({ clubMember: "1", saved: "memberTicksCleared", count: "3" });
     const [banner] = byTestId(tree, "member-ticks-cleared");
     expect(banner.props.children).toBe("Am scos bifa de membru la 3 înscrieri. Nimic altceva nu s-a schimbat.");
+  });
+});
+
+describe("BR-REQ-037-03 criterion 14: the members' and the bounced filters are ticks", () => {
+  /*
+    The members' filter and the bounced filter are ticks of the promo filter's kind (§NNN): a
+    two-option select showed its label inside the closed box, so «Membri …» read as a chosen value,
+    and its empty option spoke of events. Same parameters, `1` when ticked, nothing otherwise.
+  */
+  it("draws the members' and the bounced filters as ticks named by what they keep, in both languages (§NNN)", async () => {
+    const race = await createRace("Crosul");
+    await register(race.id);
+    state.actor = await staff("ADMIN");
+    const ticks = (tree: ReactNode) =>
+      Object.fromEntries(
+        elements(tree)
+          .filter((element) => element.props.name === "clubMember" || element.props.name === "bounced")
+          .map((element) => [element.props.name as string, element]),
+      );
+    const text = (node: unknown): string =>
+      typeof node === "string" ? node : Array.isArray(node) ? node.map(text).join("") : isValidElement(node) ? text((node.props as Props).children) : "";
+
+    for (const locale of ["ro", "en"] as const) {
+      state.locale = locale;
+      const words = (locale === "ro" ? ro : en).Admin.registrations;
+      const off = ticks(await listPage({ eventId: race.id }));
+      expect(Object.keys(off).sort()).toEqual(["bounced", "clubMember"]);
+      for (const tick of Object.values(off)) {
+        // Not a select: no `select` prop, no options, a value of `1` and nothing ticked by default.
+        expect(tick.props.select, locale).toBeUndefined();
+        expect(tick.props.value, locale).toBe("1");
+        expect(tick.props.defaultChecked, locale).toBe(false);
+      }
+      expect(text(off.clubMember.props.children)).toBe(words.clubMemberOnly.replace("{club}", CLUB_NAME));
+      expect(off.clubMember.props.help).toBe(words.clubMemberOnlyHelp.replaceAll("{club}", CLUB_NAME));
+      expect(text(off.bounced.props.children)).toBe(words.bouncedOnly);
+      expect(off.bounced.props.help).toBe(words.bouncedOnlyHelp);
+      // Each carries its glyph first, as the promo tick does, so the dense glyph column is not a gap.
+      expect(byTestId(off.clubMember.props.children, "registrations-filter-member-glyph")).toHaveLength(1);
+      expect(byTestId(off.bounced.props.children, "registrations-filter-bounced-glyph")).toHaveLength(1);
+      // «Toate evenimentele» is the events select's alone: the status select says its own words.
+      const selects = elements(await listPage({ eventId: race.id })).filter((element) => element.props.select === true);
+      expect(selects.map((element) => element.props.name)).not.toContain("clubMember");
+      expect(selects.map((element) => element.props.name)).not.toContain("bounced");
+      const statusSelect = selects.find((element) => element.props.name === "status");
+      const empty = elements(statusSelect?.props.children).find((element) => element.props.value === "");
+      expect(text(empty?.props.children), locale).toBe(words.statusAll);
+      expect(text(empty?.props.children), locale).not.toBe(words.filterAll);
+
+      const on = ticks(await listPage({ eventId: race.id, clubMember: "1", bounced: "1" }));
+      expect(on.clubMember.props.defaultChecked).toBe(true);
+      expect(on.bounced.props.defaultChecked).toBe(true);
+    }
+    state.locale = "ro";
+  });
+
+  it("draws «Email respins» on a bounced row, the chip the desk and the registration's page draw (BR-REQ-038-01 criterion 8)", async () => {
+    const race = await createRace("Crosul");
+    const bounced = await register(race.id);
+    const reached = await register(race.id);
+    await db.insert(emailOutbox).values({
+      messageType: "REGISTRATION_CONFIRMED",
+      recipientEmail: "runner-bounced@example.org",
+      locale: "ro",
+      payloadJson: {},
+      idempotencyKey: "bounced-row",
+      status: "BOUNCED",
+      lastError: "550 5.1.1 mailbox unavailable",
+      registrationId: bounced,
+    });
+    state.actor = await staff("ADMIN");
+    const tree = await listPage({ eventId: race.id, bounced: "1" });
+    const table = elements(tree).find((element) => element.type === AdminTable);
+    const rows = table?.props.rows as { id: string }[];
+    expect(rows.map((row) => row.id)).toEqual([bounced]);
+    const nameColumn = (table?.props.columns as { key: string; render: (row: unknown) => ReactNode }[]).find((column) => column.key === "name");
+    const chips = byTestId(nameColumn?.render(rows[0]), "email-rejected");
+    expect(chips).toHaveLength(1);
+    expect(chips[0].props.label).toBe(ro.Admin.registrations.emailRejected);
+    expect(chips[0].props.title).toBe("550 5.1.1 mailbox unavailable");
+
+    const all = await listPage({ eventId: race.id });
+    const allTable = elements(all).find((element) => element.type === AdminTable);
+    const reachedRow = (allTable?.props.rows as { id: string }[]).find((row) => row.id === reached);
+    const allName = (allTable?.props.columns as { key: string; render: (row: unknown) => ReactNode }[]).find((column) => column.key === "name");
+    expect(byTestId(allName?.render(reachedRow), "email-rejected")).toHaveLength(0);
   });
 });

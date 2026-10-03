@@ -1,5 +1,7 @@
 import CampaignIcon from "@mui/icons-material/Campaign";
+import CardMembershipIcon from "@mui/icons-material/CardMembership";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
+import UnsubscribeIcon from "@mui/icons-material/Unsubscribe";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Checkbox from "@mui/material/Checkbox";
@@ -410,6 +412,19 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               color="info"
               variant="outlined"
               label={t("registrations.clubMemberChip")}
+            />
+          )}
+          {/* The provider said no (§76, §83): the same chip the desk and the registration's page draw,
+              so a row kept by «Doar cine nu a primit emailul» says why it is there (BR-REQ-038-01
+              criterion 8). The reason is the hover text, as at the desk. */}
+          {row.emailRejectedReason && (
+            <Chip
+              size="small"
+              color="error"
+              variant="outlined"
+              label={t("registrations.emailRejected")}
+              title={row.emailRejectedReason}
+              data-testid="email-rejected"
             />
           )}
           {/* "Is my name on the site?" is asked of the club, not of the platform (§186). Marked
@@ -1188,12 +1203,15 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               dense
               help={t("registrations.clubMemberOnlyHelp", { club: CLUB_NAME })}
             >
+              {/* The members' glyph the site uses wherever it means the club's members (§552, §645). */}
+              <CardMembershipIcon aria-hidden data-testid="registrations-filter-member-glyph" />
               {t("registrations.clubMemberOnly", { club: CLUB_NAME })}
             </CheckboxField>
           </Box>
           {/* Who never got the email (§76, §83): the rows to call. */}
           <Box sx={{ minWidth: 220, maxWidth: 320, pt: 0.5 }} data-testid="registrations-filter-bounced">
             <CheckboxField name="bounced" value="1" defaultChecked={bounced === "1"} dense help={t("registrations.bouncedOnlyHelp")}>
+              <UnsubscribeIcon aria-hidden data-testid="registrations-filter-bounced-glyph" />
               {t("registrations.bouncedOnly")}
             </CheckboxField>
           </Box>
@@ -1216,7 +1234,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             defaultValue={isRegistrationStatus(status) ? status : ""}
             sx={{ minWidth: 220 }}
           >
-            <MenuItem value="">{t("registrations.filterAll")}</MenuItem>
+            {/* Its own words for "no state chosen" (§NNN): «Toate evenimentele» is the events select's alone. */}
+            <MenuItem value="">{t("registrations.statusAll")}</MenuItem>
             {registrationStatus.enumValues.map((value) => (
               <MenuItem key={value} value={value}>
                 {REGISTRATION_STATUS_LABEL[value]}

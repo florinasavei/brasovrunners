@@ -626,6 +626,7 @@
       "filterAll": "All events",
       "filter": "Filter",
       "statusLabel": "Status",
+      "statusAll": "All statuses",
       "summaryTotal": "Registrations: {count} (all states, cancelled and expired included)",
       "summaryTest": "Test: {count}",
       "outside": {

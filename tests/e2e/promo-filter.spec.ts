@@ -107,6 +107,7 @@ test.describe("§581 «Doar cu oferte și beneficii»: the list and its export",
         expect(area?.height ?? 0, id).toBeGreaterThanOrEqual(44);
       }
       await expect(main.getByRole("combobox", { name: /^Membri / })).toHaveCount(0);
+      await expect(main.getByRole("combobox", { name: /^Email$/ })).toHaveCount(0);
       await box.check();
       await main.getByRole("button", { name: "Filtrează" }).click();
       await expect(page).toHaveURL(/[?&]promo=1/);
