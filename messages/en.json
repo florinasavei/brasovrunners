@@ -1089,12 +1089,13 @@
         "kept": "The deadline to sign has passed, but we are still keeping your place: sign the declaration from the email as soon as you can.",
         "WAITLISTED": "If you get a place, we email you what to do next.",
         "offer": "We have offered you a place: sign the declaration from the offer email by {due}.",
+        "offerQueued": "We have offered you a place; the offer email is on its way, and the time to sign counts from when it is sent.",
         "offerLapsed": "The offer's deadline has passed, so the place is no longer held for you.",
         "CONFIRMED": "Your registration is confirmed. The QR code for picking up your number is in the confirmation email and on your registration's page.",
-        "checkedIn": "Your arrival at the start is recorded.",
         "bib": "Your race number: {number}.",
-        "CANCELLED": "The registration is cancelled and its place has been released.",
+        "CANCELLED": "Registration cancelled. Your place has been released.",
         "EXPIRED": "The registration has expired, so we no longer hold a place for you.",
+        "holdLapsed": "Your place has expired: the declaration was not signed in time.",
         "linkUntil": "The link in the email is valid until {instant}."
       }
     },
@@ -6010,6 +6011,14 @@
               "steps": [
                 "On the site, «Send the registration link again» → the address → «Send the link».",
                 "Or they come to the desk and a volunteer confirms them there, on paper."
+              ]
+            },
+            {
+              "title": "What to tell someone who asks",
+              "steps": [
+                "Someone asks where their registration stands — on the phone, by message or at the desk: «Registrations» → search the name → open the registration. The Administrator and the Organizer see it alike.",
+                "Under «The registration's journey», «What to tell them» has the sentences to say, in the language they registered in: the same words they read on their page and in the emails, with the deadline and how long the email's link is still valid.",
+                "«Copy» puts them on the clipboard, for a message. The block shows no address and no link: a link goes only by email, with «Resend email»."
               ]
             },
             {

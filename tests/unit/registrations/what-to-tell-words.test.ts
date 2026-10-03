@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { formatDay } from "@/i18n/dates";
+import { buildOutgoingEmail, type TemplateData } from "@/modules/notifications/templates";
 import { whatToTell, type TellFacts } from "@/modules/registrations/ui/tell-words";
 import { waitlistStandingPhrase } from "@/modules/registrations/ui/waitlist-position-words";
 
@@ -99,10 +100,13 @@ describe("§NNN whatToTell — what to tell a person who asks where their regist
       expect(whatToTell(locale, facts({ status: "WAITLIST_OFFERED", holdExpiresAt: LATER }), NOW)[1]).toBe(
         ours(locale, "offer").replace("{due}", instant(locale, LATER)),
       );
-      // Still queued, the offer has not lapsed whatever its stored deadline (§520).
-      expect(whatToTell(locale, facts({ status: "WAITLIST_OFFERED", holdExpiresAt: EARLIER, offerEmailQueued: true }), NOW)[1]).toContain(
-        instant(locale, EARLIER),
-      );
+      // Still queued, the offer has not lapsed whatever its stored deadline (§520) — and the send re-bases
+      // that deadline, so the block says the email is on its way, no instant, and no spam hint yet.
+      for (const stored of [EARLIER, LATER]) {
+        const queued = whatToTell(locale, facts({ status: "WAITLIST_OFFERED", holdExpiresAt: stored, offerEmailQueued: true, liveLinkExpiresAt: LATER }), NOW);
+        expect(queued.slice(1)).toEqual([ours(locale, "offerQueued")]);
+        expect(queued.join(" ")).not.toContain(instant(locale, stored));
+      }
       const lapsed = whatToTell(locale, facts({ status: "WAITLIST_OFFERED", holdExpiresAt: EARLIER }), NOW);
       expect(lapsed[1]).toBe(ours(locale, "offerLapsed"));
       expect(lapsed).not.toContain(spam);
@@ -110,12 +114,15 @@ describe("§NNN whatToTell — what to tell a person who asks where their regist
 
     it(`a confirmed row says where the QR code is, its number and its check-in (${locale})`, () => {
       const lines = whatToTell(locale, facts({ status: "CONFIRMED", bibNumber: 42, checkedInAt: EARLIER }), NOW);
-      expect(lines.slice(1)).toEqual([ours(locale, "CONFIRMED"), ours(locale, "bib").replace("{number}", "42"), ours(locale, "checkedIn")]);
+      expect(lines.slice(1)).toEqual([ours(locale, "CONFIRMED"), ours(locale, "bib").replace("{number}", "42"), say(locale)("manage.selfCheckInDone")]);
     });
 
     it(`an ended row says it ended and offers no link (${locale})`, () => {
       expect(whatToTell(locale, facts({ status: "CANCELLED", liveLinkExpiresAt: LATER }), NOW).slice(1)).toEqual([ours(locale, "CANCELLED")]);
       expect(whatToTell(locale, facts({ status: "EXPIRED" }), NOW).slice(1)).toEqual([ours(locale, "EXPIRED")]);
+      expect(whatToTell(locale, facts({ status: "EXPIRED", expiryReason: "WAITLIST_OFFER_LAPSED" }), NOW).slice(1)).toEqual([ours(locale, "EXPIRED")]);
+      // A lapsed declaration hold: what its email told the person (§638).
+      expect(whatToTell(locale, facts({ status: "EXPIRED", expiryReason: "DECLARATION_HOLD_LAPSED" }), NOW).slice(1)).toEqual([ours(locale, "holdLapsed")]);
     });
 
     it(`a cancelled event says only the cancellation, the participant page's words (${locale})`, () => {
@@ -129,8 +136,37 @@ describe("§NNN whatToTell — what to tell a person who asks where their regist
         facts({ status: "WAITLISTED", waitlistPosition: 120, waitlistLength: 240, waitlistAutoOffer: false }),
         facts({ status: "CONFIRMED", bibNumber: 1234, checkedInAt: EARLIER, liveLinkExpiresAt: LATER }),
         facts({ status: "PENDING_EMAIL_CONFIRMATION", holdExpiresAt: LATER, liveLinkExpiresAt: LATER }),
+        facts({ status: "WAITLIST_OFFERED", holdExpiresAt: LATER, offerEmailQueued: true }),
+        facts({ status: "EXPIRED", expiryReason: "DECLARATION_HOLD_LAPSED" }),
+        facts({ status: "CANCELLED" }),
       ].flatMap((one) => whatToTell(locale, one, NOW));
       for (const line of all) expect(line.length, line).toBeLessThan(200);
+    });
+  }
+
+  /*
+    One story (§NNN): where a public page or an email already says it, the backoffice's line is that text
+    word for word, so the volunteer never tells what the person did not read.
+  */
+  for (const locale of ["ro", "en"] as const) {
+    it(`a cancelled row says the participant page's own words (${locale})`, () => {
+      const mine = catalogues[locale].Registrations.mine;
+      const firstSentence = mine.cancelled.slice(0, mine.cancelled.indexOf(".") + 1);
+      expect(ours(locale, "CANCELLED")).toBe(`${mine.cancelledTitle}. ${firstSentence}`);
+    });
+
+    it(`a lapsed declaration hold says what its email said, without the event's name (${locale})`, () => {
+      const title = "Crosul";
+      const email = buildOutgoingEmail({
+        to: "runner@example.org",
+        locale,
+        idempotencyKey: "tell-hold-lapsed",
+        messageType: "DECLARATION_HOLD_EXPIRED",
+        data: { eventTitle: title } as TemplateData,
+      });
+      const sentence = ours(locale, "holdLapsed");
+      const inEmail = sentence.replace(locale === "ro" ? "Locul tău " : "Your place ", locale === "ro" ? `Locul tău la ${title} ` : `Your place at ${title} `);
+      expect(email.text.replace(/\*\*/g, "")).toContain(inEmail);
     });
   }
 

@@ -1089,12 +1089,13 @@
         "kept": "Termenul de semnare a trecut, dar încă îți păstrăm locul: semnează declarația din email cât mai repede.",
         "WAITLISTED": "Dacă primești un loc, îți scriem pe email cu ce ai de făcut.",
         "offer": "Ți-am oferit un loc: semnează declarația din emailul cu oferta până {due}.",
+        "offerQueued": "Ți-am oferit un loc; emailul cu oferta e pe drum, iar termenul de semnare se socotește de când pleacă.",
         "offerLapsed": "Termenul ofertei a trecut, așa că locul nu mai e ținut pentru tine.",
         "CONFIRMED": "Înscrierea e confirmată. Codul QR pentru ridicarea numărului e în emailul de confirmare și în pagina înscrierii tale.",
-        "checkedIn": "Prezența ta la start e înregistrată.",
         "bib": "Numărul tău de concurs: {number}.",
-        "CANCELLED": "Înscrierea e anulată, iar locul ei a fost eliberat.",
+        "CANCELLED": "Înscrierea a fost anulată. Locul tău a fost eliberat.",
         "EXPIRED": "Înscrierea a expirat, așa că nu îți mai ținem niciun loc.",
+        "holdLapsed": "Locul tău a expirat: declarația nu a fost semnată la timp.",
         "linkUntil": "Linkul din email e valabil până {instant}."
       }
     },
@@ -6010,6 +6011,14 @@
               "steps": [
                 "Pe site, «Retrimite linkul de înregistrare» → adresa → «Trimite linkul».",
                 "Sau vine la masă și un voluntar îl confirmă pe loc, pe hârtie."
+              ]
+            },
+            {
+              "title": "Ce îi spui cuiva care întreabă",
+              "steps": [
+                "Cineva întreabă unde e înscrierea lui — la telefon, pe mesaj sau la masă: «Înscrieri» → caută numele → deschide înscrierea. Administratorul și Organizatorul o văd la fel.",
+                "Sub «Parcursul înscrierii», «Ce îi spui» are propozițiile de spus, în limba în care s-a înscris: aceleași cuvinte pe care le-a citit el pe pagina lui și în emailuri, cu termenul și cât mai e valabil linkul din email.",
+                "«Copiază» le pune în clipboard, pentru un mesaj. Blocul nu arată nicio adresă și niciun link: linkul pleacă doar pe email, cu «Retrimite emailul»."
               ]
             },
             {

@@ -308,30 +308,30 @@ function offerEmailQueuedAt(now: Date): SQL<boolean> {
 }
 
 /**
- * The purposes whose link moves the person's own registration on (§NNN, «Ce îi spui»): confirm the
- * address, sign the declaration, accept an offer, manage the registration. Not the public list's switch
- * nor the form for another person on the address: neither says where this registration stands.
- */
-const TELL_LINK_PURPOSES = ["VERIFY_REGISTRATION_EMAIL", "COMPLETE_DECLARATION", "WAITLIST_OFFER", "MANAGE_REGISTRATION"] as const;
-
-/**
- * When the newest live link of those purposes lapses (§NNN): unused, not superseded or revoked, still
- * ahead of `now`. One probe on `email_action_tokens_registration_purpose_expiry_idx`, inside the page's
- * own query, so «Ce îi spui» costs no round trip. Null when no such link is alive.
+ * When the live link the row's state is waiting on lapses (§NNN, «Ce îi spui»): the address's
+ * confirmation on `PENDING_EMAIL_CONFIRMATION`, the declaration on `PENDING_DECLARATION`, the offer on
+ * `WAITLIST_OFFERED` — and nothing on any other state. Chosen by purpose, never by recency across
+ * purposes: the «Nu mai pot veni» link (§547) is a fourteen-day `MANAGE_REGISTRATION` token minted in
+ * the same send as each of those emails, at the same `now`, and any later message mints a newer one,
+ * so "the newest live link" would tell somebody whose offer lapses tomorrow that they have two weeks.
+ * Unused, not superseded or revoked, still ahead of `now`; the newest of that purpose, ties broken on
+ * `id`. One probe on `email_action_tokens_registration_purpose_expiry_idx`, inside the page's own
+ * query, so «Ce îi spui» costs no round trip. Null when no such link is alive.
  */
 function liveLinkExpiresAtFor(now: Date): SQL<Date | null> {
   return sql<Date | null>`(
     select ${emailActionTokens.expiresAt}
     from ${emailActionTokens}
     where ${emailActionTokens.registrationId} = ${registrations.id}
-      and ${emailActionTokens.purpose} in (${sql.join(
-        TELL_LINK_PURPOSES.map((purpose) => sql`${purpose}`),
-        sql`, `,
-      )})
+      and (
+        (${registrations.status} = 'PENDING_EMAIL_CONFIRMATION' and ${emailActionTokens.purpose} = 'VERIFY_REGISTRATION_EMAIL')
+        or (${registrations.status} = 'PENDING_DECLARATION' and ${emailActionTokens.purpose} = 'COMPLETE_DECLARATION')
+        or (${registrations.status} = 'WAITLIST_OFFERED' and ${emailActionTokens.purpose} = 'WAITLIST_OFFER')
+      )
       and ${emailActionTokens.usedAt} is null
       and ${emailActionTokens.invalidatedAt} is null
       and ${emailActionTokens.expiresAt} > ${now}
-    order by ${emailActionTokens.createdAt} desc
+    order by ${emailActionTokens.createdAt} desc, ${emailActionTokens.id} desc
     limit 1
   )`.mapWith(emailActionTokens.expiresAt);
 }
@@ -671,7 +671,7 @@ export type RegistrationDetail = {
   /** Where a waiting row stands and how long the line is (§629): null unless `WAITLISTED` on an event not cancelled. */
   waitlistPosition: number | null;
   waitlistLength: number | null;
-  /** When the newest live link that moves this registration on lapses (§NNN); null when none is alive. */
+  /** When the live link the row's state waits on lapses — address, declaration or offer (§NNN); null when none is alive. */
   liveLinkExpiresAt: Date | null;
   confirmedAt: Date | null;
   cancelledAt: Date | null;

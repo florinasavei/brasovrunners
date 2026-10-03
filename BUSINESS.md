@@ -409,7 +409,8 @@ The backoffice shows, for each registration:
 - place-hold deadline;
 - confirmation/cancellation times;
 - email delivery and resend history;
-- administrative audit history.
+- administrative audit history;
+- «Ce îi spui»: what to tell the person if they ask where their registration stands — their own words, in their language, with no address and no link.
 
 An administrator can:
 

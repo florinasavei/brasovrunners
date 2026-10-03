@@ -26,6 +26,8 @@ export type TellFacts = {
   /** The row's race number: said only on a confirmed row. */
   bibNumber: number | null;
   checkedInAt: Date | null;
+  /** Why an expired row expired: a lapsed declaration hold says what its email said (§638). */
+  expiryReason?: string | null;
 };
 
 /** The states whose next step is a link in an email: the ones a lost or spam-filed email stops. */
@@ -47,8 +49,14 @@ const ENDED: ReadonlySet<RegistrationStatus> = new Set(["CANCELLED", "EXPIRED"])
  * - a cancelled event (`manage.eventCancelled`) instead of any deadline, which the cancellation voids;
  * - the spam hint (`spamHint.body`) on a state whose next step is a link in an email.
  *
+ * - a check-in as the participant's page says it (`manage.selfCheckInDone`).
+ *
  * The rest — a past deadline, an offer, a confirmed or ended row, the live link's expiry — are the
- * backoffice's own lines (`Admin.registrations.tell.*`), worded to the person in the same register.
+ * backoffice's own lines (`Admin.registrations.tell.*`), worded to the person in the same register;
+ * where a public page or an email already says the same thing, the key is that text word for word
+ * (`CANCELLED` is `mine.cancelledTitle` and the first sentence of `mine.cancelled`; `holdLapsed` is the
+ * `DECLARATION_HOLD_EXPIRED` email's sentence without the event's name), and a unit test keeps them
+ * equal. The live link is the one the state waits on (`admin-repository.ts#liveLinkExpiresAtFor`).
  * `say` is `Registrations` and `ours` is `Admin.registrations.tell`, both in the registration's
  * language. Never an address, nobody else's data: the line's numbers only, as the person reads them.
  */
@@ -88,14 +96,24 @@ export function tellLines(say: Say, ours: Say, locale: string, facts: TellFacts,
       lines.push(ours("WAITLISTED"));
       break;
     case "WAITLIST_OFFERED":
+      // The first email still queued (§520): its send re-bases the deadline, so the stored one is not the
+      // person's yet, and there is no email to look for in the spam folder.
+      if (facts.offerEmailQueued) {
+        lines.push(ours("offerQueued"));
+        return lines;
+      }
       if (deadline?.kind === "offer") lines.push(ours("offer", { due: at(deadline.at) }));
       else lines.push(ours("offerLapsed"));
       break;
     case "CONFIRMED":
       lines.push(ours("CONFIRMED"));
       if (facts.bibNumber !== null) lines.push(ours("bib", { number: facts.bibNumber }));
-      // Checked in at the desk or by the person (BR-REQ-037-08): a confirmed row with its moment.
-      if (facts.checkedInAt) lines.push(ours("checkedIn"));
+      // Checked in at the desk or by the person (BR-REQ-037-08): the participant page's own words.
+      if (facts.checkedInAt) lines.push(say("manage.selfCheckInDone"));
+      break;
+    case "EXPIRED":
+      // A lapsed declaration hold was told so by email (§638): the same words, without the event's name.
+      lines.push(ours(facts.expiryReason === "DECLARATION_HOLD_LAPSED" ? "holdLapsed" : "EXPIRED"));
       break;
     default:
       lines.push(ours(facts.status));
