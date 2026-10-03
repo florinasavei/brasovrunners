@@ -1073,6 +1073,30 @@
           "few": "Cleared the member tick on {count} registrations. Nothing else changed.",
           "other": "Cleared the member tick on {count} registrations. Nothing else changed."
         }
+      },
+      "tell": {
+        "title": "What to tell them",
+        "help": "The sentence to tell someone who asks where their registration stands; the same words they read themselves.",
+        "inLanguage": {
+          "ro": "In Romanian, the language they registered in.",
+          "en": "In English, the language they registered in."
+        },
+        "copy": "Copy",
+        "copied": "Copied",
+        "state": "Your registration: {state}.",
+        "PENDING_EMAIL_CONFIRMATION": "Press the button to confirm your address. If there is still a place, you then sign the declaration and get your QR code.",
+        "linkLapsed": "The link in the confirmation email has expired, so your address is not confirmed and we hold no place for you.",
+        "kept": "The deadline to sign has passed, but we are still keeping your place: sign the declaration from the email as soon as you can.",
+        "WAITLISTED": "We'll let you know if a place opens up.",
+        "offer": "A place has opened up for you. It is yours if you sign the self-declaration by {due}.",
+        "offerQueued": "We have offered you a place; the offer email is on its way, and the time to sign counts from when it is sent.",
+        "offerLapsed": "The offer's deadline has passed, so the place is no longer held for you.",
+        "CONFIRMED": "The QR code for picking up your number is in the confirmation email and on your registration's page.",
+        "bib": "Your race number: {number}.",
+        "CANCELLED": "Registration cancelled. Your place has been released.",
+        "EXPIRED": "The registration has expired, so we no longer hold a place for you.",
+        "holdLapsed": "Your place has expired: the declaration was not signed in time.",
+        "linkUntil": "The link in the email is valid until {instant}."
       }
     },
     "events": {
@@ -4959,7 +4983,9 @@
           "raceWeekDays": "The homepage countdown starts (days before)",
           "seriesHorizonDays": "A series keeps its dates created ahead by (days)",
           "publicListDays": "The public participant list stays up after the event (days)",
-          "familySittingMinutes": "A family registration's email waits for “Done” at most (minutes)"
+          "familySittingMinutes": "A family registration's email waits for “Done” at most (minutes)",
+          "verificationRetryHours": "The address-confirmation link is re-sent after (hours)",
+          "verificationRetries": "How many times the link is re-sent (0–3)"
         },
         "help": {
           "confirmationHours": "How long somebody has to press the link in the first email; after it, the registration lapses.",
@@ -4970,7 +4996,9 @@
           "raceWeekDays": "0 = on race day only. From the same day, the editor's bib printing card opens by itself.",
           "seriesHorizonDays": "Dates already created stay if you lower it; the missing ones are filled in if you raise it.",
           "publicListDays": "Then the list closes by itself, even while the event still has it switched on. The privacy notice from the template states this number.",
-          "familySittingMinutes": "After “Yes, one more person”, the family's email waits for “Done” at most this many minutes after the last form and leaves once, for everybody; at 0, each email leaves at once."
+          "familySittingMinutes": "After “Yes, one more person”, the family's email waits for “Done” at most this many minutes after the last form and leaves once, for everybody; at 0, each email leaves at once.",
+          "verificationRetryHours": "Counted from when the last confirmation email left, to whoever has not confirmed yet. The link's deadline does not move.",
+          "verificationRetries": "Every confirmation email counts, “Resend” and a backoffice resend included. 0 = never re-sent by itself. The deadline does not move."
         },
         "legal": "Legal texts already approved keep the numbers written in them until you approve a new version from the template, which reads them from here.",
         "updatedAt": "Set {when}.",
@@ -5009,7 +5037,8 @@
           "holdLapsed": "a held place lapses; to the one who did not sign, that it went to somebody else",
           "registrationOpened": "registration opens, to the addresses left on the event's page",
           "newEventAlert": "the new-event announcement, to the subscribers of its topics",
-          "newsletter": "the newsletter, to the topic's subscribers"
+          "newsletter": "the newsletter, to the topic's subscribers",
+          "confirmationRetry": "the address-confirmation link, re-sent to those who have not confirmed yet"
         },
         "zone": "{zone} time",
         "untitled": "(untitled event)",
@@ -5102,6 +5131,16 @@
         "saved": "When emails leave was saved.",
         "bypassHelp": "This is for the automatic emails. A resend or a message from the backoffice may leave at once: at the press, choose «Send now»."
       },
+      "retryTimes": {
+        "one": "once",
+        "few": "{count} times",
+        "other": "{count} times"
+      },
+      "confirmationRetryPreview": {
+        "name": "Confirm your email address — re-sent automatically",
+        "whenShort": "{retry} after the last email, if not confirmed",
+        "platformWords": "The same text as «Confirm your email address», with one sentence in front that states the deadline. Edit it there."
+      },
       "familyConfirmed": {
         "name": "Registration confirmed — family (several people)",
         "whenShort": "after a family's last declaration",
@@ -5113,7 +5152,9 @@
         "BIB_ASSIGNED": "When an organizer types a confirmed registration's number on its page or at the desk. Otherwise, the number comes with the confirmation. With the manage link. Never for a cancelled event.",
         "REGISTER_ANOTHER_PERSON": "No registration is created, and the screen says “check your email” as always. If the address already has {people}, the email says only that, with no link.",
         "LEGAL_TEMPLATES_CHANGED": "The check runs with the scheduled jobs, at most once an hour. A change approved before the check is not announced; «Tasks» shows the same rows."
-      }
+      },
+      "confirmationRetry": "To whoever has not confirmed, the link goes again by itself {retry} after the last email, at most {times}; “Resend” counts too. The deadline does not move.",
+      "confirmationRetryOff": "It is not re-sent by itself: in “Deadlines”, the number of resends is 0."
     },
     "guide": {
       "title": "User guide",
@@ -5359,10 +5400,19 @@
                 "Looking for someone: type part of the name in «Search by name» and press «Filter». With no event chosen, it looks in every event.",
                 "The «How far» column says each person's step. Press a name to open the registration: «The registration's journey» and «Timeline» say everything that happened.",
                 "The «Until when» column says until when each one can sign, accept or confirm — the same time as the registration's timeline.",
+                "Someone asks where their registration stands: open it and tell them what «What to tell them» says — the same words they read themselves. «Copy» puts them on the clipboard, for a message.",
                 "The top says once what you cannot change here. The Tehnic role does not see registrations at all.",
                 "On the event's public page, the first number counts the registrations holding a place: the confirmed plus those still in progress — a declaration not signed yet, a waiting-list offer not accepted yet, a place a family holds. After the dash the line names only what exists: how many are confirmed and how many in progress, and how many free places are kept for the waiting list, for example “6 registered of 10 places — 4 confirmed, 2 completing their registration, 4 places kept for the waiting list”.",
                 "Places kept are free places the waiting list claims, and the card shows them in two ways. With more places free than people waiting, the card says «Places are given from the waiting list» and counts no free place. When the list claims every free place, as in the example, the card says the places are taken — “Thank you! All 10 places are taken — … already waiting.” — and offers «Join the waiting list», while the places line still names “4 places kept for the waiting list”. Either way those places are free: with «Places from the waiting list are allocated automatically» on «No» the club hands them out, with «Send them the offer»; on «Yes» the queue does, to the first on the list. With «Show publicly how many are waiting» unticked on the event, neither the card, nor the page, nor the people on the list learn how many wait: the card says “Thank you! All 10 places are taken. Join the waiting list.”, and the places line no longer says how many are on the list.",
                 "At an event with a set number of places, the «Who's coming» title counts, like the first number, everyone with a place while registration is open. The table holds only those who ticked that they want to appear on it, mostly the confirmed, so the title and the rows differ. On the card, “1 place offered from the waiting list” is a place sent to somebody on the list who has not accepted it yet."
+              ]
+            },
+            {
+              "title": "What to tell someone who asks",
+              "steps": [
+                "Someone asks where their registration stands — on the phone, by message or at the desk: «Registrations» → search the name → open the registration. The Administrator and the Organizer see it alike.",
+                "Under «The registration's journey», «What to tell them» has the sentences to say, in the language they registered in: the same words they read on their page and in the emails, with their deadline — and until when the email's link is valid, only when that is another time than the deadline.",
+                "«Copy» puts them on the clipboard, for a message. The block shows no address and no link: a new link goes only by email; if it must be resent, the Administrator resends it."
               ]
             },
             {
@@ -5677,6 +5727,14 @@
                 "All at once: «Registrations» → «Search and filter» → tick «Only {club} members (declared)» → «Filter» → «Member ticks with no member account».",
                 "The list shows the ticked registrations whose address is no account's on «Staff». A member registered with another address appears too: untick their row. Then «Clear the ticks on all» … and confirm.",
                 "What it does not do: it cancels no registration, moves no place and sends no email. The club on the list is cleared only if the tick had set it. Every change stays in the log."
+              ]
+            },
+            {
+              "title": "What to tell someone who asks",
+              "steps": [
+                "Someone asks where their registration stands — on the phone, by message or at the desk: «Registrations» → search the name → open the registration. The Administrator and the Organizer see it alike.",
+                "Under «The registration's journey», «What to tell them» has the sentences to say, in the language they registered in: the same words they read on their page and in the emails, with their deadline — and until when the email's link is valid, only when that is another time than the deadline.",
+                "«Copy» puts them on the clipboard, for a message. The block shows no address and no link: a new link goes only by email; if it must be resent, the Administrator resends it."
               ]
             },
             {
@@ -7221,8 +7279,8 @@
       "doneTitle": "Your email address is confirmed",
       "doneWaitlist": "You are on the waiting list. If a place frees up, we email you what to do next.",
       "eventOff": "The event has been cancelled or is over, so the registration does not go on: no place was held for you and there is nothing you need to do.",
-      "waitlistFull": "The places and the waiting list are full, so your address was not confirmed and nothing was held for you. The link in your email stays valid for {confirmation} from when you sent the form: if a place opens on the waiting list in the meantime, open it again.",
-      "noWaitlist": "Every place has been taken and the event has no waiting list, so your address was not confirmed and nothing was held for you. The link in your email stays valid for {confirmation} from when you sent the form: if a place frees up in the meantime, open it again.",
+      "waitlistFull": "Places and waiting list are full: your address is not confirmed and nothing is held for you. The link is valid for {confirmation} from when the first email left; if a place opens on the list, open it again.",
+      "noWaitlist": "Every place is taken and there is no waiting list: your address is not confirmed and nothing is held for you. The link is valid for {confirmation} from when the first email left; if a place frees, open it again.",
       "doneFor": "The address is confirmed for:",
       "next": {
         "PENDING_DECLARATION": "signs the declaration from the email on its way now",

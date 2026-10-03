@@ -10,7 +10,7 @@ import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
 import { renderBilingual } from "@/modules/notifications/templates";
-import { EMAIL_SAMPLE_FAMILY } from "@/modules/notifications/domain/email-sample";
+import { EMAIL_SAMPLE_FAMILY, emailSampleConfirmationRetry } from "@/modules/notifications/domain/email-sample";
 import {
   emailCopyPrefill,
   emailSampleActionUrl,
@@ -21,7 +21,7 @@ import {
 } from "@/modules/notifications/email-copy-fields";
 import { getDb } from "@/db/client";
 import { readDeadlines } from "@/modules/deadlines/deadlines";
-import { deadlineWords } from "@/modules/deadlines/domain/duration-words";
+import { deadlineWords, hoursPhrase } from "@/modules/deadlines/domain/duration-words";
 import { replyToHeader, resolveShownContactAddresses } from "@/modules/contact/domain/shown-address";
 import { readShownContactAddress } from "@/modules/contact/shown-address";
 import { readClubNotices } from "@/modules/notifications/club-notices";
@@ -40,7 +40,7 @@ import { roadsByMessageType } from "@/modules/notifications/domain/email-transpo
 import { readEmailTransport } from "@/modules/notifications/email-transport";
 import ClubNoticesPanel from "@/modules/notifications/ui/ClubNoticesPanel";
 import OutboxQueuePanel from "@/modules/notifications/ui/OutboxQueuePanel";
-import ParticipantEmailsPanel from "@/modules/notifications/ui/ParticipantEmailsPanel";
+import ParticipantEmailsPanel, { type ParticipantEmailCard } from "@/modules/notifications/ui/ParticipantEmailsPanel";
 import UpcomingEmailsPanel from "@/modules/notifications/ui/UpcomingEmailsPanel";
 import { FORECAST_HORIZON_DAYS, forecastAutomaticEmails } from "@/modules/notifications/forecast";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
@@ -211,9 +211,15 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     sentence of its own after its when-line, for the same reason.
   */
   const reminderOff = pageWords.reminder === null;
+  const { verificationRetryHours, verificationRetries } = deadlines.deadlines;
+  const retryWords = hoursPhrase(locale, verificationRetryHours);
+  const retryLine =
+    verificationRetries > 0 ? t("emails.confirmationRetry", { retry: retryWords, times: t(`emails.retryTimes.${countForm(verificationRetries, locale)}`, { count: verificationRetries }) }) : t("emails.confirmationRetryOff");
   const whenOf = (type: EmailMessageType): string => {
     if (type === "EVENT_REMINDER" && reminderOff) return t("emails.reminderOff.when");
     const line = t(`emails.when.${type}`, whenValues);
+    // The verification email re-sent by itself (§653), in the club's numbers — or that it is off.
+    if (type === "VERIFY_REGISTRATION_EMAIL") return `${line} ${retryLine}`;
     if (type !== "COMPLETE_DECLARATION") return line;
     return `${line} ${reminderOff ? t("emails.lastCallOff") : t("emails.lastCall", whenValues)}`;
   };
@@ -300,6 +306,16 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   familySample.replyTo = replyTo;
   familySample.familyConfirmed = emailSampleFamilyConfirmed();
   const familyConfirmed = renderBilingual("REGISTRATION_CONFIRMED", emailLocale, familySample, actionUrl, written.copy);
+  /*
+    The verification email as the job re-sends it (§653): the club's words for «Confirmă adresa de
+    email» with the platform's one sentence in front, the link's deadline in it, and «valabil» the
+    hours left at the club's interval — previewed right after the first email, so the club sees the
+    sentence a person who has not confirmed reads.
+  */
+  const retrySample = { ...emailSampleFor("VERIFY_REGISTRATION_EMAIL", emailLocale), ...emailSampleConfirmationRetry(emailLocale) };
+  retrySample.timings = { ...timings, confirmationHours: Math.max(1, timings.confirmationHours - verificationRetryHours) };
+  retrySample.replyTo = replyTo;
+  const confirmationRetried = renderBilingual("VERIFY_REGISTRATION_EMAIL", emailLocale, retrySample, actionUrl, written.copy);
 
   return (
     <Stack spacing={3}>
@@ -431,7 +447,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         }))}
         // A saved text holding sample values, in either language, opens the card to whoever may fix it (§359).
         openWhen={{ saved: copySaved, inUse: lang !== undefined, attention: anySamples }}
-        messages={cards.flatMap(({ messageType, content, own, samples, sampleLanguages }) => {
+        messages={cards.flatMap(({ messageType, content, own, samples, sampleLanguages }): ParticipantEmailCard[] => {
           const card = {
             type: messageType,
             name: t(`emails.types.${messageType}`),
@@ -469,6 +485,26 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
               />
             ) : undefined,
           };
+          if (messageType === "VERIFY_REGISTRATION_EMAIL") {
+            return [
+              card,
+              {
+                type: messageType,
+                id: "VERIFY_REGISTRATION_EMAIL-retry",
+                name: t("emails.confirmationRetryPreview.name"),
+                whenShort: verificationRetries > 0 ? t("emails.confirmationRetryPreview.whenShort", { retry: retryWords }) : t("emails.confirmationRetryOff"),
+                when: retryLine,
+                subjectLine: `${t("emails.subject")}: ${confirmationRetried.subject}`,
+                html: confirmationRetried.html,
+                justSaved: false,
+                editor: (
+                  <Alert severity="info" sx={{ mb: 2 }} data-testid="email-confirmation-retry">
+                    {t("emails.confirmationRetryPreview.platformWords")}
+                  </Alert>
+                ),
+              },
+            ];
+          }
           if (messageType !== "REGISTRATION_CONFIRMED") return [card];
           return [
             card,

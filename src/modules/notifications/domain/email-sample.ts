@@ -81,7 +81,7 @@ function sampleMoment(at: Date, locale: EmailLocale): string {
 }
 
 /**
- * A deadline of the sample as a message writes it (§580, `render.ts`, `formatDeadlineInSentence`):
+ * A deadline of the sample as a message writes it (§580, `domain/deadline-in-sentence.ts`, `formatDeadlineInSentence`):
  * the month spelled out — "vineri, 2 octombrie 2026, la 18:30", "Friday, 2 October 2026, at 18:30".
  */
 function sampleDeadline(at: Date, locale: EmailLocale): string {
@@ -107,6 +107,26 @@ export function emailSampleFormerValuesOf(name: EmailCopyPlaceholder, locale: Em
   if (name === "holdExpiresAtFormatted") return [sampleMoment(EMAIL_SAMPLE_HOLD_EXPIRES_AT, locale), sampleMomentBareHour(EMAIL_SAMPLE_HOLD_EXPIRES_AT, locale)];
   if (name === "signedAtFormatted") return [sampleMomentBareHour(EMAIL_SAMPLE_SIGNED_AT, locale)];
   return [];
+}
+
+/** Until when the sample runner's address link is valid — Thursday 1 October 2026, 18:30 in Brașov (§653). */
+export const EMAIL_SAMPLE_LINK_EXPIRES_AT = new Date("2026-10-01T15:30:00Z");
+
+/**
+ * The verification email as the job re-sends it (§653), for its own preview on «Emailuri»: the one
+ * sentence in front of the body with the link's deadline, each half in its own words, as `render.ts`
+ * fills them at the send.
+ */
+export function emailSampleConfirmationRetry(locale: EmailLocale): {
+  confirmationRetry: true;
+  confirmationRetryDeadline: string;
+  confirmationRetryDeadlineOther: string;
+} {
+  return {
+    confirmationRetry: true,
+    confirmationRetryDeadline: sampleDeadline(EMAIL_SAMPLE_LINK_EXPIRES_AT, locale),
+    confirmationRetryDeadlineOther: sampleDeadline(EMAIL_SAMPLE_LINK_EXPIRES_AT, locale === "ro" ? "en" : "ro"),
+  };
 }
 
 /** The sample start as a message writes it inside a sentence (§349): "duminică, 4 oct. 2026, 09:00". */

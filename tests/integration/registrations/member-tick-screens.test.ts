@@ -278,6 +278,25 @@ describe("BR-REQ-037-03 criterion 12: «Datele înscrierii» on the registration
     const minor = await register(race.id, { birthDate: "2012-03-01", guardianName: "Maria Pop", clubMemberDeclared: false, clubName: null });
     expect((await guardianBox(minor)).forceOpen).toBe(true);
   });
+
+  it("asks the day the answers were written, not the row's creation: a minor's row restarted as an adult stays closed (§654)", async () => {
+    const race = await createRace("Crosul");
+    state.actor = await staff("ADMIN");
+    const guardianBox = async (id: string) => {
+      const [form] = byTestId(await detailPage(id, { answers: "1" }), "answers-form");
+      const [block] = elements(form).filter((element) => element.type === GuardianForMinor);
+      return block.props as { forceOpen: boolean; minorOn: string };
+    };
+    // Eighteen on 2026-03-01: created at seventeen, its answers written again after the birthday — no guardian kept.
+    const createdAt = new Date("2026-01-10T10:00:00.000Z");
+    const restartedAt = new Date("2026-06-01T10:00:00.000Z");
+    const restarted = await register(race.id, { birthDate: "2008-03-01", createdAt, answersWrittenAt: restartedAt });
+    expect(await guardianBox(restarted)).toEqual(expect.objectContaining({ forceOpen: false, minorOn: restartedAt.toISOString() }));
+    // The mirror: created and written again while still seventeen — open, the guardian owed.
+    const writtenAsMinor = new Date("2026-02-01T10:00:00.000Z");
+    const minor = await register(race.id, { birthDate: "2008-03-01", createdAt, answersWrittenAt: writtenAsMinor });
+    expect(await guardianBox(minor)).toEqual(expect.objectContaining({ forceOpen: true, minorOn: writtenAsMinor.toISOString() }));
+  });
 });
 
 describe("BR-REQ-037-03 criterion 13: the registrations list", () => {
