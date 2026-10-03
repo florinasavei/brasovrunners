@@ -71,7 +71,7 @@ import { isUuid } from "@/shared/ids";
 import { dayIn, MIN_PARTICIPANT_AGE } from "./domain/age";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS, ANOTHER_LINK_INVALID, decideSubmission } from "./domain/family";
 import { registrationNameKey } from "./domain/name-key";
-import { answersWrittenAt, planAnswerEdit } from "./answers";
+import { planAnswerEdit } from "./answers";
 import { forgetRegisteredBadgeCount } from "./nav-count";
 import { currentAddressCap } from "./address-cap";
 import { familyEntryFields, insertFamilyEntry, liveSittingEntries, personOfEntry, replaceFamilyEntry } from "./family-entries";
@@ -4600,7 +4600,7 @@ export async function editRegistrationAnswersByStaff<T extends Record<string, un
       minAge: event.minAge,
       kitShirt: event.kitShirt,
       now,
-      answersWrittenAt: answersWrittenAt(current),
+      answersWrittenAt: current.answersWrittenAt,
       declarationSigned: signed !== undefined,
     });
     if (plan.nameChange) {

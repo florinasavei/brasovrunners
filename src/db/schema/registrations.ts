@@ -516,10 +516,10 @@ export const registrations = pgTable(
       `created_at`. "Minor on the day the row was written" is judged here: the form's guardian rule
       (§108), the minors' sweep (`jobs/retention.ts`, `minor-socials`, §323) and the staff correction's
       guardian and socials rules (§645). A staff correction does not move it: it judges against it.
-      Null on a row written before the column by the previous release; read through
-      `answers.ts#answersWrittenAt`, which falls back to `created_at`.
+      Migration `0127` backfilled it from `created_at`; the default dates a row inserted without it (the
+      previous release's, during a deploy) on its own insert.
     */
-    answersWrittenAt: timestamp("answers_written_at", { withTimezone: true }),
+    answersWrittenAt: timestamp("answers_written_at", { withTimezone: true }).notNull().defaultNow(),
 
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

@@ -6,7 +6,6 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { pruneExpiredRows } from "@/modules/jobs/retention";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
-import { answersWrittenAt } from "@/modules/registrations/answers";
 import {
   confirmEmail,
   editRegistrationAnswersByStaff,
@@ -134,7 +133,6 @@ describe("BR-REQ-033-04: a restart rewrites the instant the answers were written
     expect(restarted.status).not.toBe("CANCELLED");
     expect(restarted.createdAt).toEqual(FIRST);
     expect(restarted.answersWrittenAt).toEqual(RESTART);
-    expect(answersWrittenAt(restarted)).toEqual(RESTART);
     // An adult on the restart's day: no guardian kept, the socials kept.
     expect(restarted).toMatchObject({ guardianName: null, stravaUrl: "https://www.strava.com/athletes/123", instagramHandle: "ana.pop" });
 
@@ -148,7 +146,14 @@ describe("BR-REQ-033-04: a restart rewrites the instant the answers were written
     const { corrected } = await editRegistrationAnswersByStaff(db, admin, restarted.id, { birthDate: "2008-09-14" }, RESTART);
     expect(corrected).toEqual(["birthDate"]);
     // The correction judges against the instant; it does not move it.
-    expect(await onlyRow()).toMatchObject({ birthDate: "2008-09-14", guardianName: null, answersWrittenAt: RESTART, createdAt: FIRST });
+    expect(await onlyRow()).toMatchObject({
+      birthDate: "2008-09-14",
+      guardianName: null,
+      stravaUrl: "https://www.strava.com/athletes/123",
+      instagramHandle: "ana.pop",
+      answersWrittenAt: RESTART,
+      createdAt: FIRST,
+    });
   });
 
   it("an unverified participant's restart moves it too", async () => {
@@ -160,15 +165,5 @@ describe("BR-REQ-033-04: a restart rewrites the instant the answers were written
     await submitRegistration(db, event, submissionInput(RESTART), RESTART);
     const restarted = await onlyRow();
     expect(restarted).toMatchObject({ id: first.id, status: "PENDING_EMAIL_CONFIRMATION", createdAt: FIRST, answersWrittenAt: RESTART, guardianName: null });
-  });
-
-  it("a row written before the column is judged on its creation, as before", async () => {
-    await submitRegistration(db, event, submissionInput(FIRST), FIRST);
-    const row = await onlyRow();
-    await db.update(registrations).set({ answersWrittenAt: null }).where(eq(registrations.id, row.id));
-    const [before] = await db.select().from(registrations).where(eq(registrations.id, row.id));
-    expect(answersWrittenAt(before)).toEqual(FIRST);
-    // A minor when created: a correction of an adult today still owes the guardian it was written with.
-    await expect(editRegistrationAnswersByStaff(db, admin, row.id, { guardianName: "" }, RESTART)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
   });
 });

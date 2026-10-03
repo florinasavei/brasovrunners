@@ -628,6 +628,8 @@ describe("retention sweep", () => {
       instagramHandle: "runner",
       listSocials: true,
       createdAt: new Date("2026-09-01T09:00:00.000Z"),
+      // Written on the day of their creation: a fixture never restarted (§NNN).
+      answersWrittenAt: new Date("2026-09-01T09:00:00.000Z"),
     };
     vi.stubEnv("NEXT_RUNTIME", "nodejs");
     vi.mocked(revalidateTag).mockClear();
@@ -659,8 +661,7 @@ describe("retention sweep", () => {
   /**
    * §NNN — "the day the row was written" is when its answers were written: a row created while the
    * person was a minor and restarted after the eighteenth birthday was judged an adult's by the form,
-   * so the sweep keeps its socials. A row the restart did not reach is judged on its creation, as before
-   * (the rows above have no `answers_written_at`: the fallback).
+   * so the sweep keeps its socials. A row the restart did not reach is judged on its creation, as before.
    */
   it("judges a restarted row on its answers' instant, not its creation", async () => {
     const [{ eventId }] = await db.select({ eventId: registrations.eventId }).from(registrations).where(eq(registrations.id, registrationId));

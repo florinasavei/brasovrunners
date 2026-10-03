@@ -368,8 +368,8 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
         and(
           or(isNotNull(registrations.stravaUrl), isNotNull(registrations.instagramHandle), eq(registrations.listSocials, true)),
           isNotNull(registrations.birthDate),
-          // The day the answers were written (§NNN): a restart's, not the creation's; `answers.ts#answersWrittenAt`'s fallback.
-          sql`coalesce(${registrations.answersWrittenAt}, ${registrations.createdAt}) < ((${registrations.birthDate} + interval '18 years') AT TIME ZONE 'UTC')`,
+          // The day the answers were written (§NNN): a restart's, not the creation's.
+          sql`${registrations.answersWrittenAt} < ((${registrations.birthDate} + interval '18 years') AT TIME ZONE 'UTC')`,
         ),
       )
       .returning({ id: registrations.id });
