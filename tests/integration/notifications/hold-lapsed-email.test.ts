@@ -10,7 +10,8 @@ import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository
 import { updateClubNotices } from "@/modules/notifications/club-notices";
 import { isClubCopy } from "@/modules/notifications/domain/club-notices";
 import { OutboxMessageWithdrawn } from "@/modules/notifications/outbox";
-import { formatDeadlineInSentence, renderOutboxMessage } from "@/modules/notifications/render";
+import { formatDeadlineInSentence } from "@/modules/notifications/domain/deadline-in-sentence";
+import { renderOutboxMessage } from "@/modules/notifications/render";
 import { holdLapsedIdempotencyKey, queueHoldLapsedEmails } from "@/modules/registrations/hold-lapsed-email";
 import { runRegistrationMaintenance } from "@/modules/registrations/maintenance";
 import { confirmEmail, type EventForRegistration, signDeclaration, submitRegistration, unregister } from "@/modules/registrations/service";

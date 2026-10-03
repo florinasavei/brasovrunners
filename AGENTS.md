@@ -2801,6 +2801,12 @@ confirmation that bypasses the allocator or the approved declaration, a staff-en
 allocated ahead of anybody already waiting, or a delete that skips the allocator and strands the
 place it held.
 
+What sits beside the seven and is none of them: «Ce îi spui» on the registration's page (§NNN) — the
+sentences a staff member tells a person who asks where their registration stands, in the
+registration's language — reads nothing beyond the page's own query and stores nothing:
+no audit row, no address, no link (only the expiry of the one the state waits on), shown alike to
+every role that reads the page and never at the desk.
+
 ---
 
 ## 16. Email
