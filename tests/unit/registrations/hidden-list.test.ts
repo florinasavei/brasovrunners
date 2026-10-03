@@ -11,7 +11,7 @@ import HiddenListRadio from "@/modules/registrations/ui/HiddenListRadio";
 import IncognitoIcon from "@/shared/ui/IncognitoIcon";
 
 /**
- * §NNN — «Lista ascunsă» (amending §643): the name, the incognito glyph, the radio, and the event's
+ * §647 — «Lista ascunsă» (amending §643): the name, the incognito glyph, the radio, and the event's
  * settings as the rest of the code reads them.
  */
 const ROOT = path.resolve(__dirname, "../../..");
@@ -19,7 +19,7 @@ const ROOT = path.resolve(__dirname, "../../..");
 const radio = (html: string, value: string) => (html.match(/<input[^>]*>/g) ?? []).find((tag) => tag.includes(`value="${value}"`)) ?? "";
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8").replace(/\r\n/g, "\n");
 
-describe("§NNN the event's settings, as read", () => {
+describe("§647 the event's settings, as read", () => {
   it("the hidden list acts only while «Folosește lista ascunsă» is on; «Arată public numărătoarea» on every event", () => {
     expect(hiddenListCounting(null)).toEqual({ countPublic: true, countHidden: false });
     // «Arată public numărătoarea» acts on every event; «Numără și lista ascunsă» only with the switch on.
@@ -33,7 +33,7 @@ describe("§NNN the event's settings, as read", () => {
   });
 });
 
-describe("§NNN the name, in both languages", () => {
+describe("§647 the name, in both languages", () => {
   it("says «Lista ascunsă» on the chip, the pill, the verbs, the column, the audit label and the guide", () => {
     expect(ro.Admin.registrations.outside.chip).toBe("Lista ascunsă");
     expect(en.Admin.registrations.outside.chip).toBe("Hidden list");
@@ -46,7 +46,7 @@ describe("§NNN the name, in both languages", () => {
     expect(ro.Admin.guide.sections[4].tasks[10].title).toBe("Lista ascunsă: organizatori, pacemakeri, invitați");
     expect(ro.Admin.registrations.audit.registration.outside_capacity_changed).toContain("lista ascunsă");
     // No string calls it «În afara locurilor» any more — the backoffice's toasts and dialogs included.
-    // The public words «în afara locurilor anunțate» are the visitor's (§NNN), not the old name.
+    // The public words «în afara locurilor anunțate» are the visitor's (§647), not the old name.
     expect(JSON.stringify(ro)).not.toMatch(/în afara locurilor(?! anunțate)/i);
     expect(JSON.stringify(en)).not.toMatch(/outside the places/i);
     expect(read("src/modules/registrations/csv.ts")).toContain('"Hidden list",');
@@ -89,7 +89,7 @@ describe("§NNN the name, in both languages", () => {
   });
 });
 
-describe("§NNN the glyph and the radio", () => {
+describe("§647 the glyph and the radio", () => {
   it("draws the incognito glyph on a 24-unit grid, one path, in the current colour", () => {
     const html = renderToStaticMarkup(createElement(IncognitoIcon));
     expect(html).toContain('viewBox="0 0 24 24"');

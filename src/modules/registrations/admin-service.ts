@@ -758,7 +758,7 @@ export async function givePlaceToUnconfirmedByStaff<T extends Record<string, unk
 }
 
 /**
- * «Trimite invitațiile» (§NNN): the Administrator's alone (`canManageRegistrations`, §289), asserted
+ * «Trimite invitațiile» (§647): the Administrator's alone (`canManageRegistrations`, §289), asserted
  * here before anything is read and again in the service, which does the whole send under the event
  * lock (`service.ts#inviteToEventByStaff`).
  */
@@ -775,7 +775,7 @@ export async function inviteToEvent<T extends Record<string, unknown>>(
 }
 
 /**
- * The send's forecast (§NNN), as the dialog names it: the event's capacity now and the places free for
+ * The send's forecast (§647), as the dialog names it: the event's capacity now and the places free for
  * invitations — the allocator's count against the capacity, less everyone eligible who waits
  * (`invitationForecastFree`), as the server counts under the lock. Read by the section when the page is
  * drawn, and again by the action when a send is refused, so the next press's question is asked on
@@ -794,7 +794,7 @@ export async function readInvitationForecast<T extends Record<string, unknown>>(
   return { capacity: event.capacity, free: invitationForecastFree({ capacity: event.capacity, occupied: computeOccupied(counts), waiting }), waiting };
 }
 
-/** «Retrimite» on an invitation (§NNN): the Administrator's alone, asserted here and in the service. */
+/** «Retrimite» on an invitation (§647): the Administrator's alone, asserted here and in the service. */
 export async function resendInvitation<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Pick<StaffUser, "id" | "role">,
@@ -806,7 +806,7 @@ export async function resendInvitation<T extends Record<string, unknown>>(
   return resendInvitationByStaff(db, invitationId, { days }, actor, now);
 }
 
-/** «Retrage» an invitation (§NNN): the Administrator's alone, asserted here and in the service. */
+/** «Retrage» an invitation (§647): the Administrator's alone, asserted here and in the service. */
 export async function withdrawInvitation<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Pick<StaffUser, "id" | "role">,
@@ -1093,7 +1093,7 @@ export async function checkInByStaff<T extends Record<string, unknown>>(
 }
 
 /**
- * «Modifică datele» on one registration (§NNN): an Administrator corrects any answer the person typed
+ * «Modifică datele» on one registration (§645): an Administrator corrects any answer the person typed
  * (`answers.ts` says which, and which three kinds stay the person's). The Administrator's
  * (`assertAdministrator` here, the service's own check and the action's gate: three times,
  * BR-REQ-060-01). The work and its audit rows are `editRegistrationAnswersByStaff`, in one
@@ -1114,7 +1114,7 @@ export async function editRegistrationAnswers<T extends Record<string, unknown>>
 }
 
 /**
- * Every answer one registration carries, for «Datele înscrierii» (§NNN): the Administrator's form
+ * Every answer one registration carries, for «Datele înscrierii» (§645): the Administrator's form
  * prefilled, the Organizer's read-only list (§289). The phone and the emergency contact are among them,
  * so the read is recorded before the row comes back — `registration.answers_viewed`, the reader as the
  * actor, no value — as the emergency section's is (§322). Whoever may read the registrations.
@@ -1143,7 +1143,7 @@ export async function readRegistrationAnswers<T extends Record<string, unknown>>
 }
 
 /**
- * The preview of «Bife de membru fără cont de membru» (§NNN): every ticked registration in the list's
+ * The preview of «Bife de membru fără cont de membru» (§645): every ticked registration in the list's
  * scope whose address matches no member account (`member-ticks.ts` says who counts). A read, but of
  * addresses for a verb only the Administrator has, so it is the Administrator's too.
  */
@@ -1158,7 +1158,7 @@ export async function previewMemberTickSweep<T extends Record<string, unknown>>(
 }
 
 /**
- * «Scoate bifa la cele {n}» (§NNN): the sweep, confirmed — the shape of §606's bulk verb (preview,
+ * «Scoate bifa la cele {n}» (§645): the sweep, confirmed — the shape of §606's bulk verb (preview,
  * confirm, one transaction, the audit).
  *
  * `registrationIds` are the rows the preview left ticked: the Administrator unticks («Lasă bifa») a

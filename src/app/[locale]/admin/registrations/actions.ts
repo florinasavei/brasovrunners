@@ -249,7 +249,7 @@ export async function setOutsideCapacityAction(_previous: FormOutcome | null, fo
     await setOutsideCapacity(getDb(), actor, registrationId, outside, new Date());
     outcome = outside ? { saved: "outsideMarked" } : { saved: "outsideUnmarked" };
   } catch (error) {
-    // «Folosește lista ascunsă» off (§NNN): its own sentence, naming the switch, not "check the data".
+    // «Folosește lista ascunsă» off (§647): its own sentence, naming the switch, not "check the data".
     outcome = isDomainError(error) && error.fields.includes(HIDDEN_LIST_OFF) ? { error: HIDDEN_LIST_OFF } : (noFreePlaceOutcome(error) ?? outcomeOf(error));
   }
   return backTo(detailPath(locale, registrationId), outcome);
@@ -421,7 +421,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
 }
 
 /**
- * The answers a form posted that differ from what the page rendered (§NNN): each allowlisted answer
+ * The answers a form posted that differ from what the page rendered (§645): each allowlisted answer
  * travels with its `was.<name>` twin, and only the ones whose value moved become the correction — so a
  * page opened before a colleague's save corrects what this Administrator changed and nothing else. The
  * member tick is a box: ticked posts `on`, and its twin says `on` or nothing.
@@ -443,7 +443,7 @@ function changedAnswersOf(form: FormData): Record<string, string | boolean> {
 }
 
 /**
- * «Modifică datele» (§NNN): an Administrator corrects the answers the person typed — the page's one
+ * «Modifică datele» (§645): an Administrator corrects the answers the person typed — the page's one
  * form, which also holds the name (§67's «Corectează numele», folded in). The coarse gate here,
  * `admin-service.ts` and the service assert the role again (BR-REQ-060-01). A refusal keeps every box
  * as typed (§315); a press that changes nothing says so in its own sentence. A success flashes
@@ -496,7 +496,7 @@ async function backToList(locale: Locale, listQuery: string, outcome: Record<str
 }
 
 /**
- * «Nu e membru» / «E membru» (§NNN): the member tick cleared or set on one row from the list's "⋮" —
+ * «Nu e membru» / «E membru» (§645): the member tick cleared or set on one row from the list's "⋮" —
  * the same correction as «Modifică datele», of one answer (`editRegistrationAnswers`), posting
  * `listQuery` so the press comes back to the list. A tick that already says `to` (a stale list, a
  * colleague first) changes nothing and says so. The coarse gate here; the services assert it again.
@@ -518,7 +518,7 @@ export async function setClubMemberDeclaredAction(_previous: FormOutcome | null,
 }
 
 /**
- * «Scoate bifa la cele {n}» (§NNN): the sweep the preview on the list confirms. The rows still ticked
+ * «Scoate bifa la cele {n}» (§645): the sweep the preview on the list confirms. The rows still ticked
  * in the preview are posted; the service reads the candidates again in its transaction and clears
  * only those that still are (`clearMemberTicksByStaff`). The scope is the list's, posted as the
  * event the list was resolved to (empty: every event that has not started). Back to the list with

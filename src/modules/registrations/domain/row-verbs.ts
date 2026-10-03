@@ -42,7 +42,7 @@ export type RowVerb =
   | "markBibPrinted"
   | "unmarkBibPrinted"
   /**
-   * «Nu e membru» / «E membru» (§NNN): the self-declared member tick cleared or set — a field edit
+   * «Nu e membru» / «E membru» (§645): the self-declared member tick cleared or set — a field edit
    * like the name, in every state, the Administrator's alone. Which of the two words the row shows is
    * the row's own tick; the verb is one.
    */
@@ -113,7 +113,7 @@ export function rowVerbsFor(
     verbs.push(options.bib.printed ? "unmarkBibPrinted" : "markBibPrinted");
   }
 
-  // The member tick (§NNN): changes no state and no place, so every state offers it.
+  // The member tick (§645): changes no state and no place, so every state offers it.
   if (mayManage) verbs.push("memberTick");
 
   // Cancelling releases the place through the allocator and leaves an audit row (§67, §88).

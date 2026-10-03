@@ -18,7 +18,7 @@ import { type ConfirmSpec, resolveChangedFields } from "@/shared/feedback/notice
 import { CLUB_NAME } from "@/theme/brand";
 
 /**
- * BR-REQ-037-03 criterion 12 (§NNN) — «Modifică datele», the rules that need no database: what the
+ * BR-REQ-037-03 criterion 12 (§645) — «Modifică datele», the rules that need no database: what the
  * allowlist holds and what it never will, what one correction writes, and the question that names
  * the fields the press changes.
  */

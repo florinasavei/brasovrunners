@@ -27,7 +27,7 @@ import { useBirthDateSaysMinor } from "./use-birth-date-minor";
  * invisible.
  *
  * `minorOn` is the instant the date is judged against, today when absent: the registration page's
- * correction («Modifică datele», §NNN) asks about the day the row was written, as the server does.
+ * correction («Modifică datele», §645) asks about the day the row was written, as the server does.
  *
  * The date is read by `useBirthDateSaysMinor`, which says why it subscribes to the input rather
  * than owning it; the socials block uses the same reading the other way round (`HiddenForMinor`).

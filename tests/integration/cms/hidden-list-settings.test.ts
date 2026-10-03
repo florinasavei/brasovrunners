@@ -19,7 +19,7 @@ import en from "../../../messages/en.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Lista ascunsă» on the event (`events.hidden_list_*`, migration 0126), modelled on §634's tick:
+ * §647 — «Lista ascunsă» on the event (`events.hidden_list_*`, migration 0126), modelled on §634's tick:
  * the four columns start as before the group existed (off, no series, the numbers said, the hidden list
  * not counted) and the migration switches the group on for an event that already had somebody on the
  * list; the editor's action saves them by one marker, a form without the group edits none, and every
@@ -139,7 +139,7 @@ const trailOf = (action: "event.hidden_list_changed" | "event.participant_count_
     .orderBy(asc(auditLogs.createdAt));
 /** The hidden list's group: the switch, its series, «Numără și lista ascunsă». */
 const trail = trailOf("event.hidden_list_changed");
-/** «Arată public numărătoarea», on every event: its own action (§NNN), never the hidden list's. */
+/** «Arată public numărătoarea», on every event: its own action (§647), never the hidden list's. */
 const countTrail = trailOf("event.participant_count_public_changed");
 
 type Group = { enabled?: boolean; start?: string; countPublic?: boolean; counted?: boolean } | "absent";
@@ -158,7 +158,7 @@ function settingsForm(eventId: string, expectedVersion: number, group: Group): F
     if (group.enabled) form.set("event.hiddenListEnabled", "on");
     form.set("event.hiddenListBibStart", group.start ?? "");
     if (group.counted) form.set("event.hiddenListCounted", "on");
-    // «Arată public numărătoarea» (§NNN) is outside the group, with its own marker, as the editor posts it.
+    // «Arată public numărătoarea» (§647) is outside the group, with its own marker, as the editor posts it.
     form.set("event.participantCountPublic.present", "1");
     if (group.countPublic) form.set("event.participantCountPublic", "on");
   }
@@ -187,7 +187,7 @@ const settled = (row: Awaited<ReturnType<typeof reloadEvent>>) => ({
   counted: row.hiddenListCounted,
 });
 
-describe("§NNN «Lista ascunsă» on the event", () => {
+describe("§647 «Lista ascunsă» on the event", () => {
   it("is an expand-only migration whose defaults are today's, switched on where somebody is already on the list", async () => {
     const sql = readFileSync(join(process.cwd(), "src/db/migrations/0126_hidden_list.sql"), "utf8");
     expect(sql).toContain('ALTER TABLE "events" ADD COLUMN "hidden_list_enabled" boolean DEFAULT false NOT NULL;');
@@ -477,7 +477,7 @@ describe("§NNN «Lista ascunsă» on the event", () => {
     }
   });
 
-  describe("the refusal's own sentence (§NNN)", () => {
+  describe("the refusal's own sentence (§647)", () => {
     it("names the box in both languages, and the date where the sentence is a date's", () => {
       for (const [code, box] of [
         ["HIDDEN_LIST_IN_RACE_SERIES", ["«Numerele listei ascunse încep de la»", "«The hidden list's numbers start at»"]],
@@ -552,7 +552,7 @@ describe("§NNN «Lista ascunsă» on the event", () => {
     });
   });
 
-  describe("the standing series the hidden list refuses (§NNN)", () => {
+  describe("the standing series the hidden list refuses (§647)", () => {
     const RULE = { cadence: "WEEKLY" as const, weekdays: [], until: "2026-10-21", publish: false };
 
     /** A source whose places «Trimite-i oferta» carried up to its hidden start, with its rule stored before. */

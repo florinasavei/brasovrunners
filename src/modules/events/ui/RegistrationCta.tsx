@@ -67,7 +67,7 @@ export default async function RegistrationCta({
   */
   const lateLine = previewDoor || (cta.kind !== "OPEN" && cta.kind !== "FULL") ? null : await emailDelayNotice({ variant: "short" });
   /*
-    «Folosește lista ascunsă» on (§NNN, amending §643): the places line carries one sentence, so a visitor
+    «Folosește lista ascunsă» on (§647, amending §643): the places line carries one sentence, so a visitor
     who later counts the start knows how the club seats people outside the advertised places — in the
     public's words, never the backoffice's «Lista ascunsă», and naming nobody. Only beside the places
     line (`fill`, a capped event's known counts): an uncapped event advertises no places to be outside of.
@@ -288,7 +288,7 @@ async function CapacityUnknown({ slug }: { slug: string }) {
 }
 
 /**
- * Whether anybody real on the hidden list holds a place at this event — confirmed, or a hold (§NNN):
+ * Whether anybody real on the hidden list holds a place at this event — confirmed, or a hold (§647):
  * the start list's cached counts, keyed `"hidden-list"`. A read that cannot be answered says no — the
  * sentence is a courtesy beside the places line, never a reason for the page to fail (§281).
  */

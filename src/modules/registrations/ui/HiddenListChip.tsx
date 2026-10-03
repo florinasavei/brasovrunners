@@ -6,7 +6,7 @@ import Link from "next/link";
 import IncognitoIcon from "@/shared/ui/IncognitoIcon";
 
 /**
- * «Lista ascunsă» as a chip (§NNN, amending §643): the incognito glyph beside the words, on a
+ * «Lista ascunsă» as a chip (§647, amending §643): the incognito glyph beside the words, on a
  * registration's row and page, and — given an `href` — the registrations list's pill, a filter link
  * inside a 44-pixel target like every other pill (`ChipLink`, BR-REQ-041-01 criterion 6).
  *

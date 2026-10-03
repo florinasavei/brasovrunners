@@ -10,7 +10,7 @@ function tick(name: string): HTMLInputElement | null {
 }
 
 /**
- * Shows its children while the form's checkbox `name` is ticked (§NNN: «Folosește lista ascunsă» and
+ * Shows its children while the form's checkbox `name` is ticked (§647: «Folosește lista ascunsă» and
  * the three fields that mean something only with it on). `OnlyForMode`'s twin, over a checkbox: the
  * same `ShownWhen`, so the children stay in the DOM — hidden, never removed, still posted, read-only
  * while hidden so a box out of range never blocks the save — and a refusal about one of them reveals

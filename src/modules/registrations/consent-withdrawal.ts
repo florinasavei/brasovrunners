@@ -112,7 +112,7 @@ export async function clearOptionalData<T extends Record<string, unknown>>(
         updatedAt: input.now,
       })
       .where(eq(registrations.id, current.id));
-    // A Strava link or username an Administrator corrected (§NNN) kept both values in the trail:
+    // A Strava link or username an Administrator corrected (§645) kept both values in the trail:
     // withdrawn, they go from it in the same transaction, leaving which field, who and when.
     if (cleared.includes("socials")) await scrubCorrectedAnswerValues(tx, [current.id], SOCIAL_ANSWERS);
 

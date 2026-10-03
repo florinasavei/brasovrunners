@@ -30,7 +30,7 @@ export type ActionTokenContext = {
   id: string;
   participantId: string;
   registrationId: string | null;
-  /** The invitation an `ACCEPT_INVITATION` link opens (§NNN); null for every other purpose. */
+  /** The invitation an `ACCEPT_INVITATION` link opens (§647); null for every other purpose. */
   invitationId: string | null;
   purpose: EmailActionTokenPurpose;
   expiresAt: Date;
@@ -88,7 +88,7 @@ export async function issueActionToken<T extends Record<string, unknown>>(
     now: Date;
     /** Other purposes, of this same registration, whose live links this one replaces (§643). */
     alsoReplaces?: readonly EmailActionTokenPurpose[];
-    /** `ACCEPT_INVITATION` only (§NNN): the invitation the link opens — its scope, as a registration is the others'. */
+    /** `ACCEPT_INVITATION` only (§647): the invitation the link opens — its scope, as a registration is the others'. */
     invitationId?: string | null;
   },
 ): Promise<IssuedActionToken> {
@@ -129,7 +129,7 @@ export async function issueActionToken<T extends Record<string, unknown>>(
                 inArray(emailActionTokens.purpose, replaced),
                 isNull(emailActionTokens.usedAt),
                 isNull(emailActionTokens.invalidatedAt),
-                // An invitation's link replaces the invitation's earlier one (§NNN), never another invitation's.
+                // An invitation's link replaces the invitation's earlier one (§647), never another invitation's.
                 invitationId !== null
                   ? eq(emailActionTokens.invitationId, invitationId)
                   : registrationId === null

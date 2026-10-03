@@ -55,11 +55,11 @@ async function bandOf<T extends Record<string, unknown>>(
   return { start: startNumber ?? row?.start ?? 1, spare: row ? spareBandOf(row) : null, hiddenStart: hiddenListBibStartOf(row) };
 }
 
-/** Which of an event's two series a draw is for (§NNN): the race's, or the hidden list's own. */
+/** Which of an event's two series a draw is for (§647): the race's, or the hidden list's own. */
 export type BibSeries = "race" | "hidden";
 
 /**
- * The numbers one draw may give (§173, amending it §NNN): from where to where.
+ * The numbers one draw may give (§173, amending it §647): from where to where.
  *
  * With no hidden-list series — the switch off, or no start set — the race's series is the whole
  * band, as it always was, and a row on the hidden list draws from it like everybody. With one, two
@@ -269,7 +269,7 @@ export async function pickBibNumber<T extends Record<string, unknown>>(
   taken: Set<number> = new Set(),
   startNumber?: number,
   /**
-   * «Lista ascunsă» (§NNN): a row on the hidden list draws from the hidden list's own series when the
+   * «Lista ascunsă» (§647): a row on the hidden list draws from the hidden list's own series when the
    * event has one, in confirmation order like the race's; otherwise from the race's, as before.
    */
   series: BibSeries = "race",
@@ -291,7 +291,7 @@ export async function pickBibNumber<T extends Record<string, unknown>>(
     }
   }
   /*
-    The series is full (§NNN): the race's ran into the hidden list's first number — more confirmed than
+    The series is full (§647): the race's ran into the hidden list's first number — more confirmed than
     the room between them, or a start set below the room the save asks for. A confirmation is never
     refused for want of a number the band before the hidden list would have given: the next free number
     from the series' own start, as every draw was before there were two.
@@ -435,7 +435,7 @@ export async function assignBibNumbers<T extends Record<string, unknown>>(
       Since §548 a confirmation draws its own number, so this finds only a registration confirmed
       before §87 or one whose old held number could not be kept (`releaseLegacyHeldNumbers`) — a
       gap to fill, in confirmation order, never anybody moved. Two sequences when the event has a
-      hidden-list series (§NNN): each row draws from its own list's, both in confirmation order.
+      hidden-list series (§647): each row draws from its own list's, both in confirmation order.
     */
     const taken = new Set<number>();
     const given: number[] = [];
@@ -571,7 +571,7 @@ export async function spareCardState<T extends Record<string, unknown>>(
   return {
     band: spare,
     free: freeSpareNumbers(spare, taken).length,
-    // Below the hidden list's own series when it sits above the race's (§NNN): never inside it.
+    // Below the hidden list's own series when it sits above the race's (§647): never inside it.
     candidates: nextSpareCandidates({ band: spare, taken, bibStartNumber: start, limit: SPARE_BIBS_PER_PRINT, stop: spareStopOf(start, hiddenStart) }),
   };
 }
@@ -618,7 +618,7 @@ export async function reserveSpareBibs<T extends Record<string, unknown>>(
       taken: await numbersInUse(tx, input.eventId),
       bibStartNumber: event.bibStartNumber,
       count: input.count,
-      // The spares stop before the hidden list's own series when it sits above the race's (§NNN).
+      // The spares stop before the hidden list's own series when it sits above the race's (§647).
       stop: spareStopOf(event.bibStartNumber, hiddenListBibStartOf(event)),
     });
     if (!plan.ok) {

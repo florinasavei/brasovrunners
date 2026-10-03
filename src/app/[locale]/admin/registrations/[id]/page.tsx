@@ -143,7 +143,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     familyOf(db, [registration]).then((members) => members.get(registration.id) ?? []),
     // Every list for sponsors this registration was in (§570): which partner received it, and when.
     listPartnerShares(db, id),
-    // The invitation it came from (§NNN): who sent it and when, for every role that reads this page.
+    // The invitation it came from (§647): who sent it and when, for every role that reads this page.
     findInvitationOfRegistration(db, id),
   ]);
 
@@ -163,7 +163,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     nor is a row «În afara locurilor» (§643), which needs no counted place. The server decides.
   */
   const givePlaceNowFacts = mayManage && registration.status === "PENDING_EMAIL_CONFIRMATION" ? await givePlaceNowAhead(registration.eventId) : null;
-  // The address's open invitation (§NNN) is the row's own place: the press takes it over and adds none.
+  // The address's open invitation (§647) is the row's own place: the press takes it over and adds none.
   const heldByInvitation =
     givePlaceNowFacts !== null && (await findLiveInvitationOfParticipant(db, registration.eventId, registration.participantId, new Date())) !== undefined;
   const givePlaceNow = givePlaceNowFacts
@@ -212,7 +212,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   */
   const emergency = health === "1" ? await readEmergencyDetails(db, actor, registration.id, new Date()) : null;
   /*
-    «Datele înscrierii» (§NNN): every answer the person typed, read — and the read recorded — only when
+    «Datele înscrierii» (§645): every answer the person typed, read — and the read recorded — only when
     the section is opened (`?answers=1`, a plain link), as the emergency details above are. Each box's
     value as the form renders it, and the same string in its `was.` twin.
   */
@@ -232,12 +232,12 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const countries = answers ? countryOptions(locale, (code) => countryName(code, locale)) : [];
   /*
     A signed declaration names its declarant and its second signature from the guardian
-    (`signed-declaration.ts`), so under one the guardian is the declaration's, not an answer (§NNN,
+    (`signed-declaration.ts`), so under one the guardian is the declaration's, not an answer (§645,
     `GUARDIAN_SIGNED`): the box shown greyed with why, and no twin, so nothing posts it.
   */
   const guardianSigned = acceptances.length > 0;
   /*
-    Only a minor has a guardian (§108; `answers.ts#GUARDIAN_ADULT`, §NNN): the box opens when the date in
+    Only a minor has a guardian (§108; `answers.ts#GUARDIAN_ADULT`, §645): the box opens when the date in
     the birth-date box made the person a minor on the day the row was written — the server's own test —
     and stays open when the row is a minor's or holds a guardian already, so a guardian a corrected date
     will clear is in view. Without JavaScript it is always there (`GuardianForMinor`).
@@ -305,7 +305,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     });
   const staffTrail = auditTrail.filter((entry) => entry.action !== "registration.resubmitted");
   /*
-    A corrected answer (§NNN) names its field in words; its two values are shown, except the phone's and
+    A corrected answer (§645) names its field in words; its two values are shown, except the phone's and
     the emergency contact's, which only beside the emergency details or the answers opened — both
     recorded reads (§322) — so the trail is not a way round the record.
   */
@@ -401,7 +401,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {registration.kind === "TEST" && (
           <Chip size="small" color="warning" label={tr("registrations.testKind")} />
         )}
-        {/* On the hidden list (§643, §NNN): read by every role that reads this page. */}
+        {/* On the hidden list (§643, §647): read by every role that reads this page. */}
         {registration.outsideCapacity && <HiddenListChip label={tr("registrations.outside.chip")} testId="outside-chip" />}
         <FamilyChip
           label={tr("registrations.familyChip")}
@@ -435,7 +435,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       <Typography variant="body2" color="text.secondary">
         {registration.participantEmail} · {registration.eventTitle ?? registration.eventId}
       </Typography>
-      {/* From an invitation by email (§NNN): who sent it and when, read by every role that reads this page. */}
+      {/* From an invitation by email (§647): who sent it and when, read by every role that reads this page. */}
       {invitedBy && (
         <Typography variant="body2" color="text.secondary" data-testid="registration-invited">
           {tr("registrations.invitedBy", { who: invitedBy.invitedByName ?? tr("invitations.byNobody"), when: dtInline(invitedBy.sentAt) ?? "" })}
@@ -634,7 +634,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       </Box>
 
       {/*
-        «Lista ascunsă» (§643, named and redrawn by §NNN; the owner, 2026-10-02: «Nu îmi place deloc cum arată
+        «Lista ascunsă» (§643, named and redrawn by §647; the owner, 2026-10-02: «Nu îmi place deloc cum arată
         bifa asta, trebuia să fie doar radio» and «Trebuie ca acest feature să se numească „Pune pe lista
         ascunsă” cu o iconiță specială cu un bandit (incognito)»): whether this registration takes one of the
         event's places, as two radios. Drawn while the event's «Folosește lista ascunsă» is on, or for a row
@@ -933,7 +933,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       <Divider />
 
       {/*
-        «Datele înscrierii» (§NNN; the owner, 2026-10-02: «Nu vreau să se numească „curăță”, dar practic
+        «Datele înscrierii» (§645; the owner, 2026-10-02: «Nu vreau să se numească „curăță”, dar practic
         vreau să pot modifica sau suprascrie orice dată introdusă de utilizator»): every answer the person
         typed — §67's «Corectează numele» and the member tick folded in — behind a plain link, as the
         emergency section is, because the phone and the emergency contact are among them and opening it is

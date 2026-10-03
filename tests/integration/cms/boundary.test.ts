@@ -265,7 +265,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/registrations/declare/[token]",
       // Another person on a registered address, confirmed from the inbox (§446): read, then one press.
       "/registrations/family/[token]",
-      // The invitation's acceptance link (§NNN): the email's one route, written here by hand.
+      // The invitation's acceptance link (§647): the email's one route, written here by hand.
       "/registrations/invitation/[token]",
       // The public list's own switch (BR-REQ-039-01, §143): written here by hand like the rest.
       "/registrations/list/[token]",

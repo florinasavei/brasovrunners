@@ -225,7 +225,7 @@ export default function ActionFormIsland({
     // A body that counts the ticks (§532): with none ticked, nothing to ask — the server refuses.
     const ticked = resolveBodyCount(spec, valuesOf);
     if (!ticked) return;
-    // A body naming the fields the press changes (§NNN): none changed, nothing to ask — the server says so.
+    // A body naming the fields the press changes (§645): none changed, nothing to ask — the server says so.
     const named = resolveChangedFields(ticked, (field) => {
       const value = data.get(field);
       return typeof value === "string" ? value : null;
@@ -262,7 +262,7 @@ export default function ActionFormIsland({
   };
 
   // «Anulează»: nothing is sent, and a control that changed before the question — the «Lista ascunsă»
-  // radio (§NNN) — hears it on the form and shows the server's state again.
+  // radio (§647) — hears it on the form and shows the server's state again.
   const cancelAsking = () => {
     setAsking(null);
     form.current?.dispatchEvent(new Event(CONFIRM_CANCEL_EVENT));

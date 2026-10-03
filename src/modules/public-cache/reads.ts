@@ -208,7 +208,7 @@ export async function cachedPublishedEventsBetween(locale: Locale, from: Date, t
 /**
  * `findPublishedEventBySlug`: the event page, its metadata, its pictures and its `.ics`.
  *
- * `"hidden-list"` (§NNN): the row gained the hidden list's switch, its count tick and «Arată public
+ * `"hidden-list"` (§647): the row gained the hidden list's switch, its count tick and «Arată public
  * numărătoarea», which «Cine vine» and the places line's sentence read — so no entry written without them is read by code that asks.
  */
 export async function cachedPublishedEventBySlug(locale: Locale, slug: string) {
@@ -362,7 +362,7 @@ export type PublicAvailability = {
 /**
  * The two counts the public start list pages by (§250): named, and left off at their request — and,
  * of the named, those on «Lista ascunsă» (§643), whom the title and the summary line leave out while
- * the table keeps their rows; and everybody on the hidden list with a place (§NNN), for an event whose
+ * the table keeps their rows; and everybody on the hidden list with a place (§647), for an event whose
  * «Numără și lista ascunsă» puts them back into those numbers. The key gained `"outside"` and then
  * `"hidden-list"` with the shape, so no entry written without a count is read by code that asks for it.
  */

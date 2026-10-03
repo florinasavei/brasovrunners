@@ -191,7 +191,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: GMAIL_FALLBACK_MERGE_FIELD,
     example: inBoth((locale) => gmailFallbackClause(locale)),
   },
-  // The privacy notice's marker for the invitations by email (§NNN): the backoffice section's name,
+  // The privacy notice's marker for the invitations by email (§647): the backoffice section's name,
   // and what `/admin/tasks`' row `invitationsNotice` reads (`describesEventInvitations`).
   {
     token: `{{${EVENT_INVITATIONS_MERGE_FIELD}}}`,

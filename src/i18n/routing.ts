@@ -84,7 +84,7 @@ export const routing = defineRouting({
       en: "/registrations/family/[token]",
     },
     /**
-     * A personal invitation to an event (§NNN): the page an `ACCEPT_INVITATION` token opens — the
+     * A personal invitation to an event (§647): the page an `ACCEPT_INVITATION` token opens — the
      * registration form prefilled with the invited name and address, sent with the token.
      */
     "/registrations/invitation/[token]": {

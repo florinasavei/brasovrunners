@@ -7,7 +7,7 @@ import { ensureRegistrationIsOpen, FEATURED, HUMAN_PAUSE_MS, hydrated, signIn } 
 import { chooseSex } from "./support/sex-choice";
 
 /**
- * §NNN — an invitation's link, in the browser: the page a person opens from `EVENT_INVITATION`, at
+ * §647 — an invitation's link, in the browser: the page a person opens from `EVENT_INVITATION`, at
  * 320px as at the desktop width — the banner, the form with the invited name and the address said
  * back, the press, the done view — and the same link afterwards, which says it was used. What the
  * integration suite (`tests/integration/registrations/invitations.test.ts`) cannot stand in for: what
@@ -66,7 +66,7 @@ async function seedInvitation(email: string, name: string): Promise<string> {
 
 const fitsTheWidth = () => document.documentElement.scrollWidth <= document.documentElement.clientWidth;
 
-test.describe("§NNN an invitation's link: the form prefilled, the press, the done view", () => {
+test.describe("§647 an invitation's link: the form prefilled, the press, the done view", () => {
   test.describe.configure({ timeout: 120_000 });
 
   /*

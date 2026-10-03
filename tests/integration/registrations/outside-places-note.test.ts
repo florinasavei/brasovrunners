@@ -13,7 +13,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN «Lista ascunsă», the public side: while an event's «Folosește lista ascunsă» is on, the places
+ * §647 «Lista ascunsă», the public side: while an event's «Folosește lista ascunsă» is on, the places
  * line beside the register button carries one sentence — organisers, volunteers and invited runners may
  * be at the start outside the advertised places, taking none of them — in the visitor's words, never
  * the backoffice's «Lista ascunsă». Off, nothing — unless somebody already on the list still holds a
@@ -101,7 +101,7 @@ beforeEach(async () => {
   await resetTables(db);
 });
 
-describe("§NNN the places line's sentence while the event uses the hidden list", () => {
+describe("§647 the places line's sentence while the event uses the hidden list", () => {
   it("is said beside the places line with the switch on, in both languages, in the visitor's words", async () => {
     const event = await openRace(10, true);
     await confirmed(event.id, 3);

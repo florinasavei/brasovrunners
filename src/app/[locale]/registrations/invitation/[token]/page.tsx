@@ -54,7 +54,7 @@ const INVITATION_SENTENCE_KEYS: Record<RefusedKind, "used" | "withdrawn" | "expi
 };
 
 /**
- * A personal invitation's link (§NNN; `EVENT_INVITATION`). The GET reads the link and changes nothing —
+ * A personal invitation's link (§647; `EVENT_INVITATION`). The GET reads the link and changes nothing —
  * a mail scanner opening it leaves it working (§12.8) — and draws the event's registration form,
  * prefilled with the invited name, the address said back and locked (the invitation's, never one
  * typed), «Sunt membru» ticked when the club picked a member (and set by the press whatever is posted,

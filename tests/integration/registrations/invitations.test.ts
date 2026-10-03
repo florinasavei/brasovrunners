@@ -18,7 +18,7 @@ import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — invitations by email (the owner, 2026-10-02: «vreau să trimit „invitații speciale” pe email
+ * §647 — invitations by email (the owner, 2026-10-02: «vreau să trimit „invitații speciale” pe email
  * pentru membrii BVR, un fel de adaugă manual» — «Dar vreau și pentru non-membrii»):
  *
  * - a send holds one counted place per invitation from the send to its deadline (`countOccupied`'s
@@ -167,7 +167,7 @@ async function linkOf(email: string, when: Date): Promise<string> {
   return match[1];
 }
 
-describe("§NNN BR-REQ-034-01 a send holds one counted place per invitation, until its deadline", () => {
+describe("§647 BR-REQ-034-01 a send holds one counted place per invitation, until its deadline", () => {
   it("counts the invitation in the occupied places and the public line from the send, and names it in the editor's count", async () => {
     const event = await createEvent(3);
     const sent = await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "Ana.Pop@Example.invalid" }], days: 7, outsideCapacity: false }, admin, NOW);
@@ -270,7 +270,7 @@ describe("§NNN BR-REQ-034-01 a send holds one counted place per invitation, unt
   });
 });
 
-describe("§NNN §642 on a full race: one supplementary place per invitation, only when the press named the capacity", () => {
+describe("§647 §642 on a full race: one supplementary place per invitation, only when the press named the capacity", () => {
   it("refuses an unconfirmed or a wrongly named raise, writing nothing, and adds exactly the places named", async () => {
     const event = await createEvent(1);
     await registered(event, "Ioana", 0);
@@ -311,7 +311,7 @@ describe("§NNN §642 on a full race: one supplementary place per invitation, on
   });
 });
 
-describe("§NNN AGENTS.md §15.11 a free place somebody waits for is never an invitation's, offers on or off, before or after the close", () => {
+describe("§647 AGENTS.md §15.11 a free place somebody waits for is never an invitation's, offers on or off, before or after the close", () => {
   const bogdan = [{ name: "Bogdan Pop", email: "bogdan@example.invalid" }];
 
   /** A free place with Elena waiting for it: Ana's invitation held the only one, Elena queued behind it, and «Retrage» freed it. */
@@ -366,7 +366,7 @@ describe("§NNN AGENTS.md §15.11 a free place somebody waits for is never an in
   });
 });
 
-describe("§NNN the send refuses, naming the person, and writes nothing", () => {
+describe("§647 the send refuses, naming the person, and writes nothing", () => {
   const refusal = async (promise: Promise<unknown>) => {
     const error = await refusalOf(promise);
     expect(error).toBeInstanceOf(InvitationRefusal);
@@ -409,7 +409,7 @@ describe("§NNN the send refuses, naming the person, and writes nothing", () => 
   });
 });
 
-describe("§NNN BR-REQ-036-02 the link: the GET reads, the press spends it once and seats the registration in the invitation's place", () => {
+describe("§647 BR-REQ-036-02 the link: the GET reads, the press spends it once and seats the registration in the invitation's place", () => {
   it("accepts: the address proved, the place moved from the invitation to the declaration hold with no gap, the declaration's email", async () => {
     const event = await createEvent(2, { auto: true });
     await registered(event, "Ioana", 0);
@@ -495,7 +495,7 @@ describe("§NNN BR-REQ-036-02 the link: the GET reads, the press spends it once 
   });
 });
 
-describe("§NNN the invited address registered by another route takes the invitation's place over", () => {
+describe("§647 the invited address registered by another route takes the invitation's place over", () => {
   /** The public form for the invited address itself, as anybody might fill it in. */
   async function viaPublicForm(event: EventInput, minute: number) {
     await submitRegistration(db, event, { ...form("Ana", at(minute)), email: "ana@example.invalid" }, at(minute), "REAL", PUBLIC);
@@ -558,7 +558,7 @@ describe("§NNN the invited address registered by another route takes the invita
   });
 });
 
-describe("§NNN expiry, «Retrimite» and «Retrage»", () => {
+describe("§647 expiry, «Retrimite» and «Retrage»", () => {
   it("past its deadline the place is free; the sweep stamps it, offers the place to the line, and the link says expired", async () => {
     const event = await createEvent(1, { auto: true });
     await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 1, outsideCapacity: false }, admin, NOW);

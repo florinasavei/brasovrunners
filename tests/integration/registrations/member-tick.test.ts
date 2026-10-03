@@ -20,7 +20,7 @@ import { CLUB_NAME } from "@/theme/brand";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-037-03 criterion 13 (§NNN) — the self-declared member tick, one of the answers an
+ * BR-REQ-037-03 criterion 13 (§645) — the self-declared member tick, one of the answers an
  * Administrator corrects («Modifică datele»), one row at a time or in one audited sweep
  * («Bife de membru fără cont de membru»).
  *

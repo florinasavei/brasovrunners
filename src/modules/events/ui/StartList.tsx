@@ -138,7 +138,7 @@ const NO_NUMBER = "—";
  * page's rows carry at least one number: an event that numbers nobody keeps today's table rather
  * than a column of dashes. Without that notice no number is even selected.
  *
- * ## The hidden list's two ticks (§NNN, amending §632 and §643)
+ * ## The hidden list's two ticks (§647, amending §632 and §643)
  *
  * The owner, 2026-10-02: «nu vreau să scot pe nimeni de pe listă, ci doar să nu se pună la socoteală;
  * de fapt mai punem bifă pentru „afișarea numărătorii”». Two ticks of the event's
@@ -188,7 +188,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   // them, never a row, a position or an initial.
   const { named, anonymous, outsideNamed, hidden } = await cachedStartListCounts(event.id);
   /*
-    «Lista ascunsă» (§NNN): whether the list says its numbers at all («Arată public numărătoarea»), and
+    «Lista ascunsă» (§647): whether the list says its numbers at all («Arată public numărătoarea»), and
     whether they count the hidden list («Numără și lista ascunsă») — the first on every event, the second
     only while the hidden list's switch is on. Numbers only: which rows the table holds never depends on them (§32).
   */
@@ -231,7 +231,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
     «Lista ascunsă» (§643): a runner the club put on the hidden list keeps their row in the table when
     they ticked — the list is a disclosure they chose, and nothing marks them there — and leaves the
     title's and the summary line's numbers, which count the places, as the places line does. Unless the
-    event counts the hidden list (§NNN): then those numbers are everybody on it with a place, ticked or
+    event counts the hidden list (§647): then those numbers are everybody on it with a place, ticked or
     not — its confirmed among «confirmați», its holds among «în curs de confirmare» — while the places
     line above, and the rows, stay as they are.
   */
@@ -247,7 +247,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   // The note that the hidden list is not counted, only where it is not and the numbers are said.
   const outsideShown = countPublic && !countHidden && outsideNamed + (others.outsidePending ?? 0) > 0;
   /*
-    Where it is counted (§NNN), the title and «confirmați» may hold people with no row at all — somebody
+    Where it is counted (§647), the title and «confirmați» may hold people with no row at all — somebody
     on the hidden list who did not tick is not even a «Participant (nume ascuns)» row (§32) — so the note
     says so in one sentence, and the title, the rows and the note agree. The holds only where the headline
     adds them — a capped event's known counts — so on an uncapped event, or an unknown door, the note never
@@ -272,7 +272,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
       />
     ) : null;
   // The pending on the hidden list (§643) are rows below, not part of the counted words — unless the event
-  // counts the hidden list (§NNN) — and with the numbers kept private (§NNN) there are no counted words.
+  // counts the hidden list (§647) — and with the numbers kept private (§647) there are no counted words.
   const pendingCounted = countHidden ? others.pending : Math.max(others.pending - (others.outsidePending ?? 0), 0);
   const extra = statesOn && countPublic ? othersPhrases(t, locale, { pending: pendingCounted, waitlisted: others.waitlisted }) : [];
   /*
@@ -345,7 +345,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
     >
       <Typography component="summary" id="start-list-title" variant="h2" sx={{ fontSize: "1.25rem" }}>
         <GroupsIcon aria-hidden sx={FOLD_GLYPH_SX} />
-        {/* «Arată public numărătoarea» off (§NNN): the title without its number. */}
+        {/* «Arată public numărătoarea» off (§647): the title without its number. */}
         {countPublic ? t("startList.titleCount", { count: headline.count }) : t("startList.title")}
       </Typography>
 
@@ -394,7 +394,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
                 borderCollapse: "collapse",
                 "& th, & td": { textAlign: "left", py: 1, px: 1, borderBottom: 1, borderColor: "divider", verticalAlign: "top" },
                 "& th": { fontWeight: 600, fontSize: "0.875rem", color: "text.secondary", whiteSpace: "nowrap" },
-                // The position column, only where the numbers are said (§NNN): a running position is a count.
+                // The position column, only where the numbers are said (§647): a running position is a count.
                 ...(countPublic ? { "& td:first-of-type, & th:first-of-type": { width: "3rem", color: "text.secondary" } } : {}),
                 // The race number (§613): right-aligned figures of one width, as narrow as its widest
                 // number, so the name keeps the room it had at 320 pixels.
@@ -537,7 +537,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
               name here should be able to see, without leaving, that it was their choice and how
               to change it. */}
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2, pb: 2 }}>
-            {/* Without the numbers (§NNN), the note says nothing about the title's number. */}
+            {/* Without the numbers (§647), the note says nothing about the title's number. */}
             {countPublic
               ? statesOn
                 ? t(waitlistOn ? "startList.noteStates" : "startList.noteStatesNoWaitlist")
@@ -548,7 +548,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
             {socialsOn ? ` ${t("startList.socialsNote")}` : null}
             {/* Only while the table holds somebody seated outside the places (§643): one sentence, no row marked. */}
             {outsideShown ? ` ${t("startList.outsideNote")}` : null}
-            {/* Counted, and not every one of them listed (§NNN): one sentence, no row marked. */}
+            {/* Counted, and not every one of them listed (§647): one sentence, no row marked. */}
             {countedNotListed ? ` ${t("startList.outsideCountedNote")}` : null}
           </Typography>
         </>

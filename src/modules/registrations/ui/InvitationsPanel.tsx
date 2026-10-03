@@ -30,7 +30,7 @@ type RowAction = (state: FormOutcome | null, form: FormData) => Promise<FormOutc
 const STATE_COLOR = { sent: "info", accepted: "success", expired: "default", withdrawn: "default" } as const;
 
 /**
- * «Invitații» (§NNN) on an event's registrations list: who the club invited, where each invitation
+ * «Invitații» (§647) on an event's registrations list: who the club invited, where each invitation
  * stands — sent and waiting, accepted (a link to the registration it became), expired, withdrawn — its
  * deadline and who sent it; and, for the Administrator, the send («Trimite invitații») and each open
  * invitation's «Retrimite» and «Retrage». The Organizer reads the list and is offered no verb (§289);

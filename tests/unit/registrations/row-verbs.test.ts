@@ -266,7 +266,7 @@ describe("§264 the bib's printing mark", () => {
 });
 
 /**
- * BR-REQ-037-03 criterion 12 (§NNN) — «Nu e membru» / «E membru» on the row: the self-declared member
+ * BR-REQ-037-03 criterion 12 (§645) — «Nu e membru» / «E membru» on the row: the self-declared member
  * tick is a field edit like the name, so every state offers it, and only to the Administrator.
  */
 describe("BR-REQ-037-03 the member tick on the row", () => {

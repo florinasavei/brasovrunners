@@ -50,7 +50,7 @@ export const EMAIL_GROUP_OF: Readonly<Record<EmailMessageType, EmailGroup>> = {
   REGISTRATION_MANAGE_LINK: "links",
   PROFILE_MANAGE_LINK: "links",
   REGISTER_ANOTHER_PERSON: "links",
-  // An invitation (§NNN): one link to the form, on the links' road like every other action link.
+  // An invitation (§647): one link to the form, on the links' road like every other action link.
   EVENT_INVITATION: "links",
   REGISTRATION_CONFIRMED: "confirmations",
   WAITLIST_JOINED: "confirmations",

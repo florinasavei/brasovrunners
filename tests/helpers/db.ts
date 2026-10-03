@@ -101,7 +101,7 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   // Another person waiting for the address's confirmation (§446): it points at a token and a registration.
   await db.delete(pendingFamilyEntries);
   await db.delete(emailActionTokens);
-  // The invitations by email (§NNN): they reference the event, the address and the staff; their links went above.
+  // The invitations by email (§647): they reference the event, the address and the staff; their links went above.
   await db.delete(eventInvitations);
   await db.delete(emailOutbox);
   // «Echipa»'s cards (§459) reference a photo: before the assets.

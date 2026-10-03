@@ -9,7 +9,7 @@ import { composeLegalName, resolveDisplayName } from "./names";
 import { composePhone, splitPhone } from "./phone";
 
 /**
- * «Modifică datele» (§NNN; the owner, 2026-10-02: «Nu vreau să se numească „curăță”, dar practic vreau
+ * «Modifică datele» (§645; the owner, 2026-10-02: «Nu vreau să se numească „curăță”, dar practic vreau
  * să pot modifica sau suprascrie orice dată introdusă de utilizator»): what an Administrator may
  * correct on a registration, and what stays the person's.
  *
@@ -101,7 +101,7 @@ export const EMERGENCY_SAME = "emergencySame";
 
 /**
  * The marker a refusal carries beside `guardianName` once the registration has a signed declaration
- * (§NNN): the signed text names its declarant and its second signature from the guardian
+ * (§645): the signed text names its declarant and its second signature from the guardian
  * (`signed-declaration.ts`), so correcting or clearing the guardian would rewrite who signed it — and
  * the typed signature and the stored hash are the old text's. A wrong guardian is a new declaration.
  * Beside `birthDate` it says the other way round: a birth date that would make the signer of an
@@ -113,7 +113,7 @@ export const GUARDIAN_SIGNED = "guardianSigned";
 
 /**
  * The marker a refusal carries beside the socials when the row was a minor's on the day it was
- * written but the person is an adult today (§NNN): the minors' sweep (`jobs/retention.ts`, step
+ * written but the person is an adult today (§645): the minors' sweep (`jobs/retention.ts`, step
  * `minor-socials`, §323) clears the socials of every row written before the eighteenth birthday and
  * scrubs them from the trail, so a Strava link or username saved here would be gone at the next
  * maintenance run — the page says so rather than accepting a correction that silently will not last.
@@ -121,7 +121,7 @@ export const GUARDIAN_SIGNED = "guardianSigned";
 export const MINOR_AT_REGISTRATION = "minorAtRegistration";
 
 /**
- * The marker a refusal carries beside `guardianName` when the row would not be a minor's (§NNN): the
+ * The marker a refusal carries beside `guardianName` when the row would not be a minor's (§645): the
  * form keeps a guardian only for a minor on the day the row was written (`submitRegistration`), and
  * everywhere else a guardian on the row means «a minor» — the declarant the signed text names
  * (`signature-name.ts`), its second signature (§330). A guardian typed on an adult's row would change
@@ -136,7 +136,7 @@ export const ANSWER_MARKERS: readonly string[] = [ANSWERS_UNCHANGED, EMERGENCY_S
  * The page's sentence for a refusal that carries a marker (`Admin.errors.*`), or null for the plain
  * «not valid» summary: which rule refused, and — where the refused box is the birth date rather than
  * the one the rule is about — a sentence naming the birth date, so the page never blames a box
- * nobody typed in (§NNN).
+ * nobody typed in (§645).
  */
 export function answersRefusalCode(fields: readonly string[]): string | null {
   if (fields.includes(ANSWERS_UNCHANGED)) return "ANSWERS_UNCHANGED";
@@ -243,7 +243,7 @@ const same = (a: unknown, b: unknown) => (a ?? null) === (b ?? null);
  * - the **socials-on-the-list** tick goes when both socials are cleared — a tick about nothing;
  * - the **T-shirt** is kept only where the event gives one (`shirtSizeKept`);
  * - the **guardian** goes when a corrected birth date makes the row an adult's on the day it was
- *   written, as the form never keeps one for an adult (§NNN) — audited like any other column; under a
+ *   written, as the form never keeps one for an adult (§645) — audited like any other column; under a
  *   signed declaration it is the declaration's (`GUARDIAN_SIGNED`), so such a birth date is refused.
  */
 export function planAnswerEdit(
@@ -357,7 +357,7 @@ export function planAnswerEdit(
   }
   if ((posted.has("birthDate") || posted.has("stravaUrl") || posted.has("instagramHandle")) && (minor || minorAtRegistration)) {
     const socials = (["stravaUrl", "instagramHandle"] as const).filter((field) => next[field]);
-    // Only the birth date moved: the refusal names it, not the socials nobody typed in (§NNN).
+    // Only the birth date moved: the refusal names it, not the socials nobody typed in (§645).
     if (socials.length > 0 && !posted.has("stravaUrl") && !posted.has("instagramHandle")) {
       refuse("the corrected birth date makes the row a minor's when written, and it still holds socials", ["birthDate", MINOR_AT_REGISTRATION]);
     }

@@ -673,7 +673,7 @@ export const events = pgTable(
     waitlistCountPublic: boolean("waitlist_count_public").notNull().default(true),
 
     /**
-     * «Lista ascunsă» (§NNN, amending §643): four columns — the hidden list's group of three, and «Arată public numărătoarea», which acts on every event.
+     * «Lista ascunsă» (§647, amending §643): four columns — the hidden list's group of three, and «Arată public numărătoarea», which acts on every event.
      *
      * - `hidden_list_enabled` — «Folosește lista ascunsă»: whether the registration page offers
      *   «Pune pe lista ascunsă» at all. Off by default; the migration switched it on for every event

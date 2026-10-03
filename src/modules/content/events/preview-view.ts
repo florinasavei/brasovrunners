@@ -67,7 +67,7 @@ export function previewPageOf(event: EditableEvent, translation: EditableTransla
     waitlistPublic: event.waitlistPublic,
     // «Arată public câți așteaptă» (§634): the preview's door says the count only as the page would.
     waitlistCountPublic: event.waitlistCountPublic,
-    // «Lista ascunsă» (§NNN): the preview's «Cine vine» counts as the page would.
+    // «Lista ascunsă» (§647): the preview's «Cine vine» counts as the page would.
     hiddenListEnabled: event.hiddenListEnabled,
     participantCountPublic: event.participantCountPublic,
     hiddenListCounted: event.hiddenListCounted,

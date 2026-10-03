@@ -13,7 +13,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Lista ascunsă»'s two ticks over the public «Cine vine» (amending §632 and §643), on the
+ * §647 — «Lista ascunsă»'s two ticks over the public «Cine vine» (amending §632 and §643), on the
  * rendered list, as `start-list-render.test.ts` renders it:
  *
  * - «Numără și lista ascunsă» off (the default): the title and the line count the places — a ticked
@@ -105,7 +105,7 @@ async function seeded(): Promise<string> {
   return id;
 }
 
-/** The backoffice's name for the list (§NNN), which no public page says, in either language. */
+/** The backoffice's name for the list (§647), which no public page says, in either language. */
 const BACKOFFICE_NAME = /lista ascuns|hidden list/i;
 
 /** The rendered list — and, every time, the proof it never names the hidden list. */
@@ -123,7 +123,7 @@ beforeAll(async () => {
 afterAll(async () => close());
 beforeEach(async () => resetTables(db));
 
-describe("§NNN «Cine vine» and the hidden list's two ticks", () => {
+describe("§647 «Cine vine» and the hidden list's two ticks", () => {
   it("by default counts the places: the ticked hidden-list runner is a row, out of the numbers, with the note", async () => {
     const id = await seeded();
     const html = await render(asPublic(id, { hiddenListEnabled: true, participantCountPublic: true, hiddenListCounted: false }));
@@ -148,7 +148,7 @@ describe("§NNN «Cine vine» and the hidden list's two ticks", () => {
     expect(html).not.toContain("Dan Invitat");
     expect(rows(html)).toBe(3);
     expect(html).not.toContain(ro.Event.startList.outsideNote);
-    // Title 4, rows 3: Dan, unticked, is counted and has no row — and the note says so (§NNN), so the
+    // Title 4, rows 3: Dan, unticked, is counted and has no row — and the note says so (§647), so the
     // title, the rows and the note agree.
     expect(html).toContain(ro.Event.startList.outsideCountedNote);
   });

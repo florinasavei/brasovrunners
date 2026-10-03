@@ -6,7 +6,7 @@ import type { Database, Transaction } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
 
 /**
- * The SQL of the invitations' held places (§NNN), beside the allocator's own counts: the bucket
+ * The SQL of the invitations' held places (§647), beside the allocator's own counts: the bucket
  * `repository.ts#countOccupied` adds, the sweep that ends an invitation at its deadline, and the reads
  * the maintenance job and the backoffice make. No decision is taken here; `invitations.ts` decides,
  * under the event lock, and the allocator's formula (`domain/capacity.ts#computeOccupied`) adds.
@@ -18,7 +18,7 @@ export function invitationOpen(): SQL {
 }
 
 /**
- * The count of an event's invitations that hold a counted place now (§NNN, `AGENTS.md` §10.6): open,
+ * The count of an event's invitations that hold a counted place now (§647, `AGENTS.md` §10.6): open,
  * before their deadline, and not «În afara locurilor» (§643). The deadline is compared here, on every
  * read, whatever the sweep has stamped — a place is free the instant the deadline passes. A scalar
  * subquery for `countOccupied`.
@@ -28,7 +28,7 @@ export function invitationHoldsCount(eventId: string, now: Date): SQL<number> {
 }
 
 /**
- * Invitations past their deadline, stamped expired (§NNN): under the caller's event lock, inside
+ * Invitations past their deadline, stamped expired (§647): under the caller's event lock, inside
  * `expireStaleHolds`, so every capacity-changing transaction ends them first, as it does a lapsed
  * offer. The place each held was already free in the count from its deadline; the stamp ends the
  * invitation for the backoffice, its link's page and the one-live-invitation index, and writes one
@@ -56,7 +56,7 @@ export async function expireLapsedInvitations<T extends Record<string, unknown>>
 }
 
 /**
- * The scheduled events with an open invitation past its deadline (§NNN), for the maintenance job: the
+ * The scheduled events with an open invitation past its deadline (§647), for the maintenance job: the
  * sweep stamps it and offers the place it held to the line (`fillAvailableSpots`). A liveness read,
  * like `findEventsNeedingMaintenance`: the count already treats the place as free.
  */
@@ -109,7 +109,7 @@ export async function findOpenInvitation<T extends Record<string, unknown>>(
 }
 
 /**
- * The invitation still open, before its deadline, of the address a registration belongs to (§NNN):
+ * The invitation still open, before its deadline, of the address a registration belongs to (§647):
  * the one that registration takes over when it reaches its place by another route than the link —
  * the public form's confirmation, a staff entry, the desk, a restart, «Dă-i un loc acum» — so no place
  * stays held in a seated person's name until the deadline. By the participant row the invitation was
@@ -131,7 +131,7 @@ export async function findLiveInvitationOfParticipant<T extends Record<string, u
 }
 
 /**
- * The invitation a registration came from (§NNN), for its page's facts: «Înscriere pe invitație —
+ * The invitation a registration came from (§647), for its page's facts: «Înscriere pe invitație —
  * trimisă de {who}, {when}». The accepted invitation naming the registration, whether by its link or
  * taken over by another route; who sent it is a staff name, or null once that row is gone.
  */

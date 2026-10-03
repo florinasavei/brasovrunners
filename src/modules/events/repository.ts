@@ -165,7 +165,7 @@ const PUBLIC_COLUMNS = {
   // from the availability entry it counts with (`cachedPublicAvailability`), so the number and its
   // switch come off one row; the editor's preview draws it from here.
   waitlistCountPublic: events.waitlistCountPublic,
-  // «Arată public numărătoarea» and «Lista ascunsă» (§NNN): whether «Cine vine» says its numbers (on
+  // «Arată public numărătoarea» and «Lista ascunsă» (§647): whether «Cine vine» says its numbers (on
   // every event), and whether they count the hidden list (only while its switch is on) — read by
   // `StartList` through `hiddenListCounting`. Never which names it shows.
   hiddenListEnabled: events.hiddenListEnabled,

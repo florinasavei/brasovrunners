@@ -65,14 +65,14 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   cancelRegistrationAction: vi.fn(),
   checkInAction: vi.fn(),
   confirmRegistrationNowAction: vi.fn(),
-  // «Datele înscrierii» (§NNN), folding «Corectează numele».
+  // «Datele înscrierii» (§645), folding «Corectează numele».
   editRegistrationAnswersAction: vi.fn(),
   deleteRegistrationAction: vi.fn(),
   offerPlaceAction: vi.fn(),
   promoteRegistrationAction: vi.fn(),
   setBibNumberAction: vi.fn(),
   withdrawConsentAction: vi.fn(),
-  // The member tick and its sweep (§NNN).
+  // The member tick and its sweep (§645).
   setClubMemberDeclaredAction: vi.fn(),
   clearMemberTicksAction: vi.fn(),
   declarationHoldAction: vi.fn(),
@@ -334,12 +334,12 @@ describe("§640 the registrations list's row menu", () => {
 });
 
 /**
- * §NNN — «Lista ascunsă» on the registration's own page: the block is drawn while the event's «Folosește
+ * §647 — «Lista ascunsă» on the registration's own page: the block is drawn while the event's «Folosește
  * lista ascunsă» is on, or for a row already on the list (then with the line that the switch is off); the
  * Administrator gets the two radios inside the form that posts the hidden `outside` value — the opposite
  * of the stored state — and the Organizer (MODERATOR, §289) the same radios disabled, with no form.
  */
-describe("§NNN the registration's «Lista ascunsă» block", () => {
+describe("§647 the registration's «Lista ascunsă» block", () => {
   const section = (tree: ReactNode) => elements(tree).find((element) => element.props["data-testid"] === "outside-capacity");
   const radios = (tree: ReactNode) => elements(section(tree)).filter((element) => element.type === HiddenListRadio);
   const outsideInput = (tree: ReactNode) => elements(section(tree)).find((element) => element.type === "input" && element.props.name === "outside");

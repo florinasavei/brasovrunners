@@ -80,7 +80,7 @@ function fill(template: string, values: Record<string, string | number>): string
 }
 
 /**
- * «Trimite invitații» (§NNN): the members' zone accounts as ticks with a search, the typed lines
+ * «Trimite invitații» (§647): the members' zone accounts as ticks with a search, the typed lines
  * «Nume <adresă>», the days, «Pe lista ascunsă» (§643's `outside_capacity`) and «Limba invitației» for
  * an address the club has never seen, and — before anything is sent — the dialog that
  * says how many people, how many places are free, and whether the send adds supplementary places and

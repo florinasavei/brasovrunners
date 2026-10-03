@@ -13,7 +13,7 @@ import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 type Choice = "counted" | "hidden";
 
 /**
- * «Lista ascunsă» on a registration's page (§NNN, amending §643; the owner, 2026-10-02: «Nu îmi place
+ * «Lista ascunsă» on a registration's page (§647, amending §643; the owner, 2026-10-02: «Nu îmi place
  * deloc cum arată bifa asta, trebuia să fie doar radio»): two radios — «Se numără între locurile
  * evenimentului» and «Pe lista ascunsă» — the one the server said checked, under a heading wearing the
  * incognito glyph.

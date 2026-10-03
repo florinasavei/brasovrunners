@@ -343,7 +343,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   */
   const mayManage = canManageRegistrations(actor.role);
   /*
-    «Bife de membru fără cont de membru» (§NNN): the preview, read only while it is open and only
+    «Bife de membru fără cont de membru» (§645): the preview, read only while it is open and only
     for the role that may press it — the scope the list was resolved to (one event, or every event that
     has not started), never the page of rows on screen. The service asks the role again.
   */
@@ -392,7 +392,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {row.kind === "TEST" && (
             <Chip size="small" color="warning" label={t("registrations.testKind")} />
           )}
-          {/* On the hidden list (§643, §NNN): counted in no place, for every role that reads the list. */}
+          {/* On the hidden list (§643, §647): counted in no place, for every role that reads the list. */}
           {row.outsideCapacity && <HiddenListChip label={t("registrations.outside.chip")} testId="outside-chip" />}
           {/* A family on one address (§543): who else is registered with it, each a link to their row. */}
           <FamilyChip
@@ -606,7 +606,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         {saved === "registrationDeleted" && (
           <Alert severity="success">{t("registrations.registrationDeleted")}</Alert>
         )}
-        {/* The sweep's count (§NNN): how many ticks went, and that nothing else did. */}
+        {/* The sweep's count (§645): how many ticks went, and that nothing else did. */}
         {saved === "memberTicksCleared" && (
           <Alert severity={Number(current.count ?? "0") > 0 ? "success" : "info"} data-testid="member-ticks-cleared">
             {t(`registrations.memberSweep.cleared.${countForm(Number(current.count ?? "0"), locale)}`, { count: Number(current.count ?? "0") })}
@@ -1018,7 +1018,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       </Panel>
 
       {/*
-        «Invitații» (§NNN): who the club invited to this event and where each stands; the send and each
+        «Invitații» (§647): who the club invited to this event and where each stands; the send and each
         invitation's verbs for the Administrator. Only on a list about one event: an invitation is to one.
       */}
       {filters.eventId && (
@@ -1241,7 +1241,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       )}
 
       {/*
-        «Bife de membru fără cont de membru» (§NNN; the owner, 2026-10-02: «Vreau să pot „curăța” și să
+        «Bife de membru fără cont de membru» (§645; the owner, 2026-10-02: «Vreau să pot „curăța” și să
         debifez cei care au bifat că sunt membri Brașov Runners dar nu sunt», then «Nu vreau să se numească
         „curăță”»: a plain descriptive name, never the broom). The button shows while
         the list is filtered to the people who ticked the box — the filter, or any summary pill pressed
@@ -1524,7 +1524,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   formId: `bib-printed-${row.id}`,
                 });
               }
-              // «Nu e membru» / «E membru» (§NNN): the row's own tick decides which word.
+              // «Nu e membru» / «E membru» (§645): the row's own tick decides which word.
               if (verbs.includes("memberTick")) {
                 items.push(
                   row.clubMemberDeclared
@@ -1625,7 +1625,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       id={`member-${row.id}`}
                       action={setClubMemberDeclaredAction}
                       hidden
-                      // One line naming the person (§NNN): a tick, nothing else, no email.
+                      // One line naming the person (§645): a tick, nothing else, no email.
                       confirm={
                         row.clubMemberDeclared
                           ? { title: t("confirm.memberClearTitle"), body: t("confirm.memberClearBody", { name: row.registeredName }), confirmLabel: t("registrations.memberTick.clear"), cancelLabel: words.cancel }

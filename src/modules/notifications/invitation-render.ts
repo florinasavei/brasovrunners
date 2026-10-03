@@ -16,7 +16,7 @@ import { buildOutgoingEmail, type TemplateData } from "./templates";
 type RendererDb = Parameters<EmailRenderer>[1];
 
 /**
- * How long an invitation's link answers after the invitation's deadline (§NNN): long enough for its
+ * How long an invitation's link answers after the invitation's deadline (§647): long enough for its
  * page to say «expired» or «withdrawn» by name rather than the generic refusal, and no longer than the
  * invitation itself is kept after it ends (`jobs/retention.ts`, `endedInvitationDays`). Whether it may
  * still be *accepted* is the invitation's own state, asked under the event lock at the press.
@@ -24,7 +24,7 @@ type RendererDb = Parameters<EmailRenderer>[1];
 export const INVITATION_LINK_GRACE_DAYS = 30;
 
 /**
- * `EVENT_INVITATION` (§NNN): one invitation's email, rendered at the send like every message with an
+ * `EVENT_INVITATION` (§647): one invitation's email, rendered at the send like every message with an
  * action link (§12.8, §14.5). Its own path, as the newsletter's is: there is no registration behind it.
  *
  * - The invitation is read now (`payload.invitationId`): one accepted, withdrawn or past its deadline

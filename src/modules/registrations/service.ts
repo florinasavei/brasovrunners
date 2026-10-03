@@ -285,7 +285,7 @@ async function bibAtConfirmation<T extends Record<string, unknown>>(
 ): Promise<{ bibNumber: number | null }> {
   if (current.bibNumber !== null) return { bibNumber: current.bibNumber };
   if (current.kind !== "REAL") return { bibNumber: null };
-  // A row on the hidden list draws from the hidden list's own series when the event has one (§NNN).
+  // A row on the hidden list draws from the hidden list's own series when the event has one (§647).
   // A row that changes list after this keeps its number: a number once given is never moved (§173).
   return { bibNumber: await pickBibNumber(tx, current.eventId, new Set(), undefined, current.outsideCapacity ? "hidden" : "race") };
 }
@@ -703,7 +703,7 @@ async function participantIdOfAddress<T extends Record<string, unknown>>(tx: Tra
 }
 
 /**
- * The open invitation, before its deadline, of the address a registration belongs to (§NNN), when that
+ * The open invitation, before its deadline, of the address a registration belongs to (§647), when that
  * registration is about to be given a place by a route other than the invitation's own link. Never for
  * a row in the line (`WAITLISTED`, `WAITLIST_OFFERED`), whose place comes as an offer. Read under the
  * caller's event lock.
@@ -719,7 +719,7 @@ async function invitationToAdopt<T extends Record<string, unknown>>(db: Transact
 }
 
 /**
- * An open invitation taken over by its address's registration (§NNN): marked accepted with that
+ * An open invitation taken over by its address's registration (§647): marked accepted with that
  * registration's id, after the registration took the place — the stamp the link's press writes
  * (`seatInvitedRegistration`) — and audited `event.invitation_accepted` with `adopted: true` (no actor:
  * the route that placed the row writes its own row). The link's page then says it was used.
@@ -770,7 +770,7 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
   /** The club's deadlines (§377), read by the caller before its transaction: a new hold's length comes from here. */
   settings: Deadlines,
   /**
-   * The registration an invitation's link created (§NNN): the invitation holds its place — counted in
+   * The registration an invitation's link created (§647): the invitation holds its place — counted in
    * `countOccupied`'s `invitationHolds` until the caller marks it accepted, after this — so the place is
    * the registration's own, given here like a family's reserved one, never counted against it.
    */
@@ -789,7 +789,7 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
   */
   await releaseOwnFamilyPlaceHold(db, event.id, registrationId);
   /*
-    The address's own open invitation (§NNN; the invitations review of 2026-10-02): a registration of
+    The address's own open invitation (§647; the invitations review of 2026-10-02): a registration of
     the invited address that reaches the allocator by another route — the public form and its
     confirmation, a staff entry, the desk, a restart, a late signature — takes the invitation over
     rather than waiting behind a place held in its own name. The place is this registration's, as a
@@ -810,7 +810,7 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
   */
   const outside = await repo.isOutsideCapacity(db, registrationId);
   const { free, counts, eligibleWaitlisted } = await placeForNewcomer(db, event, now, settings);
-  // An invitation's held place is this registration's (§NNN), as a family's reserved one is.
+  // An invitation's held place is this registration's (§647), as a family's reserved one is.
   let direct = outside || reserved || invited || adopted !== undefined || free;
 
   // No place: this registration would join the line, and the line may be full (§348).
@@ -850,7 +850,7 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
           holdExpiresAt: computeDeclarationHoldExpiry({
             now,
             /*
-              An invitation's registration (§NNN) is capped by the start alone: the club may invite after
+              An invitation's registration (§647) is capped by the start alone: the club may invite after
               the public close, and the close is the public door's — as «Dă-i un loc acum»'s place is.
             */
             registrationClosesAt: invited ? null : event.registrationClosesAt,
@@ -1461,7 +1461,7 @@ export type RegistrationOrigin = {
    */
   member?: { email: string };
   /**
-   * The form an invitation's link opened (§NNN), sent with that link: the club named this person and
+   * The form an invitation's link opened (§647), sent with that link: the club named this person and
    * emailed them, and the press behind the link proves the inbox, as the family's link does (§446). The
    * caller has locked the event, found the invitation open and before its deadline, spent the token in
    * the same transaction, and names the participant the invitation was sent to; the address is that
@@ -1683,7 +1683,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   origin: RegistrationOrigin = PUBLIC_ORIGIN,
 ): Promise<SubmitRegistrationResult> {
   const atTheDesk = origin.source === "STAFF" && origin.atTheDesk === true;
-  // An invitation's form (§NNN): the invitation is the door, as the desk's is — local, scheduled and dated.
+  // An invitation's form (§647): the invitation is the door, as the desk's is — local, scheduled and dated.
   const invited = origin.source === "PUBLIC" && origin.invitation !== undefined;
   assertRegistrationOpen(event, now, atTheDesk || invited);
   // An event for the members alone (§552), before anything is parsed or spent: asked again under the lock.
@@ -1748,7 +1748,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   // it has already been authenticated and authorized as an Administrator.
   // Nor is another person's registration confirmed from the email (§446): the submission that kept
   // its fields passed these checks, and the press is behind a token only the inbox holds.
-  // Nor an invitation's form (§NNN): behind a token only the inbox holds, like the family's link.
+  // Nor an invitation's form (§647): behind a token only the inbox holds, like the family's link.
   if (origin.source === "PUBLIC" && !origin.anotherPerson && !invited) {
     const verdict = classifySubmission(input, now);
     /*
@@ -1802,7 +1802,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     too, so the answer is the same for an address that is registered already and one that is not
     (§19.4). The allocator asks again under the lock; this only spares the email.
   */
-  // Never for an invitation (§NNN): its place is held for the person, whatever the line holds.
+  // Never for an invitation (§647): its place is held for the person, whatever the line holds.
   if (!invited) await assertWaitlistCanTakeOneMore(db, event.id, now);
 
   const privacyNotice = await findCurrentApprovedDocument(db, "PRIVACY_NOTICE", input.locale, now);
@@ -2077,7 +2077,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       throw new DomainError("VALIDATION_ERROR", "the invitation belongs to another address");
     }
     const rows = await repo.findRegistrationsByEventAndParticipant(tx, event.id, participant.id);
-    // An invitation decides as a staff entry does (§NNN): the club named the person, the name decides.
+    // An invitation decides as a staff entry does (§647): the club named the person, the name decides.
     const via = origin.anotherPerson ? "link" : origin.source === "STAFF" || invited ? "staff" : "form";
     /*
       Whether the schema lets a second runner onto the address yet (`family-gate.ts`). Asked only
@@ -2124,7 +2124,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     if (origin.source === "STAFF" && (decision.kind === "resend" || decision.kind === "offerAnother")) {
       throw new DomainError("VALIDATION_ERROR", "this address already has a registration for this event", ["email"]);
     }
-    // An invitation creates or restarts, or refuses (§NNN): the address registered since the send.
+    // An invitation creates or restarts, or refuses (§647): the address registered since the send.
     if (invited && (decision.kind === "resend" || decision.kind === "offerAnother")) {
       throw new DomainError("VALIDATION_ERROR", "this address already has a registration for this event", [ALREADY_ON_ADDRESS]);
     }
@@ -2646,7 +2646,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       // the waiting list and never lands directly on Confirmed — `allocateOrWaitlist` is the
       // same allocator a first-time registration uses.
       // Another person in a family sitting always waits for the family's one email (§543): a form is not the inbox.
-      // An invitation's restart waits for the caller's confirmation in this transaction (§NNN), as a new one does.
+      // An invitation's restart waits for the caller's confirmation in this transaction (§647), as a new one does.
       if (!participant.emailVerifiedAt || anotherInSitting || invited) {
         /*
           The link of this cycle lapses from now (§377), with the club's hours in force now. Before
@@ -2727,7 +2727,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     // Nor another person confirmed from the email (§446): the press proved the inbox, and the
     // caller confirms the address in this same transaction (`family-confirm.ts`).
     // The first message of the registration starts its email link (§513): its send re-bases it, once.
-    // Nor an invitation's form (§NNN): the link proved the inbox, and the caller seats the registration.
+    // Nor an invitation's form (§647): the link proved the inbox, and the caller seats the registration.
     if (!atTheDesk && !origin.anotherPerson && !invited) await holdVerification(created);
     createdDeadlines = [linkExpiresAt];
     written = created.id;
@@ -2939,7 +2939,7 @@ async function addOneSupplementaryPlace<T extends Record<string, unknown>>(
     eventId: string;
     capacity: number;
     counts: repo.OccupiedCountsRow;
-    /** Whom the place is for: a registration, or — a send of invitations (§NNN) — an invitation. An id, never a person. */
+    /** Whom the place is for: a registration, or — a send of invitations (§647) — an invitation. An id, never a person. */
     registrationId?: string;
     invitationId?: string;
     action: SupplementaryPlaceAction;
@@ -3070,7 +3070,7 @@ export async function givePlaceNowByStaff<T extends Record<string, unknown>>(
     await releaseOwnFamilyPlaceHold(tx, event.id, current.id);
     await repo.expireStaleHolds(tx, locked, now);
     /*
-      The address's open invitation (§NNN), taken over as the allocator takes it: its place is this
+      The address's open invitation (§647), taken over as the allocator takes it: its place is this
       row's — no supplementary place is asked or added — and its «În afara locurilor» comes with it.
       Marked accepted after the transition below.
     */
@@ -3126,7 +3126,7 @@ export async function givePlaceNowByStaff<T extends Record<string, unknown>>(
       now,
     });
     if (!placed) throw new DomainError("CONFLICT", "this registration changed state concurrently");
-    // The invitation's place is the row's now (§NNN); one the row did not need goes to the line below.
+    // The invitation's place is the row's now (§647); one the row did not need goes to the line below.
     if (adopted) await markInvitationAdopted(tx, adopted, placed.id, now);
 
     // The old verification link is spent: it can no longer confirm, and its page says «sign the declaration».
@@ -3886,7 +3886,7 @@ export async function setOutsideCapacityByStaff<T extends Record<string, unknown
     }
     if (current.outsideCapacity === outside) return { registration: current, offered: servedFirst };
     /*
-      «Lista ascunsă» is the event's to switch on (§NNN): «Folosește lista ascunsă» off, nobody is put on
+      «Lista ascunsă» is the event's to switch on (§647): «Folosește lista ascunsă» off, nobody is put on
       it — read under the lock, so a save switching it off and a press racing it cannot both win. Taking
       somebody off stays open whatever the switch says: the switch off changes nothing for those already on.
     */
@@ -4116,7 +4116,7 @@ export async function unregister<T extends Record<string, unknown>>(
   return unregistered.registration;
 }
 
-// --- §NNN Invitations by email -----------------------------------------------------------------
+// --- §647 Invitations by email -----------------------------------------------------------------
 
 /** One person of a send: a member picked from the members' zone (§524), or a name and an address typed. */
 export type InvitationInvitee = { name: string; email: string; memberStaffUserId?: string | null };
@@ -4151,7 +4151,7 @@ function invitationIdentity(person: InvitationInvitee) {
 }
 
 /**
- * «Trimite invitațiile» (§NNN; the owner, 2026-10-02: «vreau să trimit „invitații speciale” pe email
+ * «Trimite invitațiile» (§647; the owner, 2026-10-02: «vreau să trimit „invitații speciale” pe email
  * pentru membrii BVR, un fel de adaugă manual» — «Dar vreau și pentru non-membrii»). The Administrator's
  * alone (`canManageRegistrations`, asserted here, in the admin service and in the action): the Organizer
  * reads the invitations and changes nothing (§289).
@@ -4363,7 +4363,7 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
 }
 
 /**
- * The invitation an Administrator's press is about, locked behind its event (§NNN): open and still
+ * The invitation an Administrator's press is about, locked behind its event (§647): open and still
  * before its deadline, or the press is refused (`INVITATION_NOT_OPEN`) — accepted, withdrawn or expired
  * since the page was read. The stale holds expire first, so an invitation past its deadline is stamped
  * and refused rather than revived.
@@ -4380,7 +4380,7 @@ async function lockOpenInvitation<T extends Record<string, unknown>>(tx: Transac
 }
 
 /**
- * «Retrimite» (§NNN): the email again, with a new link — the old one superseded when the new is minted
+ * «Retrimite» (§647): the email again, with a new link — the old one superseded when the new is minted
  * (§619: its page says a newer email has it) — and the deadline kept (no `days`) or moved to `days` from
  * now, capped by the start as at the send. Never earlier than it was: a resend does not take time back.
  * `resend_count + 1`, audited. The Administrator's alone.
@@ -4445,7 +4445,7 @@ export async function resendInvitationByStaff<T extends Record<string, unknown>>
 }
 
 /**
- * «Retrage» (§NNN): the invitation ends now — its link's page says it was withdrawn — and the place it
+ * «Retrage» (§647): the invitation ends now — its link's page says it was withdrawn — and the place it
  * held is free: offered to the line in the same transaction as the event's setting says
  * (`fillAvailableSpots`, a no-op on «Nu»). Audited. The Administrator's alone.
  */
@@ -4486,7 +4486,7 @@ export async function withdrawInvitationByStaff<T extends Record<string, unknown
 }
 
 /**
- * The registration an invitation's link created, seated in the invitation's place (§NNN), inside the
+ * The registration an invitation's link created, seated in the invitation's place (§647), inside the
  * caller's transaction (`invitations.ts#acceptInvitation`), after `submitRegistration` wrote it waiting
  * for its address:
  *
@@ -4543,7 +4543,7 @@ export async function seatInvitedRegistration<T extends Record<string, unknown>>
 }
 
 /**
- * «Modifică datele» (§NNN; the owner, 2026-10-02: «Nu vreau să se numească „curăță”, dar practic vreau
+ * «Modifică datele» (§645; the owner, 2026-10-02: «Nu vreau să se numească „curăță”, dar practic vreau
  * să pot modifica sau suprascrie orice dată introdusă de utilizator»): an Administrator corrects or
  * overwrites any answer the person typed — the allowlist, its rules and the three locked kinds (the
  * address, the consents, the declaration) are `answers.ts`.

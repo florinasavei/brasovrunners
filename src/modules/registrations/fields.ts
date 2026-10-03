@@ -432,7 +432,7 @@ export function assertEmailTypedTwice(input: { email?: string; emailConfirm?: st
 }
 
 /**
- * The form's own rule for each answer an Administrator may correct (§NNN, `answers.ts`): the same
+ * The form's own rule for each answer an Administrator may correct (§645, `answers.ts`): the same
  * Zod field the person's form met, one answer at a time — a corrected phone is E.164, a corrected
  * Instagram username loses its `@`, a corrected citizenship is two letters, exactly as typed on
  * the form. The email, the consents and the declaration's statements are not here on purpose.

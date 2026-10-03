@@ -7,7 +7,7 @@ import type { Database } from "@/db/types";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 
 /**
- * Who the club's members are, for «Bife de membru fără cont de membru» (§NNN), and which ticked
+ * Who the club's members are, for «Bife de membru fără cont de membru» (§645), and which ticked
  * registrations name nobody among them.
  *
  * **A member is any live account on the team's allowlist** (`staff_users`), whatever its role: the
@@ -65,7 +65,7 @@ export function maskAddress(address: string): string {
 }
 
 /**
- * The sweep's scope is the list's (§NNN): one event when the list is about one, otherwise every event
+ * The sweep's scope is the list's (§645): one event when the list is about one, otherwise every event
  * that has not started — the members' race the owner is cleaning before, and the next runs, never a
  * season already run.
  */

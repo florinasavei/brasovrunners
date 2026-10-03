@@ -106,7 +106,7 @@ export type RegistrationCsvRow = {
    */
   promoConsentAt?: string;
   /**
-   * «Lista ascunsă» (§643, named by §NNN): "Yes" when the club put the person on the hidden list —
+   * «Lista ascunsă» (§643, named by §647): "Yes" when the club put the person on the hidden list —
    * an organizer, a pacemaker, an invited runner — empty otherwise, like the member claim.
    */
   outsideCapacity?: boolean;
@@ -150,7 +150,7 @@ const HEADER = [
   "Cancellation reason",
   // Last (§562), for the same reason: the consent to offers and benefits, its moment or empty.
   "Offers and benefits",
-  // Last (§643), for the same reason: on the hidden list (§NNN's name), "Yes" or empty.
+  // Last (§643), for the same reason: on the hidden list (§647's name), "Yes" or empty.
   "Hidden list",
 ];
 

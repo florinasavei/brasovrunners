@@ -1,7 +1,7 @@
 import { DomainError } from "@/shared/errors/domain-error";
 
 /**
- * Invitations by email (§NNN; the owner, 2026-10-02: «vreau să trimit „invitații speciale” pe email
+ * Invitations by email (§647; the owner, 2026-10-02: «vreau să trimit „invitații speciale” pe email
  * pentru membrii BVR, un fel de adaugă manual» — «Dar vreau și pentru non-membrii»), as pure rules: the
  * deadline, how many supplementary places a send needs, the state a row is in, and the backoffice's
  * typed list. No database here; `service.ts` decides under the event lock with these.
@@ -31,7 +31,7 @@ export const INVITATION_REFUSALS = [
 export type InvitationRefusalCode = (typeof INVITATION_REFUSALS)[number];
 
 /**
- * A send or a press refused (§NNN), naming the person it is about when there is one: the Administrator
+ * A send or a press refused (§647), naming the person it is about when there is one: the Administrator
  * typed the list, so the refusal may say whose line it is — in the dialog that sent it, never in a URL.
  * Nothing of the batch is written: the whole send is one transaction.
  */
@@ -66,7 +66,7 @@ export function invitationDeadline(input: { now: Date; days: number; startsAt: D
 }
 
 /**
- * The places free for invitations (§NNN): the allocator's count against the capacity, **less everyone
+ * The places free for invitations (§647): the allocator's count against the capacity, **less everyone
  * eligible who waits** (`countEligibleWaitlisted`: `WAITLISTED`, no offer yet) — whatever the event's
  * «Oferte automate» and whether the registration has closed. A free place somebody waits for is never
  * an invitation's: with automatic offers on and before the close the send's first step offers it to the
@@ -91,7 +91,7 @@ export function invitationRaises(input: { capacity: number | null; occupied: num
 }
 
 /**
- * The places free for invitations, read before the press (§NNN): `invitationFreePlaces` on the page's
+ * The places free for invitations, read before the press (§647): `invitationFreePlaces` on the page's
  * counts — the waiting always subtracted, as the server subtracts them under the lock whatever the
  * auto-offer setting or the close. (With offers on and before the close the send's first step offers
  * the line the free places it is owed; the count comes out the same: each place offered is one fewer
@@ -122,7 +122,7 @@ export function invitationState(row: { acceptedAt: Date | null; withdrawnAt: Dat
 export type TypedInvitee = { name: string; email: string; line: number };
 
 /**
- * «Nume <adresă>, una pe rând» read into people (§NNN). A line is the name and the address — the
+ * «Nume <adresă>, una pe rând» read into people (§647). A line is the name and the address — the
  * address in angle brackets, or the last word with an @ in it — in any order a person would type it:
  * «Ana Pop <ana@example.invalid>», «Ana Pop ana@example.invalid», «ana@example.invalid Ana Pop», «Ana Pop, ana@example.invalid».
  * Blank lines are skipped. A line with no address, or no name, is returned in `unread` (by its number,

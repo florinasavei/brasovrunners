@@ -263,7 +263,7 @@ export async function noticeDescribesListNumbers<T extends Record<string, unknow
 }
 
 /**
- * Whether the privacy notice in force describes the club's invitations by email (§NNN,
+ * Whether the privacy notice in force describes the club's invitations by email (§647,
  * `describesEventInvitations`) — in every language, like `noticeDescribesListNumbers`. For `/admin/tasks`.
  */
 export async function noticeDescribesEventInvitations<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {

@@ -1304,7 +1304,7 @@ function newsletterConfirmEmphasis(d: TemplateData, b: readonly string[]): Empha
   return { highlight: [b[1]], actionAfter: b[1] };
 }
 
-/** An invitation's emphasis (§NNN): the invitation and its deadline on the band, the button under them, the "ignore it" quiet. */
+/** An invitation's emphasis (§647): the invitation and its deadline on the band, the button under them, the "ignore it" quiet. */
 function invitationEmphasis(d: TemplateData, b: readonly string[]): Emphasis {
   const lead = d.holdExpiresAtFormatted ? b.slice(0, 2) : b.slice(0, 1);
   return { highlight: lead, actionAfter: lead[lead.length - 1], quiet: [b[b.length - 1]] };
@@ -1590,7 +1590,7 @@ const T = {
       action: "Intră în zona membrilor",
       links: (d: TemplateData) => (d.privacyUrl ? [{ label: "Nota de confidențialitate", url: d.privacyUrl }] : []),
     },
-    // A personal invitation to an event (§NNN): the place kept until the deadline, one link to the form.
+    // A personal invitation to an event (§647): the place kept until the deadline, one link to the form.
     eventInvitation: {
       subject: (d: TemplateData) => `Invitație la ${d.eventTitle ?? "eveniment"}`,
       body: (d: TemplateData) => [
@@ -2066,7 +2066,7 @@ const T = {
     /** The same for "registration is open" (§146), which answers a request, not a registration. */
     privacyFooterInterest: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că ai cerut să fii anunțat. Cum folosim datele tale:`,
-    /** An invitation (§NNN): the club typed the name and the address to send it; nobody asked yet. */
+    /** An invitation (§647): the club typed the name and the address to send it; nobody asked yet. */
     privacyFooterInvitation: (club: string) =>
       `Primești acest mesaj pentru că ${club} ți-a trecut numele și adresa ca să te invite la acest eveniment. Cum folosim datele tale:`,
     /** The same for a group run's self-declaration (§393): signed on a page, no registration behind it. */

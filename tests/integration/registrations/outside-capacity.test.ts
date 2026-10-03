@@ -110,7 +110,7 @@ async function createEvent(capacity: number, options: { auto?: boolean } = {}): 
       registrationMode: "INTERNAL",
       capacity,
       waitlistAutoOffer: options.auto ?? true,
-      // «Folosește lista ascunsă» (§NNN): on, or nobody may be put on the list.
+      // «Folosește lista ascunsă» (§647): on, or nobody may be put on the list.
       hiddenListEnabled: true,
       locationName: "Parcul Tractorul",
       editorialStatus: "PUBLISHED",
@@ -625,11 +625,11 @@ describe("§643 the review of 2026-10-02, round two: an open offer seated outsid
 });
 
 /**
- * §NNN — «Lista ascunsă» on top of §643: the event's switch decides who may be put on the list, and the
+ * §647 — «Lista ascunsă» on top of §643: the event's switch decides who may be put on the list, and the
  * hidden list may have its own race-number series (§173 amended), drawn in confirmation order beside
  * the race's; the public «Cine vine» may count it (`countHiddenListWithPlace`).
  */
-describe("§NNN «Lista ascunsă»: the event's switch and the hidden list's own numbers", () => {
+describe("§647 «Lista ascunsă»: the event's switch and the hidden list's own numbers", () => {
   it("with «Folosește lista ascunsă» off nobody is put on the list — the refusal names the switch — and taking somebody off stays open", async () => {
     const event = await createEvent(3);
     await confirmedAddress(event, "Ana", 0);

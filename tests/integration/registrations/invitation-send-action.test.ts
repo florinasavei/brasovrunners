@@ -11,7 +11,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, the invitations review of 2026-10-03 — «Trimite invitațiile» refused with
+ * §647, the invitations review of 2026-10-03 — «Trimite invitațiile» refused with
  * `SUPPLEMENTARY_PLACE_UNCONFIRMED` answers with state, not a redirect, so the page is not redrawn: the
  * action hands back the server's current capacity and places free for invitations
  * (`readInvitationForecast`), and the next press, asked on those numbers, goes through — no reload.
@@ -102,7 +102,7 @@ function press(eventId: string, typed: string, addPlace: number | null): FormDat
 const named = (forecast: { capacity: number | null; free: number | null }, count: number) =>
   forecast.capacity === null || forecast.free === null || count <= forecast.free ? null : forecast.capacity + (count - forecast.free);
 
-describe("§NNN a refused send hands the next dialog the server's numbers", () => {
+describe("§647 a refused send hands the next dialog the server's numbers", () => {
   it("the page drawn with a free place, the place taken since: refused with the new numbers, and the second press goes through", async () => {
     const eventId = await createEvent(1);
     const drawn = await readInvitationForecast(db, eventId, new Date());
@@ -143,7 +143,7 @@ describe("§NNN a refused send hands the next dialog the server's numbers", () =
   });
 });
 
-describe("§NNN a refused press of the invitation's form says the press's own answer", () => {
+describe("§647 a refused press of the invitation's form says the press's own answer", () => {
   it("withdrawn before the press: the action lands on the link's page with `refused=withdrawn`, the token unspent", async () => {
     const eventId = await createEvent(3);
     await expect(inviteAction(null, press(eventId, "Ana Pop <ana@example.invalid>", null))).rejects.toThrow(/REDIRECT .*saved=invitationsSent/);

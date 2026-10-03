@@ -97,7 +97,7 @@ describe("owner tasks", () => {
     }
   });
 
-  /** §NNN — the invitations by email: the club may invite meanwhile; the row says what the notice owes, open, never blocking. */
+  /** §647 — the invitations by email: the club may invite meanwhile; the row says what the notice owes, open, never blocking. */
   it("keeps the invitations row open while the notice in force does not describe them, and never blocking", () => {
     expect(stateOf({ ...LAUNCHED, invitationsDescribed: false }, "invitationsNotice")).toBe("open");
     expect(stateOf(LAUNCHED, "invitationsNotice")).toBe("done");

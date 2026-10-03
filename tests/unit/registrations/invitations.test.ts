@@ -23,7 +23,7 @@ import { eventInvitationsClause } from "@/modules/registrations/invitation-words
 const NOW = new Date("2026-10-02T10:00:00.000Z");
 const DAY = 24 * 3_600_000;
 
-describe("§NNN BR-REQ-034-01 the invitation's bucket in the one formula", () => {
+describe("§647 BR-REQ-034-01 the invitation's bucket in the one formula", () => {
   it("adds the invitations' held places, and a count without the bucket reads as none", () => {
     expect(computeOccupied({ confirmed: 2, pendingDeclarationHolds: 1, unexpiredWaitlistOfferedHolds: 1, familyReservations: 1, familyPlaceHolds: 1, invitationHolds: 3 })).toBe(9);
     expect(computeOccupied({ confirmed: 2, pendingDeclarationHolds: 0, unexpiredWaitlistOfferedHolds: 0 })).toBe(2);
@@ -63,7 +63,7 @@ describe("§NNN BR-REQ-034-01 the invitation's bucket in the one formula", () =>
   });
 });
 
-describe("§NNN the deadline and the state", () => {
+describe("§647 the deadline and the state", () => {
   const STARTS = new Date(NOW.getTime() + 30 * DAY);
   it("is min(now + days, the start) — never capped by the close — and none when that is not ahead", () => {
     expect(invitationDeadline({ now: NOW, days: 7, startsAt: STARTS })).toEqual(new Date(NOW.getTime() + 7 * DAY));
@@ -85,7 +85,7 @@ describe("§NNN the deadline and the state", () => {
   });
 });
 
-describe("§NNN «Nume <adresă>, una pe rând»", () => {
+describe("§647 «Nume <adresă>, una pe rând»", () => {
   it("reads a name and an address in the orders a person types them, and names the lines it cannot", () => {
     const parsed = parseInvitationLines(
       ["Ana Pop <ana@example.invalid>", "", "Bogdan Ionescu bogdan@example.invalid", "carmen@example.invalid Carmen Dobre", "Dan Pop, dan@example.invalid", "Fără adresă", "solo@example.invalid", "two@example.invalid three@example.invalid Pop"].join("\n"),
@@ -100,7 +100,7 @@ describe("§NNN «Nume <adresă>, una pe rând»", () => {
   });
 });
 
-describe("§NNN the EVENT_INVITATION email", () => {
+describe("§647 the EVENT_INVITATION email", () => {
   const data = { participantName: "Ana Pop", eventTitle: "Crosul", eventStartsAtFormatted: "sâmbătă, 21 nov. 2026, 10:00", holdExpiresAtFormatted: "vineri, 9 octombrie 2026, la 10:00" };
   it("names the club, the event, the deadline, the button and «ignoră-l», in both languages", () => {
     const email = renderBilingual("EVENT_INVITATION", "ro", data, "https://example.test/ro/inregistrari/invitatie/SECRET");
@@ -123,7 +123,7 @@ describe("§NNN the EVENT_INVITATION email", () => {
   });
 });
 
-describe("§NNN BR-REQ-053-01 the privacy notice's sentence", () => {
+describe("§647 BR-REQ-053-01 the privacy notice's sentence", () => {
   it("the template names {{eventInvitations}} once in each language, filled with the section's own name", () => {
     for (const body of [privacyNoticeRo, privacyNoticeEn]) {
       expect(describesEventInvitations(body)).toBe(true);

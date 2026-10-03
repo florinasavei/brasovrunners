@@ -600,7 +600,7 @@ describe("§389 each person is their own registration afterwards", () => {
     await press(await offer(event, "Maria", 5), at(7));
     const [, maria] = await rowsOf(event.id);
     const staff = await admin();
-    // «Modifică datele» (§NNN) carries §67's correction: the two names, and the name of record follows them.
+    // «Modifică datele» (§645) carries §67's correction: the two names, and the name of record follows them.
     expect(await refusal(editRegistrationAnswers(db, staff, maria.id, { firstName: "ANA", lastName: "POP" }, at(8)))).toEqual({ code: "VALIDATION_ERROR", fields: ["firstName", "lastName"] });
     const { registration: renamed } = await editRegistrationAnswers(db, staff, maria.id, { firstName: "Maria Ioana" }, at(9));
     expect(renamed).toMatchObject({ registeredName: "Maria Ioana Pop", nameKey: "maria ioana pop" });

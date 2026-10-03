@@ -28,7 +28,7 @@ describe("§384 ActionForm asks first", () => {
     expect(source).toMatch(/if \(!spec\) return;[\s\S]*?event\.preventDefault\(\);/);
     // A body that counts the ticks (§532): with none ticked nothing is asked, and the server refuses.
     expect(source).toMatch(/const ticked = resolveBodyCount\(spec, valuesOf\);\s*if \(!ticked\) return;/);
-    // A body naming the fields the press changes (§NNN): none moved, the press goes through unasked.
+    // A body naming the fields the press changes (§645): none moved, the press goes through unasked.
     expect(source).toMatch(/const named = resolveChangedFields\(ticked, [\s\S]*?\}\);\s*if \(!named\) return;\s*event\.preventDefault\(\);/);
     // A series save's email line is summed over the dates ticked at this press, then asked (§384).
     expect(source).toMatch(/const counted = resolveEmailCount\(named, valuesOf\);/);
@@ -48,7 +48,7 @@ describe("§384 ActionForm asks first", () => {
 
   it("draws the one ConfirmDialog only while a question is asked", () => {
     expect(source).toMatch(/\{asking && \(\s*<ConfirmDialog\s+spec=\{asking\.spec\}\s+open\s+onCancel=\{cancelAsking\}\s+onConfirm=\{\(\) => answer\("confirm"\)\}/);
-    // «Anulează» closes the question and tells the form, so a control that changed first shows the stored state (§NNN).
+    // «Anulează» closes the question and tells the form, so a control that changed first shows the stored state (§647).
     expect(source).toMatch(/const cancelAsking = \(\) => \{\s*setAsking\(null\);\s*form\.current\?\.dispatchEvent\(new Event\(CONFIRM_CANCEL_EVENT\)\);\s*\};/);
     expect(source).not.toContain("@mui/material/Dialog");
   });

@@ -3,7 +3,7 @@
 import SvgIcon, { type SvgIconProps } from "@mui/material/SvgIcon";
 
 /**
- * «Lista ascunsă» (§NNN; the owner, 2026-10-02: «o iconiță specială cu un bandit (incognito)»): a hat
+ * «Lista ascunsă» (§647; the owner, 2026-10-02: «o iconiță specială cu un bandit (incognito)»): a hat
  * over a pair of round glasses — somebody at the start whom the count does not see. Material's set has
  * no incognito glyph, so it is drawn here, as `RoadIcon` is: one path on the same 24-unit grid as every
  * other glyph, filled with the current colour — the crown with its dip, the brim, two rings (each a

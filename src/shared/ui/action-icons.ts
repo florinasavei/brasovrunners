@@ -159,7 +159,7 @@ export type ActionIconName =
   | "declaration"
   // Those whose address is not confirmed yet (§632): the envelope with the tick the participant's own email step wears, in the «Înscrieri» tab's pill.
   | "emailConfirmation"
-  // «Lista ascunsă» (§NNN; the owner: «o iconiță specială cu un bandit (incognito)»): the hat and the
+  // «Lista ascunsă» (§647; the owner: «o iconiță specială cu un bandit (incognito)»): the hat and the
   // round glasses, drawn here (`IncognitoIcon`, Material has none) — the registration page's block, the
   // row's chip and the list's pill.
   | "hiddenList"
@@ -170,7 +170,7 @@ export type ActionIconName =
   // A signed declaration kept for a complaint or a dispute (§556): the padlock, and opened, its release.
   | "hold"
   | "release"
-  // The self-declared member tick (§NNN): «Nu e membru» is the person taken off, «E membru» the
+  // The self-declared member tick (§645): «Nu e membru» is the person taken off, «E membru» the
   // membership card, and «Bife de membru fără cont de membru» — the ticks checked against the
   // members' accounts before any is taken off — the list being checked.
   | "memberOff"

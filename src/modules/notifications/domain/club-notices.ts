@@ -245,7 +245,7 @@ const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set<EmailMe
   // The Administrators' notice of a moved legal template (§639): to the staff, like the invitation.
   "LEGAL_TEMPLATES_CHANGED",
   "REGISTRATION_OPENED",
-  // An invitation (§NNN): to an address the club named, before any registration — like "registration is open".
+  // An invitation (§647): to an address the club named, before any registration — like "registration is open".
   "EVENT_INVITATION",
   // The newsletter (§445) goes to a subscriber, not a participant, about no registration.
   "NEWSLETTER_CONFIRM",

@@ -106,7 +106,7 @@ export const RETENTION = {
    */
   unconfirmedRegistrationDays: 30,
   /**
-   * An invitation that ended unaccepted — withdrawn, or past its deadline (§NNN): the name and the
+   * An invitation that ended unaccepted — withdrawn, or past its deadline (§647): the name and the
    * address the club typed to send one email, kept as long as an address never confirmed is (the
    * window above, counted from the end), so "I never got the invitation" can still be answered, and
    * then deleted with its link. An accepted invitation goes with its registration (`on delete cascade`).
@@ -168,7 +168,7 @@ export type PruneCounts = {
   auditLogs: number;
   /** Newsletter addresses never confirmed, and the newsletter's links nobody can use any more (§445). */
   newsletter: number;
-  /** Invitations that ended unaccepted, gone after `endedInvitationDays` (§NNN). */
+  /** Invitations that ended unaccepted, gone after `endedInvitationDays` (§647). */
   invitations: number;
 };
 
@@ -232,7 +232,7 @@ async function deleteOrphanParticipants<T extends Record<string, unknown>>(db: D
     .where(
       and(
         notExists(db.select({ id: registrations.id }).from(registrations).where(eq(registrations.participantId, participants.id))),
-        // Nor an address the club invited (§NNN): the invitation's link is scoped to it until the invitation goes.
+        // Nor an address the club invited (§647): the invitation's link is scoped to it until the invitation goes.
         notExists(db.select({ id: eventInvitations.id }).from(eventInvitations).where(eq(eventInvitations.participantId, participants.id))),
       ),
     )
@@ -322,7 +322,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
       )
       .returning({ id: registrations.id });
     /*
-      A corrected emergency contact (§NNN, «Modifică datele»): its old and new values leave the trail
+      A corrected emergency contact (§645, «Modifică datele»): its old and new values leave the trail
       with the contact itself — the row keeps which field was corrected, by whom and when.
     */
     await scrubCorrectedAnswerValues(tx, recent, ["emergencyContactName", "emergencyContactPhone"]);
@@ -372,7 +372,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
         ),
       )
       .returning({ id: registrations.id });
-    // A corrected Strava link or username goes from the trail with the socials (§NNN).
+    // A corrected Strava link or username goes from the trail with the socials (§645).
     await scrubCorrectedAnswerValues(
       tx,
       cleared.map((row) => row.id),
@@ -565,7 +565,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
   });
 
   /*
-    An invitation that ended unaccepted (§NNN): withdrawn, or past its deadline — stamped by the sweep
+    An invitation that ended unaccepted (§647): withdrawn, or past its deadline — stamped by the sweep
     or not (a cancelled event's open invitations are never swept, §331) — deleted thirty days after it
     ended, with its link (`on delete cascade`), and then the address's participant row when nothing
     else holds it. An accepted invitation is never taken here: it goes with its registration.

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.62-2026-10-02 -->
+<!-- PROJECT_BASELINE: BR-V2.63-2026-10-03 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.62-2026-10-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.63-2026-10-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1448,14 +1448,14 @@ languages go live together; that is the rule, not a setting.
    Administrator opens each registration → «Lista ascunsă» → chooses «Pe lista ascunsă» and
    confirms. They keep a declaration, a race number and their row on the public list if they
    ticked, and take none of the announced places; a place one of them held is given back to the
-   line (§643, §NNN, `AGENTS.md` §15.11). A number already given stays when somebody changes list.
+   line (§643, §647, `AGENTS.md` §15.11). A number already given stays when somebody changes list.
    While the switch is on — or while anybody already on the list still holds a place, since
    unticking it takes nobody off — the event page's places line («N înscriși din M locuri») carries one
    sentence in the public's words — organisers, volunteers and invited runners may be at the start
    outside the advertised places, taking none of them; the name «Lista ascunsă» is the backoffice's
    alone and appears on no public page and in no participant's email.
 6. **Invitations by email** — members, partners, guests the club wants at the start, without asking
-   them to fight the public form (§NNN). «Evenimente» → «Editează» on the race → «Înscrierile primite»
+   them to fight the public form (§647). «Evenimente» → «Editează» on the race → «Înscrierile primite»
    → «Trimite invitații» opens the «Invitații» section of the race's registrations list:
    - tick members from the members' zone (search by name or address), and/or type other people one per
      line — the name, then the email address;

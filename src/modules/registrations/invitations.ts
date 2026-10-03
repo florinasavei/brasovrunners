@@ -17,7 +17,7 @@ import { lockEventForCapacity } from "./repository";
 import { seatInvitedRegistration, submitRegistration } from "./service";
 
 /**
- * An invitation's link (§NNN; `/registrations/invitation/[token]`): the page's read and the form's press.
+ * An invitation's link (§647; `/registrations/invitation/[token]`): the page's read and the form's press.
  *
  * - `readInvitationLink` is the GET: the token read — charged one attempt (§39), never spent — and the
  *   invitation it is scoped to, in one read-only transaction (GET never mutates, §12.8). It says what

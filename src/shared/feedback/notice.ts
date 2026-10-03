@@ -96,7 +96,7 @@ const SENTENCES: Readonly<Record<string, { count?: string; values?: Readonly<Rec
   picturesLadderedFailed: { count: "count", values: { left: "left", failed: "failed" } },
   // The desk's spares a print reserved (§444): how many, and the first and last number.
   sparesReserved: { count: "count", values: { from: "from", to: "to" } },
-  // A send of invitations that added supplementary places (§NNN): how many invited, and the capacity now.
+  // A send of invitations that added supplementary places (§647): how many invited, and the capacity now.
   invitationsSentRaised: { count: "count", values: { capacity: "capacity" } },
 };
 
@@ -316,7 +316,7 @@ export type ConfirmSpec = {
    */
   choice?: ConfirmChoice;
   /**
-   * The fields the press changes, named in `body`'s `{fields}` (§NNN, «Modifică datele»): each listed
+   * The fields the press changes, named in `body`'s `{fields}` (§645, «Modifică datele»): each listed
    * field whose value at the press differs from its `was.<name>` twin — the value the page rendered —
    * by its label, in the form's order. Nothing changed, no question: the press goes to the server,
    * which says nothing would change (`resolveChangedFields`).

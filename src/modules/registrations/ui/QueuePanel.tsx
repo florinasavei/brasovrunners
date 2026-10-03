@@ -95,7 +95,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
   const rows = await listQueueForEvent(db, event.id, now, order);
   const free = event.capacity === null ? null : Math.max(0, event.capacity - occupied);
   // A family's reserved places count as held (§543): the same count the public page and the allocator read.
-  // …and an invitation's kept place (§NNN), until its deadline.
+  // …and an invitation's kept place (§647), until its deadline.
   const holds = counts.pendingDeclarationHolds + counts.unexpiredWaitlistOfferedHolds + counts.familyReservations + counts.familyPlaceHolds + counts.invitationHolds;
   const reserved = await listFamilyReservationsForEvent(db, event.id, now);
   const family = await familyOf(db, reserved);

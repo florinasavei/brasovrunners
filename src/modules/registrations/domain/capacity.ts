@@ -36,7 +36,7 @@ export type OccupiedCounts = {
    */
   familyPlaceHolds?: number;
   /**
-   * Live invitations (§NNN): a place the club keeps for a named person it emailed, from the send
+   * Live invitations (§647): a place the club keeps for a named person it emailed, from the send
    * until the invitation's deadline, its acceptance or its withdrawal — counted like a family's
    * reservation, and like it never released for somebody waiting before its deadline (the club's
    * choice). Not one sent «În afara locurilor» (§643). At the acceptance the count moves from this
@@ -116,7 +116,7 @@ export type PlacesTaken = {
   declaration: number;
   offered: number;
   family: number;
-  /** Kept for the people the club invited (§NNN). */
+  /** Kept for the people the club invited (§647). */
   invited: number;
 };
 
@@ -133,7 +133,7 @@ export class NoFreePlaceError extends DomainError {
   }
 }
 
-/** Who holds an event's places, as the six numbers the sentence says (§589; the invitations since §NNN). */
+/** Who holds an event's places, as the six numbers the sentence says (§589; the invitations since §647). */
 export function placesTaken(capacity: number, counts: OccupiedCounts): PlacesTaken {
   return {
     capacity,

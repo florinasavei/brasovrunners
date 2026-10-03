@@ -242,7 +242,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
 
   // `purgeLapsedFamilyEntries` (§446): another person's kept form, deleted once its window passes.
   const familyLapse = await nextFamilyEntryLapse(db, now);
-  // An invitation's deadline (§NNN): the sweep ends it and the place it kept goes to the line.
+  // An invitation's deadline (§647): the sweep ends it and the place it kept goes to the line.
   const invitationLapse = await nextInvitationLapse(db, now);
 
   return earliest([emailLapses, toDate(holds?.next), toDate(placeHolds?.next), ...eventInstants, ...lateReminders, ...interestInstants, familyLapse, toDate(invitationLapse)]);

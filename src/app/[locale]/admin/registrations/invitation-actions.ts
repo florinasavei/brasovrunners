@@ -16,7 +16,7 @@ import { flashOutcome } from "@/shared/feedback/flash";
 import { wholeDigits } from "@/shared/forms/whole-digits";
 
 /**
- * Invitations by email (§NNN): the three presses of the «Invitații» section on an event's registrations
+ * Invitations by email (§647): the three presses of the «Invitații» section on an event's registrations
  * list. Each is the Administrator's (`canManageRegistrations`), asserted here, in the admin service and
  * in the service; the Organizer reads the section and is offered no verb (§289).
  */
@@ -58,7 +58,7 @@ export type InvitationSendState = {
 } | null;
 
 /**
- * «Trimite invitațiile» (§NNN): the members ticked and the lines typed, one send. A line that is not a
+ * «Trimite invitațiile» (§647): the members ticked and the lines typed, one send. A line that is not a
  * name and an address is refused before anything is asked of the server; the service refuses the whole
  * list by the first person it cannot invite. On success, back to the section with the toast.
  */
@@ -116,7 +116,7 @@ function refusalOf(error: unknown): { error: string } {
 }
 
 /**
- * «Retrimite» (§NNN): a new email and link; the deadline kept, or moved to the days typed when that is
+ * «Retrimite» (§647): a new email and link; the deadline kept, or moved to the days typed when that is
  * later — but kept for a counted invitation while anyone eligible waits, and the toast says which.
  */
 export async function resendInvitationAction(_previous: unknown, form: FormData): Promise<null> {
@@ -133,7 +133,7 @@ export async function resendInvitationAction(_previous: unknown, form: FormData)
   return backToSection(locale, eventId, outcome);
 }
 
-/** «Retrage» (§NNN): the invitation ends now and its place goes back. */
+/** «Retrage» (§647): the invitation ends now and its place goes back. */
 export async function withdrawInvitationAction(_previous: unknown, form: FormData): Promise<null> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");

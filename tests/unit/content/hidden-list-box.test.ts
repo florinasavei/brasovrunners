@@ -5,7 +5,7 @@ import ro from "../../../messages/ro.json";
 import type { EditableEvent } from "@/modules/content/events/repository";
 
 /**
- * §NNN — «Lista ascunsă» in the public list's card, under «Arată public câți așteaptă»: the switch with
+ * §647 — «Lista ascunsă» in the public list's card, under «Arată public câți așteaptă»: the switch with
  * its marker and help, and the three fields that mean something only with it on — drawn always (still
  * posted, read-only while hidden), shown only while the switch is ticked.
  */
@@ -49,7 +49,7 @@ const detailsBlock = (html: string) => {
   return html.slice(html.lastIndexOf("<div", html.lastIndexOf("<div", at) - 1), at);
 };
 
-describe("§NNN the «Lista ascunsă» group in the editor", () => {
+describe("§647 the «Lista ascunsă» group in the editor", () => {
   it("draws «Arată public numărătoarea» on its own, then the switch with its marker and help, and the two fields under it", async () => {
     const html = await render(RACE);
     expect(html.indexOf('data-testid="waitlist-count-public"')).toBeLessThan(html.indexOf('data-testid="hidden-list-settings"'));

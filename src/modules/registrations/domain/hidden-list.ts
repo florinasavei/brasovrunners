@@ -1,5 +1,5 @@
 /**
- * «Lista ascunsă» (§NNN, amending §643): the event's own settings, as the rest of the code reads them.
+ * «Lista ascunsă» (§647, amending §643): the event's own settings, as the rest of the code reads them.
  *
  * The owner, 2026-10-02: «Trebuie ca acest feature să se numească „Pune pe lista ascunsă” […] și la
  * numărate trebuie să am bife dacă vreau să îi includ sau nu» — and «direct din setările evenimentului
@@ -22,7 +22,7 @@ export const HIDDEN_LIST_OFF = "HIDDEN_LIST_OFF";
 export const SPARES_BEFORE_HIDDEN_LIST = "SPARES_BEFORE_HIDDEN_LIST";
 
 /**
- * The markers a refused «Numerele listei ascunse încep de la» carries (§NNN): its series would start
+ * The markers a refused «Numerele listei ascunse încep de la» carries (§647): its series would start
  * inside the race's own, or would run into the desk's reserved spares (§444). Each has a second
  * sentence, `…_DATED`, for a refusal about another date of a series than the one saved — a scoped save
  * reaching it (`applyToSeries`) — which names that date. A copy (a duplicate, a repeat, the job's next
@@ -32,7 +32,7 @@ export const HIDDEN_LIST_IN_RACE_SERIES = "HIDDEN_LIST_IN_RACE_SERIES";
 export const HIDDEN_LIST_ON_SPARES = "HIDDEN_LIST_ON_SPARES";
 
 /**
- * A refused «Numerele listei ascunse încep de la» (§NNN): still a VALIDATION_ERROR about the box
+ * A refused «Numerele listei ascunse încep de la» (§647): still a VALIDATION_ERROR about the box
  * `hiddenListBibStart`, so a caller that knows nothing of it reads it as before, and it carries which of
  * the two refusals it is and, when the date judged is not the one saved, that date (`YYYY-MM-DD`, in the
  * event's zone). The action turns it into its sentence (`hiddenListRefusalOf`); the maintenance job
@@ -52,7 +52,7 @@ export class HiddenListNumbersError extends DomainError {
 }
 
 /**
- * The code an action shows for a refused «Numerele listei ascunse încep de la» (§NNN), and the date its
+ * The code an action shows for a refused «Numerele listei ascunse încep de la» (§647), and the date its
  * sentence names, or null for any other error: `Admin.errors.<code>`, `{date}` filled by the caller in
  * its own language.
  */
@@ -70,7 +70,7 @@ export type HiddenListSettings = {
 };
 
 /**
- * What «Cine vine» does with its numbers (§NNN): whether it says them at all («Arată public
+ * What «Cine vine» does with its numbers (§647): whether it says them at all («Arată public
  * numărătoarea» — on every event, whatever the switch says), and whether the hidden list is in them
  * («Numără și lista ascunsă» — only while the switch is on). Defaults — the numbers said, the hidden
  * list out — for a caller with no row. The places line and the free places never read this: the
@@ -82,7 +82,7 @@ export function hiddenListCounting(event: Partial<HiddenListSettings> | null | u
 }
 
 /**
- * Where the hidden list's own numbers start (§NNN, amending §173), or null when it draws from the
+ * Where the hidden list's own numbers start (§647, amending §173), or null when it draws from the
  * race's series as every row did: only while the switch is on and a start is set.
  */
 export function hiddenListBibStartOf(event: Partial<HiddenListSettings> | null | undefined): number | null {

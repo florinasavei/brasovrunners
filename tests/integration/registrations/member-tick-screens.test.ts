@@ -14,7 +14,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-037-03 criteria 12 and 13 (§NNN) — «Datele înscrierii» and the member tick's screens, read from
+ * BR-REQ-037-03 criteria 12 and 13 (§645) — «Datele înscrierii» and the member tick's screens, read from
  * a real database.
  *
  * - the registration's page folds «Corectează numele» into «Datele înscrierii»: closed behind a plain
@@ -66,7 +66,7 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   cancelRegistrationAction: vi.fn(),
   checkInAction: vi.fn(),
   confirmRegistrationNowAction: vi.fn(),
-  // «Datele înscrierii» (§NNN), folding «Corectează numele».
+  // «Datele înscrierii» (§645), folding «Corectează numele».
   editRegistrationAnswersAction: vi.fn(),
   deleteRegistrationAction: vi.fn(),
   givePlaceNowAction: vi.fn(),
@@ -76,7 +76,7 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   withdrawConsentAction: vi.fn(),
   setOutsideCapacityAction: vi.fn(),
   declarationHoldAction: vi.fn(),
-  // The member tick and its sweep (§NNN).
+  // The member tick and its sweep (§645).
   setClubMemberDeclaredAction: vi.fn(),
   clearMemberTicksAction: vi.fn(),
 }));

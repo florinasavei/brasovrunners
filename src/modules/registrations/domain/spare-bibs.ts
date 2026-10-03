@@ -87,7 +87,7 @@ export function spareStateOf(band: SpareBand | null, free: readonly number[]): S
 }
 
 /**
- * The first number a spare may not reach (§NNN, amending §444), or null: the hidden list's own series
+ * The first number a spare may not reach (§647, amending §444), or null: the hidden list's own series
  * when it sits above the race's (`hidden-list.ts#hiddenListBibStartOf`). The spares then stay between
  * the race's numbers and the hidden list's, so an invitation's number is never pushed up by a print and
  * a walk-in never wears a number inside the hidden list's series. A hidden series below the race's is
@@ -105,7 +105,7 @@ export function spareStopOf(bibStartNumber: number, hiddenStart: number | null):
  * `limit` is how many the caller may ask for, so the card can say the exact range of every count
  * from the same function the write uses.
  *
- * `stop` (§NNN, `spareStopOf`): the hidden list's first number when its series sits above the race's.
+ * `stop` (§647, `spareStopOf`): the hidden list's first number when its series sits above the race's.
  * The first print's «highest» is then taken over the numbers below it only, and no candidate reaches
  * it, so fewer than asked — or none — come back when the room between the two series is short.
  */
@@ -140,7 +140,7 @@ export type SpareRefusal = "count" | "ceiling" | "size" | "hiddenList";
  * them free), and the event's reservation after it — the same start on an extension, the count
  * grown to reach the last new number. Refused for a count outside 1–`SPARE_BIBS_PER_PRINT`
  * (`count`), for too few numbers left under 99 999 (`ceiling`), for too few left before the hidden
- * list's own series (`hiddenList`, `stop`, §NNN), and for a reservation that would pass
+ * list's own series (`hiddenList`, `stop`, §647), and for a reservation that would pass
  * `SPARE_BIBS_MAX` (`size`).
  */
 export function planSpareReservation(input: {

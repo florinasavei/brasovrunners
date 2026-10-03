@@ -114,7 +114,7 @@ export const LIST_SOCIALS_MERGE_FIELD = "participantListSocials";
 export const LIST_NUMBERS_MERGE_FIELD = "participantListNumbers";
 
 /**
- * The privacy notice's marker for the club's invitations by email (§NNN): the backoffice section's own
+ * The privacy notice's marker for the club's invitations by email (§647): the backoffice section's own
  * name, quoted (`registrations/invitation-words.ts`) — «Invitații» / “Invitations” — in the sentence
  * that says the club may enter an invited person's name and address to send one invitation. Like the
  * states (§396) it is also what `/admin/tasks` reads: the row `invitationsNotice` stays open until a
@@ -481,7 +481,7 @@ export function describesListNumbers(body: unknown): boolean {
 }
 
 /**
- * Whether a privacy notice describes the club's invitations by email (§NNN): it names
+ * Whether a privacy notice describes the club's invitations by email (§647): it names
  * `{{eventInvitations}}`. What `/admin/tasks`' row `invitationsNotice` reads. Pure.
  */
 export function describesEventInvitations(body: unknown): boolean {

@@ -65,7 +65,7 @@ const imports = [...registry.matchAll(/^import (\w+) from "(@mui\/icons-material
 
 /**
  * `import IncognitoIcon from "./IncognitoIcon";` — a glyph Material does not have, drawn in its own
- * file beside the registry (§NNN: «Lista ascunsă»'s incognito). One file per glyph still: the file is
+ * file beside the registry (§647: «Lista ascunsă»'s incognito). One file per glyph still: the file is
  * named after the identifier, and it is the only kind of local import the registry makes.
  */
 const drawn = [...registry.matchAll(/^import (\w+) from "(\.\/[^"]*)";/gm)].map((match) => ({
@@ -264,7 +264,7 @@ describe("§318 one glyph per verb, by name", () => {
     for (const { from } of imports) expect(from, from).toMatch(/^@mui\/icons-material\/[A-Z]\w+$/);
     const paths = imports.map((entry) => entry.from);
     expect(new Set(paths).size, "a glyph file imported twice").toBe(paths.length);
-    // A drawn glyph: its own file, named after it, ending in Icon (§NNN).
+    // A drawn glyph: its own file, named after it, ending in Icon (§647).
     for (const { identifier, from } of drawn) expect(from, identifier).toBe(`./${identifier}`);
     for (const { identifier } of drawn) expect(identifier).toMatch(/^[A-Z]\w+Icon$/);
     const identifiers = new Set([...imports, ...drawn].map((entry) => entry.identifier));

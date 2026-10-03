@@ -111,7 +111,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
     await db.delete(registrations).where(inArray(registrations.eventId, createdEventIds));
     await db.delete(events).where(inArray(events.id, createdEventIds));
     await db.delete(participants).where(inArray(participants.id, createdParticipantIds));
-    // The invitations' addresses (§NNN): the send made their participant rows; the events' deletion took the invitations.
+    // The invitations' addresses (§647): the send made their participant rows; the events' deletion took the invitations.
     if (invitedAddresses.length > 0) await db.delete(participants).where(inArray(participants.canonicalEmail, invitedAddresses));
     for (const id of [staffId, outsideStaffId]) {
       if (!id) continue;
@@ -121,7 +121,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
     await pool.end();
   });
 
-  /** The addresses the invitations' case invited (§NNN), removed after with the participant rows the send made. */
+  /** The addresses the invitations' case invited (§647), removed after with the participant rows the send made. */
   const invitedAddresses: string[] = [];
 
   /** A fresh, uniquely-named event for each test, never reused across tests. */
@@ -463,7 +463,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
   );
 
   it(
-    "§NNN two Administrators inviting onto the last free place at once: one invitation holds it, the other press is refused, and pressed again adds exactly one place",
+    "§647 two Administrators inviting onto the last free place at once: one invitation holds it, the other press is refused, and pressed again adds exactly one place",
     async () => {
       // Two places, one confirmed: one place free, read by both pages — neither question names a raise.
       const event = await createInternalEvent(2);

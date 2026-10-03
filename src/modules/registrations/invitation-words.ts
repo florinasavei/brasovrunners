@@ -2,7 +2,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * What the privacy notice's `{{eventInvitations}}` becomes (§NNN): the backoffice section's own name,
+ * What the privacy notice's `{{eventInvitations}}` becomes (§647): the backoffice section's own name,
  * quoted, in that language — „Invitații” / “Invitations” — read from the catalogue the section's heading
  * reads (`Admin.invitations.title`), so the approved sentence names the screen the club uses. Outside a
  * request, like `list-number-words.ts`, for the legal pages, the declaration and the token legend.

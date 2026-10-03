@@ -6,7 +6,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox } from "./support/fold";
 
 /**
- * §NNN (amending §643; the owner, 2026-10-02: «Nu îmi place deloc cum arată bifa asta, trebuia să fie
+ * §647 (amending §643; the owner, 2026-10-02: «Nu îmi place deloc cum arată bifa asta, trebuia să fie
  * doar radio» — and the caption cut off at the right of his phone) — «Lista ascunsă» on a registration's
  * page: two radios under a heading with the incognito glyph, the server's state checked, inside the
  * page at 320 pixels with 44-pixel targets; a change asks the dialog, «Anulează» puts the radio back,
@@ -65,7 +65,7 @@ async function seed(tag: string): Promise<{ eventId: string; registrationId: str
   });
 }
 
-test.describe("§NNN «Lista ascunsă» as a radio", () => {
+test.describe("§647 «Lista ascunsă» as a radio", () => {
   test.describe.configure({ timeout: 60_000 });
 
   test("two radios inside the page, 44-pixel targets; «Anulează» puts it back, «Da» puts the runner on the list", async ({ page }) => {
@@ -128,7 +128,7 @@ test.describe("§NNN «Lista ascunsă» as a radio", () => {
     const start = group.getByLabel("Numerele listei ascunse încep de la");
     await expect(group.getByText("Folosește lista ascunsă", { exact: true })).toBeVisible();
     await expect(start).toBeHidden();
-    // «Arată public numărătoarea» (§NNN) acts on every event: shown and ticked with the switch off, outside the group.
+    // «Arată public numărătoarea» (§647) acts on every event: shown and ticked with the switch off, outside the group.
     const countTick = box.getByTestId("participant-count-public").getByRole("checkbox", { name: "Arată public numărătoarea" });
     await expect(countTick).toBeVisible();
     await expect(countTick).toBeChecked();

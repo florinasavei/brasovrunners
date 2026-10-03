@@ -78,7 +78,7 @@ export default async function StartListBox({ event, mayEditSettings }: Pick<BoxP
                 <BoxNote>{t("editor.waitlistCountPublicHelp")}</BoxNote>
               </Box>
               {/*
-                «Arată public numărătoarea» (§NNN): «Cine vine»'s own numbers — the title's «(N)», «N confirmați
+                «Arată public numărătoarea» (§647): «Cine vine»'s own numbers — the title's «(N)», «N confirmați
                 — M cu numele afișat», «în curs» — on every event, whatever the hidden list's switch says (the
                 owner: «mai punem bifă pentru afișarea numărătorii»). It hides numbers, never a name, so it sits
                 beside «Arată public câți așteaptă», not indented. On by default; its own marker tells "unticked"
@@ -92,7 +92,7 @@ export default async function StartListBox({ event, mayEditSettings }: Pick<BoxP
                 <BoxNote>{t("editor.participantCountPublicHelp")}</BoxNote>
               </Box>
               {/*
-                «Lista ascunsă» (§NNN; the owner, 2026-10-02: «direct din setările evenimentului să pot avea
+                «Lista ascunsă» (§647; the owner, 2026-10-02: «direct din setările evenimentului să pot avea
                 „folosește lista ascunsă” dedicată pentru BIB-uri date pe invitații»): the switch that lets the
                 registrations be put on the hidden list, and — shown only while it is ticked — the hidden list's
                 own number series and «Numără și lista ascunsă». One marker for the three, so a

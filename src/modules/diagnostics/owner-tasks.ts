@@ -189,7 +189,7 @@ export type OwnerTaskInputs = {
    */
   listNumbersDescribed: boolean;
   /**
-   * Does the notice in force, in every language, describe the club's invitations by email (§NNN,
+   * Does the notice in force, in every language, describe the club's invitations by email (§647,
    * `noticeDescribesEventInvitations`)? The club may invite meanwhile (§389's precedent); the row says
    * what the notice owes.
    */
@@ -406,7 +406,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       state: input.listNumbersDescribed ? "done" : "open",
     });
     /*
-      The invitations by email (§NNN), the same shape: open, never blocking — nothing is refused, the
+      The invitations by email (§647), the same shape: open, never blocking — nothing is refused, the
       club may invite while the notice is the older one, as it registers another person on one's own
       address (§389) — and done by itself the day a notice naming `{{eventInvitations}}` takes effect.
     */

@@ -416,7 +416,7 @@ describe("BR-REQ-037-03 corrections are bounded and audited", () => {
     const event = await createInternalEvent(10);
     const registration = await addByStaff(event, "desk@example.org");
 
-    // «Modifică datele» (§NNN) carries the correction: the two names, the name of record following them.
+    // «Modifică datele» (§645) carries the correction: the two names, the name of record following them.
     const { registration: updated } = await editRegistrationAnswers(db, admin, registration.id, { firstName: "  Ana ", lastName: " Popescu  " }, NOW);
     expect(updated.registeredName).toBe("Ana Popescu");
 
@@ -706,7 +706,7 @@ describe("BR-REQ-037-06 an Administrator erases a registration", () => {
     await deleteRegistrationByStaff(db, admin, erased.id, "erasure request", NOW);
 
     const rows = await db.select().from(auditLogs).where(eq(auditLogs.entityId, erased.id));
-    // The two corrected names (§NNN) keep which field and lose both values, like the rename beside them.
+    // The two corrected names (§645) keep which field and lose both values, like the rename beside them.
     expect(rows.map((row) => row.action).filter((action) => action !== "registration.answer_corrected").sort()).toEqual([
       "registration.cancelled_by_staff",
       "registration.deleted_by_staff",

@@ -17,7 +17,7 @@ function text(form: FormData, name: string): string {
 }
 
 /**
- * The invitation's form sent (§NNN): the token spent and the registration created and seated in the
+ * The invitation's form sent (§647): the token spent and the registration created and seated in the
  * invitation's place, in one transaction (`invitations.ts#acceptInvitation`). Lands on the same page:
  *
  * - `done=1` — the place is the person's and the declaration's email is queued;

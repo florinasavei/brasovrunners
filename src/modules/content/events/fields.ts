@@ -333,7 +333,7 @@ function costRule(
 }
 
 /**
- * «Numerele listei ascunse încep de la» (§NNN): the hidden list's own series may not overlap the
+ * «Numerele listei ascunse încep de la» (§647): the hidden list's own series may not overlap the
  * race's. The race's series runs from `bibStartNumber` for `capacity` numbers on a capped event, so a
  * start inside it is refused and one below it or past it is accepted. An uncapped event's series has
  * no end — every number from its first upward is the race's — so there the hidden list's start must
@@ -938,7 +938,7 @@ export const eventFieldsSchema = z
      */
     waitlistCountPublic: z.boolean().optional(),
     /**
-     * «Lista ascunsă» (§NNN, amending §643): the event's switch, the hidden list's own number series
+     * «Lista ascunsă» (§647, amending §643): the event's switch, the hidden list's own number series
      * and «Numără și lista ascunsă», with «Arată public numărătoarea» beside them. Each optional, and
      * absent means "this caller is not editing it" (the kit's discipline, §554): the editor posts the
      * group's three with one marker and the count's tick with its own, and a form without them changes

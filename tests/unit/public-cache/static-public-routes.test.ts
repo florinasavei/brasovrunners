@@ -92,7 +92,7 @@ const PER_REQUEST: Record<string, string> = {
   "src/app/[locale]/registrations/confirm/[token]/page.tsx": TOKEN_PAGE,
   "src/app/[locale]/registrations/declare/[token]/page.tsx": TOKEN_PAGE,
   "src/app/[locale]/registrations/family/[token]/page.tsx": TOKEN_PAGE,
-  // An invitation's link (§NNN): the token read on every visit, like every link page.
+  // An invitation's link (§647): the token read on every visit, like every link page.
   "src/app/[locale]/registrations/invitation/[token]/page.tsx": TOKEN_PAGE,
   "src/app/[locale]/registrations/list/[token]/page.tsx": TOKEN_PAGE,
   "src/app/[locale]/registrations/manage/[token]/page.tsx": TOKEN_PAGE,

@@ -121,7 +121,7 @@ const TOKEN_PURPOSE_BY_MESSAGE_TYPE: Partial<Record<EmailMessageType, EmailActio
  * found — it is minted only then.
  */
 const ROUTE_BY_PURPOSE: Record<
-  // An invitation's link (§NNN) is minted by its own renderer (`invitation-render.ts`), never by this table.
+  // An invitation's link (§647) is minted by its own renderer (`invitation-render.ts`), never by this table.
   Exclude<EmailActionTokenPurpose, "REGISTER_ANOTHER_PERSON" | "ACCEPT_INVITATION">,
   | "/registrations/confirm/[token]"
   | "/registrations/declare/[token]"
@@ -204,7 +204,7 @@ async function renderRow(
   if (row.messageType === "NEWSLETTER_CONFIRM" || row.messageType === "NEWSLETTER" || row.messageType === "NEW_EVENT_ALERT") {
     return renderNewsletterRow(row, db, now, eventRows, replyTo);
   }
-  // An invitation (§NNN) is about an invitation, before any registration: its own path, its own link.
+  // An invitation (§647) is about an invitation, before any registration: its own path, its own link.
   if (row.messageType === "EVENT_INVITATION") {
     return renderInvitationRow(row, db, now, eventRows, replyTo);
   }

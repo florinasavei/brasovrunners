@@ -80,7 +80,7 @@ const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
   // The Administrators' notice of a moved template (§639): the texts are its bold line, not a field.
   LEGAL_TEMPLATES_CHANGED: [],
   REGISTRATION_OPENED: ["eventTitle"],
-  // An invitation (§NNN): the event, its start and until when the place is kept.
+  // An invitation (§647): the event, its start and until when the place is kept.
   EVENT_INVITATION: ["eventTitle", "eventStartsAtFormatted", "holdExpiresAtFormatted"],
   CLUB_CONFIRMATION_NOTICE: ["participantName", "eventTitle", "eventStartsAtFormatted", "bibNumber"],
   EVENT_UPDATE_NOTICE: ["eventTitle"],

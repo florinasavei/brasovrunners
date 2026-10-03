@@ -644,7 +644,7 @@ export async function countOutsideOnPublicStartList<T extends Record<string, unk
 }
 
 /**
- * Everybody on the hidden list with a place outside the places (§NNN, amending §643): the confirmed
+ * Everybody on the hidden list with a place outside the places (§647, amending §643): the confirmed
  * and the holds (a declaration to sign; an offer, which marking turns into one), real rows only,
  * ticked «Vreau să apar» or not. Two numbers, never a row: they enter «Cine vine» and «confirmați»
  * only where the event's «Numără și lista ascunsă» is on, and the table never gains a row for them —
@@ -799,7 +799,7 @@ export type OccupiedCountsRow = {
   familyReservations: number;
   /** A family sitting's holds for forms that wrote no registration (§543): `domain/capacity.ts#OccupiedCounts.familyPlaceHolds`. */
   familyPlaceHolds: number;
-  /** Live invitations holding a counted place (§NNN): `domain/capacity.ts#OccupiedCounts.invitationHolds`. */
+  /** Live invitations holding a counted place (§647): `domain/capacity.ts#OccupiedCounts.invitationHolds`. */
   invitationHolds: number;
 };
 
@@ -1047,7 +1047,7 @@ export async function countOccupied<T extends Record<string, unknown>>(
       familyReservations: sql<number>`count(*) filter (where ${familyReservationHolds(now)})::int`,
       // …and the sitting's holds for forms that wrote no registration (§543), counted the same.
       familyPlaceHolds: familyPlaceHoldsCount(eventId, now),
-      // …and the places the club keeps for the people it invited (§NNN), until each deadline.
+      // …and the places the club keeps for the people it invited (§647), until each deadline.
       invitationHolds: invitationHoldsCount(eventId, now),
     })
     .from(registrations)
@@ -1102,7 +1102,7 @@ export async function listPlaceCountInstants<T extends Record<string, unknown>>(
         .from(familyPlaceHolds)
         .where(and(eq(familyPlaceHolds.eventId, eventId), eq(familyPlaceHolds.holdsPlace, true))),
     )
-    // …and an invitation's held place, at its deadline (§NNN): not one «În afara locurilor», which holds none.
+    // …and an invitation's held place, at its deadline (§647): not one «În afara locurilor», which holds none.
     .unionAll(
       db
         .select({ holdExpiresAt: eventInvitations.expiresAt })
@@ -1385,7 +1385,7 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
     .returning({ id: familyPlaceHolds.id, holdsPlace: familyPlaceHolds.holdsPlace });
 
   /*
-    …and an invitation past its deadline (§NNN): stamped expired, its place free for the count below — the
+    …and an invitation past its deadline (§647): stamped expired, its place free for the count below — the
     club's word to a named person ends at its deadline and not before (the club's choice, like a family's
     reservation: never released for somebody waiting while it runs).
   */
@@ -1517,7 +1517,7 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
       ),
     );
   const due = new Set(rows.map((row) => row.eventId));
-  // An invitation past its deadline (§NNN): the sweep stamps it and offers its place to the line.
+  // An invitation past its deadline (§647): the sweep stamps it and offers its place to the line.
   for (const eventId of await eventsWithLapsedInvitations(db, now)) due.add(eventId);
 
   /*

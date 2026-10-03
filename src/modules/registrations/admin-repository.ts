@@ -566,7 +566,7 @@ export type RegistrationDetail = {
   eventKitShirt: boolean;
   /** Whether the event asks the health note (§557): the emergency section's button names the note only then. */
   eventAsksHealthNote: boolean;
-  /** «Folosește lista ascunsă» (§NNN): the page draws the hidden list's radio only then, or for a row already on it. */
+  /** «Folosește lista ascunsă» (§647): the page draws the hidden list's radio only then, or for a row already on it. */
   eventHiddenListEnabled: boolean;
   /** The registration's language, as on the list row: the declaration translation it signs (§330). */
   locale: Locale;

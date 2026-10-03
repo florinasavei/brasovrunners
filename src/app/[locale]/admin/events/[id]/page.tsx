@@ -257,7 +257,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const placesTaken = occupiedCounts === null ? null : computeOccupied(occupiedCounts);
   // Seated «În afara locurilor» (§643): beside the occupied places, which leave them out; read only where those are said.
   const outsideCount = occupiedCounts === null ? 0 : await countOutsideCapacity(db, event.id);
-  // Invitations still waiting for an answer (§NNN): «invitații în așteptare: N» beside the counts.
+  // Invitations still waiting for an answer (§647): «invitații în așteptare: N» beside the counts.
   const pendingInvitations = internal && canReadRegistrations(staffUser.role) ? await countPendingInvitations(db, event.id, now) : 0;
   // «Când se pierde un loc» (§635): the real rows waiting on each deadline, one grouped count, for the box and the queue panel.
   const placeDeadlines = internal && canReadRegistrations(staffUser.role) ? await readPlaceDeadlines(db, event.id, now) : null;
@@ -1025,7 +1025,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                         <GlyphButton icon="registrations" href={`${getPathname({ locale, href: "/admin/registrations" })}?eventId=${event.id}`} variant="text" size="small" sx={{ minHeight: 44 }}>
                           {t("registrations.viewForEvent")}
                         </GlyphButton>
-                        {/* Invitations by email (§NNN): the section on this event's registrations list — «Trimite invitații»
+                        {/* Invitations by email (§647): the section on this event's registrations list — «Trimite invitații»
                             for the Administrator, «Invitații» for a role that only reads it (§289). */}
                         <GlyphButton icon="send" href={`${getPathname({ locale, href: "/admin/registrations" })}?eventId=${event.id}#registrations-invitations`} variant="text" size="small" sx={{ minHeight: 44 }}>
                           {canManageRegistrations(staffUser.role) ? t("invitations.link") : t("invitations.title")}

@@ -93,7 +93,7 @@
  * `{{teamPage}}` in section 4 (§459) is the team page's name in the reader's language and the
  * marker `/admin/tasks` reads: a notice that names it describes the page's cards and photographs.
  *
- * `{{eventInvitations}}` at the end of section 2 (§NNN) is the backoffice section's name, quoted, in
+ * `{{eventInvitations}}` at the end of section 2 (§647) is the backoffice section's name, quoted, in
  * the sentence that says the club may enter an invited person's name and address to send one
  * invitation; it is the marker `/admin/tasks`' row `invitationsNotice` reads. It switches nothing: the
  * club may invite while the notice in force is an older one, as it registers another person on one's

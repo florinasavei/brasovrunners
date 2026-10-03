@@ -220,7 +220,7 @@ describe("§632 startListHeadline — the «Cine vine» title and line count eve
   });
 });
 
-describe("§NNN startListHeadline — «Numără și lista ascunsă» adds the hidden list's holds to «în curs»", () => {
+describe("§647 startListHeadline — «Numără și lista ascunsă» adds the hidden list's holds to «în curs»", () => {
   it("adds them where the places line is known, and never on an uncapped event", () => {
     const say = translator("ro");
     // 134 counted confirmed + 2 on the hidden list; 16 counted in progress + 1 hidden-list hold.

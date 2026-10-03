@@ -15,7 +15,7 @@ import { CLUB_NAME } from "@/theme/brand";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-037-03 criterion 12 (§NNN) — «Modifică datele»: an Administrator corrects or overwrites any
+ * BR-REQ-037-03 criterion 12 (§645) — «Modifică datele»: an Administrator corrects or overwrites any
  * answer the person typed.
  *
  * The owner, 2026-10-02: «Nu vreau să se numească „curăță”, dar practic vreau să pot modifica sau
@@ -222,7 +222,7 @@ describe("BR-REQ-037-03 criterion 12: «Modifică datele» writes only what chan
     const id = await seed({ instagramHandle: "ana.pop" });
     // Sixteen on the race day: a minor, so a guardian is owed and the socials must go first.
     expect((await refusal(editRegistrationAnswers(db, admin, id, { birthDate: "2010-01-01" }, NOW))).fields).toEqual(["guardianName"]);
-    // Only the birth date moved among the three: the refusal names it, not the socials nobody typed (§NNN).
+    // Only the birth date moved among the three: the refusal names it, not the socials nobody typed (§645).
     expect((await refusal(editRegistrationAnswers(db, admin, id, { birthDate: "2010-01-01", guardianName: "Ion Pop" }, NOW))).fields).toEqual(["birthDate", "minorAtRegistration"]);
     await editRegistrationAnswers(db, admin, id, { birthDate: "2010-01-01", guardianName: "Ion Pop", instagramHandle: "" }, NOW);
     expect(await rowOf(id)).toMatchObject({ birthDate: "2010-01-01", guardianName: "Ion Pop", instagramHandle: null });

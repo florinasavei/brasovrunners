@@ -116,7 +116,7 @@ export type RegistrationFormSettings = {
 
 /**
  * Whose address the form takes: typed twice (§206), a member's account (§552), the family sitting's
- * (§519), or an invitation's (§NNN) — the address the club sent it to, which the link proves.
+ * (§519), or an invitation's (§647) — the address the club sent it to, which the link proves.
  */
 export type RegistrationFormAddress =
   | { kind: "typed" }
@@ -634,7 +634,7 @@ export async function registrationForm({
           */}
           {invitation ? (
             /*
-              An invitation's form (§NNN): the address the club sent the invitation to, said back in bold
+              An invitation's form (§647): the address the club sent the invitation to, said back in bold
               and not asked — the server takes it from the invitation the token names, whatever is posted.
             */
             <Box data-testid="invitation-address">

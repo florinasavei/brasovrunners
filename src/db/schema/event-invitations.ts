@@ -7,7 +7,7 @@ import { registrations } from "./registrations";
 import { staffUsers } from "./staff-users";
 
 /**
- * A personal invitation to one event (§NNN; the owner, 2026-10-02: «vreau să trimit „invitații
+ * A personal invitation to one event (§647; the owner, 2026-10-02: «vreau să trimit „invitații
  * speciale” pe email pentru membrii BVR, un fel de adaugă manual» — «Dar vreau și pentru non-membrii»).
  *
  * An Administrator names a person — a member of the club picked from the members' zone, or a name and
