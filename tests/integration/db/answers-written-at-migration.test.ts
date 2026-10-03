@@ -14,8 +14,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
  *
  * - every existing row ends with `answers_written_at = created_at`: what the minors' sweep (§323) and
  *   the correction's guardian and socials rules (§645) read until now, so none is judged differently;
- * - a row inserted without the column afterwards (the previous release's, during a deploy) is dated by
- *   its own insert, never by the migration;
+ * - a row inserted afterwards without the column (the previous release's, during a deploy, naming its own
+ *   `created_at`) is dated by its own insert, never by the migration nor by that `created_at`;
  * - the file adds that one column and backfills it — no drop, no rename (AGENTS.md §7.6).
  */
 const MIGRATIONS = "src/db/migrations";
@@ -35,7 +35,7 @@ async function registrationColumns() {
   return rows.map((row) => row.column_name);
 }
 
-async function insertRegistration(email: string, createdAt: string | null) {
+async function insertRegistration(email: string, createdAt: string) {
   const {
     rows: [participant],
   } = await client.query<{ id: string }>(
@@ -50,10 +50,8 @@ async function insertRegistration(email: string, createdAt: string | null) {
   const {
     rows: [row],
   } = await client.query<{ id: string }>(
-    createdAt === null
-      ? `INSERT INTO registrations (${columns}) VALUES (${values}) RETURNING id`
-      : `INSERT INTO registrations (${columns}, created_at) VALUES (${values}, $3) RETURNING id`,
-    createdAt === null ? [event.id, participant.id] : [event.id, participant.id, createdAt],
+    `INSERT INTO registrations (${columns}, created_at) VALUES (${values}, $3) RETURNING id`,
+    [event.id, participant.id, createdAt],
   );
   return row.id;
 }
@@ -100,10 +98,22 @@ describe("§NNN migration 0127_answers_written_at — the day the answers were w
       "SELECT is_nullable, column_default FROM information_schema.columns WHERE table_name = 'registrations' AND column_name = 'answers_written_at'",
     );
     expect(column[0]).toEqual({ is_nullable: "NO", column_default: "now()" });
-    // A row the previous release inserts during the deploy, without the column: dated by its own insert.
-    const id = await insertRegistration("late@example.ro", null);
-    const { rows } = await client.query<{ same: boolean }>("SELECT answers_written_at = created_at AS same FROM registrations WHERE id = $1", [id]);
-    expect(rows[0].same).toBe(true);
+    // A row the previous release inserts during the deploy: it names its own `created_at` (the request's
+    // clock, a few seconds before the insert) and not the column, which the default dates by the insert itself.
+    const before = Date.now();
+    const createdAt = new Date(before - 5000).toISOString();
+    const id = await insertRegistration("late@example.ro", createdAt);
+    const after = Date.now();
+    const { rows } = await client.query<{ created_at: Date; answers_written_at: Date | null }>(
+      "SELECT created_at, answers_written_at FROM registrations WHERE id = $1",
+      [id],
+    );
+    expect(rows[0].created_at.toISOString()).toBe(createdAt);
+    expect(rows[0].answers_written_at).toBeInstanceOf(Date);
+    const written = (rows[0].answers_written_at as Date).getTime();
+    expect(written).toBeGreaterThanOrEqual(before - 1000);
+    expect(written).toBeLessThanOrEqual(after + 1000);
+    expect(written).not.toBe(rows[0].created_at.getTime());
   });
 
   it("is expand-only: it adds and backfills, and drops or renames nothing (AGENTS.md §7.6)", () => {
