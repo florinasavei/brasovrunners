@@ -152,6 +152,16 @@ describe("§NNN «Cine vine» and the hidden list's two ticks", () => {
     expect(html).toContain(ro.Event.startList.outsideCountedNote);
   });
 
+  it("on an uncapped event a hidden-list hold alone is in no number, so the note does not speak of it", async () => {
+    const id = await createEvent();
+    await register(id, "Ana Popescu");
+    await register(id, "Elena Organizator", { hidden: true, listOptOut: true, status: "PENDING_DECLARATION" });
+    const html = await render(asPublic(id, { hiddenListEnabled: true, participantCountPublic: true, hiddenListCounted: true }));
+    // The headline adds holds only where the places line is (§32): the title counts Ana alone.
+    expect(html).toContain("Cine vine (1)");
+    expect(html).not.toContain(ro.Event.startList.outsideCountedNote);
+  });
+
   it("«Arată public numărătoarea» off: only the names — no number in the title, no counted line, no position", async () => {
     const id = await seeded();
     const html = await render(asPublic(id, { hiddenListEnabled: true, participantCountPublic: false, hiddenListCounted: true }));

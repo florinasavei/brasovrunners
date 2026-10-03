@@ -66,11 +66,11 @@ export type BibSeries = "race" | "hidden";
  * series that never meet: the hidden list's from its own start up to the race's start when it sits
  * below it, or up to the ceiling when above; and the race's from its own start up to the hidden
  * list's when that sits above it. The save refuses a hidden start inside the race's capped series, at
- * or above an uncapped race's first number, or inside the desk's spares (`fields.ts#hiddenListBandRule`,
- * `assertHiddenListClearOfSpares`); the print keeps new spares below a hidden series above the race's
+ * or above an uncapped race's first number, or one whose series would hold the desk's spares
+ * (`fields.ts#hiddenListBandRule`, `assertHiddenListClearOfSpares`, which reads these bounds); the print keeps new spares below a hidden series above the race's
  * (`spareStopOf`); the spares are skipped by every draw as before.
  */
-function seriesBounds(band: { start: number; hiddenStart: number | null }, series: BibSeries): { from: number; to: number } {
+export function seriesBounds(band: { start: number; hiddenStart: number | null }, series: BibSeries): { from: number; to: number } {
   const { start, hiddenStart } = band;
   if (hiddenStart === null) return { from: start, to: ceilingFor(start) };
   if (series === "hidden") return { from: hiddenStart, to: hiddenStart < start ? start - 1 : ceilingFor(hiddenStart) };

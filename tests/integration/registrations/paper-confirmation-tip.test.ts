@@ -148,7 +148,9 @@ async function createRace(capacity = 150) {
 }
 
 let serial = 0;
-async function register(eventId: string, status: "PENDING_DECLARATION" | "PENDING_EMAIL_CONFIRMATION" | "CONFIRMED") {
+type ActiveStatus = "PENDING_EMAIL_CONFIRMATION" | "PENDING_DECLARATION" | "WAITLISTED" | "WAITLIST_OFFERED" | "CONFIRMED";
+
+async function register(eventId: string, status: ActiveStatus) {
   serial += 1;
   const email = `runner${serial}@example.org`;
   const [participant] = await db
@@ -171,6 +173,8 @@ async function register(eventId: string, status: "PENDING_DECLARATION" | "PENDIN
       status,
       ...(status === "PENDING_DECLARATION" ? { holdExpiresAt: new Date("2099-11-19T08:00:00.000Z") } : {}),
       ...(status === "PENDING_EMAIL_CONFIRMATION" ? { emailLinkExpiresAt: new Date(Date.now() + 2 * 24 * 60 * 60_000) } : {}),
+      ...(status === "WAITLISTED" || status === "WAITLIST_OFFERED" ? { waitlistedAt: new Date() } : {}),
+      ...(status === "WAITLIST_OFFERED" ? { offerCreatedAt: new Date(), holdExpiresAt: new Date("2099-11-19T08:00:00.000Z") } : {}),
     })
     .returning({ id: registrations.id });
   return created.id;
@@ -342,7 +346,7 @@ describe("§NNN the registration's «Lista ascunsă» block", () => {
     await db.update(events).set({ hiddenListEnabled: switchOn }).where(eq(events.id, created.id));
     return created.id;
   }
-  async function row(status: "PENDING_DECLARATION" | "CONFIRMED", input: { switchOn: boolean; onList: boolean; eventId?: string }) {
+  async function row(status: ActiveStatus, input: { switchOn: boolean; onList: boolean; eventId?: string }) {
     const id = await register(input.eventId ?? (await race(input.switchOn)), status);
     if (input.onList) await db.update(registrations).set({ outsideCapacity: true }).where(eq(registrations.id, id));
     return id;
@@ -369,7 +373,7 @@ describe("§NNN the registration's «Lista ascunsă» block", () => {
   it("with the switch on, the Administrator's form posts the opposite of the stored state, in every active state", async () => {
     state.actor = await staff("ADMIN");
     const eventId = await race(true);
-    for (const status of ["PENDING_DECLARATION", "CONFIRMED"] as const) {
+    for (const status of ["PENDING_EMAIL_CONFIRMATION", "PENDING_DECLARATION", "WAITLISTED", "WAITLIST_OFFERED", "CONFIRMED"] as const) {
       for (const onList of [false, true]) {
         const tree = await detailPage(await row(status, { switchOn: true, onList, eventId }));
         expect(radios(tree), `${status} ${onList}`).toHaveLength(1);

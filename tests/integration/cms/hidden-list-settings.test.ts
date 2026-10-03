@@ -20,7 +20,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * not counted) and the migration switches the group on for an event that already had somebody on the
  * list; the editor's action saves them by one marker, a form without the group edits none, and every
  * change is written to the trail with from and to; a series and a copy carry them; the hidden list's
- * series may not start inside the race's capped series, nor inside the desk's spares.
+ * series may not start inside the race's capped series, nor run into the desk's spares.
  */
 const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, redirected: [] as string[] }));
 
@@ -259,12 +259,16 @@ describe("§NNN «Lista ascunsă» on the event", () => {
     expect(issue({ hiddenListEnabled: false, hiddenListBibStart: "10" })).toBeNull();
   });
 
-  it("refuses a series starting inside the desk's spares, which only the event row knows", async () => {
+  it("refuses a series that runs into the desk's spares, which only the event row knows", async () => {
     const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
     await db.update(events).set({ walkInBibStart: 200, walkInBibCount: 20 }).where(eq(events.id, source.id));
     const refused = await postSave(settingsForm(source.id, (await reloadEvent(source.id)).version, { enabled: true, start: "210", countPublic: true }));
     // The box is named, so the editor points at it rather than only saying «Verifică datele introduse».
     expect(refused).toMatchObject({ error: "VALIDATION_ERROR", fields: ["event.hiddenListBibStart"] });
+    expect((await reloadEvent(source.id)).hiddenListBibStart).toBeNull();
+    // A start below spares that sit above the race: the series 160… runs through 200–219, so it is refused too.
+    const below = await postSave(settingsForm(source.id, (await reloadEvent(source.id)).version, { enabled: true, start: "160", countPublic: true }));
+    expect(below).toMatchObject({ error: "VALIDATION_ERROR", fields: ["event.hiddenListBibStart"] });
     expect((await reloadEvent(source.id)).hiddenListBibStart).toBeNull();
     expect(await postSave(settingsForm(source.id, (await reloadEvent(source.id)).version, { enabled: true, start: "220", countPublic: true }))).toBe("redirected");
     expect((await reloadEvent(source.id)).hiddenListBibStart).toBe(220);

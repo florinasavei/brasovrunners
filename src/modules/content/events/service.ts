@@ -42,6 +42,7 @@ import { countOccupied, countRegistrationsForEvent, countTestRegistrationsForEve
 import { areTestRegistrationsAvailable, removeTestRegistrations } from "@/modules/registrations/test-registrations";
 import { effectiveMinimumAge } from "@/modules/registrations/domain/age";
 import { fillAvailableSpots } from "@/modules/registrations/service";
+import { seriesBounds } from "@/modules/registrations/bibs";
 import {
   canCreateEvent,
   canDeleteEvent,
@@ -2244,21 +2245,26 @@ async function auditHiddenList<T extends Record<string, unknown>>(
 
 /**
  * The desk's spares (§444) are the event row's, written only by the print, so the form cannot see
- * them: a hidden-list series starting inside the reserved spares is refused here (§NNN), as the race's
- * own series is in `fields.ts#hiddenListBandRule`. Only while the switch is on and a start is posted.
+ * them: a hidden-list series that would hold any of the reserved spares is refused here (§NNN), as the
+ * race's own series is in `fields.ts#hiddenListBandRule`. The series is the one the draw uses
+ * (`bibs.ts#seriesBounds`): from the start up to the race's first number less one when it sits below
+ * it, otherwise up to the ceiling — so a start below a spare band that sits above the race is refused
+ * too, not only one inside it. Only while the switch is on and a start is posted.
  */
 function assertHiddenListClearOfSpares(
-  fields: Pick<EventFieldsInput, "hiddenListEnabled" | "hiddenListBibStart">,
+  fields: Pick<EventFieldsInput, "hiddenListEnabled" | "hiddenListBibStart" | "bibStartNumber">,
   current: { walkInBibStart: number | null; walkInBibCount: number | null },
 ): void {
   const start = fields.hiddenListBibStart;
   if (fields.hiddenListEnabled !== true || start === null || start === undefined) return;
   if (current.walkInBibStart === null || current.walkInBibCount === null || current.walkInBibCount <= 0) return;
-  const last = current.walkInBibStart + current.walkInBibCount - 1;
-  if (start >= current.walkInBibStart && start <= last) {
+  const first = current.walkInBibStart;
+  const last = first + current.walkInBibCount - 1;
+  const series = seriesBounds({ start: fields.bibStartNumber, hiddenStart: start }, "hidden");
+  if (series.from <= last && first <= series.to) {
     throw new DomainError(
       "VALIDATION_ERROR",
-      `hiddenListBibStart: the hidden list's numbers must start outside the desk's spare numbers (${current.walkInBibStart}–${last})`,
+      `hiddenListBibStart: the hidden list's numbers may not run into the desk's spare numbers (${first}–${last})`,
       // The box, so the editor names it beside the sentence rather than only «Verifică datele introduse».
       ["hiddenListBibStart"],
     );

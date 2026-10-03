@@ -249,9 +249,12 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   /*
     Where it is counted (§NNN), the title and «confirmați» may hold people with no row at all — somebody
     on the hidden list who did not tick is not even a «Participant (nume ascuns)» row (§32) — so the note
-    says so in one sentence, and the title, the rows and the note agree.
+    says so in one sentence, and the title, the rows and the note agree. The holds only where the headline
+    adds them — a capped event's known counts — so on an uncapped event, or an unknown door, the note never
+    speaks of holds no number above counts.
   */
-  const countedNotListed = countPublic && countHidden && hidden.confirmed + hidden.held > 0;
+  const hiddenHeldCounted = door.kind === "KNOWN" && door.fill?.confirmed !== undefined ? hidden.held : 0;
+  const countedNotListed = countPublic && countHidden && hidden.confirmed + hiddenHeldCounted > 0;
   const [participants, otherRows] = await Promise.all([
     view.namedLimit > 0 ? cachedStartListPage(event.id, view.namedOffset, view.namedLimit, socialsOn, numbersOn) : [],
     firstStatesNotice !== null && view.othersLimit > 0
