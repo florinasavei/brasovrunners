@@ -42,6 +42,17 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
+/** Each refused link's sentence under `invitation.*`: a sent form and a spent token read the same. */
+const INVITATION_SENTENCE_KEYS: Record<RefusedKind, "used" | "withdrawn" | "expired" | "cancelled" | "replaced" | "invalid"> = {
+  accepted: "used",
+  used: "used",
+  withdrawn: "withdrawn",
+  expired: "expired",
+  cancelled: "cancelled",
+  replaced: "replaced",
+  invalid: "invalid",
+};
+
 /**
  * A personal invitation's link (§NNN; `EVENT_INVITATION`). The GET reads the link and changes nothing —
  * a mail scanner opening it leaves it working (§12.8) — and draws the event's registration form,
@@ -100,25 +111,14 @@ export default async function InvitationPage({ params, searchParams }: Props) {
   const link: InvitationLink | { kind: RefusedKind } = isRefusedKind(refused) ? { kind: refused } : await readInvitationLink(getDb(), token, locale, now);
   if (link.kind !== "open") {
     const titleKey = link.kind === "replaced" ? "replacedTitle" : link.kind === "invalid" ? "invalidTitle" : "endedTitle";
-    const sentence =
-      link.kind === "accepted" || link.kind === "used"
-        ? t("invitation.used")
-        : link.kind === "withdrawn"
-          ? t("invitation.withdrawn")
-          : link.kind === "expired"
-            ? t("invitation.expired")
-            : link.kind === "cancelled"
-              ? t("invitation.cancelled")
-              : link.kind === "replaced"
-              ? t("invitation.replaced")
-              : t("invitation.invalid");
+    const sentenceKey = INVITATION_SENTENCE_KEYS[link.kind];
     return shell(
       <>
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {t(`invitation.${titleKey}`)}
         </Typography>
         <Alert severity={link.kind === "accepted" || link.kind === "used" ? "info" : "warning"} data-testid={`invitation-${link.kind}`}>
-          {sentence}
+          {t(`invitation.${sentenceKey}`)}
         </Alert>
         <Typography variant="body2" sx={{ mt: 2 }}>
           {t("invitation.askClub")} {contactLink}

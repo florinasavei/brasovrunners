@@ -123,4 +123,17 @@ test.describe("§NNN an invitation's link: the form prefilled, the press, the do
     await expect(page.getByTestId("invitation-used")).toBeVisible();
     await expect(page.locator('[name="firstName"]')).toHaveCount(0);
   });
+
+  test("a press refused because the event was called off draws the cancelled sentence, with no form", async ({ page }) => {
+    /*
+      The page's «cancelled» branch as the press's redirect reaches it (`refused=cancelled`): the same
+      branch a read of a called-off event's link takes, which the integration suite asserts by kind. The
+      featured race is shared by every spec, so it is never cancelled here; the marker draws the branch.
+    */
+    await page.goto(`/ro/inregistrari/invitatie/${randomBytes(32).toString("base64url")}?refused=cancelled`);
+    await expect(page.getByTestId("invitation-cancelled")).toHaveText("Evenimentul a fost anulat, așa că invitația nu mai e valabilă.");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Invitația nu mai e valabilă");
+    await expect(page.locator('[name="firstName"]')).toHaveCount(0);
+    expect(await page.evaluate(fitsTheWidth)).toBe(true);
+  });
 });

@@ -679,12 +679,29 @@ describe("§NNN expiry, «Retrimite» and «Retrage»", () => {
   });
 
   it("a press after the race started spends nothing: refused as expired", async () => {
-    const event = await createEvent(3, { startsAt: new Date(NOW.getTime() + 2 * DAY) });
+    const event = await createEvent(3);
     await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 7, outsideCapacity: false }, admin, NOW);
     const secret = await linkOf("ana@example.invalid", at(1));
-    const after = new Date(NOW.getTime() + 2 * DAY + 60_000);
+    // The start moved earlier after the send: the invitation's own deadline is still ahead, so only the start refuses it.
+    await db.update(events).set({ startsAt: new Date(NOW.getTime() + DAY) }).where(eq(events.id, event.id));
+    const after = new Date(NOW.getTime() + DAY + 60_000);
+    const [invitation] = await invitationsOf(event.id);
+    expect(invitation.expiresAt.getTime()).toBeGreaterThan(after.getTime());
     expect(await acceptInvitation(db, secret, form("Ana", after), after)).toEqual({ ok: false, kind: "expired" });
     expect(await unspent()).toBe(true);
+    expect(await readInvitationLink(db, secret, "ro", after)).toMatchObject({ kind: "expired" });
+    expect(await db.select().from(registrations)).toHaveLength(0);
+  });
+
+  it("an event marked «Încheiat» (COMPLETED) with its start still ahead is no call-off: the link and the press say expired, never cancelled", async () => {
+    const event = await createEvent(3);
+    await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 7, outsideCapacity: false }, admin, NOW);
+    const secret = await linkOf("ana@example.invalid", at(1));
+    await db.update(events).set({ eventStatus: "COMPLETED" }).where(eq(events.id, event.id));
+    expect(await readInvitationLink(db, secret, "ro", at(2))).toMatchObject({ kind: "expired" });
+    expect(await acceptInvitation(db, secret, form("Ana", at(3)), at(3))).toEqual({ ok: false, kind: "expired" });
+    expect(await unspent()).toBe(true);
+    expect(await db.select().from(registrations)).toHaveLength(0);
   });
 
   it("«Retrimite» with days on a counted invitation while somebody waits: the link and the email again, the deadline kept", async () => {

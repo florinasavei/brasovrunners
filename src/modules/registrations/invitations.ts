@@ -79,8 +79,9 @@ export async function readInvitationLink<T extends Record<string, unknown>>(db: 
       leaves `event_invitations` as it was, so this page is the only thing that tells the invitee, and
       «the deadline has passed» would be a false reason. A race started since says the deadline passed.
     */
-    if (event && event.eventStatus !== "SCHEDULED") return { kind: "cancelled" as const, eventTitle: title, slug };
-    if (!event || event.startsAt.getTime() <= now.getTime() || !slug || !title) {
+    if (event?.eventStatus === "CANCELLED") return { kind: "cancelled" as const, eventTitle: title, slug };
+    // Marked «Încheiat» (COMPLETED), even with its start still ahead, is no call-off: the deadline has passed.
+    if (!event || event.eventStatus !== "SCHEDULED" || event.startsAt.getTime() <= now.getTime() || !slug || !title) {
       return { kind: "expired" as const, eventTitle: title, slug };
     }
     return {
@@ -143,9 +144,9 @@ export async function acceptInvitation<T extends Record<string, unknown>>(db: Da
     if (!invitation || invitation.participantId !== peek.token.participantId) return { ok: false as const, kind: "invalid" as const };
     const state = invitationState(invitation, now);
     if (state !== "sent") return { ok: false as const, kind: state };
-    // Called off: said as such, never as a passed deadline; started: the deadline (capped by the start) has passed.
-    if (lockedEvent.eventStatus !== "SCHEDULED") return { ok: false as const, kind: "cancelled" as const };
-    if (lockedEvent.startsAt.getTime() <= now.getTime()) return { ok: false as const, kind: "expired" as const };
+    // Called off: said as such, never as a passed deadline; started or marked «Încheiat»: the deadline has passed.
+    if (lockedEvent.eventStatus === "CANCELLED") return { ok: false as const, kind: "cancelled" as const };
+    if (lockedEvent.eventStatus !== "SCHEDULED" || lockedEvent.startsAt.getTime() <= now.getTime()) return { ok: false as const, kind: "expired" as const };
 
     // Single use (BR-REQ-036-02): one UPDATE, so of two presses at once only one spends it.
     const consumed = await consumeActionToken(tx, { secret, purpose: "ACCEPT_INVITATION", now });
