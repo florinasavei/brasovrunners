@@ -308,11 +308,18 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
    * The standing series (§122): every source with a rule is brought up to the club's horizon —
    * eight weeks unless changed (§377). One indexed read for the sources, two per source, and on
    * most runs no write; caught on its own — a series that cannot be extended is a date missing
-   * from the list next month, not a hold that never expires.
+   * from the list next month, not a hold that never expires. A source the hidden list refused
+   * (§NNN: its places reached «Numerele listei ascunse încep de la») makes none of its dates until it
+   * is saved right; each counts as one error and is logged by its id, so the run says so every time.
    */
   let occurrencesCreated = 0;
   try {
-    occurrencesCreated = (await materializeStandingRepeats(db, now, settings)).created;
+    const series = await materializeStandingRepeats(db, now, settings);
+    occurrencesCreated = series.created;
+    for (const sourceId of series.refused) {
+      console.error("[series] no new dates: the hidden list's numbers start inside the race's series or the spares", sourceId);
+    }
+    errorCount += series.refused.length;
   } catch {
     errorCount += 1;
   }

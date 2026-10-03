@@ -1427,9 +1427,11 @@ languages go live together; that is the rule, not a setting.
      number is accepted. It judges the start only when the save moves it, switches the hidden list
      on, or moves the race's first number or its places — a place «Trimite-i oferta» added never
      makes the next save refuse a start nobody touched. A save carried to other dates of a series
-     judges each date by its own places and spares, and a refusal names the date and changes no
-     date; a duplicate or a repeat whose places have reached the hidden start is refused the same
-     way. Leave room above the race's places for
+     judges each date by its own places and spares, and a refusal says the box and the date and
+     changes no date; a duplicate or a repeat whose places have reached the hidden start is refused
+     with a sentence that says the box to move. A standing series in that state makes no new dates
+     until the start is moved: each maintenance run counts it as an error in its job record and
+     logs the event's id. Leave room above the race's places for
      such supplementary places and for the desk's spares (say 900 for a race of 150, not 151). With
      the hidden series above the race's, the spares printed for the desk stay between the two — a
      print that would reach the hidden series is refused with a sentence that names this box. A

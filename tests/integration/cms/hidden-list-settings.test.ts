@@ -13,6 +13,9 @@ import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { addSupplementaryPlace } from "@/modules/registrations/repository";
+import { formatCalendarDay } from "@/i18n/dates";
+import ro from "../../../messages/ro.json";
+import en from "../../../messages/en.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -23,7 +26,20 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * change is written to the trail with from and to; a series and a copy carry them; the hidden list's
  * series may not start inside the race's capped series, nor run into the desk's spares.
  */
-const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, redirected: [] as string[] }));
+const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, redirected: [] as string[], slugsRefused: false }));
+
+// A refusal of a series that is not the hidden list's, on demand: the standing job must not swallow it.
+vi.mock("@/modules/content/events/repository", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@/modules/content/events/repository")>();
+  const { DomainError } = await import("@/shared/errors/domain-error");
+  return {
+    ...original,
+    findTakenSlugs: (async (...args: Parameters<typeof original.findTakenSlugs>) => {
+      if (state.slugsRefused) throw new DomainError("VALIDATION_ERROR", "slug: refused for the test", ["slug"]);
+      return original.findTakenSlugs(...args);
+    }) as typeof original.findTakenSlugs,
+  };
+});
 
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
@@ -41,7 +57,8 @@ vi.mock("@/modules/staff-identity/session", () => ({
   requireStaffCapability: async () => state.actor,
 }));
 
-const { saveEventAndTranslationsAction } = await import("@/app/[locale]/admin/actions");
+const { duplicateEventAction, repeatEventAction, saveEventAndTranslationsAction } = await import("@/app/[locale]/admin/actions");
+const { runRegistrationMaintenance } = await import("@/modules/registrations/maintenance");
 
 const NOW = new Date("2026-09-25T10:00:00.000Z");
 
@@ -109,6 +126,7 @@ beforeEach(async () => {
     now: NOW,
   });
   state.redirected.length = 0;
+  state.slugsRefused = false;
 });
 
 const reloadEvent = async (id: string) => (await db.select().from(events).where(eq(events.id, id)))[0];
@@ -233,7 +251,9 @@ describe("§NNN «Lista ascunsă» on the event", () => {
   it("refuses a hidden-list series starting inside the race's series, names the box, and accepts one below or past it", async () => {
     const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
     const refused = await postSave(settingsForm(source.id, (await reloadEvent(source.id)).version, { enabled: true, start: "100", countPublic: true }));
-    expect(refused).toMatchObject({ error: "VALIDATION_ERROR", fields: ["event.hiddenListBibStart"] });
+    // Its own sentence, naming the box, rather than «Verifică datele introduse»; the box is linked too.
+    expect(refused).toMatchObject({ error: "HIDDEN_LIST_IN_RACE_SERIES", fields: ["event.hiddenListBibStart"] });
+    expect(refused).not.toHaveProperty("errorValues");
     expect((await reloadEvent(source.id)).hiddenListBibStart).toBeNull();
     // Exactly past the 150 places: 151.
     expect(await postSave(settingsForm(source.id, (await reloadEvent(source.id)).version, { enabled: true, start: "151", countPublic: true }))).toBe("redirected");
@@ -274,17 +294,17 @@ describe("§NNN «Lista ascunsă» on the event", () => {
     expect(await withCapacity("151")).toBe("redirected");
     expect((await reloadEvent(source.id)).hiddenListBibStart).toBe(151);
     // A save that moves the places is judged: 152 places reach past the start, and the box is named.
-    expect(await withCapacity("152")).toMatchObject({ error: "VALIDATION_ERROR", fields: ["event.hiddenListBibStart"] });
+    expect(await withCapacity("152")).toMatchObject({ error: "HIDDEN_LIST_IN_RACE_SERIES", fields: ["event.hiddenListBibStart"] });
     expect((await reloadEvent(source.id)).capacity).toBe(151);
     // A save that moves the start is judged too: 150 is inside 1–151.
     const moved = settingsForm(source.id, (await reloadEvent(source.id)).version, { ...group, start: "150" });
     moved.set("event.capacity", "151");
-    expect(await postSave(moved)).toMatchObject({ error: "VALIDATION_ERROR", fields: ["event.hiddenListBibStart"] });
+    expect(await postSave(moved)).toMatchObject({ error: "HIDDEN_LIST_IN_RACE_SERIES", fields: ["event.hiddenListBibStart"] });
     // Switching the hidden list on again with that start is judged as well: off then on, refused.
     const off = settingsForm(source.id, (await reloadEvent(source.id)).version, { ...group, enabled: false });
     off.set("event.capacity", "151");
     expect(await postSave(off)).toBe("redirected");
-    expect(await withCapacity("151")).toMatchObject({ error: "VALIDATION_ERROR", fields: ["event.hiddenListBibStart"] });
+    expect(await withCapacity("151")).toMatchObject({ error: "HIDDEN_LIST_IN_RACE_SERIES", fields: ["event.hiddenListBibStart"] });
     expect((await reloadEvent(source.id)).hiddenListEnabled).toBe(false);
   });
 
@@ -293,11 +313,11 @@ describe("§NNN «Lista ascunsă» on the event", () => {
     await db.update(events).set({ walkInBibStart: 200, walkInBibCount: 20 }).where(eq(events.id, source.id));
     const refused = await postSave(settingsForm(source.id, (await reloadEvent(source.id)).version, { enabled: true, start: "210", countPublic: true }));
     // The box is named, so the editor points at it rather than only saying «Verifică datele introduse».
-    expect(refused).toMatchObject({ error: "VALIDATION_ERROR", fields: ["event.hiddenListBibStart"] });
+    expect(refused).toMatchObject({ error: "HIDDEN_LIST_ON_SPARES", fields: ["event.hiddenListBibStart"] });
     expect((await reloadEvent(source.id)).hiddenListBibStart).toBeNull();
     // A start below spares that sit above the race: the series 160… runs through 200–219, so it is refused too.
     const below = await postSave(settingsForm(source.id, (await reloadEvent(source.id)).version, { enabled: true, start: "160", countPublic: true }));
-    expect(below).toMatchObject({ error: "VALIDATION_ERROR", fields: ["event.hiddenListBibStart"] });
+    expect(below).toMatchObject({ error: "HIDDEN_LIST_ON_SPARES", fields: ["event.hiddenListBibStart"] });
     expect((await reloadEvent(source.id)).hiddenListBibStart).toBeNull();
     expect(await postSave(settingsForm(source.id, (await reloadEvent(source.id)).version, { enabled: true, start: "220", countPublic: true }))).toBe("redirected");
     expect((await reloadEvent(source.id)).hiddenListBibStart).toBe(220);
@@ -399,7 +419,7 @@ describe("§NNN «Lista ascunsă» on the event", () => {
     for (const id of [source.id, ...dates.map((date) => date.id)]) expect((await reloadEvent(id)).hiddenListBibStart, id).toBe(161);
   });
 
-  it("a copy is refused, naming its date, when the source's places have reached its hidden start", async () => {
+  it("a copy is refused when the source's places have reached its hidden start, its log naming the date", async () => {
     const source = await createEvent(db, {
       actor: admin,
       fields: { ...FIELDS, hiddenListEnabled: true, hiddenListBibStart: "151", translations: TRANSLATIONS },
@@ -421,7 +441,7 @@ describe("§NNN «Lista ascunsă» on the event", () => {
     expect((await reloadEvent(source.id)).repeatRule).toBeNull();
     // A rule stored before the place was added: the maintenance job skips this source and fails nothing.
     await db.update(events).set({ repeatRule: { cadence: "WEEKLY", weekdays: [], until: "2026-10-21", publish: false } }).where(eq(events.id, source.id));
-    expect(await materializeStandingRepeats(db, NOW, { seriesHorizonDays: 60 })).toEqual({ sources: 1, created: 0 });
+    expect(await materializeStandingRepeats(db, NOW, { seriesHorizonDays: 60 })).toEqual({ sources: 1, created: 0, refused: [source.id] });
     expect((await db.select().from(events)).length).toBe(before);
   });
 
@@ -455,5 +475,141 @@ describe("§NNN «Lista ascunsă» on the event", () => {
       expect(settled(await reloadEvent(date.id)), date.id).toEqual({ enabled: true, start: null, countPublic: true, counted: true });
       expect((await trail(date.id)).map((entry) => entry.metadataJson), date.id).toEqual([moved]);
     }
+  });
+
+  describe("the refusal's own sentence (§NNN)", () => {
+    it("names the box in both languages, and the date where the sentence is a date's", () => {
+      for (const [code, box] of [
+        ["HIDDEN_LIST_IN_RACE_SERIES", ["«Numerele listei ascunse încep de la»", "«The hidden list's numbers start at»"]],
+        ["HIDDEN_LIST_ON_SPARES", ["«Numerele listei ascunse încep de la»", "«The hidden list's numbers start at»"]],
+      ] as const) {
+        expect(ro.Admin.errors[code]).toContain(box[0]);
+        expect(en.Admin.errors[code]).toContain(box[1]);
+        expect(ro.Admin.errors[code]).not.toContain("{date}");
+        expect(ro.Admin.errors[`${code}_DATED`]).toContain(box[0]);
+        expect(en.Admin.errors[`${code}_DATED`]).toContain(box[1]);
+        expect(ro.Admin.errors[`${code}_DATED`]).toContain("{date}");
+        expect(en.Admin.errors[`${code}_DATED`]).toContain("{date}");
+      }
+    });
+
+    /** The editor's scoped save, as the action posts it: «această dată și următoarele». */
+    async function postFollowing(eventId: string, start: string) {
+      const form = settingsForm(eventId, (await reloadEvent(eventId)).version, { enabled: true, start, countPublic: true });
+      form.set("scope", "following");
+      return postSave(form);
+    }
+
+    it("a scoped save refused on another date's places says that date, in the reader's language", async () => {
+      const { source, dates } = await seriesWithDates();
+      await db.update(events).set({ capacity: 160 }).where(eq(events.id, dates[1].id));
+      const refused = await postFollowing(source.id, "155");
+      expect(refused).toMatchObject({
+        error: "HIDDEN_LIST_IN_RACE_SERIES_DATED",
+        errorValues: { date: formatCalendarDay("2026-10-21", { locale: "ro", position: "inline" }) },
+        fields: ["event.hiddenListBibStart"],
+      });
+      expect((refused as { errorValues: { date: string } }).errorValues.date).toContain("21 oct.");
+      for (const id of [source.id, ...dates.map((date) => date.id)]) expect((await reloadEvent(id)).hiddenListBibStart, id).toBeNull();
+    });
+
+    it("a scoped save refused on another date's spares says that date", async () => {
+      const { source, dates } = await seriesWithDates();
+      await db.update(events).set({ walkInBibStart: 200, walkInBibCount: 20 }).where(eq(events.id, dates[0].id));
+      expect(await postFollowing(source.id, "210")).toMatchObject({
+        error: "HIDDEN_LIST_ON_SPARES_DATED",
+        errorValues: { date: formatCalendarDay("2026-10-14", { locale: "ro", position: "inline" }) },
+      });
+    });
+
+    it("a duplicate and a repeat refused by the source's hidden list say which box to move, never a date", async () => {
+      const source = await createEvent(db, {
+        actor: admin,
+        fields: { ...FIELDS, hiddenListEnabled: true, hiddenListBibStart: "151", translations: TRANSLATIONS },
+        now: NOW,
+      });
+      expect(await addSupplementaryPlace(db, source.id, admin.id, NOW)).toBe(151);
+      const before = (await db.select().from(events)).length;
+
+      const duplicate = new FormData();
+      duplicate.set("uiLocale", "ro");
+      duplicate.set("eventId", source.id);
+      await expect(duplicateEventAction(null, duplicate)).rejects.toThrow("NEXT_REDIRECT");
+      // Back to the events list, whose alert reads `Admin.errors.<code>` — this code, not VALIDATION_ERROR.
+      expect(state.redirected.at(-1)).toMatch(/[?&]error=HIDDEN_LIST_IN_RACE_SERIES(#|&)/);
+
+      const repeat = new FormData();
+      repeat.set("uiLocale", "ro");
+      repeat.set("eventId", source.id);
+      repeat.set("repeatOn", "on");
+      repeat.set("cadence", "WEEKLY");
+      repeat.set("until", "2026-10-21");
+      const refused = await repeatEventAction(null, repeat);
+      // The box is the event's settings', not the repeat panel's: no link to a box the panel lacks.
+      expect(refused).toMatchObject({ error: "HIDDEN_LIST_IN_RACE_SERIES", fields: [] });
+      expect(refused).not.toHaveProperty("errorValues");
+      expect((await db.select().from(events)).length).toBe(before);
+    });
+  });
+
+  describe("the standing series the hidden list refuses (§NNN)", () => {
+    const RULE = { cadence: "WEEKLY" as const, weekdays: [], until: "2026-10-21", publish: false };
+
+    /** A source whose places «Trimite-i oferta» carried up to its hidden start, with its rule stored before. */
+    async function stuckSource() {
+      const source = await createEvent(db, {
+        actor: admin,
+        fields: { ...FIELDS, hiddenListEnabled: true, hiddenListBibStart: "151", translations: TRANSLATIONS },
+        now: NOW,
+      });
+      expect(await addSupplementaryPlace(db, source.id, admin.id, NOW)).toBe(151);
+      await db.update(events).set({ repeatRule: RULE }).where(eq(events.id, source.id));
+      return source;
+    }
+
+    /** An ordinary series beside it, whose rule is stored and whose dates the job makes. */
+    async function healthySource() {
+      const translations = {
+        ro: { ...TRANSLATIONS.ro, slug: "crosul-sanatos" },
+        en: { ...TRANSLATIONS.en, slug: "healthy-race" },
+      };
+      const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations }, now: NOW });
+      await db.update(events).set({ repeatRule: RULE }).where(eq(events.id, source.id));
+      return source;
+    }
+
+    it("is named back to the run, while the other series still gets its dates", async () => {
+      const stuck = await stuckSource();
+      const healthy = await healthySource();
+      const run = await materializeStandingRepeats(db, NOW, { seriesHorizonDays: 60 });
+      expect(run).toMatchObject({ sources: 2, refused: [stuck.id] });
+      expect(run.created).toBe(2);
+      expect(await db.select().from(events).where(eq(events.repeatOf, healthy.id))).toHaveLength(2);
+      expect(await db.select().from(events).where(eq(events.repeatOf, stuck.id))).toHaveLength(0);
+    });
+
+    it("lets any other refusal of a series fail the step, as before", async () => {
+      await stuckSource();
+      await healthySource();
+      state.slugsRefused = true;
+      await expect(materializeStandingRepeats(db, NOW, { seriesHorizonDays: 60 })).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["slug"] });
+    });
+
+    it("counts each refused source as an error of the maintenance run, and logs its id", async () => {
+      const stuck = await stuckSource();
+      const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+      try {
+        const refused = await runRegistrationMaintenance(db, NOW);
+        expect(logged.mock.calls.some((call) => call.includes(stuck.id))).toBe(true);
+        // Saved right — the start above the places — the same run has one error fewer.
+        await db.update(events).set({ hiddenListBibStart: 900 }).where(eq(events.id, stuck.id));
+        logged.mockClear();
+        const fixed = await runRegistrationMaintenance(db, NOW);
+        expect(fixed.errorCount).toBe(refused.errorCount - 1);
+        expect(logged.mock.calls.some((call) => call.includes(stuck.id))).toBe(false);
+      } finally {
+        logged.mockRestore();
+      }
+    });
   });
 });

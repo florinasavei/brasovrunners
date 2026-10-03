@@ -10,6 +10,8 @@
  * «Cine vine»'s numbers — and the rows already on the list stay on it.
  */
 
+import { DomainError } from "@/shared/errors/domain-error";
+
 /** The marker a refusal carries when somebody is put on the list of an event whose switch is off. */
 export const HIDDEN_LIST_OFF = "HIDDEN_LIST_OFF";
 
@@ -18,6 +20,46 @@ export const HIDDEN_LIST_OFF = "HIDDEN_LIST_OFF";
  * list's own series (`spare-bibs.ts#spareStopOf`): the editor turns it into a sentence naming the box.
  */
 export const SPARES_BEFORE_HIDDEN_LIST = "SPARES_BEFORE_HIDDEN_LIST";
+
+/**
+ * The markers a refused «Numerele listei ascunse încep de la» carries (§NNN): its series would start
+ * inside the race's own, or would run into the desk's reserved spares (§444). Each has a second
+ * sentence, `…_DATED`, for a refusal about another date of a series than the one saved — a scoped save
+ * reaching it (`applyToSeries`) — which names that date. A copy (a duplicate, a repeat, the job's next
+ * dates) is refused by the source's own settings, so its sentence names the box, not a date.
+ */
+export const HIDDEN_LIST_IN_RACE_SERIES = "HIDDEN_LIST_IN_RACE_SERIES";
+export const HIDDEN_LIST_ON_SPARES = "HIDDEN_LIST_ON_SPARES";
+
+/**
+ * A refused «Numerele listei ascunse încep de la» (§NNN): still a VALIDATION_ERROR about the box
+ * `hiddenListBibStart`, so a caller that knows nothing of it reads it as before, and it carries which of
+ * the two refusals it is and, when the date judged is not the one saved, that date (`YYYY-MM-DD`, in the
+ * event's zone). The action turns it into its sentence (`hiddenListRefusalOf`); the maintenance job
+ * tells it apart from every other refusal of a series it extends.
+ */
+export class HiddenListNumbersError extends DomainError {
+  readonly marker: typeof HIDDEN_LIST_IN_RACE_SERIES | typeof HIDDEN_LIST_ON_SPARES;
+  readonly date: string | null;
+
+  /** `message` is for the logs and may name a copy's date; `date` is the one the sentence names. */
+  constructor(marker: HiddenListNumbersError["marker"], message: string, date: string | null = null) {
+    super("VALIDATION_ERROR", message, ["hiddenListBibStart"]);
+    this.name = "HiddenListNumbersError";
+    this.marker = marker;
+    this.date = date;
+  }
+}
+
+/**
+ * The code an action shows for a refused «Numerele listei ascunse încep de la» (§NNN), and the date its
+ * sentence names, or null for any other error: `Admin.errors.<code>`, `{date}` filled by the caller in
+ * its own language.
+ */
+export function hiddenListRefusalOf(error: unknown): { code: string; date: string | null } | null {
+  if (!(error instanceof HiddenListNumbersError)) return null;
+  return { code: error.date ? `${error.marker}_DATED` : error.marker, date: error.date };
+}
 
 /** The event's four columns, as stored. */
 export type HiddenListSettings = {

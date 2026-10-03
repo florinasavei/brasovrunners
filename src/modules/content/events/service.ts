@@ -43,6 +43,7 @@ import { areTestRegistrationsAvailable, removeTestRegistrations } from "@/module
 import { effectiveMinimumAge } from "@/modules/registrations/domain/age";
 import { fillAvailableSpots } from "@/modules/registrations/service";
 import { seriesBounds } from "@/modules/registrations/bibs";
+import { HIDDEN_LIST_IN_RACE_SERIES, HIDDEN_LIST_ON_SPARES, HiddenListNumbersError } from "@/modules/registrations/domain/hidden-list";
 import {
   canCreateEvent,
   canDeleteEvent,
@@ -2070,7 +2071,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
         member,
       );
       if (judged) {
-        assertHiddenListNumbers(judged, await lockEventForCapacity(tx, member.id), toWallTimeInput(member.startsAt, zone).slice(0, 10));
+        assertHiddenListNumbers(judged, await lockEventForCapacity(tx, member.id), { date: toWallTimeInput(member.startsAt, zone).slice(0, 10), named: true });
       }
     }
 
@@ -2318,16 +2319,20 @@ function hiddenListNumbersToJudge(
  * ceiling — so a start below a spare band that sits above the race is refused too, not only one inside
  * it. Each refusal names the box, so the editor points at it rather than only «Verifică datele introduse».
  * `on` is the date judged when it is not the one saved — another date of a series a scoped save reaches
- * (`applyToSeries`), or a date a copy makes (`assertCopiedHiddenList`) — and the refusal names it.
+ * (`applyToSeries`), or a date a copy makes (`assertCopiedHiddenList`) — and the log names it. The
+ * refusal is a `HiddenListNumbersError`, whose marker the action turns into a sentence naming the box;
+ * it names the date too when `on.named` — another date of the series, whose own places or spares refused
+ * it. A copy's date is not named: it is refused by the source's settings, which is where the box is.
  */
 function assertHiddenListNumbers(
   series: HiddenListNumbersRow,
   locked: { walkInBibStart: number | null; walkInBibCount: number | null } | null,
-  on?: string,
+  on?: { date: string; named: boolean },
 ): void {
-  const where = on ? ` on ${on}` : "";
+  const where = on ? ` on ${on.date}` : "";
+  const date = on?.named ? on.date : null;
   const band = hiddenListBandIssue(series);
-  if (band !== null) throw new DomainError("VALIDATION_ERROR", `hiddenListBibStart: ${band}${where}`, ["hiddenListBibStart"]);
+  if (band !== null) throw new HiddenListNumbersError(HIDDEN_LIST_IN_RACE_SERIES, `hiddenListBibStart: ${band}${where}`, date);
   const start = series.hiddenListBibStart;
   if (start === null || !locked) return;
   if (locked.walkInBibStart === null || locked.walkInBibCount === null || locked.walkInBibCount <= 0) return;
@@ -2335,10 +2340,10 @@ function assertHiddenListNumbers(
   const last = first + locked.walkInBibCount - 1;
   const bounds = seriesBounds({ start: series.bibStartNumber, hiddenStart: start }, "hidden");
   if (bounds.from <= last && first <= bounds.to) {
-    throw new DomainError(
-      "VALIDATION_ERROR",
+    throw new HiddenListNumbersError(
+      HIDDEN_LIST_ON_SPARES,
       `hiddenListBibStart: the hidden list's numbers may not run into the desk's spare numbers (${first}–${last})${where}`,
-      ["hiddenListBibStart"],
+      date,
     );
   }
 }
@@ -2352,7 +2357,7 @@ function assertHiddenListNumbers(
  */
 function assertCopiedHiddenList(source: HiddenListNumbersRow, startsAt: Date, zone: string): void {
   const series = hiddenListNumbersToJudge(source, null);
-  if (series) assertHiddenListNumbers(series, null, toWallTimeInput(startsAt, zone).slice(0, 10));
+  if (series) assertHiddenListNumbers(series, null, { date: toWallTimeInput(startsAt, zone).slice(0, 10), named: false });
 }
 
 /**
@@ -3599,21 +3604,27 @@ export async function materializeStandingRepeats<T extends Record<string, unknow
   now: Date,
   /** The club's deadlines, read once by the maintenance run (§377). */
   deadlines: Pick<Deadlines, "seriesHorizonDays">,
-): Promise<{ sources: number; created: number }> {
+): Promise<{ sources: number; created: number; refused: string[] }> {
   const sources = await db.select().from(events).where(sql`${events.repeatRule} IS NOT NULL`);
   let created = 0;
+  const refused: string[] = [];
   for (const source of sources) {
     const rule = readRepeatRule(source.repeatRule);
     if (!rule) continue;
     try {
       created += await materializeSeries(db, source, rule, null, now, deadlines);
     } catch (error) {
-      // One source refused for its hidden list (§NNN) holds back its own dates, never the other series'.
-      if (error instanceof DomainError && error.code === "VALIDATION_ERROR") continue;
-      throw error;
+      /*
+        One source refused for its hidden list (§NNN: «Trimite-i oferta» carried its places up to the
+        hidden start, §642) holds back its own dates, never the other series' — and is named back to the
+        run, which counts it as an error and logs it, so a series that stopped is never silent. Any other
+        refusal is a bug in the series and fails the step as before.
+      */
+      if (!(error instanceof HiddenListNumbersError)) throw error;
+      refused.push(source.id);
     }
   }
-  return { sources: sources.length, created };
+  return { sources: sources.length, created, refused };
 }
 
 /**
