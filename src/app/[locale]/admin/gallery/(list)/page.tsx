@@ -135,6 +135,7 @@ export default async function AdminGalleryPage({ params, searchParams }: Props) 
             </Typography>
             <AdminTable
               caption={t(`gallery.group.${kind}`)}
+              tableId={`albums-${kind}`}
               columns={kind === "event" ? [...columns.slice(0, 1), eventColumn, ...columns.slice(1)] : columns}
               rows={group}
               rowKey={(row) => row.id}

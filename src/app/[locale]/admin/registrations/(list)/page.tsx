@@ -1342,6 +1342,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
 
       <AdminTable
         caption={t("registrations.tableCaption")}
+        tableId="registrations"
         columns={columns}
         rows={rows}
         rowKey={(row) => row.id}

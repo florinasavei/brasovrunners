@@ -240,6 +240,7 @@ export default async function AdminPicturesPage({ params, searchParams }: Props)
 
       <AdminTable
         caption={t("pictures.tableCaption")}
+        tableId="pictures"
         columns={columns}
         rows={page}
         rowKey={(row) => row.id}

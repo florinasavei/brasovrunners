@@ -380,6 +380,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
 
       <AdminTable
         caption={t("staff.tableCaption")}
+        tableId="staff"
         columns={columns}
         rows={staff}
         rowKey={(member) => member.id}
