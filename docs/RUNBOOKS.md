@@ -808,8 +808,8 @@ it is (§ Release from the phone).
 | --- | --- |
 | 2026-09-16 | The domain is registered. The registrar's verification service sends the ICANN contact verification to the registrant mailbox; it lands in spam and is not seen. |
 | 2026-10-03, about 11:04 | The registrar puts the domain on hold for the unverified contact. The `.com` registry answers «no such name»; the public site, the backoffice, QA and the `mail.` subdomain go with it. |
-| about 12:02 | The hourly health monitor on the public name fails and cron-job.org emails. Both pingers — cron-job.org's job pings and the GitHub backstop — call the public name, so no job runs from here on. |
-| afternoon | A release from the phone waits its hour in ship's first step and stops; its log said the same two lines it says for a slow build (since then it says what it sees). A phone that had the name cached keeps showing the site, while new visitors see nothing — which made a dead name look like a dead site to some and a live one to others. |
+| about 12:02 | The hourly health monitor on the public name fails and cron-job.org emails. cron-job.org's job pings call the public name, and the GitHub backstop calls nothing — its base-URL secrets are unset, so its steps skip green — so no job runs from here on. |
+| between about 12:00 and 18:00 | A release from the phone waits its hour in ship's first step and stops; its log said the same two lines it says for a slow build (since then it says what it sees). A phone that had the name cached keeps showing the site, while new visitors see nothing — which made a dead name look like a dead site to some and a live one to others. |
 | about 18:24 | The verification email is found in spam and clicked; the registry publishes the domain again within minutes. |
 | about 18:24–18:40 | A network's resolver keeps its cached «no such name» for about a quarter of an hour; mobile data sees the site at once. The jobs run at their next ping. |
 

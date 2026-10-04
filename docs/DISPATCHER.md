@@ -340,6 +340,7 @@ page. What the dispatcher keeps from it:
    was regenerated; the fixer restored it from git. The rule of 2026-09-29 holds: back up
    `src/db/migrations/meta` before any generate, and check that
    `git diff --stat origin/qa -- src/db/migrations/` touches only the new migration and the journal.
-10. **Pings on the public name die with the name.** Both pingers called the public name, so no job
-    ran for seven hours. `SETUP.md` §40 moves the job pings to the address no registrar can hold and
+10. **Pings on the public name die with the name.** cron-job.org's job pings called the public name,
+    and the GitHub backstop called nothing (its base-URL secrets were unset, so it skipped green), so
+    no job ran for seven hours. `SETUP.md` §40 moves both to the address no registrar can hold and
     adds the second health monitor; the dispatcher checks `/devs` → Stare after any name incident.

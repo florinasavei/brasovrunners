@@ -449,8 +449,8 @@ provider-assigned default hostnames; the custom domain is bound at the end of M1
 
 | Project | Production branch | APP_ENV | Current hostname | Final hostname |
 | --- | --- | --- | --- | --- |
-| `brasov-runners-qa` | `qa` | `qa` | `qa.brasovrunners.com` — `APP_BASE_URL` moved to it on 2026-09-17 by `yarn domain:bind qa`, effective on the next QA deployment; `brasov-runners-qa-nu.vercel.app` still serves and is what the QA pinger and the migrate smoke call, on purpose | `qa.brasovrunners.com` |
-| `brasov-runners-production` | `main` | `production` | `brasov-runners-production.vercel.app` (created 2026-09-16, never deployed; stays reachable as the smoke and scheduler target) | `brasovrunners.com`, with `www.brasovrunners.com` redirecting to it — bought and bound 2026-09-16, DNS at the registrar pending; a year later `brasovrunners.ro` and its `www`, redirecting too, until the club decides otherwise (`DECISIONS.md` §55) |
+| `brasov-runners-qa` | `qa` | `qa` | `qa.brasovrunners.com` — `APP_BASE_URL` moved to it on 2026-09-17 by `yarn domain:bind qa`, effective on the next QA deployment; `brasov-runners-qa-nu.vercel.app` still serves and is the address the QA job pings, the backstop and a second health monitor must call (§40, since 2026-10-03; `CLAUDE.md` «Still owed» item 19) — on 2026-10-03 the pings in use called the public name | `qa.brasovrunners.com` |
+| `brasov-runners-production` | `main` | `production` | `brasov-runners-production.vercel.app` (created 2026-09-16, never deployed; stays reachable, and is the address the production job pings, the backstop and a second health monitor must call — §40, since 2026-10-03; `CLAUDE.md` «Still owed» item 19 — on 2026-10-03 the pings in use called the public name) | `brasovrunners.com`, with `www.brasovrunners.com` redirecting to it — bought and bound 2026-09-16, DNS at the registrar pending; a year later `brasovrunners.ro` and its `www`, redirecting too, until the club decides otherwise (`DECISIONS.md` §55) |
 
 The QA project's hostname carries a `-nu` suffix Vercel appended because the plain name was
 taken. It is not cosmetic: `APP_BASE_URL` must match it character for character, or the
@@ -1635,8 +1635,9 @@ responses not saved.
 
 **Since 2026-10-03: the jobs and a second health monitor on the address no registrar can hold
 (`DECISIONS.md` §NNN).** While the registrar held the name for seven hours (§26), no job ran:
-the table above names the `vercel.app` addresses, yet the pings in use called the public name, and
-so did the GitHub backstop. Each Vercel project's own `vercel.app` address (§26's table) answers whatever
+the table above names the `vercel.app` addresses, yet the cron-job.org job pings in use called the
+public name, and the GitHub backstop called nothing — its base-URL secrets were unset, so its steps
+skipped green (step 3). The clicks below move both to the `vercel.app` addresses. Each Vercel project's own `vercel.app` address (§26's table) answers whatever
 happens to the club's DNS. The owner's clicks, once:
 
 ```text
@@ -1662,7 +1663,10 @@ brasovrunners QA origin      GET  https://brasov-runners-qa-nu.vercel.app/api/he
    same as the others. Each is the shallow `/api/health` (§577): it wakes no database and costs one
    function call an hour. **The monitors on the public names stay**: they are the ones that say the
    name is dead. Read the pair together — public red and `vercel.app` green is the name
-   (`docs/RUNBOOKS.md` § The domain stops answering); both red is the site.
+   (`docs/RUNBOOKS.md` § The domain stops answering); both red is the site — unless the body still
+   carries a build and `domain.status` says `urgent` or `expired`: from 30 days before the expiry
+   (once `DOMAIN_REGISTERED_ON` is set) the shallow health answers 503 on every host, and that pair
+   is the renewal (§26), not the site.
 3. **The backstop's secrets.** GitHub → the repository → **Settings** → **Secrets and variables**
    → **Actions** → **Secrets**: `PRODUCTION_APP_BASE_URL` = `https://brasov-runners-production.vercel.app`
    and `QA_APP_BASE_URL` = `https://brasov-runners-qa-nu.vercel.app`, no trailing slash, beside
