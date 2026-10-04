@@ -741,8 +741,9 @@ mailbox, the renewal, the monitors on the address no registrar can hold — is `
    verification email and click its link; no email, or the link expired: the registrar's control
    panel → the domain → resend the verification, then click. The hold lifts at the registry within
    minutes; resolvers that cached the «no such name» answer keep it up to fifteen minutes more.
-2. **The yearly renewal.** The expiry is in `SETUP.md` §26 (2027-09-16), and `/api/health` and
-   «Sarcini» warn from 90 days before it once `DOMAIN_REGISTERED_ON` is set. Auto-renew fails on an
+2. **The yearly renewal.** The expiry is in `SETUP.md` §26 (2027-09-16); once
+   `DOMAIN_REGISTERED_ON` is set, «Sarcini» turns amber 90 days before it, and from 30 days before
+   it `/api/health` answers 503 on every host, so the monitors alarm. Auto-renew fails on an
    expired or refused card; the domain expires and the registrar parks it (a parking page: «carries
    no baseline») or holds it. Fix: the control panel → renew, update the card; then raise
    `DOMAIN_RENEWAL_YEARS` on both Vercel projects and redeploy. Past the registrar's grace period a
@@ -777,15 +778,25 @@ decision in this release (`docs/PLATFORM.md` § When the name is gone), stops th
 - **After**, the Administrators get «Ceasul termenelor a stat pe loc»: how long, what was moved,
   and each claim that lapsed and could not be revived (its place was taken, or the platform had
   already expired it). «Sarcini» shows «Site-ul de negăsit: ceasul termenelor» in red until every
-  one is handled. For each:
-  1. «Înscrieri» → state **«Expirată»** → **Filtrează**, sorted by **«Până când»**: the window's
-     lapses sit together, their deadlines in grey inside the hours of the outage.
-  2. A person who registers again, or whom the staff add again, waits on the list:
-     **«Trimite-i oferta»** on their registration seats them (an Administrator; one supplementary
+  one is handled. **That email is the list to work from:** under its bold line it names each claim
+  not revived — the person, the event, what it was — with a link to its page in the backoffice, and
+  under the list one sentence per kind with the verb its state has now. Without the email:
+  «Înscrieri» → the event and state **«Expirată»** → **Filtrează**, and open each row; the history
+  on the registration's page carries «Nereluat după întreruperea site-ului…» for a claim the
+  window did not revive, and otherwise its expiry falls inside the hours of the outage. (The
+  «Până când» column shows no deadline for an expired registration and does not sort by its
+  expiry.) For each, as the email says it:
+  1. **A lapsed offer, declaration hold or address link** — the registration is «Expirată», and no
+     verb seats an expired row: the person registers again (or the staff use «Adaugă înscrierea»),
+     and once they wait, **«Trimite-i oferta»** seats them (an Administrator; one supplementary
      place when none is free, confirmed and audited).
-  3. A family member whose reservation was cleared while the address waited:
-     **«Dă-i un loc acum»** on that registration.
-  4. An invitation that expired: send a new one to the same address.
+  2. **A family reservation** cleared while the address waited — the address is still unconfirmed:
+     **«Dă-i un loc acum»** on that registration seats them, with one confirmed supplementary place
+     when none is free.
+  3. **An expired invitation** cannot be re-sent («Retrimite» is for an open one): send a new one to
+     the same address from «Trimite invitații».
+  4. **A place held for a family form** is nobody's registration yet: the person fills in the form
+     again.
 - `/devs` → Stare shows what the name answered at the maintenance job's last real run and the last
   three windows.
 
