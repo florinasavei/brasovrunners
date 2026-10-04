@@ -2,22 +2,26 @@
 
 import { useTranslations } from "next-intl";
 import { useCallback, useLayoutEffect, useSyncExternalStore } from "react";
-import { storageKey } from "@/modules/staff-identity/domain/column-widths";
+import { hiddenStorageKey, storageKey } from "@/modules/staff-identity/domain/column-widths";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import {
+  applyHidden,
   dropEarlyStyle,
   layOut,
+  readHidden,
   readWidths,
   releaseLayout,
   tablesOf,
   WIDTHS_CHANGED,
+  writeHidden,
   writeWidths,
 } from "./column-widths-dom";
 
 /**
  * One per table, under it (§650): lays the table out with the widths this browser stored for it
- * when the page opens and whenever the table's frame changes width, and offers to put every column
- * back the way the server drew it.
+ * when the page opens and whenever the table's frame changes width, hides the columns this browser
+ * hides on it (§NNN), and offers to put every column back the way the server drew it — its width
+ * and, if hidden, the column itself.
  *
  * The control shows only while something is stored — a reset for a table nobody resized is a
  * button that does nothing — and only from `md` up, where the table is (the phone layout has no
@@ -50,12 +54,15 @@ export default function ColumnWidths({ tableId }: { tableId: string }) {
   );
   const stored = useSyncExternalStore(
     subscribe,
-    () => Object.keys(readWidths(tableId)).length > 0,
+    () => Object.keys(readWidths(tableId)).length > 0 || readHidden(tableId).length > 0,
     () => false,
   );
 
   useLayoutEffect(() => {
     const apply = () => {
+      // The hidden columns first (§NNN), so the layout below measures only the columns shown —
+      // on a soft navigation no pre-paint script ran, and this is where they are hidden.
+      applyHidden(tableId);
       // The pre-paint style goes even when nothing is left to lay out: the islands own it now.
       dropEarlyStyle(tableId);
       const widths = readWidths(tableId);
@@ -66,7 +73,8 @@ export default function ColumnWidths({ tableId }: { tableId: string }) {
     apply();
     // Another tab resized or reset this table: lay it out again, back to automatic if emptied.
     const onStorage = (event: StorageEvent) => {
-      if (event.key !== null && event.key !== storageKey(tableId)) return;
+      if (event.key !== null && event.key !== storageKey(tableId) && event.key !== hiddenStorageKey(tableId)) return;
+      applyHidden(tableId);
       const widths = readWidths(tableId);
       for (const table of tablesOf(tableId)) layOut(table, widths);
     };
@@ -101,6 +109,9 @@ export default function ColumnWidths({ tableId }: { tableId: string }) {
     // The button goes once nothing is stored; the focus goes to the first column edge, not to <body>.
     tables[0]?.querySelector<HTMLElement>('[role="separator"]')?.focus();
     writeWidths(tableId, {});
+    // Every column back too (§NNN); the widths of the columns that return were just cleared.
+    writeHidden(tableId, []);
+    applyHidden(tableId);
     for (const table of tables) releaseLayout(table);
   }
 

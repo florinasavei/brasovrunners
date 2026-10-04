@@ -565,7 +565,11 @@
     "columns": {
       "resize": "Width of the “{column}” column",
       "resizeHow": "Drag the edge to widen or narrow the column; from the keyboard, the left and right arrows. A double click puts it back to its original width.",
-      "reset": "Default widths",
+      "reset": "Default widths and columns",
+      "menu": "Columns",
+      "menuHow": "Choose the columns this table shows, in this browser.",
+      "showAll": "Show all columns",
+      "always": "Always shown: {columns}",
       "widthValue": "{width} px"
     },
     "backToEvents": "Back to the event list",

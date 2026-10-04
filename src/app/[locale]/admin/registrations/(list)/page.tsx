@@ -471,6 +471,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     {
       key: "status",
       label: t("registrations.columnStatus"),
+      essential: true,
       sortable: true,
       render: (row) => <Chip size="small" label={REGISTRATION_STATUS_LABEL[row.status]} />,
     },

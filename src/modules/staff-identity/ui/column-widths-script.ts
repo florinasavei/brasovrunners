@@ -9,6 +9,11 @@
  * appends one `<style data-column-widths="<id>">` to `<head>` with the same fixed layout — at once,
  * or in the first frame the table is displayed (`WAIT_FRAMES`).
  *
+ * First, once, it hides the columns this browser hides on the table (§NNN): it reads
+ * `br.table.<id>.hidden` and appends `<style data-column-hidden="<id>">` — `display: none` for each
+ * hidden column's `<col>`, heading and cells, by position, an essential column never — the same
+ * text `hiddenColumnsCss` gives the islands, which replace it and keep it.
+ *
  * A `<style>` element and not attributes: the table, its `<col>`s and their `style` belong to
  * React, and an attribute written before hydration is a hydration mismatch; `<head>` tolerates an
  * element a script added. The islands remove it the moment they lay the table out themselves
@@ -22,6 +27,7 @@
 import {
   ACTIONS_COLUMN,
   MAX_COLUMN_WIDTH,
+  hiddenStorageKey,
   MIN_COLUMN_WIDTH,
   storageKey,
   TABLE_ID_PATTERN,
@@ -40,17 +46,30 @@ const WAIT_FRAMES = 300;
 export function earlyWidthsScript(tableId: string): string {
   if (!TABLE_ID_PATTERN.test(tableId)) throw new Error(`earlyWidthsScript: tableId "${tableId}" is not lowercase-hyphenated`);
   const [prefix, suffix] = storageKey("\u0000").split("\u0000");
+  const [hiddenPrefix, hiddenSuffix] = hiddenStorageKey("\u0000").split("\u0000");
+  const actions = JSON.stringify(ACTIONS_COLUMN);
   return [
     "(function f(i,n,me){try{",
-    "var q='table[data-table-id=\"'+i+'\"]',t=document.querySelector(q),",
-    "w=JSON.parse(localStorage.getItem(" + JSON.stringify(prefix) + "+i+" + JSON.stringify(suffix) + ")||'null');",
-    "if(!t||!w||typeof w!=='object'||!me||!me.isConnected)return;",
+    "var q='table[data-table-id=\"'+i+'\"]',t=document.querySelector(q);",
+    "if(!t||!me||!me.isConnected)return;",
+    // The hidden columns (§NNN), once, before anything is measured: a hidden heading then measures
+    // as `display:none` below and is left out of the widths, as `layOut` leaves it out. The same
+    // text `hiddenColumnsCss` writes, in its own `<style>`, which the islands keep.
+    "if(n===0)try{var hs=JSON.parse(localStorage.getItem(" + JSON.stringify(hiddenPrefix) + "+i+" + JSON.stringify(hiddenSuffix) + ")||'null'),hc='',l=0,c=0,a=false;",
+    "if(Array.isArray(hs))t.querySelectorAll(':scope>colgroup>col[data-column]').forEach(function(o){",
+    "var key=o.getAttribute('data-column');if(key===" + actions + "){a=true;return;}c+=1;",
+    "if(o.hasAttribute('data-column-essential')||hs.indexOf(key)<0){l=c;return;}",
+    "hc+=q+'>colgroup>col:nth-child('+c+'),'+q+'>thead>tr>th:nth-child('+c+'),'+q+'>tbody>tr>td:nth-child('+c+'){display:none}';});",
+    "if(hc){if(!a&&l<c)hc+=q+'>thead>tr>th:nth-child('+l+')>[data-column-resize]{right:0}';",
+    "var g=document.createElement('style');g.setAttribute('data-column-hidden',i);g.textContent=hc;document.head.appendChild(g);}}catch(x){}",
+    "var w=JSON.parse(localStorage.getItem(" + JSON.stringify(prefix) + "+i+" + JSON.stringify(suffix) + ")||'null');",
+    "if(!w||typeof w!=='object')return;",
     "if(t.offsetParent===null){if(n<" + WAIT_FRAMES + ")requestAnimationFrame(function(){f(i,n+1,me);});return;}",
     "var k=/^[A-Za-z0-9_-]{1,80}$/,css='',sum=0,hit=false;",
     "t.querySelectorAll(':scope>colgroup>col[data-column]').forEach(function(c){",
     "var key=c.getAttribute('data-column'),h=k.test(key)&&t.querySelector(':scope>thead th[data-column=\"'+key+'\"]');",
     "if(!h||getComputedStyle(h).display==='none')return;",
-    "var s=key!==" + JSON.stringify(ACTIONS_COLUMN) + "&&typeof w[key]==='number'&&isFinite(w[key]);",
+    "var s=key!==" + actions + "&&typeof w[key]==='number'&&isFinite(w[key]);",
     "var px=s?Math.min(" + MAX_COLUMN_WIDTH + ",Math.max(" + MIN_COLUMN_WIDTH + ",Math.round(w[key]))):Math.round(h.getBoundingClientRect().width);",
     "hit=hit||s;sum+=px;css+=q+'>colgroup>col[data-column=\"'+key+'\"]{width:'+px+'px}';});",
     "if(!hit)return;",

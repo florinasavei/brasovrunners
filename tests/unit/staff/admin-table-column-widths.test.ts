@@ -8,11 +8,15 @@ import {
   clampWidth,
   columnFloor,
   fixedLayout,
+  hiddenColumnsCss,
+  hiddenStorageKey,
+  isEssentialColumn,
   KEY_STEP,
   KEY_STEP_LARGE,
   keyboardWidth,
   MAX_COLUMN_WIDTH,
   MIN_COLUMN_WIDTH,
+  parseHidden,
   parseWidths,
   storageKey,
   TABLE_ID_PATTERN,
@@ -20,10 +24,12 @@ import {
 } from "@/modules/staff-identity/domain/column-widths";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import {
+  readHidden,
   readWidths,
   recordedFloor,
   recordFloors,
   WIDTHS_CHANGED,
+  writeHidden,
   writeWidths,
 } from "@/modules/staff-identity/ui/column-widths-dom";
 import { earlyWidthsScript } from "@/modules/staff-identity/ui/column-widths-script";
@@ -42,7 +48,7 @@ const rows: Row[] = [
 const columns: AdminColumn<Row>[] = [
   { key: "name", label: "Nume", primary: true, sortable: true, render: (r) => r.name },
   { key: "club", label: "Club", hideBelow: "lg", render: (r) => r.club },
-  { key: "state", label: "Stare", render: () => "Confirmată" },
+  { key: "state", label: "Stare", essential: true, render: () => "Confirmată" },
 ];
 
 function render(props: { tableId?: string; withActions?: boolean } = {}) {
@@ -161,7 +167,8 @@ describe("§650 AdminTable's columns, as the server draws them", () => {
   it("draws no handle and no reset control before JavaScript runs, so the table is the one it was", () => {
     const html = render();
     expect(html).not.toContain('role="separator"');
-    expect(html).not.toContain("data-column-resize");
+    // The pre-paint script names the edge in a selector (§NNN); no element carries it.
+    expect(html.replace(/<script[\s\S]*?<\/script>/g, "")).not.toContain("data-column-resize");
     expect(html).not.toContain("admin-table-reset-widths");
     // The selector is in the stylesheet; the attribute itself is set only by an island.
     expect(html).not.toMatch(/<table[^>]*data-resized/);
@@ -189,7 +196,7 @@ describe("§650 AdminTable's columns, as the server draws them", () => {
     // It writes one <style> into <head> and touches no attribute React owns.
     expect(body).toContain("document.head.appendChild");
     expect(body).toContain("'data-column-widths'");
-    expect(body).not.toMatch(/\.style\.|setAttribute\('(?!data-column-widths')|dataset/);
+    expect(body).not.toMatch(/\.style\.|setAttribute\('(?!data-column-widths'|data-column-hidden')|dataset/);
     expect(body).toContain(`Math.max(${MIN_COLUMN_WIDTH},`);
   });
 });
@@ -202,10 +209,13 @@ describe("§650 the pre-paint script, run against a stand-in for the page", () =
   function run(
     stored: string | null,
     headings: Record<string, Element>,
-    options: { hiddenFrames?: number; connected?: boolean } = {},
+    options: { hiddenFrames?: number; connected?: boolean; hidden?: string; essential?: string[] } = {},
   ) {
     const appended: { attributes: Record<string, string>; textContent?: string }[] = [];
-    const cols = Object.keys(headings).map((key) => ({ getAttribute: () => key }));
+    const cols = Object.keys(headings).map((key) => ({
+      getAttribute: () => key,
+      hasAttribute: (name: string) => name === "data-column-essential" && (options.essential ?? []).includes(key),
+    }));
     let hiddenFrames = options.hiddenFrames ?? 0;
     const frames: (() => void)[] = [];
     const table = {
@@ -227,7 +237,7 @@ describe("§650 the pre-paint script, run against a stand-in for the page", () =
       },
       head: { appendChild: (element: (typeof appended)[number]) => void appended.push(element) },
     };
-    const localStorage = { getItem: () => stored };
+    const localStorage = { getItem: (key: string) => (key.endsWith(".hidden") ? (options.hidden ?? null) : stored) };
     const getComputedStyle = (heading: Element) => ({ display: heading.display });
     const requestAnimationFrame = (callback: () => void) => void frames.push(callback);
     new Function("document", "localStorage", "getComputedStyle", "requestAnimationFrame", earlyWidthsScript("registrations"))(
@@ -283,6 +293,106 @@ describe("§650 the pre-paint script, run against a stand-in for the page", () =
     expect(never.frames).toBe(300);
     // A width under the least floor is raised to it, as the islands would.
     expect(run(JSON.stringify({ name: 10 }), headings)[0].textContent).toContain(`{width:${MIN_COLUMN_WIDTH}px}`);
+  });
+
+  it("§NNN hides the stored hidden columns first, in their own style, the same text the islands write", () => {
+    const appended = run(null, headings, { hidden: JSON.stringify(["state", "name"]), essential: ["name"] });
+    // Nothing stored for the widths: one style, the hidden one, and the essential «name» still shown.
+    expect(appended).toHaveLength(1);
+    expect(appended[0].attributes).toEqual({ "data-column-hidden": "registrations" });
+    const columns = [
+      { key: "name", essential: true },
+      { key: "club", essential: false },
+      { key: "state", essential: false },
+    ];
+    expect(appended[0].textContent).toBe(hiddenColumnsCss("registrations", columns, ["state", "name"], true));
+    expect(appended[0].textContent).toContain(':nth-child(3)');
+    expect(appended[0].textContent).not.toContain(':nth-child(1)');
+  });
+
+  it("§NNN writes the hidden style once, beside the widths' one, and nothing for garbage", () => {
+    const both = run(JSON.stringify({ name: 300 }), headings, { hidden: JSON.stringify(["club"]), hiddenFrames: 2 });
+    expect(both.map((style) => Object.keys(style.attributes)[0])).toEqual(["data-column-hidden", "data-column-widths"]);
+    expect(run(null, headings, { hidden: "not json" })).toHaveLength(0);
+    expect(run(null, headings, { hidden: JSON.stringify({ club: true }) })).toHaveLength(0);
+    expect(run(null, headings, { hidden: JSON.stringify(["nothing-here"]) })).toHaveLength(0);
+  });
+});
+
+describe("§NNN columns that can be hidden", () => {
+  it("names the hidden columns' storage beside the widths'", () => {
+    expect(hiddenStorageKey("registrations")).toBe("br.table.registrations.hidden");
+  });
+
+  it("reads storage defensively: only an array of column keys, each once, never the verbs'", () => {
+    expect(parseHidden(null)).toEqual([]);
+    expect(parseHidden("not json")).toEqual([]);
+    expect(parseHidden('{"email":true}')).toEqual([]);
+    expect(parseHidden(`["email",3,null,"email","${ACTIONS_COLUMN}","a b","x\\"]","bib"]`)).toEqual(["email", "bib"]);
+  });
+
+  it("keeps the first column, the phone's headline and a column marked essential", () => {
+    expect(isEssentialColumn({}, 0)).toBe(true);
+    expect(isEssentialColumn({ primary: true }, 3)).toBe(true);
+    expect(isEssentialColumn({ essential: true }, 2)).toBe(true);
+    expect(isEssentialColumn({}, 1)).toBe(false);
+  });
+
+  it("turns hidden columns into one rule set per position, never an essential one", () => {
+    const columns = [
+      { key: "name", essential: true },
+      { key: "email", essential: false },
+      { key: "status", essential: true },
+      { key: "bib", essential: false },
+    ];
+    const q = 'table[data-table-id="registrations"]';
+    expect(hiddenColumnsCss("registrations", columns, [], true)).toBe("");
+    expect(hiddenColumnsCss("registrations", columns, ["name", "status"], true)).toBe("");
+    expect(hiddenColumnsCss("registrations", columns, ["email", "bib", "gone"], true)).toBe(
+      `${q}>colgroup>col:nth-child(2),${q}>thead>tr>th:nth-child(2),${q}>tbody>tr>td:nth-child(2){display:none}` +
+        `${q}>colgroup>col:nth-child(4),${q}>thead>tr>th:nth-child(4),${q}>tbody>tr>td:nth-child(4){display:none}`,
+    );
+    // Without row verbs, the last column shown keeps its edge inside its own cell (§652's `last`).
+    expect(hiddenColumnsCss("registrations", columns, ["bib"], false)).toContain(
+      `${q}>thead>tr>th:nth-child(3)>[data-column-resize]{right:0}`,
+    );
+    expect(hiddenColumnsCss("registrations", columns, ["email"], false)).not.toContain("data-column-resize");
+  });
+
+  it("marks the essential columns on the server's <col>s and draws no menu before JavaScript runs", () => {
+    const html = render();
+    const essential = [...html.matchAll(/<col[^>]*data-column="([^"]+)"[^>]*>/g)]
+      .filter((m) => m[0].includes("data-column-essential"))
+      .map((m) => m[1]);
+    expect(essential).toEqual(["name", "state"]);
+    expect(html).not.toContain("admin-table-columns");
+    expect(html).not.toContain("menuitemcheckbox");
+  });
+
+  it("hands the menu strings and flags, never a row, and every list marks its state essential", () => {
+    const table = read("src", "modules", "staff-identity", "ui", "AdminTable.tsx");
+    expect(table).toMatch(/<ColumnVisibility tableId=\{tableId\} columns=\{menuColumns\} \/>/);
+    expect(table).toMatch(/const menuColumns = columns\.map\(\(column, index\) => \(\{\s+key: column\.key,\s+label: column\.label,\s+essential: isEssentialColumn\(column, index\),\s+\}\)\);/);
+    const source = read("src", "modules", "staff-identity", "ui", "ColumnVisibility.tsx");
+    const props = source.match(/type Props = \{([\s\S]*?)\n\};/)?.[1] ?? "";
+    expect(props.replace(/\/\*\*.*\*\//g, "").replace(/\s+/g, " ").trim()).toBe(
+      "tableId: string; columns: readonly { key: string; label: string; essential: boolean }[];",
+    );
+    // A checkbox per hideable column, labelled by the menu item; the trigger is named and 44 px.
+    expect(source).toContain('role="menuitemcheckbox"');
+    expect(source).toContain('aria-label={t("columns.menu")}');
+    expect(source).toMatch(/minWidth: 44, minHeight: 44/);
+    expect(source).toContain('from "@mui/icons-material/ViewColumn"');
+    for (const parts of [
+      ["src", "app", "[locale]", "admin", "(list)", "page.tsx"],
+      ["src", "app", "[locale]", "admin", "pages", "(list)", "page.tsx"],
+      ["src", "app", "[locale]", "admin", "gallery", "(list)", "page.tsx"],
+      ["src", "app", "[locale]", "admin", "staff", "page.tsx"],
+      ["src", "app", "[locale]", "admin", "registrations", "(list)", "page.tsx"],
+      ["src", "app", "[locale]", "admin", "legal", "(list)", "page.tsx"],
+    ]) {
+      expect(read(...parts), parts.join("/")).toMatch(/key: "(?:status|state)",\n\s+label: [^\n]+\n\s+essential: true,/);
+    }
   });
 });
 
@@ -400,6 +510,39 @@ describe("§650 the widths in this browser's storage", () => {
     recordFloors(table, { name: 119, state: MIN_COLUMN_WIDTH });
     expect(recordedFloor(table, "name")).toBe(119);
     expect(recordedFloor({}, "name")).toBeUndefined();
+  });
+
+  it("§NNN round-trips the hidden columns under br.table.<id>.hidden, beside the widths", () => {
+    const fake = stub();
+    writeWidths("registrations", { email: 240 });
+    writeHidden("registrations", ["email", "bib"]);
+    expect([...fake.store.keys()].sort()).toEqual(["br.table.registrations.hidden", "br.table.registrations.widths"]);
+    expect(readHidden("registrations")).toEqual(["email", "bib"]);
+    // A hidden column keeps its width for when it returns.
+    expect(readWidths("registrations")).toEqual({ email: 240 });
+    expect(readHidden("events")).toEqual([]);
+    writeHidden("registrations", []);
+    expect(fake.store.has("br.table.registrations.hidden")).toBe(false);
+    expect(fake.events.map((event) => (event as CustomEvent<string>).detail)).toEqual(["registrations", "registrations", "registrations"]);
+  });
+
+  it("§NNN keeps this page's hidden columns when storage refuses, an emptied list too", () => {
+    stub({ throws: true });
+    expect(readHidden("registrations")).toEqual([]);
+    expect(() => writeHidden("registrations", ["email"])).not.toThrow();
+    expect(readHidden("registrations")).toEqual(["email"]);
+    writeHidden("registrations", []);
+    expect(readHidden("registrations")).toEqual([]);
+  });
+
+  it("§NNN shows all again over what a storage that refuses to write still holds", () => {
+    const fake = stub();
+    fake.store.set("br.table.staff.hidden", '["email"]');
+    (window.localStorage as { removeItem: unknown }).removeItem = () => {
+      throw new Error("SecurityError");
+    };
+    writeHidden("staff", []);
+    expect(readHidden("staff")).toEqual([]);
   });
 
   it("says which table changed, for its reset control", () => {

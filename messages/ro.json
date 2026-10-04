@@ -565,7 +565,11 @@
     "columns": {
       "resize": "Lățimea coloanei „{column}”",
       "resizeHow": "Trage marginea ca să lărgești sau să îngustezi coloana; cu tastatura, săgețile stânga și dreapta. Dublu clic o readuce la lățimea inițială.",
-      "reset": "Lățimi implicite",
+      "reset": "Lățimi și coloane implicite",
+      "menu": "Coloane",
+      "menuHow": "Alege coloanele afișate în acest tabel, în acest browser.",
+      "showAll": "Arată toate coloanele",
+      "always": "Mereu afișate: {columns}",
       "widthValue": "{width} px"
     },
     "backToEvents": "Înapoi la lista de evenimente",
