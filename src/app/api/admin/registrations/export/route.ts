@@ -177,7 +177,7 @@ export async function GET(request: Request): Promise<Response> {
         confirmedAt: row.confirmedAt,
         bibNumber: row.bibNumber,
         checkedInAt: row.checkedInAt,
-        emailBounced: row.emailRejectedReason !== null,
+        emailBounced: row.emailRejected !== null,
         termsVersion: row.termsVersion,
         termsAcceptedAt: row.termsAcceptedAt,
         declarationVersion: declarations.get(row.id)?.version ?? null,
@@ -229,7 +229,7 @@ export async function GET(request: Request): Promise<Response> {
       confirmedAt: row.confirmedAt?.toISOString() ?? "",
       bibNumber: row.bibNumber,
       checkedInAt: row.checkedInAt?.toISOString() ?? "",
-      emailBounced: row.emailRejectedReason !== null,
+      emailBounced: row.emailRejected !== null,
       // The terms accepted on the form (§421, §425): blank for a staff or desk entry.
       termsVersion: row.termsVersion,
       termsAcceptedAt: row.termsAcceptedAt?.toISOString() ?? "",

@@ -5,6 +5,7 @@ import type { RegistrationStatus } from "@/db/schema/registrations";
 import { formatDay } from "@/i18n/dates";
 import { formatDeadlineInSentence } from "@/modules/notifications/domain/deadline-in-sentence";
 import { confirmationDueMoment } from "../domain/hold-deadlines";
+import type { RejectedEmail } from "../domain/rejected-email";
 import { rowDeadlineOf } from "../domain/row-deadline";
 import { waitlistStandingPhrase } from "./waitlist-position-words";
 
@@ -29,6 +30,8 @@ export type TellFacts = {
   checkedInAt: Date | null;
   /** Why an expired row expired: a lapsed declaration hold says what its email said (§638). */
   expiryReason?: string | null;
+  /** The newest email the provider rejected (§NNN): one more sentence, so the person knows our mail does not reach them. */
+  emailRejected?: Pick<RejectedEmail, "status"> | null;
 };
 
 /** The states whose next step is a link in an email: the ones a lost or spam-filed email stops. */
@@ -151,6 +154,9 @@ export function tellLines(say: Say, ours: Say, locale: string, facts: TellFacts,
   if (active && link && !held && !lapsed && link.getTime() !== stated?.getTime()) lines.push(ours("linkUntil", { instant: at(link) }));
   // Not once the link or the offer has lapsed: there is no email left to look for.
   if (WAITS_ON_AN_EMAIL.has(facts.status) && !lapsed) lines.push(say("spamHint.body"));
+  // The newest email bounced or was marked as spam (§NNN): on any state, confirmed included — said to the
+  // person without the address, which stays theirs to change (§645).
+  if (facts.emailRejected) lines.push(ours(`rejected.${facts.emailRejected.status}`));
   return lines;
 }
 

@@ -22,6 +22,7 @@ import { awaitingItsFirstEmail, familyEmailQueued, familyReservationHolds, offer
 import { promoListed } from "./sponsor-list";
 import { healthNoteShown } from "./domain/health-note";
 import type { QueueOrder } from "./domain/waitlist";
+import { rejectedEmailOf, type RejectedEmail } from "./domain/rejected-email";
 import type { PlaceDeadlineCounts, PlaceDeadlineEvent } from "./domain/place-deadlines";
 
 /**
@@ -88,8 +89,8 @@ export type RegistrationListRow = {
   /** When the club last said this bib is on paper (§264); null while it is not. */
   bibPrintedAt: Date | null;
   checkedInAt: Date | null;
-  /** Mailgun's reason when a message bounced or was complained about (§76); null otherwise. */
-  emailRejectedReason: string | null;
+  /** The newest message the provider rejected — which, when, why and its reason (§76, §NNN); null otherwise. */
+  emailRejected: RejectedEmail | null;
   /** The latest declaration's declarant's document: the adult's, or the parent's for a minor (§95, §108). */
   idDocument: string | null;
   /** The minor's own document, beside the parent's (§330); `identityDocumentsOf` says whose is whose. */
@@ -201,11 +202,11 @@ function escapeLike(term: string): string {
 /** Every filter the list and its count must agree on, in one place so they cannot drift apart. */
 /**
  * The provider's last word on this registration's mail, when that word was "no" (BR-REQ-080-04,
- * `DECISIONS.md` §76): the reason Mailgun gave for the newest bounced or complained message —
- * any message type, because a verification that bounced means exactly what a bounced
- * confirmation means: this person never got the email, and somebody should call them. Null
- * when every message went through, or none was sent yet. A short sanitized reason (§16.1),
- * never a body.
+ * `DECISIONS.md` §76, §NNN): the newest bounced or complained message — its type, when it left,
+ * which of the two, and the short sanitized reason the provider gave (§16.1), never a body. Any
+ * message type: a confirmed participant whose race-number email bounced is one the club can no
+ * longer reach by email, and somebody should call them. Null when every message went through, or
+ * none was sent yet. (`emailRejected`, below the declaration probes.)
  */
 /**
  * The identity document the latest declaration names (§95): what the desk checks the kit
@@ -246,16 +247,22 @@ const latestDeclarationAcceptedAt = sql<Date | null>`(
 )`.mapWith(declarationAcceptances.acceptedAt);
 
 // A club copy (§320) that bounced is a club mailbox's problem, not the participant's address:
-// it never marks the registration as unreachable.
-const emailRejectedReason = sql<string | null>`(
-  SELECT coalesce(${emailOutbox.lastError}, ${emailOutbox.status}::text)
+// it never marks the registration as unreachable. One object (§NNN): which message, when it left (or
+// was queued, refused outright), bounced or complained, and the reason — so the chip says which and when.
+const emailRejected = sql<RejectedEmail | null>`(
+  SELECT json_build_object(
+    'messageType', ${emailOutbox.messageType},
+    'at', floor(extract(epoch FROM coalesce(${emailOutbox.sentAt}, ${emailOutbox.createdAt})) * 1000),
+    'status', ${emailOutbox.status},
+    'reason', ${emailOutbox.lastError}
+  )
   FROM ${emailOutbox}
   WHERE ${emailOutbox.registrationId} = ${registrations.id}
     AND ${emailOutbox.status} IN ('BOUNCED', 'COMPLAINED')
     AND (${emailOutbox.payloadJson} ->> 'clubCopy') IS DISTINCT FROM 'true'
   ORDER BY ${emailOutbox.createdAt} DESC
   LIMIT 1
-)`;
+)`.mapWith(rejectedEmailOf);
 
 function registrationConditions(filters: RegistrationListFilters): SQL[] {
   const search = filters.search?.trim();
@@ -268,7 +275,7 @@ function registrationConditions(filters: RegistrationListFilters): SQL[] {
     // filter, because `false` here means "did not tick a box" as often as it means "not a
     // member", and a screen that presented it as the second would be inventing an answer.
     filters.clubMemberDeclared ? eq(registrations.clubMemberDeclared, true) : undefined,
-    filters.emailBounced ? sql`${emailRejectedReason} IS NOT NULL` : undefined,
+    filters.emailBounced ? sql`${emailRejected} IS NOT NULL` : undefined,
     // The same condition as the club's list on «Newsletter» and the sponsor list's candidates (§570, §581).
     filters.promoConsented ? promoListed() : undefined,
     filters.outsideCapacity ? eq(registrations.outsideCapacity, true) : undefined,
@@ -433,7 +440,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       bibNumber: registrations.bibNumber,
       bibPrintedAt: registrations.bibPrintedAt,
       checkedInAt: registrations.checkedInAt,
-      emailRejectedReason,
+      emailRejected,
       idDocument: latestIdDocument,
       minorIdDocument: latestMinorIdDocument,
       cycleStartedAt: registrations.privacyAcknowledgedAt,
@@ -691,8 +698,8 @@ export type RegistrationDetail = {
   checkedInByName: string | null;
   /** Who vouched for the address at the desk, when nobody clicked a link. */
   emailConfirmedByName: string | null;
-  /** Mailgun's reason when a message to this registration bounced or was complained about; null otherwise. */
-  emailRejectedReason: string | null;
+  /** The newest message to this registration the provider rejected (§76, §NNN); null otherwise. */
+  emailRejected: RejectedEmail | null;
   /** For "send the reminder": only while the event is ahead (§81). */
   eventStartsAt: Date;
   /** When the current cycle began (`privacy_acknowledged_at`, rewritten on a restart); §145. */
@@ -741,7 +748,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       checkedInAt: registrations.checkedInAt,
       checkedInByName: checkedInBy.displayName,
       emailConfirmedByName: emailConfirmedBy.displayName,
-      emailRejectedReason,
+      emailRejected,
       eventStartsAt: events.startsAt,
       id: registrations.id,
       status: registrations.status,
@@ -1030,8 +1037,10 @@ export type DeskRegistration = {
   checkinCode: string | null;
   checkedInAt: Date | null;
   checkedInByName: string | null;
-  /** The desk sees who never got the email (`DECISIONS.md` §76) — the reason, never the address. */
-  emailRejectedReason: string | null;
+  /** The desk sees whom an email no longer reaches (`DECISIONS.md` §76, §NNN) — which, when and why, never the address. */
+  emailRejected: RejectedEmail | null;
+  /** When the address was confirmed, so the desk's words say whether the rejection came after it (§NNN). */
+  emailConfirmedAt: Date | null;
   /** The declarant's document, and a minor's own beside it (§95, §330; `identityDocumentsOf`). */
   idDocument: string | null;
   minorIdDocument: string | null;
@@ -1058,7 +1067,8 @@ const DESK_COLUMNS = {
   minorIdDocument: latestMinorIdDocument,
   checkedInAt: registrations.checkedInAt,
   checkedInByName: checkedInBy.displayName,
-  emailRejectedReason,
+  emailRejected,
+  emailConfirmedAt: registrations.emailConfirmedAt,
 };
 
 function deskQuery<T extends Record<string, unknown>>(db: Database<T>, locale: Locale) {

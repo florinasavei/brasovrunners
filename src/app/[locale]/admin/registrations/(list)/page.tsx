@@ -94,6 +94,8 @@ import { givePlaceRefusalAhead } from "@/modules/registrations/give-place-tip";
 import { paperConfirmationText } from "@/modules/registrations/ui/PaperConfirmationTip";
 import RegistrationRowMenu, { type RegistrationMenuItem } from "@/modules/registrations/ui/RegistrationRowMenu";
 import HiddenListChip from "@/modules/registrations/ui/HiddenListChip";
+import EmailRejectedChip from "@/modules/registrations/ui/EmailRejectedChip";
+import { rejectedEmailSentences, rejectedEmailWords } from "@/modules/registrations/ui/rejected-email-words";
 import { CLUB_NAME } from "@/theme/brand";
 import { actionKeyOf } from "@/shared/forms/action-key";
 
@@ -417,19 +419,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               label={t("registrations.clubMemberChip")}
             />
           )}
-          {/* The provider said no (§76, §83): the same chip the desk and the registration's page draw,
-              so a row kept by «Doar cine nu a primit emailul» says why it is there (BR-REQ-038-01
-              criterion 8). The reason is the hover text, as at the desk. */}
-          {row.emailRejectedReason && (
-            <Chip
-              size="small"
-              color="error"
-              variant="outlined"
-              label={t("registrations.emailRejected")}
-              title={row.emailRejectedReason}
-              data-testid="email-rejected"
-            />
-          )}
+          {/* The newest email was rejected (§76, §83, §NNN): the desk's and the page's chip, so a row kept by
+              «Doar cu un email respins» says why — which email, when, why, and whether after the confirmation. */}
+          {row.emailRejected && (() => {
+            const words = rejectedEmailWords({ ...row.emailRejected, emailConfirmedAt: row.emailConfirmedAt }, locale);
+            return <EmailRejectedChip label={t("registrations.emailRejected")} sentences={rejectedEmailSentences(words)} reason={words.reason} />;
+          })()}
           {/* "Is my name on the site?" is asked of the club, not of the platform (§186). Marked
               only when the answer is no: on an event that publishes a list most rows are on it,
               and a chip on every row is a chip nobody reads. On an event with no published list
@@ -1225,7 +1220,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               {t("registrations.clubMemberOnly", { club: CLUB_NAME })}
             </CheckboxField>
           </Box>
-          {/* Who never got the email (§76, §83): the rows to call. */}
+          {/* Whose newest email was rejected, confirmed or not (§76, §83, §NNN): the rows to call. */}
           <Box sx={{ minWidth: 220, maxWidth: 320, pt: 0.5 }} data-testid="registrations-filter-bounced">
             <CheckboxField name="bounced" value="1" defaultChecked={bounced === "1"} dense help={t("registrations.bouncedOnlyHelp")}>
               <UnsubscribeIcon aria-hidden data-testid="registrations-filter-bounced-glyph" />
