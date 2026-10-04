@@ -15,6 +15,7 @@ import {
 import { defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { identityDocumentsOf } from "@/modules/registrations/domain/identity-documents";
 import { rowDeadlineOf } from "@/modules/registrations/domain/row-deadline";
+import { ageOnRaceDay } from "@/modules/registrations/domain/age";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -245,6 +246,10 @@ export async function GET(request: Request): Promise<Response> {
       // The list's «Până când» (§650): the moment the row waits on and its kind, empty when none — last, like the special guest.
       deadline: deadlineOf(row)?.at.toISOString() ?? "",
       deadlineFor: deadlineOf(row)?.kind ?? "",
+      // The list's «Vârstă» and «Oraș» (§NNN), from the row the list reads: the age on the event's day, the country, the city.
+      ageOnRaceDay: ageOnRaceDay(row.birthDate, row.eventStartsAt, row.eventTimezone),
+      country: row.country,
+      city: row.city,
     })),
   );
 

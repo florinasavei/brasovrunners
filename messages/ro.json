@@ -787,6 +787,9 @@
       "columnStatus": "Stare",
       "columnJourney": "Unde a ajuns",
       "columnUntilWhen": "Până când",
+      "columnCity": "Oraș",
+      "columnAge": "Vârstă",
+      "ageHint": "Vârsta împlinită în ziua evenimentului, cea după care se socotesc categoriile și regulile pentru minori. «—»: fără dată de naștere.",
       "untilWhenHint": "Până când poate semna declarația, accepta oferta sau confirma adresa din email, la minut. Gri: termen trecut. «—»: nu așteaptă nimic. La fel ca în cronologia înscrierii.",
       "untilWhen": {
         "hold": "Poate semna până {instant}",
@@ -5400,6 +5403,7 @@
                 "Cauți pe cineva: scrie o parte din nume în «Caută după nume» și apasă «Filtrează». Fără un eveniment ales, caută în toate.",
                 "Coloana «Unde a ajuns» spune pasul fiecăruia. Apasă pe nume ca să deschizi înscrierea: «Parcursul înscrierii» și «Cronologie» spun tot ce s-a întâmplat.",
                 "Coloana «Până când» spune până când poate semna, accepta sau confirma fiecare — aceeași oră ca în cronologia înscrierii.",
+                "«Oraș» spune unde locuiește fiecare, cu codul țării doar în afara României, iar «Vârstă» vârsta din ziua evenimentului. Ambele se pot sorta și apar și în export.",
                 "Cineva întreabă unde e înscrierea lui: deschide-o și spune-i ce scrie la «Ce îi spui» — aceleași cuvinte pe care le-a citit și el. «Copiază» le pune în clipboard, pentru un mesaj.",
                 "Sus scrie o dată ce nu poți modifica aici. Rolul Tehnic nu vede înscrierile deloc.",
                 "Pe pagina publică a evenimentului, prima cifră numără înscrierile care țin un loc: confirmații plus cei încă în curs — o declarație nesemnată, o ofertă din lista de așteptare neacceptată, locul ținut de o familie. După liniuță, linia spune doar ce există: câți sunt confirmați și câți în curs, și câte locuri libere sunt păstrate pentru lista de așteptare, de exemplu „6 înscriși din 10 locuri — 4 confirmați, 2 în curs de confirmare, 4 locuri păstrate pentru lista de așteptare”.",

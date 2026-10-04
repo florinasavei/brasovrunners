@@ -50,6 +50,19 @@ export type RegistrationListRow = {
   eventTitle: string | null;
   /** BR-REQ-031-06. What this person said about themselves, never what the club verified. */
   clubMemberDeclared: boolean;
+  /**
+   * Where the person lives (§510) — the country's ISO code, `RO` by default, and the city as typed — for
+   * the list's «Oraș» (`domain/city-label.ts#cityLabel`, §NNN) and the export's «Country» and «City».
+   */
+  country: string | null;
+  city: string | null;
+  /**
+   * The birth date and the event's start on its own clock, for «Vârstă» (§NNN): the age on the event's
+   * day, `domain/age.ts#ageOnRaceDay`, the one the categories and the minors' rules count (§329).
+   */
+  birthDate: string | null;
+  eventStartsAt: Date;
+  eventTimezone: string;
   /** When the entrant ticked "I am medically fit" (§171); null on a desk or phone entry. */
   fitnessDeclaredAt: Date | null;
   /**
@@ -145,7 +158,7 @@ export type RegistrationListFilters = {
  * An allowlist rather than a mapping built from the request: `?sort=` arrives from a URL anybody
  * can type, and the one thing that must not be possible is for it to name a column.
  */
-export const REGISTRATION_SORT_KEYS = ["name", "status", "event", "submitted", "bib", "untilWhen"] as const;
+export const REGISTRATION_SORT_KEYS = ["name", "status", "event", "submitted", "bib", "untilWhen", "city", "age"] as const;
 export type RegistrationSortKey = (typeof REGISTRATION_SORT_KEYS)[number];
 
 /**
@@ -374,6 +387,20 @@ function registrationOrderBy(sort: RegistrationSortKey, dir: "asc" | "desc", now
     // The soonest deadline first (§650); a row that waits on none comes after every dated one, either way.
     case "untilWhen":
       return dir === "asc" ? sql`${rowDeadlineOrder(now)} asc nulls last` : sql`${rowDeadlineOrder(now)} desc nulls last`;
+    /*
+      «Oraș» (§NNN): the city as typed, by the database's collation as the name sorts; a row with no city
+      last either way, as a row with no number is under «BIB». The country's code the cell adds is not
+      part of the order: «Bristol (GB)» sorts among the B's.
+    */
+    case "city":
+      return dir === "asc" ? sql`nullif(btrim(${registrations.city}), '') asc nulls last` : sql`nullif(btrim(${registrations.city}), '') desc nulls last`;
+    /*
+      «Vârstă» (§NNN): the youngest first is the latest birth date first. Over one event this is exactly
+      the order of the ages on screen; over every event it is the order of the birth dates, which two
+      rows of different races read the same way within a year. No birth date last, either way.
+    */
+    case "age":
+      return dir === "asc" ? sql`${registrations.birthDate} desc nulls last` : sql`${registrations.birthDate} asc nulls last`;
   }
 }
 
@@ -416,6 +443,12 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       eventId: registrations.eventId,
       eventTitle: eventTranslations.title,
       clubMemberDeclared: registrations.clubMemberDeclared,
+      // «Oraș» and «Vârstă» (§NNN): read from the row and its event, no query per row.
+      country: registrations.country,
+      city: registrations.city,
+      birthDate: registrations.birthDate,
+      eventStartsAt: events.startsAt,
+      eventTimezone: events.timezone,
       fitnessDeclaredAt: registrations.fitnessDeclaredAt,
       termsVersion: registrations.termsVersion,
       termsAcceptedAt: registrations.termsAcceptedAt,
@@ -454,6 +487,8 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
     })
     .from(registrations)
     .innerJoin(participants, eq(participants.id, registrations.participantId))
+    // The event's start and clock, for «Vârstă» (§NNN): one primary-key probe per row.
+    .innerJoin(events, eq(events.id, registrations.eventId))
     .leftJoin(
       eventTranslations,
       and(
@@ -917,10 +952,11 @@ export async function listEmergencySheet<T extends Record<string, unknown>>(
 }
 
 /**
- * The extra columns the spreadsheet carries and the CSV does not (§322): sex, the age on race
- * day, where the runner is from, and the t-shirt size — what a category ranking, the club's
- * "where do our runners come from" and the kit order need, and nothing the start list itself
- * reads. One query for the exported ids rather than four more columns on every page of the list.
+ * The extra columns the spreadsheet carries (§322): sex, the age on race day, where the runner is
+ * from, and the t-shirt size — what a category ranking, the club's "where do our runners come
+ * from" and the kit order need. The age, the country and the city are also the list's own
+ * «Vârstă» and «Oraș» and the CSV's last columns since §NNN; sex, citizenship and the t-shirt stay
+ * the spreadsheet's alone. One query for the exported ids.
  */
 export type WorkbookDetails = {
   id: string;

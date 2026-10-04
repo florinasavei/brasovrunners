@@ -41,6 +41,8 @@ import SummaryStrip from "@/modules/registrations/ui/SummaryStrip";
 import PlaceDeadlines from "@/modules/registrations/ui/PlaceDeadlines";
 import RowDeadlineCell from "@/modules/registrations/ui/RowDeadlineCell";
 import { rowDeadlineOf } from "@/modules/registrations/domain/row-deadline";
+import { cityLabel } from "@/modules/registrations/domain/city-label";
+import { ageOnRaceDay } from "@/modules/registrations/domain/age";
 import { deadlinesForThisRequest } from "@/modules/deadlines/request";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { familiesTogether, familyOf } from "@/modules/registrations/family-marker";
@@ -546,6 +548,45 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 ✓
               </Box>
             )}
+          </Box>
+        );
+      },
+    },
+    {
+      /*
+        «Oraș» (§NNN): where the person lives, the city as typed and the country's code only when it is not
+        Romania («Bristol (GB)», `cityLabel`), in both of `AdminTable`'s layouts. «—» when no city was
+        given. Sorted by the city alone, the rows with none last.
+      */
+      key: "city",
+      label: t("registrations.columnCity"),
+      sortable: true,
+      initialDir: "asc",
+      render: (row) => {
+        const label = cityLabel(row.city, row.country);
+        return (
+          <Box component="span" data-testid="row-city" sx={label ? undefined : { color: "text.disabled" }}>
+            {label || "—"}
+          </Box>
+        );
+      },
+    },
+    {
+      /*
+        «Vârstă» (§NNN): the age on the event's day (`ageOnRaceDay`, on the event's own clock), the age the
+        categories and the minors' rules count (§329), not today's. «—» with no birth date. Ascending is
+        the youngest first.
+      */
+      key: "age",
+      label: t("registrations.columnAge"),
+      hint: t("registrations.ageHint"),
+      sortable: true,
+      initialDir: "asc",
+      render: (row) => {
+        const age = ageOnRaceDay(row.birthDate, row.eventStartsAt, row.eventTimezone);
+        return (
+          <Box component="span" data-testid="row-age" sx={{ fontVariantNumeric: "tabular-nums", color: age === null ? "text.disabled" : "text.primary" }}>
+            {age ?? "—"}
           </Box>
         );
       },
