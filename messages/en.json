@@ -757,6 +757,8 @@
           "offered_by_staff": "Offer sent ahead of the waiting list (“Send them the offer”)",
           "address_vouched_by_staff": "Address vouched for by the team; place given ahead of the waiting list (“Give them a place now”)",
           "outside_capacity_changed": "Put on the special guests list, or taken off it",
+          "deadline_moved_for_outage": "Deadline moved: the site could not be reached, the clock stood still",
+          "not_revived_for_outage": "Not revived after the outage: the deadline had passed while the site could not be reached, and the place had been given meanwhile or the claim had already lapsed",
           "answer_corrected": "Answer corrected: {field}",
           "answers_viewed": "Answers opened, with the phone and the emergency contact"
         },
@@ -3278,6 +3280,22 @@
             "Check: this row shows the new expiry date and turns green when more than 90 days are left."
           ]
         },
+        "unreachableWindow": {
+          "title": "The site unreachable: the deadlines' clock",
+          "todo": "The site could not be reached from {windowFrom} to {windowUntil}: {windowGranted} given back, deadlines moved: {windowMoved}.",
+          "done": "No outage needs a look: the newest one, if any, left nobody without the place they had.",
+          "open": "The site's name has not resolved since {windowFrom}. On every run the running deadlines move by the time elapsed, so nothing lapses until it is back.",
+          "stuck": "The outage from {windowFrom} to {windowUntil} is over, but its deadlines could not be moved yet: the scheduled job keeps trying; its last error is on /devs.",
+          "notRevived": "The outage from {windowFrom} to {windowUntil} left claims lapsed that were not revived; still waiting, with the verb the email names: {windowNotRevived}.",
+          "how": [
+            "Check the domain at the registrar: the account, the contact verification emails, the renewal payment.",
+            "While the name is gone, nothing lapses. When it is back, the scheduled jobs move the deadlines by themselves and send «The deadlines' clock stood still».",
+            "The email names each person whose claim was not revived and what can be done for them: nobody is seated beyond the advertised places by itself.",
+            "A lapsed offer, declaration hold or address link: the person registers again (or «Add the registration»); once they wait, «Send them the offer» seats them.",
+            "A family reservation: «Give them a place now» on its registration, the address being still unconfirmed. An expired invitation: a new one to the same address, from «Send invitations».",
+            "The row stays red only while one of them is unresolved: until they register again, get a new invitation or a place, or the event starts."
+          ]
+        },
         "contactForm": {
           "title": "The contact form",
           "todo": "Messages from “Write to us” reach the club through Gmail. Until the account is configured, the page shows the club's address instead of the form.",
@@ -4563,6 +4581,8 @@
         "MEMBER_INVITATION": "The member invitation",
         "DECLARATION_HOLD_EXPIRED": "The held place expired",
         "LEGAL_TEMPLATES_CHANGED": "The legal templates changed",
+        "UNREACHABLE_WINDOW_OPENED": "The site's name does not resolve",
+        "UNREACHABLE_WINDOW_CLOSED": "The deadlines' clock stood still",
         "EVENT_INVITATION": "Invitation to an event"
       },
       "when": {
@@ -4596,6 +4616,8 @@
         "MEMBER_INVITATION": "When an administrator adds somebody on Echipa with the role Membru, and on \"Resend the invitation\" until their first sign-in. No token: the button leads to the sign-in, then to the members' area.",
         "DECLARATION_HOLD_EXPIRED": "When somebody who did not sign the declaration in time loses the place to somebody who wanted it. Once per place lost, with what they can still do. Not after the start or for a cancelled event.",
         "LEGAL_TEMPLATES_CHANGED": "When a new release of the site changes a legal text's template: once per change, to every Administrator and Superadministrator. No token: the button leads to «New version».",
+        "UNREACHABLE_WINDOW_OPENED": "When the scheduled jobs, reached by another address, find twice, ten minutes apart, that the site's name no longer resolves: once per outage, to every Administrator and Superadministrator. No button.",
+        "UNREACHABLE_WINDOW_CLOSED": "After an outage — the site's name not found, or no scheduled call arriving: how long, what moved, what to check. Once per outage, to the same people, even with the moving switched off.",
         "EVENT_INVITATION": "When an administrator sends invitations from an event's registrations list, and on Resend. One link to the form, with the name and address filled in; the place is kept until the deadline."
       },
       "whenShort": {
@@ -4629,6 +4651,8 @@
         "MEMBER_INVITATION": "when a member is added",
         "DECLARATION_HOLD_EXPIRED": "when an unsigned place goes to somebody else",
         "LEGAL_TEMPLATES_CHANGED": "when a legal template changes",
+        "UNREACHABLE_WINDOW_OPENED": "when the site's name does not resolve",
+        "UNREACHABLE_WINDOW_CLOSED": "after an outage of the site",
         "EVENT_INVITATION": "when an administrator invites somebody"
       },
       "clubNotices": {
@@ -4985,7 +5009,8 @@
           "publicListDays": "The public participant list stays up after the event (days)",
           "familySittingMinutes": "A family registration's email waits for “Done” at most (minutes)",
           "verificationRetryHours": "The address-confirmation link is re-sent after (hours)",
-          "verificationRetries": "How many times the link is re-sent (0–3)"
+          "verificationRetries": "How many times the link is re-sent (0–3)",
+          "outageGraceMaxHours": "The deadlines' clock stands still while the site cannot be reached, at most (hours)"
         },
         "help": {
           "confirmationHours": "How long somebody has to press the link in the first email; after it, the registration lapses.",
@@ -4998,7 +5023,8 @@
           "publicListDays": "Then the list closes by itself, even while the event still has it switched on. The privacy notice from the template states this number.",
           "familySittingMinutes": "After “Yes, one more person”, the family's email waits for “Done” at most this many minutes after the last form and leaves once, for everybody; at 0, each email leaves at once.",
           "verificationRetryHours": "Counted from when the last confirmation email left, to whoever has not confirmed yet. The link's deadline does not move.",
-          "verificationRetries": "Every confirmation email counts, “Resend” and a backoffice resend included. 0 = never re-sent by itself. The deadline does not move."
+          "verificationRetries": "Every confirmation email counts, “Resend” and a backoffice resend included. 0 = never re-sent by itself. The deadline does not move.",
+          "outageGraceMaxHours": "While the name is not found, running deadlines move on every run; after a silence of the scheduled calls, afterwards. At most this many hours; 0 = no moving, the outages are still recorded."
         },
         "legal": "Legal texts already approved keep the numbers written in them until you approve a new version from the template, which reads them from here.",
         "updatedAt": "Set {when}.",
@@ -5151,7 +5177,9 @@
         "COMPLETE_DECLARATION": "The place is held for {hold} from when the email leaves, or until the deadline for a distant event. The deadline counts only when somebody is waiting; otherwise it is signed at the desk too.",
         "BIB_ASSIGNED": "When an organizer types a confirmed registration's number on its page or at the desk. Otherwise, the number comes with the confirmation. With the manage link. Never for a cancelled event.",
         "REGISTER_ANOTHER_PERSON": "No registration is created, and the screen says “check your email” as always. If the address already has {people}, the email says only that, with no link.",
-        "LEGAL_TEMPLATES_CHANGED": "The check runs with the scheduled jobs, at most once an hour. A change approved before the check is not announced; «Tasks» shows the same rows."
+        "LEGAL_TEMPLATES_CHANGED": "The check runs with the scheduled jobs, at most once an hour. A change approved before the check is not announced; «Tasks» shows the same rows.",
+        "UNREACHABLE_WINDOW_OPENED": "While the name does not resolve nothing lapses. It leaves on the club's road, which does not depend on the club's domain.",
+        "UNREACHABLE_WINDOW_CLOSED": "The deadlines move by as long as the outage lasted, at most what «Deadlines» says. Whoever lost the place meanwhile is named in the email; an administrator decides."
       },
       "confirmationRetry": "To whoever has not confirmed, the link goes again by itself {retry} after the last email, at most {times}; “Resend” counts too. The deadline does not move.",
       "confirmationRetryOff": "It is not re-sent by itself: in “Deadlines”, the number of resends is 0."
@@ -7899,6 +7927,25 @@
       "pingSkipped": "last ping {when}: skipped",
       "cadenceOnDemand": "Minimum interval: on demand — at least one real run a day, at {time} (Settings → Costs).",
       "cadenceEvery": "Minimum interval: {minutes} min between two real runs (Settings → Costs)."
+    },
+    "unreachable": {
+      "domain": "The site's name: {host} — {answer}, at the maintenance job's last real run ({when}). This page does not ask it.",
+      "domainUnknown": "The site's name: no answer remembered from the maintenance job's last real run. This page does not ask it.",
+      "domainSkipped": "The site's name is not asked on this deployment: a laptop, a test, or an address that is a number.",
+      "answer": {
+        "resolves": "resolves",
+        "unresolved": "not found",
+        "unknown": "no answer in time",
+        "skipped": "not asked"
+      },
+      "none": "The deadlines' clock: no outage recorded.",
+      "windows": "The deadlines' clock — the last outages, newest first:",
+      "open": "since {from}: the site's name does not resolve; the deadlines move on every run, nothing lapses until it is back.",
+      "closed": "{from} – {until} ({source}): given back {granted}; deadlines moved: {moved}; claims not revived: {notRevived}.",
+      "source": {
+        "dns": "the name not found",
+        "pings": "no scheduled call"
+      }
     }
   },
   "Error": {

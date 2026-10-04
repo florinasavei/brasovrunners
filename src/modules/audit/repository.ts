@@ -109,6 +109,19 @@ export type AuditAction =
    * and after), the state the row was in and, when the change moved it, the state after — never a name.
    */
   | "registration.outside_capacity_changed"
+  /**
+   * A deadline of this registration moved later by the maintenance job's outage grace (§NNN): the
+   * site's name did not resolve, or no scheduler call arrived. No actor; `kind` (which deadline),
+   * `from` and `to` (instants), the window's id and `source` — never a name.
+   */
+  | "registration.deadline_moved_for_outage"
+  /**
+   * The outage grace did not revive this registration's lapsed claim (§NNN): an offer or a family's
+   * reservation whose deadline passed while the platform could not be reached, and whose counted place
+   * was given meanwhile. It lapses as it would have; the job seats nobody, an Administrator decides. No
+   * actor; `kind`, the window's id and the `deadline` left as it was — never a name.
+   */
+  | "registration.not_revived_for_outage"
   /** The participant is here (BR-REQ-037-08); by staff, or by themselves. */
   | "registration.checked_in"
   | "registration.checkin_undone"
@@ -297,6 +310,17 @@ export type AuditAction =
   | "event.invitation_withdrawn"
   | "event.invitation_expired"
   | "event.invitation_accepted"
+  /**
+   * An invitation's deadline moved later by the outage grace (§NNN): the invitation's id, from and to,
+   * the window's id and source — never a name or an address.
+   */
+  | "event.invitation_deadline_moved_for_outage"
+  /**
+   * An invitation the outage grace did not revive (§NNN): it lapsed while the platform could not be
+   * reached and its counted place was given meanwhile. The invitation's id, the window's id and the
+   * `deadline` left as it was — never a name or an address.
+   */
+  | "event.invitation_not_revived_for_outage"
   /**
    * «Arată public câți așteaptă» switched (§634): from and to, on every date a save changed it — the
    * editor's own date and each date of a series the scoped save carried it to.

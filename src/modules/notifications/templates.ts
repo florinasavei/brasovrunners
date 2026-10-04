@@ -25,6 +25,14 @@ import { weatherSpanWords } from "@/modules/weather/words";
 import { CANNOT_COME_GLYPH_PATH, CANNOT_COME_MESSAGES } from "./domain/cannot-come";
 import type { HoldLapsedNext } from "./domain/hold-lapsed";
 import { legalTemplateNames, legalTemplatesWords } from "./legal-templates-words";
+import {
+  notRevivedLinks,
+  type UnreachableWindowFacts,
+  windowClosedBody,
+  windowClosedFactsLine,
+  windowOpenedBody,
+  windowOpenedFactsLine,
+} from "./outage-grace-words";
 import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
 
 /**
@@ -953,6 +961,11 @@ export type TemplateData = {
    */
   legalTemplateKeys?: readonly string[];
   /**
+   * The outage grace's two emails to the Administrators (§NNN): the window's instants, what it gave back, the club's cap
+   * and the counts, as the maintenance job wrote them. Each half writes them in its own language.
+   */
+  unreachableWindow?: UnreachableWindowFacts;
+  /**
    * "Detalii actualizate" (§331): which facts the save changed — the place, the start, the
    * programme, the event on again. The values are the event's as it stands at send time, in the
    * fields above; this says which of them to name as new.
@@ -1640,6 +1653,20 @@ const T = {
       // The screen the button opens and what is done there (§654): «Versiune nouă» regenerates; approving is on «Documente legale».
       action: `${legalTemplatesWords("ro").newVersion}: regenerează textele`,
     },
+    // To the Administrators (§NNN): the site's name does not resolve, and nothing lapses until it does.
+    // No button: the address it would open is the one that is gone.
+    unreachableWindowOpened: {
+      subject: "Site-ul nu se găsește după nume: termenele stau pe loc",
+      facts: (d: TemplateData) => (d.unreachableWindow ? { line: windowOpenedFactsLine("ro", d.unreachableWindow), links: [] } : undefined),
+      body: (d: TemplateData) => windowOpenedBody("ro", d.unreachableWindow),
+    },
+    // To the Administrators (§NNN): the window is over, what moved, and what to check.
+    unreachableWindowClosed: {
+      subject: "Ceasul termenelor a stat pe loc: ce s-a mutat",
+      facts: (d: TemplateData) => (d.unreachableWindow ? { line: windowClosedFactsLine("ro", d.unreachableWindow), links: notRevivedLinks("ro", d.unreachableWindow) } : undefined),
+      body: (d: TemplateData) => windowClosedBody("ro", d.unreachableWindow),
+      action: "Deschide «Sarcini»",
+    },
     registrationOpened: {
       // To an address, not a participant (§146): the greeting names nobody.
       subject: (d: TemplateData) => `Înscrierile la ${d.eventTitle ?? "eveniment"} s-au deschis`,
@@ -2295,6 +2322,17 @@ const T = {
       },
       action: `${legalTemplatesWords("en").newVersion}: regenerate the texts`,
     },
+    unreachableWindowOpened: {
+      subject: "The site's name does not resolve: the deadlines are held",
+      facts: (d: TemplateData) => (d.unreachableWindow ? { line: windowOpenedFactsLine("en", d.unreachableWindow), links: [] } : undefined),
+      body: (d: TemplateData) => windowOpenedBody("en", d.unreachableWindow),
+    },
+    unreachableWindowClosed: {
+      subject: "The deadlines' clock stood still: what moved",
+      facts: (d: TemplateData) => (d.unreachableWindow ? { line: windowClosedFactsLine("en", d.unreachableWindow), links: notRevivedLinks("en", d.unreachableWindow) } : undefined),
+      body: (d: TemplateData) => windowClosedBody("en", d.unreachableWindow),
+      action: "Open «Tasks»",
+    },
     registrationOpened: {
       subject: (d: TemplateData) => `Registration for ${d.eventTitle ?? "the event"} is open`,
       greeting: () => "Hello,",
@@ -2700,6 +2738,8 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   MEMBER_INVITATION: "memberInvitation",
   EVENT_INVITATION: "eventInvitation",
   LEGAL_TEMPLATES_CHANGED: "legalTemplatesChanged",
+  UNREACHABLE_WINDOW_OPENED: "unreachableWindowOpened",
+  UNREACHABLE_WINDOW_CLOSED: "unreachableWindowClosed",
 };
 
 /** The newsletter's three messages (§445): to an address, never about a registration. */
@@ -3340,7 +3380,10 @@ export function buildTemplateContent(
         // …nor a member's invitation (§524): no event, no registration, nothing of a participant's to link.
         messageType === "MEMBER_INVITATION" ||
         // …nor the Administrators' notice of a moved template (§639): its one link is its button.
-        messageType === "LEGAL_TEMPLATES_CHANGED"
+        messageType === "LEGAL_TEMPLATES_CHANGED" ||
+        // …nor the outage grace's two (§NNN): to the Administrators, about no event and nobody's data.
+        messageType === "UNREACHABLE_WINDOW_OPENED" ||
+        messageType === "UNREACHABLE_WINDOW_CLOSED"
       ) {
         return own.length > 0 ? own : undefined;
       }
@@ -3446,6 +3489,9 @@ const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set([
   "MEMBER_INVITATION",
   // To the club's Administrators about its legal texts (§639): about nobody's data.
   "LEGAL_TEMPLATES_CHANGED",
+  // The outage grace's two (§NNN): to the Administrators, instants and counts only.
+  "UNREACHABLE_WINDOW_OPENED",
+  "UNREACHABLE_WINDOW_CLOSED",
 ]);
 
 /**

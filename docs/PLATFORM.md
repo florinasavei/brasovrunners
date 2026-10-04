@@ -577,6 +577,79 @@ yarn idle:measure --hours 1 --vercel-project <name>   plus the last hour of Verc
 | R2, Mailgun | none on a timer; the picture sweep ran on every hourly safety run | the sweep runs once a day | a photo upload; an email a person caused |
 | GitHub Actions | `scheduled-jobs.yml` said every five minutes (GitHub ran it every three to five hours) | four times a day, as the backstop it is | — |
 
+## When the name is gone — the deadlines' clock stops (2026-10-03)
+
+On 2026-10-03 a registrar hold for the domain's contact verification took the club's name away from
+about 11:04 to 18:24 UTC. The site, the backoffice, QA and the email subdomain could not be reached by
+name, and both pingers (the external monitors and the GitHub backstop) call the public name, so no job
+ran while every participant's deadline kept running. Since `DECISIONS.md` §NNN the maintenance job's
+first step, on every real run, is the outage grace (`registrations/outage-grace.ts`): detect, move,
+then sweep.
+
+- **The pings.** Every call of either job is remembered in the data cache, answered from the cache or
+  run for real. A silence longer than the pinger's own threshold — twice the cadence plus five minutes,
+  the number `/api/health` pages on (35 minutes by day on production, 125 at night) — is recorded as a
+  `pings` window that is over: from the call that should have come to the first that did. Both jobs'
+  calls must be missing together, and each job must have a call remembered before the silence, so one
+  evicted cache slot opens nothing. A cache that has lost the last real run's own ping is not read at
+  all; neither is a silence a real run of either job sits in. Only QA and production, which have a pinger, are judged this way. It cannot tell a dead
+  pinger from a dead name, and takes the participant's side; the cap bounds it. The run does not read
+  every five-minute slot since the last real run (after a quiet night that was some 650 cache reads):
+  it walks one job's calls back along the pinger's cadence and reads every slot of both jobs only where
+  a call is missing — about 125 reads after a quiet day. Two runs that read the same silence at once
+  record it once (a unique index), so its deadlines move once.
+- **The name.** The job resolves `APP_BASE_URL`'s host. One «no such name» is only a suspicion; a
+  second one at least ten minutes later opens a `dns` window at the first probe's instant, and it stays
+  open until the name answers again. A timeout or a failed resolver opens and closes nothing. **This
+  signal works only while the job pings reach the platform by an address that does not hang on the
+  public name** — the deployment's own `vercel.app` address (`SETUP.md` §40); a pinger that calls the
+  public name cannot reach the job while the name is gone, and the window is then seen by the pings,
+  once the name is back.
+
+While a `dns` window is open every real run moves the running deadlines — address links, holds,
+offers, invitations, family forms — later by the time since the run before, so nothing reads as
+lapsed, and the sweeps are held as well; the job's plan keeps every ping running for real meanwhile,
+until the window has given back the cap (then a real run would move nothing, so the ordinary quiet
+holds and the next real run closes it), and confirms a first «no such name» ten minutes after it. A
+`pings` window moves them once it is seen — only what was running inside it: it is seen at the first
+real run after it, which can come hours after the pings came back, so a deadline written after its end
+is not moved and one written inside it is moved by what was left of it. Either way the total is the window's length, capped by «Termene» → «Ceasul termenelor stă pe
+loc…» (`outageGraceMaxHours`, 48 hours by default; 0 switches the moving off and the windows are still
+recorded and announced) and by the event's close and start as the allocator caps it; a deadline that
+passed before the window never moves. A claim whose deadline passed while the door was shut is revived
+only while its counted place is still free: otherwise it lapses as it would have and the closed email
+names the person, the event and the backoffice page. So is — the commoner case — a claim the platform
+had already lapsed inside the window before the run saw it: every transaction that gives a place first
+lapses what is past its deadline, so an offer or a declaration hold already `EXPIRED`, a family's
+reservation already cleared, an invitation already stamped expired or an address link already ended is
+read, left exactly as it is (never revived: the person's state and emails have moved on), audited as
+not revived and named. The job seats nobody beyond the advertised places
+— a supplementary place is an Administrator's confirmed press — and the email says, per kind, the verb
+the claim's state has now: a lapsed offer, declaration hold or address link is `EXPIRED`, so the person
+registers again (or the staff adds the registration) and «Trimite-i oferta» seats them once they wait;
+a family's cleared reservation still waits for its address, which «Dă-i un loc acum» is for; an
+expired invitation cannot be re-sent, so a new one goes to the same address. Each move is in the registration's history; the window, what it gave back and its counts are
+the table `unreachable_windows`.
+
+**Where it shows.** The Administrators get «Site-ul nu se găsește după nume» when a `dns` window opens
+(on the club's road — Gmail by default, which does not hang on the club's domain) and «Ceasul
+termenelor a stat pe loc» once any window is over, with what to check. `/api/health?deep=1` carries in
+its `domain` block `host`, `resolves` (`true`, `false`, or `null` for no answer or not asked),
+`checkedAt`, `unreachableSince` and `lastUnreachable` — instants only — and answers `degraded` while the
+name is gone or a window is open; the shallow answer asks nobody. `/devs` → Stare shows what the name
+answered at the maintenance job's last real run (kept beside its ping in the data cache; the page asks
+nobody) and lists the last three windows, and «Sarcini» has the row «Site-ul de negăsit: ceasul
+termenelor», red while a window is open, while a window's moves are stuck, and while the newest window
+left a claim it did not revive that is not handled yet on an event that has not started — handled once
+the person's own row left `EXPIRED` (registering again, through the form or «Adaugă înscrierea»,
+restarts that same row), a new invitation went to the address or the expired one was accepted, or the
+family's reservation holds a place again or its address was confirmed and placed. No page and no action a
+visitor waits on asks the name.
+
+**What it does not do.** It cannot run a job nobody calls: while the name is gone the jobs run only
+if a monitor calls the deployment's own address. Whatever the monitors call, the deadlines are moved
+at the first real run after the name is back.
+
 ## Cost
 
 Three services are paid now — Neon Launch since 2026-09-22, one Vercel Pro seat since 2026-09-30 and

@@ -25,6 +25,8 @@ import { checkJobHealth } from "@/modules/jobs/health";
 import { readJobCadence } from "@/modules/jobs/cadence";
 import { describeJob } from "@/modules/jobs/overview";
 import { DAILY_WINDOW_LABEL, type JobName } from "@/modules/jobs/schedule";
+import { readLastNameReading, readUnreachableWindows } from "@/modules/jobs/unreachable-windows";
+import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { countMediaAssets, ORPHAN_ASSET_DAYS } from "@/modules/media/references";
 import { readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
 import { REPO_DOCS } from "@/modules/diagnostics/repo-docs";
@@ -185,6 +187,12 @@ export default async function DevsPage({ params, searchParams }: Props) {
       describeJob(db, { job: job.jobName as JobName, now, cadenceMinutes: jobCadence.minutes, lastFinishedAt: job.lastFinishedAt }),
     ),
   );
+  /*
+    The outage grace (§NNN): what the site's name answered at the maintenance job's last real run, as
+    the run kept it — this page never asks the name: the probe runs in the job and the deep health
+    only — and the last three windows the job wrote.
+  */
+  const [nameReading, outageWindows] = await Promise.all([readLastNameReading(db), readUnreachableWindows(db, 3)]);
   const volume = await readEmailVolumeToday(db, now);
   const emailHealth = await checkEmailHealth(db, now, budget.effects.jobFloorMinutes);
   const pictures = await countMediaAssets(db, now);
@@ -825,6 +833,51 @@ export default async function DevsPage({ params, searchParams }: Props) {
                   {schedule.lastPingAt
                     ? ` · ${t(schedule.lastPingRan ? "jobSchedule.pingRan" : "jobSchedule.pingSkipped", { when: at(schedule.lastPingAt) })}`
                     : ""}
+                </Typography>
+              );
+            })}
+            {/*
+              The outage grace (§NNN): the site's name as the maintenance job's last real run found it,
+              then the last three windows the job wrote — open (red), over (what it gave back, what it
+              moved and what it did not revive), or none.
+            */}
+            <Typography
+              variant="body2"
+              data-testid="outage-domain"
+              color={nameReading?.status === "unresolved" ? "error.main" : "text.primary"}
+            >
+              {nameReading === null
+                ? t("unreachable.domainUnknown")
+                : nameReading.host
+                  ? t("unreachable.domain", {
+                      host: nameReading.host,
+                      answer: t(`unreachable.answer.${nameReading.status === "resolves" || nameReading.status === "unresolved" || nameReading.status === "skipped" ? nameReading.status : "unknown"}`),
+                      when: formatDay(new Date(nameReading.at), { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }),
+                    })
+                  : t("unreachable.domainSkipped")}
+            </Typography>
+            <Typography variant="body2" data-testid="outage-windows" color="text.primary">
+              {t(outageWindows.length === 0 ? "unreachable.none" : "unreachable.windows")}
+            </Typography>
+            {outageWindows.map((window) => {
+              const at = (value: Date) => formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
+              return (
+                <Typography
+                  key={window.id}
+                  variant="body2"
+                  color={window.endedAt === null ? "error.main" : "text.secondary"}
+                  sx={{ pl: 2 }}
+                >
+                  {window.endedAt === null
+                    ? t("unreachable.open", { from: at(window.startedAt) })
+                    : t("unreachable.closed", {
+                        from: at(window.startedAt),
+                        until: at(window.endedAt),
+                        source: t(`unreachable.source.${window.source === "pings" ? "pings" : "dns"}`),
+                        granted: minutesPhrase(locale, Math.round(window.grantedMs / 60_000)),
+                        moved: window.rowsMoved,
+                        notRevived: window.claimsNotRevived,
+                      })}
                 </Typography>
               );
             })}

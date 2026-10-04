@@ -44,6 +44,9 @@ const EVERY_MESSAGE: Record<EmailMessageType, { button: boolean; why: string }> 
   DECLARATION_HOLD_EXPIRED: { button: false, why: "after the fact: the place went to somebody else" },
   // To the Administrators about the club's legal texts (§639).
   LEGAL_TEMPLATES_CHANGED: { button: false, why: "no registration" },
+  // The outage grace's two, to the Administrators (§NNN).
+  UNREACHABLE_WINDOW_OPENED: { button: false, why: "no registration" },
+  UNREACHABLE_WINDOW_CLOSED: { button: false, why: "no registration" },
   // An invitation (§647): to an address, before any registration exists.
   EVENT_INVITATION: { button: false, why: "no registration" },
 };

@@ -82,6 +82,7 @@ export type TaskId =
   | "translation"
   | "contactForm"
   | "domainRenewal"
+  | "unreachableWindow"
   | "neonLimits";
 
 /**
@@ -117,6 +118,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   translation: "account",
   contactForm: "account",
   domainRenewal: "decision",
+  unreachableWindow: "check",
   neonLimits: "decision",
 };
 
@@ -343,6 +345,16 @@ export type OwnerTaskInputs = {
    * 2026-09-26 (one address for search engines) and asked to be reminded to renew the `.com`.
    */
   domainRenewal: DomainRenewal;
+  /**
+   * The outage grace (§NNN, `unreachable_windows`, `unreachableWindowState`): `open` while a window is
+   * open — the site's name does not resolve and the deadlines are held; `stuck` while a window over for
+   * more than two hours still has deadlines it could not move; `notRevived` while the newest window over
+   * left a claim it did not revive that is not handled yet on an event that has not started — the person
+   * has not registered again (their own row is still `EXPIRED`), no new invitation went to the address,
+   * the reservation not placed — for an
+   * Administrator to act on with the verb the email names; `clear` otherwise.
+   */
+  unreachableWindow: "open" | "stuck" | "notRevived" | "clear";
   /**
    * This environment's monthly compute-time quota and this period's spend against it, both read
    * from the same Neon project row the consumption panel already fetches (§335) — never a
@@ -701,6 +713,22 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
    */
   const quota = input.neonQuota?.quotaCuHours ?? null;
   const nearLimit = quota !== null && isNeonQuotaNearLimit(input.neonQuota?.usedCuHours ?? 0, quota);
+  /*
+    The clock stopped while the door was shut (§NNN): blocking while a window is open — nobody reaches
+    the form by its name — and while the newest left somebody's claim lapsed whom only an Administrator
+    can seat; broken while a window's moves are stuck; done otherwise.
+  */
+  push("unreachableWindow", {
+    owner: "club",
+    state:
+      input.unreachableWindow === "clear"
+        ? "done"
+        : input.unreachableWindow === "stuck"
+          ? "broken"
+          : "blocking",
+    ...(input.unreachableWindow === "clear" ? {} : { text: input.unreachableWindow }),
+  });
+
   push("neonLimits", {
     owner: "club",
     state: quota === null ? "open" : nearLimit ? "broken" : "done",

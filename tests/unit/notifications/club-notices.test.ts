@@ -148,6 +148,9 @@ describe("BR-REQ-033-02 criterion 12 the club's hidden copy of every participant
       "MEMBER_INVITATION",
       // The Administrators' notice of a moved legal template (§639): to the staff.
       "LEGAL_TEMPLATES_CHANGED",
+      // The outage grace's two (§NNN): to the staff.
+      "UNREACHABLE_WINDOW_OPENED",
+      "UNREACHABLE_WINDOW_CLOSED",
       "REGISTRATION_OPENED",
       // An invitation (§647): to an address the club named, before any registration.
       "EVENT_INVITATION",
