@@ -201,6 +201,7 @@ describe("§562 the exports", () => {
     email: "ana@example.ro",
     status: "CONFIRMED",
     clubMemberDeclared: false,
+    memberVerified: false,
     fitnessDeclaredAt: null,
     stravaUrl: "",
     instagramHandle: "",

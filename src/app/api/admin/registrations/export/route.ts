@@ -103,7 +103,8 @@ export async function GET(request: Request): Promise<Response> {
     {
     eventId: scope.eventId,
     status: isRegistrationStatus(status) ? status : undefined,
-    clubMemberDeclared: clubMember === "1" || undefined,
+    // Declared or verified (§NNN), as the list keeps them.
+    clubMember: clubMember === "1" || undefined,
     emailBounced: emailBounced === "1" || undefined,
     promoConsented: promo === "1" || undefined,
     outsideCapacity: outside === "1" || undefined,
@@ -166,6 +167,7 @@ export async function GET(request: Request): Promise<Response> {
         status: row.status,
         clubName: row.clubName ?? "",
         clubMemberDeclared: row.clubMemberDeclared,
+        memberVerified: row.memberVerified,
         fitnessDeclaredAt: row.fitnessDeclaredAt,
         stravaUrl: row.stravaUrl ?? "",
         guardianName: row.guardianName ?? "",
@@ -217,6 +219,7 @@ export async function GET(request: Request): Promise<Response> {
       email: row.participantEmail,
       status: row.status,
       clubMemberDeclared: row.clubMemberDeclared,
+      memberVerified: row.memberVerified,
       fitnessDeclaredAt: row.fitnessDeclaredAt?.toISOString() ?? null,
       stravaUrl: row.stravaUrl ?? "",
       guardianName: row.guardianName ?? "",

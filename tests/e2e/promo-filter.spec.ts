@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import pg from "pg";
 import { FEATURED, hydrated, signIn } from "./support/featured-event";
+import { CLUB_NAME } from "../../src/theme/brand";
 
 /**
  * §581 (amending §570) — «Doar cu oferte și beneficii» on the registrations list: the owner,
@@ -98,7 +99,7 @@ test.describe("§581 «Doar cu oferte și beneficii»: the list and its export",
       expect(target?.height ?? 0).toBeGreaterThanOrEqual(44);
       // Its two neighbours are ticks of the same kind (§650), not selects whose closed box shows the label as a value.
       for (const [id, name] of [
-        ["registrations-filter-member", /^Doar membrii .+ \(declarați\)$/],
+        ["registrations-filter-member", new RegExp(`^Doar membrii ${CLUB_NAME}$`)],
         ["registrations-filter-bounced", /^Doar cine nu a primit emailul$/],
       ] as const) {
         const tick = main.getByTestId(id);

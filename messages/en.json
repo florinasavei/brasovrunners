@@ -784,11 +784,16 @@
       "registrationDeleted": "The registration was permanently deleted.",
       "eraseLeftovers": "Also delete by hand: the “Signed declaration” messages in the archive, their row in downloaded exports and PDFs, printed sheets, and the address in Mailgun → Suppressions.",
       "rowActions": "Actions for {name}",
-      "clubMemberOnly": "Only {club} members (declared)",
-      "clubMemberOnlyHelp": "Those who ticked “I am a member of the {club} group” when registering. The club does not check; the row reads “Member (declared)”.",
+      "clubMemberOnly": "Only {club} members",
+      "clubMemberOnlyHelp": "Those who ticked “I am a member of the {club} group” when registering, or whose address is an account’s on «Staff». The row says which: “Member (verified)” or “Member (declared)”.",
       "bouncedOnly": "Only those the email never reached",
       "bouncedOnlyHelp": "The address bounced the message or the provider refused it; the row reads “Email rejected”. These are the people to call before the race.",
-      "clubMemberChip": "Member (declared)",
+      "member": {
+        "verified": "Member (verified)",
+        "verifiedHint": "The address belongs to an account on «Staff», so the club knows they are a member.",
+        "declared": "Member (declared)",
+        "declaredHint": "Ticked when registering; the club has not checked."
+      },
       "columnName": "Name",
       "columnStatus": "Status",
       "columnJourney": "How far",
@@ -5760,7 +5765,7 @@
               "steps": [
                 "When: before a members' race, so that only the club's members stay ticked. The participant ticks it on the form; the club does not check it.",
                 "One at a time: in «The registration's answers» untick the member tick → «Save the answers». On the list, «Not a member» is in the row's ⋮ menu.",
-                "All at once: «Registrations» → «Search and filter» → tick «Only {club} members (declared)» → «Filter» → «Member ticks with no member account».",
+                "All at once: «Registrations» → «Search and filter» → tick «Only {club} members» → «Filter» → «Member ticks with no member account».",
                 "The list shows the ticked registrations whose address is no account's on «Staff». A member registered with another address appears too: untick their row. Then «Clear the ticks on all» … and confirm.",
                 "What it does not do: it cancels no registration, moves no place and sends no email. The club on the list is cleared only if the tick had set it. Every change stays in the log."
               ]

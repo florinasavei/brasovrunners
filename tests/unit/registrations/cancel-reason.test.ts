@@ -48,6 +48,7 @@ describe("§558 the cancellation reason", () => {
       email: "ana@example.ro",
       status: "CANCELLED",
       clubMemberDeclared: false,
+      memberVerified: false,
       fitnessDeclaredAt: null,
       stravaUrl: "",
       instagramHandle: "",

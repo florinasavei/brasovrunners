@@ -26,6 +26,7 @@ describe("CSV formula neutralization", () => {
         email: "ana@example.ro",
         status: "CONFIRMED",
         clubMemberDeclared: false,
+        memberVerified: false,
         fitnessDeclaredAt: null,
         stravaUrl: "",
         instagramHandle: "",
@@ -53,6 +54,7 @@ describe("CSV formula neutralization", () => {
         email: "ana@example.ro",
         status: "CONFIRMED",
         clubMemberDeclared: false,
+        memberVerified: false,
         fitnessDeclaredAt: null,
         stravaUrl: "",
         instagramHandle: "",
@@ -71,7 +73,7 @@ describe("CSV formula neutralization", () => {
 
   it("includes the header row and uses CRLF line endings", () => {
     const csv = buildRegistrationsCsv([]);
-    expect(csv).toBe("Event,Name,First name,Last name,Identity document,Email,Status,Club member (declared),Medically fit (declared),Strava,Instagram,Socials on the public list,Public list & results,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Cancellation reason,Offers and benefits,Special guest,Until when,Waiting on,Age on race day,Country,City");
+    expect(csv).toBe("Event,Name,First name,Last name,Identity document,Email,Status,Club member,Medically fit (declared),Strava,Instagram,Socials on the public list,Public list & results,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Cancellation reason,Offers and benefits,Special guest,Until when,Waiting on,Age on race day,Country,City");
 
     const withRow = buildRegistrationsCsv([
       {
@@ -83,6 +85,7 @@ describe("CSV formula neutralization", () => {
         email: "ana@example.ro",
         status: "CONFIRMED",
         clubMemberDeclared: false,
+        memberVerified: false,
         fitnessDeclaredAt: null,
         stravaUrl: "",
         instagramHandle: "",
@@ -114,6 +117,7 @@ describe("CSV formula neutralization", () => {
       email: "ana@example.ro",
       status: "CONFIRMED",
       clubMemberDeclared: false,
+      memberVerified: false,
       fitnessDeclaredAt: null,
       stravaUrl: "",
       instagramHandle: "",
@@ -130,8 +134,13 @@ describe("CSV formula neutralization", () => {
     ]);
     // Race day and the provider's verdict as the last two columns (§83): a time, and Yes or empty.
     expect(member.split("\r\n")[1]).toBe(
-      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,CONFIRMED,Yes,,https://www.strava.com/athletes/12345,ana.pop,,,,,2026-09-04T10:00:00.000Z,,17,2026-10-11T06:40:00.000Z,Yes,,,,,,,,,,,,,",
+      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,CONFIRMED,declared,,https://www.strava.com/athletes/12345,ana.pop,,,,,2026-09-04T10:00:00.000Z,,17,2026-10-11T06:40:00.000Z,Yes,,,,,,,,,,,,,",
     );
+
+    // A member account's address (§NNN): "verified", whatever the tick; the tick alone is "declared" above.
+    for (const clubMemberDeclared of [true, false]) {
+      expect(buildRegistrationsCsv([{ ...row, clubMemberDeclared, memberVerified: true }]).split("\r\n")[1].split(",")[7]).toBe("verified");
+    }
 
     // No number yet is an empty cell, never 0 (BR-REQ-038-01).
     const other = buildRegistrationsCsv([row]);
@@ -162,6 +171,7 @@ describe("CSV formula neutralization", () => {
         email: "maria@example.ro",
         status: "CONFIRMED",
         clubMemberDeclared: false,
+        memberVerified: false,
         fitnessDeclaredAt: null,
         stravaUrl: "",
         instagramHandle: "",
@@ -196,6 +206,7 @@ describe("CSV formula neutralization", () => {
       email: "ana@example.ro",
       status: "CONFIRMED",
       clubMemberDeclared: false,
+      memberVerified: false,
       fitnessDeclaredAt: null,
       stravaUrl: "",
       instagramHandle: "",
@@ -235,6 +246,7 @@ describe("CSV formula neutralization", () => {
       email: "ana@example.ro",
       status: "CONFIRMED",
       clubMemberDeclared: false,
+      memberVerified: false,
       fitnessDeclaredAt: null,
       stravaUrl: "",
       instagramHandle: "",
@@ -269,6 +281,7 @@ describe("CSV formula neutralization", () => {
       email: "ana@example.ro",
       status: "CONFIRMED",
       clubMemberDeclared: false,
+      memberVerified: false,
       fitnessDeclaredAt: null,
       stravaUrl: "https://www.strava.com/athletes/12345",
       instagramHandle: "ana.pop",
@@ -305,6 +318,7 @@ describe("CSV formula neutralization", () => {
       email: "familia.pop@example.ro",
       status: "PENDING_EMAIL_CONFIRMATION",
       clubMemberDeclared: false,
+      memberVerified: false,
       fitnessDeclaredAt: null,
       stravaUrl: "",
       instagramHandle: "",
