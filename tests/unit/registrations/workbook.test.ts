@@ -192,6 +192,25 @@ describe("BR-REQ-060-01 the start list as a spreadsheet (§172)", () => {
     expect(unlisted).toContain(`<c r="${cell}" t="b"><v>0</v></c>`);
   });
 
+  /** §NNN — «Club member» says which, as the list's chip: "verified" from a member account's address, "declared" from the tick alone. */
+  it("writes «Club member» as verified, declared or blank", async () => {
+    expect(REGISTRATION_SHEET_HEADERS).toContain("Club member");
+    expect(REGISTRATION_SHEET_HEADERS).not.toContain("Club member (declared)");
+    const text = async (over: Partial<RegistrationSheetRow>) => {
+      const parts = unzip(await buildRegistrationsWorkbook([row(over)], "Test"));
+      return `${parts.get("xl/sharedStrings.xml") ?? ""}${parts.get("xl/worksheets/sheet1.xml") ?? ""}`;
+    };
+    const verified = await text({ clubMemberDeclared: false, memberVerified: true });
+    expect(verified).toContain(">verified<");
+    expect(verified).not.toContain(">declared<");
+    const declared = await text({ clubMemberDeclared: true, memberVerified: false });
+    expect(declared).toContain(">declared<");
+    expect(declared).not.toContain(">verified<");
+    const neither = await text({ clubMemberDeclared: false });
+    expect(neither).not.toContain(">declared<");
+    expect(neither).not.toContain(">verified<");
+  });
+
   it("takes a sheet name Excel would refuse and makes one it accepts", async () => {
     const parts = unzip(await buildRegistrationsWorkbook([row()], "Cros/2026: ediția a [V]-a, pe Tâmpa și retur"));
     const workbook = parts.get("xl/workbook.xml") ?? "";

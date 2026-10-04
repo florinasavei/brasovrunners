@@ -21,6 +21,7 @@ import { alias } from "drizzle-orm/pg-core";
 import { awaitingItsFirstEmail, familyEmailQueued, familyReservationHolds, offerAwaitingItsFirstEmail } from "./repository";
 import { promoListed } from "./sponsor-list";
 import { healthNoteShown } from "./domain/health-note";
+import { memberCanonicalEmails } from "./member-ticks";
 import type { QueueOrder } from "./domain/waitlist";
 import type { PlaceDeadlineCounts, PlaceDeadlineEvent } from "./domain/place-deadlines";
 
@@ -50,6 +51,8 @@ export type RegistrationListRow = {
   eventTitle: string | null;
   /** BR-REQ-031-06. What this person said about themselves, never what the club verified. */
   clubMemberDeclared: boolean;
+  /** «Membru (verificat)» (§NNN): the participant's canonical address is a member account's; `membershipOf` reads the two. */
+  memberVerified: boolean;
   /** When the entrant ticked "I am medically fit" (§171); null on a desk or phone entry. */
   fitnessDeclaredAt: Date | null;
   /**
@@ -125,7 +128,13 @@ export type RegistrationListFilters = {
   eventId?: string;
   status?: RegistrationStatus;
   excludeTest?: boolean;
-  clubMemberDeclared?: boolean;
+  /** «Doar membrii {club}» (§650, §NNN): the rows whose person ticked the box or whose address is a member account's. */
+  clubMember?: boolean;
+  /**
+   * The member accounts' canonical addresses (`memberCanonicalEmails`), when the caller has read them
+   * already: a page that lists, counts and sums reads them once. Absent, each query reads them itself.
+   */
+  members?: readonly string[];
   /** A name, or part of one (BR-REQ-041-01 criterion 7). */
   search?: string;
   /** Only the rows whose email the provider refused (§83): who to call. */
@@ -257,17 +266,32 @@ const emailRejectedReason = sql<string | null>`(
   LIMIT 1
 )`;
 
-function registrationConditions(filters: RegistrationListFilters): SQL[] {
+/**
+ * «Membru (verificat)» (§NNN): the participant's canonical address (`participants.canonical_email`, the
+ * canonicalizer's own output, AGENTS.md §10.4) is among the member accounts' — never a raw address, never
+ * a name. With no member account it is plainly false, never an `IN ()`.
+ */
+function memberVerifiedOf(members: readonly string[]): SQL<boolean> {
+  return (members.length > 0 ? sql<boolean>`(${inArray(participants.canonicalEmail, [...members])})` : sql<boolean>`false`).mapWith(Boolean);
+}
+
+/** The member accounts' canonical addresses for one query: the caller's, or read now. */
+async function membersFor<T extends Record<string, unknown>>(db: Database<T>, filters: RegistrationListFilters): Promise<readonly string[]> {
+  return filters.members ?? [...(await memberCanonicalEmails(db))];
+}
+
+function registrationConditions(filters: RegistrationListFilters, members: readonly string[] = []): SQL[] {
   const search = filters.search?.trim();
 
   return [
     filters.eventId ? eq(registrations.eventId, filters.eventId) : undefined,
     filters.status ? eq(registrations.status, filters.status) : undefined,
     filters.excludeTest ? eq(registrations.kind, "REAL") : undefined,
-    // Only ever narrows to the people who said yes. There is no "show me the non-members"
-    // filter, because `false` here means "did not tick a box" as often as it means "not a
-    // member", and a screen that presented it as the second would be inventing an answer.
-    filters.clubMemberDeclared ? eq(registrations.clubMemberDeclared, true) : undefined,
+    // Only ever narrows to the members, declared or verified (§NNN; the row's chip says which).
+    // There is no "show me the non-members" filter, because `false` here means "did not tick a
+    // box" as often as it means "not a member", and a screen that presented it as the second
+    // would be inventing an answer.
+    filters.clubMember ? sql`(${registrations.clubMemberDeclared} or ${memberVerifiedOf(members)})` : undefined,
     filters.emailBounced ? sql`${emailRejectedReason} IS NOT NULL` : undefined,
     // The same condition as the club's list on «Newsletter» and the sponsor list's candidates (§570, §581).
     filters.promoConsented ? promoListed() : undefined,
@@ -399,7 +423,8 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
   /** The clock of «Până când» (§650): a family's reservation against its link in the order, a queued offer's email (§520). */
   now: Date = new Date(),
 ): Promise<RegistrationListRow[]> {
-  const conditions = registrationConditions(filters);
+  const members = await membersFor(db, filters);
+  const conditions = registrationConditions(filters, members);
 
   const query = db
     .select({
@@ -416,6 +441,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       eventId: registrations.eventId,
       eventTitle: eventTranslations.title,
       clubMemberDeclared: registrations.clubMemberDeclared,
+      memberVerified: memberVerifiedOf(members),
       fitnessDeclaredAt: registrations.fitnessDeclaredAt,
       termsVersion: registrations.termsVersion,
       termsAcceptedAt: registrations.termsAcceptedAt,
@@ -511,7 +537,7 @@ export async function summariseRegistrationsForAdmin<T extends Record<string, un
   db: Database<T>,
   filters: RegistrationListFilters = {},
 ): Promise<RegistrationSummary> {
-  const conditions = registrationConditions(filters);
+  const conditions = registrationConditions(filters, filters.clubMember ? await membersFor(db, filters) : []);
 
   const rows = await db
     .select({ status: registrations.status, kind: registrations.kind, outside: registrations.outsideCapacity, total: count() })
@@ -592,7 +618,7 @@ export async function countRegistrationsForAdmin<T extends Record<string, unknow
   db: Database<T>,
   filters: RegistrationListFilters = {},
 ): Promise<number> {
-  const conditions = registrationConditions(filters);
+  const conditions = registrationConditions(filters, filters.clubMember ? await membersFor(db, filters) : []);
 
   const [row] = await db
     .select({ total: count() })
@@ -652,6 +678,8 @@ export type RegistrationDetail = {
   eventId: string;
   eventTitle: string | null;
   clubMemberDeclared: boolean;
+  /** «Membru (verificat)» (§NNN), as on the list row. */
+  memberVerified: boolean;
   submittedAt: Date;
   emailConfirmedAt: Date | null;
   waitlistedAt: Date | null;
@@ -732,6 +760,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
   id: string,
   now: Date = new Date(),
 ): Promise<RegistrationDetail | undefined> {
+  const members = [...(await memberCanonicalEmails(db))];
   const [row] = await db
     .select({
       bibNumber: registrations.bibNumber,
@@ -754,6 +783,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       eventId: registrations.eventId,
       eventTitle: eventTranslations.title,
       clubMemberDeclared: registrations.clubMemberDeclared,
+      memberVerified: memberVerifiedOf(members),
       fitnessDeclaredAt: registrations.fitnessDeclaredAt,
       stravaUrl: registrations.stravaUrl,
       instagramHandle: registrations.instagramHandle,

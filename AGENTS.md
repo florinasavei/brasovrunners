@@ -1984,18 +1984,21 @@ three rules (`DECISIONS.md` §30):
 
 `club_member_declared` carries one rule of its own (BR-REQ-031-06, `DECISIONS.md` §48):
 
-- **It is a claim and is never verified.** Nothing matches it against `staff_users` or any
-  roster, because most members of this club have no backoffice account and a verified flag would
-  answer "no" for exactly the people the question is asked to find. Every surface that shows it
-  says "declared".
+- **It is a claim and is never verified.** Nothing writes it from `staff_users` or any roster,
+  and every surface that shows it alone says "declared". Since the members' zone gave the club's
+  members accounts of their own (§524), the backoffice also says **verified** — derived when the
+  screen or the export is drawn, never stored — when the participant's canonical address is the
+  canonicalized address of a live account on «Echipa», whatever the tick (`DECISIONS.md` §NNN,
+  `registrations/domain/membership.ts`). That reading is the account's, not the column's: it
+  changes nothing here, ends the moment the account is removed, and grants nothing either.
 - **It grants nothing, so it MUST NOT appear in any condition in the allocator or the capacity
   formula of §10.6** — the same rule `kind` carries, for a different reason: a self-ticked box
   that decided a price, a place or a queue position would decide it for anybody who ticked it.
   A member price, if the club ever wants one, needs a membership list and a decision recorded
   before it needs this column.
 - **`false` means "did not say" as often as it means "no",** so it is reported as a presence and
-  never as a negative: the export prints "Yes" or an empty cell, and the backoffice filter
-  narrows to the people who declared it and offers no way to select the rest.
+  never as a negative: the export prints "declared", "verified" or an empty cell, and the
+  backoffice filter narrows to the members, declared or verified, and offers no way to select the rest.
 
 ### 12.7 Declaration acceptances
 

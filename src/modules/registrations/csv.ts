@@ -13,6 +13,13 @@
 
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { raceNumberOf } from "./domain/race-number";
+import { MEMBERSHIP_EXPORT_WORDS, membershipOf } from "./domain/membership";
+
+/** The «Club member» cell of both exports (§NNN): "verified", "declared" or empty, as the list's chip. */
+export function membershipCell(row: { clubMemberDeclared: boolean; memberVerified?: boolean }): string {
+  const membership = membershipOf({ declared: row.clubMemberDeclared, verified: row.memberVerified ?? false });
+  return membership ? MEMBERSHIP_EXPORT_WORDS[membership] : "";
+}
 
 const FORMULA_PREFIXES = ["=", "+", "-", "@"];
 
@@ -42,15 +49,20 @@ export type RegistrationCsvRow = {
   email: string;
   status: string;
   /**
-   * BR-REQ-031-06. "Yes" or empty, never "No".
+   * BR-REQ-031-06. With `memberVerified` below, "declared", "verified" or empty, never "No" (§NNN).
    *
    * The column is a claim somebody made about themselves, and an empty cell says so: a person
    * who never opened the optional section and a person who is not in the club produce the same
    * `false`, and printing "No" against both would turn a missing answer into a stated one. The
-   * volunteer sorting this at a start line reads a column of "Yes" and blanks, which is what
+   * volunteer sorting this at a start line reads a column of words and blanks, which is what
    * the data actually is.
    */
   clubMemberDeclared: boolean;
+  /**
+   * «Membru (verificat)» (§NNN): the address is a member account's. With the tick, the «Club member»
+   * cell reads "verified", "declared" or empty (`membershipOf`) — still never "No".
+   */
+  memberVerified?: boolean;
   /** When the entrant ticked "I am medically fit" (§171); empty for a desk or phone entry. */
   fitnessDeclaredAt: string | null;
   /** The optional socials (§106), empty when not given. */
@@ -130,7 +142,8 @@ const HEADER = [
   "Identity document",
   "Email",
   "Status",
-  "Club member (declared)",
+  // Declared or verified (§NNN): the cell says which. Same position, so a script reading by position still finds it.
+  "Club member",
   "Medically fit (declared)",
   "Strava",
   "Instagram",
@@ -184,7 +197,7 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         row.idDocument,
         row.email,
         row.status,
-        row.clubMemberDeclared ? "Yes" : "",
+        membershipCell(row),
         row.fitnessDeclaredAt ?? "",
         row.stravaUrl,
         row.instagramHandle,
