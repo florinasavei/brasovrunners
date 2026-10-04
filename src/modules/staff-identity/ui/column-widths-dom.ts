@@ -103,6 +103,17 @@ export function writeHidden(tableId: string, keys: readonly string[]): void {
   window.dispatchEvent(new CustomEvent(WIDTHS_CHANGED, { detail: tableId }));
 }
 
+/**
+ * The hidden keys that name a column of this table that may be hidden (§NNN) — a renamed or removed
+ * column, or one since marked essential, is not hidden by anything, so the reset does not count it.
+ */
+export function readHiddenHere(tableId: string): string[] {
+  const table = tablesOf(tableId)[0];
+  if (!table) return [];
+  const hideable = new Set(hideableColumns(table).columns.filter((column) => !column.essential).map((column) => column.key));
+  return readHidden(tableId).filter((key) => hideable.has(key));
+}
+
 /** The table's columns in order, the row verbs' left out, each with whether it may be hidden. */
 function hideableColumns(table: HTMLTableElement): { columns: { key: string; essential: boolean }[]; hasActions: boolean } {
   const columns: { key: string; essential: boolean }[] = [];

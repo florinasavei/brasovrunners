@@ -8,7 +8,7 @@ import {
   applyHidden,
   dropEarlyStyle,
   layOut,
-  readHidden,
+  readHiddenHere,
   readWidths,
   releaseLayout,
   tablesOf,
@@ -54,7 +54,7 @@ export default function ColumnWidths({ tableId }: { tableId: string }) {
   );
   const stored = useSyncExternalStore(
     subscribe,
-    () => Object.keys(readWidths(tableId)).length > 0 || readHidden(tableId).length > 0,
+    () => Object.keys(readWidths(tableId)).length > 0 || readHiddenHere(tableId).length > 0,
     () => false,
   );
 

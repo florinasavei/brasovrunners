@@ -8,6 +8,7 @@ import ListItemText from "@mui/material/ListItemText";
 import ListSubheader from "@mui/material/ListSubheader";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+import Box from "@mui/material/Box";
 import { useTranslations } from "next-intl";
 import { useCallback, useId, useState, useSyncExternalStore } from "react";
 import { applyHidden, layOut, readHidden, readWidths, tablesOf, WIDTHS_CHANGED, writeHidden } from "./column-widths-dom";
@@ -36,6 +37,7 @@ type Props = {
 export default function ColumnVisibility({ tableId, columns }: Props) {
   const t = useTranslations("Admin");
   const menuId = useId();
+  const buttonId = useId();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const hydrated = useSyncExternalStore(
     useCallback(() => () => {}, []),
@@ -59,11 +61,22 @@ export default function ColumnVisibility({ tableId, columns }: Props) {
   // A string, so the snapshot is stable between reads; one key per line.
   const hiddenText = useSyncExternalStore(subscribe, () => readHidden(tableId).join("\n"), () => "");
 
-  if (!hydrated) return null;
-
   const hideable = columns.filter((column) => !column.essential);
   const essential = columns.filter((column) => column.essential);
   if (hideable.length === 0) return null;
+  // Before hydration, and with JavaScript off, an empty box of the button's size holds its place,
+  // so the layout that runs at hydration (`ColumnWidths`) already measures the actions' heading with
+  // it, and the button that replaces it moves no column and wraps under no heading.
+  if (!hydrated) {
+    return (
+      <Box
+        component="span"
+        aria-hidden
+        data-testid="admin-table-columns-placeholder"
+        sx={{ display: { xs: "none", md: "inline-block" }, width: 44, height: 44, verticalAlign: "middle" }}
+      />
+    );
+  }
   const hidden = new Set(hiddenText ? hiddenText.split("\n") : []);
   const hiddenHere = hideable.filter((column) => hidden.has(column.key));
 
@@ -85,6 +98,7 @@ export default function ColumnVisibility({ tableId, columns }: Props) {
   return (
     <>
       <IconButton
+        id={buttonId}
         size="small"
         aria-label={t("columns.menu")}
         title={t("columns.menuHow")}
@@ -97,7 +111,16 @@ export default function ColumnVisibility({ tableId, columns }: Props) {
       >
         <ViewColumnIcon fontSize="small" />
       </IconButton>
-      <Menu id={menuId} anchorEl={anchor} open={anchor !== null} onClose={() => setAnchor(null)}>
+      <Menu
+        id={menuId}
+        anchorEl={anchor}
+        open={anchor !== null}
+        onClose={() => setAnchor(null)}
+        slotProps={{ list: { "aria-labelledby": buttonId } }}
+      >
+        {/* Between `md` and `lg` a `hideBelow: "lg"` column is already hidden by its own breakpoint
+            and still offered here as shown: the tick says this browser does not hide it, not that it
+            is on screen at this width. Accepted, as the breakpoint's rule is the narrower one. */}
         {hideable.map((column) => {
           const shown = !hidden.has(column.key);
           return (
@@ -126,7 +149,8 @@ export default function ColumnVisibility({ tableId, columns }: Props) {
           <ListItemText>{t("columns.showAll")}</ListItemText>
         </MenuItem>
         {essential.length > 0 && (
-          <ListSubheader sx={{ position: "static", lineHeight: 1.5, py: 1, maxWidth: 320, whiteSpace: "normal" }}>
+          // `role="none"`: not an item of the menu (ARIA allows none there); the arrows skip it.
+          <ListSubheader role="none" sx={{ position: "static", lineHeight: 1.5, py: 1, maxWidth: 320, whiteSpace: "normal" }}>
             {t("columns.always", { columns: essential.map((column) => column.label).join(", ") })}
           </ListSubheader>
         )}

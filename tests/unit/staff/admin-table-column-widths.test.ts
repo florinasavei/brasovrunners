@@ -25,6 +25,7 @@ import {
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import {
   readHidden,
+  readHiddenHere,
   readWidths,
   recordedFloor,
   recordFloors,
@@ -365,8 +366,10 @@ describe("§NNN columns that can be hidden", () => {
       .filter((m) => m[0].includes("data-column-essential"))
       .map((m) => m[1]);
     expect(essential).toEqual(["name", "state"]);
-    expect(html).not.toContain("admin-table-columns");
+    expect(html).not.toContain('data-testid="admin-table-columns"');
     expect(html).not.toContain("menuitemcheckbox");
+    // An empty box of the button's size holds its place, so hydration's layout already counts it.
+    expect(html).toContain('data-testid="admin-table-columns-placeholder"');
   });
 
   it("hands the menu strings and flags, never a row, and every list marks its state essential", () => {
@@ -543,6 +546,19 @@ describe("§650 the widths in this browser's storage", () => {
     };
     writeHidden("staff", []);
     expect(readHidden("staff")).toEqual([]);
+  });
+
+  it("§NNN counts for the reset only the hidden keys that name a column of the table that may be hidden", () => {
+    const fake = stub();
+    const col = (key: string, essential = false) => ({ dataset: { column: key }, hasAttribute: () => essential });
+    const table = { querySelectorAll: () => [col("name", true), col("email"), col("bib"), col("state", true), col(ACTIONS_COLUMN)] };
+    // `pictures`: no earlier test left this page a list for it while storage refused.
+    vi.stubGlobal("document", { querySelectorAll: () => [table] });
+    // A renamed column, an essential one and the verbs' are hidden by nothing: the reset ignores them.
+    fake.store.set("br.table.pictures.hidden", '["gone","state"]');
+    expect(readHiddenHere("pictures")).toEqual([]);
+    fake.store.set("br.table.pictures.hidden", '["gone","bib"]');
+    expect(readHiddenHere("pictures")).toEqual(["bib"]);
   });
 
   it("says which table changed, for its reset control", () => {
