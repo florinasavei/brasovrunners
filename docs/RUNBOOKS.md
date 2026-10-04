@@ -591,8 +591,26 @@ carries a newer baseline than `qa`'s) ships as it is.
    pushed to the branch, then runs `yarn ship`: the pull request's checks on the landed tree, the
    merge into `qa`, `qa`'s run, the `qa → main` release PR, the production migration approved,
    and production's `/api/health` reporting the new baseline. About an hour.
-3. It ends with a comment on the pull request: "Released BR-V2.NN…" or "The release stopped".
-   The run's **Summary** page says, in a table, each step's outcome and ship's minutes.
+3. It ends with a comment on the pull request: "Released BR-V2.NN…" or "The release stopped",
+   followed, when ship itself stopped, by ship's reason. The run's **Summary** page says, in a
+   table, each step's outcome and ship's minutes. The comment and the label's removal are made
+   with the run's own token, so a stopped release loses its label and the label can be ticked
+   again (`DECISIONS.md` §NNN) — a run started by hand under **Actions** has no label to remove.
+
+While ship waits for production — first for the baseline production runs, at the end for the new
+one — its log says what production answers every two minutes, one of three lines:
+
+- **«no answer for 12 min: TypeError fetch failed — ENOTFOUND …: a name or network failure»** —
+  production does not answer at all: its name does not resolve, the connection is refused, or the
+  certificate fails. It is not the release: follow § The domain stops answering.
+- **«production answers with BR-V2.64-…; waiting for BR-V2.65-…»** — the site is up and runs
+  another build. At the end of a release that means the new deployment is slow or failed: open
+  Vercel → the production project → **Deployments** and look at the newest one.
+- **«production answers but its body carries no baseline»** — something answers that is not the
+  application: a parking or hold page, a proxy's error, an empty body. Treat it like no answer.
+
+After an hour (at the start) or twenty minutes (at the end) ship stops with the same words after
+«STOP:»; the comment on the pull request carries them too.
 
 If the pull request shows **«This branch has conflicts»**, the label starts nothing — GitHub runs
 no `pull_request` workflow while a branch cannot merge into its base, and no run, no summary and
@@ -631,12 +649,52 @@ The run's **Summary** says where, in words:
   and tick **ship** again.
 - **"docs:check refused the landed tree"**: usually a new file without its README row — add it
   on the branch.
-- A stop inside **Ship** (a red check, a migration that failed): the table's last line names the
-  step. If the pull request already merged into `qa`, running **release** again with its number
-  continues from there — a merged pull request ships `qa` as it is.
+- A stop inside **Ship** before the `qa → main` release merged (a red check, the `qa` run, the
+  release PR's checks): the table's last line names the step. If the pull request already merged
+  into `qa`, running **release** again with its number continues from there — a merged pull
+  request ships `qa` as it is.
+- **"production never reported …"** (at the start, step 1): nothing has merged yet. The words
+  after it say which case (above, under § Every release): no answer → § The domain stops
+  answering; another build → Vercel's production deployment. Once production answers with the
+  baseline `main` carries, tick **ship** again — the label came off at the stop.
+- **A stop after the `qa → main` release merged** — the migration's or production's; the table
+  lists the step «migration», and the comment says «The release is already in main»
+  (`DECISIONS.md` §NNN). **Never tick ship again, nor run release again**: a second run takes its
+  starting baseline from `main`, which is now the new one, waits an hour for a baseline production
+  does not run, and stops with a second «The release stopped» for a release that went out. Instead:
+  - **the migration** («no migrate.yml run appeared», «was still … after an hour», «ended
+    failure; production still runs the previous build»): the summary names the run. Fix the
+    migration, or approve and re-run **migrate** on `main` by hand (Actions → the run → **Review
+    deployments** / **Re-run jobs**); then, if production's build gave up waiting for the
+    migration, open Vercel → the production project → **Deployments** and redeploy the newest;
+  - **"production did not report … in time"** (step 7): no answer → § The domain stops
+    answering; another build → open Vercel → the production project → **Deployments**, fix the
+    newest deployment or redeploy it.
+
+  Either way the release is done once `/api/health` reports the new baseline.
 
 Never push to `qa` or `main` by hand from the phone: the release PR and the production migration
 are the run's to open, merge and approve.
+
+## The domain stops answering
+
+Ship's «no answer for N min: …» or «production answers but its body carries no baseline» means
+the club's domain itself does not serve the application — not the release (`DECISIONS.md` §NNN).
+The words after «no answer» name the failure; check in this order, from a phone if need be:
+
+1. **The name resolves.** An online DNS lookup (or `nslookup <domain>`) of the apex and `www`.
+   `ENOTFOUND` or `EAI_AGAIN`, or no answer there: the name does not resolve.
+2. **The registrar.** Its control panel → the domain: not expired, no «hold» or suspension (an
+   unpaid renewal or an unanswered contact-verification email puts one on), and the nameservers or
+   records still the ones § Domain binding set. A hold page or a parking page is the «carries no
+   baseline» line.
+3. **Vercel's domain status.** Vercel → the production project → **Settings** → **Domains**: each
+   domain «Valid Configuration». «Invalid Configuration» names the record Vercel expects.
+4. **The certificate.** A «certificate failure» in the line: the same **Domains** page shows the
+   certificate's state; Vercel renews it on its own once the records are right again.
+
+Once `/api/health` on the domain answers with a baseline, ship's waits see it — at the start,
+tick **ship** again; at the end, the release is done (§ When it stops) — never tick it again then.
 
 
 ---

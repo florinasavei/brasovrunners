@@ -163,6 +163,112 @@ export async function mergePullRequest(merge, state, { sleep, every = 5, capSeco
   }
 }
 
+/** Where a person goes when production stops answering at all (§NNN). */
+const NO_ANSWER_RUNBOOK = "docs/RUNBOOKS.md § The domain stops answering";
+
+/** What one failed fetch means, by its cause's code — the words a phone reads in the log. */
+function failureKind(code, name) {
+  if (name === "TimeoutError" || name === "AbortError") return "no answer within the request's time";
+  if (/^(ENOTFOUND|EAI_AGAIN)$/.test(code)) return "a name or network failure";
+  if (/^(ECONNREFUSED|ECONNRESET|ETIMEDOUT|EHOSTUNREACH|ENETUNREACH|UND_ERR_)/.test(code)) return "a network failure";
+  if (/CERT|TLS|SSL|SELF_SIGNED|UNABLE_TO_|DEPTH_ZERO/.test(code)) return "a certificate failure";
+  return "no answer";
+}
+
+/**
+ * One fetch error as a line: `TypeError fetch failed — ENOTFOUND host: a name or network failure`.
+ * Node's fetch hides the reason in `cause` (code and host); a string passes through as it is.
+ *
+ * @param {unknown} error
+ */
+export function describeFetchError(error) {
+  if (typeof error === "string") return error;
+  const e = /** @type {{ name?: string, message?: string, code?: string, cause?: { code?: string, hostname?: string, host?: string, message?: string } }} */ (error ?? {});
+  const head = `${e.name ?? "Error"} ${e.message ?? String(error)}`.trim();
+  const cause = e.cause;
+  const code = String(cause?.code ?? e.code ?? "");
+  const where = cause ? [cause.code, cause.hostname ?? cause.host].filter(Boolean).join(" ") || cause.message : "";
+  return `${head}${where ? ` — ${where}` : ""}: ${failureKind(code, e.name)}`;
+}
+
+/**
+ * One reading of production's `/api/health`, judged (§NNN): it did not answer (`no-answer`: a
+ * fetch error, the detail says which), it answers with the expected baseline (`expected`), with
+ * another one (`other-build`: the detail is that baseline), or with a body that carries none
+ * (`unreadable`: an empty body, a registrar's or a proxy's HTML page). `expected` is one baseline
+ * or several, any of which will do; a body names one as `"BR-V…`, the same test `ship` always made.
+ *
+ * @param {{ body?: string | null, error?: unknown, status?: number }} reading
+ * @param {string | string[]} expected
+ * @returns {{ kind: "no-answer" | "other-build" | "expected" | "unreadable", detail: string }}
+ */
+export function judgeProductionReading({ body, error, status } = {}, expected) {
+  const wanted = (Array.isArray(expected) ? expected : [expected]).filter(Boolean);
+  const text = String(body ?? "");
+  if (error && !text) return { kind: "no-answer", detail: describeFetchError(error) };
+  const hit = wanted.find((b) => text.includes(`"${b}`));
+  if (hit) return { kind: "expected", detail: text.match(new RegExp(`"(${hit.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[^"]*)"`))?.[1] ?? hit };
+  const other = text.match(/"baseline"\s*:\s*"([^"]+)"/)?.[1] ?? text.match(/"(BR-V\d+\.\d+-\d{4}-\d{2}-\d{2})"/)?.[1];
+  if (other) return { kind: "other-build", detail: other };
+  return { kind: "unreadable", detail: text.trim() ? `HTTP ${status ?? "?"}, no baseline in the body` : `HTTP ${status ?? "?"}, an empty body` };
+}
+
+/**
+ * The line a production wait prints for one judged reading: what production says, not only that
+ * the wait goes on. `silentMs` is how long production has not answered at all.
+ *
+ * @param {{ kind: string, detail: string }} judged
+ * @param {{ waitingFor: string, silentMs?: number }} context
+ */
+export function productionLine(judged, { waitingFor, silentMs = 0 }) {
+  switch (judged.kind) {
+    case "no-answer": {
+      const minutes = Math.floor(silentMs / 60_000);
+      return `${minutes >= 1 ? `no answer for ${minutes} min` : "no answer"}: ${judged.detail}; ${NO_ANSWER_RUNBOOK}`;
+    }
+    case "other-build":
+      return `production answers with ${judged.detail}; waiting for ${waitingFor}`;
+    case "unreadable":
+      return `production answers but its body carries no baseline (${judged.detail})`;
+    default:
+      return `production answers with ${judged.detail}`;
+  }
+}
+
+/**
+ * Reads production until it reports one of `expected` (§NNN), printing what it sees on the first
+ * reading and then every `reportEvery` seconds — not on every poll. Returns
+ * { status: "expected", body, judged } or { status: "timeout", judged, line }, the line naming the
+ * last reading's case for the STOP.
+ *
+ * @param {() => Promise<{ body?: string | null, error?: unknown, status?: number }>} read
+ * @param {string | string[]} expected  the first one is what the lines say is awaited
+ * @param {{ sleep: (seconds: number) => Promise<unknown>, every: number, polls: number, now?: () => number,
+ *           reportEvery?: number, onReport?: (line: string) => void }} options
+ */
+export async function waitForProduction(read, expected, { sleep, every, polls, now = Date.now, reportEvery = 120, onReport }) {
+  const waitingFor = Array.isArray(expected) ? expected[0] : expected;
+  let silentSince = null;
+  let reportedAt = null;
+  let judged = null;
+  let line = "";
+  for (let i = 0; i < polls; i++) {
+    const reading = await read();
+    judged = judgeProductionReading(reading, expected);
+    if (judged.kind === "expected") return { status: "expected", body: String(reading.body ?? ""), judged };
+    const at = now();
+    if (judged.kind === "no-answer") silentSince ??= at;
+    else silentSince = null;
+    line = productionLine(judged, { waitingFor, silentMs: silentSince === null ? 0 : at - silentSince });
+    if (reportedAt === null || at - reportedAt >= reportEvery * 1000) {
+      onReport?.(line);
+      reportedAt = at;
+    }
+    if (i < polls - 1) await sleep(every);
+  }
+  return { status: "timeout", judged, line };
+}
+
 /** A duration as `m:ss` — minutes are not wrapped into hours, a release is read in minutes. */
 export function formatDuration(ms) {
   const seconds = Math.max(0, Math.round(ms / 1000));
