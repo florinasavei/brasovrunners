@@ -17,7 +17,7 @@ const REJECTED_AT = new Date("2026-10-03T09:15:00.000Z");
 const inline = (locale: "ro" | "en", at: Date) => formatDay(at, { locale, timeZone: "Europe/Bucharest", style: "short", withTime: true, position: "inline" });
 
 function facts(overrides: Partial<RejectedEmailFacts> = {}): RejectedEmailFacts {
-  return { messageType: "BIB_ASSIGNED", at: REJECTED_AT, status: "BOUNCED", reason: "550 5.1.1 mailbox unavailable", emailConfirmedAt: CONFIRMED_AT, ...overrides };
+  return { messageType: "BIB_ASSIGNED", at: REJECTED_AT, sent: true, status: "BOUNCED", reason: "550 5.1.1 mailbox unavailable", emailConfirmedAt: CONFIRMED_AT, ...overrides };
 }
 
 describe("rejectedEmailWords", () => {
@@ -31,6 +31,12 @@ describe("rejectedEmailWords", () => {
       // §452: the hour inside a sentence takes «la» / «at»; no «pe» before the weekday.
       expect(said.which).toContain(locale === "ro" ? ", la 12:15" : ", at 12:15");
       expect(said.which).not.toMatch(/ pe /);
+    });
+
+    it(`says «pus în coadă», not «trimis», for a message the provider refused at the send (${locale})`, () => {
+      const said = rejectedEmailWords(facts({ sent: false }), locale);
+      expect(said.which).toBe(fill(words.whichQueued, { type: catalogues[locale].Admin.emails.types.BIB_ASSIGNED, instant: inline(locale, REJECTED_AT) }));
+      expect(said.which).not.toBe(rejectedEmailWords(facts(), locale).which);
     });
 
     it(`says a bounce and a complaint in plain words, the provider's reason apart (${locale})`, () => {
@@ -62,7 +68,7 @@ describe("rejectedEmailWords", () => {
     });
 
     it(`keeps every new sentence under 200 characters (§511) (${locale})`, () => {
-      const all = [words.which, words.typeUnknown, words.why.BOUNCED, words.why.COMPLAINED, words.reason, words.confirmedBefore, words.confirmedAfter, words.neverConfirmed, words.todo,
+      const all = [words.which, words.whichQueued, words.typeUnknown, words.why.BOUNCED, words.why.COMPLAINED, words.reason, words.confirmedBefore, words.confirmedAfter, words.neverConfirmed, words.todo,
         catalogues[locale].Admin.registrations.tell.rejected.BOUNCED, catalogues[locale].Admin.registrations.tell.rejected.COMPLAINED,
         catalogues[locale].Admin.registrations.bouncedOnly, catalogues[locale].Admin.registrations.bouncedOnlyHelp];
       for (const text of all) expect(text.length, text).toBeLessThan(200);
@@ -86,13 +92,23 @@ describe("«Ce îi spui» on a row whose newest email was rejected (§NNN)", () 
       expect(complained.at(-1)).toBe(catalogues[locale].Admin.registrations.tell.rejected.COMPLAINED);
       expect(whatToTell(locale, { ...base, emailRejected: null }, now)).toEqual(without);
     });
+
+    it(`drops «look in spam» when the address bounced the email it waits on, keeps it for a complaint (${locale})`, () => {
+      const pending: TellFacts = { ...base, status: "PENDING_EMAIL_CONFIRMATION", bibNumber: null };
+      const spamHint = catalogues[locale].Registrations.spamHint.body;
+      expect(whatToTell(locale, pending, now)).toContain(spamHint);
+      const bounced = whatToTell(locale, { ...pending, emailRejected: { status: "BOUNCED" } }, now);
+      expect(bounced).not.toContain(spamHint);
+      expect(bounced.at(-1)).toBe(catalogues[locale].Admin.registrations.tell.rejected.BOUNCED);
+      expect(whatToTell(locale, { ...pending, emailRejected: { status: "COMPLAINED" } }, now)).toContain(spamHint);
+    });
   }
 });
 
 describe("rejectedEmailOf — the subquery's object", () => {
   it("reads the parsed object and its text alike, the instant as epoch milliseconds", () => {
-    const object = { messageType: "BIB_ASSIGNED", at: REJECTED_AT.getTime(), status: "COMPLAINED", reason: "" };
-    const expected = { messageType: "BIB_ASSIGNED", at: REJECTED_AT, status: "COMPLAINED", reason: null };
+    const object = { messageType: "BIB_ASSIGNED", at: REJECTED_AT.getTime(), sent: false, status: "COMPLAINED", reason: "" };
+    const expected = { messageType: "BIB_ASSIGNED", at: REJECTED_AT, sent: false, status: "COMPLAINED", reason: null };
     expect(rejectedEmailOf(object)).toEqual(expected);
     expect(rejectedEmailOf(JSON.stringify(object))).toEqual(expected);
     expect(rejectedEmailOf(null)).toBeNull();

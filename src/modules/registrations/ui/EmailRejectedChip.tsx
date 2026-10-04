@@ -12,10 +12,13 @@ import { readingTimeMs, TOOLTIP_TEXT_SX } from "@/shared/ui/tooltip-text";
  * focus and on a tap, never a `title` attribute (which a touch screen never shows). The provider's own
  * reason comes last, in small print.
  *
- * The chip sits in a 44-pixel target that takes the focus (BR-REQ-041-01 criterion 6); `describeChild`
- * makes the open tooltip the target's description, and the sentences are also its accessible name, so a
- * screen reader hears them without opening anything. Strings only across the boundary: the words are
- * made on the server (`rejected-email-words.ts`).
+ * The chip sits in a 44-pixel target that takes the focus (BR-REQ-041-01 criterion 6). Its accessible
+ * name carries the label, the sentences and the reason, so a screen reader hears them once, without
+ * opening anything. One channel only, as `GlyphChip`'s: no `describeChild`, which would add the open
+ * tooltip (opened by that very focus) as the target's description and read it all a second time; and
+ * the title stays a React node, so MUI's other branch, which sets `aria-label` to a string title,
+ * never replaces the name. Strings only across the boundary: the words are made on the server
+ * (`rejected-email-words.ts`).
  */
 export default function EmailRejectedChip({
   label,
@@ -31,7 +34,11 @@ export default function EmailRejectedChip({
   // Controlled, as `GlyphChip`'s: MUI opens on a touch only after a long press, so a tap opens it too.
   const [open, setOpen] = useState(false);
   const text = sentences.join(" ");
-  const spoken = [label, text, reason].filter(Boolean).join(". ");
+  // Each part ends a sentence of its own: a period only where it has none («…nouă. Motivul…», never «..»).
+  const spoken = [label, text, reason]
+    .filter((part): part is string => Boolean(part))
+    .map((part) => (/[.!?]$/.test(part.trim()) ? part.trim() : `${part.trim()}.`))
+    .join(" ");
   return (
     <Tooltip
       title={
@@ -45,7 +52,6 @@ export default function EmailRejectedChip({
         </>
       }
       arrow
-      describeChild
       open={open}
       onOpen={() => setOpen(true)}
       onClose={() => setOpen(false)}

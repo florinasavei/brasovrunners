@@ -152,8 +152,9 @@ export function tellLines(say: Say, ours: Say, locale: string, facts: TellFacts,
   const held = deadline?.kind === "hold" || deadline?.kind === "kept";
   const lapsed = deadline?.kind === "linkLapsed" || deadline?.kind === "offerLapsed";
   if (active && link && !held && !lapsed && link.getTime() !== stated?.getTime()) lines.push(ours("linkUntil", { instant: at(link) }));
-  // Not once the link or the offer has lapsed: there is no email left to look for.
-  if (WAITS_ON_AN_EMAIL.has(facts.status) && !lapsed) lines.push(say("spamHint.body"));
+  // Not once the link or the offer has lapsed: there is no email left to look for. Nor when the address
+  // bounced the email: «look in spam» would contradict the line below, which says it never arrived.
+  if (WAITS_ON_AN_EMAIL.has(facts.status) && !lapsed && facts.emailRejected?.status !== "BOUNCED") lines.push(say("spamHint.body"));
   // The newest email bounced or was marked as spam (§NNN): on any state, confirmed included — said to the
   // person without the address, which stays theirs to change (§645).
   if (facts.emailRejected) lines.push(ours(`rejected.${facts.emailRejected.status}`));

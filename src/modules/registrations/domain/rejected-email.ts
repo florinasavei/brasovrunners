@@ -8,6 +8,8 @@
 export type RejectedEmail = {
   messageType: string;
   at: Date;
+  /** Whether the message ever left (`sent_at` set); false when the provider refused it at the send. */
+  sent: boolean;
   status: "BOUNCED" | "COMPLAINED";
   reason: string | null;
 };
@@ -20,10 +22,11 @@ export type RejectedEmail = {
 export function rejectedEmailOf(value: unknown): RejectedEmail | null {
   const raw = typeof value === "string" ? (JSON.parse(value) as unknown) : value;
   if (raw === null || typeof raw !== "object") return null;
-  const row = raw as { messageType?: unknown; at?: unknown; status?: unknown; reason?: unknown };
+  const row = raw as { messageType?: unknown; at?: unknown; sent?: unknown; status?: unknown; reason?: unknown };
   return {
     messageType: String(row.messageType),
     at: new Date(Number(row.at)),
+    sent: row.sent !== false,
     status: row.status === "COMPLAINED" ? "COMPLAINED" : "BOUNCED",
     reason: typeof row.reason === "string" && row.reason.length > 0 ? row.reason : null,
   };

@@ -253,6 +253,7 @@ const emailRejected = sql<RejectedEmail | null>`(
   SELECT json_build_object(
     'messageType', ${emailOutbox.messageType},
     'at', floor(extract(epoch FROM coalesce(${emailOutbox.sentAt}, ${emailOutbox.createdAt})) * 1000),
+    'sent', ${emailOutbox.sentAt} IS NOT NULL,
     'status', ${emailOutbox.status},
     'reason', ${emailOutbox.lastError}
   )

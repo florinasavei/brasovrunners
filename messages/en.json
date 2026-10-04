@@ -684,6 +684,7 @@
       "emailRejected": "Email rejected",
       "rejected": {
         "which": "Rejected: “{type}”, sent {instant}.",
+        "whichQueued": "Rejected: “{type}”, queued {instant}; the provider refused it at the send.",
         "typeUnknown": "a club email",
         "why": {
           "BOUNCED": "The address does not exist, the mailbox is full or the recipient's server refused it.",
@@ -794,7 +795,7 @@
       "clubMemberOnly": "Only {club} members (declared)",
       "clubMemberOnlyHelp": "Those who ticked “I am a member of the {club} group” when registering. The club does not check; the row reads “Member (declared)”.",
       "bouncedOnly": "Only with a rejected email",
-      "bouncedOnlyHelp": "Those whose latest email bounced or was marked as spam, even when the registration is confirmed. “Email rejected” on the row says which email, when and why: call them.",
+      "bouncedOnlyHelp": "Those with an email that bounced or was marked as spam, even when the registration is confirmed. “Email rejected” on the row says which email, when and why: call them.",
       "clubMemberChip": "Member (declared)",
       "columnName": "Name",
       "columnStatus": "Status",
@@ -1111,8 +1112,8 @@
         "holdLapsed": "Your place has expired: the declaration was not signed in time.",
         "linkUntil": "The link in the email is valid until {instant}.",
         "rejected": {
-          "BOUNCED": "The last email sent to your address was rejected: the address does not exist or the mailbox is full, so the club's messages do not reach you.",
-          "COMPLAINED": "The last email sent to your address was marked as spam, so the club's messages may no longer reach you."
+          "BOUNCED": "An email the club sent to your address was rejected: the address does not exist or the mailbox is full, so the club's messages do not reach you.",
+          "COMPLAINED": "An email the club sent to your address was marked as spam, so the club's messages may no longer reach you."
         }
       }
     },

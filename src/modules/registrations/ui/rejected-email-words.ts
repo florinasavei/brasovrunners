@@ -49,7 +49,8 @@ export function rejectedEmailWords(facts: RejectedEmailFacts, locale: string): R
         ? say("registrations.rejected.confirmedBefore", { date: instant(confirmed) })
         : say("registrations.rejected.confirmedAfter", { date: instant(confirmed) });
   return {
-    which: say("registrations.rejected.which", { type, instant: instant(facts.at) }),
+    // Refused at the send, the message never left: «pus în coadă», not «trimis».
+    which: say(facts.sent ? "registrations.rejected.which" : "registrations.rejected.whichQueued", { type, instant: instant(facts.at) }),
     why: say(`registrations.rejected.why.${facts.status}`),
     context,
     todo: say("registrations.rejected.todo"),

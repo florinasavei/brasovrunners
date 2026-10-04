@@ -238,7 +238,7 @@ describe("«Email respins» says which email, when and why (§NNN)", () => {
 
     // The listing's own query carries the object the chip reads: one subquery, four fields.
     const listed = await listRegistrationsForAdmin(db, { eventId: race.id, emailBounced: true });
-    expect(listed.find((row) => row.id === confirmed)?.emailRejected).toEqual({ messageType: "BIB_ASSIGNED", at: BIB_SENT, status: "BOUNCED", reason: "550 5.1.1 mailbox unavailable" });
+    expect(listed.find((row) => row.id === confirmed)?.emailRejected).toEqual({ messageType: "BIB_ASSIGNED", at: BIB_SENT, sent: true, status: "BOUNCED", reason: "550 5.1.1 mailbox unavailable" });
   });
 
   it("on the registration's page: the chip, the same words under the address, and one sentence in «Ce îi spui»", async () => {
@@ -248,7 +248,7 @@ describe("«Email respins» says which email, when and why (§NNN)", () => {
     state.actor = await staff();
 
     const detail = await findRegistrationDetailForAdmin(db, id);
-    expect(detail?.emailRejected).toEqual({ messageType: "BIB_ASSIGNED", at: BIB_SENT, status: "BOUNCED", reason: "550 5.1.1 mailbox unavailable" });
+    expect(detail?.emailRejected).toEqual({ messageType: "BIB_ASSIGNED", at: BIB_SENT, sent: true, status: "BOUNCED", reason: "550 5.1.1 mailbox unavailable" });
 
     const tree = await RegistrationDetailPage({ params: Promise.resolve({ locale: "ro", id }), searchParams: Promise.resolve({}) } as never);
     const all = elements(tree);
