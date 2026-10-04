@@ -8,7 +8,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-038-01 — the preview route draws a member's bib where the sheet would print one:
+ * §664, BR-REQ-038-01 — the preview route draws a member's bib where the sheet would print one:
  * a row that asked AND whose canonical address is a member account's; a declared-only row draws the
  * ordinary bib. `member=1` on the sample draws the members' design, the switch on or not yet, with
  * the platform's label in the picture's language.
@@ -37,7 +37,7 @@ vi.mock("@/modules/registrations/bib-image", () => ({
 
 const { GET } = await import("@/app/api/admin/events/[id]/bibs/preview/route");
 
-describe("§NNN the preview draws the members' bib for wanted AND verified", () => {
+describe("§664 the preview draws the members' bib for wanted AND verified", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let eventId: string;

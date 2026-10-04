@@ -343,7 +343,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
           // (§324); the schema requires it then, and ignores it for an adult.
           guardianName: optional(form, "guardianName"),
           clubMemberDeclared: form.get("clubMemberDeclared") === "on",
-          // The members' bib (§NNN): kept by the service only where the event offers it.
+          // The members' bib (§664): kept by the service only where the event offers it.
           memberBibWanted: form.get("memberBibWanted") === "on",
           tshirtSize: optional(form, "tshirtSize") as
             | "NONE"

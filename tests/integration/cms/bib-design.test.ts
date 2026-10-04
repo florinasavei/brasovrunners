@@ -171,7 +171,7 @@ describe("§249 the bib's design, saved and read back", () => {
     const event = await existingEvent();
     // What a save from the previous release wrote: every key but the footer's — and, older still
     // than the crops (§560), none of theirs either.
-    // Nor the members' bib (§NNN), younger still.
+    // Nor the members' bib (§664), younger still.
     const footerKeys = ["showEmail", "showPartners", "showEventInFooter", "showWebsite", "footerText", "headerImageCrop", "sponsorImageCrop", "member"];
     const before = Object.fromEntries(
       Object.entries({ ...DEFAULT_BIB_DESIGN, numberScale: "large" }).filter(([key]) => !footerKeys.includes(key)),
@@ -182,7 +182,7 @@ describe("§249 the bib's design, saved and read back", () => {
   });
 
   /**
-   * §NNN — the members' race number rides in the same column: saved by the same form, read back
+   * §664 — the members' race number rides in the same column: saved by the same form, read back
    * by what both renderers call, its label stored the way it prints.
    */
   it("stores the members' design, and both renderers read it", async () => {

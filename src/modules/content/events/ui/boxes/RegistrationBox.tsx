@@ -119,7 +119,7 @@ export default async function RegistrationBox({
   const designOn = (["showName", "showEventTitle", "showDate", "showLogo", "cutMarks"] as const)
     .filter((field) => design[field])
     .map((field) => t(`editor.bibDesign.${field}`));
-  // The members' bib (§NNN) is one more thing the closed line names when it is on.
+  // The members' bib (§664) is one more thing the closed line names when it is on.
   if (design.member.enabled) designOn.push(t("editor.bibDesign.member.summary"));
   const footerOn = (["showEventInFooter", "showPartners", "showWebsite", "showEmail"] as const)
     .filter((field) => design[field])

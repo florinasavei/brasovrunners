@@ -11,7 +11,7 @@ import { invitationDraft } from "@/modules/registrations/domain/invitations";
 import { memberBibKept, memberBibOf, memberBibTickedAtFirst } from "@/modules/registrations/domain/member-bib";
 
 /**
- * §NNN, BR-REQ-038-01 — the members' race number: the members' header and label on a member's bib,
+ * §664, BR-REQ-038-01 — the members' race number: the members' header and label on a member's bib,
  * the number and the name where they always are, both renderers reading `bib-geometry.ts`; and the
  * three facts that decide who wears it.
  */
@@ -57,7 +57,7 @@ function carries(pdf: Buffer, hex: string): boolean {
 
 afterEach(() => vi.restoreAllMocks());
 
-describe("§NNN who wears the members' bib", () => {
+describe("§664 who wears the members' bib", () => {
   it("is kept only when offered, declared and wanted — a stale form stores false", () => {
     expect(memberBibKept({ offered: true, declared: true, wanted: true })).toBe(true);
     expect(memberBibKept({ offered: false, declared: true, wanted: true })).toBe(false);
@@ -81,7 +81,7 @@ describe("§NNN who wears the members' bib", () => {
   });
 });
 
-describe("§NNN «Vreau numărul de membru» starts ticked unless a refusal brought back an untick", () => {
+describe("§664 «Vreau numărul de membru» starts ticked unless a refusal brought back an untick", () => {
   it("is ticked on a fresh form and on a family sitting's shared boxes, which hold no member tick", () => {
     expect(memberBibTickedAtFirst(null)).toBe(true);
     expect(memberBibTickedAtFirst({ city: "Brașov", emergencyContactName: "Ana" })).toBe(true);
@@ -101,7 +101,7 @@ describe("§NNN «Vreau numărul de membru» starts ticked unless a refusal brou
   });
 });
 
-describe("§NNN the label's place, one geometry for both renderers", () => {
+describe("§664 the label's place, one geometry for both renderers", () => {
   it("sits inside the band, under the race's date, right of the lockup", () => {
     const L = BIB_LAYOUT;
     expect(L.memberTagTop).toBeGreaterThan(L.dateTop + L.dateSize);
@@ -112,7 +112,7 @@ describe("§NNN the label's place, one geometry for both renderers", () => {
   });
 });
 
-describe("§NNN the sheet", () => {
+describe("§664 the sheet", () => {
   it("draws the members' colour only on a member's bib, and only while the switch is on", async () => {
     expect(carries(await sheet([{ member: true }]), MEMBER_COLOUR)).toBe(true);
     expect(carries(await sheet([{ member: false }]), MEMBER_COLOUR)).toBe(false);
@@ -164,7 +164,7 @@ describe("§NNN the sheet", () => {
   });
 });
 
-describe("§NNN the picture", () => {
+describe("§664 the picture", () => {
   const draw = async (over: Partial<Parameters<typeof renderBibImage>[0]> = {}) =>
     Buffer.from(
       await (

@@ -108,7 +108,7 @@ async function loadOne(src: string | null, maxWidth: number): Promise<LoadedBibP
 
 /**
  * Both places' pictures for a renderer, each `null` where there is none or it could not be read —
- * and the members' header (§NNN), read only when `members` says a member's bib will be drawn and the
+ * and the members' header (§664), read only when `members` says a member's bib will be drawn and the
  * members' switch is on: a sheet of no member's bib fetches nothing more than before.
  */
 export async function loadBibPictures(

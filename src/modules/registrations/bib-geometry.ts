@@ -87,7 +87,7 @@ export const BIB_LAYOUT = {
   /** The small print's strip for one line; every further line adds `BIB_FOOTER_LINE.lineHeight`. */
   footerHeight: 22,
   /**
-   * The members' label (§NNN) — «Membru {club}» — on a member's header, at its right, under the race
+   * The members' label (§664) — «Membru {club}» — on a member's header, at its right, under the race
    * and its date: `memberLabelSize` points, centred in a tag `memberTagHeight` tall whose top is
    * `memberTagTop` from the card's top, the text's right edge at the card's inset. On the members'
    * picture the tag is filled (the members' colour, else the event's band) so the words read on any

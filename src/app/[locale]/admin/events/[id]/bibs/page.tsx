@@ -44,7 +44,7 @@ export default async function EventBibsPage({ params }: Props) {
   const bibs = await listBibs(db, id);
   const t = await getTranslations("Admin");
   /*
-    The members' race number (§NNN), while the event's switch is on: a sample of the members' bib
+    The members' race number (§664), while the event's switch is on: a sample of the members' bib
     beside the grid's (whose own pictures draw each member's bib as it prints), and one line for the
     rows that asked and will print the ordinary bib — their address is no member account's — with the
     list of them, so an Administrator adds the members on «Echipa» before printing.
@@ -134,7 +134,7 @@ export default async function EventBibsPage({ params }: Props) {
                   a radius here clipped that edge's corners — as the editor preview and the desk row
                   no longer do either. `m=1` is read by nobody: the route answers a row's picture
                   with an hour's cache, and a member added on «Echipa» must change the address the
-                  grid asks, or it shows the ordinary bib the sheet no longer prints (§NNN). */}
+                  grid asks, or it shows the ordinary bib the sheet no longer prints (§664). */}
               <Box
                 component="img"
                 src={`/api/admin/events/${id}/bibs/preview?registration=${bib.id}&locale=${locale}${bib.member ? "&m=1" : ""}`}

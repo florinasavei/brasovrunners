@@ -57,7 +57,7 @@ export type RegistrationEntryDetails = {
    */
   clubMemberDeclared?: boolean;
   /**
-   * «Vreau numărul de membru» (§NNN), as kept: `service.ts` writes true only when the event's
+   * «Vreau numărul de membru» (§664), as kept: `service.ts` writes true only when the event's
    * members' bib is on and the member tick is too. NOT NULL with a default of false, like the tick.
    */
   memberBibWanted?: boolean;

@@ -57,7 +57,7 @@ export function previewPageOf(event: EditableEvent, translation: EditableTransla
     registrationClosesAt: event.registrationClosesAt,
     kitShirt: event.kitShirt,
     askHealthNote: event.askHealthNote,
-    // The members' race number (§NNN): the draft's own switch, read as the page reads the saved one.
+    // The members' race number (§664): the draft's own switch, read as the page reads the saved one.
     offersMemberBib: readBibDesign(event.bibDesign).member.enabled,
     confirmationOpensDaysBefore: event.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: event.confirmationDeadlineDaysBefore,

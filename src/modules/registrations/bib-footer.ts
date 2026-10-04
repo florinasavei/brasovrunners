@@ -132,7 +132,7 @@ export function bibWebsiteHost(siteUrl: string | null | undefined): string | nul
  * out — an emoji would be a box on the paper and a request to an emoji service in the preview,
  * which is the preview and the paper disagreeing — then trimmed and cut at
  * `BIB_FOOTER_TEXT_MAX` characters. Never HTML and never a template: both renderers draw it as
- * text, and nothing in it is substituted. The members' label (§NNN) is the same kind of line, cut
+ * text, and nothing in it is substituted. The members' label (§664) is the same kind of line, cut
  * shorter: `max` is its own ceiling.
  */
 export function bibFooterText(raw: string, max: number = BIB_FOOTER_TEXT_MAX): string {

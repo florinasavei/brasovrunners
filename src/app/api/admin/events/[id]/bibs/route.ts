@@ -98,13 +98,13 @@ export async function GET(
     handed over as PNG (§560, `bib-pictures.ts`): pdfkit embeds no WebP, which every stored
     picture is, and a design with a picture failed the whole sheet with "Unknown image format.".
   */
-  // The members' header too (§NNN), only when a member's bib is on this sheet; a spare never is one.
+  // The members' header too (§664), only when a member's bib is on this sheet; a spare never is one.
   const anyMember = rows.some((row) => row.member === true);
   const loaded = await loadBibPictures(event.design, BIB_PICTURE_WIDTH.sheet, anyMember);
   const header = loaded.header?.png ?? null;
   const sponsors = loaded.sponsors?.png ?? null;
   const memberHeader = loaded.memberHeader?.png ?? null;
-  // The sheet's own words, in its language: read only when the sheet prints them (§444, §NNN).
+  // The sheet's own words, in its language: read only when the sheet prints them (§444, §664).
   const admin = spares || anyMember ? await getTranslations({ locale, namespace: "Admin" }) : null;
 
   const pdf = await renderBibSheet({
@@ -123,7 +123,7 @@ export async function GET(
     layout,
     design: event.design,
     pictures: { header, sponsors, memberHeader },
-    // The members' label when the club typed none (§NNN), in the sheet's language.
+    // The members' label when the club typed none (§664), in the sheet's language.
     ...(anyMember && admin ? { memberLabelDefault: admin("bibs.memberLabelDefault", { club: CLUB_NAME }) } : {}),
     // Under a spare's empty line (§444), in the sheet's language.
     ...(spares && admin ? { blankMark: admin("bibs.spareMark") } : {}),

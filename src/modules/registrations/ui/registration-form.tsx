@@ -853,7 +853,7 @@ export async function registrationForm({
                 <Hint text={t("clubMemberHint")} />
               </CheckboxField>
 
-              {/* «Vreau numărul de membru» (§NNN), only while the event offers the members' bib:
+              {/* «Vreau numărul de membru» (§664), only while the event offers the members' bib:
                   ticked to begin with — a refused press brings back an untick, a prefill never
                   does (`memberBibTickedAtFirst`) — a member's own choice to say no. Under the member tick and
                   meaningful only with it — the server stores false without it, whatever a form

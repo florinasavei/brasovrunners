@@ -30,7 +30,7 @@ export default function BibFooterTextField({
   label: string;
   placeholder: string;
   help: string;
-  /** The count's test id: the members' label (§NNN) uses this box too. */
+  /** The count's test id: the members' label (§664) uses this box too. */
   countTestId?: string;
 }) {
   const [length, setLength] = useState(defaultValue.length);

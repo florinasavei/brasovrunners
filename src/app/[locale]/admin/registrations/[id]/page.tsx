@@ -137,7 +137,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   if (!registration) notFound();
   // «Membru (verificat)» / «Membru (declarat)» (§662), as on the list's row.
   const membership = membershipOf({ declared: registration.clubMemberDeclared, verified: registration.memberVerified });
-  // The members' race number (§NNN): «Număr de membru» when the row will print one, «cerut, neverificat» when it asked
+  // The members' race number (§664): «Număr de membru» when the row will print one, «cerut, neverificat» when it asked
   // and its address is no member account's — the sheet then prints the ordinary bib.
   const memberBib = memberBibOf({ offered: registration.eventOffersMemberBib, wanted: registration.memberBibWanted, verified: registration.memberVerified });
 
@@ -234,7 +234,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     value as the form renders it, and the same string in its `was.` twin.
   */
   const answers = query.answers === "1" ? await readRegistrationAnswers(db, actor, registration.id, new Date()) : null;
-  // «Vreau numărul de membru» (§NNN) only where the event offers it, or the row still says yes.
+  // «Vreau numărul de membru» (§664) only where the event offers it, or the row still says yes.
   const answerFields = EDITABLE_ANSWERS.filter(
     (field) => (field !== "tshirtSize" || registration.eventKitShirt) && (field !== "memberBibWanted" || registration.eventOffersMemberBib || registration.memberBibWanted),
   );
@@ -857,7 +857,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                       ? tr("registrations.bibSettledPrinted", { number: registration.bibNumber })
                       : tr("registrations.bibSettled", { number: registration.bibNumber })}
                 </Typography>
-                {/* The members' race number (§NNN), beside the number: which bib the sheet prints for this row. */}
+                {/* The members' race number (§664), beside the number: which bib the sheet prints for this row. */}
                 {memberBib && (
                   <Typography variant="body2" color={memberBib === "printed" ? "text.primary" : "text.secondary"} data-testid="member-bib">
                     {tr(`registrations.memberBib.${memberBib}`)}
@@ -1132,7 +1132,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   <CheckboxField name="clubMemberDeclared" defaultChecked={answers.clubMemberDeclared} help={tr("registrations.answers.memberHelp", { club: CLUB_NAME })}>
                     {answerLabels.clubMemberDeclared}
                   </CheckboxField>
-                  {/* «Vreau numărul de membru» (§NNN): the person's wish, corrected like the tick; kept only under it. */}
+                  {/* «Vreau numărul de membru» (§664): the person's wish, corrected like the tick; kept only under it. */}
                   {answerLabels.memberBibWanted && (
                     <CheckboxField name="memberBibWanted" defaultChecked={answers.memberBibWanted} help={tr("registrations.answers.memberBibHelp")}>
                       {answerLabels.memberBibWanted}

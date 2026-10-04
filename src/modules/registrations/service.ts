@@ -1966,7 +1966,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     promoConsent,
     promoConsentAt: promoConsent ? now : null,
     clubMemberDeclared: input.clubMemberDeclared,
-    // «Vreau numărul de membru» (§NNN): only under the member tick; decided under the event's lock
+    // «Vreau numărul de membru» (§664): only under the member tick; decided under the event's lock
     // below, kept only while the event offers the members' bib. Always a boolean, so a restart rewrites it.
     memberBibWanted: input.clubMemberDeclared && input.memberBibWanted,
     // As posted; decided under the event's lock below (§554): kept only when the event gives a shirt.
@@ -2049,7 +2049,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     */
     details.tshirtSize = shirtSizeKept(locked.kitShirt, input.tshirtSize);
     /*
-      The members' bib (§NNN), by the same rule off the same locked row: «Vreau numărul de membru»
+      The members' bib (§664), by the same rule off the same locked row: «Vreau numărul de membru»
       is kept only while the event's bib design offers it and the member tick is on; a stale form
       stores false, never refused. Every door passes here.
     */
@@ -4617,7 +4617,7 @@ export async function editRegistrationAnswersByStaff<T extends Record<string, un
       now,
       answersWrittenAt: current.answersWrittenAt,
       declarationSigned: signed !== undefined,
-      // The members' bib (§NNN), off the locked row.
+      // The members' bib (§664), off the locked row.
       memberBibOffered: readBibDesign(event.bibDesign).member.enabled,
     });
     if (plan.nameChange) {

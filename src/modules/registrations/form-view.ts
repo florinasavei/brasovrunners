@@ -56,7 +56,7 @@ export type RegistrationFormView = {
   askShirt: boolean;
   /** «Informații medicale» (§557): the health note's fold only when the event asks it. */
   askHealth: boolean;
-  /** The members' race number (§NNN): «Vreau numărul de membru» under the member tick, only when offered. */
+  /** The members' race number (§664): «Vreau numărul de membru» under the member tick, only when offered. */
   askMemberBib: boolean;
   /** The event publishes a start list (§143): the «Vreau să apar» tick is asked. */
   publishesList: boolean;

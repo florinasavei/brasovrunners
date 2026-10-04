@@ -76,7 +76,7 @@ type Schema = { events: typeof events; eventTranslations: typeof eventTranslatio
 export type Database = NodePgDatabase<Schema> | PgliteDatabase<Schema>;
 
 /**
- * Whether the event offers the members' race number (§NNN): its bib design's `member.enabled`, read
+ * Whether the event offers the members' race number (§664): its bib design's `member.enabled`, read
  * as `bib-design.ts#readBibDesign` reads it — on only for a JSON true, off for anything else or
  * nothing. The page and the staff form read it to ask «Vreau numărul de membru»; the service decides
  * again off the locked row.
@@ -155,7 +155,7 @@ const PUBLIC_COLUMNS = {
   // «Condiții de participare» → «Informații medicale» (§557): whether the form asks the health note.
   askHealthNote: events.askHealthNote,
   /*
-    The members' race number (§NNN): whether the form asks «Vreau numărul de membru». The one key of
+    The members' race number (§664): whether the form asks «Vreau numărul de membru». The one key of
     the bib design a page reads, as `bib-design.ts#readBibDesign` reads it — on only for a JSON true;
     the service decides again off the locked row whatever this said.
   */

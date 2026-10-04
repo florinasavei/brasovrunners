@@ -17,7 +17,7 @@ import { memberBibCell } from "./domain/member-bib";
 import { MEMBERSHIP_EXPORT_WORDS, membershipOf } from "./domain/membership";
 
 /**
- * The «Member bib» cell of both exports (§NNN): "yes" when the row will print the members' bib (it
+ * The «Member bib» cell of both exports (§664): "yes" when the row will print the members' bib (it
  * asked, the event offers it, and its address is a member account's), "asked" when it asked and the
  * club does not know the address as a member's, empty otherwise.
  */
@@ -151,7 +151,7 @@ export type RegistrationCsvRow = {
   country?: string | null;
   city?: string | null;
   /**
-   * The members' race number (§NNN): whether the event offers it and whether the person asked
+   * The members' race number (§664): whether the event offers it and whether the person asked
    * («Vreau numărul de membru»); with `memberVerified`, the «Member bib» cell (`memberBibExportCell`).
    */
   memberBibOffered?: boolean;
@@ -209,7 +209,7 @@ const HEADER = [
   "Age on race day",
   "Country",
   "City",
-  // Last (§NNN), for the same reason: the members' race number — "yes", "asked" or empty.
+  // Last (§664), for the same reason: the members' race number — "yes", "asked" or empty.
   "Member bib",
 ];
 

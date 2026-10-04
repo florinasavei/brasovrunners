@@ -113,11 +113,11 @@ test.describe("§560 the sponsors' band: upload, crop, preview", () => {
 });
 
 /**
- * §NNN — «Numărul membrilor»: the members' switch, colour and label redraw the members' own preview
+ * §664 — «Numărul membrilor»: the members' switch, colour and label redraw the members' own preview
  * before anything is saved, and the preview's address asks for a member's bib (`member=1`). Nothing
  * is saved, so the featured event the registration specs configure is left as it was.
  */
-test.describe("§NNN the members' number, designed in the panel", () => {
+test.describe("§664 the members' number, designed in the panel", () => {
   test("the switch, the colour and the label redraw the members' preview", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);

@@ -685,7 +685,7 @@ export async function isEventSpareNumber<T extends Record<string, unknown>>(
 }
 
 /**
- * One bib of the sheet. `member` is whether it prints the members' design (§NNN): the event offers
+ * One bib of the sheet. `member` is whether it prints the members' design (§664): the event offers
  * it, the person asked («Vreau numărul de membru»), and the address is a member account's (§662) —
  * all three, never the tick alone. The number is the same number either way.
  */
@@ -693,7 +693,7 @@ export type BibRow = { id: string; bibNumber: number; registeredName: string; me
 
 /**
  * Whether a row prints the members' bib, as one SQL condition over a registration joined to its
- * event and participant (§NNN): asked, offered, and the canonical address among the member
+ * event and participant (§664): asked, offered, and the canonical address among the member
  * accounts' (`memberCanonicalEmails`, read once per sheet by the caller) — a plain `false` with no
  * member account, never an `IN ()`.
  */
@@ -759,7 +759,7 @@ export async function listBibs<T extends Record<string, unknown>>(
 }
 
 /**
- * The bibs that asked for the members' design and will print the ordinary one (§NNN): confirmed
+ * The bibs that asked for the members' design and will print the ordinary one (§664): confirmed
  * real rows with a number whose address is no member account's — the bibs page's one line before
  * printing, so an Administrator adds them on «Echipa» first if they are members. Zero while the
  * event does not offer the members' bib.

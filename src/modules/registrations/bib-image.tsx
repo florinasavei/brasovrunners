@@ -92,7 +92,7 @@ type BibImageInput = {
    */
   pictures?: Partial<Record<BibPictureSlot | "memberHeader", BibImagePicture | null>>;
   /**
-   * A member's bib (§NNN): the members' header — their picture, else their colour, else the event's
+   * A member's bib (§664): the members' header — their picture, else their colour, else the event's
    * band — and their label, over the same number, name and small print. Only while the design's
    * members' switch is on.
    */
@@ -173,7 +173,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const digits = String(input.bibNumber);
   // The sheet's size in points, the club's scale included, then to pixels (§249).
   const numberSize = px(bibNumberPoints(digits, numberScaleFactor(design)));
-  // The members' header (§NNN) only while the switch is on; everything under it is the one design.
+  // The members' header (§664) only while the switch is on; everything under it is the one design.
   const asMember = input.member === true && design.member.enabled;
   const band = asMember ? bibMemberBandColour(design.member, input.bandColour) : bibBandColour(input.bandColour);
   const bandText = bandTextColour(band);
@@ -185,7 +185,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
     const address = bibPictureUrl(src, env.APP_BASE_URL);
     return address ? { src: address, width: 0, height: 0 } : null;
   };
-  // A member's bib draws the members' picture or none — never the event's (§NNN): its band instead.
+  // A member's bib draws the members' picture or none — never the event's (§664): its band instead.
   const header = asMember
     ? input.pictures
       ? (input.pictures.memberHeader ?? null)
@@ -333,7 +333,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
             )}
           </div>
         )}
-        {/* The members' label (§NNN), at the sheet's points (`BIB_LAYOUT.memberTag*`): absolute over
+        {/* The members' label (§664), at the sheet's points (`BIB_LAYOUT.memberTag*`): absolute over
             the header's right, a filled tag on the members' picture, the band itself on a band. */}
         {memberLabel ? (
           <div

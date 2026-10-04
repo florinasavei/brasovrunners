@@ -18,7 +18,7 @@ import { composePhone, splitPhone } from "./phone";
  * form's own rule (`answerRules`): the two names (the name of record follows them, with §389's rule
  * and §67's audit), the start-list name, the birth date, the sex, the citizenship, the country and the
  * city, the telephone, the emergency contact, the guardian, the club and the member tick, «Vreau
- * numărul de membru» (§NNN), the socials and the T-shirt. A key outside it is refused by name — never ignored, so a caller learns it asked
+ * numărul de membru» (§664), the socials and the T-shirt. A key outside it is refused by name — never ignored, so a caller learns it asked
  * for something this verb does not do.
  *
  * **Three kinds stay the person's, and the screen says why** (`LOCKED_ANSWER_KINDS`):
@@ -244,7 +244,7 @@ const same = (a: unknown, b: unknown) => (a ?? null) === (b ?? null);
  *   still holds that name; a club typed while the tick stays on is refused, since the tick is the club;
  * - the **socials-on-the-list** tick goes when both socials are cleared — a tick about nothing;
  * - the **T-shirt** is kept only where the event gives one (`shirtSizeKept`);
- * - **«Vreau numărul de membru»** (§NNN) is kept only while the event offers the members' bib and
+ * - **«Vreau numărul de membru»** (§664) is kept only while the event offers the members' bib and
  *   the member tick is on (`memberBibKept`): clearing the tick clears it, audited like any column;
  * - the **guardian** goes when a corrected birth date makes the row an adult's on the day it was
  *   written, as the form never keeps one for an adult (§645) — audited like any other column; under a
@@ -265,7 +265,7 @@ export function planAnswerEdit(
     answersWrittenAt: Date;
     /** The row has a declaration acceptance (online or paper): the guardian is the signed text's, not an answer any more. */
     declarationSigned: boolean;
-    /** The event's bib design offers the members' bib (§NNN); absent is "no". */
+    /** The event's bib design offers the members' bib (§664); absent is "no". */
     memberBibOffered?: boolean;
   },
 ): AnswerPlan {
@@ -311,7 +311,7 @@ export function planAnswerEdit(
     }
   }
 
-  // The members' bib (§NNN): only under the member tick and while the event offers it, as the form keeps it.
+  // The members' bib (§664): only under the member tick and while the event offers it, as the form keeps it.
   // Recomputed when the wish is posted, or when the tick is cleared under a standing wish — never a change nobody asked for.
   if (posted.has("memberBibWanted") || (posted.has("clubMemberDeclared") && next.memberBibWanted === true)) {
     next.memberBibWanted = memberBibKept({

@@ -44,7 +44,7 @@ export default function BibDesignPreview({
   /** The address of the bib as stored, computed on the server. */
   initialSrc: string;
   labels: { alt: string; caption: string; pending: string };
-  /** A member's bib (§NNN): the same sample with the members' header and label. */
+  /** A member's bib (§664): the same sample with the members' header and label. */
   member?: boolean;
 }) {
   const root = useRef<HTMLElement>(null);

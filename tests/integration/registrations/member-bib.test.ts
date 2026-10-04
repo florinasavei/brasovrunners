@@ -22,7 +22,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { readSheet } from "../../helpers/xlsx";
 
 /**
- * §NNN, BR-REQ-038-01, BR-REQ-037-03 — the members' race number from a real database:
+ * §664, BR-REQ-038-01, BR-REQ-037-03 — the members' race number from a real database:
  *
  * - «Vreau numărul de membru» is stored only while the event's bib design offers it and under the
  *   member tick, whatever the form posts — on the public form and on a staff entry alike;
@@ -33,7 +33,7 @@ import { readSheet } from "../../helpers/xlsx";
  */
 const NOW = new Date("2026-09-04T10:00:00.000Z");
 
-// The export route reads the database and the signed-in staff member through these two (§NNN finding 4).
+// The export route reads the database and the signed-in staff member through these two (§664).
 const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown }));
 vi.mock("@/db/client", () => ({ getDb: () => state.db }));
 vi.mock("@/modules/staff-identity/session", () => ({
@@ -130,7 +130,7 @@ function submission(overrides: Record<string, unknown> = {}) {
 
 const rowOf = async (eventId: string) => (await db.select().from(registrations).where(eq(registrations.eventId, eventId)))[0];
 
-describe("§NNN «Vreau numărul de membru» is kept only where it means something", () => {
+describe("§664 «Vreau numărul de membru» is kept only where it means something", () => {
   it("stores the wish under the member tick while the event offers the members' bib", async () => {
     const event = await createEvent(true);
     await submitRegistration(db, event, submission({ clubMemberDeclared: true, memberBibWanted: true }), NOW);
@@ -185,7 +185,7 @@ describe("§NNN «Vreau numărul de membru» is kept only where it means somethi
   });
 });
 
-describe("§NNN «Modifică datele» corrects the wish, audited", () => {
+describe("§664 «Modifică datele» corrects the wish, audited", () => {
   it("changes it under the member tick, and clearing the tick clears it with its own row", async () => {
     const event = await createEvent(true);
     await submitRegistration(db, event, submission({ clubMemberDeclared: true, memberBibWanted: false }), NOW);
@@ -217,7 +217,7 @@ describe("§NNN «Modifică datele» corrects the wish, audited", () => {
   });
 });
 
-describe("§NNN the sheet prints the members' bib for wanted AND verified only", () => {
+describe("§664 the sheet prints the members' bib for wanted AND verified only", () => {
   let counter = 0;
   async function confirmed(eventId: string, email: string, options: { wanted: boolean; declared?: boolean; kind?: RegistrationKind }) {
     counter += 1;

@@ -1,5 +1,5 @@
 /**
- * The members' race number (§NNN; the owner, 2026-10-04: «I want BVR members to have an optional
+ * The members' race number (§664; the owner, 2026-10-04: «I want BVR members to have an optional
  * special BiBs, with a special design»): who asked for it, and who will wear it.
  *
  * Three facts meet here, and the bib needs all three:
@@ -50,7 +50,7 @@ export function memberBibCell(row: { memberBibOffered: boolean; memberBibWanted:
 }
 
 /**
- * Whether «Vreau numărul de membru» starts ticked on a form (§NNN). Ticked, unless the draft is a
+ * Whether «Vreau numărul de membru» starts ticked on a form (§664). Ticked, unless the draft is a
  * refused press that brought the member tick back without the wish — then the person had unticked
  * it, and the box shows what they chose. Every other draft is a prefill, never an answer to this
  * question: a family sitting's shared boxes (§519) hold no member tick, and an invitation's prefill

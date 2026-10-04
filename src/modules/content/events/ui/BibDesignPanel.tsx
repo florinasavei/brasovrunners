@@ -57,7 +57,7 @@ import { BIB_COLOURS } from "./bib-colours";
  * line's box is the panel's second island, for its character count; everything else posts
  * itself, and the preview above follows all of it through the same query-string mirror.
  *
- * **«Numărul membrilor» is the last group** (§NNN): the switch, the members' header — a colour or
+ * **«Numărul membrilor» is the last group** (§664): the switch, the members' header — a colour or
  * a picture through the same `BibPictureField` as the main header, under the members' field names —
  * and «Eticheta», with a preview of a member's bib of its own. Everything else a member's bib
  * prints is the design above; who gets one is the registration's tick and the club's member list.
@@ -127,7 +127,7 @@ export default async function BibDesignPanel({
 
   /**
    * One picture place (§560): the stored picture and its crop, and the words of the control. With
-   * `member`, the members' header (§NNN): the header's place and shape, the members' fields.
+   * `member`, the members' header (§664): the header's place and shape, the members' fields.
    */
   const picture = (slot: BibPictureSlot, place?: "member") => {
     const field = slot === "header" ? "headerImageSrc" : "sponsorImageSrc";
@@ -276,7 +276,7 @@ export default async function BibDesignPanel({
           </Stack>
         </Box>
 
-        {/* «Numărul membrilor» (§NNN): the members' own header and label; the rest is the design
+        {/* «Numărul membrilor» (§664): the members' own header and label; the rest is the design
             above. The switch is what makes the form ask «Vreau numărul de membru». */}
         <Box component="fieldset" sx={{ border: 0, p: 0, m: 0, minWidth: 0 }} data-testid="bib-design-member">
           <Typography component="legend" variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>

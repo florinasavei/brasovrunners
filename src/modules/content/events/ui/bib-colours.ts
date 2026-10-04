@@ -2,7 +2,7 @@
  * The colours a race's numbers may print in (§173, §177): six that stay apart from each other
  * on paper and from the club's blue, which is the empty choice. Hex triplets, because that is
  * what `events.bib_colour` checks for and what the sheet paints. The members' header offers the
- * same six (§NNN), its empty choice being the event's own band.
+ * same six (§664), its empty choice being the event's own band.
  */
 export const BIB_COLOURS = [
   { key: "green", hex: "#1b8a3a" },

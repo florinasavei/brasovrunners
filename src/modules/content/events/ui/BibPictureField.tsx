@@ -59,7 +59,7 @@ type Props = {
   scope: PickerScope | null;
   labels: BibPictureLabels;
   /**
-   * `member`: the members' header (§NNN) — the header's place and shape, under the members' own
+   * `member`: the members' header (§664) — the header's place and shape, under the members' own
    * field names, so one control serves both headers and there is no second copy of it.
    */
   place?: "member";

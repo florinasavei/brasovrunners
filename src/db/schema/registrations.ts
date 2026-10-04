@@ -296,7 +296,7 @@ export const registrations = pgTable(
     clubMemberDeclared: boolean("club_member_declared").notNull().default(false),
 
     /**
-     * «Vreau numărul de membru» (§NNN): the person asked to wear the members' race number, which
+     * «Vreau numărul de membru» (§664): the person asked to wear the members' race number, which
      * the event offers when its bib design's members' switch is on. Stored true only when that
      * switch and `club_member_declared` are both on at the moment of writing; the service writes
      * false otherwise, whatever the form posted.

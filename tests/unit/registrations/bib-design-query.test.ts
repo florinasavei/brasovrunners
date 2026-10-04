@@ -43,7 +43,7 @@ const EVERYTHING_OFF: BibDesign = {
   showEventInFooter: true,
   showWebsite: true,
   footerText: "Cronometraj: Start & Go + 50% · Urgențe organizator 0722 000 000",
-  // The members' bib (§NNN): on, a colour, a picture with its crop and a label with a diacritic and an ampersand.
+  // The members' bib (§664): on, a colour, a picture with its crop and a label with a diacritic and an ampersand.
   member: {
     enabled: true,
     bandColour: "#6a1b9a",
@@ -148,12 +148,12 @@ describe("§249 the design on the wire: encode, then parse", () => {
       sponsorImageSrc: null,
       headerImageCrop: null,
       sponsorImageCrop: null,
-      // The members' design (§NNN): off, nothing chosen, as a query that says nothing about it.
+      // The members' design (§664): off, nothing chosen, as a query that says nothing about it.
       member: { enabled: false, bandColour: null, headerImageSrc: null, headerImageCrop: null, label: "" },
     });
   });
 
-  it("§NNN carries the members' design under keys of its own, and `member=1` only when asked", () => {
+  it("§664 carries the members' design under keys of its own, and `member=1` only when asked", () => {
     const params = bibDesignSearchParams(EVERYTHING_OFF);
     expect(params.get("memberEnabled")).toBe("1");
     expect(params.get("memberBandColour")).toBe("#6a1b9a");
@@ -166,7 +166,7 @@ describe("§249 the design on the wire: encode, then parse", () => {
     expect(bibDesignFromQuery(url.searchParams).member).toEqual(EVERYTHING_OFF.member);
   });
 
-  it("§NNN drops the members' crop with its picture, and a colour that is not a hex triplet", () => {
+  it("§664 drops the members' crop with its picture, and a colour that is not a hex triplet", () => {
     const params = new URLSearchParams({ memberEnabled: "1", memberBandColour: "red; background: url(x)", memberHeaderImageCrop: '{"x":0,"y":0,"w":1,"h":0.5}' });
     expect(bibDesignFromQuery(params).member).toEqual({ enabled: true, bandColour: null, headerImageSrc: null, headerImageCrop: null, label: "" });
   });
@@ -187,7 +187,7 @@ describe("§249 the form, read the same way for the save and for the preview", (
     });
   });
 
-  it("§NNN reads the members' section of the panel", () => {
+  it("§664 reads the members' section of the panel", () => {
     const form = posted({
       [`${BIB_DESIGN_FORM_PREFIX}member.enabled`]: "on",
       [`${BIB_DESIGN_FORM_PREFIX}member.bandColour`]: "#c62828",
@@ -239,7 +239,7 @@ describe("§249 the form, read the same way for the save and for the preview", (
       showWebsite: true,
       // As typed; the schema trims it, for the save and the preview alike.
       footerText: " Cronometraj: StartTime ",
-      // Nothing posted for the members' section (§NNN): off.
+      // Nothing posted for the members' section (§664): off.
       member: { enabled: false, bandColour: null, headerImageSrc: null, headerImageCrop: null, label: "" },
     });
   });

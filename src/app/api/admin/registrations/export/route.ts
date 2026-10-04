@@ -71,7 +71,7 @@ export async function GET(request: Request): Promise<Response> {
   const promo = url.searchParams.get("promo");
   // «În afara locurilor» (§643): the list's pill filters the rows on screen, so it filters the file too.
   const outside = url.searchParams.get("outside");
-  // The bibs page's filter (§NNN): the file is the rows on screen.
+  // The bibs page's filter (§664): the file is the rows on screen.
   const memberBib = url.searchParams.get("memberBib");
 
   /*
@@ -171,7 +171,7 @@ export async function GET(request: Request): Promise<Response> {
         clubName: row.clubName ?? "",
         clubMemberDeclared: row.clubMemberDeclared,
         memberVerified: row.memberVerified,
-        // «Member bib» (§NNN): yes, asked or empty.
+        // «Member bib» (§664): yes, asked or empty.
         memberBibOffered: row.memberBibOffered,
         memberBibWanted: row.memberBibWanted,
         fitnessDeclaredAt: row.fitnessDeclaredAt,
@@ -226,7 +226,7 @@ export async function GET(request: Request): Promise<Response> {
       status: row.status,
       clubMemberDeclared: row.clubMemberDeclared,
       memberVerified: row.memberVerified,
-      // «Member bib» (§NNN): yes, asked or empty.
+      // «Member bib» (§664): yes, asked or empty.
       memberBibOffered: row.memberBibOffered,
       memberBibWanted: row.memberBibWanted,
       fitnessDeclaredAt: row.fitnessDeclaredAt?.toISOString() ?? null,

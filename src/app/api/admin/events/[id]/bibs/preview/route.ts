@@ -55,7 +55,7 @@ const SAMPLE_NAME = "Nume Prenume";
  * chose — so the gate is the one every staff role already passes for a real bib. The same
  * renderer as the paper, never a second drawing (§180): the preview is a preview of the print.
  */
-/** The design's pictures, read and turned into what `next/og` draws (`bib-pictures.ts`); the members' header for a member's bib (§NNN). */
+/** The design's pictures, read and turned into what `next/og` draws (`bib-pictures.ts`); the members' header for a member's bib (§664). */
 async function imagePictures(design: BibDesign, member = false) {
   const loaded = await loadBibPictures(design, BIB_PICTURE_WIDTH.preview, member);
   return { header: bibPictureForImage(loaded.header), sponsors: bibPictureForImage(loaded.sponsors), memberHeader: bibPictureForImage(loaded.memberHeader) };
@@ -92,13 +92,13 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   // The same facts the sheet's footer is made of (§180, §317), so either picture is a picture of
   // the paper; which of them print is the design's to say.
   const partners = event.coHosts.map((host) => host.name);
-  // The members' label when the club typed none (§NNN), in the picture's language — read only for a member's bib.
+  // The members' label when the club typed none (§664), in the picture's language — read only for a member's bib.
   const memberLabelDefault = async () => (await getTranslations({ locale, namespace: "Admin" }))("bibs.memberLabelDefault", { club: CLUB_NAME });
 
   if (sample) {
     const design = bibDesignFromQuery(url.searchParams);
     /*
-      `member=1` draws a member's bib (§NNN) — the designer's second preview and the bibs page's — with
+      `member=1` draws a member's bib (§664) — the designer's second preview and the bibs page's — with
       the members' design as the query carries it, whether or not its switch is on yet: the club sees
       the members' bib before it offers it.
     */
@@ -149,7 +149,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   }
 
   /*
-    The bib this row prints (§NNN): the members' when the event offers it, the row asked, and its
+    The bib this row prints (§664): the members' when the event offers it, the row asked, and its
     canonical address is a member account's (§662) — `bibs.ts#listBibs`'s rule, asked of one row. The
     member set is read only when the first two hold.
   */
@@ -173,7 +173,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   /*
     A number and a name change rarely; the browser may keep the picture for an hour. Whether it is a
     member's bib changes when «Echipa» does, so the bibs page's grid puts the row's `member` flag in
-    the address it asks (`m=1`, read by nobody here): a change in verification is a new address (§NNN).
+    the address it asks (`m=1`, read by nobody here): a change in verification is a new address (§664).
   */
   image.headers.set("Cache-Control", "private, max-age=3600");
   return image;

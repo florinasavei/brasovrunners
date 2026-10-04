@@ -28,7 +28,7 @@
 export const BIB_DESIGN_FORM_PREFIX = "event.bibDesign.";
 
 /**
- * The members' fields in the preview's address (§NNN): their own keys, so they never meet the main
+ * The members' fields in the preview's address (§664): their own keys, so they never meet the main
  * header's. `member=1` is not among them — it asks the route to draw the member's bib, and is the
  * caller's to add (`bibPreviewUrl`'s `member`).
  */
@@ -67,7 +67,7 @@ export type BibDesignFormValues = {
   showWebsite: boolean;
   /** As typed: the schema trims it, keeps it to one line and to `BIB_FOOTER_TEXT_MAX`. */
   footerText: string;
-  /** The members' race number (§NNN): its switch, its header and its label, as posted. */
+  /** The members' race number (§664): its switch, its header and its label, as posted. */
   member: BibMemberFormValues;
 };
 
@@ -82,7 +82,7 @@ export type BibMemberFormValues = {
   label: string;
 };
 
-/** The members' fields' prefix inside the panel's (§NNN): `event.bibDesign.member.*`. */
+/** The members' fields' prefix inside the panel's (§664): `event.bibDesign.member.*`. */
 export const BIB_MEMBER_FORM_PREFIX = `${BIB_DESIGN_FORM_PREFIX}member.`;
 
 const SWITCHES = [
@@ -171,7 +171,7 @@ export function bibDesignSearchParams(values: BibDesignFormValues, into = new UR
   for (const key of TEXTS) {
     if (values[key].trim()) into.set(key, values[key]);
   }
-  // The members' header and label (§NNN), absent when empty, like the main ones.
+  // The members' header and label (§664), absent when empty, like the main ones.
   const member = values.member;
   into.set(MEMBER_QUERY.enabled, member.enabled ? "1" : "0");
   if (member.bandColour) into.set(MEMBER_QUERY.bandColour, member.bandColour);
@@ -216,7 +216,7 @@ export function bibDesignValuesFromQuery(params: URLSearchParams): Partial<BibDe
     const raw = params.get(key);
     if (raw) values[key] = raw;
   }
-  // The members' design (§NNN): absent keys read as the platform's own — off, no colour, no picture.
+  // The members' design (§664): absent keys read as the platform's own — off, no colour, no picture.
   const enabled = params.get(MEMBER_QUERY.enabled);
   values.member = {
     enabled: enabled === "1",
@@ -257,7 +257,7 @@ export function bibPreviewUrl(input: {
   /** The colour select as it reads now; empty is the club's colour. */
   colour: string | null;
   design: BibDesignFormValues;
-  /** Draw a member's bib (§NNN): the members' header and label over the same sample. */
+  /** Draw a member's bib (§664): the members' header and label over the same sample. */
   member?: boolean;
 }): string {
   const params = new URLSearchParams({ sample: "1", locale: input.locale });

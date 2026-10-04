@@ -214,10 +214,10 @@ describe("§317 the footer's settings, read from whatever is stored", () => {
 });
 
 /**
- * §NNN, BR-REQ-038-01 — the members' race number: a nested `member` object inside the same JSON
+ * §664, BR-REQ-038-01 — the members' race number: a nested `member` object inside the same JSON
  * column, read with the same never-throw fallbacks as the rest of the design.
  */
-describe("§NNN the members' design", () => {
+describe("§664 the members' design", () => {
   const OURS = "https://pub-example.r2.dev/qa/3f2a1b4c-0000-4000-8000-000000000000/web.webp";
 
   it("reads a design saved before the key existed as off, and prints it as before", () => {

@@ -68,7 +68,7 @@ export type RegistrationListRow = {
   eventTimezone: string;
   /** «Membru (verificat)» (§662): the participant's canonical address is a member account's; `membershipOf` reads the two. */
   memberVerified: boolean;
-  /** «Vreau numărul de membru» (§NNN) and whether the event offers the members' bib: the export's «Member bib». */
+  /** «Vreau numărul de membru» (§664) and whether the event offers the members' bib: the export's «Member bib». */
   memberBibWanted: boolean;
   memberBibOffered: boolean;
   /** When the entrant ticked "I am medically fit" (§171); null on a desk or phone entry. */
@@ -165,7 +165,7 @@ export type RegistrationListFilters = {
   /** «În afara locurilor» (§643): only the rows seated outside the places — the summary strip's pill. Narrows only. */
   outsideCapacity?: boolean;
   /**
-   * The members' race number asked for and not verified (§NNN): the real rows with a number that want it,
+   * The members' race number asked for and not verified (§664): the real rows with a number that want it,
    * at an event that offers it, whose address is no member account's — the bibs page's link, the same set
    * its line counts. Narrows only.
    */
@@ -307,7 +307,7 @@ function memberVerifiedOf(members: readonly string[]): SQL<boolean> {
 }
 
 /**
- * The members' race number asked for and not verified (§NNN), in the bibs sheet's own scope: a real row
+ * The members' race number asked for and not verified (§664), in the bibs sheet's own scope: a real row
  * with a number (`bibs.ts#bibScopeWhere`), that wants it, at an event that offers it, whose address is no
  * member account's — so the list the bibs page links to counts what its line counts. The event's switch
  * is read through its own `EXISTS`, never through the caller's joins: the summary and the count select
@@ -505,7 +505,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       eventStartsAt: events.startsAt,
       eventTimezone: events.timezone,
       memberVerified: memberVerifiedOf(members),
-      // The members' race number (§NNN): the export's «Member bib».
+      // The members' race number (§664): the export's «Member bib».
       memberBibWanted: registrations.memberBibWanted,
       memberBibOffered: OFFERS_MEMBER_BIB,
       fitnessDeclaredAt: registrations.fitnessDeclaredAt,
@@ -748,7 +748,7 @@ export type RegistrationDetail = {
   clubMemberDeclared: boolean;
   /** «Membru (verificat)» (§662), as on the list row. */
   memberVerified: boolean;
-  /** «Vreau numărul de membru» (§NNN) as stored, and whether the event offers the members' bib now. */
+  /** «Vreau numărul de membru» (§664) as stored, and whether the event offers the members' bib now. */
   memberBibWanted: boolean;
   eventOffersMemberBib: boolean;
   submittedAt: Date;
@@ -1371,7 +1371,7 @@ export async function listEventsAcceptingRegistrations<T extends Record<string, 
       // Beside each name on the staff form ("14+"), so the volunteer knows which minimum the
       // birth date is counted against before pressing (§329).
       minAge: events.minAge,
-      // Whether the staff form asks «Vreau numărul de membru» (§NNN), read as `readBibDesign` reads it.
+      // Whether the staff form asks «Vreau numărul de membru» (§664), read as `readBibDesign` reads it.
       offersMemberBib: OFFERS_MEMBER_BIB,
     })
     .from(events)

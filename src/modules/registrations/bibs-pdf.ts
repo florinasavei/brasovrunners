@@ -53,7 +53,7 @@ export type BibSheetRow = {
   bibNumber: BibRow["bibNumber"];
   registeredName: string | null;
   /**
-   * A member's bib (§NNN): the members' header and label over the same number, name and small
+   * A member's bib (§664): the members' header and label over the same number, name and small
    * print. Drawn only while the design's members' switch is on; a spare is never a member's.
    */
   member?: boolean;
@@ -87,7 +87,7 @@ export type BibSheetInput = {
    */
   pictures?: { header?: Buffer | null; sponsors?: Buffer | null; memberHeader?: Buffer | null };
   /**
-   * The platform's words for the members' label when the club typed none (§NNN) — «Membru {club}» —
+   * The platform's words for the members' label when the club typed none (§664) — «Membru {club}» —
    * in the sheet's language, from the caller's catalogue. Absent, a member's bib carries no label
    * unless the club typed one.
    */
@@ -248,7 +248,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     return { lines, height: L.footerHeight + Math.max(0, lines.length - 1) * BIB_SHEET_FOOTER.lineHeight };
   };
   /*
-    The two headers a sheet may draw (§NNN): the event's, and — while the members' switch is on — the
+    The two headers a sheet may draw (§664): the event's, and — while the members' switch is on — the
     members'. Each with the small print laid out for it, since the footer prints the race's title and
     date only when the header drawn does not (§317); the design of the small print is the one design.
     A members' picture that could not be fetched draws the members' colour, else the event's band —
@@ -279,7 +279,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     const left = slot.x + BIB_MARGIN;
     const top = slot.y + BIB_MARGIN;
     const bottom = top + BIB_CARD.height;
-    // The members' header only while the switch is on (§NNN); everything under it is the one design.
+    // The members' header only while the switch is on (§664); everything under it is the one design.
     const header = row.member === true && design.member.enabled ? memberHeader : eventHeader;
     const footerLines = header.footer.lines;
     const footerHeight = header.footer.height;
@@ -326,7 +326,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     }
 
     /*
-      The members' label (§NNN), small, at the header's right under the race and its date
+      The members' label (§664), small, at the header's right under the race and its date
       (`BIB_LAYOUT.memberTag*`): on the members' picture a tag of the members' colour (else the event's
       band) behind it, so it reads on any photograph; on a band, the band. The text is drawn without a
       width, right-aligned by hand at the card's inset, so pdfkit cannot wrap it (§317's lesson).

@@ -112,7 +112,7 @@ const storedCrop = z
   .catch(null);
 
 /**
- * The members' race number (§NNN; the owner, 2026-10-04: «I want BVR members to have an optional
+ * The members' race number (§664; the owner, 2026-10-04: «I want BVR members to have an optional
  * special BiBs, with a special design»).
  *
  * The same bib in every other way — the number from the same band in the same order (§173), the
@@ -180,7 +180,7 @@ export function readBibMemberDesign(value: unknown): BibMemberDesign {
   return parsed.success ? parsed.data : DEFAULT_BIB_MEMBER_DESIGN;
 }
 
-/** Absent — every design saved before §NNN — or malformed, the members' bib is off. */
+/** Absent — every design saved before §664 — or malformed, the members' bib is off. */
 const bibMemberSchemaWithDefault = z.unknown().optional().transform((value) => readBibMemberDesign(value));
 
 /** The line printed on a member's band: the club's, or the platform's words when it typed none. */
@@ -189,7 +189,7 @@ export function bibMemberLabel(member: BibMemberDesign, fallback: string): strin
 }
 
 /**
- * The band colour of a member's bib when no members' picture is drawn (§NNN): the members' own
+ * The band colour of a member's bib when no members' picture is drawn (§664): the members' own
  * colour, else the event's band — never the event's picture, so a member's bib never passes for
  * the ordinary one, and a members' picture that could not be fetched never fails the sheet.
  */
@@ -235,7 +235,7 @@ export const bibDesignSchema = z
      * `BIB_FOOTER_TEXT_MAX` characters — normalised rather than refused, like every field here.
      */
     footerText: z.string().transform((value) => bibFooterText(value)).catch(""),
-    /** The members' race number (§NNN): off, or the members' own header and label. */
+    /** The members' race number (§664): off, or the members' own header and label. */
     member: bibMemberSchemaWithDefault,
   })
   .strict()

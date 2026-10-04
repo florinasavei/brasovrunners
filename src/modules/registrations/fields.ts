@@ -133,7 +133,7 @@ const submissionFields = z.object({
   clubMemberDeclared: z.boolean().default(false),
 
   /**
-   * «Vreau numărul de membru» (§NNN): the wish to wear the members' race number. Asked only while
+   * «Vreau numărul de membru» (§664): the wish to wear the members' race number. Asked only while
    * the event's bib design offers it, under the member tick, and stored only then (`service.ts`); a
    * wish and never a fact — the sheet prints the members' bib only for an address the club knows
    * as a member's (§662). Unticked is absent from `FormData`, so `.default(false)` like the tick.
