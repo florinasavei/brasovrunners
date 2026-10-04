@@ -159,7 +159,9 @@ describe("§535 release.yml — the same tools as the PC, in order", () => {
     const say = steps.slice(steps.indexOf("- name: Say so on the pull request"));
     expect(say).toMatch(/\n {8}env:\n(?: {10}.*\n)*? {10}GH_TOKEN: \$\{\{ github\.token \}\}\n/);
     expect(say).toContain("TIMES: ${{ runner.temp }}/ship-times.jsonl");
-    expect(say).toContain(`jq -r '.outcome // empty'`);
+    // Cut by characters inside jq, never by bytes: the outcome carries «—» and «§».
+    expect(say).toContain(`jq -r '.outcome // empty | .[0:600]'`);
+    expect(say).not.toContain("head -c");
     expect(say).toContain("${why:+ — ship: $why}");
     // Only this step uses the job's token; every step before it pushes, merges and approves with SHIP_TOKEN.
     expect(workflow.match(/github\.token/g)).toHaveLength(1);

@@ -382,7 +382,7 @@ jobs:
             # which says whether production did not answer or answered with another build.
             why=""
             if [ -s "$TIMES" ]; then
-              why=$(tail -n 1 "$TIMES" | jq -r '.outcome // empty' 2> /dev/null | head -c 600 || true)
+              why=$(tail -n 1 "$TIMES" | jq -r '.outcome // empty | .[0:600]' 2> /dev/null || true)
             fi
             gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body "The release stopped ($OUTCOME)${why:+ — ship: $why} — the run's summary page says where and why: $RUN_URL. Fix it, then add the label ship again (or run the release workflow)." || true
             # The label comes off, so adding it again starts the release again. The REST call, not

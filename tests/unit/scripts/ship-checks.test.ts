@@ -178,6 +178,8 @@ describe("§NNN ship: one production reading, judged", () => {
     expect(productionLine(judged, { waitingFor: NEW })).toMatch(/^no answer: TypeError/);
     const timeout = Object.assign(new Error("The operation was aborted due to timeout"), { name: "TimeoutError" });
     expect(describeFetchError(timeout)).toBe("TimeoutError The operation was aborted due to timeout: no answer within the request's time");
+    const leaf = Object.assign(new TypeError("fetch failed"), { cause: { code: "UNABLE_TO_VERIFY_LEAF_SIGNATURE", message: "unable to verify the first certificate" } });
+    expect(describeFetchError(leaf)).toBe("TypeError fetch failed — UNABLE_TO_VERIFY_LEAF_SIGNATURE: a certificate failure");
   });
 
   it("is another build when the body carries another baseline", () => {

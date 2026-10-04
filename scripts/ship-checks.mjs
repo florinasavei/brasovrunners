@@ -171,7 +171,7 @@ function failureKind(code, name) {
   if (name === "TimeoutError" || name === "AbortError") return "no answer within the request's time";
   if (/^(ENOTFOUND|EAI_AGAIN)$/.test(code)) return "a name or network failure";
   if (/^(ECONNREFUSED|ECONNRESET|ETIMEDOUT|EHOSTUNREACH|ENETUNREACH|UND_ERR_)/.test(code)) return "a network failure";
-  if (/CERT|TLS|SSL|SELF_SIGNED/.test(code)) return "a certificate failure";
+  if (/CERT|TLS|SSL|SELF_SIGNED|UNABLE_TO_|DEPTH_ZERO/.test(code)) return "a certificate failure";
   return "no answer";
 }
 

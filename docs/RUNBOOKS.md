@@ -594,8 +594,8 @@ carries a newer baseline than `qa`'s) ships as it is.
 3. It ends with a comment on the pull request: "Released BR-V2.NN…" or "The release stopped",
    followed, when ship itself stopped, by ship's reason. The run's **Summary** page says, in a
    table, each step's outcome and ship's minutes. The comment and the label's removal are made
-   with the run's own token, so a stopped release always loses its label and the label can be
-   ticked again (`DECISIONS.md` §NNN).
+   with the run's own token, so a stopped release loses its label and the label can be ticked
+   again (`DECISIONS.md` §NNN) — a run started by hand under **Actions** has no label to remove.
 
 While ship waits for production — first for the baseline production runs, at the end for the new
 one — its log says what production answers every two minutes, one of three lines:
@@ -652,13 +652,39 @@ The run's **Summary** says where, in words:
 - A stop inside **Ship** (a red check, a migration that failed): the table's last line names the
   step. If the pull request already merged into `qa`, running **release** again with its number
   continues from there — a merged pull request ships `qa` as it is.
-- **"production never reported …"** or **"production did not report … in time"**: the words after
-  it say which case (above, under § Every release): no answer → § The domain stops answering;
-  another build → Vercel's production deployment. Once production answers with the expected
-  build, tick **ship** again — the label came off at the stop.
+- **"production never reported …"** (at the start, step 1): nothing has merged yet. The words
+  after it say which case (above, under § Every release): no answer → § The domain stops
+  answering; another build → Vercel's production deployment. Once production answers with the
+  baseline `main` carries, tick **ship** again — the label came off at the stop.
+- **"production did not report … in time"** (at the end, step 7): the pull request and the
+  `qa → main` release are already merged, so **do not tick ship again** — a second run finds
+  nothing to propose to `main` and stops with a second «The release stopped» for a release that
+  went out. No answer → § The domain stops answering; another build → open Vercel → the
+  production project → **Deployments**, fix the newest deployment or redeploy it. The release is
+  done once `/api/health` reports the new baseline.
 
 Never push to `qa` or `main` by hand from the phone: the release PR and the production migration
 are the run's to open, merge and approve.
+
+## The domain stops answering
+
+Ship's «no answer for N min: …» or «production answers but its body carries no baseline» means
+the club's domain itself does not serve the application — not the release (`DECISIONS.md` §NNN).
+The words after «no answer» name the failure; check in this order, from a phone if need be:
+
+1. **The name resolves.** An online DNS lookup (or `nslookup <domain>`) of the apex and `www`.
+   `ENOTFOUND` or `EAI_AGAIN`, or no answer there: the name does not resolve.
+2. **The registrar.** Its control panel → the domain: not expired, no «hold» or suspension (an
+   unpaid renewal or an unanswered contact-verification email puts one on), and the nameservers or
+   records still the ones § Domain binding set. A hold page or a parking page is the «carries no
+   baseline» line.
+3. **Vercel's domain status.** Vercel → the production project → **Settings** → **Domains**: each
+   domain «Valid Configuration». «Invalid Configuration» names the record Vercel expects.
+4. **The certificate.** A «certificate failure» in the line: the same **Domains** page shows the
+   certificate's state; Vercel renews it on its own once the records are right again.
+
+Once `/api/health` on the domain answers with a baseline, ship's waits see it — at the start,
+tick **ship** again; at the end, the release is done (§ When it stops).
 
 
 ---

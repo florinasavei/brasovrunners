@@ -193,7 +193,11 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
   Vercel's production deployment; «production answers but its body carries no baseline» → a page
   that is not the application, treat it as no answer. The STOP names the case in the same words,
   and so do the times file's `outcome`, the summary page and the release workflow's comment. After
-  a STOP on the phone the label came off; tick **ship** again once production answers.
+  step 1's STOP («never reported», nothing merged yet) the label came off; tick **ship** again
+  once production answers. After step 7's («did not report … in time») the release is already in
+  `main`: do not label again — a second run has nothing to propose to `main` and stops. Follow the
+  domain triage, or fix or redeploy Vercel's production deployment; the release is done once
+  `/api/health` reports the new baseline.
 
 ### Cloud loop
 
