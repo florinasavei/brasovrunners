@@ -48,3 +48,15 @@ export function memberBibCell(row: { memberBibOffered: boolean; memberBibWanted:
   const kind = memberBibOf({ offered: row.memberBibOffered, wanted: row.memberBibWanted, verified: row.memberVerified });
   return kind ? MEMBER_BIB_EXPORT_WORDS[kind] : "";
 }
+
+/**
+ * Whether «Vreau numărul de membru» starts ticked on a form (§NNN). Ticked, unless the draft is a
+ * refused press that brought the member tick back without the wish — then the person had unticked
+ * it, and the box shows what they chose. Every other draft is a prefill, never an answer to this
+ * question: a family sitting's shared boxes (§519) hold no member tick, and an invitation's prefill
+ * for a member (`invitationDraft`) carries the wish as well as the tick.
+ */
+export function memberBibTickedAtFirst(draft: Readonly<Record<string, string>> | null): boolean {
+  if (draft?.clubMemberDeclared !== "on") return true;
+  return draft.memberBibWanted === "on";
+}

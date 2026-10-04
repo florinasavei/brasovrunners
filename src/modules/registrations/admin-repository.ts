@@ -165,8 +165,9 @@ export type RegistrationListFilters = {
   /** «În afara locurilor» (§643): only the rows seated outside the places — the summary strip's pill. Narrows only. */
   outsideCapacity?: boolean;
   /**
-   * The members' race number asked for and not verified (§NNN): the rows that want it, at an event that
-   * offers it, whose address is no member account's — the bibs page's link. Narrows only.
+   * The members' race number asked for and not verified (§NNN): the real rows with a number that want it,
+   * at an event that offers it, whose address is no member account's — the bibs page's link, the same set
+   * its line counts. Narrows only.
    */
   memberBibAsked?: boolean;
 };
@@ -305,6 +306,17 @@ function memberVerifiedOf(members: readonly string[]): SQL<boolean> {
   return (members.length > 0 ? sql<boolean>`(${inArray(participants.canonicalEmail, [...members])})` : sql<boolean>`false`).mapWith(Boolean);
 }
 
+/**
+ * The members' race number asked for and not verified (§NNN), in the bibs sheet's own scope: a real row
+ * with a number (`bibs.ts#bibScopeWhere`), that wants it, at an event that offers it, whose address is no
+ * member account's — so the list the bibs page links to counts what its line counts. The event's switch
+ * is read through its own `EXISTS`, never through the caller's joins: the summary and the count select
+ * no `events`, and a condition naming it there failed the whole page.
+ */
+function memberBibAskedUnverified(members: readonly string[]): SQL {
+  return sql`(${registrations.memberBibWanted} and ${registrations.kind} = 'REAL' and ${registrations.bibNumber} is not null and exists (select 1 from ${events} where ${events.id} = ${registrations.eventId} and ${OFFERS_MEMBER_BIB}) and not ${memberVerifiedOf(members)})`;
+}
+
 /** The member accounts' canonical addresses for one query: the caller's, or read now. */
 async function membersFor<T extends Record<string, unknown>>(db: Database<T>, filters: RegistrationListFilters): Promise<readonly string[]> {
   return filters.members ?? [...(await memberCanonicalEmails(db))];
@@ -326,7 +338,7 @@ function registrationConditions(filters: RegistrationListFilters, members: reado
     // The same condition as the club's list on «Newsletter» and the sponsor list's candidates (§570, §581).
     filters.promoConsented ? promoListed() : undefined,
     filters.outsideCapacity ? eq(registrations.outsideCapacity, true) : undefined,
-    filters.memberBibAsked ? sql`(${registrations.memberBibWanted} and ${OFFERS_MEMBER_BIB} and not ${memberVerifiedOf(members)})` : undefined,
+    filters.memberBibAsked ? memberBibAskedUnverified(members) : undefined,
     /*
       Name only, and deliberately not the email address. An organizer at a desk is holding a
       person who just said their name out loud; matching addresses as well would turn this box

@@ -7,7 +7,8 @@ import { BIB_CARD, BIB_IMAGE, BIB_LAYOUT, BIB_MARGIN } from "@/modules/registrat
 import { renderBibImage } from "@/modules/registrations/bib-image";
 import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
 import { memberBibExportCell } from "@/modules/registrations/csv";
-import { memberBibKept, memberBibOf } from "@/modules/registrations/domain/member-bib";
+import { invitationDraft } from "@/modules/registrations/domain/invitations";
+import { memberBibKept, memberBibOf, memberBibTickedAtFirst } from "@/modules/registrations/domain/member-bib";
 
 /**
  * §NNN, BR-REQ-038-01 — the members' race number: the members' header and label on a member's bib,
@@ -77,6 +78,26 @@ describe("§NNN who wears the members' bib", () => {
     expect(memberBibExportCell({ memberBibOffered: true, memberBibWanted: true, memberVerified: false })).toBe("asked");
     expect(memberBibExportCell({ memberBibOffered: true, memberBibWanted: false, memberVerified: true })).toBe("");
     expect(memberBibExportCell({ memberVerified: true })).toBe("");
+  });
+});
+
+describe("§NNN «Vreau numărul de membru» starts ticked unless a refusal brought back an untick", () => {
+  it("is ticked on a fresh form and on a family sitting's shared boxes, which hold no member tick", () => {
+    expect(memberBibTickedAtFirst(null)).toBe(true);
+    expect(memberBibTickedAtFirst({ city: "Brașov", emergencyContactName: "Ana" })).toBe(true);
+  });
+
+  it("is ticked on the invitation form of an invited member, beside «Sunt membru»", () => {
+    const draft = invitationDraft({ name: "Ana Maria Pop", member: true }, "Brașov Runners");
+    expect(draft).toMatchObject({ firstName: "Ana Maria", lastName: "Pop", clubMemberDeclared: "on", memberBibWanted: "on" });
+    expect(memberBibTickedAtFirst(draft)).toBe(true);
+    // A non-member's invitation asks nothing of the members' bib, and the box (if shown) starts ticked.
+    expect(invitationDraft({ name: "Ion", member: false }, "Brașov Runners")).toEqual({ firstName: "Ion", lastName: "" });
+  });
+
+  it("brings back what a refused press posted: the member tick with or without the wish", () => {
+    expect(memberBibTickedAtFirst({ clubMemberDeclared: "on" })).toBe(false);
+    expect(memberBibTickedAtFirst({ clubMemberDeclared: "on", memberBibWanted: "on" })).toBe(true);
   });
 });
 

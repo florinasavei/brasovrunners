@@ -24,6 +24,7 @@ import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { fullThanksPhrase, waitlistOfferPhrase } from "@/modules/events/ui/counted-phrases";
 import { SHIRT_SIZES } from "@/modules/registrations/domain/kit";
+import { memberBibTickedAtFirst } from "@/modules/registrations/domain/member-bib";
 import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age";
 import { NO_WAITLIST, WAITLIST_FULL } from "@/modules/registrations/domain/waitlist";
 import { countryOptions } from "@/modules/registrations/countries";
@@ -853,7 +854,8 @@ export async function registrationForm({
               </CheckboxField>
 
               {/* «Vreau numărul de membru» (§NNN), only while the event offers the members' bib:
-                  ticked to begin with, a member's own choice to say no. Under the member tick and
+                  ticked to begin with — a refused press brings back an untick, a prefill never
+                  does (`memberBibTickedAtFirst`) — a member's own choice to say no. Under the member tick and
                   meaningful only with it — the server stores false without it, whatever a form
                   posts — and a wish, never a fact: the club prints the members' bib only for an
                   address it knows as a member's. Without JavaScript it is an ordinary box. */}
@@ -862,7 +864,7 @@ export async function registrationForm({
                   <CheckboxField
                     id={fieldId("memberBibWanted")}
                     name="memberBibWanted"
-                    defaultChecked={draft ? prefill("memberBibWanted") === "on" : true}
+                    defaultChecked={memberBibTickedAtFirst(draft)}
                     help={t("memberBibWantedHelp", { club: CLUB_NAME })}
                   >
                     {t("memberBibWanted")}

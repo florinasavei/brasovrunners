@@ -7,7 +7,13 @@ import { type RegistrationKind, registrations } from "@/db/schema/registrations"
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
-import { listRegistrationsForAdmin, findRegistrationDetailForAdmin, listEventsAcceptingRegistrations } from "@/modules/registrations/admin-repository";
+import {
+  countRegistrationsForAdmin,
+  findRegistrationDetailForAdmin,
+  listEventsAcceptingRegistrations,
+  listRegistrationsForAdmin,
+  summariseRegistrationsForAdmin,
+} from "@/modules/registrations/admin-repository";
 import { createRegistrationByStaff, editRegistrationAnswers } from "@/modules/registrations/admin-service";
 import { countUnverifiedMemberBibs, listBibs } from "@/modules/registrations/bibs";
 import { buildRegistrationsCsv } from "@/modules/registrations/csv";
@@ -273,6 +279,8 @@ describe("§NNN the sheet prints the members' bib for wanted AND verified only",
     const verified = await confirmed(event.id, "membru@example.ro", { wanted: true });
     const asked = await confirmed(event.id, "declarat@example.ro", { wanted: true });
     await confirmed(event.id, "nimic@example.ro", { wanted: false, declared: false });
+    // A test row that asked: off the sheet, so off the line and off the list it links to.
+    await confirmed(event.id, "proba@example.ro", { wanted: true, kind: "TEST" });
 
     const rows = await listRegistrationsForAdmin(db, { eventId: event.id });
     const csv = buildRegistrationsCsv(
@@ -308,6 +316,15 @@ describe("§NNN the sheet prints the members' bib for wanted AND verified only",
 
     const filtered = await listRegistrationsForAdmin(db, { eventId: event.id, memberBibAsked: true });
     expect(filtered.map((row) => row.id)).toEqual([asked.id]);
+    /*
+      The list page reads the count and the summary under the same filter, and neither joins
+      `events`: the event's switch is the condition's own subquery, never the caller's join.
+    */
+    const askedFilter = { eventId: event.id, status: "CONFIRMED" as const, memberBibAsked: true };
+    expect(await countRegistrationsForAdmin(db, askedFilter)).toBe(1);
+    expect(await summariseRegistrationsForAdmin(db, askedFilter)).toMatchObject({ real: 1, test: 0 });
+    // The bibs page's line and the list it links to count the same set.
+    expect(await countUnverifiedMemberBibs(db, event.id)).toBe(1);
 
     const page = await findRegistrationDetailForAdmin(db, verified.id);
     expect(page).toMatchObject({ memberBibWanted: true, eventOffersMemberBib: true, memberVerified: true });
