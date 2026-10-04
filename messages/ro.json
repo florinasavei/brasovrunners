@@ -1067,8 +1067,10 @@
           "stravaUrl": "Strava",
           "instagramHandle": "Instagram",
           "tshirtSize": "Mărimea tricoului",
-          "listSocials": "Strava și Instagram pe listă"
-        }
+          "listSocials": "Strava și Instagram pe listă",
+          "memberBibWanted": "Vreau numărul de membru"
+        },
+        "memberBibHelp": "Se păstrează doar cu bifa de membru și cât timp evenimentul oferă numărul membrilor."
       },
       "memberTick": {
         "clear": "Nu e membru",
@@ -1129,6 +1131,13 @@
           "BOUNCED": "Un email trimis de club la adresa ta a fost respins: adresa nu există sau căsuța e plină, așa că mesajele clubului nu ajung la tine.",
           "COMPLAINED": "Un email trimis de club la adresa ta a fost marcat ca spam, așa că mesajele clubului s-ar putea să nu mai ajungă la tine."
         }
+      },
+      "memberBibWantedStaffHelp": "Doar pentru un membru, la un eveniment care oferă numărul membrilor; altfel nu se păstrează.",
+      "memberBibAskedFilter": "Doar cei care au cerut numărul de membru, dar adresa lor nu e a unui cont de membru.",
+      "memberBibAskedClear": "Arată-i pe toți",
+      "memberBib": {
+        "printed": "Număr de membru",
+        "asked": "Număr de membru: cerut, neverificat — se tipărește numărul obișnuit"
       }
     },
     "events": {
@@ -1930,7 +1939,22 @@
         "previewCaption": "Previzualizare — așa se tipărește",
         "previewPending": "Se redesenează…",
         "previewAlt": "Numărul de concurs, așa cum ar arăta cu alegerile de acum, pentru un alergător cu numele „Nume Prenume”",
-        "previewNote": "Previzualizarea de mai sus se schimbă pe loc; pagina „Numere” și PDF-ul, după salvare."
+        "previewNote": "Previzualizarea de mai sus se schimbă pe loc; pagina „Numere” și PDF-ul, după salvare.",
+        "member": {
+          "title": "Numărul membrilor",
+          "summary": "număr de membru",
+          "enabled": "Membrii primesc un număr cu design propriu",
+          "enabledHelp": "Formularul întreabă „Vreau numărul de membru” sub bifa de membru {club}. Se tipărește doar pentru o adresă a unui cont din «Echipa». Numărul rămâne în aceeași ordine.",
+          "previewAlt": "Numărul de concurs al unui membru, cu designul membrilor, pentru un alergător cu numele „Nume Prenume”",
+          "previewCaption": "Previzualizare — numărul unui membru",
+          "bandColour": "Culoarea benzii pentru membri",
+          "bandColourHelp": "Folosită când nu alegi o imagine, și sub eticheta de pe imagine.",
+          "eventColour": "Culoarea evenimentului",
+          "headerImageSrc": "Imagine în locul benzii, pentru membri",
+          "headerImageSrcHelp": "Ca imaginea de sus a numărului, doar pe numerele membrilor. Fără ea, banda are culoarea aleasă mai sus.",
+          "label": "Eticheta",
+          "labelHelp": "Un rând scurt pe banda numărului de membru, cel mult {max} de caractere. Gol: «Membru {club}»."
+        }
       },
       "bibColour": "Culoarea numerelor de concurs (BIB)",
       "bibColourHelp": "Banda de sus a numărului tipărit, cea cu logo-ul clubului și cursa pe ea. „Culoarea clubului” dacă nu vrei una anume.",
@@ -4443,7 +4467,12 @@
       "sparesReserved": "Rezervate numerele {from}–{to}. Descarcă foaia și tipărește-o.",
       "sparesDownloadRange": "Descarcă foaia {from}–{to} (PDF)",
       "spareMark": "înscris la fața locului",
-      "helpMore": "Numerele se dau în ordinea confirmării și nu se dau de două ori. Foaia are două numere A5 pe o pagină A4; un singur număr se descarcă de pe pagina înscrierii."
+      "helpMore": "Numerele se dau în ordinea confirmării și nu se dau de două ori. Foaia are două numere A5 pe o pagină A4; un singur număr se descarcă de pe pagina înscrierii.",
+      "memberLabelDefault": "Membru {club}",
+      "memberSampleAlt": "Numărul de concurs al unui membru, cu designul membrilor",
+      "memberSampleCaption": "Numărul membrilor, cum se tipărește. Pe foaia de acum: {count}.",
+      "memberUnverified": "Au cerut numărul de membru, dar adresa lor nu e a unui cont de membru: {count}. Li se tipărește numărul obișnuit; dacă sunt membri, adaugă-i în «Echipa» înainte de tipărire.",
+      "memberUnverifiedLink": "Vezi-i în listă"
     },
     "emergency": {
       "title": "Fișă de urgență — confidențial. Se distruge după eveniment.",
@@ -5505,6 +5534,7 @@
                 "Tipărește la mărimea reală (100%) și taie pe linie.",
                 "Numerele se dau în ordinea confirmării, de la «Numerele de concurs (BIB) încep de la». «Alocă numerele» e al Administratorului.",
                 "Rezervele pentru masă: «Retipărește rezervele libere (PDF)» le tipărește din nou pe cele încă nedate. Numere de rezervă noi pune doar Administratorul.",
+                "Numărul membrilor: cine a cerut «Vreau numărul de membru» și are adresa unui cont din «Echipa» primește banda și eticheta membrilor; numărul e același. «Vezi numerele» îi arată pe ceilalți.",
                 "Pe site, lista «Cine vine» arată coloana «BIB» după ce clubul aprobă nota de confidențialitate nouă. Înainte, Administratorul le scrie celor deja înscriși cu «Trimite un mesaj participanților»; cine nu vrea să apară apasă «Nu vreau să apar pe lista de participanți & rezultate» în «Înscrierile mele», iar numărul dispare odată cu numele. De la aprobare, coloana arată numărul fiecărui confirmat care are număr, oricare ar fi nota sub care s-a înscris; un confirmat fără număr are „—”."
               ]
             },
@@ -7303,7 +7333,9 @@
       "alreadyRegistered": "Pe această adresă e deja o înscriere cu acest nume: nu s-a înregistrat nimic. Adresa neconfirmată? Apasă linkul din emailul de confirmare și primești locul invitației.",
       "addressAtCap": "Adresa aceasta are deja numărul maxim de înscrieri la eveniment: nu s-a înregistrat nimic.",
       "notYou": "Nu te așteptai la această invitație? Ignor-o sau scrie-ne:"
-    }
+    },
+    "memberBibWanted": "Vreau numărul de membru",
+    "memberBibWantedHelp": "Același număr, în aceeași ordine; doar arată altfel. Clubul îl tipărește doar dacă adresa ta e a unui membru {club}."
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Îți putem trimite unul nou, pe aceeași adresă de email.",

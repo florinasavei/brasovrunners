@@ -22,6 +22,7 @@ export default function BibFooterTextField({
   label,
   placeholder,
   help,
+  countTestId = "bib-footer-text-count",
 }: {
   name: string;
   defaultValue: string;
@@ -29,6 +30,8 @@ export default function BibFooterTextField({
   label: string;
   placeholder: string;
   help: string;
+  /** The count's test id: the members' label (§NNN) uses this box too. */
+  countTestId?: string;
 }) {
   const [length, setLength] = useState(defaultValue.length);
   return (
@@ -43,7 +46,7 @@ export default function BibFooterTextField({
       helperText={
         <Box component="span" sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
           <span>{help}</span>
-          <Box component="span" sx={{ flexShrink: 0, fontVariantNumeric: "tabular-nums" }} data-testid="bib-footer-text-count">
+          <Box component="span" sx={{ flexShrink: 0, fontVariantNumeric: "tabular-nums" }} data-testid={countTestId}>
             {length}/{maxLength}
           </Box>
         </Box>

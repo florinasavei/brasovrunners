@@ -56,6 +56,11 @@ export type RegistrationEntryDetails = {
    * default of false, so "not supplied" means "leave it alone" rather than "clear it".
    */
   clubMemberDeclared?: boolean;
+  /**
+   * «Vreau numărul de membru» (§NNN), as kept: `service.ts` writes true only when the event's
+   * members' bib is on and the member tick is too. NOT NULL with a default of false, like the tick.
+   */
+  memberBibWanted?: boolean;
   tshirtSize?: RegistrationTshirtSize | null;
   healthNotes?: string | null;
   healthConsentVersion?: number | null;

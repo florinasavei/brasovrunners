@@ -111,6 +111,92 @@ const storedCrop = z
   .transform((crop) => meaningfulCrop(crop))
   .catch(null);
 
+/**
+ * The members' race number (§NNN; the owner, 2026-10-04: «I want BVR members to have an optional
+ * special BiBs, with a special design»).
+ *
+ * The same bib in every other way — the number from the same band in the same order (§173), the
+ * name, the number's size, the small print, the sponsors, the cut marks: the event's one design —
+ * with its own header and one short line on it. The header is a band colour or a stored picture
+ * with its crop, exactly the choices the main header offers (§249, §560); with neither, the event's
+ * band colour. The label is plain text like the footer's own line (§317), at most
+ * `BIB_MEMBER_LABEL_MAX` characters; empty prints the platform's words in the sheet's language
+ * («Membru {club}», `Admin.bibs.memberLabelDefault`).
+ *
+ * Who wears it is not decided here: a registration that asked for it and whose address is a member
+ * account's (`bibs.ts#listBibs`). Stored inside `events.bib_design`, so no migration; a design
+ * saved before this key existed reads as off and prints as it did.
+ */
+export const BIB_MEMBER_LABEL_MAX = 24;
+
+/** A colour for the members' header: a hex triplet, or null for "none of its own". */
+const memberColour = z
+  .string()
+  .trim()
+  .regex(/^#[0-9a-f]{6}$/i)
+  .transform((value) => value.toLowerCase())
+  .nullable()
+  .catch(null);
+
+export const bibMemberSchema = z
+  .object({
+    /** «Membrii primesc un număr cu design propriu». */
+    enabled: z.boolean().catch(false),
+    /** The members' band colour, or null for the event's. */
+    bandColour: memberColour,
+    /** A picture across the top instead of a band, one this site stored (§249). */
+    headerImageSrc: storedPicture,
+    /** Its crop in the header's shape (§560); none without a picture. */
+    headerImageCrop: storedCrop,
+    /** «Eticheta»: the short line on the member's band; empty is the platform's own words. */
+    label: z
+      .string()
+      .transform((value) => bibFooterText(value, BIB_MEMBER_LABEL_MAX))
+      .catch(""),
+  })
+  .strict()
+  // A crop belongs to its picture (§560), here as in the main header.
+  .transform((member) => ({ ...member, headerImageCrop: member.headerImageSrc ? member.headerImageCrop : null }));
+
+export type BibMemberDesign = z.infer<typeof bibMemberSchema>;
+
+export const DEFAULT_BIB_MEMBER_DESIGN: BibMemberDesign = {
+  enabled: false,
+  bandColour: null,
+  headerImageSrc: null,
+  headerImageCrop: null,
+  label: "",
+};
+
+/**
+ * The members' object as stored or posted, never a throw: only the keys this release knows are
+ * read (a later release's key is ignored, as `readBibDesign` does for the whole design, §317), each
+ * falls back on its own, and anything that is not an object reads as off.
+ */
+export function readBibMemberDesign(value: unknown): BibMemberDesign {
+  const stored: Record<string, unknown> = typeof value === "object" && value !== null && !Array.isArray(value) ? { ...value } : {};
+  const known = Object.fromEntries(Object.keys(DEFAULT_BIB_MEMBER_DESIGN).filter((key) => key in stored).map((key) => [key, stored[key]]));
+  const parsed = bibMemberSchema.safeParse({ ...DEFAULT_BIB_MEMBER_DESIGN, ...known });
+  return parsed.success ? parsed.data : DEFAULT_BIB_MEMBER_DESIGN;
+}
+
+/** Absent — every design saved before §NNN — or malformed, the members' bib is off. */
+const bibMemberSchemaWithDefault = z.unknown().optional().transform((value) => readBibMemberDesign(value));
+
+/** The line printed on a member's band: the club's, or the platform's words when it typed none. */
+export function bibMemberLabel(member: BibMemberDesign, fallback: string): string {
+  return member.label || bibFooterText(fallback, BIB_MEMBER_LABEL_MAX);
+}
+
+/**
+ * The band colour of a member's bib when no members' picture is drawn (§NNN): the members' own
+ * colour, else the event's band — never the event's picture, so a member's bib never passes for
+ * the ordinary one, and a members' picture that could not be fetched never fails the sheet.
+ */
+export function bibMemberBandColour(member: BibMemberDesign, eventColour: string | null | undefined): string {
+  return member.bandColour ?? bibBandColour(eventColour);
+}
+
 export const bibDesignSchema = z
   .object({
     showName: z.boolean().catch(true),
@@ -148,7 +234,9 @@ export const bibDesignSchema = z
      * A line of the club's own: plain text, one line, what the bib's font can draw, at most
      * `BIB_FOOTER_TEXT_MAX` characters — normalised rather than refused, like every field here.
      */
-    footerText: z.string().transform(bibFooterText).catch(""),
+    footerText: z.string().transform((value) => bibFooterText(value)).catch(""),
+    /** The members' race number (§NNN): off, or the members' own header and label. */
+    member: bibMemberSchemaWithDefault,
   })
   .strict()
   // A crop belongs to its picture: none without one (§560), whether saved or read.
@@ -177,6 +265,7 @@ export const DEFAULT_BIB_DESIGN: BibDesign = {
   showEventInFooter: false,
   showWebsite: false,
   footerText: "",
+  member: DEFAULT_BIB_MEMBER_DESIGN,
 };
 
 /**

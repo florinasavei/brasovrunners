@@ -22,7 +22,7 @@ import { buildListHref } from "@/modules/staff-identity/domain/admin-list-query"
  *
  * Pure, so the toggle and the allowlist are tested without a page.
  */
-export const SUMMARY_KEPT_KEYS = ["eventId", "clubMember", "bounced", "promo", "outside", "q", "sort", "dir", "perPage"] as const;
+export const SUMMARY_KEPT_KEYS = ["eventId", "clubMember", "bounced", "promo", "outside", "memberBib", "q", "sort", "dir", "perPage"] as const;
 
 /** The keys of the page's query a pill reads: the ones it keeps and `status`. */
 export type SummaryQuery = Partial<Record<(typeof SUMMARY_KEPT_KEYS)[number] | "status", string | undefined>> &

@@ -58,11 +58,16 @@ type Props = {
   /** The event whose editor this is: the gallery opens on «Acest eveniment». Null on the create page. */
   scope: PickerScope | null;
   labels: BibPictureLabels;
+  /**
+   * `member`: the members' header (§NNN) — the header's place and shape, under the members' own
+   * field names, so one control serves both headers and there is no second copy of it.
+   */
+  place?: "member";
 };
 
 /** The form's field names for a place: the picture's address, its crop, and what a refused save brings back. */
-export function bibPictureFieldNames(slot: BibPictureSlot) {
-  const key = slot === "header" ? "headerImage" : "sponsorImage";
+export function bibPictureFieldNames(slot: BibPictureSlot, place?: "member") {
+  const key = place === "member" ? "member.headerImage" : slot === "header" ? "headerImage" : "sponsorImage";
   return {
     src: `${BIB_DESIGN_FORM_PREFIX}${key}Src`,
     crop: `${BIB_DESIGN_FORM_PREFIX}${key}Crop`,
@@ -104,9 +109,9 @@ function recalledPicture(raw: string | undefined, src: string | undefined, fallb
   return fallback && fallback.src === src ? fallback : { ...EMPTY, src };
 }
 
-function PictureField({ slot, picture: initial, crop: initialCrop, scope, labels }: Props) {
+function PictureField({ slot, picture: initial, crop: initialCrop, scope, labels, place }: Props) {
   const recall = useRecall();
-  const names = bibPictureFieldNames(slot);
+  const names = bibPictureFieldNames(slot, place);
   const [picture, setPicture] = useState<BibPictureValue>(() => recalledPicture(recall.value(names.picture), recall.value(names.src), initial));
   const [crop, setCrop] = useState<ImageCrop | null>(() => {
     const recalled = recall.value(names.crop);
@@ -123,7 +128,7 @@ function PictureField({ slot, picture: initial, crop: initialCrop, scope, labels
   const cropInput = useRef<HTMLInputElement>(null);
   const first = useRef(true);
   const lang = typeof document === "undefined" ? "ro" : document.documentElement.lang || "ro";
-  const inputId = `bib-picture-${slot}`;
+  const inputId = place === "member" ? "bib-picture-member-header" : `bib-picture-${slot}`;
   const sized = picture.src !== "" && picture.width > 0 && picture.height > 0;
 
   // The preview listens to the form's `change` (`BibDesignPreview`); a hidden field set by React

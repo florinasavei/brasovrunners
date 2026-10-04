@@ -111,3 +111,40 @@ test.describe("§560 the sponsors' band: upload, crop, preview", () => {
     expect({ r: data[at] < 90, b: data[at + 2] > 180 }).toEqual({ r: true, b: true });
   });
 });
+
+/**
+ * §NNN — «Numărul membrilor»: the members' switch, colour and label redraw the members' own preview
+ * before anything is saved, and the preview's address asks for a member's bib (`member=1`). Nothing
+ * is saved, so the featured event the registration specs configure is left as it was.
+ */
+test.describe("§NNN the members' number, designed in the panel", () => {
+  test("the switch, the colour and the label redraw the members' preview", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    await page.reload();
+    await hydrated(page);
+    await openEditorBox(page, "Participare și înscrieri");
+    await openEditorBox(page, "Numere de concurs (BIB)");
+    await openFold(page.getByTestId("bib-design"));
+
+    const members = page.getByTestId("bib-design-member");
+    const preview = page.getByTestId("bib-design-preview-member").locator("img");
+    await expect(preview).toHaveAttribute("src", /[?&]member=1(&|$)/);
+
+    const enabled = members.getByRole("checkbox", { name: "Membrii primesc un număr cu design propriu" });
+    expect((await enabled.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await enabled.check();
+    await expect(preview).toHaveAttribute("src", /[?&]memberEnabled=1(&|$)/, { timeout: 10_000 });
+
+    await members.getByLabel("Culoarea benzii pentru membri").selectOption({ label: "Violet" });
+    await expect(preview).toHaveAttribute("src", /[?&]memberBandColour=%236a1b9a(&|$)/, { timeout: 10_000 });
+
+    await members.getByRole("textbox", { name: "Eticheta" }).fill("BVR");
+    await expect(page.getByTestId("bib-member-label-count")).toHaveText("3/24");
+    await expect(preview).toHaveAttribute("src", /[?&]memberLabel=BVR(&|$)/, { timeout: 10_000 });
+
+    const picture = await page.request.get((await preview.getAttribute("src")) as string);
+    expect(picture.status()).toBe(200);
+    expect(picture.headers()["content-type"]).toBe("image/png");
+  });
+});

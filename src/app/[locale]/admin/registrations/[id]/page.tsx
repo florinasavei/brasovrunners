@@ -45,6 +45,7 @@ import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
 import { isMinorOn } from "@/modules/registrations/domain/age";
 import { fieldId } from "@/shared/forms/outcome";
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
+import { memberBibOf } from "@/modules/registrations/domain/member-bib";
 import { canResendReminder, deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import { canTransition, isTerminalStatus } from "@/modules/registrations/domain/state-machine";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
@@ -136,6 +137,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   if (!registration) notFound();
   // «Membru (verificat)» / «Membru (declarat)» (§662), as on the list's row.
   const membership = membershipOf({ declared: registration.clubMemberDeclared, verified: registration.memberVerified });
+  // The members' race number (§NNN): «Număr de membru» when the row will print one, «cerut, neverificat» when it asked
+  // and its address is no member account's — the sheet then prints the ordinary bib.
+  const memberBib = memberBibOf({ offered: registration.eventOffersMemberBib, wanted: registration.memberBibWanted, verified: registration.memberVerified });
 
   const [acceptances, outboxHistory, auditTrail, freeBibs, minorSigns, family, partnerShares, invitedBy] = await Promise.all([
     listDeclarationAcceptances(db, id),
@@ -230,12 +234,16 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     value as the form renders it, and the same string in its `was.` twin.
   */
   const answers = query.answers === "1" ? await readRegistrationAnswers(db, actor, registration.id, new Date()) : null;
-  const answerFields = EDITABLE_ANSWERS.filter((field) => field !== "tshirtSize" || registration.eventKitShirt);
+  // «Vreau numărul de membru» (§NNN) only where the event offers it, or the row still says yes.
+  const answerFields = EDITABLE_ANSWERS.filter(
+    (field) => (field !== "tshirtSize" || registration.eventKitShirt) && (field !== "memberBibWanted" || registration.eventOffersMemberBib || registration.memberBibWanted),
+  );
   const answerLabels = Object.fromEntries(answerFields.map((field) => [field, tr(`registrations.answers.fields.${field}`, { club: CLUB_NAME })])) as Record<string, string>;
   const answerValues: Record<string, string> = answers
     ? Object.fromEntries(
         answerFields.map((field) => {
           if (field === "clubMemberDeclared") return [field, answers.clubMemberDeclared ? "on" : ""];
+          if (field === "memberBibWanted") return [field, answers.memberBibWanted ? "on" : ""];
           if (field === "sex") return [field, sexShown(answers.sex) ?? ""];
           if (field === "tshirtSize") return [field, answers.tshirtSize ?? "NONE"];
           return [field, (answers[field] as string | null) ?? ""];
@@ -262,7 +270,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   // The Organizer's read-only list (§289): each answer in words, «—» for none.
   const answerShown = (field: string): string => {
     const value = answerValues[field] ?? "";
-    if (field === "clubMemberDeclared") return value === "on" ? tr("registrations.answers.yes") : tr("registrations.answers.no");
+    if (field === "clubMemberDeclared" || field === "memberBibWanted") return value === "on" ? tr("registrations.answers.yes") : tr("registrations.answers.no");
     if (field === "sex") return value ? tr(`registrations.answers.sex.${value}`) : "";
     if (field === "tshirtSize") return value === "NONE" ? "" : value;
     if ((field === "nationality" || field === "country") && value) return countryName(value, locale);
@@ -849,6 +857,12 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                       ? tr("registrations.bibSettledPrinted", { number: registration.bibNumber })
                       : tr("registrations.bibSettled", { number: registration.bibNumber })}
                 </Typography>
+                {/* The members' race number (§NNN), beside the number: which bib the sheet prints for this row. */}
+                {memberBib && (
+                  <Typography variant="body2" color={memberBib === "printed" ? "text.primary" : "text.secondary"} data-testid="member-bib">
+                    {tr(`registrations.memberBib.${memberBib}`)}
+                  </Typography>
+                )}
                 {/* Replacing a number already emailed is the Administrator's (§548); filling a gap is any desk role's. */}
                 {registration.bibPrintedAt === null && (registration.bibNumber === null || mayManage) && (
                   /* The box spans the section. A refused number comes back in its box with the fold open (§315). */
@@ -1118,6 +1132,12 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   <CheckboxField name="clubMemberDeclared" defaultChecked={answers.clubMemberDeclared} help={tr("registrations.answers.memberHelp", { club: CLUB_NAME })}>
                     {answerLabels.clubMemberDeclared}
                   </CheckboxField>
+                  {/* «Vreau numărul de membru» (§NNN): the person's wish, corrected like the tick; kept only under it. */}
+                  {answerLabels.memberBibWanted && (
+                    <CheckboxField name="memberBibWanted" defaultChecked={answers.memberBibWanted} help={tr("registrations.answers.memberBibHelp")}>
+                      {answerLabels.memberBibWanted}
+                    </CheckboxField>
+                  )}
                   <Box>
                     <GlyphSubmitButton label={tr("registrations.answers.save")} pendingLabel={tr("registrations.answers.pending")} icon="save" variant="contained" />
                   </Box>

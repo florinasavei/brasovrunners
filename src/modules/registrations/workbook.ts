@@ -8,7 +8,7 @@ import { ageOnRaceDay } from "./domain/age";
 import { ROW_DEADLINE_EXPORT_WORDS, type RowDeadlineKind } from "./domain/row-deadline";
 import { shirtSizeShown } from "./domain/kit";
 import { raceNumberOf } from "./domain/race-number";
-import { membershipCell } from "./csv";
+import { memberBibExportCell, membershipCell } from "./csv";
 import { sexCell } from "./domain/sex";
 
 /**
@@ -168,6 +168,8 @@ const COLUMNS: Array<SheetColumn<RegistrationSheetRow>> = [
   { header: "Identity document", width: 18, cell: (row) => ({ value: row.idDocument, type: String }) },
   // Declared or verified (§662), as the list's chip: "verified", "declared" or blank.
   { header: "Club member", width: 12, cell: (row) => ({ value: membershipCell(row), type: String }) },
+  // Beside it (§NNN): the members' race number — "yes" when it prints, "asked" when the address is no member's, blank.
+  { header: "Member bib", width: 11, cell: (row) => ({ value: memberBibExportCell(row), type: String }) },
   { header: "Medically fit (declared)", width: 18, cell: (row) => ({ value: onClubClock(row.fitnessDeclaredAt), type: Date, format: STAMP_FORMAT }) },
   { header: "Guardian", width: 24, cell: (row) => ({ value: row.guardianName, type: String }) },
   // Beside the guardian's name (§330): a minor's declaration carries both documents.

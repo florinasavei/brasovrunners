@@ -37,12 +37,15 @@ export default function BibDesignPreview({
   locale,
   initialSrc,
   labels,
+  member = false,
 }: {
   eventId: string;
   locale: string;
   /** The address of the bib as stored, computed on the server. */
   initialSrc: string;
   labels: { alt: string; caption: string; pending: string };
+  /** A member's bib (§NNN): the same sample with the members' header and label. */
+  member?: boolean;
 }) {
   const root = useRef<HTMLElement>(null);
   const [src, setSrc] = useState(initialSrc);
@@ -66,6 +69,7 @@ export default function BibDesignPreview({
         number: get("event.bibStartNumber"),
         colour: get("event.bibColour"),
         design: readBibDesignForm(get),
+        member,
       });
       // The same address loads nothing, so nothing would ever say it arrived.
       if (next === shown.current) setPending(false);
@@ -87,10 +91,10 @@ export default function BibDesignPreview({
       form.removeEventListener("input", onChange);
       form.removeEventListener("change", onChange);
     };
-  }, [eventId, locale]);
+  }, [eventId, locale, member]);
 
   return (
-    <Box ref={root} component="figure" sx={{ m: 0, maxWidth: 320 }} data-testid="bib-design-preview" aria-busy={pending || undefined}>
+    <Box ref={root} component="figure" sx={{ m: 0, maxWidth: 320 }} data-testid={member ? "bib-design-preview-member" : "bib-design-preview"} aria-busy={pending || undefined}>
       {/* The paper's own proportion (A5, 990×700, §338) is declared, so the box keeps its height
           while a fresh picture is on its way and the panel below does not jump. No border and no
           rounded corner of its own: the picture draws the paper's edge itself (`bib-image.tsx`,

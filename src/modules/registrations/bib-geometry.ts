@@ -86,6 +86,18 @@ export const BIB_LAYOUT = {
   sponsorPicture: 24,
   /** The small print's strip for one line; every further line adds `BIB_FOOTER_LINE.lineHeight`. */
   footerHeight: 22,
+  /**
+   * The members' label (§NNN) — «Membru {club}» — on a member's header, at its right, under the race
+   * and its date: `memberLabelSize` points, centred in a tag `memberTagHeight` tall whose top is
+   * `memberTagTop` from the card's top, the text's right edge at the card's inset. On the members'
+   * picture the tag is filled (the members' colour, else the event's band) so the words read on any
+   * photograph, reaching `memberTagPad` past the text on each side; on a band it is the band itself.
+   * Both renderers place it at these points; the number and the name do not move.
+   */
+  memberLabelSize: 8,
+  memberTagTop: 45,
+  memberTagHeight: 13,
+  memberTagPad: 5,
 } as const;
 
 /**
