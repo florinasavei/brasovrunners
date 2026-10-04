@@ -8,6 +8,8 @@ import {
   bandTextColour,
   type BibDesign,
   bibBandColour,
+  bibMemberBandColour,
+  bibMemberLabel,
   bibPictureUrl,
   DEFAULT_BIB_DESIGN,
   numberScaleFactor,
@@ -88,7 +90,15 @@ type BibImageInput = {
    * none there (the band, no sponsors' strip), as the sheet does with a picture it could not fetch.
    * Absent, the design's own addresses are drawn as they are, with no size.
    */
-  pictures?: Partial<Record<BibPictureSlot, BibImagePicture | null>>;
+  pictures?: Partial<Record<BibPictureSlot | "memberHeader", BibImagePicture | null>>;
+  /**
+   * A member's bib (§NNN): the members' header — their picture, else their colour, else the event's
+   * band — and their label, over the same number, name and small print. Only while the design's
+   * members' switch is on.
+   */
+  member?: boolean;
+  /** The platform's words for the members' label when the club typed none («Membru {club}»), in the picture's language. */
+  memberLabelDefault?: string;
 };
 
 /** One picture as the renderer takes it: something `next/og` can load, and its size in pixels. */
@@ -100,11 +110,11 @@ export type BibImagePicture = { src: string; width: number; height: number };
  * fills it — the sheet draws the same numbers in points. With no crop, `object-fit` as before:
  * the header covers its strip, the sponsors' strip fits the whole picture.
  */
-function placedPicture(slot: BibPictureSlot, picture: BibImagePicture, design: BibDesign) {
+function placedPicture(slot: BibPictureSlot, picture: BibImagePicture, design: BibDesign, crop = slot === "header" ? design.headerImageCrop : design.sponsorImageCrop) {
   const { src } = picture;
   const size = picture.width > 0 && picture.height > 0 ? { width: picture.width, height: picture.height } : null;
   const box = { width: px(BIB_PICTURE_BOX[slot].width), height: px(BIB_PICTURE_BOX[slot].height) };
-  const drawing = bibPictureDrawing(slot, slot === "header" ? design.headerImageCrop : design.sponsorImageCrop, size, box);
+  const drawing = bibPictureDrawing(slot, crop, size, box);
   if (drawing.kind !== "crop") {
     // eslint-disable-next-line @next/next/no-img-element -- Satori draws it
     return <img src={src} alt="" width={box.width} height={box.height} style={{ flexShrink: 0, objectFit: drawing.kind === "cover" ? "cover" : "contain" }} />;
@@ -163,8 +173,11 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const digits = String(input.bibNumber);
   // The sheet's size in points, the club's scale included, then to pixels (§249).
   const numberSize = px(bibNumberPoints(digits, numberScaleFactor(design)));
-  const band = bibBandColour(input.bandColour);
+  // The members' header (§NNN) only while the switch is on; everything under it is the one design.
+  const asMember = input.member === true && design.member.enabled;
+  const band = asMember ? bibMemberBandColour(design.member, input.bandColour) : bibBandColour(input.bandColour);
   const bandText = bandTextColour(band);
+  const memberLabel = asMember ? bibMemberLabel(design.member, input.memberLabelDefault ?? "") : "";
   // A picture the club uploaded (§249): the one the route read (§560), or — when the caller read
   // none — the design's own address made absolute; the band when there is none.
   const pictureOf = (slot: BibPictureSlot, src: string | null): BibImagePicture | null => {
@@ -172,7 +185,16 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
     const address = bibPictureUrl(src, env.APP_BASE_URL);
     return address ? { src: address, width: 0, height: 0 } : null;
   };
-  const header = pictureOf("header", design.headerImageSrc);
+  // A member's bib draws the members' picture or none — never the event's (§NNN): its band instead.
+  const header = asMember
+    ? input.pictures
+      ? (input.pictures.memberHeader ?? null)
+      : (() => {
+          const address = bibPictureUrl(design.member.headerImageSrc, env.APP_BASE_URL);
+          return address ? { src: address, width: 0, height: 0 } : null;
+        })()
+    : pictureOf("header", design.headerImageSrc);
+  const headerCrop = asMember ? design.member.headerImageCrop : design.headerImageCrop;
   const sponsors = pictureOf("sponsors", design.sponsorImageSrc);
   // Told which header this picture draws, as the sheet is (§317).
   const footerLines = bibImageFooterLines(input, header !== null);
@@ -245,7 +267,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
             picture is two headers, and the club chose the picture. It covers the strip, centred,
             exactly as the sheet crops it — the club's crop when it drew one (§560). */}
         {header ? (
-          placedPicture("header", header, design)
+          placedPicture("header", header, design, headerCrop)
         ) : (
           <div
             style={{
@@ -311,6 +333,28 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
             )}
           </div>
         )}
+        {/* The members' label (§NNN), at the sheet's points (`BIB_LAYOUT.memberTag*`): absolute over
+            the header's right, a filled tag on the members' picture, the band itself on a band. */}
+        {memberLabel ? (
+          <div
+            style={{
+              display: "flex",
+              position: "absolute",
+              // From inside the paper's drawn edge, as Satori places an absolute box: less `PAPER_EDGE`.
+              top: px(BIB_MARGIN + L.memberTagTop) - PAPER_EDGE,
+              right: px(BIB_MARGIN + L.inset - L.memberTagPad) - PAPER_EDGE,
+              height: px(L.memberTagHeight),
+              alignItems: "center",
+              padding: `0 ${px(L.memberTagPad)}px`,
+              background: header ? band : "transparent",
+              color: bandText,
+              fontSize: px(L.memberLabelSize),
+              whiteSpace: "nowrap",
+            }}
+          >
+            {memberLabel}
+          </div>
+        ) : null}
         {design.namePosition === "above" ? name : null}
         {/* The number, centred on what the card has left, as the sheet centres it. */}
         <div

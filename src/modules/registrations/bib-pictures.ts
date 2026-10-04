@@ -106,13 +106,23 @@ async function loadOne(src: string | null, maxWidth: number): Promise<LoadedBibP
   }
 }
 
-/** Both places' pictures for a renderer, each `null` where there is none or it could not be read. */
+/**
+ * Both places' pictures for a renderer, each `null` where there is none or it could not be read —
+ * and the members' header (§NNN), read only when `members` says a member's bib will be drawn and the
+ * members' switch is on: a sheet of no member's bib fetches nothing more than before.
+ */
 export async function loadBibPictures(
-  design: { headerImageSrc: string | null; sponsorImageSrc: string | null },
+  design: { headerImageSrc: string | null; sponsorImageSrc: string | null; member?: { enabled: boolean; headerImageSrc: string | null } },
   maxWidth: number,
-): Promise<Record<BibPictureSlot, LoadedBibPicture | null>> {
-  const [header, sponsors] = await Promise.all([loadOne(design.headerImageSrc, maxWidth), loadOne(design.sponsorImageSrc, maxWidth)]);
-  return { header, sponsors };
+  members = false,
+): Promise<Record<BibPictureSlot | "memberHeader", LoadedBibPicture | null>> {
+  const memberSrc = members && design.member?.enabled ? design.member.headerImageSrc : null;
+  const [header, sponsors, memberHeader] = await Promise.all([
+    loadOne(design.headerImageSrc, maxWidth),
+    loadOne(design.sponsorImageSrc, maxWidth),
+    loadOne(memberSrc, maxWidth),
+  ]);
+  return { header, sponsors, memberHeader };
 }
 
 /** A loaded picture as `next/og` takes it: an inline PNG, with its size. */

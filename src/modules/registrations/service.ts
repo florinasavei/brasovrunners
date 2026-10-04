@@ -113,6 +113,8 @@ import * as repo from "./repository";
 import { findInvitationById, findLiveInvitationOfParticipant, findOpenInvitation, invitationOpen } from "./invitation-repository";
 import { confirmsInvitationRaises, INVITATION_BATCH_MAX, InvitationRefusal, invitationDeadline, invitationFreePlaces, invitationRaises, invitationState, validInvitationDays } from "./domain/invitations";
 import { waitlistRefusalOf } from "./domain/waitlist";
+import { memberBibKept } from "./domain/member-bib";
+import { readBibDesign } from "./bib-design";
 
 /**
  * The registration lifecycle (AGENTS.md §15.1-§15.7; BR-REQ-030/031/033/034/035/036).
@@ -1964,6 +1966,9 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     promoConsent,
     promoConsentAt: promoConsent ? now : null,
     clubMemberDeclared: input.clubMemberDeclared,
+    // «Vreau numărul de membru» (§NNN): only under the member tick; decided under the event's lock
+    // below, kept only while the event offers the members' bib. Always a boolean, so a restart rewrites it.
+    memberBibWanted: input.clubMemberDeclared && input.memberBibWanted,
     // As posted; decided under the event's lock below (§554): kept only when the event gives a shirt.
     tshirtSize: input.tshirtSize,
     healthNotes,
@@ -2043,6 +2048,16 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       Every door passes here: the public form, the family forms, a staff entry, the desk's walk-in.
     */
     details.tshirtSize = shirtSizeKept(locked.kitShirt, input.tshirtSize);
+    /*
+      The members' bib (§NNN), by the same rule off the same locked row: «Vreau numărul de membru»
+      is kept only while the event's bib design offers it and the member tick is on; a stale form
+      stores false, never refused. Every door passes here.
+    */
+    details.memberBibWanted = memberBibKept({
+      offered: readBibDesign(locked.bibDesign).member.enabled,
+      declared: details.clubMemberDeclared === true,
+      wanted: details.memberBibWanted === true,
+    });
     /*
       The health note (§557), by the same rule off the same locked row: kept only when the event
       asks it («Condiții de participare» → «Informații medicale»); otherwise a posted note is
@@ -4602,6 +4617,8 @@ export async function editRegistrationAnswersByStaff<T extends Record<string, un
       now,
       answersWrittenAt: current.answersWrittenAt,
       declarationSigned: signed !== undefined,
+      // The members' bib (§NNN), off the locked row.
+      memberBibOffered: readBibDesign(event.bibDesign).member.enabled,
     });
     if (plan.nameChange) {
       // Two people on one address are told apart by their names (§389): a corrected name that is another's here makes one of two.

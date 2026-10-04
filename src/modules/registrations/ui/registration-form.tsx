@@ -24,6 +24,7 @@ import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { fullThanksPhrase, waitlistOfferPhrase } from "@/modules/events/ui/counted-phrases";
 import { SHIRT_SIZES } from "@/modules/registrations/domain/kit";
+import { memberBibTickedAtFirst } from "@/modules/registrations/domain/member-bib";
 import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age";
 import { NO_WAITLIST, WAITLIST_FULL } from "@/modules/registrations/domain/waitlist";
 import { countryOptions } from "@/modules/registrations/countries";
@@ -297,7 +298,7 @@ export async function registrationForm({
   action,
   preview,
 }: RegistrationFormInput): Promise<ReactNode> {
-  const { event, hasRules, askShirt, askHealth, minAge } = view;
+  const { event, hasRules, askShirt, askHealth, askMemberBib, minAge } = view;
   const { termsVersion, refusalOn, listStatesOn, listSocialsOn, promoOn, promoShared, capMax, familyOpen } = settings;
   const siteKey = preview ? undefined : settings.siteKey;
   const { tooYoung, emergencySame, captchaFailed, tooFast, retry } = refusal;
@@ -851,6 +852,25 @@ export async function registrationForm({
                     somebody is selected for, and the tooltip says where the line is. */}
                 <Hint text={t("clubMemberHint")} />
               </CheckboxField>
+
+              {/* «Vreau numărul de membru» (§NNN), only while the event offers the members' bib:
+                  ticked to begin with — a refused press brings back an untick, a prefill never
+                  does (`memberBibTickedAtFirst`) — a member's own choice to say no. Under the member tick and
+                  meaningful only with it — the server stores false without it, whatever a form
+                  posts — and a wish, never a fact: the club prints the members' bib only for an
+                  address it knows as a member's. Without JavaScript it is an ordinary box. */}
+              {askMemberBib && (
+                <Box sx={{ pl: { xs: 3, sm: 4 } }}>
+                  <CheckboxField
+                    id={fieldId("memberBibWanted")}
+                    name="memberBibWanted"
+                    defaultChecked={memberBibTickedAtFirst(draft)}
+                    help={t("memberBibWantedHelp", { club: CLUB_NAME })}
+                  >
+                    {t("memberBibWanted")}
+                  </CheckboxField>
+                </Box>
+              )}
 
               {/* The T-shirt's size, only for an event that gives one (§554, «Kit de participare»):
                   otherwise no box at all, and the server stores NONE whatever a stale form posts. */}

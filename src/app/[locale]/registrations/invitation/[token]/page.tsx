@@ -18,6 +18,7 @@ import { findCurrentApprovedDocument } from "@/modules/legal-documents/repositor
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { datedOrNull } from "@/modules/events/domain/dated";
 import { ALREADY_ON_ADDRESS, ADDRESS_AT_CAP } from "@/modules/registrations/domain/family";
+import { invitationDraft } from "@/modules/registrations/domain/invitations";
 import { UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
 import { yearsPhrase } from "@/modules/registrations/domain/age";
 import { ERROR_SUMMARY_ID, parseInvalidFields } from "@/modules/registrations/form-errors";
@@ -145,16 +146,9 @@ export default async function InvitationPage({ params, searchParams }: Props) {
   const rejected = parseInvalidFields(fields);
   const invalid = new Set<string>(rejected);
   const tooYoung = markers.includes(UNDER_MINIMUM_AGE);
-  // What was typed before a refusal (§142); else the invitation's name, and «Sunt membru» for a member.
-  const words = link.name.split(" ");
-  const draft =
-    error !== undefined
-      ? await readFormDraft()
-      : {
-          firstName: words.length > 1 ? words.slice(0, -1).join(" ") : link.name,
-          lastName: words.length > 1 ? words[words.length - 1] : "",
-          ...(link.member ? { clubMemberDeclared: "on", clubName: CLUB_NAME } : {}),
-        };
+  // What was typed before a refusal (§142); else the invitation's name, and for a member «Sunt membru»
+  // with «Vreau numărul de membru» ticked (§NNN).
+  const draft = error !== undefined ? await readFormDraft() : invitationDraft(link, CLUB_NAME);
   const deadline = formatDay(link.expiresAt, { locale, timeZone: event.timezone, style: "long", month: "long", withTime: true, position: "inline" });
 
   return (

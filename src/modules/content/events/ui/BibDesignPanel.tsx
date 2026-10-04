@@ -10,11 +10,13 @@ import { shownContactAddressesOrDefault } from "@/modules/contact/shown-address"
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import { isStorageConfigured } from "@/modules/media/storage";
 import {
+  BIB_MEMBER_LABEL_MAX,
   BIB_NAME_POSITIONS,
   BIB_NUMBER_SCALES,
   type BibDesign,
   DEFAULT_BIB_DESIGN,
 } from "@/modules/registrations/bib-design";
+import { CLUB_NAME } from "@/theme/brand";
 import { bibPreviewUrl } from "@/modules/registrations/bib-design-query";
 import { BIB_FOOTER_TEXT_MAX, bibWebsiteHost } from "@/modules/registrations/bib-footer";
 import { BIB_PICTURE_RATIO, type BibPictureSlot } from "@/modules/registrations/bib-picture-frame";
@@ -24,6 +26,7 @@ import Panel from "@/shared/ui/Panel";
 import BibDesignPreview from "./BibDesignPreview";
 import BibPictureField, { type BibPictureLabels } from "./BibPictureField";
 import BibFooterTextField from "./BibFooterTextField";
+import { BIB_COLOURS } from "./bib-colours";
 
 /**
  * What a race number looks like, as the club decides it (`DECISIONS.md` §249; the owner: "I
@@ -53,6 +56,11 @@ import BibFooterTextField from "./BibFooterTextField";
  * the mailbox, the site's host — so the club is never switching on a word it cannot see. The
  * line's box is the panel's second island, for its character count; everything else posts
  * itself, and the preview above follows all of it through the same query-string mirror.
+ *
+ * **«Numărul membrilor» is the last group** (§NNN): the switch, the members' header — a colour or
+ * a picture through the same `BibPictureField` as the main header, under the members' field names —
+ * and «Eticheta», with a preview of a member's bib of its own. Everything else a member's bib
+ * prints is the design above; who gets one is the registration's tick and the club's member list.
  */
 export default async function BibDesignPanel({
   eventId,
@@ -78,6 +86,9 @@ export default async function BibDesignPanel({
   // The reader's own language, for the picture list's titles; the form has no locale prop.
   const locale = (await getLocale()) as Locale;
   const initialSrc = eventId ? bibPreviewUrl({ eventId, locale, number: String(bibStartNumber), colour: bibColour, design }) : null;
+  const memberSrc = eventId
+    ? bibPreviewUrl({ eventId, locale, number: String(bibStartNumber), colour: bibColour, design, member: true })
+    : null;
   /*
     The two stored pictures' facts — the asset, its small file, its size for the crop box (§560) —
     read here in one query; the gallery's list is asked for only when «Din galerie» opens (§485).
@@ -85,7 +96,7 @@ export default async function BibDesignPanel({
     Nothing is offered when there is no store configured — a local machine without R2.
   */
   const storage = isStorageConfigured();
-  const facts = storage ? await readBibPictureFacts(getDb(), [design.headerImageSrc, design.sponsorImageSrc]) : new Map<string, never>();
+  const facts = storage ? await readBibPictureFacts(getDb(), [design.headerImageSrc, design.sponsorImageSrc, design.member.headerImageSrc]) : new Map<string, never>();
   const rich = richTextEditorLabels(await getTranslations("Admin.richText"));
   const ratioWords = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 });
   // What the footer's two switches would print here: this deployment's own values, never a
@@ -114,14 +125,18 @@ export default async function BibDesignPanel({
     </CheckboxField>
   );
 
-  /** One picture place (§560): the stored picture and its crop, and the words of the control. */
-  const picture = (slot: BibPictureSlot) => {
+  /**
+   * One picture place (§560): the stored picture and its crop, and the words of the control. With
+   * `member`, the members' header (§NNN): the header's place and shape, the members' fields.
+   */
+  const picture = (slot: BibPictureSlot, place?: "member") => {
     const field = slot === "header" ? "headerImageSrc" : "sponsorImageSrc";
-    const src = design[field];
+    const src = place === "member" ? design.member.headerImageSrc : design[field];
     const stored = src ? facts.get(src) : undefined;
+    const crop = place === "member" ? design.member.headerImageCrop : design[slot === "header" ? "headerImageCrop" : "sponsorImageCrop"];
     const labels: BibPictureLabels = {
-      legend: t(`editor.bibDesign.${field}`),
-      help: t(`editor.bibDesign.${field}Help`),
+      legend: place === "member" ? t("editor.bibDesign.member.headerImageSrc") : t(`editor.bibDesign.${field}`),
+      help: place === "member" ? t("editor.bibDesign.member.headerImageSrcHelp") : t(`editor.bibDesign.${field}Help`),
       none: t("editor.bibDesign.noPicture"),
       choose: t("editor.bibDesign.picture.choose"),
       replace: t("editor.bibDesign.picture.replace"),
@@ -157,9 +172,10 @@ export default async function BibDesignPanel({
       <BibPictureField
         slot={slot}
         picture={stored ? { id: stored.id, src: stored.src, thumb: stored.thumb, width: stored.width, height: stored.height } : null}
-        crop={stored ? design[slot === "header" ? "headerImageCrop" : "sponsorImageCrop"] : null}
+        crop={stored ? crop : null}
         scope={eventId ? { kind: "event", id: eventId } : null}
         labels={labels}
+        place={place}
       />
     );
   };
@@ -257,6 +273,65 @@ export default async function BibDesignPanel({
               {footerSwitch("showWebsite", t("editor.bibDesign.footer.showWebsite"), siteHost)}
               {footerSwitch("showEmail", t("editor.bibDesign.footer.showEmail"), replyTo)}
             </Stack>
+          </Stack>
+        </Box>
+
+        {/* «Numărul membrilor» (§NNN): the members' own header and label; the rest is the design
+            above. The switch is what makes the form ask «Vreau numărul de membru». */}
+        <Box component="fieldset" sx={{ border: 0, p: 0, m: 0, minWidth: 0 }} data-testid="bib-design-member">
+          <Typography component="legend" variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+            {t("editor.bibDesign.member.title")}
+          </Typography>
+          <Stack spacing={1}>
+            <CheckboxField
+              name="event.bibDesign.member.enabled"
+              defaultChecked={design.member.enabled}
+              help={t("editor.bibDesign.member.enabledHelp", { club: CLUB_NAME })}
+            >
+              {t("editor.bibDesign.member.enabled")}
+            </CheckboxField>
+            {eventId && memberSrc && (
+              <BibDesignPreview
+                eventId={eventId}
+                locale={locale}
+                initialSrc={memberSrc}
+                member
+                labels={{
+                  alt: t("editor.bibDesign.member.previewAlt"),
+                  caption: t("editor.bibDesign.member.previewCaption"),
+                  pending: t("editor.bibDesign.previewPending"),
+                }}
+              />
+            )}
+            <RecallField
+              select
+              name="event.bibDesign.member.bandColour"
+              label={t("editor.bibDesign.member.bandColour")}
+              helperText={t("editor.bibDesign.member.bandColourHelp")}
+              defaultValue={design.member.bandColour ?? ""}
+              slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+              sx={{ width: { sm: 280 } }}
+            >
+              <option value="">{t("editor.bibDesign.member.eventColour")}</option>
+              {BIB_COLOURS.map((choice) => (
+                <option key={choice.hex} value={choice.hex}>
+                  {t(`editor.bibColours.${choice.key}`)}
+                </option>
+              ))}
+              {design.member.bandColour && !BIB_COLOURS.some((choice) => choice.hex === design.member.bandColour) && (
+                <option value={design.member.bandColour}>{design.member.bandColour}</option>
+              )}
+            </RecallField>
+            {storage && picture("header", "member")}
+            <BibFooterTextField
+              name="event.bibDesign.member.label"
+              defaultValue={design.member.label}
+              maxLength={BIB_MEMBER_LABEL_MAX}
+              label={t("editor.bibDesign.member.label")}
+              placeholder={t("bibs.memberLabelDefault", { club: CLUB_NAME })}
+              help={t("editor.bibDesign.member.labelHelp", { max: BIB_MEMBER_LABEL_MAX, club: CLUB_NAME })}
+              countTestId="bib-member-label-count"
+            />
           </Stack>
         </Box>
 

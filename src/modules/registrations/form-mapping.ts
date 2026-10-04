@@ -91,6 +91,7 @@ export function readRegistrationForm(
     clubName: optional(form, "clubName"),
     // BR-REQ-031-06 — a claim the club can see and correct, and that grants nothing.
     clubMemberDeclared: checked(form, "clubMemberDeclared"),
+    memberBibWanted: checked(form, "memberBibWanted"),
     guardianName: text(form, "guardianName"),
     stravaUrl: text(form, "stravaUrl"),
     instagramHandle: text(form, "instagramHandle"),

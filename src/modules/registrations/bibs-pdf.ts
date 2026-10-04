@@ -6,6 +6,8 @@ import {
   bandTextColour,
   type BibDesign,
   bibBandColour,
+  bibMemberBandColour,
+  bibMemberLabel,
   DEFAULT_BIB_DESIGN,
   numberScaleFactor,
 } from "./bib-design";
@@ -47,7 +49,15 @@ import type { BibRow } from "./bibs";
  * One bib to print: a number and the name under it, or — a desk spare (§444) — no name, which
  * prints an empty line where the name goes, for the marker at the desk.
  */
-export type BibSheetRow = { bibNumber: BibRow["bibNumber"]; registeredName: string | null };
+export type BibSheetRow = {
+  bibNumber: BibRow["bibNumber"];
+  registeredName: string | null;
+  /**
+   * A member's bib (§NNN): the members' header and label over the same number, name and small
+   * print. Drawn only while the design's members' switch is on; a spare is never a member's.
+   */
+  member?: boolean;
+};
 
 export type BibSheetInput = {
   rows: readonly BibSheetRow[];
@@ -75,7 +85,13 @@ export type BibSheetInput = {
    * caps their size and hands over what it got — `null` where it got nothing, which prints the
    * coloured band exactly as before (§249).
    */
-  pictures?: { header?: Buffer | null; sponsors?: Buffer | null };
+  pictures?: { header?: Buffer | null; sponsors?: Buffer | null; memberHeader?: Buffer | null };
+  /**
+   * The platform's words for the members' label when the club typed none (§NNN) — «Membru {club}» —
+   * in the sheet's language, from the caller's catalogue. Absent, a member's bib carries no label
+   * unless the club typed one.
+   */
+  memberLabelDefault?: string;
   /**
    * The small words under a desk spare's empty name line (§444) — «înscris la fața locului» — in
    * the sheet's language, from the caller's catalogue; absent, the line alone.
@@ -207,11 +223,11 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
    * crop exact — or, with none, the header covering its strip and the sponsors' picture fitted
    * whole, as every sheet printed before crops existed.
    */
-  const drawPicture = (slot: BibPictureSlot, picture: Buffer, x: number, y: number) => {
+  const drawPicture = (slot: BibPictureSlot, picture: Buffer, x: number, y: number, crop = slot === "header" ? design.headerImageCrop : design.sponsorImageCrop) => {
     const box = BIB_PICTURE_BOX[slot];
     const opened = picture as unknown as { width?: number; height?: number };
     const size = opened.width && opened.height ? { width: opened.width, height: opened.height } : null;
-    const drawing = bibPictureDrawing(slot, slot === "header" ? design.headerImageCrop : design.sponsorImageCrop, size);
+    const drawing = bibPictureDrawing(slot, crop, size);
     if (drawing.kind === "crop") {
       doc.save();
       doc.rect(x, y, box.width, box.height).clip();
@@ -227,8 +243,29 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   // The same on every bib of the sheet, so laid out once (§317), and told which header the sheet
   // really draws. A second line takes its height from the number's area, never from the small
   // print's size.
-  const footerLines = bibSheetFooterLines(input, headerPicture !== null);
-  const footerHeight = L.footerHeight + Math.max(0, footerLines.length - 1) * BIB_SHEET_FOOTER.lineHeight;
+  const footerFor = (pictureDrawn: boolean) => {
+    const lines = bibSheetFooterLines(input, pictureDrawn);
+    return { lines, height: L.footerHeight + Math.max(0, lines.length - 1) * BIB_SHEET_FOOTER.lineHeight };
+  };
+  /*
+    The two headers a sheet may draw (§NNN): the event's, and — while the members' switch is on — the
+    members'. Each with the small print laid out for it, since the footer prints the race's title and
+    date only when the header drawn does not (§317); the design of the small print is the one design.
+    A members' picture that could not be fetched draws the members' colour, else the event's band —
+    never a failed sheet, and never the event's own picture, which would hide whose bib it is.
+  */
+  const eventHeader = { picture: headerPicture, crop: design.headerImageCrop, band, bandText, label: null as string | null, footer: footerFor(headerPicture !== null) };
+  const memberPicture = design.member.enabled && input.pictures?.memberHeader ? embed(input.pictures.memberHeader) : null;
+  const memberBand = bibMemberBandColour(design.member, input.bandColour);
+  const memberLabel = bibMemberLabel(design.member, input.memberLabelDefault ?? "");
+  const memberHeader = {
+    picture: memberPicture,
+    crop: design.member.headerImageCrop,
+    band: memberBand,
+    bandText: bandTextColour(memberBand),
+    label: memberLabel || null,
+    footer: footerFor(memberPicture !== null),
+  };
 
   const chunks: Buffer[] = [];
   doc.on("data", (chunk: Buffer) => chunks.push(chunk));
@@ -242,6 +279,10 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     const left = slot.x + BIB_MARGIN;
     const top = slot.y + BIB_MARGIN;
     const bottom = top + BIB_CARD.height;
+    // The members' header only while the switch is on (§NNN); everything under it is the one design.
+    const header = row.member === true && design.member.enabled ? memberHeader : eventHeader;
+    const footerLines = header.footer.lines;
+    const footerHeight = header.footer.height;
 
     /*
       The club's own picture across the top (§249), or the coloured band with the lockup and the
@@ -249,12 +290,12 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       and it is drawn to cover the strip, so a photograph of any proportion fills it without
       being squashed: the club's crop in the strip's 9.02:1 (§560), or centred and cut to it.
     */
-    if (headerPicture) {
-      drawPicture("header", headerPicture, left, top);
+    if (header.picture) {
+      drawPicture("header", header.picture, left, top, header.crop);
     } else {
       // The band first, across the card: it is what says which race this is before anybody is
       // close enough to read a word of it.
-      doc.rect(left, top, BIB_CARD.width, L.bandHeight).fill(band);
+      doc.rect(left, top, BIB_CARD.width, L.bandHeight).fill(header.band);
 
       // The lockup at the left of the band, white on whatever colour the band is; the race and
       // its date at the right, in whichever of white and ink can be read on it.
@@ -267,14 +308,14 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
         doc
           .font("bold")
           .fontSize(L.titleSize)
-          .fillColor(bandText)
+          .fillColor(header.bandText)
           .text(input.eventTitle, headerLeft, top + L.titleTop, { width: headerWidth, align: "right", lineBreak: false, ellipsis: true });
       }
       if (design.showDate) {
         doc
           .font("body")
           .fontSize(L.dateSize)
-          .fillColor(bandText)
+          .fillColor(header.bandText)
           .text(input.eventDate, headerLeft, top + (design.showEventTitle ? L.dateTop : L.dateTopAlone), {
             width: headerWidth,
             align: "right",
@@ -282,6 +323,25 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
             ellipsis: true,
           });
       }
+    }
+
+    /*
+      The members' label (§NNN), small, at the header's right under the race and its date
+      (`BIB_LAYOUT.memberTag*`): on the members' picture a tag of the members' colour (else the event's
+      band) behind it, so it reads on any photograph; on a band, the band. The text is drawn without a
+      width, right-aligned by hand at the card's inset, so pdfkit cannot wrap it (§317's lesson).
+    */
+    if (header.label) {
+      doc.font("body").fontSize(L.memberLabelSize);
+      const labelWidth = doc.widthOfString(header.label);
+      const labelHeight = doc.heightOfString(header.label, { lineBreak: false });
+      const right = left + BIB_CARD.width - L.inset;
+      if (header.picture) {
+        doc.rect(right - labelWidth - L.memberTagPad, top + L.memberTagTop, labelWidth + 2 * L.memberTagPad, L.memberTagHeight).fill(header.band);
+      }
+      doc
+        .fillColor(header.bandText)
+        .text(header.label, right - labelWidth, top + L.memberTagTop + (L.memberTagHeight - labelHeight) / 2, { lineBreak: false });
     }
 
     /*

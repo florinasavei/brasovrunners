@@ -5,11 +5,12 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
-import { Link } from "@/i18n/navigation";
+import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventForEditing } from "@/modules/content/events/repository";
 import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
-import { findEventForBibs, listBibs } from "@/modules/registrations/bibs";
+import { bibPreviewUrl } from "@/modules/registrations/bib-design-query";
+import { countUnverifiedMemberBibs, findEventForBibs, listBibs } from "@/modules/registrations/bibs";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isUuid } from "@/shared/ids";
@@ -42,6 +43,19 @@ export default async function EventBibsPage({ params }: Props) {
   const event = await findEventForBibs(db, id, locale);
   const bibs = await listBibs(db, id);
   const t = await getTranslations("Admin");
+  /*
+    The members' race number (§NNN), while the event's switch is on: a sample of the members' bib
+    beside the grid's (whose own pictures draw each member's bib as it prints), and one line for the
+    rows that asked and will print the ordinary bib — their address is no member account's — with the
+    list of them, so an Administrator adds the members on «Echipa» before printing.
+  */
+  const memberBibOn = event?.design.member.enabled === true;
+  const unverifiedMemberBibs = memberBibOn ? await countUnverifiedMemberBibs(db, id) : 0;
+  const memberSample =
+    memberBibOn && event
+      ? bibPreviewUrl({ eventId: id, locale, number: String(event.bibStartNumber), colour: event.bibColour, design: event.design, member: true })
+      : null;
+  const unverifiedHref = `${getPathname({ locale, href: "/admin/registrations" })}?${new URLSearchParams({ eventId: id, status: "CONFIRMED", memberBib: "asked" }).toString()}`;
 
   return (
     <Stack spacing={2}>
@@ -73,6 +87,30 @@ export default async function EventBibsPage({ params }: Props) {
           </GlyphButton>
         </Box>
       )}
+      {memberSample && (
+        <Box component="figure" sx={{ m: 0, maxWidth: 320 }} data-testid="bibs-member-sample">
+          <Box
+            component="img"
+            src={memberSample}
+            alt={t("bibs.memberSampleAlt")}
+            width={BIB_IMAGE.width}
+            height={BIB_IMAGE.height}
+            loading="lazy"
+            sx={{ width: "100%", height: "auto", display: "block" }}
+          />
+          <Typography component="figcaption" variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+            {t("bibs.memberSampleCaption", { count: bibs.filter((bib) => bib.member).length })}
+          </Typography>
+        </Box>
+      )}
+      {unverifiedMemberBibs > 0 && (
+        <Typography variant="body2" data-testid="bibs-member-unverified">
+          {t("bibs.memberUnverified", { count: unverifiedMemberBibs })}{" "}
+          <Box component="a" href={unverifiedHref} sx={{ color: "primary.main", display: "inline-flex", alignItems: "center", minHeight: 44 }}>
+            {t("bibs.memberUnverifiedLink")}
+          </Box>
+        </Typography>
+      )}
       {bibs.length === 0 ? (
         <Typography color="text.secondary">
           {t("bibs.helpNone")}
@@ -94,10 +132,12 @@ export default async function EventBibsPage({ params }: Props) {
             <Box component="li" key={bib.id}>
               {/* No rounded corner: the picture draws the paper's edge itself (A5 bibs, §338), and
                   a radius here clipped that edge's corners — as the editor preview and the desk row
-                  no longer do either. */}
+                  no longer do either. `m=1` is read by nobody: the route answers a row's picture
+                  with an hour's cache, and a member added on «Echipa» must change the address the
+                  grid asks, or it shows the ordinary bib the sheet no longer prints (§NNN). */}
               <Box
                 component="img"
-                src={`/api/admin/events/${id}/bibs/preview?registration=${bib.id}&locale=${locale}`}
+                src={`/api/admin/events/${id}/bibs/preview?registration=${bib.id}&locale=${locale}${bib.member ? "&m=1" : ""}`}
                 alt={t("bibs.previewAlt", { number: bib.bibNumber, name: bib.registeredName })}
                 width={BIB_IMAGE.width}
                 height={BIB_IMAGE.height}
