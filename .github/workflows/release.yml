@@ -38,6 +38,11 @@ name: release
 #     tested, the `qa` run `ship` waits for would never start, and `migrate.yml` would never run;
 #   - the variable `SHIP_PRODUCTION_URL`: production's origin, which `ship` asks for its health;
 #   - the label `ship`.
+#
+# The closing comment and the label's removal use the job's own token instead (§NNN): on
+# 2026-10-03 both were refused to the personal token, and the label that stayed on could start
+# nothing when added again. A comment or a label changed by GitHub's token starts no workflow,
+# which is right — only a person adding the label starts a release.
 
 on:
   workflow_dispatch:
@@ -59,9 +64,12 @@ on:
   pull_request:
     types: [labeled]
 
-# The job reads with its own token and writes only through SHIP_TOKEN.
+# The job reads with its own token, and with it writes only the closing comment and takes the
+# label off (§NNN); every push, merge and approval goes through SHIP_TOKEN.
 permissions:
   contents: read
+  pull-requests: write
+  issues: write
 
 jobs:
   ship:
@@ -358,15 +366,26 @@ jobs:
       - name: Say so on the pull request
         if: always() && steps.pr.outputs.state != '' && env.DRY_RUN != 'true'
         env:
+          # The job's own token, not SHIP_TOKEN: a comment and a label are the pull request's, and
+          # what GitHub's token does there starts no workflow (§NNN).
+          GH_TOKEN: ${{ github.token }}
           OUTCOME: ${{ job.status }}
           TO: ${{ steps.land.outputs.to }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           LABELLED: ${{ github.event_name == 'pull_request' }}
+          TIMES: ${{ runner.temp }}/ship-times.jsonl
         run: |
           if [ "$OUTCOME" = "success" ]; then
             gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body "Released ${TO:-the release}: production reports it. $RUN_URL" || true
           else
-            gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body "The release stopped ($OUTCOME) — the run's summary page says where and why: $RUN_URL. Fix it, then add the label ship again (or run the release workflow)." || true
-            # The label comes off, so adding it again starts the release again.
-            [ "$LABELLED" = "true" ] && gh pr edit "$PR" --repo "$GITHUB_REPOSITORY" --remove-label ship || true
+            # Ship's STOP, when it stopped there: its first line is the times file's last outcome,
+            # which says whether production did not answer or answered with another build.
+            why=""
+            if [ -s "$TIMES" ]; then
+              why=$(tail -n 1 "$TIMES" | jq -r '.outcome // empty' 2> /dev/null | head -c 600 || true)
+            fi
+            gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body "The release stopped ($OUTCOME)${why:+ — ship: $why} — the run's summary page says where and why: $RUN_URL. Fix it, then add the label ship again (or run the release workflow)." || true
+            # The label comes off, so adding it again starts the release again. The REST call, not
+            # `gh pr edit`, which also reads the pull request's projects — more than this token may.
+            [ "$LABELLED" = "true" ] && gh api -X DELETE "repos/$GITHUB_REPOSITORY/issues/$PR/labels/ship" > /dev/null || true
           fi

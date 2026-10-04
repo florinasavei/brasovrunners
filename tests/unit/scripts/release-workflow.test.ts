@@ -75,8 +75,9 @@ describe("§535 release.yml — the dry run and the summary page", () => {
 
 describe("§535 release.yml — the token and what a person typed", () => {
   it("reads with its own token and writes only through SHIP_TOKEN, which it refuses to run without", () => {
-    expect(workflow).toMatch(/\npermissions:\n {2}contents: read\n/);
-    expect(workflow).not.toMatch(/: write\b/);
+    expect(workflow).toMatch(/\npermissions:\n {2}contents: read\n {2}pull-requests: write\n {2}issues: write\n(?!\s{2}\S)/);
+    // Contents stay read: every push, merge and approval goes through SHIP_TOKEN (§NNN).
+    expect(workflow).not.toMatch(/contents: write|actions: write|deployments: write/);
     expect(workflow).toContain("GH_TOKEN: ${{ secrets.SHIP_TOKEN }}");
     expect(workflow).toMatch(/uses: actions\/checkout@v4\n {8}with:\n(?: {10}.*\n)*? {10}token: \$\{\{ secrets\.SHIP_TOKEN \}\}\n/);
     expect(steps).toContain('[ -n "$GH_TOKEN" ] || missing="$missing the secret SHIP_TOKEN;"');
@@ -151,6 +152,17 @@ describe("§535 release.yml — the same tools as the PC, in order", () => {
 
   it("says the outcome on the pull request and takes the label off a stopped release", () => {
     expect(steps).toContain("if: always() && steps.pr.outputs.state != ''");
-    expect(steps).toContain("--remove-label ship");
+    expect(steps).toContain('gh api -X DELETE "repos/$GITHUB_REPOSITORY/issues/$PR/labels/ship"');
+  });
+
+  it("comments and takes the label off with the job's own token, saying why ship stopped (§NNN)", () => {
+    const say = steps.slice(steps.indexOf("- name: Say so on the pull request"));
+    expect(say).toMatch(/\n {8}env:\n(?: {10}.*\n)*? {10}GH_TOKEN: \$\{\{ github\.token \}\}\n/);
+    expect(say).toContain("TIMES: ${{ runner.temp }}/ship-times.jsonl");
+    expect(say).toContain(`jq -r '.outcome // empty'`);
+    expect(say).toContain("${why:+ — ship: $why}");
+    // Only this step uses the job's token; every step before it pushes, merges and approves with SHIP_TOKEN.
+    expect(workflow.match(/github\.token/g)).toHaveLength(1);
+    expect(steps.slice(0, steps.indexOf("- name: Say so on the pull request"))).not.toContain("github.token");
   });
 });

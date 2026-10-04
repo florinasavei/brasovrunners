@@ -591,8 +591,26 @@ carries a newer baseline than `qa`'s) ships as it is.
    pushed to the branch, then runs `yarn ship`: the pull request's checks on the landed tree, the
    merge into `qa`, `qa`'s run, the `qa → main` release PR, the production migration approved,
    and production's `/api/health` reporting the new baseline. About an hour.
-3. It ends with a comment on the pull request: "Released BR-V2.NN…" or "The release stopped".
-   The run's **Summary** page says, in a table, each step's outcome and ship's minutes.
+3. It ends with a comment on the pull request: "Released BR-V2.NN…" or "The release stopped",
+   followed, when ship itself stopped, by ship's reason. The run's **Summary** page says, in a
+   table, each step's outcome and ship's minutes. The comment and the label's removal are made
+   with the run's own token, so a stopped release always loses its label and the label can be
+   ticked again (`DECISIONS.md` §NNN).
+
+While ship waits for production — first for the baseline production runs, at the end for the new
+one — its log says what production answers every two minutes, one of three lines:
+
+- **«no answer for 12 min: TypeError fetch failed — ENOTFOUND …: a name or network failure»** —
+  production does not answer at all: its name does not resolve, the connection is refused, or the
+  certificate fails. It is not the release: follow § The domain stops answering.
+- **«production answers with BR-V2.64-…; waiting for BR-V2.65-…»** — the site is up and runs
+  another build. At the end of a release that means the new deployment is slow or failed: open
+  Vercel → the production project → **Deployments** and look at the newest one.
+- **«production answers but its body carries no baseline»** — something answers that is not the
+  application: a parking or hold page, a proxy's error, an empty body. Treat it like no answer.
+
+After an hour (at the start) or twenty minutes (at the end) ship stops with the same words after
+«STOP:»; the comment on the pull request carries them too.
 
 If the pull request shows **«This branch has conflicts»**, the label starts nothing — GitHub runs
 no `pull_request` workflow while a branch cannot merge into its base, and no run, no summary and
@@ -634,6 +652,10 @@ The run's **Summary** says where, in words:
 - A stop inside **Ship** (a red check, a migration that failed): the table's last line names the
   step. If the pull request already merged into `qa`, running **release** again with its number
   continues from there — a merged pull request ships `qa` as it is.
+- **"production never reported …"** or **"production did not report … in time"**: the words after
+  it say which case (above, under § Every release): no answer → § The domain stops answering;
+  another build → Vercel's production deployment. Once production answers with the expected
+  build, tick **ship** again — the label came off at the stop.
 
 Never push to `qa` or `main` by hand from the phone: the release PR and the production migration
 are the run's to open, merge and approve.

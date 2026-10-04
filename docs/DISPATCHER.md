@@ -186,6 +186,14 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
   PR only once that run is green, so the release PR's run finds the tree tested and skips; at
   the end, and at any stop, it prints each step's m:ss and appends one JSON line to
   `SHIP_TIMES_FILE` (§504).
+- **Production's waits** (step 1, the previous baseline; step 7, the new one) print what production
+  answers on the first reading and then every two minutes (§NNN): «no answer for N min: <the fetch
+  error>» → the site does not answer at all, `docs/RUNBOOKS.md` § The domain stops answering;
+  «production answers with <baseline>; waiting for <baseline>» → another build is live, check
+  Vercel's production deployment; «production answers but its body carries no baseline» → a page
+  that is not the application, treat it as no answer. The STOP names the case in the same words,
+  and so do the times file's `outcome`, the summary page and the release workflow's comment. After
+  a STOP on the phone the label came off; tick **ship** again once production answers.
 
 ### Cloud loop
 

@@ -1,7 +1,16 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { bucketOf, judgeChecks, mergePullRequest, waitForSettledChecks } from "../../../scripts/ship-checks.mjs";
+import {
+  bucketOf,
+  describeFetchError,
+  judgeChecks,
+  judgeProductionReading,
+  mergePullRequest,
+  productionLine,
+  waitForProduction,
+  waitForSettledChecks,
+} from "../../../scripts/ship-checks.mjs";
 
 /**
  * §426 — `yarn ship` judges a pull request's checks only once none is pending and the same set
@@ -147,5 +156,100 @@ describe("§520 ship: a merge judged by the PR's state", () => {
     expect(ship).toContain("await merge(PR);");
     expect(ship).toContain("await merge(release);");
     expect(ship).not.toMatch(/gh\("pr", "merge"/);
+  });
+});
+
+/**
+ * §NNN — a production wait says what it sees. On 2026-10-03 the step waited an hour while the
+ * domain did not resolve, and printed the same two lines it would have printed had production
+ * answered with another build.
+ */
+describe("§NNN ship: one production reading, judged", () => {
+  const NEW = "BR-V9.41-2031-01-02";
+  const OLD = "BR-V9.40-2031-01-01";
+  const notFound = Object.assign(new TypeError("fetch failed"), { cause: { code: "ENOTFOUND", hostname: "production.example.org" } });
+
+  it("is no answer on a fetch error, naming the cause and the runbook", () => {
+    const judged = judgeProductionReading({ body: "", error: notFound }, NEW);
+    expect(judged).toEqual({ kind: "no-answer", detail: "TypeError fetch failed — ENOTFOUND production.example.org: a name or network failure" });
+    expect(productionLine(judged, { waitingFor: NEW, silentMs: 12 * 60_000 + 5_000 })).toBe(
+      "no answer for 12 min: TypeError fetch failed — ENOTFOUND production.example.org: a name or network failure; docs/RUNBOOKS.md § The domain stops answering",
+    );
+    expect(productionLine(judged, { waitingFor: NEW })).toMatch(/^no answer: TypeError/);
+    const timeout = Object.assign(new Error("The operation was aborted due to timeout"), { name: "TimeoutError" });
+    expect(describeFetchError(timeout)).toBe("TimeoutError The operation was aborted due to timeout: no answer within the request's time");
+  });
+
+  it("is another build when the body carries another baseline", () => {
+    const judged = judgeProductionReading({ body: JSON.stringify({ status: "ok", baseline: OLD }), status: 200 }, NEW);
+    expect(judged).toEqual({ kind: "other-build", detail: OLD });
+    expect(productionLine(judged, { waitingFor: NEW })).toBe(`production answers with ${OLD}; waiting for ${NEW}`);
+  });
+
+  it("is expected on the awaited baseline, or on any of several", () => {
+    const body = JSON.stringify({ status: "ok", baseline: NEW });
+    expect(judgeProductionReading({ body, status: 200 }, NEW)).toEqual({ kind: "expected", detail: NEW });
+    expect(judgeProductionReading({ body, status: 200 }, [OLD, NEW]).kind).toBe("expected");
+  });
+
+  it("is unreadable on an HTML page or an empty body", () => {
+    const html = judgeProductionReading({ body: "<!doctype html><title>Domain on hold</title>", status: 200 }, NEW);
+    expect(html).toEqual({ kind: "unreadable", detail: "HTTP 200, no baseline in the body" });
+    expect(productionLine(html, { waitingFor: NEW })).toBe("production answers but its body carries no baseline (HTTP 200, no baseline in the body)");
+    expect(judgeProductionReading({ body: "", status: 502 }, NEW)).toEqual({ kind: "unreadable", detail: "HTTP 502, an empty body" });
+  });
+});
+
+describe("§NNN ship: a production wait prints what it sees, every two minutes", () => {
+  it("prints on the first reading and then every two minutes, not on every poll, and names the case at the end", async () => {
+    let t = 0;
+    const lines: string[] = [];
+    const error = Object.assign(new TypeError("fetch failed"), { cause: { code: "ENOTFOUND", hostname: "production.example.org" } });
+    const waited = await waitForProduction(async () => ({ body: "", error }), "BR-V9.41-2031-01-02", {
+      sleep: async (seconds: number) => {
+        t += seconds * 1000;
+      },
+      now: () => t,
+      every: 30,
+      polls: 20, // ten minutes
+      onReport: (line: string) => lines.push(line),
+    });
+    expect(waited.status).toBe("timeout");
+    expect(lines).toHaveLength(5); // 0, 2, 4, 6 and 8 minutes
+    expect(lines[0]).toMatch(/^no answer: /);
+    expect(lines[1]).toMatch(/^no answer for 2 min: /);
+    expect((waited as { line?: string }).line).toMatch(/^no answer for 9 min: .*ENOTFOUND.*§ The domain stops answering$/);
+  });
+
+  it("returns the body as soon as production reports the baseline, and says which build answered before", async () => {
+    let t = 0;
+    const readings = [
+      { body: "", error: new TypeError("fetch failed") },
+      { body: '{"baseline":"BR-V9.40-2031-01-01"}', status: 200 },
+      { body: '{"status":"ok","baseline":"BR-V9.41-2031-01-02"}', status: 200 },
+    ];
+    let i = 0;
+    const lines: string[] = [];
+    const waited = await waitForProduction(async () => readings[i++], "BR-V9.41-2031-01-02", {
+      sleep: async (seconds: number) => {
+        t += seconds * 1000;
+      },
+      now: () => t,
+      every: 60,
+      polls: 10,
+      reportEvery: 60,
+      onReport: (line: string) => lines.push(line),
+    });
+    expect(waited).toMatchObject({ status: "expected", body: '{"status":"ok","baseline":"BR-V9.41-2031-01-02"}' });
+    expect(lines).toEqual([expect.stringMatching(/^no answer: TypeError fetch failed: no answer;/), "production answers with BR-V9.40-2031-01-01; waiting for BR-V9.41-2031-01-02"]);
+  });
+
+  it("is what ship's both production waits use, with health returning the body or the error", () => {
+    const ship = readFileSync(path.join(process.cwd(), "scripts/ship.mjs"), "utf8");
+    expect(ship).toContain("productionReports([PREV, NEW], 30, 120)");
+    expect(ship).toContain("productionReports(NEW, 20, 60)");
+    expect(ship).toContain('return { body: "", error };');
+    expect(ship).not.toMatch(/async function until\(/);
+    expect(ship).toContain('console.log(`production: ${report.match(/"status":"[a-z]+"/)?.[0] ?? "?"} ${NEW}`);');
   });
 });

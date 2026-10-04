@@ -1678,10 +1678,12 @@ of the `production` environment):
 2. **Token name** `brasovrunners ship`; **Expiration** a date after you are back (at most a year);
    **Resource owner** you; **Repository access** → **Only select repositories** → this repository.
 3. **Repository permissions** — each **Read and write**: **Contents**, **Pull requests**,
-   **Issues** (the comment and the label on the pull request), **Actions**, **Deployments**
-   (approving the gated `production` migration run), **Workflows** (a landing that merges `qa`
-   in carries `qa`'s workflow changes, and GitHub refuses that push without it). **Metadata** is
-   read-only and set by itself. Nothing else.
+   **Actions**, **Deployments** (approving the gated `production` migration run), **Workflows**
+   (a landing that merges `qa` in carries `qa`'s workflow changes, and GitHub refuses that push
+   without it). **Metadata** is read-only and set by itself. Nothing else. **Issues** is no
+   longer needed (`DECISIONS.md` §NNN): the closing comment and the removal of the `ship` label
+   are made with the run's own token, which the workflow grants itself, so a token without it
+   loses nothing and an existing token that has it may keep it.
 4. **Generate token**, copy it once.
 5. The repository → **Settings** → **Secrets and variables** → **Actions** → **Secrets** →
    **New repository secret** → Name `SHIP_TOKEN`, Secret the token → **Add secret**.
