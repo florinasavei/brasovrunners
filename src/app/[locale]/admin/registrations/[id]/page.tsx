@@ -88,6 +88,8 @@ import GivePlaceButton from "@/modules/registrations/ui/GivePlaceButton";
 import PaperConfirmationTip from "@/modules/registrations/ui/PaperConfirmationTip";
 import OfferPlaceButton from "@/modules/registrations/ui/OfferPlaceButton";
 import WhatToTell from "@/modules/registrations/ui/WhatToTell";
+import EmailRejectedChip from "@/modules/registrations/ui/EmailRejectedChip";
+import { rejectedEmailSentences, rejectedEmailWords } from "@/modules/registrations/ui/rejected-email-words";
 import { whatToTell } from "@/modules/registrations/ui/tell-words";
 import { givePlaceNowAhead, staffOfferIfMadeNow, staffOfferQuestion } from "@/modules/registrations/give-place-tip";
 import { findInvitationOfRegistration, findLiveInvitationOfParticipant } from "@/modules/registrations/invitation-repository";
@@ -187,6 +189,10 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const offerForecast = registration.status === "WAITLISTED" && mayManage ? await staffOfferIfMadeNow(registration.eventId, locale) : null;
   // The timeline's short form with the time (§349): a value beside its label, so capitalised;
   // `dtInline` inside a sentence.
+  // «Email respins» in words (§NNN): the chip's tooltip and the line under the address say the same.
+  const rejected = registration.emailRejected
+    ? rejectedEmailWords({ ...registration.emailRejected, emailConfirmedAt: registration.emailConfirmedAt }, locale)
+    : null;
   const dt = (value: Date | null) => (value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }) : null);
   const dtInline = (value: Date | null) =>
     value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }) : null;
@@ -419,16 +425,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             href: getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: member.id } } }),
           }))}
         />
-        {/* Mailgun bounced or the recipient complained (§76): the reason, so somebody calls. */}
-        {registration.emailRejectedReason && (
-          <Chip
-            size="small"
-            color="error"
-            variant="outlined"
-            label={`${tr("registrations.emailRejected")} — ${registration.emailRejectedReason}`}
-            data-testid="email-rejected"
-          />
-        )}
+        {/* The newest email was rejected (§76, §NNN): which, when and why, so somebody calls. */}
+        {rejected && <EmailRejectedChip label={tr("registrations.emailRejected")} sentences={rejectedEmailSentences(rejected)} reason={rejected.reason} />}
         {/* BR-REQ-037-05: a staff-entered row behaves exactly like any other, and says so. */}
         {registration.source === "STAFF" && (
           <Chip size="small" variant="outlined" label={tr("registrations.enteredByStaff")} />
@@ -444,6 +442,17 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       <Typography variant="body2" color="text.secondary">
         {registration.participantEmail} · {registration.eventTitle ?? registration.eventId}
       </Typography>
+      {/* Under the address it is about (§NNN): the chip's words in full, for whoever reads rather than hovers. */}
+      {rejected && (
+        <Typography variant="body2" color="error" data-testid="email-rejected-words">
+          {rejectedEmailSentences(rejected).join(" ")}
+          {rejected.reason && (
+            <Typography component="small" variant="caption" color="text.secondary" sx={{ display: "block", wordBreak: "break-word" }}>
+              {rejected.reason}
+            </Typography>
+          )}
+        </Typography>
+      )}
       {/* From an invitation by email (§647): who sent it and when, read by every role that reads this page. */}
       {invitedBy && (
         <Typography variant="body2" color="text.secondary" data-testid="registration-invited">

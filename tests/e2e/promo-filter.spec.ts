@@ -100,7 +100,7 @@ test.describe("§581 «Doar cu oferte și beneficii»: the list and its export",
       // Its two neighbours are ticks of the same kind (§650), not selects whose closed box shows the label as a value.
       for (const [id, name] of [
         ["registrations-filter-member", new RegExp(`^Doar membrii ${CLUB_NAME}$`)],
-        ["registrations-filter-bounced", /^Doar cine nu a primit emailul$/],
+        ["registrations-filter-bounced", /^Doar cu un email respins$/],
       ] as const) {
         const tick = main.getByTestId(id);
         await expect(tick.getByRole("checkbox", { name })).not.toBeChecked();

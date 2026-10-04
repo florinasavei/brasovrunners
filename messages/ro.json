@@ -686,6 +686,20 @@
       "outboxHistory": "Istoric email",
       "outboxClubCopy": "copie pentru club, fără linkurile participantului",
       "emailRejected": "Email respins",
+      "rejected": {
+        "which": "Respins: „{type}”, trimis {instant}.",
+        "whichQueued": "Respins: „{type}”, pus în coadă {instant}; furnizorul l-a refuzat la trimitere.",
+        "typeUnknown": "un email al clubului",
+        "why": {
+          "BOUNCED": "Adresa nu există, căsuța e plină sau serverul destinatarului l-a refuzat.",
+          "COMPLAINED": "Mesajul a fost marcat ca spam de destinatar."
+        },
+        "reason": "Motivul dat de furnizor: {reason}",
+        "confirmedBefore": "Adresa a fost confirmată {date}; un email trimis după aceea a fost respins.",
+        "confirmedAfter": "Adresa a fost confirmată {date}, după acest email.",
+        "neverConfirmed": "Adresa nu a fost confirmată niciodată.",
+        "todo": "Sună persoana; adresa o poate schimba doar ea, printr-o înscriere nouă."
+      },
       "testKind": "Test",
       "enteredByStaff": "Adăugată de echipă",
       "livesIn": "Locuiește în: {place}",
@@ -786,8 +800,8 @@
       "rowActions": "Acțiuni pentru {name}",
       "clubMemberOnly": "Doar membrii {club}",
       "clubMemberOnlyHelp": "Cine a bifat la înscriere „Sunt membru al grupului {club}” sau are adresa unui cont din «Echipa». Pe rând scrie care: „Membru (verificat)” sau „Membru (declarat)”.",
-      "bouncedOnly": "Doar cine nu a primit emailul",
-      "bouncedOnlyHelp": "Adresa a respins mesajul sau furnizorul l-a refuzat; pe rând scrie „Email respins”. Pe ei îi suni înainte de cursă.",
+      "bouncedOnly": "Doar cu un email respins",
+      "bouncedOnlyHelp": "Cei cu un email respins sau marcat ca spam, chiar dacă înscrierea e confirmată. „Email respins” pe rând spune care email, când și de ce: pe ei îi suni.",
       "member": {
         "verified": "Membru (verificat)",
         "verifiedHint": "Adresa e a unui cont din «Echipa», deci clubul știe că e membru.",
@@ -1110,7 +1124,11 @@
         "CANCELLED": "Înscrierea a fost anulată. Locul tău a fost eliberat.",
         "EXPIRED": "Înscrierea a expirat, așa că nu îți mai ținem niciun loc.",
         "holdLapsed": "Locul tău a expirat: declarația nu a fost semnată la timp.",
-        "linkUntil": "Linkul din email e valabil până {instant}."
+        "linkUntil": "Linkul din email e valabil până {instant}.",
+        "rejected": {
+          "BOUNCED": "Un email trimis de club la adresa ta a fost respins: adresa nu există sau căsuța e plină, așa că mesajele clubului nu ajung la tine.",
+          "COMPLAINED": "Un email trimis de club la adresa ta a fost marcat ca spam, așa că mesajele clubului s-ar putea să nu mai ajungă la tine."
+        }
       }
     },
     "events": {
