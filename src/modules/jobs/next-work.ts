@@ -266,7 +266,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
 }
 
 /**
- * The outage grace (§NNN, `registrations/outage-grace.ts`): the door watched while it may be shut. A
+ * The outage grace (§657, `registrations/outage-grace.ts`): the door watched while it may be shut. A
  * `dns` suspicion (one «no such name», `confirmed_at` null) is confirmed or dropped by the probe ten
  * minutes after it, so the run then is due — and so is the next ping, when that instant has passed
  * already (the probe said nothing in between). While a window is open every ping runs for real: each

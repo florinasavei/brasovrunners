@@ -160,11 +160,11 @@ describe("§520 ship: a merge judged by the PR's state", () => {
 });
 
 /**
- * §NNN — a production wait says what it sees. On 2026-10-03 the step waited an hour while the
+ * §658 — a production wait says what it sees. On 2026-10-03 the step waited an hour while the
  * domain did not resolve, and printed the same two lines it would have printed had production
  * answered with another build.
  */
-describe("§NNN ship: one production reading, judged", () => {
+describe("§658 ship: one production reading, judged", () => {
   const NEW = "BR-V9.41-2031-01-02";
   const OLD = "BR-V9.40-2031-01-01";
   const notFound = Object.assign(new TypeError("fetch failed"), { cause: { code: "ENOTFOUND", hostname: "production.example.org" } });
@@ -202,7 +202,7 @@ describe("§NNN ship: one production reading, judged", () => {
   });
 });
 
-describe("§NNN ship: a production wait prints what it sees, every two minutes", () => {
+describe("§658 ship: a production wait prints what it sees, every two minutes", () => {
   it("prints on the first reading and then every two minutes, not on every poll, and names the case at the end", async () => {
     let t = 0;
     const lines: string[] = [];

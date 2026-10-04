@@ -3,7 +3,7 @@ import { membershipCell } from "@/modules/registrations/csv";
 import { MEMBERSHIP_EXPORT_WORDS, membershipOf } from "@/modules/registrations/domain/membership";
 
 /**
- * §NNN (amending §650) — a registration is a «verified» member when its address is a member account's,
+ * §662 (amending §650) — a registration is a «verified» member when its address is a member account's,
  * whatever the tick; «declared» when the person ticked and no account matches; nothing otherwise.
  */
 describe("membershipOf", () => {

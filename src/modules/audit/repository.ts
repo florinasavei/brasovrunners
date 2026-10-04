@@ -110,13 +110,13 @@ export type AuditAction =
    */
   | "registration.outside_capacity_changed"
   /**
-   * A deadline of this registration moved later by the maintenance job's outage grace (§NNN): the
+   * A deadline of this registration moved later by the maintenance job's outage grace (§657): the
    * site's name did not resolve, or no scheduler call arrived. No actor; `kind` (which deadline),
    * `from` and `to` (instants), the window's id and `source` — never a name.
    */
   | "registration.deadline_moved_for_outage"
   /**
-   * The outage grace did not revive this registration's lapsed claim (§NNN): an offer or a family's
+   * The outage grace did not revive this registration's lapsed claim (§657): an offer or a family's
    * reservation whose deadline passed while the platform could not be reached, and whose counted place
    * was given meanwhile. It lapses as it would have; the job seats nobody, an Administrator decides. No
    * actor; `kind`, the window's id and the `deadline` left as it was — never a name.
@@ -311,12 +311,12 @@ export type AuditAction =
   | "event.invitation_expired"
   | "event.invitation_accepted"
   /**
-   * An invitation's deadline moved later by the outage grace (§NNN): the invitation's id, from and to,
+   * An invitation's deadline moved later by the outage grace (§657): the invitation's id, from and to,
    * the window's id and source — never a name or an address.
    */
   | "event.invitation_deadline_moved_for_outage"
   /**
-   * An invitation the outage grace did not revive (§NNN): it lapsed while the platform could not be
+   * An invitation the outage grace did not revive (§657): it lapsed while the platform could not be
    * reached and its counted place was given meanwhile. The invitation's id, the window's id and the
    * `deadline` left as it was — never a name or an address.
    */

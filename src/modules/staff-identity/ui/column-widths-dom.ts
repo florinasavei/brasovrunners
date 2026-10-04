@@ -14,7 +14,7 @@ import {
 
 /**
  * The browser half of the resizable columns (§650): reading and writing the stored widths, and
- * laying a server-rendered table out with them — and, since §NNN, the columns hidden on it. Called only from the two islands' handlers and
+ * laying a server-rendered table out with them — and, since §661, the columns hidden on it. Called only from the two islands' handlers and
  * effects, never during a render, so nothing here runs on the server.
  *
  * The table itself stays a Server Component's markup. The islands reach it through the DOM —
@@ -24,7 +24,7 @@ import {
  */
 
 /**
- * Said on `window` whenever a table's stored widths or hidden columns change (§NNN), so its reset
+ * Said on `window` whenever a table's stored widths or hidden columns change (§661), so its reset
  * control can appear and its «Coloane» menu tick again.
  */
 export const WIDTHS_CHANGED = "br:admin-table-widths";
@@ -72,10 +72,10 @@ export function writeWidths(tableId: string, widths: ColumnWidths): void {
   window.dispatchEvent(new CustomEvent(WIDTHS_CHANGED, { detail: tableId }));
 }
 
-/** The hidden columns this page was told while storage refused to keep them (§NNN), per table. */
+/** The hidden columns this page was told while storage refused to keep them (§661), per table. */
 const unsavedHidden = new Map<string, string[]>();
 
-/** The column keys this browser hides on `tableId` (§NNN): nothing when storage is blocked. */
+/** The column keys this browser hides on `tableId` (§661): nothing when storage is blocked. */
 export function readHidden(tableId: string): string[] {
   const kept = unsavedHidden.get(tableId);
   if (kept) return [...kept];
@@ -104,7 +104,7 @@ export function writeHidden(tableId: string, keys: readonly string[]): void {
 }
 
 /**
- * The hidden keys that name a column of this table that may be hidden (§NNN) — a renamed or removed
+ * The hidden keys that name a column of this table that may be hidden (§661) — a renamed or removed
  * column, or one since marked essential, is not hidden by anything, so the reset does not count it.
  */
 export function readHiddenHere(tableId: string): string[] {
@@ -128,7 +128,7 @@ function hideableColumns(table: HTMLTableElement): { columns: { key: string; ess
 
 /**
  * Hides this browser's hidden columns of `tableId` with one `<style data-column-hidden="<id>">` in
- * `<head>` (§NNN) — the same text the pre-paint script wrote, which this replaces — or removes it
+ * `<head>` (§661) — the same text the pre-paint script wrote, which this replaces — or removes it
  * when none is hidden. A style and not the cells' attributes, for the widths' reason: the cells
  * belong to React. Kept apart from the widths' early style, which the islands drop on hydration,
  * because this one stays: it is the hiding itself.

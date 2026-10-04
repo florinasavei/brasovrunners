@@ -379,8 +379,8 @@ describe("owner tasks", () => {
     ]);
   });
 
-  // §NNN: the outage grace — blocking while a window is open or a claim it did not revive still waits, broken while one is stuck.
-  it("§NNN the unreachable window: blocking while open or while a claim not revived waits, broken while stuck, done otherwise", () => {
+  // §657: the outage grace — blocking while a window is open or a claim it did not revive still waits, broken while one is stuck.
+  it("§657 the unreachable window: blocking while open or while a claim not revived waits, broken while stuck, done otherwise", () => {
     const row = (unreachableWindow: OwnerTaskInputs["unreachableWindow"]) => ownerTasks({ ...LAUNCHED, unreachableWindow }).find((task) => task.id === "unreachableWindow");
     expect(row("clear")).toMatchObject({ state: "done", owner: "club", kind: "check" });
     expect(row("clear")?.text).toBeUndefined();
@@ -389,7 +389,7 @@ describe("owner tasks", () => {
     expect(row("stuck")).toMatchObject({ state: "broken", text: "stuck" });
   });
 
-  it("§NNN the unreachable window's sentences exist in both catalogues and fill the window's values", () => {
+  it("§657 the unreachable window's sentences exist in both catalogues and fill the window's values", () => {
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.unreachableWindow;
       for (const key of ["{windowFrom}", "{windowUntil}", "{windowGranted}", "{windowMoved}"]) expect(item.todo).toContain(key);

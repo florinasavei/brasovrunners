@@ -7,7 +7,7 @@ import { rejectedEmailSentences, rejectedEmailWords, type RejectedEmailFacts } f
 import { whatToTell, type TellFacts } from "@/modules/registrations/ui/tell-words";
 
 /**
- * BR-REQ-037-03, BR-REQ-038-01 criterion 8 (§NNN; amending §650, §76, §83) — «Email respins» says which
+ * BR-REQ-037-03, BR-REQ-038-01 criterion 8 (§663; amending §650, §76, §83) — «Email respins» says which
  * email was rejected, when, why, and whether the address had been confirmed before it: a confirmed row
  * with a rejected email is a confirmed participant the club can no longer reach by email.
  */
@@ -76,7 +76,7 @@ describe("rejectedEmailWords", () => {
   }
 });
 
-describe("«Ce îi spui» on a row whose newest email was rejected (§NNN)", () => {
+describe("«Ce îi spui» on a row whose newest email was rejected (§663)", () => {
   const base: TellFacts = {
     status: "CONFIRMED", holdExpiresAt: null, emailLinkExpiresAt: null, offerEmailQueued: false, eventStartsAt: new Date("2026-11-21T08:00:00.000Z"),
     eventTimezone: "Europe/Bucharest", eventCancelled: false, waitlistAutoOffer: true, waitlistCountPublic: true, waitlistPosition: null,

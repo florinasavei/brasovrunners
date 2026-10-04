@@ -168,7 +168,7 @@ describe("§650 AdminTable's columns, as the server draws them", () => {
   it("draws no handle and no reset control before JavaScript runs, so the table is the one it was", () => {
     const html = render();
     expect(html).not.toContain('role="separator"');
-    // The pre-paint script names the edge in a selector (§NNN); no element carries it.
+    // The pre-paint script names the edge in a selector (§661); no element carries it.
     expect(html.replace(/<script[\s\S]*?<\/script>/g, "")).not.toContain("data-column-resize");
     expect(html).not.toContain("admin-table-reset-widths");
     // The selector is in the stylesheet; the attribute itself is set only by an island.
@@ -296,7 +296,7 @@ describe("§650 the pre-paint script, run against a stand-in for the page", () =
     expect(run(JSON.stringify({ name: 10 }), headings)[0].textContent).toContain(`{width:${MIN_COLUMN_WIDTH}px}`);
   });
 
-  it("§NNN hides the stored hidden columns first, in their own style, the same text the islands write", () => {
+  it("§661 hides the stored hidden columns first, in their own style, the same text the islands write", () => {
     const appended = run(null, headings, { hidden: JSON.stringify(["state", "name"]), essential: ["name"] });
     // Nothing stored for the widths: one style, the hidden one, and the essential «name» still shown.
     expect(appended).toHaveLength(1);
@@ -311,7 +311,7 @@ describe("§650 the pre-paint script, run against a stand-in for the page", () =
     expect(appended[0].textContent).not.toContain(':nth-child(1)');
   });
 
-  it("§NNN writes the hidden style once, beside the widths' one, and nothing for garbage", () => {
+  it("§661 writes the hidden style once, beside the widths' one, and nothing for garbage", () => {
     const both = run(JSON.stringify({ name: 300 }), headings, { hidden: JSON.stringify(["club"]), hiddenFrames: 2 });
     expect(both.map((style) => Object.keys(style.attributes)[0])).toEqual(["data-column-hidden", "data-column-widths"]);
     expect(run(null, headings, { hidden: "not json" })).toHaveLength(0);
@@ -320,7 +320,7 @@ describe("§650 the pre-paint script, run against a stand-in for the page", () =
   });
 });
 
-describe("§NNN columns that can be hidden", () => {
+describe("§661 columns that can be hidden", () => {
   it("names the hidden columns' storage beside the widths'", () => {
     expect(hiddenStorageKey("registrations")).toBe("br.table.registrations.hidden");
   });
@@ -515,7 +515,7 @@ describe("§650 the widths in this browser's storage", () => {
     expect(recordedFloor({}, "name")).toBeUndefined();
   });
 
-  it("§NNN round-trips the hidden columns under br.table.<id>.hidden, beside the widths", () => {
+  it("§661 round-trips the hidden columns under br.table.<id>.hidden, beside the widths", () => {
     const fake = stub();
     writeWidths("registrations", { email: 240 });
     writeHidden("registrations", ["email", "bib"]);
@@ -529,7 +529,7 @@ describe("§650 the widths in this browser's storage", () => {
     expect(fake.events.map((event) => (event as CustomEvent<string>).detail)).toEqual(["registrations", "registrations", "registrations"]);
   });
 
-  it("§NNN keeps this page's hidden columns when storage refuses, an emptied list too", () => {
+  it("§661 keeps this page's hidden columns when storage refuses, an emptied list too", () => {
     stub({ throws: true });
     expect(readHidden("registrations")).toEqual([]);
     expect(() => writeHidden("registrations", ["email"])).not.toThrow();
@@ -538,7 +538,7 @@ describe("§650 the widths in this browser's storage", () => {
     expect(readHidden("registrations")).toEqual([]);
   });
 
-  it("§NNN shows all again over what a storage that refuses to write still holds", () => {
+  it("§661 shows all again over what a storage that refuses to write still holds", () => {
     const fake = stub();
     fake.store.set("br.table.staff.hidden", '["email"]');
     (window.localStorage as { removeItem: unknown }).removeItem = () => {
@@ -548,7 +548,7 @@ describe("§650 the widths in this browser's storage", () => {
     expect(readHidden("staff")).toEqual([]);
   });
 
-  it("§NNN counts for the reset only the hidden keys that name a column of the table that may be hidden", () => {
+  it("§661 counts for the reset only the hidden keys that name a column of the table that may be hidden", () => {
     const fake = stub();
     const col = (key: string, essential = false) => ({ dataset: { column: key }, hasAttribute: () => essential });
     const table = { querySelectorAll: () => [col("name", true), col("email"), col("bib"), col("state", true), col(ACTIONS_COLUMN)] };

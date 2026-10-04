@@ -22,7 +22,7 @@ import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email
  * nobody, rather than failing the whole preview.
  *
  * The same set makes a registration «Membru (verificat)» on the list, its page and the export
- * (§NNN, `domain/membership.ts`): one definition of who the club's members are, for the sweep and the chip.
+ * (§662, `domain/membership.ts`): one definition of who the club's members are, for the sweep and the chip.
  *
  * What it cannot see, and the screen says so: a member who registered with another address than
  * the one on their account. They appear among the candidates, and the Administrator leaves them out

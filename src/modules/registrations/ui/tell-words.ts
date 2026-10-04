@@ -30,7 +30,7 @@ export type TellFacts = {
   checkedInAt: Date | null;
   /** Why an expired row expired: a lapsed declaration hold says what its email said (§638). */
   expiryReason?: string | null;
-  /** The newest email the provider rejected (§NNN): one more sentence, so the person knows our mail does not reach them. */
+  /** The newest email the provider rejected (§663): one more sentence, so the person knows our mail does not reach them. */
   emailRejected?: Pick<RejectedEmail, "status"> | null;
 };
 
@@ -155,7 +155,7 @@ export function tellLines(say: Say, ours: Say, locale: string, facts: TellFacts,
   // Not once the link or the offer has lapsed: there is no email left to look for. Nor when the address
   // bounced the email: «look in spam» would contradict the line below, which says it never arrived.
   if (WAITS_ON_AN_EMAIL.has(facts.status) && !lapsed && facts.emailRejected?.status !== "BOUNCED") lines.push(say("spamHint.body"));
-  // The newest email bounced or was marked as spam (§NNN): on any state, confirmed included — said to the
+  // The newest email bounced or was marked as spam (§663): on any state, confirmed included — said to the
   // person without the address, which stays theirs to change (§645).
   if (facts.emailRejected) lines.push(ours(`rejected.${facts.emailRejected.status}`));
   return lines;

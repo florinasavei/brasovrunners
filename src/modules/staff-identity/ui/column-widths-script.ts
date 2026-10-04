@@ -9,7 +9,7 @@
  * appends one `<style data-column-widths="<id>">` to `<head>` with the same fixed layout — at once,
  * or in the first frame the table is displayed (`WAIT_FRAMES`).
  *
- * First, once, it hides the columns this browser hides on the table (§NNN): it reads
+ * First, once, it hides the columns this browser hides on the table (§661): it reads
  * `br.table.<id>.hidden` and appends `<style data-column-hidden="<id>">` — `display: none` for each
  * hidden column's `<col>`, heading and cells, by position, an essential column never — the same
  * text `hiddenColumnsCss` gives the islands, which replace it and keep it.
@@ -52,7 +52,7 @@ export function earlyWidthsScript(tableId: string): string {
     "(function f(i,n,me){try{",
     "var q='table[data-table-id=\"'+i+'\"]',t=document.querySelector(q);",
     "if(!t||!me||!me.isConnected)return;",
-    // The hidden columns (§NNN), once, before anything is measured: a hidden heading then measures
+    // The hidden columns (§661), once, before anything is measured: a hidden heading then measures
     // as `display:none` below and is left out of the widths, as `layOut` leaves it out. The same
     // text `hiddenColumnsCss` writes, in its own `<style>`, which the islands keep.
     "if(n===0)try{var hs=JSON.parse(localStorage.getItem(" + JSON.stringify(hiddenPrefix) + "+i+" + JSON.stringify(hiddenSuffix) + ")||'null'),hc='',l=0,c=0,a=false;",

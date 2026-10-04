@@ -20,7 +20,7 @@ import {
 /**
  * One per table, under it (§650): lays the table out with the widths this browser stored for it
  * when the page opens and whenever the table's frame changes width, hides the columns this browser
- * hides on it (§NNN), and offers to put every column back the way the server drew it — its width
+ * hides on it (§661), and offers to put every column back the way the server drew it — its width
  * and, if hidden, the column itself.
  *
  * The control shows only while something is stored — a reset for a table nobody resized is a
@@ -60,7 +60,7 @@ export default function ColumnWidths({ tableId }: { tableId: string }) {
 
   useLayoutEffect(() => {
     const apply = () => {
-      // The hidden columns first (§NNN), so the layout below measures only the columns shown —
+      // The hidden columns first (§661), so the layout below measures only the columns shown —
       // on a soft navigation no pre-paint script ran, and this is where they are hidden.
       applyHidden(tableId);
       // The pre-paint style goes even when nothing is left to lay out: the islands own it now.
@@ -109,7 +109,7 @@ export default function ColumnWidths({ tableId }: { tableId: string }) {
     // The button goes once nothing is stored; the focus goes to the first column edge, not to <body>.
     tables[0]?.querySelector<HTMLElement>('[role="separator"]')?.focus();
     writeWidths(tableId, {});
-    // Every column back too (§NNN); the widths of the columns that return were just cleared.
+    // Every column back too (§661); the widths of the columns that return were just cleared.
     writeHidden(tableId, []);
     applyHidden(tableId);
     for (const table of tables) releaseLayout(table);

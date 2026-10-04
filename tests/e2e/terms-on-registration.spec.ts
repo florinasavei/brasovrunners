@@ -113,7 +113,7 @@ test.describe("§425 the accepted terms on the registration's page and in the ex
       const [header, ...lines] = (await response.text()).split("\r\n");
       // The terms' two columns, then the declaration's two (§499), then the family column (§543),
       // then the participant's reason for cancelling (§558), then the offers and benefits (§562), then
-      // «Special guest» (§643, named by §647, renamed since), then the list's «Până când» (§650): the moment and what for, then the age on race day, the country and the city (§NNN), the last three.
+      // «Special guest» (§643, named by §647, renamed since), then the list's «Până când» (§650): the moment and what for, then the age on race day, the country and the city (§660), the last three.
       expect(header.split(",").slice(-13, -9)).toEqual(["Terms version", "Terms accepted", "Declaration version", "Declaration signed"]);
       expect(header.split(",").at(-9)).toBe("family");
       expect(header.split(",").at(-8)).toBe("Cancellation reason");

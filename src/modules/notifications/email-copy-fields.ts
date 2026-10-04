@@ -110,7 +110,7 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     eventLinksUrl: `${base}/${locale}/EXAMPLE-event#links`,
     // «Șabloanele textelor legale s-au schimbat» (§639): two texts whose template moved, for its preview.
     legalTemplateKeys: ["PRIVACY_NOTICE", "TERMS"],
-    // The outage grace's two (§NNN): a seven-hour window on a Saturday, for their previews — instants and counts only.
+    // The outage grace's two (§657): a seven-hour window on a Saturday, for their previews — instants and counts only.
     unreachableWindow: {
       startedAt: "2026-10-03T07:00:00.000Z",
       endedAt: "2026-10-03T14:00:00.000Z",

@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { bigint, check, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 /**
- * The stretches during which the platform could not be reached (§NNN, «the clock stops while the door
+ * The stretches during which the platform could not be reached (§657, «the clock stops while the door
  * is shut»): the site's name did not resolve, or no scheduler call reached the platform for longer than
  * the pinger's own threshold. While a `dns` window is open its running deadlines are moved on every
  * real run by the time since the last one; once a window is over, every participant deadline that was
@@ -17,7 +17,7 @@ export const UNREACHABLE_SOURCES = ["dns", "pings"] as const;
 export type UnreachableSource = (typeof UNREACHABLE_SOURCES)[number];
 
 /**
- * A claim the outage grace did not revive (§NNN): its counted place was no longer free — or the
+ * A claim the outage grace did not revive (§657): its counted place was no longer free — or the
  * allocator had already lapsed it before the run (a declaration hold, an address link among them).
  */
 export type NotRevivedClaim = {
@@ -69,7 +69,7 @@ export const unreachableWindows = pgTable(
      * invitation that lapsed while the door was shut and whose counted place was given meanwhile — and
      * every claim the allocator had already lapsed inside the window before the run saw it (an offer, a
      * declaration hold, a family's reservation, an address link, an invitation), read and left as it is.
-     * The job seats nobody (§NNN): they lapse as they would have, and an Administrator decides.
+     * The job seats nobody (§657): they lapse as they would have, and an Administrator decides.
      */
     claimsNotRevived: integer("claims_not_revived").notNull().default(0),
     /** Those claims, by kind, id and event — ids only: the email names them at its send, «Sarcini» reads whether they still wait. */
@@ -91,7 +91,7 @@ export const unreachableWindows = pgTable(
     // At most one window open (or suspected) at a time: a second run that finds the name gone again keeps the first.
     uniqueIndex("unreachable_windows_one_open").on(sql`(${t.endedAt} is null)`).where(sql`${t.endedAt} is null`),
     /*
-      A silence of the pings is recorded once (§NNN): two maintenance runs at the same moment (the
+      A silence of the pings is recorded once (§657): two maintenance runs at the same moment (the
       backstop and the monitor landing together after a silence) read the same silence, and the second
       insert is refused here rather than moving every deadline twice.
     */

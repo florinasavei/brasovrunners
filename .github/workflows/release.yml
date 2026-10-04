@@ -39,7 +39,7 @@ name: release
 #   - the variable `SHIP_PRODUCTION_URL`: production's origin, which `ship` asks for its health;
 #   - the label `ship`.
 #
-# The closing comment and the label's removal use the job's own token instead (§NNN): on
+# The closing comment and the label's removal use the job's own token instead (§658): on
 # 2026-10-03 both were refused to the personal token, and the label that stayed on could start
 # nothing when added again. A comment or a label changed by GitHub's token starts no workflow,
 # which is right — only a person adding the label starts a release.
@@ -65,7 +65,7 @@ on:
     types: [labeled]
 
 # The job reads with its own token, and with it writes only the closing comment and takes the
-# label off (§NNN); every push, merge and approval goes through SHIP_TOKEN.
+# label off (§658); every push, merge and approval goes through SHIP_TOKEN.
 permissions:
   contents: read
   pull-requests: write
@@ -367,7 +367,7 @@ jobs:
         if: always() && steps.pr.outputs.state != '' && env.DRY_RUN != 'true'
         env:
           # The job's own token, not SHIP_TOKEN: a comment and a label are the pull request's, and
-          # what GitHub's token does there starts no workflow (§NNN).
+          # what GitHub's token does there starts no workflow (§658).
           GH_TOKEN: ${{ github.token }}
           OUTCOME: ${{ job.status }}
           TO: ${{ steps.land.outputs.to }}
@@ -385,13 +385,17 @@ jobs:
             if [ -s "$TIMES" ]; then
               why=$(tail -n 1 "$TIMES" | jq -r '.outcome // empty | .[0:600]' 2> /dev/null || true)
               # A STOP after the qa → main release merged — the migration's or production's — is never
-              # re-labelled (§NNN): a second run would take its starting baseline from main, wait an hour
+              # re-labelled (§658): a second run would take its starting baseline from main, wait an hour
               # for a baseline production does not run, and stop again. Ship opens its step «migration»
               # right after that merge, so the times record's steps say whether the release is in main.
               late=$(tail -n 1 "$TIMES" | jq -r 'if any(.steps[]?; .name == "migration") then "yes" else "" end' 2> /dev/null || true)
             fi
             if [ "$late" = "yes" ]; then
               next="The release is already in main: do not add the label ship again. If the migration stopped, fix it, or approve and re-run migrate.yml on main by hand, then redeploy production if its build gave up waiting. If production did not answer, follow docs/RUNBOOKS.md § The domain stops answering; if it answers with another build, check Vercel's production deployment. The release is done once /api/health reports the new baseline."
+            elif [ "$OUTCOME" = "cancelled" ] || [ ! -s "$TIMES" ]; then
+              # Ship appends its times record only when it ends (measured()), so a cancelled run leaves
+              # none and may have merged the release before it was stopped: the reader checks main first.
+              next="Check whether the release pull request (qa → main) merged before adding the label ship again: if it did, the release is in main and a second run would stop again — finish it by hand (approve migrate.yml on main, redeploy production). If it did not, fix it, then add the label ship again (or run the release workflow)."
             else
               next="Fix it, then add the label ship again (or run the release workflow)."
             fi

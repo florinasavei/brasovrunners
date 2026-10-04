@@ -450,7 +450,7 @@ describe("BR-REQ-037-03 criterion 14: the members' and the bounced filters are t
     const rows = table?.props.rows as { id: string }[];
     expect(rows.map((row) => row.id)).toEqual([bounced]);
     const nameColumn = (table?.props.columns as { key: string; render: (row: unknown) => ReactNode }[]).find((column) => column.key === "name");
-    // Since §NNN the chip is an island with a tooltip: the provider's reason is its small print, never a `title`.
+    // Since §663 the chip is an island with a tooltip: the provider's reason is its small print, never a `title`.
     const chips = elements(nameColumn?.render(rows[0])).filter((element) => element.type === EmailRejectedChip);
     expect(chips).toHaveLength(1);
     expect(chips[0].props.label).toBe(ro.Admin.registrations.emailRejected);

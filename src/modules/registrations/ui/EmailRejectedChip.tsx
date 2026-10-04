@@ -7,7 +7,7 @@ import { useState } from "react";
 import { readingTimeMs, TOOLTIP_TEXT_SX } from "@/shared/ui/tooltip-text";
 
 /**
- * «Email respins» with its explanation (§NNN): which email was rejected, when, why, whether the address
+ * «Email respins» with its explanation (§663): which email was rejected, when, why, whether the address
  * had been confirmed before it, and what to do — in an MUI `Tooltip` that opens on hover, on keyboard
  * focus and on a tap, never a `title` attribute (which a touch screen never shows). The provider's own
  * reason comes last, in small print.
@@ -64,6 +64,9 @@ export default function EmailRejectedChip({
         tabIndex={0}
         role="note"
         aria-label={spoken}
+        // MUI's Tooltip names its open child by the tooltip (`aria-labelledby`) unless the child sets the key
+        // itself: an explicit undefined keeps the name on `aria-label`, so the sentences are heard once.
+        aria-labelledby={undefined}
         onClick={() => setOpen(true)}
         data-testid={testId}
         sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, cursor: "help" }}

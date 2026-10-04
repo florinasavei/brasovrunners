@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — the deep health says whether the site's name resolves (`domain.host`, `domain.resolves`,
+ * §657 — the deep health says whether the site's name resolves (`domain.host`, `domain.resolves`,
  * `domain.checkedAt`) and whether the maintenance job holds an unreachable window open; the shallow
  * one asks nobody (§577). Reached by another address while the name is gone, the answer is `degraded`
  * (a 503), so a monitor that calls by that address hears it.
@@ -36,7 +36,7 @@ beforeEach(() => {
   readUnreachableWindows.mockResolvedValue([]);
 });
 
-describe("§NNN the domain block of /api/health", () => {
+describe("§657 the domain block of /api/health", () => {
   it("says the name resolves and nothing is held, and stays ok", async () => {
     const response = await deep();
     const body = await response.json();

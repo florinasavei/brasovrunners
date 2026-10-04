@@ -61,10 +61,11 @@ import ColumnWidthsScript from "./ColumnWidthsScript";
  * know. Right after `</table>`, `ColumnWidthsScript` applies them as a `<style>` before the first
  * paint, so a resized table does not jump on load; under the table, `ColumnWidths` takes over once
  * hydrated (removing that style), lays the table out again when its frame changes width, and
- * offers «Lățimi și coloane implicite» while any is stored. With JavaScript off neither island draws anything, and the table is the
+ * offers «Lățimi și coloane implicite» while any is stored. With JavaScript off no handle, reset or
+ * menu is drawn — only an empty box that holds the menu button's place — and the table is the
  * automatic one it always was.
  *
- * ## Columns that can be hidden, without the grid (§NNN)
+ * ## Columns that can be hidden, without the grid (§661)
  *
  * The owner's second grid ask, showing and hiding columns, is paid the same way. The actions'
  * heading (or, on a list without row verbs, the line under the table) carries «Coloane», one more
@@ -110,7 +111,7 @@ export type AdminColumn<Row> = {
   /** The row's headline on a phone. Exactly one column should set it. */
   primary?: boolean;
   /**
-   * Never hidden from the «Coloane» menu (§NNN): the state, which a row cannot be read without.
+   * Never hidden from the «Coloane» menu (§661): the state, which a row cannot be read without.
    * The first column and the `primary` one are essential without saying so.
    */
   essential?: boolean;
@@ -256,7 +257,7 @@ export default function AdminTable<Row>({
   const primary = columns.find((column) => column.primary) ?? columns[0];
   const secondary = columns.filter((column) => column !== primary);
   const hinted = columns.filter((column) => column.hint);
-  // What the «Coloane» menu offers (§NNN): strings and a flag per column, never a row.
+  // What the «Coloane» menu offers (§661): strings and a flag per column, never a row.
   const menuColumns = columns.map((column, index) => ({
     key: column.key,
     label: column.label,

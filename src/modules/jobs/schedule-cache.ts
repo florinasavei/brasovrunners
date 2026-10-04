@@ -246,7 +246,7 @@ export async function readLastPing(job: JobName, now: Date, horizonMs: number): 
 
 /**
  * The pings the cache remembers between `anchor` and `now`, by job, enough to find every silence the
- * full record would show, for the maintenance run's outage grace (§NNN,
+ * full record would show, for the maintenance run's outage grace (§657,
  * `registrations/domain/outage-grace.ts`) — or null when the cache cannot be trusted to remember: the
  * anchor is a real run of `anchor.job`, which wrote its own ping slot (`recordRealRun`), and a cache
  * that has lost that slot (evicted, unreachable, outside a request) has lost the others too, so a
@@ -338,7 +338,7 @@ export async function readPingHistory(
   return found;
 }
 
-/** What the maintenance job's name probe answered at one of its real runs (§NNN): `/devs` shows it, never asking the name itself. */
+/** What the maintenance job's name probe answered at one of its real runs (§657): `/devs` shows it, never asking the name itself. */
 export type NameReadingSlot = { at: string; status: string; host: string | null };
 
 const nameTags = [`${TAG}:name`];

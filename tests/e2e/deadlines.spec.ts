@@ -68,7 +68,7 @@ test.describe("§377 the club's deadlines on «Setări» → «Termene»", () =>
     seriesHorizonDays: "56",
     // How long a public participant list stays up after the event (§421).
     publicListDays: "30",
-    // The longest stretch one outage moves the running deadlines by (§NNN).
+    // The longest stretch one outage moves the running deadlines by (§657).
     outageGraceMaxHours: "48",
   };
 

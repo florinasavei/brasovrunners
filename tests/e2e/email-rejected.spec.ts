@@ -4,7 +4,7 @@ import pg from "pg";
 import { FEATURED, hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN (amending §650, §76, §83) — «Email respins» says which email, when and why. The owner,
+ * §663 (amending §650, §76, §83) — «Email respins» says which email, when and why. The owner,
  * 2026-10-04, on rows «Confirmată» kept by the rejected-email filter: «Cum poți să nu fi primit mail
  * dar să fii și confirmat? Adaugă tooltips și informații». A confirmed registration whose race-number
  * email bounced: the filter «Doar cu un email respins» keeps it, the chip is a client island that
@@ -69,7 +69,7 @@ async function cleanup(seeded: Seeded): Promise<void> {
   }
 }
 
-test.describe("§NNN «Email respins» says which email, when and why", () => {
+test.describe("§663 «Email respins» says which email, when and why", () => {
   test("a confirmed row whose race-number email bounced: the filter keeps it, the chip opens on focus and says it once", async ({ page }) => {
     test.setTimeout(90_000);
     const hydrationWarnings: string[] = [];
@@ -104,6 +104,7 @@ test.describe("§NNN «Email respins» says which email, when and why", () => {
       await expect(tooltip).toContainText("Adresa a fost confirmată");
       await expect(tooltip).toContainText("Sună persoana");
       await expect(chip).not.toHaveAttribute("aria-describedby", /.+/);
+      await expect(chip).not.toHaveAttribute("aria-labelledby", /.+/);
 
       // The registration's page: the same chip beside the name, the same words under the address.
       await page.goto(`/ro/admin/registrations/${seeded.registrationId}`);

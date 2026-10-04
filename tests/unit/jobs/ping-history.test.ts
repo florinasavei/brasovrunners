@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — the outage grace reads the pings the data cache remembers since the maintenance's last real
+ * §657 — the outage grace reads the pings the data cache remembers since the maintenance's last real
  * run (`readPingHistory`). The quiet before a run can last a day (§577); reading every five-minute
  * slot of both jobs over it was some 650 cache reads in a hundred round trips on one run. The read is
  * bounded now — one job walked along its pinger's cadence, every slot only where a call is missing —
@@ -48,7 +48,7 @@ function gapsOf(byJob: Record<string, Date[]>) {
 
 beforeEach(() => fakeNextCache.reset());
 
-describe("§NNN the pings since the last real run, read bounded", () => {
+describe("§657 the pings since the last real run, read bounded", () => {
   it("reads no silence after a quiet day, in a fraction of the slots", async () => {
     await recordPing(MAINTENANCE, ANCHOR, true);
     const all = calls(new Date(ANCHOR.getTime() + 15 * MINUTE), NOW);

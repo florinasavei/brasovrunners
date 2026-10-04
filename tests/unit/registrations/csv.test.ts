@@ -137,7 +137,7 @@ describe("CSV formula neutralization", () => {
       "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,CONFIRMED,declared,,https://www.strava.com/athletes/12345,ana.pop,,,,,2026-09-04T10:00:00.000Z,,17,2026-10-11T06:40:00.000Z,Yes,,,,,,,,,,,,,",
     );
 
-    // A member account's address (§NNN): "verified", whatever the tick; the tick alone is "declared" above.
+    // A member account's address (§662): "verified", whatever the tick; the tick alone is "declared" above.
     for (const clubMemberDeclared of [true, false]) {
       expect(buildRegistrationsCsv([{ ...row, clubMemberDeclared, memberVerified: true }]).split("\r\n")[1].split(",")[7]).toBe("verified");
     }
@@ -336,7 +336,7 @@ describe("CSV formula neutralization", () => {
     expect(alone.split(",").at(-9)).toBe("");
   });
 
-  // §NNN — the list's «Vârstă» and «Oraș» in the CSV: last, under the spreadsheet's headers, blank when the row has none.
+  // §660 — the list's «Vârstă» and «Oraș» in the CSV: last, under the spreadsheet's headers, blank when the row has none.
   it("ends with the age on race day, the country and the city, or three empty cells", () => {
     const base = {
       eventTitle: "Test",
@@ -347,6 +347,7 @@ describe("CSV formula neutralization", () => {
       email: "ana@example.ro",
       status: "CONFIRMED",
       clubMemberDeclared: false,
+      memberVerified: false,
       fitnessDeclaredAt: null,
       stravaUrl: "",
       instagramHandle: "",

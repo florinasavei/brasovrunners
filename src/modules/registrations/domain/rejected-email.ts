@@ -1,5 +1,5 @@
 /**
- * The newest email the provider rejected for a registration (§76, §83, §NNN): which message it was,
+ * The newest email the provider rejected for a registration (§76, §83, §663): which message it was,
  * when it left — or, refused outright, when it was queued (`sent_at` is set at most once and a row the
  * provider refused at the send never has one; no rejection instant is stored) —, whether it bounced or
  * was marked as spam, and the provider's short sanitized reason (§16.1). Null when nothing was

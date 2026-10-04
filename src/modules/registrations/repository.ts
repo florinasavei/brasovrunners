@@ -1369,7 +1369,7 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
     address is confirmed. Cleared rather than left to lapse in the count alone, so the job does not
     find it again on every run (`findEventsNeedingMaintenance`). `reservation_lapsed_at` keeps the
     instant and `reservation_lapsed_from` the deadline that lapsed (the value the statement clears), in
-    the same statement: the outage grace (§NNN) names a reservation cleared inside a window by them,
+    the same statement: the outage grace (§657) names a reservation cleared inside a window by them,
     and never a form that had no reservation to clear.
   */
   const lapsedReservations = await db

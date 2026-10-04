@@ -193,7 +193,7 @@ describe("BR-REQ-060-01 the start list as a spreadsheet (§172)", () => {
     expect(unlisted).toContain(`<c r="${cell}" t="b"><v>0</v></c>`);
   });
 
-  /** §NNN — «Club member» says which, as the list's chip: "verified" from a member account's address, "declared" from the tick alone. */
+  /** §662 — «Club member» says which, as the list's chip: "verified" from a member account's address, "declared" from the tick alone. */
   it("writes «Club member» as verified, declared or blank", async () => {
     expect(REGISTRATION_SHEET_HEADERS).toContain("Club member");
     expect(REGISTRATION_SHEET_HEADERS).not.toContain("Club member (declared)");

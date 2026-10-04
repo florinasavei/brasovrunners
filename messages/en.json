@@ -695,7 +695,7 @@
           "COMPLAINED": "The recipient marked the message as spam."
         },
         "reason": "The provider's reason: {reason}",
-        "confirmedBefore": "The address was confirmed {date}; an email sent after that was rejected.",
+        "confirmedBefore": "The address was confirmed {date}; an email after that was rejected.",
         "confirmedAfter": "The address was confirmed {date}, after this email.",
         "neverConfirmed": "The address was never confirmed.",
         "todo": "Phone the person; only they can change the address, by registering again."

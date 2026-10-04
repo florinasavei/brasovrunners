@@ -5,7 +5,7 @@ import Tooltip from "@mui/material/Tooltip";
 import type { Membership } from "../domain/membership";
 
 /**
- * «Membru (verificat)» / «Membru (declarat)» (§NNN, amending §650): one chip, on a registration's row and
+ * «Membru (verificat)» / «Membru (declarat)» (§662, amending §650): one chip, on a registration's row and
  * page, with what it means in one sentence as its tooltip. Verified is filled — the club knows it —,
  * declared is outlined, the person's own word.
  *

@@ -1,7 +1,7 @@
 import { isIP } from "node:net";
 
 /**
- * Whether the site's public name resolves (§NNN, the outage grace), as pure rules: which host is asked at all, and
+ * Whether the site's public name resolves (§657, the outage grace), as pure rules: which host is asked at all, and
  * what a resolver's error means. The lookup itself is `resilience/name-probe.ts`.
  *
  * Only an answer that the name does not exist is `unresolved` — `ENOTFOUND` (the zone has no such

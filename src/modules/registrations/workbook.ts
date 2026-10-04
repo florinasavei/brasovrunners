@@ -57,7 +57,7 @@ export type RegistrationSheetRow = Omit<
   checkedInAt: Date | null;
   fitnessDeclaredAt: Date | null;
   /**
-   * The spreadsheet's own columns (§322; the age, the country and the city in the CSV too since §NNN): what a category ranking, the club's
+   * The spreadsheet's own columns (§322; the age, the country and the city in the CSV too since §660): what a category ranking, the club's
    * "where do our runners come from" and the kit order read. Optional because a row built
    * without them — a test, a future caller — prints blanks rather than failing.
    */
@@ -145,7 +145,7 @@ const COLUMNS: Array<SheetColumn<RegistrationSheetRow>> = [
   { header: "Club", width: 22, cell: (row) => ({ value: row.clubName, type: String }) },
   /*
     The ones the form asks for and the start list does not use (§322, the country §510), on the sheet the club
-    works in; of them the CSV carries only the age, the country and the city, last (§NNN). Never the phone, the emergency contact or the
+    works in; of them the CSV carries only the age, the country and the city, last (§660). Never the phone, the emergency contact or the
     health note: those are read on the registration's page and the emergency sheet, audited,
     and a file that leaves the application is exactly where they must not go (`AGENTS.md`
     §15.10; `workbook.test.ts` asserts the absence).
@@ -166,7 +166,7 @@ const COLUMNS: Array<SheetColumn<RegistrationSheetRow>> = [
   { header: "Waiting on", width: 30, cell: (row) => ({ value: row.deadlineFor ? ROW_DEADLINE_EXPORT_WORDS[row.deadlineFor] : "", type: String }) },
   { header: "Email", width: 30, cell: (row) => ({ value: row.email, type: String }) },
   { header: "Identity document", width: 18, cell: (row) => ({ value: row.idDocument, type: String }) },
-  // Declared or verified (§NNN), as the list's chip: "verified", "declared" or blank.
+  // Declared or verified (§662), as the list's chip: "verified", "declared" or blank.
   { header: "Club member", width: 12, cell: (row) => ({ value: membershipCell(row), type: String }) },
   { header: "Medically fit (declared)", width: 18, cell: (row) => ({ value: onClubClock(row.fitnessDeclaredAt), type: Date, format: STAMP_FORMAT }) },
   { header: "Guardian", width: 24, cell: (row) => ({ value: row.guardianName, type: String }) },

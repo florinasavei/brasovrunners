@@ -14,7 +14,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (amending §650, §524) — «membru declarat» and «membru verificat», from a real database:
+ * §662 (amending §650, §524) — «membru declarat» and «membru verificat», from a real database:
  *
  * - a registration whose canonical address is a member account's (a live row on «Echipa») is
  *   «Membru (verificat)», whatever its tick; a ticked one with no account is «Membru (declarat)»;
@@ -196,7 +196,7 @@ beforeEach(async () => {
   state.actor = await account("organiser@dev.test", "ADMIN");
 });
 
-describe("§NNN: a member is declared or verified (BR-REQ-037-03)", () => {
+describe("§662: a member is declared or verified (BR-REQ-037-03)", () => {
   it("draws «verificat» for a member account's address whatever the tick, «declarat» for the tick alone, nothing for neither", async () => {
     const race = await createRace("Crosul");
     await account("ana.pop@gmail.com");

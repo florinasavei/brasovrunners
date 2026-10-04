@@ -28,7 +28,7 @@ import { type EventForRegistration, submitRegistration } from "@/modules/registr
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the clock stops while the door is shut (the outage grace). On 2026-10-03 a registrar hold for
+ * §657 — the clock stops while the door is shut (the outage grace). On 2026-10-03 a registrar hold for
  * the contact verification took the club's domain away for about seven hours: the pingers call the
  * public name, so no job ran, while every deadline kept running. Here the platform is unreachable two
  * ways — the pings fall silent (a window seen once it is over), and the job, reached by another
@@ -203,7 +203,7 @@ async function invite(event: EventForRegistration, expiresAt: Date) {
 const windows = () => db.select().from(unreachableWindows);
 const outbox = (type: "UNREACHABLE_WINDOW_OPENED" | "UNREACHABLE_WINDOW_CLOSED") => db.select().from(emailOutbox).where(eq(emailOutbox.messageType, type));
 
-describe("§NNN the pings fall silent: the window is seen once it is over, and the deadlines move", () => {
+describe("§657 the pings fall silent: the window is seen once it is over, and the deadlines move", () => {
   it("moves every deadline running at the window's start by its length, and none that passed before it", async () => {
     const event = await createEvent();
     const link = await register(event, { status: "PENDING_EMAIL_CONFIRMATION", emailLinkExpiresAt: new Date("2026-10-03T11:00:00.000Z") });
@@ -554,7 +554,7 @@ describe("§NNN the pings fall silent: the window is seen once it is over, and t
   });
 });
 
-describe("§NNN the name does not resolve: two probes ten minutes apart, the window stays open, nothing lapses, then everything moves", () => {
+describe("§657 the name does not resolve: two probes ten minutes apart, the window stays open, nothing lapses, then everything moves", () => {
   // Every call arrives (by another address); only the name is gone.
   const everyQuarter: OutageGraceDeps["readPings"] = async (_anchor, now) => {
     const pings: Date[] = [];
@@ -726,7 +726,7 @@ describe("§NNN the name does not resolve: two probes ten minutes apart, the win
   });
 });
 
-describe("§NNN a window seen late moves only what was running inside it, and is recorded once", () => {
+describe("§657 a window seen late moves only what was running inside it, and is recorded once", () => {
   // Brașov's 11:19 to 18:30: the last call at 11:04, the first back at 18:30, answered from the cache until this 19:30 run.
   const at = (iso: string) => new Date(`2026-10-03T${iso}:00.000Z`);
   const SHUT = at("08:19");
@@ -791,7 +791,7 @@ describe("§NNN a window seen late moves only what was running inside it, and is
   });
 });
 
-describe("§NNN a claim the allocator already lapsed inside the window: recorded as not revived, never revived", () => {
+describe("§657 a claim the allocator already lapsed inside the window: recorded as not revived, never revived", () => {
   // Inside the pings window (09:15–16:00): a newcomer's transaction at 15:30, while the name answered a visitor, lapses what was past its deadline first.
   const NEWCOMER = new Date("2026-10-03T15:30:00.000Z");
 

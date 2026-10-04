@@ -54,18 +54,18 @@ export type RegistrationListRow = {
   clubMemberDeclared: boolean;
   /**
    * Where the person lives (§510) — the country's ISO code, `RO` by default, and the city as typed — for
-   * the list's «Oraș» (`domain/city-label.ts#cityLabel`, §NNN) and the export's «Country» and «City».
+   * the list's «Oraș» (`domain/city-label.ts#cityLabel`, §660) and the export's «Country» and «City».
    */
-  country: string | null;
+  country: string;
   city: string | null;
   /**
-   * The birth date and the event's start on its own clock, for «Vârstă» (§NNN): the age on the event's
+   * The birth date and the event's start on its own clock, for «Vârstă» (§660): the age on the event's
    * day, `domain/age.ts#ageOnRaceDay`, the one the categories and the minors' rules count (§329).
    */
   birthDate: string | null;
   eventStartsAt: Date;
   eventTimezone: string;
-  /** «Membru (verificat)» (§NNN): the participant's canonical address is a member account's; `membershipOf` reads the two. */
+  /** «Membru (verificat)» (§662): the participant's canonical address is a member account's; `membershipOf` reads the two. */
   memberVerified: boolean;
   /** When the entrant ticked "I am medically fit" (§171); null on a desk or phone entry. */
   fitnessDeclaredAt: Date | null;
@@ -105,7 +105,7 @@ export type RegistrationListRow = {
   /** When the club last said this bib is on paper (§264); null while it is not. */
   bibPrintedAt: Date | null;
   checkedInAt: Date | null;
-  /** The newest message the provider rejected — which, when, why and its reason (§76, §NNN); null otherwise. */
+  /** The newest message the provider rejected — which, when, why and its reason (§76, §663); null otherwise. */
   emailRejected: RejectedEmail | null;
   /** The latest declaration's declarant's document: the adult's, or the parent's for a minor (§95, §108). */
   idDocument: string | null;
@@ -142,7 +142,7 @@ export type RegistrationListFilters = {
   eventId?: string;
   status?: RegistrationStatus;
   excludeTest?: boolean;
-  /** «Doar membrii {club}» (§650, §NNN): the rows whose person ticked the box or whose address is a member account's. */
+  /** «Doar membrii {club}» (§650, §662): the rows whose person ticked the box or whose address is a member account's. */
   clubMember?: boolean;
   /**
    * The member accounts' canonical addresses (`memberCanonicalEmails`), when the caller has read them
@@ -224,7 +224,7 @@ function escapeLike(term: string): string {
 /** Every filter the list and its count must agree on, in one place so they cannot drift apart. */
 /**
  * The provider's last word on this registration's mail, when that word was "no" (BR-REQ-080-04,
- * `DECISIONS.md` §76, §NNN): the newest bounced or complained message — its type, when it left,
+ * `DECISIONS.md` §76, §663): the newest bounced or complained message — its type, when it left,
  * which of the two, and the short sanitized reason the provider gave (§16.1), never a body. Any
  * message type: a confirmed participant whose race-number email bounced is one the club can no
  * longer reach by email, and somebody should call them. Null when every message went through, or
@@ -269,7 +269,7 @@ const latestDeclarationAcceptedAt = sql<Date | null>`(
 )`.mapWith(declarationAcceptances.acceptedAt);
 
 // A club copy (§320) that bounced is a club mailbox's problem, not the participant's address:
-// it never marks the registration as unreachable. One object (§NNN): which message, when it left (or
+// it never marks the registration as unreachable. One object (§663): which message, when it left (or
 // was queued, refused outright), bounced or complained, and the reason — so the chip says which and when.
 const emailRejected = sql<RejectedEmail | null>`(
   SELECT json_build_object(
@@ -288,7 +288,7 @@ const emailRejected = sql<RejectedEmail | null>`(
 )`.mapWith(rejectedEmailOf);
 
 /**
- * «Membru (verificat)» (§NNN): the participant's canonical address (`participants.canonical_email`, the
+ * «Membru (verificat)» (§662): the participant's canonical address (`participants.canonical_email`, the
  * canonicalizer's own output, AGENTS.md §10.4) is among the member accounts' — never a raw address, never
  * a name. With no member account it is plainly false, never an `IN ()`.
  */
@@ -308,7 +308,7 @@ function registrationConditions(filters: RegistrationListFilters, members: reado
     filters.eventId ? eq(registrations.eventId, filters.eventId) : undefined,
     filters.status ? eq(registrations.status, filters.status) : undefined,
     filters.excludeTest ? eq(registrations.kind, "REAL") : undefined,
-    // Only ever narrows to the members, declared or verified (§NNN; the row's chip says which).
+    // Only ever narrows to the members, declared or verified (§662; the row's chip says which).
     // There is no "show me the non-members" filter, because `false` here means "did not tick a
     // box" as often as it means "not a member", and a screen that presented it as the second
     // would be inventing an answer.
@@ -420,14 +420,14 @@ function registrationOrderBy(sort: RegistrationSortKey, dir: "asc" | "desc", now
     case "untilWhen":
       return dir === "asc" ? sql`${rowDeadlineOrder(now)} asc nulls last` : sql`${rowDeadlineOrder(now)} desc nulls last`;
     /*
-      «Oraș» (§NNN): the city as typed, by the database's collation as the name sorts; a row with no city
+      «Oraș» (§660): the city as typed, by the database's collation as the name sorts; a row with no city
       last either way, as a row with no number is under «BIB». The country's code the cell adds is not
       part of the order: «Bristol (GB)» sorts among the B's.
     */
     case "city":
       return dir === "asc" ? sql`nullif(btrim(${registrations.city}), '') asc nulls last` : sql`nullif(btrim(${registrations.city}), '') desc nulls last`;
     /*
-      «Vârstă» (§NNN): the youngest first is the latest birth date first. Over one event this is exactly
+      «Vârstă» (§660): the youngest first is the latest birth date first. Over one event this is exactly
       the order of the ages on screen; over every event it is the order of the birth dates, which two
       rows of different races read the same way within a year. No birth date last, either way.
     */
@@ -476,7 +476,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       eventId: registrations.eventId,
       eventTitle: eventTranslations.title,
       clubMemberDeclared: registrations.clubMemberDeclared,
-      // «Oraș» and «Vârstă» (§NNN): read from the row and its event, no query per row.
+      // «Oraș» and «Vârstă» (§660): read from the row and its event, no query per row.
       country: registrations.country,
       city: registrations.city,
       birthDate: registrations.birthDate,
@@ -521,7 +521,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
     })
     .from(registrations)
     .innerJoin(participants, eq(participants.id, registrations.participantId))
-    // The event's start and clock, for «Vârstă» (§NNN): one primary-key probe per row.
+    // The event's start and clock, for «Vârstă» (§660): one primary-key probe per row.
     .innerJoin(events, eq(events.id, registrations.eventId))
     .leftJoin(
       eventTranslations,
@@ -721,7 +721,7 @@ export type RegistrationDetail = {
   eventId: string;
   eventTitle: string | null;
   clubMemberDeclared: boolean;
-  /** «Membru (verificat)» (§NNN), as on the list row. */
+  /** «Membru (verificat)» (§662), as on the list row. */
   memberVerified: boolean;
   submittedAt: Date;
   emailConfirmedAt: Date | null;
@@ -762,7 +762,7 @@ export type RegistrationDetail = {
   checkedInByName: string | null;
   /** Who vouched for the address at the desk, when nobody clicked a link. */
   emailConfirmedByName: string | null;
-  /** The newest message to this registration the provider rejected (§76, §NNN); null otherwise. */
+  /** The newest message to this registration the provider rejected (§76, §663); null otherwise. */
   emailRejected: RejectedEmail | null;
   /** For "send the reminder": only while the event is ahead (§81). */
   eventStartsAt: Date;
@@ -993,7 +993,7 @@ export async function listEmergencySheet<T extends Record<string, unknown>>(
  * The extra columns the spreadsheet carries (§322): sex, the age on race day, where the runner is
  * from, and the t-shirt size — what a category ranking, the club's "where do our runners come
  * from" and the kit order need. The age, the country and the city are also the list's own
- * «Vârstă» and «Oraș» and the CSV's last columns since §NNN; sex, citizenship and the t-shirt stay
+ * «Vârstă» and «Oraș» and the CSV's last columns since §660; sex, citizenship and the t-shirt stay
  * the spreadsheet's alone. One query for the exported ids.
  */
 export type WorkbookDetails = {
@@ -1104,9 +1104,9 @@ export type DeskRegistration = {
   checkinCode: string | null;
   checkedInAt: Date | null;
   checkedInByName: string | null;
-  /** The desk sees whom an email no longer reaches (`DECISIONS.md` §76, §NNN) — which, when and why, never the address. */
+  /** The desk sees whom an email no longer reaches (`DECISIONS.md` §76, §663) — which, when and why, never the address. */
   emailRejected: RejectedEmail | null;
-  /** When the address was confirmed, so the desk's words say whether the rejection came after it (§NNN). */
+  /** When the address was confirmed, so the desk's words say whether the rejection came after it (§663). */
   emailConfirmedAt: Date | null;
   /** The declarant's document, and a minor's own beside it (§95, §330; `identityDocumentsOf`). */
   idDocument: string | null;

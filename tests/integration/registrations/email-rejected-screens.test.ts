@@ -14,7 +14,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-037-03, BR-REQ-038-01 criterion 8 (§NNN; amending §650, §76, §83) — «Email respins» on the
+ * BR-REQ-037-03, BR-REQ-038-01 criterion 8 (§663; amending §650, §76, §83) — «Email respins» on the
  * registrations list, the registration's page and the desk, from a real database: the chip's tooltip says
  * which email was rejected (its «Emailuri» name), when, why, whether the address had been confirmed
  * before it, and what to do; the provider's reason is the small print, never a `title`. A confirmed row
@@ -193,7 +193,7 @@ beforeEach(async () => {
   state.locale = "ro";
 });
 
-describe("«Email respins» says which email, when and why (§NNN)", () => {
+describe("«Email respins» says which email, when and why (§663)", () => {
   it("on the list: a confirmed row whose race-number email bounced, a never-confirmed row, a complaint; the newest rejection wins", async () => {
     const race = await createRace();
     const confirmed = await register(race.id, { emailConfirmedAt: CONFIRMED_AT, confirmedAt: CONFIRMED_AT, bibNumber: 17 });

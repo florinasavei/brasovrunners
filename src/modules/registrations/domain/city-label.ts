@@ -1,5 +1,5 @@
 /**
- * «Oraș» on the registrations list (§NNN): where the person lives, as one short cell — the city as typed,
+ * «Oraș» on the registrations list (§660): where the person lives, as one short cell — the city as typed,
  * followed by the country's ISO code in brackets only when it is not Romania («Bristol (GB)»), because
  * most of the club's runners live in Romania and a «(RO)» on every row is noise. Empty when no city was
  * given: the list prints «—» for it, as it does for every column with nothing to say.
@@ -8,7 +8,7 @@
  * cell and its phone row read this one function; the export keeps the country and the city in their own
  * columns, as the spreadsheet always has, so a sheet can filter by either.
  */
-export const HOME_COUNTRY = "RO";
+const HOME_COUNTRY = "RO";
 
 export function cityLabel(city: string | null | undefined, country: string | null | undefined): string {
   const typed = city?.trim() ?? "";

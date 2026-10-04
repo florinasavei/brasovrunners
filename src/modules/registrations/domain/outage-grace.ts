@@ -4,7 +4,7 @@ import type { NameProbeStatus } from "@/modules/resilience/domain/name-probe";
 import { capHoldExpiry } from "./hold-deadlines";
 
 /**
- * The clock stops while the door is shut (§NNN): the outage grace's rules, without a database. On
+ * The clock stops while the door is shut (§657): the outage grace's rules, without a database. On
  * 2026-10-03 the registrar held the club's domain for its contact verification, from about 11:04 to
  * 18:24 UTC; the owner, the same day: «DO IT! Make it super safe!».
  *
@@ -237,7 +237,7 @@ export const PENDING_HOLD_MS = 2 * 60 * MINUTE;
 export type UnreachableWindowState = "open" | "stuck" | "notRevived" | "clear";
 
 /**
- * What «Sarcini» says of the windows (§NNN): `open` while a window is open — nobody reaches the site
+ * What «Sarcini» says of the windows (§657): `open` while a window is open — nobody reaches the site
  * by its name; `stuck` while a window closed more than `PENDING_HOLD_MS` ago still has deadlines it
  * could not move; `notRevived` while the newest closed window left a claim it did not revive still
  * unhandled on an event that has not started (`notRevivedWaiting`, read by `jobs/unreachable-windows.ts`:

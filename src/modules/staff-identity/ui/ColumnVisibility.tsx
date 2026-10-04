@@ -21,7 +21,7 @@ type Props = {
 };
 
 /**
- * «Coloane» (§NNN): which of a backoffice table's columns this browser shows. One checkbox per
+ * «Coloane» (§661): which of a backoffice table's columns this browser shows. One checkbox per
  * column that may be hidden, and «Arată toate coloanele»; the essential ones (the first, the state)
  * are named under the list as always shown, with no checkbox.
  *
@@ -29,8 +29,9 @@ type Props = {
  * heading and whether it is essential — and never a row: it hides through the same store
  * (`br.table.<id>.hidden`, beside the widths) and the same `<style>` in `<head>` the pre-paint script
  * writes, then lays the table out again so its fixed widths count only the columns shown. A hidden
- * column keeps its stored width for when it returns. Drawn only once hydrated, and only from `md`
- * up, where the table is: with JavaScript off, or on the phone layout, every column shows.
+ * column keeps its stored width for when it returns. The menu is drawn only once hydrated, and only
+ * from `md` up, where the table is; before that an empty box of the button's size holds its place.
+ * With JavaScript off, or on the phone layout, every column shows.
  *
  * A view, not a disclosure: the exports keep their own columns, and nothing reaches the server.
  */

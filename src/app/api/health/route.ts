@@ -88,7 +88,7 @@ async function askTheDatabase(
         console.error("[health] the bot-check counts could not be read", error);
         return null;
       }),
-      // The outage grace (§NNN): the open window and the latest one over, as instants — never the reason this half fails.
+      // The outage grace (§657): the open window and the latest one over, as instants — never the reason this half fails.
       readUnreachableWindows(db, 2).then(
         (windows): OutageHalf => {
           const open = windows.find((window) => window.endedAt === null) ?? null;
@@ -131,7 +131,7 @@ export const dynamic = "force-dynamic";
 
 type SchemaCheck = Awaited<ReturnType<typeof checkSchemaVersion>>;
 type EmailCheck = Awaited<ReturnType<typeof checkEmailHealth>>;
-/** The unreachable windows (§NNN), as instants a monitor can log: kept in the reused half as strings, never dates. */
+/** The unreachable windows (§657), as instants a monitor can log: kept in the reused half as strings, never dates. */
 type OutageHalf = { unreachableSince: string | null; lastUnreachable: { startedAt: string; endedAt: string } | null };
 type DatabaseHalf = { schema: SchemaCheck; jobs: JobHealth[]; email: EmailCheck; botCheck: BotCheckSignalLevels | null; outage?: OutageHalf | null };
 
@@ -192,7 +192,7 @@ const BUDGET_NOTE: Record<NeonQuotaHealth["level"], string | null> = {
 /** How long the route waits for the month's budget before probing without it (§447). */
 const HEALTH_BUDGET_WAIT_MS = 2_500;
 
-/** The name probe's answer when it did not answer in time (§NNN): nothing is known, nothing is degraded. */
+/** The name probe's answer when it did not answer in time (§657): nothing is known, nothing is degraded. */
 const NAME_NOT_ASKED = { status: "unknown" as const, host: null, checkedAt: "" };
 
 
@@ -259,7 +259,7 @@ async function deepHealth(now: Date): Promise<Response> {
     // DeepL's credit (§497): cached an hour; never holds the probe longer than the budget does.
     withinWait(readTranslationCredit(env), HEALTH_BUDGET_WAIT_MS, { ok: false as const, reason: "unavailable" as const }),
     /*
-      Does the site's public name still resolve (§NNN)? The deep answer only — the shallow one asks
+      Does the site's public name still resolve (§657)? The deep answer only — the shallow one asks
       nobody (§577) — bounded like the others and never failing the endpoint: a probe that cannot
       answer is `unknown`. Reached through another address while the name is gone, this is what
       says so; reached by the name, it says `resolves`.
@@ -328,7 +328,7 @@ async function deepHealth(now: Date): Promise<Response> {
   const domain = domainRenewal(env.DOMAIN_REGISTERED_ON, env.DOMAIN_RENEWAL_YEARS, now);
   const domainDue = domain.status === "urgent" || domain.status === "expired";
   /*
-    The outage grace (§NNN): the name does not resolve, or the job holds a window open — nobody can
+    The outage grace (§657): the name does not resolve, or the job holds a window open — nobody can
     reach the site by its name, and the deadlines are held. `degraded`, so the 503 reaches a monitor that
     calls by another address; a monitor that calls by the name cannot reach this line at all, which is
     why the job also emails the Administrators.
@@ -404,7 +404,7 @@ async function deepHealth(now: Date): Promise<Response> {
       // used or left, which are the club's account figures (Costuri, §479). No effect on `status`.
       translation: creditHealth(translationCredit),
       // The domain's expiry (§435) is public at any registrar, so the day and the days left are
-      // published. And whether its name resolves (§NNN): `host` — the name asked, `APP_BASE_URL`'s, which
+      // published. And whether its name resolves (§657): `host` — the name asked, `APP_BASE_URL`'s, which
       // a monitor calling by another address cannot see otherwise; null where nothing is asked —
       // `resolves` (true, false, or null for no answer or not asked), `checkedAt`, the open unreachable
       // window's start and the latest one over: instants only, no counts.

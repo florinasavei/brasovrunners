@@ -3,7 +3,7 @@ import { countForm } from "@/i18n/count-form";
 import { hoursPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 
 /**
- * The outage grace's two Administrators' emails (§NNN), in both languages: «Site-ul nu se găsește după
+ * The outage grace's two Administrators' emails (§657), in both languages: «Site-ul nu se găsește după
  * nume» while a `dns` window is open, and «Ceasul termenelor a stat pe loc» once a window is over and its
  * deadlines have moved.
  *
@@ -146,7 +146,7 @@ export function windowOpenedBody(locale: Lang, facts?: UnreachableWindowFacts): 
 /**
  * What an Administrator can do for each kind of claim not revived — one sentence per kind present in
  * the email, both languages, each under 200 characters — naming only the verbs that exist for the
- * state the claim is in now (§NNN): a lapsed offer, declaration hold or address link is an `EXPIRED`
+ * state the claim is in now (§657): a lapsed offer, declaration hold or address link is an `EXPIRED`
  * registration, which no verb seats, so the person registers again (or the staff adds the registration)
  * and «Trimite-i oferta» seats them once they wait; a cleared family reservation still waits for its
  * address, which «Dă-i un loc acum» is for; an expired invitation cannot be re-sent («Retrimite» is for

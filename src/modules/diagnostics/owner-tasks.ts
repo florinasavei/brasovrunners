@@ -346,7 +346,7 @@ export type OwnerTaskInputs = {
    */
   domainRenewal: DomainRenewal;
   /**
-   * The outage grace (§NNN, `unreachable_windows`, `unreachableWindowState`): `open` while a window is
+   * The outage grace (§657, `unreachable_windows`, `unreachableWindowState`): `open` while a window is
    * open — the site's name does not resolve and the deadlines are held; `stuck` while a window over for
    * more than two hours still has deadlines it could not move; `notRevived` while the newest window over
    * left a claim it did not revive that is not handled yet on an event that has not started — the person
@@ -714,7 +714,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   const quota = input.neonQuota?.quotaCuHours ?? null;
   const nearLimit = quota !== null && isNeonQuotaNearLimit(input.neonQuota?.usedCuHours ?? 0, quota);
   /*
-    The clock stopped while the door was shut (§NNN): blocking while a window is open — nobody reaches
+    The clock stopped while the door was shut (§657): blocking while a window is open — nobody reaches
     the form by its name — and while the newest left somebody's claim lapsed whom only an Administrator
     can seat; broken while a window's moves are stuck; done otherwise.
   */

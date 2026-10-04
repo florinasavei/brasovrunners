@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V2.66-2026-10-03`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V2.67-2026-10-04`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -596,7 +596,7 @@ carries a newer baseline than `qa`'s) ships as it is.
    followed, when ship itself stopped, by ship's reason. The run's **Summary** page says, in a
    table, each step's outcome and ship's minutes. The comment and the label's removal are made
    with the run's own token, so a stopped release loses its label and the label can be ticked
-   again (`DECISIONS.md` §NNN) — a run started by hand under **Actions** has no label to remove.
+   again (`DECISIONS.md` §658) — a run started by hand under **Actions** has no label to remove.
 
 While ship waits for production — first for the baseline production runs, at the end for the new
 one — its log says what production answers every two minutes, one of three lines:
@@ -660,7 +660,7 @@ The run's **Summary** says where, in words:
   baseline `main` carries, tick **ship** again — the label came off at the stop.
 - **A stop after the `qa → main` release merged** — the migration's or production's; the table
   lists the step «migration», and the comment says «The release is already in main»
-  (`DECISIONS.md` §NNN). **Never tick ship again, nor run release again**: a second run takes its
+  (`DECISIONS.md` §658). **Never tick ship again, nor run release again**: a second run takes its
   starting baseline from `main`, which is now the new one, waits an hour for a baseline production
   does not run, and stops with a second «The release stopped» for a release that went out. Instead:
   - **the migration** («no migrate.yml run appeared», «was still … after an hour», «ended
@@ -681,7 +681,7 @@ are the run's to open, merge and approve.
 
 («Domeniul nu mai răspunde».) The club's name does not resolve, or does not reach Vercel, while
 the deployments behind it run on: the database, the outbox and the functions are fine, nobody can
-find them by name (`DECISIONS.md` §NNN). The names are in `SETUP.md` §26's table; below, `<domain>`
+find them by name (`DECISIONS.md` §659). The names are in `SETUP.md` §26's table; below, `<domain>`
 is the club's `.com` and every time is UTC. The setup that keeps such an hour cheap — the contact
 mailbox, the renewal, the monitors on the address no registrar can hold — is `SETUP.md` §26 and
 §40.
@@ -780,12 +780,14 @@ decision in this release (`docs/PLATFORM.md` § When the name is gone), stops th
   already expired it). «Sarcini» shows «Site-ul de negăsit: ceasul termenelor» in red until every
   one is handled. **That email is the list to work from:** under its bold line it names each claim
   not revived — the person, the event, what it was — with a link to its page in the backoffice, and
-  under the list one sentence per kind with the verb its state has now. Without the email:
-  «Înscrieri» → the event and state **«Expirată»** → **Filtrează**, and open each row; the history
-  on the registration's page carries «Nereluat după întreruperea site-ului…» for a claim the
-  window did not revive, and otherwise its expiry falls inside the hours of the outage. (The
-  «Până când» column shows no deadline for an expired registration and does not sort by its
-  expiry.) For each, as the email says it:
+  under the list one sentence per kind with the verb its state has now. Without the email the list
+  is incomplete: «Înscrieri» → the event and state **«Expirată»** → **Filtrează** finds the lapsed
+  offers, declaration holds and address links (their history on the registration's page carries
+  «Nereluat după întreruperea site-ului…»); a family's reservation is still awaiting its address,
+  with the same history line; an expired invitation's line is in the event's own history; a place
+  held for a family form has no row at all. Ask any Administrator for the email before relying on
+  this. (The «Până când» column shows no deadline for an expired registration and does not sort by
+  its expiry.) For each, as the email says it:
   1. **A lapsed offer, declaration hold or address link** — the registration is «Expirată», and no
      verb seats an expired row: the person registers again (or the staff use «Adaugă înscrierea»),
      and once they wait, **«Trimite-i oferta»** seats them (an Administrator; one supplementary

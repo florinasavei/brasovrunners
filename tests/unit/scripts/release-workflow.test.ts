@@ -77,7 +77,7 @@ describe("§535 release.yml — the dry run and the summary page", () => {
 describe("§535 release.yml — the token and what a person typed", () => {
   it("writes the comment and the label with its own token, and every push, merge and approval through SHIP_TOKEN, which it refuses to run without", () => {
     expect(workflow).toMatch(/\npermissions:\n {2}contents: read\n {2}pull-requests: write\n {2}issues: write\n(?!\s{2}\S)/);
-    // Contents stay read: every push, merge and approval goes through SHIP_TOKEN (§NNN).
+    // Contents stay read: every push, merge and approval goes through SHIP_TOKEN (§658).
     expect(workflow).not.toMatch(/contents: write|actions: write|deployments: write/);
     expect(workflow).toContain("GH_TOKEN: ${{ secrets.SHIP_TOKEN }}");
     expect(workflow).toMatch(/uses: actions\/checkout@v4\n {8}with:\n(?: {10}.*\n)*? {10}token: \$\{\{ secrets\.SHIP_TOKEN \}\}\n/);
@@ -156,7 +156,7 @@ describe("§535 release.yml — the same tools as the PC, in order", () => {
     expect(steps).toContain('gh api -X DELETE "repos/$GITHUB_REPOSITORY/issues/$PR/labels/ship"');
   });
 
-  it("comments and takes the label off with the job's own token, saying why ship stopped (§NNN)", () => {
+  it("comments and takes the label off with the job's own token, saying why ship stopped (§658)", () => {
     const say = steps.slice(steps.indexOf("- name: Say so on the pull request"));
     expect(say).toMatch(/\n {8}env:\n(?: {10}.*\n)*? {10}GH_TOKEN: \$\{\{ github\.token \}\}\n/);
     expect(say).toContain("TIMES: ${{ runner.temp }}/ship-times.jsonl");
@@ -169,7 +169,7 @@ describe("§535 release.yml — the same tools as the PC, in order", () => {
     expect(steps.slice(0, steps.indexOf("- name: Say so on the pull request"))).not.toContain("github.token");
   });
 
-  it("after a STOP once the release merged into main says not to label again; before it, to label again (§NNN)", () => {
+  it("after a STOP once the release merged into main says not to label again; before it, to label again (§658)", () => {
     const say = steps.slice(steps.indexOf("- name: Say so on the pull request"));
     // Chosen by the times record's steps, not by one STOP's words: the migration's STOPs come after
     // the merge into main as well as production's.
@@ -181,6 +181,9 @@ describe("§535 release.yml — the same tools as the PC, in order", () => {
     expect(say).toContain("docs/RUNBOOKS.md § The domain stops answering");
     expect(say).toContain("The release is done once /api/health reports the new baseline.");
     expect(say).toContain('next="Fix it, then add the label ship again (or run the release workflow)."');
+    // A cancelled run, or one that left no times record, may have merged the release before it stopped.
+    expect(say).toContain('elif [ "$OUTCOME" = "cancelled" ] || [ ! -s "$TIMES" ]; then');
+    expect(say).toContain("Check whether the release pull request (qa → main) merged before adding the label ship again");
     expect(say).toContain('$RUN_URL. $next"');
     // Ship opens the step «migration» right after the qa → main merge, before anything that can stop,
     // and every STOP before it (production's first wait among them) comes before that merge.

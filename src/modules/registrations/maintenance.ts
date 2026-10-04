@@ -41,7 +41,7 @@ import { fillAvailableSpots } from "./service";
 export async function runRegistrationMaintenance<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,
-  /** The name probe and the pings' reader (§NNN): the real ones unless a test hands its own. */
+  /** The name probe and the pings' reader (§657): the real ones unless a test hands its own. */
   outageDeps: OutageGraceDeps = {},
 ): Promise<{
   eventsProcessed: number;
@@ -68,7 +68,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
    */
   legalTemplatesNoticesQueued: number;
   /**
-   * The outage grace (§NNN): what the site's name answered this run (`resolves`, `unresolved`,
+   * The outage grace (§657): what the site's name answered this run (`resolves`, `unresolved`,
    * `unknown`, `skipped`), whether this run held every lapse — a `dns` window is open — how many
    * deadlines a window moved, and how many lapsed claims it did not revive because their place was
    * given meanwhile.
@@ -94,7 +94,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   const settings = await readDeadlinesForRun(db);
 
   /*
-    The clock stops while the door is shut (§NNN), first — detect, move, then sweep: before anything
+    The clock stops while the door is shut (§657), first — detect, move, then sweep: before anything
     below lapses an address link, a hold, an offer, an invitation or a family's form, a window moves
     the deadlines that were running in it — a `dns` window still open (the site's name does not
     resolve) by the time since the last run, and holds every lapse of this run besides. Caught on its own: a failure here is counted, as
@@ -132,7 +132,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     legacyFailed = true;
   }
 
-  // While the door is shut nothing lapses (§NNN): nobody can reach the page that would act on it.
+  // While the door is shut nothing lapses (§657): nobody can reach the page that would act on it.
   const lapsedEmailConfirmations = outageGrace.holding ? 0 : await repo.expireStalePendingEmailConfirmations(db, now, settings);
 
   /*
@@ -153,10 +153,10 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     familyPurgeFailed = true;
   }
 
-  // The holds, the offers, the invitations and the line's offers: every one of them waits for the door too (§NNN).
+  // The holds, the offers, the invitations and the line's offers: every one of them waits for the door too (§657).
   const eventIds = outageGrace.holding ? [] : await repo.findEventsNeedingMaintenance(db, now);
   let errorCount = (familyPurgeFailed ? 1 : 0) + (legacyFailed ? 1 : 0) + outageFailed;
-  // A window whose moves have failed for longer than a while is «Sarcini»'s, not the next ping's (§NNN).
+  // A window whose moves have failed for longer than a while is «Sarcini»'s, not the next ping's (§657).
   let retryableErrorCount = errorCount - (outageFailed - outageRetryable);
 
   for (const eventId of eventIds) {
@@ -264,7 +264,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   */
   let confirmationRetriesQueued = 0;
   try {
-    // Not while the door is shut (§NNN): the link would open the name that is gone, and spend one of the address's few nudges.
+    // Not while the door is shut (§657): the link would open the name that is gone, and spend one of the address's few nudges.
     if (!outageGrace.holding) confirmationRetriesQueued = await queueConfirmationRetries(db, now, settings);
   } catch {
     errorCount += 1;

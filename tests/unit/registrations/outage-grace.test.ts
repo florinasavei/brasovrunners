@@ -38,7 +38,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — the clock stops while the door is shut (the outage grace): the rules, without a database.
+ * §657 — the clock stops while the door is shut (the outage grace): the rules, without a database.
  * Which silences of the pinger are a window (the pinger's own threshold, never a second one), what a
  * run does with the name's answer — two «no such name» ten minutes apart before anything opens — where
  * a deadline moves, what «Sarcini» says, and what the name probe makes of a resolver's answer.
@@ -50,7 +50,7 @@ const NOON = new Date("2026-10-03T11:00:00.000Z");
 const NIGHT = new Date("2026-10-02T22:00:00.000Z");
 const at = (base: Date, minutes: number) => new Date(base.getTime() + minutes * MINUTE);
 
-describe("§NNN the pinger's silences", () => {
+describe("§657 the pinger's silences", () => {
   it("reuses the health check's threshold: 35 minutes by day, 125 at night", () => {
     expect(jobStalenessThresholdMs(NOON, 15)).toBe(35 * MINUTE);
     expect(jobStalenessThresholdMs(NIGHT, 15)).toBe(125 * MINUTE);
@@ -99,7 +99,7 @@ describe("§NNN the pinger's silences", () => {
   });
 });
 
-describe("§NNN what a run does with the name's answer", () => {
+describe("§657 what a run does with the name's answer", () => {
   const maxMs = outageGraceMaxMs(DEFAULT_DEADLINES);
   const suspicion = (startedAt: Date): KnownWindow => ({ id: "s", source: "dns", startedAt, endedAt: null, confirmedAt: null });
   const open = (startedAt: Date): KnownWindow => ({ id: "w", source: "dns", startedAt, endedAt: null, confirmedAt: startedAt });
@@ -173,7 +173,7 @@ describe("§NNN what a run does with the name's answer", () => {
   });
 });
 
-describe("§NNN where a deadline moves", () => {
+describe("§657 where a deadline moves", () => {
   const since = at(NOON, -420);
   const grantedMs = 420 * MINUTE;
 
@@ -239,7 +239,7 @@ describe("§NNN where a deadline moves", () => {
   });
 });
 
-describe("§NNN what «Sarcini» says of the windows", () => {
+describe("§657 what «Sarcini» says of the windows", () => {
   const closed = (overrides: Partial<{ endedAt: Date | null; confirmedAt: Date | null; appliedAt: Date | null }> = {}) => ({
     endedAt: at(NOON, -300),
     confirmedAt: at(NOON, -300),
@@ -268,7 +268,7 @@ describe("§NNN what «Sarcini» says of the windows", () => {
   });
 });
 
-describe("§NNN the name probe", () => {
+describe("§657 the name probe", () => {
   it("asks only a public name: never a laptop, a test, a number or a private suffix", () => {
     expect(probedHost("https://club.example.com", "production")).toBe("club.example.com");
     expect(probedHost("https://qa.club.example.com/", "qa")).toBe("qa.club.example.com");
@@ -301,7 +301,7 @@ describe("§NNN the name probe", () => {
   });
 });
 
-describe("§NNN the Administrators' two emails", () => {
+describe("§657 the Administrators' two emails", () => {
   const TYPES = ["UNREACHABLE_WINDOW_OPENED", "UNREACHABLE_WINDOW_CLOSED"] as const;
   const facts = (overrides: Record<string, unknown> = {}) =>
     readUnreachableWindowFacts({ startedAt: "2026-10-03T07:00:00.000Z", endedAt: "2026-10-04T07:00:00.000Z", source: "pings", grantedMinutes: 2880, maxHours: 48, moved: 21, notRevived: 2, ...overrides });
@@ -432,7 +432,7 @@ describe("§NNN the Administrators' two emails", () => {
     // The payload carries ids only; anything unreadable is left out.
     expect(readNotRevivedRefs({ claims: [{ kind: "offer", id: "r", eventId: "e" }, { kind: "seated", id: "x", eventId: "e" }, "junk"] })).toEqual([{ kind: "offer", id: "r", eventId: "e" }]);
     expect(readNotRevivedRefs(null)).toEqual([]);
-    // What the allocator had already lapsed (§NNN): a declaration hold and an address link are named too.
+    // What the allocator had already lapsed (§657): a declaration hold and an address link are named too.
     expect(readNotRevivedRefs({ claims: [{ kind: "declarationHold", id: "d", eventId: "e" }, { kind: "emailLink", id: "l", eventId: "e" }] }).map((ref) => ref.kind)).toEqual(["declarationHold", "emailLink"]);
     const lapsed = { ...facts(), claims: [
       { kind: "declarationHold" as const, name: "Ion Pop", event: "Crosul", url: "https://example.test/ro/admin/registrations/d" },

@@ -961,7 +961,7 @@ export type TemplateData = {
    */
   legalTemplateKeys?: readonly string[];
   /**
-   * The outage grace's two emails to the Administrators (§NNN): the window's instants, what it gave back, the club's cap
+   * The outage grace's two emails to the Administrators (§657): the window's instants, what it gave back, the club's cap
    * and the counts, as the maintenance job wrote them. Each half writes them in its own language.
    */
   unreachableWindow?: UnreachableWindowFacts;
@@ -1653,14 +1653,14 @@ const T = {
       // The screen the button opens and what is done there (§654): «Versiune nouă» regenerates; approving is on «Documente legale».
       action: `${legalTemplatesWords("ro").newVersion}: regenerează textele`,
     },
-    // To the Administrators (§NNN): the site's name does not resolve, and nothing lapses until it does.
+    // To the Administrators (§657): the site's name does not resolve, and nothing lapses until it does.
     // No button: the address it would open is the one that is gone.
     unreachableWindowOpened: {
       subject: "Site-ul nu se găsește după nume: termenele stau pe loc",
       facts: (d: TemplateData) => (d.unreachableWindow ? { line: windowOpenedFactsLine("ro", d.unreachableWindow), links: [] } : undefined),
       body: (d: TemplateData) => windowOpenedBody("ro", d.unreachableWindow),
     },
-    // To the Administrators (§NNN): the window is over, what moved, and what to check.
+    // To the Administrators (§657): the window is over, what moved, and what to check.
     unreachableWindowClosed: {
       subject: "Ceasul termenelor a stat pe loc: ce s-a mutat",
       facts: (d: TemplateData) => (d.unreachableWindow ? { line: windowClosedFactsLine("ro", d.unreachableWindow), links: notRevivedLinks("ro", d.unreachableWindow) } : undefined),
@@ -3381,7 +3381,7 @@ export function buildTemplateContent(
         messageType === "MEMBER_INVITATION" ||
         // …nor the Administrators' notice of a moved template (§639): its one link is its button.
         messageType === "LEGAL_TEMPLATES_CHANGED" ||
-        // …nor the outage grace's two (§NNN): to the Administrators, about no event and nobody's data.
+        // …nor the outage grace's two (§657): to the Administrators, about no event and nobody's data.
         messageType === "UNREACHABLE_WINDOW_OPENED" ||
         messageType === "UNREACHABLE_WINDOW_CLOSED"
       ) {
@@ -3489,7 +3489,7 @@ const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set([
   "MEMBER_INVITATION",
   // To the club's Administrators about its legal texts (§639): about nobody's data.
   "LEGAL_TEMPLATES_CHANGED",
-  // The outage grace's two (§NNN): to the Administrators, instants and counts only.
+  // The outage grace's two (§657): to the Administrators, instants and counts only.
   "UNREACHABLE_WINDOW_OPENED",
   "UNREACHABLE_WINDOW_CLOSED",
 ]);

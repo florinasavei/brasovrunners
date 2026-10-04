@@ -80,7 +80,7 @@ export const STAFF_CLIENT_MESSAGES = [
   "Network.blocked",
   "Network.retry",
   // The resizable columns of every backoffice table (§650): each edge's name and how to move it,
-  // the control that puts the widths back, and the «Coloane» menu that hides columns (§NNN).
+  // the control that puts the widths back, and the «Coloane» menu that hides columns (§661).
   "Admin.columns",
   // «Tradu din română» (§464): the buttons beside every English box and at the top of an editor,
   // their pressed state, their question and their refusals.

@@ -9,7 +9,7 @@ import { type NameReadingSlot, readNameReading } from "./schedule-cache";
 
 /**
  * The windows the platform could not be reached, as `/devs`, «Sarcini» and the deep health read them
- * (§NNN): newest first, the open one among them, never a `dns` suspicion (one probe so far is no
+ * (§657): newest first, the open one among them, never a `dns` suspicion (one probe so far is no
  * window). A read of a handful of rows by their index; the writes are the maintenance job's alone
  * (`registrations/outage-grace.ts`).
  */
@@ -23,7 +23,7 @@ export async function readUnreachableWindows<T extends Record<string, unknown>>(
 }
 
 /**
- * How many claims the newest closed window did not revive still wait for an Administrator (§NNN) —
+ * How many claims the newest closed window did not revive still wait for an Administrator (§657) —
  * only until the facts show them handled, so the row never stays red with nothing to press. On a
  * scheduled event that has not started:
  *
@@ -96,7 +96,7 @@ export async function countNotRevivedWaiting<T extends Record<string, unknown>>(
 }
 
 /**
- * What the site's name answered at the maintenance job's last real run (§NNN), as the run kept it
+ * What the site's name answered at the maintenance job's last real run (§657), as the run kept it
  * beside its ping: `/devs` shows it and never asks the name itself — the probe runs in the job and the
  * deep health only. Null when there was no run, or the cache no longer remembers it.
  */

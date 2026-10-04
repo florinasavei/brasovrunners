@@ -95,7 +95,7 @@ export type DeadlineRule = {
  *   the address and the event counts toward one plus this number, the person's own «Retrimite» and a
  *   staff resend included, so nobody is nudged twice by a resend; 0 switches the mechanism off; three
  *   nudges is the most a reminder may be before it is a mailer. Neither moves the link's deadline.
- * - **the outage grace** (§NNN) 0 to 168 hours, 48 by default: the longest stretch by which one
+ * - **the outage grace** (§657) 0 to 168 hours, 48 by default: the longest stretch by which one
  *   window the platform could not be reached — the site's name not resolving, or no scheduler call
  *   reaching it — moves the participants' deadlines that were running in it
  *   (`registrations/domain/outage-grace.ts`). 0 switches the moving off while the windows are still

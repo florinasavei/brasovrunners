@@ -10,7 +10,7 @@ import { FEATURED, hydrated, signIn } from "./support/featured-event";
  * automatic layout, and the edge is a named vertical separator, one per column but the row verbs',
  * whose `aria-valuenow` the arrow keys move by 16 and whose `aria-valuemin` is its heading's floor. At 320 px the phone layout has no columns, so no edge and no reset.
  *
- * §NNN — and hidden: «Coloane» in the actions' heading unticks a column, which stays hidden after a
+ * §661 — and hidden: «Coloane» in the actions' heading unticks a column, which stays hidden after a
  * reload (drawn hidden before hydration too), keeps its width, has no edge to tab to, and comes back
  * by the menu or the reset; the name and the state have no checkbox.
  *
@@ -190,7 +190,7 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
     }
   });
 
-  test("§NNN «Coloane» hides a column, before hydration too, and the menu or the reset brings it back", async ({ page }, testInfo) => {
+  test("§661 «Coloane» hides a column, before hydration too, and the menu or the reset brings it back", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "the table is a desktop layout; the phone has its own test below");
     test.setTimeout(90_000);
     const seeded = await seed(`${testInfo.project.name}-${Date.now().toString(36)}`);
@@ -272,7 +272,7 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
       await expect(main.getByRole("link", { name: `Deschide înscrierea lui Coloane ${seeded.tag}`, exact: true })).toBeVisible();
       await expect(main.locator("[data-column-resize]").filter({ visible: true })).toHaveCount(0);
       await expect(main.getByTestId("admin-table-reset-widths").filter({ visible: true })).toHaveCount(0);
-      // Nor a «Coloane» menu (§NNN): the phone's blocks show every field.
+      // Nor a «Coloane» menu (§661): the phone's blocks show every field.
       await expect(main.getByTestId("admin-table-columns").filter({ visible: true })).toHaveCount(0);
     } finally {
       await cleanup(seeded);

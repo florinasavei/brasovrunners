@@ -184,7 +184,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     search?: string;
   } = {
     status: isRegistrationStatus(status) ? status : undefined,
-    // One-way: it narrows to the members, declared or verified (§NNN), and never to the ones who did not
+    // One-way: it narrows to the members, declared or verified (§662), and never to the ones who did not
     // tick (`admin-repository.ts` says why).
     clubMember: clubMember === "1" || undefined,
     emailBounced: bounced === "1" || undefined,
@@ -207,7 +207,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const [volume, events, members] = await Promise.all([
     readEmailVolumeToday(db, new Date()),
     listEventsWithRegistrations(db),
-    // «Membru (verificat)» (§NNN): the member accounts' canonical addresses, read once for the list, its count and its strip.
+    // «Membru (verificat)» (§662): the member accounts' canonical addresses, read once for the list, its count and its strip.
     memberCanonicalEmails(db),
   ]);
   filters.members = [...members];
@@ -388,7 +388,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     locale,
   };
 
-  // «Membru (verificat)» / «Membru (declarat)» (§NNN): one chip, or none; its sentence is the tooltip.
+  // «Membru (verificat)» / «Membru (declarat)» (§662): one chip, or none; its sentence is the tooltip.
   const memberChipOf = (row: RegistrationListRow) => {
     const membership = membershipOf({ declared: row.clubMemberDeclared, verified: row.memberVerified });
     return membership && <MemberChip membership={membership} label={t(`registrations.member.${membership}`)} hint={t(`registrations.member.${membership}Hint`)} />;
@@ -424,10 +424,10 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               href: getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: member.id } } }),
             }))}
           />
-          {/* BR-REQ-031-06, §NNN: «verificat» when the address is a member account's, whatever the tick;
+          {/* BR-REQ-031-06, §662: «verificat» when the address is a member account's, whatever the tick;
               «declarat» when the person ticked and no account matches — what they said, not what the club checked. */}
           {memberChipOf(row)}
-          {/* The newest email was rejected (§76, §83, §NNN): the desk's and the page's chip, so a row kept by
+          {/* The newest email was rejected (§76, §83, §663): the desk's and the page's chip, so a row kept by
               «Doar cu un email respins» says why — which email, when, why, and whether after the confirmation. */}
           {row.emailRejected && (() => {
             const words = rejectedEmailWords({ ...row.emailRejected, emailConfirmedAt: row.emailConfirmedAt }, locale);
@@ -556,7 +556,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     },
     {
       /*
-        «Oraș» (§NNN): where the person lives, the city as typed and the country's code only when it is not
+        «Oraș» (§660): where the person lives, the city as typed and the country's code only when it is not
         Romania («Bristol (GB)», `cityLabel`), in both of `AdminTable`'s layouts. «—» when no city was
         given. Sorted by the city alone, the rows with none last.
       */
@@ -575,7 +575,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     },
     {
       /*
-        «Vârstă» (§NNN): the age on the event's day (`ageOnRaceDay`, on the event's own clock), the age the
+        «Vârstă» (§660): the age on the event's day (`ageOnRaceDay`, on the event's own clock), the age the
         categories and the minors' rules count (§329), not today's. «—» with no birth date. Ascending is
         the youngest first.
       */
@@ -1268,7 +1268,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               {t("registrations.clubMemberOnly", { club: CLUB_NAME })}
             </CheckboxField>
           </Box>
-          {/* Whose newest email was rejected, confirmed or not (§76, §83, §NNN): the rows to call. */}
+          {/* Whose newest email was rejected, confirmed or not (§76, §83, §663): the rows to call. */}
           <Box sx={{ minWidth: 220, maxWidth: 320, pt: 0.5 }} data-testid="registrations-filter-bounced">
             <CheckboxField name="bounced" value="1" defaultChecked={bounced === "1"} dense help={t("registrations.bouncedOnlyHelp")}>
               <UnsubscribeIcon aria-hidden data-testid="registrations-filter-bounced-glyph" />

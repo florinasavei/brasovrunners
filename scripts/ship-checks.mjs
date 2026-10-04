@@ -163,7 +163,7 @@ export async function mergePullRequest(merge, state, { sleep, every = 5, capSeco
   }
 }
 
-/** Where a person goes when production stops answering at all (§NNN). */
+/** Where a person goes when production stops answering at all (§658). */
 const NO_ANSWER_RUNBOOK = "docs/RUNBOOKS.md § The domain stops answering";
 
 /** What one failed fetch means, by its cause's code — the words a phone reads in the log. */
@@ -192,7 +192,7 @@ export function describeFetchError(error) {
 }
 
 /**
- * One reading of production's `/api/health`, judged (§NNN): it did not answer (`no-answer`: a
+ * One reading of production's `/api/health`, judged (§658): it did not answer (`no-answer`: a
  * fetch error, the detail says which), it answers with the expected baseline (`expected`), with
  * another one (`other-build`: the detail is that baseline), or with a body that carries none
  * (`unreadable`: an empty body, a registrar's or a proxy's HTML page). `expected` is one baseline
@@ -236,7 +236,7 @@ export function productionLine(judged, { waitingFor, silentMs = 0 }) {
 }
 
 /**
- * Reads production until it reports one of `expected` (§NNN), printing what it sees on the first
+ * Reads production until it reports one of `expected` (§658), printing what it sees on the first
  * reading and then every `reportEvery` seconds — not on every poll. Returns
  * { status: "expected", body, judged } or { status: "timeout", judged, line }, the line naming the
  * last reading's case for the STOP.

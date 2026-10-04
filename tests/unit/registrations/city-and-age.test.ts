@@ -3,10 +3,10 @@ import { ageOnRaceDay } from "@/modules/registrations/domain/age";
 import { cityLabel } from "@/modules/registrations/domain/city-label";
 
 /**
- * BR-REQ-037-03 — the registrations list's «Oraș» and «Vârstă» (§NNN): the two pure helpers the list's
+ * BR-REQ-037-03 — the registrations list's «Oraș» and «Vârstă» (§660): the two pure helpers the list's
  * cells, its phone row and the export read.
  */
-describe("§NNN «Oraș»: the city, and the country's code only when it is not Romania", () => {
+describe("§660 «Oraș»: the city, and the country's code only when it is not Romania", () => {
   it("a Romanian city reads as typed, without a code", () => {
     expect(cityLabel("Brașov", "RO")).toBe("Brașov");
   });
@@ -27,7 +27,7 @@ describe("§NNN «Oraș»: the city, and the country's code only when it is not 
   });
 });
 
-describe("§NNN «Vârstă»: the age on the event's day, on the event's clock", () => {
+describe("§660 «Vârstă»: the age on the event's day, on the event's clock", () => {
   // 21 November, 08:00 in Brașov.
   const raceStart = new Date("2026-11-21T06:00:00.000Z");
 

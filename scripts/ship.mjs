@@ -3,7 +3,7 @@
  * Ship one small batch to production, end to end — the release step of `docs/DISPATCHER.md`.
  *
  * Usage: yarn ship <batch PR> <new baseline> <previous baseline> "<release title>"
- *        yarn ship 163 BR-V2.66-2026-10-03 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
+ *        yarn ship 163 BR-V2.67-2026-10-04 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
  *
  *   1. waits until production reports the previous baseline: one release at a time;
  *   2. waits for the batch PR's checks to settle (§426), stops unless green, merges it into `qa`
@@ -16,7 +16,7 @@
  *   7. waits until production's `/api/health` reports the new baseline.
  *
  * Both production waits say every two minutes what production answers — nothing, another build,
- * or a body with no baseline — and a STOP says which (§NNN).
+ * or a body with no baseline — and a STOP says which (§658).
  *
  * Each step's time is printed and appended to `SHIP_TIMES_FILE` (§504). Needs `gh` with the right to
  * merge and approve the `production` environment. Production's origin is `SHIP_PRODUCTION_URL`, never
@@ -115,7 +115,7 @@ function productionUrl() {
  * database — so the polls below, every 20 to 30 seconds while a release is on its way, wake
  * nothing. `deep` asks for the full report once, after the flip, to say how the site is.
  * Returns the body, or the fetch error rather than an empty string, so a wait can say whether
- * production did not answer or answered with another build (§NNN).
+ * production did not answer or answered with another build (§658).
  */
 async function health(base, { deep = false } = {}) {
   try {
@@ -126,7 +126,7 @@ async function health(base, { deep = false } = {}) {
   }
 }
 
-/** Waits for production to report one of `expected`, saying what it sees every two minutes (§NNN). */
+/** Waits for production to report one of `expected`, saying what it sees every two minutes (§658). */
 function productionReports(expected, every, polls) {
   return waitForProduction(() => health(BASE), expected, { sleep, every, polls, onReport: (line) => console.log(`  ${line}`) });
 }
@@ -229,7 +229,7 @@ await settledChecks(release, { tolerate: /^Vercel\b/i });
 const migrationExpected = releaseChangesMigrations();
 await merge(release);
 // From here the release is in main: a STOP in this step or the next is never re-labelled, and
-// release.yml's closing comment tells the two apart by this step's name in the times file (§NNN).
+// release.yml's closing comment tells the two apart by this step's name in the times file (§658).
 clock.step("migration");
 const releaseMerge = gh("pr", "view", release, "--json", "mergeCommit", "-q", ".mergeCommit.oid");
 if (migrationExpected === false) {

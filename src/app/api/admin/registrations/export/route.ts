@@ -103,7 +103,7 @@ export async function GET(request: Request): Promise<Response> {
     {
     eventId: scope.eventId,
     status: isRegistrationStatus(status) ? status : undefined,
-    // Declared or verified (§NNN), as the list keeps them.
+    // Declared or verified (§662), as the list keeps them.
     clubMember: clubMember === "1" || undefined,
     emailBounced: emailBounced === "1" || undefined,
     promoConsented: promo === "1" || undefined,
@@ -249,7 +249,7 @@ export async function GET(request: Request): Promise<Response> {
       // The list's «Până când» (§650): the moment the row waits on and its kind, empty when none — last, like the special guest.
       deadline: deadlineOf(row)?.at.toISOString() ?? "",
       deadlineFor: deadlineOf(row)?.kind ?? "",
-      // The list's «Vârstă» and «Oraș» (§NNN), from the row the list reads: the age on the event's day, the country, the city.
+      // The list's «Vârstă» and «Oraș» (§660), from the row the list reads: the age on the event's day, the country, the city.
       ageOnRaceDay: ageOnRaceDay(row.birthDate, row.eventStartsAt, row.eventTimezone),
       country: row.country,
       city: row.city,

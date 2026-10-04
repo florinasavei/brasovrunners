@@ -13,7 +13,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Pe lista de participanți în back-office vreau să văd și Orașul și vârsta participanților» (the
+ * §660 — «Pe lista de participanți în back-office vreau să văd și Orașul și vârsta participanților» (the
  * owner, 2026-10-04), from a real database:
  *
  * - the registrations list has «Oraș» and «Vârstă», in both of `AdminTable`'s layouts, for every role that
@@ -171,7 +171,7 @@ beforeEach(async () => {
   state.locale = "ro";
 });
 
-describe("§NNN «Oraș» and «Vârstă» on the registrations list", () => {
+describe("§660 «Oraș» and «Vârstă» on the registrations list", () => {
   it("two sortable columns, in both layouts, for the Administrator and the Organizer — a test row like a real one", async () => {
     const race = await seed();
     for (const role of ["ADMIN", "MODERATOR"] as const) {

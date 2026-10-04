@@ -80,7 +80,7 @@ const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
   MEMBER_INVITATION: ["inviterName"],
   // The Administrators' notice of a moved template (§639): the texts are its bold line, not a field.
   LEGAL_TEMPLATES_CHANGED: [],
-  // The outage grace's two (§NNN): the window's instants and counts are their paragraphs, not fields.
+  // The outage grace's two (§657): the window's instants and counts are their paragraphs, not fields.
   UNREACHABLE_WINDOW_OPENED: [],
   UNREACHABLE_WINDOW_CLOSED: [],
   REGISTRATION_OPENED: ["eventTitle"],
@@ -530,7 +530,7 @@ describe("§359 \"Înlocuiește cu câmpurile\" rewrites a saved text to its fie
   // follow-up (§373), so the declaration's three messages come back as today's starting text too.
   // The legal templates' message (§639) names whom a lawyer should read from the texts that moved: the
   // sample's two texts ask for "the terms above all", the starting text, which names none, the changed texts.
-  // The outage grace's closed notice (§NNN) chooses its paragraphs by the case: the sample's window left
+  // The outage grace's closed notice (§657) chooses its paragraphs by the case: the sample's window left
   // a claim it did not revive, the starting text, which has no window, none.
   const STRUCTURAL = new Set<EmailMessageType>(["EVENT_THANKS", "LEGAL_TEMPLATES_CHANGED", "UNREACHABLE_WINDOW_CLOSED"]);
 

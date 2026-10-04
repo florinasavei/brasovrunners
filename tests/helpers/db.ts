@@ -142,7 +142,7 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(pages);
   await db.delete(participants);
   await db.delete(jobRuns);
-  // The unreachable windows (§NNN): ids, instants and counts, referencing nothing.
+  // The unreachable windows (§657): ids, instants and counts, referencing nothing.
   await db.delete(unreachableWindows);
   await db.delete(rateLimitBuckets);
   await db.delete(platformSettings);

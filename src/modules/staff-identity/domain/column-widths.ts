@@ -40,7 +40,7 @@ export function storageKey(tableId: string): string {
 }
 
 /**
- * The columns this browser hides on one table (§NNN), beside its widths: a list of column keys.
+ * The columns this browser hides on one table (§661), beside its widths: a list of column keys.
  * A hidden column keeps its stored width, so it comes back as wide as it was.
  */
 export function hiddenStorageKey(tableId: string): string {
@@ -51,7 +51,7 @@ export function hiddenStorageKey(tableId: string): string {
 export const COLUMN_KEY_PATTERN = /^[A-Za-z0-9_-]{1,80}$/;
 
 /**
- * A column nobody may hide (§NNN): the first one (the row's name), the phone layout's headline,
+ * A column nobody may hide (§661): the first one (the row's name), the phone layout's headline,
  * and any the list marks `essential` (the state). The row verbs' column is never a column key,
  * so it is never offered either. A table therefore always keeps a column to read a row by.
  */
@@ -82,7 +82,7 @@ export function parseHidden(raw: string | null | undefined): string[] {
 }
 
 /**
- * The CSS that hides `hidden` on one table (§NNN), by position, because a body cell carries no
+ * The CSS that hides `hidden` on one table (§661), by position, because a body cell carries no
  * column key: for each hidden column one rule set over its `<col>`, its heading and its cells.
  * `columns` are the table's own, in order, the row verbs' left out (theirs is always the last
  * `<col>`, so it shifts no position). An essential column is never hidden, whatever storage says.

@@ -25,7 +25,7 @@ export type RejectedEmailWords = {
 };
 
 /**
- * «Email respins», said in full (§NNN; amending §650, §76, §83). The chip means the NEWEST email sent to
+ * «Email respins», said in full (§663; amending §650, §76, §83). The chip means the NEWEST email sent to
  * this registration was rejected — any of the message types, and often long after the address was
  * confirmed: a confirmed participant whose race-number email bounced is exactly whom the club must
  * phone. So the words say which email (its name in the «Emailuri» catalogue), when (club time, §452's

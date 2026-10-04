@@ -353,7 +353,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     !/vercel\.app$/i.test(hostname) && !/^(localhost|127\.0\.0\.1|\[::1\])$/i.test(hostname);
   // When the domain expires (§435): the two dates from the environment, the arithmetic pure.
   const domain = domainRenewal(env.DOMAIN_REGISTERED_ON, env.DOMAIN_RENEWAL_YEARS, now);
-  // The outage grace (§NNN): the latest windows, the claims the newest left lapsed still waiting, and what the row says of them.
+  // The outage grace (§657): the latest windows, the claims the newest left lapsed still waiting, and what the row says of them.
   const outageWindows = await readUnreachableWindows(db, 5);
   const notRevivedWaiting = await countNotRevivedWaiting(db, outageWindows, now);
   const outage = unreachableWindowState(outageWindows, now, notRevivedWaiting);
@@ -389,7 +389,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     domainExpiresOn:
       domain.status === "unknown" ? "" : formatCalendarDay(domain.expiresOn, { locale, style: "long", position: "inline" }),
     renewalYears: String(env.DOMAIN_RENEWAL_YEARS),
-    // The outage grace's row (§NNN): the latest window's instants, what it gave back and its counts.
+    // The outage grace's row (§657): the latest window's instants, what it gave back and its counts.
     windowFrom: windowAt(lastWindow?.startedAt ?? null),
     windowUntil: windowAt(lastWindow?.endedAt ?? null),
     windowGranted: minutesPhrase(locale, Math.round((lastWindow?.grantedMs ?? 0) / 60_000)),

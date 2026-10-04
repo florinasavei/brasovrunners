@@ -134,7 +134,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const timelineNow = new Date();
   const registration = await findRegistrationDetailForAdmin(db, id, timelineNow);
   if (!registration) notFound();
-  // «Membru (verificat)» / «Membru (declarat)» (§NNN), as on the list's row.
+  // «Membru (verificat)» / «Membru (declarat)» (§662), as on the list's row.
   const membership = membershipOf({ declared: registration.clubMemberDeclared, verified: registration.memberVerified });
 
   const [acceptances, outboxHistory, auditTrail, freeBibs, minorSigns, family, partnerShares, invitedBy] = await Promise.all([
@@ -189,7 +189,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const offerForecast = registration.status === "WAITLISTED" && mayManage ? await staffOfferIfMadeNow(registration.eventId, locale) : null;
   // The timeline's short form with the time (§349): a value beside its label, so capitalised;
   // `dtInline` inside a sentence.
-  // «Email respins» in words (§NNN): the chip's tooltip and the line under the address say the same.
+  // «Email respins» in words (§663): the chip's tooltip and the line under the address say the same.
   const rejected = registration.emailRejected
     ? rejectedEmailWords({ ...registration.emailRejected, emailConfirmedAt: registration.emailConfirmedAt }, locale)
     : null;
@@ -425,13 +425,13 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             href: getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: member.id } } }),
           }))}
         />
-        {/* The newest email was rejected (§76, §NNN): which, when and why, so somebody calls. */}
+        {/* The newest email was rejected (§76, §663): which, when and why, so somebody calls. */}
         {rejected && <EmailRejectedChip label={tr("registrations.emailRejected")} sentences={rejectedEmailSentences(rejected)} reason={rejected.reason} />}
         {/* BR-REQ-037-05: a staff-entered row behaves exactly like any other, and says so. */}
         {registration.source === "STAFF" && (
           <Chip size="small" variant="outlined" label={tr("registrations.enteredByStaff")} />
         )}
-        {/* BR-REQ-031-06, §NNN: the list's chip — «verificat» from a member account's address, «declarat» from the tick alone. */}
+        {/* BR-REQ-031-06, §662: the list's chip — «verificat» from a member account's address, «declarat» from the tick alone. */}
         {membership && (
           <MemberChip membership={membership} label={tr(`registrations.member.${membership}`)} hint={tr(`registrations.member.${membership}Hint`)} />
         )}
@@ -442,7 +442,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       <Typography variant="body2" color="text.secondary">
         {registration.participantEmail} · {registration.eventTitle ?? registration.eventId}
       </Typography>
-      {/* Under the address it is about (§NNN): the chip's words in full, for whoever reads rather than hovers. */}
+      {/* Under the address it is about (§663): the chip's words in full, for whoever reads rather than hovers. */}
       {rejected && (
         <Typography variant="body2" color="error" data-testid="email-rejected-words">
           {rejectedEmailSentences(rejected).join(" ")}

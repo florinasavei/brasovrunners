@@ -188,7 +188,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
     ),
   );
   /*
-    The outage grace (§NNN): what the site's name answered at the maintenance job's last real run, as
+    The outage grace (§657): what the site's name answered at the maintenance job's last real run, as
     the run kept it — this page never asks the name: the probe runs in the job and the deep health
     only — and the last three windows the job wrote.
   */
@@ -837,7 +837,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
               );
             })}
             {/*
-              The outage grace (§NNN): the site's name as the maintenance job's last real run found it,
+              The outage grace (§657): the site's name as the maintenance job's last real run found it,
               then the last three windows the job wrote — open (red), over (what it gave back, what it
               moved and what it did not revive), or none.
             */}

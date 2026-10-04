@@ -36,7 +36,7 @@ import { invitationOpen } from "./invitation-repository";
 import { countOccupied, emailLinkLapseSql, lockEventForCapacity } from "./repository";
 
 /**
- * The clock stops while the door is shut (§NNN) — the outage grace, the first step of every real
+ * The clock stops while the door is shut (§657) — the outage grace, the first step of every real
  * maintenance run, before anything lapses (`maintenance.ts`). The rules are `domain/outage-grace.ts`'s;
  * this reads, writes and tells the Administrators.
  *
@@ -147,7 +147,7 @@ export async function applyOutageGrace<T extends Record<string, unknown>>(
 ): Promise<OutageGraceRun> {
   const maxMs = outageGraceMaxMs(settings);
   const probe = await (deps.probe ?? (() => probePublicName({ now })))();
-  // The answer, kept beside the run's ping for `/devs` (§NNN): the page shows it and asks nobody.
+  // The answer, kept beside the run's ping for `/devs` (§657): the page shows it and asks nobody.
   await (deps.recordReading ?? recordNameReading)({ at: now.toISOString(), status: probe.status, host: probe.host }).catch(() => undefined);
 
   // The silences of the pings since the last real run, when the deployment has a pinger and the cache remembers — whatever the cap: 0 switches the moving off, never the seeing.
@@ -202,7 +202,7 @@ export async function applyOutageGrace<T extends Record<string, unknown>>(
   }
   for (const gap of plan.record) {
     /*
-      Once, whoever writes it first (§NNN): two runs at the same moment read the same silence before
+      Once, whoever writes it first (§657): two runs at the same moment read the same silence before
       either writes it — nothing above is locked — and `unreachable_windows_pings_once` refuses the
       second row, so the deadlines move once. The moves themselves serialize on the one row.
     */

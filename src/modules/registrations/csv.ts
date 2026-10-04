@@ -15,7 +15,7 @@ import type { RegistrationStatus } from "@/db/schema/registrations";
 import { raceNumberOf } from "./domain/race-number";
 import { MEMBERSHIP_EXPORT_WORDS, membershipOf } from "./domain/membership";
 
-/** The «Club member» cell of both exports (§NNN): "verified", "declared" or empty, as the list's chip. */
+/** The «Club member» cell of both exports (§662): "verified", "declared" or empty, as the list's chip. */
 export function membershipCell(row: { clubMemberDeclared: boolean; memberVerified: boolean }): string {
   const membership = membershipOf({ declared: row.clubMemberDeclared, verified: row.memberVerified });
   return membership ? MEMBERSHIP_EXPORT_WORDS[membership] : "";
@@ -49,7 +49,7 @@ export type RegistrationCsvRow = {
   email: string;
   status: string;
   /**
-   * BR-REQ-031-06. With `memberVerified` below, "declared", "verified" or empty, never "No" (§NNN).
+   * BR-REQ-031-06. With `memberVerified` below, "declared", "verified" or empty, never "No" (§662).
    *
    * The column is a claim somebody made about themselves, and an empty cell says so: a person
    * who never opened the optional section and a person who is not in the club produce the same
@@ -59,7 +59,7 @@ export type RegistrationCsvRow = {
    */
   clubMemberDeclared: boolean;
   /**
-   * «Membru (verificat)» (§NNN): the address is a member account's. With the tick, the «Club member»
+   * «Membru (verificat)» (§662): the address is a member account's. With the tick, the «Club member»
    * cell reads "verified", "declared" or empty (`membershipOf`) — still never "No".
    */
   memberVerified: boolean;
@@ -133,7 +133,7 @@ export type RegistrationCsvRow = {
    */
   deadlineFor?: string;
   /**
-   * The list's «Vârstă» and «Oraș» (§NNN), with the spreadsheet's headers and values (§322, §510): whole
+   * The list's «Vârstă» and «Oraș» (§660), with the spreadsheet's headers and values (§322, §510): whole
    * years on the event's day (`domain/age.ts#ageOnRaceDay`), the country's ISO code and the city as typed —
    * each blank when the row has none. Two columns rather than the list's «Bristol (GB)», so a sheet filters by either.
    */
@@ -150,7 +150,7 @@ const HEADER = [
   "Identity document",
   "Email",
   "Status",
-  // Declared or verified (§NNN): the cell says which. Same position, so a script reading by position still finds it.
+  // Declared or verified (§662): the cell says which. Same position, so a script reading by position still finds it.
   "Club member",
   "Medically fit (declared)",
   "Strava",
@@ -189,7 +189,7 @@ const HEADER = [
   */
   "Until when",
   "Waiting on",
-  // Last (§NNN), for the same reason: the list's «Vârstă» and «Oraș», under the spreadsheet's own headers.
+  // Last (§660), for the same reason: the list's «Vârstă» and «Oraș», under the spreadsheet's own headers.
   "Age on race day",
   "Country",
   "City",

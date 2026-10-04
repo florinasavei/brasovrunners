@@ -3,7 +3,7 @@ import { env } from "@/shared/config/env";
 import { type NameProbeStatus, probedHost, probeStatusOf } from "./domain/name-probe";
 
 /**
- * Does the site's public name — `APP_BASE_URL`'s host — still resolve (§NNN)?
+ * Does the site's public name — `APP_BASE_URL`'s host — still resolve (§657)?
  *
  * Asked by the maintenance job at the start of each real run (`registrations/outage-grace.ts`) and by the deep health check, and by
  * nothing else: never the shallow health (which wakes nothing and asks nobody, §577) and never a page

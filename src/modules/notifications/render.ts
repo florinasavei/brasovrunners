@@ -760,7 +760,7 @@ async function renderRow(
     payloadActionUrl = data.signInUrl;
   }
   /*
-    The outage grace's two (§NNN), to an Administrator or a Superadministrator: the window's instants and
+    The outage grace's two (§657), to an Administrator or a Superadministrator: the window's instants and
     counts are in the payload — no participant, no token. «Site-ul nu se găsește după nume» has no
     button: the address it would open is the one that is gone. The second opens «Sarcini», where the
     window stands, and names each claim it did not revive — read here, at the send, from the ids the

@@ -695,7 +695,7 @@
           "COMPLAINED": "Mesajul a fost marcat ca spam de destinatar."
         },
         "reason": "Motivul dat de furnizor: {reason}",
-        "confirmedBefore": "Adresa a fost confirmată {date}; un email trimis după aceea a fost respins.",
+        "confirmedBefore": "Adresa a fost confirmată {date}; un email de după aceea a fost respins.",
         "confirmedAfter": "Adresa a fost confirmată {date}, după acest email.",
         "neverConfirmed": "Adresa nu a fost confirmată niciodată.",
         "todo": "Sună persoana; adresa o poate schimba doar ea, printr-o înscriere nouă."

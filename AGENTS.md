@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.66-2026-10-03 -->
+<!-- PROJECT_BASELINE: BR-V2.67-2026-10-04 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V2.66-2026-10-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.67-2026-10-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1335,7 +1335,7 @@ Rules:
   is not moved; one written inside it by what was left of it), recorded once however many runs read
   it at once. Capped by «Termene» (`outageGraceMaxHours`; 0 switches the moving off,
   the windows are still recorded and announced) and as the allocator caps it, under the event lock,
-  compare-and-set, each link's live token in lockstep, audited with no actor (`DECISIONS.md` §NNN,
+  compare-and-set, each link's live token in lockstep, audited with no actor (`DECISIONS.md` §657,
   `registrations/outage-grace.ts`); this is the one move of an invitation's deadline while somebody
   waits. A claim whose deadline passed while the door was shut is revived only while its counted place
   is still free, counted again under the lock (`occupied ≤ capacity`): otherwise its deadline is put
@@ -2015,7 +2015,7 @@ three rules (`DECISIONS.md` §30):
   and every surface that shows it alone says "declared". Since the members' zone gave the club's
   members accounts of their own (§524), the backoffice also says **verified** — derived when the
   screen or the export is drawn, never stored — when the participant's canonical address is the
-  canonicalized address of a live account on «Echipa», whatever the tick (`DECISIONS.md` §NNN,
+  canonicalized address of a live account on «Echipa», whatever the tick (`DECISIONS.md` §662,
   `registrations/domain/membership.ts`). That reading is the account's, not the column's: it
   changes nothing here, ends the moment the account is removed, and grants nothing either.
 - **It grants nothing, so it MUST NOT appear in any condition in the allocator or the capacity

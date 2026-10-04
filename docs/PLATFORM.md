@@ -316,21 +316,21 @@ decided; the owner picks.
 
 **Three things confirmed on the way, so they are not rediscovered.** Scheduled workflows run only
 from the **default branch**, which here is `qa` — that is why the schedule fires at all. Every
-scheduled run before `QA_APP_BASE_URL` and `QA_JOB_SECRET` existed (created 2026-09-05T02:34Z)
-was a **green skip**, which is exactly the failure `DECISIONS.md` §31 records, and the two runs
-straight after it returned **401** until the Vercel project's own `JOB_SECRET` matched, at about
-05:47Z — a green tick is not evidence that a job ran. And GitHub documents that scheduled
-workflows are disabled on repositories after a period of inactivity: still unconfirmed, still the
-case a club site quiet for a season would trip. **Since `DECISIONS.md` §98 there is an alert
-on `degraded`:** `/api/health` answers 503 for every status but `ok`, and a cron-job.org
-monitor on it with "notify on failure" emails the club — from cron-job.org's own mail, which
-is the point, because the commonest reason is that the club cannot send any. **Since `DECISIONS.md` §NNN
-(2026-10-03), once `CLAUDE.md` «Still owed» item 19 is done, the monitors come in pairs:** one on the public name and one on the deployment's own
-`vercel.app` address, per environment — the public one red and the other green is the name, both
-red is the site, unless both bodies carry a build and `domain.status` says `urgent` or `expired`:
-from 30 days before the expiry that pair is the renewal — and the job pings and this workflow's
-`*_APP_BASE_URL` secrets call the `vercel.app` address, so the jobs run while a registrar holds
-the name (`SETUP.md` §40, `docs/RUNBOOKS.md` § The domain stops answering).
+scheduled run before `QA_APP_BASE_URL` and `QA_JOB_SECRET` existed (created 2026-09-05T02:34Z) was a
+**green skip**, which is exactly the failure `DECISIONS.md` §31 records, and the two runs straight
+after it returned **401** until the Vercel project's own `JOB_SECRET` matched, at about 05:47Z — a
+green tick is not evidence that a job ran. And GitHub documents that scheduled workflows are
+disabled on repositories after a period of inactivity: still unconfirmed, still the case a club site
+quiet for a season would trip. **Since `DECISIONS.md` §98 there is an alert on `degraded`:**
+`/api/health` answers 503 for every status but `ok`, and a cron-job.org monitor on it with "notify
+on failure" emails the club — from cron-job.org's own mail, which is the point, because the
+commonest reason is that the club cannot send any. **Since `DECISIONS.md` §659 (2026-10-03), once
+`CLAUDE.md` «Still owed» item 19 is done, the monitors come in pairs:** one on the public name and
+one on the deployment's own `vercel.app` address, per environment — the public one red and the other
+green is the name, both red is the site, unless both bodies carry a build and `domain.status` says
+`urgent` or `expired`: from 30 days before the expiry that pair is the renewal — and the job pings
+and this workflow's `*_APP_BASE_URL` secrets call the `vercel.app` address, so the jobs run while a
+registrar holds the name (`SETUP.md` §40, `docs/RUNBOOKS.md` § The domain stops answering).
 
 ### 5. Neon Launch scales to zero and bills what stays awake
 
@@ -588,7 +588,7 @@ yarn idle:measure --hours 1 --vercel-project <name>   plus the last hour of Verc
 On 2026-10-03 a registrar hold for the domain's contact verification took the club's name away from
 about 11:04 to 18:24 UTC. The site, the backoffice, QA and the email subdomain could not be reached by
 name, and both pingers (the external monitors and the GitHub backstop) call the public name, so no job
-ran while every participant's deadline kept running. Since `DECISIONS.md` §NNN the maintenance job's
+ran while every participant's deadline kept running. Since `DECISIONS.md` §657 the maintenance job's
 first step, on every real run, is the outage grace (`registrations/outage-grace.ts`): detect, move,
 then sweep.
 
@@ -648,7 +648,7 @@ nobody) and lists the last three windows, and «Sarcini» has the row «Site-ul 
 termenelor», red while a window is open, while a window's moves are stuck, and while the newest window
 left a claim it did not revive that is not handled yet on an event that has not started — handled once
 the person's own row left `EXPIRED` (registering again, through the form or «Adaugă înscrierea»,
-restarts that same row), a new invitation went to the address or the expired one was accepted, or the
+restarts that same row), a new invitation went to the address, or the
 family's reservation holds a place again or its address was confirmed and placed. No page and no action a
 visitor waits on asks the name.
 

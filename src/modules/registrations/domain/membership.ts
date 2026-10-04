@@ -1,5 +1,5 @@
 /**
- * Whether a registration is a club member's, as the backoffice says it (§NNN, amending §650 and §524).
+ * Whether a registration is a club member's, as the backoffice says it (§662, amending §650 and §524).
  *
  * - `verified`: the participant's canonical address is one of the club's member accounts — a live
  *   row on «Echipa» (`member-ticks.ts#memberCanonicalEmails`) — whatever the person ticked. Adding the

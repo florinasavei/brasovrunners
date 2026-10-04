@@ -244,7 +244,7 @@ const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set<EmailMe
   "MEMBER_INVITATION",
   // The Administrators' notice of a moved legal template (§639): to the staff, like the invitation.
   "LEGAL_TEMPLATES_CHANGED",
-  // The outage grace's two (§NNN): to the staff, like the templates' notice.
+  // The outage grace's two (§657): to the staff, like the templates' notice.
   "UNREACHABLE_WINDOW_OPENED",
   "UNREACHABLE_WINDOW_CLOSED",
   "REGISTRATION_OPENED",
