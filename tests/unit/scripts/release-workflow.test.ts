@@ -10,6 +10,7 @@ import { timesTable, withoutWorkflow } from "../../../scripts/ship-checks.mjs";
  */
 const workflow = readFileSync(".github/workflows/release.yml", "utf8").replace(/\r\n/g, "\n");
 const steps = workflow.slice(workflow.indexOf("\n    steps:\n"));
+const shipScript = readFileSync("scripts/ship.mjs", "utf8").replace(/\r\n/g, "\n");
 
 describe("§535 release.yml — who starts a release", () => {
   it("starts by hand with a PR number, or by the label ship on a pull request, nothing else", () => {
@@ -74,7 +75,7 @@ describe("§535 release.yml — the dry run and the summary page", () => {
 });
 
 describe("§535 release.yml — the token and what a person typed", () => {
-  it("reads with its own token and writes only through SHIP_TOKEN, which it refuses to run without", () => {
+  it("writes the comment and the label with its own token, and every push, merge and approval through SHIP_TOKEN, which it refuses to run without", () => {
     expect(workflow).toMatch(/\npermissions:\n {2}contents: read\n {2}pull-requests: write\n {2}issues: write\n(?!\s{2}\S)/);
     // Contents stay read: every push, merge and approval goes through SHIP_TOKEN (§NNN).
     expect(workflow).not.toMatch(/contents: write|actions: write|deployments: write/);
@@ -166,5 +167,21 @@ describe("§535 release.yml — the same tools as the PC, in order", () => {
     // Only this step uses the job's token; every step before it pushes, merges and approves with SHIP_TOKEN.
     expect(workflow.match(/github\.token/g)).toHaveLength(1);
     expect(steps.slice(0, steps.indexOf("- name: Say so on the pull request"))).not.toContain("github.token");
+  });
+
+  it("after step 7's STOP says the release is in main and not to label again; after any other, to label again (§NNN)", () => {
+    const say = steps.slice(steps.indexOf("- name: Say so on the pull request"));
+    // Chosen by the times file's last record: step 7's STOP is the one whose outcome begins so.
+    expect(say).toContain(`startswith("stopped: production did not report ")`);
+    expect(say).toContain('if [ "$late" = "yes" ]; then');
+    expect(say).toContain("The release is already in main: do not add the label ship again.");
+    expect(say).toContain("docs/RUNBOOKS.md § The domain stops answering");
+    expect(say).toContain("The release is done once /api/health reports the new baseline.");
+    expect(say).toContain('next="Fix it, then add the label ship again (or run the release workflow)."');
+    expect(say).toContain('$RUN_URL. $next"');
+    // The workflow's words match the STOP ship prints at step 7, and not the one at step 1.
+    expect(shipScript).toContain("stop(`production did not report ${NEW} in time");
+    expect(shipScript).toContain("stop(`production never reported ${PREV}");
+    expect(shipScript).toContain("measured(`stopped: ${message.split(");
   });
 });

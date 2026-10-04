@@ -381,10 +381,19 @@ jobs:
             # Ship's STOP, when it stopped there: its first line is the times file's last outcome,
             # which says whether production did not answer or answered with another build.
             why=""
+            late=""
             if [ -s "$TIMES" ]; then
               why=$(tail -n 1 "$TIMES" | jq -r '.outcome // empty | .[0:600]' 2> /dev/null || true)
+              # Step 7's STOP comes after the batch and the qa → main release merged (§NNN): a second
+              # run would find nothing to propose to main and stop again, so the next step differs.
+              late=$(tail -n 1 "$TIMES" | jq -r 'if ((.outcome // "") | startswith("stopped: production did not report ")) then "yes" else "" end' 2> /dev/null || true)
             fi
-            gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body "The release stopped ($OUTCOME)${why:+ — ship: $why} — the run's summary page says where and why: $RUN_URL. Fix it, then add the label ship again (or run the release workflow)." || true
+            if [ "$late" = "yes" ]; then
+              next="The release is already in main: do not add the label ship again. If production did not answer, follow docs/RUNBOOKS.md § The domain stops answering; if it answers with another build, check Vercel's production deployment. The release is done once /api/health reports the new baseline."
+            else
+              next="Fix it, then add the label ship again (or run the release workflow)."
+            fi
+            gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body "The release stopped ($OUTCOME)${why:+ — ship: $why} — the run's summary page says where and why: $RUN_URL. $next" || true
             # The label comes off, so adding it again starts the release again. The REST call, not
             # `gh pr edit`, which also reads the pull request's projects — more than this token may.
             [ "$LABELLED" = "true" ] && gh api -X DELETE "repos/$GITHUB_REPOSITORY/issues/$PR/labels/ship" > /dev/null || true
