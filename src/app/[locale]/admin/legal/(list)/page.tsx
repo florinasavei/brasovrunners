@@ -353,6 +353,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
     {
       key: "state",
       label: t("legal.state"),
+      essential: true,
       render: (version) => stateChip(stateOf(version)),
     },
     {

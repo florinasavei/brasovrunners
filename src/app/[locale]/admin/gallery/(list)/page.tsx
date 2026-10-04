@@ -71,6 +71,7 @@ export default async function AdminGalleryPage({ params, searchParams }: Props) 
     {
       key: "status",
       label: t("gallery.columnStatus"),
+      essential: true,
       render: (row) => (
         <Chip
           size="small"

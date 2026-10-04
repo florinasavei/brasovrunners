@@ -400,6 +400,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
     {
       key: "status",
       label: t("events.columnStatus"),
+      essential: true,
       render: ({ members, next }) => {
         // One chip per state the series is in, with how many dates are in it ("Publicat · 8 date";
         // the owner: "not sure what these statuses are"); one event, one chip. The registration
