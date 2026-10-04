@@ -324,7 +324,13 @@ workflows are disabled on repositories after a period of inactivity: still uncon
 case a club site quiet for a season would trip. **Since `DECISIONS.md` §98 there is an alert
 on `degraded`:** `/api/health` answers 503 for every status but `ok`, and a cron-job.org
 monitor on it with "notify on failure" emails the club — from cron-job.org's own mail, which
-is the point, because the commonest reason is that the club cannot send any.
+is the point, because the commonest reason is that the club cannot send any. **Since `DECISIONS.md` §NNN
+(2026-10-03), once `CLAUDE.md` «Still owed» item 19 is done, the monitors come in pairs:** one on the public name and one on the deployment's own
+`vercel.app` address, per environment — the public one red and the other green is the name, both
+red is the site, unless both bodies carry a build and `domain.status` says `urgent` or `expired`:
+from 30 days before the expiry that pair is the renewal — and the job pings and this workflow's
+`*_APP_BASE_URL` secrets call the `vercel.app` address, so the jobs run while a registrar holds
+the name (`SETUP.md` §40, `docs/RUNBOOKS.md` § The domain stops answering).
 
 ### 5. Neon Launch scales to zero and bills what stays awake
 

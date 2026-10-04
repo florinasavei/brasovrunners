@@ -268,6 +268,18 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
 - The owner's standing rules go into every brief: every text the club types is Română and
   English, both or neither; legal texts and emails carry placeholders, never a hardcoded value.
 - The rules that cannot be broken (CLAUDE.md) outrank speed, and so does the public repository.
+- A claim about the club's domain names its vantage point; the container's resolver is not one
+  (2026-10-03, lesson 1). A dead name: the registry first, the code last (lesson 2).
+- A wait longer than a few minutes prints what it waits on and what it last saw (lesson 3).
+- A workflow's own comments and labels use `github.token`; the PAT only for what must start a
+  workflow (lesson 4).
+- A change on the maintenance job's critical path ships in two steps: `qa`, a soak, production on
+  the owner's word (lesson 5).
+- A brief embeds the intent and the checklist in full, names every persisted identifier, and checks
+  who may use the mechanism it prescribes (lessons 6, 7).
+- The load is read before each launch; a result from a run the machine rule forbids is not relied
+  on (lesson 8). `src/db/migrations/meta` is backed up before any generate (lesson 9).
+- After a name incident, `/devs` → Stare: the jobs ran, by the `vercel.app` address (lesson 10).
 
 ## Keeping branches mergeable — the lessons of 2026-09-29
 
@@ -280,3 +292,55 @@ On 2026-09-29 four landings stopped on merge conflicts or a red CI, and the disp
 5. **A kit derived from a paired kit keeps the old gates.** Before running a landing, grep its baseline strings (`grep -oE 'BR-V2\.[0-9]+-2026-09-27'`) in both the premerge and the land script.
 6. **E2E stays in CI.** Rounds do not run Playwright: the release PR’s eight CI shards are the e2e gate, and a red one is fixed on the batch before the ship restarts. The owner declined e2e in rounds: «cred că exagerezi cu E2E». The landing runs `yarn check` on the batch before it pushes, which catches the unit and docs failures locally.
 7. **A hotfix follows `docs/RUNBOOKS.md` § Hotfix:** a branch from main, only the checks that break a deploy, `--admin` into main by the owner’s authorisation, main back into qa at once, the tests in the next batch.
+
+## The day the name went away — the lessons of 2026-10-03
+
+On 2026-10-03 the registrar held the club's domain for the ICANN contact verification from about
+11:04 to 18:24 UTC (`docs/RUNBOOKS.md` § The domain stops answering has the timeline). The batch
+that followed shipped the outage grace, the ship's own words for what production answers, and this
+page. What the dispatcher keeps from it:
+
+1. **A sandboxed container's answers about the club's own domain are not evidence.** The
+   dispatcher's container blocks the public name (a CONNECT 403) and its resolver answered NXDOMAIN
+   for it; the dispatcher read that as the world's answer, then doubted it when the owner saw the
+   site, and was right after all — the owner's phone had the delegation cached. The rule: judge a
+   dead name from outside — a GitHub runner's log, dnschecker.org, a phone on mobile data, the
+   `vercel.app` address's `/api/health` — never from inside the container, and say which vantage
+   point a claim rests on.
+2. **A registrar hold has a shape.** NXDOMAIN at the `.com` registry's own servers; the site still
+   visible to anyone whose resolver cached the delegation (up to two days); up to fifteen minutes of
+   negative caching after the fix. The ICANN contact verification must be clicked within 15 days of
+   the registration or of a contact change, and its email lands in spam. The runbook carries the
+   steps; the dispatcher looks at the registry first and the code last.
+3. **The ship step's silence cost an hour.** It printed the same two lines for «no answer» and
+   «another build». The ship branch of this release makes it say what it sees. The rule: a wait
+   longer than a few minutes prints what it is waiting on and what it last saw.
+4. **The release's closing comment and label removal failed on the token's permissions**, so a
+   stopped release could not be re-labelled; the ship branch moves them to the job's own token. The
+   rule: a workflow's own write-backs (comments, labels) use `github.token`; the PAT is for what
+   must start workflows.
+5. **Two-step release for anything on the maintenance job's critical path:** into `qa` first, a
+   soak while QA's jobs run, production after the owner's word. This release's batch is the first
+   shipped that way — the label `ship` is added only after the soak.
+6. **`br-chain` hands the implementer only the `brief`;** the intent and the checklist reach the
+   reviewer and the fixer. A brief that says «as the intent says» leaves the implementer to invent
+   names and semantics — the outage grace took six rounds partly for that. The rule: the brief
+   embeds the intent and the checklist in full, and names every persisted identifier.
+7. **A brief checks the preconditions of the house mechanism it prescribes.** The first brief told
+   the job to seat a revived claim «outside the places»: that column is «Lista de invitați
+   speciali», an Administrator's verb under the event's switch (§643, §648), and the supplementary
+   place is an Administrator's confirmed press (§642) — a job may use neither. The rule: before
+   prescribing a mechanism, read who may use it and under which switch; when none fits, the job
+   records and the human presses.
+8. **Fix agents still ran `yarn test`, `next build` and Playwright against the machine rule**, and
+   the machine survived at a load of twelve. The rule stays in every stage's prompt, the dispatcher
+   reads the load before launching the next workflow, and a result claimed from a forbidden run is
+   not relied on.
+9. **The drizzle probe overwrote an earlier snapshot again** (`0125_snapshot.json`) when a migration
+   was regenerated; the fixer restored it from git. The rule of 2026-09-29 holds: back up
+   `src/db/migrations/meta` before any generate, and check that
+   `git diff --stat origin/qa -- src/db/migrations/` touches only the new migration and the journal.
+10. **Pings on the public name die with the name.** cron-job.org's job pings called the public name,
+    and the GitHub backstop called nothing (its base-URL secrets were unset, so it skipped green), so
+    no job ran for seven hours. `SETUP.md` §40 moves both to the address no registrar can hold and
+    adds the second health monitor; the dispatcher checks `/devs` → Stare after any name incident.
