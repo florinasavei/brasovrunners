@@ -120,6 +120,14 @@ export type RegistrationCsvRow = {
    * `offerLapsed`, `reserved`, `link`, `linkLapsed` (`RowDeadlineKind`) — empty with the moment.
    */
   deadlineFor?: string;
+  /**
+   * The list's «Vârstă» and «Oraș» (§NNN), with the spreadsheet's headers and values (§322, §510): whole
+   * years on the event's day (`domain/age.ts#ageOnRaceDay`), the country's ISO code and the city as typed —
+   * each blank when the row has none. Two columns rather than the list's «Bristol (GB)», so a sheet filters by either.
+   */
+  ageOnRaceDay?: number | null;
+  country?: string | null;
+  city?: string | null;
 };
 
 const HEADER = [
@@ -168,6 +176,10 @@ const HEADER = [
   */
   "Until when",
   "Waiting on",
+  // Last (§NNN), for the same reason: the list's «Vârstă» and «Oraș», under the spreadsheet's own headers.
+  "Age on race day",
+  "Country",
+  "City",
 ];
 
 export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): string {
@@ -208,6 +220,9 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         row.outsideCapacity ? "Yes" : "",
         row.deadline ?? "",
         row.deadlineFor ?? "",
+        String(row.ageOnRaceDay ?? ""),
+        row.country ?? "",
+        row.city ?? "",
       ]
         .map(csvCell)
         .join(","),

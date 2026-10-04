@@ -10,7 +10,7 @@ import { REGISTRATION_SHEET_HEADERS } from "@/modules/registrations/workbook";
  * on the emergency sheet, audited, by the people they are for. A downloaded export is the one
  * copy nobody can audit or erase, so none of the three is in either file — asserted on the
  * headers, which is where a column added by habit would show up first. The spreadsheet carries
- * what a category ranking and a kit order need; the CSV does not.
+ * what a category ranking and a kit order need; the CSV only the age and where the runner lives (§NNN).
  */
 const csvHeader = buildRegistrationsCsv([]).split("\r\n")[0].split(",");
 
@@ -25,12 +25,18 @@ describe("BR-REQ-031-05 criterion 4 the exports leave the emergency details out"
     }
   });
 
-  it("puts sex, the age on race day, where the runner is from and the t-shirt on the spreadsheet only", () => {
-    // The country of residence (§510) with them, right before the city it makes sense of.
-    for (const header of ["Sex", "Age on race day", "Nationality", "Country", "City", "T-shirt size"]) {
+  it("puts sex, the citizenship and the t-shirt on the spreadsheet only; the age and where the runner lives in both (§NNN)", () => {
+    for (const header of ["Sex", "Nationality", "T-shirt size"]) {
       expect(REGISTRATION_SHEET_HEADERS, `${header} is on the spreadsheet`).toContain(header);
       expect(csvHeader, `${header} is not in the CSV`).not.toContain(header);
     }
+    // The list's «Vârstă» and «Oraș» (§NNN): the same three headers in both files; the CSV has them last.
+    for (const header of ["Age on race day", "Country", "City"]) {
+      expect(REGISTRATION_SHEET_HEADERS, `${header} is on the spreadsheet`).toContain(header);
+      expect(csvHeader, `${header} is in the CSV`).toContain(header);
+    }
+    expect(csvHeader.slice(-3)).toEqual(["Age on race day", "Country", "City"]);
+    // The country of residence (§510) right before the city it makes sense of, in both.
     expect(REGISTRATION_SHEET_HEADERS.indexOf("Country")).toBe(REGISTRATION_SHEET_HEADERS.indexOf("City") - 1);
   });
 });

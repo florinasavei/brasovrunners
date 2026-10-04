@@ -789,6 +789,9 @@
       "columnStatus": "Status",
       "columnJourney": "How far",
       "columnUntilWhen": "Until when",
+      "columnCity": "City",
+      "columnAge": "Age",
+      "ageHint": "The age on the event's day, the one the categories and the rules for minors count. «—»: no birth date.",
       "untilWhenHint": "Until when the person can sign the declaration, accept the offer or confirm the address from the email, to the minute. Grey: passed. «—»: nothing is due. As in the registration's timeline.",
       "untilWhen": {
         "hold": "Can sign until {instant}",
@@ -5428,6 +5431,7 @@
                 "Looking for someone: type part of the name in «Search by name» and press «Filter». With no event chosen, it looks in every event.",
                 "The «How far» column says each person's step. Press a name to open the registration: «The registration's journey» and «Timeline» say everything that happened.",
                 "The «Until when» column says until when each one can sign, accept or confirm — the same time as the registration's timeline.",
+                "«City» says where each one lives, with the country's code only outside Romania, and «Age» the age on the event's day. Both sort, and both are in the export.",
                 "Someone asks where their registration stands: open it and tell them what «What to tell them» says — the same words they read themselves. «Copy» puts them on the clipboard, for a message.",
                 "The top says once what you cannot change here. The Tehnic role does not see registrations at all.",
                 "On the event's public page, the first number counts the registrations holding a place: the confirmed plus those still in progress — a declaration not signed yet, a waiting-list offer not accepted yet, a place a family holds. After the dash the line names only what exists: how many are confirmed and how many in progress, and how many free places are kept for the waiting list, for example “6 registered of 10 places — 4 confirmed, 2 completing their registration, 4 places kept for the waiting list”.",

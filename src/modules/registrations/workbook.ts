@@ -56,7 +56,7 @@ export type RegistrationSheetRow = Omit<
   checkedInAt: Date | null;
   fitnessDeclaredAt: Date | null;
   /**
-   * The spreadsheet's own columns, not the CSV's (§322): what a category ranking, the club's
+   * The spreadsheet's own columns (§322; the age, the country and the city in the CSV too since §NNN): what a category ranking, the club's
    * "where do our runners come from" and the kit order read. Optional because a row built
    * without them — a test, a future caller — prints blanks rather than failing.
    */
@@ -144,7 +144,7 @@ const COLUMNS: Array<SheetColumn<RegistrationSheetRow>> = [
   { header: "Club", width: 22, cell: (row) => ({ value: row.clubName, type: String }) },
   /*
     The ones the form asks for and the start list does not use (§322, the country §510), on the sheet the club
-    works in and deliberately not in the CSV. Never the phone, the emergency contact or the
+    works in; of them the CSV carries only the age, the country and the city, last (§NNN). Never the phone, the emergency contact or the
     health note: those are read on the registration's page and the emergency sheet, audited,
     and a file that leaves the application is exactly where they must not go (`AGENTS.md`
     §15.10; `workbook.test.ts` asserts the absence).
