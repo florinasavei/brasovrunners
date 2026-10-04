@@ -384,12 +384,14 @@ jobs:
             late=""
             if [ -s "$TIMES" ]; then
               why=$(tail -n 1 "$TIMES" | jq -r '.outcome // empty | .[0:600]' 2> /dev/null || true)
-              # Step 7's STOP comes after the batch and the qa → main release merged (§NNN): a second
-              # run would find nothing to propose to main and stop again, so the next step differs.
-              late=$(tail -n 1 "$TIMES" | jq -r 'if ((.outcome // "") | startswith("stopped: production did not report ")) then "yes" else "" end' 2> /dev/null || true)
+              # A STOP after the qa → main release merged — the migration's or production's — is never
+              # re-labelled (§NNN): a second run would take its starting baseline from main, wait an hour
+              # for a baseline production does not run, and stop again. Ship opens its step «migration»
+              # right after that merge, so the times record's steps say whether the release is in main.
+              late=$(tail -n 1 "$TIMES" | jq -r 'if any(.steps[]?; .name == "migration") then "yes" else "" end' 2> /dev/null || true)
             fi
             if [ "$late" = "yes" ]; then
-              next="The release is already in main: do not add the label ship again. If production did not answer, follow docs/RUNBOOKS.md § The domain stops answering; if it answers with another build, check Vercel's production deployment. The release is done once /api/health reports the new baseline."
+              next="The release is already in main: do not add the label ship again. If the migration stopped, fix it, or approve and re-run migrate.yml on main by hand, then redeploy production if its build gave up waiting. If production did not answer, follow docs/RUNBOOKS.md § The domain stops answering; if it answers with another build, check Vercel's production deployment. The release is done once /api/health reports the new baseline."
             else
               next="Fix it, then add the label ship again (or run the release workflow)."
             fi

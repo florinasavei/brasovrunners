@@ -194,10 +194,17 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
   that is not the application, treat it as no answer. The STOP names the case in the same words,
   and so do the times file's `outcome`, the summary page and the release workflow's comment. After
   step 1's STOP («never reported», nothing merged yet) run `yarn ship` again with the same
-  arguments once production answers (from the phone: the label came off; tick **ship** again). After step 7's («did not report … in time») the release is already in
-  `main`: do not run `yarn ship` or label again — a second run has nothing to propose to `main` and stops. Follow the
-  domain triage, or fix or redeploy Vercel's production deployment; the release is done once
-  `/api/health` reports the new baseline.
+  arguments once production answers (from the phone: the label came off; tick **ship** again).
+- **A STOP after the `qa → main` release merged** — the migration's («no migrate.yml run
+  appeared», «was still … after an hour», «ended failure») or step 7's («did not report … in
+  time») — is never followed by `yarn ship` or the label again (§NNN): a second run takes its
+  starting baseline from `main`, now the new one, waits an hour for a baseline production does not
+  run, and stops again. The times record lists the step «migration», which ship opens right after
+  that merge, and the release workflow's comment says «The release is already in main». The
+  migration: fix it, or approve and re-run `migrate.yml` on `main` by hand, then redeploy
+  production if its build gave up waiting. Production: the domain triage, or fix or redeploy
+  Vercel's production deployment. The release is done once `/api/health` reports the new
+  baseline.
 
 ### Cloud loop
 

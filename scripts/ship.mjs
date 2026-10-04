@@ -228,9 +228,10 @@ console.log(`== release PR #${release}`);
 await settledChecks(release, { tolerate: /^Vercel\b/i });
 const migrationExpected = releaseChangesMigrations();
 await merge(release);
-const releaseMerge = gh("pr", "view", release, "--json", "mergeCommit", "-q", ".mergeCommit.oid");
-
+// From here the release is in main: a STOP in this step or the next is never re-labelled, and
+// release.yml's closing comment tells the two apart by this step's name in the times file (§NNN).
 clock.step("migration");
+const releaseMerge = gh("pr", "view", release, "--json", "mergeCommit", "-q", ".mergeCommit.oid");
 if (migrationExpected === false) {
   console.log("== no migration in this release: migrate.yml does not run");
 } else {

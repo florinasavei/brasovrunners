@@ -649,19 +649,29 @@ The run's **Summary** says where, in words:
   and tick **ship** again.
 - **"docs:check refused the landed tree"**: usually a new file without its README row — add it
   on the branch.
-- A stop inside **Ship** (a red check, a migration that failed): the table's last line names the
-  step. If the pull request already merged into `qa`, running **release** again with its number
-  continues from there — a merged pull request ships `qa` as it is.
+- A stop inside **Ship** before the `qa → main` release merged (a red check, the `qa` run, the
+  release PR's checks): the table's last line names the step. If the pull request already merged
+  into `qa`, running **release** again with its number continues from there — a merged pull
+  request ships `qa` as it is.
 - **"production never reported …"** (at the start, step 1): nothing has merged yet. The words
   after it say which case (above, under § Every release): no answer → § The domain stops
   answering; another build → Vercel's production deployment. Once production answers with the
   baseline `main` carries, tick **ship** again — the label came off at the stop.
-- **"production did not report … in time"** (at the end, step 7): the pull request and the
-  `qa → main` release are already merged, so **do not tick ship again** — a second run finds
-  nothing to propose to `main` and stops with a second «The release stopped» for a release that
-  went out. No answer → § The domain stops answering; another build → open Vercel → the
-  production project → **Deployments**, fix the newest deployment or redeploy it. The release is
-  done once `/api/health` reports the new baseline.
+- **A stop after the `qa → main` release merged** — the migration's or production's; the table
+  lists the step «migration», and the comment says «The release is already in main»
+  (`DECISIONS.md` §NNN). **Never tick ship again, nor run release again**: a second run takes its
+  starting baseline from `main`, which is now the new one, waits an hour for a baseline production
+  does not run, and stops with a second «The release stopped» for a release that went out. Instead:
+  - **the migration** («no migrate.yml run appeared», «was still … after an hour», «ended
+    failure; production still runs the previous build»): the summary names the run. Fix the
+    migration, or approve and re-run **migrate** on `main` by hand (Actions → the run → **Review
+    deployments** / **Re-run jobs**); then, if production's build gave up waiting for the
+    migration, open Vercel → the production project → **Deployments** and redeploy the newest;
+  - **"production did not report … in time"** (step 7): no answer → § The domain stops
+    answering; another build → open Vercel → the production project → **Deployments**, fix the
+    newest deployment or redeploy it.
+
+  Either way the release is done once `/api/health` reports the new baseline.
 
 Never push to `qa` or `main` by hand from the phone: the release PR and the production migration
 are the run's to open, merge and approve.
@@ -684,7 +694,7 @@ The words after «no answer» name the failure; check in this order, from a phon
    certificate's state; Vercel renews it on its own once the records are right again.
 
 Once `/api/health` on the domain answers with a baseline, ship's waits see it — at the start,
-tick **ship** again; at the end, the release is done (§ When it stops).
+tick **ship** again; at the end, the release is done (§ When it stops) — never tick it again then.
 
 
 ---

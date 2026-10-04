@@ -169,19 +169,25 @@ describe("§535 release.yml — the same tools as the PC, in order", () => {
     expect(steps.slice(0, steps.indexOf("- name: Say so on the pull request"))).not.toContain("github.token");
   });
 
-  it("after step 7's STOP says the release is in main and not to label again; after any other, to label again (§NNN)", () => {
+  it("after a STOP once the release merged into main says not to label again; before it, to label again (§NNN)", () => {
     const say = steps.slice(steps.indexOf("- name: Say so on the pull request"));
-    // Chosen by the times file's last record: step 7's STOP is the one whose outcome begins so.
-    expect(say).toContain(`startswith("stopped: production did not report ")`);
+    // Chosen by the times record's steps, not by one STOP's words: the migration's STOPs come after
+    // the merge into main as well as production's.
+    expect(say).toContain(`jq -r 'if any(.steps[]?; .name == "migration") then "yes" else "" end'`);
+    expect(say).not.toContain("startswith(");
     expect(say).toContain('if [ "$late" = "yes" ]; then');
     expect(say).toContain("The release is already in main: do not add the label ship again.");
+    expect(say).toContain("If the migration stopped, fix it, or approve and re-run migrate.yml on main by hand, then redeploy production if its build gave up waiting.");
     expect(say).toContain("docs/RUNBOOKS.md § The domain stops answering");
     expect(say).toContain("The release is done once /api/health reports the new baseline.");
     expect(say).toContain('next="Fix it, then add the label ship again (or run the release workflow)."');
     expect(say).toContain('$RUN_URL. $next"');
-    // The workflow's words match the STOP ship prints at step 7, and not the one at step 1.
-    expect(shipScript).toContain("stop(`production did not report ${NEW} in time");
-    expect(shipScript).toContain("stop(`production never reported ${PREV}");
+    // Ship opens the step «migration» right after the qa → main merge, before anything that can stop,
+    // and every STOP before it (production's first wait among them) comes before that merge.
+    expect(shipScript).toMatch(/\nawait merge\(release\);\n(?:\/\/.*\n)*clock\.step\("migration"\);\n/);
+    expect(shipScript.indexOf('clock.step("migration")')).toBeGreaterThan(shipScript.indexOf("stop(`production never reported ${PREV}"));
+    expect(shipScript.match(/clock\.step\("migration"\)/g)).toHaveLength(1);
     expect(shipScript).toContain("measured(`stopped: ${message.split(");
+    expect(shipScript).toContain("steps: steps.map((s) => ({ name: s.name,");
   });
 });
