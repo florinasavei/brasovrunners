@@ -22,6 +22,7 @@ const row = (over: Partial<RegistrationSheetRow> = {}): RegistrationSheetRow => 
   status: "CONFIRMED",
   clubName: "Brașov Runners",
   clubMemberDeclared: true,
+  memberVerified: false,
   fitnessDeclaredAt: new Date("2026-09-04T10:00:00.000Z"),
   stravaUrl: "",
   instagramHandle: "",

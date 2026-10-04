@@ -19,7 +19,7 @@ describe("membershipOf", () => {
 
   it("writes the export's cell in the export's words, empty for none (never «No»)", () => {
     expect(membershipCell({ clubMemberDeclared: true, memberVerified: true })).toBe(MEMBERSHIP_EXPORT_WORDS.verified);
-    expect(membershipCell({ clubMemberDeclared: true })).toBe(MEMBERSHIP_EXPORT_WORDS.declared);
+    expect(membershipCell({ clubMemberDeclared: true, memberVerified: false })).toBe(MEMBERSHIP_EXPORT_WORDS.declared);
     expect(membershipCell({ clubMemberDeclared: false, memberVerified: false })).toBe("");
   });
 });

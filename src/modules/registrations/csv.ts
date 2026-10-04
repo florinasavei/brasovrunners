@@ -16,8 +16,8 @@ import { raceNumberOf } from "./domain/race-number";
 import { MEMBERSHIP_EXPORT_WORDS, membershipOf } from "./domain/membership";
 
 /** The «Club member» cell of both exports (§NNN): "verified", "declared" or empty, as the list's chip. */
-export function membershipCell(row: { clubMemberDeclared: boolean; memberVerified?: boolean }): string {
-  const membership = membershipOf({ declared: row.clubMemberDeclared, verified: row.memberVerified ?? false });
+export function membershipCell(row: { clubMemberDeclared: boolean; memberVerified: boolean }): string {
+  const membership = membershipOf({ declared: row.clubMemberDeclared, verified: row.memberVerified });
   return membership ? MEMBERSHIP_EXPORT_WORDS[membership] : "";
 }
 
@@ -62,7 +62,7 @@ export type RegistrationCsvRow = {
    * «Membru (verificat)» (§NNN): the address is a member account's. With the tick, the «Club member»
    * cell reads "verified", "declared" or empty (`membershipOf`) — still never "No".
    */
-  memberVerified?: boolean;
+  memberVerified: boolean;
   /** When the entrant ticked "I am medically fit" (§171); empty for a desk or phone entry. */
   fitnessDeclaredAt: string | null;
   /** The optional socials (§106), empty when not given. */
