@@ -110,7 +110,7 @@ test.describe("§663 «Email respins» says which email, when and why", () => {
       await page.goto(`/ro/admin/registrations/${seeded.registrationId}`);
       await hydrated(page);
       await expect(page.locator('#main [data-testid="email-rejected"]:visible')).toHaveCount(1);
-      await expect(page.locator("#main")).toContainText("un email trimis după aceea a fost respins");
+      await expect(page.locator("#main")).toContainText("un email de după aceea a fost respins");
       expect(hydrationWarnings).toEqual([]);
     } finally {
       await cleanup(seeded);
