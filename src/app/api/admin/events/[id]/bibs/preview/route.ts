@@ -170,7 +170,11 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     design: event.design,
     pictures: await imagePictures(event.design, member),
   });
-  // A number and a name change rarely; the browser may keep the picture for an hour.
+  /*
+    A number and a name change rarely; the browser may keep the picture for an hour. Whether it is a
+    member's bib changes when «Echipa» does, so the bibs page's grid puts the row's `member` flag in
+    the address it asks (`m=1`, read by nobody here): a change in verification is a new address (§NNN).
+  */
   image.headers.set("Cache-Control", "private, max-age=3600");
   return image;
 }

@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
@@ -19,6 +19,7 @@ import { countUnverifiedMemberBibs, listBibs } from "@/modules/registrations/bib
 import { buildRegistrationsCsv } from "@/modules/registrations/csv";
 import { type EventForRegistration, submitRegistration } from "@/modules/registrations/service";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { readSheet } from "../../helpers/xlsx";
 
 /**
  * §NNN, BR-REQ-038-01, BR-REQ-037-03 — the members' race number from a real database:
@@ -32,12 +33,23 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  */
 const NOW = new Date("2026-09-04T10:00:00.000Z");
 
+// The export route reads the database and the signed-in staff member through these two (§NNN finding 4).
+const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown }));
+vi.mock("@/db/client", () => ({ getDb: () => state.db }));
+vi.mock("@/modules/staff-identity/session", () => ({
+  DEV_STAFF_COOKIE: "dev-staff",
+  requireStaff: async () => state.actor,
+  requireStaffCapability: async () => state.actor,
+}));
+const { GET: exportRegistrations } = await import("@/app/api/admin/registrations/export/route");
+
 let db: TestDatabase;
 let close: () => Promise<void>;
 let admin: StaffUser;
 
 beforeAll(async () => {
   ({ db, close } = await createTestDatabase());
+  state.db = db;
 });
 afterAll(async () => close());
 
@@ -63,6 +75,7 @@ beforeEach(async () => {
   await resetTables(db);
   await approveLegalDocuments();
   [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Admin", role: "ADMIN" }).returning();
+  state.actor = admin;
 });
 
 async function createEvent(memberBib: boolean): Promise<EventForRegistration> {
@@ -224,7 +237,8 @@ describe("§NNN the sheet prints the members' bib for wanted AND verified only",
         displayName: email,
         clubMemberDeclared: options.declared ?? true,
         memberBibWanted: options.wanted,
-        bibNumber: options.kind === "TEST" ? null : counter,
+        // A number on every row, the TEST one too: the sheet and the filter keep it out by its kind, not by a missing number.
+        bibNumber: counter,
         privacyNoticeVersion: 1,
         privacyAcknowledgedAt: NOW,
         resultsNameConsent: false,
@@ -328,5 +342,38 @@ describe("§NNN the sheet prints the members' bib for wanted AND verified only",
 
     const page = await findRegistrationDetailForAdmin(db, verified.id);
     expect(page).toMatchObject({ memberBibWanted: true, eventOffersMemberBib: true, memberVerified: true });
+  });
+
+  it("the export route writes «Member bib» as yes, asked or empty, in the CSV and in the workbook", async () => {
+    const event = await createEvent(true);
+    await db.insert(staffUsers).values({ email: "membru@example.ro", displayName: "Membru", role: "MEMBER" });
+    await confirmed(event.id, "membru@example.ro", { wanted: true });
+    await confirmed(event.id, "declarat@example.ro", { wanted: true });
+    await confirmed(event.id, "nimic@example.ro", { wanted: false, declared: false });
+    const expected = new Map([
+      ["membru@example.ro", "yes"],
+      ["declarat@example.ro", "asked"],
+      ["nimic@example.ro", ""],
+    ]);
+
+    const csv = await (await exportRegistrations(new Request(`http://localhost/api/admin/registrations/export?eventId=${event.id}`))).text();
+    const [header, ...lines] = csv.split("\r\n").filter((line) => line !== "");
+    const at = header.split(",").indexOf("Member bib");
+    expect(at).toBeGreaterThan(-1);
+    for (const [email, cell] of expected) {
+      expect(lines.find((line) => line.includes(email))?.split(",")[at], `CSV ${email}`).toBe(cell);
+    }
+
+    const response = await exportRegistrations(new Request(`http://localhost/api/admin/registrations/export?eventId=${event.id}&format=xlsx`));
+    expect(response.status).toBe(200);
+    const { rows } = readSheet(Buffer.from(await response.arrayBuffer()));
+    const column = rows[0].indexOf("Member bib");
+    expect(column).toBeGreaterThan(-1);
+    for (const [email, cell] of expected) {
+      const row = rows.find((cells) => cells.includes(email));
+      expect(row, `workbook ${email}`).toBeDefined();
+      // An empty cell is written as no cell at all, or as an empty string.
+      expect(row?.[column] ?? "", `workbook ${email}`).toBe(cell);
+    }
   });
 });

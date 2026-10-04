@@ -76,13 +76,6 @@ type Schema = { events: typeof events; eventTranslations: typeof eventTranslatio
 export type Database = NodePgDatabase<Schema> | PgliteDatabase<Schema>;
 
 /**
- * Exactly the columns a public page may show.
- *
- * Written out rather than `select()`-ing the whole row on purpose. When registrations and
- * participants land, `SELECT *` on a joined query is how an email address reaches a public
- * template; an explicit list cannot do that by accident (BR-REQ-070-01).
- */
-/**
  * Whether the event offers the members' race number (§NNN): its bib design's `member.enabled`, read
  * as `bib-design.ts#readBibDesign` reads it — on only for a JSON true, off for anything else or
  * nothing. The page and the staff form read it to ask «Vreau numărul de membru»; the service decides
@@ -90,6 +83,13 @@ export type Database = NodePgDatabase<Schema> | PgliteDatabase<Schema>;
  */
 export const OFFERS_MEMBER_BIB = sql<boolean>`coalesce((${events.bibDesign} #> '{member,enabled}') = 'true'::jsonb, false)`.mapWith(Boolean);
 
+/**
+ * Exactly the columns a public page may show.
+ *
+ * Written out rather than `select()`-ing the whole row on purpose. When registrations and
+ * participants land, `SELECT *` on a joined query is how an email address reaches a public
+ * template; an explicit list cannot do that by accident (BR-REQ-070-01).
+ */
 const PUBLIC_COLUMNS = {
   id: events.id,
   type: events.type,

@@ -132,10 +132,12 @@ export default async function EventBibsPage({ params }: Props) {
             <Box component="li" key={bib.id}>
               {/* No rounded corner: the picture draws the paper's edge itself (A5 bibs, §338), and
                   a radius here clipped that edge's corners — as the editor preview and the desk row
-                  no longer do either. */}
+                  no longer do either. `m=1` is read by nobody: the route answers a row's picture
+                  with an hour's cache, and a member added on «Echipa» must change the address the
+                  grid asks, or it shows the ordinary bib the sheet no longer prints (§NNN). */}
               <Box
                 component="img"
-                src={`/api/admin/events/${id}/bibs/preview?registration=${bib.id}&locale=${locale}`}
+                src={`/api/admin/events/${id}/bibs/preview?registration=${bib.id}&locale=${locale}${bib.member ? "&m=1" : ""}`}
                 alt={t("bibs.previewAlt", { number: bib.bibNumber, name: bib.registeredName })}
                 width={BIB_IMAGE.width}
                 height={BIB_IMAGE.height}
