@@ -15,6 +15,7 @@ import {
 import { defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { identityDocumentsOf } from "@/modules/registrations/domain/identity-documents";
 import { rowDeadlineOf } from "@/modules/registrations/domain/row-deadline";
+import { ageOnRaceDay } from "@/modules/registrations/domain/age";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -102,7 +103,8 @@ export async function GET(request: Request): Promise<Response> {
     {
     eventId: scope.eventId,
     status: isRegistrationStatus(status) ? status : undefined,
-    clubMemberDeclared: clubMember === "1" || undefined,
+    // Declared or verified (§662), as the list keeps them.
+    clubMember: clubMember === "1" || undefined,
     emailBounced: emailBounced === "1" || undefined,
     promoConsented: promo === "1" || undefined,
     outsideCapacity: outside === "1" || undefined,
@@ -165,6 +167,7 @@ export async function GET(request: Request): Promise<Response> {
         status: row.status,
         clubName: row.clubName ?? "",
         clubMemberDeclared: row.clubMemberDeclared,
+        memberVerified: row.memberVerified,
         fitnessDeclaredAt: row.fitnessDeclaredAt,
         stravaUrl: row.stravaUrl ?? "",
         guardianName: row.guardianName ?? "",
@@ -177,7 +180,7 @@ export async function GET(request: Request): Promise<Response> {
         confirmedAt: row.confirmedAt,
         bibNumber: row.bibNumber,
         checkedInAt: row.checkedInAt,
-        emailBounced: row.emailRejectedReason !== null,
+        emailBounced: row.emailRejected !== null,
         termsVersion: row.termsVersion,
         termsAcceptedAt: row.termsAcceptedAt,
         declarationVersion: declarations.get(row.id)?.version ?? null,
@@ -216,6 +219,7 @@ export async function GET(request: Request): Promise<Response> {
       email: row.participantEmail,
       status: row.status,
       clubMemberDeclared: row.clubMemberDeclared,
+      memberVerified: row.memberVerified,
       fitnessDeclaredAt: row.fitnessDeclaredAt?.toISOString() ?? null,
       stravaUrl: row.stravaUrl ?? "",
       guardianName: row.guardianName ?? "",
@@ -229,7 +233,7 @@ export async function GET(request: Request): Promise<Response> {
       confirmedAt: row.confirmedAt?.toISOString() ?? "",
       bibNumber: row.bibNumber,
       checkedInAt: row.checkedInAt?.toISOString() ?? "",
-      emailBounced: row.emailRejectedReason !== null,
+      emailBounced: row.emailRejected !== null,
       // The terms accepted on the form (§421, §425): blank for a staff or desk entry.
       termsVersion: row.termsVersion,
       termsAcceptedAt: row.termsAcceptedAt?.toISOString() ?? "",
@@ -245,6 +249,10 @@ export async function GET(request: Request): Promise<Response> {
       // The list's «Până când» (§650): the moment the row waits on and its kind, empty when none — last, like the special guest.
       deadline: deadlineOf(row)?.at.toISOString() ?? "",
       deadlineFor: deadlineOf(row)?.kind ?? "",
+      // The list's «Vârstă» and «Oraș» (§660), from the row the list reads: the age on the event's day, the country, the city.
+      ageOnRaceDay: ageOnRaceDay(row.birthDate, row.eventStartsAt, row.eventTimezone),
+      country: row.country,
+      city: row.city,
     })),
   );
 

@@ -176,6 +176,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
     {
       key: "status",
       label: t("pages.columnStatus"),
+      essential: true,
       render: (row) => (
         <Chip
           size="small"

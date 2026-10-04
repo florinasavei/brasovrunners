@@ -48,6 +48,7 @@ const LAUNCHED: OwnerTaskInputs = {
   publishedEventCount: 4,
   raceDaySheetsDue: [],
   domainRenewal: { status: "ok", expiresOn: "2029-09-16", daysLeft: 1086 },
+  unreachableWindow: "clear",
   storageConfigured: true,
   botCheckConfigured: true,
   botCheckHealth: "ok",
@@ -373,8 +374,33 @@ describe("owner tasks", () => {
       "translation",
       "contactForm",
       "domainRenewal",
+      "unreachableWindow",
       "neonLimits",
     ]);
+  });
+
+  // §657: the outage grace — blocking while a window is open or a claim it did not revive still waits, broken while one is stuck.
+  it("§657 the unreachable window: blocking while open or while a claim not revived waits, broken while stuck, done otherwise", () => {
+    const row = (unreachableWindow: OwnerTaskInputs["unreachableWindow"]) => ownerTasks({ ...LAUNCHED, unreachableWindow }).find((task) => task.id === "unreachableWindow");
+    expect(row("clear")).toMatchObject({ state: "done", owner: "club", kind: "check" });
+    expect(row("clear")?.text).toBeUndefined();
+    expect(row("open")).toMatchObject({ state: "blocking", text: "open" });
+    expect(row("notRevived")).toMatchObject({ state: "blocking", text: "notRevived" });
+    expect(row("stuck")).toMatchObject({ state: "broken", text: "stuck" });
+  });
+
+  it("§657 the unreachable window's sentences exist in both catalogues and fill the window's values", () => {
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.unreachableWindow;
+      for (const key of ["{windowFrom}", "{windowUntil}", "{windowGranted}", "{windowMoved}"]) expect(item.todo).toContain(key);
+      expect(item.open).toContain("{windowFrom}");
+      expect(item.stuck).toContain("{windowUntil}");
+      expect(item.notRevived).toContain("{windowNotRevived}");
+      // The job seats nobody: no word of the special list in the row.
+      expect(JSON.stringify(item)).not.toMatch(/invitați speciali|special guests/i);
+      expect(typeof item.done).toBe("string");
+      expect(item.how.length).toBeGreaterThan(0);
+    }
   });
 
   // §622: email nothing is carrying — red with the remedies, green otherwise, and always on the list.

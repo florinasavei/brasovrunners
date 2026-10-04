@@ -17,8 +17,9 @@ import {
   PER_PAGE_OPTIONS,
   sortHref,
 } from "@/modules/staff-identity/domain/admin-list-query";
-import { ACTIONS_COLUMN, TABLE_ID_PATTERN } from "@/modules/staff-identity/domain/column-widths";
+import { ACTIONS_COLUMN, isEssentialColumn, TABLE_ID_PATTERN } from "@/modules/staff-identity/domain/column-widths";
 import ColumnResizeHandle from "./ColumnResizeHandle";
+import ColumnVisibility from "./ColumnVisibility";
 import ColumnWidths from "./ColumnWidths";
 import ColumnWidthsScript from "./ColumnWidthsScript";
 
@@ -60,8 +61,19 @@ import ColumnWidthsScript from "./ColumnWidthsScript";
  * know. Right after `</table>`, `ColumnWidthsScript` applies them as a `<style>` before the first
  * paint, so a resized table does not jump on load; under the table, `ColumnWidths` takes over once
  * hydrated (removing that style), lays the table out again when its frame changes width, and
- * offers «Lățimi implicite» while any is stored. With JavaScript off neither island draws anything, and the table is the
+ * offers «Lățimi și coloane implicite» while any is stored. With JavaScript off no handle, reset or
+ * menu is drawn — only an empty box that holds the menu button's place — and the table is the
  * automatic one it always was.
+ *
+ * ## Columns that can be hidden, without the grid (§661)
+ *
+ * The owner's second grid ask, showing and hiding columns, is paid the same way. The actions'
+ * heading (or, on a list without row verbs, the line under the table) carries «Coloane», one more
+ * island (`ColumnVisibility`): a menu with a checkbox per column and «Arată toate coloanele». What
+ * is hidden is this browser's own, beside the widths (`br.table.<id>.hidden`), hidden before the
+ * first paint by the same script and undone by the same reset. A column marked `essential` — and
+ * always the first one and the phone's headline — has no checkbox (`data-column-essential` on its
+ * `<col>`). The phone layout and the exports keep every column: hiding is a view, not a disclosure.
  *
  * A resized table switches to `table-layout: fixed` at the sum of its columns' widths: wider
  * than the frame, the frame scrolls sideways inside its border; narrower, it stops short. The
@@ -98,6 +110,11 @@ export type AdminColumn<Row> = {
   hideBelow?: "sm" | "md" | "lg";
   /** The row's headline on a phone. Exactly one column should set it. */
   primary?: boolean;
+  /**
+   * Never hidden from the «Coloane» menu (§661): the state, which a row cannot be read without.
+   * The first column and the `primary` one are essential without saying so.
+   */
+  essential?: boolean;
   render: (row: Row) => ReactNode;
 };
 
@@ -240,6 +257,13 @@ export default function AdminTable<Row>({
   const primary = columns.find((column) => column.primary) ?? columns[0];
   const secondary = columns.filter((column) => column !== primary);
   const hinted = columns.filter((column) => column.hint);
+  // What the «Coloane» menu offers (§661): strings and a flag per column, never a row.
+  const menuColumns = columns.map((column, index) => ({
+    key: column.key,
+    label: column.label,
+    essential: isEssentialColumn(column, index),
+  }));
+  const columnMenu = <ColumnVisibility tableId={tableId} columns={menuColumns} />;
 
   return (
     <Stack spacing={2}>
@@ -259,11 +283,12 @@ export default function AdminTable<Row>({
             {caption}
           </Box>
           <colgroup>
-            {columns.map((column) => (
+            {columns.map((column, index) => (
               <Box
                 key={column.key}
                 component="col"
                 data-column={column.key}
+                data-column-essential={isEssentialColumn(column, index) ? "" : undefined}
                 sx={column.hideBelow ? HIDE_COL[column.hideBelow] : undefined}
               />
             ))}
@@ -333,8 +358,13 @@ export default function AdminTable<Row>({
                 </TableCell>
               ))}
               {rowActions && (
-                <TableCell align="right" data-column={ACTIONS_COLUMN} sx={{ fontWeight: 700, ...HEAD_RULE }}>
+                <TableCell
+                  align="right"
+                  data-column={ACTIONS_COLUMN}
+                  sx={{ fontWeight: 700, whiteSpace: "nowrap", ...HEAD_RULE }}
+                >
                   {labels.actions}
+                  {columnMenu}
                 </TableCell>
               )}
             </TableRow>
@@ -429,6 +459,8 @@ export default function AdminTable<Row>({
             {labels.results}
           </Typography>
           <ColumnWidths tableId={tableId} />
+          {/* A list without row verbs has no actions' heading to carry the menu: it sits here. */}
+          {!rowActions && columnMenu}
         </Stack>
 
         <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>

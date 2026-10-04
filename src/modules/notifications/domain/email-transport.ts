@@ -76,6 +76,10 @@ export const EMAIL_GROUP_OF: Readonly<Record<EmailMessageType, EmailGroup>> = {
   MEMBER_INVITATION: "club",
   // The Administrators' notice of a moved legal template (§639): to the club's own people, as the invitation.
   LEGAL_TEMPLATES_CHANGED: "club",
+  // The outage grace's two (§657): the club's road — Gmail by default (§622), which does not hang on
+  // the club's own domain, the very thing that may be gone when the first one leaves.
+  UNREACHABLE_WINDOW_OPENED: "club",
+  UNREACHABLE_WINDOW_CLOSED: "club",
   NEWSLETTER_CONFIRM: "newsletter",
   NEWSLETTER: "newsletter",
   NEW_EVENT_ALERT: "newsletter",

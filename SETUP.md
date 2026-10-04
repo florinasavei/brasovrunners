@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.66-2026-10-03 -->
+<!-- PROJECT_BASELINE: BR-V2.67-2026-10-04 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.66-2026-10-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.67-2026-10-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -449,8 +449,8 @@ provider-assigned default hostnames; the custom domain is bound at the end of M1
 
 | Project | Production branch | APP_ENV | Current hostname | Final hostname |
 | --- | --- | --- | --- | --- |
-| `brasov-runners-qa` | `qa` | `qa` | `qa.brasovrunners.com` — `APP_BASE_URL` moved to it on 2026-09-17 by `yarn domain:bind qa`, effective on the next QA deployment; `brasov-runners-qa-nu.vercel.app` still serves and is what the QA pinger and the migrate smoke call, on purpose | `qa.brasovrunners.com` |
-| `brasov-runners-production` | `main` | `production` | `brasov-runners-production.vercel.app` (created 2026-09-16, never deployed; stays reachable as the smoke and scheduler target) | `brasovrunners.com`, with `www.brasovrunners.com` redirecting to it — bought and bound 2026-09-16, DNS at the registrar pending; a year later `brasovrunners.ro` and its `www`, redirecting too, until the club decides otherwise (`DECISIONS.md` §55) |
+| `brasov-runners-qa` | `qa` | `qa` | `qa.brasovrunners.com` — `APP_BASE_URL` moved to it on 2026-09-17 by `yarn domain:bind qa`, effective on the next QA deployment; `brasov-runners-qa-nu.vercel.app` still serves and is the address the QA job pings, the backstop and a second health monitor must call (§40, since 2026-10-03; `CLAUDE.md` «Still owed» item 19) — on 2026-10-03 the pings in use called the public name | `qa.brasovrunners.com` |
+| `brasov-runners-production` | `main` | `production` | `brasov-runners-production.vercel.app` (created 2026-09-16; stays reachable, and is the address the production job pings, the backstop and a second health monitor must call — §40, since 2026-10-03; `CLAUDE.md` «Still owed» item 19 — on 2026-10-03 the pings in use called the public name) | `brasovrunners.com`, with `www.brasovrunners.com` redirecting to it — bought and bound 2026-09-16, DNS at the registrar since 2026-09-17 (its contact address must stay verified: the 2026-10-03 hold, §40); a year later `brasovrunners.ro` and its `www`, redirecting too, until the club decides otherwise (`DECISIONS.md` §55) |
 
 The QA project's hostname carries a `-nu` suffix Vercel appended because the plain name was
 taken. It is not cosmetic: `APP_BASE_URL` must match it character for character, or the
@@ -473,6 +473,39 @@ there is **no MX and no `mail.` record today**, so nothing on the domain receive
 is issued and renewed by Vercel; nothing is bought or installed at the registrar. FTP is not used.
 Vercel reports both production hostnames configured (`A` and `CNAME`), and `www` answers 308 to
 the apex.
+
+**The registrant contact and the renewal — since 2026-10-03 (`DECISIONS.md` §659).** On
+2026-10-03 the registrar held the domain from about 11:04 to 18:24 UTC because the ICANN contact
+verification sent at registration had landed in spam on 16 September; the name, the backoffice,
+QA and `mail.` went with it (`docs/RUNBOOKS.md` § The domain stops answering). So, at ROMARG's
+control panel and in the contact mailbox, once and after every change:
+
+- **The registrant and admin contact is a mailbox outside the domain, read daily** — today the
+  owner's Gmail. Never an address `@brasovrunners.com` or `@mail.brasovrunners.com`: a domain on
+  hold cannot deliver the email that lifts the hold.
+- **The ICANN contact verification arrives at registration and after every change of the
+  registrant contact** (name, email, postal address), and must be clicked within **15 days**, or
+  the registrar suspends the domain (`clientHold`) with every record unchanged. After any change of
+  the contact, look for it the same day. It comes from the registrar's verification service — for
+  a registrar on OpenSRS, that service's own sender, not ROMARG's name.
+- **Whitelist both senders in that mailbox.** In Gmail: **Settings** → **Filters and Blocked
+  Addresses** → **Create a new filter** → *Has the words* `brasovrunners.com` → **Never send it to
+  Spam** and **Star it**; and one filter per sender — ROMARG's address and the verification
+  service's, as they appear on their first email — with the same two ticks. A message that names
+  the domain then never lands in spam, whoever sends it.
+- **Auto-renew is on, with a card valid past the renewal date** (2027-09-16). Check the card's
+  expiry each summer; a refused card at renewal is an expired domain.
+- **The renewal date on both Vercel projects:** `DOMAIN_REGISTERED_ON=2026-09-16` and
+  `DOMAIN_RENEWAL_YEARS=1` (the years paid from registration in total; 2 after the first yearly
+  renewal), in the Production environment, then a redeploy. What the code does with them
+  (`src/modules/diagnostics/domain/domain-renewal.ts`, from configuration and the clock only, never
+  a WHOIS query): the expiry is the registration day plus the years paid — 2027-09-16;
+  «Sarcini» (`/admin/tasks`) shows the row «Reînnoirea domeniului .com» green until 90 days before,
+  amber from 2027-06-18, red from 2027-08-17 (30 days) and past the day; from that same red day
+  `/api/health` — shallow and `?deep=1` alike — answers `degraded` with a 503, so the hourly
+  health monitor emails a month before the expiry; «Setări» → «Costuri» shows the expiry with the
+  month's costs. Unset, the row says the date is not known and nothing else changes, so nothing
+  reminds anybody.
 
 **QA moved to `qa.brasovrunners.com` on 2026-09-17.** The order that made it safe: the QA Zitadel
 application first gained `https://qa.brasovrunners.com/api/auth/callback/zitadel` and the
@@ -1577,7 +1610,9 @@ The size ceiling is `PATCH …/projects/<id>/endpoints/<endpoint id>` with
 
 **The monitors on cron-job.org, as set — read back from the owner's screenshots on
 2026-09-24.** Account time zone `Europe/Bucharest`. The job addresses are each Vercel project's
-own `vercel.app` address (§26's table), on purpose; the health monitors call the club's hosts.
+own `vercel.app` address (§26's table), on purpose — on 2026-10-03 the pings in use were not, so
+read them back (below); the health monitors call the club's hosts, and since 2026-10-03 a second
+pair calls the `vercel.app` addresses.
 Every job POST carries `Authorization: Bearer <that environment's JOB_SECRET>` (the job's
 *Advanced* tab); the health GETs carry nothing.
 
@@ -1597,6 +1632,58 @@ brasovrunners QA deep       GET  qa. /api/health?deep=1                       2 
 
 All of them: *notify on failure* after 1 failure, *notify when disabled for too many failures* on,
 responses not saved.
+
+**Since 2026-10-03: the jobs and a second health monitor on the address no registrar can hold
+(`DECISIONS.md` §659).** While the registrar held the name for seven hours (§26), no job ran:
+the table above names the `vercel.app` addresses, yet the cron-job.org job pings in use called the
+public name, and the GitHub backstop called nothing — its base-URL secrets were unset, so its steps
+skipped green (step 3). The clicks below move both to the `vercel.app` addresses. Each Vercel
+project's own `vercel.app` address (§26's table) answers whatever happens to the club's DNS. The
+owner's clicks, once:
+
+```text
+cron-job.org title           request (unchanged schedule, header and notifications)
+prod outbox day / night      POST https://brasov-runners-production.vercel.app/api/internal/jobs/email-outbox
+prod maintenance day / night POST https://brasov-runners-production.vercel.app/api/internal/jobs/registration-maintenance
+qa outbox                    POST https://brasov-runners-qa-nu.vercel.app/api/internal/jobs/email-outbox
+qa maintenance               POST https://brasov-runners-qa-nu.vercel.app/api/internal/jobs/registration-maintenance
+
+new, beside the two on the public names, which stay:
+brasovrunners PROD origin    GET  https://brasov-runners-production.vercel.app/api/health   2 0-1,4-23 * * *   hourly at :02, as PROD health
+brasovrunners QA origin      GET  https://brasov-runners-qa-nu.vercel.app/api/health        2 */6 * * *        every six hours, as QA health
+```
+
+1. **The job pings** — every job of the table above, six in all, two endpoints per environment:
+   cron-job.org → the job → **Common** → **URL** → the address above; the *Advanced* tab's
+   `Authorization: Bearer <that environment's JOB_SECRET>` stays as it is. **Save**, then **Test
+   run**: 200. While the name is gone the jobs keep running, and the outage grace — its own
+   decision in this release — needs exactly that: its `dns` signal is the maintenance job finding
+   the public name gone, which it can only do if something reaches the job by another address.
+2. **The two new health monitors** — *Create cronjob* → the address above, *GET*, no header,
+   *Custom* schedule as in the table, *notify on failure* after 1 failure and *when disabled*, the
+   same as the others. Each is the shallow `/api/health` (§577): it wakes no database and costs one
+   function call an hour. **The monitors on the public names stay**: they are the ones that say the
+   name is dead. Read the pair together — public red and `vercel.app` green is the name
+   (`docs/RUNBOOKS.md` § The domain stops answering); both red is the site — unless the body still
+   carries a build and `domain.status` says `urgent` or `expired`: from 30 days before the expiry
+   (once `DOMAIN_REGISTERED_ON` is set) the shallow health answers 503 on every host, and that pair
+   is the renewal (§26), not the site.
+3. **The backstop's secrets.** GitHub → the repository → **Settings** → **Secrets and variables**
+   → **Actions** → **Secrets**: `PRODUCTION_APP_BASE_URL` = `https://brasov-runners-production.vercel.app`
+   and `QA_APP_BASE_URL` = `https://brasov-runners-qa-nu.vercel.app`, no trailing slash, beside
+   `PRODUCTION_JOB_SECRET` and `QA_JOB_SECRET` (each that project's `JOB_SECRET`, character for
+   character). **Today the two base URLs are unset**: `.github/workflows/scheduled-jobs.yml`'s steps
+   print «not configured; skipping» and exit in zero seconds with a green tick, four times a day,
+   and guard nothing (the green skip of `DECISIONS.md` §31). Verify with **Actions** →
+   **scheduled-jobs** → **Run workflow**: each step takes a second or two and prints the job's JSON.
+
+**Why `/api` on the `vercel.app` host is not sent to the public name.** Nothing in the application
+redirects one host to another, and `src/proxy.ts` — the only code that redirects at all (locales,
+aliases, moved backoffice addresses) — excludes `/api` from its matcher
+(`"/((?!api|_next|_vercel|.*\\..*).*)"`), so `/api/health` and both job routes answer on whichever
+host was asked. Keep it so in Vercel too: the project → **Settings** → **Domains** → the
+`vercel.app` domain must not be set to *Redirect to* the public name, or every ping above would
+follow a 308 back to the name that is gone.
 
 **Since §577 (2026-09-30): the daily window and the two depths of `/api/health`.** An idle
 platform now looks at its database once a day, at **04:00** in Brașov — both jobs' safety run, the
@@ -1678,10 +1765,12 @@ of the `production` environment):
 2. **Token name** `brasovrunners ship`; **Expiration** a date after you are back (at most a year);
    **Resource owner** you; **Repository access** → **Only select repositories** → this repository.
 3. **Repository permissions** — each **Read and write**: **Contents**, **Pull requests**,
-   **Issues** (the comment and the label on the pull request), **Actions**, **Deployments**
-   (approving the gated `production` migration run), **Workflows** (a landing that merges `qa`
-   in carries `qa`'s workflow changes, and GitHub refuses that push without it). **Metadata** is
-   read-only and set by itself. Nothing else.
+   **Actions**, **Deployments** (approving the gated `production` migration run), **Workflows**
+   (a landing that merges `qa` in carries `qa`'s workflow changes, and GitHub refuses that push
+   without it). **Metadata** is read-only and set by itself. Nothing else. **Issues** is no
+   longer needed (`DECISIONS.md` §658): the closing comment and the removal of the `ship` label
+   are made with the run's own token, which the workflow grants itself, so a token without it
+   loses nothing and an existing token that has it may keep it.
 4. **Generate token**, copy it once.
 5. The repository → **Settings** → **Secrets and variables** → **Actions** → **Secrets** →
    **New repository secret** → Name `SHIP_TOKEN`, Secret the token → **Add secret**.

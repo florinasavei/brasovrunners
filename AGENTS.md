@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.66-2026-10-03 -->
+<!-- PROJECT_BASELINE: BR-V2.67-2026-10-04 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V2.66-2026-10-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.67-2026-10-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1326,6 +1326,33 @@ Rules:
   a row that holds a counted place releases it under the event lock and the ordinary refill follows;
   unmarking serves the line first and then needs `occupied < capacity` under the lock; a restart of a
   cancelled or expired row through the form clears the mark;
+- while the door is shut — the site's public name answers «no such name» on two probes at least ten
+  minutes apart, or no scheduler call arrives for longer than the pinger's own threshold — the
+  maintenance job moves every hold, offer, reservation, invitation and link deadline that was running
+  later by the time the door was shut: while a `dns` window is open, on every real run by the time
+  since the run before (so none reads as lapsed, and the sweeps are held too); a `pings` window, seen
+  once it is over, in one step and only what was running inside it (a deadline written after it ended
+  is not moved; one written inside it by what was left of it), recorded once however many runs read
+  it at once. Capped by «Termene» (`outageGraceMaxHours`; 0 switches the moving off,
+  the windows are still recorded and announced) and as the allocator caps it, under the event lock,
+  compare-and-set, each link's live token in lockstep, audited with no actor (`DECISIONS.md` §657,
+  `registrations/outage-grace.ts`); this is the one move of an invitation's deadline while somebody
+  waits. A claim whose deadline passed while the door was shut is revived only while its counted place
+  is still free, counted again under the lock (`occupied ≤ capacity`): otherwise its deadline is put
+  back, it lapses as it would have, it is audited (`registration.not_revived_for_outage`,
+  `event.invitation_not_revived_for_outage`) and named to the Administrators — and so is a claim the
+  allocator had already lapsed inside the window before the run (an offer or a declaration hold made
+  `EXPIRED`, a family's reservation cleared, an invitation stamped expired, an address link ended),
+  read under the same lock and left as it is (`lapsedBy: "allocator"`), never revived. The job never marks a
+  row outside the places and never raises a capacity — a supplementary place needs an Administrator's
+  confirmed press (§642), a row that consumes no place an Administrator's verb under the event's
+  own switch (§643, §648) — so the Administrator re-seats them, if anybody does, with the verb the
+  claim's state has now: «Trimite-i oferta» once the person is back on the waiting list (a lapsed
+  offer, declaration hold or address link is `EXPIRED`: they register again first), «Dă-i un loc acum»
+  for a family's address still unconfirmed, a new invitation for a guest; a family's cleared
+  reservation is recognised by `registrations.reservation_lapsed_at` and judged by
+  `reservation_lapsed_from` (the deadline that lapsed), which `expireStaleHolds` writes in the
+  statement that clears it, never by `updated_at` nor by its sitting's `reserved_until`;
 - an invitation by email (`event_invitations`, §647) holds one counted place from the send until it is
   accepted, withdrawn or its deadline passes — the deadline compared on every read, so the place is free
   the instant it passes — unless it was sent «Pe lista de invitați speciali» (`outside_capacity`). It is the club's choice, like a
@@ -1984,18 +2011,21 @@ three rules (`DECISIONS.md` §30):
 
 `club_member_declared` carries one rule of its own (BR-REQ-031-06, `DECISIONS.md` §48):
 
-- **It is a claim and is never verified.** Nothing matches it against `staff_users` or any
-  roster, because most members of this club have no backoffice account and a verified flag would
-  answer "no" for exactly the people the question is asked to find. Every surface that shows it
-  says "declared".
+- **It is a claim and is never verified.** Nothing writes it from `staff_users` or any roster,
+  and every surface that shows it alone says "declared". Since the members' zone gave the club's
+  members accounts of their own (§524), the backoffice also says **verified** — derived when the
+  screen or the export is drawn, never stored — when the participant's canonical address is the
+  canonicalized address of a live account on «Echipa», whatever the tick (`DECISIONS.md` §662,
+  `registrations/domain/membership.ts`). That reading is the account's, not the column's: it
+  changes nothing here, ends the moment the account is removed, and grants nothing either.
 - **It grants nothing, so it MUST NOT appear in any condition in the allocator or the capacity
   formula of §10.6** — the same rule `kind` carries, for a different reason: a self-ticked box
   that decided a price, a place or a queue position would decide it for anybody who ticked it.
   A member price, if the club ever wants one, needs a membership list and a decision recorded
   before it needs this column.
 - **`false` means "did not say" as often as it means "no",** so it is reported as a presence and
-  never as a negative: the export prints "Yes" or an empty cell, and the backoffice filter
-  narrows to the people who declared it and offers no way to select the rest.
+  never as a negative: the export prints "declared", "verified" or an empty cell, and the
+  backoffice filter narrows to the members, declared or verified, and offers no way to select the rest.
 
 ### 12.7 Declaration acceptances
 

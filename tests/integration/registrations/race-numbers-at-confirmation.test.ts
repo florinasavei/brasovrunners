@@ -243,6 +243,7 @@ describe("BR-REQ-038-01 §548 a race number only once a registration is confirme
           email: "ana@example.test",
           status: row.status,
           clubMemberDeclared: false,
+          memberVerified: false,
           fitnessDeclaredAt: null,
           stravaUrl: "",
           instagramHandle: "",

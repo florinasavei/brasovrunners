@@ -1,8 +1,12 @@
 import {
+  ACTIONS_COLUMN,
   columnFloor,
   type ColumnWidths,
   fixedLayout,
+  hiddenColumnsCss,
+  hiddenStorageKey,
   MIN_COLUMN_WIDTH,
+  parseHidden,
   parseWidths,
   storageKey,
   touchesVisible,
@@ -10,7 +14,7 @@ import {
 
 /**
  * The browser half of the resizable columns (§650): reading and writing the stored widths, and
- * laying a server-rendered table out with them. Called only from the two islands' handlers and
+ * laying a server-rendered table out with them — and, since §661, the columns hidden on it. Called only from the two islands' handlers and
  * effects, never during a render, so nothing here runs on the server.
  *
  * The table itself stays a Server Component's markup. The islands reach it through the DOM —
@@ -19,7 +23,10 @@ import {
  * the first reason `AdminTable` is not a data grid.
  */
 
-/** Said on `window` whenever a table's stored widths change, so its reset control can appear. */
+/**
+ * Said on `window` whenever a table's stored widths or hidden columns change (§661), so its reset
+ * control can appear and its «Coloane» menu tick again.
+ */
 export const WIDTHS_CHANGED = "br:admin-table-widths";
 
 /**
@@ -63,6 +70,80 @@ export function writeWidths(tableId: string, widths: ColumnWidths): void {
     else unsaved.set(tableId, { ...widths });
   }
   window.dispatchEvent(new CustomEvent(WIDTHS_CHANGED, { detail: tableId }));
+}
+
+/** The hidden columns this page was told while storage refused to keep them (§661), per table. */
+const unsavedHidden = new Map<string, string[]>();
+
+/** The column keys this browser hides on `tableId` (§661): nothing when storage is blocked. */
+export function readHidden(tableId: string): string[] {
+  const kept = unsavedHidden.get(tableId);
+  if (kept) return [...kept];
+  try {
+    return parseHidden(window.localStorage.getItem(hiddenStorageKey(tableId)));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Keeps the hidden columns under `br.table.<id>.hidden`, the entry removed when none is. A storage
+ * that refuses keeps them for this page, an empty list too, so «Arată toate coloanele» is not undone
+ * by what storage still says. Said on `window` with the widths' event: the reset control and the
+ * menu both listen to it.
+ */
+export function writeHidden(tableId: string, keys: readonly string[]): void {
+  try {
+    if (keys.length === 0) window.localStorage.removeItem(hiddenStorageKey(tableId));
+    else window.localStorage.setItem(hiddenStorageKey(tableId), JSON.stringify(keys));
+    unsavedHidden.delete(tableId);
+  } catch {
+    unsavedHidden.set(tableId, [...keys]);
+  }
+  window.dispatchEvent(new CustomEvent(WIDTHS_CHANGED, { detail: tableId }));
+}
+
+/**
+ * The hidden keys that name a column of this table that may be hidden (§661) — a renamed or removed
+ * column, or one since marked essential, is not hidden by anything, so the reset does not count it.
+ */
+export function readHiddenHere(tableId: string): string[] {
+  const table = tablesOf(tableId)[0];
+  if (!table) return [];
+  const hideable = new Set(hideableColumns(table).columns.filter((column) => !column.essential).map((column) => column.key));
+  return readHidden(tableId).filter((key) => hideable.has(key));
+}
+
+/** The table's columns in order, the row verbs' left out, each with whether it may be hidden. */
+function hideableColumns(table: HTMLTableElement): { columns: { key: string; essential: boolean }[]; hasActions: boolean } {
+  const columns: { key: string; essential: boolean }[] = [];
+  let hasActions = false;
+  for (const col of table.querySelectorAll<HTMLTableColElement>(":scope > colgroup > col[data-column]")) {
+    const key = col.dataset.column as string;
+    if (key === ACTIONS_COLUMN) hasActions = true;
+    else columns.push({ key, essential: col.hasAttribute("data-column-essential") });
+  }
+  return { columns, hasActions };
+}
+
+/**
+ * Hides this browser's hidden columns of `tableId` with one `<style data-column-hidden="<id>">` in
+ * `<head>` (§661) — the same text the pre-paint script wrote, which this replaces — or removes it
+ * when none is hidden. A style and not the cells' attributes, for the widths' reason: the cells
+ * belong to React. Kept apart from the widths' early style, which the islands drop on hydration,
+ * because this one stays: it is the hiding itself.
+ */
+export function applyHidden(tableId: string): void {
+  for (const style of document.head.querySelectorAll(`style[data-column-hidden="${tableId}"]`)) style.remove();
+  const table = tablesOf(tableId)[0];
+  if (!table) return;
+  const { columns, hasActions } = hideableColumns(table);
+  const css = hiddenColumnsCss(tableId, columns, readHidden(tableId), hasActions);
+  if (!css) return;
+  const style = document.createElement("style");
+  style.setAttribute("data-column-hidden", tableId);
+  style.textContent = css;
+  document.head.appendChild(style);
 }
 
 /**
