@@ -477,6 +477,13 @@ export const registrations = pgTable(
      * free never had one, and is never named. Null on every other row.
      */
     reservationLapsedAt: timestamp("reservation_lapsed_at", { withTimezone: true }),
+    /**
+     * The deadline that lapsed when the allocator cleared that reservation: the row's `hold_expires_at`
+     * as it stood, written in the same statement as `reservation_lapsed_at`, and nowhere else. The
+     * outage grace (§NNN) matches and judges a cleared reservation by it, never by its sitting's
+     * `reserved_until`, which a move of the reservation leaves behind. Null on every other row.
+     */
+    reservationLapsedFrom: timestamp("reservation_lapsed_from", { withTimezone: true }),
     confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
     cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
     expiredAt: timestamp("expired_at", { withTimezone: true }),

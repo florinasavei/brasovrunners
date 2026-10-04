@@ -641,8 +641,9 @@ answered at the maintenance job's last real run (kept beside its ping in the dat
 nobody) and lists the last three windows, and «Sarcini» has the row «Site-ul de negăsit: ceasul
 termenelor», red while a window is open, while a window's moves are stuck, and while the newest window
 left a claim it did not revive that is not handled yet on an event that has not started — handled once
-the same person has a newer registration on the event, the invitation was sent again or accepted, or
-the family's reservation holds a place again or its address was confirmed and placed. No page and no action a
+the person's own row left `EXPIRED` (registering again, through the form or «Adaugă înscrierea»,
+restarts that same row), a new invitation went to the address or the expired one was accepted, or the
+family's reservation holds a place again or its address was confirmed and placed. No page and no action a
 visitor waits on asks the name.
 
 **What it does not do.** It cannot run a job nobody calls: while the name is gone the jobs run only

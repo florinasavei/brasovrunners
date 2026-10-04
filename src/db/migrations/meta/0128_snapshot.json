@@ -5461,6 +5461,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "reservation_lapsed_from": {
+          "name": "reservation_lapsed_from",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
         "confirmed_at": {
           "name": "confirmed_at",
           "type": "timestamp with time zone",

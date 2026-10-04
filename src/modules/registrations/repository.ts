@@ -1368,12 +1368,13 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
     — the registration itself stays, waiting for its address, and is allocated like any other when the
     address is confirmed. Cleared rather than left to lapse in the count alone, so the job does not
     find it again on every run (`findEventsNeedingMaintenance`). `reservation_lapsed_at` keeps the
-    instant, in the same statement: the outage grace (§NNN) names a reservation cleared inside a
-    window by it, and never a form that had no reservation to clear.
+    instant and `reservation_lapsed_from` the deadline that lapsed (the value the statement clears), in
+    the same statement: the outage grace (§NNN) names a reservation cleared inside a window by them,
+    and never a form that had no reservation to clear.
   */
   const lapsedReservations = await db
     .update(registrations)
-    .set({ holdExpiresAt: null, reservationLapsedAt: now, updatedAt: now })
+    .set({ holdExpiresAt: null, reservationLapsedAt: now, reservationLapsedFrom: sql`${registrations.holdExpiresAt}`, updatedAt: now })
     .where(
       and(
         eq(registrations.eventId, event.id),

@@ -584,22 +584,23 @@ const sittingOfRegistration = and(
 ) as SQL;
 
 /**
- * A family's reservation the allocator cleared (`expireStaleHolds` wrote `reservation_lapsed_at` in the
- * statement that set `hold_expires_at` to null) after the window began, its sitting's `reserved_until`
- * in the span: the registration still waits for its address, with no place. The evidence is that
- * column alone, never `updated_at` — a family form sent while no place was free never had a
- * reservation, has a null `hold_expires_at` from the start, and is touched by any later write (the
- * link's own move among them), so it is never named.
+ * A family's reservation the allocator cleared (`expireStaleHolds` wrote `reservation_lapsed_at` and,
+ * as `reservation_lapsed_from`, the `hold_expires_at` it set to null, in one statement) after the
+ * window began, that lapsed deadline in the span: the registration still waits for its address, with
+ * no place. The deadline is the row's own, never its sitting's `reserved_until`, which an earlier move
+ * of the reservation leaves behind. The evidence is those columns alone, never `updated_at` — a family
+ * form sent while no place was free never had a reservation, has a null `hold_expires_at` from the
+ * start, and is touched by any later write (the link's own move among them), so it is never named.
  */
 function clearedReservationWhere(span: LapsedSpan): SQL {
   return and(
     eq(registrations.status, "PENDING_EMAIL_CONFIRMATION"),
     isNull(registrations.holdExpiresAt),
     isNotNull(registrations.reservationLapsedAt),
+    isNotNull(registrations.reservationLapsedFrom),
     gt(registrations.reservationLapsedAt, span.startedAt),
-    gt(familySittings.reservedUntil, span.since),
-    lte(familySittings.reservedUntil, span.until),
-    sql`${registrations.reservationLapsedAt} >= ${familySittings.reservedUntil}`,
+    gt(registrations.reservationLapsedFrom, span.since),
+    lte(registrations.reservationLapsedFrom, span.until),
   ) as SQL;
 }
 
@@ -958,13 +959,13 @@ async function moveOneEvent<T extends Record<string, unknown>>(
       }
 
       for (const row of await tx
-        .select({ id: registrations.id, participantId: registrations.participantId, submittedAt: registrations.submittedAt, reservedUntil: familySittings.reservedUntil })
+        .selectDistinct({ id: registrations.id, participantId: registrations.participantId, submittedAt: registrations.submittedAt, lapsedFrom: registrations.reservationLapsedFrom })
         .from(registrations)
         .innerJoin(familySittings, sittingOfRegistration)
         .where(and(eq(registrations.eventId, eventId), clearedReservationWhere(span)))
-        .orderBy(asc(familySittings.reservedUntil), asc(registrations.id))) {
-        if (!row.reservedUntil || !wouldMove(row.reservedUntil, row.submittedAt, holdCap)) continue;
-        await record({ kind: "familyReservation", id: row.id, participantId: row.participantId, deadline: row.reservedUntil });
+        .orderBy(asc(registrations.reservationLapsedFrom), asc(registrations.id))) {
+        if (!row.lapsedFrom || !wouldMove(row.lapsedFrom, row.submittedAt, holdCap)) continue;
+        await record({ kind: "familyReservation", id: row.id, participantId: row.participantId, deadline: row.lapsedFrom });
       }
 
       for (const row of await tx

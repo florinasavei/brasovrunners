@@ -350,7 +350,8 @@ export type OwnerTaskInputs = {
    * open — the site's name does not resolve and the deadlines are held; `stuck` while a window over for
    * more than two hours still has deadlines it could not move; `notRevived` while the newest window over
    * left a claim it did not revive that is not handled yet on an event that has not started — the person
-   * has not registered again, the invitation was not sent again, the reservation not placed — for an
+   * has not registered again (their own row is still `EXPIRED`), no new invitation went to the address,
+   * the reservation not placed — for an
    * Administrator to act on with the verb the email names; `clear` otherwise.
    */
   unreachableWindow: "open" | "stuck" | "notRevived" | "clear";

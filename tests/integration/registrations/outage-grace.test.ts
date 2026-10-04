@@ -998,9 +998,10 @@ describe("§NNN a claim the allocator already lapsed inside the window: recorded
     expect((await windows())[0].claimsNotRevived).toBe(1);
   });
 
-  it("counts a claim not revived on «Sarcini» only until the facts show it handled: registered again, the invitation sent again or accepted, the reservation placed", async () => {
+  it("counts a claim not revived on «Sarcini» only until the facts show it handled: the lapsed row restarted, a new invitation to the address, the reservation placed", async () => {
     const event = await createEvent({ capacity: 3 });
     const offered = await register(event, { status: "WAITLIST_OFFERED", holdExpiresAt: new Date("2026-10-03T10:00:00.000Z"), waitlistedAt: ANCHOR, offerCreatedAt: ANCHOR });
+    const offeredSerial = serial;
     const invitation = await invite(event, new Date("2026-10-03T10:30:00.000Z"));
     const reservedUntil = new Date("2026-10-03T11:00:00.000Z");
     const reservation = await register(event, { status: "PENDING_EMAIL_CONFIRMATION", holdExpiresAt: reservedUntil, emailLinkExpiresAt: new Date(NOW.getTime() + DAY) });
@@ -1024,13 +1025,16 @@ describe("§NNN a claim the allocator already lapsed inside the window: recorded
     expect((await windows())[0].claimsNotRevived).toBe(3);
     expect(await waiting()).toBe(3);
 
-    // The person whose offer lapsed registers again (the same address and name): handled.
-    const lapsed = await rowOf(offered);
-    const again = await register(event, { status: "WAITLISTED", waitlistedAt: NOW });
-    await db.update(registrations).set({ participantId: lapsed.participantId, registeredName: lapsed.registeredName, submittedAt: NOW }).where(eq(registrations.id, again));
+    // The person whose offer lapsed registers again through the form, the same address and name: the
+    // allocator restarts that same row under its own id — no second row — and it leaves EXPIRED: handled.
+    const rowsBefore = await db.select({ id: registrations.id }).from(registrations).where(eq(registrations.eventId, event.id));
+    await submitRegistration(db, event, { ...submission(`runner-${offeredSerial}@example.ro`, NOW), lastName: `Pop${offeredSerial}` }, NOW);
+    const rowsAfter = await db.select({ id: registrations.id }).from(registrations).where(eq(registrations.eventId, event.id));
+    expect(rowsAfter.map((row) => row.id).sort()).toEqual(rowsBefore.map((row) => row.id).sort());
+    expect((await rowOf(offered)).status).not.toBe("EXPIRED");
     expect(await waiting()).toBe(2);
 
-    // The invitation's guest is sent a new one to the same address: handled; accepting it would be too.
+    // The invitation's guest is sent a new one to the same address — an expired one cannot be re-sent: handled.
     const [guest] = await db.select().from(eventInvitations).where(eq(eventInvitations.id, invitation.id));
     await db.insert(eventInvitations).values({ eventId: event.id, participantId: guest.participantId, name: guest.name, email: guest.email, canonicalEmail: guest.canonicalEmail, sentAt: NOW, lastSentAt: NOW, expiresAt: new Date(NOW.getTime() + DAY), createdAt: NOW });
     expect(await waiting()).toBe(1);
@@ -1047,6 +1051,40 @@ describe("§NNN a claim the allocator already lapsed inside the window: recorded
     await db.update(registrations).set({ status: "PENDING_EMAIL_CONFIRMATION", confirmedAt: null, emailConfirmedAt: null }).where(eq(registrations.id, reservation));
     expect(await waiting()).toBe(1);
     expect(await countNotRevivedWaiting(db, await readUnreachableWindows(db), new Date(event.startsAt.getTime() + MINUTE))).toBe(0);
+  });
+
+  it("matches a family's cleared reservation by the deadline that lapsed, not by its sitting's first one, which an earlier move left behind", async () => {
+    const event = await createEvent({ capacity: 1 });
+    // The sitting's `reserved_until` was 08:30; an earlier window moved the reservation itself to 11:00, inside this one.
+    const firstDeadline = new Date("2026-10-03T08:30:00.000Z");
+    const moved = new Date("2026-10-03T11:00:00.000Z");
+    const reservation = await register(event, { status: "PENDING_EMAIL_CONFIRMATION", holdExpiresAt: moved, emailLinkExpiresAt: new Date(NOW.getTime() + DAY) });
+    await db.insert(familySittings).values({
+      eventId: event.id,
+      participantId: (await rowOf(reservation)).participantId,
+      registrationId: reservation,
+      registrationIds: [reservation],
+      locale: "ro",
+      heldUntil: ANCHOR,
+      expiresAt: new Date(NOW.getTime() + DAY),
+      reservedUntil: firstDeadline,
+      createdAt: ANCHOR,
+    });
+    await allocatorLapsesAt(event, NEWCOMER);
+    const cleared = await rowOf(reservation);
+    expect(cleared.holdExpiresAt).toBeNull();
+    expect(cleared.reservationLapsedAt).toEqual(NEWCOMER);
+    expect(cleared.reservationLapsedFrom).toEqual(moved);
+    await register(event, { status: "CONFIRMED", confirmedAt: NEWCOMER });
+
+    await runRegistrationMaintenance(db, NOW, deps("resolves"));
+
+    const [window] = await windows();
+    expect(window.notRevived).toEqual([{ kind: "familyReservation", id: reservation, eventId: event.id }]);
+    const [audit] = await notRevivedAudit("registration.not_revived_for_outage");
+    expect(audit.metadataJson).toEqual({ kind: "familyReservation", windowId: window.id, deadline: moved.toISOString(), lapsedBy: "allocator" });
+    expect((await rowOf(reservation)).holdExpiresAt).toBeNull();
+    expect(computeOccupied(await countOccupied(db, event.id, NOW))).toBe(1);
   });
 
   it("records a claim whose deadline fell between a closed window's end and the run, lapsed by the allocator in that interval", async () => {

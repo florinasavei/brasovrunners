@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, inArray, isNotNull, isNull, lte, not, or, type SQL, sql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, isNotNull, isNull, lte, or, type SQL, sql } from "drizzle-orm";
 import { eventInvitations } from "@/db/schema/event-invitations";
 import { events } from "@/db/schema/events";
 import { jobRuns } from "@/db/schema/job-runs";
@@ -28,14 +28,15 @@ export async function readUnreachableWindows<T extends Record<string, unknown>>(
  * scheduled event that has not started:
  *
  * - a lapsed offer, declaration hold or address link waits while its registration is still lapsed
- *   (`EXPIRED`, or an offer put back and not swept yet) and the same person — the participant and the
- *   name — has no newer registration on the event: they register again (or the staff adds one), and
- *   from there «Trimite-i oferta» is the Administrator's verb;
+ *   (`EXPIRED`, or an offer put back and not swept yet). The person registering again — through the
+ *   form or «Adaugă înscrierea» — restarts that same row under its own id (`decideSubmission`'s
+ *   `restart`), so the row leaving `EXPIRED` is what shows it handled; from there «Trimite-i oferta»
+ *   is the Administrator's verb;
  * - a cleared family reservation waits while the address is unconfirmed with no reservation running
- *   («Dă-i un loc acum»), confirmed but waiting for a place («Trimite-i oferta»), or lapsed with no
- *   newer registration; a place again, or the address confirmed and placed, is handled;
- * - an expired invitation waits while it is neither accepted nor withdrawn, was not sent again after the
- *   window, and no newer one went to the same address.
+ *   («Dă-i un loc acum»), confirmed but waiting for a place («Trimite-i oferta»), or lapsed; a place
+ *   again, or the address confirmed and placed, is handled;
+ * - an expired invitation waits while it is neither accepted nor withdrawn and no newer one went to
+ *   the same address — an expired invitation cannot be re-sent, so a new one is what the email asks for.
  *
  * A family's held place is nobody's registration: there is nobody to seat, and it is not counted.
  * Ids only are read; «Sarcini» shows a count.
@@ -54,8 +55,6 @@ export async function countNotRevivedWaiting<T extends Record<string, unknown>>(
   const lapsedIds = idsOf(["offer", "declarationHold", "emailLink"]);
   const familyIds = idsOf(["familyReservation"]);
   const invitationIds = idsOf(["invitation"]);
-  // The same person registered again on the event: the address and the name, a row submitted after this one.
-  const registeredAgain = sql`exists (select 1 from ${registrations} as later where later.event_id = ${registrations.eventId} and later.participant_id = ${registrations.participantId} and lower(later.registered_name) = lower(${registrations.registeredName}) and later.id <> ${registrations.id} and later.submitted_at > ${registrations.submittedAt})`;
   const stillLapsed = or(eq(registrations.status, "EXPIRED"), and(eq(registrations.status, "WAITLIST_OFFERED"), lte(registrations.holdExpiresAt, now)));
   let waiting = 0;
   const countRegistrations = async (ids: string[], state: SQL | undefined) => {
@@ -64,7 +63,7 @@ export async function countNotRevivedWaiting<T extends Record<string, unknown>>(
       .select({ id: registrations.id })
       .from(registrations)
       .innerJoin(events, eq(events.id, registrations.eventId))
-      .where(and(inArray(registrations.id, ids), ahead, state, not(registeredAgain)));
+      .where(and(inArray(registrations.id, ids), ahead, state));
     return rows.length;
   };
   waiting += await countRegistrations(lapsedIds, stillLapsed);
@@ -88,8 +87,6 @@ export async function countNotRevivedWaiting<T extends Record<string, unknown>>(
           isNull(eventInvitations.acceptedAt),
           isNull(eventInvitations.withdrawnAt),
           or(isNotNull(eventInvitations.expiredAt), lte(eventInvitations.expiresAt, now)),
-          // Sent again after the window: the Administrator acted.
-          lte(eventInvitations.lastSentAt, newest.endedAt as Date),
           sql`not exists (select 1 from ${eventInvitations} as later where later.event_id = ${eventInvitations.eventId} and later.canonical_email = ${eventInvitations.canonicalEmail} and later.created_at > ${eventInvitations.createdAt})`,
         ),
       );

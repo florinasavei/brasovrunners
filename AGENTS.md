@@ -1350,8 +1350,9 @@ Rules:
   claim's state has now: «Trimite-i oferta» once the person is back on the waiting list (a lapsed
   offer, declaration hold or address link is `EXPIRED`: they register again first), «Dă-i un loc acum»
   for a family's address still unconfirmed, a new invitation for a guest; a family's cleared
-  reservation is recognised by `registrations.reservation_lapsed_at`, which `expireStaleHolds` writes
-  in the statement that clears it, never by `updated_at`;
+  reservation is recognised by `registrations.reservation_lapsed_at` and judged by
+  `reservation_lapsed_from` (the deadline that lapsed), which `expireStaleHolds` writes in the
+  statement that clears it, never by `updated_at` nor by its sitting's `reserved_until`;
 - an invitation by email (`event_invitations`, §647) holds one counted place from the send until it is
   accepted, withdrawn or its deadline passes — the deadline compared on every read, so the place is free
   the instant it passes — unless it was sent «Pe lista de invitați speciali» (`outside_capacity`). It is the club's choice, like a
