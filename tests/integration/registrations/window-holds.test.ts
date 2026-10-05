@@ -240,6 +240,8 @@ describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (ย
     expect(result.holdsMoved).toMatchObject({ moved: 1, to: before(5) });
     expect(await holdOf(atStart.id)).toEqual(before(5));
     expect(await previewWindowHolds(db, await reload(event.id), NOW, 30)).toEqual({ moveNow: 0, atWindow: 1, to: before(5) });
+    // Once that deadline is behind, the card states no date gone by.
+    expect(await previewWindowHolds(db, await reload(event.id), before(3), 30)).toBeNull();
   });
 
   it("past the new deadline, a hold moves to now plus the club's minutes, never on the spot", async () => {
@@ -255,7 +257,8 @@ describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (ย
     const real = await seedRow(event.id, { status: "PENDING_DECLARATION", holdExpiresAt: before(5) });
     const test = await seedRow(event.id, { status: "PENDING_DECLARATION", holdExpiresAt: before(5), kind: "TEST" });
     const minutes = await seedRow(event.id, { status: "PENDING_DECLARATION", holdExpiresAt: new Date(OPEN.getTime() + 20 * MINUTE) });
-    const sent = () => db.update(emailOutbox).set({ status: "SENT", sentAt: OPEN });
+    // Left two hours before these saves: outside ยง606's hour, so it holds back nothing.
+    const sent = () => db.update(emailOutbox).set({ status: "SENT", sentAt: new Date(OPEN.getTime() - 2 * 60 * MINUTE) });
 
     const first = await saveWindow(event.id, 15, 3, OPEN);
     expect(first.holdsMoved).toEqual({ moved: 1, test: 1, to: before(3), queued: 2 });
@@ -295,6 +298,41 @@ describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (ย
     });
     const result = await saveWindow(event.id, 15, 3, OPEN);
     expect(result.holdsMoved).toEqual({ moved: 1, test: 0, to: before(3), queued: 0 });
+    expect(await declarationEmails()).toHaveLength(1);
+  });
+
+  it("a declaration email that left within the hour is not followed by the move's: one email, not two (ยง606's hour)", async () => {
+    const event = await seedEvent(5);
+    const real = await seedRow(event.id, { status: "PENDING_DECLARATION", holdExpiresAt: before(5) });
+    await db.insert(emailOutbox).values({
+      participantId: real.participantId,
+      registrationId: real.id,
+      messageType: "COMPLETE_DECLARATION",
+      locale: "ro",
+      recipientEmail: "p@example.test",
+      payloadJson: {},
+      idempotencyKey: `registration:${real.id}:sign-reminder:${before(5).toISOString()}`,
+      status: "SENT",
+      attemptCount: 1,
+      createdAt: new Date(OPEN.getTime() - 2 * MINUTE),
+      sentAt: new Date(OPEN.getTime() - MINUTE),
+    });
+    const result = await saveWindow(event.id, 15, 3, OPEN);
+    expect(result.holdsMoved).toEqual({ moved: 1, test: 0, to: before(3), queued: 0 });
+    expect(await declarationEmails()).toHaveLength(1);
+  });
+
+  it("a move past the new deadline's last call is that last call: the job queues nothing after it", async () => {
+    // Window 15 / 5 open; at 6 days and an hour before the start the deadline moves to 4 days. The new
+    // deadline's last call (48 hours before it) was due at 6 days before: the move's email is that call.
+    const event = await seedEvent(5);
+    const real = await seedRow(event.id, { status: "PENDING_DECLARATION", holdExpiresAt: before(5) });
+    const at = new Date(before(6).getTime() + 60 * MINUTE);
+    const result = await saveWindow(event.id, 15, 4, at);
+    expect(result.holdsMoved).toEqual({ moved: 1, test: 0, to: before(4), queued: 1 });
+    const [email] = await declarationEmails();
+    expect(email.idempotencyKey).toBe(`registration:${real.id}:sign-reminder:${before(4).toISOString()}`);
+    expect(await queueEventReminders(db, at, DEFAULT_DEADLINES)).toBe(0);
     expect(await declarationEmails()).toHaveLength(1);
   });
 

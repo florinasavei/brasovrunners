@@ -99,9 +99,11 @@ export type HeldRow = { id: string; holdExpiresAt: Date | null };
  *   (`isWindowGivenInstant`, counted from the start as it stood before the save) — a hold given under a
  *   window older than the one stored, the deadline of 0 the event had before somebody set 5 included —
  *   to the same instant: the rows say what the event says, and a save that changes nothing aligns them
- *   once and then finds nothing to do. A hold at the registration close is left alone unless it is the
- *   old instant itself: the club's minutes are capped by the close (`capHoldExpiry`), and a close may
- *   fall a whole number of days before the start.
+ *   once and then finds nothing to do. A hold at the registration close — the close as saved, and the
+ *   close as it stood before the save — is left alone unless it is the old instant itself: the club's
+ *   minutes are capped by the close (`capHoldExpiry`), a close may fall a whole number of days before
+ *   the start, and a save that moves the close must not take the holds capped at the old one for a
+ *   window's.
  * - Once the new instant is behind the floor, only the old instant's rows, and only when the window
  *   changed: an unchanged window never shortens a kept hold to the club's minutes.
  *
@@ -110,23 +112,25 @@ export type HeldRow = { id: string; holdExpiresAt: Date | null };
  */
 export function windowHoldMoves(input: {
   holds: readonly HeldRow[];
-  before: WindowedEvent;
+  /** The event as it stood before the save, its registration close with it (the cap the old holds were given under). */
+  before: WindowedEvent & { registrationClosesAt?: Date | null };
   after: WindowedEvent;
   now: Date;
   holdMinutes: number;
+  /** The registration close as the save leaves it. */
   registrationClosesAt: Date | null;
 }): { id: string; from: Date; to: Date }[] {
   const target = windowHoldTarget(input.after, input.now, input.holdMinutes);
   if (!target) return [];
   const exact = holdsMovedByWindowChange(input);
-  const close = input.registrationClosesAt?.getTime() ?? null;
+  const closes = new Set([input.registrationClosesAt, input.before.registrationClosesAt].flatMap((close) => (close ? [close.getTime()] : [])));
   return input.holds.flatMap((row) => {
     const at = row.holdExpiresAt;
     if (!at) return [];
     if (exact && at.getTime() === exact.from.getTime()) return [{ id: row.id, from: at, to: exact.to }];
     if (target.floored || at.getTime() === target.to.getTime()) return [];
     if (!isWindowGivenInstant(at, input.before.startsAt)) return [];
-    if (close !== null && at.getTime() === close) return [];
+    if (closes.has(at.getTime())) return [];
     return [{ id: row.id, from: at, to: target.to }];
   });
 }

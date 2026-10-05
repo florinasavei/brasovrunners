@@ -1705,7 +1705,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
     await auditWaitlistCountPublic(tx, input.actor, current, saved, now);
     await auditHiddenList(tx, input.actor, current, saved, now);
     // The holds the window gave follow it (§NNN): under the event lock, in this transaction.
-    holdsQueued = (await moveWindowHolds(tx, { actorStaffUserId: input.actor.id, before: current, after: saved, now, holdMinutes: deadlines.holdMinutes })).queued;
+    holdsQueued = (await moveWindowHolds(tx, { actorStaffUserId: input.actor.id, before: current, after: saved, now, deadlines })).queued;
     // The place's name in each language is the event's (§362): written with the row, under its version.
     // An older event's English name follows its Romanian one when only the Romanian moved, which
     // needs the rows as they were (`namesAfterSave`) — the notice compares the same rows.
@@ -2122,7 +2122,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
           before: member,
           after: { ...member, ...changes, id: member.id },
           now,
-          holdMinutes: input.deadlines.holdMinutes,
+          deadlines: input.deadlines,
         }),
       );
       // Each date has its own queue, checked against its own places (§147): the new capacity
@@ -2551,7 +2551,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
         or off, a moved start — or holds given under an older window than the one stored. Under the event
         lock, in this transaction; `hold_expires_at` only, nobody seated or released (AGENTS.md §10.6).
       */
-      holdMoves.push(await moveWindowHolds(tx, { actorStaffUserId: input.actor.id, before: current, after: savedEvent, now, holdMinutes: deadlines.holdMinutes }));
+      holdMoves.push(await moveWindowHolds(tx, { actorStaffUserId: input.actor.id, before: current, after: savedEvent, now, deadlines }));
       // Before the words, so each row a text save writes back already carries its new name.
       await writePlaceNames(tx, input.eventId, names);
       // Before the translations loop: a settings-only save (an Organizer without text rights)

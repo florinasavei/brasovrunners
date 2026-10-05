@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, isNull, or, sql } from "drizzle-orm";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import type { events } from "@/db/schema/events";
@@ -6,8 +6,11 @@ import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import type { Database, Transaction } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
+import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
+import { lastCallDeadline, lastCallKey, windowLastCallAt } from "@/modules/notifications/domain/automatic-sends";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { confirmationWindow } from "./domain/hold-deadlines";
+import { RECENT_DECLARATION_EMAIL_MS } from "./domain/resend";
 import { type WindowedEvent, windowHoldInstant, windowHoldMoves, windowHoldTarget } from "./domain/window-holds";
 import { lockEventForCapacity } from "./repository";
 
@@ -28,6 +31,19 @@ import { lockEventForCapacity } from "./repository";
 /** The key of the declaration email a move sends inside an open window: one per registration and new deadline. */
 export function deadlineMovedKey(registrationId: string, to: Date): string {
   return `registration:${registrationId}:deadline-moved:${to.toISOString()}`;
+}
+
+/**
+ * The key the move's email goes under (§NNN). When the new deadline's last call (`windowLastCallAt`) is
+ * already due, or due within the hour §606 keeps between two declaration emails, the move's email IS
+ * that last call: it goes under the job's own key for the new deadline (`lastCallKey`), so the job finds
+ * it queued and the person gets one email, not two identical ones minutes apart. Otherwise its own key.
+ */
+export function movedEmailKey(registrationId: string, after: WindowedEvent, to: Date, now: Date, lastCallHours: number): string {
+  const candidate = { ...after, holdExpiresAt: to, reminderHoursBefore: null };
+  const lastCallAt = lastCallDeadline(candidate) ? windowLastCallAt(after, { lastCallHours }) : null;
+  if (lastCallAt && lastCallAt.getTime() <= now.getTime() + RECENT_DECLARATION_EMAIL_MS) return lastCallKey(registrationId, candidate);
+  return deadlineMovedKey(registrationId, to);
 }
 
 /** What a save did to the holds of one event: the real rows moved, the test ones apart (§12.6), the instant, the emails queued. */
@@ -69,9 +85,9 @@ async function heldRowsOf<T extends Record<string, unknown>>(db: Database<T>, ev
  * lockstep (below), and one audit row `registration.hold_moved_by_window` (from, to, who saved); per
  * event, when anything moved, one `event.holds_moved_by_window` (how many, real and test apart, to
  * when). When the window is already open, each moved row is sent the declaration email once more — its
- * words state the new deadline — through the outbox (`deadlineMovedKey`, so a retried save sends nothing
- * twice), unless its own declaration email is still waiting to leave (it renders the stored deadline
- * when it does). Before the window opens nothing is sent: the window's own ask (§104) says the new
+ * words state the new deadline — through the outbox (`movedEmailKey`, so a retried save sends nothing
+ * twice, and a move past the new deadline's last call is that last call), unless its own declaration
+ * email is still waiting to leave (it renders the stored deadline when it does) or left within the hour. Before the window opens nothing is sent: the window's own ask (§104) says the new
  * deadline on its day. The caller drains the outbox once after the commit when `queued` is above zero.
  *
  * A scheduled event with internal registration only: a cancelled event's queue is left as it was
@@ -79,11 +95,19 @@ async function heldRowsOf<T extends Record<string, unknown>>(db: Database<T>, ev
  */
 export async function moveWindowHolds<T extends Record<string, unknown>>(
   tx: Transaction<T>,
-  input: { actorStaffUserId: string; before: WindowedEvent; after: EventRow; now: Date; holdMinutes: number },
+  input: {
+    actorStaffUserId: string;
+    /** The event as it stood before the save: the start and window the holds were given against, and its registration close. */
+    before: WindowedEvent & { registrationClosesAt: Date | null };
+    after: EventRow;
+    now: Date;
+    deadlines: Pick<Deadlines, "holdMinutes" | "lastCallHours">;
+  },
 ): Promise<WindowHoldsMoved> {
   const { after, now } = input;
+  const { holdMinutes, lastCallHours } = input.deadlines;
   if (after.eventStatus !== "SCHEDULED" || after.registrationMode !== "INTERNAL") return NOTHING;
-  if (!windowHoldTarget(after, now, input.holdMinutes)) return NOTHING;
+  if (!windowHoldTarget(after, now, holdMinutes)) return NOTHING;
   await lockEventForCapacity(tx, after.id);
   const rows = await heldRowsOf(tx, after.id);
   if (rows.length === 0) return NOTHING;
@@ -92,7 +116,7 @@ export async function moveWindowHolds<T extends Record<string, unknown>>(
     before: input.before,
     after,
     now,
-    holdMinutes: input.holdMinutes,
+    holdMinutes,
     registrationClosesAt: after.registrationClosesAt,
   });
   if (moves.length === 0) return NOTHING;
@@ -100,7 +124,12 @@ export async function moveWindowHolds<T extends Record<string, unknown>>(
   const byId = new Map(rows.map((row) => [row.id, row]));
   const window = confirmationWindow(after);
   const windowOpen = window !== null && now.getTime() >= window.opensAt.getTime();
-  // A declaration email of the row's own still waiting to leave: it will say the moved deadline when it does.
+  /*
+    A declaration email of the row's own still waiting to leave — it will say the moved deadline when it
+    does — or one that left within the hour (§606's RECENT_DECLARATION_EMAIL_MS): a last call that went a
+    minute before the save is not followed by a second, identical one.
+  */
+  const since = new Date(now.getTime() - RECENT_DECLARATION_EMAIL_MS);
   const waitingToLeave = windowOpen
     ? new Set(
         (
@@ -115,7 +144,7 @@ export async function moveWindowHolds<T extends Record<string, unknown>>(
                 ),
                 sql`${emailOutbox.participantId} is not null`,
                 eq(emailOutbox.messageType, "COMPLETE_DECLARATION"),
-                inArray(emailOutbox.status, ["PENDING", "PROCESSING"]),
+                or(inArray(emailOutbox.status, ["PENDING", "PROCESSING"]), gte(emailOutbox.sentAt, since)),
               ),
             )
         ).map((row) => row.registrationId),
@@ -156,7 +185,7 @@ export async function moveWindowHolds<T extends Record<string, unknown>>(
         locale: row.locale,
         recipientEmail: row.deliveryEmail,
         payload: {},
-        idempotencyKey: deadlineMovedKey(move.id, move.to),
+        idempotencyKey: movedEmailKey(move.id, after, move.to, now, lastCallHours),
         requestedByStaffUserId: input.actorStaffUserId,
         // One drain for the whole save, after its commit, never one per row (§606's discipline).
         drainAfter: false,
@@ -210,8 +239,9 @@ async function moveDeclarationLink<T extends Record<string, unknown>>(
  * What the editor's «Fereastra de confirmare» card says before a save (§NNN), from the move's own rules
  * on the window as stored: how many real reserved places a save would move now (held to another
  * window-given instant than the stored window's), how many hold the stored window's instant (and would
- * follow a changed window), and that instant. Test rows are counted nowhere the club reads (§12.6).
- * Reads only: GET mutates nothing.
+ * follow a changed window), and that instant. Null once that instant is behind and nothing would move:
+ * a sentence saying places are held until a date gone by would be wrong. Test rows are counted nowhere
+ * the club reads (§12.6). Reads only: GET mutates nothing.
  */
 export async function previewWindowHolds<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -226,6 +256,8 @@ export async function previewWindowHolds<T extends Record<string, unknown>>(
   if (rows.length === 0) return null;
   const moveNow = windowHoldMoves({ holds: rows, before: event, after: event, now, holdMinutes, registrationClosesAt: event.registrationClosesAt }).length;
   const instant = windowHoldInstant(event).getTime();
+  // A deadline already behind holds nothing the card could count down to: say nothing rather than a date gone by.
+  if (moveNow === 0 && instant <= now.getTime()) return null;
   const atWindow = rows.filter((row) => row.holdExpiresAt?.getTime() === instant).length;
   return { moveNow, atWindow, to: moveNow > 0 ? target.to : new Date(instant) };
 }

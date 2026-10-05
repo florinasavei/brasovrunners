@@ -110,6 +110,23 @@ describe("§NNN windowHoldMoves — which rows move", () => {
     expect(ids(moves)).toEqual(["start"]);
   });
 
+  it("leaves a hold at the close as it stood before the save, when the same save moves the close", () => {
+    // No window: the start is the instant. A confirmation a few minutes before a close at 1 day before the
+    // start was capped at that close (`capHoldExpiry`); the save moves the close to 2 hours before the start.
+    const capped = [{ id: "capped-at-old-close", holdExpiresAt: at(1) }];
+    const movedClose = new Date(START.getTime() - 2 * 60 * MINUTE);
+    const save = (beforeEvent: ReturnType<typeof event>, afterEvent: ReturnType<typeof event>) =>
+      windowHoldMoves({ holds: capped, before: { ...beforeEvent, registrationClosesAt: at(1) }, after: afterEvent, now: NOW, holdMinutes, registrationClosesAt: movedClose });
+    expect(save(event(0, 0), event(0, 0))).toEqual([]);
+    // With a window as well, unchanged or changed: the club's capped minutes are not the window's.
+    expect(save(event(15, 5), event(15, 5))).toEqual([]);
+    expect(save(event(15, 5), event(15, 3))).toEqual([]);
+    // Without the old close in hand it would have looked window-given and gone to the start.
+    expect(windowHoldMoves({ holds: capped, before: event(0, 0), after: event(0, 0), now: NOW, holdMinutes, registrationClosesAt: movedClose })).toHaveLength(1);
+    // The old window's own instant still moves, whatever the close: at 1 day before, a deadline of 1 moved to 3.
+    expect(save(event(15, 1), event(15, 3))).toEqual([{ id: "capped-at-old-close", from: at(1), to: at(3) }]);
+  });
+
   it("past the new deadline: only the old instant's rows, and only when the window changed", () => {
     const now = at(3);
     const moved = windowHoldMoves({ holds, before: event(15, 0), after: event(15, 5), now, holdMinutes, registrationClosesAt: null });
