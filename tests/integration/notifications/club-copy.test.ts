@@ -220,7 +220,7 @@ describe("BR-REQ-033-02 criterion 14 no club-bound message carries a token, a li
     expect(history.filter((entry) => !entry.clubCopy)).toHaveLength(5);
 
     // A club mailbox that bounces its copy says nothing about the participant's address (§76).
-    const bounced = () => findRegistrationDetailForAdmin(db, registration.id).then((detail) => detail?.emailRejectedReason ?? null);
+    const bounced = () => findRegistrationDetailForAdmin(db, registration.id).then((detail) => detail?.emailRejected?.reason ?? null);
     const [copy] = rows.filter((row) => row.participantId === null);
     await db.update(emailOutbox).set({ status: "BOUNCED", lastError: "550 club mailbox full" }).where(eq(emailOutbox.id, copy.id));
     expect(await bounced()).toBeNull();

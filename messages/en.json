@@ -565,7 +565,11 @@
     "columns": {
       "resize": "Width of the “{column}” column",
       "resizeHow": "Drag the edge to widen or narrow the column; from the keyboard, the left and right arrows. A double click puts it back to its original width.",
-      "reset": "Default widths",
+      "reset": "Default widths and columns",
+      "menu": "Columns",
+      "menuHow": "Choose the columns this table shows, in this browser.",
+      "showAll": "Show all columns",
+      "always": "Always shown: {columns}",
       "widthValue": "{width} px"
     },
     "backToEvents": "Back to the event list",
@@ -682,6 +686,20 @@
       "outboxHistory": "Email history",
       "outboxClubCopy": "club copy, without the participant's links",
       "emailRejected": "Email rejected",
+      "rejected": {
+        "which": "Rejected: “{type}”, sent {instant}.",
+        "whichQueued": "Rejected: “{type}”, queued {instant}; the provider refused it at the send.",
+        "typeUnknown": "a club email",
+        "why": {
+          "BOUNCED": "The address does not exist, the mailbox is full or the recipient's server refused it.",
+          "COMPLAINED": "The recipient marked the message as spam."
+        },
+        "reason": "The provider's reason: {reason}",
+        "confirmedBefore": "The address was confirmed {date}; an email after that was rejected.",
+        "confirmedAfter": "The address was confirmed {date}, after this email.",
+        "neverConfirmed": "The address was never confirmed.",
+        "todo": "Phone the person; only they can change the address, by registering again."
+      },
       "testKind": "Test",
       "enteredByStaff": "Entered by staff",
       "livesIn": "Lives in: {place}",
@@ -757,6 +775,8 @@
           "offered_by_staff": "Offer sent ahead of the waiting list (“Send them the offer”)",
           "address_vouched_by_staff": "Address vouched for by the team; place given ahead of the waiting list (“Give them a place now”)",
           "outside_capacity_changed": "Put on the special guests list, or taken off it",
+          "deadline_moved_for_outage": "Deadline moved: the site could not be reached, the clock stood still",
+          "not_revived_for_outage": "Not revived after the outage: the deadline had passed while the site could not be reached, and the place had been given meanwhile or the claim had already lapsed",
           "answer_corrected": "Answer corrected: {field}",
           "answers_viewed": "Answers opened, with the phone and the emergency contact"
         },
@@ -778,15 +798,23 @@
       "registrationDeleted": "The registration was permanently deleted.",
       "eraseLeftovers": "Also delete by hand: the “Signed declaration” messages in the archive, their row in downloaded exports and PDFs, printed sheets, and the address in Mailgun → Suppressions.",
       "rowActions": "Actions for {name}",
-      "clubMemberOnly": "Only {club} members (declared)",
-      "clubMemberOnlyHelp": "Those who ticked “I am a member of the {club} group” when registering. The club does not check; the row reads “Member (declared)”.",
-      "bouncedOnly": "Only those the email never reached",
-      "bouncedOnlyHelp": "The address bounced the message or the provider refused it; the row reads “Email rejected”. These are the people to call before the race.",
-      "clubMemberChip": "Member (declared)",
+      "clubMemberOnly": "Only {club} members",
+      "clubMemberOnlyHelp": "Those who ticked “I am a member of the {club} group” when registering, or whose address is an account’s on «Staff». The row says which: “Member (verified)” or “Member (declared)”.",
+      "bouncedOnly": "Only with a rejected email",
+      "bouncedOnlyHelp": "Those with an email that bounced or was marked as spam, even when the registration is confirmed. “Email rejected” on the row says which email, when and why: call them.",
+      "member": {
+        "verified": "Member (verified)",
+        "verifiedHint": "The address belongs to an account on «Staff», so the club knows they are a member.",
+        "declared": "Member (declared)",
+        "declaredHint": "Ticked when registering; the club has not checked."
+      },
       "columnName": "Name",
       "columnStatus": "Status",
       "columnJourney": "How far",
       "columnUntilWhen": "Until when",
+      "columnCity": "City",
+      "columnAge": "Age",
+      "ageHint": "The age on the event's day, the one the categories and the rules for minors count. «—»: no birth date.",
       "untilWhenHint": "Until when the person can sign the declaration, accept the offer or confirm the address from the email, to the minute. Grey: passed. «—»: nothing is due. As in the registration's timeline.",
       "untilWhen": {
         "hold": "Can sign until {instant}",
@@ -1096,7 +1124,11 @@
         "CANCELLED": "Registration cancelled. Your place has been released.",
         "EXPIRED": "The registration has expired, so we no longer hold a place for you.",
         "holdLapsed": "Your place has expired: the declaration was not signed in time.",
-        "linkUntil": "The link in the email is valid until {instant}."
+        "linkUntil": "The link in the email is valid until {instant}.",
+        "rejected": {
+          "BOUNCED": "An email the club sent to your address was rejected: the address does not exist or the mailbox is full, so the club's messages do not reach you.",
+          "COMPLAINED": "An email the club sent to your address was marked as spam, so the club's messages may no longer reach you."
+        }
       }
     },
     "events": {
@@ -3278,6 +3310,22 @@
             "Check: this row shows the new expiry date and turns green when more than 90 days are left."
           ]
         },
+        "unreachableWindow": {
+          "title": "The site unreachable: the deadlines' clock",
+          "todo": "The site could not be reached from {windowFrom} to {windowUntil}: {windowGranted} given back, deadlines moved: {windowMoved}.",
+          "done": "No outage needs a look: the newest one, if any, left nobody without the place they had.",
+          "open": "The site's name has not resolved since {windowFrom}. On every run the running deadlines move by the time elapsed, so nothing lapses until it is back.",
+          "stuck": "The outage from {windowFrom} to {windowUntil} is over, but its deadlines could not be moved yet: the scheduled job keeps trying; its last error is on /devs.",
+          "notRevived": "The outage from {windowFrom} to {windowUntil} left claims lapsed that were not revived; still waiting, with the verb the email names: {windowNotRevived}.",
+          "how": [
+            "Check the domain at the registrar: the account, the contact verification emails, the renewal payment.",
+            "While the name is gone, nothing lapses. When it is back, the scheduled jobs move the deadlines by themselves and send «The deadlines' clock stood still».",
+            "The email names each person whose claim was not revived and what can be done for them: nobody is seated beyond the advertised places by itself.",
+            "A lapsed offer, declaration hold or address link: the person registers again (or «Add the registration»); once they wait, «Send them the offer» seats them.",
+            "A family reservation: «Give them a place now» on its registration, the address being still unconfirmed. An expired invitation: a new one to the same address, from «Send invitations».",
+            "The row stays red only while one of them is unresolved: until they register again, get a new invitation or a place, or the event starts."
+          ]
+        },
         "contactForm": {
           "title": "The contact form",
           "todo": "Messages from “Write to us” reach the club through Gmail. Until the account is configured, the page shows the club's address instead of the form.",
@@ -4563,6 +4611,8 @@
         "MEMBER_INVITATION": "The member invitation",
         "DECLARATION_HOLD_EXPIRED": "The held place expired",
         "LEGAL_TEMPLATES_CHANGED": "The legal templates changed",
+        "UNREACHABLE_WINDOW_OPENED": "The site's name does not resolve",
+        "UNREACHABLE_WINDOW_CLOSED": "The deadlines' clock stood still",
         "EVENT_INVITATION": "Invitation to an event"
       },
       "when": {
@@ -4596,6 +4646,8 @@
         "MEMBER_INVITATION": "When an administrator adds somebody on Echipa with the role Membru, and on \"Resend the invitation\" until their first sign-in. No token: the button leads to the sign-in, then to the members' area.",
         "DECLARATION_HOLD_EXPIRED": "When somebody who did not sign the declaration in time loses the place to somebody who wanted it. Once per place lost, with what they can still do. Not after the start or for a cancelled event.",
         "LEGAL_TEMPLATES_CHANGED": "When a new release of the site changes a legal text's template: once per change, to every Administrator and Superadministrator. No token: the button leads to «New version».",
+        "UNREACHABLE_WINDOW_OPENED": "When the scheduled jobs, reached by another address, find twice, ten minutes apart, that the site's name no longer resolves: once per outage, to every Administrator and Superadministrator. No button.",
+        "UNREACHABLE_WINDOW_CLOSED": "After an outage — the site's name not found, or no scheduled call arriving: how long, what moved, what to check. Once per outage, to the same people, even with the moving switched off.",
         "EVENT_INVITATION": "When an administrator sends invitations from an event's registrations list, and on Resend. One link to the form, with the name and address filled in; the place is kept until the deadline."
       },
       "whenShort": {
@@ -4629,6 +4681,8 @@
         "MEMBER_INVITATION": "when a member is added",
         "DECLARATION_HOLD_EXPIRED": "when an unsigned place goes to somebody else",
         "LEGAL_TEMPLATES_CHANGED": "when a legal template changes",
+        "UNREACHABLE_WINDOW_OPENED": "when the site's name does not resolve",
+        "UNREACHABLE_WINDOW_CLOSED": "after an outage of the site",
         "EVENT_INVITATION": "when an administrator invites somebody"
       },
       "clubNotices": {
@@ -4985,7 +5039,8 @@
           "publicListDays": "The public participant list stays up after the event (days)",
           "familySittingMinutes": "A family registration's email waits for “Done” at most (minutes)",
           "verificationRetryHours": "The address-confirmation link is re-sent after (hours)",
-          "verificationRetries": "How many times the link is re-sent (0–3)"
+          "verificationRetries": "How many times the link is re-sent (0–3)",
+          "outageGraceMaxHours": "The deadlines' clock stands still while the site cannot be reached, at most (hours)"
         },
         "help": {
           "confirmationHours": "How long somebody has to press the link in the first email; after it, the registration lapses.",
@@ -4998,7 +5053,8 @@
           "publicListDays": "Then the list closes by itself, even while the event still has it switched on. The privacy notice from the template states this number.",
           "familySittingMinutes": "After “Yes, one more person”, the family's email waits for “Done” at most this many minutes after the last form and leaves once, for everybody; at 0, each email leaves at once.",
           "verificationRetryHours": "Counted from when the last confirmation email left, to whoever has not confirmed yet. The link's deadline does not move.",
-          "verificationRetries": "Every confirmation email counts, “Resend” and a backoffice resend included. 0 = never re-sent by itself. The deadline does not move."
+          "verificationRetries": "Every confirmation email counts, “Resend” and a backoffice resend included. 0 = never re-sent by itself. The deadline does not move.",
+          "outageGraceMaxHours": "While the name is not found, running deadlines move on every run; after a silence of the scheduled calls, afterwards. At most this many hours; 0 = no moving, the outages are still recorded."
         },
         "legal": "Legal texts already approved keep the numbers written in them until you approve a new version from the template, which reads them from here.",
         "updatedAt": "Set {when}.",
@@ -5151,7 +5207,9 @@
         "COMPLETE_DECLARATION": "The place is held for {hold} from when the email leaves, or until the deadline for a distant event. The deadline counts only when somebody is waiting; otherwise it is signed at the desk too.",
         "BIB_ASSIGNED": "When an organizer types a confirmed registration's number on its page or at the desk. Otherwise, the number comes with the confirmation. With the manage link. Never for a cancelled event.",
         "REGISTER_ANOTHER_PERSON": "No registration is created, and the screen says “check your email” as always. If the address already has {people}, the email says only that, with no link.",
-        "LEGAL_TEMPLATES_CHANGED": "The check runs with the scheduled jobs, at most once an hour. A change approved before the check is not announced; «Tasks» shows the same rows."
+        "LEGAL_TEMPLATES_CHANGED": "The check runs with the scheduled jobs, at most once an hour. A change approved before the check is not announced; «Tasks» shows the same rows.",
+        "UNREACHABLE_WINDOW_OPENED": "While the name does not resolve nothing lapses. It leaves on the club's road, which does not depend on the club's domain.",
+        "UNREACHABLE_WINDOW_CLOSED": "The deadlines move by as long as the outage lasted, at most what «Deadlines» says. Whoever lost the place meanwhile is named in the email; an administrator decides."
       },
       "confirmationRetry": "To whoever has not confirmed, the link goes again by itself {retry} after the last email, at most {times}; “Resend” counts too. The deadline does not move.",
       "confirmationRetryOff": "It is not re-sent by itself: in “Deadlines”, the number of resends is 0."
@@ -5400,6 +5458,7 @@
                 "Looking for someone: type part of the name in «Search by name» and press «Filter». With no event chosen, it looks in every event.",
                 "The «How far» column says each person's step. Press a name to open the registration: «The registration's journey» and «Timeline» say everything that happened.",
                 "The «Until when» column says until when each one can sign, accept or confirm — the same time as the registration's timeline.",
+                "«City» says where each one lives, with the country's code only outside Romania, and «Age» the age on the event's day. Both sort, and both are in the export.",
                 "Someone asks where their registration stands: open it and tell them what «What to tell them» says — the same words they read themselves. «Copy» puts them on the clipboard, for a message.",
                 "The top says once what you cannot change here. The Tehnic role does not see registrations at all.",
                 "On the event's public page, the first number counts the registrations holding a place: the confirmed plus those still in progress — a declaration not signed yet, a waiting-list offer not accepted yet, a place a family holds. After the dash the line names only what exists: how many are confirmed and how many in progress, and how many free places are kept for the waiting list, for example “6 registered of 10 places — 4 confirmed, 2 completing their registration, 4 places kept for the waiting list”.",
@@ -5724,7 +5783,7 @@
               "steps": [
                 "When: before a members' race, so that only the club's members stay ticked. The participant ticks it on the form; the club does not check it.",
                 "One at a time: in «The registration's answers» untick the member tick → «Save the answers». On the list, «Not a member» is in the row's ⋮ menu.",
-                "All at once: «Registrations» → «Search and filter» → tick «Only {club} members (declared)» → «Filter» → «Member ticks with no member account».",
+                "All at once: «Registrations» → «Search and filter» → tick «Only {club} members» → «Filter» → «Member ticks with no member account».",
                 "The list shows the ticked registrations whose address is no account's on «Staff». A member registered with another address appears too: untick their row. Then «Clear the ticks on all» … and confirm.",
                 "What it does not do: it cancels no registration, moves no place and sends no email. The club on the list is cleared only if the tick had set it. Every change stays in the log."
               ]
@@ -7899,6 +7958,25 @@
       "pingSkipped": "last ping {when}: skipped",
       "cadenceOnDemand": "Minimum interval: on demand — at least one real run a day, at {time} (Settings → Costs).",
       "cadenceEvery": "Minimum interval: {minutes} min between two real runs (Settings → Costs)."
+    },
+    "unreachable": {
+      "domain": "The site's name: {host} — {answer}, at the maintenance job's last real run ({when}). This page does not ask it.",
+      "domainUnknown": "The site's name: no answer remembered from the maintenance job's last real run. This page does not ask it.",
+      "domainSkipped": "The site's name is not asked on this deployment: a laptop, a test, or an address that is a number.",
+      "answer": {
+        "resolves": "resolves",
+        "unresolved": "not found",
+        "unknown": "no answer in time",
+        "skipped": "not asked"
+      },
+      "none": "The deadlines' clock: no outage recorded.",
+      "windows": "The deadlines' clock — the last outages, newest first:",
+      "open": "since {from}: the site's name does not resolve; the deadlines move on every run, nothing lapses until it is back.",
+      "closed": "{from} – {until} ({source}): given back {granted}; deadlines moved: {moved}; claims not revived: {notRevived}.",
+      "source": {
+        "dns": "the name not found",
+        "pings": "no scheduled call"
+      }
     }
   },
   "Error": {

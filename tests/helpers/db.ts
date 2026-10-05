@@ -27,6 +27,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import { teamMembers } from "@/db/schema/team";
 import { faqQuestions } from "@/db/schema/faq";
 import { memberDiscountCodes } from "@/db/schema/member-discount-codes";
+import { unreachableWindows } from "@/db/schema/unreachable-windows";
 import { forgetCachedDeadlines } from "@/modules/deadlines/memo";
 import { forgetCachedAddressCap } from "@/modules/registrations/address-cap-memo";
 
@@ -141,6 +142,8 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(pages);
   await db.delete(participants);
   await db.delete(jobRuns);
+  // The unreachable windows (§657): ids, instants and counts, referencing nothing.
+  await db.delete(unreachableWindows);
   await db.delete(rateLimitBuckets);
   await db.delete(platformSettings);
   // Last: events, translations and legal documents reference staff users, and although the

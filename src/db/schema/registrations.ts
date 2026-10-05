@@ -469,6 +469,21 @@ export const registrations = pgTable(
     waitlistedAt: timestamp("waitlisted_at", { withTimezone: true }),
     offerCreatedAt: timestamp("offer_created_at", { withTimezone: true }),
     holdExpiresAt: timestamp("hold_expires_at", { withTimezone: true }),
+    /**
+     * When the allocator last cleared a family's reservation (§543) past its deadline
+     * (`expireStaleHolds`): written in the same statement that sets `hold_expires_at` to null on a
+     * row still waiting for its address, and nowhere else. The outage grace (§657) reads it as the
+     * evidence that a reservation existed and was cleared — a family form sent while no place was
+     * free never had one, and is never named. Null on every other row.
+     */
+    reservationLapsedAt: timestamp("reservation_lapsed_at", { withTimezone: true }),
+    /**
+     * The deadline that lapsed when the allocator cleared that reservation: the row's `hold_expires_at`
+     * as it stood, written in the same statement as `reservation_lapsed_at`, and nowhere else. The
+     * outage grace (§657) matches and judges a cleared reservation by it, never by its sitting's
+     * `reserved_until`, which a move of the reservation leaves behind. Null on every other row.
+     */
+    reservationLapsedFrom: timestamp("reservation_lapsed_from", { withTimezone: true }),
     confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
     cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
     expiredAt: timestamp("expired_at", { withTimezone: true }),

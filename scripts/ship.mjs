@@ -3,7 +3,7 @@
  * Ship one small batch to production, end to end — the release step of `docs/DISPATCHER.md`.
  *
  * Usage: yarn ship <batch PR> <new baseline> <previous baseline> "<release title>"
- *        yarn ship 163 BR-V2.66-2026-10-03 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
+ *        yarn ship 163 BR-V2.67-2026-10-04 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
  *
  *   1. waits until production reports the previous baseline: one release at a time;
  *   2. waits for the batch PR's checks to settle (§426), stops unless green, merges it into `qa`
@@ -15,6 +15,9 @@
  *      and waits for it;
  *   7. waits until production's `/api/health` reports the new baseline.
  *
+ * Both production waits say every two minutes what production answers — nothing, another build,
+ * or a body with no baseline — and a STOP says which (§658).
+ *
  * Each step's time is printed and appended to `SHIP_TIMES_FILE` (§504). Needs `gh` with the right to
  * merge and approve the `production` environment. Production's origin is `SHIP_PRODUCTION_URL`, never
  * in this public file (the domain lives in `SETUP.md` §26 alone).
@@ -25,7 +28,16 @@ import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
-import { createClock, formatDuration, judgeChecks, mergePullRequest, waitForRun, waitForSettledChecks, withoutWorkflow } from "./ship-checks.mjs";
+import {
+  createClock,
+  formatDuration,
+  judgeChecks,
+  mergePullRequest,
+  waitForProduction,
+  waitForRun,
+  waitForSettledChecks,
+  withoutWorkflow,
+} from "./ship-checks.mjs";
 
 const clock = createClock(Date.now, (s) => console.log(`-- ${s.name}: ${formatDuration(s.ms)}`));
 const [PR, NEW, PREV, TITLE] = process.argv.slice(2);
@@ -102,24 +114,21 @@ function productionUrl() {
  * Production's `/api/health`. Shallow by default since §577 — the build and the configuration, no
  * database — so the polls below, every 20 to 30 seconds while a release is on its way, wake
  * nothing. `deep` asks for the full report once, after the flip, to say how the site is.
+ * Returns the body, or the fetch error rather than an empty string, so a wait can say whether
+ * production did not answer or answered with another build (§658).
  */
 async function health(base, { deep = false } = {}) {
   try {
     const response = await fetch(new URL(deep ? "/api/health?deep=1" : "/api/health", base), { signal: AbortSignal.timeout(15_000) });
-    return await response.text();
-  } catch {
-    return "";
+    return { body: await response.text(), error: null, status: response.status };
+  } catch (error) {
+    return { body: "", error };
   }
 }
 
-/** Polls until `test` returns something truthy, every `every` seconds, at most `times` times. */
-async function until(test, every, times) {
-  for (let i = 0; i < times; i++) {
-    const value = await test();
-    if (value) return value;
-    if (i < times - 1) await sleep(every);
-  }
-  return null;
+/** Waits for production to report one of `expected`, saying what it sees every two minutes (§658). */
+function productionReports(expected, every, polls) {
+  return waitForProduction(() => health(BASE), expected, { sleep, every, polls, onReport: (line) => console.log(`  ${line}`) });
 }
 
 /** Waits until the PR's checks settle, then judges them (§426); stops on a red `tolerate` does not name. */
@@ -171,11 +180,8 @@ const REPO = gh("repo", "view", "--json", "nameWithOwner", "-q", ".nameWithOwner
 
 clock.step(`${PREV} on production`);
 console.log(`== waiting for ${PREV} on production`);
-const onProduction = await until(async () => {
-  const body = await health(BASE);
-  return body.includes(`"${PREV}`) || body.includes(`"${NEW}`);
-}, 30, 120);
-if (!onProduction) stop(`production never reported ${PREV}`);
+const onProduction = await productionReports([PREV, NEW], 30, 120);
+if (onProduction.status !== "expected") stop(`production never reported ${PREV} — ${onProduction.line}`);
 
 clock.step(`batch PR #${PR}`);
 console.log(`== batch PR #${PR}`);
@@ -222,9 +228,10 @@ console.log(`== release PR #${release}`);
 await settledChecks(release, { tolerate: /^Vercel\b/i });
 const migrationExpected = releaseChangesMigrations();
 await merge(release);
-const releaseMerge = gh("pr", "view", release, "--json", "mergeCommit", "-q", ".mergeCommit.oid");
-
+// From here the release is in main: a STOP in this step or the next is never re-labelled, and
+// release.yml's closing comment tells the two apart by this step's name in the times file (§658).
 clock.step("migration");
+const releaseMerge = gh("pr", "view", release, "--json", "mergeCommit", "-q", ".mergeCommit.oid");
 if (migrationExpected === false) {
   console.log("== no migration in this release: migrate.yml does not run");
 } else {
@@ -257,13 +264,13 @@ if (migrationExpected === false) {
 
 clock.step(`${NEW} on production`);
 console.log(`== waiting for ${NEW} on production`);
-const live = await until(async () => {
-  const body = await health(BASE);
-  return body.includes(`"${NEW}`) ? body : null;
-}, 20, 60);
-if (!live) stop(`production did not report ${NEW} in time — check the Vercel deployment`);
+const live = await productionReports(NEW, 20, 60);
+if (live.status !== "expected") {
+  const hint = live.judged?.kind === "other-build" ? " — check Vercel's production deployment" : "";
+  stop(`production did not report ${NEW} in time — ${live.line}${hint}`);
+}
 // One deep call, now that the new build answers: the database, the schema and the jobs (§577).
-const report = (await health(BASE, { deep: true })) || live;
+const report = (await health(BASE, { deep: true })).body || live.body;
 console.log(`production: ${report.match(/"status":"[a-z]+"/)?.[0] ?? "?"} ${NEW}`);
 clock.end();
 measured("released");

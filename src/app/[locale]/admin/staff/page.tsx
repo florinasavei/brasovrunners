@@ -160,6 +160,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
     {
       key: "status",
       label: t("staff.columnStatus"),
+      essential: true,
       hideBelow: "lg",
       render: (member) =>
         member.firstSignedInAt === null ? (

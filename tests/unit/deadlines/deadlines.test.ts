@@ -48,6 +48,7 @@ describe("§377 the club's deadlines, unset", () => {
       // The verification email re-sent by itself (§653): twenty hours after the last one, once.
       verificationRetryHours: 20,
       verificationRetries: 1,
+      outageGraceMaxHours: 48,
     });
   });
 

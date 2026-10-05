@@ -99,6 +99,15 @@ export const emailMessageType = pgEnum("email_message_type", [
   "LEGAL_TEMPLATES_CHANGED",
   /** A personal invitation to an event (§647): the place kept until a deadline, one link that opens the form prefilled. */
   "EVENT_INVITATION",
+  // «Site-ul nu se găsește după nume» (§657): the maintenance job, reached by another address, found
+  // the site's public name not resolving on two probes ten minutes apart, and holds every participant
+  // deadline until it does again. Once per window, to every Administrator and Superadministrator, on
+  // the club's road (Gmail: the club's own domain may be the thing that is gone). No participant, no token.
+  "UNREACHABLE_WINDOW_OPENED",
+  // «Ceasul termenelor a stat pe loc» (§657): a window is over — when, how it was seen, how long was
+  // given back, how many deadlines moved, which claims were not revived, and what to check.
+  // Once per window (a `pings` one too), to the same people.
+  "UNREACHABLE_WINDOW_CLOSED",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];
