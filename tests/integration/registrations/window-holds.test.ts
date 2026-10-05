@@ -18,7 +18,7 @@ import { forecastAutomaticEmails } from "@/modules/notifications/forecast";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-033-01 (`DECISIONS.md` §NNN, amending §104 and §407) — a save that changes an event's
+ * BR-REQ-033-01 (`DECISIONS.md` §665, amending §104 and §407) — a save that changes an event's
  * participation window moves the declaration holds that window gave, in the save's transaction:
  * the window-given holds (a test row with them), never the club's minutes or a waiting-list offer;
  * their live declaration links in lockstep; one audit row per registration and one on the event; a
@@ -35,7 +35,7 @@ const NOW = new Date("2026-10-05T09:00:00.000Z");
 /** Inside the window: 8 Nov, the window opened on 6 Nov. */
 const OPEN = new Date("2026-11-08T09:00:00.000Z");
 
-describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (§NNN)", () => {
+describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (§665)", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;
@@ -422,7 +422,7 @@ describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (�
     expect(await holdOf(row.id)).toEqual(START);
   });
 
-  it("the last call goes 48 hours before the window's deadline, once — once more after the deadline moved; never at the start's lead (§NNN)", async () => {
+  it("the last call goes 48 hours before the window's deadline, once — once more after the deadline moved; never at the start's lead (§665)", async () => {
     const event = await seedEvent(5);
     await db.update(events).set({ reminderHoursBefore: 72 }).where(eq(events.id, event.id));
     const row = await seedRow(event.id, { status: "PENDING_DECLARATION", holdExpiresAt: before(5) });

@@ -147,9 +147,9 @@ type Due = {
   registrationId?: string;
   kind?: Kind;
   count?: number;
-  /** The outbox key the job would write, when it is not the send's one per registration (the last call before a window's deadline, §NNN). */
+  /** The outbox key the job would write, when it is not the send's one per registration (the last call before a window's deadline, §665). */
   key?: string;
-  /** The window's ask: the last call it yields to when that is already in the outbox (`askYieldsToKey`, §NNN). */
+  /** The window's ask: the last call it yields to when that is already in the outbox (`askYieldsToKey`, §665). */
   yieldsTo?: string | null;
 };
 
@@ -300,7 +300,7 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
     const send = item.send as "reminder" | "lastCall" | "participation";
     return AUTOMATIC_SEND_KEYS[send](item.registrationId as string);
   };
-  // With them, the last calls a window's ask yields to (§NNN): the job skips the ask for a row whose
+  // With them, the last calls a window's ask yields to (§665): the job skips the ask for a row whose
   // last call for the same deadline is in the outbox (`askYieldsToLastCall`), and so does the forecast.
   const keys = [...keyed.map(keyOf), ...keyed.flatMap((item) => item.yieldsTo ?? [])];
   const queued = new Set<string>();

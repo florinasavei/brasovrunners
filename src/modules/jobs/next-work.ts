@@ -177,7 +177,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     const start = startsAt.getTime();
     if (event.waitingOrPending) eventInstants.push(ahead(start));
     const mailed = event.eventStatus === "SCHEDULED" && event.registrationMode === "INTERNAL";
-    // The reminder's lead is the last call's too, for a row not held until a window's deadline (`domain/automatic-sends.ts`, one formula with the job, §383, §NNN).
+    // The reminder's lead is the last call's too, for a row not held until a window's deadline (`domain/automatic-sends.ts`, one formula with the job, §383, §665).
     const reminderAt = declarationLastCallDueAt({ startsAt, reminderHoursBefore: toCount(event.reminderHoursBefore) }, settings);
     if (mailed && reminderAt && (event.confirmed || event.pendingDeclaration)) {
       eventInstants.push(ahead(reminderAt.getTime()));
@@ -189,7 +189,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     });
     if (mailed && event.pendingDeclaration && window) {
       eventInstants.push(ahead(window.opensAt.getTime()));
-      // The last call before a window's deadline (§NNN), «Termene» `lastCallHours` ahead of it — one formula with the job.
+      // The last call before a window's deadline (§665), «Termene» `lastCallHours` ahead of it — one formula with the job.
       const lastCallAt = windowLastCallAt(
         { startsAt, confirmationOpensDaysBefore: toCount(event.opensDays), confirmationDeadlineDaysBefore: toCount(event.deadlineDays) },
         settings,

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.68-2026-10-04 -->
+<!-- PROJECT_BASELINE: BR-V2.69-2026-10-05 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V2.68-2026-10-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.69-2026-10-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -904,7 +904,7 @@ so; both numbers are the organizer's, per event, and zero switches the window of
 that changes the window (or the start) moves the holds the window gave — a whole number of
 days before the start — to the new instant, never earlier than now plus the club's hold
 minutes, under the event lock and in the save's transaction; the club's minutes and offers
-stay (`registrations/window-holds.ts`, `DECISIONS.md` §NNN). The last call to sign for a hold
+stay (`registrations/window-holds.ts`, `DECISIONS.md` §665). The last call to sign for a hold
 that ends at a deadline before the start goes «Termene» `lastCallHours` before that deadline.
 
 All deadlines are capped by registration close and event start. Changing these defaults updates business/spec docs when behavior changes.
@@ -2887,7 +2887,7 @@ Registration maintenance:
   whoever still owes a signature (`DECISIONS.md` §160) — except a place held until a
   participation window's deadline before the start, whose last call goes «Termene»
   `lastCallHours` (48 by default; 0 = none) before that deadline, once per deadline instant
-  (`registration:<id>:sign-reminder:<deadline>`, `DECISIONS.md` §NNN);
+  (`registration:<id>:sign-reminder:<deadline>`, `DECISIONS.md` §665);
 - queue the verification email once more (`DECISIONS.md` §653): the address link, the club's hours
   after the last one left («Termene» `verificationRetryHours`, 20 by default), to a
   `PENDING_EMAIL_CONFIRMATION` registration of a scheduled event whose link still has an hour — while

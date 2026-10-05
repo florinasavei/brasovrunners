@@ -39,7 +39,7 @@ describe("§377 the club's deadlines, unset", () => {
       holdMinutes: 30,
       offerHours: 24,
       reminderHours: 48,
-      // The last call before a window's deadline (§NNN): the reminder's own two days.
+      // The last call before a window's deadline (§665): the reminder's own two days.
       lastCallHours: 48,
       selfCheckinHours: 24,
       raceWeekDays: 7,

@@ -130,6 +130,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.69` | a changed confirmation window moves the places it reserved, and the last call to sign comes before its deadline (§665) |
 | `BR-V2.68` | a members' race number: the club's design for its members, the member's choice, printed only for a verified address (§664) |
 | `BR-V2.67` | the clock stops while the site cannot be reached: the deadlines move by the outage, and the job seats nobody (§657) · the release says whether production answered, and a stopped release can be labelled again (§658) · a runbook for a domain that stops answering, and the pings on the address no registrar can hold (§659) · the registrations list shows the city and the age, sortable, and the CSV carries them (§660) · «Coloane» shows and hides a backoffice table's columns, without a data grid (§661) · a member is declared or verified: «Echipa»'s accounts verify a registration's address (§662) · «Email respins» says which email, when and why (§663) |
 | `BR-V2.66` | the verification email re-sent by itself to whoever has not confirmed, at most a configurable number of times — two «Termene» numbers (§653) · four sentences say what happens: the link's time from the first email, the lapsed place names whose, the templates email's button, the waiting-list resend (§654) · «Ce îi spui»: what to tell a person who asks where their registration stands (§655) · a restart rewrites the day the answers were written (§656) |

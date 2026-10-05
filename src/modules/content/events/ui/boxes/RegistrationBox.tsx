@@ -94,7 +94,7 @@ export default async function RegistrationBox({
   windowHolds = null,
 }: BoxProps & {
   /**
-   * The reserved places the participation window gave, as a save would treat them (§NNN,
+   * The reserved places the participation window gave, as a save would treat them (§665,
    * `registrations/window-holds.ts#previewWindowHolds`): how many a save moves now to the stored
    * window's instant, how many already hold it, and that instant. Real registrations only; the create
    * form has none.
@@ -173,7 +173,7 @@ export default async function RegistrationBox({
   })();
 
   /*
-    What the save does to the places the window already gave (§NNN): moves those held to another
+    What the save does to the places the window already gave (§665): moves those held to another
     window's instant now, or — when they all hold this one — says a changed window will move them.
   */
   const windowHoldsLine = (() => {

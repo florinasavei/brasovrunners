@@ -12,9 +12,9 @@ import {
 } from "@/modules/notifications/domain/automatic-sends";
 
 /**
- * §NNN (amending §160, §377) — the last call to sign follows the participation window's deadline,
+ * §665 (amending §160, §377) — the last call to sign follows the participation window's deadline,
  * not the start. The owner's race: 21 Nov at 10:00, the window 15 / 5 (deadline 16 Nov 10:00), the
- * reminder three days before the start. Until §NNN the last call went at the reminder's lead — two
+ * reminder three days before the start. Until §665 the last call went at the reminder's lead — two
  * days after every window hold had lapsed.
  */
 const HOUR = 60 * 60_000;
@@ -25,7 +25,7 @@ const DEADLINE = before(5 * DAY);
 const race = { startsAt: START, reminderHoursBefore: 72, confirmationOpensDaysBefore: 15, confirmationDeadlineDaysBefore: 5 };
 const held = { ...race, holdExpiresAt: DEADLINE };
 
-describe("§NNN the last call before a window's deadline", () => {
+describe("§665 the last call before a window's deadline", () => {
   it("goes 48 hours before the deadline to a row held until it, and only between then and the deadline", () => {
     expect(lastCallDeadline(held)).toEqual(DEADLINE);
     expect(declarationLastCallDueAt(held, DEFAULT_DEADLINES)).toEqual(new Date(DEADLINE.getTime() - 48 * HOUR));

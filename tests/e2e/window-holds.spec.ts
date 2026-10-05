@@ -5,7 +5,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox } from "./support/fold";
 
 /**
- * BR-REQ-033-01 (`DECISIONS.md` §NNN, amending §104 and §407) — a changed confirmation window moves the
+ * BR-REQ-033-01 (`DECISIONS.md` §665, amending §104 and §407) — a changed confirmation window moves the
  * holds it gave. On the editor: the «Fereastra de confirmare» card says what the next save moves, and
  * after the save the banner says what it moved.
  *
@@ -60,7 +60,7 @@ async function seed(tag: string): Promise<{ eventId: string; registrationId: str
   });
 }
 
-test.describe("BR-REQ-033-01 the window's card and the save's banner (§NNN)", () => {
+test.describe("BR-REQ-033-01 the window's card and the save's banner (§665)", () => {
   test("the card says the save moves the place held until the start; the save moves it and says so", async ({ page }) => {
     test.setTimeout(90_000);
     const tag = `${test.info().project.name}-${Date.now().toString(36)}`;

@@ -127,7 +127,7 @@ export async function queueParticipationConfirmations<T extends Record<string, u
   // club's hold (§377) taken inside the window is a person signing right now.
   const due = (await selectDeclarationCandidates(db, { from: now })).filter((row) => isParticipationConfirmationDue(row, now));
   if (due.length === 0) return 0;
-  // The ask yields to a last call already in the outbox for the same deadline (§NNN,
+  // The ask yields to a last call already in the outbox for the same deadline (§665,
   // `askYieldsToLastCall`; the forecast on «Emailuri» reads the same rule). In the ordinary order the
   // last call comes after the opening (`windowLastCallAt`), so no such row exists when the ask is due.
   const lastCalls = due.flatMap((row) => askYieldsToKey(row.registrationId, row) ?? []);
@@ -180,7 +180,7 @@ export async function queueParticipationConfirmations<T extends Record<string, u
 export async function queueEventReminders<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,
-  /** The club's deadlines, read once by the run (§377): the reminder lead of an event left "as usual", and the last call's before a window's deadline (§NNN). */
+  /** The club's deadlines, read once by the run (§377): the reminder lead of an event left "as usual", and the last call's before a window's deadline (§665). */
   deadlines: LastCallDeadlines,
 ): Promise<number> {
   const rows = (await selectReminderCandidates(db, { from: now, until: now })).filter((row) => isEventReminderDue(row, now, deadlines));
@@ -223,7 +223,7 @@ export async function queueEventReminders<T extends Record<string, unknown>>(
  * One per registration, ever, by its own key: somebody who registered inside the window and
  * signed nothing gets this and nothing else.
  *
- * **Before a window's deadline (§NNN).** On an event whose participation window is due before the
+ * **Before a window's deadline (§665).** On an event whose participation window is due before the
  * start, a call a reminder lead before the start would reach a place held until that deadline days
  * after it lapsed. So a row whose hold ends at the window's deadline gets its last call «Termene»
  * `lastCallHours` before that deadline instead — none at 0 — once per deadline instant

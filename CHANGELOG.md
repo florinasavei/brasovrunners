@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.69-2026-10-05
+
+- **A changed confirmation window moves the places it reserved, and the last call to sign comes before its deadline** — saving «Fereastra de confirmare» moves every place the window held (a deadline of 0's start included) to the new deadline in the same save, never earlier than the club's hold minutes from now, with the card saying how many before and the banner after, and an email to each inside an open window; the last call to sign goes «Termene» «Ultima chemare» hours (48) before the window's deadline, not before the start. §665.
 ## BR-V2.68-2026-10-04
 
 - **A members' race number** — the bib designer's «Numărul membrilor» gives an event's members their own header (a colour or a cropped picture) and a short label; the form asks «Vreau numărul de membru» (ticked) under the member tick; the sheet prints it only for an address on «Echipa», with the same number in the same order, and the bibs page lists who asked but is not verified. §664.

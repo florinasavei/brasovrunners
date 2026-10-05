@@ -27,7 +27,7 @@ const DAY = 24 * 60 * 60_000;
 /** The one idempotency key per registration and send (§16.1), shared by the job that writes it and the page that looks for it. */
 export const AUTOMATIC_SEND_KEYS = {
   reminder: (registrationId: string) => `registration:${registrationId}:reminder`,
-  /** Before a window's deadline (§NNN), one per deadline instant; otherwise one per registration, ever (§160). */
+  /** Before a window's deadline (§665), one per deadline instant; otherwise one per registration, ever (§160). */
   lastCall: (registrationId: string, deadline: Date | null = null) =>
     deadline ? `registration:${registrationId}:sign-reminder:${deadline.toISOString()}` : `registration:${registrationId}:sign-reminder`,
   participation: (registrationId: string) => `registration:${registrationId}:confirm-participation`,
@@ -233,7 +233,7 @@ export function isEventReminderDue(candidate: ReminderCandidate, now: Date, dead
   return at !== null && at.getTime() <= now.getTime() && now.getTime() < candidate.startsAt.getTime();
 }
 
-// --- The last call to sign (§160, §377, §NNN) ---------------------------------------------------
+// --- The last call to sign (§160, §377, §665) ---------------------------------------------------
 
 export type LastCallCandidate = Pick<ReminderCandidate, "startsAt" | "reminderHoursBefore"> & {
   /** The event's participation window (§104); absent on a caller that has none to hand, which keeps the start's rule. */
@@ -243,11 +243,11 @@ export type LastCallCandidate = Pick<ReminderCandidate, "startsAt" | "reminderHo
   holdExpiresAt?: Date | null;
 };
 
-/** The settings the last call reads: the reminder's lead (§377) and the lead before a window's deadline (§NNN). */
+/** The settings the last call reads: the reminder's lead (§377) and the lead before a window's deadline (§665). */
 export type LastCallDeadlines = Pick<Deadlines, "reminderHours" | "lastCallHours">;
 
 /**
- * The window's deadline a registration's last call is counted back from (§NNN), or null when the
+ * The window's deadline a registration's last call is counted back from (§665), or null when the
  * start's rule applies: only on an event whose window is due before the start, and only for a row
  * whose hold ends at that deadline — a place the window gave (or a save of the window moved there).
  * A row holding the club's minutes (§377), and every row of an event without a window or with its
@@ -261,7 +261,7 @@ export function lastCallDeadline(candidate: LastCallCandidate): Date | null {
 }
 
 /**
- * The instant the last call goes before an event's window deadline (§NNN): «Termene» `lastCallHours`
+ * The instant the last call goes before an event's window deadline (§665): «Termene» `lastCallHours`
  * before it, or null — no window due before the start, 0 hours, or an instant at or before the window's
  * opening, where the window's own ask (§104, `isParticipationConfirmationDue`) is already the call.
  * Per event: `jobs/next-work.ts` plans its wake with it.
@@ -275,7 +275,7 @@ export function windowLastCallAt(event: Omit<LastCallCandidate, "holdExpiresAt" 
 
 /**
  * When a registration still owing its signature gets the declaration once more. Held until its event's
- * window deadline (`lastCallDeadline`): `lastCallHours` before that deadline (§NNN). Otherwise the
+ * window deadline (`lastCallDeadline`): `lastCallHours` before that deadline (§665). Otherwise the
  * reminder's lead before the start (§160, §377); none without a reminder.
  */
 export function declarationLastCallDueAt(candidate: LastCallCandidate, deadlines: LastCallDeadlines): Date | null {
@@ -292,7 +292,7 @@ export function isDeclarationLastCallDue(candidate: LastCallCandidate, now: Date
 
 /**
  * The last call's idempotency key (§16.1): one per registration — and, before a window's deadline, one
- * per deadline instant (§NNN), so a deadline a save moved earns one more call, and the same deadline
+ * per deadline instant (§665), so a deadline a save moved earns one more call, and the same deadline
  * never two.
  */
 export function lastCallKey(registrationId: string, candidate: LastCallCandidate): string {
@@ -333,7 +333,7 @@ export function participationConfirmationDueAt(candidate: ParticipationCandidate
 }
 
 /**
- * The outbox key of the last call the window's ask yields to (§NNN), or null when it yields to none:
+ * The outbox key of the last call the window's ask yields to (§665), or null when it yields to none:
  * a row whose hold ends at the window's deadline (`lastCallDeadline`) has a last call for that
  * deadline, and once that is in the outbox an ask after it says nothing new — a save that opened the
  * window with the deadline's last call due within the hour queued the last call (`movedEmailKey`).

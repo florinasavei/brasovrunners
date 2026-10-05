@@ -70,7 +70,7 @@ export type DeadlineRule = {
  * - the **waiting-list offer** 6 to 72 hours: a night's sleep at least, three days at most, and
  *   always capped by the close and the start anyway (`capHoldExpiry`);
  * - the **reminder** 0 (none) to 168 hours — a week, the per-event column's CHECK as well;
- * - the **last call to sign before a window's deadline** (§NNN) 0 (none) to 168 hours, 48 by default:
+ * - the **last call to sign before a window's deadline** (§665) 0 (none) to 168 hours, 48 by default:
  *   on an event whose participation window is due before the start, the declaration goes once more
  *   this long before that deadline, to whoever holds a place until it — a week at most, like the
  *   reminder, and by default the reminder's own two days;

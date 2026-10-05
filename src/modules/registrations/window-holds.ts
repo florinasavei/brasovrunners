@@ -21,7 +21,7 @@ import { type WindowedEvent, windowHoldInstant, windowHoldMoves, windowHoldTarge
 import { lockEventForCapacity } from "./repository";
 
 /**
- * A changed participation window moves the holds it gave (§NNN, amending §104, §407) — the half that
+ * A changed participation window moves the holds it gave (§665, amending §104, §407) — the half that
  * writes. The rules are `domain/window-holds.ts`; this reads the event's `PENDING_DECLARATION` rows
  * under the event lock and moves the ones those rules name, in the caller's transaction (the editor's
  * save), so the window and the holds it gave commit together or not at all.
@@ -40,7 +40,7 @@ export function deadlineMovedKey(registrationId: string, to: Date): string {
 }
 
 /**
- * The key the move's email goes under (§NNN) — so that whatever the job would send next for the same
+ * The key the move's email goes under (§665) — so that whatever the job would send next for the same
  * deadline finds it queued, and the person gets one email, not two identical ones minutes apart:
  *
  * 1. the new deadline's last call (`windowLastCallAt`) is already due, or due within the hour §606 keeps
@@ -75,7 +75,7 @@ export function movedEmailKey(
 
 /**
  * Whether a declaration email that left within the hour (§606's `RECENT_DECLARATION_EMAIL_MS`) holds the
- * move's email back (§NNN). Only when the deadline moved later: the recent email stated an earlier
+ * move's email back (§665). Only when the deadline moved later: the recent email stated an earlier
  * deadline, still safe to act on. A deadline moved earlier is told whatever left within the hour —
  * the recent email stated a later deadline the person could wait for and lose the place — unless one of
  * those recent emails already went under a key carrying the new instant (it rendered that deadline).
@@ -287,7 +287,7 @@ async function moveDeclarationLink<T extends Record<string, unknown>>(
 }
 
 /**
- * What the editor's «Fereastra de confirmare» card says before a save (§NNN), from the move's own rules
+ * What the editor's «Fereastra de confirmare» card says before a save (§665), from the move's own rules
  * on the window as stored: how many real reserved places a save would move now (held to another
  * window-given instant than the stored window's), how many hold the stored window's instant (and would
  * follow a changed window), and that instant. Null once that instant is behind and nothing would move:

@@ -220,7 +220,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const countOf = (raw: string | undefined) => (Number.isFinite(Number(raw)) ? Number(raw) : 0);
   const datesWords = (raw: string | undefined) => tEvent(`series.count.${countForm(countOf(raw), locale)}`, { count: countOf(raw) });
   /*
-    The reserved places the save moved with the window (§NNN): a count and an instant from the query
+    The reserved places the save moved with the window (§665): a count and an instant from the query
     string — typed by anybody, so a count that is no whole number shows nothing, and an instant that is
     no date leaves the sentence without one.
   */
@@ -237,7 +237,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             : t(`editor.holdsMovedSeries.${countForm(movedCount, locale)}`, { count: movedCount })
         }${movedSent === "1" ? ` ${t("editor.holdsMovedSent")}` : ""}`
       : null;
-  // What the window's move does on the next save (§NNN), from the move's own rules on the stored window.
+  // What the window's move does on the next save (§665), from the move's own rules on the stored window.
   const windowHolds = internal ? await previewWindowHolds(db, event, now, deadlines.holdMinutes) : null;
   /*
     The minor's paper form (§330) only where the declaration in effect, in the language the form
@@ -690,7 +690,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             </Alert>
           )}
           {saved === "event" && offered && <Alert severity="success">{t("editor.savedOffered", { offered })}</Alert>}
-          {/* The reserved places the window's move carried (§NNN), under whichever banner the save gave. */}
+          {/* The reserved places the window's move carried (§665), under whichever banner the save gave. */}
           {holdsMovedLine && (saved === "event" || saved === "eventSeries") && (
             <Alert severity="info" sx={{ mt: 1 }} data-testid="holds-moved">
               {holdsMovedLine}

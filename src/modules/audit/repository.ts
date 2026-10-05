@@ -116,7 +116,7 @@ export type AuditAction =
    */
   | "registration.deadline_moved_for_outage"
   /**
-   * This registration's declaration hold followed its event's changed participation window (§NNN): the
+   * This registration's declaration hold followed its event's changed participation window (§665): the
    * actor who saved the event, `from` and `to` (instants) — never a name.
    */
   | "registration.hold_moved_by_window"
@@ -321,7 +321,7 @@ export type AuditAction =
    */
   | "event.invitation_deadline_moved_for_outage"
   /**
-   * A save of the event moved the declaration holds its participation window gave (§NNN): who saved,
+   * A save of the event moved the declaration holds its participation window gave (§665): who saved,
    * how many (`moved` real, `test` apart), `to` (the instant) and how many declaration emails it queued
    * — never a name.
    */

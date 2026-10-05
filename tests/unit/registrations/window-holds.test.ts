@@ -9,7 +9,7 @@ import {
 import { movedEmailKey, recentEmailHoldsBack } from "@/modules/registrations/window-holds";
 
 /**
- * BR-REQ-033-01 (`DECISIONS.md` §NNN, amending §104 and §407): a changed participation window moves
+ * BR-REQ-033-01 (`DECISIONS.md` §665, amending §104 and §407): a changed participation window moves
  * the holds it gave — the pure rules. The race of the brief: 21 Nov 2026 at 10:00 Romania time
  * (08:00 UTC), its window 15 / 5.
  */
@@ -20,7 +20,7 @@ const at = (daysBefore: number) => new Date(START.getTime() - daysBefore * DAY);
 const event = (opens: number, deadline: number, startsAt = START) => ({ startsAt, confirmationOpensDaysBefore: opens, confirmationDeadlineDaysBefore: deadline });
 const NOW = new Date("2026-10-05T09:00:00.000Z");
 
-describe("§NNN the instant a window gives a hold taken before it opens", () => {
+describe("§665 the instant a window gives a hold taken before it opens", () => {
   it("is the deadline, the start at a deadline of 0, and the start with no window", () => {
     expect(windowHoldInstant(event(15, 5))).toEqual(at(5));
     expect(windowHoldInstant(event(15, 0))).toEqual(START);
@@ -39,7 +39,7 @@ describe("§NNN the instant a window gives a hold taken before it opens", () => 
   });
 });
 
-describe("§NNN holdsMovedByWindowChange", () => {
+describe("§665 holdsMovedByWindowChange", () => {
   const holdMinutes = 30;
 
   it("moves a deadline of 0 to 5 days before the start", () => {
@@ -81,7 +81,7 @@ describe("§NNN holdsMovedByWindowChange", () => {
   });
 });
 
-describe("§NNN windowHoldMoves — which rows move", () => {
+describe("§665 windowHoldMoves — which rows move", () => {
   const holdMinutes = 30;
   const clubMinutes = new Date(NOW.getTime() - 10 * MINUTE);
   const holds = [
@@ -143,7 +143,7 @@ describe("§NNN windowHoldMoves — which rows move", () => {
   });
 });
 
-describe("BR-REQ-033-01 the move's email beside one that left within the hour (§NNN)", () => {
+describe("BR-REQ-033-01 the move's email beside one that left within the hour (§665)", () => {
   const ask = "registration:r:confirm-participation";
   it("holds back a later deadline's, sends an earlier one's unless a recent email carried the new instant", () => {
     expect(recentEmailHoldsBack({ from: at(5), to: at(3) }, [ask])).toBe(true);

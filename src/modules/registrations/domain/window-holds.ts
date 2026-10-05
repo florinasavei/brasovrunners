@@ -1,11 +1,11 @@
 import { confirmationWindow } from "./hold-deadlines";
 
 /**
- * A changed participation window moves the holds it gave (§NNN, amending §104, §407).
+ * A changed participation window moves the holds it gave (§665, amending §104, §407).
  *
  * A hold taken before an event's window opens ends where the window says — its deadline, or the
  * start when the deadline is 0 (`computeDeclarationHoldExpiry`) — and that instant is written on the
- * row once. Until §NNN a later change of the two numbers on the event moved nothing: the rows kept
+ * row once. Until §665 a later change of the two numbers on the event moved nothing: the rows kept
  * the deadline of the window they were given under, while the editor, the emails and the job read
  * the new one. These are the pure rules of the move; `registrations/window-holds.ts` performs it in
  * the save's transaction, under the event lock.

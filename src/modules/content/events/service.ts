@@ -1674,7 +1674,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
    * landing between the count and the write waits rather than slipping past it.
    */
   const hiddenListNumbers = hiddenListNumbersToJudge(fields, current);
-  // The club's hold minutes, the floor of a moved hold (§NNN), read before the event row is locked (§377).
+  // The club's hold minutes, the floor of a moved hold (§665), read before the event row is locked (§377).
   const deadlines = await currentDeadlines(db);
   let holdsQueued = 0;
   const saved = await db.transaction(async (tx) => {
@@ -1704,7 +1704,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
     await auditWaitlistAutoOffer(tx, input.actor, current, saved, now);
     await auditWaitlistCountPublic(tx, input.actor, current, saved, now);
     await auditHiddenList(tx, input.actor, current, saved, now);
-    // The holds the window gave follow it (§NNN): under the event lock, in this transaction.
+    // The holds the window gave follow it (§665): under the event lock, in this transaction.
     holdsQueued = (await moveWindowHolds(tx, { actorStaffUserId: input.actor.id, before: current, after: saved, now, deadlines })).queued;
     // The place's name in each language is the event's (§362): written with the row, under its version.
     // An older event's English name follows its Romanian one when only the Romanian moved, which
@@ -1731,7 +1731,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
   revalidatePublicContent("events");
   // As in `saveEventAndTranslations`: the event's instants are the maintenance job's (§334).
   wakeJobs("registration-maintenance");
-  // The declaration emails a move inside an open window queued (§NNN): one drain, after the commit.
+  // The declaration emails a move inside an open window queued (§665): one drain, after the commit.
   if (holdsQueued > 0) drainOutboxAfterResponse();
   return saved;
 }
@@ -1945,7 +1945,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
 ): Promise<{ applied: number; offered: number; dates: SavedDate[]; holds: WindowHoldsMoved[] }> {
   const { before, after, now } = input;
   const dates: SavedDate[] = [];
-  // What the window's move did on each date this save wrote (§NNN).
+  // What the window's move did on each date this save wrote (§665).
   const holds: WindowHoldsMoved[] = [];
   const sourceId = before.repeatOf ?? (before.repeatRule ? before.id : null);
   if (!sourceId) return { applied: 0, offered: 0, dates, holds };
@@ -2115,7 +2115,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
         await auditWaitlistCountPublic(tx, input.actor, member, { id: member.id, waitlistCountPublic: changes.waitlistCountPublic }, now);
       }
       await auditHiddenList(tx, input.actor, member, { ...hiddenListOf(member), ...hiddenListChanges(changes), id: member.id }, now);
-      // This date's holds follow its own window and start as the save leaves them (§NNN).
+      // This date's holds follow its own window and start as the save leaves them (§665).
       holds.push(
         await moveWindowHolds(tx, {
           actorStaffUserId: input.actor.id,
@@ -2509,7 +2509,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     // database — read by `translationsAfter` further down, since the in-memory rows loaded
     // before this transaction do not see that write on their own.
     let discountNoteCleared = false;
-    // What the window's move did to the holds of every date this save wrote (§NNN).
+    // What the window's move did to the holds of every date this save wrote (§665).
     const holdMoves: WindowHoldsMoved[] = [];
     if (parsedEventFields && times) {
       // Under the event lock, on an uncapped event too, so the spares it reads are the ones in force (§647).
@@ -2547,7 +2547,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       await auditWaitlistCountPublic(tx, input.actor, current, savedEvent, now);
       await auditHiddenList(tx, input.actor, current, savedEvent, now);
       /*
-        The holds the participation window gave follow it (§NNN): a changed deadline, a window switched on
+        The holds the participation window gave follow it (§665): a changed deadline, a window switched on
         or off, a moved start — or holds given under an older window than the one stored. Under the event
         lock, in this transaction; `hold_expires_at` only, nobody seated or released (AGENTS.md §10.6).
       */
@@ -2681,13 +2681,13 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     — a translation's words move nothing the job acts on.
   */
   if (parsedEventFields) wakeJobs("registration-maintenance");
-  // The declaration emails a move inside an open window queued (§NNN): one drain, after the commit.
+  // The declaration emails a move inside an open window queued (§665): one drain, after the commit.
   if (outcome.holdsMoved.queued > 0) drainOutboxAfterResponse();
   return outcome;
 }
 
 /**
- * Every date's move as the one the banner gives (§NNN): the counts summed, and the instant only when
+ * Every date's move as the one the banner gives (§665): the counts summed, and the instant only when
  * every moved hold went to the same one — a series' dates each have their own deadline.
  */
 function combineHoldMoves(moves: readonly WindowHoldsMoved[]): WindowHoldsMoved {

@@ -706,7 +706,7 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
     outcome = {
       ...(appliedTo > 0 ? { saved: "eventSeries", applied: String(appliedTo) } : { saved: "event" }),
       offered: offered > 0 ? String(offered) : undefined,
-      // The reserved places the window's move carried (§NNN): how many, to when, whether they were emailed — a count and an instant, never who.
+      // The reserved places the window's move carried (§665): how many, to when, whether they were emailed — a count and an instant, never who.
       ...(holdsMoved.moved > 0
         ? {
             moved: String(holdsMoved.moved),

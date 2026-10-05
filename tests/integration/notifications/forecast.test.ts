@@ -114,7 +114,7 @@ describe("§383 the forecast of automatic emails", () => {
     // B — ten days out, the reminder off: nothing.
     const b = await event("Crosul B", at(10 * DAY), { reminderHoursBefore: 0, confirmationOpensDaysBefore: 0 });
     await registration(b, "b1", "CONFIRMED", { bibNumber: 2 });
-    // C — eight days out: its window (7 days / 2 days) opens tomorrow; the hold is the window's, so the last call goes 48 hours before its deadline (§NNN).
+    // C — eight days out: its window (7 days / 2 days) opens tomorrow; the hold is the window's, so the last call goes 48 hours before its deadline (§665).
     const c = await event("Crosul C", at(8 * DAY));
     const c1 = await registration(c, "c1", "PENDING_DECLARATION", { holdExpiresAt: at(6 * DAY), bibNumber: 3 });
     // D — full, with a hold that lapses in twenty hours and somebody waiting; no reminder, no window.
@@ -224,7 +224,7 @@ describe("§383 the forecast of automatic emails", () => {
     expect((await forecast()).some((candidate) => candidate.type === "BIB_ASSIGNED")).toBe(false);
   });
 
-  it("follows the club's reminder lead: none at all when the club sends none — and the window's last call by its own setting (§NNN)", async () => {
+  it("follows the club's reminder lead: none at all when the club sends none — and the window's last call by its own setting (§665)", async () => {
     const quiet = await forecastAutomaticEmails(db, { now: NOW, horizonDays: 14, deadlines: { ...DEFAULT_DEADLINES, reminderHours: 0 } });
     expect(quiet.some((row) => row.send === "reminder")).toBe(false);
     // The one last call left is C's, before its window's deadline: `lastCallHours`, not the reminder's lead.
@@ -234,12 +234,12 @@ describe("§383 the forecast of automatic emails", () => {
   });
 
   /**
-   * §160, §NNN — a window hold on a full event with a waiting list lapses at the window's deadline
+   * §160, §665 — a window hold on a full event with a waiting list lapses at the window's deadline
    * and is released to the queue then. Its last call goes 48 hours before that deadline, so it comes
-   * first and is sent; the release still takes the place at the deadline. (Before §NNN the last call
+   * first and is sent; the release still takes the place at the deadline. (Before §665 the last call
    * went at the reminder's lead before the start — the deadline itself — and the release won.)
    */
-  it("calls a window hold before the deadline at which the job releases it to the waiting list (§160, §NNN)", async () => {
+  it("calls a window hold before the deadline at which the job releases it to the waiting list (§160, §665)", async () => {
     const g = await event("Crosul G", at(9 * DAY), { capacity: 1 });
     const g1 = await registration(g, "g1", "PENDING_DECLARATION", { holdExpiresAt: at(7 * DAY) });
     const g2 = await registration(g, "g2", "WAITLISTED");
@@ -355,7 +355,7 @@ describe("§383 the forecast of automatic emails", () => {
         return participantOnly("EVENT_REMINDER", ":reminder");
       case "lastCall":
         await queueEventReminders(db, when, DEFAULT_DEADLINES);
-        // One per registration, or one per window deadline (§NNN): either key.
+        // One per registration, or one per window deadline (§665): either key.
         return participantOnly("COMPLETE_DECLARATION", ":sign-reminder%");
       case "participation":
         await queueParticipationConfirmations(db, when);
