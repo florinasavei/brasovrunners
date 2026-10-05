@@ -7,7 +7,13 @@ import { registrations } from "@/db/schema/registrations";
 import type { Database, Transaction } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
-import { lastCallDeadline, lastCallKey, windowLastCallAt } from "@/modules/notifications/domain/automatic-sends";
+import {
+  AUTOMATIC_SEND_KEYS,
+  isParticipationConfirmationDue,
+  lastCallDeadline,
+  lastCallKey,
+  windowLastCallAt,
+} from "@/modules/notifications/domain/automatic-sends";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { confirmationWindow } from "./domain/hold-deadlines";
 import { RECENT_DECLARATION_EMAIL_MS } from "./domain/resend";
@@ -34,16 +40,51 @@ export function deadlineMovedKey(registrationId: string, to: Date): string {
 }
 
 /**
- * The key the move's email goes under (§NNN). When the new deadline's last call (`windowLastCallAt`) is
- * already due, or due within the hour §606 keeps between two declaration emails, the move's email IS
- * that last call: it goes under the job's own key for the new deadline (`lastCallKey`), so the job finds
- * it queued and the person gets one email, not two identical ones minutes apart. Otherwise its own key.
+ * The key the move's email goes under (§NNN) — so that whatever the job would send next for the same
+ * deadline finds it queued, and the person gets one email, not two identical ones minutes apart:
+ *
+ * 1. the new deadline's last call (`windowLastCallAt`) is already due, or due within the hour §606 keeps
+ *    between two declaration emails: the move's email IS that last call, under the job's own key for the
+ *    new deadline (`lastCallKey`);
+ * 2. otherwise, the window is open at `now`, the window's own ask (§104) is owed for the moved hold
+ *    (`isParticipationConfirmationDue`) and was never queued (`participationQueued` false — a save that
+ *    widened the window so that it is open now): the move's email IS that ask, under
+ *    `AUTOMATIC_SEND_KEYS.participation`, and `queueParticipationConfirmations` queues nothing after it;
+ * 3. otherwise its own key, one per new deadline (`deadlineMovedKey`).
  */
-export function movedEmailKey(registrationId: string, after: WindowedEvent, to: Date, now: Date, lastCallHours: number): string {
+export function movedEmailKey(
+  registrationId: string,
+  after: WindowedEvent,
+  to: Date,
+  now: Date,
+  lastCallHours: number,
+  participationQueued: boolean,
+): string {
   const candidate = { ...after, holdExpiresAt: to, reminderHoursBefore: null };
   const lastCallAt = lastCallDeadline(candidate) ? windowLastCallAt(after, { lastCallHours }) : null;
   if (lastCallAt && lastCallAt.getTime() <= now.getTime() + RECENT_DECLARATION_EMAIL_MS) return lastCallKey(registrationId, candidate);
+  const ask = {
+    startsAt: after.startsAt,
+    confirmationOpensDaysBefore: after.confirmationOpensDaysBefore ?? null,
+    confirmationDeadlineDaysBefore: after.confirmationDeadlineDaysBefore ?? null,
+    holdExpiresAt: to,
+  };
+  if (!participationQueued && isParticipationConfirmationDue(ask, now)) return AUTOMATIC_SEND_KEYS.participation(registrationId);
   return deadlineMovedKey(registrationId, to);
+}
+
+/**
+ * Whether a declaration email that left within the hour (§606's `RECENT_DECLARATION_EMAIL_MS`) holds the
+ * move's email back (§NNN). Only when the deadline moved later: the recent email stated an earlier
+ * deadline, still safe to act on. A deadline moved earlier is told whatever left within the hour —
+ * the recent email stated a later deadline the person could wait for and lose the place — unless one of
+ * those recent emails already went under a key carrying the new instant (it rendered that deadline).
+ */
+export function recentEmailHoldsBack(move: { from: Date; to: Date }, recentKeys: readonly string[]): boolean {
+  if (recentKeys.length === 0) return false;
+  if (move.to.getTime() > move.from.getTime()) return true;
+  const suffix = `:${move.to.toISOString()}`;
+  return recentKeys.some((key) => key.endsWith(suffix));
 }
 
 /** What a save did to the holds of one event: the real rows moved, the test ones apart (§12.6), the instant, the emails queued. */
@@ -86,9 +127,11 @@ async function heldRowsOf<T extends Record<string, unknown>>(db: Database<T>, ev
  * event, when anything moved, one `event.holds_moved_by_window` (how many, real and test apart, to
  * when). When the window is already open, each moved row is sent the declaration email once more — its
  * words state the new deadline — through the outbox (`movedEmailKey`, so a retried save sends nothing
- * twice, and a move past the new deadline's last call is that last call), unless its own declaration
- * email is still waiting to leave (it renders the stored deadline when it does) or left within the hour. Before the window opens nothing is sent: the window's own ask (§104) says the new
- * deadline on its day. The caller drains the outbox once after the commit when `queued` is above zero.
+ * twice, a move past the new deadline's last call is that last call, and a move that finds the window's
+ * own ask still owed is that ask), unless its own declaration email is still waiting to leave (it renders
+ * the stored deadline when it does), or one left within the hour and the deadline moved later
+ * (`recentEmailHoldsBack`). Before the window opens nothing is sent: the window's own ask (§104) says the
+ * new deadline on its day. The caller drains the outbox once after the commit when `queued` is above zero.
  *
  * A scheduled event with internal registration only: a cancelled event's queue is left as it was
  * cancelled (§331), and a save that puts it back on aligns its holds then.
@@ -125,31 +168,39 @@ export async function moveWindowHolds<T extends Record<string, unknown>>(
   const window = confirmationWindow(after);
   const windowOpen = window !== null && now.getTime() >= window.opensAt.getTime();
   /*
-    A declaration email of the row's own still waiting to leave — it will say the moved deadline when it
-    does — or one that left within the hour (§606's RECENT_DECLARATION_EMAIL_MS): a last call that went a
-    minute before the save is not followed by a second, identical one.
+    The moved rows' declaration emails that bear on the move's: one still waiting to leave (it will say
+    the moved deadline when it does), one that left within the hour (§606's RECENT_DECLARATION_EMAIL_MS:
+    it holds the move's back when the deadline moved later, `recentEmailHoldsBack`), and the window's own
+    ask (§104) already queued at any time (`movedEmailKey` uses its key when it is still owed).
   */
   const since = new Date(now.getTime() - RECENT_DECLARATION_EMAIL_MS);
-  const waitingToLeave = windowOpen
-    ? new Set(
-        (
-          await tx
-            .select({ registrationId: emailOutbox.registrationId })
-            .from(emailOutbox)
-            .where(
-              and(
-                inArray(
-                  emailOutbox.registrationId,
-                  moves.map((move) => move.id),
-                ),
-                sql`${emailOutbox.participantId} is not null`,
-                eq(emailOutbox.messageType, "COMPLETE_DECLARATION"),
-                or(inArray(emailOutbox.status, ["PENDING", "PROCESSING"]), gte(emailOutbox.sentAt, since)),
+  const earlier = windowOpen
+    ? await tx
+        .select({ registrationId: emailOutbox.registrationId, status: emailOutbox.status, sentAt: emailOutbox.sentAt, idempotencyKey: emailOutbox.idempotencyKey })
+        .from(emailOutbox)
+        .where(
+          and(
+            inArray(
+              emailOutbox.registrationId,
+              moves.map((move) => move.id),
+            ),
+            sql`${emailOutbox.participantId} is not null`,
+            eq(emailOutbox.messageType, "COMPLETE_DECLARATION"),
+            or(
+              inArray(emailOutbox.status, ["PENDING", "PROCESSING"]),
+              gte(emailOutbox.sentAt, since),
+              inArray(
+                emailOutbox.idempotencyKey,
+                moves.map((move) => AUTOMATIC_SEND_KEYS.participation(move.id)),
               ),
-            )
-        ).map((row) => row.registrationId),
-      )
-    : new Set<string | null>();
+            ),
+          ),
+        )
+    : [];
+  const waitingToLeave = new Set(earlier.filter((email) => email.status === "PENDING" || email.status === "PROCESSING").map((email) => email.registrationId));
+  const participationQueued = new Set(earlier.filter((email) => email.idempotencyKey === AUTOMATIC_SEND_KEYS.participation(email.registrationId ?? "")).map((email) => email.registrationId));
+  const recentKeysOf = (id: string) =>
+    earlier.filter((email) => email.registrationId === id && email.sentAt !== null && email.sentAt.getTime() >= since.getTime()).map((email) => email.idempotencyKey);
 
   let moved = 0;
   let test = 0;
@@ -177,7 +228,7 @@ export async function moveWindowHolds<T extends Record<string, unknown>>(
     if (row.kind === "TEST") test += 1;
     else moved += 1;
     to = move.to;
-    if (windowOpen && !waitingToLeave.has(move.id)) {
+    if (windowOpen && !waitingToLeave.has(move.id) && !recentEmailHoldsBack(move, recentKeysOf(move.id))) {
       const inserted = await enqueueEmail(tx, {
         participantId: row.participantId,
         registrationId: move.id,
@@ -185,7 +236,7 @@ export async function moveWindowHolds<T extends Record<string, unknown>>(
         locale: row.locale,
         recipientEmail: row.deliveryEmail,
         payload: {},
-        idempotencyKey: movedEmailKey(move.id, after, move.to, now, lastCallHours),
+        idempotencyKey: movedEmailKey(move.id, after, move.to, now, lastCallHours, participationQueued.has(move.id)),
         requestedByStaffUserId: input.actorStaffUserId,
         // One drain for the whole save, after its commit, never one per row (§606's discipline).
         drainAfter: false,

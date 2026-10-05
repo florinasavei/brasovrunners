@@ -6,6 +6,7 @@ import {
   windowHoldMoves,
   windowHoldTarget,
 } from "@/modules/registrations/domain/window-holds";
+import { movedEmailKey, recentEmailHoldsBack } from "@/modules/registrations/window-holds";
 
 /**
  * BR-REQ-033-01 (`DECISIONS.md` §NNN, amending §104 and §407): a changed participation window moves
@@ -139,5 +140,24 @@ describe("§NNN windowHoldMoves — which rows move", () => {
     const later = new Date(START.getTime() + 7 * DAY);
     const moves = windowHoldMoves({ holds: [{ id: "five-days", holdExpiresAt: at(5) }], before: event(15, 5), after: event(15, 5, later), now: NOW, holdMinutes, registrationClosesAt: null });
     expect(moves).toEqual([{ id: "five-days", from: at(5), to: new Date(later.getTime() - 5 * DAY) }]);
+  });
+});
+
+describe("BR-REQ-033-01 the move's email beside one that left within the hour (§NNN)", () => {
+  const ask = "registration:r:confirm-participation";
+  it("holds back a later deadline's, sends an earlier one's unless a recent email carried the new instant", () => {
+    expect(recentEmailHoldsBack({ from: at(5), to: at(3) }, [ask])).toBe(true);
+    expect(recentEmailHoldsBack({ from: at(3), to: at(5) }, [ask])).toBe(false);
+    expect(recentEmailHoldsBack({ from: at(3), to: at(5) }, [`registration:r:deadline-moved:${at(5).toISOString()}`])).toBe(true);
+    expect(recentEmailHoldsBack({ from: at(5), to: at(3) }, [])).toBe(false);
+  });
+
+  it("is the window's own ask while it is owed and never queued, the last call when that is due, else its own key", () => {
+    const now = at(10);
+    expect(movedEmailKey("r", event(15, 5), at(5), now, 48, false)).toBe(ask);
+    expect(movedEmailKey("r", event(15, 5), at(5), now, 48, true)).toBe(`registration:r:deadline-moved:${at(5).toISOString()}`);
+    expect(movedEmailKey("r", event(15, 5), at(5), at(7), 48, false)).toBe(`registration:r:sign-reminder:${at(5).toISOString()}`);
+    // Before the window opens nothing asks: the move's own key (the caller sends nothing then).
+    expect(movedEmailKey("r", event(7, 5), at(5), now, 48, false)).toBe(`registration:r:deadline-moved:${at(5).toISOString()}`);
   });
 });

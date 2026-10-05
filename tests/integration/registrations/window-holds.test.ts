@@ -13,7 +13,7 @@ import { computeContentHash, type LegalDocumentTranslationInput } from "@/module
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { previewWindowHolds } from "@/modules/registrations/window-holds";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
-import { queueEventReminders } from "@/modules/notifications/event-mail";
+import { queueEventReminders, queueParticipationConfirmations } from "@/modules/notifications/event-mail";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -134,6 +134,23 @@ describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (ย
       })
       .returning();
     return row;
+  }
+
+  /** The window's own ask (ยง104), as the job queues it, already left at `sentAt`. */
+  async function sendAsk(row: { id: string; participantId: string }, sentAt: Date) {
+    await db.insert(emailOutbox).values({
+      participantId: row.participantId,
+      registrationId: row.id,
+      messageType: "COMPLETE_DECLARATION",
+      locale: "ro",
+      recipientEmail: "p@example.test",
+      payloadJson: {},
+      idempotencyKey: `registration:${row.id}:confirm-participation`,
+      status: "SENT",
+      attemptCount: 1,
+      createdAt: new Date(sentAt.getTime() - MINUTE),
+      sentAt,
+    });
   }
 
   const reload = async (id: string) => (await db.select().from(events).where(eq(events.id, id)))[0];
@@ -259,10 +276,12 @@ describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (ย
     const minutes = await seedRow(event.id, { status: "PENDING_DECLARATION", holdExpiresAt: new Date(OPEN.getTime() + 20 * MINUTE) });
     // Left two hours before these saves: outside ยง606's hour, so it holds back nothing.
     const sent = () => db.update(emailOutbox).set({ status: "SENT", sentAt: new Date(OPEN.getTime() - 2 * 60 * MINUTE) });
+    // The window's own ask went when it opened (ยง104): the move's emails are their own, not that ask.
+    for (const row of [real, test]) await sendAsk(row, new Date(OPEN.getTime() - 2 * 60 * MINUTE));
 
     const first = await saveWindow(event.id, 15, 3, OPEN);
     expect(first.holdsMoved).toEqual({ moved: 1, test: 1, to: before(3), queued: 2 });
-    const queued = await declarationEmails();
+    const queued = (await declarationEmails()).filter((row) => row.idempotencyKey.includes(":deadline-moved:"));
     expect(queued.map((row) => row.registrationId).sort()).toEqual([real.id, test.id].sort());
     expect(queued.map((row) => row.idempotencyKey).sort()).toEqual(
       [`registration:${real.id}:deadline-moved:${before(3).toISOString()}`, `registration:${test.id}:deadline-moved:${before(3).toISOString()}`].sort(),
@@ -273,11 +292,11 @@ describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (ย
     // Back to 5, then to 3 again: one more email for the deadline it had not been told, none for one it had.
     await sent();
     await saveWindow(event.id, 15, 5, new Date(OPEN.getTime() + MINUTE));
-    expect(await declarationEmails()).toHaveLength(4);
+    expect(await declarationEmails()).toHaveLength(6);
     await sent();
     const third = await saveWindow(event.id, 15, 3, new Date(OPEN.getTime() + 2 * MINUTE));
     expect(third.holdsMoved).toMatchObject({ moved: 1, test: 1, queued: 0 });
-    expect(await declarationEmails()).toHaveLength(4);
+    expect(await declarationEmails()).toHaveLength(6);
     expect(await db.select().from(emailOutbox).where(and(eq(emailOutbox.registrationId, real.id), like(emailOutbox.idempotencyKey, "%deadline-moved%")))).toHaveLength(2);
   });
 
@@ -319,6 +338,42 @@ describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (ย
     });
     const result = await saveWindow(event.id, 15, 3, OPEN);
     expect(result.holdsMoved).toEqual({ moved: 1, test: 0, to: before(3), queued: 0 });
+    expect(await declarationEmails()).toHaveLength(1);
+  });
+
+  it("a save that opens the window is the window's own ask: one email, under its key, and the job queues none after it", async () => {
+    // 7 / 2 at 10 days before the start: the window had not opened, its ask never went. Saved 15 / 5, it is open now.
+    const event = await seedEvent(2);
+    await db.update(events).set({ confirmationOpensDaysBefore: 7 }).where(eq(events.id, event.id));
+    const real = await seedRow(event.id, { status: "PENDING_DECLARATION", holdExpiresAt: before(2) });
+    const at = before(10);
+    const result = await saveWindow(event.id, 15, 5, at);
+    expect(result.holdsMoved).toEqual({ moved: 1, test: 0, to: before(5), queued: 1 });
+    const [email, ...rest] = await declarationEmails();
+    expect(rest).toHaveLength(0);
+    expect(email.idempotencyKey).toBe(`registration:${real.id}:confirm-participation`);
+    expect(await queueParticipationConfirmations(db, at)).toBe(0);
+    expect(await queueParticipationConfirmations(db, new Date(at.getTime() + 60 * MINUTE))).toBe(0);
+    expect(await declarationEmails()).toHaveLength(1);
+  });
+
+  it("an email that left within the hour does not hold back an earlier deadline's: the move's email goes", async () => {
+    // Earlier: the ask stated 18 Nov, the save 30 minutes later owes the signature by 16 Nov โ€” told at once.
+    const event = await seedEvent(3);
+    const real = await seedRow(event.id, { status: "PENDING_DECLARATION", holdExpiresAt: before(3) });
+    await sendAsk(real, new Date(OPEN.getTime() - 30 * MINUTE));
+    const earlier = await saveWindow(event.id, 15, 5, OPEN);
+    expect(earlier.holdsMoved).toEqual({ moved: 1, test: 0, to: before(5), queued: 1 });
+    expect((await declarationEmails()).map((row) => row.idempotencyKey)).toContain(`registration:${real.id}:deadline-moved:${before(5).toISOString()}`);
+  });
+
+  it("an email that left within the hour holds back the move's when the deadline moved later", async () => {
+    // The ask stated 16 Nov; the save 30 minutes later gives until 18 Nov โ€” the ask is still safe to act on.
+    const event = await seedEvent(5);
+    const real = await seedRow(event.id, { status: "PENDING_DECLARATION", holdExpiresAt: before(5) });
+    await sendAsk(real, new Date(OPEN.getTime() - 30 * MINUTE));
+    const later = await saveWindow(event.id, 15, 3, OPEN);
+    expect(later.holdsMoved).toEqual({ moved: 1, test: 0, to: before(3), queued: 0 });
     expect(await declarationEmails()).toHaveLength(1);
   });
 
