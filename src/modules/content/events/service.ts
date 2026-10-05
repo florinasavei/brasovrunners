@@ -582,6 +582,10 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     // «Estimativ» (§585) means nothing without a number: a tick beside an empty box is saved false, quietly.
     elevationGainEstimated: estimatedElevation(fields.elevationGainMeters, fields.elevationGainEstimated === true),
     nightOverride: fields.nightOverride,
+    // «Vremea» (§NNN), by the partners' discipline: a caller that did not post the choice writes
+    // nothing, so no save changes whose weather the page shows by not mentioning it; a create that
+    // posts none stores the column's default, the forecast.
+    ...(fields.weatherMode === undefined ? {} : { weatherMode: fields.weatherMode }),
     // Only a group run on asphalt or trail has a self-declaration to offer (§393): anything else
     // is written as not offering one, whatever a hidden or stale box posted — as §111 normalizes a
     // turn-up type's registration block.
@@ -1127,6 +1131,7 @@ type OptionalTextColumns = {
   seoTitle?: string | null;
   seoDescription?: string | null;
   discountNote?: string | null;
+  weatherNote?: string | null;
 };
 
 /**
@@ -1147,6 +1152,9 @@ function writtenOptionalTexts(row: OptionalTextColumns) {
     // Nulled by `translationColumnsFrom` outside `EXTERNAL` + `PAID`, so this can never fire
     // there — the same "a hidden box never blocks the save" rule the others follow.
     discountNote: isWrittenText(row.discountNote),
+    // The club's own weather text (§NNN): kept whatever «Vremea» says, so asked in both languages
+    // whatever it says too — a text switched back on is never one language's alone.
+    weatherNote: isWrittenText(row.weatherNote),
   };
 }
 
@@ -1815,6 +1823,9 @@ const SERIES_COLUMNS = [
   // The night override, a fact of the route like the two above (§382, §394). "Automat" carried to
   // every date is what makes a weekly run follow the season by itself: each date asks its own sunset.
   "nightOverride",
+  // «Vremea» (§NNN), like the night override: a fact of where the run goes — "from this date" gives
+  // every later date the forecast, the club's text (`weatherNote` below) or none.
+  "weatherMode",
   // The self-declaration offered on the run's page (§394), like the night override: "from this
   // date" carries it to every later Tâmpa run of the series.
   "offersGroupRunDeclaration",
@@ -1890,6 +1901,8 @@ const SERIES_TRANSLATION_COLUMNS = [
   // The discount belongs to the race, like `costType` above (`DECISIONS.md` §394): a series
   // edit's discount note carries the way its cost does.
   "discountNote",
+  // The club's weather text travels with «Vremea» above (§NNN): the icy trail is icy on every date.
+  "weatherNote",
 ] as const;
 
 /** Equal as stored: dates by their instant, JSON by its text, null by null. */
@@ -2744,6 +2757,7 @@ function blankEventRow(now: Date): EditableEvent {
     elevationGainMeters: null,
     elevationGainEstimated: false,
     nightOverride: null,
+    weatherMode: "forecast",
     offersGroupRunDeclaration: false,
     locationName: null,
     locationAddress: null,
@@ -2814,6 +2828,7 @@ function blankTranslationRow(eventId: string, locale: Locale, now: Date): Editab
     seoTitle: null,
     seoDescription: null,
     discountNote: null,
+    weatherNote: null,
     authorStaffUserId: null,
     reviewedByStaffUserId: null,
     version: 1,
@@ -3354,6 +3369,8 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // makes, keeps the organizer's "Da" or "Nu" — and "Automat" stays automatic, so each date is a
     // night event by its own sunset.
     nightOverride: source.nightOverride,
+    // «Vremea» (§NNN) goes with the copy, the club's text with the words (`copiedTranslationValues`).
+    weatherMode: source.weatherMode,
     // The self-declaration travels with the route too (§393): a copy of the trail run, and every
     // date a series makes from it, offers the same declaration.
     offersGroupRunDeclaration: source.offersGroupRunDeclaration,
@@ -3443,6 +3460,8 @@ function copiedTranslationValues(
     // The discount travels with the mode and cost type it belongs to (`copiedEventValues`, both
     // carried unchanged): a series held at a discount is held at it every date.
     discountNote: translation.discountNote,
+    // The club's weather text (§NNN) travels with «Vremea», which `copiedEventValues` carries.
+    weatherNote: translation.weatherNote,
     authorStaffUserId: actor.id,
     createdAt: now,
     updatedAt: now,

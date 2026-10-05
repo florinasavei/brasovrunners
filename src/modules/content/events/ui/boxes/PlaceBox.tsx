@@ -1,13 +1,19 @@
+import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import RecallField from "@/shared/forms/recall";
+import { identicalInBothLanguages, isWrittenText } from "@/shared/forms/both-languages";
 import { textFieldConstraints } from "@/shared/forms/constraints";
+import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import { CLUB_LOCALITY, placeInBox } from "@/modules/events/domain/place";
+import { readWeatherMode, WEATHER_MODES } from "@/modules/weather/domain/mode";
 import { coordinatesText, forecastPlace, typedCoordinates } from "@/modules/weather/domain/place";
 import { env } from "@/shared/config/env";
 import { eventInputConstraints } from "../../constraints";
 import { placeSummary } from "../box-summaries";
 import PlaceToBeAnnounced from "../PlaceToBeAnnounced";
+import { WeatherNoteFields } from "../TranslationFields";
+import WeatherModeField, { type WeatherModeWords } from "../WeatherModeField";
 import { type BoxProps, type LanguageEntry, summaryWords } from "./box-kit";
 
 /**
@@ -45,56 +51,115 @@ export default async function PlaceFields({ event, mayEditSettings, languages }:
   const typed = event ? typedCoordinates(event) : null;
   const weatherPlace = event ? forecastPlace({ ...event, locationToBeAnnounced: false }, env.CLUB_COORDINATES) : null;
 
-  if (!mayEditSettings) return <Typography variant="body2">{placeSummary(words, event, translations)}</Typography>;
-  return (
-    /* The switch and the two names are the island; their constraints are read here, off the
-       schema, and handed to it as data — it only takes `required` away while the switch is on. */
-    <PlaceToBeAnnounced
-      defaultChecked={event?.locationToBeAnnounced ?? false}
-      labels={{
-        toggle: t("editor.placeToBeAnnounced"),
-        toggleHelp: t("editor.placeToBeAnnouncedHelp"),
-        meetingPoint: t("editor.fields.locationName"),
-        ro: tSite("languageName.ro"),
-        en: tSite("languageName.en"),
-        locationHelp: t("editor.locationHelp"),
-        unpublished: t("editor.placeUnpublished"),
-        copyToEnglish: t("editor.locationCopyToEnglish"),
-        // A template: the island fills `{place}` with what the English box still says.
-        englishLeftBehind: t.raw("editor.locationEnglishLeftBehind") as string,
-      }}
-      names={{
-        ro: { defaultValue: placeNameInBox(event, languages, "ro"), box: textFieldConstraints(eventInputConstraints("locationName")) },
-        en: { defaultValue: placeNameInBox(event, languages, "en"), box: textFieldConstraints(eventInputConstraints("locationNameEn")) },
-      }}
-    >
-      {/* Where to meet, as one pasted link (§61). */}
-      <RecallField
-        name="event.mapUrl"
-        label={t("editor.mapUrl")}
-        helperText={t("editor.mapUrlHelp")}
-        defaultValue={event?.mapUrl ?? ""}
-        {...textFieldConstraints(eventInputConstraints("mapUrl"), { inputMode: "url" })}
-      />
-      {/* Where the weather is read when the link carries no pin (§416, amending §402): a short
-          share link or a venue's page names no place a server can read without asking the map. */}
-      <RecallField
-        name="event.coordinates"
-        label={t("editor.coordinates")}
-        helperText={t("editor.coordinatesHelp")}
-        defaultValue={typed ? coordinatesText(typed) : ""}
-        {...textFieldConstraints(eventInputConstraints("coordinates"), { inputMode: "decimal" })}
-      />
-      {weatherPlace && (
-        <Typography variant="caption" color="text.secondary" component="p" data-testid="weather-place" sx={{ px: 1.75 }}>
-          {t(`editor.weatherPlace.${weatherPlace.source}`, {
-            coordinates: coordinatesText(weatherPlace.coordinates),
-            place: CLUB_LOCALITY,
-          })}
+  const weather = await weatherParts(event, languages);
+
+  if (!mayEditSettings) {
+    // The choice is the Organizer's, with the place; the club's text is the words' — a reader with
+    // text rights writes it here while the stored choice is «Text scris de club» (§NNN).
+    return (
+      <Stack spacing={2}>
+        <Typography variant="body2">{placeSummary(words, event, translations)}</Typography>
+        <Typography variant="body2" data-testid="weather-mode-summary">
+          {`${weather.words.label}: ${weather.words.choices[weather.mode].label}`}
         </Typography>
-      )}
-    </PlaceToBeAnnounced>
+        {weather.mode === "custom" && weather.panels}
+      </Stack>
+    );
+  }
+  return (
+    <Stack spacing={2}>
+      {/* The switch and the two names are the island; their constraints are read here, off the
+         schema, and handed to it as data — it only takes `required` away while the switch is on. */}
+      <PlaceToBeAnnounced
+        defaultChecked={event?.locationToBeAnnounced ?? false}
+        labels={{
+          toggle: t("editor.placeToBeAnnounced"),
+          toggleHelp: t("editor.placeToBeAnnouncedHelp"),
+          meetingPoint: t("editor.fields.locationName"),
+          ro: tSite("languageName.ro"),
+          en: tSite("languageName.en"),
+          locationHelp: t("editor.locationHelp"),
+          unpublished: t("editor.placeUnpublished"),
+          copyToEnglish: t("editor.locationCopyToEnglish"),
+          // A template: the island fills `{place}` with what the English box still says.
+          englishLeftBehind: t.raw("editor.locationEnglishLeftBehind") as string,
+        }}
+        names={{
+          ro: { defaultValue: placeNameInBox(event, languages, "ro"), box: textFieldConstraints(eventInputConstraints("locationName")) },
+          en: { defaultValue: placeNameInBox(event, languages, "en"), box: textFieldConstraints(eventInputConstraints("locationNameEn")) },
+        }}
+      >
+        {/* Where to meet, as one pasted link (§61). */}
+        <RecallField
+          name="event.mapUrl"
+          label={t("editor.mapUrl")}
+          helperText={t("editor.mapUrlHelp")}
+          defaultValue={event?.mapUrl ?? ""}
+          {...textFieldConstraints(eventInputConstraints("mapUrl"), { inputMode: "url" })}
+        />
+        {/* Where the weather is read when the link carries no pin (§416, amending §402): a short
+            share link or a venue's page names no place a server can read without asking the map. */}
+        <RecallField
+          name="event.coordinates"
+          label={t("editor.coordinates")}
+          helperText={t("editor.coordinatesHelp")}
+          defaultValue={typed ? coordinatesText(typed) : ""}
+          {...textFieldConstraints(eventInputConstraints("coordinates"), { inputMode: "decimal" })}
+        />
+        {weatherPlace && (
+          <Typography variant="caption" color="text.secondary" component="p" data-testid="weather-place" sx={{ px: 1.75 }}>
+            {t(`editor.weatherPlace.${weatherPlace.source}`, {
+              coordinates: coordinatesText(weatherPlace.coordinates),
+              place: CLUB_LOCALITY,
+            })}
+          </Typography>
+        )}
+      </PlaceToBeAnnounced>
+      {/* «Vremea» (§NNN), beside the line that says where the forecast is read, and outside the place's
+          switch: an event whose place is announced later still has a choice about its weather. */}
+      <WeatherModeField name="event.weatherMode" defaultMode={weather.mode} hasNote={weather.hasNote} words={weather.words}>
+        {weather.panels}
+      </WeatherModeField>
+    </Stack>
   );
+}
+
+/**
+ * «Vremea»'s parts (§NNN): the stored choice (the forecast on the create page), whether any language
+ * has a text, the words, and the club's text once per language — the discount note's strip
+ * (`CostBox`), one short line per language, with the house's same-text warning.
+ */
+async function weatherParts(event: BoxProps["event"], languages: readonly LanguageEntry[]) {
+  const t = await getTranslations("Admin");
+  const mode = readWeatherMode(event?.weatherMode);
+  const words: WeatherModeWords = {
+    label: t("editor.weather.label"),
+    choices: Object.fromEntries(
+      WEATHER_MODES.map((choice) => [choice, { label: t(`editor.weather.modes.${choice}`), help: t(`editor.weather.help.${choice}`) }]),
+    ) as WeatherModeWords["choices"],
+    noNote: t("editor.weather.noNote"),
+  };
+  const panels = (
+    <LocaleTabPanels
+      idPrefix="weather-note"
+      translateCard
+      panels={languages.map((entry) => ({
+        locale: entry.translation.locale,
+        label: entry.label,
+        content: <WeatherNoteFields translation={entry.translation} mayEdit={entry.mayEdit} />,
+      }))}
+      identical={{
+        names: ["weatherNote"],
+        warning: t("editor.identical.warning"),
+        mark: t("editor.identical.tab"),
+        initial: (() => {
+          const [first, ...rest] = languages;
+          return first ? rest.some((entry) => identicalInBothLanguages(first.translation.weatherNote, entry.translation.weatherNote)) : false;
+        })(),
+      }}
+    />
+  );
+  return { mode, words, panels, hasNote: languages.some((entry) => isWrittenText(entry.translation.weatherNote)) };
 }
 
 /** What one language's meeting-point box opens with (§362): that language's page's name, or "" on create. */

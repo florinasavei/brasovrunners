@@ -4,6 +4,7 @@ import CloudySnowingIcon from "@mui/icons-material/CloudySnowing";
 import FilterDramaIcon from "@mui/icons-material/FilterDrama";
 import FoggyIcon from "@mui/icons-material/Foggy";
 import GrainIcon from "@mui/icons-material/Grain";
+import ThermostatIcon from "@mui/icons-material/Thermostat";
 import ThunderstormIcon from "@mui/icons-material/Thunderstorm";
 import UmbrellaIcon from "@mui/icons-material/Umbrella";
 import WaterDropIcon from "@mui/icons-material/WaterDrop";
@@ -35,3 +36,9 @@ export const WEATHER_GLYPH: Record<WeatherGlyphName, Glyph> = {
   snowShowers: CloudySnowingIcon,
   thunder: ThunderstormIcon,
 };
+
+/**
+ * The glyph beside the club's own weather text (§NNN): a thermometer, neither sun nor rain — the
+ * sky is the club's words to say, not a forecast's kind to draw.
+ */
+export const CLUB_WEATHER_GLYPH: Glyph = ThermostatIcon;

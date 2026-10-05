@@ -21,7 +21,7 @@ import { NO_RACE_NUMBER } from "@/modules/registrations/domain/qr-identity";
 import { env } from "@/shared/config/env";
 import { CLUB_LOCALITY } from "@/modules/events/domain/place";
 import { type EventForecast, forecastPlaceName } from "@/modules/weather/domain/forecast";
-import { weatherSpanWords } from "@/modules/weather/words";
+import { weatherLabel, weatherSpanWords } from "@/modules/weather/words";
 import { CANNOT_COME_GLYPH_PATH, CANNOT_COME_MESSAGES } from "./domain/cannot-come";
 import type { HoldLapsedNext } from "./domain/hold-lapsed";
 import { legalTemplateNames, legalTemplatesWords } from "./legal-templates-words";
@@ -694,6 +694,8 @@ export function renderBilingual(
     */
     ...(data.eventTitleOther ? { eventTitle: data.eventTitleOther } : {}),
     ...(data.eventChecklistOther !== undefined ? { eventChecklist: data.eventChecklistOther ?? undefined } : {}),
+    // The club's weather text in the second half's language (§NNN), or no row there — never the first half's words.
+    ...(data.eventWeatherNoteOther !== undefined ? { eventWeatherNote: data.eventWeatherNoteOther ?? undefined } : {}),
     // The organizer's own words in the second half's language (§354, bilingual everywhere) —
     // absent only for a row queued with one text, which both halves then read as before.
     ...(data.organizerNoteOther ? { organizerNote: data.organizerNoteOther } : {}),
@@ -856,6 +858,14 @@ export type TemplateData = {
    * answer — the facts block's «Vremea» row is then simply not there.
    */
   eventWeather?: EventForecast;
+  /**
+   * The club's own weather text in place of the forecast (§NNN), on the reminder only, when the
+   * event's «Vremea» is «Text scris de club» and this half's language has one — the facts block's
+   * «Vremea» row says it as written, with no credit. Absent otherwise: no row.
+   */
+  eventWeatherNote?: string;
+  /** The same in the other language, for the second half; `null` when that language has none (§28). */
+  eventWeatherNoteOther?: string | null;
   /** The programme's rows as lines, in the message's language and in the other's (§117); on the update notice (§331). */
   eventProgramme?: string[];
   eventProgrammeOther?: string[];
@@ -3047,9 +3057,12 @@ export function buildTemplateContent(
           timeZone: data.eventFacts.timezone,
         })
       : undefined;
+  // Or the club's own words (§NNN): «Vremea», then the text as written — no place, no hours, no credit.
   const weatherRow = weatherWordsForRow
     ? { label: weatherWordsForRow.heading, line: weatherWordsForRow.line, credit: weatherWordsForRow.credit }
-    : undefined;
+    : messageType === "EVENT_REMINDER" && data.eventWeatherNote
+      ? { label: weatherLabel(locale), line: data.eventWeatherNote }
+      : undefined;
   const factsBlock = data.eventFacts && EVENT_FACTS_MESSAGES.has(messageType) ? eventFactsBlock(data.eventFacts, locale, weatherRow) : undefined;
   const linkData: TemplateData = factsBlock
     ? { ...data, eventUrl: undefined, eventScheduleUrl: undefined, eventRulesUrl: undefined, eventLinksUrl: undefined }

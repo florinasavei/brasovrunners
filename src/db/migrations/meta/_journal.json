@@ -890,6 +890,13 @@
       "when": 1791092246544,
       "tag": "0129_member_bib_wanted",
       "breakpoints": true
+    },
+    {
+      "idx": 127,
+      "version": "7",
+      "when": 1791196025859,
+      "tag": "0130_weather_mode",
+      "breakpoints": true
     }
   ]
 }

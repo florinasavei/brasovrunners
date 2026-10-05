@@ -77,6 +77,7 @@ import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { readAddressCap } from "@/modules/registrations/address-cap";
 import { SIGNABLE_STATUSES } from "@/modules/registrations/domain/family-signing";
 import { confirmationDueMoment, participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
+import { readWeatherMode, weatherShown } from "@/modules/weather/domain/mode";
 import { forecastForEvent } from "@/modules/weather/source";
 import { renderNewsletterRow } from "@/modules/newsletter/render";
 import { renderInvitationRow } from "./invitation-render";
@@ -684,7 +685,20 @@ async function renderRow(
     when Open-Meteo did not answer within its three seconds: the reminder goes out without the line,
     never later for it.
   */
+  /*
+    Or the club's own words in its place (§NNN), each half from its own language's row — never the
+    other's (§28): a language without a text has no weather line in its half. «Fără vreme» has none,
+    and neither of the two asks Open-Meteo (`forecastForEvent` says null without a request).
+  */
   if (row.messageType === "EVENT_REMINDER" && eventDetails) {
+    const ownRow = eventTexts.find((candidate) => candidate.locale === locale);
+    const otherRow = eventTexts.find((candidate) => candidate.locale === otherLocale(locale));
+    const shown = weatherShown(eventDetails, ownRow);
+    if (shown?.kind === "custom") data.eventWeatherNote = shown.text;
+    if (readWeatherMode(eventDetails.weatherMode) === "custom") {
+      const other = weatherShown(eventDetails, otherRow);
+      data.eventWeatherNoteOther = other?.kind === "custom" ? other.text : null;
+    }
     const weather = await forecastForEvent(eventDetails, now);
     if (weather) data.eventWeather = weather;
   }
