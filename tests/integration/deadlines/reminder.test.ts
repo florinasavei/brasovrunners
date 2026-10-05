@@ -117,10 +117,10 @@ describe("§377 the reminder lead, the event's or the club's", () => {
     const [a, b] = await Promise.all([usual, own].map((event) => seedRegistration(event.id, "CONFIRMED")));
 
     // No reminder by default: the event that chose its own still gets one.
-    expect(await queueEventReminders(db, NOW, { reminderHours: 0 })).toBe(1);
+    expect(await queueEventReminders(db, NOW, { ...DEFAULT_DEADLINES, reminderHours: 0 })).toBe(1);
     expect(await queued("EVENT_REMINDER")).toEqual([b.id]);
     // Three days by default: the event left "as usual" is inside it now.
-    expect(await queueEventReminders(db, NOW, { reminderHours: 72 })).toBe(1);
+    expect(await queueEventReminders(db, NOW, { ...DEFAULT_DEADLINES, reminderHours: 72 })).toBe(1);
     expect(await queued("EVENT_REMINDER")).toEqual(expect.arrayContaining([a.id, b.id]));
   });
 

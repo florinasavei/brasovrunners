@@ -15,6 +15,7 @@ import {
   eventReminderDueAt,
   isDeclarationLastCallDue,
   isConfirmationRetryDue,
+  lastCallKey,
   isEventReminderDue,
   nextInLineOffers,
   onePerAddress,
@@ -138,14 +139,23 @@ const RUN_ORDER: AutomaticSend[] = [
 ];
 
 type Kind = "REAL" | "TEST";
-type Due = { at: Date; eventId: string; send: AutomaticSend; registrationId?: string; kind?: Kind; count?: number };
+type Due = {
+  at: Date;
+  eventId: string;
+  send: AutomaticSend;
+  registrationId?: string;
+  kind?: Kind;
+  count?: number;
+  /** The outbox key the job would write, when it is not the send's one per registration (the last call before a window's deadline, §NNN). */
+  key?: string;
+};
 
 export async function forecastAutomaticEmails<T extends Record<string, unknown>>(
   db: Database<T>,
   input: {
     now: Date;
     horizonDays?: number;
-    deadlines: Pick<Deadlines, "reminderHours" | "confirmationHours" | "verificationRetryHours" | "verificationRetries">;
+    deadlines: Pick<Deadlines, "reminderHours" | "lastCallHours" | "confirmationHours" | "verificationRetryHours" | "verificationRetries">;
   },
 ): Promise<ForecastRow[]> {
   const { now, deadlines } = input;
@@ -269,13 +279,14 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
       const lapseAt = consumedByNextInLine.get(row.registrationId);
       const releasedFirst = lapseAt !== undefined && lapseAt.getTime() <= at.getTime();
       if (!releasedFirst && inHorizon(at) && isDeclarationLastCallDue(row, at, deadlines)) {
-        keyed.push({ at, eventId: row.eventId, send: "lastCall", registrationId: row.registrationId, kind: row.kind });
+        keyed.push({ at, eventId: row.eventId, send: "lastCall", registrationId: row.registrationId, kind: row.kind, key: lastCallKey(row.registrationId, row) });
       }
     }
   }
 
   // Leave out what is already in the outbox: `enqueueEmail` would insert nothing for it.
   const keyOf = (item: Due): string => {
+    if (item.key) return item.key;
     const send = item.send as "reminder" | "lastCall" | "participation";
     return AUTOMATIC_SEND_KEYS[send](item.registrationId as string);
   };

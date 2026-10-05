@@ -6,11 +6,13 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
-import { DEADLINE_RULES, type Deadlines, EVENT_REMINDER_MAX_HOURS } from "@/modules/deadlines/domain/deadlines";
+import { DEADLINE_RULES, EVENT_REMINDER_MAX_HOURS } from "@/modules/deadlines/domain/deadlines";
 import { DomainError } from "@/shared/errors/domain-error";
 import {
   AUTOMATIC_SEND_KEYS,
   isDeclarationLastCallDue,
+  type LastCallDeadlines,
+  lastCallKey,
   isEventReminderDue,
   isParticipationConfirmationDue,
 } from "./domain/automatic-sends";
@@ -161,8 +163,8 @@ export async function queueParticipationConfirmations<T extends Record<string, u
 export async function queueEventReminders<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,
-  /** The club's deadlines, read once by the run (§377): the reminder lead of an event left "as usual". */
-  deadlines: Pick<Deadlines, "reminderHours">,
+  /** The club's deadlines, read once by the run (§377): the reminder lead of an event left "as usual", and the last call's before a window's deadline (§NNN). */
+  deadlines: LastCallDeadlines,
 ): Promise<number> {
   const rows = (await selectReminderCandidates(db, { from: now, until: now })).filter((row) => isEventReminderDue(row, now, deadlines));
 
@@ -203,11 +205,17 @@ export async function queueEventReminders<T extends Record<string, unknown>>(
  *
  * One per registration, ever, by its own key: somebody who registered inside the window and
  * signed nothing gets this and nothing else.
+ *
+ * **Before a window's deadline (§NNN).** On an event whose participation window is due before the
+ * start, a call a reminder lead before the start would reach a place held until that deadline days
+ * after it lapsed. So a row whose hold ends at the window's deadline gets its last call «Termene»
+ * `lastCallHours` before that deadline instead — none at 0 — once per deadline instant
+ * (`lastCallKey`): a deadline a save moved earns one more. Every other row keeps the rule above.
  */
 async function queueDeclarationReminders<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,
-  deadlines: Pick<Deadlines, "reminderHours">,
+  deadlines: LastCallDeadlines,
 ): Promise<number> {
   const rows = (await selectDeclarationCandidates(db, { from: now })).filter((row) => isDeclarationLastCallDue(row, now, deadlines));
   if (rows.length === 0) return 0;
@@ -222,7 +230,7 @@ async function queueDeclarationReminders<T extends Record<string, unknown>>(
         locale: row.locale,
         recipientEmail: row.recipientEmail,
         payload: {},
-        idempotencyKey: AUTOMATIC_SEND_KEYS.lastCall(row.registrationId),
+        idempotencyKey: lastCallKey(row.registrationId, row),
         now,
       });
       if (inserted) queued += 1;

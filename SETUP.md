@@ -1421,7 +1421,7 @@ else's: they are marked **YOURS**. Everything else below is a value, not a place
 | Înscrieri | Înscrierile se deschid | leave **empty** — entries open the moment the event is published |
 | Înscrieri | Înscrierile se închid | leave **empty** for "until the start", or a date if the club wants the list closed earlier |
 | Înscrieri | Confirmarea participării: cu câte zile înainte se cere | **YOURS** — the default **7** asks everyone to confirm a week out |
-| Înscrieri | …și cu câte zile înainte expiră | **YOURS** — the default **2**: an unconfirmed place goes to the waiting list two days before |
+| Înscrieri | …și cu câte zile înainte expiră | **YOURS** — the default **2**: an unconfirmed place goes to the waiting list two days before (when somebody waits). Changing either number later moves the places already reserved by the window to the new deadline in the same save — the card says how many before you press, the banner after; inside an open window each of those people is emailed the new deadline. The last call to sign goes «Setări» → «Termene» → «Ultima chemare la semnat…» hours before the deadline (48 by default) |
 | Înscrieri | Numerele de concurs (BIB) încep de la | **1**, or **100** if the club wants three-digit numbers |
 | Înscrieri | Culoarea numerelor de concurs (BIB) | the band colour on the printed bib; any of the palette's |
 | Înscrieri | Declarația pe care o semnează participantul | the approved **EVENT_DECLARATION** — the only entry in the list on production |

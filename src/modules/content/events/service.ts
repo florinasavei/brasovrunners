@@ -40,6 +40,8 @@ import { eraseAllRegistrationsOfEvent } from "@/modules/registrations/admin-serv
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
 import { countOccupied, countRegistrationsForEvent, countTestRegistrationsForEvent, lockEventForCapacity } from "@/modules/registrations/repository";
 import { areTestRegistrationsAvailable, removeTestRegistrations } from "@/modules/registrations/test-registrations";
+import { moveWindowHolds, type WindowHoldsMoved } from "@/modules/registrations/window-holds";
+import { drainOutboxAfterResponse } from "@/modules/notifications/drain";
 import { effectiveMinimumAge } from "@/modules/registrations/domain/age";
 import { fillAvailableSpots } from "@/modules/registrations/service";
 import { seriesBounds } from "@/modules/registrations/bibs";
@@ -1672,6 +1674,9 @@ export async function saveEventFields<T extends Record<string, unknown>>(
    * landing between the count and the write waits rather than slipping past it.
    */
   const hiddenListNumbers = hiddenListNumbersToJudge(fields, current);
+  // The club's hold minutes, the floor of a moved hold (§NNN), read before the event row is locked (§377).
+  const deadlines = await currentDeadlines(db);
+  let holdsQueued = 0;
   const saved = await db.transaction(async (tx) => {
     // Under the event lock, on an uncapped event too, so the spares it reads are the ones in force (§647).
     if (hiddenListNumbers) assertHiddenListNumbers(hiddenListNumbers, await lockEventForCapacity(tx, input.eventId));
@@ -1699,6 +1704,8 @@ export async function saveEventFields<T extends Record<string, unknown>>(
     await auditWaitlistAutoOffer(tx, input.actor, current, saved, now);
     await auditWaitlistCountPublic(tx, input.actor, current, saved, now);
     await auditHiddenList(tx, input.actor, current, saved, now);
+    // The holds the window gave follow it (§NNN): under the event lock, in this transaction.
+    holdsQueued = (await moveWindowHolds(tx, { actorStaffUserId: input.actor.id, before: current, after: saved, now, holdMinutes: deadlines.holdMinutes })).queued;
     // The place's name in each language is the event's (§362): written with the row, under its version.
     // An older event's English name follows its Romanian one when only the Romanian moved, which
     // needs the rows as they were (`namesAfterSave`) — the notice compares the same rows.
@@ -1724,6 +1731,8 @@ export async function saveEventFields<T extends Record<string, unknown>>(
   revalidatePublicContent("events");
   // As in `saveEventAndTranslations`: the event's instants are the maintenance job's (§334).
   wakeJobs("registration-maintenance");
+  // The declaration emails a move inside an open window queued (§NNN): one drain, after the commit.
+  if (holdsQueued > 0) drainOutboxAfterResponse();
   return saved;
 }
 
@@ -1933,11 +1942,13 @@ async function applyToSeries<T extends Record<string, unknown>>(
      */
     discountNoteCleared?: boolean;
   },
-): Promise<{ applied: number; offered: number; dates: SavedDate[] }> {
+): Promise<{ applied: number; offered: number; dates: SavedDate[]; holds: WindowHoldsMoved[] }> {
   const { before, after, now } = input;
   const dates: SavedDate[] = [];
+  // What the window's move did on each date this save wrote (§NNN).
+  const holds: WindowHoldsMoved[] = [];
   const sourceId = before.repeatOf ?? (before.repeatRule ? before.id : null);
-  if (!sourceId) return { applied: 0, offered: 0, dates };
+  if (!sourceId) return { applied: 0, offered: 0, dates, holds };
   if (!canEditEventFields(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not edit a series`);
   }
@@ -1989,14 +2000,14 @@ async function applyToSeries<T extends Record<string, unknown>>(
     placeMoved.length === 0 &&
     !input.discountNoteCleared
   ) {
-    return { applied: 0, offered: 0, dates };
+    return { applied: 0, offered: 0, dates, holds };
   }
 
   // The series is the source and every date made from it; "following" is by the day this
   // date had before the save, so moving it does not change which dates follow; ticked dates
   // are those and no other, whatever else the list carried.
   const chosen = typeof input.scope === "object" ? input.scope.ids.filter((id) => id !== before.id) : null;
-  if (chosen && chosen.length === 0) return { applied: 0, offered: 0, dates };
+  if (chosen && chosen.length === 0) return { applied: 0, offered: 0, dates, holds };
   const members = await tx
     .select()
     .from(events)
@@ -2104,6 +2115,16 @@ async function applyToSeries<T extends Record<string, unknown>>(
         await auditWaitlistCountPublic(tx, input.actor, member, { id: member.id, waitlistCountPublic: changes.waitlistCountPublic }, now);
       }
       await auditHiddenList(tx, input.actor, member, { ...hiddenListOf(member), ...hiddenListChanges(changes), id: member.id }, now);
+      // This date's holds follow its own window and start as the save leaves them (§NNN).
+      holds.push(
+        await moveWindowHolds(tx, {
+          actorStaffUserId: input.actor.id,
+          before: member,
+          after: { ...member, ...changes, id: member.id },
+          now,
+          holdMinutes: input.deadlines.holdMinutes,
+        }),
+      );
       // Each date has its own queue, checked against its own places (§147): the new capacity
       // is the source's, the raise is measured against what this date had, and the status is
       // this date's as it now stands — a cancelled date offers nothing.
@@ -2149,7 +2170,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
       }
     }
   }
-  return { applied, offered, dates };
+  return { applied, offered, dates, holds };
 }
 
 /**
@@ -2431,7 +2452,7 @@ async function offerRaisedCapacity<T extends Record<string, unknown>>(
 export async function saveEventAndTranslations<T extends Record<string, unknown>>(
   db: Database<T>,
   input: SaveEventAndTranslationsInput,
-): Promise<{ appliedTo: number; offered: number; placeAnnounced: boolean; notice?: EventNoticeOutcome }> {
+): Promise<{ appliedTo: number; offered: number; placeAnnounced: boolean; holdsMoved: WindowHoldsMoved; notice?: EventNoticeOutcome }> {
   const now = input.now ?? new Date();
 
   const [current] = await db.select().from(events).where(eq(events.id, input.eventId)).limit(1);
@@ -2488,6 +2509,8 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     // database — read by `translationsAfter` further down, since the in-memory rows loaded
     // before this transaction do not see that write on their own.
     let discountNoteCleared = false;
+    // What the window's move did to the holds of every date this save wrote (§NNN).
+    const holdMoves: WindowHoldsMoved[] = [];
     if (parsedEventFields && times) {
       // Under the event lock, on an uncapped event too, so the spares it reads are the ones in force (§647).
       const hiddenListNumbers = hiddenListNumbersToJudge(parsedEventFields, current);
@@ -2523,6 +2546,12 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       await auditWaitlistAutoOffer(tx, input.actor, current, savedEvent, now);
       await auditWaitlistCountPublic(tx, input.actor, current, savedEvent, now);
       await auditHiddenList(tx, input.actor, current, savedEvent, now);
+      /*
+        The holds the participation window gave follow it (§NNN): a changed deadline, a window switched on
+        or off, a moved start — or holds given under an older window than the one stored. Under the event
+        lock, in this transaction; `hold_expires_at` only, nobody seated or released (AGENTS.md §10.6).
+      */
+      holdMoves.push(await moveWindowHolds(tx, { actorStaffUserId: input.actor.id, before: current, after: savedEvent, now, holdMinutes: deadlines.holdMinutes }));
       // Before the words, so each row a text save writes back already carries its new name.
       await writePlaceNames(tx, input.eventId, names);
       // Before the translations loop: a settings-only save (an Organizer without text rights)
@@ -2607,6 +2636,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
         discountNoteCleared,
       });
       appliedTo = series.applied;
+      holdMoves.push(...series.holds);
       offered += series.offered;
       otherDates.push(...series.dates);
     }
@@ -2639,7 +2669,8 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
           now,
         })
       : undefined;
-    return notice ? { appliedTo, offered, placeAnnounced, notice } : { appliedTo, offered, placeAnnounced };
+    const holdsMoved = combineHoldMoves(holdMoves);
+    return notice ? { appliedTo, offered, placeAnnounced, holdsMoved, notice } : { appliedTo, offered, placeAnnounced, holdsMoved };
   });
   // The one save of the whole event (§36), cancelling included: a cancelled event must never read
   // as scheduled, so the cached rows go the moment it commits (§28, §333).
@@ -2650,7 +2681,24 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     — a translation's words move nothing the job acts on.
   */
   if (parsedEventFields) wakeJobs("registration-maintenance");
+  // The declaration emails a move inside an open window queued (§NNN): one drain, after the commit.
+  if (outcome.holdsMoved.queued > 0) drainOutboxAfterResponse();
   return outcome;
+}
+
+/**
+ * Every date's move as the one the banner gives (§NNN): the counts summed, and the instant only when
+ * every moved hold went to the same one — a series' dates each have their own deadline.
+ */
+function combineHoldMoves(moves: readonly WindowHoldsMoved[]): WindowHoldsMoved {
+  const withRows = moves.filter((move) => move.to !== null);
+  const instants = new Set(withRows.map((move) => move.to?.getTime()));
+  return {
+    moved: moves.reduce((sum, move) => sum + move.moved, 0),
+    test: moves.reduce((sum, move) => sum + move.test, 0),
+    to: instants.size === 1 ? withRows[0].to : null,
+    queued: moves.reduce((sum, move) => sum + move.queued, 0),
+  };
 }
 
 // --- The preview before saving (§579) -------------------------------------------------------

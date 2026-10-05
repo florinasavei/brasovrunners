@@ -37,7 +37,9 @@ import {
   registrationSummary,
   registrationWindowSummary,
   summaryDate,
+  summaryDateTime,
 } from "../box-summaries";
+import { countForm } from "@/i18n/count-form";
 import OnlyForMode from "../OnlyForMode";
 import OnlyForType from "../OnlyForType";
 import WaitlistLimitOnly from "../WaitlistLimitOnly";
@@ -89,7 +91,15 @@ export default async function RegistrationBox({
   locale,
   now,
   clubDeadlines,
+  windowHolds = null,
 }: BoxProps & {
+  /**
+   * The reserved places the participation window gave, as a save would treat them (§NNN,
+   * `registrations/window-holds.ts#previewWindowHolds`): how many a save moves now to the stored
+   * window's instant, how many already hold it, and that instant. Real registrations only; the create
+   * form has none.
+   */
+  windowHolds?: { moveNow: number; atWindow: number; to: Date } | null;
   /** The page's clock, for "race week" (the bib card opens by itself then). */
   now?: Date;
   /**
@@ -160,6 +170,22 @@ export default async function RegistrationBox({
     return confirmationDueAtStart({ days: event.confirmationDeadlineDaysBefore })
       ? t("editor.boxes.confirmation.datesAtStart", values)
       : t("editor.boxes.confirmation.dates", values);
+  })();
+
+  /*
+    What the save does to the places the window already gave (§NNN): moves those held to another
+    window's instant now, or — when they all hold this one — says a changed window will move them.
+  */
+  const windowHoldsLine = (() => {
+    if (!windowHolds) return null;
+    const due = summaryDateTime(windowHolds.to, zone, locale, "inline");
+    if (windowHolds.moveNow > 0) {
+      return t(`editor.boxes.confirmation.moveNow.${countForm(windowHolds.moveNow, locale)}`, { count: windowHolds.moveNow, due });
+    }
+    if (windowHolds.atWindow > 0) {
+      return t(`editor.boxes.confirmation.follow.${countForm(windowHolds.atWindow, locale)}`, { count: windowHolds.atWindow, due });
+    }
+    return null;
   })();
 
   const summary = registrationSummary(words, event, {
@@ -367,6 +393,11 @@ export default async function RegistrationBox({
                       {confirmationDates && (
                         <Typography variant="body2" data-testid="confirmation-dates">
                           {confirmationDates}
+                        </Typography>
+                      )}
+                      {windowHoldsLine && (
+                        <Typography variant="body2" data-testid="confirmation-holds">
+                          {windowHoldsLine}
                         </Typography>
                       )}
                       <BoxNote more={t("editor.confirmationWindowHelpMore", { hold })}>{t("editor.confirmationWindowHelp")}</BoxNote>
