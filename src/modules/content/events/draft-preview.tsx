@@ -88,7 +88,7 @@ export async function renderEventDraftPreview<T extends Record<string, unknown>>
 
   const rows = routing.locales.map((locale) => draft.translations[locale]);
   const gaps = missingForPublish(storedPublishReader(draft.event, rows), routing.locales);
-  const owed = textsOwedInOneLanguage(draft.translations);
+  const owed = textsOwedInOneLanguage(draft.translations, draft.event.weatherMode);
   const missing = Object.fromEntries(
     routing.locales.map((locale) => [
       locale,

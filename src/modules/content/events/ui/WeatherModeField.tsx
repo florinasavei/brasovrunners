@@ -38,7 +38,7 @@ export default function WeatherModeField({
 }: {
   name: string;
   defaultMode: string;
-  /** Whether any language has a stored text — read on the server, as saved. */
+  /** Whether any language has a stored text — read on the server, as saved; typing takes over from it. */
   hasNote: boolean;
   words: WeatherModeWords;
   children: ReactNode;
@@ -54,6 +54,10 @@ export default function WeatherModeField({
     setMode(initial);
   }
   const labelId = `${recall.idOf(name)}-label`;
+  // Whether a language's box now says something, once the person has typed in one: the hint follows
+  // what is on screen rather than what was saved. Null until the first keystroke (the stored answer).
+  const [typed, setTyped] = useState<boolean | null>(null);
+  const showHint = typed === null ? !hasNote : !typed;
 
   return (
     <Stack spacing={0.5} data-testid="weather-mode-field">
@@ -88,8 +92,14 @@ export default function WeatherModeField({
         ))}
       </RadioGroup>
       <ShownWhen shown={mode === "custom"} answer={mode}>
-        <Stack spacing={1}>
-          {!hasNote && (
+        <Stack
+          spacing={1}
+          onInput={(event) => {
+            const boxes = event.currentTarget.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[name$=".weatherNote"]');
+            setTyped(Array.from(boxes).some((box) => box.value.trim() !== ""));
+          }}
+        >
+          {showHint && (
             <Typography variant="body2" color="text.secondary" role="status" data-testid="weather-mode-no-note">
               {words.noNote}
             </Typography>

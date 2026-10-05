@@ -106,7 +106,8 @@ export default async function PlaceFields({ event, mayEditSettings, languages }:
           defaultValue={typed ? coordinatesText(typed) : ""}
           {...textFieldConstraints(eventInputConstraints("coordinates"), { inputMode: "decimal" })}
         />
-        {weatherPlace && (
+        {/* Only while the stored choice is the forecast: the club's text and «Fără vreme» read no forecast at all. */}
+        {weatherPlace && weather.mode === "forecast" && (
           <Typography variant="caption" color="text.secondary" component="p" data-testid="weather-place" sx={{ px: 1.75 }}>
             {t(`editor.weatherPlace.${weatherPlace.source}`, {
               coordinates: coordinatesText(weatherPlace.coordinates),

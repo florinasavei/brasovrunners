@@ -63,6 +63,7 @@ import { isBlankValue } from "@/shared/forms/blank-value";
 import { type BilingualText, isWrittenText, missingLanguage, type TextLanguage } from "@/shared/forms/both-languages";
 import { hasRichTextContent, parseRichText, type RichTextDoc, richTextToPlainText } from "@/modules/content/rich-text/domain/schema";
 import { attachYoutubePosters } from "@/modules/media/video-poster";
+import { DEFAULT_WEATHER_MODE, readWeatherMode, type WeatherMode } from "@/modules/weather/domain/mode";
 import {
   type EventFieldsInput,
   eventFieldsSchema,
@@ -1139,7 +1140,7 @@ type OptionalTextColumns = {
  * A rich text is read by the rule the editor's "· incomplet" marks use (`isBlankValue`, §350), so
  * a tab the page marks unfinished and a text the save refuses are always the same text.
  */
-function writtenOptionalTexts(row: OptionalTextColumns) {
+function writtenOptionalTexts(row: OptionalTextColumns, weatherMode: WeatherMode) {
   const writtenDoc = (doc: unknown) => doc !== null && doc !== undefined && !isBlankValue(JSON.stringify(doc));
   return {
     body: writtenDoc(row.bodyJson),
@@ -1152,9 +1153,11 @@ function writtenOptionalTexts(row: OptionalTextColumns) {
     // Nulled by `translationColumnsFrom` outside `EXTERNAL` + `PAID`, so this can never fire
     // there — the same "a hidden box never blocks the save" rule the others follow.
     discountNote: isWrittenText(row.discountNote),
-    // The club's own weather text (§NNN): kept whatever «Vremea» says, so asked in both languages
-    // whatever it says too — a text switched back on is never one language's alone.
-    weatherNote: isWrittenText(row.weatherNote),
+    // The club's own weather text (§NNN) is kept whatever «Vremea» says, but asked in both languages
+    // only while the choice saved is «Text scris de club»: under the forecast or «Fără vreme» its box
+    // is hidden and the text shows nowhere, and a hidden box never blocks the save (§350). The save
+    // that switches back to the club's text is the one that asks for both languages.
+    weatherNote: weatherMode === "custom" && isWrittenText(row.weatherNote),
   };
 }
 
@@ -1175,8 +1178,8 @@ function writtenOptionalTexts(row: OptionalTextColumns) {
  * place's name is required in both languages by the event's own schema since §362 (`placeRule`),
  * where the switch that excuses it (§328) is known.
  */
-function assertOptionalTextsInBothLanguages(rows: Readonly<Record<Locale, OptionalTextColumns>>): void {
-  const missing = textsOwedInOneLanguage(rows);
+function assertOptionalTextsInBothLanguages(rows: Readonly<Record<Locale, OptionalTextColumns>>, weatherMode: unknown): void {
+  const missing = textsOwedInOneLanguage(rows, weatherMode);
   if (missing.length > 0) {
     throw new DomainError("VALIDATION_ERROR", `${missing.join(", ")}: written in the other language only; write both languages or neither`, missing);
   }
@@ -2613,7 +2616,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     */
     const savedRo = savedTranslations.find((row) => row.locale === "ro");
     const savedEn = savedTranslations.find((row) => row.locale === "en");
-    if (savedRo && savedEn) assertOptionalTextsInBothLanguages({ ro: savedRo, en: savedEn });
+    if (savedRo && savedEn) assertOptionalTextsInBothLanguages({ ro: savedRo, en: savedEn }, savedEvent.weatherMode);
 
     // More places than before: the difference goes to the waiting list at once (§147), here,
     // where the row is already locked by the guarded update and the number is not yet committed.
@@ -2938,11 +2941,13 @@ export async function draftEvent<T extends Record<string, unknown>>(db: Database
 /**
  * The optional texts written in one language and not the other (§352), by the box the language
  * still owed posts — the names `assertOptionalTextsInBothLanguages` would refuse, said instead of
- * refused: the preview's «English incomplet» mark (§579).
+ * refused: the preview's «English incomplet» mark (§579). `weatherMode` is the event's «Vremea» as
+ * stored after the save: the weather text is owed in both languages only under the club's text.
  */
-export function textsOwedInOneLanguage(rows: Readonly<Record<Locale, OptionalTextColumns>>): string[] {
-  const ro = writtenOptionalTexts(rows.ro);
-  const en = writtenOptionalTexts(rows.en);
+export function textsOwedInOneLanguage(rows: Readonly<Record<Locale, OptionalTextColumns>>, weatherMode: unknown): string[] {
+  const mode = readWeatherMode(weatherMode);
+  const ro = writtenOptionalTexts(rows.ro, mode);
+  const en = writtenOptionalTexts(rows.en, mode);
   return (Object.keys(ro) as Array<keyof typeof ro>).flatMap((field) => {
     const language = missingLanguage({ ro: ro[field], en: en[field] }, (written) => written);
     return language ? [`translations.${language}.${field}`] : [];
@@ -3058,7 +3063,8 @@ async function prepareEventCreate<T extends Record<string, unknown>>(
     ro: translationColumnsFrom(parsed.translations.ro, parsed.type, discountAllowed),
     en: translationColumnsFrom(parsed.translations.en, parsed.type, discountAllowed),
   };
-  assertOptionalTextsInBothLanguages(translationColumns);
+  // A create that posts no choice stores the column's default, the forecast.
+  assertOptionalTextsInBothLanguages(translationColumns, parsed.weatherMode ?? DEFAULT_WEATHER_MODE);
   // Each language's name for the place, from the Locul box (§362); a caller that posts no English
   // name leaves the English row to the event's, as every event before it did.
   const names = placeNamesFrom(parsed);

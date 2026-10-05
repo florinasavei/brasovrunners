@@ -139,13 +139,14 @@ test.describe("BR-REQ-011-01 the weather block at the event's own place (§416)"
 
 test.describe("BR-REQ-011-01 «Vremea» is the club's to choose (§NNN)", () => {
   test("the club's own text replaces the forecast, in each language, with no credit and no «?»; «Fără vreme» shows none", async ({ page }) => {
-    const custom = await insertDraft({}, "custom", { mode: "custom", ro: "Pe creastă e polei, veniți cu parazăpezi.", en: "The ridge is icy, bring microspikes." });
+    const custom = await insertDraft({}, "custom", { mode: "custom", ro: "Pe creastă e polei, veniți cu colțari.", en: "The ridge is icy, bring microspikes." });
     const off = await insertDraft({}, "off", { mode: "off", ro: "Text păstrat.", en: "Kept text." });
+    const blank = await insertDraft({}, "blank", { mode: "custom" });
     try {
       await signIn(page, "Dev Administrator");
       await page.goto(`/ro/preview/events/${custom}`);
       const weather = weatherRow(page, "Vremea");
-      await expect(weather).toHaveText("Pe creastă e polei, veniți cu parazăpezi.");
+      await expect(weather).toHaveText("Pe creastă e polei, veniți cu colțari.");
       await expect(weather.getByTestId("event-weather-help")).toHaveCount(0);
       await expect(weather).not.toContainText("Parțial noros");
       await noSidewaysScroll(page);
@@ -162,14 +163,25 @@ test.describe("BR-REQ-011-01 «Vremea» is the club's to choose (§NNN)", () => 
       await openEditorBox(page, "Când și unde");
       await expect(page.getByTestId("weather-mode-field")).toBeVisible();
       await expect(page.locator('input[name="event.weatherMode"][value="custom"]')).toBeChecked();
-      await expect(page.locator('input[name="translations.ro.weatherNote"]')).toHaveValue("Pe creastă e polei, veniți cu parazăpezi.");
+      await expect(page.locator('input[name="translations.ro.weatherNote"]')).toHaveValue("Pe creastă e polei, veniți cu colțari.");
       await expect(page.getByTestId("weather-mode-no-note")).toHaveCount(0);
+      // No forecast is read under the club's text, so the line about where it would be read is not drawn.
+      await expect(page.getByTestId("weather-place")).toHaveCount(0);
       // Each radio row is a thumb's target (BR-REQ-041-01 criterion 6).
       const radio = await page.getByTestId("weather-mode-off").boundingBox();
       expect(radio?.height ?? 0).toBeGreaterThanOrEqual(44);
+
+      // No text saved yet: the hint shows, and goes as soon as a language's box says something.
+      await page.goto(`/ro/admin/events/${blank}`);
+      await hydrated(page);
+      await openEditorBox(page, "Când și unde");
+      await expect(page.getByTestId("weather-mode-no-note")).toBeVisible();
+      await page.locator('input[name="translations.ro.weatherNote"]').fill("Polei pe creastă.");
+      await expect(page.getByTestId("weather-mode-no-note")).toHaveCount(0);
     } finally {
       await remove(custom);
       await remove(off);
+      await remove(blank);
     }
   });
 });

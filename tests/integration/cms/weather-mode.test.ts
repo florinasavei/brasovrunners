@@ -72,7 +72,7 @@ const TRANSLATIONS = {
   en: { slug: "tampa-wednesday", title: "Tâmpa, Wednesday", excerpt: "Up the Tâmpa." },
 };
 
-const ICY_RO = "Pe creastă e polei, veniți cu parazăpezi.";
+const ICY_RO = "Pe creastă e polei, veniți cu colțari.";
 const ICY_EN = "The ridge is icy, bring microspikes.";
 
 let db: TestDatabase;
@@ -186,6 +186,29 @@ describe("BR-REQ-050-02 «Vremea»: the forecast, the club's text, or none (§NN
       fields: expect.arrayContaining(["translations.en.weatherNote"]),
     });
     expect(await noteIn(created.id, "ro")).toBeNull();
+  });
+
+  it("a text in one language does not block the save while its box is hidden (§350), and the switch back to the club's text asks for both", async () => {
+    const created = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
+    // «Text scris de club», Romanian typed, then a change of mind to «Fără vreme»: the hidden box saves.
+    await save(created.id, { weatherMode: "off" }, { ro: ICY_RO, en: "" });
+    expect((await reloadEvent(created.id)).weatherMode).toBe("off");
+    expect(await noteIn(created.id, "ro")).toBe(ICY_RO);
+    expect(await noteIn(created.id, "en")).toBeNull();
+    // The same under the forecast.
+    await save(created.id, { weatherMode: "forecast" });
+    expect((await reloadEvent(created.id)).weatherMode).toBe("forecast");
+
+    // Back to the club's text with English still empty: refused on the English box, nothing written.
+    await expect(save(created.id, { weatherMode: "custom" })).rejects.toMatchObject({
+      code: "VALIDATION_ERROR",
+      fields: expect.arrayContaining(["translations.en.weatherNote"]),
+    });
+    expect((await reloadEvent(created.id)).weatherMode).toBe("forecast");
+
+    await save(created.id, { weatherMode: "custom" }, { en: ICY_EN });
+    expect((await reloadEvent(created.id)).weatherMode).toBe("custom");
+    expect(await noteIn(created.id, "en")).toBe(ICY_EN);
   });
 
   it("refuses a text longer than 200 characters and a fourth value of the choice", async () => {

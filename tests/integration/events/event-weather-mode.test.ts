@@ -37,7 +37,7 @@ afterEach(() => {
 
 const HOUR = 60 * 60 * 1000;
 const NOW = new Date("2026-09-24T09:00:00.000Z");
-const ICY = "Pe creastă e polei, veniți cu parazăpezi.";
+const ICY = "Pe creastă e polei, veniți cu colțari.";
 
 function event(overrides: Partial<PublicEvent> = {}): PublicEvent {
   return {

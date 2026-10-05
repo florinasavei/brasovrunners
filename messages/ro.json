@@ -1557,12 +1557,12 @@
         },
         "help": {
           "forecast": "Prognoza pentru locul evenimentului, cu 7 zile înainte: pe pagină, pe card și în reamintire.",
-          "custom": "Textul vostru în locul prognozei, pe pagină și în reamintire. Pe card nu apare nimic.",
+          "custom": "Textul tău în locul prognozei, pe pagină și în reamintire. Pe card nu apare nimic.",
           "off": "Nicio vreme pe pagină, pe card sau în reamintire."
         },
         "noNote": "Nu e scris încă niciun text: pagina nu arată vremea până îl scrii, în ambele limbi.",
         "note": "Textul despre vreme",
-        "noteHelp": "Scurt, cel mult 200 de caractere, de ex. „Pe creastă e polei, veniți cu parazăpezi.”"
+        "noteHelp": "Scurt, cel mult 200 de caractere, de ex. „Pe creastă e polei, veniți cu colțari.”"
       },
       "locationHelp": "Locul, cum i-ai spune unui prieten, în română și în engleză. Dacă numele e același, apasă „Același nume și în engleză”.",
       "locationCopyToEnglish": "Același nume și în engleză",

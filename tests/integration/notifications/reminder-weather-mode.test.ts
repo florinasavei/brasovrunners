@@ -50,7 +50,7 @@ vi.mock("@/modules/weather/source", async (importOriginal) => {
 
 const { renderOutboxMessage } = await import("@/modules/notifications/render");
 
-const ICY_RO = "Pe creastă e polei, veniți cu parazăpezi.";
+const ICY_RO = "Pe creastă e polei, veniți cu colțari.";
 const ICY_EN = "The ridge is icy, bring microspikes.";
 
 describe("BR-REQ-080-01 the reminder's weather follows «Vremea» (§NNN)", () => {
