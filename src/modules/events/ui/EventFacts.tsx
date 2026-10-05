@@ -16,8 +16,9 @@ import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import { forecastPlaceName, rainLikely, type EventForecast, type WeatherReading } from "@/modules/weather/domain/forecast";
 import CardWeather from "@/modules/weather/ui/CardWeather";
-import { WEATHER_GLYPH } from "@/modules/weather/ui/glyphs";
-import { weatherSpanWords, weatherWords } from "@/modules/weather/words";
+import { readsForecast, weatherShown } from "@/modules/weather/domain/mode";
+import { CLUB_WEATHER_GLYPH, WEATHER_GLYPH } from "@/modules/weather/ui/glyphs";
+import { weatherLabel, weatherSpanWords, weatherWords } from "@/modules/weather/words";
 import SocialIcon from "@/shared/ui/SocialIcon";
 import { partnerCardSurface } from "@/theme/surfaces";
 import { coHostDescription, coHostLinkHost, coHostLinkLabel, coHostLinksForPage, primaryCoHostLink, readCoHosts } from "../domain/co-hosts";
@@ -762,7 +763,8 @@ export default async function EventFacts({
     const cardPills: Pill[] = buildRoutePills(event, t, format);
     // The weather at the start, the row's last pill after the cost (§429, amending §416's place for
     // it among the marks above the title): what the day will be like, beside what the route is.
-    const weatherPill = cardWeather ? <CardWeather reading={cardWeather} locale={locale} /> : null;
+    // Only in «Prognoza automată» (§NNN): the club's text is a sentence, not a pill, and «Fără vreme» is none.
+    const weatherPill = cardWeather && readsForecast(event) ? <CardWeather reading={cardWeather} locale={locale} /> : null;
     const pillsRow = cardPills.length > 0 || weatherPill !== null;
 
     /*
@@ -999,7 +1001,7 @@ export default async function EventFacts({
       Likewise the «Cu taxă» pill and the «Cu taxă, la organizator: …» words under it repeat two
       words on purpose: the words say who is paid, which the pill's closed-set word cannot.
     */
-    if (weather) {
+    if (weather && readsForecast(event)) {
       const words = weatherWords(weather.start, locale);
       // No `mr` on this glyph (review finding, §429): the wrapping `Box` already gives it a
       // 0.5 gap from the word beside it, and `HERO_GLYPH_SX`'s own `mr` doubled that space —
@@ -1255,7 +1257,23 @@ export default async function EventFacts({
     The place is the club's locality when the forecast is the club's (`forecastPlaceName`), never a
     meeting point it was not read at.
   */
-  if (weather) {
+  /*
+    «Vremea» is the club's to choose (§NNN): the forecast above, the club's own text in this
+    language, or nothing. The club's text is the row's whole value — the label, a thermometer and the
+    words as written, escaped like every text — with no place and hours (they are the forecast's
+    scope), no Open-Meteo and no «?» (the words are not the forecast's). A language without one has
+    no row (§28). The forecast is read by the caller only in `forecast` (`forecastForEvent`), so
+    `weather` is null in the other two whatever this row decides.
+  */
+  const shownWeather = weatherShown(event, event);
+  if (shownWeather?.kind === "custom") {
+    rows.push({
+      key: "weather",
+      label: weatherLabel(locale),
+      icon: CLUB_WEATHER_GLYPH,
+      value: <Box data-testid="event-weather-note">{shownWeather.text}</Box>,
+    });
+  } else if (weather && shownWeather?.kind === "forecast") {
     const words = weatherSpanWords(weather, locale, {
       place: forecastPlaceName(weather.place, event.locationName, CLUB_LOCALITY),
       timeZone: event.timezone,

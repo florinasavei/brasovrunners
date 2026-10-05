@@ -218,6 +218,11 @@ const PUBLIC_COLUMNS = {
   // event, null everywhere but an `EXTERNAL`-registration, `PAID` one — the service clears it
   // elsewhere, so a null here means "no discount stated" rather than "read the box".
   discountNote: eventTranslations.discountNote,
+  // «Vremea» (§NNN): whose weather the page and the card show — the forecast, the club's own text in
+  // this language, or none (`weather/domain/mode.ts#weatherShown`). The text is this row's, never
+  // the other language's: a language without one shows no weather (§28).
+  weatherMode: events.weatherMode,
+  weatherNote: eventTranslations.weatherNote,
   // The programme's rows (§117), the event's own; read through `readScheduleItems`. Without
   // their places while the place is to be announced (§328).
   scheduleItems: publicScheduleItems,
@@ -651,6 +656,10 @@ export async function findEventNotificationRows<T extends Record<string, unknown
       minAge: events.minAge,
       // The night override (§394): with the start and the zone, whether the reminder says to bring a light.
       nightOverride: events.nightOverride,
+      // «Vremea» (§NNN): whether the reminder's weather line is the forecast, the club's own text in
+      // each half's language, or nothing.
+      weatherMode: events.weatherMode,
+      weatherNote: eventTranslations.weatherNote,
       // Whether the reminder's night line calls it a run rather than an event (§394).
       type: events.type,
       // The route pills' source (`RouteFactsSource`) carries it, as the page's row does.

@@ -221,6 +221,14 @@ export const events = pgTable(
     longitude: doublePrecision("longitude"),
 
     /**
+     * «Vremea» (§NNN, amending §402 and §469): whose weather the event shows — `forecast` (Open-Meteo
+     * at the event's place, the default and every event's behaviour before the column), `custom`
+     * (the club's own text, `event_translations.weather_note`, in its place) or `off` (none).
+     * Read through `weather/domain/mode.ts#readWeatherMode`, which reads anything else as the forecast.
+     */
+    weatherMode: text("weather_mode").notNull().default("forecast"),
+
+    /**
      * The course: where the run actually goes (BR-REQ-011-01 criterion 8).
      *
      * A link and never a file, because media storage is deferred (`AGENTS.md` §17) and there is
@@ -770,6 +778,8 @@ export const events = pgTable(
     ),
 
     check("events_map_url_is_https", sql`${t.mapUrl} IS NULL OR ${t.mapUrl} LIKE 'https://%'`),
+    // «Vremea» (§NNN): one of the three; the domain's `WEATHER_MODES` says the same in words.
+    check("events_weather_mode_known", sql`${t.weatherMode} IN ('forecast', 'custom', 'off')`),
     // The club's scale of fifteen (§526): five bands of three steps.
     check("events_difficulty_level_in_scale", sql`${t.difficultyLevel} IS NULL OR ${t.difficultyLevel} BETWEEN 1 AND 15`),
     // «Coordonate» (§416): both or neither, each in its range — a pair the forecast can ask for. The
@@ -1008,6 +1018,15 @@ export const eventTranslations = pgTable(
      * rights leaves no stale note nobody can read.
      */
     discountNote: text("discount_note"),
+
+    /**
+     * The club's own weather text, per language (§NNN): shown in place of the forecast — on the page's
+     * «Vremea» row and the reminder's line — while `events.weather_mode` is `custom`, and kept, unread,
+     * while it is not, so switching back finds it. Plain text, at most 200 characters (checked in
+     * `content/events/fields.ts`, as `discount_note` is), both languages or neither (§352). A language
+     * without one shows no weather at all (§28), never the other language's words.
+     */
+    weatherNote: text("weather_note"),
 
     // AGENTS.md §12.4. The author is what turns "an Author edits their own drafts"
     // (BR-REQ-051-01 criterion 1) into a rule the server can check rather than a description.

@@ -579,7 +579,7 @@ yarn idle:measure --hours 1 --vercel-project <name>   plus the last hour of Verc
 | Vercel edge requests | an open public tab asked `/api/build-id` every minute (1 440 a day, CDN hits) | a public tab asks only when shown again; the backoffice every minute while visible | — |
 | Cloudflare Turnstile | the script and a challenge on every view of the registration, contact and declaration pages and of an event page with the interest box; a siteverify probe from every health check (cached 15 min) | nothing until a person focuses, presses or types in a protected form; the probe only in the daily deep check and `/admin/tasks` | one challenge per form a person starts; siteverify on submit |
 | DeepL, Neon's API | read by every health check (cached an hour and 15 minutes) | only by the deep check and the backoffice pages | — |
-| Open-Meteo | none (fetched only inside a page's render, one entry per place and hour, §402, §549) | unchanged | a render of a page that shows the forecast, once per hour per place |
+| Open-Meteo | none (fetched only inside a page's render, one entry per place and hour, §402, §549; never for an event whose «Vremea» is the club's own text or «Fără vreme») | unchanged | a render of a page that shows the forecast, once per hour per place |
 | R2, Mailgun | none on a timer; the picture sweep ran on every hourly safety run | the sweep runs once a day | a photo upload; an email a person caused |
 | GitHub Actions | `scheduled-jobs.yml` said every five minutes (GitHub ran it every three to five hours) | four times a day, as the backstop it is | — |
 

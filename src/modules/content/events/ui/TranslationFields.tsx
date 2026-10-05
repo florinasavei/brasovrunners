@@ -72,6 +72,7 @@ export type TranslationDraft = Pick<
   | "seoTitle"
   | "seoDescription"
   | "discountNote"
+  | "weatherNote"
 > &
   Partial<Pick<EditableTranslation, "id" | "version" | "eventId">>;
 
@@ -92,6 +93,7 @@ export function blankTranslation(locale: Locale): TranslationDraft {
     seoTitle: null,
     seoDescription: null,
     discountNote: null,
+    weatherNote: null,
   };
 }
 
@@ -418,6 +420,31 @@ export async function DiscountNoteFields({ translation, mayEdit }: PieceProps) {
         {...box("discountNote")}
       />
       {translateButton(translation, name("discountNote"))}
+    </>
+  );
+}
+
+/**
+ * The club's own weather text (§NNN): one short line per language, in the place's card under
+ * «Vremea», read in place of the forecast while «Text scris de club» is chosen (`WeatherModeField`).
+ * Plain text, 200 characters at most — the box's own limit, off `fields.ts`.
+ */
+export async function WeatherNoteFields({ translation, mayEdit }: PieceProps) {
+  const t = await getTranslations("Admin");
+  const name = named(translation);
+  if (!mayEdit) {
+    return <ReadOnlyLine label={t("editor.weather.note")} value={translation.weatherNote || t("editor.boxes.summary.empty")} />;
+  }
+  return (
+    <>
+      <RecallField
+        name={name("weatherNote")}
+        label={t("editor.weather.note")}
+        helperText={t("editor.weather.noteHelp")}
+        defaultValue={translation.weatherNote ?? ""}
+        {...box("weatherNote")}
+      />
+      {translateButton(translation, name("weatherNote"))}
     </>
   );
 }
