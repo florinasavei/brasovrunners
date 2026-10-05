@@ -1,4 +1,5 @@
-import { sql, and, eq, gt, isNotNull, isNull, lte, ne } from "drizzle-orm";
+import { sql, and, eq, gt, inArray, isNotNull, isNull, lte, ne } from "drizzle-orm";
+import { emailOutbox } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
@@ -12,6 +13,7 @@ import {
   AUTOMATIC_SEND_KEYS,
   isDeclarationLastCallDue,
   type LastCallDeadlines,
+  lastCallDeadline,
   lastCallKey,
   isEventReminderDue,
   isParticipationConfirmationDue,
@@ -122,7 +124,25 @@ export async function queueParticipationConfirmations<T extends Record<string, u
 ): Promise<number> {
   // Only the holds the window gave, inside the window (`isParticipationConfirmationDue`): the
   // club's hold (§377) taken inside the window is a person signing right now.
-  const waiting = (await selectDeclarationCandidates(db, { from: now })).filter((row) => isParticipationConfirmationDue(row, now));
+  const due = (await selectDeclarationCandidates(db, { from: now })).filter((row) => isParticipationConfirmationDue(row, now));
+  if (due.length === 0) return 0;
+  // The ask yields to a last call already in the outbox for the same deadline (§NNN): a save that
+  // opened the window with that deadline's last call due within the hour queued the last call
+  // (`movedEmailKey`), and an ask after it says nothing new. In the ordinary order the last call comes
+  // after the opening (`windowLastCallAt`), so no such row exists when the ask is due.
+  const lastCalls = new Map(due.filter((row) => lastCallDeadline(row) !== null).map((row) => [row.registrationId, lastCallKey(row.registrationId, row)]));
+  const already =
+    lastCalls.size === 0
+      ? new Set<string>()
+      : new Set(
+          (
+            await db
+              .select({ key: emailOutbox.idempotencyKey })
+              .from(emailOutbox)
+              .where(inArray(emailOutbox.idempotencyKey, [...lastCalls.values()]))
+          ).map((email) => email.key),
+        );
+  const waiting = due.filter((row) => !already.has(lastCalls.get(row.registrationId) ?? ""));
   if (waiting.length === 0) return 0;
 
   let queued = 0;

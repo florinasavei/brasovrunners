@@ -357,6 +357,25 @@ describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (Â
     expect(await declarationEmails()).toHaveLength(1);
   });
 
+  it("a save that opens the window with the new deadline's last call due within the hour sends that last call alone: the job's ask yields to it", async () => {
+    // 7 / 2, saved 15 / 5 half an hour before 7 days out: the window opens now and the new deadline's
+    // last call (48 hours before 16 Nov) is due in 30 minutes. One email, under the last call's key.
+    const event = await seedEvent(2);
+    await db.update(events).set({ confirmationOpensDaysBefore: 7 }).where(eq(events.id, event.id));
+    const real = await seedRow(event.id, { status: "PENDING_DECLARATION", holdExpiresAt: before(2) });
+    const at = new Date(before(7).getTime() - 30 * MINUTE);
+    const result = await saveWindow(event.id, 15, 5, at);
+    expect(result.holdsMoved).toEqual({ moved: 1, test: 0, to: before(5), queued: 1 });
+    const [email, ...rest] = await declarationEmails();
+    expect(rest).toHaveLength(0);
+    expect(email.idempotencyKey).toBe(`registration:${real.id}:sign-reminder:${before(5).toISOString()}`);
+    expect(await queueParticipationConfirmations(db, at)).toBe(0);
+    const later = new Date(at.getTime() + 60 * MINUTE);
+    expect(await queueParticipationConfirmations(db, later)).toBe(0);
+    expect(await queueEventReminders(db, later, DEFAULT_DEADLINES)).toBe(0);
+    expect(await declarationEmails()).toHaveLength(1);
+  });
+
   it("an email that left within the hour does not hold back an earlier deadline's: the move's email goes", async () => {
     // Earlier: the ask stated 18 Nov, the save 30 minutes later owes the signature by 16 Nov â€” told at once.
     const event = await seedEvent(3);
