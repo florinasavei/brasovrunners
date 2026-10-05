@@ -332,6 +332,27 @@ export function participationConfirmationDueAt(candidate: ParticipationCandidate
   return isParticipationConfirmationDue(candidate, at) ? at : null;
 }
 
+/**
+ * The outbox key of the last call the window's ask yields to (§NNN), or null when it yields to none:
+ * a row whose hold ends at the window's deadline (`lastCallDeadline`) has a last call for that
+ * deadline, and once that is in the outbox an ask after it says nothing new — a save that opened the
+ * window with the deadline's last call due within the hour queued the last call (`movedEmailKey`).
+ * The job reads these keys from the outbox before it asks; the forecast reads them with its own.
+ */
+export function askYieldsToKey(registrationId: string, candidate: ParticipationCandidate & LastCallCandidate): string | null {
+  return lastCallDeadline(candidate) ? lastCallKey(registrationId, candidate) : null;
+}
+
+/** Whether the window's ask is left out because the last call for the same deadline is already in the outbox (`queued`: the keys found there). */
+export function askYieldsToLastCall(
+  registrationId: string,
+  candidate: ParticipationCandidate & LastCallCandidate,
+  queued: ReadonlySet<string>,
+): boolean {
+  const key = askYieldsToKey(registrationId, candidate);
+  return key !== null && queued.has(key);
+}
+
 // --- "Registration is open" (§146) --------------------------------------------------------------
 
 export type InterestEvent = RegistrationWindowInput & {

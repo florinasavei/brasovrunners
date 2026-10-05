@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import {
   AUTOMATIC_SEND_KEYS,
+  askYieldsToKey,
+  askYieldsToLastCall,
   declarationLastCallDueAt,
   isDeclarationLastCallDue,
   lastCallDeadline,
@@ -66,5 +68,18 @@ describe("§NNN the last call before a window's deadline", () => {
     }
     // A caller with no window to hand (the job's plan per event) reads the same start rule.
     expect(declarationLastCallDueAt({ startsAt: START, reminderHoursBefore: 72 }, DEFAULT_DEADLINES)).toEqual(before(72 * HOUR));
+  });
+
+  it("the window's ask yields to the last call for the same deadline once that is in the outbox — the job's rule and the forecast's", () => {
+    const key = lastCallKey("r1", held);
+    expect(askYieldsToKey("r1", held)).toBe(key);
+    expect(askYieldsToLastCall("r1", held, new Set([key]))).toBe(true);
+    expect(askYieldsToLastCall("r1", held, new Set())).toBe(false);
+    // A last call for another deadline, or the start's one-per-registration key, is not this deadline's.
+    expect(askYieldsToLastCall("r1", held, new Set([`registration:r1:sign-reminder:${before(4 * DAY).toISOString()}`, "registration:r1:sign-reminder"]))).toBe(false);
+    // A row whose hold is not the window's deadline yields to nothing.
+    const clubMinutes = { ...race, holdExpiresAt: new Date(DEADLINE.getTime() + 30 * 60_000) };
+    expect(askYieldsToKey("r1", clubMinutes)).toBeNull();
+    expect(askYieldsToLastCall("r1", clubMinutes, new Set(["registration:r1:sign-reminder"]))).toBe(false);
   });
 });

@@ -14,6 +14,7 @@ import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository
 import { previewWindowHolds } from "@/modules/registrations/window-holds";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { queueEventReminders, queueParticipationConfirmations } from "@/modules/notifications/event-mail";
+import { forecastAutomaticEmails } from "@/modules/notifications/forecast";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -369,6 +370,9 @@ describe("BR-REQ-033-01 a changed confirmation window moves the holds it gave (�
     const [email, ...rest] = await declarationEmails();
     expect(rest).toHaveLength(0);
     expect(email.idempotencyKey).toBe(`registration:${real.id}:sign-reminder:${before(5).toISOString()}`);
+    // The forecast on «Emailuri» reads the same guard (§383): no ask, and no last call — it is queued.
+    const forecast = await forecastAutomaticEmails(db, { now: at, horizonDays: 14, deadlines: DEFAULT_DEADLINES });
+    expect(forecast.filter((row) => row.registrationIds.includes(real.id) && (row.send === "participation" || row.send === "lastCall"))).toEqual([]);
     expect(await queueParticipationConfirmations(db, at)).toBe(0);
     const later = new Date(at.getTime() + 60 * MINUTE);
     expect(await queueParticipationConfirmations(db, later)).toBe(0);
