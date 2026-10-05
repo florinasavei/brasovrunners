@@ -655,7 +655,18 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
   const eventId = text(form, "eventId");
   const path = editorPath(locale, eventId);
 
-  let outcome: { error?: string; saved?: string; applied?: string; offered?: string; announced?: string; notice?: string; queued?: string };
+  let outcome: {
+    error?: string;
+    saved?: string;
+    applied?: string;
+    offered?: string;
+    announced?: string;
+    notice?: string;
+    queued?: string;
+    moved?: string;
+    movedTo?: string;
+    movedSent?: string;
+  };
   try {
     const actor = await requireStaff();
     const editsEventRow = text(form, "event.expectedVersion") !== "";
@@ -664,7 +675,7 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
     const ticked = form.getAll("dates").filter((value): value is string => typeof value === "string" && value !== "");
     const scope = text(form, "scope");
 
-    const { appliedTo, offered, placeAnnounced, notice } = await saveEventAndTranslations(getDb(), {
+    const { appliedTo, offered, placeAnnounced, holdsMoved, notice } = await saveEventAndTranslations(getDb(), {
       actor,
       eventId,
       fields: editsEventRow ? eventFieldsFrom(form) : undefined,
@@ -695,6 +706,14 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
     outcome = {
       ...(appliedTo > 0 ? { saved: "eventSeries", applied: String(appliedTo) } : { saved: "event" }),
       offered: offered > 0 ? String(offered) : undefined,
+      // The reserved places the window's move carried (§NNN): how many, to when, whether they were emailed — a count and an instant, never who.
+      ...(holdsMoved.moved > 0
+        ? {
+            moved: String(holdsMoved.moved),
+            movedTo: holdsMoved.to?.toISOString(),
+            movedSent: holdsMoved.queued > 0 ? "1" : undefined,
+          }
+        : {}),
       // The save that announced the place (§328): the banner says it is public now. A flag, never
       // the place itself — nothing typed goes in a URL. When the organizer also told the
       // participants, the notice's own banner says so, and "nobody was written to" would be false.

@@ -88,6 +88,7 @@ import GlyphButton from "@/shared/ui/GlyphButton";
 import Panel from "@/shared/ui/Panel";
 import InfoTip from "@/shared/ui/InfoTip";
 import { previewDeclarationResend } from "@/modules/registrations/bulk-resend";
+import { previewWindowHolds } from "@/modules/registrations/window-holds";
 import { countBibs, spareCardState } from "@/modules/registrations/bibs";
 import { SPARE_BIBS_PER_PRINT, spareRangeOfQuery } from "@/modules/registrations/domain/spare-bibs";
 import { countInterests } from "@/modules/registrations/interest";
@@ -134,7 +135,7 @@ import { startBoxValues, typedStartOrNull } from "@/modules/events/domain/provis
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string; announced?: string; notice?: string; queued?: string; count?: string; from?: string; to?: string; erased?: string; recent?: string; limited?: string; testQueued?: string } & Partial<Record<keyof PlacesTaken, string>>>;
+  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string; announced?: string; notice?: string; queued?: string; moved?: string; movedTo?: string; movedSent?: string; count?: string; from?: string; to?: string; erased?: string; recent?: string; limited?: string; testQueued?: string } & Partial<Record<keyof PlacesTaken, string>>>;
 };
 
 export const dynamic = "force-dynamic";
@@ -182,7 +183,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   // A malformed id is the same 404 an unknown one gets, not the query Postgres refuses (§376).
   if (!isUuid(id)) notFound();
   const query = await searchParams;
-  const { error, saved, assigned, total, notConfirmed, test, created, applied, offered, notPublished: notPublishedParam, announced, notice: noticeParam, queued, from: spareFrom, to: spareTo, erased, recent, limited, testQueued } = query;
+  const { error, saved, assigned, total, notConfirmed, test, created, applied, offered, notPublished: notPublishedParam, announced, notice: noticeParam, queued, from: spareFrom, to: spareTo, erased, recent, limited, testQueued, moved, movedTo, movedSent } = query;
   // What the save told the participants (§331), matched against the words there are — the query
   // string is typed by anybody, and it reaches `t("editor.notice.<x>")`.
   const noticeOutcome = (["update", "none", "cancelled", "cancelledQuiet", "cancelledNobody"] as const).find((kind) => kind === noticeParam);
@@ -218,6 +219,26 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   // count arrives in the query string, so anything that is not a number reads as none.
   const countOf = (raw: string | undefined) => (Number.isFinite(Number(raw)) ? Number(raw) : 0);
   const datesWords = (raw: string | undefined) => tEvent(`series.count.${countForm(countOf(raw), locale)}`, { count: countOf(raw) });
+  /*
+    The reserved places the save moved with the window (§NNN): a count and an instant from the query
+    string — typed by anybody, so a count that is no whole number shows nothing, and an instant that is
+    no date leaves the sentence without one.
+  */
+  const movedCount = /^\d+$/.test(moved ?? "") ? Number(moved) : 0;
+  const movedInstant = movedTo && !Number.isNaN(Date.parse(movedTo)) ? new Date(movedTo) : null;
+  const holdsMovedLine =
+    movedCount > 0
+      ? `${
+          movedInstant
+            ? t(`editor.holdsMoved.${countForm(movedCount, locale)}`, {
+                count: movedCount,
+                due: formatDay(movedInstant, { locale, timeZone: event.timezone, style: "short", withTime: true, position: "inline" }),
+              })
+            : t(`editor.holdsMovedSeries.${countForm(movedCount, locale)}`, { count: movedCount })
+        }${movedSent === "1" ? ` ${t("editor.holdsMovedSent")}` : ""}`
+      : null;
+  // What the window's move does on the next save (§NNN), from the move's own rules on the stored window.
+  const windowHolds = internal ? await previewWindowHolds(db, event, now, deadlines.holdMinutes) : null;
   /*
     The minor's paper form (§330) only where the declaration in effect, in the language the form
     prints in, asks the minor to sign.
@@ -669,6 +690,12 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             </Alert>
           )}
           {saved === "event" && offered && <Alert severity="success">{t("editor.savedOffered", { offered })}</Alert>}
+          {/* The reserved places the window's move carried (§NNN), under whichever banner the save gave. */}
+          {holdsMovedLine && (saved === "event" || saved === "eventSeries") && (
+            <Alert severity="info" sx={{ mt: 1 }} data-testid="holds-moved">
+              {holdsMovedLine}
+            </Alert>
+          )}
           {/* A batch of test rows that met the waiting list's limit part-way (§350, the waiting-list
               cap): how many went in, and that the rest were refused as a real registration would be.
               A counted phrase — "1 înscriere", "19 înscrieri", "20 de înscrieri". */}
@@ -897,6 +924,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     locale={locale}
                     now={now}
                     clubDeadlines={deadlines}
+                    windowHolds={windowHolds}
                     bibPrint={
                       bibCounts ? (
                         <BibPrintCard

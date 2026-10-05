@@ -31,6 +31,7 @@ export const DEADLINE_KEYS = [
   "holdMinutes",
   "offerHours",
   "reminderHours",
+  "lastCallHours",
   "selfCheckinHours",
   "raceWeekDays",
   "seriesHorizonDays",
@@ -69,6 +70,10 @@ export type DeadlineRule = {
  * - the **waiting-list offer** 6 to 72 hours: a night's sleep at least, three days at most, and
  *   always capped by the close and the start anyway (`capHoldExpiry`);
  * - the **reminder** 0 (none) to 168 hours — a week, the per-event column's CHECK as well;
+ * - the **last call to sign before a window's deadline** (§NNN) 0 (none) to 168 hours, 48 by default:
+ *   on an event whose participation window is due before the start, the declaration goes once more
+ *   this long before that deadline, to whoever holds a place until it — a week at most, like the
+ *   reminder, and by default the reminder's own two days;
  * - **"I am here"** 1 to 72 hours before the start;
  * - **race week** 0 (the race day only) to 21 days;
  * - the **series horizon** 14 to 182 days: two weeks is the least a listing should show ahead,
@@ -107,6 +112,7 @@ export const DEADLINE_RULES: Record<DeadlineKey, DeadlineRule> = {
   holdMinutes: { unit: "minutes", min: 10, max: 120, default: 30 },
   offerHours: { unit: "hours", min: 6, max: 72, default: 24 },
   reminderHours: { unit: "hours", min: 0, max: 168, default: 48 },
+  lastCallHours: { unit: "hours", min: 0, max: 168, default: 48 },
   selfCheckinHours: { unit: "hours", min: 1, max: 72, default: 24 },
   raceWeekDays: { unit: "days", min: 0, max: 21, default: 7 },
   seriesHorizonDays: { unit: "days", min: 14, max: 182, default: 56 },
@@ -156,6 +162,7 @@ export const deadlinesSettingSchema = z
     holdMinutes: bounded("holdMinutes"),
     offerHours: bounded("offerHours"),
     reminderHours: bounded("reminderHours"),
+    lastCallHours: bounded("lastCallHours"),
     selfCheckinHours: bounded("selfCheckinHours"),
     raceWeekDays: bounded("raceWeekDays"),
     seriesHorizonDays: bounded("seriesHorizonDays"),

@@ -776,6 +776,7 @@
           "address_vouched_by_staff": "Adresă garantată de echipă; loc dat înaintea listei de așteptare («Dă-i un loc acum»)",
           "outside_capacity_changed": "Pus pe lista de invitați speciali sau scos de pe ea",
           "deadline_moved_for_outage": "Termen mutat: site-ul nu a putut fi accesat, ceasul a stat pe loc",
+          "hold_moved_by_window": "Termenul semnării mutat după fereastra de confirmare schimbată",
           "not_revived_for_outage": "Nereluat după întreruperea site-ului: termenul trecuse cât nu putea fi accesat, iar locul fusese dat între timp sau cererea expirase deja",
           "answer_corrected": "Răspuns corectat: {field}",
           "answers_viewed": "Datele înscrierii deschise, cu telefonul și persoana de contact"
@@ -1748,6 +1749,17 @@
       "savedSeriesOfferedOne": "Salvat — și pe încă {dates} a seriei; locuri oferite listei de așteptare: {offered}.",
       "savedSeriesOfferedMany": "Salvat — și pe încă {dates} ale seriei; locuri oferite listei de așteptare: {offered}.",
       "savedOffered": "Salvat — locuri oferite listei de așteptare: {offered}.",
+      "holdsMoved": {
+        "one": "Salvarea a mutat 1 loc rezervat la termenul nou, {due}.",
+        "few": "Salvarea a mutat {count} locuri rezervate la termenul nou, {due}.",
+        "other": "Salvarea a mutat {count} de locuri rezervate la termenul nou, {due}."
+      },
+      "holdsMovedSeries": {
+        "one": "Salvarea a mutat 1 loc rezervat la termenul nou al datei lui.",
+        "few": "Salvarea a mutat {count} locuri rezervate la termenul nou al fiecărei date.",
+        "other": "Salvarea a mutat {count} de locuri rezervate la termenul nou al fiecărei date."
+      },
+      "holdsMovedSent": "Fereastra e deja deschisă, așa că fiecare primește din nou emailul cu declarația și termenul nou.",
       "placeAnnouncedLive": "Locația e anunțată: apare pe pagină, pe carduri, în calendar și în emailurile de acum încolo. Cei înscriși nu primesc un email separat despre ea.",
       "placeAnnouncedDraft": "Locația e anunțată: va apărea pe toate paginile când evenimentul e publicat. Nimeni nu primește un email despre ea.",
       "scope": {
@@ -2118,7 +2130,17 @@
           "title": "Fereastra de confirmare",
           "dates": "Pentru {date}: cerută din {opens}, termen {due}.",
           "datesAtStart": "Pentru {date}: cerută din {opens}, termen la start — locul nu expiră înainte de start.",
-          "datesOff": "Fără fereastră: semnătura se cere la înscriere ({hold}), ca la antrenamentele săptămânale."
+          "datesOff": "Fără fereastră: semnătura se cere la înscriere ({hold}), ca la antrenamentele săptămânale.",
+          "moveNow": {
+            "one": "Salvarea mută 1 loc rezervat la termenul ferestrei, {due}; dacă schimbi numerele, la termenul nou.",
+            "few": "Salvarea mută {count} locuri rezervate la termenul ferestrei, {due}; dacă schimbi numerele, la termenul nou.",
+            "other": "Salvarea mută {count} de locuri rezervate la termenul ferestrei, {due}; dacă schimbi numerele, la termenul nou."
+          },
+          "follow": {
+            "one": "1 loc rezervat ține până {due}. Dacă schimbi numerele, salvarea îl mută la termenul nou.",
+            "few": "{count} locuri rezervate țin până {due}. Dacă schimbi numerele, salvarea le mută la termenul nou.",
+            "other": "{count} de locuri rezervate țin până {due}. Dacă schimbi numerele, salvarea le mută la termenul nou."
+          }
         },
         "bibs": {
           "title": "Numere de concurs (BIB)",
@@ -5047,6 +5069,8 @@
       "neverSent": "nu se mai trimite",
       "lastCall": "Odată cu reminderul — cu {reminder} înainte de start, sau cât e ales pe eveniment — pleacă o ultimă dată, către cine încă nu a semnat.",
       "lastCallOff": "Pentru un eveniment care are ales un reminder, pleacă o ultimă dată odată cu el, către cine încă nu a semnat.",
+      "lastCallWindow": "La o cursă cu termen de confirmare înainte de start, pleacă în schimb cu {lastCall} înaintea termenului, către cine are locul ținut până la el.",
+      "lastCallWindowOff": "La o cursă cu termen de confirmare înainte de start, nu pleacă nicio ultimă chemare înaintea termenului.",
       "reminderOff": {
         "when": "Oprit implicit: pleacă doar la evenimentele care au ales un reminder în editor, o dată, tuturor celor confirmați.",
         "whenShort": "doar unde evenimentul are ales un reminder"
@@ -5062,6 +5086,7 @@
           "holdMinutes": "Locul e ținut pentru semnarea declarației (minute)",
           "offerHours": "Oferta de pe lista de așteptare stă deschisă (ore)",
           "reminderHours": "Reminderul pleacă înainte de start cu (ore)",
+          "lastCallHours": "Ultima chemare la semnat pleacă înaintea termenului ferestrei cu (ore)",
           "selfCheckinHours": "„Am ajuns” se poate apăsa înainte de start cu (ore)",
           "raceWeekDays": "Numărătoarea inversă de pe prima pagină începe cu (zile înainte)",
           "seriesHorizonDays": "O serie își are datele create înainte cu (zile)",
@@ -5076,6 +5101,7 @@
           "holdMinutes": "Pentru un eveniment fără fereastră de confirmare, sau aflat deja în ea. O cursă mai departe de fereastră ține locul până la termenul ales pe eveniment.",
           "offerHours": "Cât are primul de pe listă ca să semneze; niciodată după închiderea înscrierilor sau după start.",
           "reminderHours": "0 = fără reminder. Un eveniment își poate alege altceva, în editor, la „Participare și înscrieri”.",
+          "lastCallHours": "Cu câte ore înaintea termenului ferestrei pleacă ultima chemare la semnat. 0 = niciuna înaintea termenului.",
           "selfCheckinHours": "Butonul din pagina participantului, „Am ajuns — marchează-mă prezent”.",
           "raceWeekDays": "0 = doar în ziua cursei. Din aceeași zi, cardul de tipărire a numerelor din editor se deschide singur.",
           "seriesHorizonDays": "Datele deja create rămân dacă micșorezi numărul; se completează singure dacă îl mărești.",
