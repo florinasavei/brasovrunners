@@ -694,7 +694,7 @@ export function renderBilingual(
     */
     ...(data.eventTitleOther ? { eventTitle: data.eventTitleOther } : {}),
     ...(data.eventChecklistOther !== undefined ? { eventChecklist: data.eventChecklistOther ?? undefined } : {}),
-    // The club's weather text in the second half's language (§NNN), or no row there — never the first half's words.
+    // The club's weather text in the second half's language (§666), or no row there — never the first half's words.
     ...(data.eventWeatherNoteOther !== undefined ? { eventWeatherNote: data.eventWeatherNoteOther ?? undefined } : {}),
     // The organizer's own words in the second half's language (§354, bilingual everywhere) —
     // absent only for a row queued with one text, which both halves then read as before.
@@ -859,7 +859,7 @@ export type TemplateData = {
    */
   eventWeather?: EventForecast;
   /**
-   * The club's own weather text in place of the forecast (§NNN), on the reminder only, when the
+   * The club's own weather text in place of the forecast (§666), on the reminder only, when the
    * event's «Vremea» is «Text scris de club» and this half's language has one — the facts block's
    * «Vremea» row says it as written, with no credit. Absent otherwise: no row.
    */
@@ -3057,7 +3057,7 @@ export function buildTemplateContent(
           timeZone: data.eventFacts.timezone,
         })
       : undefined;
-  // Or the club's own words (§NNN): «Vremea», then the text as written — no place, no hours, no credit.
+  // Or the club's own words (§666): «Vremea», then the text as written — no place, no hours, no credit.
   const weatherRow = weatherWordsForRow
     ? { label: weatherWordsForRow.heading, line: weatherWordsForRow.line, credit: weatherWordsForRow.credit }
     : messageType === "EVENT_REMINDER" && data.eventWeatherNote

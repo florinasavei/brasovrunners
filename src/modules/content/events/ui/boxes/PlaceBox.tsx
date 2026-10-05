@@ -7,6 +7,7 @@ import { textFieldConstraints } from "@/shared/forms/constraints";
 import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import { CLUB_LOCALITY, placeInBox } from "@/modules/events/domain/place";
 import { readWeatherMode, WEATHER_MODES } from "@/modules/weather/domain/mode";
+import { WEATHER_WINDOW_DAYS } from "@/modules/weather/domain/forecast";
 import { coordinatesText, forecastPlace, typedCoordinates } from "@/modules/weather/domain/place";
 import { env } from "@/shared/config/env";
 import { eventInputConstraints } from "../../constraints";
@@ -55,7 +56,7 @@ export default async function PlaceFields({ event, mayEditSettings, languages }:
 
   if (!mayEditSettings) {
     // The choice is the Organizer's, with the place; the club's text is the words' — a reader with
-    // text rights writes it here while the stored choice is «Text scris de club» (§NNN).
+    // text rights writes it here while the stored choice is «Text scris de club» (§666).
     return (
       <Stack spacing={2}>
         <Typography variant="body2">{placeSummary(words, event, translations)}</Typography>
@@ -116,7 +117,7 @@ export default async function PlaceFields({ event, mayEditSettings, languages }:
           </Typography>
         )}
       </PlaceToBeAnnounced>
-      {/* «Vremea» (§NNN), beside the line that says where the forecast is read, and outside the place's
+      {/* «Vremea» (§666), beside the line that says where the forecast is read, and outside the place's
           switch: an event whose place is announced later still has a choice about its weather. */}
       <WeatherModeField name="event.weatherMode" defaultMode={weather.mode} hasNote={weather.hasNote} words={weather.words}>
         {weather.panels}
@@ -126,7 +127,7 @@ export default async function PlaceFields({ event, mayEditSettings, languages }:
 }
 
 /**
- * «Vremea»'s parts (§NNN): the stored choice (the forecast on the create page), whether any language
+ * «Vremea»'s parts (§666): the stored choice (the forecast on the create page), whether any language
  * has a text, the words, and the club's text once per language — the discount note's strip
  * (`CostBox`), one short line per language, with the house's same-text warning.
  */
@@ -136,7 +137,10 @@ async function weatherParts(event: BoxProps["event"], languages: readonly Langua
   const words: WeatherModeWords = {
     label: t("editor.weather.label"),
     choices: Object.fromEntries(
-      WEATHER_MODES.map((choice) => [choice, { label: t(`editor.weather.modes.${choice}`), help: t(`editor.weather.help.${choice}`) }]),
+      WEATHER_MODES.map((choice) => [
+        choice,
+        { label: t(`editor.weather.modes.${choice}`), help: t(`editor.weather.help.${choice}`, { days: WEATHER_WINDOW_DAYS }) },
+      ]),
     ) as WeatherModeWords["choices"],
     noNote: t("editor.weather.noNote"),
   };

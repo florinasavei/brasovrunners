@@ -203,7 +203,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     // The club's discount on an external event's own fee (`DECISIONS.md` §394), under the same
     // box the cost boxes live in.
     discountNote: ["registration", t("editor.discountNote")],
-    // The club's own weather text (§NNN), in the place's card under «Vremea».
+    // The club's own weather text (§666), in the place's card under «Vremea».
     weatherNote: ["whenWhere", `${t("editor.weather.label")} › ${t("editor.weather.note")}`],
   };
   for (const locale of routing.locales) {

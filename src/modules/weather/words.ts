@@ -195,7 +195,7 @@ export function weatherListWords(locale: "ro" | "en"): { atStart: string; credit
 }
 
 /**
- * The row's label alone, «Vremea» / «Weather», for the club's own text (§NNN): the page's row and the
+ * The row's label alone, «Vremea» / «Weather», for the club's own text (§666): the page's row and the
  * reminder's line say the label, then the club's words as written — no place, no hours, no credit and
  * no «?», since nothing in them is the forecast's.
  */

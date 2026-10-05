@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PublicEvent } from "@/modules/events/repository";
 
 /**
- * BR-REQ-011-01 (§NNN) — «Vremea» is the club's to choose, per event: the page's row and the cards'
+ * BR-REQ-011-01 (§666) — «Vremea» is the club's to choose, per event: the page's row and the cards'
  * pill follow `events.weather_mode`.
  *
  * - `forecast` — unchanged: the forecast read at the event's place, the row, the pill.
@@ -130,7 +130,7 @@ async function page(overrides: Partial<PublicEvent> = {}) {
   return { html, row, asked: fetchImpl.mock.calls.length };
 }
 
-describe("BR-REQ-011-01 «Vremea» follows the club's choice on the event page (§NNN)", () => {
+describe("BR-REQ-011-01 «Vremea» follows the club's choice on the event page (§666)", () => {
   it("forecast: the forecast's row, read at Open-Meteo, as before", async () => {
     const { row, asked } = await page({ weatherMode: "forecast", weatherNote: ICY });
     expect(asked).toBe(1);
@@ -169,6 +169,13 @@ describe("BR-REQ-011-01 «Vremea» follows the club's choice on the event page (
     expect(none.asked).toBe(0);
   });
 
+  it("custom: no row on a cancelled event, whatever its text — the forecast's own rule", async () => {
+    const { html, row, asked } = await page({ weatherMode: "custom", weatherNote: ICY, eventStatus: "CANCELLED" });
+    expect(asked).toBe(0);
+    expect(row).toBeUndefined();
+    expect(text(html)).not.toContain(ICY);
+  });
+
   it("off: no row, no request, whatever text is kept", async () => {
     const { html, row, asked } = await page({ weatherMode: "off", weatherNote: ICY });
     expect(asked).toBe(0);
@@ -178,7 +185,7 @@ describe("BR-REQ-011-01 «Vremea» follows the club's choice on the event page (
   });
 });
 
-describe("BR-REQ-041-01 the cards' weather pill only in «Prognoza automată» (§NNN)", () => {
+describe("BR-REQ-041-01 the cards' weather pill only in «Prognoza automată» (§666)", () => {
   it("the listing asks only for the events whose weather is the forecast", async () => {
     const fetchImpl = openMeteo();
     const found = await forecastsForEvents(

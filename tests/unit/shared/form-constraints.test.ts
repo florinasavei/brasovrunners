@@ -36,7 +36,7 @@ const NOT_A_BOX = new Set([
   "featured",
   "isSpecial",
   "nightOverride",
-  // «Vremea» (§NNN): three radios in the place's card, one always ticked — a radio group, not a box.
+  // «Vremea» (§666): three radios in the place's card, one always ticked — a radio group, not a box.
   "weatherMode",
   "offersGroupRunDeclaration",
   "participantListVisibility",

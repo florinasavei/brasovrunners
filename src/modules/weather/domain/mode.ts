@@ -1,7 +1,7 @@
 import { isWrittenText } from "@/shared/forms/both-languages";
 
 /**
- * Whose weather an event shows (§NNN, amending §402 and §469): the club decides, per event, between
+ * Whose weather an event shows (§666, amending §402 and §469): the club decides, per event, between
  * the forecast, its own words, or nothing — a mountain race where the valley's forecast misleads, a
  * run where the organizer knows the trail will be icy.
  *

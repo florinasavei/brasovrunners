@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.69-2026-10-05 -->
+<!-- PROJECT_BASELINE: BR-V2.70-2026-10-05 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.69-2026-10-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.70-2026-10-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -24173,3 +24173,25 @@ With them, in lockstep (§657's `moveTokenWith` discipline): a live declaration 
 *Rejected:* a new reminder button — «Retrimite declarația tuturor care nu au semnat» on the event's page (§606) and «Mesaje» → «Cei care nu au semnat» (§364) already exist; moving waiting-list offers (a promise to the queue, made for a day); a backfill migration (the save moves, nothing else — a migration cannot know which window a club meant); moving holds on a cancelled event (its queue is left as it was cancelled, §331 — a save that puts it back on aligns them); a live recount in the browser as the numbers are typed (a client island for a sentence the banner says exactly after the save); keeping the start's last call as well for a window hold (two calls, the second after the place could already be gone).
 
 Baseline `BR-V2.69-2026-10-05`.
+
+## 666. The weather is the club's to choose: the forecast, the club's own text, or none, per event (amending §402, §469)
+
+**The owner, 2026-10-05:** «I need to be able to toggle showing the weather for each event, and also add custom weather info myself», then, clarifying: «Basically I want to choose if I take the weather info automatically from the API or put custom info».
+
+**Why.** Until now the forecast (§402, §416, §429, §469, §484) showed on every event inside the seven-day window, read from Open-Meteo at the event's place, and the club could say nothing instead. A mountain race where the valley's forecast misleads, or a run where the organizer knows the trail will be icy, needs the club's words — or no weather at all.
+
+**Decision.** One choice per event, «Vremea», stored as `events.weather_mode` (`text NOT NULL DEFAULT 'forecast'`, a CHECK on the three values; migration `0130`, expand only, no backfill), read through `weather/domain/mode.ts#readWeatherMode`, which reads anything else as the forecast:
+
+- **«Prognoza automată»** (`forecast`, the default — every existing event keeps today's behaviour): Open-Meteo at the event's place (§416), the event page's «Vremea» row, the cards' pill (§429), the reminder's line, inside the seven days.
+- **«Text scris de club»** (`custom`): the club's own short text replaces the forecast on the event page's row and in the reminder's facts block, in the reader's language. No Open-Meteo request is made for that event; no credit and no «?» (§473), since the words are the club's; the row is «Vremea», a thermometer glyph and the words as written, escaped like every text. **The cards draw no pill** — a sentence is not a pill.
+- **«Fără vreme»** (`off`): no row, no pill, no reminder line, no request.
+
+The text is `event_translations.weather_note` (same migration): plain text, at most 200 characters, normalised like the discount note (§394) — trimmed, an emptied field clears the column, never rich text — and, like every optional text, both languages or neither (§352), **asked only while the choice saved is «Text scris de club»**. It is written in the place's card, under the choice, once per language (the discount note's strip), and **kept when the choice moves away** and shown again when it comes back. Kept but hidden, it follows «a hidden box never blocks the save» (§350): a text typed in Romanian alone and then left under «Prognoza automată» or «Fără vreme» saves, unread, and the save that switches back to the club's text is the one refused on the language still owed, when it carries both languages as the editor's save does (`textsOwedInOneLanguage` reads the mode as stored after the save; the preview's «incomplet» mark reads the same) — a save carrying one language alone, a reader's who may write only that one, is never refused over the other's text (§352's rule, unchanged), and the page simply shows no row in the language without a text. A language without a text shows no weather row at all, never the other language's words (§28), and a cancelled or completed event shows none either, whatever its text — like the forecast, the row answers only an event still to be held; the text is not part of a translation's completeness for publication.
+
+**One resolver.** `weatherShown(event, translation)` answers `{ kind: 'forecast' }`, `{ kind: 'custom', text }` or nothing, and the page, the cards and the reminder all ask it. `forecastForEvent` and `forecastsForEvents` return nothing without a request unless the choice is the forecast, so the browser and the server alike never contact Open-Meteo for the other two (§110, §402). The page clock opens a weather window only for the forecast (`page-clock.ts`), and since only a forecast read lowers a page's lifetime to the hour (§549), a page with the club's text or none keeps its ordinary lifetime. The structured data carries no weather and is unchanged; its `geo` stays the place's (§416).
+
+**In the editor.** Three radios in «Când și unde» → «Unde», after the line that says where the forecast is read (§416) — a line drawn only while the stored choice is the forecast, since the other two read none — outside the place's «se anunță mai târziu» switch; each with its sentence under it, each row a 44-pixel target. While «Text scris de club» is chosen the language panels show, and when no language has a text yet a hint says the page shows nothing until one is written — a hint, not a refusal, which goes as soon as a language's box says something and comes back if both are emptied, before any save. The choice is the Organizer's and up, with the place (§207); the text is the words' (§103), so a reader with text rights and no settings rights writes it there while the stored choice is the club's text. A form without the radios leaves the choice alone; a series edit carries the choice and the text to the dates it writes, and a duplicate or a repeat copies both. The night pill (§428) is untouched.
+
+**Refused.** Showing the forecast and the club's text together — the owner's words: one or the other. Editing the forecast's numbers. A club-wide default (per event, the forecast by default, as before). A pill on the cards for the club's text. A text longer than 200 characters, or with formatting. A second place for the weather: §416's pin-or-coordinates rule stands.
+
+Baseline `BR-V2.70-2026-10-05`.

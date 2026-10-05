@@ -8,7 +8,7 @@ import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-080-01 (§NNN) — the reminder's «Vremea» row follows the event's choice: the forecast as
+ * BR-REQ-080-01 (§666) — the reminder's «Vremea» row follows the event's choice: the forecast as
  * before (`reminder-weather.test.ts`), the club's own text in each half's language with no credit,
  * or nothing. Neither of the last two asks Open-Meteo; a half whose language has no text has no row,
  * never the other half's words (§28).
@@ -53,7 +53,7 @@ const { renderOutboxMessage } = await import("@/modules/notifications/render");
 const ICY_RO = "Pe creastă e polei, veniți cu colțari.";
 const ICY_EN = "The ridge is icy, bring microspikes.";
 
-describe("BR-REQ-080-01 the reminder's weather follows «Vremea» (§NNN)", () => {
+describe("BR-REQ-080-01 the reminder's weather follows «Vremea» (§666)", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let participantId: string;

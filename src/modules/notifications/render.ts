@@ -686,7 +686,7 @@ async function renderRow(
     never later for it.
   */
   /*
-    Or the club's own words in its place (§NNN), each half from its own language's row — never the
+    Or the club's own words in its place (§666), each half from its own language's row — never the
     other's (§28): a language without a text has no weather line in its half. «Fără vreme» has none,
     and neither of the two asks Open-Meteo (`forecastForEvent` says null without a request).
   */

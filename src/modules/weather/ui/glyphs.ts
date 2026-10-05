@@ -38,7 +38,7 @@ export const WEATHER_GLYPH: Record<WeatherGlyphName, Glyph> = {
 };
 
 /**
- * The glyph beside the club's own weather text (§NNN): a thermometer, neither sun nor rain — the
+ * The glyph beside the club's own weather text (§666): a thermometer, neither sun nor rain — the
  * sky is the club's words to say, not a forecast's kind to draw.
  */
 export const CLUB_WEATHER_GLYPH: Glyph = ThermostatIcon;

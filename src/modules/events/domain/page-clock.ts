@@ -42,7 +42,7 @@ type ClockedEvent = {
   registrationClosesAt?: Date | null;
   confirmationOpensDaysBefore?: number | null;
   confirmationDeadlineDaysBefore?: number | null;
-  /** «Vremea» (§NNN); absent reads as the forecast. */
+  /** «Vremea» (§666); absent reads as the forecast. */
   weatherMode?: string | null;
 };
 
@@ -54,7 +54,7 @@ export function eventClockInstants(event: ClockedEvent, deadlines?: Pick<Deadlin
   if (startsAt) {
     instants.push(startsAt, event.raceStartsAt, event.endsAt, new Date(startsAt.getTime() + SIGNING_GRACE_MINUTES * 60_000));
     instants.push(registrationClosesOrStarts({ registrationClosesAt: event.registrationClosesAt ?? null, startsAt }));
-    // Only an event whose weather is the forecast has a window to open (§NNN): the club's own text
+    // Only an event whose weather is the forecast has a window to open (§666): the club's own text
     // and «Fără vreme» read the same on every day, and no forecast keeps such a page to the hour.
     if (readsForecast(event)) instants.push(new Date(weatherInstant({ startsAt, raceStartsAt: event.raceStartsAt }).getTime() - WEATHER_WINDOW_DAYS * DAY_MS));
     const window = confirmationWindow({ ...event, startsAt });

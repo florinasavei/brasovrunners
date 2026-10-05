@@ -425,7 +425,7 @@ export async function DiscountNoteFields({ translation, mayEdit }: PieceProps) {
 }
 
 /**
- * The club's own weather text (§NNN): one short line per language, in the place's card under
+ * The club's own weather text (§666): one short line per language, in the place's card under
  * «Vremea», read in place of the forecast while «Text scris de club» is chosen (`WeatherModeField`).
  * Plain text, 200 characters at most — the box's own limit, off `fields.ts`.
  */

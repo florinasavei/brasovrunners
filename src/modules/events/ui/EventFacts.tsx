@@ -763,7 +763,7 @@ export default async function EventFacts({
     const cardPills: Pill[] = buildRoutePills(event, t, format);
     // The weather at the start, the row's last pill after the cost (§429, amending §416's place for
     // it among the marks above the title): what the day will be like, beside what the route is.
-    // Only in «Prognoza automată» (§NNN): the club's text is a sentence, not a pill, and «Fără vreme» is none.
+    // Only in «Prognoza automată» (§666): the club's text is a sentence, not a pill, and «Fără vreme» is none.
     const weatherPill = cardWeather && readsForecast(event) ? <CardWeather reading={cardWeather} locale={locale} /> : null;
     const pillsRow = cardPills.length > 0 || weatherPill !== null;
 
@@ -1258,15 +1258,18 @@ export default async function EventFacts({
     meeting point it was not read at.
   */
   /*
-    «Vremea» is the club's to choose (§NNN): the forecast above, the club's own text in this
+    «Vremea» is the club's to choose (§666): the forecast above, the club's own text in this
     language, or nothing. The club's text is the row's whole value — the label, a thermometer and the
     words as written, escaped like every text — with no place and hours (they are the forecast's
     scope), no Open-Meteo and no «?» (the words are not the forecast's). A language without one has
-    no row (§28). The forecast is read by the caller only in `forecast` (`forecastForEvent`), so
-    `weather` is null in the other two whatever this row decides.
+    no row (§28), and neither has a cancelled or completed event, whatever its text — like the
+    forecast (`forecastForEvent`), the row answers only an event still to be held. The forecast is read by
+    the caller only in `forecast` (`forecastForEvent`), so `weather` is null in the other two
+    whatever this row decides.
   */
   const shownWeather = weatherShown(event, event);
-  if (shownWeather?.kind === "custom") {
+  const goingAhead = !event.eventStatus || event.eventStatus === "SCHEDULED";
+  if (shownWeather?.kind === "custom" && goingAhead) {
     rows.push({
       key: "weather",
       label: weatherLabel(locale),

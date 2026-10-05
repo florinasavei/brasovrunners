@@ -5,7 +5,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-050-02 (§NNN) — «Vremea» in the editor: the forecast, the club's own text, or none, per
+ * BR-REQ-050-02 (§666) — «Vremea» in the editor: the forecast, the club's own text, or none, per
  * event, end to end through the service and the editor's own Server Action.
  *
  * What is proven: a new event starts on the forecast; the choice is saved and a form without the
@@ -146,7 +146,7 @@ async function postSave(form: FormData) {
   expect(outcome, JSON.stringify(outcome)).toBe("redirected");
 }
 
-describe("BR-REQ-050-02 «Vremea»: the forecast, the club's text, or none (§NNN)", () => {
+describe("BR-REQ-050-02 «Vremea»: the forecast, the club's text, or none (§666)", () => {
   it("a new event starts on the forecast, with no text in either language", async () => {
     const created = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
     expect((await reloadEvent(created.id)).weatherMode).toBe("forecast");

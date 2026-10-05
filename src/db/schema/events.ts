@@ -221,7 +221,7 @@ export const events = pgTable(
     longitude: doublePrecision("longitude"),
 
     /**
-     * «Vremea» (§NNN, amending §402 and §469): whose weather the event shows — `forecast` (Open-Meteo
+     * «Vremea» (§666, amending §402 and §469): whose weather the event shows — `forecast` (Open-Meteo
      * at the event's place, the default and every event's behaviour before the column), `custom`
      * (the club's own text, `event_translations.weather_note`, in its place) or `off` (none).
      * Read through `weather/domain/mode.ts#readWeatherMode`, which reads anything else as the forecast.
@@ -778,7 +778,7 @@ export const events = pgTable(
     ),
 
     check("events_map_url_is_https", sql`${t.mapUrl} IS NULL OR ${t.mapUrl} LIKE 'https://%'`),
-    // «Vremea» (§NNN): one of the three; the domain's `WEATHER_MODES` says the same in words.
+    // «Vremea» (§666): one of the three; the domain's `WEATHER_MODES` says the same in words.
     check("events_weather_mode_known", sql`${t.weatherMode} IN ('forecast', 'custom', 'off')`),
     // The club's scale of fifteen (§526): five bands of three steps.
     check("events_difficulty_level_in_scale", sql`${t.difficultyLevel} IS NULL OR ${t.difficultyLevel} BETWEEN 1 AND 15`),
@@ -1020,7 +1020,7 @@ export const eventTranslations = pgTable(
     discountNote: text("discount_note"),
 
     /**
-     * The club's own weather text, per language (§NNN): shown in place of the forecast — on the page's
+     * The club's own weather text, per language (§666): shown in place of the forecast — on the page's
      * «Vremea» row and the reminder's line — while `events.weather_mode` is `custom`, and kept, unread,
      * while it is not, so switching back finds it. Plain text, at most 200 characters (checked in
      * `content/events/fields.ts`, as `discount_note` is), both languages or neither (§352). A language

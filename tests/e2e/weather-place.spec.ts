@@ -43,7 +43,7 @@ async function withDatabase<T>(work: (client: pg.Client) => Promise<T>): Promise
 const DAY = 86_400_000;
 
 /**
- * A draft group run two days from now, with its place as given — and, for «Vremea» (§NNN), its
+ * A draft group run two days from now, with its place as given — and, for «Vremea» (§666), its
  * choice and the club's text in each language; returns its id.
  */
 async function insertDraft(
@@ -137,7 +137,7 @@ test.describe("BR-REQ-011-01 the weather block at the event's own place (§416)"
   });
 });
 
-test.describe("BR-REQ-011-01 «Vremea» is the club's to choose (§NNN)", () => {
+test.describe("BR-REQ-011-01 «Vremea» is the club's to choose (§666)", () => {
   test("the club's own text replaces the forecast, in each language, with no credit and no «?»; «Fără vreme» shows none", async ({ page }) => {
     const custom = await insertDraft({}, "custom", { mode: "custom", ro: "Pe creastă e polei, veniți cu colțari.", en: "The ridge is icy, bring microspikes." });
     const off = await insertDraft({}, "off", { mode: "off", ro: "Text păstrat.", en: "Kept text." });

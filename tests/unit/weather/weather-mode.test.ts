@@ -3,14 +3,14 @@ import { eventClockInstants } from "@/modules/events/domain/page-clock";
 import { readsForecast, readWeatherMode, WEATHER_MODES, weatherShown } from "@/modules/weather/domain/mode";
 
 /**
- * BR-REQ-011-01 (§NNN) — `weatherShown`, the one resolver the page, the cards and the reminder ask:
+ * BR-REQ-011-01 (§666) — `weatherShown`, the one resolver the page, the cards and the reminder ask:
  * the forecast, the club's own text in the reader's language, or nothing. Three modes, with and
  * without a text, in both languages; an unknown stored value reads as the forecast.
  */
 const NOTES = { ro: { weatherNote: "Pe creastă e polei." }, en: { weatherNote: "The ridge is icy." } } as const;
 const NONE = { weatherNote: null };
 
-describe("BR-REQ-011-01 weatherShown (§NNN)", () => {
+describe("BR-REQ-011-01 weatherShown (§666)", () => {
   for (const locale of ["ro", "en"] as const) {
     describe(`in ${locale}`, () => {
       it("forecast: the forecast, with or without a text — the text is never shown beside it", () => {

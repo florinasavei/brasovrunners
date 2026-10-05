@@ -1556,7 +1556,7 @@
           "off": "No weather"
         },
         "help": {
-          "forecast": "The forecast for the event's place, from 7 days before: on the page, on the card and in the reminder.",
+          "forecast": "The forecast for the event's place, from {days} days before: on the page, on the card and in the reminder.",
           "custom": "Your text instead of the forecast, on the page and in the reminder. The card shows nothing.",
           "off": "No weather on the page, on the card or in the reminder."
         },

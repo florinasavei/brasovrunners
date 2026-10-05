@@ -40,7 +40,7 @@ const TRANSLATION_FIELDS = [
   "seoTitle",
   "seoDescription",
   "discountNote",
-  // The club's own weather text (§NNN), one short line like the discount note.
+  // The club's own weather text (§666), one short line like the discount note.
   "weatherNote",
   "description",
 ] as const;

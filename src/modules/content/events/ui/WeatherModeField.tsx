@@ -14,12 +14,12 @@ import { ShownWhen } from "./OnlyForType";
 export type WeatherModeWords = {
   label: string;
   choices: Readonly<Record<WeatherMode, { label: string; help: string }>>;
-  /** «Nu ai scris încă textul…»: `custom` chosen and no language has a text yet — a hint, never a refusal. */
+  /** «Nu e scris încă niciun text…»: `custom` chosen and no language has a text yet — a hint, never a refusal. */
   noNote: string;
 };
 
 /**
- * «Vremea» (§NNN): whose weather the page and the reminder show — «Prognoza automată», «Text scris de
+ * «Vremea» (§666): whose weather the page and the reminder show — «Prognoza automată», «Text scris de
  * club» or «Fără vreme» — as three radios, each with its sentence under it, so the choice reads
  * without opening anything. Radios rather than a select because the three need their help visible
  * side by side, and each row is a 44-pixel target (BR-REQ-041-01 criterion 6).

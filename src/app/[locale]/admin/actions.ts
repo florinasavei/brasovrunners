@@ -325,7 +325,7 @@ function eventFieldsFrom(form: FormData) {
     // "Eveniment de noapte" (§394): the three choices in "Traseul" — "yes", "no", or "auto" (and
     // an absent value) for the sunset's own answer.
     nightOverride: nightOverrideFromChoice(value("nightOverride")),
-    // «Vremea» (§NNN): the three radios in the place's card, read only when the form carried them —
+    // «Vremea» (§666): the three radios in the place's card, read only when the form carried them —
     // a form without them (a reader who may not change the place) is "not editing it".
     weatherMode: form.has("event.weatherMode") ? value("weatherMode") : undefined,
     // The group run's optional self-declaration (§393): a checkbox in "Traseul"; unticked, or
@@ -436,7 +436,7 @@ function translationInputFrom(form: FormData, locale: Locale) {
     // future caller, a stale form) must leave the column alone rather than blank it; cleared
     // server-side outside EXTERNAL + PAID (`service.ts#applyTranslationSave`).
     discountNote: form.has(`translations.${locale}.discountNote`) ? value("discountNote") : undefined,
-    // The club's own weather text (§NNN), from the place's card under «Vremea» — read only when the
+    // The club's own weather text (§666), from the place's card under «Vremea» — read only when the
     // box was posted, like the discount note: an absent box leaves the column alone, "" clears it.
     weatherNote: form.has(`translations.${locale}.weatherNote`) ? value("weatherNote") : undefined,
   };

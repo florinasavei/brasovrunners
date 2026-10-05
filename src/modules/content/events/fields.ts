@@ -157,7 +157,7 @@ export const translationFieldsSchema = z
      */
     discountNote: optionalText(MAX_DISCOUNT_NOTE).optional(),
     /**
-     * The club's own weather text (§NNN), shown in place of the forecast while «Vremea» is «Text scris
+     * The club's own weather text (§666), shown in place of the forecast while «Vremea» is «Text scris
      * de club». Plain text, at most 200 characters, normalised like `discountNote`; "" clears it.
      * Kept whatever the mode — switching back to the club's text finds it. Optional in the input
      * like `checklist`: absent leaves the column alone. Both languages or neither (§352).
@@ -805,7 +805,7 @@ export const eventFieldsSchema = z
      */
     nightOverride: z.boolean().nullable().optional().default(null),
     /**
-     * «Vremea» (§NNN): the forecast, the club's own text, or none. Absent means this caller is not
+     * «Vremea» (§666): the forecast, the club's own text, or none. Absent means this caller is not
      * editing it (a fixture, a script, a reader who may not change the place), so the stored choice
      * stays; a create that posts none stores the column's default, the forecast. A value outside the
      * three did not come from the editor's radios and is refused.

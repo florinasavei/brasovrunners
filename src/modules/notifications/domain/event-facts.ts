@@ -125,7 +125,7 @@ export function eventFactsBlock(details: EmailEventFacts, locale: Locale, weathe
   });
 
   // Vremea: the forecast at the start, right under «Când», the hour it is for (§402), and the credit its licence asks for, as a word.
-  // The club's own text (§NNN) comes without a credit: the words are the club's, not Open-Meteo's.
+  // The club's own text (§666) comes without a credit: the words are the club's, not Open-Meteo's.
   if (weather) rows.push({ label: weather.label, lines: [[{ text: weather.line }], ...(weather.credit ? [[{ text: weather.credit }]] : [])] });
 
   // Unde: the page's sentence while the place is to be announced (§328), and nothing else.
