@@ -864,7 +864,9 @@ or off; it goes when the queue is through. Four causes, told apart by the same p
    has the price. With «Gmail preia când Mailgun se oprește» on, the deferred rows leave through Gmail
    at once instead (§622), and «Trimite acum» says «N prin Gmail — cota Mailgun epuizată până la …».
 2. **Overdue** — messages waited more than ninety minutes for a scheduler. cron-job.org →
-   the two job monitors: paused, disabled after failures, or the `JOB_SECRET` changed. Run
+   the two job monitors: paused, disabled after failures, or the `JOB_SECRET` changed (a history
+   entry answering `continuing: true` is a long run that finished after the response, not a
+   failure: `SETUP.md` §40, `DECISIONS.md` §NNN). Run
    `yarn smoke` on the environment; `jobs[].status` names which one is stale. Pressing
    "Trimite acum" on `/admin/registrations` drains the outbox by hand meanwhile.
 3. **Paused by the provider** (§605) — `lastError` starts "paused by the provider:". Mailgun
