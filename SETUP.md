@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.71-2026-10-06 -->
+<!-- PROJECT_BASELINE: BR-V2.72-2026-10-06 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.71-2026-10-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.72-2026-10-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1475,7 +1475,10 @@ languages go live together; that is the rule, not a setting.
 
    Beside «Arată public câți așteaptă», on this and every event whether or not the special guests list is
    on, **«Arată public numărătoarea»** — ticked by default; unticked, «Cine vine» shows the names
-   only, with no count in its title, no «confirmați» line and no position.
+   only, with no count in its title, no «confirmați» line and no position, and the event's public
+   pages say no number at all: no «N înscriși din M locuri», no free places, no «Toate cele M locuri»
+   (it reads «Toate locurile s-au ocupat»), no room or count on the waiting list — only whether
+   places are left, the race is full or the waiting list is open (§668).
 
    Then they register like anybody (or are entered from «Înscrierile primite»), and an
    Administrator opens each registration → «Lista de invitați speciali» → chooses «Invitat special — nu

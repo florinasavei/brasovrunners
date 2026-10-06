@@ -125,7 +125,8 @@ export async function renderDraftForm<T extends Record<string, unknown>>(
   // and a list that takes people (§587): the join form's thank-you, from the draft's own door and the
   // club's «Termene» already read for the steps — nothing more is read.
   const fullNotice = cta?.kind === "FULL_NO_WAITLIST" ? NO_WAITLIST : cta?.kind === "WAITLIST_FULL" ? WAITLIST_FULL : cta?.kind === "FULL" ? "WAITLIST" : null;
-  const fullCounts = cta?.kind === "FULL" && door.kind === "KNOWN" && door.fill ? { capacity: door.fill.capacity, waiting: cta.waiting } : null;
+  // No places line — «Arată public numărătoarea» unticked (§668) — is the real page's lead with no capacity.
+  const fullCounts = cta?.kind === "FULL" && door.kind === "KNOWN" ? { capacity: door.fill?.capacity ?? null, waiting: cta.waiting } : null;
   const offerHours = fullNotice === "WAITLIST" ? steps.deadlines.offerHours : null;
 
   return (

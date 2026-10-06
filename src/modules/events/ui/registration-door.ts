@@ -5,7 +5,7 @@ import type { Database } from "@/db/types";
 import { readPublicPlaces } from "@/modules/registrations/service";
 import { eventClockInstants } from "../domain/page-clock";
 import { registrationDoorOpen } from "../domain/listing-filter";
-import { type PublicFill, publicFill, registrationCta, type RegistrationCta } from "../domain/registration-cta";
+import { type PublicFill, publicFill, publicNumbersShown, registrationCta, type RegistrationCta } from "../domain/registration-cta";
 import { registrationState } from "../domain/registration-window";
 import type { PublicEvent, PublicEventPage } from "../repository";
 
@@ -53,6 +53,13 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
   // «Arată public câți așteaptă» (§634), read from the entry the counts come from, so the two are one moment.
   let waitlistCountPublic = true;
   /*
+    «Arată public numărătoarea» (§668), from the same entry for the same reason — and from the event row
+    as well: off in either, the door says no number and there is no places line (`registrationCta`,
+    `publicFill`). An event save expires both, so they disagree only for the instant between two reads,
+    and then the numbers stay unsaid rather than said.
+  */
+  let participantCountPublic = publicNumbersShown(event);
+  /*
     Every page that shows a door is kept no longer than the door's next change (§549): the window
     opening or closing, the start, the confirmation window, the weather window — the page's card,
     hero or button read differently from then on, and a static page must be made again then.
@@ -73,6 +80,7 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
         confirmed = availability.confirmed;
         occupied = availability.occupied;
         waitlistCountPublic = availability.waitlistCountPublic !== false;
+        participantCountPublic = participantCountPublic && publicNumbersShown(availability);
       }
     } catch (error) {
       /*
@@ -94,9 +102,12 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
 
   return {
     kind: "KNOWN",
-    cta: registrationCta({ ...event, availablePlaces, waitlistRoom, waitlistCapacity, waiting, offered, waitlisted, waitlistCountPublic }, now),
+    cta: registrationCta(
+      { ...event, availablePlaces, waitlistRoom, waitlistCapacity, waiting, offered, waitlisted, waitlistCountPublic, participantCountPublic },
+      now,
+    ),
     // In progress is counted from the occupied places, in every state (§615).
-    fill: publicFill(capacity, availablePlaces, { occupied, confirmed, waitlisted, waitlistCountPublic }),
+    fill: publicFill(capacity, availablePlaces, { occupied, confirmed, waitlisted, waitlistCountPublic, participantCountPublic }),
   };
 }
 
@@ -139,12 +150,29 @@ export async function draftRegistrationDoor<T extends Record<string, unknown>>(
   }
   return {
     kind: "KNOWN",
-    // The draft's own «Arată public câți așteaptă» (§634): the preview says the count only as the saved page would.
+    // The draft's own «Arată public câți așteaptă» (§634) and «Arată public numărătoarea» (§668): the
+    // preview says the numbers only as the saved page would.
     cta: registrationCta(
-      { ...event, availablePlaces, waitlistRoom, waitlistCapacity: limits.waitlistCapacity, waiting, offered, waitlisted, waitlistCountPublic: event.waitlistCountPublic },
+      {
+        ...event,
+        availablePlaces,
+        waitlistRoom,
+        waitlistCapacity: limits.waitlistCapacity,
+        waiting,
+        offered,
+        waitlisted,
+        waitlistCountPublic: event.waitlistCountPublic,
+        participantCountPublic: event.participantCountPublic,
+      },
       now,
     ),
-    fill: publicFill(limits.capacity, availablePlaces, { occupied, confirmed, waitlisted, waitlistCountPublic: event.waitlistCountPublic }),
+    fill: publicFill(limits.capacity, availablePlaces, {
+      occupied,
+      confirmed,
+      waitlisted,
+      waitlistCountPublic: event.waitlistCountPublic,
+      participantCountPublic: event.participantCountPublic,
+    }),
   };
 }
 

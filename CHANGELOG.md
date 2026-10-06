@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.72-2026-10-06
+
+- **«Arată public numărătoarea» unticked hides every number** — the event page, its card, the calendar, the series card and the register page say no places line, no free places, no capacity and no waiting or offered count; only whether places are left, the race is full or the waiting list is open. Ticked, nothing changes. §668.
 ## BR-V2.71-2026-10-06
 
 - **A long job run no longer reads as a failed cron job** — a job ping that runs for real answers within twenty seconds; a run still going answers `continuing: true` and finishes on the platform after the response, so cron-job.org's 30-second limit stops reporting «Timeout» for runs that succeed. §667.
