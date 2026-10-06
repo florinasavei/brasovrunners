@@ -153,3 +153,17 @@ export function parseInvitationLines(text: string): { people: TypedInvitee[]; un
   });
   return { people, unread };
 }
+
+/**
+ * The invitation form's boxes before any press (§647): the invited name split into first and last,
+ * and for a member «Sunt membru» with the club's name and «Vreau numărul de membru» ticked (§664) —
+ * the members' bib's first readers are the members the club invited.
+ */
+export function invitationDraft(link: { name: string; member: boolean }, clubName: string): Record<string, string> {
+  const words = link.name.split(" ");
+  return {
+    firstName: words.length > 1 ? words.slice(0, -1).join(" ") : link.name,
+    lastName: words.length > 1 ? words[words.length - 1] : "",
+    ...(link.member ? { clubMemberDeclared: "on", clubName, memberBibWanted: "on" } : {}),
+  };
+}

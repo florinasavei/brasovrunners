@@ -71,6 +71,8 @@ export async function GET(request: Request): Promise<Response> {
   const promo = url.searchParams.get("promo");
   // «În afara locurilor» (§643): the list's pill filters the rows on screen, so it filters the file too.
   const outside = url.searchParams.get("outside");
+  // The bibs page's filter (§664): the file is the rows on screen.
+  const memberBib = url.searchParams.get("memberBib");
 
   /*
     The event scope, by the rule the screen uses (§178, §312) rather than the raw parameter.
@@ -108,6 +110,7 @@ export async function GET(request: Request): Promise<Response> {
     emailBounced: emailBounced === "1" || undefined,
     promoConsented: promo === "1" || undefined,
     outsideCapacity: outside === "1" || undefined,
+    memberBibAsked: memberBib === "asked" || undefined,
     search: search || undefined,
     excludeTest: true,
     },
@@ -168,6 +171,9 @@ export async function GET(request: Request): Promise<Response> {
         clubName: row.clubName ?? "",
         clubMemberDeclared: row.clubMemberDeclared,
         memberVerified: row.memberVerified,
+        // «Member bib» (§664): yes, asked or empty.
+        memberBibOffered: row.memberBibOffered,
+        memberBibWanted: row.memberBibWanted,
         fitnessDeclaredAt: row.fitnessDeclaredAt,
         stravaUrl: row.stravaUrl ?? "",
         guardianName: row.guardianName ?? "",
@@ -220,6 +226,9 @@ export async function GET(request: Request): Promise<Response> {
       status: row.status,
       clubMemberDeclared: row.clubMemberDeclared,
       memberVerified: row.memberVerified,
+      // «Member bib» (§664): yes, asked or empty.
+      memberBibOffered: row.memberBibOffered,
+      memberBibWanted: row.memberBibWanted,
       fitnessDeclaredAt: row.fitnessDeclaredAt?.toISOString() ?? null,
       stravaUrl: row.stravaUrl ?? "",
       guardianName: row.guardianName ?? "",

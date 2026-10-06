@@ -10,6 +10,7 @@ import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { BIB_PICTURE_WIDTH, loadBibPictures } from "@/modules/registrations/bib-pictures";
 import { env } from "@/shared/config/env";
+import { CLUB_NAME } from "@/theme/brand";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
@@ -97,9 +98,14 @@ export async function GET(
     handed over as PNG (§560, `bib-pictures.ts`): pdfkit embeds no WebP, which every stored
     picture is, and a design with a picture failed the whole sheet with "Unknown image format.".
   */
-  const loaded = await loadBibPictures(event.design, BIB_PICTURE_WIDTH.sheet);
+  // The members' header too (§664), only when a member's bib is on this sheet; a spare never is one.
+  const anyMember = rows.some((row) => row.member === true);
+  const loaded = await loadBibPictures(event.design, BIB_PICTURE_WIDTH.sheet, anyMember);
   const header = loaded.header?.png ?? null;
   const sponsors = loaded.sponsors?.png ?? null;
+  const memberHeader = loaded.memberHeader?.png ?? null;
+  // The sheet's own words, in its language: read only when the sheet prints them (§444, §664).
+  const admin = spares || anyMember ? await getTranslations({ locale, namespace: "Admin" }) : null;
 
   const pdf = await renderBibSheet({
     rows,
@@ -116,9 +122,11 @@ export async function GET(
     generatedAt: now,
     layout,
     design: event.design,
-    pictures: { header, sponsors },
+    pictures: { header, sponsors, memberHeader },
+    // The members' label when the club typed none (§664), in the sheet's language.
+    ...(anyMember && admin ? { memberLabelDefault: admin("bibs.memberLabelDefault", { club: CLUB_NAME }) } : {}),
     // Under a spare's empty line (§444), in the sheet's language.
-    ...(spares ? { blankMark: (await getTranslations({ locale, namespace: "Admin" }))("bibs.spareMark") } : {}),
+    ...(spares && admin ? { blankMark: admin("bibs.spareMark") } : {}),
   });
 
   const suffix = `${spares ? "-spares" : ""}${from !== undefined || to !== undefined ? `-${from ?? 1}-${to ?? "end"}` : ""}${only && !spares ? "-unprinted" : ""}${layout === "one" ? "-one-per-page" : ""}`;

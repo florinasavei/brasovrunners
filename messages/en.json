@@ -1067,8 +1067,10 @@
           "stravaUrl": "Strava",
           "instagramHandle": "Instagram",
           "tshirtSize": "T-shirt size",
-          "listSocials": "Strava and Instagram on the list"
-        }
+          "listSocials": "Strava and Instagram on the list",
+          "memberBibWanted": "I want the members' number"
+        },
+        "memberBibHelp": "Kept only with the member tick, and while the event offers the members' number."
       },
       "memberTick": {
         "clear": "Not a member",
@@ -1129,6 +1131,13 @@
           "BOUNCED": "An email the club sent to your address was rejected: the address does not exist or the mailbox is full, so the club's messages do not reach you.",
           "COMPLAINED": "An email the club sent to your address was marked as spam, so the club's messages may no longer reach you."
         }
+      },
+      "memberBibWantedStaffHelp": "Only for a member, at an event that offers the members' number; otherwise it is not kept.",
+      "memberBibAskedFilter": "Only those who asked for the members' number, whose address is no member account's.",
+      "memberBibAskedClear": "Show everyone",
+      "memberBib": {
+        "printed": "Members' number",
+        "asked": "Members' number: asked, not verified — the ordinary number prints"
       }
     },
     "events": {
@@ -1930,7 +1939,22 @@
         "previewCaption": "Preview — this is how it prints",
         "previewPending": "Redrawing…",
         "previewAlt": "The race number as it would look with the current choices, for a runner named “Nume Prenume”",
-        "previewNote": "The preview above changes at once; the “Numbers” page and the PDF follow a save."
+        "previewNote": "The preview above changes at once; the “Numbers” page and the PDF follow a save.",
+        "member": {
+          "title": "The members' number",
+          "summary": "members' number",
+          "enabled": "Members get a race number with their own design",
+          "enabledHelp": "The form asks “I want the members' number” under the {club} member tick. It prints only for an address of an account on «Staff». The number keeps its order.",
+          "previewAlt": "A member's race number, in the members' design, for a runner named “Nume Prenume”",
+          "previewCaption": "Preview — a member's number",
+          "bandColour": "The members' band colour",
+          "bandColourHelp": "Used when you choose no picture, and under the label on a picture.",
+          "eventColour": "The event's colour",
+          "headerImageSrc": "Picture instead of the band, for members",
+          "headerImageSrcHelp": "Like the number's top picture, on members' numbers only. Without one, the band takes the colour chosen above.",
+          "label": "Label",
+          "labelHelp": "One short line on the member's band, at most {max} characters. Empty: «{club} member»."
+        }
       },
       "bibColour": "Colour of the race numbers (BIB)",
       "bibColourHelp": "The band across the top of the printed number, the one carrying the club's logo and the race. “The club's colour” unless you want a specific one.",
@@ -4443,7 +4467,12 @@
       "sparesReserved": "Numbers {from}–{to} reserved. Download the sheet and print it.",
       "sparesDownloadRange": "Download the sheet {from}–{to} (PDF)",
       "spareMark": "on-the-spot entry",
-      "helpMore": "Numbers are given in order of confirmation and are never given twice. The sheet prints two A5 numbers per A4 page; a single number downloads from the registration's page."
+      "helpMore": "Numbers are given in order of confirmation and are never given twice. The sheet prints two A5 numbers per A4 page; a single number downloads from the registration's page.",
+      "memberLabelDefault": "{club} member",
+      "memberSampleAlt": "A member's race number, in the members' design",
+      "memberSampleCaption": "The members' number, as it prints. On the sheet now: {count}.",
+      "memberUnverified": "Asked for the members' number, but their address is no member account's: {count}. They print the ordinary number; if they are members, add them on «Staff» before printing.",
+      "memberUnverifiedLink": "See them in the list"
     },
     "emergency": {
       "title": "Emergency sheet — confidential. Destroy after the event.",
@@ -5505,6 +5534,7 @@
                 "Print at actual size (100%) and cut on the line.",
                 "Numbers go in order of confirmation, from «Race numbers (BIB) start at». «Assign numbers» is the Administrator's.",
                 "The desk's spares: «Reprint the free spares (PDF)» prints again the ones not yet given. Only the Administrator reserves new spare numbers.",
+                "The members' number: whoever asked «I want the members' number» and has the address of an account on «Staff» gets the members' band and label; the number is the same. «See the bibs» names the rest.",
                 "On the site, the «Who's coming» list shows the «BIB» column once the club approves the new privacy notice. Before that, the Administrator writes to those already registered with «Send a message to participants»; anyone who does not want to appear presses «I do not want to appear on the participants & results list» in «My registrations», and the number leaves with the name. From the approval on, the column shows the number of every confirmed runner who has one, whichever notice they registered under; a confirmed runner without one shows “—”."
               ]
             },
@@ -7303,7 +7333,9 @@
       "alreadyRegistered": "This address already has a registration with this name: nothing was registered. Address not confirmed? Press the link in the confirmation email to get the invitation's place.",
       "addressAtCap": "This address already has the most registrations allowed for the event: nothing was registered.",
       "notYou": "Not expecting this invitation? Ignore it or write to us:"
-    }
+    },
+    "memberBibWanted": "I want the members' number",
+    "memberBibWantedHelp": "The same number, in the same order; only the look differs. The club prints it only if your address is a {club} member's."
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. We can send you a new one, to the same email address.",

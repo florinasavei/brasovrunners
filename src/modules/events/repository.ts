@@ -76,6 +76,14 @@ type Schema = { events: typeof events; eventTranslations: typeof eventTranslatio
 export type Database = NodePgDatabase<Schema> | PgliteDatabase<Schema>;
 
 /**
+ * Whether the event offers the members' race number (§664): its bib design's `member.enabled`, read
+ * as `bib-design.ts#readBibDesign` reads it — on only for a JSON true, off for anything else or
+ * nothing. The page and the staff form read it to ask «Vreau numărul de membru»; the service decides
+ * again off the locked row.
+ */
+export const OFFERS_MEMBER_BIB = sql<boolean>`coalesce((${events.bibDesign} #> '{member,enabled}') = 'true'::jsonb, false)`.mapWith(Boolean);
+
+/**
  * Exactly the columns a public page may show.
  *
  * Written out rather than `select()`-ing the whole row on purpose. When registrations and
@@ -146,6 +154,12 @@ const PUBLIC_COLUMNS = {
   kitShirt: events.kitShirt,
   // «Condiții de participare» → «Informații medicale» (§557): whether the form asks the health note.
   askHealthNote: events.askHealthNote,
+  /*
+    The members' race number (§664): whether the form asks «Vreau numărul de membru». The one key of
+    the bib design a page reads, as `bib-design.ts#readBibDesign` reads it — on only for a JSON true;
+    the service decides again off the locked row whatever this said.
+  */
+  offersMemberBib: OFFERS_MEMBER_BIB,
   confirmationOpensDaysBefore: events.confirmationOpensDaysBefore,
   confirmationDeadlineDaysBefore: events.confirmationDeadlineDaysBefore,
   // Who may enter (§329): the page says it, the form's picker is bounded by it, and the

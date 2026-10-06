@@ -343,6 +343,8 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
           // (§324); the schema requires it then, and ignores it for an adult.
           guardianName: optional(form, "guardianName"),
           clubMemberDeclared: form.get("clubMemberDeclared") === "on",
+          // The members' bib (§664): kept by the service only where the event offers it.
+          memberBibWanted: form.get("memberBibWanted") === "on",
           tshirtSize: optional(form, "tshirtSize") as
             | "NONE"
             | "XS"
@@ -431,7 +433,7 @@ function changedAnswersOf(form: FormData): Record<string, string | boolean> {
   for (const field of EDITABLE_ANSWERS) {
     const was = form.get(`was.${field}`);
     if (typeof was !== "string") continue;
-    if (field === "clubMemberDeclared") {
+    if (field === "clubMemberDeclared" || field === "memberBibWanted") {
       const ticked = form.get(field) === "on";
       if (ticked !== (was === "on")) changes[field] = ticked;
       continue;

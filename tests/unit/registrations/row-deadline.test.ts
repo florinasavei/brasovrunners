@@ -180,9 +180,9 @@ describe("§650 the export carries the moment and what it is for", () => {
   // Before the age, the country and the city, which came last with §660.
   it("the CSV, last: the moment in ISO 8601 and the kind's token, or two empty cells", () => {
     const [header, held, none] = buildRegistrationsCsv([{ ...base, deadline: AHEAD.toISOString(), deadlineFor: "hold" }, base]).split("\r\n");
-    expect(header.split(",").slice(-5, -3)).toEqual(["Until when", "Waiting on"]);
-    expect(held.split(",").slice(-5, -3)).toEqual([AHEAD.toISOString(), "hold"]);
-    expect(none.split(",").slice(-5, -3)).toEqual(["", ""]);
+    expect(header.split(",").slice(-6, -4)).toEqual(["Until when", "Waiting on"]);
+    expect(held.split(",").slice(-6, -4)).toEqual([AHEAD.toISOString(), "hold"]);
+    expect(none.split(",").slice(-6, -4)).toEqual(["", ""]);
   });
 
   it("the spreadsheet: «Until when» and «Waiting on» right after «Status», as on the list", () => {

@@ -13,7 +13,17 @@
 
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { raceNumberOf } from "./domain/race-number";
+import { memberBibCell } from "./domain/member-bib";
 import { MEMBERSHIP_EXPORT_WORDS, membershipOf } from "./domain/membership";
+
+/**
+ * The «Member bib» cell of both exports (§664): "yes" when the row will print the members' bib (it
+ * asked, the event offers it, and its address is a member account's), "asked" when it asked and the
+ * club does not know the address as a member's, empty otherwise.
+ */
+export function memberBibExportCell(row: { memberBibOffered?: boolean; memberBibWanted?: boolean; memberVerified: boolean }): string {
+  return memberBibCell({ memberBibOffered: row.memberBibOffered === true, memberBibWanted: row.memberBibWanted === true, memberVerified: row.memberVerified });
+}
 
 /** The «Club member» cell of both exports (§662): "verified", "declared" or empty, as the list's chip. */
 export function membershipCell(row: { clubMemberDeclared: boolean; memberVerified: boolean }): string {
@@ -140,6 +150,12 @@ export type RegistrationCsvRow = {
   ageOnRaceDay?: number | null;
   country?: string | null;
   city?: string | null;
+  /**
+   * The members' race number (§664): whether the event offers it and whether the person asked
+   * («Vreau numărul de membru»); with `memberVerified`, the «Member bib» cell (`memberBibExportCell`).
+   */
+  memberBibOffered?: boolean;
+  memberBibWanted?: boolean;
 };
 
 const HEADER = [
@@ -193,6 +209,8 @@ const HEADER = [
   "Age on race day",
   "Country",
   "City",
+  // Last (§664), for the same reason: the members' race number — "yes", "asked" or empty.
+  "Member bib",
 ];
 
 export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): string {
@@ -236,6 +254,7 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         String(row.ageOnRaceDay ?? ""),
         row.country ?? "",
         row.city ?? "",
+        memberBibExportCell(row),
       ]
         .map(csvCell)
         .join(","),

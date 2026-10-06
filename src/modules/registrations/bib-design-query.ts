@@ -28,6 +28,19 @@
 export const BIB_DESIGN_FORM_PREFIX = "event.bibDesign.";
 
 /**
+ * The members' fields in the preview's address (§664): their own keys, so they never meet the main
+ * header's. `member=1` is not among them — it asks the route to draw the member's bib, and is the
+ * caller's to add (`bibPreviewUrl`'s `member`).
+ */
+const MEMBER_QUERY = {
+  enabled: "memberEnabled",
+  bandColour: "memberBandColour",
+  headerImageSrc: "memberHeaderImageSrc",
+  headerImageCrop: "memberHeaderImageCrop",
+  label: "memberLabel",
+} as const;
+
+/**
  * A picture's crop (§560) as the form posts it and the address carries it — the JSON of §241's four
  * fractions — or as a stored design holds it, the object itself. The schema reads either.
  */
@@ -54,7 +67,23 @@ export type BibDesignFormValues = {
   showWebsite: boolean;
   /** As typed: the schema trims it, keeps it to one line and to `BIB_FOOTER_TEXT_MAX`. */
   footerText: string;
+  /** The members' race number (§664): its switch, its header and its label, as posted. */
+  member: BibMemberFormValues;
 };
+
+/** «Numărul membrilor» as the panel posts it; `bib-design.ts#bibMemberSchema` validates it. */
+export type BibMemberFormValues = {
+  enabled: boolean;
+  /** The colour select: a hex triplet, or null for the event's band. */
+  bandColour: string | null;
+  headerImageSrc: string | null;
+  headerImageCrop: BibCropValue;
+  /** As typed: the schema keeps it to one line and `BIB_MEMBER_LABEL_MAX`. */
+  label: string;
+};
+
+/** The members' fields' prefix inside the panel's (§664): `event.bibDesign.member.*`. */
+export const BIB_MEMBER_FORM_PREFIX = `${BIB_DESIGN_FORM_PREFIX}member.`;
 
 const SWITCHES = [
   "showName",
@@ -106,6 +135,13 @@ export function readBibDesignForm(get: (name: string) => string | null): BibDesi
     showWebsite: field("showWebsite") === "on",
     // A text box always posts, empty or not; what it may say is the schema's to decide.
     footerText: field("footerText") ?? "",
+    member: {
+      enabled: field("member.enabled") === "on",
+      bandColour: field("member.bandColour")?.trim() || null,
+      headerImageSrc: field("member.headerImageSrc")?.trim() || null,
+      headerImageCrop: field("member.headerImageCrop")?.trim() || null,
+      label: field("member.label") ?? "",
+    },
   };
 }
 
@@ -135,6 +171,16 @@ export function bibDesignSearchParams(values: BibDesignFormValues, into = new UR
   for (const key of TEXTS) {
     if (values[key].trim()) into.set(key, values[key]);
   }
+  // The members' header and label (§664), absent when empty, like the main ones.
+  const member = values.member;
+  into.set(MEMBER_QUERY.enabled, member.enabled ? "1" : "0");
+  if (member.bandColour) into.set(MEMBER_QUERY.bandColour, member.bandColour);
+  if (member.headerImageSrc) {
+    into.set(MEMBER_QUERY.headerImageSrc, member.headerImageSrc);
+    const crop = member.headerImageCrop;
+    if (crop) into.set(MEMBER_QUERY.headerImageCrop, typeof crop === "string" ? crop : JSON.stringify({ x: crop.x, y: crop.y, w: crop.w, h: crop.h }));
+  }
+  if (member.label.trim()) into.set(MEMBER_QUERY.label, member.label);
   return into;
 }
 
@@ -170,6 +216,15 @@ export function bibDesignValuesFromQuery(params: URLSearchParams): Partial<BibDe
     const raw = params.get(key);
     if (raw) values[key] = raw;
   }
+  // The members' design (§664): absent keys read as the platform's own — off, no colour, no picture.
+  const enabled = params.get(MEMBER_QUERY.enabled);
+  values.member = {
+    enabled: enabled === "1",
+    bandColour: params.get(MEMBER_QUERY.bandColour) || null,
+    headerImageSrc: params.get(MEMBER_QUERY.headerImageSrc) || null,
+    headerImageCrop: params.get(MEMBER_QUERY.headerImageCrop) || null,
+    label: params.get(MEMBER_QUERY.label) ?? "",
+  };
   return values;
 }
 
@@ -202,8 +257,11 @@ export function bibPreviewUrl(input: {
   /** The colour select as it reads now; empty is the club's colour. */
   colour: string | null;
   design: BibDesignFormValues;
+  /** Draw a member's bib (§664): the members' header and label over the same sample. */
+  member?: boolean;
 }): string {
   const params = new URLSearchParams({ sample: "1", locale: input.locale });
+  if (input.member) params.set("member", "1");
   if (input.number?.trim()) params.set("number", input.number.trim());
   if (input.colour?.trim()) params.set("colour", input.colour.trim());
   bibDesignSearchParams(input.design, params);

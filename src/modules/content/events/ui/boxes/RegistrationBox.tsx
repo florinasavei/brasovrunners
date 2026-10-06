@@ -28,6 +28,7 @@ import { type EventFieldName, eventInputConstraints } from "../../constraints";
 import { waitlistLimitSchema } from "../../fields";
 import { WAITLIST_CHOICES, waitlistChoiceOf } from "../../waitlist-choice";
 import BibDesignPanel from "../BibDesignPanel";
+import { BIB_COLOURS } from "../bib-colours";
 import {
   bibDesignSummary,
   bibsSummary,
@@ -45,20 +46,6 @@ import { BoxNote, type BoxProps, RiskLine, SettingsReadOnly, summaryWords } from
 import { DEFAULT_TIMEZONE } from "./WhenBox";
 
 const REGISTRATION_MODES = ["NONE", "INTERNAL", "EXTERNAL"] as const;
-
-/**
- * The colours a race's numbers may print in (§173, §177): six that stay apart from each other
- * on paper and from the club's blue, which is the empty choice. Hex triplets, because that is
- * what `events.bib_colour` checks for and what the sheet paints.
- */
-const BIB_COLOURS = [
-  { key: "green", hex: "#1b8a3a" },
-  { key: "red", hex: "#c62828" },
-  { key: "orange", hex: "#ef6c00" },
-  { key: "purple", hex: "#6a1b9a" },
-  { key: "teal", hex: "#00838f" },
-  { key: "black", hex: "#212121" },
-] as const;
 
 /** An approved race-declaration version the editor offers; `effectiveAt` tells a version in force from one approved for later (§515). */
 export type DeclarationOption = { id: string; key: RaceDeclarationKey; version: number; title: string; effectiveAt?: Date };
@@ -132,6 +119,8 @@ export default async function RegistrationBox({
   const designOn = (["showName", "showEventTitle", "showDate", "showLogo", "cutMarks"] as const)
     .filter((field) => design[field])
     .map((field) => t(`editor.bibDesign.${field}`));
+  // The members' bib (§664) is one more thing the closed line names when it is on.
+  if (design.member.enabled) designOn.push(t("editor.bibDesign.member.summary"));
   const footerOn = (["showEventInFooter", "showPartners", "showWebsite", "showEmail"] as const)
     .filter((field) => design[field])
     .map((field) => t(`editor.bibDesign.footer.${field}`));

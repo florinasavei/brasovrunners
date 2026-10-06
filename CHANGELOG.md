@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.68-2026-10-04
+
+- **A members' race number** — the bib designer's «Numărul membrilor» gives an event's members their own header (a colour or a cropped picture) and a short label; the form asks «Vreau numărul de membru» (ticked) under the member tick; the sheet prints it only for an address on «Echipa», with the same number in the same order, and the bibs page lists who asked but is not verified. §664.
 ## BR-V2.67-2026-10-04
 
 - **The clock stops while the site cannot be reached** — when the site's name stops resolving (two checks ten minutes apart), every scheduled run moves the participants' running deadlines by the time since the last one, so nothing lapses until the name is back; when no scheduled call reaches the platform for longer than the monitors allow, the deadlines that were running in that silence are moved afterwards by as long as it lasted — nothing made after it. At most the new «Termene» number (48 hours by default; 0 stops the moving but still records and announces the outage). A claim whose place was given meanwhile, or that the platform had already ended inside the outage, is not revived and the platform seats nobody beyond the advertised places: the Administrators' email names each person with the verb that fits their claim now, and «Sarcini» stays red until each is handled. `/api/health`, `/devs` and «Sarcini» show it. §657.
