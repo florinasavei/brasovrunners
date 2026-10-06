@@ -23,7 +23,7 @@ import {
 } from "@/modules/public-cache/reads";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { isColdMiss, throughBreaker } from "@/modules/resilience/breaker";
-import { newcomerWouldQueue } from "@/modules/events/domain/registration-cta";
+import { newcomerWouldQueue, publicNumbersShown } from "@/modules/events/domain/registration-cta";
 import { NO_WAITLIST, WAITLIST_FULL } from "@/modules/registrations/domain/waitlist";
 import { formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
@@ -255,7 +255,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   let fullNotice: typeof WAITLIST_FULL | typeof NO_WAITLIST | "WAITLIST" | null = null;
   let offerHours: number | null = null;
   // `waiting` null: the club keeps the line's count private (§634), and the title says no number.
-  let fullCounts: { capacity: number; waiting: number | null } | null = null;
+  // `capacity` null: the event says no public number at all (§NNN), and the title names no capacity.
+  let fullCounts: { capacity: number | null; waiting: number | null } | null = null;
   if (!submitted && !error && !resting) {
     try {
       const places = await cachedPublicAvailability(event.id, now);
@@ -263,7 +264,12 @@ export default async function RegisterPage({ params, searchParams }: Props) {
         fullNotice = places.waitlistCapacity === 0 ? NO_WAITLIST : places.waitlistRoom === 0 ? WAITLIST_FULL : "WAITLIST";
         if (fullNotice === "WAITLIST") {
           offerHours = (await cachedDeadlines()).offerHours;
-          fullCounts = { capacity: places.capacity, waiting: places.waitlistCountPublic === false ? null : (places.waiting ?? places.waitlisted ?? 0) };
+          // «Arată public numărătoarea» (§NNN): off in the row or the entry, no capacity and no count — the door's rule.
+          const numbers = publicNumbersShown(event) && publicNumbersShown(places);
+          fullCounts = {
+            capacity: numbers ? places.capacity : null,
+            waiting: !numbers || places.waitlistCountPublic === false ? null : (places.waiting ?? places.waitlisted ?? 0),
+          };
         }
       }
     } catch (failure) {

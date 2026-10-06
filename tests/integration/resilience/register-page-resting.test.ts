@@ -23,7 +23,7 @@ const state = vi.hoisted(() => ({
   refusal: null as Error | null,
   draft: null as Record<string, string> | null,
   // The event's count (§587: the join form's words); null, as before, for every other case.
-  availability: null as null | { available: number; capacity: number; waitlistRoom: number | null; waitlistCapacity: number | null; waiting?: number; waitlistCountPublic?: boolean },
+  availability: null as null | { available: number; capacity: number; waitlistRoom: number | null; waitlistCapacity: number | null; waiting?: number; waitlistCountPublic?: boolean; participantCountPublic?: boolean },
   sitting: null as null | {
     sittingId: string | null;
     seed?: null;
@@ -315,6 +315,19 @@ describe("§587 the join form says the event page's message once, above the form
     expect(html).not.toContain("Fii primul");
     // The rest of the notice is the same: what the list does, and the club's offer hours.
     expect(html).toContain(ro.Event.cta.fullJoin);
+  });
+
+  it("§NNN says no capacity and no count in the title when the event says no public number", async () => {
+    state.availability = { available: 0, capacity: 151, waitlistRoom: null, waitlistCapacity: null, waiting: 17, participantCountPublic: false };
+    const html = await render();
+    expect(html).toContain('data-testid="registration-waitlist-notice"');
+    expect(html).toContain("Mulțumim! Toate locurile s-au ocupat. Intră pe lista de așteptare.");
+    expect(html).not.toContain("151");
+    expect(html).not.toContain("17 așteaptă");
+    expect(html).not.toContain("așteaptă deja");
+    // The rest of the notice is the same: what the list does, and the club's offer hours.
+    expect(html).toContain(ro.Event.cta.fullJoin);
+    expect(html).toContain("ai 36 de ore să confirmi");
   });
 
   it("says the kind refusal when the list is full or the event keeps none, and nothing while there is a place", async () => {
