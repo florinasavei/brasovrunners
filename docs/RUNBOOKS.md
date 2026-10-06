@@ -636,6 +636,10 @@ The run's **Summary** says where, in words:
   line, and no rule merges prose, so the stop is by design (`docs/DISPATCHER.md` § Cloud loop).
   A Claude Code on the web session: "resolve the conflict in <file>, keep both sides' lines,
   commit, and run yarn batch:merge again"; then push and tick **ship**.
+- **"pull request create failed: … Resource not accessible by personal access token"**: the
+  token lacks **Pull requests: Read and write** (`SETUP.md` § 41, step 3). Open the release
+  pull request by hand (base `main`, head `qa`), then run **release** by hand with the batch
+  pull request's number: it finds that pull request and continues from it.
 - **"qa has no scripts/merge-branches.mjs yet"**: the release tooling is not in `qa` yet — this
   one release goes from the PC (`docs/DISPATCHER.md` § Ship).
 - **"Set once in … Secrets and variables"** or **"GitHub refused to say what … may do"**: the
@@ -668,6 +672,13 @@ The run's **Summary** says where, in words:
     migration, or approve and re-run **migrate** on `main` by hand (Actions → the run → **Review
     deployments** / **Re-run jobs**); then, if production's build gave up waiting for the
     migration, open Vercel → the production project → **Deployments** and redeploy the newest;
+  - **the migration still «Waiting» although the run's log says «approved migration run …»**
+    (2026-10-06, BR-V2.72): the `Production` environment does not count an approval by the person
+    whose push started the run, and the release token acts as that person. On the run's page
+    (desktop view), **Start all waiting jobs** → tick Production → **I understand the consequences,
+    start deploying** runs it with the administrator's bypass; the migration is the one QA already
+    ran. Then the production build that gave up waiting needs a new deployment: Vercel →
+    **Redeploy**, or the next change merged into `main`;
   - **"production did not report … in time"** (step 7): no answer → § The domain stops
     answering; another build → open Vercel → the production project → **Deployments**, fix the
     newest deployment or redeploy it.
