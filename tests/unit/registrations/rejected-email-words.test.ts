@@ -79,7 +79,7 @@ describe("rejectedEmailWords", () => {
 describe("«Ce îi spui» on a row whose newest email was rejected (§663)", () => {
   const base: TellFacts = {
     status: "CONFIRMED", holdExpiresAt: null, emailLinkExpiresAt: null, offerEmailQueued: false, eventStartsAt: new Date("2026-11-21T08:00:00.000Z"),
-    eventTimezone: "Europe/Bucharest", eventCancelled: false, waitlistAutoOffer: true, waitlistCountPublic: true, waitlistPosition: null,
+    eventTimezone: "Europe/Bucharest", eventCancelled: false, waitlistAutoOffer: true, waitlistCountPublic: true, participantCountPublic: true, waitlistPosition: null,
     waitlistLength: null, liveLinkExpiresAt: null, bibNumber: 17, checkedInAt: null,
   };
   const now = new Date("2026-10-04T09:00:00.000Z");

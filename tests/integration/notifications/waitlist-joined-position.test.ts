@@ -494,6 +494,24 @@ describe("§634 the count kept private: the person's own page, «Toate înscrier
     expect(message.text).not.toContain("locul 2");
   });
 
+  it("§NNN says the same with «Arată public numărătoarea» unticked, whatever the waiting count's own switch says", async () => {
+    await db.update(events).set({ participantCountPublic: false, waitlistCountPublic: true }).where(eq(events.id, eventId));
+    await person("WAITLISTED", at(1));
+    const me = await person("WAITLISTED", at(2));
+    const page = await manage(me.registration.id, me.participant.id);
+    expect(page).toContain("Ești pe lista de așteptare. Locurile eliberate se oferă în ordine.");
+    expect(page).not.toContain("locul 2");
+    expect(await mine(me.participant.id)).not.toContain("din 2");
+    const message = await renderOutboxMessage(row("WAITLIST_JOINED", me.registration.id, me.participant.id), db, NOW);
+    expect(message.text).toContain("Când am trimis acest email, erai pe lista de așteptare; locurile eliberate se oferă în ordine.");
+    expect(message.text).not.toContain("locul 2");
+    // The parent ticked again: today's sentence, the child having been left ticked.
+    await db.update(events).set({ participantCountPublic: true }).where(eq(events.id, eventId));
+    expect(await manage(me.registration.id, me.participant.id)).toContain(
+      "Ești pe locul 2 din 2 persoane de pe lista de așteptare. Locurile eliberate se oferă în ordine.",
+    );
+  });
+
   it("switched on again, says today's sentences byte for byte", async () => {
     await hidden();
     await db.update(events).set({ waitlistCountPublic: true }).where(eq(events.id, eventId));

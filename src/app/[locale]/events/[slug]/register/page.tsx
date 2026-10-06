@@ -23,7 +23,7 @@ import {
 } from "@/modules/public-cache/reads";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { isColdMiss, throughBreaker } from "@/modules/resilience/breaker";
-import { newcomerWouldQueue, publicNumbersShown } from "@/modules/events/domain/registration-cta";
+import { newcomerWouldQueue, publicNumbersShown, waitlistCountShown } from "@/modules/events/domain/registration-cta";
 import { NO_WAITLIST, WAITLIST_FULL } from "@/modules/registrations/domain/waitlist";
 import { formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
@@ -268,7 +268,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           const numbers = publicNumbersShown(event) && publicNumbersShown(places);
           fullCounts = {
             capacity: numbers ? places.capacity : null,
-            waiting: !numbers || places.waitlistCountPublic === false ? null : (places.waiting ?? places.waitlisted ?? 0),
+            // «Arată public câți așteaptă» sits under it (§NNN): one rule for both, the door's.
+            waiting: numbers && waitlistCountShown(places) ? (places.waiting ?? places.waitlisted ?? 0) : null,
           };
         }
       }

@@ -767,6 +767,8 @@ export type RegistrationDetail = {
   /** «Ofertele din lista de așteptare pleacă automat» (§615) and «Arată public câți așteaptă» (§634), for the waiting sentence. */
   waitlistAutoOffer: boolean;
   waitlistCountPublic: boolean;
+  /** «Arată public numărătoarea» (§668): «Arată public câți așteaptă» sits under it (§NNN), so off it keeps the length private too. */
+  participantCountPublic: boolean;
   /** Where a waiting row stands and how long the line is (§629): null unless `WAITLISTED` on an event not cancelled. */
   waitlistPosition: number | null;
   waitlistLength: number | null;
@@ -885,6 +887,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       eventCancelled: sql<boolean>`(${events.eventStatus} = 'CANCELLED')`.mapWith(Boolean),
       waitlistAutoOffer: events.waitlistAutoOffer,
       waitlistCountPublic: events.waitlistCountPublic,
+      participantCountPublic: events.participantCountPublic,
       waitlistPosition: waitlistPositionOfRow,
       waitlistLength: waitlistLengthOfRow,
       liveLinkExpiresAt: liveLinkExpiresAtFor(now),
