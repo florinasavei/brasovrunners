@@ -28,6 +28,7 @@ import { type EventFieldName, eventInputConstraints } from "../../constraints";
 import { waitlistLimitSchema } from "../../fields";
 import { WAITLIST_CHOICES, waitlistChoiceOf } from "../../waitlist-choice";
 import BibDesignPanel from "../BibDesignPanel";
+import { BIB_COLOURS } from "../bib-colours";
 import {
   bibDesignSummary,
   bibsSummary,
@@ -36,7 +37,9 @@ import {
   registrationSummary,
   registrationWindowSummary,
   summaryDate,
+  summaryDateTime,
 } from "../box-summaries";
+import { countForm } from "@/i18n/count-form";
 import OnlyForMode from "../OnlyForMode";
 import OnlyForType from "../OnlyForType";
 import WaitlistLimitOnly from "../WaitlistLimitOnly";
@@ -45,20 +48,6 @@ import { BoxNote, type BoxProps, RiskLine, SettingsReadOnly, summaryWords } from
 import { DEFAULT_TIMEZONE } from "./WhenBox";
 
 const REGISTRATION_MODES = ["NONE", "INTERNAL", "EXTERNAL"] as const;
-
-/**
- * The colours a race's numbers may print in (§173, §177): six that stay apart from each other
- * on paper and from the club's blue, which is the empty choice. Hex triplets, because that is
- * what `events.bib_colour` checks for and what the sheet paints.
- */
-const BIB_COLOURS = [
-  { key: "green", hex: "#1b8a3a" },
-  { key: "red", hex: "#c62828" },
-  { key: "orange", hex: "#ef6c00" },
-  { key: "purple", hex: "#6a1b9a" },
-  { key: "teal", hex: "#00838f" },
-  { key: "black", hex: "#212121" },
-] as const;
 
 /** An approved race-declaration version the editor offers; `effectiveAt` tells a version in force from one approved for later (§515). */
 export type DeclarationOption = { id: string; key: RaceDeclarationKey; version: number; title: string; effectiveAt?: Date };
@@ -102,7 +91,15 @@ export default async function RegistrationBox({
   locale,
   now,
   clubDeadlines,
+  windowHolds = null,
 }: BoxProps & {
+  /**
+   * The reserved places the participation window gave, as a save would treat them (§665,
+   * `registrations/window-holds.ts#previewWindowHolds`): how many a save moves now to the stored
+   * window's instant, how many already hold it, and that instant. Real registrations only; the create
+   * form has none.
+   */
+  windowHolds?: { moveNow: number; atWindow: number; to: Date } | null;
   /** The page's clock, for "race week" (the bib card opens by itself then). */
   now?: Date;
   /**
@@ -132,6 +129,8 @@ export default async function RegistrationBox({
   const designOn = (["showName", "showEventTitle", "showDate", "showLogo", "cutMarks"] as const)
     .filter((field) => design[field])
     .map((field) => t(`editor.bibDesign.${field}`));
+  // The members' bib (§664) is one more thing the closed line names when it is on.
+  if (design.member.enabled) designOn.push(t("editor.bibDesign.member.summary"));
   const footerOn = (["showEventInFooter", "showPartners", "showWebsite", "showEmail"] as const)
     .filter((field) => design[field])
     .map((field) => t(`editor.bibDesign.footer.${field}`));
@@ -171,6 +170,22 @@ export default async function RegistrationBox({
     return confirmationDueAtStart({ days: event.confirmationDeadlineDaysBefore })
       ? t("editor.boxes.confirmation.datesAtStart", values)
       : t("editor.boxes.confirmation.dates", values);
+  })();
+
+  /*
+    What the save does to the places the window already gave (§665): moves those held to another
+    window's instant now, or — when they all hold this one — says a changed window will move them.
+  */
+  const windowHoldsLine = (() => {
+    if (!windowHolds) return null;
+    const due = summaryDateTime(windowHolds.to, zone, locale, "inline");
+    if (windowHolds.moveNow > 0) {
+      return t(`editor.boxes.confirmation.moveNow.${countForm(windowHolds.moveNow, locale)}`, { count: windowHolds.moveNow, due });
+    }
+    if (windowHolds.atWindow > 0) {
+      return t(`editor.boxes.confirmation.follow.${countForm(windowHolds.atWindow, locale)}`, { count: windowHolds.atWindow, due });
+    }
+    return null;
   })();
 
   const summary = registrationSummary(words, event, {
@@ -378,6 +393,11 @@ export default async function RegistrationBox({
                       {confirmationDates && (
                         <Typography variant="body2" data-testid="confirmation-dates">
                           {confirmationDates}
+                        </Typography>
+                      )}
+                      {windowHoldsLine && (
+                        <Typography variant="body2" data-testid="confirmation-holds">
+                          {windowHoldsLine}
                         </Typography>
                       )}
                       <BoxNote more={t("editor.confirmationWindowHelpMore", { hold })}>{t("editor.confirmationWindowHelp")}</BoxNote>

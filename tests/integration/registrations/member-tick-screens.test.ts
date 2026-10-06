@@ -91,6 +91,7 @@ const { default: AdminRegistrationsPage } = await import("@/app/[locale]/admin/r
 const { default: RegistrationDetailPage } = await import("@/app/[locale]/admin/registrations/[id]/page");
 const { default: AdminTable } = await import("@/modules/staff-identity/ui/AdminTable");
 const { default: GuardianForMinor } = await import("@/modules/registrations/ui/GuardianForMinor");
+const { default: EmailRejectedChip } = await import("@/modules/registrations/ui/EmailRejectedChip");
 const actions = await import("@/app/[locale]/admin/registrations/actions");
 
 type Props = Record<string, unknown> & { children?: ReactNode };
@@ -449,15 +450,16 @@ describe("BR-REQ-037-03 criterion 14: the members' and the bounced filters are t
     const rows = table?.props.rows as { id: string }[];
     expect(rows.map((row) => row.id)).toEqual([bounced]);
     const nameColumn = (table?.props.columns as { key: string; render: (row: unknown) => ReactNode }[]).find((column) => column.key === "name");
-    const chips = byTestId(nameColumn?.render(rows[0]), "email-rejected");
+    // Since §663 the chip is an island with a tooltip: the provider's reason is its small print, never a `title`.
+    const chips = elements(nameColumn?.render(rows[0])).filter((element) => element.type === EmailRejectedChip);
     expect(chips).toHaveLength(1);
     expect(chips[0].props.label).toBe(ro.Admin.registrations.emailRejected);
-    expect(chips[0].props.title).toBe("550 5.1.1 mailbox unavailable");
+    expect(chips[0].props.reason).toBe("Motivul dat de furnizor: 550 5.1.1 mailbox unavailable");
 
     const all = await listPage({ eventId: race.id });
     const allTable = elements(all).find((element) => element.type === AdminTable);
     const reachedRow = (allTable?.props.rows as { id: string }[]).find((row) => row.id === reached);
     const allName = (allTable?.props.columns as { key: string; render: (row: unknown) => ReactNode }[]).find((column) => column.key === "name");
-    expect(byTestId(allName?.render(reachedRow), "email-rejected")).toHaveLength(0);
+    expect(elements(allName?.render(reachedRow)).filter((element) => element.type === EmailRejectedChip)).toHaveLength(0);
   });
 });

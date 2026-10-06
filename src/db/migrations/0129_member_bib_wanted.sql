@@ -1,0 +1,1 @@
+ALTER TABLE "registrations" ADD COLUMN "member_bib_wanted" boolean DEFAULT false NOT NULL;

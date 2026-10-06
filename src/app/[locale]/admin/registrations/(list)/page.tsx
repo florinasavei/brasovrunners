@@ -41,6 +41,8 @@ import SummaryStrip from "@/modules/registrations/ui/SummaryStrip";
 import PlaceDeadlines from "@/modules/registrations/ui/PlaceDeadlines";
 import RowDeadlineCell from "@/modules/registrations/ui/RowDeadlineCell";
 import { rowDeadlineOf } from "@/modules/registrations/domain/row-deadline";
+import { cityLabel } from "@/modules/registrations/domain/city-label";
+import { ageOnRaceDay } from "@/modules/registrations/domain/age";
 import { deadlinesForThisRequest } from "@/modules/deadlines/request";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { familiesTogether, familyOf } from "@/modules/registrations/family-marker";
@@ -94,6 +96,11 @@ import { givePlaceRefusalAhead } from "@/modules/registrations/give-place-tip";
 import { paperConfirmationText } from "@/modules/registrations/ui/PaperConfirmationTip";
 import RegistrationRowMenu, { type RegistrationMenuItem } from "@/modules/registrations/ui/RegistrationRowMenu";
 import HiddenListChip from "@/modules/registrations/ui/HiddenListChip";
+import MemberChip from "@/modules/registrations/ui/MemberChip";
+import { membershipOf } from "@/modules/registrations/domain/membership";
+import { memberCanonicalEmails } from "@/modules/registrations/member-ticks";
+import EmailRejectedChip from "@/modules/registrations/ui/EmailRejectedChip";
+import { rejectedEmailSentences, rejectedEmailWords } from "@/modules/registrations/ui/rejected-email-words";
 import { CLUB_NAME } from "@/theme/brand";
 import { actionKeyOf } from "@/shared/forms/action-key";
 
@@ -144,7 +151,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   if (!canReadRegistrations(actor.role)) notFound();
 
   const current = await searchParams;
-  const { eventId, status, clubMember, bounced, promo, outside, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test, memberSweep } = current;
+  const { eventId, status, clubMember, bounced, promo, outside, memberBib, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test, memberSweep } = current;
   // What «Trimite acum» said about Mailgun's stop (§622): from the action's own address; unreadable says nothing.
   const untilParsed = current.until ? new Date(current.until) : null;
   const untilAt = untilParsed && !Number.isNaN(untilParsed.getTime()) ? untilParsed : null;
@@ -169,21 +176,25 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const filters: {
     eventId?: string;
     status?: RegistrationStatus;
-    clubMemberDeclared?: true;
+    clubMember?: true;
+    members?: readonly string[];
     emailBounced?: true;
     promoConsented?: true;
     outsideCapacity?: true;
+    memberBibAsked?: true;
     search?: string;
   } = {
     status: isRegistrationStatus(status) ? status : undefined,
-    // One-way: it narrows to the people who ticked the box and never to the ones who did not
-    // (`admin-repository.ts` says why).
-    clubMemberDeclared: clubMember === "1" || undefined,
+    // One-way: it narrows to the members, declared or verified (§662), and never to the ones who did not
+    // tick (`admin-repository.ts` says why).
+    clubMember: clubMember === "1" || undefined,
     emailBounced: bounced === "1" || undefined,
     // «Doar cu oferte și beneficii» (§581): who said yes, by the one condition of §570 (`promoListed`).
     promoConsented: promo === "1" || undefined,
     // «În afara locurilor» (§643): the strip's own pill, narrowing to the rows seated outside the places.
     outsideCapacity: outside === "1" || undefined,
+    // The bibs page's link (§664): who asked for the members' bib and is no member account's.
+    memberBibAsked: memberBib === "asked" || undefined,
     search: q || undefined,
   };
 
@@ -196,10 +207,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     Unless a name was typed and no event chosen (§312): then every event, because somebody
     searching for a person must not be told "nobody" by a filter they never set.
   */
-  const [volume, events] = await Promise.all([
+  const [volume, events, members] = await Promise.all([
     readEmailVolumeToday(db, new Date()),
     listEventsWithRegistrations(db),
+    // «Membru (verificat)» (§662): the member accounts' canonical addresses, read once for the list, its count and its strip.
+    memberCanonicalEmails(db),
   ]);
+  filters.members = [...members];
   const eventFilter = defaultEventFilter(eventId, events, q);
   filters.eventId = eventFilter.eventId;
   const featuredEvent = events.find((event) => event.featured) ?? null;
@@ -291,6 +305,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     // Rides with every sort, page and export link (§581): the file is the rows on screen.
     promo: promo === "1" ? "1" : undefined,
     outside: outside === "1" ? "1" : undefined,
+    memberBib: memberBib === "asked" ? "asked" : undefined,
     q,
     sort: current.sort,
     dir: current.dir,
@@ -305,7 +320,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     `defaultEventFilter` over it, so `all` and a bookmarked link mean there what they mean here.
   */
   const exportQueryString = buildListHref("", listParams, { eventId: eventFilter.eventId ?? ALL_EVENTS }).replace(/^\?/, "");
-  const hasFilters = Boolean(eventId || status || clubMember || bounced || promo === "1" || outside === "1" || q);
+  const hasFilters = Boolean(eventId || status || clubMember || bounced || promo === "1" || outside === "1" || memberBib === "asked" || q);
   /*
     Nobody chose a filter, yet the list is still narrowed: `defaultEventFilter` scoped it to the
     featured event with no URL parameter to show for it (§178). This is the shape §277 named —
@@ -377,6 +392,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     locale,
   };
 
+  // «Membru (verificat)» / «Membru (declarat)» (§662): one chip, or none; its sentence is the tooltip.
+  const memberChipOf = (row: RegistrationListRow) => {
+    const membership = membershipOf({ declared: row.clubMemberDeclared, verified: row.memberVerified });
+    return membership && <MemberChip membership={membership} label={t(`registrations.member.${membership}`)} hint={t(`registrations.member.${membership}Hint`)} />;
+  };
+
   const columns: readonly AdminColumn<RegistrationListRow>[] = [
     {
       key: "name",
@@ -407,29 +428,15 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               href: getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: member.id } } }),
             }))}
           />
-          {/* BR-REQ-031-06. "Declared" in both languages, because this is what the person wrote
-              about themselves and not something the club checked. */}
-          {row.clubMemberDeclared && (
-            <Chip
-              size="small"
-              color="info"
-              variant="outlined"
-              label={t("registrations.clubMemberChip")}
-            />
-          )}
-          {/* The provider said no (§76, §83): the same chip the desk and the registration's page draw,
-              so a row kept by «Doar cine nu a primit emailul» says why it is there (BR-REQ-038-01
-              criterion 8). The reason is the hover text, as at the desk. */}
-          {row.emailRejectedReason && (
-            <Chip
-              size="small"
-              color="error"
-              variant="outlined"
-              label={t("registrations.emailRejected")}
-              title={row.emailRejectedReason}
-              data-testid="email-rejected"
-            />
-          )}
+          {/* BR-REQ-031-06, §662: «verificat» when the address is a member account's, whatever the tick;
+              «declarat» when the person ticked and no account matches — what they said, not what the club checked. */}
+          {memberChipOf(row)}
+          {/* The newest email was rejected (§76, §83, §663): the desk's and the page's chip, so a row kept by
+              «Doar cu un email respins» says why — which email, when, why, and whether after the confirmation. */}
+          {row.emailRejected && (() => {
+            const words = rejectedEmailWords({ ...row.emailRejected, emailConfirmedAt: row.emailConfirmedAt }, locale);
+            return <EmailRejectedChip label={t("registrations.emailRejected")} sentences={rejectedEmailSentences(words)} reason={words.reason} />;
+          })()}
           {/* "Is my name on the site?" is asked of the club, not of the platform (§186). Marked
               only when the answer is no: on an event that publishes a list most rows are on it,
               and a chip on every row is a chip nobody reads. On an event with no published list
@@ -471,6 +478,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     {
       key: "status",
       label: t("registrations.columnStatus"),
+      essential: true,
       sortable: true,
       render: (row) => <Chip size="small" label={REGISTRATION_STATUS_LABEL[row.status]} />,
     },
@@ -546,6 +554,45 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 ✓
               </Box>
             )}
+          </Box>
+        );
+      },
+    },
+    {
+      /*
+        «Oraș» (§660): where the person lives, the city as typed and the country's code only when it is not
+        Romania («Bristol (GB)», `cityLabel`), in both of `AdminTable`'s layouts. «—» when no city was
+        given. Sorted by the city alone, the rows with none last.
+      */
+      key: "city",
+      label: t("registrations.columnCity"),
+      sortable: true,
+      initialDir: "asc",
+      render: (row) => {
+        const label = cityLabel(row.city, row.country);
+        return (
+          <Box component="span" data-testid="row-city" sx={label ? undefined : { color: "text.disabled" }}>
+            {label || "—"}
+          </Box>
+        );
+      },
+    },
+    {
+      /*
+        «Vârstă» (§660): the age on the event's day (`ageOnRaceDay`, on the event's own clock), the age the
+        categories and the minors' rules count (§329), not today's. «—» with no birth date. Ascending is
+        the youngest first.
+      */
+      key: "age",
+      label: t("registrations.columnAge"),
+      hint: t("registrations.ageHint"),
+      sortable: true,
+      initialDir: "asc",
+      render: (row) => {
+        const age = ageOnRaceDay(row.birthDate, row.eventStartsAt, row.eventTimezone);
+        return (
+          <Box component="span" data-testid="row-age" sx={{ fontVariantNumeric: "tabular-nums", color: age === null ? "text.disabled" : "text.primary" }}>
+            {age ?? "—"}
           </Box>
         );
       },
@@ -1156,12 +1203,27 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         așteptare» was pressed, and the next «Filtrează» sent `status=` and dropped the filter the
         pill had set (§626). A new address is a new form; the fields start from what the address says.
       */}
+      {/* The bibs page's filter (§664), said in words since no box of the form carries it, and cleared by a link. */}
+      {memberBib === "asked" && (
+        <Typography variant="body2" data-testid="registrations-filter-member-bib">
+          {t("registrations.memberBibAskedFilter")}{" "}
+          <Box
+            component="a"
+            href={buildListHref(basePath, listParams, { memberBib: undefined })}
+            sx={{ color: "primary.main", display: "inline-flex", alignItems: "center", minHeight: 44 }}
+          >
+            {t("registrations.memberBibAskedClear")}
+          </Box>
+        </Typography>
+      )}
       <Box component="form" key={listQueryString} method="get" action={basePath}>
         <input type="hidden" name="sort" value={query.sort} />
         <input type="hidden" name="dir" value={query.dir} />
         <input type="hidden" name="perPage" value={String(query.perPage)} />
         {/* The «În afara locurilor» pill's filter (§643) survives «Filtrează»; the pill itself clears it. */}
         {outside === "1" && <input type="hidden" name="outside" value="1" />}
+        {/* The bibs page's filter (§664) survives «Filtrează»; the line above the list says it and clears it. */}
+        {memberBib === "asked" && <input type="hidden" name="memberBib" value="asked" />}
         <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap", gap: 2, alignItems: "flex-start" }}>
           {/* BR-REQ-041-01 criterion 7. First, and widest, because on race morning it is the
               only one that gets used. */}
@@ -1225,7 +1287,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               {t("registrations.clubMemberOnly", { club: CLUB_NAME })}
             </CheckboxField>
           </Box>
-          {/* Who never got the email (§76, §83): the rows to call. */}
+          {/* Whose newest email was rejected, confirmed or not (§76, §83, §663): the rows to call. */}
           <Box sx={{ minWidth: 220, maxWidth: 320, pt: 0.5 }} data-testid="registrations-filter-bounced">
             <CheckboxField name="bounced" value="1" defaultChecked={bounced === "1"} dense help={t("registrations.bouncedOnlyHelp")}>
               <UnsubscribeIcon aria-hidden data-testid="registrations-filter-bounced-glyph" />

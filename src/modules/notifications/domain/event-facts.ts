@@ -101,7 +101,7 @@ function eventWords(locale: Locale): Translate {
  * the confirmation and the declaration request never do — a forecast read weeks before race day
  * would be out of date by then.
  */
-export type EmailWeatherRow = { label: string; line: string; credit: string };
+export type EmailWeatherRow = { label: string; line: string; credit?: string };
 
 export function eventFactsBlock(details: EmailEventFacts, locale: Locale, weather?: EmailWeatherRow): EventFactsBlock {
   const t = eventWords(locale);
@@ -125,7 +125,8 @@ export function eventFactsBlock(details: EmailEventFacts, locale: Locale, weathe
   });
 
   // Vremea: the forecast at the start, right under «Când», the hour it is for (§402), and the credit its licence asks for, as a word.
-  if (weather) rows.push({ label: weather.label, lines: [[{ text: weather.line }], [{ text: weather.credit }]] });
+  // The club's own text (§666) comes without a credit: the words are the club's, not Open-Meteo's.
+  if (weather) rows.push({ label: weather.label, lines: [[{ text: weather.line }], ...(weather.credit ? [[{ text: weather.credit }]] : [])] });
 
   // Unde: the page's sentence while the place is to be announced (§328), and nothing else.
   if (details.locationToBeAnnounced) {

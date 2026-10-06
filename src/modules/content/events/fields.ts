@@ -23,6 +23,7 @@ import {
 import { refuseOneLanguage } from "@/shared/forms/both-languages";
 import { WAITLIST_CHOICES } from "./waitlist-choice";
 import { EVENT_COST_TYPES, type EventCostType, MAX_DISCOUNT_NOTE, MAX_EVENT_COST_AMOUNT } from "@/modules/events/domain/cost";
+import { MAX_WEATHER_NOTE, WEATHER_MODES } from "@/modules/weather/domain/mode";
 import {
   DEFAULT_EVENT_LINK_KIND,
   isEventLinkKind,
@@ -155,6 +156,13 @@ export const translationFieldsSchema = z
      * languages or neither (§352, `assertOptionalTextsInBothLanguages`).
      */
     discountNote: optionalText(MAX_DISCOUNT_NOTE).optional(),
+    /**
+     * The club's own weather text (§666), shown in place of the forecast while «Vremea» is «Text scris
+     * de club». Plain text, at most 200 characters, normalised like `discountNote`; "" clears it.
+     * Kept whatever the mode — switching back to the club's text finds it. Optional in the input
+     * like `checklist`: absent leaves the column alone. Both languages or neither (§352).
+     */
+    weatherNote: optionalText(MAX_WEATHER_NOTE).optional(),
   })
   .strict();
 
@@ -796,6 +804,13 @@ export const eventFieldsSchema = z
      * caller from before it existed, which means automatic.
      */
     nightOverride: z.boolean().nullable().optional().default(null),
+    /**
+     * «Vremea» (§666): the forecast, the club's own text, or none. Absent means this caller is not
+     * editing it (a fixture, a script, a reader who may not change the place), so the stored choice
+     * stays; a create that posts none stores the column's default, the forecast. A value outside the
+     * three did not come from the editor's radios and is refused.
+     */
+    weatherMode: z.enum(WEATHER_MODES).optional(),
     /**
      * "Declarație opțională pe propria răspundere" (§393): the group run's self-declaration, a
      * checkbox in "Traseul". Optional for a caller from before it existed, which means none offered;

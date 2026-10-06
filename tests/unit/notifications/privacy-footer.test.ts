@@ -31,6 +31,8 @@ const CLUB_MAIL: readonly EmailMessageType[] = [
   "STAFF_INVITATION",
   "MEMBER_INVITATION",
   "LEGAL_TEMPLATES_CHANGED",
+  "UNREACHABLE_WINDOW_OPENED",
+  "UNREACHABLE_WINDOW_CLOSED",
 ];
 
 const noticeUrl = (locale: "ro" | "en") => `${env.APP_BASE_URL}${getPathname({ locale, href: "/legal/privacy" })}`;

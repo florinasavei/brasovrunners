@@ -40,6 +40,80 @@ export function storageKey(tableId: string): string {
 }
 
 /**
+ * The columns this browser hides on one table (§661), beside its widths: a list of column keys.
+ * A hidden column keeps its stored width, so it comes back as wide as it was.
+ */
+export function hiddenStorageKey(tableId: string): string {
+  return `br.table.${tableId}.hidden`;
+}
+
+/** A column key as storage, the pre-paint script and a CSS attribute selector accept it. */
+export const COLUMN_KEY_PATTERN = /^[A-Za-z0-9_-]{1,80}$/;
+
+/**
+ * A column nobody may hide (§661): the first one (the row's name), the phone layout's headline,
+ * and any the list marks `essential` (the state). The row verbs' column is never a column key,
+ * so it is never offered either. A table therefore always keeps a column to read a row by.
+ */
+export function isEssentialColumn(column: { essential?: boolean; primary?: boolean }, index: number): boolean {
+  return index === 0 || column.primary === true || column.essential === true;
+}
+
+/**
+ * What storage held for the hidden columns, read defensively like the widths: anything but an
+ * array of column keys is nothing, and a key that could not be a column (the verbs', a selector)
+ * is dropped. Each key once, in the order stored.
+ */
+export function parseHidden(raw: string | null | undefined): string[] {
+  if (!raw) return [];
+  let value: unknown;
+  try {
+    value = JSON.parse(raw);
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(value)) return [];
+  const keys: string[] = [];
+  for (const key of value) {
+    if (typeof key !== "string" || key === ACTIONS_COLUMN || !COLUMN_KEY_PATTERN.test(key)) continue;
+    if (!keys.includes(key)) keys.push(key);
+  }
+  return keys.slice(0, 80);
+}
+
+/**
+ * The CSS that hides `hidden` on one table (§661), by position, because a body cell carries no
+ * column key: for each hidden column one rule set over its `<col>`, its heading and its cells.
+ * `columns` are the table's own, in order, the row verbs' left out (theirs is always the last
+ * `<col>`, so it shifts no position). An essential column is never hidden, whatever storage says.
+ * When the table has no verbs' column and its last column is hidden, the last column still shown
+ * gets its resize edge inside its own cell, as the last column always has (§652), so the frame
+ * never scrolls for it. Empty when nothing is hidden. The pre-paint script writes the same text.
+ */
+export function hiddenColumnsCss(
+  tableId: string,
+  columns: readonly { key: string; essential: boolean }[],
+  hidden: readonly string[],
+  hasActions: boolean,
+): string {
+  const q = `table[data-table-id="${tableId}"]`;
+  let css = "";
+  let last = 0;
+  columns.forEach(({ key, essential }, index) => {
+    const n = index + 1;
+    if (essential || !hidden.includes(key)) {
+      last = n;
+      return;
+    }
+    css += `${q}>colgroup>col:nth-child(${n}),${q}>thead>tr>th:nth-child(${n}),${q}>tbody>tr>td:nth-child(${n}){display:none}`;
+  });
+  if (css && !hasActions && last < columns.length) {
+    css += `${q}>thead>tr>th:nth-child(${last})>[data-column-resize]{right:0}`;
+  }
+  return css;
+}
+
+/**
  * One column's floor: its own measured one (the heading's longest word, its arrow and padding),
  * never below `MIN_COLUMN_WIDTH`, never past `MAX_COLUMN_WIDTH`, whole.
  */

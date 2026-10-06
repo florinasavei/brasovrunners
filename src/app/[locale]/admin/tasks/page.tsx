@@ -72,6 +72,8 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { PINGER_CADENCE_MINUTES } from "@/modules/jobs/quiet-hours";
+import { countNotRevivedWaiting, readUnreachableWindows } from "@/modules/jobs/unreachable-windows";
+import { unreachableWindowState } from "@/modules/registrations/domain/outage-grace";
 import { getPathname } from "@/i18n/navigation";
 import SubNav from "@/shared/ui/SubNav";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
@@ -351,6 +353,12 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     !/vercel\.app$/i.test(hostname) && !/^(localhost|127\.0\.0\.1|\[::1\])$/i.test(hostname);
   // When the domain expires (§435): the two dates from the environment, the arithmetic pure.
   const domain = domainRenewal(env.DOMAIN_REGISTERED_ON, env.DOMAIN_RENEWAL_YEARS, now);
+  // The outage grace (§657): the latest windows, the claims the newest left lapsed still waiting, and what the row says of them.
+  const outageWindows = await readUnreachableWindows(db, 5);
+  const notRevivedWaiting = await countNotRevivedWaiting(db, outageWindows, now);
+  const outage = unreachableWindowState(outageWindows, now, notRevivedWaiting);
+  const lastWindow = outageWindows[0] ?? null;
+  const windowAt = (value: Date | null) => (value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }) : "—");
 
   /**
    * The values the step-by-step instructions under each task need, read from this deployment
@@ -381,6 +389,12 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     domainExpiresOn:
       domain.status === "unknown" ? "" : formatCalendarDay(domain.expiresOn, { locale, style: "long", position: "inline" }),
     renewalYears: String(env.DOMAIN_RENEWAL_YEARS),
+    // The outage grace's row (§657): the latest window's instants, what it gave back and its counts.
+    windowFrom: windowAt(lastWindow?.startedAt ?? null),
+    windowUntil: windowAt(lastWindow?.endedAt ?? null),
+    windowGranted: minutesPhrase(locale, Math.round((lastWindow?.grantedMs ?? 0) / 60_000)),
+    windowMoved: String(lastWindow?.rowsMoved ?? 0),
+    windowNotRevived: String(notRevivedWaiting),
   };
   /** `t.raw` returns the catalogue's array untouched, so the values are filled in here. */
   const fill = (step: string) =>
@@ -458,6 +472,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       publishedEventCount,
       raceDaySheetsDue,
       domainRenewal: domain,
+      unreachableWindow: outage,
       storageConfigured: isStorageConfigured(),
       // Configured *and* switched on (§254): a row that said "done" while the check was off
       // would be the task board lying about a defence.

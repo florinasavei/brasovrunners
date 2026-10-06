@@ -1,19 +1,21 @@
-import { and, eq, gt, inArray, or, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
 import { familyPlaceHolds } from "@/db/schema/family-entries";
 import { registrationInterests } from "@/db/schema/registration-interests";
 import { registrations } from "@/db/schema/registrations";
+import { unreachableWindows } from "@/db/schema/unreachable-windows";
 import type { Database } from "@/db/types";
 import { PROCESSING_LOCK_TIMEOUT_MS } from "@/modules/notifications/domain/retry";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
-import { declarationLastCallDueAt, eventReminderDueAt } from "@/modules/notifications/domain/automatic-sends";
+import { declarationLastCallDueAt, eventReminderDueAt, windowLastCallAt } from "@/modules/notifications/domain/automatic-sends";
 import { nextConfirmationRetry } from "@/modules/notifications/confirmation-retry";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { PLACE_HOLDING_STATUSES } from "@/modules/registrations/domain/state-machine";
 import { emailLinkLapseSql } from "@/modules/registrations/repository";
 import { nextFamilyEntryLapse } from "@/modules/registrations/family-entries";
 import { nextInvitationLapse } from "@/modules/registrations/invitation-repository";
+import { DNS_CONFIRM_MS, outageGraceMaxMs } from "@/modules/registrations/domain/outage-grace";
 import type { JobName } from "./schedule";
 
 /**
@@ -175,7 +177,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     const start = startsAt.getTime();
     if (event.waitingOrPending) eventInstants.push(ahead(start));
     const mailed = event.eventStatus === "SCHEDULED" && event.registrationMode === "INTERNAL";
-    // The reminder's lead is the last call's too (`domain/automatic-sends.ts`, one formula with the job, §383).
+    // The reminder's lead is the last call's too, for a row not held until a window's deadline (`domain/automatic-sends.ts`, one formula with the job, §383, §665).
     const reminderAt = declarationLastCallDueAt({ startsAt, reminderHoursBefore: toCount(event.reminderHoursBefore) }, settings);
     if (mailed && reminderAt && (event.confirmed || event.pendingDeclaration)) {
       eventInstants.push(ahead(reminderAt.getTime()));
@@ -187,6 +189,12 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     });
     if (mailed && event.pendingDeclaration && window) {
       eventInstants.push(ahead(window.opensAt.getTime()));
+      // The last call before a window's deadline (§665), «Termene» `lastCallHours` ahead of it — one formula with the job.
+      const lastCallAt = windowLastCallAt(
+        { startsAt, confirmationOpensDaysBefore: toCount(event.opensDays), confirmationDeadlineDaysBefore: toCount(event.deadlineDays) },
+        settings,
+      );
+      if (lastCallAt) eventInstants.push(ahead(lastCallAt.getTime()));
     }
   }
 
@@ -247,6 +255,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
   const invitationLapse = await nextInvitationLapse(db, now);
   // `queueConfirmationRetries` (§653): the verification email re-sent, the club's hours after the last one left.
   const confirmationRetry = await nextConfirmationRetry(db, now, settings);
+  const outage = await nextOutageWork(db, now, outageGraceMaxMs(settings));
 
   return earliest([
     emailLapses,
@@ -258,7 +267,39 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     familyLapse,
     toDate(invitationLapse),
     confirmationRetry,
+    outage,
   ]);
+}
+
+/**
+ * The outage grace (§657, `registrations/outage-grace.ts`): the door watched while it may be shut. A
+ * `dns` suspicion (one «no such name», `confirmed_at` null) is confirmed or dropped by the probe ten
+ * minutes after it, so the run then is due — and so is the next ping, when that instant has passed
+ * already (the probe said nothing in between). While a window is open every ping runs for real: each
+ * run moves the running deadlines by the time since the one before, which is what keeps them from
+ * reading as lapsed, and the probe that closes the window is a real run's — until the window has given
+ * back the club's cap (`granted_ms` at `maxMs`, or the cap at 0): past it nothing moves any more, so
+ * the plan falls back to its ordinary quiet. The window stays open and recorded; the next real run
+ * the ordinary plan makes, or a wake, probes the name and closes it. A closed window plans nothing:
+ * its moves are done in the run that closes it, or that run reports a failure and promises no quiet
+ * (`planQuiet`).
+ */
+async function nextOutageWork<T extends Record<string, unknown>>(db: Database<T>, now: Date, maxMs: number): Promise<Date | null> {
+  const any = db as unknown as AnyDb;
+  const [open] = await any
+    .select({ startedAt: unreachableWindows.startedAt, confirmedAt: unreachableWindows.confirmedAt, grantedMs: unreachableWindows.grantedMs })
+    .from(unreachableWindows)
+    .where(isNull(unreachableWindows.endedAt))
+    .limit(1);
+  if (!open) return null;
+  // A window that has given back all the cap allows: a real run would move nothing, so none is asked for.
+  if (open.confirmedAt !== null && Number(open.grantedMs) >= maxMs) return null;
+  // The next ping, whenever it comes: a minute on, so the plan is ahead of this run and the ping after it runs.
+  const soon = new Date(now.getTime() + MINUTE);
+  const startedAt = toDate(open.startedAt);
+  if (open.confirmedAt !== null || !startedAt) return soon;
+  const confirmAt = new Date(startedAt.getTime() + DNS_CONFIRM_MS);
+  return confirmAt > soon ? confirmAt : soon;
 }
 
 /**

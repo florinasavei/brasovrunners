@@ -59,6 +59,9 @@ const NOT_WAITED_FOR: ReadonlySet<EmailMessageType> = new Set<EmailMessageType>(
   "MEMBER_INVITATION",
   // The Administrators' notice of a moved legal template (§639): nobody on a public page waits for it.
   "LEGAL_TEMPLATES_CHANGED",
+  // The outage grace's two (§657): to the Administrators; nobody on a public page waits for them.
+  "UNREACHABLE_WINDOW_OPENED",
+  "UNREACHABLE_WINDOW_CLOSED",
   // An invitation (§647): sent by an Administrator's press, to somebody who is on no page waiting for it.
   "EVENT_INVITATION",
 ]);

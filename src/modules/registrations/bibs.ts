@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, inArray, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, isNotNull, isNull, notInArray, type SQL, sql } from "drizzle-orm";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
@@ -6,6 +6,8 @@ import { registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { type BibDesign, readBibDesign } from "./bib-design";
+import { memberCanonicalEmails } from "./member-ticks";
+import { OFFERS_MEMBER_BIB } from "@/modules/events/repository";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { type CoHost, readCoHosts } from "@/modules/events/domain/co-hosts";
@@ -682,7 +684,23 @@ export async function isEventSpareNumber<T extends Record<string, unknown>>(
   return !(await skippedSpareNumbers(db, eventId)).includes(number);
 }
 
-export type BibRow = { id: string; bibNumber: number; registeredName: string };
+/**
+ * One bib of the sheet. `member` is whether it prints the members' design (§664): the event offers
+ * it, the person asked («Vreau numărul de membru»), and the address is a member account's (§662) —
+ * all three, never the tick alone. The number is the same number either way.
+ */
+export type BibRow = { id: string; bibNumber: number; registeredName: string; member: boolean };
+
+/**
+ * Whether a row prints the members' bib, as one SQL condition over a registration joined to its
+ * event and participant (§664): asked, offered, and the canonical address among the member
+ * accounts' (`memberCanonicalEmails`, read once per sheet by the caller) — a plain `false` with no
+ * member account, never an `IN ()`.
+ */
+function memberBibPrinted(members: readonly string[]): SQL<boolean> {
+  if (members.length === 0) return sql<boolean>`false`.mapWith(Boolean);
+  return sql<boolean>`(${registrations.memberBibWanted} and ${OFFERS_MEMBER_BIB} and ${inArray(participants.canonicalEmail, [...members])})`.mapWith(Boolean);
+}
 
 /**
  * Which bibs a sheet is being asked for (`DECISIONS.md` §264).
@@ -723,12 +741,45 @@ export async function listBibs<T extends Record<string, unknown>>(
   eventId: string,
   scope: BibScope = {},
 ): Promise<BibRow[]> {
+  // The member accounts, once per sheet (§662): the same set the list's «Membru (verificat)» reads.
+  const members = [...(await memberCanonicalEmails(db))];
   const rows = await db
-    .select({ id: registrations.id, bibNumber: registrations.bibNumber, registeredName: registrations.registeredName })
+    .select({
+      id: registrations.id,
+      bibNumber: registrations.bibNumber,
+      registeredName: registrations.registeredName,
+      member: memberBibPrinted(members),
+    })
     .from(registrations)
+    .innerJoin(events, eq(events.id, registrations.eventId))
+    .innerJoin(participants, eq(participants.id, registrations.participantId))
     .where(bibScopeWhere(eventId, scope))
     .orderBy(asc(registrations.bibNumber));
-  return rows.map((row) => ({ id: row.id, bibNumber: row.bibNumber as number, registeredName: row.registeredName }));
+  return rows.map((row) => ({ id: row.id, bibNumber: row.bibNumber as number, registeredName: row.registeredName, member: row.member === true }));
+}
+
+/**
+ * The bibs that asked for the members' design and will print the ordinary one (§664): confirmed
+ * real rows with a number whose address is no member account's — the bibs page's one line before
+ * printing, so an Administrator adds them on «Echipa» first if they are members. Zero while the
+ * event does not offer the members' bib.
+ */
+export async function countUnverifiedMemberBibs<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number> {
+  const members = [...(await memberCanonicalEmails(db))];
+  const [row] = await db
+    .select({ count: sql<number>`count(*)`.mapWith(Number) })
+    .from(registrations)
+    .innerJoin(events, eq(events.id, registrations.eventId))
+    .innerJoin(participants, eq(participants.id, registrations.participantId))
+    .where(
+      and(
+        bibScopeWhere(eventId, {}),
+        eq(registrations.memberBibWanted, true),
+        OFFERS_MEMBER_BIB,
+        members.length > 0 ? notInArray(participants.canonicalEmail, members) : undefined,
+      ),
+    );
+  return row?.count ?? 0;
 }
 
 /**

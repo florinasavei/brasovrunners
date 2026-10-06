@@ -2,10 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   bandTextColour,
   BIB_BAND_FALLBACK,
+  BIB_MEMBER_LABEL_MAX,
   bibBandColour,
   bibDesignSchema,
+  bibMemberBandColour,
+  bibMemberLabel,
   bibPictureUrl,
   DEFAULT_BIB_DESIGN,
+  DEFAULT_BIB_MEMBER_DESIGN,
   numberScaleFactor,
   readBibDesign,
 } from "@/modules/registrations/bib-design";
@@ -206,5 +210,68 @@ describe("§317 the footer's settings, read from whatever is stored", () => {
       cutMarks: true,
       showEmail: false,
     });
+  });
+});
+
+/**
+ * §664, BR-REQ-038-01 — the members' race number: a nested `member` object inside the same JSON
+ * column, read with the same never-throw fallbacks as the rest of the design.
+ */
+describe("§664 the members' design", () => {
+  const OURS = "https://pub-example.r2.dev/qa/3f2a1b4c-0000-4000-8000-000000000000/web.webp";
+
+  it("reads a design saved before the key existed as off, and prints it as before", () => {
+    const before: Record<string, unknown> = { ...DEFAULT_BIB_DESIGN };
+    delete before.member;
+    expect(readBibDesign(before)).toEqual(DEFAULT_BIB_DESIGN);
+    expect(readBibDesign(before).member).toEqual(DEFAULT_BIB_MEMBER_DESIGN);
+    expect(readBibDesign(null).member.enabled).toBe(false);
+  });
+
+  it("falls back field by field: a wrong colour, a foreign picture, a switch that is not a boolean", () => {
+    const member = readBibDesign({ member: { enabled: "yes", bandColour: "red", headerImageSrc: "https://elsewhere.example/a.png", label: "Membru" } }).member;
+    expect(member).toEqual({ enabled: false, bandColour: null, headerImageSrc: null, headerImageCrop: null, label: "Membru" });
+    expect(readBibDesign({ member: "on" }).member).toEqual(DEFAULT_BIB_MEMBER_DESIGN);
+    expect(readBibDesign({ member: { enabled: true, bandColour: "#C62828" } }).member.bandColour).toBe("#c62828");
+  });
+
+  it("keeps the rest of the design when the members' object is malformed", () => {
+    const design = readBibDesign({ showName: false, member: ["nonsense"] });
+    expect(design.showName).toBe(false);
+    expect(design.member).toEqual(DEFAULT_BIB_MEMBER_DESIGN);
+  });
+
+  it("ignores a key a later release added inside the members' object", () => {
+    expect(readBibDesign({ member: { enabled: true, laterKey: 1 } }).member.enabled).toBe(true);
+  });
+
+  it("normalises the label like the footer's line and caps it", () => {
+    expect(readBibDesign({ member: { label: "  Membru\n  BVR \u{1F3C3} " } }).member.label).toBe("Membru BVR");
+    expect(Array.from(readBibDesign({ member: { label: "ă".repeat(80) } }).member.label)).toHaveLength(BIB_MEMBER_LABEL_MAX);
+    expect(BIB_MEMBER_LABEL_MAX).toBe(24);
+  });
+
+  it("drops a crop without its picture, and keeps one with it", () => {
+    const crop = { x: 0, y: 0.2, w: 1, h: 0.3 };
+    expect(readBibDesign({ member: { headerImageCrop: crop } }).member.headerImageCrop).toBeNull();
+    expect(readBibDesign({ member: { headerImageSrc: OURS, headerImageCrop: crop } }).member.headerImageCrop).toEqual(crop);
+  });
+
+  it("saves through the same schema the form posts to", () => {
+    const parsed = bibDesignSchema.parse({ ...DEFAULT_BIB_DESIGN, member: { enabled: true, bandColour: "#6a1b9a", headerImageSrc: null, headerImageCrop: null, label: "  Membru BVR " } });
+    expect(parsed.member).toEqual({ enabled: true, bandColour: "#6a1b9a", headerImageSrc: null, headerImageCrop: null, label: "Membru BVR" });
+    // A form without the members' section (an older caller) saves the members' bib off.
+    const without: Record<string, unknown> = { ...DEFAULT_BIB_DESIGN };
+    delete without.member;
+    expect(bibDesignSchema.parse(without).member).toEqual(DEFAULT_BIB_MEMBER_DESIGN);
+  });
+
+  it("prints the club's label, else the platform's words; the members' colour, else the event's band", () => {
+    const member = { ...DEFAULT_BIB_MEMBER_DESIGN, enabled: true };
+    expect(bibMemberLabel(member, "Membru Brașov Runners")).toBe("Membru Brașov Runners");
+    expect(bibMemberLabel({ ...member, label: "BVR" }, "Membru Brașov Runners")).toBe("BVR");
+    expect(bibMemberBandColour(member, "#1b8a3a")).toBe("#1b8a3a");
+    expect(bibMemberBandColour(member, null)).toBe(BIB_BAND_FALLBACK);
+    expect(bibMemberBandColour({ ...member, bandColour: "#c62828" }, "#1b8a3a")).toBe("#c62828");
   });
 });

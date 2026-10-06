@@ -54,6 +54,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.locationToBeAnnounced": inWhenWhere(t("editor.placeToBeAnnounced")),
     "event.mapUrl": inWhenWhere(t("editor.mapUrl")),
     "event.coordinates": inWhenWhere(t("editor.coordinates")),
+    "event.weatherMode": inWhenWhere(t("editor.weather.label")),
     "event.registrationMode": inBox("registration", t("editor.registrationMode")),
     "event.capacity": inBox("registration", t("editor.capacity")),
     // «Lista de așteptare» and, under «Limitată», its number (§633).
@@ -202,6 +203,8 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     // The club's discount on an external event's own fee (`DECISIONS.md` §394), under the same
     // box the cost boxes live in.
     discountNote: ["registration", t("editor.discountNote")],
+    // The club's own weather text (§666), in the place's card under «Vremea».
+    weatherNote: ["whenWhere", `${t("editor.weather.label")} › ${t("editor.weather.note")}`],
   };
   for (const locale of routing.locales) {
     const language = tSite(`languageName.${locale}`);

@@ -6,9 +6,13 @@ import { FEATURED, hydrated, signIn } from "./support/featured-event";
 /**
  * §650, BR-REQ-041-01 — a backoffice table's columns can be resized: on the registrations list at
  * desktop width, a column's edge is dragged, the width survives a reload — drawn before the page
- * hydrates, by the inline script's `<style>` — «Lățimi implicite» puts the table back to its
+ * hydrates, by the inline script's `<style>` — «Lățimi și coloane implicite» puts the table back to its
  * automatic layout, and the edge is a named vertical separator, one per column but the row verbs',
  * whose `aria-valuenow` the arrow keys move by 16 and whose `aria-valuemin` is its heading's floor. At 320 px the phone layout has no columns, so no edge and no reset.
+ *
+ * §661 — and hidden: «Coloane» in the actions' heading unticks a column, which stays hidden after a
+ * reload (drawn hidden before hydration too), keeps its width, has no edge to tab to, and comes back
+ * by the menu or the reset; the name and the state have no checkbox.
  *
  * Everything here is the browser's own layout — `col` alignment under `table-layout: fixed` with
  * collapsed borders, pointer capture, the restore after a reload — which no unit test can reach.
@@ -157,7 +161,7 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
       ).toBe(0);
       await expect(handle).toHaveAttribute("aria-valuemin", floor as string);
 
-      // «Lățimi implicite»: the table is automatic again, and the focus lands on a column edge.
+      // «Lățimi și coloane implicite»: the table is automatic again, and the focus lands on a column edge.
       await reset.click();
       await expect(reset).toHaveCount(0);
       await expect(main.locator('table[data-table-id="registrations"]')).not.toHaveAttribute("data-resized");
@@ -186,6 +190,76 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
     }
   });
 
+  test("§661 «Coloane» hides a column, before hydration too, and the menu or the reset brings it back", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "the table is a desktop layout; the phone has its own test below");
+    test.setTimeout(90_000);
+    const seeded = await seed(`${testInfo.project.name}-${Date.now().toString(36)}`);
+    try {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await signIn(page, "Dev Administrator");
+      await page.goto(`/ro/admin/registrations?eventId=${seeded.eventId}&q=${encodeURIComponent(seeded.tag)}`);
+      await hydrated(page);
+
+      const main = page.locator("#main");
+      const table = main.locator('table[data-table-id="registrations"]');
+      const email = table.locator('th[data-column="email"]');
+      const button = main.getByTestId("admin-table-columns");
+      await expect(email).toBeVisible();
+      await expect(button).toHaveAccessibleName("Coloane");
+      // A width stored for the column first: hiding keeps it for when the column returns.
+      await table.locator('[data-column-resize="email"]').focus();
+      await page.keyboard.press("ArrowRight");
+      const width = await inlineWidth(page, "email");
+      expect(width).toMatch(/^\d+px$/);
+
+      await button.click();
+      const menu = page.getByRole("menu");
+      // The name and the state are always shown: no checkbox for either.
+      await expect(menu.locator('[data-column-toggle="name"]')).toHaveCount(0);
+      await expect(menu.locator('[data-column-toggle="status"]')).toHaveCount(0);
+      await expect(menu.getByText("Mereu afișate:")).toBeVisible();
+      const toggle = menu.getByRole("menuitemcheckbox", { name: "E-mail", exact: true });
+      await expect(toggle).toHaveAttribute("aria-checked", "true");
+      await toggle.click();
+      await expect(toggle).toHaveAttribute("aria-checked", "false");
+      await page.keyboard.press("Escape");
+      await expect(email).toBeHidden();
+      await expect(table.locator('[data-column-resize="email"]')).toBeHidden();
+
+      // Before any island runs, the column is already hidden by the pre-paint script's own <style>.
+      await page.route("**/_next/static/chunks/**", (route) => route.abort());
+      await page.reload();
+      await expect(table).toBeVisible();
+      expect(
+        await page.evaluate(() => document.head.querySelectorAll('style[data-column-hidden="registrations"]').length),
+      ).toBe(1);
+      await expect(email).toBeHidden();
+      await page.unroute("**/_next/static/chunks/**");
+
+      // Hydrated, it stays hidden, and «Arată toate coloanele» brings it back at its stored width.
+      await page.reload();
+      await hydrated(page);
+      await expect(email).toBeHidden();
+      await button.click();
+      await page.getByRole("menuitem", { name: "Arată toate coloanele" }).click();
+      await page.keyboard.press("Escape");
+      await expect(email).toBeVisible();
+      await expect.poll(() => inlineWidth(page, "email")).toBe(width);
+
+      // Hidden again, then the reset: every column back, every width automatic.
+      await button.click();
+      await page.getByRole("menuitemcheckbox", { name: "E-mail", exact: true }).click();
+      await page.keyboard.press("Escape");
+      await expect(email).toBeHidden();
+      await main.getByTestId("admin-table-reset-widths").click();
+      await expect(email).toBeVisible();
+      await expect(main.getByTestId("admin-table-reset-widths")).toHaveCount(0);
+      expect(await page.evaluate(() => localStorage.getItem("br.table.registrations.hidden"))).toBeNull();
+    } finally {
+      await cleanup(seeded);
+    }
+  });
+
   test("the phone layout has no column edge and no reset", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile", "the 320-px phone");
     test.setTimeout(60_000);
@@ -198,6 +272,8 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
       await expect(main.getByRole("link", { name: `Deschide înscrierea lui Coloane ${seeded.tag}`, exact: true })).toBeVisible();
       await expect(main.locator("[data-column-resize]").filter({ visible: true })).toHaveCount(0);
       await expect(main.getByTestId("admin-table-reset-widths").filter({ visible: true })).toHaveCount(0);
+      // Nor a «Coloane» menu (§661): the phone's blocks show every field.
+      await expect(main.getByTestId("admin-table-columns").filter({ visible: true })).toHaveCount(0);
     } finally {
       await cleanup(seeded);
     }

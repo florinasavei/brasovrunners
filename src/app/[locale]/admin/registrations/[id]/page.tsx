@@ -45,6 +45,7 @@ import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
 import { isMinorOn } from "@/modules/registrations/domain/age";
 import { fieldId } from "@/shared/forms/outcome";
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
+import { memberBibOf } from "@/modules/registrations/domain/member-bib";
 import { canResendReminder, deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import { canTransition, isTerminalStatus } from "@/modules/registrations/domain/state-machine";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
@@ -78,6 +79,8 @@ import {
 import { CLUB_NAME } from "@/theme/brand";
 import { resendRegistrationEmailAction } from "./actions";
 import DeclarationHoldForm from "@/modules/registrations/ui/DeclarationHoldForm";
+import MemberChip from "@/modules/registrations/ui/MemberChip";
+import { membershipOf } from "@/modules/registrations/domain/membership";
 import TextHashTip from "@/modules/registrations/ui/TextHashTip";
 import { shortTextHash } from "@/modules/legal-documents/domain/signed-text";
 import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
@@ -86,6 +89,8 @@ import GivePlaceButton from "@/modules/registrations/ui/GivePlaceButton";
 import PaperConfirmationTip from "@/modules/registrations/ui/PaperConfirmationTip";
 import OfferPlaceButton from "@/modules/registrations/ui/OfferPlaceButton";
 import WhatToTell from "@/modules/registrations/ui/WhatToTell";
+import EmailRejectedChip from "@/modules/registrations/ui/EmailRejectedChip";
+import { rejectedEmailSentences, rejectedEmailWords } from "@/modules/registrations/ui/rejected-email-words";
 import { whatToTell } from "@/modules/registrations/ui/tell-words";
 import { givePlaceNowAhead, staffOfferIfMadeNow, staffOfferQuestion } from "@/modules/registrations/give-place-tip";
 import { findInvitationOfRegistration, findLiveInvitationOfParticipant } from "@/modules/registrations/invitation-repository";
@@ -130,6 +135,11 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const timelineNow = new Date();
   const registration = await findRegistrationDetailForAdmin(db, id, timelineNow);
   if (!registration) notFound();
+  // «Membru (verificat)» / «Membru (declarat)» (§662), as on the list's row.
+  const membership = membershipOf({ declared: registration.clubMemberDeclared, verified: registration.memberVerified });
+  // The members' race number (§664): «Număr de membru» when the row will print one, «cerut, neverificat» when it asked
+  // and its address is no member account's — the sheet then prints the ordinary bib.
+  const memberBib = memberBibOf({ offered: registration.eventOffersMemberBib, wanted: registration.memberBibWanted, verified: registration.memberVerified });
 
   const [acceptances, outboxHistory, auditTrail, freeBibs, minorSigns, family, partnerShares, invitedBy] = await Promise.all([
     listDeclarationAcceptances(db, id),
@@ -183,6 +193,10 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const offerForecast = registration.status === "WAITLISTED" && mayManage ? await staffOfferIfMadeNow(registration.eventId, locale) : null;
   // The timeline's short form with the time (§349): a value beside its label, so capitalised;
   // `dtInline` inside a sentence.
+  // «Email respins» in words (§663): the chip's tooltip and the line under the address say the same.
+  const rejected = registration.emailRejected
+    ? rejectedEmailWords({ ...registration.emailRejected, emailConfirmedAt: registration.emailConfirmedAt }, locale)
+    : null;
   const dt = (value: Date | null) => (value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }) : null);
   const dtInline = (value: Date | null) =>
     value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }) : null;
@@ -220,12 +234,16 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     value as the form renders it, and the same string in its `was.` twin.
   */
   const answers = query.answers === "1" ? await readRegistrationAnswers(db, actor, registration.id, new Date()) : null;
-  const answerFields = EDITABLE_ANSWERS.filter((field) => field !== "tshirtSize" || registration.eventKitShirt);
+  // «Vreau numărul de membru» (§664) only where the event offers it, or the row still says yes.
+  const answerFields = EDITABLE_ANSWERS.filter(
+    (field) => (field !== "tshirtSize" || registration.eventKitShirt) && (field !== "memberBibWanted" || registration.eventOffersMemberBib || registration.memberBibWanted),
+  );
   const answerLabels = Object.fromEntries(answerFields.map((field) => [field, tr(`registrations.answers.fields.${field}`, { club: CLUB_NAME })])) as Record<string, string>;
   const answerValues: Record<string, string> = answers
     ? Object.fromEntries(
         answerFields.map((field) => {
           if (field === "clubMemberDeclared") return [field, answers.clubMemberDeclared ? "on" : ""];
+          if (field === "memberBibWanted") return [field, answers.memberBibWanted ? "on" : ""];
           if (field === "sex") return [field, sexShown(answers.sex) ?? ""];
           if (field === "tshirtSize") return [field, answers.tshirtSize ?? "NONE"];
           return [field, (answers[field] as string | null) ?? ""];
@@ -252,7 +270,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   // The Organizer's read-only list (§289): each answer in words, «—» for none.
   const answerShown = (field: string): string => {
     const value = answerValues[field] ?? "";
-    if (field === "clubMemberDeclared") return value === "on" ? tr("registrations.answers.yes") : tr("registrations.answers.no");
+    if (field === "clubMemberDeclared" || field === "memberBibWanted") return value === "on" ? tr("registrations.answers.yes") : tr("registrations.answers.no");
     if (field === "sex") return value ? tr(`registrations.answers.sex.${value}`) : "";
     if (field === "tshirtSize") return value === "NONE" ? "" : value;
     if ((field === "nationality" || field === "country") && value) return countryName(value, locale);
@@ -415,23 +433,15 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             href: getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: member.id } } }),
           }))}
         />
-        {/* Mailgun bounced or the recipient complained (§76): the reason, so somebody calls. */}
-        {registration.emailRejectedReason && (
-          <Chip
-            size="small"
-            color="error"
-            variant="outlined"
-            label={`${tr("registrations.emailRejected")} — ${registration.emailRejectedReason}`}
-            data-testid="email-rejected"
-          />
-        )}
+        {/* The newest email was rejected (§76, §663): which, when and why, so somebody calls. */}
+        {rejected && <EmailRejectedChip label={tr("registrations.emailRejected")} sentences={rejectedEmailSentences(rejected)} reason={rejected.reason} />}
         {/* BR-REQ-037-05: a staff-entered row behaves exactly like any other, and says so. */}
         {registration.source === "STAFF" && (
           <Chip size="small" variant="outlined" label={tr("registrations.enteredByStaff")} />
         )}
-        {/* BR-REQ-031-06. A claim, worded as one wherever it is shown. */}
-        {registration.clubMemberDeclared && (
-          <Chip size="small" color="info" variant="outlined" label={tr("registrations.clubMemberChip")} />
+        {/* BR-REQ-031-06, §662: the list's chip — «verificat» from a member account's address, «declarat» from the tick alone. */}
+        {membership && (
+          <MemberChip membership={membership} label={tr(`registrations.member.${membership}`)} hint={tr(`registrations.member.${membership}Hint`)} />
         )}
       </Stack>
       {/* Where this person is, as steps (§145): the same derivation the list's "Etapă"
@@ -440,6 +450,17 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       <Typography variant="body2" color="text.secondary">
         {registration.participantEmail} · {registration.eventTitle ?? registration.eventId}
       </Typography>
+      {/* Under the address it is about (§663): the chip's words in full, for whoever reads rather than hovers. */}
+      {rejected && (
+        <Typography variant="body2" color="error" data-testid="email-rejected-words">
+          {rejectedEmailSentences(rejected).join(" ")}
+          {rejected.reason && (
+            <Typography component="small" variant="caption" color="text.secondary" sx={{ display: "block", wordBreak: "break-word" }}>
+              {rejected.reason}
+            </Typography>
+          )}
+        </Typography>
+      )}
       {/* From an invitation by email (§647): who sent it and when, read by every role that reads this page. */}
       {invitedBy && (
         <Typography variant="body2" color="text.secondary" data-testid="registration-invited">
@@ -836,6 +857,12 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                       ? tr("registrations.bibSettledPrinted", { number: registration.bibNumber })
                       : tr("registrations.bibSettled", { number: registration.bibNumber })}
                 </Typography>
+                {/* The members' race number (§664), beside the number: which bib the sheet prints for this row. */}
+                {memberBib && (
+                  <Typography variant="body2" color={memberBib === "printed" ? "text.primary" : "text.secondary"} data-testid="member-bib">
+                    {tr(`registrations.memberBib.${memberBib}`)}
+                  </Typography>
+                )}
                 {/* Replacing a number already emailed is the Administrator's (§548); filling a gap is any desk role's. */}
                 {registration.bibPrintedAt === null && (registration.bibNumber === null || mayManage) && (
                   /* The box spans the section. A refused number comes back in its box with the fold open (§315). */
@@ -1105,6 +1132,12 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   <CheckboxField name="clubMemberDeclared" defaultChecked={answers.clubMemberDeclared} help={tr("registrations.answers.memberHelp", { club: CLUB_NAME })}>
                     {answerLabels.clubMemberDeclared}
                   </CheckboxField>
+                  {/* «Vreau numărul de membru» (§664): the person's wish, corrected like the tick; kept only under it. */}
+                  {answerLabels.memberBibWanted && (
+                    <CheckboxField name="memberBibWanted" defaultChecked={answers.memberBibWanted} help={tr("registrations.answers.memberBibHelp")}>
+                      {answerLabels.memberBibWanted}
+                    </CheckboxField>
+                  )}
                   <Box>
                     <GlyphSubmitButton label={tr("registrations.answers.save")} pendingLabel={tr("registrations.answers.pending")} icon="save" variant="contained" />
                   </Box>

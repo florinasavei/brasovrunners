@@ -334,6 +334,7 @@
         "few": "Thank you! All {capacity} places are taken. Join the waiting list.",
         "other": "Thank you! All {capacity} places are taken. Join the waiting list."
       },
+      "fullThanksPlain": "Thank you! All places are taken. Join the waiting list.",
       "waitingCount": "{count} on the waiting list",
       "offeredCount": {
         "one": "{count} place offered from the waiting list",
@@ -565,7 +566,11 @@
     "columns": {
       "resize": "Width of the “{column}” column",
       "resizeHow": "Drag the edge to widen or narrow the column; from the keyboard, the left and right arrows. A double click puts it back to its original width.",
-      "reset": "Default widths",
+      "reset": "Default widths and columns",
+      "menu": "Columns",
+      "menuHow": "Choose the columns this table shows, in this browser.",
+      "showAll": "Show all columns",
+      "always": "Always shown: {columns}",
       "widthValue": "{width} px"
     },
     "backToEvents": "Back to the event list",
@@ -682,6 +687,20 @@
       "outboxHistory": "Email history",
       "outboxClubCopy": "club copy, without the participant's links",
       "emailRejected": "Email rejected",
+      "rejected": {
+        "which": "Rejected: “{type}”, sent {instant}.",
+        "whichQueued": "Rejected: “{type}”, queued {instant}; the provider refused it at the send.",
+        "typeUnknown": "a club email",
+        "why": {
+          "BOUNCED": "The address does not exist, the mailbox is full or the recipient's server refused it.",
+          "COMPLAINED": "The recipient marked the message as spam."
+        },
+        "reason": "The provider's reason: {reason}",
+        "confirmedBefore": "The address was confirmed {date}; an email after that was rejected.",
+        "confirmedAfter": "The address was confirmed {date}, after this email.",
+        "neverConfirmed": "The address was never confirmed.",
+        "todo": "Phone the person; only they can change the address, by registering again."
+      },
       "testKind": "Test",
       "enteredByStaff": "Entered by staff",
       "livesIn": "Lives in: {place}",
@@ -757,6 +776,9 @@
           "offered_by_staff": "Offer sent ahead of the waiting list (“Send them the offer”)",
           "address_vouched_by_staff": "Address vouched for by the team; place given ahead of the waiting list (“Give them a place now”)",
           "outside_capacity_changed": "Put on the special guests list, or taken off it",
+          "deadline_moved_for_outage": "Deadline moved: the site could not be reached, the clock stood still",
+          "hold_moved_by_window": "Signing deadline moved with the changed confirmation window",
+          "not_revived_for_outage": "Not revived after the outage: the deadline had passed while the site could not be reached, and the place had been given meanwhile or the claim had already lapsed",
           "answer_corrected": "Answer corrected: {field}",
           "answers_viewed": "Answers opened, with the phone and the emergency contact"
         },
@@ -778,15 +800,23 @@
       "registrationDeleted": "The registration was permanently deleted.",
       "eraseLeftovers": "Also delete by hand: the “Signed declaration” messages in the archive, their row in downloaded exports and PDFs, printed sheets, and the address in Mailgun → Suppressions.",
       "rowActions": "Actions for {name}",
-      "clubMemberOnly": "Only {club} members (declared)",
-      "clubMemberOnlyHelp": "Those who ticked “I am a member of the {club} group” when registering. The club does not check; the row reads “Member (declared)”.",
-      "bouncedOnly": "Only those the email never reached",
-      "bouncedOnlyHelp": "The address bounced the message or the provider refused it; the row reads “Email rejected”. These are the people to call before the race.",
-      "clubMemberChip": "Member (declared)",
+      "clubMemberOnly": "Only {club} members",
+      "clubMemberOnlyHelp": "Those who ticked “I am a member of the {club} group” when registering, or whose address is an account’s on «Staff». The row says which: “Member (verified)” or “Member (declared)”.",
+      "bouncedOnly": "Only with a rejected email",
+      "bouncedOnlyHelp": "Those with an email that bounced or was marked as spam, even when the registration is confirmed. “Email rejected” on the row says which email, when and why: call them.",
+      "member": {
+        "verified": "Member (verified)",
+        "verifiedHint": "The address belongs to an account on «Staff», so the club knows they are a member.",
+        "declared": "Member (declared)",
+        "declaredHint": "Ticked when registering; the club has not checked."
+      },
       "columnName": "Name",
       "columnStatus": "Status",
       "columnJourney": "How far",
       "columnUntilWhen": "Until when",
+      "columnCity": "City",
+      "columnAge": "Age",
+      "ageHint": "The age on the event's day, the one the categories and the rules for minors count. «—»: no birth date.",
       "untilWhenHint": "Until when the person can sign the declaration, accept the offer or confirm the address from the email, to the minute. Grey: passed. «—»: nothing is due. As in the registration's timeline.",
       "untilWhen": {
         "hold": "Can sign until {instant}",
@@ -1039,8 +1069,10 @@
           "stravaUrl": "Strava",
           "instagramHandle": "Instagram",
           "tshirtSize": "T-shirt size",
-          "listSocials": "Strava and Instagram on the list"
-        }
+          "listSocials": "Strava and Instagram on the list",
+          "memberBibWanted": "I want the members' number"
+        },
+        "memberBibHelp": "Kept only with the member tick, and while the event offers the members' number."
       },
       "memberTick": {
         "clear": "Not a member",
@@ -1096,7 +1128,18 @@
         "CANCELLED": "Registration cancelled. Your place has been released.",
         "EXPIRED": "The registration has expired, so we no longer hold a place for you.",
         "holdLapsed": "Your place has expired: the declaration was not signed in time.",
-        "linkUntil": "The link in the email is valid until {instant}."
+        "linkUntil": "The link in the email is valid until {instant}.",
+        "rejected": {
+          "BOUNCED": "An email the club sent to your address was rejected: the address does not exist or the mailbox is full, so the club's messages do not reach you.",
+          "COMPLAINED": "An email the club sent to your address was marked as spam, so the club's messages may no longer reach you."
+        }
+      },
+      "memberBibWantedStaffHelp": "Only for a member, at an event that offers the members' number; otherwise it is not kept.",
+      "memberBibAskedFilter": "Only those who asked for the members' number, whose address is no member account's.",
+      "memberBibAskedClear": "Show everyone",
+      "memberBib": {
+        "printed": "Members' number",
+        "asked": "Members' number: asked, not verified — the ordinary number prints"
       }
     },
     "events": {
@@ -1506,6 +1549,22 @@
         "typed": "The weather is read for these coordinates ({coordinates}).",
         "club": "The weather is read for {place} ({coordinates}): the map link carries no coordinates and none are typed."
       },
+      "weather": {
+        "label": "Weather",
+        "modes": {
+          "forecast": "Automatic forecast",
+          "custom": "The club's own text",
+          "off": "No weather"
+        },
+        "help": {
+          "forecast": "The forecast for the event's place, from {days} days before: on the page, on the card and in the reminder.",
+          "custom": "Your text instead of the forecast, on the page and in the reminder. The card shows nothing.",
+          "off": "No weather on the page, on the card or in the reminder."
+        },
+        "noNote": "No text written yet: the page shows no weather until you write one, in both languages.",
+        "note": "The weather text",
+        "noteHelp": "Short, at most 200 characters, e.g. “The ridge is icy, bring microspikes.”"
+      },
       "locationHelp": "The place, as you would tell a friend, in Romanian and in English. If the name is the same, press “Same name in English”.",
       "locationCopyToEnglish": "Same name in English",
       "locationEnglishLeftBehind": "The English box still says “{place}”. If the place has moved, change it here too.",
@@ -1707,6 +1766,17 @@
       "savedSeriesOfferedOne": "Saved — also on {dates} of the series; places offered to the waiting list: {offered}.",
       "savedSeriesOfferedMany": "Saved — also on {dates} of the series; places offered to the waiting list: {offered}.",
       "savedOffered": "Saved — places offered to the waiting list: {offered}.",
+      "holdsMoved": {
+        "one": "The save moved 1 reserved place to the new deadline, {due}.",
+        "few": "The save moved {count} reserved places to the new deadline, {due}.",
+        "other": "The save moved {count} reserved places to the new deadline, {due}."
+      },
+      "holdsMovedSeries": {
+        "one": "The save moved 1 reserved place to its date's new deadline.",
+        "few": "The save moved {count} reserved places to each date's new deadline.",
+        "other": "The save moved {count} reserved places to each date's new deadline."
+      },
+      "holdsMovedSent": "The window is already open, so each of them gets the declaration email again, with the new deadline.",
       "placeAnnouncedLive": "The location is announced: it shows on the page, the cards, the calendar and in emails from now on. Those registered get no separate email about it.",
       "placeAnnouncedDraft": "The location is announced: it will show on every page once the event is published. Nobody is emailed about it.",
       "scope": {
@@ -1898,7 +1968,22 @@
         "previewCaption": "Preview — this is how it prints",
         "previewPending": "Redrawing…",
         "previewAlt": "The race number as it would look with the current choices, for a runner named “Nume Prenume”",
-        "previewNote": "The preview above changes at once; the “Numbers” page and the PDF follow a save."
+        "previewNote": "The preview above changes at once; the “Numbers” page and the PDF follow a save.",
+        "member": {
+          "title": "The members' number",
+          "summary": "members' number",
+          "enabled": "Members get a race number with their own design",
+          "enabledHelp": "The form asks “I want the members' number” under the {club} member tick. It prints only for an address of an account on «Staff». The number keeps its order.",
+          "previewAlt": "A member's race number, in the members' design, for a runner named “Nume Prenume”",
+          "previewCaption": "Preview — a member's number",
+          "bandColour": "The members' band colour",
+          "bandColourHelp": "Used when you choose no picture, and under the label on a picture.",
+          "eventColour": "The event's colour",
+          "headerImageSrc": "Picture instead of the band, for members",
+          "headerImageSrcHelp": "Like the number's top picture, on members' numbers only. Without one, the band takes the colour chosen above.",
+          "label": "Label",
+          "labelHelp": "One short line on the member's band, at most {max} characters. Empty: «{club} member»."
+        }
       },
       "bibColour": "Colour of the race numbers (BIB)",
       "bibColourHelp": "The band across the top of the printed number, the one carrying the club's logo and the race. “The club's colour” unless you want a specific one.",
@@ -2062,7 +2147,17 @@
           "title": "Confirmation window",
           "dates": "For {date}: asked from {opens}, due {due}.",
           "datesAtStart": "For {date}: asked from {opens}, due at the start — the place does not lapse before the start.",
-          "datesOff": "No window: the signature is asked at registration ({hold}), as on the weekly runs."
+          "datesOff": "No window: the signature is asked at registration ({hold}), as on the weekly runs.",
+          "moveNow": {
+            "one": "Saving moves 1 reserved place to the window's deadline, {due}; if you change the numbers, to the new one.",
+            "few": "Saving moves {count} reserved places to the window's deadline, {due}; if you change the numbers, to the new one.",
+            "other": "Saving moves {count} reserved places to the window's deadline, {due}; if you change the numbers, to the new one."
+          },
+          "follow": {
+            "one": "1 reserved place is held until {due}. If you change the numbers, saving moves it to the new deadline.",
+            "few": "{count} reserved places are held until {due}. If you change the numbers, saving moves them to the new deadline.",
+            "other": "{count} reserved places are held until {due}. If you change the numbers, saving moves them to the new deadline."
+          }
         },
         "bibs": {
           "title": "Race numbers (bibs)",
@@ -2367,7 +2462,7 @@
       "hiddenListBibStartHelp": "Empty: everybody's series. Set: their own series, from here up, outside the race's series; leave room above it, say 900 for 150 places. Without a limit of places, only below the race's first number.",
       "hiddenListBibStartHelpMore": "The room above the race's series holds supplementary places and the desk's spares. A full series takes the next free number after it, from the other series if need be; no number is given twice.",
       "participantCountPublic": "Show the count publicly",
-      "participantCountPublicHelp": "Ticked: the page says how many are coming and how many are confirmed. Unticked: the list shows only the names, no numbers; the club sees the numbers in the backoffice.",
+      "participantCountPublicHelp": "Ticked: the page says how many places, how many are coming and how many are confirmed. Unticked: no number on the event's public pages — only whether places are left; the list shows names only.",
       "hiddenListCounted": "Count the special guests too",
       "hiddenListCountedHelp": "Ticked: “Who's coming” and “confirmed” count the special guests too. Unticked: the numbers count only the race's places; the special guests come on top."
     },
@@ -3276,6 +3371,22 @@
             "DOMAIN_RENEWAL_YEARS is the total number of years paid since registration: the first year plus a 3-year renewal is 4.",
             "In Vercel → the production project (and QA) → Settings → Environment Variables; beside it DOMAIN_REGISTERED_ON = the day {apex} was registered, YYYY-MM-DD. Redeploy.",
             "Check: this row shows the new expiry date and turns green when more than 90 days are left."
+          ]
+        },
+        "unreachableWindow": {
+          "title": "The site unreachable: the deadlines' clock",
+          "todo": "The site could not be reached from {windowFrom} to {windowUntil}: {windowGranted} given back, deadlines moved: {windowMoved}.",
+          "done": "No outage needs a look: the newest one, if any, left nobody without the place they had.",
+          "open": "The site's name has not resolved since {windowFrom}. On every run the running deadlines move by the time elapsed, so nothing lapses until it is back.",
+          "stuck": "The outage from {windowFrom} to {windowUntil} is over, but its deadlines could not be moved yet: the scheduled job keeps trying; its last error is on /devs.",
+          "notRevived": "The outage from {windowFrom} to {windowUntil} left claims lapsed that were not revived; still waiting, with the verb the email names: {windowNotRevived}.",
+          "how": [
+            "Check the domain at the registrar: the account, the contact verification emails, the renewal payment.",
+            "While the name is gone, nothing lapses. When it is back, the scheduled jobs move the deadlines by themselves and send «The deadlines' clock stood still».",
+            "The email names each person whose claim was not revived and what can be done for them: nobody is seated beyond the advertised places by itself.",
+            "A lapsed offer, declaration hold or address link: the person registers again (or «Add the registration»); once they wait, «Send them the offer» seats them.",
+            "A family reservation: «Give them a place now» on its registration, the address being still unconfirmed. An expired invitation: a new one to the same address, from «Send invitations».",
+            "The row stays red only while one of them is unresolved: until they register again, get a new invitation or a place, or the event starts."
           ]
         },
         "contactForm": {
@@ -4395,7 +4506,12 @@
       "sparesReserved": "Numbers {from}–{to} reserved. Download the sheet and print it.",
       "sparesDownloadRange": "Download the sheet {from}–{to} (PDF)",
       "spareMark": "on-the-spot entry",
-      "helpMore": "Numbers are given in order of confirmation and are never given twice. The sheet prints two A5 numbers per A4 page; a single number downloads from the registration's page."
+      "helpMore": "Numbers are given in order of confirmation and are never given twice. The sheet prints two A5 numbers per A4 page; a single number downloads from the registration's page.",
+      "memberLabelDefault": "{club} member",
+      "memberSampleAlt": "A member's race number, in the members' design",
+      "memberSampleCaption": "The members' number, as it prints. On the sheet now: {count}.",
+      "memberUnverified": "Asked for the members' number, but their address is no member account's: {count}. They print the ordinary number; if they are members, add them on «Staff» before printing.",
+      "memberUnverifiedLink": "See them in the list"
     },
     "emergency": {
       "title": "Emergency sheet — confidential. Destroy after the event.",
@@ -4563,6 +4679,8 @@
         "MEMBER_INVITATION": "The member invitation",
         "DECLARATION_HOLD_EXPIRED": "The held place expired",
         "LEGAL_TEMPLATES_CHANGED": "The legal templates changed",
+        "UNREACHABLE_WINDOW_OPENED": "The site's name does not resolve",
+        "UNREACHABLE_WINDOW_CLOSED": "The deadlines' clock stood still",
         "EVENT_INVITATION": "Invitation to an event"
       },
       "when": {
@@ -4596,6 +4714,8 @@
         "MEMBER_INVITATION": "When an administrator adds somebody on Echipa with the role Membru, and on \"Resend the invitation\" until their first sign-in. No token: the button leads to the sign-in, then to the members' area.",
         "DECLARATION_HOLD_EXPIRED": "When somebody who did not sign the declaration in time loses the place to somebody who wanted it. Once per place lost, with what they can still do. Not after the start or for a cancelled event.",
         "LEGAL_TEMPLATES_CHANGED": "When a new release of the site changes a legal text's template: once per change, to every Administrator and Superadministrator. No token: the button leads to «New version».",
+        "UNREACHABLE_WINDOW_OPENED": "When the scheduled jobs, reached by another address, find twice, ten minutes apart, that the site's name no longer resolves: once per outage, to every Administrator and Superadministrator. No button.",
+        "UNREACHABLE_WINDOW_CLOSED": "After an outage — the site's name not found, or no scheduled call arriving: how long, what moved, what to check. Once per outage, to the same people, even with the moving switched off.",
         "EVENT_INVITATION": "When an administrator sends invitations from an event's registrations list, and on Resend. One link to the form, with the name and address filled in; the place is kept until the deadline."
       },
       "whenShort": {
@@ -4629,6 +4749,8 @@
         "MEMBER_INVITATION": "when a member is added",
         "DECLARATION_HOLD_EXPIRED": "when an unsigned place goes to somebody else",
         "LEGAL_TEMPLATES_CHANGED": "when a legal template changes",
+        "UNREACHABLE_WINDOW_OPENED": "when the site's name does not resolve",
+        "UNREACHABLE_WINDOW_CLOSED": "after an outage of the site",
         "EVENT_INVITATION": "when an administrator invites somebody"
       },
       "clubNotices": {
@@ -4964,6 +5086,8 @@
       "neverSent": "not sent any more",
       "lastCall": "With the reminder — {reminder} before the start, or as the event chooses — it goes one last time, to whoever has not signed.",
       "lastCallOff": "For an event that chose a reminder, it goes one last time with it, to whoever has not signed.",
+      "lastCallWindow": "For a race whose confirmation is due before the start, it goes {lastCall} before that deadline instead, to whoever is held until it.",
+      "lastCallWindowOff": "For a race whose confirmation is due before the start, no last call goes before that deadline.",
       "reminderOff": {
         "when": "Off by default: it goes only for events that chose a reminder in the editor, once, to everyone confirmed.",
         "whenShort": "only where the event chose a reminder"
@@ -4979,26 +5103,30 @@
           "holdMinutes": "A place is held for signing the declaration (minutes)",
           "offerHours": "A waiting-list offer stays open (hours)",
           "reminderHours": "The reminder goes before the start by (hours)",
+          "lastCallHours": "The last call to sign goes before the window's deadline by (hours)",
           "selfCheckinHours": "“I have arrived” can be pressed before the start by (hours)",
           "raceWeekDays": "The homepage countdown starts (days before)",
           "seriesHorizonDays": "A series keeps its dates created ahead by (days)",
           "publicListDays": "The public participant list stays up after the event (days)",
           "familySittingMinutes": "A family registration's email waits for “Done” at most (minutes)",
           "verificationRetryHours": "The address-confirmation link is re-sent after (hours)",
-          "verificationRetries": "How many times the link is re-sent (0–3)"
+          "verificationRetries": "How many times the link is re-sent (0–3)",
+          "outageGraceMaxHours": "The deadlines' clock stands still while the site cannot be reached, at most (hours)"
         },
         "help": {
           "confirmationHours": "How long somebody has to press the link in the first email; after it, the registration lapses.",
           "holdMinutes": "For an event with no confirmation window, or already inside it. A race further away than its window holds the place until the deadline set on the event.",
           "offerHours": "How long the first in line has to sign; never past the registration close or the start.",
           "reminderHours": "0 = no reminder. An event can choose otherwise in the editor, under “Taking part and registration”.",
+          "lastCallHours": "How many hours before the window's deadline the last call to sign goes. 0 = none before the deadline.",
           "selfCheckinHours": "The button on the participant's page, “I have arrived — mark me as here”.",
           "raceWeekDays": "0 = on race day only. From the same day, the editor's bib printing card opens by itself.",
           "seriesHorizonDays": "Dates already created stay if you lower it; the missing ones are filled in if you raise it.",
           "publicListDays": "Then the list closes by itself, even while the event still has it switched on. The privacy notice from the template states this number.",
           "familySittingMinutes": "After “Yes, one more person”, the family's email waits for “Done” at most this many minutes after the last form and leaves once, for everybody; at 0, each email leaves at once.",
           "verificationRetryHours": "Counted from when the last confirmation email left, to whoever has not confirmed yet. The link's deadline does not move.",
-          "verificationRetries": "Every confirmation email counts, “Resend” and a backoffice resend included. 0 = never re-sent by itself. The deadline does not move."
+          "verificationRetries": "Every confirmation email counts, “Resend” and a backoffice resend included. 0 = never re-sent by itself. The deadline does not move.",
+          "outageGraceMaxHours": "While the name is not found, running deadlines move on every run; after a silence of the scheduled calls, afterwards. At most this many hours; 0 = no moving, the outages are still recorded."
         },
         "legal": "Legal texts already approved keep the numbers written in them until you approve a new version from the template, which reads them from here.",
         "updatedAt": "Set {when}.",
@@ -5151,7 +5279,9 @@
         "COMPLETE_DECLARATION": "The place is held for {hold} from when the email leaves, or until the deadline for a distant event. The deadline counts only when somebody is waiting; otherwise it is signed at the desk too.",
         "BIB_ASSIGNED": "When an organizer types a confirmed registration's number on its page or at the desk. Otherwise, the number comes with the confirmation. With the manage link. Never for a cancelled event.",
         "REGISTER_ANOTHER_PERSON": "No registration is created, and the screen says “check your email” as always. If the address already has {people}, the email says only that, with no link.",
-        "LEGAL_TEMPLATES_CHANGED": "The check runs with the scheduled jobs, at most once an hour. A change approved before the check is not announced; «Tasks» shows the same rows."
+        "LEGAL_TEMPLATES_CHANGED": "The check runs with the scheduled jobs, at most once an hour. A change approved before the check is not announced; «Tasks» shows the same rows.",
+        "UNREACHABLE_WINDOW_OPENED": "While the name does not resolve nothing lapses. It leaves on the club's road, which does not depend on the club's domain.",
+        "UNREACHABLE_WINDOW_CLOSED": "The deadlines move by as long as the outage lasted, at most what «Deadlines» says. Whoever lost the place meanwhile is named in the email; an administrator decides."
       },
       "confirmationRetry": "To whoever has not confirmed, the link goes again by itself {retry} after the last email, at most {times}; “Resend” counts too. The deadline does not move.",
       "confirmationRetryOff": "It is not re-sent by itself: in “Deadlines”, the number of resends is 0."
@@ -5400,9 +5530,10 @@
                 "Looking for someone: type part of the name in «Search by name» and press «Filter». With no event chosen, it looks in every event.",
                 "The «How far» column says each person's step. Press a name to open the registration: «The registration's journey» and «Timeline» say everything that happened.",
                 "The «Until when» column says until when each one can sign, accept or confirm — the same time as the registration's timeline.",
+                "«City» says where each one lives, with the country's code only outside Romania, and «Age» the age on the event's day. Both sort, and both are in the export.",
                 "Someone asks where their registration stands: open it and tell them what «What to tell them» says — the same words they read themselves. «Copy» puts them on the clipboard, for a message.",
                 "The top says once what you cannot change here. The Tehnic role does not see registrations at all.",
-                "On the event's public page, the first number counts the registrations holding a place: the confirmed plus those still in progress — a declaration not signed yet, a waiting-list offer not accepted yet, a place a family holds. After the dash the line names only what exists: how many are confirmed and how many in progress, and how many free places are kept for the waiting list, for example “6 registered of 10 places — 4 confirmed, 2 completing their registration, 4 places kept for the waiting list”.",
+                "On the event's public page, the first number counts the registrations holding a place: the confirmed plus those still in progress — a declaration not signed yet, a waiting-list offer not accepted yet, a place a family holds. After the dash the line names only what exists: how many are confirmed and how many in progress, and how many free places are kept for the waiting list, for example “6 registered of 10 places — 4 confirmed, 2 completing their registration, 4 places kept for the waiting list”. With «Show the count publicly» unticked on the event, the places line does not show at all, and the page and the card say no number — no free places, no number of places, nobody waiting: only whether places are left, whether they are taken and whether there is a waiting list.",
                 "Places kept are free places the waiting list claims, and the card shows them in two ways. With more places free than people waiting, the card says «Places are given from the waiting list» and counts no free place. When the list claims every free place, as in the example, the card says the places are taken — “Thank you! All 10 places are taken — … already waiting.” — and offers «Join the waiting list», while the places line still names “4 places kept for the waiting list”. Either way those places are free: with «Places from the waiting list are allocated automatically» on «No» the club hands them out, with «Send them the offer»; on «Yes» the queue does, to the first on the list. With «Show publicly how many are waiting» unticked on the event, neither the card, nor the page, nor the people on the list learn how many wait: the card says “Thank you! All 10 places are taken. Join the waiting list.”, and the places line no longer says how many are on the list.",
                 "At an event with a set number of places, the «Who's coming» title counts, like the first number, everyone with a place while registration is open. The table holds only those who ticked that they want to appear on it, mostly the confirmed, so the title and the rows differ. On the card, “1 place offered from the waiting list” is a place sent to somebody on the list who has not accepted it yet."
               ]
@@ -5446,6 +5577,7 @@
                 "Print at actual size (100%) and cut on the line.",
                 "Numbers go in order of confirmation, from «Race numbers (BIB) start at». «Assign numbers» is the Administrator's.",
                 "The desk's spares: «Reprint the free spares (PDF)» prints again the ones not yet given. Only the Administrator reserves new spare numbers.",
+                "The members' number: whoever asked «I want the members' number» and has the address of an account on «Staff» gets the members' band and label; the number is the same. «See the bibs» names the rest.",
                 "On the site, the «Who's coming» list shows the «BIB» column once the club approves the new privacy notice. Before that, the Administrator writes to those already registered with «Send a message to participants»; anyone who does not want to appear presses «I do not want to appear on the participants & results list» in «My registrations», and the number leaves with the name. From the approval on, the column shows the number of every confirmed runner who has one, whichever notice they registered under; a confirmed runner without one shows “—”."
               ]
             },
@@ -5661,7 +5793,7 @@
                 "Confirmed or with a declaration to sign, they keep their state, number and emails. They appear on the public list only if they ticked, unmarked.",
                 "With «The special guests' numbers start at» the special guests have their own series of race numbers, in confirmation order; a number already given stays.",
                 "On the site, «Who's coming» counts them only with «Count the special guests too» ticked; the places and the free places never count them.",
-                "«Show the count publicly», beside «Show publicly how many are waiting», is on every event: unticked, «Who's coming» shows only the names, no numbers.",
+                "«Show the count publicly», beside «Show publicly how many are waiting», is on every event: unticked, the page and the card say no number at all, and «Who's coming» shows only the names.",
                 "While the special guests list is in use or anybody on it holds a place, the page says beside the places, naming nobody, that organisers and invited runners may start outside the advertised places.",
                 "«Counted among the event's places» turns it back only if a place is free; otherwise the press is refused and says who holds the places.",
                 "In the registrations list, each wears the label «Special guest», and the special guests' pill shows them all; the export has a column for them."
@@ -5724,7 +5856,7 @@
               "steps": [
                 "When: before a members' race, so that only the club's members stay ticked. The participant ticks it on the form; the club does not check it.",
                 "One at a time: in «The registration's answers» untick the member tick → «Save the answers». On the list, «Not a member» is in the row's ⋮ menu.",
-                "All at once: «Registrations» → «Search and filter» → tick «Only {club} members (declared)» → «Filter» → «Member ticks with no member account».",
+                "All at once: «Registrations» → «Search and filter» → tick «Only {club} members» → «Filter» → «Member ticks with no member account».",
                 "The list shows the ticked registrations whose address is no account's on «Staff». A member registered with another address appears too: untick their row. Then «Clear the ticks on all» … and confirm.",
                 "What it does not do: it cancels no registration, moves no place and sends no email. The club on the list is cleared only if the tick had set it. Every change stays in the log."
               ]
@@ -7244,7 +7376,9 @@
       "alreadyRegistered": "This address already has a registration with this name: nothing was registered. Address not confirmed? Press the link in the confirmation email to get the invitation's place.",
       "addressAtCap": "This address already has the most registrations allowed for the event: nothing was registered.",
       "notYou": "Not expecting this invitation? Ignore it or write to us:"
-    }
+    },
+    "memberBibWanted": "I want the members' number",
+    "memberBibWantedHelp": "The same number, in the same order; only the look differs. The club prints it only if your address is a {club} member's."
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. We can send you a new one, to the same email address.",
@@ -7899,6 +8033,25 @@
       "pingSkipped": "last ping {when}: skipped",
       "cadenceOnDemand": "Minimum interval: on demand — at least one real run a day, at {time} (Settings → Costs).",
       "cadenceEvery": "Minimum interval: {minutes} min between two real runs (Settings → Costs)."
+    },
+    "unreachable": {
+      "domain": "The site's name: {host} — {answer}, at the maintenance job's last real run ({when}). This page does not ask it.",
+      "domainUnknown": "The site's name: no answer remembered from the maintenance job's last real run. This page does not ask it.",
+      "domainSkipped": "The site's name is not asked on this deployment: a laptop, a test, or an address that is a number.",
+      "answer": {
+        "resolves": "resolves",
+        "unresolved": "not found",
+        "unknown": "no answer in time",
+        "skipped": "not asked"
+      },
+      "none": "The deadlines' clock: no outage recorded.",
+      "windows": "The deadlines' clock — the last outages, newest first:",
+      "open": "since {from}: the site's name does not resolve; the deadlines move on every run, nothing lapses until it is back.",
+      "closed": "{from} – {until} ({source}): given back {granted}; deadlines moved: {moved}; claims not revived: {notRevived}.",
+      "source": {
+        "dns": "the name not found",
+        "pings": "no scheduled call"
+      }
     }
   },
   "Error": {

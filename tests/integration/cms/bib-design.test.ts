@@ -171,13 +171,42 @@ describe("§249 the bib's design, saved and read back", () => {
     const event = await existingEvent();
     // What a save from the previous release wrote: every key but the footer's — and, older still
     // than the crops (§560), none of theirs either.
-    const footerKeys = ["showEmail", "showPartners", "showEventInFooter", "showWebsite", "footerText", "headerImageCrop", "sponsorImageCrop"];
+    // Nor the members' bib (§664), younger still.
+    const footerKeys = ["showEmail", "showPartners", "showEventInFooter", "showWebsite", "footerText", "headerImageCrop", "sponsorImageCrop", "member"];
     const before = Object.fromEntries(
       Object.entries({ ...DEFAULT_BIB_DESIGN, numberScale: "large" }).filter(([key]) => !footerKeys.includes(key)),
     );
     expect(Object.keys(before)).toHaveLength(9);
     await db.update(events).set({ bibDesign: before }).where(eq(events.id, event.id));
     expect((await findEventForBibs(db, event.id, "ro"))?.design).toEqual({ ...DEFAULT_BIB_DESIGN, numberScale: "large" });
+  });
+
+  /**
+   * §664 — the members' race number rides in the same column: saved by the same form, read back
+   * by what both renderers call, its label stored the way it prints.
+   */
+  it("stores the members' design, and both renderers read it", async () => {
+    const event = await existingEvent();
+    const crop = { x: 0, y: 0.25, w: 1, h: 0.2 };
+    await saveEventFields(db, {
+      actor: admin,
+      eventId: event.id,
+      expectedVersion: event.version,
+      fields: {
+        ...EVENT_FIELDS,
+        bibDesign: { ...DEFAULT_BIB_DESIGN, member: { enabled: true, bandColour: "#6A1B9A", headerImageSrc: PICTURE, headerImageCrop: JSON.stringify(crop), label: `  Membru\n${"B".repeat(40)}` } },
+      },
+    });
+    const member = (await findEventForBibs(db, event.id, "ro"))?.design.member;
+    expect(member).toEqual({ enabled: true, bandColour: "#6a1b9a", headerImageSrc: PICTURE, headerImageCrop: crop, label: `Membru ${"B".repeat(17)}` });
+  });
+
+  it("reads a members' object that is not one as off, and keeps the rest of the design", async () => {
+    const event = await existingEvent();
+    await db.update(events).set({ bibDesign: { ...DEFAULT_BIB_DESIGN, numberScale: "small", member: "on" } }).where(eq(events.id, event.id));
+    const design = (await findEventForBibs(db, event.id, "ro"))?.design;
+    expect(design?.numberScale).toBe("small");
+    expect(design?.member.enabled).toBe(false);
   });
 
   it("refuses a picture this site did not store", async () => {

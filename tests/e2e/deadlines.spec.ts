@@ -63,11 +63,15 @@ test.describe("§377 the club's deadlines on «Setări» → «Termene»", () =>
     holdMinutes: "30",
     offerHours: "24",
     reminderHours: "48",
+    // The last call to sign before a window's deadline (§665).
+    lastCallHours: "48",
     selfCheckinHours: "24",
     raceWeekDays: "7",
     seriesHorizonDays: "56",
     // How long a public participant list stays up after the event (§421).
     publicListDays: "30",
+    // The longest stretch one outage moves the running deadlines by (§657).
+    outageGraceMaxHours: "48",
   };
 
   // Set by a test that is about to save; the restore runs only then, with time of its own.

@@ -231,6 +231,12 @@ describe("§369 the club's name leaves the platform only through the constant", 
           // environment's facts and the constant — `club-identity-render.test.ts` reads it filled.
           "Identity.line",
           "Identity.lineNoCif",
+          // The members' race number (§664): the designer's switch and label help, the label's default
+          // (the sheet's and the picture's, in their language), and the form's wish's help.
+          "Admin.editor.bibDesign.member.enabledHelp",
+          "Admin.editor.bibDesign.member.labelHelp",
+          "Admin.bibs.memberLabelDefault",
+          "Registration.memberBibWantedHelp",
         ].sort(),
       );
     }
@@ -250,6 +256,9 @@ describe("§369 the club's name leaves the platform only through the constant", 
       "safetyRules.introMountain": 1,
       // The register form's box (§562); the declaration page reads it as `formCopy`, the notice through `promo-consent-words.ts`.
       "promo.label": 1,
+      // The members' race number (§664): the form's wish and the designer's switch.
+      memberBibWantedHelp: 1,
+      "editor.bibDesign.member.enabledHelp": 1,
     };
     const sources = sourceFiles(path.join(process.cwd(), "src")).map((file) => readFileSync(file, "utf8"));
     for (const [key, expected] of Object.entries(calls)) {

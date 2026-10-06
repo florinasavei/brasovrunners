@@ -295,6 +295,19 @@ export const registrations = pgTable(
      */
     clubMemberDeclared: boolean("club_member_declared").notNull().default(false),
 
+    /**
+     * «Vreau numărul de membru» (§664): the person asked to wear the members' race number, which
+     * the event offers when its bib design's members' switch is on. Stored true only when that
+     * switch and `club_member_declared` are both on at the moment of writing; the service writes
+     * false otherwise, whatever the form posted.
+     *
+     * A wish, never a fact, exactly like the tick above: the sheet prints the members' bib only
+     * for a registration that wants it AND whose canonical address is a member account's (§662) —
+     * never for the tick alone. It changes nothing else: not the number, not its band, not the
+     * order of confirmation (§173), not a place.
+     */
+    memberBibWanted: boolean("member_bib_wanted").notNull().default(false),
+
     tshirtSize: registrationTshirtSize("tshirt_size"),
 
     /**
@@ -469,6 +482,21 @@ export const registrations = pgTable(
     waitlistedAt: timestamp("waitlisted_at", { withTimezone: true }),
     offerCreatedAt: timestamp("offer_created_at", { withTimezone: true }),
     holdExpiresAt: timestamp("hold_expires_at", { withTimezone: true }),
+    /**
+     * When the allocator last cleared a family's reservation (§543) past its deadline
+     * (`expireStaleHolds`): written in the same statement that sets `hold_expires_at` to null on a
+     * row still waiting for its address, and nowhere else. The outage grace (§657) reads it as the
+     * evidence that a reservation existed and was cleared — a family form sent while no place was
+     * free never had one, and is never named. Null on every other row.
+     */
+    reservationLapsedAt: timestamp("reservation_lapsed_at", { withTimezone: true }),
+    /**
+     * The deadline that lapsed when the allocator cleared that reservation: the row's `hold_expires_at`
+     * as it stood, written in the same statement as `reservation_lapsed_at`, and nowhere else. The
+     * outage grace (§657) matches and judges a cleared reservation by it, never by its sitting's
+     * `reserved_until`, which a move of the reservation leaves behind. Null on every other row.
+     */
+    reservationLapsedFrom: timestamp("reservation_lapsed_from", { withTimezone: true }),
     confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
     cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
     expiredAt: timestamp("expired_at", { withTimezone: true }),

@@ -9,8 +9,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 /**
  * Migration `0127_answers_written_at` (`DECISIONS.md` §654), proven on real PostgreSQL (PGlite): the
  * database is built up to the migration before it, registrations are written the way the previous
- * release wrote them — without the column — and then the rest of the migrations run over them, as
- * `yarn db:migrate:env` runs them over production.
+ * release wrote them — without the column — and then the migration runs over them, as
+ * `yarn db:migrate:env` runs it over production.
  *
  * - every existing row ends with `answers_written_at = created_at`: what the minors' sweep (§323) and
  *   the correction's guardian and socials rules (§645) read until now, so none is judged differently;
@@ -74,8 +74,9 @@ beforeAll(async () => {
   await client.query("INSERT INTO events (type, starts_at) VALUES ('RACE', '2026-11-21T08:00:00Z')");
   for (const [index, createdAt] of CREATED.entries()) await insertRegistration(`runner${index}@example.ro`, createdAt);
   columnsBefore = await registrationColumns();
-  // Then the rest, this migration among them, over those rows.
-  await migrate(db, { migrationsFolder: MIGRATIONS });
+  // Then this migration over those rows — and no later one, whose own columns are not this file's to count.
+  writeFileSync(path.join(folder, "meta", "_journal.json"), JSON.stringify({ ...journal, entries: journal.entries.slice(0, position + 1) }));
+  await migrate(db, { migrationsFolder: folder });
 });
 
 afterAll(async () => {

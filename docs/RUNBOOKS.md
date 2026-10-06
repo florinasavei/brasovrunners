@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V2.66-2026-10-03`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V2.72-2026-10-06`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -13,6 +13,7 @@
 | [Legal document version](#legal-document-version) | Whenever an approved privacy, terms, or declaration version changes |
 | [Deploy a release](#deploy-a-release) | Every merge to `qa`, and every promotion to `main` |
 | [Release from the phone](#release-from-the-phone) | A release with the PC off — the owner on holiday, GitHub's app in hand |
+| [The domain stops answering](#the-domain-stops-answering) | The site, the backoffice and QA «cannot be found» at once; the monitor on the public name is red |
 
 
 ---
@@ -591,8 +592,26 @@ carries a newer baseline than `qa`'s) ships as it is.
    pushed to the branch, then runs `yarn ship`: the pull request's checks on the landed tree, the
    merge into `qa`, `qa`'s run, the `qa → main` release PR, the production migration approved,
    and production's `/api/health` reporting the new baseline. About an hour.
-3. It ends with a comment on the pull request: "Released BR-V2.NN…" or "The release stopped".
-   The run's **Summary** page says, in a table, each step's outcome and ship's minutes.
+3. It ends with a comment on the pull request: "Released BR-V2.NN…" or "The release stopped",
+   followed, when ship itself stopped, by ship's reason. The run's **Summary** page says, in a
+   table, each step's outcome and ship's minutes. The comment and the label's removal are made
+   with the run's own token, so a stopped release loses its label and the label can be ticked
+   again (`DECISIONS.md` §658) — a run started by hand under **Actions** has no label to remove.
+
+While ship waits for production — first for the baseline production runs, at the end for the new
+one — its log says what production answers every two minutes, one of three lines:
+
+- **«no answer for 12 min: TypeError fetch failed — ENOTFOUND …: a name or network failure»** —
+  production does not answer at all: its name does not resolve, the connection is refused, or the
+  certificate fails. It is not the release: follow § The domain stops answering.
+- **«production answers with BR-V2.64-…; waiting for BR-V2.65-…»** — the site is up and runs
+  another build. At the end of a release that means the new deployment is slow or failed: open
+  Vercel → the production project → **Deployments** and look at the newest one.
+- **«production answers but its body carries no baseline»** — something answers that is not the
+  application: a parking or hold page, a proxy's error, an empty body. Treat it like no answer.
+
+After an hour (at the start) or twenty minutes (at the end) ship stops with the same words after
+«STOP:»; the comment on the pull request carries them too.
 
 If the pull request shows **«This branch has conflicts»**, the label starts nothing — GitHub runs
 no `pull_request` workflow while a branch cannot merge into its base, and no run, no summary and
@@ -631,12 +650,186 @@ The run's **Summary** says where, in words:
   and tick **ship** again.
 - **"docs:check refused the landed tree"**: usually a new file without its README row — add it
   on the branch.
-- A stop inside **Ship** (a red check, a migration that failed): the table's last line names the
-  step. If the pull request already merged into `qa`, running **release** again with its number
-  continues from there — a merged pull request ships `qa` as it is.
+- A stop inside **Ship** before the `qa → main` release merged (a red check, the `qa` run, the
+  release PR's checks): the table's last line names the step. If the pull request already merged
+  into `qa`, running **release** again with its number continues from there — a merged pull
+  request ships `qa` as it is.
+- **"production never reported …"** (at the start, step 1): nothing has merged yet. The words
+  after it say which case (above, under § Every release): no answer → § The domain stops
+  answering; another build → Vercel's production deployment. Once production answers with the
+  baseline `main` carries, tick **ship** again — the label came off at the stop.
+- **A stop after the `qa → main` release merged** — the migration's or production's; the table
+  lists the step «migration», and the comment says «The release is already in main»
+  (`DECISIONS.md` §658). **Never tick ship again, nor run release again**: a second run takes its
+  starting baseline from `main`, which is now the new one, waits an hour for a baseline production
+  does not run, and stops with a second «The release stopped» for a release that went out. Instead:
+  - **the migration** («no migrate.yml run appeared», «was still … after an hour», «ended
+    failure; production still runs the previous build»): the summary names the run. Fix the
+    migration, or approve and re-run **migrate** on `main` by hand (Actions → the run → **Review
+    deployments** / **Re-run jobs**); then, if production's build gave up waiting for the
+    migration, open Vercel → the production project → **Deployments** and redeploy the newest;
+  - **"production did not report … in time"** (step 7): no answer → § The domain stops
+    answering; another build → open Vercel → the production project → **Deployments**, fix the
+    newest deployment or redeploy it.
+
+  Either way the release is done once `/api/health` reports the new baseline.
 
 Never push to `qa` or `main` by hand from the phone: the release PR and the production migration
 are the run's to open, merge and approve.
+
+## The domain stops answering
+
+(«Domeniul nu mai răspunde».) The club's name does not resolve, or does not reach Vercel, while
+the deployments behind it run on: the database, the outbox and the functions are fine, nobody can
+find them by name (`DECISIONS.md` §659). The names are in `SETUP.md` §26's table; below, `<domain>`
+is the club's `.com` and every time is UTC. The setup that keeps such an hour cheap — the contact
+mailbox, the renewal, the monitors on the address no registrar can hold — is `SETUP.md` §26 and
+§40.
+
+### What it looks like
+
+- **A browser says the server cannot be found** (`DNS_PROBE_FINISHED_NXDOMAIN` in Chrome, «Server
+  Not Found» elsewhere) for the public site, the backoffice and QA at once: the apex, `www`, `qa.`
+  and the `mail.` subdomain are one zone, and they go together. Mail from `mail.` fails its SPF and
+  DKIM checks at the receiving end, and every link in an email names the dead host.
+- **Not everybody sees it at once.** A phone or a network whose resolver cached the name keeps
+  showing the site for up to two days (the `.com` delegation's cache), while new visitors see
+  nothing; after the fix, a resolver that cached the «no such name» keeps it for up to fifteen
+  minutes. One person who sees the site proves nothing, either way.
+- **cron-job.org emails** a failed «brasovrunners PROD health» (and «QA health»): the monitors on
+  the public name. The monitors on the `vercel.app` addresses stay green (`SETUP.md` §40) — that
+  pair, one red and one green, is this runbook's case.
+- **Ship's wait** prints «no answer for N min: TypeError fetch failed — ENOTFOUND …: a name or
+  network failure», or «production answers but its body carries no baseline» when the registrar
+  serves a hold or parking page in the site's place (§ Release from the phone).
+
+### Two minutes from a phone
+
+1. **Is the site alive?** Open `https://brasov-runners-production.vercel.app/api/health` —
+   production's own `vercel.app` address, which no registrar can hold (QA's:
+   `https://brasov-runners-qa-nu.vercel.app/api/health`). It answers with a `build` and a
+   baseline → the site is alive and **the name is the problem**: go on. It does not answer either
+   → not this runbook: Vercel's status page and production's deployments (§ Deploy a release).
+2. **Is the name in the registry?** dnschecker.org → `<domain>` (the apex) → type **A** →
+   **Search**.
+   - **Red everywhere** → the name is gone from the registry: the registrar. Causes 1–3 below,
+     in that order.
+   - **Red in places, green in others** → propagation: records or nameservers changed in the last
+     hours, or a hold lifted minutes ago. Recheck in fifteen minutes; if nobody changed anything
+     and nothing was lifted, read it as red everywhere.
+   - **Green everywhere**, with the address in `SETUP.md` §26's table → the name is fine and what
+     fails is your own network's cache: switch the phone to mobile data, or wait fifteen minutes.
+     Green everywhere and still nothing on mobile data → cause 6, Vercel.
+3. **Since when, and do the jobs run?** cron-job.org → each job → **History**. The health monitor
+   on the public name dates the start to the hour. The job pings and the `vercel.app` health
+   monitor green → the jobs run and the outage grace (below) is watching the name; the job pings
+   red too → they still call the public name, and nothing runs until it is back (`SETUP.md` §40
+   moves them).
+4. **From a computer, if one is at hand:** `dig +norecurse @a.gtld-servers.net <domain> NS` asks
+   the `.com` registry itself. An answer naming the registrar's nameservers → the registry is fine,
+   look at the zone (causes 4–6); `NXDOMAIN` → a hold or an expiry, whatever any phone shows.
+   lookup.icann.org → `<domain>` shows the domain's status: `clientHold` or `serverHold` is a hold.
+
+### The causes, likeliest first, and the fix for each
+
+1. **The registrar's hold for the ICANN contact verification.** ICANN requires the registrant's
+   email address to be verified within **15 days** of the registration and of every change of the
+   registrant contact; unverified, the registrar suspends the domain (`clientHold`), the registry
+   stops publishing it, and the records stay exactly as they were. The email comes from the
+   registrar's verification service, not from the registrar's own name, and often lands in spam.
+   Fix: search the contact mailbox (`SETUP.md` §26) — inbox, **Spam**, **All mail** — for the
+   verification email and click its link; no email, or the link expired: the registrar's control
+   panel → the domain → resend the verification, then click. The hold lifts at the registry within
+   minutes; resolvers that cached the «no such name» answer keep it up to fifteen minutes more.
+2. **The yearly renewal.** The expiry is in `SETUP.md` §26 (2027-09-16); once
+   `DOMAIN_REGISTERED_ON` is set, «Sarcini» turns amber 90 days before it, and from 30 days before
+   it `/api/health` answers 503 on every host, so the monitors alarm. Auto-renew fails on an
+   expired or refused card; the domain expires and the registrar parks it (a parking page: «carries
+   no baseline») or holds it. Fix: the control panel → renew, update the card; then raise
+   `DOMAIN_RENEWAL_YEARS` on both Vercel projects and redeploy. Past the registrar's grace period a
+   redemption fee applies, so the day it is seen, not later.
+3. **An unpaid invoice** at the registrar — another service on the same account — can suspend the
+   account's domains. Fix: pay it, and ask the registrar's support to lift the suspension.
+4. **A nameserver change.** Someone changed the domain's nameservers away from the registrar's
+   `ns1`–`ns4` (`SETUP.md` §26), and the new ones hold no zone. dnschecker red in places, then
+   everywhere. Fix: put the registrar's four back; a nameserver change propagates for up to two
+   days.
+5. **A deleted zone or record.** The registrar's Zone Editor lost the apex `A`, a `CNAME` or the
+   whole zone: the registry answers (step 4 above), the name has no address. Fix: enter the records
+   again from `SETUP.md` §26's table (TTL 30) and §35's for `mail.`.
+6. **Vercel's domain configuration.** The name resolves to Vercel and Vercel refuses it. Vercel →
+   the production project → **Settings** → **Domains**: each domain «Valid Configuration»;
+   «Invalid Configuration» names the record Vercel expects, and a domain missing from the list is
+   added back. A «certificate failure» in ship's line: the same page shows the certificate's state;
+   Vercel renews it on its own once the records are right again.
+
+### What the platform does meanwhile, and what is left to do after
+
+Nothing is lost: registrations, the desk and the outbox keep their data, and anybody whose
+resolver still has the name keeps using the site. What a name outage does to the participants is
+run their deadlines — an address link, a declaration hold, a waiting-list offer, an invitation, a
+family form — while nobody can reach the page that keeps them. **The outage grace**, its own
+decision in this release (`docs/PLATFORM.md` § When the name is gone), stops that clock:
+
+- **While the name is gone**, if the job pings call the `vercel.app` addresses (`SETUP.md` §40),
+  the maintenance job sees the name fail twice ten minutes apart, holds every running deadline
+  still and emails the Administrators «Site-ul nu se găsește după nume». If the pings call the
+  public name, no job runs at all and the grace sees the silence at the first run after.
+- **After**, the Administrators get «Ceasul termenelor a stat pe loc»: how long, what was moved,
+  and each claim that lapsed and could not be revived (its place was taken, or the platform had
+  already expired it). «Sarcini» shows «Site-ul de negăsit: ceasul termenelor» in red until every
+  one is handled. **That email is the list to work from:** under its bold line it names each claim
+  not revived — the person, the event, what it was — with a link to its page in the backoffice, and
+  under the list one sentence per kind with the verb its state has now. Without the email the list
+  is incomplete: «Înscrieri» → the event and state **«Expirată»** → **Filtrează** finds the lapsed
+  offers, declaration holds and address links (their history on the registration's page carries
+  «Nereluat după întreruperea site-ului…»); a family's reservation is still awaiting its address,
+  with the same history line; an expired invitation's line is in the event's own history; a place
+  held for a family form has no row at all. Ask any Administrator for the email before relying on
+  this. (The «Până când» column shows no deadline for an expired registration and does not sort by
+  its expiry.) For each, as the email says it:
+  1. **A lapsed offer, declaration hold or address link** — the registration is «Expirată», and no
+     verb seats an expired row: the person registers again (or the staff use «Adaugă înscrierea»),
+     and once they wait, **«Trimite-i oferta»** seats them (an Administrator; one supplementary
+     place when none is free, confirmed and audited).
+  2. **A family reservation** cleared while the address waited — the address is still unconfirmed:
+     **«Dă-i un loc acum»** on that registration seats them, with one confirmed supplementary place
+     when none is free.
+  3. **An expired invitation** cannot be re-sent («Retrimite» is for an open one): send a new one to
+     the same address from «Trimite invitații».
+  4. **A place held for a family form** is nobody's registration yet: the person fills in the form
+     again.
+- `/devs` → Stare shows what the name answered at the maintenance job's last real run and the last
+  three windows.
+
+### A release during such an hour
+
+Ship's first step waits **60 minutes** for production to name the baseline `main` runs, by the
+public name; while the name is gone it waits the full hour and stops. Ship's lines say which case
+it is (§ Release from the phone).
+
+- **A STOP before the `qa → main` release merged** (the start, «production never reported …»):
+  nothing merged. Once `/api/health` on the domain answers with a baseline, tick **ship** again on
+  the pull request, or **Actions** → **release** → **Run workflow** with its number.
+- **A STOP once the release is in `main`** (the comment says «The release is already in main»):
+  **never tick ship again**. § When it stops says what instead — the migration's run, or Vercel's
+  production deployment — and the release is done once `/api/health` reports the new baseline.
+
+### The worked example: 2026-10-03
+
+| UTC | What happened |
+| --- | --- |
+| 2026-09-16 | The domain is registered. The registrar's verification service sends the ICANN contact verification to the registrant mailbox; it lands in spam and is not seen. |
+| 2026-10-03, about 11:04 | The registrar puts the domain on hold for the unverified contact. The `.com` registry answers «no such name»; the public site, the backoffice, QA and the `mail.` subdomain go with it. |
+| about 12:02 | The hourly health monitor on the public name fails and cron-job.org emails. cron-job.org's job pings call the public name, and the GitHub backstop calls nothing — its base-URL secrets are unset, so its steps skip green — so no job runs from here on. |
+| between about 12:00 and 18:00 | A release from the phone waits its hour in ship's first step and stops; its log said the same two lines it says for a slow build (since then it says what it sees). A phone that had the name cached keeps showing the site, while new visitors see nothing — which made a dead name look like a dead site to some and a live one to others. |
+| about 18:24 | The verification email is found in spam and clicked; the registry publishes the domain again within minutes. |
+| about 18:24–18:40 | A network's resolver keeps its cached «no such name» for about a quarter of an hour; mobile data sees the site at once. The jobs run at their next ping. |
+
+Seven hours twenty minutes. What it leaves: the registrant contact is a mailbox outside the domain,
+read daily, with the registrar's senders whitelisted (`SETUP.md` §26); the job pings and a second
+health monitor call the `vercel.app` addresses (`SETUP.md` §40); and the deadlines' clock stops
+while the name is gone (the outage grace).
 
 
 ---
@@ -671,7 +864,11 @@ or off; it goes when the queue is through. Four causes, told apart by the same p
    has the price. With «Gmail preia când Mailgun se oprește» on, the deferred rows leave through Gmail
    at once instead (§622), and «Trimite acum» says «N prin Gmail — cota Mailgun epuizată până la …».
 2. **Overdue** — messages waited more than ninety minutes for a scheduler. cron-job.org →
-   the two job monitors: paused, disabled after failures, or the `JOB_SECRET` changed. Run
+   the two job monitors: paused, disabled after failures, or the `JOB_SECRET` changed (a history
+   entry that is a 200 taking about twenty seconds is a long run that finished after the response,
+   not a failure — the body says `continuing: true` only with the job's "save responses" on; Vercel's
+   function log line `[jobs] <job>: finished after the response in <ms> ms` is the authority:
+   `SETUP.md` §40, `DECISIONS.md` §667). Run
    `yarn smoke` on the environment; `jobs[].status` names which one is stale. Pressing
    "Trimite acum" on `/admin/registrations` drains the outbox by hand meanwhile.
 3. **Paused by the provider** (§605) — `lastError` starts "paused by the provider:". Mailgun

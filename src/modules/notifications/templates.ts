@@ -21,10 +21,18 @@ import { NO_RACE_NUMBER } from "@/modules/registrations/domain/qr-identity";
 import { env } from "@/shared/config/env";
 import { CLUB_LOCALITY } from "@/modules/events/domain/place";
 import { type EventForecast, forecastPlaceName } from "@/modules/weather/domain/forecast";
-import { weatherSpanWords } from "@/modules/weather/words";
+import { weatherLabel, weatherSpanWords } from "@/modules/weather/words";
 import { CANNOT_COME_GLYPH_PATH, CANNOT_COME_MESSAGES } from "./domain/cannot-come";
 import type { HoldLapsedNext } from "./domain/hold-lapsed";
 import { legalTemplateNames, legalTemplatesWords } from "./legal-templates-words";
+import {
+  notRevivedLinks,
+  type UnreachableWindowFacts,
+  windowClosedBody,
+  windowClosedFactsLine,
+  windowOpenedBody,
+  windowOpenedFactsLine,
+} from "./outage-grace-words";
 import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
 
 /**
@@ -686,6 +694,8 @@ export function renderBilingual(
     */
     ...(data.eventTitleOther ? { eventTitle: data.eventTitleOther } : {}),
     ...(data.eventChecklistOther !== undefined ? { eventChecklist: data.eventChecklistOther ?? undefined } : {}),
+    // The club's weather text in the second half's language (§666), or no row there — never the first half's words.
+    ...(data.eventWeatherNoteOther !== undefined ? { eventWeatherNote: data.eventWeatherNoteOther ?? undefined } : {}),
     // The organizer's own words in the second half's language (§354, bilingual everywhere) —
     // absent only for a row queued with one text, which both halves then read as before.
     ...(data.organizerNoteOther ? { organizerNote: data.organizerNoteOther } : {}),
@@ -848,6 +858,14 @@ export type TemplateData = {
    * answer — the facts block's «Vremea» row is then simply not there.
    */
   eventWeather?: EventForecast;
+  /**
+   * The club's own weather text in place of the forecast (§666), on the reminder only, when the
+   * event's «Vremea» is «Text scris de club» and this half's language has one — the facts block's
+   * «Vremea» row says it as written, with no credit. Absent otherwise: no row.
+   */
+  eventWeatherNote?: string;
+  /** The same in the other language, for the second half; `null` when that language has none (§28). */
+  eventWeatherNoteOther?: string | null;
   /** The programme's rows as lines, in the message's language and in the other's (§117); on the update notice (§331). */
   eventProgramme?: string[];
   eventProgrammeOther?: string[];
@@ -952,6 +970,11 @@ export type TemplateData = {
    * language, from the catalogue `/admin/legal` lists them by (`legal-templates-words.ts`).
    */
   legalTemplateKeys?: readonly string[];
+  /**
+   * The outage grace's two emails to the Administrators (§657): the window's instants, what it gave back, the club's cap
+   * and the counts, as the maintenance job wrote them. Each half writes them in its own language.
+   */
+  unreachableWindow?: UnreachableWindowFacts;
   /**
    * "Detalii actualizate" (§331): which facts the save changed — the place, the start, the
    * programme, the event on again. The values are the event's as it stands at send time, in the
@@ -1640,6 +1663,20 @@ const T = {
       // The screen the button opens and what is done there (§654): «Versiune nouă» regenerates; approving is on «Documente legale».
       action: `${legalTemplatesWords("ro").newVersion}: regenerează textele`,
     },
+    // To the Administrators (§657): the site's name does not resolve, and nothing lapses until it does.
+    // No button: the address it would open is the one that is gone.
+    unreachableWindowOpened: {
+      subject: "Site-ul nu se găsește după nume: termenele stau pe loc",
+      facts: (d: TemplateData) => (d.unreachableWindow ? { line: windowOpenedFactsLine("ro", d.unreachableWindow), links: [] } : undefined),
+      body: (d: TemplateData) => windowOpenedBody("ro", d.unreachableWindow),
+    },
+    // To the Administrators (§657): the window is over, what moved, and what to check.
+    unreachableWindowClosed: {
+      subject: "Ceasul termenelor a stat pe loc: ce s-a mutat",
+      facts: (d: TemplateData) => (d.unreachableWindow ? { line: windowClosedFactsLine("ro", d.unreachableWindow), links: notRevivedLinks("ro", d.unreachableWindow) } : undefined),
+      body: (d: TemplateData) => windowClosedBody("ro", d.unreachableWindow),
+      action: "Deschide «Sarcini»",
+    },
     registrationOpened: {
       // To an address, not a participant (§146): the greeting names nobody.
       subject: (d: TemplateData) => `Înscrierile la ${d.eventTitle ?? "eveniment"} s-au deschis`,
@@ -2295,6 +2332,17 @@ const T = {
       },
       action: `${legalTemplatesWords("en").newVersion}: regenerate the texts`,
     },
+    unreachableWindowOpened: {
+      subject: "The site's name does not resolve: the deadlines are held",
+      facts: (d: TemplateData) => (d.unreachableWindow ? { line: windowOpenedFactsLine("en", d.unreachableWindow), links: [] } : undefined),
+      body: (d: TemplateData) => windowOpenedBody("en", d.unreachableWindow),
+    },
+    unreachableWindowClosed: {
+      subject: "The deadlines' clock stood still: what moved",
+      facts: (d: TemplateData) => (d.unreachableWindow ? { line: windowClosedFactsLine("en", d.unreachableWindow), links: notRevivedLinks("en", d.unreachableWindow) } : undefined),
+      body: (d: TemplateData) => windowClosedBody("en", d.unreachableWindow),
+      action: "Open «Tasks»",
+    },
     registrationOpened: {
       subject: (d: TemplateData) => `Registration for ${d.eventTitle ?? "the event"} is open`,
       greeting: () => "Hello,",
@@ -2700,6 +2748,8 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   MEMBER_INVITATION: "memberInvitation",
   EVENT_INVITATION: "eventInvitation",
   LEGAL_TEMPLATES_CHANGED: "legalTemplatesChanged",
+  UNREACHABLE_WINDOW_OPENED: "unreachableWindowOpened",
+  UNREACHABLE_WINDOW_CLOSED: "unreachableWindowClosed",
 };
 
 /** The newsletter's three messages (§445): to an address, never about a registration. */
@@ -3007,9 +3057,12 @@ export function buildTemplateContent(
           timeZone: data.eventFacts.timezone,
         })
       : undefined;
+  // Or the club's own words (§666): «Vremea», then the text as written — no place, no hours, no credit.
   const weatherRow = weatherWordsForRow
     ? { label: weatherWordsForRow.heading, line: weatherWordsForRow.line, credit: weatherWordsForRow.credit }
-    : undefined;
+    : messageType === "EVENT_REMINDER" && data.eventWeatherNote
+      ? { label: weatherLabel(locale), line: data.eventWeatherNote }
+      : undefined;
   const factsBlock = data.eventFacts && EVENT_FACTS_MESSAGES.has(messageType) ? eventFactsBlock(data.eventFacts, locale, weatherRow) : undefined;
   const linkData: TemplateData = factsBlock
     ? { ...data, eventUrl: undefined, eventScheduleUrl: undefined, eventRulesUrl: undefined, eventLinksUrl: undefined }
@@ -3340,7 +3393,10 @@ export function buildTemplateContent(
         // …nor a member's invitation (§524): no event, no registration, nothing of a participant's to link.
         messageType === "MEMBER_INVITATION" ||
         // …nor the Administrators' notice of a moved template (§639): its one link is its button.
-        messageType === "LEGAL_TEMPLATES_CHANGED"
+        messageType === "LEGAL_TEMPLATES_CHANGED" ||
+        // …nor the outage grace's two (§657): to the Administrators, about no event and nobody's data.
+        messageType === "UNREACHABLE_WINDOW_OPENED" ||
+        messageType === "UNREACHABLE_WINDOW_CLOSED"
       ) {
         return own.length > 0 ? own : undefined;
       }
@@ -3446,6 +3502,9 @@ const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set([
   "MEMBER_INVITATION",
   // To the club's Administrators about its legal texts (§639): about nobody's data.
   "LEGAL_TEMPLATES_CHANGED",
+  // The outage grace's two (§657): to the Administrators, instants and counts only.
+  "UNREACHABLE_WINDOW_OPENED",
+  "UNREACHABLE_WINDOW_CLOSED",
 ]);
 
 /**

@@ -42,21 +42,28 @@ async function withDatabase<T>(work: (client: pg.Client) => Promise<T>): Promise
 
 const DAY = 86_400_000;
 
-/** A draft group run two days from now, with its place as given; returns its id. */
-async function insertDraft(place: { mapUrl?: string; latitude?: number; longitude?: number }, tag: string): Promise<string> {
+/**
+ * A draft group run two days from now, with its place as given — and, for «Vremea» (§666), its
+ * choice and the club's text in each language; returns its id.
+ */
+async function insertDraft(
+  place: { mapUrl?: string; latitude?: number; longitude?: number },
+  tag: string,
+  weather: { mode?: "forecast" | "custom" | "off"; ro?: string; en?: string } = {},
+): Promise<string> {
   return withDatabase(async (client) => {
     const startsAt = new Date(Math.floor((Date.now() + 2 * DAY) / 3_600_000) * 3_600_000);
     const { rows } = await client.query<{ id: string }>(
-      `INSERT INTO events (type, surface, starts_at, location_name, map_url, latitude, longitude)
-       VALUES ('GROUP_RUN', 'TRAIL', $1, 'Stația de telecabină Tâmpa', $2, $3, $4) RETURNING id`,
-      [startsAt, place.mapUrl ?? null, place.latitude ?? null, place.longitude ?? null],
+      `INSERT INTO events (type, surface, starts_at, location_name, map_url, latitude, longitude, weather_mode)
+       VALUES ('GROUP_RUN', 'TRAIL', $1, 'Stația de telecabină Tâmpa', $2, $3, $4, $5) RETURNING id`,
+      [startsAt, place.mapUrl ?? null, place.latitude ?? null, place.longitude ?? null, weather.mode ?? "forecast"],
     );
     const id = rows[0].id;
     const suffix = `${tag}-${Date.now().toString(36)}`;
     await client.query(
-      `INSERT INTO event_translations (event_id, locale, slug, title, excerpt) VALUES
-       ($1, 'ro', $2, 'Vremea la locul evenimentului', 'Un test.'), ($1, 'en', $3, 'Weather at the place', 'A test.')`,
-      [id, `vremea-${suffix}`, `weather-${suffix}`],
+      `INSERT INTO event_translations (event_id, locale, slug, title, excerpt, weather_note) VALUES
+       ($1, 'ro', $2, 'Vremea la locul evenimentului', 'Un test.', $4), ($1, 'en', $3, 'Weather at the place', 'A test.', $5)`,
+      [id, `vremea-${suffix}`, `weather-${suffix}`, weather.ro ?? null, weather.en ?? null],
     );
     return id;
   });
@@ -126,6 +133,55 @@ test.describe("BR-REQ-011-01 the weather block at the event's own place (§416)"
     } finally {
       await remove(typed);
       await remove(none);
+    }
+  });
+});
+
+test.describe("BR-REQ-011-01 «Vremea» is the club's to choose (§666)", () => {
+  test("the club's own text replaces the forecast, in each language, with no credit and no «?»; «Fără vreme» shows none", async ({ page }) => {
+    const custom = await insertDraft({}, "custom", { mode: "custom", ro: "Pe creastă e polei, veniți cu colțari.", en: "The ridge is icy, bring microspikes." });
+    const off = await insertDraft({}, "off", { mode: "off", ro: "Text păstrat.", en: "Kept text." });
+    const blank = await insertDraft({}, "blank", { mode: "custom" });
+    try {
+      await signIn(page, "Dev Administrator");
+      await page.goto(`/ro/preview/events/${custom}`);
+      const weather = weatherRow(page, "Vremea");
+      await expect(weather).toHaveText("Pe creastă e polei, veniți cu colțari.");
+      await expect(weather.getByTestId("event-weather-help")).toHaveCount(0);
+      await expect(weather).not.toContainText("Parțial noros");
+      await noSidewaysScroll(page);
+
+      await page.goto(`/en/preview/events/${custom}`);
+      await expect(weatherRow(page, "Weather")).toHaveText("The ridge is icy, bring microspikes.");
+
+      await page.goto(`/ro/preview/events/${off}`);
+      await expect(page.locator('[data-testid="event-facts"] dt').filter({ hasText: /^Vremea$/ })).toHaveCount(0);
+
+      // The editor: three radios beside the weather's place line, the club's text kept under «Text scris de club».
+      await page.goto(`/ro/admin/events/${custom}`);
+      await hydrated(page);
+      await openEditorBox(page, "Când și unde");
+      await expect(page.getByTestId("weather-mode-field")).toBeVisible();
+      await expect(page.locator('input[name="event.weatherMode"][value="custom"]')).toBeChecked();
+      await expect(page.locator('input[name="translations.ro.weatherNote"]')).toHaveValue("Pe creastă e polei, veniți cu colțari.");
+      await expect(page.getByTestId("weather-mode-no-note")).toHaveCount(0);
+      // No forecast is read under the club's text, so the line about where it would be read is not drawn.
+      await expect(page.getByTestId("weather-place")).toHaveCount(0);
+      // Each radio row is a thumb's target (BR-REQ-041-01 criterion 6).
+      const radio = await page.getByTestId("weather-mode-off").boundingBox();
+      expect(radio?.height ?? 0).toBeGreaterThanOrEqual(44);
+
+      // No text saved yet: the hint shows, and goes as soon as a language's box says something.
+      await page.goto(`/ro/admin/events/${blank}`);
+      await hydrated(page);
+      await openEditorBox(page, "Când și unde");
+      await expect(page.getByTestId("weather-mode-no-note")).toBeVisible();
+      await page.locator('input[name="translations.ro.weatherNote"]').fill("Polei pe creastă.");
+      await expect(page.getByTestId("weather-mode-no-note")).toHaveCount(0);
+    } finally {
+      await remove(custom);
+      await remove(off);
+      await remove(blank);
     }
   });
 });

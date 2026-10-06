@@ -11,10 +11,12 @@ import { readNewsletterWords } from "@/modules/newsletter/domain/message";
 import { holdAwaitingItsFirstEmail } from "@/modules/registrations/repository";
 import {
   AUTOMATIC_SEND_KEYS,
+  askYieldsToKey,
   declarationLastCallDueAt,
   eventReminderDueAt,
   isDeclarationLastCallDue,
   isConfirmationRetryDue,
+  lastCallKey,
   isEventReminderDue,
   nextInLineOffers,
   onePerAddress,
@@ -138,14 +140,25 @@ const RUN_ORDER: AutomaticSend[] = [
 ];
 
 type Kind = "REAL" | "TEST";
-type Due = { at: Date; eventId: string; send: AutomaticSend; registrationId?: string; kind?: Kind; count?: number };
+type Due = {
+  at: Date;
+  eventId: string;
+  send: AutomaticSend;
+  registrationId?: string;
+  kind?: Kind;
+  count?: number;
+  /** The outbox key the job would write, when it is not the send's one per registration (the last call before a window's deadline, §665). */
+  key?: string;
+  /** The window's ask: the last call it yields to when that is already in the outbox (`askYieldsToKey`, §665). */
+  yieldsTo?: string | null;
+};
 
 export async function forecastAutomaticEmails<T extends Record<string, unknown>>(
   db: Database<T>,
   input: {
     now: Date;
     horizonDays?: number;
-    deadlines: Pick<Deadlines, "reminderHours" | "confirmationHours" | "verificationRetryHours" | "verificationRetries">;
+    deadlines: Pick<Deadlines, "reminderHours" | "lastCallHours" | "confirmationHours" | "verificationRetryHours" | "verificationRetries">;
   },
 ): Promise<ForecastRow[]> {
   const { now, deadlines } = input;
@@ -258,7 +271,14 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
   for (const row of await selectDeclarationCandidates(db, { from: now })) {
     const confirmAt = participationConfirmationDueAt(row, now);
     if (inHorizon(confirmAt)) {
-      keyed.push({ at: confirmAt, eventId: row.eventId, send: "participation", registrationId: row.registrationId, kind: row.kind });
+      keyed.push({
+        at: confirmAt,
+        eventId: row.eventId,
+        send: "participation",
+        registrationId: row.registrationId,
+        kind: row.kind,
+        yieldsTo: askYieldsToKey(row.registrationId, row),
+      });
     }
     const natural = declarationLastCallDueAt(row, deadlines);
     if (natural) {
@@ -269,17 +289,20 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
       const lapseAt = consumedByNextInLine.get(row.registrationId);
       const releasedFirst = lapseAt !== undefined && lapseAt.getTime() <= at.getTime();
       if (!releasedFirst && inHorizon(at) && isDeclarationLastCallDue(row, at, deadlines)) {
-        keyed.push({ at, eventId: row.eventId, send: "lastCall", registrationId: row.registrationId, kind: row.kind });
+        keyed.push({ at, eventId: row.eventId, send: "lastCall", registrationId: row.registrationId, kind: row.kind, key: lastCallKey(row.registrationId, row) });
       }
     }
   }
 
   // Leave out what is already in the outbox: `enqueueEmail` would insert nothing for it.
   const keyOf = (item: Due): string => {
+    if (item.key) return item.key;
     const send = item.send as "reminder" | "lastCall" | "participation";
     return AUTOMATIC_SEND_KEYS[send](item.registrationId as string);
   };
-  const keys = keyed.map(keyOf);
+  // With them, the last calls a window's ask yields to (§665): the job skips the ask for a row whose
+  // last call for the same deadline is in the outbox (`askYieldsToLastCall`), and so does the forecast.
+  const keys = [...keyed.map(keyOf), ...keyed.flatMap((item) => item.yieldsTo ?? [])];
   const queued = new Set<string>();
   for (let i = 0; i < keys.length; i += 500) {
     const rows = await db
@@ -288,7 +311,7 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
       .where(inArray(emailOutbox.idempotencyKey, keys.slice(i, i + 500)));
     for (const row of rows) queued.add(row.key);
   }
-  const pending: Due[] = keyed.filter((item) => !queued.has(keyOf(item)));
+  const pending: Due[] = keyed.filter((item) => !queued.has(keyOf(item)) && !(item.yieldsTo && queued.has(item.yieldsTo)));
   pending.push(...nextInLinePending);
 
   /*

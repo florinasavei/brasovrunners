@@ -39,6 +39,8 @@ describe("§377 the club's deadlines, unset", () => {
       holdMinutes: 30,
       offerHours: 24,
       reminderHours: 48,
+      // The last call before a window's deadline (§665): the reminder's own two days.
+      lastCallHours: 48,
       selfCheckinHours: 24,
       raceWeekDays: 7,
       seriesHorizonDays: 56,
@@ -48,6 +50,7 @@ describe("§377 the club's deadlines, unset", () => {
       // The verification email re-sent by itself (§653): twenty hours after the last one, once.
       verificationRetryHours: 20,
       verificationRetries: 1,
+      outageGraceMaxHours: 48,
     });
   });
 

@@ -203,14 +203,14 @@ describe("BR-REQ-031-06 the club-member claim", () => {
 
     const members = await listRegistrationsForAdmin(db, {
       eventId: event.id,
-      clubMemberDeclared: true,
+      clubMember: true,
     });
     expect(members.map((row) => row.participantEmail)).toEqual(["member@example.ro"]);
 
     // `false` is not a filter value: it would present "did not answer" as "not a member".
     const unfiltered = await listRegistrationsForAdmin(db, {
       eventId: event.id,
-      clubMemberDeclared: false,
+      clubMember: false,
     });
     expect(unfiltered).toHaveLength(2);
   });

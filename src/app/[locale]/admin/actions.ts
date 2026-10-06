@@ -325,6 +325,9 @@ function eventFieldsFrom(form: FormData) {
     // "Eveniment de noapte" (§394): the three choices in "Traseul" — "yes", "no", or "auto" (and
     // an absent value) for the sunset's own answer.
     nightOverride: nightOverrideFromChoice(value("nightOverride")),
+    // «Vremea» (§666): the three radios in the place's card, read only when the form carried them —
+    // a form without them (a reader who may not change the place) is "not editing it".
+    weatherMode: form.has("event.weatherMode") ? value("weatherMode") : undefined,
     // The group run's optional self-declaration (§393): a checkbox in "Traseul"; unticked, or
     // disabled because the club has no approved text of that kind, posts nothing: not offered.
     offersGroupRunDeclaration: form.get("event.offersGroupRunDeclaration") === "on",
@@ -433,6 +436,9 @@ function translationInputFrom(form: FormData, locale: Locale) {
     // future caller, a stale form) must leave the column alone rather than blank it; cleared
     // server-side outside EXTERNAL + PAID (`service.ts#applyTranslationSave`).
     discountNote: form.has(`translations.${locale}.discountNote`) ? value("discountNote") : undefined,
+    // The club's own weather text (§666), from the place's card under «Vremea» — read only when the
+    // box was posted, like the discount note: an absent box leaves the column alone, "" clears it.
+    weatherNote: form.has(`translations.${locale}.weatherNote`) ? value("weatherNote") : undefined,
   };
 }
 
@@ -655,7 +661,18 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
   const eventId = text(form, "eventId");
   const path = editorPath(locale, eventId);
 
-  let outcome: { error?: string; saved?: string; applied?: string; offered?: string; announced?: string; notice?: string; queued?: string };
+  let outcome: {
+    error?: string;
+    saved?: string;
+    applied?: string;
+    offered?: string;
+    announced?: string;
+    notice?: string;
+    queued?: string;
+    moved?: string;
+    movedTo?: string;
+    movedSent?: string;
+  };
   try {
     const actor = await requireStaff();
     const editsEventRow = text(form, "event.expectedVersion") !== "";
@@ -664,7 +681,7 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
     const ticked = form.getAll("dates").filter((value): value is string => typeof value === "string" && value !== "");
     const scope = text(form, "scope");
 
-    const { appliedTo, offered, placeAnnounced, notice } = await saveEventAndTranslations(getDb(), {
+    const { appliedTo, offered, placeAnnounced, holdsMoved, notice } = await saveEventAndTranslations(getDb(), {
       actor,
       eventId,
       fields: editsEventRow ? eventFieldsFrom(form) : undefined,
@@ -695,6 +712,14 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
     outcome = {
       ...(appliedTo > 0 ? { saved: "eventSeries", applied: String(appliedTo) } : { saved: "event" }),
       offered: offered > 0 ? String(offered) : undefined,
+      // The reserved places the window's move carried (§665): how many, to when, whether they were emailed — a count and an instant, never who.
+      ...(holdsMoved.moved > 0
+        ? {
+            moved: String(holdsMoved.moved),
+            movedTo: holdsMoved.to?.toISOString(),
+            movedSent: holdsMoved.queued > 0 ? "1" : undefined,
+          }
+        : {}),
       // The save that announced the place (§328): the banner says it is public now. A flag, never
       // the place itself — nothing typed goes in a URL. When the organizer also told the
       // participants, the notice's own banner says so, and "nobody was written to" would be false.

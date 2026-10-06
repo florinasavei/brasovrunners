@@ -21,7 +21,10 @@ import { alias } from "drizzle-orm/pg-core";
 import { awaitingItsFirstEmail, familyEmailQueued, familyReservationHolds, offerAwaitingItsFirstEmail } from "./repository";
 import { promoListed } from "./sponsor-list";
 import { healthNoteShown } from "./domain/health-note";
+import { memberCanonicalEmails } from "./member-ticks";
+import { OFFERS_MEMBER_BIB } from "@/modules/events/repository";
 import type { QueueOrder } from "./domain/waitlist";
+import { rejectedEmailOf, type RejectedEmail } from "./domain/rejected-email";
 import type { PlaceDeadlineCounts, PlaceDeadlineEvent } from "./domain/place-deadlines";
 
 /**
@@ -50,6 +53,24 @@ export type RegistrationListRow = {
   eventTitle: string | null;
   /** BR-REQ-031-06. What this person said about themselves, never what the club verified. */
   clubMemberDeclared: boolean;
+  /**
+   * Where the person lives (§510) — the country's ISO code, `RO` by default, and the city as typed — for
+   * the list's «Oraș» (`domain/city-label.ts#cityLabel`, §660) and the export's «Country» and «City».
+   */
+  country: string;
+  city: string | null;
+  /**
+   * The birth date and the event's start on its own clock, for «Vârstă» (§660): the age on the event's
+   * day, `domain/age.ts#ageOnRaceDay`, the one the categories and the minors' rules count (§329).
+   */
+  birthDate: string | null;
+  eventStartsAt: Date;
+  eventTimezone: string;
+  /** «Membru (verificat)» (§662): the participant's canonical address is a member account's; `membershipOf` reads the two. */
+  memberVerified: boolean;
+  /** «Vreau numărul de membru» (§664) and whether the event offers the members' bib: the export's «Member bib». */
+  memberBibWanted: boolean;
+  memberBibOffered: boolean;
   /** When the entrant ticked "I am medically fit" (§171); null on a desk or phone entry. */
   fitnessDeclaredAt: Date | null;
   /**
@@ -88,8 +109,8 @@ export type RegistrationListRow = {
   /** When the club last said this bib is on paper (§264); null while it is not. */
   bibPrintedAt: Date | null;
   checkedInAt: Date | null;
-  /** Mailgun's reason when a message bounced or was complained about (§76); null otherwise. */
-  emailRejectedReason: string | null;
+  /** The newest message the provider rejected — which, when, why and its reason (§76, §663); null otherwise. */
+  emailRejected: RejectedEmail | null;
   /** The latest declaration's declarant's document: the adult's, or the parent's for a minor (§95, §108). */
   idDocument: string | null;
   /** The minor's own document, beside the parent's (§330); `identityDocumentsOf` says whose is whose. */
@@ -125,7 +146,13 @@ export type RegistrationListFilters = {
   eventId?: string;
   status?: RegistrationStatus;
   excludeTest?: boolean;
-  clubMemberDeclared?: boolean;
+  /** «Doar membrii {club}» (§650, §662): the rows whose person ticked the box or whose address is a member account's. */
+  clubMember?: boolean;
+  /**
+   * The member accounts' canonical addresses (`memberCanonicalEmails`), when the caller has read them
+   * already: a page that lists, counts and sums reads them once. Absent, each query reads them itself.
+   */
+  members?: readonly string[];
   /** A name, or part of one (BR-REQ-041-01 criterion 7). */
   search?: string;
   /** Only the rows whose email the provider refused (§83): who to call. */
@@ -137,6 +164,12 @@ export type RegistrationListFilters = {
   promoConsented?: boolean;
   /** «În afara locurilor» (§643): only the rows seated outside the places — the summary strip's pill. Narrows only. */
   outsideCapacity?: boolean;
+  /**
+   * The members' race number asked for and not verified (§664): the real rows with a number that want it,
+   * at an event that offers it, whose address is no member account's — the bibs page's link, the same set
+   * its line counts. Narrows only.
+   */
+  memberBibAsked?: boolean;
 };
 
 /**
@@ -145,7 +178,7 @@ export type RegistrationListFilters = {
  * An allowlist rather than a mapping built from the request: `?sort=` arrives from a URL anybody
  * can type, and the one thing that must not be possible is for it to name a column.
  */
-export const REGISTRATION_SORT_KEYS = ["name", "status", "event", "submitted", "bib", "untilWhen"] as const;
+export const REGISTRATION_SORT_KEYS = ["name", "status", "event", "submitted", "bib", "untilWhen", "city", "age"] as const;
 export type RegistrationSortKey = (typeof REGISTRATION_SORT_KEYS)[number];
 
 /**
@@ -201,11 +234,11 @@ function escapeLike(term: string): string {
 /** Every filter the list and its count must agree on, in one place so they cannot drift apart. */
 /**
  * The provider's last word on this registration's mail, when that word was "no" (BR-REQ-080-04,
- * `DECISIONS.md` §76): the reason Mailgun gave for the newest bounced or complained message —
- * any message type, because a verification that bounced means exactly what a bounced
- * confirmation means: this person never got the email, and somebody should call them. Null
- * when every message went through, or none was sent yet. A short sanitized reason (§16.1),
- * never a body.
+ * `DECISIONS.md` §76, §663): the newest bounced or complained message — its type, when it left,
+ * which of the two, and the short sanitized reason the provider gave (§16.1), never a body. Any
+ * message type: a confirmed participant whose race-number email bounced is one the club can no
+ * longer reach by email, and somebody should call them. Null when every message went through, or
+ * none was sent yet. (`emailRejected`, below the declaration probes.)
  */
 /**
  * The identity document the latest declaration names (§95): what the desk checks the kit
@@ -246,32 +279,66 @@ const latestDeclarationAcceptedAt = sql<Date | null>`(
 )`.mapWith(declarationAcceptances.acceptedAt);
 
 // A club copy (§320) that bounced is a club mailbox's problem, not the participant's address:
-// it never marks the registration as unreachable.
-const emailRejectedReason = sql<string | null>`(
-  SELECT coalesce(${emailOutbox.lastError}, ${emailOutbox.status}::text)
+// it never marks the registration as unreachable. One object (§663): which message, when it left (or
+// was queued, refused outright), bounced or complained, and the reason — so the chip says which and when.
+const emailRejected = sql<RejectedEmail | null>`(
+  SELECT json_build_object(
+    'messageType', ${emailOutbox.messageType},
+    'at', floor(extract(epoch FROM coalesce(${emailOutbox.sentAt}, ${emailOutbox.createdAt})) * 1000),
+    'sent', ${emailOutbox.sentAt} IS NOT NULL,
+    'status', ${emailOutbox.status},
+    'reason', ${emailOutbox.lastError}
+  )
   FROM ${emailOutbox}
   WHERE ${emailOutbox.registrationId} = ${registrations.id}
     AND ${emailOutbox.status} IN ('BOUNCED', 'COMPLAINED')
     AND (${emailOutbox.payloadJson} ->> 'clubCopy') IS DISTINCT FROM 'true'
   ORDER BY ${emailOutbox.createdAt} DESC
   LIMIT 1
-)`;
+)`.mapWith(rejectedEmailOf);
 
-function registrationConditions(filters: RegistrationListFilters): SQL[] {
+/**
+ * «Membru (verificat)» (§662): the participant's canonical address (`participants.canonical_email`, the
+ * canonicalizer's own output, AGENTS.md §10.4) is among the member accounts' — never a raw address, never
+ * a name. With no member account it is plainly false, never an `IN ()`.
+ */
+function memberVerifiedOf(members: readonly string[]): SQL<boolean> {
+  return (members.length > 0 ? sql<boolean>`(${inArray(participants.canonicalEmail, [...members])})` : sql<boolean>`false`).mapWith(Boolean);
+}
+
+/**
+ * The members' race number asked for and not verified (§664), in the bibs sheet's own scope: a real row
+ * with a number (`bibs.ts#bibScopeWhere`), that wants it, at an event that offers it, whose address is no
+ * member account's — so the list the bibs page links to counts what its line counts. The event's switch
+ * is read through its own `EXISTS`, never through the caller's joins: the summary and the count select
+ * no `events`, and a condition naming it there failed the whole page.
+ */
+function memberBibAskedUnverified(members: readonly string[]): SQL {
+  return sql`(${registrations.memberBibWanted} and ${registrations.kind} = 'REAL' and ${registrations.bibNumber} is not null and exists (select 1 from ${events} where ${events.id} = ${registrations.eventId} and ${OFFERS_MEMBER_BIB}) and not ${memberVerifiedOf(members)})`;
+}
+
+/** The member accounts' canonical addresses for one query: the caller's, or read now. */
+async function membersFor<T extends Record<string, unknown>>(db: Database<T>, filters: RegistrationListFilters): Promise<readonly string[]> {
+  return filters.members ?? [...(await memberCanonicalEmails(db))];
+}
+
+function registrationConditions(filters: RegistrationListFilters, members: readonly string[] = []): SQL[] {
   const search = filters.search?.trim();
 
   return [
     filters.eventId ? eq(registrations.eventId, filters.eventId) : undefined,
     filters.status ? eq(registrations.status, filters.status) : undefined,
     filters.excludeTest ? eq(registrations.kind, "REAL") : undefined,
-    // Only ever narrows to the people who said yes. There is no "show me the non-members"
-    // filter, because `false` here means "did not tick a box" as often as it means "not a
-    // member", and a screen that presented it as the second would be inventing an answer.
-    filters.clubMemberDeclared ? eq(registrations.clubMemberDeclared, true) : undefined,
-    filters.emailBounced ? sql`${emailRejectedReason} IS NOT NULL` : undefined,
+    // Only ever narrows to the members, declared or verified (§662; the row's chip says which).
+    // There is no "show me the non-members" filter, because `false` here means "did not tick a
+    // box" as often as it means "not a member", and a screen that presented it as the second
+    // would be inventing an answer.
+    filters.clubMember ? sql`(${registrations.clubMemberDeclared} or ${memberVerifiedOf(members)})` : undefined,
+    filters.emailBounced ? sql`${emailRejected} IS NOT NULL` : undefined,
     // The same condition as the club's list on «Newsletter» and the sponsor list's candidates (§570, §581).
     filters.promoConsented ? promoListed() : undefined,
     filters.outsideCapacity ? eq(registrations.outsideCapacity, true) : undefined,
+    filters.memberBibAsked ? memberBibAskedUnverified(members) : undefined,
     /*
       Name only, and deliberately not the email address. An organizer at a desk is holding a
       person who just said their name out loud; matching addresses as well would turn this box
@@ -374,6 +441,20 @@ function registrationOrderBy(sort: RegistrationSortKey, dir: "asc" | "desc", now
     // The soonest deadline first (§650); a row that waits on none comes after every dated one, either way.
     case "untilWhen":
       return dir === "asc" ? sql`${rowDeadlineOrder(now)} asc nulls last` : sql`${rowDeadlineOrder(now)} desc nulls last`;
+    /*
+      «Oraș» (§660): the city as typed, by the database's collation as the name sorts; a row with no city
+      last either way, as a row with no number is under «BIB». The country's code the cell adds is not
+      part of the order: «Bristol (GB)» sorts among the B's.
+    */
+    case "city":
+      return dir === "asc" ? sql`nullif(btrim(${registrations.city}), '') asc nulls last` : sql`nullif(btrim(${registrations.city}), '') desc nulls last`;
+    /*
+      «Vârstă» (§660): the youngest first is the latest birth date first. Over one event this is exactly
+      the order of the ages on screen; over every event it is the order of the birth dates, which two
+      rows of different races read the same way within a year. No birth date last, either way.
+    */
+    case "age":
+      return dir === "asc" ? sql`${registrations.birthDate} desc nulls last` : sql`${registrations.birthDate} asc nulls last`;
   }
 }
 
@@ -399,7 +480,8 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
   /** The clock of «Până când» (§650): a family's reservation against its link in the order, a queued offer's email (§520). */
   now: Date = new Date(),
 ): Promise<RegistrationListRow[]> {
-  const conditions = registrationConditions(filters);
+  const members = await membersFor(db, filters);
+  const conditions = registrationConditions(filters, members);
 
   const query = db
     .select({
@@ -416,6 +498,16 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       eventId: registrations.eventId,
       eventTitle: eventTranslations.title,
       clubMemberDeclared: registrations.clubMemberDeclared,
+      // «Oraș» and «Vârstă» (§660): read from the row and its event, no query per row.
+      country: registrations.country,
+      city: registrations.city,
+      birthDate: registrations.birthDate,
+      eventStartsAt: events.startsAt,
+      eventTimezone: events.timezone,
+      memberVerified: memberVerifiedOf(members),
+      // The members' race number (§664): the export's «Member bib».
+      memberBibWanted: registrations.memberBibWanted,
+      memberBibOffered: OFFERS_MEMBER_BIB,
       fitnessDeclaredAt: registrations.fitnessDeclaredAt,
       termsVersion: registrations.termsVersion,
       termsAcceptedAt: registrations.termsAcceptedAt,
@@ -433,7 +525,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       bibNumber: registrations.bibNumber,
       bibPrintedAt: registrations.bibPrintedAt,
       checkedInAt: registrations.checkedInAt,
-      emailRejectedReason,
+      emailRejected,
       idDocument: latestIdDocument,
       minorIdDocument: latestMinorIdDocument,
       cycleStartedAt: registrations.privacyAcknowledgedAt,
@@ -454,6 +546,8 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
     })
     .from(registrations)
     .innerJoin(participants, eq(participants.id, registrations.participantId))
+    // The event's start and clock, for «Vârstă» (§660): one primary-key probe per row.
+    .innerJoin(events, eq(events.id, registrations.eventId))
     .leftJoin(
       eventTranslations,
       and(
@@ -511,7 +605,7 @@ export async function summariseRegistrationsForAdmin<T extends Record<string, un
   db: Database<T>,
   filters: RegistrationListFilters = {},
 ): Promise<RegistrationSummary> {
-  const conditions = registrationConditions(filters);
+  const conditions = registrationConditions(filters, filters.clubMember || filters.memberBibAsked ? await membersFor(db, filters) : []);
 
   const rows = await db
     .select({ status: registrations.status, kind: registrations.kind, outside: registrations.outsideCapacity, total: count() })
@@ -592,7 +686,7 @@ export async function countRegistrationsForAdmin<T extends Record<string, unknow
   db: Database<T>,
   filters: RegistrationListFilters = {},
 ): Promise<number> {
-  const conditions = registrationConditions(filters);
+  const conditions = registrationConditions(filters, filters.clubMember || filters.memberBibAsked ? await membersFor(db, filters) : []);
 
   const [row] = await db
     .select({ total: count() })
@@ -652,6 +746,11 @@ export type RegistrationDetail = {
   eventId: string;
   eventTitle: string | null;
   clubMemberDeclared: boolean;
+  /** «Membru (verificat)» (§662), as on the list row. */
+  memberVerified: boolean;
+  /** «Vreau numărul de membru» (§664) as stored, and whether the event offers the members' bib now. */
+  memberBibWanted: boolean;
+  eventOffersMemberBib: boolean;
   submittedAt: Date;
   emailConfirmedAt: Date | null;
   waitlistedAt: Date | null;
@@ -691,8 +790,8 @@ export type RegistrationDetail = {
   checkedInByName: string | null;
   /** Who vouched for the address at the desk, when nobody clicked a link. */
   emailConfirmedByName: string | null;
-  /** Mailgun's reason when a message to this registration bounced or was complained about; null otherwise. */
-  emailRejectedReason: string | null;
+  /** The newest message to this registration the provider rejected (§76, §663); null otherwise. */
+  emailRejected: RejectedEmail | null;
   /** For "send the reminder": only while the event is ahead (§81). */
   eventStartsAt: Date;
   /** When the current cycle began (`privacy_acknowledged_at`, rewritten on a restart); §145. */
@@ -732,6 +831,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
   id: string,
   now: Date = new Date(),
 ): Promise<RegistrationDetail | undefined> {
+  const members = [...(await memberCanonicalEmails(db))];
   const [row] = await db
     .select({
       bibNumber: registrations.bibNumber,
@@ -741,7 +841,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       checkedInAt: registrations.checkedInAt,
       checkedInByName: checkedInBy.displayName,
       emailConfirmedByName: emailConfirmedBy.displayName,
-      emailRejectedReason,
+      emailRejected,
       eventStartsAt: events.startsAt,
       id: registrations.id,
       status: registrations.status,
@@ -754,6 +854,9 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       eventId: registrations.eventId,
       eventTitle: eventTranslations.title,
       clubMemberDeclared: registrations.clubMemberDeclared,
+      memberVerified: memberVerifiedOf(members),
+      memberBibWanted: registrations.memberBibWanted,
+      eventOffersMemberBib: OFFERS_MEMBER_BIB,
       fitnessDeclaredAt: registrations.fitnessDeclaredAt,
       stravaUrl: registrations.stravaUrl,
       instagramHandle: registrations.instagramHandle,
@@ -917,10 +1020,11 @@ export async function listEmergencySheet<T extends Record<string, unknown>>(
 }
 
 /**
- * The extra columns the spreadsheet carries and the CSV does not (§322): sex, the age on race
- * day, where the runner is from, and the t-shirt size — what a category ranking, the club's
- * "where do our runners come from" and the kit order need, and nothing the start list itself
- * reads. One query for the exported ids rather than four more columns on every page of the list.
+ * The extra columns the spreadsheet carries (§322): sex, the age on race day, where the runner is
+ * from, and the t-shirt size — what a category ranking, the club's "where do our runners come
+ * from" and the kit order need. The age, the country and the city are also the list's own
+ * «Vârstă» and «Oraș» and the CSV's last columns since §660; sex, citizenship and the t-shirt stay
+ * the spreadsheet's alone. One query for the exported ids.
  */
 export type WorkbookDetails = {
   id: string;
@@ -1030,8 +1134,10 @@ export type DeskRegistration = {
   checkinCode: string | null;
   checkedInAt: Date | null;
   checkedInByName: string | null;
-  /** The desk sees who never got the email (`DECISIONS.md` §76) — the reason, never the address. */
-  emailRejectedReason: string | null;
+  /** The desk sees whom an email no longer reaches (`DECISIONS.md` §76, §663) — which, when and why, never the address. */
+  emailRejected: RejectedEmail | null;
+  /** When the address was confirmed, so the desk's words say whether the rejection came after it (§663). */
+  emailConfirmedAt: Date | null;
   /** The declarant's document, and a minor's own beside it (§95, §330; `identityDocumentsOf`). */
   idDocument: string | null;
   minorIdDocument: string | null;
@@ -1058,7 +1164,8 @@ const DESK_COLUMNS = {
   minorIdDocument: latestMinorIdDocument,
   checkedInAt: registrations.checkedInAt,
   checkedInByName: checkedInBy.displayName,
-  emailRejectedReason,
+  emailRejected,
+  emailConfirmedAt: registrations.emailConfirmedAt,
 };
 
 function deskQuery<T extends Record<string, unknown>>(db: Database<T>, locale: Locale) {
@@ -1254,7 +1361,7 @@ export async function listEventsWithRegistrations<T extends Record<string, unkno
 export async function listEventsAcceptingRegistrations<T extends Record<string, unknown>>(
   db: Database<T>,
   locale: "ro" | "en",
-): Promise<Array<{ id: string; title: string | null; startsAt: Date; timezone: string; minAge: number }>> {
+): Promise<Array<{ id: string; title: string | null; startsAt: Date; timezone: string; minAge: number; offersMemberBib: boolean }>> {
   return db
     .select({
       id: events.id,
@@ -1264,6 +1371,8 @@ export async function listEventsAcceptingRegistrations<T extends Record<string, 
       // Beside each name on the staff form ("14+"), so the volunteer knows which minimum the
       // birth date is counted against before pressing (§329).
       minAge: events.minAge,
+      // Whether the staff form asks «Vreau numărul de membru» (§664), read as `readBibDesign` reads it.
+      offersMemberBib: OFFERS_MEMBER_BIB,
     })
     .from(events)
     .leftJoin(

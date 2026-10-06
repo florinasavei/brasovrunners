@@ -479,6 +479,8 @@ export type CreateRegistrationByStaffInput = {
     guardianName?: string;
     /** BR-REQ-031-06. What the person told the organizer; a claim like every other one. */
     clubMemberDeclared?: boolean;
+    /** «Vreau numărul de membru» (§664), as the person told the organizer; kept only where the event offers it. */
+    memberBibWanted?: boolean;
     tshirtSize?: "NONE" | "XS" | "S" | "M" | "L" | "XL" | "XXL";
   };
   email: string;

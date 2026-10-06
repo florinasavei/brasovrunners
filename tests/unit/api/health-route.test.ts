@@ -299,7 +299,7 @@ describe("§435 /api/health warns 30 days before the domain expires", () => {
     const body = await response.json();
     expect(response.status).toBe(200);
     expect(body.status).toBe("ok");
-    expect(body.domain).toEqual({ status: "soon", expiresOn: "2027-09-16", daysLeft: 45 });
+    expect(body.domain).toMatchObject({ status: "soon", expiresOn: "2027-09-16", daysLeft: 45 });
   });
 
   it("degrades to a 503 at 30 days and past the day", async () => {
@@ -319,6 +319,8 @@ describe("§435 /api/health warns 30 days before the domain expires", () => {
   it("says unknown and changes nothing while the dates are unset", async () => {
     const response = await GET();
     expect(response.status).toBe(200);
-    expect((await response.json()).domain).toEqual({ status: "unknown" });
+    const domain = (await response.json()).domain;
+    expect(domain).toMatchObject({ status: "unknown" });
+    expect(domain.expiresOn).toBeUndefined();
   });
 });

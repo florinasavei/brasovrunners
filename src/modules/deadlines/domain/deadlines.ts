@@ -31,6 +31,7 @@ export const DEADLINE_KEYS = [
   "holdMinutes",
   "offerHours",
   "reminderHours",
+  "lastCallHours",
   "selfCheckinHours",
   "raceWeekDays",
   "seriesHorizonDays",
@@ -38,6 +39,7 @@ export const DEADLINE_KEYS = [
   "familySittingMinutes",
   "verificationRetryHours",
   "verificationRetries",
+  "outageGraceMaxHours",
 ] as const;
 
 export type DeadlineKey = (typeof DEADLINE_KEYS)[number];
@@ -68,6 +70,10 @@ export type DeadlineRule = {
  * - the **waiting-list offer** 6 to 72 hours: a night's sleep at least, three days at most, and
  *   always capped by the close and the start anyway (`capHoldExpiry`);
  * - the **reminder** 0 (none) to 168 hours — a week, the per-event column's CHECK as well;
+ * - the **last call to sign before a window's deadline** (§665) 0 (none) to 168 hours, 48 by default:
+ *   on an event whose participation window is due before the start, the declaration goes once more
+ *   this long before that deadline, to whoever holds a place until it — a week at most, like the
+ *   reminder, and by default the reminder's own two days;
  * - **"I am here"** 1 to 72 hours before the start;
  * - **race week** 0 (the race day only) to 21 days;
  * - the **series horizon** 14 to 182 days: two weeks is the least a listing should show ahead,
@@ -94,12 +100,19 @@ export type DeadlineRule = {
  *   the address and the event counts toward one plus this number, the person's own «Retrimite» and a
  *   staff resend included, so nobody is nudged twice by a resend; 0 switches the mechanism off; three
  *   nudges is the most a reminder may be before it is a mailer. Neither moves the link's deadline.
+ * - **the outage grace** (§657) 0 to 168 hours, 48 by default: the longest stretch by which one
+ *   window the platform could not be reached — the site's name not resolving, or no scheduler call
+ *   reaching it — moves the participants' deadlines that were running in it
+ *   (`registrations/domain/outage-grace.ts`). 0 switches the moving off while the windows are still
+ *   recorded and announced; a week is the most a deadline should be carried for a door nobody
+ *   reopened, and two days covers a registrar's hold over a weekend.
  */
 export const DEADLINE_RULES: Record<DeadlineKey, DeadlineRule> = {
   confirmationHours: { unit: "hours", min: 12, max: 168, default: 48 },
   holdMinutes: { unit: "minutes", min: 10, max: 120, default: 30 },
   offerHours: { unit: "hours", min: 6, max: 72, default: 24 },
   reminderHours: { unit: "hours", min: 0, max: 168, default: 48 },
+  lastCallHours: { unit: "hours", min: 0, max: 168, default: 48 },
   selfCheckinHours: { unit: "hours", min: 1, max: 72, default: 24 },
   raceWeekDays: { unit: "days", min: 0, max: 21, default: 7 },
   seriesHorizonDays: { unit: "days", min: 14, max: 182, default: 56 },
@@ -107,6 +120,7 @@ export const DEADLINE_RULES: Record<DeadlineKey, DeadlineRule> = {
   familySittingMinutes: { unit: "minutes", min: 0, max: 60, default: 10 },
   verificationRetryHours: { unit: "hours", min: 2, max: 72, default: 20 },
   verificationRetries: { unit: "count", min: 0, max: 3, default: 1 },
+  outageGraceMaxHours: { unit: "hours", min: 0, max: 168, default: 48 },
 };
 
 export type Deadlines = Record<DeadlineKey, number>;
@@ -148,6 +162,7 @@ export const deadlinesSettingSchema = z
     holdMinutes: bounded("holdMinutes"),
     offerHours: bounded("offerHours"),
     reminderHours: bounded("reminderHours"),
+    lastCallHours: bounded("lastCallHours"),
     selfCheckinHours: bounded("selfCheckinHours"),
     raceWeekDays: bounded("raceWeekDays"),
     seriesHorizonDays: bounded("seriesHorizonDays"),
@@ -155,6 +170,7 @@ export const deadlinesSettingSchema = z
     familySittingMinutes: bounded("familySittingMinutes"),
     verificationRetryHours: bounded("verificationRetryHours"),
     verificationRetries: bounded("verificationRetries"),
+    outageGraceMaxHours: bounded("outageGraceMaxHours"),
   })
   .strict();
 

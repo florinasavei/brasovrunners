@@ -59,8 +59,13 @@ export function waitlistRoomPhrase(say: Say, locale: string, room: number): stri
  * already counted; an empty line says «Fii primul pe lista de așteptare.» instead of a nought.
  * `waiting` null is a count the club keeps private (§634): «… s-au ocupat. Intră pe lista de
  * așteptare.», which says neither the number nor that nobody waits.
+ *
+ * `capacity` null is an event that says no public number at all («Arată public numărătoarea» unticked,
+ * §668), or a full state read with no places line: «Mulțumim! Toate locurile s-au ocupat. Intră pe lista
+ * de așteptare.» — no capacity, and no count of the line whatever `waiting` says.
  */
-export function fullThanksPhrase(say: Say, locale: string, capacity: number, waiting: number | null): string {
+export function fullThanksPhrase(say: Say, locale: string, capacity: number | null, waiting: number | null): string {
+  if (capacity === null) return say("cta.fullThanksPlain");
   const key = waiting === null ? "cta.fullThanksJoin" : waiting > 0 ? "cta.fullThanks" : "cta.fullThanksFirst";
   return say(`${key}.${countForm(capacity, locale)}`, waiting === null ? { capacity } : { capacity, waiting });
 }

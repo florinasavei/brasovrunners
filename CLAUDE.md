@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.66-2026-10-03 -->
+<!-- PROJECT_BASELINE: BR-V2.72-2026-10-06 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V2.66-2026-10-03`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V2.72-2026-10-06`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -242,6 +242,14 @@ it is the authority, this is the summary):
     which departs from the brief: §524); add the first members on «Echipa» → «Adaugă mai mulți membri» (after the notice of item 16);
     write «Pagini» → «Pagini standard» → «Membri» and «Întrebări frecvente» (§525) in both languages, then publish them;
     add the partners' codes in «Membri» → «Coduri de reducere» → «Adaugă un cod».
+19. **Keep the jobs and a monitor off the public name, and the domain's contact read** — from the
+    registrar hold of 2026-10-03 (`docs/RUNBOOKS.md` § The domain stops answering). On cron-job.org: the job pings (two
+    endpoints per environment, six jobs) moved to each project's `vercel.app` address, and two new health monitors on those
+    addresses, production hourly and QA six-hourly, beside the ones on the public name (`SETUP.md` §40, with the addresses).
+    On GitHub: the backstop's secrets `PRODUCTION_APP_BASE_URL` and `QA_APP_BASE_URL` set to the same addresses — unset,
+    `scheduled-jobs.yml` skips green in zero seconds and guards nothing. At the registrar: the registrant and admin contact
+    a mailbox outside the domain, read daily; the registrar's and its verification service's senders whitelisted there;
+    auto-renew on with a valid card; `DOMAIN_REGISTERED_ON` and `DOMAIN_RENEWAL_YEARS` on both Vercel projects (`SETUP.md` §26).
 
 **The values behind items 10 and 11 are in `.env.local` and on both Vercel projects**, never in
 this repository — it is public, and `yarn secrets:check` blocks a commit that carries one. The
