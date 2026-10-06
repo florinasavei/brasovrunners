@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V2.70-2026-10-05`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V2.71-2026-10-06`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -864,7 +864,11 @@ or off; it goes when the queue is through. Four causes, told apart by the same p
    has the price. With «Gmail preia când Mailgun se oprește» on, the deferred rows leave through Gmail
    at once instead (§622), and «Trimite acum» says «N prin Gmail — cota Mailgun epuizată până la …».
 2. **Overdue** — messages waited more than ninety minutes for a scheduler. cron-job.org →
-   the two job monitors: paused, disabled after failures, or the `JOB_SECRET` changed. Run
+   the two job monitors: paused, disabled after failures, or the `JOB_SECRET` changed (a history
+   entry that is a 200 taking about twenty seconds is a long run that finished after the response,
+   not a failure — the body says `continuing: true` only with the job's "save responses" on; Vercel's
+   function log line `[jobs] <job>: finished after the response in <ms> ms` is the authority:
+   `SETUP.md` §40, `DECISIONS.md` §667). Run
    `yarn smoke` on the environment; `jobs[].status` names which one is stale. Pressing
    "Trimite acum" on `/admin/registrations` drains the outbox by hand meanwhile.
 3. **Paused by the provider** (§605) — `lastError` starts "paused by the provider:". Mailgun
