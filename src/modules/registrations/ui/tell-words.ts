@@ -23,7 +23,7 @@ export type TellFacts = {
   eventCancelled: boolean;
   waitlistAutoOffer: boolean;
   waitlistCountPublic: boolean;
-  /** «Arată public numărătoarea» (§668), the parent of the switch above (§NNN): required, so no caller can leave the line's length said by forgetting it. */
+  /** «Arată public numărătoarea» (§668), the parent of the switch above (§669): required, so no caller can leave the line's length said by forgetting it. */
   participantCountPublic: boolean;
   waitlistPosition: number | null;
   waitlistLength: number | null;
@@ -117,7 +117,7 @@ export function tellLines(say: Say, ours: Say, locale: string, facts: TellFacts,
             position: facts.waitlistPosition,
             length: facts.waitlistLength,
             autoOffer: facts.waitlistAutoOffer,
-            // What the person's own page says (§NNN): the parent unticked keeps the length private too.
+            // What the person's own page says (§669): the parent unticked keeps the length private too.
             countPublic: waitlistCountShown(facts),
           }),
         );

@@ -114,7 +114,7 @@ describe("§654 whatToTell — what to tell a person who asks where their regist
       }
     });
 
-    it(`§NNN the waiting line keeps the count private with «Arată public numărătoarea» unticked (${locale})`, () => {
+    it(`§669 the waiting line keeps the count private with «Arată public numărătoarea» unticked (${locale})`, () => {
       const lines = whatToTell(
         locale,
         facts({ status: "WAITLISTED", waitlistPosition: 3, waitlistLength: 10, waitlistAutoOffer: true, waitlistCountPublic: true, participantCountPublic: false }),

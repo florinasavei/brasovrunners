@@ -229,7 +229,7 @@ export async function readWaitlistPosition<T extends Record<string, unknown>>(
       eventId: registrations.eventId,
       status: registrations.status,
       autoOffer: events.waitlistAutoOffer,
-      // «Arată public câți așteaptă» (§634) under «Arată public numărătoarea» (§NNN), from the same read of
+      // «Arată public câți așteaptă» (§634) under «Arată public numărătoarea» (§669), from the same read of
       // the event row: whether the sentence may say the line's length (`waitlistCountShown`, below).
       waitlistCountPublic: events.waitlistCountPublic,
       participantCountPublic: events.participantCountPublic,

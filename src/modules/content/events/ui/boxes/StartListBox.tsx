@@ -79,7 +79,7 @@ export default async function StartListBox({ event, mayEditSettings }: Pick<BoxP
                 </CheckboxField>
                 <BoxNote>{t("editor.participantCountPublicHelp")}</BoxNote>
                 {/*
-                  «Arată public câți așteaptă» (§634) under it (§NNN; the owner: "these 2 checkboxes need to be nested"):
+                  «Arată public câți așteaptă» (§634) under it (§669; the owner: "these 2 checkboxes need to be nested"):
                   the line's NUMBER is one of the numbers above, so with the parent unticked it is private
                   whatever this says (`waitlistCountShown`). Shown only while the parent is ticked, but kept in
                   the form — hidden, never removed — so its value and its marker still post and nothing a save

@@ -7,7 +7,7 @@ import type { EditableEvent } from "@/modules/content/events/repository";
 import { publicFill, publicNumbersShown, registrationCta, type RegistrationCtaInput, waitlistCountShown } from "@/modules/events/domain/registration-cta";
 
 /**
- * BR-REQ-039-01 (§NNN) — «Arată public câți așteaptă» nested under «Arată public numărătoarea». The owner,
+ * BR-REQ-039-01 (§669) — «Arată public câți așteaptă» nested under «Arată public numărătoarea». The owner,
  * looking at the event editor on production: "These 2 checkboxes need to be nested, they refer to the same
  * thing pretty much". The parent unticked already hides every number on the event's public pages, so the
  * waiting count is one of them: one pure rule (`waitlistCountShown`) beside `publicNumbersShown`, and the
@@ -71,7 +71,7 @@ const childBlock = (html: string) => {
   return html.slice(html.lastIndexOf("<div", html.lastIndexOf("<div", at) - 1), at);
 };
 
-describe("§NNN waitlistCountShown: the waiting count is one of the public numbers", () => {
+describe("§669 waitlistCountShown: the waiting count is one of the public numbers", () => {
   it("is on only with both switches on, absent reading as on", () => {
     expect(waitlistCountShown({ participantCountPublic: true, waitlistCountPublic: true })).toBe(true);
     expect(waitlistCountShown({})).toBe(true);
@@ -100,7 +100,7 @@ describe("§NNN waitlistCountShown: the waiting count is one of the public numbe
   });
 });
 
-describe("§NNN the editor: «Arată public câți așteaptă» under «Arată public numărătoarea»", () => {
+describe("§669 the editor: «Arată public câți așteaptă» under «Arată public numărătoarea»", () => {
   it("draws the parent first and the child after it, inside the parent's own block", async () => {
     const html = await render(RACE);
     const parentAt = html.indexOf('data-testid="participant-count-public"');
@@ -140,7 +140,7 @@ describe("§NNN the editor: «Arată public câți așteaptă» under «Arată p
     const ghid = (messages: unknown) =>
       JSON.stringify(messages)
         .split('"')
-        .filter((text) => text.includes("cu «Arată public câți așteaptă» sub ea") || text.includes("with «Show publicly how many are waiting» under it"));
+        .filter((text) => text.includes("cu «Arată public câți așteaptă» sub el") || text.includes("with «Show publicly how many are waiting» under it"));
     expect(ghid(ro)).toHaveLength(1);
     expect(ghid(en)).toHaveLength(1);
     for (const step of [...ghid(ro), ...ghid(en)]) expect(step.length).toBeLessThan(200);

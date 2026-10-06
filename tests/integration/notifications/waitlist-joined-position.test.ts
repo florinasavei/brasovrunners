@@ -494,7 +494,7 @@ describe("§634 the count kept private: the person's own page, «Toate înscrier
     expect(message.text).not.toContain("locul 2");
   });
 
-  it("§NNN says the same with «Arată public numărătoarea» unticked, whatever the waiting count's own switch says", async () => {
+  it("§669 says the same with «Arată public numărătoarea» unticked, whatever the waiting count's own switch says", async () => {
     await db.update(events).set({ participantCountPublic: false, waitlistCountPublic: true }).where(eq(events.id, eventId));
     await person("WAITLISTED", at(1));
     const me = await person("WAITLISTED", at(2));

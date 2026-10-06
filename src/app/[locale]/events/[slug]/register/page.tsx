@@ -268,7 +268,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           const numbers = publicNumbersShown(event) && publicNumbersShown(places);
           fullCounts = {
             capacity: numbers ? places.capacity : null,
-            // «Arată public câți așteaptă» sits under it (§NNN): one rule for both, the door's.
+            // «Arată public câți așteaptă» sits under it (§669): one rule for both, the door's.
             waiting: numbers && waitlistCountShown(places) ? (places.waiting ?? places.waitlisted ?? 0) : null,
           };
         }

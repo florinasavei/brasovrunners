@@ -63,7 +63,7 @@ describe("§647 the «Lista ascunsă» group in the editor", () => {
     // «Arată public numărătoarea» starts ticked, «Numără și lista ascunsă» not.
     expect(html).toMatch(/<input[^>]*name="event.participantCountPublic"[^>]*checked/);
     // «Arată public numărătoarea» is outside the group (it acts on every event): «Arată public câți
-    // așteaptă» under it (§NNN), both before the switch, never in the hidden block, each with its own marker.
+    // așteaptă» under it (§669), both before the switch, never in the hidden block, each with its own marker.
     const countAt = html.indexOf('data-testid="participant-count-public"');
     expect(countAt).toBeLessThan(html.indexOf('data-testid="waitlist-count-public"'));
     expect(html.indexOf('data-testid="waitlist-count-public"')).toBeLessThan(html.indexOf('data-testid="hidden-list-settings"'));

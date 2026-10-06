@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.72-2026-10-06 -->
+<!-- PROJECT_BASELINE: BR-V2.73-2026-10-06 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.72-2026-10-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.73-2026-10-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1426,7 +1426,7 @@ else's: they are marked **YOURS**. Everything else below is a value, not a place
 | Înscrieri | Culoarea numerelor de concurs (BIB) | the band colour on the printed bib; any of the palette's |
 | Înscrieri | Declarația pe care o semnează participantul | the approved **EVENT_DECLARATION** — the only entry in the list on production |
 | Înscrieri | Publică lista participanților | leave **off**. It goes on only once the privacy notice describes it |
-| Înscrieri | Arată public câți așteaptă | under «Arată public numărătoarea», shown while that one is ticked (§NNN); unticking the count makes the line's count private too. Suggested for the race: **untick it**. The card, the page and each person on the list then learn only that a waiting list exists and how to join it — no count and no place in the line (the newest is always last, so a place would be the count); you still see every number in the backoffice (§634) |
+| Înscrieri | Arată public câți așteaptă | under «Arată public numărătoarea», shown while that one is ticked (§669); unticking the count makes the line's count private too. Suggested for the race: **untick it**. The card, the page and each person on the list then learn only that a waiting list exists and how to join it — no count and no place in the line (the newest is always last, so a place would be the count); you still see every number in the backoffice (§634) |
 | Traseu și detalii | Distanță, Denivelare, Dificultate, Suprafață, Cost | as the race is |
 | Română / English | Titlu, Adresa paginii, Rezumat | both languages — the event cannot be published with either missing |
 | Română / English | Regulamentul evenimentului | the race rules. Every entrant ticks "am citit regulamentul", and the emails link here |
@@ -1473,7 +1473,7 @@ languages go live together; that is the rule, not a setting.
    - **«Numără și invitații speciali»** — unticked by default, «Cine vine» counts the race's places only;
      ticked, it counts the special guests list too. The places line and the free places never do.
 
-   Above «Arată public câți așteaptă», which sits under it (§NNN), on this and every event whether or not the
+   Above «Arată public câți așteaptă», which sits under it (§669), on this and every event whether or not the
    special guests list is on, **«Arată public numărătoarea»** — ticked by default; unticked, «Arată public
    câți așteaptă» is hidden (its tick kept, but the line's count is private everywhere, each waiting
    person's own page and email included), «Cine vine» shows the names

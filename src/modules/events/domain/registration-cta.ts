@@ -69,7 +69,7 @@ export function publicNumbersShown(event: { participantCountPublic?: boolean | n
 
 /**
  * Whether an event's public pages, and each waiting person's own sentence, may say how many people
- * wait (§634, nested under §668 by §NNN): «Arată public câți așteaptă» ticked AND «Arată public
+ * wait (§634, nested under §668 by §669): «Arată public câți așteaptă» ticked AND «Arată public
  * numărătoarea» ticked. The editor draws the first under the second, so the parent unticked keeps the
  * line's length private everywhere — the door, the places line, the register page, the registration's
  * page, «Toate înscrierile mele», the `WAITLIST_JOINED` email and «Ce îi spui» — whatever the child was
