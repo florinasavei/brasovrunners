@@ -865,8 +865,10 @@ or off; it goes when the queue is through. Four causes, told apart by the same p
    at once instead (§622), and «Trimite acum» says «N prin Gmail — cota Mailgun epuizată până la …».
 2. **Overdue** — messages waited more than ninety minutes for a scheduler. cron-job.org →
    the two job monitors: paused, disabled after failures, or the `JOB_SECRET` changed (a history
-   entry answering `continuing: true` is a long run that finished after the response, not a
-   failure: `SETUP.md` §40, `DECISIONS.md` §NNN). Run
+   entry that is a 200 taking about twenty seconds is a long run that finished after the response,
+   not a failure — the body says `continuing: true` only with the job's "save responses" on; Vercel's
+   function log line `[jobs] <job>: finished after the response in <ms> ms` is the authority:
+   `SETUP.md` §40, `DECISIONS.md` §NNN). Run
    `yarn smoke` on the environment; `jobs[].status` names which one is stale. Pressing
    "Trimite acum" on `/admin/registrations` drains the outbox by hand meanwhile.
 3. **Paused by the provider** (§605) — `lastError` starts "paused by the provider:". Mailgun

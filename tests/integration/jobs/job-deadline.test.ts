@@ -37,6 +37,7 @@ vi.mock("@/modules/diagnostics/neon-budget", async () => {
 
 const { fakeNextCache } = await import("../../helpers/next-cache");
 const { answerJobPing, JOB_RESPONSE_DEADLINE_MS } = await import("@/modules/jobs/ping");
+const { readLastPing } = await import("@/modules/jobs/schedule-cache");
 
 const JOB = "registration-maintenance" as const;
 
@@ -166,6 +167,8 @@ describe("BR-REQ-090-03 a job ping answers within the response deadline (§NNN)"
 
       held.release();
       await expect(handed).resolves.toBeUndefined();
+      // The failure is recorded as a ping that ran, with no plan.
+      expect(await readLastPing(JOB, NOW, 10 * 60_000)).toMatchObject({ ran: true });
       // Two turns of the event loop: long enough for Node to report a rejection nobody handled.
       await new Promise((resolve) => setImmediate(resolve));
       await new Promise((resolve) => setImmediate(resolve));
