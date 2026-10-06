@@ -113,6 +113,15 @@ describe("§654 whatToTell — what to tell a person who asks where their regist
       }
     });
 
+    it(`§NNN the waiting line keeps the count private with «Arată public numărătoarea» unticked (${locale})`, () => {
+      const lines = whatToTell(
+        locale,
+        facts({ status: "WAITLISTED", waitlistPosition: 3, waitlistLength: 10, waitlistAutoOffer: true, waitlistCountPublic: true, participantCountPublic: false }),
+        NOW,
+      );
+      expect(lines[1]).toBe(waitlistStandingPhrase(say(locale), locale, { position: 3, length: 10, autoOffer: true, countPublic: false }));
+    });
+
     it(`an offer says its deadline once, and once lapsed says so without the spam hint (${locale})`, () => {
       // The offer's link lapses with the offer: its expiry is the instant already said, so not again.
       expect(whatToTell(locale, facts({ status: "WAITLIST_OFFERED", holdExpiresAt: LATER, liveLinkExpiresAt: LATER }), NOW).slice(1)).toEqual([

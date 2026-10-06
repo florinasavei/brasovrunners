@@ -2450,7 +2450,7 @@
       "waitlistAutoOfferHelp": "Pe „Da”, un loc eliberat sau adăugat se alocă pe loc primului de pe lista de așteptare: primește oferta pe email și o confirmă până la termen. Pe „Nu”, locurile rămân libere până le dai tu.",
       "waitlistAutoOfferHelpMore": "Le dai din «Coada de înscrieri», cu «Trimite-i oferta», sau, la masă, cu «Dă-i un loc». Cât timp cineva așteaptă, cei noi intră tot pe listă.",
       "waitlistCountPublic": "Arată public câți așteaptă",
-      "waitlistCountPublicHelp": "Bifat: cardul, pagina și fiecare persoană de pe listă află câți așteaptă. Debifat: paginile spun doar că există o listă de așteptare și cum intri pe ea; clubul vede numărul în administrare.",
+      "waitlistCountPublicHelp": "Bifat: cardul, pagina și fiecare persoană de pe listă află câți așteaptă. Debifat: se spune doar că există o listă și cum intri pe ea; clubul vede numărul în administrare.",
       "hiddenListTitle": "Lista de invitați speciali",
       "hiddenListEnabled": "Folosește lista de invitați speciali",
       "hiddenListEnabledHelp": "Bifat: pe înscrieri apare «Invitat special — nu ocupă un loc». Debifat: nimeni nou nu intră pe listă; cei de pe ea rămân, iar pagina îi anunță cât timp au loc.",
@@ -2462,7 +2462,7 @@
       "hiddenListBibStartHelp": "Gol: aceeași serie ca toți. Pus: seria lor, de aici în sus, în afara seriei cursei; lasă loc deasupra ei, de exemplu 900 la 150 de locuri. Fără limită de locuri, doar sub primul număr al cursei.",
       "hiddenListBibStartHelpMore": "Deasupra seriei cursei încap locurile suplimentare și numerele de rezervă ale mesei. O serie plină ia următorul număr liber de după ea, chiar din cealaltă serie; niciun număr nu se dă de două ori.",
       "participantCountPublic": "Arată public numărătoarea",
-      "participantCountPublicHelp": "Bifat: pagina spune câte locuri are, câți vin și câți sunt confirmați. Debifat: nicio cifră pe paginile publice ale evenimentului — doar dacă mai sunt locuri; lista arată doar numele.",
+      "participantCountPublicHelp": "Bifat: pagina spune câte locuri are, câți vin și câți sunt confirmați. Debifat: nicio cifră pe paginile publice, nici câți așteaptă — doar dacă mai sunt locuri.",
       "hiddenListCounted": "Numără și invitații speciali",
       "hiddenListCountedHelp": "Bifat: „Cine vine” și „confirmați” îi numără și pe invitații speciali. Debifat: numerele spun doar locurile cursei; invitații speciali sunt pe deasupra."
     },
@@ -5793,7 +5793,7 @@
                 "Confirmat sau cu declarația de semnat, își păstrează starea, numărul și emailurile. Apare pe lista publică doar dacă a bifat, fără niciun semn.",
                 "Cu «Numerele invitaților speciali încep de la» invitații speciali au seria lor de numere de concurs, în ordinea confirmării; un număr deja dat rămâne.",
                 "Pe site, «Cine vine» îi numără doar cu «Numără și invitații speciali» bifat; locurile și locurile libere nu îi numără niciodată.",
-                "«Arată public numărătoarea», lângă «Arată public câți așteaptă», e pe orice eveniment: debifat, pagina și cardul nu mai spun nicio cifră, iar «Cine vine» arată doar numele.",
+                "«Arată public numărătoarea», cu «Arată public câți așteaptă» sub ea, e pe orice eveniment: debifată, paginile nu mai spun nicio cifră, nici câți așteaptă; «Cine vine» arată doar numele.",
                 "Cât timp lista de invitați speciali e folosită sau cineva de pe ea are loc, pagina spune lângă locuri, fără nume, că organizatorii și invitații pot fi la start în afara locurilor anunțate.",
                 "«Se numără între locurile evenimentului» o întoarce doar dacă e un loc liber; altfel apăsarea e refuzată și spune cine ține locurile.",
                 "În lista înscrierilor, fiecare are eticheta «Invitat special», iar pilula invitaților speciali îi arată pe toți; exportul are o coloană pentru ei."

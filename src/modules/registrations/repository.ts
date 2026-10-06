@@ -16,6 +16,7 @@ import {
 } from "@/db/schema/registrations";
 import type { Database, Transaction } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
+import { waitlistCountShown } from "@/modules/events/domain/registration-cta";
 import { OFFER_UNTIL_START, STARTS_DEADLINE } from "@/modules/notifications/domain/deadline-rebase";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { env } from "@/shared/config/env";
@@ -228,8 +229,10 @@ export async function readWaitlistPosition<T extends Record<string, unknown>>(
       eventId: registrations.eventId,
       status: registrations.status,
       autoOffer: events.waitlistAutoOffer,
-      // «Arată public câți așteaptă» (§634), from the same read of the event row: whether the sentence may say the line's length.
-      countPublic: events.waitlistCountPublic,
+      // «Arată public câți așteaptă» (§634) under «Arată public numărătoarea» (§NNN), from the same read of
+      // the event row: whether the sentence may say the line's length (`waitlistCountShown`, below).
+      waitlistCountPublic: events.waitlistCountPublic,
+      participantCountPublic: events.participantCountPublic,
       eventStatus: events.eventStatus,
     })
     .from(registrations)
@@ -248,7 +251,7 @@ export async function readWaitlistPosition<T extends Record<string, unknown>>(
     .as("waitlist_line");
   const [row] = await db.select({ position: line.position, length: line.length }).from(line).where(eq(line.id, registrationId));
   // The row left the line between the two statements: it is no longer waiting.
-  return row ? { position: row.position, length: row.length, autoOffer: own.autoOffer, countPublic: own.countPublic } : null;
+  return row ? { position: row.position, length: row.length, autoOffer: own.autoOffer, countPublic: waitlistCountShown(own) } : null;
 }
 
 /**

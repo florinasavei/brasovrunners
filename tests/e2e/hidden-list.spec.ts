@@ -139,6 +139,13 @@ test.describe("§647 «Lista de invitați speciali» (named so since) as a radio
     await expect(countTick).toBeVisible();
     await expect(countTick).toBeChecked();
     await expect(group.getByRole("checkbox", { name: "Arată public numărătoarea" })).toHaveCount(0);
+    // «Arată public câți așteaptă» sits under it (§NNN): shown while it is ticked, hidden (still posted) while not.
+    const waitingTick = box.getByTestId("participant-count-public").getByRole("checkbox", { name: "Arată public câți așteaptă" });
+    await expect(waitingTick).toBeVisible();
+    await countTick.uncheck();
+    await expect(waitingTick).toBeHidden();
+    await countTick.check();
+    await expect(waitingTick).toBeVisible();
     await group.getByRole("checkbox", { name: "Folosește lista de invitați speciali" }).check();
     await expect(start).toBeVisible();
     await expect(group.getByRole("checkbox", { name: "Numără și invitații speciali" })).not.toBeChecked();

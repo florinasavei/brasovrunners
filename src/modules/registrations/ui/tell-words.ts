@@ -3,6 +3,7 @@ import en from "../../../../messages/en.json";
 import ro from "../../../../messages/ro.json";
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { formatDay } from "@/i18n/dates";
+import { waitlistCountShown } from "@/modules/events/domain/registration-cta";
 import { formatDeadlineInSentence } from "@/modules/notifications/domain/deadline-in-sentence";
 import { confirmationDueMoment } from "../domain/hold-deadlines";
 import type { RejectedEmail } from "../domain/rejected-email";
@@ -22,6 +23,8 @@ export type TellFacts = {
   eventCancelled: boolean;
   waitlistAutoOffer: boolean;
   waitlistCountPublic: boolean;
+  /** «Arată public numărătoarea» (§668), the parent of the switch above (§NNN): absent reads as on. */
+  participantCountPublic?: boolean;
   waitlistPosition: number | null;
   waitlistLength: number | null;
   liveLinkExpiresAt: Date | null;
@@ -114,7 +117,8 @@ export function tellLines(say: Say, ours: Say, locale: string, facts: TellFacts,
             position: facts.waitlistPosition,
             length: facts.waitlistLength,
             autoOffer: facts.waitlistAutoOffer,
-            countPublic: facts.waitlistCountPublic,
+            // What the person's own page says (§NNN): the parent unticked keeps the length private too.
+            countPublic: waitlistCountShown(facts),
           }),
         );
       }

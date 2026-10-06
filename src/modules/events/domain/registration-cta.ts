@@ -67,6 +67,20 @@ export function publicNumbersShown(event: { participantCountPublic?: boolean | n
   return event?.participantCountPublic !== false;
 }
 
+/**
+ * Whether an event's public pages, and each waiting person's own sentence, may say how many people
+ * wait (§634, nested under §668 by §NNN): «Arată public câți așteaptă» ticked AND «Arată public
+ * numărătoarea» ticked. The editor draws the first under the second, so the parent unticked keeps the
+ * line's length private everywhere — the door, the places line, the register page, the registration's
+ * page, «Toate înscrierile mele», the `WAITLIST_JOINED` email and «Ce îi spui» — whatever the child was
+ * left at, and the waiting person is told what §634's private count tells them. Absent reads as on.
+ */
+export function waitlistCountShown(
+  event: { participantCountPublic?: boolean | null; waitlistCountPublic?: boolean | null } | null | undefined,
+): boolean {
+  return publicNumbersShown(event) && event?.waitlistCountPublic !== false;
+}
+
 export type RegistrationCta =
   /** No control at all: the club has not asked anybody to sign up for this one. */
   | { kind: "NONE" }
@@ -172,7 +186,7 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
         not this one: with the names published, how many they are is visible by nature. With no public
         number at all (above), the people waiting go too, whatever this switch says.
       */
-      const countPublic = numbers && event.waitlistCountPublic !== false;
+      const countPublic = waitlistCountShown(event);
       const waitlisted = countPublic ? (event.waitlisted ?? 0) : 0;
       const shownPlaces = numbers ? event.availablePlaces : null;
       /*
@@ -280,7 +294,7 @@ export function publicFill(
   const claimed = Math.min(Math.max(capacity - availablePlaces, 0), capacity);
   // The line's length, the places line's last part (§629): only when anybody waits, and only while the
   // club says it publicly (§634) — off, «, 10 pe lista de așteptare» is not drawn; every other part stays.
-  const said = held?.waitlistCountPublic !== false;
+  const said = waitlistCountShown(held);
   const waiting = said && held?.waitlisted !== undefined && held.waitlisted > 0 ? { waitlisted: held.waitlisted } : {};
   /*
     The first number is the occupied count in every state (§615): the registrations holding places,

@@ -2450,7 +2450,7 @@
       "waitlistAutoOfferHelp": "On “Yes”, a freed or added place is offered at once, by email and with a deadline, to the first on the waiting list. On “No”, places stay free until you hand them out.",
       "waitlistAutoOfferHelpMore": "You hand them out from the “Registration queue” with “Send them the offer”, or at the desk with “Give a place”. While anyone waits, newcomers join the list too.",
       "waitlistCountPublic": "Show publicly how many are waiting",
-      "waitlistCountPublicHelp": "Ticked: the card, the page and each person on the list learn how many are waiting. Unticked: the pages say only that there is a waiting list and how to join it; the club sees it in the backoffice.",
+      "waitlistCountPublicHelp": "Ticked: the card, the page and each person on the list learn how many are waiting. Unticked: only that there is a list and how to join it; the club sees the number in the backoffice.",
       "hiddenListTitle": "Special guests list",
       "hiddenListEnabled": "Use the special guests list",
       "hiddenListEnabledHelp": "Ticked: registrations offer «Special guest — takes no place». Unticked: nobody new goes on the list; those on it stay, and the page mentions them while they hold a place.",
@@ -2462,7 +2462,7 @@
       "hiddenListBibStartHelp": "Empty: everybody's series. Set: their own series, from here up, outside the race's series; leave room above it, say 900 for 150 places. Without a limit of places, only below the race's first number.",
       "hiddenListBibStartHelpMore": "The room above the race's series holds supplementary places and the desk's spares. A full series takes the next free number after it, from the other series if need be; no number is given twice.",
       "participantCountPublic": "Show the count publicly",
-      "participantCountPublicHelp": "Ticked: the page says how many places, how many are coming and how many are confirmed. Unticked: no number on the event's public pages — only whether places are left; the list shows names only.",
+      "participantCountPublicHelp": "Ticked: the page says how many places, how many are coming and how many are confirmed. Unticked: no number on the public pages, not even how many wait — only whether places are left.",
       "hiddenListCounted": "Count the special guests too",
       "hiddenListCountedHelp": "Ticked: “Who's coming” and “confirmed” count the special guests too. Unticked: the numbers count only the race's places; the special guests come on top."
     },
@@ -5793,7 +5793,7 @@
                 "Confirmed or with a declaration to sign, they keep their state, number and emails. They appear on the public list only if they ticked, unmarked.",
                 "With «The special guests' numbers start at» the special guests have their own series of race numbers, in confirmation order; a number already given stays.",
                 "On the site, «Who's coming» counts them only with «Count the special guests too» ticked; the places and the free places never count them.",
-                "«Show the count publicly», beside «Show publicly how many are waiting», is on every event: unticked, the page and the card say no number at all, and «Who's coming» shows only the names.",
+                "«Show the count publicly», with «Show publicly how many are waiting» under it, is on every event: unticked, the pages say no number, not even how many wait; «Who's coming» shows only the names.",
                 "While the special guests list is in use or anybody on it holds a place, the page says beside the places, naming nobody, that organisers and invited runners may start outside the advertised places.",
                 "«Counted among the event's places» turns it back only if a place is free; otherwise the press is refused and says who holds the places.",
                 "In the registrations list, each wears the label «Special guest», and the special guests' pill shows them all; the export has a column for them."
