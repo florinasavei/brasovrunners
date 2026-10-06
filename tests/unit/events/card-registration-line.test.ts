@@ -81,7 +81,8 @@ describe("§409 cardRegistrationLine — the card's registration, in words", () 
       button: { cta: { kind: "FULL", waitlistRoom: null, waiting: 0 }, label: "Intră pe lista de așteptare" },
     });
     const en = cardRegistrationLine(translator("en"), "en", race(), NOW, known({ kind: "FULL", waitlistRoom: 3, waiting: 0 }));
-    expect(en.lead).toBe("All places are taken.");
+    // No places line (no fill — «Arată public numărătoarea» unticked, §NNN): the thank-you with no capacity.
+    expect(en.lead).toBe("Thank you! All places are taken. Join the waiting list.");
     const waiting = cardRegistrationLine(translator("en"), "en", race(), NOW, known({ kind: "FULL", waitlistRoom: 3, waiting: 4 }, { taken: 50, capacity: 50 }));
     expect(waiting.lead).toBe("Thank you! All 50 places are taken — 4 already waiting.");
     const ro50 = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "FULL", waitlistRoom: null, waiting: 3 }, { taken: 50, capacity: 50 }));
@@ -285,7 +286,7 @@ describe("§472 CardRegistration — only the date, the hour and the free places
     );
     expect(html).toContain('data-testid="card-waitlist-note"');
     expect(html).not.toContain('data-testid="card-places"');
-    expect(strongs(render("en", known({ kind: "FULL", waitlistRoom: null, waiting: 0 })))).toEqual(["All places are taken."]);
+    expect(strongs(render("en", known({ kind: "FULL", waitlistRoom: null, waiting: 0 })))).toEqual(["Thank you! All places are taken. Join the waiting list."]);
   });
 
   it("§594 draws the capped list's room between the join sentence and the quiet window, not bold, and nothing for a list with no limit", () => {

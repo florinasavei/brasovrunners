@@ -46,7 +46,26 @@ export type RegistrationCtaInput = RegistrationWindowInput & {
    * sentences. It changes no decision: who queues is still read from the counts above.
    */
   waitlistCountPublic?: boolean;
+  /**
+   * «Arată public numărătoarea» (§NNN, amending §648 point 8): false withholds every number the door
+   * would say — the free places (`availablePlaces` said as null, as an uncapped event's), the offers, the
+   * people waiting (whatever `waitlistCountPublic` says) and the waiting list's room. Absent is on. It
+   * changes no decision either: which door it is is still read from the real counts.
+   */
+  participantCountPublic?: boolean;
 };
+
+/**
+ * Whether an event's public pages may say any number derived from its capacity or its registrations
+ * (§NNN, amending §648 point 8): «Arată public numărătoarea» ticked, the default, or a row read without
+ * the column. Unticked, the public reads the event as it reads one without a capacity, except for the
+ * state words it still needs — places are left, the race is full, the waiting list is open or full,
+ * places are given from it. The one rule every public surface asks: the door (`registrationCta`), the
+ * places line (`publicFill`), the register page's full state and «Cine vine» (`hiddenListCounting`).
+ */
+export function publicNumbersShown(event: { participantCountPublic?: boolean | null } | null | undefined): boolean {
+  return event?.participantCountPublic !== false;
+}
 
 export type RegistrationCta =
   /** No control at all: the club has not asked anybody to sign up for this one. */
@@ -71,7 +90,8 @@ export type RegistrationCta =
    * nobody waiting — an open offer alone included, since its holder has a place: today's line and door.
    *
    * `waitlisted` is the number the door may SAY: nought when the club keeps the count private (§634),
-   * whatever the line holds — `fromWaitlist` is decided before, from the real count.
+   * whatever the line holds — `fromWaitlist` is decided before, from the real count. With no public
+   * number at all (§NNN), `availablePlaces` is null as well and `offered` nought.
    */
   | { kind: "OPEN"; availablePlaces: number | null; offered: number; waitlisted: number; fromWaitlist: boolean }
   /**
@@ -82,7 +102,8 @@ export type RegistrationCta =
    * `waiting` is the line's length the lead may say, or null when the club keeps it private (§634): the
    * lead is then «Mulțumim! Toate cele 150 de locuri s-au ocupat. Intră pe lista de așteptare.», which
    * says neither a number nor «Fii primul» (which would say nought). The room stays: it is a fact about
-   * the list's size, like the capacity (§32's reasoning), not a count of people.
+   * the list's size, like the capacity (§32's reasoning), not a count of people — unless the event says
+   * no public number at all (§NNN): then the room is null too, and the lead names no capacity.
    */
   | { kind: "FULL"; waitlistRoom: number | null; waiting: number | null }
   /** No place and the waiting list at its limit (§348): a sentence, no button. */
@@ -136,16 +157,24 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
       return { kind: "CLOSED" };
 
     case "OPEN": {
-      const offered = event.offered ?? 0;
+      /*
+        «Arată public numărătoarea» off (§NNN): no number at all — the free places said as an uncapped
+        event's (null), no offer counted, nobody counted as waiting, no room; the state words stay. Applied
+        here, once, like the switch below, so no surface can forget it.
+      */
+      const numbers = publicNumbersShown(event);
+      const offered = numbers ? (event.offered ?? 0) : 0;
       /*
         «Arată public câți așteaptă» off (§634): the people waiting are said as nobody — the card's and the
         page's «N pe lista de așteptare» go, the offered places and «Locurile se dau din lista de așteptare»
         stay. Applied here, once, so no surface can forget it; the door below is still chosen from the
         real count. The public list's own waiting group («Cine vine», `StartList.tsx`) is §628's switch,
-        not this one: with the names published, how many they are is visible by nature.
+        not this one: with the names published, how many they are is visible by nature. With no public
+        number at all (above), the people waiting go too, whatever this switch says.
       */
-      const countPublic = event.waitlistCountPublic !== false;
+      const countPublic = numbers && event.waitlistCountPublic !== false;
       const waitlisted = countPublic ? (event.waitlisted ?? 0) : 0;
+      const shownPlaces = numbers ? event.availablePlaces : null;
       /*
         Somebody waiting (§615): a person in the line with no place yet — or, in a cache entry written
         before the halves were counted, the line's length alone (§587), until it next expires. Then a
@@ -156,7 +185,7 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
       // Zero free places is the waiting list, not a refusal: BR-REQ-035-01. `null` is an
       // uncapped event, which is never full.
       if (event.availablePlaces !== 0 && !fromWaitlist) {
-        return { kind: "OPEN", availablePlaces: event.availablePlaces, offered, waitlisted, fromWaitlist: false };
+        return { kind: "OPEN", availablePlaces: shownPlaces, offered, waitlisted, fromWaitlist: false };
       }
       // …unless the event keeps no waiting list, or keeps one that is full (§348): then there is
       // nothing to join, and a button would lead to a form that refuses at the end of it — with
@@ -164,8 +193,9 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
       if (event.waitlistCapacity === 0) return { kind: "FULL_NO_WAITLIST" };
       if (event.waitlistRoom === 0) return { kind: "WAITLIST_FULL" };
       // Places free while somebody is in the line (§615): open, through the line's door.
-      if (event.availablePlaces !== 0) return { kind: "OPEN", availablePlaces: event.availablePlaces, offered, waitlisted, fromWaitlist: true };
-      return { kind: "FULL", waitlistRoom: event.waitlistRoom ?? null, waiting: countPublic ? (event.waiting ?? 0) : null };
+      if (event.availablePlaces !== 0) return { kind: "OPEN", availablePlaces: shownPlaces, offered, waitlisted, fromWaitlist: true };
+      // The room is a number about the list's size (§634 kept it); with no public number (§NNN) it goes too.
+      return { kind: "FULL", waitlistRoom: numbers ? (event.waitlistRoom ?? null) : null, waiting: countPublic ? (event.waiting ?? 0) : null };
     }
 
     case "NOT_APPLICABLE":
@@ -218,6 +248,9 @@ export type PublicFill = {
  * event, not about anybody — which is why the public event query still carries no capacity and
  * this is read from the row the free-place count already reads (`RegistrationCta`).
  *
+ * `null` too for an event whose «Arată public numărătoarea» is unticked (§NNN): no number derived from
+ * its capacity or its registrations is said publicly, so the page reads as an uncapped event's.
+ *
  * `null` for an uncapped event, where the formula gives no free places either: BR-REQ-034-01
  * criterion 4 shows no number there, and a head count with no "out of" beside it would be a
  * count of people rather than of places — held places and all, which §32 declined to publish.
@@ -239,9 +272,11 @@ export type PublicFill = {
 export function publicFill(
   capacity: number | null,
   availablePlaces: number | null,
-  held?: { occupied?: number; confirmed?: number; waitlisted?: number; waitlistCountPublic?: boolean },
+  held?: { occupied?: number; confirmed?: number; waitlisted?: number; waitlistCountPublic?: boolean; participantCountPublic?: boolean },
 ): PublicFill | null {
   if (capacity === null || availablePlaces === null) return null;
+  // «Arată public numărătoarea» off (§NNN): no places line at all, as on an uncapped event.
+  if (!publicNumbersShown(held)) return null;
   const claimed = Math.min(Math.max(capacity - availablePlaces, 0), capacity);
   // The line's length, the places line's last part (§629): only when anybody waits, and only while the
   // club says it publicly (§634) — off, «, 10 pe lista de așteptare» is not drawn; every other part stays.

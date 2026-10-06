@@ -10,6 +10,7 @@
  * «Cine vine»'s numbers — and the rows already on the list stay on it.
  */
 
+import { publicNumbersShown } from "@/modules/events/domain/registration-cta";
 import { DomainError } from "@/shared/errors/domain-error";
 
 /** The marker a refusal carries when somebody is put on the list of an event whose switch is off. */
@@ -73,11 +74,12 @@ export type HiddenListSettings = {
  * What «Cine vine» does with its numbers (§647): whether it says them at all («Arată public
  * numărătoarea» — on every event, whatever the switch says), and whether the hidden list is in them
  * («Numără și lista ascunsă» — only while the switch is on). Defaults — the numbers said, the hidden
- * list out — for a caller with no row. The places line and the free places never read this: the
- * hidden list takes no place.
+ * list out — for a caller with no row. The places line and the free places never read this function —
+ * the hidden list takes no place — but they ask the same `publicNumbersShown` (§NNN).
  */
 export function hiddenListCounting(event: Partial<HiddenListSettings> | null | undefined): { countPublic: boolean; countHidden: boolean } {
-  const countPublic = event?.participantCountPublic !== false;
+  // The one rule for every public number of the event (§NNN): the places line and the door ask it too.
+  const countPublic = publicNumbersShown(event);
   return { countPublic, countHidden: event?.hiddenListEnabled === true && event.hiddenListCounted === true };
 }
 
