@@ -6,8 +6,8 @@ import ro from "../../../messages/ro.json";
 import type { EditableEvent } from "@/modules/content/events/repository";
 
 /**
- * §634 — «Arată public câți așteaptă» in the public list's card, directly under «Lista de așteptare e
- * publică»: a tick with its marker (a form without the box is "not editing it"), on by default, and drawn
+ * §634 — «Arată public câți așteaptă» in the public list's card, under «Arată public numărătoarea»
+ * (§NNN): a tick with its marker (a form without the box is "not editing it"), on by default, and drawn
  * whatever the names switch says — it hides a number, never a name. One sentence of help, under 200
  * characters in both catalogues (§511).
  */

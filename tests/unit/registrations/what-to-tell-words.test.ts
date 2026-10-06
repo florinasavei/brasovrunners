@@ -45,6 +45,7 @@ function facts(overrides: Partial<TellFacts>): TellFacts {
     eventCancelled: false,
     waitlistAutoOffer: true,
     waitlistCountPublic: true,
+    participantCountPublic: true,
     waitlistPosition: null,
     waitlistLength: null,
     liveLinkExpiresAt: null,

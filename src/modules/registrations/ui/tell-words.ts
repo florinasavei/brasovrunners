@@ -23,8 +23,8 @@ export type TellFacts = {
   eventCancelled: boolean;
   waitlistAutoOffer: boolean;
   waitlistCountPublic: boolean;
-  /** «Arată public numărătoarea» (§668), the parent of the switch above (§NNN): absent reads as on. */
-  participantCountPublic?: boolean;
+  /** «Arată public numărătoarea» (§668), the parent of the switch above (§NNN): required, so no caller can leave the line's length said by forgetting it. */
+  participantCountPublic: boolean;
   waitlistPosition: number | null;
   waitlistLength: number | null;
   liveLinkExpiresAt: Date | null;
