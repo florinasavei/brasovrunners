@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.70-2026-10-05 -->
+<!-- PROJECT_BASELINE: BR-V2.71-2026-10-06 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.70-2026-10-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.71-2026-10-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1633,7 +1633,7 @@ brasovrunners QA deep       GET  qa. /api/health?deep=1                       2 
 All of them: *notify on failure* after 1 failure, *notify when disabled for too many failures* on,
 responses not saved.
 
-**A long real run is not a failure (`DECISIONS.md` §NNN).** cron-job.org gives up on a request
+**A long real run is not a failure (`DECISIONS.md` §667).** cron-job.org gives up on a request
 after 30 seconds and reports «Timeout». A job ping that runs for real answers within twenty
 seconds: a run still going then answers 200 with `continuing: true` and its `startedAt`, and
 finishes on the platform after the response — its plan written when it ends. With responses not

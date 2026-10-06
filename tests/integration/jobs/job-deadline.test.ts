@@ -3,7 +3,7 @@ import type { JobRunOutcome } from "@/modules/jobs/ping";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-090-03, §NNN — a job ping that runs for real answers within the response deadline: a run
+ * BR-REQ-090-03, §667 — a job ping that runs for real answers within the response deadline: a run
  * that ends first answers as it always did, and a run still going answers `continuing: true`, is
  * handed to the platform to finish after the response, and leaves its plan when it ends.
  *
@@ -101,7 +101,7 @@ afterEach(() => {
   error.mockRestore();
 });
 
-describe("BR-REQ-090-03 a job ping answers within the response deadline (§NNN)", () => {
+describe("BR-REQ-090-03 a job ping answers within the response deadline (§667)", () => {
   it("leaves cron-job.org's thirty seconds a margin", () => {
     expect(JOB_RESPONSE_DEADLINE_MS).toBe(20_000);
   });

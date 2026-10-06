@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.71-2026-10-06
+
+- **A long job run no longer reads as a failed cron job** — a job ping that runs for real answers within twenty seconds; a run still going answers `continuing: true` and finishes on the platform after the response, so cron-job.org's 30-second limit stops reporting «Timeout» for runs that succeed. §667.
 ## BR-V2.70-2026-10-05
 
 - **«Vremea» is the club's to choose, per event** — the automatic forecast (as before), the club's own short text in both languages in its place on the page and in the reminder, or no weather at all; only the forecast asks Open-Meteo and draws the cards' pill. §666.

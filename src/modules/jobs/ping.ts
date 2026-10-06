@@ -18,7 +18,7 @@ import { insideJobRun, readPingVerdict, recordPing, recordRealRun } from "./sche
  *      that is about to use PostgreSQL anyway;
  *   4. the work, then the plan: the database the run already has awake says when the job next
  *      has something to do, and the plan is left in the cache for the pings after it;
- *   5. the answer, within twenty seconds (§NNN): a run still going then answers `continuing: true`
+ *   5. the answer, within twenty seconds (§667): a run still going then answers `continuing: true`
  *      and finishes after the response, its plan written when it ends.
  *
  * The body stays informative for cron-job.org's log either way: which job, whether it ran, why
@@ -34,7 +34,7 @@ export type JobRunOutcome = {
 };
 
 /**
- * How long a ping that runs for real may keep its caller waiting, from the handler's start (§NNN).
+ * How long a ping that runs for real may keep its caller waiting, from the handler's start (§667).
  *
  * cron-job.org abandons a request after 30 seconds and reports the job failed, although the run
  * goes on and finishes on the platform; a job it sees failing long enough it disables (§98). The
@@ -95,7 +95,7 @@ export async function answerJobPing(
   }
 
   /*
-    The real run, started once, raced against the response deadline (§NNN). It settles first —
+    The real run, started once, raced against the response deadline (§667). It settles first —
     nearly always — and the answer is the run's own, status and headers included. The deadline
     comes first, and the run is handed to the platform to finish after the response: cron-job.org
     gets a 200 within its thirty seconds, the run's result is dropped, and its plan is written when
