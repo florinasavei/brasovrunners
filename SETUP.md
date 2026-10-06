@@ -1633,6 +1633,16 @@ brasovrunners QA deep       GET  qa. /api/health?deep=1                       2 
 All of them: *notify on failure* after 1 failure, *notify when disabled for too many failures* on,
 responses not saved.
 
+**A long real run is not a failure (`DECISIONS.md` §NNN).** cron-job.org gives up on a request
+after 30 seconds and reports «Timeout». A job ping that runs for real answers within twenty
+seconds: a run still going then answers 200 with `continuing: true` and its `startedAt`, and
+finishes on the platform after the response — its plan written when it ends. With responses not
+saved, the job's **History** shows such a run as a successful 200 that took about twenty seconds
+instead of «Timeout»; the body (`continuing: true`, `startedAt`) shows there only with the job's
+"save responses" option on. Vercel's function log for the route is the authority:
+`[jobs] <job>: finished after the response in <ms> ms` (and the error line, if it failed). Nothing
+to set: no schedule, header or timeout changes.
+
 **Since 2026-10-03: the jobs and a second health monitor on the address no registrar can hold
 (`DECISIONS.md` §659).** While the registrar held the name for seven hours (§26), no job ran:
 the table above names the `vercel.app` addresses, yet the cron-job.org job pings in use called the
