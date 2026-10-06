@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.70-2026-10-05
+
+- **«Vremea» is the club's to choose, per event** — the automatic forecast (as before), the club's own short text in both languages in its place on the page and in the reminder, or no weather at all; only the forecast asks Open-Meteo and draws the cards' pill. §666.
 ## BR-V2.69-2026-10-05
 
 - **A changed confirmation window moves the places it reserved, and the last call to sign comes before its deadline** — saving «Fereastra de confirmare» moves every place the window held (a deadline of 0's start included) to the new deadline in the same save, never earlier than the club's hold minutes from now, with the card saying how many before and the banner after, and an email to each inside an open window; the last call to sign goes «Termene» «Ultima chemare» hours (48) before the window's deadline, not before the start. §665.

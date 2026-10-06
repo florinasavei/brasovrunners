@@ -93,6 +93,9 @@ export function previewPageOf(event: EditableEvent, translation: EditableTransla
     routeDescriptionJson: translation.routeDescriptionJson,
     checklist: translation.checklist,
     discountNote: translation.discountNote,
+    // «Vremea» (§666): the draft's choice and this language's text, read as the page reads the saved ones.
+    weatherMode: event.weatherMode,
+    weatherNote: translation.weatherNote,
     // No programme while the start is held back (§533): its rows are instants, as on the page.
     scheduleItems: dateLater ? null : placeLater ? withoutPlaces(event.scheduleItems) : event.scheduleItems,
     coHosts: event.coHosts,

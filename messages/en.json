@@ -1548,6 +1548,22 @@
         "typed": "The weather is read for these coordinates ({coordinates}).",
         "club": "The weather is read for {place} ({coordinates}): the map link carries no coordinates and none are typed."
       },
+      "weather": {
+        "label": "Weather",
+        "modes": {
+          "forecast": "Automatic forecast",
+          "custom": "The club's own text",
+          "off": "No weather"
+        },
+        "help": {
+          "forecast": "The forecast for the event's place, from {days} days before: on the page, on the card and in the reminder.",
+          "custom": "Your text instead of the forecast, on the page and in the reminder. The card shows nothing.",
+          "off": "No weather on the page, on the card or in the reminder."
+        },
+        "noNote": "No text written yet: the page shows no weather until you write one, in both languages.",
+        "note": "The weather text",
+        "noteHelp": "Short, at most 200 characters, e.g. “The ridge is icy, bring microspikes.”"
+      },
       "locationHelp": "The place, as you would tell a friend, in Romanian and in English. If the name is the same, press “Same name in English”.",
       "locationCopyToEnglish": "Same name in English",
       "locationEnglishLeftBehind": "The English box still says “{place}”. If the place has moved, change it here too.",

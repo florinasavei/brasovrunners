@@ -14,6 +14,7 @@ import {
   weatherInstant,
   withinWeatherWindow,
 } from "./domain/forecast";
+import { readsForecast } from "./domain/mode";
 import { forecastPlace, type PlaceColumns, roundPlace } from "./domain/place";
 
 export type { EventForecast } from "./domain/forecast";
@@ -395,18 +396,23 @@ export function freshReading(forecast: HourlyForecast, at: Date, now: number): W
   return pickHour(forecast, at);
 }
 
-/** What an event carries that the forecast reads: its start, its status, and its place (`PlaceColumns`). */
-export type ForecastEvent = { startsAt: Date; raceStartsAt?: Date | null; endsAt?: Date | null; eventStatus?: string | null } & PlaceColumns;
+/**
+ * What an event carries that the forecast reads: its start, its status, its place (`PlaceColumns`)
+ * and «Vremea» (§666) — absent reads as the forecast, as every event did before the choice.
+ */
+export type ForecastEvent = { startsAt: Date; raceStartsAt?: Date | null; endsAt?: Date | null; eventStatus?: string | null; weatherMode?: string | null } & PlaceColumns;
 
 /**
  * The forecast for an event, or null — the one call the page, the listing and the reminder make.
  *
- * Null without a request when the start is behind us or more than seven days away
+ * Null without a request when the club chose its own text or no weather for the event (§666,
+ * `readsForecast`), when the start is behind us or more than seven days away
  * (`withinWeatherWindow`), when the event is not going ahead, and on any failure — a cached answer
  * older than `MAX_FORECAST_AGE_MS` whose fresh request fails included (an outage the cache would
  * otherwise serve through). Asked for the event's own place (`forecastPlace`).
  */
 export async function forecastForEvent(event: ForecastEvent, now: Date, deps: ForecastDeps = {}): Promise<EventForecast | null> {
+  if (!readsForecast(event)) return null;
   if (event.eventStatus && event.eventStatus !== "SCHEDULED") return null;
   const at = weatherInstant(event);
   if (!withinWeatherWindow(at, now)) return null;
@@ -420,8 +426,9 @@ export async function forecastForEvent(event: ForecastEvent, now: Date, deps: Fo
 
 /**
  * Every listed event's forecast at once, by id (§416 — the owner: "aș vrea să văd vremea și pe
- * cardul principal"): the listing's hero and cards. An event outside the window asks nothing, and
- * events that meet at one rounded place share one read — the club's weekly runs are one request.
+ * cardul principal"): the listing's hero and cards. An event outside the window asks nothing, nor
+ * one whose «Vremea» is the club's text or none (§666: a sentence is not a pill), and events that
+ * meet at one rounded place share one read — the club's weekly runs are one request.
  */
 export async function forecastsForEvents(
   events: readonly (ForecastEvent & { id: string })[],
@@ -432,6 +439,7 @@ export async function forecastsForEvents(
   const found = new Map<string, EventForecast>();
   await Promise.all(
     events.map(async (event) => {
+      if (!readsForecast(event)) return;
       if (event.eventStatus && event.eventStatus !== "SCHEDULED") return;
       const at = weatherInstant(event);
       if (!withinWeatherWindow(at, now)) return;

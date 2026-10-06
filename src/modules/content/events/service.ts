@@ -63,6 +63,7 @@ import { isBlankValue } from "@/shared/forms/blank-value";
 import { type BilingualText, isWrittenText, missingLanguage, type TextLanguage } from "@/shared/forms/both-languages";
 import { hasRichTextContent, parseRichText, type RichTextDoc, richTextToPlainText } from "@/modules/content/rich-text/domain/schema";
 import { attachYoutubePosters } from "@/modules/media/video-poster";
+import { DEFAULT_WEATHER_MODE, readWeatherMode, type WeatherMode } from "@/modules/weather/domain/mode";
 import {
   type EventFieldsInput,
   eventFieldsSchema,
@@ -582,6 +583,10 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     // «Estimativ» (§585) means nothing without a number: a tick beside an empty box is saved false, quietly.
     elevationGainEstimated: estimatedElevation(fields.elevationGainMeters, fields.elevationGainEstimated === true),
     nightOverride: fields.nightOverride,
+    // «Vremea» (§666), by the partners' discipline: a caller that did not post the choice writes
+    // nothing, so no save changes whose weather the page shows by not mentioning it; a create that
+    // posts none stores the column's default, the forecast.
+    ...(fields.weatherMode === undefined ? {} : { weatherMode: fields.weatherMode }),
     // Only a group run on asphalt or trail has a self-declaration to offer (§393): anything else
     // is written as not offering one, whatever a hidden or stale box posted — as §111 normalizes a
     // turn-up type's registration block.
@@ -1127,6 +1132,7 @@ type OptionalTextColumns = {
   seoTitle?: string | null;
   seoDescription?: string | null;
   discountNote?: string | null;
+  weatherNote?: string | null;
 };
 
 /**
@@ -1134,7 +1140,7 @@ type OptionalTextColumns = {
  * A rich text is read by the rule the editor's "· incomplet" marks use (`isBlankValue`, §350), so
  * a tab the page marks unfinished and a text the save refuses are always the same text.
  */
-function writtenOptionalTexts(row: OptionalTextColumns) {
+function writtenOptionalTexts(row: OptionalTextColumns, weatherMode: WeatherMode) {
   const writtenDoc = (doc: unknown) => doc !== null && doc !== undefined && !isBlankValue(JSON.stringify(doc));
   return {
     body: writtenDoc(row.bodyJson),
@@ -1147,6 +1153,11 @@ function writtenOptionalTexts(row: OptionalTextColumns) {
     // Nulled by `translationColumnsFrom` outside `EXTERNAL` + `PAID`, so this can never fire
     // there — the same "a hidden box never blocks the save" rule the others follow.
     discountNote: isWrittenText(row.discountNote),
+    // The club's own weather text (§666) is kept whatever «Vremea» says, but asked in both languages
+    // only while the choice saved is «Text scris de club»: under the forecast or «Fără vreme» its box
+    // is hidden and the text shows nowhere, and a hidden box never blocks the save (§350). The save
+    // that switches back to the club's text is the one that asks for both languages.
+    weatherNote: weatherMode === "custom" && isWrittenText(row.weatherNote),
   };
 }
 
@@ -1167,8 +1178,8 @@ function writtenOptionalTexts(row: OptionalTextColumns) {
  * place's name is required in both languages by the event's own schema since §362 (`placeRule`),
  * where the switch that excuses it (§328) is known.
  */
-function assertOptionalTextsInBothLanguages(rows: Readonly<Record<Locale, OptionalTextColumns>>): void {
-  const missing = textsOwedInOneLanguage(rows);
+function assertOptionalTextsInBothLanguages(rows: Readonly<Record<Locale, OptionalTextColumns>>, weatherMode: unknown): void {
+  const missing = textsOwedInOneLanguage(rows, weatherMode);
   if (missing.length > 0) {
     throw new DomainError("VALIDATION_ERROR", `${missing.join(", ")}: written in the other language only; write both languages or neither`, missing);
   }
@@ -1815,6 +1826,9 @@ const SERIES_COLUMNS = [
   // The night override, a fact of the route like the two above (§382, §394). "Automat" carried to
   // every date is what makes a weekly run follow the season by itself: each date asks its own sunset.
   "nightOverride",
+  // «Vremea» (§666), like the night override: a fact of where the run goes — "from this date" gives
+  // every later date the forecast, the club's text (`weatherNote` below) or none.
+  "weatherMode",
   // The self-declaration offered on the run's page (§394), like the night override: "from this
   // date" carries it to every later Tâmpa run of the series.
   "offersGroupRunDeclaration",
@@ -1890,6 +1904,8 @@ const SERIES_TRANSLATION_COLUMNS = [
   // The discount belongs to the race, like `costType` above (`DECISIONS.md` §394): a series
   // edit's discount note carries the way its cost does.
   "discountNote",
+  // The club's weather text travels with «Vremea» above (§666): the icy trail is icy on every date.
+  "weatherNote",
 ] as const;
 
 /** Equal as stored: dates by their instant, JSON by its text, null by null. */
@@ -2600,7 +2616,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     */
     const savedRo = savedTranslations.find((row) => row.locale === "ro");
     const savedEn = savedTranslations.find((row) => row.locale === "en");
-    if (savedRo && savedEn) assertOptionalTextsInBothLanguages({ ro: savedRo, en: savedEn });
+    if (savedRo && savedEn) assertOptionalTextsInBothLanguages({ ro: savedRo, en: savedEn }, savedEvent.weatherMode);
 
     // More places than before: the difference goes to the waiting list at once (§147), here,
     // where the row is already locked by the guarded update and the number is not yet committed.
@@ -2744,6 +2760,7 @@ function blankEventRow(now: Date): EditableEvent {
     elevationGainMeters: null,
     elevationGainEstimated: false,
     nightOverride: null,
+    weatherMode: "forecast",
     offersGroupRunDeclaration: false,
     locationName: null,
     locationAddress: null,
@@ -2814,6 +2831,7 @@ function blankTranslationRow(eventId: string, locale: Locale, now: Date): Editab
     seoTitle: null,
     seoDescription: null,
     discountNote: null,
+    weatherNote: null,
     authorStaffUserId: null,
     reviewedByStaffUserId: null,
     version: 1,
@@ -2923,11 +2941,13 @@ export async function draftEvent<T extends Record<string, unknown>>(db: Database
 /**
  * The optional texts written in one language and not the other (§352), by the box the language
  * still owed posts — the names `assertOptionalTextsInBothLanguages` would refuse, said instead of
- * refused: the preview's «English incomplet» mark (§579).
+ * refused: the preview's «English incomplet» mark (§579). `weatherMode` is the event's «Vremea» as
+ * stored after the save: the weather text is owed in both languages only under the club's text.
  */
-export function textsOwedInOneLanguage(rows: Readonly<Record<Locale, OptionalTextColumns>>): string[] {
-  const ro = writtenOptionalTexts(rows.ro);
-  const en = writtenOptionalTexts(rows.en);
+export function textsOwedInOneLanguage(rows: Readonly<Record<Locale, OptionalTextColumns>>, weatherMode: unknown): string[] {
+  const mode = readWeatherMode(weatherMode);
+  const ro = writtenOptionalTexts(rows.ro, mode);
+  const en = writtenOptionalTexts(rows.en, mode);
   return (Object.keys(ro) as Array<keyof typeof ro>).flatMap((field) => {
     const language = missingLanguage({ ro: ro[field], en: en[field] }, (written) => written);
     return language ? [`translations.${language}.${field}`] : [];
@@ -3043,7 +3063,8 @@ async function prepareEventCreate<T extends Record<string, unknown>>(
     ro: translationColumnsFrom(parsed.translations.ro, parsed.type, discountAllowed),
     en: translationColumnsFrom(parsed.translations.en, parsed.type, discountAllowed),
   };
-  assertOptionalTextsInBothLanguages(translationColumns);
+  // A create that posts no choice stores the column's default, the forecast.
+  assertOptionalTextsInBothLanguages(translationColumns, parsed.weatherMode ?? DEFAULT_WEATHER_MODE);
   // Each language's name for the place, from the Locul box (§362); a caller that posts no English
   // name leaves the English row to the event's, as every event before it did.
   const names = placeNamesFrom(parsed);
@@ -3354,6 +3375,8 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // makes, keeps the organizer's "Da" or "Nu" — and "Automat" stays automatic, so each date is a
     // night event by its own sunset.
     nightOverride: source.nightOverride,
+    // «Vremea» (§666) goes with the copy, the club's text with the words (`copiedTranslationValues`).
+    weatherMode: source.weatherMode,
     // The self-declaration travels with the route too (§393): a copy of the trail run, and every
     // date a series makes from it, offers the same declaration.
     offersGroupRunDeclaration: source.offersGroupRunDeclaration,
@@ -3443,6 +3466,8 @@ function copiedTranslationValues(
     // The discount travels with the mode and cost type it belongs to (`copiedEventValues`, both
     // carried unchanged): a series held at a discount is held at it every date.
     discountNote: translation.discountNote,
+    // The club's weather text (§666) travels with «Vremea», which `copiedEventValues` carries.
+    weatherNote: translation.weatherNote,
     authorStaffUserId: actor.id,
     createdAt: now,
     updatedAt: now,

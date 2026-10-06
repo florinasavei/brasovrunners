@@ -193,3 +193,12 @@ export function weatherListWords(locale: "ro" | "en"): { atStart: string; credit
   const t = weatherCatalogue(locale);
   return { atStart: t("atStart"), credit: t("credit", { source: t("source") }) };
 }
+
+/**
+ * The row's label alone, «Vremea» / «Weather», for the club's own text (§666): the page's row and the
+ * reminder's line say the label, then the club's words as written — no place, no hours, no credit and
+ * no «?», since nothing in them is the forecast's.
+ */
+export function weatherLabel(locale: "ro" | "en"): string {
+  return weatherCatalogue(locale)("label");
+}

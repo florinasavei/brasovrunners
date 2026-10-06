@@ -1,6 +1,7 @@
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { publicListClosesAt, type Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { WEATHER_WINDOW_DAYS, weatherInstant } from "@/modules/weather/domain/forecast";
+import { readsForecast } from "@/modules/weather/domain/mode";
 import { SIGNING_GRACE_MINUTES } from "@/modules/group-run-declarations/domain";
 import { registrationClosesOrStarts } from "./registration-window";
 import { fromWallTimeInput, toWallTimeInput } from "./zoned-time";
@@ -41,6 +42,8 @@ type ClockedEvent = {
   registrationClosesAt?: Date | null;
   confirmationOpensDaysBefore?: number | null;
   confirmationDeadlineDaysBefore?: number | null;
+  /** «Vremea» (§666); absent reads as the forecast. */
+  weatherMode?: string | null;
 };
 
 const DAY_MS = 24 * 60 * 60_000;
@@ -51,7 +54,9 @@ export function eventClockInstants(event: ClockedEvent, deadlines?: Pick<Deadlin
   if (startsAt) {
     instants.push(startsAt, event.raceStartsAt, event.endsAt, new Date(startsAt.getTime() + SIGNING_GRACE_MINUTES * 60_000));
     instants.push(registrationClosesOrStarts({ registrationClosesAt: event.registrationClosesAt ?? null, startsAt }));
-    instants.push(new Date(weatherInstant({ startsAt, raceStartsAt: event.raceStartsAt }).getTime() - WEATHER_WINDOW_DAYS * DAY_MS));
+    // Only an event whose weather is the forecast has a window to open (§666): the club's own text
+    // and «Fără vreme» read the same on every day, and no forecast keeps such a page to the hour.
+    if (readsForecast(event)) instants.push(new Date(weatherInstant({ startsAt, raceStartsAt: event.raceStartsAt }).getTime() - WEATHER_WINDOW_DAYS * DAY_MS));
     const window = confirmationWindow({ ...event, startsAt });
     if (window) instants.push(window.opensAt, window.deadline);
     if (deadlines) instants.push(publicListClosesAt({ startsAt, endsAt: event.endsAt }, deadlines));
