@@ -66,24 +66,11 @@ export default async function StartListBox({ event, mayEditSettings }: Pick<BoxP
                 <BoxNote more={t("editor.waitlistPublicHelpMore")}>{t("editor.waitlistPublicHelp")}</BoxNote>
               </Box>
               {/*
-                «Arată public câți așteaptă» (§634): the line's NUMBER, on the card, the page and in each
-                waiting person's own sentence — not indented, because it does not depend on the list above
-                (it hides a number, never a name) and shows whatever the names switch says. On by default;
-                the marker tells "unticked" from "a form without the box", which must change nothing.
-              */}
-              <Box data-testid="waitlist-count-public" sx={{ mt: 1 }}>
-                <input type="hidden" name="event.waitlistCountPublic.present" value="1" />
-                <CheckboxField name="event.waitlistCountPublic" defaultChecked={event?.waitlistCountPublic ?? true}>
-                  {t("editor.waitlistCountPublic")}
-                </CheckboxField>
-                <BoxNote>{t("editor.waitlistCountPublicHelp")}</BoxNote>
-              </Box>
-              {/*
-                «Arată public numărătoarea» (§647): «Cine vine»'s own numbers — the title's «(N)», «N confirmați
-                — M cu numele afișat», «în curs» — on every event, whatever the hidden list's switch says (the
-                owner: «mai punem bifă pentru afișarea numărătorii»). It hides numbers, never a name, so it sits
-                beside «Arată public câți așteaptă», not indented. On by default; its own marker tells "unticked"
-                from "a form without the box".
+                «Arată public numărătoarea» (§647, §668): every number on the event's public pages — the places
+                line, the card's counts, «Cine vine»'s «(N)» — on every event, whatever the hidden list's switch
+                says (the owner: «mai punem bifă pentru afișarea numărătorii»). It hides numbers, never a name,
+                so it is not indented under the names switch. On by default; its own marker tells "unticked"
+                from "a form without the box", which must change nothing.
               */}
               <Box data-testid="participant-count-public" sx={{ mt: 1 }}>
                 <input type="hidden" name="event.participantCountPublic.present" value="1" />
@@ -91,6 +78,22 @@ export default async function StartListBox({ event, mayEditSettings }: Pick<BoxP
                   {t("editor.participantCountPublic")}
                 </CheckboxField>
                 <BoxNote>{t("editor.participantCountPublicHelp")}</BoxNote>
+                {/*
+                  «Arată public câți așteaptă» (§634) under it (§669; the owner: "these 2 checkboxes need to be nested"):
+                  the line's NUMBER is one of the numbers above, so with the parent unticked it is private
+                  whatever this says (`waitlistCountShown`). Shown only while the parent is ticked, but kept in
+                  the form — hidden, never removed — so its value and its marker still post and nothing a save
+                  did not touch changes. On by default.
+                */}
+                <OnlyWhenTicked name="event.participantCountPublic" initiallyTicked={event?.participantCountPublic ?? true}>
+                  <Box data-testid="waitlist-count-public" sx={{ mt: 1, pl: { xs: 1.5, sm: 3.5 }, borderLeft: 2, borderColor: "divider", minWidth: 0 }}>
+                    <input type="hidden" name="event.waitlistCountPublic.present" value="1" />
+                    <CheckboxField name="event.waitlistCountPublic" defaultChecked={event?.waitlistCountPublic ?? true}>
+                      {t("editor.waitlistCountPublic")}
+                    </CheckboxField>
+                    <BoxNote>{t("editor.waitlistCountPublicHelp")}</BoxNote>
+                  </Box>
+                </OnlyWhenTicked>
               </Box>
               {/*
                 «Lista ascunsă» (§647; the owner, 2026-10-02: «direct din setările evenimentului să pot avea

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.72-2026-10-06 -->
+<!-- PROJECT_BASELINE: BR-V2.73-2026-10-06 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.72-2026-10-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.73-2026-10-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -24254,3 +24254,22 @@ The structured data carries no capacity or remaining capacity (`structured-data.
 **Consequences.** `events/domain/registration-cta.ts` (`publicNumbersShown`, `registrationCta`, `publicFill`), `events/ui/registration-door.ts`, `events/ui/counted-phrases.ts` (`fullThanksPhrase` with a null capacity), `events/ui/RegistrationCta.tsx`, `events/ui/CardRegistration.tsx`, `public-cache/reads.ts` (the entry's field and key), `registrations/domain/hidden-list.ts`, the register page, `registrations/ui/registration-form.tsx`, `content/events/draft-form.tsx`; `messages/{ro,en}.json` (`Event.cta.fullThanksPlain`, `Admin.editor.participantCountPublicHelp`, two «Ghid» steps); `SETUP.md` §39, `AGENTS.md` §10.10. Tests: `tests/unit/events/participant-count-public.test.ts` and `tests/integration/registrations/participant-count-public-render.test.ts` (new); `registration-fill-render.test.ts`, `register-page-resting.test.ts`, `card-registration-line.test.ts` (the full lead with no places line is the numberless thank-you, not «Locurile s-au ocupat.»). No migration, no dependency, no new client island.
 
 Baseline `BR-V2.72-2026-10-06`.
+
+## 669. «Arată public câți așteaptă» sits under «Arată public numărătoarea», which unticked hides the waiting count from everyone (amending §634, §668)
+
+**The owner, looking at the event editor on production:** "These 2 checkboxes need to be nested, they refer to the same thing pretty much." The two were «Arată public câți așteaptă» (§634) and «Arată public numărătoarea» (§668), drawn side by side in the public list's card, the waiting count first — though unticking the count already hid every number on the event's public pages, the waiting count among them.
+
+This amends §634 and §668. Before it, «Arată public numărătoarea» unticked hid every number on the event's public pages, but §668 left the rest to §634 in so many words — its "What does not change" line kept "the emails to a person (not public; a waiting person's own position follows §634 alone)", and it refused "Changing an email" — so with the parent unticked and «Arată public câți așteaptă» left ticked, each waiting person still learnt the line's length from their registration's page, «Toate înscrierile mele» and the `WAITLIST_JOINED` email, and an Administrator read it to them from «Ce îi spui». That line of §668, and its refusal, no longer hold for the waiting count: §634's switch now speaks only while the parent is ticked.
+
+**Decision.**
+
+1. **The parent comes first.** In «Lista publică a participanților», after «Lista de așteptare e publică», the editor draws «Arată public numărătoarea» with its help, then «Arată public câți așteaptă» as its child: indented with the card's left rule (`pl: { xs: 1.5, sm: 3.5 }`, `borderLeft: 2`, the special guests list's own indentation), inside `OnlyWhenTicked name="event.participantCountPublic"`. Shown while the parent is ticked; hidden, never removed, while it is not — the child's tick and its `.present` marker still post, so a save that did not touch it changes nothing, and ticking the parent again shows the child as it was left. No new client island: the existing `OnlyWhenTicked`, the editor still a Server Component.
+2. **One pure rule.** `waitlistCountShown(event)` beside `publicNumbersShown` in `events/domain/registration-cta.ts`: the waiting count may be said only while both switches are on, absent reading as on. The door (`registrationCta`), the places line (`publicFill`) and the register page's full state ask it instead of combining the two switches by hand.
+3. **The parent unticked makes the waiting count private everywhere**, whatever the child was left at — including the surfaces §668 had not reached: the waiting person's own sentence on their registration's page and on «Toate înscrierile mele», the `WAITLIST_JOINED` email, and an Administrator's «Ce îi spui» block. `readWaitlistPosition` reads both columns from the same row and answers `countPublic: waitlistCountShown(...)`; the admin detail query carries `participantCountPublic` and `whatToTell` asks the same rule. The person is told exactly what §634's private count tells them: that they wait and how freed places are given — no length of the line, and no place in it, since the newest is last and their place would be the length.
+4. **The words follow**, both languages, each under 200 characters: the parent's help says unticked shows no number «nici câți așteaptă» / "not even how many wait"; the child's help is shortened to fit; the «Ghid» step under «Invitați speciali» opens with the parent and says the child sits under it, and the registrations guide's paragraph on the places line says that unticked the count is told to nobody, not even those on the list, and that the waiting count's switch sits under it.
+
+**Refused.** Unticking the child when the parent is unticked, or disabling it: the club's choice for the waiting count is kept, and comes back as it was when the count is shown again. A database change: none — the two columns stay; the nesting is a rule over them. Saying the position without the length when only the parent is off: §634's reason holds (the newest's place is the length), so the private sentence is the one sentence for both.
+
+**Amends** SPECS BR-REQ-039-01 criterion 29 (the waiting count's switch drawn under «Lista de așteptare e publică»): it is now drawn under «Arată public numărătoarea»; criterion 31's «shown on every event beside «Arată public câți așteaptă»»: the count's switch is now its parent; and criterion 34's "the admin side and the emails are unchanged": with the parent unticked, the waiting person's own page, «Toate înscrierile mele», the `WAITLIST_JOINED` email and «Ce îi spui» no longer say how many wait. It amends as well BR-REQ-035-01 criterion 20's "with the switch on every sentence is as before": that holds only while «Arată public numărătoarea» is ticked.
+
+Baseline `BR-V2.73-2026-10-06`.

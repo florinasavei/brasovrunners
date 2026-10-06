@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.73-2026-10-06
+
+- **The waiting count's switch sits under the count's** — in the event editor «Arată public câți așteaptă» is drawn indented under «Arată public numărătoarea» and shown only while it is ticked; unticking the count now keeps the waiting list's length private everywhere, the waiting person's own page, email and the backoffice's «Ce îi spui» included. §669.
 ## BR-V2.72-2026-10-06
 
 - **«Arată public numărătoarea» unticked hides every number** — the event page, its card, the calendar, the series card and the register page say no places line, no free places, no capacity and no waiting or offered count; only whether places are left, the race is full or the waiting list is open. Ticked, nothing changes. §668.

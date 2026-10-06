@@ -5,7 +5,7 @@ import ro from "../../../messages/ro.json";
 import type { EditableEvent } from "@/modules/content/events/repository";
 
 /**
- * §647 — «Lista ascunsă» in the public list's card, under «Arată public câți așteaptă»: the switch with
+ * §647 — «Lista ascunsă» in the public list's card, under the two count switches: the switch with
  * its marker and help, and the three fields that mean something only with it on — drawn always (still
  * posted, read-only while hidden), shown only while the switch is ticked.
  */
@@ -62,10 +62,11 @@ describe("§647 the «Lista ascunsă» group in the editor", () => {
     expect(html).toContain('name="event.hiddenListBibStart"');
     // «Arată public numărătoarea» starts ticked, «Numără și lista ascunsă» not.
     expect(html).toMatch(/<input[^>]*name="event.participantCountPublic"[^>]*checked/);
-    // «Arată public numărătoarea» is outside the group (it acts on every event): beside «Arată public câți
-    // așteaptă», before the switch, never in the hidden block, with its own marker.
+    // «Arată public numărătoarea» is outside the group (it acts on every event): «Arată public câți
+    // așteaptă» under it (§669), both before the switch, never in the hidden block, each with its own marker.
     const countAt = html.indexOf('data-testid="participant-count-public"');
-    expect(countAt).toBeGreaterThan(html.indexOf('data-testid="waitlist-count-public"'));
+    expect(countAt).toBeLessThan(html.indexOf('data-testid="waitlist-count-public"'));
+    expect(html.indexOf('data-testid="waitlist-count-public"')).toBeLessThan(html.indexOf('data-testid="hidden-list-settings"'));
     expect(countAt).toBeLessThan(html.indexOf('data-testid="hidden-list-settings"'));
     expect(html.indexOf('name="event.participantCountPublic"')).toBeLessThan(html.indexOf('data-testid="hidden-list-settings"'));
     expect(html).toMatch(/<input[^>]*type="hidden"[^>]*name="event.participantCountPublic.present"[^>]*value="1"/);

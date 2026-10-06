@@ -130,6 +130,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.73` | the waiting count's switch sits under the count's (§669) |
 | `BR-V2.72` | «Arată public numărătoarea» unticked hides every public number of the event (§668) |
 | `BR-V2.71` | a job ping answers within twenty seconds; a longer run finishes after the response (§667) |
 | `BR-V2.70` | «Vremea» per event: the forecast, the club's own text, or none (§666) |
