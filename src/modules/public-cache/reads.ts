@@ -293,7 +293,7 @@ function groupById<T extends { locale: Locale; slug: string }>(
  *   and the switch that withholds it come from one read and one moment — never a count from one entry
  *   beside a switch from another. The counts are still in the entry (the door decides from them who
  *   queues); the switch says only whether a sentence may print the people waiting;
- * - `participantCountPublic`: «Arată public numărătoarea» (§NNN), off the same row for the same reason:
+ * - `participantCountPublic`: «Arată public numărătoarea» (§668), off the same row for the same reason:
  *   off, no sentence may print any of the numbers above.
  *
  * `null` for an uncapped event, which shows no number and never waitlists anybody, and for one
@@ -307,7 +307,7 @@ export async function cachedPublicAvailability(eventId: string, now: Date): Prom
   /*
     "count-switch" (§634): the entry's shape gained `waitlistCountPublic`, so its key changed with it, as
     the start list's keys did for §628 — no entry written without the switch is ever read by code that
-    asks for it. "numbers-switch" (§NNN): the same again for `participantCountPublic`.
+    asks for it. "numbers-switch" (§668): the same again for `participantCountPublic`.
   */
   return publicRead(["places.available", eventId, window, "count-switch", "numbers-switch"], ["places", "events"], async () => {
     const db = getDb();
@@ -361,7 +361,7 @@ export type PublicAvailability = {
    */
   waitlistCountPublic?: boolean;
   /**
-   * «Arată public numărătoarea» (§NNN, amending §648 point 8), off the same row: false withholds every
+   * «Arată public numărătoarea» (§668, amending §648 point 8), off the same row: false withholds every
    * number the door, the places line and the register page's full state would say
    * (`registration-cta.ts#publicNumbersShown`). Written by `cachedPublicAvailability` under its
    * `"numbers-switch"` key; optional only for a test's stand-in, which reads as on.

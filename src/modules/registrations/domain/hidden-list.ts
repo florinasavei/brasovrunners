@@ -75,10 +75,10 @@ export type HiddenListSettings = {
  * numărătoarea» — on every event, whatever the switch says), and whether the hidden list is in them
  * («Numără și lista ascunsă» — only while the switch is on). Defaults — the numbers said, the hidden
  * list out — for a caller with no row. The places line and the free places never read this function —
- * the hidden list takes no place — but they ask the same `publicNumbersShown` (§NNN).
+ * the hidden list takes no place — but they ask the same `publicNumbersShown` (§668).
  */
 export function hiddenListCounting(event: Partial<HiddenListSettings> | null | undefined): { countPublic: boolean; countHidden: boolean } {
-  // The one rule for every public number of the event (§NNN): the places line and the door ask it too.
+  // The one rule for every public number of the event (§668): the places line and the door ask it too.
   const countPublic = publicNumbersShown(event);
   return { countPublic, countHidden: event?.hiddenListEnabled === true && event.hiddenListCounted === true };
 }

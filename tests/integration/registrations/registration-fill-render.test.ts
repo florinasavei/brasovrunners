@@ -125,7 +125,7 @@ describe("§346 the fill line beside the register button, from the cached count"
       occupied: 12,
       // «Arată public câți așteaptă» (§634), off the same row: on by default.
       waitlistCountPublic: true,
-      // «Arată public numărătoarea» (§NNN), off the same row: on by default.
+      // «Arată public numărătoarea» (§668), off the same row: on by default.
       participantCountPublic: true,
     });
   });
@@ -147,7 +147,7 @@ describe("§346 the fill line beside the register button, from the cached count"
       occupied: 2,
       // «Arată public câți așteaptă» (§634), off the same row: on by default.
       waitlistCountPublic: true,
-      // «Arată public numărătoarea» (§NNN), off the same row: on by default.
+      // «Arată public numărătoarea» (§668), off the same row: on by default.
       participantCountPublic: true,
     });
   });

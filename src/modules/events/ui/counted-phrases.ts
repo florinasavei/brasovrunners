@@ -61,7 +61,7 @@ export function waitlistRoomPhrase(say: Say, locale: string, room: number): stri
  * așteptare.», which says neither the number nor that nobody waits.
  *
  * `capacity` null is an event that says no public number at all («Arată public numărătoarea» unticked,
- * §NNN), or a full state read with no places line: «Mulțumim! Toate locurile s-au ocupat. Intră pe lista
+ * §668), or a full state read with no places line: «Mulțumim! Toate locurile s-au ocupat. Intră pe lista
  * de așteptare.» — no capacity, and no count of the line whatever `waiting` says.
  */
 export function fullThanksPhrase(say: Say, locale: string, capacity: number | null, waiting: number | null): string {

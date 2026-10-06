@@ -257,7 +257,7 @@ export type RegistrationFormInput = {
   fullNotice: typeof WAITLIST_FULL | typeof NO_WAITLIST | "WAITLIST" | null;
   /**
    * For `WAITLIST`: the event's places and how many already wait, for the thank-you lead (§587); the
-   * capacity null when the event says no public number (§NNN).
+   * capacity null when the event says no public number (§668).
    */
   fullCounts: { capacity: number | null; waiting: number | null } | null;
   /** For `WAITLIST`: the club's offer window («Termene», `offerHours`, §377); null says no offer sentence. */

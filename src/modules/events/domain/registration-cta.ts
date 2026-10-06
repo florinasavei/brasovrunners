@@ -47,7 +47,7 @@ export type RegistrationCtaInput = RegistrationWindowInput & {
    */
   waitlistCountPublic?: boolean;
   /**
-   * «Arată public numărătoarea» (§NNN, amending §648 point 8): false withholds every number the door
+   * «Arată public numărătoarea» (§668, amending §648 point 8): false withholds every number the door
    * would say — the free places (`availablePlaces` said as null, as an uncapped event's), the offers, the
    * people waiting (whatever `waitlistCountPublic` says) and the waiting list's room. Absent is on. It
    * changes no decision either: which door it is is still read from the real counts.
@@ -57,7 +57,7 @@ export type RegistrationCtaInput = RegistrationWindowInput & {
 
 /**
  * Whether an event's public pages may say any number derived from its capacity or its registrations
- * (§NNN, amending §648 point 8): «Arată public numărătoarea» ticked, the default, or a row read without
+ * (§668, amending §648 point 8): «Arată public numărătoarea» ticked, the default, or a row read without
  * the column. Unticked, the public reads the event as it reads one without a capacity, except for the
  * state words it still needs — places are left, the race is full, the waiting list is open or full,
  * places are given from it. The one rule every public surface asks: the door (`registrationCta`), the
@@ -91,7 +91,7 @@ export type RegistrationCta =
    *
    * `waitlisted` is the number the door may SAY: nought when the club keeps the count private (§634),
    * whatever the line holds — `fromWaitlist` is decided before, from the real count. With no public
-   * number at all (§NNN), `availablePlaces` is null as well and `offered` nought.
+   * number at all (§668), `availablePlaces` is null as well and `offered` nought.
    */
   | { kind: "OPEN"; availablePlaces: number | null; offered: number; waitlisted: number; fromWaitlist: boolean }
   /**
@@ -103,7 +103,7 @@ export type RegistrationCta =
    * lead is then «Mulțumim! Toate cele 150 de locuri s-au ocupat. Intră pe lista de așteptare.», which
    * says neither a number nor «Fii primul» (which would say nought). The room stays: it is a fact about
    * the list's size, like the capacity (§32's reasoning), not a count of people — unless the event says
-   * no public number at all (§NNN): then the room is null too, and the lead names no capacity.
+   * no public number at all (§668): then the room is null too, and the lead names no capacity.
    */
   | { kind: "FULL"; waitlistRoom: number | null; waiting: number | null }
   /** No place and the waiting list at its limit (§348): a sentence, no button. */
@@ -158,7 +158,7 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
 
     case "OPEN": {
       /*
-        «Arată public numărătoarea» off (§NNN): no number at all — the free places said as an uncapped
+        «Arată public numărătoarea» off (§668): no number at all — the free places said as an uncapped
         event's (null), no offer counted, nobody counted as waiting, no room; the state words stay. Applied
         here, once, like the switch below, so no surface can forget it.
       */
@@ -194,7 +194,7 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
       if (event.waitlistRoom === 0) return { kind: "WAITLIST_FULL" };
       // Places free while somebody is in the line (§615): open, through the line's door.
       if (event.availablePlaces !== 0) return { kind: "OPEN", availablePlaces: shownPlaces, offered, waitlisted, fromWaitlist: true };
-      // The room is a number about the list's size (§634 kept it); with no public number (§NNN) it goes too.
+      // The room is a number about the list's size (§634 kept it); with no public number (§668) it goes too.
       return { kind: "FULL", waitlistRoom: numbers ? (event.waitlistRoom ?? null) : null, waiting: countPublic ? (event.waiting ?? 0) : null };
     }
 
@@ -248,7 +248,7 @@ export type PublicFill = {
  * event, not about anybody — which is why the public event query still carries no capacity and
  * this is read from the row the free-place count already reads (`RegistrationCta`).
  *
- * `null` too for an event whose «Arată public numărătoarea» is unticked (§NNN): no number derived from
+ * `null` too for an event whose «Arată public numărătoarea» is unticked (§668): no number derived from
  * its capacity or its registrations is said publicly, so the page reads as an uncapped event's.
  *
  * `null` for an uncapped event, where the formula gives no free places either: BR-REQ-034-01
@@ -275,7 +275,7 @@ export function publicFill(
   held?: { occupied?: number; confirmed?: number; waitlisted?: number; waitlistCountPublic?: boolean; participantCountPublic?: boolean },
 ): PublicFill | null {
   if (capacity === null || availablePlaces === null) return null;
-  // «Arată public numărătoarea» off (§NNN): no places line at all, as on an uncapped event.
+  // «Arată public numărătoarea» off (§668): no places line at all, as on an uncapped event.
   if (!publicNumbersShown(held)) return null;
   const claimed = Math.min(Math.max(capacity - availablePlaces, 0), capacity);
   // The line's length, the places line's last part (§629): only when anybody waits, and only while the

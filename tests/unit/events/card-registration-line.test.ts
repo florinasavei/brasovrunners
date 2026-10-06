@@ -81,7 +81,7 @@ describe("§409 cardRegistrationLine — the card's registration, in words", () 
       button: { cta: { kind: "FULL", waitlistRoom: null, waiting: 0 }, label: "Intră pe lista de așteptare" },
     });
     const en = cardRegistrationLine(translator("en"), "en", race(), NOW, known({ kind: "FULL", waitlistRoom: 3, waiting: 0 }));
-    // No places line (no fill — «Arată public numărătoarea» unticked, §NNN): the thank-you with no capacity.
+    // No places line (no fill — «Arată public numărătoarea» unticked, §668): the thank-you with no capacity.
     expect(en.lead).toBe("Thank you! All places are taken. Join the waiting list.");
     const waiting = cardRegistrationLine(translator("en"), "en", race(), NOW, known({ kind: "FULL", waitlistRoom: 3, waiting: 4 }, { taken: 50, capacity: 50 }));
     expect(waiting.lead).toBe("Thank you! All 50 places are taken — 4 already waiting.");

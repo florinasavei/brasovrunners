@@ -163,7 +163,7 @@ export function cardRegistrationLine(
         takes people, which is still the instant the button goes away.
       */
       // The thank-you lead with the counts (§587): «Mulțumim! Toate cele 10 locuri s-au ocupat — 3 așteaptă deja un loc.»
-      // With no public number (§NNN) there is no fill: «Mulțumim! Toate locurile s-au ocupat. Intră pe lista de așteptare.»
+      // With no public number (§668) there is no fill: «Mulțumim! Toate locurile s-au ocupat. Intră pe lista de așteptare.»
       const lead = fullThanksPhrase(say, locale, fill?.capacity ?? null, cta.waiting);
       return {
         ...quiet,

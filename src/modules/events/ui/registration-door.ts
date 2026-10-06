@@ -53,7 +53,7 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
   // «Arată public câți așteaptă» (§634), read from the entry the counts come from, so the two are one moment.
   let waitlistCountPublic = true;
   /*
-    «Arată public numărătoarea» (§NNN), from the same entry for the same reason — and from the event row
+    «Arată public numărătoarea» (§668), from the same entry for the same reason — and from the event row
     as well: off in either, the door says no number and there is no places line (`registrationCta`,
     `publicFill`). An event save expires both, so they disagree only for the instant between two reads,
     and then the numbers stay unsaid rather than said.
@@ -150,7 +150,7 @@ export async function draftRegistrationDoor<T extends Record<string, unknown>>(
   }
   return {
     kind: "KNOWN",
-    // The draft's own «Arată public câți așteaptă» (§634) and «Arată public numărătoarea» (§NNN): the
+    // The draft's own «Arată public câți așteaptă» (§634) and «Arată public numărătoarea» (§668): the
     // preview says the numbers only as the saved page would.
     cta: registrationCta(
       {

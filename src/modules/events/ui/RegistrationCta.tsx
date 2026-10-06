@@ -163,7 +163,7 @@ export default async function RegistrationCta({
       <Stack spacing={1} sx={{ mt: { xs: DENSITY.gapSm, sm: 3 }, alignItems: "flex-start" }}>
         <Box data-testid="registration-waitlist-message">
           <Typography variant="body1" component="p" sx={{ fontWeight: 700 }}>
-            {/* No places line — «Arată public numărătoarea» unticked (§NNN) — is the lead with no capacity. */}
+            {/* No places line — «Arată public numărătoarea» unticked (§668) — is the lead with no capacity. */}
             {fullThanksPhrase(t, locale, fill?.capacity ?? null, cta.waiting)}
           </Typography>
           <Typography variant="body1" component="p">

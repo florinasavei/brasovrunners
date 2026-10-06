@@ -9,7 +9,7 @@ import { fullThanksPhrase } from "@/modules/events/ui/counted-phrases";
 import { hiddenListCounting } from "@/modules/registrations/domain/hidden-list";
 
 /**
- * BR-REQ-034-01, BR-REQ-039-01 (§NNN, amending §648 point 8) — «Arată public numărătoarea» unticked hides
+ * BR-REQ-034-01, BR-REQ-039-01 (§668, amending §648 point 8) — «Arată public numărătoarea» unticked hides
  * every public number of the event. The owner, 2026-10-06: «Am debifat "arată public câți așteaptă" dar
  * tot văd asta..», and his choice: hide all numbers — the page says only whether places are left or the
  * race is full, with no counts at all.
@@ -90,7 +90,7 @@ function cardStrings(locale: "ro" | "en", cta: ReturnType<typeof registrationCta
   return [line.lead, line.detail, line.note, line.roomLine, line.quietLine, line.button?.label].filter((part): part is string => typeof part === "string");
 }
 
-describe("§NNN publicNumbersShown — the one rule", () => {
+describe("§668 publicNumbersShown — the one rule", () => {
   it("is on by default and for a row read without the column; off only for an explicit false", () => {
     expect(publicNumbersShown({ participantCountPublic: true })).toBe(true);
     expect(publicNumbersShown({})).toBe(true);
@@ -106,7 +106,7 @@ describe("§NNN publicNumbersShown — the one rule", () => {
   });
 });
 
-describe("§NNN registrationCta with «Arată public numărătoarea» unticked", () => {
+describe("§668 registrationCta with «Arată public numărătoarea» unticked", () => {
   it("open with free places: the register door, and no number — as an uncapped event", () => {
     const open = event(CASES["open with free places"].input);
     expect(registrationCta({ ...open, participantCountPublic: false }, DURING)).toEqual({ kind: "OPEN", availablePlaces: null, offered: 0, waitlisted: 0, fromWaitlist: false });
@@ -143,7 +143,7 @@ describe("§NNN registrationCta with «Arată public numărătoarea» unticked",
   });
 });
 
-describe("§NNN publicFill with «Arată public numărătoarea» unticked", () => {
+describe("§668 publicFill with «Arată public numărătoarea» unticked", () => {
   it("is null: no places line at all", () => {
     expect(publicFill(151, 0, { occupied: 151, confirmed: 141, waitlisted: 17, participantCountPublic: false })).toBeNull();
     expect(publicFill(151, 9, { occupied: 142, confirmed: 131, participantCountPublic: false })).toBeNull();
@@ -158,7 +158,7 @@ describe("§NNN publicFill with «Arată public numărătoarea» unticked", () =
   });
 });
 
-describe("§NNN the words drawn from an unticked door carry no number", () => {
+describe("§668 the words drawn from an unticked door carry no number", () => {
   for (const locale of ["ro", "en"] as const) {
     it(`says no digit of the capacity or of any count, in every case (${locale})`, () => {
       for (const [name, c] of Object.entries(CASES)) {

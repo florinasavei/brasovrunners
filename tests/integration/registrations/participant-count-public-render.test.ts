@@ -14,7 +14,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-034-01, BR-REQ-039-01 (§NNN, amending §648 point 8) — «Arată public numărătoarea» unticked: the
+ * BR-REQ-034-01, BR-REQ-039-01 (§668, amending §648 point 8) — «Arată public numărătoarea» unticked: the
  * event page's door and the listing card, rendered from a real database (PGlite) through the public
  * cache's read-through, say no number derived from the event's capacity or its registrations — no places
  * line, no free places, no capacity in the full lead, no room, no offered or waiting count — and keep the
@@ -143,7 +143,7 @@ beforeEach(async () => {
   await resetTables(db);
 });
 
-describe("§NNN «Arată public numărătoarea» unticked: the event page and the card say no number", () => {
+describe("§668 «Arată public numărătoarea» unticked: the event page and the card say no number", () => {
   it("the column is on by default, and the availability entry carries it off the same row", async () => {
     const event = await publish({});
     expect(event.participantCountPublic).toBe(true);

@@ -317,7 +317,7 @@ describe("§587 the join form says the event page's message once, above the form
     expect(html).toContain(ro.Event.cta.fullJoin);
   });
 
-  it("§NNN says no capacity and no count in the title when the event says no public number", async () => {
+  it("§668 says no capacity and no count in the title when the event says no public number", async () => {
     state.availability = { available: 0, capacity: 151, waitlistRoom: null, waitlistCapacity: null, waiting: 17, participantCountPublic: false };
     const html = await render();
     expect(html).toContain('data-testid="registration-waitlist-notice"');

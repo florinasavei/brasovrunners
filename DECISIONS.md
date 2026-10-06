@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.71-2026-10-06 -->
+<!-- PROJECT_BASELINE: BR-V2.72-2026-10-06 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.71-2026-10-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.72-2026-10-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -24216,3 +24216,41 @@ Baseline `BR-V2.70-2026-10-05`.
 **How to read a continuing run.** cron-job.org → the job → **History**: with responses not saved (as every job is set, `SETUP.md` §40), a successful 200 that took about twenty seconds instead of «Timeout»; the body (`continuing: true`, `startedAt`) shows there only with the job's "save responses" option on. Vercel → the project → the function's log is the authority: `[jobs] <job>: finished after the response in <ms> ms`, and an error line before it when it failed. `/api/health?deep=1` and `/devs` read the plan the run left, as for any run. Production and QA the same. `SETUP.md` §40 says it for the owner; tested in `tests/integration/jobs/job-deadline.test.ts`.
 
 Baseline `BR-V2.71-2026-10-06`.
+
+## 668. Unticked, «Arată public numărătoarea» hides every public number of the event (amending §648)
+
+**The owner, 2026-10-06**, with a screenshot of the production event page of the 21 November race showing «151 de înscriși din 151 de locuri — 141 de confirmați, 10 în curs de confirmare» and the editor with «Arată public câți așteaptă» and «Arată public numărătoarea» both unticked: «Am debifat "arată public câți așteaptă" dar tot văd asta..». Asked what unticking «Arată public numărătoarea» should do to that places line, he chose: «Hide all numbers — the page says only whether places are left or the race is full, with no counts at all».
+
+This amends §648 point 8; §634 is unchanged.
+
+**What was true.** «Arată public numărătoarea» (`events.participant_count_public`, ticked by default, §648) removed the numbers from «Cine vine» only. The places line (`publicFill`, the `cta.fill*` messages: «X de înscriși din Y de locuri — A confirmați, B în curs de confirmare, C locuri păstrate pentru lista de așteptare»), the card's «N locuri libere din M», the page's «N locuri libere», the offered count, the room left on a capped waiting list and the full state's «Toate cele {capacity} locuri s-au ocupat» kept their numbers — although the switch's own help promised «Bifat: pagina spune câți vin și câți sunt confirmați», which read as if unticking took those numbers away. «Arată public câți așteaptă» worked as designed: the 17 waiting on that race were named nowhere public.
+
+**Decision.** An event whose «Arată public numărătoarea» is unticked shows no public number derived from its capacity or its registrations, anywhere. The public reads it as it reads an event without a capacity, except for the state words it still needs: places are left (the register button), the race is full, the waiting list is open or full, places are given from the waiting list. Ticked — the default — nothing changes anywhere, byte for byte (tested).
+
+**One rule, in the pure domain.** `events/domain/registration-cta.ts#publicNumbersShown` — `participantCountPublic !== false`, so a row read without the column says the numbers as before. Every public surface asks it; none re-derives it:
+- `registrationCta` takes `participantCountPublic`: unticked, `OPEN` says `availablePlaces` as null (an uncapped event's), `offered` and `waitlisted` as nought, and `FULL` says `waitlistRoom` and `waiting` as null — the waiting count hidden whatever «Arată public câți așteaptă» says. The door itself (`OPEN`, `fromWaitlist`, `FULL`, `WAITLIST_FULL`, `FULL_NO_WAITLIST`) is still chosen from the real counts: the switch decides nothing.
+- `publicFill` takes the same: unticked, it is null — no places line at all.
+- `hiddenListCounting` («Cine vine», §648 point 6) asks the same function, so the list's numbers and the places line go together; its rows and rules are unchanged.
+
+**Every surface it reaches**, all through the one door (`readRegistrationDoor`, `draftRegistrationDoor`):
+- the event page's door (`RegistrationCta`): no places line, no «N locuri libere», no «N loc oferit din lista de așteptare», no «N pe lista de așteptare», no «Mai sunt N locuri pe lista de așteptare»; the full lead is «Mulțumim! Toate locurile s-au ocupat. Intră pe lista de așteptare.» / "Thank you! All places are taken. Join the waiting list." (`cta.fullThanksPlain`, new, the one numberless variant that was missing — «Fii primul» would say nought, so it is never used here). The special guests' sentence beside the places line («…în afara locurilor anunțate», §648 point 7) goes with the line it stands beside, as on an uncapped event;
+- the listing card, the hero and featured card, the calendar's cards and the series card (`cardRegistrationLine`, through `EventFacts`): no «N locuri libere din M», no offered or waiting count, no room line; the full lead as above; «Locurile se dau din lista de așteptare» and the buttons stay;
+- the register page's full state (the join form's title): no capacity and no count — `fullCounts.capacity` null — the same sentence; the editor's preview of the form does the same from the draft's door;
+- the editor's preview of the page and card (`draftRegistrationDoor`) reads the draft's own switch.
+The structured data carries no capacity or remaining capacity (`structured-data.ts` has none), so nothing changes there. The share image, the `.ics` and the sitemap carry no count.
+
+**What does not change.** The allocator, the capacity formula, every admin screen, list, export and count, the emails to a person (not public; a waiting person's own position follows §634 alone), «Cine vine»'s rows and rules (§32, §628, §634), the default (ticked), the column and its migration (none), the audit action `event.participant_count_public_changed`. «Arată public câți așteaptă» still acts alone while «Arată public numărătoarea» is ticked.
+
+**The words.** `Admin.editor.participantCountPublicHelp` now says both halves: «Bifat: pagina spune câte locuri are, câți vin și câți sunt confirmați. Debifat: nicio cifră pe paginile publice ale evenimentului — doar dacă mai sunt locuri; lista arată doar numele.» / "Ticked: the page says how many places, how many are coming and how many are confirmed. Unticked: no number on the event's public pages — only whether places are left; the list shows names only." (183 and 193 characters, §511). The «Ghid» step on the places line («prima cifră…») and the special guests' step on the switch gain the unticked behaviour. `SETUP.md` §39's row and `AGENTS.md` §10.10 (and its column list) say it.
+
+**The cache.** The live door reads the switch from the availability entry the counts ride (`cachedPublicAvailability`), as §634's switch is read, so the count and its switch are one read at one moment; the entry's key gained `"numbers-switch"` with its shape, so no entry written without the column is read by code that asks for it. The door also asks the event row it was handed (the page's `events.by-slug` entry, keyed `"hidden-list"` with the column since §648, or the listing's rows, which carry it in `PUBLIC_COLUMNS`): off in either, no number — so a stale copy can only withhold a number, never say one. The register page applies the same pair. Every event save (`revalidatePublicContent("events")`, the editor's save, a scoped series save, a duplicate, a repeat) expires the page and listing rows and the availability entries (filed under both `places` and `events`), and the switch can only become false through such a save, so no entry that predates the column can be read after an unticking.
+
+**Refused.**
+- **Hiding only the places line**, keeping «N locuri libere» on the card: the owner chose no counts at all, and the card's free places are the same number by another name.
+- **A second switch** for the places line: «Arată public numărătoarea» is named for the count it withholds and its help already promised it; two switches for one intent would be read the way the owner read this one.
+- **Hiding the state words** («Locurile s-au ocupat», «Locurile se dau din lista de așteptare», the waiting list's door): without them a visitor could not tell whether to press, and they say no number.
+- **Changing an email**: a message to one person is not a public page, and the waiting person's own position is §634's business.
+
+**Consequences.** `events/domain/registration-cta.ts` (`publicNumbersShown`, `registrationCta`, `publicFill`), `events/ui/registration-door.ts`, `events/ui/counted-phrases.ts` (`fullThanksPhrase` with a null capacity), `events/ui/RegistrationCta.tsx`, `events/ui/CardRegistration.tsx`, `public-cache/reads.ts` (the entry's field and key), `registrations/domain/hidden-list.ts`, the register page, `registrations/ui/registration-form.tsx`, `content/events/draft-form.tsx`; `messages/{ro,en}.json` (`Event.cta.fullThanksPlain`, `Admin.editor.participantCountPublicHelp`, two «Ghid» steps); `SETUP.md` §39, `AGENTS.md` §10.10. Tests: `tests/unit/events/participant-count-public.test.ts` and `tests/integration/registrations/participant-count-public-render.test.ts` (new); `registration-fill-render.test.ts`, `register-page-resting.test.ts`, `card-registration-line.test.ts` (the full lead with no places line is the numberless thank-you, not «Locurile s-au ocupat.»). No migration, no dependency, no new client island.
+
+Baseline `BR-V2.72-2026-10-06`.

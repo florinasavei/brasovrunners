@@ -255,7 +255,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   let fullNotice: typeof WAITLIST_FULL | typeof NO_WAITLIST | "WAITLIST" | null = null;
   let offerHours: number | null = null;
   // `waiting` null: the club keeps the line's count private (§634), and the title says no number.
-  // `capacity` null: the event says no public number at all (§NNN), and the title names no capacity.
+  // `capacity` null: the event says no public number at all (§668), and the title names no capacity.
   let fullCounts: { capacity: number | null; waiting: number | null } | null = null;
   if (!submitted && !error && !resting) {
     try {
@@ -264,7 +264,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
         fullNotice = places.waitlistCapacity === 0 ? NO_WAITLIST : places.waitlistRoom === 0 ? WAITLIST_FULL : "WAITLIST";
         if (fullNotice === "WAITLIST") {
           offerHours = (await cachedDeadlines()).offerHours;
-          // «Arată public numărătoarea» (§NNN): off in the row or the entry, no capacity and no count — the door's rule.
+          // «Arată public numărătoarea» (§668): off in the row or the entry, no capacity and no count — the door's rule.
           const numbers = publicNumbersShown(event) && publicNumbersShown(places);
           fullCounts = {
             capacity: numbers ? places.capacity : null,
