@@ -114,7 +114,7 @@ describe("§383 the forecast of automatic emails", () => {
     // B — ten days out, the reminder off: nothing.
     const b = await event("Crosul B", at(10 * DAY), { reminderHoursBefore: 0, confirmationOpensDaysBefore: 0 });
     await registration(b, "b1", "CONFIRMED", { bibNumber: 2 });
-    // C — eight days out: its window (7 days / 2 days) opens tomorrow; the last call at the reminder's lead.
+    // C — eight days out: its window (7 days / 2 days) opens tomorrow; the hold is the window's, so the last call goes 48 hours before its deadline (§665).
     const c = await event("Crosul C", at(8 * DAY));
     const c1 = await registration(c, "c1", "PENDING_DECLARATION", { holdExpiresAt: at(6 * DAY), bibNumber: 3 });
     // D — full, with a hold that lapses in twenty hours and somebody waiting; no reminder, no window.
@@ -156,7 +156,7 @@ describe("§383 the forecast of automatic emails", () => {
       { at: at(DAY).toISOString(), eventId: a, type: "EVENT_REMINDER", send: "reminder", recipients: 2 },
       { at: at(DAY).toISOString(), eventId: c, type: "COMPLETE_DECLARATION", send: "participation", recipients: 1 },
       { at: at(2 * DAY).toISOString(), eventId: f, type: "REGISTRATION_OPENED", send: "registrationOpened", recipients: 2 },
-      { at: at(6 * DAY).toISOString(), eventId: c, type: "COMPLETE_DECLARATION", send: "lastCall", recipients: 1 },
+      { at: at(4 * DAY).toISOString(), eventId: c, type: "COMPLETE_DECLARATION", send: "lastCall", recipients: 1 },
     ]);
   });
 
@@ -224,33 +224,36 @@ describe("§383 the forecast of automatic emails", () => {
     expect((await forecast()).some((candidate) => candidate.type === "BIB_ASSIGNED")).toBe(false);
   });
 
-  it("follows the club's reminder lead: none at all when the club sends none", async () => {
-    const rows = await forecastAutomaticEmails(db, { now: NOW, horizonDays: 14, deadlines: { ...DEFAULT_DEADLINES, reminderHours: 0 } });
-    expect(rows.some((row) => row.send === "reminder" || row.send === "lastCall")).toBe(false);
+  it("follows the club's reminder lead: none at all when the club sends none — and the window's last call by its own setting (§665)", async () => {
+    const quiet = await forecastAutomaticEmails(db, { now: NOW, horizonDays: 14, deadlines: { ...DEFAULT_DEADLINES, reminderHours: 0 } });
+    expect(quiet.some((row) => row.send === "reminder")).toBe(false);
+    // The one last call left is C's, before its window's deadline: `lastCallHours`, not the reminder's lead.
+    expect(quiet.filter((row) => row.send === "lastCall").map((row) => row.eventId)).toEqual([fixture.c]);
+    const none = await forecastAutomaticEmails(db, { now: NOW, horizonDays: 14, deadlines: { ...DEFAULT_DEADLINES, reminderHours: 0, lastCallHours: 0 } });
+    expect(none.some((row) => row.send === "reminder" || row.send === "lastCall")).toBe(false);
   });
 
   /**
-   * §160 — the default window's deadline (`start - 2 days`) and the club's 48-hour reminder lead
-   * land on the same instant, so a full event with a waiting list is the case where a declaration
-   * hold's last call and its release to the queue would otherwise both claim that lapse. The
-   * forecast must side with the job: one waitlist offer, no sign-reminder it can never send.
+   * §160, §665 — a window hold on a full event with a waiting list lapses at the window's deadline
+   * and is released to the queue then. Its last call goes 48 hours before that deadline, so it comes
+   * first and is sent; the release still takes the place at the deadline. (Before §665 the last call
+   * went at the reminder's lead before the start — the deadline itself — and the release won.)
    */
-  it("never promises a last call for a window hold the job releases to the waiting list instead (§160)", async () => {
+  it("calls a window hold before the deadline at which the job releases it to the waiting list (§160, §665)", async () => {
     const g = await event("Crosul G", at(9 * DAY), { capacity: 1 });
-    await registration(g, "g1", "PENDING_DECLARATION", { holdExpiresAt: at(7 * DAY) });
+    const g1 = await registration(g, "g1", "PENDING_DECLARATION", { holdExpiresAt: at(7 * DAY) });
     const g2 = await registration(g, "g2", "WAITLISTED");
 
     const rows = (await forecast()).filter((row) => row.eventId === g);
-    expect(rows.map((row) => row.send)).toEqual(["participation", "holdLapsed", "nextInLine"]);
+    expect(rows.map((row) => row.send)).toEqual(["participation", "lastCall", "holdLapsed", "nextInLine"]);
+    expect(rows.find((row) => row.send === "lastCall")).toMatchObject({ at: at(5 * DAY), registrationIds: [g1] });
     expect(rows.find((row) => row.send === "nextInLine")?.registrationIds).toEqual([g2]);
-    expect(rows.some((row) => row.send === "lastCall")).toBe(false);
 
-    // The full job, run at that same instant on the same data, agrees: `g2` is offered the
-    // place, and `g1` — released before `queueEventReminders` ever looked at it — gets no
-    // sign-reminder (`c1`, the fixture's other window race, still gets its own, unaffected).
+    // The full job agrees: the last call at its instant, keyed by the deadline; the place offered at the deadline.
+    await runRegistrationMaintenance(db, at(5 * DAY));
+    expect(await queued("COMPLETE_DECLARATION", `:sign-reminder:${at(7 * DAY).toISOString()}`)).toContain("g1");
     await runRegistrationMaintenance(db, at(7 * DAY));
     expect(await queued("WAITLIST_SPOT_OFFER")).toContain("g2");
-    expect(await queued("COMPLETE_DECLARATION", ":sign-reminder")).not.toContain("g1");
   });
 
   /**
@@ -352,7 +355,8 @@ describe("§383 the forecast of automatic emails", () => {
         return participantOnly("EVENT_REMINDER", ":reminder");
       case "lastCall":
         await queueEventReminders(db, when, DEFAULT_DEADLINES);
-        return participantOnly("COMPLETE_DECLARATION", ":sign-reminder");
+        // One per registration, or one per window deadline (§665): either key.
+        return participantOnly("COMPLETE_DECLARATION", ":sign-reminder%");
       case "participation":
         await queueParticipationConfirmations(db, when);
         return participantOnly("COMPLETE_DECLARATION", ":confirm-participation");

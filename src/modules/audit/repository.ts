@@ -116,6 +116,11 @@ export type AuditAction =
    */
   | "registration.deadline_moved_for_outage"
   /**
+   * This registration's declaration hold followed its event's changed participation window (§665): the
+   * actor who saved the event, `from` and `to` (instants) — never a name.
+   */
+  | "registration.hold_moved_by_window"
+  /**
    * The outage grace did not revive this registration's lapsed claim (§657): an offer or a family's
    * reservation whose deadline passed while the platform could not be reached, and whose counted place
    * was given meanwhile. It lapses as it would have; the job seats nobody, an Administrator decides. No
@@ -315,6 +320,12 @@ export type AuditAction =
    * the window's id and source — never a name or an address.
    */
   | "event.invitation_deadline_moved_for_outage"
+  /**
+   * A save of the event moved the declaration holds its participation window gave (§665): who saved,
+   * how many (`moved` real, `test` apart), `to` (the instant) and how many declaration emails it queued
+   * — never a name.
+   */
+  | "event.holds_moved_by_window"
   /**
    * An invitation the outage grace did not revive (§657): it lapsed while the platform could not be
    * reached and its counted place was given meanwhile. The invitation's id, the window's id and the

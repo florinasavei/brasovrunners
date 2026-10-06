@@ -776,6 +776,7 @@
           "address_vouched_by_staff": "Address vouched for by the team; place given ahead of the waiting list (“Give them a place now”)",
           "outside_capacity_changed": "Put on the special guests list, or taken off it",
           "deadline_moved_for_outage": "Deadline moved: the site could not be reached, the clock stood still",
+          "hold_moved_by_window": "Signing deadline moved with the changed confirmation window",
           "not_revived_for_outage": "Not revived after the outage: the deadline had passed while the site could not be reached, and the place had been given meanwhile or the claim had already lapsed",
           "answer_corrected": "Answer corrected: {field}",
           "answers_viewed": "Answers opened, with the phone and the emergency contact"
@@ -1748,6 +1749,17 @@
       "savedSeriesOfferedOne": "Saved — also on {dates} of the series; places offered to the waiting list: {offered}.",
       "savedSeriesOfferedMany": "Saved — also on {dates} of the series; places offered to the waiting list: {offered}.",
       "savedOffered": "Saved — places offered to the waiting list: {offered}.",
+      "holdsMoved": {
+        "one": "The save moved 1 reserved place to the new deadline, {due}.",
+        "few": "The save moved {count} reserved places to the new deadline, {due}.",
+        "other": "The save moved {count} reserved places to the new deadline, {due}."
+      },
+      "holdsMovedSeries": {
+        "one": "The save moved 1 reserved place to its date's new deadline.",
+        "few": "The save moved {count} reserved places to each date's new deadline.",
+        "other": "The save moved {count} reserved places to each date's new deadline."
+      },
+      "holdsMovedSent": "The window is already open, so each of them gets the declaration email again, with the new deadline.",
       "placeAnnouncedLive": "The location is announced: it shows on the page, the cards, the calendar and in emails from now on. Those registered get no separate email about it.",
       "placeAnnouncedDraft": "The location is announced: it will show on every page once the event is published. Nobody is emailed about it.",
       "scope": {
@@ -2118,7 +2130,17 @@
           "title": "Confirmation window",
           "dates": "For {date}: asked from {opens}, due {due}.",
           "datesAtStart": "For {date}: asked from {opens}, due at the start — the place does not lapse before the start.",
-          "datesOff": "No window: the signature is asked at registration ({hold}), as on the weekly runs."
+          "datesOff": "No window: the signature is asked at registration ({hold}), as on the weekly runs.",
+          "moveNow": {
+            "one": "Saving moves 1 reserved place to the window's deadline, {due}; if you change the numbers, to the new one.",
+            "few": "Saving moves {count} reserved places to the window's deadline, {due}; if you change the numbers, to the new one.",
+            "other": "Saving moves {count} reserved places to the window's deadline, {due}; if you change the numbers, to the new one."
+          },
+          "follow": {
+            "one": "1 reserved place is held until {due}. If you change the numbers, saving moves it to the new deadline.",
+            "few": "{count} reserved places are held until {due}. If you change the numbers, saving moves them to the new deadline.",
+            "other": "{count} reserved places are held until {due}. If you change the numbers, saving moves them to the new deadline."
+          }
         },
         "bibs": {
           "title": "Race numbers (bibs)",
@@ -5047,6 +5069,8 @@
       "neverSent": "not sent any more",
       "lastCall": "With the reminder — {reminder} before the start, or as the event chooses — it goes one last time, to whoever has not signed.",
       "lastCallOff": "For an event that chose a reminder, it goes one last time with it, to whoever has not signed.",
+      "lastCallWindow": "For a race whose confirmation is due before the start, it goes {lastCall} before that deadline instead, to whoever is held until it.",
+      "lastCallWindowOff": "For a race whose confirmation is due before the start, no last call goes before that deadline.",
       "reminderOff": {
         "when": "Off by default: it goes only for events that chose a reminder in the editor, once, to everyone confirmed.",
         "whenShort": "only where the event chose a reminder"
@@ -5062,6 +5086,7 @@
           "holdMinutes": "A place is held for signing the declaration (minutes)",
           "offerHours": "A waiting-list offer stays open (hours)",
           "reminderHours": "The reminder goes before the start by (hours)",
+          "lastCallHours": "The last call to sign goes before the window's deadline by (hours)",
           "selfCheckinHours": "“I have arrived” can be pressed before the start by (hours)",
           "raceWeekDays": "The homepage countdown starts (days before)",
           "seriesHorizonDays": "A series keeps its dates created ahead by (days)",
@@ -5076,6 +5101,7 @@
           "holdMinutes": "For an event with no confirmation window, or already inside it. A race further away than its window holds the place until the deadline set on the event.",
           "offerHours": "How long the first in line has to sign; never past the registration close or the start.",
           "reminderHours": "0 = no reminder. An event can choose otherwise in the editor, under “Taking part and registration”.",
+          "lastCallHours": "How many hours before the window's deadline the last call to sign goes. 0 = none before the deadline.",
           "selfCheckinHours": "The button on the participant's page, “I have arrived — mark me as here”.",
           "raceWeekDays": "0 = on race day only. From the same day, the editor's bib printing card opens by itself.",
           "seriesHorizonDays": "Dates already created stay if you lower it; the missing ones are filled in if you raise it.",

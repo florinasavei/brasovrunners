@@ -21,7 +21,7 @@ import {
 } from "@/modules/notifications/email-copy-fields";
 import { getDb } from "@/db/client";
 import { readDeadlines } from "@/modules/deadlines/deadlines";
-import { deadlineWords, hoursPhrase } from "@/modules/deadlines/domain/duration-words";
+import { deadlineWords, hoursPhrase, leadPhrase } from "@/modules/deadlines/domain/duration-words";
 import { replyToHeader, resolveShownContactAddresses } from "@/modules/contact/domain/shown-address";
 import { readShownContactAddress } from "@/modules/contact/shown-address";
 import { readClubNotices } from "@/modules/notifications/club-notices";
@@ -221,7 +221,10 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     // The verification email re-sent by itself (§653), in the club's numbers — or that it is off.
     if (type === "VERIFY_REGISTRATION_EMAIL") return `${line} ${retryLine}`;
     if (type !== "COMPLETE_DECLARATION") return line;
-    return `${line} ${reminderOff ? t("emails.lastCallOff") : t("emails.lastCall", whenValues)}`;
+    // The last call, by the reminder's lead — and, on a race whose window is due before the start, before that deadline instead (§665).
+    const { lastCallHours } = deadlines.deadlines;
+    const windowLastCall = lastCallHours > 0 ? t("emails.lastCallWindow", { lastCall: leadPhrase(locale, lastCallHours) }) : t("emails.lastCallWindowOff");
+    return `${line} ${reminderOff ? t("emails.lastCallOff") : t("emails.lastCall", whenValues)} ${windowLastCall}`;
   };
   /*
     What a short «când» line leaves out (the plain-words pass): the hold, the per-address limit, the

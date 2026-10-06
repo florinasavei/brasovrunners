@@ -63,6 +63,8 @@ test.describe("§377 the club's deadlines on «Setări» → «Termene»", () =>
     holdMinutes: "30",
     offerHours: "24",
     reminderHours: "48",
+    // The last call to sign before a window's deadline (§665).
+    lastCallHours: "48",
     selfCheckinHours: "24",
     raceWeekDays: "7",
     seriesHorizonDays: "56",
