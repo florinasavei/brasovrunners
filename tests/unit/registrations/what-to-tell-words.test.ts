@@ -45,6 +45,7 @@ function facts(overrides: Partial<TellFacts>): TellFacts {
     eventCancelled: false,
     waitlistAutoOffer: true,
     waitlistCountPublic: true,
+    participantCountPublic: true,
     waitlistPosition: null,
     waitlistLength: null,
     liveLinkExpiresAt: null,
@@ -111,6 +112,15 @@ describe("§654 whatToTell — what to tell a person who asks where their regist
         expect(lines[2]).toBe(ours(locale, "WAITLISTED"));
         expect(lines).not.toContain(spam);
       }
+    });
+
+    it(`§669 the waiting line keeps the count private with «Arată public numărătoarea» unticked (${locale})`, () => {
+      const lines = whatToTell(
+        locale,
+        facts({ status: "WAITLISTED", waitlistPosition: 3, waitlistLength: 10, waitlistAutoOffer: true, waitlistCountPublic: true, participantCountPublic: false }),
+        NOW,
+      );
+      expect(lines[1]).toBe(waitlistStandingPhrase(say(locale), locale, { position: 3, length: 10, autoOffer: true, countPublic: false }));
     });
 
     it(`an offer says its deadline once, and once lapsed says so without the spam hint (${locale})`, () => {

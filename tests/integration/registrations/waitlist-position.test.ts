@@ -163,6 +163,16 @@ describe("§629 readWaitlistPosition — the line in queue order", () => {
     expect(await readWaitlistPosition(db, me.id)).toEqual({ position: 2, length: 2, autoOffer: true, countPublic: false });
   });
 
+  it("§669 reads the count as private while «Arată public numărătoarea» is unticked, the waiting count's switch left on", async () => {
+    const e = await event();
+    await person(e.id, "WAITLISTED", at(1));
+    const me = await person(e.id, "WAITLISTED", at(2));
+    await db.update(events).set({ participantCountPublic: false, waitlistCountPublic: true }).where(eq(events.id, e.id));
+    expect(await readWaitlistPosition(db, me.id)).toEqual({ position: 2, length: 2, autoOffer: true, countPublic: false });
+    await db.update(events).set({ participantCountPublic: true }).where(eq(events.id, e.id));
+    expect((await readWaitlistPosition(db, me.id))?.countPublic).toBe(true);
+  });
+
   it("moves up when the person ahead leaves the line", async () => {
     const e = await event();
     const ahead = await person(e.id, "WAITLISTED", at(1));
