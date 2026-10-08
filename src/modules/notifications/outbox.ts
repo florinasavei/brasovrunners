@@ -1253,7 +1253,11 @@ export async function applyMailgunEvent(db: Db, params: MailgunDeliveryEvent): P
           .set({ deliveredAt: sql`coalesce(${emailOutbox.deliveredAt}, ${occurredAt.toISOString()}::timestamptz)` })
           .where(eq(emailOutbox.id, row.id));
         if (row.participantId && participantMeant) {
-          await settleDelivery(tx, { id: row.id, participantId: row.participantId, registrationId: row.registrationId, messageType: row.messageType }, occurredAt);
+          await settleDelivery(
+            tx,
+            { id: row.id, participantId: row.participantId, registrationId: row.registrationId, messageType: row.messageType, createdAt: row.createdAt },
+            occurredAt,
+          );
         }
         return;
       }

@@ -694,6 +694,7 @@
         "why": {
           "BOUNCED": "The address does not exist, the mailbox is full or the recipient's server refused it.",
           "COMPLAINED": "The recipient marked the message as spam.",
+          "BOUNCEDQueued": "It never left: the provider refused the address.",
           "account": "It never left: the club's Mailgun account was refused at the time, not the address.",
           "missing": "The address receives the club's email again ({date}), but this one was not sent again.",
           "missingUndated": "The address receives the club's email again, but this one was not sent again.",
@@ -708,6 +709,7 @@
         "neverConfirmed": "The address was never confirmed.",
         "todo": "Phone the person; only they can change the address, by registering again.",
         "whichFamily": "Rejected at the same address, for another registration at this event: “{type}”, {instant}.",
+        "whichFamilyQueued": "Never left, for another registration at the same address and this event: “{type}”, queued {instant}.",
         "todoPress": {
           "confirmation": "Send the confirmation again; it also carries the number, the QR code and the signed declaration: “Resend QR” in the list, “Resend email” on the registration's page.",
           "reminder": "Send the reminder again: “Send the reminder” on the registration's page.",
@@ -717,6 +719,14 @@
           "confirmation": "Ask an Administrator to send the confirmation again (“Resend QR”); it also carries the number, the QR code and the signed declaration.",
           "reminder": "Ask an Administrator to send the reminder again (“Send the reminder”).",
           "resend": "Ask an Administrator to send it again."
+        },
+        "todoCall": {
+          "update": "Phone the person: they do not know the time or the place has changed.",
+          "cancelled": "Phone the person: they do not know it has been cancelled."
+        },
+        "todoAskAdminCall": {
+          "update": "Ask an Administrator to phone the person: they do not know the time or the place has changed.",
+          "cancelled": "Ask an Administrator to phone the person: they do not know it has been cancelled."
         },
         "todoFamily": "It is sent again from that person's registration, not this one. {todo}",
         "todoWait": "Do not send it again yet: wait for the delivery confirmation.",
@@ -1157,7 +1167,8 @@
             "resend": "A club email meant for you has not reached you yet; we will send it again.",
             "confirmation": "Your registration's confirmation, with the QR code, has not reached you yet; we will send it again.",
             "reminder": "The email with the race-day details has not reached you yet; we will send it again."
-          }
+          },
+          "changed": "The event's details have changed, and our email about it did not reach you: the current time and place are on the event's page."
         }
       },
       "memberBibWantedStaffHelp": "Only for a member, at an event that offers the members' number; otherwise it is not kept.",

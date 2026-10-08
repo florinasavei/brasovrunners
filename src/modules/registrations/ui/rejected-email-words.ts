@@ -2,7 +2,7 @@ import { createTranslator } from "next-intl";
 import en from "../../../../messages/en.json";
 import ro from "../../../../messages/ro.json";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
-import type { DeskEmailState } from "../domain/email-state";
+import { callInstead, type DeskEmailState } from "../domain/email-state";
 
 type Say = (key: string, values?: Record<string, string | number>) => string;
 
@@ -14,13 +14,20 @@ export type RejectedEmailFacts = DeskEmailState & {
   };
 
 export type RejectedEmailWords = {
-  /** «Respins: „Înscriere confirmată (cu QR și număr)”, trimis sâmb., 3 oct. 2026, la 10:00.» */
+  /**
+   * «Respins: „Înscriere confirmată (cu QR și număr)”, trimis sâmb., 3 oct. 2026, la 10:00.» — or, for one
+   * that never left, «pus în coadă»; a family member's, «Respins la aceeași adresă, …» only when it left.
+   */
   which: string;
   /** Why, in plain words — by the state's kind (§NNN): the address refused it, the club's account was refused, the address works again, it was sent again. */
   why: string;
   /** Why a confirmed row can carry the chip: the address was confirmed before (or after) it, or never. */
   context: string;
-  /** What staff do: phone; send it again, by the press that clears it; wait. The address is the person's to change (§645). */
+  /**
+   * What staff do: phone; send it again, by the press that clears it; for the event's notices, which no
+   * press sends again, phone the person about what they do not know; wait. The address is the person's to
+   * change (§645).
+   */
   todo: string;
   /** The provider's own short words, for the page's small print; null on a list, at the desk, or when it gave none. */
   reason: string | null;
@@ -37,7 +44,14 @@ export type RejectedEmailWords = {
  *
  * Pure: the staff member's language, the facts the list, the page and the desk already read. «Send it
  * again» is the Administrator's verb (`AGENTS.md` §15.11, §289): only a reader who may press it is told to
- * (`mayResend`); everybody else — the Organizer, Tehnic, a volunteer at the desk — is told to ask one.
+ * (`mayResend`); everybody else — the Organizer, Tehnic, a volunteer at the desk — is told to ask one. The
+ * same for the phone call that replaces a press for the event's notices (`callInstead`, §NNN): «Detalii
+ * actualizate» and the cancellation are the Administrator's to follow up, like every email state.
+ *
+ * The sentences never contradict each other (§NNN): one that never left — the club's account refused it
+ * (`not-sent`, whatever `sent` says), or the provider refused it at the send — is «pus în coadă» and «Nu a
+ * plecat», never «trimis» or «Respins la aceeași adresă», and its address's refusal is the provider's,
+ * never the recipient's server's; a complaint arrived, so it left. A table test reads every combination.
  */
 export function rejectedEmailWords(facts: RejectedEmailFacts, locale: string, options: { mayResend?: boolean } = {}): RejectedEmailWords {
   const lang = locale === "en" ? "en" : "ro";
@@ -53,10 +67,13 @@ export function rejectedEmailWords(facts: RejectedEmailFacts, locale: string, op
       : confirmed.getTime() <= facts.at.getTime()
         ? say("registrations.rejected.confirmedBefore", { date: instant(confirmed) })
         : say("registrations.rejected.confirmedAfter", { date: instant(confirmed) });
-  const which = !facts.own
-    ? say("registrations.rejected.whichFamily", { type, instant: instant(facts.at) })
-    : // Refused at the send, the message never left: «pus în coadă», not «trimis».
-      say(facts.sent ? "registrations.rejected.which" : "registrations.rejected.whichQueued", { type, instant: instant(facts.at) });
+  // Whether it left: never when the club's account refused it (its own sentence says so), always for a
+  // complaint (it arrived) — so «trimis» and «Nu a plecat» are never said of one email.
+  const left = facts.kind !== "not-sent" && (facts.sent || facts.status === "COMPLAINED");
+  // Refused at the send, the message never left: «pus în coadă», not «trimis»; and a family member's that
+  // never left was not refused at the address — «Nu a plecat», not «Respins la aceeași adresă».
+  const whichKey = facts.own ? (left ? "which" : "whichQueued") : left ? "whichFamily" : "whichFamilyQueued";
+  const which = say(`registrations.rejected.${whichKey}`, { type, instant: instant(facts.at) });
   const retriedAt = facts.retriedAt ?? null;
   const laterDeliveredAt = facts.laterDeliveredAt ?? null;
   // Each kind has its own sentence, with its date when the reader has it and without it otherwise —
@@ -64,9 +81,14 @@ export function rejectedEmailWords(facts: RejectedEmailFacts, locale: string, op
   // The press named is the one that clears it (§NNN, `pressThatClears`): «Retrimite QR» for anything the
   // confirmation carries, «Trimite reminderul» for the reminder — on the family member's registration when
   // the refusal is theirs, never a press on this one that cannot clear it.
+  // «Detalii actualizate» and the cancellation have no press (§NNN): the person is phoned about what they
+  // do not know — the same call whichever registration at the address shows it.
+  const call = callInstead(facts.messageType);
   const press = facts.press ?? "resend";
-  const pressed = say(options.mayResend ? `registrations.rejected.todoPress.${press}` : `registrations.rejected.todoAskAdmin.${press}`);
-  const resend = facts.own ? pressed : say("registrations.rejected.todoFamily", { todo: pressed });
+  const pressed = call
+    ? say(options.mayResend ? `registrations.rejected.todoCall.${call}` : `registrations.rejected.todoAskAdminCall.${call}`)
+    : say(options.mayResend ? `registrations.rejected.todoPress.${press}` : `registrations.rejected.todoAskAdmin.${press}`);
+  const resend = facts.own || call ? pressed : say("registrations.rejected.todoFamily", { todo: pressed });
   const [why, todo] = (() => {
     switch (facts.kind) {
       case "not-sent":
@@ -90,7 +112,8 @@ export function rejectedEmailWords(facts: RejectedEmailFacts, locale: string, op
           say("registrations.rejected.todoWait"),
         ];
       default:
-        return [say(`registrations.rejected.why.${facts.status}`), say("registrations.rejected.todo")];
+        // Refused at the send, the address's refusal is the provider's: the recipient's server never saw it.
+        return [say(left ? `registrations.rejected.why.${facts.status}` : "registrations.rejected.why.BOUNCEDQueued"), say("registrations.rejected.todo")];
     }
   })();
   const detail = facts.detail ?? null;

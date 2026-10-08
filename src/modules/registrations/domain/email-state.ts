@@ -1,6 +1,7 @@
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { registrationStatus, type RegistrationStatus } from "@/db/schema/registrations";
 import { typesCoveredBy } from "@/modules/notifications/domain/content-cover";
+import { AUDIENCE_STATUSES } from "@/modules/notifications/domain/organizer-message";
 import { isRejectionCause, rejectionCause, type RejectionCause } from "@/modules/notifications/domain/rejection-cause";
 import { deriveAllowedResendMessageType } from "./resend";
 
@@ -24,9 +25,16 @@ import { deriveAllowedResendMessageType } from "./resend";
  *
  * `not-sent`, `missing` and `retried` are open only while the registration the refused message was for
  * **still needs it** (`stillNeededMessageTypes`): what the page can send again for its status now, and
- * what that carries. A verification refused before the address was confirmed, a declaration link after
- * the signing, a waiting-list email after the list, a notice that informed and asked nothing: none of
- * them is anybody's to act on, and they stay in the registration's history alone.
+ * what that carries; and while the event is ahead, «Detalii actualizate» — or, on a cancelled event,
+ * that it is cancelled — which no press sends again and somebody must phone about (`callInstead`). A
+ * verification refused before the address was confirmed, a declaration link after the signing, a
+ * waiting-list email after the list, a notice that informed and asked nothing: none of them is
+ * anybody's to act on, and they stay in the registration's history alone.
+ *
+ * **Once the event has ended** (`ends_at`, else the end of its start day in its own time zone) nothing of
+ * its registrations asks anybody to act, `unreachable` included: no state at all, so no chip, no filter,
+ * no export «Yes», nothing in «Ce îi spui», nothing at the desk — the registration's history keeps every
+ * row. Until then nothing changes, race day included: the desk needs its chip at check-in.
  *
  * A family member's refusal at the same event (one address, §543) is read by the same rule, against its
  * own registration's status, so one refusal has one state on every registration it shows on.
@@ -51,27 +59,72 @@ export function needsEmailAction(state: { kind: EmailStateKind } | null | undefi
 }
 
 /**
- * Where the event stands for the press that would send a message again: «Trimite reminderul» exists only
- * while the event is ahead (`canResendReminder`, §81), and a cancelled event's links lead nowhere, so only
- * where the registration stands is sent again (§331, `resendRegistrationEmail`).
+ * Where the event stands, for what its registrations still need, until it has ended (after that nothing:
+ * the SQL reads no state at all). «Trimite reminderul» exists only while the event is ahead
+ * (`canResendReminder`, §81); «Detalii actualizate» matters only before the start; a cancelled event's
+ * links lead nowhere, so only where the registration stands is sent again (§331, `resendRegistrationEmail`),
+ * and that it is cancelled matters only before its start.
+ *
+ * - `ahead` — on, not started; `started` — on, started and not ended (race day, after the start);
+ * - `cancelled-ahead` — cancelled, its start still ahead; `cancelled-started` — cancelled, its start passed
+ *   and its day not over.
  */
-export const EVENT_MOMENTS = ["ahead", "past", "cancelled"] as const;
+export const EVENT_MOMENTS = ["ahead", "started", "cancelled-ahead", "cancelled-started"] as const;
 export type EventMoment = (typeof EVENT_MOMENTS)[number];
 
 /**
- * The messages a registration in this status still needs (§NNN): the one the page sends again for it
- * (`deriveAllowedResendMessageType` — «Retrimite QR» on a confirmed registration) and what that carries
- * (`typesCoveredBy`: the confirmation carries the race number's QR and the signed declaration), and on a
- * confirmed registration of an event still ahead the reminder (`«Trimite reminderul»`) and what it
- * carries. A refusal of any other type has nothing left to send: no press could clear it, so it asks
- * nobody to act. The SQL (`registrations/email-state.ts`) reads the same list, built from this function.
+ * The messages no press sends again and a phone call replaces (§NNN): «Detalii actualizate» (a moved time
+ * or place, a changed programme) and «{event} a fost anulat». Each is still needed by a registration that
+ * was told it (`EVENT_NOTICE_STATUSES`, §331) while it matters — the update notice while the event is on
+ * and ahead, the cancellation while the event is cancelled and its start ahead — and not answered: a later
+ * message that carries it (`domain/content-cover.ts`: the confirmation, the reminder, the declaration
+ * request, a later update notice) answers it like any other.
+ */
+const CALL_INSTEAD = {
+  EVENT_UPDATE_NOTICE: "update",
+  EVENT_CANCELLED: "cancelled",
+} as const satisfies Partial<Record<EmailMessageType, string>>;
+
+export type EmailCall = (typeof CALL_INSTEAD)[keyof typeof CALL_INSTEAD];
+
+/** The phone call that replaces a press for this refused message: what the person does not know; null for every other type. */
+export function callInstead(messageType: string): EmailCall | null {
+  return (CALL_INSTEAD as Partial<Record<string, EmailCall>>)[messageType] ?? null;
+}
+
+/**
+ * The statuses an event's notices go to (§331): the same four `EVENT_NOTICE_STATUSES`
+ * (`notifications/event-notices.ts`) names and «Trimite un mesaj participanților» calls «toți cei activi»
+ * — the two are held equal by a test. Read from the pure one here, so no client of this module imports the
+ * outbox.
+ */
+const TOLD_OF_THE_EVENT: readonly RegistrationStatus[] = AUDIENCE_STATUSES.ALL_ACTIVE;
+
+/**
+ * The messages a registration in this status still needs (§NNN), at this moment of its event:
+ *
+ * - the one the page sends again for it (`deriveAllowedResendMessageType` — «Retrimite QR» on a confirmed
+ *   registration) and what that carries (`typesCoveredBy`: the confirmation carries the race number's QR
+ *   and the signed declaration) — on a cancelled event only where the registration stands (§331);
+ * - on a confirmed registration of an event still ahead, the reminder (`«Trimite reminderul»`) and what it
+ *   carries;
+ * - on a registration the event's notices go to, «Detalii actualizate» while the event is on and ahead, and
+ *   the cancellation while it is cancelled and its start ahead (`callInstead`) — by their own rule, never
+ *   because a press carries them.
+ *
+ * A refusal of any other type has nothing left to send and nobody to phone about: it asks nobody to act.
+ * The SQL (`registrations/email-state.ts`) reads the same list, built from this function.
  */
 export function stillNeededMessageTypes(status: RegistrationStatus, moment: EventMoment): EmailMessageType[] {
+  const cancelled = moment === "cancelled-ahead" || moment === "cancelled-started";
+  const ahead = moment === "ahead" || moment === "cancelled-ahead";
+  const needed = new Set<EmailMessageType>();
   const resendable = deriveAllowedResendMessageType(status);
-  if (!resendable) return [];
-  if (moment === "cancelled" && resendable !== "REGISTRATION_STATE_NOTICE") return [];
-  const needed = new Set(typesCoveredBy(resendable));
-  if (moment === "ahead" && status === "CONFIRMED") for (const type of typesCoveredBy("EVENT_REMINDER")) needed.add(type);
+  if (resendable && (!cancelled || resendable === "REGISTRATION_STATE_NOTICE")) for (const type of typesCoveredBy(resendable)) needed.add(type);
+  if (ahead && !cancelled && status === "CONFIRMED") for (const type of typesCoveredBy("EVENT_REMINDER")) needed.add(type);
+  // The event's notices by their own rule: a press that carries one (the confirmation carries the details) is not why it is needed.
+  for (const type of Object.keys(CALL_INSTEAD) as EmailMessageType[]) needed.delete(type);
+  if (ahead && TOLD_OF_THE_EVENT.includes(status)) needed.add(cancelled ? "EVENT_CANCELLED" : "EVENT_UPDATE_NOTICE");
   return [...needed];
 }
 
@@ -84,12 +137,13 @@ export const STILL_NEEDED_KEYS: readonly string[] = EVENT_MOMENTS.flatMap((momen
  * The press that clears a refusal (§NNN), on the registration the refused message was for: «Retrimite QR»
  * (the confirmation, which carries the race number and the signed declaration too), «Trimite reminderul»,
  * or the page's resend for any other status — never a press that sends something else. Null when no
- * press would.
+ * press would, and for the event's notices (`callInstead`): a confirmation sent again does carry the
+ * details, but it never says they changed — the person is phoned.
  */
 export type EmailPress = "confirmation" | "reminder" | "resend";
 
 export function pressThatClears(messageType: string, status: RegistrationStatus | null): EmailPress | null {
-  if (status === null) return null;
+  if (status === null || callInstead(messageType) !== null) return null;
   const type = messageType as EmailMessageType;
   const resendable = deriveAllowedResendMessageType(status);
   if (resendable && typesCoveredBy(resendable).includes(type)) return resendable === "REGISTRATION_CONFIRMED" ? "confirmation" : "resend";

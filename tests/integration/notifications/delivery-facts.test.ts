@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { emailOutbox, type EmailMessageType } from "@/db/schema/email-outbox";
 import { events, eventTranslations } from "@/db/schema/events";
@@ -37,6 +37,10 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * - what a message carries answers a refusal of what it carries (the confirmation the race number and the
  *   signed declaration), written when it is sent or delivered; a refusal the registration no longer needs
  *   asks nobody to act; a family member's refusal reads the same on every registration it shows on.
+ * - only a message queued no earlier than the refusal answers it: an older confirmation delivered late does
+ *   not carry a race number refused since;
+ * - once the event has ended nothing of its registrations asks anybody to act, race day still does; the
+ *   event's notices ask for a phone call while they matter.
  */
 const T0 = new Date("2026-10-08T08:00:00.000Z");
 const minutes = (n: number) => new Date(T0.getTime() + n * 60_000);
@@ -73,6 +77,13 @@ async function race(startsAt = new Date("2099-11-21T08:00:00.000Z")) {
     { eventId: event.id, locale: "en", slug: `cros-${serial}-en`, title: "Crosul" },
   ]);
   return event;
+}
+
+/** Midnight today in the club's time zone, by the database's clock: a race day that has started and not ended (§NNN). */
+async function startOfTodayInClubTime(): Promise<Date> {
+  const result = await db.execute(sql`select (date_trunc('day', now() at time zone 'Europe/Bucharest') at time zone 'Europe/Bucharest') as "start"`);
+  const [row] = ((Array.isArray(result) ? result : (result as { rows?: unknown[] }).rows) ?? []) as Array<{ start: unknown }>;
+  return row.start instanceof Date ? row.start : new Date(String(row.start));
 }
 
 async function person(email: string) {
@@ -663,6 +674,31 @@ describe("what a message carries answers a refusal of it (BR-REQ-038-01, §NNN)"
     expect((await read(signed.id)).resolvedAt).toEqual(minutes(21));
     expect((await findRegistrationDetailForAdmin(db, reg))?.emailState).toBeNull();
   });
+
+  it("an older confirmation delivered late does not answer a race number refused since — whichever is processed first", async () => {
+    for (const order of ["refusal first", "delivery first"] as const) {
+      await resetTables(db);
+      const r = await race();
+      const p = await person("ana@example.org");
+      const reg = await register(r.id, p, { bibNumber: 17 });
+      // The confirmation left at 0 and the receiving server deferred it for hours; a number set by hand at 10 was refused at 11.
+      const confirmation = await outboxRow({ participantId: p, registrationId: reg, messageType: "REGISTRATION_CONFIRMED", createdAt: minutes(0) });
+      const bib = await outboxRow({ participantId: p, registrationId: reg, messageType: "BIB_ASSIGNED", createdAt: minutes(10) });
+      const steps = [() => event(bib, "failed", minutes(11)), () => event(confirmation, "delivered", minutes(240))];
+      if (order === "delivery first") steps.reverse();
+      for (const step of steps) await step();
+      // The address works — it took the confirmation — but the confirmation carried the number as it stood at 0, not the new one.
+      expect(await read(bib.id), order).toMatchObject({ laterDeliveredAt: minutes(240), resolvedAt: null, retriedAt: null });
+      expect((await findRegistrationDetailForAdmin(db, reg))?.emailState, order).toMatchObject({ kind: "missing", messageType: "BIB_ASSIGNED", press: "confirmation" });
+      expect(await countNeedingEmailActionForAdmin(db, { eventId: r.id }), order).toBe(1);
+      // «Retrimite QR» now: a confirmation queued after the refusal carries the new number, and its delivery ends it.
+      const again = await sendNow({ participantId: p, registrationId: reg, messageType: "REGISTRATION_CONFIRMED", at: minutes(300) });
+      expect((await read(bib.id)).retriedAt, order).toEqual(minutes(300));
+      await event(again, "delivered", minutes(301));
+      expect((await read(bib.id)).resolvedAt, order).toEqual(minutes(301));
+      expect((await findRegistrationDetailForAdmin(db, reg))?.emailState, order).toBeNull();
+    }
+  });
 });
 
 describe("a refusal speaks only while the registration still needs what it refused (BR-REQ-038-01, §NNN)", () => {
@@ -709,18 +745,23 @@ describe("a refusal speaks only while the registration still needs what it refus
     expect(await countNeedingEmailActionForAdmin(db, { eventId: r.id })).toBe(1);
   });
 
-  it("the reminder is owed only while «Trimite reminderul» can send it: the event ahead, never past or cancelled", async () => {
+  it("the reminder is owed only while «Trimite reminderul» can send it: the event ahead, never from its start or cancelled", async () => {
     const ahead = await race();
-    const past = await race(new Date("2026-09-01T08:00:00.000Z"));
-    for (const event_ of [ahead, past]) {
+    const raceDay = await race(await startOfTodayInClubTime());
+    for (const event_ of [ahead, raceDay]) {
       const p = await person(`reminder-${event_.id}@example.org`);
       const reg = await register(event_.id, p);
       await owed(reg, p, "EVENT_REMINDER");
     }
     const [aheadRow] = await listRegistrationsForAdmin(db, { eventId: ahead.id });
     expect(aheadRow.emailState).toMatchObject({ kind: "missing", messageType: "EVENT_REMINDER", press: "reminder" });
-    const [pastRow] = await listRegistrationsForAdmin(db, { eventId: past.id });
-    expect(pastRow.emailState).toBeNull();
+    const [raceDayRow] = await listRegistrationsForAdmin(db, { eventId: raceDay.id });
+    expect(raceDayRow.emailState).toBeNull();
+    // Race day after the start still owes the confirmation: the desk asks for its QR.
+    const runner = await person("race-day@example.org");
+    const runnerReg = await register(raceDay.id, runner);
+    await owed(runnerReg, runner, "REGISTRATION_CONFIRMED");
+    expect((await findRegistrationDetailForAdmin(db, runnerReg))?.emailState).toMatchObject({ kind: "missing", press: "confirmation" });
 
     // A cancelled event's links lead nowhere: the confirmation is not sent again, so its refusal asks nothing.
     const p = await person("cancelled@example.org");
@@ -729,6 +770,127 @@ describe("a refusal speaks only while the registration still needs what it refus
     expect((await findRegistrationDetailForAdmin(db, reg))?.emailState).toMatchObject({ kind: "missing", press: "confirmation" });
     await db.update(events).set({ eventStatus: "CANCELLED" }).where(eq(events.id, ahead.id));
     expect((await findRegistrationDetailForAdmin(db, reg))?.emailState).toBeNull();
+  });
+});
+
+describe("once the event has ended, nothing of its registrations asks anybody to act (BR-REQ-038-01, §NNN)", () => {
+  it("race day keeps the chip, the filter, the count and the desk's chip; the day after, every one is silent and the history keeps the rows", async () => {
+    const raceDay = await race(await startOfTodayInClubTime());
+    // A start thirty hours ago: its day is over, whatever the hour now.
+    const dayAfter = await race(new Date(Date.now() - 30 * 60 * 60_000));
+    const regs: Record<string, string> = {};
+    for (const event_ of [raceDay, dayAfter]) {
+      const p = await person(`ended-${event_.id}@example.org`);
+      const reg = await register(event_.id, p, { bibNumber: 7 });
+      regs[event_.id] = reg;
+      // The address refuses the club's mail: the call list until the end, and not a moment after.
+      await outboxRow({ participantId: p, registrationId: reg, messageType: "REGISTRATION_CONFIRMED", status: "BOUNCED", createdAt: minutes(0), rejectionCause: "no-such-address" });
+    }
+    expect((await listRegistrationsForAdmin(db, { eventId: raceDay.id }))[0].emailState).toMatchObject({ kind: "unreachable" });
+    expect(await listRegistrationsForAdmin(db, { eventId: raceDay.id, emailBounced: true })).toHaveLength(1);
+    expect(await countNeedingEmailActionForAdmin(db, { eventId: raceDay.id })).toBe(1);
+    expect((await listDeskRegistrations(db, { eventId: raceDay.id, query: "", locale: "ro" }))[0].emailState).toMatchObject({ kind: "unreachable" });
+
+    const [after] = await listRegistrationsForAdmin(db, { eventId: dayAfter.id });
+    expect(after.emailState).toBeNull();
+    // The export's «Email bounced» reads the same state.
+    expect(needsEmailAction(after.emailState)).toBe(false);
+    expect(await listRegistrationsForAdmin(db, { eventId: dayAfter.id, emailBounced: true })).toHaveLength(0);
+    expect(await countNeedingEmailActionForAdmin(db, { eventId: dayAfter.id })).toBe(0);
+    expect((await listDeskRegistrations(db, { eventId: dayAfter.id, query: "", locale: "ro" }))[0].emailState).toBeNull();
+    expect((await findRegistrationDetailForAdmin(db, regs[dayAfter.id]))?.emailState).toBeNull();
+    // The registration's history keeps everything.
+    expect((await listOutboxHistory(db, regs[dayAfter.id])).map((row) => [row.messageType, row.status])).toEqual([["REGISTRATION_CONFIRMED", "BOUNCED"]]);
+    // The club's count per race reads the same rule.
+    expect(await countNeedingEmailActionByEvent(db, new Date())).toEqual([{ eventId: raceDay.id, count: 1 }]);
+  });
+
+  it("an event's own end decides when it has one: ended earlier is silent, ending later still speaks", async () => {
+    const now = Date.now();
+    const ended = await race(new Date(now - 3 * 60 * 60_000));
+    await db.update(events).set({ endsAt: new Date(now - 60 * 60_000) }).where(eq(events.id, ended.id));
+    const running = await race(new Date(now - 2 * 60 * 60_000));
+    await db.update(events).set({ endsAt: new Date(now + 2 * 60 * 60_000) }).where(eq(events.id, running.id));
+    for (const event_ of [ended, running]) {
+      const p = await person(`ends-${event_.id}@example.org`);
+      const reg = await register(event_.id, p);
+      await outboxRow({ participantId: p, registrationId: reg, messageType: "REGISTRATION_CONFIRMED", status: "BOUNCED", sentAt: null, createdAt: minutes(0), lastError: "mailgun 401: Forbidden", rejectionCause: "account" });
+    }
+    expect((await listRegistrationsForAdmin(db, { eventId: ended.id }))[0].emailState).toBeNull();
+    expect((await listRegistrationsForAdmin(db, { eventId: running.id }))[0].emailState).toMatchObject({ kind: "not-sent", messageType: "REGISTRATION_CONFIRMED" });
+  });
+});
+
+describe("the event's notices ask for a phone call while they matter (BR-REQ-038-01, §331, §NNN)", () => {
+  const stateOf = async (id: string) => (await findRegistrationDetailForAdmin(db, id))?.emailState ?? null;
+
+  it("«Detalii actualizate» never left: owed while the event is ahead, no press named; the reminder, which carries the details, answers it", async () => {
+    const r = await race();
+    const p = await person("ana@example.org");
+    const reg = await register(r.id, p);
+    const notice = await outboxRow({
+      participantId: p,
+      registrationId: reg,
+      messageType: "EVENT_UPDATE_NOTICE",
+      status: "BOUNCED",
+      sentAt: null,
+      createdAt: minutes(0),
+      lastError: "mailgun 401: Forbidden",
+      rejectionCause: "account",
+    });
+    expect(await stateOf(reg)).toMatchObject({ kind: "not-sent", messageType: "EVENT_UPDATE_NOTICE", press: null });
+    expect(await countNeedingEmailActionForAdmin(db, { eventId: r.id })).toBe(1);
+    await sendNow({ participantId: p, registrationId: reg, messageType: "EVENT_REMINDER", at: minutes(10) });
+    expect(await read(notice.id)).toMatchObject({ retriedAt: minutes(10), resolvedAt: minutes(10) });
+    expect(await stateOf(reg)).toBeNull();
+  });
+
+  it("«Detalii actualizate» owed to an address that works: the declaration request, which carries the details, answers it once delivered; from the start it asks nothing", async () => {
+    const r = await race();
+    const p = await person("ana@example.org");
+    const reg = await register(r.id, p, { status: "PENDING_DECLARATION", confirmedAt: null });
+    const notice = await outboxRow({ participantId: p, registrationId: reg, messageType: "EVENT_UPDATE_NOTICE", createdAt: minutes(0) });
+    await event(notice, "failed", minutes(1));
+    const other = await outboxRow({ participantId: p, registrationId: null, messageType: "PROFILE_MANAGE_LINK", createdAt: minutes(2) });
+    await event(other, "delivered", minutes(3));
+    expect(await stateOf(reg)).toMatchObject({ kind: "missing", messageType: "EVENT_UPDATE_NOTICE", press: null });
+    // Race day, after the start: a moved time or place is no longer anybody's call to make.
+    await db.update(events).set({ startsAt: await startOfTodayInClubTime() }).where(eq(events.id, r.id));
+    expect(await stateOf(reg)).toBeNull();
+    await db.update(events).set({ startsAt: r.startsAt }).where(eq(events.id, r.id));
+    const declaration = await sendNow({ participantId: p, registrationId: reg, messageType: "COMPLETE_DECLARATION", at: minutes(10) });
+    expect(await stateOf(reg)).toMatchObject({ kind: "retried", messageType: "EVENT_UPDATE_NOTICE" });
+    await event(declaration, "delivered", minutes(11));
+    expect((await read(notice.id)).resolvedAt).toEqual(minutes(11));
+    expect(await stateOf(reg)).toBeNull();
+  });
+
+  it("the cancellation never left: owed while the event is cancelled and its start ahead, counted for the club; silent from the start", async () => {
+    const r = await race();
+    await db.update(events).set({ eventStatus: "CANCELLED" }).where(eq(events.id, r.id));
+    const p = await person("ana@example.org");
+    const reg = await register(r.id, p);
+    await outboxRow({
+      participantId: p,
+      registrationId: reg,
+      messageType: "EVENT_CANCELLED",
+      status: "BOUNCED",
+      sentAt: null,
+      createdAt: minutes(0),
+      lastError: "mailgun 401: Forbidden",
+      rejectionCause: "account",
+    });
+    expect(await stateOf(reg)).toMatchObject({ kind: "not-sent", messageType: "EVENT_CANCELLED", press: null });
+    expect(await countNeedingEmailActionByEvent(db, T0)).toEqual([{ eventId: r.id, count: 1 }]);
+    // A registration the cancellation never went to (it waits on its address) is not owed it.
+    const waiting = await person("waiting@example.org");
+    const waitingReg = await register(r.id, waiting, { status: "PENDING_EMAIL_CONFIRMATION", emailConfirmedAt: null, confirmedAt: null });
+    await outboxRow({ participantId: waiting, registrationId: waitingReg, messageType: "EVENT_CANCELLED", status: "BOUNCED", sentAt: null, createdAt: minutes(0), lastError: "mailgun 401: Forbidden", rejectionCause: "account" });
+    expect(await stateOf(waitingReg)).toBeNull();
+    // Its start passed: silent.
+    await db.update(events).set({ startsAt: await startOfTodayInClubTime() }).where(eq(events.id, r.id));
+    expect(await stateOf(reg)).toBeNull();
+    expect(await countNeedingEmailActionForAdmin(db, { eventId: r.id })).toBe(0);
   });
 });
 

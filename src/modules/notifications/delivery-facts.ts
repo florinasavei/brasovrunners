@@ -97,13 +97,16 @@ export async function lockParticipantFacts(handle: Pick<Db, "execute">, particip
   await handle.execute(sql`select pg_advisory_xact_lock(${participantLockKey(participantId)})`);
 }
 
-type DeliveredRow = { id: string; participantId: string; registrationId: string | null; messageType: EmailMessageType };
+type DeliveredRow = { id: string; participantId: string; registrationId: string | null; messageType: EmailMessageType; createdAt: Date };
 
 /**
  * A participant's message was delivered at `deliveredAt`: every earlier refusal of the address says the
  * address works now, and every earlier refusal of a message it carries (`typesCoveredBy`: itself, and for
- * the confirmation the race number's and the signed declaration's) says it is over. A complaint is left
- * as it is; a refusal of the account takes no `later_delivered_at` (it was never about the address).
+ * the confirmation the race number's and the signed declaration's) says it is over — only a refusal of a
+ * message queued no later than this one (§NNN): what a message carries is what stood when it was made, so
+ * an older confirmation delivered late (a deferral that took hours) never answers a race number refused
+ * since, which it does not carry. A complaint is left as it is; a refusal of the account takes no
+ * `later_delivered_at` (it was never about the address).
  */
 export async function settleDelivery(handle: Handle, row: DeliveredRow, deliveredAt: Date): Promise<void> {
   const before = sql`${rejectionInstantSql()} < ${at(deliveredAt)}`;
@@ -130,6 +133,8 @@ export async function settleDelivery(handle: Handle, row: DeliveredRow, delivere
         eq(emailOutbox.status, "BOUNCED"),
         inArray(emailOutbox.messageType, typesCoveredBy(row.messageType)),
         sql`${emailOutbox.registrationId} is not distinct from ${row.registrationId}`,
+        // Queued no later than the delivered message: it carries what stood then, not a refusal made since.
+        sql`${emailOutbox.createdAt} <= ${at(row.createdAt)}`,
         before,
       ),
     );
@@ -139,8 +144,10 @@ export async function settleDelivery(handle: Handle, row: DeliveredRow, delivere
  * A participant's message was refused (its row already says so): read what came after it from the other
  * rows — a delivery to the address, a delivery of a message that carries it (`typesCovering`: itself, or
  * the confirmation for a race number or a signed declaration), such a message sent again — so a refusal
- * processed after the delivery that answers it is answered all the same. A complaint reads only whether
- * such a message left again: no delivery withdraws it.
+ * processed after the delivery that answers it is answered all the same. Only a message queued no earlier
+ * than this one answers it (§NNN), as `settleDelivery` reads it from the other side: an older confirmation
+ * delivered late does not carry a number refused since. A complaint reads only whether such a message left
+ * again: no delivery withdraws it.
  */
 export async function settleRejection(handle: Handle, rowId: string): Promise<void> {
   const [row] = await handle
@@ -171,12 +178,14 @@ export async function settleRejection(handle: Handle, rowId: string): Promise<vo
     sql`${emailOutbox.registrationId} is not distinct from ${row.registrationId}`,
   ) as SQL;
   const deliveredAfter = sql`${emailOutbox.deliveredAt} > ${at(instant)}`;
-  const leftAgain = and(sameMessage, sql`${emailOutbox.createdAt} >= ${at(row.createdAt)}`, isNotNull(emailOutbox.sentAt)) as SQL;
+  // Queued no earlier than the refused message: only such a message carries what it carried.
+  const queuedSince = sql`${emailOutbox.createdAt} >= ${at(row.createdAt)}`;
+  const leftAgain = and(sameMessage, queuedSince, isNotNull(emailOutbox.sentAt)) as SQL;
   const account = row.rejectionCause === "account";
 
   // The address works again: never read for the account's refusal, which was not about it.
   const [address] = account || complaint ? [] : await handle.select({ first: min(emailOutbox.deliveredAt) }).from(emailOutbox).where(and(others, deliveredAfter));
-  const [same] = complaint ? [] : await handle.select({ first: min(emailOutbox.deliveredAt) }).from(emailOutbox).where(and(sameMessage, deliveredAfter));
+  const [same] = complaint ? [] : await handle.select({ first: min(emailOutbox.deliveredAt) }).from(emailOutbox).where(and(sameMessage, queuedSince, deliveredAfter));
   const [again] = await handle
     .select({ sentAt: emailOutbox.sentAt, transport: emailOutbox.transport })
     .from(emailOutbox)
@@ -235,9 +244,19 @@ function answeredBySend(row: SentRow, participantId: string, sentAt: Date): SQL 
  * participant's index: whether such a refusal exists, and whether the participant's lock is free. Only
  * when there is something to mark — or when the lock is held, which means a refusal is being written at
  * this very moment and may be one — does it open its own transaction under the lock
- * (`lockParticipantFacts`), like the webhook's refusal it races: whichever commits first, the other reads
- * it — a refusal settled after this send reads it as sent (`settleRejection`), and this statement, taken
- * after that refusal, sees it refused. Nothing at all for a message that is not a participant's.
+ * (`lockParticipantFacts`), like the webhook's refusal it races: inside it, whichever commits first, the
+ * other reads it — a refusal settled after this send reads it as sent (`settleRejection`), and this
+ * statement, taken after that refusal, sees it refused. Nothing at all for a message that is not a
+ * participant's.
+ *
+ * The probe leaves one window, accepted (§NNN) rather than paid for with a round trip on every send: a
+ * refusal whose transaction commits after the probe's snapshot was taken and before its
+ * `pg_try_advisory_xact_lock` runs — the commit has released the lock by then — is neither seen by the
+ * probe nor waited for; and if that refusal's own `settleRejection` read the outbox before this send's
+ * `sent_at` was committed (it is written just before the probe), it did not see the send either. That
+ * refusal is then not marked sent again: on Mailgun's road until the covering message's delivery ends it
+ * (`settleDelivery`); on Gmail's road, which reports no delivery, never — until the next covering send
+ * marks it.
  *
  * `retried_at` keeps the **latest** such send, and `retried_via` its road (§NNN, a stated departure from
  * the first send the brief named): the state «sent again, delivery not known yet» is about the send whose

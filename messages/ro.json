@@ -694,6 +694,7 @@
         "why": {
           "BOUNCED": "Adresa nu există, căsuța e plină sau serverul destinatarului l-a refuzat.",
           "COMPLAINED": "Mesajul a fost marcat ca spam de destinatar.",
+          "BOUNCEDQueued": "Nu a plecat: furnizorul a refuzat adresa.",
           "account": "Nu a plecat: contul clubului la Mailgun a fost refuzat atunci, nu adresa.",
           "missing": "Adresa primește din nou emailurile clubului ({date}), dar acesta nu a mai fost trimis.",
           "missingUndated": "Adresa primește din nou emailurile clubului, dar acesta nu a mai fost trimis.",
@@ -708,6 +709,7 @@
         "neverConfirmed": "Adresa nu a fost confirmată niciodată.",
         "todo": "Sună persoana; adresa o poate schimba doar ea, printr-o înscriere nouă.",
         "whichFamily": "Respins la aceeași adresă, pentru altă înscriere de la acest eveniment: „{type}”, {instant}.",
+        "whichFamilyQueued": "Nu a plecat, pentru altă înscriere de la aceeași adresă și acest eveniment: „{type}”, pus în coadă {instant}.",
         "todoPress": {
           "confirmation": "Retrimite confirmarea, care poartă și numărul, codul QR și declarația semnată: „Retrimite QR” în listă, „Retrimite emailul” în pagina înscrierii.",
           "reminder": "Retrimite reminderul: „Trimite reminderul” în pagina înscrierii.",
@@ -717,6 +719,14 @@
           "confirmation": "Roagă un administrator să retrimită confirmarea („Retrimite QR”), care poartă și numărul, codul QR și declarația semnată.",
           "reminder": "Roagă un administrator să retrimită reminderul („Trimite reminderul”).",
           "resend": "Roagă un administrator să-l retrimită."
+        },
+        "todoCall": {
+          "update": "Sună persoana: nu știe că s-a schimbat ora sau locul.",
+          "cancelled": "Sună persoana: nu știe că s-a anulat."
+        },
+        "todoAskAdminCall": {
+          "update": "Roagă un administrator să sune persoana: nu știe că s-a schimbat ora sau locul.",
+          "cancelled": "Roagă un administrator să sune persoana: nu știe că s-a anulat."
         },
         "todoFamily": "Se retrimite de pe înscrierea acelei persoane, nu de pe aceasta. {todo}",
         "todoWait": "Nu-l retrimite încă: așteaptă confirmarea livrării.",
@@ -1157,7 +1167,8 @@
             "resend": "Un email al clubului pentru tine nu a ajuns încă la tine; ți-l trimitem din nou.",
             "confirmation": "Confirmarea înscrierii, cu codul QR, nu a ajuns încă la tine; ți-o trimitem din nou.",
             "reminder": "Emailul cu detaliile pentru ziua cursei nu a ajuns încă la tine; ți-l trimitem din nou."
-          }
+          },
+          "changed": "Detaliile evenimentului s-au schimbat, iar emailul nostru despre asta nu a ajuns la tine: ora și locul la zi sunt pe pagina evenimentului."
         }
       },
       "memberBibWantedStaffHelp": "Doar pentru un membru, la un eveniment care oferă numărul membrilor; altfel nu se păstrează.",

@@ -6,11 +6,16 @@ import { formatDay } from "@/i18n/dates";
 import { emailMessageType } from "@/db/schema/email-outbox";
 import { registrationStatus } from "@/db/schema/registrations";
 import { COVER_PAIRS, typesCoveredBy, typesCovering } from "@/modules/notifications/domain/content-cover";
+import { REJECTION_CAUSES } from "@/modules/notifications/domain/rejection-cause";
+import { EVENT_NOTICE_STATUSES } from "@/modules/notifications/event-notices";
 import { deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import {
+  callInstead,
   deskEmailStateOf,
+  EMAIL_STATE_KINDS,
   emailStateDetailOf,
   emailStateOf,
+  EVENT_MOMENTS,
   pressThatClears,
   STILL_NEEDED_KEYS,
   stillNeededMessageTypes,
@@ -71,6 +76,24 @@ describe("rejectedEmailWords", () => {
 
     it(`says a family member's refusal at the same address as such (${locale})`, () => {
       expect(rejectedEmailWords(facts({ own: false }), locale).which).toBe(fill(words.whichFamily, { type, instant: inline(locale, REJECTED_AT) }));
+    });
+
+    it(`says a family member's email that never left as never left — never as refused at the address (${locale})`, () => {
+      // A §543 family, and the club's account refused the sibling's race number on 1–2 October.
+      const atTheAddress = fill(words.whichFamily, { type, instant: inline(locale, REJECTED_AT) });
+      for (const mayResend of [true, false]) {
+        const said = rejectedEmailWords(facts({ own: false, sent: false, kind: "not-sent", cause: "account" }), locale, { mayResend });
+        expect(said.which).toBe(fill(words.whichFamilyQueued, { type, instant: inline(locale, REJECTED_AT) }));
+        expect(said.which).not.toBe(atTheAddress);
+        expect(said.why).toBe(words.why.account);
+        // «Respins la aceeași adresă» is said nowhere: the account was refused, not the address.
+        const refusedAtTheAddress = words.whichFamily.split(",")[0];
+        for (const sentence of rejectedEmailSentences(said)) expect(sentence).not.toContain(refusedAtTheAddress);
+        // The address's own refusal at the send, by the provider: never left either, never the recipient's server.
+        const invalid = rejectedEmailWords(facts({ own: false, sent: false, kind: "unreachable", cause: "no-such-address" }), locale, { mayResend });
+        expect(invalid.which).toBe(fill(words.whichFamilyQueued, { type, instant: inline(locale, REJECTED_AT) }));
+        expect(invalid.why).toBe(words.why.BOUNCEDQueued);
+      }
     });
 
     it(`says a bounce and a complaint in plain words, the provider's words apart (${locale})`, () => {
@@ -186,6 +209,29 @@ describe("rejectedEmailWords", () => {
       expect(rejectedEmailSentences(rejectedEmailWords(facts(), locale))).toHaveLength(4);
     });
 
+    it(`asks for a phone call, never a press, for «Detalii actualizate» and the cancellation (${locale})`, () => {
+      for (const [messageType, call] of [
+        ["EVENT_UPDATE_NOTICE", "update"],
+        ["EVENT_CANCELLED", "cancelled"],
+      ] as const) {
+        expect(callInstead(messageType)).toBe(call);
+        for (const kind of ["not-sent", "missing"] as const) {
+          for (const own of [true, false]) {
+            const notice = facts({ kind, messageType, press: null, own, sent: kind !== "not-sent", cause: kind === "not-sent" ? "account" : "mailbox-full" });
+            // The Administrator phones; every other reader — the Organizer, the desk — asks one to; the same call on a family member's.
+            expect(rejectedEmailWords(notice, locale, { mayResend: true }).todo).toBe(words.todoCall[call]);
+            expect(rejectedEmailWords(notice, locale).todo).toBe(words.todoAskAdminCall[call]);
+            for (const sentence of rejectedEmailSentences(rejectedEmailWords(notice, locale, { mayResend: true }))) {
+              for (const press of Object.values(words.todoPress)) expect(sentence).not.toBe(press);
+            }
+          }
+        }
+        // An address that refuses the club's mail is phoned about the address, as for any message.
+        expect(rejectedEmailWords(facts({ messageType, press: null }), locale, { mayResend: true }).todo).toBe(words.todo);
+      }
+      expect(callInstead("REGISTRATION_CONFIRMED")).toBeNull();
+    });
+
     it(`names a message type the catalogue does not know generically (${locale})`, () => {
       const said = rejectedEmailWords(facts({ messageType: "SOMETHING_NEW" }), locale);
       expect(said.which).toContain(words.typeUnknown);
@@ -194,15 +240,74 @@ describe("rejectedEmailWords", () => {
 
     it(`keeps every sentence under 200 characters (§511) (${locale})`, () => {
       const all = [
-        words.which, words.whichQueued, words.whichFamily, words.typeUnknown, words.why.BOUNCED, words.why.COMPLAINED, words.why.account, words.why.missing,
+        words.which, words.whichQueued, words.whichFamily, words.whichFamilyQueued, words.typeUnknown, words.why.BOUNCED, words.why.BOUNCEDQueued,
+        words.why.COMPLAINED, words.why.account, words.why.missing,
         words.why.retried, words.why.retriedGmail, words.why.missingUndated, words.why.retriedUndated, words.why.retriedGmailUndated, words.reason,
         words.confirmedBefore, words.confirmedAfter, words.neverConfirmed, words.todo, words.todoWait, words.todoAsk, words.todoFamily,
-        ...Object.values(words.todoPress), ...Object.values(words.todoAskAdmin),
+        ...Object.values(words.todoPress), ...Object.values(words.todoAskAdmin), ...Object.values(words.todoCall), ...Object.values(words.todoAskAdminCall),
         catalogues[locale].Admin.registrations.tell.rejected.BOUNCED, catalogues[locale].Admin.registrations.tell.rejected.COMPLAINED,
+        catalogues[locale].Admin.registrations.tell.rejected.changed,
         ...Object.values(catalogues[locale].Admin.registrations.tell.rejected.owed),
         catalogues[locale].Admin.registrations.bouncedOnly, catalogues[locale].Admin.registrations.bouncedOnlyHelp,
       ];
       for (const text of all) expect(text.length, text).toBeLessThan(200);
+    });
+  }
+});
+
+describe("the sentences never contradict each other, in every combination (§NNN)", () => {
+  for (const locale of ["ro", "en"] as const) {
+    it(`own × sent × kind × status × cause × reader: «trimis» never beside «Nu a plecat», the address never beside «nu adresa» (${locale})`, () => {
+      const words = catalogues[locale].Admin.registrations.rejected;
+      const fill = (text: string, values: Record<string, string>) => Object.entries(values).reduce((acc, [k, v]) => acc.replace(`{${k}}`, v), text);
+      const values = { type: catalogues[locale].Admin.emails.types.BIB_ASSIGNED, instant: inline(locale, REJECTED_AT) };
+      // What each «which» claims: it left (and, for a family member's, was refused at the address), or it never left.
+      const left = [fill(words.which, values), fill(words.whichFamily, values)];
+      const neverLeft = [fill(words.whichQueued, values), fill(words.whichFamilyQueued, values)];
+      // What each «why» claims: the recipient's side refused it (so it left), or it never left.
+      const reachedTheRecipient = [words.why.BOUNCED, words.why.COMPLAINED];
+      const neverLeftWhy = [words.why.account, words.why.BOUNCEDQueued];
+      let combinations = 0;
+      for (const own of [true, false]) {
+        for (const sent of [true, false]) {
+          for (const kind of EMAIL_STATE_KINDS) {
+            for (const status of ["BOUNCED", "COMPLAINED"] as const) {
+              for (const cause of REJECTION_CAUSES) {
+                for (const mayResend of [true, false]) {
+                  combinations += 1;
+                  const label = JSON.stringify({ own, sent, kind, status, cause, mayResend });
+                  const said = rejectedEmailWords(
+                    facts({
+                      own,
+                      sent,
+                      kind,
+                      status,
+                      cause,
+                      laterDeliveredAt: kind === "missing" ? LATER : null,
+                      retriedAt: kind === "retried" ? LATER : null,
+                      retriedVia: kind === "retried" ? "mailgun" : null,
+                    }),
+                    locale,
+                    { mayResend },
+                  );
+                  expect([...left, ...neverLeft], label).toContain(said.which);
+                  if (left.includes(said.which)) expect(neverLeftWhy, label).not.toContain(said.why);
+                  if (neverLeft.includes(said.which)) expect(reachedTheRecipient, label).not.toContain(said.why);
+                  // The club's account refused it: it never left, at this registration's or a family member's.
+                  if (kind === "not-sent") expect(neverLeft, label).toContain(said.which);
+                  // A complaint arrived: it left.
+                  if (status === "COMPLAINED" && kind !== "not-sent") expect(left, label).toContain(said.which);
+                  // Own and family read the same «why»: only «which» and the press's place differ.
+                  expect(said.why, label).toBe(rejectedEmailWords(facts({ own: !own, sent, kind, status, cause, laterDeliveredAt: kind === "missing" ? LATER : null, retriedAt: kind === "retried" ? LATER : null, retriedVia: kind === "retried" ? "mailgun" : null }), locale, { mayResend }).why);
+                  // No key leaks into a sentence: every one is a catalogue sentence.
+                  for (const sentence of rejectedEmailSentences(said)) expect(sentence, label).not.toMatch(/registrations\.rejected|Admin\./);
+                }
+              }
+            }
+          }
+        }
+      }
+      expect(combinations).toBe(2 * 2 * EMAIL_STATE_KINDS.length * 2 * REJECTION_CAUSES.length * 2);
     });
   }
 });
@@ -239,6 +344,26 @@ describe("«Ce îi spui» on a row whose email did not arrive (§663, §NNN)", (
       }
       // Sent again: nothing to say until its delivery is known (the next change draws it).
       expect(whatToTell(locale, { ...base, emailState: { kind: "retried", status: "BOUNCED" } }, now)).toEqual(without);
+    });
+
+    it(`says «Detalii actualizate» that did not reach them as what changed, promising nothing, and keeps «look in spam» (${locale})`, () => {
+      const tell = catalogues[locale].Admin.registrations.tell.rejected;
+      const without = whatToTell(locale, base, now);
+      const spamHint = catalogues[locale].Registrations.spamHint.body;
+      const pending: TellFacts = { ...base, status: "PENDING_DECLARATION", bibNumber: null, holdExpiresAt: new Date("2026-10-10T08:00:00.000Z") };
+      for (const kind of ["not-sent", "missing"] as const) {
+        const update = { kind, status: "BOUNCED", own: true, press: null, messageType: "EVENT_UPDATE_NOTICE" } as const;
+        const said = whatToTell(locale, { ...base, emailState: update }, now);
+        expect(said).toEqual([...without, tell.changed]);
+        for (const owed of Object.values(tell.owed)) expect(said).not.toContain(owed);
+        // A family member's notice is theirs: nothing to this person.
+        expect(whatToTell(locale, { ...base, emailState: { ...update, own: false } }, now)).toEqual(without);
+        // Not the email a pending registration waits on: its link may still be in spam.
+        expect(whatToTell(locale, { ...pending, emailState: update }, now)).toContain(spamHint);
+        // A cancellation they did not get is the cancelled event's own line, and only that.
+        const cancelled: TellFacts = { ...base, eventCancelled: true };
+        expect(whatToTell(locale, { ...cancelled, emailState: { ...update, messageType: "EVENT_CANCELLED" } }, now)).toEqual(whatToTell(locale, cancelled, now));
+      }
     });
 
     it(`drops «look in spam» for an email refused and not sent again, keeps it for a complaint and a send again (${locale})`, () => {
@@ -333,15 +458,26 @@ describe("the email state's object, as the subquery hands it back", () => {
 });
 
 describe("what a message carries, and what a registration still needs (§NNN)", () => {
-  it("the confirmation carries the race number and the signed declaration; the reminder the race number; every other type only itself", () => {
-    expect(typesCoveredBy("REGISTRATION_CONFIRMED").sort()).toEqual(["BIB_ASSIGNED", "DECLARATION_SIGNED", "REGISTRATION_CONFIRMED"]);
-    expect(typesCoveredBy("EVENT_REMINDER").sort()).toEqual(["BIB_ASSIGNED", "EVENT_REMINDER"]);
-    for (const type of ["VERIFY_REGISTRATION_EMAIL", "COMPLETE_DECLARATION", "WAITLIST_SPOT_OFFER", "ORGANIZER_MESSAGE", "BIB_ASSIGNED"] as const) {
+  it("the confirmation carries the race number, the signed declaration and the event's details; the reminder the race number and the details; the declaration request the details; every other type only itself", () => {
+    expect(typesCoveredBy("REGISTRATION_CONFIRMED").sort()).toEqual(["BIB_ASSIGNED", "DECLARATION_SIGNED", "EVENT_UPDATE_NOTICE", "REGISTRATION_CONFIRMED"]);
+    expect(typesCoveredBy("EVENT_REMINDER").sort()).toEqual(["BIB_ASSIGNED", "EVENT_REMINDER", "EVENT_UPDATE_NOTICE"]);
+    expect(typesCoveredBy("COMPLETE_DECLARATION").sort()).toEqual(["COMPLETE_DECLARATION", "EVENT_UPDATE_NOTICE"]);
+    for (const type of ["VERIFY_REGISTRATION_EMAIL", "WAITLIST_SPOT_OFFER", "ORGANIZER_MESSAGE", "BIB_ASSIGNED", "EVENT_UPDATE_NOTICE", "EVENT_CANCELLED"] as const) {
       expect(typesCoveredBy(type)).toEqual([type]);
     }
     expect(typesCovering("BIB_ASSIGNED").sort()).toEqual(["BIB_ASSIGNED", "EVENT_REMINDER", "REGISTRATION_CONFIRMED"]);
     expect(typesCovering("DECLARATION_SIGNED").sort()).toEqual(["DECLARATION_SIGNED", "REGISTRATION_CONFIRMED"]);
+    // A later update notice covers an earlier one (a type covers itself); the race number's email and the organizers' message carry one line, not the details.
+    expect(typesCovering("EVENT_UPDATE_NOTICE").sort()).toEqual(["COMPLETE_DECLARATION", "EVENT_REMINDER", "EVENT_UPDATE_NOTICE", "REGISTRATION_CONFIRMED"]);
+    expect(typesCovering("EVENT_CANCELLED")).toEqual(["EVENT_CANCELLED"]);
     expect(typesCovering("ORGANIZER_MESSAGE")).toEqual(["ORGANIZER_MESSAGE"]);
+  });
+
+  it("the messages said to carry the event's details are the ones the templates draw the details block on", () => {
+    const templates = readFileSync("src/modules/notifications/templates.ts", "utf8");
+    const block = /const EVENT_FACTS_MESSAGES[^=]*= new Set\(\[([^\]]*)\]/.exec(templates)?.[1] ?? "";
+    const withTheBlock = [...block.matchAll(/"([A-Z_]+)"/g)].map((match) => match[1]);
+    for (const covering of typesCovering("EVENT_UPDATE_NOTICE").filter((type) => type !== "EVENT_UPDATE_NOTICE")) expect(withTheBlock).toContain(covering);
   });
 
   it("migration 0131's backfill reads the same pairs", () => {
@@ -356,15 +492,33 @@ describe("what a message carries, and what a registration still needs (§NNN)", 
   });
 
   it("a registration needs what its page can send again and what that carries — and on a confirmed one, the reminder while the event is ahead", () => {
-    expect(stillNeededMessageTypes("CONFIRMED", "ahead").sort()).toEqual(["BIB_ASSIGNED", "DECLARATION_SIGNED", "EVENT_REMINDER", "REGISTRATION_CONFIRMED"]);
-    expect(stillNeededMessageTypes("CONFIRMED", "past").sort()).toEqual(["BIB_ASSIGNED", "DECLARATION_SIGNED", "REGISTRATION_CONFIRMED"]);
+    expect(stillNeededMessageTypes("CONFIRMED", "ahead").sort()).toEqual(["BIB_ASSIGNED", "DECLARATION_SIGNED", "EVENT_REMINDER", "EVENT_UPDATE_NOTICE", "REGISTRATION_CONFIRMED"]);
+    // Race day, after the start: what the desk asks for, never the reminder nor the update notice.
+    expect(stillNeededMessageTypes("CONFIRMED", "started").sort()).toEqual(["BIB_ASSIGNED", "DECLARATION_SIGNED", "REGISTRATION_CONFIRMED"]);
     expect(stillNeededMessageTypes("PENDING_EMAIL_CONFIRMATION", "ahead")).toEqual(["VERIFY_REGISTRATION_EMAIL"]);
-    expect(stillNeededMessageTypes("PENDING_DECLARATION", "ahead")).toEqual(["COMPLETE_DECLARATION"]);
-    expect(stillNeededMessageTypes("WAITLIST_OFFERED", "ahead")).toEqual(["WAITLIST_SPOT_OFFER"]);
-    expect(stillNeededMessageTypes("WAITLISTED", "ahead")).toEqual(["WAITLIST_JOINED"]);
-    // A cancelled event's links lead nowhere: only where the registration stands is sent again (§331).
-    expect(stillNeededMessageTypes("CONFIRMED", "cancelled")).toEqual([]);
-    expect(stillNeededMessageTypes("CANCELLED", "cancelled")).toEqual(["REGISTRATION_STATE_NOTICE"]);
+    expect(stillNeededMessageTypes("PENDING_DECLARATION", "ahead").sort()).toEqual(["COMPLETE_DECLARATION", "EVENT_UPDATE_NOTICE"]);
+    expect(stillNeededMessageTypes("PENDING_DECLARATION", "started")).toEqual(["COMPLETE_DECLARATION"]);
+    expect(stillNeededMessageTypes("WAITLIST_OFFERED", "ahead").sort()).toEqual(["EVENT_UPDATE_NOTICE", "WAITLIST_SPOT_OFFER"]);
+    expect(stillNeededMessageTypes("WAITLISTED", "ahead").sort()).toEqual(["EVENT_UPDATE_NOTICE", "WAITLIST_JOINED"]);
+    // A cancelled event's links lead nowhere: only where the registration stands is sent again (§331) —
+    // and, before its start, that it is cancelled, to the people told of it.
+    expect(stillNeededMessageTypes("CONFIRMED", "cancelled-ahead")).toEqual(["EVENT_CANCELLED"]);
+    expect(stillNeededMessageTypes("CONFIRMED", "cancelled-started")).toEqual([]);
+    expect(stillNeededMessageTypes("CANCELLED", "cancelled-ahead")).toEqual(["REGISTRATION_STATE_NOTICE"]);
+    expect(stillNeededMessageTypes("CANCELLED", "cancelled-started")).toEqual(["REGISTRATION_STATE_NOTICE"]);
+    expect(stillNeededMessageTypes("PENDING_EMAIL_CONFIRMATION", "cancelled-ahead")).toEqual([]);
+    // The event's notices, by their own rule: to the people they go to (§331), while they matter.
+    for (const status of registrationStatus.enumValues) {
+      const told = (EVENT_NOTICE_STATUSES as readonly string[]).includes(status);
+      expect(stillNeededMessageTypes(status, "ahead").includes("EVENT_UPDATE_NOTICE"), status).toBe(told);
+      expect(stillNeededMessageTypes(status, "cancelled-ahead").includes("EVENT_CANCELLED"), status).toBe(told);
+      expect(stillNeededMessageTypes(status, "ahead"), status).not.toContain("EVENT_CANCELLED");
+      expect(stillNeededMessageTypes(status, "cancelled-ahead"), status).not.toContain("EVENT_UPDATE_NOTICE");
+      for (const moment of ["started", "cancelled-started"] as const) {
+        expect(stillNeededMessageTypes(status, moment), `${moment} ${status}`).not.toContain("EVENT_UPDATE_NOTICE");
+        expect(stillNeededMessageTypes(status, moment), `${moment} ${status}`).not.toContain("EVENT_CANCELLED");
+      }
+    }
     // What a registration has moved past is nobody's to send again.
     expect(stillNeededMessageTypes("CONFIRMED", "ahead")).not.toContain("VERIFY_REGISTRATION_EMAIL");
     expect(stillNeededMessageTypes("CONFIRMED", "ahead")).not.toContain("COMPLETE_DECLARATION");
@@ -372,9 +526,10 @@ describe("what a message carries, and what a registration still needs (§NNN)", 
     expect(stillNeededMessageTypes("CONFIRMED", "ahead")).not.toContain("ORGANIZER_MESSAGE");
     // The SQL's list is this function's, every status and every moment.
     expect(STILL_NEEDED_KEYS).toContain("ahead:CONFIRMED:BIB_ASSIGNED");
-    expect(STILL_NEEDED_KEYS).not.toContain("past:CONFIRMED:EVENT_REMINDER");
+    expect(STILL_NEEDED_KEYS).toContain("cancelled-ahead:CONFIRMED:EVENT_CANCELLED");
+    expect(STILL_NEEDED_KEYS).not.toContain("started:CONFIRMED:EVENT_REMINDER");
     expect(STILL_NEEDED_KEYS).toHaveLength(
-      (["ahead", "past", "cancelled"] as const).reduce((sum, moment) => sum + registrationStatus.enumValues.reduce((n, status) => n + stillNeededMessageTypes(status, moment).length, 0), 0),
+      EVENT_MOMENTS.reduce((sum, moment) => sum + registrationStatus.enumValues.reduce((n, status) => n + stillNeededMessageTypes(status, moment).length, 0), 0),
     );
   });
 
@@ -386,12 +541,23 @@ describe("what a message carries, and what a registration still needs (§NNN)", 
     expect(pressThatClears("VERIFY_REGISTRATION_EMAIL", "PENDING_EMAIL_CONFIRMATION")).toBe("resend");
     expect(pressThatClears("VERIFY_REGISTRATION_EMAIL", "CONFIRMED")).toBeNull();
     expect(pressThatClears("BIB_ASSIGNED", null)).toBeNull();
-    // Every press named is a press the page has: the state's own resend, or the reminder.
+    // The event's notices have no press: the confirmation carries the details, but never says they changed.
     for (const status of registrationStatus.enumValues) {
-      for (const type of stillNeededMessageTypes(status, "ahead")) {
-        const press = pressThatClears(type, status);
-        expect(press, `${status} ${type}`).not.toBeNull();
-        if (press !== "reminder") expect(typesCoveredBy(deriveAllowedResendMessageType(status)!)).toContain(type);
+      expect(pressThatClears("EVENT_UPDATE_NOTICE", status), status).toBeNull();
+      expect(pressThatClears("EVENT_CANCELLED", status), status).toBeNull();
+    }
+    // Every press named is a press the page has: the state's own resend, or the reminder; every other still-needed message is a call.
+    for (const moment of EVENT_MOMENTS) {
+      for (const status of registrationStatus.enumValues) {
+        for (const type of stillNeededMessageTypes(status, moment)) {
+          const press = pressThatClears(type, status);
+          if (callInstead(type) !== null) {
+            expect(press, `${moment} ${status} ${type}`).toBeNull();
+            continue;
+          }
+          expect(press, `${moment} ${status} ${type}`).not.toBeNull();
+          if (press !== "reminder") expect(typesCoveredBy(deriveAllowedResendMessageType(status)!)).toContain(type);
+        }
       }
     }
   });

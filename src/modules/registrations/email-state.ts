@@ -1,4 +1,4 @@
-import { and, eq, gt, notInArray, type SQL, type SQLWrapper, sql } from "drizzle-orm";
+import { and, eq, notInArray, type SQL, type SQLWrapper, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
@@ -31,10 +31,12 @@ import {
  * same openness, the family's against its own registration, so one refusal has one state wherever it
  * shows.
  *
- * **Open.** `unreachable` always (the address refuses the club's mail: the call list, whatever the
- * message was); `not-sent`, `missing` and `retried` only while the registration the message was for still
- * needs it (`stillNeededMessageTypes`). A refusal answered — a message that carries it delivered later, or
- * for the club's account left later (`resolved_at`) — is closed.
+ * **Open.** Nothing once the event has ended (`ends_at`, else the end of its start day in its own time
+ * zone): after it nobody has anything to do about its registrations' email, and the history keeps every
+ * row. Until then — race day included — `unreachable` always (the address refuses the club's mail: the
+ * call list, whatever the message was); `not-sent`, `missing` and `retried` only while the registration
+ * the message was for still needs it (`stillNeededMessageTypes`). A refusal answered — a message that
+ * carries it delivered later, or for the club's account left later (`resolved_at`) — is closed.
  *
  * **Which one.** The address first (`unreachable`: nothing will arrive), then what never left
  * (`not-sent`), then what is owed to an address that works (`missing`), then what waits (`retried`); within
@@ -59,13 +61,36 @@ function kindSql(): SQL<EmailStateKind | null> {
   end)`;
 }
 
+/** The instant the reads compare with: the database's `now()`, or the caller's (`countNeedingEmailActionByEvent`). */
+const clockSql = (now?: Date): SQL => (now ? sql`${now.toISOString()}::timestamptz` : sql`now()`);
+
+/**
+ * When an event has ended (§NNN): its `ends_at`, else the end of its start day in its own time zone —
+ * the next midnight there, so a summer-time change that day is the zone's own. `event` is the table or
+ * an alias of it.
+ */
+function eventEndSql(event: SQLWrapper): SQL<Date> {
+  return sql<Date>`coalesce(${event}."ends_at", (date_trunc('day', ${event}."starts_at" at time zone ${event}."timezone") + interval '1 day') at time zone ${event}."timezone")`;
+}
+
+/** Whether the event has not ended yet (`eventEndSql`), race day included. */
+function eventNotEndedSql(event: SQLWrapper, now?: Date): SQL<boolean> {
+  return sql<boolean>`${clockSql(now)} < ${eventEndSql(event)}`;
+}
+
 /**
  * Whether the registration the refused message was for still needs it (§NNN): its status now, where its
- * event stands, and the message's type, against the list `stillNeededMessageTypes` builds.
+ * event stands (`EVENT_MOMENTS`; an ended event has no state at all, `openRefusalsWhere`), and the message's
+ * type, against the list `stillNeededMessageTypes` builds.
  */
-function stillNeededSql(): SQL<boolean> {
+function stillNeededSql(now?: Date): SQL<boolean> {
   const keys = sql.join(STILL_NEEDED_KEYS.map((key) => sql`${key}`), sql`, `);
-  const moment = sql`(case when ${OWNER_EVENT}."event_status" = 'CANCELLED' then 'cancelled' when ${OWNER_EVENT}."starts_at" > now() then 'ahead' else 'past' end)`;
+  const ahead = sql`${OWNER_EVENT}."starts_at" > ${clockSql(now)}`;
+  const moment = sql`(case
+    when ${OWNER_EVENT}."event_status" = 'CANCELLED' then (case when ${ahead} then 'cancelled-ahead' else 'cancelled-started' end)
+    when ${ahead} then 'ahead'
+    else 'started'
+  end)`;
   return sql<boolean>`(${moment} || ':' || ${OWNER}."status"::text || ':' || ${emailOutbox.messageType}::text) in (${keys})`;
 }
 
@@ -77,13 +102,14 @@ function refusalsFromSql(): SQL {
     cross join lateral (select ${kindSql()} as "kind") as ${FACT}`;
 }
 
-/** The open ones (above): the same condition for the registration's own and for a family member's. */
-function openRefusalsWhere(): SQL {
+/** The open ones (above): the same condition for the registration's own and for a family member's, at one event, until it ends. */
+function openRefusalsWhere(now?: Date): SQL {
   return sql`${emailOutbox.participantId} = ${registrations.participantId}
     and ${participantMessageCondition()}
     and ${emailOutbox.status} in ('BOUNCED', 'COMPLAINED')
     and ${OWNER}."event_id" = ${registrations.eventId}
-    and (${FACT}."kind" = 'unreachable' or (${FACT}."kind" is not null and ${stillNeededSql()}))`;
+    and ${eventNotEndedSql(OWNER_EVENT, now)}
+    and (${FACT}."kind" = 'unreachable' or (${FACT}."kind" is not null and ${stillNeededSql(now)}))`;
 }
 
 /** The order the registration shows them in: the address, then what never left, what is owed, what waits; its own first; newest first. */
@@ -153,9 +179,10 @@ export function registrationEmailStateDetailSql(): SQL<RegistrationEmailStateDet
 }
 
 /**
- * How many real, live registrations of each scheduled event that has not started ask somebody to act on
- * their email (§NNN): the club's side counts them per race («N participanți nu primesc emailurile»). The
- * caller asserts who may read it; the count names nobody.
+ * How many real, live registrations of each event that has not ended ask somebody to act on their email
+ * (§NNN), by the same rule as the state, at `now`: the club's side counts them per race («N participanți
+ * nu primesc emailurile»). A cancelled event counts while the people told of it may not know (its start
+ * ahead); race day counts until the day is over. The caller asserts who may read it; the count names nobody.
  */
 export async function countNeedingEmailActionByEvent<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -167,11 +194,10 @@ export async function countNeedingEmailActionByEvent<T extends Record<string, un
     .innerJoin(events, eq(events.id, registrations.eventId))
     .where(
       and(
-        eq(events.eventStatus, "SCHEDULED"),
-        gt(events.startsAt, now),
+        eventNotEndedSql(events, now),
         eq(registrations.kind, "REAL"),
         notInArray(registrations.status, ["CANCELLED", "EXPIRED"]),
-        needsEmailActionSql(),
+        needsEmailActionSql(now),
       ),
     )
     .groupBy(registrations.eventId);
@@ -181,9 +207,10 @@ export async function countNeedingEmailActionByEvent<T extends Record<string, un
 /**
  * Whether its state asks somebody to act (`EMAIL_STATE_NEEDS_ACTION`: unreachable, not sent, missing) —
  * the same as "an open refusal of one of those kinds exists", because each of them outranks `retried`,
- * the one kind that waits. Open means what it means for the state: a refusal no longer needed is not here.
+ * the one kind that waits. Open means what it means for the state: a refusal no longer needed, or of an
+ * event that has ended, is not here. `now` is the database's own unless the caller names its instant.
  */
-export function needsEmailActionSql(): SQL<boolean> {
+export function needsEmailActionSql(now?: Date): SQL<boolean> {
   const kinds = sql.join(EMAIL_STATE_NEEDS_ACTION.map((kind) => sql`${kind}`), sql`, `);
-  return sql<boolean>`exists (select 1 from ${refusalsFromSql()} where ${openRefusalsWhere()} and ${FACT}."kind" in (${kinds}))`;
+  return sql<boolean>`exists (select 1 from ${refusalsFromSql()} where ${openRefusalsWhere(now)} and ${FACT}."kind" in (${kinds}))`;
 }

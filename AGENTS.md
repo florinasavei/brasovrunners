@@ -2202,11 +2202,17 @@ it and not a club copy, says anything about their address: «Email respins», th
 state (`registrations/email-state.ts`) and the automatic re-send's refusal read those alone
 (`DECISIONS.md` §NNN). A message answers a refusal of what it carries
 (`notifications/domain/content-cover.ts`: the confirmation carries the race number and the signed
-declaration, the reminder the race number), written on the refused row when it is sent or delivered so
-it outlives the 90-day sweep of `SENT` rows; and an owed or unsent refusal asks somebody to act only
+declaration, the reminder the race number, and the confirmation, the reminder and the declaration
+request the event's details, which a refused «Detalii actualizate» was to tell) — only a refusal of a
+message queued no later than it — written on the refused row when it is sent or delivered so it
+outlives the 90-day sweep of `SENT` rows; and an owed or unsent refusal asks somebody to act only
 while the registration it was for still needs what was refused — what the page can send again for its
-status now, and what that carries (`stillNeededMessageTypes`) — an address that refuses the club's mail
-always does.
+status now, and what that carries; «Detalii actualizate» while the event is ahead, and the cancellation
+while it is cancelled and its start ahead, both for a phone call, no press sending them
+(`stillNeededMessageTypes`, `callInstead`) — an address that refuses the club's mail always does.
+**Once the event has ended** (`ends_at`, else the end of its start day in its own time zone) nothing of
+its registrations asks anybody to act — no chip, filter, export «Yes», «Ce îi spui» line or desk chip;
+race day still does — and the registration's history keeps every row.
 
 ### 12.12 Audit/environment
 
@@ -3160,9 +3166,13 @@ What the webhook does with an event (`DECISIONS.md` §NNN; `api/webhooks/mailgun
   lock and the same whatever order the events arrive in: a later delivery to the address says it
   works again (`later_delivered_at`, never on a complaint or the account's refusal), and only the
   same message, or one that carries it (the confirmation for a race number or a signed declaration,
-  `domain/content-cover.ts`), delivered later ends a refusal (`resolved_at`); such a message leaving
-  again marks it (`retried_at`, `retried_via`), and ends a refusal of the club's account — the send asks
-  first, in one round trip, whether there is anything to mark, and takes the lock only then.
+  `domain/content-cover.ts`), queued no earlier than the refused one and delivered later ends a refusal
+  (`resolved_at`) — an older confirmation delivered late never answers a race number refused since;
+  such a message leaving again marks it (`retried_at`, `retried_via`), and ends a refusal of the club's
+  account — the send asks first, in one round trip, whether there is anything to mark, and takes the
+  lock only then, or when the participant's lock is held. A refusal committed between the probe's
+  snapshot and its lock test goes unmarked: until the covering delivery ends it, or on the Gmail road
+  never (until the next covering send).
 - **retries**: Mailgun retries a webhook it could not deliver for about eight hours (5 and 10 and
   15 minutes, then 1, 2 and 4 hours), but — by its documentation's own wording — not the delivery
   notification: a `delivered` event lost to a 5xx or a cold start is never replayed, and the refusal

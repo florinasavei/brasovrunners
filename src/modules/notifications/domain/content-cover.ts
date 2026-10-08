@@ -3,20 +3,32 @@ import type { EmailMessageType } from "@/db/schema/email-outbox";
 /**
  * What a participant's message carries of another (§NNN): a message of the type on the left, sent or
  * delivered, gives the person what an earlier refused message of each type on the right was to give
- * them, so it answers that refusal as well as its own. Read from what `render.ts` puts in each message
- * for a confirmed registration, not from the types' names:
+ * them, so it answers that refusal as well as its own. Read from what `render.ts` and `templates.ts` put
+ * in each message, not from the types' names:
  *
  * - `REGISTRATION_CONFIRMED` — the confirmation carries the desk code with its QR and the race number
  *   (what `BIB_ASSIGNED` carries) and the signed declaration as a PDF (what `DECLARATION_SIGNED` carried,
  *   §126). «Retrimite QR» sends it, so it is the press that clears all three.
  * - `EVENT_REMINDER` — the reminder carries the desk code with its QR and the race number too.
+ * - The event's details as they stand when it leaves (`EVENT_FACTS_MESSAGES` in `templates.ts`, §392: the
+ *   date, both named times, the place, the programme, read at send time) are carried by the confirmation,
+ *   the reminder and the declaration request (`COMPLETE_DECLARATION`, the participation confirmation of
+ *   §104): each gives the person what a refused «Detalii actualizate» (`EVENT_UPDATE_NOTICE`, §331) was to
+ *   tell them, and so does a later «Detalii actualizate» itself — which a type always covers. The
+ *   verification email carries the block too, but no update notice goes to a registration that still
+ *   waits on it (`EVENT_NOTICE_STATUSES`, §331), so it has nothing of one to answer. The race number's
+ *   email and «Mesaj de la organizatori» carry one line only — the date, the event's start and the place
+ *   — never the race's own start or the programme, so they answer no update notice.
  *
  * Every other type covers only itself: a delivered «Mesaj de la organizatori» does not give the runner
- * the QR a refused confirmation carried, and a reminder does not carry the signed declaration.
+ * the QR a refused confirmation carried, and a reminder does not carry the signed declaration. Nothing
+ * here says what the person must be told by phone instead (`domain/email-state.ts`, `callInstead`): a
+ * covering message that leaves anyway answers the refusal all the same.
  */
 export const CONTENT_COVER = {
-  REGISTRATION_CONFIRMED: ["BIB_ASSIGNED", "DECLARATION_SIGNED"],
-  EVENT_REMINDER: ["BIB_ASSIGNED"],
+  REGISTRATION_CONFIRMED: ["BIB_ASSIGNED", "DECLARATION_SIGNED", "EVENT_UPDATE_NOTICE"],
+  EVENT_REMINDER: ["BIB_ASSIGNED", "EVENT_UPDATE_NOTICE"],
+  COMPLETE_DECLARATION: ["EVENT_UPDATE_NOTICE"],
 } as const satisfies Partial<Record<EmailMessageType, readonly EmailMessageType[]>>;
 
 const COVERING = Object.keys(CONTENT_COVER) as Array<keyof typeof CONTENT_COVER>;
