@@ -423,7 +423,6 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       */}
       <CalendarRsvpPanel locale={locale} state={calendarRsvp} mayEdit={mayEditEmail} openWhen={{ saved: saved === "calendarRsvp" }} />
 
-
       {/* The club's mailboxes that refuse its emails (§671), under the lists that name them; nothing when none did. */}
       {clubRejections.length > 0 && <ClubMailboxRejectionsPanel locale={locale} groups={clubRejections} />}
 

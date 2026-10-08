@@ -5030,7 +5030,7 @@
       },
       "calendarRsvp": {
         "title": "Răspunsurile din calendar",
-        "intro": "Invitația din calendar — în confirmare, memento, declarația unei alergări de grup și anunțurile de schimbare — poate cere Da, Nu sau Poate. Aici alegi unde ajung răspunsurile.",
+        "intro": "Invitația din calendar poate cere Da, Nu sau Poate. La o alergare de grup pleacă o singură dată, cu declarația, și nu se mai actualizează. Aici alegi unde ajung răspunsurile.",
         "aside": "Merg la {address}",
         "asideNone": "Oprit — calendarul pleacă ca fișier, fără Da / Nu / Poate",
         "inForce": "În vigoare: răspunsurile din calendar merg la {address}.",

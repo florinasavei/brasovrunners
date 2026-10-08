@@ -11,7 +11,10 @@ import { changesTheCalendar, type EventChangeKind } from "@/modules/events/domai
  *
  * - the confirmation and the reminder carry the invitation (`REQUEST`) instead of the file;
  * - the group run's signed declaration carries it too (`GROUP_RUN_DECLARATION_SIGNED`; the owner
- *   chose the declaration's email over a form of its own) — to the signer;
+ *   chose the declaration's email over a form of its own) — to the signer, once: a group run takes
+ *   no registrations, and the update and the cancellation below are queued to registrations only
+ *   (`event-notices.ts`), so a signer's invitation is never updated or cancelled (named in §NNN and
+ *   in `SETUP.md` §38 step 8, not mended: a send to the signers would be a new path, the owner's call);
  * - «Detalii actualizate» carries the updated invitation when it is about the time, the place or a
  *   date on again (`changesTheCalendar`), never about the programme or a note alone;
  * - the cancellation carries the invitation's cancellation (`CANCEL`).

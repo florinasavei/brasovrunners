@@ -5030,7 +5030,7 @@
       },
       "calendarRsvp": {
         "title": "Calendar answers",
-        "intro": "The calendar invitation — in the confirmation, the reminder, a group run's declaration and the change notices — can ask Yes, No or Maybe. Here you choose where the answers go.",
+        "intro": "The calendar invitation can ask Yes, No or Maybe. For a group run it goes once, with the declaration, and is never updated. Here you choose where the answers go.",
         "aside": "Go to {address}",
         "asideNone": "Off — the calendar goes as a file, without Yes / No / Maybe",
         "inForce": "In force: calendar answers go to {address}.",

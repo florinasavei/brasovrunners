@@ -534,12 +534,12 @@ test.describe("BR-REQ-033-02 criterion 12 the club's hidden copy of the emails t
 });
 
 /**
- * BR-REQ-080-01 (`DECISIONS.md` §NNN) — «Răspunsurile din calendar merg la»: one address beside the
+ * BR-REQ-033-02 (`DECISIONS.md` §NNN) — «Răspunsurile din calendar merg la»: one address beside the
  * club's copies, named back in force, refused when it is not an address, and empty again at the end
  * so the next test on this database starts with the calendar file as before. Desktop only: one
  * shared `platform_settings` row.
  */
-test.describe("BR-REQ-080-01 where the calendar's answers go", () => {
+test.describe("BR-REQ-033-02 where the calendar's answers go", () => {
   test.beforeEach(() => {
     test.skip(test.info().project.name !== "desktop", "one shared platform_settings row");
   });

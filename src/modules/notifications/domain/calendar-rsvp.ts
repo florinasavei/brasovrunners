@@ -11,7 +11,7 @@ import { z } from "zod";
  * calendar app answers with «Da / Nu / Poate» (`METHOD:REQUEST`, `ORGANIZER` this address,
  * `ATTENDEE` the runner), and the app sends the answer here. Nothing on the site reads it: the club
  * reads its own mailbox, a `+calendar` address and a filter keeping the answers out of the inbox
- * (`SETUP.md` § Calendar answers).
+ * (`SETUP.md` §38 step 8).
  *
  * Never a default address in code: the repository is public, and an address is the club's to type.
  * Pure: no database, no environment.

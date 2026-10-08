@@ -1410,11 +1410,14 @@ club names — which is why a colleague's Yahoo can be on the list.
    Do the same in any mailbox that is on "Către" or "Copie (Cc)" and wants it. (`DECISIONS.md`
    §310)
 8. **Optional: let the calendar entry ask «Da / Nu / Poate», and file the answers.** Off until
-   somebody types an address; then the confirmation, the reminder, a group run's signed
-   declaration, «Detalii actualizate» about the time or the place and the cancellation carry an
-   invitation the runner's calendar app (Gmail, Outlook, Apple) answers, and the answer arrives as
-   an email from the runner — «Accepted: <event> (…)» or its translation. Nothing on the site reads
-   it; the club reads its Gmail. (`DECISIONS.md` §NNN)
+   somebody types an address; then a race's confirmation, reminder, «Detalii actualizate» about
+   the time or the place and cancellation carry an invitation the runner's calendar app (Gmail,
+   Outlook, Apple) answers, and the answer arrives as an email from the runner — «Accepted: <event>
+   (…)» or its translation. Nothing on the site reads it; the club reads its Gmail. A group run's
+   invitation rides only on the signed declaration's email and is sent once: no change notice or
+   cancellation reaches the signers, so a run moved or called off afterwards stays as it was in
+   their calendars — tell them another way. A calendar's «Nu» cancels nothing either: the place
+   stays taken until the runner uses «Nu mai pot ajunge». (`DECISIONS.md` §NNN)
    - In the app, as an Administrator, on each deployment (QA has its own): «Setări» → «Emailuri» →
      **«Răspunsurile din calendar»** → «Răspunsurile din calendar merg la» = the club's Gmail with
      `+calendar` before the `@` (Gmail delivers `name+calendar@…` to `name@…`, and the part after
@@ -1425,7 +1428,10 @@ club names — which is why a colleague's Yahoo can be on the list.
      **New label** `Calendar` → **Create filter**. The answers collect under the label, out of the
      inbox. Do not tick **Delete it**: a runner who writes a line with the answer is reachable there.
    - To go back to the plain calendar file («Adaugă în calendar», no answer asked), empty the box
-     and save.
+     and save. That does not reach the invitations already sent: they stay in the runners'
+     calendars, and a cancellation after that no longer removes them. Changing the address to
+     another one changes the organizer of entries already answered, which some calendar apps
+     refuse; choose the address once.
 
 To take the form away, clear the recipients on «Pagini» → «Contact» (`/admin/pages/contact`) and leave `CONTACT_FORM_TO`
 empty — or remove `CONTACT_SMTP_USER` or `CONTACT_SMTP_PASSWORD` and redeploy: the page goes
