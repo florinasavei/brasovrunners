@@ -4,8 +4,8 @@ import { WEATHER_GLYPH_NAMES } from "@/modules/weather/domain/wmo";
 import { weatherWords } from "@/modules/weather/words";
 
 /**
- * BR-REQ-041-01 (§429, amending §416) — a listing card's weather pill wears the umbrella when rain
- * is likely at the start: a chance of 50% or more, or a forecast amount of 0.5 mm or more already
+ * BR-REQ-041-01 (§429, amending §416) — a listing card's weather pill marks the hour when rain
+ * is likely at the start (since §NNN its drop and chance in the primary colour, never an umbrella): a chance of 50% or more, or a forecast amount of 0.5 mm or more already
  * falling in the hour, unless the hour's own glyph says more (snow, frost, the storm), because
  * Open-Meteo's chance is of any precipitation.
  */
@@ -27,7 +27,7 @@ describe("BR-REQ-041-01 rain is likely at the start (§429)", () => {
     expect(rainLikely({ precipitationProbability: null, glyph: "snow", precipitationMm: 5 })).toBe(false);
   });
 
-  it("leaves snow, frost and the storm their own glyph, and umbrellas every other sky", () => {
+  it("leaves snow, frost and the storm their own glyph, and marks every other sky", () => {
     const kept = new Set(["snow", "snowShowers", "ice", "thunder"]);
     for (const glyph of WEATHER_GLYPH_NAMES) {
       expect(rainLikely({ precipitationProbability: 80, glyph, precipitationMm: null }), glyph).toBe(!kept.has(glyph));
