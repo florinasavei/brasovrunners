@@ -94,11 +94,17 @@
       "pageIntro": "Luna clubului: alergările săptămânale și cursele, pe zile. Poți lua tot calendarul în telefon sau în Google Calendar.",
       "introHelp": "Despre calendar și cum îl iei în telefon",
       "addTitle": "Adaugă în calendarul tău",
-      "feedAddress": "Adresa pentru alte aplicații",
+      "feedAddress": "Adresa calendarului, de copiat",
       "subscribeGoogle": "Google Calendar",
       "subscribeApple": "Apple / Outlook / telefon",
       "downloadLink": "descarcă .ics",
-      "refreshNote": "Google Calendar reia adresa singur, cam o dată pe zi; Apple și Outlook, cât de des le setezi. O schimbare apare la următoarea reluare. Pe Android, calendarul „🏃 BVR” se vede în aplicație abia după ce îl activezi: Google Calendar → Meniu → Setări → 🏃 BVR → Sincronizare."
+      "refreshNote": "Google Calendar reia adresa singur, cam o dată pe zi; Apple și Outlook, cât de des le setezi. O schimbare apare la următoarea reluare. Pe Android, calendarul „🏃 BVR” se vede în aplicație abia după ce îl activezi: Google Calendar → Meniu → Setări → 🏃 BVR → Sincronizare.",
+      "addressLabel": "Adresa calendarului",
+      "copy": "Copiază",
+      "copied": "Copiat",
+      "googleHintWhy": "Nu merge butonul? Google ascunde calendarul în loc să-l scoată și ține o copie veche după adresă.",
+      "googleHintHow": "Pe web: calendar.google.com → „+” lângă „Alte calendare” → „Din URL” → lipește adresa, cu ?v=2 la final.",
+      "phoneAppHint": "Aplicația Google Calendar de pe telefon nu adaugă un calendar după adresă; folosește site-ul."
     },
     "raceWeek": {
       "today": "Azi, {when}",
@@ -133,7 +139,12 @@
       "instagramDownload": "Descarcă poza",
       "calendarTitle": "Adaugă în calendar:",
       "googleCalendar": "Google Calendar",
-      "ics": "Fișier .ics"
+      "ics": "Fișier .ics",
+      "fileAddress": "Adresa fișierului, de copiat",
+      "fileAddressLabel": "Adresa fișierului .ics",
+      "copy": "Copiază",
+      "copied": "Copiat",
+      "binHint": "Ai șters evenimentul din Google Calendar? Îl găsești 30 de zile în Coșul calendarului, pe web; fișierul acesta nu se adaugă a doua oară cât timp e acolo."
     },
     "rules": "Regulamentul evenimentului",
     "conditions": {

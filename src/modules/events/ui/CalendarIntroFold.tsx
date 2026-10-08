@@ -5,14 +5,27 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { webcalUrl } from "@/modules/events/ical";
+import CalendarAddress from "@/modules/events/ui/CalendarAddress";
 
-/** The two doors into a reader's own calendar (§107, §139), built exactly as `CalendarSection` builds them. */
-export function calendarFeedLinks(baseUrl: string, locale: string): { google: string; webcal: string } {
+/**
+ * The two doors into a reader's own calendar (§107, §139), built exactly as `CalendarSection` builds
+ * them, and the plain `https://` address behind both, to copy (§NNN).
+ */
+export function calendarFeedLinks(baseUrl: string, locale: string): { google: string; webcal: string; feed: string } {
   const feed = `${baseUrl}/${locale}/events/calendar.ics`;
   return {
     google: `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcalUrl(feed))}`,
     webcal: webcalUrl(feed),
+    feed,
   };
+}
+
+/**
+ * The words under the feed's address (§NNN), in order: why Google's button may do nothing, the way
+ * that always works, and the phone app's limit. One list for both places that draw the address.
+ */
+export function feedAddressHints(t: (key: "calendar.googleHintWhy" | "calendar.googleHintHow" | "calendar.phoneAppHint") => string): string[] {
+  return [t("calendar.googleHintWhy"), t("calendar.googleHintHow"), t("calendar.phoneAppHint")];
 }
 
 const LINK_SX = {
@@ -28,7 +41,8 @@ const LINK_SX = {
  * fold beside the H1, so the month starts a paragraph higher. A native `<details>`, rendered on
  * the server — it opens with scripts off, and it holds what a tooltip cannot: the two links the
  * sentence promises (Google Calendar's add link and the `webcal://` feed, §107), so "you can
- * take the calendar into your phone" is one press from the head. The summary is a small muted
+ * take the calendar into your phone" is one press from the head — and, since §NNN, the feed's
+ * address to copy, with what to do when Google says it already has it. The summary is a small muted
  * glyph with a 44-pixel target and a name of its own (BR-REQ-041-01 criterion 6); the body opens
  * as a panel under the heading row, anchored to it, so the heading does not move.
  *
@@ -92,6 +106,15 @@ export default async function CalendarIntroFold({ locale, baseUrl }: { locale: s
             {t("calendar.subscribeApple")}
           </Box>
         </Box>
+        {/* Under the two doors, the address itself (§NNN): for when Google's button does nothing. */}
+        <CalendarAddress
+          id="calendar-feed-address-head"
+          address={links.feed}
+          label={t("calendar.addressLabel")}
+          copyLabel={t("calendar.copy")}
+          copiedLabel={t("calendar.copied")}
+          hints={feedAddressHints(t)}
+        />
       </Box>
     </Box>
   );
