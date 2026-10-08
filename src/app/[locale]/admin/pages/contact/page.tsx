@@ -14,6 +14,9 @@ import { readShownContactAddress } from "@/modules/contact/shown-address";
 import ContactRecipientsPanel from "@/modules/contact/ui/ContactRecipientsPanel";
 import PublicPhonePanel from "@/modules/contact/ui/PublicPhonePanel";
 import ShownAddressPanel from "@/modules/contact/ui/ShownAddressPanel";
+import { readFeedbackSettings } from "@/modules/feedback/settings";
+import FeedbackFormsPanel from "@/modules/feedback/ui/FeedbackFormsPanel";
+import { noticeDescribesFeedbackForms } from "@/modules/legal-documents/repository";
 import PagesSubNav from "@/modules/content/pages/ui/PagesSubNav";
 import { canManageClubSettings, canReadContent } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -52,7 +55,14 @@ export default async function AdminContactSettingsPage({ params, searchParams }:
   const { saved } = await searchParams;
   const t = await getTranslations("Admin");
   const db = getDb();
-  const [recipients, shownAddress, publicPhone] = await Promise.all([readContactRecipients(db), readShownContactAddress(db), readPublicPhone(db)]);
+  const now = new Date();
+  const [recipients, shownAddress, publicPhone, feedbackForms, feedbackNoticeDescribes] = await Promise.all([
+    readContactRecipients(db),
+    readShownContactAddress(db),
+    readPublicPhone(db),
+    readFeedbackSettings(db),
+    noticeDescribesFeedbackForms(db, now),
+  ]);
   const mayEdit = canManageClubSettings(actor.role);
 
   return (
@@ -63,15 +73,25 @@ export default async function AdminContactSettingsPage({ params, searchParams }:
         {saved === "contactRecipients" && <Alert severity="success">{t("emails.contacts.saved")}</Alert>}
         {saved === "shownContactAddress" && <Alert severity="success">{t("emails.shownAddress.saved")}</Alert>}
         {saved === "publicPhone" && <Alert severity="success">{t("emails.publicPhone.saved")}</Alert>}
+        {saved === "feedbackForms" && <Alert severity="success">{t("emails.feedbackForms.saved")}</Alert>}
       </Box>
 
-      {/* The page is these two cards alone, so they open on arrival (§336's `primary`, §516). */}
+      {/* The page is these cards alone, so they open on arrival (§336's `primary`, §516). */}
       <ContactRecipientsPanel
         locale={locale}
         recipients={recipients}
         resolved={resolveContactRecipients(recipients, env.CONTACT_FORM_TO)}
         mayEdit={mayEdit}
         openWhen={{ primary: true, saved: saved === "contactRecipients" }}
+      />
+
+      {/* «Spune-ne ceva» (§NNN): the four anonymous forms, each off until switched on here, under who receives «Scrie-ne». */}
+      <FeedbackFormsPanel
+        locale={locale}
+        state={feedbackForms}
+        noticeDescribes={feedbackNoticeDescribes}
+        mayEdit={mayEdit}
+        openWhen={{ primary: true, saved: saved === "feedbackForms" }}
       />
 
       {/* «Adresa de contact afișată» (§442), beside who receives the form: both are "where the club is written to". */}

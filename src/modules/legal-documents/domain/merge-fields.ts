@@ -124,6 +124,15 @@ export const LIST_NUMBERS_MERGE_FIELD = "participantListNumbers";
 export const EVENT_INVITATIONS_MERGE_FIELD = "eventInvitations";
 
 /**
+ * The privacy notice's marker for «Spune-ne ceva» (§NNN): the forms' name, quoted, in the reader's
+ * language (`feedback/notice-words.ts`), in the paragraph that says the forms are anonymous unless a
+ * contact is left, that the site keeps nothing, where each message goes and how long it is kept. The
+ * gate, like the newsletter's (§445): the contact page draws the door, and the feedback page exists,
+ * only while the notice in force names it in every language (`describesFeedbackForms`).
+ */
+export const FEEDBACK_FORMS_MERGE_FIELD = "feedbackForms";
+
+/**
  * The event's own minimum age (§329) as a merge field (§440, amending §393): "16 ani" / "16
  * years", the unit included like `{{holdMinutes}}` so Romanian's "20 de ani" comes out right
  * (`yearsPhrase`). The group-run declarations state it in a sentence of its own — "Declar că am
@@ -329,6 +338,7 @@ export const MERGE_FIELDS = [
   GMAIL_FALLBACK_MERGE_FIELD,
   ADDRESS_CAP_MERGE_FIELD,
   EVENT_INVITATIONS_MERGE_FIELD,
+  FEEDBACK_FORMS_MERGE_FIELD,
 ] as const;
 
 /**
@@ -495,6 +505,15 @@ export function describesEventInvitations(body: unknown): boolean {
  */
 export function describesNewsletter(body: unknown): boolean {
   return mergeFieldsIn(body).has(NEWSLETTER_MERGE_FIELD);
+}
+
+/**
+ * Whether a privacy notice describes «Spune-ne ceva» (§NNN): it names `{{feedbackForms}}`. The gate
+ * for the contact page's door and the feedback page, and what `/admin/tasks`' row `feedbackNotice`
+ * reads. Pure; the caller asks it of the notice in force, in every language.
+ */
+export function describesFeedbackForms(body: unknown): boolean {
+  return mergeFieldsIn(body).has(FEEDBACK_FORMS_MERGE_FIELD);
 }
 
 /** Whether a privacy notice describes the team page (§459): it names `{{teamPage}}`. Pure. */

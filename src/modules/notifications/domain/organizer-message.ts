@@ -61,6 +61,8 @@ export const ORGANIZER_MESSAGE_PLACEHOLDERS = [
   "eventLocationName",
   "bibNumber",
   "eventChecklist",
+  // «Spune-ne cum a fost» for this event while that form is open, the contact page otherwise (§NNN).
+  "feedbackLink",
 ] as const satisfies readonly EmailCopyPlaceholder[];
 
 /**

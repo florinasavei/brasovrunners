@@ -12,6 +12,7 @@ import { recordAuditEvent } from "@/modules/audit/repository";
 import { replyToInForce } from "@/modules/contact/shown-address";
 import { placeToBeAnnouncedWords } from "@/modules/events/calendar-labels";
 import { findEventNotificationDetails } from "@/modules/events/repository";
+import { eventDay, howItWentOpen, howItWentUrl } from "@/modules/feedback/links";
 import { lockEventForCapacity } from "@/modules/registrations/repository";
 import { canMessageParticipants } from "@/modules/staff-identity/domain/roles";
 import { env } from "@/shared/config/env";
@@ -363,6 +364,10 @@ export async function previewParticipantMessage<T extends Record<string, unknown
   const eventUrl = details.slug
     ? `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: details.slug } } })}`
     : undefined;
+  // `{feedbackLink}` (§NNN) as the send will fill it: «Cum a fost» while that branch is open, the contact page otherwise.
+  const feedbackOpen = await howItWentOpen(db, new Date());
+  const day = eventDay(details.startsAt, details.timezone);
+  const contactOf = (language: Locale) => `${env.APP_BASE_URL}${getPathname({ locale: language, href: "/contact" })}`;
 
   const data: TemplateData = {
     participantName: EMAIL_SAMPLE[locale].participantName,
@@ -384,6 +389,8 @@ export async function previewParticipantMessage<T extends Record<string, unknown
     contactUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/contact" })}`,
     myRegistrationsUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/registrations/mine" })}`,
     replyTo,
+    feedbackLink: feedbackOpen ? howItWentUrl(locale, details.slug ?? null, day) : contactOf(locale),
+    feedbackLinkOther: feedbackOpen ? howItWentUrl(other, otherDetails?.slug ?? null, day) : contactOf(other),
     ...(words.subject[locale] ? { organizerSubject: words.subject[locale] } : {}),
     ...(words.subject[other] ? { organizerSubjectOther: words.subject[other] } : {}),
     ...(words.body[locale] ? { organizerBody: words.body[locale] } : {}),

@@ -118,7 +118,7 @@ describe("§373 the fields of an email's words, as a legend", () => {
         ...EMAIL_COPY_PLACEHOLDERS.filter((name) => filled.includes(name) && !used.includes(name)),
         ...EMAIL_COPY_PLACEHOLDERS.filter((name) => !filled.includes(name)),
       ]);
-      expect(drawn.slice(-3)).toEqual(["holdExpiresAtFormatted", "staffRole", "inviterName"]);
+      expect(drawn.slice(-4)).toEqual(["holdExpiresAtFormatted", "staffRole", "inviterName", "feedbackLink"]);
       for (const name of used) expect(rowOf(html, name).words).toContain(words.usedMark);
       for (const name of drawn.slice(used.length)) expect(rowOf(html, name).words).not.toContain(words.usedMark);
       // The facts a send may lack say so; the name and the title do not.
@@ -151,16 +151,16 @@ describe("§373 the fields of an email's words, as a legend", () => {
     // No card frame — no h4 heading — and the "i" leads the line, ahead of the caret and the words.
     expect(html).not.toMatch(/<summary[^>]*><h4/);
     expect(html).toMatch(
-      /<summary[^>]*><svg[^>]*InfoOutlined[^>]*>[\s\S]*?<\/svg>[\s\S]*?<span[^>]*>Câmpurile pe care le poți folosi<span[^>]*>16 câmpuri · 4 câmpuri folosite aici<\/span><\/span><\/summary>/,
+      /<summary[^>]*><svg[^>]*InfoOutlined[^>]*>[\s\S]*?<\/svg>[\s\S]*?<span[^>]*>Câmpurile pe care le poți folosi<span[^>]*>17 câmpuri · 4 câmpuri folosite aici<\/span><\/span><\/summary>/,
     );
     expect(text(html)).toContain(ro.Admin.emails.copy.legend.intro);
     expect(text(html)).toContain(ro.Admin.emails.copy.legend.missing);
 
     // The name, the event and the link's lifetime since §419.
-    expect(text(await render("VERIFY_REGISTRATION_EMAIL", "ro"))).toContain("16 câmpuri · 3 câmpuri folosite aici");
-    expect(text(await render("WAITLIST_JOINED", "ro"))).toContain("16 câmpuri · 1 câmp folosit aici");
-    expect(text(await render("PROFILE_MANAGE_LINK", "ro"))).toContain("16 câmpuri · niciunul folosit aici");
-    expect(text(await render("REGISTRATION_CONFIRMED", "en"))).toContain("The fields you can use 16 fields · 4 fields used here");
+    expect(text(await render("VERIFY_REGISTRATION_EMAIL", "ro"))).toContain("17 câmpuri · 3 câmpuri folosite aici");
+    expect(text(await render("WAITLIST_JOINED", "ro"))).toContain("17 câmpuri · 1 câmp folosit aici");
+    expect(text(await render("PROFILE_MANAGE_LINK", "ro"))).toContain("17 câmpuri · niciunul folosit aici");
+    expect(text(await render("REGISTRATION_CONFIRMED", "en"))).toContain("The fields you can use 17 fields · 4 fields used here");
   });
 
   it("gives the examples of the language being edited, whatever the backoffice's language", async () => {

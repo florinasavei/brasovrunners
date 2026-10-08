@@ -32,6 +32,8 @@ const LAUNCHED: OwnerTaskInputs = {
   promoDescribed: true,
   sponsorShareDescribed: true,
   newsletterDescribed: true,
+  feedbackDescribed: true,
+  feedbackBranchesOn: 2,
   gmailFallbackDescribed: true,
   refusalDescribed: true,
   teamPageDescribed: true,
@@ -105,6 +107,21 @@ describe("owner tasks", () => {
     expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "invitationsNotice")).toBe(false);
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.invitationsNotice;
+      expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+    }
+  });
+
+  /** §NNN — «Spune-ne ceva»: open while a branch is on and the notice is silent; absent while nothing waits on it. */
+  it("keeps the feedback row open while a branch is on and the notice in force does not describe the forms", () => {
+    expect(stateOf({ ...LAUNCHED, feedbackDescribed: false }, "feedbackNotice")).toBe("open");
+    expect(stateOf(LAUNCHED, "feedbackNotice")).toBe("done");
+    expect(stateOf({ ...LAUNCHED, feedbackBranchesOn: 0 }, "feedbackNotice")).toBe("done");
+    // Every branch off and the notice silent: nothing waits on it, so no row at all.
+    expect(ownerTasks({ ...LAUNCHED, feedbackDescribed: false, feedbackBranchesOn: 0 }).some((task) => task.id === "feedbackNotice")).toBe(false);
+    expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "feedbackNotice")).toBe(false);
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.feedbackNotice;
       expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
       expect(item.how.join("\n")).toContain("/admin/legal");
     }
@@ -357,6 +374,7 @@ describe("owner tasks", () => {
       "promoNotice",
       "sponsorNotice",
       "newsletterNotice",
+      "feedbackNotice",
       "gmailFallbackNotice",
       "refusalTerms",
       "teamPageNotice",

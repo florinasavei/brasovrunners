@@ -44,6 +44,8 @@ import {
   listUpcomingEvents,
 } from "@/modules/events/repository";
 import { readDeadlines } from "@/modules/deadlines/deadlines";
+import { DEFAULT_FEEDBACK_SETTINGS, type FeedbackSettings } from "@/modules/feedback/domain/branches";
+import { readFeedbackSettings } from "@/modules/feedback/settings";
 import { DEFAULT_DEADLINES, type Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { governorEffects } from "@/modules/diagnostics/domain/neon-budget";
 import { peekNeonBudgetLevel } from "@/modules/diagnostics/budget-level";
@@ -55,6 +57,7 @@ import { emailLeavesAt, emailWaitMinutes } from "@/modules/notifications/domain/
 import { type EmailDelay, judgeEmailDelay } from "@/modules/notifications/domain/email-delay";
 import { readEmailDelayFacts } from "@/modules/notifications/public-delay";
 import {
+  describesFeedbackForms,
   describesListNumbers,
   describesListSocials,
   describesListStates,
@@ -528,6 +531,42 @@ export async function cachedPromotionalMaterialsShared(now: Date): Promise<boole
 export async function cachedNewsletterOffered(now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesNewsletter(notice.body));
+}
+
+/**
+ * Whether «Spune-ne ceva» may exist (§NNN): the privacy notice in force describes the forms
+ * (`describesFeedbackForms`), in every language — `cachedNewsletterOffered`'s twin, so an approval
+ * opens the door the moment the notice itself changes. `noticeDescribesFeedbackForms` is the
+ * uncached read the action and the email ask.
+ */
+export async function cachedFeedbackFormsDescribed(now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesFeedbackForms(notice.body));
+}
+
+/**
+ * The branches' switches and the safety branch's first name (§NNN), for the contact page's door and
+ * the feedback page — never an address: who receives is nobody's business but the sender's, the
+ * reasoning of `cachedContactFormReaches`. The page shows the first name anyway. When the database
+ * cannot answer, every branch is off: a door that may lead nowhere is not drawn.
+ */
+export async function cachedFeedbackOffer(): Promise<FeedbackSettings> {
+  try {
+    return await publicRead(["settings.feedback-offer"], ["settings"], async () => withoutAddresses(await readFeedbackSettings(getDb())));
+  } catch {
+    return DEFAULT_FEEDBACK_SETTINGS;
+  }
+}
+
+/** A recipient reduced to "somebody": the public cache keeps the yes, never the address. */
+function withoutAddresses(settings: FeedbackSettings): FeedbackSettings {
+  const someone = (to: string | null) => (to ? "set" : null);
+  return {
+    howItWent: { on: settings.howItWent.on, to: someone(settings.howItWent.to) },
+    suggestion: { on: settings.suggestion.on, to: someone(settings.suggestion.to) },
+    complaint: { on: settings.complaint.on, to: someone(settings.complaint.to) },
+    safety: { on: settings.safety.on, to: someone(settings.safety.to), name: settings.safety.name },
+  };
 }
 
 /**

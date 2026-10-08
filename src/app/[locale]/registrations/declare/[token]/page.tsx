@@ -37,6 +37,7 @@ import { listNumbersMergeValues } from "@/modules/registrations/list-number-word
 import { promotionalMaterialsMergeValues } from "@/modules/registrations/promo-consent-words";
 import { gmailFallbackMergeValues } from "@/modules/notifications/fallback-notice-words";
 import { eventInvitationsMergeValues } from "@/modules/registrations/invitation-words";
+import { feedbackFormsMergeValues } from "@/modules/feedback/notice-words";
 import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { expectedSignatures, mismatchedSignatures, type SignatureBox } from "@/modules/registrations/domain/signature-name";
@@ -662,7 +663,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               // The club's deadlines and the public list's period (§377, §421) — as the PDF fills them.
               ...deadlineMergeValues(locale, await cachedDeadlines()),
               // The list-states marker, should the declaration name it (§396) — as the PDF fills it.
-              ...listStatesMergeValues(locale), ...listSocialsMergeValues(locale), ...listNumbersMergeValues(locale), ...gmailFallbackMergeValues(locale), ...eventInvitationsMergeValues(locale), ...promotionalMaterialsMergeValues(locale),
+              ...listStatesMergeValues(locale), ...listSocialsMergeValues(locale), ...listNumbersMergeValues(locale), ...gmailFallbackMergeValues(locale), ...eventInvitationsMergeValues(locale), ...feedbackFormsMergeValues(locale), ...promotionalMaterialsMergeValues(locale),
               ...newsletterMergeValues(locale),
             }}
           />

@@ -27,11 +27,14 @@ import {
   noticeDescribesPromotionalMaterialsShared,
   noticeDescribesListStates,
   noticeDescribesNewsletter,
+  noticeDescribesFeedbackForms,
   noticeDescribesTeamPage,
   termsDescribeRefusal,
   raceDeclarationsCurrent,
   groupRunDeclarationsSeriesCurrent,
 } from "@/modules/legal-documents/repository";
+import { branchesSwitchedOn } from "@/modules/feedback/domain/branches";
+import { readFeedbackSettings } from "@/modules/feedback/settings";
 import {
   countTasks,
   filterTasks,
@@ -465,6 +468,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       sponsorShareDescribed: await noticeDescribesPromotionalMaterialsShared(db, now),
       // §445: the same switch for the newsletter's pop-up on the contact page.
       newsletterDescribed: await noticeDescribesNewsletter(db, now),
+      // §NNN: «Spune-ne ceva», described by the notice in force; the row waits only while a branch is on.
+      feedbackDescribed: await noticeDescribesFeedbackForms(db, now),
+      feedbackBranchesOn: branchesSwitchedOn(await readFeedbackSettings(db)).length,
       gmailFallbackDescribed: await noticeDescribesGmailFallback(db, now),
       // §636: the terms in force carry the club's right to refuse a registration, in every language.
       refusalDescribed: await termsDescribeRefusal(db, now),

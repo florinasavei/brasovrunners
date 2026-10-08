@@ -1557,6 +1557,8 @@
       "shownAddressBody": "The site shows the chosen address from now on, and replies to the club's emails go to it. Approved legal texts keep their own address.",
       "publicPhoneTitle": "Change the phone shown?",
       "publicPhoneBody": "The site shows this number at the foot of every page from now on. An empty box takes it off.",
+      "feedbackFormsTitle": "Save the “Tell us something” forms?",
+      "feedbackFormsBody": "The forms switched on appear on the contact page while the privacy notice in force describes them.",
       "siteTintTitle": "Change the site's background?",
       "siteTintBody": "Every public page of the site opens with the chosen background from now on, for every visitor. The dark theme and the backoffice stay as they are. You can go back to “White” at any time.",
       "siteFontSizeTitle": "Change the text size?",
@@ -2951,7 +2953,8 @@
         "promotionalMaterialsShared": "Only in the privacy notice: what data the club's partners may receive from those who ticked offers and benefits. Without it in the notice in force, the list for sponsors is off",
         "registrationsPerAddress": "Terms only: how many people may register with the same email address for one event, with the unit (“4 people”), from Settings → “Deadlines”",
         "gmailFallback": "Only in the privacy notice: the name of the switch «Gmail takes over when Mailgun stops», quoted. Without it in the notice in force, the switch is off and messages wait for Mailgun",
-        "eventInvitations": "Privacy notice only: the Invitations section's name, in quotation marks. With it in the notice in force, /admin/tasks counts the invitations as described"
+        "eventInvitations": "Privacy notice only: the Invitations section's name, in quotation marks. With it in the notice in force, /admin/tasks counts the invitations as described",
+        "feedbackForms": "Privacy notice only: the “Tell us something” forms’ name, in quotation marks. With it in the notice in force, the contact page shows the forms switched on"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -3647,6 +3650,16 @@
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 5 has the paragraph about the club's news, and section 7 how long the address is kept.",
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”. Once in force in both languages, the contact page shows “Subscribe to the news”, with no other setting.",
             "You write the newsletter from the backoffice's “Newsletter” menu; the new-event announcements go by themselves."
+          ]
+        },
+        "feedbackNotice": {
+          "title": "Privacy notice: the “Tell us something” forms",
+          "todo": "You switched on “Tell us something” forms, but the notice in force does not describe them yet: the contact page shows none until the club approves a notice that describes them.",
+          "done": "The notice in force describes the “Tell us something” forms: the contact page shows the ones switched on.",
+          "how": [
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 5 has the paragraph about the forms, section 10 their cookie.",
+            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”. Once in force in both languages, the forms switched on appear under the newsletter.",
+            "The email “The legal templates changed” goes by itself after the release: nothing to do for it."
           ]
         },
         "teamPageNotice": {
@@ -5207,7 +5220,8 @@
             "confirmationHours": "How long the link that confirms the address lives, from “Deadlines” — the unit comes with it, so do not add “hours” after it",
             "holdMinutes": "How long a place is held while the declaration is signed, from “Deadlines”, with its unit",
             "offerHours": "How long a waiting-list offer stays open, from “Deadlines”, with its unit",
-            "reminderHours": "How long before the start the reminder goes — this event's own, else the club's from “Deadlines” — with its unit; none when the event sends no reminder"
+            "reminderHours": "How long before the start the reminder goes — this event's own, else the club's from “Deadlines” — with its unit; none when the event sends no reminder",
+            "feedbackLink": "The link to “Tell us how it was” for this event while the form is on; otherwise the contact page"
           }
         },
         "machinery": "The button, the link inside it, the QR code, the attachments, the greeting and the sign-off stay the default ones: they carry tokens and files, not words.",
@@ -5533,6 +5547,39 @@
         "save": "Save the phone",
         "saving": "Saving…",
         "saved": "The public phone was saved."
+      },
+      "feedbackForms": {
+        "title": "Tell us something",
+        "intro": "Four anonymous forms under the newsletter, on the contact page. Each is off until you switch it on here, and reaches one address.",
+        "aside": "On: {on} of {all}",
+        "noticeMissing": "The privacy notice in force does not describe the forms yet: nothing shows on the site until you approve a new notice (see “Tasks”).",
+        "updatedAt": "Set {when}.",
+        "branches": {
+          "howItWent": "How it was",
+          "suggestion": "A suggestion",
+          "complaint": "A complaint",
+          "safety": "Safety (confidential)"
+        },
+        "help": {
+          "howItWent": "The event, the date, a rating from 1 to 5, what happened and why someone stopped coming. Also from the thank-you email.",
+          "suggestion": "One text box.",
+          "complaint": "What happened, optionally the event and the date.",
+          "safety": "For women who did not feel safe: it reaches only the person below, through Mailgun."
+        },
+        "switch": "On",
+        "to": "Who receives it",
+        "toOf": "Who receives it — {branch}",
+        "toHelp": "One address. The message leaves through the club's Gmail, like “Write to us”.",
+        "toHelpSafety": "The designated person's own address. It leaves only through Mailgun, never through the club's Gmail.",
+        "safetyName": "First name shown",
+        "safetyNameHelp": "The form says: “The message reaches … only”. At most 40 characters.",
+        "stateOn": "on",
+        "stateOff": "off",
+        "readOnly": "The Administrator switches the forms on; you see what is on.",
+        "save": "Save the forms",
+        "saving": "Saving…",
+        "saved": "The “Tell us something” forms were saved.",
+        "roads": "The site keeps no message. How it was, suggestions and complaints leave through the club's Gmail (CONTACT_SMTP_USER); Safety only through Mailgun."
       },
       "perSendNewsletter": "The newsletter's text is written per send, on the backoffice's “Newsletter” page, so it has no words to edit here.",
       "newsletterLink": "Newsletter →",
@@ -6638,7 +6685,7 @@
       "subject": "Subject",
       "subjectHelp": "In both languages, required, at most {max} characters each. You can use the fields {list}; they are filled in for each participant.",
       "body": "Message",
-      "bodyHelp": "Required in both languages, plain text, at most {max} characters each. Fields filled in for each participant: {list}.",
+      "bodyHelp": "In both languages, plain text, at most {max} characters each. Fields filled in for each participant: {list}. {feedback}: “Tell us how it was” while it is on, otherwise Contact.",
       "bodyScope": "Write only about this event: weather, place, time, safety, a change. No advertising, offers or other events: those need each person's separate consent.",
       "preview": "How the email looks",
       "previewHelp": "Exactly the email that goes out, for a sample participant, {name}, number {bibNumber}. It updates as you type.",
@@ -8419,6 +8466,125 @@
     "emailConfirm": "Type the address once more",
     "emailMismatch": "The two addresses are not the same — check the letters."
   },
+  "Tell": {
+    "title": "Tell us something",
+    "intro": "Anonymous unless you leave a contact. Choose what it is about.",
+    "backToContact": "Back to Contact",
+    "door": {
+      "intro": "How an event went, a suggestion or a complaint — anonymously, if you like.",
+      "button": "Open the anonymous form"
+    },
+    "choose": {
+      "legend": "What is it about?",
+      "next": "Continue"
+    },
+    "branches": {
+      "howItWent": {
+        "label": "How it was",
+        "hint": "An event or a group run: what you liked, what you did not.",
+        "intro": "Tell us how it was. Apart from what happened, everything is optional."
+      },
+      "suggestion": {
+        "label": "A suggestion",
+        "hint": "What we could do differently or more of.",
+        "intro": "Any idea is welcome: a route, a time, something you would like."
+      },
+      "complaint": {
+        "label": "A complaint",
+        "hint": "Something did not go as it should.",
+        "intro": "Tell us what happened; the event and the date are optional."
+      },
+      "safety": {
+        "label": "Safety",
+        "hint": "For women who did not feel safe with us. Confidential.",
+        "intro": "Confidential."
+      }
+    },
+    "safety": {
+      "reader": "The message reaches {name} only. The site keeps nothing of it.",
+      "whereWhen": "Where and when (optional)",
+      "contact": "If you want {name} to contact you, leave an email or a phone number (optional)",
+      "contactHelp": "Without it, the message stays anonymous."
+    },
+    "event": "The event",
+    "eventGeneral": "Something else / in general",
+    "date": "Date (optional)",
+    "dateHelp": "For a run of a series: the day you mean.",
+    "rating": {
+      "legend": "How was it? (optional)",
+      "faces": {
+        "1": "Very bad",
+        "2": "Bad",
+        "3": "So-so",
+        "4": "Good",
+        "5": "Very good"
+      }
+    },
+    "message": {
+      "howItWent": "What happened?",
+      "suggestion": "Your suggestion",
+      "complaint": "What happened?",
+      "safety": "What happened?"
+    },
+    "messageHelp": {
+      "howItWent": "At most 2,000 characters.",
+      "suggestion": "At most 2,000 characters.",
+      "complaint": "At most 2,000 characters.",
+      "safety": "At most 2,000 characters. Write only as much as you want."
+    },
+    "reasons": {
+      "legend": "If you stopped coming, will you tell us why?",
+      "help": "Optional; tick as many as you like.",
+      "items": {
+        "time": "The time or the day",
+        "place": "The place",
+        "pace": "The group's pace",
+        "health": "An injury or my health",
+        "moved": "I moved",
+        "other": "Something else"
+      }
+    },
+    "reasonOther": "Something else, in a few words (optional)",
+    "email": "Email (optional)",
+    "emailHelp": "Only if you want an answer; without it, the message is anonymous.",
+    "errors": {
+      "title": "The message did not leave",
+      "fieldsIntro": "Check:",
+      "field": "Check this field.",
+      "limited": "Too many messages in the last hour; try again later.",
+      "unavailable": "We could not send it now. Try again in a few minutes.",
+      "generic": "Check the form and send it again.",
+      "captcha": "Tick the check above and send it again."
+    },
+    "fieldNames": {
+      "event": "The event",
+      "date": "The date",
+      "rating": "How it was",
+      "message": "The message",
+      "reasons": "Why you stopped coming",
+      "reasonOther": "Something else",
+      "whereWhen": "Where and when",
+      "contact": "The contact",
+      "email": "The email",
+      "captcha": "The anti-bot check"
+    },
+    "privacy": "The site keeps nothing: the message leaves by email to the club.",
+    "privacySafety": "The site keeps nothing of the message.",
+    "privacyLinkLabel": "Privacy notice",
+    "submit": "Send",
+    "submitting": "Sending…",
+    "incompleteHint": "Write the message to be able to send it.",
+    "otherBranches": "Another kind of message",
+    "sent": {
+      "title": "Your message is on its way",
+      "body": "Thank you! We read it carefully.",
+      "safety": "Only {name} received it. Thank you for telling us."
+    },
+    "eventPage": {
+      "lead": "Were you there? Tell us how it was — anonymously, it takes a minute.",
+      "button": "Tell us how it was"
+    }
+  },
   "Budget": {
     "title": "This month's budget",
     "intro": "How much of the monthly limit the database has used, at what pace, and how the site slows itself down when the month runs ahead.",
@@ -8736,6 +8902,7 @@
       "groupRunDeclarationErased": "The declaration was erased.",
       "shownContactAddress": "The contact address shown was saved.",
       "publicPhone": "The public phone was saved.",
+      "feedbackForms": "The “Tell us something” forms were saved.",
       "siteTint": "The site's background was saved.",
       "siteFontSize": "The site's text size was saved.",
       "clubTodoAdded": "Added to the list.",

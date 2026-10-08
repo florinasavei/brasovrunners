@@ -8,6 +8,7 @@ import { routing, type Locale } from "@/i18n/routing";
 import { addressListRefusal, CONTACT_RECIPIENTS_MAX, parseAddressList } from "@/modules/contact/domain/recipients";
 import { updateContactRecipients } from "@/modules/contact/recipients";
 import { updatePublicPhone } from "@/modules/contact/public-phone";
+import { updateFeedbackSettings } from "@/modules/feedback/settings";
 import { updateShownContactAddress } from "@/modules/contact/shown-address";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
 import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
@@ -93,4 +94,36 @@ export async function updatePublicPhoneAction(_previous: FormOutcome | null, for
   revalidatePath(path);
   await flashOutcome({ saved: "publicPhone" });
   redirect(`${path}?saved=publicPhone#admin-alert`);
+}
+
+/**
+ * «Spune-ne ceva» (§NNN): per branch a switch and the address that receives it, and the safety
+ * branch's first name. Administrator at the door, the service asserting it again and validating
+ * each address; a refused save comes back as typed, the boxes it names marked.
+ */
+export async function updateFeedbackFormsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/pages/contact" });
+  const value = (name: string) => (typeof form.get(name) === "string" ? String(form.get(name)) : "");
+  const branch = (name: string) => ({ on: form.get(`${name}On`) === "on", to: value(`${name}To`) });
+
+  try {
+    const actor = await requireStaffCapability(canManageClubSettings);
+    await updateFeedbackSettings(
+      getDb(),
+      actor,
+      {
+        howItWent: branch("howItWent"),
+        suggestion: branch("suggestion"),
+        complaint: branch("complaint"),
+        safety: { ...branch("safety"), name: value("safetyName") },
+      },
+      new Date(),
+    );
+  } catch (error) {
+    return refused(error, form);
+  }
+  revalidatePath(path);
+  await flashOutcome({ saved: "feedbackForms" });
+  redirect(`${path}?saved=feedbackForms#admin-alert`);
 }

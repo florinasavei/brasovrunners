@@ -130,6 +130,9 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     cannotComeUrl: `${base}/${locale}/EXAMPLE#cancel`,
     // "Înscrierile mele" by address, which the update notice points at (§419) and the organizer's message too.
     myRegistrationsUrl: `${base}/${locale}/EXAMPLE-mine`,
+    // `{feedbackLink}` (§NNN): the form for the sample event, each half in its own language.
+    feedbackLink: `${base}${sample.feedbackLink}`,
+    feedbackLinkOther: `${base}${other.feedbackLink}`,
     // The public list's switch on the confirmation (§143): the sample runner is on the list.
     listConsentUrl: `${base}/${locale}/EXAMPLE-list`,
     listed: true,
@@ -377,6 +380,8 @@ const ONLY_IN: Partial<Record<EmailCopyPlaceholder, readonly EmailMessageType[]>
   signedAtFormatted: ["REGISTRATION_CONFIRMED", "DECLARATION_SIGNED", "DECLARATION_ARCHIVE", "GROUP_RUN_DECLARATION_SIGNED", "GROUP_RUN_DECLARATION_ARCHIVE"],
   staffRole: ["STAFF_INVITATION"],
   inviterName: ["STAFF_INVITATION", "MEMBER_INVITATION"],
+  // The organizer's message alone (§NNN): no other message is written per event by somebody asking how it was.
+  feedbackLink: ["ORGANIZER_MESSAGE"],
 };
 
 /**
@@ -428,6 +433,7 @@ const OTHER_HALF: Partial<Record<EmailCopyPlaceholder, keyof TemplateData>> = {
   currentStatus: "currentStatusOther",
   holdExpiresAtFormatted: "holdExpiresAtFormattedOther",
   signedAtFormatted: "signedAtFormattedOther",
+  feedbackLink: "feedbackLinkOther",
 };
 
 /**

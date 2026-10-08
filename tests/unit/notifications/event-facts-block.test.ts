@@ -32,6 +32,8 @@ describe("§392 the facts block is not a placeholder", () => {
       "holdMinutes",
       "offerHours",
       "reminderHours",
+      // «Spune-ne cum a fost» in the organizer's message (§NNN) — a field, not the facts block.
+      "feedbackLink",
     ]);
   });
 });

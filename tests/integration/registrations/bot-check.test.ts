@@ -95,12 +95,15 @@ describe("§254 the anti-bot switch", () => {
     // The contact page asks the same switch through the public cache (§333), which the switch's
     // own save expires — so it is still consulted, and a change still shows on the next visit.
     expect(read("src", "app", "[locale]", "contact", "page.tsx")).toContain("cachedBotCheckSiteKey");
+    // «Spune-ne ceva» (§NNN), the wizard under the contact page: the same read, the same switch.
+    expect(read("src", "app", "[locale]", "contact", "feedback", "page.tsx")).toContain("cachedBotCheckSiteKey");
     expect(read("src", "modules", "public-cache", "reads.ts")).toMatch(/cachedBotCheckSiteKey[\s\S]*readBotCheck/);
     expect(read("src", "modules", "registrations", "bot-check.ts")).toMatch(/updateBotCheck[\s\S]*revalidatePublicContent\("settings"\)/);
     for (const action of [
       ["src", "app", "[locale]", "events", "[slug]", "register", "actions.ts"],
       ["src", "app", "[locale]", "events", "[slug]", "actions.ts"],
       ["src", "app", "[locale]", "contact", "actions.ts"],
+      ["src", "app", "[locale]", "contact", "feedback", "actions.ts"],
     ]) {
       expect(read(...action), action.join("/")).toContain("botCheckIsOn");
     }

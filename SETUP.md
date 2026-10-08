@@ -1440,6 +1440,22 @@ club names — which is why a colleague's Yahoo can be on the list.
      another one changes the organizer of entries already answered, which some calendar apps
      refuse; choose the address once.
 
+**«Spune-ne ceva» — the anonymous forms under the newsletter (§NNN).** Nothing to set on the
+deployment: the three ordinary branches («Cum a fost», «O sugestie», «O reclamație») leave through
+the same Gmail account as the form above, and the confidential «Siguranță» through Mailgun alone
+(`MAILGUN_*`, already set), never through the club's Gmail. On each deployment (QA has its own):
+
+1. `/admin/legal` → the «GDPR» card → «Regenerează din șablon» → approve the notice: its section 5
+   describes the forms. Until a notice naming them is in force in both languages, nothing shows on
+   `/contact` whatever the switches say, and `/admin/tasks` carries the row «formularele „Spune-ne ceva”».
+2. «Pagini» → «Contact» → **«Spune-ne ceva»**: tick «Pornit» on each branch the club wants, with the
+   one address that receives it; for «Siguranță», the designated person's own address (not a shared
+   club mailbox) and the first name the form shows («Mesajul ajunge doar la …») → **Salvează
+   formularele** → confirm. Each branch is off by default; untick to take it away.
+3. Check: `/ro/contact` shows «Spune-ne ceva» under the newsletter; a message sent from QA arrives
+   with `[QA]` in front of its subject. The site keeps no copy of any message, so the inbox is the
+   only place to look.
+
 To take the form away, clear the recipients on «Pagini» → «Contact» (`/admin/pages/contact`) and leave `CONTACT_FORM_TO`
 empty — or remove `CONTACT_SMTP_USER` or `CONTACT_SMTP_PASSWORD` and redeploy: the page goes
 back to the address either way. Google's own limit on an ordinary account is about 500 messages a day,

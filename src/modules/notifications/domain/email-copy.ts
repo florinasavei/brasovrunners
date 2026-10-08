@@ -53,6 +53,13 @@ export const EMAIL_COPY_PLACEHOLDERS = [
   "holdMinutes",
   "offerHours",
   "reminderHours",
+  /*
+    «Spune-ne cum a fost» (§NNN), in the organizer's message only (`ORGANIZER_MESSAGE_PLACEHOLDERS`):
+    the anonymous form for the message's event while «Cum a fost» is open, the contact page otherwise.
+    The one address in the set, and the reason it may be: the platform mints it from `APP_BASE_URL`,
+    exactly as it mints the button's — nobody types it, so it can lead nowhere this site does not.
+  */
+  "feedbackLink",
 ] as const;
 
 export type EmailCopyPlaceholder = (typeof EMAIL_COPY_PLACEHOLDERS)[number];

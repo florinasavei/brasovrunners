@@ -17,6 +17,7 @@ import { GROUP_RUN_DECLARATION_KEYS, raceDeclarationKeysFor, RACE_DECLARATION_KE
 import {
   asksForMinorSignature,
   describesEventInvitations,
+  describesFeedbackForms,
   describesListNumbers,
   describesGmailFallback,
   describesListSocials,
@@ -269,6 +270,17 @@ export async function noticeDescribesListNumbers<T extends Record<string, unknow
 export async function noticeDescribesEventInvitations<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesEventInvitations(notice.body));
+}
+
+/**
+ * Whether the privacy notice in force describes «Spune-ne ceva» (§NNN, `describesFeedbackForms`) — in
+ * every language, like `noticeDescribesNewsletter`: one door serves both, and a person in either was
+ * told only what their language's notice says. For `/admin/tasks` and the email that links the form;
+ * a public page asks through the public cache (`cachedFeedbackFormsDescribed`).
+ */
+export async function noticeDescribesFeedbackForms<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesFeedbackForms(notice.body));
 }
 
 /**

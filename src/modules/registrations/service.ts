@@ -1323,7 +1323,7 @@ export function classifySubmission(
 }
 
 /** Shared with the contact and interest forms (§146, §149), which keep the older, single answer. */
-export function looksLikeSpam(input: { honeypot?: string; renderedAt?: string }, now: Date): boolean {
+export function looksLikeSpam(input: { honeypot?: string; renderedAt?: string; email?: string }, now: Date): boolean {
   const verdict = classifySubmission(input, now);
   return verdict !== "ok" && verdict !== "autofill";
 }

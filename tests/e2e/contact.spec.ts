@@ -96,6 +96,8 @@ test.describe("BR-REQ-070-04 the contact form", () => {
             const above = [
               ...[...document.querySelectorAll("main form")].filter((form) => !form.closest("dialog, [data-testid='newsletter-section']")),
               ...document.querySelectorAll('main [data-testid="newsletter-section"]'),
+              // «Spune-ne ceva» (§NNN), when a branch is on: its door is under the newsletter, the line under it.
+              ...document.querySelectorAll('main [data-testid="feedback-section"]'),
             ];
             return lineTop - Math.max(-Infinity, ...above.map((element) => element.getBoundingClientRect().bottom));
           }),
