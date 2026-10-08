@@ -41,7 +41,7 @@ import {
 } from "@/modules/contact/fields";
 import { readFormDraft } from "@/modules/registrations/form-draft";
 import { contactSmtpRoadExists } from "@/modules/contact/delivery";
-import { FEEDBACK_SECTION_ID, offeredBranches } from "@/modules/feedback/domain/branches";
+import { doorIntroKey, FEEDBACK_SECTION_ID, offeredBranches } from "@/modules/feedback/domain/branches";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { BOT_CHECK_ERROR_ATTRIBUTE, BOT_CHECK_SLOT_SX } from "@/modules/registrations/domain/turnstile-widget";
 import { pageAlternates, staticRouteUrls } from "@/modules/seo/alternates";
@@ -175,7 +175,8 @@ export default async function ContactPage({ params, searchParams }: Props) {
     here, and then simply not drawn.
   */
   const [feedbackOffer, feedbackDescribed] = await Promise.all([orNull(() => cachedFeedbackOffer()), orNull(() => cachedFeedbackFormsDescribed(now))]);
-  const feedbackOpen = feedbackOffer !== null && offeredBranches(feedbackOffer, feedbackDescribed === true, contactSmtpRoadExists()).length > 0;
+  const feedbackOffered = feedbackOffer === null ? [] : offeredBranches(feedbackOffer, feedbackDescribed === true, contactSmtpRoadExists());
+  const feedbackOpen = feedbackOffered.length > 0;
   const tell = await getTranslations("Tell");
 
   const field = (name: "name" | "email" | "message", help?: string) => ({
@@ -392,7 +393,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
             {tell("title")}
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-            {tell("door.intro")}
+            {tell(doorIntroKey(feedbackOffered))}
           </Typography>
           <Button
             component="a"

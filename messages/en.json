@@ -8472,6 +8472,7 @@
     "backToContact": "Back to Contact",
     "door": {
       "intro": "How an event went, a suggestion or a complaint — anonymously, if you like.",
+      "introSafety": "A confidential form for anyone who did not feel safe.",
       "button": "Open the anonymous form"
     },
     "choose": {
@@ -8526,10 +8527,10 @@
       "safety": "What happened?"
     },
     "messageHelp": {
-      "howItWent": "At most 2,000 characters.",
-      "suggestion": "At most 2,000 characters.",
-      "complaint": "At most 2,000 characters.",
-      "safety": "At most 2,000 characters. Write only as much as you want."
+      "howItWent": "At most {max} characters.",
+      "suggestion": "At most {max} characters.",
+      "complaint": "At most {max} characters.",
+      "safety": "At most {max} characters. Write only as much as you want."
     },
     "reasons": {
       "legend": "If you stopped coming, will you tell us why?",

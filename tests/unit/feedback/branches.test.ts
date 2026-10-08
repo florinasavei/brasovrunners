@@ -3,6 +3,7 @@ import {
   BRANCH_SLUG,
   composeFeedbackEmail,
   DEFAULT_FEEDBACK_SETTINGS,
+  doorIntroKey,
   feedbackFields,
   type FeedbackInput,
   type FeedbackSettings,
@@ -54,6 +55,14 @@ describe("§NNN the branches a visitor is offered", () => {
     expect(offeredBranches(ON, true, false)).toEqual(["safety"]);
     expect(offeredBranches({ ...ON, safety: { on: false, to: null, name: null } }, true, false)).toEqual([]);
     expect(offeredBranches(ON, false, false)).toEqual([]);
+  });
+
+  it("says the door's sentence from what is offered: the safety form's own with «Siguranță» alone, the three forms' otherwise", () => {
+    expect(doorIntroKey(offeredBranches(ON, true, false))).toBe("door.introSafety");
+    expect(doorIntroKey(["safety"])).toBe("door.introSafety");
+    expect(doorIntroKey(offeredBranches(ON, true, true))).toBe("door.intro");
+    expect(doorIntroKey(["howItWent"])).toBe("door.intro");
+    expect(doorIntroKey(["suggestion", "safety"])).toBe("door.intro");
   });
 
   it("skips the choice when one branch is on, chooses by ?tip= among several, and has no page with none", () => {

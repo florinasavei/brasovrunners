@@ -377,7 +377,7 @@ async function BranchForm({
             </Box>
           )}
           <TextField
-            {...box("message", t(`messageHelp.${branch}`))}
+            {...box("message", t(`messageHelp.${branch}`, { max: String(FEEDBACK_TEXT_MAX) }))}
             label={t(`message.${branch}`)}
             required
             multiline

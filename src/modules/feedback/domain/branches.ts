@@ -81,6 +81,15 @@ export function offeredBranches(settings: FeedbackSettings, noticeDescribes: boo
   });
 }
 
+/**
+ * The door's sentence on `/contact` (§NNN), from what is offered: the three ordinary forms named only
+ * while one of them is there — with «Siguranță» alone (a deployment with no SMTP road, or the club's
+ * choice) the button opens the safety form straight away, and the sentence says that form alone.
+ */
+export function doorIntroKey(offered: readonly FeedbackBranch[]): "door.intro" | "door.introSafety" {
+  return offered.length === 1 && offered[0] === "safety" ? "door.introSafety" : "door.intro";
+}
+
 /** How many branches are switched on, whatever the notice says: the backoffice summary's count. */
 export function branchesSwitchedOn(settings: FeedbackSettings): FeedbackBranch[] {
   return FEEDBACK_BRANCHES.filter((branch) => settings[branch].on);

@@ -364,8 +364,9 @@ export async function previewParticipantMessage<T extends Record<string, unknown
   const eventUrl = details.slug
     ? `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: details.slug } } })}`
     : undefined;
-  // `{feedbackLink}` (§NNN) as the send will fill it: «Cum a fost» while that branch is open, the contact page otherwise.
-  const feedbackOpen = await howItWentOpen(db, new Date());
+  // `{feedbackLink}` (§NNN) as the send will fill it: «Cum a fost» while that branch is open, the contact page
+  // otherwise — and always for a members' event (§552), whose slug the public form neither lists nor names.
+  const feedbackOpen = !details.membersOnly && (await howItWentOpen(db, new Date()));
   const day = eventDay(details.startsAt, details.timezone);
   const contactOf = (language: Locale) => `${env.APP_BASE_URL}${getPathname({ locale: language, href: "/contact" })}`;
 
@@ -398,7 +399,10 @@ export async function previewParticipantMessage<T extends Record<string, unknown
   };
   const rendered = renderBilingual("ORGANIZER_MESSAGE", locale, data, eventUrl);
   const unknown = [
-    ...new Set([words.subject.ro, words.subject.en, words.body.ro, words.body.en].flatMap((value) => unknownOrganizerPlaceholders(value))),
+    ...new Set([
+      ...[words.subject.ro, words.subject.en].flatMap((value) => unknownOrganizerPlaceholders(value, "subject")),
+      ...[words.body.ro, words.body.en].flatMap((value) => unknownOrganizerPlaceholders(value, "body")),
+    ]),
   ];
   return { subject: rendered.subject, html: rendered.html, unknown };
 }

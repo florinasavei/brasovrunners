@@ -8472,6 +8472,7 @@
     "backToContact": "Înapoi la Contact",
     "door": {
       "intro": "Cum a fost la un eveniment, o sugestie sau o reclamație — anonim, dacă vrei.",
+      "introSafety": "Un formular confidențial pentru cine nu s-a simțit în siguranță.",
       "button": "Deschide formularul anonim"
     },
     "choose": {
@@ -8526,10 +8527,10 @@
       "safety": "Ce s-a întâmplat?"
     },
     "messageHelp": {
-      "howItWent": "Cel mult 2 000 de caractere.",
-      "suggestion": "Cel mult 2 000 de caractere.",
-      "complaint": "Cel mult 2 000 de caractere.",
-      "safety": "Cel mult 2 000 de caractere. Scrie doar cât vrei."
+      "howItWent": "Cel mult {max} de caractere.",
+      "suggestion": "Cel mult {max} de caractere.",
+      "complaint": "Cel mult {max} de caractere.",
+      "safety": "Cel mult {max} de caractere. Scrie doar cât vrei."
     },
     "reasons": {
       "legend": "Dacă nu mai vii, ne spui de ce?",

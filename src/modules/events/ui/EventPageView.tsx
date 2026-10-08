@@ -158,8 +158,9 @@ export default async function EventPageView({
         </Alert>
       )}
       {/* «Spune-ne cum a fost» once it is over (§NNN), under the line that says so; a visit's page only —
-          the preview before saving reads no public cache. */}
-      {visit && <EventFeedbackButton event={{ ...event, slug }} locale={locale} now={now} />}
+          the preview before saving reads no public cache. Never on a members' event (§552): the form's
+          picker and title are public, so it would open on «Altceva» and the club would lose the event. */}
+      {visit && !membersOnly && <EventFeedbackButton event={{ ...event, slug }} locale={locale} now={now} />}
 
       {/* What it is, and — when the club has said — what it is run on (`DECISIONS.md` §61),
           each with its glyph (§112); the words stay, the glyphs decorate. Then, for an event held

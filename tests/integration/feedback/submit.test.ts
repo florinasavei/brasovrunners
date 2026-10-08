@@ -296,10 +296,11 @@ describe("§NNN «Spune-ne ceva»", () => {
   });
 
   describe("the emails that carry «Spune-ne cum a fost»", () => {
-    async function seed() {
+    async function seed({ membersOnly = false }: { membersOnly?: boolean } = {}) {
       const [event] = await db
         .insert(events)
         .values({
+          membersOnly,
           type: "RACE",
           startsAt: new Date("2026-10-04T06:00:00Z"),
           timezone: "Europe/Bucharest",
@@ -420,6 +421,26 @@ describe("§NNN «Spune-ne ceva»", () => {
       expect(open.text).toContain("Spune-ne aici: ");
       expect(open.text).toContain("/ro/contact/spune-ne?tip=cum-a-fost&eveniment=alergarea-de-duminica&data=2026-10-04");
       expect(open.text).toContain("/en/contact/tell-us?tip=cum-a-fost&eveniment=sunday-run&data=2026-10-04");
+    });
+
+    it("a members' event (§552): no form in the thank-you, and the organizer's {feedbackLink} is the contact page, never its slug", async () => {
+      const { event, person, registration } = await seed({ membersOnly: true });
+      await openHowItWent();
+      const thanks = await renderOutboxMessage(thanksRow(person.id, registration.id), db, NOW);
+      expect(thanks.text).not.toContain("Spune-ne cum a fost");
+      expect(thanks.text).not.toContain("tip=cum-a-fost");
+      expect(thanks.text).not.toContain("eveniment=");
+
+      const words = {
+        subject: { ro: "Cum a fost la {eventTitle}?", en: "How was {eventTitle}?" },
+        body: { ro: "Spune-ne aici: {feedbackLink}", en: "Tell us here: {feedbackLink}" },
+      };
+      await sendParticipantMessage(db, organizer, { eventId: event.id, audience: "ALL_ACTIVE", sendId: "0b0d5c3e-4f5a-4c1e-9d2b-7a8e9f0a1b22", ...words }, NOW);
+      const [row] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "ORGANIZER_MESSAGE"));
+      const message = await renderOutboxMessage({ ...row, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
+      expect(message.text).toMatch(/Spune-ne aici: \S+\/ro\/contact(\s|$)/);
+      expect(message.text).toMatch(/Tell us here: \S+\/en\/contact(\s|$)/);
+      expect(message.text).not.toContain("tip=cum-a-fost");
     });
   });
 });

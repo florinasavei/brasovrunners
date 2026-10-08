@@ -718,9 +718,11 @@ async function renderRow(
     now, at the send, as every fact of a message is. The thank-you's button when it carries no results
     link (the link under them otherwise), and the organizer's `{feedbackLink}`, which falls back to the
     contact page so a sentence written around it never reads empty. Each half in its own language.
+    Never for a members' event (§552): the form's picker and its title are public, so its link would
+    open on «Altceva» and the club's email would lose the event — the contact page stands in instead.
   */
   if ((row.messageType === "EVENT_THANKS" || row.messageType === "ORGANIZER_MESSAGE") && eventDetails) {
-    if (await howItWentOpen(db, now)) {
+    if (!eventDetails.membersOnly && (await howItWentOpen(db, now))) {
       const day = eventDay(eventDetails.startsAt, eventDetails.timezone ?? CLUB_TIME_ZONE);
       data.feedbackUrl = howItWentUrl(locale, eventDetails.slug ?? null, day);
       data.feedbackUrlOther = howItWentUrl(otherLocale(locale), otherDetails?.slug ?? null, day);

@@ -18,7 +18,7 @@ import { readRepeatRule } from "@/modules/events/domain/repeat";
 import { EMAIL_SAMPLE } from "@/modules/notifications/domain/email-sample";
 import {
   ORGANIZER_BODY_MAX,
-  ORGANIZER_MESSAGE_PLACEHOLDERS,
+  ORGANIZER_SUBJECT_PLACEHOLDERS,
   ORGANIZER_SUBJECT_MAX,
   organizerMessageCost,
   organizerMessageDeferral,
@@ -156,7 +156,8 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
   );
   const languageRo = tSite("languageName.ro");
   const languageEn = tSite("languageName.en");
-  const placeholderList = ORGANIZER_MESSAGE_PLACEHOLDERS.map((name) => `{${name}}`).join(", ");
+  // The subject's fields, in both helps; the body's one more, `{feedbackLink}`, has its own sentence (§NNN).
+  const placeholderList = ORGANIZER_SUBJECT_PLACEHOLDERS.map((name) => `{${name}}`).join(", ");
   const refusal = await refusalMessages({
     audience: t("participantMessages.audience"),
     subjectRo: `${t("participantMessages.subject")} (${languageRo})`,
