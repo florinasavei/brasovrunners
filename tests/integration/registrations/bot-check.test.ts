@@ -88,7 +88,7 @@ describe("§254 the anti-bot switch", () => {
     /*
       A source assertion, and worth one: a switch that half the entry points ignore is worse
       than no switch — the club would believe the challenge was off while the registration form
-      still refused people (§97, §254). The registration form, the contact page and, since §NNN,
+      still refused people (§97, §254). The registration form, the contact page and, since §675,
       the two link forms («Înscrierile mele», «Retrimite linkul») read it; their actions ask it.
     */
     const read = (...where: string[]) => readFileSync(path.join(process.cwd(), ...where), "utf8");

@@ -211,7 +211,7 @@ describe("BR-REQ-036-02 participant link request", () => {
   });
 
   /*
-    §NNN — the form's honeypot and timing check. A post that looks automated gets the same silent
+    §675 — the form's honeypot and timing check. A post that looks automated gets the same silent
     nothing as an unknown address, before anything is counted or looked up: so a script spends
     neither the mailbox's hourly allowance nor the club's email, and the person who then asks
     honestly is still answered.
@@ -226,7 +226,7 @@ describe("BR-REQ-036-02 participant link request", () => {
       await expect(
         requestRegistrationLink(
           db,
-          { email: "ana@example.ro", eventId, honeypot: "cheap watches",renderedAt: RENDERED },
+          { email: "ana@example.ro", eventId, honeypot: "cheap watches", renderedAt: RENDERED },
           new Date(NOW.getTime() + attempt * 60_000),
         ),
       ).resolves.toBeUndefined();

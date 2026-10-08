@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.75-2026-10-08 -->
+<!-- PROJECT_BASELINE: BR-V2.76-2026-10-08 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.75-2026-10-08`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.76-2026-10-08`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -24452,3 +24452,29 @@ What always works: calendar.google.com on the web → «+» beside «Alte calend
 **Amends §107** (the calendar's doors gain the address to copy), **§195** (the folded address is a box to copy, no longer a `webcal://` link).
 
 Baseline `BR-V2.75-2026-10-08`.
+
+## 675. The two link forms run the anti-bot check too (amending §77, §97, §254)
+
+**Context.** The owner, 2026-10-08, with a screenshot of «Înscrierile mele» (`/ro/inscrieri/ale-mele`: one address box, «Trimite-mi linkul»): «This page also needs a turnstile».
+
+The page takes any address and emails that address a link; its twin, «Retrimite linkul de înregistrare» (`/ro/inregistrari/retrimite`), does the same for one registration. Both are `AGENTS.md` §19.4's «management/profile link request» surface: throttled per canonical address, one answer whatever the address means (the oracle rule, §77). Neither carried the defences every other public form has — the honeypot, the timing check and Cloudflare Turnstile (§97, §254) — so a script could type a stranger's address into them until the hour's allowance was spent, and the club's Mailgun allowance with it. The contact form, the newsletter box, «Anunță-mă» and the group-run declaration all carried the three; these two were the last public forms that did not.
+
+**Decision.** *Both forms, not the one in the screenshot.* They are one surface in §19.4, share one throttle bucket (`link-request`, §322) and answer with one sentence; a defence on one of them would leave the other as the way round it, and a script does not care which page it posts to.
+
+*The contact form's three defences, unchanged.* The page carries the honeypot exactly as the contact page writes it, a hidden `renderedAt`, and `BotCheck` with Cloudflare's sentence (`notice`, §323) in a box that takes no room until the widget arms (§593). No held press: the existing button stays, as on every form but the registration form.
+
+*What refuses, and what passes — §216's rule, restated for a form whose whole purpose is to help somebody who got no email.* Only a token Cloudflare looked at and rejected (`failed`) refuses: the post comes back to the same page with the refusal line («Verificarea anti-bot nu a reușit…», the registration form's words) and `?captcha=1&since=<renderedAt>` — the resend page keeps its `&event=<slug>` — never the address in the URL (§14.5). A widget that never ran, or a Cloudflare that did not answer (`unavailable`), and a check that is off or unconfigured (`not_configured`) pass, because the honeypot, the timing check and the throttle are still in front (§420). Refusing a person who could not get a link because their browser could not run a script would close the one door left to them.
+
+*The honeypot and the timing check answer with the form's silence.* A filled trap, or a post under a second after the render, gets the same «if that address has registrations, we have sent the link» and queues nothing, counts nothing and looks nothing up — the interest box's rule (§146). Not counting matters here: a script's posts must not spend the mailbox's hourly allowance, or the person asking honestly afterwards would be throttled by the bot. The address travels with the trap, so a password manager that fills the trap with the person's own address reads as `autofill`, not a bot (§282). A refused redraw is timed from the render the person first saw (`since`, §146), so a quick retry is not read as a bot; the widget's reset key stays this render's own time, never `since`, so a refusal never posts the spent token again (§185).
+
+*The oracle rule is kept.* The bot check is decided before anything is counted or looked up, so its refusal says nothing about the address; every honest post is still counted before the lookup and answered with the one sentence.
+
+*The switch covers these forms too.* «Verificarea anti-bot» in «Setări → Platformă» governs both link forms as it governs the others (§254: a switch that half the entry points ignore is worse than none). The pages read it through the public cache (`cachedBotCheckSiteKey`), as the contact page does, so a GET wakes nothing; the actions ask `botCheckIsOn`. The source assertion in `tests/integration/registrations/bot-check.test.ts` now names the two link pages and their two actions beside the registration form, the contact page and their actions.
+
+**Refused.** *Keeping the typed address in the sealed draft cookie on a refusal.* The privacy notice's section 10 names the three forms that set that cookie («formularul de înscriere, declarația sau formularul de contact»); one address is retyped or autofilled, and a change to the notice's template for one email box would be a new version the club has to approve.
+
+*A new privacy-notice sentence.* The notice's section 10 already says the forms run Turnstile when the check is on and what Cloudflare sees, and the caption under the widget names it on the page — the judgement that covered the newsletter box and the group-run declaration.
+
+Tests: `tests/integration/registrations/my-registrations.test.ts` and `link-request.test.ts` — a filled trap and a post under a second queue nothing and leave the allowance whole, the person's own address in the trap sends the link, an honest post is unchanged; `bot-check.test.ts` — every public form that draws the widget, and its action, consults the switch.
+
+Baseline `BR-V2.76-2026-10-08`.

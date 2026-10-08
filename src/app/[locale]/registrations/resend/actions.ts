@@ -24,7 +24,7 @@ function text(form: FormData, name: string): string {
  * The service answers identically for the same reason — a form anyone can type any address into
  * must not become a way to find out who entered the race.
  *
- * The one other answer is the bot check's (§NNN, the contact form's rule, §216): a token
+ * The one other answer is the bot check's (§675, the contact form's rule, §216): a token
  * Cloudflare looked at and rejected comes back to the form with the refusal line — decided before
  * anything is counted or looked up, so it says nothing about the address. A widget that never
  * ran, or a Cloudflare that did not answer, passes: the honeypot, the timing check and the

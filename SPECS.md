@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.75-2026-10-08 -->
+<!-- PROJECT_BASELINE: BR-V2.76-2026-10-08 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.75-2026-10-08`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.76-2026-10-08`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -1032,6 +1032,7 @@ registration — and it lists registrations and never changes an address.
 15. Given the address holder's manage link listing another adult and a minor registered on the same address, when the holder posts a yes for the adult, then it is refused as FORBIDDEN and nothing is written, the adult's row offers only «Nu mai vreau oferte și beneficii pentru această înscriere» while it says yes, a yes for the minor is kept, and the adult's own link may say yes (2026-09-29, `DECISIONS.md` §562).
 16. Given «Înscrierile mele» under an address's link, when it lists a registration that says yes, then it offers only «Nu mai vreau oferte și beneficii pentru această înscriere», and a registration that says no shows, while the notice in force describes the offers, no button but the sentence pointing to the registration's own page or the declaration; a yes posted through this link is refused as FORBIDDEN for every row, the holder's own and another adult's included, and nothing is written, a no is kept with one audit row `via: MY_REGISTRATIONS`, and the registration's own manage link still says yes (2026-09-29, `DECISIONS.md` §562).
 17. Given a person subscribed to the newsletter who also said yes to offers and benefits, when the newsletter subscription is removed, then `promo_consent` is unchanged; and when offers and benefits are withdrawn, the newsletter subscription is unchanged (2026-09-29, `DECISIONS.md` §562).
+18. The «Înscrierile mele» form carries the honeypot, the timing check and, while «Verificarea anti-bot» is on, Turnstile: a post with the trap filled (other than with the person's own address) or sent under a second after the render is answered «sent», queues nothing and counts nothing against the address's allowance; a post Turnstile could not verify (no token, Cloudflare silent) is served as usual; a token Cloudflare rejected comes back to the form with the refusal line and the address never in the URL (2026-10-08, `DECISIONS.md` §675).
 
 **Verification:** integration `registrations/my-registrations.test.ts`; integration `cms/boundary.test.ts` (the routes)
 
@@ -1474,6 +1475,7 @@ registration — and it lists registrations and never changes an address.
 37. An `ACCEPT_INVITATION` link is scoped to its invitation, hashed at rest and minted at the send; opening it reads in a read-only transaction and spends nothing; the form's press spends it once, a refused form takes the spend back, and a resend's newer link makes the older one read as replaced (2026-10-03, `DECISIONS.md` §647).
 38. The invitation link's press asks, under the event lock and before it spends the token, whether the invitation is still open and before its deadline and the event still scheduled and not started; refused, it spends nothing, lands on the link's page with the refusal (withdrawn, expired, cancelled), and the page then reads the same — never «already used» for a person who has no registration (2026-10-03, `DECISIONS.md` §647).
 39. An invitation's link to an event called off since the send (`CANCELLED`) — the GET and the press alike — says the event was cancelled («Evenimentul a fost anulat, așa că invitația nu mai e valabilă.»), never that the deadline passed; a race already started, or an event marked «Încheiat» (`COMPLETED`) even with its start ahead, says expired, never cancelled; the token stays unspent (2026-10-03, `DECISIONS.md` §647).
+40. The «Retrimite linkul» form carries the same three defences with the same answers: a spam-looking post is answered «sent», queues nothing and counts nothing; a post Turnstile could not verify is served as usual; a token Cloudflare rejected comes back with the refusal line, the event it was asked from kept, and the address never in the URL (2026-10-08, `DECISIONS.md` §675).
 
 **Verification:** integration `tokens/action-tokens.test.ts`, `tokens/token-throttle.test.ts`
 

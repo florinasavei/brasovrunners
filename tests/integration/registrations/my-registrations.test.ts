@@ -117,7 +117,7 @@ describe("BR-REQ-036-04 my registrations", () => {
   });
 
   /*
-    §NNN — the form's honeypot and timing check: a post that looks automated gets the same silent
+    §675 — the form's honeypot and timing check: a post that looks automated gets the same silent
     nothing, before the count and the lookup, so the mailbox's allowance is left for the person.
   */
   describe("the form's honeypot and timing check", () => {

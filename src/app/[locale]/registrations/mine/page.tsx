@@ -37,7 +37,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * "My registrations": type the address, get one link (BR-REQ-036-04, `DECISIONS.md` §77).
  * The same shape as the resend form and the same one answer, because a form anybody can type
  * any address into must not say whether that address is known. The form's defences are the
- * contact form's (§NNN): the honeypot, the timing check and Cloudflare's check when the club has
+ * contact form's (§675): the honeypot, the timing check and Cloudflare's check when the club has
  * it on — the one other sentence is the check's own refusal, which says nothing of the address.
  */
 export default async function MyRegistrationsRequestPage({ params, searchParams }: Props) {
@@ -103,7 +103,7 @@ export default async function MyRegistrationsRequestPage({ params, searchParams 
               autoComplete="email"
               // No helper (§546): the sentence above says which address.
             />
-            {/* Cloudflare's check (§NNN), as on the contact form: its own island, reset by this
+            {/* Cloudflare's check (§675), as on the contact form: its own island, reset by this
                 render's time (§185), Cloudflare's sentence with it (§323), no room before (§593). */}
             {siteKey && (
               <Box sx={BOT_CHECK_SLOT_SX}>

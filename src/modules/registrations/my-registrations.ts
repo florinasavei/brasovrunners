@@ -41,7 +41,7 @@ export async function requestMyRegistrationsLink<T extends Record<string, unknow
   input: { email: string; locale: Locale; honeypot?: string; renderedAt?: string },
   now: Date,
 ): Promise<void> {
-  // The form's own defences (§NNN), answered with the same silence as everything below: a filled
+  // The form's own defences (§675), answered with the same silence as everything below: a filled
   // trap or a post under a second after the render counts nothing and looks nothing up — a script
   // spends neither the mailbox's allowance nor the club's email. The person's own address in the
   // trap is a password manager (§282) and passes.

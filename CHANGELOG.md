@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.76-2026-10-08
+
+- **The two link forms check for bots too** — «Înscrierile mele» and «Retrimite linkul» now carry the contact form's honeypot, timing check and Cloudflare's check (when it is on): a script's post is answered «sent» and sends nothing, and only a token Cloudflare rejected asks to tick the box again. §675.
 ## BR-V2.75-2026-10-08
 
 - **The calendar entry can ask «Da / Nu / Poate»** — with one address in «Setări» → «Emailuri» → «Răspunsurile din calendar», the confirmation, the reminder, a group run's signed declaration, a time or place update and a cancellation carry an invitation the runner's calendar answers, and the answers land in that mailbox; empty, the calendar file is exactly as before. §672.

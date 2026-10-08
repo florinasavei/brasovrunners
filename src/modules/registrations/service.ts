@@ -1324,7 +1324,7 @@ export function classifySubmission(
 
 /**
  * Shared with the contact and interest forms (§146, §149), which keep the older, single answer,
- * and with the two link forms (§NNN). `email`, when the form has one, lets a trap holding the
+ * and with the two link forms (§675). `email`, when the form has one, lets a trap holding the
  * person's own address read as a password manager rather than a bot (§282).
  */
 export function looksLikeSpam(input: { honeypot?: string; renderedAt?: string; email?: string }, now: Date): boolean {
@@ -1600,7 +1600,7 @@ export async function requestRegistrationLink<T extends Record<string, unknown>>
   input: { email: string; eventId?: string; honeypot?: string; renderedAt?: string },
   now: Date,
 ): Promise<void> {
-  // The form's honeypot and timing check (§NNN), before the count and the lookup and with the
+  // The form's honeypot and timing check (§675), before the count and the lookup and with the
   // same silence: a script's post spends neither the mailbox's allowance nor the club's email.
   // The person's own address in the trap is a password manager (§282), not a bot, and passes.
   if (looksLikeSpam(input, now)) return;

@@ -46,7 +46,7 @@ export const metadata: Metadata = {
  *
  * The confirmation says "if that address has a registration" rather than "sent", because the
  * page cannot honestly say more without saying who is registered. The form's defences are the
- * contact form's (§NNN): the honeypot, the timing check and Cloudflare's check when the club has
+ * contact form's (§675): the honeypot, the timing check and Cloudflare's check when the club has
  * it on — the one other sentence is the check's own refusal, which says nothing of the address.
  */
 export default async function ResendPage({ params, searchParams }: Props) {
@@ -113,7 +113,7 @@ export default async function ResendPage({ params, searchParams }: Props) {
               helperText={t("resend.emailHelp")}
             />
 
-            {/* Cloudflare's check (§NNN), as on the contact form: its own island, reset by this
+            {/* Cloudflare's check (§675), as on the contact form: its own island, reset by this
                 render's time (§185), Cloudflare's sentence with it (§323), no room before (§593). */}
             {siteKey && (
               <Box sx={BOT_CHECK_SLOT_SX}>

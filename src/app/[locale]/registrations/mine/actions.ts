@@ -20,7 +20,7 @@ function text(form: FormData, name: string): string {
  * the address is known, unknown, malformed, throttled or the post looked automated
  * (BR-REQ-036-04; the oracle rule of `registrations/resend`).
  *
- * The one other answer is the bot check's (§NNN, the contact form's rule, §216): a token
+ * The one other answer is the bot check's (§675, the contact form's rule, §216): a token
  * Cloudflare looked at and rejected comes back to the form with the refusal line — decided before
  * anything is counted or looked up, so it says nothing about the address. A widget that never
  * ran, or a Cloudflare that did not answer, passes: the honeypot, the timing check and the
