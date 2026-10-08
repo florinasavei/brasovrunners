@@ -81,7 +81,7 @@ describe("the calendar page draws the feed's address to copy (§674)", () => {
     expect(address).toMatch(/^https?:\/\//);
     expectAddressBox(html, { id: "calendar-feed-address-head", address, locale });
     const words = catalogues[locale].Events.calendar;
-    for (const hint of [words.googleHintWhy, words.googleHintHow, words.phoneAppHint]) expect(html).toContain(escape(hint));
+    for (const hint of [words.googleHintWhy, words.googleHintHow, words.phoneAppHint, words.androidSync]) expect(html).toContain(escape(hint));
     // The two doors stay: the quick-add link works the first time, and the box joins it.
     expect(html).toContain(`>${escape(words.subscribeGoogle)}</a>`);
     expect(html).toContain(`>${escape(words.subscribeApple)}</a>`);
@@ -100,7 +100,7 @@ describe("the calendar page draws the feed's address to copy (§674)", () => {
     const fold = html.slice(html.indexOf("<details"));
     expect(fold).toContain(`${escape(words.feedAddress)}</summary>`);
     expectAddressBox(fold, { id: "calendar-feed-address", address, locale });
-    for (const hint of [words.googleHintWhy, words.googleHintHow, words.phoneAppHint]) expect(fold).toContain(escape(hint));
+    for (const hint of [words.googleHintWhy, words.googleHintHow, words.phoneAppHint, words.androidSync]) expect(fold).toContain(escape(hint));
     // The ids differ from the head's: both are in one page's HTML (the head's is hidden from `sm`).
     expect(html).not.toContain('id="calendar-feed-address-head"');
   });
@@ -136,8 +136,8 @@ describe("the event page draws its own file's address (§674)", () => {
 
 describe("the words (§674)", () => {
   const keys = {
-    Events: ["calendar.feedAddress", "calendar.addressLabel", "calendar.copy", "calendar.copied", "calendar.googleHintWhy", "calendar.googleHintHow", "calendar.phoneAppHint"],
-    Event: ["share.fileAddress", "share.fileAddressLabel", "share.copy", "share.copied", "share.binHint"],
+    Events: ["calendar.feedAddress", "calendar.addressLabel", "calendar.copy", "calendar.copied", "calendar.googleHintWhy", "calendar.googleHintHow", "calendar.phoneAppHint", "calendar.androidSync", "calendar.twoWays"],
+    Event: ["share.fileAddress", "share.fileAddressLabel", "share.copy", "share.copied", "share.binHint", "share.fileSnapshot"],
   } as const;
 
   it.each(["ro", "en"] as const)("are in the catalogue, each under 200 characters (%s)", (locale) => {

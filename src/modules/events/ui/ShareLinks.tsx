@@ -103,6 +103,12 @@ export default async function ShareLinks({ url, title, imageHref, fileName, cale
           {anchor(calendar.icsHref, t("share.ics"), <EventAvailableIcon sx={SHARE_ICON_SX} aria-hidden="true" />, true)}
         </Stack>
       )}
+      {calendar && (
+        /* The file is a copy of today (§674): said once, in the open, under the row. */
+        <Typography variant="caption" color="text.secondary" component="p" data-testid="event-calendar-snapshot">
+          {t("share.fileSnapshot")}
+        </Typography>
+      )}
       {/*
         The file's address, to copy (§674): a fold, closed, so the row stays one row. Google Calendar
         on the web takes it by «Din URL»; and a person who deleted the event in Google learns why

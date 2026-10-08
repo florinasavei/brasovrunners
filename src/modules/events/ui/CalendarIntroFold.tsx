@@ -24,8 +24,11 @@ export function calendarFeedLinks(baseUrl: string, locale: string): { google: st
  * The words under the feed's address (§674), in order: why Google's button may do nothing, the way
  * that always works, and the phone app's limit. One list for both places that draw the address.
  */
-export function feedAddressHints(t: (key: "calendar.googleHintWhy" | "calendar.googleHintHow" | "calendar.phoneAppHint") => string): string[] {
-  return [t("calendar.googleHintWhy"), t("calendar.googleHintHow"), t("calendar.phoneAppHint")];
+export function feedAddressHints(
+  t: (key: "calendar.googleHintWhy" | "calendar.googleHintHow" | "calendar.phoneAppHint" | "calendar.androidSync") => string,
+): string[] {
+  // The Android step last (the owner, 2026-10-08: «It just says that calendar was added successfully but I can't see it»).
+  return [t("calendar.googleHintWhy"), t("calendar.googleHintHow"), t("calendar.phoneAppHint"), t("calendar.androidSync")];
 }
 
 const LINK_SX = {

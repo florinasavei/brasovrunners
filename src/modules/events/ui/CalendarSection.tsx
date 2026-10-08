@@ -104,6 +104,10 @@ export default async function CalendarSection({
           </Button>
           <InfoTip text={t("calendar.refreshNote")} />
         </Stack>
+        {/* The two ways, said in the open (§674; the owner: «we need to write that on the website so people know how to use them»). */}
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }} data-testid="calendar-two-ways">
+          {t("calendar.twoWays")}
+        </Typography>
         {/* A fold looks like a fold (§164): the marker back, the pointer, an underline on
             hover and on focus. It had been a flex box, which removes the triangle in
             Chrome and Safari — the owner: "it's not clear that this is expandable". */}
