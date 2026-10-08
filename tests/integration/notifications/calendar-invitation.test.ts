@@ -27,7 +27,7 @@ import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-080-01 criterion 11, BR-REQ-020-01 criterion 7 (`DECISIONS.md` §NNN, amending §174) — the
+ * BR-REQ-080-01 criterion 11, BR-REQ-020-01 criterion 7 (`DECISIONS.md` §672, amending §174) — the
  * five messages that carry the event into a calendar, with «Răspunsurile din calendar merg la» set
  * and unset: unset, exactly today's attachment on the confirmation and the reminder and nothing on
  * the rest; set, an invitation the calendar answers on all five, its update on «Detalii actualizate»
@@ -150,7 +150,7 @@ async function render(messageType: EmailMessageType, who: Awaited<ReturnType<typ
   );
 }
 
-describe("BR-REQ-080-01 «Răspunsurile din calendar merg la» (§NNN)", () => {
+describe("BR-REQ-080-01 «Răspunsurile din calendar merg la» (§672)", () => {
   it("is off until an Administrator types an address; trimmed, checked, audited, and off again when emptied", async () => {
     expect(await readCalendarRsvpTo(db)).toEqual({ to: "", updatedAt: null });
     expect(await calendarRsvpToForSending(db)).toBeNull();
@@ -184,7 +184,7 @@ describe("BR-REQ-080-01 «Răspunsurile din calendar merg la» (§NNN)", () => {
   });
 });
 
-describe("BR-REQ-080-01 criterion 11 the five messages, with the setting unset and set (§NNN)", () => {
+describe("BR-REQ-080-01 criterion 11 the five messages, with the setting unset and set (§672)", () => {
   it("unset: the confirmation and the reminder carry today's file, and nothing else carries one", async () => {
     const event = await publishedRace();
     const ana = await registered(event.id);
@@ -318,7 +318,7 @@ describe("BR-REQ-080-01 criterion 11 the five messages, with the setting unset a
   });
 });
 
-describe("BR-REQ-080-01 the group run's declaration carries the invitation to the signer (§NNN)", () => {
+describe("BR-REQ-080-01 the group run's declaration carries the invitation to the signer (§672)", () => {
   async function approve(key: "GROUP_RUN_DECLARATION_TRAIL" | "PRIVACY_NOTICE") {
     const translations: LegalDocumentTranslationInput[] = (["ro", "en"] as const).map((locale) => ({ locale, ...LEGAL_TEMPLATES[key][locale] }));
     await insertLegalDocumentVersion(db, { key, version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(translations), translations, now: NOW });
@@ -390,7 +390,7 @@ describe("BR-REQ-080-01 the group run's declaration carries the invitation to th
   });
 });
 
-describe("BR-REQ-020-01 criterion 7 the invitation's SEQUENCE moves with the time, the place and the status (§NNN)", () => {
+describe("BR-REQ-020-01 criterion 7 the invitation's SEQUENCE moves with the time, the place and the status (§672)", () => {
   const FIELDS = {
     type: "RACE",
     eventStatus: "SCHEDULED",

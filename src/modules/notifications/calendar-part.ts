@@ -11,7 +11,7 @@ import { CLUB_NAME } from "@/theme/brand";
 import type { CalendarPart } from "./domain/calendar-part";
 
 /**
- * The event in the runner's calendar, as the message carries it (§174, §NNN): the part
+ * The event in the runner's calendar, as the message carries it (§174, §672): the part
  * `calendarPartFor` chose, built from the same function the event page's file and the feed use
  * (`toCalendarEvent`, `buildCalendar`), so what lands in a calendar says what the page says.
  *

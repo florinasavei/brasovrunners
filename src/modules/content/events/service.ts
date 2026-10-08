@@ -1512,7 +1512,7 @@ type SavedDate = {
 const placeLanguagesOf = (rows: readonly EditableTranslation[]) => rows.map((row) => ({ locale: row.locale, locationName: row.locationName }));
 
 /**
- * The calendar invitation's number moves with what it says (§NNN): every date of the save whose
+ * The calendar invitation's number moves with what it says (§672): every date of the save whose
  * start, place or status moved (`calendarSequenceMoves`) gets `calendar_sequence + 1`, in the save's
  * transaction — whether or not anybody is told, because the next invitation that date sends (the
  * reminder, a confirmation) must outrank the one a runner's calendar already holds. Neither the
@@ -1747,7 +1747,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
     await clearDiscountNoteIfNotAllowed(tx, input.eventId, saved);
     // No words are saved here; only the place's names moved, and the notice compares those.
     const dates: SavedDate[] = [{ before: current, after: saved, translationsBefore, translationsAfter: withPlaceNames(translationsBefore, names) }];
-    // The calendar invitation's number (§NNN), told or not: the next invitation must outrank the last.
+    // The calendar invitation's number (§672), told or not: the next invitation must outrank the last.
     await bumpCalendarSequences(tx, dates);
     if (announcing) await announceSave(tx, { actor: input.actor, request, saved, dates, now });
     return saved;
@@ -2653,7 +2653,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     const announcing = request.notify || request.cancellation !== null;
     const thisDate: SavedDate = { before: current, after: savedEvent, translationsBefore: existingTranslations, translationsAfter };
     /*
-      The calendar invitation's number (§NNN): a date of the series moves only by what moved on this
+      The calendar invitation's number (§672): a date of the series moves only by what moved on this
       one (`applyToSeries` carries this date's differences and nothing else), so the other dates are
       read back for it only when this one's start, place or status moved — or for the notice.
     */
@@ -2686,7 +2686,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     */
     const placeAnnounced = current.locationToBeAnnounced && !savedEvent.locationToBeAnnounced;
 
-    // Told or not, every date whose start, place or status moved outranks the invitation it sent (§NNN).
+    // Told or not, every date whose start, place or status moved outranks the invitation it sent (§672).
     if (calendarMoved) await bumpCalendarSequences(tx, [thisDate, ...otherDates]);
 
     /*

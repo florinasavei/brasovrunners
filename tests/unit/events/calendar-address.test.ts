@@ -5,7 +5,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — the calendar's address, to copy, and what to do when Google says it already has it
+ * §674 — the calendar's address, to copy, and what to do when Google says it already has it
  * (amending §107 and §195).
  *
  * The owner, 2026-10-08: «Why can't I add the event back to my Google calendar after I removed it?»
@@ -73,7 +73,7 @@ function expectAddressBox(html: string, { id, address, locale }: { id: string; a
   expect(button).toContain(escape(id.startsWith("event") ? words.Event.share.copy : words.Events.calendar.copy));
 }
 
-describe("the calendar page draws the feed's address to copy (§NNN)", () => {
+describe("the calendar page draws the feed's address to copy (§674)", () => {
   it.each(["ro", "en"] as const)("in the «?» fold on a phone, from APP_BASE_URL and the locale (%s)", async (locale) => {
     currentLocale = locale;
     const html = withoutStyles(renderToStaticMarkup(await CalendarIntroFold({ locale, baseUrl: env.APP_BASE_URL })));
@@ -106,7 +106,7 @@ describe("the calendar page draws the feed's address to copy (§NNN)", () => {
   });
 });
 
-describe("the event page draws its own file's address (§NNN)", () => {
+describe("the event page draws its own file's address (§674)", () => {
   const props = (fileAddress?: string) => ({
     url: `${env.APP_BASE_URL}/ro/evenimente/crosul`,
     title: "Crosul",
@@ -134,7 +134,7 @@ describe("the event page draws its own file's address (§NNN)", () => {
   });
 });
 
-describe("the words (§NNN)", () => {
+describe("the words (§674)", () => {
   const keys = {
     Events: ["calendar.feedAddress", "calendar.addressLabel", "calendar.copy", "calendar.copied", "calendar.googleHintWhy", "calendar.googleHintHow", "calendar.phoneAppHint"],
     Event: ["share.fileAddress", "share.fileAddressLabel", "share.copy", "share.copied", "share.binHint"],
@@ -163,7 +163,7 @@ describe("the words (§NNN)", () => {
   });
 });
 
-describe("«Copiază» without a clipboard selects the text (§NNN)", () => {
+describe("«Copiază» without a clipboard selects the text (§674)", () => {
   const box = () => {
     const calls: string[] = [];
     return { calls, focus: () => calls.push("focus"), select: () => calls.push("select") };

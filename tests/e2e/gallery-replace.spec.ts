@@ -4,7 +4,7 @@ import { confirmDialog } from "./support/confirm";
 import { fillDateField, signIn } from "./support/featured-event";
 
 /**
- * «Înlocuiește» on an album's photo (§NNN; BR-REQ-054-01) — through the browser, at both viewports.
+ * «Înlocuiește» on an album's photo (§673; BR-REQ-054-01) — through the browser, at both viewports.
  *
  * What the integration suite cannot see: the button's file input, the browser's shrink at the
  * remembered quality, the post to the album's upload route, and the page re-rendered with the new
@@ -12,7 +12,7 @@ import { fillDateField, signIn } from "./support/featured-event";
  * follows it to the public gallery. Local storage mode (`APP_ENV=local`): the objects are served
  * back by `/api/media/…`, and the old picture's address answers 404 once it is replaced.
  */
-test.describe.serial("§NNN «Înlocuiește» on an album's photo", () => {
+test.describe.serial("§673 «Înlocuiește» on an album's photo", () => {
   let slug = "";
   let editorUrl = "";
 

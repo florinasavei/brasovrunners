@@ -74,7 +74,7 @@ export default async function CalendarSection({
           calendar does not work" — a `webcal://` link does nothing where no app claims the
           scheme, which on a desktop is most browsers): Google Calendar's own "add by URL"
           address, `webcal://` for Apple, Outlook and phones, the file itself; the plain
-          address folded away, to copy (§NNN), and the "when does it update" behind an "i"
+          address folded away, to copy (§674), and the "when does it update" behind an "i"
           (the feed is fresh on every read, §129; when the phone shows a change is the app's
           clock, and the owner asked why Google still showed the old hour). */}
       <Box component="section" aria-labelledby="add-to-calendar" sx={{ mt: 2, p: 1.5, border: 1, borderColor: "divider", borderRadius: 2 }}>
@@ -113,7 +113,7 @@ export default async function CalendarSection({
             {t("calendar.feedAddress")}
           </summary>
           {/*
-            The address to copy (§NNN, amending §195). §195 made it a `webcal://` link, to press
+            The address to copy (§674, amending §195). §195 made it a `webcal://` link, to press
             as well as to copy; the «Apple / Outlook / telefon» button above is that link, so the
             fold now holds the plain `https://` address in a read-only box with «Copiază» — what
             Google Calendar's «Din URL» wants pasted when its quick-add button does nothing (a

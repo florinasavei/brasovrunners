@@ -9,7 +9,7 @@ export function eventCalendarFileUrl(baseUrl: string, locale: string, slug: stri
 }
 
 /**
- * A calendar's address, to copy (§NNN, amending §107 and §195): a read-only box with the plain
+ * A calendar's address, to copy (§674, amending §107 and §195): a read-only box with the plain
  * `https://` address and «Copiază» beside it, and the sentences that say when a person needs it.
  *
  * Google Calendar's quick-add link (the «Google Calendar» button) works the first time. After a

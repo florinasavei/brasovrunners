@@ -110,7 +110,7 @@ const WRITES: Record<string, Expected> = {
   "src/modules/content/gallery/service.ts#addPhoto": ["gallery"],
   "src/modules/content/gallery/service.ts#addStoredPhoto": ["gallery"],
   "src/modules/content/gallery/service.ts#deletePhoto": ["gallery"],
-  // «Înlocuiește» (§NNN): the photo's new picture, through the media verb, expired as a delete is.
+  // «Înlocuiește» (§673): the photo's new picture, through the media verb, expired as a delete is.
   "src/modules/content/gallery/service.ts#replacePhoto": ["gallery"],
   "src/modules/content/gallery/service.ts#setCover": ["gallery"],
   "src/modules/content/gallery/service.ts#deleteAlbum": ["gallery"],

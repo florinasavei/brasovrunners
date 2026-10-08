@@ -24,7 +24,7 @@ export type PhotoReplaceLabels = {
 };
 
 /**
- * «Înlocuiește» on one photo of an album (§NNN): the uploader's file input for one file, shrunk in
+ * «Înlocuiește» on one photo of an album (§673): the uploader's file input for one file, shrunk in
  * the browser at the quality chosen beside «Încarcă fotografii» (the one remembered choice, §414,
  * §437), posted to the album's upload route with the photo it replaces. The server keeps the
  * photo's place and its cover role; the page then re-renders with the new picture.

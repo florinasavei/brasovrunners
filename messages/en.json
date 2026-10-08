@@ -104,7 +104,7 @@
       "copied": "Copied",
       "googleHintWhy": "The button does nothing? Google hides a calendar rather than removing it, and keeps an old copy by its address.",
       "googleHintHow": "On the web: calendar.google.com → “+” beside “Other calendars” → “From URL” → paste the address, with ?v=2 at the end.",
-      "phoneAppHint": "The Google Calendar app on a phone cannot add a calendar by its address; use the website."
+      "phoneAppHint": "The Google Calendar app on a phone cannot add a calendar by its address; use calendar.google.com in the browser."
     },
     "raceWeek": {
       "today": "Today, {when}",
@@ -4311,7 +4311,7 @@
       "imageSize": "Width on a wide screen",
       "imageRemove": "Remove the picture",
       "imageReplace": "Replace",
-      "imageReplaceHelp": "Another photograph in the same place: the description, caption, width and placement stay, the crop is cleared. The same picture in the other language's text changes too, keeping its own description and caption.",
+      "imageReplaceHelp": "Another photograph in the same place: the description, caption, width and placement stay; the crop is cleared. The same picture in the other language's text changes too, with its own words kept.",
       "imageDone": "Done",
       "imageClose": "Close the picture panel",
       "imagePanel": "The picture",
@@ -5049,7 +5049,7 @@
       "calendarRsvp": {
         "title": "Calendar answers",
         "intro": "The calendar invitation can ask Yes, No or Maybe. For a group run it goes once, with the declaration, and is never updated. Here you choose where the answers go.",
-        "aside": "Go to {address}",
+        "aside": "Answers go to {address}",
         "asideNone": "Off — the calendar goes as a file, without Yes / No / Maybe",
         "inForce": "In force: calendar answers go to {address}.",
         "inForceNone": "In force: no address. The confirmation and the reminder carry the calendar file, with “Add to calendar”, without Yes / No / Maybe.",

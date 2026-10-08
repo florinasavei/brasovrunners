@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.74-2026-10-08 -->
+<!-- PROJECT_BASELINE: BR-V2.75-2026-10-08 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.74-2026-10-08`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.75-2026-10-08`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1417,7 +1417,14 @@ club names — which is why a colleague's Yahoo can be on the list.
    invitation rides only on the signed declaration's email and is sent once: no change notice or
    cancellation reaches the signers, so a run moved or called off afterwards stays as it was in
    their calendars — tell them another way. A calendar's «Nu» cancels nothing either: the place
-   stays taken until the runner uses «Nu mai pot ajunge». (`DECISIONS.md` §NNN)
+   stays taken until the runner uses «Nu mai pot ajunge». (`DECISIONS.md` §672)
+   - **QA first, then production.** Set the address on QA, register yourself for a QA event from a
+     Gmail address (and an Outlook or Apple one if you can), and check: the confirmation arrives
+     with its text, its links and the signed PDF visible, and with Da / Nu / Poate; one answer lands
+     under the «Calendar» label below; «Setări» → «Emailuri» shows the row as sent, not «eșuat» or
+     «respins». Only then set the address on production. The first real send on QA is the check
+     that a live inbox shows the buttons and that Mailgun accepts the invitation's shape; nothing
+     in the tests can replace it.
    - In the app, as an Administrator, on each deployment (QA has its own): «Setări» → «Emailuri» →
      **«Răspunsurile din calendar»** → «Răspunsurile din calendar merg la» = the club's Gmail with
      `+calendar` before the `@` (Gmail delivers `name+calendar@…` to `name@…`, and the part after

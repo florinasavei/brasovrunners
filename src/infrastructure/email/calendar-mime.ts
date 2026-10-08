@@ -2,7 +2,7 @@ import MailComposer from "nodemailer/lib/mail-composer";
 import type { EmailCalendar, OutgoingEmail } from "./adapter";
 
 /**
- * The calendar invitation's MIME, the same on both roads (§NNN).
+ * The calendar invitation's MIME, the same on both roads (§672).
  *
  * A calendar app offers «Da / Nu / Poate» only for a part typed `text/calendar; method=REQUEST`
  * (Gmail, Outlook and Apple read the `method` parameter, not only the file's `METHOD:` line).
@@ -20,7 +20,7 @@ export function icalEventOf(calendar: EmailCalendar): { method: string; content:
 }
 
 /**
- * The whole message as RFC 5322, for Mailgun's `messages.mime` (§NNN): the headers Mailgun's form
+ * The whole message as RFC 5322, for Mailgun's `messages.mime` (§672): the headers Mailgun's form
  * would have written — From, To, Cc, Reply-To, Subject — the text, the HTML, the invitation and any
  * other attachment (the signed declaration beside a confirmation, §174). A Bcc is no header, as on
  * every road; it is among `recipients`, the envelope Mailgun's `to` field must carry in full.

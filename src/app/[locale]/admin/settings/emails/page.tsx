@@ -187,7 +187,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     readNeonBudget(now).then((budget) => readOutboxDelivery(db, now, budget.effects.jobFloorMinutes)),
     // «Reîncearcă emailurile eșuate» (§622): the week's FAILED rows its question counts, for whoever may press it.
     maySendNow ? countRetryableFailed(db, now) : 0,
-    // «Răspunsurile din calendar merg la» (§NNN): the club's own address, read straight through like the others.
+    // «Răspunsurile din calendar merg la» (§672): the club's own address, read straight through like the others.
     readCalendarRsvpTo(db),
   ]);
   /*
@@ -417,7 +417,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       )}
 
       {/*
-        Where a calendar invitation's «Da / Nu / Poate» goes (§NNN), beside the copies: what else the
+        Where a calendar invitation's «Da / Nu / Poate» goes (§672), beside the copies: what else the
         club receives. The club's own address, no participant's, so every reader of this page sees it;
         the Administrator changes it.
       */}

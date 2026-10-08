@@ -137,7 +137,7 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     await expect(main.getByTestId("outbox-timing-form")).toHaveCount(0);
     await expect(main.getByTestId("outbox-when").getByRole("switch")).toHaveCount(0);
     await expect(main.getByRole("heading", { name: "Copiile clubului" })).toBeVisible();
-    // Where the calendar's answers go (§NNN): read by every reader of the page, changed by the Administrator.
+    // Where the calendar's answers go (§672): read by every reader of the page, changed by the Administrator.
     await expect(main.getByRole("heading", { name: "Răspunsurile din calendar" })).toBeVisible();
     await expect(main.getByTestId("calendar-rsvp-form")).toHaveCount(0);
     await expect(main.getByRole("button", { name: /Salvează/ })).toHaveCount(0);
@@ -534,7 +534,7 @@ test.describe("BR-REQ-033-02 criterion 12 the club's hidden copy of the emails t
 });
 
 /**
- * BR-REQ-033-02 (`DECISIONS.md` §NNN) — «Răspunsurile din calendar merg la»: one address beside the
+ * BR-REQ-033-02 (`DECISIONS.md` §672) — «Răspunsurile din calendar merg la»: one address beside the
  * club's copies, named back in force, refused when it is not an address, and empty again at the end
  * so the next test on this database starts with the calendar file as before. Desktop only: one
  * shared `platform_settings` row.

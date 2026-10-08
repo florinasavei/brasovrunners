@@ -15,7 +15,7 @@ import {
 } from "./domain/calendar-rsvp";
 
 /**
- * «Răspunsurile din calendar merg la» (§NNN): the shape every club setting on «Emailuri» has (§100,
+ * «Răspunsurile din calendar merg la» (§672): the shape every club setting on «Emailuri» has (§100,
  * §164, §244) — one `platform_settings` row, written by an Administrator, audited with what it was
  * and what it became, read straight through by the page and through a half-minute memo by the send.
  * An address of the club's own, never a credential and never a participant's.
@@ -36,7 +36,7 @@ export async function readCalendarRsvpTo<T extends Record<string, unknown>>(db: 
 }
 
 /**
- * The address the renderer writes as the invitation's organizer, or null for today's file (§NNN).
+ * The address the renderer writes as the invitation's organizer, or null for today's file (§672).
  * From the instance's memo (`domain/calendar-rsvp.ts`); a database that cannot answer is off — a
  * message never fails over a calendar part.
  */

@@ -34,7 +34,7 @@ export function fillIsFor(detail: RichTextFillDetail | null | undefined, name: s
 }
 
 /**
- * «Înlocuiește» on a picture in a text reaches every box of the same form (§NNN): the Romanian
+ * «Înlocuiește» on a picture in a text reaches every box of the same form (§673): the Romanian
  * text and its English copy name the same stored picture, and a picture replaced in one language
  * and left in the other would show the old photograph on the other language's page. The box that
  * replaced announces the old address and the new picture; every box of that form — a mounted

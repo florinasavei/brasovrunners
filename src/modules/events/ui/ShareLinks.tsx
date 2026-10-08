@@ -40,7 +40,7 @@ type Props = {
   fileName: string;
   /**
    * "Add to calendar" (§107). `fileAddress` is the `.ics`'s absolute address, drawn in a fold under
-   * the row to copy (§NNN) — absent on a members' event, whose file opens with a session only.
+   * the row to copy (§674) — absent on a members' event, whose file opens with a session only.
    */
   calendar?: { icsHref: string; googleUrl: string; fileAddress?: string };
   /**
@@ -104,7 +104,7 @@ export default async function ShareLinks({ url, title, imageHref, fileName, cale
         </Stack>
       )}
       {/*
-        The file's address, to copy (§NNN): a fold, closed, so the row stays one row. Google Calendar
+        The file's address, to copy (§674): a fold, closed, so the row stays one row. Google Calendar
         on the web takes it by «Din URL»; and a person who deleted the event in Google learns why
         the file will not add it again for 30 days (Google keeps the deleted entry, by its UID, in
         the calendar's Bin — the UID is the event's on purpose, §107, §174).

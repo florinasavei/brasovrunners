@@ -40,7 +40,7 @@ export type OutgoingEmail = {
   /** Files carried with the message — the signed declaration (§95). Rendered at send time, never stored in the outbox. */
   attachments?: EmailAttachment[];
   /**
-   * A calendar invitation the runner's calendar answers (§NNN): the `.ics` text and its iTIP method.
+   * A calendar invitation the runner's calendar answers (§672): the `.ics` text and its iTIP method.
    * Not an attachment like the others, because a calendar app offers «Da / Nu / Poate» only for a
    * part typed `text/calendar; method=REQUEST` (Gmail, Outlook and Apple all read the parameter):
    * both roads hand it to Nodemailer's composer, which writes it as that `multipart/alternative`
@@ -79,7 +79,7 @@ export type EmailTransportName = "mailgun" | "gmail";
 
 export type EmailAttachment = { filename: string; contentType: string; data: Buffer };
 
-/** An invitation (§NNN): the method the calendar part is typed with, and the file, `METHOD` and all. */
+/** An invitation (§672): the method the calendar part is typed with, and the file, `METHOD` and all. */
 export type EmailCalendar = { method: "REQUEST" | "CANCEL"; ics: string };
 
 /**

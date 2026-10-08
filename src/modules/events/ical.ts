@@ -569,7 +569,7 @@ export function googleCalendarDetails(event: CalendarEvent, labels: CalendarLabe
 }
 
 /**
- * An invitation the runner's calendar answers (§NNN, amending §107 and §174; the owner: «can we make
+ * An invitation the runner's calendar answers (§672, amending §107 and §174; the owner: «can we make
  * it Smarter so that people can respond Going/NotGoing»): the same entry the page's file and the
  * feed carry — the same `UID`, so the invitation and a subscribed feed's entry are one event in the
  * app, not two — sent as an iTIP request (RFC 5546) with the club as `ORGANIZER` and the runner as
@@ -609,7 +609,7 @@ function icalParam(value: string): string {
   return /[:;,]/.test(clean) ? `"${clean}"` : clean;
 }
 
-/** `ORGANIZER` and `ATTENDEE` for an invitation (§NNN), unfolded: `buildCalendar` folds every line. */
+/** `ORGANIZER` and `ATTENDEE` for an invitation (§672), unfolded: `buildCalendar` folds every line. */
 function rsvpLines(rsvp: CalendarRsvp): string[] {
   const attendeeName = rsvp.attendeeName?.trim();
   // A cancellation asks nothing (RFC 5546 §3.2.5): the attendee is named, and no answer is requested.
@@ -651,7 +651,7 @@ export function buildVEvent(event: CalendarEvent, baseUrl: string, labels: Calen
   ];
   if (place.location) lines.push(`LOCATION:${icalText(place.location)}`);
   lines.push("END:VEVENT");
-  // An invitation is one entry (§NNN): each further VEVENT would be one more invitation to answer.
+  // An invitation is one entry (§672): each further VEVENT would be one more invitation to answer.
   // Its programme is already in the description, under «Programul evenimentului».
   if (rsvp) return lines;
 
@@ -689,7 +689,7 @@ export function buildCalendar(params: {
   /** The subscriber's refresh hint: an hour (§129). Outlook reads it; Google and Apple keep their own clock. */
   refreshHours?: number;
   /**
-   * An invitation rather than a published file (§NNN): `METHOD:REQUEST` or `CANCEL`, one entry per
+   * An invitation rather than a published file (§672): `METHOD:REQUEST` or `CANCEL`, one entry per
    * event with the club as organizer and the runner as attendee, and none of a feed's own lines —
    * no calendar name and no refresh hint, which belong to a calendar one subscribes to, and which an
    * app reading an invitation would at best ignore. Absent, the file is byte for byte what it was.

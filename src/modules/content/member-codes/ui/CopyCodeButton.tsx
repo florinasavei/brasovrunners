@@ -6,12 +6,12 @@ import Button from "@mui/material/Button";
 import { useState } from "react";
 import { copyText } from "./copy-text";
 
-/** How long the button says «Copiat» (§NNN): two seconds, then its word again. */
+/** How long the button says «Copiat» (§674): two seconds, then its word again. */
 const COPIED_FOR_MS = 2000;
 
 /**
  * «Copiază codul» (§552): the site's one clipboard island — the members' codes, «Ce le spui» and,
- * since §NNN, the calendar's address. The text itself is in the server's HTML, in a box a person
+ * since §674, the calendar's address. The text itself is in the server's HTML, in a box a person
  * can select and copy without JavaScript; this puts it on the clipboard in one press and says so,
  * glyph beside the word. A clipboard the browser refuses (an insecure context, an old browser)
  * selects the text in the box named by `selectId` instead (`copy-text.ts`), so the press is never

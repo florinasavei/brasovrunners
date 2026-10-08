@@ -252,7 +252,7 @@ export default async function EventPageView({
               // A members' file is the twin's, per request (§552): the static one reads the public row alone.
               icsHref: membersOnly ? `/${locale}/${LIVE_SEGMENT}/events/${slug}/calendar.ics` : `/${locale}/events/${slug}/calendar.ics`,
               googleUrl: googleCalendarUrl(toCalendarEvent(dated, locale, now), { locale, t }),
-              // The file's address to copy (§NNN): not for a members' event, whose file opens only with a member's session.
+              // The file's address to copy (§674): not for a members' event, whose file opens only with a member's session.
               fileAddress: membersOnly ? undefined : eventCalendarFileUrl(env.APP_BASE_URL, locale, slug),
             } : undefined
           }

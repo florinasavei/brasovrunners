@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * «Răspunsurile din calendar merg la» (§NNN; the owner, 2026-10-08: «On the iCal calendar, can we
+ * «Răspunsurile din calendar merg la» (§672; the owner, 2026-10-08: «On the iCal calendar, can we
  * make it Smarter so that people can respond Going/NotGoing and replying to [the club's Gmail]?»,
  * then «Will this bloat up the app? Can this be a config? In Gmail I can setup a filter I guess»).
  *

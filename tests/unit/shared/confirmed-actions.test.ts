@@ -169,7 +169,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   updateSiteFontSizeAction: [],
   // Who receives the signed declarations and the confirmations, with personal data in them.
   updateClubNoticesAction: [],
-  // «Răspunsurile din calendar merg la» (§NNN): every invitation from now on asks, and the answers go there.
+  // «Răspunsurile din calendar merg la» (§672): every invitation from now on asks, and the answers go there.
   updateCalendarRsvpAction: [],
   // Asks for "Revino la textul implicit" (`reset=1`) only; saving the wording is an editorial save.
   updateEmailCopyAction: [],

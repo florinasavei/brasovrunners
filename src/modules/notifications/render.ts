@@ -1255,7 +1255,7 @@ async function renderRow(
 
   /**
    * The event in the runner's own calendar (§174; the owner: "și de iCal ca să poată pune în
-   * calendar") — and, since §NNN, an invitation the calendar answers when the club named where the
+   * calendar") — and, since §672, an invitation the calendar answers when the club named where the
    * answers go (the owner: «can we make it Smarter so that people can respond Going/NotGoing»).
    *
    * Without that address, exactly as before: the confirmation and the reminder, the two messages
@@ -1459,7 +1459,7 @@ async function renderGroupRunDeclarationRow(
   const pdf = await renderGroupRunDeclarationPdf(db, signed, declarationPdfAudience(row.messageType, false) ?? "club", now);
   if (!archive && signed.idDocument !== null) data.idDocumentMasked = true;
   /*
-    The run as an invitation (§NNN; the owner chose the declaration's email over a «Vin» form of its
+    The run as an invitation (§672; the owner chose the declaration's email over a «Vin» form of its
     own): to the signer, at the address they typed, under the name they signed with — only while the
     club named where the answers go, never on the archive copy or a club copy (`calendarPartFor`).
     The date they signed on: a series' declaration covers every date (§523), and the invitation is

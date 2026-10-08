@@ -6,7 +6,7 @@ import { replacementIsFor } from "@/modules/content/rich-text/ui/fill-event";
 import { parseRichText } from "@/modules/content/rich-text/domain/schema";
 
 /**
- * «Înlocuiește» on a picture in a text (§NNN; BR-REQ-050-03) — the node update the editor makes,
+ * «Înlocuiește» on a picture in a text (§673; BR-REQ-050-03) — the node update the editor makes,
  * as the pure rule it calls, and the document that rule leaves, through the schema a save parses.
  * The editor itself runs only in a browser; the source checks below pin that it calls this rule
  * on the selected node, uploads through the one `uploadPicture`, and deletes nothing.
@@ -31,7 +31,7 @@ function docOf(nodes: Array<[number, ReturnType<typeof image> | typeof paragraph
   };
 }
 
-describe("§NNN the picture's node, replaced", () => {
+describe("§673 the picture's node, replaced", () => {
   it("takes the new address and size, keeps the words, the width share and the placement, and clears the crop and the card's centre", () => {
     const next = replacedPictureAttrs(image(OLD).attrs, NEW);
     expect(next).toEqual({

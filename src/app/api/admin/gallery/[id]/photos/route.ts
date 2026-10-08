@@ -18,7 +18,7 @@ export const maxDuration = 60;
 /**
  * One photo into an album (BR-REQ-054-01). `POST` multipart with a `file`; the uploader sends
  * one request per photo. Or with an `assetId` instead: a picture already stored, chosen from the
- * gallery (§485), added as it is. Or with a `file` and a `replaceItemId`: «Înlocuiește» (§NNN), the
+ * gallery (§485), added as it is. Or with a `file` and a `replaceItemId`: «Înlocuiește» (§673), the
  * new photo in that photo's place — here rather than in a Server Action because an action's body
  * stops at 1 MB and the browser sends up to 4 (`BROWSER_SEND_BYTES`); the limits and quality of an
  * upload, the roles of a delete. Editorial roles only. The bytes are checked by
@@ -74,7 +74,7 @@ export async function POST(
   const quality = parseImageQuality(form.get("quality"));
   if (!quality) return NextResponse.json({ error: "VALIDATION_ERROR", detail: "quality" }, { status: 400 });
 
-  // «Înlocuiește» (§NNN): the photo whose place the new one takes, in this album.
+  // «Înlocuiește» (§673): the photo whose place the new one takes, in this album.
   const replaceItemId = form.get("replaceItemId");
   if (typeof replaceItemId === "string" && replaceItemId !== "") {
     if (!isUuid(replaceItemId)) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });

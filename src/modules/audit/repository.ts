@@ -370,7 +370,7 @@ export type AuditAction =
    */
   | "media.ladder_given"
   /**
-   * «Înlocuiește» (§NNN): a stored picture replaced in place by a new upload — `entity_id` the new
+   * «Înlocuiește» (§673): a stored picture replaced in place by a new upload — `entity_id` the new
    * picture, the metadata `{ from, to, where, oldDeleted }`: the two asset ids, the place whose
    * reference moved (`{ kind: "album", albumId, itemId }`) and whether the old picture went with it
    * (it stays while anything else still uses it). Never the file's bytes or a person.
@@ -411,7 +411,7 @@ export type AuditAction =
   | "email_copy.changed"
   /** Who at the club receives the declaration copies and the confirmation notices (§244, §245). */
   | "club_notices.changed"
-  /** «Răspunsurile din calendar merg la» (§NNN): the club's address an invitation's answers go to, from and to; empty is off. */
+  /** «Răspunsurile din calendar merg la» (§672): the club's address an invitation's answers go to, from and to; empty is off. */
   | "calendar_rsvp_to.changed"
   /**
    * An approved legal version taken out of circulation (`DECISIONS.md` §46, §53).

@@ -3527,7 +3527,7 @@ export function buildOutgoingEmail(params: {
   data: TemplateData;
   actionUrl?: string;
   attachments?: OutgoingEmail["attachments"];
-  /** A calendar invitation (§NNN), never on a club copy (§320). */
+  /** A calendar invitation (§672), never on a club copy (§320). */
   calendar?: OutgoingEmail["calendar"];
   /** The club's own wording for this message (§247), read once per batch by the caller. */
   overrides?: EmailCopy | null;
@@ -3544,7 +3544,7 @@ export function buildOutgoingEmail(params: {
     locale: params.locale,
     idempotencyKey: params.idempotencyKey,
     ...(params.attachments && params.attachments.length > 0 ? { attachments: params.attachments } : {}),
-    // Absent unless the club named where the answers go (§NNN), so every other message is as before.
+    // Absent unless the club named where the answers go (§672), so every other message is as before.
     ...(params.calendar ? { calendar: params.calendar } : {}),
     // Absent rather than empty, so a message with no copies is byte-identical to before.
     ...(params.cc && params.cc.length > 0 ? { cc: params.cc } : {}),

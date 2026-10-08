@@ -6,7 +6,7 @@ import { events, eventTranslations } from "@/db/schema/events";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — `?v=2` is the same file (amending §107).
+ * §674 — `?v=2` is the same file (amending §107).
  *
  * When Google Calendar believes it already has a calendar (one the person hid or removed), «Din URL»
  * with the same address does nothing for up to a day; the same address with `?v=2` at the end is a
@@ -34,7 +34,7 @@ const { GET: eventFile } = await import("@/app/[locale]/events/[slug]/calendar.i
 
 const NOW = new Date("2026-10-08T09:00:00.000Z");
 
-describe("§NNN the calendar files answer the same bytes whatever the query", () => {
+describe("§674 the calendar files answer the same bytes whatever the query", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 

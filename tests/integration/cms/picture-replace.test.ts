@@ -13,7 +13,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * «Înlocuiește» (§NNN, amending §72 and §73; BR-REQ-054-01, BR-REQ-050-03, BR-REQ-060-01) —
+ * «Înlocuiește» (§673, amending §72 and §73; BR-REQ-054-01, BR-REQ-050-03, BR-REQ-060-01) —
  * against PGlite and the in-memory store (`APP_ENV=test`).
  *
  * The one verb, `replaceStoredPicture`: the new picture under a new key prefix, the references the
@@ -62,7 +62,7 @@ const ALBUM = {
   },
 };
 
-describe("§NNN «Înlocuiește» — a picture replaced in place", () => {
+describe("§673 «Înlocuiește» — a picture replaced in place", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

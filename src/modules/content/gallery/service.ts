@@ -340,7 +340,7 @@ export async function deletePhoto<T extends Record<string, unknown>>(
 }
 
 /**
- * «Înlocuiește» on one photo of an album (§NNN): a new upload takes the photo's place — the same
+ * «Înlocuiește» on one photo of an album (§673): a new upload takes the photo's place — the same
  * item, so its order number (`position`) and, when it was the cover, the cover — through the one
  * replacement verb (`replaceStoredPicture`): a new key prefix, the old picture deleted only when
  * nothing else uses it (another album, a text, a card), one audit row, the gallery's cache expired.

@@ -1,5 +1,5 @@
 /**
- * «Înlocuiește» on a picture in a text (§NNN): what the image node becomes when a new upload takes
+ * «Înlocuiește» on a picture in a text (§673): what the image node becomes when a new upload takes
  * its place, and how the editor finds that node again once the upload has answered.
  *
  * The node stays where it is, with the words written about it — `alt`, `caption`, its width share
@@ -49,7 +49,7 @@ export function findPictureToReplace(doc: PictureDoc, selectedAt: number, src: s
 
 /**
  * Every picture in a document that carries `src`, by position — what a box changes when another
- * box of the same form replaced that picture (§NNN): the Romanian text and its English copy name
+ * box of the same form replaced that picture (§673): the Romanian text and its English copy name
  * the same stored picture, and a replace in one reaches the other. Positions are stable through
  * the change: an image is an atom, and a new attribute does not change its size.
  */

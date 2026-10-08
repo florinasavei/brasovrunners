@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V2.74-2026-10-08`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V2.75-2026-10-08`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -851,7 +851,7 @@ while the name is gone (the outage grace).
 The owner, 2026-10-08: «Why can't I add the event back to my Google calendar after I removed it?»
 and «Still can't re-import the Brașov Runners calendar». Nothing is wrong with the site: the feed
 and the files answer as always. Google does three things that look like a broken button
-(`DECISIONS.md` §NNN):
+(`DECISIONS.md` §674):
 
 - **The «×» beside a calendar in Google's left list hides it; it does not unsubscribe.** The
   calendar is still there, under Settings → «Calendare» with its box unticked.

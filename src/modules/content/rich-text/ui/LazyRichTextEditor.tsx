@@ -93,7 +93,7 @@ function LazyRichTextEditorIsland({
     return () => window.removeEventListener(RICH_TEXT_FILL_EVENT, onFill);
   }, [mounted, editor.name]);
   /*
-    A picture replaced in another box of this form while this fold is still shut (§NNN): the
+    A picture replaced in another box of this form while this fold is still shut (§673): the
     document this box posts, and mounts from later, takes the new picture wherever it names the
     old one, its own words kept. Once mounted, the editor hears it itself.
   */

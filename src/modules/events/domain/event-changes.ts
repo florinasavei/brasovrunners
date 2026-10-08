@@ -145,20 +145,20 @@ export function eventChangesToAnnounce(
 }
 
 /**
- * The kinds that change what a runner's calendar holds about the date (§NNN): when, where, and that
+ * The kinds that change what a runner's calendar holds about the date (§672): when, where, and that
  * it is on again. «Detalii actualizate» carrying one of them carries the updated invitation; a
  * programme row or a note alone does not — the invitation has one entry, its programme is words in
  * the description, and asking an answered invitation again over them would be noise.
  */
 export const CALENDAR_CHANGE_KINDS = ["time", "place", "reinstated"] as const satisfies readonly EventChangeKind[];
 
-/** Whether a notice's kinds include one the calendar entry is about (§NNN). */
+/** Whether a notice's kinds include one the calendar entry is about (§672). */
 export function changesTheCalendar(kinds: readonly EventChangeKind[]): boolean {
   return kinds.some((kind) => (CALENDAR_CHANGE_KINDS as readonly EventChangeKind[]).includes(kind));
 }
 
 /**
- * Whether a save moves the calendar invitation's `SEQUENCE` (§NNN; RFC 5546 §2.1.4): the start or
+ * Whether a save moves the calendar invitation's `SEQUENCE` (§672; RFC 5546 §2.1.4): the start or
  * the race's start moved, the place a page shows moved, the date was cancelled, or it is on again —
  * the same comparison «Detalii actualizate» reads (`eventChangesToAnnounce`), made on every save
  * whether or not the organizer asked to tell anybody. A runner's calendar keeps the entry it was

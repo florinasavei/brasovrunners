@@ -283,7 +283,7 @@ export function createMailgunAdapter(config: MailgunConfig): EmailAdapter {
   const authorization = `Basic ${Buffer.from(`api:${config.apiKey}`).toString("base64")}`;
   const endpoint = `${config.apiBaseUrl.replace(/\/+$/, "")}/${config.domain}/messages`;
   /*
-    The same domain's other door (§NNN): a message composed whole, for the one part the form API has no
+    The same domain's other door (§672): a message composed whole, for the one part the form API has no
     field for — a calendar invitation's `text/calendar; method=REQUEST` alternative (`calendar-mime.ts`).
     Mailgun's reference, «Send an email in MIME format»: `to` (every envelope recipient) and `message`
     (the MIME, as a file), with the same `o:`, `h:` and `v:` options as the form.
@@ -298,7 +298,7 @@ export function createMailgunAdapter(config: MailgunConfig): EmailAdapter {
       let url = endpoint;
       if (message.calendar) {
         /*
-          A calendar invitation (§NNN): the message composed whole by Nodemailer, as the Gmail road
+          A calendar invitation (§672): the message composed whole by Nodemailer, as the Gmail road
           composes it, and posted to `messages.mime` — the From, the copies, the Reply-To, the text, the
           HTML, the invitation's alternative part and every attachment are in the MIME; the envelope
           (the address, every copy, every hidden copy) is `to`. A message that cannot be composed is the

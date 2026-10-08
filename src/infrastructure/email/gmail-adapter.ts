@@ -66,7 +66,7 @@ export function createGmailAdapter(config: GmailAdapterConfig): EmailAdapter {
                 })),
               }
             : {}),
-          // A calendar invitation (§NNN): Nodemailer writes the `text/calendar; method=…` alternative
+          // A calendar invitation (§672): Nodemailer writes the `text/calendar; method=…` alternative
           // and the `invite.ics` attachment itself — the same composer the Mailgun road uses.
           ...(message.calendar ? { icalEvent: icalEventOf(message.calendar) } : {}),
         });

@@ -3,7 +3,7 @@ import ro from "../../../messages/ro.json";
 import { buildCalendar, buildVEvent, type CalendarEvent, type CalendarLabels, type CalendarRsvp } from "@/modules/events/ical";
 
 /**
- * BR-REQ-020-01 criterion 7 (`DECISIONS.md` §NNN, amending §107 and §174) — the calendar entry as
+ * BR-REQ-020-01 criterion 7 (`DECISIONS.md` §672, amending §107 and §174) — the calendar entry as
  * an invitation the runner's calendar answers: `METHOD:REQUEST` with the club as `ORGANIZER` and
  * the runner as the one `ATTENDEE`, `SEQUENCE` from the event, the public feed's `UID`, one entry
  * with the programme in its description, and `METHOD:CANCEL` for a cancelled event. Without the
@@ -45,7 +45,7 @@ const request: CalendarRsvp = {
 const unfold = (ics: string) => ics.replace(/\r\n /g, "");
 const lines = (ics: string) => unfold(ics).split("\r\n");
 
-/** Today's file for `event` with one programme row, as the code before §NNN wrote it (captured from it). */
+/** Today's file for `event` with one programme row, as the code before §672 wrote it (captured from it). */
 const TODAY = [
   "BEGIN:VCALENDAR",
   "VERSION:2.0",
@@ -91,7 +91,7 @@ const TODAY = [
   "",
 ].join("\r\n");
 
-describe("BR-REQ-020-01 criterion 7 the calendar entry as an invitation (§NNN)", () => {
+describe("BR-REQ-020-01 criterion 7 the calendar entry as an invitation (§672)", () => {
   it("without the option, writes today's file byte for byte — the feed and the page's .ics are unchanged", () => {
     expect(buildCalendar({ events: [event], baseUrl: "https://example.test", name: "BVR", labels })).toBe(TODAY);
     expect(buildCalendar({ events: [event], baseUrl: "https://example.test", name: "BVR", labels, rsvp: undefined })).toBe(TODAY);

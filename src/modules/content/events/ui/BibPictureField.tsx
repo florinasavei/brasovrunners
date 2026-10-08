@@ -1,6 +1,9 @@
 "use client";
 
 import UploadIcon from "@mui/icons-material/Upload";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
+
+const ReplaceGlyph = ACTION_ICONS.replace;
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
@@ -212,7 +215,7 @@ function PictureField({ slot, picture: initial, crop: initialCrop, scope, labels
           htmlFor={`${inputId}-file`}
           variant="outlined"
           size="small"
-          startIcon={<UploadIcon fontSize="small" />}
+          startIcon={picture.src ? <ReplaceGlyph fontSize="small" /> : <UploadIcon fontSize="small" />}
           disabled={state === "uploading"}
           sx={{ minHeight: 44 }}
         >

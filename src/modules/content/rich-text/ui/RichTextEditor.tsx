@@ -313,7 +313,7 @@ function RichTextEditorIsland({
     /** After the stored facts, the shape the upload went in with (§454); raw, `{shape}` substituted here. */
     imageUploadCropped: string;
     imageRemove: string;
-    /** «Înlocuiește» in the picture's panel (§NNN): the button, and what it keeps and what it drops. */
+    /** «Înlocuiește» in the picture's panel (§673): the button, and what it keeps and what it drops. */
     imageReplace: string;
     imageReplaceHelp: string;
     imageDone: string;
@@ -662,7 +662,7 @@ function RichTextEditorIsland({
   }, [editor, name]);
 
   /*
-    «Înlocuiește» pressed in another box of this form (§NNN) — the other language's text, as a rule,
+    «Înlocuiește» pressed in another box of this form (§673) — the other language's text, as a rule,
     which names the same stored picture: every image here carrying the old address takes the new
     picture, its own description and caption kept, in one transaction, so the hidden value and the
     tab marks follow as for typing. The box that pressed has already changed its own node and finds
@@ -765,7 +765,7 @@ function RichTextEditorIsland({
   };
 
   /**
-   * «Înlocuiește» (§NNN): the same shrink-and-upload `insertImage` uses, at the same remembered
+   * «Înlocuiește» (§673): the same shrink-and-upload `insertImage` uses, at the same remembered
    * quality and with the same facts and refusal under the toolbar, written to the picture that was
    * selected — found again by its position and address, since the upload takes seconds — as a new
    * address and size with the words kept and the crop cleared (`replacedPictureAttrs`); then every
@@ -788,6 +788,9 @@ function RichTextEditorIsland({
           editor
             .chain()
             .command(({ tr }) => {
+              // Out of this box's undo history: the other language's box takes the same picture
+              // in its own transaction, and a Ctrl+Z here would leave the two languages apart.
+              tr.setMeta("addToHistory", false);
               tr.setNodeMarkup(at, undefined, replacedPictureAttrs(node.attrs, uploaded));
               return true;
             })
@@ -1743,7 +1746,7 @@ function RichTextEditorIsland({
               />
             )}
             {/*
-              «Înlocuiește» (§NNN), beside the crop box's verbs: another photograph in this node's
+              «Înlocuiește» (§673), beside the crop box's verbs: another photograph in this node's
               place, the words kept and the crop cleared; the same picture in the other language's
               text changes with it, keeping that text's own words.
             */}

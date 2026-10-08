@@ -113,11 +113,11 @@ export async function uploadBodyImage<T extends Record<string, unknown>>(
   };
 }
 
-/** The place whose reference a replacement moves, for the audit row (§NNN). */
+/** The place whose reference a replacement moves, for the audit row (§673). */
 export type PictureReplacementPlace = { kind: "album"; albumId: string; itemId: string };
 
 /**
- * «Înlocuiește» (§NNN, amending §72 and §73): one stored picture replaced in place by a new upload,
+ * «Înlocuiește» (§673, amending §72 and §73): one stored picture replaced in place by a new upload,
  * wherever the caller says it is used. The verb an album photo's replace calls, and the one a
  * future place that keeps a picture by its id should call, so they replace alike. The team card
  * (`teamMembers.photoMediaAssetId`) and the bib design keep their upload-then-save flow (§541,

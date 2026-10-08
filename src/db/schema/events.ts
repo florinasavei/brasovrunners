@@ -172,7 +172,7 @@ export const events = pgTable(
     version: integer("version").notNull().default(1),
 
     /**
-     * The calendar invitation's `SEQUENCE` (§NNN; RFC 5546 §2.1.4): how many times what a runner's
+     * The calendar invitation's `SEQUENCE` (§672; RFC 5546 §2.1.4): how many times what a runner's
      * calendar holds about this date — its time, its place, whether it happens — has changed since
      * it was first sent. Bumped by the editor's save when the start, the race's start or the place a
      * page shows moves (`calendarSequenceMoves`, the same comparison that fills «Detalii

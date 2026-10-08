@@ -2,7 +2,7 @@ import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { changesTheCalendar, type EventChangeKind } from "@/modules/events/domain/event-changes";
 
 /**
- * Which calendar part a message carries (§174, §NNN, amending both): today's published file, an
+ * Which calendar part a message carries (§174, §672, amending both): today's published file, an
  * invitation the runner's calendar answers, its cancellation, or nothing.
  *
  * Without «Răspunsurile din calendar merg la» (`rsvpTo` null, the default) it is exactly what it
@@ -13,7 +13,7 @@ import { changesTheCalendar, type EventChangeKind } from "@/modules/events/domai
  * - the group run's signed declaration carries it too (`GROUP_RUN_DECLARATION_SIGNED`; the owner
  *   chose the declaration's email over a form of its own) — to the signer, once: a group run takes
  *   no registrations, and the update and the cancellation below are queued to registrations only
- *   (`event-notices.ts`), so a signer's invitation is never updated or cancelled (named in §NNN and
+ *   (`event-notices.ts`), so a signer's invitation is never updated or cancelled (named in §672 and
  *   in `SETUP.md` §38 step 8, not mended: a send to the signers would be a new path, the owner's call);
  * - «Detalii actualizate» carries the updated invitation when it is about the time, the place or a
  *   date on again (`changesTheCalendar`), never about the programme or a note alone;

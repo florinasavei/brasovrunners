@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 /**
- * §NNN — the calendar's address, to copy (BR-REQ-020-01, BR-REQ-041-01 criterion 6).
+ * §674 — the calendar's address, to copy (BR-REQ-020-01, BR-REQ-041-01 criterion 6).
  *
  * The owner, 2026-10-08: «Still can't re-import the Brașov Runners calendar». Google keeps a hidden
  * or removed calendar by its address, so its quick-add button can do nothing; the address pasted

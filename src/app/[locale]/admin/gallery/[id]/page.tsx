@@ -69,7 +69,7 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
   const transitions = allowedTransitions(actor.role, album.editorialStatus, isOwnDraft);
   const mayEdit = isEditorial(actor.role);
   const title = translations.find((row) => row.locale === locale)?.title ?? "";
-  // «Înlocuiește» on each photo (§NNN); the refusal is the uploader's own words.
+  // «Înlocuiește» on each photo (§673); the refusal is the uploader's own words.
   const replaceLabels = {
     replace: t("gallery.replacePhoto"),
     replacing: t("gallery.replacing"),
@@ -203,7 +203,7 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                 {t("gallery.uploadHelp")}
               </Typography>
-              {/* «Înlocuiește» on each photo below (§NNN): what it keeps, and which quality it uses. */}
+              {/* «Înlocuiește» on each photo below (§673): what it keeps, and which quality it uses. */}
               {photos.length > 0 && (
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                   {t("gallery.replaceHelp")}
@@ -250,7 +250,7 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
                           {t("gallery.setCover")}
                         </GlyphButton>
                       </form>
-                      {/* Beside «Șterge» (§NNN): the photo's place and cover role kept, storage needed like the upload. */}
+                      {/* Beside «Șterge» (§673): the photo's place and cover role kept, storage needed like the upload. */}
                       {isStorageConfigured() && (
                         <PhotoReplaceButton uploadUrl={`/api/admin/gallery/${album.id}/photos`} itemId={photo.id} labels={replaceLabels} />
                       )}

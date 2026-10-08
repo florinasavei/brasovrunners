@@ -133,7 +133,7 @@ export const PANEL_GLYPHS = {
   contacts: ContactMailIcon,
   shownAddress: AlternateEmailIcon,
   publicPhone: PhoneIcon,
-  // «Răspunsurile din calendar» (§NNN): where an invitation's «Da / Nu / Poate» goes.
+  // «Răspunsurile din calendar» (§672): where an invitation's «Da / Nu / Poate» goes.
   calendarRsvp: EventAvailableIcon,
   notices: AnnouncementIcon,
   plan: CardMembershipIcon,

@@ -120,7 +120,7 @@ export type ActionIconName =
   | "rename"
   | "reset"
   | "upload"
-  // «Înlocuiește» (§NNN): a new photo in a stored one's place — the two arrows of a swap, never the
+  // «Înlocuiește» (§673): a new photo in a stored one's place — the two arrows of a swap, never the
   // upload arrow, which adds a picture beside the others.
   | "replace"
   | "duplicate"

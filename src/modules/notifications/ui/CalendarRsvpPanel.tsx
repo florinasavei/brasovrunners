@@ -23,7 +23,7 @@ type Props = {
 };
 
 /**
- * «Răspunsurile din calendar merg la» (§NNN): one optional address, beside «Copiile clubului»
+ * «Răspunsurile din calendar merg la» (§672): one optional address, beside «Copiile clubului»
  * because it answers the same question — what the club receives. Empty, the calendar goes out as
  * the file it always was (§174); with an address, as an invitation the runner answers «Da / Nu /
  * Poate», and the answer lands there. The «Telefon public» shape (§565): a Server Component, one

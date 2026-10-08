@@ -98,7 +98,7 @@ describe("§541 the photo field's wiring", () => {
   const labels: TeamPhotoLabels = {
     legend: "Fotografia",
     choose: "Alege o fotografie",
-    // One word wherever a picture is replaced (§NNN).
+    // One word wherever a picture is replaced (§673).
     replace: "Înlocuiește",
     remove: "Scoate fotografia",
     uploading: "Se încarcă…",

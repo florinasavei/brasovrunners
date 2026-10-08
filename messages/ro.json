@@ -104,7 +104,7 @@
       "copied": "Copiat",
       "googleHintWhy": "Nu merge butonul? Google ascunde calendarul în loc să-l scoată și ține o copie veche după adresă.",
       "googleHintHow": "Pe web: calendar.google.com → „+” lângă „Alte calendare” → „Din URL” → lipește adresa, cu ?v=2 la final.",
-      "phoneAppHint": "Aplicația Google Calendar de pe telefon nu adaugă un calendar după adresă; folosește site-ul."
+      "phoneAppHint": "Aplicația Google Calendar de pe telefon nu adaugă un calendar după adresă; folosește calendar.google.com în browser."
     },
     "raceWeek": {
       "today": "Azi, {when}",
@@ -4644,7 +4644,7 @@
       "replacing": "Se înlocuiește…",
       "replaced": "Fotografia a fost înlocuită.",
       "replaceChanged": "Fotografia s-a schimbat între timp (ștearsă sau înlocuită de altcineva). Pagina arată acum ce este.",
-      "replaceHelp": "«Înlocuiește» pune o fotografie nouă în locul uneia: același loc în album, coperta rămâne copertă. Se încarcă la calitatea aleasă mai sus.",
+      "replaceHelp": "«Înlocuiește» pune o fotografie nouă în locul acesteia: același loc în album, coperta rămâne copertă. Se încarcă la calitatea aleasă mai sus.",
       "removePhotoTitle": "Ștergi fotografia?",
       "removePhotoBody": "Fotografia dispare din album și din stocare, dacă nu o mai folosește un text, un card din «Echipa» sau alt album. Nu se poate anula.",
       "delete": "Șterge albumul",

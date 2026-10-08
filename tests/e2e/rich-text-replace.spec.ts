@@ -4,7 +4,7 @@ import { confirmDialog } from "./support/confirm";
 import { signIn } from "./support/featured-event";
 
 /**
- * «Înlocuiește» on a picture in a text (§NNN; BR-REQ-050-03) — through the browser, at both
+ * «Înlocuiește» on a picture in a text (§673; BR-REQ-050-03) — through the browser, at both
  * viewports. What the unit tests cannot see: the button's hidden file input inside the picture's
  * panel, the panel staying with its picture across the file dialog and the upload, the node found
  * again and changed in place, and the English text's copy of the same picture changed with it,
@@ -27,7 +27,7 @@ async function chooseFile(page: Page, press: () => Promise<void>, name: string, 
   await chooser.setFiles({ name, mimeType: "image/png", buffer });
 }
 
-test.describe.serial("§NNN «Înlocuiește» on a picture in a text", () => {
+test.describe.serial("§673 «Înlocuiește» on a picture in a text", () => {
   test("replaces the picture in its node, keeps its words, clears the crop, and changes the English copy too", async ({ page }) => {
     test.setTimeout(150_000);
     const id = `${test.info().project.name}-${Date.now().toString(36)}`;

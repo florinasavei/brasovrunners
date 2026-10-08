@@ -252,7 +252,7 @@ export async function updateClubNoticesAction(_previous: FormOutcome | null, for
 }
 
 /**
- * «Răspunsurile din calendar merg la» (§NNN): one address, or empty for the calendar file as before.
+ * «Răspunsurile din calendar merg la» (§672): one address, or empty for the calendar file as before.
  * The club's copies' gate and shape: Administrator at the door, the service asserting the role again
  * and validating the address, a refusal returned with the box as typed (§315).
  */

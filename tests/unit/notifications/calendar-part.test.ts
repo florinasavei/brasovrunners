@@ -5,12 +5,12 @@ import { calendarPartFor } from "@/modules/notifications/domain/calendar-part";
 import { calendarRsvpToSchema } from "@/modules/notifications/domain/calendar-rsvp";
 
 /**
- * `DECISIONS.md` §NNN — which message carries which calendar part, the address's rule, and when the
+ * `DECISIONS.md` §672 — which message carries which calendar part, the address's rule, and when the
  * invitation's `SEQUENCE` moves. Pure: the table the renderer asks and the comparison the save asks.
  */
 const RSVP = "club+calendar@example.org";
 
-describe("§NNN which calendar part a message carries", () => {
+describe("§672 which calendar part a message carries", () => {
   it("unset: today's file on the confirmation and the reminder, and nothing on any other message", () => {
     for (const messageType of emailMessageType.enumValues as readonly EmailMessageType[]) {
       const part = calendarPartFor({ messageType, clubCopy: false, rsvpTo: null, confirmed: true, changes: ["time"] });
@@ -59,7 +59,7 @@ describe("§NNN which calendar part a message carries", () => {
   });
 });
 
-describe("§NNN the address", () => {
+describe("§672 the address", () => {
   it("is empty (off) or one address, trimmed", () => {
     expect(calendarRsvpToSchema.parse({})).toEqual({ to: "" });
     expect(calendarRsvpToSchema.parse({ to: "" })).toEqual({ to: "" });
@@ -71,7 +71,7 @@ describe("§NNN the address", () => {
   });
 });
 
-describe("§NNN the invitation's SEQUENCE moves with what the calendar holds", () => {
+describe("§672 the invitation's SEQUENCE moves with what the calendar holds", () => {
   const before: EventChangeFacts = {
     eventStatus: "SCHEDULED",
     startsAt: new Date("2026-10-11T07:00:00.000Z"),

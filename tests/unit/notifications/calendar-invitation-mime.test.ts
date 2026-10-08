@@ -3,7 +3,7 @@ import MailComposer from "nodemailer/lib/mail-composer";
 import type { OutgoingEmail } from "@/infrastructure/email/adapter";
 
 /**
- * BR-REQ-080-01 (`DECISIONS.md` §NNN) — a calendar invitation leaves typed so a calendar app answers
+ * BR-REQ-080-01 (`DECISIONS.md` §672) — a calendar invitation leaves typed so a calendar app answers
  * it: a `text/calendar; charset=utf-8; method=REQUEST` alternative beside the text and the HTML, and
  * the same file as an `invite.ics` attachment — the shape Google Calendar's own invitations have.
  * Both roads: the Mailgun one composes the message whole and posts it to `messages.mime` (its form
@@ -85,7 +85,7 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
 });
 
-describe("BR-REQ-080-01 the invitation's MIME (§NNN)", () => {
+describe("BR-REQ-080-01 the invitation's MIME (§672)", () => {
   it("composes the alternative, the invite.ics, the other attachments and the headers; a Bcc is envelope only", async () => {
     const { mime, recipients } = await composeMime(
       { ...INVITATION, cc: ["copie@example.org"], bcc: ["ascuns@example.org"] },
