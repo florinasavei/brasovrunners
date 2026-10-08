@@ -91,7 +91,7 @@ const { default: AdminRegistrationsPage } = await import("@/app/[locale]/admin/r
 const { default: RegistrationDetailPage } = await import("@/app/[locale]/admin/registrations/[id]/page");
 const { default: AdminTable } = await import("@/modules/staff-identity/ui/AdminTable");
 const { default: GuardianForMinor } = await import("@/modules/registrations/ui/GuardianForMinor");
-const { default: EmailRejectedChip } = await import("@/modules/registrations/ui/EmailRejectedChip");
+const { default: EmailStateLine } = await import("@/modules/registrations/ui/EmailStateLine");
 const actions = await import("@/app/[locale]/admin/registrations/actions");
 
 type Props = Record<string, unknown> & { children?: ReactNode };
@@ -409,7 +409,8 @@ describe("BR-REQ-037-03 criterion 14: the members' and the bounced filters are t
       }
       expect(text(off.clubMember.props.children)).toBe(words.clubMemberOnly.replace("{club}", CLUB_NAME));
       expect(off.clubMember.props.help).toBe(words.clubMemberOnlyHelp.replaceAll("{club}", CLUB_NAME));
-      expect(text(off.bounced.props.children)).toBe(words.bouncedOnly);
+      // With how many it would keep (§NNN): nobody's email asks for anything at this race.
+      expect(text(off.bounced.props.children)).toBe(words.bouncedOnly.replace("{count}", "0"));
       expect(off.bounced.props.help).toBe(words.bouncedOnlyHelp);
       // Each carries its glyph first, as the promo tick does, so the dense glyph column is not a gap.
       expect(byTestId(off.clubMember.props.children, "registrations-filter-member-glyph")).toHaveLength(1);
@@ -430,11 +431,14 @@ describe("BR-REQ-037-03 criterion 14: the members' and the bounced filters are t
     state.locale = "ro";
   });
 
-  it("draws «Email respins» on a bounced row, the chip the desk and the registration's page draw (BR-REQ-038-01 criterion 8)", async () => {
+  it("draws a bounced row's email state in one line under the name, a link to its «Emailuri» (BR-REQ-038-01 criterion 8)", async () => {
     const race = await createRace("Crosul");
     const bounced = await register(race.id);
     const reached = await register(race.id);
+    // The participant's own message (§NNN): their id on the row, as every message to them carries it.
+    const [{ participantId }] = await db.select({ participantId: registrations.participantId }).from(registrations).where(eq(registrations.id, bounced));
     await db.insert(emailOutbox).values({
+      participantId,
       messageType: "REGISTRATION_CONFIRMED",
       recipientEmail: "runner-bounced@example.org",
       locale: "ro",
@@ -450,16 +454,20 @@ describe("BR-REQ-037-03 criterion 14: the members' and the bounced filters are t
     const rows = table?.props.rows as { id: string }[];
     expect(rows.map((row) => row.id)).toEqual([bounced]);
     const nameColumn = (table?.props.columns as { key: string; render: (row: unknown) => ReactNode }[]).find((column) => column.key === "name");
-    // Since §663 the chip is an island with a tooltip: the provider's reason is its small print, never a `title`.
-    const chips = elements(nameColumn?.render(rows[0])).filter((element) => element.type === EmailRejectedChip);
-    expect(chips).toHaveLength(1);
-    expect(chips[0].props.label).toBe(ro.Admin.registrations.emailRejected);
-    expect(chips[0].props.reason).toBe("Motivul dat de furnizor: 550 5.1.1 mailbox unavailable");
+    // Since §NNN one line under the name, a link to the registration's «Emailuri» — no tooltip island — and no
+    // list payload carries the provider's words: the small print is the registration page's alone.
+    const lines = elements(nameColumn?.render(rows[0])).filter((element) => element.type === EmailStateLine);
+    expect(lines).toHaveLength(1);
+    const words = lines[0].props.words as { line: string; tone: string };
+    expect(words.tone).toBe("error");
+    expect(words.line).toContain(ro.Admin.emails.typesShort.REGISTRATION_CONFIRMED.replaceAll(" ", " "));
+    expect(lines[0].props.href).toMatch(/#emailuri$/);
+    expect(JSON.stringify(lines[0].props)).not.toContain("550 5.1.1");
 
     const all = await listPage({ eventId: race.id });
     const allTable = elements(all).find((element) => element.type === AdminTable);
     const reachedRow = (allTable?.props.rows as { id: string }[]).find((row) => row.id === reached);
     const allName = (allTable?.props.columns as { key: string; render: (row: unknown) => ReactNode }[]).find((column) => column.key === "name");
-    expect(elements(allName?.render(reachedRow)).filter((element) => element.type === EmailRejectedChip)).toHaveLength(0);
+    expect(elements(allName?.render(reachedRow)).filter((element) => element.type === EmailStateLine)).toHaveLength(0);
   });
 });

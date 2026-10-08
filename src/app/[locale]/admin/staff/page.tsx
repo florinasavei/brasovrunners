@@ -39,6 +39,8 @@ import {
 } from "../actions";
 import { isZitadelInviteConfigured } from "@/modules/staff-identity/zitadel-users";
 import { checkInviteKey, hasNoAccount } from "@/modules/diagnostics/invite-key";
+import { refusedInvitations } from "@/modules/notifications/delivery-evidence";
+import { causeLabel } from "@/modules/registrations/ui/rejected-email-words";
 import { env } from "@/shared/config/env";
 import { findAuditEvent } from "@/modules/audit/repository";
 import { MEMBER_ROWS_MAX } from "@/modules/staff-identity/domain/member-rows";
@@ -105,6 +107,8 @@ export default async function StaffPage({ params, searchParams }: Props) {
    * accounts, and then nothing below claims anything about anybody.
    */
   const accounts = await checkInviteKey({ authMode: env.STAFF_AUTH_MODE, readerEmail: actor.email });
+  // Whose newest invitation email was refused (§NNN): one read of the window's invitations, for the rows' mark.
+  const invitationRefusals = await refusedInvitations(getDb(), new Date());
   /**
    * «Adaugă mai mulți membri» (§524): the press's report, read back from its own audit row — one
    * line per member, by row id, named here from the list above. A row withdrawn since is left out.
@@ -140,6 +144,15 @@ export default async function StaffPage({ params, searchParams }: Props) {
           {hasNoAccount(accounts, member.email) && (
             <Chip size="small" color="warning" label={t("staff.noAccount")} data-testid="staff-no-account" />
           )}
+          {/* The invitation email was refused (§NNN): until the person signs in, the row says why it did not reach them. */}
+          {(() => {
+            const cause = member.firstSignedInAt === null ? invitationRefusals.get(member.email.trim().toLowerCase()) : undefined;
+            return (
+              cause && (
+                <Chip size="small" color="error" variant="outlined" label={t("staff.invitationRefused", { label: causeLabel(cause, locale) })} data-testid="staff-invitation-refused" />
+              )
+            );
+          })()}
         </Stack>
       ),
     },

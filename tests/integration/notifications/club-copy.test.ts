@@ -219,10 +219,15 @@ describe("BR-REQ-033-02 criterion 14 no club-bound message carries a token, a li
     expect(history.filter((entry) => entry.clubCopy)).toHaveLength(4);
     expect(history.filter((entry) => !entry.clubCopy)).toHaveLength(5);
 
-    // A club mailbox that bounces its copy says nothing about the participant's address (§76).
-    const bounced = () => findRegistrationDetailForAdmin(db, registration.id).then((detail) => detail?.emailRejected?.reason ?? null);
+    // A club mailbox that bounces its copy says nothing about the participant's address (§76) — nor one that
+    // bounces the archive copy or the confirmation notice, which carry the participant's id (§NNN).
+    const bounced = () => findRegistrationDetailForAdmin(db, registration.id).then((detail) => detail?.emailState?.detail ?? null);
     const [copy] = rows.filter((row) => row.participantId === null);
     await db.update(emailOutbox).set({ status: "BOUNCED", lastError: "550 club mailbox full" }).where(eq(emailOutbox.id, copy.id));
+    expect(await bounced()).toBeNull();
+    const clubOwn = rows.filter((row) => row.messageType === "DECLARATION_ARCHIVE" || row.messageType === "CLUB_CONFIRMATION_NOTICE");
+    expect(clubOwn.every((row) => row.participantId !== null)).toBe(true);
+    for (const row of clubOwn) await db.update(emailOutbox).set({ status: "BOUNCED", lastError: "550 club mailbox full" }).where(eq(emailOutbox.id, row.id));
     expect(await bounced()).toBeNull();
     const [verification] = own.filter((row) => row.messageType === "VERIFY_REGISTRATION_EMAIL");
     await db.update(emailOutbox).set({ status: "BOUNCED", lastError: "550 no such user" }).where(eq(emailOutbox.id, verification.id));

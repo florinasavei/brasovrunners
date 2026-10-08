@@ -195,6 +195,40 @@ export const emailOutbox = pgTable(
 
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     sentAt: timestamp("sent_at", { withTimezone: true }),
+
+    /*
+      What the provider said happened to the message after it left (§NNN; AGENTS.md §16.5) — the facts
+      the registration's email state is read from (`registrations/email-state.ts`). Nothing here is a
+      read receipt: open and click tracking stay off (§320).
+    */
+    /** Mailgun's `delivered` for this row's own recipient: the receiving server took it. Set once, never moved. */
+    deliveredAt: timestamp("delivered_at", { withTimezone: true }),
+    /**
+     * When the refusal happened: the `failed` or `complained` event's own time (Mailgun's, never the
+     * moment the webhook was processed), or the moment of a refusal at the send. BOUNCED and COMPLAINED
+     * rows only; null on a row refused before the column existed — read as `sent_at`, else `created_at`.
+     */
+    rejectedAt: timestamp("rejected_at", { withTimezone: true }),
+    /** Why (`domain/rejection-cause.ts`): stored when the refusal is written, never recomputed from `last_error`. */
+    rejectionCause: text("rejection_cause"),
+    /** The receiving server's codes: «550 5.1.1», or Mailgun's own «605». */
+    providerCode: text("provider_code"),
+    /** The receiving server's words, redacted (`infrastructure/email/redact.ts`) and at most 200 characters. */
+    providerDetail: text("provider_detail"),
+    /**
+     * On a refused participant's message: when a later message to the same address was delivered — the
+     * address works again. Never on a complaint, which is the person's own word and no delivery withdraws.
+     */
+    laterDeliveredAt: timestamp("later_delivered_at", { withTimezone: true }),
+    /**
+     * On a refused participant's message: when the same message — its type, or one that carries it
+     * (`notifications/domain/content-cover.ts`), for the same registration — was delivered later, or, for a
+     * refusal of the club's account, left later. The refusal is over.
+     */
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+    /** On a refused participant's message: when the same message, or one that carries it, last left again, and by which road. */
+    retriedAt: timestamp("retried_at", { withTimezone: true }),
+    retriedVia: text("retried_via", { enum: ["mailgun", "gmail"] }),
   },
   (t) => [
     check("email_outbox_attempt_count_non_negative", sql`${t.attemptCount} >= 0`),
@@ -224,5 +258,12 @@ export const emailOutbox = pgTable(
     index("email_outbox_registration_created_idx").on(t.registrationId, t.createdAt),
     // Gmail's rolling day and its last send, read before every Gmail message (§443 review).
     index("email_outbox_transport_sent_idx").on(t.transport, t.sentAt),
+    // The delivery webhook's lookup (§NNN): it found its row by a full scan until delivered events acted.
+    index("email_outbox_provider_message_id_idx")
+      .on(t.providerMessageId)
+      .where(sql`${t.providerMessageId} is not null`),
+    // A participant's own rows, across their registrations (§NNN): the email state's probe, and the
+    // webhook's settling of earlier refusals by a later delivery to the same address.
+    index("email_outbox_participant_idx").on(t.participantId),
   ],
 );

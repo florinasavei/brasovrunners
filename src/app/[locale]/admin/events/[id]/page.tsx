@@ -88,6 +88,7 @@ import GlyphButton from "@/shared/ui/GlyphButton";
 import Panel from "@/shared/ui/Panel";
 import InfoTip from "@/shared/ui/InfoTip";
 import { previewDeclarationResend } from "@/modules/registrations/bulk-resend";
+import { countAddressRefusingMail } from "@/modules/registrations/email-state";
 import { previewWindowHolds } from "@/modules/registrations/window-holds";
 import { countBibs, spareCardState } from "@/modules/registrations/bibs";
 import { SPARE_BIBS_PER_PRINT, spareRangeOfQuery } from "@/modules/registrations/domain/spare-bibs";
@@ -471,16 +472,19 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     button and says why beside it, in the refusal banner's own sentence (§592).
   */
   const declarationResend = canManageRegistrations(staffUser.role) && internal ? await previewDeclarationResend(db, event.id, now) : null;
+  // Of those who wait to sign, how many have an address that refuses the club's mail (§NNN): said first, never a block.
+  const refusingMail = declarationResend && declarationResend.pending > 0 ? await countAddressRefusingMail(db, event.id, "PENDING_DECLARATION") : 0;
   const declarationResendConfirm: ConfirmSpec | null = declarationResend
     ? (() => {
         const { counts, testCounts } = declarationResend;
         const skipped = counts.skippedRecent + counts.skippedLimited;
-        const body = t("bulkResend.body", {
+        const counted = t("bulkResend.body", {
           waiting: t(`bulkResend.waiting.${countForm(declarationResend.pending, locale)}`, { count: declarationResend.pending }),
           skipped: t(`bulkResend.skipped.${countForm(skipped, locale)}`, { count: skipped }),
           recent: String(counts.skippedRecent),
           limited: String(counts.skippedLimited),
         });
+        const body = refusingMail > 0 ? `${t(`bulkResend.rejectedFirst.${countForm(refusingMail, locale)}`, { count: refusingMail })} ${counted}` : counted;
         return {
           title: t("bulkResend.confirmTitle"),
           body: testCounts.queued > 0 ? `${body} ${t("participantMessages.testLine", { test: String(testCounts.queued) })}` : body,

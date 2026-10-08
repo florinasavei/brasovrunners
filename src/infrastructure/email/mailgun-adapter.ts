@@ -1,4 +1,5 @@
 import type { EmailAdapter, OutgoingEmail, SendResult } from "./adapter";
+import { redactProviderText } from "./redact";
 
 /**
  * Mailgun, over its HTTP API (AGENTS.md §16; BR-REQ-080-01, BR-REQ-080-03).
@@ -96,6 +97,12 @@ export type MailgunConfig = {
    * to "can I still change my mind?".
    */
   replyTo?: string;
+  /**
+   * The environment the message leaves from (`APP_ENV`), sent as a tag (`env:<name>`, §NNN): QA and
+   * production share the sending domain and its webhooks, and each deployment's webhook acts only on
+   * the events of its own messages. Absent, no tag — and every event is acted on, as before.
+   */
+  environment?: string;
 };
 
 /** Longer than this and the message is stuck behind a provider that is not answering. */
@@ -230,10 +237,6 @@ function normalizeProviderMessageId(id: string | undefined): string | undefined 
     : trimmed;
 }
 
-/** Anything shaped like an address. Deliberately greedy: a false positive costs a word of
- * context in an error message, a false negative stores somebody's address. */
-const EMAIL_SHAPED = /[^\s<>"']+@[^\s<>"']+\.[^\s<>"',;)]+/g;
-
 /**
  * Trim a provider message down to something safe to store in `email_outbox.last_error`.
  *
@@ -241,16 +244,37 @@ const EMAIL_SHAPED = /[^\s<>"']+@[^\s<>"']+\.[^\s<>"',;)]+/g;
  * because Mailgun's most common rejection on a sandbox domain is literally *"…is not among the
  * authorized recipients"* with the participant's address in it. That string is read by an
  * organizer in the backoffice and shipped into logs, so the address comes out here, at the one
- * boundary that sees it, rather than being trusted not to appear.
+ * boundary that sees it, rather than being trusted not to appear. The redactor is the one the
+ * delivery webhook uses too (`redact.ts`, §NNN): the key, any address, the recipient's local part
+ * quoted alone, an IP literal, a token-length run.
  */
-function sanitizeError(status: number, body: string, apiKey: string): string {
-  const redacted = body
-    .replace(/\s+/g, " ")
-    .replaceAll(apiKey, "<redacted>")
-    .replace(EMAIL_SHAPED, "<address>");
-
-  return `mailgun ${status}: ${redacted.slice(0, 200)}`;
+function sanitizeError(status: number, body: string, apiKey: string, recipient: string): string {
+  return `mailgun ${status}: ${redactProviderText(body, { secrets: [apiKey], recipient })}`;
 }
+
+/**
+ * Whether a refusal stored at the send was the club's **account** rather than the address (§NNN): the
+ * exact opposite of the one case `classifyMailgunFailure` calls the address's — a 400 that names the
+ * address or the recipient and not the sender — read back from `last_error` as `sanitizeError` wrote it.
+ * Since §622 such a refusal is FAILED; before it, every permanent refusal was stored BOUNCED, and the
+ * rows Mailgun's refusals of the account left on 2026-10-01 and 02 (credentials, the probation's pause,
+ * the spent allowance's «recipient limit exceeded») still read as the runners' bounces. They never left,
+ * and say nothing about the address.
+ *
+ * The placeholder `sanitizeError` put where an address was is taken out first: it says «address» itself.
+ * A Gmail refusal (`gmail: …`), a webhook's reason and anything that is not a stored Mailgun answer is
+ * never the account's.
+ */
+export function isAccountRefusalError(stored: string | null | undefined): boolean {
+  if (typeof stored !== "string") return false;
+  const match = /^mailgun (\d{3}):\s?([\s\S]*)$/.exec(stored.trim());
+  if (!match) return false;
+  const failure = classifyMailgunFailure(Number(match[1]), match[2].replaceAll("<address>", " "));
+  return !(failure.outcome === "permanent_failure" && !failure.notTheAddress);
+}
+
+/** The tag that names the environment a message left from (§NNN): the webhook acts only on its own. */
+export const ENVIRONMENT_TAG_PREFIX = "env:";
 
 export function createMailgunAdapter(config: MailgunConfig): EmailAdapter {
   // Basic auth, username `api`, password the key — Mailgun's documented scheme. Built once,
@@ -299,9 +323,11 @@ export function createMailgunAdapter(config: MailgunConfig): EmailAdapter {
        * having been stored successfully. It identifies the trigger, never the participant.
        */
       form.set("v:idempotency_key", message.idempotencyKey);
-      // Three tags at most, and one is enough: delivery statistics per locale is the only
-      // question the club would ever ask of them.
+      // Three tags at most: delivery statistics per locale is the only question the club would ever
+      // ask of them, and the second says which deployment the message is from (§NNN), so the
+      // webhook QA's and production's events both reach acts on its own deployment's alone.
       form.set("o:tag", `locale:${message.locale}`);
+      if (config.environment) form.append("o:tag", `${ENVIRONMENT_TAG_PREFIX}${config.environment}`);
 
       let response: Response;
       try {
@@ -333,7 +359,7 @@ export function createMailgunAdapter(config: MailgunConfig): EmailAdapter {
       const body = await response.text().catch(() => "");
       // The response's headers go with it: a 429's `Retry-After` is when Mailgun wants us back (§605).
       const failure = classifyMailgunFailure(response.status, body, response.headers);
-      return { ...failure, error: sanitizeError(response.status, body, config.apiKey) };
+      return { ...failure, error: sanitizeError(response.status, body, config.apiKey, message.to) };
     },
   };
 }

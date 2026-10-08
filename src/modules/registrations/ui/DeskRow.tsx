@@ -20,10 +20,10 @@ import RecallField from "@/shared/forms/recall";
 import { handsSpareAtConfirm, type SpareState } from "../domain/spare-bibs";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import GlyphButton from "@/shared/ui/GlyphButton";
-import EmailRejectedChip from "./EmailRejectedChip";
+import DeskEmailChip from "./DeskEmailChip";
 import FamilyChip from "./FamilyChip";
 import GivePlaceButton from "./GivePlaceButton";
-import { rejectedEmailSentences, rejectedEmailWords } from "./rejected-email-words";
+import { rejectedEmailWords } from "./rejected-email-words";
 import {
   checkInAction,
   confirmRegistrationNowAction,
@@ -206,10 +206,14 @@ export default async function DeskRow({
               label={REGISTRATION_STATUS_LABEL[row.status]}
             />
             {row.kind === "TEST" && <Chip size="small" color="warning" label={t("registrations.testKind")} />}
-            {/* The newest email was rejected (§76, §663): whom to call before race day — which email, when, why; never the address. */}
-            {row.emailRejected && (() => {
-              const words = rejectedEmailWords({ ...row.emailRejected, emailConfirmedAt: row.emailConfirmedAt }, locale);
-              return <EmailRejectedChip label={t("registrations.emailRejected")} sentences={rejectedEmailSentences(words)} reason={words.reason} />;
+            {/* The QR confirmation did not arrive and somebody must act (§663, §NNN): one chip, from the desk's own
+                projection and words — never an address or the provider's words (§67). Every other email is the
+                registration page's to say; the desk hands the number against the name either way. */}
+            {(() => {
+              const desk = row.emailState
+                ? rejectedEmailWords({ ...row.emailState, emailConfirmedAt: row.emailConfirmedAt, confirmed: row.status === "CONFIRMED" }, locale, "desk").desk
+                : null;
+              return desk && <DeskEmailChip label={desk.label} hint={desk.hint} />;
             })()}
             {row.checkedInAt && (
               <Chip
