@@ -2213,8 +2213,19 @@ while it is cancelled and its start ahead, both until the registration is checke
 call, no press sending them
 (`stillNeededMessageTypes`, `callInstead`) — an address that refuses the club's mail always does.
 **Once the event has ended** (`ends_at`, else the end of its start day in its own time zone) nothing of
-its registrations asks anybody to act — no chip, filter, export «Yes», «Ce îi spui» line or desk chip;
-race day still does — and the registration's history keeps every row.
+its registrations asks anybody to act — no line on the list, filter, export «Yes», «Ce îi spui» line or desk
+chip; race day still does — and the registration's history keeps every row.
+
+The screens say the state by its cause and by who reads it, from one pure module
+(`registrations/ui/rejected-email-words.ts`, `DECISIONS.md` §NNN): one line under the name on the list
+(a link to the registration's «Emailuri», only while somebody must act), the same line and a to-do under
+the address — the Administrator told the press that clears it, the Organizer to ask for it, both to phone
+where no press helps — and «Emailuri» on the registration's page, every email newest first, the club's by
+role and never by address; the desk one chip, «Fără QR pe email — caută după nume», for the QR
+confirmation alone; the first sentence of every resend's question says what the last refusal means for it.
+The club's own mailboxes that refuse its emails are on «Setări → Emailuri» (under
+`canReadRegistrations`) and on «Sarcini», beside a red row when Mailgun's «Delivered» events do not
+arrive and a row per race whose participants have an email that asks for something.
 
 ### 12.12 Audit/environment
 

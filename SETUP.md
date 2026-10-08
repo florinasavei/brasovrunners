@@ -1218,6 +1218,9 @@ set (`env.ts` defaults both); `EMAIL_REPLY_TO` is set only when a club mailbox e
    database, so the shared domain wakes neither for the other. Check it worked: Mailgun's «Test
    webhook» on Delivered answers 200 from both addresses (a test event names no message of ours, so it
    changes nothing), and Mailgun → Sending → Logs shows the webhook delivered for the next real email.
+   Afterwards «Sarcini» watches it (`DECISIONS.md` §NNN): when the participants' emails that left by
+   Mailgun in the last seven days carry not one delivery, it shows the red row «Mailgun nu trimite
+   evenimentele „Delivered”» with this step's values filled in; the row goes at the first delivery reported.
 6. **Rehearse on QA first** — production refuses every registration until the club's legal
    texts are approved (§30), so a registration there cannot be walked yet. On the QA Vercel
    project set `MAILGUN_DOMAIN=mail.<club domain>`, `MAILGUN_API_KEY` (QA's **own** sending key,

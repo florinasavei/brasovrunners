@@ -6,7 +6,7 @@ import { formatDay } from "@/i18n/dates";
 import { emailMessageType } from "@/db/schema/email-outbox";
 import { registrationStatus } from "@/db/schema/registrations";
 import { COVER_PAIRS, typesCoveredBy, typesCovering } from "@/modules/notifications/domain/content-cover";
-import { REJECTION_CAUSES } from "@/modules/notifications/domain/rejection-cause";
+import { REJECTION_CAUSES, type RejectionCause } from "@/modules/notifications/domain/rejection-cause";
 import { EVENT_NOTICE_STATUSES } from "@/modules/notifications/event-notices";
 import { deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import {
@@ -24,10 +24,10 @@ import { rejectedEmailSentences, rejectedEmailWords, type RejectedEmailFacts, ty
 import { whatToTell, type TellFacts } from "@/modules/registrations/ui/tell-words";
 
 /**
- * BR-REQ-037-03, BR-REQ-038-01 criterion 8 (§663; amending §650, §76, §83; §NNN) — «Email respins» says which
- * email did not arrive, when, why — by the registration's one email state: the address refused it, the
- * club's account was refused when it was to leave, the address works again but it was not sent again, or it
- * was sent again — and whether the address had been confirmed before it.
+ * BR-REQ-037-03, BR-REQ-038-01 criterion 8 (§663; amending §650, §76, §83; the data decision §NNN; §NNN) —
+ * «Email respins» says which email did not arrive, when, why — by the registration's one email state and,
+ * for an address that refuses the club's mail, by its cause — whether the address had been confirmed before
+ * it, and what to do, by who reads it.
  */
 const catalogues = { ro, en } as const;
 const READERS: readonly RejectedEmailReader[] = ["administrator", "organizer", "desk"];
@@ -35,12 +35,14 @@ const CONFIRMED_AT = new Date("2026-10-01T07:30:00.000Z");
 const REJECTED_AT = new Date("2026-10-03T09:15:00.000Z");
 const LATER = new Date("2026-10-05T10:00:00.000Z");
 const inline = (locale: "ro" | "en", at: Date) => formatDay(at, { locale, timeZone: "Europe/Bucharest", style: "short", withTime: true, position: "inline" });
+const fill = (text: string, values: Record<string, string>) => Object.entries(values).reduce((acc, [k, v]) => acc.replace(`{${k}}`, v), text);
 
 function facts(overrides: Partial<RejectedEmailFacts> = {}): RejectedEmailFacts {
   return {
     kind: "unreachable",
     messageType: "BIB_ASSIGNED",
     at: REJECTED_AT,
+    atKnown: true,
     sent: true,
     status: "BOUNCED",
     cause: "no-such-address",
@@ -58,7 +60,6 @@ function facts(overrides: Partial<RejectedEmailFacts> = {}): RejectedEmailFacts 
 describe("rejectedEmailWords", () => {
   for (const locale of ["ro", "en"] as const) {
     const words = catalogues[locale].Admin.registrations.rejected;
-    const fill = (text: string, values: Record<string, string>) => Object.entries(values).reduce((acc, [k, v]) => acc.replace(`{${k}}`, v), text);
     const type = catalogues[locale].Admin.emails.types.BIB_ASSIGNED;
 
     it(`names the email by its «Emailuri» name and says when, in club time (${locale})`, () => {
@@ -73,6 +74,21 @@ describe("rejectedEmailWords", () => {
       const said = rejectedEmailWords(facts({ sent: false }), locale, "organizer");
       expect(said.which).toBe(fill(words.whichQueued, { type, instant: inline(locale, REJECTED_AT) }));
       expect(said.which).not.toBe(rejectedEmailWords(facts(), locale, "organizer").which);
+    });
+
+    it(`says «pus în coadă», never «refuzat la trimitere», when only the queueing's instant is known — a refusal from before 0131 (${locale})`, () => {
+      // Migration 0131 does not backfill `rejected_at`: the instant is then `created_at`, the queueing's.
+      const untimed = rejectedEmailWords(facts({ sent: false, atKnown: false }), locale, "organizer");
+      expect(untimed.which).toBe(fill(words.whichUntimed, { type, instant: inline(locale, REJECTED_AT) }));
+      expect(untimed.which).not.toBe(fill(words.whichQueued, { type, instant: inline(locale, REJECTED_AT) }));
+      const family = rejectedEmailWords(facts({ sent: false, atKnown: false, own: false, kind: "not-sent", cause: "account" }), locale, "organizer");
+      expect(family.which).toBe(fill(words.whichFamilyUntimed, { type, instant: inline(locale, REJECTED_AT) }));
+      // A refusal's own instant keeps «refuzat la trimitere», own or a family member's.
+      expect(rejectedEmailWords(facts({ sent: false, atKnown: true, own: false, kind: "not-sent", cause: "account" }), locale, "organizer").which).toBe(
+        fill(words.whichFamilyQueued, { type, instant: inline(locale, REJECTED_AT) }),
+      );
+      // One that left says «trimis» either way.
+      expect(rejectedEmailWords(facts({ atKnown: false }), locale, "organizer").which).toBe(fill(words.which, { type, instant: inline(locale, REJECTED_AT) }));
     });
 
     it(`says a family member's refusal at the same address as such (${locale})`, () => {
@@ -94,16 +110,20 @@ describe("rejectedEmailWords", () => {
         const invalid = rejectedEmailWords(facts({ own: false, sent: false, kind: "unreachable", cause: "no-such-address" }), locale, reader);
         expect(invalid.which).toBe(fill(words.whichFamilyQueued, { type, instant: inline(locale, REJECTED_AT) }));
         expect(invalid.why).toBe(words.why.BOUNCEDQueued);
+        // Any other refusal at the send is the provider's, not the address's.
+        expect(rejectedEmailWords(facts({ sent: false, cause: "other" }), locale, reader).why).toBe(words.why.queuedOther);
       }
     });
 
-    it(`says a bounce and a complaint in plain words, the provider's words apart (${locale})`, () => {
+    it(`says why by the cause, in plain words, the provider's words apart (${locale})`, () => {
       const bounce = rejectedEmailWords(facts(), locale, "organizer");
-      expect(bounce.why).toBe(words.why.BOUNCED);
+      expect(bounce.why).toBe(words.why.cause["no-such-address"]);
       expect(bounce.reason).toBe(fill(words.reason, { reason: "550 5.1.1 mailbox unavailable" }));
       expect(rejectedEmailSentences(bounce)).not.toContain(bounce.reason);
+      for (const cause of REJECTION_CAUSES.filter((each) => each !== "account")) {
+        expect(rejectedEmailWords(facts({ cause, status: cause === "complained" ? "COMPLAINED" : "BOUNCED" }), locale, "organizer").why, cause).toBe(words.why.cause[cause]);
+      }
       const complaint = rejectedEmailWords(facts({ status: "COMPLAINED", cause: "complained", detail: null }), locale, "organizer");
-      expect(complaint.why).toBe(words.why.COMPLAINED);
       expect(complaint.reason).toBeNull();
       // No list and no desk carries the provider's words: without them there is no small print.
       expect(rejectedEmailWords(facts({ detail: undefined }), locale, "organizer").reason).toBeNull();
@@ -112,8 +132,11 @@ describe("rejectedEmailWords", () => {
     it(`says the club's account was refused, never the address, for a message that never left (${locale})`, () => {
       const said = rejectedEmailWords(facts({ kind: "not-sent", sent: false, cause: "account" }), locale, "administrator");
       expect(said.why).toBe(words.why.account);
-      expect(said.todo).toBe(words.todoPress.confirmation);
-      expect(said.why).not.toBe(words.why.BOUNCED);
+      // Said first that it was the account, not the address; then the press that clears it.
+      expect(said.todo).toBe(`${words.todoCause.account} ${words.todoPress.confirmation}`);
+      expect(Object.values(words.why.cause)).not.toContain(said.why);
+      // The desk asks for the press, as for any owed email.
+      expect(rejectedEmailWords(facts({ kind: "not-sent", sent: false, cause: "account" }), locale, "desk").todo).toBe(words.todoAskAdmin.confirmation);
     });
 
     it(`says the address works again and this one is owed (${locale})`, () => {
@@ -134,8 +157,8 @@ describe("rejectedEmailWords", () => {
       expect(rejectedEmailWords(reminder, locale, "organizer").todo).toBe(words.todoAskAdmin.reminder);
       // Any other status: the page's own resend, which sends the very message.
       const verify = facts({ kind: "not-sent", messageType: "VERIFY_REGISTRATION_EMAIL", press: "resend" });
-      expect(rejectedEmailWords(verify, locale, "administrator").todo).toBe(words.todoPress.resend);
-      expect(rejectedEmailWords(verify, locale, "organizer").todo).toBe(words.todoAskAdmin.resend);
+      expect(rejectedEmailWords(verify, locale, "administrator").todo).toBe(`${words.todoCause.account} ${words.todoPress.resend}`);
+      expect(rejectedEmailWords(verify, locale, "organizer").todo).toBe(`${words.todoCause.account} ${words.todoAskAdmin.resend}`);
       // A family member's: from that person's registration, not this one.
       expect(rejectedEmailWords(facts({ kind: "missing", own: false }), locale, "administrator").todo).toBe(fill(words.todoFamily, { todo: words.todoPress.confirmation }));
       expect(rejectedEmailWords(facts({ kind: "missing", own: false }), locale, "organizer").todo).toBe(fill(words.todoFamily, { todo: words.todoAskAdmin.confirmation }));
@@ -155,15 +178,17 @@ describe("rejectedEmailWords", () => {
       expect(rejectedEmailWords(facts({ kind: "retried" }), locale, "organizer").why).toBe(words.why.retriedUndated);
       expect(rejectedEmailWords(facts({ kind: "retried", retriedVia: "gmail" }), locale, "organizer").why).toBe(words.why.retriedGmailUndated);
       for (const kind of ["not-sent", "missing", "retried"] as const) {
-        expect(rejectedEmailWords(facts({ kind }), locale, "organizer").why).not.toBe(words.why.BOUNCED);
+        expect(Object.values(words.why.cause)).not.toContain(rejectedEmailWords(facts({ kind }), locale, "organizer").why);
       }
     });
 
     it(`asks a reader who may not send it again to ask an Administrator — the desk, the Organizer (${locale})`, () => {
       for (const kind of ["not-sent", "missing"] as const) {
-        expect(rejectedEmailWords(facts({ kind }), locale, "organizer").todo).toBe(words.todoAskAdmin.confirmation);
+        // An email the club's account could not send says so first, to whoever may phone about it.
+        const account = kind === "not-sent" ? `${words.todoCause.account} ` : "";
+        expect(rejectedEmailWords(facts({ kind }), locale, "organizer").todo).toBe(`${account}${words.todoAskAdmin.confirmation}`);
         expect(rejectedEmailWords(facts({ kind }), locale, "desk").todo).toBe(words.todoAskAdmin.confirmation);
-        expect(rejectedEmailWords(facts({ kind }), locale, "administrator").todo).toBe(words.todoPress.confirmation);
+        expect(rejectedEmailWords(facts({ kind }), locale, "administrator").todo).toBe(`${account}${words.todoPress.confirmation}`);
       }
     });
 
@@ -172,6 +197,7 @@ describe("rejectedEmailWords", () => {
         kind: "missing",
         messageType: "REGISTRATION_CONFIRMED",
         at: REJECTED_AT.getTime(),
+        atKnown: true,
         sent: true,
         status: "BOUNCED",
         cause: "no-such-address",
@@ -208,8 +234,27 @@ describe("rejectedEmailWords", () => {
     it(`tells the Administrator and the Organizer to phone, the address being the person's to change; the desk what to say to the person (${locale})`, () => {
       expect(rejectedEmailWords(facts(), locale, "administrator").todo).toBe(words.todo);
       expect(rejectedEmailWords(facts(), locale, "organizer").todo).toBe(words.todo);
+      // The desk tells the person what they can do — never that somebody will phone them, which nothing tracks.
       expect(rejectedEmailWords(facts(), locale, "desk").todo).toBe(words.todoTellUnreachable);
+      expect(words.todoTellUnreachable).not.toMatch(locale === "ro" ? /o sună/ : /will phone/);
       expect(rejectedEmailSentences(rejectedEmailWords(facts(), locale, "organizer"))).toHaveLength(4);
+    });
+
+    it(`never suggests a new registration on a confirmed one: the place stays, said first (${locale})`, () => {
+      const newRegistration = locale === "ro" ? "înscriere nouă" : "registering again";
+      for (const reader of READERS) {
+        for (const cause of REJECTION_CAUSES) {
+          const said = rejectedEmailWords(facts({ cause, confirmed: true, status: cause === "complained" ? "COMPLAINED" : "BOUNCED" }), locale, reader);
+          expect(said.todo, `${reader} ${cause}`).not.toContain(newRegistration);
+          if (reader !== "desk") expect(said.todo.startsWith(words.placeKept), `${reader} ${cause}`).toBe(true);
+        }
+        // Not confirmed: the address is the person's to change, by a new registration (§645).
+        expect(rejectedEmailWords(facts({ confirmed: false }), locale, reader).todo).toContain(newRegistration);
+      }
+      // An owed email on a confirmed registration: the place first, then the press.
+      expect(rejectedEmailWords(facts({ kind: "missing", confirmed: true }), locale, "administrator").todo).toBe(`${words.placeKept} ${words.todoPress.confirmation}`);
+      // An email sent again asks nobody to act: no lead.
+      expect(rejectedEmailWords(facts({ kind: "retried", confirmed: true }), locale, "administrator").todo).toBe(words.todoWait);
     });
 
     it(`asks for a phone call, never a press, for «Detalii actualizate» and the cancellation (${locale})`, () => {
@@ -245,14 +290,12 @@ describe("rejectedEmailWords", () => {
       // (`announceSavedDate`, `EVENT_CHANGE_KINDS`): the state carries none of it, so the words must be true of all.
       const timeOrPlace = locale === "ro" ? "ora sau locul" : "the time or the place";
       const page = locale === "ro" ? "pagina evenimentului" : "event page";
-      for (const changes of [[], ["reinstated"], ["programme"], ["place", "time"]]) {
-        for (const kind of ["not-sent", "missing"] as const) {
-          for (const reader of READERS) {
-            const said = rejectedEmailWords(facts({ kind, messageType: "EVENT_UPDATE_NOTICE", press: null, sent: kind !== "not-sent", cause: kind === "not-sent" ? "account" : "mailbox-full" }), locale, reader);
-            const label = JSON.stringify({ changes, kind, reader });
-            expect(said.todo, label).not.toContain(timeOrPlace);
-            expect(said.todo, label).toContain(page);
-          }
+      for (const kind of ["not-sent", "missing"] as const) {
+        for (const reader of READERS) {
+          const said = rejectedEmailWords(facts({ kind, messageType: "EVENT_UPDATE_NOTICE", press: null, sent: kind !== "not-sent", cause: kind === "not-sent" ? "account" : "mailbox-full" }), locale, reader);
+          const label = JSON.stringify({ kind, reader });
+          expect(said.todo, label).not.toContain(timeOrPlace);
+          expect(said.todo, label).toContain(page);
         }
       }
       for (const text of [words.todoCall.update, words.todoTell.update]) expect(text).not.toContain(timeOrPlace);
@@ -278,23 +321,25 @@ describe("rejectedEmailWords", () => {
               reader,
             );
             const call = callInstead(messageType);
+            const pressed = press === null ? null : reader === "administrator" ? words.todoPress[press] : words.todoAskAdmin[press];
+            // A full mailbox: the person makes room, then the press that clears it — none for the event's notices.
+            const unreachable = reader === "desk" ? words.todoTellCause["mailbox-full"] : [words.todoCause["mailbox-full"], call ? null : pressed].filter(Boolean).join(" ");
             const expected =
               kind === "unreachable"
-                ? reader === "desk"
-                  ? words.todoTellUnreachable
-                  : words.todo
+                ? unreachable
                 : kind === "retried"
                   ? words.todoWait
                   : call
                     ? reader === "desk"
                       ? words.todoTell[call]
                       : words.todoCall[call]
-                    : reader === "administrator"
-                      ? words.todoPress[press!]
-                      : words.todoAskAdmin[press!];
+                    : // The club's account's refusal says so first, to whoever may phone about it.
+                      kind === "not-sent" && reader !== "desk"
+                      ? `${words.todoCause.account} ${pressed as string}`
+                      : (pressed as string);
             expect(said.todo, label).toBe(expected);
             // Only the Administrator is told a press; nobody at the desk is told to phone.
-            if (reader !== "administrator") for (const text of Object.values(words.todoPress)) expect(said.todo, label).not.toBe(text);
+            if (reader !== "administrator") for (const text of Object.values(words.todoPress)) expect(said.todo, label).not.toContain(text);
             if (reader === "desk") expect(said.todo, label).not.toMatch(locale === "ro" ? /^Sună/ : /^Phone/);
           }
         }
@@ -306,20 +351,22 @@ describe("rejectedEmailWords", () => {
       const said = rejectedEmailWords(facts({ messageType: "SOMETHING_NEW" }), locale, "organizer");
       expect(said.which).toContain(words.typeUnknown);
       expect(said.which).not.toContain("SOMETHING_NEW");
+      expect(said.short).toBe(words.typeUnknown);
     });
 
     it(`keeps every sentence under 200 characters (§511) (${locale})`, () => {
+      const strings = (node: unknown): string[] =>
+        typeof node === "string" ? [node] : node && typeof node === "object" ? Object.values(node).flatMap(strings) : [];
+      const registrations = catalogues[locale].Admin.registrations;
       const all = [
-        words.which, words.whichQueued, words.whichFamily, words.whichFamilyQueued, words.typeUnknown, words.why.BOUNCED, words.why.BOUNCEDQueued,
-        words.why.COMPLAINED, words.why.account, words.why.missing,
-        words.why.retried, words.why.retriedGmail, words.why.missingUndated, words.why.retriedUndated, words.why.retriedGmailUndated, words.reason,
-        words.confirmedBefore, words.confirmedAfter, words.neverConfirmed, words.todo, words.todoWait, words.todoAsk, words.todoFamily,
-        ...Object.values(words.todoPress), ...Object.values(words.todoAskAdmin), ...Object.values(words.todoCall), ...Object.values(words.todoTell), words.todoTellUnreachable,
-        catalogues[locale].Admin.registrations.tell.rejected.BOUNCED, catalogues[locale].Admin.registrations.tell.rejected.COMPLAINED,
-        catalogues[locale].Admin.registrations.tell.rejected.changed,
-        ...Object.values(catalogues[locale].Admin.registrations.tell.rejected.owed),
-        catalogues[locale].Admin.registrations.bouncedOnly, catalogues[locale].Admin.registrations.bouncedOnlyHelp,
+        ...strings(words),
+        ...strings(registrations.tell.rejected),
+        ...strings(registrations.emails),
+        ...strings(catalogues[locale].Admin.emails.typesShort),
+        registrations.bouncedOnly,
+        registrations.bouncedOnlyHelp,
       ];
+      expect(all.length).toBeGreaterThan(80);
       for (const text of all) expect(text.length, text).toBeLessThan(200);
     });
   }
@@ -327,57 +374,57 @@ describe("rejectedEmailWords", () => {
 
 describe("the sentences never contradict each other, in every combination (§NNN)", () => {
   for (const locale of ["ro", "en"] as const) {
-    it(`own × sent × kind × status × cause × reader: «trimis» never beside «Nu a plecat», the address never beside «nu adresa» (${locale})`, () => {
+    it(`own × sent × timed × kind × status × cause × reader: «trimis» never beside «Nu a plecat», the address never beside «nu adresa» (${locale})`, () => {
       const words = catalogues[locale].Admin.registrations.rejected;
-      const fill = (text: string, values: Record<string, string>) => Object.entries(values).reduce((acc, [k, v]) => acc.replace(`{${k}}`, v), text);
       const values = { type: catalogues[locale].Admin.emails.types.BIB_ASSIGNED, instant: inline(locale, REJECTED_AT) };
       // What each «which» claims: it left (and, for a family member's, was refused at the address), or it never left.
       const left = [fill(words.which, values), fill(words.whichFamily, values)];
-      const neverLeft = [fill(words.whichQueued, values), fill(words.whichFamilyQueued, values)];
+      const neverLeft = [fill(words.whichQueued, values), fill(words.whichFamilyQueued, values), fill(words.whichUntimed, values), fill(words.whichFamilyUntimed, values)];
       // What each «why» claims: the recipient's side refused it (so it left), or it never left.
-      const reachedTheRecipient = [words.why.BOUNCED, words.why.COMPLAINED];
-      const neverLeftWhy = [words.why.account, words.why.BOUNCEDQueued];
+      const reachedTheRecipient: string[] = Object.values(words.why.cause);
+      const neverLeftWhy = [words.why.account, words.why.BOUNCEDQueued, words.why.queuedOther];
       let combinations = 0;
       for (const own of [true, false]) {
         for (const sent of [true, false]) {
-          for (const kind of EMAIL_STATE_KINDS) {
-            for (const status of ["BOUNCED", "COMPLAINED"] as const) {
-              for (const cause of REJECTION_CAUSES) {
-                for (const reader of READERS) {
-                  combinations += 1;
-                  const label = JSON.stringify({ own, sent, kind, status, cause, reader });
-                  const said = rejectedEmailWords(
-                    facts({
-                      own,
+          for (const atKnown of [true, false]) {
+            for (const kind of EMAIL_STATE_KINDS) {
+              for (const status of ["BOUNCED", "COMPLAINED"] as const) {
+                for (const cause of REJECTION_CAUSES) {
+                  for (const reader of READERS) {
+                    combinations += 1;
+                    const label = JSON.stringify({ own, sent, atKnown, kind, status, cause, reader });
+                    const these = {
                       sent,
+                      atKnown,
                       kind,
                       status,
                       cause,
                       laterDeliveredAt: kind === "missing" ? LATER : null,
                       retriedAt: kind === "retried" ? LATER : null,
-                      retriedVia: kind === "retried" ? "mailgun" : null,
-                    }),
-                    locale,
-                    reader,
-                  );
-                  expect([...left, ...neverLeft], label).toContain(said.which);
-                  if (left.includes(said.which)) expect(neverLeftWhy, label).not.toContain(said.why);
-                  if (neverLeft.includes(said.which)) expect(reachedTheRecipient, label).not.toContain(said.why);
-                  // The club's account refused it: it never left, at this registration's or a family member's.
-                  if (kind === "not-sent") expect(neverLeft, label).toContain(said.which);
-                  // A complaint arrived: it left.
-                  if (status === "COMPLAINED" && kind !== "not-sent") expect(left, label).toContain(said.which);
-                  // Own and family read the same «why»: only «which» and the press's place differ.
-                  expect(said.why, label).toBe(rejectedEmailWords(facts({ own: !own, sent, kind, status, cause, laterDeliveredAt: kind === "missing" ? LATER : null, retriedAt: kind === "retried" ? LATER : null, retriedVia: kind === "retried" ? "mailgun" : null }), locale, reader).why);
-                  // No key leaks into a sentence: every one is a catalogue sentence.
-                  for (const sentence of rejectedEmailSentences(said)) expect(sentence, label).not.toMatch(/registrations\.rejected|Admin\./);
+                      retriedVia: kind === "retried" ? ("mailgun" as const) : null,
+                    };
+                    const said = rejectedEmailWords(facts({ own, ...these }), locale, reader);
+                    expect([...left, ...neverLeft], label).toContain(said.which);
+                    if (left.includes(said.which)) expect(neverLeftWhy, label).not.toContain(said.why);
+                    if (neverLeft.includes(said.which)) expect(reachedTheRecipient, label).not.toContain(said.why);
+                    // The club's account refused it: it never left, at this registration's or a family member's.
+                    if (kind === "not-sent") expect(neverLeft, label).toContain(said.which);
+                    // A complaint arrived: it left.
+                    if (status === "COMPLAINED" && kind !== "not-sent") expect(left, label).toContain(said.which);
+                    // Only a refusal's own instant is «refuzat la trimitere»; a queueing's is «pus în coadă».
+                    if (!atKnown) expect([fill(words.whichQueued, values), fill(words.whichFamilyQueued, values)], label).not.toContain(said.which);
+                    // Own and family read the same «why»: only «which» and the press's place differ.
+                    expect(said.why, label).toBe(rejectedEmailWords(facts({ own: !own, ...these }), locale, reader).why);
+                    // No key leaks into a sentence: every one is a catalogue sentence.
+                    for (const sentence of [...rejectedEmailSentences(said), said.line, said.label]) expect(sentence, label).not.toMatch(/registrations\.rejected|Admin\./);
+                  }
                 }
               }
             }
           }
         }
       }
-      expect(combinations).toBe(2 * 2 * EMAIL_STATE_KINDS.length * 2 * REJECTION_CAUSES.length * READERS.length);
+      expect(combinations).toBe(2 * 2 * 2 * EMAIL_STATE_KINDS.length * 2 * REJECTION_CAUSES.length * READERS.length);
     });
   }
 });
@@ -389,43 +436,64 @@ describe("«Ce îi spui» on a row whose email did not arrive (§663, §NNN)", (
     waitlistLength: null, liveLinkExpiresAt: null, bibNumber: 17, checkedInAt: null,
   };
   const now = new Date("2026-10-04T09:00:00.000Z");
+  const state = (overrides: Partial<NonNullable<TellFacts["emailState"]>> = {}): NonNullable<TellFacts["emailState"]> => ({
+    kind: "unreachable",
+    status: "BOUNCED",
+    messageType: "REGISTRATION_CONFIRMED",
+    at: REJECTED_AT,
+    cause: "mailbox-full",
+    ...overrides,
+  });
   for (const locale of ["ro", "en"] as const) {
-    it(`adds one sentence, bounce or complaint, when the address refuses the club's mail (${locale})`, () => {
+    const tell = catalogues[locale].Admin.registrations.tell.rejected;
+    const short = catalogues[locale].Admin.emails.typesShort;
+    const date = formatDay(REJECTED_AT, { locale, timeZone: "Europe/Bucharest", style: "long", year: false, position: "inline" });
+    const lost = (cause: Exclude<RejectionCause, "account" | "complained">, type = short.REGISTRATION_CONFIRMED) => fill(tell.lost, { type, date, why: tell.why[cause] });
+
+    it(`names the email in the participant's words and its date, why by cause, what they can do — and on a confirmed row that the place stays (${locale})`, () => {
       const without = whatToTell(locale, base, now);
-      const bounced = whatToTell(locale, { ...base, emailState: { kind: "unreachable", status: "BOUNCED" } }, now);
-      expect(bounced).toEqual([...without, catalogues[locale].Admin.registrations.tell.rejected.BOUNCED]);
-      const complained = whatToTell(locale, { ...base, emailState: { kind: "unreachable", status: "COMPLAINED" } }, now);
-      expect(complained.at(-1)).toBe(catalogues[locale].Admin.registrations.tell.rejected.COMPLAINED);
+      expect(whatToTell(locale, { ...base, emailState: state() }, now)).toEqual([...without, lost("mailbox-full"), tell.can["mailbox-full"], tell.placeKept]);
+      expect(whatToTell(locale, { ...base, emailState: state({ cause: "blocked" }) }, now)).toEqual([...without, lost("blocked"), tell.can.blocked, tell.placeKept]);
+      expect(whatToTell(locale, { ...base, emailState: state({ cause: "suppressed" }) }, now)).toEqual([...without, lost("suppressed"), tell.can.suppressed, tell.placeKept]);
+      expect(whatToTell(locale, { ...base, emailState: state({ cause: "unsubscribed" }) }, now)).toEqual([...without, lost("unsubscribed"), tell.can.unsubscribed, tell.placeKept]);
+      // On a confirmed registration, never «a new registration»: the place stays.
+      expect(whatToTell(locale, { ...base, emailState: state({ cause: "no-such-address" }) }, now)).toEqual([...without, lost("no-such-address"), tell.placeKept]);
+      // A complaint arrived: marked as spam, never «did not reach you».
+      const complained = whatToTell(locale, { ...base, emailState: state({ status: "COMPLAINED", cause: "complained" }) }, now);
+      expect(complained).toEqual([...without, fill(tell.spam, { type: short.REGISTRATION_CONFIRMED, date }), tell.can.unsubscribed, tell.placeKept]);
       expect(whatToTell(locale, { ...base, emailState: null }, now)).toEqual(without);
+      // The race number by its own short name.
+      expect(whatToTell(locale, { ...base, emailState: state({ messageType: "BIB_ASSIGNED" }) }, now)).toContain(lost("mailbox-full", short.BIB_ASSIGNED));
+      // Every cause has its words, under 200 characters.
+      for (const cause of REJECTION_CAUSES) {
+        for (const line of whatToTell(locale, { ...base, emailState: state({ cause }) }, now)) expect(line.length, `${cause}: ${line}`).toBeLessThan(200);
+      }
     });
 
     it(`says an email the club's account could not send, or one owed to an address that works again, as owed — never as a refusal (${locale})`, () => {
-      const without = whatToTell(locale, base, now);
-      const tell = catalogues[locale].Admin.registrations.tell.rejected;
+      const pending: TellFacts = { ...base, status: "PENDING_DECLARATION", bibNumber: null, holdExpiresAt: new Date("2026-10-10T08:00:00.000Z") };
       for (const kind of ["not-sent", "missing"] as const) {
-        const said = whatToTell(locale, { ...base, emailState: { kind, status: "BOUNCED" } }, now);
-        expect(said).toEqual([...without, tell.owed.resend]);
-        expect(said).not.toContain(tell.BOUNCED);
-        // Said by what the press that clears it sends: the confirmation with its QR, the race-day details.
-        expect(whatToTell(locale, { ...base, emailState: { kind, status: "BOUNCED", own: true, press: "confirmation" } }, now)).toEqual([...without, tell.owed.confirmation]);
-        expect(whatToTell(locale, { ...base, emailState: { kind, status: "BOUNCED", own: true, press: "reminder" } }, now)).toEqual([...without, tell.owed.reminder]);
-        // A family member's email owed at the same address is theirs: nothing to tell this person.
-        expect(whatToTell(locale, { ...base, emailState: { kind, status: "BOUNCED", own: false, press: "confirmation" } }, now)).toEqual(without);
+        const owed = fill(tell.owed, { type: short.REGISTRATION_CONFIRMED, date });
+        expect(whatToTell(locale, { ...base, emailState: state({ kind, cause: kind === "not-sent" ? "account" : "mailbox-full" }) }, now)).toEqual([...whatToTell(locale, base, now), owed, tell.placeKept]);
+        // Not confirmed: no place to speak of.
+        const declaration = state({ kind, messageType: "COMPLETE_DECLARATION", cause: "account" });
+        expect(whatToTell(locale, { ...pending, emailState: declaration }, now).at(-1)).toBe(fill(tell.owed, { type: short.COMPLETE_DECLARATION, date }));
+        // A family member's email owed at the same address is theirs: nothing to tell this person, not even the place.
+        expect(whatToTell(locale, { ...base, emailState: state({ kind, own: false }) }, now)).toEqual(whatToTell(locale, base, now));
       }
-      // Sent again: nothing to say until its delivery is known (the next change draws it).
-      expect(whatToTell(locale, { ...base, emailState: { kind: "retried", status: "BOUNCED" } }, now)).toEqual(without);
+      // Sent again: nothing to say until its delivery is known.
+      expect(whatToTell(locale, { ...base, emailState: state({ kind: "retried" }) }, now)).toEqual(whatToTell(locale, base, now));
     });
 
     it(`says «Detalii actualizate» that did not reach them as what changed, promising nothing, and keeps «look in spam» (${locale})`, () => {
-      const tell = catalogues[locale].Admin.registrations.tell.rejected;
       const without = whatToTell(locale, base, now);
       const spamHint = catalogues[locale].Registrations.spamHint.body;
       const pending: TellFacts = { ...base, status: "PENDING_DECLARATION", bibNumber: null, holdExpiresAt: new Date("2026-10-10T08:00:00.000Z") };
       for (const kind of ["not-sent", "missing"] as const) {
-        const update = { kind, status: "BOUNCED", own: true, press: null, messageType: "EVENT_UPDATE_NOTICE" } as const;
+        const update = state({ kind, own: true, press: null, messageType: "EVENT_UPDATE_NOTICE", cause: kind === "not-sent" ? "account" : "mailbox-full" });
         const said = whatToTell(locale, { ...base, emailState: update }, now);
-        expect(said).toEqual([...without, tell.changed]);
-        for (const owed of Object.values(tell.owed)) expect(said).not.toContain(owed);
+        expect(said).toEqual([...without, tell.changed, tell.placeKept]);
+        expect(said).not.toContain(fill(tell.owed, { type: short.EVENT_UPDATE_NOTICE, date }));
         // A family member's notice is theirs: nothing to this person.
         expect(whatToTell(locale, { ...base, emailState: { ...update, own: false } }, now)).toEqual(without);
         // Not the email a pending registration waits on: its link may still be in spam.
@@ -439,23 +507,25 @@ describe("«Ce îi spui» on a row whose email did not arrive (§663, §NNN)", (
     it(`drops «look in spam» for an email refused and not sent again, keeps it for a complaint and a send again (${locale})`, () => {
       const pending: TellFacts = { ...base, status: "PENDING_EMAIL_CONFIRMATION", bibNumber: null };
       const spamHint = catalogues[locale].Registrations.spamHint.body;
+      const verify = (overrides: Partial<NonNullable<TellFacts["emailState"]>> = {}) => state({ messageType: "VERIFY_REGISTRATION_EMAIL", cause: "no-such-address", ...overrides });
       expect(whatToTell(locale, pending, now)).toContain(spamHint);
-      const bounced = whatToTell(locale, { ...pending, emailState: { kind: "unreachable", status: "BOUNCED" } }, now);
+      const bounced = whatToTell(locale, { ...pending, emailState: verify() }, now);
       expect(bounced).not.toContain(spamHint);
-      expect(bounced.at(-1)).toBe(catalogues[locale].Admin.registrations.tell.rejected.BOUNCED);
-      expect(whatToTell(locale, { ...pending, emailState: { kind: "unreachable", status: "COMPLAINED" } }, now)).toContain(spamHint);
+      // Not confirmed: the address is the person's to change, by a new registration.
+      expect(bounced.slice(-2)).toEqual([lost("no-such-address", short.VERIFY_REGISTRATION_EMAIL), tell.can["no-such-address"]]);
+      expect(whatToTell(locale, { ...pending, emailState: verify({ status: "COMPLAINED", cause: "complained" }) }, now)).toContain(spamHint);
       // Never left (the club's account), or owed to an address that works again: not in spam either.
       for (const kind of ["not-sent", "missing"] as const) {
-        const said = whatToTell(locale, { ...pending, emailState: { kind, status: "BOUNCED", press: "resend" } }, now);
+        const said = whatToTell(locale, { ...pending, emailState: verify({ kind, press: "resend" }) }, now);
         expect(said).not.toContain(spamHint);
-        expect(said.at(-1)).toBe(catalogues[locale].Admin.registrations.tell.rejected.owed.resend);
+        expect(said.at(-1)).toBe(fill(tell.owed, { type: short.VERIFY_REGISTRATION_EMAIL, date }));
         // A family member's owed email says nothing about this person's own, which may be in spam like anybody's.
-        expect(whatToTell(locale, { ...pending, emailState: { kind, status: "BOUNCED", own: false, press: "resend" } }, now)).toContain(spamHint);
+        expect(whatToTell(locale, { ...pending, emailState: verify({ kind, own: false, press: "resend" }) }, now)).toContain(spamHint);
       }
       // The address's refusal is everybody's at it, a family member's included.
-      expect(whatToTell(locale, { ...pending, emailState: { kind: "unreachable", status: "BOUNCED", own: false } }, now)).not.toContain(spamHint);
+      expect(whatToTell(locale, { ...pending, emailState: verify({ own: false }) }, now)).not.toContain(spamHint);
       // Sent again: it may be in spam this time.
-      expect(whatToTell(locale, { ...pending, emailState: { kind: "retried", status: "BOUNCED" } }, now)).toContain(spamHint);
+      expect(whatToTell(locale, { ...pending, emailState: verify({ kind: "retried" }) }, now)).toContain(spamHint);
     });
   }
 });
@@ -465,6 +535,7 @@ describe("the email state's object, as the subquery hands it back", () => {
     kind: "missing",
     messageType: "REGISTRATION_CONFIRMED",
     at: REJECTED_AT.getTime(),
+    atKnown: true,
     sent: true,
     status: "BOUNCED",
     cause: "mailbox-full",
@@ -482,6 +553,7 @@ describe("the email state's object, as the subquery hands it back", () => {
       kind: "missing",
       messageType: "REGISTRATION_CONFIRMED",
       at: REJECTED_AT,
+      atKnown: true,
       sent: true,
       status: "BOUNCED",
       cause: "mailbox-full",
@@ -495,6 +567,8 @@ describe("the email state's object, as the subquery hands it back", () => {
     expect(emailStateOf(JSON.stringify(object))).toEqual(expected);
     expect(emailStateOf(null)).toBeNull();
     expect(emailStateDetailOf(object)).toEqual({ ...expected, code: "552 5.2.2", detail: "mailbox full" });
+    // A refusal from before `rejected_at` was stored: its instant is the queueing's, and the object says so.
+    expect(emailStateOf({ ...object, atKnown: false })?.atKnown).toBe(false);
   });
 
   it("gives the desk what did not arrive, why and when — never the provider's words, nor the stored answer it classified", () => {
@@ -503,6 +577,7 @@ describe("the email state's object, as the subquery hands it back", () => {
       kind: "missing",
       messageType: "REGISTRATION_CONFIRMED",
       at: REJECTED_AT,
+      atKnown: true,
       sent: true,
       status: "BOUNCED",
       cause: "mailbox-full",

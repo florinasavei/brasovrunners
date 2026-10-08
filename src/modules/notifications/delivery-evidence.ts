@@ -1,4 +1,4 @@
-import { and, desc, inArray, max, or, sql } from "drizzle-orm";
+import { and, desc, inArray, isNull, max, or, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import type { Database } from "@/db/types";
 import { CLUB_COPY_FLAG, isClubCopy } from "./domain/club-notices";
@@ -89,6 +89,52 @@ export async function listClubMailboxRejections(
       code: row.code,
     };
   });
+}
+
+/** The invitations «Echipa» sends (§123, §524): a colleague's and a club member's. */
+const INVITATIONS = ["STAFF_INVITATION", "MEMBER_INVITATION"] as const;
+
+/** How far back «Echipa» looks for an invitation's refusal: the outbox keeps a sent row ninety days. */
+const INVITATION_WINDOW_MS = 90 * 24 * 3_600_000;
+
+/**
+ * The addresses whose newest invitation was refused (§NNN), by address in lower case, with the cause — for
+ * «Echipa»'s mark beside the name. A later invitation that left answers it (the newest one is read); the
+ * club's account refused at the send says nothing about the address and marks nobody. One read of the
+ * window's invitations, which carry no registration (`email_outbox_registration_created_idx`). The caller
+ * asserts who may read it (`canManageStaff`).
+ */
+export async function refusedInvitations(db: Db, now: Date): Promise<Map<string, RejectionCause>> {
+  const rows = await db
+    .select({
+      recipientEmail: emailOutbox.recipientEmail,
+      status: emailOutbox.status,
+      sentAt: emailOutbox.sentAt,
+      cause: emailOutbox.rejectionCause,
+      lastError: emailOutbox.lastError,
+    })
+    .from(emailOutbox)
+    .where(
+      and(
+        isNull(emailOutbox.registrationId),
+        inArray(emailOutbox.messageType, [...INVITATIONS]),
+        sql`${emailOutbox.createdAt} >= ${new Date(now.getTime() - INVITATION_WINDOW_MS).toISOString()}::timestamptz`,
+      ),
+    )
+    .orderBy(desc(emailOutbox.createdAt), desc(emailOutbox.id));
+  const newest = new Map<string, (typeof rows)[number]>();
+  for (const row of rows) {
+    const key = row.recipientEmail.trim().toLowerCase();
+    if (!newest.has(key)) newest.set(key, row);
+  }
+  const refused = new Map<string, RejectionCause>();
+  for (const [address, row] of newest) {
+    if (row.status !== "BOUNCED" && row.status !== "COMPLAINED") continue;
+    const status = row.status === "COMPLAINED" ? "COMPLAINED" : "BOUNCED";
+    const cause = isRejectionCause(row.cause) ? row.cause : rejectionCause({ status, sent: row.sentAt !== null, reason: row.lastError });
+    if (cause !== "account") refused.set(address, cause);
+  }
+  return refused;
 }
 
 export type DeliveryEvidence = {

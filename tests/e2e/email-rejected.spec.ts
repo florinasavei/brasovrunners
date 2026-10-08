@@ -4,13 +4,14 @@ import pg from "pg";
 import { FEATURED, hydrated, signIn } from "./support/featured-event";
 
 /**
- * §663 (amending §650, §76, §83) — «Email respins» says which email, when and why. The owner,
- * 2026-10-04, on rows «Confirmată» kept by the rejected-email filter: «Cum poți să nu fi primit mail
- * dar să fii și confirmat? Adaugă tooltips și informații». A confirmed registration whose race-number
- * email bounced: the filter «Doar cu un email respins» keeps it, the chip is a client island that
- * hydrates without a warning, opens its tooltip on keyboard focus and on a tap, and its accessible
- * name says the sentences once — no `aria-describedby` repeating them. The registration's page says
- * the same under the address. The rows are written straight into the database and removed after.
+ * §NNN (amending §663, §650; the data decision §NNN) — «Email respins» drawn where the club looks, phone
+ * first. The owner, 2026-10-07, on two «Confirmată» cards each with «Email respins»: «Cum e posibil să fie
+ * email respins dar și confirmat? Am nevoie de mai multe info in app». A confirmed registration whose
+ * race-number email the address refused: the filter «Doar cu un email respins (n)» keeps it, the card says
+ * in one line under the name which email, why and when — a plain 44-pixel link, no tooltip island — and the
+ * link opens the registration's «Emailuri», open by itself, with the whole story and the provider's small
+ * print; under the address the place is said to stay. The rows are written straight into the database and
+ * removed after.
  */
 
 function databaseUrl(): string {
@@ -46,9 +47,9 @@ async function seed(tag: string): Promise<Seeded> {
     );
     await client.query(
       `INSERT INTO email_outbox (registration_id, participant_id, message_type, locale, recipient_email, payload_json,
-         idempotency_key, status, last_error, created_at, sent_at)
+         idempotency_key, status, last_error, provider_detail, rejection_cause, rejected_at, created_at, sent_at)
        VALUES ($1, $2, 'BIB_ASSIGNED', 'ro', $3, '{}'::jsonb, $4, 'BOUNCED', '550 5.1.1 mailbox unavailable',
-         now() - interval '1 day', now() - interval '1 day')`,
+         '550 5.1.1 mailbox unavailable', 'no-such-address', now() - interval '1 day', now() - interval '1 day', now() - interval '1 day')`,
       [rows[0].id, participantRows[0].id, email, `e2e-respins-${tag}`],
     );
     return { eventId, registrationId: rows[0].id, participantId: participantRows[0].id, name };
@@ -69,8 +70,8 @@ async function cleanup(seeded: Seeded): Promise<void> {
   }
 }
 
-test.describe("§663 «Email respins» says which email, when and why", () => {
-  test("a confirmed row whose race-number email bounced: the filter keeps it, the chip opens on focus and says it once", async ({ page }) => {
+test.describe("§NNN «Email respins» says which email, why and what to do, where the club looks", () => {
+  test("a confirmed row whose race-number email was refused: one line under the name, a link to «Emailuri»", async ({ page }) => {
     test.setTimeout(90_000);
     const hydrationWarnings: string[] = [];
     page.on("console", (message) => {
@@ -82,37 +83,41 @@ test.describe("§663 «Email respins» says which email, when and why", () => {
       await page.goto(`/ro/admin/registrations?eventId=${seeded.eventId}&bounced=1&q=${encodeURIComponent(seeded.name)}`);
       await hydrated(page);
       const main = page.locator("#main");
-      await expect(main.getByTestId("registrations-filter-bounced").getByRole("checkbox", { name: "Doar cu un email respins" })).toBeChecked();
+      // The tick says how many it keeps.
+      await expect(main.getByTestId("registrations-filter-bounced").getByRole("checkbox", { name: /^Doar cu un email respins \(\d+\)$/ })).toBeChecked();
       await expect(main.getByRole("link", { name: `Deschide înscrierea lui ${seeded.name}`, exact: true })).toBeVisible();
 
-      const chip = main.locator('[data-testid="email-rejected"]:visible');
-      await expect(chip).toHaveCount(1);
-      // One channel: the name holds the label and the sentences; nothing describes it again.
-      await expect(chip).toHaveAttribute("aria-label", /^Email respins\. Respins: „/);
-      // The email by its «Emailuri» name, never the message type.
-      await expect(chip).toHaveAttribute("aria-label", /„Numărul de concurs dat de mână”, trimis /);
-      const name = (await chip.getAttribute("aria-label")) ?? "";
-      expect(name).toContain("Sună persoana");
-      // No list payload carries the provider's words (§NNN): the small print is the registration page's alone.
-      expect(name).not.toContain("Motivul dat de furnizor");
-      expect(name).not.toContain("..");
-      const box = await chip.boundingBox();
+      // One line under the name: the cause, the email's short name, the day — a link, never a chip with a tooltip.
+      const line = main.locator('[data-testid="email-state-line"]:visible');
+      await expect(line).toHaveCount(1);
+      // Each part unbreakable (non-breaking spaces inside it): `\s` reads both.
+      await expect(line).toHaveText(/^Adresa\snu\sexistă\s·\sNumărul\sde\sconcurs\s·\s/);
+      await expect(line).toHaveAttribute("href", /#emailuri$/);
+      await expect(main.locator('[data-testid="email-rejected"]')).toHaveCount(0);
+      // No list carries the provider's words.
+      await expect(line).not.toContainText("550");
+      const box = await line.boundingBox();
       expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+      // At a phone's width it wraps between parts, two lines at most.
+      if ((page.viewportSize()?.width ?? 1280) < 600) expect(box?.height ?? 0).toBeLessThanOrEqual(64);
+      await line.focus();
+      await expect(page.getByRole("tooltip")).toHaveCount(0);
 
-      await chip.focus();
-      const tooltip = page.getByRole("tooltip");
-      await expect(tooltip).toBeVisible();
-      await expect(tooltip).toContainText("Adresa a fost confirmată");
-      await expect(tooltip).toContainText("Sună persoana");
-      await expect(chip).not.toHaveAttribute("aria-describedby", /.+/);
-      await expect(chip).not.toHaveAttribute("aria-labelledby", /.+/);
-
-      // The registration's page: the same chip beside the name, the same words under the address.
-      await page.goto(`/ro/admin/registrations/${seeded.registrationId}`);
+      // The link opens the registration's «Emailuri», open by itself while somebody must act.
+      await line.click();
+      await expect(page).toHaveURL(new RegExp(`/ro/admin/registrations/${seeded.registrationId}#emailuri$`));
       await hydrated(page);
-      await expect(page.locator('#main [data-testid="email-rejected"]:visible')).toHaveCount(1);
-      await expect(page.locator("#main")).toContainText("un email de după aceea a fost respins");
-      await expect(page.locator("#main")).toContainText("Motivul dat de furnizor: 550 5.1.1 mailbox unavailable");
+      const section = page.locator("details#emailuri");
+      await expect(section).toHaveAttribute("open", "");
+      await expect(section).toContainText("Respins: „Numărul de concurs dat de mână”");
+      await expect(section).toContainText("Serverul destinatarului spune că adresa nu există.");
+      await expect(section).toContainText("Motivul dat de furnizor: 550 5.1.1 mailbox unavailable");
+      await expect(section).toContainText("Numărul de concurs · către participant");
+      await expect(section).toContainText("Trimis = predat furnizorului de email.");
+      // Under the address: the same line, and the place stays — never «a new registration» on a confirmed one.
+      const todo = page.getByTestId("email-state-todo");
+      await expect(todo).toContainText("Locul rămâne confirmat; la masă îl găsiți după nume.");
+      await expect(todo).not.toContainText("înscriere nouă");
       expect(hydrationWarnings).toEqual([]);
     } finally {
       await cleanup(seeded);

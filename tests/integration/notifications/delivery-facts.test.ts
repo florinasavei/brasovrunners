@@ -513,6 +513,8 @@ describe("the registration's one email state (BR-REQ-038-01)", () => {
       kind: "unreachable",
       messageType: "REGISTRATION_CONFIRMED",
       at: minutes(1),
+      // The webhook stored the refusal's own instant (§NNN): «refuzat la trimitere» may be said of it.
+      atKnown: true,
       sent: true,
       status: "BOUNCED",
       cause: "no-such-address",

@@ -684,17 +684,88 @@
       "termsLine": "Termenii acceptați (v{version}): {date}",
       "termsOnPaper": "Termenii și condițiile: pe hârtie — înscriere adăugată de echipă",
       "termsNotRecorded": "Termenii și condițiile: nicio versiune înregistrată — înscriere trimisă înainte ca site-ul să o păstreze",
-      "outboxHistory": "Istoric email",
-      "outboxClubCopy": "copie pentru club, fără linkurile participantului",
-      "emailRejected": "Email respins",
+      "emails": {
+        "title": "Emailuri",
+        "count": {
+          "one": "{count} email",
+          "few": "{count} emailuri",
+          "other": "{count} de emailuri"
+        },
+        "all": "Toate emailurile ({count})",
+        "club": "și cele către club ({count})",
+        "none": "Niciun email către participant încă.",
+        "role": {
+          "participant": "către participant",
+          "archive": "copia de arhivă a clubului",
+          "notice": "anunț pentru club",
+          "copy": "copie pentru club",
+          "staff": "către echipă",
+          "public": "către public"
+        },
+        "state": {
+          "queued": "În coadă {date}",
+          "sent": "Trimis {date}",
+          "delivered": "Livrat {date}",
+          "gmail": "Trimis prin Gmail {date} · fără confirmare de livrare",
+          "refused": "Respins {date} — {label}",
+          "spam": "Marcat ca spam {date}",
+          "notSent": "Nu a plecat {date} — {reason}"
+        },
+        "notSentReason": {
+          "account": "contul clubului era refuzat de Mailgun",
+          "failed": "a eșuat la fiecare încercare"
+        },
+        "resentBy": "Retrimis de {staff}",
+        "resentByNobody": "Retrimis de mână",
+        "after": {
+          "resolved": "A ajuns apoi: {date}.",
+          "retried": "Retrimis {date}; așteptăm livrarea.",
+          "retriedGmail": "Retrimis prin Gmail {date}; nu știm dacă a ajuns.",
+          "laterDelivered": "Adresa a primit apoi alt email: {date}."
+        },
+        "legend": "Trimis = predat furnizorului de email. Livrat = a ajuns la serverul lui de email, poate în Spam; nu știm dacă l-a deschis.",
+        "legendKept": "Emailurile livrate se șterg după 90 de zile; livrările dinainte de 8 octombrie 2026 nu au fost înregistrate."
+      },
       "rejected": {
         "which": "Respins: „{type}”, trimis {instant}.",
         "whichQueued": "Respins: „{type}”, refuzat la trimitere {instant}.",
+        "whichUntimed": "Respins: „{type}”, pus în coadă {instant}.",
         "typeUnknown": "un email al clubului",
+        "label": {
+          "no-such-address": "Adresa nu există",
+          "mailbox-full": "Căsuța e plină",
+          "blocked": "Blocat la destinatar",
+          "gave-up": "Eșuat temporar",
+          "refused": "Refuzat definitiv",
+          "suppressed": "Mailgun nu mai trimite",
+          "unsubscribed": "S-a dezabonat",
+          "complained": "Marcat ca spam",
+          "complaint-suppressed": "Oprit: marcat ca spam",
+          "account": "Nu a plecat",
+          "other": "Motiv necunoscut",
+          "noLonger": "Adresa nu mai există"
+        },
+        "line": {
+          "missing": "{short} lipsește · adresa merge acum",
+          "retried": "Retrimis {date} · așteptăm livrarea",
+          "retriedGmail": "Retrimis prin Gmail {date} · nu știm dacă a ajuns"
+        },
         "why": {
-          "BOUNCED": "Adresa nu există, căsuța e plină sau serverul destinatarului l-a refuzat.",
-          "COMPLAINED": "Mesajul a fost marcat ca spam de destinatar.",
+          "cause": {
+            "no-such-address": "Serverul destinatarului spune că adresa nu există.",
+            "mailbox-full": "Căsuța destinatarului e plină și nu mai primește emailuri.",
+            "blocked": "Serverul destinatarului l-a blocat, printr-un filtru anti-spam sau o regulă a lui; nu e neapărat adresa.",
+            "gave-up": "Serverul destinatarului l-a tot amânat, iar Mailgun a renunțat după câteva ore.",
+            "refused": "Serverul destinatarului l-a refuzat definitiv, fără să spună de ce.",
+            "suppressed": "Mailgun nu l-a mai trimis: adresa a respins un email mai vechi, așa că Mailgun a oprit-o.",
+            "unsubscribed": "Mailgun nu l-a mai trimis: persoana s-a dezabonat de la emailurile clubului.",
+            "complained": "Persoana a marcat emailul clubului ca spam.",
+            "complaint-suppressed": "Mailgun nu l-a mai trimis: persoana a marcat odată un email al clubului ca spam.",
+            "other": "Serverul destinatarului l-a refuzat dintr-un motiv pe care nu-l putem încadra."
+          },
+          "noLonger": "A mers la confirmare ({date}); acum serverul spune că nu există — poate și-a închis căsuța.",
           "BOUNCEDQueued": "Nu a plecat: furnizorul a refuzat adresa.",
+          "queuedOther": "Nu a plecat: furnizorul l-a refuzat la trimitere.",
           "account": "Nu a plecat: contul clubului la Mailgun a fost refuzat atunci, nu adresa.",
           "missing": "Adresa primește din nou emailurile clubului ({date}), dar acesta nu a mai fost trimis.",
           "missingUndated": "Adresa primește din nou emailurile clubului, dar acesta nu a mai fost trimis.",
@@ -707,9 +778,21 @@
         "confirmedBefore": "Adresa a fost confirmată {date}; un email de după aceea a fost respins.",
         "confirmedAfter": "Adresa a fost confirmată {date}, după acest email.",
         "neverConfirmed": "Adresa nu a fost confirmată niciodată.",
+        "placeKept": "Locul rămâne confirmat; la masă îl găsiți după nume.",
         "todo": "Sună persoana; adresa o poate schimba doar ea, printr-o înscriere nouă.",
+        "todoKept": "Sună persoana: emailurile clubului nu ajung la adresa ei.",
+        "todoCause": {
+          "account": "Nu a plecat atunci (contul clubului era refuzat de Mailgun), nu din cauza adresei.",
+          "mailbox-full": "Roag-o să-și facă loc în căsuță.",
+          "retryLater": "Nu e neapărat adresa; poate merge mai târziu.",
+          "suppressed": "Mailgun nu-i mai trimite până nu e scoasă adresa din Mailgun → Suppressions — doar dacă persoana confirmă că e corectă.",
+          "unsubscribed": "S-a dezabonat: nu ridica dezabonarea decât dacă persoana o cere.",
+          "complained": "A marcat emailul ca spam: sun-o doar dacă trebuie să afle ceva.",
+          "complaint-suppressed": "Mailgun nu-i mai trimite după marcajul de spam: adresa iese din Suppressions doar dacă persoana o cere."
+        },
         "whichFamily": "Respins la aceeași adresă, pentru altă înscriere de la acest eveniment: „{type}”, {instant}.",
         "whichFamilyQueued": "Nu a plecat, pentru altă înscriere de la aceeași adresă și acest eveniment: „{type}”, refuzat la trimitere {instant}.",
+        "whichFamilyUntimed": "Nu a plecat, pentru altă înscriere de la aceeași adresă și acest eveniment: „{type}”, pus în coadă {instant}.",
         "todoPress": {
           "confirmation": "Retrimite confirmarea, care poartă și numărul, codul QR și declarația semnată: „Retrimite QR” în listă, „Retrimite emailul” în pagina înscrierii.",
           "reminder": "Retrimite reminderul: „Trimite reminderul” în pagina înscrierii.",
@@ -728,10 +811,29 @@
           "update": "Spune-i persoanei: nu a primit „Detalii actualizate” — ce s-a schimbat e pe pagina evenimentului.",
           "cancelled": "Spune-i persoanei: nu a primit anunțul — evenimentul s-a anulat."
         },
-        "todoTellUnreachable": "Spune-i persoanei că emailurile clubului nu ajung la ea; un administrator o sună.",
+        "todoTellUnreachable": "Spune-i persoanei că emailurile clubului nu ajung la ea; adresa o poate schimba doar ea, printr-o înscriere nouă.",
+        "todoTellKept": "Spune-i persoanei că emailurile clubului nu ajung la ea; locul ei rămâne confirmat.",
+        "todoTellCause": {
+          "mailbox-full": "Spune-i persoanei că are căsuța plină: să-și facă loc, ca emailurile clubului să ajungă.",
+          "blocked": "Spune-i persoanei că serverul ei de email a refuzat emailul clubului; să pună clubul în contacte.",
+          "suppressed": "Spune-i persoanei că nu-i mai trimitem emailuri după un refuz; dacă adresa e bună, să ne spună.",
+          "unsubscribed": "Spune-i persoanei că s-a dezabonat de la emailurile clubului; de aceea nu le primește.",
+          "complained": "Spune-i persoanei că a marcat un email al clubului ca spam; de aceea nu le mai primește."
+        },
         "todoFamily": "Se retrimite de pe înscrierea acelei persoane, nu de pe aceasta. {todo}",
         "todoWait": "Nu-l retrimite încă: așteaptă confirmarea livrării.",
-        "todoAsk": "Întreabă persoana dacă l-a primit."
+        "todoAsk": "Întreabă persoana dacă l-a primit.",
+        "desk": {
+          "label": "Fără QR pe email — caută după nume",
+          "hint": "Nu oprește ridicarea numărului."
+        },
+        "warn": {
+          "suppressed": "Mailgun nu va trimite la această adresă; retrimiterea nu ajunge.",
+          "noSuchAddress": "Ultimul email a fost respins: adresa nu există; probabil va fi respins din nou.",
+          "mailboxFull": "Căsuța era plină {date}; poate merge acum.",
+          "refused": "Ultimul email a fost respins ({label}); poate merge acum.",
+          "complained": "Ultimul email a fost marcat ca spam; poate ajunge tot în Spam."
+        }
       },
       "testKind": "Test",
       "enteredByStaff": "Adăugată de echipă",
@@ -834,8 +936,8 @@
       "rowActions": "Acțiuni pentru {name}",
       "clubMemberOnly": "Doar membrii {club}",
       "clubMemberOnlyHelp": "Cine a bifat la înscriere „Sunt membru al grupului {club}” sau are adresa unui cont din «Echipa». Pe rând scrie care: „Membru (verificat)” sau „Membru (declarat)”.",
-      "bouncedOnly": "Doar cu un email respins",
-      "bouncedOnlyHelp": "Cei cu un email respins sau marcat ca spam, chiar dacă înscrierea e confirmată. „Email respins” pe rând spune care email, când și de ce: pe ei îi suni.",
+      "bouncedOnly": "Doar cu un email respins ({count})",
+      "bouncedOnlyHelp": "Cei care cer o acțiune: nimic nu a mai ajuns la adresă după un refuz, un email lipsește sau unul nu a plecat.",
       "member": {
         "verified": "Membru (verificat)",
         "verifiedHint": "Adresa e a unui cont din «Echipa», deci clubul știe că e membru.",
@@ -1162,14 +1264,29 @@
         "holdLapsed": "Locul tău a expirat: declarația nu a fost semnată la timp.",
         "linkUntil": "Linkul din email e valabil până {instant}.",
         "rejected": {
-          "BOUNCED": "Un email trimis de club la adresa ta a fost respins: adresa nu există sau căsuța e plină, așa că mesajele clubului nu ajung la tine.",
-          "COMPLAINED": "Un email trimis de club la adresa ta a fost marcat ca spam, așa că mesajele clubului s-ar putea să nu mai ajungă la tine.",
-          "owed": {
-            "resend": "Un email al clubului pentru tine nu a ajuns încă la tine; ți-l trimitem din nou.",
-            "confirmation": "Confirmarea înscrierii, cu codul QR, nu a ajuns încă la tine; ți-o trimitem din nou.",
-            "reminder": "Emailul cu detaliile pentru ziua cursei nu a ajuns încă la tine; ți-l trimitem din nou."
+          "lost": "Emailul nostru „{type}” ({date}) nu a ajuns la tine: {why}.",
+          "spam": "Emailul nostru „{type}” ({date}) a fost marcat ca spam, așa că mesajele clubului s-ar putea să nu mai ajungă la tine.",
+          "why": {
+            "no-such-address": "serverul tău de email spune că adresa nu există",
+            "mailbox-full": "căsuța ta e plină",
+            "blocked": "serverul tău de email l-a blocat",
+            "gave-up": "serverul tău de email nu l-a primit la timp",
+            "refused": "serverul tău de email l-a refuzat",
+            "suppressed": "un email mai vechi fusese respins, așa că nu l-am mai trimis",
+            "unsubscribed": "te-ai dezabonat de la emailurile clubului",
+            "complaint-suppressed": "ai marcat odată un email al clubului ca spam",
+            "other": "serverul tău de email l-a refuzat"
           },
-          "changed": "Detaliile evenimentului s-au schimbat, iar emailul nostru despre asta nu a ajuns la tine: ora și locul la zi sunt pe pagina evenimentului."
+          "can": {
+            "no-such-address": "Adresa o poți schimba doar printr-o înscriere nouă.",
+            "mailbox-full": "Fă loc în căsuță și îți retrimitem.",
+            "blocked": "Adaugă adresa clubului în contacte și îți retrimitem.",
+            "suppressed": "Am oprit trimiterile după un refuz; spune-ne dacă adresa e bună.",
+            "unsubscribed": "Dacă vrei să le primești din nou, spune-ne."
+          },
+          "owed": "Emailul nostru „{type}” ({date}) nu a ajuns încă la tine; ți-l trimitem din nou.",
+          "changed": "Detaliile evenimentului s-au schimbat, iar emailul nostru despre asta nu a ajuns la tine: ora și locul la zi sunt pe pagina evenimentului.",
+          "placeKept": "Locul tău e confirmat; la masă te găsim după nume."
         }
       },
       "memberBibWantedStaffHelp": "Doar pentru un membru, la un eveniment care oferă numărul membrilor; altfel nu se păstrează.",
@@ -2575,6 +2692,7 @@
       "accountUnconfigured": "Nu putem face asta fără cheia Zitadel: Sarcini → Club → „Invită echipa”. Până atunci, din consola Zitadel.",
       "accountFailed": "Furnizorul de autentificare a refuzat ({reason}).",
       "noAccount": "Fără cont de autentificare",
+      "invitationRefused": "Invitația respinsă: {label}",
       "noAccountHelp": "„Fără cont de autentificare”: persoana e pe listă, dar nu se poate autentifica. Rezolvarea: ⋮ → „Retrage accesul”, apoi „Adaugă” din nou cu aceeași adresă.",
       "accountsBlind": "Nu am putut verifica cine are cont: cheia Zitadel vede doar {seen} conturi, deci nu are rolul „Org User Manager”. Vezi Sarcini → Club → „Cheia de invitații”.",
       "accountsUnchecked": "Nu am putut verifica cine are cont de autentificare — Zitadel a răspuns: {reason}. Rândurile de mai jos nu spun nimic despre conturi până la o verificare reușită; reîncarcă pagina peste câteva minute.",
@@ -2659,6 +2777,11 @@
         "other": "{count} vor fi sărite"
       },
       "body": "{waiting}; {skipped}: {recent} cu email în ultima oră sau încă în coadă, {limited} la limita de retrimiteri. Fiecare primește un link nou — cel vechi nu mai merge. Emailurile pleacă la ritmul drumului.",
+      "rejectedFirst": {
+        "one": "{count} persoană dintre ei are un email respins; la ea retrimiterea poate să nu ajungă.",
+        "few": "{count} persoane dintre ei au un email respins; la ele retrimiterea poate să nu ajungă.",
+        "other": "{count} de persoane dintre ei au un email respins; la ele retrimiterea poate să nu ajungă."
+      },
       "done": "La coadă: {queued} · sărite: {skipped} — {recent} cu email recent, {limited} la limita de retrimiteri."
     },
     "testRegistrations": {
@@ -3619,6 +3742,44 @@
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea 2 descrie invitațiile.",
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Rândul se închide singur când nota intră în vigoare."
           ]
+        },
+        "clubMailboxRefusals": {
+          "title": "Adresele clubului care resping emailuri",
+          "todo": {
+            "one": "{count} adresă a clubului respinge emailuri: copiile sau anunțurile nu ajung acolo.",
+            "few": "{count} adrese ale clubului resping emailuri: copiile sau anunțurile nu ajung acolo.",
+            "other": "{count} de adrese ale clubului resping emailuri: copiile sau anunțurile nu ajung acolo."
+          },
+          "done": "Nicio adresă a clubului nu a respins emailuri în ultimele 30 de zile.",
+          "how": [
+            "Deschide «Setări» → «Emailuri» → «Adresele clubului care resping emailuri».",
+            "Sub fiecare adresă scrie ce faci: o corectezi în «Copiile clubului», faci loc în căsuță, sau o scoți din Mailgun → Suppressions dacă e bună.",
+            "Rândul se face verde după 30 de zile fără niciun refuz."
+          ]
+        },
+        "deliveryReports": {
+          "title": "Mailgun nu trimite evenimentele „Delivered”",
+          "todo": "Mailgun nu trimite evenimentele „Delivered”; fără ele, „Email respins” nu se stinge.",
+          "how": [
+            "Mailgun → Sending → Webhooks, domeniul {mailDomain}.",
+            "La «Delivered» adaugă adresa {webhookUrl}, lângă adresa celeilalte instalări dacă e acolo.",
+            "La «Permanent Failure» și «Spam Complaints» trebuie să fie aceeași adresă.",
+            "«Test webhook» pe «Delivered» trebuie să răspundă 200. Rândul dispare la prima livrare raportată."
+          ]
+        },
+        "emailAttention": {
+          "title": "Participanți cu un email care cere atenție",
+          "todo": {
+            "one": "{count} participant la {event} are un email care cere atenție.",
+            "few": "{count} participanți la {event} au un email care cere atenție.",
+            "other": "{count} de participanți la {event} au un email care cere atenție."
+          },
+          "how": [
+            "Deschide lista de mai jos: arată doar înscrierile cu un email respins.",
+            "Sub fiecare nume scrie ce email, de ce, iar în pagina înscrierii ce faci.",
+            "Rândul dispare când nu mai rămâne niciunul, sau după eveniment."
+          ],
+          "link": "Înscrieri → {event}"
         }
       },
       "freeVerdict": {
@@ -4721,6 +4882,31 @@
         "UNREACHABLE_WINDOW_CLOSED": "Ceasul termenelor a stat pe loc",
         "EVENT_INVITATION": "Invitația la un eveniment"
       },
+      "typesShort": {
+        "VERIFY_REGISTRATION_EMAIL": "Confirmă adresa",
+        "COMPLETE_DECLARATION": "Linkul de declarație",
+        "WAITLIST_JOINED": "Lista de așteptare",
+        "WAITLIST_SPOT_OFFER": "Oferta de loc",
+        "REGISTRATION_CONFIRMED": "Confirmarea cu QR",
+        "REGISTRATION_CANCELLED": "Înscriere anulată",
+        "WAITLIST_OFFER_EXPIRED": "Oferta a expirat",
+        "REGISTRATION_MANAGE_LINK": "Linkul înscrierii",
+        "PROFILE_MANAGE_LINK": "Înscrierile mele",
+        "REGISTRATION_STATE_NOTICE": "Starea înscrierii",
+        "EVENT_REMINDER": "Reminderul",
+        "EVENT_THANKS": "Mulțumirile",
+        "DECLARATION_SIGNED": "Declarația semnată",
+        "DECLARATION_ARCHIVE": "Copia de arhivă",
+        "BIB_ASSIGNED": "Numărul de concurs",
+        "CLUB_CONFIRMATION_NOTICE": "Anunțul de confirmare",
+        "EVENT_UPDATE_NOTICE": "Detalii actualizate",
+        "EVENT_CANCELLED": "Eveniment anulat",
+        "ORGANIZER_MESSAGE": "Mesajul organizatorilor",
+        "GROUP_RUN_DECLARATION_SIGNED": "Declarația alergării",
+        "GROUP_RUN_DECLARATION_ARCHIVE": "Copia de arhivă a alergării",
+        "REGISTER_ANOTHER_PERSON": "Înscrierea altei persoane",
+        "DECLARATION_HOLD_EXPIRED": "Locul ținut a expirat"
+      },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "După trimiterea formularului. Linkul e valabil {confirmation}, de când pleacă emailul.",
         "COMPLETE_DECLARATION": "După confirmarea adresei, când există loc: cere semnarea declarației. La un eveniment îndepărtat pleacă din nou când se deschide fereastra de confirmare.",
@@ -4836,6 +5022,33 @@
           "participants": {
             "title": "Copia clubului la emailurile către participanți"
           }
+        }
+      },
+      "clubRejections": {
+        "title": "Adresele clubului care resping emailuri",
+        "intro": "Copiile și anunțurile clubului care nu au ajuns în ultimele 30 de zile, pe adrese.",
+        "aside": {
+          "one": "{count} adresă",
+          "few": "{count} adrese",
+          "other": "{count} de adrese"
+        },
+        "role": {
+          "archive": "arhiva declarațiilor",
+          "archiveCopy": "Cc la arhivă",
+          "notice": "anunțuri de confirmare",
+          "copy": "Bcc la mesajele participanților"
+        },
+        "last": "{message} · ultima dată {date} · {label}",
+        "count": {
+          "one": "{count} refuz în 30 de zile",
+          "few": "{count} refuzuri în 30 de zile",
+          "other": "{count} de refuzuri în 30 de zile"
+        },
+        "todo": {
+          "suppressed": "Mailgun nu-i mai trimite: dacă adresa e bună, scoate-o din Mailgun → Suppressions.",
+          "mailbox": "Fă loc în această căsuță sau pune altă adresă în „Copiile clubului”.",
+          "fix": "Corectează adresa în „Copiile clubului” sau scoate-o de acolo.",
+          "removed": "Adresa nu mai e în „Copiile clubului”: nu mai e nimic de făcut."
         }
       },
       "queue": {

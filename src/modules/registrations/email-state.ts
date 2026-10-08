@@ -1,7 +1,7 @@
 import { and, eq, notInArray, type SQL, type SQLWrapper, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
-import { registrations } from "@/db/schema/registrations";
+import { registrations, type RegistrationStatus } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import { participantMessageCondition, rejectionInstantSql } from "@/modules/notifications/delivery-facts";
 import {
@@ -140,6 +140,7 @@ function fieldsSql(projection: Projection): SQL {
   const desk = sql`'kind', ${FACT}."kind",
     'messageType', ${emailOutbox.messageType},
     'at', ${epochMs(rejectionInstantSql())},
+    'atKnown', ${emailOutbox.rejectedAt} is not null,
     'sent', ${emailOutbox.sentAt} is not null,
     'status', ${emailOutbox.status},
     'cause', ${emailOutbox.rejectionCause},
@@ -207,6 +208,30 @@ export async function countNeedingEmailActionByEvent<T extends Record<string, un
     )
     .groupBy(registrations.eventId);
   return rows;
+}
+
+/**
+ * How many real registrations of one event, in one status, whose address refuses the club's mail — an open
+ * `unreachable` refusal, by the same rule as the state (§NNN): «Retrimite declarația tuturor care nu au
+ * semnat» says it first, since for them a resend may not arrive. The caller asserts who may read it.
+ */
+export async function countAddressRefusingMail<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  status: RegistrationStatus,
+): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)`.mapWith(Number) })
+    .from(registrations)
+    .where(
+      and(
+        eq(registrations.eventId, eventId),
+        eq(registrations.status, status),
+        eq(registrations.kind, "REAL"),
+        sql`exists (select 1 from ${refusalsFromSql()} where ${openRefusalsWhere()} and ${FACT}."kind" = 'unreachable')`,
+      ),
+    );
+  return row?.count ?? 0;
 }
 
 /**

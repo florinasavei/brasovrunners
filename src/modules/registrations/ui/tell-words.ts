@@ -5,9 +5,11 @@ import type { RegistrationStatus } from "@/db/schema/registrations";
 import { formatDay } from "@/i18n/dates";
 import { waitlistCountShown } from "@/modules/events/domain/registration-cta";
 import { formatDeadlineInSentence } from "@/modules/notifications/domain/deadline-in-sentence";
+import type { RejectionCause } from "@/modules/notifications/domain/rejection-cause";
 import { confirmationDueMoment } from "../domain/hold-deadlines";
 import { callInstead, type RegistrationEmailState } from "../domain/email-state";
 import { rowDeadlineOf } from "../domain/row-deadline";
+import { shortEmailName } from "./rejected-email-words";
 import { waitlistStandingPhrase } from "./waitlist-position-words";
 
 type Say = (key: string, values?: Record<string, string | number>) => string;
@@ -34,15 +36,15 @@ export type TellFacts = {
   /** Why an expired row expired: a lapsed declaration hold says what its email said (§638). */
   expiryReason?: string | null;
   /**
-   * The registration's email state (§663, §NNN): one more sentence when the address refuses the club's mail
-   * (`unreachable`), so the person knows our mail does not reach them. A message the club's account could not
-   * send, or one owed again to an address that works, is not the person's to hear about as a refusal: it is
-   * said as owed, naming what the press that clears it sends (`press`) — and only when it is this
-   * registration's own (`own`), not a family member's at the same address. «Detalii actualizate» that did
-   * not reach them is said as what changed, where to read it, and nothing promised (`messageType`, §NNN):
-   * no press sends it again.
+   * The registration's email state (§663, the data decision §NNN, §NNN): when the address refuses the club's
+   * mail (`unreachable`), which email did not arrive, in the participant's words and with its date, why in
+   * plain words by its cause, and what the person can do. A message the club's account could not send, or one
+   * owed again to an address that works, is not the person's to hear about as a refusal: it is said as owed
+   * — and only when it is this registration's own (`own`), not a family member's at the same address.
+   * «Detalii actualizate» that did not reach them is said as what changed, where to read it, and nothing
+   * promised: no press sends it again. On a confirmed registration the place is said to stay.
    */
-  emailState?: (Pick<RegistrationEmailState, "kind" | "status"> & Partial<Pick<RegistrationEmailState, "own" | "press" | "messageType">>) | null;
+  emailState?: (Pick<RegistrationEmailState, "kind" | "status" | "messageType" | "at" | "cause"> & Partial<Pick<RegistrationEmailState, "own" | "press">>) | null;
 };
 
 /** The states whose next step is a link in an email: the ones a lost or spam-filed email stops. */
@@ -177,17 +179,55 @@ export function tellLines(say: Say, ours: Say, locale: string, facts: TellFacts,
   const refusedNotResent = state !== null && state.status === "BOUNCED" && state.kind !== "retried" && (state.kind === "unreachable" || (own && call === null));
   if (WAITS_ON_AN_EMAIL.has(facts.status) && !lapsed && !refusedNotResent) lines.push(say("spamHint.body"));
   // The address refuses the club's mail (§663, §NNN): on any state, confirmed included — said to the person
-  // without the address, which stays theirs to change (§645). An email the club's account could not send,
-  // or one owed to an address that works again, is said as owed — never as the address's refusal — by
-  // what the press that clears it sends: the confirmation with its QR, the race-day details, or the email.
-  // «Detalii actualizate» has no press: the person hears that the details changed and where they are, with
-  // no promise to send anything; a cancellation they did not get is the cancelled event's own line above.
-  if (state?.kind === "unreachable") lines.push(ours(`rejected.${state.status}`));
-  else if ((state?.kind === "not-sent" || state?.kind === "missing") && own) {
-    if (call === "update") lines.push(ours("rejected.changed"));
-    else if (call === null) lines.push(ours(`rejected.owed.${state.press ?? "resend"}`));
-  }
+  // without the address, which stays theirs to change (§645): which email, in their words, and its date; why,
+  // by its cause; what they can do. An email the club's account could not send, or one owed to an address
+  // that works again, is said as owed — never as the address's refusal. «Detalii actualizate» has no press:
+  // the person hears that the details changed and where they are, with no promise to send anything; a
+  // cancellation they did not get is the cancelled event's own line above. Whenever an email line is said
+  // on a confirmed registration, the place is said to stay — a refusal never touches it.
+  const said = state === null ? [] : emailTellLines(ours, locale, facts, state, own, call);
+  lines.push(...said);
+  if (said.length > 0 && facts.status === "CONFIRMED") lines.push(ours("rejected.placeKept"));
   return lines;
+}
+
+/** The causes a person can do something about by adding the club to their contacts (§NNN). */
+const ASK_FOR_CONTACTS: ReadonlySet<RejectionCause> = new Set(["blocked", "gave-up", "refused", "other", "account"]);
+
+/** What a person can do about a refusal of their address, by its cause (§NNN); null for nothing to say. */
+function canKey(cause: RejectionCause, confirmed: boolean): string | null {
+  if (cause === "no-such-address") return confirmed ? null : "rejected.can.no-such-address";
+  if (cause === "mailbox-full") return "rejected.can.mailbox-full";
+  if (cause === "suppressed") return "rejected.can.suppressed";
+  if (ASK_FOR_CONTACTS.has(cause)) return "rejected.can.blocked";
+  return "rejected.can.unsubscribed";
+}
+
+/** The email's lines of «Ce îi spui» (§NNN): none for an email sent again, nor for a family member's owed one. */
+function emailTellLines(
+  ours: Say,
+  locale: string,
+  facts: TellFacts,
+  state: NonNullable<TellFacts["emailState"]>,
+  own: boolean,
+  call: ReturnType<typeof callInstead>,
+): string[] {
+  const type = shortEmailName(state.messageType, locale);
+  const date = formatDay(state.at, { locale, timeZone: facts.eventTimezone, style: "long", year: false, position: "inline" });
+  if (state.kind === "unreachable") {
+    // A complaint arrived: it was marked as spam, never «did not reach you».
+    const first =
+      state.status === "COMPLAINED" || state.cause === "complained"
+        ? ours("rejected.spam", { type, date })
+        : ours("rejected.lost", { type, date, why: ours(`rejected.why.${state.cause === "account" ? "other" : state.cause}`) });
+    const can = canKey(state.status === "COMPLAINED" ? "complained" : state.cause, facts.status === "CONFIRMED");
+    return can ? [first, ours(can)] : [first];
+  }
+  if ((state.kind === "not-sent" || state.kind === "missing") && own) {
+    if (call === "update") return [ours("rejected.changed")];
+    if (call === null) return [ours("rejected.owed", { type, date })];
+  }
+  return [];
 }
 
 /**

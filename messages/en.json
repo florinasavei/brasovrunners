@@ -684,17 +684,88 @@
       "termsLine": "Terms accepted (v{version}): {date}",
       "termsOnPaper": "Terms and conditions: on paper — entered by staff",
       "termsNotRecorded": "Terms and conditions: no version recorded — sent before the site kept one",
-      "outboxHistory": "Email history",
-      "outboxClubCopy": "club copy, without the participant's links",
-      "emailRejected": "Email rejected",
+      "emails": {
+        "title": "Emails",
+        "count": {
+          "one": "{count} email",
+          "few": "{count} emails",
+          "other": "{count} emails"
+        },
+        "all": "All emails ({count})",
+        "club": "and those to the club ({count})",
+        "none": "No email to the participant yet.",
+        "role": {
+          "participant": "to the participant",
+          "archive": "the club's archive copy",
+          "notice": "notice to the club",
+          "copy": "copy for the club",
+          "staff": "to the team",
+          "public": "to the public"
+        },
+        "state": {
+          "queued": "Queued {date}",
+          "sent": "Sent {date}",
+          "delivered": "Delivered {date}",
+          "gmail": "Sent by Gmail {date} · no delivery confirmation",
+          "refused": "Rejected {date} — {label}",
+          "spam": "Marked as spam {date}",
+          "notSent": "Never left {date} — {reason}"
+        },
+        "notSentReason": {
+          "account": "the club's account was refused by Mailgun",
+          "failed": "it failed on every attempt"
+        },
+        "resentBy": "Resent by {staff}",
+        "resentByNobody": "Resent by hand",
+        "after": {
+          "resolved": "It arrived afterwards: {date}.",
+          "retried": "Sent again {date}; awaiting delivery.",
+          "retriedGmail": "Sent again by Gmail {date}; arrival unknown.",
+          "laterDelivered": "The address took another email afterwards: {date}."
+        },
+        "legend": "Sent = handed to the email provider. Delivered = reached the recipient's email server, maybe its Spam; we do not know whether it was opened.",
+        "legendKept": "Delivered emails are deleted after 90 days; deliveries before 8 October 2026 were not recorded."
+      },
       "rejected": {
         "which": "Rejected: “{type}”, sent {instant}.",
         "whichQueued": "Rejected: “{type}”, refused at the send {instant}.",
+        "whichUntimed": "Rejected: “{type}”, queued {instant}.",
         "typeUnknown": "a club email",
+        "label": {
+          "no-such-address": "Address does not exist",
+          "mailbox-full": "Mailbox full",
+          "blocked": "Blocked by the recipient",
+          "gave-up": "Failed for now",
+          "refused": "Refused for good",
+          "suppressed": "Mailgun stopped sending",
+          "unsubscribed": "Unsubscribed",
+          "complained": "Marked as spam",
+          "complaint-suppressed": "Stopped: marked as spam",
+          "account": "Never left",
+          "other": "Unknown reason",
+          "noLonger": "Address no longer exists"
+        },
+        "line": {
+          "missing": "{short} missing · address works again",
+          "retried": "Sent again {date} · awaiting delivery",
+          "retriedGmail": "Sent again by Gmail {date} · arrival unknown"
+        },
         "why": {
-          "BOUNCED": "The address does not exist, the mailbox is full or the recipient's server refused it.",
-          "COMPLAINED": "The recipient marked the message as spam.",
+          "cause": {
+            "no-such-address": "The recipient's server says the address does not exist.",
+            "mailbox-full": "The recipient's mailbox is full and takes no more email.",
+            "blocked": "The recipient's server blocked it, by a spam filter or a rule of its own; it is not necessarily the address.",
+            "gave-up": "The recipient's server kept deferring it, and Mailgun gave up after a few hours.",
+            "refused": "The recipient's server refused it for good, without saying why.",
+            "suppressed": "Mailgun did not send it: the address rejected an older email, so Mailgun stopped it.",
+            "unsubscribed": "Mailgun did not send it: the person unsubscribed from the club's emails.",
+            "complained": "The person marked the club's email as spam.",
+            "complaint-suppressed": "Mailgun did not send it: the person once marked a club email as spam.",
+            "other": "The recipient's server refused it for a reason we cannot place."
+          },
+          "noLonger": "It answered the confirmation ({date}); now the server says it does not exist — perhaps the mailbox was closed.",
           "BOUNCEDQueued": "It never left: the provider refused the address.",
+          "queuedOther": "It never left: the provider refused it at the send.",
           "account": "It never left: the club's Mailgun account was refused at the time, not the address.",
           "missing": "The address receives the club's email again ({date}), but this one was not sent again.",
           "missingUndated": "The address receives the club's email again, but this one was not sent again.",
@@ -707,9 +778,21 @@
         "confirmedBefore": "The address was confirmed {date}; an email after that was rejected.",
         "confirmedAfter": "The address was confirmed {date}, after this email.",
         "neverConfirmed": "The address was never confirmed.",
+        "placeKept": "The place stays confirmed; at the desk you find them by name.",
         "todo": "Phone the person; only they can change the address, by registering again.",
+        "todoKept": "Phone the person: the club's emails do not reach their address.",
+        "todoCause": {
+          "account": "It never left then (Mailgun refused the club's account), not because of the address.",
+          "mailbox-full": "Ask them to make room in the mailbox.",
+          "retryLater": "It is not necessarily the address; it may go through later.",
+          "suppressed": "Mailgun will not send to it until the address is removed from Mailgun → Suppressions — only if the person confirms it is right.",
+          "unsubscribed": "They unsubscribed: never lift it unless the person asks.",
+          "complained": "They marked the email as spam: phone only if they must learn something.",
+          "complaint-suppressed": "Mailgun stopped after the spam mark: the address leaves Suppressions only if the person asks."
+        },
         "whichFamily": "Rejected at the same address, for another registration at this event: “{type}”, {instant}.",
         "whichFamilyQueued": "Never left, for another registration at the same address and this event: “{type}”, refused at the send {instant}.",
+        "whichFamilyUntimed": "Never left, for another registration at the same address and this event: “{type}”, queued {instant}.",
         "todoPress": {
           "confirmation": "Send the confirmation again; it also carries the number, the QR code and the signed declaration: “Resend QR” in the list, “Resend email” on the registration's page.",
           "reminder": "Send the reminder again: “Send the reminder” on the registration's page.",
@@ -728,10 +811,29 @@
           "update": "Tell the person: they did not receive “Updated details” — what changed is on the event page.",
           "cancelled": "Tell the person: they did not receive the notice — the event has been cancelled."
         },
-        "todoTellUnreachable": "Tell the person the club's emails do not reach them; an Administrator will phone them.",
+        "todoTellUnreachable": "Tell the person the club's emails do not reach them; only they can change the address, by registering again.",
+        "todoTellKept": "Tell the person the club's emails do not reach them; their place stays confirmed.",
+        "todoTellCause": {
+          "mailbox-full": "Tell the person their mailbox is full: they should make room so the club's emails arrive.",
+          "blocked": "Tell the person their email server refused the club's email; they should add the club to their contacts.",
+          "suppressed": "Tell the person we stopped emailing them after a rejection; if the address is right, they should tell us.",
+          "unsubscribed": "Tell the person they unsubscribed from the club's emails; that is why they get none.",
+          "complained": "Tell the person they marked a club email as spam; that is why they get none."
+        },
         "todoFamily": "It is sent again from that person's registration, not this one. {todo}",
         "todoWait": "Do not send it again yet: wait for the delivery confirmation.",
-        "todoAsk": "Ask the person whether it arrived."
+        "todoAsk": "Ask the person whether it arrived.",
+        "desk": {
+          "label": "No QR by email — search by name",
+          "hint": "It does not stop the number being handed out."
+        },
+        "warn": {
+          "suppressed": "Mailgun will not send to this address; resending will not arrive.",
+          "noSuchAddress": "The last email was rejected: the address does not exist; it will probably be rejected again.",
+          "mailboxFull": "The mailbox was full {date}; it may work now.",
+          "refused": "The last email was rejected ({label}); it may work now.",
+          "complained": "The last email was marked as spam; it may land in Spam again."
+        }
       },
       "testKind": "Test",
       "enteredByStaff": "Entered by staff",
@@ -834,8 +936,8 @@
       "rowActions": "Actions for {name}",
       "clubMemberOnly": "Only {club} members",
       "clubMemberOnlyHelp": "Those who ticked “I am a member of the {club} group” when registering, or whose address is an account’s on «Staff». The row says which: “Member (verified)” or “Member (declared)”.",
-      "bouncedOnly": "Only with a rejected email",
-      "bouncedOnlyHelp": "Those with an email that bounced or was marked as spam, even when the registration is confirmed. “Email rejected” on the row says which email, when and why: call them.",
+      "bouncedOnly": "Only with a rejected email ({count})",
+      "bouncedOnlyHelp": "Those that need action: nothing has reached the address since a refusal, an email is missing, or one never left.",
       "member": {
         "verified": "Member (verified)",
         "verifiedHint": "The address belongs to an account on «Staff», so the club knows they are a member.",
@@ -1162,14 +1264,29 @@
         "holdLapsed": "Your place has expired: the declaration was not signed in time.",
         "linkUntil": "The link in the email is valid until {instant}.",
         "rejected": {
-          "BOUNCED": "An email the club sent to your address was rejected: the address does not exist or the mailbox is full, so the club's messages do not reach you.",
-          "COMPLAINED": "An email the club sent to your address was marked as spam, so the club's messages may no longer reach you.",
-          "owed": {
-            "resend": "A club email meant for you has not reached you yet; we will send it again.",
-            "confirmation": "Your registration's confirmation, with the QR code, has not reached you yet; we will send it again.",
-            "reminder": "The email with the race-day details has not reached you yet; we will send it again."
+          "lost": "Our email “{type}” ({date}) did not reach you: {why}.",
+          "spam": "Our email “{type}” ({date}) was marked as spam, so the club's messages may no longer reach you.",
+          "why": {
+            "no-such-address": "your email server says the address does not exist",
+            "mailbox-full": "your mailbox is full",
+            "blocked": "your email server blocked it",
+            "gave-up": "your email server did not take it in time",
+            "refused": "your email server refused it",
+            "suppressed": "an older email had been rejected, so we did not send it",
+            "unsubscribed": "you unsubscribed from the club's emails",
+            "complaint-suppressed": "you once marked a club email as spam",
+            "other": "your email server refused it"
           },
-          "changed": "The event's details have changed, and our email about it did not reach you: the current time and place are on the event's page."
+          "can": {
+            "no-such-address": "You can change the address only by registering again.",
+            "mailbox-full": "Make room in your mailbox and we will send it again.",
+            "blocked": "Add the club's address to your contacts and we will send it again.",
+            "suppressed": "We stopped sending after a rejection; tell us if the address is right.",
+            "unsubscribed": "If you want them again, tell us."
+          },
+          "owed": "Our email “{type}” ({date}) has not reached you yet; we will send it again.",
+          "changed": "The event's details have changed, and our email about it did not reach you: the current time and place are on the event's page.",
+          "placeKept": "Your place is confirmed; at the desk we find you by name."
         }
       },
       "memberBibWantedStaffHelp": "Only for a member, at an event that offers the members' number; otherwise it is not kept.",
@@ -2575,6 +2692,7 @@
       "accountUnconfigured": "This needs the Zitadel key: Tasks → Club → “Invite the team”. Until then, from the Zitadel console.",
       "accountFailed": "The identity provider refused ({reason}).",
       "noAccount": "No sign-in account",
+      "invitationRefused": "Invitation rejected: {label}",
       "noAccountHelp": "“No sign-in account”: the person is on the list but cannot sign in. The fix: ⋮ → “Revoke access”, then “Add” again with the same address.",
       "accountsBlind": "Could not check who has an account: the Zitadel key sees only {seen} accounts, so it lacks the “Org User Manager” role. See Tasks → Club → “The invitation key”.",
       "accountsUnchecked": "Could not check who has a sign-in account — Zitadel answered: {reason}. The rows below say nothing about accounts until a check succeeds; reload the page in a few minutes.",
@@ -2659,6 +2777,11 @@
         "other": "{count} will be skipped"
       },
       "body": "{waiting}; {skipped}: {recent} with an email in the last hour or still queued, {limited} at the resend limit. Each gets a new link — the old one stops working. The emails leave at the road's pace.",
+      "rejectedFirst": {
+        "one": "{count} of them has a rejected email; for them the resend may not arrive.",
+        "few": "{count} of them have a rejected email; for them the resend may not arrive.",
+        "other": "{count} of them have a rejected email; for them the resend may not arrive."
+      },
       "done": "Queued: {queued} · skipped: {skipped} — {recent} with a recent email, {limited} at the resend limit."
     },
     "testRegistrations": {
@@ -3619,6 +3742,44 @@
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 2 describes the invitations.",
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”. The row closes by itself once the notice takes effect."
           ]
+        },
+        "clubMailboxRefusals": {
+          "title": "The club's addresses that reject emails",
+          "todo": {
+            "one": "{count} club address rejects emails: copies or notices do not reach it.",
+            "few": "{count} club addresses reject emails: copies or notices do not reach them.",
+            "other": "{count} club addresses reject emails: copies or notices do not reach them."
+          },
+          "done": "No club address rejected an email in the last 30 days.",
+          "how": [
+            "Open «Settings» → «Emails» → «The club's addresses that reject emails».",
+            "Under each address it says what to do: correct it in «The club's copies», make room in the mailbox, or remove it from Mailgun → Suppressions if it is right.",
+            "The row turns green after 30 days with no rejection."
+          ]
+        },
+        "deliveryReports": {
+          "title": "Mailgun does not send the “Delivered” events",
+          "todo": "Mailgun does not send the “Delivered” events; without them, “Email rejected” never clears.",
+          "how": [
+            "Mailgun → Sending → Webhooks, domain {mailDomain}.",
+            "Under «Delivered» add the address {webhookUrl}, beside the other deployment's address if it is there.",
+            "«Permanent Failure» and «Spam Complaints» must carry the same address.",
+            "«Test webhook» on «Delivered» must answer 200. The row goes at the first delivery reported."
+          ]
+        },
+        "emailAttention": {
+          "title": "Participants with an email that needs attention",
+          "todo": {
+            "one": "{count} participant at {event} has an email that needs attention.",
+            "few": "{count} participants at {event} have an email that needs attention.",
+            "other": "{count} participants at {event} have an email that needs attention."
+          },
+          "how": [
+            "Open the list below: it shows only the registrations with a rejected email.",
+            "Under each name it says which email and why; the registration's page says what to do.",
+            "The row goes when none is left, or after the event."
+          ],
+          "link": "Registrations → {event}"
         }
       },
       "freeVerdict": {
@@ -4721,6 +4882,31 @@
         "UNREACHABLE_WINDOW_CLOSED": "The deadlines' clock stood still",
         "EVENT_INVITATION": "Invitation to an event"
       },
+      "typesShort": {
+        "VERIFY_REGISTRATION_EMAIL": "Confirm your address",
+        "COMPLETE_DECLARATION": "Declaration link",
+        "WAITLIST_JOINED": "Waiting list",
+        "WAITLIST_SPOT_OFFER": "Place offer",
+        "REGISTRATION_CONFIRMED": "Confirmation with QR",
+        "REGISTRATION_CANCELLED": "Registration cancelled",
+        "WAITLIST_OFFER_EXPIRED": "Offer expired",
+        "REGISTRATION_MANAGE_LINK": "Registration link",
+        "PROFILE_MANAGE_LINK": "My registrations",
+        "REGISTRATION_STATE_NOTICE": "Registration status",
+        "EVENT_REMINDER": "The reminder",
+        "EVENT_THANKS": "The thank-you",
+        "DECLARATION_SIGNED": "Signed declaration",
+        "DECLARATION_ARCHIVE": "Archive copy",
+        "BIB_ASSIGNED": "Race number",
+        "CLUB_CONFIRMATION_NOTICE": "Confirmation notice",
+        "EVENT_UPDATE_NOTICE": "Updated details",
+        "EVENT_CANCELLED": "Event cancelled",
+        "ORGANIZER_MESSAGE": "Organisers' message",
+        "GROUP_RUN_DECLARATION_SIGNED": "Group-run declaration",
+        "GROUP_RUN_DECLARATION_ARCHIVE": "Group-run archive copy",
+        "REGISTER_ANOTHER_PERSON": "Another person's registration",
+        "DECLARATION_HOLD_EXPIRED": "Held place expired"
+      },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "After the form is sent. The link lasts {confirmation}, from when the email leaves.",
         "COMPLETE_DECLARATION": "After the address is confirmed, when there is a place: it asks for the declaration. For a distant event it goes again when the confirmation window opens.",
@@ -4836,6 +5022,33 @@
           "participants": {
             "title": "The club's copy of the emails to participants"
           }
+        }
+      },
+      "clubRejections": {
+        "title": "The club's addresses that reject emails",
+        "intro": "The club's copies and notices that did not arrive in the last 30 days, by address.",
+        "aside": {
+          "one": "{count} address",
+          "few": "{count} addresses",
+          "other": "{count} addresses"
+        },
+        "role": {
+          "archive": "the declarations' archive",
+          "archiveCopy": "Cc to the archive",
+          "notice": "confirmation notices",
+          "copy": "Bcc of the participants' messages"
+        },
+        "last": "{message} · last {date} · {label}",
+        "count": {
+          "one": "{count} rejection in 30 days",
+          "few": "{count} rejections in 30 days",
+          "other": "{count} rejections in 30 days"
+        },
+        "todo": {
+          "suppressed": "Mailgun no longer sends to it: if the address is right, remove it from Mailgun → Suppressions.",
+          "mailbox": "Make room in this mailbox, or put another address in “The club's copies”.",
+          "fix": "Correct the address in “The club's copies”, or remove it there.",
+          "removed": "The address is no longer in “The club's copies”: nothing left to do."
         }
       },
       "queue": {

@@ -39,6 +39,8 @@ import EmailTransportPanel from "@/modules/notifications/ui/EmailTransportPanel"
 import { roadsByMessageType } from "@/modules/notifications/domain/email-transport";
 import { readEmailTransport } from "@/modules/notifications/email-transport";
 import ClubNoticesPanel from "@/modules/notifications/ui/ClubNoticesPanel";
+import ClubMailboxRejectionsPanel from "@/modules/notifications/ui/ClubMailboxRejectionsPanel";
+import { readClubMailboxRejections } from "@/modules/notifications/club-mailbox-rejections";
 import OutboxQueuePanel from "@/modules/notifications/ui/OutboxQueuePanel";
 import ParticipantEmailsPanel, { type ParticipantEmailCard } from "@/modules/notifications/ui/ParticipantEmailsPanel";
 import UpcomingEmailsPanel from "@/modules/notifications/ui/UpcomingEmailsPanel";
@@ -189,6 +191,11 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     is stopped, or — refused — when it reopens. From the action's own address; anything unreadable
     says nothing rather than a wrong hour.
   */
+  /*
+    The club's own mailboxes that refuse its emails (§NNN): addresses of the club's, read under the same gate
+    as the club's copies above (`canReadRegistrations`), and drawn only when one refused something.
+  */
+  const clubRejections = maySeeQueue && notices ? await readClubMailboxRejections(db, notices, env.DECLARATIONS_ARCHIVE_TO, now) : [];
   const untilParsed = until ? new Date(until) : null;
   const untilAt = untilParsed && !Number.isNaN(untilParsed.getTime()) ? untilParsed : null;
   const carriedKind = stopKind === "paused" || stopKind === "allowance" ? stopKind : null;
@@ -403,6 +410,9 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
           openWhen={{ saved: saved === "clubNotices" }}
         />
       )}
+
+      {/* The club's mailboxes that refuse its emails (§NNN), under the lists that name them; nothing when none did. */}
+      {clubRejections.length > 0 && <ClubMailboxRejectionsPanel locale={locale} groups={clubRejections} />}
 
       {/*
         The newsletter (§445) has its own page in the menu since the owner's 2026-09-26 "un meniu

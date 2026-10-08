@@ -159,12 +159,35 @@ export function pressThatClears(messageType: string, status: RegistrationStatus 
   return null;
 }
 
+/**
+ * The messages that carry the desk code and its QR (`render.ts`: the confirmation, the reminder and the
+ * race number's email of a confirmed registration) — what the person shows at the desk.
+ */
+export const DESK_CODE_MESSAGE_TYPES: readonly EmailMessageType[] = ["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "BIB_ASSIGNED"];
+
+/**
+ * Whether a refused message is the QR confirmation, for the desk's one chip (§NNN): the confirmation, or a
+ * message it carries (`typesCoveredBy`) that carries the desk code too — the race number's email. A refused
+ * reminder leaves the confirmation's QR in the inbox, and the declaration's PDF and «Detalii actualizate»
+ * carry no QR: the desk has nothing to say about them.
+ */
+export function isDeskQrMessage(messageType: string): boolean {
+  const type = messageType as EmailMessageType;
+  return typesCoveredBy("REGISTRATION_CONFIRMED").includes(type) && DESK_CODE_MESSAGE_TYPES.includes(type);
+}
+
 export type RegistrationEmailState = {
   kind: EmailStateKind;
   /** The refused message's type: what did not arrive. */
   messageType: string;
   /** When it was refused (`rejected_at`), or — for a row refused before that was stored — when it left, else was queued. */
   at: Date;
+  /**
+   * Whether `at` is the refusal's own instant (`rejected_at` is set). A refusal written before migration
+   * `0131` has none, and `at` is then when it left, else when it was queued (§NNN): the words say
+   * «refuzat la trimitere» only of a refusal's own instant, and «pus în coadă» of a queueing's.
+   */
+  atKnown: boolean;
   /** Whether the refused message ever left (`sent_at`); a refusal at the send never did. */
   sent: boolean;
   status: "BOUNCED" | "COMPLAINED";
@@ -186,7 +209,7 @@ export type RegistrationEmailState = {
  */
 export type DeskEmailState = Pick<
   RegistrationEmailState,
-  "kind" | "messageType" | "at" | "sent" | "status" | "cause" | "own" | "press" | "laterDeliveredAt" | "retriedAt" | "retriedVia"
+  "kind" | "messageType" | "at" | "atKnown" | "sent" | "status" | "cause" | "own" | "press" | "laterDeliveredAt" | "retriedAt" | "retriedVia"
 >;
 
 /** The registration page's: the state, with the provider's code and words in small print — never on a list. */
@@ -236,6 +259,8 @@ export function deskEmailStateOf(value: unknown): DeskEmailState | null {
     kind: kindOf(row.kind),
     messageType,
     at: instant(row.at) ?? new Date(0),
+    // Only a `false` the SQL wrote is a queueing's instant; an object without the field is read as before.
+    atKnown: row.atKnown !== false,
     sent,
     status,
     cause: causeOf(row, status, sent),

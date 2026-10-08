@@ -18,6 +18,7 @@ import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import {
+  countNeedingEmailActionForAdmin,
   countRegistrationsForAdmin,
   summariseRegistrationsForAdmin,
   listEventsWithRegistrations,
@@ -99,8 +100,8 @@ import HiddenListChip from "@/modules/registrations/ui/HiddenListChip";
 import MemberChip from "@/modules/registrations/ui/MemberChip";
 import { membershipOf } from "@/modules/registrations/domain/membership";
 import { memberCanonicalEmails } from "@/modules/registrations/member-ticks";
-import EmailRejectedChip from "@/modules/registrations/ui/EmailRejectedChip";
-import { rejectedEmailSentences, rejectedEmailWords } from "@/modules/registrations/ui/rejected-email-words";
+import EmailStateLine from "@/modules/registrations/ui/EmailStateLine";
+import { rejectedEmailWords, resendWarning, withResendWarning } from "@/modules/registrations/ui/rejected-email-words";
 import { needsEmailAction } from "@/modules/registrations/domain/email-state";
 import { CLUB_NAME } from "@/theme/brand";
 import { actionKeyOf } from "@/shared/forms/action-key";
@@ -220,7 +221,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const featuredEvent = events.find((event) => event.featured) ?? null;
 
   const deadlinesNow = new Date();
-  const [sortedRows, total, summary, bibs, voidBibs, sponsors, placeDeadlines] = await Promise.all([
+  const [sortedRows, total, summary, bibs, voidBibs, sponsors, placeDeadlines, needingEmailAction] = await Promise.all([
     listRegistrationsForAdmin(
       db,
       filters,
@@ -256,6 +257,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filters.eventId
       ? Promise.all([readPlaceDeadlines(db, filters.eventId, deadlinesNow), deadlinesForThisRequest()]).then(([facts, deadlines]) => (facts ? { ...facts, deadlines } : null))
       : Promise.resolve(null),
+    // «Doar cu un email respins ({n})» (§NNN): how many the tick would keep under the other filters, before anybody ticks it.
+    countNeedingEmailActionForAdmin(db, { ...filters, emailBounced: undefined }),
   ]);
 
   // A family's rows side by side (§588), where its first row falls in the chosen order; phone cards read the same rows.
@@ -432,12 +435,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {/* BR-REQ-031-06, §662: «verificat» when the address is a member account's, whatever the tick;
               «declarat» when the person ticked and no account matches — what they said, not what the club checked. */}
           {memberChipOf(row)}
-          {/* The newest email was rejected (§76, §83, §663): the desk's and the page's chip, so a row kept by
-              «Doar cu un email respins» says why — which email, when, why, and whether after the confirmation. */}
-          {row.emailState && needsEmailAction(row.emailState) && (() => {
-            const words = rejectedEmailWords({ ...row.emailState, emailConfirmedAt: row.emailConfirmedAt }, locale, mayManage ? "administrator" : "organizer");
-            return <EmailRejectedChip label={t("registrations.emailRejected")} sentences={rejectedEmailSentences(words)} reason={words.reason} />;
-          })()}
           {/* "Is my name on the site?" is asked of the club, not of the platform (§186). Marked
               only when the answer is no: on an event that publishes a list most rows are on it,
               and a chip on every row is a chip nobody reads. On an event with no published list
@@ -473,6 +470,19 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               />
             );
           })()}
+          {/* The email state in one line under the name and its chips (§663, §NNN): only while somebody must
+              act — the cause, the email, the day — itself the link to the registration's «Emailuri». An email
+              sent again waits quietly here; the registration's page says it. */}
+          {row.emailState && needsEmailAction(row.emailState) && (
+            <EmailStateLine
+              href={`${getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: row.id } } })}#emailuri`}
+              words={rejectedEmailWords(
+                { ...row.emailState, emailConfirmedAt: row.emailConfirmedAt, emailVerifiedAt: row.emailVerifiedAt, confirmed: row.status === "CONFIRMED" },
+                locale,
+                mayManage ? "administrator" : "organizer",
+              )}
+            />
+          )}
         </Stack>
       ),
     },
@@ -1288,11 +1298,11 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               {t("registrations.clubMemberOnly", { club: CLUB_NAME })}
             </CheckboxField>
           </Box>
-          {/* Whose newest email was rejected, confirmed or not (§76, §83, §663): the rows to call. */}
+          {/* The rows whose email asks somebody to act (§663, §NNN), confirmed or not, with how many there are. */}
           <Box sx={{ minWidth: 220, maxWidth: 320, pt: 0.5 }} data-testid="registrations-filter-bounced">
             <CheckboxField name="bounced" value="1" defaultChecked={bounced === "1"} dense help={t("registrations.bouncedOnlyHelp")}>
               <UnsubscribeIcon aria-hidden data-testid="registrations-filter-bounced-glyph" />
-              {t("registrations.bouncedOnly")}
+              {t("registrations.bouncedOnly", { count: needingEmailAction })}
             </CheckboxField>
           </Box>
           {/*
@@ -1505,7 +1515,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               <ActionForm
                 action={resendRegistrationEmailAction}
                 confirm={withSendNowChoice(
-                  { title: t("confirm.resendTitle"), body: t(`confirm.resendWhat.${row.status}`, { name: row.registeredName }), ...(row.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: t("registrations.resendShort"), cancelLabel: words.cancel },
+                  {
+                    title: t("confirm.resendTitle"),
+                    // What the last refusal says of this press, first (§NNN); it never blocks it.
+                    body: withResendWarning(t(`confirm.resendWhat.${row.status}`, { name: row.registeredName }), resendWarning(row.emailState, locale)),
+                    ...(row.kind === "TEST" ? {} : { email: words.email(1) }),
+                    confirmLabel: t("registrations.resendShort"),
+                    cancelLabel: words.cancel,
+                  },
                   sendNow,
                 )}
               >
@@ -1543,9 +1560,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 confirm={withSendNowChoice(
                   {
                     title: t("confirm.resendFamilyTitle"),
-                    body: t("confirm.resendFamilyBody", {
-                      names: [row.registeredName, ...(family.get(row.id) ?? []).map((member) => member.name)].join(", "),
-                    }),
+                    // One address for the whole family (§543): the row's state is the address's, said first (§NNN).
+                    body: withResendWarning(
+                      t("confirm.resendFamilyBody", {
+                        names: [row.registeredName, ...(family.get(row.id) ?? []).map((member) => member.name)].join(", "),
+                      }),
+                      resendWarning(row.emailState, locale),
+                    ),
                     ...(row.kind === "TEST" ? {} : { email: words.email(1) }),
                     confirmLabel: t("registrations.resendFamily"),
                     cancelLabel: words.cancel,

@@ -58,6 +58,8 @@ export const TASK_TARGETS: Partial<Record<TaskId, TaskTarget>> = {
   neonLimits: { kind: "settings", tab: "costs", hash: "neon-limits" },
   // The outage grace (§657): the events, whose registrations lists carry «Trimite-i oferta» and «Dă-i un loc acum».
   unreachableWindow: { kind: "section", section: "events" },
+  // The club's mailboxes that refuse its emails (§NNN), under «Copiile clubului» that names them.
+  clubMailboxRefusals: { kind: "settings", tab: "emails", hash: "club-mailbox-rejections" },
 };
 
 /** The internal route a section target opens. */
