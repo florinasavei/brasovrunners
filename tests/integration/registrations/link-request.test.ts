@@ -210,6 +210,66 @@ describe("BR-REQ-036-02 participant link request", () => {
     expect(await outboxRows()).toHaveLength(limit);
   });
 
+  /*
+    §NNN — the form's honeypot and timing check. A post that looks automated gets the same silent
+    nothing as an unknown address, before anything is counted or looked up: so a script spends
+    neither the mailbox's hourly allowance nor the club's email, and the person who then asks
+    honestly is still answered.
+  */
+  const RENDERED = new Date(NOW.getTime() - 10_000).toISOString();
+
+  it("queues nothing for a filled trap, and counts nothing against the mailbox", async () => {
+    await seedRegistration("PENDING_EMAIL_CONFIRMATION");
+    const { limit } = RATE_LIMITS["link-request"];
+
+    for (let attempt = 0; attempt < limit + 1; attempt += 1) {
+      await expect(
+        requestRegistrationLink(
+          db,
+          { email: "ana@example.ro", eventId, honeypot: "cheap watches",renderedAt: RENDERED },
+          new Date(NOW.getTime() + attempt * 60_000),
+        ),
+      ).resolves.toBeUndefined();
+    }
+    expect(await outboxRows()).toHaveLength(0);
+
+    // The bucket was never touched: the honest ask that follows is still within the allowance.
+    await requestRegistrationLink(db, { email: "ana@example.ro", eventId, renderedAt: RENDERED }, new Date(NOW.getTime() + 30 * 60_000));
+    expect(await outboxRows()).toHaveLength(1);
+  });
+
+  it("queues nothing for a post sent under a second after the form was drawn, and counts nothing", async () => {
+    await seedRegistration("PENDING_EMAIL_CONFIRMATION");
+    const { limit } = RATE_LIMITS["link-request"];
+
+    for (let attempt = 0; attempt < limit + 1; attempt += 1) {
+      const at = new Date(NOW.getTime() + attempt * 60_000);
+      await requestRegistrationLink(db, { email: "ana@example.ro", eventId, renderedAt: new Date(at.getTime() - 300).toISOString() }, at);
+    }
+    expect(await outboxRows()).toHaveLength(0);
+
+    await requestRegistrationLink(db, { email: "ana@example.ro", eventId, renderedAt: RENDERED }, new Date(NOW.getTime() + 30 * 60_000));
+    expect(await outboxRows()).toHaveLength(1);
+  });
+
+  it("reads the person's own address in the trap as a password manager, and sends the link", async () => {
+    await seedRegistration("PENDING_EMAIL_CONFIRMATION");
+
+    await requestRegistrationLink(db, { email: "ana@example.ro", eventId, honeypot: " Ana@example.ro ", renderedAt: RENDERED }, NOW);
+
+    expect(await outboxRows()).toHaveLength(1);
+  });
+
+  it("answers an honest post from the form exactly as before", async () => {
+    const registrationId = await seedRegistration("PENDING_EMAIL_CONFIRMATION");
+
+    await requestRegistrationLink(db, { email: "ana@example.ro", eventId, renderedAt: RENDERED }, NOW);
+
+    const [row] = await outboxRows();
+    expect(row.messageType).toBe("VERIFY_REGISTRATION_EMAIL");
+    expect(row.registrationId).toBe(registrationId);
+  });
+
   it("does not change the registration it sends about", async () => {
     const registrationId = await seedRegistration("PENDING_DECLARATION");
     const [before] = await db.select().from(registrations).where(eq(registrations.id, registrationId));

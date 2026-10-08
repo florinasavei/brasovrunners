@@ -7,8 +7,9 @@ import TurnstileWidget, { type BotCheckWords } from "./TurnstileWidget";
  *
  * A Server Component around the client island so the words stay in the catalogue on the server
  * and cross the boundary as strings — the island carries no messages of its own. Every form that
- * runs the check places this one: the registration form, the contact form, the newsletter box
- * and the group-run declaration, so a stuck check reads and recovers the same everywhere.
+ * runs the check places this one: the registration form, the contact form, the newsletter box,
+ * the group-run declaration and the two link forms (§NNN), so a stuck check reads and recovers
+ * the same everywhere.
  *
  * `heldPress` says whether the form's send button holds a press for the check and sends it by the
  * eight-second valve (`SubmitButton`'s `awaitsBotCheck`) — only the registration form does. There
@@ -19,7 +20,8 @@ import TurnstileWidget, { type BotCheckWords } from "./TurnstileWidget";
  *
  * `notice` adds the sentence that names Cloudflare and what it sees (§323, `Legal.botCheckNotice`)
  * under the check — drawn by the island with the widget, once a person starts on the form, and not
- * before (§593): the registration form, the contact form and the interest box carry it. The form
+ * before (§593): the registration form, the contact form, the interest box and the two link forms
+ * carry it. The form
  * wraps this in a box with `BOT_CHECK_SLOT_SX`, so an unarmed check leaves no gap either.
  */
 export default async function BotCheck({
