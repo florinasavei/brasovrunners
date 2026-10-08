@@ -73,7 +73,7 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     await expect(fold).toHaveAttribute("open", "");
     await expect(fold.getByText(intro)).toBeVisible();
     await expect(fold.getByRole("link", { name: "Google Calendar" })).toHaveAttribute("href", /^https:\/\/calendar\.google\.com\/calendar\/r\?cid=webcal%3A%2F%2F/);
-    await expect(fold.getByRole("link", { name: "Apple / Outlook / telefon" })).toHaveAttribute("href", /^webcal:\/\/.+\/ro\/events\/calendar\.ics$/);
+    await expect(fold.getByRole("link", { name: "Apple / Outlook" })).toHaveAttribute("href", /^webcal:\/\/.+\/ro\/events\/calendar\.ics$/);
     await summary.click();
     await expect(fold).not.toHaveAttribute("open", "");
 

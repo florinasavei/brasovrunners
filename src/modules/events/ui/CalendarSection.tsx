@@ -73,7 +73,8 @@ export default async function CalendarSection({
       {/* "Add to your calendar" (§107, §139): three doors (the owner: "this subscription to
           calendar does not work" — a `webcal://` link does nothing where no app claims the
           scheme, which on a desktop is most browsers): Google Calendar's own "add by URL"
-          address, `webcal://` for Apple, Outlook and phones, the file itself; the plain
+          address, `webcal://` for Apple and Outlook (not «telefon» any more: on Android no app claims
+          the scheme, and the hint under the address says to use calendar.google.com), the file itself; the plain
           address folded away, to copy (§674), and the "when does it update" behind an "i"
           (the feed is fresh on every read, §129; when the phone shows a change is the app's
           clock, and the owner asked why Google still showed the old hour). */}

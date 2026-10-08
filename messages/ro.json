@@ -96,7 +96,7 @@
       "addTitle": "Adaugă în calendarul tău",
       "feedAddress": "Adresa calendarului, de copiat",
       "subscribeGoogle": "Google Calendar",
-      "subscribeApple": "Apple / Outlook / telefon",
+      "subscribeApple": "Apple / Outlook",
       "downloadLink": "descarcă .ics",
       "twoWays": "Abonează-te (Google Calendar sau Apple / Outlook): calendarul se actualizează singur când clubul schimbă ceva. Fișierul descărcat e o copie de azi; o schimbare nu ajunge în el.",
       "refreshNote": "Google Calendar reia adresa singur, cam o dată pe zi.\nApple și Outlook: cât de des le setezi tu.\nO schimbare apare la următoarea reluare.",
@@ -105,7 +105,7 @@
       "copied": "Copiat",
       "googleHintWhy": "Nu merge butonul? Google ascunde calendarul în loc să-l scoată și ține o copie veche după adresă.",
       "googleHintHow": "Pe web: calendar.google.com → „+” lângă „Alte calendare” → „Din URL” → lipește adresa, cu ?v=2 la final.",
-      "phoneAppHint": "Aplicația Google Calendar de pe telefon nu adaugă un calendar după adresă; folosește calendar.google.com în browser.",
+      "phoneAppHint": "Pe Android, butonul „Apple / Outlook” nu face nimic, iar aplicația Google Calendar nu adaugă un calendar după adresă: folosește calendar.google.com în browser, „Din URL”.",
       "androidSync": "Pe Android nu-l vezi după „Calendar adăugat”? Google Calendar → Meniu → Setări → contul tău → „Afișează mai multe” → 🏃 BVR → Sincronizare."
     },
     "raceWeek": {

@@ -96,7 +96,7 @@
       "addTitle": "Add to your calendar",
       "feedAddress": "The calendar's address, to copy",
       "subscribeGoogle": "Google Calendar",
-      "subscribeApple": "Apple / Outlook / phone",
+      "subscribeApple": "Apple / Outlook",
       "downloadLink": "download the .ics",
       "twoWays": "Subscribe (Google Calendar or Apple / Outlook): the calendar updates by itself when the club changes something. A downloaded file is a copy of today; a change does not reach it.",
       "refreshNote": "Google Calendar re-reads the address by itself, about once a day.\nApple and Outlook: as often as you set them.\nA change shows at the next re-read.",
@@ -105,7 +105,7 @@
       "copied": "Copied",
       "googleHintWhy": "The button does nothing? Google hides a calendar rather than removing it, and keeps an old copy by its address.",
       "googleHintHow": "On the web: calendar.google.com → “+” beside “Other calendars” → “From URL” → paste the address, with ?v=2 at the end.",
-      "phoneAppHint": "The Google Calendar app on a phone cannot add a calendar by its address; use calendar.google.com in the browser.",
+      "phoneAppHint": "On Android the “Apple / Outlook” button does nothing, and the Google Calendar app cannot add a calendar by its address: use calendar.google.com in the browser, “From URL”.",
       "androidSync": "On Android, nothing after “Calendar added”? Google Calendar → Menu → Settings → your account → “Show more” → 🏃 BVR → Sync."
     },
     "raceWeek": {
