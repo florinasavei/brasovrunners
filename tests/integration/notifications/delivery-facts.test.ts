@@ -37,8 +37,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * - what a message carries answers a refusal of what it carries (the confirmation the race number and the
  *   signed declaration), written when it is sent or delivered; a refusal the registration no longer needs
  *   asks nobody to act; a family member's refusal reads the same on every registration it shows on.
- * - only a message queued no earlier than the refusal answers it: an older confirmation delivered late does
- *   not carry a race number refused since;
+ * - only a message sent no earlier than the refused one was queued answers it — what a message carries is
+ *   read at its send: an older confirmation delivered late does not carry a race number refused since, and
+ *   one queued before the refusal but held and sent after it does;
  * - once the event has ended nothing of its registrations asks anybody to act, race day still does; the
  *   event's notices ask for a phone call while they matter.
  */
@@ -699,6 +700,42 @@ describe("what a message carries answers a refusal of it (BR-REQ-038-01, §NNN)"
       expect((await findRegistrationDetailForAdmin(db, reg))?.emailState, order).toBeNull();
     }
   });
+
+  it("a confirmation queued before a race number was refused, held and sent after it, answers it: it carries what stood at its send — whichever is processed first", async () => {
+    for (const order of ["refusal first", "delivery first"] as const) {
+      await resetTables(db);
+      const r = await race();
+      const p = await person("ana@example.org");
+      const reg = await register(r.id, p, { bibNumber: 17 });
+      // Queued at 0 and held by the schedule or the allowance; a number set by hand at 10 was refused at 11; the confirmation left at 20, rendered with it.
+      const confirmation = await outboxRow({ participantId: p, registrationId: reg, messageType: "REGISTRATION_CONFIRMED", createdAt: minutes(0), sentAt: minutes(20) });
+      const bib = await outboxRow({ participantId: p, registrationId: reg, messageType: "BIB_ASSIGNED", createdAt: minutes(10) });
+      const steps = [() => event(bib, "failed", minutes(11)), () => event(confirmation, "delivered", minutes(21))];
+      if (order === "delivery first") steps.reverse();
+      for (const step of steps) await step();
+      expect(await read(bib.id), order).toMatchObject({ laterDeliveredAt: minutes(21), resolvedAt: minutes(21) });
+      expect((await findRegistrationDetailForAdmin(db, reg))?.emailState, order).toBeNull();
+    }
+  });
+
+  it("the send itself: a confirmation queued before the refusal and sent after it marks it sent again, and its delivery ends it", async () => {
+    const r = await race();
+    const p = await person("ana@example.org");
+    const reg = await register(r.id, p, { bibNumber: 17 });
+    const held = await outboxRow({ participantId: p, registrationId: reg, messageType: "REGISTRATION_CONFIRMED", status: "PENDING", createdAt: minutes(0), providerMessageId: null });
+    const bib = await outboxRow({ participantId: p, registrationId: reg, messageType: "BIB_ASSIGNED", createdAt: minutes(10) });
+    await event(bib, "failed", minutes(11));
+    expect((await findRegistrationDetailForAdmin(db, reg))?.emailState).toMatchObject({ kind: "unreachable", messageType: "BIB_ASSIGNED" });
+    await processOutboxBatch(db, {
+      sender: sender({ outcome: "sent", providerMessageId: `mg-${held.idempotencyKey}`, transport: "mailgun", acceptedAt: minutes(20) }),
+      render,
+      now: minutes(20),
+    });
+    expect(await read(bib.id)).toMatchObject({ retriedAt: minutes(20), retriedVia: "mailgun" });
+    await event(await read(held.id), "delivered", minutes(21));
+    expect((await read(bib.id)).resolvedAt).toEqual(minutes(21));
+    expect((await findRegistrationDetailForAdmin(db, reg))?.emailState).toBeNull();
+  });
 });
 
 describe("a refusal speaks only while the registration still needs what it refused (BR-REQ-038-01, §NNN)", () => {
@@ -862,6 +899,30 @@ describe("the event's notices ask for a phone call while they matter (BR-REQ-038
     expect(await stateOf(reg)).toMatchObject({ kind: "retried", messageType: "EVENT_UPDATE_NOTICE" });
     await event(declaration, "delivered", minutes(11));
     expect((await read(notice.id)).resolvedAt).toEqual(minutes(11));
+    expect(await stateOf(reg)).toBeNull();
+  });
+
+  it("a checked-in registration needs neither notice: the person is at the desk — race day before the start included", async () => {
+    const r = await race();
+    const p = await person("ana@example.org");
+    const reg = await register(r.id, p, { checkedInAt: minutes(5) });
+    const notice = await outboxRow({ participantId: p, registrationId: reg, messageType: "EVENT_UPDATE_NOTICE", createdAt: minutes(0) });
+    await event(notice, "failed", minutes(1));
+    // The address refused it, nothing delivered since: still the call list, as for any message.
+    expect(await stateOf(reg)).toMatchObject({ kind: "unreachable", messageType: "EVENT_UPDATE_NOTICE" });
+    const other = await outboxRow({ participantId: p, registrationId: null, messageType: "PROFILE_MANAGE_LINK", createdAt: minutes(2) });
+    await event(other, "delivered", minutes(3));
+    // The address works: owed the notice only while not checked in.
+    expect(await stateOf(reg)).toBeNull();
+    expect(await countNeedingEmailActionForAdmin(db, { eventId: r.id })).toBe(0);
+    expect(await listRegistrationsForAdmin(db, { eventId: r.id, emailBounced: true })).toHaveLength(0);
+    await db.update(registrations).set({ checkedInAt: null }).where(eq(registrations.id, reg));
+    expect(await stateOf(reg)).toMatchObject({ kind: "missing", messageType: "EVENT_UPDATE_NOTICE", press: null });
+    // The cancellation the same, on a cancelled event whose start is ahead.
+    await db.update(events).set({ eventStatus: "CANCELLED" }).where(eq(events.id, r.id));
+    await outboxRow({ participantId: p, registrationId: reg, messageType: "EVENT_CANCELLED", status: "BOUNCED", sentAt: null, createdAt: minutes(10), lastError: "mailgun 401: Forbidden", rejectionCause: "account" });
+    expect(await stateOf(reg)).toMatchObject({ kind: "not-sent", messageType: "EVENT_CANCELLED" });
+    await db.update(registrations).set({ checkedInAt: minutes(11) }).where(eq(registrations.id, reg));
     expect(await stateOf(reg)).toBeNull();
   });
 

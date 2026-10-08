@@ -11,6 +11,7 @@ import {
   type EmailStateKind,
   emailStateDetailOf,
   emailStateOf,
+  EVENT_NOTICE_TYPES,
   type RegistrationEmailState,
   type RegistrationEmailStateDetail,
   STILL_NEEDED_KEYS,
@@ -81,17 +82,20 @@ function eventNotEndedSql(event: SQLWrapper, now?: Date): SQL<boolean> {
 /**
  * Whether the registration the refused message was for still needs it (§NNN): its status now, where its
  * event stands (`EVENT_MOMENTS`; an ended event has no state at all, `openRefusalsWhere`), and the message's
- * type, against the list `stillNeededMessageTypes` builds.
+ * type, against the list `stillNeededMessageTypes` builds — and the event's notices never once that
+ * registration is checked in: the person is at the desk, there is nobody to phone (`EVENT_NOTICE_TYPES`).
  */
 function stillNeededSql(now?: Date): SQL<boolean> {
   const keys = sql.join(STILL_NEEDED_KEYS.map((key) => sql`${key}`), sql`, `);
+  const notices = sql.join(EVENT_NOTICE_TYPES.map((type) => sql`${type}`), sql`, `);
   const ahead = sql`${OWNER_EVENT}."starts_at" > ${clockSql(now)}`;
   const moment = sql`(case
     when ${OWNER_EVENT}."event_status" = 'CANCELLED' then (case when ${ahead} then 'cancelled-ahead' else 'cancelled-started' end)
     when ${ahead} then 'ahead'
     else 'started'
   end)`;
-  return sql<boolean>`(${moment} || ':' || ${OWNER}."status"::text || ':' || ${emailOutbox.messageType}::text) in (${keys})`;
+  return sql<boolean>`((${moment} || ':' || ${OWNER}."status"::text || ':' || ${emailOutbox.messageType}::text) in (${keys})
+    and not (${emailOutbox.messageType}::text in (${notices}) and ${OWNER}."checked_in_at" is not null))`;
 }
 
 /** The participant's refused rows for the registration in the outer query (`registrations`), with their kind. */
@@ -181,8 +185,9 @@ export function registrationEmailStateDetailSql(): SQL<RegistrationEmailStateDet
 /**
  * How many real, live registrations of each event that has not ended ask somebody to act on their email
  * (§NNN), by the same rule as the state, at `now`: the club's side counts them per race («N participanți
- * nu primesc emailurile»). A cancelled event counts while the people told of it may not know (its start
- * ahead); race day counts until the day is over. The caller asserts who may read it; the count names nobody.
+ * nu primesc emailurile»). A cancelled event counts until it ends, like any other — an address that
+ * refuses the club's mail is still the call list; its notices are owed only while its start is ahead.
+ * Race day counts until the day is over. The caller asserts who may read it; the count names nobody.
  */
 export async function countNeedingEmailActionByEvent<T extends Record<string, unknown>>(
   db: Database<T>,

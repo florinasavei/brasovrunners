@@ -14,7 +14,11 @@ import type { EmailMessageType } from "@/db/schema/email-outbox";
  *   date, both named times, the place, the programme, read at send time) are carried by the confirmation,
  *   the reminder and the declaration request (`COMPLETE_DECLARATION`, the participation confirmation of
  *   §104): each gives the person what a refused «Detalii actualizate» (`EVENT_UPDATE_NOTICE`, §331) was to
- *   tell them, and so does a later «Detalii actualizate» itself — which a type always covers. The
+ *   tell them. A later «Detalii actualizate» answers an earlier one too (a type always covers itself), and
+ *   that is accepted knowingly (§NNN), not because it carries the earlier one's details: it carries the
+ *   one-line facts and the band for its own changes only (`noticeParts` in `templates.ts`), so a notice
+ *   about the place answers a refused one about the programme. What it does carry is what the refused one
+ *   asked of the person — the details were updated, look at the event's page, which shows them all. The
  *   verification email carries the block too, but no update notice goes to a registration that still
  *   waits on it (`EVENT_NOTICE_STATUSES`, §331), so it has nothing of one to answer. The race number's
  *   email and «Mesaj de la organizatori» carry one line only — the date, the event's start and the place

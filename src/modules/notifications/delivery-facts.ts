@@ -97,15 +97,32 @@ export async function lockParticipantFacts(handle: Pick<Db, "execute">, particip
   await handle.execute(sql`select pg_advisory_xact_lock(${participantLockKey(participantId)})`);
 }
 
-type DeliveredRow = { id: string; participantId: string; registrationId: string | null; messageType: EmailMessageType; createdAt: Date };
+/**
+ * The delivered row. `sentAt` is the instant what it carries was read (§NNN): the outbox renders a
+ * message at its send — the race number, the event's details, the signed declaration are read then
+ * (`render.ts`, `event-notices.ts`) — and stamps `sent_at` the moment the provider takes it, so a
+ * message queued before a refusal and held by the schedule or the allowance until after it carries what
+ * stood at the send, not at the queueing. The milliseconds between the render and the provider's answer
+ * are accepted: a refusal queued inside them is read as carried. `createdAt` stands in for a row with no
+ * `sent_at` (none is delivered without one).
+ */
+type DeliveredRow = {
+  id: string;
+  participantId: string;
+  registrationId: string | null;
+  messageType: EmailMessageType;
+  sentAt: Date | null;
+  createdAt: Date;
+};
 
 /**
  * A participant's message was delivered at `deliveredAt`: every earlier refusal of the address says the
  * address works now, and every earlier refusal of a message it carries (`typesCoveredBy`: itself, and for
  * the confirmation the race number's and the signed declaration's) says it is over — only a refusal of a
- * message queued no later than this one (§NNN): what a message carries is what stood when it was made, so
- * an older confirmation delivered late (a deferral that took hours) never answers a race number refused
- * since, which it does not carry. A complaint is left as it is; a refusal of the account takes no
+ * message queued no later than this one was sent (§NNN): what a message carries is what stood when it was
+ * rendered, at its send, so a confirmation sent before a race number was refused (a deferral that took
+ * hours to deliver it) never answers that refusal, and one queued before it but held and sent after it
+ * does. A complaint is left as it is; a refusal of the account takes no
  * `later_delivered_at` (it was never about the address).
  */
 export async function settleDelivery(handle: Handle, row: DeliveredRow, deliveredAt: Date): Promise<void> {
@@ -133,8 +150,8 @@ export async function settleDelivery(handle: Handle, row: DeliveredRow, delivere
         eq(emailOutbox.status, "BOUNCED"),
         inArray(emailOutbox.messageType, typesCoveredBy(row.messageType)),
         sql`${emailOutbox.registrationId} is not distinct from ${row.registrationId}`,
-        // Queued no later than the delivered message: it carries what stood then, not a refusal made since.
-        sql`${emailOutbox.createdAt} <= ${at(row.createdAt)}`,
+        // Queued no later than the delivered message was sent: it carries what stood at its send, not a refusal made since.
+        sql`${emailOutbox.createdAt} <= ${at(row.sentAt ?? row.createdAt)}`,
         before,
       ),
     );
@@ -144,9 +161,11 @@ export async function settleDelivery(handle: Handle, row: DeliveredRow, delivere
  * A participant's message was refused (its row already says so): read what came after it from the other
  * rows — a delivery to the address, a delivery of a message that carries it (`typesCovering`: itself, or
  * the confirmation for a race number or a signed declaration), such a message sent again — so a refusal
- * processed after the delivery that answers it is answered all the same. Only a message queued no earlier
- * than this one answers it (§NNN), as `settleDelivery` reads it from the other side: an older confirmation
- * delivered late does not carry a number refused since. A complaint reads only whether such a message left
+ * processed after the delivery that answers it is answered all the same. Only a message sent no earlier
+ * than this one was queued answers it (§NNN), as `settleDelivery` reads it from the other side: what a
+ * message carries is read when it is rendered, at its send (`sent_at`), so a confirmation sent before a
+ * race number was refused does not carry it, however late it is delivered, and one held and sent after it
+ * does. A complaint reads only whether such a message left
  * again: no delivery withdraws it.
  */
 export async function settleRejection(handle: Handle, rowId: string): Promise<void> {
@@ -178,14 +197,14 @@ export async function settleRejection(handle: Handle, rowId: string): Promise<vo
     sql`${emailOutbox.registrationId} is not distinct from ${row.registrationId}`,
   ) as SQL;
   const deliveredAfter = sql`${emailOutbox.deliveredAt} > ${at(instant)}`;
-  // Queued no earlier than the refused message: only such a message carries what it carried.
-  const queuedSince = sql`${emailOutbox.createdAt} >= ${at(row.createdAt)}`;
-  const leftAgain = and(sameMessage, queuedSince, isNotNull(emailOutbox.sentAt)) as SQL;
+  // Sent (rendered) no earlier than the refused message was queued: only such a message carries what it carried.
+  const sentSince = sql`${emailOutbox.sentAt} >= ${at(row.createdAt)}`;
+  const leftAgain = and(sameMessage, sentSince, isNotNull(emailOutbox.sentAt)) as SQL;
   const account = row.rejectionCause === "account";
 
   // The address works again: never read for the account's refusal, which was not about it.
   const [address] = account || complaint ? [] : await handle.select({ first: min(emailOutbox.deliveredAt) }).from(emailOutbox).where(and(others, deliveredAfter));
-  const [same] = complaint ? [] : await handle.select({ first: min(emailOutbox.deliveredAt) }).from(emailOutbox).where(and(sameMessage, queuedSince, deliveredAfter));
+  const [same] = complaint ? [] : await handle.select({ first: min(emailOutbox.deliveredAt) }).from(emailOutbox).where(and(sameMessage, sentSince, deliveredAfter));
   const [again] = await handle
     .select({ sentAt: emailOutbox.sentAt, transport: emailOutbox.transport })
     .from(emailOutbox)
@@ -210,12 +229,13 @@ export async function settleRejection(handle: Handle, rowId: string): Promise<vo
     .where(eq(emailOutbox.id, row.id));
 }
 
-type SentRow = { id: string; participantId: string | null; registrationId: string | null; messageType: EmailMessageType; payloadJson: unknown; createdAt: Date };
+type SentRow = { id: string; participantId: string | null; registrationId: string | null; messageType: EmailMessageType; payloadJson: unknown };
 
 /**
  * The earlier refusals one send still has something to tell (§NNN): the participant's refusals and
  * complaints of a message this one carries (`typesCoveredBy`: itself, and for the confirmation the race
- * number's and the signed declaration's), for the same registration, queued no later — and neither over
+ * number's and the signed declaration's), for the same registration, queued no later than this one was
+ * sent (`sentAt`, the instant what it carries was read, `DeliveredRow`) — and neither over
  * (`resolved_at`) nor already told of this send or a later one (`retried_at`). The probe and the update
  * read this one condition, so the probe can never skip a row the update would have marked.
  */
@@ -226,7 +246,7 @@ function answeredBySend(row: SentRow, participantId: string, sentAt: Date): SQL 
     inArray(emailOutbox.status, ["BOUNCED", "COMPLAINED"]),
     inArray(emailOutbox.messageType, typesCoveredBy(row.messageType)),
     sql`${emailOutbox.registrationId} is not distinct from ${row.registrationId}`,
-    sql`${emailOutbox.createdAt} <= ${at(row.createdAt)}`,
+    sql`${emailOutbox.createdAt} <= ${at(sentAt)}`,
     isNull(emailOutbox.resolvedAt),
     sql`(${emailOutbox.retriedAt} is null or ${emailOutbox.retriedAt} < ${at(sentAt)})`,
   ) as SQL;
@@ -235,7 +255,7 @@ function answeredBySend(row: SentRow, participantId: string, sentAt: Date): SQL 
 /**
  * A participant's message left (`sent_at`, by `via`): every earlier refusal or complaint of a message it
  * carries — its own type, or for the confirmation the race number's and the signed declaration's
- * (`domain/content-cover.ts`), for the same registration, queued no later — was sent again. A refusal of
+ * (`domain/content-cover.ts`), for the same registration, queued no later than this send — was sent again. A refusal of
  * the club's account is over with it (it never left; now what it carried has). A complaint takes
  * `retried_at` too (the history says the message left again), and stays the person's word: nothing else
  * changes on it.

@@ -1255,7 +1255,7 @@ export async function applyMailgunEvent(db: Db, params: MailgunDeliveryEvent): P
         if (row.participantId && participantMeant) {
           await settleDelivery(
             tx,
-            { id: row.id, participantId: row.participantId, registrationId: row.registrationId, messageType: row.messageType, createdAt: row.createdAt },
+            { id: row.id, participantId: row.participantId, registrationId: row.registrationId, messageType: row.messageType, sentAt: row.sentAt, createdAt: row.createdAt },
             occurredAt,
           );
         }

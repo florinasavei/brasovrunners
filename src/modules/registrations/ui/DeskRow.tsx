@@ -210,7 +210,7 @@ export default async function DeskRow({
             {/* The newest email was rejected (§76, §663): whom to call before race day — which email, when, why; never the address. */}
             {/* Every staff role works the desk, and «send it again» is the Administrator's: the words ask for one. */}
             {row.emailState && needsEmailAction(row.emailState) && (() => {
-              const words = rejectedEmailWords({ ...row.emailState, emailConfirmedAt: row.emailConfirmedAt }, locale, { mayResend: false });
+              const words = rejectedEmailWords({ ...row.emailState, emailConfirmedAt: row.emailConfirmedAt }, locale, "desk");
               return <EmailRejectedChip label={t("registrations.emailRejected")} sentences={rejectedEmailSentences(words)} reason={words.reason} />;
             })()}
             {row.checkedInAt && (

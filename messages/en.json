@@ -689,7 +689,7 @@
       "emailRejected": "Email rejected",
       "rejected": {
         "which": "Rejected: “{type}”, sent {instant}.",
-        "whichQueued": "Rejected: “{type}”, queued {instant}; the provider refused it at the send.",
+        "whichQueued": "Rejected: “{type}”, refused at the send {instant}.",
         "typeUnknown": "a club email",
         "why": {
           "BOUNCED": "The address does not exist, the mailbox is full or the recipient's server refused it.",
@@ -709,7 +709,7 @@
         "neverConfirmed": "The address was never confirmed.",
         "todo": "Phone the person; only they can change the address, by registering again.",
         "whichFamily": "Rejected at the same address, for another registration at this event: “{type}”, {instant}.",
-        "whichFamilyQueued": "Never left, for another registration at the same address and this event: “{type}”, queued {instant}.",
+        "whichFamilyQueued": "Never left, for another registration at the same address and this event: “{type}”, refused at the send {instant}.",
         "todoPress": {
           "confirmation": "Send the confirmation again; it also carries the number, the QR code and the signed declaration: “Resend QR” in the list, “Resend email” on the registration's page.",
           "reminder": "Send the reminder again: “Send the reminder” on the registration's page.",
@@ -721,13 +721,14 @@
           "resend": "Ask an Administrator to send it again."
         },
         "todoCall": {
-          "update": "Phone the person: they do not know the time or the place has changed.",
+          "update": "Phone the person: they did not receive “Updated details” — what changed is on the event page.",
           "cancelled": "Phone the person: they do not know it has been cancelled."
         },
-        "todoAskAdminCall": {
-          "update": "Ask an Administrator to phone the person: they do not know the time or the place has changed.",
-          "cancelled": "Ask an Administrator to phone the person: they do not know it has been cancelled."
+        "todoTell": {
+          "update": "Tell the person: they did not receive “Updated details” — what changed is on the event page.",
+          "cancelled": "Tell the person: they did not receive the notice — the event has been cancelled."
         },
+        "todoTellUnreachable": "Tell the person the club's emails do not reach them; an Administrator will phone them.",
         "todoFamily": "It is sent again from that person's registration, not this one. {todo}",
         "todoWait": "Do not send it again yet: wait for the delivery confirmation.",
         "todoAsk": "Ask the person whether it arrived."

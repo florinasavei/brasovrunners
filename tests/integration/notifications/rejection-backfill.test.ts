@@ -251,4 +251,42 @@ describe("migration 0131's backfill of what came after", () => {
     expect(await read(bib.id)).toMatchObject({ rejectionCause: "account", retriedAt: minutes(31), retriedVia: "gmail", resolvedAt: minutes(31) });
     expect(await read(signed.id)).toMatchObject({ rejectionCause: "refused", retriedAt: minutes(31), retriedVia: "gmail", resolvedAt: null });
   });
+
+  it("reads a confirmation queued before the refusal but sent after it as sent again: what it carries is read at its send", async () => {
+    const [event] = await db
+      .insert(events)
+      .values({ type: "RACE", surface: "ASPHALT", startsAt: new Date("2099-11-21T08:00:00.000Z"), timezone: "Europe/Bucharest", capacity: 150, registrationMode: "INTERNAL" })
+      .returning();
+    const [participant] = await db
+      .insert(participants)
+      .values({ deliveryEmail: "ana@example.org", normalizedEmail: "ana@example.org", canonicalEmail: "ana@example.org", canonicalizationVersion: 2, defaultName: "Ana Pop" })
+      .returning();
+    const [registration] = await db
+      .insert(registrations)
+      .values({
+        eventId: event.id,
+        participantId: participant.id,
+        kind: "REAL",
+        locale: "ro",
+        registeredName: "Ana Pop",
+        displayName: resolveDisplayName({ legalName: "Ana Pop" }),
+        privacyNoticeVersion: 1,
+        privacyAcknowledgedAt: T0,
+        resultsNameConsent: false,
+        resultsConsentVersion: 1,
+        status: "CONFIRMED",
+      })
+      .returning();
+    const own = { participantId: participant.id, registrationId: registration.id };
+    // Queued at -10 and held by the schedule; the race number refused by the account at 0; the confirmation left at 5, rendered with it.
+    await legacy({ ...own, messageType: "REGISTRATION_CONFIRMED", status: "SENT", sent: true, createdAt: minutes(-10), sentAt: minutes(5), transport: "mailgun" });
+    const bib = await legacy({ ...own, messageType: "BIB_ASSIGNED", status: "BOUNCED", sent: false, lastError: "mailgun 401: Forbidden", createdAt: minutes(0) });
+    // Sent before the refusal was queued: it does not carry it.
+    const later = await legacy({ ...own, messageType: "BIB_ASSIGNED", status: "BOUNCED", sent: false, lastError: "mailgun 401: Forbidden", createdAt: minutes(6) });
+    await backfill();
+
+    const read = async (id: string) => (await db.select().from(emailOutbox).where(eq(emailOutbox.id, id)))[0];
+    expect(await read(bib.id)).toMatchObject({ rejectionCause: "account", retriedAt: minutes(5), retriedVia: "mailgun", resolvedAt: minutes(5) });
+    expect(await read(later.id)).toMatchObject({ rejectionCause: "account", retriedAt: null, resolvedAt: null });
+  });
 });

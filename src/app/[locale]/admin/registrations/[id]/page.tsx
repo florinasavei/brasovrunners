@@ -198,7 +198,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   // Only a state that asks somebody to act (§NNN): «sent again» waits for its delivery, and the next change draws it.
   const rejected =
     registration.emailState && needsEmailAction(registration.emailState)
-      ? rejectedEmailWords({ ...registration.emailState, emailConfirmedAt: registration.emailConfirmedAt }, locale, { mayResend: mayManage })
+      ? rejectedEmailWords({ ...registration.emailState, emailConfirmedAt: registration.emailConfirmedAt }, locale, mayManage ? "administrator" : "organizer")
       : null;
   const dt = (value: Date | null) => (value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }) : null);
   const dtInline = (value: Date | null) =>

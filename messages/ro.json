@@ -689,7 +689,7 @@
       "emailRejected": "Email respins",
       "rejected": {
         "which": "Respins: „{type}”, trimis {instant}.",
-        "whichQueued": "Respins: „{type}”, pus în coadă {instant}; furnizorul l-a refuzat la trimitere.",
+        "whichQueued": "Respins: „{type}”, refuzat la trimitere {instant}.",
         "typeUnknown": "un email al clubului",
         "why": {
           "BOUNCED": "Adresa nu există, căsuța e plină sau serverul destinatarului l-a refuzat.",
@@ -709,7 +709,7 @@
         "neverConfirmed": "Adresa nu a fost confirmată niciodată.",
         "todo": "Sună persoana; adresa o poate schimba doar ea, printr-o înscriere nouă.",
         "whichFamily": "Respins la aceeași adresă, pentru altă înscriere de la acest eveniment: „{type}”, {instant}.",
-        "whichFamilyQueued": "Nu a plecat, pentru altă înscriere de la aceeași adresă și acest eveniment: „{type}”, pus în coadă {instant}.",
+        "whichFamilyQueued": "Nu a plecat, pentru altă înscriere de la aceeași adresă și acest eveniment: „{type}”, refuzat la trimitere {instant}.",
         "todoPress": {
           "confirmation": "Retrimite confirmarea, care poartă și numărul, codul QR și declarația semnată: „Retrimite QR” în listă, „Retrimite emailul” în pagina înscrierii.",
           "reminder": "Retrimite reminderul: „Trimite reminderul” în pagina înscrierii.",
@@ -721,13 +721,14 @@
           "resend": "Roagă un administrator să-l retrimită."
         },
         "todoCall": {
-          "update": "Sună persoana: nu știe că s-a schimbat ora sau locul.",
+          "update": "Sună persoana: nu a primit „Detalii actualizate” — ce s-a schimbat e pe pagina evenimentului.",
           "cancelled": "Sună persoana: nu știe că s-a anulat."
         },
-        "todoAskAdminCall": {
-          "update": "Roagă un administrator să sune persoana: nu știe că s-a schimbat ora sau locul.",
-          "cancelled": "Roagă un administrator să sune persoana: nu știe că s-a anulat."
+        "todoTell": {
+          "update": "Spune-i persoanei: nu a primit „Detalii actualizate” — ce s-a schimbat e pe pagina evenimentului.",
+          "cancelled": "Spune-i persoanei: nu a primit anunțul — evenimentul s-a anulat."
         },
+        "todoTellUnreachable": "Spune-i persoanei că emailurile clubului nu ajung la ea; un administrator o sună.",
         "todoFamily": "Se retrimite de pe înscrierea acelei persoane, nu de pe aceasta. {todo}",
         "todoWait": "Nu-l retrimite încă: așteaptă confirmarea livrării.",
         "todoAsk": "Întreabă persoana dacă l-a primit."

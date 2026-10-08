@@ -298,7 +298,7 @@ describe("«Email respins» says which email, when and why (§663)", () => {
     expect((tell?.props.lines as string[]).at(-1)).toBe(ro.Admin.registrations.tell.rejected.BOUNCED);
   });
 
-  it("at the desk: the same words, and no address", async () => {
+  it("at the desk: the same words, no address, and what to tell the person in front of it — never «Sună persoana» (§67, §NNN)", async () => {
     const race = await createRace();
     const id = await register(race.id, { emailConfirmedAt: CONFIRMED_AT, confirmedAt: CONFIRMED_AT, bibNumber: 17 });
     await rejected(id, { messageType: "BIB_ASSIGNED", status: "BOUNCED", at: BIB_SENT, reason: "550 5.1.1 mailbox unavailable", key: "bib" });
@@ -310,7 +310,7 @@ describe("«Email respins» says which email, when and why (§663)", () => {
       fill(words.which, { type: ro.Admin.emails.types.BIB_ASSIGNED, instant: at(BIB_SENT) }),
       words.why.BOUNCED,
       fill(words.confirmedBefore, { date: at(CONFIRMED_AT) }),
-      words.todo,
+      words.todoTellUnreachable,
     ]);
     expect(JSON.stringify(chip?.props)).not.toContain("@example.org");
     // The desk's own projection (§67, §NNN): never the provider's words, which a redactor could miss an address in.

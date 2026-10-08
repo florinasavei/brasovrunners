@@ -2204,11 +2204,13 @@ state (`registrations/email-state.ts`) and the automatic re-send's refusal read 
 (`notifications/domain/content-cover.ts`: the confirmation carries the race number and the signed
 declaration, the reminder the race number, and the confirmation, the reminder and the declaration
 request the event's details, which a refused «Detalii actualizate» was to tell) — only a refusal of a
-message queued no later than it — written on the refused row when it is sent or delivered so it
+message queued no later than it was sent: what a message carries is read when it is rendered, at its
+send (`sent_at`), not when it was queued — written on the refused row when it is sent or delivered so it
 outlives the 90-day sweep of `SENT` rows; and an owed or unsent refusal asks somebody to act only
 while the registration it was for still needs what was refused — what the page can send again for its
 status now, and what that carries; «Detalii actualizate» while the event is ahead, and the cancellation
-while it is cancelled and its start ahead, both for a phone call, no press sending them
+while it is cancelled and its start ahead, both until the registration is checked in, both for a phone
+call, no press sending them
 (`stillNeededMessageTypes`, `callInstead`) — an address that refuses the club's mail always does.
 **Once the event has ended** (`ends_at`, else the end of its start day in its own time zone) nothing of
 its registrations asks anybody to act — no chip, filter, export «Yes», «Ce îi spui» line or desk chip;
@@ -3166,8 +3168,10 @@ What the webhook does with an event (`DECISIONS.md` §NNN; `api/webhooks/mailgun
   lock and the same whatever order the events arrive in: a later delivery to the address says it
   works again (`later_delivered_at`, never on a complaint or the account's refusal), and only the
   same message, or one that carries it (the confirmation for a race number or a signed declaration,
-  `domain/content-cover.ts`), queued no earlier than the refused one and delivered later ends a refusal
-  (`resolved_at`) — an older confirmation delivered late never answers a race number refused since;
+  `domain/content-cover.ts`), sent no earlier than the refused one was queued and delivered later ends
+  a refusal (`resolved_at`) — the render instant, `sent_at`, is what the message carries: a confirmation
+  sent before a race number was refused never answers it, however late it is delivered, and one queued
+  before it but held by the schedule or the allowance and sent after it does;
   such a message leaving again marks it (`retried_at`, `retried_via`), and ends a refusal of the club's
   account — the send asks first, in one round trip, whether there is anything to mark, and takes the
   lock only then, or when the participant's lock is held. A refusal committed between the probe's

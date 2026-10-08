@@ -435,7 +435,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {/* The newest email was rejected (§76, §83, §663): the desk's and the page's chip, so a row kept by
               «Doar cu un email respins» says why — which email, when, why, and whether after the confirmation. */}
           {row.emailState && needsEmailAction(row.emailState) && (() => {
-            const words = rejectedEmailWords({ ...row.emailState, emailConfirmedAt: row.emailConfirmedAt }, locale, { mayResend: mayManage });
+            const words = rejectedEmailWords({ ...row.emailState, emailConfirmedAt: row.emailConfirmedAt }, locale, mayManage ? "administrator" : "organizer");
             return <EmailRejectedChip label={t("registrations.emailRejected")} sentences={rejectedEmailSentences(words)} reason={words.reason} />;
           })()}
           {/* "Is my name on the site?" is asked of the club, not of the platform (§186). Marked

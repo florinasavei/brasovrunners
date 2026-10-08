@@ -87,6 +87,13 @@ const CALL_INSTEAD = {
 
 export type EmailCall = (typeof CALL_INSTEAD)[keyof typeof CALL_INSTEAD];
 
+/**
+ * The event's notices (`CALL_INSTEAD`'s types). Once the registration is checked in (`checked_in_at`) none
+ * of them is needed any more (§NNN): the person is standing at the desk, and nobody has anything to do —
+ * the SQL reads this list (`registrations/email-state.ts`).
+ */
+export const EVENT_NOTICE_TYPES = Object.keys(CALL_INSTEAD) as EmailMessageType[];
+
 /** The phone call that replaces a press for this refused message: what the person does not know; null for every other type. */
 export function callInstead(messageType: string): EmailCall | null {
   return (CALL_INSTEAD as Partial<Record<string, EmailCall>>)[messageType] ?? null;
@@ -110,7 +117,8 @@ const TOLD_OF_THE_EVENT: readonly RegistrationStatus[] = AUDIENCE_STATUSES.ALL_A
  *   carries;
  * - on a registration the event's notices go to, «Detalii actualizate» while the event is on and ahead, and
  *   the cancellation while it is cancelled and its start ahead (`callInstead`) — by their own rule, never
- *   because a press carries them.
+ *   because a press carries them; and never once the registration is checked in (`EVENT_NOTICE_TYPES`: the
+ *   SQL adds that condition, a fact this function does not take).
  *
  * A refusal of any other type has nothing left to send and nobody to phone about: it asks nobody to act.
  * The SQL (`registrations/email-state.ts`) reads the same list, built from this function.
@@ -123,7 +131,7 @@ export function stillNeededMessageTypes(status: RegistrationStatus, moment: Even
   if (resendable && (!cancelled || resendable === "REGISTRATION_STATE_NOTICE")) for (const type of typesCoveredBy(resendable)) needed.add(type);
   if (ahead && !cancelled && status === "CONFIRMED") for (const type of typesCoveredBy("EVENT_REMINDER")) needed.add(type);
   // The event's notices by their own rule: a press that carries one (the confirmation carries the details) is not why it is needed.
-  for (const type of Object.keys(CALL_INSTEAD) as EmailMessageType[]) needed.delete(type);
+  for (const type of EVENT_NOTICE_TYPES) needed.delete(type);
   if (ahead && TOLD_OF_THE_EVENT.includes(status)) needed.add(cancelled ? "EVENT_CANCELLED" : "EVENT_UPDATE_NOTICE");
   return [...needed];
 }
