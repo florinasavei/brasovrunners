@@ -193,7 +193,7 @@ test.describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
   // process, so that test also takes `withFeaturedEventLock`, the advisory lock the two share).
   test.describe.configure({ mode: "serial" });
 
-  test("a card within seven days of its start wears the glyph and the degrees; Open-Meteo's credit is the footer's, not the listing's", async ({ page }) => {
+  test("a card within seven days of its start wears the glyph, the degrees and the chance; Open-Meteo's credit is the footer's, not the listing's", async ({ page }) => {
     await page.goto("/ro/evenimente");
     const main = page.locator("#main");
     await expect(main.locator("ul > li h2").first()).toBeAttached();
@@ -206,15 +206,18 @@ test.describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
     const pill = pills.first();
     await expect(pill).toBeVisible();
     await expect(pill).toContainText("14 °C");
-    await expect(pill.locator("svg")).toHaveCount(1);
-    // The word is for a screen reader; the rain and the wind are the page's.
-    await expect(pill).toContainText("Vremea la start: Parțial noros");
-    await expect(pill).not.toContainText("ploaie");
+    // The sky's glyph, then the stub's 20% after a drop (§677) — two glyphs, neither an umbrella.
+    await expect(pill.locator("svg")).toHaveCount(2);
+    await expect(pill.getByTestId("card-weather-chance")).toHaveText("20 %");
+    // The word is for a screen reader, the chance with it; the wind is the page's.
+    await expect(pill).toContainText("Vremea la start: Parțial noros, 14 °C, 20% șanse de ploaie");
+    await expect(pill).not.toContainText("ploaie probabilă");
+    await expect(pill).not.toContainText("km/h");
     // The last pill of the route's row (§429, amending §416), not among the marks above the title.
     const row = pill.locator("xpath=ancestor::*[@data-fact='pills'][1]");
     await expect(row).toHaveCount(1);
     expect(await pill.evaluate((element) => element.nextElementSibling === null)).toBe(true);
-    // The stub's 20% is no umbrella.
+    // The stub's 20% is not rain likely (§429): the figure stays in the pill's secondary colour.
     await expect(pill).not.toHaveAttribute("data-rain-likely", "true");
     // As tall as the route's pills beside it (24 px), inside its card.
     const box = await pill.boundingBox();
@@ -294,15 +297,16 @@ async function runFeaturedHeroWeatherCase(page: Page): Promise<void> {
     await moveFeaturedRaceTimes(page, gathering, "09:00", gathering, "10:00");
 
     await page.goto("/ro/evenimente");
-    // The same pill every card wears (§429): the glyph and the degrees, the word for a screen
-    // reader; the rain and the wind are the event page's.
+    // The same pill every card wears (§429): the glyph, the degrees and the chance after a drop
+    // (§677), the word for a screen reader; the wind is the event page's.
     const hero = page.locator('section[aria-labelledby="featured-event-title"]').first();
     await expect(hero).toBeVisible();
     const weather = hero.getByTestId("card-weather");
     await expect(weather).toBeVisible();
     await expect(weather).toContainText("Vremea la start: Parțial noros");
     await expect(weather).toContainText("14 °C");
-    await expect(weather).not.toContainText("ploaie");
+    await expect(weather.getByTestId("card-weather-chance")).toHaveText("20 %");
+    await expect(weather).not.toContainText("ploaie probabilă");
 
     await page.goto("/en/events");
     const heroEn = page.locator('section[aria-labelledby="featured-event-title"]').first();
@@ -310,6 +314,7 @@ async function runFeaturedHeroWeatherCase(page: Page): Promise<void> {
     await expect(weatherEn).toBeVisible();
     await expect(weatherEn).toContainText("Partly cloudy");
     await expect(weatherEn).toContainText("14 °C");
+    await expect(weatherEn.getByTestId("card-weather-chance")).toHaveText("20%");
   } finally {
     // Whatever the assertions above found, `FEATURED` is left exactly as every other spec
     // expects it — three weeks out, the seed's own dates — even on a failed assertion.

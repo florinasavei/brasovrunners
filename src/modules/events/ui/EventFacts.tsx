@@ -5,7 +5,7 @@ import PlaceIcon from "@mui/icons-material/Place";
 import RouteIcon from "@mui/icons-material/Route";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import SportsScoreIcon from "@mui/icons-material/SportsScore";
-import UmbrellaIcon from "@mui/icons-material/Umbrella";
+import WaterDropIcon from "@mui/icons-material/WaterDrop";
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
@@ -275,8 +275,9 @@ export default async function EventFacts({
   weather?: EventForecast | null;
   /**
    * The compact form's weather (§416, moved by §429): the start's reading, drawn as the last pill of
-   * the route's row (`CardWeather`) — the umbrella when rain is likely. Read by the listing for every
-   * card at once; null outside the seven days or on any failure, and then the row is the route's alone.
+   * the route's row (`CardWeather`) — the hour's chance of rain after a drop (§677). Read by the
+   * listing for every card at once; null outside the seven days or on any failure, and then the row
+   * is the route's alone.
    */
   cardWeather?: WeatherReading | null;
   /**
@@ -690,20 +691,20 @@ export default async function EventFacts({
   );
 
   /*
-    A forecast's summary pieces, the umbrella spliced in right after the rain phrase rather than
-    appended after the wind (review finding, §429): «Parțial noros, 14 °C, 60% șanse de ploaie,
-    ☂ ploaie probabilă, vânt 11 km/h», never «…, vânt 11 km/h, ☂ ploaie probabilă»; with no chance
-    but an amount already falling, right after the temperature. Shared by the hero and
-    the page, the only two places that draw this line — the card's own pill (`CardWeather`) never
-    shows the rain phrase at all. `words.details` is built in this fixed order (temperature, rain,
-    wind, each only when the hour has it), so the umbrella's place is the count of whichever of
-    the first two are actually there.
+    A forecast's summary pieces, the rain-likely mark spliced in right after the rain phrase rather
+    than appended after the wind (review finding, §429): «Parțial noros, 14 °C, 60% șanse de ploaie,
+    💧 ploaie probabilă, vânt 11 km/h», never «…, vânt 11 km/h, 💧 ploaie probabilă» — a drop since
+    §677, never the closed umbrella; with no chance but an amount already falling, right after the
+    temperature. Shared by the hero and the page, the only two places that draw this line — the
+    card's own pill (`CardWeather`) shows the chance as a figure (§677), never the rain phrase.
+    `words.details` is built in this fixed order (temperature, rain, wind, each only when the hour
+    has it), so the mark's place is the count of whichever of the first two are actually there.
   */
-  const forecastSummaryPieces = (words: ReturnType<typeof weatherWords>, reading: WeatherReading, umbrella: ReactNode): ReactNode[] => {
+  const forecastSummaryPieces = (words: ReturnType<typeof weatherWords>, reading: WeatherReading, likelyMark: ReactNode): ReactNode[] => {
     const pieces: ReactNode[] = [words.summary, ...words.details];
     if (rainLikely(reading)) {
       const afterRain = 1 + (reading.temperatureC !== null ? 1 : 0) + (reading.precipitationProbability !== null ? 1 : 0);
-      pieces.splice(afterRain, 0, umbrella);
+      pieces.splice(afterRain, 0, likelyMark);
     }
     return pieces;
   };
@@ -1006,16 +1007,17 @@ export default async function EventFacts({
       // No `mr` on this glyph (review finding, §429): the wrapping `Box` already gives it a
       // 0.5 gap from the word beside it, and `HERO_GLYPH_SX`'s own `mr` doubled that space —
       // the one glyph on the hero not seated beside a label, where the margin belongs instead.
-      const umbrella = rainLikely(weather.start) ? (
+      // The drop before «ploaie probabilă» (§677): the chance itself is already the line's «60% șanse de ploaie».
+      const likelyMark = rainLikely(weather.start) ? (
         <Box key="rain-likely" component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
-          <UmbrellaIcon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
+          <WaterDropIcon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
           {words.rainLikely}
         </Box>
       ) : null;
       lines.push({
         label: words.label,
         icon: WEATHER_GLYPH[weather.start.glyph],
-        value: forecastSummaryPieces(words, weather.start, umbrella),
+        value: forecastSummaryPieces(words, weather.start, likelyMark),
         testId: "hero-weather",
       });
     }
@@ -1243,17 +1245,19 @@ export default async function EventFacts({
     - where it was read, «Pentru locul evenimentului» or «Pentru Brașov», the row's last line.
 
     Since §469 (the owner, 2026-09-26: the page's weather as small as the card's) the row is the
-    first line reduced to the glyph, the sky's word and the start hour's degrees — and the umbrella
-    with «ploaie probabilă» only when rain is likely. No wind, no chance of rain on a dry hour; the
-    details, the hours strip and the place line are gone; the reminder keeps its own line.
+    first line reduced to the glyph, the sky's word and the start hour's degrees — and the drop (the
+    umbrella until §677) with «ploaie probabilă» only when rain is likely. No wind, no chance of rain
+    on a dry hour; the details, the hours strip and the place line are gone; the reminder keeps its
+    own line.
   */
   /*
     Since §484 (the owner, 2026-09-27: «La vreme vreau să zic și locația și intervalul») the line
     reads the hours the event is out — from the start's hour to the end's, at most six (`pickSpan`) —
     and opens with where and when, so the label and the line are one sentence: «Vremea | la Parcul
-    Tractorul, sâmbătă, 26 sept. 18:00–20:00: Ploaie · 12–15 °C · ☂ ploaie probabilă 70 % ?». The sky's
+    Tractorul, sâmbătă, 26 sept. 18:00–20:00: Ploaie · 12–15 °C · 💧 ploaie probabilă 70 % ?». The sky's
     word and the row's glyph are the span's (the wettest hour when rain is likely, else the kind most
-    hours share), the degrees a range when they differ, the umbrella when rain is likely in any hour.
+    hours share), the degrees a range when they differ, the drop and «ploaie probabilă N %» when rain
+    is likely in any hour (a drop, never the closed umbrella, since §677).
     The place is the club's locality when the forecast is the club's (`forecastPlaceName`), never a
     meeting point it was not read at.
   */
@@ -1281,9 +1285,9 @@ export default async function EventFacts({
       place: forecastPlaceName(weather.place, event.locationName, CLUB_LOCALITY),
       timeZone: event.timezone,
     });
-    const umbrella = words.rainLikelyChance !== null ? (
+    const likelyMark = words.rainLikelyChance !== null ? (
       <Box key="rain-likely" component="span" data-testid="weather-rain-likely" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
-        <UmbrellaIcon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
+        <WaterDropIcon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
         {words.rainLikelyChance}
       </Box>
     ) : null;
@@ -1293,7 +1297,7 @@ export default async function EventFacts({
       icon: WEATHER_GLYPH[words.glyph],
       value: (
         <Box data-testid="event-weather">
-          {flow(withScope([words.summary, ...(words.temperature !== null ? [words.temperature] : []), ...(umbrella ? [umbrella] : [])], words))}
+          {flow(withScope([words.summary, ...(words.temperature !== null ? [words.temperature] : []), ...(likelyMark ? [likelyMark] : [])], words))}
         </Box>
       ),
     });

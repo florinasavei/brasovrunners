@@ -70,7 +70,7 @@ const KIND_BY_CODE: Record<number, WeatherKind> = {
   99: "thunderstormHail",
 };
 
-/** One glyph per kind: the sun, a cloud with a gap, a cloud, the mist, drops, a raindrop, an umbrella, snow, frost, snow from a cloud, the storm. */
+/** One glyph per kind: the sun, a cloud with a gap, a cloud, the mist, drops, a raindrop, a raining cloud, snow, frost, snow from a cloud, the storm. */
 export const GLYPH_BY_KIND: Record<WeatherKind, WeatherGlyphName> = {
   clear: "clear",
   mainlyClear: "clear",

@@ -258,7 +258,7 @@ export function pickSpan(
  *
  * `sky` is the hour whose word and glyph speak for the span: the worst when rain is likely in any
  * hour — the wettest of those hours (the highest chance; the earlier on a tie) — so the line never
- * says «Parțial noros» beside an umbrella; otherwise the dominant sky, the kind most hours share
+ * says «Parțial noros» beside «ploaie probabilă»; otherwise the dominant sky, the kind most hours share
  * (a tie goes to the earlier hour, the start's first). Null only for an empty span.
  */
 export type WeatherSpanSummary = {
@@ -301,19 +301,20 @@ export function summarizeSpan(span: readonly WeatherReading[]): WeatherSpanSumma
 }
 
 /**
- * The chance of rain, in percent, from which a listing card's weather pill wears the umbrella
- * (§429; the owner, 2026-09-26: "an umbrella when rain is likely"). Fifty: "likely" is more likely
- * than not, the one threshold a runner reads without a legend — below it the sky's own glyph, at
- * or above it the umbrella, whatever the sky's word at the hour.
+ * The chance of rain, in percent, from which rain is "likely" (§429; the owner, 2026-09-26: "an
+ * umbrella when rain is likely"). Fifty: "likely" is more likely than not, the one threshold a
+ * runner reads without a legend. Since §677 the mark it earns is no longer an umbrella: on a card's
+ * pill the drop and the chance take the primary colour, on the hero and the event page the drop
+ * stands before «ploaie probabilă» — whatever the sky's word at the hour.
  */
 export const RAIN_LIKELY_PERCENT = 50;
 
 /**
- * The glyphs the umbrella never replaces: snow, frost and the storm say something a runner needs
- * more than "take an umbrella" — what to wear on the feet, or whether to go out on a ridge at all.
- * Open-Meteo's chance is of any precipitation, so a snowy hour's 80% is snow, not rain.
+ * The glyphs the rain-likely mark never joins: snow, frost and the storm say something a runner
+ * needs more than "take an umbrella" — what to wear on the feet, or whether to go out on a ridge at
+ * all. Open-Meteo's chance is of any precipitation, so a snowy hour's 80% is snow, not rain.
  */
-const STRONGER_THAN_UMBRELLA: ReadonlySet<WeatherGlyphName> = new Set(["snow", "snowShowers", "ice", "thunder"]);
+const STRONGER_THAN_RAIN: ReadonlySet<WeatherGlyphName> = new Set(["snow", "snowShowers", "ice", "thunder"]);
 
 /**
  * Below the chance threshold, a forecast amount already falling in the hour: 0.5 mm or more of
@@ -329,7 +330,7 @@ const RAIN_LIKELY_MM = 0.5;
  * chance and a missing amount are neither a likely one.
  */
 export function rainLikely(reading: Pick<WeatherReading, "precipitationProbability" | "glyph" | "precipitationMm">): boolean {
-  if (STRONGER_THAN_UMBRELLA.has(reading.glyph)) return false;
+  if (STRONGER_THAN_RAIN.has(reading.glyph)) return false;
   const byChance = reading.precipitationProbability !== null && reading.precipitationProbability >= RAIN_LIKELY_PERCENT;
   const byAmount = reading.precipitationMm !== null && reading.precipitationMm >= RAIN_LIKELY_MM;
   return byChance || byAmount;
