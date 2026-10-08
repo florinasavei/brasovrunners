@@ -568,20 +568,78 @@ export function googleCalendarDetails(event: CalendarEvent, labels: CalendarLabe
   return groups.map((group) => group.map(htmlLine).join("<br>")).join("<br><br>");
 }
 
-export function buildVEvent(event: CalendarEvent, baseUrl: string, labels: CalendarLabels): string[] {
+/**
+ * An invitation the runner's calendar answers (§NNN, amending §107 and §174; the owner: «can we make
+ * it Smarter so that people can respond Going/NotGoing»): the same entry the page's file and the
+ * feed carry — the same `UID`, so the invitation and a subscribed feed's entry are one event in the
+ * app, not two — sent as an iTIP request (RFC 5546) with the club as `ORGANIZER` and the runner as
+ * the one `ATTENDEE`. Gmail, Outlook and Apple then show «Da / Nu / Poate» where a published file
+ * shows only «Adaugă în calendar», and send the answer to the organizer's address.
+ *
+ * - `REQUEST` — the confirmation, the reminder, the group run's declaration and «Detalii actualizate»
+ *   about the time, the place or a date on again: `PARTSTAT=NEEDS-ACTION;RSVP=TRUE`, `STATUS:CONFIRMED`.
+ * - `CANCEL` — the event's cancellation: `STATUS:CANCELLED`, and an attendee line that asks nothing.
+ *
+ * `sequence` is the event's `calendar_sequence` (`event-changes.ts#calendarSequenceMoves`): an app
+ * keeps the highest it has read and ignores an older one. `now` is the invitation's `DTSTAMP`, the
+ * moment this message was made (RFC 5546 §2.1.5); `LAST-MODIFIED` stays the entry's own stamp.
+ */
+export type CalendarRsvp = {
+  method: "REQUEST" | "CANCEL";
+  organizerEmail: string;
+  organizerName: string;
+  attendeeEmail: string;
+  attendeeName?: string | null;
+  sequence: number;
+  now: Date;
+};
+
+/**
+ * A parameter value (RFC 5545 §3.1, §3.2): a name as typed by a person — «Popescu, Ana» — carries
+ * characters a parameter may not carry bare. Line breaks and control characters become a space,
+ * a double quote (which no parameter value may hold, and RFC 6868's escape is not read everywhere)
+ * becomes a single one, and the value is quoted when it holds a `:`, `;` or `,`.
+ */
+function icalParam(value: string): string {
+  const clean = value
+    .replace(/[\u0000-\u001f\u007f]+/g, " ")
+    .replace(/"/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+  return /[:;,]/.test(clean) ? `"${clean}"` : clean;
+}
+
+/** `ORGANIZER` and `ATTENDEE` for an invitation (§NNN), unfolded: `buildCalendar` folds every line. */
+function rsvpLines(rsvp: CalendarRsvp): string[] {
+  const attendeeName = rsvp.attendeeName?.trim();
+  // A cancellation asks nothing (RFC 5546 §3.2.5): the attendee is named, and no answer is requested.
+  const asks = rsvp.method === "REQUEST" ? ";PARTSTAT=NEEDS-ACTION;RSVP=TRUE" : "";
+  return [
+    `ORGANIZER;CN=${icalParam(rsvp.organizerName)}:mailto:${rsvp.organizerEmail}`,
+    `ATTENDEE${attendeeName ? `;CN=${icalParam(attendeeName)}` : ""};ROLE=REQ-PARTICIPANT${asks}:mailto:${rsvp.attendeeEmail}`,
+  ];
+}
+
+export function buildVEvent(event: CalendarEvent, baseUrl: string, labels: CalendarLabels, options: { rsvp?: CalendarRsvp } = {}): string[] {
   const stamp = event.updatedAt ?? event.startsAt;
   const rows = event.programme ?? [];
   const place = calendarPlace(event, labels);
+  const { rsvp } = options;
   // RFC 5545 §3.8.1.11: a cancelled event says so; Google, Apple and Outlook all strike it through.
-  const status = event.eventStatus === "CANCELLED" ? ["STATUS:CANCELLED"] : [];
+  // An invitation says it either way (RFC 5546 §3.2.2): confirmed, or cancelled with its `CANCEL`.
+  const cancelled = event.eventStatus === "CANCELLED" || rsvp?.method === "CANCEL";
+  const status = cancelled ? ["STATUS:CANCELLED"] : rsvp ? ["STATUS:CONFIRMED"] : [];
   const lines = [
     "BEGIN:VEVENT",
     `UID:${event.id}@${uidHost(baseUrl)}`,
-    `DTSTAMP:${icalUtc(stamp)}`,
+    // An invitation's stamp is when the message was made (RFC 5546 §2.1.5); a published entry's is when it changed.
+    `DTSTAMP:${icalUtc(rsvp ? rsvp.now : stamp)}`,
     `LAST-MODIFIED:${icalUtc(stamp)}`,
     `DTSTART:${icalUtc(event.startsAt)}`,
     `DTEND:${icalUtc(event.endsAt ?? event.startsAt)}`,
+    ...(rsvp ? [`SEQUENCE:${Math.max(0, Math.trunc(rsvp.sequence))}`] : []),
     ...status,
+    ...(rsvp ? rsvpLines(rsvp) : []),
     // The environment on the entry itself, not only on the calendar's name (§174): a single
     // event added from an attachment lands in a calendar that already has its own name, and
     // the only thing on screen is this line.
@@ -593,6 +651,9 @@ export function buildVEvent(event: CalendarEvent, baseUrl: string, labels: Calen
   ];
   if (place.location) lines.push(`LOCATION:${icalText(place.location)}`);
   lines.push("END:VEVENT");
+  // An invitation is one entry (§NNN): each further VEVENT would be one more invitation to answer.
+  // Its programme is already in the description, under «Programul evenimentului».
+  if (rsvp) return lines;
 
   /**
    * One entry per programme row (§117): "Crosul aniversar — Kit pickup", at the row's own
@@ -627,7 +688,27 @@ export function buildCalendar(params: {
   labels: CalendarLabels;
   /** The subscriber's refresh hint: an hour (§129). Outlook reads it; Google and Apple keep their own clock. */
   refreshHours?: number;
+  /**
+   * An invitation rather than a published file (§NNN): `METHOD:REQUEST` or `CANCEL`, one entry per
+   * event with the club as organizer and the runner as attendee, and none of a feed's own lines —
+   * no calendar name and no refresh hint, which belong to a calendar one subscribes to, and which an
+   * app reading an invitation would at best ignore. Absent, the file is byte for byte what it was.
+   */
+  rsvp?: CalendarRsvp;
 }): string {
+  if (params.rsvp) {
+    const rsvp = params.rsvp;
+    const invitation = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      `PRODID:${PRODID}`,
+      "CALSCALE:GREGORIAN",
+      `METHOD:${rsvp.method}`,
+      ...params.events.flatMap((event) => buildVEvent(event, params.baseUrl, params.labels, { rsvp })),
+      "END:VCALENDAR",
+    ];
+    return `${invitation.map(icalFold).join("\r\n")}\r\n`;
+  }
   /**
    * The environment on the name, on QA only (§174; the owner: "the QA iCal needs to be named
    * differently!").

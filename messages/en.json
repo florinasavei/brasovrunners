@@ -1514,6 +1514,8 @@
       "contactRecipientsBody": "Messages from the contact form reach the saved addresses from now on, and only them.",
       "clubNoticesTitle": "Change who receives the club's copies?",
       "clubNoticesBody": "Signed declarations, confirmations and the copies of messages to participants — with their personal data — go from now on to the addresses saved, and only to them.",
+      "calendarRsvpTitle": "Change where calendar answers go?",
+      "calendarRsvpBody": "Invitations sent from now on ask Yes / No / Maybe, and the answers — with the name and address of whoever answers — go to the address saved. Empty: the plain file again.",
       "emailCopyResetTitle": "Go back to the default text?",
       "emailCopyResetBody": "The club's own text for this email, in this language, is lost; emails sent from now on use the default text.",
       "botCheckOnTitle": "Turn the anti-bot check on?",
@@ -5025,6 +5027,21 @@
             "title": "The club's copy of the emails to participants"
           }
         }
+      },
+      "calendarRsvp": {
+        "title": "Calendar answers",
+        "intro": "The calendar invitation can ask Yes, No or Maybe. For a group run it goes once, with the declaration, and is never updated. Here you choose where the answers go.",
+        "aside": "Go to {address}",
+        "asideNone": "Off — the calendar goes as a file, without Yes / No / Maybe",
+        "inForce": "In force: calendar answers go to {address}.",
+        "inForceNone": "In force: no address. The confirmation and the reminder carry the calendar file, with “Add to calendar”, without Yes / No / Maybe.",
+        "field": "Calendar answers go to",
+        "help": "With an address here, the calendar invitation has Yes / No / Maybe; the answers arrive there. Tip: the club's address with +calendar and a Gmail filter.",
+        "updatedAt": "Changed {when}.",
+        "readOnly": "The Administrator sets the address; you see what is in force.",
+        "save": "Save the address",
+        "saving": "Saving…",
+        "saved": "The address for calendar answers was saved."
       },
       "clubRejections": {
         "title": "The club's addresses that reject emails",
@@ -8668,6 +8685,7 @@
       "emailTransport": "The email routes were saved.",
       "contactRecipients": "The contact recipients were saved.",
       "clubNotices": "The club's copies were saved.",
+      "calendarRsvp": "The address for calendar answers was saved.",
       "emailCopy": "The email's wording was saved.",
       "emailCopyReset": "The email's wording is the default again.",
       "emailCopySamples": "The sample values were replaced with fields.",

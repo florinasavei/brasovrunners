@@ -404,6 +404,8 @@ export type AuditAction =
   | "email_copy.changed"
   /** Who at the club receives the declaration copies and the confirmation notices (§244, §245). */
   | "club_notices.changed"
+  /** «Răspunsurile din calendar merg la» (§NNN): the club's address an invitation's answers go to, from and to; empty is off. */
+  | "calendar_rsvp_to.changed"
   /**
    * An approved legal version taken out of circulation (`DECISIONS.md` §46, §53).
    *
