@@ -124,7 +124,8 @@ export async function settleDelivery(handle: Handle, row: DeliveredRow, delivere
 /**
  * A participant's message was refused (its row already says so): read what came after it from the other
  * rows — a delivery to the address, a delivery of the same message, the same message sent again — so a
- * refusal processed after the delivery that answers it is answered all the same. Nothing for a complaint.
+ * refusal processed after the delivery that answers it is answered all the same. A complaint reads only
+ * whether the same message left again: no delivery withdraws it.
  */
 export async function settleRejection(handle: Handle, rowId: string): Promise<void> {
   const [row] = await handle
@@ -143,7 +144,10 @@ export async function settleRejection(handle: Handle, rowId: string): Promise<vo
     .where(eq(emailOutbox.id, rowId))
     .limit(1);
   const instant = instantOf(row?.instant);
-  if (!row || !instant || row.status !== "BOUNCED" || row.participantId === null || !isParticipantMeant(row)) return;
+  if (!row || !instant || row.participantId === null || !isParticipantMeant(row)) return;
+  if (row.status !== "BOUNCED" && row.status !== "COMPLAINED") return;
+  // A complaint is the person's own word: no delivery clears it, and it only learns it was sent again.
+  const complaint = row.status === "COMPLAINED";
 
   const others = and(eq(emailOutbox.participantId, row.participantId), ne(emailOutbox.id, row.id), participantMessageCondition()) as SQL;
   const sameMessage = and(
@@ -156,8 +160,8 @@ export async function settleRejection(handle: Handle, rowId: string): Promise<vo
   const account = row.rejectionCause === "account";
 
   // The address works again: never read for the account's refusal, which was not about it.
-  const [address] = account ? [] : await handle.select({ first: min(emailOutbox.deliveredAt) }).from(emailOutbox).where(and(others, deliveredAfter));
-  const [same] = await handle.select({ first: min(emailOutbox.deliveredAt) }).from(emailOutbox).where(and(sameMessage, deliveredAfter));
+  const [address] = account || complaint ? [] : await handle.select({ first: min(emailOutbox.deliveredAt) }).from(emailOutbox).where(and(others, deliveredAfter));
+  const [same] = complaint ? [] : await handle.select({ first: min(emailOutbox.deliveredAt) }).from(emailOutbox).where(and(sameMessage, deliveredAfter));
   const [again] = await handle
     .select({ sentAt: emailOutbox.sentAt, transport: emailOutbox.transport })
     .from(emailOutbox)
@@ -185,29 +189,43 @@ export async function settleRejection(handle: Handle, rowId: string): Promise<vo
 type SentRow = { id: string; participantId: string | null; registrationId: string | null; messageType: EmailMessageType; payloadJson: unknown; createdAt: Date };
 
 /**
- * A participant's message left (`sent_at`, by `via`): every earlier refusal of the same message — its
- * type, for the same registration, queued no later — was sent again. A refusal of the club's account is
- * over with it (it never left; now it has). Refusals only (BOUNCED): a complaint stays the person's word.
- * One statement, and it changes nothing for a message with no refusal before it.
+ * A participant's message left (`sent_at`, by `via`): every earlier refusal or complaint of the same
+ * message — its type, for the same registration, queued no later — was sent again. A refusal of the
+ * club's account is over with it (it never left; now it has). A complaint takes `retried_at` too (the
+ * history says the message left again), and stays the person's word: nothing else changes on it.
+ *
+ * In its own transaction, under the participant's lock (`lockParticipantFacts`), like the webhook's
+ * refusal it races: whichever commits first, the other reads it — a refusal settled after this send
+ * reads it as sent (`settleRejection`), and this statement, taken after that refusal, sees it refused.
+ * One statement, and nothing for a message with no refusal before it; nothing at all, not even the
+ * transaction, for a message that is not a participant's.
+ *
+ * `retried_at` keeps the **latest** such send, and `retried_via` its road (§NNN, a stated departure from
+ * the first send the brief named): the state «sent again, delivery not known yet» is about the send whose
+ * delivery may still come, and a Gmail send after a Mailgun one will never report its delivery.
  */
-export async function noteSentAgain(handle: Pick<Db, "update">, row: SentRow, sentAt: Date, via: "mailgun" | "gmail"): Promise<void> {
+export async function noteSentAgain(db: Pick<Db, "transaction">, row: SentRow, sentAt: Date, via: "mailgun" | "gmail"): Promise<void> {
   if (row.participantId === null || !isParticipantMeant(row)) return;
-  await handle
-    .update(emailOutbox)
-    .set({
-      // Every expression reads the row as it was: the road is the newest send's.
-      retriedVia: sql`case when ${emailOutbox.retriedAt} is null or ${emailOutbox.retriedAt} <= ${at(sentAt)} then ${via} else ${emailOutbox.retriedVia} end`,
-      retriedAt: sql`greatest(${emailOutbox.retriedAt}, ${at(sentAt)})`,
-      resolvedAt: sql`case when ${emailOutbox.rejectionCause} = 'account' then least(${emailOutbox.resolvedAt}, ${at(sentAt)}) else ${emailOutbox.resolvedAt} end`,
-    })
-    .where(
-      and(
-        eq(emailOutbox.participantId, row.participantId),
-        ne(emailOutbox.id, row.id),
-        eq(emailOutbox.status, "BOUNCED"),
-        eq(emailOutbox.messageType, row.messageType),
-        sql`${emailOutbox.registrationId} is not distinct from ${row.registrationId}`,
-        sql`${emailOutbox.createdAt} <= ${at(row.createdAt)}`,
-      ),
-    );
+  const participantId = row.participantId;
+  await db.transaction(async (tx) => {
+    await lockParticipantFacts(tx, participantId);
+    await tx
+      .update(emailOutbox)
+      .set({
+        // Every expression reads the row as it was: the road is the newest send's.
+        retriedVia: sql`case when ${emailOutbox.retriedAt} is null or ${emailOutbox.retriedAt} <= ${at(sentAt)} then ${via} else ${emailOutbox.retriedVia} end`,
+        retriedAt: sql`greatest(${emailOutbox.retriedAt}, ${at(sentAt)})`,
+        resolvedAt: sql`case when ${emailOutbox.rejectionCause} = 'account' then least(${emailOutbox.resolvedAt}, ${at(sentAt)}) else ${emailOutbox.resolvedAt} end`,
+      })
+      .where(
+        and(
+          eq(emailOutbox.participantId, participantId),
+          ne(emailOutbox.id, row.id),
+          inArray(emailOutbox.status, ["BOUNCED", "COMPLAINED"]),
+          eq(emailOutbox.messageType, row.messageType),
+          sql`${emailOutbox.registrationId} is not distinct from ${row.registrationId}`,
+          sql`${emailOutbox.createdAt} <= ${at(row.createdAt)}`,
+        ),
+      );
+  });
 }

@@ -72,3 +72,19 @@ export const PARTICIPANT_MESSAGE_TYPES: readonly EmailMessageType[] = messageTyp
 
 /** The club's own mailboxes' messages (§99, §245, §393) — a club copy of a participant's message is the club's too. */
 export const CLUB_MAILBOX_MESSAGE_TYPES: readonly EmailMessageType[] = messageTypesFor("club");
+
+/**
+ * Whom one outbox row was for, by role and never by address (§NNN): the participant; the club's archive
+ * copy of a declaration (§99, §393) or its «somebody has confirmed» notice (§245) — the club's audience,
+ * told apart because the club fixes them in two different settings; a club copy of a participant's
+ * message (§320, the `clubCopy` flag); or a colleague's or the public's. From the audience map, so a type
+ * added tomorrow has a role the day it has an audience.
+ */
+export type RecipientRole = "participant" | "archive" | "notice" | "copy" | "staff" | "public";
+
+export function recipientRoleOf(messageType: EmailMessageType, clubCopy: boolean): RecipientRole {
+  if (clubCopy) return "copy";
+  const audience = audienceOf(messageType);
+  if (audience === "club") return messageType === "CLUB_CONFIRMATION_NOTICE" ? "notice" : "archive";
+  return audience;
+}

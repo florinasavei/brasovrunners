@@ -19,6 +19,7 @@ import { ageOnRaceDay } from "@/modules/registrations/domain/age";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { needsEmailAction } from "@/modules/registrations/domain/email-state";
 
 function isRegistrationStatus(value: string | null): value is RegistrationStatus {
   return !!value && (registrationStatus.enumValues as readonly string[]).includes(value);
@@ -186,7 +187,7 @@ export async function GET(request: Request): Promise<Response> {
         confirmedAt: row.confirmedAt,
         bibNumber: row.bibNumber,
         checkedInAt: row.checkedInAt,
-        emailBounced: row.emailState !== null,
+        emailBounced: needsEmailAction(row.emailState),
         termsVersion: row.termsVersion,
         termsAcceptedAt: row.termsAcceptedAt,
         declarationVersion: declarations.get(row.id)?.version ?? null,
@@ -242,7 +243,7 @@ export async function GET(request: Request): Promise<Response> {
       confirmedAt: row.confirmedAt?.toISOString() ?? "",
       bibNumber: row.bibNumber,
       checkedInAt: row.checkedInAt?.toISOString() ?? "",
-      emailBounced: row.emailState !== null,
+      emailBounced: needsEmailAction(row.emailState),
       // The terms accepted on the form (§421, §425): blank for a staff or desk entry.
       termsVersion: row.termsVersion,
       termsAcceptedAt: row.termsAcceptedAt?.toISOString() ?? "",

@@ -315,4 +315,55 @@ describe("«Email respins» says which email, when and why (§663)", () => {
     expect(JSON.stringify(row)).not.toContain("550 5.1.1");
     expect(chip?.props.reason).toBeNull();
   });
+
+  it("speaks only for what asks somebody to act: a message sent again lights nothing; the desk asks for an Administrator", async () => {
+    const race = await createRace();
+    const waiting = await register(race.id, { emailConfirmedAt: CONFIRMED_AT, confirmedAt: CONFIRMED_AT, bibNumber: 18 });
+    const owed = await register(race.id, { emailConfirmedAt: CONFIRMED_AT, confirmedAt: CONFIRMED_AT, bibNumber: 19 });
+    await rejected(waiting, { messageType: "REGISTRATION_CONFIRMED", status: "BOUNCED", at: BIB_SENT, reason: "bounce", key: "waiting" });
+    await rejected(owed, { messageType: "REGISTRATION_CONFIRMED", status: "BOUNCED", at: BIB_SENT, reason: "bounce", key: "owed" });
+    const LATER = new Date("2026-10-05T10:00:00.000Z");
+    // Sent again before this release («Retrimite QR»), no delivery will ever be reported for it.
+    await db.update(emailOutbox).set({ retriedAt: LATER, retriedVia: "mailgun" }).where(eq(emailOutbox.idempotencyKey, "waiting"));
+    // The address works again; this message is owed.
+    await db.update(emailOutbox).set({ laterDeliveredAt: LATER }).where(eq(emailOutbox.idempotencyKey, "owed"));
+    state.actor = await staff();
+
+    const tree = await AdminRegistrationsPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({ eventId: race.id }) } as never);
+    const table = elements(tree).find((element) => element.type === AdminTable);
+    const rows = table?.props.rows as { id: string }[];
+    const name = (table?.props.columns as { key: string; render: (row: unknown) => ReactNode }[]).find((column) => column.key === "name");
+    const chips = (id: string) => elements(name?.render(rows.find((row) => row.id === id))).filter((element) => element.type === EmailRejectedChip);
+    expect(chips(waiting)).toHaveLength(0);
+    expect(chips(owed)).toHaveLength(1);
+    // The Administrator may send it again, and is told so.
+    expect((chips(owed)[0].props as { sentences: string[] }).sentences.slice(1)).toEqual([
+      fill(words.why.missing, { date: at(LATER) }),
+      fill(words.confirmedBefore, { date: at(CONFIRMED_AT) }),
+      words.todoResend,
+    ]);
+    const kept = await AdminRegistrationsPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({ eventId: race.id, bounced: "1" }) } as never);
+    expect((elements(kept).find((element) => element.type === AdminTable)?.props.rows as { id: string }[]).map((row) => row.id)).toEqual([owed]);
+
+    // The registration's page: no red line and no chip for the message sent again, nor a refusal in «Ce îi spui».
+    const page = elements(await RegistrationDetailPage({ params: Promise.resolve({ locale: "ro", id: waiting }), searchParams: Promise.resolve({}) } as never));
+    expect(page.find((element) => element.type === EmailRejectedChip)).toBeUndefined();
+    expect(page.find((element) => element.props["data-testid"] === "email-rejected-words")).toBeUndefined();
+    const tell = page.find((element) => element.type === WhatToTell);
+    expect(tell?.props.lines as string[]).not.toContain(ro.Admin.registrations.tell.rejected.BOUNCED);
+
+    // At the desk, which every staff role works: the owed email with its date, and «ask an Administrator».
+    const desk = await listDeskRegistrations(db, { eventId: race.id, query: "", locale: "ro" });
+    const deskChip = async (id: string) =>
+      elements(await DeskRow({ row: desk.find((row) => row.id === id)!, locale: "ro", back: "desk", minorSigns: { ro: false, en: false } })).find(
+        (element) => element.type === EmailRejectedChip,
+      );
+    expect(await deskChip(waiting)).toBeUndefined();
+    expect((await deskChip(owed))?.props.sentences).toEqual([
+      fill(words.which, { type: ro.Admin.emails.types.REGISTRATION_CONFIRMED, instant: at(BIB_SENT) }),
+      fill(words.why.missing, { date: at(LATER) }),
+      fill(words.confirmedBefore, { date: at(CONFIRMED_AT) }),
+      words.todoAskAdmin,
+    ]);
+  });
 });

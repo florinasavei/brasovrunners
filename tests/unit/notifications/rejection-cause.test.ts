@@ -45,7 +45,7 @@ describe("rejectionCause — why, by a stated precedence", () => {
   const bounce = (facts: Partial<Parameters<typeof rejectionCause>[0]>) => rejectionCause({ status: "BOUNCED", sent: true, reason: "bounce", ...facts });
 
   it("a complaint is the person's own word, whatever else the row says", () => {
-    expect(rejectionCause({ status: "COMPLAINED", sent: true, reason: "suppress-bounce", code: "550 5.1.1" })).toBe("complaint");
+    expect(rejectionCause({ status: "COMPLAINED", sent: true, reason: "suppress-bounce", code: "550 5.1.1" })).toBe("complained");
   });
 
   it("reads Mailgun's own suppressions by their reason and by their code", () => {
@@ -77,11 +77,112 @@ describe("rejectionCause — why, by a stated precedence", () => {
     expect(bounce({ code: "550 5.4.1", detail: "Recipient address rejected: Access denied" })).toBe("no-such-address");
   });
 
-  it("never calls a bare «bounce» with no code «no such address»: the cause was not recorded", () => {
-    expect(bounce({})).toBe("other");
-    expect(bounce({ reason: "hardfail" })).toBe("other");
+  it("never calls a bare «bounce» with no code «no such address»: refused, the cause not recorded", () => {
+    expect(bounce({})).toBe("refused");
+    expect(bounce({ reason: "hardfail" })).toBe("no-such-address");
     expect(bounce({ reason: "generic" })).toBe("other");
     expect(bounce({ reason: null })).toBe("other");
+  });
+
+  it("lets a class-4 code decide only a full mailbox: a deferral is no block and no missing address", () => {
+    expect(bounce({ reason: "old", code: "421 4.7.0", detail: "4.7.0 [TSS04] Messages from <ip> temporarily deferred due to unexpected volume or user complaints" })).toBe("gave-up");
+    expect(bounce({ reason: "old", code: "451 4.1.1" })).toBe("gave-up");
+    expect(bounce({ reason: "old", code: "452 4.2.2" })).toBe("mailbox-full");
+    expect(bounce({ reason: "bounce", code: "550 5.7.1" })).toBe("blocked");
+  });
+
+  /*
+    The receiving servers' own words (Yahoo's, Microsoft's, Gmail's, Mailgun's), as the webhook hands them
+    to `rejectionCause`: the code it built from `delivery-status` (`mailgun-event.ts`) and the server's
+    sentence. The owner's case was a yahoo.com address.
+  */
+  const REAL: Array<[string, Parameters<typeof rejectionCause>[0], string]> = [
+    [
+      "Yahoo 421 4.7.0 [TSS04], given up",
+      { status: "BOUNCED", sent: true, reason: "old", code: "421 4.7.0", detail: "421 4.7.0 [TSS04] Messages from 192.0.2.1 temporarily deferred due to unexpected volume or user complaints - 4.16.55.1" },
+      "gave-up",
+    ],
+    [
+      "Yahoo 554 5.7.9 policy",
+      { status: "BOUNCED", sent: true, reason: "bounce", code: "554 5.7.9", detail: "554 5.7.9 Message not accepted for policy reasons. See https://senders.yahooinc.com/error-codes" },
+      "blocked",
+    ],
+    [
+      "Yahoo 553 5.7.1 [BL21]",
+      { status: "BOUNCED", sent: true, reason: "espblock", code: "553 5.7.1", detail: "553 5.7.1 [BL21] Connections will not be accepted from 192.0.2.1, because the ip is in Spamhaus's list" },
+      "blocked",
+    ],
+    [
+      "Yahoo 553 5.7.2 [TSS09]",
+      { status: "BOUNCED", sent: true, reason: "bounce", code: "553 5.7.2", detail: "553 5.7.2 [TSS09] All messages from 192.0.2.1 will be permanently deferred; Retrying will NOT succeed" },
+      "blocked",
+    ],
+    [
+      "Yahoo 552 5.2.2 full",
+      { status: "BOUNCED", sent: true, reason: "bounce", code: "552 5.2.2", detail: "552 5.2.2 This message could not be delivered because the recipient's mailbox is full" },
+      "mailbox-full",
+    ],
+    [
+      "Yahoo 554 no such account",
+      { status: "BOUNCED", sent: true, reason: "bounce", code: "554", detail: "554 delivery error: dd This user doesn't have a yahoo.com account (<address>) [0] - mta1234.mail.bf1.yahoo.com" },
+      "no-such-address",
+    ],
+    [
+      "Yahoo 554 mailbox disabled",
+      { status: "BOUNCED", sent: true, reason: "bounce", code: "554", detail: "554 delivery error: dd Sorry your message to <address> cannot be delivered. This mailbox is disabled (554.30)" },
+      "no-such-address",
+    ],
+    [
+      "Yahoo 552 mailbox not found",
+      { status: "BOUNCED", sent: true, reason: "bounce", code: "552", detail: "552 1 Requested mail action aborted, mailbox not found" },
+      "no-such-address",
+    ],
+    [
+      "Microsoft 550 5.5.0",
+      { status: "BOUNCED", sent: true, reason: "bounce", code: "550 5.5.0", detail: "550 5.5.0 Requested action not taken: mailbox unavailable (S2017062302)" },
+      "no-such-address",
+    ],
+    [
+      "Microsoft 550 5.1.10",
+      { status: "BOUNCED", sent: true, reason: "bounce", code: "550 5.1.10", detail: "550 5.1.10 RESOLVER.ADR.RecipientNotFound; Recipient not found by SMTP address lookup" },
+      "no-such-address",
+    ],
+    [
+      "Microsoft 550 5.7.1 S3150",
+      {
+        status: "BOUNCED",
+        sent: true,
+        reason: "bounce",
+        code: "550 5.7.1",
+        detail: "550 5.7.1 Unfortunately, messages from [192.0.2.1] weren't sent. Please contact your Internet service provider since part of their network is on our block list (S3150)",
+      },
+      "blocked",
+    ],
+    [
+      "Microsoft 550 5.7.515",
+      { status: "BOUNCED", sent: true, reason: "bounce", code: "550 5.7.515", detail: "550 5.7.515 Access denied, sending domain example.org does not meet the required authentication level" },
+      "blocked",
+    ],
+    ["Gmail at the send", { status: "BOUNCED", sent: false, reason: "gmail: the address was refused (5.1.1)" }, "no-such-address"],
+    ["Mailgun 605", { status: "BOUNCED", sent: true, reason: "suppress-bounce", code: "605", detail: "Not delivering to previously bounced address" }, "suppressed"],
+    ["Mailgun 606", { status: "BOUNCED", sent: true, reason: "suppress-unsubscribe", code: "606", detail: "Not delivering to unsubscribed address" }, "unsubscribed"],
+    ["Mailgun 607", { status: "BOUNCED", sent: true, reason: "suppress-complaint", code: "607", detail: "Not delivering to a user who marked your messages as spam" }, "complaint-suppressed"],
+    ["the account's credentials, 2026-10-01", { status: "BOUNCED", sent: false, reason: "mailgun 401: Forbidden" }, "account"],
+    [
+      "the probation's pause, 2026-10-01",
+      {
+        status: "BOUNCED",
+        sent: false,
+        reason:
+          "mailgun 400: Domain mail.example.org is not allowed to send: You are sending too fast. Your account is on probation and the account has been temporarily disabled.",
+      },
+      "account",
+    ],
+    ["the spent allowance, 2026-10-02", { status: "BOUNCED", sent: false, reason: "mailgun 400: Domain mail.example.org is not allowed to send: recipient limit exceeded" }, "account"],
+  ];
+
+  it.each(REAL)("reads %s", (_name, facts, expected) => {
+    expect(rejectionCause(facts)).toBe(expected);
   });
 
   it("reads a Gmail refusal by its 5.1.x", () => {

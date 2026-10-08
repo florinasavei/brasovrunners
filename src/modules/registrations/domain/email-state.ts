@@ -1,4 +1,4 @@
-import { isRejectionCause, type RejectionCause } from "@/modules/notifications/domain/rejection-cause";
+import { isRejectionCause, rejectionCause, type RejectionCause } from "@/modules/notifications/domain/rejection-cause";
 
 /**
  * The registration's one email state (§NNN; amending §663, §76/§83): whether the participant's own mail
@@ -28,6 +28,15 @@ export type EmailStateKind = (typeof EMAIL_STATE_KINDS)[number];
 /** The kinds that ask somebody to act: call, or send it again. `retried` waits for the delivery. */
 export const EMAIL_STATE_NEEDS_ACTION: readonly EmailStateKind[] = ["unreachable", "not-sent", "missing"];
 
+/**
+ * Whether a state asks somebody to act — what today's chip, the page's red line, «Ce îi spui», the filter
+ * and the export's «Email bounced» speak for (§NNN). `retried` is shown nowhere until the next change draws
+ * it: it waits for a delivery, and a refusal sent again before this release never gets one.
+ */
+export function needsEmailAction(state: { kind: EmailStateKind } | null | undefined): boolean {
+  return state !== null && state !== undefined && EMAIL_STATE_NEEDS_ACTION.includes(state.kind);
+}
+
 export type RegistrationEmailState = {
   kind: EmailStateKind;
   /** The refused message's type: what did not arrive. */
@@ -47,8 +56,14 @@ export type RegistrationEmailState = {
   retriedVia: "mailgun" | "gmail" | null;
 };
 
-/** The desk's projection (§67, `AGENTS.md` §15.11): what did not arrive and why — no provider text, no address. */
-export type DeskEmailState = Pick<RegistrationEmailState, "kind" | "messageType" | "at" | "sent" | "status" | "cause" | "own">;
+/**
+ * The desk's projection (§67, `AGENTS.md` §15.11): what did not arrive, why and when — the instants of what
+ * came after it included, which are not words — and no provider text, no address.
+ */
+export type DeskEmailState = Pick<
+  RegistrationEmailState,
+  "kind" | "messageType" | "at" | "sent" | "status" | "cause" | "own" | "laterDeliveredAt" | "retriedAt" | "retriedVia"
+>;
 
 /** The registration page's: the state, with the provider's code and words in small print — never on a list. */
 export type RegistrationEmailStateDetail = RegistrationEmailState & {
@@ -75,31 +90,38 @@ function rawOf(value: unknown): Record<string, unknown> | null {
   return raw !== null && typeof raw === "object" ? (raw as Record<string, unknown>) : null;
 }
 
+/**
+ * The cause stored with the refusal; for a row written without one (an older deployment's, between the
+ * migration and the build after it), the same `rejectionCause` read from the stored answer it carried
+ * (`unclassified`), which is dropped here and goes no further.
+ */
+function causeOf(row: Record<string, unknown>, status: "BOUNCED" | "COMPLAINED", sent: boolean): RejectionCause {
+  if (isRejectionCause(row.cause)) return row.cause;
+  return rejectionCause({ status, sent, reason: textOf(row.unclassified) });
+}
+
 export function deskEmailStateOf(value: unknown): DeskEmailState | null {
   const row = rawOf(value);
   if (!row) return null;
   const status = row.status === "COMPLAINED" ? "COMPLAINED" : "BOUNCED";
+  const sent = row.sent !== false;
   return {
     kind: kindOf(row.kind),
     messageType: String(row.messageType),
     at: instant(row.at) ?? new Date(0),
-    sent: row.sent !== false,
+    sent,
     status,
-    cause: isRejectionCause(row.cause) ? row.cause : status === "COMPLAINED" ? "complaint" : "other",
+    cause: causeOf(row, status, sent),
     own: row.own !== false,
-  };
-}
-
-export function emailStateOf(value: unknown): RegistrationEmailState | null {
-  const row = rawOf(value);
-  const desk = deskEmailStateOf(row);
-  if (!row || !desk) return null;
-  return {
-    ...desk,
     laterDeliveredAt: instant(row.laterDeliveredAt),
     retriedAt: instant(row.retriedAt),
     retriedVia: row.retriedVia === "gmail" ? "gmail" : row.retriedVia === "mailgun" ? "mailgun" : null,
   };
+}
+
+/** The list's and the export's: the same object as the desk's — no provider text on either. */
+export function emailStateOf(value: unknown): RegistrationEmailState | null {
+  return deskEmailStateOf(value);
 }
 
 export function emailStateDetailOf(value: unknown): RegistrationEmailStateDetail | null {

@@ -8,16 +8,20 @@ import { isAccountRefusalError } from "@/infrastructure/email/mailgun-adapter";
  * account being refused at the send all alike. Each of them asks for something different, and two of
  * them say nothing about the address at all.
  *
- * - `no-such-address` — the receiving server says the mailbox or the domain does not exist (5.1.x);
- * - `mailbox-full` — over quota (x.2.2, 552);
+ * - `no-such-address` — the receiving server says the mailbox or the domain does not exist (5.1.x;
+ *   Mailgun's `hardfail`; Yahoo's «doesn't have a yahoo.com account»);
+ * - `mailbox-full` — over quota (x.2.2; a 552 whose words say so);
+ * - `blocked` — the receiving server refused it for policy or reputation (5.7.x, espblock, a block list):
+ *   about the club's sending, not the address;
+ * - `gave-up` — Mailgun gave up after hours of deferrals (old, greylisted), the address not refused;
+ * - `refused` — refused for good, a plain `bounce` whose cause was not recorded: permanent, and never read
+ *   as «no such address», which it may not be;
  * - `suppressed` — Mailgun did not try: the address bounced before, on this sending domain (605);
  * - `unsubscribed` — Mailgun did not try: the address is on its unsubscribe list (606);
+ * - `complained` — the person marked this message as spam;
  * - `complaint-suppressed` — Mailgun did not try: the person once marked the club's mail as spam (607);
- * - `blocked` — the receiving server refused it for policy or reputation (5.7.x, espblock, a block list);
- * - `gave-up` — Mailgun gave up after hours of deferrals (old, greylisted), the address not refused;
- * - `complaint` — the person marked this message as spam;
  * - `account` — the club's Mailgun account was refused at the send: the message never left;
- * - `other` — refused for good, the cause not recorded (a bare `bounce` with no code says no more).
+ * - `other` — anything else (Mailgun's `generic`, a refusal no rule reads).
  *
  * Stored on the row (`rejection_cause`) when the refusal is written — the webhook's event and the send's
  * answer are the only moments the provider's words are at hand — and never recomputed from `last_error`,
@@ -28,12 +32,13 @@ import { isAccountRefusalError } from "@/infrastructure/email/mailgun-adapter";
 export const REJECTION_CAUSES = [
   "no-such-address",
   "mailbox-full",
-  "suppressed",
-  "unsubscribed",
-  "complaint-suppressed",
   "blocked",
   "gave-up",
-  "complaint",
+  "refused",
+  "suppressed",
+  "unsubscribed",
+  "complained",
+  "complaint-suppressed",
   "account",
   "other",
 ] as const;
@@ -76,12 +81,19 @@ function basicCodeIn(text: string | null | undefined): number | null {
   return match ? Number(match[1]) : null;
 }
 
-/** What an enhanced status decides alone, or null when its subject leaves the words to decide. */
-function causeOfEnhanced([, subject, detail]: [number, number, number]): RejectionCause | null {
-  if (subject === 1) return detail === 7 || detail === 8 ? "blocked" : "no-such-address"; // x.1.7/x.1.8 are the sender's
-  if (subject === 2) return detail === 2 ? "mailbox-full" : detail === 1 ? "no-such-address" : null; // x.2.1: mailbox disabled
-  if (subject === 4) return detail === 4 ? "no-such-address" : detail === 7 ? "gave-up" : null; // x.4.4: unroutable; x.4.7: expired
-  if (subject === 6 || subject === 7) return "blocked"; // content, security and policy
+/**
+ * What an enhanced status decides alone, or null when it leaves the words to decide. A class-4 code is a
+ * deferral, which says nothing final about the address or the club: only its x.2.2 (a full mailbox — the
+ * last deferral a final `old` carries) decides. A class-5 code decides 5.1.x (no such address; 5.1.7 and
+ * 5.1.8 are the sender's, so blocked), 5.2.1 (a disabled mailbox), 5.2.2 (full) and 5.7.x (blocked):
+ * Yahoo's «421 4.7.0 [TSS04] … temporarily deferred» is not a block, and its final `old` is a give-up.
+ */
+function causeOfEnhanced([klass, subject, detail]: [number, number, number]): RejectionCause | null {
+  if (subject === 2 && detail === 2) return "mailbox-full";
+  if (klass !== 5) return null;
+  if (subject === 1) return detail === 7 || detail === 8 ? "blocked" : "no-such-address";
+  if (subject === 2 && detail === 1) return "no-such-address";
+  if (subject === 7) return "blocked";
   return null;
 }
 
@@ -94,7 +106,7 @@ const WORDS: ReadonlyArray<[RegExp, RejectionCause]> = [
   [/marked (your )?messages as spam|previously complained/i, "complaint-suppressed"],
   [/quota|mail ?box (is )?full|insufficient (system )?storage|exceeded (the )?storage|out of storage/i, "mailbox-full"],
   [
-    /user unknown|unknown user|no such (user|mailbox|recipient|address|domain)|does ?n[o’']t exist|not exist|invalid (recipient|mailbox|address)|recipient (address )?rejected|address rejected|not a valid address|mailbox (is )?unavailable|mailbox not found|no mailbox|unrouteable|unroutable|account (has been |is )?disabled|deactivated/i,
+    /user unknown|unknown user|no such (user|mailbox|recipient|address|domain)|does ?n[o’']t exist|not exist|does ?n[o’']t have an? [\w. -]{0,40}account|invalid (recipient|mailbox|address)|recipient not found|recipient (address )?rejected|address rejected|not a valid address|mailbox (is )?unavailable|mailbox not found|no mailbox|unrouteable|unroutable|(account|mailbox) (has been |is )?disabled|deactivated/i,
     "no-such-address",
   ],
   [/spam|blocked|block ?list|blacklist|spamhaus|policy|reputation|\bTSS\d+|dmarc|\bspf\b|dkim|not authori[sz]ed|denied|prohibited/i, "blocked"],
@@ -102,17 +114,24 @@ const WORDS: ReadonlyArray<[RegExp, RejectionCause]> = [
 ];
 
 /**
- * The cause, by a stated precedence (§NNN): the person's complaint; a refusal stored at the send (the
- * club's account, unless it was the one 400 that names the address); a Gmail refusal (`gmail-adapter.ts`
- * keeps only its 5.1.x as a bounce); Mailgun's own suppressions; the enhanced status code — a final `old`
- * event can carry the last deferral's 4.2.2, and that is a full mailbox, not a give-up; a 552; Mailgun's
- * reason token; the server's words; and `other`. Only `code` and `detail` are read for codes and words:
- * a stored reason is either Mailgun's token or a send-time answer, and both are read by their shape, so
- * a row written before the cause was stored reads the same here as the migration's backfill made it.
+ * The cause, by a stated precedence (§NNN): the person's complaint; Mailgun's own suppressions, by their
+ * reason or their code (605, 606, 607); a refusal stored at the send (the club's account, unless it was
+ * the one 400 that names the address; a Gmail refusal, which `gmail-adapter.ts` keeps only for a 5.1.x);
+ * the enhanced status code (`causeOfEnhanced`: a final `old` carrying the last deferral's 4.2.2 is a full
+ * mailbox, not a give-up); Mailgun's reason token (`old`, `greylisted`, `espblock`, `blacklisted`,
+ * `hardfail`); the server's words; a 552 whose words said nothing; a plain `bounce` — `refused`; and
+ * `other` (`generic` among them). Only `code` and `detail` are read for codes and words: a stored reason
+ * is either Mailgun's token or a send-time answer, and both are read by their shape, so a row written
+ * before the cause was stored reads the same here as the migration's backfill made it.
  */
 export function rejectionCause(facts: RejectionFacts): RejectionCause {
-  if (facts.status === "COMPLAINED") return "complaint";
+  if (facts.status === "COMPLAINED") return "complained";
   const reason = (facts.reason ?? "").trim();
+  const token = reason.toLowerCase();
+  const basic = basicCodeIn(facts.code);
+  if (token === "suppress-bounce" || basic === 605) return "suppressed";
+  if (token === "suppress-unsubscribe" || basic === 606) return "unsubscribed";
+  if (token === "suppress-complaint" || basic === 607) return "complaint-suppressed";
 
   if (MAILGUN_SEND_ANSWER.test(reason)) {
     if (!facts.sent && isAccountRefusalError(reason)) return "account";
@@ -120,23 +139,18 @@ export function rejectionCause(facts: RejectionFacts): RejectionCause {
   }
   if (GMAIL_ANSWER.test(reason)) return /\b5\.1\.\d{1,3}\b/.test(reason) ? "no-such-address" : "other";
 
-  const token = reason.toLowerCase();
-  const basic = basicCodeIn(facts.code);
-  if (token === "suppress-bounce" || basic === 605) return "suppressed";
-  if (token === "suppress-unsubscribe" || basic === 606) return "unsubscribed";
-  if (token === "suppress-complaint" || basic === 607) return "complaint-suppressed";
-
   const enhanced = enhancedStatusIn(facts.code) ?? enhancedStatusIn(facts.detail);
   const byCode = enhanced ? causeOfEnhanced(enhanced) : null;
   if (byCode) return byCode;
-  if (basic === 552) return "mailbox-full";
 
-  if (token === "espblock" || token === "blacklisted") return "blocked";
   if (token === "old" || token === "greylisted") return "gave-up";
+  if (token === "espblock" || token === "blacklisted") return "blocked";
+  if (token === "hardfail") return "no-such-address";
 
   const words = facts.detail ?? "";
   for (const [pattern, cause] of WORDS) if (pattern.test(words)) return cause;
 
-  if (enhanced && enhanced[1] === 4) return "gave-up";
+  if (basic === 552) return "mailbox-full";
+  if (token === "bounce") return "refused";
   return "other";
 }

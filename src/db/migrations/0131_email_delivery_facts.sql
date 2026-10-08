@@ -11,7 +11,10 @@ CREATE INDEX "email_outbox_provider_message_id_idx" ON "email_outbox" USING btre
 CREATE INDEX "email_outbox_participant_idx" ON "email_outbox" USING btree ("participant_id");--> statement-breakpoint
 -- The backfill of the refusals written before the cause was stored (§NNN), once. They have two shapes only: Mailgun's one-word reason from the webhook, or the answer stored at the send ("mailgun NNN: …", "gmail: …"). The same rule as `rejectionCause` (notifications/domain/rejection-cause.ts) reads those shapes, and `isAccountRefusalError` (infrastructure/email/mailgun-adapter.ts) the account's: a refusal at the send is the club's account unless it is the one 400 that names the address or the recipient and not the sender, after the probation's pause and the spent allowance are ruled out. tests/integration/notifications/rejection-backfill.test.ts runs this statement against the TypeScript on the same rows. No delivery or rejection instant is invented: none was recorded before this release.
 UPDATE "email_outbox" SET "rejection_cause" = CASE
-  WHEN "status" = 'COMPLAINED' THEN 'complaint'
+  WHEN "status" = 'COMPLAINED' THEN 'complained'
+  WHEN lower(trim(coalesce("last_error", ''))) = 'suppress-bounce' THEN 'suppressed'
+  WHEN lower(trim(coalesce("last_error", ''))) = 'suppress-unsubscribe' THEN 'unsubscribed'
+  WHEN lower(trim(coalesce("last_error", ''))) = 'suppress-complaint' THEN 'complaint-suppressed'
   WHEN coalesce("last_error", '') ~ '^mailgun [0-9]{3}:' THEN CASE
     WHEN "sent_at" IS NULL AND NOT (
       substring("last_error" from '^mailgun ([0-9]{3}):') = '400'
@@ -25,15 +28,14 @@ UPDATE "email_outbox" SET "rejection_cause" = CASE
     ELSE 'other'
   END
   WHEN coalesce("last_error", '') ~ '^gmail:' THEN CASE WHEN "last_error" ~ '\m5\.1\.[0-9]{1,3}\M' THEN 'no-such-address' ELSE 'other' END
-  WHEN lower(trim(coalesce("last_error", ''))) = 'suppress-bounce' THEN 'suppressed'
-  WHEN lower(trim(coalesce("last_error", ''))) = 'suppress-unsubscribe' THEN 'unsubscribed'
-  WHEN lower(trim(coalesce("last_error", ''))) = 'suppress-complaint' THEN 'complaint-suppressed'
-  WHEN lower(trim(coalesce("last_error", ''))) IN ('espblock', 'blacklisted') THEN 'blocked'
   WHEN lower(trim(coalesce("last_error", ''))) IN ('old', 'greylisted') THEN 'gave-up'
+  WHEN lower(trim(coalesce("last_error", ''))) IN ('espblock', 'blacklisted') THEN 'blocked'
+  WHEN lower(trim(coalesce("last_error", ''))) = 'hardfail' THEN 'no-such-address'
+  WHEN lower(trim(coalesce("last_error", ''))) = 'bounce' THEN 'refused'
   ELSE 'other'
 END
 WHERE "status" IN ('BOUNCED', 'COMPLAINED') AND "rejection_cause" IS NULL;--> statement-breakpoint
--- A refused participant's message that was already sent again — the same type, for the same registration, queued after it and gone — says so: the latest send, and its road. Never a complaint, and never the club's own messages (the archive copies, the confirmation notice), which carry the participant's id but are not theirs.
+-- A refused or complained-about participant's message that was already sent again — the same type, for the same registration, queued after it and gone — says so: the latest send, and its road (the send whose delivery may still come; the runtime's `noteSentAgain` keeps the same). Never the club's own messages (the archive copies, the confirmation notice), which carry the participant's id but are not theirs.
 UPDATE "email_outbox" AS "x" SET ("retried_at", "retried_via") = (
   SELECT "r"."sent_at", coalesce("r"."transport", 'mailgun')
   FROM "email_outbox" AS "r"
@@ -46,7 +48,7 @@ UPDATE "email_outbox" AS "x" SET ("retried_at", "retried_via") = (
   ORDER BY "r"."sent_at" DESC
   LIMIT 1
 )
-WHERE "x"."status" = 'BOUNCED'
+WHERE "x"."status" IN ('BOUNCED', 'COMPLAINED')
   AND "x"."participant_id" IS NOT NULL
   AND "x"."message_type" NOT IN ('DECLARATION_ARCHIVE', 'GROUP_RUN_DECLARATION_ARCHIVE', 'CLUB_CONFIRMATION_NOTICE')
   AND EXISTS (

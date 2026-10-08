@@ -77,11 +77,36 @@ describe("deliveryEventOf", () => {
     expect(old?.cause).toBe("mailbox-full");
   });
 
+  it("reads Yahoo's final «old» after [TSS04] deferrals as a give-up, and Yahoo's missing account as no such address", () => {
+    const old = deliveryEventOf(
+      failed({
+        reason: "old",
+        "delivery-status": {
+          code: 421,
+          message: "421 4.7.0 [TSS04] Messages from 192.0.2.10 temporarily deferred due to unexpected volume or user complaints - 4.16.55.1",
+          description: "",
+        },
+      }),
+      NOW,
+    );
+    expect(old?.code).toBe("421 4.7.0");
+    expect(old?.cause).toBe("gave-up");
+    const noAccount = deliveryEventOf(
+      failed({
+        recipient: "ana.popescu@yahoo.com",
+        "delivery-status": { code: 554, message: "delivery error: dd This user doesn't have a yahoo.com account (ana.popescu@yahoo.com) [0] - mta1234.mail.bf1.yahoo.com" },
+      }),
+      NOW,
+    );
+    expect(noAccount?.cause).toBe("no-such-address");
+    expect(noAccount?.detail).not.toContain("ana.popescu");
+  });
+
   it("tolerates every field missing, and names no message without an id or a key", () => {
     expect(deliveryEventOf({}, NOW)).toBeNull();
     expect(deliveryEventOf({ "event-data": { event: "delivered" } }, NOW)).toBeNull();
     const bare = deliveryEventOf({ "event-data": { event: "complained", message: { headers: { "message-id": "m-1" } } } }, NOW);
-    expect(bare).toMatchObject({ providerMessageId: "m-1", event: "complained", reason: null, recipient: null, occurredAt: null, code: null, detail: null, cause: "complaint" });
+    expect(bare).toMatchObject({ providerMessageId: "m-1", event: "complained", reason: null, recipient: null, occurredAt: null, code: null, detail: null, cause: "complained" });
     const byKey = deliveryEventOf({ "event-data": { event: "delivered", "user-variables": { idempotency_key: "k-1" } } }, NOW);
     expect(byKey).toMatchObject({ providerMessageId: null, idempotencyKey: "k-1" });
   });

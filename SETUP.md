@@ -1205,7 +1205,9 @@ set (`env.ts` defaults both); `EMAIL_REPLY_TO` is set only when a club mailbox e
    on (`DECISIONS.md` §76, §NNN):
    - **Delivered** — required since §NNN: it is what tells a registration that a refused email's
      address works again, or that the same email arrived after all. Without it nothing ever clears
-     and every «Email respins» stays as it was;
+     and every «Email respins» stays as it was. Mailgun does not retry a delivery notification: a
+     `delivered` event the webhook missed (a 5xx, a deployment, the domain down) is never replayed, and
+     the refusal it would have cleared stays until the same email is delivered again;
    - **Permanent Failure** — `BOUNCED` on the outbox row, with its cause («Email respins»);
    - **Spam Complaints** — `COMPLAINED`.
 

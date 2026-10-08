@@ -696,8 +696,11 @@
           "COMPLAINED": "The recipient marked the message as spam.",
           "account": "It never left: the club's Mailgun account was refused at the time, not the address.",
           "missing": "The address receives the club's email again ({date}), but this one was not sent again.",
+          "missingUndated": "The address receives the club's email again, but this one was not sent again.",
           "retried": "Sent again {date}; not yet known whether it arrived.",
-          "retriedGmail": "Sent again by Gmail {date}; Gmail does not confirm delivery."
+          "retriedUndated": "Sent again; not yet known whether it arrived.",
+          "retriedGmail": "Sent again by Gmail {date}; Gmail does not confirm delivery.",
+          "retriedGmailUndated": "Sent again by Gmail; Gmail does not confirm delivery."
         },
         "reason": "The provider's reason: {reason}",
         "confirmedBefore": "The address was confirmed {date}; an email after that was rejected.",
@@ -706,6 +709,7 @@
         "todo": "Phone the person; only they can change the address, by registering again.",
         "whichFamily": "Rejected at the same address, for another registration at this event: “{type}”, {instant}.",
         "todoResend": "Send it again from the registration's page.",
+        "todoAskAdmin": "Ask an Administrator to send it again.",
         "todoWait": "Do not send it again yet: wait for the delivery confirmation.",
         "todoAsk": "Ask the person whether it arrived."
       },
@@ -1139,7 +1143,8 @@
         "linkUntil": "The link in the email is valid until {instant}.",
         "rejected": {
           "BOUNCED": "An email the club sent to your address was rejected: the address does not exist or the mailbox is full, so the club's messages do not reach you.",
-          "COMPLAINED": "An email the club sent to your address was marked as spam, so the club's messages may no longer reach you."
+          "COMPLAINED": "An email the club sent to your address was marked as spam, so the club's messages may no longer reach you.",
+          "owed": "A club email meant for you has not reached you yet; we will send it again."
         }
       },
       "memberBibWantedStaffHelp": "Only for a member, at an event that offers the members' number; otherwise it is not kept.",

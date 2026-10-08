@@ -77,7 +77,13 @@ const epochMs = (instant: SQLWrapper) => sql`floor(extract(epoch from ${instant}
 
 type Projection = "desk" | "list" | "page";
 
-/** The object's fields, by who reads it: the desk never gets provider text or more than it needs (§67). */
+/**
+ * The object's fields, by who reads it: the desk never gets provider text or more than it needs (§67) —
+ * what did not arrive, why, and when it was refused, sent again or the address answered again, which are
+ * instants and not words. `unclassified` is the one exception, and it never leaves the server: a refusal
+ * written without a cause (by a deployment older than this one, between the migration and the build that
+ * follows it) carries its stored answer so the mapper classifies it with `rejectionCause` and drops it.
+ */
 function fieldsSql(projection: Projection): SQL {
   const desk = sql`'kind', ${kindSql()},
     'messageType', ${emailOutbox.messageType},
@@ -85,16 +91,15 @@ function fieldsSql(projection: Projection): SQL {
     'sent', ${emailOutbox.sentAt} is not null,
     'status', ${emailOutbox.status},
     'cause', ${emailOutbox.rejectionCause},
-    'own', ${emailOutbox.registrationId} = ${registrations.id}`;
-  if (projection === "desk") return desk;
-  const list = sql`${desk},
+    'unclassified', case when ${emailOutbox.rejectionCause} is null then ${emailOutbox.lastError} end,
+    'own', ${emailOutbox.registrationId} = ${registrations.id},
     'laterDeliveredAt', ${epochMs(emailOutbox.laterDeliveredAt)},
     'retriedAt', ${epochMs(emailOutbox.retriedAt)},
     'retriedVia', ${emailOutbox.retriedVia}`;
-  if (projection === "list") return list;
+  if (projection !== "page") return desk;
   // The page alone reads the provider's words (no list payload carries them): the redacted detail, or
   // for a refusal at the send, the stored answer, which is redacted the same way.
-  return sql`${list},
+  return sql`${desk},
     'code', ${emailOutbox.providerCode},
     'detail', coalesce(${emailOutbox.providerDetail}, ${emailOutbox.lastError})`;
 }
@@ -122,14 +127,6 @@ export function deskEmailStateSql(): SQL<DeskEmailState | null> {
 /** The registration page's: the state with the provider's code and words, for the small print. */
 export function registrationEmailStateDetailSql(): SQL<RegistrationEmailStateDetail | null> {
   return stateSql("page").mapWith(emailStateDetailOf) as SQL<RegistrationEmailStateDetail | null>;
-}
-
-/**
- * Whether the registration in the outer query has an email state at all, as one `EXISTS` (the filter
- * «Doar cu un email respins»), never by building the object to test it for null.
- */
-export function hasEmailStateSql(): SQL<boolean> {
-  return sql<boolean>`exists (select 1 from ${emailOutbox} where ${openRefusalsWhere()})`;
 }
 
 /**

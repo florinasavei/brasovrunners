@@ -5,6 +5,7 @@ import { emailOutbox, type EmailMessageType } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
+import { redactProviderText } from "@/infrastructure/email/redact";
 import { rejectionCause } from "@/modules/notifications/domain/rejection-cause";
 import { resolveDisplayName } from "@/modules/registrations/names";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -73,10 +74,16 @@ async function legacy(input: {
   return row;
 }
 
+/** Mailgun's long answers end in words like these; they push the cut past the part that matters. */
+const PADDING =
+  "Please contact support for more information on the limits that apply to this domain and on how the sending of messages is restored once the review of the account has finished. Thank you for your patience while we look into it.";
+/** What `sanitizeError` (`mailgun-adapter.ts`) stores for a 400: the status, then the body redacted and cut. */
+const stored = (body: string) => `mailgun 400: ${redactProviderText(body)}`;
+
 const SHAPES: Array<{ status: "BOUNCED" | "COMPLAINED"; sent: boolean; lastError: string | null; expected: string }> = [
   // Mailgun's one word, from the webhook.
-  { status: "BOUNCED", sent: true, lastError: "bounce", expected: "other" },
-  { status: "BOUNCED", sent: true, lastError: "hardfail", expected: "other" },
+  { status: "BOUNCED", sent: true, lastError: "bounce", expected: "refused" },
+  { status: "BOUNCED", sent: true, lastError: "hardfail", expected: "no-such-address" },
   { status: "BOUNCED", sent: true, lastError: "generic", expected: "other" },
   { status: "BOUNCED", sent: true, lastError: null, expected: "other" },
   { status: "BOUNCED", sent: true, lastError: "suppress-bounce", expected: "suppressed" },
@@ -87,7 +94,7 @@ const SHAPES: Array<{ status: "BOUNCED" | "COMPLAINED"; sent: boolean; lastError
   { status: "BOUNCED", sent: true, lastError: "old", expected: "gave-up" },
   { status: "BOUNCED", sent: true, lastError: "greylisted", expected: "gave-up" },
   { status: "BOUNCED", sent: true, lastError: "550 5.1.1 mailbox unavailable", expected: "other" },
-  { status: "COMPLAINED", sent: true, lastError: null, expected: "complaint" },
+  { status: "COMPLAINED", sent: true, lastError: null, expected: "complained" },
   // The answers stored at the send, before §622 made the account's refusals FAILED.
   { status: "BOUNCED", sent: false, lastError: "mailgun 401: Forbidden", expected: "account" },
   { status: "BOUNCED", sent: false, lastError: "mailgun 403: Domain mail.example.org is not allowed to send: domain disabled", expected: "account" },
@@ -112,10 +119,26 @@ const SHAPES: Array<{ status: "BOUNCED" | "COMPLAINED"; sent: boolean; lastError
   { status: "BOUNCED", sent: true, lastError: "mailgun 401: Forbidden", expected: "other" },
   { status: "BOUNCED", sent: false, lastError: "gmail: the address was refused (5.1.1)", expected: "no-such-address" },
   { status: "BOUNCED", sent: false, lastError: "gmail: the address was refused (5xx)", expected: "other" },
+  // Long answers, stored as `sanitizeError` stores them: the body redacted, then cut to 200 characters.
+  {
+    status: "BOUNCED",
+    sent: false,
+    lastError: stored(
+      `Domain mail.example.org is not allowed to send: You are sending too fast. Your account is on probation and the account has been temporarily disabled. ${PADDING}`,
+    ),
+    expected: "account",
+  },
+  // The cut took the probation's words away: still the account's, never the address's.
+  { status: "BOUNCED", sent: false, lastError: stored(`Domain mail.example.org is not allowed to send: ${PADDING} Your account is on probation and temporarily disabled.`), expected: "account" },
+  { status: "BOUNCED", sent: false, lastError: stored(`Domain mail.example.org is not allowed to send: recipient limit exceeded. ${PADDING}`), expected: "account" },
+  { status: "BOUNCED", sent: false, lastError: stored(`'to' parameter is not a valid address. please check documentation. ${PADDING}`), expected: "no-such-address" },
+  { status: "BOUNCED", sent: false, lastError: stored(`'from' parameter is not a valid address. please check documentation. ${PADDING}`), expected: "account" },
 ];
 
 describe("migration 0131's backfill of the cause", () => {
   it("gives every legacy shape the cause `rejectionCause` reads in it", async () => {
+    // The long answers really were cut.
+    expect(SHAPES.filter((shape) => (shape.lastError?.length ?? 0) >= 210)).toHaveLength(5);
     const rows = [];
     for (const shape of SHAPES) rows.push({ shape, row: await legacy(shape) });
     await backfill();
@@ -139,7 +162,7 @@ describe("migration 0131's backfill of the cause", () => {
 });
 
 describe("migration 0131's backfill of what came after", () => {
-  it("marks a refusal sent again by its latest send and road, and ends the account's refusal with the first", async () => {
+  it("marks a refusal or a complaint sent again by its latest send and road, and ends the account's refusal with the first", async () => {
     const [event] = await db
       .insert(events)
       .values({ type: "RACE", surface: "ASPHALT", startsAt: new Date("2099-11-21T08:00:00.000Z"), timezone: "Europe/Bucharest", capacity: 150, registrationMode: "INTERNAL" })
@@ -181,7 +204,8 @@ describe("migration 0131's backfill of what came after", () => {
     expect(await read(account.id)).toMatchObject({ rejectionCause: "account", retriedAt: minutes(21), retriedVia: "gmail", resolvedAt: minutes(11) });
     expect(await read(bounce.id)).toMatchObject({ retriedAt: minutes(41), retriedVia: "mailgun", resolvedAt: null });
     expect(await read(notAgain.id)).toMatchObject({ retriedAt: null, resolvedAt: null, laterDeliveredAt: null });
-    expect(await read(complaint.id)).toMatchObject({ retriedAt: null, resolvedAt: null });
+    // A complaint learns it was sent again, and stays the person's word.
+    expect(await read(complaint.id)).toMatchObject({ retriedAt: minutes(70), retriedVia: "mailgun", resolvedAt: null });
     expect(await read(archive.id)).toMatchObject({ retriedAt: null, resolvedAt: null });
     // No delivery is invented: none was recorded before this release.
     expect((await db.select().from(emailOutbox)).every((row) => row.deliveredAt === null && row.laterDeliveredAt === null && row.rejectedAt === null)).toBe(true);

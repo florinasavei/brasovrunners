@@ -2,12 +2,11 @@ import { createTranslator } from "next-intl";
 import en from "../../../../messages/en.json";
 import ro from "../../../../messages/ro.json";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
-import type { DeskEmailState, RegistrationEmailState } from "../domain/email-state";
+import type { DeskEmailState } from "../domain/email-state";
 
 type Say = (key: string, values?: Record<string, string | number>) => string;
 
-export type RejectedEmailFacts = DeskEmailState &
-  Partial<Pick<RegistrationEmailState, "laterDeliveredAt" | "retriedAt" | "retriedVia">> & {
+export type RejectedEmailFacts = DeskEmailState & {
     /** When the address was confirmed — by the person's click, by staff, or on paper at the desk; null if never. */
     emailConfirmedAt: Date | null;
     /** The provider's own words, for the page's small print alone (`RegistrationEmailStateDetail.detail`). */
@@ -36,9 +35,11 @@ export type RejectedEmailWords = {
  * confirmed before it, and what to do. Staff never change the address (§645, `AGENTS.md` §15.11): only the
  * person can, by registering again.
  *
- * Pure: the staff member's language, the facts the list, the page and the desk already read.
+ * Pure: the staff member's language, the facts the list, the page and the desk already read. «Send it
+ * again» is the Administrator's verb (`AGENTS.md` §15.11, §289): only a reader who may press it is told to
+ * (`mayResend`); everybody else — the Organizer, Tehnic, a volunteer at the desk — is told to ask one.
  */
-export function rejectedEmailWords(facts: RejectedEmailFacts, locale: string): RejectedEmailWords {
+export function rejectedEmailWords(facts: RejectedEmailFacts, locale: string, options: { mayResend?: boolean } = {}): RejectedEmailWords {
   const lang = locale === "en" ? "en" : "ro";
   const messages = lang === "en" ? en : ro;
   const say = createTranslator({ locale: lang, messages, namespace: "Admin" }) as unknown as Say;
@@ -58,23 +59,29 @@ export function rejectedEmailWords(facts: RejectedEmailFacts, locale: string): R
       say(facts.sent ? "registrations.rejected.which" : "registrations.rejected.whichQueued", { type, instant: instant(facts.at) });
   const retriedAt = facts.retriedAt ?? null;
   const laterDeliveredAt = facts.laterDeliveredAt ?? null;
+  // Each kind has its own sentence, with its date when the reader has it and without it otherwise —
+  // never the address's refusal for an email that is merely owed or waiting.
+  const resend = say(options.mayResend ? "registrations.rejected.todoResend" : "registrations.rejected.todoAskAdmin");
   const [why, todo] = (() => {
     switch (facts.kind) {
       case "not-sent":
-        return [say("registrations.rejected.why.account"), say("registrations.rejected.todoResend")];
+        return [say("registrations.rejected.why.account"), resend];
       case "missing":
         return [
           laterDeliveredAt
             ? say("registrations.rejected.why.missing", { date: instant(laterDeliveredAt) })
-            : say(`registrations.rejected.why.${facts.status}`),
-          say("registrations.rejected.todoResend"),
+            : say("registrations.rejected.why.missingUndated"),
+          resend,
         ];
       case "retried":
-        if (retriedAt && facts.retriedVia === "gmail") {
-          return [say("registrations.rejected.why.retriedGmail", { date: instant(retriedAt) }), say("registrations.rejected.todoAsk")];
+        if (facts.retriedVia === "gmail") {
+          return [
+            retriedAt ? say("registrations.rejected.why.retriedGmail", { date: instant(retriedAt) }) : say("registrations.rejected.why.retriedGmailUndated"),
+            say("registrations.rejected.todoAsk"),
+          ];
         }
         return [
-          retriedAt ? say("registrations.rejected.why.retried", { date: instant(retriedAt) }) : say(`registrations.rejected.why.${facts.status}`),
+          retriedAt ? say("registrations.rejected.why.retried", { date: instant(retriedAt) }) : say("registrations.rejected.why.retriedUndated"),
           say("registrations.rejected.todoWait"),
         ];
       default:

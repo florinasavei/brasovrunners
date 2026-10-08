@@ -160,13 +160,18 @@ export function tellLines(say: Say, ours: Say, locale: string, facts: TellFacts,
   const held = deadline?.kind === "hold" || deadline?.kind === "kept";
   const lapsed = deadline?.kind === "linkLapsed" || deadline?.kind === "offerLapsed";
   if (active && link && !held && !lapsed && link.getTime() !== stated?.getTime()) lines.push(ours("linkUntil", { instant: at(link) }));
-  // Not once the link or the offer has lapsed: there is no email left to look for. Nor when the address
-  // bounced the email: «look in spam» would contradict the line below, which says it never arrived.
-  const unreachable = facts.emailState?.kind === "unreachable" ? facts.emailState : null;
-  if (WAITS_ON_AN_EMAIL.has(facts.status) && !lapsed && unreachable?.status !== "BOUNCED") lines.push(say("spamHint.body"));
+  // Not once the link or the offer has lapsed: there is no email left to look for. Nor while an email the
+  // person waits on was refused and not sent again (§NNN): the address refused it, the club's account was
+  // refused so it never left, or it is owed to an address that works again — none of them is in spam. A
+  // message sent again may be; a complaint is the person's own, and their mail still arrives.
+  const state = facts.emailState ?? null;
+  const refusedNotResent = state !== null && state.status === "BOUNCED" && state.kind !== "retried";
+  if (WAITS_ON_AN_EMAIL.has(facts.status) && !lapsed && !refusedNotResent) lines.push(say("spamHint.body"));
   // The address refuses the club's mail (§663, §NNN): on any state, confirmed included — said to the person
-  // without the address, which stays theirs to change (§645).
-  if (unreachable) lines.push(ours(`rejected.${unreachable.status}`));
+  // without the address, which stays theirs to change (§645). An email the club's account could not send,
+  // or one owed to an address that works again, is said as owed — never as the address's refusal.
+  if (state?.kind === "unreachable") lines.push(ours(`rejected.${state.status}`));
+  else if (state?.kind === "not-sent" || state?.kind === "missing") lines.push(ours("rejected.owed"));
   return lines;
 }
 

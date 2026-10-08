@@ -2913,7 +2913,9 @@ Registration maintenance:
   first, none while the outbox is behind (§623) or an email for them waits to leave, never to an address
   whose refusal still stands on any of the participant's own messages, for any event — a complaint, or a
   refusal with nothing delivered to the address since; not the club's own mailboxes' refusals, not the
-  club's Mailgun account refused at the send (`DECISIONS.md` §NNN); no deadline moves and the allocator is
+  club's Mailgun account refused at the send, and not a newsletter's: §653's «…for any event or a
+  newsletter» loses its newsletter, which the code never read (a newsletter row carries no participant,
+  and its audience is the public's) (`DECISIONS.md` §NNN); no deadline moves and the allocator is
   not called;
 - close remaining waiting-list entries for events that have started, with
   `expiry_reason = EVENT_STARTED`;
@@ -3153,6 +3155,12 @@ What the webhook does with an event (`DECISIONS.md` §NNN; `api/webhooks/mailgun
   works again (`later_delivered_at`, never on a complaint or the account's refusal), and only the
   same message delivered later ends a refusal (`resolved_at`); the same message leaving again marks it
   (`retried_at`, `retried_via`), and ends a refusal of the club's account.
+- **retries**: Mailgun retries a webhook it could not deliver for about eight hours (5 and 10 and
+  15 minutes, then 1, 2 and 4 hours), but — by its documentation's own wording — not the delivery
+  notification: a `delivered` event lost to a 5xx or a cold start is never replayed, and the refusal
+  it would have cleared stays until the same message is delivered again. Whether a retry carries a
+  fresh signature `timestamp` is not documented; if it does not, a retry later than the signature's
+  fifteen minutes (`mailgun-webhook.ts`) is refused — kept as it is, an owner's question (`DECISIONS.md` §NNN).
 
 ---
 

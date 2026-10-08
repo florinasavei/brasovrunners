@@ -91,6 +91,7 @@ import OfferPlaceButton from "@/modules/registrations/ui/OfferPlaceButton";
 import WhatToTell from "@/modules/registrations/ui/WhatToTell";
 import EmailRejectedChip from "@/modules/registrations/ui/EmailRejectedChip";
 import { rejectedEmailSentences, rejectedEmailWords } from "@/modules/registrations/ui/rejected-email-words";
+import { needsEmailAction } from "@/modules/registrations/domain/email-state";
 import { whatToTell } from "@/modules/registrations/ui/tell-words";
 import { givePlaceNowAhead, staffOfferIfMadeNow, staffOfferQuestion } from "@/modules/registrations/give-place-tip";
 import { findInvitationOfRegistration, findLiveInvitationOfParticipant } from "@/modules/registrations/invitation-repository";
@@ -194,9 +195,11 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   // The timeline's short form with the time (§349): a value beside its label, so capitalised;
   // `dtInline` inside a sentence.
   // «Email respins» in words (§663): the chip's tooltip and the line under the address say the same.
-  const rejected = registration.emailState
-    ? rejectedEmailWords({ ...registration.emailState, emailConfirmedAt: registration.emailConfirmedAt }, locale)
-    : null;
+  // Only a state that asks somebody to act (§NNN): «sent again» waits for its delivery, and the next change draws it.
+  const rejected =
+    registration.emailState && needsEmailAction(registration.emailState)
+      ? rejectedEmailWords({ ...registration.emailState, emailConfirmedAt: registration.emailConfirmedAt }, locale, { mayResend: mayManage })
+      : null;
   const dt = (value: Date | null) => (value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }) : null);
   const dtInline = (value: Date | null) =>
     value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }) : null;

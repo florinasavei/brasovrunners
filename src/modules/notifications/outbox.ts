@@ -798,8 +798,9 @@ export async function processOutboxBatch(
         const markSent = (handle: Pick<typeof db, "update">) => handle.update(emailOutbox).set(sentValues).where(eq(emailOutbox.id, row.id));
         /*
           The same message refused before for this registration is now sent again (§NNN): its refusal
-          says so, and a refusal of the club's account is over. Best effort, after the mark: the message
-          is out whatever happens here, and a refusal that stays unmarked reads as it did before.
+          says so, and a refusal of the club's account is over. Best effort, after the mark, in its own
+          transaction under the participant's lock (`noteSentAgain`): the message is out whatever happens
+          here, and a refusal that stays unmarked reads as it did before.
         */
         const noteSent = () =>
           noteSentAgain(db, row, sentValues.sentAt, sentValues.transport).catch((error: unknown) => {
@@ -1263,9 +1264,11 @@ export async function applyMailgunEvent(db: Db, params: MailgunDeliveryEvent): P
             nextAttemptAt: null,
             lastError: params.reason,
             rejectedAt: sql`coalesce(${emailOutbox.rejectedAt}, ${occurredAt.toISOString()}::timestamptz)`,
-            rejectionCause: "complaint",
+            rejectionCause: "complained",
           })
           .where(eq(emailOutbox.id, row.id));
+        // Whether the same message already left again: the history says so. Nothing clears a complaint.
+        if (participantMeant) await settleRejection(tx, row.id);
         return;
       }
       // A complaint stands: a bounce reported after it does not turn the person's word into the server's.
@@ -1279,7 +1282,7 @@ export async function applyMailgunEvent(db: Db, params: MailgunDeliveryEvent): P
           lastError: params.reason,
           rejectedAt: sql`coalesce(${emailOutbox.rejectedAt}, ${occurredAt.toISOString()}::timestamptz)`,
           rejectionCause:
-            params.cause && params.cause !== "complaint"
+            params.cause && params.cause !== "complained"
               ? params.cause
               : rejectionCause({ status: "BOUNCED", sent: row.sentAt !== null, reason: params.reason, code: params.code, detail: params.detail }),
           providerCode: params.code ?? null,

@@ -101,6 +101,7 @@ import { membershipOf } from "@/modules/registrations/domain/membership";
 import { memberCanonicalEmails } from "@/modules/registrations/member-ticks";
 import EmailRejectedChip from "@/modules/registrations/ui/EmailRejectedChip";
 import { rejectedEmailSentences, rejectedEmailWords } from "@/modules/registrations/ui/rejected-email-words";
+import { needsEmailAction } from "@/modules/registrations/domain/email-state";
 import { CLUB_NAME } from "@/theme/brand";
 import { actionKeyOf } from "@/shared/forms/action-key";
 
@@ -433,8 +434,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {memberChipOf(row)}
           {/* The newest email was rejected (§76, §83, §663): the desk's and the page's chip, so a row kept by
               «Doar cu un email respins» says why — which email, when, why, and whether after the confirmation. */}
-          {row.emailState && (() => {
-            const words = rejectedEmailWords({ ...row.emailState, emailConfirmedAt: row.emailConfirmedAt }, locale);
+          {row.emailState && needsEmailAction(row.emailState) && (() => {
+            const words = rejectedEmailWords({ ...row.emailState, emailConfirmedAt: row.emailConfirmedAt }, locale, { mayResend: mayManage });
             return <EmailRejectedChip label={t("registrations.emailRejected")} sentences={rejectedEmailSentences(words)} reason={words.reason} />;
           })()}
           {/* "Is my name on the site?" is asked of the club, not of the platform (§186). Marked

@@ -24,6 +24,7 @@ import EmailRejectedChip from "./EmailRejectedChip";
 import FamilyChip from "./FamilyChip";
 import GivePlaceButton from "./GivePlaceButton";
 import { rejectedEmailSentences, rejectedEmailWords } from "./rejected-email-words";
+import { needsEmailAction } from "../domain/email-state";
 import {
   checkInAction,
   confirmRegistrationNowAction,
@@ -207,8 +208,9 @@ export default async function DeskRow({
             />
             {row.kind === "TEST" && <Chip size="small" color="warning" label={t("registrations.testKind")} />}
             {/* The newest email was rejected (§76, §663): whom to call before race day — which email, when, why; never the address. */}
-            {row.emailState && (() => {
-              const words = rejectedEmailWords({ ...row.emailState, emailConfirmedAt: row.emailConfirmedAt }, locale);
+            {/* Every staff role works the desk, and «send it again» is the Administrator's: the words ask for one. */}
+            {row.emailState && needsEmailAction(row.emailState) && (() => {
+              const words = rejectedEmailWords({ ...row.emailState, emailConfirmedAt: row.emailConfirmedAt }, locale, { mayResend: false });
               return <EmailRejectedChip label={t("registrations.emailRejected")} sentences={rejectedEmailSentences(words)} reason={words.reason} />;
             })()}
             {row.checkedInAt && (

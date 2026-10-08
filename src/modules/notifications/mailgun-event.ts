@@ -107,7 +107,7 @@ export function deliveryEventOf(body: MailgunWebhookPayload, now: Date): Mailgun
     const status = eventData?.["delivery-status"] ?? null;
     return status ? (text(status.message) ?? text(status.description) ?? text(status["last-message"])) : null;
   })();
-  const cause = event === "complained" ? "complaint" : rejectionCause({ status: "BOUNCED", sent: true, reason: rawReason, code, detail: rawWords });
+  const cause = event === "complained" ? "complained" : rejectionCause({ status: "BOUNCED", sent: true, reason: rawReason, code, detail: rawWords });
   return {
     providerMessageId,
     idempotencyKey,

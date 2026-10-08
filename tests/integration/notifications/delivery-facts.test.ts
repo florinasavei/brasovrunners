@@ -4,12 +4,20 @@ import { emailOutbox, type EmailMessageType } from "@/db/schema/email-outbox";
 import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
+import { staffUsers } from "@/db/schema/staff-users";
 import type { OutgoingEmail, SendResult } from "@/infrastructure/email/adapter";
 import type { EmailSender } from "@/infrastructure/email/delivery";
 import { selectConfirmationRetryRows } from "@/modules/notifications/confirmation-retry";
 import { listClubMailboxRejections, readDeliveryEvidence } from "@/modules/notifications/delivery-evidence";
 import { applyMailgunEvent, type OutboxRow, processOutboxBatch } from "@/modules/notifications/outbox";
-import { findRegistrationDetailForAdmin, listDeskRegistrations, listRegistrationsForAdmin } from "@/modules/registrations/admin-repository";
+import {
+  countNeedingEmailActionForAdmin,
+  findRegistrationDetailForAdmin,
+  listDeskRegistrations,
+  listOutboxHistory,
+  listRegistrationsForAdmin,
+} from "@/modules/registrations/admin-repository";
+import { needsEmailAction } from "@/modules/registrations/domain/email-state";
 import { countNeedingEmailActionByEvent } from "@/modules/registrations/email-state";
 import { resolveDisplayName } from "@/modules/registrations/names";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -177,8 +185,8 @@ describe("the webhook keeps what the provider said (BR-REQ-080-04)", () => {
     const future = await outboxRow({ participantId: p, registrationId: null, messageType: "PROFILE_MANAGE_LINK" });
     await event(future, "failed", minutes(10 * 24 * 60));
     expect((await read(future.id)).rejectedAt).toEqual(minutes(24 * 60));
-    // Without a cause from the route, the stored words are read.
-    expect((await read(future.id)).rejectionCause).toBe("other");
+    // Without a cause from the route, the stored words are read: a bare «bounce» is refused, the cause not recorded.
+    expect((await read(future.id)).rejectionCause).toBe("refused");
   });
 
   it("a failure after a delivery is BOUNCED and keeps the delivery; a complaint is not overwritten by a bounce", async () => {
@@ -191,7 +199,7 @@ describe("the webhook keeps what the provider said (BR-REQ-080-04)", () => {
     const spam = await outboxRow({ participantId: p, registrationId: null, messageType: "PROFILE_MANAGE_LINK" });
     await event(spam, "complained", minutes(2));
     await event(spam, "failed", minutes(3));
-    expect(await read(spam.id)).toMatchObject({ status: "COMPLAINED", rejectionCause: "complaint", rejectedAt: minutes(2) });
+    expect(await read(spam.id)).toMatchObject({ status: "COMPLAINED", rejectionCause: "complained", rejectedAt: minutes(2) });
   });
 
   it("an event for a copy on the archive's envelope leaves the row alone; a participant's message takes a respelled recipient", async () => {
@@ -275,7 +283,7 @@ describe("the webhook keeps what the provider said (BR-REQ-080-04)", () => {
     await event(later, "delivered", minutes(11));
     expect(await read(spam.id)).toMatchObject({ status: "COMPLAINED", laterDeliveredAt: null, resolvedAt: null });
     expect((await read(account.id)).laterDeliveredAt).toBeNull();
-    expect((await findRegistrationDetailForAdmin(db, reg))?.emailState).toMatchObject({ kind: "unreachable", status: "COMPLAINED", cause: "complaint" });
+    expect((await findRegistrationDetailForAdmin(db, reg))?.emailState).toMatchObject({ kind: "unreachable", status: "COMPLAINED", cause: "complained" });
   });
 });
 
@@ -323,6 +331,69 @@ describe("the send keeps what the provider said (BR-REQ-080-02)", () => {
     expect(await read(bounced.id)).toMatchObject({ retriedAt: minutes(7), retriedVia: "gmail", resolvedAt: null });
     // The race number's refusal waits — by Gmail, whose delivery is never known.
     expect((await findRegistrationDetailForAdmin(db, reg))?.emailState).toMatchObject({ kind: "retried", messageType: "BIB_ASSIGNED", retriedVia: "gmail" });
+  });
+});
+
+describe("a complaint sent again", () => {
+  it("takes `retried_at`, whichever is processed first, and stays the person's word", async () => {
+    const r = await race();
+    const p = await person("ana@example.org");
+    const reg = await register(r.id, p);
+    // The send after the complaint is recorded.
+    const spam = await outboxRow({ participantId: p, registrationId: reg, messageType: "ORGANIZER_MESSAGE", createdAt: minutes(0) });
+    await event(spam, "complained", minutes(1));
+    await outboxRow({ participantId: p, registrationId: reg, messageType: "ORGANIZER_MESSAGE", status: "PENDING", createdAt: minutes(5), providerMessageId: null });
+    await processOutboxBatch(db, { sender: sender({ outcome: "sent", providerMessageId: "mg-again", transport: "mailgun", acceptedAt: minutes(6) }), render, now: minutes(6) });
+    expect(await read(spam.id)).toMatchObject({ status: "COMPLAINED", retriedAt: minutes(6), retriedVia: "mailgun", resolvedAt: null, laterDeliveredAt: null });
+
+    // The complaint reported after the send.
+    const first = await outboxRow({ participantId: p, registrationId: reg, messageType: "EVENT_UPDATE_NOTICE", createdAt: minutes(10) });
+    await outboxRow({ participantId: p, registrationId: reg, messageType: "EVENT_UPDATE_NOTICE", createdAt: minutes(11), sentAt: minutes(12), transport: "gmail" });
+    await event(first, "complained", minutes(13));
+    expect(await read(first.id)).toMatchObject({ status: "COMPLAINED", retriedAt: minutes(12), retriedVia: "gmail", resolvedAt: null, laterDeliveredAt: null });
+    expect((await findRegistrationDetailForAdmin(db, reg))?.emailState).toMatchObject({ kind: "unreachable", status: "COMPLAINED" });
+  });
+});
+
+describe("the registration's emails, as its page reads them (§NNN)", () => {
+  it("newest first, by role, with every fact, who asked for a resend, and the provider's words on a refused row only", async () => {
+    const r = await race();
+    const p = await person("ana@example.org");
+    const reg = await register(r.id, p);
+    const [admin] = await db
+      .insert(staffUsers)
+      .values({ email: "admin@example.org", displayName: "Maria Admin", role: "ADMIN" })
+      .returning();
+    const qr = await outboxRow({ participantId: p, registrationId: reg, messageType: "REGISTRATION_CONFIRMED", createdAt: minutes(0) });
+    await event(qr, "failed", minutes(1), { code: "552 5.2.2", detail: "mailbox full", cause: "mailbox-full" });
+    await outboxRow({ participantId: p, registrationId: reg, messageType: "DECLARATION_ARCHIVE", recipientEmail: "archive@example.org", createdAt: minutes(2) });
+    await outboxRow({ participantId: null, registrationId: reg, messageType: "REGISTRATION_CONFIRMED", recipientEmail: "office@example.org", payloadJson: { clubCopy: true }, createdAt: minutes(3) });
+    await outboxRow({ participantId: p, registrationId: reg, messageType: "CLUB_CONFIRMATION_NOTICE", recipientEmail: "office@example.org", createdAt: minutes(4) });
+    const resend = await outboxRow({ participantId: p, registrationId: reg, messageType: "REGISTRATION_CONFIRMED", createdAt: minutes(5), transport: "gmail" });
+    await db.update(emailOutbox).set({ isManualResend: true, requestedByStaffUserId: admin.id }).where(eq(emailOutbox.id, resend.id));
+    await db.update(emailOutbox).set({ retriedAt: minutes(5), retriedVia: "gmail" }).where(eq(emailOutbox.id, qr.id));
+
+    const history = await listOutboxHistory(db, reg);
+    expect(history.map((row) => [row.messageType, row.recipientRole])).toEqual([
+      ["REGISTRATION_CONFIRMED", "participant"],
+      ["CLUB_CONFIRMATION_NOTICE", "notice"],
+      ["REGISTRATION_CONFIRMED", "copy"],
+      ["DECLARATION_ARCHIVE", "archive"],
+      ["REGISTRATION_CONFIRMED", "participant"],
+    ]);
+    expect(history[0]).toMatchObject({ isManualResend: true, requestedByName: "Maria Admin", transport: "gmail", providerDetail: null, rejectionCause: null });
+    expect(history[4]).toMatchObject({
+      status: "BOUNCED",
+      requestedByName: null,
+      rejectedAt: minutes(1),
+      rejectionCause: "mailbox-full",
+      providerCode: "552 5.2.2",
+      providerDetail: "mailbox full",
+      retriedAt: minutes(5),
+      retriedVia: "gmail",
+    });
+    // Never a club mailbox's address: the role says whose it was.
+    expect(JSON.stringify(history)).not.toContain("example.org");
   });
 });
 
@@ -382,7 +453,37 @@ describe("the registration's one email state (BR-REQ-038-01)", () => {
     await db.update(emailOutbox).set({ laterDeliveredAt: minutes(11), resolvedAt: minutes(11) }).where(eq(emailOutbox.messageType, "EVENT_REMINDER"));
     expect((await findRegistrationDetailForAdmin(db, reg))?.emailState).toMatchObject({ kind: "retried", messageType: "REGISTRATION_CONFIRMED" });
     expect(await countNeedingEmailActionByEvent(db, T0)).toEqual([]);
-    expect(await listRegistrationsForAdmin(db, { eventId: r.id, emailBounced: true })).toHaveLength(1);
+    // «Doar cu un email respins», its count and the export read the same: a message sent again is not kept.
+    expect(await listRegistrationsForAdmin(db, { eventId: r.id, emailBounced: true })).toHaveLength(0);
+    expect(await countNeedingEmailActionForAdmin(db, { eventId: r.id })).toBe(0);
+    expect(needsEmailAction((await listRegistrationsForAdmin(db, { eventId: r.id }))[0].emailState)).toBe(false);
+  });
+
+  it("«Doar cu un email respins» keeps what asks somebody to act, and its count says how many", async () => {
+    const r = await race();
+    const states = ["unreachable", "not-sent", "missing", "retried", "none"] as const;
+    for (const state of states) {
+      const p = await person(`${state}@example.org`);
+      const reg = await register(r.id, p);
+      if (state === "none") continue;
+      const row = await outboxRow({
+        participantId: p,
+        registrationId: reg,
+        messageType: "REGISTRATION_CONFIRMED",
+        status: "BOUNCED",
+        sentAt: state === "not-sent" ? null : minutes(0),
+        lastError: state === "not-sent" ? "mailgun 401: Forbidden" : "bounce",
+        rejectionCause: state === "not-sent" ? "account" : "refused",
+      });
+      if (state === "missing") await db.update(emailOutbox).set({ laterDeliveredAt: minutes(5) }).where(eq(emailOutbox.id, row.id));
+      if (state === "retried") await db.update(emailOutbox).set({ retriedAt: minutes(5), retriedVia: "mailgun" }).where(eq(emailOutbox.id, row.id));
+    }
+    const listed = await listRegistrationsForAdmin(db, { eventId: r.id });
+    expect(listed.map((row) => row.emailState?.kind ?? "none").sort()).toEqual([...states].sort());
+    const kept = await listRegistrationsForAdmin(db, { eventId: r.id, emailBounced: true });
+    expect(kept.map((row) => row.emailState?.kind).sort()).toEqual(["missing", "not-sent", "unreachable"]);
+    expect(await countNeedingEmailActionForAdmin(db, { eventId: r.id })).toBe(3);
+    expect(listed.filter((row) => needsEmailAction(row.emailState))).toHaveLength(3);
   });
 
   it("the desk reads what did not arrive and why, never the provider's words; the page reads them", async () => {
@@ -392,7 +493,18 @@ describe("the registration's one email state (BR-REQ-038-01)", () => {
     const qr = await outboxRow({ participantId: p, registrationId: reg, messageType: "REGISTRATION_CONFIRMED" });
     await event(qr, "failed", minutes(1), { code: "550 5.1.1", detail: "mailbox <address> unknown at relay", cause: "no-such-address" });
     const [desk] = await listDeskRegistrations(db, { eventId: r.id, query: "", locale: "ro" });
-    expect(desk.emailState).toEqual({ kind: "unreachable", messageType: "REGISTRATION_CONFIRMED", at: minutes(1), sent: true, status: "BOUNCED", cause: "no-such-address", own: true });
+    expect(desk.emailState).toEqual({
+      kind: "unreachable",
+      messageType: "REGISTRATION_CONFIRMED",
+      at: minutes(1),
+      sent: true,
+      status: "BOUNCED",
+      cause: "no-such-address",
+      own: true,
+      laterDeliveredAt: null,
+      retriedAt: null,
+      retriedVia: null,
+    });
     expect(JSON.stringify(desk)).not.toContain("relay");
     const [listed] = await listRegistrationsForAdmin(db, { eventId: r.id });
     expect(JSON.stringify(listed)).not.toContain("relay");
@@ -401,30 +513,48 @@ describe("the registration's one email state (BR-REQ-038-01)", () => {
 });
 
 describe("what the club's side reads", () => {
-  it("lists the club mailboxes' refusals, only the ones it names, never a participant's or a subscriber's", async () => {
+  it("lists every club mailbox's refusal by its role, the address only while it is still the club's", async () => {
     const p = await person("ana@example.org");
     await outboxRow({ participantId: p, registrationId: null, messageType: "DECLARATION_ARCHIVE", recipientEmail: "Archive@example.org", status: "BOUNCED", rejectionCause: "mailbox-full", createdAt: minutes(1) });
     await outboxRow({ participantId: null, registrationId: null, messageType: "REGISTRATION_CONFIRMED", recipientEmail: "office@example.org", status: "BOUNCED", payloadJson: { clubCopy: true }, createdAt: minutes(2) });
-    await outboxRow({ participantId: null, registrationId: null, messageType: "DECLARATION_ARCHIVE", recipientEmail: "former@example.org", status: "BOUNCED", createdAt: minutes(3) });
+    // A mailbox the club has since removed: listed by its role, without its address.
+    await outboxRow({ participantId: null, registrationId: null, messageType: "CLUB_CONFIRMATION_NOTICE", recipientEmail: "former@example.org", status: "BOUNCED", lastError: "bounce", createdAt: minutes(3) });
+    // Never a subscriber's, nor a participant's own.
     await outboxRow({ participantId: null, registrationId: null, messageType: "NEWSLETTER", recipientEmail: "archive@example.org", status: "BOUNCED", createdAt: minutes(4) });
     await outboxRow({ participantId: p, registrationId: null, messageType: "PROFILE_MANAGE_LINK", recipientEmail: "archive@example.org", status: "BOUNCED", createdAt: minutes(5) });
+    // Before the window.
+    await outboxRow({ participantId: null, registrationId: null, messageType: "DECLARATION_ARCHIVE", recipientEmail: "archive@example.org", status: "BOUNCED", createdAt: minutes(-60) });
     const listed = await listClubMailboxRejections(db, { since: T0, mailboxes: ["archive@example.org", "office@example.org"] });
-    expect(listed.map((row) => [row.messageType, row.recipientEmail, row.cause])).toEqual([
-      ["REGISTRATION_CONFIRMED", "office@example.org", "other"],
-      ["DECLARATION_ARCHIVE", "Archive@example.org", "mailbox-full"],
+    expect(listed.map((row) => [row.role, row.messageType, row.recipientEmail, row.cause])).toEqual([
+      ["notice", "CLUB_CONFIRMATION_NOTICE", null, "refused"],
+      ["copy", "REGISTRATION_CONFIRMED", "office@example.org", "other"],
+      ["archive", "DECLARATION_ARCHIVE", "Archive@example.org", "mailbox-full"],
     ]);
-    expect(await listClubMailboxRejections(db, { since: T0, mailboxes: [] })).toEqual([]);
+    // Nothing configured: the refusals are still the club's to see, without an address.
+    expect((await listClubMailboxRejections(db, { since: T0, mailboxes: [] })).map((row) => row.recipientEmail)).toEqual([null, null, null]);
   });
 
-  it("says whether Mailgun's deliveries arrive at all", async () => {
+  it("applies its limit in SQL, newest first, so a busy mailbox cannot push another out after the fact", async () => {
+    for (let index = 0; index < 5; index += 1) {
+      await outboxRow({ participantId: null, registrationId: null, messageType: "DECLARATION_ARCHIVE", recipientEmail: `old-${index}@example.org`, status: "BOUNCED", createdAt: minutes(index) });
+    }
+    await outboxRow({ participantId: null, registrationId: null, messageType: "DECLARATION_ARCHIVE", recipientEmail: "archive@example.org", status: "BOUNCED", createdAt: minutes(10) });
+    const listed = await listClubMailboxRejections(db, { since: T0, mailboxes: ["archive@example.org"], limit: 2 });
+    expect(listed.map((row) => row.recipientEmail)).toEqual(["archive@example.org", null]);
+  });
+
+  it("counts the participants' Mailgun messages of the last seven days against those delivered", async () => {
     const p = await person("ana@example.org");
     const now = minutes(24 * 60);
     await outboxRow({ participantId: p, registrationId: null, messageType: "PROFILE_MANAGE_LINK", createdAt: minutes(60), transport: "mailgun" });
+    // Gmail's road reports no delivery; the club's own and an older send are not read.
     await outboxRow({ participantId: p, registrationId: null, messageType: "PROFILE_MANAGE_LINK", createdAt: minutes(61), transport: "gmail" });
-    expect(await readDeliveryEvidence(db, now)).toEqual({ lastDeliveredAt: null, mailgunSentLastDay: 1 });
+    await outboxRow({ participantId: p, registrationId: null, messageType: "DECLARATION_ARCHIVE", recipientEmail: "archive@example.org", createdAt: minutes(61), transport: "mailgun" });
+    await outboxRow({ participantId: p, registrationId: null, messageType: "PROFILE_MANAGE_LINK", createdAt: minutes(-8 * 24 * 60), transport: "mailgun" });
+    expect(await readDeliveryEvidence(db, now)).toEqual({ mailgunSent: 1, delivered: 0, lastDeliveredAt: null });
     const delivered = await outboxRow({ participantId: p, registrationId: null, messageType: "PROFILE_MANAGE_LINK", createdAt: minutes(62) });
     await event(delivered, "delivered", minutes(63));
-    expect((await readDeliveryEvidence(db, now)).lastDeliveredAt).toEqual(minutes(63));
+    expect(await readDeliveryEvidence(db, now)).toEqual({ mailgunSent: 2, delivered: 1, lastDeliveredAt: minutes(63) });
   });
 });
 
@@ -444,7 +574,7 @@ describe("the automatic re-send's refusal (§653)", () => {
     await outboxRow({ participantId: account, registrationId: null, messageType: "PROFILE_MANAGE_LINK", status: "BOUNCED", sentAt: null, rejectionCause: "account", lastError: "mailgun 401: Forbidden" });
     const cleared = await outboxRow({ participantId: answered, registrationId: null, messageType: "PROFILE_MANAGE_LINK", status: "BOUNCED", rejectionCause: "mailbox-full" });
     await db.update(emailOutbox).set({ laterDeliveredAt: minutes(5) }).where(eq(emailOutbox.id, cleared.id));
-    const spam = await outboxRow({ participantId: complained, registrationId: null, messageType: "PROFILE_MANAGE_LINK", status: "COMPLAINED", rejectionCause: "complaint" });
+    const spam = await outboxRow({ participantId: complained, registrationId: null, messageType: "PROFILE_MANAGE_LINK", status: "COMPLAINED", rejectionCause: "complained" });
     await db.update(emailOutbox).set({ laterDeliveredAt: minutes(5) }).where(eq(emailOutbox.id, spam.id));
     // A club mailbox's refusal of the archive copy says nothing about the person.
     await outboxRow({ participantId: answered, registrationId: null, messageType: "DECLARATION_ARCHIVE", recipientEmail: "archive@example.org", status: "BOUNCED" });

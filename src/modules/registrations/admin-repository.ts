@@ -24,9 +24,11 @@ import { healthNoteShown } from "./domain/health-note";
 import { memberCanonicalEmails } from "./member-ticks";
 import { OFFERS_MEMBER_BIB } from "@/modules/events/repository";
 import type { QueueOrder } from "./domain/waitlist";
-import { isRejectionCause, type RejectionCause } from "@/modules/notifications/domain/rejection-cause";
+import { isRejectionCause, rejectionCause, type RejectionCause } from "@/modules/notifications/domain/rejection-cause";
+import { recipientRoleOf, type RecipientRole } from "@/modules/notifications/domain/email-audience";
+import { isClubCopy } from "@/modules/notifications/domain/club-notices";
 import type { DeskEmailState, RegistrationEmailState, RegistrationEmailStateDetail } from "./domain/email-state";
-import { deskEmailStateSql, hasEmailStateSql, registrationEmailStateDetailSql, registrationEmailStateSql } from "./email-state";
+import { deskEmailStateSql, needsEmailActionSql, registrationEmailStateDetailSql, registrationEmailStateSql } from "./email-state";
 import type { PlaceDeadlineCounts, PlaceDeadlineEvent } from "./domain/place-deadlines";
 
 /**
@@ -313,8 +315,9 @@ function registrationConditions(filters: RegistrationListFilters, members: reado
     // box" as often as it means "not a member", and a screen that presented it as the second
     // would be inventing an answer.
     filters.clubMember ? sql`(${registrations.clubMemberDeclared} or ${memberVerifiedOf(members)})` : undefined,
-    // «Doar cu un email respins»: the rows that carry the state (§NNN), one EXISTS — never the object built to test it.
-    filters.emailBounced ? hasEmailStateSql() : undefined,
+    // «Doar cu un email respins»: the rows whose state asks somebody to act (§NNN: unreachable, not sent,
+    // missing — never «sent again», which waits for its delivery), one EXISTS — never the object built to test it.
+    filters.emailBounced ? needsEmailActionSql() : undefined,
     // The same condition as the club's list on «Newsletter» and the sponsor list's candidates (§570, §581).
     filters.promoConsented ? promoListed() : undefined,
     filters.outsideCapacity ? eq(registrations.outsideCapacity, true) : undefined,
@@ -682,6 +685,17 @@ export async function countRegistrationsForAdmin<T extends Record<string, unknow
     .where(conditions.length > 0 ? and(...conditions) : undefined);
 
   return row?.total ?? 0;
+}
+
+/**
+ * How many rows «Doar cu un email respins» would keep under the other filters (§NNN): the filter's label
+ * says it before anybody ticks it. The same conditions as the list and its count, so the three agree.
+ */
+export async function countNeedingEmailActionForAdmin<T extends Record<string, unknown>>(
+  db: Database<T>,
+  filters: RegistrationListFilters = {},
+): Promise<number> {
+  return countRegistrationsForAdmin(db, { ...filters, emailBounced: true });
 }
 
 export type RegistrationDetail = {
@@ -1298,13 +1312,16 @@ export type OutboxHistoryRow = {
   messageType: string;
   status: string;
   isManualResend: boolean;
+  /** Who asked for a manual resend (§81): the staff member's display name; null for every other row, or a removed account. */
+  requestedByName: string | null;
   /** The club's copy of the participant's message (§320), labelled so it does not read as a second send to them. */
   clubCopy: boolean;
   /**
-   * Whom the row's message was for, by role and never by address (§NNN): the participant, the club's
-   * archive copy (§99, §393), the club's confirmation notice (§245), or a club copy (§320).
+   * Whom the row's message was for, by role and never by address (§NNN; `recipientRoleOf`, from the
+   * audience map and the club-copy flag): the participant, the club's archive copy (§99, §393), the
+   * club's confirmation notice (§245), a club copy (§320) — never a club mailbox's address.
    */
-  recipientRole: "participant" | "archive" | "notice" | "copy";
+  recipientRole: RecipientRole;
   createdAt: Date;
   sentAt: Date | null;
   /** Which road it left by (§443): Gmail reports no delivery. */
@@ -1320,15 +1337,17 @@ export type OutboxHistoryRow = {
   laterDeliveredAt: Date | null;
   resolvedAt: Date | null;
   retriedAt: Date | null;
+  /** The road the latest send after the refusal took: by Gmail, no delivery will ever be reported. */
+  retriedVia: "mailgun" | "gmail" | null;
 };
 
-function recipientRoleOf(messageType: string, clubCopy: boolean): OutboxHistoryRow["recipientRole"] {
-  if (clubCopy) return "copy";
-  if (messageType === "DECLARATION_ARCHIVE" || messageType === "GROUP_RUN_DECLARATION_ARCHIVE") return "archive";
-  if (messageType === "CLUB_CONFIRMATION_NOTICE") return "notice";
-  return "participant";
-}
+const resendRequestedBy = alias(staffUsers, "resend_requested_by");
 
+/**
+ * The registration's emails, newest first (§NNN): every fact the outbox holds of each — the road, the
+ * delivery, the refusal and its cause, the code and the redacted words on a refused row, what came after —
+ * whom it was for by role, and who asked for a manual resend. The registration's page is its only reader.
+ */
 export async function listOutboxHistory<T extends Record<string, unknown>>(
   db: Database<T>,
   registrationId: string,
@@ -1339,27 +1358,44 @@ export async function listOutboxHistory<T extends Record<string, unknown>>(
       messageType: emailOutbox.messageType,
       status: emailOutbox.status,
       isManualResend: emailOutbox.isManualResend,
-      clubCopy: sql<boolean>`(${emailOutbox.payloadJson} ->> 'clubCopy') IS NOT DISTINCT FROM 'true'`.mapWith(Boolean),
+      requestedByName: resendRequestedBy.displayName,
+      payloadJson: emailOutbox.payloadJson,
       createdAt: emailOutbox.createdAt,
       sentAt: emailOutbox.sentAt,
       transport: emailOutbox.transport,
       deliveredAt: emailOutbox.deliveredAt,
       rejectedAt: emailOutbox.rejectedAt,
       rejectionCause: emailOutbox.rejectionCause,
+      lastError: emailOutbox.lastError,
       providerCode: emailOutbox.providerCode,
       providerDetail: sql<string | null>`case when ${refused} then coalesce(${emailOutbox.providerDetail}, ${emailOutbox.lastError}) end`,
       laterDeliveredAt: emailOutbox.laterDeliveredAt,
       resolvedAt: emailOutbox.resolvedAt,
       retriedAt: emailOutbox.retriedAt,
+      retriedVia: emailOutbox.retriedVia,
     })
     .from(emailOutbox)
+    .leftJoin(resendRequestedBy, and(eq(emailOutbox.isManualResend, true), eq(resendRequestedBy.id, emailOutbox.requestedByStaffUserId)))
     .where(eq(emailOutbox.registrationId, registrationId))
-    .orderBy(asc(emailOutbox.createdAt));
-  return rows.map((row) => ({
-    ...row,
-    recipientRole: recipientRoleOf(row.messageType, row.clubCopy),
-    rejectionCause: isRejectionCause(row.rejectionCause) ? row.rejectionCause : null,
-  }));
+    .orderBy(desc(emailOutbox.createdAt), desc(emailOutbox.id));
+  return rows.map(({ payloadJson, lastError, ...row }) => {
+    const clubCopy = isClubCopy(payloadJson);
+    const status = row.status === "COMPLAINED" ? "COMPLAINED" : "BOUNCED";
+    // A refused row stored without a cause (an older deployment's) reads it as the state does (`domain/email-state.ts`).
+    const cause = isRejectionCause(row.rejectionCause)
+      ? row.rejectionCause
+      : row.status === "BOUNCED" || row.status === "COMPLAINED"
+        ? rejectionCause({ status, sent: row.sentAt !== null, reason: lastError })
+        : null;
+    return {
+      ...row,
+      clubCopy,
+      recipientRole: recipientRoleOf(row.messageType, clubCopy),
+      transport: row.transport === "gmail" ? "gmail" : row.transport === "mailgun" ? "mailgun" : null,
+      rejectionCause: cause,
+      retriedVia: row.retriedVia === "gmail" ? "gmail" : row.retriedVia === "mailgun" ? "mailgun" : null,
+    };
+  });
 }
 
 /** Events with at least one registration, for the list page's filter — Admin has no reason to
