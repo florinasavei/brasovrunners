@@ -11,7 +11,7 @@ import { resolveDisplayName } from "@/modules/registrations/names";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * Migration 0131's backfill (§NNN): the refusals written before the cause was stored get it once, from
+ * Migration 0131's backfill (§670): the refusals written before the cause was stored get it once, from
  * the two shapes they have — Mailgun's one word from the webhook, or the answer stored at the send — by
  * the same rule `rejectionCause` reads those shapes with. This runs the migration's own statements again,
  * on rows written the way the old code wrote them, and holds the SQL and the TypeScript together on every

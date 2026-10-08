@@ -114,7 +114,7 @@ export type RegistrationListRow = {
   bibPrintedAt: Date | null;
   checkedInAt: Date | null;
   /**
-   * The registration's one email state (§NNN, amending §663): the participant's own message that did not
+   * The registration's one email state (§670, amending §663): the participant's own message that did not
    * reach them — which, when, why, and what came after; null when their mail has no open refusal. Never
    * the provider's words: no list payload carries them.
    */
@@ -315,7 +315,7 @@ function registrationConditions(filters: RegistrationListFilters, members: reado
     // box" as often as it means "not a member", and a screen that presented it as the second
     // would be inventing an answer.
     filters.clubMember ? sql`(${registrations.clubMemberDeclared} or ${memberVerifiedOf(members)})` : undefined,
-    // «Doar cu un email respins»: the rows whose state asks somebody to act (§NNN: unreachable, not sent,
+    // «Doar cu un email respins»: the rows whose state asks somebody to act (§670: unreachable, not sent,
     // missing — never «sent again», which waits for its delivery), one EXISTS — never the object built to test it.
     filters.emailBounced ? needsEmailActionSql() : undefined,
     // The same condition as the club's list on «Newsletter» and the sponsor list's candidates (§570, §581).
@@ -688,7 +688,7 @@ export async function countRegistrationsForAdmin<T extends Record<string, unknow
 }
 
 /**
- * How many rows «Doar cu un email respins» would keep under the other filters (§NNN): the filter's label
+ * How many rows «Doar cu un email respins» would keep under the other filters (§670): the filter's label
  * says it before anybody ticks it. The same conditions as the list and its count, so the three agree.
  */
 export async function countNeedingEmailActionForAdmin<T extends Record<string, unknown>>(
@@ -787,7 +787,7 @@ export type RegistrationDetail = {
   /** Who vouched for the address at the desk, when nobody clicked a link. */
   emailConfirmedByName: string | null;
   /**
-   * The registration's one email state (§NNN, amending §663) — with the provider's code and redacted words
+   * The registration's one email state (§670, amending §663) — with the provider's code and redacted words
    * for the page's small print, which only this page reads; null when the participant's mail has no open refusal.
    */
   emailState: RegistrationEmailStateDetail | null;
@@ -1135,7 +1135,7 @@ export type DeskRegistration = {
   checkedInAt: Date | null;
   checkedInByName: string | null;
   /**
-   * The desk sees whom an email does not reach (`DECISIONS.md` §76, §663, §NNN) — which, when and why: its own
+   * The desk sees whom an email does not reach (`DECISIONS.md` §76, §663, §670) — which, when and why: its own
    * projection, never the address and never the provider's words (§67, `AGENTS.md` §15.11).
    */
   emailState: DeskEmailState | null;
@@ -1317,7 +1317,7 @@ export type OutboxHistoryRow = {
   /** The club's copy of the participant's message (§320), labelled so it does not read as a second send to them. */
   clubCopy: boolean;
   /**
-   * Whom the row's message was for, by role and never by address (§NNN; `recipientRoleOf`, from the
+   * Whom the row's message was for, by role and never by address (§670; `recipientRoleOf`, from the
    * audience map and the club-copy flag): the participant, the club's archive copy (§99, §393), the
    * club's confirmation notice (§245), a club copy (§320) — never a club mailbox's address.
    */
@@ -1326,7 +1326,7 @@ export type OutboxHistoryRow = {
   sentAt: Date | null;
   /** Which road it left by (§443): Gmail reports no delivery. */
   transport: "mailgun" | "gmail" | null;
-  /** The provider's facts after it left (§NNN): delivered, refused and when, why. */
+  /** The provider's facts after it left (§670): delivered, refused and when, why. */
   deliveredAt: Date | null;
   rejectedAt: Date | null;
   rejectionCause: RejectionCause | null;
@@ -1344,7 +1344,7 @@ export type OutboxHistoryRow = {
 const resendRequestedBy = alias(staffUsers, "resend_requested_by");
 
 /**
- * The registration's emails, newest first (§NNN): every fact the outbox holds of each — the road, the
+ * The registration's emails, newest first (§670): every fact the outbox holds of each — the road, the
  * delivery, the refusal and its cause, the code and the redacted words on a refused row, what came after —
  * whom it was for by role, and who asked for a manual resend. The registration's page is its only reader.
  */

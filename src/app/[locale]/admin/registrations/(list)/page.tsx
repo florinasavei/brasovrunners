@@ -257,7 +257,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filters.eventId
       ? Promise.all([readPlaceDeadlines(db, filters.eventId, deadlinesNow), deadlinesForThisRequest()]).then(([facts, deadlines]) => (facts ? { ...facts, deadlines } : null))
       : Promise.resolve(null),
-    // «Doar cu un email respins ({n})» (§NNN): how many the tick would keep under the other filters, before anybody ticks it.
+    // «Doar cu un email respins ({n})» (§671): how many the tick would keep under the other filters, before anybody ticks it.
     countNeedingEmailActionForAdmin(db, { ...filters, emailBounced: undefined }),
   ]);
 
@@ -470,7 +470,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               />
             );
           })()}
-          {/* The email state in one line under the name and its chips (§663, §NNN): only while somebody must
+          {/* The email state in one line under the name and its chips (§663, §671): only while somebody must
               act — the cause, the email, the day — itself the link to the registration's «Emailuri». An email
               sent again waits quietly here; the registration's page says it. */}
           {row.emailState && needsEmailAction(row.emailState) && (
@@ -1298,7 +1298,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               {t("registrations.clubMemberOnly", { club: CLUB_NAME })}
             </CheckboxField>
           </Box>
-          {/* The rows whose email asks somebody to act (§663, §NNN), confirmed or not, with how many there are. */}
+          {/* The rows whose email asks somebody to act (§663, §671), confirmed or not, with how many there are. */}
           <Box sx={{ minWidth: 220, maxWidth: 320, pt: 0.5 }} data-testid="registrations-filter-bounced">
             <CheckboxField name="bounced" value="1" defaultChecked={bounced === "1"} dense help={t("registrations.bouncedOnlyHelp")}>
               <UnsubscribeIcon aria-hidden data-testid="registrations-filter-bounced-glyph" />
@@ -1517,7 +1517,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 confirm={withSendNowChoice(
                   {
                     title: t("confirm.resendTitle"),
-                    // What the last refusal says of this press, first (§NNN); it never blocks it.
+                    // What the last refusal says of this press, first (§671); it never blocks it.
                     body: withResendWarning(t(`confirm.resendWhat.${row.status}`, { name: row.registeredName }), resendWarning(row.emailState, locale)),
                     ...(row.kind === "TEST" ? {} : { email: words.email(1) }),
                     confirmLabel: t("registrations.resendShort"),
@@ -1560,7 +1560,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 confirm={withSendNowChoice(
                   {
                     title: t("confirm.resendFamilyTitle"),
-                    // One address for the whole family (§543): the row's state is the address's, said first (§NNN).
+                    // One address for the whole family (§543): the row's state is the address's, said first (§671).
                     body: withResendWarning(
                       t("confirm.resendFamilyBody", {
                         names: [row.registeredName, ...(family.get(row.id) ?? []).map((member) => member.name)].join(", "),

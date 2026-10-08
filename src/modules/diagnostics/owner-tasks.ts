@@ -149,7 +149,7 @@ export type OwnerTask = {
    */
   label?: "due";
   /**
-   * The row's own key, when one id carries several rows (§NNN: one per race whose participants have an email
+   * The row's own key, when one id carries several rows (§671: one per race whose participants have an email
    * that needs attention); the id otherwise.
    */
   key?: string;
@@ -382,24 +382,24 @@ export type OwnerTaskInputs = {
   neonQuota: { quotaCuHours: number | null; usedCuHours: number } | null;
   /**
    * How many of the club's own mailboxes refused its emails in the last thirty days and still ask for
-   * something (§NNN, `clubMailboxesToFix`): red while any does. Absent where the page did not read it.
+   * something (§671, `clubMailboxesToFix`): red while any does. Absent where the page did not read it.
    */
   clubMailboxRefusals?: number;
   /**
-   * How many of those that refused in the last thirty days have since left «Copiile clubului» (§NNN): nothing
+   * How many of those that refused in the last thirty days have since left «Copiile clubului» (§671): nothing
    * to do, but «Setări → Emailuri» still lists them, so the green row says where they are rather than that
    * none refused.
    */
   clubMailboxesRemoved?: number;
   /**
-   * Whether Mailgun's deliveries reach this deployment (§NNN, `readDeliveryEvidence`): the participants' own
+   * Whether Mailgun's deliveries reach this deployment (§671, `readDeliveryEvidence`): the participants' own
    * messages that left by Mailgun in the last seven days, and how many of them were reported delivered. A
    * red row only when some left and none was: without the «Delivered» events no refusal ever clears.
    */
   deliveryEvidence?: { mailgunSent: number; delivered: number };
   /**
    * Per published event that has not ended, how many of its participants have an email that asks somebody
-   * to act (§NNN, `countNeedingEmailActionByEvent`): one row each, linking its list filtered.
+   * to act (§671, `countNeedingEmailActionByEvent`): one row each, linking its list filtered.
    */
   emailAttention?: ReadonlyArray<{ eventId: string; title: string; count: number }>;
 };
@@ -777,7 +777,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   });
 
   /*
-    The club's side of «Email respins» (§NNN). A club mailbox that refuses the archive copy, the
+    The club's side of «Email respins» (§671). A club mailbox that refuses the archive copy, the
     confirmation notice or a copy is red until thirty days pass with no refusal; the page's panel says
     what to do per address. Green says «none refused» only when none did: when the only refusals are of
     addresses removed since, it says the panel still lists them, with nothing to do.
@@ -793,11 +793,11 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
           : {}),
     });
   }
-  // Mailgun's «Delivered» events do not arrive (§NNN): only when some left this week and none was reported.
+  // Mailgun's «Delivered» events do not arrive (§671): only when some left this week and none was reported.
   if (input.deliveryEvidence && input.emailDeliveryMode !== "capture" && input.deliveryEvidence.mailgunSent > 0 && input.deliveryEvidence.delivered === 0) {
     push("deliveryReports", { owner: "club", state: "broken" });
   }
-  // One row per race whose participants have an email that asks somebody to act (§NNN), gone with the last of them.
+  // One row per race whose participants have an email that asks somebody to act (§671), gone with the last of them.
   for (const event of input.emailAttention ?? []) {
     if (event.count <= 0) continue;
     push("emailAttention", {

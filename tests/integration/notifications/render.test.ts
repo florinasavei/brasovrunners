@@ -444,7 +444,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     expect(withDoc.text).not.toContain(doc);
   });
 
-  it("gives the desk code and its QR to exactly the messages the email state says carry it (§NNN)", async () => {
+  it("gives the desk code and its QR to exactly the messages the email state says carry it (§671)", async () => {
     await db.update(registrations).set({ status: "CONFIRMED", confirmedAt: NOW, holdExpiresAt: null }).where(eq(registrations.id, registrationId));
     const candidates: EmailMessageType[] = ["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "BIB_ASSIGNED", "DECLARATION_SIGNED", "EVENT_UPDATE_NOTICE", "REGISTRATION_CANCELLED"];
     const carrying: EmailMessageType[] = [];

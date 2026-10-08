@@ -1,7 +1,7 @@
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 
 /**
- * Whom each message type is written for (§NNN; amending §320's exclusion set): the one map every
+ * Whom each message type is written for (§670; amending §320's exclusion set): the one map every
  * question about "is this the participant's own mail" is answered from.
  *
  * - **participant** — a message to the person registered (or about to be), at their own address: the
@@ -74,7 +74,7 @@ export const PARTICIPANT_MESSAGE_TYPES: readonly EmailMessageType[] = messageTyp
 export const CLUB_MAILBOX_MESSAGE_TYPES: readonly EmailMessageType[] = messageTypesFor("club");
 
 /**
- * Whom one outbox row was for, by role and never by address (§NNN): the participant; the club's archive
+ * Whom one outbox row was for, by role and never by address (§670): the participant; the club's archive
  * copy of a declaration (§99, §393) or its «somebody has confirmed» notice (§245) — the club's audience,
  * told apart because the club fixes them in two different settings; a club copy of a participant's
  * message (§320, the `clubCopy` flag); or a colleague's or the public's. From the audience map, so a type

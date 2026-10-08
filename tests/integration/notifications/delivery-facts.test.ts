@@ -24,7 +24,7 @@ import { resolveDisplayName } from "@/modules/registrations/names";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-080-04, BR-REQ-080-02, BR-REQ-038-01 (§NNN; amending §663, §76/§83, §320, §622, §653) — the stored
+ * BR-REQ-080-04, BR-REQ-080-02, BR-REQ-038-01 (§670; amending §663, §76/§83, §320, §622, §653) — the stored
  * facts tell the truth, and one email state per registration is read from them:
  *
  * - the webhook keeps a delivery once, a refusal with its instant, cause, code and redacted words, an event
@@ -80,7 +80,7 @@ async function race(startsAt = new Date("2099-11-21T08:00:00.000Z")) {
   return event;
 }
 
-/** Midnight today in the club's time zone, by the database's clock: a race day that has started and not ended (§NNN). */
+/** Midnight today in the club's time zone, by the database's clock: a race day that has started and not ended (§670). */
 async function startOfTodayInClubTime(): Promise<Date> {
   const result = await db.execute(sql`select (date_trunc('day', now() at time zone 'Europe/Bucharest') at time zone 'Europe/Bucharest') as "start"`);
   const [row] = ((Array.isArray(result) ? result : (result as { rows?: unknown[] }).rows) ?? []) as Array<{ start: unknown }>;
@@ -371,7 +371,7 @@ describe("a complaint sent again", () => {
   });
 });
 
-describe("the registration's emails, as its page reads them (§NNN)", () => {
+describe("the registration's emails, as its page reads them (§670)", () => {
   it("newest first, by role, with every fact, who asked for a resend, and the provider's words on a refused row only", async () => {
     const r = await race();
     const p = await person("ana@example.org");
@@ -444,7 +444,7 @@ describe("the registration's one email state (BR-REQ-038-01)", () => {
     expect(await countNeedingEmailActionByEvent(db, T0)).toEqual([{ eventId: r.id, count: 1 }]);
   });
 
-  it("«Sarcini»'s count per race is the list filter's own number, test registrations left out (§NNN)", async () => {
+  it("«Sarcini»'s count per race is the list filter's own number, test registrations left out (§671)", async () => {
     const r = await race();
     // A live one, a cancelled one and an expired one whose address refuses the club's mail, and a test one.
     for (const [email, overrides] of [
@@ -533,7 +533,7 @@ describe("the registration's one email state (BR-REQ-038-01)", () => {
       kind: "unreachable",
       messageType: "REGISTRATION_CONFIRMED",
       at: minutes(1),
-      // The webhook stored the refusal's own instant (§NNN): «refuzat la trimitere» may be said of it.
+      // The webhook stored the refusal's own instant (§671): «refuzat la trimitere» may be said of it.
       atKnown: true,
       sent: true,
       status: "BOUNCED",
@@ -551,7 +551,7 @@ describe("the registration's one email state (BR-REQ-038-01)", () => {
   });
 });
 
-describe("«Retrimite declarația tuturor care nu au semnat» counts who has an address that refuses mail (BR-REQ-037-02, §NNN)", () => {
+describe("«Retrimite declarația tuturor care nu au semnat» counts who has an address that refuses mail (BR-REQ-037-02, §671)", () => {
   it("counts an open refusal of the address among those who wait to sign; not the club's account, another status, a test registration or another event", async () => {
     const r = await race();
     const other = await race(new Date("2099-12-01T08:00:00.000Z"));
@@ -663,7 +663,7 @@ async function sendNow(input: { participantId: string; registrationId: string; m
   return read(row.id);
 }
 
-describe("what a message carries answers a refusal of it (BR-REQ-038-01, §NNN)", () => {
+describe("what a message carries answers a refusal of it (BR-REQ-038-01, §670)", () => {
   it("a race number refused on 1-2 October, then «Retrimite QR»: sent again, and over once the confirmation arrives", async () => {
     const r = await race();
     const p = await person("ana@example.org");
@@ -790,7 +790,7 @@ describe("what a message carries answers a refusal of it (BR-REQ-038-01, §NNN)"
   });
 });
 
-describe("a refusal speaks only while the registration still needs what it refused (BR-REQ-038-01, §NNN)", () => {
+describe("a refusal speaks only while the registration still needs what it refused (BR-REQ-038-01, §670)", () => {
   /** A refusal of `messageType` to an address that has answered since (a later message delivered): owed, if still needed. */
   async function owed(registrationId: string, participantId: string, messageType: EmailMessageType, extra: Partial<RowInput> = {}) {
     const row = await outboxRow({ participantId, registrationId, messageType, status: "BOUNCED", createdAt: minutes(0), rejectionCause: "mailbox-full", ...extra });
@@ -862,7 +862,7 @@ describe("a refusal speaks only while the registration still needs what it refus
   });
 });
 
-describe("once the event has ended, nothing of its registrations asks anybody to act (BR-REQ-038-01, §NNN)", () => {
+describe("once the event has ended, nothing of its registrations asks anybody to act (BR-REQ-038-01, §670)", () => {
   it("race day keeps the chip, the filter, the count and the desk's chip; the day after, every one is silent and the history keeps the rows", async () => {
     const raceDay = await race(await startOfTodayInClubTime());
     // A start thirty hours ago: its day is over, whatever the hour now.
@@ -910,7 +910,7 @@ describe("once the event has ended, nothing of its registrations asks anybody to
   });
 });
 
-describe("the event's notices ask for a phone call while they matter (BR-REQ-038-01, §331, §NNN)", () => {
+describe("the event's notices ask for a phone call while they matter (BR-REQ-038-01, §331, §670)", () => {
   const stateOf = async (id: string) => (await findRegistrationDetailForAdmin(db, id))?.emailState ?? null;
 
   it("«Detalii actualizate» never left: owed while the event is ahead, no press named; the reminder, which carries the details, answers it", async () => {
@@ -1007,7 +1007,7 @@ describe("the event's notices ask for a phone call while they matter (BR-REQ-038
   });
 });
 
-describe("a family member's refusal reads the same on every registration it shows on (BR-REQ-038-01, §543, §NNN)", () => {
+describe("a family member's refusal reads the same on every registration it shows on (BR-REQ-038-01, §543, §670)", () => {
   async function family() {
     const r = await race();
     const p = await person("family@example.org");
@@ -1065,7 +1065,7 @@ describe("a family member's refusal reads the same on every registration it show
   });
 });
 
-describe("a send asks first whether it has a refusal to mark (§NNN)", () => {
+describe("a send asks first whether it has a refusal to mark (§670)", () => {
   it("opens no transaction when nothing earlier was refused, nor when the refusal was already told of this send; one when there is", async () => {
     const r = await race();
     const p = await person("ana@example.org");

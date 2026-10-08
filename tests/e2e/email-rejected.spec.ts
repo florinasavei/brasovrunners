@@ -4,7 +4,7 @@ import pg from "pg";
 import { FEATURED, hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN (amending §663, §650; the data decision „The runners' own emails tell the truth”) — «Email respins» drawn where the club looks, phone
+ * §671 (amending §663, §650; the data decision „The runners' own emails tell the truth”) — «Email respins» drawn where the club looks, phone
  * first. The owner, 2026-10-07, on two «Confirmată» cards each with «Email respins»: «Cum e posibil să fie
  * email respins dar și confirmat? Am nevoie de mai multe info in app». A confirmed registration whose
  * race-number email the address refused: the filter «Doar cu un email respins (n)» keeps it, the card says
@@ -120,7 +120,7 @@ async function cleanup(seeded: Seeded): Promise<void> {
   }
 }
 
-test.describe("§NNN «Email respins» says which email, why and what to do, where the club looks", () => {
+test.describe("§671 «Email respins» says which email, why and what to do, where the club looks", () => {
   test("a confirmed row whose race-number email was refused: one line under the name, a link to «Emailuri»", async ({ page }) => {
     test.setTimeout(90_000);
     const hydrationWarnings: string[] = [];

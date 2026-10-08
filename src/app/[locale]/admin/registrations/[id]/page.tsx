@@ -199,7 +199,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   // The timeline's short form with the time (§349): a value beside its label, so capitalised;
   // `dtInline` inside a sentence.
   /*
-    The email state in words (§663, §NNN): the short line under the address and one to-do by who reads it —
+    The email state in words (§663, §671): the short line under the address and one to-do by who reads it —
     the Administrator is told the press, the Organizer to ask for it (§289) — and the whole story, the long
     name and the provider's small print, in «Emailuri». An email sent again waits: its line is grey, and the
     section opens by itself only while somebody must act.
@@ -218,9 +218,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       )
     : null;
   const emailNeedsAction = needsEmailAction(emailState);
-  // What the last refusal says of a resend, as each question's first sentence (§NNN).
+  // What the last refusal says of a resend, as each question's first sentence (§671).
   const resendWarned = (body: string) => withResendWarning(body, resendWarning(emailState, locale));
-  // «Emailuri» (§NNN): the participant's own, newest first, the first few in view; the club's apart, by role.
+  // «Emailuri» (§671): the participant's own, newest first, the first few in view; the club's apart, by role.
   const ownEmails = outboxHistory.filter((row) => !isClubRow(row));
   const clubEmails = outboxHistory.filter((row) => isClubRow(row));
   const dt = (value: Date | null) => (value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }) : null);
@@ -475,7 +475,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {registration.participantEmail} · {registration.eventTitle ?? registration.eventId}
       </Typography>
       {/*
-        Under the address it is about (§663, §NNN): the list's own line — a link to «Emailuri» below, where the
+        Under the address it is about (§663, §671): the list's own line — a link to «Emailuri» below, where the
         whole story is — and what to do, by who reads it. Never the address's change: that is the person's (§645).
       */}
       {emailWords && (
@@ -651,7 +651,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       )}
 
       {/*
-        «Emailuri» (§NNN; it replaced «Istoric email» at the foot of the page): after the verbs, so the resend
+        «Emailuri» (§671; it replaced «Istoric email» at the foot of the page): after the verbs, so the resend
         presses stay where the thumb finds them, and the address under the name links here. The whole story
         of the state first — the long name, when, why, whether the address had been confirmed, the provider's
         small print — then every email, newest first, in two short lines each: the participant's own, the
@@ -1639,7 +1639,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
 }
 
 /**
- * The rows of «Emailuri» (§NNN), each in two short lines — which email for whom, and what became of it — and,
+ * The rows of «Emailuri» (§671), each in two short lines — which email for whom, and what became of it — and,
  * under a refusal, the provider's code and words, why in plain words and what came after, in small print.
  */
 function emailRows(rows: readonly OutboxHistoryRow[], locale: string, testId: string) {

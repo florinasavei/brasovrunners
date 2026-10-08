@@ -18,7 +18,7 @@ import {
 } from "./domain/email-state";
 
 /**
- * The registration's one email state, as SQL (§NNN; the kinds are `domain/email-state.ts`'s). One
+ * The registration's one email state, as SQL (§670; the kinds are `domain/email-state.ts`'s). One
  * correlated subquery per registration row — the participant's refused rows, through
  * `email_outbox_participant_idx`, each joined to the registration it was for and that registration's
  * event by their keys — returning one JSON object, so a list of two hundred is two hundred index probes
@@ -66,7 +66,7 @@ function kindSql(): SQL<EmailStateKind | null> {
 const clockSql = (now?: Date): SQL => (now ? sql`${now.toISOString()}::timestamptz` : sql`now()`);
 
 /**
- * When an event has ended (§NNN): its `ends_at`, else the end of its start day in its own time zone —
+ * When an event has ended (§670): its `ends_at`, else the end of its start day in its own time zone —
  * the next midnight there, so a summer-time change that day is the zone's own. `event` is the table or
  * an alias of it.
  */
@@ -80,7 +80,7 @@ function eventNotEndedSql(event: SQLWrapper, now?: Date): SQL<boolean> {
 }
 
 /**
- * Whether the registration the refused message was for still needs it (§NNN): its status now, where its
+ * Whether the registration the refused message was for still needs it (§670): its status now, where its
  * event stands (`EVENT_MOMENTS`; an ended event has no state at all, `openRefusalsWhere`), and the message's
  * type, against the list `stillNeededMessageTypes` builds — and the event's notices never once that
  * registration is checked in: the person is at the desk, there is nobody to phone (`EVENT_NOTICE_TYPES`).
@@ -168,7 +168,7 @@ function stateSql(projection: Projection): SQL {
   )`;
 }
 
-/** The list's and the export's state: no provider text (§NNN: the list must not carry it). */
+/** The list's and the export's state: no provider text (§670: the list must not carry it). */
 export function registrationEmailStateSql(): SQL<RegistrationEmailState | null> {
   return stateSql("list").mapWith(emailStateOf) as SQL<RegistrationEmailState | null>;
 }
@@ -184,7 +184,7 @@ export function registrationEmailStateDetailSql(): SQL<RegistrationEmailStateDet
 }
 
 /**
- * How many real registrations of each event that has not ended ask somebody to act on their email (§NNN),
+ * How many real registrations of each event that has not ended ask somebody to act on their email (§671),
  * by the same rule as the state, at `now`: the club's side counts them per race («N participanți nu
  * primesc emailurile»), and its row links the list filtered by the event and «Doar cu un email respins» —
  * so the count is that filter's own condition, whatever the registration's status, and the two numbers
@@ -214,7 +214,7 @@ export async function countNeedingEmailActionByEvent<T extends Record<string, un
 
 /**
  * How many real registrations of one event, in one status, whose address refuses the club's mail — an open
- * `unreachable` refusal, by the same rule as the state (§NNN): «Retrimite declarația tuturor care nu au
+ * `unreachable` refusal, by the same rule as the state (§671): «Retrimite declarația tuturor care nu au
  * semnat» says it first, since for them a resend may not arrive. The caller asserts who may read it.
  */
 export async function countAddressRefusingMail<T extends Record<string, unknown>>(

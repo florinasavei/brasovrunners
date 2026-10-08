@@ -143,7 +143,7 @@ export function createEmailSenderForEnvironment(
         apiBaseUrl: config.MAILGUN_API_BASE_URL ?? "",
         from: formatSenderIdentity(config),
         replyTo,
-        // The deployment's own tag on every message (§NNN): its webhook acts on its own events only.
+        // The deployment's own tag on every message (§670): its webhook acts on its own events only.
         environment: config.APP_ENV,
       }),
     ...(gmail ? { gmail } : {}),

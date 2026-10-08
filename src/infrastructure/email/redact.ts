@@ -1,5 +1,5 @@
 /**
- * The one redactor for a provider's own words before anything stores them (§14.5, §16.1, §NNN): the
+ * The one redactor for a provider's own words before anything stores them (§14.5, §16.1, §670): the
  * send's refusal body (`mailgun-adapter.ts`) and the delivery webhook's SMTP text alike. A receiving
  * server's answer quotes the recipient often — whole («<ana@example.com>: user unknown») or only the
  * local part («ana.popescu… does not exist») — and a long opaque run may be a token from a link the

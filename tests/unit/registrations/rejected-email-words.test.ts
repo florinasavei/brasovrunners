@@ -24,7 +24,7 @@ import { rejectedEmailWords, type RejectedEmailFacts, type RejectedEmailReader, 
 import { whatToTell, type TellFacts } from "@/modules/registrations/ui/tell-words";
 
 /**
- * BR-REQ-037-03, BR-REQ-038-01 criterion 8 (§663; amending §650, §76, §83; the data decision „The runners' own emails tell the truth”; §NNN) —
+ * BR-REQ-037-03, BR-REQ-038-01 criterion 8 (§663; amending §650, §76, §83; the data decision „The runners' own emails tell the truth”; §671) —
  * «Email respins» says which email did not arrive, when, why — by the registration's one email state and,
  * for an address that refuses the club's mail, by its cause — whether the address had been confirmed before
  * it, and what to do, by who reads it.
@@ -387,7 +387,7 @@ describe("rejectedEmailWords", () => {
   }
 });
 
-describe("the sentences never contradict each other, in every combination (§NNN)", () => {
+describe("the sentences never contradict each other, in every combination (§670)", () => {
   for (const locale of ["ro", "en"] as const) {
     it(`own × sent × timed × kind × status × cause × reader: «trimis» never beside «Nu a plecat», the address never beside «nu adresa» (${locale})`, () => {
       const words = catalogues[locale].Admin.registrations.rejected;
@@ -444,7 +444,7 @@ describe("the sentences never contradict each other, in every combination (§NNN
   }
 });
 
-describe("«Ce îi spui» on a row whose email did not arrive (§663, §NNN)", () => {
+describe("«Ce îi spui» on a row whose email did not arrive (§663, §670)", () => {
   const base: TellFacts = {
     status: "CONFIRMED", holdExpiresAt: null, emailLinkExpiresAt: null, offerEmailQueued: false, eventStartsAt: new Date("2026-11-21T08:00:00.000Z"),
     eventTimezone: "Europe/Bucharest", eventCancelled: false, waitlistAutoOffer: true, waitlistCountPublic: true, participantCountPublic: true, waitlistPosition: null,
@@ -617,7 +617,7 @@ describe("the email state's object, as the subquery hands it back", () => {
   });
 });
 
-describe("what a message carries, and what a registration still needs (§NNN)", () => {
+describe("what a message carries, and what a registration still needs (§670)", () => {
   it("the confirmation carries the race number, the signed declaration and the event's details; the reminder the race number and the details; the declaration request the details; every other type only itself", () => {
     expect(typesCoveredBy("REGISTRATION_CONFIRMED").sort()).toEqual(["BIB_ASSIGNED", "DECLARATION_SIGNED", "EVENT_UPDATE_NOTICE", "REGISTRATION_CONFIRMED"]);
     expect(typesCoveredBy("EVENT_REMINDER").sort()).toEqual(["BIB_ASSIGNED", "EVENT_REMINDER", "EVENT_UPDATE_NOTICE"]);

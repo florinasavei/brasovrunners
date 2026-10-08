@@ -1,7 +1,7 @@
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 
 /**
- * What a participant's message carries of another (§NNN): a message of the type on the left, sent or
+ * What a participant's message carries of another (§670): a message of the type on the left, sent or
  * delivered, gives the person what an earlier refused message of each type on the right was to give
  * them, so it answers that refusal as well as its own. Read from what `render.ts` and `templates.ts` put
  * in each message, not from the types' names:
@@ -15,7 +15,7 @@ import type { EmailMessageType } from "@/db/schema/email-outbox";
  *   the reminder and the declaration request (`COMPLETE_DECLARATION`, the participation confirmation of
  *   §104): each gives the person what a refused «Detalii actualizate» (`EVENT_UPDATE_NOTICE`, §331) was to
  *   tell them. A later «Detalii actualizate» answers an earlier one too (a type always covers itself), and
- *   that is accepted knowingly (§NNN), not because it carries the earlier one's details: it carries the
+ *   that is accepted knowingly (§670), not because it carries the earlier one's details: it carries the
  *   one-line facts and the band for its own changes only (`noticeParts` in `templates.ts`), so a notice
  *   about the place answers a refused one about the programme. What it does carry is what the refused one
  *   asked of the person — the details were updated, look at the event's page, which shows them all. The

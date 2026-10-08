@@ -13,7 +13,7 @@ import {
 import { enhancedStatusIn, enhancedStatusTextIn, rejectionCause } from "@/modules/notifications/domain/rejection-cause";
 
 /**
- * BR-REQ-080-04, BR-REQ-038-01 (§NNN; amending §663, §76/§83, §320, §622) — the facts a refusal is stored
+ * BR-REQ-080-04, BR-REQ-038-01 (§670; amending §663, §76/§83, §320, §622) — the facts a refusal is stored
  * with: whom each message type is for (the participant's own mail is the only one a refusal of which says
  * anything about them), why a message was refused, by a stated precedence, and the one redactor every
  * provider word passes through before it is stored.

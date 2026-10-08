@@ -798,7 +798,7 @@ export async function processOutboxBatch(
         const markSent = (handle: Pick<typeof db, "update">) => handle.update(emailOutbox).set(sentValues).where(eq(emailOutbox.id, row.id));
         /*
           The same message refused before for this registration, or one this message carries (the
-          confirmation carries the race number and the signed declaration), is now sent again (§NNN): its
+          confirmation carries the race number and the signed declaration), is now sent again (§670): its
           refusal says so, and a refusal of the club's account is over. Best effort, after the mark: one
           probe first, and only when it finds something its own transaction under the participant's lock
           (`noteSentAgain`); the message is out whatever happens here, and a refusal that stays unmarked
@@ -1056,7 +1056,7 @@ async function recordFailure(
 
 /**
  * The address refused at the send (§622: the one refusal that is the address's, Mailgun's 400 naming
- * it or Gmail's 5.1.x): BOUNCED, terminal, with the facts a webhook's refusal carries (§NNN) — the
+ * it or Gmail's 5.1.x): BOUNCED, terminal, with the facts a webhook's refusal carries (§670) — the
  * instant, the cause and the code (the provider's words are the reason itself, already redacted) — and
  * what the participant's later rows already say about it. A FAILED row carries none of them:
  * «Reîncearcă emailurile eșuate» sends it again as it is (`retry-failed.ts`), with nothing stale to clear.
@@ -1086,7 +1086,7 @@ async function recordBounceAtSend(db: Db, row: OutboxRow, error: string, at: Dat
 /**
  * The Mailgun events a delivery webhook may report, and what each does to the row it names
  * (AGENTS.md §16.5). `delivered` marks the row's delivery and settles the participant's earlier
- * refusals (§NNN); `opened`/`clicked`/`unsubscribed` update nothing — this schema tracks send outcome,
+ * refusals (§670); `opened`/`clicked`/`unsubscribed` update nothing — this schema tracks send outcome,
  * not engagement, and tracking stays off (§320) — and are accepted (not rejected) so Mailgun does not
  * retry a webhook this application has nothing to do with.
  */

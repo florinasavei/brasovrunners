@@ -28,7 +28,7 @@ export function adminSay(lang: Lang): Say {
 const NBSP = " ";
 
 /**
- * A line of parts joined by « · », each part unbreakable (§NNN): where the line wraps, it wraps between two
+ * A line of parts joined by « · », each part unbreakable (§671): where the line wraps, it wraps between two
  * parts, never inside one — «Căsuța e plină» never leaves «plină» alone on the next line — and so takes
  * two lines at most on a 360- or a 400-pixel phone.
  */
@@ -50,7 +50,7 @@ export function shortDay(at: Date, locale: string): string {
 
 const lineDays = new Map<Lang, Intl.DateTimeFormat>();
 /**
- * The card's date, on the list's one line (§NNN): «26 sept.» / «26 Sept», in club time — the day and the
+ * The card's date, on the list's one line (§671): «26 sept.» / «26 Sept», in club time — the day and the
  * month alone, no weekday, so the common line, «Adresa nu există · Confirmarea cu QR · 3 oct.», keeps to
  * one line on a 400-pixel phone (the weekday took it to two), and the longest, «Adresa nu mai există ·
  * Numărul de concurs · 26 oct.», to two, wrapping between parts. The sentences keep `shortDay`.
@@ -66,7 +66,7 @@ export function lineDay(at: Date, locale: string): string {
 }
 
 /**
- * An email's short name, in the words the participant reads (`Admin.emails.typesShort`, §NNN): «Confirmarea
+ * An email's short name, in the words the participant reads (`Admin.emails.typesShort`, §671): «Confirmarea
  * cu QR», «Numărul de concurs». A type with no short name keeps its long one (`Admin.emails.types`), and a
  * type the catalogue does not know reads «un email al clubului».
  */
@@ -77,13 +77,13 @@ export function shortEmailName(messageType: string, locale: string): string {
   return short[messageType] ?? long[messageType] ?? messages.Admin.registrations.rejected.typeUnknown;
 }
 
-/** The cause in at most four words (§NNN): «Adresa nu există», «Căsuța e plină», «Mailgun nu mai trimite». */
+/** The cause in at most four words (§671): «Adresa nu există», «Căsuța e plină», «Mailgun nu mai trimite». */
 export function causeLabel(cause: RejectionCause, locale: string): string {
   return adminSay(langOf(locale))(`registrations.rejected.label.${cause}`);
 }
 
 /**
- * Why, in plain words, for one refusal (§NNN): the receiving server's reason by its cause when the message
+ * Why, in plain words, for one refusal (§671): the receiving server's reason by its cause when the message
  * left; when it never left, the club's account (`account`), the provider refusing the address at the send,
  * or the provider refusing it otherwise. A complaint always left.
  */
@@ -102,11 +102,11 @@ export type RejectedEmailFacts = DeskEmailState & {
   emailConfirmedAt: Date | null;
   /**
    * The person's own click on a link (`participants.email_verified_at`): an address that answered a click
-   * before its refusal «no longer exists» (§NNN) — the person may have closed the mailbox. Absent at the desk.
+   * before its refusal «no longer exists» (§671) — the person may have closed the mailbox. Absent at the desk.
    */
   emailVerifiedAt?: Date | null;
   /**
-   * This registration is confirmed (§NNN): its place stays whatever the email, the words say so first, and
+   * This registration is confirmed (§671): its place stays whatever the email, the words say so first, and
    * they never suggest a new registration — on a full race a new one goes to the waiting list.
    */
   confirmed?: boolean;
@@ -117,7 +117,7 @@ export type RejectedEmailFacts = DeskEmailState & {
 };
 
 /**
- * Who reads the words (§NNN): an Administrator (the list, the page — may press every resend), an
+ * Who reads the words (§670): an Administrator (the list, the page — may press every resend), an
  * Organizer (the list, the page — reads, presses nothing, §289), or whoever works the desk on race day
  * (every staff role; no address and no phone there, §67 — but the person in front of them).
  */
@@ -127,16 +127,16 @@ export type RejectedEmailWords = {
   /**
    * «Respins: „Înscriere confirmată (cu QR și număr)”, trimis sâm., 3 oct. 2026, la 10:00.» — or, for one
    * that never left, «refuzat la trimitere» at the refused attempt's instant (`rejected_at`), and «pus în
-   * coadă» at the queueing's when the refusal's own instant was never stored (§NNN); a family member's,
+   * coadă» at the queueing's when the refusal's own instant was never stored (§671); a family member's,
    * «Respins la aceeași adresă, …» only when it left. The long name: the registration page's story.
    */
   which: string;
-  /** Why, in plain words — by the cause for an address that refuses mail, by the state's kind otherwise (§NNN). */
+  /** Why, in plain words — by the cause for an address that refuses mail, by the state's kind otherwise (§671). */
   why: string;
   /** Why a confirmed row can carry it: the address was confirmed before (or after) it, or never. */
   context: string;
   /**
-   * What to do, by who reads it (§NNN): on a confirmed registration first that the place stays; then what
+   * What to do, by who reads it (§671): on a confirmed registration first that the place stays; then what
    * the cause asks — phone, let the person make room, wait and send again, lift Mailgun's suppression only
    * when the person confirms the address, never lift an unsubscription unasked — and the press that clears
    * it by its button's name for the Administrator, «Roagă un administrator să…» for the Organizer; the desk
@@ -150,14 +150,14 @@ export type RejectedEmailWords = {
   /** The email's short name. */
   short: string;
   /**
-   * The one line under the name (§NNN), each part unbreakable: «Adresa nu există · Confirmarea cu QR ·
+   * The one line under the name (§671), each part unbreakable: «Adresa nu există · Confirmarea cu QR ·
    * 3 oct.» (red); «Confirmarea cu QR lipsește · adresa merge acum» or «Nu a plecat · … · …»
    * (amber); «Retrimis sâm., 3 oct. · așteptăm livrarea» (quiet — the list draws nothing for it).
    */
   line: string;
   tone: "error" | "warning" | "info";
   /**
-   * The desk's one chip (§NNN, §67): only while somebody must act and the refused email is this person's
+   * The desk's one chip (§671, §67): only while somebody must act and the refused email is this person's
    * own QR confirmation, or any QR confirmation at an address that refuses mail — «Fără QR pe email — caută
    * după nume», and what to tell the person. Null for every other email, every other reader, a family
    * member's owed one, and a state that waits.
@@ -168,11 +168,11 @@ export type RejectedEmailWords = {
 /** The causes whose to-do ends with the press that clears it: the address may take the email now. */
 const SEND_AGAIN_AFTER: ReadonlySet<RejectionCause> = new Set(["mailbox-full", "blocked", "gave-up", "refused", "other", "suppressed", "account"]);
 
-/** The to-do sentence for an address that refuses the club's mail, by cause, before the press (§NNN). */
+/** The to-do sentence for an address that refuses the club's mail, by cause, before the press (§671). */
 function causeTodoKey(cause: RejectionCause, confirmed: boolean): string {
   switch (cause) {
     case "no-such-address":
-      // Never «a new registration» on a confirmed one (§NNN): on a full race it goes to the waiting list.
+      // Never «a new registration» on a confirmed one (§671): on a full race it goes to the waiting list.
       return confirmed ? "todoKept" : "todo";
     case "mailbox-full":
       return "todoCause.mailbox-full";
@@ -189,7 +189,7 @@ function causeTodoKey(cause: RejectionCause, confirmed: boolean): string {
   }
 }
 
-/** What the desk tells the person in front of it about an address that refuses the club's mail (§NNN). */
+/** What the desk tells the person in front of it about an address that refuses the club's mail (§671). */
 function deskTellKey(cause: RejectionCause, confirmed: boolean): string {
   switch (cause) {
     case "no-such-address":
@@ -210,7 +210,7 @@ function deskTellKey(cause: RejectionCause, confirmed: boolean): string {
 
 /**
  * «Email respins», said in full (§663; amending §650, §76, §83) — of the registration's one email state
- * (the data decision §670), by its cause and for who reads it (§NNN): which email did not arrive (its
+ * (the data decision §670), by its cause and for who reads it (§671): which email did not arrive (its
  * name in the «Emailuri» catalogue, short on a card), when (club time, §452), why in plain words, whether
  * the address had been confirmed before it, and what to do. Staff never change the address (§645,
  * `AGENTS.md` §15.11): only the person can, by registering again — said only while the registration is
@@ -252,7 +252,7 @@ export function rejectedEmailWords(facts: RejectedEmailFacts, locale: string, re
   // complaint (it arrived) — so «trimis» and «Nu a plecat» are never said of one email.
   const left = facts.kind !== "not-sent" && (facts.sent || facts.status === "COMPLAINED");
   // Refused at the send, the message never left: «refuzat la trimitere» at the refusal's own instant, or «pus
-  // în coadă» at the queueing's when a refusal written before `rejected_at` existed has only that (§NNN).
+  // în coadă» at the queueing's when a refusal written before `rejected_at` existed has only that (§671).
   const timed = facts.atKnown !== false;
   const whichKey = facts.own
     ? left
@@ -266,7 +266,7 @@ export function rejectedEmailWords(facts: RejectedEmailFacts, locale: string, re
         ? "whichFamilyQueued"
         : "whichFamilyUntimed";
   const which = rejected(whichKey, { type, instant: instant(facts.at) });
-  // «Adresa nu mai există» (§NNN): the address answered the person's own click before it was refused.
+  // «Adresa nu mai există» (§671): the address answered the person's own click before it was refused.
   const verifiedAt = facts.emailVerifiedAt ?? null;
   const noLonger = facts.kind === "unreachable" && left && facts.cause === "no-such-address" && verifiedAt !== null && verifiedAt.getTime() <= facts.at.getTime();
   const label = noLonger ? rejected("label.noLonger") : causeLabel(facts.cause, lang);
@@ -279,7 +279,7 @@ export function rejectedEmailWords(facts: RejectedEmailFacts, locale: string, re
   const pressOf = (press: NonNullable<DeskEmailState["press"]>) =>
     rejected(reader === "administrator" ? `todoPress.${press}` : `todoAskAdmin.${press}`);
   const family = (text: string) => (facts.own ? text : rejected("todoFamily", { todo: text }));
-  // On a confirmed registration the place stays (§NNN): the Administrator and the Organizer read that first.
+  // On a confirmed registration the place stays (§671): the Administrator and the Organizer read that first.
   const lead = confirmed && needsAction && reader !== "desk" ? rejected("placeKept") : null;
 
   let why: string;
@@ -327,11 +327,11 @@ export function rejectedEmailWords(facts: RejectedEmailFacts, locale: string, re
     default: {
       why = noLonger && verifiedAt ? rejected("why.noLonger", { date: shortDay(verifiedAt, lang) }) : causeWhy(facts.cause, left, lang);
       if (reader === "desk") {
-        // An event's notice that never arrived is said to the person too, after what the address does (§NNN).
+        // An event's notice that never arrived is said to the person too, after what the address does (§671).
         todo = [rejected(deskTellKey(facts.cause, confirmed)), call ? rejected(`todoTell.${call}`) : null].filter(Boolean).join(" ");
       } else if (call) {
         // Nothing sends an event's notice again (`callInstead`): whatever the cause, the person is phoned
-        // and told what the notice said (§NNN). For an address that does not exist the call is the to-do
+        // and told what the notice said (§671). For an address that does not exist the call is the to-do
         // itself — «Sună persoana» once, not twice.
         const cause = facts.cause === "no-such-address" ? null : rejected(causeTodoKey(facts.cause, confirmed));
         todo = [lead, cause, rejected(`todoCall.${call}`)].filter(Boolean).join(" ");
@@ -344,11 +344,11 @@ export function rejectedEmailWords(facts: RejectedEmailFacts, locale: string, re
       tone = "error";
     }
   }
-  // The provider's code and words in small print (§NNN), the code once: the server's words usually start with it.
+  // The provider's code and words in small print (§671), the code once: the server's words usually start with it.
   const code = facts.code?.trim() || null;
   const words = facts.detail?.trim() || null;
   const detail = words && code && !words.startsWith(code) ? `${code} ${words}` : (words ?? code);
-  // The desk's chip (§NNN, §67): this person's own QR email, or an address that refuses every email. A family
+  // The desk's chip (§671, §67): this person's own QR email, or an address that refuses every email. A family
   // member's owed confirmation says nothing of this one, which may have arrived. Its hint is what to tell the
   // person — for an email owed, that it did not arrive and the number is handed out by name, never a press.
   const deskChip = reader === "desk" && needsAction && isDeskQrMessage(facts.messageType) && (facts.own || facts.kind === "unreachable");
@@ -370,7 +370,7 @@ export function rejectedEmailWords(facts: RejectedEmailFacts, locale: string, re
 }
 
 /**
- * The first sentence of a resend's question (§NNN), while the registration's state asks somebody to act:
+ * The first sentence of a resend's question (§671), while the registration's state asks somebody to act:
  * what the last refusal says of this press — Mailgun will not send at all (a suppression, an
  * unsubscription, a complaint's suppression); the address does not exist; the mailbox was full on that
  * day; the receiving server refused it for its own reason. Nothing for an email the club's account could

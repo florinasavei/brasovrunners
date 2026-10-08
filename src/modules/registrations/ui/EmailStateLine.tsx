@@ -11,7 +11,7 @@ const TONE_COLOR: Record<RejectedEmailWords["tone"], string> = {
 };
 
 /**
- * The registration's email state in one line under the name (§NNN; the owner, 2026-10-07: «Cum e posibil
+ * The registration's email state in one line under the name (§671; the owner, 2026-10-07: «Cum e posibil
  * să fie email respins dar și confirmat? Am nevoie de mai multe info in app»): «Adresa nu există ·
  * Confirmarea cu QR · 3 oct.», itself a link to the registration's «Emailuri», where the whole story is.
  *

@@ -36,7 +36,7 @@ export type TellFacts = {
   /** Why an expired row expired: a lapsed declaration hold says what its email said (§638). */
   expiryReason?: string | null;
   /**
-   * The registration's email state (§663, the data decision §670, §NNN): when the address refuses the club's
+   * The registration's email state (§663, the data decision §670, §671): when the address refuses the club's
    * mail (`unreachable`), which email did not arrive, in the participant's words and with its date, why in
    * plain words by its cause, and what the person can do. A message the club's account could not send, or one
    * owed again to an address that works, is not the person's to hear about as a refusal: it is said as owed
@@ -167,18 +167,18 @@ export function tellLines(say: Say, ours: Say, locale: string, facts: TellFacts,
   const lapsed = deadline?.kind === "linkLapsed" || deadline?.kind === "offerLapsed";
   if (active && link && !held && !lapsed && link.getTime() !== stated?.getTime()) lines.push(ours("linkUntil", { instant: at(link) }));
   // Not once the link or the offer has lapsed: there is no email left to look for. Nor while an email the
-  // person waits on was refused and not sent again (§NNN): the address refused it, the club's account was
+  // person waits on was refused and not sent again (§670): the address refused it, the club's account was
   // refused so it never left, or it is owed to an address that works again — none of them is in spam. A
   // message sent again may be; a complaint is the person's own, and their mail still arrives.
   // A family member's email owed at the same address is theirs (§543): this person's own mail is not
   // refused by it, and may be in spam like anybody's. The address's refusal is everybody's at it. An event's
-  // notice owed (§NNN) is not the email the person waits on: the link they wait for may be in spam.
+  // notice owed (§670) is not the email the person waits on: the link they wait for may be in spam.
   const state = facts.emailState ?? null;
   const own = state?.own !== false;
   const call = state?.messageType ? callInstead(state.messageType) : null;
   const refusedNotResent = state !== null && state.status === "BOUNCED" && state.kind !== "retried" && (state.kind === "unreachable" || (own && call === null));
   if (WAITS_ON_AN_EMAIL.has(facts.status) && !lapsed && !refusedNotResent) lines.push(say("spamHint.body"));
-  // The address refuses the club's mail (§663, §NNN): on any state, confirmed included — said to the person
+  // The address refuses the club's mail (§663, §670): on any state, confirmed included — said to the person
   // without the address, which stays theirs to change (§645): which email, in their words, and its date; why,
   // by its cause; what they can do. An email the club's account could not send, or one owed to an address
   // that works again, is said as owed — never as the address's refusal. «Detalii actualizate» has no press:
@@ -191,10 +191,10 @@ export function tellLines(say: Say, ours: Say, locale: string, facts: TellFacts,
   return lines;
 }
 
-/** The causes a person can do something about by adding the club to their contacts (§NNN). */
+/** The causes a person can do something about by adding the club to their contacts (§671). */
 const ASK_FOR_CONTACTS: ReadonlySet<RejectionCause> = new Set(["blocked", "gave-up", "refused", "other", "account"]);
 
-/** What a person can do about a refusal of their address, by its cause (§NNN); null for nothing to say. */
+/** What a person can do about a refusal of their address, by its cause (§671); null for nothing to say. */
 function canKey(cause: RejectionCause, confirmed: boolean): string | null {
   if (cause === "no-such-address") return confirmed ? null : "rejected.can.no-such-address";
   if (cause === "mailbox-full") return "rejected.can.mailbox-full";
@@ -203,7 +203,7 @@ function canKey(cause: RejectionCause, confirmed: boolean): string | null {
   return "rejected.can.unsubscribed";
 }
 
-/** The email's lines of «Ce îi spui» (§NNN): none for an email sent again, nor for a family member's owed one. */
+/** The email's lines of «Ce îi spui» (§671): none for an email sent again, nor for a family member's owed one. */
 function emailTellLines(
   ours: Say,
   locale: string,

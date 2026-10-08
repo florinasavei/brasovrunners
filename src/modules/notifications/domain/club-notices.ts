@@ -224,7 +224,7 @@ export function participantMessageBcc(setting: ClubNotices | null): readonly str
 
 /**
  * The messages a participant receives, from §16.3's list — the ones the club gets a copy of (§320).
- * Read from the audience map (`email-audience.ts`, §NNN), where every message type must name whom it
+ * Read from the audience map (`email-audience.ts`, §670), where every message type must name whom it
  * is written for, so a type added tomorrow cannot become a participant's message — or stop being one —
  * because somebody forgot a set: the club's own (the archive copies and the confirmation notice, §244,
  * §245: a hidden copy of a copy would spend the allowance twice on the same mailbox), the staff's

@@ -72,7 +72,7 @@ export type PersonData = {
   registrations: PersonRegistration[];
   declarationAcceptances: DeclarationAcceptance[];
   /**
-   * The messages by type, date and status, and what the provider reported of each (§NNN): when it was
+   * The messages by type, date and status, and what the provider reported of each (§670): when it was
    * delivered or refused, why, and whether the address took a later message — never the provider's words,
    * which a redactor may have missed an address in.
    */

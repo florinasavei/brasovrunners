@@ -45,7 +45,7 @@ vi.mock("@/shared/feedback/confirm-words", () => ({ confirmWords: async () => ({
 // «Retrimite invitația»'s two answers read the club's timing (§540); the roles do not depend on it.
 vi.mock("@/modules/notifications/send-now-choice", () => ({ sendNowChoiceFor: async () => null }));
 vi.mock("@/shared/forms/refusal-messages", () => ({ refusalMessages: async () => ({}) }));
-// The invitations' refusals (§NNN) are a read of the outbox; the roles do not depend on them.
+// The invitations' refusals (§671) are a read of the outbox; the roles do not depend on them.
 vi.mock("@/modules/notifications/delivery-evidence", () => ({ refusedInvitations: async () => new Map() }));
 vi.mock("@/app/[locale]/admin/actions", () => ({
   changeStaffRoleAction: vi.fn(),

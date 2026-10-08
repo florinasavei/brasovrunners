@@ -3492,7 +3492,7 @@ const EVENT_FACTS_MESSAGES: ReadonlySet<EmailMessageType> = new Set([
  * The messages that are not to a person about their own data (§323), and so carry no privacy line:
  * the club's (the archive copies and the confirmation notice go to the club's mailboxes) and the
  * staff's (an invitation says what the account keeps in its own body; the Administrators' notices are
- * about nobody's data) — read from the audience map (`domain/email-audience.ts`, §NNN). The public's —
+ * about nobody's data) — read from the audience map (`domain/email-audience.ts`, §670). The public's —
  * the newsletter, «registration is open», an invitation to an event — keep their line.
  */
 function carriesNoPrivacyLine(messageType: EmailMessageType): boolean {

@@ -20,7 +20,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-037-01, BR-REQ-037-02, BR-REQ-038-01 (§663; amending §650, §76, §83; the data decision „The runners' own emails tell the truth”; §NNN) —
+ * BR-REQ-037-01, BR-REQ-037-02, BR-REQ-038-01 (§663; amending §650, §76, §83; the data decision „The runners' own emails tell the truth”; §671) —
  * «Email respins» drawn where the club looks, from a real database: one line under the name on the list (a
  * link to the registration's «Emailuri»), the filter's count, the line and its to-do under the address, the
  * section «Emailuri» (the story, the participant's own emails newest first, the club's apart by role), the
@@ -240,7 +240,7 @@ async function listOf(params: Record<string, string>) {
   return { tree, rows, lines };
 }
 
-describe("the list: one line under the name, a link to «Emailuri» (§NNN)", () => {
+describe("the list: one line under the name, a link to «Emailuri» (§671)", () => {
   it("draws the cause, the email's short name and its day; the filter says how many; no provider words", async () => {
     const race = await createRace();
     const confirmed = await register(race.id, { emailConfirmedAt: CONFIRMED_AT, confirmedAt: CONFIRMED_AT, bibNumber: 17 });
@@ -320,7 +320,7 @@ describe("the list: one line under the name, a link to «Emailuri» (§NNN)", ()
   });
 });
 
-describe("«Retrimite declarația tuturor care nu au semnat» (§606, §NNN, BR-REQ-037-02)", () => {
+describe("«Retrimite declarația tuturor care nu au semnat» (§606, §671, BR-REQ-037-02)", () => {
   /** Every element under `node`, the props that carry elements included (the event page's `below`). */
   function everything(node: ReactNode, acc: ReactElement<Props>[] = []): ReactElement<Props>[] {
     for (const element of elements(node)) {
@@ -353,7 +353,7 @@ describe("«Retrimite declarația tuturor care nu au semnat» (§606, §NNN, BR-
   });
 });
 
-describe("the registration's page: the line, its to-do, and «Emailuri» (§NNN)", () => {
+describe("the registration's page: the line, its to-do, and «Emailuri» (§671)", () => {
   it("says the short line and the to-do under the address; the story, the own emails newest first, the club's apart; «Ce îi spui»", async () => {
     const race = await createRace();
     const id = await register(race.id, { emailConfirmedAt: CONFIRMED_AT, confirmedAt: CONFIRMED_AT, bibNumber: 17 });
@@ -456,7 +456,7 @@ describe("the registration's page: the line, its to-do, and «Emailuri» (§NNN)
   });
 });
 
-describe("the desk: one chip, for the QR confirmation only (§NNN, §67)", () => {
+describe("the desk: one chip, for the QR confirmation only (§671, §67)", () => {
   it("says «Fără QR pe email — caută după nume» for the confirmation, nothing for the reminder, never an address", async () => {
     const race = await createRace();
     const qr = await register(race.id, { emailConfirmedAt: CONFIRMED_AT, confirmedAt: CONFIRMED_AT, bibNumber: 17 });
@@ -477,7 +477,7 @@ describe("the desk: one chip, for the QR confirmation only (§NNN, §67)", () =>
   });
 });
 
-describe("the club's own side (§NNN)", () => {
+describe("the club's own side (§671)", () => {
   it("lists the club's mailboxes that refuse its emails by address while still the club's, by role once removed — never a subscriber's or a runner's", async () => {
     const race = await createRace();
     const id = await register(race.id);

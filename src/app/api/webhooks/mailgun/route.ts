@@ -10,7 +10,7 @@ import { env } from "@/shared/config/env";
  * the outbox row whose message they are about. Refused for lacking a signing key until
  * `MAILGUN_WEBHOOK_SIGNING_KEY` is configured, which is the correct behaviour for an endpoint nothing
  * should be calling yet. What is kept of an event, and how it is redacted first, is
- * `notifications/mailgun-event.ts` (§NNN); what it does to the row, `applyMailgunEvent`.
+ * `notifications/mailgun-event.ts` (§670); what it does to the row, `applyMailgunEvent`.
  *
  * An event tagged for another deployment is answered without touching the database: QA and production
  * share the sending domain and its webhooks, and a delivery of a QA message must not wake production's.
@@ -33,7 +33,7 @@ export async function POST(request: Request): Promise<Response> {
     return NextResponse.json({ error: "INVALID_SIGNATURE" }, { status: 401 });
   }
 
-  // Another deployment's message: answered, never looked up (§NNN).
+  // Another deployment's message: answered, never looked up (§670).
   if (taggedForAnotherEnvironment(body["event-data"]?.tags, env.APP_ENV)) return NextResponse.json({ ok: true });
 
   const event = deliveryEventOf(body, new Date());

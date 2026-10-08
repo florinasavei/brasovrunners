@@ -472,7 +472,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     button and says why beside it, in the refusal banner's own sentence (§592).
   */
   const declarationResend = canManageRegistrations(staffUser.role) && internal ? await previewDeclarationResend(db, event.id, now) : null;
-  // Of those who wait to sign, how many have an address that refuses the club's mail (§NNN): said first, never a block.
+  // Of those who wait to sign, how many have an address that refuses the club's mail (§671): said first, never a block.
   const refusingMail = declarationResend && declarationResend.pending > 0 ? await countAddressRefusingMail(db, event.id, "PENDING_DECLARATION") : 0;
   const declarationResendConfirm: ConfirmSpec | null = declarationResend
     ? (() => {

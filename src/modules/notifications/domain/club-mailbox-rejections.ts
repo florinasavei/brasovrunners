@@ -2,7 +2,7 @@ import type { RecipientRole } from "./email-audience";
 import type { RejectionCause } from "./rejection-cause";
 
 /**
- * The club's own mailboxes that refuse its emails, one entry per address (§NNN): what «Setări → Emailuri»
+ * The club's own mailboxes that refuse its emails, one entry per address (§671): what «Setări → Emailuri»
  * draws in «Adresele clubului care resping emailuri» and what «Sarcini» counts. Pure: the refusals as
  * `listClubMailboxRejections` reads them (newest first, the address only while it is still one of the club's),
  * and which addresses are now the declaration's visible or hidden copies.

@@ -98,7 +98,7 @@ export type MailgunConfig = {
    */
   replyTo?: string;
   /**
-   * The environment the message leaves from (`APP_ENV`), sent as a tag (`env:<name>`, §NNN): QA and
+   * The environment the message leaves from (`APP_ENV`), sent as a tag (`env:<name>`, §670): QA and
    * production share the sending domain and its webhooks, and each deployment's webhook acts only on
    * the events of its own messages. Absent, no tag — and every event is acted on, as before.
    */
@@ -245,7 +245,7 @@ function normalizeProviderMessageId(id: string | undefined): string | undefined 
  * authorized recipients"* with the participant's address in it. That string is read by an
  * organizer in the backoffice and shipped into logs, so the address comes out here, at the one
  * boundary that sees it, rather than being trusted not to appear. The redactor is the one the
- * delivery webhook uses too (`redact.ts`, §NNN): the key, any address, the recipient's local part
+ * delivery webhook uses too (`redact.ts`, §670): the key, any address, the recipient's local part
  * quoted alone, an IP literal, a token-length run.
  */
 function sanitizeError(status: number, body: string, apiKey: string, recipient: string): string {
@@ -253,7 +253,7 @@ function sanitizeError(status: number, body: string, apiKey: string, recipient: 
 }
 
 /**
- * Whether a refusal stored at the send was the club's **account** rather than the address (§NNN): the
+ * Whether a refusal stored at the send was the club's **account** rather than the address (§670): the
  * exact opposite of the one case `classifyMailgunFailure` calls the address's — a 400 that names the
  * address or the recipient and not the sender — read back from `last_error` as `sanitizeError` wrote it.
  * Since §622 such a refusal is FAILED; before it, every permanent refusal was stored BOUNCED, and the
@@ -273,7 +273,7 @@ export function isAccountRefusalError(stored: string | null | undefined): boolea
   return !(failure.outcome === "permanent_failure" && !failure.notTheAddress);
 }
 
-/** The tag that names the environment a message left from (§NNN): the webhook acts only on its own. */
+/** The tag that names the environment a message left from (§670): the webhook acts only on its own. */
 export const ENVIRONMENT_TAG_PREFIX = "env:";
 
 export function createMailgunAdapter(config: MailgunConfig): EmailAdapter {
@@ -324,7 +324,7 @@ export function createMailgunAdapter(config: MailgunConfig): EmailAdapter {
        */
       form.set("v:idempotency_key", message.idempotencyKey);
       // Three tags at most: delivery statistics per locale is the only question the club would ever
-      // ask of them, and the second says which deployment the message is from (§NNN), so the
+      // ask of them, and the second says which deployment the message is from (§670), so the
       // webhook QA's and production's events both reach acts on its own deployment's alone.
       form.set("o:tag", `locale:${message.locale}`);
       if (config.environment) form.append("o:tag", `${ENVIRONMENT_TAG_PREFIX}${config.environment}`);

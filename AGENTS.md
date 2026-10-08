@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.73-2026-10-06 -->
+<!-- PROJECT_BASELINE: BR-V2.74-2026-10-08 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V2.73-2026-10-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.74-2026-10-08`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -2200,7 +2200,7 @@ for — the participant, the club's own mailboxes, the staff or the public
 (`notifications/domain/email-audience.ts`) — and only a participant's own message, with their id on
 it and not a club copy, says anything about their address: «Email respins», the registration's email
 state (`registrations/email-state.ts`) and the automatic re-send's refusal read those alone
-(`DECISIONS.md` §NNN). A message answers a refusal of what it carries
+(`DECISIONS.md` §670). A message answers a refusal of what it carries
 (`notifications/domain/content-cover.ts`: the confirmation carries the race number and the signed
 declaration, the reminder the race number, and the confirmation, the reminder and the declaration
 request the event's details, which a refused «Detalii actualizate» was to tell) — only a refusal of a
@@ -2217,7 +2217,7 @@ its registrations asks anybody to act — no line on the list, filter, export «
 chip; race day still does — and the registration's history keeps every row.
 
 The screens say the state by its cause and by who reads it, from one pure module
-(`registrations/ui/rejected-email-words.ts`, `DECISIONS.md` §NNN): one line under the name on the list
+(`registrations/ui/rejected-email-words.ts`, `DECISIONS.md` §671): one line under the name on the list
 (a link to the registration's «Emailuri», only while somebody must act), the same line and a to-do under
 the address — the Administrator told the press that clears it, the Organizer to ask for it, both to phone
 where no press helps — and «Emailuri» on the registration's page, every email newest first, the club's by
@@ -2940,7 +2940,7 @@ Registration maintenance:
   refusal with nothing delivered to the address since; not the club's own mailboxes' refusals, not the
   club's Mailgun account refused at the send, and not a newsletter's: §653's «…for any event or a
   newsletter» loses its newsletter, which the code never read (a newsletter row carries no participant,
-  and its audience is the public's) (`DECISIONS.md` §NNN); no deadline moves and the allocator is
+  and its audience is the public's) (`DECISIONS.md` §670); no deadline moves and the allocator is
   not called;
 - close remaining waiting-list entries for events that have started, with
   `expiry_reason = EVENT_STARTED`;
@@ -3155,7 +3155,7 @@ never move into a table the backoffice can read (§14.5), and no screen shows th
 - suppress repeated send where provider indicates permanent failure;
 - no body/secrets/action token in logs.
 
-What the webhook does with an event (`DECISIONS.md` §NNN; `api/webhooks/mailgun/route.ts`,
+What the webhook does with an event (`DECISIONS.md` §670; `api/webhooks/mailgun/route.ts`,
 `notifications/mailgun-event.ts`, `applyMailgunEvent`, `notifications/delivery-facts.ts`):
 
 - **an event tagged for another deployment** (`env:<APP_ENV>`, which the adapter puts on every
@@ -3193,7 +3193,7 @@ What the webhook does with an event (`DECISIONS.md` §NNN; `api/webhooks/mailgun
   notification: a `delivered` event lost to a 5xx or a cold start is never replayed, and the refusal
   it would have cleared stays until it, or a message that carries it, is delivered again. Whether a retry carries a
   fresh signature `timestamp` is not documented; if it does not, a retry later than the signature's
-  fifteen minutes (`mailgun-webhook.ts`) is refused — kept as it is, an owner's question (`DECISIONS.md` §NNN).
+  fifteen minutes (`mailgun-webhook.ts`) is refused — kept as it is, an owner's question (`DECISIONS.md` §670).
 
 ---
 

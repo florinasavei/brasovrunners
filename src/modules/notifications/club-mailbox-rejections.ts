@@ -2,7 +2,7 @@ import { listClubMailboxRejections } from "./delivery-evidence";
 import { type ClubNotices, mailboxesReceivingCopies, resolveDeclarationCopies } from "./domain/club-notices";
 import { type ClubMailboxGroup, groupClubMailboxRejections } from "./domain/club-mailbox-rejections";
 
-/** The window «Adresele clubului care resping emailuri» and its «Sarcini» row read (§NNN). */
+/** The window «Adresele clubului care resping emailuri» and its «Sarcini» row read (§671). */
 export const CLUB_REJECTION_WINDOW_DAYS = 30;
 
 /** Enough refusals for the window's counts; the read stops there in SQL. */
@@ -10,7 +10,7 @@ const CLUB_REJECTION_ROWS = 500;
 
 /**
  * The club's own mailboxes that refused its emails in the last thirty days, one entry per address
- * (`domain/club-mailbox-rejections.ts`, §NNN): the club's settings as they stand now decide which addresses
+ * (`domain/club-mailbox-rejections.ts`, §671): the club's settings as they stand now decide which addresses
  * may be written (`mailboxesReceivingCopies`) and which are the declaration's copies. The caller asserts who
  * may read it — the addresses are the club's, shown to those who read the registrations (BR-REQ-060-01).
  */

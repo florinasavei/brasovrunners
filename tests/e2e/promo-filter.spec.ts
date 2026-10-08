@@ -100,7 +100,7 @@ test.describe("§581 «Doar cu oferte și beneficii»: the list and its export",
       // Its two neighbours are ticks of the same kind (§650), not selects whose closed box shows the label as a value.
       for (const [id, name] of [
         ["registrations-filter-member", new RegExp(`^Doar membrii ${CLUB_NAME}$`)],
-        // With how many it would keep (§NNN), before anybody ticks it.
+        // With how many it would keep (§671), before anybody ticks it.
         ["registrations-filter-bounced", /^Doar cu un email respins \(\d+\)$/],
       ] as const) {
         const tick = main.getByTestId(id);

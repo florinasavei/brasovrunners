@@ -122,7 +122,7 @@ export async function selectConfirmationRetryRows<T extends Row>(
         createdAt: emailOutbox.createdAt,
         startsDeadline: sql<boolean>`coalesce((${emailOutbox.payloadJson}->>${STARTS_DEADLINE}::text) = 'true', false)`,
         isRetry: sql<boolean>`(${emailOutbox.idempotencyKey} like ${RETRY_KEY_PATTERN})`,
-        // A refusal that still stands for the address (§NNN): the same rule as `refusedAddresses`.
+        // A refusal that still stands for the address (§670): the same rule as `refusedAddresses`.
         addressRefused: sql<boolean>`(${addressRefusedCondition()})`,
       })
       .from(emailOutbox)
@@ -150,7 +150,7 @@ export async function selectConfirmationRetryRows<T extends Row>(
 }
 
 /**
- * The addresses whose refusal still stands, for any event (§76, §83; §NNN, amending §653): the outbox keeps
+ * The addresses whose refusal still stands, for any event (§76, §83; §670, amending §653): the outbox keeps
  * no suppression list of its own, so the re-sent email reads the rows themselves — the participant's own
  * messages only (`addressRefusedCondition`). A club mailbox that bounced the archive copy, the club's
  * Mailgun account refused at the send, and a refusal answered since by a delivery to the address no longer

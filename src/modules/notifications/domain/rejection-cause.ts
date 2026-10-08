@@ -1,7 +1,7 @@
 import { isAccountRefusalError } from "@/infrastructure/email/mailgun-adapter";
 
 /**
- * Why a message was refused, in the few words staff act on (§NNN; amending §76/§83, §663, and §622's
+ * Why a message was refused, in the few words staff act on (§670; amending §76/§83, §663, and §622's
  * reading of the rows it left behind). Until now every permanent refusal was stored `BOUNCED` and
  * worded «adresa nu există sau căsuța e plină» — a full mailbox, Mailgun's own suppression after an
  * earlier bounce, a receiving server's policy, eight hours of deferrals, and the club's own Mailgun
@@ -121,7 +121,7 @@ const WORDS: ReadonlyArray<[RegExp, RejectionCause]> = [
 ];
 
 /**
- * The cause, by a stated precedence (§NNN): the person's complaint; Mailgun's own suppressions, by their
+ * The cause, by a stated precedence (§670): the person's complaint; Mailgun's own suppressions, by their
  * reason or their code (605, 606, 607); a refusal stored at the send (the club's account, unless it was
  * the one 400 that names the address; a Gmail refusal, which `gmail-adapter.ts` keeps only for a 5.1.x);
  * the enhanced status code (`causeOfEnhanced`: a final `old` carrying the last deferral's 4.2.2 is a full

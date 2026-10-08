@@ -107,7 +107,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
    * accounts, and then nothing below claims anything about anybody.
    */
   const accounts = await checkInviteKey({ authMode: env.STAFF_AUTH_MODE, readerEmail: actor.email });
-  // Whose newest invitation email was refused (§NNN): one read of the window's invitations, for the rows' mark.
+  // Whose newest invitation email was refused (§671): one read of the window's invitations, for the rows' mark.
   const invitationRefusals = await refusedInvitations(getDb(), new Date());
   /**
    * «Adaugă mai mulți membri» (§524): the press's report, read back from its own audit row — one
@@ -144,7 +144,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
           {hasNoAccount(accounts, member.email) && (
             <Chip size="small" color="warning" label={t("staff.noAccount")} data-testid="staff-no-account" />
           )}
-          {/* The invitation email was refused (§NNN): until the person signs in, the row says why it did not reach them. */}
+          {/* The invitation email was refused (§671): until the person signs in, the row says why it did not reach them. */}
           {(() => {
             const cause = member.firstSignedInAt === null ? invitationRefusals.get(member.email.trim().toLowerCase()) : undefined;
             return (

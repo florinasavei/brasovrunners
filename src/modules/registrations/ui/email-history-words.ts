@@ -3,7 +3,7 @@ import type { RecipientRole } from "@/modules/notifications/domain/email-audienc
 import type { OutboxHistoryRow } from "../admin-repository";
 import { adminSay, causeLabel, causeWhy, shortEmailName } from "./rejected-email-words";
 
-/** The roles a registration's page lists apart, behind «și cele către club» (§NNN): the club's own mailboxes and copies. */
+/** The roles a registration's page lists apart, behind «și cele către club» (§671): the club's own mailboxes and copies. */
 const CLUB_ROLES: ReadonlySet<RecipientRole> = new Set(["archive", "notice", "copy", "staff", "public"]);
 
 /** Whether a row of the history is the club's (the archive, the notice, a copy), not the participant's own. */
@@ -11,7 +11,7 @@ export function isClubRow(row: Pick<OutboxHistoryRow, "recipientRole">): boolean
   return CLUB_ROLES.has(row.recipientRole);
 }
 
-/** How many of the participant's own emails «Emailuri» shows before «Toate emailurile ({n})» (§NNN). */
+/** How many of the participant's own emails «Emailuri» shows before «Toate emailurile ({n})» (§671). */
 export const EMAILS_SHOWN = 5;
 
 export type EmailHistoryWords = {
@@ -26,7 +26,7 @@ export type EmailHistoryWords = {
 };
 
 /**
- * One row of the registration's «Emailuri» (§NNN), in two short lines: which email and for whom, by its
+ * One row of the registration's «Emailuri» (§671), in two short lines: which email and for whom, by its
  * short name and role words — «către participant», «copia de arhivă a clubului» — and what became of it:
  * «În coadă», «Trimis», «Livrat», «Trimis prin Gmail · fără confirmare de livrare», «Respins — {cause}»,
  * «Marcat ca spam», «Nu a plecat — {reason}»; «Retrimis de {staff}» on a resend by hand. A refused row adds

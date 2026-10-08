@@ -7,7 +7,7 @@ import { useState } from "react";
 import { readingTimeMs, TOOLTIP_TEXT_SX } from "@/shared/ui/tooltip-text";
 
 /**
- * The desk's one email chip (§NNN, §67): «Fără QR pe email — caută după nume», only while somebody must act
+ * The desk's one email chip (§671, §67): «Fără QR pe email — caută după nume», only while somebody must act
  * and the refused email is the QR confirmation — and in its tooltip that it does not stop the number being
  * handed out, and what to tell the person in front of the desk. Never an address, never the provider's words:
  * the words are made on the server from the desk's own projection (`rejected-email-words.ts`).

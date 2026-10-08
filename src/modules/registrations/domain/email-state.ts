@@ -6,7 +6,7 @@ import { isRejectionCause, rejectionCause, type RejectionCause } from "@/modules
 import { deriveAllowedResendMessageType } from "./resend";
 
 /**
- * The registration's one email state (§NNN; amending §663, §76/§83): whether the participant's own mail
+ * The registration's one email state (§670; amending §663, §76/§83): whether the participant's own mail
  * reaches them, read from the refusals the provider reported and what came after each
  * (`notifications/delivery-facts.ts`). One state per registration, chosen in SQL
  * (`registrations/email-state.ts`), so the list, the page, the desk, the filter and the export can
@@ -51,7 +51,7 @@ export const EMAIL_STATE_NEEDS_ACTION: readonly EmailStateKind[] = ["unreachable
 
 /**
  * Whether a state asks somebody to act — what today's chip, the page's red line, «Ce îi spui», the filter
- * and the export's «Email bounced» speak for (§NNN). `retried` is shown nowhere until the next change draws
+ * and the export's «Email bounced» speak for (§670). `retried` is shown nowhere until the next change draws
  * it: it waits for a delivery, and a refusal sent again before this release never gets one.
  */
 export function needsEmailAction(state: { kind: EmailStateKind } | null | undefined): boolean {
@@ -73,7 +73,7 @@ export const EVENT_MOMENTS = ["ahead", "started", "cancelled-ahead", "cancelled-
 export type EventMoment = (typeof EVENT_MOMENTS)[number];
 
 /**
- * The messages no press sends again and a phone call replaces (§NNN): «Detalii actualizate» (a moved time
+ * The messages no press sends again and a phone call replaces (§670): «Detalii actualizate» (a moved time
  * or place, a changed programme) and «{event} a fost anulat». Each is still needed by a registration that
  * was told it (`EVENT_NOTICE_STATUSES`, §331) while it matters — the update notice while the event is on
  * and ahead, the cancellation while the event is cancelled and its start ahead — and not answered: a later
@@ -89,7 +89,7 @@ export type EmailCall = (typeof CALL_INSTEAD)[keyof typeof CALL_INSTEAD];
 
 /**
  * The event's notices (`CALL_INSTEAD`'s types). Once the registration is checked in (`checked_in_at`) none
- * of them is needed any more (§NNN): the person is standing at the desk, and nobody has anything to do —
+ * of them is needed any more (§670): the person is standing at the desk, and nobody has anything to do —
  * the SQL reads this list (`registrations/email-state.ts`).
  */
 export const EVENT_NOTICE_TYPES = Object.keys(CALL_INSTEAD) as EmailMessageType[];
@@ -108,7 +108,7 @@ export function callInstead(messageType: string): EmailCall | null {
 const TOLD_OF_THE_EVENT: readonly RegistrationStatus[] = AUDIENCE_STATUSES.ALL_ACTIVE;
 
 /**
- * The messages a registration in this status still needs (§NNN), at this moment of its event:
+ * The messages a registration in this status still needs (§670), at this moment of its event:
  *
  * - the one the page sends again for it (`deriveAllowedResendMessageType` — «Retrimite QR» on a confirmed
  *   registration) and what that carries (`typesCoveredBy`: the confirmation carries the race number's QR
@@ -142,7 +142,7 @@ export const STILL_NEEDED_KEYS: readonly string[] = EVENT_MOMENTS.flatMap((momen
 );
 
 /**
- * The press that clears a refusal (§NNN), on the registration the refused message was for: «Retrimite QR»
+ * The press that clears a refusal (§670), on the registration the refused message was for: «Retrimite QR»
  * (the confirmation, which carries the race number and the signed declaration too), «Trimite reminderul»,
  * or the page's resend for any other status — never a press that sends something else. Null when no
  * press would, and for the event's notices (`callInstead`): a confirmation sent again does carry the
@@ -166,7 +166,7 @@ export function pressThatClears(messageType: string, status: RegistrationStatus 
 export const DESK_CODE_MESSAGE_TYPES: readonly EmailMessageType[] = ["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "BIB_ASSIGNED"];
 
 /**
- * Whether a refused message is the QR confirmation, for the desk's one chip (§NNN): the confirmation, or a
+ * Whether a refused message is the QR confirmation, for the desk's one chip (§671): the confirmation, or a
  * message it carries (`typesCoveredBy`) that carries the desk code too — the race number's email. A refused
  * reminder leaves the confirmation's QR in the inbox, and the declaration's PDF and «Detalii actualizate»
  * carry no QR: the desk has nothing to say about them.
@@ -184,7 +184,7 @@ export type RegistrationEmailState = {
   at: Date;
   /**
    * Whether `at` is the refusal's own instant (`rejected_at` is set). A refusal written before migration
-   * `0131` has none, and `at` is then when it left, else when it was queued (§NNN): the words say
+   * `0131` has none, and `at` is then when it left, else when it was queued (§671): the words say
    * «refuzat la trimitere» only of a refusal's own instant, and «pus în coadă» of a queueing's.
    */
   atKnown: boolean;

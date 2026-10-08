@@ -192,7 +192,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     says nothing rather than a wrong hour.
   */
   /*
-    The club's own mailboxes that refuse its emails (§NNN): addresses of the club's, read under the same gate
+    The club's own mailboxes that refuse its emails (§671): addresses of the club's, read under the same gate
     as the club's copies above (`canReadRegistrations`), and drawn only when one refused something.
   */
   const clubRejections = maySeeQueue && notices ? await readClubMailboxRejections(db, notices, env.DECLARATIONS_ARCHIVE_TO, now) : [];
@@ -411,7 +411,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         />
       )}
 
-      {/* The club's mailboxes that refuse its emails (§NNN), under the lists that name them; nothing when none did. */}
+      {/* The club's mailboxes that refuse its emails (§671), under the lists that name them; nothing when none did. */}
       {clubRejections.length > 0 && <ClubMailboxRejectionsPanel locale={locale} groups={clubRejections} />}
 
       {/*

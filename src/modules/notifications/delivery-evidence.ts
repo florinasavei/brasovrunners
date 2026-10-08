@@ -7,7 +7,7 @@ import { isRejectionCause, rejectionCause, type RejectionCause } from "./domain/
 import { participantMessageCondition, rejectionInstantSql } from "./delivery-facts";
 
 /**
- * What the club's own side reads of the delivery facts (§NNN): the reads the club's screens draw, kept
+ * What the club's own side reads of the delivery facts (§670): the reads the club's screens draw, kept
  * beside the facts so the screens never write their own SQL over them. Each caller asserts its own
  * permission on the server first: the club mailboxes' refusals name addresses, and only those who read
  * registrations may see them (BR-REQ-060-01).
@@ -98,7 +98,7 @@ const INVITATIONS = ["STAFF_INVITATION", "MEMBER_INVITATION"] as const;
 const INVITATION_WINDOW_MS = 90 * 24 * 3_600_000;
 
 /**
- * The addresses whose newest invitation was refused (§NNN), by address in lower case, with the cause — for
+ * The addresses whose newest invitation was refused (§671), by address in lower case, with the cause — for
  * «Echipa»'s mark beside the name. A later invitation that left answers it (the newest one is read); the
  * club's account refused at the send says nothing about the address and marks nobody. One read of the
  * window's invitations, which carry no registration (`email_outbox_registration_created_idx`). The caller
@@ -147,7 +147,7 @@ export type DeliveryEvidence = {
 };
 
 /**
- * Whether Mailgun's `delivered` events reach this deployment at all (§NNN): without them nothing ever
+ * Whether Mailgun's `delivered` events reach this deployment at all (§670): without them nothing ever
  * clears, and every refusal stays as it was. One aggregate over the participants' own messages that left
  * by Mailgun in the last seven days — bounded by `sent_at`, so it reads the recent rows and not the table
  * — against those of them that carry a delivery. Gmail's road reports none, and is left out.

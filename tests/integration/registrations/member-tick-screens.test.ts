@@ -409,7 +409,7 @@ describe("BR-REQ-037-03 criterion 14: the members' and the bounced filters are t
       }
       expect(text(off.clubMember.props.children)).toBe(words.clubMemberOnly.replace("{club}", CLUB_NAME));
       expect(off.clubMember.props.help).toBe(words.clubMemberOnlyHelp.replaceAll("{club}", CLUB_NAME));
-      // With how many it would keep (§NNN): nobody's email asks for anything at this race.
+      // With how many it would keep (§671): nobody's email asks for anything at this race.
       expect(text(off.bounced.props.children)).toBe(words.bouncedOnly.replace("{count}", "0"));
       expect(off.bounced.props.help).toBe(words.bouncedOnlyHelp);
       // Each carries its glyph first, as the promo tick does, so the dense glyph column is not a gap.
@@ -435,7 +435,7 @@ describe("BR-REQ-037-03 criterion 14: the members' and the bounced filters are t
     const race = await createRace("Crosul");
     const bounced = await register(race.id);
     const reached = await register(race.id);
-    // The participant's own message (§NNN): their id on the row, as every message to them carries it.
+    // The participant's own message (§670): their id on the row, as every message to them carries it.
     const [{ participantId }] = await db.select({ participantId: registrations.participantId }).from(registrations).where(eq(registrations.id, bounced));
     await db.insert(emailOutbox).values({
       participantId,
@@ -454,7 +454,7 @@ describe("BR-REQ-037-03 criterion 14: the members' and the bounced filters are t
     const rows = table?.props.rows as { id: string }[];
     expect(rows.map((row) => row.id)).toEqual([bounced]);
     const nameColumn = (table?.props.columns as { key: string; render: (row: unknown) => ReactNode }[]).find((column) => column.key === "name");
-    // Since §NNN one line under the name, a link to the registration's «Emailuri» — no tooltip island — and no
+    // Since §671 one line under the name, a link to the registration's «Emailuri» — no tooltip island — and no
     // list payload carries the provider's words: the small print is the registration page's alone.
     const lines = elements(nameColumn?.render(rows[0])).filter((element) => element.type === EmailStateLine);
     expect(lines).toHaveLength(1);

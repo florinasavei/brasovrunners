@@ -197,7 +197,7 @@ export const emailOutbox = pgTable(
     sentAt: timestamp("sent_at", { withTimezone: true }),
 
     /*
-      What the provider said happened to the message after it left (§NNN; AGENTS.md §16.5) — the facts
+      What the provider said happened to the message after it left (§670; AGENTS.md §16.5) — the facts
       the registration's email state is read from (`registrations/email-state.ts`). Nothing here is a
       read receipt: open and click tracking stay off (§320).
     */
@@ -258,11 +258,11 @@ export const emailOutbox = pgTable(
     index("email_outbox_registration_created_idx").on(t.registrationId, t.createdAt),
     // Gmail's rolling day and its last send, read before every Gmail message (§443 review).
     index("email_outbox_transport_sent_idx").on(t.transport, t.sentAt),
-    // The delivery webhook's lookup (§NNN): it found its row by a full scan until delivered events acted.
+    // The delivery webhook's lookup (§670): it found its row by a full scan until delivered events acted.
     index("email_outbox_provider_message_id_idx")
       .on(t.providerMessageId)
       .where(sql`${t.providerMessageId} is not null`),
-    // A participant's own rows, across their registrations (§NNN): the email state's probe, and the
+    // A participant's own rows, across their registrations (§670): the email state's probe, and the
     // webhook's settling of earlier refusals by a later delivery to the same address.
     index("email_outbox_participant_idx").on(t.participantId),
   ],

@@ -360,7 +360,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   // When the domain expires (§435): the two dates from the environment, the arithmetic pure.
   const domain = domainRenewal(env.DOMAIN_REGISTERED_ON, env.DOMAIN_RENEWAL_YEARS, now);
   /*
-    The club's side of «Email respins» (§NNN): its own mailboxes that refused its emails in thirty days,
+    The club's side of «Email respins» (§671): its own mailboxes that refused its emails in thirty days,
     whether Mailgun's deliveries arrive at all this week, and per race how many participants have an email
     that asks somebody to act — counts, never a name or an address; this panel is the Administrator's.
   */
@@ -707,7 +707,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
               <Typography variant="body2" color="text.secondary">
                 {(() => {
                   const sentence = task.text ?? (task.state === "done" ? "done" : "todo");
-                  // A row said by a count (§NNN) reads its form, never an ICU plural; its own values beside the page's.
+                  // A row said by a count (§671) reads its form, never an ICU plural; its own values beside the page's.
                   const key = task.count !== undefined && task.state !== "done" ? `${sentence}.${countForm(task.count, locale)}` : sentence;
                   return t(`items.${task.id}.${key}`, { ...howValues, ...task.values, ...(task.count !== undefined ? { count: task.count } : {}) });
                 })()}
@@ -715,7 +715,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
               </Typography>
               {/* Where it is done, when that is a screen of this backoffice (§516): gone once the row is. */}
               {task.state !== "done" && <TaskTargetLink locale={locale} role={actor.role} target={TASK_TARGETS[task.id]} />}
-              {/* A race's registrations, filtered to the emails that ask somebody to act (§NNN): 44 pixels, as every row link. */}
+              {/* A race's registrations, filtered to the emails that ask somebody to act (§671): 44 pixels, as every row link. */}
               {task.registrationsOf && (
                 <Box
                   component="a"

@@ -24,7 +24,7 @@ import {
 } from "@/modules/registrations/ui/rejected-email-words";
 
 /**
- * §NNN (amending §663, §650; the data decision „The runners' own emails tell the truth”) — «Email respins» drawn where the club looks, phone
+ * §671 (amending §663, §650; the data decision „The runners' own emails tell the truth”) — «Email respins» drawn where the club looks, phone
  * first: one line under the name on the list (BR-REQ-038-01), the to-do by who reads it, the resend
  * questions' first sentence (BR-REQ-037-02), the desk's one QR chip (§67), the registration's «Emailuri»
  * (BR-REQ-037-01) and the club's own mailboxes.
@@ -55,7 +55,7 @@ function facts(overrides: Partial<RejectedEmailFacts> = {}): RejectedEmailFacts 
   };
 }
 
-describe("the words by cause and by reader (§NNN)", () => {
+describe("the words by cause and by reader (§671)", () => {
   for (const locale of ["ro", "en"] as const) {
     const words = catalogues[locale].Admin.registrations.rejected;
 
@@ -134,7 +134,7 @@ describe("the words by cause and by reader (§NNN)", () => {
   }
 });
 
-describe("the line under the name (§NNN)", () => {
+describe("the line under the name (§671)", () => {
   for (const locale of ["ro", "en"] as const) {
     const words = catalogues[locale].Admin.registrations.rejected;
     const short = catalogues[locale].Admin.emails.typesShort;
@@ -207,7 +207,7 @@ describe("the line under the name (§NNN)", () => {
   });
 });
 
-describe("the resend questions' first sentence (§NNN, BR-REQ-037-02)", () => {
+describe("the resend questions' first sentence (§671, BR-REQ-037-02)", () => {
   for (const locale of ["ro", "en"] as const) {
     const warn = catalogues[locale].Admin.registrations.rejected.warn;
     const state = (cause: RejectionCause, kind: (typeof EMAIL_STATE_KINDS)[number] = "unreachable") => ({ kind, cause, at: REJECTED_AT });
@@ -239,7 +239,7 @@ describe("the resend questions' first sentence (§NNN, BR-REQ-037-02)", () => {
   }
 });
 
-describe("the desk's one chip: the QR confirmation only (§NNN, §67)", () => {
+describe("the desk's one chip: the QR confirmation only (§671, §67)", () => {
   for (const locale of ["ro", "en"] as const) {
     const words = catalogues[locale].Admin.registrations.rejected;
 
@@ -287,7 +287,7 @@ describe("the desk's one chip: the QR confirmation only (§NNN, §67)", () => {
   });
 });
 
-describe("«Emailuri» rows in two short lines (§NNN, BR-REQ-037-01)", () => {
+describe("«Emailuri» rows in two short lines (§671, BR-REQ-037-01)", () => {
   const row = (overrides: Partial<OutboxHistoryRow> = {}): OutboxHistoryRow => ({
     messageType: "REGISTRATION_CONFIRMED",
     status: "SENT",
@@ -354,7 +354,7 @@ describe("«Emailuri» rows in two short lines (§NNN, BR-REQ-037-01)", () => {
   }
 });
 
-describe("the club's own mailboxes (§NNN)", () => {
+describe("the club's own mailboxes (§671)", () => {
   const at = (minutes: number) => new Date(REJECTED_AT.getTime() - minutes * 60_000);
   const input = (overrides: Partial<ClubRejectionInput>): ClubRejectionInput => ({
     role: "archive",

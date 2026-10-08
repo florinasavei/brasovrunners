@@ -759,7 +759,7 @@ describe("the email task off production", () => {
   });
 });
 
-/** §NNN — the club's side of «Email respins» on «Sarcini»: three rows, each from what the system reports. */
+/** §671 — the club's side of «Email respins» on «Sarcini»: three rows, each from what the system reports. */
 describe("the email rows of «Sarcini»", () => {
   const rows = (input: Partial<OwnerTaskInputs>) => ownerTasks({ ...LAUNCHED, ...input });
 

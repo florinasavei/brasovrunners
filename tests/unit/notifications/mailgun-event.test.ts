@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { deliveryEventOf, deliveryStatusOf, taggedForAnotherEnvironment } from "@/modules/notifications/mailgun-event";
 
 /**
- * BR-REQ-080-04 (§NNN; AGENTS.md §16.5) — what the delivery webhook keeps of a Mailgun event: the kind, the
+ * BR-REQ-080-04 (§670; AGENTS.md §16.5) — what the delivery webhook keeps of a Mailgun event: the kind, the
  * instant, whom it is about, the codes and the redacted words, Mailgun's one word, the row's own key; every
  * field may be missing. And the route answers another deployment's event without touching the database.
  */

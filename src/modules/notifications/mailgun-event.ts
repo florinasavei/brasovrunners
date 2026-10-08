@@ -5,7 +5,7 @@ import { enhancedStatusTextIn, rejectionCause } from "./domain/rejection-cause";
 import type { MailgunDeliveryEvent, MailgunEventType } from "./outbox";
 
 /**
- * What the delivery webhook keeps of one Mailgun event (§NNN; AGENTS.md §16.5), read from its JSON:
+ * What the delivery webhook keeps of one Mailgun event (§670; AGENTS.md §16.5), read from its JSON:
  * its kind, its instant (`timestamp`), whom it is about (`recipient` — compared with the row's, never
  * stored or logged), the delivery status's codes and words — redacted before anything stores them, of
  * any address, the recipient's local part, an IP literal and a token-length run, and cut to 200

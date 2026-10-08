@@ -95,7 +95,7 @@ export type VerificationEmailRow = {
   /** One the job re-sent by itself (its key is `AUTOMATIC_SEND_KEYS.confirmationRetry`): it uses up its attempt whatever became of it. */
   isRetry: boolean;
   /**
-   * On a refused row: whether the refusal still stands for the address (§NNN) — a complaint, or a refusal
+   * On a refused row: whether the refusal still stands for the address (§670) — a complaint, or a refusal
    * with nothing delivered to the address since, and not the club's account refused at the send. Absent,
    * a refused row is read as standing, as every one was before.
    */
@@ -131,7 +131,7 @@ export type ConfirmationRetryPlan = {
  * - nothing for the address and the event is waiting to leave (`PENDING`, `PROCESSING`): an email
  *   still queued is no email yet, nobody can have missed it, and a link on its way says it already;
  * - the address never bounced or complained, for any message (`refused`, §76, §83): a nudge to an
- *   address that refused mail harms the sending domain and reaches nobody. Since §NNN a refusal that no
+ *   address that refused mail harms the sending domain and reaches nobody. Since §670 a refusal that no
  *   longer stands is not one: the club's Mailgun account refused at the send, or a refusal answered by a
  *   later delivery to the address (`addressRefused`); a complaint always stands.
  *

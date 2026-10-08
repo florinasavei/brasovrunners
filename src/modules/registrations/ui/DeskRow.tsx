@@ -206,7 +206,7 @@ export default async function DeskRow({
               label={REGISTRATION_STATUS_LABEL[row.status]}
             />
             {row.kind === "TEST" && <Chip size="small" color="warning" label={t("registrations.testKind")} />}
-            {/* The QR confirmation did not arrive and somebody must act (§663, §NNN): one chip, from the desk's own
+            {/* The QR confirmation did not arrive and somebody must act (§663, §671): one chip, from the desk's own
                 projection and words — never an address or the provider's words (§67). Every other email is the
                 registration page's to say; the desk hands the number against the name either way. */}
             {(() => {

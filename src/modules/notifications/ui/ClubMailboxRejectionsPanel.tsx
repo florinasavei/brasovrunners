@@ -9,7 +9,7 @@ import { causeLabel, shortDay, shortEmailName } from "@/modules/registrations/ui
 import Panel from "@/shared/ui/Panel";
 
 /**
- * «Adresele clubului care resping emailuri» (§NNN), on «Setări → Emailuri», beside «Copiile clubului»: the
+ * «Adresele clubului care resping emailuri» (§671), on «Setări → Emailuri», beside «Copiile clubului»: the
  * club's own mailboxes that refused the archive copy, the confirmation notice or a copy of a participant's
  * message in the last thirty days — which no longer light a runner's «Email respins» (the data decision
  * „The runners' own emails tell the truth”) and would otherwise show nowhere. Per address — written only

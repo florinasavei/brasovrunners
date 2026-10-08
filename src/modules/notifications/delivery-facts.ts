@@ -6,7 +6,7 @@ import { typesCoveredBy, typesCovering } from "./domain/content-cover";
 import { PARTICIPANT_MESSAGE_TYPES } from "./domain/email-audience";
 
 /**
- * What a later message says about an earlier refusal (§NNN) — the three facts the registration's email
+ * What a later message says about an earlier refusal (§670) — the three facts the registration's email
  * state is read from, kept on the refused row itself so that a list of two hundred registrations reads
  * them with one probe each and nothing more:
  *
@@ -42,7 +42,7 @@ type Schema = { emailOutbox: typeof emailOutbox };
 type Db = Database<Schema>;
 type Handle = Pick<Db, "select" | "update">;
 
-/** The participant's own messages, as SQL (§NNN): their type, their id on the row, and not a club copy. */
+/** The participant's own messages, as SQL (§670): their type, their id on the row, and not a club copy. */
 export function participantMessageCondition(): SQL {
   return and(
     isNotNull(emailOutbox.participantId),
@@ -53,7 +53,7 @@ export function participantMessageCondition(): SQL {
 }
 
 /**
- * A participant's own message whose refusal still stands for the **address** (§NNN, amending §653): a
+ * A participant's own message whose refusal still stands for the **address** (§670, amending §653): a
  * complaint — the person's own word, which no delivery withdraws — or a refusal with nothing delivered to
  * the address since. Never a refusal of the club's account, which said nothing about the address, and
  * never a club mailbox's.
@@ -87,18 +87,18 @@ function instantOf(value: unknown): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-/** The participant's lock's key (§NNN). */
+/** The participant's lock's key (§670). */
 function participantLockKey(participantId: string): SQL {
   return sql`hashtext(${`email-facts:${participantId}`})`;
 }
 
-/** The participant's lock (§NNN): the settling of one address's facts, one transaction at a time. */
+/** The participant's lock (§670): the settling of one address's facts, one transaction at a time. */
 export async function lockParticipantFacts(handle: Pick<Db, "execute">, participantId: string): Promise<void> {
   await handle.execute(sql`select pg_advisory_xact_lock(${participantLockKey(participantId)})`);
 }
 
 /**
- * The delivered row. `sentAt` is the instant what it carries was read (§NNN): the outbox renders a
+ * The delivered row. `sentAt` is the instant what it carries was read (§670): the outbox renders a
  * message at its send — the race number, the event's details, the signed declaration are read then
  * (`render.ts`, `event-notices.ts`) — and stamps `sent_at` the moment the provider takes it, so a
  * message queued before a refusal and held by the schedule or the allowance until after it carries what
@@ -119,7 +119,7 @@ type DeliveredRow = {
  * A participant's message was delivered at `deliveredAt`: every earlier refusal of the address says the
  * address works now, and every earlier refusal of a message it carries (`typesCoveredBy`: itself, and for
  * the confirmation the race number's and the signed declaration's) says it is over — only a refusal of a
- * message queued no later than this one was sent (§NNN): what a message carries is what stood when it was
+ * message queued no later than this one was sent (§670): what a message carries is what stood when it was
  * rendered, at its send, so a confirmation sent before a race number was refused (a deferral that took
  * hours to deliver it) never answers that refusal, and one queued before it but held and sent after it
  * does. A complaint is left as it is; a refusal of the account takes no
@@ -162,7 +162,7 @@ export async function settleDelivery(handle: Handle, row: DeliveredRow, delivere
  * rows — a delivery to the address, a delivery of a message that carries it (`typesCovering`: itself, or
  * the confirmation for a race number or a signed declaration), such a message sent again — so a refusal
  * processed after the delivery that answers it is answered all the same. Only a message sent no earlier
- * than this one was queued answers it (§NNN), as `settleDelivery` reads it from the other side: what a
+ * than this one was queued answers it (§670), as `settleDelivery` reads it from the other side: what a
  * message carries is read when it is rendered, at its send (`sent_at`), so a confirmation sent before a
  * race number was refused does not carry it, however late it is delivered, and one held and sent after it
  * does. A complaint reads only whether such a message left
@@ -232,7 +232,7 @@ export async function settleRejection(handle: Handle, rowId: string): Promise<vo
 type SentRow = { id: string; participantId: string | null; registrationId: string | null; messageType: EmailMessageType; payloadJson: unknown };
 
 /**
- * The earlier refusals one send still has something to tell (§NNN): the participant's refusals and
+ * The earlier refusals one send still has something to tell (§670): the participant's refusals and
  * complaints of a message this one carries (`typesCoveredBy`: itself, and for the confirmation the race
  * number's and the signed declaration's), for the same registration, queued no later than this one was
  * sent (`sentAt`, the instant what it carries was read, `DeliveredRow`) — and neither over
@@ -269,7 +269,7 @@ function answeredBySend(row: SentRow, participantId: string, sentAt: Date): SQL 
  * statement, taken after that refusal, sees it refused. Nothing at all for a message that is not a
  * participant's.
  *
- * The probe leaves one window, accepted (§NNN) rather than paid for with a round trip on every send: a
+ * The probe leaves one window, accepted (§670) rather than paid for with a round trip on every send: a
  * refusal whose transaction commits after the probe's snapshot was taken and before its
  * `pg_try_advisory_xact_lock` runs — the commit has released the lock by then — is neither seen by the
  * probe nor waited for; and if that refusal's own `settleRejection` read the outbox before this send's
@@ -278,7 +278,7 @@ function answeredBySend(row: SentRow, participantId: string, sentAt: Date): SQL 
  * (`settleDelivery`); on Gmail's road, which reports no delivery, never — until the next covering send
  * marks it.
  *
- * `retried_at` keeps the **latest** such send, and `retried_via` its road (§NNN, a stated departure from
+ * `retried_at` keeps the **latest** such send, and `retried_via` its road (§670, a stated departure from
  * the first send the brief named): the state «sent again, delivery not known yet» is about the send whose
  * delivery may still come, and a Gmail send after a Mailgun one will never report its delivery.
  */
