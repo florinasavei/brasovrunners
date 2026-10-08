@@ -10,7 +10,8 @@ import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import type { PublicEvent } from "@/modules/events/repository";
 import CalendarHeader, { calendarStepHrefs } from "@/modules/events/ui/CalendarHeader";
-import { calendarFeedLinks } from "@/modules/events/ui/CalendarIntroFold";
+import CalendarAddress from "@/modules/events/ui/CalendarAddress";
+import { calendarFeedLinks, feedAddressHints } from "@/modules/events/ui/CalendarIntroFold";
 import CalendarSwipe from "@/modules/events/ui/CalendarSwipe";
 import EventCalendar, { type CalendarLayout, type CalendarView } from "@/modules/events/ui/EventCalendar";
 import InfoTip from "@/shared/ui/InfoTip";
@@ -55,7 +56,6 @@ export default async function CalendarSection({
   events: PublicEvent[];
 }) {
   const t = await getTranslations("Events");
-  const feed = `${env.APP_BASE_URL}/${locale}/events/calendar.ics`;
   // The same two doors the page head's «?» carries on a phone (§487), built in one place.
   const links = calendarFeedLinks(env.APP_BASE_URL, locale);
   const steps = calendarStepHrefs({ view, layout, query, locale, now });
@@ -73,8 +73,9 @@ export default async function CalendarSection({
       {/* "Add to your calendar" (§107, §139): three doors (the owner: "this subscription to
           calendar does not work" — a `webcal://` link does nothing where no app claims the
           scheme, which on a desktop is most browsers): Google Calendar's own "add by URL"
-          address, `webcal://` for Apple, Outlook and phones, the file itself; the plain
-          address folded away for any other app, and the "when does it update" behind an "i"
+          address, `webcal://` for Apple and Outlook (not «telefon» any more: on Android no app claims
+          the scheme, and the hint under the address says to use calendar.google.com), the file itself; the plain
+          address folded away, to copy (§674), and the "when does it update" behind an "i"
           (the feed is fresh on every read, §129; when the phone shows a change is the app's
           clock, and the owner asked why Google still showed the old hour). */}
       <Box component="section" aria-labelledby="add-to-calendar" sx={{ mt: 2, p: 1.5, border: 1, borderColor: "divider", borderRadius: 2 }}>
@@ -104,6 +105,10 @@ export default async function CalendarSection({
           </Button>
           <InfoTip text={t("calendar.refreshNote")} />
         </Stack>
+        {/* The two ways, said in the open (§674; the owner: «we need to write that on the website so people know how to use them»). */}
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }} data-testid="calendar-two-ways">
+          {t("calendar.twoWays")}
+        </Typography>
         {/* A fold looks like a fold (§164): the marker back, the pointer, an underline on
             hover and on focus. It had been a flex box, which removes the triangle in
             Chrome and Safari — the owner: "it's not clear that this is expandable". */}
@@ -113,28 +118,21 @@ export default async function CalendarSection({
             {t("calendar.feedAddress")}
           </summary>
           {/*
-            A link, not only a string to copy (§195; the owner, of the address: "ăsta trebuia
-            să fie link"). It is still selected whole by one click — `userSelect: all` — for
-            the calendar apps that want it pasted, and it is now also pressable for the ones
-            that subscribe from the browser. `webcal://` rather than `https://` on the anchor:
-            the same address handed to the operating system as a subscription rather than as a
-            file to download once, which is the difference between a calendar that updates and
-            a snapshot of today.
+            The address to copy (§674, amending §195). §195 made it a `webcal://` link, to press
+            as well as to copy; the «Apple / Outlook / telefon» button above is that link, so the
+            fold now holds the plain `https://` address in a read-only box with «Copiază» — what
+            Google Calendar's «Din URL» wants pasted when its quick-add button does nothing (a
+            calendar hidden or removed before is kept by its address) — and the three sentences
+            that say so.
           */}
-          <Box
-            component="a"
-            href={links.webcal}
-            sx={{
-              display: "inline-block",
-              fontFamily: "monospace",
-              fontSize: "0.8125rem",
-              userSelect: "all",
-              wordBreak: "break-all",
-              minHeight: 44,
-            }}
-          >
-            {feed}
-          </Box>
+          <CalendarAddress
+            id="calendar-feed-address"
+            address={links.feed}
+            label={t("calendar.addressLabel")}
+            copyLabel={t("calendar.copy")}
+            copiedLabel={t("calendar.copied")}
+            hints={feedAddressHints(t)}
+          />
         </Box>
       </Box>
     </Box>

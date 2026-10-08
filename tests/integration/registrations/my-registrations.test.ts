@@ -8,6 +8,7 @@ import { type RegistrationStatus, registrations } from "@/db/schema/registration
 import { issueActionToken } from "@/modules/action-tokens/repository";
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
+import { RATE_LIMITS } from "@/modules/rate-limit/service";
 import { newCheckinCode } from "@/modules/registrations/checkin-code";
 import {
   checkInSelfFromMyRegistrations,
@@ -113,6 +114,59 @@ describe("BR-REQ-036-04 my registrations", () => {
     await expect(requestMyRegistrationsLink(db, { email: "nobody@example.ro", locale: "ro" }, NOW)).resolves.toBeUndefined();
     await expect(requestMyRegistrationsLink(db, { email: "not an address", locale: "ro" }, NOW)).resolves.toBeUndefined();
     expect(await db.select().from(emailOutbox)).toHaveLength(0);
+  });
+
+  /*
+    §675 — the form's honeypot and timing check: a post that looks automated gets the same silent
+    nothing, before the count and the lookup, so the mailbox's allowance is left for the person.
+  */
+  describe("the form's honeypot and timing check", () => {
+    const RENDERED = new Date(NOW.getTime() - 10_000).toISOString();
+    const outbox = () => db.select().from(emailOutbox);
+
+    it("queues nothing for a filled trap, and counts nothing against the mailbox", async () => {
+      const { limit } = RATE_LIMITS["link-request"];
+      for (let attempt = 0; attempt < limit + 1; attempt += 1) {
+        await expect(
+          requestMyRegistrationsLink(
+            db,
+            { email: "ana@example.ro", locale: "ro", honeypot: "cheap watches", renderedAt: RENDERED },
+            new Date(NOW.getTime() + attempt * 60_000),
+          ),
+        ).resolves.toBeUndefined();
+      }
+      expect(await outbox()).toHaveLength(0);
+
+      // The bucket was never touched: the honest ask that follows is still within the allowance.
+      await requestMyRegistrationsLink(db, { email: "ana@example.ro", locale: "ro", renderedAt: RENDERED }, new Date(NOW.getTime() + 30 * 60_000));
+      expect(await outbox()).toHaveLength(1);
+    });
+
+    it("queues nothing for a post sent under a second after the form was drawn, and counts nothing", async () => {
+      const { limit } = RATE_LIMITS["link-request"];
+      for (let attempt = 0; attempt < limit + 1; attempt += 1) {
+        const at = new Date(NOW.getTime() + attempt * 60_000);
+        await requestMyRegistrationsLink(db, { email: "ana@example.ro", locale: "ro", renderedAt: new Date(at.getTime() - 300).toISOString() }, at);
+      }
+      expect(await outbox()).toHaveLength(0);
+
+      await requestMyRegistrationsLink(db, { email: "ana@example.ro", locale: "ro", renderedAt: RENDERED }, new Date(NOW.getTime() + 30 * 60_000));
+      expect(await outbox()).toHaveLength(1);
+    });
+
+    it("reads the person's own address in the trap as a password manager, and sends the link", async () => {
+      await requestMyRegistrationsLink(db, { email: "ana@example.ro", locale: "ro", honeypot: "ANA@example.ro", renderedAt: RENDERED }, NOW);
+      const [row] = await outbox();
+      expect(row.messageType).toBe("PROFILE_MANAGE_LINK");
+      expect(row.participantId).toBe(participantId);
+    });
+
+    it("answers an honest post from the form exactly as before", async () => {
+      await requestMyRegistrationsLink(db, { email: "ana@example.ro", locale: "en", renderedAt: RENDERED }, NOW);
+      const [row] = await outbox();
+      expect(row.messageType).toBe("PROFILE_MANAGE_LINK");
+      expect(row.locale).toBe("en");
+    });
   });
 
   it("renders the message with a MANAGE_PROFILE token scoped to the participant and a link to the page", async () => {

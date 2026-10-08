@@ -55,6 +55,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import SendIcon from "@mui/icons-material/Send";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import StarIcon from "@mui/icons-material/Star";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
 import TranslateIcon from "@mui/icons-material/Translate";
@@ -119,6 +120,9 @@ export type ActionIconName =
   | "rename"
   | "reset"
   | "upload"
+  // «Înlocuiește» (§673): a new photo in a stored one's place — the two arrows of a swap, never the
+  // upload arrow, which adds a picture beside the others.
+  | "replace"
   | "duplicate"
   | "repeat"
   | "repeatStop"
@@ -224,6 +228,7 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   rename: DriveFileRenameOutlineIcon,
   reset: RestartAltIcon,
   upload: UploadIcon,
+  replace: SwapHorizIcon,
   duplicate: ContentCopyIcon,
   repeat: EventRepeatIcon,
   repeatStop: EventBusyIcon,

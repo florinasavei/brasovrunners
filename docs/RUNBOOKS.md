@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V2.74-2026-10-08`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V2.76-2026-10-08`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -14,6 +14,7 @@
 | [Deploy a release](#deploy-a-release) | Every merge to `qa`, and every promotion to `main` |
 | [Release from the phone](#release-from-the-phone) | A release with the PC off — the owner on holiday, GitHub's app in hand |
 | [The domain stops answering](#the-domain-stops-answering) | The site, the backoffice and QA «cannot be found» at once; the monitor on the public name is red |
+| [Google Calendar will not add the calendar again](#google-calendar-will-not-add-the-calendar-again) | Somebody removed or hid the club's calendar, or deleted an event, and the site's buttons now do nothing |
 
 
 ---
@@ -841,6 +842,40 @@ Seven hours twenty minutes. What it leaves: the registrant contact is a mailbox 
 read daily, with the registrar's senders whitelisted (`SETUP.md` §26); the job pings and a second
 health monitor call the `vercel.app` addresses (`SETUP.md` §40); and the deadlines' clock stops
 while the name is gone (the outage grace).
+
+
+---
+
+## Google Calendar will not add the calendar again
+
+The owner, 2026-10-08: «Why can't I add the event back to my Google calendar after I removed it?»
+and «Still can't re-import the Brașov Runners calendar». Nothing is wrong with the site: the feed
+and the files answer as always. Google does three things that look like a broken button
+(`DECISIONS.md` §674):
+
+- **The «×» beside a calendar in Google's left list hides it; it does not unsubscribe.** The
+  calendar is still there, under Settings → «Calendare» with its box unticked.
+- **Google keeps a calendar it has seen by its address.** The site's «Google Calendar» button is
+  Google's quick-add link for the feed; for an address Google believes it already has, the press
+  does nothing, or adds a calendar that stays empty for up to a day.
+- **A deleted event sits in the calendar's Bin for 30 days**, and a file carrying the same event
+  (the same UID — on purpose, so an edit updates the entry rather than adding a second one) is
+  ignored meanwhile.
+
+What always works, on a computer or a phone's browser — **not** the Google Calendar phone app,
+which cannot add a calendar by its address:
+
+1. On the calendar page, «Adresa calendarului, de copiat» (on a phone, the «?» beside the
+   heading) → **Copiază**.
+2. calendar.google.com → **«+»** beside «Alte calendare» → **«Din URL»** → paste the address.
+3. If Google says it already has it, add **`?v=2`** at the end of the address (then `?v=3`, …).
+   That is a new address to Google and the same file to the site, which ignores the query.
+4. On Android, switch the new calendar on in the app: Google Calendar → Meniu → Setări → 🏃 BVR →
+   Sincronizare.
+
+A deleted single event: restore it from the Bin (calendar.google.com → ⚙ → «Coș de gunoi»), or
+wait the 30 days; the event page's «Adresa fișierului, de copiat» gives the event's own file for
+«Din URL» as well.
 
 
 ---

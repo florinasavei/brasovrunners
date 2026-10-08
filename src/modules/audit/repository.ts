@@ -370,6 +370,13 @@ export type AuditAction =
    */
   | "media.ladder_given"
   /**
+   * «Înlocuiește» (§673): a stored picture replaced in place by a new upload — `entity_id` the new
+   * picture, the metadata `{ from, to, where, oldDeleted }`: the two asset ids, the place whose
+   * reference moved (`{ kind: "album", albumId, itemId }`) and whether the old picture went with it
+   * (it stays while anything else still uses it). Never the file's bytes or a person.
+   */
+  | "media.picture_replaced"
+  /**
    * The database's brakes changed from `/admin/tasks` (§335): the compute's size ceiling and the
    * period's CU-hour limit, from and to as Neon stated them before and after — never the request —
    * with what was asked, the environment, and whether all of it was applied.
@@ -404,6 +411,8 @@ export type AuditAction =
   | "email_copy.changed"
   /** Who at the club receives the declaration copies and the confirmation notices (§244, §245). */
   | "club_notices.changed"
+  /** «Răspunsurile din calendar merg la» (§672): the club's address an invitation's answers go to, from and to; empty is off. */
+  | "calendar_rsvp_to.changed"
   /**
    * An approved legal version taken out of circulation (`DECISIONS.md` §46, §53).
    *

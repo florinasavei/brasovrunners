@@ -1,4 +1,5 @@
 import type { EmailAdapter, OutgoingEmail, SendResult } from "./adapter";
+import { composeMime } from "./calendar-mime";
 import { redactProviderText } from "./redact";
 
 /**
@@ -281,22 +282,49 @@ export function createMailgunAdapter(config: MailgunConfig): EmailAdapter {
   // never logged, and never attached to an object anything else can read.
   const authorization = `Basic ${Buffer.from(`api:${config.apiKey}`).toString("base64")}`;
   const endpoint = `${config.apiBaseUrl.replace(/\/+$/, "")}/${config.domain}/messages`;
+  /*
+    The same domain's other door (§672): a message composed whole, for the one part the form API has no
+    field for — a calendar invitation's `text/calendar; method=REQUEST` alternative (`calendar-mime.ts`).
+    Mailgun's reference, «Send an email in MIME format»: `to` (every envelope recipient) and `message`
+    (the MIME, as a file), with the same `o:`, `h:` and `v:` options as the form.
+  */
+  const mimeEndpoint = `${endpoint}.mime`;
 
   return {
     name: "mailgun",
 
     async send(message: OutgoingEmail): Promise<SendResult> {
       const form = new FormData();
-      form.set("from", config.from);
-      form.set("to", message.to);
-      // Repeated fields, which is how Mailgun takes several recipients of the same kind. A
-      // `cc` is on the message everybody can read; a `bcc` reaches its mailbox and appears
-      // nowhere (§244, where the club is warned of exactly that).
-      for (const address of message.cc ?? []) form.append("cc", address);
-      for (const address of message.bcc ?? []) form.append("bcc", address);
-      form.set("subject", message.subject);
-      form.set("text", message.text);
-      form.set("html", message.html);
+      let url = endpoint;
+      if (message.calendar) {
+        /*
+          A calendar invitation (§672): the message composed whole by Nodemailer, as the Gmail road
+          composes it, and posted to `messages.mime` — the From, the copies, the Reply-To, the text, the
+          HTML, the invitation's alternative part and every attachment are in the MIME; the envelope
+          (the address, every copy, every hidden copy) is `to`. A message that cannot be composed is the
+          message's fault, never the address's: FAILED, for a person (§622).
+        */
+        let composed: Awaited<ReturnType<typeof composeMime>>;
+        try {
+          composed = await composeMime(message, { from: config.from, replyTo: config.replyTo });
+        } catch {
+          return { outcome: "permanent_failure", error: "mailgun: the calendar invitation could not be composed", notTheAddress: true };
+        }
+        for (const address of composed.recipients) form.append("to", address);
+        form.set("message", new Blob([new Uint8Array(composed.mime)], { type: "message/rfc822" }), "message.mime");
+        url = mimeEndpoint;
+      } else {
+        form.set("from", config.from);
+        form.set("to", message.to);
+        // Repeated fields, which is how Mailgun takes several recipients of the same kind. A
+        // `cc` is on the message everybody can read; a `bcc` reaches its mailbox and appears
+        // nowhere (§244, where the club is warned of exactly that).
+        for (const address of message.cc ?? []) form.append("cc", address);
+        for (const address of message.bcc ?? []) form.append("bcc", address);
+        form.set("subject", message.subject);
+        form.set("text", message.text);
+        form.set("html", message.html);
+      }
       /*
         No open or click tracking, on every message, whatever the domain's own setting says
         (§320). Click tracking rewrites every link through Mailgun's redirect host — the
@@ -309,10 +337,13 @@ export function createMailgunAdapter(config: MailgunConfig): EmailAdapter {
       form.set("o:tracking", "no");
       form.set("o:tracking-clicks", "no");
       form.set("o:tracking-opens", "no");
-      if (config.replyTo) form.set("h:Reply-To", config.replyTo);
-      // Mailgun takes files as repeated `attachment` parts of the same multipart form.
-      for (const attachment of message.attachments ?? []) {
-        form.append("attachment", new Blob([new Uint8Array(attachment.data)], { type: attachment.contentType }), attachment.filename);
+      // A composed message carries its Reply-To and its files inside the MIME (`composeMime`).
+      if (!message.calendar) {
+        if (config.replyTo) form.set("h:Reply-To", config.replyTo);
+        // Mailgun takes files as repeated `attachment` parts of the same multipart form.
+        for (const attachment of message.attachments ?? []) {
+          form.append("attachment", new Blob([new Uint8Array(attachment.data)], { type: attachment.contentType }), attachment.filename);
+        }
       }
 
       /**
@@ -331,7 +362,7 @@ export function createMailgunAdapter(config: MailgunConfig): EmailAdapter {
 
       let response: Response;
       try {
-        response = await fetch(endpoint, {
+        response = await fetch(url, {
           method: "POST",
           headers: { Authorization: authorization },
           body: form,

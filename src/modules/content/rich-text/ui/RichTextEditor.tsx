@@ -37,6 +37,7 @@ import LinkOffIcon from "@mui/icons-material/LinkOff";
 import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import RedoIcon from "@mui/icons-material/Redo";
 import SmartDisplayIcon from "@mui/icons-material/SmartDisplay";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import TableChartIcon from "@mui/icons-material/TableChart";
 import TableRowsIcon from "@mui/icons-material/TableRows";
 import UploadIcon from "@mui/icons-material/Upload";
@@ -89,8 +90,17 @@ import {
   type TableValign,
 } from "../domain/schema";
 import { CROP_PRESETS, type CropPreset, presetCrop } from "../domain/picture-frame";
+import { findPictureToReplace, picturesCarrying, replacedPictureAttrs } from "../domain/replace-picture";
 import { editorLook, sameEditorLook } from "./editor-look";
-import { fillIsFor, RICH_TEXT_FILL_EVENT, type RichTextFillDetail } from "./fill-event";
+import {
+  announcePictureReplaced,
+  fillIsFor,
+  replacementIsFor,
+  RICH_TEXT_FILL_EVENT,
+  RICH_TEXT_PICTURE_REPLACED_EVENT,
+  type PictureReplacedDetail,
+  type RichTextFillDetail,
+} from "./fill-event";
 import ImageCropBox, { type ImageCropLabels } from "./ImageCropBox";
 import { cardFrameGeometry, cropGeometry, cropImageCss, cropWindowCss } from "./image-layout";
 import { EDITOR_TABLE_SX, PREVIEW_CONTENT_SX } from "./table-layout";
@@ -303,6 +313,9 @@ function RichTextEditorIsland({
     /** After the stored facts, the shape the upload went in with (§454); raw, `{shape}` substituted here. */
     imageUploadCropped: string;
     imageRemove: string;
+    /** «Înlocuiește» in the picture's panel (§673): the button, and what it keeps and what it drops. */
+    imageReplace: string;
+    imageReplaceHelp: string;
     imageDone: string;
     /** The ✕ on the picture's panel, and the panel's own heading (§258). */
     imageClose: string;
@@ -648,6 +661,31 @@ function RichTextEditorIsland({
     return () => window.removeEventListener(RICH_TEXT_FILL_EVENT, onFill);
   }, [editor, name]);
 
+  /*
+    «Înlocuiește» pressed in another box of this form (§673) — the other language's text, as a rule,
+    which names the same stored picture: every image here carrying the old address takes the new
+    picture, its own description and caption kept, in one transaction, so the hidden value and the
+    tab marks follow as for typing. The box that pressed has already changed its own node and finds
+    nothing left to change.
+  */
+  useEffect(() => {
+    if (!editor) return;
+    const onReplaced = (event: Event) => {
+      const detail = (event as CustomEvent<PictureReplacedDetail>).detail;
+      if (!replacementIsFor(detail, hiddenValue.current)) return;
+      const positions = picturesCarrying(editor.state.doc, detail.oldSrc);
+      if (positions.length === 0) return;
+      const tr = editor.state.tr;
+      for (const at of positions) {
+        const node = tr.doc.nodeAt(at);
+        if (node) tr.setNodeMarkup(at, undefined, replacedPictureAttrs(node.attrs, detail.picture));
+      }
+      editor.view.dispatch(tr);
+    };
+    window.addEventListener(RICH_TEXT_PICTURE_REPLACED_EVENT, onReplaced);
+    return () => window.removeEventListener(RICH_TEXT_PICTURE_REPLACED_EVENT, onReplaced);
+  }, [editor]);
+
   /**
    * Shrink in the browser, post to `/api/admin/media`, insert the answer as an image node.
    * One file at a time; a failure is a sentence under the toolbar, never a lost body.
@@ -725,6 +763,53 @@ function RichTextEditorIsland({
     setPosterState("idle");
     setPosterGalleryOpen(false);
   };
+
+  /**
+   * «Înlocuiește» (§673): the same shrink-and-upload `insertImage` uses, at the same remembered
+   * quality and with the same facts and refusal under the toolbar, written to the picture that was
+   * selected — found again by its position and address, since the upload takes seconds — as a new
+   * address and size with the words kept and the crop cleared (`replacedPictureAttrs`); then every
+   * other box of the form is told, so the other language's copy of the picture changes too. The old
+   * picture is left to the save and the sweep (§73): this text is not saved yet.
+   */
+  const replaceImage = async (file: File, selectedAt: number, oldSrc: string) => {
+    setImageState("uploading");
+    setStored(null);
+    setChosen(null);
+    setPicked(null);
+    try {
+      const uploaded = await uploadPicture(file, setChosen);
+      setStored(uploaded.stored ?? null);
+      setStoredShape("free");
+      if (editor) {
+        const at = findPictureToReplace(editor.state.doc, selectedAt, oldSrc);
+        const node = at === null ? null : editor.state.doc.nodeAt(at);
+        if (at !== null && node) {
+          editor
+            .chain()
+            .command(({ tr }) => {
+              // Out of this box's undo history: the other language's box takes the same picture
+              // in its own transaction, and a Ctrl+Z here would leave the two languages apart.
+              tr.setMeta("addToHistory", false);
+              tr.setNodeMarkup(at, undefined, replacedPictureAttrs(node.attrs, uploaded));
+              return true;
+            })
+            .setNodeSelection(at)
+            .run();
+          // The other language's text names the same picture: it changes too, its own words kept.
+          announcePictureReplaced({
+            oldSrc,
+            picture: { src: uploaded.src, width: uploaded.width, height: uploaded.height },
+            form: hiddenValue.current?.form ?? null,
+          });
+        }
+      }
+      setImageState("idle");
+    } catch {
+      setImageState("failed");
+    }
+  };
+  const replaceFileInputRef = useRef<HTMLInputElement>(null);
 
   /**
    * The selected picture, when one is: ProseMirror marks the node's own element, and that
@@ -1660,6 +1745,41 @@ function RichTextEditorIsland({
                 }}
               />
             )}
+            {/*
+              «Înlocuiește» (§673), beside the crop box's verbs: another photograph in this node's
+              place, the words kept and the crop cleared; the same picture in the other language's
+              text changes with it, keeping that text's own words.
+            */}
+            <Box>
+              <input
+                ref={replaceFileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                hidden
+                data-testid="rich-text-image-replace-input"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  // The same file chosen twice in a row must still fire a change.
+                  event.target.value = "";
+                  const oldSrc = String(imageAttrs?.src ?? "");
+                  if (file && imageNodeAt !== null && oldSrc) void replaceImage(file, imageNodeAt, oldSrc);
+                }}
+              />
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<SwapHorizIcon fontSize="small" />}
+                onClick={() => replaceFileInputRef.current?.click()}
+                disabled={imageState === "uploading"}
+                sx={{ minHeight: 44 }}
+                data-testid="rich-text-image-replace"
+              >
+                {imageState === "uploading" ? labels.imageUploading : labels.imageReplace}
+              </Button>
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+                {labels.imageReplaceHelp}
+              </Typography>
+            </Box>
             <Stack direction="row" spacing={1} sx={{ justifyContent: "space-between" }}>
               <Button color="error" size="small" startIcon={<DeleteIcon fontSize="small" />} onClick={() => editor?.chain().focus().deleteSelection().run()}>
                 {labels.imageRemove}

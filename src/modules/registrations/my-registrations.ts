@@ -17,7 +17,7 @@ import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { DomainError } from "@/shared/errors/domain-error";
 import type { WaitlistStanding } from "./domain/waitlist-standing";
 import { findRegistrationById, readWaitlistPosition } from "./repository";
-import { checkIn, type EventForRegistration, unregister } from "./service";
+import { checkIn, type EventForRegistration, looksLikeSpam, unregister } from "./service";
 import type { CancelReason } from "./domain/cancel-reason";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { selfCheckinOpensAt } from "@/modules/deadlines/domain/deadlines";
@@ -38,9 +38,15 @@ import { selfCheckinOpensAt } from "@/modules/deadlines/domain/deadlines";
  */
 export async function requestMyRegistrationsLink<T extends Record<string, unknown>>(
   db: Database<T>,
-  input: { email: string; locale: Locale },
+  input: { email: string; locale: Locale; honeypot?: string; renderedAt?: string },
   now: Date,
 ): Promise<void> {
+  // The form's own defences (§675), answered with the same silence as everything below: a filled
+  // trap or a post under a second after the render counts nothing and looks nothing up — a script
+  // spends neither the mailbox's allowance nor the club's email. The person's own address in the
+  // trap is a password manager (§282) and passes.
+  if (looksLikeSpam(input, now)) return;
+
   let identity;
   try {
     identity = canonicalizeEmail(input.email);

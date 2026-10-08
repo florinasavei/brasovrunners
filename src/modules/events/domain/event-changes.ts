@@ -144,6 +144,39 @@ export function eventChangesToAnnounce(
   return changes;
 }
 
+/**
+ * The kinds that change what a runner's calendar holds about the date (§672): when, where, and that
+ * it is on again. «Detalii actualizate» carrying one of them carries the updated invitation; a
+ * programme row or a note alone does not — the invitation has one entry, its programme is words in
+ * the description, and asking an answered invitation again over them would be noise.
+ */
+export const CALENDAR_CHANGE_KINDS = ["time", "place", "reinstated"] as const satisfies readonly EventChangeKind[];
+
+/** Whether a notice's kinds include one the calendar entry is about (§672). */
+export function changesTheCalendar(kinds: readonly EventChangeKind[]): boolean {
+  return kinds.some((kind) => (CALENDAR_CHANGE_KINDS as readonly EventChangeKind[]).includes(kind));
+}
+
+/**
+ * Whether a save moves the calendar invitation's `SEQUENCE` (§672; RFC 5546 §2.1.4): the start or
+ * the race's start moved, the place a page shows moved, the date was cancelled, or it is on again —
+ * the same comparison «Detalii actualizate» reads (`eventChangesToAnnounce`), made on every save
+ * whether or not the organizer asked to tell anybody. A runner's calendar keeps the entry it was
+ * sent; the next invitation it reads (an update, the reminder) must carry a higher number for the
+ * app to take the new time over the old one, and a cancellation a higher one still for the app to
+ * strike it through. A programme row, the end, a note or any other column does not move it: an
+ * invitation answered «Da» is not asked again over a typo.
+ */
+export function calendarSequenceMoves(
+  before: EventChangeFacts,
+  after: EventChangeFacts,
+  languagesBefore: readonly PlaceInLanguage[] = [],
+  languagesAfter: readonly PlaceInLanguage[] = [],
+): boolean {
+  if (before.eventStatus !== "CANCELLED" && after.eventStatus === "CANCELLED") return true;
+  return changesTheCalendar(eventChangesToAnnounce(before, after, languagesBefore, languagesAfter));
+}
+
 /** The kinds as an outbox payload carries them; anything else in the list is dropped, never rendered. */
 export function readEventChanges(value: unknown): EventChangeKind[] {
   if (!Array.isArray(value)) return [];
