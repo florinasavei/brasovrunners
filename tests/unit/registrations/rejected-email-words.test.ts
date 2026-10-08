@@ -20,11 +20,11 @@ import {
   STILL_NEEDED_KEYS,
   stillNeededMessageTypes,
 } from "@/modules/registrations/domain/email-state";
-import { rejectedEmailSentences, rejectedEmailWords, type RejectedEmailFacts, type RejectedEmailReader } from "@/modules/registrations/ui/rejected-email-words";
+import { rejectedEmailWords, type RejectedEmailFacts, type RejectedEmailReader, type RejectedEmailWords } from "@/modules/registrations/ui/rejected-email-words";
 import { whatToTell, type TellFacts } from "@/modules/registrations/ui/tell-words";
 
 /**
- * BR-REQ-037-03, BR-REQ-038-01 criterion 8 (§663; amending §650, §76, §83; the data decision §NNN; §NNN) —
+ * BR-REQ-037-03, BR-REQ-038-01 criterion 8 (§663; amending §650, §76, §83; the data decision „The runners' own emails tell the truth”; §NNN) —
  * «Email respins» says which email did not arrive, when, why — by the registration's one email state and,
  * for an address that refuses the club's mail, by its cause — whether the address had been confirmed before
  * it, and what to do, by who reads it.
@@ -35,6 +35,8 @@ const CONFIRMED_AT = new Date("2026-10-01T07:30:00.000Z");
 const REJECTED_AT = new Date("2026-10-03T09:15:00.000Z");
 const LATER = new Date("2026-10-05T10:00:00.000Z");
 const inline = (locale: "ro" | "en", at: Date) => formatDay(at, { locale, timeZone: "Europe/Bucharest", style: "short", withTime: true, position: "inline" });
+/** The story in reading order, as the registration's «Emailuri» tells it; the reason stays apart, in small print. */
+const rejectedEmailSentences = (words: RejectedEmailWords): string[] => [words.which, words.why, words.context, words.todo];
 const fill = (text: string, values: Record<string, string>) => Object.entries(values).reduce((acc, [k, v]) => acc.replace(`{${k}}`, v), text);
 
 function facts(overrides: Partial<RejectedEmailFacts> = {}): RejectedEmailFacts {
@@ -127,6 +129,10 @@ describe("rejectedEmailWords", () => {
       expect(complaint.reason).toBeNull();
       // No list and no desk carries the provider's words: without them there is no small print.
       expect(rejectedEmailWords(facts({ detail: undefined }), locale, "organizer").reason).toBeNull();
+      // The provider's code, once: before words that do not start with it, alone when there are no words.
+      expect(rejectedEmailWords(facts({ code: "550", detail: "550 5.1.1 mailbox unavailable" }), locale, "organizer").reason).toBe(fill(words.reason, { reason: "550 5.1.1 mailbox unavailable" }));
+      expect(rejectedEmailWords(facts({ code: "552", detail: "mailbox full" }), locale, "organizer").reason).toBe(fill(words.reason, { reason: "552 mailbox full" }));
+      expect(rejectedEmailWords(facts({ code: "605", detail: null }), locale, "organizer").reason).toBe(fill(words.reason, { reason: "605" }));
     });
 
     it(`says the club's account was refused, never the address, for a message that never left (${locale})`, () => {
@@ -277,10 +283,15 @@ describe("rejectedEmailWords", () => {
             }
           }
         }
-        // An address that refuses the club's mail is phoned about the address, as for any message; the desk tells the person.
-        expect(rejectedEmailWords(facts({ messageType, press: null }), locale, "administrator").todo).toBe(words.todo);
-        expect(rejectedEmailWords(facts({ messageType, press: null }), locale, "organizer").todo).toBe(words.todo);
-        expect(rejectedEmailWords(facts({ messageType, press: null }), locale, "desk").todo).toBe(words.todoTellUnreachable);
+        // An address that does not exist: the call is the to-do itself, «Sună persoana» once; the desk tells the person both.
+        expect(rejectedEmailWords(facts({ messageType, press: null }), locale, "administrator").todo).toBe(words.todoCall[call]);
+        expect(rejectedEmailWords(facts({ messageType, press: null }), locale, "organizer").todo).toBe(words.todoCall[call]);
+        expect(rejectedEmailWords(facts({ messageType, press: null }), locale, "desk").todo).toBe(`${words.todoTellUnreachable} ${words.todoTell[call]}`);
+        // Any other cause: nothing sends the notice again, so the cause's sentence is followed by the call.
+        const blocked = facts({ messageType, press: null, cause: "blocked" });
+        expect(rejectedEmailWords(blocked, locale, "administrator").todo).toBe(`${words.todoCause.retryLater} ${words.todoCall[call]}`);
+        expect(rejectedEmailWords(blocked, locale, "organizer").todo).toBe(`${words.todoCause.retryLater} ${words.todoCall[call]}`);
+        expect(rejectedEmailWords(blocked, locale, "desk").todo).toBe(`${words.todoTellCause.blocked} ${words.todoTell[call]}`);
       }
       expect(callInstead("REGISTRATION_CONFIRMED")).toBeNull();
     });
@@ -323,7 +334,11 @@ describe("rejectedEmailWords", () => {
             const call = callInstead(messageType);
             const pressed = press === null ? null : reader === "administrator" ? words.todoPress[press] : words.todoAskAdmin[press];
             // A full mailbox: the person makes room, then the press that clears it — none for the event's notices.
-            const unreachable = reader === "desk" ? words.todoTellCause["mailbox-full"] : [words.todoCause["mailbox-full"], call ? null : pressed].filter(Boolean).join(" ");
+            // An event's notice, which nothing sends again, always ends with the call (at the desk: what to tell the person).
+            const unreachable =
+              reader === "desk"
+                ? [words.todoTellCause["mailbox-full"], call ? words.todoTell[call] : null].filter(Boolean).join(" ")
+                : [words.todoCause["mailbox-full"], call ? words.todoCall[call] : pressed].filter(Boolean).join(" ");
             const expected =
               kind === "unreachable"
                 ? unreachable

@@ -1,7 +1,7 @@
 import { createTranslator } from "next-intl";
 import en from "../../../../messages/en.json";
 import ro from "../../../../messages/ro.json";
-import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { CLUB_TIME_ZONE, formatDay, intlLocale } from "@/i18n/dates";
 import type { RejectionCause } from "@/modules/notifications/domain/rejection-cause";
 import { callInstead, type DeskEmailState, isDeskQrMessage, needsEmailAction } from "../domain/email-state";
 
@@ -11,9 +11,12 @@ type Lang = "ro" | "en";
 const langOf = (locale: string): Lang => (locale === "en" ? "en" : "ro");
 const catalogueOf = (lang: Lang) => (lang === "en" ? en : ro);
 
-/** One translator per language for the whole process: a list of two hundred rows asks for it once. */
+/**
+ * One translator per language for the whole process: a list of two hundred rows asks for it once, and so
+ * does a registration's «Emailuri» (`email-history-words.ts`).
+ */
 const sayers = new Map<Lang, Say>();
-function adminSay(lang: Lang): Say {
+export function adminSay(lang: Lang): Say {
   let say = sayers.get(lang);
   if (!say) {
     say = createTranslator({ locale: lang, messages: catalogueOf(lang), namespace: "Admin" }) as unknown as Say;
@@ -42,6 +45,22 @@ export function unbreakableLine(text: string): string {
  */
 export function shortDay(at: Date, locale: string): string {
   return formatDay(at, { locale: langOf(locale), timeZone: CLUB_TIME_ZONE, style: "short", year: false, position: "inline" });
+}
+
+const lineDays = new Map<Lang, Intl.DateTimeFormat>();
+/**
+ * The day on the list's one line (§NNN): «26 sept.» / «26 Sept», in club time — the day and the month
+ * alone, no weekday, so the longest usual line, «Adresa nu există · Confirmarea cu QR · 26 sept.», keeps
+ * to one line on a 400-pixel phone (the weekday took it to two). The sentences keep `shortDay`.
+ */
+export function lineDay(at: Date, locale: string): string {
+  const lang = langOf(locale);
+  let format = lineDays.get(lang);
+  if (!format) {
+    format = new Intl.DateTimeFormat(intlLocale(lang), { day: "numeric", month: "short", timeZone: CLUB_TIME_ZONE });
+    lineDays.set(lang, format);
+  }
+  return format.format(at);
 }
 
 /**
@@ -89,6 +108,8 @@ export type RejectedEmailFacts = DeskEmailState & {
    * they never suggest a new registration — on a full race a new one goes to the waiting list.
    */
   confirmed?: boolean;
+  /** The provider's code, for the page's small print alone (`RegistrationEmailStateDetail.code`). */
+  code?: string | null;
   /** The provider's own words, for the page's small print alone (`RegistrationEmailStateDetail.detail`). */
   detail?: string | null;
 };
@@ -120,7 +141,7 @@ export type RejectedEmailWords = {
    * what to say to the person in front of it, never to phone.
    */
   todo: string;
-  /** The provider's own short words, for the page's small print; null on a list, at the desk, or when it gave none. */
+  /** The provider's code and short words, for the page's small print; null on a list, at the desk, or when it gave none. */
   reason: string | null;
   /** The cause in at most four words: the card's label. */
   label: string;
@@ -128,15 +149,16 @@ export type RejectedEmailWords = {
   short: string;
   /**
    * The one line under the name (§NNN), each part unbreakable: «Adresa nu există · Confirmarea cu QR ·
-   * sâmb., 3 oct.» (red); «Confirmarea cu QR lipsește · adresa merge acum» or «Nu a plecat · … · …»
+   * 3 oct.» (red); «Confirmarea cu QR lipsește · adresa merge acum» or «Nu a plecat · … · …»
    * (amber); «Retrimis sâmb., 3 oct. · așteptăm livrarea» (quiet — the list draws nothing for it).
    */
   line: string;
   tone: "error" | "warning" | "info";
   /**
-   * The desk's one chip (§NNN, §67): only while somebody must act and the refused email is the QR
-   * confirmation — «Fără QR pe email — caută după nume», and what to tell the person. Null for every
-   * other email, every other reader, and a state that waits.
+   * The desk's one chip (§NNN, §67): only while somebody must act and the refused email is this person's
+   * own QR confirmation, or any QR confirmation at an address that refuses mail — «Fără QR pe email — caută
+   * după nume», and what to tell the person. Null for every other email, every other reader, a family
+   * member's owed one, and a state that waits.
    */
   desk: { label: string; hint: string } | null;
 };
@@ -186,7 +208,7 @@ function deskTellKey(cause: RejectionCause, confirmed: boolean): string {
 
 /**
  * «Email respins», said in full (§663; amending §650, §76, §83) — of the registration's one email state
- * (the data decision, §NNN), by its cause and for who reads it (§NNN): which email did not arrive (its
+ * (the data decision „The runners' own emails tell the truth”), by its cause and for who reads it (§NNN): which email did not arrive (its
  * name in the «Emailuri» catalogue, short on a card), when (club time, §452), why in plain words, whether
  * the address had been confirmed before it, and what to do. Staff never change the address (§645,
  * `AGENTS.md` §15.11): only the person can, by registering again — said only while the registration is
@@ -246,7 +268,7 @@ export function rejectedEmailWords(facts: RejectedEmailFacts, locale: string, re
   const verifiedAt = facts.emailVerifiedAt ?? null;
   const noLonger = facts.kind === "unreachable" && left && facts.cause === "no-such-address" && verifiedAt !== null && verifiedAt.getTime() <= facts.at.getTime();
   const label = noLonger ? rejected("label.noLonger") : causeLabel(facts.cause, lang);
-  const day = shortDay(facts.at, lang);
+  const day = lineDay(facts.at, lang);
   const confirmed = facts.confirmed === true;
   const needsAction = needsEmailAction(facts);
 
@@ -303,21 +325,34 @@ export function rejectedEmailWords(facts: RejectedEmailFacts, locale: string, re
     default: {
       why = noLonger && verifiedAt ? rejected("why.noLonger", { date: shortDay(verifiedAt, lang) }) : causeWhy(facts.cause, left, lang);
       if (reader === "desk") {
-        todo = rejected(deskTellKey(facts.cause, confirmed));
+        // An event's notice that never arrived is said to the person too, after what the address does (§NNN).
+        todo = [rejected(deskTellKey(facts.cause, confirmed)), call ? rejected(`todoTell.${call}`) : null].filter(Boolean).join(" ");
+      } else if (call) {
+        // Nothing sends an event's notice again (`callInstead`): whatever the cause, the person is phoned
+        // and told what the notice said (§NNN). For an address that does not exist the call is the to-do
+        // itself — «Sună persoana» once, not twice.
+        const cause = facts.cause === "no-such-address" ? null : rejected(causeTodoKey(facts.cause, confirmed));
+        todo = [lead, cause, rejected(`todoCall.${call}`)].filter(Boolean).join(" ");
       } else {
         // Then what the cause asks; then, where the address may take it now, the press that clears it.
-        const then = SEND_AGAIN_AFTER.has(facts.cause) && call === null && facts.press !== null ? family(pressOf(facts.press)) : null;
+        const then = SEND_AGAIN_AFTER.has(facts.cause) && facts.press !== null ? family(pressOf(facts.press)) : null;
         todo = [lead, rejected(causeTodoKey(facts.cause, confirmed)), then].filter(Boolean).join(" ");
       }
       line = unbreakableLine([label, short, day].join(" · "));
       tone = "error";
     }
   }
-  const detail = facts.detail ?? null;
-  const desk =
-    reader === "desk" && needsAction && isDeskQrMessage(facts.messageType)
-      ? { label: rejected("desk.label"), hint: `${rejected("desk.hint")} ${todo}` }
-      : null;
+  // The provider's code and words in small print (§NNN), the code once: the server's words usually start with it.
+  const code = facts.code?.trim() || null;
+  const words = facts.detail?.trim() || null;
+  const detail = words && code && !words.startsWith(code) ? `${code} ${words}` : (words ?? code);
+  // The desk's chip (§NNN, §67): this person's own QR email, or an address that refuses every email. A family
+  // member's owed confirmation says nothing of this one, which may have arrived. Its hint is what to tell the
+  // person — for an email owed, that it did not arrive and the number is handed out by name, never a press.
+  const deskChip = reader === "desk" && needsAction && isDeskQrMessage(facts.messageType) && (facts.own || facts.kind === "unreachable");
+  const desk = deskChip
+    ? { label: rejected("desk.label"), hint: `${rejected("desk.hint")} ${facts.kind === "unreachable" ? todo : rejected("desk.tellOwed")}` }
+    : null;
   return {
     which,
     why,
@@ -330,11 +365,6 @@ export function rejectedEmailWords(facts: RejectedEmailFacts, locale: string, re
     tone,
     desk,
   };
-}
-
-/** The story in reading order, for the registration page's «Emailuri»; the reason stays apart, in small print. */
-export function rejectedEmailSentences(words: RejectedEmailWords): string[] {
-  return [words.which, words.why, words.context, words.todo];
 }
 
 /**

@@ -4,34 +4,37 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { countForm } from "@/i18n/count-form";
 import type { Locale } from "@/i18n/routing";
-import type { ClubMailboxGroup } from "@/modules/notifications/domain/club-mailbox-rejections";
+import { type ClubMailboxGroup, clubMailboxesToFix } from "@/modules/notifications/domain/club-mailbox-rejections";
 import { causeLabel, shortDay, shortEmailName } from "@/modules/registrations/ui/rejected-email-words";
 import Panel from "@/shared/ui/Panel";
 
 /**
  * «Adresele clubului care resping emailuri» (§NNN), on «Setări → Emailuri», beside «Copiile clubului»: the
  * club's own mailboxes that refused the archive copy, the confirmation notice or a copy of a participant's
- * message in the last thirty days — which no longer light a runner's «Email respins» (the data decision,
- * §NNN) and would otherwise show nowhere. Per address — written only while it is still in the club's
- * settings, else the role's words alone — the role, the last refused message, its day and cause, how many in
- * the window, and the one thing to do.
+ * message in the last thirty days — which no longer light a runner's «Email respins» (the data decision
+ * „The runners' own emails tell the truth”) and would otherwise show nowhere. Per address — written only
+ * while it is still in the club's settings, else the role's words alone — the role, the last refused
+ * message, its day and cause, how many in the window, and the one thing to do.
  *
- * A Server Component, folded and opened by itself (there is something to act on), drawn only for the roles
+ * A Server Component, folded; it opens by itself and draws the amber border only while an address still in
+ * the club's settings asks for something (`clubMailboxesToFix`) — an address already removed from them says
+ * «nu mai e nimic de făcut» and asks for no attention. Drawn only for the roles
  * that read the registrations — the page asserts it on the server (`canReadRegistrations`) and does not draw
  * the panel when nothing was refused. Never a participant's, a subscriber's, an invitee's or a colleague's
  * address: only the club's audience and its copies are read (`listClubMailboxRejections`).
  */
 export default async function ClubMailboxRejectionsPanel({ locale, groups }: { locale: Locale; groups: readonly ClubMailboxGroup[] }) {
   const t = await getTranslations("Admin");
+  const toFix = clubMailboxesToFix(groups) > 0;
   return (
     <Panel
       glyph="notices"
       collapsible
-      tone="risk"
+      tone={toFix ? "risk" : "default"}
       title={t("emails.clubRejections.title")}
       intro={t("emails.clubRejections.intro")}
       aside={t(`emails.clubRejections.aside.${countForm(groups.length, locale)}`, { count: groups.length })}
-      openWhen={{ attention: true }}
+      openWhen={{ attention: toFix }}
       id="club-mailbox-rejections"
       data-testid="club-mailbox-rejections"
     >

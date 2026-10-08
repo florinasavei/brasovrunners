@@ -1,12 +1,7 @@
-import { createTranslator } from "next-intl";
-import en from "../../../../messages/en.json";
-import ro from "../../../../messages/ro.json";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { RecipientRole } from "@/modules/notifications/domain/email-audience";
 import type { OutboxHistoryRow } from "../admin-repository";
-import { causeLabel, causeWhy, shortEmailName } from "./rejected-email-words";
-
-type Say = (key: string, values?: Record<string, string | number>) => string;
+import { adminSay, causeLabel, causeWhy, shortEmailName } from "./rejected-email-words";
 
 /** The roles a registration's page lists apart, behind «și cele către club» (§NNN): the club's own mailboxes and copies. */
 const CLUB_ROLES: ReadonlySet<RecipientRole> = new Set(["archive", "notice", "copy", "staff", "public"]);
@@ -40,7 +35,8 @@ export type EmailHistoryWords = {
  */
 export function emailHistoryWords(row: OutboxHistoryRow, locale: string): EmailHistoryWords {
   const lang = locale === "en" ? "en" : "ro";
-  const say = createTranslator({ locale: lang, messages: lang === "en" ? en : ro, namespace: "Admin" }) as unknown as Say;
+  // The cached translator, one per language: a history of thirty rows asks for it once.
+  const say = adminSay(lang);
   const words = (key: string, values?: Record<string, string | number>) => say(`registrations.emails.${key}`, values);
   const date = (at: Date) => formatDay(at, { locale: lang, timeZone: CLUB_TIME_ZONE, style: "short", year: false, withTime: true, position: "continues" });
   const title = `${shortEmailName(row.messageType, lang)} · ${words(`role.${row.recipientRole}`)}`;

@@ -11,6 +11,7 @@ import { DESK_CODE_MESSAGE_TYPES, EMAIL_STATE_KINDS, isDeskQrMessage, needsEmail
 import { emailHistoryWords, isClubRow } from "@/modules/registrations/ui/email-history-words";
 import {
   causeLabel,
+  lineDay,
   rejectedEmailWords,
   type RejectedEmailFacts,
   type RejectedEmailReader,
@@ -21,7 +22,7 @@ import {
 } from "@/modules/registrations/ui/rejected-email-words";
 
 /**
- * §NNN (amending §663, §650; the data decision §NNN) — «Email respins» drawn where the club looks, phone
+ * §NNN (amending §663, §650; the data decision „The runners' own emails tell the truth”) — «Email respins» drawn where the club looks, phone
  * first: one line under the name on the list (BR-REQ-038-01), the to-do by who reads it, the resend
  * questions' first sentence (BR-REQ-037-02), the desk's one QR chip (§67), the registration's «Emailuri»
  * (BR-REQ-037-01) and the club's own mailboxes.
@@ -135,11 +136,16 @@ describe("the line under the name (§NNN)", () => {
   for (const locale of ["ro", "en"] as const) {
     const words = catalogues[locale].Admin.registrations.rejected;
     const short = catalogues[locale].Admin.emails.typesShort;
-    const day = shortDay(REJECTED_AT, locale);
+    const day = lineDay(REJECTED_AT, locale);
 
-    it(`writes the short date as §452's short style, no year and no hour (${locale})`, () => {
-      expect(day).toBe(formatDay(REJECTED_AT, { locale, timeZone: "Europe/Bucharest", style: "short", year: false, position: "inline" }));
-      expect(day).not.toMatch(/2026|:/);
+    it(`writes the line's day as the day and the month alone — no weekday, no year, no hour — in club time (${locale})`, () => {
+      // §452's short style without its weekday: the weekday took the longest usual line to two lines at 400 px.
+      const sentence = formatDay(REJECTED_AT, { locale, timeZone: "Europe/Bucharest", style: "short", year: false, position: "inline" });
+      expect(sentence.endsWith(day)).toBe(true);
+      expect(day).toBe(locale === "ro" ? "3 oct." : "3 Oct");
+      expect(day).not.toMatch(/2026|:|,/);
+      // Club time: 23:30 UTC on 2 October is already 3 October in Brașov.
+      expect(lineDay(new Date("2026-10-02T23:30:00.000Z"), locale)).toBe(day);
     });
 
     it(`says the address's refusal in red: cause · email · day, each part unbreakable (${locale})`, () => {
@@ -253,6 +259,22 @@ describe("the desk's one chip: the QR confirmation only (§NNN, §67)", () => {
         }
         // Sent again: it waits, the desk says nothing.
         expect(rejectedEmailWords(facts({ messageType, kind: "retried" }), locale, "desk").desk).toBeNull();
+        // An email owed: the hint is what to tell the person, never a press to ask for.
+        for (const kind of ["not-sent", "missing"] as const) {
+          const hint = rejectedEmailWords(facts({ messageType, kind }), locale, "desk").desk?.hint;
+          expect(hint, `${messageType} ${kind}`).toBe(`${words.desk.hint} ${words.desk.tellOwed}`);
+          for (const press of Object.values(words.todoAskAdmin)) expect(hint).not.toContain(press);
+        }
+      }
+    });
+
+    it(`shows nothing for a family member's owed QR email — this person's own may have arrived (${locale})`, () => {
+      for (const messageType of ["REGISTRATION_CONFIRMED", "BIB_ASSIGNED"]) {
+        for (const kind of ["not-sent", "missing"] as const) {
+          expect(rejectedEmailWords(facts({ messageType, kind, own: false }), locale, "desk").desk, `${messageType} ${kind}`).toBeNull();
+        }
+        // An address that refuses every email reaches nobody at it: the chip stays, whosever the email was.
+        expect(rejectedEmailWords(facts({ messageType, kind: "unreachable", own: false }), locale, "desk").desk?.label).toBe(words.desk.label);
       }
     });
 

@@ -4,7 +4,7 @@ import pg from "pg";
 import { FEATURED, hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN (amending §663, §650; the data decision §NNN) — «Email respins» drawn where the club looks, phone
+ * §NNN (amending §663, §650; the data decision „The runners' own emails tell the truth”) — «Email respins» drawn where the club looks, phone
  * first. The owner, 2026-10-07, on two «Confirmată» cards each with «Email respins»: «Cum e posibil să fie
  * email respins dar și confirmat? Am nevoie de mai multe info in app». A confirmed registration whose
  * race-number email the address refused: the filter «Doar cu un email respins (n)» keeps it, the card says
@@ -23,7 +23,10 @@ function databaseUrl(): string {
 
 type Seeded = { eventId: string; registrationId: string; participantId: string; name: string };
 
-async function seed(tag: string): Promise<Seeded> {
+/** The refused email and its instant: the race number's yesterday, or the longest line on the list (`at`). */
+type Refusal = { messageType: "BIB_ASSIGNED" | "REGISTRATION_CONFIRMED"; at?: string };
+
+async function seed(tag: string, refusal: Refusal = { messageType: "BIB_ASSIGNED" }): Promise<Seeded> {
   const client = new pg.Client({ connectionString: databaseUrl() });
   await client.connect();
   try {
@@ -48,9 +51,9 @@ async function seed(tag: string): Promise<Seeded> {
     await client.query(
       `INSERT INTO email_outbox (registration_id, participant_id, message_type, locale, recipient_email, payload_json,
          idempotency_key, status, last_error, provider_detail, rejection_cause, rejected_at, created_at, sent_at)
-       VALUES ($1, $2, 'BIB_ASSIGNED', 'ro', $3, '{}'::jsonb, $4, 'BOUNCED', '550 5.1.1 mailbox unavailable',
-         '550 5.1.1 mailbox unavailable', 'no-such-address', now() - interval '1 day', now() - interval '1 day', now() - interval '1 day')`,
-      [rows[0].id, participantRows[0].id, email, `e2e-respins-${tag}`],
+       VALUES ($1, $2, $5, 'ro', $3, '{}'::jsonb, $4, 'BOUNCED', '550 5.1.1 mailbox unavailable',
+         '550 5.1.1 mailbox unavailable', 'no-such-address', $6::timestamptz, $6::timestamptz, $6::timestamptz)`,
+      [rows[0].id, participantRows[0].id, email, `e2e-respins-${tag}`, refusal.messageType, refusal.at ?? new Date(Date.now() - 86_400_000).toISOString()],
     );
     return { eventId, registrationId: rows[0].id, participantId: participantRows[0].id, name };
   } finally {
@@ -98,8 +101,6 @@ test.describe("§NNN «Email respins» says which email, why and what to do, whe
       await expect(line).not.toContainText("550");
       const box = await line.boundingBox();
       expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
-      // At a phone's width it wraps between parts, two lines at most.
-      if ((page.viewportSize()?.width ?? 1280) < 600) expect(box?.height ?? 0).toBeLessThanOrEqual(64);
       await line.focus();
       await expect(page.getByRole("tooltip")).toHaveCount(0);
 
@@ -119,6 +120,36 @@ test.describe("§NNN «Email respins» says which email, why and what to do, whe
       await expect(todo).toContainText("Locul rămâne confirmat; la masă îl găsiți după nume.");
       await expect(todo).not.toContainText("înscriere nouă");
       expect(hydrationWarnings).toEqual([]);
+    } finally {
+      await cleanup(seeded);
+    }
+  });
+
+  test("the longest line on the list: one line at 400 pixels, two at most at 360, wrapping between parts", async ({ page }) => {
+    test.setTimeout(90_000);
+    // «Confirmarea cu QR» on the 26th of September: the confirmation's short name, the longest day the line writes.
+    const seeded = await seed(`${test.info().project.name}-wide-${Date.now().toString(36)}`, { messageType: "REGISTRATION_CONFIRMED", at: "2026-09-26T09:00:00.000Z" });
+    try {
+      await signIn(page, "Dev Administrator");
+      for (const [width, lines] of [
+        [400, 1],
+        [360, 2],
+      ] as const) {
+        await page.setViewportSize({ width, height: 800 });
+        await page.goto(`/ro/admin/registrations?eventId=${seeded.eventId}&bounced=1&q=${encodeURIComponent(seeded.name)}`);
+        await hydrated(page);
+        const line = page.locator('#main [data-testid="email-state-line"]:visible');
+        await expect(line).toHaveCount(1);
+        await expect(line).toHaveText(/^Adresa\snu\sexistă\s·\sConfirmarea\scu\sQR\s·\s26\ssept\.$/);
+        // The link stays a 44-pixel target; the words inside it take one line of body2 (20 px) per line.
+        const link = await line.boundingBox();
+        expect(link?.height ?? 0, `${width}px link`).toBeGreaterThanOrEqual(44);
+        expect(link?.height ?? 0, `${width}px link`).toBeLessThanOrEqual(44);
+        const words = await line.locator("span").first().boundingBox();
+        expect(words?.height ?? 0, `${width}px words`).toBeLessThanOrEqual(lines * 22);
+        // Never wider than the screen: no sideways scroll.
+        expect((link?.x ?? 0) + (link?.width ?? 0), `${width}px right edge`).toBeLessThanOrEqual(width);
+      }
     } finally {
       await cleanup(seeded);
     }

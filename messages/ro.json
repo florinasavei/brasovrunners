@@ -724,7 +724,7 @@
           "laterDelivered": "Adresa a primit apoi alt email: {date}."
         },
         "legend": "Trimis = predat furnizorului de email. Livrat = a ajuns la serverul lui de email, poate în Spam; nu știm dacă l-a deschis.",
-        "legendKept": "Emailurile livrate se șterg după 90 de zile; livrările dinainte de 8 octombrie 2026 nu au fost înregistrate."
+        "legendKept": "Emailurile livrate se șterg după 90 de zile; livrările dinainte de această versiune nu au fost înregistrate."
       },
       "rejected": {
         "which": "Respins: „{type}”, trimis {instant}.",
@@ -825,7 +825,8 @@
         "todoAsk": "Întreabă persoana dacă l-a primit.",
         "desk": {
           "label": "Fără QR pe email — caută după nume",
-          "hint": "Nu oprește ridicarea numărului."
+          "hint": "Nu oprește ridicarea numărului.",
+          "tellOwed": "Spune-i persoanei: emailul cu QR nu i-a ajuns; numărul îl ridică după nume."
         },
         "warn": {
           "suppressed": "Mailgun nu va trimite la această adresă; retrimiterea nu ajunge.",

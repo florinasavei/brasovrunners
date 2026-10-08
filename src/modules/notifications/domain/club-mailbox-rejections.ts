@@ -8,7 +8,7 @@ import type { RejectionCause } from "./rejection-cause";
  * and which addresses are now the declaration's visible or hidden copies.
  *
  * - **By address**, while the address is still in the club's settings; a mailbox the club has since removed is
- *   one entry per role, named by the role's words alone — never its address (the data decision, §NNN).
+ *   one entry per role, named by the role's words alone — never its address (the data decision „The runners' own emails tell the truth”).
  * - **The role**, in the words of «Copiile clubului»: the declarations' archive, a Cc of it (an archive copy
  *   whose address is now one of the declaration's copies), the confirmation notices, the Bcc of the
  *   participants' messages.

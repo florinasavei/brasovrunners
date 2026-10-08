@@ -14,13 +14,13 @@ import { CLUB_COPY_FLAG, DEFAULT_CLUB_NOTICES } from "@/modules/notifications/do
 import type { RejectionCause } from "@/modules/notifications/domain/rejection-cause";
 import { findRegistrationDetailForAdmin, listDeskRegistrations, listRegistrationsForAdmin } from "@/modules/registrations/admin-repository";
 import { resolveDisplayName } from "@/modules/registrations/names";
-import { shortDay, unbreakableLine } from "@/modules/registrations/ui/rejected-email-words";
+import { lineDay, shortDay, unbreakableLine } from "@/modules/registrations/ui/rejected-email-words";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-037-01, BR-REQ-037-02, BR-REQ-038-01 (§663; amending §650, §76, §83; the data decision §NNN; §NNN) —
+ * BR-REQ-037-01, BR-REQ-037-02, BR-REQ-038-01 (§663; amending §650, §76, §83; the data decision „The runners' own emails tell the truth”; §NNN) —
  * «Email respins» drawn where the club looks, from a real database: one line under the name on the list (a
  * link to the registration's «Emailuri»), the filter's count, the line and its to-do under the address, the
  * section «Emailuri» (the story, the participant's own emails newest first, the club's apart by role), the
@@ -90,6 +90,7 @@ const { default: DeskEmailChip } = await import("@/modules/registrations/ui/Desk
 const { default: WhatToTell } = await import("@/modules/registrations/ui/WhatToTell");
 const { default: DeskRow } = await import("@/modules/registrations/ui/DeskRow");
 const { default: ClubMailboxRejectionsPanel } = await import("@/modules/notifications/ui/ClubMailboxRejectionsPanel");
+const { default: EmailTemplatesPage } = await import("@/app/[locale]/admin/settings/emails/page");
 
 type Props = Record<string, unknown> & { children?: ReactNode };
 
@@ -209,7 +210,7 @@ async function outbox(
   });
 }
 
-async function staff(role: "ADMIN" | "MODERATOR" = "ADMIN"): Promise<StaffUser> {
+async function staff(role: "ADMIN" | "MODERATOR" | "DEV" = "ADMIN"): Promise<StaffUser> {
   const [user] = await db.insert(staffUsers).values({ email: `${role.toLowerCase()}@dev.test`, displayName: role, role }).returning();
   return user;
 }
@@ -263,8 +264,8 @@ describe("the list: one line under the name, a link to «Emailuri» (§NNN)", ()
     expect(bib.href).toBe("/ro/admin/registrations#emailuri");
     expect(bib.words.tone).toBe("error");
     // The newest refusal of the address, by its cause: the email's short name and its day, unbreakable parts.
-    expect(bib.words.line).toBe(unbreakableLine(`${words.label["no-such-address"]} · ${short.BIB_ASSIGNED} · ${shortDay(BIB_SENT, "ro")}`));
-    expect(lineOf(never).words.line).toBe(unbreakableLine(`${words.label["mailbox-full"]} · ${short.VERIFY_REGISTRATION_EMAIL} · ${shortDay(verifyAt, "ro")}`));
+    expect(bib.words.line).toBe(unbreakableLine(`${words.label["no-such-address"]} · ${short.BIB_ASSIGNED} · ${lineDay(BIB_SENT, "ro")}`));
+    expect(lineOf(never).words.line).toBe(unbreakableLine(`${words.label["mailbox-full"]} · ${short.VERIFY_REGISTRATION_EMAIL} · ${lineDay(verifyAt, "ro")}`));
     expect(lineOf(complained).words.line.startsWith(unbreakableLine(words.label.complained))).toBe(true);
     // No list payload carries the provider's words, nor any address.
     expect(JSON.stringify(kept.lines(confirmed).map((line) => line.props))).not.toMatch(/550 5\.1\.1|@/);
@@ -335,7 +336,7 @@ describe("the registration's page: the line, its to-do, and «Emailuri» (§NNN)
     const under = all.find((element) => element.props["data-testid"] === "email-state");
     const line = elements(under).find((element) => element.type === EmailStateLine);
     expect(line?.props.href).toBe("#emailuri");
-    expect((line?.props.words as { line: string }).line).toBe(unbreakableLine(`${words.label["no-such-address"]} · ${short.BIB_ASSIGNED} · ${shortDay(BIB_SENT, "ro")}`));
+    expect((line?.props.words as { line: string }).line).toBe(unbreakableLine(`${words.label["no-such-address"]} · ${short.BIB_ASSIGNED} · ${lineDay(BIB_SENT, "ro")}`));
     expect(text(all.find((element) => element.props["data-testid"] === "email-state-todo"))).toBe(`${words.placeKept} ${words.todoKept}`);
     // Never a chip in the heading any more.
     expect(all.some((element) => element.props["data-testid"] === "email-rejected")).toBe(false);
@@ -470,6 +471,32 @@ describe("the club's own side (§NNN)", () => {
     expect(said).not.toMatch(/gone@|subscriber@|runner@/);
     expect(said).toContain(ro.Admin.emails.clubRejections.role.notice);
     expect(said).toContain(ro.Admin.emails.clubRejections.todo.mailbox);
+    // An address still the club's asks for something: the fold opens by itself, amber.
+    const fold = panel.find((element) => element.props.id === "club-mailbox-rejections");
+    expect(fold?.props.openWhen).toEqual({ attention: true });
+    expect(fold?.props.tone).toBe("risk");
+  });
+
+  it("draws the panel on «Setări → Emailuri» for the Organizer, who reads the registrations, and never for the Tehnic role", async () => {
+    const race = await createRace();
+    const id = await register(race.id);
+    // A confirmation notice to an address no longer in the club's settings: drawn by its role, closed, no amber.
+    await outbox(id, { messageType: "CLUB_CONFIRMATION_NOTICE", status: "BOUNCED", at: new Date(Date.now() - 86_400_000), cause: "suppressed", rejected: true, recipient: "gone@example.org", key: "notice-page" });
+    const panelOf = async (role: "MODERATOR" | "DEV") => {
+      state.actor = await staff(role);
+      const page = await EmailTemplatesPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({}) });
+      return elements(page).filter((element) => element.type === ClubMailboxRejectionsPanel);
+    };
+    const organizer = await panelOf("MODERATOR");
+    expect(organizer).toHaveLength(1);
+    const groups = organizer[0].props.groups as Awaited<ReturnType<typeof readClubMailboxRejections>>;
+    expect(groups.map((group) => [group.address, group.role, group.todo])).toEqual([[null, "notice", "removed"]]);
+    // Nothing left to do: the fold stays closed and draws no amber border.
+    const fold = elements(await ClubMailboxRejectionsPanel({ locale: "ro", groups })).find((element) => element.props.id === "club-mailbox-rejections");
+    expect(fold?.props.openWhen).toEqual({ attention: false });
+    expect(fold?.props.tone).toBe("default");
+    // The Tehnic role sees the page and never the club's mailboxes (it reads no participant data).
+    expect(await panelOf("DEV")).toHaveLength(0);
   });
 
   it("marks on «Echipa» an invitation whose newest email was refused, not one sent again since, nor the club's account's refusal", async () => {

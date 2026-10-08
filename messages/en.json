@@ -724,7 +724,7 @@
           "laterDelivered": "The address took another email afterwards: {date}."
         },
         "legend": "Sent = handed to the email provider. Delivered = reached the recipient's email server, maybe its Spam; we do not know whether it was opened.",
-        "legendKept": "Delivered emails are deleted after 90 days; deliveries before 8 October 2026 were not recorded."
+        "legendKept": "Delivered emails are deleted after 90 days; deliveries before this release were not recorded."
       },
       "rejected": {
         "which": "Rejected: “{type}”, sent {instant}.",
@@ -825,7 +825,8 @@
         "todoAsk": "Ask the person whether it arrived.",
         "desk": {
           "label": "No QR by email — search by name",
-          "hint": "It does not stop the number being handed out."
+          "hint": "It does not stop the number being handed out.",
+          "tellOwed": "Tell the person: the QR email did not reach them; they collect the number by name."
         },
         "warn": {
           "suppressed": "Mailgun will not send to this address; resending will not arrive.",

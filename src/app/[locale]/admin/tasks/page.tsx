@@ -364,10 +364,14 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     whether Mailgun's deliveries arrive at all this week, and per race how many participants have an email
     that asks somebody to act — counts, never a name or an address; this panel is the Administrator's.
   */
-  const clubMailboxes = await readClubMailboxRejections(db, await readClubNotices(db), env.DECLARATIONS_ARCHIVE_TO, now);
-  const deliveryEvidence = await readDeliveryEvidence(db, now);
+  // Independent reads, side by side: the club's mailboxes (after its notices' settings), the deliveries, the per-race counts.
+  const [clubMailboxes, deliveryEvidence, needingEmailAction] = await Promise.all([
+    readClubNotices(db).then((notices) => readClubMailboxRejections(db, notices, env.DECLARATIONS_ARCHIVE_TO, now)),
+    readDeliveryEvidence(db, now),
+    countNeedingEmailActionByEvent(db, now),
+  ]);
   const titles = new Map(published.map((event) => [event.id, event.title ?? event.id]));
-  const emailAttention = (await countNeedingEmailActionByEvent(db, now)).flatMap((row) =>
+  const emailAttention = needingEmailAction.flatMap((row) =>
     titles.has(row.eventId) ? [{ eventId: row.eventId, title: titles.get(row.eventId) as string, count: row.count }] : [],
   );
   // The outage grace (§657): the latest windows, the claims the newest left lapsed still waiting, and what the row says of them.

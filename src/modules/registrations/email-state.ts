@@ -1,4 +1,4 @@
-import { and, eq, notInArray, type SQL, type SQLWrapper, sql } from "drizzle-orm";
+import { and, eq, type SQL, type SQLWrapper, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
 import { registrations, type RegistrationStatus } from "@/db/schema/registrations";
@@ -184,11 +184,14 @@ export function registrationEmailStateDetailSql(): SQL<RegistrationEmailStateDet
 }
 
 /**
- * How many real, live registrations of each event that has not ended ask somebody to act on their email
- * (§NNN), by the same rule as the state, at `now`: the club's side counts them per race («N participanți
- * nu primesc emailurile»). A cancelled event counts until it ends, like any other — an address that
- * refuses the club's mail is still the call list; its notices are owed only while its start is ahead.
- * Race day counts until the day is over. The caller asserts who may read it; the count names nobody.
+ * How many real registrations of each event that has not ended ask somebody to act on their email (§NNN),
+ * by the same rule as the state, at `now`: the club's side counts them per race («N participanți nu
+ * primesc emailurile»), and its row links the list filtered by the event and «Doar cu un email respins» —
+ * so the count is that filter's own condition, whatever the registration's status, and the two numbers
+ * agree; only a test registration is left out, as from every count the club is given (`AGENTS.md` §12.6).
+ * A cancelled event counts until it ends, like any other — an address that refuses the club's mail is
+ * still the call list; its notices are owed only while its start is ahead. Race day counts until the day
+ * is over. The caller asserts who may read it; the count names nobody.
  */
 export async function countNeedingEmailActionByEvent<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -202,7 +205,6 @@ export async function countNeedingEmailActionByEvent<T extends Record<string, un
       and(
         eventNotEndedSql(events, now),
         eq(registrations.kind, "REAL"),
-        notInArray(registrations.status, ["CANCELLED", "EXPIRED"]),
         needsEmailActionSql(now),
       ),
     )

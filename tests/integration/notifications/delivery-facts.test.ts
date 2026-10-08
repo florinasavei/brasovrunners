@@ -444,6 +444,26 @@ describe("the registration's one email state (BR-REQ-038-01)", () => {
     expect(await countNeedingEmailActionByEvent(db, T0)).toEqual([{ eventId: r.id, count: 1 }]);
   });
 
+  it("«Sarcini»'s count per race is the list filter's own number, test registrations left out (§NNN)", async () => {
+    const r = await race();
+    // A live one, a cancelled one and an expired one whose address refuses the club's mail, and a test one.
+    for (const [email, overrides] of [
+      ["live@example.org", {}],
+      ["gone@example.org", { status: "CANCELLED" as const, confirmedAt: null }],
+      ["late@example.org", { status: "EXPIRED" as const, confirmedAt: null }],
+      ["test@example.org", { kind: "TEST" as const }],
+    ] as const) {
+      const p = await person(email);
+      const reg = await register(r.id, p, overrides);
+      await outboxRow({ participantId: p, registrationId: reg, messageType: "REGISTRATION_CONFIRMED", status: "BOUNCED", rejectionCause: "no-such-address" });
+    }
+    const listed = await listRegistrationsForAdmin(db, { eventId: r.id, emailBounced: true, excludeTest: true });
+    expect(listed).toHaveLength(3);
+    // The row links the list filtered by the event and «Doar cu un email respins»: the same rows, the test one apart.
+    expect(await countNeedingEmailActionByEvent(db, T0)).toEqual([{ eventId: r.id, count: listed.length }]);
+    expect(await countNeedingEmailActionForAdmin(db, { eventId: r.id, excludeTest: true })).toBe(listed.length);
+  });
+
   it("a family member's refusal at the same event marks the address; another event's does not", async () => {
     const r = await race();
     const other = await race(new Date("2099-12-01T08:00:00.000Z"));
