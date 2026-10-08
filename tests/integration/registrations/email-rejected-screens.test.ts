@@ -251,6 +251,7 @@ describe("«Email respins» says which email, when and why (§663)", () => {
       status: "BOUNCED",
       cause: "other",
       own: true,
+      press: "confirmation",
       laterDeliveredAt: null,
       retriedAt: null,
       retriedVia: null,
@@ -273,6 +274,7 @@ describe("«Email respins» says which email, when and why (§663)", () => {
       status: "BOUNCED",
       cause: "other",
       own: true,
+      press: "confirmation",
       laterDeliveredAt: null,
       retriedAt: null,
       retriedVia: null,
@@ -340,7 +342,7 @@ describe("«Email respins» says which email, when and why (§663)", () => {
     expect((chips(owed)[0].props as { sentences: string[] }).sentences.slice(1)).toEqual([
       fill(words.why.missing, { date: at(LATER) }),
       fill(words.confirmedBefore, { date: at(CONFIRMED_AT) }),
-      words.todoResend,
+      words.todoPress.confirmation,
     ]);
     const kept = await AdminRegistrationsPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({ eventId: race.id, bounced: "1" }) } as never);
     expect((elements(kept).find((element) => element.type === AdminTable)?.props.rows as { id: string }[]).map((row) => row.id)).toEqual([owed]);
@@ -363,7 +365,7 @@ describe("«Email respins» says which email, when and why (§663)", () => {
       fill(words.which, { type: ro.Admin.emails.types.REGISTRATION_CONFIRMED, instant: at(BIB_SENT) }),
       fill(words.why.missing, { date: at(LATER) }),
       fill(words.confirmedBefore, { date: at(CONFIRMED_AT) }),
-      words.todoAskAdmin,
+      words.todoAskAdmin.confirmation,
     ]);
   });
 });

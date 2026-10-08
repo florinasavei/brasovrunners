@@ -2186,8 +2186,8 @@ email_outbox
 - provider_code null           «550 5.1.1», or Mailgun's own «605»
 - provider_detail null         the receiving server's words, redacted, ≤ 200 characters
 - later_delivered_at null      on a refused participant's message: the address took a later one
-- resolved_at null             on a refused participant's message: the same one arrived (or left, for the account's refusal)
-- retried_at null, retried_via null   the same one left again, and by which road
+- resolved_at null             on a refused participant's message: it, or one that carries it, arrived (or left, for the account's refusal)
+- retried_at null, retried_via null   it, or one that carries it, left again, and by which road
 
 INDEX(status, next_attempt_at, created_at)
 INDEX(registration_id, created_at)
@@ -2200,7 +2200,13 @@ for — the participant, the club's own mailboxes, the staff or the public
 (`notifications/domain/email-audience.ts`) — and only a participant's own message, with their id on
 it and not a club copy, says anything about their address: «Email respins», the registration's email
 state (`registrations/email-state.ts`) and the automatic re-send's refusal read those alone
-(`DECISIONS.md` §NNN).
+(`DECISIONS.md` §NNN). A message answers a refusal of what it carries
+(`notifications/domain/content-cover.ts`: the confirmation carries the race number and the signed
+declaration, the reminder the race number), written on the refused row when it is sent or delivered so
+it outlives the 90-day sweep of `SENT` rows; and an owed or unsent refusal asks somebody to act only
+while the registration it was for still needs what was refused — what the page can send again for its
+status now, and what that carries (`stillNeededMessageTypes`) — an address that refuses the club's mail
+always does.
 
 ### 12.12 Audit/environment
 
@@ -3153,12 +3159,14 @@ What the webhook does with an event (`DECISIONS.md` §NNN; `api/webhooks/mailgun
 - **a participant's own message settles their earlier refusals**, under the participant's advisory
   lock and the same whatever order the events arrive in: a later delivery to the address says it
   works again (`later_delivered_at`, never on a complaint or the account's refusal), and only the
-  same message delivered later ends a refusal (`resolved_at`); the same message leaving again marks it
-  (`retried_at`, `retried_via`), and ends a refusal of the club's account.
+  same message, or one that carries it (the confirmation for a race number or a signed declaration,
+  `domain/content-cover.ts`), delivered later ends a refusal (`resolved_at`); such a message leaving
+  again marks it (`retried_at`, `retried_via`), and ends a refusal of the club's account — the send asks
+  first, in one round trip, whether there is anything to mark, and takes the lock only then.
 - **retries**: Mailgun retries a webhook it could not deliver for about eight hours (5 and 10 and
   15 minutes, then 1, 2 and 4 hours), but — by its documentation's own wording — not the delivery
   notification: a `delivered` event lost to a 5xx or a cold start is never replayed, and the refusal
-  it would have cleared stays until the same message is delivered again. Whether a retry carries a
+  it would have cleared stays until it, or a message that carries it, is delivered again. Whether a retry carries a
   fresh signature `timestamp` is not documented; if it does not, a retry later than the signature's
   fifteen minutes (`mailgun-webhook.ts`) is refused — kept as it is, an owner's question (`DECISIONS.md` §NNN).
 

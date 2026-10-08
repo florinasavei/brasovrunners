@@ -1,7 +1,7 @@
 import { ENVIRONMENT_TAG_PREFIX } from "@/infrastructure/email/mailgun-adapter";
 import type { MailgunSignature } from "@/infrastructure/email/mailgun-webhook";
 import { redactProviderText } from "@/infrastructure/email/redact";
-import { rejectionCause } from "./domain/rejection-cause";
+import { enhancedStatusTextIn, rejectionCause } from "./domain/rejection-cause";
 import type { MailgunDeliveryEvent, MailgunEventType } from "./outbox";
 
 /**
@@ -58,8 +58,9 @@ export function deliveryStatusOf(eventData: EventData | null | undefined, recipi
   if (!status) return { code: null, detail: null };
   const words = text(status.message) ?? text(status.description) ?? text(status["last-message"]);
   const basic = codeOf(status.code) ?? codeOf(status["last-code"]);
-  const enhanced =
-    text(status["enhanced-code"])?.match(/^[245]\.\d{1,3}\.\d{1,3}$/)?.[0] ?? (words ? /\b[245]\.\d{1,3}\.\d{1,3}\b/.exec(words)?.[0] : undefined) ?? null;
+  // Mailgun's own field when it sends one, else the code standing alone in the words — never three parts of
+  // an IP literal the words quote (`enhancedStatusTextIn`, the one pattern `rejectionCause` reads too).
+  const enhanced = text(status["enhanced-code"])?.match(/^[245]\.\d{1,3}\.\d{1,3}$/)?.[0] ?? enhancedStatusTextIn(words);
   const code = [basic, enhanced].filter(Boolean).join(" ");
   const detail = words ? redactProviderText(words, { recipient }) : "";
   return { code: code === "" ? null : code.slice(0, 20), detail: detail === "" ? null : detail };

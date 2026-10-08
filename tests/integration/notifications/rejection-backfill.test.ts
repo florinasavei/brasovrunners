@@ -193,7 +193,8 @@ describe("migration 0131's backfill of what came after", () => {
     await legacy({ ...own, status: "SENT", sent: true, createdAt: minutes(20), sentAt: minutes(21), transport: "gmail" });
     const bounce = await legacy({ ...own, messageType: "BIB_ASSIGNED", status: "BOUNCED", sent: true, lastError: "bounce", createdAt: minutes(30) });
     await legacy({ ...own, messageType: "BIB_ASSIGNED", status: "SENT", sent: true, createdAt: minutes(40), sentAt: minutes(41) });
-    const notAgain = await legacy({ ...own, messageType: "EVENT_REMINDER", status: "BOUNCED", sent: true, lastError: "bounce", createdAt: minutes(50) });
+    // A notice that carries no race number: the race number's refusal before it is not answered by it.
+    const notAgain = await legacy({ ...own, messageType: "EVENT_UPDATE_NOTICE", status: "BOUNCED", sent: true, lastError: "bounce", createdAt: minutes(50) });
     const complaint = await legacy({ ...own, messageType: "ORGANIZER_MESSAGE", status: "COMPLAINED", sent: true, createdAt: minutes(60) });
     await legacy({ ...own, messageType: "ORGANIZER_MESSAGE", status: "SENT", sent: true, createdAt: minutes(70) });
     const archive = await legacy({ ...own, messageType: "DECLARATION_ARCHIVE", status: "BOUNCED", sent: true, lastError: "bounce", createdAt: minutes(80) });
@@ -209,5 +210,45 @@ describe("migration 0131's backfill of what came after", () => {
     expect(await read(archive.id)).toMatchObject({ retriedAt: null, resolvedAt: null });
     // No delivery is invented: none was recorded before this release.
     expect((await db.select().from(emailOutbox)).every((row) => row.deliveredAt === null && row.laterDeliveredAt === null && row.rejectedAt === null)).toBe(true);
+  });
+
+  it("reads a later message that carries the refused one as sent again: «Retrimite QR» before this release answers the race number and the signed declaration", async () => {
+    const [event] = await db
+      .insert(events)
+      .values({ type: "RACE", surface: "ASPHALT", startsAt: new Date("2099-11-21T08:00:00.000Z"), timezone: "Europe/Bucharest", capacity: 150, registrationMode: "INTERNAL" })
+      .returning();
+    const [participant] = await db
+      .insert(participants)
+      .values({ deliveryEmail: "ana@example.org", normalizedEmail: "ana@example.org", canonicalEmail: "ana@example.org", canonicalizationVersion: 2, defaultName: "Ana Pop" })
+      .returning();
+    const [registration] = await db
+      .insert(registrations)
+      .values({
+        eventId: event.id,
+        participantId: participant.id,
+        kind: "REAL",
+        locale: "ro",
+        registeredName: "Ana Pop",
+        displayName: resolveDisplayName({ legalName: "Ana Pop" }),
+        privacyNoticeVersion: 1,
+        privacyAcknowledgedAt: T0,
+        resultsNameConsent: false,
+        resultsConsentVersion: 1,
+        status: "CONFIRMED",
+      })
+      .returning();
+    const own = { participantId: participant.id, registrationId: registration.id };
+    // The confirmation before the refusals answers neither: it was queued before them.
+    await legacy({ ...own, messageType: "REGISTRATION_CONFIRMED", status: "SENT", sent: true, createdAt: minutes(-60), sentAt: minutes(-59) });
+    // The race number refused by the account on 1-2 October, and a signed declaration the address refused.
+    const bib = await legacy({ ...own, messageType: "BIB_ASSIGNED", status: "BOUNCED", sent: false, lastError: "mailgun 401: Forbidden", createdAt: minutes(0) });
+    const signed = await legacy({ ...own, messageType: "DECLARATION_SIGNED", status: "BOUNCED", sent: true, lastError: "bounce", createdAt: minutes(5) });
+    // «Retrimite QR»: the confirmation, which carries the number's QR and the signed PDF.
+    await legacy({ ...own, messageType: "REGISTRATION_CONFIRMED", status: "SENT", sent: true, createdAt: minutes(30), sentAt: minutes(31), transport: "gmail" });
+    await backfill();
+
+    const read = async (id: string) => (await db.select().from(emailOutbox).where(eq(emailOutbox.id, id)))[0];
+    expect(await read(bib.id)).toMatchObject({ rejectionCause: "account", retriedAt: minutes(31), retriedVia: "gmail", resolvedAt: minutes(31) });
+    expect(await read(signed.id)).toMatchObject({ rejectionCause: "refused", retriedAt: minutes(31), retriedVia: "gmail", resolvedAt: null });
   });
 });

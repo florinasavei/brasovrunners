@@ -708,8 +708,17 @@
         "neverConfirmed": "Adresa nu a fost confirmată niciodată.",
         "todo": "Sună persoana; adresa o poate schimba doar ea, printr-o înscriere nouă.",
         "whichFamily": "Respins la aceeași adresă, pentru altă înscriere de la acest eveniment: „{type}”, {instant}.",
-        "todoResend": "Retrimite-l din pagina înscrierii.",
-        "todoAskAdmin": "Roagă un administrator să-l retrimită.",
+        "todoPress": {
+          "confirmation": "Retrimite confirmarea, care poartă și numărul, codul QR și declarația semnată: „Retrimite QR” în listă, „Retrimite emailul” în pagina înscrierii.",
+          "reminder": "Retrimite reminderul: „Trimite reminderul” în pagina înscrierii.",
+          "resend": "Retrimite-l: „Retrimite” în listă, „Retrimite emailul” în pagina înscrierii."
+        },
+        "todoAskAdmin": {
+          "confirmation": "Roagă un administrator să retrimită confirmarea („Retrimite QR”), care poartă și numărul, codul QR și declarația semnată.",
+          "reminder": "Roagă un administrator să retrimită reminderul („Trimite reminderul”).",
+          "resend": "Roagă un administrator să-l retrimită."
+        },
+        "todoFamily": "Se retrimite de pe înscrierea acelei persoane, nu de pe aceasta. {todo}",
         "todoWait": "Nu-l retrimite încă: așteaptă confirmarea livrării.",
         "todoAsk": "Întreabă persoana dacă l-a primit."
       },
@@ -1144,7 +1153,11 @@
         "rejected": {
           "BOUNCED": "Un email trimis de club la adresa ta a fost respins: adresa nu există sau căsuța e plină, așa că mesajele clubului nu ajung la tine.",
           "COMPLAINED": "Un email trimis de club la adresa ta a fost marcat ca spam, așa că mesajele clubului s-ar putea să nu mai ajungă la tine.",
-          "owed": "Un email al clubului pentru tine nu a ajuns încă la tine; ți-l trimitem din nou."
+          "owed": {
+            "resend": "Un email al clubului pentru tine nu a ajuns încă la tine; ți-l trimitem din nou.",
+            "confirmation": "Confirmarea înscrierii, cu codul QR, nu a ajuns încă la tine; ți-o trimitem din nou.",
+            "reminder": "Emailul cu detaliile pentru ziua cursei nu a ajuns încă la tine; ți-l trimitem din nou."
+          }
         }
       },
       "memberBibWantedStaffHelp": "Doar pentru un membru, la un eveniment care oferă numărul membrilor; altfel nu se păstrează.",

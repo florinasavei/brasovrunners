@@ -1,5 +1,5 @@
-import { eq } from "drizzle-orm";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { eq, inArray } from "drizzle-orm";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { emailOutbox, type EmailMessageType } from "@/db/schema/email-outbox";
 import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
@@ -9,6 +9,7 @@ import type { OutgoingEmail, SendResult } from "@/infrastructure/email/adapter";
 import type { EmailSender } from "@/infrastructure/email/delivery";
 import { selectConfirmationRetryRows } from "@/modules/notifications/confirmation-retry";
 import { listClubMailboxRejections, readDeliveryEvidence } from "@/modules/notifications/delivery-evidence";
+import { noteSentAgain } from "@/modules/notifications/delivery-facts";
 import { applyMailgunEvent, type OutboxRow, processOutboxBatch } from "@/modules/notifications/outbox";
 import {
   countNeedingEmailActionForAdmin,
@@ -33,6 +34,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * - the registration's state: the club's own mail never lights it; the club's account refused it is
  *   «not sent»; the address working again leaves the message «missing» until the same one is delivered; a
  *   message sent again waits («retried»); a family member's refusal at the same event marks the address.
+ * - what a message carries answers a refusal of what it carries (the confirmation the race number and the
+ *   signed declaration), written when it is sent or delivered; a refusal the registration no longer needs
+ *   asks nobody to act; a family member's refusal reads the same on every registration it shows on.
  */
 const T0 = new Date("2026-10-08T08:00:00.000Z");
 const minutes = (n: number) => new Date(T0.getTime() + n * 60_000);
@@ -501,6 +505,7 @@ describe("the registration's one email state (BR-REQ-038-01)", () => {
       status: "BOUNCED",
       cause: "no-such-address",
       own: true,
+      press: "confirmation",
       laterDeliveredAt: null,
       retriedAt: null,
       retriedVia: null,
@@ -580,5 +585,227 @@ describe("the automatic re-send's refusal (§653)", () => {
     await outboxRow({ participantId: answered, registrationId: null, messageType: "DECLARATION_ARCHIVE", recipientEmail: "archive@example.org", status: "BOUNCED" });
     const { refused } = await selectConfirmationRetryRows(db, from, { confirmationHours: 48 });
     expect([...refused].sort()).toEqual([standing, complained].sort());
+  });
+});
+
+/** A participant's message queued now and sent by the outbox, as «Retrimite QR» queues the confirmation. */
+async function sendNow(input: { participantId: string; registrationId: string; messageType: EmailMessageType; at: Date; transport?: "mailgun" | "gmail" }) {
+  const row = await outboxRow({ ...input, status: "PENDING", createdAt: input.at, providerMessageId: null });
+  await processOutboxBatch(db, {
+    sender: sender({ outcome: "sent", providerMessageId: `mg-${row.idempotencyKey}`, transport: input.transport ?? "mailgun", acceptedAt: input.at }),
+    render,
+    now: input.at,
+  });
+  return read(row.id);
+}
+
+describe("what a message carries answers a refusal of it (BR-REQ-038-01, §NNN)", () => {
+  it("a race number refused on 1-2 October, then «Retrimite QR»: sent again, and over once the confirmation arrives", async () => {
+    const r = await race();
+    const p = await person("ana@example.org");
+    const reg = await register(r.id, p, { bibNumber: 17 });
+    // The account's refusal, as the 1-2 October rows read now; and a refusal of the address answered since.
+    const account = await outboxRow({
+      participantId: p,
+      registrationId: reg,
+      messageType: "BIB_ASSIGNED",
+      status: "BOUNCED",
+      sentAt: null,
+      createdAt: minutes(0),
+      lastError: "mailgun 400: Domain mail.example.org is not allowed to send: recipient limit exceeded",
+      rejectionCause: "account",
+    });
+    expect((await findRegistrationDetailForAdmin(db, reg))?.emailState).toMatchObject({ kind: "not-sent", messageType: "BIB_ASSIGNED", press: "confirmation" });
+
+    const confirmation = await sendNow({ participantId: p, registrationId: reg, messageType: "REGISTRATION_CONFIRMED", at: minutes(10) });
+    // The confirmation carries the number and its QR: the account's refusal is over, and it says it was sent again.
+    expect(await read(account.id)).toMatchObject({ retriedAt: minutes(10), retriedVia: "mailgun", resolvedAt: minutes(10) });
+    expect((await findRegistrationDetailForAdmin(db, reg))?.emailState).toBeNull();
+    await event(confirmation, "delivered", minutes(11));
+    expect((await read(account.id)).resolvedAt).toEqual(minutes(10));
+  });
+
+  it("a race number the address refused: «Retrimite QR» waits for its delivery, which ends it — whichever is processed first — and the ending outlives the sent rows", async () => {
+    for (const order of ["refusal first", "delivery first"] as const) {
+      await resetTables(db);
+      const r = await race();
+      const p = await person("ana@example.org");
+      const reg = await register(r.id, p, { bibNumber: 17 });
+      const bib = await outboxRow({ participantId: p, registrationId: reg, messageType: "BIB_ASSIGNED", createdAt: minutes(0) });
+      const notice = await outboxRow({ participantId: p, registrationId: reg, messageType: "ORGANIZER_MESSAGE", createdAt: minutes(2) });
+      const confirmation = await outboxRow({ participantId: p, registrationId: reg, messageType: "REGISTRATION_CONFIRMED", createdAt: minutes(10), transport: "mailgun" });
+      const steps = [() => event(bib, "failed", minutes(1)), () => event(notice, "delivered", minutes(3)), () => event(confirmation, "delivered", minutes(11))];
+      if (order === "delivery first") steps.reverse();
+      for (const step of steps) await step();
+      // A delivered «Mesaj de la organizatori» says only that the address works; the confirmation carries the number.
+      expect(await read(bib.id), order).toMatchObject({ laterDeliveredAt: minutes(3), resolvedAt: minutes(11) });
+      expect((await findRegistrationDetailForAdmin(db, reg))?.emailState, order).toBeNull();
+      // The retention sweep deletes sent rows after 90 days: the refusal stays answered.
+      await db.delete(emailOutbox).where(inArray(emailOutbox.id, [notice.id, confirmation.id]));
+      expect((await findRegistrationDetailForAdmin(db, reg))?.emailState, order).toBeNull();
+      expect(await listRegistrationsForAdmin(db, { eventId: r.id, emailBounced: true }), order).toHaveLength(0);
+    }
+  });
+
+  it("the signed declaration refused: the confirmation, which carries the PDF, answers it; another message does not", async () => {
+    const r = await race();
+    const p = await person("ana@example.org");
+    const reg = await register(r.id, p);
+    const signed = await outboxRow({ participantId: p, registrationId: reg, messageType: "DECLARATION_SIGNED", createdAt: minutes(0) });
+    await event(signed, "failed", minutes(1));
+    const reminder = await outboxRow({ participantId: p, registrationId: reg, messageType: "EVENT_REMINDER", createdAt: minutes(5) });
+    await event(reminder, "delivered", minutes(6));
+    expect(await read(signed.id)).toMatchObject({ laterDeliveredAt: minutes(6), resolvedAt: null });
+    expect((await findRegistrationDetailForAdmin(db, reg))?.emailState).toMatchObject({ kind: "missing", messageType: "DECLARATION_SIGNED", press: "confirmation" });
+    const confirmation = await sendNow({ participantId: p, registrationId: reg, messageType: "REGISTRATION_CONFIRMED", at: minutes(20) });
+    expect((await findRegistrationDetailForAdmin(db, reg))?.emailState).toMatchObject({ kind: "retried", messageType: "DECLARATION_SIGNED" });
+    await event(confirmation, "delivered", minutes(21));
+    expect((await read(signed.id)).resolvedAt).toEqual(minutes(21));
+    expect((await findRegistrationDetailForAdmin(db, reg))?.emailState).toBeNull();
+  });
+});
+
+describe("a refusal speaks only while the registration still needs what it refused (BR-REQ-038-01, §NNN)", () => {
+  /** A refusal of `messageType` to an address that has answered since (a later message delivered): owed, if still needed. */
+  async function owed(registrationId: string, participantId: string, messageType: EmailMessageType, extra: Partial<RowInput> = {}) {
+    const row = await outboxRow({ participantId, registrationId, messageType, status: "BOUNCED", createdAt: minutes(0), rejectionCause: "mailbox-full", ...extra });
+    await db.update(emailOutbox).set({ laterDeliveredAt: minutes(5) }).where(eq(emailOutbox.id, row.id));
+    return row;
+  }
+
+  it("a verification, a declaration link and an offer the registration has moved past ask nobody to act; while it waits on them, they do", async () => {
+    const r = await race();
+    const cases: Array<[EmailMessageType, "PENDING_EMAIL_CONFIRMATION" | "PENDING_DECLARATION" | "WAITLIST_OFFERED"]> = [
+      ["VERIFY_REGISTRATION_EMAIL", "PENDING_EMAIL_CONFIRMATION"],
+      ["COMPLETE_DECLARATION", "PENDING_DECLARATION"],
+      ["WAITLIST_SPOT_OFFER", "WAITLIST_OFFERED"],
+    ];
+    for (const [messageType, waiting] of cases) {
+      const p = await person(`${messageType.toLowerCase()}@example.org`);
+      const reg = await register(r.id, p, { status: waiting, confirmedAt: null });
+      const row = await owed(reg, p, messageType);
+      expect((await findRegistrationDetailForAdmin(db, reg))?.emailState, messageType).toMatchObject({ kind: "missing", messageType, press: "resend" });
+      // The registration moves on: confirmed. Nothing the page can send would clear it, and nothing is owed.
+      await db.update(registrations).set({ status: "CONFIRMED", confirmedAt: minutes(6) }).where(eq(registrations.id, reg));
+      expect((await findRegistrationDetailForAdmin(db, reg))?.emailState, messageType).toBeNull();
+      // The same for the account's refusal of it, sent never: «not sent» asks nothing once it is not needed.
+      await db.update(emailOutbox).set({ rejectionCause: "account", sentAt: null, laterDeliveredAt: null }).where(eq(emailOutbox.id, row.id));
+      expect((await findRegistrationDetailForAdmin(db, reg))?.emailState, messageType).toBeNull();
+      // It stays in the registration's history.
+      expect((await listOutboxHistory(db, reg)).map((entry) => entry.messageType), messageType).toContain(messageType);
+    }
+    expect(await listRegistrationsForAdmin(db, { eventId: r.id, emailBounced: true })).toHaveLength(0);
+    expect(await countNeedingEmailActionForAdmin(db, { eventId: r.id })).toBe(0);
+    expect(await countNeedingEmailActionByEvent(db, T0)).toEqual([]);
+    expect((await listRegistrationsForAdmin(db, { eventId: r.id })).some((row) => needsEmailAction(row.emailState))).toBe(false);
+  });
+
+  it("an address that refuses the club's mail stays the call list, whatever the message and the registration's state", async () => {
+    const r = await race();
+    const p = await person("ana@example.org");
+    const reg = await register(r.id, p);
+    await outboxRow({ participantId: p, registrationId: reg, messageType: "VERIFY_REGISTRATION_EMAIL", status: "BOUNCED", createdAt: minutes(0), rejectionCause: "no-such-address" });
+    expect((await findRegistrationDetailForAdmin(db, reg))?.emailState).toMatchObject({ kind: "unreachable", messageType: "VERIFY_REGISTRATION_EMAIL" });
+    expect(await countNeedingEmailActionForAdmin(db, { eventId: r.id })).toBe(1);
+  });
+
+  it("the reminder is owed only while «Trimite reminderul» can send it: the event ahead, never past or cancelled", async () => {
+    const ahead = await race();
+    const past = await race(new Date("2026-09-01T08:00:00.000Z"));
+    for (const event_ of [ahead, past]) {
+      const p = await person(`reminder-${event_.id}@example.org`);
+      const reg = await register(event_.id, p);
+      await owed(reg, p, "EVENT_REMINDER");
+    }
+    const [aheadRow] = await listRegistrationsForAdmin(db, { eventId: ahead.id });
+    expect(aheadRow.emailState).toMatchObject({ kind: "missing", messageType: "EVENT_REMINDER", press: "reminder" });
+    const [pastRow] = await listRegistrationsForAdmin(db, { eventId: past.id });
+    expect(pastRow.emailState).toBeNull();
+
+    // A cancelled event's links lead nowhere: the confirmation is not sent again, so its refusal asks nothing.
+    const p = await person("cancelled@example.org");
+    const reg = await register(ahead.id, p);
+    await owed(reg, p, "REGISTRATION_CONFIRMED");
+    expect((await findRegistrationDetailForAdmin(db, reg))?.emailState).toMatchObject({ kind: "missing", press: "confirmation" });
+    await db.update(events).set({ eventStatus: "CANCELLED" }).where(eq(events.id, ahead.id));
+    expect((await findRegistrationDetailForAdmin(db, reg))?.emailState).toBeNull();
+  });
+});
+
+describe("a family member's refusal reads the same on every registration it shows on (BR-REQ-038-01, §543, §NNN)", () => {
+  async function family() {
+    const r = await race();
+    const p = await person("family@example.org");
+    const parent = await register(r.id, p, { bibNumber: 1 });
+    const child = await register(r.id, p, { bibNumber: 2 });
+    return { r, p, parent, child };
+  }
+  const stateOf = async (id: string) => (await findRegistrationDetailForAdmin(db, id))?.emailState ?? null;
+
+  it("the sibling's refusal sent again waits on both", async () => {
+    const { r, p, parent, child } = await family();
+    await outboxRow({ participantId: p, registrationId: child, messageType: "BIB_ASSIGNED", status: "BOUNCED", createdAt: minutes(0), rejectionCause: "mailbox-full" });
+    expect(await stateOf(child)).toMatchObject({ kind: "unreachable", own: true });
+    expect(await stateOf(parent)).toMatchObject({ kind: "unreachable", own: false });
+    await sendNow({ participantId: p, registrationId: child, messageType: "REGISTRATION_CONFIRMED", at: minutes(10) });
+    expect(await stateOf(child)).toMatchObject({ kind: "retried", messageType: "BIB_ASSIGNED", own: true });
+    expect(await stateOf(parent)).toMatchObject({ kind: "retried", messageType: "BIB_ASSIGNED", own: false });
+    // The list and the desk read the same: waiting, on both, and the filter keeps neither.
+    const listed = await listRegistrationsForAdmin(db, { eventId: r.id });
+    const desk = await listDeskRegistrations(db, { eventId: r.id, query: "", locale: "ro" });
+    for (const id of [parent, child]) {
+      expect(listed.find((row) => row.id === id)?.emailState?.kind).toBe("retried");
+      expect(desk.find((row) => row.id === id)?.emailState?.kind).toBe("retried");
+    }
+    expect(await countNeedingEmailActionForAdmin(db, { eventId: r.id })).toBe(0);
+  });
+
+  it("resolved by a send that carries it: silent on both", async () => {
+    const { p, parent, child } = await family();
+    const bib = await outboxRow({ participantId: p, registrationId: child, messageType: "BIB_ASSIGNED", createdAt: minutes(0) });
+    await event(bib, "failed", minutes(1));
+    const confirmation = await sendNow({ participantId: p, registrationId: child, messageType: "REGISTRATION_CONFIRMED", at: minutes(10) });
+    await event(confirmation, "delivered", minutes(11));
+    expect(await stateOf(child)).toBeNull();
+    expect(await stateOf(parent)).toBeNull();
+  });
+
+  it("owed to an address that works: the same state on both, naming the press on the sibling's registration", async () => {
+    const { p, parent, child } = await family();
+    const bib = await outboxRow({ participantId: p, registrationId: child, messageType: "BIB_ASSIGNED", status: "BOUNCED", createdAt: minutes(0), rejectionCause: "mailbox-full" });
+    await db.update(emailOutbox).set({ laterDeliveredAt: minutes(5) }).where(eq(emailOutbox.id, bib.id));
+    expect(await stateOf(child)).toMatchObject({ kind: "missing", own: true, press: "confirmation" });
+    expect(await stateOf(parent)).toMatchObject({ kind: "missing", own: false, press: "confirmation" });
+  });
+
+  it("is read against its own registration's status: the sibling's verification, owed no longer, is silent on both", async () => {
+    const { r, p, parent, child } = await family();
+    // The parent still waits on its own verification; the child's was refused, and the child is confirmed since.
+    await db.update(registrations).set({ status: "PENDING_EMAIL_CONFIRMATION", confirmedAt: null }).where(eq(registrations.id, parent));
+    const verify = await outboxRow({ participantId: p, registrationId: child, messageType: "VERIFY_REGISTRATION_EMAIL", status: "BOUNCED", createdAt: minutes(0), rejectionCause: "mailbox-full" });
+    await db.update(emailOutbox).set({ laterDeliveredAt: minutes(5) }).where(eq(emailOutbox.id, verify.id));
+    expect(await stateOf(child)).toBeNull();
+    expect(await stateOf(parent)).toBeNull();
+    expect(await listRegistrationsForAdmin(db, { eventId: r.id, emailBounced: true })).toHaveLength(0);
+  });
+});
+
+describe("a send asks first whether it has a refusal to mark (§NNN)", () => {
+  it("opens no transaction when nothing earlier was refused, nor when the refusal was already told of this send; one when there is", async () => {
+    const r = await race();
+    const p = await person("ana@example.org");
+    const reg = await register(r.id, p);
+    const handle = { execute: db.execute.bind(db), transaction: vi.fn(db.transaction.bind(db)) as unknown as typeof db.transaction };
+    const sent = await outboxRow({ participantId: p, registrationId: reg, messageType: "REGISTRATION_CONFIRMED", createdAt: minutes(10) });
+    await noteSentAgain(handle, sent, minutes(10), "mailgun");
+    expect(handle.transaction).not.toHaveBeenCalled();
+
+    const bib = await outboxRow({ participantId: p, registrationId: reg, messageType: "BIB_ASSIGNED", status: "BOUNCED", createdAt: minutes(5), rejectionCause: "mailbox-full" });
+    await noteSentAgain(handle, sent, minutes(10), "mailgun");
+    expect(handle.transaction).toHaveBeenCalledTimes(1);
+    expect(await read(bib.id)).toMatchObject({ retriedAt: minutes(10), retriedVia: "mailgun" });
+    // Told already: the same send again changes nothing and opens nothing.
+    await noteSentAgain(handle, sent, minutes(10), "mailgun");
+    expect(handle.transaction).toHaveBeenCalledTimes(1);
   });
 });

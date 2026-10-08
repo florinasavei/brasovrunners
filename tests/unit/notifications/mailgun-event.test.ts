@@ -102,6 +102,25 @@ describe("deliveryEventOf", () => {
     expect(noAccount?.detail).not.toContain("ana.popescu");
   });
 
+  /*
+    A policy text that quotes an IP literal before its own status code: «10.5.1.20» holds «5.1.20», which a
+    scan of the raw words would take for an enhanced status — a missing address. The scan never reads three
+    parts of a dotted quad (`enhancedStatusTextIn`, the pattern `rejectionCause` reads too).
+  */
+  const QUOTING_AN_IP: Array<[string, Record<string, unknown>, string | null, string]> = [
+    ["an IP before the code", { code: 550, message: "550 [10.5.1.20] 5.7.1 Service unavailable; client host blocked using a block list" }, "550 5.7.1", "blocked"],
+    ["an IP and no code", { code: 550, message: "Rejected by local policy for 10.5.1.20" }, "550", "blocked"],
+    ["an IP after the code", { code: 550, message: "5.7.1 Client host [192.0.2.1] rejected: Access denied" }, "550 5.7.1", "blocked"],
+    ["Yahoo's dotted reference only", { code: 421, message: "Messages temporarily deferred due to unexpected volume - 4.16.55.1" }, "421", "gave-up"],
+  ];
+
+  it.each(QUOTING_AN_IP)("never reads an enhanced status out of an IP literal: %s", (_name, status, code, cause) => {
+    const event = deliveryEventOf(failed({ reason: cause === "gave-up" ? "old" : "bounce", "delivery-status": status }), NOW);
+    expect(event?.code).toBe(code);
+    expect(event?.cause).toBe(cause);
+    expect(event?.code ?? "").not.toMatch(/5\.1\.20|16\.55/);
+  });
+
   it("tolerates every field missing, and names no message without an id or a key", () => {
     expect(deliveryEventOf({}, NOW)).toBeNull();
     expect(deliveryEventOf({ "event-data": { event: "delivered" } }, NOW)).toBeNull();

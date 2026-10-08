@@ -1,4 +1,8 @@
+import type { EmailMessageType } from "@/db/schema/email-outbox";
+import { registrationStatus, type RegistrationStatus } from "@/db/schema/registrations";
+import { typesCoveredBy } from "@/modules/notifications/domain/content-cover";
 import { isRejectionCause, rejectionCause, type RejectionCause } from "@/modules/notifications/domain/rejection-cause";
+import { deriveAllowedResendMessageType } from "./resend";
 
 /**
  * The registration's one email state (§NNN; amending §663, §76/§83): whether the participant's own mail
@@ -8,15 +12,24 @@ import { isRejectionCause, rejectionCause, type RejectionCause } from "@/modules
  * never disagree:
  *
  * - `unreachable` — the address refuses the club's mail: a refusal with nothing delivered to the address
- *   since, or a complaint (never cleared). It may be a family member's message at the same event: one
- *   address (§543), one fact.
+ *   since, or a complaint (never cleared) — whatever message it was, and whatever the registration has
+ *   become since: it is about the address, and it is the call list.
  * - `not-sent` — the club's Mailgun account was refused when this message was to leave (2026-10-01 and
  *   02): it never left, and nothing has left in its place. Not the address's fault — and the person
  *   really has not got it.
  * - `missing` — the address works again (a later message was delivered), but this message — the QR
- *   confirmation, say — has not been delivered or sent again since.
- * - `retried` — this message was sent again after its refusal and no delivery is known yet: by Mailgun,
- *   the delivery may still come; by Gmail, it never will (Gmail reports none).
+ *   confirmation, say — has not been delivered or sent again since, nor any message that carries it.
+ * - `retried` — this message, or one that carries it, was sent again after its refusal and no delivery
+ *   is known yet: by Mailgun, the delivery may still come; by Gmail, it never will (Gmail reports none).
+ *
+ * `not-sent`, `missing` and `retried` are open only while the registration the refused message was for
+ * **still needs it** (`stillNeededMessageTypes`): what the page can send again for its status now, and
+ * what that carries. A verification refused before the address was confirmed, a declaration link after
+ * the signing, a waiting-list email after the list, a notice that informed and asked nothing: none of
+ * them is anybody's to act on, and they stay in the registration's history alone.
+ *
+ * A family member's refusal at the same event (one address, §543) is read by the same rule, against its
+ * own registration's status, so one refusal has one state on every registration it shows on.
  *
  * Null when the participant's own mail has no open refusal. The club's own messages (the archive copy,
  * the confirmation notice, the club's copies) are never part of it: a club mailbox that bounces is the
@@ -37,6 +50,53 @@ export function needsEmailAction(state: { kind: EmailStateKind } | null | undefi
   return state !== null && state !== undefined && EMAIL_STATE_NEEDS_ACTION.includes(state.kind);
 }
 
+/**
+ * Where the event stands for the press that would send a message again: «Trimite reminderul» exists only
+ * while the event is ahead (`canResendReminder`, §81), and a cancelled event's links lead nowhere, so only
+ * where the registration stands is sent again (§331, `resendRegistrationEmail`).
+ */
+export const EVENT_MOMENTS = ["ahead", "past", "cancelled"] as const;
+export type EventMoment = (typeof EVENT_MOMENTS)[number];
+
+/**
+ * The messages a registration in this status still needs (§NNN): the one the page sends again for it
+ * (`deriveAllowedResendMessageType` — «Retrimite QR» on a confirmed registration) and what that carries
+ * (`typesCoveredBy`: the confirmation carries the race number's QR and the signed declaration), and on a
+ * confirmed registration of an event still ahead the reminder (`«Trimite reminderul»`) and what it
+ * carries. A refusal of any other type has nothing left to send: no press could clear it, so it asks
+ * nobody to act. The SQL (`registrations/email-state.ts`) reads the same list, built from this function.
+ */
+export function stillNeededMessageTypes(status: RegistrationStatus, moment: EventMoment): EmailMessageType[] {
+  const resendable = deriveAllowedResendMessageType(status);
+  if (!resendable) return [];
+  if (moment === "cancelled" && resendable !== "REGISTRATION_STATE_NOTICE") return [];
+  const needed = new Set(typesCoveredBy(resendable));
+  if (moment === "ahead" && status === "CONFIRMED") for (const type of typesCoveredBy("EVENT_REMINDER")) needed.add(type);
+  return [...needed];
+}
+
+/** Every (moment, status, type) the SQL reads as still needed, as `moment:status:type`. */
+export const STILL_NEEDED_KEYS: readonly string[] = EVENT_MOMENTS.flatMap((moment) =>
+  registrationStatus.enumValues.flatMap((status) => stillNeededMessageTypes(status, moment).map((type) => `${moment}:${status}:${type}`)),
+);
+
+/**
+ * The press that clears a refusal (§NNN), on the registration the refused message was for: «Retrimite QR»
+ * (the confirmation, which carries the race number and the signed declaration too), «Trimite reminderul»,
+ * or the page's resend for any other status — never a press that sends something else. Null when no
+ * press would.
+ */
+export type EmailPress = "confirmation" | "reminder" | "resend";
+
+export function pressThatClears(messageType: string, status: RegistrationStatus | null): EmailPress | null {
+  if (status === null) return null;
+  const type = messageType as EmailMessageType;
+  const resendable = deriveAllowedResendMessageType(status);
+  if (resendable && typesCoveredBy(resendable).includes(type)) return resendable === "REGISTRATION_CONFIRMED" ? "confirmation" : "resend";
+  if (status === "CONFIRMED" && typesCoveredBy("EVENT_REMINDER").includes(type)) return "reminder";
+  return null;
+}
+
 export type RegistrationEmailState = {
   kind: EmailStateKind;
   /** The refused message's type: what did not arrive. */
@@ -49,6 +109,8 @@ export type RegistrationEmailState = {
   cause: RejectionCause;
   /** False when the refusal is another registration's at the same event, on the same address (a family, §543). */
   own: boolean;
+  /** The press that clears it, on the registration it was for (`pressThatClears`); null when none would. */
+  press: EmailPress | null;
   /** When a later message reached the address (`missing`). */
   laterDeliveredAt: Date | null;
   /** When the same message last left again, and by which road (`retried`). */
@@ -62,7 +124,7 @@ export type RegistrationEmailState = {
  */
 export type DeskEmailState = Pick<
   RegistrationEmailState,
-  "kind" | "messageType" | "at" | "sent" | "status" | "cause" | "own" | "laterDeliveredAt" | "retriedAt" | "retriedVia"
+  "kind" | "messageType" | "at" | "sent" | "status" | "cause" | "own" | "press" | "laterDeliveredAt" | "retriedAt" | "retriedVia"
 >;
 
 /** The registration page's: the state, with the provider's code and words in small print — never on a list. */
@@ -79,6 +141,8 @@ const instant = (value: unknown): Date | null => {
 };
 const kindOf = (value: unknown): EmailStateKind => ((EMAIL_STATE_KINDS as readonly unknown[]).includes(value) ? (value as EmailStateKind) : "unreachable");
 const textOf = (value: unknown): string | null => (typeof value === "string" && value.length > 0 ? value : null);
+const statusOf = (value: unknown): RegistrationStatus | null =>
+  (registrationStatus.enumValues as readonly unknown[]).includes(value) ? (value as RegistrationStatus) : null;
 
 /**
  * The subquery's one JSON object (`registrations/email-state.ts`). node-postgres and PGlite hand `json`
@@ -105,14 +169,16 @@ export function deskEmailStateOf(value: unknown): DeskEmailState | null {
   if (!row) return null;
   const status = row.status === "COMPLAINED" ? "COMPLAINED" : "BOUNCED";
   const sent = row.sent !== false;
+  const messageType = String(row.messageType);
   return {
     kind: kindOf(row.kind),
-    messageType: String(row.messageType),
+    messageType,
     at: instant(row.at) ?? new Date(0),
     sent,
     status,
     cause: causeOf(row, status, sent),
     own: row.own !== false,
+    press: pressThatClears(messageType, statusOf(row.registrationStatus)),
     laterDeliveredAt: instant(row.laterDeliveredAt),
     retriedAt: instant(row.retriedAt),
     retriedVia: row.retriedVia === "gmail" ? "gmail" : row.retriedVia === "mailgun" ? "mailgun" : null,

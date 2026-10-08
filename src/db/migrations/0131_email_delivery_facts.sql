@@ -35,13 +35,13 @@ UPDATE "email_outbox" SET "rejection_cause" = CASE
   ELSE 'other'
 END
 WHERE "status" IN ('BOUNCED', 'COMPLAINED') AND "rejection_cause" IS NULL;--> statement-breakpoint
--- A refused or complained-about participant's message that was already sent again — the same type, for the same registration, queued after it and gone — says so: the latest send, and its road (the send whose delivery may still come; the runtime's `noteSentAgain` keeps the same). Never the club's own messages (the archive copies, the confirmation notice), which carry the participant's id but are not theirs.
+-- A refused or complained-about participant's message that was already sent again — the same type, or one that carries it (notifications/domain/content-cover.ts: the confirmation carries the race number's QR and the signed declaration, the reminder the race number's QR), for the same registration, queued after it and gone — says so: the latest send, and its road (the send whose delivery may still come; the runtime's `noteSentAgain` keeps the same). So a race number refused on 1-2 October and answered by «Retrimite QR» before this release reads as sent again. Never the club's own messages (the archive copies, the confirmation notice), which carry the participant's id but are not theirs.
 UPDATE "email_outbox" AS "x" SET ("retried_at", "retried_via") = (
   SELECT "r"."sent_at", coalesce("r"."transport", 'mailgun')
   FROM "email_outbox" AS "r"
   WHERE "r"."participant_id" = "x"."participant_id"
     AND "r"."registration_id" IS NOT DISTINCT FROM "x"."registration_id"
-    AND "r"."message_type" = "x"."message_type"
+    AND ("r"."message_type" = "x"."message_type" OR ("r"."message_type"::text, "x"."message_type"::text) IN (('REGISTRATION_CONFIRMED', 'BIB_ASSIGNED'), ('REGISTRATION_CONFIRMED', 'DECLARATION_SIGNED'), ('EVENT_REMINDER', 'BIB_ASSIGNED')))
     AND "r"."id" <> "x"."id"
     AND "r"."created_at" >= "x"."created_at"
     AND "r"."sent_at" IS NOT NULL
@@ -55,18 +55,18 @@ WHERE "x"."status" IN ('BOUNCED', 'COMPLAINED')
     SELECT 1 FROM "email_outbox" AS "r"
     WHERE "r"."participant_id" = "x"."participant_id"
       AND "r"."registration_id" IS NOT DISTINCT FROM "x"."registration_id"
-      AND "r"."message_type" = "x"."message_type"
+      AND ("r"."message_type" = "x"."message_type" OR ("r"."message_type"::text, "x"."message_type"::text) IN (('REGISTRATION_CONFIRMED', 'BIB_ASSIGNED'), ('REGISTRATION_CONFIRMED', 'DECLARATION_SIGNED'), ('EVENT_REMINDER', 'BIB_ASSIGNED')))
       AND "r"."id" <> "x"."id"
       AND "r"."created_at" >= "x"."created_at"
       AND "r"."sent_at" IS NOT NULL
   );--> statement-breakpoint
--- A refusal of the club's account is over once the same message left after it: it never said anything about the address, and what became of the later one is that row's own story.
+-- A refusal of the club's account is over once the same message, or one that carries it, left after it: it never said anything about the address, and what became of the later one is that row's own story.
 UPDATE "email_outbox" AS "x" SET "resolved_at" = (
   SELECT min("r"."sent_at")
   FROM "email_outbox" AS "r"
   WHERE "r"."participant_id" = "x"."participant_id"
     AND "r"."registration_id" IS NOT DISTINCT FROM "x"."registration_id"
-    AND "r"."message_type" = "x"."message_type"
+    AND ("r"."message_type" = "x"."message_type" OR ("r"."message_type"::text, "x"."message_type"::text) IN (('REGISTRATION_CONFIRMED', 'BIB_ASSIGNED'), ('REGISTRATION_CONFIRMED', 'DECLARATION_SIGNED'), ('EVENT_REMINDER', 'BIB_ASSIGNED')))
     AND "r"."id" <> "x"."id"
     AND "r"."created_at" >= "x"."created_at"
     AND "r"."sent_at" IS NOT NULL

@@ -221,11 +221,12 @@ export const emailOutbox = pgTable(
      */
     laterDeliveredAt: timestamp("later_delivered_at", { withTimezone: true }),
     /**
-     * On a refused participant's message: when the same message — its type, for the same registration —
-     * was delivered later, or, for a refusal of the club's account, left later. The refusal is over.
+     * On a refused participant's message: when the same message — its type, or one that carries it
+     * (`notifications/domain/content-cover.ts`), for the same registration — was delivered later, or, for a
+     * refusal of the club's account, left later. The refusal is over.
      */
     resolvedAt: timestamp("resolved_at", { withTimezone: true }),
-    /** On a refused participant's message: when the same message last left again, and by which road. */
+    /** On a refused participant's message: when the same message, or one that carries it, last left again, and by which road. */
     retriedAt: timestamp("retried_at", { withTimezone: true }),
     retriedVia: text("retried_via", { enum: ["mailgun", "gmail"] }),
   },

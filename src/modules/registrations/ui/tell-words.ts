@@ -36,9 +36,11 @@ export type TellFacts = {
   /**
    * The registration's email state (§663, §NNN): one more sentence when the address refuses the club's mail
    * (`unreachable`), so the person knows our mail does not reach them. A message the club's account could not
-   * send, or one owed again to an address that works, is not the person's to hear about as a refusal.
+   * send, or one owed again to an address that works, is not the person's to hear about as a refusal: it is
+   * said as owed, naming what the press that clears it sends (`press`) — and only when it is this
+   * registration's own (`own`), not a family member's at the same address.
    */
-  emailState?: Pick<RegistrationEmailState, "kind" | "status"> | null;
+  emailState?: (Pick<RegistrationEmailState, "kind" | "status"> & Partial<Pick<RegistrationEmailState, "own" | "press">>) | null;
 };
 
 /** The states whose next step is a link in an email: the ones a lost or spam-filed email stops. */
@@ -164,14 +166,18 @@ export function tellLines(say: Say, ours: Say, locale: string, facts: TellFacts,
   // person waits on was refused and not sent again (§NNN): the address refused it, the club's account was
   // refused so it never left, or it is owed to an address that works again — none of them is in spam. A
   // message sent again may be; a complaint is the person's own, and their mail still arrives.
+  // A family member's email owed at the same address is theirs (§543): this person's own mail is not
+  // refused by it, and may be in spam like anybody's. The address's refusal is everybody's at it.
   const state = facts.emailState ?? null;
-  const refusedNotResent = state !== null && state.status === "BOUNCED" && state.kind !== "retried";
+  const own = state?.own !== false;
+  const refusedNotResent = state !== null && state.status === "BOUNCED" && state.kind !== "retried" && (own || state.kind === "unreachable");
   if (WAITS_ON_AN_EMAIL.has(facts.status) && !lapsed && !refusedNotResent) lines.push(say("spamHint.body"));
   // The address refuses the club's mail (§663, §NNN): on any state, confirmed included — said to the person
   // without the address, which stays theirs to change (§645). An email the club's account could not send,
-  // or one owed to an address that works again, is said as owed — never as the address's refusal.
+  // or one owed to an address that works again, is said as owed — never as the address's refusal — by
+  // what the press that clears it sends: the confirmation with its QR, the race-day details, or the email.
   if (state?.kind === "unreachable") lines.push(ours(`rejected.${state.status}`));
-  else if (state?.kind === "not-sent" || state?.kind === "missing") lines.push(ours("rejected.owed"));
+  else if ((state?.kind === "not-sent" || state?.kind === "missing") && own) lines.push(ours(`rejected.owed.${state.press ?? "resend"}`));
   return lines;
 }
 

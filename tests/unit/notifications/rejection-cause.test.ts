@@ -10,7 +10,7 @@ import {
   messageTypesFor,
   PARTICIPANT_MESSAGE_TYPES,
 } from "@/modules/notifications/domain/email-audience";
-import { enhancedStatusIn, rejectionCause } from "@/modules/notifications/domain/rejection-cause";
+import { enhancedStatusIn, enhancedStatusTextIn, rejectionCause } from "@/modules/notifications/domain/rejection-cause";
 
 /**
  * BR-REQ-080-04, BR-REQ-038-01 (§NNN; amending §663, §76/§83, §320, §622) — the facts a refusal is stored
@@ -61,6 +61,10 @@ describe("rejectionCause — why, by a stated precedence", () => {
     expect(bounce({ code: "550 5.1.1", detail: "user unknown" })).toBe("no-such-address");
     expect(bounce({ reason: "old", code: "452 4.2.2", detail: "4.2.2 The email account that you tried to reach is over quota" })).toBe("mailbox-full");
     expect(bounce({ code: "552" })).toBe("mailbox-full");
+    // A 552 whose enhanced status was found and decided nothing is not a full mailbox: the message's size is
+    // the message's, so it reads on — a plain bounce is refused, a reason not recorded is other.
+    expect(bounce({ code: "552 5.3.4", detail: "552 5.3.4 Message size exceeds fixed maximum message size" })).toBe("refused");
+    expect(bounce({ reason: null, code: "552 5.3.4", detail: "552 5.3.4 Message size exceeds fixed maximum message size" })).toBe("other");
     expect(bounce({ reason: "espblock", code: "554 5.7.1" })).toBe("blocked");
     expect(bounce({ code: "550", detail: "5.7.1 Message rejected for policy reasons" })).toBe("blocked");
     expect(bounce({ code: "550 5.1.8" })).toBe("blocked");
@@ -214,10 +218,21 @@ describe("rejectionCause — why, by a stated precedence", () => {
     expect(isAccountRefusalError(null)).toBe(false);
   });
 
-  it("finds an enhanced status in a text", () => {
+  it("finds an enhanced status in a text — never three parts of a dotted quad", () => {
     expect(enhancedStatusIn("550 5.1.1 user unknown")).toEqual([5, 1, 1]);
     expect(enhancedStatusIn("452 4.2.2 over quota")).toEqual([4, 2, 2]);
+    expect(enhancedStatusIn("refused (5.1.1).")).toEqual([5, 1, 1]);
     expect(enhancedStatusIn("no code here")).toBeNull();
+    // An IP literal or a dotted reference is not a status: «10.5.1.20», Yahoo's «4.16.55.1».
+    expect(enhancedStatusIn("Rejected by policy for 10.5.1.20")).toBeNull();
+    expect(enhancedStatusIn("deferred - 4.16.55.1")).toBeNull();
+    expect(enhancedStatusTextIn("550 [10.5.1.20] 5.7.1 blocked")).toBe("5.7.1");
+    expect(enhancedStatusTextIn("v5.1.1")).toBeNull();
+  });
+
+  it("does not read a policy text that quotes an IP as a missing address", () => {
+    expect(bounce({ code: "550", detail: "Rejected by local policy for 10.5.1.20" })).toBe("blocked");
+    expect(bounce({ code: "550", detail: "Delivery not authorised from 10.5.1.20, message refused" })).toBe("blocked");
   });
 });
 

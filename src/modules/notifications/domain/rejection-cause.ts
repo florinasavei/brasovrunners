@@ -10,7 +10,7 @@ import { isAccountRefusalError } from "@/infrastructure/email/mailgun-adapter";
  *
  * - `no-such-address` — the receiving server says the mailbox or the domain does not exist (5.1.x;
  *   Mailgun's `hardfail`; Yahoo's «doesn't have a yahoo.com account»);
- * - `mailbox-full` — over quota (x.2.2; a 552 whose words say so);
+ * - `mailbox-full` — over quota (x.2.2; a bare 552, or one whose words say so);
  * - `blocked` — the receiving server refused it for policy or reputation (5.7.x, espblock, a block list):
  *   about the club's sending, not the address;
  * - `gave-up` — Mailgun gave up after hours of deferrals (old, greylisted), the address not refused;
@@ -49,14 +49,6 @@ export function isRejectionCause(value: unknown): value is RejectionCause {
   return typeof value === "string" && (REJECTION_CAUSES as readonly string[]).includes(value);
 }
 
-/**
- * The causes that are about the address — the person's mailbox, or Mailgun's lists for it. `account` is
- * the club's, and says nothing about whether the address works.
- */
-export function isAddressCause(cause: RejectionCause): boolean {
-  return cause !== "account";
-}
-
 export type RejectionFacts = {
   status: "BOUNCED" | "COMPLAINED";
   /** Whether the message ever left (`sent_at`): a refusal at the send never did. */
@@ -69,9 +61,24 @@ export type RejectionFacts = {
   detail?: string | null;
 };
 
+/**
+ * An enhanced status (RFC 3463) standing alone in a text — never three parts of a dotted quad: a policy text
+ * that quotes «10.5.1.20» or Yahoo's reference «4.16.55.1» names an address or a ticket, not «5.1.20». So
+ * no word character or dot before it, and no word character or «.digit» after it (a sentence's full stop
+ * after it is fine). One pattern for every reader: the webhook's scan of the server's words
+ * (`mailgun-event.ts`), the cause, and the code a refusal at the send is stored with (`outbox.ts`).
+ */
+const ENHANCED_STATUS = /(?<![\w.])([245])\.(\d{1,3})\.(\d{1,3})(?!\w|\.\d)/;
+
+/** The enhanced status in a text, as it is written there: «550 5.1.1 user unknown» → «5.1.1». */
+export function enhancedStatusTextIn(text: string | null | undefined): string | null {
+  const match = typeof text === "string" ? ENHANCED_STATUS.exec(text) : null;
+  return match ? `${match[1]}.${match[2]}.${match[3]}` : null;
+}
+
 /** The enhanced status (RFC 3463) in a text: «5.1.1» → [5, 1, 1]. */
 export function enhancedStatusIn(text: string | null | undefined): [number, number, number] | null {
-  const match = typeof text === "string" ? /\b([245])\.(\d{1,3})\.(\d{1,3})\b/.exec(text) : null;
+  const match = typeof text === "string" ? ENHANCED_STATUS.exec(text) : null;
   return match ? [Number(match[1]), Number(match[2]), Number(match[3])] : null;
 }
 
@@ -119,8 +126,8 @@ const WORDS: ReadonlyArray<[RegExp, RejectionCause]> = [
  * the one 400 that names the address; a Gmail refusal, which `gmail-adapter.ts` keeps only for a 5.1.x);
  * the enhanced status code (`causeOfEnhanced`: a final `old` carrying the last deferral's 4.2.2 is a full
  * mailbox, not a give-up); Mailgun's reason token (`old`, `greylisted`, `espblock`, `blacklisted`,
- * `hardfail`); the server's words; a 552 whose words said nothing; a plain `bounce` — `refused`; and
- * `other` (`generic` among them). Only `code` and `detail` are read for codes and words: a stored reason
+ * `hardfail`); the server's words; a 552 with no enhanced status, whose words said nothing; a plain
+ * `bounce` — `refused`; and `other` (`generic` among them). Only `code` and `detail` are read for codes and words: a stored reason
  * is either Mailgun's token or a send-time answer, and both are read by their shape, so a row written
  * before the cause was stored reads the same here as the migration's backfill made it.
  */
@@ -150,7 +157,10 @@ export function rejectionCause(facts: RejectionFacts): RejectionCause {
   const words = facts.detail ?? "";
   for (const [pattern, cause] of WORDS) if (pattern.test(words)) return cause;
 
-  if (basic === 552) return "mailbox-full";
+  // A bare 552 is a full mailbox (RFC 5321's «exceeded storage allocation»); a 552 whose enhanced status was
+  // found and decided nothing is not — «552 5.3.4 Message size exceeds fixed maximum message size» is the
+  // message's size, read below as the plain refusal it is.
+  if (basic === 552 && !enhanced) return "mailbox-full";
   if (token === "bounce") return "refused";
   return "other";
 }

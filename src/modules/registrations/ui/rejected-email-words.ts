@@ -20,7 +20,7 @@ export type RejectedEmailWords = {
   why: string;
   /** Why a confirmed row can carry the chip: the address was confirmed before (or after) it, or never. */
   context: string;
-  /** What staff do: phone; send it again; wait. The address is the person's to change (§645). */
+  /** What staff do: phone; send it again, by the press that clears it; wait. The address is the person's to change (§645). */
   todo: string;
   /** The provider's own short words, for the page's small print; null on a list, at the desk, or when it gave none. */
   reason: string | null;
@@ -61,7 +61,12 @@ export function rejectedEmailWords(facts: RejectedEmailFacts, locale: string, op
   const laterDeliveredAt = facts.laterDeliveredAt ?? null;
   // Each kind has its own sentence, with its date when the reader has it and without it otherwise —
   // never the address's refusal for an email that is merely owed or waiting.
-  const resend = say(options.mayResend ? "registrations.rejected.todoResend" : "registrations.rejected.todoAskAdmin");
+  // The press named is the one that clears it (§NNN, `pressThatClears`): «Retrimite QR» for anything the
+  // confirmation carries, «Trimite reminderul» for the reminder — on the family member's registration when
+  // the refusal is theirs, never a press on this one that cannot clear it.
+  const press = facts.press ?? "resend";
+  const pressed = say(options.mayResend ? `registrations.rejected.todoPress.${press}` : `registrations.rejected.todoAskAdmin.${press}`);
+  const resend = facts.own ? pressed : say("registrations.rejected.todoFamily", { todo: pressed });
   const [why, todo] = (() => {
     switch (facts.kind) {
       case "not-sent":

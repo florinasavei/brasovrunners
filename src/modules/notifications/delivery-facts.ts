@@ -1,7 +1,8 @@
-import { and, desc, eq, inArray, isNotNull, min, ne, type SQL, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull, min, ne, type SQL, sql } from "drizzle-orm";
 import { type EmailMessageType, emailOutbox } from "@/db/schema/email-outbox";
 import type { Database } from "@/db/types";
 import { CLUB_COPY_FLAG, isClubCopy } from "./domain/club-notices";
+import { typesCoveredBy, typesCovering } from "./domain/content-cover";
 import { PARTICIPANT_MESSAGE_TYPES } from "./domain/email-audience";
 
 /**
@@ -13,11 +14,18 @@ import { PARTICIPANT_MESSAGE_TYPES } from "./domain/email-audience";
  *   again. Any of the participant's own messages, for any registration — the address is one fact, and a
  *   family on one address (§543) shares it. Never on a complaint, which is the person's own word, and
  *   never on a refusal of the club's account, which said nothing about the address.
- * - `resolved_at` — the **same** message (its type, for the same registration) was delivered later; or,
- *   for a refusal of the club's account, left later. Only that ends the refusal: a delivered «Mesaj de
- *   la organizatori» does not give the runner the QR the bounced confirmation carried.
- * - `retried_at` and `retried_via` — the same message left again later, and by which road: delivery not
+ * - `resolved_at` — a message that **carries what this one carried** (its own type, or one that covers it
+ *   by `domain/content-cover.ts`: the confirmation carries the race number's QR and the signed
+ *   declaration), for the same registration, was delivered later; or, for a refusal of the club's account,
+ *   left later. Only that ends the refusal: a delivered «Mesaj de la organizatori» does not give the
+ *   runner the QR the bounced confirmation carried, and a delivered confirmation after «Retrimite QR» does
+ *   give them the number a refused `BIB_ASSIGNED` carried.
+ * - `retried_at` and `retried_via` — such a message left again later, and by which road: delivery not
  *   known yet, or never (Gmail's road reports no delivery).
+ *
+ * Written when the later message is sent or delivered, never worked out when the list is read: the
+ * retention sweep deletes `SENT` rows after 90 days, and the refusal must stay answered after the message
+ * that answered it is gone.
  *
  * Kept from both sides, so the result does not depend on the order Mailgun's events arrive in (it does
  * not promise one, and retries a webhook for hours): a refusal written after the delivery that clears it
@@ -79,16 +87,22 @@ function instantOf(value: unknown): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+/** The participant's lock's key (§NNN). */
+function participantLockKey(participantId: string): SQL {
+  return sql`hashtext(${`email-facts:${participantId}`})`;
+}
+
 /** The participant's lock (§NNN): the settling of one address's facts, one transaction at a time. */
 export async function lockParticipantFacts(handle: Pick<Db, "execute">, participantId: string): Promise<void> {
-  await handle.execute(sql`select pg_advisory_xact_lock(hashtext(${`email-facts:${participantId}`}))`);
+  await handle.execute(sql`select pg_advisory_xact_lock(${participantLockKey(participantId)})`);
 }
 
 type DeliveredRow = { id: string; participantId: string; registrationId: string | null; messageType: EmailMessageType };
 
 /**
  * A participant's message was delivered at `deliveredAt`: every earlier refusal of the address says the
- * address works now, and every earlier refusal of the same message says it is over. A complaint is left
+ * address works now, and every earlier refusal of a message it carries (`typesCoveredBy`: itself, and for
+ * the confirmation the race number's and the signed declaration's) says it is over. A complaint is left
  * as it is; a refusal of the account takes no `later_delivered_at` (it was never about the address).
  */
 export async function settleDelivery(handle: Handle, row: DeliveredRow, deliveredAt: Date): Promise<void> {
@@ -114,7 +128,7 @@ export async function settleDelivery(handle: Handle, row: DeliveredRow, delivere
         eq(emailOutbox.participantId, row.participantId),
         ne(emailOutbox.id, row.id),
         eq(emailOutbox.status, "BOUNCED"),
-        eq(emailOutbox.messageType, row.messageType),
+        inArray(emailOutbox.messageType, typesCoveredBy(row.messageType)),
         sql`${emailOutbox.registrationId} is not distinct from ${row.registrationId}`,
         before,
       ),
@@ -123,9 +137,10 @@ export async function settleDelivery(handle: Handle, row: DeliveredRow, delivere
 
 /**
  * A participant's message was refused (its row already says so): read what came after it from the other
- * rows — a delivery to the address, a delivery of the same message, the same message sent again — so a
- * refusal processed after the delivery that answers it is answered all the same. A complaint reads only
- * whether the same message left again: no delivery withdraws it.
+ * rows — a delivery to the address, a delivery of a message that carries it (`typesCovering`: itself, or
+ * the confirmation for a race number or a signed declaration), such a message sent again — so a refusal
+ * processed after the delivery that answers it is answered all the same. A complaint reads only whether
+ * such a message left again: no delivery withdraws it.
  */
 export async function settleRejection(handle: Handle, rowId: string): Promise<void> {
   const [row] = await handle
@@ -152,7 +167,7 @@ export async function settleRejection(handle: Handle, rowId: string): Promise<vo
   const others = and(eq(emailOutbox.participantId, row.participantId), ne(emailOutbox.id, row.id), participantMessageCondition()) as SQL;
   const sameMessage = and(
     others,
-    eq(emailOutbox.messageType, row.messageType),
+    inArray(emailOutbox.messageType, typesCovering(row.messageType)),
     sql`${emailOutbox.registrationId} is not distinct from ${row.registrationId}`,
   ) as SQL;
   const deliveredAfter = sql`${emailOutbox.deliveredAt} > ${at(instant)}`;
@@ -168,7 +183,7 @@ export async function settleRejection(handle: Handle, rowId: string): Promise<vo
     .where(leftAgain)
     .orderBy(desc(emailOutbox.sentAt))
     .limit(1);
-  // The account's refusal is over once the same message left at all — the earliest such send.
+  // The account's refusal is over once it, or a message that carries it, left at all — the earliest such send.
   const [firstAgain] = account && again ? await handle.select({ first: min(emailOutbox.sentAt) }).from(emailOutbox).where(leftAgain) : [];
 
   const laterDelivered = instantOf(address?.first);
@@ -189,24 +204,54 @@ export async function settleRejection(handle: Handle, rowId: string): Promise<vo
 type SentRow = { id: string; participantId: string | null; registrationId: string | null; messageType: EmailMessageType; payloadJson: unknown; createdAt: Date };
 
 /**
- * A participant's message left (`sent_at`, by `via`): every earlier refusal or complaint of the same
- * message — its type, for the same registration, queued no later — was sent again. A refusal of the
- * club's account is over with it (it never left; now it has). A complaint takes `retried_at` too (the
- * history says the message left again), and stays the person's word: nothing else changes on it.
+ * The earlier refusals one send still has something to tell (§NNN): the participant's refusals and
+ * complaints of a message this one carries (`typesCoveredBy`: itself, and for the confirmation the race
+ * number's and the signed declaration's), for the same registration, queued no later — and neither over
+ * (`resolved_at`) nor already told of this send or a later one (`retried_at`). The probe and the update
+ * read this one condition, so the probe can never skip a row the update would have marked.
+ */
+function answeredBySend(row: SentRow, participantId: string, sentAt: Date): SQL {
+  return and(
+    eq(emailOutbox.participantId, participantId),
+    ne(emailOutbox.id, row.id),
+    inArray(emailOutbox.status, ["BOUNCED", "COMPLAINED"]),
+    inArray(emailOutbox.messageType, typesCoveredBy(row.messageType)),
+    sql`${emailOutbox.registrationId} is not distinct from ${row.registrationId}`,
+    sql`${emailOutbox.createdAt} <= ${at(row.createdAt)}`,
+    isNull(emailOutbox.resolvedAt),
+    sql`(${emailOutbox.retriedAt} is null or ${emailOutbox.retriedAt} < ${at(sentAt)})`,
+  ) as SQL;
+}
+
+/**
+ * A participant's message left (`sent_at`, by `via`): every earlier refusal or complaint of a message it
+ * carries — its own type, or for the confirmation the race number's and the signed declaration's
+ * (`domain/content-cover.ts`), for the same registration, queued no later — was sent again. A refusal of
+ * the club's account is over with it (it never left; now what it carried has). A complaint takes
+ * `retried_at` too (the history says the message left again), and stays the person's word: nothing else
+ * changes on it.
  *
- * In its own transaction, under the participant's lock (`lockParticipantFacts`), like the webhook's
- * refusal it races: whichever commits first, the other reads it — a refusal settled after this send
- * reads it as sent (`settleRejection`), and this statement, taken after that refusal, sees it refused.
- * One statement, and nothing for a message with no refusal before it; nothing at all, not even the
- * transaction, for a message that is not a participant's.
+ * Almost no send has an earlier refusal to mark, so it asks first, in one round trip, through the
+ * participant's index: whether such a refusal exists, and whether the participant's lock is free. Only
+ * when there is something to mark — or when the lock is held, which means a refusal is being written at
+ * this very moment and may be one — does it open its own transaction under the lock
+ * (`lockParticipantFacts`), like the webhook's refusal it races: whichever commits first, the other reads
+ * it — a refusal settled after this send reads it as sent (`settleRejection`), and this statement, taken
+ * after that refusal, sees it refused. Nothing at all for a message that is not a participant's.
  *
  * `retried_at` keeps the **latest** such send, and `retried_via` its road (§NNN, a stated departure from
  * the first send the brief named): the state «sent again, delivery not known yet» is about the send whose
  * delivery may still come, and a Gmail send after a Mailgun one will never report its delivery.
  */
-export async function noteSentAgain(db: Pick<Db, "transaction">, row: SentRow, sentAt: Date, via: "mailgun" | "gmail"): Promise<void> {
+export async function noteSentAgain(db: Pick<Db, "transaction" | "execute">, row: SentRow, sentAt: Date, via: "mailgun" | "gmail"): Promise<void> {
   if (row.participantId === null || !isParticipantMeant(row)) return;
   const participantId = row.participantId;
+  const answered = answeredBySend(row, participantId, sentAt);
+  const probe = await db.execute(
+    sql`select pg_try_advisory_xact_lock(${participantLockKey(participantId)}) as "free", exists (select 1 from ${emailOutbox} where ${answered}) as "pending"`,
+  );
+  const [first] = ((Array.isArray(probe) ? probe : (probe as { rows?: unknown[] }).rows) ?? []) as Array<{ free?: unknown; pending?: unknown }>;
+  if (first?.free === true && first.pending !== true) return;
   await db.transaction(async (tx) => {
     await lockParticipantFacts(tx, participantId);
     await tx
@@ -217,15 +262,6 @@ export async function noteSentAgain(db: Pick<Db, "transaction">, row: SentRow, s
         retriedAt: sql`greatest(${emailOutbox.retriedAt}, ${at(sentAt)})`,
         resolvedAt: sql`case when ${emailOutbox.rejectionCause} = 'account' then least(${emailOutbox.resolvedAt}, ${at(sentAt)}) else ${emailOutbox.resolvedAt} end`,
       })
-      .where(
-        and(
-          eq(emailOutbox.participantId, participantId),
-          ne(emailOutbox.id, row.id),
-          inArray(emailOutbox.status, ["BOUNCED", "COMPLAINED"]),
-          eq(emailOutbox.messageType, row.messageType),
-          sql`${emailOutbox.registrationId} is not distinct from ${row.registrationId}`,
-          sql`${emailOutbox.createdAt} <= ${at(row.createdAt)}`,
-        ),
-      );
+      .where(answered);
   });
 }

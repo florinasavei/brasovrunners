@@ -797,10 +797,12 @@ export async function processOutboxBatch(
         } as const;
         const markSent = (handle: Pick<typeof db, "update">) => handle.update(emailOutbox).set(sentValues).where(eq(emailOutbox.id, row.id));
         /*
-          The same message refused before for this registration is now sent again (§NNN): its refusal
-          says so, and a refusal of the club's account is over. Best effort, after the mark, in its own
-          transaction under the participant's lock (`noteSentAgain`): the message is out whatever happens
-          here, and a refusal that stays unmarked reads as it did before.
+          The same message refused before for this registration, or one this message carries (the
+          confirmation carries the race number and the signed declaration), is now sent again (§NNN): its
+          refusal says so, and a refusal of the club's account is over. Best effort, after the mark: one
+          probe first, and only when it finds something its own transaction under the participant's lock
+          (`noteSentAgain`); the message is out whatever happens here, and a refusal that stays unmarked
+          reads as it did before.
         */
         const noteSent = () =>
           noteSentAgain(db, row, sentValues.sentAt, sentValues.transport).catch((error: unknown) => {
@@ -1194,8 +1196,8 @@ async function rowsForEvent(db: Db, params: MailgunDeliveryEvent): Promise<Outbo
  *
  * - `delivered` sets `delivered_at` once — a repeated event keeps the first instant — and, on a
  *   participant's own message, settles their earlier refusals (`delivery-facts.ts`): the address works
- *   again, and the same message's refusal is over. The row's status is not touched: a delivery is what
- *   SENT already promised.
+ *   again, and the refusal of the same message, or of one it carries, is over. The row's status is not
+ *   touched: a delivery is what SENT already promised.
  * - a permanent failure is BOUNCED, with its instant, its cause (`domain/rejection-cause.ts`), the code
  *   and the redacted words; `delivered_at` is kept (a delayed bounce after a delivery). A complaint is
  *   never overwritten by a bounce: it is the person's own word.

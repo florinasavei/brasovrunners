@@ -13,33 +13,45 @@ import {
   emailStateOf,
   type RegistrationEmailState,
   type RegistrationEmailStateDetail,
+  STILL_NEEDED_KEYS,
 } from "./domain/email-state";
 
 /**
  * The registration's one email state, as SQL (§NNN; the kinds are `domain/email-state.ts`'s). One
  * correlated subquery per registration row — the participant's refused rows, through
- * `email_outbox_participant_idx` — returning one JSON object, so a list of two hundred is two hundred
- * index probes and never a query each. The rule lives here and only here: which refusals are still
- * open, which kind each one is, and which one the registration shows.
+ * `email_outbox_participant_idx`, each joined to the registration it was for and that registration's
+ * event by their keys — returning one JSON object, so a list of two hundred is two hundred index probes
+ * and never a query each. The rule lives here and only here: which refusals are still open, which kind
+ * each one is, and which one the registration shows.
  *
- * **Open.** A participant's own message (`participantMessageCondition`: their type, their id, not a
- * club copy — the archive copy and the confirmation notice carry the participant's id and are not
- * theirs), refused (`BOUNCED`) or complained about (`COMPLAINED`), and:
+ * **Which rows.** A participant's own message (`participantMessageCondition`: their type, their id, not a
+ * club copy — the archive copy and the confirmation notice carry the participant's id and are not theirs),
+ * refused (`BOUNCED`) or complained about (`COMPLAINED`), for this registration or another one at the same
+ * event on the same address (a family, §543) — and every one of them read by the **same** kind and the
+ * same openness, the family's against its own registration, so one refusal has one state wherever it
+ * shows.
  *
- * - this registration's own message, not resolved — the same message delivered later, or for a refusal
- *   of the club's account, left later (`resolved_at`);
- * - or another registration's **at the same event** on the same address (a family, §543) whose refusal
- *   still stands for the address: nothing delivered to it since, and not a refusal of the account;
- * - or any complaint at the same event: the person's own word, which no delivery withdraws.
+ * **Open.** `unreachable` always (the address refuses the club's mail: the call list, whatever the
+ * message was); `not-sent`, `missing` and `retried` only while the registration the message was for still
+ * needs it (`stillNeededMessageTypes`). A refusal answered — a message that carries it delivered later, or
+ * for the club's account left later (`resolved_at`) — is closed.
  *
- * **Which one.** The address first (`unreachable`: nothing will arrive), then what is owed (`not-sent`,
- * `missing`), then what waits (`retried`); the newest refusal within each.
+ * **Which one.** The address first (`unreachable`: nothing will arrive), then what never left
+ * (`not-sent`), then what is owed to an address that works (`missing`), then what waits (`retried`); within
+ * each, the registration's own before a family member's, then the newest refusal.
  */
 
-/** The kind of one open refused row, for the registration in the outer query. */
-function kindSql(): SQL<EmailStateKind> {
-  return sql<EmailStateKind>`(case
-    when ${emailOutbox.status} = 'COMPLAINED' or ${emailOutbox.registrationId} is distinct from ${registrations.id} then 'unreachable'
+/** The refused row's own registration and its event, joined by their keys inside the subquery. */
+const OWNER = sql.raw('"email_owner"');
+const OWNER_EVENT = sql.raw('"email_owner_event"');
+/** The kind, computed once per refused row (`lateral`), so the filter, the order and the object read one value. */
+const FACT = sql.raw('"email_fact"');
+
+/** The kind of one refused row — null when it is answered — whichever registration reads it. */
+function kindSql(): SQL<EmailStateKind | null> {
+  return sql<EmailStateKind | null>`(case
+    when ${emailOutbox.status} = 'COMPLAINED' then 'unreachable'
+    when ${emailOutbox.resolvedAt} is not null then null
     when ${emailOutbox.rejectionCause} = 'account' then 'not-sent'
     when ${emailOutbox.retriedAt} is not null then 'retried'
     when ${emailOutbox.laterDeliveredAt} is not null then 'missing'
@@ -47,30 +59,39 @@ function kindSql(): SQL<EmailStateKind> {
   end)`;
 }
 
-/** The order the registration shows them in: the address, then what is owed, then what waits; newest first. */
-function rankSql(): SQL<number> {
-  return sql<number>`(case ${kindSql()} when 'unreachable' then 0 when 'retried' then 2 else 1 end)`;
+/**
+ * Whether the registration the refused message was for still needs it (§NNN): its status now, where its
+ * event stands, and the message's type, against the list `stillNeededMessageTypes` builds.
+ */
+function stillNeededSql(): SQL<boolean> {
+  const keys = sql.join(STILL_NEEDED_KEYS.map((key) => sql`${key}`), sql`, `);
+  const moment = sql`(case when ${OWNER_EVENT}."event_status" = 'CANCELLED' then 'cancelled' when ${OWNER_EVENT}."starts_at" > now() then 'ahead' else 'past' end)`;
+  return sql<boolean>`(${moment} || ':' || ${OWNER}."status"::text || ':' || ${emailOutbox.messageType}::text) in (${keys})`;
 }
 
-/** The participant's open refusals for the registration in the outer query (`registrations`). */
+/** The participant's refused rows for the registration in the outer query (`registrations`), with their kind. */
+function refusalsFromSql(): SQL {
+  return sql`${emailOutbox}
+    join ${registrations} as ${OWNER} on ${OWNER}."id" = ${emailOutbox.registrationId}
+    join ${events} as ${OWNER_EVENT} on ${OWNER_EVENT}."id" = ${OWNER}."event_id"
+    cross join lateral (select ${kindSql()} as "kind") as ${FACT}`;
+}
+
+/** The open ones (above): the same condition for the registration's own and for a family member's. */
 function openRefusalsWhere(): SQL {
   return sql`${emailOutbox.participantId} = ${registrations.participantId}
     and ${participantMessageCondition()}
     and ${emailOutbox.status} in ('BOUNCED', 'COMPLAINED')
-    and (
-      (${emailOutbox.registrationId} = ${registrations.id} and (${emailOutbox.status} = 'COMPLAINED' or ${emailOutbox.resolvedAt} is null))
-      or (
-        ${emailOutbox.registrationId} <> ${registrations.id}
-        and exists (
-          select 1 from ${registrations} as "family"
-          where "family"."id" = ${emailOutbox.registrationId} and "family"."event_id" = ${registrations.eventId}
-        )
-        and (
-          ${emailOutbox.status} = 'COMPLAINED'
-          or (${emailOutbox.resolvedAt} is null and ${emailOutbox.laterDeliveredAt} is null and ${emailOutbox.rejectionCause} is distinct from 'account')
-        )
-      )
-    )`;
+    and ${OWNER}."event_id" = ${registrations.eventId}
+    and (${FACT}."kind" = 'unreachable' or (${FACT}."kind" is not null and ${stillNeededSql()}))`;
+}
+
+/** The order the registration shows them in: the address, then what never left, what is owed, what waits; its own first; newest first. */
+function orderSql(): SQL {
+  return sql`(case ${FACT}."kind" when 'unreachable' then 0 when 'not-sent' then 1 when 'missing' then 2 else 3 end),
+    (${emailOutbox.registrationId} = ${registrations.id}) desc,
+    ${rejectionInstantSql()} desc,
+    ${emailOutbox.createdAt} desc`;
 }
 
 const epochMs = (instant: SQLWrapper) => sql`floor(extract(epoch from ${instant}) * 1000)`;
@@ -80,12 +101,13 @@ type Projection = "desk" | "list" | "page";
 /**
  * The object's fields, by who reads it: the desk never gets provider text or more than it needs (§67) —
  * what did not arrive, why, and when it was refused, sent again or the address answered again, which are
- * instants and not words. `unclassified` is the one exception, and it never leaves the server: a refusal
- * written without a cause (by a deployment older than this one, between the migration and the build that
- * follows it) carries its stored answer so the mapper classifies it with `rejectionCause` and drops it.
+ * instants and not words, and the status of the registration it was for (which press clears it).
+ * `unclassified` is the one exception, and it never leaves the server: a refusal written without a cause
+ * (by a deployment older than this one, between the migration and the build that follows it) carries its
+ * stored answer so the mapper classifies it with `rejectionCause` and drops it.
  */
 function fieldsSql(projection: Projection): SQL {
-  const desk = sql`'kind', ${kindSql()},
+  const desk = sql`'kind', ${FACT}."kind",
     'messageType', ${emailOutbox.messageType},
     'at', ${epochMs(rejectionInstantSql())},
     'sent', ${emailOutbox.sentAt} is not null,
@@ -93,6 +115,7 @@ function fieldsSql(projection: Projection): SQL {
     'cause', ${emailOutbox.rejectionCause},
     'unclassified', case when ${emailOutbox.rejectionCause} is null then ${emailOutbox.lastError} end,
     'own', ${emailOutbox.registrationId} = ${registrations.id},
+    'registrationStatus', ${OWNER}."status",
     'laterDeliveredAt', ${epochMs(emailOutbox.laterDeliveredAt)},
     'retriedAt', ${epochMs(emailOutbox.retriedAt)},
     'retriedVia', ${emailOutbox.retriedVia}`;
@@ -107,9 +130,9 @@ function fieldsSql(projection: Projection): SQL {
 function stateSql(projection: Projection): SQL {
   return sql`(
     select json_build_object(${fieldsSql(projection)})
-    from ${emailOutbox}
+    from ${refusalsFromSql()}
     where ${openRefusalsWhere()}
-    order by ${rankSql()}, ${rejectionInstantSql()} desc, ${emailOutbox.createdAt} desc
+    order by ${orderSql()}
     limit 1
   )`;
 }
@@ -158,9 +181,9 @@ export async function countNeedingEmailActionByEvent<T extends Record<string, un
 /**
  * Whether its state asks somebody to act (`EMAIL_STATE_NEEDS_ACTION`: unreachable, not sent, missing) —
  * the same as "an open refusal of one of those kinds exists", because each of them outranks `retried`,
- * the one kind that waits.
+ * the one kind that waits. Open means what it means for the state: a refusal no longer needed is not here.
  */
 export function needsEmailActionSql(): SQL<boolean> {
   const kinds = sql.join(EMAIL_STATE_NEEDS_ACTION.map((kind) => sql`${kind}`), sql`, `);
-  return sql<boolean>`exists (select 1 from ${emailOutbox} where ${openRefusalsWhere()} and ${kindSql()} in (${kinds}))`;
+  return sql<boolean>`exists (select 1 from ${refusalsFromSql()} where ${openRefusalsWhere()} and ${FACT}."kind" in (${kinds}))`;
 }
