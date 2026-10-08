@@ -644,6 +644,9 @@ export async function findEventNotificationRows<T extends Record<string, unknown
       costAmount: events.costAmount,
       costUrl: events.costUrl,
       startsAt: events.startsAt,
+      // A members' event (§552): no «Spune-ne cum a fost» link — the form's picker and title are public,
+      // and would name it nowhere or leave the club's email at «altceva» (§676).
+      membersOnly: events.membersOnly,
       // Whether the event will still run, for «Nu mai pot ajunge» (§558): read with the rest, never a second query per row.
       eventStatus: events.eventStatus,
       // The calendar invitation's `SEQUENCE` (§672), read with the rest: an email's alone, never a page's.

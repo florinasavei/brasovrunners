@@ -20,6 +20,7 @@ export type RateLimitScope =
   | "admin-send-now"
   | "admin-retry-failed"
   | "contact-message"
+  | "feedback"
   | "group-run-declaration"
   | "newsletter-subscribe"
   | "content-translate"
@@ -70,6 +71,13 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
    * address). Every message is an immediate SMTP send; a refused send is refunded (`refundRateLimit`).
    */
   "contact-message": { limit: 5, windowMs: 60 * 60_000 },
+  /**
+   * «Spune-ne ceva» (§676), keyed on the branch's name alone: the forms are anonymous, so there is
+   * no identity to key on and never an IP (§19.4). Thirty an hour per branch is more than a club
+   * hears in a week, and a script that floods one branch leaves the others open. A send the road
+   * refused is refunded, like the contact form's.
+   */
+  feedback: { limit: 30, windowMs: 60 * 60_000 },
   /**
    * A group run's self-declaration (§393), hashed canonical email; each signature queues two
    * messages, so a script spends the Mailgun allowance twice per post.

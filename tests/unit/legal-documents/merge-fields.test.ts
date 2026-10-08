@@ -152,8 +152,9 @@ describe("the declaration's merge fields", () => {
         // claims for them were waived within the law's limits, the heirs and the minor's guardian included (§568). And once more by the list for partners (§570): a paragraph in section 5, the exception in 6, the retention in 7.
         // The terms have their own since §3 says when the club may refuse or cancel a registration (§618): one paragraph.
         // The notice grew once more when its history paragraph came to describe both modes of the waiting list (§646),
-        // and by a paragraph in section 2 for the invitations by email (§647).
-        const ceiling = key === "EVENT_DECLARATION" ? 10300 : key === "PRIVACY_NOTICE" ? 32000 : key === "TERMS" ? 12000 : 11000;
+        // and by a paragraph in section 2 for the invitations by email (§647), and by one in section 5 for
+        // «Spune-ne ceva», the anonymous forms and their confidential safety branch (§676).
+        const ceiling = key === "EVENT_DECLARATION" ? 10300 : key === "PRIVACY_NOTICE" ? 33500 : key === "TERMS" ? 12000 : 11000;
         expect(text.length, `${key} ${locale}`).toBeGreaterThan(key === "EVENT_DECLARATION" ? 1500 : 2500);
         expect(text.length, `${key} ${locale}`).toBeLessThan(ceiling);
       }

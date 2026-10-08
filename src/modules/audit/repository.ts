@@ -388,6 +388,11 @@ export type AuditAction =
   | "shown_contact_address.changed"
   /** «Telefon public»: the number the footer's «Contact» shows, set or cleared (§565); whether one is set, never the number. */
   | "public_phone.changed"
+  /**
+   * «Spune-ne ceva» (§676): which branch was switched on or off, which recipient changed and whether
+   * the safety branch's first name did — never an address, a name or a word of any message.
+   */
+  | "feedback_forms.changed"
   /** «Aspectul site-ului»: the public pages' light background tint, a preset or a typed colour (§488). */
   | "site_tint.changed"
   /** «Mărimea textului»: the public pages' text size, one of four steps (§530). */

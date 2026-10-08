@@ -179,6 +179,11 @@ export type EmailSampleValues = {
    */
   staffRole: string;
   inviterName: string;
+  /**
+   * `{feedbackLink}` in the organizer's message (§676): «Spune-ne cum a fost» for the sample event,
+   * as a path — the preview puts `APP_BASE_URL` in front of it (`email-copy-fields.ts`).
+   */
+  feedbackLink: string;
   staffEmail: string;
   /** "Detalii actualizate" and "Eveniment anulat" (§331) — the organizer's words, never the club's copy. */
   organizerNote: string;
@@ -210,6 +215,7 @@ export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
     ...emailSampleDeadlines("ro"),
     staffRole: "Organizator",
     inviterName: "Ion Exemplu",
+    feedbackLink: "/ro/contact/spune-ne?tip=cum-a-fost",
     staffEmail: "ana.popescu@example.org",
     organizerNote: "Ne vedem la intrarea dinspre Livada Poștei, lângă panoul cu harta.",
     cancellationReason: "Avertizare meteo de cod portocaliu pentru Tâmpa: traseul nu este sigur.",
@@ -239,6 +245,7 @@ export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
     ...emailSampleDeadlines("en"),
     staffRole: "Organizator",
     inviterName: "Ion Exemplu",
+    feedbackLink: "/en/contact/tell-us?tip=cum-a-fost",
     staffEmail: "ana.popescu@example.org",
     organizerNote: "We meet at the Livada Poștei entrance, by the map board.",
     cancellationReason: "An orange weather warning for Tâmpa: the route is not safe.",

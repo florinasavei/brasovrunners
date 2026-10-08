@@ -80,6 +80,7 @@ const LIVE_TWINS = {
 const TOKEN_PAGE = "a token page: the address carries a single-use secret, checked against its hash per request and never cached (AGENTS.md §12.8, §14.5)";
 const PER_REQUEST: Record<string, string> = {
   "src/app/[locale]/contact/page.tsx": "the form's render time is the bot check's clock (§149), the flash toast (§427) and ?sent/?error",
+  "src/app/[locale]/contact/feedback/page.tsx": "«Spune-ne ceva»'s wizard: the draft cookie, the render time the timing check reads, ?tip/?sent/?error (§676)",
   "src/app/[locale]/members/page.tsx": "the sign-in button reads the session (§524)",
   "src/app/[locale]/members-area/page.tsx": "the members' zone reads the session and sends a stranger to the sign-in (§524, AGENTS.md §14.5)",
   "src/app/[locale]/sign-in/page.tsx": "reads the session, ?to= and ?error= (§26)",

@@ -65,6 +65,12 @@ export type OutgoingEmail = {
    * the club chose Gmail for the group — a bulk send from a personal Gmail is what Google restricts.
    */
   bulk?: true;
+  /**
+   * No `Reply-To` at all, not even the club's (§676): «Spune-ne ceva»'s confidential safety form
+   * reaches one person, and a "Reply" from her mailbox must not go to a shared club mailbox by
+   * default — the contact line in the body is the only way back. Mailgun's road only.
+   */
+  noReplyTo?: true;
 };
 
 /**

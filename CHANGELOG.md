@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.77-2026-10-08
+
+- **«Spune-ne ceva» under the newsletter on Contact** — an anonymous wizard: how an event went (an event, a day, five faces, why someone stopped coming), a suggestion, a complaint, and a confidential «Siguranță» form for women that reaches one person by Mailgun alone; each branch switched on in «Pagini» → «Contact», nothing stored, the thank-you email, the event page after the end and the organizer's `{feedbackLink}` (in the body) lead to it — never from a members' event. §676.
 ## BR-V2.76-2026-10-08
 
 - **The two link forms check for bots too** — «Înscrierile mele» and «Retrimite linkul» now carry the contact form's honeypot, timing check and Cloudflare's check (when it is on): a script's post is answered «sent» and sends nothing, and only a token Cloudflare rejected asks to tick the box again. §675.
