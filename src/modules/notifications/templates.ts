@@ -5,6 +5,7 @@ import { emailBodyParts, newsletterBodyParts, readEmailBody, type EmailBodyPart 
 import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 import { copyFor, onlyMissingFacts, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
 import { organizerParagraphs } from "./domain/organizer-message";
+import { audienceOf } from "./domain/email-audience";
 import { type EmailEventFacts, type EventFactsBlock, eventFactsBlock } from "./domain/event-facts";
 import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
 import type { EventChangeKind } from "@/modules/events/domain/event-changes";
@@ -3407,7 +3408,7 @@ export function buildTemplateContent(
     footer: data.replyTo ? copy.footer : undefined,
     // Not on the club's copy either (§320, §324): "this message comes to you about your
     // registration" is addressed to the participant, and the copy lands in the club's mailbox.
-    privacy: NOT_A_PARTICIPANT_MESSAGE.has(messageType) || clubCopy
+    privacy: carriesNoPrivacyLine(messageType) || clubCopy
       ? undefined
       : {
           // The confirmation answers a request, as "registration is open" does; the newsletter
@@ -3488,24 +3489,16 @@ const EVENT_FACTS_MESSAGES: ReadonlySet<EmailMessageType> = new Set([
 ]);
 
 /**
- * The messages that are not to a participant about their own data (§323), and so carry no
- * privacy line: the club's archive copy and its confirmation notice go to the club's mailboxes,
- * and the staff invitation says what it keeps about the team in its own body.
+ * The messages that are not to a person about their own data (§323), and so carry no privacy line:
+ * the club's (the archive copies and the confirmation notice go to the club's mailboxes) and the
+ * staff's (an invitation says what the account keeps in its own body; the Administrators' notices are
+ * about nobody's data) — read from the audience map (`domain/email-audience.ts`, §670). The public's —
+ * the newsletter, «registration is open», an invitation to an event — keep their line.
  */
-const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set([
-  "DECLARATION_ARCHIVE",
-  // The group run's archive copy (§393), to the club's mailbox like the race's.
-  "GROUP_RUN_DECLARATION_ARCHIVE",
-  "CLUB_CONFIRMATION_NOTICE",
-  "STAFF_INVITATION",
-  // A member's invitation (§524) says what the account keeps in its own body, as the colleague's does.
-  "MEMBER_INVITATION",
-  // To the club's Administrators about its legal texts (§639): about nobody's data.
-  "LEGAL_TEMPLATES_CHANGED",
-  // The outage grace's two (§657): to the Administrators, instants and counts only.
-  "UNREACHABLE_WINDOW_OPENED",
-  "UNREACHABLE_WINDOW_CLOSED",
-]);
+function carriesNoPrivacyLine(messageType: EmailMessageType): boolean {
+  const audience = audienceOf(messageType);
+  return audience === "club" || audience === "staff";
+}
 
 /**
  * Who the controller is, as the privacy line names it (§323): the club's legal name from the

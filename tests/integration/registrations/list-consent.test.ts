@@ -134,6 +134,7 @@ describe("BR-REQ-039-01 the participant's own switch for the public list", () =>
       providerMessageId: null,
       transport: null,
       recipientCount: null,
+      deliveredAt: null, rejectedAt: null, rejectionCause: null, providerCode: null, providerDetail: null, laterDeliveredAt: null, resolvedAt: null, retriedAt: null, retriedVia: null,
       lastError: null,
       createdAt: NOW,
       sentAt: null,

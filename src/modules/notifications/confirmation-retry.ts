@@ -23,6 +23,7 @@ import {
 import { judgeEmailDelay } from "./domain/email-delay";
 import { emailWaitMinutes } from "./domain/email-wait";
 import { readDeliveryTiming } from "./delivery-timing";
+import { addressRefusedCondition } from "./delivery-facts";
 import { enqueueEmail } from "./outbox";
 import { readEmailDelayFacts } from "./public-delay";
 
@@ -121,6 +122,8 @@ export async function selectConfirmationRetryRows<T extends Row>(
         createdAt: emailOutbox.createdAt,
         startsDeadline: sql<boolean>`coalesce((${emailOutbox.payloadJson}->>${STARTS_DEADLINE}::text) = 'true', false)`,
         isRetry: sql<boolean>`(${emailOutbox.idempotencyKey} like ${RETRY_KEY_PATTERN})`,
+        // A refusal that still stands for the address (§670): the same rule as `refusedAddresses`.
+        addressRefused: sql<boolean>`(${addressRefusedCondition()})`,
       })
       .from(emailOutbox)
       .innerJoin(registrations, eq(registrations.id, emailOutbox.registrationId))
@@ -139,6 +142,7 @@ export async function selectConfirmationRetryRows<T extends Row>(
         participantId: row.participantId,
         startsDeadline: row.startsDeadline === true || String(row.startsDeadline) === "true",
         isRetry: row.isRetry === true || String(row.isRetry) === "true",
+        addressRefused: row.addressRefused === true || String(row.addressRefused) === "true",
       });
     }
   }
@@ -146,8 +150,11 @@ export async function selectConfirmationRetryRows<T extends Row>(
 }
 
 /**
- * The addresses that bounced or complained on any message, for any event (§76, §83): the outbox keeps
- * no suppression list of its own, so the re-sent email reads the rows themselves.
+ * The addresses whose refusal still stands, for any event (§76, §83; §670, amending §653): the outbox keeps
+ * no suppression list of its own, so the re-sent email reads the rows themselves — the participant's own
+ * messages only (`addressRefusedCondition`). A club mailbox that bounced the archive copy, the club's
+ * Mailgun account refused at the send, and a refusal answered since by a delivery to the address no longer
+ * hold the link back from a person whose address works. A complaint always does.
  */
 async function refusedAddresses<T extends Row>(db: Database<T>, participantIds: readonly string[]): Promise<Set<string>> {
   const refused = new Set<string>();
@@ -155,7 +162,7 @@ async function refusedAddresses<T extends Row>(db: Database<T>, participantIds: 
     const rows = await db
       .selectDistinct({ participantId: emailOutbox.participantId })
       .from(emailOutbox)
-      .where(and(inArray(emailOutbox.status, ["BOUNCED", "COMPLAINED"]), inArray(emailOutbox.participantId, participantIds.slice(i, i + 500))));
+      .where(and(addressRefusedCondition(), inArray(emailOutbox.participantId, participantIds.slice(i, i + 500))));
     for (const row of rows) if (row.participantId) refused.add(row.participantId);
   }
   return refused;

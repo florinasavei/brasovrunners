@@ -22,7 +22,8 @@ import { openFormDraft, purposeSecret, sealFormDraft } from "./form-draft";
  * (`AGENTS.md` §10.4): `Ana.Pop+club@Gmail.com` and `ana.pop@gmail.com` are one person here as
  * they are one participant, and the "Anunță-mă" list is matched the same way. Every registration
  * in every status with every stored column, the declaration acceptances, the consents and their
- * versions (they are columns of the registration), the messages by type, date and status, the
+ * versions (they are columns of the registration), the messages by type, date and status and what
+ * the provider reported of each (delivered, refused, why — never its words), the
  * addresses left for an announcement, and the audit rows about the person or their registrations.
  *
  * Administrator only (`canManageRegistrations`): it is the whole of a person on one screen, the
@@ -70,7 +71,22 @@ export type PersonData = {
   participant: Participant | null;
   registrations: PersonRegistration[];
   declarationAcceptances: DeclarationAcceptance[];
-  messages: Array<{ registrationId: string | null; messageType: string; status: string; createdAt: Date; sentAt: Date | null }>;
+  /**
+   * The messages by type, date and status, and what the provider reported of each (§670): when it was
+   * delivered or refused, why, and whether the address took a later message — never the provider's words,
+   * which a redactor may have missed an address in.
+   */
+  messages: Array<{
+    registrationId: string | null;
+    messageType: string;
+    status: string;
+    createdAt: Date;
+    sentAt: Date | null;
+    deliveredAt: Date | null;
+    rejectedAt: Date | null;
+    rejectionCause: string | null;
+    laterDeliveredAt: Date | null;
+  }>;
   announcementRequests: Array<{ eventId: string; eventTitle: string | null; deliveryEmail: string; locale: string; createdAt: Date }>;
   auditTrail: Array<{ action: string; entityType: string; entityId: string | null; createdAt: Date; actorName: string | null; metadata: unknown }>;
 };
@@ -118,6 +134,10 @@ async function collectPersonData<T extends Record<string, unknown>>(
           status: emailOutbox.status,
           createdAt: emailOutbox.createdAt,
           sentAt: emailOutbox.sentAt,
+          deliveredAt: emailOutbox.deliveredAt,
+          rejectedAt: emailOutbox.rejectedAt,
+          rejectionCause: emailOutbox.rejectionCause,
+          laterDeliveredAt: emailOutbox.laterDeliveredAt,
         })
         .from(emailOutbox)
         .where(

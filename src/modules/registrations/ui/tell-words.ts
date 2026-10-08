@@ -5,9 +5,11 @@ import type { RegistrationStatus } from "@/db/schema/registrations";
 import { formatDay } from "@/i18n/dates";
 import { waitlistCountShown } from "@/modules/events/domain/registration-cta";
 import { formatDeadlineInSentence } from "@/modules/notifications/domain/deadline-in-sentence";
+import type { RejectionCause } from "@/modules/notifications/domain/rejection-cause";
 import { confirmationDueMoment } from "../domain/hold-deadlines";
-import type { RejectedEmail } from "../domain/rejected-email";
+import { callInstead, type RegistrationEmailState } from "../domain/email-state";
 import { rowDeadlineOf } from "../domain/row-deadline";
+import { shortEmailName } from "./rejected-email-words";
 import { waitlistStandingPhrase } from "./waitlist-position-words";
 
 type Say = (key: string, values?: Record<string, string | number>) => string;
@@ -33,8 +35,16 @@ export type TellFacts = {
   checkedInAt: Date | null;
   /** Why an expired row expired: a lapsed declaration hold says what its email said (§638). */
   expiryReason?: string | null;
-  /** The newest email the provider rejected (§663): one more sentence, so the person knows our mail does not reach them. */
-  emailRejected?: Pick<RejectedEmail, "status"> | null;
+  /**
+   * The registration's email state (§663, the data decision §670, §671): when the address refuses the club's
+   * mail (`unreachable`), which email did not arrive, in the participant's words and with its date, why in
+   * plain words by its cause, and what the person can do. A message the club's account could not send, or one
+   * owed again to an address that works, is not the person's to hear about as a refusal: it is said as owed
+   * — and only when it is this registration's own (`own`), not a family member's at the same address.
+   * «Detalii actualizate» that did not reach them is said as what changed, where to read it, and nothing
+   * promised: no press sends it again. On a confirmed registration the place is said to stay.
+   */
+  emailState?: (Pick<RegistrationEmailState, "kind" | "status" | "messageType" | "at" | "cause"> & Partial<Pick<RegistrationEmailState, "own" | "press">>) | null;
 };
 
 /** The states whose next step is a link in an email: the ones a lost or spam-filed email stops. */
@@ -156,13 +166,68 @@ export function tellLines(say: Say, ours: Say, locale: string, facts: TellFacts,
   const held = deadline?.kind === "hold" || deadline?.kind === "kept";
   const lapsed = deadline?.kind === "linkLapsed" || deadline?.kind === "offerLapsed";
   if (active && link && !held && !lapsed && link.getTime() !== stated?.getTime()) lines.push(ours("linkUntil", { instant: at(link) }));
-  // Not once the link or the offer has lapsed: there is no email left to look for. Nor when the address
-  // bounced the email: «look in spam» would contradict the line below, which says it never arrived.
-  if (WAITS_ON_AN_EMAIL.has(facts.status) && !lapsed && facts.emailRejected?.status !== "BOUNCED") lines.push(say("spamHint.body"));
-  // The newest email bounced or was marked as spam (§663): on any state, confirmed included — said to the
-  // person without the address, which stays theirs to change (§645).
-  if (facts.emailRejected) lines.push(ours(`rejected.${facts.emailRejected.status}`));
+  // Not once the link or the offer has lapsed: there is no email left to look for. Nor while an email the
+  // person waits on was refused and not sent again (§670): the address refused it, the club's account was
+  // refused so it never left, or it is owed to an address that works again — none of them is in spam. A
+  // message sent again may be; a complaint is the person's own, and their mail still arrives.
+  // A family member's email owed at the same address is theirs (§543): this person's own mail is not
+  // refused by it, and may be in spam like anybody's. The address's refusal is everybody's at it. An event's
+  // notice owed (§670) is not the email the person waits on: the link they wait for may be in spam.
+  const state = facts.emailState ?? null;
+  const own = state?.own !== false;
+  const call = state?.messageType ? callInstead(state.messageType) : null;
+  const refusedNotResent = state !== null && state.status === "BOUNCED" && state.kind !== "retried" && (state.kind === "unreachable" || (own && call === null));
+  if (WAITS_ON_AN_EMAIL.has(facts.status) && !lapsed && !refusedNotResent) lines.push(say("spamHint.body"));
+  // The address refuses the club's mail (§663, §670): on any state, confirmed included — said to the person
+  // without the address, which stays theirs to change (§645): which email, in their words, and its date; why,
+  // by its cause; what they can do. An email the club's account could not send, or one owed to an address
+  // that works again, is said as owed — never as the address's refusal. «Detalii actualizate» has no press:
+  // the person hears that the details changed and where they are, with no promise to send anything; a
+  // cancellation they did not get is the cancelled event's own line above. Whenever an email line is said
+  // on a confirmed registration, the place is said to stay — a refusal never touches it.
+  const said = state === null ? [] : emailTellLines(ours, locale, facts, state, own, call);
+  lines.push(...said);
+  if (said.length > 0 && facts.status === "CONFIRMED") lines.push(ours("rejected.placeKept"));
   return lines;
+}
+
+/** The causes a person can do something about by adding the club to their contacts (§671). */
+const ASK_FOR_CONTACTS: ReadonlySet<RejectionCause> = new Set(["blocked", "gave-up", "refused", "other", "account"]);
+
+/** What a person can do about a refusal of their address, by its cause (§671); null for nothing to say. */
+function canKey(cause: RejectionCause, confirmed: boolean): string | null {
+  if (cause === "no-such-address") return confirmed ? null : "rejected.can.no-such-address";
+  if (cause === "mailbox-full") return "rejected.can.mailbox-full";
+  if (cause === "suppressed") return "rejected.can.suppressed";
+  if (ASK_FOR_CONTACTS.has(cause)) return "rejected.can.blocked";
+  return "rejected.can.unsubscribed";
+}
+
+/** The email's lines of «Ce îi spui» (§671): none for an email sent again, nor for a family member's owed one. */
+function emailTellLines(
+  ours: Say,
+  locale: string,
+  facts: TellFacts,
+  state: NonNullable<TellFacts["emailState"]>,
+  own: boolean,
+  call: ReturnType<typeof callInstead>,
+): string[] {
+  const type = shortEmailName(state.messageType, locale);
+  const date = formatDay(state.at, { locale, timeZone: facts.eventTimezone, style: "long", year: false, position: "inline" });
+  if (state.kind === "unreachable") {
+    // A complaint arrived: it was marked as spam, never «did not reach you».
+    const first =
+      state.status === "COMPLAINED" || state.cause === "complained"
+        ? ours("rejected.spam", { type, date })
+        : ours("rejected.lost", { type, date, why: ours(`rejected.why.${state.cause === "account" ? "other" : state.cause}`) });
+    const can = canKey(state.status === "COMPLAINED" ? "complained" : state.cause, facts.status === "CONFIRMED");
+    return can ? [first, ours(can)] : [first];
+  }
+  if ((state.kind === "not-sent" || state.kind === "missing") && own) {
+    if (call === "update") return [ours("rejected.changed")];
+    if (call === null) return [ours("rejected.owed", { type, date })];
+  }
+  return [];
 }
 
 /**
