@@ -18,7 +18,7 @@ import { readRepeatRule } from "@/modules/events/domain/repeat";
 import { EMAIL_SAMPLE } from "@/modules/notifications/domain/email-sample";
 import {
   ORGANIZER_BODY_MAX,
-  ORGANIZER_MESSAGE_PLACEHOLDERS,
+  ORGANIZER_SUBJECT_PLACEHOLDERS,
   ORGANIZER_SUBJECT_MAX,
   organizerMessageCost,
   organizerMessageDeferral,
@@ -156,7 +156,8 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
   );
   const languageRo = tSite("languageName.ro");
   const languageEn = tSite("languageName.en");
-  const placeholderList = ORGANIZER_MESSAGE_PLACEHOLDERS.map((name) => `{${name}}`).join(", ");
+  // The subject's fields, in both helps; the body's one more, `{feedbackLink}`, has its own sentence (§676).
+  const placeholderList = ORGANIZER_SUBJECT_PLACEHOLDERS.map((name) => `{${name}}`).join(", ");
   const refusal = await refusalMessages({
     audience: t("participantMessages.audience"),
     subjectRo: `${t("participantMessages.subject")} (${languageRo})`,
@@ -236,7 +237,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
               subject: t("participantMessages.subject"),
               subjectHelp: t("participantMessages.subjectHelp", { max: String(ORGANIZER_SUBJECT_MAX), list: placeholderList }),
               body: t("participantMessages.body"),
-              bodyHelp: t("participantMessages.bodyHelp", { max: String(ORGANIZER_BODY_MAX), list: placeholderList }),
+              bodyHelp: t("participantMessages.bodyHelp", { max: String(ORGANIZER_BODY_MAX), list: placeholderList, feedback: "{feedbackLink}" }),
               bodyScope: t("participantMessages.bodyScope"),
               identical: t("editor.identical.warning"),
               preview: t("participantMessages.preview"),

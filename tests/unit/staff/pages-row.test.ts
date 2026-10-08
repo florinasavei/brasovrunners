@@ -109,10 +109,10 @@ describe("«Pagini»'s row: every entry an address of the section", () => {
     expect(page).toContain("if (!canReadContent(actor.role)) notFound();");
     expect(page).not.toContain("SettingsSubNav");
     const actions = read("src/app/[locale]/admin/pages/contact/actions.ts");
-    // Three saves since «Telefon public» (§565): each lands back here, each behind the Administrator's gate.
-    expect(actions.match(/href: "\/admin\/pages\/contact"/g)).toHaveLength(3);
+    // Four saves since «Spune-ne ceva» (§676; three since «Telefon public», §565): each lands back here, each behind the Administrator's gate.
+    expect(actions.match(/href: "\/admin\/pages\/contact"/g)).toHaveLength(4);
     expect(actions).not.toContain("/admin/settings/contact");
-    expect(actions.match(/requireStaffCapability\(canManageClubSettings\)/g)).toHaveLength(3);
+    expect(actions.match(/requireStaffCapability\(canManageClubSettings\)/g)).toHaveLength(4);
   });
 });
 

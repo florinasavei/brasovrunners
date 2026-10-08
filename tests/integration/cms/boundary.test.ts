@@ -237,6 +237,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       // The club's month, its own page since §251.
       "/calendar",
       "/contact",
+      // «Spune-ne ceva» (§676): the anonymous wizard under the contact page, a platform page like it.
+      "/contact/feedback",
       "/devs",
       "/devs/docs/[name]",
       "/devs/theme",

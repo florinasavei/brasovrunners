@@ -320,7 +320,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
                       {message.subject}
                     </Typography>
                     <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-                      {message.to.join(", ")} · Reply-To {message.replyTo.address} ·{" "}
+                      {message.to.join(", ")} · Reply-To {message.replyTo?.address ?? "—"} ·{" "}
                       {formatDay(message.capturedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true })}
                     </Typography>
                   </Box>

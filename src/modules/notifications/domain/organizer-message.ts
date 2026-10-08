@@ -54,7 +54,7 @@ export function isParticipantMessageAudience(value: unknown): value is Participa
  * `{bibNumber}` is the race number of a confirmed registration, empty for whoever is not
  * confirmed yet: a number exists only from the confirmation (§548).
  */
-export const ORGANIZER_MESSAGE_PLACEHOLDERS = [
+export const ORGANIZER_SUBJECT_PLACEHOLDERS = [
   "participantName",
   "eventTitle",
   "eventStartsAtFormatted",
@@ -62,6 +62,14 @@ export const ORGANIZER_MESSAGE_PLACEHOLDERS = [
   "bibNumber",
   "eventChecklist",
 ] as const satisfies readonly EmailCopyPlaceholder[];
+
+/**
+ * The body's set: the subject's, and `{feedbackLink}` — «Spune-ne cum a fost» for this event while
+ * that form is open, the contact page otherwise (§676). A whole address belongs in the body alone: in
+ * the subject it is refused like any field this message cannot fill there, and the composer's help
+ * introduces it in its own sentence under the body, never in the subject's list.
+ */
+export const ORGANIZER_MESSAGE_PLACEHOLDERS = [...ORGANIZER_SUBJECT_PLACEHOLDERS, "feedbackLink"] as const satisfies readonly EmailCopyPlaceholder[];
 
 /**
  * Per language, as typed — the composer's help says "each". The subject a runner receives joins the
@@ -101,9 +109,9 @@ function bodyText(value: string): string {
   return value.replace(/\r\n?/g, "\n").trim();
 }
 
-/** The `{names}` this message cannot fill, in the order they were written, once each. */
-export function unknownOrganizerPlaceholders(text: string): string[] {
-  const known = new Set<string>(ORGANIZER_MESSAGE_PLACEHOLDERS);
+/** The `{names}` this message cannot fill in that part, in the order they were written, once each. */
+export function unknownOrganizerPlaceholders(text: string, part: "subject" | "body" = "body"): string[] {
+  const known = new Set<string>(part === "subject" ? ORGANIZER_SUBJECT_PLACEHOLDERS : ORGANIZER_MESSAGE_PLACEHOLDERS);
   return [...new Set(placeholdersIn(text).filter((name) => !known.has(name)))];
 }
 
@@ -127,7 +135,7 @@ export function checkOrganizerMessage(input: {
     const box = BOX[part][language];
     if (!isWrittenText(value)) return issues.push({ box, problem: "empty" });
     if (value.length > max) return issues.push({ box, problem: "tooLong" });
-    const names = unknownOrganizerPlaceholders(value);
+    const names = unknownOrganizerPlaceholders(value, part);
     if (names.length > 0) issues.push({ box, problem: "unknownPlaceholder", names });
   };
   for (const language of ["ro", "en"] as const) check("subject", subject[language], language, ORGANIZER_SUBJECT_MAX);

@@ -1,6 +1,8 @@
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import RateReviewIcon from "@mui/icons-material/RateReview";
 import Container from "@mui/material/Container";
 import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
@@ -17,6 +19,8 @@ import { faqOnSite } from "@/modules/content/faq/on-site";
 import {
   cachedBotCheckSiteKey,
   cachedContactFormReaches,
+  cachedFeedbackFormsDescribed,
+  cachedFeedbackOffer,
   cachedNewsletterOffered,
   cachedPublishedEventBySlug,
   cachedShownContactAddresses,
@@ -36,6 +40,8 @@ import {
   parseContactErrorFields,
 } from "@/modules/contact/fields";
 import { readFormDraft } from "@/modules/registrations/form-draft";
+import { contactSmtpRoadExists } from "@/modules/contact/delivery";
+import { doorIntroKey, FEEDBACK_SECTION_ID, offeredBranches } from "@/modules/feedback/domain/branches";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { BOT_CHECK_ERROR_ATTRIBUTE, BOT_CHECK_SLOT_SX } from "@/modules/registrations/domain/turnstile-widget";
 import { pageAlternates, staticRouteUrls } from "@/modules/seo/alternates";
@@ -45,6 +51,7 @@ import ClubIdentity from "@/shared/ui/ClubIdentity";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import Wordmark from "@/shared/ui/Wordmark";
 import { INLINE_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
+import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import { submitContactAction } from "./actions";
 import { DENSITY } from "@/theme/density";
 
@@ -162,6 +169,15 @@ export default async function ContactPage({ params, searchParams }: Props) {
   const aboutEvent = about ? await orNull(() => cachedPublishedEventBySlug(locale, about)) : null;
   // «Poate găsești răspunsul la Întrebări frecvente» (§525), while that page is on the site.
   const showFaq = await faqOnSite(locale);
+  /*
+    «Spune-ne ceva» (§676): the door under the newsletter, drawn only while a branch is switched on and
+    the notice in force describes the forms in every language — tolerant of an outage like every read
+    here, and then simply not drawn.
+  */
+  const [feedbackOffer, feedbackDescribed] = await Promise.all([orNull(() => cachedFeedbackOffer()), orNull(() => cachedFeedbackFormsDescribed(now))]);
+  const feedbackOffered = feedbackOffer === null ? [] : offeredBranches(feedbackOffer, feedbackDescribed === true, contactSmtpRoadExists());
+  const feedbackOpen = feedbackOffered.length > 0;
+  const tell = await getTranslations("Tell");
 
   const field = (name: "name" | "email" | "message", help?: string) => ({
     id: fieldId(name),
@@ -362,6 +378,36 @@ export default async function ContactPage({ params, searchParams }: Props) {
           leaveOutcome={leaveOutcome}
           leaveTyped={leaveRefused ? draft?.newsletterLeaveEmail : undefined}
         />
+      )}
+
+      {/* «Spune-ne ceva» (§676): one section and one button to the anonymous wizard, under the newsletter. */}
+      {feedbackOpen && (
+        <Box
+          component="section"
+          id={FEEDBACK_SECTION_ID}
+          aria-labelledby="feedback-heading"
+          data-testid="feedback-section"
+          sx={{ mt: { xs: DENSITY.sectionGapLg, sm: 4 }, pt: { xs: DENSITY.sectionGap, sm: 3 }, borderTop: 1, borderColor: "divider", scrollMarginTop: 16 }}
+        >
+          <Typography id="feedback-heading" variant="h2" sx={{ fontSize: "1.35rem", mb: 1 }}>
+            {tell("title")}
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+            {tell(doorIntroKey(feedbackOffered))}
+          </Typography>
+          <Button
+            component="a"
+            href={getPathname({ locale, href: "/contact/feedback" })}
+            variant="outlined"
+            size="large"
+            fullWidth
+            sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}
+            data-testid="feedback-door"
+          >
+            <RateReviewIcon aria-hidden="true" sx={glyphSx("large")} />
+            {tell("door.button")}
+          </Button>
+        </Box>
       )}
 
       {/* Who is written to, by its legal name and CIF (§565): the page's last line, under the form

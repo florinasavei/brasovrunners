@@ -62,6 +62,7 @@ const { default: GroupRunDeclarationPage } = await import("@/app/[locale]/events
 const { default: MembersAreaPage } = await import("@/app/[locale]/members-area/page");
 const { default: EventCard } = await import("@/modules/events/ui/EventCard");
 const { default: StartList } = await import("@/modules/events/ui/StartList");
+const { default: EventFeedbackButton } = await import("@/modules/feedback/ui/EventFeedbackButton");
 const { default: EventPageView } = await import("@/modules/events/ui/EventPageView");
 const { signGroupRunDeclaration } = await import("@/modules/group-run-declarations/service");
 
@@ -408,6 +409,22 @@ describe("§552 events for the members alone", () => {
       };
       expect(await onPage("crosul-membrilor")).toHaveLength(0);
       expect(await onPage("crosul-public")).toHaveLength(1);
+    });
+
+    it("«Spune-ne cum a fost» is never offered on a members' event, and still is on a public one (§676)", async () => {
+      await createEventAndPublish(db, { actor: admin, fields: { ...fields(), translations: PUBLIC }, publish: true, now: NOW });
+      state.cookie = member.id;
+      // The button decides for itself whether the branch is open and the event is over; the page decides
+      // whether to ask it at all (§676): the form's picker is public, so a members' event would open on
+      // «Altceva» and the club would lose which event the message was about.
+      const onPage = async (slug: string) => {
+        const [view] = elementsOf(await throughTwin({ params: Promise.resolve({ locale: "ro", slug }), searchParams: Promise.resolve({}) }), EventPageView);
+        return elementsOf(await EventPageView(view.props as Parameters<typeof EventPageView>[0]), EventFeedbackButton);
+      };
+      expect(await onPage("crosul-membrilor")).toHaveLength(0);
+      const [button] = await onPage("crosul-public");
+      expect(button).toBeDefined();
+      expect((button.props.event as { slug: string }).slug).toBe("crosul-public");
     });
   });
 

@@ -16,6 +16,7 @@ import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import DrawIcon from "@mui/icons-material/Draw";
 import EventIcon from "@mui/icons-material/Event";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
+import FeedbackIcon from "@mui/icons-material/Feedback";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import FlagIcon from "@mui/icons-material/Flag";
 import GavelIcon from "@mui/icons-material/Gavel";
@@ -133,6 +134,8 @@ export const PANEL_GLYPHS = {
   contacts: ContactMailIcon,
   shownAddress: AlternateEmailIcon,
   publicPhone: PhoneIcon,
+  // «Spune-ne ceva» (§676): the four anonymous forms under the newsletter on «Contact».
+  feedback: FeedbackIcon,
   // «Răspunsurile din calendar» (§672): where an invitation's «Da / Nu / Poate» goes.
   calendarRsvp: EventAvailableIcon,
   notices: AnnouncementIcon,

@@ -114,7 +114,7 @@ const BOT_CHECK_TEXT: Record<ContactSignals["botCheck"], string> = {
  * so the person reading can overrule the mark — a real question from somebody whose browser
  * never ran the widget looks exactly like this, and "Reply" still answers them.
  */
-function suspicionFooter(suspicion: ContactSuspicion): { heading: string; reasons: string[]; signals: string } {
+export function suspicionFooter(suspicion: ContactSuspicion): { heading: string; reasons: string[]; signals: string } {
   const { signals } = suspicion;
   return {
     heading: "Posibil spam — livrat oricum, ca să nu pierdem un om:",

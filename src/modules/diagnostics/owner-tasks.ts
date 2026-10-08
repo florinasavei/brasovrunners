@@ -62,6 +62,7 @@ export type TaskId =
   | "promoNotice"
   | "sponsorNotice"
   | "newsletterNotice"
+  | "feedbackNotice"
   | "gmailFallbackNotice"
   | "refusalTerms"
   | "teamPageNotice"
@@ -101,6 +102,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   promoNotice: "text",
   sponsorNotice: "text",
   newsletterNotice: "text",
+  feedbackNotice: "text",
   gmailFallbackNotice: "text",
   refusalTerms: "text",
   teamPageNotice: "text",
@@ -229,6 +231,14 @@ export type OwnerTaskInputs = {
    * `noticeDescribesNewsletter`)? Until it does, the contact page offers no subscription.
    */
   newsletterDescribed: boolean;
+  /**
+   * Does the notice in force, in every language, describe «Spune-ne ceva» (§676,
+   * `noticeDescribesFeedbackForms`)? Until it does, the contact page draws no door and the feedback
+   * page answers 404, whatever the switches on «Pagini» → «Contact» say.
+   */
+  feedbackDescribed: boolean;
+  /** How many of «Spune-ne ceva»'s four branches the club switched on (§676). */
+  feedbackBranchesOn: number;
   /**
    * Does the notice in force, in every language, say a message may leave through the club's Gmail
    * while Mailgun is stopped (§622, `noticeDescribesGmailFallback`)? Until it does, «Gmail preia când
@@ -492,6 +502,18 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       owner: "club",
       state: input.newsletterDescribed ? "done" : "open",
     });
+    /*
+      «Spune-ne ceva» (§676), the same shape — and only once there is something to wait for: open while
+      a branch is switched on and the notice in force does not name `{{feedbackForms}}` (the switch is
+      on and nothing shows: the club must hear why, not find a missing door), done by itself the day a
+      notice naming it takes effect, and absent while every branch is off and the notice is silent.
+    */
+    if (input.feedbackDescribed || input.feedbackBranchesOn > 0) {
+      push("feedbackNotice", {
+        owner: "club",
+        state: input.feedbackDescribed ? "done" : "open",
+      });
+    }
     /*
       Gmail carrying while Mailgun is stopped (§622), the same shape: open, never blocking — nothing is
       refused, a Mailgun stop simply holds the mail as it always did — and done by itself the day a

@@ -11,6 +11,7 @@ import {
   ADDRESS_CAP_MERGE_FIELD,
   addressCapMergeValues,
   EVENT_INVITATIONS_MERGE_FIELD,
+  FEEDBACK_FORMS_MERGE_FIELD,
   DEADLINE_MERGE_FIELDS,
   deadlineMergeValues,
   LIST_NUMBERS_MERGE_FIELD,
@@ -27,6 +28,7 @@ import { seriesRhythmPhrase } from "@/modules/group-run-declarations/series";
 import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 import { gmailFallbackClause } from "@/modules/notifications/fallback-notice-words";
 import { eventInvitationsClause } from "@/modules/registrations/invitation-words";
+import { feedbackFormsClause } from "@/modules/feedback/notice-words";
 
 /**
  * The declaration's merge fields, in one list (`DECISIONS.md` §190).
@@ -197,6 +199,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${EVENT_INVITATIONS_MERGE_FIELD}}}`,
     messageKey: EVENT_INVITATIONS_MERGE_FIELD,
     example: inBoth((locale) => eventInvitationsClause(locale)),
+  },
+  // The privacy notice's marker for «Spune-ne ceva» (§676): the forms' name, and the switch — the
+  // contact page's door and the feedback page exist only while it is named (`describesFeedbackForms`).
+  {
+    token: `{{${FEEDBACK_FORMS_MERGE_FIELD}}}`,
+    messageKey: FEEDBACK_FORMS_MERGE_FIELD,
+    example: inBoth((locale) => feedbackFormsClause(locale)),
   },
 ];
 
