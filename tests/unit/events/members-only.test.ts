@@ -143,7 +143,9 @@ describe("§552 no public read path meets a members' row or a code (source walk)
         "src/app/[locale]/registrations/invitation/[token]/page.tsx",
         "src/modules/events/members-only.ts",
         "src/modules/events/repository.ts",
-        "src/modules/notifications/render.ts",
+        // The email's calendar part (the file or the invitation): written to somebody already
+        // registered or signed for the event, so past the door already (§552).
+        "src/modules/notifications/calendar-part.ts",
       ].sort(),
     );
     const cache = SOURCES.find((file) => file.path === "src/modules/public-cache/reads.ts")!.text;

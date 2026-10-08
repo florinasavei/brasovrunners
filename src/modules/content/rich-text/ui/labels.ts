@@ -141,6 +141,9 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     // Raw, with its placeholder: the island names the shape itself.
     imageUploadCropped: rt.raw("imageUploadCropped") as string,
     imageRemove: rt("imageRemove"),
+    // «Înlocuiește» in the picture's panel (§673), and what it keeps.
+    imageReplace: rt("imageReplace"),
+    imageReplaceHelp: rt("imageReplaceHelp"),
     imageDone: rt("imageDone"),
     imageClose: rt("imageClose"),
     imagePanel: rt("imagePanel"),

@@ -1,4 +1,5 @@
 import type { EmailAdapter, OutgoingEmail, SendResult } from "./adapter";
+import { icalEventOf } from "./calendar-mime";
 import { createSmtpConnection, describeSmtpFailure, type SmtpAddress, type SmtpConfig } from "./smtp-adapter";
 
 /**
@@ -65,6 +66,9 @@ export function createGmailAdapter(config: GmailAdapterConfig): EmailAdapter {
                 })),
               }
             : {}),
+          // A calendar invitation (§672): Nodemailer writes the `text/calendar; method=…` alternative
+          // and the `invite.ics` attachment itself — the same composer the Mailgun road uses.
+          ...(message.calendar ? { icalEvent: icalEventOf(message.calendar) } : {}),
         });
         /*
           The runner's own address refused while a copy went (§493): Gmail took the message for the

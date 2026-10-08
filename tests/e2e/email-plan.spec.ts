@@ -117,7 +117,7 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     // Every panel is a closed fold (§336). Opened here before anything is counted, because a
     // control inside a closed fold is not in the accessibility tree — "no Save button" would be
     // true of a hidden one.
-    for (const id of ["email-plan", "outbox-queue", "club-notices"]) {
+    for (const id of ["email-plan", "outbox-queue", "club-notices", "calendar-rsvp"]) {
       await openFold(main.getByTestId(id));
     }
 
@@ -137,6 +137,9 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     await expect(main.getByTestId("outbox-timing-form")).toHaveCount(0);
     await expect(main.getByTestId("outbox-when").getByRole("switch")).toHaveCount(0);
     await expect(main.getByRole("heading", { name: "Copiile clubului" })).toBeVisible();
+    // Where the calendar's answers go (§672): read by every reader of the page, changed by the Administrator.
+    await expect(main.getByRole("heading", { name: "Răspunsurile din calendar" })).toBeVisible();
+    await expect(main.getByTestId("calendar-rsvp-form")).toHaveCount(0);
     await expect(main.getByRole("button", { name: /Salvează/ })).toHaveCount(0);
 
     // And the contact recipients: the list in force, and nothing to change it with — the hidden
@@ -527,5 +530,46 @@ test.describe("BR-REQ-033-02 criterion 12 the club's hidden copy of the emails t
     await expect(participants.locator(":scope > summary")).toContainText("Adrese: —");
     await expect(forecast).toContainText(`costă circa ${before} mesaje`);
     await expect(forecast).not.toContainText("copiile ascunse");
+  });
+});
+
+/**
+ * BR-REQ-033-02 (`DECISIONS.md` §672) — «Răspunsurile din calendar merg la»: one address beside the
+ * club's copies, named back in force, refused when it is not an address, and empty again at the end
+ * so the next test on this database starts with the calendar file as before. Desktop only: one
+ * shared `platform_settings` row.
+ */
+test.describe("BR-REQ-033-02 where the calendar's answers go", () => {
+  test.beforeEach(() => {
+    test.skip(test.info().project.name !== "desktop", "one shared platform_settings row");
+  });
+
+  test("an Administrator names the address, a wrong one is refused, and empty is off again", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/settings/emails");
+    const main = page.locator("#main");
+    const panel = main.getByTestId("calendar-rsvp");
+    await expect(panel.locator(":scope > summary")).toContainText(/Oprit — calendarul pleacă ca fișier|Merg la /);
+    await openFold(panel);
+    const box = panel.getByLabel("Răspunsurile din calendar merg la");
+
+    await box.fill("club+calendar@example.org");
+    await panel.getByRole("button", { name: "Salvează adresa", exact: true }).click();
+    await confirmDialog(page, "Schimbi unde merg răspunsurile din calendar?");
+    await expect(panel).toHaveAttribute("open", "");
+    await expect(panel.getByText("În vigoare: răspunsurile din calendar merg la club+calendar@example.org.")).toBeVisible();
+    await expect(panel.locator(":scope > summary")).toContainText("Merg la club+calendar@example.org");
+
+    await box.fill("nu-e-adresa");
+    await panel.getByRole("button", { name: "Salvează adresa", exact: true }).click();
+    await confirmDialog(page, "Schimbi unde merg răspunsurile din calendar?");
+    await expect(panel.getByTestId("form-refusal")).toBeVisible();
+    await expect(box).toHaveValue("nu-e-adresa");
+
+    await box.fill("");
+    await panel.getByRole("button", { name: "Salvează adresa", exact: true }).click();
+    await confirmDialog(page, "Schimbi unde merg răspunsurile din calendar?");
+    await expect(panel.getByText("În vigoare: nicio adresă.", { exact: false })).toBeVisible();
+    await expect(panel.locator(":scope > summary")).toContainText("Oprit — calendarul pleacă ca fișier");
   });
 });

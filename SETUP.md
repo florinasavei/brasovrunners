@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.74-2026-10-08 -->
+<!-- PROJECT_BASELINE: BR-V2.75-2026-10-08 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.74-2026-10-08`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.75-2026-10-08`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1409,6 +1409,36 @@ club names — which is why a colleague's Yahoo can be on the list.
    `src/modules/contact/message.ts`); changing it breaks this filter in every mailbox that has one.
    Do the same in any mailbox that is on "Către" or "Copie (Cc)" and wants it. (`DECISIONS.md`
    §310)
+8. **Optional: let the calendar entry ask «Da / Nu / Poate», and file the answers.** Off until
+   somebody types an address; then a race's confirmation, reminder, «Detalii actualizate» about
+   the time or the place and cancellation carry an invitation the runner's calendar app (Gmail,
+   Outlook, Apple) answers, and the answer arrives as an email from the runner — «Accepted: <event>
+   (…)» or its translation. Nothing on the site reads it; the club reads its Gmail. A group run's
+   invitation rides only on the signed declaration's email and is sent once: no change notice or
+   cancellation reaches the signers, so a run moved or called off afterwards stays as it was in
+   their calendars — tell them another way. A calendar's «Nu» cancels nothing either: the place
+   stays taken until the runner uses «Nu mai pot ajunge». (`DECISIONS.md` §672)
+   - **QA first, then production.** Set the address on QA, register yourself for a QA event from a
+     Gmail address (and an Outlook or Apple one if you can), and check: the confirmation arrives
+     with its text, its links and the signed PDF visible, and with Da / Nu / Poate; one answer lands
+     under the «Calendar» label below; «Setări» → «Emailuri» shows the row as sent, not «eșuat» or
+     «respins». Only then set the address on production. The first real send on QA is the check
+     that a live inbox shows the buttons and that Mailgun accepts the invitation's shape; nothing
+     in the tests can replace it.
+   - In the app, as an Administrator, on each deployment (QA has its own): «Setări» → «Emailuri» →
+     **«Răspunsurile din calendar»** → «Răspunsurile din calendar merg la» = the club's Gmail with
+     `+calendar` before the `@` (Gmail delivers `name+calendar@…` to `name@…`, and the part after
+     the `+` is what the filter catches) → **Salvează adresa** → confirm. Never write the address
+     into this repository; it lives in the app only.
+   - In the club's Gmail: the search box → **Show search options** → **To** = that `+calendar`
+     address → **Create filter** → tick **Skip the Inbox (Archive it)** and **Apply the label** →
+     **New label** `Calendar` → **Create filter**. The answers collect under the label, out of the
+     inbox. Do not tick **Delete it**: a runner who writes a line with the answer is reachable there.
+   - To go back to the plain calendar file («Adaugă în calendar», no answer asked), empty the box
+     and save. That does not reach the invitations already sent: they stay in the runners'
+     calendars, and a cancellation after that no longer removes them. Changing the address to
+     another one changes the organizer of entries already answered, which some calendar apps
+     refuse; choose the address once.
 
 To take the form away, clear the recipients on «Pagini» → «Contact» (`/admin/pages/contact`) and leave `CONTACT_FORM_TO`
 empty — or remove `CONTACT_SMTP_USER` or `CONTACT_SMTP_PASSWORD` and redeploy: the page goes

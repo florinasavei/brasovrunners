@@ -32,3 +32,30 @@ export function fillIsFor(detail: RichTextFillDetail | null | undefined, name: s
   if (!detail.form || !box) return true;
   return box.form === detail.form;
 }
+
+/**
+ * «Înlocuiește» on a picture in a text reaches every box of the same form (§673): the Romanian
+ * text and its English copy name the same stored picture, and a picture replaced in one language
+ * and left in the other would show the old photograph on the other language's page. The box that
+ * replaced announces the old address and the new picture; every box of that form — a mounted
+ * editor, or a fold not opened yet — changes each image carrying the old address, keeping its own
+ * description and caption. Nothing is saved by the event.
+ */
+export const RICH_TEXT_PICTURE_REPLACED_EVENT = "br:rich-text-picture-replaced";
+
+export type PictureReplacedDetail = {
+  oldSrc: string;
+  picture: { src: string; width: number; height: number };
+  form?: HTMLFormElement | null;
+};
+
+export function announcePictureReplaced(detail: PictureReplacedDetail): void {
+  window.dispatchEvent(new CustomEvent<PictureReplacedDetail>(RICH_TEXT_PICTURE_REPLACED_EVENT, { detail }));
+}
+
+/** Whether a replace is meant for the box posting through `box`: the same form, when both are known. */
+export function replacementIsFor(detail: PictureReplacedDetail | null | undefined, box: HTMLInputElement | null): boolean {
+  if (!detail || !detail.oldSrc) return false;
+  if (!detail.form || !box) return true;
+  return box.form === detail.form;
+}

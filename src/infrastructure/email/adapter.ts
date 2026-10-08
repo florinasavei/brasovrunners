@@ -40,6 +40,15 @@ export type OutgoingEmail = {
   /** Files carried with the message — the signed declaration (§95). Rendered at send time, never stored in the outbox. */
   attachments?: EmailAttachment[];
   /**
+   * A calendar invitation the runner's calendar answers (§672): the `.ics` text and its iTIP method.
+   * Not an attachment like the others, because a calendar app offers «Da / Nu / Poate» only for a
+   * part typed `text/calendar; method=REQUEST` (Gmail, Outlook and Apple all read the parameter):
+   * both roads hand it to Nodemailer's composer, which writes it as that `multipart/alternative`
+   * part beside the text and the HTML, and once more as an `invite.ics` attachment — the shape
+   * Google's own invitations have. Rendered at send time, never stored, never on a club copy (§320).
+   */
+  calendar?: EmailCalendar;
+  /**
    * The road the club chose for this message's group (§443). A wish, not an order: the sender
    * takes Mailgun's road whenever Gmail is not configured, is at its daily cap, or failed. Absent
    * means Mailgun.
@@ -69,6 +78,9 @@ export type MailgunStopped = { kind: "paused" | "allowance"; until?: Date };
 export type EmailTransportName = "mailgun" | "gmail";
 
 export type EmailAttachment = { filename: string; contentType: string; data: Buffer };
+
+/** An invitation (§672): the method the calendar part is typed with, and the file, `METHOD` and all. */
+export type EmailCalendar = { method: "REQUEST" | "CANCEL"; ics: string };
 
 /**
  * The four outcomes the outbox knows how to act on.

@@ -12,7 +12,7 @@ import { routing } from "@/i18n/routing";
 import { processUploadedImage } from "@/modules/media/images";
 import type { ImageQuality } from "@/modules/media/ladder";
 import { deleteAssetsNoLongerReferenced } from "@/modules/media/references";
-import { newAssetKeyPrefix, putImageObjects, type StoredImageFacts, storedImageFacts } from "@/modules/media/service";
+import { newAssetKeyPrefix, putImageObjects, replaceStoredPicture, type StoredImageFacts, storedImageFacts } from "@/modules/media/service";
 import { deleteAssetObjects, getStorage } from "@/modules/media/storage";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import {
@@ -337,6 +337,59 @@ export async function deletePhoto<T extends Record<string, unknown>>(
   });
   revalidatePublicContent("gallery");
   await removeObjects(prefixes);
+}
+
+/**
+ * «Înlocuiește» on one photo of an album (§673): a new upload takes the photo's place — the same
+ * item, so its order number (`position`) and, when it was the cover, the cover — through the one
+ * replacement verb (`replaceStoredPicture`): a new key prefix, the old picture deleted only when
+ * nothing else uses it (another album, a text, a card), one audit row, the gallery's cache expired.
+ * The roles that may remove a photo (BR-REQ-060-01), asserted before anything is encoded.
+ */
+export async function replacePhoto<T extends Record<string, unknown>>(
+  db: Database<T>,
+  input: { actor: Actor; albumId: string; itemId: string; file: Buffer; originalFilename: string; quality?: ImageQuality; now?: Date },
+): Promise<{ itemId: string; assetId: string; stored: StoredImageFacts; oldDeleted: boolean }> {
+  if (!isEditorial(input.actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not replace a photo`);
+  }
+  const now = input.now ?? new Date();
+  const [item] = await db
+    .select({ assetId: galleryItems.mediaAssetId })
+    .from(galleryItems)
+    .where(and(eq(galleryItems.id, input.itemId), eq(galleryItems.albumId, input.albumId)))
+    .limit(1);
+  if (!item) throw new DomainError("NOT_FOUND", "no such photo in this album");
+
+  const processed = await processUploadedImage(input.file, { quality: input.quality });
+  const replaced = await replaceStoredPicture(db, {
+    actor: input.actor,
+    oldAssetId: item.assetId,
+    processed,
+    originalFilename: input.originalFilename,
+    where: { kind: "album", albumId: input.albumId, itemId: input.itemId },
+    now,
+    repoint: async (tx, { oldAssetId, newAssetId }) => {
+      // The same row: its position, and so its place in the album, does not move.
+      const [moved] = await tx
+        .update(galleryItems)
+        .set({ mediaAssetId: newAssetId })
+        .where(and(eq(galleryItems.id, input.itemId), eq(galleryItems.albumId, input.albumId), eq(galleryItems.mediaAssetId, oldAssetId)))
+        .returning({ id: galleryItems.id });
+      // Removed or replaced by someone else since it was read: nothing of this one is kept.
+      if (!moved) throw new DomainError("CONFLICT", "this photo was changed by someone else");
+      // The cover stays the cover; the day the album changed is the sitemap's (§342).
+      await tx
+        .update(galleryAlbums)
+        .set({
+          coverMediaAssetId: sql`CASE WHEN ${galleryAlbums.coverMediaAssetId} = ${oldAssetId} THEN ${newAssetId}::uuid ELSE ${galleryAlbums.coverMediaAssetId} END`,
+          updatedAt: now,
+        })
+        .where(eq(galleryAlbums.id, input.albumId));
+    },
+    expire: () => revalidatePublicContent("gallery"),
+  });
+  return { itemId: input.itemId, assetId: replaced.assetId, stored: replaced.stored, oldDeleted: replaced.oldDeleted };
 }
 
 export async function setCover<T extends Record<string, unknown>>(

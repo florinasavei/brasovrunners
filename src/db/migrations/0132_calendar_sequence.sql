@@ -1,0 +1,1 @@
+ALTER TABLE "events" ADD COLUMN "calendar_sequence" integer DEFAULT 0 NOT NULL;
