@@ -13,6 +13,7 @@ import { routing } from "@/i18n/routing";
 import { findAlbumForEditor, listEventsForAlbumSelect } from "@/modules/content/gallery/repository";
 import AlbumFieldsForm from "@/modules/content/gallery/ui/AlbumFieldsForm";
 import { albumFormFieldLabels } from "@/modules/content/gallery/ui/field-labels";
+import PhotoReplaceButton from "@/modules/content/gallery/ui/PhotoReplaceButton";
 import PhotoUploader from "@/modules/content/gallery/ui/PhotoUploader";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import ActionForm from "@/shared/forms/ActionForm";
@@ -68,6 +69,14 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
   const transitions = allowedTransitions(actor.role, album.editorialStatus, isOwnDraft);
   const mayEdit = isEditorial(actor.role);
   const title = translations.find((row) => row.locale === locale)?.title ?? "";
+  // «Înlocuiește» on each photo (§NNN); the refusal is the uploader's own words.
+  const replaceLabels = {
+    replace: t("gallery.replacePhoto"),
+    replacing: t("gallery.replacing"),
+    replaced: t("gallery.replaced"),
+    changed: t("gallery.replaceChanged"),
+    failed: t.raw("gallery.uploadFailed") as string,
+  };
 
   return (
     <Stack spacing={3}>
@@ -194,6 +203,12 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                 {t("gallery.uploadHelp")}
               </Typography>
+              {/* «Înlocuiește» on each photo below (§NNN): what it keeps, and which quality it uses. */}
+              {photos.length > 0 && (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                  {t("gallery.replaceHelp")}
+                </Typography>
+              )}
             </Box>
           ) : (
             <Alert severity="warning" sx={{ mb: 2 }}>
@@ -235,6 +250,10 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
                           {t("gallery.setCover")}
                         </GlyphButton>
                       </form>
+                      {/* Beside «Șterge» (§NNN): the photo's place and cover role kept, storage needed like the upload. */}
+                      {isStorageConfigured() && (
+                        <PhotoReplaceButton uploadUrl={`/api/admin/gallery/${album.id}/photos`} itemId={photo.id} labels={replaceLabels} />
+                      )}
                       <ActionForm
                         action={deletePhotoAction}
                         confirm={{ title: t("gallery.removePhotoTitle"), body: t("gallery.removePhotoBody"), confirmLabel: t("gallery.removePhoto"), cancelLabel: words.cancel, destructive: true }}

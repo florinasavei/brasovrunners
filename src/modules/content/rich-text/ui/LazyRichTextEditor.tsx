@@ -9,7 +9,15 @@ import { recalledJson, useRecall } from "@/shared/forms/recall";
 import ValidityProxy from "@/shared/forms/ValidityProxy";
 import { useTwinFold } from "@/shared/ui/LocaleTabPanels";
 import { isRichTextEmpty, readRichText, type RichTextDoc } from "../domain/schema";
-import { fillIsFor, RICH_TEXT_FILL_EVENT, type RichTextFillDetail } from "./fill-event";
+import { replacePictureInDoc } from "../domain/replace-picture";
+import {
+  fillIsFor,
+  replacementIsFor,
+  RICH_TEXT_FILL_EVENT,
+  RICH_TEXT_PICTURE_REPLACED_EVENT,
+  type PictureReplacedDetail,
+  type RichTextFillDetail,
+} from "./fill-event";
 import RichTextEditor from "./RichTextEditor";
 
 /**
@@ -84,6 +92,22 @@ function LazyRichTextEditorIsland({
     window.addEventListener(RICH_TEXT_FILL_EVENT, onFill);
     return () => window.removeEventListener(RICH_TEXT_FILL_EVENT, onFill);
   }, [mounted, editor.name]);
+  /*
+    A picture replaced in another box of this form while this fold is still shut (§NNN): the
+    document this box posts, and mounts from later, takes the new picture wherever it names the
+    old one, its own words kept. Once mounted, the editor hears it itself.
+  */
+  const initialBody = editor.initialBody;
+  useEffect(() => {
+    if (mounted) return;
+    const onReplaced = (event: Event) => {
+      const detail = (event as CustomEvent<PictureReplacedDetail>).detail;
+      if (!replacementIsFor(detail, hidden.current)) return;
+      setFilled((previous) => replacePictureInDoc(previous ?? readRichText(initialBody), detail.oldSrc, detail.picture) ?? previous);
+    };
+    window.addEventListener(RICH_TEXT_PICTURE_REPLACED_EVENT, onReplaced);
+    return () => window.removeEventListener(RICH_TEXT_PICTURE_REPLACED_EVENT, onReplaced);
+  }, [mounted, initialBody]);
   // The form hears the change as it hears typing (§350's tab marks re-read the form on `input`).
   useEffect(() => {
     if (filled) hidden.current?.dispatchEvent(new Event("input", { bubbles: true }));
