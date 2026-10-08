@@ -30,8 +30,9 @@ test("the calendar page's «?» fold shows the feed's address and «Copiază» c
   expect(address).toMatch(/^https?:\/\/[^/]+\/ro\/events\/calendar\.ics$/);
   await expect(box).toHaveAttribute("readonly", "");
 
-  // The words under it: what to do when Google says it already has the calendar.
-  await expect(fold.getByText("„Din URL”", { exact: false })).toBeVisible();
+  // The words under it: what to do when Google says it already has the calendar. The «how» hint
+  // is the one read: the Android hint names «Din URL» too, and a bare text locator would find both.
+  await expect(fold.getByText("Pe web: calendar.google.com", { exact: false })).toContainText("„Din URL”");
   await expect(fold.getByText("?v=2", { exact: false })).toBeVisible();
 
   const copy = fold.getByRole("button", { name: "Copiază" });
