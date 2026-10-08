@@ -8511,6 +8511,7 @@
     "humidity": "humidity {percent}%",
     "uv": "UV index {index}",
     "rainShort": "{percent}% rain",
+    "chanceShort": "{percent}%",
     "temperatureRange": "{from}–{to} °C",
     "hourRange": "{from}–{to}",
     "scope": "at {place}, {day} {hours}",

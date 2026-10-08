@@ -1,4 +1,4 @@
-import UmbrellaIcon from "@mui/icons-material/Umbrella";
+import WaterDropIcon from "@mui/icons-material/WaterDrop";
 import Box from "@mui/material/Box";
 import { rainLikely, type WeatherReading } from "../domain/forecast";
 import { weatherListWords, weatherWords } from "../words";
@@ -13,32 +13,38 @@ import { WEATHER_GLYPH } from "./glyphs";
  * Where (§429, amending §416): the **last pill of the route's row** (`RoutePills`' trailing slot,
  * from `EventFacts`' compact form), after the cost — what the day will be like beside what the
  * route is, no longer among the marks above the title (type, partner, cancelled), which say what
- * the event is. And when rain is likely at the start (`rainLikely`: a chance of 50% or more, *or*
- * a forecast amount of 0.5 mm or more already falling in the hour even at a lower chance — a
- * showery hour of 45% with 2 mm still earns it — unless the sky's own glyph says more: snow, frost
- * or the storm), the umbrella sits **beside** the sky's own glyph — «🌧 ☂ 9 °C» — never replacing
- * it, so a showers hour still reads as showers and the umbrella says something on its own; a
- * screen reader hears «ploaie probabilă» / "rain likely" after the degrees.
+ * the event is.
  *
- * The glyph is a Material icon made here, in a Server Component, and never handed to a client
+ * The chance of rain after the degrees (§NNN, amending §429; the owner, 2026-10-08: «I hate that
+ * umbrella closed, show percentages of precipitation as well»): a drop and the hour's chance —
+ * «☁ 14 °C 💧 20 %» — whenever the forecast has one and it does not round to 0 (a dry hour has
+ * nothing to read). In `text.secondary` like the glyph; when rain is likely at the start
+ * (`rainLikely`, §429's rule, unchanged: a chance of 50% or more, *or* 0.5 mm or more already
+ * falling in the hour, unless the sky's own glyph says more: snow, frost or the storm) the drop and
+ * the figure take the primary colour — «🌧 9 °C 💧 60 %» — so the likely hour stands out without a
+ * second glyph. No umbrella any more, closed or open. A screen reader hears the chance in words
+ * after the degrees, «20% șanse de ploaie», and «ploaie probabilă» / "rain likely" after it when
+ * rain is likely, as before.
+ *
+ * The glyphs are Material icons made here, in a Server Component, and never handed to a client
  * component as an element (§370): the pill is a plain `<span>`, not MUI's `Chip`, whose `icon` prop
  * would be exactly that. A screen reader hears «Vremea la start: Parțial noros, 14 °C»; the eye
- * gets the glyph and the number. The word, the rain, the wind, the details and the credit are the
+ * gets the glyph and the number. The word, the wind, the details and the credit are the
  * page's. Open-Meteo's credit is never on a card: it lives in the site footer's «Despre club»
  * fold (`SiteFooter`), and beside the forecast on the event page and the featured hero (§429).
  */
 export default function CardWeather({ reading, locale }: { reading: WeatherReading; locale: "ro" | "en" }) {
   const words = weatherWords(reading, locale);
-  const umbrella = rainLikely(reading);
+  const likely = rainLikely(reading);
   const Glyph = WEATHER_GLYPH[reading.glyph];
-  const spoken = [`${weatherListWords(locale).atStart}: ${words.summary}`, words.temperature, umbrella ? words.rainLikely : null].filter(Boolean).join(
-    ", ",
-  );
+  const spoken = [`${weatherListWords(locale).atStart}: ${words.summary}`, words.temperature, words.chanceSpoken, likely ? words.rainLikely : null]
+    .filter(Boolean)
+    .join(", ");
   return (
     <Box
       component="span"
       data-testid="card-weather"
-      data-rain-likely={umbrella ? "true" : undefined}
+      data-rain-likely={likely ? "true" : undefined}
       sx={{
         position: "relative",
         display: "inline-flex",
@@ -58,8 +64,18 @@ export default function CardWeather({ reading, locale }: { reading: WeatherReadi
       }}
     >
       <Glyph aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
-      {umbrella ? <UmbrellaIcon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} /> : null}
       <span aria-hidden="true">{words.temperature ?? words.summary}</span>
+      {words.chanceShort !== null ? (
+        <Box
+          component="span"
+          aria-hidden="true"
+          data-testid="card-weather-chance"
+          sx={{ display: "inline-flex", alignItems: "center", gap: 0.25, ml: 0.25, color: likely ? "primary.main" : "text.secondary" }}
+        >
+          <WaterDropIcon sx={{ fontSize: 18, color: "inherit" }} />
+          {words.chanceShort}
+        </Box>
+      ) : null}
       <Box component="span" sx={SR_ONLY_SX}>
         {spoken}
       </Box>
