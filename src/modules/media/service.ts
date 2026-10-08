@@ -2,8 +2,11 @@ import { randomUUID } from "node:crypto";
 import { desc, eq } from "drizzle-orm";
 import { mediaAssets } from "@/db/schema/gallery";
 import type { Database } from "@/db/types";
+import { recordAuditEvent } from "@/modules/audit/repository";
+import { DomainError } from "@/shared/errors/domain-error";
 import { type ImageEncoding, type ProcessedImage, processUploadedImage, storedBytes } from "./images";
 import { type ImageQuality, ladderKeyPrefixOf } from "./ladder";
+import { deleteAssetsNoLongerReferenced } from "./references";
 import { bodyImageSrc, deleteAssetObjects, getStorage, objectKey, type Storage } from "./storage";
 
 /**
@@ -107,6 +110,105 @@ export async function uploadBodyImage<T extends Record<string, unknown>>(
     width: processed.width,
     height: processed.height,
     stored: storedImageFacts(processed),
+  };
+}
+
+/** The place whose reference a replacement moves, for the audit row (§NNN). */
+export type PictureReplacementPlace = { kind: "album"; albumId: string; itemId: string };
+
+/**
+ * «Înlocuiește» (§NNN, amending §72 and §73): one stored picture replaced in place by a new upload,
+ * wherever the caller says it is used. The one verb every place that keeps a picture by its id
+ * calls, so they replace alike.
+ *
+ * - **A new key prefix, always.** Every public address embeds the prefix, and every cache on the
+ *   way — the browser's, the CDN's, the rendered page — holds the old bytes under the old address.
+ *   Writing new bytes under the old prefix would show the old picture to whoever cached it and
+ *   the new one to nobody else; a new prefix is a new address, which no cache has seen.
+ * - **The objects first, then one transaction:** the new row, `repoint` (the caller moves its own
+ *   references to the new id, and throws to undo everything), the old row deleted only when the
+ *   one references predicate says nothing else uses it (another album, a text, a card, a bib
+ *   design, a draft — `deleteAssetsNoLongerReferenced`), and the audit row. A failed transaction
+ *   removes the new objects again, so no row ever names a picture that is half there.
+ * - **Then** `expire` (the public cache tags of the places that moved, written by the caller as
+ *   it writes them on a save), and last the old objects, best effort, as a photo's delete does.
+ *
+ * A picture in a rich text is not replaced here: the text is the reference, and it is not saved
+ * yet when the editor replaces its picture, so its old picture waits for the sweep (§73).
+ */
+export async function replaceStoredPicture<T extends Record<string, unknown>>(
+  db: Database<T>,
+  input: {
+    actor: { id: string };
+    oldAssetId: string;
+    processed: ProcessedImage;
+    originalFilename: string;
+    where: PictureReplacementPlace;
+    repoint: (tx: Database<T>, ids: { oldAssetId: string; newAssetId: string }) => Promise<void>;
+    expire: () => void;
+    now?: Date;
+  },
+): Promise<{ assetId: string; src: string; width: number; height: number; stored: StoredImageFacts; oldDeleted: boolean }> {
+  const now = input.now ?? new Date();
+  const storage = getStorage();
+  const { processed } = input;
+  const keyPrefix = newAssetKeyPrefix();
+
+  // Removes what it wrote and throws on a failure: nothing in the database has moved yet.
+  await putImageObjects(storage, keyPrefix, processed);
+
+  let outcome: { assetId: string; oldPrefixes: string[] };
+  try {
+    outcome = await db.transaction(async (tx) => {
+      const [old] = await tx.select({ id: mediaAssets.id }).from(mediaAssets).where(eq(mediaAssets.id, input.oldAssetId)).limit(1);
+      if (!old) throw new DomainError("NOT_FOUND", "no such picture");
+
+      const [asset] = await tx
+        .insert(mediaAssets)
+        .values({
+          keyPrefix,
+          originalFilename: input.originalFilename.slice(0, 255),
+          width: processed.width,
+          height: processed.height,
+          byteSize: processed.web.byteLength,
+          createdByStaffUserId: input.actor.id,
+          createdAt: now,
+          lastReferencedAt: now,
+        })
+        .returning({ id: mediaAssets.id });
+
+      await input.repoint(tx, { oldAssetId: old.id, newAssetId: asset.id });
+      const oldPrefixes = await deleteAssetsNoLongerReferenced(tx, [old.id]);
+
+      await recordAuditEvent(tx, {
+        actorStaffUserId: input.actor.id,
+        action: "media.picture_replaced",
+        entityType: "media_asset",
+        entityId: asset.id,
+        metadata: { from: old.id, to: asset.id, where: input.where, oldDeleted: oldPrefixes.length > 0 },
+        now,
+      });
+      return { assetId: asset.id, oldPrefixes };
+    });
+  } catch (error) {
+    await deleteAssetObjects(storage, keyPrefix);
+    throw error;
+  }
+
+  // Only once the rows commit, or a cached page points at the old address a moment longer.
+  input.expire();
+  for (const prefix of outcome.oldPrefixes) {
+    // Best effort: the row is gone; a failed delete leaves a stray object, never a broken image.
+    await deleteAssetObjects(storage, prefix);
+  }
+
+  return {
+    assetId: outcome.assetId,
+    src: bodyImageSrc(objectKey(keyPrefix, "web")),
+    width: processed.width,
+    height: processed.height,
+    stored: storedImageFacts(processed),
+    oldDeleted: outcome.oldPrefixes.length > 0,
   };
 }
 

@@ -37,6 +37,7 @@ import LinkOffIcon from "@mui/icons-material/LinkOff";
 import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import RedoIcon from "@mui/icons-material/Redo";
 import SmartDisplayIcon from "@mui/icons-material/SmartDisplay";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import TableChartIcon from "@mui/icons-material/TableChart";
 import TableRowsIcon from "@mui/icons-material/TableRows";
 import UploadIcon from "@mui/icons-material/Upload";
@@ -89,6 +90,7 @@ import {
   type TableValign,
 } from "../domain/schema";
 import { CROP_PRESETS, type CropPreset, presetCrop } from "../domain/picture-frame";
+import { findPictureToReplace, replacedPictureAttrs } from "../domain/replace-picture";
 import { editorLook, sameEditorLook } from "./editor-look";
 import { fillIsFor, RICH_TEXT_FILL_EVENT, type RichTextFillDetail } from "./fill-event";
 import ImageCropBox, { type ImageCropLabels } from "./ImageCropBox";
@@ -303,6 +305,9 @@ function RichTextEditorIsland({
     /** After the stored facts, the shape the upload went in with (§454); raw, `{shape}` substituted here. */
     imageUploadCropped: string;
     imageRemove: string;
+    /** «Înlocuiește» in the picture's panel (§NNN): the button, and what it keeps and what it drops. */
+    imageReplace: string;
+    imageReplaceHelp: string;
     imageDone: string;
     /** The ✕ on the picture's panel, and the panel's own heading (§258). */
     imageClose: string;
@@ -725,6 +730,43 @@ function RichTextEditorIsland({
     setPosterState("idle");
     setPosterGalleryOpen(false);
   };
+
+  /**
+   * «Înlocuiește» (§NNN): the same shrink-and-upload `insertImage` uses, at the same remembered
+   * quality and with the same facts and refusal under the toolbar, written to the picture that was
+   * selected — found again by its position and address, since the upload takes seconds — as a new
+   * address and size with the words kept and the crop cleared (`replacedPictureAttrs`). The old
+   * picture is left to the save and the sweep (§73): this text is not saved yet.
+   */
+  const replaceImage = async (file: File, selectedAt: number, oldSrc: string) => {
+    setImageState("uploading");
+    setStored(null);
+    setChosen(null);
+    setPicked(null);
+    try {
+      const uploaded = await uploadPicture(file, setChosen);
+      setStored(uploaded.stored ?? null);
+      setStoredShape("free");
+      if (editor) {
+        const at = findPictureToReplace(editor.state.doc, selectedAt, oldSrc);
+        const node = at === null ? null : editor.state.doc.nodeAt(at);
+        if (at !== null && node) {
+          editor
+            .chain()
+            .command(({ tr }) => {
+              tr.setNodeMarkup(at, undefined, replacedPictureAttrs(node.attrs, uploaded));
+              return true;
+            })
+            .setNodeSelection(at)
+            .run();
+        }
+      }
+      setImageState("idle");
+    } catch {
+      setImageState("failed");
+    }
+  };
+  const replaceFileInputRef = useRef<HTMLInputElement>(null);
 
   /**
    * The selected picture, when one is: ProseMirror marks the node's own element, and that
@@ -1660,6 +1702,40 @@ function RichTextEditorIsland({
                 }}
               />
             )}
+            {/*
+              «Înlocuiește» (§NNN), beside the crop box's verbs: another photograph in this node's
+              place, the words kept and the crop cleared; this language's text only.
+            */}
+            <Box>
+              <input
+                ref={replaceFileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                hidden
+                data-testid="rich-text-image-replace-input"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  // The same file chosen twice in a row must still fire a change.
+                  event.target.value = "";
+                  const oldSrc = String(imageAttrs?.src ?? "");
+                  if (file && imageNodeAt !== null && oldSrc) void replaceImage(file, imageNodeAt, oldSrc);
+                }}
+              />
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<SwapHorizIcon fontSize="small" />}
+                onClick={() => replaceFileInputRef.current?.click()}
+                disabled={imageState === "uploading"}
+                sx={{ minHeight: 44 }}
+                data-testid="rich-text-image-replace"
+              >
+                {imageState === "uploading" ? labels.imageUploading : labels.imageReplace}
+              </Button>
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+                {labels.imageReplaceHelp}
+              </Typography>
+            </Box>
             <Stack direction="row" spacing={1} sx={{ justifyContent: "space-between" }}>
               <Button color="error" size="small" startIcon={<DeleteIcon fontSize="small" />} onClick={() => editor?.chain().focus().deleteSelection().run()}>
                 {labels.imageRemove}

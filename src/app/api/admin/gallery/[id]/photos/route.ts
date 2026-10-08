@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
-import { addPhoto, addStoredPhoto } from "@/modules/content/gallery/service";
+import { addPhoto, addStoredPhoto, replacePhoto } from "@/modules/content/gallery/service";
 import { MAX_UPLOAD_BYTES } from "@/modules/media/images";
 import { parseImageQuality } from "@/modules/media/ladder";
 import { isStorageConfigured } from "@/modules/media/storage";
@@ -18,8 +18,11 @@ export const maxDuration = 60;
 /**
  * One photo into an album (BR-REQ-054-01). `POST` multipart with a `file`; the uploader sends
  * one request per photo. Or with an `assetId` instead: a picture already stored, chosen from the
- * gallery (§485), added as it is. Editorial roles only. The bytes are checked by `processUploadedImage`
- * whatever the client claimed, and nothing is written anywhere until they pass.
+ * gallery (§485), added as it is. Or with a `file` and a `replaceItemId`: «Înlocuiește» (§NNN), the
+ * new photo in that photo's place — here rather than in a Server Action because an action's body
+ * stops at 1 MB and the browser sends up to 4 (`BROWSER_SEND_BYTES`); the limits and quality of an
+ * upload, the roles of a delete. Editorial roles only. The bytes are checked by
+ * `processUploadedImage` whatever the client claimed, and nothing is written anywhere until they pass.
  */
 export async function POST(
   request: Request,
@@ -70,6 +73,29 @@ export async function POST(
   // The choice beside the upload (§414): absent is "normal", anything else must be one of the two.
   const quality = parseImageQuality(form.get("quality"));
   if (!quality) return NextResponse.json({ error: "VALIDATION_ERROR", detail: "quality" }, { status: 400 });
+
+  // «Înlocuiește» (§NNN): the photo whose place the new one takes, in this album.
+  const replaceItemId = form.get("replaceItemId");
+  if (typeof replaceItemId === "string" && replaceItemId !== "") {
+    if (!isUuid(replaceItemId)) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
+    try {
+      const result = await replacePhoto(getDb(), {
+        actor,
+        albumId: id,
+        itemId: replaceItemId,
+        file: Buffer.from(await file.arrayBuffer()),
+        originalFilename,
+        quality,
+      });
+      return NextResponse.json(result, { status: 200 });
+    } catch (error) {
+      if (isDomainError(error)) {
+        const status = error.code === "NOT_FOUND" ? 404 : error.code === "FORBIDDEN" ? 403 : error.code === "CONFLICT" ? 409 : 400;
+        return NextResponse.json({ error: error.code, detail: error.message }, { status });
+      }
+      throw error;
+    }
+  }
 
   try {
     const result = await addPhoto(getDb(), {
