@@ -2180,12 +2180,27 @@ email_outbox
 - last_error null
 - created_at
 - sent_at null
+- delivered_at null            Mailgun's `delivered` for the row's own recipient; set once
+- rejected_at null             the refusal's own instant (the event's, or the send's)
+- rejection_cause null         why: domain/rejection-cause.ts, stored, never recomputed
+- provider_code null           «550 5.1.1», or Mailgun's own «605»
+- provider_detail null         the receiving server's words, redacted, ≤ 200 characters
+- later_delivered_at null      on a refused participant's message: the address took a later one
+- resolved_at null             on a refused participant's message: the same one arrived (or left, for the account's refusal)
+- retried_at null, retried_via null   the same one left again, and by which road
 
 INDEX(status, next_attempt_at, created_at)
 INDEX(registration_id, created_at)
+INDEX(provider_message_id) WHERE provider_message_id IS NOT NULL
+INDEX(participant_id)
 ```
 
-Each deliberate resend gets a new row/idempotency key.
+Each deliberate resend gets a new row/idempotency key. Every message type names whom it is written
+for — the participant, the club's own mailboxes, the staff or the public
+(`notifications/domain/email-audience.ts`) — and only a participant's own message, with their id on
+it and not a club copy, says anything about their address: «Email respins», the registration's email
+state (`registrations/email-state.ts`) and the automatic re-send's refusal read those alone
+(`DECISIONS.md` §NNN).
 
 ### 12.12 Audit/environment
 
@@ -2896,7 +2911,10 @@ Registration maintenance:
   count for the address and the event — every one that left, and every one the job re-sent whatever
   became of it, the person's «Retrimite» and a staff resend included (`registration:<id>:verify-retry:<n>`); one per address and event, at most 50 a run oldest
   first, none while the outbox is behind (§623) or an email for them waits to leave, never to an address
-  that bounced or complained on any message; no deadline moves and the allocator is not called;
+  whose refusal still stands on any of the participant's own messages, for any event — a complaint, or a
+  refusal with nothing delivered to the address since; not the club's own mailboxes' refusals, not the
+  club's Mailgun account refused at the send (`DECISIONS.md` §NNN); no deadline moves and the allocator is
+  not called;
 - close remaining waiting-list entries for events that have started, with
   `expiry_reason = EVENT_STARTED`;
 - call fill available spots;
@@ -3109,6 +3127,32 @@ never move into a table the backoffice can read (§14.5), and no screen shows th
 - update sent/delivered/bounced/complained/failed metadata;
 - suppress repeated send where provider indicates permanent failure;
 - no body/secrets/action token in logs.
+
+What the webhook does with an event (`DECISIONS.md` §NNN; `api/webhooks/mailgun/route.ts`,
+`notifications/mailgun-event.ts`, `applyMailgunEvent`, `notifications/delivery-facts.ts`):
+
+- **an event tagged for another deployment** (`env:<APP_ENV>`, which the adapter puts on every
+  message) is answered without touching the database — QA and production share the sending domain
+  and its webhooks; an untagged event is everyone's;
+- **the row** is found by the provider's message id, else by the row's own idempotency key the
+  message carried (`v:idempotency_key`), and only a row that left;
+- **the recipient** is compared with the row's, as spelled for delivery (`normalizedEmail`, never
+  identity): an event for a copy on the envelope of the club's archive copy leaves the row alone,
+  logged with the row id only, never an address; a participant's message has no copies, so a
+  respelling still lands; a `delivered` event that names nobody changes nothing;
+- **`delivered`** sets `delivered_at` once and never moves the status; **a permanent failure** is
+  `BOUNCED` with its instant (Mailgun's `timestamp`, never later than now), its cause, code and
+  words, keeping `delivered_at` (a delayed bounce); **`complained`** is `COMPLAINED` and a later
+  bounce never overwrites it; a temporary failure changes nothing;
+- **the provider's words are redacted before anything stores them** (`infrastructure/email/redact.ts`:
+  any address, the recipient's local part quoted alone, an IP, a token-length run, then cut to 200
+  characters); only the delivery status's code and words are kept — never the MX host, the sending IP,
+  a geolocation or a client;
+- **a participant's own message settles their earlier refusals**, under the participant's advisory
+  lock and the same whatever order the events arrive in: a later delivery to the address says it
+  works again (`later_delivered_at`, never on a complaint or the account's refusal), and only the
+  same message delivered later ends a refusal (`resolved_at`); the same message leaving again marks it
+  (`retried_at`, `retried_via`), and ends a refusal of the club's account.
 
 ---
 

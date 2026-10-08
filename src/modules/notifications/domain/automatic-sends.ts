@@ -94,6 +94,12 @@ export type VerificationEmailRow = {
   startsDeadline: boolean;
   /** One the job re-sent by itself (its key is `AUTOMATIC_SEND_KEYS.confirmationRetry`): it uses up its attempt whatever became of it. */
   isRetry: boolean;
+  /**
+   * On a refused row: whether the refusal still stands for the address (§NNN) — a complaint, or a refusal
+   * with nothing delivered to the address since, and not the club's account refused at the send. Absent,
+   * a refused row is read as standing, as every one was before.
+   */
+  addressRefused?: boolean;
 };
 
 export type ConfirmationRetryPlan = {
@@ -125,7 +131,9 @@ export type ConfirmationRetryPlan = {
  * - nothing for the address and the event is waiting to leave (`PENDING`, `PROCESSING`): an email
  *   still queued is no email yet, nobody can have missed it, and a link on its way says it already;
  * - the address never bounced or complained, for any message (`refused`, §76, §83): a nudge to an
- *   address that refused mail harms the sending domain and reaches nobody.
+ *   address that refused mail harms the sending domain and reaches nobody. Since §NNN a refusal that no
+ *   longer stands is not one: the club's Mailgun account refused at the send, or a refusal answered by a
+ *   later delivery to the address (`addressRefused`); a complaint always stands.
  *
  * It is due the club's hours after the **last** email the address got for the event, and only while
  * the link still has an hour and the event has not started. A plan whose window is empty is left out.
@@ -148,7 +156,7 @@ export function planConfirmationRetries(
     if (refused.has(candidate.participantId)) continue;
     const group = byGroup.get(groupOf(candidate.participantId, candidate.eventId)) ?? [];
     if (group.some((row) => row.status === "PENDING" || row.status === "PROCESSING")) continue;
-    if (group.some((row) => row.status === "BOUNCED" || row.status === "COMPLAINED")) continue;
+    if (group.some((row) => (row.status === "BOUNCED" || row.status === "COMPLAINED") && row.addressRefused !== false)) continue;
     if (!group.some((row) => row.status === "SENT" && row.sentAt !== null)) continue;
     // What counts: every email that left, and every one the job re-sent whatever became of it.
     const counted = group.filter((row) => (row.status === "SENT" && row.sentAt !== null) || row.isRetry);

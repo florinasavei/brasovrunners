@@ -207,8 +207,8 @@ export default async function DeskRow({
             />
             {row.kind === "TEST" && <Chip size="small" color="warning" label={t("registrations.testKind")} />}
             {/* The newest email was rejected (§76, §663): whom to call before race day — which email, when, why; never the address. */}
-            {row.emailRejected && (() => {
-              const words = rejectedEmailWords({ ...row.emailRejected, emailConfirmedAt: row.emailConfirmedAt }, locale);
+            {row.emailState && (() => {
+              const words = rejectedEmailWords({ ...row.emailState, emailConfirmedAt: row.emailConfirmedAt }, locale);
               return <EmailRejectedChip label={t("registrations.emailRejected")} sentences={rejectedEmailSentences(words)} reason={words.reason} />;
             })()}
             {row.checkedInAt && (

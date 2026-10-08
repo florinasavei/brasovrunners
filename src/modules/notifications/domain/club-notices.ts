@@ -1,6 +1,7 @@
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { isValidEmail } from "@/modules/participants/domain/canonical-email";
 import { STARTS_DEADLINE } from "./deadline-rebase";
+import { audienceOf } from "./email-audience";
 import { z } from "zod";
 
 /**
@@ -222,42 +223,17 @@ export function participantMessageBcc(setting: ClubNotices | null): readonly str
 }
 
 /**
- * The messages a participant receives, from §16.3's list — the ones the club gets a copy of
- * (§320). Spelled out as the exclusions rather than the inclusions, so a message type added
- * tomorrow *for a participant* is copied without anybody remembering this set, and one added
- * for the club or the staff has to be named here to stay out:
- *
- * - `DECLARATION_ARCHIVE` and `CLUB_CONFIRMATION_NOTICE` are the club's own (§244, §245) — a
- *   hidden copy of a copy would spend the allowance twice on the same mailbox;
- * - `STAFF_INVITATION` goes to a colleague, not a participant (§141);
- * - `REGISTRATION_OPENED` goes to an address left on an event page before the window (§146):
- *   there is no registration behind it, so nothing says whether the person is real, and the
- *   owner asked for the *registration* emails.
+ * The messages a participant receives, from §16.3's list — the ones the club gets a copy of (§320).
+ * Read from the audience map (`email-audience.ts`, §NNN), where every message type must name whom it
+ * is written for, so a type added tomorrow cannot become a participant's message — or stop being one —
+ * because somebody forgot a set: the club's own (the archive copies and the confirmation notice, §244,
+ * §245: a hidden copy of a copy would spend the allowance twice on the same mailbox), the staff's
+ * (invitations, the Administrators' notices, §141, §524, §639, §657) and the public's (the newsletter,
+ * «registration is open», an invitation to an event — no registration behind them, §146, §445, §647)
+ * are the rest.
  */
-const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set<EmailMessageType>([
-  "DECLARATION_ARCHIVE",
-  // The group run's archive copy (§393): the club's own, like the race's.
-  "GROUP_RUN_DECLARATION_ARCHIVE",
-  "CLUB_CONFIRMATION_NOTICE",
-  "STAFF_INVITATION",
-  // A member's account (§524): to a club member, about no registration.
-  "MEMBER_INVITATION",
-  // The Administrators' notice of a moved legal template (§639): to the staff, like the invitation.
-  "LEGAL_TEMPLATES_CHANGED",
-  // The outage grace's two (§657): to the staff, like the templates' notice.
-  "UNREACHABLE_WINDOW_OPENED",
-  "UNREACHABLE_WINDOW_CLOSED",
-  "REGISTRATION_OPENED",
-  // An invitation (§647): to an address the club named, before any registration — like "registration is open".
-  "EVENT_INVITATION",
-  // The newsletter (§445) goes to a subscriber, not a participant, about no registration.
-  "NEWSLETTER_CONFIRM",
-  "NEWSLETTER",
-  "NEW_EVENT_ALERT",
-]);
-
 export function isParticipantMessage(messageType: EmailMessageType): boolean {
-  return !NOT_A_PARTICIPANT_MESSAGE.has(messageType);
+  return audienceOf(messageType) === "participant";
 }
 
 /**

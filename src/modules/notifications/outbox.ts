@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, isNull, lte, not, or, type SQL, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, lte, ne, not, or, type SQL, sql } from "drizzle-orm";
 import {
   type EmailMessageType,
   type EmailOutboxStatus,
@@ -19,8 +19,12 @@ import {
   clubCopyRecipients,
   isClubCopy,
   isCopiedPerMessage,
+  isParticipantMessage,
   participantMessageBcc,
 } from "./domain/club-notices";
+import { enhancedStatusIn, type RejectionCause, rejectionCause } from "./domain/rejection-cause";
+import { isParticipantMeant, lockParticipantFacts, noteSentAgain, settleDelivery, settleRejection } from "./delivery-facts";
+import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { readBulkLimit } from "./bulk-budget";
 import { readEmailPlan } from "./email-plan";
 import { readMailgunHour } from "./hourly-pace";
@@ -793,6 +797,15 @@ export async function processOutboxBatch(
         } as const;
         const markSent = (handle: Pick<typeof db, "update">) => handle.update(emailOutbox).set(sentValues).where(eq(emailOutbox.id, row.id));
         /*
+          The same message refused before for this registration is now sent again (§NNN): its refusal
+          says so, and a refusal of the club's account is over. Best effort, after the mark: the message
+          is out whatever happens here, and a refusal that stays unmarked reads as it did before.
+        */
+        const noteSent = () =>
+          noteSentAgain(db, row, sentValues.sentAt, sentValues.transport).catch((error: unknown) => {
+            console.error("[email-outbox] the earlier refusals could not be marked as sent again", { id: row.id }, error);
+          });
+        /*
           An offer's move and its SENT mark commit together, under the event's lock (§520): while the
           message was queued the offer was kept past its stored deadline (`awaitingItsFirstEmail`),
           and the mark is what ends that — alone, it would let a count under the lock see a late offer
@@ -808,11 +821,13 @@ export async function processOutboxBatch(
             },
           );
           if (!together) await markSent(db);
+          await noteSent();
           summary.sent += 1;
           if (carrying && result.transport === "gmail") viaGmail += 1;
           continue;
         }
         await markSent(db);
+        await noteSent();
         summary.sent += 1;
         if (carrying && result.transport === "gmail") viaGmail += 1;
         /*
@@ -956,7 +971,7 @@ export async function processOutboxBatch(
           summary.failed += 1;
           continue;
         }
-        await recordFailure(db, row.id, "BOUNCED", error);
+        await recordBounceAtSend(db, row, error, clock());
         summary.bounced += 1;
         continue;
       }
@@ -1027,7 +1042,7 @@ async function releaseForPause(db: Db, row: OutboxRow, until: Date, error: strin
 async function recordFailure(
   db: Db,
   id: string,
-  status: Extract<EmailOutboxStatus, "FAILED" | "BOUNCED">,
+  status: Extract<EmailOutboxStatus, "FAILED">,
   error: string,
 ): Promise<void> {
   await db
@@ -1037,9 +1052,39 @@ async function recordFailure(
 }
 
 /**
+ * The address refused at the send (§622: the one refusal that is the address's, Mailgun's 400 naming
+ * it or Gmail's 5.1.x): BOUNCED, terminal, with the facts a webhook's refusal carries (§NNN) — the
+ * instant, the cause and the code (the provider's words are the reason itself, already redacted) — and
+ * what the participant's later rows already say about it. A FAILED row carries none of them:
+ * «Reîncearcă emailurile eșuate» sends it again as it is (`retry-failed.ts`), with nothing stale to clear.
+ */
+async function recordBounceAtSend(db: Db, row: OutboxRow, error: string, at: Date): Promise<void> {
+  const cause = rejectionCause({ status: "BOUNCED", sent: false, reason: error });
+  const mailgunStatus = /^mailgun (\d{3}):/.exec(error)?.[1] ?? null;
+  const enhanced = enhancedStatusIn(error);
+  await db.transaction(async (tx) => {
+    if (row.participantId) await lockParticipantFacts(tx, row.participantId);
+    await tx
+      .update(emailOutbox)
+      .set({
+        status: "BOUNCED",
+        lockedAt: null,
+        nextAttemptAt: null,
+        lastError: error,
+        rejectedAt: at,
+        rejectionCause: cause,
+        providerCode: mailgunStatus ?? (enhanced ? enhanced.join(".") : null),
+      })
+      .where(eq(emailOutbox.id, row.id));
+    await settleRejection(tx, row.id);
+  });
+}
+
+/**
  * The Mailgun events a delivery webhook may report, and what each does to the row it names
- * (AGENTS.md §16.5). `delivered`/`opened`/`clicked`/`unsubscribed` update nothing — this schema
- * tracks send outcome, not engagement — and are accepted (not rejected) so Mailgun does not
+ * (AGENTS.md §16.5). `delivered` marks the row's delivery and settles the participant's earlier
+ * refusals (§NNN); `opened`/`clicked`/`unsubscribed` update nothing — this schema tracks send outcome,
+ * not engagement, and tracking stays off (§320) — and are accepted (not rejected) so Mailgun does not
  * retry a webhook this application has nothing to do with.
  */
 export type MailgunEventType =
@@ -1052,27 +1097,115 @@ export type MailgunEventType =
   | "failed"
   | "complained";
 
+/** One delivery event, as the route read it from Mailgun's payload — every provider word already redacted. */
+export type MailgunDeliveryEvent = {
+  /** `message.headers.message-id`: the id the send stored, without Mailgun's brackets. */
+  providerMessageId: string | null;
+  /**
+   * The row's own idempotency key, carried through Mailgun as the `v:idempotency_key` variable
+   * (`mailgun-adapter.ts`): the match when no row carries the provider's id — a row stored with the
+   * adapter's fallback id. Only a row that left is matched this way.
+   */
+  idempotencyKey?: string | null;
+  event: MailgunEventType;
+  /** Mailgun's one-word reason (`bounce`, `suppress-bounce`, `old` …), redacted. */
+  reason: string | null;
+  /**
+   * Mailgun's current payload reports one `failed` event and distinguishes the two cases
+   * with this field. The legacy `permanent_fail`/`temporary_fail` names are still handled
+   * below, so both shapes work and neither has to be guessed at.
+   */
+  severity?: string | null;
+  /**
+   * Whom the event is about. One message to an address with copies on its envelope (the club's archive
+   * copy, §99) shares one message id: an event for a copy's recipient is not the row's.
+   */
+  recipient?: string | null;
+  /** Mailgun's own instant for the event (`timestamp`); the moment of processing when absent. */
+  occurredAt?: Date | null;
+  /** The receiving server's codes: «550 5.1.1», or Mailgun's own «605». */
+  code?: string | null;
+  /** The receiving server's words, redacted (`infrastructure/email/redact.ts`). */
+  detail?: string | null;
+  /**
+   * The cause, read by the route from the server's words before they were redacted
+   * (`mailgun-event.ts`); absent, it is read here from what is stored.
+   */
+  cause?: RejectionCause | null;
+  /** The webhook's clock: an event's instant is never later than this. */
+  now?: Date;
+};
+
+/**
+ * Whether two spellings are one delivery address: trimmed, the local part lower-cased and the domain
+ * in punycode (`normalizedEmail`, AGENTS.md §10.4), so Mailgun's lower-casing or an international
+ * domain's ASCII form still matches. How the address is **spelled for delivery**, never who it belongs
+ * to: a dotted Gmail spelling stays another address (§74), and it may itself be a club copy's.
+ */
+function sameDeliveryAddress(a: string, b: string): boolean {
+  const spelled = (value: string) => {
+    try {
+      return canonicalizeEmail(value).normalizedEmail;
+    } catch {
+      return value.trim().toLowerCase();
+    }
+  };
+  return spelled(a) === spelled(b);
+}
+
+/** Whether the row's message carried copies on its envelope (the club's own messages only, §320, `render.ts`). */
+function carriesEnvelopeCopies(row: Pick<OutboxRow, "messageType" | "payloadJson">): boolean {
+  if (isClubCopy(row.payloadJson) || isParticipantMessage(row.messageType)) return false;
+  const payload = (row.payloadJson ?? {}) as { cc?: unknown; bcc?: unknown };
+  return [payload.cc, payload.bcc].some((list) => Array.isArray(list) && list.some((entry) => typeof entry === "string" && entry.trim() !== ""));
+}
+
+/** The rows one event names: by the provider's id (both of its spellings), else by the row's own key. */
+async function rowsForEvent(db: Db, params: MailgunDeliveryEvent): Promise<OutboxRow[]> {
+  if (params.providerMessageId) {
+    /**
+     * Both spellings of the id, because rows written before `normalizeProviderMessageId`
+     * existed still carry Mailgun's bracketed form. Matching both means a bounce for one of
+     * those older messages still lands, and no migration has to rewrite stored provider ids.
+     */
+    const byId = await db
+      .select()
+      .from(emailOutbox)
+      .where(
+        or(
+          eq(emailOutbox.providerMessageId, params.providerMessageId),
+          eq(emailOutbox.providerMessageId, `<${params.providerMessageId}>`),
+        ),
+      );
+    if (byId.length > 0) return byId;
+  }
+  if (!params.idempotencyKey) return [];
+  return db
+    .select()
+    .from(emailOutbox)
+    .where(and(eq(emailOutbox.idempotencyKey, params.idempotencyKey), not(isNull(emailOutbox.sentAt))))
+    .limit(1);
+}
+
 /**
  * Apply one delivery event to the outbox row it names, found by the provider message id this
- * application supplied when sending (`SendResult.providerMessageId`).
+ * application supplied when sending (`SendResult.providerMessageId`), or by the row's own key.
  *
- * Naturally idempotent: setting `BOUNCED` on an already-`BOUNCED` row, because Mailgun resent
- * the same webhook, changes nothing. No separate dedup table is needed for that reason alone.
+ * - `delivered` sets `delivered_at` once — a repeated event keeps the first instant — and, on a
+ *   participant's own message, settles their earlier refusals (`delivery-facts.ts`): the address works
+ *   again, and the same message's refusal is over. The row's status is not touched: a delivery is what
+ *   SENT already promised.
+ * - a permanent failure is BOUNCED, with its instant, its cause (`domain/rejection-cause.ts`), the code
+ *   and the redacted words; `delivered_at` is kept (a delayed bounce after a delivery). A complaint is
+ *   never overwritten by a bounce: it is the person's own word.
+ * - `complained` is COMPLAINED, with its instant; it clears nothing and nothing clears it.
+ *
+ * An event about another recipient of the same message — a copy on the archive's envelope — leaves the
+ * row as it was and is logged with the row's id alone (never an address, §14.5). On a message with no
+ * copies there is no other recipient: a spelling Mailgun changed still lands, logged the same way. A
+ * delivery that names nobody changes nothing. Idempotent: the same event twice changes nothing more.
  */
-export async function applyMailgunEvent(
-  db: Db,
-  params: {
-    providerMessageId: string;
-    event: MailgunEventType;
-    reason: string | null;
-    /**
-     * Mailgun's current payload reports one `failed` event and distinguishes the two cases
-     * with this field. The legacy `permanent_fail`/`temporary_fail` names are still handled
-     * below, so both shapes work and neither has to be guessed at.
-     */
-    severity?: string | null;
-  },
-): Promise<void> {
+export async function applyMailgunEvent(db: Db, params: MailgunDeliveryEvent): Promise<void> {
   /**
    * Which failures are final, and why the distinction is not cosmetic.
    *
@@ -1085,27 +1218,75 @@ export async function applyMailgunEvent(
     params.event === "permanent_fail" ||
     (params.event === "failed" && params.severity !== "temporary");
 
-  const status: EmailOutboxStatus | null =
-    params.event === "complained"
-      ? "COMPLAINED"
-      : permanent
-        ? "BOUNCED"
-        : null;
+  const verdict: "delivered" | "BOUNCED" | "COMPLAINED" | null =
+    params.event === "delivered" ? "delivered" : params.event === "complained" ? "COMPLAINED" : permanent ? "BOUNCED" : null;
+  if (verdict === null) return;
+  if (verdict === "delivered" && !params.recipient) return;
 
-  if (status === null) return;
+  const now = params.now ?? new Date();
+  // Mailgun's own instant (it retries a webhook for hours), never later than now.
+  const occurredAt = params.occurredAt && params.occurredAt.getTime() <= now.getTime() ? params.occurredAt : now;
 
-  /**
-   * Both spellings of the id, because rows written before `normalizeProviderMessageId`
-   * existed still carry Mailgun's bracketed form. Matching both means a bounce for one of
-   * those older messages still lands, and no migration has to rewrite stored provider ids.
-   */
-  await db
-    .update(emailOutbox)
-    .set({ status, lockedAt: null, nextAttemptAt: null, lastError: params.reason })
-    .where(
-      or(
-        eq(emailOutbox.providerMessageId, params.providerMessageId),
-        eq(emailOutbox.providerMessageId, `<${params.providerMessageId}>`),
-      ),
-    );
+  for (const row of await rowsForEvent(db, params)) {
+    if (params.recipient && !sameDeliveryAddress(params.recipient, row.recipientEmail)) {
+      const copied = carriesEnvelopeCopies(row);
+      // A copy's delivery comes with every archive message: only a refusal is worth a line.
+      if (verdict !== "delivered") {
+        console.warn(
+          copied
+            ? "[mailgun-webhook] an event for a copy on the envelope left the row as it was"
+            : "[mailgun-webhook] the event's recipient is spelled differently from the row's; applied to it",
+          { id: row.id },
+        );
+      }
+      if (copied) continue;
+    }
+    const participantMeant = isParticipantMeant(row);
+    await db.transaction(async (tx) => {
+      if (row.participantId && participantMeant) await lockParticipantFacts(tx, row.participantId);
+      if (verdict === "delivered") {
+        await tx
+          .update(emailOutbox)
+          .set({ deliveredAt: sql`coalesce(${emailOutbox.deliveredAt}, ${occurredAt.toISOString()}::timestamptz)` })
+          .where(eq(emailOutbox.id, row.id));
+        if (row.participantId && participantMeant) {
+          await settleDelivery(tx, { id: row.id, participantId: row.participantId, registrationId: row.registrationId, messageType: row.messageType }, occurredAt);
+        }
+        return;
+      }
+      if (verdict === "COMPLAINED") {
+        await tx
+          .update(emailOutbox)
+          .set({
+            status: "COMPLAINED",
+            lockedAt: null,
+            nextAttemptAt: null,
+            lastError: params.reason,
+            rejectedAt: sql`coalesce(${emailOutbox.rejectedAt}, ${occurredAt.toISOString()}::timestamptz)`,
+            rejectionCause: "complaint",
+          })
+          .where(eq(emailOutbox.id, row.id));
+        return;
+      }
+      // A complaint stands: a bounce reported after it does not turn the person's word into the server's.
+      if (row.status === "COMPLAINED") return;
+      await tx
+        .update(emailOutbox)
+        .set({
+          status: "BOUNCED",
+          lockedAt: null,
+          nextAttemptAt: null,
+          lastError: params.reason,
+          rejectedAt: sql`coalesce(${emailOutbox.rejectedAt}, ${occurredAt.toISOString()}::timestamptz)`,
+          rejectionCause:
+            params.cause && params.cause !== "complaint"
+              ? params.cause
+              : rejectionCause({ status: "BOUNCED", sent: row.sentAt !== null, reason: params.reason, code: params.code, detail: params.detail }),
+          providerCode: params.code ?? null,
+          providerDetail: params.detail ?? null,
+        })
+        .where(and(eq(emailOutbox.id, row.id), ne(emailOutbox.status, "COMPLAINED")));
+      if (participantMeant) await settleRejection(tx, row.id);
+    });
+  }
 }

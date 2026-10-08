@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { isValidElement, type ReactElement, type ReactNode } from "react";
 import { createTranslator } from "next-intl";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -161,7 +162,10 @@ async function register(eventId: string, row: Partial<typeof registrations.$infe
 }
 
 async function rejected(registrationId: string, input: { messageType: EmailMessageType; status: "BOUNCED" | "COMPLAINED"; at: Date; reason?: string | null; key: string }) {
+  // The participant's own message (§NNN): their id on the row, as every message to them carries it.
+  const [{ participantId }] = await db.select({ participantId: registrations.participantId }).from(registrations).where(eq(registrations.id, registrationId));
   await db.insert(emailOutbox).values({
+    participantId,
     messageType: input.messageType,
     recipientEmail: "runner-rejected@example.org",
     locale: "ro",
@@ -226,7 +230,8 @@ describe("«Email respins» says which email, when and why (§663)", () => {
       fill(words.confirmedBefore, { date: at(CONFIRMED_AT) }),
       words.todo,
     ]);
-    expect(bib.reason).toBe(fill(words.reason, { reason: "550 5.1.1 mailbox unavailable" }));
+    // No list payload carries the provider's words (§NNN): the small print is the registration page's alone.
+    expect(bib.reason).toBeNull();
 
     const verify = chipOf(never);
     expect(verify.sentences[0]).toBe(fill(words.which, { type: ro.Admin.emails.types.VERIFY_REGISTRATION_EMAIL, instant: at(verifyAt) }));
@@ -236,9 +241,21 @@ describe("«Email respins» says which email, when and why (§663)", () => {
     expect(spam.sentences[1]).toBe(words.why.COMPLAINED);
     expect(spam.reason).toBeNull();
 
-    // The listing's own query carries the object the chip reads: one subquery, four fields.
+    // The listing's own query carries the object the chip reads: one subquery, the state and its facts, no provider text.
     const listed = await listRegistrationsForAdmin(db, { eventId: race.id, emailBounced: true });
-    expect(listed.find((row) => row.id === confirmed)?.emailRejected).toEqual({ messageType: "BIB_ASSIGNED", at: BIB_SENT, sent: true, status: "BOUNCED", reason: "550 5.1.1 mailbox unavailable" });
+    expect(listed.find((row) => row.id === confirmed)?.emailState).toEqual({
+      kind: "unreachable",
+      messageType: "BIB_ASSIGNED",
+      at: BIB_SENT,
+      sent: true,
+      status: "BOUNCED",
+      cause: "other",
+      own: true,
+      laterDeliveredAt: null,
+      retriedAt: null,
+      retriedVia: null,
+    });
+    expect(JSON.stringify(listed)).not.toContain("550 5.1.1");
   });
 
   it("on the registration's page: the chip, the same words under the address, and one sentence in «Ce îi spui»", async () => {
@@ -248,7 +265,20 @@ describe("«Email respins» says which email, when and why (§663)", () => {
     state.actor = await staff();
 
     const detail = await findRegistrationDetailForAdmin(db, id);
-    expect(detail?.emailRejected).toEqual({ messageType: "BIB_ASSIGNED", at: BIB_SENT, sent: true, status: "BOUNCED", reason: "550 5.1.1 mailbox unavailable" });
+    expect(detail?.emailState).toEqual({
+      kind: "unreachable",
+      messageType: "BIB_ASSIGNED",
+      at: BIB_SENT,
+      sent: true,
+      status: "BOUNCED",
+      cause: "other",
+      own: true,
+      laterDeliveredAt: null,
+      retriedAt: null,
+      retriedVia: null,
+      code: null,
+      detail: "550 5.1.1 mailbox unavailable",
+    });
 
     const tree = await RegistrationDetailPage({ params: Promise.resolve({ locale: "ro", id }), searchParams: Promise.resolve({}) } as never);
     const all = elements(tree);
@@ -281,5 +311,8 @@ describe("«Email respins» says which email, when and why (§663)", () => {
       words.todo,
     ]);
     expect(JSON.stringify(chip?.props)).not.toContain("@example.org");
+    // The desk's own projection (§67, §NNN): never the provider's words, which a redactor could miss an address in.
+    expect(JSON.stringify(row)).not.toContain("550 5.1.1");
+    expect(chip?.props.reason).toBeNull();
   });
 });

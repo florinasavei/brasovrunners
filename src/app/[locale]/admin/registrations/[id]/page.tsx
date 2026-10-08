@@ -194,8 +194,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   // The timeline's short form with the time (§349): a value beside its label, so capitalised;
   // `dtInline` inside a sentence.
   // «Email respins» in words (§663): the chip's tooltip and the line under the address say the same.
-  const rejected = registration.emailRejected
-    ? rejectedEmailWords({ ...registration.emailRejected, emailConfirmedAt: registration.emailConfirmedAt }, locale)
+  const rejected = registration.emailState
+    ? rejectedEmailWords({ ...registration.emailState, emailConfirmedAt: registration.emailConfirmedAt }, locale)
     : null;
   const dt = (value: Date | null) => (value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }) : null);
   const dtInline = (value: Date | null) =>

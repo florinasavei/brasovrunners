@@ -87,13 +87,14 @@ test.describe("§663 «Email respins» says which email, when and why", () => {
 
       const chip = main.locator('[data-testid="email-rejected"]:visible');
       await expect(chip).toHaveCount(1);
-      // One channel: the name holds the label, the sentences and the reason; nothing describes it again.
+      // One channel: the name holds the label and the sentences; nothing describes it again.
       await expect(chip).toHaveAttribute("aria-label", /^Email respins\. Respins: „/);
       // The email by its «Emailuri» name, never the message type.
       await expect(chip).toHaveAttribute("aria-label", /„Numărul de concurs dat de mână”, trimis /);
       const name = (await chip.getAttribute("aria-label")) ?? "";
       expect(name).toContain("Sună persoana");
-      expect(name).toContain("Motivul dat de furnizor: 550 5.1.1 mailbox unavailable");
+      // No list payload carries the provider's words (§NNN): the small print is the registration page's alone.
+      expect(name).not.toContain("Motivul dat de furnizor");
       expect(name).not.toContain("..");
       const box = await chip.boundingBox();
       expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
@@ -111,6 +112,7 @@ test.describe("§663 «Email respins» says which email, when and why", () => {
       await hydrated(page);
       await expect(page.locator('#main [data-testid="email-rejected"]:visible')).toHaveCount(1);
       await expect(page.locator("#main")).toContainText("un email de după aceea a fost respins");
+      await expect(page.locator("#main")).toContainText("Motivul dat de furnizor: 550 5.1.1 mailbox unavailable");
       expect(hydrationWarnings).toEqual([]);
     } finally {
       await cleanup(seeded);

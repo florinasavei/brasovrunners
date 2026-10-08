@@ -434,7 +434,10 @@ describe("BR-REQ-037-03 criterion 14: the members' and the bounced filters are t
     const race = await createRace("Crosul");
     const bounced = await register(race.id);
     const reached = await register(race.id);
+    // The participant's own message (§NNN): their id on the row, as every message to them carries it.
+    const [{ participantId }] = await db.select({ participantId: registrations.participantId }).from(registrations).where(eq(registrations.id, bounced));
     await db.insert(emailOutbox).values({
+      participantId,
       messageType: "REGISTRATION_CONFIRMED",
       recipientEmail: "runner-bounced@example.org",
       locale: "ro",
@@ -450,11 +453,12 @@ describe("BR-REQ-037-03 criterion 14: the members' and the bounced filters are t
     const rows = table?.props.rows as { id: string }[];
     expect(rows.map((row) => row.id)).toEqual([bounced]);
     const nameColumn = (table?.props.columns as { key: string; render: (row: unknown) => ReactNode }[]).find((column) => column.key === "name");
-    // Since §663 the chip is an island with a tooltip: the provider's reason is its small print, never a `title`.
+    // Since §663 the chip is an island with a tooltip, never a `title`; since §NNN no list payload carries the
+    // provider's words — the small print is the registration page's alone.
     const chips = elements(nameColumn?.render(rows[0])).filter((element) => element.type === EmailRejectedChip);
     expect(chips).toHaveLength(1);
     expect(chips[0].props.label).toBe(ro.Admin.registrations.emailRejected);
-    expect(chips[0].props.reason).toBe("Motivul dat de furnizor: 550 5.1.1 mailbox unavailable");
+    expect(chips[0].props.reason).toBeNull();
 
     const all = await listPage({ eventId: race.id });
     const allTable = elements(all).find((element) => element.type === AdminTable);

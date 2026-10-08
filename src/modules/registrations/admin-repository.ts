@@ -24,7 +24,9 @@ import { healthNoteShown } from "./domain/health-note";
 import { memberCanonicalEmails } from "./member-ticks";
 import { OFFERS_MEMBER_BIB } from "@/modules/events/repository";
 import type { QueueOrder } from "./domain/waitlist";
-import { rejectedEmailOf, type RejectedEmail } from "./domain/rejected-email";
+import { isRejectionCause, type RejectionCause } from "@/modules/notifications/domain/rejection-cause";
+import type { DeskEmailState, RegistrationEmailState, RegistrationEmailStateDetail } from "./domain/email-state";
+import { deskEmailStateSql, hasEmailStateSql, registrationEmailStateDetailSql, registrationEmailStateSql } from "./email-state";
 import type { PlaceDeadlineCounts, PlaceDeadlineEvent } from "./domain/place-deadlines";
 
 /**
@@ -109,8 +111,12 @@ export type RegistrationListRow = {
   /** When the club last said this bib is on paper (§264); null while it is not. */
   bibPrintedAt: Date | null;
   checkedInAt: Date | null;
-  /** The newest message the provider rejected — which, when, why and its reason (§76, §663); null otherwise. */
-  emailRejected: RejectedEmail | null;
+  /**
+   * The registration's one email state (§NNN, amending §663): the participant's own message that did not
+   * reach them — which, when, why, and what came after; null when their mail has no open refusal. Never
+   * the provider's words: no list payload carries them.
+   */
+  emailState: RegistrationEmailState | null;
   /** The latest declaration's declarant's document: the adult's, or the parent's for a minor (§95, §108). */
   idDocument: string | null;
   /** The minor's own document, beside the parent's (§330); `identityDocumentsOf` says whose is whose. */
@@ -233,14 +239,6 @@ function escapeLike(term: string): string {
 
 /** Every filter the list and its count must agree on, in one place so they cannot drift apart. */
 /**
- * The provider's last word on this registration's mail, when that word was "no" (BR-REQ-080-04,
- * `DECISIONS.md` §76, §663): the newest bounced or complained message — its type, when it left,
- * which of the two, and the short sanitized reason the provider gave (§16.1), never a body. Any
- * message type: a confirmed participant whose race-number email bounced is one the club can no
- * longer reach by email, and somebody should call them. Null when every message went through, or
- * none was sent yet. (`emailRejected`, below the declaration probes.)
- */
-/**
  * The identity document the latest declaration names (§95): what the desk checks the kit
  * against, and what the export carries for the organiser who hands kits out by ID.
  */
@@ -277,25 +275,6 @@ const latestDeclarationAcceptedAt = sql<Date | null>`(
   ORDER BY ${declarationAcceptances.acceptedAt} DESC
   LIMIT 1
 )`.mapWith(declarationAcceptances.acceptedAt);
-
-// A club copy (§320) that bounced is a club mailbox's problem, not the participant's address:
-// it never marks the registration as unreachable. One object (§663): which message, when it left (or
-// was queued, refused outright), bounced or complained, and the reason — so the chip says which and when.
-const emailRejected = sql<RejectedEmail | null>`(
-  SELECT json_build_object(
-    'messageType', ${emailOutbox.messageType},
-    'at', floor(extract(epoch FROM coalesce(${emailOutbox.sentAt}, ${emailOutbox.createdAt})) * 1000),
-    'sent', ${emailOutbox.sentAt} IS NOT NULL,
-    'status', ${emailOutbox.status},
-    'reason', ${emailOutbox.lastError}
-  )
-  FROM ${emailOutbox}
-  WHERE ${emailOutbox.registrationId} = ${registrations.id}
-    AND ${emailOutbox.status} IN ('BOUNCED', 'COMPLAINED')
-    AND (${emailOutbox.payloadJson} ->> 'clubCopy') IS DISTINCT FROM 'true'
-  ORDER BY ${emailOutbox.createdAt} DESC
-  LIMIT 1
-)`.mapWith(rejectedEmailOf);
 
 /**
  * «Membru (verificat)» (§662): the participant's canonical address (`participants.canonical_email`, the
@@ -334,7 +313,8 @@ function registrationConditions(filters: RegistrationListFilters, members: reado
     // box" as often as it means "not a member", and a screen that presented it as the second
     // would be inventing an answer.
     filters.clubMember ? sql`(${registrations.clubMemberDeclared} or ${memberVerifiedOf(members)})` : undefined,
-    filters.emailBounced ? sql`${emailRejected} IS NOT NULL` : undefined,
+    // «Doar cu un email respins»: the rows that carry the state (§NNN), one EXISTS — never the object built to test it.
+    filters.emailBounced ? hasEmailStateSql() : undefined,
     // The same condition as the club's list on «Newsletter» and the sponsor list's candidates (§570, §581).
     filters.promoConsented ? promoListed() : undefined,
     filters.outsideCapacity ? eq(registrations.outsideCapacity, true) : undefined,
@@ -525,7 +505,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       bibNumber: registrations.bibNumber,
       bibPrintedAt: registrations.bibPrintedAt,
       checkedInAt: registrations.checkedInAt,
-      emailRejected,
+      emailState: registrationEmailStateSql(),
       idDocument: latestIdDocument,
       minorIdDocument: latestMinorIdDocument,
       cycleStartedAt: registrations.privacyAcknowledgedAt,
@@ -792,8 +772,11 @@ export type RegistrationDetail = {
   checkedInByName: string | null;
   /** Who vouched for the address at the desk, when nobody clicked a link. */
   emailConfirmedByName: string | null;
-  /** The newest message to this registration the provider rejected (§76, §663); null otherwise. */
-  emailRejected: RejectedEmail | null;
+  /**
+   * The registration's one email state (§NNN, amending §663) — with the provider's code and redacted words
+   * for the page's small print, which only this page reads; null when the participant's mail has no open refusal.
+   */
+  emailState: RegistrationEmailStateDetail | null;
   /** For "send the reminder": only while the event is ahead (§81). */
   eventStartsAt: Date;
   /** When the current cycle began (`privacy_acknowledged_at`, rewritten on a restart); §145. */
@@ -843,7 +826,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       checkedInAt: registrations.checkedInAt,
       checkedInByName: checkedInBy.displayName,
       emailConfirmedByName: emailConfirmedBy.displayName,
-      emailRejected,
+      emailState: registrationEmailStateDetailSql(),
       eventStartsAt: events.startsAt,
       id: registrations.id,
       status: registrations.status,
@@ -1137,8 +1120,11 @@ export type DeskRegistration = {
   checkinCode: string | null;
   checkedInAt: Date | null;
   checkedInByName: string | null;
-  /** The desk sees whom an email no longer reaches (`DECISIONS.md` §76, §663) — which, when and why, never the address. */
-  emailRejected: RejectedEmail | null;
+  /**
+   * The desk sees whom an email does not reach (`DECISIONS.md` §76, §663, §NNN) — which, when and why: its own
+   * projection, never the address and never the provider's words (§67, `AGENTS.md` §15.11).
+   */
+  emailState: DeskEmailState | null;
   /** When the address was confirmed, so the desk's words say whether the rejection came after it (§663). */
   emailConfirmedAt: Date | null;
   /** The declarant's document, and a minor's own beside it (§95, §330; `identityDocumentsOf`). */
@@ -1167,7 +1153,7 @@ const DESK_COLUMNS = {
   minorIdDocument: latestMinorIdDocument,
   checkedInAt: registrations.checkedInAt,
   checkedInByName: checkedInBy.displayName,
-  emailRejected,
+  emailState: deskEmailStateSql(),
   emailConfirmedAt: registrations.emailConfirmedAt,
 };
 
@@ -1314,15 +1300,41 @@ export type OutboxHistoryRow = {
   isManualResend: boolean;
   /** The club's copy of the participant's message (§320), labelled so it does not read as a second send to them. */
   clubCopy: boolean;
+  /**
+   * Whom the row's message was for, by role and never by address (§NNN): the participant, the club's
+   * archive copy (§99, §393), the club's confirmation notice (§245), or a club copy (§320).
+   */
+  recipientRole: "participant" | "archive" | "notice" | "copy";
   createdAt: Date;
   sentAt: Date | null;
+  /** Which road it left by (§443): Gmail reports no delivery. */
+  transport: "mailgun" | "gmail" | null;
+  /** The provider's facts after it left (§NNN): delivered, refused and when, why. */
+  deliveredAt: Date | null;
+  rejectedAt: Date | null;
+  rejectionCause: RejectionCause | null;
+  /** The receiving server's code and its redacted words — on a refused row only; for a refusal at the send, the stored answer. */
+  providerCode: string | null;
+  providerDetail: string | null;
+  /** What came after a refusal (`notifications/delivery-facts.ts`). */
+  laterDeliveredAt: Date | null;
+  resolvedAt: Date | null;
+  retriedAt: Date | null;
 };
+
+function recipientRoleOf(messageType: string, clubCopy: boolean): OutboxHistoryRow["recipientRole"] {
+  if (clubCopy) return "copy";
+  if (messageType === "DECLARATION_ARCHIVE" || messageType === "GROUP_RUN_DECLARATION_ARCHIVE") return "archive";
+  if (messageType === "CLUB_CONFIRMATION_NOTICE") return "notice";
+  return "participant";
+}
 
 export async function listOutboxHistory<T extends Record<string, unknown>>(
   db: Database<T>,
   registrationId: string,
 ): Promise<OutboxHistoryRow[]> {
-  return db
+  const refused = sql`${emailOutbox.status} in ('BOUNCED', 'COMPLAINED')`;
+  const rows = await db
     .select({
       messageType: emailOutbox.messageType,
       status: emailOutbox.status,
@@ -1330,10 +1342,24 @@ export async function listOutboxHistory<T extends Record<string, unknown>>(
       clubCopy: sql<boolean>`(${emailOutbox.payloadJson} ->> 'clubCopy') IS NOT DISTINCT FROM 'true'`.mapWith(Boolean),
       createdAt: emailOutbox.createdAt,
       sentAt: emailOutbox.sentAt,
+      transport: emailOutbox.transport,
+      deliveredAt: emailOutbox.deliveredAt,
+      rejectedAt: emailOutbox.rejectedAt,
+      rejectionCause: emailOutbox.rejectionCause,
+      providerCode: emailOutbox.providerCode,
+      providerDetail: sql<string | null>`case when ${refused} then coalesce(${emailOutbox.providerDetail}, ${emailOutbox.lastError}) end`,
+      laterDeliveredAt: emailOutbox.laterDeliveredAt,
+      resolvedAt: emailOutbox.resolvedAt,
+      retriedAt: emailOutbox.retriedAt,
     })
     .from(emailOutbox)
     .where(eq(emailOutbox.registrationId, registrationId))
     .orderBy(asc(emailOutbox.createdAt));
+  return rows.map((row) => ({
+    ...row,
+    recipientRole: recipientRoleOf(row.messageType, row.clubCopy),
+    rejectionCause: isRejectionCause(row.rejectionCause) ? row.rejectionCause : null,
+  }));
 }
 
 /** Events with at least one registration, for the list page's filter — Admin has no reason to

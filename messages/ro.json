@@ -693,13 +693,21 @@
         "typeUnknown": "un email al clubului",
         "why": {
           "BOUNCED": "Adresa nu există, căsuța e plină sau serverul destinatarului l-a refuzat.",
-          "COMPLAINED": "Mesajul a fost marcat ca spam de destinatar."
+          "COMPLAINED": "Mesajul a fost marcat ca spam de destinatar.",
+          "account": "Nu a plecat: contul clubului la Mailgun a fost refuzat atunci, nu adresa.",
+          "missing": "Adresa primește din nou emailurile clubului ({date}), dar acesta nu a mai fost trimis.",
+          "retried": "Retrimis {date}; încă nu știm dacă a ajuns.",
+          "retriedGmail": "Retrimis prin Gmail {date}; Gmail nu confirmă livrarea."
         },
         "reason": "Motivul dat de furnizor: {reason}",
         "confirmedBefore": "Adresa a fost confirmată {date}; un email de după aceea a fost respins.",
         "confirmedAfter": "Adresa a fost confirmată {date}, după acest email.",
         "neverConfirmed": "Adresa nu a fost confirmată niciodată.",
-        "todo": "Sună persoana; adresa o poate schimba doar ea, printr-o înscriere nouă."
+        "todo": "Sună persoana; adresa o poate schimba doar ea, printr-o înscriere nouă.",
+        "whichFamily": "Respins la aceeași adresă, pentru altă înscriere de la acest eveniment: „{type}”, {instant}.",
+        "todoResend": "Retrimite-l din pagina înscrierii.",
+        "todoWait": "Nu-l retrimite încă: așteaptă confirmarea livrării.",
+        "todoAsk": "Întreabă persoana dacă l-a primit."
       },
       "testKind": "Test",
       "enteredByStaff": "Adăugată de echipă",

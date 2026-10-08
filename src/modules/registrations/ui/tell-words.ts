@@ -6,7 +6,7 @@ import { formatDay } from "@/i18n/dates";
 import { waitlistCountShown } from "@/modules/events/domain/registration-cta";
 import { formatDeadlineInSentence } from "@/modules/notifications/domain/deadline-in-sentence";
 import { confirmationDueMoment } from "../domain/hold-deadlines";
-import type { RejectedEmail } from "../domain/rejected-email";
+import type { RegistrationEmailState } from "../domain/email-state";
 import { rowDeadlineOf } from "../domain/row-deadline";
 import { waitlistStandingPhrase } from "./waitlist-position-words";
 
@@ -33,8 +33,12 @@ export type TellFacts = {
   checkedInAt: Date | null;
   /** Why an expired row expired: a lapsed declaration hold says what its email said (§638). */
   expiryReason?: string | null;
-  /** The newest email the provider rejected (§663): one more sentence, so the person knows our mail does not reach them. */
-  emailRejected?: Pick<RejectedEmail, "status"> | null;
+  /**
+   * The registration's email state (§663, §NNN): one more sentence when the address refuses the club's mail
+   * (`unreachable`), so the person knows our mail does not reach them. A message the club's account could not
+   * send, or one owed again to an address that works, is not the person's to hear about as a refusal.
+   */
+  emailState?: Pick<RegistrationEmailState, "kind" | "status"> | null;
 };
 
 /** The states whose next step is a link in an email: the ones a lost or spam-filed email stops. */
@@ -158,10 +162,11 @@ export function tellLines(say: Say, ours: Say, locale: string, facts: TellFacts,
   if (active && link && !held && !lapsed && link.getTime() !== stated?.getTime()) lines.push(ours("linkUntil", { instant: at(link) }));
   // Not once the link or the offer has lapsed: there is no email left to look for. Nor when the address
   // bounced the email: «look in spam» would contradict the line below, which says it never arrived.
-  if (WAITS_ON_AN_EMAIL.has(facts.status) && !lapsed && facts.emailRejected?.status !== "BOUNCED") lines.push(say("spamHint.body"));
-  // The newest email bounced or was marked as spam (§663): on any state, confirmed included — said to the
-  // person without the address, which stays theirs to change (§645).
-  if (facts.emailRejected) lines.push(ours(`rejected.${facts.emailRejected.status}`));
+  const unreachable = facts.emailState?.kind === "unreachable" ? facts.emailState : null;
+  if (WAITS_ON_AN_EMAIL.has(facts.status) && !lapsed && unreachable?.status !== "BOUNCED") lines.push(say("spamHint.body"));
+  // The address refuses the club's mail (§663, §NNN): on any state, confirmed included — said to the person
+  // without the address, which stays theirs to change (§645).
+  if (unreachable) lines.push(ours(`rejected.${unreachable.status}`));
   return lines;
 }
 

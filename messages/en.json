@@ -693,13 +693,21 @@
         "typeUnknown": "a club email",
         "why": {
           "BOUNCED": "The address does not exist, the mailbox is full or the recipient's server refused it.",
-          "COMPLAINED": "The recipient marked the message as spam."
+          "COMPLAINED": "The recipient marked the message as spam.",
+          "account": "It never left: the club's Mailgun account was refused at the time, not the address.",
+          "missing": "The address receives the club's email again ({date}), but this one was not sent again.",
+          "retried": "Sent again {date}; not yet known whether it arrived.",
+          "retriedGmail": "Sent again by Gmail {date}; Gmail does not confirm delivery."
         },
         "reason": "The provider's reason: {reason}",
         "confirmedBefore": "The address was confirmed {date}; an email after that was rejected.",
         "confirmedAfter": "The address was confirmed {date}, after this email.",
         "neverConfirmed": "The address was never confirmed.",
-        "todo": "Phone the person; only they can change the address, by registering again."
+        "todo": "Phone the person; only they can change the address, by registering again.",
+        "whichFamily": "Rejected at the same address, for another registration at this event: “{type}”, {instant}.",
+        "todoResend": "Send it again from the registration's page.",
+        "todoWait": "Do not send it again yet: wait for the delivery confirmation.",
+        "todoAsk": "Ask the person whether it arrived."
       },
       "testKind": "Test",
       "enteredByStaff": "Entered by staff",

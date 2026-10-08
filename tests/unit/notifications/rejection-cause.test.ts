@@ -1,0 +1,152 @@
+import { describe, expect, it } from "vitest";
+import { emailMessageType } from "@/db/schema/email-outbox";
+import { isAccountRefusalError } from "@/infrastructure/email/mailgun-adapter";
+import { redactProviderText } from "@/infrastructure/email/redact";
+import { isParticipantMessage } from "@/modules/notifications/domain/club-notices";
+import {
+  audienceOf,
+  CLUB_MAILBOX_MESSAGE_TYPES,
+  EMAIL_AUDIENCE,
+  messageTypesFor,
+  PARTICIPANT_MESSAGE_TYPES,
+} from "@/modules/notifications/domain/email-audience";
+import { enhancedStatusIn, rejectionCause } from "@/modules/notifications/domain/rejection-cause";
+
+/**
+ * BR-REQ-080-04, BR-REQ-038-01 (§NNN; amending §663, §76/§83, §320, §622) — the facts a refusal is stored
+ * with: whom each message type is for (the participant's own mail is the only one a refusal of which says
+ * anything about them), why a message was refused, by a stated precedence, and the one redactor every
+ * provider word passes through before it is stored.
+ */
+describe("the audience map", () => {
+  it("names an audience for every message type, and nothing else", () => {
+    expect(Object.keys(EMAIL_AUDIENCE).sort()).toEqual([...emailMessageType.enumValues].sort());
+    const all = (["participant", "club", "staff", "public"] as const).flatMap((audience) => messageTypesFor(audience));
+    expect(all.sort()).toEqual([...emailMessageType.enumValues].sort());
+  });
+
+  it("keeps the club's own mailboxes' messages out of the participant's, though they carry the participant's id", () => {
+    expect([...CLUB_MAILBOX_MESSAGE_TYPES].sort()).toEqual(["CLUB_CONFIRMATION_NOTICE", "DECLARATION_ARCHIVE", "GROUP_RUN_DECLARATION_ARCHIVE"]);
+    for (const type of CLUB_MAILBOX_MESSAGE_TYPES) expect(PARTICIPANT_MESSAGE_TYPES).not.toContain(type);
+    expect(PARTICIPANT_MESSAGE_TYPES).toContain("REGISTRATION_CONFIRMED");
+    expect(PARTICIPANT_MESSAGE_TYPES).toContain("BIB_ASSIGNED");
+  });
+
+  it("is what «a participant's message» reads (§320): the copies, the privacy line and the refusals agree", () => {
+    for (const type of emailMessageType.enumValues) expect(isParticipantMessage(type), type).toBe(audienceOf(type) === "participant");
+    // The public's and the staff's are not a participant's either.
+    for (const type of ["NEWSLETTER", "REGISTRATION_OPENED", "EVENT_INVITATION", "STAFF_INVITATION", "LEGAL_TEMPLATES_CHANGED"] as const) {
+      expect(isParticipantMessage(type), type).toBe(false);
+    }
+  });
+});
+
+describe("rejectionCause — why, by a stated precedence", () => {
+  const bounce = (facts: Partial<Parameters<typeof rejectionCause>[0]>) => rejectionCause({ status: "BOUNCED", sent: true, reason: "bounce", ...facts });
+
+  it("a complaint is the person's own word, whatever else the row says", () => {
+    expect(rejectionCause({ status: "COMPLAINED", sent: true, reason: "suppress-bounce", code: "550 5.1.1" })).toBe("complaint");
+  });
+
+  it("reads Mailgun's own suppressions by their reason and by their code", () => {
+    expect(bounce({ reason: "suppress-bounce", code: "605" })).toBe("suppressed");
+    expect(bounce({ reason: "generic", code: "605" })).toBe("suppressed");
+    expect(bounce({ reason: "suppress-unsubscribe" })).toBe("unsubscribed");
+    expect(bounce({ reason: null, code: "606" })).toBe("unsubscribed");
+    expect(bounce({ reason: "suppress-complaint" })).toBe("complaint-suppressed");
+    expect(bounce({ reason: null, code: "607" })).toBe("complaint-suppressed");
+  });
+
+  it("reads the enhanced status before the reason: a final «old» carrying the last deferral's 4.2.2 is a full mailbox", () => {
+    expect(bounce({ code: "550 5.1.1", detail: "user unknown" })).toBe("no-such-address");
+    expect(bounce({ reason: "old", code: "452 4.2.2", detail: "4.2.2 The email account that you tried to reach is over quota" })).toBe("mailbox-full");
+    expect(bounce({ code: "552" })).toBe("mailbox-full");
+    expect(bounce({ reason: "espblock", code: "554 5.7.1" })).toBe("blocked");
+    expect(bounce({ code: "550", detail: "5.7.1 Message rejected for policy reasons" })).toBe("blocked");
+    expect(bounce({ code: "550 5.1.8" })).toBe("blocked");
+  });
+
+  it("reads Mailgun's reason when no code decides, then the server's words", () => {
+    expect(bounce({ reason: "old" })).toBe("gave-up");
+    expect(bounce({ reason: "greylisted" })).toBe("gave-up");
+    expect(bounce({ reason: "espblock" })).toBe("blocked");
+    expect(bounce({ reason: "blacklisted" })).toBe("blocked");
+    expect(bounce({ code: "550", detail: "Requested action not taken: mailbox unavailable, no such user" })).toBe("no-such-address");
+    expect(bounce({ code: "550", detail: "Mailbox is full" })).toBe("mailbox-full");
+    expect(bounce({ code: "554", detail: "Message blocked due to spam content" })).toBe("blocked");
+    expect(bounce({ code: "550 5.4.1", detail: "Recipient address rejected: Access denied" })).toBe("no-such-address");
+  });
+
+  it("never calls a bare «bounce» with no code «no such address»: the cause was not recorded", () => {
+    expect(bounce({})).toBe("other");
+    expect(bounce({ reason: "hardfail" })).toBe("other");
+    expect(bounce({ reason: "generic" })).toBe("other");
+    expect(bounce({ reason: null })).toBe("other");
+  });
+
+  it("reads a Gmail refusal by its 5.1.x", () => {
+    expect(rejectionCause({ status: "BOUNCED", sent: false, reason: "gmail: the address was refused (5.1.1)" })).toBe("no-such-address");
+    expect(rejectionCause({ status: "BOUNCED", sent: false, reason: "gmail: rejected" })).toBe("other");
+  });
+
+  it("calls a refusal at the send the club's account unless it is the one 400 that names the address (§622)", () => {
+    const atSend = (reason: string) => rejectionCause({ status: "BOUNCED", sent: false, reason });
+    // The refusals Mailgun gave the account on 2026-10-01 and 02.
+    expect(atSend("mailgun 401: Forbidden")).toBe("account");
+    expect(atSend("mailgun 403: Domain mail.example.org is not allowed to send: domain disabled")).toBe("account");
+    expect(atSend("mailgun 400: Domain mail.example.org is not allowed to send: recipient limit exceeded")).toBe("account");
+    expect(
+      atSend(
+        "mailgun 400: Domain mail.example.org is not allowed to send: You are sending too fast. Your account is on probation and the account has been temporarily disabled.",
+      ),
+    ).toBe("account");
+    expect(atSend("mailgun 429: Too Many Requests")).toBe("account");
+    expect(atSend("mailgun 400: 'from' parameter is not a valid address. please check documentation")).toBe("account");
+    // The address's own: a 400 that names it — with the redactor's placeholder taken out first.
+    expect(atSend("mailgun 400: 'to' parameter is not a valid address. please check documentation")).toBe("no-such-address");
+    expect(atSend("mailgun 400: <address> is not among the authorized recipients")).toBe("other");
+    expect(isAccountRefusalError("mailgun 400: Sandbox subdomains are for test purposes only. Please add <address> to authorized recipients")).toBe(false);
+    // A refusal that left is never the account's.
+    expect(rejectionCause({ status: "BOUNCED", sent: true, reason: "mailgun 401: Forbidden" })).toBe("other");
+    expect(isAccountRefusalError("bounce")).toBe(false);
+    expect(isAccountRefusalError("gmail: the address was refused (5.1.1)")).toBe(false);
+    expect(isAccountRefusalError(null)).toBe(false);
+  });
+
+  it("finds an enhanced status in a text", () => {
+    expect(enhancedStatusIn("550 5.1.1 user unknown")).toEqual([5, 1, 1]);
+    expect(enhancedStatusIn("452 4.2.2 over quota")).toEqual([4, 2, 2]);
+    expect(enhancedStatusIn("no code here")).toBeNull();
+  });
+});
+
+describe("redactProviderText — one redactor for every provider word", () => {
+  it("takes out every address, the recipient's local part quoted alone, an IP and a token-length run", () => {
+    const text = "550 5.1.1 <ana.popescu@example.com>: Recipient ana.popescu does not exist here (mx 192.0.2.10, 2001:db8::1:2:3) ref AbCdEfGhIjKlMnOpQrStUvWxYz0123456789";
+    const redacted = redactProviderText(text, { recipient: "ana.popescu@example.com" });
+    expect(redacted).not.toContain("ana.popescu");
+    expect(redacted).not.toContain("example.com");
+    expect(redacted).not.toContain("192.0.2.10");
+    expect(redacted).not.toContain("2001:db8");
+    expect(redacted).not.toContain("AbCdEfGhIjKlMnOpQrStUvWxYz0123456789");
+    expect(redacted).toContain("does not exist");
+    expect(redacted).toContain("5.1.1");
+  });
+
+  it("keeps a clock time and a word that merely contains the local part", () => {
+    expect(redactProviderText("deferred until 10:00:00", { recipient: "ana@example.com" })).toBe("deferred until 10:00:00");
+    expect(redactProviderText("cannot deliver", { recipient: "can@example.com" })).toBe("cannot deliver");
+  });
+
+  it("redacts before it cuts, so no half address survives the cut", () => {
+    const long = `${"x".repeat(190)} someone.long@example.org trailing`;
+    const redacted = redactProviderText(long);
+    expect(redacted.length).toBeLessThanOrEqual(200);
+    expect(redacted).not.toMatch(/someone|@/);
+  });
+
+  it("removes a secret it is told about, and answers nothing for nothing", () => {
+    expect(redactProviderText("key-123 refused", { secrets: ["key-123"] })).toBe("<redacted> refused");
+    expect(redactProviderText(null)).toBe("");
+  });
+});
