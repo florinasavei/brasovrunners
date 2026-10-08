@@ -746,7 +746,21 @@ describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
     expect(chanceColour(calm)).not.toBe("");
     // A snowy hour's chance is shown, never as rain likely: secondary, like any calm hour.
     expect(chanceColour(await card({ ...reading, code: 73, kind: "snow", glyph: "snow", precipitationProbability: 90 }))).toBe(chanceColour(calm));
-    // 0 % — or a chance that rounds to it — and no chance at all draw no drop and no figure.
+    // A likely hour by amount alone with no chance to show — none, or 0 % — still draws the drop,
+    // alone and primary, with no figure: the eye gets what a screen reader hears (§NNN).
+    for (const chance of [null, 0]) {
+      const html = await card({ ...reading, precipitationProbability: chance, precipitationMm: chance === null ? 1 : 2 });
+      const pill = pillOf(withoutStyles(html));
+      expect(pill).toContain('data-rain-likely="true"');
+      expect(pill).toContain('data-testid="card-weather-chance"');
+      expect(pill).toContain('data-testid="WaterDropIcon"');
+      expect(pathsOf(pill)).toHaveLength(2);
+      expect(pathsOf(pill)[1]).toBe(pathsOf(pillOf(withoutStyles(calm)))[1]);
+      expect(chanceColour(html)).toBe(PRIMARY);
+      expect(text(pill)).not.toContain("%");
+      expect(text(pill)).toContain("ploaie probabilă");
+    }
+    // 0 % — or a chance that rounds to it — and no chance at all draw no drop and no figure on a calm hour.
     for (const dry of [0, 0.4, null]) {
       const pill = pillOf(withoutStyles(await card({ ...reading, precipitationProbability: dry })));
       expect(pill).not.toContain('data-testid="card-weather-chance"');

@@ -22,7 +22,9 @@ import { WEATHER_GLYPH } from "./glyphs";
  * (`rainLikely`, §429's rule, unchanged: a chance of 50% or more, *or* 0.5 mm or more already
  * falling in the hour, unless the sky's own glyph says more: snow, frost or the storm) the drop and
  * the figure take the primary colour — «🌧 9 °C 💧 60 %» — so the likely hour stands out without a
- * second glyph. No umbrella any more, closed or open. A screen reader hears the chance in words
+ * second glyph. A likely hour with no chance to show — likely by its amount alone, with no chance
+ * or one that rounds to 0 — still gets the drop, alone and primary, so the eye is told what a screen
+ * reader hears. No umbrella any more, closed or open. A screen reader hears the chance in words
  * after the degrees, «20% șanse de ploaie», and «ploaie probabilă» / "rain likely" after it when
  * rain is likely, as before.
  *
@@ -65,7 +67,7 @@ export default function CardWeather({ reading, locale }: { reading: WeatherReadi
     >
       <Glyph aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
       <span aria-hidden="true">{words.temperature ?? words.summary}</span>
-      {words.chanceShort !== null ? (
+      {words.chanceShort !== null || likely ? (
         <Box
           component="span"
           aria-hidden="true"
