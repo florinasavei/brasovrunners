@@ -74,6 +74,7 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
     replace: t("gallery.replacePhoto"),
     replacing: t("gallery.replacing"),
     replaced: t("gallery.replaced"),
+    changed: t("gallery.replaceChanged"),
     failed: t.raw("gallery.uploadFailed") as string,
   };
 

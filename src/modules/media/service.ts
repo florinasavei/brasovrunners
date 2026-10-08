@@ -118,8 +118,10 @@ export type PictureReplacementPlace = { kind: "album"; albumId: string; itemId: 
 
 /**
  * «Înlocuiește» (§NNN, amending §72 and §73): one stored picture replaced in place by a new upload,
- * wherever the caller says it is used. The one verb every place that keeps a picture by its id
- * calls, so they replace alike.
+ * wherever the caller says it is used. The verb an album photo's replace calls, and the one a
+ * future place that keeps a picture by its id should call, so they replace alike. The team card
+ * (`teamMembers.photoMediaAssetId`) and the bib design keep their upload-then-save flow (§541,
+ * §560); this verb did not change them.
  *
  * - **A new key prefix, always.** Every public address embeds the prefix, and every cache on the
  *   way — the browser's, the CDN's, the rendered page — holds the old bytes under the old address.

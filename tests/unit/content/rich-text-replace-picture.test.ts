@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { findPictureToReplace, replacedPictureAttrs } from "@/modules/content/rich-text/domain/replace-picture";
+import { findPictureToReplace, picturesCarrying, replacedPictureAttrs, replacePictureInDoc } from "@/modules/content/rich-text/domain/replace-picture";
+import { replacementIsFor } from "@/modules/content/rich-text/ui/fill-event";
 import { parseRichText } from "@/modules/content/rich-text/domain/schema";
 
 /**
@@ -11,6 +12,7 @@ import { parseRichText } from "@/modules/content/rich-text/domain/schema";
  * on the selected node, uploads through the one `uploadPicture`, and deletes nothing.
  */
 const OLD = "/api/media/test/11111111-1111-8111-8111-111111111111/web.webp";
+const OTHER = "/api/media/test/33333333-3333-8333-8333-333333333333/web.webp";
 const NEW = { src: "/api/media/test/22222222-2222-8222-8222-222222222222/web.webp", width: 900, height: 1200 };
 
 const image = (src: string, extra: Record<string, unknown> = {}) => ({
@@ -73,7 +75,7 @@ describe("§NNN the picture's node, replaced", () => {
     expect(findPictureToReplace(docOf([[0, paragraph]]), 7, OLD)).toBeNull();
   });
 
-  it("is wired in the editor: the selected node, the one upload, no delete at upload time, and the help says each language apart", () => {
+  it("is wired in the editor: the selected node, the one upload, no delete at upload time, and the other language told", () => {
     const ROOT = path.resolve(__dirname, "../../..");
     const editor = readFileSync(path.join(ROOT, "src/modules/content/rich-text/ui/RichTextEditor.tsx"), "utf8");
     const body = editor.slice(editor.indexOf("const replaceImage = async"), editor.indexOf("const replaceFileInputRef"));
@@ -86,8 +88,49 @@ describe("§NNN the picture's node, replaced", () => {
     const en = JSON.parse(readFileSync(path.join(ROOT, "messages/en.json"), "utf8"));
     expect(ro.Admin.richText.imageReplace).toBe("Înlocuiește");
     expect(en.Admin.richText.imageReplace).toBe("Replace");
-    expect(ro.Admin.richText.imageReplaceHelp).toContain("În fiecare limbă separat");
-    expect(en.Admin.richText.imageReplaceHelp).toContain("In each language separately");
+    expect(body).toContain("announcePictureReplaced(");
+    // Every box of the form listens: the mounted editor and the fold not opened yet.
+    expect(editor).toContain("RICH_TEXT_PICTURE_REPLACED_EVENT, onReplaced");
+    const lazy = readFileSync(path.join(ROOT, "src/modules/content/rich-text/ui/LazyRichTextEditor.tsx"), "utf8");
+    expect(lazy).toContain("RICH_TEXT_PICTURE_REPLACED_EVENT, onReplaced");
+    expect(lazy).toContain("replacePictureInDoc(");
+    expect(ro.Admin.richText.imageReplaceHelp).not.toContain("În fiecare limbă separat");
+    expect(ro.Admin.richText.imageReplaceHelp).toContain("celeilalte limbi se schimbă și ea");
+    expect(en.Admin.richText.imageReplaceHelp).not.toContain("In each language separately");
+    expect(en.Admin.richText.imageReplaceHelp).toContain("other language's text changes too");
+  });
+
+  it("reaches the other language's document: every image carrying the old address, each keeping its own words", () => {
+    const english = {
+      type: "doc",
+      content: [
+        { type: "paragraph", content: [{ type: "text", text: "Before" }] },
+        { type: "image", attrs: { ...image(OLD).attrs, alt: "The map", caption: "The long loop" } },
+        { type: "image", attrs: image(OTHER).attrs },
+      ],
+    };
+    const after = replacePictureInDoc(english, OLD, NEW);
+    expect(after).not.toBeNull();
+    const parsed = parseRichText(after);
+    const [, replaced, other] = parsed.content ?? [];
+    expect(replaced?.type === "image" && replaced.attrs).toMatchObject({ src: NEW.src, width: 900, height: 1200, alt: "The map", caption: "The long loop", crop: null, focus: null });
+    // Another picture is not touched, nor the paragraph before it.
+    expect(other?.type === "image" && other.attrs).toMatchObject({ src: OTHER, alt: "Harta" });
+    expect(parsed.content?.[0]).toEqual(parseRichText(english).content?.[0]);
+    // A document that does not name the picture is left as it was.
+    expect(replacePictureInDoc({ type: "doc", content: [{ type: "paragraph" }] }, OLD, NEW)).toBeNull();
+    // The mounted editor's search: every position carrying the address.
+    expect(picturesCarrying(docOf([[0, paragraph], [7, image(OLD)], [9, image("/x")], [14, image(OLD)]]), OLD)).toEqual([7, 14]);
+  });
+
+  it("is heard only by boxes of the form that pressed", () => {
+    const form = {} as HTMLFormElement;
+    const other = {} as HTMLFormElement;
+    const detail = { oldSrc: OLD, picture: NEW, form };
+    expect(replacementIsFor(detail, { form } as HTMLInputElement)).toBe(true);
+    expect(replacementIsFor(detail, { form: other } as HTMLInputElement)).toBe(false);
+    expect(replacementIsFor({ ...detail, form: null }, { form: other } as HTMLInputElement)).toBe(true);
+    expect(replacementIsFor({ ...detail, oldSrc: "" }, { form } as HTMLInputElement)).toBe(false);
   });
 
   it("speaks one word everywhere a picture is replaced: the album, the text, the team card and the bib", () => {

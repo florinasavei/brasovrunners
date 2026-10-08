@@ -46,3 +46,39 @@ export function findPictureToReplace(doc: PictureDoc, selectedAt: number, src: s
   });
   return found;
 }
+
+/**
+ * Every picture in a document that carries `src`, by position — what a box changes when another
+ * box of the same form replaced that picture (§NNN): the Romanian text and its English copy name
+ * the same stored picture, and a replace in one reaches the other. Positions are stable through
+ * the change: an image is an atom, and a new attribute does not change its size.
+ */
+export function picturesCarrying(doc: Pick<PictureDoc, "descendants">, src: string): number[] {
+  const found: number[] = [];
+  doc.descendants((node, position) => {
+    if (node.type.name === "image" && node.attrs.src === src) found.push(position);
+    return true;
+  });
+  return found;
+}
+
+/** A stored document as JSON — any node, its attributes and its children. */
+type JsonNode = { type: string; attrs?: Record<string, unknown>; content?: JsonNode[] } & Record<string, unknown>;
+
+/**
+ * The same change on a stored document that no editor holds yet — a fold not opened (§96): every
+ * image carrying `oldSrc` takes the new picture, each with its own words kept. `null` when no
+ * image carries it, so the caller leaves the document as it was.
+ */
+export function replacePictureInDoc<D extends { type: string; content?: unknown[] }>(doc: D, oldSrc: string, next: ReplacementPicture): D | null {
+  let changed = false;
+  const walk = (node: JsonNode): JsonNode => {
+    if (node.type === "image" && node.attrs?.src === oldSrc) {
+      changed = true;
+      return { ...node, attrs: replacedPictureAttrs(node.attrs, next) };
+    }
+    return Array.isArray(node.content) ? { ...node, content: node.content.map(walk) } : node;
+  };
+  const after = walk(doc as unknown as JsonNode);
+  return changed ? (after as unknown as D) : null;
+}

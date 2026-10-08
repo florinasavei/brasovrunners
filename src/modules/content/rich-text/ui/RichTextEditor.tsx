@@ -90,9 +90,17 @@ import {
   type TableValign,
 } from "../domain/schema";
 import { CROP_PRESETS, type CropPreset, presetCrop } from "../domain/picture-frame";
-import { findPictureToReplace, replacedPictureAttrs } from "../domain/replace-picture";
+import { findPictureToReplace, picturesCarrying, replacedPictureAttrs } from "../domain/replace-picture";
 import { editorLook, sameEditorLook } from "./editor-look";
-import { fillIsFor, RICH_TEXT_FILL_EVENT, type RichTextFillDetail } from "./fill-event";
+import {
+  announcePictureReplaced,
+  fillIsFor,
+  replacementIsFor,
+  RICH_TEXT_FILL_EVENT,
+  RICH_TEXT_PICTURE_REPLACED_EVENT,
+  type PictureReplacedDetail,
+  type RichTextFillDetail,
+} from "./fill-event";
 import ImageCropBox, { type ImageCropLabels } from "./ImageCropBox";
 import { cardFrameGeometry, cropGeometry, cropImageCss, cropWindowCss } from "./image-layout";
 import { EDITOR_TABLE_SX, PREVIEW_CONTENT_SX } from "./table-layout";
@@ -653,6 +661,31 @@ function RichTextEditorIsland({
     return () => window.removeEventListener(RICH_TEXT_FILL_EVENT, onFill);
   }, [editor, name]);
 
+  /*
+    «Înlocuiește» pressed in another box of this form (§NNN) — the other language's text, as a rule,
+    which names the same stored picture: every image here carrying the old address takes the new
+    picture, its own description and caption kept, in one transaction, so the hidden value and the
+    tab marks follow as for typing. The box that pressed has already changed its own node and finds
+    nothing left to change.
+  */
+  useEffect(() => {
+    if (!editor) return;
+    const onReplaced = (event: Event) => {
+      const detail = (event as CustomEvent<PictureReplacedDetail>).detail;
+      if (!replacementIsFor(detail, hiddenValue.current)) return;
+      const positions = picturesCarrying(editor.state.doc, detail.oldSrc);
+      if (positions.length === 0) return;
+      const tr = editor.state.tr;
+      for (const at of positions) {
+        const node = tr.doc.nodeAt(at);
+        if (node) tr.setNodeMarkup(at, undefined, replacedPictureAttrs(node.attrs, detail.picture));
+      }
+      editor.view.dispatch(tr);
+    };
+    window.addEventListener(RICH_TEXT_PICTURE_REPLACED_EVENT, onReplaced);
+    return () => window.removeEventListener(RICH_TEXT_PICTURE_REPLACED_EVENT, onReplaced);
+  }, [editor]);
+
   /**
    * Shrink in the browser, post to `/api/admin/media`, insert the answer as an image node.
    * One file at a time; a failure is a sentence under the toolbar, never a lost body.
@@ -735,7 +768,8 @@ function RichTextEditorIsland({
    * «Înlocuiește» (§NNN): the same shrink-and-upload `insertImage` uses, at the same remembered
    * quality and with the same facts and refusal under the toolbar, written to the picture that was
    * selected — found again by its position and address, since the upload takes seconds — as a new
-   * address and size with the words kept and the crop cleared (`replacedPictureAttrs`). The old
+   * address and size with the words kept and the crop cleared (`replacedPictureAttrs`); then every
+   * other box of the form is told, so the other language's copy of the picture changes too. The old
    * picture is left to the save and the sweep (§73): this text is not saved yet.
    */
   const replaceImage = async (file: File, selectedAt: number, oldSrc: string) => {
@@ -759,6 +793,12 @@ function RichTextEditorIsland({
             })
             .setNodeSelection(at)
             .run();
+          // The other language's text names the same picture: it changes too, its own words kept.
+          announcePictureReplaced({
+            oldSrc,
+            picture: { src: uploaded.src, width: uploaded.width, height: uploaded.height },
+            form: hiddenValue.current?.form ?? null,
+          });
         }
       }
       setImageState("idle");
@@ -1704,7 +1744,8 @@ function RichTextEditorIsland({
             )}
             {/*
               «Înlocuiește» (§NNN), beside the crop box's verbs: another photograph in this node's
-              place, the words kept and the crop cleared; this language's text only.
+              place, the words kept and the crop cleared; the same picture in the other language's
+              text changes with it, keeping that text's own words.
             */}
             <Box>
               <input

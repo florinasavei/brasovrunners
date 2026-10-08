@@ -17,6 +17,8 @@ export type PhotoReplaceLabels = {
   replace: string;
   replacing: string;
   replaced: string;
+  /** The photo was removed or replaced by someone else meanwhile: a retry cannot help. */
+  changed: string;
   /** The uploader's own refusal, raw with `{names}` (the same words as an upload). */
   failed: string;
 };
@@ -37,7 +39,7 @@ export default function PhotoReplaceButton({
   labels: PhotoReplaceLabels;
 }) {
   const router = useRouter();
-  const [state, setState] = useState<"idle" | "replacing" | "replaced" | "failed">("idle");
+  const [state, setState] = useState<"idle" | "replacing" | "replaced" | "changed" | "failed">("idle");
   const [failedName, setFailedName] = useState("");
   const inputId = `photo-replace-${itemId}`;
 
@@ -56,6 +58,13 @@ export default function PhotoReplaceButton({
       body.append("quality", quality);
       body.append("replaceItemId", itemId);
       const response = await fetch(uploadUrl, { method: "POST", body });
+      // Removed or replaced by someone else since the page was drawn (404, 409): the same file again
+      // would meet the same answer, so the page is drawn again and says so, not "could not upload".
+      if (response.status === 404 || response.status === 409) {
+        setState("changed");
+        router.refresh();
+        return;
+      }
       if (!response.ok) throw new Error(String(response.status));
       setState("replaced");
       router.refresh();
@@ -80,15 +89,15 @@ export default function PhotoReplaceButton({
         {state === "replacing" ? labels.replacing : labels.replace}
         <input id={inputId} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(event) => void onChoose(event)} />
       </Button>
-      {(state === "replaced" || state === "failed") && (
+      {state !== "idle" && state !== "replacing" && (
         <Typography
           variant="caption"
-          color={state === "failed" ? "error" : "text.secondary"}
+          color={state === "replaced" ? "text.secondary" : "error"}
           sx={{ display: "block", mt: 0.5 }}
           aria-live="polite"
           data-testid="photo-replace-note"
         >
-          {state === "failed" ? labels.failed.replace("{names}", failedName) : labels.replaced}
+          {state === "failed" ? labels.failed.replace("{names}", failedName) : state === "changed" ? labels.changed : labels.replaced}
         </Typography>
       )}
     </Box>
