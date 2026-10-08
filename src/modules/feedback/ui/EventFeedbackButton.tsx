@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
+import { contactSmtpRoadExists } from "@/modules/contact/delivery";
 import { feedbackQueryFor, offeredBranches } from "@/modules/feedback/domain/branches";
 import { eventDay } from "@/modules/feedback/links";
 import { cachedFeedbackFormsDescribed, cachedFeedbackOffer } from "@/modules/public-cache/reads";
@@ -39,7 +40,7 @@ export default async function EventFeedbackButton({ event, locale, now }: { even
   let open = false;
   try {
     const [offer, described] = await Promise.all([cachedFeedbackOffer(), cachedFeedbackFormsDescribed(now)]);
-    open = offeredBranches(offer, described).includes("howItWent");
+    open = offeredBranches(offer, described, contactSmtpRoadExists()).includes("howItWent");
   } catch {
     open = false;
   }

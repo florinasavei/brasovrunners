@@ -40,6 +40,7 @@ import {
   parseContactErrorFields,
 } from "@/modules/contact/fields";
 import { readFormDraft } from "@/modules/registrations/form-draft";
+import { contactSmtpRoadExists } from "@/modules/contact/delivery";
 import { FEEDBACK_SECTION_ID, offeredBranches } from "@/modules/feedback/domain/branches";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { BOT_CHECK_ERROR_ATTRIBUTE, BOT_CHECK_SLOT_SX } from "@/modules/registrations/domain/turnstile-widget";
@@ -174,7 +175,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
     here, and then simply not drawn.
   */
   const [feedbackOffer, feedbackDescribed] = await Promise.all([orNull(() => cachedFeedbackOffer()), orNull(() => cachedFeedbackFormsDescribed(now))]);
-  const feedbackOpen = feedbackOffer !== null && offeredBranches(feedbackOffer, feedbackDescribed === true).length > 0;
+  const feedbackOpen = feedbackOffer !== null && offeredBranches(feedbackOffer, feedbackDescribed === true, contactSmtpRoadExists()).length > 0;
   const tell = await getTranslations("Tell");
 
   const field = (name: "name" | "email" | "message", help?: string) => ({

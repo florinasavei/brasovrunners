@@ -101,6 +101,16 @@ export function contactSmtpRoadFor(config: ContactConfig): ContactSmtpRoad | nul
   return { transport: contactTransportFor(config), from, appEnv: config.APP_ENV };
 }
 
+/**
+ * Whether this deployment has the SMTP road at all — the environment alone, so no read and no cache:
+ * «Spune-ne ceva» offers its three ordinary branches only where they can leave (§NNN), the way
+ * «Scrie-ne» draws no form where `contactFormReaches` says no. Without it a visitor would be shown a
+ * form that answers «Nu am putut trimite acum…» to every post, forever.
+ */
+export function contactSmtpRoadExists(config: Pick<ContactConfig, "CONTACT_FORM_MODE"> = env): boolean {
+  return config.CONTACT_FORM_MODE !== "off";
+}
+
 /** This process's SMTP road, from its environment. */
 export function contactSmtpRoad(): ContactSmtpRoad | null {
   return contactSmtpRoadFor(env);

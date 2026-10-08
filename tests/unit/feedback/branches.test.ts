@@ -7,6 +7,8 @@ import {
   type FeedbackInput,
   type FeedbackSettings,
   feedbackQueryFor,
+  feedbackRefusalUrl,
+  feedbackSentUrl,
   NO_CONTACT_LINE,
   offeredBranches,
   pickerOrder,
@@ -36,15 +38,22 @@ const parse = (raw: Record<string, unknown>): FeedbackInput => feedbackFields.pa
 
 describe("§NNN the branches a visitor is offered", () => {
   it("offers none by default, and none while the notice in force does not describe the forms", () => {
-    expect(offeredBranches(DEFAULT_FEEDBACK_SETTINGS, true)).toEqual([]);
-    expect(offeredBranches(ON, false)).toEqual([]);
+    expect(offeredBranches(DEFAULT_FEEDBACK_SETTINGS, true, true)).toEqual([]);
+    expect(offeredBranches(ON, false, true)).toEqual([]);
   });
 
   it("offers each branch switched on with a recipient, in the wizard's order — the safety branch only with its first name", () => {
-    expect(offeredBranches(ON, true)).toEqual(["howItWent", "suggestion", "complaint", "safety"]);
-    expect(offeredBranches({ ...ON, suggestion: { on: true, to: null } }, true)).toEqual(["howItWent", "complaint", "safety"]);
-    expect(offeredBranches({ ...ON, complaint: { on: false, to: "complaints@example.org" } }, true)).toEqual(["howItWent", "suggestion", "safety"]);
-    expect(offeredBranches({ ...ON, safety: { on: true, to: "safety@example.org", name: null } }, true)).toEqual(["howItWent", "suggestion", "complaint"]);
+    expect(offeredBranches(ON, true, true)).toEqual(["howItWent", "suggestion", "complaint", "safety"]);
+    expect(offeredBranches({ ...ON, suggestion: { on: true, to: null } }, true, true)).toEqual(["howItWent", "complaint", "safety"]);
+    expect(offeredBranches({ ...ON, complaint: { on: false, to: "complaints@example.org" } }, true, true)).toEqual(["howItWent", "suggestion", "safety"]);
+    expect(offeredBranches({ ...ON, safety: { on: true, to: "safety@example.org", name: null } }, true, true)).toEqual(["howItWent", "suggestion", "complaint"]);
+  });
+
+  it("offers the three ordinary branches only where the deployment has the SMTP road; the safety branch leaves by Mailgun and stays", () => {
+    // `CONTACT_FORM_MODE=off`: every post on them would answer «Nu am putut trimite acum…» forever.
+    expect(offeredBranches(ON, true, false)).toEqual(["safety"]);
+    expect(offeredBranches({ ...ON, safety: { on: false, to: null, name: null } }, true, false)).toEqual([]);
+    expect(offeredBranches(ON, false, false)).toEqual([]);
   });
 
   it("skips the choice when one branch is on, chooses by ?tip= among several, and has no page with none", () => {
@@ -175,5 +184,20 @@ describe("§NNN the notice's marker", () => {
   it("becomes the forms' own name, quoted, in each language", () => {
     expect(feedbackFormsClause("ro")).toBe("„Spune-ne ceva”");
     expect(feedbackFormsClause("en")).toBe("“Tell us something”");
+  });
+});
+
+describe("§NNN the addresses the action sends the browser back to", () => {
+  it("keeps ?tip=, names the boxes, carries ?since= and lands on the summary; without a branch, no ?tip=", () => {
+    expect(feedbackRefusalUrl("/ro/contact/spune-ne", "complaint", "VALIDATION_ERROR", { fields: ["message", "date"], renderedAt: "2026-10-08T12:00:00.000Z" })).toBe(
+      "/ro/contact/spune-ne?tip=reclamatie&error=VALIDATION_ERROR&fields=message,date&since=2026-10-08T12%3A00%3A00.000Z#feedback-errors",
+    );
+    expect(feedbackRefusalUrl("/en/contact/tell-us", null, "UNAVAILABLE")).toBe("/en/contact/tell-us?error=UNAVAILABLE#feedback-errors");
+    expect(feedbackRefusalUrl("/ro/contact/spune-ne", "safety", "LIMITED", { fields: [], renderedAt: "" })).toBe("/ro/contact/spune-ne?tip=siguranta&error=LIMITED#feedback-errors");
+  });
+
+  it("answers a sent post with the branch's slug", () => {
+    expect(feedbackSentUrl("/ro/contact/spune-ne", "howItWent")).toBe("/ro/contact/spune-ne?sent=cum-a-fost");
+    expect(feedbackSentUrl("/ro/contact/spune-ne", null)).toBe("/ro/contact/spune-ne?sent=");
   });
 });

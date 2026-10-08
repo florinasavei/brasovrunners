@@ -60,17 +60,23 @@ export const DEFAULT_FEEDBACK_SETTINGS: FeedbackSettings = {
   safety: { on: false, to: null, name: null },
 };
 
+/** The branches that leave by the contact form's SMTP road (§149); the safety branch leaves by Mailgun alone. */
+export const SMTP_BRANCHES: readonly FeedbackBranch[] = ["howItWent", "suggestion", "complaint"];
+
 /**
  * The branches a visitor is offered, in the wizard's order: switched on, with somebody to receive
- * them (and, for the safety branch, the first name the page promises) — and none at all while the
- * privacy notice in force does not describe the forms (`describesFeedbackForms`): nothing is taken
- * from a person before the notice the club approved says what happens to it (AGENTS.md §10.8).
+ * them (and, for the safety branch, the first name the page promises), and with a road to leave by —
+ * the three ordinary branches only where the deployment has the SMTP road (`contactSmtpRoadExists`;
+ * `CONTACT_FORM_MODE=off` has none), as «Scrie-ne» draws no form without one — and none at all while
+ * the privacy notice in force does not describe the forms (`describesFeedbackForms`): nothing is
+ * taken from a person before the notice the club approved says what happens to it (AGENTS.md §10.8).
  */
-export function offeredBranches(settings: FeedbackSettings, noticeDescribes: boolean): FeedbackBranch[] {
+export function offeredBranches(settings: FeedbackSettings, noticeDescribes: boolean, smtpRoad: boolean): FeedbackBranch[] {
   if (!noticeDescribes) return [];
   return FEEDBACK_BRANCHES.filter((branch) => {
     const setting = settings[branch];
     if (!setting.on || !setting.to) return false;
+    if (!smtpRoad && SMTP_BRANCHES.includes(branch)) return false;
     return branch !== "safety" || Boolean(settings.safety.name);
   });
 }
@@ -141,6 +147,13 @@ export type Rating = (typeof RATINGS)[number];
 /** Every box any branch has, in the order the forms show them — the order a refusal lists them in. */
 export const FEEDBACK_FIELDS = ["event", "date", "rating", "message", "reasons", "reasonOther", "whereWhen", "contact", "email", "captcha"] as const;
 export type FeedbackField = (typeof FEEDBACK_FIELDS)[number];
+
+/**
+ * What a refusal keeps in the sealed draft (§142), path-scoped to the wizard and read back by its form:
+ * every box but the ticks (kept joined, as `reasons`) and the anti-bot check — never the trap, the
+ * clock or the token.
+ */
+export const FEEDBACK_DRAFT_BOXES = ["event", "date", "rating", "message", "reasonOther", "whereWhen", "contact", "email"] as const satisfies readonly FeedbackField[];
 
 /** The boxes each branch has, in its form's order. */
 export const BRANCH_FIELDS: Readonly<Record<FeedbackBranch, readonly FeedbackField[]>> = {
@@ -252,6 +265,32 @@ export function parseFeedbackError(value: string | undefined): FeedbackError | n
 
 /** The anchor a refused post lands on (a `"use server"` module may not export it). */
 export const FEEDBACK_ERROR_SUMMARY_ID = "feedback-errors";
+
+/**
+ * Where a refused post goes back to (§NNN): the wizard's path with `?tip=` — so the refusal lands on
+ * the form it came from, never the choice —, `error=` the code, `&fields=` the boxes it names (names
+ * only, never a value: what was typed rides in the sealed draft, AGENTS.md §14.5), `&since=` the render
+ * the corrected form is timed from (§146: a quick fix must not read as a bot), and the summary's anchor.
+ * Pure, so the action's redirect is tested without a request.
+ */
+export function feedbackRefusalUrl(
+  path: string,
+  branch: FeedbackBranch | null,
+  code: FeedbackError,
+  options: { fields?: readonly string[]; renderedAt?: string } = {},
+): string {
+  const query = new URLSearchParams();
+  if (branch) query.set(FEEDBACK_QUERY.branch, BRANCH_SLUG[branch]);
+  query.set("error", code);
+  if (options.fields && options.fields.length > 0) query.set("fields", options.fields.join(","));
+  if (options.renderedAt) query.set("since", options.renderedAt);
+  return `${path}?${query.toString().replace(/%2C/g, ",")}#${FEEDBACK_ERROR_SUMMARY_ID}`;
+}
+
+/** Where a post that left goes (§NNN): `?sent=<the branch's slug>`, which the page answers with its sent line. */
+export function feedbackSentUrl(path: string, branch: FeedbackBranch | null): string {
+  return `${path}?sent=${branch ? BRANCH_SLUG[branch] : ""}`;
+}
 /** The door's section on `/contact` — `/ro/contact#spune-ne`, an address the club can share. */
 export const FEEDBACK_SECTION_ID = "spune-ne";
 

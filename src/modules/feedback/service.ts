@@ -98,7 +98,7 @@ export async function submitFeedback<T extends Record<string, unknown>>(
   now: Date,
 ): Promise<FeedbackOutcome> {
   const branch = postedBranch(rawInput);
-  if (!branch || !offeredBranches(deps.settings, deps.noticeDescribes).includes(branch)) {
+  if (!branch || !offeredBranches(deps.settings, deps.noticeDescribes, deps.smtp !== null).includes(branch)) {
     return logged(branch ?? "unknown", { outcome: "unavailable" });
   }
   // Cloudflare's own refusal only (§216): a widget that never ran is `unavailable`, and passes.

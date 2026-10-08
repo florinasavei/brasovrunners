@@ -3,6 +3,7 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { noticeDescribesFeedbackForms } from "@/modules/legal-documents/repository";
+import { contactSmtpRoadExists } from "@/modules/contact/delivery";
 import { env } from "@/shared/config/env";
 import { feedbackQueryFor, offeredBranches } from "./domain/branches";
 import { readFeedbackSettingsMemo } from "./settings";
@@ -23,7 +24,7 @@ export async function howItWentOpen<T extends Record<string, unknown>>(db: Datab
   const held = memo.get(db);
   if (held && now.getTime() - held.at >= 0 && now.getTime() - held.at < MEMO_MS) return held.open;
   const [settings, described] = await Promise.all([readFeedbackSettingsMemo(db, now), noticeDescribesFeedbackForms(db, now)]);
-  const open = offeredBranches(settings, described).includes("howItWent");
+  const open = offeredBranches(settings, described, contactSmtpRoadExists()).includes("howItWent");
   memo.set(db, { at: now.getTime(), open });
   return open;
 }

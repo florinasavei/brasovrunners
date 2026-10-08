@@ -270,6 +270,10 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/events/page.tsx", prop: "mt", step: "headGap", sm: 1, xsBefore: 1 },
   { file: "src/app/[locale]/calendar/page.tsx", prop: "mt", step: "headGap", sm: 1, xsBefore: 1 },
   { file: "src/app/[locale]/contact/page.tsx", prop: "mt", step: "headGap", sm: 1, xsBefore: 1 },
+  // «Spune-ne ceva» (§NNN), born on the scale: the wizard's container, and its door under the newsletter on /contact.
+  { file: "src/app/[locale]/contact/feedback/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  { file: "src/app/[locale]/contact/page.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
+  { file: "src/app/[locale]/contact/page.tsx", prop: "pt", step: "sectionGap", sm: 3, xsBefore: 3 },
 ];
 
 const siteKey = (site: { file: string; prop: string; step: string; sm: number }) => `${site.file} ${site.prop}: { xs: DENSITY.${site.step}, sm: ${site.sm} }`;

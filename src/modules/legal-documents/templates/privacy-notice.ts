@@ -95,7 +95,10 @@
  * messages reach the club's Gmail — the confidential safety form only the designated person's own
  * address, through Mailgun — and how long they are kept; and the switch: the contact page draws the
  * door, and the feedback page exists, only while the notice in force names it in every language
- * (`describesFeedbackForms`).
+ * (`describesFeedbackForms`). **Open for counsel before the club approves it:** the paragraph rests on
+ * art. 6(1)(f) alone, and a «Siguranță» report may carry special-category data (health, sex life), which
+ * needs an art. 9(2) condition as well — (f), legal claims, or (a), explicit consent given by sending,
+ * are the candidates. The lawyer decides the words, in both languages; the code reads only the marker.
  *
  * `{{teamPage}}` in section 4 (§459) is the team page's name in the reader's language and the
  * marker `/admin/tasks` reads: a notice that names it describes the page's cards and photographs.

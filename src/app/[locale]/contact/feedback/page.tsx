@@ -21,6 +21,7 @@ import type { ComponentType } from "react";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
+import { contactSmtpRoadExists } from "@/modules/contact/delivery";
 import {
   BRANCH_SLUG,
   BRANCH_FIELDS,
@@ -120,7 +121,8 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
 
   // Tolerant of an outage like every read on the contact page (§281): no answer is no door.
   const [offer, described] = await Promise.all([orNull(() => cachedFeedbackOffer()), orNull(() => cachedFeedbackFormsDescribed(now))]);
-  const offered = offer ? offeredBranches(offer, described === true) : [];
+  // The three ordinary branches only where the SMTP road exists (`CONTACT_FORM_MODE`), as «Scrie-ne» draws no form without one.
+  const offered = offer ? offeredBranches(offer, described === true, contactSmtpRoadExists()) : [];
   const query = readFeedbackQuery(search);
   const sentBranch = Object.entries(BRANCH_SLUG).find(([, slug]) => slug === search.sent)?.[0] as FeedbackBranch | undefined;
   const step = wizardStep(offered, sentBranch ?? query.branch);

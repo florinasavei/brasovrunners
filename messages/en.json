@@ -6685,7 +6685,7 @@
       "subject": "Subject",
       "subjectHelp": "In both languages, required, at most {max} characters each. You can use the fields {list}; they are filled in for each participant.",
       "body": "Message",
-      "bodyHelp": "In both languages, plain text, at most {max} characters each. Fields filled in for each participant: {list}. {feedback}: “Tell us how it was” while it is on, otherwise Contact.",
+      "bodyHelp": "Required in both languages, plain text, at most {max} characters each. Fields filled in for each participant: {list}. {feedback}: “Tell us how it was” while it is on, otherwise Contact.",
       "bodyScope": "Write only about this event: weather, place, time, safety, a change. No advertising, offers or other events: those need each person's separate consent.",
       "preview": "How the email looks",
       "previewHelp": "Exactly the email that goes out, for a sample participant, {name}, number {bibNumber}. It updates as you type.",
@@ -8496,8 +8496,7 @@
       },
       "safety": {
         "label": "Safety",
-        "hint": "For women who did not feel safe with us. Confidential.",
-        "intro": "Confidential."
+        "hint": "For women who did not feel safe with us. Confidential."
       }
     },
     "safety": {

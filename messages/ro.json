@@ -6685,7 +6685,7 @@
       "subject": "Subiect",
       "subjectHelp": "În ambele limbi, obligatoriu, cel mult {max} de caractere în fiecare. Poți folosi câmpurile {list}; se completează pentru fiecare participant.",
       "body": "Mesajul",
-      "bodyHelp": "În ambele limbi, text simplu, cel mult {max} caractere fiecare. Câmpuri pentru fiecare participant: {list}. {feedback}: „Spune-ne cum a fost” dacă e pornit, altfel Contact.",
+      "bodyHelp": "Obligatoriu în ambele limbi, text simplu, cel mult {max} caractere fiecare. Câmpuri pentru fiecare participant: {list}. {feedback}: „Spune-ne cum a fost” dacă e pornit, altfel Contact.",
       "bodyScope": "Scrie doar despre acest eveniment: vreme, loc, oră, siguranță, o schimbare. Fără reclame, oferte sau alte evenimente: acelea cer acordul separat al fiecăruia.",
       "preview": "Cum arată emailul",
       "previewHelp": "Exact emailul care pleacă, pentru un participant de exemplu, {name}, cu numărul {bibNumber}. Se actualizează pe măsură ce scrii.",
@@ -8496,8 +8496,7 @@
       },
       "safety": {
         "label": "Siguranță",
-        "hint": "Pentru femeile care nu s-au simțit în siguranță la noi. Confidențial.",
-        "intro": "Confidențial."
+        "hint": "Pentru femeile care nu s-au simțit în siguranță la noi. Confidențial."
       }
     },
     "safety": {

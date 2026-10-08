@@ -7,7 +7,7 @@ import { createEmailSenderForEnvironment } from "@/infrastructure/email/sender";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { contactSmtpRoad } from "@/modules/contact/delivery";
-import { BRANCH_SLUG, FEEDBACK_BRANCHES, FEEDBACK_ERROR_SUMMARY_ID, FEEDBACK_QUERY, type FeedbackBranch } from "@/modules/feedback/domain/branches";
+import { FEEDBACK_BRANCHES, FEEDBACK_DRAFT_BOXES, type FeedbackBranch, type FeedbackError, feedbackRefusalUrl, feedbackSentUrl } from "@/modules/feedback/domain/branches";
 import { type FeedbackOutcome, submitFeedback } from "@/modules/feedback/service";
 import { readFeedbackSettingsMemo } from "@/modules/feedback/settings";
 import { noticeDescribesFeedbackForms } from "@/modules/legal-documents/repository";
@@ -28,7 +28,7 @@ function text(form: FormData, name: string): string {
 /** What a refusal keeps, sealed (§142): the boxes, the ticks joined — never the trap, the clock or the token. */
 function keepTyped(form: FormData, path: string): Promise<void> {
   const values: Record<string, string> = {};
-  for (const name of ["event", "date", "rating", "message", "reasonOther", "whereWhen", "contact", "email"]) {
+  for (const name of FEEDBACK_DRAFT_BOXES) {
     const value = text(form, name);
     if (value !== "") values[name] = value;
   }
@@ -48,11 +48,9 @@ export async function submitFeedbackAction(form: FormData): Promise<void> {
   const locale: Locale = form.get("locale") === "en" ? "en" : "ro";
   const path = getPathname({ locale, href: "/contact/feedback" });
   const branch: FeedbackBranch | null = FEEDBACK_BRANCHES.find((name) => name === form.get("branch")) ?? null;
-  const tip = branch ? `${FEEDBACK_QUERY.branch}=${BRANCH_SLUG[branch]}` : "";
   const renderedAt = text(form, "renderedAt");
-  // The corrected form is timed from the render it corrects (§146's `since`), or a quick fix reads as a bot.
-  const since = renderedAt ? `&since=${encodeURIComponent(renderedAt)}` : "";
-  const back = (code: string, fields = "") => `${path}?${tip}${tip ? "&" : ""}error=${code}${fields}${since}#${FEEDBACK_ERROR_SUMMARY_ID}`;
+  // `?tip=` keeps the form it came from; `since` times the corrected form from the render it corrects (§146).
+  const back = (code: FeedbackError, fields: readonly string[] = []) => feedbackRefusalUrl(path, branch, code, { fields, renderedAt });
 
   let outcome: FeedbackOutcome;
   try {
@@ -102,7 +100,7 @@ export async function submitFeedbackAction(form: FormData): Promise<void> {
   } catch (error) {
     if (isDomainError(error) && error.code === "VALIDATION_ERROR") {
       await keepTyped(form, path);
-      redirect(back("VALIDATION_ERROR", error.fields.length > 0 ? `&fields=${error.fields.join(",")}` : ""));
+      redirect(back("VALIDATION_ERROR", error.fields));
     }
     // The database is away (§447): the bucket and the settings need it. The text is kept.
     if (isDatabaseAwayError(error)) {
@@ -115,9 +113,9 @@ export async function submitFeedbackAction(form: FormData): Promise<void> {
 
   if (outcome.outcome === "sent" || outcome.outcome === "ignored") {
     await clearFormDraft(path);
-    redirect(`${path}?sent=${branch ? BRANCH_SLUG[branch] : ""}`);
+    redirect(feedbackSentUrl(path, branch));
   }
   await keepTyped(form, path);
-  if (outcome.outcome === "captcha") redirect(back("VALIDATION_ERROR", "&fields=captcha"));
+  if (outcome.outcome === "captcha") redirect(back("VALIDATION_ERROR", ["captcha"]));
   redirect(back(outcome.outcome === "limited" ? "LIMITED" : "UNAVAILABLE"));
 }

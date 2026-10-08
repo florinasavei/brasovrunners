@@ -190,9 +190,12 @@ describe("§NNN «Spune-ne ceva»", () => {
       expect(await submitFeedback(db, deps(), SAFETY, NOW)).toEqual({ outcome: "sent" });
     });
 
-    it("answers a deployment with no road «unavailable»", async () => {
-      expect(await submitFeedback(db, deps({ smtp: null }), HOW, NOW)).toEqual({ outcome: "unavailable" });
+    it("answers a deployment with no road «unavailable»; without the SMTP road the safety branch still leaves by Mailgun", async () => {
+      // No SMTP road (`CONTACT_FORM_MODE=off`): the three ordinary branches are not offered at all.
+      for (const branch of [HOW, SUGGESTION, COMPLAINT]) expect(await submitFeedback(db, deps({ smtp: null }), branch, NOW)).toEqual({ outcome: "unavailable" });
       expect(await submitFeedback(db, deps({ mailgun: null }), SAFETY, NOW)).toEqual({ outcome: "unavailable" });
+      expect(await submitFeedback(db, deps({ smtp: null }), SAFETY, NOW)).toEqual({ outcome: "sent" });
+      expect(smtp.messages).toHaveLength(0);
     });
   });
 
@@ -385,6 +388,10 @@ describe("§NNN «Spune-ne ceva»", () => {
       // One button for both halves, as every message's action is; each half says it in its own words.
       expect(open.text).toContain("E anonim și durează un minut.");
       expect(open.text).toContain("It is anonymous and takes a minute.");
+      // The English half's button is the Romanian form (one action per message); its own language is a link under it.
+      expect(open.text).toContain("Tell us how it was, in English: ");
+      expect(open.text).toContain("/en/contact/tell-us?tip=cum-a-fost&eveniment=sunday-run&data=2026-10-04");
+      expect(open.text).not.toContain("Spune-ne cum a fost, în română");
     });
 
     it("the thank-you with results: the results stay the button, the form a link under them", async () => {

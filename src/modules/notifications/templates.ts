@@ -707,7 +707,9 @@ export function renderBilingual(
     ...(data.organizerSubjectOther ? { organizerSubject: data.organizerSubjectOther } : {}),
     ...(data.organizerBodyOther ? { organizerBody: data.organizerBodyOther } : {}),
     // «Spune-ne ceva» (§NNN): the form in the second half's own language, as a link and as `{feedbackLink}`.
-    ...(data.feedbackUrlOther ? { feedbackUrl: data.feedbackUrlOther } : {}),
+    // The half's button is the first half's (one action per message), so a thank-you without results also
+    // lists the form in this half's own language under it (`feedbackButtonOtherLanguage`).
+    ...(data.feedbackUrlOther ? { feedbackUrl: data.feedbackUrlOther, feedbackButtonOtherLanguage: true } : {}),
     ...(data.feedbackLinkOther ? { feedbackLink: data.feedbackLinkOther } : {}),
     // The newsletter's own words and topics in the second half's language (§445).
     ...(data.newsletterSubjectOther ? { newsletterSubject: data.newsletterSubjectOther } : {}),
@@ -849,6 +851,12 @@ export type TemplateData = {
   feedbackUrl?: string;
   /** The same form in the other language, for the bilingual message's second half. */
   feedbackUrlOther?: string;
+  /**
+   * Set on the bilingual message's second half alone: its action button opens the form in the first
+   * half's language (one action URL per message), so the thank-you without a results link also lists
+   * `feedbackUrl` — this half's own language — as a link under it.
+   */
+  feedbackButtonOtherLanguage?: boolean;
   /**
    * `{feedbackLink}` in the organizer's message (§NNN): `feedbackUrl` while «Cum a fost» is open, the
    * contact page's address otherwise — never empty, so a sentence the organizer wrote around it reads.
@@ -1544,7 +1552,14 @@ const T = {
         "Ne vedem la următoarea alergare.",
       ],
       action: (d: TemplateData) => (d.thanksUrl || !d.feedbackUrl ? "Rezultate și poze" : "Spune-ne cum a fost"),
-      links: (d: TemplateData) => (d.thanksUrl && d.feedbackUrl ? [{ label: "Spune-ne cum a fost", url: d.feedbackUrl }] : []),
+      links: (d: TemplateData) =>
+        !d.feedbackUrl
+          ? []
+          : d.thanksUrl
+            ? [{ label: "Spune-ne cum a fost", url: d.feedbackUrl }]
+            : d.feedbackButtonOtherLanguage
+              ? [{ label: "Spune-ne cum a fost, în română", url: d.feedbackUrl }]
+              : [],
       emphasis: (d: TemplateData, b: readonly string[]): Emphasis => (d.thanksUrl || d.feedbackUrl ? { highlight: [b[1]], actionAfter: b[1] } : { highlight: [b[0]] }),
     },
     declarationSigned: {
@@ -2243,7 +2258,14 @@ const T = {
         "See you at the next run.",
       ],
       action: (d: TemplateData) => (d.thanksUrl || !d.feedbackUrl ? "Results and photos" : "Tell us how it was"),
-      links: (d: TemplateData) => (d.thanksUrl && d.feedbackUrl ? [{ label: "Tell us how it was", url: d.feedbackUrl }] : []),
+      links: (d: TemplateData) =>
+        !d.feedbackUrl
+          ? []
+          : d.thanksUrl
+            ? [{ label: "Tell us how it was", url: d.feedbackUrl }]
+            : d.feedbackButtonOtherLanguage
+              ? [{ label: "Tell us how it was, in English", url: d.feedbackUrl }]
+              : [],
       emphasis: (d: TemplateData, b: readonly string[]): Emphasis => (d.thanksUrl || d.feedbackUrl ? { highlight: [b[1]], actionAfter: b[1] } : { highlight: [b[0]] }),
     },
     declarationSigned: {
