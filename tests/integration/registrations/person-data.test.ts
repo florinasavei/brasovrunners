@@ -106,6 +106,7 @@ describe("BR-REQ-070-01 everything held about a person", () => {
       idempotencyKey: "cancelled-1",
       status: "SENT",
       sentAt: NOW,
+      deliveredAt: NOW,
     });
     const interest = canonicalizeEmail("ana.pop@gmail.com");
     await db.insert(registrationInterests).values({
@@ -134,6 +135,9 @@ describe("BR-REQ-070-01 everything held about a person", () => {
       listOptOut: true,
     });
     expect(data.messages.map((message) => [message.messageType, message.status])).toEqual([["REGISTRATION_CANCELLED", "SENT"]]);
+    // What the provider reported is the person's too (§670): the delivery, never the provider's words.
+    expect(data.messages[0]).toMatchObject({ deliveredAt: NOW, rejectedAt: null, rejectionCause: null, laterDeliveredAt: null });
+    expect(Object.keys(data.messages[0])).not.toContain("providerDetail");
     // The "Anunță-mă" address is matched the same way, and it is its own row: no participant.
     expect(data.announcementRequests).toHaveLength(1);
 

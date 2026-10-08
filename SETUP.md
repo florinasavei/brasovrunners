@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.73-2026-10-06 -->
+<!-- PROJECT_BASELINE: BR-V2.74-2026-10-08 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.73-2026-10-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.74-2026-10-08`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1005,7 +1005,10 @@ Providers:
       with `/api/health` reading `ok` on both. Production: `MAILGUN_WEBHOOK_SIGNING_KEY` set,
       the domain-level webhook "brasovrunners production" on delivered / permanent failure /
       temporary failure / spam complaints; a second webhook "brasovrunners qa" points at QA.
-      QA still sends from the sandbox until its own sending key is made (optional).
+      QA still sends from the sandbox until its own sending key is made (optional). Since §670
+      (2026-10-08) §35 step 5 is the rule: both addresses on Delivered, Permanent Failure and Spam
+      Complaints of the club's sending domain — the record above is how it was first set, and which
+      of the two addresses each event carries now is to be checked in Mailgun against step 5.
 - [x] Production config rejects unsafe resources/modes — the development switcher
       (`tests/unit/config/env.test.ts`), live delivery anywhere else
       (`notifications/modes.test.ts`), test registrations, twice
@@ -1196,11 +1199,28 @@ set (`env.ts` defaults both); `EMAIL_REPLY_TO` is set only when a club mailbox e
 4. **Mailgun → Sending → Domain settings → Sending API keys → Create** for this domain →
    `MAILGUN_API_KEY`. A domain-scoped key, not the account's private key.
 5. **Mailgun → Sending → Webhooks** (domain `mail.<club domain>`): copy the **HTTP webhook
-   signing key** → `MAILGUN_WEBHOOK_SIGNING_KEY`; add `https://<production host>/api/webhooks/mailgun`
-   for **Permanent Failure** and **Spam Complaints** — the two events the application acts on
-   (`BOUNCED`/`COMPLAINED` on the outbox row, "email respins" at the desk and on the
-   registration, `DECISIONS.md` §76). "Delivered" is optional and harmless; "Temporary
-   Failure" is ignored by the route.
+   signing key** → `MAILGUN_WEBHOOK_SIGNING_KEY` (one key per domain: the same value on both Vercel
+   projects). Add **both** deployments' addresses — `https://<production host>/api/webhooks/mailgun`
+   and `https://<QA host>/api/webhooks/mailgun` — to each of the three events the application acts
+   on (`DECISIONS.md` §76, §670):
+   - **Delivered** — required since §670: it is what tells a registration that a refused email's
+     address works again, or that the same email — or one that carries it, as the confirmation
+     «Retrimite QR» sends carries the race number — arrived after all. Without it nothing ever clears
+     and every «Email respins» stays as it was. Mailgun does not retry a delivery notification: a
+     `delivered` event the webhook missed (a 5xx, a deployment, the domain down) is never replayed, and
+     the refusal it would have cleared stays until such an email is delivered again;
+   - **Permanent Failure** — `BOUNCED` on the outbox row, with its cause («Email respins»);
+   - **Spam Complaints** — `COMPLAINED`.
+
+   "Temporary Failure" is ignored by the route; leave it off. Mailgun takes up to three URLs per
+   event. Every message carries a tag naming the deployment it left from (`env:production`,
+   `env:qa`), and each deployment's webhook answers the other's events without opening its
+   database, so the shared domain wakes neither for the other. Check it worked: Mailgun's «Test
+   webhook» on Delivered answers 200 from both addresses (a test event names no message of ours, so it
+   changes nothing), and Mailgun → Sending → Logs shows the webhook delivered for the next real email.
+   Afterwards «Sarcini» watches it (`DECISIONS.md` §671): when the participants' emails that left by
+   Mailgun in the last seven days carry not one delivery, it shows the red row «Mailgun nu trimite
+   evenimentele „Delivered”» with this step's values filled in; the row goes at the first delivery reported.
 6. **Rehearse on QA first** — production refuses every registration until the club's legal
    texts are approved (§30), so a registration there cannot be walked yet. On the QA Vercel
    project set `MAILGUN_DOMAIN=mail.<club domain>`, `MAILGUN_API_KEY` (QA's **own** sending key,
@@ -1231,7 +1251,11 @@ set (`env.ts` defaults both); `EMAIL_REPLY_TO` is set only when a club mailbox e
 Sandbox afterwards: unused since 2026-09-23 — QA sends through the club domain with its own key
 (step 6, `DECISIONS.md` §307). Two consequences to remember: QA and production share the domain's
 daily allowance (a rehearsal's messages count against the same hundred a day), and the domain's
-webhooks point at production, so a QA bounce is recorded on production's outbox, not QA's.
+webhooks and its suppression list. Both deployments' addresses are on every webhook (step 5) and each
+acts only on its own messages' events, by the tag (§670) — a message sent before the tag existed is
+acted on by both, and matches no row on the one that did not send it. The suppression list is not
+split: a QA rehearsal's typo that bounces suppresses that address for production too, and a production
+email to it then reads «Mailgun nu mai trimite» with no production cause in its history.
 
 **Probation: 100 messages an hour.** Mailgun's notice of 2026-10-01 said: «You are sending too
 fast. Your account is on probation and domains are limited to 100 messages / hour. To maintain

@@ -27,6 +27,7 @@ import {
   findRegistrationDetailForAdmin,
   listDeclarationAcceptances,
   listOutboxHistory,
+  type OutboxHistoryRow,
   termsLineKindFor,
 } from "@/modules/registrations/admin-repository";
 import { readEmergencyDetails, readRegistrationAnswers } from "@/modules/registrations/admin-service";
@@ -89,8 +90,12 @@ import GivePlaceButton from "@/modules/registrations/ui/GivePlaceButton";
 import PaperConfirmationTip from "@/modules/registrations/ui/PaperConfirmationTip";
 import OfferPlaceButton from "@/modules/registrations/ui/OfferPlaceButton";
 import WhatToTell from "@/modules/registrations/ui/WhatToTell";
-import EmailRejectedChip from "@/modules/registrations/ui/EmailRejectedChip";
-import { rejectedEmailSentences, rejectedEmailWords } from "@/modules/registrations/ui/rejected-email-words";
+import EmailStateLine from "@/modules/registrations/ui/EmailStateLine";
+import { rejectedEmailWords, resendWarning, withResendWarning } from "@/modules/registrations/ui/rejected-email-words";
+import { EMAILS_SHOWN, emailHistoryWords, isClubRow } from "@/modules/registrations/ui/email-history-words";
+import { needsEmailAction } from "@/modules/registrations/domain/email-state";
+import { countForm } from "@/i18n/count-form";
+import Panel from "@/shared/ui/Panel";
 import { whatToTell } from "@/modules/registrations/ui/tell-words";
 import { givePlaceNowAhead, staffOfferIfMadeNow, staffOfferQuestion } from "@/modules/registrations/give-place-tip";
 import { findInvitationOfRegistration, findLiveInvitationOfParticipant } from "@/modules/registrations/invitation-repository";
@@ -193,10 +198,31 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const offerForecast = registration.status === "WAITLISTED" && mayManage ? await staffOfferIfMadeNow(registration.eventId, locale) : null;
   // The timeline's short form with the time (§349): a value beside its label, so capitalised;
   // `dtInline` inside a sentence.
-  // «Email respins» in words (§663): the chip's tooltip and the line under the address say the same.
-  const rejected = registration.emailRejected
-    ? rejectedEmailWords({ ...registration.emailRejected, emailConfirmedAt: registration.emailConfirmedAt }, locale)
+  /*
+    The email state in words (§663, §671): the short line under the address and one to-do by who reads it —
+    the Administrator is told the press, the Organizer to ask for it (§289) — and the whole story, the long
+    name and the provider's small print, in «Emailuri». An email sent again waits: its line is grey, and the
+    section opens by itself only while somebody must act.
+  */
+  const emailState = registration.emailState;
+  const emailWords = emailState
+    ? rejectedEmailWords(
+        {
+          ...emailState,
+          emailConfirmedAt: registration.emailConfirmedAt,
+          emailVerifiedAt: registration.emailVerifiedAt,
+          confirmed: registration.status === "CONFIRMED",
+        },
+        locale,
+        mayManage ? "administrator" : "organizer",
+      )
     : null;
+  const emailNeedsAction = needsEmailAction(emailState);
+  // What the last refusal says of a resend, as each question's first sentence (§671).
+  const resendWarned = (body: string) => withResendWarning(body, resendWarning(emailState, locale));
+  // «Emailuri» (§671): the participant's own, newest first, the first few in view; the club's apart, by role.
+  const ownEmails = outboxHistory.filter((row) => !isClubRow(row));
+  const clubEmails = outboxHistory.filter((row) => isClubRow(row));
   const dt = (value: Date | null) => (value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }) : null);
   const dtInline = (value: Date | null) =>
     value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }) : null;
@@ -433,8 +459,6 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             href: getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: member.id } } }),
           }))}
         />
-        {/* The newest email was rejected (§76, §663): which, when and why, so somebody calls. */}
-        {rejected && <EmailRejectedChip label={tr("registrations.emailRejected")} sentences={rejectedEmailSentences(rejected)} reason={rejected.reason} />}
         {/* BR-REQ-037-05: a staff-entered row behaves exactly like any other, and says so. */}
         {registration.source === "STAFF" && (
           <Chip size="small" variant="outlined" label={tr("registrations.enteredByStaff")} />
@@ -450,16 +474,17 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       <Typography variant="body2" color="text.secondary">
         {registration.participantEmail} · {registration.eventTitle ?? registration.eventId}
       </Typography>
-      {/* Under the address it is about (§663): the chip's words in full, for whoever reads rather than hovers. */}
-      {rejected && (
-        <Typography variant="body2" color="error" data-testid="email-rejected-words">
-          {rejectedEmailSentences(rejected).join(" ")}
-          {rejected.reason && (
-            <Typography component="small" variant="caption" color="text.secondary" sx={{ display: "block", wordBreak: "break-word" }}>
-              {rejected.reason}
-            </Typography>
-          )}
-        </Typography>
+      {/*
+        Under the address it is about (§663, §671): the list's own line — a link to «Emailuri» below, where the
+        whole story is — and what to do, by who reads it. Never the address's change: that is the person's (§645).
+      */}
+      {emailWords && (
+        <Box data-testid="email-state">
+          <EmailStateLine href="#emailuri" words={emailWords} />
+          <Typography variant="body2" color={emailNeedsAction ? "text.primary" : "text.secondary"} data-testid="email-state-todo">
+            {emailWords.todo}
+          </Typography>
+        </Box>
       )}
       {/* From an invitation by email (§647): who sent it and when, read by every role that reads this page. */}
       {invitedBy && (
@@ -537,7 +562,13 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           <ActionForm
             action={resendRegistrationEmailAction}
             confirm={withSendNowChoice(
-              { title: tr("confirm.resendTitle"), body: tr(`confirm.resendWhat.${registration.status}`, { name: registration.registeredName }), ...(registration.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: tr("registrations.resend"), cancelLabel: words.cancel },
+              {
+                title: tr("confirm.resendTitle"),
+                body: resendWarned(tr(`confirm.resendWhat.${registration.status}`, { name: registration.registeredName })),
+                ...(registration.kind === "TEST" ? {} : { email: words.email(1) }),
+                confirmLabel: tr("registrations.resend"),
+                cancelLabel: words.cancel,
+              },
               sendNow,
             )}
             data-testid="resend-form"
@@ -555,7 +586,13 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           <ActionForm
             action={resendRegistrationEmailAction}
             confirm={withSendNowChoice(
-              { title: tr("confirm.reminderTitle"), body: tr("confirm.reminderBody", { name: registration.registeredName }), ...(registration.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: tr("registrations.sendReminder"), cancelLabel: words.cancel },
+              {
+                title: tr("confirm.reminderTitle"),
+                body: resendWarned(tr("confirm.reminderBody", { name: registration.registeredName })),
+                ...(registration.kind === "TEST" ? {} : { email: words.email(1) }),
+                confirmLabel: tr("registrations.sendReminder"),
+                cancelLabel: words.cancel,
+              },
               sendNow,
             )}
             data-testid="reminder-form"
@@ -612,6 +649,59 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           </Stack>
         </ActionForm>
       )}
+
+      {/*
+        «Emailuri» (§671; it replaced «Istoric email» at the foot of the page): after the verbs, so the resend
+        presses stay where the thumb finds them, and the address under the name links here. The whole story
+        of the state first — the long name, when, why, whether the address had been confirmed, the provider's
+        small print — then every email, newest first, in two short lines each: the participant's own, the
+        first few in view and the rest one fold away; the club's (the archive, the notice, the copies) behind
+        their own fold, by role and never by a club mailbox's address. Open by itself only while somebody must
+        act. Every role that reads the page reads it; nothing here changes anything.
+      */}
+      <Panel
+        glyph="email"
+        level={3}
+        collapsible
+        title={tr("registrations.emails.title")}
+        aside={tr(`registrations.emails.count.${countForm(outboxHistory.length, locale)}`, { count: outboxHistory.length })}
+        openWhen={{ attention: emailNeedsAction }}
+        id="emailuri"
+        data-testid="emails-section"
+      >
+        <Stack spacing={1.5}>
+          {emailWords && (
+            <Typography variant="body2" data-testid="emails-story">
+              {[emailWords.which, emailWords.why, emailWords.context].join(" ")}
+              {emailWords.reason && (
+                <Typography component="small" variant="caption" color="text.secondary" sx={{ display: "block", wordBreak: "break-word" }}>
+                  {emailWords.reason}
+                </Typography>
+              )}
+            </Typography>
+          )}
+          {ownEmails.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">
+              {tr("registrations.emails.none")}
+            </Typography>
+          ) : (
+            emailRows(ownEmails.slice(0, EMAILS_SHOWN), locale, "emails-own")
+          )}
+          {ownEmails.length > EMAILS_SHOWN && (
+            <Panel variant="help" title={tr("registrations.emails.all", { count: ownEmails.length })} data-testid="emails-all">
+              {emailRows(ownEmails.slice(EMAILS_SHOWN), locale, "emails-rest")}
+            </Panel>
+          )}
+          {clubEmails.length > 0 && (
+            <Panel variant="help" title={tr("registrations.emails.club", { count: clubEmails.length })} data-testid="emails-club">
+              {emailRows(clubEmails, locale, "emails-club-rows")}
+            </Panel>
+          )}
+          <Typography variant="caption" color="text.secondary" data-testid="emails-legend">
+            {`${tr("registrations.emails.legend")} ${tr("registrations.emails.legendKept")}`}
+          </Typography>
+        </Stack>
+      </Panel>
 
       {/*
         Emergency and health (§322): for the people they are for, and only when asked. Folded
@@ -1544,19 +1634,33 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         </Stack>
       )}
 
-      <Stack spacing={1}>
-        <Typography variant="h3" sx={{ fontSize: "1rem" }}>
-          {tr("registrations.outboxHistory")}
-        </Typography>
-        {outboxHistory.map((row, index) => (
-          <Typography key={index} variant="body2" color="text.secondary">
-            {dt(row.createdAt)} · {row.messageType} · {row.status}
-            {row.isManualResend ? ` · ${tr("registrations.resend")}` : ""}
-            {/* A club mailbox's copy (§320), so it does not read as the participant being sent it twice. */}
-            {row.clubCopy ? ` · ${tr("registrations.outboxClubCopy")}` : ""}
-          </Typography>
-        ))}
-      </Stack>
+    </Stack>
+  );
+}
+
+/**
+ * The rows of «Emailuri» (§671), each in two short lines — which email for whom, and what became of it — and,
+ * under a refusal, the provider's code and words, why in plain words and what came after, in small print.
+ */
+function emailRows(rows: readonly OutboxHistoryRow[], locale: string, testId: string) {
+  return (
+    <Stack component="ul" spacing={1} sx={{ listStyle: "none", m: 0, p: 0 }} data-testid={testId}>
+      {rows.map((row, index) => {
+        const said = emailHistoryWords(row, locale);
+        return (
+          <Box component="li" key={index} data-testid="email-row" data-role={row.recipientRole} data-status={row.status}>
+            <Typography variant="body2">{said.title}</Typography>
+            <Typography variant="body2" color={said.refused ? "error.main" : "text.secondary"}>
+              {said.state}
+            </Typography>
+            {said.notes.map((note, at) => (
+              <Typography key={at} component="small" variant="caption" color="text.secondary" sx={{ display: "block", wordBreak: "break-word" }}>
+                {note}
+              </Typography>
+            ))}
+          </Box>
+        );
+      })}
     </Stack>
   );
 }

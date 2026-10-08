@@ -130,6 +130,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.74` | «Email respins» tells the truth: the runners' own emails, Mailgun's facts kept, what a message carries at its send answers its refusals, one email state that speaks only when somebody must act on something still needed — until the event ends, and a call, or at the desk a word, for a notice that never arrived (§670) · «Email respins» says which email, why and what to do, where the club looks: one line on the list, «Emailuri» on the page, the club's own mailboxes (§671) |
 | `BR-V2.73` | the waiting count's switch sits under the count's (§669) |
 | `BR-V2.72` | «Arată public numărătoarea» unticked hides every public number of the event (§668) |
 | `BR-V2.71` | a job ping answers within twenty seconds; a longer run finishes after the response (§667) |

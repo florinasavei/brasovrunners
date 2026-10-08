@@ -75,6 +75,12 @@ import { PINGER_CADENCE_MINUTES } from "@/modules/jobs/quiet-hours";
 import { countNotRevivedWaiting, readUnreachableWindows } from "@/modules/jobs/unreachable-windows";
 import { unreachableWindowState } from "@/modules/registrations/domain/outage-grace";
 import { getPathname } from "@/i18n/navigation";
+import { countForm } from "@/i18n/count-form";
+import { readClubNotices } from "@/modules/notifications/club-notices";
+import { readClubMailboxRejections } from "@/modules/notifications/club-mailbox-rejections";
+import { clubMailboxesToFix } from "@/modules/notifications/domain/club-mailbox-rejections";
+import { readDeliveryEvidence } from "@/modules/notifications/delivery-evidence";
+import { countNeedingEmailActionByEvent } from "@/modules/registrations/email-state";
 import SubNav from "@/shared/ui/SubNav";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { CLUB_NAME } from "@/theme/brand";
@@ -353,6 +359,21 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     !/vercel\.app$/i.test(hostname) && !/^(localhost|127\.0\.0\.1|\[::1\])$/i.test(hostname);
   // When the domain expires (§435): the two dates from the environment, the arithmetic pure.
   const domain = domainRenewal(env.DOMAIN_REGISTERED_ON, env.DOMAIN_RENEWAL_YEARS, now);
+  /*
+    The club's side of «Email respins» (§671): its own mailboxes that refused its emails in thirty days,
+    whether Mailgun's deliveries arrive at all this week, and per race how many participants have an email
+    that asks somebody to act — counts, never a name or an address; this panel is the Administrator's.
+  */
+  // Independent reads, side by side: the club's mailboxes (after its notices' settings), the deliveries, the per-race counts.
+  const [clubMailboxes, deliveryEvidence, needingEmailAction] = await Promise.all([
+    readClubNotices(db).then((notices) => readClubMailboxRejections(db, notices, env.DECLARATIONS_ARCHIVE_TO, now)),
+    readDeliveryEvidence(db, now),
+    countNeedingEmailActionByEvent(db, now),
+  ]);
+  const titles = new Map(published.map((event) => [event.id, event.title ?? event.id]));
+  const emailAttention = needingEmailAction.flatMap((row) =>
+    titles.has(row.eventId) ? [{ eventId: row.eventId, title: titles.get(row.eventId) as string, count: row.count }] : [],
+  );
   // The outage grace (§657): the latest windows, the claims the newest left lapsed still waiting, and what the row says of them.
   const outageWindows = await readUnreachableWindows(db, 5);
   const notRevivedWaiting = await countNotRevivedWaiting(db, outageWindows, now);
@@ -491,6 +512,10 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       // The same reading the Costuri panel shows, never a second request (§335): null when
       // Neon could not be read at all, so "no quota" and "we could not check" both read `open`.
       neonQuota: neon.ok ? { quotaCuHours: neon.consumption.quotaCuHours, usedCuHours: neon.consumption.cuHours } : null,
+      clubMailboxRefusals: clubMailboxesToFix(clubMailboxes),
+      clubMailboxesRemoved: clubMailboxes.length - clubMailboxesToFix(clubMailboxes),
+      deliveryEvidence,
+      emailAttention,
     }),
   );
 
@@ -660,9 +685,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
           {shown.map((task) => (
             <Box
               component="li"
-              key={task.id}
+              key={task.key ?? task.id}
               // An address for the row: the editors' grey «Copiază și tradu tot» links `#task-translation` (§482).
-              id={`task-${task.id}`}
+              id={`task-${task.key ?? task.id}`}
               sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2, scrollMarginTop: 16 }}
             >
               <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1 }}>
@@ -680,11 +705,27 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
               {/* The row's own sentence for its state when `todo`/`done` cannot say it — a key
                   that is set and does not work is neither (§288). */}
               <Typography variant="body2" color="text.secondary">
-                {t(`items.${task.id}.${task.text ?? (task.state === "done" ? "done" : "todo")}`, howValues)}
+                {(() => {
+                  const sentence = task.text ?? (task.state === "done" ? "done" : "todo");
+                  // A row said by a count (§671) reads its form, never an ICU plural; its own values beside the page's.
+                  const key = task.count !== undefined && task.state !== "done" ? `${sentence}.${countForm(task.count, locale)}` : sentence;
+                  return t(`items.${task.id}.${key}`, { ...howValues, ...task.values, ...(task.count !== undefined ? { count: task.count } : {}) });
+                })()}
                 {task.detail && ` — ${task.detail}`}
               </Typography>
               {/* Where it is done, when that is a screen of this backoffice (§516): gone once the row is. */}
               {task.state !== "done" && <TaskTargetLink locale={locale} role={actor.role} target={TASK_TARGETS[task.id]} />}
+              {/* A race's registrations, filtered to the emails that ask somebody to act (§671): 44 pixels, as every row link. */}
+              {task.registrationsOf && (
+                <Box
+                  component="a"
+                  href={getPathname({ locale, href: { pathname: "/admin/registrations", query: { eventId: task.registrationsOf.eventId, bounced: "1" } } })}
+                  data-testid="task-registrations"
+                  sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, fontSize: "0.875rem", fontWeight: 500 }}
+                >
+                  {t(`items.${task.id}.link`, { event: task.registrationsOf.title })}
+                </Box>
+              )}
               {/*
                 How to do it, on the page, with this deployment's own values filled in — so the
                 answer to "what do I click" is under the task and not in a runbook ("things

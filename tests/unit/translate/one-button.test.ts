@@ -112,7 +112,8 @@ describe("§482 the whole-record button is always there for a role that writes w
   });
 
   it("links a task row by its own address", () => {
-    expect(readFileSync(path.join(ROOT, "src/app/[locale]/admin/tasks/page.tsx"), "utf8")).toContain("id={`task-${task.id}`}");
+    // A row's own key when one id carries several rows (§671); the id otherwise, so «translation» is `#task-translation`.
+    expect(readFileSync(path.join(ROOT, "src/app/[locale]/admin/tasks/page.tsx"), "utf8")).toContain("id={`task-${task.key ?? task.id}`}");
     expect(readFileSync(path.join(ROOT, "src/app/[locale]/admin/layout.tsx"), "utf8")).toContain("#task-translation");
   });
 });

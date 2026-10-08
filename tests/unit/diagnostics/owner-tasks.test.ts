@@ -759,3 +759,71 @@ describe("the email task off production", () => {
   });
 });
 
+/** §671 — the club's side of «Email respins» on «Sarcini»: three rows, each from what the system reports. */
+describe("the email rows of «Sarcini»", () => {
+  const rows = (input: Partial<OwnerTaskInputs>) => ownerTasks({ ...LAUNCHED, ...input });
+
+  it("reds the club's mailboxes row while one refuses, and greens it after thirty quiet days", () => {
+    const red = rows({ clubMailboxRefusals: 2 }).find((task) => task.id === "clubMailboxRefusals");
+    expect(red).toMatchObject({ state: "broken", owner: "club", kind: "check", count: 2 });
+    expect(rows({ clubMailboxRefusals: 0 }).find((task) => task.id === "clubMailboxRefusals")?.state).toBe("done");
+    // Not read: no row at all.
+    expect(rows({}).some((task) => task.id === "clubMailboxRefusals")).toBe(false);
+  });
+
+  it("says «none refused» only when none did, and where the removed ones are when only they refused", () => {
+    // No refusal at all in thirty days: the plain green sentence.
+    const quiet = rows({ clubMailboxRefusals: 0, clubMailboxesRemoved: 0 }).find((task) => task.id === "clubMailboxRefusals");
+    expect(quiet?.state).toBe("done");
+    expect(quiet?.text).toBeUndefined();
+    expect(ro.Admin.tasks.items.clubMailboxRefusals.done).toBe("Nicio adresă a clubului nu a respins emailuri în ultimele 30 de zile.");
+    // Only addresses removed since refused: green, and it points at the panel that still lists them.
+    const removed = rows({ clubMailboxRefusals: 0, clubMailboxesRemoved: 1 }).find((task) => task.id === "clubMailboxRefusals");
+    expect(removed).toMatchObject({ state: "done", text: "doneRemoved" });
+    expect(ro.Admin.tasks.items.clubMailboxRefusals.doneRemoved).toBe(
+      "Nicio adresă din „Copiile clubului” nu cere nimic; adresele scoase între timp apar în „Setări → Emailuri”.",
+    );
+    expect(en.Admin.tasks.items.clubMailboxRefusals.doneRemoved).toContain("Settings → Emails");
+    // One still in the settings outranks the removed: red, by its count.
+    expect(rows({ clubMailboxRefusals: 1, clubMailboxesRemoved: 2 }).find((task) => task.id === "clubMailboxRefusals")).toMatchObject({ state: "broken", count: 1 });
+  });
+
+  it("says Mailgun's «Delivered» events do not arrive only when some left this week and none was reported", () => {
+    expect(rows({ deliveryEvidence: { mailgunSent: 12, delivered: 0 } }).find((task) => task.id === "deliveryReports")).toMatchObject({ state: "broken", kind: "account" });
+    expect(rows({ deliveryEvidence: { mailgunSent: 12, delivered: 3 } }).some((task) => task.id === "deliveryReports")).toBe(false);
+    expect(rows({ deliveryEvidence: { mailgunSent: 0, delivered: 0 } }).some((task) => task.id === "deliveryReports")).toBe(false);
+    // A laptop captures and never hears from Mailgun: nothing owed there.
+    expect(rows({ emailDeliveryMode: "capture", deliveryEvidence: { mailgunSent: 12, delivered: 0 } }).some((task) => task.id === "deliveryReports")).toBe(false);
+  });
+
+  it("gives each race whose participants have an email that needs attention its own row, its count and its filtered list", () => {
+    const tasks = rows({
+      emailAttention: [
+        { eventId: "e1", title: "Crosul", count: 2 },
+        { eventId: "e2", title: "Semimaratonul", count: 0 },
+      ],
+    }).filter((task) => task.id === "emailAttention");
+    expect(tasks).toHaveLength(1);
+    expect(tasks[0]).toMatchObject({ state: "open", key: "emailAttention-e1", values: { event: "Crosul" }, count: 2, registrationsOf: { eventId: "e1", title: "Crosul" } });
+  });
+
+  it("words each row in both catalogues, by count form, under 200 characters, its link on the board", () => {
+    for (const catalogue of [ro, en]) {
+      const items = catalogue.Admin.tasks.items;
+      for (const form of ["one", "few", "other"] as const) {
+        expect(items.clubMailboxRefusals.todo[form]).toContain("{count}");
+        expect(items.emailAttention.todo[form]).toContain("{event}");
+      }
+      expect(items.emailAttention.link).toContain("{event}");
+      expect(items.deliveryReports.how.join("\n")).toContain("{webhookUrl}");
+      const strings = [
+        items.clubMailboxRefusals.title, items.clubMailboxRefusals.done, items.clubMailboxRefusals.doneRemoved, ...Object.values(items.clubMailboxRefusals.todo), ...items.clubMailboxRefusals.how,
+        items.deliveryReports.title, items.deliveryReports.todo, ...items.deliveryReports.how,
+        items.emailAttention.title, items.emailAttention.link, ...Object.values(items.emailAttention.todo), ...items.emailAttention.how,
+      ];
+      for (const text of strings) expect(text.length, text).toBeLessThanOrEqual(200);
+    }
+    expect(ro.Admin.tasks.items.deliveryReports.todo).toBe("Mailgun nu trimite evenimentele „Delivered”; fără ele, „Email respins” nu se stinge.");
+  });
+});
+

@@ -83,7 +83,10 @@ export type TaskId =
   | "contactForm"
   | "domainRenewal"
   | "unreachableWindow"
-  | "neonLimits";
+  | "neonLimits"
+  | "clubMailboxRefusals"
+  | "deliveryReports"
+  | "emailAttention";
 
 /**
  * Each task's kind, typed as a `Record` over every id so a task added without one does not
@@ -120,6 +123,9 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   domainRenewal: "decision",
   unreachableWindow: "check",
   neonLimits: "decision",
+  clubMailboxRefusals: "check",
+  deliveryReports: "account",
+  emailAttention: "check",
 };
 
 export type OwnerTask = {
@@ -142,6 +148,17 @@ export type OwnerTask = {
    * is right and its word is not: a domain thirty days from expiry is red, and still works (§435).
    */
   label?: "due";
+  /**
+   * The row's own key, when one id carries several rows (§671: one per race whose participants have an email
+   * that needs attention); the id otherwise.
+   */
+  key?: string;
+  /** The row's own values for its sentence (an event's title), beside the page's. */
+  values?: Record<string, string>;
+  /** A count the sentence is said by: the page reads `<text>.<form>` (`countForm`), never an ICU plural. */
+  count?: number;
+  /** The registrations list the row's work is done on, filtered by its event and «Doar cu un email respins». */
+  registrationsOf?: { eventId: string; title: string };
 };
 
 /**
@@ -363,6 +380,28 @@ export type OwnerTaskInputs = {
    * step either way — set a limit, or find out why it could not be checked — so both are `open`.
    */
   neonQuota: { quotaCuHours: number | null; usedCuHours: number } | null;
+  /**
+   * How many of the club's own mailboxes refused its emails in the last thirty days and still ask for
+   * something (§671, `clubMailboxesToFix`): red while any does. Absent where the page did not read it.
+   */
+  clubMailboxRefusals?: number;
+  /**
+   * How many of those that refused in the last thirty days have since left «Copiile clubului» (§671): nothing
+   * to do, but «Setări → Emailuri» still lists them, so the green row says where they are rather than that
+   * none refused.
+   */
+  clubMailboxesRemoved?: number;
+  /**
+   * Whether Mailgun's deliveries reach this deployment (§671, `readDeliveryEvidence`): the participants' own
+   * messages that left by Mailgun in the last seven days, and how many of them were reported delivered. A
+   * red row only when some left and none was: without the «Delivered» events no refusal ever clears.
+   */
+  deliveryEvidence?: { mailgunSent: number; delivered: number };
+  /**
+   * Per published event that has not ended, how many of its participants have an email that asks somebody
+   * to act (§671, `countNeedingEmailActionByEvent`): one row each, linking its list filtered.
+   */
+  emailAttention?: ReadonlyArray<{ eventId: string; title: string; count: number }>;
 };
 
 export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
@@ -736,6 +775,40 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     // about to suspend the database", which is the one thing this row exists to say in time.
     text: nearLimit ? "broken" : undefined,
   });
+
+  /*
+    The club's side of «Email respins» (§671). A club mailbox that refuses the archive copy, the
+    confirmation notice or a copy is red until thirty days pass with no refusal; the page's panel says
+    what to do per address. Green says «none refused» only when none did: when the only refusals are of
+    addresses removed since, it says the panel still lists them, with nothing to do.
+  */
+  if (input.clubMailboxRefusals !== undefined) {
+    push("clubMailboxRefusals", {
+      owner: "club",
+      state: input.clubMailboxRefusals > 0 ? "broken" : "done",
+      ...(input.clubMailboxRefusals > 0
+        ? { count: input.clubMailboxRefusals }
+        : (input.clubMailboxesRemoved ?? 0) > 0
+          ? { text: "doneRemoved" }
+          : {}),
+    });
+  }
+  // Mailgun's «Delivered» events do not arrive (§671): only when some left this week and none was reported.
+  if (input.deliveryEvidence && input.emailDeliveryMode !== "capture" && input.deliveryEvidence.mailgunSent > 0 && input.deliveryEvidence.delivered === 0) {
+    push("deliveryReports", { owner: "club", state: "broken" });
+  }
+  // One row per race whose participants have an email that asks somebody to act (§671), gone with the last of them.
+  for (const event of input.emailAttention ?? []) {
+    if (event.count <= 0) continue;
+    push("emailAttention", {
+      owner: "club",
+      state: "open",
+      key: `emailAttention-${event.eventId}`,
+      values: { event: event.title },
+      count: event.count,
+      registrationsOf: { eventId: event.eventId, title: event.title },
+    });
+  }
 
   /**
    * The queued work (the owner, 2026-09-18: "all the queued work, so I can continue

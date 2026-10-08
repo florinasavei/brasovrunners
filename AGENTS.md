@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.73-2026-10-06 -->
+<!-- PROJECT_BASELINE: BR-V2.74-2026-10-08 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V2.73-2026-10-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.74-2026-10-08`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -2180,12 +2180,52 @@ email_outbox
 - last_error null
 - created_at
 - sent_at null
+- delivered_at null            Mailgun's `delivered` for the row's own recipient; set once
+- rejected_at null             the refusal's own instant (the event's, or the send's)
+- rejection_cause null         why: domain/rejection-cause.ts, stored, never recomputed
+- provider_code null           «550 5.1.1», or Mailgun's own «605»
+- provider_detail null         the receiving server's words, redacted, ≤ 200 characters
+- later_delivered_at null      on a refused participant's message: the address took a later one
+- resolved_at null             on a refused participant's message: it, or one that carries it, arrived (or left, for the account's refusal)
+- retried_at null, retried_via null   it, or one that carries it, left again, and by which road
 
 INDEX(status, next_attempt_at, created_at)
 INDEX(registration_id, created_at)
+INDEX(provider_message_id) WHERE provider_message_id IS NOT NULL
+INDEX(participant_id)
 ```
 
-Each deliberate resend gets a new row/idempotency key.
+Each deliberate resend gets a new row/idempotency key. Every message type names whom it is written
+for — the participant, the club's own mailboxes, the staff or the public
+(`notifications/domain/email-audience.ts`) — and only a participant's own message, with their id on
+it and not a club copy, says anything about their address: «Email respins», the registration's email
+state (`registrations/email-state.ts`) and the automatic re-send's refusal read those alone
+(`DECISIONS.md` §670). A message answers a refusal of what it carries
+(`notifications/domain/content-cover.ts`: the confirmation carries the race number and the signed
+declaration, the reminder the race number, and the confirmation, the reminder and the declaration
+request the event's details, which a refused «Detalii actualizate» was to tell) — only a refusal of a
+message queued no later than it was sent: what a message carries is read when it is rendered, at its
+send (`sent_at`), not when it was queued — written on the refused row when it is sent or delivered so it
+outlives the 90-day sweep of `SENT` rows; and an owed or unsent refusal asks somebody to act only
+while the registration it was for still needs what was refused — what the page can send again for its
+status now, and what that carries; «Detalii actualizate» while the event is ahead, and the cancellation
+while it is cancelled and its start ahead, both until the registration is checked in, both for a phone
+call, no press sending them
+(`stillNeededMessageTypes`, `callInstead`) — an address that refuses the club's mail always does.
+**Once the event has ended** (`ends_at`, else the end of its start day in its own time zone) nothing of
+its registrations asks anybody to act — no line on the list, filter, export «Yes», «Ce îi spui» line or desk
+chip; race day still does — and the registration's history keeps every row.
+
+The screens say the state by its cause and by who reads it, from one pure module
+(`registrations/ui/rejected-email-words.ts`, `DECISIONS.md` §671): one line under the name on the list
+(a link to the registration's «Emailuri», only while somebody must act), the same line and a to-do under
+the address — the Administrator told the press that clears it, the Organizer to ask for it, both to phone
+where no press helps — and «Emailuri» on the registration's page, every email newest first, the club's by
+role and never by address; the desk one chip, «Fără QR pe email — caută după nume», for the QR
+confirmation alone; the first sentence of every resend's question says what the last refusal means for it.
+The club's own mailboxes that refuse its emails are on «Setări → Emailuri» (under
+`canReadRegistrations`) and on «Sarcini», beside a red row when Mailgun's «Delivered» events do not
+arrive and a row per race whose participants have an email that asks for something.
 
 ### 12.12 Audit/environment
 
@@ -2896,7 +2936,12 @@ Registration maintenance:
   count for the address and the event — every one that left, and every one the job re-sent whatever
   became of it, the person's «Retrimite» and a staff resend included (`registration:<id>:verify-retry:<n>`); one per address and event, at most 50 a run oldest
   first, none while the outbox is behind (§623) or an email for them waits to leave, never to an address
-  that bounced or complained on any message; no deadline moves and the allocator is not called;
+  whose refusal still stands on any of the participant's own messages, for any event — a complaint, or a
+  refusal with nothing delivered to the address since; not the club's own mailboxes' refusals, not the
+  club's Mailgun account refused at the send, and not a newsletter's: §653's «…for any event or a
+  newsletter» loses its newsletter, which the code never read (a newsletter row carries no participant,
+  and its audience is the public's) (`DECISIONS.md` §670); no deadline moves and the allocator is
+  not called;
 - close remaining waiting-list entries for events that have started, with
   `expiry_reason = EVENT_STARTED`;
 - call fill available spots;
@@ -3109,6 +3154,46 @@ never move into a table the backoffice can read (§14.5), and no screen shows th
 - update sent/delivered/bounced/complained/failed metadata;
 - suppress repeated send where provider indicates permanent failure;
 - no body/secrets/action token in logs.
+
+What the webhook does with an event (`DECISIONS.md` §670; `api/webhooks/mailgun/route.ts`,
+`notifications/mailgun-event.ts`, `applyMailgunEvent`, `notifications/delivery-facts.ts`):
+
+- **an event tagged for another deployment** (`env:<APP_ENV>`, which the adapter puts on every
+  message) is answered without touching the database — QA and production share the sending domain
+  and its webhooks; an untagged event is everyone's;
+- **the row** is found by the provider's message id, else by the row's own idempotency key the
+  message carried (`v:idempotency_key`), and only a row that left;
+- **the recipient** is compared with the row's, as spelled for delivery (`normalizedEmail`, never
+  identity): an event for a copy on the envelope of the club's archive copy leaves the row alone,
+  logged with the row id only, never an address; a participant's message has no copies, so a
+  respelling still lands; a `delivered` event that names nobody changes nothing;
+- **`delivered`** sets `delivered_at` once and never moves the status; **a permanent failure** is
+  `BOUNCED` with its instant (Mailgun's `timestamp`, never later than now), its cause, code and
+  words, keeping `delivered_at` (a delayed bounce); **`complained`** is `COMPLAINED` and a later
+  bounce never overwrites it; a temporary failure changes nothing;
+- **the provider's words are redacted before anything stores them** (`infrastructure/email/redact.ts`:
+  any address, the recipient's local part quoted alone, an IP, a token-length run, then cut to 200
+  characters); only the delivery status's code and words are kept — never the MX host, the sending IP,
+  a geolocation or a client;
+- **a participant's own message settles their earlier refusals**, under the participant's advisory
+  lock and the same whatever order the events arrive in: a later delivery to the address says it
+  works again (`later_delivered_at`, never on a complaint or the account's refusal), and only the
+  same message, or one that carries it (the confirmation for a race number or a signed declaration,
+  `domain/content-cover.ts`), sent no earlier than the refused one was queued and delivered later ends
+  a refusal (`resolved_at`) — the render instant, `sent_at`, is what the message carries: a confirmation
+  sent before a race number was refused never answers it, however late it is delivered, and one queued
+  before it but held by the schedule or the allowance and sent after it does;
+  such a message leaving again marks it (`retried_at`, `retried_via`), and ends a refusal of the club's
+  account — the send asks first, in one round trip, whether there is anything to mark, and takes the
+  lock only then, or when the participant's lock is held. A refusal committed between the probe's
+  snapshot and its lock test goes unmarked: until the covering delivery ends it, or on the Gmail road
+  never (until the next covering send).
+- **retries**: Mailgun retries a webhook it could not deliver for about eight hours (5 and 10 and
+  15 minutes, then 1, 2 and 4 hours), but — by its documentation's own wording — not the delivery
+  notification: a `delivered` event lost to a 5xx or a cold start is never replayed, and the refusal
+  it would have cleared stays until it, or a message that carries it, is delivered again. Whether a retry carries a
+  fresh signature `timestamp` is not documented; if it does not, a retry later than the signature's
+  fifteen minutes (`mailgun-webhook.ts`) is refused — kept as it is, an owner's question (`DECISIONS.md` §670).
 
 ---
 
