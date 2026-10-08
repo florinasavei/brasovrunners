@@ -513,6 +513,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       // Neon could not be read at all, so "no quota" and "we could not check" both read `open`.
       neonQuota: neon.ok ? { quotaCuHours: neon.consumption.quotaCuHours, usedCuHours: neon.consumption.cuHours } : null,
       clubMailboxRefusals: clubMailboxesToFix(clubMailboxes),
+      clubMailboxesRemoved: clubMailboxes.length - clubMailboxesToFix(clubMailboxes),
       deliveryEvidence,
       emailAttention,
     }),

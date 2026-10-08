@@ -19,8 +19,9 @@ const TONE_COLOR: Record<RejectedEmailWords["tone"], string> = {
  * Component with nothing to hydrate, which a keyboard reaches and a touch follows. The glyph is the filter's
  * («Doar cu un email respins»). `flexBasis: 100%` puts it under the name in the name cell's wrapping row,
  * not among the chips, and its weight is the body's — the cell is a bold heading on a phone's card. The
- * link is 44 pixels tall (BR-REQ-041-01 criterion 6); each part of the line is unbreakable, so at 360
- * pixels it wraps between two parts, never inside one.
+ * link is at least 44 pixels tall (BR-REQ-041-01 criterion 6); each part of the line is unbreakable, so it
+ * wraps only between two parts, never inside one: the common line takes one line at 400 pixels, the longest
+ * two at most at 360 and at 400.
  */
 export default function EmailStateLine({ href, words, testId = "email-state-line" }: { href: string; words: Pick<RejectedEmailWords, "line" | "tone">; testId?: string }) {
   return (

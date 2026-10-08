@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import UnsubscribeIcon from "@mui/icons-material/Unsubscribe";
+import { isValidElement, type ReactElement, type ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
@@ -7,7 +8,8 @@ import { EMAIL_AUDIENCE } from "@/modules/notifications/domain/email-audience";
 import { clubMailboxesToFix, groupClubMailboxRejections, type ClubRejectionInput } from "@/modules/notifications/domain/club-mailbox-rejections";
 import { REJECTION_CAUSES, type RejectionCause } from "@/modules/notifications/domain/rejection-cause";
 import type { OutboxHistoryRow } from "@/modules/registrations/admin-repository";
-import { DESK_CODE_MESSAGE_TYPES, EMAIL_STATE_KINDS, isDeskQrMessage, needsEmailAction } from "@/modules/registrations/domain/email-state";
+import { EMAIL_STATE_KINDS, isDeskQrMessage, needsEmailAction } from "@/modules/registrations/domain/email-state";
+import EmailStateLine from "@/modules/registrations/ui/EmailStateLine";
 import { emailHistoryWords, isClubRow } from "@/modules/registrations/ui/email-history-words";
 import {
   causeLabel,
@@ -189,15 +191,19 @@ describe("the line under the name (§NNN)", () => {
   }
 
   it("draws the line as a 44-pixel link under the name, the filter's glyph, never a tooltip island", () => {
-    const line = readFileSync("src/modules/registrations/ui/EmailStateLine.tsx", "utf8");
-    expect(line).not.toContain('"use client"');
-    expect(line).toContain("minHeight: 44");
-    expect(line).toContain('flexBasis: "100%"');
-    expect(line).toContain("@mui/icons-material/Unsubscribe");
-    const list = readFileSync("src/app/[locale]/admin/registrations/(list)/page.tsx", "utf8");
-    expect(list).toContain("<EmailStateLine");
-    expect(list).toContain("#emailuri");
-    expect(list).not.toContain("EmailRejectedChip");
+    // The list and the page hand it its href and words (the integration renders read them); here, what it draws.
+    type Props = Record<string, unknown> & { children?: ReactNode; sx?: Record<string, unknown> };
+    const link = EmailStateLine({ href: "/ro/admin/registrations/r1#emailuri", words: { line: "Adresa nu există · Confirmarea cu QR · 3 oct.", tone: "error" } }) as ReactElement<Props>;
+    expect(link.props.component).toBe("a");
+    expect(link.props.href).toBe("/ro/admin/registrations/r1#emailuri");
+    expect(link.props.sx).toMatchObject({ minHeight: 44, flexBasis: "100%", color: "error.main" });
+    const children = (Array.isArray(link.props.children) ? link.props.children : [link.props.children]).filter((child): child is ReactElement<Props> => isValidElement(child));
+    // The filter's glyph, hidden from a screen reader, then the words at body weight: nothing that opens on hover.
+    expect(children).toHaveLength(2);
+    expect(children[0].type).toBe(UnsubscribeIcon);
+    expect(children[0].props["aria-hidden"]).toBe(true);
+    expect(children[1].props.children).toBe("Adresa nu există · Confirmarea cu QR · 3 oct.");
+    expect((children[1].props.sx as Record<string, unknown>).fontWeight).toBe(400);
   });
 });
 
@@ -231,17 +237,6 @@ describe("the resend questions' first sentence (§NNN, BR-REQ-037-02)", () => {
       expect(withResendWarning("Body.", null)).toBe("Body.");
     });
   }
-
-  it("is the first sentence of every resend question: the list's «Retrimite QR» and «Retrimite familiei», the page's resend and reminder, the bulk declaration", () => {
-    const list = readFileSync("src/app/[locale]/admin/registrations/(list)/page.tsx", "utf8");
-    expect(list.match(/withResendWarning\(/g)).toHaveLength(2);
-    const page = readFileSync("src/app/[locale]/admin/registrations/[id]/page.tsx", "utf8");
-    expect(page).toContain('body: resendWarned(tr(`confirm.resendWhat.${registration.status}`');
-    expect(page).toContain('body: resendWarned(tr("confirm.reminderBody"');
-    const event = readFileSync("src/app/[locale]/admin/events/[id]/page.tsx", "utf8");
-    expect(event).toContain("bulkResend.rejectedFirst.");
-    expect(event).toContain("countAddressRefusingMail(db, event.id, \"PENDING_DECLARATION\")");
-  });
 });
 
 describe("the desk's one chip: the QR confirmation only (§NNN, §67)", () => {
@@ -287,14 +282,8 @@ describe("the desk's one chip: the QR confirmation only (§NNN, §67)", () => {
   }
 
   it("reads the QR confirmation from the cover map and from what carries the desk code", () => {
+    // What carries the desk code is rendered in `render.test.ts`; DeskRow's chip in the screens' integration test.
     expect(["REGISTRATION_CONFIRMED", "BIB_ASSIGNED", "EVENT_REMINDER", "DECLARATION_SIGNED", "EVENT_UPDATE_NOTICE"].filter(isDeskQrMessage)).toEqual(["REGISTRATION_CONFIRMED", "BIB_ASSIGNED"]);
-    // The messages said to carry the desk code are the ones `render.ts` gives a check-in code and its QR.
-    const render = readFileSync("src/modules/notifications/render.ts", "utf8");
-    const condition = /\(row\.messageType === "([A-Z_]+)" \|\| row\.messageType === "([A-Z_]+)" \|\| row\.messageType === "([A-Z_]+)"\) &&\s*registration\?\.status === "CONFIRMED"/.exec(render);
-    expect(condition?.slice(1).sort()).toEqual([...DESK_CODE_MESSAGE_TYPES].sort());
-    const row = readFileSync("src/modules/registrations/ui/DeskRow.tsx", "utf8");
-    expect(row).toContain("<DeskEmailChip");
-    expect(row).toContain('"desk").desk');
   });
 });
 
@@ -402,17 +391,6 @@ describe("the club's own mailboxes (§NNN)", () => {
     for (const cause of ["suppressed", "unsubscribed", "complaint-suppressed"] as const) {
       expect(groupClubMailboxRejections([input({ cause })], { declarationCopies: [] })[0].todo, cause).toBe("suppressed");
     }
-  });
-
-  it("draws the panel on «Setări → Emailuri» under the registrations' reading gate, and only when something was refused", () => {
-    const page = readFileSync("src/app/[locale]/admin/settings/emails/page.tsx", "utf8");
-    expect(page).toContain("const maySeeQueue = canReadRegistrations(staff.role);");
-    expect(page).toContain("maySeeQueue && notices ? await readClubMailboxRejections(");
-    expect(page).toContain("{clubRejections.length > 0 && <ClubMailboxRejectionsPanel");
-    const panel = readFileSync("src/modules/notifications/ui/ClubMailboxRejectionsPanel.tsx", "utf8");
-    expect(panel).toContain('id="club-mailbox-rejections"');
-    // The address only while it is still the club's (`listClubMailboxRejections` nulls it otherwise), else the role alone.
-    expect(panel).toContain("group.address ? `${group.address} · ${role}` : role");
   });
 
   for (const locale of ["ro", "en"] as const) {

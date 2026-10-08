@@ -771,6 +771,23 @@ describe("the email rows of «Sarcini»", () => {
     expect(rows({}).some((task) => task.id === "clubMailboxRefusals")).toBe(false);
   });
 
+  it("says «none refused» only when none did, and where the removed ones are when only they refused", () => {
+    // No refusal at all in thirty days: the plain green sentence.
+    const quiet = rows({ clubMailboxRefusals: 0, clubMailboxesRemoved: 0 }).find((task) => task.id === "clubMailboxRefusals");
+    expect(quiet?.state).toBe("done");
+    expect(quiet?.text).toBeUndefined();
+    expect(ro.Admin.tasks.items.clubMailboxRefusals.done).toBe("Nicio adresă a clubului nu a respins emailuri în ultimele 30 de zile.");
+    // Only addresses removed since refused: green, and it points at the panel that still lists them.
+    const removed = rows({ clubMailboxRefusals: 0, clubMailboxesRemoved: 1 }).find((task) => task.id === "clubMailboxRefusals");
+    expect(removed).toMatchObject({ state: "done", text: "doneRemoved" });
+    expect(ro.Admin.tasks.items.clubMailboxRefusals.doneRemoved).toBe(
+      "Nicio adresă din „Copiile clubului” nu cere ceva; adresele scoase între timp apar în „Setări → Emailuri”.",
+    );
+    expect(en.Admin.tasks.items.clubMailboxRefusals.doneRemoved).toContain("Settings → Emails");
+    // One still in the settings outranks the removed: red, by its count.
+    expect(rows({ clubMailboxRefusals: 1, clubMailboxesRemoved: 2 }).find((task) => task.id === "clubMailboxRefusals")).toMatchObject({ state: "broken", count: 1 });
+  });
+
   it("says Mailgun's «Delivered» events do not arrive only when some left this week and none was reported", () => {
     expect(rows({ deliveryEvidence: { mailgunSent: 12, delivered: 0 } }).find((task) => task.id === "deliveryReports")).toMatchObject({ state: "broken", kind: "account" });
     expect(rows({ deliveryEvidence: { mailgunSent: 12, delivered: 3 } }).some((task) => task.id === "deliveryReports")).toBe(false);
@@ -800,7 +817,7 @@ describe("the email rows of «Sarcini»", () => {
       expect(items.emailAttention.link).toContain("{event}");
       expect(items.deliveryReports.how.join("\n")).toContain("{webhookUrl}");
       const strings = [
-        items.clubMailboxRefusals.title, items.clubMailboxRefusals.done, ...Object.values(items.clubMailboxRefusals.todo), ...items.clubMailboxRefusals.how,
+        items.clubMailboxRefusals.title, items.clubMailboxRefusals.done, items.clubMailboxRefusals.doneRemoved, ...Object.values(items.clubMailboxRefusals.todo), ...items.clubMailboxRefusals.how,
         items.deliveryReports.title, items.deliveryReports.todo, ...items.deliveryReports.how,
         items.emailAttention.title, items.emailAttention.link, ...Object.values(items.emailAttention.todo), ...items.emailAttention.how,
       ];

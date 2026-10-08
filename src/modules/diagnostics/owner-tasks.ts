@@ -386,6 +386,12 @@ export type OwnerTaskInputs = {
    */
   clubMailboxRefusals?: number;
   /**
+   * How many of those that refused in the last thirty days have since left «Copiile clubului» (§NNN): nothing
+   * to do, but «Setări → Emailuri» still lists them, so the green row says where they are rather than that
+   * none refused.
+   */
+  clubMailboxesRemoved?: number;
+  /**
    * Whether Mailgun's deliveries reach this deployment (§NNN, `readDeliveryEvidence`): the participants' own
    * messages that left by Mailgun in the last seven days, and how many of them were reported delivered. A
    * red row only when some left and none was: without the «Delivered» events no refusal ever clears.
@@ -773,13 +779,18 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   /*
     The club's side of «Email respins» (§NNN). A club mailbox that refuses the archive copy, the
     confirmation notice or a copy is red until thirty days pass with no refusal; the page's panel says
-    what to do per address.
+    what to do per address. Green says «none refused» only when none did: when the only refusals are of
+    addresses removed since, it says the panel still lists them, with nothing to do.
   */
   if (input.clubMailboxRefusals !== undefined) {
     push("clubMailboxRefusals", {
       owner: "club",
       state: input.clubMailboxRefusals > 0 ? "broken" : "done",
-      ...(input.clubMailboxRefusals > 0 ? { count: input.clubMailboxRefusals } : {}),
+      ...(input.clubMailboxRefusals > 0
+        ? { count: input.clubMailboxRefusals }
+        : (input.clubMailboxesRemoved ?? 0) > 0
+          ? { text: "doneRemoved" }
+          : {}),
     });
   }
   // Mailgun's «Delivered» events do not arrive (§NNN): only when some left this week and none was reported.

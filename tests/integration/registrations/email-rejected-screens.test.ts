@@ -91,6 +91,7 @@ const { default: WhatToTell } = await import("@/modules/registrations/ui/WhatToT
 const { default: DeskRow } = await import("@/modules/registrations/ui/DeskRow");
 const { default: ClubMailboxRejectionsPanel } = await import("@/modules/notifications/ui/ClubMailboxRejectionsPanel");
 const { default: EmailTemplatesPage } = await import("@/app/[locale]/admin/settings/emails/page");
+const { default: EditEventPage } = await import("@/app/[locale]/admin/events/[id]/page");
 
 type Props = Record<string, unknown> & { children?: ReactNode };
 
@@ -301,16 +302,54 @@ describe("the list: one line under the name, a link to «Emailuri» (§NNN)", ()
   it("asks before a resend what the last refusal says of it — the row's and the family's question alike", async () => {
     const race = await createRace();
     const id = await register(race.id, { emailConfirmedAt: CONFIRMED_AT, confirmedAt: CONFIRMED_AT, bibNumber: 17 });
+    // A family member on the same address at the same event (§543): the row carries «Retrimite familiei» too.
+    await register(race.id, { participantId: await participantOf(id), emailConfirmedAt: CONFIRMED_AT, confirmedAt: CONFIRMED_AT, bibNumber: 18 });
     await outbox(id, { messageType: "REGISTRATION_CONFIRMED", status: "BOUNCED", at: BIB_SENT, cause: "suppressed", rejected: true, key: "suppressed" });
     state.actor = await staff();
     const { tree } = await listOf({ eventId: race.id });
     const table = elements(tree).find((element) => element.type === AdminTable);
-    const actions = (table?.props.rowActions as (row: unknown) => ReactNode)((table?.props.rows as unknown[])[0]);
+    const row = (table?.props.rows as { id: string }[]).find((candidate) => candidate.id === id);
+    const actions = (table?.props.rowActions as (row: unknown) => ReactNode)(row);
     const forms = elements(actions).filter((element) => typeof element.props.confirm === "object" && element.props.confirm !== null);
-    const resend = forms.find((element) => (element.props.confirm as { title: string }).title === ro.Admin.confirm.resendTitle);
+    const bodyOf = (title: string) => (forms.find((element) => (element.props.confirm as { title: string }).title === title)?.props.confirm as { body: string } | undefined)?.body;
     const name = (await findRegistrationDetailForAdmin(db, id))!.registeredName;
     // The warning first; the question's own sentence unchanged; the press never blocked.
-    expect((resend?.props.confirm as { body: string }).body).toBe(`${words.warn.suppressed} ${fill(ro.Admin.confirm.resendWhat.CONFIRMED, { name })}`);
+    expect(bodyOf(ro.Admin.confirm.resendTitle)).toBe(`${words.warn.suppressed} ${fill(ro.Admin.confirm.resendWhat.CONFIRMED, { name })}`);
+    // «Retrimite familiei»: one address for the whole family, so the same warning opens its question.
+    expect(bodyOf(ro.Admin.confirm.resendFamilyTitle)?.startsWith(`${words.warn.suppressed} `)).toBe(true);
+  });
+});
+
+describe("«Retrimite declarația tuturor care nu au semnat» (§606, §NNN, BR-REQ-037-02)", () => {
+  /** Every element under `node`, the props that carry elements included (the event page's `below`). */
+  function everything(node: ReactNode, acc: ReactElement<Props>[] = []): ReactElement<Props>[] {
+    for (const element of elements(node)) {
+      acc.push(element);
+      for (const [key, value] of Object.entries(element.props)) {
+        if (key !== "children" && (isValidElement(value) || Array.isArray(value))) everything(value as ReactNode, acc);
+      }
+    }
+    return acc;
+  }
+  const bulkBody = async (eventId: string) => {
+    const tree = await EditEventPage({ params: Promise.resolve({ locale: "ro", id: eventId }), searchParams: Promise.resolve({}) } as never);
+    const form = everything(tree).find((element) => element.props["data-testid"] === "bulk-resend-form");
+    return (form?.props.confirm as { body: string } | undefined)?.body;
+  };
+  const waiting = { status: "PENDING_DECLARATION" as const, holdExpiresAt: new Date("2099-11-19T08:00:00.000Z") };
+
+  it("opens with how many of those who wait to sign have an address that refuses mail; nothing when none has", async () => {
+    const race = await createRace();
+    const refusing = await register(race.id, waiting);
+    await register(race.id, waiting);
+    state.actor = await staff();
+    // Nobody's address refuses mail: the question's own words, nothing before them.
+    const plain = await bulkBody(race.id);
+    expect(plain?.startsWith(fill(ro.Admin.bulkResend.waiting.few, { count: "2" }))).toBe(true);
+    // One of the two: the warning first, then the same question — the press never blocked.
+    await outbox(refusing, { messageType: "COMPLETE_DECLARATION", status: "BOUNCED", at: BIB_SENT, cause: "no-such-address", rejected: true, key: "declaration" });
+    const warned = await bulkBody(race.id);
+    expect(warned).toBe(`${fill(ro.Admin.bulkResend.rejectedFirst.one, { count: "1" })} ${plain}`);
   });
 });
 
@@ -477,16 +516,18 @@ describe("the club's own side (§NNN)", () => {
     expect(fold?.props.tone).toBe("risk");
   });
 
-  it("draws the panel on «Setări → Emailuri» for the Organizer, who reads the registrations, and never for the Tehnic role", async () => {
+  it("draws the panel on «Setări → Emailuri» only when a club mailbox refused something, for the Organizer, who reads the registrations, and never for the Tehnic role", async () => {
     const race = await createRace();
     const id = await register(race.id);
-    // A confirmation notice to an address no longer in the club's settings: drawn by its role, closed, no amber.
-    await outbox(id, { messageType: "CLUB_CONFIRMATION_NOTICE", status: "BOUNCED", at: new Date(Date.now() - 86_400_000), cause: "suppressed", rejected: true, recipient: "gone@example.org", key: "notice-page" });
-    const panelOf = async (role: "MODERATOR" | "DEV") => {
+    const panelOf = async (role: "ADMIN" | "MODERATOR" | "DEV") => {
       state.actor = await staff(role);
       const page = await EmailTemplatesPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({}) });
       return elements(page).filter((element) => element.type === ClubMailboxRejectionsPanel);
     };
+    // Nothing refused in thirty days: no panel, even for the Administrator.
+    expect(await panelOf("ADMIN")).toHaveLength(0);
+    // A confirmation notice to an address no longer in the club's settings: drawn by its role, closed, no amber.
+    await outbox(id, { messageType: "CLUB_CONFIRMATION_NOTICE", status: "BOUNCED", at: new Date(Date.now() - 86_400_000), cause: "suppressed", rejected: true, recipient: "gone@example.org", key: "notice-page" });
     const organizer = await panelOf("MODERATOR");
     expect(organizer).toHaveLength(1);
     const groups = organizer[0].props.groups as Awaited<ReturnType<typeof readClubMailboxRejections>>;

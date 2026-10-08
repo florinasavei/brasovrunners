@@ -5,6 +5,8 @@ import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { renderOutboxMessage } from "@/modules/notifications/render";
+import type { EmailMessageType } from "@/db/schema/email-outbox";
+import { DESK_CODE_MESSAGE_TYPES } from "@/modules/registrations/domain/email-state";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { hoursPhrase } from "@/modules/deadlines/domain/duration-words";
@@ -440,6 +442,44 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     expect(withDoc.text).toMatch(/Links and files: \S+crosul-traseu#links/);
     expect(withDoc.html).not.toContain(doc);
     expect(withDoc.text).not.toContain(doc);
+  });
+
+  it("gives the desk code and its QR to exactly the messages the email state says carry it (§NNN)", async () => {
+    await db.update(registrations).set({ status: "CONFIRMED", confirmedAt: NOW, holdExpiresAt: null }).where(eq(registrations.id, registrationId));
+    const candidates: EmailMessageType[] = ["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "BIB_ASSIGNED", "DECLARATION_SIGNED", "EVENT_UPDATE_NOTICE", "REGISTRATION_CANCELLED"];
+    const carrying: EmailMessageType[] = [];
+    for (const [index, messageType] of candidates.entries()) {
+      const message = await renderOutboxMessage(
+        {
+          id: `row-desk-${index}`,
+          participantId,
+          registrationId,
+          messageType,
+          locale: "ro",
+          recipientEmail: "ana@example.ro",
+          payloadJson: {},
+          idempotencyKey: `test:desk:${index}`,
+          requestedByStaffUserId: null,
+          isManualResend: false,
+          status: "PROCESSING",
+          attemptCount: 1,
+          nextAttemptAt: null,
+          lockedAt: NOW,
+          providerMessageId: null,
+          transport: null,
+          recipientCount: null,
+          deliveredAt: null, rejectedAt: null, rejectionCause: null, providerCode: null, providerDetail: null, laterDeliveredAt: null, resolvedAt: null, retriedAt: null, retriedVia: null,
+          lastError: null,
+          createdAt: NOW,
+          sentAt: null,
+        },
+        db,
+        NOW,
+      );
+      if (message.html.includes("/api/registrations/qr/")) carrying.push(messageType);
+    }
+    // The desk's chip («Fără QR pe email») reads `DESK_CODE_MESSAGE_TYPES`: the renderer and it agree.
+    expect(carrying.sort()).toEqual([...DESK_CODE_MESSAGE_TYPES].sort());
   });
 
   it("renders a message with no token and no action link", async () => {

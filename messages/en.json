@@ -3752,6 +3752,7 @@
             "other": "{count} club addresses reject emails: copies or notices do not reach them."
           },
           "done": "No club address rejected an email in the last 30 days.",
+          "doneRemoved": "No address in “The club's copies” asks for anything; the addresses removed since appear under “Settings → Emails”.",
           "how": [
             "Open «Settings» → «Emails» → «The club's addresses that reject emails».",
             "Under each address it says what to do: correct it in «The club's copies», make room in the mailbox, or remove it from Mailgun → Suppressions if it is right.",

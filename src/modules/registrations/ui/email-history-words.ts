@@ -17,7 +17,7 @@ export const EMAILS_SHOWN = 5;
 export type EmailHistoryWords = {
   /** «Confirmarea cu QR · către participant» — by role, never a club mailbox's address. */
   title: string;
-  /** «Livrat sâmb., 3 oct., 10:15» — what happened to it and when, and who asked for a resend by hand. */
+  /** «Livrat sâm., 3 oct., 10:15» — what happened to it and when, and who asked for a resend by hand. */
   state: string;
   /** A refusal or an email that never left reads in red. */
   refused: boolean;

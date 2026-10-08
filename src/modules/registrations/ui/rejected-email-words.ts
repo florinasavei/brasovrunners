@@ -28,8 +28,9 @@ export function adminSay(lang: Lang): Say {
 const NBSP = " ";
 
 /**
- * A line of parts joined by « · », each part unbreakable (§NNN): at 360 pixels the line wraps between two
- * parts, never inside one — «Căsuța e plină» never leaves «plină» alone on the next line.
+ * A line of parts joined by « · », each part unbreakable (§NNN): where the line wraps, it wraps between two
+ * parts, never inside one — «Căsuța e plină» never leaves «plină» alone on the next line — and so takes
+ * two lines at most on a 360- or a 400-pixel phone.
  */
 export function unbreakableLine(text: string): string {
   return text
@@ -39,9 +40,9 @@ export function unbreakableLine(text: string): string {
 }
 
 /**
- * The short date of a card (§452's short style, no year, no hour; §366's phone width): «sâmb., 3 oct.» /
- * «Sat, 3 Oct», in club time — the refusals a registration shows are of an event that has not ended, so
- * the year is the reader's own.
+ * The short date inside a sentence (§452's short style, no year, no hour): «sâm., 3 oct.» / «Sat, 3 Oct»,
+ * in club time — the refusals a registration shows are of an event that has not ended, so the year is the
+ * reader's own. The list's one line takes `lineDay` instead, the day and the month alone.
  */
 export function shortDay(at: Date, locale: string): string {
   return formatDay(at, { locale: langOf(locale), timeZone: CLUB_TIME_ZONE, style: "short", year: false, position: "inline" });
@@ -49,9 +50,10 @@ export function shortDay(at: Date, locale: string): string {
 
 const lineDays = new Map<Lang, Intl.DateTimeFormat>();
 /**
- * The day on the list's one line (§NNN): «26 sept.» / «26 Sept», in club time — the day and the month
- * alone, no weekday, so the longest usual line, «Adresa nu există · Confirmarea cu QR · 26 sept.», keeps
- * to one line on a 400-pixel phone (the weekday took it to two). The sentences keep `shortDay`.
+ * The card's date, on the list's one line (§NNN): «26 sept.» / «26 Sept», in club time — the day and the
+ * month alone, no weekday, so the common line, «Adresa nu există · Confirmarea cu QR · 3 oct.», keeps to
+ * one line on a 400-pixel phone (the weekday took it to two), and the longest, «Adresa nu mai există ·
+ * Numărul de concurs · 26 oct.», to two, wrapping between parts. The sentences keep `shortDay`.
  */
 export function lineDay(at: Date, locale: string): string {
   const lang = langOf(locale);
@@ -123,7 +125,7 @@ export type RejectedEmailReader = "administrator" | "organizer" | "desk";
 
 export type RejectedEmailWords = {
   /**
-   * «Respins: „Înscriere confirmată (cu QR și număr)”, trimis sâmb., 3 oct. 2026, la 10:00.» — or, for one
+   * «Respins: „Înscriere confirmată (cu QR și număr)”, trimis sâm., 3 oct. 2026, la 10:00.» — or, for one
    * that never left, «refuzat la trimitere» at the refused attempt's instant (`rejected_at`), and «pus în
    * coadă» at the queueing's when the refusal's own instant was never stored (§NNN); a family member's,
    * «Respins la aceeași adresă, …» only when it left. The long name: the registration page's story.
@@ -150,7 +152,7 @@ export type RejectedEmailWords = {
   /**
    * The one line under the name (§NNN), each part unbreakable: «Adresa nu există · Confirmarea cu QR ·
    * 3 oct.» (red); «Confirmarea cu QR lipsește · adresa merge acum» or «Nu a plecat · … · …»
-   * (amber); «Retrimis sâmb., 3 oct. · așteptăm livrarea» (quiet — the list draws nothing for it).
+   * (amber); «Retrimis sâm., 3 oct. · așteptăm livrarea» (quiet — the list draws nothing for it).
    */
   line: string;
   tone: "error" | "warning" | "info";

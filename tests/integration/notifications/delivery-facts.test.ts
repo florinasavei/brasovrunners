@@ -19,7 +19,7 @@ import {
   listRegistrationsForAdmin,
 } from "@/modules/registrations/admin-repository";
 import { needsEmailAction } from "@/modules/registrations/domain/email-state";
-import { countNeedingEmailActionByEvent } from "@/modules/registrations/email-state";
+import { countAddressRefusingMail, countNeedingEmailActionByEvent } from "@/modules/registrations/email-state";
 import { resolveDisplayName } from "@/modules/registrations/names";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -548,6 +548,36 @@ describe("the registration's one email state (BR-REQ-038-01)", () => {
     const [listed] = await listRegistrationsForAdmin(db, { eventId: r.id });
     expect(JSON.stringify(listed)).not.toContain("relay");
     expect((await findRegistrationDetailForAdmin(db, reg))?.emailState).toMatchObject({ code: "550 5.1.1", detail: "mailbox <address> unknown at relay" });
+  });
+});
+
+describe("«Retrimite declarația tuturor care nu au semnat» counts who has an address that refuses mail (BR-REQ-037-02, §NNN)", () => {
+  it("counts an open refusal of the address among those who wait to sign; not the club's account, another status, a test registration or another event", async () => {
+    const r = await race();
+    const other = await race(new Date("2099-12-01T08:00:00.000Z"));
+    const waiting = { status: "PENDING_DECLARATION" as const, confirmedAt: null };
+    const refusal = (participantId: string, registrationId: string, rejectionCause: string, extra: Partial<RowInput> = {}) =>
+      outboxRow({ participantId, registrationId, messageType: "COMPLETE_DECLARATION", status: "BOUNCED", rejectionCause, ...extra });
+
+    // Waits to sign, and the address does not exist: the one the question counts.
+    const unreachable = await person("gone@example.org");
+    await refusal(unreachable, await register(r.id, unreachable, waiting), "no-such-address", { recipientEmail: "gone@example.org" });
+    // Waits to sign, and the club's account refused the link at the send: sending again is the right press.
+    const account = await person("account@example.org");
+    await refusal(account, await register(r.id, account, waiting), "account", { recipientEmail: "account@example.org", sentAt: null, lastError: "mailgun 401: Forbidden" });
+    // Confirmed already, its address refusing mail: not among those the bulk resend reaches.
+    const confirmed = await person("confirmed@example.org");
+    await outboxRow({ participantId: confirmed, registrationId: await register(r.id, confirmed), messageType: "REGISTRATION_CONFIRMED", recipientEmail: "confirmed@example.org", status: "BOUNCED", rejectionCause: "no-such-address" });
+    // A test registration waiting to sign, the address refusing mail: never in a count the club is given.
+    const test = await person("test@example.org");
+    await refusal(test, await register(r.id, test, { ...waiting, kind: "TEST" }), "no-such-address", { recipientEmail: "test@example.org" });
+    // Another event's.
+    const elsewhere = await person("elsewhere@example.org");
+    await refusal(elsewhere, await register(other.id, elsewhere, waiting), "no-such-address", { recipientEmail: "elsewhere@example.org" });
+
+    expect(await countAddressRefusingMail(db, r.id, "PENDING_DECLARATION")).toBe(1);
+    expect(await countAddressRefusingMail(db, other.id, "PENDING_DECLARATION")).toBe(1);
+    expect(await countAddressRefusingMail(db, r.id, "WAITLIST_OFFERED")).toBe(0);
   });
 });
 
