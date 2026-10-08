@@ -130,6 +130,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.78` | the rain is a raining cloud and a percentage (§677) |
 | `BR-V2.77` | one anonymous wizard from Contact, the safety form reaching one person (§676) |
 | `BR-V2.76` | the two link forms run the anti-bot check too (§675) |
 | `BR-V2.75` | the calendar entry in the confirmation, the reminder, a group run's declaration, a time or place update and a cancellation asks «Da / Nu / Poate» once the club names, in «Emailuri», the address the answers go to; empty, the file is as before (§672) · a picture is replaced in place («Înlocuiește») in an album and in a text (§673) · the calendar's address to copy, and Google's «Din URL» with ?v=2 (§674) |

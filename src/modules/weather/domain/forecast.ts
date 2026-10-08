@@ -303,7 +303,7 @@ export function summarizeSpan(span: readonly WeatherReading[]): WeatherSpanSumma
 /**
  * The chance of rain, in percent, from which rain is "likely" (§429; the owner, 2026-09-26: "an
  * umbrella when rain is likely"). Fifty: "likely" is more likely than not, the one threshold a
- * runner reads without a legend. Since §NNN the mark it earns is no longer an umbrella: on a card's
+ * runner reads without a legend. Since §677 the mark it earns is no longer an umbrella: on a card's
  * pill the drop and the chance take the primary colour, on the hero and the event page the drop
  * stands before «ploaie probabilă» — whatever the sky's word at the hour.
  */

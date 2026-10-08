@@ -3,7 +3,7 @@
 import { createSvgIcon } from "@mui/material/SvgIcon";
 
 /**
- * A cloud with rain falling from it, the sky's glyph for showers and heavy rain (§NNN, amending
+ * A cloud with rain falling from it, the sky's glyph for showers and heavy rain (§677, amending
  * §402; the owner, 2026-10-08: «I hate that umbrella closed»). Material's icon set has no such
  * glyph — its `Shower` is a bathroom's, `BeachAccess` a parasol, `Water` waves — so it is drawn
  * here, as `createSvgIcon` draws every glyph of `@mui/icons-material` (the same `"use client"`

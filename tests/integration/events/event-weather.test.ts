@@ -217,20 +217,20 @@ describe("BR-REQ-011-01 the event page's weather is one line (§469, replacing �
     return rows(html).find((row) => row.label === "Vremea" || row.label === "Weather")?.dd ?? "";
   };
 
-  it("RO, rain likely: the word, the degrees and the drop with «ploaie probabilă 80 %» — no «șanse», no wind (§469, §NNN)", async () => {
+  it("RO, rain likely: the word, the degrees and the drop with «ploaie probabilă 80 %» — no «șanse», no wind (§469, §677)", async () => {
     const dd = await line("ro", rainy());
     expect(text(dd)).toContain("Ploaie");
     expect(text(dd)).toContain("16 °C");
     expect(text(dd)).toContain("ploaie probabilă 80 %");
     expect(dd).toContain('data-testid="weather-rain-likely"');
-    // The drop, never the closed umbrella (§NNN).
+    // The drop, never the closed umbrella (§677).
     expect(dd).toContain('data-testid="WaterDropIcon"');
     expect(dd).not.toContain("UmbrellaIcon");
     expect(text(dd)).not.toContain("km/h");
     expect(text(dd)).not.toContain("șanse");
   });
 
-  it("showers: the row's glyph is the raining cloud, never the umbrella (§NNN)", async () => {
+  it("showers: the row's glyph is the raining cloud, never the umbrella (§677)", async () => {
     currentLocale = "ro";
     const html = withoutStyles(await page({}, openMeteo({ code: 81, chance: 70, mm: 3 })));
     const row = rows(html).find((each) => each.label === "Vremea");
@@ -333,7 +333,7 @@ describe("BR-REQ-041-01 the listing reads every card's forecast at once (§416)"
     expect(found.size).toBe(0);
   });
 
-  it("draws the read chance on the card's pill after a drop, in the primary colour when rain is likely (§NNN)", async () => {
+  it("draws the read chance on the card's pill after a drop, in the primary colour when rain is likely (§677)", async () => {
     const pill = async (fetchImpl: typeof fetch) => {
       const found = await forecastsForEvents([at("a")], NOW, { fetch: fetchImpl, source: "open-meteo" });
       const html = renderToStaticMarkup(await EventFacts({ event: at("a"), now: NOW, variant: "compact", cardWeather: found.get("a")?.start ?? null }));

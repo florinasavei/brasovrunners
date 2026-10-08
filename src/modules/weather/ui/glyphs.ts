@@ -20,7 +20,7 @@ import RainyIcon from "./RainyIcon";
  *
  * The sun for a clear sky; a cloud with a gap in it for a partly cloudy one; a whole cloud for an
  * overcast one; the mist; fine drops for drizzle; one drop for rain; a cloud with rain falling from
- * it for showers and heavy rain (§NNN — never a closed umbrella); a snowflake for frost (freezing
+ * it for showers and heavy rain (§677 — never a closed umbrella); a snowflake for frost (freezing
  * drizzle and rain) and snow falling from a cloud for snow; the storm. Always beside its word: the
  * word is what is read.
  */

@@ -39,12 +39,12 @@ export type WeatherWords = {
   /** The chance of rain alone, «20%» — an hour of the block; null when the hour has none. */
   rainShort: string | null;
   /**
-   * The chance alone as a card's pill shows it after the drop (§NNN): «20 %» / "20%" — null when
+   * The chance alone as a card's pill shows it after the drop (§677): «20 %» / "20%" — null when
    * the hour has none or it rounds to 0, since a dry hour has nothing to read.
    */
   chanceShort: string | null;
   /**
-   * The chance in words for a card's spoken text (§NNN), «20% șanse de ploaie» — exactly when
+   * The chance in words for a card's spoken text (§677), «20% șanse de ploaie» — exactly when
    * `chanceShort` is drawn, so the ear hears the figure the eye sees; else null.
    */
   chanceSpoken: string | null;
@@ -82,7 +82,7 @@ export function weatherWords(reading: WeatherReading, locale: "ro" | "en"): Weat
     ...(reading.humidity !== null ? [t("humidity", { percent: whole(reading.humidity) })] : []),
     ...(sunny ? [t("uv", { index: whole(reading.uvIndex ?? 0) })] : []),
   ];
-  // A chance that rounds to 0 is nothing to read on a card (§NNN), as a tenth of a millimetre is not.
+  // A chance that rounds to 0 is nothing to read on a card (§677), as a tenth of a millimetre is not.
   const someChance = reading.precipitationProbability !== null && Math.round(reading.precipitationProbability) > 0;
   const rainLikelyChance = !isRainLikely(reading)
     ? null

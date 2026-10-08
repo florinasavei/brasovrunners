@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.77-2026-10-08 -->
+<!-- PROJECT_BASELINE: BR-V2.78-2026-10-08 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.77-2026-10-08`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.78-2026-10-08`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -398,6 +398,8 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 197. A listing card wears the weather pill only when its event's «Vremea» is the forecast: the listing asks Open-Meteo for no event whose weather is the club's text or none, and a card handed a reading for such an event draws no pill (2026-10-05, `DECISIONS.md` §666).
 198. Criterion 67's free places on the card's registration line apply only while the event's «Arată public numărătoarea» is on: off, the open card's line ends with no free places and no size, as an uncapped event's does, and a full one reads «· Lista de așteptare» as before (2026-10-06, `DECISIONS.md` §668).
 199. At 320 px the calendar page's «?» fold shows the feed's address box and a «Copiază» button at least 44 pixels tall, with no horizontal scroll (2026-10-08, `DECISIONS.md` §674).
+200. A listing card's weather pill shows, after the degrees, a drop and the hour's chance of rain in the locale's format («20 %» / "20%") whenever the forecast has a chance that does not round to 0, and nothing at 0 % or without one unless rain is likely; the drop and the figure are in the primary colour exactly when the §429 rain-likely rule holds, otherwise in the secondary text colour; a likely hour with no chance to show (likely by its amount alone, with no chance or one that rounds to 0) draws the drop alone, in the primary colour, with no figure; and a screen reader hears the chance in words («20% șanse de ploaie») after the degrees (amending criterion 90; 2026-10-08, `DECISIONS.md` §677).
+201. No weather glyph on a card, the featured hero or the event page is a closed umbrella: showers and heavy rain (WMO 65, 80–82) draw a cloud with rain falling from it (`RainyIcon`), the rain-likely mark on a card is the drop of criterion 90's amendment, and on the hero's line and the event page's row it is a drop before «ploaie probabilă» (amending criteria 90 and 91; 2026-10-08, `DECISIONS.md` §677).
 
 **Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects, `event-pages.spec.ts` (criterion 12); unit `registrations/form-errors.test.ts`, `events/listing.test.ts`, `theme/brand.test.ts`; release check on a real device
 
@@ -528,6 +530,7 @@ coffee is run on nothing.
 68. Given the event editor's «Traseu» card, when «Distanță (m)» holds a distance and «Aproximativ» is ticked, then `events.distance_estimated` is saved true and the event's route pill reads «≈ 10 km», with «circa 10 km (aproximativ)» / “about 10 km (approximate)” as its tooltip and accessible name; with the distance empty the tick is saved false and the save is not refused (2026-10-01, `DECISIONS.md` §598).
 69. Given an event whose distance is ticked «Aproximativ», then the emails' facts block (the HTML part and the plain text), the calendar entry's facts line and the share picture say the long form, «circa 10 km (aproximativ)», never the bare number; an exact distance reads «10 km» as before; a duplicate, every date a series makes and the draft preview keep the tick (2026-10-01, `DECISIONS.md` §598).
 70. Given an event whose «Vremea» is «Text scris de club» (`custom`) and whose translation in the page's language has a weather text, when its page or preview is rendered, then the «Vremea» / «Weather» row shows that text as written and escaped, with no forecast, no Open-Meteo credit and no «?», and Open-Meteo is not asked. Given no text in that language, there is no row, never the other language's text; given an event cancelled or completed, there is no row either, whatever its text. Given «Fără vreme» (`off`), there is no row and no request. Given «Prognoza automată» (`forecast`, the default), the row is the forecast as before and the club's text is never shown beside it; an unknown stored value reads as the forecast (2026-10-05, `DECISIONS.md` §666).
+71. When rain is likely, the event page's weather block and weather row draw a drop, never an umbrella, before «ploaie probabilă» / "rain likely" (on the row «ploaie probabilă N %» / "rain likely N%"); on a dry hour the row still shows no chance (amending criteria 45 and 48; 2026-10-08, `DECISIONS.md` §677).
 
 **Verification:** integration `events/configuration.test.ts`, `registrations/interest.test.ts`, `cms/series-edit.test.ts`; unit `events/zoned-time.test.ts`, `events/ical.test.ts`, `events/co-hosts.test.ts`, `content/event-co-hosts-field.test.ts`; e2e `event-pages.spec.ts`; unit `events/registration-window.test.ts` (13, 18)
 

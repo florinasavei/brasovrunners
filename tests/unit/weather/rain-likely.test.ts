@@ -5,7 +5,7 @@ import { weatherWords } from "@/modules/weather/words";
 
 /**
  * BR-REQ-041-01 (§429, amending §416) — a listing card's weather pill marks the hour when rain
- * is likely at the start (since §NNN its drop and chance in the primary colour, never an umbrella): a chance of 50% or more, or a forecast amount of 0.5 mm or more already
+ * is likely at the start (since §677 its drop and chance in the primary colour, never an umbrella): a chance of 50% or more, or a forecast amount of 0.5 mm or more already
  * falling in the hour, unless the hour's own glyph says more (snow, frost, the storm), because
  * Open-Meteo's chance is of any precipitation.
  */

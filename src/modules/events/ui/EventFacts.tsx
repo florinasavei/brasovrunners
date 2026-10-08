@@ -275,7 +275,7 @@ export default async function EventFacts({
   weather?: EventForecast | null;
   /**
    * The compact form's weather (§416, moved by §429): the start's reading, drawn as the last pill of
-   * the route's row (`CardWeather`) — the hour's chance of rain after a drop (§NNN). Read by the
+   * the route's row (`CardWeather`) — the hour's chance of rain after a drop (§677). Read by the
    * listing for every card at once; null outside the seven days or on any failure, and then the row
    * is the route's alone.
    */
@@ -694,9 +694,9 @@ export default async function EventFacts({
     A forecast's summary pieces, the rain-likely mark spliced in right after the rain phrase rather
     than appended after the wind (review finding, §429): «Parțial noros, 14 °C, 60% șanse de ploaie,
     💧 ploaie probabilă, vânt 11 km/h», never «…, vânt 11 km/h, 💧 ploaie probabilă» — a drop since
-    §NNN, never the closed umbrella; with no chance but an amount already falling, right after the
+    §677, never the closed umbrella; with no chance but an amount already falling, right after the
     temperature. Shared by the hero and the page, the only two places that draw this line — the
-    card's own pill (`CardWeather`) shows the chance as a figure (§NNN), never the rain phrase.
+    card's own pill (`CardWeather`) shows the chance as a figure (§677), never the rain phrase.
     `words.details` is built in this fixed order (temperature, rain, wind, each only when the hour
     has it), so the mark's place is the count of whichever of the first two are actually there.
   */
@@ -1007,7 +1007,7 @@ export default async function EventFacts({
       // No `mr` on this glyph (review finding, §429): the wrapping `Box` already gives it a
       // 0.5 gap from the word beside it, and `HERO_GLYPH_SX`'s own `mr` doubled that space —
       // the one glyph on the hero not seated beside a label, where the margin belongs instead.
-      // The drop before «ploaie probabilă» (§NNN): the chance itself is already the line's «60% șanse de ploaie».
+      // The drop before «ploaie probabilă» (§677): the chance itself is already the line's «60% șanse de ploaie».
       const likelyMark = rainLikely(weather.start) ? (
         <Box key="rain-likely" component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
           <WaterDropIcon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
@@ -1246,7 +1246,7 @@ export default async function EventFacts({
 
     Since §469 (the owner, 2026-09-26: the page's weather as small as the card's) the row is the
     first line reduced to the glyph, the sky's word and the start hour's degrees — and the drop (the
-    umbrella until §NNN) with «ploaie probabilă» only when rain is likely. No wind, no chance of rain
+    umbrella until §677) with «ploaie probabilă» only when rain is likely. No wind, no chance of rain
     on a dry hour; the details, the hours strip and the place line are gone; the reminder keeps its
     own line.
   */
@@ -1257,7 +1257,7 @@ export default async function EventFacts({
     Tractorul, sâmbătă, 26 sept. 18:00–20:00: Ploaie · 12–15 °C · 💧 ploaie probabilă 70 % ?». The sky's
     word and the row's glyph are the span's (the wettest hour when rain is likely, else the kind most
     hours share), the degrees a range when they differ, the drop and «ploaie probabilă N %» when rain
-    is likely in any hour (a drop, never the closed umbrella, since §NNN).
+    is likely in any hour (a drop, never the closed umbrella, since §677).
     The place is the club's locality when the forecast is the club's (`forecastPlaceName`), never a
     meeting point it was not read at.
   */

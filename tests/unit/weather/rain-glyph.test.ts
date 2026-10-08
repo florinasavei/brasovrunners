@@ -10,7 +10,7 @@ import RainyIcon from "@/modules/weather/ui/RainyIcon";
 import { weatherWords } from "@/modules/weather/words";
 
 /**
- * BR-REQ-041-01 / BR-REQ-011-01 (§NNN, amending §402, §416, §429) — the rain is a raining cloud and
+ * BR-REQ-041-01 / BR-REQ-011-01 (§677, amending §402, §416, §429) — the rain is a raining cloud and
  * a percentage, never a closed umbrella: showers and heavy rain draw `RainyIcon` (Material Symbols'
  * «rainy», drawn here), and a card's pill says the hour's chance after a drop, «20 %», whenever the
  * forecast has one that does not round to 0.
@@ -18,7 +18,7 @@ import { weatherWords } from "@/modules/weather/words";
 const glyphTestId = (name: (typeof WEATHER_GLYPH_NAMES)[number]) =>
   /data-testid="([^"]+)"/.exec(renderToStaticMarkup(createElement(WEATHER_GLYPH[name])))?.[1];
 
-describe("§NNN the sky's glyph for showers and heavy rain is a raining cloud", () => {
+describe("§677 the sky's glyph for showers and heavy rain is a raining cloud", () => {
   it("maps showers to RainyIcon, and WMO 80–82 and 65 to it", () => {
     expect(WEATHER_GLYPH.showers).toBe(RainyIcon);
     expect(glyphTestId("showers")).toBe("RainyIcon");
@@ -48,7 +48,7 @@ describe("§NNN the sky's glyph for showers and heavy rain is a raining cloud", 
   });
 });
 
-describe("§NNN a card's pill says the chance in figures", () => {
+describe("§677 a card's pill says the chance in figures", () => {
   const reading = (precipitationProbability: number | null): WeatherReading => ({
     hourAt: 0,
     code: 3,

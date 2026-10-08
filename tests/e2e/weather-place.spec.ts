@@ -206,7 +206,7 @@ test.describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
     const pill = pills.first();
     await expect(pill).toBeVisible();
     await expect(pill).toContainText("14 °C");
-    // The sky's glyph, then the stub's 20% after a drop (§NNN) — two glyphs, neither an umbrella.
+    // The sky's glyph, then the stub's 20% after a drop (§677) — two glyphs, neither an umbrella.
     await expect(pill.locator("svg")).toHaveCount(2);
     await expect(pill.getByTestId("card-weather-chance")).toHaveText("20 %");
     // The word is for a screen reader, the chance with it; the wind is the page's.
@@ -298,7 +298,7 @@ async function runFeaturedHeroWeatherCase(page: Page): Promise<void> {
 
     await page.goto("/ro/evenimente");
     // The same pill every card wears (§429): the glyph, the degrees and the chance after a drop
-    // (§NNN), the word for a screen reader; the wind is the event page's.
+    // (§677), the word for a screen reader; the wind is the event page's.
     const hero = page.locator('section[aria-labelledby="featured-event-title"]').first();
     await expect(hero).toBeVisible();
     const weather = hero.getByTestId("card-weather");

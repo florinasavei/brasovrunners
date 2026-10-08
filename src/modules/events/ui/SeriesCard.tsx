@@ -116,7 +116,7 @@ export default async function SeriesCard({
         <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 1.5 } }}>
           {/* The next date's weather at its start (§416) is the last pill of its route's row, the
               hour's chance of rain after a drop, in the primary colour when rain is likely (§429,
-              §NNN). */}
+              §677). */}
           <EventFacts event={next} now={now} variant="compact" whenLead={t("series.nextLabel")} cardWeather={weather} />
         </Box>
 

@@ -15,7 +15,7 @@ import { WEATHER_GLYPH } from "./glyphs";
  * route is, no longer among the marks above the title (type, partner, cancelled), which say what
  * the event is.
  *
- * The chance of rain after the degrees (§NNN, amending §429; the owner, 2026-10-08: «I hate that
+ * The chance of rain after the degrees (§677, amending §429; the owner, 2026-10-08: «I hate that
  * umbrella closed, show percentages of precipitation as well»): a drop and the hour's chance —
  * «☁ 14 °C 💧 20 %» — whenever the forecast has one and it does not round to 0 (a dry hour has
  * nothing to read). In `text.secondary` like the glyph; when rain is likely at the start

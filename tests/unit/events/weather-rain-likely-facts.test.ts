@@ -6,7 +6,7 @@ import type { PublicEvent } from "@/modules/events/repository";
 /**
  * BR-REQ-011-01 / §429 (fix round on §401's weather chip: the rain-likely rule also applies to
  * the featured hero's «Vremea» line and the event page's weather block — a mark beside the
- * rain percentage, and "ploaie probabilă" / "rain likely" in the accessible text). Since §NNN the
+ * rain percentage, and "ploaie probabilă" / "rain likely" in the accessible text). Since §677 the
  * mark is a drop (`WaterDropIcon`), never the closed umbrella (`UmbrellaIcon`), which is drawn nowhere.
  */
 let currentLocale: "ro" | "en" = "ro";
@@ -109,7 +109,7 @@ const eventWeatherSummary = (html: string) => {
   return text(end >= 0 ? block.slice(0, end) : block);
 };
 
-describe("the hero's «Vremea» line wears the drop when rain is likely (§429, §NNN)", () => {
+describe("the hero's «Vremea» line wears the drop when rain is likely (§429, §677)", () => {
   it("adds no drop below the rain-likely threshold", async () => {
     const html = withoutStyles(
       renderToStaticMarkup(
@@ -120,7 +120,7 @@ describe("the hero's «Vremea» line wears the drop when rain is likely (§429, 
     expect(dd).not.toContain("WaterDropIcon");
     expect(dd).not.toContain("UmbrellaIcon");
     expect(text(dd)).not.toContain("ploaie probabilă");
-    // The hero keeps the chance in words on every hour that has one (§NNN).
+    // The hero keeps the chance in words on every hour that has one (§677).
     expect(text(dd)).toContain("30% șanse de ploaie");
   });
 
@@ -174,7 +174,7 @@ describe("the hero's «Vremea» line wears the drop when rain is likely (§429, 
   });
 });
 
-describe("the event page's weather block wears the drop when rain is likely (§429, §NNN)", () => {
+describe("the event page's weather block wears the drop when rain is likely (§429, §677)", () => {
   it("adds no drop below the threshold", async () => {
     const html = withoutStyles(
       renderToStaticMarkup(
@@ -185,7 +185,7 @@ describe("the event page's weather block wears the drop when rain is likely (§4
     expect(html).not.toContain("UmbrellaIcon");
   });
 
-  it("draws the drop after the degrees and says «ploaie probabilă 60 %» when rain is likely — no «șanse», no wind (§469, §NNN)", async () => {
+  it("draws the drop after the degrees and says «ploaie probabilă 60 %» when rain is likely — no «șanse», no wind (§469, §677)", async () => {
     const html = withoutStyles(
       renderToStaticMarkup(
         await EventFacts({ event: event(), now: NOW, stacked: true, weather: forecast(reading({ precipitationProbability: 60 })) }),

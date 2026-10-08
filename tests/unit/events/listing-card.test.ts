@@ -654,9 +654,9 @@ describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
   const pillOf = (html: string) => /<span\b[^>]*data-testid="card-weather"[^>]*>([\s\S]*?)<\/span><\/span>/.exec(html)?.[0] ?? "";
   /** The glyph's path data, which names the Material icon it is. */
   const pathOf = (fragment: string) => /<svg\b[^>]*>[\s\S]*?<path\b[^>]*\bd="([^"]+)"/.exec(fragment)?.[1] ?? "";
-  /** Every glyph's path data, in order — the sky's own glyph first, the chance's drop after it when the hour has one (§NNN). */
+  /** Every glyph's path data, in order — the sky's own glyph first, the chance's drop after it when the hour has one (§677). */
   const pathsOf = (fragment: string) => [...fragment.matchAll(/<svg\b[^>]*>[\s\S]*?<path\b[^>]*\bd="([^"]+)"/g)].map((m) => m[1]);
-  /** The colour Emotion gave the chance's drop and figure (§NNN), from the markup with its styles. */
+  /** The colour Emotion gave the chance's drop and figure (§677), from the markup with its styles. */
   const chanceColour = (html: string) => {
     const tag = /<span\b[^>]*data-testid="card-weather-chance"[^>]*>/.exec(html)?.[0] ?? "";
     const cls = /class="[^"]*\b(css-[\w-]+)"/.exec(tag)?.[1] ?? "none";
@@ -670,7 +670,7 @@ describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
     const pill = pillOf(html);
     expect(pill).toMatch(/<svg\b[^>]*aria-hidden="true"/);
     expect(pill).toContain('<span aria-hidden="true">12 °C</span>');
-    // The chance after the degrees, a drop and the figure (§NNN); a screen reader hears it in words.
+    // The chance after the degrees, a drop and the figure (§677); a screen reader hears it in words.
     expect(text(pill)).toContain("Vremea la start: Înnorat, 12 °C, 30% șanse de ploaie");
     expect(pill).toContain('data-testid="card-weather-chance"');
     expect(text(pill)).toContain("30 %");
@@ -701,14 +701,14 @@ describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
     expect(withoutStyles(await markup(createElement(EventCard, { event: bare, index: 0, now: NOW })))).not.toContain('data-fact="pills"');
   });
 
-  it("marks a likely hour by the chance itself, never an umbrella, and a screen reader hears «ploaie probabilă» (§429, §NNN)", async () => {
+  it("marks a likely hour by the chance itself, never an umbrella, and a screen reader hears «ploaie probabilă» (§429, §677)", async () => {
     const calm = pillOf(withoutStyles(await markup(createElement(EventCard, { event: trailToRoad(), index: 0, now: NOW, weather: reading }))));
     const wet = pillOf(
       withoutStyles(await markup(createElement(EventCard, { event: trailToRoad(), index: 0, now: NOW, weather: { ...reading, precipitationProbability: 60 } }))),
     );
     expect(wet).toContain('data-rain-likely="true"');
     // The sky's own glyph stays first; the drop after the degrees is the chance's, likely or not —
-    // no second sky glyph, no umbrella (§NNN).
+    // no second sky glyph, no umbrella (§677).
     expect(pathsOf(wet)[0]).toBe(pathOf(calm));
     expect(pathsOf(wet)).toHaveLength(2);
     expect(pathsOf(calm)).toHaveLength(2);
@@ -735,7 +735,7 @@ describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
     expect(snow).not.toContain("data-rain-likely");
   });
 
-  it("colours the drop and the chance primary only when rain is likely, and shows nothing at 0 % (§NNN)", async () => {
+  it("colours the drop and the chance primary only when rain is likely, and shows nothing at 0 % (§677)", async () => {
     const calm = await card(reading);
     const wet = await card({ ...reading, precipitationProbability: 60 });
     // A likely hour by amount alone, at a low chance, is primary too: §429's rule decides, not the figure.
@@ -747,7 +747,7 @@ describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
     // A snowy hour's chance is shown, never as rain likely: secondary, like any calm hour.
     expect(chanceColour(await card({ ...reading, code: 73, kind: "snow", glyph: "snow", precipitationProbability: 90 }))).toBe(chanceColour(calm));
     // A likely hour by amount alone with no chance to show — none, or 0 % — still draws the drop,
-    // alone and primary, with no figure: the eye gets what a screen reader hears (§NNN).
+    // alone and primary, with no figure: the eye gets what a screen reader hears (§677).
     for (const chance of [null, 0]) {
       const html = await card({ ...reading, precipitationProbability: chance, precipitationMm: chance === null ? 1 : 2 });
       const pill = pillOf(withoutStyles(html));

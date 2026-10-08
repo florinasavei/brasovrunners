@@ -175,7 +175,7 @@ export default async function EventCard({
         {/* The facts, with their links: the place is the map the club pasted. The weather at the
             start, a glyph and the degrees (§416), within seven days of it, is the last pill of the
             route's row — the hour's chance of rain after a drop, in the primary colour when rain
-            is likely (§429, §NNN).
+            is likely (§429, §677).
 
             Card height (review finding, §429): the pill left the marks row above the title
             (`CARD_CHIPS_SX`) for the last slot of this row (`RoutePills`' `trailing`), at the
