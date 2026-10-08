@@ -752,7 +752,8 @@ export async function cachedMenuOrder(): Promise<string[]> {
 }
 
 /**
- * The Turnstile site key the contact page draws its widget with, or nothing (§254) — on when the
+ * The Turnstile site key the contact page and the two link forms (§NNN) draw their widget with, or
+ * nothing (§254) — on when the
  * database cannot answer, as `botCheckIsOn` is. Verifying a submission reads the switch itself.
  */
 export async function cachedBotCheckSiteKey(): Promise<string | undefined> {

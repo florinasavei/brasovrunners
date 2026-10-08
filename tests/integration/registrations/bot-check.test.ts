@@ -84,23 +84,33 @@ describe("§254 the anti-bot switch", () => {
     });
   });
 
-  it("is consulted by both public forms and by both of their actions", () => {
+  it("is consulted by every public form that draws the widget, and by its action", () => {
     /*
       A source assertion, and worth one: a switch that half the entry points ignore is worse
       than no switch — the club would believe the challenge was off while the registration form
-      still refused people. Four places carry it (§97): the two forms and their two actions.
+      still refused people (§97, §254). The registration form, the contact page and, since §NNN,
+      the two link forms («Înscrierile mele», «Retrimite linkul») read it; their actions ask it.
     */
     const read = (...where: string[]) => readFileSync(path.join(process.cwd(), ...where), "utf8");
     expect(read("src", "app", "[locale]", "events", "[slug]", "register", "page.tsx")).toContain("activeBotCheckSiteKey");
-    // The contact page asks the same switch through the public cache (§333), which the switch's
-    // own save expires — so it is still consulted, and a change still shows on the next visit.
-    expect(read("src", "app", "[locale]", "contact", "page.tsx")).toContain("cachedBotCheckSiteKey");
+    // The contact page and the two link forms ask the same switch through the public cache (§333),
+    // which the switch's own save expires — so it is still consulted, and a change still shows on
+    // the next visit.
+    for (const page of [
+      ["src", "app", "[locale]", "contact", "page.tsx"],
+      ["src", "app", "[locale]", "registrations", "mine", "page.tsx"],
+      ["src", "app", "[locale]", "registrations", "resend", "page.tsx"],
+    ]) {
+      expect(read(...page), page.join("/")).toContain("cachedBotCheckSiteKey");
+    }
     expect(read("src", "modules", "public-cache", "reads.ts")).toMatch(/cachedBotCheckSiteKey[\s\S]*readBotCheck/);
     expect(read("src", "modules", "registrations", "bot-check.ts")).toMatch(/updateBotCheck[\s\S]*revalidatePublicContent\("settings"\)/);
     for (const action of [
       ["src", "app", "[locale]", "events", "[slug]", "register", "actions.ts"],
       ["src", "app", "[locale]", "events", "[slug]", "actions.ts"],
       ["src", "app", "[locale]", "contact", "actions.ts"],
+      ["src", "app", "[locale]", "registrations", "mine", "actions.ts"],
+      ["src", "app", "[locale]", "registrations", "resend", "actions.ts"],
     ]) {
       expect(read(...action), action.join("/")).toContain("botCheckIsOn");
     }
