@@ -326,7 +326,11 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
 
       {album.editorialStatus === "PUBLISHED" && (
         <Typography variant="body2">
-          <Link href={{ pathname: "/gallery/[slug]", params: { slug: translations.find((row) => row.locale === locale)?.slug ?? "" } }}>
+          {/* No prefetch (§673): scrolled into view beside «Șterge albumul», a prefetch renders the public
+              album while the delete runs, and a render in flight across the write is stored as fresh
+              (§583) — the deleted album answered 200 for three seconds, and so did CI. The backoffice has
+              no business rendering the public site before anybody asks for it. */}
+          <Link prefetch={false} href={{ pathname: "/gallery/[slug]", params: { slug: translations.find((row) => row.locale === locale)?.slug ?? "" } }}>
             {t("gallery.viewPublic")}
           </Link>
         </Typography>

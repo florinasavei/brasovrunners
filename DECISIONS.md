@@ -24408,6 +24408,8 @@ Baseline `BR-V2.75-2026-10-08`.
 
 No migration (the same tables), no dependency; the editor's client code grows by one verb.
 
+**Found by this batch's CI, fixed here:** the editor's «Vezi albumul public» link prefetched the public album the moment it scrolled into view beside «Șterge albumul», so a delete ran while that render was in flight, and the render was stored as fresh after the write's expiry (§583's window) — the deleted album answered 200 for three seconds, which `gallery-replace.spec.ts` met every time and `gallery.spec.ts` once in a while. The link no longer prefetches (the backoffice has no business rendering the public site before anybody asks), and both specs expect the 404 within seconds rather than within one request.
+
 **Refused.** Overwriting the objects under the old prefix: the caches would keep the old picture, and a failed upload would leave a half-replaced one. Deleting the text's old picture at upload time: the text is not saved yet. A Server Action for the gallery's replace: its 1 MB body is below what the browser sends. Replacing in one language only: the other language's page would keep the old photograph, which was the brief's point.
 
 Amends §72 (a picture in the text is replaced, not only removed) and §73 (a replaced picture leaves through the same reference check and sweep).

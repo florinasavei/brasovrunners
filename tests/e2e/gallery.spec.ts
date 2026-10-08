@@ -151,7 +151,9 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
     await confirmDialog(page);
     await page.waitForURL(/\/admin\/gallery\?saved=deleted/);
 
-    expect((await page.goto(`/ro/galerie/${slug}`))?.status()).toBe(404);
+    // Within seconds, not within one request (§583): a render in flight across the delete is stored
+    // as fresh until the write's second expiry, three seconds after its response.
+    await expect.poll(async () => (await page.request.get(`/ro/galerie/${slug}`)).status(), { timeout: 10_000 }).toBe(404);
     expect((await page.request.get(thumbSrc)).status()).toBe(404);
     expect((await page.request.get(rungSrc)).status()).toBe(404);
   });

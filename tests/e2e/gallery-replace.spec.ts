@@ -92,6 +92,8 @@ test.describe.serial("§673 «Înlocuiește» on an album's photo", () => {
     await page.getByRole("button", { name: "Șterge albumul" }).click();
     await confirmDialog(page);
     await page.waitForURL(/\/admin\/gallery\?saved=deleted/);
-    expect((await page.goto(`/ro/galerie/${slug}`))?.status()).toBe(404);
+    // Gone within seconds, not within one request: a render in flight across the delete is stored
+    // as fresh until the write's second expiry (§583), three seconds after its response.
+    await expect.poll(async () => (await page.request.get(`/ro/galerie/${slug}`)).status(), { timeout: 10_000 }).toBe(404);
   });
 });
