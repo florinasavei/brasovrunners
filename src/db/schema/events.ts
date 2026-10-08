@@ -171,6 +171,18 @@ export const events = pgTable(
     thanksSentAt: timestamp("thanks_sent_at", { withTimezone: true }),
     version: integer("version").notNull().default(1),
 
+    /**
+     * The calendar invitation's `SEQUENCE` (§NNN; RFC 5546 §2.1.4): how many times what a runner's
+     * calendar holds about this date — its time, its place, whether it happens — has changed since
+     * it was first sent. Bumped by the editor's save when the start, the race's start or the place a
+     * page shows moves (`calendarSequenceMoves`, the same comparison that fills «Detalii
+     * actualizate», §331), when the date is cancelled and when it is on again; never by a programme
+     * row, a note or any other column, so an invitation already answered is not asked again over a
+     * typo. Not `version`, which every save and every supplementary place moves. Zero on every
+     * event until it changes; read only by the email renderer, never by a public page.
+     */
+    calendarSequence: integer("calendar_sequence").notNull().default(0),
+
     startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
     endsAt: timestamp("ends_at", { withTimezone: true }),
 

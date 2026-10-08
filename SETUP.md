@@ -1409,6 +1409,23 @@ club names — which is why a colleague's Yahoo can be on the list.
    `src/modules/contact/message.ts`); changing it breaks this filter in every mailbox that has one.
    Do the same in any mailbox that is on "Către" or "Copie (Cc)" and wants it. (`DECISIONS.md`
    §310)
+8. **Optional: let the calendar entry ask «Da / Nu / Poate», and file the answers.** Off until
+   somebody types an address; then the confirmation, the reminder, a group run's signed
+   declaration, «Detalii actualizate» about the time or the place and the cancellation carry an
+   invitation the runner's calendar app (Gmail, Outlook, Apple) answers, and the answer arrives as
+   an email from the runner — «Accepted: <event> (…)» or its translation. Nothing on the site reads
+   it; the club reads its Gmail. (`DECISIONS.md` §NNN)
+   - In the app, as an Administrator, on each deployment (QA has its own): «Setări» → «Emailuri» →
+     **«Răspunsurile din calendar»** → «Răspunsurile din calendar merg la» = the club's Gmail with
+     `+calendar` before the `@` (Gmail delivers `name+calendar@…` to `name@…`, and the part after
+     the `+` is what the filter catches) → **Salvează adresa** → confirm. Never write the address
+     into this repository; it lives in the app only.
+   - In the club's Gmail: the search box → **Show search options** → **To** = that `+calendar`
+     address → **Create filter** → tick **Skip the Inbox (Archive it)** and **Apply the label** →
+     **New label** `Calendar` → **Create filter**. The answers collect under the label, out of the
+     inbox. Do not tick **Delete it**: a runner who writes a line with the answer is reachable there.
+   - To go back to the plain calendar file («Adaugă în calendar», no answer asked), empty the box
+     and save.
 
 To take the form away, clear the recipients on «Pagini» → «Contact» (`/admin/pages/contact`) and leave `CONTACT_FORM_TO`
 empty — or remove `CONTACT_SMTP_USER` or `CONTACT_SMTP_PASSWORD` and redeploy: the page goes

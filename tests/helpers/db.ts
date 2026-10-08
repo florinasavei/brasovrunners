@@ -30,6 +30,7 @@ import { memberDiscountCodes } from "@/db/schema/member-discount-codes";
 import { unreachableWindows } from "@/db/schema/unreachable-windows";
 import { forgetCachedDeadlines } from "@/modules/deadlines/memo";
 import { forgetCachedAddressCap } from "@/modules/registrations/address-cap-memo";
+import { forgetCachedCalendarRsvpTo } from "@/modules/notifications/domain/calendar-rsvp";
 
 const schema = {
   auditLogs,
@@ -80,6 +81,7 @@ export async function createTestDatabase(): Promise<{
   // A fresh database has no deadlines row: nothing memoized from another database may answer for it.
   forgetCachedDeadlines();
   forgetCachedAddressCap();
+  forgetCachedCalendarRsvpTo();
 
   return {
     db,
@@ -95,6 +97,7 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   // its numbers to the next test's empty database. The same for the limit per address (§389).
   forgetCachedDeadlines();
   forgetCachedAddressCap();
+  forgetCachedCalendarRsvpTo();
   await db.delete(auditLogs);
   await db.delete(declarationAcceptances);
   // A group run's self-declarations (§393) reference the event and the legal version: before both.

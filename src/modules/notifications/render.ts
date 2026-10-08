@@ -10,11 +10,8 @@ import { issueActionToken } from "@/modules/action-tokens/repository";
 import { readEventChanges, readEventNoticeWords } from "@/modules/events/domain/event-changes";
 import { hasRouteDescription, partitionEventLinks } from "@/modules/events/domain/route-section";
 import { localizedSchedule, programmeLines, readScheduleItems } from "@/modules/events/domain/schedule";
-import { type EventNotificationRow, eventNotificationDetailsIn, findEventNotificationRows, findEventStartsAt, findPublishedEventBySlug } from "@/modules/events/repository";
-import { datedOrNull } from "@/modules/events/domain/dated";
-import { toCalendarEvent } from "@/modules/events/calendar";
-import { calendarLabels, placeToBeAnnouncedWords } from "@/modules/events/calendar-labels";
-import { buildCalendar } from "@/modules/events/ical";
+import { type EventNotificationRow, eventNotificationDetailsIn, findEventNotificationRows, findEventStartsAt } from "@/modules/events/repository";
+import { placeToBeAnnouncedWords } from "@/modules/events/calendar-labels";
 import { nightShape } from "@/modules/events/domain/night";
 import { clubNightEvent } from "@/modules/events/night-event";
 import { newCheckinCode } from "@/modules/registrations/checkin-code";
@@ -34,6 +31,9 @@ import {
 import { seriesRhythmPhrase } from "@/modules/group-run-declarations/series";
 import { generateTokenSecret, hashTokenSecret } from "@/modules/action-tokens/domain/token-secret";
 import { bulkCopyRecipients, declarationPdfAudience, isClubCopy, isParticipantMessage } from "./domain/club-notices";
+import { calendarPartFor } from "./domain/calendar-part";
+import { renderCalendarPart } from "./calendar-part";
+import { calendarRsvpToForSending } from "./calendar-rsvp";
 import { CANNOT_COME_MESSAGES, cannotComeApplies, cannotComeUrlOf } from "./domain/cannot-come";
 import { CONFIRMATION_RETRY_LEAST_LEFT_MS, isConfirmationRetry } from "./domain/automatic-sends";
 import { type HoldLapsedNext, holdLapsedNext } from "./domain/hold-lapsed";
@@ -1251,42 +1251,47 @@ async function renderRow(
   // (§95): a copy the participant keeps, in the language they signed in — on the confirmation
   // since §126, on the club's archive copy, and on the older message type for a resend.
   let attachments: OutgoingEmail["attachments"];
+  let calendar: OutgoingEmail["calendar"];
 
   /**
-   * The event in the runner's own calendar, attached (§174; the owner: "și de iCal ca să poată
-   * pune în calendar").
+   * The event in the runner's own calendar (§174; the owner: "și de iCal ca să poată pune în
+   * calendar") — and, since §NNN, an invitation the calendar answers when the club named where the
+   * answers go (the owner: «can we make it Smarter so that people can respond Going/NotGoing»).
    *
-   * On the confirmation and the reminder, which are the two messages somebody acts on. Every
-   * phone and desktop client opens an `.ics` attachment with one tap — including the ones that
-   * will not follow a link out to the site, which on race week is the point. It is the same
-   * file the event page offers (§107, §159), built from the same function, so what lands in a
-   * calendar says exactly what the page says.
+   * Without that address, exactly as before: the confirmation and the reminder, the two messages
+   * somebody acts on, carry the same file the event page offers (§107, §159), built from the same
+   * function, so what lands in a calendar says exactly what the page says. With it, they carry the
+   * invitation instead, and «Detalii actualizate» about the time or the place and the cancellation
+   * carry its update and its cancellation (`calendarPartFor`) — to a person who holds a place.
    *
-   * A published event only: an `.ics` for a draft would leak an unpublished page's details into
-   * somebody's calendar. When there is no published row the message simply goes without it.
-   *
-   * Never on a club copy (§320), which attaches nothing: the rule is "no attachment", not a list.
+   * A published, dated event only (`renderCalendarPart`). Never on a club copy (§320), which attaches
+   * nothing: the rule is "no attachment", not a list.
    */
-  if (
+  const confirmedHere = familyConfirmed !== null || registration?.status === "CONFIRMED";
+  // The four registration messages `calendarPartFor` may give a part; any other asks no setting.
+  const mayCarryCalendar =
     !clubCopy &&
-    (row.messageType === "REGISTRATION_CONFIRMED" || row.messageType === "EVENT_REMINDER") &&
-    eventDetails?.slug
-  ) {
-    // Dated only: an event whose date is to be announced (§533) has no calendar entry to attach.
-    // The members' audience (§552): this message is to somebody registered for the event, so an
-    // event for the members alone gets its calendar entry like any other — past the door already.
-    const found = await findPublishedEventBySlug(db, locale, eventDetails.slug, "members");
-    const published = found ? datedOrNull(found) : null;
-    if (published) {
-      const ics = buildCalendar({
-        events: [toCalendarEvent(published, locale, now)],
-        baseUrl: env.APP_BASE_URL,
-        name: published.title,
-        labels: calendarLabels(locale),
+    (row.messageType === "REGISTRATION_CONFIRMED" ||
+      row.messageType === "EVENT_REMINDER" ||
+      row.messageType === "EVENT_UPDATE_NOTICE" ||
+      row.messageType === "EVENT_CANCELLED");
+  if (mayCarryCalendar && eventDetails?.slug) {
+    const rsvpTo = await calendarRsvpToForSending(db);
+    const part = calendarPartFor({ messageType: row.messageType, clubCopy, rsvpTo, confirmed: confirmedHere, changes: updateChanges });
+    if (part) {
+      const carried = await renderCalendarPart(db, {
+        part,
+        locale,
+        slug: eventDetails.slug,
+        now,
+        rsvpTo,
+        sequence: eventDetails.calendarSequence,
+        // The address the message goes to — a family's one address (§389, §519) — and whom it greets:
+        // a minor's parent or guardian (§108), else the person, else the family's first form.
+        attendee: { email: row.recipientEmail, name: registration?.guardianName ?? data.participantName },
       });
-      attachments = [
-        { filename: `${eventDetails.slug}.ics`, contentType: "text/calendar; charset=utf-8", data: Buffer.from(ics, "utf8") },
-      ];
+      attachments = carried.attachments;
+      calendar = carried.calendar;
     }
   }
 
@@ -1353,6 +1358,7 @@ async function renderRow(
     data,
     actionUrl,
     attachments: clubCopy ? undefined : attachments,
+    calendar: clubCopy ? undefined : calendar,
     // The club's own words, when it has written any (§247). Memoized for half a minute, so a
     // batch of twenty reads the setting once rather than twenty times.
     overrides: await readEmailCopyForSending(db, now),
@@ -1452,6 +1458,31 @@ async function renderGroupRunDeclarationRow(
   */
   const pdf = await renderGroupRunDeclarationPdf(db, signed, declarationPdfAudience(row.messageType, false) ?? "club", now);
   if (!archive && signed.idDocument !== null) data.idDocumentMasked = true;
+  /*
+    The run as an invitation (§NNN; the owner chose the declaration's email over a «Vin» form of its
+    own): to the signer, at the address they typed, under the name they signed with — only while the
+    club named where the answers go, never on the archive copy or a club copy (`calendarPartFor`).
+    The date they signed on: a series' declaration covers every date (§523), and the invitation is
+    the one date's entry, as the feed's is.
+  */
+  let calendar: OutgoingEmail["calendar"];
+  if (!archive && eventDetails?.slug) {
+    const rsvpTo = await calendarRsvpToForSending(db);
+    const part = calendarPartFor({ messageType: row.messageType, clubCopy: isClubCopy(row.payloadJson), rsvpTo, confirmed: true });
+    if (part) {
+      calendar = (
+        await renderCalendarPart(db, {
+          part,
+          locale,
+          slug: eventDetails.slug,
+          now,
+          rsvpTo,
+          sequence: eventDetails.calendarSequence,
+          attendee: { email: row.recipientEmail, name: signed.typedName },
+        })
+      ).calendar;
+    }
+  }
   // The archive copy's own copies (§244), read from the payload as the race's archive reads them.
   const payload = (archive ? (row.payloadJson ?? {}) : {}) as { cc?: unknown; bcc?: unknown };
   const addresses = (value: unknown): string[] =>
@@ -1465,6 +1496,7 @@ async function renderGroupRunDeclarationRow(
     data,
     actionUrl,
     attachments: pdf ? [{ filename: "declaratie-semnata.pdf", contentType: "application/pdf", data: pdf }] : undefined,
+    calendar,
     overrides: await readEmailCopyForSending(db, now),
     cc: addresses(payload.cc),
     bcc: addresses(payload.bcc),

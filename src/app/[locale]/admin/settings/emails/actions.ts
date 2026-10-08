@@ -8,6 +8,7 @@ import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { addressListRefusal, parseAddressList } from "@/modules/contact/domain/recipients";
 import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
+import { updateCalendarRsvpTo } from "@/modules/notifications/calendar-rsvp";
 import { updateClubNotices } from "@/modules/notifications/club-notices";
 import { CLUB_NOTICE_RECIPIENTS_MAX, clubNoticeBoxesOf } from "@/modules/notifications/domain/club-notices";
 import { EmailCopySampleValueError, type EmailSampleHit } from "@/modules/notifications/domain/email-sample";
@@ -248,6 +249,26 @@ export async function updateClubNoticesAction(_previous: FormOutcome | null, for
   revalidatePath(path);
   await flashOutcome({ saved: "clubNotices" });
   redirect(`${path}?saved=clubNotices#admin-alert`);
+}
+
+/**
+ * «Răspunsurile din calendar merg la» (§NNN): one address, or empty for the calendar file as before.
+ * The club's copies' gate and shape: Administrator at the door, the service asserting the role again
+ * and validating the address, a refusal returned with the box as typed (§315).
+ */
+export async function updateCalendarRsvpAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/settings/emails" });
+  try {
+    const actor = await requireStaffCapability(canManageClubSettings);
+    const to = form.get("calendarRsvpTo");
+    await updateCalendarRsvpTo(getDb(), actor, { to: typeof to === "string" ? to : "" }, new Date());
+  } catch (error) {
+    return refused(error, form);
+  }
+  revalidatePath(path);
+  await flashOutcome({ saved: "calendarRsvp" });
+  redirect(`${path}?saved=calendarRsvp#admin-alert`);
 }
 
 /**

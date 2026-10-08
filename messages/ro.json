@@ -1514,6 +1514,8 @@
       "contactRecipientsBody": "Mesajele din formularul de contact ajung de acum la adresele salvate, și numai la ele.",
       "clubNoticesTitle": "Schimbi cine primește copiile clubului?",
       "clubNoticesBody": "Declarațiile semnate, confirmările și copiile mesajelor către participanți — cu datele lor personale — ajung de acum la adresele salvate, și numai la ele.",
+      "calendarRsvpTitle": "Schimbi unde merg răspunsurile din calendar?",
+      "calendarRsvpBody": "Invitațiile trimise de acum cer Da / Nu / Poate, iar răspunsurile — cu numele și adresa celui care răspunde — ajung la adresa salvată. Gol: din nou fișierul simplu.",
       "emailCopyResetTitle": "Revii la textul implicit?",
       "emailCopyResetBody": "Textul scris de club pentru acest email, în această limbă, se pierde; emailurile trimise de acum folosesc textul implicit.",
       "botCheckOnTitle": "Pornești verificarea anti-bot?",
@@ -5025,6 +5027,21 @@
             "title": "Copia clubului la emailurile către participanți"
           }
         }
+      },
+      "calendarRsvp": {
+        "title": "Răspunsurile din calendar",
+        "intro": "Invitația din calendar — în confirmare, memento, declarația unei alergări de grup și anunțurile de schimbare — poate cere Da, Nu sau Poate. Aici alegi unde ajung răspunsurile.",
+        "aside": "Merg la {address}",
+        "asideNone": "Oprit — calendarul pleacă ca fișier, fără Da / Nu / Poate",
+        "inForce": "În vigoare: răspunsurile din calendar merg la {address}.",
+        "inForceNone": "În vigoare: nicio adresă. Confirmarea și mementoul au fișierul de calendar, cu „Adaugă în calendar”, fără Da / Nu / Poate.",
+        "field": "Răspunsurile din calendar merg la",
+        "help": "Cu o adresă aici, invitația din calendar are Da / Nu / Poate; răspunsurile ajung pe ea. Pont: adresa clubului cu +calendar și un filtru în Gmail.",
+        "updatedAt": "Modificat {when}.",
+        "readOnly": "Adresa o stabilește Administratorul; tu vezi ce e în vigoare.",
+        "save": "Salvează adresa",
+        "saving": "Se salvează…",
+        "saved": "Adresa pentru răspunsurile din calendar a fost salvată."
       },
       "clubRejections": {
         "title": "Adresele clubului care resping emailuri",
@@ -8668,6 +8685,7 @@
       "emailTransport": "Drumurile emailurilor au fost salvate.",
       "contactRecipients": "Destinatarii mesajelor de contact au fost salvați.",
       "clubNotices": "Copiile clubului au fost salvate.",
+      "calendarRsvp": "Adresa pentru răspunsurile din calendar a fost salvată.",
       "emailCopy": "Textul emailului a fost salvat.",
       "emailCopyReset": "Textul emailului a revenit la cel implicit.",
       "emailCopySamples": "Valorile de exemplu au fost înlocuite cu câmpuri.",

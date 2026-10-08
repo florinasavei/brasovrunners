@@ -11,7 +11,7 @@ import { costPaidToExternalOrganizer, type EventCostType } from "@/modules/event
 import { difficultyLevel, storedDifficulty } from "@/modules/events/domain/difficulty";
 import { estimatedDistance } from "@/modules/events/domain/distance";
 import { estimatedElevation } from "@/modules/events/domain/elevation";
-import { EVENT_NOTICE_TEXT_MAX, type EventChangeKind, eventChangesToAnnounce, eventNoticeTextSchema } from "@/modules/events/domain/event-changes";
+import { calendarSequenceMoves, EVENT_NOTICE_TEXT_MAX, type EventChangeKind, eventChangesToAnnounce, eventNoticeTextSchema } from "@/modules/events/domain/event-changes";
 import { EVENT_TYPES, type EventType, hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
 import { englishNameAfterSave, PLACE_NAME_FIELD, type PlaceNameField, placeNameIn, placeShown } from "@/modules/events/domain/place";
 import { queueEventCancelledNotices, queueEventUpdateNotices } from "@/modules/notifications/event-notices";
@@ -1508,6 +1508,27 @@ type SavedDate = {
   translationsAfter: readonly EditableTranslation[];
 };
 
+/** Each language's own name for the place, as the change comparison reads it (§362). */
+const placeLanguagesOf = (rows: readonly EditableTranslation[]) => rows.map((row) => ({ locale: row.locale, locationName: row.locationName }));
+
+/**
+ * The calendar invitation's number moves with what it says (§NNN): every date of the save whose
+ * start, place or status moved (`calendarSequenceMoves`) gets `calendar_sequence + 1`, in the save's
+ * transaction — whether or not anybody is told, because the next invitation that date sends (the
+ * reminder, a confirmation) must outrank the one a runner's calendar already holds. Neither the
+ * version nor `updatedAt` moves: the save already moved both, and nothing on a page reads this.
+ */
+async function bumpCalendarSequences<T extends Record<string, unknown>>(tx: Transaction<T>, dates: readonly SavedDate[]): Promise<void> {
+  const moved = dates
+    .filter((date) => calendarSequenceMoves(date.before, date.after, placeLanguagesOf(date.translationsBefore), placeLanguagesOf(date.translationsAfter)))
+    .map((date) => date.after.id);
+  if (moved.length === 0) return;
+  await tx
+    .update(events)
+    .set({ calendarSequence: sql`${events.calendarSequence} + 1` })
+    .where(inArray(events.id, moved));
+}
+
 /**
  * Tell one date's participants what the save did to it, inside the save's transaction (§331).
  *
@@ -1565,8 +1586,7 @@ async function announceSavedDate<T extends Record<string, unknown>>(
   }
 
   if (!request.notify || after.eventStatus !== "SCHEDULED" || input.alreadyStarted) return null;
-  const languages = (rows: readonly EditableTranslation[]) => rows.map((row) => ({ locale: row.locale, locationName: row.locationName }));
-  const changes = eventChangesToAnnounce(before, after, languages(input.translationsBefore), languages(input.translationsAfter));
+  const changes = eventChangesToAnnounce(before, after, placeLanguagesOf(input.translationsBefore), placeLanguagesOf(input.translationsAfter));
   if (changes.length === 0 && !request.note) return { kind: "nothingToTell" };
 
   const queued = await queueEventUpdateNotices(tx, {
@@ -1725,16 +1745,11 @@ export async function saveEventFields<T extends Record<string, unknown>>(
     const names = namesAfterSave(current, translationsBefore, placeNamesFrom(fields));
     await writePlaceNames(tx, input.eventId, names);
     await clearDiscountNoteIfNotAllowed(tx, input.eventId, saved);
-    if (announcing) {
-      // No words are saved here; only the place's names moved, and the notice compares those.
-      await announceSave(tx, {
-        actor: input.actor,
-        request,
-        saved,
-        dates: [{ before: current, after: saved, translationsBefore, translationsAfter: withPlaceNames(translationsBefore, names) }],
-        now,
-      });
-    }
+    // No words are saved here; only the place's names moved, and the notice compares those.
+    const dates: SavedDate[] = [{ before: current, after: saved, translationsBefore, translationsAfter: withPlaceNames(translationsBefore, names) }];
+    // The calendar invitation's number (§NNN), told or not: the next invitation must outrank the last.
+    await bumpCalendarSequences(tx, dates);
+    if (announcing) await announceSave(tx, { actor: input.actor, request, saved, dates, now });
     return saved;
   });
   // Every column here is on a public page, the capacity included (the free places are expired
@@ -2636,6 +2651,13 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     // exactly what was written, and inside the transaction, so a refused date undoes it all.
     const scope = input.scope ?? "this";
     const announcing = request.notify || request.cancellation !== null;
+    const thisDate: SavedDate = { before: current, after: savedEvent, translationsBefore: existingTranslations, translationsAfter };
+    /*
+      The calendar invitation's number (§NNN): a date of the series moves only by what moved on this
+      one (`applyToSeries` carries this date's differences and nothing else), so the other dates are
+      read back for it only when this one's start, place or status moved — or for the notice.
+    */
+    const calendarMoved = calendarSequenceMoves(current, savedEvent, placeLanguagesOf(existingTranslations), placeLanguagesOf(translationsAfter));
     let appliedTo = 0;
     const otherDates: SavedDate[] = [];
     if (scope !== "this") {
@@ -2646,7 +2668,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
         after: savedEvent,
         translationsBefore: existingTranslations,
         translationsAfter,
-        collect: announcing,
+        collect: announcing || calendarMoved,
         now,
         deadlines,
         discountNoteCleared,
@@ -2664,26 +2686,15 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     */
     const placeAnnounced = current.locationToBeAnnounced && !savedEvent.locationToBeAnnounced;
 
+    // Told or not, every date whose start, place or status moved outranks the invitation it sent (§NNN).
+    if (calendarMoved) await bumpCalendarSequences(tx, [thisDate, ...otherDates]);
+
     /*
       Telling the participants (§331), last, when every date is written and nothing is left to
       refuse: a refused save queues nothing, because the messages are rows in this transaction.
     */
     const notice = announcing
-      ? await announceSave(tx, {
-          actor: input.actor,
-          request,
-          saved: savedEvent,
-          dates: [
-            {
-              before: current,
-              after: savedEvent,
-              translationsBefore: existingTranslations,
-              translationsAfter,
-            },
-            ...otherDates,
-          ],
-          now,
-        })
+      ? await announceSave(tx, { actor: input.actor, request, saved: savedEvent, dates: [thisDate, ...otherDates], now })
       : undefined;
     const holdsMoved = combineHoldMoves(holdMoves);
     return notice ? { appliedTo, offered, placeAnnounced, holdsMoved, notice } : { appliedTo, offered, placeAnnounced, holdsMoved };
@@ -2738,6 +2749,7 @@ function blankEventRow(now: Date): EditableEvent {
     publishedAt: null,
     thanksSentAt: null,
     version: 1,
+    calendarSequence: 0,
     startsAt: now,
     endsAt: null,
     raceStartsAt: null,

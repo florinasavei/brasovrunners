@@ -39,6 +39,8 @@ import EmailTransportPanel from "@/modules/notifications/ui/EmailTransportPanel"
 import { roadsByMessageType } from "@/modules/notifications/domain/email-transport";
 import { readEmailTransport } from "@/modules/notifications/email-transport";
 import ClubNoticesPanel from "@/modules/notifications/ui/ClubNoticesPanel";
+import CalendarRsvpPanel from "@/modules/notifications/ui/CalendarRsvpPanel";
+import { readCalendarRsvpTo } from "@/modules/notifications/calendar-rsvp";
 import ClubMailboxRejectionsPanel from "@/modules/notifications/ui/ClubMailboxRejectionsPanel";
 import { readClubMailboxRejections } from "@/modules/notifications/club-mailbox-rejections";
 import OutboxQueuePanel from "@/modules/notifications/ui/OutboxQueuePanel";
@@ -148,7 +150,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   // The club's deadlines (§377), straight through like the words: the panel that sets them, the
   // when-lines that state them, the previews that print them and the forecast (§383), as they now stand.
   const deadlinesRead = readDeadlines(db);
-  const [plan, transport, volume, queue, notices, written, deadlines, forecast, addressCap, shownAddress, outboxDelivery, failedRetryable] = await Promise.all([
+  const [plan, transport, volume, queue, notices, written, deadlines, forecast, addressCap, shownAddress, outboxDelivery, failedRetryable, calendarRsvp] = await Promise.all([
     readEmailPlan(db),
     // Which road each group takes, Gmail's cap and pace (§443), beside the plan it spends less of.
     readEmailTransport(db),
@@ -185,6 +187,8 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     readNeonBudget(now).then((budget) => readOutboxDelivery(db, now, budget.effects.jobFloorMinutes)),
     // «Reîncearcă emailurile eșuate» (§622): the week's FAILED rows its question counts, for whoever may press it.
     maySendNow ? countRetryableFailed(db, now) : 0,
+    // «Răspunsurile din calendar merg la» (§NNN): the club's own address, read straight through like the others.
+    readCalendarRsvpTo(db),
   ]);
   /*
     What «Trimite acum» said about Mailgun's stop (§622): how many Gmail carried and until when Mailgun
@@ -360,6 +364,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         )}
         {saved === "deliveryTiming" && <Alert severity="success">{t("emails.deliveryTiming.saved")}</Alert>}
         {saved === "clubNotices" && <Alert severity="success">{t("emails.clubNotices.saved")}</Alert>}
+        {saved === "calendarRsvp" && <Alert severity="success">{t("emails.calendarRsvp.saved")}</Alert>}
         {saved === "emailCopy" && <Alert severity="success">{t("emails.copy.saved")}</Alert>}
         {saved === "emailCopyReset" && <Alert severity="success">{t("emails.copy.resetDone")}</Alert>}
         {saved === "emailCopySamples" && <Alert severity="success">{t("emails.copy.samplesReplaced")}</Alert>}
@@ -410,6 +415,14 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
           openWhen={{ saved: saved === "clubNotices" }}
         />
       )}
+
+      {/*
+        Where a calendar invitation's «Da / Nu / Poate» goes (§NNN), beside the copies: what else the
+        club receives. The club's own address, no participant's, so every reader of this page sees it;
+        the Administrator changes it.
+      */}
+      <CalendarRsvpPanel locale={locale} state={calendarRsvp} mayEdit={mayEditEmail} openWhen={{ saved: saved === "calendarRsvp" }} />
+
 
       {/* The club's mailboxes that refuse its emails (§671), under the lists that name them; nothing when none did. */}
       {clubRejections.length > 0 && <ClubMailboxRejectionsPanel locale={locale} groups={clubRejections} />}
