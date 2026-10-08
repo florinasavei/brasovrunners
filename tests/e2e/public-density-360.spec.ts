@@ -127,7 +127,7 @@ test.describe("§480 the public pages at 360 px", () => {
 
   test("a public fold's summary is 44 pixels tall, its padding inside it", async ({ page }) => {
     await page.goto("/ro/calendar");
-    const summary = page.locator("#main details > summary", { hasText: "Adresa pentru alte aplicații" });
+    const summary = page.locator("#main details > summary", { hasText: "Adresa calendarului, de copiat" });
     await expect(summary).toBeVisible();
     const height = tenth((await summary.boundingBox())?.height ?? 0);
     expect(height, "the calendar's feed-address fold").toBeGreaterThanOrEqual(44);

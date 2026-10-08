@@ -94,11 +94,17 @@
       "pageIntro": "The club's month: the weekly runs and the races, day by day. You can take the whole calendar into your phone or your Google Calendar.",
       "introHelp": "About the calendar and how to take it into your phone",
       "addTitle": "Add to your calendar",
-      "feedAddress": "The address for other apps",
+      "feedAddress": "The calendar's address, to copy",
       "subscribeGoogle": "Google Calendar",
       "subscribeApple": "Apple / Outlook / phone",
       "downloadLink": "download the .ics",
-      "refreshNote": "Google Calendar re-reads the address by itself, about once a day; Apple and Outlook as often as you set them. A change shows on the next read. On Android the 🏃 BVR calendar only appears in the app once you switch it on: Google Calendar → Menu → Settings → 🏃 BVR → Sync."
+      "refreshNote": "Google Calendar re-reads the address by itself, about once a day; Apple and Outlook as often as you set them. A change shows on the next read. On Android the 🏃 BVR calendar only appears in the app once you switch it on: Google Calendar → Menu → Settings → 🏃 BVR → Sync.",
+      "addressLabel": "The calendar's address",
+      "copy": "Copy",
+      "copied": "Copied",
+      "googleHintWhy": "The button does nothing? Google hides a calendar rather than removing it, and keeps an old copy by its address.",
+      "googleHintHow": "On the web: calendar.google.com → “+” beside “Other calendars” → “From URL” → paste the address, with ?v=2 at the end.",
+      "phoneAppHint": "The Google Calendar app on a phone cannot add a calendar by its address; use the website."
     },
     "raceWeek": {
       "today": "Today, {when}",
@@ -133,7 +139,12 @@
       "instagramDownload": "Download the picture",
       "calendarTitle": "Add to calendar:",
       "googleCalendar": "Google Calendar",
-      "ics": ".ics file"
+      "ics": ".ics file",
+      "fileAddress": "The file's address, to copy",
+      "fileAddressLabel": "The .ics file's address",
+      "copy": "Copy",
+      "copied": "Copied",
+      "binHint": "Deleted the event from Google Calendar? It sits in the calendar's Bin for 30 days, on the web; this file is not added a second time while it is there."
     },
     "rules": "Event rules",
     "conditions": {
