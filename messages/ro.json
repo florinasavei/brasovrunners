@@ -3752,7 +3752,7 @@
             "other": "{count} de adrese ale clubului resping emailuri: copiile sau anunțurile nu ajung acolo."
           },
           "done": "Nicio adresă a clubului nu a respins emailuri în ultimele 30 de zile.",
-          "doneRemoved": "Nicio adresă din „Copiile clubului” nu cere ceva; adresele scoase între timp apar în „Setări → Emailuri”.",
+          "doneRemoved": "Nicio adresă din „Copiile clubului” nu cere nimic; adresele scoase între timp apar în „Setări → Emailuri”.",
           "how": [
             "Deschide «Setări» → «Emailuri» → «Adresele clubului care resping emailuri».",
             "Sub fiecare adresă scrie ce faci: o corectezi în «Copiile clubului», faci loc în căsuță, sau o scoți din Mailgun → Suppressions dacă e bună.",

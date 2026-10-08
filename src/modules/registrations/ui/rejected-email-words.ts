@@ -210,7 +210,7 @@ function deskTellKey(cause: RejectionCause, confirmed: boolean): string {
 
 /**
  * «Email respins», said in full (§663; amending §650, §76, §83) — of the registration's one email state
- * (the data decision „The runners' own emails tell the truth”), by its cause and for who reads it (§NNN): which email did not arrive (its
+ * (the data decision §670), by its cause and for who reads it (§NNN): which email did not arrive (its
  * name in the «Emailuri» catalogue, short on a card), when (club time, §452), why in plain words, whether
  * the address had been confirmed before it, and what to do. Staff never change the address (§645,
  * `AGENTS.md` §15.11): only the person can, by registering again — said only while the registration is

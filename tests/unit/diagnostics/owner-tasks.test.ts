@@ -781,7 +781,7 @@ describe("the email rows of «Sarcini»", () => {
     const removed = rows({ clubMailboxRefusals: 0, clubMailboxesRemoved: 1 }).find((task) => task.id === "clubMailboxRefusals");
     expect(removed).toMatchObject({ state: "done", text: "doneRemoved" });
     expect(ro.Admin.tasks.items.clubMailboxRefusals.doneRemoved).toBe(
-      "Nicio adresă din „Copiile clubului” nu cere ceva; adresele scoase între timp apar în „Setări → Emailuri”.",
+      "Nicio adresă din „Copiile clubului” nu cere nimic; adresele scoase între timp apar în „Setări → Emailuri”.",
     );
     expect(en.Admin.tasks.items.clubMailboxRefusals.doneRemoved).toContain("Settings → Emails");
     // One still in the settings outranks the removed: red, by its count.

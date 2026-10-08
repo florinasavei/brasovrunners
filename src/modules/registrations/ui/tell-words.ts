@@ -36,7 +36,7 @@ export type TellFacts = {
   /** Why an expired row expired: a lapsed declaration hold says what its email said (§638). */
   expiryReason?: string | null;
   /**
-   * The registration's email state (§663, the data decision „The runners' own emails tell the truth”, §NNN): when the address refuses the club's
+   * The registration's email state (§663, the data decision §670, §NNN): when the address refuses the club's
    * mail (`unreachable`), which email did not arrive, in the participant's words and with its date, why in
    * plain words by its cause, and what the person can do. A message the club's account could not send, or one
    * owed again to an address that works, is not the person's to hear about as a refusal: it is said as owed
