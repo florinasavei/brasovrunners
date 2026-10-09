@@ -198,15 +198,16 @@ export function defaultAudience(branch: FeedbackBranch): FeedbackAudience {
  * - **«Clubul»** — the branch's own recipient, and for the safety branch the «O reclamație» recipient
  *   or else the contact form's (`clubFallback`: whether the contact form reaches anybody); by the SMTP
  *   road, so never on a deployment without one.
- * - **the person** — while the safety branch is switched on with its recipient and its first name, the
- *   person the club designated; by Mailgun alone, whatever the branch.
+ * - **the person** — while the safety branch has its recipient and its first name, switched on or not,
+ *   the person the club designated; by Mailgun alone, whatever the branch. Switching the safety form off
+ *   takes away her form, not her: a named message from another form may still reach her.
  *
  * Fewer than two is no choice: the group is not drawn and the message goes to the branch's own reader.
  */
 export function audiencesFor(branch: FeedbackBranch, settings: FeedbackSettings, roads: { smtp: boolean; clubFallback: boolean }): FeedbackAudience[] {
   const clubRecipient = branch === "safety" ? Boolean(settings.complaint.to) || roads.clubFallback : Boolean(settings[branch].to);
   const club = roads.smtp && clubRecipient;
-  const person = settings.safety.on && Boolean(settings.safety.to) && Boolean(settings.safety.name);
+  const person = Boolean(settings.safety.to) && Boolean(settings.safety.name);
   return FEEDBACK_AUDIENCES.filter((audience) => (audience === "club" ? club : person));
 }
 
@@ -471,6 +472,16 @@ const SUBJECT: Readonly<Record<Exclude<FeedbackBranch, "safety">, string>> = {
   complaint: "O reclamație de pe site",
 };
 
+/**
+ * Each ordinary form's name as the club reads it, quoted on the line «Din formularul: …» when a named
+ * message from it reaches the safety branch's person (§NNN): her inbox otherwise holds only her own form's.
+ */
+const FORM_NAME: Readonly<Record<Exclude<FeedbackBranch, "safety">, string>> = {
+  howItWent: "„Cum a fost”",
+  suggestion: "„O sugestie”",
+  complaint: "„O reclamație”",
+};
+
 /** «Altceva / în general»: no event chosen, or one the club does not publish. */
 const GENERAL = "altceva / în general";
 
@@ -498,13 +509,15 @@ function dayWords(day: string): string {
 type Line = { label: string; value: string };
 
 /**
- * The lines of one message: first «Nume: …» — the name the person gave, or «(anonim)» (§NNN) — then
- * only what they filled, in the form's order (`BRANCH_FIELDS`), and the way back or «(fără contact
+ * The lines of one message: first «Nume: …» — the name the person gave, or «(anonim)» (§NNN) — then,
+ * for a message from an ordinary form that goes to the safety branch's person, «Din formularul: „…”»
+ * (§NNN), then only what they filled, in the form's order (`BRANCH_FIELDS`), and the way back or «(fără contact
  * lăsat)». Romanian whatever the form's language — the reader is the club — with the form's language
  * on its own line so the club knows how to answer.
  */
 export function feedbackLines(input: FeedbackInput, context: FeedbackContext): { lines: Line[]; message: Line; contact: Line } {
   const lines: Line[] = [{ label: "Nume", value: input.identity === "named" && input.name ? input.name : ANONYMOUS_NAME_LINE }];
+  if (context.toPerson && input.branch !== "safety") lines.push({ label: "Din formularul", value: FORM_NAME[input.branch] });
   // A slug the club does not publish is no event: the posted value is only ever a picker's option.
   const event = (slug: string | null) => (slug && context.eventTitle ? context.eventTitle : GENERAL);
   switch (input.branch) {

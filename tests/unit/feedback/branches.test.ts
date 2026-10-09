@@ -189,8 +189,8 @@ describe("§NNN «Cine să afle?»: the club or the safety branch's person", () 
     for (const branch of ["howItWent", "suggestion", "complaint", "safety"] as const) expect(audiencesFor(branch, ON, roads), branch).toEqual(["club", "person"]);
   });
 
-  it("offers the person only while the safety branch is on with its recipient and its first name", () => {
-    expect(audiencesFor("suggestion", { ...ON, safety: { on: false, to: "safety@example.org", name: "Maria" } }, roads)).toEqual(["club"]);
+  it("offers the person whenever the safety branch has its recipient and its first name, switched on or not", () => {
+    expect(audiencesFor("suggestion", { ...ON, safety: { on: false, to: "safety@example.org", name: "Maria" } }, roads)).toEqual(["club", "person"]);
     expect(audiencesFor("suggestion", { ...ON, safety: { on: true, to: null, name: "Maria" } }, roads)).toEqual(["club"]);
     expect(audiencesFor("suggestion", { ...ON, safety: { on: true, to: "safety@example.org", name: null } }, roads)).toEqual(["club"]);
   });
@@ -230,7 +230,13 @@ describe("§NNN «Cine să afle?»: the club or the safety branch's person", () 
     const toPerson = composeFeedbackEmail(input, { eventTitle: null, toPerson: true }, "production");
     expect(toPerson.subject).toBe(SAFETY_SUBJECT);
     expect(toPerson.text).toContain("cine a scris a ales să afli doar tu");
-    expect(composeFeedbackEmail(input, { eventTitle: null }, "production").subject).toBe("O sugestie de pe site");
+    expect(toPerson.text.split("\n")[1]).toBe("Din formularul: „O sugestie”");
+    const toClub = composeFeedbackEmail(input, { eventTitle: null }, "production");
+    expect(toClub.subject).toBe("O sugestie de pe site");
+    expect(toClub.text).not.toContain("Din formularul");
+    // Her own form needs no such line.
+    const safety = parse({ branch: "safety", message: "Cineva m-a urmărit.", whereWhen: "", contact: "" });
+    expect(composeFeedbackEmail(safety, { eventTitle: null, toPerson: true }, "production").text).not.toContain("Din formularul");
   });
 });
 

@@ -105,9 +105,12 @@ export function readFeedbackInput(raw: unknown): FeedbackInput {
   return parsed.data;
 }
 
-/** The function log's one line: the branch and the outcome, never a word the person typed (§676). */
-function logged(branch: FeedbackBranch | "unknown", outcome: FeedbackOutcome): FeedbackOutcome {
-  console.info(`[feedback] ${branch}: ${outcome.outcome}`);
+/**
+ * The function log's one line: the branch, the reader once it is known (`club` or `person`, §NNN) and
+ * the outcome — never a word the person typed, an address or a name (§676).
+ */
+function logged(branch: FeedbackBranch | "unknown", outcome: FeedbackOutcome, reader?: FeedbackAudience): FeedbackOutcome {
+  console.info(`[feedback] ${branch}${reader ? ` ${reader}` : ""}: ${outcome.outcome}`);
   return outcome;
 }
 
@@ -138,12 +141,12 @@ export async function submitFeedback<T extends Record<string, unknown>>(
   const audience = chosenAudience(input, offeredAudiences);
   if (!audience) throw new DomainError("VALIDATION_ERROR", "the feedback form chose a reader not offered", ["audience"]);
   const recipients = readersOf(branch, audience, deps);
-  if (recipients.length === 0) return logged(branch, { outcome: "unavailable" });
+  if (recipients.length === 0) return logged(branch, { outcome: "unavailable" }, audience);
   const road = audience === "person" ? deps.mailgun : deps.smtp;
-  if (!road) return logged(branch, { outcome: "unavailable" });
+  if (!road) return logged(branch, { outcome: "unavailable" }, audience);
 
   const verdict = await consumeRateLimit(db, "feedback", branch, now);
-  if (!verdict.allowed) return logged(branch, { outcome: "limited", retryAfter: verdict.retryAfter });
+  if (!verdict.allowed) return logged(branch, { outcome: "limited", retryAfter: verdict.retryAfter }, audience);
 
   const eventSlug = input.branch === "howItWent" || input.branch === "complaint" ? input.event : null;
   const eventTitle = eventSlug ? await deps.eventTitle(eventSlug, input.locale) : null;
@@ -153,11 +156,11 @@ export async function submitFeedback<T extends Record<string, unknown>>(
     audience === "person"
       ? await sendSafety(deps.mailgun as FeedbackMailgunRoad, recipients[0], email, input.locale)
       : await sendOrdinary(deps.smtp as FeedbackSmtpRoad, recipients, email, input, deps.screening, now);
-  if (sent) return logged(branch, audience === defaultAudience(branch) ? { outcome: "sent" } : { outcome: "sent", audience });
+  if (sent) return logged(branch, audience === defaultAudience(branch) ? { outcome: "sent" } : { outcome: "sent", audience }, audience);
 
   // A message that reached nobody is not one of the branch's thirty.
   await refundRateLimit(db, "feedback", branch, now);
-  return logged(branch, { outcome: "unavailable" });
+  return logged(branch, { outcome: "unavailable" }, audience);
 }
 
 /** A post with the named mode taken away (§NNN): `feedbackFields` then drops the name, the way back and the reader. */

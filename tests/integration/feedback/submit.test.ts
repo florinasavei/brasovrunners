@@ -134,14 +134,15 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(message.idempotencyKey).toMatch(/^feedback:/);
     });
 
-    it("writes no outbox row and no audit row, and logs the branch and the outcome only", async () => {
+    it("writes no outbox row and no audit row, and logs the branch, the reader and the outcome only", async () => {
       const logged = vi.spyOn(console, "info").mockImplementation(() => undefined);
       await submitFeedback(db, deps(), HOW, NOW);
       await submitFeedback(db, deps(), SAFETY, NOW);
       expect(await db.select().from(emailOutbox)).toEqual([]);
       expect(await db.select().from(auditLogs)).toEqual([]);
       const lines = logged.mock.calls.map((call) => call.join(" "));
-      expect(lines).toEqual(["[feedback] howItWent: sent", "[feedback] safety: sent"]);
+      // The reader as a word (§NNN), never an address or a name.
+      expect(lines).toEqual(["[feedback] howItWent club: sent", "[feedback] safety person: sent"]);
       logged.mockRestore();
     });
 
@@ -172,8 +173,26 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(message.subject).toBe(SAFETY_SUBJECT);
       expect(message.noReplyTo).toBe(true);
       expect(message.text.split("\n")[0]).toBe("Nume: Ana Pop");
+      // Her inbox otherwise holds only her own form's: the line says which form it came from (§NNN).
+      expect(message.text.split("\n")[1]).toBe("Din formularul: „O reclamație”");
+      expect(message.html).toContain("<strong>Din formularul:</strong> „O reclamație”");
       expect(message.text).toContain("Contact: ana@example.org");
       expect(message.text).toContain("cine a scris a ales să afli doar tu");
+    });
+
+    it("sends a named «O sugestie» to the safety branch's person by Mailgun while her own form is switched off but she is configured", async () => {
+      const safetyOff = { ...SETTINGS, safety: { on: false, to: "safety@example.org", name: "Maria" } };
+      const toPerson = { ...SUGGESTION, audience: "person" };
+      expect(await submitFeedback(db, deps({ settings: safetyOff }), toPerson, NOW)).toEqual({ outcome: "sent", audience: "person" });
+      expect(smtp.messages).toHaveLength(0);
+      const [message] = mailgun.send.mock.calls[0];
+      expect(message.to).toBe("safety@example.org");
+      expect(message.subject).toBe(SAFETY_SUBJECT);
+      expect(message.noReplyTo).toBe(true);
+      expect(message.text).toContain("Din formularul: „O sugestie”");
+      // Her own form stays closed.
+      expect(await submitFeedback(db, deps({ settings: safetyOff }), SAFETY, NOW)).toEqual({ outcome: "unavailable" });
+      expect(mailgun.send).toHaveBeenCalledTimes(1);
     });
 
     it("sends a named «Cum a fost» to the club by default, by the SMTP road, with the name in Reply-To", async () => {
