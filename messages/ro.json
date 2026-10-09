@@ -5558,7 +5558,7 @@
           "howItWent": "Cum a fost",
           "suggestion": "O sugestie",
           "complaint": "O reclamație",
-          "safety": "Siguranță (confidențial)"
+          "safety": "Siguranță pentru femei (confidențial)"
         },
         "help": {
           "howItWent": "Evenimentul, data, o notă de la 1 la 5, ce s-a întâmplat și de ce nu mai vine cineva. Și din emailul de mulțumire.",
@@ -8496,8 +8496,8 @@
         "intro": "Spune-ne ce s-a întâmplat; evenimentul și data sunt opționale."
       },
       "safety": {
-        "label": "Siguranță",
-        "hint": "Pentru femeile care nu s-au simțit în siguranță la noi. Confidențial."
+        "label": "Siguranță pentru femei",
+        "hint": "Ca femeie, alergatul vine uneori cu provocări în plus. Dacă ceva te-a făcut să nu te simți în largul tău la noi, spune-ne — confidențial."
       }
     },
     "safety": {

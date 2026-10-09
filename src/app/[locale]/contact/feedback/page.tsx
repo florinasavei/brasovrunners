@@ -1,9 +1,15 @@
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import DirectionsRunOutlinedIcon from "@mui/icons-material/DirectionsRunOutlined";
+import FeedbackOutlinedIcon from "@mui/icons-material/FeedbackOutlined";
+import LightbulbOutlinedIcon from "@mui/icons-material/LightbulbOutlined";
+import RadioButtonCheckedIcon from "@mui/icons-material/RadioButtonChecked";
+import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import SentimentDissatisfiedIcon from "@mui/icons-material/SentimentDissatisfied";
 import SentimentNeutralIcon from "@mui/icons-material/SentimentNeutral";
 import SentimentSatisfiedIcon from "@mui/icons-material/SentimentSatisfied";
 import SentimentVeryDissatisfiedIcon from "@mui/icons-material/SentimentVeryDissatisfied";
 import SentimentVerySatisfiedIcon from "@mui/icons-material/SentimentVerySatisfied";
+import VolunteerActivismOutlinedIcon from "@mui/icons-material/VolunteerActivismOutlined";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
@@ -48,7 +54,6 @@ import { readFormDraft } from "@/modules/registrations/form-draft";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { BOT_CHECK_ERROR_ATTRIBUTE, BOT_CHECK_SLOT_SX } from "@/modules/registrations/domain/turnstile-widget";
 import CheckboxField from "@/shared/ui/CheckboxField";
-import RadioField from "@/shared/ui/RadioField";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { INLINE_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
@@ -90,6 +95,23 @@ const FACES: Readonly<Record<(typeof RATINGS)[number], ComponentType<{ "aria-hid
   4: SentimentSatisfiedIcon,
   5: SentimentVerySatisfiedIcon,
 };
+
+type Glyph = ComponentType<{ "aria-hidden"?: boolean | "true"; sx?: object; className?: string }>;
+
+/**
+ * Step 1's cards (§NNN): one glyph per branch, drawn on the server — decoration, `aria-hidden`, the
+ * words carry the meaning. The safety card takes the club's secondary colour, so it reads as its
+ * own place rather than as a fourth complaint.
+ */
+const BRANCH_CARDS: Readonly<Record<FeedbackBranch, { Icon: Glyph; accent: "primary" | "secondary" }>> = {
+  howItWent: { Icon: DirectionsRunOutlinedIcon, accent: "primary" },
+  suggestion: { Icon: LightbulbOutlinedIcon, accent: "primary" },
+  complaint: { Icon: FeedbackOutlinedIcon, accent: "primary" },
+  safety: { Icon: VolunteerActivismOutlinedIcon, accent: "secondary" },
+};
+
+/** The faintest wash of a palette colour, as a CSS variable so it follows the scheme and crosses no boundary. */
+const wash = (accent: "primary" | "secondary", percent: number) => `color-mix(in srgb, var(--mui-palette-${accent}-main) ${percent}%, transparent)`;
 
 const DAY_MS = 24 * 60 * 60_000;
 
@@ -159,8 +181,15 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
 
 type T = Awaited<ReturnType<typeof getTranslations<"Tell">>>;
 
-/** Step 1: one native radio per branch on, and «Continuă» — a `GET`, so `?tip=` is the step. */
+/**
+ * Step 1: one card per branch on, and «Continuă» — a `GET`, so `?tip=` is the step (§NNN).
+ *
+ * Each card is a `<label>` around a native radio, the rating faces' own shape: the radio is
+ * visually hidden but real, so the choice works without JavaScript, from the keyboard and with a
+ * screen reader; the border, the wash and the ring glyph follow `:checked` in CSS alone.
+ */
 function ChooseStep({ branches, path, query, t }: { branches: FeedbackBranch[]; path: string; query: ReturnType<typeof readFeedbackQuery>; t: T }) {
+  const chosen = query.branch && branches.includes(query.branch) ? query.branch : branches[0];
   return (
     <>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
@@ -174,18 +203,63 @@ function ChooseStep({ branches, path, query, t }: { branches: FeedbackBranch[]; 
           <Typography component="legend" variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
             {t("choose.legend")}
           </Typography>
-          <Stack spacing={0.5}>
-            {branches.map((branch, index) => (
-              <Box key={branch}>
-                <RadioField name={FEEDBACK_QUERY.branch} value={BRANCH_SLUG[branch]} defaultChecked={query.branch && branches.includes(query.branch) ? query.branch === branch : index === 0}>
-                  {t(`branches.${branch}.label`)}
-                </RadioField>
-                <Typography variant="body2" color="text.secondary" sx={{ ml: 6, mt: -0.5 }}>
-                  {t(`branches.${branch}.hint`)}
-                </Typography>
-              </Box>
-            ))}
-          </Stack>
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1.5 }}>
+            {branches.map((branch) => {
+              const { Icon, accent } = BRANCH_CARDS[branch];
+              const slug = BRANCH_SLUG[branch];
+              return (
+                <Box
+                  key={branch}
+                  component="label"
+                  data-testid={`feedback-choice-${slug}`}
+                  sx={{
+                    ...TAP_TARGET,
+                    position: "relative",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 1.5,
+                    p: 1.5,
+                    pr: 5,
+                    border: 1,
+                    borderColor: "divider",
+                    borderRadius: 2,
+                    cursor: "pointer",
+                    transition: "border-color 120ms, background-color 120ms",
+                    "&:hover": { borderColor: `${accent}.main` },
+                    "&:has(input:checked)": { borderColor: `${accent}.main`, bgcolor: wash(accent, 8), boxShadow: `inset 0 0 0 1px var(--mui-palette-${accent}-main)` },
+                    "&:has(input:focus-visible)": { outline: 2, outlineColor: "primary.main", outlineStyle: "solid", outlineOffset: 2 },
+                    "& .choice-on": { display: "none" },
+                    "&:has(input:checked) .choice-on": { display: "inline-block" },
+                    "&:has(input:checked) .choice-off": { display: "none" },
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name={FEEDBACK_QUERY.branch}
+                    value={slug}
+                    defaultChecked={branch === chosen}
+                    style={{ position: "absolute", opacity: 0, width: 1, height: 1, margin: 0, top: 0, left: 0 }}
+                  />
+                  <Box
+                    aria-hidden="true"
+                    sx={{ flex: "none", width: 44, height: 44, borderRadius: "50%", display: "grid", placeItems: "center", bgcolor: wash(accent, 14), color: `${accent}.main` }}
+                  >
+                    <Icon aria-hidden="true" sx={{ fontSize: 26 }} />
+                  </Box>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography component="span" variant="body1" sx={{ display: "block", fontWeight: 600 }}>
+                      {t(`branches.${branch}.label`)}
+                    </Typography>
+                    <Typography component="span" variant="body2" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
+                      {t(`branches.${branch}.hint`)}
+                    </Typography>
+                  </Box>
+                  <RadioButtonUncheckedIcon className="choice-off" aria-hidden="true" sx={{ position: "absolute", top: 12, right: 12, fontSize: 22, color: "text.secondary" }} />
+                  <RadioButtonCheckedIcon className="choice-on" aria-hidden="true" sx={{ position: "absolute", top: 12, right: 12, fontSize: 22, color: `${accent}.main` }} />
+                </Box>
+              );
+            })}
+          </Box>
         </Box>
         <Button type="submit" variant="contained" size="large" fullWidth sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX, mt: 3 }}>
           {t("choose.next")}

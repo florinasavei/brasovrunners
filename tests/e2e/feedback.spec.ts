@@ -175,11 +175,23 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await door.click();
       await expect(page).toHaveURL(/\/ro\/contact\/spune-ne$/);
 
-      // Step 1: native radios, one per branch on, and «Continuă» — the branch lands in the address.
+      // Step 1 (§NNN): one card per branch on, each a label around a native radio, with its glyph, a
+      // thumb's height and the warm words for the safety branch; «Continuă» puts the branch in the address.
       const choose = page.getByTestId("feedback-choose");
       await expect(choose).toBeVisible();
       await expect(choose.locator('input[name="tip"]')).toHaveCount(2);
-      await choose.locator('input[name="tip"][value="siguranta"]').check();
+      const safetyCard = page.getByTestId("feedback-choice-siguranta");
+      await expect(page.getByTestId("feedback-choice-cum-a-fost").locator('input[name="tip"]')).toBeChecked();
+      await expect(safetyCard).toContainText("Siguranță pentru femei");
+      await expect(safetyCard).toContainText("provocări în plus");
+      for (const card of [page.getByTestId("feedback-choice-cum-a-fost"), safetyCard]) {
+        await expect(card.locator("svg").first()).toBeVisible();
+        expect((await card.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+      }
+      await noSidewaysScroll(page);
+      // The whole card is the target: a press on its words chooses it.
+      await safetyCard.getByText("Siguranță pentru femei").click();
+      await expect(safetyCard.locator('input[name="tip"]')).toBeChecked();
       await choose.getByRole("button", { name: "Continuă" }).click();
       await expect(page).toHaveURL(/\/ro\/contact\/spune-ne\?tip=siguranta$/);
       // Above the form, in the page's language: who reads it, by the first name the club set.

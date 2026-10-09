@@ -5558,7 +5558,7 @@
           "howItWent": "How it was",
           "suggestion": "A suggestion",
           "complaint": "A complaint",
-          "safety": "Safety (confidential)"
+          "safety": "Safety for women (confidential)"
         },
         "help": {
           "howItWent": "The event, the date, a rating from 1 to 5, what happened and why someone stopped coming. Also from the thank-you email.",
@@ -8496,8 +8496,8 @@
         "intro": "Tell us what happened; the event and the date are optional."
       },
       "safety": {
-        "label": "Safety",
-        "hint": "For women who did not feel safe with us. Confidential."
+        "label": "Safety for women",
+        "hint": "Running as a woman sometimes comes with extra challenges. If anything made you feel uneasy with us, tell us — in confidence."
       }
     },
     "safety": {
