@@ -8534,6 +8534,18 @@
     },
     "event": "The event",
     "eventGeneral": "Something else / in general",
+    "eventFilter": {
+      "search": "Type part of a name or a date",
+      "noMatch": "No event found",
+      "open": "Open the list of events",
+      "close": "Close the list of events",
+      "kinds": "Show",
+      "chips": {
+        "all": "All",
+        "race": "Races",
+        "group": "Group runs"
+      }
+    },
     "date": "Date (optional)",
     "dateHelp": "For a run of a series: the day you mean.",
     "rating": {

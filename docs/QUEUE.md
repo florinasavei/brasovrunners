@@ -130,6 +130,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.81` | the feedback form's event picker filters (§680) |
 | `BR-V2.80` | the safety form is Girl Zone, «Anonim» wears an incognito hat, the newsletter goes last (§679) |
 | `BR-V2.79` | the feedback choice is cards with icons, every form opens with anonymous or named, and a named message chooses the club or the safety person (§678) |
 | `BR-V2.78` | the rain is a raining cloud and a percentage (§677) |
