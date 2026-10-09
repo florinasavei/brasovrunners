@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.81-2026-10-09
+
+- **«Evenimentul» filters as you type** — on «Cum a fost» and «O reclamație», a long event list becomes a search box that finds an event by part of its title or its day, with or without diacritics, and Enter picks the highlighted row — the first event found, or the one already chosen while it still matches; «Altceva / în general» heads the list while the box is empty or nothing matches, and «Toate» / «Curse» / «Alergări de grup» chips narrow it; without JavaScript, or with eight rows or fewer, the plain list stays. §680.
 ## BR-V2.80-2026-10-09
 
 - **«Girl Zone», with a flower; «Anonim» in an incognito hat; the newsletter last** — the confidential safety form of «Spune-ne ceva» is called «Girl Zone» in both languages, on its card, its form's heading, the backoffice switch, the email's footer and the privacy notice's template, with a flower glyph in place of the heart; the subtitle that says whom it is for and the email's neutral subject are unchanged. «Cum vrei să trimiți?» shows an incognito hat and glasses before «Anonim» and a person before «Cu nume și prenume», and on the contact page «Spune-ne ceva» now comes right under the form, with the newsletter's box last. §679.

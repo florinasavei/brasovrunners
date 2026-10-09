@@ -8534,6 +8534,18 @@
     },
     "event": "Evenimentul",
     "eventGeneral": "Altceva / în general",
+    "eventFilter": {
+      "search": "Scrie o parte din nume sau din dată",
+      "noMatch": "Niciun eveniment găsit",
+      "open": "Deschide lista evenimentelor",
+      "close": "Închide lista evenimentelor",
+      "kinds": "Arată",
+      "chips": {
+        "all": "Toate",
+        "race": "Curse",
+        "group": "Alergări de grup"
+      }
+    },
     "date": "Data (opțional)",
     "dateHelp": "Pentru o alergare dintr-o serie: ziua la care te gândești.",
     "rating": {
