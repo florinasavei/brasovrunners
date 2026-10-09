@@ -48,7 +48,10 @@ import {
   STOPPED_REASONS,
   wizardStep,
 } from "@/modules/feedback/domain/branches";
+import { GENERAL_VALUE, pickerFilters, pickerKind, type PickerOption } from "@/modules/feedback/domain/event-picker";
+import { dayKey } from "@/modules/events/domain/calendar";
 import BranchChoice, { BranchGlyphTile } from "@/modules/feedback/ui/BranchChoice";
+import EventPickerFilter from "@/modules/feedback/ui/EventPickerFilter";
 import { branchLabelLang } from "@/modules/feedback/ui/branch-glyph";
 import IdentityChoice from "@/modules/feedback/ui/IdentityChoice";
 import {
@@ -277,6 +280,40 @@ async function BranchForm({
     helperText: invalid.has(name) ? t("errors.field") : help,
     defaultValue: kept(name) ?? "",
   });
+  // The picker's rows as plain data (§NNN): «Altceva» first, then the events, each with its kind and its
+  // day — the native select draws them, and the filtering island receives them as they are.
+  const pickerOptions: PickerOption[] = withEvent
+    ? [
+        { value: GENERAL_VALUE, label: t("eventGeneral"), kind: "other", day: null, when: null },
+        ...events.map((event) => {
+          const timeZone = event.timezone ?? CLUB_TIME_ZONE;
+          return {
+            value: event.slug,
+            label: event.title,
+            kind: pickerKind(event.type),
+            day: event.startsAt ? dayKey(event.startsAt, timeZone) : null,
+            when: event.startsAt ? formatDay(event.startsAt, { locale, timeZone, style: "short", position: "continues" }) : null,
+          };
+        }),
+      ]
+    : [];
+  // The native select, exactly as before: what a browser without JavaScript posts, and what the island stands in for.
+  const nativePicker = (
+    <TextField
+      {...box("event")}
+      defaultValue={chosenEvent}
+      select
+      label={t("event")}
+      fullWidth
+      slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+    >
+      {pickerOptions.map((option) => (
+        <option key={option.value || "general"} value={option.value}>
+          {option.when ? `${option.label} — ${option.when}` : option.label}
+        </option>
+      ))}
+    </TextField>
+  );
   const otherBranches = single ? null : getPathname({ locale, href: { pathname: "/contact/feedback", query: { ...(query.eventSlug ? { [FEEDBACK_QUERY.event]: query.eventSlug } : {}), ...(query.date ? { [FEEDBACK_QUERY.date]: query.date } : {}) } } });
 
   return (
@@ -353,25 +390,31 @@ async function BranchForm({
               audience={audienceKept && identity.audiences.includes(audienceKept) ? audienceKept : defaultAudience(branch)}
             />
           )}
-          {withEvent && (
-            <TextField
-              {...box("event")}
-              defaultValue={chosenEvent}
-              select
-              label={t("event")}
-              fullWidth
-              slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
-            >
-              <option value="">{t("eventGeneral")}</option>
-              {events.map((event) => (
-                <option key={event.id} value={event.slug}>
-                  {event.startsAt
-                    ? `${event.title} — ${formatDay(event.startsAt, { locale, timeZone: event.timezone ?? CLUB_TIME_ZONE, style: "short", position: "continues" })}`
-                    : event.title}
-                </option>
-              ))}
-            </TextField>
-          )}
+          {withEvent &&
+            (pickerFilters(pickerOptions) ? (
+              // A long list (§NNN): the island takes the select's place once it runs, and posts the same `event`.
+              <EventPickerFilter
+                id={fieldId("event")}
+                name="event"
+                options={pickerOptions}
+                selected={chosenEvent}
+                error={invalid.has("event")}
+                helperText={invalid.has("event") ? t("errors.field") : undefined}
+                words={{
+                  label: t("event"),
+                  search: t("eventFilter.search"),
+                  noMatch: t("eventFilter.noMatch"),
+                  open: t("eventFilter.open"),
+                  close: t("eventFilter.close"),
+                  kinds: t("eventFilter.kinds"),
+                  chips: { all: t("eventFilter.chips.all"), race: t("eventFilter.chips.race"), group: t("eventFilter.chips.group") },
+                }}
+              >
+                {nativePicker}
+              </EventPickerFilter>
+            ) : (
+              nativePicker
+            ))}
           {fields.includes("date") && (
             <TextField
               {...box("date", t("dateHelp"))}

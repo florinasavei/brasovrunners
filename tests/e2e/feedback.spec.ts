@@ -147,6 +147,69 @@ async function setBranches(page: Page, on: Branches): Promise<void> {
   await expect(page).toHaveURL(/saved=feedbackForms/, { timeout: 30_000 });
 }
 
+/**
+ * «Evenimentul» through the filtering island (§NNN), when the picker has it — over eight rows: «Altceva»
+ * first, a thumb's row each, the list below the box, «Niciun eveniment găsit» for a word nothing has,
+ * the chips when both kinds are there, and an event found by part of its title typed without its
+ * diacritics. Returns the title picked — or null when the list is short and the native select is all
+ * there is, which the form posts as before.
+ */
+async function pickEventByTyping(page: Page): Promise<string | null> {
+  const island = page.getByTestId("feedback-event-filter");
+  if ((await island.count()) === 0) {
+    await expect(page.locator('select[name="event"]')).toHaveCount(1);
+    return null;
+  }
+  // The native select is gone from the form; the island's hidden input is the one `event` posted.
+  await expect(page.locator('select[name="event"]')).toHaveCount(0);
+  await expect(page.locator('[name="event"]')).toHaveCount(1);
+
+  const chips = island.getByRole("group", { name: "Arată" });
+  if ((await chips.count()) > 0) {
+    for (const words of ["Toate", "Curse", "Alergări de grup"]) {
+      const chip = chips.getByRole("button", { name: words });
+      expect((await chip.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    }
+    await chips.getByRole("button", { name: "Curse" }).click();
+    await expect(chips.getByRole("button", { name: "Curse" })).toHaveAttribute("aria-pressed", "true");
+    await chips.getByRole("button", { name: "Toate" }).click();
+    await expect(chips.getByRole("button", { name: "Toate" })).toHaveAttribute("aria-pressed", "true");
+  }
+
+  const box = island.getByRole("combobox", { name: "Evenimentul" });
+  await box.click();
+  const listbox = page.getByRole("listbox");
+  await expect(listbox).toBeVisible();
+  const options = listbox.getByRole("option");
+  await expect(options.first()).toHaveText("Altceva / în general");
+  // Below the box, and a thumb's row each.
+  const boxBottom = ((await box.boundingBox())?.y ?? 0) + ((await box.boundingBox())?.height ?? 0);
+  expect((await listbox.boundingBox())?.y ?? 0).toBeGreaterThanOrEqual(boxBottom - 1);
+  expect((await options.nth(1).boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+  // The title is the row's first line; its day is the second.
+  const title = (await options.nth(1).locator("span > span").first().innerText()).trim();
+
+  await box.fill("zzz-niciun-eveniment");
+  await expect(page.getByTestId("feedback-event-no-match")).toHaveText("Niciun eveniment găsit");
+  await expect(options.first()).toHaveText("Altceva / în general");
+
+  // Part of the title, lower case and without its diacritics: the filter finds it all the same.
+  const typed = title
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .slice(0, Math.max(3, Math.min(title.length, 8)))
+    .trim();
+  await box.fill(typed);
+  const match = listbox.getByRole("option").filter({ hasText: title }).first();
+  await expect(match).toBeVisible();
+  await match.click();
+  await expect(page.locator('[name="event"]')).not.toHaveValue("");
+  await expect(box).toHaveValue(new RegExp(`^${title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} — `));
+  await noSidewaysScroll(page);
+  return title;
+}
+
 async function noSidewaysScroll(page: Page): Promise<void> {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
@@ -268,15 +331,24 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await noSidewaysScroll(page);
 
       // «Cum a fost»: a slug the club does not publish leaves «Altceva / în general» selected…
+      // What is posted is read by its name: the native select before the filtering island runs, the
+      // island's hidden input after (§NNN) — one `event` either way, with the same slug.
+      const posted = page.locator('[name="event"]');
       await page.goto(`/ro/contact/spune-ne?tip=cum-a-fost&eveniment=nu-exista-${tag}&data=2026-10-04`);
-      const event = page.locator("#f-event");
-      await expect(event).toHaveValue("");
+      await expect(posted).toHaveValue("");
       await expect(page.locator("#f-date")).toHaveValue("2026-10-04");
-      // …and one it publishes in the picker's window is preselected, whichever the database holds.
-      const offered = await event.locator("option").evaluateAll((options) => options.map((option) => (option as HTMLOptionElement).value).filter(Boolean));
+      // …and one it publishes in the picker's window is preselected, whichever the database holds — the
+      // options read from the server's own HTML, where the native select always is.
+      const served = await (await page.request.get("/ro/contact/spune-ne?tip=cum-a-fost")).text();
+      const nativeSelect = /<select[^>]*name="event"[^>]*>([\s\S]*?)<\/select>/.exec(served);
+      expect(nativeSelect, "the server draws the native select, JavaScript or not").not.toBeNull();
+      const offered = [...nativeSelect![1].matchAll(/<option[^>]*value="([^"]*)"/g)].map(([, value]) => value).filter(Boolean);
       if (offered.length > 0) {
         await page.goto(`/ro/contact/spune-ne?tip=cum-a-fost&eveniment=${offered[0]}`);
-        await expect(page.locator("#f-event")).toHaveValue(offered[0]);
+        await expect(posted).toHaveValue(offered[0]);
+        await hydrated(page);
+        await expect(posted).toHaveCount(1);
+        await expect(posted).toHaveValue(offered[0]);
       }
 
       // An empty message: the browser lets spaces through, the server refuses them, and the form comes
@@ -306,12 +378,24 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await expect(page.locator('[name="message"]')).toHaveAttribute("aria-invalid", "true");
       await noSidewaysScroll(page);
 
+      // The event, picked by typing part of its title (§NNN; the owner: «I need to be able the filter
+      // the events here») — when the picker is long enough for the filtering island, over eight rows.
+      await hydrated(page);
+      const pickedTitle = await pickEventByTyping(page);
+
       // Corrected and sent: the sent page, on the branch's slug.
       await page.locator('[name="message"]').fill("Foarte frumos, mulțumim.");
       await page.waitForTimeout(HUMAN_PAUSE_MS);
       await page.getByTestId("feedback-form-cum-a-fost").getByRole("button", { name: "Trimite" }).click();
       await expect(page).toHaveURL(/\/ro\/contact\/spune-ne\?sent=cum-a-fost$/, { timeout: 30_000 });
       await expect(page.getByTestId("feedback-sent")).toContainText("Mesajul a plecat");
+      // The club's message names the event picked: its subject is «Cum a fost: <title>», as `/devs` shows the capture.
+      if (pickedTitle) {
+        await expect(async () => {
+          await page.goto("/ro/devs?panel=email");
+          await expect(page.locator("main")).toContainText(`Cum a fost: ${pickedTitle}`, { timeout: 2_000 });
+        }).toPass({ timeout: 45_000 });
+      }
 
       // One branch on: no choice of one — its form at once, on /ro and on /en.
       await setBranches(page, { suggestion: true });

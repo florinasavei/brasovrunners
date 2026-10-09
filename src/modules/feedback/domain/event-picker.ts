@@ -1,0 +1,101 @@
+import type { EventType } from "@/modules/events/domain/event-type";
+import { foldForSearch } from "@/modules/registrations/country-search";
+
+/**
+ * «Evenimentul» on «Cum a fost» and «O reclamație», filtered as one types (§NNN, amending §676; the
+ * owner, 2026-10-09: «Also I need to be able the filter the events here»).
+ *
+ * The picker lists every published event of the last 90 days and the next 30 (`pickerOrder`), and
+ * with a weekly group run that is a long native list on a phone. The server still draws the native
+ * `<select name="event">` — what a browser without JavaScript posts — and, once the list is long
+ * enough to need it, a client island (`ui/EventPickerFilter.tsx`) replaces it with a box that
+ * filters as one types and three chips that narrow it to one kind.
+ *
+ * Plain data in, plain data out, with no import that ships code but the fold, so the island, the
+ * server page and a unit test read the same rules — and the island carries neither Zod nor the
+ * server's configuration (§489).
+ */
+
+/** What an event is, for the chips: a race, a group run, or anything else (a hike, a coffee…). */
+export type PickerKind = "race" | "group" | "other";
+
+/** The chip that is pressed: every kind, or one of the two the chips name. */
+export type PickerChip = "all" | "race" | "group";
+
+export const PICKER_CHIPS: readonly PickerChip[] = ["all", "race", "group"];
+
+/**
+ * One row of the picker as the server hands it to the island — plain data, never an element (§370).
+ * `value` is the slug the form posts (`""` for «Altceva / în general»); `label` the event's title;
+ * `day` its day in the event's zone, `YYYY-MM-DD`; `when` the same day in the page's own date words
+ * (`formatDay`, as the native option says it), so the island formats nothing and searches the words
+ * the reader sees.
+ */
+export type PickerOption = {
+  value: string;
+  label: string;
+  kind: PickerKind;
+  day: string | null;
+  when: string | null;
+};
+
+/** «Altceva / în general»: the option that names no event, always first. */
+export const GENERAL_VALUE = "";
+
+/**
+ * Up to this many rows in the native list (with «Altceva» among them), no island is mounted: eight
+ * rows open on a phone without a scroll worth filtering, and the page then ships no JavaScript for
+ * the picker at all.
+ */
+export const PICKER_NATIVE_MAX = 8;
+
+/** Whether the picker is long enough for the filtering island — more rows than `PICKER_NATIVE_MAX`. */
+export function pickerFilters(options: readonly PickerOption[]): boolean {
+  return options.length > PICKER_NATIVE_MAX;
+}
+
+/** The kind of an event, from the type it already carries: no column of its own. */
+export function pickerKind(type: EventType): PickerKind {
+  if (type === "RACE") return "race";
+  if (type === "GROUP_RUN") return "group";
+  return "other";
+}
+
+/** The chips are drawn only when both kinds they name are among the options; otherwise one would empty the list. */
+export function pickerChipsShown(options: readonly PickerOption[]): boolean {
+  return options.some((option) => option.kind === "race") && options.some((option) => option.kind === "group");
+}
+
+/** What a row is searched by: its title and its day, in the reader's words and as `YYYY-MM-DD`, folded. */
+function haystack(option: PickerOption): string {
+  return foldForSearch([option.label, option.when ?? "", option.day ?? ""].join(" "));
+}
+
+/**
+ * The rows the list shows for what was typed and the chip pressed, in the given order
+ * (`pickerOrder`'s: the held ones first, the most recent first, then the ones ahead).
+ *
+ * - **«Altceva / în general» is always first**, whatever was typed and whichever chip: it is the
+ *   answer for a message about no event, and it must never be filtered away.
+ * - **Every word typed must be found**, anywhere in the title or the day, without its accents or
+ *   its case: «crosul» finds «Crosul», «brasov» finds «Brașov», «happy oct» finds the October
+ *   Mondays of «Happy Monday».
+ * - **A chip narrows to its kind**; «Toate» keeps every kind, the other events (a hike, a coffee)
+ *   included.
+ */
+export function filterPickerOptions(options: readonly PickerOption[], typed: string, chip: PickerChip): PickerOption[] {
+  const words = foldForSearch(typed).split(/\s+/).filter(Boolean);
+  const general = options.find((option) => option.value === GENERAL_VALUE);
+  const events = options.filter(
+    (option) =>
+      option.value !== GENERAL_VALUE &&
+      (chip === "all" || option.kind === chip) &&
+      (words.length === 0 || words.every((word) => haystack(option).includes(word))),
+  );
+  return general ? [general, ...events] : events;
+}
+
+/** Whether a filtered list holds no event — only «Altceva» — so the island says «Niciun eveniment găsit». */
+export function pickerNoEventFound(filtered: readonly PickerOption[]): boolean {
+  return !filtered.some((option) => option.value !== GENERAL_VALUE);
+}
