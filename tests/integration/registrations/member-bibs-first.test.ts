@@ -10,7 +10,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-038-01 — the sheet's route prints the members' race numbers (§664) first, on pages
+ * §681, BR-REQ-038-01 — the sheet's route prints the members' race numbers (§664) first, on pages
  * of their own, and `part=members` / `part=others` print one pile; an unknown part is the whole
  * sheet. The file's name says which part. The role check is the one it was (§289), and no
  * download — whole or part — marks a bib printed: the mark stays the club's own press (§264).
@@ -43,7 +43,7 @@ vi.mock("@/modules/registrations/bibs-pdf", async (original) => {
 
 const { GET } = await import("@/app/api/admin/events/[id]/bibs/route");
 
-describe("§NNN the members' race numbers print first, on their own pages", () => {
+describe("§681 the members' race numbers print first, on their own pages", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let eventId: string;

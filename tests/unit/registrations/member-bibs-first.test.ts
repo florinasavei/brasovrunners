@@ -4,7 +4,7 @@ import { type BibDesign, DEFAULT_BIB_DESIGN, DEFAULT_BIB_MEMBER_DESIGN } from "@
 import { type BibSheetInput, type BibSheetRow, renderBibSheet, sheetPages } from "@/modules/registrations/bibs-pdf";
 
 /**
- * §NNN, BR-REQ-038-01 — the members' race numbers (§664) print first, on pages of their own: a
+ * §681, BR-REQ-038-01 — the members' race numbers (§664) print first, on pages of their own: a
  * members' bib never shares an A4 page with an ordinary one, an odd members' pile leaves its last
  * page's lower half blank, and the ordinary bibs follow in number order. With no member's bib on
  * the sheet the pages are today's pairs. `part` keeps one pile; the desk's spares stay with the
@@ -17,7 +17,7 @@ const spare = (bibNumber: number): BibSheetRow => ({ bibNumber, registeredName: 
 /** The pages as numbers, `null` for a blank half. */
 const numbers = (pages: ReturnType<typeof sheetPages<BibSheetRow>>) => pages.map((page) => page.map((row) => row?.bibNumber ?? null));
 
-describe("§NNN sheetPages — the members' pile first, on its own pages", () => {
+describe("§681 sheetPages — the members' pile first, on its own pages", () => {
   it("with no member's bib, pairs the rows in their order exactly as before", () => {
     const rows = [1, 2, 3, 4, 5].map(ordinary);
     expect(numbers(sheetPages(rows))).toEqual([
@@ -97,7 +97,7 @@ describe("§NNN sheetPages — the members' pile first, on its own pages", () =>
   });
 });
 
-describe("§NNN the sheet draws the members' pages first", () => {
+describe("§681 the sheet draws the members' pages first", () => {
   const withMembers: BibDesign = { ...DEFAULT_BIB_DESIGN, member: { ...DEFAULT_BIB_MEMBER_DESIGN, enabled: true, bandColour: "#6a1b9a" } };
   const render = (rows: BibSheetRow[], over: Partial<BibSheetInput> = {}) =>
     renderBibSheet({

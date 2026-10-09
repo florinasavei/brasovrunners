@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.81-2026-10-09 -->
+<!-- PROJECT_BASELINE: BR-V2.82-2026-10-09 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.81-2026-10-09`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.82-2026-10-09`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -24633,3 +24633,30 @@ Baseline `BR-V2.80-2026-10-09`.
 **The e2e makes its own picker (the review of 2026-10-09).** CI seeds four events, so the picker had eight rows or fewer, the spec found no island and returned without checking any of it. It now publishes what it needs before any page reads the picker: four races and four group runs held 41 to 48 days ago — inside the picker's 90 days back, never among the listing's dates to come — written to the table as drafts, every title and slug carrying the run's one-word mark so a rerun or the other project never meets them, then published through the backoffice's «Publică cele bifate», which expires the public pages' cached copy (§333) as every publication does; rows published behind the server's back would never reach a picker the server had already read. At the end they are deleted the same way, «Șterge cele bifate», with whatever is left removed from the table. The island is then asserted, never skipped: no early return when it is absent.
 
 Baseline `BR-V2.81-2026-10-09`.
+
+## 681. Members' race numbers print first, on their own pages (amending §664, §338)
+
+**The owner, 2026-10-08**, after §664 (a members' race number: the club's own design for its verified members, the member's own choice): «I want to queue BVR members BIBs» → «Printed as their own sheet». Started 2026-10-09 while the owner was away; the routine questions below were decided here.
+
+**What existed.** `GET /api/admin/events/<id>/bibs` drew every bib of the sheet's scope (`bibs.ts#listBibs`, `bibScopeWhere`) in number order, two A5 bibs to an A4 page cut in half (`bibs-pdf.ts`, §338), and a member's bib (wanted + offered + verified, `BibRow.member`, §664) was drawn with the members' design wherever its number fell — so a members' bib could share a page with an ordinary one, and the club could not print the members' pile on other card or hand it out apart.
+
+### The decision
+
+**1. One PDF, the members first, on their own pages.** While the event offers the members' bib and a row on the sheet is a member's, the file draws all the members' bibs first, in number order, two to a page; on an odd count the last members' page carries one bib and its lower half is left blank — the dashed cut (and the club's cut marks, §249) still drawn, nothing else. **A members' bib never shares an A4 page with an ordinary one.** Then every other bib in number order, two to a page, as before. The grouping is one pure function, `bibs-pdf.ts#sheetPages(rows, { part, layout, membersOn })`, which the renderer draws page by page; a member's bib is `row.member` while the design's members' switch is on — the same condition that draws the members' header, so the pile and the design never disagree. With «Câte unul pe pagină» (§79) each page holds one bib, the members' first. **With no member's bib on the sheet the file is byte for byte what it was** — the same pages in the same order; checked by hashing the old and the new renderer's output for sheets of 0–7 bibs in both layouts, spares and a members-flagged sheet with the switch off included.
+
+**2. Two more downloads on the bibs page,** shown only when the sheet holds a member's bib, beside «Descarcă toate numerele»: «Doar numerele membrilor (PDF)» / "Members' numbers only (PDF)" and «Fără numerele membrilor (PDF)» / "Without members' numbers (PDF)", with one line under the buttons: «Numerele membrilor se tipăresc primele, pe foi separate, ca să le poți tipări pe alt carton.» / "Members' numbers print first, on their own pages, so you can print them on different card." They are a query parameter on the same route, `part=members` / `part=others`, read with zod and refused nowhere: anything else, or nothing, is the whole sheet. The file's name says which part (`bibs-<id>-members.pdf`, `bibs-<id>-without-members.pdf`; the whole sheet keeps the name it had). The authorization is the route's own role check (§289), unchanged. The bibs page's grid shows the paper's order — the members' pile, then the rest — and the guide's step on printing names the two downloads.
+
+**3. The «tipărit» mark stays the club's own press, never a download.** The sheet is a GET that mutates nothing (§264, `AGENTS.md` §12.8): no download, whole or part, marks a bib printed, and the mark is the separate press on the registrations list over its own scope (all, or the unprinted), unchanged. So no file — and no part of one — can make the mark claim a bib that was not in it; a part mark would have tied a mutation to a GET, which §264 refused for the whole sheet for the same reason.
+
+**4. Nothing else changes:** the numbers, their order within each pile, both designs, the unverified line (§664), the spares (§444): a spare is never a member's bib, so on a sheet that held both it would sit among the ordinary bibs where it was; the desk's spares print on their own sheet (`spares=1`) as before, where `part=others` changes nothing and `part=members` prints the «—» page.
+
+### Refused
+
+- **A separate number band for members** — §664 refused it: the order of confirmation is the fairness rule (§173), and the members' pile keeps the numbers it was given.
+- **Two separate PDFs only** — the one-file default keeps the club's one click; the parts are for a club that prints the members on other card.
+- **A members' sheet in another paper size** — the members' design is A5 on A4 like every bib (§338).
+- **Marking a part printed from its download** — see 3.
+
+Tests: unit `registrations/member-bibs-first.test.ts` (no members → today's pairs; 3 members + 4 ordinary → [m1,m2] [m3,blank] [o1,o2] [o3,o4]; no page ever mixes the two for 0–5 of each; `members` and `others`; the spares' place kept; the switch off; one per page; the renderer's pages and their cuts read off the drawing calls; an empty part prints the «—» page); integration `registrations/member-bibs-first.test.ts` (the route's whole sheet, both parts and an unknown one, the file names, an event without the members' bib in number order, a role that may not read the registrations refused with a part or without, and no download marking anything printed). Amends §338 (the pages of a sheet holding members' bibs) and §664 (where a members' bib prints).
+
+Baseline `BR-V2.82-2026-10-09`.

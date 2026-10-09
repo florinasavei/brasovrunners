@@ -56,7 +56,7 @@ export default async function EventBibsPage({ params }: Props) {
       ? bibPreviewUrl({ eventId: id, locale, number: String(event.bibStartNumber), colour: event.bibColour, design: event.design, member: true })
       : null;
   /*
-    The members' bibs print first, on pages of their own (§NNN): the two part downloads appear only
+    The members' bibs print first, on pages of their own (§681): the two part downloads appear only
     when the sheet holds one, and the grid shows the paper's order — the members' pile, then the rest.
   */
   const memberBibs = memberBibOn ? bibs.filter((bib) => bib.member).length : 0;

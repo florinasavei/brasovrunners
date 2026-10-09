@@ -15,7 +15,7 @@ import { CLUB_NAME } from "@/theme/brand";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
-/** The `part` query (§NNN): an unknown value, or none, is the whole sheet — refused nowhere. */
+/** The `part` query (§681): an unknown value, or none, is the whole sheet — refused nowhere. */
 const PART = z.enum(["all", "members", "others"]).catch("all");
 
 /** What the file's name says of the part it holds; the whole sheet keeps the name it had. */
@@ -30,7 +30,7 @@ const PART_SUFFIX: Record<BibSheetPart, string> = { all: "", members: "-members"
  * nothing else (`AGENTS.md` §19.2). `from` and `to` bound the numbers printed, for a reprint;
  * `only=unprinted` is the club's weekly job — the people who registered after the last sheet
  * went to the printer (§264). Omitted, every assigned number. `spares=1` prints the desk's free
- * spares instead, blank (§444). The members' bibs print first, on pages of their own (§NNN);
+ * spares instead, blank (§444). The members' bibs print first, on pages of their own (§681);
  * `part=members` prints only theirs and `part=others` every bib but theirs — anything else, or
  * nothing, is the whole sheet, never an error.
  *
@@ -86,7 +86,7 @@ export async function GET(
   */
   const spares = url.searchParams.get("spares") === "1";
   /*
-    Which bibs go into the file (§NNN): the members' pile alone, to print on other card, or every
+    Which bibs go into the file (§681): the members' pile alone, to print on other card, or every
     bib but theirs; anything else is the whole sheet with the members' pages first. A download
     marks nothing printed, whole or part: the mark is the club's own press on the registrations
     list (§264), so no file can make it claim a bib that was not in it.

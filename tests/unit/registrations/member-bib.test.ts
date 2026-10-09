@@ -135,7 +135,7 @@ describe("§664 the sheet", () => {
     const calls = text.mock.calls.map(([value, x, y]) => ({ value: String(value), x: Number(x), y: Number(y) }));
     const label = calls.find((call) => call.value === "Membru Brașov Runners");
     expect(label).toBeDefined();
-    // The member's bib opens a page of its own (§NNN): the upper card, which starts at the margin.
+    // The member's bib opens a page of its own (§681): the upper card, which starts at the margin.
     const upperTop = BIB_MARGIN;
     expect(label!.y).toBeGreaterThan(upperTop + BIB_LAYOUT.memberTagTop);
     expect(label!.y).toBeLessThan(upperTop + BIB_LAYOUT.memberTagTop + BIB_LAYOUT.memberTagHeight);

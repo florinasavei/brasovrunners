@@ -75,7 +75,7 @@ export type BibSheetInput = {
   generatedAt: Date;
   /** Two bibs to a page — the default — or one; see `bibSheetSlots`. */
   layout?: BibSheetLayout;
-  /** Which bibs of `rows` go into the file, the members' always first (§NNN; `sheetPages`); absent is all. */
+  /** Which bibs of `rows` go into the file, the members' always first (§681; `sheetPages`); absent is all. */
   part?: BibSheetPart;
   /** What the club decided this bib shows (§249); absent is the platform's own design. */
   design?: BibDesign;
@@ -136,7 +136,7 @@ export function bibSheetSlots(count: number, layout: BibSheetLayout = "two"): Bi
 }
 
 /**
- * Which bibs of the sheet go into the file (§NNN): `all` — the default, the club's one click — or
+ * Which bibs of the sheet go into the file (§681): `all` — the default, the club's one click — or
  * only the members' (`members`), or every bib but theirs (`others`: the ordinary bibs and the
  * desk's spares), so the members' pile can be printed on other card and handed out apart.
  */
@@ -146,7 +146,7 @@ export type BibSheetPart = "all" | "members" | "others";
 export type BibSheetPage<R> = Array<R | null>;
 
 /**
- * The sheet's bibs grouped into its pages (§NNN, amending §338 and §664).
+ * The sheet's bibs grouped into its pages (§681, amending §338 and §664).
  *
  * **A members' bib never shares an A4 page with an ordinary one.** While the event offers the
  * members' bib (`membersOn`) and a row on the sheet is a member's (`BibSheetRow.member`), the
@@ -544,7 +544,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   const perPage = input.layout === "one" ? 1 : 2;
   // The places on one page, upper half first (or the one centred place with `one`).
   const slots = bibSheetSlots(perPage, input.layout);
-  // The members' pile first, on pages of its own, while the event offers their bib (§NNN).
+  // The members' pile first, on pages of its own, while the event offers their bib (§681).
   const pages = sheetPages(input.rows, { part: input.part, layout: input.layout, membersOn: design.member.enabled });
   pages.forEach((page) => {
     // Every page opens with its cut — a blank lower half included — and its bibs in order.
