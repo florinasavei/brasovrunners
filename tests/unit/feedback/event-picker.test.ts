@@ -11,7 +11,7 @@ import {
 } from "@/modules/feedback/domain/event-picker";
 
 /**
- * BR-REQ-070-04, `DECISIONS.md` §NNN (amending §676) — «Evenimentul» filtered as one types: the pure
+ * BR-REQ-070-04, `DECISIONS.md` §680 (amending §676) — «Evenimentul» filtered as one types: the pure
  * rules the island and the server page share. Case and diacritics do not matter, every word typed must
  * be found in the title or the day, a chip narrows to its kind, «Altceva / în general» is the first row
  * while the box is empty or nothing typed matches an event and steps out while something does (so Enter
@@ -30,7 +30,7 @@ const EVENTS: PickerOption[] = [
 const ALL = [GENERAL, ...EVENTS];
 const values = (options: readonly PickerOption[]) => options.map((option) => option.value);
 
-describe("BR-REQ-070-04 the feedback form's event picker filters as you type (§NNN)", () => {
+describe("BR-REQ-070-04 the feedback form's event picker filters as you type (§680)", () => {
   it("finds a title without its diacritics or its case: «crosul» finds «Crosul», «brasov» finds «Brașov»", () => {
     expect(values(filterPickerOptions(ALL, "crosul", "all"))).toEqual(["crosul-brasovului"]);
     expect(values(filterPickerOptions(ALL, "brasov", "all"))).toEqual(["crosul-brasovului"]);

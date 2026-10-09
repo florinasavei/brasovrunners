@@ -29,7 +29,7 @@ import { HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
  * expires the cached notice. That leaves one more approved version behind (§46): run it on a local
  * or CI database only.
  *
- * **The picker's events.** «Evenimentul» becomes the filtering island only over eight rows (§NNN), and
+ * **The picker's events.** «Evenimentul» becomes the filtering island only over eight rows (§680), and
  * CI seeds four events, so the spec publishes its own — four races and four group runs held some
  * six weeks ago, each title carrying the run's mark — through the backoffice's bulk verb, and
  * deletes them the same way at the end (`publishPickerEvents`, `removePickerEvents`).
@@ -159,7 +159,7 @@ const PICKER_EACH = 4;
 type PickerFixture = { mark: string; races: string[]; runs: string[] };
 
 /**
- * The picker's own events (§NNN): four races and four group runs, so «Evenimentul» has nine rows
+ * The picker's own events (§680): four races and four group runs, so «Evenimentul» has nine rows
  * («Altceva» counted) — over the island's eight — and both kinds for the chips, whatever else the
  * database holds; CI seeds four events, too few for the island. Written to the table as drafts (the
  * setup, not the subject), every title carrying `mark` so a rerun or the other project never meets
@@ -233,7 +233,7 @@ async function removePickerEvents(page: Page, mark: string): Promise<void> {
 }
 
 /**
- * «Evenimentul» through the filtering island (§NNN) — over eight rows, which `publishPickerEvents`
+ * «Evenimentul» through the filtering island (§680) — over eight rows, which `publishPickerEvents`
  * makes sure of: «Altceva» first, a thumb's row each, the list below the box, «Niciun eveniment
  * găsit» for a word nothing has, the chips narrowing to the spec's own races and group runs, and an
  * event found by part of its title typed without its diacritics — picked with Enter, the first match
@@ -445,7 +445,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
 
       // «Cum a fost»: a slug the club does not publish leaves «Altceva / în general» selected…
       // What is posted is read by its name: the native select before the filtering island runs, the
-      // island's hidden input after (§NNN) — one `event` either way, with the same slug.
+      // island's hidden input after (§680) — one `event` either way, with the same slug.
       const posted = page.locator('[name="event"]');
       await page.goto(`/ro/contact/spune-ne?tip=cum-a-fost&eveniment=nu-exista-${tag}&data=2026-10-04`);
       await expect(posted).toHaveValue("");
@@ -491,7 +491,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await expect(page.locator('[name="message"]')).toHaveAttribute("aria-invalid", "true");
       await noSidewaysScroll(page);
 
-      // The event, picked by typing part of its title (§NNN; the owner: «I need to be able the filter
+      // The event, picked by typing part of its title (§680; the owner: «I need to be able the filter
       // the events here») — through the filtering island, which the picker's own events make sure of.
       await hydrated(page);
       const pickedTitle = await pickEventByTyping(page, offered[0], pickerFixture);

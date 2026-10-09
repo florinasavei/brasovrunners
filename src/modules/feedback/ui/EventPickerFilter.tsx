@@ -16,7 +16,7 @@ import {
 } from "../domain/event-picker";
 
 /**
- * «Evenimentul», filtered as one types (§NNN, amending §676) — the island the feedback page mounts
+ * «Evenimentul», filtered as one types (§680, amending §676) — the island the feedback page mounts
  * around its native `<select name="event">` when the list is longer than eight rows.
  *
  * Until it runs — on the server, while the page hydrates, and for good in a browser without

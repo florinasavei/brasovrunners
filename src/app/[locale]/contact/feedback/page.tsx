@@ -280,7 +280,7 @@ async function BranchForm({
     helperText: invalid.has(name) ? t("errors.field") : help,
     defaultValue: kept(name) ?? "",
   });
-  // The picker's rows as plain data (§NNN): «Altceva» first, then the events, each with its kind and its
+  // The picker's rows as plain data (§680): «Altceva» first, then the events, each with its kind and its
   // day — the native select draws them, and the filtering island receives them as they are.
   const pickerOptions: PickerOption[] = withEvent
     ? [
@@ -392,7 +392,7 @@ async function BranchForm({
           )}
           {withEvent &&
             (pickerFilters(pickerOptions) ? (
-              // A long list (§NNN): the island takes the select's place once it runs, and posts the same `event`.
+              // A long list (§680): the island takes the select's place once it runs, and posts the same `event`.
               <EventPickerFilter
                 id={fieldId("event")}
                 name="event"

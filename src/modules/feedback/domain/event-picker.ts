@@ -2,7 +2,7 @@ import type { EventType } from "@/modules/events/domain/event-type";
 import { foldForSearch } from "@/modules/registrations/country-search";
 
 /**
- * «Evenimentul» on «Cum a fost» and «O reclamație», filtered as one types (§NNN, amending §676; the
+ * «Evenimentul» on «Cum a fost» and «O reclamație», filtered as one types (§680, amending §676; the
  * owner, 2026-10-09: «Also I need to be able the filter the events here»).
  *
  * The picker lists every published event of the last 90 days and the next 30 (`pickerOrder`), and

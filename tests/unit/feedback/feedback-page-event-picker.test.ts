@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { PickerOption } from "@/modules/feedback/domain/event-picker";
 
 /**
- * BR-REQ-070-04, `DECISIONS.md` §NNN (amending §676) — the feedback page as the server draws it, with
+ * BR-REQ-070-04, `DECISIONS.md` §680 (amending §676) — the feedback page as the server draws it, with
  * the filtering island in front of a long picker.
  *
  * Whatever the list's length, the server's HTML still holds the native `<select name="event">` with the
@@ -117,7 +117,7 @@ beforeEach(() => {
   locale = "ro";
 });
 
-describe("BR-REQ-070-04 «Evenimentul»: the native select stays, the island stands in front of a long one (§NNN)", () => {
+describe("BR-REQ-070-04 «Evenimentul»: the native select stays, the island stands in front of a long one (§680)", () => {
   it("draws the same native select, id, name and options, with no island for eight rows or fewer", async () => {
     rows = events(7);
     const html = await render();
