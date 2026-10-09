@@ -84,7 +84,7 @@ test.describe("BR-REQ-070-04 the contact form", () => {
     }
     await expect(line).toBeVisible();
     await expect(line).toContainText("(");
-    // The page's last line: under the contact form and under the newsletter's box alike.
+    // The page's last line: under the contact form, «Spune-ne ceva» and the newsletter's box alike.
     // One snapshot of the layout per try, polled: the form grows as it hydrates (the anti-bot box),
     // and a line measured before that growth and the form after it would lie. The newsletter's own
     // forms live in a pop-up (`<dialog>`), so its section is what the line must follow, not they.
@@ -96,7 +96,7 @@ test.describe("BR-REQ-070-04 the contact form", () => {
             const above = [
               ...[...document.querySelectorAll("main form")].filter((form) => !form.closest("dialog, [data-testid='newsletter-section']")),
               ...document.querySelectorAll('main [data-testid="newsletter-section"]'),
-              // «Spune-ne ceva» (§676), when a branch is on: its door is under the newsletter, the line under it.
+              // «Spune-ne ceva» (§676), when a branch is on: its door is above the newsletter (§NNN), the line under both.
               ...document.querySelectorAll('main [data-testid="feedback-section"]'),
             ];
             return lineTop - Math.max(-Infinity, ...above.map((element) => element.getBoundingClientRect().bottom));

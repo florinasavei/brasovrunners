@@ -13,7 +13,7 @@ import { type AppEnvironment, markSubjectForEnvironment } from "@/infrastructure
  *   stopped coming.
  * - **«O sugestie»** (`sugestie`) — one box.
  * - **«O reclamație»** (`reclamatie`) — what happened, and optionally the event and the date.
- * - **«Siguranță pentru femei»** (`siguranta`) — confidential, for women who did not feel safe: it
+ * - **«Girl Zone»** (`siguranta`) — confidential, for women who did not feel safe: it
  *   reaches one person the club names, by the club's email service alone, and the site keeps nothing of it.
  *
  * Anonymous unless the person chooses otherwise (§678): every form opens with «Anonim» (the default)
@@ -88,7 +88,7 @@ export function offeredBranches(settings: FeedbackSettings, noticeDescribes: boo
 
 /**
  * The door's sentence on `/contact` (§676), from what is offered: the three ordinary forms named only
- * while one of them is there — with «Siguranță pentru femei» alone (a deployment with no SMTP road, or the club's
+ * while one of them is there — with «Girl Zone» alone (a deployment with no SMTP road, or the club's
  * choice) the button opens the safety form straight away, and the sentence says that form alone.
  */
 export function doorIntroKey(offered: readonly FeedbackBranch[]): "door.intro" | "door.introSafety" {
@@ -562,7 +562,7 @@ export function composeFeedbackEmail(input: FeedbackInput, context: FeedbackCont
         : SUBJECT[input.branch];
   const footer =
     input.branch === "safety"
-      ? "— Trimis prin formularul confidențial „Siguranță pentru femei” al site-ului. Site-ul nu a păstrat nimic din el."
+      ? "— Trimis prin formularul confidențial „Girl Zone” al site-ului. Site-ul nu a păstrat nimic din el."
       : context.toPerson
         ? "— Trimis prin formularele „Spune-ne ceva” ale site-ului; cine a scris a ales să afli doar tu. Site-ul nu a păstrat nimic din el."
         : "— Trimis prin formularele „Spune-ne ceva” ale site-ului. Site-ul nu a păstrat nimic din el.";

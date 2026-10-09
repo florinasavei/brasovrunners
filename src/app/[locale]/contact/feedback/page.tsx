@@ -49,6 +49,7 @@ import {
   wizardStep,
 } from "@/modules/feedback/domain/branches";
 import BranchChoice, { BranchGlyphTile } from "@/modules/feedback/ui/BranchChoice";
+import { branchLabelLang } from "@/modules/feedback/ui/branch-glyph";
 import IdentityChoice from "@/modules/feedback/ui/IdentityChoice";
 import {
   cachedBotCheckSiteKey,
@@ -283,7 +284,7 @@ async function BranchForm({
       {/* The glyph the visitor chose on step 1, beside the branch's name. */}
       <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1 }}>
         <BranchGlyphTile branch={branch} />
-        <Typography variant="h2" sx={{ fontSize: "1.35rem", m: 0 }}>
+        <Typography variant="h2" lang={branchLabelLang(branch, locale)} sx={{ fontSize: "1.35rem", m: 0 }}>
           {t(`branches.${branch}.label`)}
         </Typography>
       </Box>
