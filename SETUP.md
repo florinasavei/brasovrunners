@@ -1442,10 +1442,10 @@ club names — which is why a colleague's Yahoo can be on the list.
 
 **«Spune-ne ceva» — the anonymous forms under the newsletter (§676).** Nothing to set on the
 deployment: the three ordinary branches («Cum a fost», «O sugestie», «O reclamație») leave through
-the same Gmail account as the form above, and the confidential «Siguranță pentru femei» through Mailgun alone
+the same Gmail account as the form above, and the confidential «Girl Zone» through Mailgun alone
 (`MAILGUN_*`, already set), never through the club's Gmail. Without the Gmail account and its app
 password (`CONTACT_SMTP_USER`, `CONTACT_SMTP_PASSWORD`) the three ordinary branches are not offered at
-all, whatever their switches say — only «Siguranță pentru femei», if it is on. On each deployment (QA has its own):
+all, whatever their switches say — only «Girl Zone», if it is on. On each deployment (QA has its own):
 
 1. `/admin/legal` → the «GDPR» card → «Regenerează din șablon» → approve the notice: its section 5
    describes the forms. Until a notice naming them is in force in both languages, nothing shows on
@@ -1457,11 +1457,11 @@ all, whatever their switches say — only «Siguranță pentru femei», if it is
    `/admin/tasks` carries the row «„Spune-ne ceva” cu nume și prenume» — approve it again once this
    release is in.
 2. «Pagini» → «Contact» → **«Spune-ne ceva»**: tick «Pornit» on each branch the club wants, with the
-   one address that receives it; for «Siguranță pentru femei», the designated person's own address (not a shared
+   one address that receives it; for «Girl Zone», the designated person's own address (not a shared
    club mailbox) and the first name the form shows («Mesajul ajunge doar la …») → **Salvează
    formularele** → confirm. Each branch is off by default; untick to take it away. «Cine să afle?»
    offers the safety branch's person whenever her address and first name are saved, switched on or not —
-   unticking «Siguranță pentru femei» takes away her form, not her; on the safety form «Clubul» is the
+   unticking «Girl Zone» takes away her form, not her; on the safety form «Clubul» is the
    «O reclamație» address, or the contact form's recipients when it has none, and needs the Gmail
    account. A message for the person always leaves by Mailgun alone, with the neutral subject, and one
    from another form says which on its line «Din formularul: „…”»; one for the club by the club's Gmail.

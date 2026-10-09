@@ -1,13 +1,16 @@
+import LocalFloristOutlinedIcon from "@mui/icons-material/LocalFloristOutlined";
 import { createTranslator } from "next-intl";
+import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { BRANCH_SLUG, FEEDBACK_BRANCHES, type FeedbackBranch } from "@/modules/feedback/domain/branches";
 import { FEEDBACK_BRANCH_GLYPH, FEEDBACK_BRANCH_TINT } from "@/modules/feedback/ui/branch-glyph";
+import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * BR-REQ-070-04 — «Spune-ne ceva»'s step 1 as cards (§676, §678), rendered
+ * BR-REQ-070-04 — «Spune-ne ceva»'s step 1 as cards (§676, §678, §NNN), rendered
  * on the server as a visitor's browser receives it: one card per branch offered, each a `<label>` around
  * a visible native radio named `tip` with the branch's slug, its glyph, its name and its hint; the
  * chosen branch checked by default; the women's form in the owner's words; and one glyph for every
@@ -56,7 +59,7 @@ describe("BR-REQ-070-04 step 1: one card per branch offered", () => {
       expect(card).toContain(ro.Tell.branches[branch].hint);
     }
     // The pictures the decision names, by Material's own test ids.
-    for (const icon of ["DirectionsRunIcon", "LightbulbOutlinedIcon", "ReportProblemOutlinedIcon", "FavoriteBorderIcon"]) {
+    for (const icon of ["DirectionsRunIcon", "LightbulbOutlinedIcon", "ReportProblemOutlinedIcon", "LocalFloristOutlinedIcon"]) {
       expect(html).toContain(`data-testid="${icon}"`);
     }
     // No drawn ring standing in for the radio.
@@ -88,11 +91,11 @@ describe("BR-REQ-070-04 step 1: one card per branch offered", () => {
 
   it("names the women's form and says why, in the owner's words, in both languages", async () => {
     const roHtml = await render(["howItWent", "safety"], "howItWent");
-    expect(roHtml).toContain("Siguranță pentru femei");
+    expect(roHtml).toContain("Girl Zone");
     expect(roHtml).toContain("Știm că alergatul, ca femeie, vine cu provocări în plus. Dacă ceva te-a făcut să nu te simți în siguranță la noi, spune-ne — confidențial.");
 
     const enHtml = await render(["howItWent", "safety"], "howItWent", "en");
-    expect(enHtml).toContain("Safety for women");
+    expect(enHtml).toContain("Girl Zone");
     expect(enHtml).toContain("We know running as a woman comes with extra challenges. If something made you feel unsafe with us, tell us — confidentially.");
   });
 
@@ -107,5 +110,28 @@ describe("BR-REQ-070-04 one glyph per branch", () => {
     expect(Object.keys(FEEDBACK_BRANCH_GLYPH).sort()).toEqual([...FEEDBACK_BRANCHES].sort());
     expect(Object.keys(FEEDBACK_BRANCH_TINT).sort()).toEqual([...FEEDBACK_BRANCHES].sort());
     expect(new Set(Object.values(FEEDBACK_BRANCH_GLYPH)).size).toBe(FEEDBACK_BRANCHES.length);
+  });
+
+  it("§NNN the safety form is «Girl Zone» with a flower, in both languages; the hint and the door's sentence stay", () => {
+    expect(FEEDBACK_BRANCH_GLYPH.safety).toBe(LocalFloristOutlinedIcon);
+    expect(renderToStaticMarkup(createElement(LocalFloristOutlinedIcon))).toContain('data-testid="LocalFloristOutlinedIcon"');
+    expect(ro.Tell.branches.safety.label).toBe("Girl Zone");
+    expect(en.Tell.branches.safety.label).toBe("Girl Zone");
+    expect(ro.Admin.emails.feedbackForms.branches.safety).toBe("Girl Zone (confidențial)");
+    expect(en.Admin.emails.feedbackForms.branches.safety).toBe("Girl Zone (confidential)");
+    expect(ro.Tell.branches.safety.hint).toBe(
+      "Știm că alergatul, ca femeie, vine cu provocări în plus. Dacă ceva te-a făcut să nu te simți în siguranță la noi, spune-ne — confidențial.",
+    );
+    for (const catalogue of [ro, en]) expect(JSON.stringify(catalogue)).not.toMatch(/Siguranță pentru femei|Safety for women/);
+  });
+
+  it("§NNN the privacy notice's template names «Girl Zone» three times per language and keeps both markers", () => {
+    for (const [body, name] of [[privacyNoticeRo, "„Girl Zone”"], [privacyNoticeEn, "“Girl Zone”"]] as const) {
+      const text = JSON.stringify(body);
+      expect(text.split(name).length - 1).toBe(3);
+      expect(text).toContain("{{feedbackForms}}");
+      expect(text).toContain("{{feedbackFormsNamed}}");
+      expect(text).not.toMatch(/Siguranță pentru femei|Safety for women/);
+    }
   });
 });

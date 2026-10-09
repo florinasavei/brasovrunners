@@ -5568,7 +5568,7 @@
           "howItWent": "How it was",
           "suggestion": "A suggestion",
           "complaint": "A complaint",
-          "safety": "Safety for women (confidential)"
+          "safety": "Girl Zone (confidential)"
         },
         "help": {
           "howItWent": "The event, the date, a rating from 1 to 5, what happened and why someone stopped coming. Also from the thank-you email.",
@@ -5589,7 +5589,7 @@
         "save": "Save the forms",
         "saving": "Saving…",
         "saved": "The “Tell us something” forms were saved.",
-        "roads": "The site keeps no message. How it was, suggestions and complaints leave through the club's Gmail (CONTACT_SMTP_USER); Safety for women only through Mailgun."
+        "roads": "The site keeps no message. How it was, suggestions and complaints leave through the club's Gmail (CONTACT_SMTP_USER); Girl Zone only through Mailgun."
       },
       "perSendNewsletter": "The newsletter's text is written per send, on the backoffice's “Newsletter” page, so it has no words to edit here.",
       "newsletterLink": "Newsletter →",
@@ -8521,7 +8521,7 @@
         "intro": "Tell us what happened; the event and the date are optional."
       },
       "safety": {
-        "label": "Safety for women",
+        "label": "Girl Zone",
         "hint": "We know running as a woman comes with extra challenges. If something made you feel unsafe with us, tell us — confidentially."
       }
     },

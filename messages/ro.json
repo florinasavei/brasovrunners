@@ -5568,7 +5568,7 @@
           "howItWent": "Cum a fost",
           "suggestion": "O sugestie",
           "complaint": "O reclamație",
-          "safety": "Siguranță pentru femei (confidențial)"
+          "safety": "Girl Zone (confidențial)"
         },
         "help": {
           "howItWent": "Evenimentul, data, o notă de la 1 la 5, ce s-a întâmplat și de ce nu mai vine cineva. Și din emailul de mulțumire.",
@@ -5589,7 +5589,7 @@
         "save": "Salvează formularele",
         "saving": "Se salvează…",
         "saved": "Formularele „Spune-ne ceva” au fost salvate.",
-        "roads": "Site-ul nu păstrează niciun mesaj. Cum a fost, sugestiile și reclamațiile pleacă prin Gmail-ul clubului (CONTACT_SMTP_USER); Siguranță pentru femei doar prin Mailgun."
+        "roads": "Site-ul nu păstrează niciun mesaj. Cum a fost, sugestiile și reclamațiile pleacă prin Gmail-ul clubului (CONTACT_SMTP_USER); Girl Zone doar prin Mailgun."
       },
       "perSendNewsletter": "Textul newsletterului se scrie la fiecare trimitere, pe pagina „Newsletter” a backoffice-ului, așa că nu are cuvinte de editat aici.",
       "newsletterLink": "Newsletter →",
@@ -8521,7 +8521,7 @@
         "intro": "Spune-ne ce s-a întâmplat; evenimentul și data sunt opționale."
       },
       "safety": {
-        "label": "Siguranță pentru femei",
+        "label": "Girl Zone",
         "hint": "Știm că alergatul, ca femeie, vine cu provocări în plus. Dacă ceva te-a făcut să nu te simți în siguranță la noi, spune-ne — confidențial."
       }
     },
