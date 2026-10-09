@@ -230,12 +230,21 @@ describe("BR-REQ-011-01 the event page's weather is one line (§469, replacing �
     expect(text(dd)).not.toContain("șanse");
   });
 
-  it("showers: the row's glyph is the raining cloud, never the umbrella (§677)", async () => {
+  it("showers: the row's glyph is the heavy rain cloud, never the umbrella (§677, §NNN)", async () => {
     currentLocale = "ro";
     const html = withoutStyles(await page({}, openMeteo({ code: 81, chance: 70, mm: 3 })));
     const row = rows(html).find((each) => each.label === "Vremea");
-    expect(row?.dt).toContain('data-testid="RainyIcon"');
+    expect(row?.dt).toContain('data-testid="RainyHeavyIcon"');
     expect(html).not.toContain("UmbrellaIcon");
+  });
+
+  it("plain rain: the row's glyph is the rain cloud, and the drop is the chance's alone (§NNN, amending §677)", async () => {
+    currentLocale = "ro";
+    const html = withoutStyles(await page({}, rainy()));
+    const row = rows(html).find((each) => each.label === "Vremea");
+    expect(row?.dt).toContain('data-testid="RainyIcon"');
+    expect(row?.dt).not.toContain("WaterDropIcon");
+    expect(row?.dd.match(/data-testid="WaterDropIcon"/g)).toHaveLength(1);
   });
 
   it("RO, rain unlikely: the word and the degrees alone", async () => {
@@ -340,7 +349,7 @@ describe("BR-REQ-041-01 the listing reads every card's forecast at once (§416)"
       return /data-testid="card-weather"[\s\S]*$/.exec(html)?.[0] ?? "";
     };
     const wet = await pill(openMeteo({ code: 81, chance: 80, mm: 3 }));
-    expect(wet).toContain('data-testid="RainyIcon"');
+    expect(wet).toContain('data-testid="RainyHeavyIcon"');
     expect(wet).toContain('data-testid="card-weather-chance"');
     expect(wet).toContain('data-testid="WaterDropIcon"');
     expect(text(wet)).toContain("80 %");

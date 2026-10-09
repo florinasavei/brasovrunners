@@ -3,8 +3,11 @@
 import { createSvgIcon } from "@mui/material/SvgIcon";
 
 /**
- * A cloud with rain falling from it, the sky's glyph for showers and heavy rain (§677, amending
- * §402; the owner, 2026-10-08: «I hate that umbrella closed»). Material's icon set has no such
+ * A cloud with three strokes of rain under it, the sky's glyph for plain rain (WMO 61/63; §NNN,
+ * amending §677: the owner, 2026-10-09, «Yes different icon» — the drop it replaces is the chance's
+ * mark alone). It was the glyph for showers and heavy rain (§677, amending §402; the owner,
+ * 2026-10-08: «I hate that umbrella closed»), which now take `RainyHeavyIcon`, and drizzle
+ * `RainyLightIcon`: one family of three clouds, by intensity. Material's icon set has no such
  * glyph — its `Shower` is a bathroom's, `BeachAccess` a parasol, `Water` waves — so it is drawn
  * here, as `createSvgIcon` draws every glyph of `@mui/icons-material` (the same `"use client"`
  * module): it takes `fontSize` and `color` like the others, and its test id is «RainyIcon».
