@@ -2954,7 +2954,8 @@
         "registrationsPerAddress": "Doar în termeni: câte persoane se pot înscrie cu aceeași adresă de email la un eveniment, cu unitatea („4 persoane”), din Setări → „Termene”",
         "gmailFallback": "Doar în nota de confidențialitate: numele comutatorului «Gmail preia când Mailgun se oprește», între ghilimele. Fără el în nota în vigoare, comutatorul e oprit și mesajele așteaptă Mailgun",
         "eventInvitations": "Doar în nota de confidențialitate: numele secțiunii Invitații, între ghilimele. Cu el în nota în vigoare, /admin/tasks consideră invitațiile descrise",
-        "feedbackForms": "Doar în nota de confidențialitate: numele formularelor „Spune-ne ceva”, între ghilimele. Cu el în nota în vigoare, pagina de contact arată formularele pornite"
+        "feedbackForms": "Doar în nota de confidențialitate: numele formularelor „Spune-ne ceva”, între ghilimele. Cu el în nota în vigoare, pagina de contact arată formularele pornite",
+        "feedbackFormsNamed": "Doar în nota de confidențialitate: alegerea „Cu nume și prenume” din formularele „Spune-ne ceva”, între ghilimele. Fără el în nota în vigoare, formularele sunt doar anonime"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -3660,6 +3661,15 @@
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea 5 are paragraful despre formulare, secțiunea 10 cookie-ul lor.",
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare în ambele limbi, formularele pornite apar sub newsletter.",
             "Emailul „Șabloanele textelor legale s-au schimbat” pleacă singur, după lansare: nimic de făcut pentru el."
+          ]
+        },
+        "feedbackNamedNotice": {
+          "title": "Nota de confidențialitate: „Spune-ne ceva” cu nume și prenume",
+          "todo": "Nota în vigoare nu spune încă că formularele „Spune-ne ceva” pot fi trimise cu nume și prenume: până când clubul aprobă o notă care o spune, formularele sunt doar anonime.",
+          "done": "Nota în vigoare descrie trimiterea cu nume și prenume: fiecare formular începe cu „Anonim” / „Cu nume și prenume”, iar cine își dă numele alege cine află.",
+          "how": [
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Paragraful despre formulare din secțiunea 5 descrie alegerea „Cu nume și prenume” și cine află.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare în ambele limbi, formularele încep cu alegerea, fără altă setare."
           ]
         },
         "teamPageNotice": {
@@ -5558,7 +5568,7 @@
           "howItWent": "Cum a fost",
           "suggestion": "O sugestie",
           "complaint": "O reclamație",
-          "safety": "Siguranță (confidențial)"
+          "safety": "Siguranță pentru femei (confidențial)"
         },
         "help": {
           "howItWent": "Evenimentul, data, o notă de la 1 la 5, ce s-a întâmplat și de ce nu mai vine cineva. Și din emailul de mulțumire.",
@@ -5579,7 +5589,7 @@
         "save": "Salvează formularele",
         "saving": "Se salvează…",
         "saved": "Formularele „Spune-ne ceva” au fost salvate.",
-        "roads": "Site-ul nu păstrează niciun mesaj. Cum a fost, sugestiile și reclamațiile pleacă prin Gmail-ul clubului (CONTACT_SMTP_USER); Siguranță doar prin Mailgun."
+        "roads": "Site-ul nu păstrează niciun mesaj. Cum a fost, sugestiile și reclamațiile pleacă prin Gmail-ul clubului (CONTACT_SMTP_USER); Siguranță pentru femei doar prin Mailgun."
       },
       "perSendNewsletter": "Textul newsletterului se scrie la fiecare trimitere, pe pagina „Newsletter” a backoffice-ului, așa că nu are cuvinte de editat aici.",
       "newsletterLink": "Newsletter →",
@@ -8468,16 +8478,31 @@
   },
   "Tell": {
     "title": "Spune-ne ceva",
-    "intro": "Anonim, dacă nu lași un contact. Alege despre ce e vorba.",
+    "intro": "Anonim, dacă nu alegi să-ți spui numele. Alege despre ce e vorba.",
     "backToContact": "Înapoi la Contact",
     "door": {
       "intro": "Cum a fost la un eveniment, o sugestie sau o reclamație — anonim, dacă vrei.",
-      "introSafety": "Un formular confidențial pentru cine nu s-a simțit în siguranță.",
+      "introSafety": "Un formular confidențial pentru femeile care nu s-au simțit în siguranță la noi.",
       "button": "Deschide formularul anonim"
     },
     "choose": {
       "legend": "Despre ce e vorba?",
       "next": "Continuă"
+    },
+    "identity": {
+      "legend": "Cum vrei să trimiți?",
+      "anonymous": "Anonim",
+      "anonymousHint": "Nu ne spui cine ești.",
+      "named": "Cu nume și prenume",
+      "namedHint": "Ca să te putem căuta și să-ți răspundem."
+    },
+    "name": "Numele și prenumele",
+    "audience": {
+      "legend": "Cine să afle?",
+      "club": "Clubul",
+      "clubHint": "Mesajul ajunge în căsuța de e-mail a clubului.",
+      "person": "{name}",
+      "personHint": "Doar {name}, persoana desemnată de club pentru siguranță. Confidențial."
     },
     "branches": {
       "howItWent": {
@@ -8496,15 +8521,16 @@
         "intro": "Spune-ne ce s-a întâmplat; evenimentul și data sunt opționale."
       },
       "safety": {
-        "label": "Siguranță",
-        "hint": "Pentru femeile care nu s-au simțit în siguranță la noi. Confidențial."
+        "label": "Siguranță pentru femei",
+        "hint": "Știm că alergatul, ca femeie, vine cu provocări în plus. Dacă ceva te-a făcut să nu te simți în siguranță la noi, spune-ne — confidențial."
       }
     },
     "safety": {
       "reader": "Mesajul ajunge doar la {name}. Site-ul nu păstrează nimic din el.",
+      "readerChoice": "Anonim, mesajul ajunge doar la {name}; cu nume și prenume, alegi tu cine află. Site-ul nu păstrează nimic din el.",
       "whereWhen": "Unde și când (opțional)",
       "contact": "Dacă vrei să te contacteze {name}, lasă un email sau un telefon (opțional)",
-      "contactHelp": "Fără el, mesajul rămâne anonim."
+      "contactHelp": "Doar dacă vrei să-ți răspundă."
     },
     "event": "Evenimentul",
     "eventGeneral": "Altceva / în general",
@@ -8546,7 +8572,7 @@
     },
     "reasonOther": "Altceva, în câteva cuvinte (opțional)",
     "email": "E-mail (opțional)",
-    "emailHelp": "Doar dacă vrei un răspuns; fără el, mesajul e anonim.",
+    "emailHelp": "Doar dacă vrei un răspuns.",
     "errors": {
       "title": "Mesajul nu a plecat",
       "fieldsIntro": "Verifică:",
@@ -8557,6 +8583,8 @@
       "captcha": "Bifează verificarea de mai sus și trimite din nou."
     },
     "fieldNames": {
+      "name": "Numele",
+      "audience": "Cine să afle",
       "event": "Evenimentul",
       "date": "Data",
       "rating": "Cum a fost",

@@ -130,6 +130,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.79` | the feedback choice is cards with icons, every form opens with anonymous or named, and a named message chooses the club or the safety person (§678) |
 | `BR-V2.78` | the rain is a raining cloud and a percentage (§677) |
 | `BR-V2.77` | one anonymous wizard from Contact, the safety form reaching one person (§676) |
 | `BR-V2.76` | the two link forms run the anti-bot check too (§675) |

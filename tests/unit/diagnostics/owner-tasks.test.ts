@@ -34,6 +34,7 @@ const LAUNCHED: OwnerTaskInputs = {
   newsletterDescribed: true,
   feedbackDescribed: true,
   feedbackBranchesOn: 2,
+  feedbackNamedDescribed: true,
   gmailFallbackDescribed: true,
   refusalDescribed: true,
   teamPageDescribed: true,
@@ -122,6 +123,21 @@ describe("owner tasks", () => {
     expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "feedbackNotice")).toBe(false);
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.feedbackNotice;
+      expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+    }
+  });
+
+  /** §678 — «Spune-ne ceva» with a name: its own marker, its own row; open while a branch is on and the notice is silent. */
+  it("keeps the named-mode row open while a branch is on and the notice in force does not name {{feedbackFormsNamed}}", () => {
+    expect(stateOf({ ...LAUNCHED, feedbackNamedDescribed: false }, "feedbackNamedNotice")).toBe("open");
+    expect(stateOf(LAUNCHED, "feedbackNamedNotice")).toBe("done");
+    // Its own answer, not the forms': a notice naming the forms and not the named mode leaves it open.
+    expect(stateOf({ ...LAUNCHED, feedbackNamedDescribed: false }, "feedbackNotice")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, feedbackNamedDescribed: false, feedbackBranchesOn: 0 }).some((task) => task.id === "feedbackNamedNotice")).toBe(false);
+    expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "feedbackNamedNotice")).toBe(false);
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.feedbackNamedNotice;
       expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
       expect(item.how.join("\n")).toContain("/admin/legal");
     }
@@ -375,6 +391,7 @@ describe("owner tasks", () => {
       "sponsorNotice",
       "newsletterNotice",
       "feedbackNotice",
+      "feedbackNamedNotice",
       "gmailFallbackNotice",
       "refusalTerms",
       "teamPageNotice",

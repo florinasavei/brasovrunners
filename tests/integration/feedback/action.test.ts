@@ -140,6 +140,66 @@ describe("§676 submitFeedbackAction's redirects", () => {
     expect(kept).not.toHaveProperty("cf-turnstile-response");
   });
 
+  it("refuses «Cu nume și prenume» with no name on the box, and keeps the choice and the way back in the draft, never in the address (§678)", async () => {
+    const to = await pressed(post({ branch: "howItWent", identity: "named", name: " ", event: "", date: "", rating: "", message: "Bine.", reasons: [], reasonOther: "", email: "ana@example.org" }));
+    const url = new URL(to, "http://club.test");
+    expect(url.searchParams.get("fields")).toBe("name");
+    expect(to).not.toContain("ana");
+    expect(openFormDraft(lastDraft()?.value ?? "")).toMatchObject({ identity: "named", email: "ana@example.org", message: "Bine." });
+  });
+
+  it("keeps no name, no way back, no reader and no identity in the draft of an anonymous refused post, even typed into the hidden boxes (§678)", async () => {
+    for (const identity of ["anonymous", ""]) {
+      const to = await pressed(
+        post({ branch: "safety", identity, name: "Ana Pop", email: "ana@example.org", contact: "0700 000 000", audience: "club", message: "", whereWhen: "Parcul, joi" }),
+      );
+      expect(new URL(to, "http://club.test").searchParams.get("fields")).toBe("message");
+      const kept = openFormDraft(lastDraft()?.value ?? "");
+      expect(kept).toMatchObject({ whereWhen: "Parcul, joi" });
+      for (const box of ["identity", "name", "email", "contact", "audience"]) expect(kept, `${identity}: ${box}`).not.toHaveProperty(box);
+    }
+  });
+
+  it("reads a named post as anonymous while the notice in force does not name {{feedbackFormsNamed}}: sent with no name, and a refusal keeps none (§678)", async () => {
+    const unnamed = (body: unknown) => JSON.parse(JSON.stringify(body).split("{{feedbackFormsNamed}}").join("cu numele"));
+    const translations = [
+      { locale: "ro" as const, title: "Nota de confidențialitate", body: unnamed(privacyNoticeRo) },
+      { locale: "en" as const, title: "Privacy notice", body: unnamed(privacyNoticeEn) },
+    ];
+    await insertLegalDocumentVersion(db, {
+      key: "PRIVACY_NOTICE",
+      version: 2,
+      effectiveAt: new Date(Date.now() - 3_600_000),
+      isApproved: true,
+      contentSha256: computeContentHash(translations),
+      translations,
+      now: new Date(),
+    });
+    const before = capturedContactMessages().length;
+    const named = { branch: "howItWent", identity: "named", name: "Ana Pop", email: "ana@example.org", event: "", date: "", rating: "", reasons: [], reasonOther: "" };
+    expect(await pressed(post({ ...named, message: "Foarte frumos." }))).toBe("/ro/contact/spune-ne?sent=cum-a-fost");
+    expect(capturedContactMessages().length).toBe(before + 1);
+    const [sent] = capturedContactMessages();
+    expect(sent.text.split("\n")[0]).toBe("Nume: (anonim)");
+    expect(sent.text).not.toContain("Ana");
+    expect(sent.replyTo).toBeUndefined();
+
+    await pressed(post({ ...named, message: " " }));
+    const kept = openFormDraft(lastDraft()?.value ?? "");
+    expect(kept).not.toHaveProperty("name");
+    expect(kept).not.toHaveProperty("email");
+    expect(kept).not.toHaveProperty("identity");
+  });
+
+  it("names the other reader on the sent page: a named safety report the sender gave the club leaves by the SMTP road, «&catre=clubul» (§678)", async () => {
+    const before = capturedContactMessages().length;
+    const to = await pressed(post({ branch: "safety", identity: "named", name: "Ana Pop", audience: "club", message: "Cineva m-a urmărit.", whereWhen: "", contact: "" }));
+    expect(to).toBe("/ro/contact/spune-ne?sent=siguranta&catre=clubul");
+    expect(capturedContactMessages().length).toBe(before + 1);
+    expect(capturedContactMessages()[0].subject).toContain("Mesaj confidențial de pe site");
+    expect(capturedContactMessages()[0].text.split("\n")[0]).toBe("Nume: Ana Pop");
+  });
+
   it("keeps the English path for an English post", async () => {
     const to = await pressed(post({ locale: "en", branch: "safety", message: "", whereWhen: "", contact: "" }));
     expect(to).toMatch(/^\/en\/contact\/tell-us\?tip=siguranta&error=VALIDATION_ERROR&fields=message&since=[^#]+#feedback-errors$/);
