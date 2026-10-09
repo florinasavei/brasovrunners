@@ -3659,7 +3659,7 @@
           "done": "Nota în vigoare descrie formularele „Spune-ne ceva”: pagina de contact le arată pe cele pornite.",
           "how": [
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea 5 are paragraful despre formulare, secțiunea 10 cookie-ul lor.",
-            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare în ambele limbi, formularele pornite apar sub newsletter.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare în ambele limbi, formularele pornite apar pe pagina de contact, deasupra newsletterului.",
             "Emailul „Șabloanele textelor legale s-au schimbat” pleacă singur, după lansare: nimic de făcut pentru el."
           ]
         },
@@ -5560,7 +5560,7 @@
       },
       "feedbackForms": {
         "title": "Spune-ne ceva",
-        "intro": "Patru formulare anonime sub newsletter, pe pagina de contact. Fiecare e oprit până îl pornești aici și primește la o singură adresă.",
+        "intro": "Patru formulare anonime pe pagina de contact, sub formularul de contact și deasupra newsletterului. Fiecare e oprit până îl pornești aici și primește la o singură adresă.",
         "aside": "Pornite: {on} din {all}",
         "noticeMissing": "Nota de confidențialitate în vigoare nu descrie încă formularele: pe site nu apare nimic până nu aprobi o notă nouă (vezi „Sarcini”).",
         "updatedAt": "Setat {when}.",

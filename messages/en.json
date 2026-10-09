@@ -3659,7 +3659,7 @@
           "done": "The notice in force describes the “Tell us something” forms: the contact page shows the ones switched on.",
           "how": [
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 5 has the paragraph about the forms, section 10 their cookie.",
-            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”. Once in force in both languages, the forms switched on appear under the newsletter.",
+            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”. Once in force in both languages, the forms switched on appear on the contact page, above the newsletter.",
             "The email “The legal templates changed” goes by itself after the release: nothing to do for it."
           ]
         },
@@ -5560,7 +5560,7 @@
       },
       "feedbackForms": {
         "title": "Tell us something",
-        "intro": "Four anonymous forms under the newsletter, on the contact page. Each is off until you switch it on here, and reaches one address.",
+        "intro": "Four anonymous forms on the contact page, under the contact form and above the newsletter. Each is off until you switch it on here, and reaches one address.",
         "aside": "On: {on} of {all}",
         "noticeMissing": "The privacy notice in force does not describe the forms yet: nothing shows on the site until you approve a new notice (see “Tasks”).",
         "updatedAt": "Set {when}.",

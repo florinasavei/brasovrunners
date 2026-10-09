@@ -1440,7 +1440,7 @@ club names — which is why a colleague's Yahoo can be on the list.
      another one changes the organizer of entries already answered, which some calendar apps
      refuse; choose the address once.
 
-**«Spune-ne ceva» — the anonymous forms under the newsletter (§676).** Nothing to set on the
+**«Spune-ne ceva» — the anonymous forms under the contact form, above the newsletter (§676, §NNN).** Nothing to set on the
 deployment: the three ordinary branches («Cum a fost», «O sugestie», «O reclamație») leave through
 the same Gmail account as the form above, and the confidential «Girl Zone» through Mailgun alone
 (`MAILGUN_*`, already set), never through the club's Gmail. Without the Gmail account and its app
@@ -1465,7 +1465,7 @@ all, whatever their switches say — only «Girl Zone», if it is on. On each de
    «O reclamație» address, or the contact form's recipients when it has none, and needs the Gmail
    account. A message for the person always leaves by Mailgun alone, with the neutral subject, and one
    from another form says which on its line «Din formularul: „…”»; one for the club by the club's Gmail.
-3. Check: `/ro/contact` shows «Spune-ne ceva» under the newsletter; a message sent from QA arrives
+3. Check: `/ro/contact` shows «Spune-ne ceva» under the contact form and the newsletter last, under it; a message sent from QA arrives
    with `[QA]` in front of its subject, its first line «Nume: (anonim)» or the name the person gave. The site keeps no copy of any message, so the inbox is the
    only place to look.
 
