@@ -13,10 +13,12 @@ import { type AppEnvironment, markSubjectForEnvironment } from "@/infrastructure
  *   stopped coming.
  * - **«O sugestie»** (`sugestie`) — one box.
  * - **«O reclamație»** (`reclamatie`) — what happened, and optionally the event and the date.
- * - **«Siguranță»** (`siguranta`) — confidential, for women who did not feel safe: it reaches one
- *   person the club names, by the club's email service alone, and the site keeps nothing of it.
+ * - **«Siguranță pentru femei»** (`siguranta`) — confidential, for women who did not feel safe: it
+ *   reaches one person the club names, by the club's email service alone, and the site keeps nothing of it.
  *
- * Anonymous: no field asks who is writing. An address or a telephone is optional, for an answer.
+ * Anonymous unless the person chooses otherwise (§NNN): every form opens with «Anonim» (the default)
+ * or «Cu nume și prenume», and only the named mode shows — and the server only keeps — a name, which it
+ * then requires, and the branch's way back (an address, or for the safety form an address or a telephone).
  */
 
 export const FEEDBACK_BRANCHES = ["howItWent", "suggestion", "complaint", "safety"] as const;
@@ -83,7 +85,7 @@ export function offeredBranches(settings: FeedbackSettings, noticeDescribes: boo
 
 /**
  * The door's sentence on `/contact` (§676), from what is offered: the three ordinary forms named only
- * while one of them is there — with «Siguranță» alone (a deployment with no SMTP road, or the club's
+ * while one of them is there — with «Siguranță pentru femei» alone (a deployment with no SMTP road, or the club's
  * choice) the button opens the safety form straight away, and the sentence says that form alone.
  */
 export function doorIntroKey(offered: readonly FeedbackBranch[]): "door.intro" | "door.introSafety" {
@@ -154,22 +156,35 @@ export const RATINGS = [1, 2, 3, 4, 5] as const;
 export type Rating = (typeof RATINGS)[number];
 
 /** Every box any branch has, in the order the forms show them — the order a refusal lists them in. */
-export const FEEDBACK_FIELDS = ["event", "date", "rating", "message", "reasons", "reasonOther", "whereWhen", "contact", "email", "captcha"] as const;
+export const FEEDBACK_FIELDS = ["name", "email", "contact", "event", "date", "rating", "message", "reasons", "reasonOther", "whereWhen", "captcha"] as const;
 export type FeedbackField = (typeof FEEDBACK_FIELDS)[number];
 
 /**
- * What a refusal keeps in the sealed draft (§142), path-scoped to the wizard and read back by its form:
- * every box but the ticks (kept joined, as `reasons`) and the anti-bot check — never the trap, the
- * clock or the token.
+ * The choice every form opens with (§NNN), the radio named `identity`: «Anonim», the default and what
+ * anything else posted reads as, or «Cu nume și prenume».
  */
-export const FEEDBACK_DRAFT_BOXES = ["event", "date", "rating", "message", "reasonOther", "whereWhen", "contact", "email"] as const satisfies readonly FeedbackField[];
+export const FEEDBACK_IDENTITIES = ["anonymous", "named"] as const;
+export type FeedbackIdentity = (typeof FEEDBACK_IDENTITIES)[number];
 
-/** The boxes each branch has, in its form's order. */
+/** The boxes only the named mode shows and the server only keeps: the name and the branch's way back. */
+export const NAMED_ONLY_FIELDS = ["name", "email", "contact"] as const satisfies readonly FeedbackField[];
+
+/**
+ * What a refusal keeps in the sealed draft (§142), path-scoped to the wizard and read back by its form:
+ * the identity choice and every box but the ticks (kept joined, as `reasons`) and the anti-bot check —
+ * never the trap, the clock or the token.
+ */
+export const FEEDBACK_DRAFT_BOXES = ["identity", "name", "email", "contact", "event", "date", "rating", "message", "reasonOther", "whereWhen"] as const satisfies readonly (FeedbackField | "identity")[];
+
+/**
+ * The boxes each branch has, in its form's order: the name and the way back first, inside the
+ * identity choice at the very top (§NNN), then the branch's own.
+ */
 export const BRANCH_FIELDS: Readonly<Record<FeedbackBranch, readonly FeedbackField[]>> = {
-  howItWent: ["event", "date", "rating", "message", "reasons", "reasonOther", "email"],
-  suggestion: ["message", "email"],
-  complaint: ["message", "event", "date", "email"],
-  safety: ["message", "whereWhen", "contact"],
+  howItWent: ["name", "email", "event", "date", "rating", "message", "reasons", "reasonOther"],
+  suggestion: ["name", "email", "message"],
+  complaint: ["name", "email", "message", "event", "date"],
+  safety: ["name", "contact", "message", "whereWhen"],
 };
 
 /** A line becomes a header-free line: no break, the edges trimmed. */
@@ -213,6 +228,9 @@ const reasons = z.array(z.enum(STOPPED_REASONS)).max(STOPPED_REASONS.length).tra
 
 const common = {
   locale: z.enum(["ro", "en"]),
+  identity: z.enum(FEEDBACK_IDENTITIES),
+  /** The person's name and surname: kept only in the named mode, and required there. */
+  name: line,
   honeypot: z.string().max(2000).optional(),
   renderedAt: z.iso.datetime().optional(),
 };
@@ -242,7 +260,25 @@ export const complaintFields = z.object({
 
 export const safetyFields = z.object({ branch: z.literal("safety"), message: text, whereWhen: line, contact: line, ...common });
 
-export const feedbackFields = z.discriminatedUnion("branch", [howItWentFields, suggestionFields, complaintFields, safetyFields]);
+/**
+ * Anonymous unless the person chose otherwise (§NNN): any identity but «Cu nume și prenume» reads as
+ * «Anonim», and then the name and the way back are dropped before anything is read — a box the page
+ * hid is never refused, and never sent.
+ */
+function anonymousDropsWhoIsWriting(raw: unknown): unknown {
+  if (!raw || typeof raw !== "object") return raw;
+  const posted = raw as Record<string, unknown>;
+  if (posted.identity === "named") return raw;
+  return { ...posted, identity: "anonymous", ...Object.fromEntries(NAMED_ONLY_FIELDS.map((field) => [field, ""])) };
+}
+
+export const feedbackFields = z.preprocess(
+  anonymousDropsWhoIsWriting,
+  z.discriminatedUnion("branch", [howItWentFields, suggestionFields, complaintFields, safetyFields]).superRefine((input, context) => {
+    // The named mode is a name: «Cu nume și prenume» with the box empty is refused on the box.
+    if (input.identity === "named" && input.name === "") context.addIssue({ code: "custom", path: ["name"], message: "a name" });
+  }),
+);
 
 export type FeedbackInput = z.infer<typeof feedbackFields>;
 
@@ -328,6 +364,9 @@ const LANGUAGE_NAME = { ro: "română", en: "engleză" } as const;
 /** Said when no way back was left: the club knows at a glance that there is nobody to answer. */
 export const NO_CONTACT_LINE = "(fără contact lăsat)";
 
+/** The email's first line in the anonymous mode (§NNN): «Nume: (anonim)». */
+export const ANONYMOUS_NAME_LINE = "(anonim)";
+
 /**
  * The safety branch's subject (§676): neutral, so a notification on a phone's lock screen says
  * nothing of what is inside. The other three name their branch, because the club files them.
@@ -363,12 +402,13 @@ function dayWords(day: string): string {
 type Line = { label: string; value: string };
 
 /**
- * The lines of one message, in the form's order (`BRANCH_FIELDS`): only what the person filled, then
- * the way back or «(fără contact lăsat)». Romanian whatever the form's language — the reader is the
- * club — with the form's language on its own line so the club knows how to answer.
+ * The lines of one message: first «Nume: …» — the name the person gave, or «(anonim)» (§NNN) — then
+ * only what they filled, in the form's order (`BRANCH_FIELDS`), and the way back or «(fără contact
+ * lăsat)». Romanian whatever the form's language — the reader is the club — with the form's language
+ * on its own line so the club knows how to answer.
  */
 export function feedbackLines(input: FeedbackInput, context: FeedbackContext): { lines: Line[]; message: Line; contact: Line } {
-  const lines: Line[] = [];
+  const lines: Line[] = [{ label: "Nume", value: input.identity === "named" && input.name ? input.name : ANONYMOUS_NAME_LINE }];
   // A slug the club does not publish is no event: the posted value is only ever a picker's option.
   const event = (slug: string | null) => (slug && context.eventTitle ? context.eventTitle : GENERAL);
   switch (input.branch) {
@@ -413,7 +453,7 @@ export function composeFeedbackEmail(input: FeedbackInput, context: FeedbackCont
         : SUBJECT[input.branch];
   const footer =
     input.branch === "safety"
-      ? "— Trimis prin formularul confidențial „Siguranță” al site-ului. Site-ul nu a păstrat nimic din el."
+      ? "— Trimis prin formularul confidențial „Siguranță pentru femei” al site-ului. Site-ul nu a păstrat nimic din el."
       : "— Trimis prin formularele „Spune-ne ceva” ale site-ului. Site-ul nu a păstrat nimic din el.";
   const text = [
     ...lines.map((entry) => `${entry.label}: ${entry.value}`),

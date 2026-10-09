@@ -7,10 +7,10 @@ import type { ComponentType } from "react";
 import type { FeedbackBranch } from "../domain/branches";
 
 /**
- * «Spune-ne ceva»'s one glyph per branch (§676, and the cards that followed it), looked up by the
- * branch's name: step 1 draws it on each card and step 2 beside the branch's title, so the picture a
- * visitor chose is the one above the form they fill. Decoration only — the word is the label, and the
- * tile is `aria-hidden`. One file per glyph, never the barrel (§90).
+ * «Spune-ne ceva»'s one glyph per branch (§676, §NNN), looked up by the branch's name: step 1 draws
+ * it on each card and step 2 beside the branch's title, so the picture a visitor chose is the one above
+ * the form they fill. Decoration only — the word is the label, and the tile is `aria-hidden`. One file
+ * per glyph, never the barrel (§90).
  *
  * The metaphors, written down: how it was is a runner, a suggestion the light bulb, a complaint the
  * triangle that says something is wrong, and the women's safety form a heart outline — care, not a

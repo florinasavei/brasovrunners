@@ -83,6 +83,9 @@ export async function submitFeedbackAction(form: FormData): Promise<void> {
       {
         branch: text(form, "branch"),
         locale,
+        // «Anonim» unless «Cu nume și prenume» was chosen; the name and the way back are dropped then (§NNN).
+        identity: text(form, "identity"),
+        name: text(form, "name"),
         event: text(form, "event"),
         date: text(form, "date"),
         rating: text(form, "rating"),

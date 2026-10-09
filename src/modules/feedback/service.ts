@@ -177,7 +177,8 @@ async function sendOrdinary(
   const result = await road.transport.send({
     from: road.from,
     to: [to.replace(/[\r\n]+/g, " ").trim()],
-    ...(input.email ? { replyTo: { name: input.email, address: input.email } } : {}),
+    // Only in the named mode (§NNN): the anonymous mode has no address to answer, and no name.
+    ...(input.email ? { replyTo: { name: input.name || input.email, address: input.email } } : {}),
     subject,
     text,
     html,

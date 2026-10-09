@@ -1448,14 +1448,16 @@ password (`CONTACT_SMTP_USER`, `CONTACT_SMTP_PASSWORD`) the three ordinary branc
 all, whatever their switches say — only «Siguranță pentru femei», if it is on. On each deployment (QA has its own):
 
 1. `/admin/legal` → the «GDPR» card → «Regenerează din șablon» → approve the notice: its section 5
-   describes the forms. Until a notice naming them is in force in both languages, nothing shows on
+   describes the forms — anonymous unless the person chooses «Cu nume și prenume», which every form
+   opens with (§NNN); a notice approved before that template still says the forms ask no name, so
+   approve it again once this release is in. Until a notice naming them is in force in both languages, nothing shows on
    `/contact` whatever the switches say, and `/admin/tasks` carries the row «formularele „Spune-ne ceva”».
 2. «Pagini» → «Contact» → **«Spune-ne ceva»**: tick «Pornit» on each branch the club wants, with the
    one address that receives it; for «Siguranță pentru femei», the designated person's own address (not a shared
    club mailbox) and the first name the form shows («Mesajul ajunge doar la …») → **Salvează
    formularele** → confirm. Each branch is off by default; untick to take it away.
 3. Check: `/ro/contact` shows «Spune-ne ceva» under the newsletter; a message sent from QA arrives
-   with `[QA]` in front of its subject. The site keeps no copy of any message, so the inbox is the
+   with `[QA]` in front of its subject, its first line «Nume: (anonim)» or the name the person gave. The site keeps no copy of any message, so the inbox is the
    only place to look.
 
 To take the form away, clear the recipients on «Pagini» → «Contact» (`/admin/pages/contact`) and leave `CONTACT_FORM_TO`

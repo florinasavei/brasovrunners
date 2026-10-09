@@ -76,7 +76,7 @@ describe("§676 «Spune-ne ceva»", () => {
 
   const post = (fields: Record<string, unknown>) => ({ locale: "ro", renderedAt: RENDERED, ...fields });
   const HOW = post({ branch: "howItWent", event: "crosul", date: "2026-10-04", rating: "5", message: "Foarte frumos.", reasons: [], reasonOther: "", email: "" });
-  const SUGGESTION = post({ branch: "suggestion", message: "Alergări seara.", email: "ana@example.org" });
+  const SUGGESTION = post({ branch: "suggestion", identity: "named", name: "Ana Pop", message: "Alergări seara.", email: "ana@example.org" });
   const COMPLAINT = post({ branch: "complaint", message: "Nimeni la start.", event: "", date: "", email: "" });
   const SAFETY = post({ branch: "safety", message: "Cineva m-a urmărit.", whereWhen: "Parcul, joi", contact: "" });
 
@@ -91,11 +91,29 @@ describe("§676 «Spune-ne ceva»", () => {
       // Reply-To only when an address was typed; the anonymity line otherwise.
       expect(smtp.messages[0].replyTo).toBeUndefined();
       expect(smtp.messages[0].text).toContain(`Contact: ${NO_CONTACT_LINE}`);
-      expect(smtp.messages[1].replyTo).toEqual({ name: "ana@example.org", address: "ana@example.org" });
+      // The named mode (§NNN): the name is the Reply-To's name and the email's first line.
+      expect(smtp.messages[1].replyTo).toEqual({ name: "Ana Pop", address: "ana@example.org" });
+      expect(smtp.messages[1].text.split("\n")[0]).toBe("Nume: Ana Pop");
+      expect(smtp.messages[0].text.split("\n")[0]).toBe("Nume: (anonim)");
       for (const message of smtp.messages) {
         expect(message.cc).toBeUndefined();
         expect(message.bcc).toBeUndefined();
       }
+    });
+
+    it("drops the name and the way back the anonymous mode hid: no Reply-To, «(anonim)», «(fără contact lăsat)» (§NNN)", async () => {
+      const anonymous = { ...SUGGESTION, identity: "anonymous" };
+      expect(await submitFeedback(db, deps(), anonymous, NOW)).toEqual({ outcome: "sent" });
+      expect(await submitFeedback(db, deps(), { ...SAFETY, name: "Ana Pop", contact: "0700 000 000" }, NOW)).toEqual({ outcome: "sent" });
+      expect(smtp.messages[0].replyTo).toBeUndefined();
+      expect(smtp.messages[0].text).not.toContain("Ana");
+      expect(smtp.messages[0].text).toContain(`Contact: ${NO_CONTACT_LINE}`);
+      const [safety] = mailgun.send.mock.calls[0];
+      expect(safety.text).not.toContain("Ana");
+      expect(safety.text).not.toContain("0700");
+      expect(safety.text.split("\n")[0]).toBe("Nume: (anonim)");
+      // The named mode with no name is refused on the box.
+      await expect(submitFeedback(db, deps(), { ...SUGGESTION, name: "" }, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["name"] });
     });
 
     it("sends the safety branch by Mailgun alone: the neutral subject, no Reply-To, never the SMTP road", async () => {

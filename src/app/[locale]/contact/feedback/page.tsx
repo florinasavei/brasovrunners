@@ -49,6 +49,7 @@ import { readFormDraft } from "@/modules/registrations/form-draft";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { BOT_CHECK_ERROR_ATTRIBUTE, BOT_CHECK_SLOT_SX } from "@/modules/registrations/domain/turnstile-widget";
 import CheckboxField from "@/shared/ui/CheckboxField";
+import RadioField from "@/shared/ui/RadioField";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { INLINE_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
@@ -102,8 +103,9 @@ function dayStart(at: Date): Date {
  * «Spune-ne ceva» / "Tell us something" (§676; BR-REQ-070-04) — one door from `/contact`, one
  * server-rendered wizard with no client state beyond the form.
  *
- * Step 1 «Despre ce e vorba?» is a `GET` form: native radios, one per branch the club switched on,
- * and «Continuă» — the branch is `?tip=` in the address, so the back button works. One branch on is
+ * Step 1 «Despre ce e vorba?» is a `GET` form: one card per branch the club switched on, each around
+ * its native radio, and «Continuă» — the branch is `?tip=` in the address, so the back button works.
+ * Step 2, every branch's form, opens with «Anonim» / «Cu nume și prenume» (§NNN). One branch on is
  * that branch's form straight away; none on, or the privacy notice in force not describing the forms,
  * is a 404 (and no door on `/contact`). Each form posts to `submitFeedbackAction`; a refusal comes
  * back here with the boxes named in `?fields=` and what was typed in the sealed draft (§142), never
@@ -224,6 +226,8 @@ async function BranchForm({
   const chosenEvent = kept("event") ?? (query.eventSlug && events.some((event) => event.slug === query.eventSlug) ? query.eventSlug : "");
   const ratingTyped = kept("rating") ?? "";
   const reasonsTyped = new Set((kept("reasons") ?? "").split(",").filter(Boolean));
+  // «Anonim» unless the refused post had chosen the name (§NNN).
+  const named = kept("identity") === "named";
 
   const box = (name: FeedbackField, help?: string) => ({
     id: fieldId(name),
@@ -292,6 +296,58 @@ async function BranchForm({
         />
         <input type="hidden" name="renderedAt" value={renderedAt.toISOString()} />
         <Stack spacing={2}>
+          {/*
+            The very first thing (§NNN): anonymous, the default, or with one's name. The name and the way
+            back show only in the named mode — CSS `:has` alone, no island; without `:has` they simply
+            stay visible, and the server drops them on an anonymous post. No `required` attribute on the
+            name: the browser would refuse a hidden box; the server requires it in the named mode.
+          */}
+          <Box
+            data-testid="feedback-identity"
+            sx={{ "&:has(input[name='identity'][value='anonymous']:checked) [data-named-only]": { display: "none" } }}
+          >
+            <Box component="fieldset" id={fieldId("identity")} sx={{ border: 0, m: 0, p: 0, minWidth: 0 }}>
+              <Typography component="legend" variant="body1" sx={{ fontWeight: 600 }}>
+                {t("identity.legend")}
+              </Typography>
+              <Box sx={{ display: "flex", flexWrap: "wrap", columnGap: 2 }}>
+                <RadioField name="identity" value="anonymous" defaultChecked={!named}>
+                  {t("identity.anonymous")}
+                </RadioField>
+                <RadioField name="identity" value="named" defaultChecked={named}>
+                  {t("identity.named")}
+                </RadioField>
+              </Box>
+            </Box>
+            <Stack spacing={2} data-named-only="" data-testid="feedback-named" sx={{ mt: 1 }}>
+              <TextField
+                {...box("name")}
+                label={t("name")}
+                autoComplete="name"
+                fullWidth
+                slotProps={{ htmlInput: { maxLength: FEEDBACK_LINE_MAX, "aria-required": "true" } }}
+              />
+              {fields.includes("contact") && (
+                <TextField
+                  {...box("contact", t("safety.contactHelp"))}
+                  label={t("safety.contact", { name: safetyName })}
+                  fullWidth
+                  slotProps={{ htmlInput: { maxLength: FEEDBACK_LINE_MAX } }}
+                />
+              )}
+              {fields.includes("email") && (
+                // `inputMode`, not `type="email"`: a half-typed address left in a box the anonymous mode hid
+                // would make the browser refuse the post on a box it cannot show; the server checks it.
+                <TextField
+                  {...box("email", t("emailHelp"))}
+                  label={t("email")}
+                  autoComplete="email"
+                  fullWidth
+                  slotProps={{ htmlInput: { inputMode: "email", spellCheck: false, autoCapitalize: "none" } }}
+                />
+              )}
+            </Stack>
+          </Box>
           {withEvent && (
             <TextField
               {...box("event")}
@@ -399,17 +455,6 @@ async function BranchForm({
           )}
           {fields.includes("whereWhen") && (
             <TextField {...box("whereWhen")} label={t("safety.whereWhen")} fullWidth slotProps={{ htmlInput: { maxLength: FEEDBACK_LINE_MAX } }} />
-          )}
-          {fields.includes("contact") && (
-            <TextField
-              {...box("contact", t("safety.contactHelp"))}
-              label={t("safety.contact", { name: safetyName })}
-              fullWidth
-              slotProps={{ htmlInput: { maxLength: FEEDBACK_LINE_MAX } }}
-            />
-          )}
-          {fields.includes("email") && (
-            <TextField {...box("email", t("emailHelp"))} type="email" label={t("email")} autoComplete="email" fullWidth />
           )}
 
           {/* Cloudflare Turnstile, when the club switched it on (§97); the render's own time resets it (§185). */}

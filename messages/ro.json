@@ -5579,7 +5579,7 @@
         "save": "Salvează formularele",
         "saving": "Se salvează…",
         "saved": "Formularele „Spune-ne ceva” au fost salvate.",
-        "roads": "Site-ul nu păstrează niciun mesaj. Cum a fost, sugestiile și reclamațiile pleacă prin Gmail-ul clubului (CONTACT_SMTP_USER); Siguranță doar prin Mailgun."
+        "roads": "Site-ul nu păstrează niciun mesaj. Cum a fost, sugestiile și reclamațiile pleacă prin Gmail-ul clubului (CONTACT_SMTP_USER); Siguranță pentru femei doar prin Mailgun."
       },
       "perSendNewsletter": "Textul newsletterului se scrie la fiecare trimitere, pe pagina „Newsletter” a backoffice-ului, așa că nu are cuvinte de editat aici.",
       "newsletterLink": "Newsletter →",
@@ -8468,7 +8468,7 @@
   },
   "Tell": {
     "title": "Spune-ne ceva",
-    "intro": "Anonim, dacă nu lași un contact. Alege despre ce e vorba.",
+    "intro": "Anonim, dacă nu alegi să-ți spui numele. Alege despre ce e vorba.",
     "backToContact": "Înapoi la Contact",
     "door": {
       "intro": "Cum a fost la un eveniment, o sugestie sau o reclamație — anonim, dacă vrei.",
@@ -8479,6 +8479,12 @@
       "legend": "Despre ce e vorba?",
       "next": "Continuă"
     },
+    "identity": {
+      "legend": "Cum trimiți mesajul?",
+      "anonymous": "Anonim",
+      "named": "Cu nume și prenume"
+    },
+    "name": "Numele și prenumele",
     "branches": {
       "howItWent": {
         "label": "Cum a fost",
@@ -8504,7 +8510,7 @@
       "reader": "Mesajul ajunge doar la {name}. Site-ul nu păstrează nimic din el.",
       "whereWhen": "Unde și când (opțional)",
       "contact": "Dacă vrei să te contacteze {name}, lasă un email sau un telefon (opțional)",
-      "contactHelp": "Fără el, mesajul rămâne anonim."
+      "contactHelp": "Doar dacă vrei să-ți răspundă."
     },
     "event": "Evenimentul",
     "eventGeneral": "Altceva / în general",
@@ -8546,7 +8552,7 @@
     },
     "reasonOther": "Altceva, în câteva cuvinte (opțional)",
     "email": "E-mail (opțional)",
-    "emailHelp": "Doar dacă vrei un răspuns; fără el, mesajul e anonim.",
+    "emailHelp": "Doar dacă vrei un răspuns.",
     "errors": {
       "title": "Mesajul nu a plecat",
       "fieldsIntro": "Verifică:",
@@ -8557,6 +8563,7 @@
       "captcha": "Bifează verificarea de mai sus și trimite din nou."
     },
     "fieldNames": {
+      "name": "Numele",
       "event": "Evenimentul",
       "date": "Data",
       "rating": "Cum a fost",

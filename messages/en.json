@@ -5579,7 +5579,7 @@
         "save": "Save the forms",
         "saving": "Saving…",
         "saved": "The “Tell us something” forms were saved.",
-        "roads": "The site keeps no message. How it was, suggestions and complaints leave through the club's Gmail (CONTACT_SMTP_USER); Safety only through Mailgun."
+        "roads": "The site keeps no message. How it was, suggestions and complaints leave through the club's Gmail (CONTACT_SMTP_USER); Safety for women only through Mailgun."
       },
       "perSendNewsletter": "The newsletter's text is written per send, on the backoffice's “Newsletter” page, so it has no words to edit here.",
       "newsletterLink": "Newsletter →",
@@ -8468,7 +8468,7 @@
   },
   "Tell": {
     "title": "Tell us something",
-    "intro": "Anonymous unless you leave a contact. Choose what it is about.",
+    "intro": "Anonymous unless you choose to give your name. Choose what it is about.",
     "backToContact": "Back to Contact",
     "door": {
       "intro": "How an event went, a suggestion or a complaint — anonymously, if you like.",
@@ -8479,6 +8479,12 @@
       "legend": "What is it about?",
       "next": "Continue"
     },
+    "identity": {
+      "legend": "How do you send it?",
+      "anonymous": "Anonymous",
+      "named": "With my first and last name"
+    },
+    "name": "First and last name",
     "branches": {
       "howItWent": {
         "label": "How it was",
@@ -8504,7 +8510,7 @@
       "reader": "The message reaches {name} only. The site keeps nothing of it.",
       "whereWhen": "Where and when (optional)",
       "contact": "If you want {name} to contact you, leave an email or a phone number (optional)",
-      "contactHelp": "Without it, the message stays anonymous."
+      "contactHelp": "Only if you want an answer."
     },
     "event": "The event",
     "eventGeneral": "Something else / in general",
@@ -8546,7 +8552,7 @@
     },
     "reasonOther": "Something else, in a few words (optional)",
     "email": "Email (optional)",
-    "emailHelp": "Only if you want an answer; without it, the message is anonymous.",
+    "emailHelp": "Only if you want an answer.",
     "errors": {
       "title": "The message did not leave",
       "fieldsIntro": "Check:",
@@ -8557,6 +8563,7 @@
       "captcha": "Tick the check above and send it again."
     },
     "fieldNames": {
+      "name": "The name",
       "event": "The event",
       "date": "The date",
       "rating": "How it was",

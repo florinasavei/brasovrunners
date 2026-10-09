@@ -140,6 +140,14 @@ describe("§676 submitFeedbackAction's redirects", () => {
     expect(kept).not.toHaveProperty("cf-turnstile-response");
   });
 
+  it("refuses «Cu nume și prenume» with no name on the box, and keeps the choice and the way back in the draft, never in the address (§NNN)", async () => {
+    const to = await pressed(post({ branch: "howItWent", identity: "named", name: " ", event: "", date: "", rating: "", message: "Bine.", reasons: [], reasonOther: "", email: "ana@example.org" }));
+    const url = new URL(to, "http://club.test");
+    expect(url.searchParams.get("fields")).toBe("name");
+    expect(to).not.toContain("ana");
+    expect(openFormDraft(lastDraft()?.value ?? "")).toMatchObject({ identity: "named", email: "ana@example.org", message: "Bine." });
+  });
+
   it("keeps the English path for an English post", async () => {
     const to = await pressed(post({ locale: "en", branch: "safety", message: "", whereWhen: "", contact: "" }));
     expect(to).toMatch(/^\/en\/contact\/tell-us\?tip=siguranta&error=VALIDATION_ERROR&fields=message&since=[^#]+#feedback-errors$/);

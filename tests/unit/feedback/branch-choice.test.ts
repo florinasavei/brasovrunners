@@ -7,7 +7,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * BR-REQ-070-04 — «Spune-ne ceva»'s step 1 as cards (§676 and the decision that followed it), rendered
+ * BR-REQ-070-04 — «Spune-ne ceva»'s step 1 as cards (§676, §NNN), rendered
  * on the server as a visitor's browser receives it: one card per branch offered, each a `<label>` around
  * a visible native radio named `tip` with the branch's slug, its glyph, its name and its hint; the
  * chosen branch checked by default; the women's form in the owner's words; and one glyph for every
@@ -62,6 +62,18 @@ describe("BR-REQ-070-04 step 1: one card per branch offered", () => {
     // No drawn ring standing in for the radio.
     expect(html).not.toContain("RadioButtonCheckedIcon");
     expect(html).not.toContain("RadioButtonUncheckedIcon");
+  });
+
+  it("names each radio by its title alone and describes it by its hint", async () => {
+    const html = await render(FEEDBACK_BRANCHES, "howItWent");
+    for (const branch of FEEDBACK_BRANCHES) {
+      const slug = BRANCH_SLUG[branch];
+      const input = new RegExp(`<input[^>]*value="${slug}"[^>]*>`).exec(html)?.[0] ?? "";
+      expect(input).toContain(`aria-labelledby="feedback-choice-${slug}-title"`);
+      expect(input).toContain(`aria-describedby="feedback-choice-${slug}-hint"`);
+      expect(html).toMatch(new RegExp(`id="feedback-choice-${slug}-title"[^>]*>${ro.Tell.branches[branch].label}<`));
+      expect(html).toMatch(new RegExp(`id="feedback-choice-${slug}-hint"[^>]*>${ro.Tell.branches[branch].hint}<`));
+    }
   });
 
   it("checks the branch ?tip= named, and only the branches offered are drawn", async () => {
