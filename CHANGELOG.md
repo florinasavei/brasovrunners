@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.80-2026-10-09
+
+- **«Girl Zone», with a flower; «Anonim» in an incognito hat; the newsletter last** — the confidential safety form of «Spune-ne ceva» is called «Girl Zone» in both languages, on its card, its form's heading, the backoffice switch, the email's footer and the privacy notice's template, with a flower glyph in place of the heart; the subtitle that says whom it is for and the email's neutral subject are unchanged. «Cum vrei să trimiți?» shows an incognito hat and glasses before «Anonim» and a person before «Cu nume și prenume», and on the contact page «Spune-ne ceva» now comes right under the form, with the newsletter's box last. §679.
 ## BR-V2.79-2026-10-09
 
 - **«Spune-ne ceva» chooses with cards and icons, and every form opens with «Anonim» / «Cu nume și prenume»** — each kind of message is a card with its own picture, kept beside the form's title; the name and the way back show only when the person chooses to give them, and then «Cine să afle?» sends it to the club or only to the person the club designated for safety. The email's first line says the name or «(anonim)». The named mode waits for the club to approve the new privacy notice. Still plain forms working without JavaScript. The safety form is now «Siguranță pentru femei», with a warmer subtitle. §678.

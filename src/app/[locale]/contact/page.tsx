@@ -170,9 +170,9 @@ export default async function ContactPage({ params, searchParams }: Props) {
   // «Poate găsești răspunsul la Întrebări frecvente» (§525), while that page is on the site.
   const showFaq = await faqOnSite(locale);
   /*
-    «Spune-ne ceva» (§676): the door under the newsletter, drawn only while a branch is switched on and
-    the notice in force describes the forms in every language — tolerant of an outage like every read
-    here, and then simply not drawn.
+    «Spune-ne ceva» (§676): the door under the form and above the newsletter (§679), drawn only while a
+    branch is switched on and the notice in force describes the forms in every language — tolerant of
+    an outage like every read here, and then simply not drawn.
   */
   const [feedbackOffer, feedbackDescribed] = await Promise.all([orNull(() => cachedFeedbackOffer()), orNull(() => cachedFeedbackFormsDescribed(now))]);
   const feedbackOffered = feedbackOffer === null ? [] : offeredBranches(feedbackOffer, feedbackDescribed === true, contactSmtpRoadExists());
@@ -356,31 +356,8 @@ export default async function ContactPage({ params, searchParams }: Props) {
         </>
       )}
 
-      {newsletterOffered && (
-        <NewsletterSignup
-          locale={locale}
-          outcome={newsletterOutcome}
-          refused={newsletterOutcome === "invalid" ? parseNewsletterFields(nfields) : []}
-          typed={
-            newsletterRefused
-              ? {
-                  email: draft?.newsletterEmail,
-                  topics: (draft?.newsletterTopics ?? "").split(",").filter(Boolean),
-                  consent: draft?.newsletterConsent === "on",
-                }
-              : {}
-          }
-          siteKey={siteKey}
-          renderedAt={(newsletterRefused || leaveRefused ? parseInterestSince(since, now) : null)?.toISOString() ?? now.toISOString()}
-          // This render's own time, never `since`: a refusal redraws with the same `since`, and a
-          // Turnstile reset keyed on it would never run, posting the spent token again (§185).
-          attempt={now.toISOString()}
-          leaveOutcome={leaveOutcome}
-          leaveTyped={leaveRefused ? draft?.newsletterLeaveEmail : undefined}
-        />
-      )}
-
-      {/* «Spune-ne ceva» (§676): one section and one button to the anonymous wizard, under the newsletter. */}
+      {/* «Spune-ne ceva» (§676): one section and one button to the anonymous wizard, under the form and
+          above the newsletter (§679). */}
       {feedbackOpen && (
         <Box
           component="section"
@@ -410,9 +387,39 @@ export default async function ContactPage({ params, searchParams }: Props) {
         </Box>
       )}
 
+      {/*
+        The newsletter's box, the last section of the page (§679; the owner, 2026-10-09: «And the
+        newsletter must be all the way to the bottom now»): under the form and under «Spune-ne ceva»,
+        only the club's identity line below it. Its anchors (`#abonare`, the pop-up's and the
+        unsubscribe fold's) are ids, so every redirect and scroll target lands wherever it sits.
+      */}
+      {newsletterOffered && (
+        <NewsletterSignup
+          locale={locale}
+          outcome={newsletterOutcome}
+          refused={newsletterOutcome === "invalid" ? parseNewsletterFields(nfields) : []}
+          typed={
+            newsletterRefused
+              ? {
+                  email: draft?.newsletterEmail,
+                  topics: (draft?.newsletterTopics ?? "").split(",").filter(Boolean),
+                  consent: draft?.newsletterConsent === "on",
+                }
+              : {}
+          }
+          siteKey={siteKey}
+          renderedAt={(newsletterRefused || leaveRefused ? parseInterestSince(since, now) : null)?.toISOString() ?? now.toISOString()}
+          // This render's own time, never `since`: a refusal redraws with the same `since`, and a
+          // Turnstile reset keyed on it would never run, posting the spent token again (§185).
+          attempt={now.toISOString()}
+          leaveOutcome={leaveOutcome}
+          leaveTyped={leaveRefused ? draft?.newsletterLeaveEmail : undefined}
+        />
+      )}
+
       {/* Who is written to, by its legal name and CIF (§565): the page's last line, under the form
-          (or the address where there is no form) and under the newsletter's box; nothing while the
-          facts are unset. */}
+          (or the address where there is no form), «Spune-ne ceva» and the newsletter's box; nothing
+          while the facts are unset. */}
       <ClubIdentity shape="line" />
     </Container>
   );

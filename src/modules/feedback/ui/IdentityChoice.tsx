@@ -1,8 +1,11 @@
+import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
+import type { SvgIconProps } from "@mui/material/SvgIcon";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
+import type { ComponentType } from "react";
 import {
   FEEDBACK_LINE_MAX,
   FEEDBACK_NAME_MAX,
@@ -11,6 +14,7 @@ import {
   feedbackFieldId,
 } from "@/modules/feedback/domain/branches";
 import RadioField from "@/shared/ui/RadioField";
+import IncognitoIcon from "./IncognitoIcon";
 
 type Props = {
   /** The branch's way back: an address on the three ordinary forms, an address or a telephone on the safety form. */
@@ -29,12 +33,36 @@ type Props = {
   audience: FeedbackAudience;
 };
 
-/** One radio with its sentence under it. */
-function Choice({ name, value, checked, label, hint }: { name: string; value: string; checked: boolean; label: string; hint: string }) {
+/**
+ * One radio with its sentence under it, and, where it has one, a 24-pixel glyph before its words (§679):
+ * decoration (`aria-hidden`), drawn inside the label, so the whole row is still the radio's tap target.
+ */
+function Choice({
+  name,
+  value,
+  checked,
+  label,
+  hint,
+  glyph: Glyph,
+}: {
+  name: string;
+  value: string;
+  checked: boolean;
+  label: string;
+  hint: string;
+  glyph?: ComponentType<SvgIconProps>;
+}) {
   return (
     <Box>
       <RadioField name={name} value={value} defaultChecked={checked}>
-        {label}
+        {Glyph ? (
+          <Box component="span" data-testid={`feedback-identity-${value}`} sx={{ display: "inline-flex", alignItems: "center", gap: 1 }}>
+            <Glyph aria-hidden="true" sx={{ fontSize: 24, flexShrink: 0 }} />
+            {label}
+          </Box>
+        ) : (
+          label
+        )}
       </RadioField>
       <Typography variant="body2" color="text.secondary" sx={{ ml: 6, mt: -0.5 }}>
         {hint}
@@ -45,7 +73,8 @@ function Choice({ name, value, checked, label, hint }: { name: string; value: st
 
 /**
  * «Spune-ne ceva»'s first box (§678), every branch's form: «Cum vrei să trimiți?» — «Anonim», the
- * default, or «Cu nume și prenume», each with its sentence under it. The named mode shows the name
+ * default, or «Cu nume și prenume», each with its glyph before its words (the incognito hat and
+ * glasses, a person; §679) and its sentence under it. The named mode shows the name
  * (2–80 characters, required there by the server), the branch's way back and, when a named message may
  * reach either, «Cine să afle?»: «Clubul» or the safety branch's person by her first name — never an
  * address. They show only while «Cu nume și prenume» is checked, in CSS alone (`:has`), no island;
@@ -69,8 +98,9 @@ export default async function IdentityChoice({ wayBack, named, invalid, kept, sa
         <Typography component="legend" variant="body1" sx={{ fontWeight: 600 }}>
           {t("identity.legend")}
         </Typography>
-        <Choice name="identity" value="anonymous" checked={!named} label={t("identity.anonymous")} hint={t("identity.anonymousHint")} />
-        <Choice name="identity" value="named" checked={named} label={t("identity.named")} hint={t("identity.namedHint")} />
+        {/* «We love icons» (§679): the incognito hat and glasses for «Anonim», a person for the named mode. */}
+        <Choice name="identity" value="anonymous" checked={!named} label={t("identity.anonymous")} hint={t("identity.anonymousHint")} glyph={IncognitoIcon} />
+        <Choice name="identity" value="named" checked={named} label={t("identity.named")} hint={t("identity.namedHint")} glyph={PersonOutlinedIcon} />
       </Box>
       <Stack spacing={2} data-named-only="" data-testid="feedback-named" sx={{ mt: 2 }}>
         <TextField

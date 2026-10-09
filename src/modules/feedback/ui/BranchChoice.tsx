@@ -1,10 +1,10 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { BRANCH_SLUG, FEEDBACK_QUERY, type FeedbackBranch } from "@/modules/feedback/domain/branches";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
-import { FEEDBACK_BRANCH_GLYPH, FEEDBACK_BRANCH_TINT, paletteWash } from "./branch-glyph";
+import { branchLabelLang, FEEDBACK_BRANCH_GLYPH, FEEDBACK_BRANCH_TINT, paletteWash } from "./branch-glyph";
 
 /**
  * A branch's glyph on its tinted tile — 40 pixels, a rounded square, a 24-pixel picture — the same on
@@ -33,10 +33,12 @@ export function BranchGlyphTile({ branch }: { branch: FeedbackBranch }) {
  * The radio is named by the branch's title alone and described by its hint (`aria-labelledby`,
  * `aria-describedby`), so a screen reader says the name first and the sentence after it.
  *
- * `chosen` is checked by default — the first branch, or the one `?tip=` named.
+ * `chosen` is checked by default — the first branch, or the one `?tip=` named. A name written in
+ * another language than the page's — «Girl Zone» on the Romanian page — carries its `lang` (§679).
  */
 export default async function BranchChoice({ branches, chosen }: { branches: readonly FeedbackBranch[]; chosen: FeedbackBranch }) {
   const t = await getTranslations("Tell");
+  const locale = await getLocale();
   return (
     <Box component="fieldset" sx={{ border: 0, m: 0, p: 0, minWidth: 0 }}>
       <Typography component="legend" variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
@@ -74,7 +76,7 @@ export default async function BranchChoice({ branches, chosen }: { branches: rea
             >
               <BranchGlyphTile branch={branch} />
               <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography id={`${idBase}-title`} component="span" variant="body1" sx={{ display: "block", fontWeight: 600 }}>
+                <Typography id={`${idBase}-title`} component="span" variant="body1" lang={branchLabelLang(branch, locale)} sx={{ display: "block", fontWeight: 600 }}>
                   {t(`branches.${branch}.label`)}
                 </Typography>
                 <Typography id={`${idBase}-hint`} component="span" variant="body2" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
