@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.82-2026-10-09 -->
+<!-- PROJECT_BASELINE: BR-V2.83-2026-10-10 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.82-2026-10-09`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.83-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -24660,3 +24660,23 @@ Baseline `BR-V2.81-2026-10-09`.
 Tests: unit `registrations/member-bibs-first.test.ts` (no members → today's pairs; 3 members + 4 ordinary → [m1,m2] [m3,blank] [o1,o2] [o3,o4]; no page ever mixes the two for 0–5 of each; `members` and `others`; the spares' place kept; the switch off; one per page; the renderer's pages and their cuts read off the drawing calls; an empty part prints the «—» page); integration `registrations/member-bibs-first.test.ts` (the route's whole sheet, both parts and an unknown one, the file names, an event without the members' bib in number order, a role that may not read the registrations refused with a part or without, and no download marking anything printed). Amends §338 (the pages of a sheet holding members' bibs) and §664 (where a members' bib prints).
 
 Baseline `BR-V2.82-2026-10-09`.
+
+## 682. A plain rain hour has its own cloud, never the chance's drop (amending §677)
+
+**The owner, 2026-10-09:** «Yes different icon» — answering whether a plain rain hour should get a sky glyph of its own, the one thing §677 left under «Known, left for the owner».
+
+**What was there.** Since §677 a card's weather pill shows the hour's chance after a drop (`WaterDrop`): «☁ 14 °C 💧 20 %». A plain rain hour (WMO 61, 63 — `WEATHER_GLYPH.rain` in `src/modules/weather/ui/glyphs.ts`) still drew `WaterDrop` as its sky's glyph, so its pill read «💧 12 °C 💧 70 %», and the hero's line and the event page's row a drop before «ploaie probabilă» beside a drop as the row's glyph: the same drop in two roles. Drizzle (51/53/55) drew MUI's `Grain`, a scatter of dots unlike any cloud, and showers and heavy rain (65, 80–82) the raining cloud of §677 (`RainyIcon`).
+
+**Decision — no sky glyph is the drop; three rain intensities, three clouds, one family.**
+
+- **The drop is the chance's mark alone.** `WaterDrop` is drawn only where §677 put it as the chance: after the degrees on a card's pill (`CardWeather`), before «ploaie probabilă» on the featured hero's line and in the event page's row (`EventFacts`). No entry of `WEATHER_GLYPH` is it, and a test holds that.
+- **Drizzle → `RainyLightIcon`, plain rain → `RainyIcon`, showers and heavy rain → `RainyHeavyIcon`.** One cloud — Google's Material Symbols «rainy», filled, weight 400, Apache License 2.0, the path `RainyIcon.tsx` already carries, rescaled from the Symbols' 960-unit grid to the 24-unit viewBox — with two short strokes of rain under it for drizzle, its own three for plain rain, four long ones for showers and heavy rain, every stroke «rainy»'s own shape and slope. Each is one `<path>` made with MUI's `createSvgIcon` (`@mui/material/SvgIcon`), one file each in `src/modules/weather/ui/`, each crediting its source and licence in its comment; test ids «RainyLightIcon», «RainyIcon», «RainyHeavyIcon». `RainyIcon` moves from showers to plain rain; showers take the heavier cloud. Freezing drizzle and freezing rain keep the frost's `AcUnit`: they never drew the drop.
+- **Why the light and heavy clouds are drawn, not fetched.** Google's icon CDN answers for «rainy_light» and «rainy_heavy» in Material Symbols, but both are the rain's strokes alone, with no cloud: beside «rainy» they would read as three unrelated marks, and a drizzle pill of four slanted lines could pass for the wind. So the two are built from «rainy»'s own cloud and stroke — one family by construction — and their comments say so. Nothing is taken from another icon set.
+
+**Why.** The drop says «this is the chance of rain» since §677; a sky glyph that is also the drop makes a rain hour read the same mark twice, and the second one's meaning depends on where it sits. A cloud per intensity says what the sky does, the drop and its figure say how likely, and the two never look alike.
+
+**What does not change.** The chance rule and its figure (§677), the primary colour when rain is likely (§429), `data-rain-likely`, what a screen reader hears, the reminder email's one line (§469, words only), and every other sky glyph.
+
+**Refused.** A coloured drop for the sky instead of a new glyph: colour alone never carries meaning (`AGENTS.md` §18.2: state, not colour only), and the chance's drop already turns primary when rain is likely, so a second colour on the same shape would say nothing a colour-blind runner could read. Google's cloudless «rainy_light» and «rainy_heavy» as they are: see above. Keeping `Grain` for drizzle: it is the only rain glyph that would not be a cloud. A weather-icon library: three paths are all that is needed.
+
+Baseline `BR-V2.83-2026-10-10`.

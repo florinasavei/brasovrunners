@@ -4,7 +4,7 @@ import { createSvgIcon } from "@mui/material/SvgIcon";
 
 /**
  * A cloud with four long strokes of rain under it, the sky's glyph for showers and heavy rain (WMO
- * 65, 80–82; §NNN, amending §677): the heaviest of the three rain clouds — `RainyLightIcon` for
+ * 65, 80–82; §682, amending §677): the heaviest of the three rain clouds — `RainyLightIcon` for
  * drizzle, `RainyIcon` for plain rain, `RainyHeavyIcon` for showers and heavy rain — so the drop
  * stays the chance's mark alone. Made with `createSvgIcon`, as every glyph of `@mui/icons-material`
  * is (the same `"use client"` module): it takes `fontSize` and `color` like the others, and its

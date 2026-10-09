@@ -3,7 +3,7 @@
 import { createSvgIcon } from "@mui/material/SvgIcon";
 
 /**
- * A cloud with two short strokes of rain under it, the sky's glyph for drizzle (WMO 51/53/55; §NNN,
+ * A cloud with two short strokes of rain under it, the sky's glyph for drizzle (WMO 51/53/55; §682,
  * amending §677): the lightest of the three rain clouds — `RainyLightIcon` for drizzle, `RainyIcon`
  * for plain rain, `RainyHeavyIcon` for showers and heavy rain — so the drop stays the chance's
  * mark alone. Made with `createSvgIcon`, as every glyph of `@mui/icons-material` is (the same

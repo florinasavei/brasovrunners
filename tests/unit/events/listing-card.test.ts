@@ -725,7 +725,7 @@ describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
     expect(showers).toContain('data-testid="RainyHeavyIcon"');
     expect(pathsOf(showers)[0]).not.toBe(pathOf(calm));
     // A plain rain hour draws its own cloud, never the chance's drop: one drop in the pill, the
-    // chance's, and a sky glyph unlike it (§NNN, amending §677 — no «💧 12 °C 💧 70 %»).
+    // chance's, and a sky glyph unlike it (§682, amending §677 — no «💧 12 °C 💧 70 %»).
     const rain = pillOf(
       withoutStyles(
         await markup(createElement(EventCard, { event: trailToRoad(), index: 0, now: NOW, weather: { ...reading, code: 61, kind: "rain", glyph: "rain", precipitationProbability: 70 } })),

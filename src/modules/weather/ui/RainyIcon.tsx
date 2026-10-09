@@ -3,7 +3,7 @@
 import { createSvgIcon } from "@mui/material/SvgIcon";
 
 /**
- * A cloud with three strokes of rain under it, the sky's glyph for plain rain (WMO 61/63; §NNN,
+ * A cloud with three strokes of rain under it, the sky's glyph for plain rain (WMO 61/63; §682,
  * amending §677: the owner, 2026-10-09, «Yes different icon» — the drop it replaces is the chance's
  * mark alone). It was the glyph for showers and heavy rain (§677, amending §402; the owner,
  * 2026-10-08: «I hate that umbrella closed»), which now take `RainyHeavyIcon`, and drizzle

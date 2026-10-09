@@ -230,7 +230,7 @@ describe("BR-REQ-011-01 the event page's weather is one line (§469, replacing �
     expect(text(dd)).not.toContain("șanse");
   });
 
-  it("showers: the row's glyph is the heavy rain cloud, never the umbrella (§677, §NNN)", async () => {
+  it("showers: the row's glyph is the heavy rain cloud, never the umbrella (§677, §682)", async () => {
     currentLocale = "ro";
     const html = withoutStyles(await page({}, openMeteo({ code: 81, chance: 70, mm: 3 })));
     const row = rows(html).find((each) => each.label === "Vremea");
@@ -238,7 +238,7 @@ describe("BR-REQ-011-01 the event page's weather is one line (§469, replacing �
     expect(html).not.toContain("UmbrellaIcon");
   });
 
-  it("plain rain: the row's glyph is the rain cloud, and the drop is the chance's alone (§NNN, amending §677)", async () => {
+  it("plain rain: the row's glyph is the rain cloud, and the drop is the chance's alone (§682, amending §677)", async () => {
     currentLocale = "ro";
     const html = withoutStyles(await page({}, rainy()));
     const row = rows(html).find((each) => each.label === "Vremea");

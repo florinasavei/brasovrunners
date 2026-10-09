@@ -14,7 +14,7 @@ import RainyLightIcon from "@/modules/weather/ui/RainyLightIcon";
 import { weatherWords } from "@/modules/weather/words";
 
 /**
- * BR-REQ-041-01 / BR-REQ-011-01 (§677, amending §402, §416, §429; §NNN, amending §677) — the rain is
+ * BR-REQ-041-01 / BR-REQ-011-01 (§677, amending §402, §416, §429; §682, amending §677) — the rain is
  * a raining cloud and a percentage, never a closed umbrella and never the chance's drop: drizzle,
  * plain rain and showers draw one family of three clouds by intensity (`RainyLightIcon`,
  * `RainyIcon`, `RainyHeavyIcon`, drawn here from Material Symbols' «rainy»), and a card's pill says
@@ -31,7 +31,7 @@ const RAIN_CLOUDS = [
 
 const pathOf = (icon: Glyph) => /<path d="([^"]+)"/.exec(renderToStaticMarkup(createElement(icon)))?.[1] ?? "";
 
-describe("§NNN three rain intensities, three clouds — no sky glyph is the chance's drop", () => {
+describe("§682 three rain intensities, three clouds — no sky glyph is the chance's drop", () => {
   it("maps drizzle, plain rain and showers to the light, the plain and the heavy rain cloud, by their WMO codes", () => {
     for (const { glyph, icon, testId, codes } of RAIN_CLOUDS) {
       expect(WEATHER_GLYPH[glyph], glyph).toBe(icon);

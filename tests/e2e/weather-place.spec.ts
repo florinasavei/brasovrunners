@@ -207,7 +207,7 @@ test.describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
     await expect(pill).toBeVisible();
     await expect(pill).toContainText("14 °C");
     // The sky's glyph, then the stub's 20% after a drop (§677) — two glyphs, neither an umbrella,
-    // and the sky's never the drop (§NNN): the two draw different paths.
+    // and the sky's never the drop (§682): the two draw different paths.
     await expect(pill.locator("svg")).toHaveCount(2);
     const [skyPath, dropPath] = await pill.locator("svg path").evaluateAll((paths) => paths.map((path) => path.getAttribute("d")));
     expect(skyPath).not.toBe(dropPath);

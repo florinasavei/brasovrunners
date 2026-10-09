@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.82-2026-10-09 -->
+<!-- PROJECT_BASELINE: BR-V2.83-2026-10-10 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.82-2026-10-09`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.83-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -400,6 +400,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 199. At 320 px the calendar page's «?» fold shows the feed's address box and a «Copiază» button at least 44 pixels tall, with no horizontal scroll (2026-10-08, `DECISIONS.md` §674).
 200. A listing card's weather pill shows, after the degrees, a drop and the hour's chance of rain in the locale's format («20 %» / "20%") whenever the forecast has a chance that does not round to 0, and nothing at 0 % or without one unless rain is likely; the drop and the figure are in the primary colour exactly when the §429 rain-likely rule holds, otherwise in the secondary text colour; a likely hour with no chance to show (likely by its amount alone, with no chance or one that rounds to 0) draws the drop alone, in the primary colour, with no figure; and a screen reader hears the chance in words («20% șanse de ploaie») after the degrees (amending criterion 90; 2026-10-08, `DECISIONS.md` §677).
 201. No weather glyph on a card, the featured hero or the event page is a closed umbrella: showers and heavy rain (WMO 65, 80–82) draw a cloud with rain falling from it (`RainyIcon`), the rain-likely mark on a card is the drop of criterion 90's amendment, and on the hero's line and the event page's row it is a drop before «ploaie probabilă» (amending criteria 90 and 91; 2026-10-08, `DECISIONS.md` §677).
+202. Amends criterion 201. No sky glyph on a card, the featured hero or the event page is the drop: drizzle (WMO 51, 53, 55), plain rain (61, 63) and showers and heavy rain (65, 80–82) draw three rain clouds by intensity — `RainyLightIcon`, `RainyIcon`, `RainyHeavyIcon`, each one path on the 24-unit viewBox, sharing one cloud with two, three and four strokes — and `WaterDrop` is drawn only as the chance's mark, so a plain rain hour's pill draws exactly one drop, after the degrees (2026-10-10, `DECISIONS.md` §682).
 
 **Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects, `event-pages.spec.ts` (criterion 12); unit `registrations/form-errors.test.ts`, `events/listing.test.ts`, `theme/brand.test.ts`; release check on a real device
 

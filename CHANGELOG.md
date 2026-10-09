@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.83-2026-10-10
+
+- **A plain rain hour has its own cloud** — the weather's sky glyph is never the drop any more: drizzle, rain and showers draw three rain clouds of one family, lighter to heavier, and the drop is only the chance of rain's mark, so a rainy card reads «🌧 12 °C 💧 70 %» rather than two drops. §682.
 ## BR-V2.82-2026-10-09
 
 - **Members' race numbers print first, on their own pages** — the bibs PDF draws the verified members' bibs before everybody else's, never on a page with an ordinary bib, and the bibs page adds «Doar numerele membrilor (PDF)» and «Fără numerele membrilor (PDF)» so the club can print them on other card; a sheet without a member's bib is unchanged. §681.
