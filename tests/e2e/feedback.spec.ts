@@ -201,6 +201,8 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await expect(safetyCard).toHaveCSS("outline-width", "2px");
       // The radio is named by the title alone; the hint describes it.
       await expect(safetyCard.locator('input[name="tip"]')).toHaveAccessibleName("Girl Zone");
+      // An English name on the Romanian page, said as English (§NNN).
+      await expect(safetyCard.getByText("Girl Zone")).toHaveAttribute("lang", "en");
       // The whole card is the target: a press on its words chooses it.
       await safetyCard.getByText("Girl Zone").click();
       await expect(safetyCard.locator('input[name="tip"]')).toBeChecked();
@@ -208,6 +210,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await expect(page).toHaveURL(/\/ro\/contact\/spune-ne\?tip=siguranta$/);
       await expect(page.getByTestId("feedback-glyph-siguranta")).toBeVisible();
       await expect(page.getByRole("heading", { level: 2, name: "Girl Zone" })).toBeVisible();
+      await expect(page.getByRole("heading", { level: 2, name: "Girl Zone" })).toHaveAttribute("lang", "en");
       // Above the form, in the page's language: who reads it, by the first name the club set.
       // The club may hear a named report too (§678) — the contact form reaches it on this deployment — so the line says the sender chooses then.
       await expect(page.getByTestId("feedback-safety-reader")).toHaveText(

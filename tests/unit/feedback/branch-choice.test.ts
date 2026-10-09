@@ -4,7 +4,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { BRANCH_SLUG, FEEDBACK_BRANCHES, type FeedbackBranch } from "@/modules/feedback/domain/branches";
-import { FEEDBACK_BRANCH_GLYPH, FEEDBACK_BRANCH_TINT } from "@/modules/feedback/ui/branch-glyph";
+import { branchLabelLang, FEEDBACK_BRANCH_GLYPH, FEEDBACK_BRANCH_TINT } from "@/modules/feedback/ui/branch-glyph";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
@@ -20,6 +20,7 @@ let locale: "ro" | "en" = "ro";
 
 vi.mock("next-intl/server", () => ({
   getTranslations: async (namespace: string) => createTranslator({ locale, messages: locale === "ro" ? ro : en, namespace: namespace as "Tell" }),
+  getLocale: async () => locale,
 }));
 
 const { default: BranchChoice } = await import("@/modules/feedback/ui/BranchChoice");
@@ -122,7 +123,26 @@ describe("BR-REQ-070-04 one glyph per branch", () => {
     expect(ro.Tell.branches.safety.hint).toBe(
       "Știm că alergatul, ca femeie, vine cu provocări în plus. Dacă ceva te-a făcut să nu te simți în siguranță la noi, spune-ne — confidențial.",
     );
+    expect(en.Tell.branches.safety.hint).toBe(
+      "We know running as a woman comes with extra challenges. If something made you feel unsafe with us, tell us — confidentially.",
+    );
+    expect(ro.Tell.door.introSafety).toBe("Un formular confidențial pentru femeile care nu s-au simțit în siguranță la noi.");
+    expect(en.Tell.door.introSafety).toBe("A confidential form for women who did not feel safe with us.");
     for (const catalogue of [ro, en]) expect(JSON.stringify(catalogue)).not.toMatch(/Siguranță pentru femei|Safety for women/);
+  });
+
+  it("§NNN «Girl Zone» is said as English on the Romanian page, and nothing else carries a lang", async () => {
+    expect(branchLabelLang("safety", "ro")).toBe("en");
+    expect(branchLabelLang("safety", "en")).toBeUndefined();
+    for (const branch of ["howItWent", "suggestion", "complaint"] as const) {
+      expect(branchLabelLang(branch, "ro")).toBeUndefined();
+      expect(branchLabelLang(branch, "en")).toBeUndefined();
+    }
+    const roHtml = await render(FEEDBACK_BRANCHES, "howItWent", "ro");
+    expect(roHtml).toMatch(/id="feedback-choice-siguranta-title"[^>]*lang="en"|lang="en"[^>]*id="feedback-choice-siguranta-title"/);
+    expect(roHtml.match(/lang="/g)).toHaveLength(1);
+    const enHtml = await render(FEEDBACK_BRANCHES, "howItWent", "en");
+    expect(enHtml).not.toContain('lang="');
   });
 
   it("§NNN the privacy notice's template names «Girl Zone» three times per language and keeps both markers", () => {

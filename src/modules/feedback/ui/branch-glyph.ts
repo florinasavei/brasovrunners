@@ -36,5 +36,21 @@ export const FEEDBACK_BRANCH_TINT: Readonly<Record<FeedbackBranch, "primary" | "
   safety: "secondary",
 };
 
+/**
+ * The language a branch's name is written in, where it is a name in one language whatever the page's
+ * (§NNN): «Girl Zone» is English on the Romanian page too, so the step-1 card and the step-2 heading
+ * carry `lang="en"` there and a screen reader says it as English. A branch absent here is written in
+ * the page's own language.
+ */
+export const FEEDBACK_BRANCH_LABEL_LANG: Readonly<Partial<Record<FeedbackBranch, string>>> = {
+  safety: "en",
+};
+
+/** The `lang` a branch's name needs on a page in `locale` — none when it is the page's own language. */
+export function branchLabelLang(branch: FeedbackBranch, locale: string): string | undefined {
+  const lang = FEEDBACK_BRANCH_LABEL_LANG[branch];
+  return lang && lang !== locale ? lang : undefined;
+}
+
 /** A wash of a palette colour, through its CSS variable so it follows the colour scheme (`theme/surfaces.ts`'s way). */
 export const paletteWash = (colour: "primary" | "secondary", percent: number) => `color-mix(in srgb, var(--mui-palette-${colour}-main) ${percent}%, transparent)`;
