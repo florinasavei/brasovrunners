@@ -125,12 +125,24 @@ export const EVENT_INVITATIONS_MERGE_FIELD = "eventInvitations";
 
 /**
  * The privacy notice's marker for «Spune-ne ceva» (§676): the forms' name, quoted, in the reader's
- * language (`feedback/notice-words.ts`), in the paragraph that says the forms are anonymous unless a
- * contact is left, that the site keeps nothing, where each message goes and how long it is kept. The
+ * language (`feedback/notice-words.ts`), in the paragraph that says the forms are anonymous unless the
+ * person chooses to give a name (`{{feedbackFormsNamed}}`, below), that the site keeps nothing, where each message goes and how long it is kept. The
  * gate, like the newsletter's (§445): the contact page draws the door, and the feedback page exists,
  * only while the notice in force names it in every language (`describesFeedbackForms`).
  */
 export const FEEDBACK_FORMS_MERGE_FIELD = "feedbackForms";
+
+/**
+ * The privacy notice's marker for «Spune-ne ceva»'s named mode (§NNN): the radio's own words,
+ * quoted — „Cu nume și prenume” / “With my name” (`feedback/notice-words.ts`) — in the same
+ * paragraph, which then says the forms are anonymous unless the person chooses to give a name, what
+ * the named mode takes (a name, a way back) and that the sender chooses who hears it: the club's
+ * mailbox or the person the club designated for safety. A notice approved from the template before it
+ * says the forms ask for no name, so the gate is its own: the forms offer the named mode — and the
+ * server reads a name — only while the notice in force names it in every language
+ * (`describesFeedbackFormsNamed`); until then every form is anonymous only.
+ */
+export const FEEDBACK_FORMS_NAMED_MERGE_FIELD = "feedbackFormsNamed";
 
 /**
  * The event's own minimum age (§329) as a merge field (§440, amending §393): "16 ani" / "16
@@ -339,6 +351,7 @@ export const MERGE_FIELDS = [
   ADDRESS_CAP_MERGE_FIELD,
   EVENT_INVITATIONS_MERGE_FIELD,
   FEEDBACK_FORMS_MERGE_FIELD,
+  FEEDBACK_FORMS_NAMED_MERGE_FIELD,
 ] as const;
 
 /**
@@ -514,6 +527,15 @@ export function describesNewsletter(body: unknown): boolean {
  */
 export function describesFeedbackForms(body: unknown): boolean {
   return mergeFieldsIn(body).has(FEEDBACK_FORMS_MERGE_FIELD);
+}
+
+/**
+ * Whether a privacy notice describes «Spune-ne ceva»'s named mode (§NNN): it names
+ * `{{feedbackFormsNamed}}`. The gate for the identity choice, the named boxes and «Cine să afle?», and
+ * what `/admin/tasks`' row `feedbackNamedNotice` reads. Pure; asked of the notice in force, in every language.
+ */
+export function describesFeedbackFormsNamed(body: unknown): boolean {
+  return mergeFieldsIn(body).has(FEEDBACK_FORMS_NAMED_MERGE_FIELD);
 }
 
 /** Whether a privacy notice describes the team page (§459): it names `{{teamPage}}`. Pure. */

@@ -58,6 +58,7 @@ import { type EmailDelay, judgeEmailDelay } from "@/modules/notifications/domain
 import { readEmailDelayFacts } from "@/modules/notifications/public-delay";
 import {
   describesFeedbackForms,
+  describesFeedbackFormsNamed,
   describesListNumbers,
   describesListSocials,
   describesListStates,
@@ -542,6 +543,17 @@ export async function cachedNewsletterOffered(now: Date): Promise<boolean> {
 export async function cachedFeedbackFormsDescribed(now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesFeedbackForms(notice.body));
+}
+
+/**
+ * Whether «Spune-ne ceva» may offer «Cu nume și prenume» (§NNN): the privacy notice in force names
+ * `{{feedbackFormsNamed}}` (`describesFeedbackFormsNamed`), in every language — the same reading as
+ * `cachedFeedbackFormsDescribed`. Until it does, every form is anonymous only; the action asks the
+ * uncached `noticeDescribesFeedbackFormsNamed` again.
+ */
+export async function cachedFeedbackFormsNamedDescribed(now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesFeedbackFormsNamed(notice.body));
 }
 
 /**
