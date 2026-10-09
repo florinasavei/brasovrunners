@@ -36,7 +36,7 @@ function text(form: FormData, name: string): string {
 
 /**
  * What a refusal keeps, sealed (§142): the boxes, the ticks joined — never the trap, the clock or the
- * token. An anonymous post keeps no name, no way back, no reader and no identity (§NNN): what the person
+ * token. An anonymous post keeps no name, no way back, no reader and no identity (§678): what the person
  * chose not to give is not written into a cookie either, even when the hidden boxes still held it —
  * and every post is anonymous while the notice in force does not offer the named mode.
  */
@@ -94,7 +94,7 @@ export async function submitFeedbackAction(form: FormData): Promise<void> {
         settings,
         noticeDescribes,
         namedDescribed,
-        // «Clubul» for a named safety report when «O reclamație» has no recipient (§NNN): the contact form's own.
+        // «Clubul» for a named safety report when «O reclamație» has no recipient (§678): the contact form's own.
         clubFallback: contactDelivery(recipients)?.to ?? [],
         smtp: contactSmtpRoad(),
         // Mailgun's road alone for the safety branch: the environment's sender with no Gmail road at all.
@@ -111,7 +111,7 @@ export async function submitFeedbackAction(form: FormData): Promise<void> {
       {
         branch: text(form, "branch"),
         locale,
-        // «Anonim» unless «Cu nume și prenume» was chosen; the name and the way back are dropped then (§NNN).
+        // «Anonim» unless «Cu nume și prenume» was chosen; the name and the way back are dropped then (§678).
         identity: text(form, "identity"),
         name: text(form, "name"),
         audience: text(form, "audience"),

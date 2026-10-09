@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.78-2026-10-08 -->
+<!-- PROJECT_BASELINE: BR-V2.79-2026-10-09 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.78-2026-10-08`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.79-2026-10-09`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1450,7 +1450,7 @@ all, whatever their switches say — only «Siguranță pentru femei», if it is
 1. `/admin/legal` → the «GDPR» card → «Regenerează din șablon» → approve the notice: its section 5
    describes the forms. Until a notice naming them is in force in both languages, nothing shows on
    `/contact` whatever the switches say, and `/admin/tasks` carries the row «formularele „Spune-ne ceva”».
-   The same paragraph now also names the named mode (§NNN): every form opens with «Anonim» / «Cu nume
+   The same paragraph now also names the named mode (§678): every form opens with «Anonim» / «Cu nume
    și prenume», and a person who gives a name chooses «Cine să afle?» — the club's mailbox or the safety
    branch's person. A notice approved before that template says the forms ask no name, so until one
    from the new template is in force in both languages every form is anonymous only, and

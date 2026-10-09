@@ -128,7 +128,7 @@ describe("owner tasks", () => {
     }
   });
 
-  /** §NNN — «Spune-ne ceva» with a name: its own marker, its own row; open while a branch is on and the notice is silent. */
+  /** §678 — «Spune-ne ceva» with a name: its own marker, its own row; open while a branch is on and the notice is silent. */
   it("keeps the named-mode row open while a branch is on and the notice in force does not name {{feedbackFormsNamed}}", () => {
     expect(stateOf({ ...LAUNCHED, feedbackNamedDescribed: false }, "feedbackNamedNotice")).toBe("open");
     expect(stateOf(LAUNCHED, "feedbackNamedNotice")).toBe("done");

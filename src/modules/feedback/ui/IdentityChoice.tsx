@@ -44,7 +44,7 @@ function Choice({ name, value, checked, label, hint }: { name: string; value: st
 }
 
 /**
- * «Spune-ne ceva»'s first box (§NNN), every branch's form: «Cum vrei să trimiți?» — «Anonim», the
+ * «Spune-ne ceva»'s first box (§678), every branch's form: «Cum vrei să trimiți?» — «Anonim», the
  * default, or «Cu nume și prenume», each with its sentence under it. The named mode shows the name
  * (2–80 characters, required there by the server), the branch's way back and, when a named message may
  * reach either, «Cine să afle?»: «Clubul» or the safety branch's person by her first name — never an

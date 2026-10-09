@@ -285,7 +285,7 @@ export async function noticeDescribesFeedbackForms<T extends Record<string, unkn
 }
 
 /**
- * Whether the privacy notice in force describes «Spune-ne ceva»'s named mode (§NNN,
+ * Whether the privacy notice in force describes «Spune-ne ceva»'s named mode (§678,
  * `describesFeedbackFormsNamed`) — in every language, like `noticeDescribesFeedbackForms`. For the
  * action, which reads every post as anonymous until it does, and `/admin/tasks`; the page asks
  * through the public cache (`cachedFeedbackFormsNamedDescribed`).

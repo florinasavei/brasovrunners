@@ -91,7 +91,7 @@
  * only while the notice in force names it in every language (`describesGmailFallback`).
  *
  * `{{feedbackForms}}` in sections 5 and 10 (§676) is «Spune-ne ceva»'s name, quoted, in the paragraph
- * that says the forms are anonymous unless the person chooses `{{feedbackFormsNamed}}` (§NNN: each
+ * that says the forms are anonymous unless the person chooses `{{feedbackFormsNamed}}` (§678: each
  * form opens with that choice, the radio's words quoted) — a name, a contact if they want an answer,
  * and the choice of who hears it, the club or the designated person —, that the site keeps nothing, that the
  * messages reach the club's Gmail — the confidential safety form only the designated person's own

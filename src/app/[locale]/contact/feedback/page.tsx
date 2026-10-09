@@ -120,7 +120,7 @@ function dayStart(at: Date): Date {
  * Step 1 «Despre ce e vorba?» is a `GET` form: one card per branch the club switched on, each around
  * its native radio, and «Continuă» — the branch is `?tip=` in the address, so the back button works.
  * Step 2, every branch's form, opens with «Anonim» / «Cu nume și prenume» and, named, «Cine să afle?»
- * (§NNN) — while the notice in force names `{{feedbackFormsNamed}}`; anonymous only until then. One branch on is
+ * (§678) — while the notice in force names `{{feedbackFormsNamed}}`; anonymous only until then. One branch on is
  * that branch's form straight away; none on, or the privacy notice in force not describing the forms,
  * is a 404 (and no door on `/contact`). Each form posts to `submitFeedbackAction`; a refusal comes
  * back here with the boxes named in `?fields=` and what was typed in the sealed draft (§142), never
@@ -149,7 +149,7 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
   const contactPath = getPathname({ locale, href: "/contact" });
   const safetyName = offer?.safety.name ?? "";
 
-  // The named mode (§NNN): only while the notice in force names it, and then whom a named message may reach.
+  // The named mode (§678): only while the notice in force names it, and then whom a named message may reach.
   let identity: Identity | null = null;
   if (step.kind === "form" && offer) {
     const namedDescribed = (await orNull(() => cachedFeedbackFormsNamedDescribed(now))) === true;
@@ -171,7 +171,7 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
       {sentBranch && offered.includes(sentBranch) ? (
         <Alert severity="success" role="status" data-testid="feedback-sent">
           <AlertTitle>{t("sent.title")}</AlertTitle>
-          {/* Who got it (§NNN): the safety person — her form's own reader, or the one a named message chose — or the club. */}
+          {/* Who got it (§678): the safety person — her form's own reader, or the one a named message chose — or the club. */}
           {sentReader(sentBranch, search.catre) === "person" ? t("sent.safety", { name: safetyName }) : t("sent.body")}
         </Alert>
       ) : step.kind === "choose" ? (
@@ -195,7 +195,7 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
 
 type T = Awaited<ReturnType<typeof getTranslations<"Tell">>>;
 
-/** The named mode, when the notice in force offers it (§NNN): whom a named message on this branch may reach. */
+/** The named mode, when the notice in force offers it (§678): whom a named message on this branch may reach. */
 type Identity = { audiences: FeedbackAudience[] };
 
 /**
@@ -265,7 +265,7 @@ async function BranchForm({
   const chosenEvent = kept("event") ?? (query.eventSlug && events.some((event) => event.slug === query.eventSlug) ? query.eventSlug : "");
   const ratingTyped = kept("rating") ?? "";
   const reasonsTyped = new Set((kept("reasons") ?? "").split(",").filter(Boolean));
-  // «Anonim» unless the refused post had chosen the name (§NNN), and its «Cine să afle?».
+  // «Anonim» unless the refused post had chosen the name (§678), and its «Cine să afle?».
   const named = identity !== null && kept("identity") === "named";
   const audienceKept = FEEDBACK_AUDIENCES.find((answer) => answer === kept("audience"));
 
@@ -289,7 +289,7 @@ async function BranchForm({
       </Box>
       {branch === "safety" ? (
         // Above the form, in the person's language (§676): who reads it, and that the site keeps nothing —
-        // and, when a named report may go to the club instead (§NNN), that the sender chooses then.
+        // and, when a named report may go to the club instead (§678), that the sender chooses then.
         <Alert severity="info" icon={false} sx={{ mb: 2 }} data-testid="feedback-safety-reader">
           {identity?.audiences.includes("club") ? t("safety.readerChoice", { name: safetyName }) : t("safety.reader", { name: safetyName })}
         </Alert>
@@ -338,7 +338,7 @@ async function BranchForm({
         <input type="hidden" name="renderedAt" value={renderedAt.toISOString()} />
         <Stack spacing={2}>
           {/*
-            The very first thing (§NNN): anonymous, the default, or with one's name — only while the notice
+            The very first thing (§678): anonymous, the default, or with one's name — only while the notice
             in force says a name may be given; until then the form is anonymous only, with no way back.
           */}
           {identity && (

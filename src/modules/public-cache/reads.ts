@@ -546,7 +546,7 @@ export async function cachedFeedbackFormsDescribed(now: Date): Promise<boolean> 
 }
 
 /**
- * Whether «Spune-ne ceva» may offer «Cu nume și prenume» (§NNN): the privacy notice in force names
+ * Whether «Spune-ne ceva» may offer «Cu nume și prenume» (§678): the privacy notice in force names
  * `{{feedbackFormsNamed}}` (`describesFeedbackFormsNamed`), in every language — the same reading as
  * `cachedFeedbackFormsDescribed`. Until it does, every form is anonymous only; the action asks the
  * uncached `noticeDescribesFeedbackFormsNamed` again.

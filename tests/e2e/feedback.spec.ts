@@ -34,7 +34,7 @@ import { HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
  */
 
 const LOCK_KEY = 390_039_001;
-/** The forms' marker (§676) and the named mode's (§NNN): without the second, every form is anonymous only. */
+/** The forms' marker (§676) and the named mode's (§678): without the second, every form is anonymous only. */
 const MARKERS = ["{{feedbackForms}}", "{{feedbackFormsNamed}}"] as const;
 const SAFETY_NAME = "Maria";
 const ADDED_PARAGRAPH = {
@@ -177,7 +177,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await door.click();
       await expect(page).toHaveURL(/\/ro\/contact\/spune-ne$/);
 
-      // Step 1 (§NNN): one card per branch on, each a label around a native radio that stays visible,
+      // Step 1 (§678): one card per branch on, each a label around a native radio that stays visible,
       // with its glyph, a thumb's height and the warm words for the women's form; «Continuă» puts the
       // branch in the address, and step 2's title carries the same glyph.
       const choose = page.getByTestId("feedback-choose");
@@ -209,12 +209,12 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await expect(page.getByTestId("feedback-glyph-siguranta")).toBeVisible();
       await expect(page.getByRole("heading", { level: 2, name: "Siguranță pentru femei" })).toBeVisible();
       // Above the form, in the page's language: who reads it, by the first name the club set.
-      // The club may hear a named report too (§NNN) — the contact form reaches it on this deployment — so the line says the sender chooses then.
+      // The club may hear a named report too (§678) — the contact form reaches it on this deployment — so the line says the sender chooses then.
       await expect(page.getByTestId("feedback-safety-reader")).toHaveText(
         `Anonim, mesajul ajunge doar la ${SAFETY_NAME}; cu nume și prenume, alegi tu cine află. Site-ul nu păstrează nimic din el.`,
       );
       await expect(page.getByTestId("feedback-form-siguranta")).toBeVisible();
-      // The form opens with «Anonim» / «Cu nume și prenume» (§NNN): anonymous by default, the name and the
+      // The form opens with «Anonim» / «Cu nume și prenume» (§678): anonymous by default, the name and the
       // way back hidden until the name is chosen — CSS alone.
       const safetyForm = page.getByTestId("feedback-form-siguranta");
       const identity = safetyForm.getByTestId("feedback-identity");
@@ -228,7 +228,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await expect(safetyForm.locator('[name="name"]')).toBeVisible();
       await expect(safetyForm.locator('[name="name"]')).toHaveAttribute("maxlength", "80");
       await expect(safetyForm.locator('[name="contact"]')).toBeVisible();
-      // «Cine să afle?» (§NNN): the club or the safety person by her first name — on her own form, she is
+      // «Cine să afle?» (§678): the club or the safety person by her first name — on her own form, she is
       // checked — and never an address on the page.
       const audience = safetyForm.getByTestId("feedback-audience");
       await expect(audience).toBeVisible();

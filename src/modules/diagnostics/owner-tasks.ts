@@ -242,7 +242,7 @@ export type OwnerTaskInputs = {
   /** How many of «Spune-ne ceva»'s four branches the club switched on (§676). */
   feedbackBranchesOn: number;
   /**
-   * Does the notice in force, in every language, describe «Spune-ne ceva»'s named mode (§NNN,
+   * Does the notice in force, in every language, describe «Spune-ne ceva»'s named mode (§678,
    * `noticeDescribesFeedbackFormsNamed`)? Until it does, every form is anonymous only.
    */
   feedbackNamedDescribed: boolean;
@@ -522,7 +522,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       });
     }
     /*
-      «Spune-ne ceva» with a name (§NNN), the same shape and its own answer: a notice approved from the
+      «Spune-ne ceva» with a name (§678), the same shape and its own answer: a notice approved from the
       template before the named mode says the forms ask for no name, so the forms stay anonymous only
       until one naming `{{feedbackFormsNamed}}` takes effect — open while a branch is on and it is
       missing, done by itself the day it takes effect, absent while nothing waits on it.

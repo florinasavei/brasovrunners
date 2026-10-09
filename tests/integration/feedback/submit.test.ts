@@ -93,7 +93,7 @@ describe("§676 «Spune-ne ceva»", () => {
       // Reply-To only when an address was typed; the anonymity line otherwise.
       expect(smtp.messages[0].replyTo).toBeUndefined();
       expect(smtp.messages[0].text).toContain(`Contact: ${NO_CONTACT_LINE}`);
-      // The named mode (§NNN): the name is the Reply-To's name and the email's first line.
+      // The named mode (§678): the name is the Reply-To's name and the email's first line.
       expect(smtp.messages[1].replyTo).toEqual({ name: "Ana Pop", address: "ana@example.org" });
       expect(smtp.messages[1].text.split("\n")[0]).toBe("Nume: Ana Pop");
       expect(smtp.messages[0].text.split("\n")[0]).toBe("Nume: (anonim)");
@@ -103,7 +103,7 @@ describe("§676 «Spune-ne ceva»", () => {
       }
     });
 
-    it("drops the name and the way back the anonymous mode hid: no Reply-To, «(anonim)», «(fără contact lăsat)» (§NNN)", async () => {
+    it("drops the name and the way back the anonymous mode hid: no Reply-To, «(anonim)», «(fără contact lăsat)» (§678)", async () => {
       const anonymous = { ...SUGGESTION, identity: "anonymous" };
       expect(await submitFeedback(db, deps(), anonymous, NOW)).toEqual({ outcome: "sent" });
       expect(await submitFeedback(db, deps(), { ...SAFETY, name: "Ana Pop", contact: "0700 000 000" }, NOW)).toEqual({ outcome: "sent" });
@@ -141,7 +141,7 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(await db.select().from(emailOutbox)).toEqual([]);
       expect(await db.select().from(auditLogs)).toEqual([]);
       const lines = logged.mock.calls.map((call) => call.join(" "));
-      // The reader as a word (§NNN), never an address or a name.
+      // The reader as a word (§678), never an address or a name.
       expect(lines).toEqual(["[feedback] howItWent club: sent", "[feedback] safety person: sent"]);
       logged.mockRestore();
     });
@@ -162,7 +162,7 @@ describe("§676 «Spune-ne ceva»", () => {
     });
   });
 
-  describe("§NNN who hears a named message, and the notice that allows a name", () => {
+  describe("§678 who hears a named message, and the notice that allows a name", () => {
     it("sends a named «O reclamație» to the safety branch's person by Mailgun alone, with the neutral subject and no Reply-To", async () => {
       const toPerson = { ...COMPLAINT, identity: "named", name: "Ana Pop", audience: "person", email: "ana@example.org" };
       // The other reader than the branch's own: the outcome names her, for the sent page's line.
@@ -173,7 +173,7 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(message.subject).toBe(SAFETY_SUBJECT);
       expect(message.noReplyTo).toBe(true);
       expect(message.text.split("\n")[0]).toBe("Nume: Ana Pop");
-      // Her inbox otherwise holds only her own form's: the line says which form it came from (§NNN).
+      // Her inbox otherwise holds only her own form's: the line says which form it came from (§678).
       expect(message.text.split("\n")[1]).toBe("Din formularul: „O reclamație”");
       expect(message.html).toContain("<strong>Din formularul:</strong> „O reclamație”");
       expect(message.text).toContain("Contact: ana@example.org");
@@ -400,7 +400,7 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(await noticeDescribesFeedbackForms(db, NOW)).toBe(true);
     });
 
-    it("§NNN allows a name only while the notice in force also names {{feedbackFormsNamed}}, in every language", async () => {
+    it("§678 allows a name only while the notice in force also names {{feedbackFormsNamed}}, in every language", async () => {
       const unnamed = (body: LegalDocumentBody) => JSON.parse(JSON.stringify(body).split("{{feedbackFormsNamed}}").join("cu numele")) as LegalDocumentBody;
       expect(await noticeDescribesFeedbackFormsNamed(db, NOW)).toBe(false);
       await approveNotice({ ro: unnamed(privacyNoticeRo), en: unnamed(privacyNoticeEn) });

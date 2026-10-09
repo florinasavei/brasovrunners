@@ -38,7 +38,7 @@ import {
  * no fallback. A road that refuses is said on the page («Nu am putut trimite acum…») with the text
  * kept, never a silent loss and never a second road.
  *
- * **Who hears it, in the named mode (§NNN).** «Cine să afle?» may send a named message on any branch
+ * **Who hears it, in the named mode (§678).** «Cine să afle?» may send a named message on any branch
  * to the club's mailbox (the branch's own recipient; for the safety branch the «O reclamație»
  * recipient, else the contact form's) by the SMTP road, or to the safety branch's person by Mailgun
  * alone, with the neutral subject — the road follows the reader, never the branch. An anonymous
@@ -66,7 +66,7 @@ export type FeedbackDeps = {
   noticeDescribes: boolean;
   /**
    * The privacy notice in force names `{{feedbackFormsNamed}}` in every language
-   * (`noticeDescribesFeedbackFormsNamed`): until it does, every post is anonymous (§NNN).
+   * (`noticeDescribesFeedbackFormsNamed`): until it does, every post is anonymous (§678).
    */
   namedDescribed: boolean;
   /** The contact form's own recipients (`contactDelivery`'s «to»), where a named safety report for «Clubul» goes when «O reclamație» has none. */
@@ -82,7 +82,7 @@ export type FeedbackDeps = {
 };
 
 export type FeedbackOutcome =
-  /** Sent; `audience` only when a named message reached the other reader than its branch's own (§NNN). */
+  /** Sent; `audience` only when a named message reached the other reader than its branch's own (§678). */
   | { outcome: "sent"; audience?: FeedbackAudience }
   /** A bot's post on an ordinary branch: answered as sent, sent nowhere. */
   | { outcome: "ignored" }
@@ -106,7 +106,7 @@ export function readFeedbackInput(raw: unknown): FeedbackInput {
 }
 
 /**
- * The function log's one line: the branch, the reader once it is known (`club` or `person`, §NNN) and
+ * The function log's one line: the branch, the reader once it is known (`club` or `person`, §678) and
  * the outcome — never a word the person typed, an address or a name (§676).
  */
 function logged(branch: FeedbackBranch | "unknown", outcome: FeedbackOutcome, reader?: FeedbackAudience): FeedbackOutcome {
@@ -127,7 +127,7 @@ export async function submitFeedback<T extends Record<string, unknown>>(
   // Cloudflare's own refusal only (§216): a widget that never ran is `unavailable`, and passes.
   if (deps.screening.turnstileVerdict === "failed") return logged(branch, { outcome: "captcha" });
 
-  // Anonymous only until the notice in force says a name may be given (§NNN).
+  // Anonymous only until the notice in force says a name may be given (§678).
   const input = readFeedbackInput(deps.namedDescribed ? rawInput : asAnonymous(rawInput));
 
   // A password manager that filled the trap with the typed address is autofill, not a bot (§282).
@@ -136,7 +136,7 @@ export async function submitFeedback<T extends Record<string, unknown>>(
     return logged(branch, input.branch === "safety" ? { outcome: "unavailable" } : { outcome: "ignored" });
   }
 
-  // «Cine să afle?» (§NNN): the branch's own reader unless a named post chose the other one offered.
+  // «Cine să afle?» (§678): the branch's own reader unless a named post chose the other one offered.
   const offeredAudiences = audiencesFor(branch, deps.settings, { smtp: deps.smtp !== null, clubFallback: deps.clubFallback.length > 0 });
   const audience = chosenAudience(input, offeredAudiences);
   if (!audience) throw new DomainError("VALIDATION_ERROR", "the feedback form chose a reader not offered", ["audience"]);
@@ -163,7 +163,7 @@ export async function submitFeedback<T extends Record<string, unknown>>(
   return logged(branch, { outcome: "unavailable" }, audience);
 }
 
-/** A post with the named mode taken away (§NNN): `feedbackFields` then drops the name, the way back and the reader. */
+/** A post with the named mode taken away (§678): `feedbackFields` then drops the name, the way back and the reader. */
 function asAnonymous(raw: unknown): unknown {
   return raw && typeof raw === "object" ? { ...(raw as Record<string, unknown>), identity: "anonymous" } : raw;
 }
@@ -192,7 +192,7 @@ async function sendSafety(road: FeedbackMailgunRoad, to: string, email: { subjec
 
 /**
  * The contact form's road (§149, §310): the club's Gmail, `Reply-To` the typed address, marked when it
- * looks automated. A named safety report the sender sent to «Clubul» (§NNN) takes it too, with its
+ * looks automated. A named safety report the sender sent to «Clubul» (§678) takes it too, with its
  * neutral subject and no `Reply-To` — its way back may be a telephone, and it is in the body.
  */
 async function sendOrdinary(
@@ -222,7 +222,7 @@ async function sendOrdinary(
   const result = await road.transport.send({
     from: road.from,
     to: to.map((address) => address.replace(/[\r\n]+/g, " ").trim()),
-    // Only in the named mode (§NNN): the anonymous mode has no address to answer, and no name.
+    // Only in the named mode (§678): the anonymous mode has no address to answer, and no name.
     ...(replyAddress ? { replyTo: { name: input.name || replyAddress, address: replyAddress } } : {}),
     subject,
     text,

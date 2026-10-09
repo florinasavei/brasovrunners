@@ -123,7 +123,7 @@ describe("§676 the forms", () => {
   });
 });
 
-describe("§NNN anonymous, or with one's name", () => {
+describe("§678 anonymous, or with one's name", () => {
   it("every branch's form starts with the name and its way back, inside the choice at the very top", () => {
     for (const [branch, fields] of Object.entries(BRANCH_FIELDS)) {
       expect(fields[0], branch).toBe("name");
@@ -182,7 +182,7 @@ describe("§NNN anonymous, or with one's name", () => {
   });
 });
 
-describe("§NNN «Cine să afle?»: the club or the safety branch's person", () => {
+describe("§678 «Cine să afle?»: the club or the safety branch's person", () => {
   const roads = { smtp: true, clubFallback: true };
 
   it("offers the club and the person on every branch while both exist, the club first", () => {
@@ -326,7 +326,7 @@ describe("§676 the notice's marker", () => {
     expect(feedbackFormsClause("en")).toBe("“Tell us something”");
   });
 
-  it("§NNN the template names the named mode too, in both languages, beside the forms' own marker; a text without it has no named mode", () => {
+  it("§678 the template names the named mode too, in both languages, beside the forms' own marker; a text without it has no named mode", () => {
     for (const body of [privacyNoticeRo, privacyNoticeEn]) {
       expect(describesFeedbackForms(body)).toBe(true);
       expect(describesFeedbackFormsNamed(body)).toBe(true);
@@ -336,7 +336,7 @@ describe("§676 the notice's marker", () => {
     expect(describesFeedbackForms(strip(privacyNoticeRo))).toBe(true);
   });
 
-  it("§NNN fills the named mode's marker with the radio's own words, quoted", () => {
+  it("§678 fills the named mode's marker with the radio's own words, quoted", () => {
     expect(feedbackFormsNamedClause("ro")).toBe("„Cu nume și prenume”");
     expect(feedbackFormsNamedClause("en")).toBe("“With my name”");
     expect(feedbackFormsMergeValues("en")).toEqual({ feedbackForms: "“Tell us something”", feedbackFormsNamed: "“With my name”" });
@@ -357,7 +357,7 @@ describe("§676 the addresses the action sends the browser back to", () => {
     expect(feedbackSentUrl("/ro/contact/spune-ne", null)).toBe("/ro/contact/spune-ne?sent=");
   });
 
-  it("§NNN names the other reader a named message reached, by a word, and reads it back", () => {
+  it("§678 names the other reader a named message reached, by a word, and reads it back", () => {
     expect(feedbackSentUrl("/ro/contact/spune-ne", "safety", "club")).toBe("/ro/contact/spune-ne?sent=siguranta&catre=clubul");
     expect(feedbackSentUrl("/ro/contact/spune-ne", "complaint", "person")).toBe("/ro/contact/spune-ne?sent=reclamatie&catre=persoana");
     expect(sentReader("safety", "clubul")).toBe("club");

@@ -208,7 +208,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: FEEDBACK_FORMS_MERGE_FIELD,
     example: inBoth((locale) => feedbackFormsClause(locale)),
   },
-  // The privacy notice's marker for «Spune-ne ceva»'s named mode (§NNN): the radio's words, and the
+  // The privacy notice's marker for «Spune-ne ceva»'s named mode (§678): the radio's words, and the
   // switch — the forms offer «Cu nume și prenume» only while it is named (`describesFeedbackFormsNamed`).
   {
     token: `{{${FEEDBACK_FORMS_NAMED_MERGE_FIELD}}}`,

@@ -12,7 +12,7 @@ export function feedbackFormsClause(locale: string): string {
 }
 
 /**
- * What the privacy notice's `{{feedbackFormsNamed}}` becomes (§NNN): the named mode's radio, quoted —
+ * What the privacy notice's `{{feedbackFormsNamed}}` becomes (§678): the named mode's radio, quoted —
  * „Cu nume și prenume” / “With my name” — read from the catalogue the form's radio reads
  * (`Tell.identity.named`), so the approved sentence names the choice a visitor sees.
  */

@@ -140,7 +140,7 @@ describe("§676 submitFeedbackAction's redirects", () => {
     expect(kept).not.toHaveProperty("cf-turnstile-response");
   });
 
-  it("refuses «Cu nume și prenume» with no name on the box, and keeps the choice and the way back in the draft, never in the address (§NNN)", async () => {
+  it("refuses «Cu nume și prenume» with no name on the box, and keeps the choice and the way back in the draft, never in the address (§678)", async () => {
     const to = await pressed(post({ branch: "howItWent", identity: "named", name: " ", event: "", date: "", rating: "", message: "Bine.", reasons: [], reasonOther: "", email: "ana@example.org" }));
     const url = new URL(to, "http://club.test");
     expect(url.searchParams.get("fields")).toBe("name");
@@ -148,7 +148,7 @@ describe("§676 submitFeedbackAction's redirects", () => {
     expect(openFormDraft(lastDraft()?.value ?? "")).toMatchObject({ identity: "named", email: "ana@example.org", message: "Bine." });
   });
 
-  it("keeps no name, no way back, no reader and no identity in the draft of an anonymous refused post, even typed into the hidden boxes (§NNN)", async () => {
+  it("keeps no name, no way back, no reader and no identity in the draft of an anonymous refused post, even typed into the hidden boxes (§678)", async () => {
     for (const identity of ["anonymous", ""]) {
       const to = await pressed(
         post({ branch: "safety", identity, name: "Ana Pop", email: "ana@example.org", contact: "0700 000 000", audience: "club", message: "", whereWhen: "Parcul, joi" }),
@@ -160,7 +160,7 @@ describe("§676 submitFeedbackAction's redirects", () => {
     }
   });
 
-  it("reads a named post as anonymous while the notice in force does not name {{feedbackFormsNamed}}: sent with no name, and a refusal keeps none (§NNN)", async () => {
+  it("reads a named post as anonymous while the notice in force does not name {{feedbackFormsNamed}}: sent with no name, and a refusal keeps none (§678)", async () => {
     const unnamed = (body: unknown) => JSON.parse(JSON.stringify(body).split("{{feedbackFormsNamed}}").join("cu numele"));
     const translations = [
       { locale: "ro" as const, title: "Nota de confidențialitate", body: unnamed(privacyNoticeRo) },
@@ -191,7 +191,7 @@ describe("§676 submitFeedbackAction's redirects", () => {
     expect(kept).not.toHaveProperty("identity");
   });
 
-  it("names the other reader on the sent page: a named safety report the sender gave the club leaves by the SMTP road, «&catre=clubul» (§NNN)", async () => {
+  it("names the other reader on the sent page: a named safety report the sender gave the club leaves by the SMTP road, «&catre=clubul» (§678)", async () => {
     const before = capturedContactMessages().length;
     const to = await pressed(post({ branch: "safety", identity: "named", name: "Ana Pop", audience: "club", message: "Cineva m-a urmărit.", whereWhen: "", contact: "" }));
     expect(to).toBe("/ro/contact/spune-ne?sent=siguranta&catre=clubul");

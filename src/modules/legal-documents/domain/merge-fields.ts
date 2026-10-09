@@ -133,7 +133,7 @@ export const EVENT_INVITATIONS_MERGE_FIELD = "eventInvitations";
 export const FEEDBACK_FORMS_MERGE_FIELD = "feedbackForms";
 
 /**
- * The privacy notice's marker for «Spune-ne ceva»'s named mode (§NNN): the radio's own words,
+ * The privacy notice's marker for «Spune-ne ceva»'s named mode (§678): the radio's own words,
  * quoted — „Cu nume și prenume” / “With my name” (`feedback/notice-words.ts`) — in the same
  * paragraph, which then says the forms are anonymous unless the person chooses to give a name, what
  * the named mode takes (a name, a way back) and that the sender chooses who hears it: the club's
@@ -530,7 +530,7 @@ export function describesFeedbackForms(body: unknown): boolean {
 }
 
 /**
- * Whether a privacy notice describes «Spune-ne ceva»'s named mode (§NNN): it names
+ * Whether a privacy notice describes «Spune-ne ceva»'s named mode (§678): it names
  * `{{feedbackFormsNamed}}`. The gate for the identity choice, the named boxes and «Cine să afle?», and
  * what `/admin/tasks`' row `feedbackNamedNotice` reads. Pure; asked of the notice in force, in every language.
  */

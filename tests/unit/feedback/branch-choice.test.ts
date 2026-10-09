@@ -7,7 +7,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * BR-REQ-070-04 — «Spune-ne ceva»'s step 1 as cards (§676, §NNN), rendered
+ * BR-REQ-070-04 — «Spune-ne ceva»'s step 1 as cards (§676, §678), rendered
  * on the server as a visitor's browser receives it: one card per branch offered, each a `<label>` around
  * a visible native radio named `tip` with the branch's slug, its glyph, its name and its hint; the
  * chosen branch checked by default; the women's form in the owner's words; and one glyph for every

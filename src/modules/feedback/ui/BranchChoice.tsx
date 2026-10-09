@@ -25,7 +25,7 @@ export function BranchGlyphTile({ branch }: { branch: FeedbackBranch }) {
 }
 
 /**
- * Step 1's choice (§676, §NNN): one card per branch offered, in a fieldset whose legend asks «Despre
+ * Step 1's choice (§676, §678): one card per branch offered, in a fieldset whose legend asks «Despre
  * ce e vorba?». Each card is a `<label>` around the native radio named `tip`, visible at the card's
  * right edge and painted in the primary colour (`accent-color`), so the keyboard, a screen reader and
  * a page with no JavaScript behave exactly as with a plain radio; the card's own outline and tint follow

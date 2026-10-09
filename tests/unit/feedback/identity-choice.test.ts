@@ -6,7 +6,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * BR-REQ-070-04, `DECISIONS.md` §NNN — the first box of every «Spune-ne ceva» form, rendered on the
+ * BR-REQ-070-04, `DECISIONS.md` §678 — the first box of every «Spune-ne ceva» form, rendered on the
  * server as a visitor's browser receives it: «Cum vrei să trimiți?» with «Anonim» checked by default and
  * a sentence under each radio; the name (80 characters at most), the way back and «Cine să afle?» in the
  * named-only part the CSS hides while «Anonim» is checked; «Cine să afle?» only with two readers, the
@@ -39,7 +39,7 @@ function radios(html: string) {
   }));
 }
 
-describe("BR-REQ-070-04 «Cum vrei să trimiți?» (§NNN)", () => {
+describe("BR-REQ-070-04 «Cum vrei să trimiți?» (§678)", () => {
   it("opens with the identity choice, «Anonim» checked, in the prescribed words, a sentence under each radio", async () => {
     const html = await render();
     expect(/<input[^>]*>/.exec(html)?.[0]).toContain('name="identity"');
