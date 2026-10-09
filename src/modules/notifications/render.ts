@@ -5,6 +5,7 @@ import { participants } from "@/db/schema/participants";
 import { type Registration, registrations } from "@/db/schema/registrations";
 import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
+import { eventDay, howItWentOpen, howItWentUrl } from "@/modules/feedback/links";
 import type { Locale } from "@/i18n/routing";
 import { issueActionToken } from "@/modules/action-tokens/repository";
 import { readEventChanges, readEventNoticeWords } from "@/modules/events/domain/event-changes";
@@ -709,6 +710,27 @@ async function renderRow(
     if (typeof url === "string" && url.startsWith("https://")) {
       data.thanksUrl = url;
       payloadActionUrl = url;
+    }
+  }
+  /*
+    «Spune-ne cum a fost» (§676): the anonymous form's «Cum a fost» for this event and its day, while
+    that branch is open — switched on, a recipient, the notice in force describing the forms — read
+    now, at the send, as every fact of a message is. The thank-you's button when it carries no results
+    link (the link under them otherwise), and the organizer's `{feedbackLink}`, which falls back to the
+    contact page so a sentence written around it never reads empty. Each half in its own language.
+    Never for a members' event (§552): the form's picker and its title are public, so its link would
+    open on «Altceva» and the club's email would lose the event — the contact page stands in instead.
+  */
+  if ((row.messageType === "EVENT_THANKS" || row.messageType === "ORGANIZER_MESSAGE") && eventDetails) {
+    if (!eventDetails.membersOnly && (await howItWentOpen(db, now))) {
+      const day = eventDay(eventDetails.startsAt, eventDetails.timezone ?? CLUB_TIME_ZONE);
+      data.feedbackUrl = howItWentUrl(locale, eventDetails.slug ?? null, day);
+      data.feedbackUrlOther = howItWentUrl(otherLocale(locale), otherDetails?.slug ?? null, day);
+      if (row.messageType === "EVENT_THANKS" && !data.thanksUrl) payloadActionUrl = data.feedbackUrl;
+    }
+    if (row.messageType === "ORGANIZER_MESSAGE") {
+      data.feedbackLink = data.feedbackUrl ?? data.contactUrl;
+      data.feedbackLinkOther = data.feedbackUrlOther ?? `${env.APP_BASE_URL}${getPathname({ locale: otherLocale(locale), href: "/contact" })}`;
     }
   }
   /*

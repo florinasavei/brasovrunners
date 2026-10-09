@@ -706,6 +706,11 @@ export function renderBilingual(
     // The organizer's message (§364): its own subject and body in the second half's language.
     ...(data.organizerSubjectOther ? { organizerSubject: data.organizerSubjectOther } : {}),
     ...(data.organizerBodyOther ? { organizerBody: data.organizerBodyOther } : {}),
+    // «Spune-ne ceva» (§676): the form in the second half's own language, as a link and as `{feedbackLink}`.
+    // The half's button is the first half's (one action per message), so a thank-you without results also
+    // lists the form in this half's own language under it (`feedbackButtonOtherLanguage`).
+    ...(data.feedbackUrlOther ? { feedbackUrl: data.feedbackUrlOther, feedbackButtonOtherLanguage: true } : {}),
+    ...(data.feedbackLinkOther ? { feedbackLink: data.feedbackLinkOther } : {}),
     // The newsletter's own words and topics in the second half's language (§445).
     ...(data.newsletterSubjectOther ? { newsletterSubject: data.newsletterSubjectOther } : {}),
     ...(data.newsletterBodyOther ? { newsletterBody: data.newsletterBodyOther } : {}),
@@ -838,6 +843,26 @@ export type TemplateData = {
   replyTo?: string;
   /** The thank-you's optional link — results, photos (§82). Carried in the payload, not a token. */
   thanksUrl?: string;
+  /**
+   * «Spune-ne cum a fost» (§676): the anonymous form's «Cum a fost» for this event and its day, while
+   * that branch is open — the thank-you's button (or the link under its results button). Read at send
+   * time from the setting and the notice in force; absent while the branch is closed.
+   */
+  feedbackUrl?: string;
+  /** The same form in the other language, for the bilingual message's second half. */
+  feedbackUrlOther?: string;
+  /**
+   * Set on the bilingual message's second half alone: its action button opens the form in the first
+   * half's language (one action URL per message), so the thank-you without a results link also lists
+   * `feedbackUrl` — this half's own language — as a link under it.
+   */
+  feedbackButtonOtherLanguage?: boolean;
+  /**
+   * `{feedbackLink}` in the organizer's message (§676): `feedbackUrl` while «Cum a fost» is open, the
+   * contact page's address otherwise — never empty, so a sentence the organizer wrote around it reads.
+   */
+  feedbackLink?: string;
+  feedbackLinkOther?: string;
   /** The signed declaration as a PDF, on the confirmation (§95): the same manage token, read-only. */
   declarationPdfUrl?: string;
   /** When it was signed, formatted for the locale — on the declaration's own message. */
@@ -1522,10 +1547,20 @@ const T = {
       body: (d: TemplateData) => [
         `Mulțumim că ai fost la ${d.eventTitle ?? "eveniment"}. Ne-a bucurat să te vedem la start.`,
         ...(d.thanksUrl ? ["Rezultatele și pozele sunt la linkul de mai jos."] : []),
+        // «Spune-ne cum a fost» (§676): the button when there are no results, the link under them otherwise.
+        ...(d.feedbackUrl ? [d.thanksUrl ? "Ne spui cum a fost? E anonim și durează un minut: „Spune-ne cum a fost”, mai jos." : "Ne spui cum a fost? E anonim și durează un minut."] : []),
         "Ne vedem la următoarea alergare.",
       ],
-      action: "Rezultate și poze",
-      emphasis: (d: TemplateData, b: readonly string[]): Emphasis => (d.thanksUrl ? { highlight: [b[1]], actionAfter: b[1] } : { highlight: [b[0]] }),
+      action: (d: TemplateData) => (d.thanksUrl || !d.feedbackUrl ? "Rezultate și poze" : "Spune-ne cum a fost"),
+      links: (d: TemplateData) =>
+        !d.feedbackUrl
+          ? []
+          : d.thanksUrl
+            ? [{ label: "Spune-ne cum a fost", url: d.feedbackUrl }]
+            : d.feedbackButtonOtherLanguage
+              ? [{ label: "Spune-ne cum a fost, în română", url: d.feedbackUrl }]
+              : [],
+      emphasis: (d: TemplateData, b: readonly string[]): Emphasis => (d.thanksUrl || d.feedbackUrl ? { highlight: [b[1]], actionAfter: b[1] } : { highlight: [b[0]] }),
     },
     declarationSigned: {
       subject: "Declarația ta semnată",
@@ -2218,10 +2253,20 @@ const T = {
       body: (d: TemplateData) => [
         `Thank you for being at ${d.eventTitle ?? "the event"}. It was good to see you at the start.`,
         ...(d.thanksUrl ? ["The results and the photos are at the link below."] : []),
+        // «Tell us how it was» (§676): the button when there are no results, the link under them otherwise.
+        ...(d.feedbackUrl ? [d.thanksUrl ? "Will you tell us how it was? It is anonymous and takes a minute: “Tell us how it was”, below." : "Will you tell us how it was? It is anonymous and takes a minute."] : []),
         "See you at the next run.",
       ],
-      action: "Results and photos",
-      emphasis: (d: TemplateData, b: readonly string[]): Emphasis => (d.thanksUrl ? { highlight: [b[1]], actionAfter: b[1] } : { highlight: [b[0]] }),
+      action: (d: TemplateData) => (d.thanksUrl || !d.feedbackUrl ? "Results and photos" : "Tell us how it was"),
+      links: (d: TemplateData) =>
+        !d.feedbackUrl
+          ? []
+          : d.thanksUrl
+            ? [{ label: "Tell us how it was", url: d.feedbackUrl }]
+            : d.feedbackButtonOtherLanguage
+              ? [{ label: "Tell us how it was, in English", url: d.feedbackUrl }]
+              : [],
+      emphasis: (d: TemplateData, b: readonly string[]): Emphasis => (d.thanksUrl || d.feedbackUrl ? { highlight: [b[1]], actionAfter: b[1] } : { highlight: [b[0]] }),
     },
     declarationSigned: {
       subject: "Your signed declaration",
@@ -2944,6 +2989,8 @@ export function buildTemplateContent(
       checkinCode: undefined,
       checkinQrUrl: undefined,
       thanksUrl: undefined,
+      // «Spune-ne cum a fost» (§676) goes with the button it may be, as the results link does.
+      feedbackUrl: undefined,
       // A family's confirmation keeps the names and the numbers, never a code or a QR (§519).
       familyConfirmed: data.familyConfirmed?.map((person) => ({
         name: person.name,

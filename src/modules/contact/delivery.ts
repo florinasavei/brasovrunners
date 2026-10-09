@@ -2,6 +2,8 @@ import {
   type CapturedSmtpMessage,
   createCaptureSmtpTransport,
   createSmtpTransport,
+  type SmtpAddress,
+  type SmtpTransport,
 } from "@/infrastructure/email/smtp-adapter";
 import { env, type Env } from "@/shared/config/env";
 import { type ContactRecipients, resolveContactRecipients } from "./domain/recipients";
@@ -71,18 +73,47 @@ export function contactDeliveryFor(
 ): ContactDelivery | null {
   const route = contactRoute(config, recipients);
   if (!route) return null;
+  return { transport: contactTransportFor(config), ...route };
+}
 
-  if (config.CONTACT_FORM_MODE === "capture") return { transport: sharedCapture, ...route };
+/** The deployment's one way out by SMTP: the capture on a laptop and in the tests, the Gmail account otherwise. */
+function contactTransportFor(config: ContactConfig): SmtpTransport {
+  if (config.CONTACT_FORM_MODE === "capture") return sharedCapture;
+  return createSmtpTransport({
+    host: config.CONTACT_SMTP_HOST,
+    port: config.CONTACT_SMTP_PORT,
+    user: config.CONTACT_SMTP_USER ?? "",
+    password: config.CONTACT_SMTP_PASSWORD ?? "",
+  });
+}
 
-  return {
-    transport: createSmtpTransport({
-      host: config.CONTACT_SMTP_HOST,
-      port: config.CONTACT_SMTP_PORT,
-      user: config.CONTACT_SMTP_USER ?? "",
-      password: config.CONTACT_SMTP_PASSWORD ?? "",
-    }),
-    ...route,
-  };
+export type ContactSmtpRoad = { transport: SmtpTransport; from: SmtpAddress; appEnv: ContactConfig["APP_ENV"] };
+
+/**
+ * The same road with nobody on it yet (§676): «Spune-ne ceva»'s three ordinary branches leave the way
+ * a contact message leaves — the club's Gmail, at once, nothing stored — each to the one address the
+ * club set for it, so they need the transport and the sender, never the contact form's recipients.
+ * `null` where the deployment has no SMTP road at all (`CONTACT_FORM_MODE=off`).
+ */
+export function contactSmtpRoadFor(config: ContactConfig): ContactSmtpRoad | null {
+  if (config.CONTACT_FORM_MODE === "off") return null;
+  const from = { name: config.EMAIL_FROM_NAME, address: config.CONTACT_SMTP_USER ?? "contact@localhost" };
+  return { transport: contactTransportFor(config), from, appEnv: config.APP_ENV };
+}
+
+/**
+ * Whether this deployment has the SMTP road at all — the environment alone, so no read and no cache:
+ * «Spune-ne ceva» offers its three ordinary branches only where they can leave (§676), the way
+ * «Scrie-ne» draws no form where `contactFormReaches` says no. Without it a visitor would be shown a
+ * form that answers «Nu am putut trimite acum…» to every post, forever.
+ */
+export function contactSmtpRoadExists(config: Pick<ContactConfig, "CONTACT_FORM_MODE"> = env): boolean {
+  return config.CONTACT_FORM_MODE !== "off";
+}
+
+/** This process's SMTP road, from its environment. */
+export function contactSmtpRoad(): ContactSmtpRoad | null {
+  return contactSmtpRoadFor(env);
 }
 
 /** This process's delivery, from its environment and the club's own recipient list. */

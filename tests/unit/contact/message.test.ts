@@ -84,7 +84,7 @@ describe("BR-REQ-070-04 the message the club receives", () => {
 
   it("keeps a header to one line whatever the box allowed", () => {
     expect(contactSubject("Ana\r\nBcc: x@example.com")).toBe("Mesaj de pe site: Ana Bcc: x@example.com");
-    expect(renderContactMessage({ ...INPUT, name: "Ana\nPopescu" }, ROUTE).replyTo.name).toBe("Ana Popescu");
+    expect(renderContactMessage({ ...INPUT, name: "Ana\nPopescu" }, ROUTE).replyTo?.name).toBe("Ana Popescu");
   });
 
   /**

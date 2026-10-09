@@ -8,6 +8,12 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.78-2026-10-08
+
+- **The rain is a raining cloud and a percentage, never a closed umbrella** — showers and heavy rain draw a cloud with rain falling from it (Material Symbols' «rainy», drawn in the project), and every card's weather pill now says the hour's chance of rain after a drop, «☁ 14 °C 💧 20 %», in the primary colour when rain is likely — a likely hour with no chance to show keeps the drop alone; nothing on a dry hour at 0 %. The hero's line and the event page's row show the drop where the umbrella was; the rule, the spoken words and the reminder are unchanged. §677.
+## BR-V2.77-2026-10-08
+
+- **«Spune-ne ceva» under the newsletter on Contact** — an anonymous wizard: how an event went (an event, a day, five faces, why someone stopped coming), a suggestion, a complaint, and a confidential «Siguranță» form for women that reaches one person by Mailgun alone; each branch switched on in «Pagini» → «Contact», nothing stored, the thank-you email, the event page after the end and the organizer's `{feedbackLink}` (in the body) lead to it — never from a members' event. §676.
 ## BR-V2.76-2026-10-08
 
 - **The two link forms check for bots too** — «Înscrierile mele» and «Retrimite linkul» now carry the contact form's honeypot, timing check and Cloudflare's check (when it is on): a script's post is answered «sent» and sends nothing, and only a token Cloudflare rejected asks to tick the box again. §675.

@@ -113,7 +113,7 @@ describe("weatherSpanWords: the sentence with where and when (§484)", () => {
     expect(words(span, "en", "Tâmpa").sentence).toBe("Weather at Tâmpa, Saturday, 26 Sept 18:00–20:00: Partly cloudy, 12–15 °C, rain likely 70%");
   });
 
-  it("a dry start with rain later: the rainy hour's word and glyph beside the umbrella, never «Parțial noros»", () => {
+  it("a dry start with rain later: the rainy hour's word and glyph beside «ploaie probabilă», never «Parțial noros»", () => {
     const span = pickSpan(forecast({ code: [2, 2, 61], chance: [10, 20, 70] }), START, new Date(START.getTime() + 2 * HOUR));
     const ro = words(span, "ro", "Tâmpa");
     expect(ro.line).toBe("Ploaie, 14 °C, ploaie probabilă 70 %");

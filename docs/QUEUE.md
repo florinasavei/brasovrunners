@@ -130,6 +130,8 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.78` | the rain is a raining cloud and a percentage (§677) |
+| `BR-V2.77` | one anonymous wizard from Contact, the safety form reaching one person (§676) |
 | `BR-V2.76` | the two link forms run the anti-bot check too (§675) |
 | `BR-V2.75` | the calendar entry in the confirmation, the reminder, a group run's declaration, a time or place update and a cancellation asks «Da / Nu / Poate» once the club names, in «Emailuri», the address the answers go to; empty, the file is as before (§672) · a picture is replaced in place («Înlocuiește») in an album and in a text (§673) · the calendar's address to copy, and Google's «Din URL» with ?v=2 (§674) |
 | `BR-V2.74` | «Email respins» tells the truth: the runners' own emails, Mailgun's facts kept, what a message carries at its send answers its refusals, one email state that speaks only when somebody must act on something still needed — until the event ends, and a call, or at the desk a word, for a notice that never arrived (§670) · «Email respins» says which email, why and what to do, where the club looks: one line on the list, «Emailuri» on the page, the club's own mailboxes (§671) |

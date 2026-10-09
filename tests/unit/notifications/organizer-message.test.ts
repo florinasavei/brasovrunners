@@ -7,6 +7,7 @@ import {
   ORGANIZER_BODY_MAX,
   ORGANIZER_MESSAGE_PLACEHOLDERS,
   ORGANIZER_SUBJECT_MAX,
+  ORGANIZER_SUBJECT_PLACEHOLDERS,
   organizerMessageCost,
   organizerMessageDeferral,
   organizerParagraphs,
@@ -106,9 +107,21 @@ describe("§364 the words: both languages, both texts, the closed placeholders",
     expect(unknownOrganizerPlaceholders("{eventTitle} {participantName} {x}")).toEqual(["x"]);
   });
 
-  it("offers a subset of §247's closed set, with no link among them", () => {
+  it("offers a subset of §247's closed set: no link in the subject, the body's one more the form's link alone (§676)", () => {
     for (const name of ORGANIZER_MESSAGE_PLACEHOLDERS) expect(EMAIL_COPY_PLACEHOLDERS).toContain(name);
-    expect(ORGANIZER_MESSAGE_PLACEHOLDERS.some((name) => /url/i.test(name))).toBe(false);
+    expect(ORGANIZER_SUBJECT_PLACEHOLDERS.some((name) => /url|link/i.test(name))).toBe(false);
+    expect(ORGANIZER_MESSAGE_PLACEHOLDERS.filter((name) => !(ORGANIZER_SUBJECT_PLACEHOLDERS as readonly string[]).includes(name))).toEqual(["feedbackLink"]);
+  });
+
+  it("refuses {feedbackLink} in the subject and fills it in the body (§676)", () => {
+    const checked = checkOrganizerMessage({
+      subject: { ro: "Cum a fost? {feedbackLink}", en: "How was {eventTitle}?" },
+      body: { ro: "Spune-ne: {feedbackLink}", en: "Tell us: {feedbackLink}" },
+    });
+    expect(checked.message).toBeNull();
+    expect(checked.issues).toEqual([{ box: "subjectRo", problem: "unknownPlaceholder", names: ["feedbackLink"] }]);
+    expect(unknownOrganizerPlaceholders("{feedbackLink}", "subject")).toEqual(["feedbackLink"]);
+    expect(unknownOrganizerPlaceholders("{feedbackLink}")).toEqual([]);
   });
 
   it("refuses a text over its ceiling", () => {

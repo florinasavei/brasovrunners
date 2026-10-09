@@ -124,6 +124,12 @@ export const routing = defineRouting({
      */
     "/contact": "/contact",
     /**
+     * «Spune-ne ceva» / "Tell us something" (§676): the anonymous wizard the contact page's door opens —
+     * how it was, a suggestion, a complaint, and the confidential safety form. Under `/contact`, whose
+     * page it belongs to; `?tip=`, `?eveniment=` and `?data=` choose the branch and the event.
+     */
+    "/contact/feedback": { ro: "/contact/spune-ne", en: "/contact/tell-us" },
+    /**
      * The newsletter's two link pages (§445): the double opt-in's confirmation, and the subscriber's
      * own page — the topics and "unsubscribe" — that every newsletter links to. The secret in the
      * path, like every emailed link; nothing about the person.

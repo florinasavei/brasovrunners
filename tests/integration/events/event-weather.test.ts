@@ -217,14 +217,25 @@ describe("BR-REQ-011-01 the event page's weather is one line (§469, replacing �
     return rows(html).find((row) => row.label === "Vremea" || row.label === "Weather")?.dd ?? "";
   };
 
-  it("RO, rain likely: the word, the degrees and the umbrella with «ploaie probabilă» — no chance, no wind", async () => {
+  it("RO, rain likely: the word, the degrees and the drop with «ploaie probabilă 80 %» — no «șanse», no wind (§469, §677)", async () => {
     const dd = await line("ro", rainy());
     expect(text(dd)).toContain("Ploaie");
     expect(text(dd)).toContain("16 °C");
-    expect(text(dd)).toContain("ploaie probabilă");
+    expect(text(dd)).toContain("ploaie probabilă 80 %");
     expect(dd).toContain('data-testid="weather-rain-likely"');
+    // The drop, never the closed umbrella (§677).
+    expect(dd).toContain('data-testid="WaterDropIcon"');
+    expect(dd).not.toContain("UmbrellaIcon");
     expect(text(dd)).not.toContain("km/h");
     expect(text(dd)).not.toContain("șanse");
+  });
+
+  it("showers: the row's glyph is the raining cloud, never the umbrella (§677)", async () => {
+    currentLocale = "ro";
+    const html = withoutStyles(await page({}, openMeteo({ code: 81, chance: 70, mm: 3 })));
+    const row = rows(html).find((each) => each.label === "Vremea");
+    expect(row?.dt).toContain('data-testid="RainyIcon"');
+    expect(html).not.toContain("UmbrellaIcon");
   });
 
   it("RO, rain unlikely: the word and the degrees alone", async () => {
@@ -320,5 +331,22 @@ describe("BR-REQ-041-01 the listing reads every card's forecast at once (§416)"
   it("has no entry when Open-Meteo fails", async () => {
     const found = await forecastsForEvents([at("a")], NOW, { fetch: failing, source: "open-meteo", timeoutMs: 50 });
     expect(found.size).toBe(0);
+  });
+
+  it("draws the read chance on the card's pill after a drop, in the primary colour when rain is likely (§677)", async () => {
+    const pill = async (fetchImpl: typeof fetch) => {
+      const found = await forecastsForEvents([at("a")], NOW, { fetch: fetchImpl, source: "open-meteo" });
+      const html = renderToStaticMarkup(await EventFacts({ event: at("a"), now: NOW, variant: "compact", cardWeather: found.get("a")?.start ?? null }));
+      return /data-testid="card-weather"[\s\S]*$/.exec(html)?.[0] ?? "";
+    };
+    const wet = await pill(openMeteo({ code: 81, chance: 80, mm: 3 }));
+    expect(wet).toContain('data-testid="RainyIcon"');
+    expect(wet).toContain('data-testid="card-weather-chance"');
+    expect(wet).toContain('data-testid="WaterDropIcon"');
+    expect(text(wet)).toContain("80 %");
+    expect(wet).not.toContain("UmbrellaIcon");
+    const dry = await pill(openMeteo({ code: 2, chance: 0, mm: 0 }));
+    expect(dry).not.toContain('data-testid="card-weather-chance"');
+    expect(dry).not.toContain("WaterDropIcon");
   });
 });

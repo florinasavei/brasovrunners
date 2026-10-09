@@ -89,17 +89,19 @@ describe("§254 the anti-bot switch", () => {
       A source assertion, and worth one: a switch that half the entry points ignore is worse
       than no switch — the club would believe the challenge was off while the registration form
       still refused people (§97, §254). The registration form, the contact page and, since §675,
-      the two link forms («Înscrierile mele», «Retrimite linkul») read it; their actions ask it.
+      the two link forms («Înscrierile mele», «Retrimite linkul») and, since §676, the «Spune-ne ceva»
+      wizard read it; their actions ask it.
     */
     const read = (...where: string[]) => readFileSync(path.join(process.cwd(), ...where), "utf8");
     expect(read("src", "app", "[locale]", "events", "[slug]", "register", "page.tsx")).toContain("activeBotCheckSiteKey");
-    // The contact page and the two link forms ask the same switch through the public cache (§333),
-    // which the switch's own save expires — so it is still consulted, and a change still shows on
-    // the next visit.
+    // The contact page, the two link forms and, since §676, the «Spune-ne ceva» wizard ask the same
+    // switch through the public cache (§333), which the switch's own save expires — so it is still
+    // consulted, and a change still shows on the next visit.
     for (const page of [
       ["src", "app", "[locale]", "contact", "page.tsx"],
       ["src", "app", "[locale]", "registrations", "mine", "page.tsx"],
       ["src", "app", "[locale]", "registrations", "resend", "page.tsx"],
+      ["src", "app", "[locale]", "contact", "feedback", "page.tsx"],
     ]) {
       expect(read(...page), page.join("/")).toContain("cachedBotCheckSiteKey");
     }
@@ -111,6 +113,7 @@ describe("§254 the anti-bot switch", () => {
       ["src", "app", "[locale]", "contact", "actions.ts"],
       ["src", "app", "[locale]", "registrations", "mine", "actions.ts"],
       ["src", "app", "[locale]", "registrations", "resend", "actions.ts"],
+      ["src", "app", "[locale]", "contact", "feedback", "actions.ts"],
     ]) {
       expect(read(...action), action.join("/")).toContain("botCheckIsOn");
     }

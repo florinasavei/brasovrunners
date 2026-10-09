@@ -654,18 +654,30 @@ describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
   const pillOf = (html: string) => /<span\b[^>]*data-testid="card-weather"[^>]*>([\s\S]*?)<\/span><\/span>/.exec(html)?.[0] ?? "";
   /** The glyph's path data, which names the Material icon it is. */
   const pathOf = (fragment: string) => /<svg\b[^>]*>[\s\S]*?<path\b[^>]*\bd="([^"]+)"/.exec(fragment)?.[1] ?? "";
-  /** Every glyph's path data, in order — the sky's own glyph first, the umbrella after it when it wears one. */
+  /** Every glyph's path data, in order — the sky's own glyph first, the chance's drop after it when the hour has one (§677). */
   const pathsOf = (fragment: string) => [...fragment.matchAll(/<svg\b[^>]*>[\s\S]*?<path\b[^>]*\bd="([^"]+)"/g)].map((m) => m[1]);
+  /** The colour Emotion gave the chance's drop and figure (§677), from the markup with its styles. */
+  const chanceColour = (html: string) => {
+    const tag = /<span\b[^>]*data-testid="card-weather-chance"[^>]*>/.exec(html)?.[0] ?? "";
+    const cls = /class="[^"]*\b(css-[\w-]+)"/.exec(tag)?.[1] ?? "none";
+    return /color:([^;}]+)/.exec(rulesFor(html, cls))?.[1] ?? "";
+  };
+  const card = (weather: typeof reading | Record<string, unknown>) =>
+    markup(createElement(EventCard, { event: trailToRoad(), index: 0, now: NOW, weather: weather as typeof reading }));
 
-  it("shows the glyph and the degrees as the last pill of the route's row, the word for a screen reader alone", async () => {
+  it("shows the glyph, the degrees and the chance as the last pill of the route's row, the word for a screen reader alone", async () => {
     const html = withoutStyles(await markup(createElement(EventCard, { event: trailToRoad(), index: 0, now: NOW, weather: reading })));
     const pill = pillOf(html);
     expect(pill).toMatch(/<svg\b[^>]*aria-hidden="true"/);
     expect(pill).toContain('<span aria-hidden="true">12 °C</span>');
-    expect(text(pill)).toContain("Vremea la start: Înnorat, 12 °C");
-    // The rain, the wind and the details are the page's, never the card's — below the umbrella's 50%.
-    expect(text(html)).not.toContain("șanse de ploaie");
+    // The chance after the degrees, a drop and the figure (§677); a screen reader hears it in words.
+    expect(text(pill)).toContain("Vremea la start: Înnorat, 12 °C, 30% șanse de ploaie");
+    expect(pill).toContain('data-testid="card-weather-chance"');
+    expect(text(pill)).toContain("30 %");
+    expect(pill).not.toContain("ploaie probabilă");
+    // The wind and the details are the page's, never the card's.
     expect(text(html)).not.toContain("rafale");
+    expect(text(html)).not.toContain("km/h");
     expect(pill).not.toContain("data-rain-likely");
     // Not among the marks above the title any more (§429, amending §416): in the route's row, after
     // every route pill and the cost — the row's last.
@@ -689,26 +701,30 @@ describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
     expect(withoutStyles(await markup(createElement(EventCard, { event: bare, index: 0, now: NOW })))).not.toContain('data-fact="pills"');
   });
 
-  it("wears the umbrella when rain is likely, and a screen reader hears the chance", async () => {
+  it("marks a likely hour by the chance itself, never an umbrella, and a screen reader hears «ploaie probabilă» (§429, §677)", async () => {
     const calm = pillOf(withoutStyles(await markup(createElement(EventCard, { event: trailToRoad(), index: 0, now: NOW, weather: reading }))));
     const wet = pillOf(
       withoutStyles(await markup(createElement(EventCard, { event: trailToRoad(), index: 0, now: NOW, weather: { ...reading, precipitationProbability: 60 } }))),
     );
     expect(wet).toContain('data-rain-likely="true"');
-    // The sky's own glyph stays: the umbrella sits beside it, never replacing it.
+    // The sky's own glyph stays first; the drop after the degrees is the chance's, likely or not —
+    // no second sky glyph, no umbrella (§677).
     expect(pathsOf(wet)[0]).toBe(pathOf(calm));
-    // A second glyph, the umbrella, joins it only when rain is likely.
     expect(pathsOf(wet)).toHaveLength(2);
-    expect(pathsOf(calm)).toHaveLength(1);
-    // And it is not the showers' own glyph (`weather/ui/glyphs.ts`) — a showers hour still reads as
-    // showers, distinct from a partly-cloudy hour that also happens to be wet.
+    expect(pathsOf(calm)).toHaveLength(2);
+    expect(pathsOf(wet)[1]).toBe(pathsOf(calm)[1]);
+    expect(wet).not.toContain("UmbrellaIcon");
+    expect(text(wet)).toContain("60 %");
+    // A showers hour draws the raining cloud as its sky (`weather/ui/glyphs.ts`), then the drop and its chance.
     const showers = pillOf(
       withoutStyles(
         await markup(createElement(EventCard, { event: trailToRoad(), index: 0, now: NOW, weather: { ...reading, code: 80, kind: "showers", glyph: "showers", precipitationProbability: 10 } })),
       ),
     );
-    expect(pathsOf(showers)).toHaveLength(1);
-    expect(text(wet)).toContain("Vremea la start: Înnorat, 12 °C, ploaie probabilă");
+    expect(pathsOf(showers)).toHaveLength(2);
+    expect(showers).toContain('data-testid="RainyIcon"');
+    expect(pathsOf(showers)[0]).not.toBe(pathOf(calm));
+    expect(text(wet)).toContain("Vremea la start: Înnorat, 12 °C, 60% șanse de ploaie, ploaie probabilă");
     expect(wet).toContain('<span aria-hidden="true">12 °C</span>');
     // Snow keeps its own glyph, whatever the chance: Open-Meteo's chance is of any precipitation.
     const snow = pillOf(
@@ -717,6 +733,41 @@ describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
       ),
     );
     expect(snow).not.toContain("data-rain-likely");
+  });
+
+  it("colours the drop and the chance primary only when rain is likely, and shows nothing at 0 % (§677)", async () => {
+    const calm = await card(reading);
+    const wet = await card({ ...reading, precipitationProbability: 60 });
+    // A likely hour by amount alone, at a low chance, is primary too: §429's rule decides, not the figure.
+    const falling = await card({ ...reading, precipitationProbability: 20, precipitationMm: 1 });
+    expect(chanceColour(wet)).toBe(PRIMARY);
+    expect(chanceColour(falling)).toBe(PRIMARY);
+    expect(chanceColour(calm)).not.toBe(PRIMARY);
+    expect(chanceColour(calm)).not.toBe("");
+    // A snowy hour's chance is shown, never as rain likely: secondary, like any calm hour.
+    expect(chanceColour(await card({ ...reading, code: 73, kind: "snow", glyph: "snow", precipitationProbability: 90 }))).toBe(chanceColour(calm));
+    // A likely hour by amount alone with no chance to show — none, or 0 % — still draws the drop,
+    // alone and primary, with no figure: the eye gets what a screen reader hears (§677).
+    for (const chance of [null, 0]) {
+      const html = await card({ ...reading, precipitationProbability: chance, precipitationMm: chance === null ? 1 : 2 });
+      const pill = pillOf(withoutStyles(html));
+      expect(pill).toContain('data-rain-likely="true"');
+      expect(pill).toContain('data-testid="card-weather-chance"');
+      expect(pill).toContain('data-testid="WaterDropIcon"');
+      expect(pathsOf(pill)).toHaveLength(2);
+      expect(pathsOf(pill)[1]).toBe(pathsOf(pillOf(withoutStyles(calm)))[1]);
+      expect(chanceColour(html)).toBe(PRIMARY);
+      expect(text(pill)).not.toContain("%");
+      expect(text(pill)).toContain("ploaie probabilă");
+    }
+    // 0 % — or a chance that rounds to it — and no chance at all draw no drop and no figure on a calm hour.
+    for (const dry of [0, 0.4, null]) {
+      const pill = pillOf(withoutStyles(await card({ ...reading, precipitationProbability: dry })));
+      expect(pill).not.toContain('data-testid="card-weather-chance"');
+      expect(pathsOf(pill)).toHaveLength(1);
+      expect(text(pill)).not.toContain("%");
+      expect(text(pill)).not.toContain("șanse de ploaie");
+    }
   });
 
   it("is on the series card for its next date, in its route's row, and on neither card without a forecast", async () => {

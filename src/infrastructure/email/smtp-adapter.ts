@@ -41,7 +41,11 @@ export type SmtpMessage = {
    * reason `mailgun-adapter.ts` does the same for the outbox's copies (§244).
    */
   bcc?: readonly string[];
-  replyTo: SmtpAddress;
+  /**
+   * Where "Reply" goes: the visitor, on the contact form; the address somebody typed for an answer,
+   * on «Spune-ne ceva» (§676) — and none when they left none, so nobody is answered by mistake.
+   */
+  replyTo?: SmtpAddress;
   subject: string;
   text: string;
   html: string;
@@ -134,7 +138,7 @@ export function createSmtpTransport(config: SmtpConfig): SmtpTransport {
           to: [...message.to],
           ...(message.cc && message.cc.length > 0 ? { cc: [...message.cc] } : {}),
           ...(message.bcc && message.bcc.length > 0 ? { bcc: [...message.bcc] } : {}),
-          replyTo: message.replyTo,
+          ...(message.replyTo ? { replyTo: message.replyTo } : {}),
           subject: message.subject,
           text: message.text,
           html: message.html,
