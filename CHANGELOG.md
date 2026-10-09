@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.82-2026-10-09
+
+- **Members' race numbers print first, on their own pages** — the bibs PDF draws the verified members' bibs before everybody else's, never on a page with an ordinary bib, and the bibs page adds «Doar numerele membrilor (PDF)» and «Fără numerele membrilor (PDF)» so the club can print them on other card; a sheet without a member's bib is unchanged. §681.
 ## BR-V2.81-2026-10-09
 
 - **«Evenimentul» filters as you type** — on «Cum a fost» and «O reclamație», a long event list becomes a search box that finds an event by part of its title or its day, with or without diacritics, and Enter picks the highlighted row — the first event found, or the one already chosen while it still matches; «Altceva / în general» heads the list while the box is empty or nothing matches, and «Toate» / «Curse» / «Alergări de grup» chips narrow it; without JavaScript, or with eight rows or fewer, the plain list stays. §680.
