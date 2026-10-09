@@ -7,7 +7,7 @@ import { HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
 
 /**
  * BR-REQ-070-04, `DECISIONS.md` §676 — «Spune-ne ceva», the anonymous wizard, through the browser at
- * 320px and on a desktop, against the production build: the door under the newsletter on `/contact`;
+ * 320px and on a desktop, against the production build: the door above the newsletter on `/contact` (the newsletter last, §679);
  * step 1's choice, a `GET` that puts the branch in `?tip=`; the safety form's reader line naming the
  * first name the club set; «Cum a fost» preselecting the event a link names (and «Altceva» for one it
  * does not publish); an empty post coming back on `#feedback-errors` with what was typed kept from
@@ -168,10 +168,17 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await ensureNoticeDescribesTheForms(page);
       await setBranches(page, { howItWent: true, safety: true });
 
-      // The door, under the newsletter, a thumb's height, leading to the wizard.
+      // The door, above the newsletter (§679; the owner: «the newsletter must be all the way to the bottom
+      // now»), a thumb's height, leading to the wizard.
       await page.goto("/ro/contact", { waitUntil: "networkidle" });
       const door = page.getByTestId("feedback-door");
       await expect(page.getByTestId("feedback-section")).toBeVisible();
+      const newsletterSection = page.getByTestId("newsletter-section");
+      if ((await newsletterSection.count()) > 0) {
+        const doorBox = await page.getByTestId("feedback-section").boundingBox();
+        const newsletterBox = await newsletterSection.boundingBox();
+        expect(newsletterBox!.y).toBeGreaterThanOrEqual(doorBox!.y + doorBox!.height);
+      }
       expect((await door.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
       await noSidewaysScroll(page);
       await door.click();
@@ -185,7 +192,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await expect(choose.locator('input[name="tip"]')).toHaveCount(2);
       const safetyCard = page.getByTestId("feedback-choice-siguranta");
       await expect(page.getByTestId("feedback-choice-cum-a-fost").locator('input[name="tip"]')).toBeChecked();
-      await expect(safetyCard).toContainText("Siguranță pentru femei");
+      await expect(safetyCard).toContainText("Girl Zone");
       await expect(safetyCard).toContainText("provocări în plus");
       for (const [slug, card] of [["cum-a-fost", page.getByTestId("feedback-choice-cum-a-fost")], ["siguranta", safetyCard]] as const) {
         await expect(card.getByTestId(`feedback-glyph-${slug}`)).toBeVisible();
@@ -200,14 +207,17 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await expect(safetyCard).toHaveCSS("outline-style", "solid");
       await expect(safetyCard).toHaveCSS("outline-width", "2px");
       // The radio is named by the title alone; the hint describes it.
-      await expect(safetyCard.locator('input[name="tip"]')).toHaveAccessibleName("Siguranță pentru femei");
+      await expect(safetyCard.locator('input[name="tip"]')).toHaveAccessibleName("Girl Zone");
+      // An English name on the Romanian page, said as English (§679).
+      await expect(safetyCard.getByText("Girl Zone")).toHaveAttribute("lang", "en");
       // The whole card is the target: a press on its words chooses it.
-      await safetyCard.getByText("Siguranță pentru femei").click();
+      await safetyCard.getByText("Girl Zone").click();
       await expect(safetyCard.locator('input[name="tip"]')).toBeChecked();
       await choose.getByRole("button", { name: "Continuă" }).click();
       await expect(page).toHaveURL(/\/ro\/contact\/spune-ne\?tip=siguranta$/);
       await expect(page.getByTestId("feedback-glyph-siguranta")).toBeVisible();
-      await expect(page.getByRole("heading", { level: 2, name: "Siguranță pentru femei" })).toBeVisible();
+      await expect(page.getByRole("heading", { level: 2, name: "Girl Zone" })).toBeVisible();
+      await expect(page.getByRole("heading", { level: 2, name: "Girl Zone" })).toHaveAttribute("lang", "en");
       // Above the form, in the page's language: who reads it, by the first name the club set.
       // The club may hear a named report too (§678) — the contact form reaches it on this deployment — so the line says the sender chooses then.
       await expect(page.getByTestId("feedback-safety-reader")).toHaveText(
@@ -224,6 +234,24 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await expect(safetyForm.locator('[name="contact"]')).toBeHidden();
       await expect(identity).toContainText("Cum vrei să trimiți?");
       await expect(identity).toContainText("Nu ne spui cine ești.");
+      // «We love icons» (§679): the incognito hat and glasses before «Anonim», a person before the named
+      // mode — decoration, so the radios keep their words as their names (above), and a thumb's row each.
+      // MUI writes a glyph's own test id («IncognitoIcon», «PersonOutlinedIcon») outside a production
+      // build only, so the unit test reads those and this one the label's own span.
+      for (const [value, words] of [["anonymous", "Anonim"], ["named", "Cu nume și prenume"]] as const) {
+        const label = identity.getByTestId(`feedback-identity-${value}`);
+        await expect(label).toHaveText(words);
+        const glyph = label.locator("svg");
+        await expect(glyph).toHaveCount(1);
+        await expect(glyph).toBeVisible();
+        await expect(glyph).toHaveAttribute("aria-hidden", "true");
+        const glyphBox = await glyph.boundingBox();
+        expect(glyphBox?.width ?? 0).toBeGreaterThanOrEqual(23);
+        // Before the words: the glyph starts the label.
+        expect(glyphBox!.x).toBeLessThanOrEqual((await label.boundingBox())!.x + 1);
+        const row = identity.locator("label", { has: page.getByRole("radio", { name: words }) });
+        expect((await row.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+      }
       await identity.getByRole("radio", { name: "Cu nume și prenume" }).check();
       await expect(safetyForm.locator('[name="name"]')).toBeVisible();
       await expect(safetyForm.locator('[name="name"]')).toHaveAttribute("maxlength", "80");

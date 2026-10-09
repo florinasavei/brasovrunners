@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.79-2026-10-09 -->
+<!-- PROJECT_BASELINE: BR-V2.80-2026-10-09 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.79-2026-10-09`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.80-2026-10-09`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -24581,3 +24581,31 @@ Step 1 of the wizard (§676) was four plain radios with a grey hint under each �
 **Refused.** A free choice of recipient or more readers: the owner named two, the club's mailbox and the designated person, and both are the club's own settings.
 
 Baseline `BR-V2.79-2026-10-09`.
+
+## 679. The safety form is «Girl Zone», with a flower; «Anonim» wears the incognito hat; the newsletter goes last on Contact (amending §676, §678)
+
+**The owner, 2026-10-09, after BR-V2.79 shipped:** «Instead of "siguranță pentru femei" call it "girl zone" and use a differ icon, with a flower».
+
+§678 refused «Girl Zone» earlier the same day (an English name on a Romanian page, and a playful one for a serious channel); the owner has now asked for it twice, so the owner's decision overrides that refusal.
+
+**Decision.**
+
+- **The name.** The safety branch of «Spune-ne ceva» is called «Girl Zone» in both catalogues: it is a name, so it is not translated, and the English page uses it too (`Tell.branches.safety.label`). The step-1 card's title, the step-2 heading, the backoffice switch in «Pagini» → «Contact» → «Spune-ne ceva» («Girl Zone (confidențial)» / "Girl Zone (confidential)"), the backoffice's line on the roads (`Admin.emails.feedbackForms.roads`), the safety email's footer («— Trimis prin formularul confidențial „Girl Zone” al site-ului. Site-ul nu a păstrat nimic din el.», `feedback/domain/branches.ts`) and `SETUP.md`'s «Spune-ne ceva» procedure all say «Girl Zone».
+- **What does not move.** The card's subtitle stays exactly as §678 wrote it — «Știm că alergatul, ca femeie, vine cu provocări în plus. Dacă ceva te-a făcut să nu te simți în siguranță la noi, spune-ne — confidențial.» / "We know running as a woman comes with extra challenges. If something made you feel unsafe with us, tell us — confidentially." — so the card still says whom the form is for. The door's sentence on `/contact` when this form is the only one offered (`Tell.door.introSafety`) stays as it is. The email's subject stays neutral and unchanged, `SAFETY_SUBJECT`, «Mesaj confidențial de pe site»: a subject naming the form is what §676 refused, and the owner asked about the name on the page. Code identifiers do not change either: the branch `safety`, the slug `siguranta`, the setting key.
+- **Said as English.** «Girl Zone» is an English name on the Romanian page too, so where the page's language is not English its card title on step 1 and its heading on step 2 carry `lang="en"` and a screen reader says it as English (`FEEDBACK_BRANCH_LABEL_LANG`, `branchLabelLang` in `feedback/ui/branch-glyph.ts`); the English page needs none, and no other branch carries a `lang`.
+- **The flower.** The branch's glyph in `FEEDBACK_BRANCH_GLYPH` (`src/modules/feedback/ui/branch-glyph.ts`) becomes `LocalFloristOutlined` (`@mui/icons-material/LocalFloristOutlined`, one file per glyph, §90) instead of §678's heart outline (`FavoriteBorder`); it shows on the step-1 card and beside the step-2 title, which read the same map. The tile's tint (the secondary colour) and everything else in the wizard are unchanged. Still decoration (`aria-hidden`): the words carry the meaning.
+- **The privacy notice.** The template's section 5 (`legal-documents/templates/privacy-notice.ts`) names the form «Girl Zone» in its three mentions in each language — „Girl Zone” / “Girl Zone” — every other word and both markers, `{{feedbackForms}}` and `{{feedbackFormsNamed}}`, unchanged. The template moves, so the club is told once (§639) and approves a new notice that says «Girl Zone»; until then the notice in force keeps §678's words, and nothing gated on a marker changes.
+
+**SPECS.** BR-REQ-070-04's criteria 33, 34 and 43 said the heart outline and «Siguranță pentru femei» / "Safety for women"; the new criterion amends the three by name, the way criterion 35 amended 30, so the requirement does not hold two answers to one question.
+
+**Refused.** Renaming the code's identifiers (`safety`, `siguranta`, `SAFETY_SUBJECT`): an address already shared, a stored setting and the log's word would move for a label change.
+
+**The owner, the same day, after this decision's first version:** «For "anymoymoys" use that incognito icons as well», «We love icons» and «And the newsletter must be all the way to the bottom now».
+
+- **The incognito glyph.** In «Cum vrei să trimiți?», the first box of every «Spune-ne ceva» form (§678), «Anonim» now wears the incognito hat and glasses and «Cu nume și prenume» a person (`PersonOutlined`, `@mui/icons-material/PersonOutlined`, one file import, §90). The options are radios with a sentence under each, not cards, so each glyph is 24 pixels, drawn inside the radio's label before its words, `aria-hidden`: the label's words stay the radio's name, the whole row stays its tap target, and nothing changes at 320 pixels. «Cine să afle?»'s answers take no glyph.
+- **Where the hat comes from.** The brief named Google's Material Symbols «detective» glyph. Google's icon CDN answers, but has no glyph by that name, nor «incognito», and neither has the outlined set of `@material-symbols/svg-400` 0.48.0; so `src/modules/feedback/ui/IncognitoIcon.tsx` draws the hat and glasses by hand, as one path on the 24-unit grid in the Symbols' outlined manner (a solid hat with its brim, two lenses as rings joined by a bridge), through `createSvgIcon` from `@mui/material/SvgIcon` as `weather/ui/RainyIcon.tsx` does (§677) — it takes `fontSize` and `color` like every Material glyph, and its test id is «IncognitoIcon». Its comment says it was drawn here and why; nothing of Google's is copied.
+- **The newsletter last.** On `/contact` the order is now the contact form (or the club's address where there is none), then «Spune-ne ceva», then the newsletter's box: «Spune-ne ceva» moves up to where the newsletter was, and its door sits **above the newsletter**, where §676 put it under the newsletter. The newsletter's box is the page's last section; only the club's identity line (§565, "the page's last line") stays under it, because that line names who is written to and closes every state of the page. Every anchor keeps working — `#spune-ne`, `#abonare` and the pop-up's and the unsubscribe fold's ids, which every redirect and scroll target names — because they are ids, not positions. The backoffice's two sentences that placed the forms (`Admin.tasks.items.feedbackNotice.how.1`, the «Spune-ne ceva» panel's intro) and `SETUP.md`'s «Spune-ne ceva» procedure now say «above the newsletter»; a source-order test (`tests/unit/newsletter/contact-page-order.test.ts`) keeps the newsletter last.
+
+**Refused.** Moving the club's identity line above the newsletter so that the newsletter is the very last thing on the page: §565 made that line the page's last on purpose, and the owner asked about the newsletter's place among the sections, not about the legal line.
+
+Baseline `BR-V2.80-2026-10-09`.

@@ -66,7 +66,7 @@ describe("§676 the branches a visitor is offered", () => {
     expect(offeredBranches(ON, false, false)).toEqual([]);
   });
 
-  it("says the door's sentence from what is offered: the safety form's own with «Siguranță pentru femei» alone, the three forms' otherwise", () => {
+  it("says the door's sentence from what is offered: the safety form's own with «Girl Zone» alone, the three forms' otherwise", () => {
     expect(doorIntroKey(offeredBranches(ON, true, false))).toBe("door.introSafety");
     expect(doorIntroKey(["safety"])).toBe("door.introSafety");
     expect(doorIntroKey(offeredBranches(ON, true, true))).toBe("door.intro");
@@ -237,6 +237,15 @@ describe("§678 «Cine să afle?»: the club or the safety branch's person", () 
     // Her own form needs no such line.
     const safety = parse({ branch: "safety", message: "Cineva m-a urmărit.", whereWhen: "", contact: "" });
     expect(composeFeedbackEmail(safety, { eventTitle: null, toPerson: true }, "production").text).not.toContain("Din formularul");
+  });
+
+  it("§679 the safety email's footer names «Girl Zone»; its subject stays neutral", () => {
+    const safety = parse({ branch: "safety", message: "Cineva m-a urmărit.", whereWhen: "", contact: "" });
+    const email = composeFeedbackEmail(safety, { eventTitle: null }, "production");
+    expect(SAFETY_SUBJECT).toBe("Mesaj confidențial de pe site");
+    expect(email.subject).toBe(SAFETY_SUBJECT);
+    expect(email.text).toContain("— Trimis prin formularul confidențial „Girl Zone” al site-ului. Site-ul nu a păstrat nimic din el.");
+    expect(email.subject).not.toContain("Girl Zone");
   });
 });
 

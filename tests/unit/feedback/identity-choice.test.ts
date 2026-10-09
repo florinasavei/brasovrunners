@@ -1,4 +1,5 @@
 import { createTranslator } from "next-intl";
+import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import type { FeedbackAudience, FeedbackField } from "@/modules/feedback/domain/branches";
@@ -20,6 +21,7 @@ vi.mock("next-intl/server", () => ({
 }));
 
 const { default: IdentityChoice } = await import("@/modules/feedback/ui/IdentityChoice");
+const { default: IncognitoIcon } = await import("@/modules/feedback/ui/IncognitoIcon");
 
 type Options = { wayBack?: "email" | "contact"; named?: boolean; audiences?: FeedbackAudience[]; audience?: FeedbackAudience; invalid?: FeedbackField[]; inLocale?: "ro" | "en" };
 
@@ -50,6 +52,35 @@ describe("BR-REQ-070-04 «Cum vrei să trimiți?» (§678)", () => {
     for (const words of ["Cum vrei să trimiți?", "Anonim", "Nu ne spui cine ești.", "Cu nume și prenume", "Ca să te putem căuta și să-ți răspundem."]) expect(html).toContain(words);
     const english = await render({ inLocale: "en" });
     for (const words of ["How do you want to send it?", "Anonymous", "You do not tell us who you are.", "With my name", "So we can find you and answer."]) expect(english).toContain(words);
+  });
+
+  it("draws the incognito hat and glasses before «Anonim» and a person before «Cu nume și prenume», both `aria-hidden`, inside the radio's label (§679)", async () => {
+    for (const inLocale of ["ro", "en"] as const) {
+      const html = await render({ inLocale });
+      const labels = [...html.matchAll(/<label[\s\S]*?<\/label>/g)].map(([label]) => label);
+      const anonymous = labels.find((label) => label.includes('value="anonymous"')) ?? "";
+      const named = labels.find((label) => label.includes('value="named"')) ?? "";
+      expect(anonymous).toMatch(/<svg[^>]*aria-hidden="true"[^>]*data-testid="IncognitoIcon"|<svg[^>]*data-testid="IncognitoIcon"[^>]*aria-hidden="true"/);
+      expect(named).toMatch(/<svg[^>]*aria-hidden="true"[^>]*data-testid="PersonOutlinedIcon"|<svg[^>]*data-testid="PersonOutlinedIcon"[^>]*aria-hidden="true"/);
+      // The glyph comes before the words, never after.
+      expect(anonymous.indexOf("IncognitoIcon")).toBeLessThan(anonymous.indexOf(inLocale === "ro" ? "Anonim" : "Anonymous"));
+      expect(named.indexOf("PersonOutlinedIcon")).toBeLessThan(named.indexOf(inLocale === "ro" ? "Cu nume și prenume" : "With my name"));
+      // The span the browser test finds them by (MUI drops its own test ids from a production build).
+      expect(anonymous).toContain('data-testid="feedback-identity-anonymous"');
+      expect(named).toContain('data-testid="feedback-identity-named"');
+      // One glyph each: none on «Cine să afle?»'s answers.
+      expect(html.match(/data-testid="IncognitoIcon"/g)).toHaveLength(1);
+      expect(html.match(/data-testid="PersonOutlinedIcon"/g)).toHaveLength(1);
+    }
+  });
+
+  it("draws «IncognitoIcon» as one path on the 24-unit grid, taking fontSize and colour like every Material glyph (§679)", async () => {
+    const html = renderToStaticMarkup(createElement(IncognitoIcon, { fontSize: "small", color: "primary" }));
+    expect(html).toContain('viewBox="0 0 24 24"');
+    expect(html).toContain('data-testid="IncognitoIcon"');
+    expect(html).toContain("MuiSvgIcon-fontSizeSmall");
+    expect(html).toContain("MuiSvgIcon-colorPrimary");
+    expect(html.match(/<path\b/g)).toHaveLength(1);
   });
 
   it("checks «Cu nume și prenume» for a refused named post", async () => {
