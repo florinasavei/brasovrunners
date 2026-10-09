@@ -77,10 +77,11 @@ function haystack(option: PickerOption): string {
  *
  * - **«Altceva / în general» is first while the box is empty, or while nothing typed matches an
  *   event**: it is the answer for a message about no event, and it is never out of reach. **While
- *   what was typed matches an event, it steps out of the list**, so the first match is the row the
- *   keyboard lands on and Enter picks the event searched for — MUI's combobox highlights the value
- *   chosen whenever it is among the rows, and with «Altceva» always there (the value by default)
- *   «crosul» + Enter picked «Altceva» (the review of 2026-10-09). Cleared, the box shows it again.
+ *   what was typed matches an event, it steps out of the list**, so Enter picks the highlighted row:
+ *   the first event found, or — when an event is already chosen and the words still match it — that
+ *   one, which MUI's combobox keeps highlighted whenever the value chosen is among the rows. With
+ *   «Altceva» always there (the value by default) that same highlight stayed on it, and «crosul» +
+ *   Enter picked «Altceva» (the review of 2026-10-09). Cleared, the box shows it again.
  * - **Every word typed must be found**, anywhere in the title or the day, without its accents or
  *   its case: «crosul» finds «Crosul», «brasov» finds «Brașov», «happy oct» finds the October
  *   Mondays of «Happy Monday».

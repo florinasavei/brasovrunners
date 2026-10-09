@@ -29,6 +29,11 @@ import { HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
  * expires the cached notice. That leaves one more approved version behind (§46): run it on a local
  * or CI database only.
  *
+ * **The picker's events.** «Evenimentul» becomes the filtering island only over eight rows (§NNN), and
+ * CI seeds four events, so the spec publishes its own — four races and four group runs held some
+ * six weeks ago, each title carrying the run's mark — through the backoffice's bulk verb, and
+ * deletes them the same way at the end (`publishPickerEvents`, `removePickerEvents`).
+ *
  * The messages leave by the capture (`APP_ENV=local`/`test`: `CONTACT_FORM_MODE=capture`), so no
  * socket is opened; each project sends one «Cum a fost», well under the branch's thirty an hour.
  */
@@ -147,42 +152,130 @@ async function setBranches(page: Page, on: Branches): Promise<void> {
   await expect(page).toHaveURL(/saved=feedbackForms/, { timeout: 30_000 });
 }
 
+/** How many races and how many group runs the spec publishes for the picker: eight events and «Altceva», over the island's threshold. */
+const PICKER_EACH = 4;
+
+/** The picker's own events, by the mark every title of them carries. */
+type PickerFixture = { mark: string; races: string[]; runs: string[] };
+
 /**
- * «Evenimentul» through the filtering island (§NNN), when the picker has it — over eight rows: «Altceva»
- * first, a thumb's row each, the list below the box, «Niciun eveniment găsit» for a word nothing has,
- * the chips when both kinds are there, and an event found by part of its title typed without its
- * diacritics — picked with Enter, the first match highlighted and «Altceva» out of the list while
- * something matches, then by a tap. `firstSlug` is the first event the server offers, the row under
- * «Altceva». Returns the title picked — or null when the list is short and the native select is all
- * there is, which the form posts as before.
+ * The picker's own events (§NNN): four races and four group runs, so «Evenimentul» has nine rows
+ * («Altceva» counted) — over the island's eight — and both kinds for the chips, whatever else the
+ * database holds; CI seeds four events, too few for the island. Written to the table as drafts (the
+ * setup, not the subject), every title carrying `mark` so a rerun or the other project never meets
+ * them, then published through the backoffice's «Publică cele bifate» — which expires the public
+ * pages' cached copy (§333) as every publication does: rows published behind the server's back
+ * would never reach a picker the server had already read (`listing-cards.spec.ts` says the same).
+ * Held 41 to 48 days ago: inside the picker's 90 days back, never among the listing's dates to
+ * come (a phone folds those after four cards, §78), and older than the past run another spec makes.
  */
-async function pickEventByTyping(page: Page, firstSlug: string | undefined): Promise<string | null> {
-  const island = page.getByTestId("feedback-event-filter");
-  if ((await island.count()) === 0) {
-    await expect(page.locator('select[name="event"]')).toHaveCount(1);
-    return null;
+async function publishPickerEvents(page: Page, mark: string): Promise<PickerFixture> {
+  const fixture: PickerFixture = { mark, races: [], runs: [] };
+  await withDatabase(async (client) => {
+    for (let index = 0; index < PICKER_EACH * 2; index += 1) {
+      const race = index % 2 === 0;
+      const number = Math.floor(index / 2) + 1;
+      const title = race ? `Cros de probă ${mark} ${number}` : `Tură de grup ${mark} ${number}`;
+      const slug = `${race ? "cros" : "tura"}-${mark}-${number}`;
+      const { rows } = await client.query<{ id: string }>(
+        `INSERT INTO events (type, starts_at, location_name)
+         VALUES ($1, date_trunc('day', now()) - make_interval(days => $2) + interval '7 hours', 'Parcul Tractorul') RETURNING id`,
+        [race ? "RACE" : "GROUP_RUN", 41 + index],
+      );
+      await client.query(
+        `INSERT INTO event_translations (event_id, locale, slug, title, excerpt) VALUES
+         ($1, 'ro', $2, $3, 'Pentru lista «Evenimentul».'), ($1, 'en', $4, $3, 'For the «Event» list.')`,
+        [rows[0].id, `${slug}-ro`, title, `${slug}-en`],
+      );
+      (race ? fixture.races : fixture.runs).push(title);
+    }
+  });
+  await tickMarkedEvents(page, mark);
+  await page.locator("#main").getByRole("button", { name: "Publică cele bifate" }).click();
+  await confirmDialog(page, "Publici evenimentele bifate?");
+  await expect(page.locator("#admin-alert")).toContainText(`${PICKER_EACH * 2} evenimente publicate`, { timeout: 30_000 });
+  return fixture;
+}
+
+/** The backoffice's events list, searched for `mark` in every state, with every row it finds ticked. */
+async function tickMarkedEvents(page: Page, mark: string): Promise<number> {
+  await page.goto(`/ro/admin?state=ALL&q=${mark}`);
+  // The row's checkbox is MUI's: a tick before hydration is reverted when React takes over.
+  await hydrated(page);
+  const main = page.locator("#main");
+  const found = await main.getByRole("link", { name: new RegExp(mark) }).filter({ visible: true }).count();
+  if (found === 0) return 0;
+  await main.getByRole("checkbox", { name: "Toate", exact: true }).check();
+  await expect(main.getByText(`Bifate: ${found}`)).toBeVisible();
+  return found;
+}
+
+/**
+ * The picker's events removed the way they were published — through the backoffice, «Șterge cele
+ * bifate», so the cached copy expires with them and no picker or calendar after this spec shows an
+ * event that is gone. Whatever the backoffice did not remove goes straight from the table.
+ */
+async function removePickerEvents(page: Page, mark: string): Promise<void> {
+  try {
+    if (!page.isClosed() && (await tickMarkedEvents(page, mark)) > 0) {
+      await page.locator("#main").getByRole("button", { name: "Șterge cele bifate" }).click();
+      await confirmDialog(page, "Ștergi evenimentele bifate?");
+      await expect(page.locator("#admin-alert")).toContainText("evenimente șterse", { timeout: 30_000 });
+    }
+  } catch (error) {
+    console.error("[feedback.spec] could not delete the picker's events in the backoffice", error);
   }
+  await withDatabase(async (client) => {
+    const { rows } = await client.query<{ event_id: string }>("SELECT DISTINCT event_id FROM event_translations WHERE slug LIKE $1", [`%-${mark}-%`]);
+    const ids = rows.map((row) => row.event_id);
+    if (ids.length > 0) await client.query("DELETE FROM events WHERE id = ANY($1::uuid[])", [ids]);
+  });
+}
+
+/**
+ * «Evenimentul» through the filtering island (§NNN) — over eight rows, which `publishPickerEvents`
+ * makes sure of: «Altceva» first, a thumb's row each, the list below the box, «Niciun eveniment
+ * găsit» for a word nothing has, the chips narrowing to the spec's own races and group runs, and an
+ * event found by part of its title typed without its diacritics — picked with Enter, the first match
+ * highlighted and «Altceva» out of the list while something matches, then by a tap. `firstSlug` is
+ * the first event the server offers, the row under «Altceva». Returns the title picked.
+ */
+async function pickEventByTyping(page: Page, firstSlug: string | undefined, fixture: PickerFixture): Promise<string> {
+  const island = page.getByTestId("feedback-event-filter");
+  await expect(island).toHaveCount(1);
   // The native select is gone from the form; the island's hidden input is the one `event` posted.
   await expect(page.locator('select[name="event"]')).toHaveCount(0);
   await expect(page.locator('[name="event"]')).toHaveCount(1);
 
-  const chips = island.getByRole("group", { name: "Arată" });
-  if ((await chips.count()) > 0) {
-    for (const words of ["Toate", "Curse", "Alergări de grup"]) {
-      const chip = chips.getByRole("button", { name: words });
-      expect((await chip.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
-    }
-    await chips.getByRole("button", { name: "Curse" }).click();
-    await expect(chips.getByRole("button", { name: "Curse" })).toHaveAttribute("aria-pressed", "true");
-    await chips.getByRole("button", { name: "Toate" }).click();
-    await expect(chips.getByRole("button", { name: "Toate" })).toHaveAttribute("aria-pressed", "true");
-  }
-
   const box = island.getByRole("combobox", { name: "Evenimentul" });
-  await box.click();
   const listbox = page.getByRole("listbox");
-  await expect(listbox).toBeVisible();
   const options = listbox.getByRole("option");
+  const titles = listbox.getByTestId("feedback-event-option-title");
+
+  // Both kinds are among the events, so the chips are there, a thumb's height each; each narrows the
+  // list to its kind — the spec's own events, found by their mark — and «Toate» brings every kind back.
+  const chips = island.getByRole("group", { name: "Arată" });
+  await expect(chips).toHaveCount(1);
+  for (const words of ["Toate", "Curse", "Alergări de grup"]) {
+    expect((await chips.getByRole("button", { name: words }).boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+  }
+  for (const [words, shown] of [
+    ["Curse", fixture.races],
+    ["Alergări de grup", fixture.runs],
+    ["Toate", [...fixture.races, ...fixture.runs]],
+  ] as const) {
+    await chips.getByRole("button", { name: words }).click();
+    await expect(chips.getByRole("button", { name: words })).toHaveAttribute("aria-pressed", "true");
+    await box.fill(fixture.mark);
+    await expect(titles).toHaveCount(shown.length);
+    expect((await titles.allInnerTexts()).map((text) => text.trim()).sort()).toEqual([...shown].sort());
+  }
+  await box.fill("");
+  await box.press("Escape");
+  await expect(listbox).toHaveCount(0);
+
+  await box.click();
+  await expect(listbox).toBeVisible();
   await expect(options.first()).toHaveText("Altceva / în general");
   // Below the box, and a thumb's row each.
   const boxBottom = ((await box.boundingBox())?.y ?? 0) + ((await box.boundingBox())?.height ?? 0);
@@ -202,7 +295,7 @@ async function pickEventByTyping(page: Page, firstSlug: string | undefined): Pro
     .toLowerCase()
     .slice(0, Math.max(3, Math.min(title.length, 8)))
     .trim();
-  // Typed and Enter: the first match is the row the keyboard is on, never «Altceva», whatever was chosen before.
+  // Typed and Enter, with «Altceva» chosen: the first match is the highlighted row, and «Altceva» is out of the list.
   await box.fill(typed);
   await expect(options.first()).toContainText(title);
   await expect(listbox.getByRole("option", { name: "Altceva / în general" })).toHaveCount(0);
@@ -239,11 +332,15 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
     // Long, because the second project waits on the lock for the first.
     test.setTimeout(420_000);
     const tag = `${test.info().project.name}-${Date.now().toString(36)}`;
+    // The picker's events' mark: one word, so the backoffice's search finds them by it and nothing else.
+    const mark = `picker${test.info().project.name}${Date.now().toString(36)}`;
     const lock = new pg.Client({ connectionString: databaseUrl() });
     await lock.connect();
     await lock.query("SELECT pg_advisory_lock($1)", [LOCK_KEY]);
     try {
       await signIn(page, "Dev Superadministrator");
+      // Before any page reads the picker: enough events for the filtering island, of both kinds.
+      const pickerFixture = await publishPickerEvents(page, mark);
       await ensureNoticeDescribesTheForms(page);
       await setBranches(page, { howItWent: true, safety: true });
 
@@ -359,13 +456,13 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       const nativeSelect = /<select[^>]*name="event"[^>]*>([\s\S]*?)<\/select>/.exec(served);
       expect(nativeSelect, "the server draws the native select, JavaScript or not").not.toBeNull();
       const offered = [...nativeSelect![1].matchAll(/<option[^>]*value="([^"]*)"/g)].map(([, value]) => value).filter(Boolean);
-      if (offered.length > 0) {
-        await page.goto(`/ro/contact/spune-ne?tip=cum-a-fost&eveniment=${offered[0]}`);
-        await expect(posted).toHaveValue(offered[0]);
-        await hydrated(page);
-        await expect(posted).toHaveCount(1);
-        await expect(posted).toHaveValue(offered[0]);
-      }
+      // The spec's own eight among them, whatever else the database holds.
+      expect(offered.filter((slug) => slug.includes(`-${mark}-`))).toHaveLength(PICKER_EACH * 2);
+      await page.goto(`/ro/contact/spune-ne?tip=cum-a-fost&eveniment=${offered[0]}`);
+      await expect(posted).toHaveValue(offered[0]);
+      await hydrated(page);
+      await expect(posted).toHaveCount(1);
+      await expect(posted).toHaveValue(offered[0]);
 
       // An empty message: the browser lets spaces through, the server refuses them, and the form comes
       // back on its summary, on the same branch, with what was typed kept from the sealed draft.
@@ -395,9 +492,9 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await noSidewaysScroll(page);
 
       // The event, picked by typing part of its title (§NNN; the owner: «I need to be able the filter
-      // the events here») — when the picker is long enough for the filtering island, over eight rows.
+      // the events here») — through the filtering island, which the picker's own events make sure of.
       await hydrated(page);
-      const pickedTitle = await pickEventByTyping(page, offered[0]);
+      const pickedTitle = await pickEventByTyping(page, offered[0], pickerFixture);
 
       // Corrected and sent: the sent page, on the branch's slug.
       await page.locator('[name="message"]').fill("Foarte frumos, mulțumim.");
@@ -406,12 +503,10 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await expect(page).toHaveURL(/\/ro\/contact\/spune-ne\?sent=cum-a-fost$/, { timeout: 30_000 });
       await expect(page.getByTestId("feedback-sent")).toContainText("Mesajul a plecat");
       // The club's message names the event picked: its subject is «Cum a fost: <title>», as `/devs` shows the capture.
-      if (pickedTitle) {
-        await expect(async () => {
-          await page.goto("/ro/devs?panel=email");
-          await expect(page.locator("main")).toContainText(`Cum a fost: ${pickedTitle}`, { timeout: 2_000 });
-        }).toPass({ timeout: 45_000 });
-      }
+      await expect(async () => {
+        await page.goto("/ro/devs?panel=email");
+        await expect(page.locator("main")).toContainText(`Cum a fost: ${pickedTitle}`, { timeout: 2_000 });
+      }).toPass({ timeout: 45_000 });
 
       // One branch on: no choice of one — its form at once, on /ro and on /en.
       await setBranches(page, { suggestion: true });
@@ -432,6 +527,12 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
         if (!page.isClosed()) await setBranches(page, {});
       } catch (error) {
         console.error("[feedback.spec] could not switch the branches off again", error);
+      }
+      // The picker's events gone again, whether or not the test reached its end.
+      try {
+        await removePickerEvents(page, mark);
+      } catch (error) {
+        console.error("[feedback.spec] could not remove the picker's events", error);
       }
       await lock.query("SELECT pg_advisory_unlock($1)", [LOCK_KEY]);
       await lock.end();
