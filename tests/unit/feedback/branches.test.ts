@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  ANONYMOUS_NAME_LINE,
+  audiencesFor,
+  BRANCH_FIELDS,
+  chosenAudience,
+  defaultAudience,
+  FEEDBACK_NAME_MAX,
+  FEEDBACK_NAME_MIN,
+  namedModeFor,
   BRANCH_SLUG,
   composeFeedbackEmail,
   DEFAULT_FEEDBACK_SETTINGS,
@@ -16,11 +24,12 @@ import {
   readDay,
   readFeedbackQuery,
   SAFETY_SUBJECT,
+  sentReader,
   wizardStep,
 } from "@/modules/feedback/domain/branches";
-import { describesFeedbackForms } from "@/modules/legal-documents/domain/merge-fields";
+import { describesFeedbackForms, describesFeedbackFormsNamed } from "@/modules/legal-documents/domain/merge-fields";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
-import { feedbackFormsClause } from "@/modules/feedback/notice-words";
+import { feedbackFormsClause, feedbackFormsMergeValues, feedbackFormsNamedClause } from "@/modules/feedback/notice-words";
 
 /**
  * BR-REQ-070-04, `DECISIONS.md` §676 — «Spune-ne ceva»'s rules, pure: which branches are offered,
@@ -57,7 +66,7 @@ describe("§676 the branches a visitor is offered", () => {
     expect(offeredBranches(ON, false, false)).toEqual([]);
   });
 
-  it("says the door's sentence from what is offered: the safety form's own with «Siguranță» alone, the three forms' otherwise", () => {
+  it("says the door's sentence from what is offered: the safety form's own with «Siguranță pentru femei» alone, the three forms' otherwise", () => {
     expect(doorIntroKey(offeredBranches(ON, true, false))).toBe("door.introSafety");
     expect(doorIntroKey(["safety"])).toBe("door.introSafety");
     expect(doorIntroKey(offeredBranches(ON, true, true))).toBe("door.intro");
@@ -103,7 +112,7 @@ describe("§676 the forms", () => {
   it("requires what happened, keeps it to 2 000 characters, and takes an address only when it is one", () => {
     expect(feedbackFields.safeParse({ locale: "ro", branch: "suggestion", message: "", email: "" }).success).toBe(false);
     expect(feedbackFields.safeParse({ locale: "ro", branch: "suggestion", message: "x".repeat(2001), email: "" }).success).toBe(false);
-    expect(feedbackFields.safeParse({ locale: "ro", branch: "suggestion", message: "Mai multe alergări seara.", email: "not an address" }).success).toBe(false);
+    expect(feedbackFields.safeParse({ locale: "ro", branch: "suggestion", identity: "named", name: "Ana Pop", message: "Mai multe alergări seara.", email: "not an address" }).success).toBe(false);
     expect(parse({ branch: "suggestion", message: "Mai multe alergări seara.", email: "" })).toMatchObject({ email: null });
   });
 
@@ -111,6 +120,123 @@ describe("§676 the forms", () => {
     const input = parse({ branch: "howItWent", event: "", date: "", rating: "4", message: "Bine.", reasons: ["moved", "time"], reasonOther: "", email: "" });
     expect(input).toMatchObject({ rating: 4, reasons: ["time", "moved"], event: null, date: null });
     expect(feedbackFields.safeParse({ locale: "ro", branch: "howItWent", event: "", date: "", rating: "6", message: "x", reasons: [], reasonOther: "", email: "" }).success).toBe(false);
+  });
+});
+
+describe("§678 anonymous, or with one's name", () => {
+  it("every branch's form starts with the name and its way back, inside the choice at the very top", () => {
+    for (const [branch, fields] of Object.entries(BRANCH_FIELDS)) {
+      expect(fields[0], branch).toBe("name");
+      expect(fields[1], branch).toBe(branch === "safety" ? "contact" : "email");
+    }
+  });
+
+  it("reads anything but «Cu nume și prenume» as anonymous, and then drops the name and the way back — even a box the page hid that would not pass", () => {
+    for (const identity of [undefined, "", "anonymous", "someone"]) {
+      const suggestion = parse({ branch: "suggestion", identity, name: "Ana Pop", message: "Seara.", email: "not an address" });
+      expect(suggestion).toMatchObject({ identity: "anonymous", name: "", email: null });
+      const safety = parse({ branch: "safety", identity, name: "Ana Pop", message: "Cineva m-a urmărit.", whereWhen: "", contact: "0700 000 000" });
+      expect(safety).toMatchObject({ identity: "anonymous", name: "", contact: "" });
+    }
+  });
+
+  it("requires a name in the named mode and names the box, beside any other refusal", () => {
+    const refused = feedbackFields.safeParse({ locale: "ro", branch: "complaint", identity: "named", name: "   ", message: "", event: "", date: "", email: "" });
+    expect(refused.success).toBe(false);
+    expect(refused.error?.issues.map((issue) => issue.path[0]).sort()).toEqual(["message", "name"]);
+    expect(parse({ branch: "complaint", identity: "named", name: " Ana  Pop\n", message: "Nimeni la start.", event: "", date: "", email: "ana@example.org" })).toMatchObject({
+      identity: "named",
+      name: "Ana  Pop",
+      email: "ana@example.org",
+    });
+  });
+
+  it("takes a name of 2 to 80 characters in the named mode, and refuses one outside on the box", () => {
+    expect([FEEDBACK_NAME_MIN, FEEDBACK_NAME_MAX]).toEqual([2, 80]);
+    const named = (name: string) => feedbackFields.safeParse({ locale: "ro", branch: "suggestion", identity: "named", name, message: "Seara.", email: "" });
+    for (const length of [1, 81]) {
+      const refused = named("A".repeat(length));
+      expect(refused.success, String(length)).toBe(false);
+      expect(refused.error?.issues.map((issue) => issue.path[0])).toEqual(["name"]);
+    }
+    for (const length of [2, 80]) expect(named("A".repeat(length)).success, String(length)).toBe(true);
+    // Measured once the edges are trimmed: two letters inside spaces are two.
+    expect(named("  Io  ").data?.name).toBe("Io");
+    // Anonymous, a name of any length is simply dropped, never refused.
+    expect(feedbackFields.safeParse({ locale: "ro", branch: "suggestion", identity: "anonymous", name: "A", message: "Seara.", email: "" }).success).toBe(true);
+  });
+
+  it("opens the email with «Nume: …» — the name given, or «(anonim)»", () => {
+    const anonymous = composeFeedbackEmail(parse({ branch: "suggestion", message: "Seara.", email: "" }), { eventTitle: null }, "production");
+    expect(anonymous.text.split("\n")[0]).toBe(`Nume: ${ANONYMOUS_NAME_LINE}`);
+    const named = composeFeedbackEmail(
+      parse({ branch: "safety", identity: "named", name: "Ana Pop", message: "Cineva m-a urmărit.", whereWhen: "", contact: "0700 000 000" }),
+      { eventTitle: null },
+      "production",
+    );
+    expect(named.text.split("\n")[0]).toBe("Nume: Ana Pop");
+    expect(named.html.startsWith("<p><strong>Nume:</strong> Ana Pop<br>")).toBe(true);
+    expect(named.text).toContain("Contact: 0700 000 000");
+    // The subject still names nobody.
+    expect(named.subject).toBe(SAFETY_SUBJECT);
+  });
+});
+
+describe("§678 «Cine să afle?»: the club or the safety branch's person", () => {
+  const roads = { smtp: true, clubFallback: true };
+
+  it("offers the club and the person on every branch while both exist, the club first", () => {
+    for (const branch of ["howItWent", "suggestion", "complaint", "safety"] as const) expect(audiencesFor(branch, ON, roads), branch).toEqual(["club", "person"]);
+  });
+
+  it("offers the person whenever the safety branch has its recipient and its first name, switched on or not", () => {
+    expect(audiencesFor("suggestion", { ...ON, safety: { on: false, to: "safety@example.org", name: "Maria" } }, roads)).toEqual(["club", "person"]);
+    expect(audiencesFor("suggestion", { ...ON, safety: { on: true, to: null, name: "Maria" } }, roads)).toEqual(["club"]);
+    expect(audiencesFor("suggestion", { ...ON, safety: { on: true, to: "safety@example.org", name: null } }, roads)).toEqual(["club"]);
+  });
+
+  it("offers the club on the safety form through «O reclamație»'s recipient or else the contact form's, and only where the SMTP road exists", () => {
+    const noComplaint = { ...ON, complaint: { on: false, to: null } };
+    expect(audiencesFor("safety", noComplaint, { smtp: true, clubFallback: true })).toEqual(["club", "person"]);
+    expect(audiencesFor("safety", noComplaint, { smtp: true, clubFallback: false })).toEqual(["person"]);
+    expect(audiencesFor("safety", ON, { smtp: true, clubFallback: false })).toEqual(["club", "person"]);
+    expect(audiencesFor("safety", ON, { smtp: false, clubFallback: true })).toEqual(["person"]);
+  });
+
+  it("reaches the branch's own reader when anonymous or when the named post chose nobody, the one chosen otherwise, and nobody for a choice not offered", () => {
+    expect([defaultAudience("safety"), defaultAudience("complaint")]).toEqual(["person", "club"]);
+    expect(chosenAudience({ branch: "complaint", identity: "anonymous", audience: "" }, ["club", "person"])).toBe("club");
+    expect(chosenAudience({ branch: "safety", identity: "anonymous", audience: "" }, ["club", "person"])).toBe("person");
+    expect(chosenAudience({ branch: "complaint", identity: "named", audience: "" }, ["club", "person"])).toBe("club");
+    expect(chosenAudience({ branch: "complaint", identity: "named", audience: "person" }, ["club", "person"])).toBe("person");
+    expect(chosenAudience({ branch: "safety", identity: "named", audience: "club" }, ["club", "person"])).toBe("club");
+    expect(chosenAudience({ branch: "complaint", identity: "named", audience: "person" }, ["club"])).toBeNull();
+    // An anonymous post never chooses: whatever it carried was dropped before.
+    expect(parse({ branch: "complaint", identity: "anonymous", audience: "person", message: "Nimeni.", event: "", date: "", email: "" }).audience).toBe("");
+  });
+
+  it("refuses an answer that is not one of the two, on the box", () => {
+    const refused = feedbackFields.safeParse({ locale: "ro", branch: "suggestion", identity: "named", name: "Ana Pop", audience: "someone@example.org", message: "Seara.", email: "" });
+    expect(refused.error?.issues.map((issue) => issue.path[0])).toEqual(["audience"]);
+  });
+
+  it("is no named mode at all while the notice in force does not name {{feedbackFormsNamed}}", () => {
+    expect(namedModeFor("suggestion", ON, false, roads)).toBeNull();
+    expect(namedModeFor("suggestion", ON, true, roads)).toEqual({ audiences: ["club", "person"] });
+  });
+
+  it("a message for the person carries the neutral subject and says the sender chose her", () => {
+    const input = parse({ branch: "suggestion", identity: "named", name: "Ana Pop", audience: "person", message: "Seara.", email: "ana@example.org" });
+    const toPerson = composeFeedbackEmail(input, { eventTitle: null, toPerson: true }, "production");
+    expect(toPerson.subject).toBe(SAFETY_SUBJECT);
+    expect(toPerson.text).toContain("cine a scris a ales să afli doar tu");
+    expect(toPerson.text.split("\n")[1]).toBe("Din formularul: „O sugestie”");
+    const toClub = composeFeedbackEmail(input, { eventTitle: null }, "production");
+    expect(toClub.subject).toBe("O sugestie de pe site");
+    expect(toClub.text).not.toContain("Din formularul");
+    // Her own form needs no such line.
+    const safety = parse({ branch: "safety", message: "Cineva m-a urmărit.", whereWhen: "", contact: "" });
+    expect(composeFeedbackEmail(safety, { eventTitle: null, toPerson: true }, "production").text).not.toContain("Din formularul");
   });
 });
 
@@ -129,7 +255,8 @@ describe("§676 the email each branch becomes", () => {
     const email = composeFeedbackEmail(input, { eventTitle: "Crosul de toamnă" }, "production");
     expect(email.subject).toBe("Cum a fost: Crosul de toamnă");
     const lines = email.text.split("\n");
-    expect(lines.slice(0, 6)).toEqual([
+    expect(lines.slice(0, 7)).toEqual([
+      `Nume: ${ANONYMOUS_NAME_LINE}`,
       "Eveniment: Crosul de toamnă",
       "Data: 4.10.2026",
       "Cum a fost: 2 din 5 — rău",
@@ -142,7 +269,7 @@ describe("§676 the email each branch becomes", () => {
   });
 
   it("names «altceva / în general» for no event, or a slug the club does not publish, and the typed address as the contact", () => {
-    const input = parse({ branch: "complaint", message: "<b>Nimeni</b> la start.", event: "nu-exista", date: "", email: "ana@example.org" });
+    const input = parse({ branch: "complaint", identity: "named", name: "Ana Pop", message: "<b>Nimeni</b> la start.", event: "nu-exista", date: "", email: "ana@example.org" });
     const email = composeFeedbackEmail(input, { eventTitle: null }, "production");
     expect(email.subject).toBe("O reclamație de pe site");
     expect(email.text).toContain("Eveniment: altceva / în general");
@@ -160,7 +287,11 @@ describe("§676 the email each branch becomes", () => {
     expect(email.subject).not.toMatch(/sigur|safety|femei/i);
     expect(email.text).toContain("Unde și când: Parcul Tractorul, joi seara");
     expect(email.text).toContain(`Contact: ${NO_CONTACT_LINE}`);
-    const reachable = composeFeedbackEmail(parse({ branch: "safety", message: "Cineva m-a urmărit după alergare.", whereWhen: "", contact: "0700 000 000" }), { eventTitle: null }, "production");
+    const reachable = composeFeedbackEmail(
+      parse({ branch: "safety", identity: "named", name: "Ana Pop", message: "Cineva m-a urmărit după alergare.", whereWhen: "", contact: "0700 000 000" }),
+      { eventTitle: null },
+      "production",
+    );
     expect(reachable.subject).toBe(SAFETY_SUBJECT);
     expect(reachable.text).toContain("Contact: 0700 000 000");
   });
@@ -194,6 +325,22 @@ describe("§676 the notice's marker", () => {
     expect(feedbackFormsClause("ro")).toBe("„Spune-ne ceva”");
     expect(feedbackFormsClause("en")).toBe("“Tell us something”");
   });
+
+  it("§678 the template names the named mode too, in both languages, beside the forms' own marker; a text without it has no named mode", () => {
+    for (const body of [privacyNoticeRo, privacyNoticeEn]) {
+      expect(describesFeedbackForms(body)).toBe(true);
+      expect(describesFeedbackFormsNamed(body)).toBe(true);
+    }
+    const strip = (body: unknown) => JSON.parse(JSON.stringify(body).split("{{feedbackFormsNamed}}").join("cu numele"));
+    expect(describesFeedbackFormsNamed(strip(privacyNoticeRo))).toBe(false);
+    expect(describesFeedbackForms(strip(privacyNoticeRo))).toBe(true);
+  });
+
+  it("§678 fills the named mode's marker with the radio's own words, quoted", () => {
+    expect(feedbackFormsNamedClause("ro")).toBe("„Cu nume și prenume”");
+    expect(feedbackFormsNamedClause("en")).toBe("“With my name”");
+    expect(feedbackFormsMergeValues("en")).toEqual({ feedbackForms: "“Tell us something”", feedbackFormsNamed: "“With my name”" });
+  });
 });
 
 describe("§676 the addresses the action sends the browser back to", () => {
@@ -208,5 +355,14 @@ describe("§676 the addresses the action sends the browser back to", () => {
   it("answers a sent post with the branch's slug", () => {
     expect(feedbackSentUrl("/ro/contact/spune-ne", "howItWent")).toBe("/ro/contact/spune-ne?sent=cum-a-fost");
     expect(feedbackSentUrl("/ro/contact/spune-ne", null)).toBe("/ro/contact/spune-ne?sent=");
+  });
+
+  it("§678 names the other reader a named message reached, by a word, and reads it back", () => {
+    expect(feedbackSentUrl("/ro/contact/spune-ne", "safety", "club")).toBe("/ro/contact/spune-ne?sent=siguranta&catre=clubul");
+    expect(feedbackSentUrl("/ro/contact/spune-ne", "complaint", "person")).toBe("/ro/contact/spune-ne?sent=reclamatie&catre=persoana");
+    expect(sentReader("safety", "clubul")).toBe("club");
+    expect(sentReader("complaint", "persoana")).toBe("person");
+    expect(sentReader("safety", null)).toBe("person");
+    expect(sentReader("complaint", "someone@example.org")).toBe("club");
   });
 });

@@ -6,11 +6,20 @@ import { getDb } from "@/db/client";
 import { createEmailSenderForEnvironment } from "@/infrastructure/email/sender";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { contactSmtpRoad } from "@/modules/contact/delivery";
-import { FEEDBACK_BRANCHES, FEEDBACK_DRAFT_BOXES, type FeedbackBranch, type FeedbackError, feedbackRefusalUrl, feedbackSentUrl } from "@/modules/feedback/domain/branches";
+import { contactDelivery, contactSmtpRoad } from "@/modules/contact/delivery";
+import { readContactRecipients } from "@/modules/contact/recipients";
+import {
+  FEEDBACK_BRANCHES,
+  FEEDBACK_DRAFT_BOXES,
+  type FeedbackBranch,
+  type FeedbackError,
+  feedbackRefusalUrl,
+  feedbackSentUrl,
+  NAMED_ONLY_FIELDS,
+} from "@/modules/feedback/domain/branches";
 import { type FeedbackOutcome, submitFeedback } from "@/modules/feedback/service";
 import { readFeedbackSettingsMemo } from "@/modules/feedback/settings";
-import { noticeDescribesFeedbackForms } from "@/modules/legal-documents/repository";
+import { noticeDescribesFeedbackForms, noticeDescribesFeedbackFormsNamed } from "@/modules/legal-documents/repository";
 import { cachedPublishedEventBySlug } from "@/modules/public-cache/reads";
 import { botCheckIsOn } from "@/modules/registrations/bot-check";
 import { TURNSTILE_FIELD } from "@/modules/registrations/domain/turnstile-widget";
@@ -25,10 +34,18 @@ function text(form: FormData, name: string): string {
   return typeof value === "string" ? value : "";
 }
 
-/** What a refusal keeps, sealed (§142): the boxes, the ticks joined — never the trap, the clock or the token. */
-function keepTyped(form: FormData, path: string): Promise<void> {
+/**
+ * What a refusal keeps, sealed (§142): the boxes, the ticks joined — never the trap, the clock or the
+ * token. An anonymous post keeps no name, no way back, no reader and no identity (§678): what the person
+ * chose not to give is not written into a cookie either, even when the hidden boxes still held it —
+ * and every post is anonymous while the notice in force does not offer the named mode.
+ */
+function keepTyped(form: FormData, path: string, namedOffered: boolean): Promise<void> {
+  const named = namedOffered && text(form, "identity") === "named";
+  const namedOnly: ReadonlySet<string> = new Set(NAMED_ONLY_FIELDS);
   const values: Record<string, string> = {};
   for (const name of FEEDBACK_DRAFT_BOXES) {
+    if (!named && (name === "identity" || namedOnly.has(name))) continue;
     const value = text(form, name);
     if (value !== "") values[name] = value;
   }
@@ -53,6 +70,8 @@ export async function submitFeedbackAction(form: FormData): Promise<void> {
   const back = (code: FeedbackError, fields: readonly string[] = []) => feedbackRefusalUrl(path, branch, code, { fields, renderedAt });
 
   let outcome: FeedbackOutcome;
+  // Known once the notice is read; until then — the database away — the draft keeps no name.
+  let namedDescribed = false;
   try {
     const now = new Date();
     const db = getDb();
@@ -62,12 +81,21 @@ export async function submitFeedbackAction(form: FormData): Promise<void> {
     const token = String(form.get(TURNSTILE_FIELD) ?? "");
     const verdict = (await botCheckIsOn(db, now)) ? await verifyTurnstile(token, remoteIp) : "not_configured";
 
-    const [settings, noticeDescribes] = await Promise.all([readFeedbackSettingsMemo(db, now), noticeDescribesFeedbackForms(db, now)]);
+    const [settings, noticeDescribes, namedNow, recipients] = await Promise.all([
+      readFeedbackSettingsMemo(db, now),
+      noticeDescribesFeedbackForms(db, now),
+      noticeDescribesFeedbackFormsNamed(db, now),
+      readContactRecipients(db),
+    ]);
+    namedDescribed = namedNow;
     outcome = await submitFeedback(
       db,
       {
         settings,
         noticeDescribes,
+        namedDescribed,
+        // «Clubul» for a named safety report when «O reclamație» has no recipient (§678): the contact form's own.
+        clubFallback: contactDelivery(recipients)?.to ?? [],
         smtp: contactSmtpRoad(),
         // Mailgun's road alone for the safety branch: the environment's sender with no Gmail road at all.
         mailgun: createEmailSenderForEnvironment(env).sender,
@@ -83,6 +111,10 @@ export async function submitFeedbackAction(form: FormData): Promise<void> {
       {
         branch: text(form, "branch"),
         locale,
+        // «Anonim» unless «Cu nume și prenume» was chosen; the name and the way back are dropped then (§678).
+        identity: text(form, "identity"),
+        name: text(form, "name"),
+        audience: text(form, "audience"),
         event: text(form, "event"),
         date: text(form, "date"),
         rating: text(form, "rating"),
@@ -99,13 +131,13 @@ export async function submitFeedbackAction(form: FormData): Promise<void> {
     );
   } catch (error) {
     if (isDomainError(error) && error.code === "VALIDATION_ERROR") {
-      await keepTyped(form, path);
+      await keepTyped(form, path, namedDescribed);
       redirect(back("VALIDATION_ERROR", error.fields));
     }
     // The database is away (§447): the bucket and the settings need it. The text is kept.
     if (isDatabaseAwayError(error)) {
       console.error("[feedback] the database is away; the message goes back with the form");
-      await keepTyped(form, path);
+      await keepTyped(form, path, namedDescribed);
       redirect(back("UNAVAILABLE"));
     }
     throw error;
@@ -113,9 +145,9 @@ export async function submitFeedbackAction(form: FormData): Promise<void> {
 
   if (outcome.outcome === "sent" || outcome.outcome === "ignored") {
     await clearFormDraft(path);
-    redirect(feedbackSentUrl(path, branch));
+    redirect(feedbackSentUrl(path, branch, outcome.outcome === "sent" ? outcome.audience : undefined));
   }
-  await keepTyped(form, path);
+  await keepTyped(form, path, namedDescribed);
   if (outcome.outcome === "captcha") redirect(back("VALIDATION_ERROR", ["captcha"]));
   redirect(back(outcome.outcome === "limited" ? "LIMITED" : "UNAVAILABLE"));
 }

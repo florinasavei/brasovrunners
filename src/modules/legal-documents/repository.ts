@@ -18,6 +18,7 @@ import {
   asksForMinorSignature,
   describesEventInvitations,
   describesFeedbackForms,
+  describesFeedbackFormsNamed,
   describesListNumbers,
   describesGmailFallback,
   describesListSocials,
@@ -281,6 +282,17 @@ export async function noticeDescribesEventInvitations<T extends Record<string, u
 export async function noticeDescribesFeedbackForms<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesFeedbackForms(notice.body));
+}
+
+/**
+ * Whether the privacy notice in force describes «Spune-ne ceva»'s named mode (§678,
+ * `describesFeedbackFormsNamed`) — in every language, like `noticeDescribesFeedbackForms`. For the
+ * action, which reads every post as anonymous until it does, and `/admin/tasks`; the page asks
+ * through the public cache (`cachedFeedbackFormsNamedDescribed`).
+ */
+export async function noticeDescribesFeedbackFormsNamed<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesFeedbackFormsNamed(notice.body));
 }
 
 /**

@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.79-2026-10-09
+
+- **«Spune-ne ceva» chooses with cards and icons, and every form opens with «Anonim» / «Cu nume și prenume»** — each kind of message is a card with its own picture, kept beside the form's title; the name and the way back show only when the person chooses to give them, and then «Cine să afle?» sends it to the club or only to the person the club designated for safety. The email's first line says the name or «(anonim)». The named mode waits for the club to approve the new privacy notice. Still plain forms working without JavaScript. The safety form is now «Siguranță pentru femei», with a warmer subtitle. §678.
 ## BR-V2.78-2026-10-08
 
 - **The rain is a raining cloud and a percentage, never a closed umbrella** — showers and heavy rain draw a cloud with rain falling from it (Material Symbols' «rainy», drawn in the project), and every card's weather pill now says the hour's chance of rain after a drop, «☁ 14 °C 💧 20 %», in the primary colour when rain is likely — a likely hour with no chance to show keeps the drop alone; nothing on a dry hour at 0 %. The hero's line and the event page's row show the drop where the umbrella was; the rule, the spoken words and the reminder are unchanged. §677.

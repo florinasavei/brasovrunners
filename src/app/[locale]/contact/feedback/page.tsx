@@ -25,12 +25,17 @@ import { contactSmtpRoadExists } from "@/modules/contact/delivery";
 import {
   BRANCH_SLUG,
   BRANCH_FIELDS,
+  defaultAudience,
+  FEEDBACK_AUDIENCES,
+  type FeedbackAudience,
+  feedbackFieldId,
   FEEDBACK_ERROR_SUMMARY_ID,
   FEEDBACK_LINE_MAX,
   FEEDBACK_QUERY,
   FEEDBACK_TEXT_MAX,
   type FeedbackBranch,
   type FeedbackField,
+  namedModeFor,
   offeredBranches,
   parseFeedbackError,
   parseFeedbackErrorFields,
@@ -39,16 +44,25 @@ import {
   pickerOrder,
   RATINGS,
   readFeedbackQuery,
+  sentReader,
   STOPPED_REASONS,
   wizardStep,
 } from "@/modules/feedback/domain/branches";
-import { cachedBotCheckSiteKey, cachedFeedbackFormsDescribed, cachedFeedbackOffer, cachedPublishedEventsBetween } from "@/modules/public-cache/reads";
+import BranchChoice, { BranchGlyphTile } from "@/modules/feedback/ui/BranchChoice";
+import IdentityChoice from "@/modules/feedback/ui/IdentityChoice";
+import {
+  cachedBotCheckSiteKey,
+  cachedContactFormReaches,
+  cachedFeedbackFormsDescribed,
+  cachedFeedbackFormsNamedDescribed,
+  cachedFeedbackOffer,
+  cachedPublishedEventsBetween,
+} from "@/modules/public-cache/reads";
 import { parseInterestSince } from "@/modules/registrations/interest-box";
 import { readFormDraft } from "@/modules/registrations/form-draft";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { BOT_CHECK_ERROR_ATTRIBUTE, BOT_CHECK_SLOT_SX } from "@/modules/registrations/domain/turnstile-widget";
 import CheckboxField from "@/shared/ui/CheckboxField";
-import RadioField from "@/shared/ui/RadioField";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { INLINE_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
@@ -60,6 +74,7 @@ type Search = {
   eveniment?: string;
   data?: string;
   sent?: string;
+  catre?: string;
   error?: string;
   fields?: string;
   since?: string;
@@ -81,7 +96,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: t("title"), description: t("intro"), robots: { index: false, follow: false } };
 }
 
-const fieldId = (name: string) => `f-${name}`;
+const fieldId = feedbackFieldId;
 
 const FACES: Readonly<Record<(typeof RATINGS)[number], ComponentType<{ "aria-hidden"?: boolean | "true"; sx?: object }>>> = {
   1: SentimentVeryDissatisfiedIcon,
@@ -102,8 +117,10 @@ function dayStart(at: Date): Date {
  * «Spune-ne ceva» / "Tell us something" (§676; BR-REQ-070-04) — one door from `/contact`, one
  * server-rendered wizard with no client state beyond the form.
  *
- * Step 1 «Despre ce e vorba?» is a `GET` form: native radios, one per branch the club switched on,
- * and «Continuă» — the branch is `?tip=` in the address, so the back button works. One branch on is
+ * Step 1 «Despre ce e vorba?» is a `GET` form: one card per branch the club switched on, each around
+ * its native radio, and «Continuă» — the branch is `?tip=` in the address, so the back button works.
+ * Step 2, every branch's form, opens with «Anonim» / «Cu nume și prenume» and, named, «Cine să afle?»
+ * (§678) — while the notice in force names `{{feedbackFormsNamed}}`; anonymous only until then. One branch on is
  * that branch's form straight away; none on, or the privacy notice in force not describing the forms,
  * is a 404 (and no door on `/contact`). Each form posts to `submitFeedbackAction`; a refusal comes
  * back here with the boxes named in `?fields=` and what was typed in the sealed draft (§142), never
@@ -132,6 +149,14 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
   const contactPath = getPathname({ locale, href: "/contact" });
   const safetyName = offer?.safety.name ?? "";
 
+  // The named mode (§678): only while the notice in force names it, and then whom a named message may reach.
+  let identity: Identity | null = null;
+  if (step.kind === "form" && offer) {
+    const namedDescribed = (await orNull(() => cachedFeedbackFormsNamedDescribed(now))) === true;
+    const clubFallback = namedDescribed && step.branch === "safety" ? (await orNull(() => cachedContactFormReaches())) === true : false;
+    identity = namedModeFor(step.branch, offer, namedDescribed, { smtp: contactSmtpRoadExists(), clubFallback });
+  }
+
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <Typography variant="body2" sx={{ mb: 1 }}>
@@ -146,12 +171,23 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
       {sentBranch && offered.includes(sentBranch) ? (
         <Alert severity="success" role="status" data-testid="feedback-sent">
           <AlertTitle>{t("sent.title")}</AlertTitle>
-          {sentBranch === "safety" ? t("sent.safety", { name: safetyName }) : t("sent.body")}
+          {/* Who got it (§678): the safety person — her form's own reader, or the one a named message chose — or the club. */}
+          {sentReader(sentBranch, search.catre) === "person" ? t("sent.safety", { name: safetyName }) : t("sent.body")}
         </Alert>
       ) : step.kind === "choose" ? (
         <ChooseStep branches={step.branches} path={path} query={query} t={t} />
       ) : (
-        <BranchForm branch={step.branch} single={step.single} locale={locale} search={search} query={query} now={now} safetyName={safetyName} contactPath={contactPath} />
+        <BranchForm
+          branch={step.branch}
+          single={step.single}
+          locale={locale}
+          search={search}
+          query={query}
+          now={now}
+          safetyName={safetyName}
+          contactPath={contactPath}
+          identity={identity}
+        />
       )}
     </Container>
   );
@@ -159,8 +195,15 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
 
 type T = Awaited<ReturnType<typeof getTranslations<"Tell">>>;
 
-/** Step 1: one native radio per branch on, and «Continuă» — a `GET`, so `?tip=` is the step. */
+/** The named mode, when the notice in force offers it (§678): whom a named message on this branch may reach. */
+type Identity = { audiences: FeedbackAudience[] };
+
+/**
+ * Step 1: one card per branch on (`BranchChoice`), and «Continuă» — a `GET`, so `?tip=` is the step;
+ * the branch `?tip=` named stays chosen, else the first.
+ */
 function ChooseStep({ branches, path, query, t }: { branches: FeedbackBranch[]; path: string; query: ReturnType<typeof readFeedbackQuery>; t: T }) {
+  const chosen = query.branch && branches.includes(query.branch) ? query.branch : branches[0];
   return (
     <>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
@@ -170,23 +213,7 @@ function ChooseStep({ branches, path, query, t }: { branches: FeedbackBranch[]; 
         {/* The event and the day a link chose ride on to the form, unread until it draws. */}
         {query.eventSlug && <input type="hidden" name={FEEDBACK_QUERY.event} value={query.eventSlug} />}
         {query.date && <input type="hidden" name={FEEDBACK_QUERY.date} value={query.date} />}
-        <Box component="fieldset" sx={{ border: 0, m: 0, p: 0 }}>
-          <Typography component="legend" variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
-            {t("choose.legend")}
-          </Typography>
-          <Stack spacing={0.5}>
-            {branches.map((branch, index) => (
-              <Box key={branch}>
-                <RadioField name={FEEDBACK_QUERY.branch} value={BRANCH_SLUG[branch]} defaultChecked={query.branch && branches.includes(query.branch) ? query.branch === branch : index === 0}>
-                  {t(`branches.${branch}.label`)}
-                </RadioField>
-                <Typography variant="body2" color="text.secondary" sx={{ ml: 6, mt: -0.5 }}>
-                  {t(`branches.${branch}.hint`)}
-                </Typography>
-              </Box>
-            ))}
-          </Stack>
-        </Box>
+        <BranchChoice branches={branches} chosen={chosen} />
         <Button type="submit" variant="contained" size="large" fullWidth sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX, mt: 3 }}>
           {t("choose.next")}
           <ArrowForwardIcon aria-hidden="true" sx={glyphSx("large")} />
@@ -206,6 +233,7 @@ async function BranchForm({
   now,
   safetyName,
   contactPath,
+  identity,
 }: {
   branch: FeedbackBranch;
   single: boolean;
@@ -215,6 +243,7 @@ async function BranchForm({
   now: Date;
   safetyName: string;
   contactPath: string;
+  identity: Identity | null;
 }) {
   const t = await getTranslations("Tell");
   const error = parseFeedbackError(search.error);
@@ -236,6 +265,9 @@ async function BranchForm({
   const chosenEvent = kept("event") ?? (query.eventSlug && events.some((event) => event.slug === query.eventSlug) ? query.eventSlug : "");
   const ratingTyped = kept("rating") ?? "";
   const reasonsTyped = new Set((kept("reasons") ?? "").split(",").filter(Boolean));
+  // «Anonim» unless the refused post had chosen the name (§678), and its «Cine să afle?».
+  const named = identity !== null && kept("identity") === "named";
+  const audienceKept = FEEDBACK_AUDIENCES.find((answer) => answer === kept("audience"));
 
   const box = (name: FeedbackField, help?: string) => ({
     id: fieldId(name),
@@ -248,13 +280,18 @@ async function BranchForm({
 
   return (
     <>
-      <Typography variant="h2" sx={{ fontSize: "1.35rem", mb: 1 }}>
-        {t(`branches.${branch}.label`)}
-      </Typography>
+      {/* The glyph the visitor chose on step 1, beside the branch's name. */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1 }}>
+        <BranchGlyphTile branch={branch} />
+        <Typography variant="h2" sx={{ fontSize: "1.35rem", m: 0 }}>
+          {t(`branches.${branch}.label`)}
+        </Typography>
+      </Box>
       {branch === "safety" ? (
-        // Above the form, in the person's language (§676): who reads it, and that the site keeps nothing.
+        // Above the form, in the person's language (§676): who reads it, and that the site keeps nothing —
+        // and, when a named report may go to the club instead (§678), that the sender chooses then.
         <Alert severity="info" icon={false} sx={{ mb: 2 }} data-testid="feedback-safety-reader">
-          {t("safety.reader", { name: safetyName })}
+          {identity?.audiences.includes("club") ? t("safety.readerChoice", { name: safetyName }) : t("safety.reader", { name: safetyName })}
         </Alert>
       ) : (
         <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
@@ -300,6 +337,21 @@ async function BranchForm({
         />
         <input type="hidden" name="renderedAt" value={renderedAt.toISOString()} />
         <Stack spacing={2}>
+          {/*
+            The very first thing (§678): anonymous, the default, or with one's name — only while the notice
+            in force says a name may be given; until then the form is anonymous only, with no way back.
+          */}
+          {identity && (
+            <IdentityChoice
+              wayBack={fields.includes("contact") ? "contact" : "email"}
+              named={named}
+              invalid={invalid}
+              kept={kept}
+              safetyName={safetyName}
+              audiences={identity.audiences}
+              audience={audienceKept && identity.audiences.includes(audienceKept) ? audienceKept : defaultAudience(branch)}
+            />
+          )}
           {withEvent && (
             <TextField
               {...box("event")}
@@ -407,17 +459,6 @@ async function BranchForm({
           )}
           {fields.includes("whereWhen") && (
             <TextField {...box("whereWhen")} label={t("safety.whereWhen")} fullWidth slotProps={{ htmlInput: { maxLength: FEEDBACK_LINE_MAX } }} />
-          )}
-          {fields.includes("contact") && (
-            <TextField
-              {...box("contact", t("safety.contactHelp"))}
-              label={t("safety.contact", { name: safetyName })}
-              fullWidth
-              slotProps={{ htmlInput: { maxLength: FEEDBACK_LINE_MAX } }}
-            />
-          )}
-          {fields.includes("email") && (
-            <TextField {...box("email", t("emailHelp"))} type="email" label={t("email")} autoComplete="email" fullWidth />
           )}
 
           {/* Cloudflare Turnstile, when the club switched it on (§97); the render's own time resets it (§185). */}

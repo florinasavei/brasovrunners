@@ -22,7 +22,8 @@ import { HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
  * test ends with every branch off, as the seed leaves them.
  *
  * **The notice.** The local seed approves the platform's template, which names `{{feedbackForms}}`
- * in both languages, and then nothing is written. On a database seeded before the template named it,
+ * and `{{feedbackFormsNamed}}` in both languages, and then nothing is written. On a database seeded
+ * before the template named them,
  * the notice in force is approved once more with one paragraph naming the marker added to it — the
  * draft written to the table (the setup, not the subject) and approved through `/admin/legal`, which
  * expires the cached notice. That leaves one more approved version behind (§46): run it on a local
@@ -33,11 +34,12 @@ import { HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
  */
 
 const LOCK_KEY = 390_039_001;
-const MARKER = "{{feedbackForms}}";
+/** The forms' marker (§676) and the named mode's (§678): without the second, every form is anonymous only. */
+const MARKERS = ["{{feedbackForms}}", "{{feedbackFormsNamed}}"] as const;
 const SAFETY_NAME = "Maria";
 const ADDED_PARAGRAPH = {
-  ro: `Formularele ${MARKER} de pe pagina de contact sunt anonime; platforma nu păstrează nicio copie.`,
-  en: `The ${MARKER} forms on the contact page are anonymous; the platform keeps no copy.`,
+  ro: `Formularele ${MARKERS[0]} de pe pagina de contact sunt anonime, dacă nu alegi ${MARKERS[1]}; platforma nu păstrează nicio copie.`,
+  en: `The ${MARKERS[0]} forms on the contact page are anonymous unless you choose ${MARKERS[1]}; the platform keeps no copy.`,
 } as const;
 
 function databaseUrl(): string {
@@ -76,7 +78,7 @@ async function noticeInForce(client: pg.Client): Promise<Translation[]> {
 }
 
 const describes = (translations: Translation[]) =>
-  translations.length >= 2 && translations.every((translation) => JSON.stringify(translation.body).includes(MARKER));
+  translations.length >= 2 && translations.every((translation) => MARKERS.every((marker) => JSON.stringify(translation.body).includes(marker)));
 
 /** The next PRIVACY_NOTICE version as a draft, written to the table; returns its id. */
 async function insertDraft(client: pg.Client, translations: Translation[]): Promise<string> {
@@ -101,7 +103,7 @@ async function insertDraft(client: pg.Client, translations: Translation[]): Prom
   return rows[0].id;
 }
 
-/** The notice in force names `{{feedbackForms}}` in both languages — approved through `/admin/legal` when it does not yet. */
+/** The notice in force names `{{feedbackForms}}` and `{{feedbackFormsNamed}}` in both languages — approved through `/admin/legal` when it does not yet. */
 async function ensureNoticeDescribesTheForms(page: Page): Promise<void> {
   const current = await withDatabase(noticeInForce);
   if (describes(current)) return;
@@ -175,16 +177,66 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await door.click();
       await expect(page).toHaveURL(/\/ro\/contact\/spune-ne$/);
 
-      // Step 1: native radios, one per branch on, and «Continuă» — the branch lands in the address.
+      // Step 1 (§678): one card per branch on, each a label around a native radio that stays visible,
+      // with its glyph, a thumb's height and the warm words for the women's form; «Continuă» puts the
+      // branch in the address, and step 2's title carries the same glyph.
       const choose = page.getByTestId("feedback-choose");
       await expect(choose).toBeVisible();
       await expect(choose.locator('input[name="tip"]')).toHaveCount(2);
-      await choose.locator('input[name="tip"][value="siguranta"]').check();
+      const safetyCard = page.getByTestId("feedback-choice-siguranta");
+      await expect(page.getByTestId("feedback-choice-cum-a-fost").locator('input[name="tip"]')).toBeChecked();
+      await expect(safetyCard).toContainText("Siguranță pentru femei");
+      await expect(safetyCard).toContainText("provocări în plus");
+      for (const [slug, card] of [["cum-a-fost", page.getByTestId("feedback-choice-cum-a-fost")], ["siguranta", safetyCard]] as const) {
+        await expect(card.getByTestId(`feedback-glyph-${slug}`)).toBeVisible();
+        await expect(card.locator('input[name="tip"]')).toBeVisible();
+        expect((await card.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+      }
+      await noSidewaysScroll(page);
+      // The keyboard: an arrow moves the choice, and the card it lands on carries the focus ring.
+      await page.getByTestId("feedback-choice-cum-a-fost").locator('input[name="tip"]').focus();
+      await page.keyboard.press("ArrowDown");
+      await expect(safetyCard.locator('input[name="tip"]')).toBeChecked();
+      await expect(safetyCard).toHaveCSS("outline-style", "solid");
+      await expect(safetyCard).toHaveCSS("outline-width", "2px");
+      // The radio is named by the title alone; the hint describes it.
+      await expect(safetyCard.locator('input[name="tip"]')).toHaveAccessibleName("Siguranță pentru femei");
+      // The whole card is the target: a press on its words chooses it.
+      await safetyCard.getByText("Siguranță pentru femei").click();
+      await expect(safetyCard.locator('input[name="tip"]')).toBeChecked();
       await choose.getByRole("button", { name: "Continuă" }).click();
       await expect(page).toHaveURL(/\/ro\/contact\/spune-ne\?tip=siguranta$/);
+      await expect(page.getByTestId("feedback-glyph-siguranta")).toBeVisible();
+      await expect(page.getByRole("heading", { level: 2, name: "Siguranță pentru femei" })).toBeVisible();
       // Above the form, in the page's language: who reads it, by the first name the club set.
-      await expect(page.getByTestId("feedback-safety-reader")).toHaveText(`Mesajul ajunge doar la ${SAFETY_NAME}. Site-ul nu păstrează nimic din el.`);
+      // The club may hear a named report too (§678) — the contact form reaches it on this deployment — so the line says the sender chooses then.
+      await expect(page.getByTestId("feedback-safety-reader")).toHaveText(
+        `Anonim, mesajul ajunge doar la ${SAFETY_NAME}; cu nume și prenume, alegi tu cine află. Site-ul nu păstrează nimic din el.`,
+      );
       await expect(page.getByTestId("feedback-form-siguranta")).toBeVisible();
+      // The form opens with «Anonim» / «Cu nume și prenume» (§678): anonymous by default, the name and the
+      // way back hidden until the name is chosen — CSS alone.
+      const safetyForm = page.getByTestId("feedback-form-siguranta");
+      const identity = safetyForm.getByTestId("feedback-identity");
+      expect(await safetyForm.locator('input:not([type="hidden"]):not([name="honeypot"])').first().getAttribute("name")).toBe("identity");
+      await expect(identity.getByRole("radio", { name: "Anonim" })).toBeChecked();
+      await expect(safetyForm.locator('[name="name"]')).toBeHidden();
+      await expect(safetyForm.locator('[name="contact"]')).toBeHidden();
+      await expect(identity).toContainText("Cum vrei să trimiți?");
+      await expect(identity).toContainText("Nu ne spui cine ești.");
+      await identity.getByRole("radio", { name: "Cu nume și prenume" }).check();
+      await expect(safetyForm.locator('[name="name"]')).toBeVisible();
+      await expect(safetyForm.locator('[name="name"]')).toHaveAttribute("maxlength", "80");
+      await expect(safetyForm.locator('[name="contact"]')).toBeVisible();
+      // «Cine să afle?» (§678): the club or the safety person by her first name — on her own form, she is
+      // checked — and never an address on the page.
+      const audience = safetyForm.getByTestId("feedback-audience");
+      await expect(audience).toBeVisible();
+      await expect(audience.getByRole("radio", { name: SAFETY_NAME })).toBeChecked();
+      await expect(audience.getByRole("radio", { name: "Clubul" })).toBeVisible();
+      expect(await page.content()).not.toContain("@example.org");
+      await identity.getByRole("radio", { name: "Anonim" }).check();
+      await expect(safetyForm.locator('[name="name"]')).toBeHidden();
       await noSidewaysScroll(page);
 
       // «Cum a fost»: a slug the club does not publish leaves «Altceva / în general» selected…
@@ -204,6 +256,10 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await page.goto("/ro/contact/spune-ne?tip=cum-a-fost");
       await hydrated(page);
       const form = page.getByTestId("feedback-form-cum-a-fost");
+      await form.getByRole("radio", { name: "Cu nume și prenume" }).check();
+      await form.locator('[name="name"]').fill("Ana Pop");
+      // On «Cum a fost» the club is the default reader; the safety person is the other answer.
+      await expect(form.getByTestId("feedback-audience").getByRole("radio", { name: "Clubul" })).toBeChecked();
       await form.locator('[name="message"]').fill("   ");
       await form.locator('input[name="reasons"][value="time"]').check();
       await form.locator('[name="reasonOther"]').fill("Seara e greu");
@@ -215,6 +271,10 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await expect(summary.getByRole("link", { name: "Mesajul" })).toBeVisible();
       await expect(page.locator('[name="reasonOther"]')).toHaveValue("Seara e greu");
       await expect(page.locator('input[name="reasons"][value="time"]')).toBeChecked();
+      // The choice and the name come back too, visible.
+      await expect(page.getByRole("radio", { name: "Cu nume și prenume" })).toBeChecked();
+      await expect(page.locator('[name="name"]')).toHaveValue("Ana Pop");
+      await expect(page.locator('[name="name"]')).toBeVisible();
       await expect(page.locator('[name="message"]')).toHaveAttribute("aria-invalid", "true");
       await noSidewaysScroll(page);
 
