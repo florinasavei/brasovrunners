@@ -63,6 +63,7 @@ export type TaskId =
   | "sponsorNotice"
   | "newsletterNotice"
   | "feedbackNotice"
+  | "feedbackNamedNotice"
   | "gmailFallbackNotice"
   | "refusalTerms"
   | "teamPageNotice"
@@ -103,6 +104,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   sponsorNotice: "text",
   newsletterNotice: "text",
   feedbackNotice: "text",
+  feedbackNamedNotice: "text",
   gmailFallbackNotice: "text",
   refusalTerms: "text",
   teamPageNotice: "text",
@@ -239,6 +241,11 @@ export type OwnerTaskInputs = {
   feedbackDescribed: boolean;
   /** How many of «Spune-ne ceva»'s four branches the club switched on (§676). */
   feedbackBranchesOn: number;
+  /**
+   * Does the notice in force, in every language, describe «Spune-ne ceva»'s named mode (§NNN,
+   * `noticeDescribesFeedbackFormsNamed`)? Until it does, every form is anonymous only.
+   */
+  feedbackNamedDescribed: boolean;
   /**
    * Does the notice in force, in every language, say a message may leave through the club's Gmail
    * while Mailgun is stopped (§622, `noticeDescribesGmailFallback`)? Until it does, «Gmail preia când
@@ -512,6 +519,18 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       push("feedbackNotice", {
         owner: "club",
         state: input.feedbackDescribed ? "done" : "open",
+      });
+    }
+    /*
+      «Spune-ne ceva» with a name (§NNN), the same shape and its own answer: a notice approved from the
+      template before the named mode says the forms ask for no name, so the forms stay anonymous only
+      until one naming `{{feedbackFormsNamed}}` takes effect — open while a branch is on and it is
+      missing, done by itself the day it takes effect, absent while nothing waits on it.
+    */
+    if (input.feedbackNamedDescribed || input.feedbackBranchesOn > 0) {
+      push("feedbackNamedNotice", {
+        owner: "club",
+        state: input.feedbackNamedDescribed ? "done" : "open",
       });
     }
     /*

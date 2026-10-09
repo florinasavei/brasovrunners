@@ -25,12 +25,17 @@ import { contactSmtpRoadExists } from "@/modules/contact/delivery";
 import {
   BRANCH_SLUG,
   BRANCH_FIELDS,
+  defaultAudience,
+  FEEDBACK_AUDIENCES,
+  type FeedbackAudience,
+  feedbackFieldId,
   FEEDBACK_ERROR_SUMMARY_ID,
   FEEDBACK_LINE_MAX,
   FEEDBACK_QUERY,
   FEEDBACK_TEXT_MAX,
   type FeedbackBranch,
   type FeedbackField,
+  namedModeFor,
   offeredBranches,
   parseFeedbackError,
   parseFeedbackErrorFields,
@@ -39,17 +44,25 @@ import {
   pickerOrder,
   RATINGS,
   readFeedbackQuery,
+  sentReader,
   STOPPED_REASONS,
   wizardStep,
 } from "@/modules/feedback/domain/branches";
 import BranchChoice, { BranchGlyphTile } from "@/modules/feedback/ui/BranchChoice";
-import { cachedBotCheckSiteKey, cachedFeedbackFormsDescribed, cachedFeedbackOffer, cachedPublishedEventsBetween } from "@/modules/public-cache/reads";
+import IdentityChoice from "@/modules/feedback/ui/IdentityChoice";
+import {
+  cachedBotCheckSiteKey,
+  cachedContactFormReaches,
+  cachedFeedbackFormsDescribed,
+  cachedFeedbackFormsNamedDescribed,
+  cachedFeedbackOffer,
+  cachedPublishedEventsBetween,
+} from "@/modules/public-cache/reads";
 import { parseInterestSince } from "@/modules/registrations/interest-box";
 import { readFormDraft } from "@/modules/registrations/form-draft";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { BOT_CHECK_ERROR_ATTRIBUTE, BOT_CHECK_SLOT_SX } from "@/modules/registrations/domain/turnstile-widget";
 import CheckboxField from "@/shared/ui/CheckboxField";
-import RadioField from "@/shared/ui/RadioField";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { INLINE_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
@@ -61,6 +74,7 @@ type Search = {
   eveniment?: string;
   data?: string;
   sent?: string;
+  catre?: string;
   error?: string;
   fields?: string;
   since?: string;
@@ -82,7 +96,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: t("title"), description: t("intro"), robots: { index: false, follow: false } };
 }
 
-const fieldId = (name: string) => `f-${name}`;
+const fieldId = feedbackFieldId;
 
 const FACES: Readonly<Record<(typeof RATINGS)[number], ComponentType<{ "aria-hidden"?: boolean | "true"; sx?: object }>>> = {
   1: SentimentVeryDissatisfiedIcon,
@@ -105,7 +119,8 @@ function dayStart(at: Date): Date {
  *
  * Step 1 «Despre ce e vorba?» is a `GET` form: one card per branch the club switched on, each around
  * its native radio, and «Continuă» — the branch is `?tip=` in the address, so the back button works.
- * Step 2, every branch's form, opens with «Anonim» / «Cu nume și prenume» (§NNN). One branch on is
+ * Step 2, every branch's form, opens with «Anonim» / «Cu nume și prenume» and, named, «Cine să afle?»
+ * (§NNN) — while the notice in force names `{{feedbackFormsNamed}}`; anonymous only until then. One branch on is
  * that branch's form straight away; none on, or the privacy notice in force not describing the forms,
  * is a 404 (and no door on `/contact`). Each form posts to `submitFeedbackAction`; a refusal comes
  * back here with the boxes named in `?fields=` and what was typed in the sealed draft (§142), never
@@ -134,6 +149,14 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
   const contactPath = getPathname({ locale, href: "/contact" });
   const safetyName = offer?.safety.name ?? "";
 
+  // The named mode (§NNN): only while the notice in force names it, and then whom a named message may reach.
+  let identity: Identity | null = null;
+  if (step.kind === "form" && offer) {
+    const namedDescribed = (await orNull(() => cachedFeedbackFormsNamedDescribed(now))) === true;
+    const clubFallback = namedDescribed && step.branch === "safety" ? (await orNull(() => cachedContactFormReaches())) === true : false;
+    identity = namedModeFor(step.branch, offer, namedDescribed, { smtp: contactSmtpRoadExists(), clubFallback });
+  }
+
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <Typography variant="body2" sx={{ mb: 1 }}>
@@ -148,18 +171,32 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
       {sentBranch && offered.includes(sentBranch) ? (
         <Alert severity="success" role="status" data-testid="feedback-sent">
           <AlertTitle>{t("sent.title")}</AlertTitle>
-          {sentBranch === "safety" ? t("sent.safety", { name: safetyName }) : t("sent.body")}
+          {/* Who got it (§NNN): the safety person — her form's own reader, or the one a named message chose — or the club. */}
+          {sentReader(sentBranch, search.catre) === "person" ? t("sent.safety", { name: safetyName }) : t("sent.body")}
         </Alert>
       ) : step.kind === "choose" ? (
         <ChooseStep branches={step.branches} path={path} query={query} t={t} />
       ) : (
-        <BranchForm branch={step.branch} single={step.single} locale={locale} search={search} query={query} now={now} safetyName={safetyName} contactPath={contactPath} />
+        <BranchForm
+          branch={step.branch}
+          single={step.single}
+          locale={locale}
+          search={search}
+          query={query}
+          now={now}
+          safetyName={safetyName}
+          contactPath={contactPath}
+          identity={identity}
+        />
       )}
     </Container>
   );
 }
 
 type T = Awaited<ReturnType<typeof getTranslations<"Tell">>>;
+
+/** The named mode, when the notice in force offers it (§NNN): whom a named message on this branch may reach. */
+type Identity = { audiences: FeedbackAudience[] };
 
 /**
  * Step 1: one card per branch on (`BranchChoice`), and «Continuă» — a `GET`, so `?tip=` is the step;
@@ -196,6 +233,7 @@ async function BranchForm({
   now,
   safetyName,
   contactPath,
+  identity,
 }: {
   branch: FeedbackBranch;
   single: boolean;
@@ -205,6 +243,7 @@ async function BranchForm({
   now: Date;
   safetyName: string;
   contactPath: string;
+  identity: Identity | null;
 }) {
   const t = await getTranslations("Tell");
   const error = parseFeedbackError(search.error);
@@ -226,8 +265,9 @@ async function BranchForm({
   const chosenEvent = kept("event") ?? (query.eventSlug && events.some((event) => event.slug === query.eventSlug) ? query.eventSlug : "");
   const ratingTyped = kept("rating") ?? "";
   const reasonsTyped = new Set((kept("reasons") ?? "").split(",").filter(Boolean));
-  // «Anonim» unless the refused post had chosen the name (§NNN).
-  const named = kept("identity") === "named";
+  // «Anonim» unless the refused post had chosen the name (§NNN), and its «Cine să afle?».
+  const named = identity !== null && kept("identity") === "named";
+  const audienceKept = FEEDBACK_AUDIENCES.find((answer) => answer === kept("audience"));
 
   const box = (name: FeedbackField, help?: string) => ({
     id: fieldId(name),
@@ -248,9 +288,10 @@ async function BranchForm({
         </Typography>
       </Box>
       {branch === "safety" ? (
-        // Above the form, in the person's language (§676): who reads it, and that the site keeps nothing.
+        // Above the form, in the person's language (§676): who reads it, and that the site keeps nothing —
+        // and, when a named report may go to the club instead (§NNN), that the sender chooses then.
         <Alert severity="info" icon={false} sx={{ mb: 2 }} data-testid="feedback-safety-reader">
-          {t("safety.reader", { name: safetyName })}
+          {identity?.audiences.includes("club") ? t("safety.readerChoice", { name: safetyName }) : t("safety.reader", { name: safetyName })}
         </Alert>
       ) : (
         <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
@@ -297,57 +338,20 @@ async function BranchForm({
         <input type="hidden" name="renderedAt" value={renderedAt.toISOString()} />
         <Stack spacing={2}>
           {/*
-            The very first thing (§NNN): anonymous, the default, or with one's name. The name and the way
-            back show only in the named mode — CSS `:has` alone, no island; without `:has` they simply
-            stay visible, and the server drops them on an anonymous post. No `required` attribute on the
-            name: the browser would refuse a hidden box; the server requires it in the named mode.
+            The very first thing (§NNN): anonymous, the default, or with one's name — only while the notice
+            in force says a name may be given; until then the form is anonymous only, with no way back.
           */}
-          <Box
-            data-testid="feedback-identity"
-            sx={{ "&:has(input[name='identity'][value='anonymous']:checked) [data-named-only]": { display: "none" } }}
-          >
-            <Box component="fieldset" id={fieldId("identity")} sx={{ border: 0, m: 0, p: 0, minWidth: 0 }}>
-              <Typography component="legend" variant="body1" sx={{ fontWeight: 600 }}>
-                {t("identity.legend")}
-              </Typography>
-              <Box sx={{ display: "flex", flexWrap: "wrap", columnGap: 2 }}>
-                <RadioField name="identity" value="anonymous" defaultChecked={!named}>
-                  {t("identity.anonymous")}
-                </RadioField>
-                <RadioField name="identity" value="named" defaultChecked={named}>
-                  {t("identity.named")}
-                </RadioField>
-              </Box>
-            </Box>
-            <Stack spacing={2} data-named-only="" data-testid="feedback-named" sx={{ mt: 1 }}>
-              <TextField
-                {...box("name")}
-                label={t("name")}
-                autoComplete="name"
-                fullWidth
-                slotProps={{ htmlInput: { maxLength: FEEDBACK_LINE_MAX, "aria-required": "true" } }}
-              />
-              {fields.includes("contact") && (
-                <TextField
-                  {...box("contact", t("safety.contactHelp"))}
-                  label={t("safety.contact", { name: safetyName })}
-                  fullWidth
-                  slotProps={{ htmlInput: { maxLength: FEEDBACK_LINE_MAX } }}
-                />
-              )}
-              {fields.includes("email") && (
-                // `inputMode`, not `type="email"`: a half-typed address left in a box the anonymous mode hid
-                // would make the browser refuse the post on a box it cannot show; the server checks it.
-                <TextField
-                  {...box("email", t("emailHelp"))}
-                  label={t("email")}
-                  autoComplete="email"
-                  fullWidth
-                  slotProps={{ htmlInput: { inputMode: "email", spellCheck: false, autoCapitalize: "none" } }}
-                />
-              )}
-            </Stack>
-          </Box>
+          {identity && (
+            <IdentityChoice
+              wayBack={fields.includes("contact") ? "contact" : "email"}
+              named={named}
+              invalid={invalid}
+              kept={kept}
+              safetyName={safetyName}
+              audiences={identity.audiences}
+              audience={audienceKept && identity.audiences.includes(audienceKept) ? audienceKept : defaultAudience(branch)}
+            />
+          )}
           {withEvent && (
             <TextField
               {...box("event")}

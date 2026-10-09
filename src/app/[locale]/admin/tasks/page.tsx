@@ -28,6 +28,7 @@ import {
   noticeDescribesListStates,
   noticeDescribesNewsletter,
   noticeDescribesFeedbackForms,
+  noticeDescribesFeedbackFormsNamed,
   noticeDescribesTeamPage,
   termsDescribeRefusal,
   raceDeclarationsCurrent,
@@ -471,6 +472,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       // §676: «Spune-ne ceva», described by the notice in force; the row waits only while a branch is on.
       feedbackDescribed: await noticeDescribesFeedbackForms(db, now),
       feedbackBranchesOn: branchesSwitchedOn(await readFeedbackSettings(db)).length,
+      feedbackNamedDescribed: await noticeDescribesFeedbackFormsNamed(db, now),
       gmailFallbackDescribed: await noticeDescribesGmailFallback(db, now),
       // §636: the terms in force carry the club's right to refuse a registration, in every language.
       refusalDescribed: await termsDescribeRefusal(db, now),

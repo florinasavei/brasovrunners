@@ -16,7 +16,7 @@ import { forgetFeedbackLinkMemo } from "@/modules/feedback/links";
 import { type FeedbackDeps, submitFeedback } from "@/modules/feedback/service";
 import { FEEDBACK_SETTING_KEY, readFeedbackSettings, updateFeedbackSettings } from "@/modules/feedback/settings";
 import { computeContentHash, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
-import { insertLegalDocumentVersion, noticeDescribesFeedbackForms } from "@/modules/legal-documents/repository";
+import { insertLegalDocumentVersion, noticeDescribesFeedbackForms, noticeDescribesFeedbackFormsNamed } from "@/modules/legal-documents/repository";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
 import { sendParticipantMessage } from "@/modules/notifications/participant-messages";
 import { renderOutboxMessage } from "@/modules/notifications/render";
@@ -66,6 +66,8 @@ describe("§676 «Spune-ne ceva»", () => {
   const deps = (overrides: Partial<FeedbackDeps> = {}): FeedbackDeps => ({
     settings: SETTINGS,
     noticeDescribes: true,
+    namedDescribed: true,
+    clubFallback: ["contact@example.org"],
     smtp: { transport: smtp, from: { name: "Club", address: "club@example.org" }, appEnv: "production" },
     mailgun,
     appEnv: "production",
@@ -156,6 +158,73 @@ describe("§676 «Spune-ne ceva»", () => {
       await submitFeedback(db, deps({ appEnv: "qa" }), SAFETY, NOW);
       expect(smtp.messages[0].subject).toBe("[QA] O sugestie de pe site");
       expect(mailgun.send.mock.calls[0][0].subject).toBe(`[QA] ${SAFETY_SUBJECT}`);
+    });
+  });
+
+  describe("§NNN who hears a named message, and the notice that allows a name", () => {
+    it("sends a named «O reclamație» to the safety branch's person by Mailgun alone, with the neutral subject and no Reply-To", async () => {
+      const toPerson = { ...COMPLAINT, identity: "named", name: "Ana Pop", audience: "person", email: "ana@example.org" };
+      // The other reader than the branch's own: the outcome names her, for the sent page's line.
+      expect(await submitFeedback(db, deps(), toPerson, NOW)).toEqual({ outcome: "sent", audience: "person" });
+      expect(smtp.messages).toHaveLength(0);
+      const [message] = mailgun.send.mock.calls[0];
+      expect(message.to).toBe("safety@example.org");
+      expect(message.subject).toBe(SAFETY_SUBJECT);
+      expect(message.noReplyTo).toBe(true);
+      expect(message.text.split("\n")[0]).toBe("Nume: Ana Pop");
+      expect(message.text).toContain("Contact: ana@example.org");
+      expect(message.text).toContain("cine a scris a ales să afli doar tu");
+    });
+
+    it("sends a named «Cum a fost» to the club by default, by the SMTP road, with the name in Reply-To", async () => {
+      expect(await submitFeedback(db, deps(), { ...HOW, identity: "named", name: "Ana Pop", email: "ana@example.org" }, NOW)).toEqual({ outcome: "sent" });
+      expect(mailgun.send).not.toHaveBeenCalled();
+      expect(smtp.messages[0].to).toEqual(["how@example.org"]);
+      expect(smtp.messages[0].replyTo).toEqual({ name: "Ana Pop", address: "ana@example.org" });
+    });
+
+    it("sends a named safety report the sender gave the club to «O reclamație»'s mailbox by the SMTP road — neutral subject, no Reply-To — or else to the contact form's", async () => {
+      const toClub = { ...SAFETY, identity: "named", name: "Ana Pop", audience: "club", contact: "0700 000 000" };
+      expect(await submitFeedback(db, deps(), toClub, NOW)).toEqual({ outcome: "sent", audience: "club" });
+      expect(mailgun.send).not.toHaveBeenCalled();
+      expect(smtp.messages[0].to).toEqual(["complaints@example.org"]);
+      expect(smtp.messages[0].subject).toBe(SAFETY_SUBJECT);
+      expect(smtp.messages[0].replyTo).toBeUndefined();
+      expect(smtp.messages[0].text).toContain("Contact: 0700 000 000");
+
+      const noComplaint = { ...SETTINGS, complaint: { on: false, to: null } };
+      expect(await submitFeedback(db, deps({ settings: noComplaint }), toClub, NOW)).toEqual({ outcome: "sent", audience: "club" });
+      expect(smtp.messages[1].to).toEqual(["contact@example.org"]);
+    });
+
+    it("refuses a reader not offered on its box, and sends nothing", async () => {
+      const noPerson = { ...SETTINGS, safety: { on: false, to: null, name: null } };
+      const toPerson = { ...SUGGESTION, audience: "person" };
+      await expect(submitFeedback(db, deps({ settings: noPerson }), toPerson, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["audience"] });
+      // No club on the safety form without the SMTP road and with no mailbox to fall back on.
+      const toClub = { ...SAFETY, identity: "named", name: "Ana Pop", audience: "club" };
+      await expect(submitFeedback(db, deps({ smtp: null }), toClub, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["audience"] });
+      expect(smtp.messages).toHaveLength(0);
+      expect(mailgun.send).not.toHaveBeenCalled();
+    });
+
+    it("keeps an anonymous message on its branch's own reader, whatever reader it carried", async () => {
+      expect(await submitFeedback(db, deps(), { ...SAFETY, identity: "anonymous", audience: "club" }, NOW)).toEqual({ outcome: "sent" });
+      expect(await submitFeedback(db, deps(), { ...COMPLAINT, audience: "person" }, NOW)).toEqual({ outcome: "sent" });
+      expect(mailgun.send.mock.calls.map(([message]) => message.to)).toEqual(["safety@example.org"]);
+      expect(smtp.messages.map((message) => message.to)).toEqual([["complaints@example.org"]]);
+    });
+
+    it("reads every post as anonymous while the notice in force does not name {{feedbackFormsNamed}}: no name, no way back, no chosen reader", async () => {
+      const named = { ...COMPLAINT, identity: "named", name: "Ana Pop", audience: "person", email: "ana@example.org" };
+      expect(await submitFeedback(db, deps({ namedDescribed: false }), named, NOW)).toEqual({ outcome: "sent" });
+      expect(mailgun.send).not.toHaveBeenCalled();
+      expect(smtp.messages[0].to).toEqual(["complaints@example.org"]);
+      expect(smtp.messages[0].replyTo).toBeUndefined();
+      expect(smtp.messages[0].text).not.toContain("Ana");
+      expect(smtp.messages[0].text.split("\n")[0]).toBe("Nume: (anonim)");
+      // A named post with no name is not refused then: there is no named mode to refuse it in.
+      expect(await submitFeedback(db, deps({ namedDescribed: false }), { ...named, name: "" }, NOW)).toEqual({ outcome: "sent" });
     });
   });
 
@@ -310,6 +379,18 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(await noticeDescribesFeedbackForms(db, NOW)).toBe(false);
       await approveNotice({ ro: privacyNoticeRo, en: privacyNoticeEn });
       expect(await noticeDescribesFeedbackForms(db, NOW)).toBe(true);
+    });
+
+    it("§NNN allows a name only while the notice in force also names {{feedbackFormsNamed}}, in every language", async () => {
+      const unnamed = (body: LegalDocumentBody) => JSON.parse(JSON.stringify(body).split("{{feedbackFormsNamed}}").join("cu numele")) as LegalDocumentBody;
+      expect(await noticeDescribesFeedbackFormsNamed(db, NOW)).toBe(false);
+      await approveNotice({ ro: unnamed(privacyNoticeRo), en: unnamed(privacyNoticeEn) });
+      expect(await noticeDescribesFeedbackForms(db, NOW)).toBe(true);
+      expect(await noticeDescribesFeedbackFormsNamed(db, NOW)).toBe(false);
+      await approveNotice({ ro: privacyNoticeRo, en: unnamed(privacyNoticeEn) });
+      expect(await noticeDescribesFeedbackFormsNamed(db, NOW)).toBe(false);
+      await approveNotice({ ro: privacyNoticeRo, en: privacyNoticeEn });
+      expect(await noticeDescribesFeedbackFormsNamed(db, NOW)).toBe(true);
     });
   });
 

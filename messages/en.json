@@ -2954,7 +2954,8 @@
         "registrationsPerAddress": "Terms only: how many people may register with the same email address for one event, with the unit (“4 people”), from Settings → “Deadlines”",
         "gmailFallback": "Only in the privacy notice: the name of the switch «Gmail takes over when Mailgun stops», quoted. Without it in the notice in force, the switch is off and messages wait for Mailgun",
         "eventInvitations": "Privacy notice only: the Invitations section's name, in quotation marks. With it in the notice in force, /admin/tasks counts the invitations as described",
-        "feedbackForms": "Privacy notice only: the “Tell us something” forms’ name, in quotation marks. With it in the notice in force, the contact page shows the forms switched on"
+        "feedbackForms": "Privacy notice only: the “Tell us something” forms’ name, in quotation marks. With it in the notice in force, the contact page shows the forms switched on",
+        "feedbackFormsNamed": "Privacy notice only: the “With my name” choice of the “Tell us something” forms, in quotation marks. Without it in the notice in force, the forms are anonymous only"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -3660,6 +3661,15 @@
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 5 has the paragraph about the forms, section 10 their cookie.",
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”. Once in force in both languages, the forms switched on appear under the newsletter.",
             "The email “The legal templates changed” goes by itself after the release: nothing to do for it."
+          ]
+        },
+        "feedbackNamedNotice": {
+          "title": "Privacy notice: “Tell us something” with a name",
+          "todo": "The notice in force does not yet say the “Tell us something” forms may be sent with a name: until the club approves a notice that says so, the forms are anonymous only.",
+          "done": "The notice in force describes sending with a name: each form opens with “Anonymous” / “With my name”, and whoever gives a name chooses who hears it.",
+          "how": [
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The forms' paragraph in section 5 describes the “With my name” choice and who hears it.",
+            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”. Once in force in both languages, the forms open with the choice, with no other setting."
           ]
         },
         "teamPageNotice": {
@@ -8480,11 +8490,20 @@
       "next": "Continue"
     },
     "identity": {
-      "legend": "How do you send it?",
+      "legend": "How do you want to send it?",
       "anonymous": "Anonymous",
-      "named": "With my first and last name"
+      "anonymousHint": "You do not tell us who you are.",
+      "named": "With my name",
+      "namedHint": "So we can find you and answer."
     },
     "name": "First and last name",
+    "audience": {
+      "legend": "Who should hear about it?",
+      "club": "The club",
+      "clubHint": "The message reaches the club's mailbox.",
+      "person": "{name}",
+      "personHint": "Only {name}, the person the club designated for safety. Confidential."
+    },
     "branches": {
       "howItWent": {
         "label": "How it was",
@@ -8508,6 +8527,7 @@
     },
     "safety": {
       "reader": "The message reaches {name} only. The site keeps nothing of it.",
+      "readerChoice": "Anonymously, the message reaches {name} only; with your name, you choose who hears it. The site keeps nothing of it.",
       "whereWhen": "Where and when (optional)",
       "contact": "If you want {name} to contact you, leave an email or a phone number (optional)",
       "contactHelp": "Only if you want an answer."
@@ -8564,6 +8584,7 @@
     },
     "fieldNames": {
       "name": "The name",
+      "audience": "Who should hear about it",
       "event": "The event",
       "date": "The date",
       "rating": "How it was",

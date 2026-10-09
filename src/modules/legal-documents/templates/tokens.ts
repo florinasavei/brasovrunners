@@ -12,6 +12,7 @@ import {
   addressCapMergeValues,
   EVENT_INVITATIONS_MERGE_FIELD,
   FEEDBACK_FORMS_MERGE_FIELD,
+  FEEDBACK_FORMS_NAMED_MERGE_FIELD,
   DEADLINE_MERGE_FIELDS,
   deadlineMergeValues,
   LIST_NUMBERS_MERGE_FIELD,
@@ -28,7 +29,7 @@ import { seriesRhythmPhrase } from "@/modules/group-run-declarations/series";
 import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 import { gmailFallbackClause } from "@/modules/notifications/fallback-notice-words";
 import { eventInvitationsClause } from "@/modules/registrations/invitation-words";
-import { feedbackFormsClause } from "@/modules/feedback/notice-words";
+import { feedbackFormsClause, feedbackFormsNamedClause } from "@/modules/feedback/notice-words";
 
 /**
  * The declaration's merge fields, in one list (`DECISIONS.md` §190).
@@ -206,6 +207,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${FEEDBACK_FORMS_MERGE_FIELD}}}`,
     messageKey: FEEDBACK_FORMS_MERGE_FIELD,
     example: inBoth((locale) => feedbackFormsClause(locale)),
+  },
+  // The privacy notice's marker for «Spune-ne ceva»'s named mode (§NNN): the radio's words, and the
+  // switch — the forms offer «Cu nume și prenume» only while it is named (`describesFeedbackFormsNamed`).
+  {
+    token: `{{${FEEDBACK_FORMS_NAMED_MERGE_FIELD}}}`,
+    messageKey: FEEDBACK_FORMS_NAMED_MERGE_FIELD,
+    example: inBoth((locale) => feedbackFormsNamedClause(locale)),
   },
 ];
 

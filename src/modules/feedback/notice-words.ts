@@ -11,7 +11,16 @@ export function feedbackFormsClause(locale: string): string {
   return locale === "en" ? `“${en.Tell.title}”` : `„${ro.Tell.title}”`;
 }
 
-/** The notice's merge value, beside the newsletter's and the invitations' on the legal pages. */
-export function feedbackFormsMergeValues(locale: string): { feedbackForms: string } {
-  return { feedbackForms: feedbackFormsClause(locale) };
+/**
+ * What the privacy notice's `{{feedbackFormsNamed}}` becomes (§NNN): the named mode's radio, quoted —
+ * „Cu nume și prenume” / “With my name” — read from the catalogue the form's radio reads
+ * (`Tell.identity.named`), so the approved sentence names the choice a visitor sees.
+ */
+export function feedbackFormsNamedClause(locale: string): string {
+  return locale === "en" ? `“${en.Tell.identity.named}”` : `„${ro.Tell.identity.named}”`;
+}
+
+/** The notice's merge values, beside the newsletter's and the invitations' on the legal pages: the forms' name and the named mode's. */
+export function feedbackFormsMergeValues(locale: string): { feedbackForms: string; feedbackFormsNamed: string } {
+  return { feedbackForms: feedbackFormsClause(locale), feedbackFormsNamed: feedbackFormsNamedClause(locale) };
 }

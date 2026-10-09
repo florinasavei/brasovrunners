@@ -22,7 +22,8 @@ import { HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
  * test ends with every branch off, as the seed leaves them.
  *
  * **The notice.** The local seed approves the platform's template, which names `{{feedbackForms}}`
- * in both languages, and then nothing is written. On a database seeded before the template named it,
+ * and `{{feedbackFormsNamed}}` in both languages, and then nothing is written. On a database seeded
+ * before the template named them,
  * the notice in force is approved once more with one paragraph naming the marker added to it — the
  * draft written to the table (the setup, not the subject) and approved through `/admin/legal`, which
  * expires the cached notice. That leaves one more approved version behind (§46): run it on a local
@@ -33,11 +34,12 @@ import { HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
  */
 
 const LOCK_KEY = 390_039_001;
-const MARKER = "{{feedbackForms}}";
+/** The forms' marker (§676) and the named mode's (§NNN): without the second, every form is anonymous only. */
+const MARKERS = ["{{feedbackForms}}", "{{feedbackFormsNamed}}"] as const;
 const SAFETY_NAME = "Maria";
 const ADDED_PARAGRAPH = {
-  ro: `Formularele ${MARKER} de pe pagina de contact sunt anonime; platforma nu păstrează nicio copie.`,
-  en: `The ${MARKER} forms on the contact page are anonymous; the platform keeps no copy.`,
+  ro: `Formularele ${MARKERS[0]} de pe pagina de contact sunt anonime, dacă nu alegi ${MARKERS[1]}; platforma nu păstrează nicio copie.`,
+  en: `The ${MARKERS[0]} forms on the contact page are anonymous unless you choose ${MARKERS[1]}; the platform keeps no copy.`,
 } as const;
 
 function databaseUrl(): string {
@@ -76,7 +78,7 @@ async function noticeInForce(client: pg.Client): Promise<Translation[]> {
 }
 
 const describes = (translations: Translation[]) =>
-  translations.length >= 2 && translations.every((translation) => JSON.stringify(translation.body).includes(MARKER));
+  translations.length >= 2 && translations.every((translation) => MARKERS.every((marker) => JSON.stringify(translation.body).includes(marker)));
 
 /** The next PRIVACY_NOTICE version as a draft, written to the table; returns its id. */
 async function insertDraft(client: pg.Client, translations: Translation[]): Promise<string> {
@@ -101,7 +103,7 @@ async function insertDraft(client: pg.Client, translations: Translation[]): Prom
   return rows[0].id;
 }
 
-/** The notice in force names `{{feedbackForms}}` in both languages — approved through `/admin/legal` when it does not yet. */
+/** The notice in force names `{{feedbackForms}}` and `{{feedbackFormsNamed}}` in both languages — approved through `/admin/legal` when it does not yet. */
 async function ensureNoticeDescribesTheForms(page: Page): Promise<void> {
   const current = await withDatabase(noticeInForce);
   if (describes(current)) return;
@@ -207,7 +209,10 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await expect(page.getByTestId("feedback-glyph-siguranta")).toBeVisible();
       await expect(page.getByRole("heading", { level: 2, name: "Siguranță pentru femei" })).toBeVisible();
       // Above the form, in the page's language: who reads it, by the first name the club set.
-      await expect(page.getByTestId("feedback-safety-reader")).toHaveText(`Mesajul ajunge doar la ${SAFETY_NAME}. Site-ul nu păstrează nimic din el.`);
+      // The club may hear a named report too (§NNN) — the contact form reaches it on this deployment — so the line says the sender chooses then.
+      await expect(page.getByTestId("feedback-safety-reader")).toHaveText(
+        `Anonim, mesajul ajunge doar la ${SAFETY_NAME}; cu nume și prenume, alegi tu cine află. Site-ul nu păstrează nimic din el.`,
+      );
       await expect(page.getByTestId("feedback-form-siguranta")).toBeVisible();
       // The form opens with «Anonim» / «Cu nume și prenume» (§NNN): anonymous by default, the name and the
       // way back hidden until the name is chosen — CSS alone.
@@ -217,9 +222,19 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await expect(identity.getByRole("radio", { name: "Anonim" })).toBeChecked();
       await expect(safetyForm.locator('[name="name"]')).toBeHidden();
       await expect(safetyForm.locator('[name="contact"]')).toBeHidden();
+      await expect(identity).toContainText("Cum vrei să trimiți?");
+      await expect(identity).toContainText("Nu ne spui cine ești.");
       await identity.getByRole("radio", { name: "Cu nume și prenume" }).check();
       await expect(safetyForm.locator('[name="name"]')).toBeVisible();
+      await expect(safetyForm.locator('[name="name"]')).toHaveAttribute("maxlength", "80");
       await expect(safetyForm.locator('[name="contact"]')).toBeVisible();
+      // «Cine să afle?» (§NNN): the club or the safety person by her first name — on her own form, she is
+      // checked — and never an address on the page.
+      const audience = safetyForm.getByTestId("feedback-audience");
+      await expect(audience).toBeVisible();
+      await expect(audience.getByRole("radio", { name: SAFETY_NAME })).toBeChecked();
+      await expect(audience.getByRole("radio", { name: "Clubul" })).toBeVisible();
+      expect(await page.content()).not.toContain("@example.org");
       await identity.getByRole("radio", { name: "Anonim" }).check();
       await expect(safetyForm.locator('[name="name"]')).toBeHidden();
       await noSidewaysScroll(page);
@@ -243,6 +258,8 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       const form = page.getByTestId("feedback-form-cum-a-fost");
       await form.getByRole("radio", { name: "Cu nume și prenume" }).check();
       await form.locator('[name="name"]').fill("Ana Pop");
+      // On «Cum a fost» the club is the default reader; the safety person is the other answer.
+      await expect(form.getByTestId("feedback-audience").getByRole("radio", { name: "Clubul" })).toBeChecked();
       await form.locator('[name="message"]').fill("   ");
       await form.locator('input[name="reasons"][value="time"]').check();
       await form.locator('[name="reasonOther"]').fill("Seara e greu");
