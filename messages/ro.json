@@ -8472,7 +8472,7 @@
     "backToContact": "Înapoi la Contact",
     "door": {
       "intro": "Cum a fost la un eveniment, o sugestie sau o reclamație — anonim, dacă vrei.",
-      "introSafety": "Un formular confidențial pentru cine nu s-a simțit în siguranță.",
+      "introSafety": "Un formular confidențial pentru femeile care nu s-au simțit în siguranță la noi.",
       "button": "Deschide formularul anonim"
     },
     "choose": {
@@ -8497,7 +8497,7 @@
       },
       "safety": {
         "label": "Siguranță pentru femei",
-        "hint": "Ca femeie, alergatul vine uneori cu provocări în plus. Dacă ceva te-a făcut să nu te simți în largul tău la noi, spune-ne — confidențial."
+        "hint": "Știm că alergatul, ca femeie, vine cu provocări în plus. Dacă ceva te-a făcut să nu te simți în siguranță la noi, spune-ne — confidențial."
       }
     },
     "safety": {

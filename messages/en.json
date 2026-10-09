@@ -8472,7 +8472,7 @@
     "backToContact": "Back to Contact",
     "door": {
       "intro": "How an event went, a suggestion or a complaint — anonymously, if you like.",
-      "introSafety": "A confidential form for anyone who did not feel safe.",
+      "introSafety": "A confidential form for women who did not feel safe with us.",
       "button": "Open the anonymous form"
     },
     "choose": {
@@ -8497,7 +8497,7 @@
       },
       "safety": {
         "label": "Safety for women",
-        "hint": "Running as a woman sometimes comes with extra challenges. If anything made you feel uneasy with us, tell us — in confidence."
+        "hint": "We know running as a woman comes with extra challenges. If something made you feel unsafe with us, tell us — confidentially."
       }
     },
     "safety": {

@@ -175,8 +175,9 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await door.click();
       await expect(page).toHaveURL(/\/ro\/contact\/spune-ne$/);
 
-      // Step 1 (§NNN): one card per branch on, each a label around a native radio, with its glyph, a
-      // thumb's height and the warm words for the safety branch; «Continuă» puts the branch in the address.
+      // Step 1 (§NNN): one card per branch on, each a label around a native radio that stays visible,
+      // with its glyph, a thumb's height and the warm words for the women's form; «Continuă» puts the
+      // branch in the address, and step 2's title carries the same glyph.
       const choose = page.getByTestId("feedback-choose");
       await expect(choose).toBeVisible();
       await expect(choose.locator('input[name="tip"]')).toHaveCount(2);
@@ -184,8 +185,9 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await expect(page.getByTestId("feedback-choice-cum-a-fost").locator('input[name="tip"]')).toBeChecked();
       await expect(safetyCard).toContainText("Siguranță pentru femei");
       await expect(safetyCard).toContainText("provocări în plus");
-      for (const card of [page.getByTestId("feedback-choice-cum-a-fost"), safetyCard]) {
-        await expect(card.locator("svg").first()).toBeVisible();
+      for (const [slug, card] of [["cum-a-fost", page.getByTestId("feedback-choice-cum-a-fost")], ["siguranta", safetyCard]] as const) {
+        await expect(card.getByTestId(`feedback-glyph-${slug}`)).toBeVisible();
+        await expect(card.locator('input[name="tip"]')).toBeVisible();
         expect((await card.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
       }
       await noSidewaysScroll(page);
@@ -194,6 +196,8 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await expect(safetyCard.locator('input[name="tip"]')).toBeChecked();
       await choose.getByRole("button", { name: "Continuă" }).click();
       await expect(page).toHaveURL(/\/ro\/contact\/spune-ne\?tip=siguranta$/);
+      await expect(page.getByTestId("feedback-glyph-siguranta")).toBeVisible();
+      await expect(page.getByRole("heading", { level: 2, name: "Siguranță pentru femei" })).toBeVisible();
       // Above the form, in the page's language: who reads it, by the first name the club set.
       await expect(page.getByTestId("feedback-safety-reader")).toHaveText(`Mesajul ajunge doar la ${SAFETY_NAME}. Site-ul nu păstrează nimic din el.`);
       await expect(page.getByTestId("feedback-form-siguranta")).toBeVisible();
