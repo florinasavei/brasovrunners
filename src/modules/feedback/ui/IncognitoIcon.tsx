@@ -3,7 +3,7 @@
 import { createSvgIcon } from "@mui/material/SvgIcon";
 
 /**
- * The incognito hat and glasses, «Anonim»'s glyph in «Cum vrei să trimiți?» (§NNN; the owner,
+ * The incognito hat and glasses, «Anonim»'s glyph in «Cum vrei să trimiți?» (§679; the owner,
  * 2026-10-09: «For "anymoymoys" use that incognito icons as well», «We love icons»). Drawn as
  * `createSvgIcon` draws every glyph of `@mui/icons-material` (the same `"use client"` module, as
  * `weather/ui/RainyIcon.tsx` is): it takes `fontSize` and `color` like the others, and its test id is

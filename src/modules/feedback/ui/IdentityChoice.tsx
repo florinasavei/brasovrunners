@@ -34,7 +34,7 @@ type Props = {
 };
 
 /**
- * One radio with its sentence under it, and, where it has one, a 24-pixel glyph before its words (§NNN):
+ * One radio with its sentence under it, and, where it has one, a 24-pixel glyph before its words (§679):
  * decoration (`aria-hidden`), drawn inside the label, so the whole row is still the radio's tap target.
  */
 function Choice({
@@ -74,7 +74,7 @@ function Choice({
 /**
  * «Spune-ne ceva»'s first box (§678), every branch's form: «Cum vrei să trimiți?» — «Anonim», the
  * default, or «Cu nume și prenume», each with its glyph before its words (the incognito hat and
- * glasses, a person; §NNN) and its sentence under it. The named mode shows the name
+ * glasses, a person; §679) and its sentence under it. The named mode shows the name
  * (2–80 characters, required there by the server), the branch's way back and, when a named message may
  * reach either, «Cine să afle?»: «Clubul» or the safety branch's person by her first name — never an
  * address. They show only while «Cu nume și prenume» is checked, in CSS alone (`:has`), no island;
@@ -98,7 +98,7 @@ export default async function IdentityChoice({ wayBack, named, invalid, kept, sa
         <Typography component="legend" variant="body1" sx={{ fontWeight: 600 }}>
           {t("identity.legend")}
         </Typography>
-        {/* «We love icons» (§NNN): the incognito hat and glasses for «Anonim», a person for the named mode. */}
+        {/* «We love icons» (§679): the incognito hat and glasses for «Anonim», a person for the named mode. */}
         <Choice name="identity" value="anonymous" checked={!named} label={t("identity.anonymous")} hint={t("identity.anonymousHint")} glyph={IncognitoIcon} />
         <Choice name="identity" value="named" checked={named} label={t("identity.named")} hint={t("identity.namedHint")} glyph={PersonOutlinedIcon} />
       </Box>

@@ -239,7 +239,7 @@ describe("§678 «Cine să afle?»: the club or the safety branch's person", () 
     expect(composeFeedbackEmail(safety, { eventTitle: null, toPerson: true }, "production").text).not.toContain("Din formularul");
   });
 
-  it("§NNN the safety email's footer names «Girl Zone»; its subject stays neutral", () => {
+  it("§679 the safety email's footer names «Girl Zone»; its subject stays neutral", () => {
     const safety = parse({ branch: "safety", message: "Cineva m-a urmărit.", whereWhen: "", contact: "" });
     const email = composeFeedbackEmail(safety, { eventTitle: null }, "production");
     expect(SAFETY_SUBJECT).toBe("Mesaj confidențial de pe site");

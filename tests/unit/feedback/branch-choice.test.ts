@@ -10,7 +10,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * BR-REQ-070-04 — «Spune-ne ceva»'s step 1 as cards (§676, §678, §NNN), rendered
+ * BR-REQ-070-04 — «Spune-ne ceva»'s step 1 as cards (§676, §678, §679), rendered
  * on the server as a visitor's browser receives it: one card per branch offered, each a `<label>` around
  * a visible native radio named `tip` with the branch's slug, its glyph, its name and its hint; the
  * chosen branch checked by default; the women's form in the owner's words; and one glyph for every
@@ -113,7 +113,7 @@ describe("BR-REQ-070-04 one glyph per branch", () => {
     expect(new Set(Object.values(FEEDBACK_BRANCH_GLYPH)).size).toBe(FEEDBACK_BRANCHES.length);
   });
 
-  it("§NNN the safety form is «Girl Zone» with a flower, in both languages; the hint and the door's sentence stay", () => {
+  it("§679 the safety form is «Girl Zone» with a flower, in both languages; the hint and the door's sentence stay", () => {
     expect(FEEDBACK_BRANCH_GLYPH.safety).toBe(LocalFloristOutlinedIcon);
     expect(renderToStaticMarkup(createElement(LocalFloristOutlinedIcon))).toContain('data-testid="LocalFloristOutlinedIcon"');
     expect(ro.Tell.branches.safety.label).toBe("Girl Zone");
@@ -131,7 +131,7 @@ describe("BR-REQ-070-04 one glyph per branch", () => {
     for (const catalogue of [ro, en]) expect(JSON.stringify(catalogue)).not.toMatch(/Siguranță pentru femei|Safety for women/);
   });
 
-  it("§NNN «Girl Zone» is said as English on the Romanian page, and nothing else carries a lang", async () => {
+  it("§679 «Girl Zone» is said as English on the Romanian page, and nothing else carries a lang", async () => {
     expect(branchLabelLang("safety", "ro")).toBe("en");
     expect(branchLabelLang("safety", "en")).toBeUndefined();
     for (const branch of ["howItWent", "suggestion", "complaint"] as const) {
@@ -145,7 +145,7 @@ describe("BR-REQ-070-04 one glyph per branch", () => {
     expect(enHtml).not.toContain('lang="');
   });
 
-  it("§NNN the privacy notice's template names «Girl Zone» three times per language and keeps both markers", () => {
+  it("§679 the privacy notice's template names «Girl Zone» three times per language and keeps both markers", () => {
     for (const [body, name] of [[privacyNoticeRo, "„Girl Zone”"], [privacyNoticeEn, "“Girl Zone”"]] as const) {
       const text = JSON.stringify(body);
       expect(text.split(name).length - 1).toBe(3);

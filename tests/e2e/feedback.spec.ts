@@ -7,7 +7,7 @@ import { HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
 
 /**
  * BR-REQ-070-04, `DECISIONS.md` §676 — «Spune-ne ceva», the anonymous wizard, through the browser at
- * 320px and on a desktop, against the production build: the door above the newsletter on `/contact` (the newsletter last, §NNN);
+ * 320px and on a desktop, against the production build: the door above the newsletter on `/contact` (the newsletter last, §679);
  * step 1's choice, a `GET` that puts the branch in `?tip=`; the safety form's reader line naming the
  * first name the club set; «Cum a fost» preselecting the event a link names (and «Altceva» for one it
  * does not publish); an empty post coming back on `#feedback-errors` with what was typed kept from
@@ -168,7 +168,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await ensureNoticeDescribesTheForms(page);
       await setBranches(page, { howItWent: true, safety: true });
 
-      // The door, above the newsletter (§NNN; the owner: «the newsletter must be all the way to the bottom
+      // The door, above the newsletter (§679; the owner: «the newsletter must be all the way to the bottom
       // now»), a thumb's height, leading to the wizard.
       await page.goto("/ro/contact", { waitUntil: "networkidle" });
       const door = page.getByTestId("feedback-door");
@@ -208,7 +208,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await expect(safetyCard).toHaveCSS("outline-width", "2px");
       // The radio is named by the title alone; the hint describes it.
       await expect(safetyCard.locator('input[name="tip"]')).toHaveAccessibleName("Girl Zone");
-      // An English name on the Romanian page, said as English (§NNN).
+      // An English name on the Romanian page, said as English (§679).
       await expect(safetyCard.getByText("Girl Zone")).toHaveAttribute("lang", "en");
       // The whole card is the target: a press on its words chooses it.
       await safetyCard.getByText("Girl Zone").click();
@@ -234,7 +234,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await expect(safetyForm.locator('[name="contact"]')).toBeHidden();
       await expect(identity).toContainText("Cum vrei să trimiți?");
       await expect(identity).toContainText("Nu ne spui cine ești.");
-      // «We love icons» (§NNN): the incognito hat and glasses before «Anonim», a person before the named
+      // «We love icons» (§679): the incognito hat and glasses before «Anonim», a person before the named
       // mode — decoration, so the radios keep their words as their names (above), and a thumb's row each.
       // MUI writes a glyph's own test id («IncognitoIcon», «PersonOutlinedIcon») outside a production
       // build only, so the unit test reads those and this one the label's own span.

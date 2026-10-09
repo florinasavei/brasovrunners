@@ -7,13 +7,13 @@ import type { ComponentType } from "react";
 import type { FeedbackBranch } from "../domain/branches";
 
 /**
- * «Spune-ne ceva»'s one glyph per branch (§676, §678, §NNN), looked up by the branch's name: step 1 draws
+ * «Spune-ne ceva»'s one glyph per branch (§676, §678, §679), looked up by the branch's name: step 1 draws
  * it on each card and step 2 beside the branch's title, so the picture a visitor chose is the one above
  * the form they fill. Decoration only — the word is the label, and the tile is `aria-hidden`. One file
  * per glyph, never the barrel (§90).
  *
  * The metaphors, written down: how it was is a runner, a suggestion the light bulb, a complaint the
- * triangle that says something is wrong, and «Girl Zone», the women's safety form, a flower (§NNN, the
+ * triangle that says something is wrong, and «Girl Zone», the women's safety form, a flower (§679, the
  * owner's ask; §678's heart before it) — never a shield: the owner asked the form to stop reading as if
  * something had already gone wrong.
  */
@@ -38,7 +38,7 @@ export const FEEDBACK_BRANCH_TINT: Readonly<Record<FeedbackBranch, "primary" | "
 
 /**
  * The language a branch's name is written in, where it is a name in one language whatever the page's
- * (§NNN): «Girl Zone» is English on the Romanian page too, so the step-1 card and the step-2 heading
+ * (§679): «Girl Zone» is English on the Romanian page too, so the step-1 card and the step-2 heading
  * carry `lang="en"` there and a screen reader says it as English. A branch absent here is written in
  * the page's own language.
  */

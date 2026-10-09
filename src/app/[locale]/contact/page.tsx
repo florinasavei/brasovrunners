@@ -170,7 +170,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
   // «Poate găsești răspunsul la Întrebări frecvente» (§525), while that page is on the site.
   const showFaq = await faqOnSite(locale);
   /*
-    «Spune-ne ceva» (§676): the door under the form and above the newsletter (§NNN), drawn only while a
+    «Spune-ne ceva» (§676): the door under the form and above the newsletter (§679), drawn only while a
     branch is switched on and the notice in force describes the forms in every language — tolerant of
     an outage like every read here, and then simply not drawn.
   */
@@ -357,7 +357,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
       )}
 
       {/* «Spune-ne ceva» (§676): one section and one button to the anonymous wizard, under the form and
-          above the newsletter (§NNN). */}
+          above the newsletter (§679). */}
       {feedbackOpen && (
         <Box
           component="section"
@@ -388,7 +388,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
       )}
 
       {/*
-        The newsletter's box, the last section of the page (§NNN; the owner, 2026-10-09: «And the
+        The newsletter's box, the last section of the page (§679; the owner, 2026-10-09: «And the
         newsletter must be all the way to the bottom now»): under the form and under «Spune-ne ceva»,
         only the club's identity line below it. Its anchors (`#abonare`, the pop-up's and the
         unsubscribe fold's) are ids, so every redirect and scroll target lands wherever it sits.

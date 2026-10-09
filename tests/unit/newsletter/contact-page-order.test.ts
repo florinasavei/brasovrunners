@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 /**
- * BR-REQ-070-04, `DECISIONS.md` §NNN (amending §676) — the owner, 2026-10-09: «And the newsletter must
+ * BR-REQ-070-04, `DECISIONS.md` §679 (amending §676) — the owner, 2026-10-09: «And the newsletter must
  * be all the way to the bottom now». On `/contact` the contact form comes first, «Spune-ne ceva» under
  * it, and the newsletter's box is the page's last section: nothing but the club's identity line (§565)
  * is drawn after it. Source-level, like `density-pass-360.test.ts`: the order in the page's JSX is the
@@ -12,7 +12,7 @@ const page = readFileSync("src/app/[locale]/contact/page.tsx", "utf8").replace(/
 const body = page.slice(page.indexOf("export default async function ContactPage"));
 const jsx = body.slice(body.indexOf("return ("));
 
-describe("BR-REQ-070-04 the contact page's sections, in order (§NNN)", () => {
+describe("BR-REQ-070-04 the contact page's sections, in order (§679)", () => {
   it("draws the form, then «Spune-ne ceva», then the newsletter, then only the identity line", () => {
     const form = jsx.indexOf("<form action={submitContactAction}>");
     const feedback = jsx.indexOf("id={FEEDBACK_SECTION_ID}");

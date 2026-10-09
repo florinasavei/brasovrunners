@@ -54,7 +54,7 @@ describe("BR-REQ-070-04 «Cum vrei să trimiți?» (§678)", () => {
     for (const words of ["How do you want to send it?", "Anonymous", "You do not tell us who you are.", "With my name", "So we can find you and answer."]) expect(english).toContain(words);
   });
 
-  it("draws the incognito hat and glasses before «Anonim» and a person before «Cu nume și prenume», both `aria-hidden`, inside the radio's label (§NNN)", async () => {
+  it("draws the incognito hat and glasses before «Anonim» and a person before «Cu nume și prenume», both `aria-hidden`, inside the radio's label (§679)", async () => {
     for (const inLocale of ["ro", "en"] as const) {
       const html = await render({ inLocale });
       const labels = [...html.matchAll(/<label[\s\S]*?<\/label>/g)].map(([label]) => label);
@@ -74,7 +74,7 @@ describe("BR-REQ-070-04 «Cum vrei să trimiți?» (§678)", () => {
     }
   });
 
-  it("draws «IncognitoIcon» as one path on the 24-unit grid, taking fontSize and colour like every Material glyph (§NNN)", async () => {
+  it("draws «IncognitoIcon» as one path on the 24-unit grid, taking fontSize and colour like every Material glyph (§679)", async () => {
     const html = renderToStaticMarkup(createElement(IncognitoIcon, { fontSize: "small", color: "primary" }));
     expect(html).toContain('viewBox="0 0 24 24"');
     expect(html).toContain('data-testid="IncognitoIcon"');

@@ -134,7 +134,7 @@ export const PANEL_GLYPHS = {
   contacts: ContactMailIcon,
   shownAddress: AlternateEmailIcon,
   publicPhone: PhoneIcon,
-  // «Spune-ne ceva» (§676): the four anonymous forms above the newsletter on «Contact» (§NNN).
+  // «Spune-ne ceva» (§676): the four anonymous forms above the newsletter on «Contact» (§679).
   feedback: FeedbackIcon,
   // «Răspunsurile din calendar» (§672): where an invitation's «Da / Nu / Poate» goes.
   calendarRsvp: EventAvailableIcon,

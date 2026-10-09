@@ -34,7 +34,7 @@ export function BranchGlyphTile({ branch }: { branch: FeedbackBranch }) {
  * `aria-describedby`), so a screen reader says the name first and the sentence after it.
  *
  * `chosen` is checked by default — the first branch, or the one `?tip=` named. A name written in
- * another language than the page's — «Girl Zone» on the Romanian page — carries its `lang` (§NNN).
+ * another language than the page's — «Girl Zone» on the Romanian page — carries its `lang` (§679).
  */
 export default async function BranchChoice({ branches, chosen }: { branches: readonly FeedbackBranch[]; chosen: FeedbackBranch }) {
   const t = await getTranslations("Tell");

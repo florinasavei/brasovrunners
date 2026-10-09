@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.79-2026-10-09 -->
+<!-- PROJECT_BASELINE: BR-V2.80-2026-10-09 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.79-2026-10-09`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.80-2026-10-09`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1440,7 +1440,7 @@ club names — which is why a colleague's Yahoo can be on the list.
      another one changes the organizer of entries already answered, which some calendar apps
      refuse; choose the address once.
 
-**«Spune-ne ceva» — the anonymous forms under the contact form, above the newsletter (§676, §NNN).** Nothing to set on the
+**«Spune-ne ceva» — the anonymous forms under the contact form, above the newsletter (§676, §679).** Nothing to set on the
 deployment: the three ordinary branches («Cum a fost», «O sugestie», «O reclamație») leave through
 the same Gmail account as the form above, and the confidential «Girl Zone» through Mailgun alone
 (`MAILGUN_*`, already set), never through the club's Gmail. Without the Gmail account and its app
