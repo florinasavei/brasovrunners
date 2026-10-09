@@ -11,7 +11,9 @@ import type { PickerOption } from "@/modules/feedback/domain/event-picker";
  * same id, the same options in `pickerOrder`'s order and the same words — what a browser without
  * JavaScript posts. Over eight rows the page wraps it in `EventPickerFilter`, handing it plain data
  * only (the rows, the value chosen, the words — §370); eight or fewer, no island at all. And the island
- * itself, rendered on the server, draws nothing but the select it was given.
+ * itself, rendered on the server, draws nothing but the select it was given — and, when its chips will
+ * be drawn, their row already, invisible and hidden from a screen reader, so the field does not jump as
+ * the island takes over.
  */
 let locale: "ro" | "en" = "ro";
 let rows: { id: string; slug: string; title: string; type: string; startsAt: Date; timezone: string }[] = [];
@@ -177,23 +179,48 @@ describe("BR-REQ-070-04 «Evenimentul»: the native select stays, the island sta
 });
 
 describe("EventPickerFilter on the server draws only the select it was given", () => {
-  it("renders its children — the native select — until it runs in a browser", async () => {
+  const SELECT = '<select id="f-event" name="event"><option value="">Altceva / în general</option></select>';
+  const GENERAL_ROW: PickerOption = { value: "", label: "Altceva / în general", kind: "other", day: null, when: null };
+
+  async function serverHtml(options: PickerOption[]): Promise<string> {
     const { default: Island } = await vi.importActual<typeof import("@/modules/feedback/ui/EventPickerFilter")>("@/modules/feedback/ui/EventPickerFilter");
     const props: Omit<ComponentProps<typeof Island>, "children"> = {
       id: "f-event",
       name: "event",
-      options: [{ value: "", label: "Altceva / în general", kind: "other", day: null, when: null }],
+      options,
       selected: "",
       error: false,
-      words: { label: "Evenimentul", search: "", noMatch: "", open: "", close: "", kinds: "", chips: { all: "", race: "", group: "" } },
+      words: { label: "Evenimentul", search: "", noMatch: "", open: "", close: "", kinds: "Arată", chips: { all: "Toate", race: "Curse", group: "Alergări de grup" } },
     };
-    const html = renderToStaticMarkup(
+    return renderToStaticMarkup(
       createElement(
         Island,
         props as ComponentProps<typeof Island>,
         createElement("select", { id: "f-event", name: "event" }, createElement("option", { value: "" }, "Altceva / în general")),
       ),
     );
-    expect(html).toBe('<select id="f-event" name="event"><option value="">Altceva / în general</option></select>');
+  }
+
+  it("renders its children — the native select — until it runs in a browser", async () => {
+    expect(await serverHtml([GENERAL_ROW])).toBe(SELECT);
+  });
+
+  it("holds the chips' row above it when they will be drawn — invisible, unread, unpressable — so the field does not jump", async () => {
+    const html = await serverHtml([
+      GENERAL_ROW,
+      { value: "crosul", label: "Crosul", kind: "race", day: "2026-10-04", when: "4 oct." },
+      { value: "happy", label: "Happy Monday", kind: "group", day: "2026-10-05", when: "5 oct." },
+    ]);
+    expect(html.endsWith(SELECT)).toBe(true);
+    // Emotion's own <style> tags aside, the row is one hidden <div> before the select.
+    const reserved = html.slice(0, html.length - SELECT.length).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
+    expect(reserved).toMatch(/^<div[^>]*aria-hidden="true"[^>]*>/);
+    expect(html).toMatch(/visibility:hidden;\}@media \(scripting: none\)\{\.css-[\w-]+\{display:none;\}\}/);
+    for (const words of ["Toate", "Curse", "Alergări de grup"]) expect(reserved).toContain(words);
+    // Nothing a reader or a test could take for the chips themselves.
+    expect(reserved).not.toContain('role="group"');
+    expect(reserved).not.toContain('role="button"');
+    expect(reserved).not.toContain("aria-pressed");
+    expect(reserved).not.toContain("data-testid");
   });
 });

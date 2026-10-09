@@ -151,10 +151,12 @@ async function setBranches(page: Page, on: Branches): Promise<void> {
  * «Evenimentul» through the filtering island (§NNN), when the picker has it — over eight rows: «Altceva»
  * first, a thumb's row each, the list below the box, «Niciun eveniment găsit» for a word nothing has,
  * the chips when both kinds are there, and an event found by part of its title typed without its
- * diacritics. Returns the title picked — or null when the list is short and the native select is all
+ * diacritics — picked with Enter, the first match highlighted and «Altceva» out of the list while
+ * something matches, then by a tap. `firstSlug` is the first event the server offers, the row under
+ * «Altceva». Returns the title picked — or null when the list is short and the native select is all
  * there is, which the form posts as before.
  */
-async function pickEventByTyping(page: Page): Promise<string | null> {
+async function pickEventByTyping(page: Page, firstSlug: string | undefined): Promise<string | null> {
   const island = page.getByTestId("feedback-event-filter");
   if ((await island.count()) === 0) {
     await expect(page.locator('select[name="event"]')).toHaveCount(1);
@@ -187,7 +189,7 @@ async function pickEventByTyping(page: Page): Promise<string | null> {
   expect((await listbox.boundingBox())?.y ?? 0).toBeGreaterThanOrEqual(boxBottom - 1);
   expect((await options.nth(1).boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
   // The title is the row's first line; its day is the second.
-  const title = (await options.nth(1).locator("span > span").first().innerText()).trim();
+  const title = (await options.nth(1).getByTestId("feedback-event-option-title").innerText()).trim();
 
   await box.fill("zzz-niciun-eveniment");
   await expect(page.getByTestId("feedback-event-no-match")).toHaveText("Niciun eveniment găsit");
@@ -200,6 +202,20 @@ async function pickEventByTyping(page: Page): Promise<string | null> {
     .toLowerCase()
     .slice(0, Math.max(3, Math.min(title.length, 8)))
     .trim();
+  // Typed and Enter: the first match is the row the keyboard is on, never «Altceva», whatever was chosen before.
+  await box.fill(typed);
+  await expect(options.first()).toContainText(title);
+  await expect(listbox.getByRole("option", { name: "Altceva / în general" })).toHaveCount(0);
+  await box.press("Enter");
+  if (firstSlug) await expect(page.locator('[name="event"]')).toHaveValue(firstSlug);
+  await expect(page.locator('[name="event"]')).not.toHaveValue("");
+  await expect(box).toHaveValue(new RegExp(`^${title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} — `));
+
+  // Cleared, the box offers «Altceva» first again; then the same event, by a tap on its row.
+  // (Enter closed the list; the arrow opens it again.)
+  await box.fill("");
+  await box.press("ArrowDown");
+  await expect(options.first()).toHaveText("Altceva / în general");
   await box.fill(typed);
   const match = listbox.getByRole("option").filter({ hasText: title }).first();
   await expect(match).toBeVisible();
@@ -381,7 +397,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       // The event, picked by typing part of its title (§NNN; the owner: «I need to be able the filter
       // the events here») — when the picker is long enough for the filtering island, over eight rows.
       await hydrated(page);
-      const pickedTitle = await pickEventByTyping(page);
+      const pickedTitle = await pickEventByTyping(page, offered[0]);
 
       // Corrected and sent: the sent page, on the branch's slug.
       await page.locator('[name="message"]').fill("Foarte frumos, mulțumim.");

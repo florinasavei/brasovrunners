@@ -20,7 +20,10 @@ import {
  * around its native `<select name="event">` when the list is longer than eight rows.
  *
  * Until it runs — on the server, while the page hydrates, and for good in a browser without
- * JavaScript — it draws its children: the server's native select, which the form posts. Once it
+ * JavaScript — it draws its children: the server's native select, which the form posts. When the
+ * chips will be drawn, the same row of chips stands above it already, invisible and out of the
+ * accessibility tree, so the field does not jump down by a row as the island takes over on a
+ * phone; a browser that says it runs no script (`scripting: none`) gives that row no room. Once it
  * runs it draws, in the select's place, MUI's `Autocomplete` (its own combobox semantics for the
  * keyboard and a screen reader) and a hidden `<input name="event">` carrying the slug chosen, so
  * exactly one `event` is posted and the server reads it as before. Above the box, when both kinds
@@ -86,9 +89,46 @@ export default function EventPickerFilter({
   const [chip, setChip] = useState<PickerChip>("all");
   const chipsShown = pickerChipsShown(options);
 
-  if (!running) return <>{children}</>;
+  // The chips; `reserved`, the same row holding the island's place before it runs — not seen, not read, not pressed.
+  const chipRow = (reserved: boolean) => (
+    <Box
+      role={reserved ? undefined : "group"}
+      aria-label={reserved ? undefined : words.kinds}
+      aria-hidden={reserved || undefined}
+      sx={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 1,
+        mb: 1.5,
+        ...(reserved && { visibility: "hidden", "@media (scripting: none)": { display: "none" } }),
+      }}
+    >
+      {PICKER_CHIPS.map((kind) => (
+        <Chip
+          key={kind}
+          label={words.chips[kind]}
+          data-testid={reserved ? undefined : `feedback-event-chip-${kind}`}
+          aria-pressed={reserved ? undefined : chip === kind}
+          color={chip === kind ? "primary" : "default"}
+          variant={chip === kind ? "filled" : "outlined"}
+          onClick={reserved ? undefined : () => setChip(kind)}
+          sx={{ height: "auto", minHeight: ROW_PX, borderRadius: ROW_PX / 2, px: 0.5 }}
+        />
+      ))}
+    </Box>
+  );
 
-  // «Altceva» first, the events that match, and — when none does — a row that says so and cannot be chosen.
+  if (!running) {
+    return (
+      <>
+        {chipsShown && chipRow(true)}
+        {children}
+      </>
+    );
+  }
+
+  // The events that match — «Altceva» first only while the box is empty or none does (`filterPickerOptions`)
+  // — and, when none does, a row that says so and cannot be chosen.
   const filter = (list: PickerOption[], state: { inputValue: string }): PickerOption[] => {
     const shown = filterPickerOptions(list, state.inputValue, chip);
     return pickerNoEventFound(shown) ? [...shown, { value: NO_MATCH_VALUE, label: words.noMatch, kind: "other", day: null, when: null }] : shown;
@@ -98,22 +138,7 @@ export default function EventPickerFilter({
 
   return (
     <Box data-testid="feedback-event-filter">
-      {chipsShown && (
-        <Box role="group" aria-label={words.kinds} sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 1.5 }}>
-          {PICKER_CHIPS.map((kind) => (
-            <Chip
-              key={kind}
-              label={words.chips[kind]}
-              data-testid={`feedback-event-chip-${kind}`}
-              aria-pressed={chip === kind}
-              color={chip === kind ? "primary" : "default"}
-              variant={chip === kind ? "filled" : "outlined"}
-              onClick={() => setChip(kind)}
-              sx={{ height: "auto", minHeight: ROW_PX, borderRadius: ROW_PX / 2, px: 0.5 }}
-            />
-          ))}
-        </Box>
-      )}
+      {chipsShown && chipRow(false)}
       <Autocomplete
         id={id}
         options={options as PickerOption[]}
@@ -141,7 +166,9 @@ export default function EventPickerFilter({
                 </Box>
               ) : (
                 <Box component="span" sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-                  <Box component="span">{option.label}</Box>
+                  <Box component="span" data-testid="feedback-event-option-title">
+                    {option.label}
+                  </Box>
                   {option.when && (
                     <Box component="span" sx={{ color: "text.secondary", typography: "body2" }}>
                       {option.when}

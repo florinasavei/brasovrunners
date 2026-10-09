@@ -39,7 +39,7 @@ export type PickerOption = {
   when: string | null;
 };
 
-/** «Altceva / în general»: the option that names no event, always first. */
+/** «Altceva / în general»: the option that names no event — first in the list, and in the filtered list whenever what was typed finds no event. */
 export const GENERAL_VALUE = "";
 
 /**
@@ -75,8 +75,12 @@ function haystack(option: PickerOption): string {
  * The rows the list shows for what was typed and the chip pressed, in the given order
  * (`pickerOrder`'s: the held ones first, the most recent first, then the ones ahead).
  *
- * - **«Altceva / în general» is always first**, whatever was typed and whichever chip: it is the
- *   answer for a message about no event, and it must never be filtered away.
+ * - **«Altceva / în general» is first while the box is empty, or while nothing typed matches an
+ *   event**: it is the answer for a message about no event, and it is never out of reach. **While
+ *   what was typed matches an event, it steps out of the list**, so the first match is the row the
+ *   keyboard lands on and Enter picks the event searched for — MUI's combobox highlights the value
+ *   chosen whenever it is among the rows, and with «Altceva» always there (the value by default)
+ *   «crosul» + Enter picked «Altceva» (the review of 2026-10-09). Cleared, the box shows it again.
  * - **Every word typed must be found**, anywhere in the title or the day, without its accents or
  *   its case: «crosul» finds «Crosul», «brasov» finds «Brașov», «happy oct» finds the October
  *   Mondays of «Happy Monday».
@@ -92,10 +96,11 @@ export function filterPickerOptions(options: readonly PickerOption[], typed: str
       (chip === "all" || option.kind === chip) &&
       (words.length === 0 || words.every((word) => haystack(option).includes(word))),
   );
+  if (words.length > 0 && events.length > 0) return events;
   return general ? [general, ...events] : events;
 }
 
-/** Whether a filtered list holds no event — only «Altceva» — so the island says «Niciun eveniment găsit». */
+/** Whether a filtered list holds no event — «Altceva» alone, or nothing — so the island says «Niciun eveniment găsit». */
 export function pickerNoEventFound(filtered: readonly PickerOption[]): boolean {
   return !filtered.some((option) => option.value !== GENERAL_VALUE);
 }

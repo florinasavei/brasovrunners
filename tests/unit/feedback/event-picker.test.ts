@@ -13,8 +13,9 @@ import {
 /**
  * BR-REQ-070-04, `DECISIONS.md` §NNN (amending §676) — «Evenimentul» filtered as one types: the pure
  * rules the island and the server page share. Case and diacritics do not matter, every word typed must
- * be found in the title or the day, a chip narrows to its kind, «Altceva / în general» is always the
- * first row, and eight rows or fewer mount no island at all.
+ * be found in the title or the day, a chip narrows to its kind, «Altceva / în general» is the first row
+ * while the box is empty or nothing typed matches an event and steps out while something does (so Enter
+ * picks the first match), and eight rows or fewer mount no island at all.
  */
 const GENERAL: PickerOption = { value: GENERAL_VALUE, label: "Altceva / în general", kind: "other", day: null, when: null };
 
@@ -31,17 +32,17 @@ const values = (options: readonly PickerOption[]) => options.map((option) => opt
 
 describe("BR-REQ-070-04 the feedback form's event picker filters as you type (§NNN)", () => {
   it("finds a title without its diacritics or its case: «crosul» finds «Crosul», «brasov» finds «Brașov»", () => {
-    expect(values(filterPickerOptions(ALL, "crosul", "all"))).toEqual([GENERAL_VALUE, "crosul-brasovului"]);
-    expect(values(filterPickerOptions(ALL, "brasov", "all"))).toEqual([GENERAL_VALUE, "crosul-brasovului"]);
-    expect(values(filterPickerOptions(ALL, "CROSUL BRAȘOVULUI", "all"))).toEqual([GENERAL_VALUE, "crosul-brasovului"]);
-    expect(values(filterPickerOptions(ALL, "tampa", "all"))).toEqual([GENERAL_VALUE, "drumetie-pe-tampa", "semimaratonul-tampa"]);
-    expect(values(filterPickerOptions(ALL, "drumetie", "all"))).toEqual([GENERAL_VALUE, "drumetie-pe-tampa"]);
+    expect(values(filterPickerOptions(ALL, "crosul", "all"))).toEqual(["crosul-brasovului"]);
+    expect(values(filterPickerOptions(ALL, "brasov", "all"))).toEqual(["crosul-brasovului"]);
+    expect(values(filterPickerOptions(ALL, "CROSUL BRAȘOVULUI", "all"))).toEqual(["crosul-brasovului"]);
+    expect(values(filterPickerOptions(ALL, "tampa", "all"))).toEqual(["drumetie-pe-tampa", "semimaratonul-tampa"]);
+    expect(values(filterPickerOptions(ALL, "drumetie", "all"))).toEqual(["drumetie-pe-tampa"]);
   });
 
   it("matches the day's words too, and every word typed must be found", () => {
-    expect(values(filterPickerOptions(ALL, "happy oct", "all"))).toEqual([GENERAL_VALUE, "happy-monday-2026-10-05"]);
-    expect(values(filterPickerOptions(ALL, "sept", "all"))).toEqual([GENERAL_VALUE, "happy-monday-2026-09-28", "drumetie-pe-tampa"]);
-    expect(values(filterPickerOptions(ALL, "2026-10-25", "all"))).toEqual([GENERAL_VALUE, "semimaratonul-tampa"]);
+    expect(values(filterPickerOptions(ALL, "happy oct", "all"))).toEqual(["happy-monday-2026-10-05"]);
+    expect(values(filterPickerOptions(ALL, "sept", "all"))).toEqual(["happy-monday-2026-09-28", "drumetie-pe-tampa"]);
+    expect(values(filterPickerOptions(ALL, "2026-10-25", "all"))).toEqual(["semimaratonul-tampa"]);
     expect(values(filterPickerOptions(ALL, "happy tampa", "all"))).toEqual([GENERAL_VALUE]);
   });
 
@@ -50,27 +51,45 @@ describe("BR-REQ-070-04 the feedback form's event picker filters as you type (§
     expect(values(filterPickerOptions(ALL, "   ", "all"))).toEqual(values(ALL));
   });
 
-  it("puts «Altceva / în general» first always: whatever is typed, whichever chip, and even when nothing matches", () => {
+  it("puts «Altceva / în general» first while the box is empty or nothing typed matches an event, whichever chip", () => {
     for (const chip of ["all", "race", "group"] as const) {
-      for (const typed of ["", "crosul", "happy", "nimic-de-gasit"]) {
+      for (const typed of ["", "   ", "nimic-de-gasit", "altceva"]) {
         expect(filterPickerOptions(ALL, typed, chip)[0]).toBe(GENERAL);
       }
     }
+    // A chip that leaves nothing of what was typed brings it back too.
+    expect(values(filterPickerOptions(ALL, "crosul", "group"))).toEqual([GENERAL_VALUE]);
     // Given last, still drawn first.
     expect(filterPickerOptions([...EVENTS, GENERAL], "", "all")[0]).toBe(GENERAL);
+  });
+
+  it("takes «Altceva» out while what was typed matches an event, so the first match is the row Enter picks", () => {
+    // MUI highlights the value chosen whenever it is among the rows, and «Altceva» is the value by default:
+    // with it in the list, «crosul» + Enter picked «Altceva» (the review of 2026-10-09).
+    for (const chip of ["all", "race", "group"] as const) {
+      for (const typed of ["crosul", "happy", "tampa", "oct"]) {
+        const shown = filterPickerOptions(ALL, typed, chip);
+        if (shown.some((option) => option.value !== GENERAL_VALUE)) expect(values(shown)).not.toContain(GENERAL_VALUE);
+      }
+    }
+    expect(filterPickerOptions(ALL, "crosul", "all")[0].value).toBe("crosul-brasovului");
+    expect(filterPickerOptions(ALL, "happy", "group")[0].value).toBe("happy-monday-2026-10-05");
+    // Cleared, the box shows it first again.
+    expect(filterPickerOptions(ALL, "", "all")[0]).toBe(GENERAL);
   });
 
   it("says «Niciun eveniment găsit» only when no event is left — «Altceva» alone", () => {
     expect(pickerNoEventFound(filterPickerOptions(ALL, "nimic-de-gasit", "all"))).toBe(true);
     expect(pickerNoEventFound(filterPickerOptions(ALL, "crosul", "all"))).toBe(false);
     expect(pickerNoEventFound(filterPickerOptions(ALL, "crosul", "group"))).toBe(true);
+    expect(pickerNoEventFound(filterPickerOptions(ALL, "", "all"))).toBe(false);
   });
 
   it("narrows to a kind with a chip; «Toate» keeps the others (a hike) too", () => {
     expect(values(filterPickerOptions(ALL, "", "race"))).toEqual([GENERAL_VALUE, "crosul-brasovului", "semimaratonul-tampa"]);
     expect(values(filterPickerOptions(ALL, "", "group"))).toEqual([GENERAL_VALUE, "happy-monday-2026-10-05", "happy-monday-2026-09-28"]);
     expect(values(filterPickerOptions(ALL, "", "all"))).toContain("drumetie-pe-tampa");
-    expect(values(filterPickerOptions(ALL, "tampa", "race"))).toEqual([GENERAL_VALUE, "semimaratonul-tampa"]);
+    expect(values(filterPickerOptions(ALL, "tampa", "race"))).toEqual(["semimaratonul-tampa"]);
   });
 
   it("draws the chips only when both a race and a group run are among the options", () => {
