@@ -715,15 +715,27 @@ describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
     expect(pathsOf(wet)[1]).toBe(pathsOf(calm)[1]);
     expect(wet).not.toContain("UmbrellaIcon");
     expect(text(wet)).toContain("60 %");
-    // A showers hour draws the raining cloud as its sky (`weather/ui/glyphs.ts`), then the drop and its chance.
+    // A showers hour draws the heavy rain cloud as its sky (`weather/ui/glyphs.ts`), then the drop and its chance.
     const showers = pillOf(
       withoutStyles(
         await markup(createElement(EventCard, { event: trailToRoad(), index: 0, now: NOW, weather: { ...reading, code: 80, kind: "showers", glyph: "showers", precipitationProbability: 10 } })),
       ),
     );
     expect(pathsOf(showers)).toHaveLength(2);
-    expect(showers).toContain('data-testid="RainyIcon"');
+    expect(showers).toContain('data-testid="RainyHeavyIcon"');
     expect(pathsOf(showers)[0]).not.toBe(pathOf(calm));
+    // A plain rain hour draws its own cloud, never the chance's drop: one drop in the pill, the
+    // chance's, and a sky glyph unlike it (§NNN, amending §677 — no «💧 12 °C 💧 70 %»).
+    const rain = pillOf(
+      withoutStyles(
+        await markup(createElement(EventCard, { event: trailToRoad(), index: 0, now: NOW, weather: { ...reading, code: 61, kind: "rain", glyph: "rain", precipitationProbability: 70 } })),
+      ),
+    );
+    expect(pathsOf(rain)).toHaveLength(2);
+    expect(rain).toContain('data-testid="RainyIcon"');
+    expect(rain.match(/data-testid="WaterDropIcon"/g)).toHaveLength(1);
+    expect(pathsOf(rain)[0]).not.toBe(pathsOf(rain)[1]);
+    expect(pathsOf(rain)[1]).toBe(pathsOf(calm)[1]);
     expect(text(wet)).toContain("Vremea la start: Înnorat, 12 °C, 60% șanse de ploaie, ploaie probabilă");
     expect(wet).toContain('<span aria-hidden="true">12 °C</span>');
     // Snow keeps its own glyph, whatever the chance: Open-Meteo's chance is of any precipitation.
