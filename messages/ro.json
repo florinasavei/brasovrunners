@@ -4740,6 +4740,9 @@
       "helpNone": "Niciun număr încă: fiecare înscriere primește unul când e confirmată.",
       "helpSome": "{total} numere date.",
       "downloadAll": "Descarcă toate numerele ({count}) — PDF de printat",
+      "downloadMembers": "Doar numerele membrilor (PDF)",
+      "downloadOthers": "Fără numerele membrilor (PDF)",
+      "membersFirstHint": "Numerele membrilor se tipăresc primele, pe foi separate, ca să le poți tipări pe alt carton.",
       "assignedNone": "Nu era nimic de numerotat. Un număr se dă doar unei înscrieri reale și confirmate: {notConfirmed} încă nu au confirmat (email sau declarație), iar {test} sunt înscrieri de test, care nu primesc numere.",
       "downloadSpares": "Retipărește rezervele libere (PDF)",
       "sparesFree": "Rezervate pentru masă: {from}–{to}, libere încă {free} din {total}. Retipărirea le pune doar pe cele libere.",
@@ -5926,6 +5929,7 @@
                 "Numerele se dau în ordinea confirmării, de la «Numerele de concurs (BIB) încep de la». «Alocă numerele» e al Administratorului.",
                 "Rezervele pentru masă: «Retipărește rezervele libere (PDF)» le tipărește din nou pe cele încă nedate. Numere de rezervă noi pune doar Administratorul.",
                 "Numărul membrilor: cine a cerut «Vreau numărul de membru» și are adresa unui cont din «Echipa» primește banda și eticheta membrilor; numărul e același. «Vezi numerele» îi arată pe ceilalți.",
+                "Numerele membrilor se tipăresc primele, pe foi separate. Pe pagina numerelor, «Doar numerele membrilor (PDF)» și «Fără numerele membrilor (PDF)» le despart, ca să le tipărești pe alt carton.",
                 "Pe site, lista «Cine vine» arată coloana «BIB» după ce clubul aprobă nota de confidențialitate nouă. Înainte, Administratorul le scrie celor deja înscriși cu «Trimite un mesaj participanților»; cine nu vrea să apară apasă «Nu vreau să apar pe lista de participanți & rezultate» în «Înscrierile mele», iar numărul dispare odată cu numele. De la aprobare, coloana arată numărul fiecărui confirmat care are număr, oricare ar fi nota sub care s-a înscris; un confirmat fără număr are „—”."
               ]
             },

@@ -1,10 +1,11 @@
 import { hasLocale } from "next-intl";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { shownContactAddresses } from "@/modules/contact/shown-address";
-import { type BibSheetRow, renderBibSheet } from "@/modules/registrations/bibs-pdf";
+import { type BibSheetPart, type BibSheetRow, renderBibSheet } from "@/modules/registrations/bibs-pdf";
 import { bibEventDate, findEventForBibs, freeSpareBibNumbers, listBibs } from "@/modules/registrations/bibs";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -13,6 +14,12 @@ import { env } from "@/shared/config/env";
 import { CLUB_NAME } from "@/theme/brand";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
+
+/** The `part` query (§NNN): an unknown value, or none, is the whole sheet — refused nowhere. */
+const PART = z.enum(["all", "members", "others"]).catch("all");
+
+/** What the file's name says of the part it holds; the whole sheet keeps the name it had. */
+const PART_SUFFIX: Record<BibSheetPart, string> = { all: "", members: "-members", others: "-without-members" };
 
 /**
  * The race numbers of one event as a printable sheet (BR-REQ-038-01).
@@ -23,7 +30,9 @@ import { isUuid } from "@/shared/ids";
  * nothing else (`AGENTS.md` §19.2). `from` and `to` bound the numbers printed, for a reprint;
  * `only=unprinted` is the club's weekly job — the people who registered after the last sheet
  * went to the printer (§264). Omitted, every assigned number. `spares=1` prints the desk's free
- * spares instead, blank (§444).
+ * spares instead, blank (§444). The members' bibs print first, on pages of their own (§NNN);
+ * `part=members` prints only theirs and `part=others` every bib but theirs — anything else, or
+ * nothing, is the whole sheet, never an error.
  *
  * **A GET that mutates nothing**, which is why marking a batch printed is a separate press on the
  * registrations list and not something this route does: the sheet has to be openable in a tab,
@@ -76,6 +85,13 @@ export async function GET(
     that reserves nothing — the reservation is the print's POST (`reserveSpareBibs`).
   */
   const spares = url.searchParams.get("spares") === "1";
+  /*
+    Which bibs go into the file (§NNN): the members' pile alone, to print on other card, or every
+    bib but theirs; anything else is the whole sheet with the members' pages first. A download
+    marks nothing printed, whole or part: the mark is the club's own press on the registrations
+    list (§264), so no file can make it claim a bib that was not in it.
+  */
+  const part: BibSheetPart = PART.parse(url.searchParams.get("part"));
 
   const db = getDb();
   const event = await findEventForBibs(db, id, locale);
@@ -99,7 +115,7 @@ export async function GET(
     picture is, and a design with a picture failed the whole sheet with "Unknown image format.".
   */
   // The members' header too (§664), only when a member's bib is on this sheet; a spare never is one.
-  const anyMember = rows.some((row) => row.member === true);
+  const anyMember = part !== "others" && rows.some((row) => row.member === true);
   const loaded = await loadBibPictures(event.design, BIB_PICTURE_WIDTH.sheet, anyMember);
   const header = loaded.header?.png ?? null;
   const sponsors = loaded.sponsors?.png ?? null;
@@ -121,6 +137,7 @@ export async function GET(
     siteUrl: env.APP_BASE_URL,
     generatedAt: now,
     layout,
+    part,
     design: event.design,
     pictures: { header, sponsors, memberHeader },
     // The members' label when the club typed none (§664), in the sheet's language.
@@ -129,7 +146,7 @@ export async function GET(
     ...(spares && admin ? { blankMark: admin("bibs.spareMark") } : {}),
   });
 
-  const suffix = `${spares ? "-spares" : ""}${from !== undefined || to !== undefined ? `-${from ?? 1}-${to ?? "end"}` : ""}${only && !spares ? "-unprinted" : ""}${layout === "one" ? "-one-per-page" : ""}`;
+  const suffix = `${spares ? "-spares" : ""}${from !== undefined || to !== undefined ? `-${from ?? 1}-${to ?? "end"}` : ""}${only && !spares ? "-unprinted" : ""}${PART_SUFFIX[part]}${layout === "one" ? "-one-per-page" : ""}`;
   return new Response(new Uint8Array(pdf), {
     status: 200,
     headers: {

@@ -135,20 +135,22 @@ describe("§664 the sheet", () => {
     const calls = text.mock.calls.map(([value, x, y]) => ({ value: String(value), x: Number(x), y: Number(y) }));
     const label = calls.find((call) => call.value === "Membru Brașov Runners");
     expect(label).toBeDefined();
-    // The lower bib of the page: its card starts at the paper's half plus the margin.
-    const lowerTop = 841.89 / 2 + BIB_MARGIN;
-    expect(label!.y).toBeGreaterThan(lowerTop + BIB_LAYOUT.memberTagTop);
-    expect(label!.y).toBeLessThan(lowerTop + BIB_LAYOUT.memberTagTop + BIB_LAYOUT.memberTagHeight);
+    // The member's bib opens a page of its own (§NNN): the upper card, which starts at the margin.
+    const upperTop = BIB_MARGIN;
+    expect(label!.y).toBeGreaterThan(upperTop + BIB_LAYOUT.memberTagTop);
+    expect(label!.y).toBeLessThan(upperTop + BIB_LAYOUT.memberTagTop + BIB_LAYOUT.memberTagHeight);
     // One label: the ordinary bib carries none.
     expect(calls.filter((call) => call.value === "Membru Brașov Runners")).toHaveLength(1);
-    // The number's line and the name's sit at the same offset from each card's top on both bibs.
+    // The number's line and the name's sit at the same offset from each card's top on both bibs —
+    // each the upper card of its own page now, the member's first.
     const offset = (value: string) => calls.filter((call) => call.value === value).map((call) => call.y);
-    const [upperNumber] = offset("101");
-    const [lowerNumber] = offset("102");
-    expect(lowerNumber - upperNumber).toBeCloseTo(841.89 / 2, 3);
-    const [upperName] = offset("Alergător 1");
-    const [lowerName] = offset("Alergător 2");
-    expect(lowerName - upperName).toBeCloseTo(841.89 / 2, 3);
+    const [ordinaryNumber] = offset("101");
+    const [memberNumber] = offset("102");
+    expect(memberNumber - ordinaryNumber).toBeCloseTo(0, 3);
+    const [ordinaryName] = offset("Alergător 1");
+    const [memberName] = offset("Alergător 2");
+    expect(memberName - ordinaryName).toBeCloseTo(0, 3);
+    expect(calls.findIndex((call) => call.value === "102")).toBeLessThan(calls.findIndex((call) => call.value === "101"));
   });
 
   it("prints the club's own label when it typed one", async () => {
