@@ -521,8 +521,8 @@ candidate — and whichever is granted first takes the apex. **Zoho Mail** is th
 neither is, since its usable tier is paid. What each grant actually includes is recorded here when
 one is granted and not before (`AGENTS.md` §1.2). The split with application mail is identical
 whichever wins: the mailbox provider owns the apex MX, SPF and DKIM, and Mailgun sends from the
-subdomain. Planned mailboxes `admin@brasovrunners.com`, `amalia@brasovrunners.com`, `dani@brasovrunners.com`, and a
-public `contact@brasovrunners.com` that all three read — a shared mailbox or, failing that on the
+subdomain. Planned mailboxes `admin@brasovrunners.com`, one per organizer, and a
+public `contact@brasovrunners.com` that they all read — a shared mailbox or, failing that on the
 plan chosen, a group. Application mail stays separate, on a subdomain: the planned name is
 `mail.brasovrunners.com`, **not configured yet — §35 is the procedure, with every value that
 can be known before Mailgun generates the DKIM key**. The provider is Mailgun, whose adapter is built and whose account exists; the
@@ -713,7 +713,7 @@ Mailgun **Route** (Send → Receiving → Routes): match recipient `contact@mail
 → Forward to `brasovrunners@gmail.com, <the owner's address>`, Stop, priority 0, no "store and notify" (nothing reads incoming
 mail, and storing people's messages at a third party for nothing is not a feature). Receiving
 works because the `mail.` MX records point at Mailgun. **Several people can read it:** the
-Forward destination takes a comma-separated list (`owner@…, amalia@…, dani@…`) and each gets a
+Forward destination takes a comma-separated list (`owner@…, organizer@…`) and each gets a
 copy. Only `contact@` is routed — a reply sent to `noreply@mail.<domain>` is dropped, which
 is right, because every email the site sent carried `Reply-To: contact@…` until `BR-V2.04`; since then (§462) the Reply-To defaults to the Gmail in `CONTACT_SMTP_USER` unless the club saves «Adresa de contact afișată» on «Pagini» → «Contact» (`/admin/pages/contact#shown-contact-address`; «Setări» → «Contact» from §516 until 2026-09-28), so the Route matters for the older emails and for a club that chooses the mailbox. **The same mailbox is the declarations archive** once `DECLARATIONS_ARCHIVE_TO=brasovrunners@gmail.com`
 is set on the production project (`DECISIONS.md` §99): every signed declaration arrives there
