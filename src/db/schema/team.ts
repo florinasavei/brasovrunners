@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { type AnyPgColumn, boolean, check, index, integer, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { type AnyPgColumn, boolean, check, index, integer, jsonb, numeric, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { mediaAssets } from "./gallery";
 import { staffUsers } from "./staff-users";
 
@@ -70,18 +70,28 @@ export const teamMembers = pgTable(
     responsibilitiesRo: text("responsibilities_ro"),
     responsibilitiesEn: text("responsibilities_en"),
     /**
-     * Whom this card answers to — another card, by reference, so the chart stays true when a card is
-     * renamed or removed: `set null` on delete leaves the children at the top. Never the card
-     * itself (the CHECK below); a cycle of any length is refused by the save (`service.ts`). Null is
-     * a root. While no shown card names a parent among the shown ones, the page is the plain grid.
+     * Whom this card answers to — another card, by reference (§691): `set null` on delete, never the
+     * card itself (the CHECK below), a cycle of any length refused by the save (`service.ts`). Since
+     * §NNN the page draws no chart from it and the editor offers no box for it: the column stays
+     * (expand only), written null by every save that posts nothing, read by nobody.
      */
     reportsToId: uuid("reports_to_id").references((): AnyPgColumn => teamMembers.id, { onDelete: "set null" }),
     /**
-     * Where the card sits against the card it answers to: `below`, in the tier under it, or `beside`,
-     * at its own tier to its right (the president's advisor). Meaningful only with a parent; the
-     * service writes `below` for a root.
+     * Where the card sat against the card it answered to (§691): `below` or `beside`. Kept with
+     * `reports_to_id` (expand only); the service writes `below` for a card with no parent.
      */
     placement: text("placement").notNull().default("below"),
+    /**
+     * The card's level on the canvas (§NNN; the owner: «the president is top level 1, then the
+     * advisor level 1.5 and the rest are level 2»). A whole or half step from 1 to 9: the whole
+     * number is the row, top first; a `.0` card is the row's lead — wide on row 1, tall under it —
+     * and a `.5` card is a small one beside the leads of its row (the president's counsellor). Null
+     * is "not on the canvas": the card is drawn in the plain grid, under the canvas when there is one,
+     * and while no shown card has a level the whole page is the grid it always was. The range is the
+     * CHECK below; the half step is `content/team/fields.ts`'s to refuse. A number in code
+     * (`mode: "number"`); `numeric(3, 1)` so `1.5` is stored exactly, never as a float's 1.4999.
+     */
+    level: numeric("level", { precision: 3, scale: 1, mode: "number" }),
 
     /**
      * The photograph, stored like every other picture (`media_assets`, §66, §414): the WebP
@@ -135,6 +145,8 @@ export const teamMembers = pgTable(
     /** A card never answers to itself (§691); a longer cycle is the service's to refuse. */
     check("team_members_reports_to_not_self", sql`${t.reportsToId} IS NULL OR ${t.reportsToId} <> ${t.id}`),
     check("team_members_placement_known", sql`${t.placement} IN ('below', 'beside')`),
+    /** A level is on the canvas's scale of nine rows or it is nothing (§NNN); the half step is the save's rule. */
+    check("team_members_level_range", sql`${t.level} IS NULL OR (${t.level} >= 1 AND ${t.level} <= 9)`),
   ],
 );
 

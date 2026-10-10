@@ -121,6 +121,8 @@ export async function createTeamMember<T extends Record<string, unknown>>(
         responsibilitiesEn: fields.responsibilitiesEn,
         reportsToId: fields.reportsToId,
         placement: fields.placement,
+        // The canvas (§NNN).
+        level: fields.level,
         position: (last?.position ?? 0) + 1,
         visible: false,
         createdByStaffUserId: input.actor.id,
@@ -182,6 +184,8 @@ export async function saveTeamMember<T extends Record<string, unknown>>(
         responsibilitiesEn: fields.responsibilitiesEn,
         reportsToId: fields.reportsToId,
         placement: fields.placement,
+        // The canvas (§NNN).
+        level: fields.level,
         updatedByStaffUserId: input.actor.id,
         version: input.expectedVersion + 1,
         updatedAt: now,

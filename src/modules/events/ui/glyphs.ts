@@ -8,6 +8,7 @@ import ConstructionIcon from "@mui/icons-material/Construction";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import HelpIcon from "@mui/icons-material/Help";
@@ -171,6 +172,8 @@ export const GLYPHS = {
   orders: ReceiptLongIcon,
   club: GroupsIcon,
   link: LinkIcon,
+  // «Mai multe» on a team card's fold (§NNN): the chevron that says "this opens downward".
+  more: ExpandMoreIcon,
 };
 
 export type GlyphName = keyof typeof GLYPHS;
