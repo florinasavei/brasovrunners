@@ -2,6 +2,7 @@ import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import EditNoteIcon from "@mui/icons-material/EditNote";
 import RateReviewIcon from "@mui/icons-material/RateReview";
 import Container from "@mui/material/Container";
 import MuiLink from "@mui/material/Link";
@@ -22,9 +23,11 @@ import {
   cachedFeedbackFormsDescribed,
   cachedFeedbackOffer,
   cachedNewsletterOffered,
+  cachedPublicPhone,
   cachedPublishedEventBySlug,
   cachedShownContactAddresses,
 } from "@/modules/public-cache/reads";
+import { telHref } from "@/modules/contact/domain/public-phone";
 import NewsletterSignup from "@/modules/newsletter/ui/NewsletterSignup";
 import {
   newsletterLeaveRefused,
@@ -138,6 +141,11 @@ export default async function ContactPage({ params, searchParams }: Props) {
 
   // The address the club chose to show (§442): the mailbox, its Gmail, or both, «… sau …».
   const writeTo = await cachedShownContactAddresses();
+  /*
+    «Telefon public» (§565) on the page itself, not only in the footer's fold (§NNN): a visitor who came
+    to reach the club finds both ways here. Optional — no number set, no line — and tolerant of an outage.
+  */
+  const phone = await orNull(() => cachedPublicPhone());
   // Guarded, because this is the page that has to work when nothing else does: a database
   // that is not answering falls back to `CONTACT_FORM_TO`, never to an error page (§164).
   const formAvailable = await cachedContactFormReaches();
@@ -202,7 +210,15 @@ export default async function ContactPage({ params, searchParams }: Props) {
         {t("title")}
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }}>
-        {t("intro")}
+        {t("intro")}{" "}
+        {/* Where and when the runs are (§NNN): the question a newcomer brings here most, answered by a link. */}
+        {t.rich("runsHint", {
+          calendar: (chunks) => (
+            <MuiLink href={getPathname({ locale, href: "/calendar" })} sx={inlineLink} data-testid="contact-calendar-link">
+              {chunks}
+            </MuiLink>
+          ),
+        })}
         {showFaq && (
           <>
             {" "}
@@ -225,6 +241,19 @@ export default async function ContactPage({ params, searchParams }: Props) {
           </Alert>
           {/* The toast the send flashed (§427), here and on no other state of this page. */}
           <PublicFlash accept={["contactSent"]} />
+          {/* A way on after the send (§NNN): the empty form again, at the page's bare address. */}
+          <Button
+            component="a"
+            href={getPathname({ locale, href: "/contact" })}
+            variant="outlined"
+            size="large"
+            fullWidth
+            data-testid="contact-send-another"
+            sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX, mt: 3 }}
+          >
+            <EditNoteIcon aria-hidden="true" sx={glyphSx("large")} />
+            {t("sent.another")}
+          </Button>
         </>
       ) : !formAvailable ? (
         // No form on this deployment: the club's address, when the club has named one (§8).
@@ -354,6 +383,17 @@ export default async function ContactPage({ params, searchParams }: Props) {
             </Typography>
           )}
         </>
+      )}
+
+      {/* The club's phone (§NNN), as a `tel:` link, under the address in every state but the sent one; its
+          own line, 24 pixels under what precedes it, so its reach above the words stays in the gap (§480). */}
+      {phone && !sent && (
+        <Typography variant="body1" sx={{ mt: 3 }} data-testid="contact-phone">
+          {t("phone")}{" "}
+          <MuiLink href={telHref(phone)} sx={{ ...inlineLink, whiteSpace: "nowrap" }}>
+            {phone}
+          </MuiLink>
+        </Typography>
       )}
 
       {/* «Spune-ne ceva» (§676): one section and one button to the anonymous wizard, under the form and

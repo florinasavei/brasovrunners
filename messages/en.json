@@ -8902,6 +8902,7 @@
     "title": "Write to us",
     "intro": "A question about a run, a registration or the club? We answer by email.",
     "faqHint": "You may find the answer in the <faq>FAQ</faq>.",
+    "runsHint": "When and where we run is on the <calendar>Calendar</calendar>.",
     "name": "Your name",
     "email": "Your email address",
     "message": "Message",
@@ -8914,9 +8915,11 @@
     "sent": {
       "title": "Your message is on its way.",
       "bodyTo": "We will answer at {email}.",
-      "body": "We will answer at your email address."
+      "body": "We will answer at your email address.",
+      "another": "Write another message"
     },
     "direct": "Or write to us directly at",
+    "phone": "Or call us at",
     "off": {
       "writeTo": "Write to us at",
       "none": "The contact form is not available at the moment.",
@@ -8953,7 +8956,7 @@
     "door": {
       "intro": "How an event went, a suggestion or a complaint — anonymously, if you like.",
       "introSafety": "A confidential form for women who did not feel safe with us.",
-      "button": "Open the anonymous form"
+      "button": "Open the form"
     },
     "choose": {
       "legend": "What is it about?",
@@ -8978,7 +8981,7 @@
       "howItWent": {
         "label": "How it was",
         "hint": "An event or a group run: what you liked, what you did not.",
-        "intro": "Tell us how it was. Apart from what happened, everything is optional."
+        "intro": "Tell us how it was. Apart from the message, everything is optional."
       },
       "suggestion": {
         "label": "A suggestion",
@@ -9012,7 +9015,7 @@
       "kinds": "Show",
       "chips": {
         "all": "All",
-        "race": "Races",
+        "special": "Special events",
         "group": "Group runs"
       }
     },
@@ -9029,7 +9032,7 @@
       }
     },
     "message": {
-      "howItWent": "What happened?",
+      "howItWent": "What did you like, and what not?",
       "suggestion": "Your suggestion",
       "complaint": "What happened?",
       "safety": "What happened?"
@@ -9084,7 +9087,8 @@
     "submit": "Send",
     "submitting": "Sending…",
     "incompleteHint": "Write the message to be able to send it.",
-    "otherBranches": "Another kind of message",
+    "otherBranches": "Change the kind of message",
+    "sendAnother": "Send another message",
     "sent": {
       "title": "Your message is on its way",
       "body": "Thank you! We read it carefully.",
