@@ -133,6 +133,16 @@ export const EVENT_INVITATIONS_MERGE_FIELD = "eventInvitations";
 export const FEEDBACK_FORMS_MERGE_FIELD = "feedbackForms";
 
 /**
+ * The privacy notice's marker for the members' shop (§NNN): the zone's section name, quoted, in the
+ * reader's language (`content/shop/notice-words.ts`) — „Magazinul clubului” / “The club's shop” — in
+ * section 5's paragraph that says what an order keeps (the member, the order, the note), why (to fulfil
+ * it, art. 6(1)(b)), for how long, and that payment is outside the site. The gate, §562's and §613's
+ * pattern: the members' zone draws the shop, and the order action takes an order, only while the
+ * notice in force names it in every language (`describesMembersShop`).
+ */
+export const MEMBERS_SHOP_MERGE_FIELD = "membersShop";
+
+/**
  * The privacy notice's marker for «Spune-ne ceva»'s named mode (§678): the radio's own words,
  * quoted — „Cu nume și prenume” / “With my name” (`feedback/notice-words.ts`) — in the same
  * paragraph, which then says the forms are anonymous unless the person chooses to give a name, what
@@ -352,6 +362,7 @@ export const MERGE_FIELDS = [
   EVENT_INVITATIONS_MERGE_FIELD,
   FEEDBACK_FORMS_MERGE_FIELD,
   FEEDBACK_FORMS_NAMED_MERGE_FIELD,
+  MEMBERS_SHOP_MERGE_FIELD,
 ] as const;
 
 /**
@@ -527,6 +538,15 @@ export function describesNewsletter(body: unknown): boolean {
  */
 export function describesFeedbackForms(body: unknown): boolean {
   return mergeFieldsIn(body).has(FEEDBACK_FORMS_MERGE_FIELD);
+}
+
+/**
+ * Whether a privacy notice describes the members' shop (§NNN): it names `{{membersShop}}`. The gate
+ * for the zone's «Magazinul clubului» and for every order, and what `/admin/tasks`' row `shopNotice`
+ * reads. Pure.
+ */
+export function describesMembersShop(body: unknown): boolean {
+  return mergeFieldsIn(body).has(MEMBERS_SHOP_MERGE_FIELD);
 }
 
 /**

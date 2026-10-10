@@ -26,6 +26,7 @@ import { weatherLabel, weatherSpanWords } from "@/modules/weather/words";
 import { CANNOT_COME_GLYPH_PATH, CANNOT_COME_MESSAGES } from "./domain/cannot-come";
 import type { HoldLapsedNext } from "./domain/hold-lapsed";
 import { legalTemplateNames, legalTemplatesWords } from "./legal-templates-words";
+import { type ShopOrderFacts, shopOrderLine, shopOrderLines, shopOrderTitle } from "./shop-order-words";
 import {
   notRevivedLinks,
   type UnreachableWindowFacts,
@@ -1002,6 +1003,11 @@ export type TemplateData = {
    */
   unreachableWindow?: UnreachableWindowFacts;
   /**
+   * The members' shop's order (§NNN), from the order's own copy at the send: the bold line, the
+   * payment words and the note, each half in its own language (`shop-order-words.ts`).
+   */
+  shopOrder?: ShopOrderFacts;
+  /**
    * "Detalii actualizate" (§331): which facts the save changed — the place, the start, the
    * programme, the event on again. The values are the event's as it stands at send time, in the
    * fields above; this says which of them to name as new.
@@ -1713,6 +1719,34 @@ const T = {
       body: (d: TemplateData) => windowClosedBody("ro", d.unreachableWindow),
       action: "Deschide «Sarcini»",
     },
+    // The members' shop (§NNN): to the member, the order received — and how to pay, outside the site.
+    shopOrderPlaced: {
+      subject: (d: TemplateData) => `Comanda ta a fost primită: ${shopOrderTitle("ro", d.shopOrder)}`,
+      facts: (d: TemplateData) => (d.shopOrder ? { line: shopOrderLine("ro", d.shopOrder), links: [] } : undefined),
+      body: () => [
+        "Am primit comanda ta din magazinul clubului. Plata nu se face pe site: plătești prin transfer sau în numerar, cum scrie mai jos, iar clubul marchează comanda plătită când primește banii.",
+        "Comanda o vezi în zona membrilor, la „Comenzile mele”; cât timp nu e plătită, o poți anula de acolo.",
+      ],
+      action: "Deschide zona membrilor",
+    },
+    // …and the payment received, marked by an Administrator.
+    shopOrderPaid: {
+      subject: (d: TemplateData) => `Comanda ta e plătită: ${shopOrderTitle("ro", d.shopOrder)}`,
+      facts: (d: TemplateData) => (d.shopOrder ? { line: shopOrderLine("ro", d.shopOrder), links: [] } : undefined),
+      body: () => ["Clubul a primit plata pentru comanda ta. Produsul ți-l predă un organizator, la o alergare sau unde vă înțelegeți."],
+      action: "Deschide zona membrilor",
+    },
+    // To «Cine primește comenzile» (§NNN): who ordered what; the list, behind the sign-in, has the rest.
+    shopOrderClubNotice: {
+      subject: (d: TemplateData) => `Comandă nouă în magazin: ${shopOrderTitle("ro", d.shopOrder)} — ${d.shopOrder?.memberName ?? "un membru"}`,
+      greeting: () => "Salut,",
+      facts: (d: TemplateData) => (d.shopOrder ? { line: shopOrderLine("ro", d.shopOrder), links: [] } : undefined),
+      body: (d: TemplateData) => [
+        `${d.shopOrder?.memberName || "Un membru"} a comandat din magazinul membrilor.`,
+        "Comenzile, cu „Marchează plătită” și „Marchează predată”, sunt în backoffice, la Pagini → Membri → Magazin. Plata nu trece prin site.",
+      ],
+      action: "Deschide comenzile",
+    },
     registrationOpened: {
       // To an address, not a participant (§146): the greeting names nobody.
       subject: (d: TemplateData) => `Înscrierile la ${d.eventTitle ?? "eveniment"} s-au deschis`,
@@ -2389,6 +2423,34 @@ const T = {
       body: (d: TemplateData) => windowClosedBody("en", d.unreachableWindow),
       action: "Open «Tasks»",
     },
+    // The members' shop (§NNN): to the member, the order received — and how to pay, outside the site.
+    shopOrderPlaced: {
+      subject: (d: TemplateData) => `Your order has been received: ${shopOrderTitle("en", d.shopOrder)}`,
+      facts: (d: TemplateData) => (d.shopOrder ? { line: shopOrderLine("en", d.shopOrder), links: [] } : undefined),
+      body: () => [
+        "We have received your order from the club's shop. Payment is not made on the site: you pay by bank transfer or in cash, as written below, and the club marks the order paid when it receives the money.",
+        "You can see the order in the members' area, under “My orders”; while it is not paid, you can cancel it there.",
+      ],
+      action: "Open the members' area",
+    },
+    // …and the payment received, marked by an Administrator.
+    shopOrderPaid: {
+      subject: (d: TemplateData) => `Your order is paid: ${shopOrderTitle("en", d.shopOrder)}`,
+      facts: (d: TemplateData) => (d.shopOrder ? { line: shopOrderLine("en", d.shopOrder), links: [] } : undefined),
+      body: () => ["The club has received the payment for your order. An organizer will hand it over to you, at a run or wherever you agree."],
+      action: "Open the members' area",
+    },
+    // To «Cine primește comenzile» (§NNN): who ordered what; the list, behind the sign-in, has the rest.
+    shopOrderClubNotice: {
+      subject: (d: TemplateData) => `New order in the shop: ${shopOrderTitle("en", d.shopOrder)} — ${d.shopOrder?.memberName ?? "a member"}`,
+      greeting: () => "Hello,",
+      facts: (d: TemplateData) => (d.shopOrder ? { line: shopOrderLine("en", d.shopOrder), links: [] } : undefined),
+      body: (d: TemplateData) => [
+        `${d.shopOrder?.memberName || "A member"} has placed an order in the members' shop.`,
+        "The orders, with “Mark paid” and “Mark handed over”, are in the backoffice, under Pages → Members → Shop. Payment does not go through the site.",
+      ],
+      action: "Open the orders",
+    },
     registrationOpened: {
       subject: (d: TemplateData) => `Registration for ${d.eventTitle ?? "the event"} is open`,
       greeting: () => "Hello,",
@@ -2796,6 +2858,9 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   LEGAL_TEMPLATES_CHANGED: "legalTemplatesChanged",
   UNREACHABLE_WINDOW_OPENED: "unreachableWindowOpened",
   UNREACHABLE_WINDOW_CLOSED: "unreachableWindowClosed",
+  SHOP_ORDER_PLACED: "shopOrderPlaced",
+  SHOP_ORDER_PAID: "shopOrderPaid",
+  SHOP_ORDER_CLUB_NOTICE: "shopOrderClubNotice",
 };
 
 /** The newsletter's three messages (§445): to an address, never about a registration. */
@@ -3316,6 +3381,10 @@ export function buildTemplateContent(
         : []),
       // Where the person stood in the line when this was rendered (§629), after the body whoever wrote it.
       ...(messageType === "WAITLIST_JOINED" && data.waitlistStanding ? [copy.waitlistPosition(data.waitlistStanding)] : []),
+      // The members' shop (§NNN): how to pay (the member's two) and the order's note, after the body whoever wrote it.
+      ...((messageType === "SHOP_ORDER_PLACED" || messageType === "SHOP_ORDER_PAID" || messageType === "SHOP_ORDER_CLUB_NOTICE") && data.shopOrder
+        ? shopOrderLines(locale, data.shopOrder, { payment: messageType === "SHOP_ORDER_PLACED" })
+        : []),
       // The verification link's other people on the address (§588): its one click confirms everybody waiting.
       ...(messageType === "VERIFY_REGISTRATION_EMAIL" && data.familyOnAddress && data.familyOnAddress.length > 0
         ? [copy.verifyCoversFamily(data.familyOnAddress)]
@@ -3444,7 +3513,11 @@ export function buildTemplateContent(
         messageType === "LEGAL_TEMPLATES_CHANGED" ||
         // …nor the outage grace's two (§657): to the Administrators, about no event and nobody's data.
         messageType === "UNREACHABLE_WINDOW_OPENED" ||
-        messageType === "UNREACHABLE_WINDOW_CLOSED"
+        messageType === "UNREACHABLE_WINDOW_CLOSED" ||
+        // …nor the members' shop's three (§NNN): about an order, no event and no registration.
+        messageType === "SHOP_ORDER_PLACED" ||
+        messageType === "SHOP_ORDER_PAID" ||
+        messageType === "SHOP_ORDER_CLUB_NOTICE"
       ) {
         return own.length > 0 ? own : undefined;
       }

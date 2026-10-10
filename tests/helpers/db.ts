@@ -27,6 +27,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import { teamMembers } from "@/db/schema/team";
 import { faqQuestions } from "@/db/schema/faq";
 import { memberDiscountCodes } from "@/db/schema/member-discount-codes";
+import { shopOrders, shopProducts, shopProductVariants } from "@/db/schema/shop";
 import { unreachableWindows } from "@/db/schema/unreachable-windows";
 import { forgetCachedDeadlines } from "@/modules/deadlines/memo";
 import { forgetCachedAddressCap } from "@/modules/registrations/address-cap-memo";
@@ -114,6 +115,10 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(faqQuestions);
   // The members' discount codes (§552) reference only staff rows.
   await db.delete(memberDiscountCodes);
+  // The members' shop (§NNN): orders name a variant and a product; products reference a photo — all before the assets.
+  await db.delete(shopOrders);
+  await db.delete(shopProductVariants);
+  await db.delete(shopProducts);
   // The gallery: items, then albums (which the cover references), then the assets.
   await db.delete(galleryItems);
   await db.delete(galleryAlbumTranslations);

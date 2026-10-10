@@ -498,6 +498,23 @@ export type AuditAction =
   | "member_code.moved"
   | "member_code.deleted"
   /**
+   * «Magazin» — the members' shop (§NNN): a product added, written, moved, archived (it had orders)
+   * or deleted; the shop's settings saved; an order placed by a member, marked paid, handed over or
+   * cancelled; the orders' CSV downloaded. The row's id and the shape of the change — never a title,
+   * a note, a name or an address.
+   */
+  | "shop.product.created"
+  | "shop.product.saved"
+  | "shop.product.moved"
+  | "shop.product.archived"
+  | "shop.product.deleted"
+  | "shop.settings_saved"
+  | "shop.order.placed"
+  | "shop.order.paid"
+  | "shop.order.handed_over"
+  | "shop.order.cancelled"
+  | "shop.orders_exported"
+  /**
    * «Adaugă mai mulți membri» (§524): one row per press — how many were added, how many were
    * already members, and each member's sign-in account by row id (created, invited, failed with
    * the provider's words, unconfigured). Never an address or a name: the ids are the staff rows.
@@ -543,7 +560,10 @@ export type RecordAuditInput = {
     | "content"
     | "staff_user"
     // `member_discount_code` for a code of the members' zone (§552).
-    | "member_discount_code";
+    | "member_discount_code"
+    // `shop_product` and `shop_order` for the members' shop (§NNN).
+    | "shop_product"
+    | "shop_order";
   /** Null only for an act about no single row — an export of every event's registrations (§322). */
   entityId: string | null;
   /**

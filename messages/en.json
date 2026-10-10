@@ -2955,7 +2955,8 @@
         "gmailFallback": "Only in the privacy notice: the name of the switch «Gmail takes over when Mailgun stops», quoted. Without it in the notice in force, the switch is off and messages wait for Mailgun",
         "eventInvitations": "Privacy notice only: the Invitations section's name, in quotation marks. With it in the notice in force, /admin/tasks counts the invitations as described",
         "feedbackForms": "Privacy notice only: the “Tell us something” forms’ name, in quotation marks. With it in the notice in force, the contact page shows the forms switched on",
-        "feedbackFormsNamed": "Privacy notice only: the “With my name” choice of the “Tell us something” forms, in quotation marks. Without it in the notice in force, the forms are anonymous only"
+        "feedbackFormsNamed": "Privacy notice only: the “With my name” choice of the “Tell us something” forms, in quotation marks. Without it in the notice in force, the forms are anonymous only",
+        "membersShop": "Privacy notice only: the section name “The club's shop”, in quotes. With it in the notice in force, the members' area shows the shop and takes orders"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -3821,6 +3822,16 @@
             "The row goes when none is left, or after the event."
           ],
           "link": "Registrations → {event}"
+        },
+        "shopNotice": {
+          "title": "Privacy notice: the members' shop",
+          "todo": "You have items visible in the shop, but the notice in force does not describe the shop yet: members do not see it and cannot order until the club approves a notice that describes it.",
+          "done": "The notice in force describes the members' shop: members see it in their area and can order.",
+          "how": [
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 5 has the paragraph about the shop.",
+            "A lawyer should read the paragraph: how long the orders are kept as accounting records.",
+            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”. Once in force in both languages, the shop appears in the members' area."
+          ]
         }
       },
       "freeVerdict": {
@@ -4931,7 +4942,10 @@
         "LEGAL_TEMPLATES_CHANGED": "The legal templates changed",
         "UNREACHABLE_WINDOW_OPENED": "The site's name does not resolve",
         "UNREACHABLE_WINDOW_CLOSED": "The deadlines' clock stood still",
-        "EVENT_INVITATION": "Invitation to an event"
+        "EVENT_INVITATION": "Invitation to an event",
+        "SHOP_ORDER_PLACED": "Your order has been received",
+        "SHOP_ORDER_PAID": "Your order is paid",
+        "SHOP_ORDER_CLUB_NOTICE": "New order in the shop"
       },
       "typesShort": {
         "VERIFY_REGISTRATION_EMAIL": "Confirm your address",
@@ -4991,7 +5005,10 @@
         "LEGAL_TEMPLATES_CHANGED": "When a new release of the site changes a legal text's template: once per change, to every Administrator and Superadministrator. No token: the button leads to «New version».",
         "UNREACHABLE_WINDOW_OPENED": "When the scheduled jobs, reached by another address, find twice, ten minutes apart, that the site's name no longer resolves: once per outage, to every Administrator and Superadministrator. No button.",
         "UNREACHABLE_WINDOW_CLOSED": "After an outage — the site's name not found, or no scheduled call arriving: how long, what moved, what to check. Once per outage, to the same people, even with the moving switched off.",
-        "EVENT_INVITATION": "When an administrator sends invitations from an event's registrations list, and on Resend. One link to the form, with the name and address filled in; the place is kept until the deadline."
+        "EVENT_INVITATION": "When an administrator sends invitations from an event's registrations list, and on Resend. One link to the form, with the name and address filled in; the place is kept until the deadline.",
+        "SHOP_ORDER_PLACED": "When a member orders from the members' shop: the order and how to pay. The button opens the members' area.",
+        "SHOP_ORDER_PAID": "When an administrator marks the order paid: to the member who ordered. The button opens the members' area.",
+        "SHOP_ORDER_CLUB_NOTICE": "On every order in the shop, to the address in «Membri» → «Magazin» → “Who receives the orders”, if one is written."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "after the form is sent",
@@ -5026,7 +5043,10 @@
         "LEGAL_TEMPLATES_CHANGED": "when a legal template changes",
         "UNREACHABLE_WINDOW_OPENED": "when the site's name does not resolve",
         "UNREACHABLE_WINDOW_CLOSED": "after an outage of the site",
-        "EVENT_INVITATION": "when an administrator invites somebody"
+        "EVENT_INVITATION": "when an administrator invites somebody",
+        "SHOP_ORDER_PLACED": "when a member orders",
+        "SHOP_ORDER_PAID": "when the order is marked paid",
+        "SHOP_ORDER_CLUB_NOTICE": "on every order, to the club"
       },
       "clubNotices": {
         "title": "The club's copies",
@@ -5632,7 +5652,10 @@
         "REGISTER_ANOTHER_PERSON": "No registration is created, and the screen says “check your email” as always. If the address already has {people}, the email says only that, with no link.",
         "LEGAL_TEMPLATES_CHANGED": "The check runs with the scheduled jobs, at most once an hour. A change approved before the check is not announced; «Tasks» shows the same rows.",
         "UNREACHABLE_WINDOW_OPENED": "While the name does not resolve nothing lapses. It leaves on the club's road, which does not depend on the club's domain.",
-        "UNREACHABLE_WINDOW_CLOSED": "The deadlines move by as long as the outage lasted, at most what «Deadlines» says. Whoever lost the place meanwhile is named in the email; an administrator decides."
+        "UNREACHABLE_WINDOW_CLOSED": "The deadlines move by as long as the outage lasted, at most what «Deadlines» says. Whoever lost the place meanwhile is named in the email; an administrator decides.",
+        "SHOP_ORDER_PLACED": "The order and the payment words are added after the text by themselves, however you write it. Payment does not go through the site.",
+        "SHOP_ORDER_PAID": "The order is added after the text by itself, however you write it.",
+        "SHOP_ORDER_CLUB_NOTICE": "Without an address nothing is sent: the orders are in the backoffice list either way."
       },
       "confirmationRetry": "To whoever has not confirmed, the link goes again by itself {retry} after the last email, at most {times}; “Resend” counts too. The deadline does not move.",
       "confirmationRetryOff": "It is not re-sent by itself: in “Deadlines”, the number of resends is 0."
@@ -7127,6 +7150,121 @@
         "validUntilHelp": "The last day members see it. Empty: no end.",
         "createTitle": "Add the code?",
         "createBody": "Members see it in their area as soon as you add it."
+      },
+      "shop": {
+        "heading": "Shop",
+        "count": {
+          "one": "{count} item",
+          "few": "{count} items",
+          "other": "{count} items"
+        },
+        "help": "The club's merchandise, ordered by members from the members' area. Payment is not made on the site: the member pays by bank transfer or in cash, and you mark the order paid.",
+        "noticeMissing": "The privacy notice in force does not describe the shop yet: members do not see it and cannot order until you approve a new notice (see “Tasks”).",
+        "readOnly": "You can read the items and the orders. An administrator changes them.",
+        "settings": "How to pay and who receives the orders",
+        "settingsHelp": "The words appear under every unpaid order and in the confirmation email. The address receives one email per order.",
+        "settingsTitle": "Save the payment words and the orders address?",
+        "settingsBody": "Members see the new words as soon as you save.",
+        "paymentRo": "How to pay (Română)",
+        "paymentEn": "How to pay (English)",
+        "paymentHelp": "For example the club's IBAN and “or cash at the run”.",
+        "bothOrNeither": "In both languages or in neither.",
+        "ordersTo": "Who receives the orders (optional)",
+        "ordersToHelp": "An email address. Empty: no email is sent, the orders are only in the list below.",
+        "notSet": "not written",
+        "add": "Add an item",
+        "create": "Add the item",
+        "createTitle": "Add the item?",
+        "createBody": "If “Visible in the shop” is ticked, members see it at once.",
+        "empty": "There are no items yet.",
+        "listLabel": "The items, in the shop's order",
+        "stockUnlimited": "no limit",
+        "stockNoLimit": "no limit",
+        "stockLine": "Stock: {stock}",
+        "visible": "Visible in the shop",
+        "hidden": "Hidden",
+        "orders": {
+          "one": "{count} order",
+          "few": "{count} orders",
+          "other": "{count} orders"
+        },
+        "oneLanguage": "Description in one language only",
+        "moveUp": "Move {title} up",
+        "moveDown": "Move {title} down",
+        "deleteTitle": "Remove the item {title}?",
+        "deleteBody": "The item is deleted for good.",
+        "archiveBody": "The item has orders: it is archived, not deleted. It leaves the shop and the list; the orders stay as they are.",
+        "archive": "Archive",
+        "delete": "Delete",
+        "edit": "Edit",
+        "saveTitle": "Save the item {title}?",
+        "saveBody": "Members see the changes at once. Orders already placed keep their price and title.",
+        "titleRo": "Name (Română)",
+        "titleEn": "Name (English)",
+        "descriptionRo": "Description (Română)",
+        "descriptionEn": "Description (English)",
+        "descriptionHelp": "Material, sizes, colour — briefly.",
+        "price": "Price, in lei",
+        "priceHelp": "For example 45 or 45.50.",
+        "variants": "Variants and stock (optional)",
+        "variantsHelp": "One per line, for example “M: 10” or “L” (no limit). At most {max} variants, {length} characters each. Empty: one variant.",
+        "stock": "Stock (no variants)",
+        "stockHelp": "How many are left, at most {max}. Empty: no limit.",
+        "visibleSwitch": "Visible in the shop",
+        "photo": "The item's photo",
+        "photoHelp": "Once you choose the photo, you choose the part the shop shows. It is kept when you save the item.",
+        "photoCrop": "Crop — what the shop shows",
+        "photoCropHelp": "It starts square (1:1). You can choose another shape or drag a rectangle over the photo.",
+        "ordersHeading": "Orders",
+        "filterLabel": "Filter the orders",
+        "filterStatus": "Status",
+        "filterAll": "All",
+        "filterProduct": "Item",
+        "filterApply": "Filter",
+        "filterClear": "All orders",
+        "csv": "Download CSV",
+        "ordersEmpty": "No orders.",
+        "orderNumber": "Order no. {number}",
+        "status": {
+          "PLACED": "Placed",
+          "PAID": "Paid",
+          "HANDED_OVER": "Handed over",
+          "CANCELLED": "Cancelled"
+        },
+        "accountGone": "the account no longer exists",
+        "note": "Note",
+        "cancelledByMember": "Cancelled by the member.",
+        "cancelledByClub": "Cancelled by the club.",
+        "verbs": {
+          "pay": {
+            "title": "Mark order no. {number} paid?",
+            "body": "The member receives the email “Your order is paid”. The payment was made outside the site.",
+            "label": "Mark paid"
+          },
+          "handOver": {
+            "title": "Mark order no. {number} handed over?",
+            "body": "The order is closed: it can no longer be cancelled.",
+            "label": "Mark handed over"
+          },
+          "cancel": {
+            "title": "Cancel order no. {number}?",
+            "body": "The items go back into stock. If the member has already paid, the club refunds them outside the site.",
+            "label": "Cancel"
+          }
+        },
+        "columns": {
+          "number": "No.",
+          "date": "Date",
+          "member": "Member",
+          "email": "Email",
+          "product": "Item",
+          "variant": "Variant",
+          "quantity": "Quantity",
+          "unitPrice": "Unit price",
+          "total": "Total",
+          "status": "Status",
+          "note": "Note"
+        }
       }
     },
     "declarationHold": {
@@ -9096,7 +9234,16 @@
         "few": "Member tick cleared on {count} registrations.",
         "other": "Member tick cleared on {count} registrations."
       },
-      "answersCorrected": "Answers corrected: {fields}."
+      "answersCorrected": "Answers corrected: {fields}.",
+      "shopProductCreated": "The item has been added.",
+      "shopProductSaved": "The item has been saved.",
+      "shopProductMoved": "The items' order has been changed.",
+      "shopProductDeleted": "The item has been deleted.",
+      "shopProductArchived": "The item had orders, so it has been archived.",
+      "shopSettingsSaved": "The payment words and the orders address have been saved.",
+      "shopOrderPaid": "The order has been marked paid. The member receives an email.",
+      "shopOrderHandedOver": "The order has been marked handed over.",
+      "shopOrderCancelled": "The order has been cancelled."
     }
   },
   "Network": {
@@ -9356,6 +9503,38 @@
     "copyCode": "Copy the code",
     "codeCopied": "Copied",
     "codeValidUntil": "Valid until {day}, inclusive.",
-    "codeLink": "Open the partner's page"
+    "codeLink": "Open the partner's page",
+    "shop": {
+      "title": "The club's shop",
+      "lead": "The club's merchandise, for members only. Payment is not made on the site: you pay by bank transfer or in cash, as the club says.",
+      "ordersTitle": "My orders",
+      "orderNumber": "Order no. {number}",
+      "status": {
+        "PLACED": "Placed",
+        "PAID": "Paid",
+        "HANDED_OVER": "Handed over",
+        "CANCELLED": "Cancelled"
+      },
+      "note": "Your note",
+      "howToPay": "How to pay:",
+      "paymentByClub": "the club will tell you how to pay.",
+      "cancelFold": "I want to cancel the order",
+      "cancelHelp": "The order is cancelled for good; you can place it again any time. Once it is paid, write to the club.",
+      "cancel": "Cancel the order",
+      "soldOut": "Sold out.",
+      "variant": "Variant",
+      "variantSoldOut": "{label} — sold out",
+      "quantity": "Quantity",
+      "noteLabel": "A note for the club (optional, at most {max} characters)",
+      "order": "Order",
+      "outcome": {
+        "placed": "Your order has been received. We have also emailed it to you, with how to pay.",
+        "cancelled": "The order has been cancelled.",
+        "NOT_FOUND": "The item is no longer in the shop, or the order no longer exists.",
+        "CONFLICT": "There are not enough left for your order, or the order changed its status in the meantime.",
+        "VALIDATION_ERROR": "Check the variant, the quantity (1–5) and the note (at most 300 characters).",
+        "FORBIDDEN": "Your account cannot do this."
+      }
+    }
   }
 }

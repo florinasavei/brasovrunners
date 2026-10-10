@@ -130,6 +130,33 @@ export function canEditDiscountCodeWords(role: StaffRole): boolean {
   return canEditMembersPage(role);
 }
 
+/**
+ * **«Magazin» — the members' shop (§NNN).** The catalogue, the payment words, the recipient of the
+ * club's order notice, and every verb on an order — marked paid, handed over, cancelled — are the
+ * Administrator's and the Superadministrator's: an order is money the club collects outside the site,
+ * the threshold of changing a registration (`canManageRegistrations`).
+ */
+export function canManageShop(role: StaffRole): boolean {
+  return atLeast(role, "ADMIN");
+}
+
+/**
+ * Reading the shop — the catalogue, the orders and their CSV — without a verb that changes one: who
+ * reads the participant list (`canReadRegistrations`, §289), the Organizer included. The Tehnic, the
+ * Redactor and the volunteer read none of it; an order names a member and what they paid.
+ */
+export function canReadShop(role: StaffRole): boolean {
+  return canReadRegistrations(role);
+}
+
+/**
+ * The ordering member's address beside an order (§NNN): only for the roles that already read the
+ * club's members' and subscribers' addresses (§550, `canSendNewsletter`) — the same rule, read once.
+ */
+export function canSeeShopMemberAddresses(role: StaffRole): boolean {
+  return canSendNewsletter(role);
+}
+
 export const EDITORIAL_STATUSES = ["DRAFT", "IN_REVIEW", "PUBLISHED", "ARCHIVED"] as const;
 export type EditorialStatus = (typeof EDITORIAL_STATUSES)[number];
 

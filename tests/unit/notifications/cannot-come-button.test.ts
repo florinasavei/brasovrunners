@@ -49,6 +49,10 @@ const EVERY_MESSAGE: Record<EmailMessageType, { button: boolean; why: string }> 
   UNREACHABLE_WINDOW_CLOSED: { button: false, why: "no registration" },
   // An invitation (§647): to an address, before any registration exists.
   EVENT_INVITATION: { button: false, why: "no registration" },
+  // The members' shop (§NNN): about an order, never a registration.
+  SHOP_ORDER_PLACED: { button: false, why: "no registration" },
+  SHOP_ORDER_PAID: { button: false, why: "no registration" },
+  SHOP_ORDER_CLUB_NOTICE: { button: false, why: "no registration" },
 };
 
 const TYPES = Object.keys(EVERY_MESSAGE) as EmailMessageType[];

@@ -2955,7 +2955,8 @@
         "gmailFallback": "Doar în nota de confidențialitate: numele comutatorului «Gmail preia când Mailgun se oprește», între ghilimele. Fără el în nota în vigoare, comutatorul e oprit și mesajele așteaptă Mailgun",
         "eventInvitations": "Doar în nota de confidențialitate: numele secțiunii Invitații, între ghilimele. Cu el în nota în vigoare, /admin/tasks consideră invitațiile descrise",
         "feedbackForms": "Doar în nota de confidențialitate: numele formularelor „Spune-ne ceva”, între ghilimele. Cu el în nota în vigoare, pagina de contact arată formularele pornite",
-        "feedbackFormsNamed": "Doar în nota de confidențialitate: alegerea „Cu nume și prenume” din formularele „Spune-ne ceva”, între ghilimele. Fără el în nota în vigoare, formularele sunt doar anonime"
+        "feedbackFormsNamed": "Doar în nota de confidențialitate: alegerea „Cu nume și prenume” din formularele „Spune-ne ceva”, între ghilimele. Fără el în nota în vigoare, formularele sunt doar anonime",
+        "membersShop": "Doar în nota de confidențialitate: numele secțiunii „Magazinul clubului”, între ghilimele. Cu el în nota în vigoare, zona membrilor arată magazinul și primește comenzi"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -3821,6 +3822,16 @@
             "Rândul dispare când nu mai rămâne niciunul, sau după eveniment."
           ],
           "link": "Înscrieri → {event}"
+        },
+        "shopNotice": {
+          "title": "Nota de confidențialitate: magazinul membrilor",
+          "todo": "Ai produse vizibile în magazin, dar nota în vigoare nu descrie încă magazinul: membrii nu îl văd și nu pot comanda până când clubul aprobă o notă care îl descrie.",
+          "done": "Nota în vigoare descrie magazinul membrilor: membrii îl văd în zona lor și pot comanda.",
+          "how": [
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea 5 are paragraful despre magazin.",
+            "Un jurist ar trebui să citească paragraful: cât timp se păstrează comenzile ca evidență contabilă.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare în ambele limbi, magazinul apare în zona membrilor."
+          ]
         }
       },
       "freeVerdict": {
@@ -4931,7 +4942,10 @@
         "LEGAL_TEMPLATES_CHANGED": "Șabloanele textelor legale s-au schimbat",
         "UNREACHABLE_WINDOW_OPENED": "Site-ul nu se găsește după nume",
         "UNREACHABLE_WINDOW_CLOSED": "Ceasul termenelor a stat pe loc",
-        "EVENT_INVITATION": "Invitația la un eveniment"
+        "EVENT_INVITATION": "Invitația la un eveniment",
+        "SHOP_ORDER_PLACED": "Comanda ta a fost primită",
+        "SHOP_ORDER_PAID": "Comanda ta e plătită",
+        "SHOP_ORDER_CLUB_NOTICE": "Comandă nouă în magazin"
       },
       "typesShort": {
         "VERIFY_REGISTRATION_EMAIL": "Confirmă adresa",
@@ -4991,7 +5005,10 @@
         "LEGAL_TEMPLATES_CHANGED": "Când o versiune nouă a site-ului schimbă șablonul unui text legal: o dată pe schimbare, fiecărui Administrator și Superadministrator. Fără token: butonul duce la «Versiune nouă».",
         "UNREACHABLE_WINDOW_OPENED": "Când sarcinile programate, ajunse pe altă adresă, găsesc de două ori, la zece minute distanță, că numele site-ului nu se mai găsește: o dată pe întrerupere, fiecărui Administrator. Fără buton.",
         "UNREACHABLE_WINDOW_CLOSED": "După o întrerupere — numele site-ului negăsit sau nicio verificare programată ajunsă: cât a durat, ce s-a mutat, ce e de verificat. O dată pe întrerupere, acelorași, și cu mutarea oprită.",
-        "EVENT_INVITATION": "Când un administrator trimite invitații din lista înscrierilor unui eveniment, și la Retrimite. Un link spre formular, cu numele și adresa completate; locul e păstrat până la termen."
+        "EVENT_INVITATION": "Când un administrator trimite invitații din lista înscrierilor unui eveniment, și la Retrimite. Un link spre formular, cu numele și adresa completate; locul e păstrat până la termen.",
+        "SHOP_ORDER_PLACED": "Când un membru comandă din magazinul membrilor: comanda și cum se plătește. Butonul duce în zona membrilor.",
+        "SHOP_ORDER_PAID": "Când un administrator marchează comanda plătită: membrului care a comandat. Butonul duce în zona membrilor.",
+        "SHOP_ORDER_CLUB_NOTICE": "La fiecare comandă din magazin, la adresa din «Membri» → «Magazin» → «Cine primește comenzile», dacă e scrisă."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
@@ -5026,7 +5043,10 @@
         "LEGAL_TEMPLATES_CHANGED": "când se schimbă un șablon legal",
         "UNREACHABLE_WINDOW_OPENED": "când numele site-ului nu se găsește",
         "UNREACHABLE_WINDOW_CLOSED": "după o întrerupere a site-ului",
-        "EVENT_INVITATION": "când un administrator invită pe cineva"
+        "EVENT_INVITATION": "când un administrator invită pe cineva",
+        "SHOP_ORDER_PLACED": "când un membru comandă",
+        "SHOP_ORDER_PAID": "când comanda e marcată plătită",
+        "SHOP_ORDER_CLUB_NOTICE": "la fiecare comandă, clubului"
       },
       "clubNotices": {
         "title": "Copiile clubului",
@@ -5632,7 +5652,10 @@
         "REGISTER_ANOTHER_PERSON": "Nu se creează nicio înscriere, iar ecranul spune „verifică-ți emailul” ca oricând. Dacă adresa are deja {people}, emailul spune doar asta, fără link.",
         "LEGAL_TEMPLATES_CHANGED": "Verificarea rulează cu sarcinile programate, cel mult o dată pe oră. O schimbare aprobată înainte de verificare nu mai e anunțată; «Sarcini» arată aceleași rânduri.",
         "UNREACHABLE_WINDOW_OPENED": "Cât timp numele nu se găsește nu expiră nimic. Pleacă pe drumul clubului, care nu depinde de domeniul clubului.",
-        "UNREACHABLE_WINDOW_CLOSED": "Termenele se mută cu cât a durat întreruperea, cel mult cât spune «Termene». Cine își pierduse locul între timp e numit în email; un administrator decide."
+        "UNREACHABLE_WINDOW_CLOSED": "Termenele se mută cu cât a durat întreruperea, cel mult cât spune «Termene». Cine își pierduse locul între timp e numit în email; un administrator decide.",
+        "SHOP_ORDER_PLACED": "Comanda și cuvintele despre plată se adaugă singure după text, oricum l-ai scrie. Plata nu trece prin site.",
+        "SHOP_ORDER_PAID": "Comanda se adaugă singură după text, oricum l-ai scrie.",
+        "SHOP_ORDER_CLUB_NOTICE": "Fără adresă, nu pleacă nimic: comenzile sunt oricum în lista din backoffice."
       },
       "confirmationRetry": "Cui nu a confirmat, linkul pleacă singur din nou la {retry} după ultimul email, cel mult {times}; se socotește și «Retrimite». Termenul nu se mută.",
       "confirmationRetryOff": "Nu se retrimite singur: în „Termene”, numărul de retrimiteri e 0."
@@ -7127,6 +7150,121 @@
         "validUntilHelp": "Ultima zi în care membrii îl văd. Gol: fără termen.",
         "createTitle": "Adaugi codul?",
         "createBody": "Membrii îl văd în zona lor de îndată ce îl adaugi."
+      },
+      "shop": {
+        "heading": "Magazin",
+        "count": {
+          "one": "{count} produs",
+          "few": "{count} produse",
+          "other": "{count} de produse"
+        },
+        "help": "Produsele clubului, comandate de membri din zona membrilor. Plata nu se face pe site: membrul plătește prin transfer sau în numerar, iar tu marchezi comanda plătită.",
+        "noticeMissing": "Nota de confidențialitate în vigoare nu descrie încă magazinul: membrii nu îl văd și nu pot comanda până nu aprobi o notă nouă (vezi „Sarcini”).",
+        "readOnly": "Poți citi produsele și comenzile. Le schimbă un administrator.",
+        "settings": "Cum se plătește și cine primește comenzile",
+        "settingsHelp": "Cuvintele apar sub fiecare comandă neplătită și în emailul de confirmare. Adresa primește câte un email pentru fiecare comandă.",
+        "settingsTitle": "Salvezi plata și adresa pentru comenzi?",
+        "settingsBody": "Membrii văd noile cuvinte de îndată ce salvezi.",
+        "paymentRo": "Cum se plătește (Română)",
+        "paymentEn": "Cum se plătește (English)",
+        "paymentHelp": "De exemplu contul IBAN al clubului și „sau numerar la alergare”.",
+        "bothOrNeither": "În ambele limbi sau în niciuna.",
+        "ordersTo": "Cine primește comenzile (opțional)",
+        "ordersToHelp": "O adresă de email. Goală: nu pleacă niciun email, comenzile sunt doar în lista de mai jos.",
+        "notSet": "nescris",
+        "add": "Adaugă un produs",
+        "create": "Adaugă produsul",
+        "createTitle": "Adaugi produsul?",
+        "createBody": "Dacă e bifat „Vizibil în magazin”, membrii îl văd de îndată.",
+        "empty": "Nu este încă niciun produs.",
+        "listLabel": "Produsele, în ordinea din magazin",
+        "stockUnlimited": "fără limită",
+        "stockNoLimit": "fără limită",
+        "stockLine": "Stoc: {stock}",
+        "visible": "Vizibil în magazin",
+        "hidden": "Ascuns",
+        "orders": {
+          "one": "{count} comandă",
+          "few": "{count} comenzi",
+          "other": "{count} de comenzi"
+        },
+        "oneLanguage": "Descriere într-o singură limbă",
+        "moveUp": "Mută {title} mai sus",
+        "moveDown": "Mută {title} mai jos",
+        "deleteTitle": "Scoți produsul {title}?",
+        "deleteBody": "Produsul dispare de tot.",
+        "archiveBody": "Produsul are comenzi: se arhivează, nu se șterge. Iese din magazin și din listă; comenzile rămân cum sunt.",
+        "archive": "Arhivează",
+        "delete": "Șterge",
+        "edit": "Modifică",
+        "saveTitle": "Salvezi produsul {title}?",
+        "saveBody": "Membrii văd schimbările de îndată. Comenzile deja făcute rămân cu prețul și titlul lor.",
+        "titleRo": "Denumirea (Română)",
+        "titleEn": "Denumirea (English)",
+        "descriptionRo": "Descriere (Română)",
+        "descriptionEn": "Descriere (English)",
+        "descriptionHelp": "Material, mărimi, culoare — pe scurt.",
+        "price": "Prețul, în lei",
+        "priceHelp": "De exemplu 45 sau 45,50.",
+        "variants": "Variante și stoc (opțional)",
+        "variantsHelp": "Câte una pe rând, de exemplu „M: 10” sau „L” (fără limită). Cel mult {max} variante, {length} de caractere fiecare. Gol: o singură variantă.",
+        "stock": "Stoc (fără variante)",
+        "stockHelp": "Câte bucăți mai sunt, cel mult {max}. Gol: fără limită.",
+        "visibleSwitch": "Vizibil în magazin",
+        "photo": "Fotografia produsului",
+        "photoHelp": "După ce alegi fotografia, alegi partea care se vede în magazin. Se păstrează când salvezi produsul.",
+        "photoCrop": "Decupaj — ce se vede în magazin",
+        "photoCropHelp": "Pornește pătrat (1:1). Poți alege alt format sau trage un dreptunghi peste fotografie.",
+        "ordersHeading": "Comenzi",
+        "filterLabel": "Filtrează comenzile",
+        "filterStatus": "Starea",
+        "filterAll": "Toate",
+        "filterProduct": "Produsul",
+        "filterApply": "Filtrează",
+        "filterClear": "Toate comenzile",
+        "csv": "Descarcă CSV",
+        "ordersEmpty": "Nicio comandă.",
+        "orderNumber": "Comanda nr. {number}",
+        "status": {
+          "PLACED": "Plasată",
+          "PAID": "Plătită",
+          "HANDED_OVER": "Predată",
+          "CANCELLED": "Anulată"
+        },
+        "accountGone": "contul nu mai există",
+        "note": "Nota",
+        "cancelledByMember": "Anulată de membru.",
+        "cancelledByClub": "Anulată de club.",
+        "verbs": {
+          "pay": {
+            "title": "Marchezi comanda nr. {number} plătită?",
+            "body": "Membrul primește emailul „Comanda ta e plătită”. Plata a fost făcută în afara site-ului.",
+            "label": "Marchează plătită"
+          },
+          "handOver": {
+            "title": "Marchezi comanda nr. {number} predată?",
+            "body": "Comanda se închide: nu mai poate fi anulată.",
+            "label": "Marchează predată"
+          },
+          "cancel": {
+            "title": "Anulezi comanda nr. {number}?",
+            "body": "Bucățile se întorc în stoc. Dacă membrul a plătit deja, îi dați banii înapoi în afara site-ului.",
+            "label": "Anulează"
+          }
+        },
+        "columns": {
+          "number": "Nr.",
+          "date": "Data",
+          "member": "Membru",
+          "email": "Email",
+          "product": "Produs",
+          "variant": "Varianta",
+          "quantity": "Bucăți",
+          "unitPrice": "Preț bucata",
+          "total": "Total",
+          "status": "Starea",
+          "note": "Nota"
+        }
       }
     },
     "declarationHold": {
@@ -9096,7 +9234,16 @@
         "few": "Bifa de membru scoasă la {count} înscrieri.",
         "other": "Bifa de membru scoasă la {count} de înscrieri."
       },
-      "answersCorrected": "Date corectate: {fields}."
+      "answersCorrected": "Date corectate: {fields}.",
+      "shopProductCreated": "Produsul a fost adăugat.",
+      "shopProductSaved": "Produsul a fost salvat.",
+      "shopProductMoved": "Ordinea produselor a fost schimbată.",
+      "shopProductDeleted": "Produsul a fost șters.",
+      "shopProductArchived": "Produsul avea comenzi, așa că a fost arhivat.",
+      "shopSettingsSaved": "Plata și adresa pentru comenzi au fost salvate.",
+      "shopOrderPaid": "Comanda a fost marcată plătită. Membrul primește un email.",
+      "shopOrderHandedOver": "Comanda a fost marcată predată.",
+      "shopOrderCancelled": "Comanda a fost anulată."
     }
   },
   "Network": {
@@ -9356,6 +9503,38 @@
     "copyCode": "Copiază codul",
     "codeCopied": "Copiat",
     "codeValidUntil": "Valabil până {day}, inclusiv.",
-    "codeLink": "Deschide pagina partenerului"
+    "codeLink": "Deschide pagina partenerului",
+    "shop": {
+      "title": "Magazinul clubului",
+      "lead": "Produsele clubului, doar pentru membri. Plata nu se face pe site: o faci prin transfer sau în numerar, cum spune clubul.",
+      "ordersTitle": "Comenzile mele",
+      "orderNumber": "Comanda nr. {number}",
+      "status": {
+        "PLACED": "Plasată",
+        "PAID": "Plătită",
+        "HANDED_OVER": "Predată",
+        "CANCELLED": "Anulată"
+      },
+      "note": "Nota ta",
+      "howToPay": "Cum se plătește:",
+      "paymentByClub": "clubul îți spune cum se plătește.",
+      "cancelFold": "Vreau să anulez comanda",
+      "cancelHelp": "Comanda se anulează de tot; o poți face din nou oricând. După ce e plătită, scrie-i clubului.",
+      "cancel": "Anulează comanda",
+      "soldOut": "Stoc epuizat.",
+      "variant": "Varianta",
+      "variantSoldOut": "{label} — stoc epuizat",
+      "quantity": "Bucăți",
+      "noteLabel": "O notă pentru club (opțional, cel mult {max} de caractere)",
+      "order": "Comandă",
+      "outcome": {
+        "placed": "Comanda a fost primită. Ți-am trimis și un email cu ea și cu felul în care se plătește.",
+        "cancelled": "Comanda a fost anulată.",
+        "NOT_FOUND": "Produsul nu mai e în magazin sau comanda nu mai există.",
+        "CONFLICT": "Nu mai sunt destule bucăți pentru comanda ta, sau comanda și-a schimbat starea între timp.",
+        "VALIDATION_ERROR": "Verifică varianta, cantitatea (1–5) și nota (cel mult 300 de caractere).",
+        "FORBIDDEN": "Contul tău nu poate face asta."
+      }
+    }
   }
 }

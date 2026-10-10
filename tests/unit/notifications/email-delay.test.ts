@@ -146,6 +146,9 @@ describe("§623 judgeEmailDelay", () => {
       "LEGAL_TEMPLATES_CHANGED",
       "UNREACHABLE_WINDOW_OPENED",
       "UNREACHABLE_WINDOW_CLOSED",
+      "SHOP_ORDER_PLACED",
+      "SHOP_ORDER_PAID",
+      "SHOP_ORDER_CLUB_NOTICE",
     ] as const) {
       expect(isWaitedFor(type, false), type).toBe(false);
     }

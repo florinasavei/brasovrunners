@@ -12,6 +12,10 @@ import {
   saveDiscountCode,
   setDiscountCodeHidden,
 } from "@/modules/content/member-codes/service";
+import type { OrderVerb } from "@/modules/content/shop/domain";
+import { moveOrderByClub } from "@/modules/content/shop/orders";
+import { createProduct, deleteProduct, moveProduct, saveProduct } from "@/modules/content/shop/service";
+import { saveShopSettings } from "@/modules/content/shop/settings";
 import { canEditMembersPage, canPublishMembersPage } from "@/modules/staff-identity/domain/roles";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -169,4 +173,107 @@ export async function deleteDiscountCodeAction(_previous: FormOutcome | null, fo
     outcome = codeOutcomeOf(error);
   }
   return backToCodes(form, outcome);
+}
+
+// --- «Magazin» — the members' shop (§NNN) --------------------------------------------------------
+
+/**
+ * The shop's writes, the codes' shape: a refused product or settings save returns, so every box comes
+ * back as typed (§315); every other outcome is a redirect to the card with a language-neutral code and
+ * a toast (§384). The door is a staff session; the service asserts `canManageShop` again
+ * (BR-REQ-060-01), so an Organizer who reads the card is refused every verb on the server.
+ */
+function productFieldsOf(form: FormData) {
+  return {
+    titleRo: text(form, "titleRo"),
+    titleEn: text(form, "titleEn"),
+    descriptionRo: text(form, "descriptionRo"),
+    descriptionEn: text(form, "descriptionEn"),
+    price: text(form, "price"),
+    variants: text(form, "variants"),
+    stock: text(form, "stock"),
+    variantsLoaded: text(form, "variantsLoaded"),
+    visible: form.get("visible") === "on",
+    photoAssetId: text(form, "photoAssetId"),
+    photoCrop: text(form, "photoCrop"),
+  };
+}
+
+export async function createShopProductAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  let id: string;
+  try {
+    const actor = await requireStaff();
+    id = (await createProduct(getDb(), { actor, fields: productFieldsOf(form) })).id;
+  } catch (error) {
+    return refused(error, form);
+  }
+  return backToCodes(form, { saved: "shopProductCreated" }, `product-${id}`);
+}
+
+export async function saveShopProductAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const productId = text(form, "productId");
+  try {
+    const actor = await requireStaff();
+    await saveProduct(getDb(), { actor, productId, expectedVersion: Number(text(form, "expectedVersion")), fields: productFieldsOf(form) });
+  } catch (error) {
+    return refused(error, form);
+  }
+  return backToCodes(form, { saved: "shopProductSaved" }, `product-${productId}`);
+}
+
+/** One place up or down; lands on the product it moved. A plain form: moving asks nothing first. */
+export async function moveShopProductAction(form: FormData): Promise<void> {
+  const productId = text(form, "productId");
+  let outcome: { error?: string; saved?: string };
+  try {
+    const actor = await requireStaff();
+    await moveProduct(getDb(), { actor, productId, direction: text(form, "direction") === "up" ? "up" : "down" });
+    outcome = { saved: "shopProductMoved" };
+  } catch (error) {
+    outcome = codeOutcomeOf(error);
+  }
+  return backToCodes(form, outcome, `product-${productId}`);
+}
+
+/** Deletes a product, or archives it when an order names it — the toast says which. */
+export async function deleteShopProductAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  let outcome: { error?: string; saved?: string };
+  try {
+    const actor = await requireStaff();
+    const done = await deleteProduct(getDb(), { actor, productId: text(form, "productId") });
+    outcome = done === "archived" ? { saved: "shopProductArchived" } : { saved: "shopProductDeleted" };
+  } catch (error) {
+    outcome = codeOutcomeOf(error);
+  }
+  return backToCodes(form, outcome, "members-shop");
+}
+
+/** «Cum se plătește» and «Cine primește comenzile»: both languages or neither, one address or none. */
+export async function saveShopSettingsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  try {
+    const actor = await requireStaff();
+    await saveShopSettings(getDb(), {
+      actor,
+      fields: { paymentRo: text(form, "paymentRo"), paymentEn: text(form, "paymentEn"), ordersTo: text(form, "ordersTo") },
+    });
+  } catch (error) {
+    return refused(error, form);
+  }
+  return backToCodes(form, { saved: "shopSettingsSaved" }, "members-shop");
+}
+
+/** «Marchează plătită», «Marchează predată», «Anulează» on an order — the verb a closed set, never a name from the POST. */
+export async function moveShopOrderAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const posted = text(form, "verb");
+  const verb: OrderVerb = posted === "pay" ? "pay" : posted === "handOver" ? "handOver" : "cancel";
+  const orderId = text(form, "orderId");
+  let outcome: { error?: string; saved?: string };
+  try {
+    const actor = await requireStaff();
+    await moveOrderByClub(getDb(), { actor, orderId, verb });
+    outcome = verb === "pay" ? { saved: "shopOrderPaid" } : verb === "handOver" ? { saved: "shopOrderHandedOver" } : { saved: "shopOrderCancelled" };
+  } catch (error) {
+    outcome = codeOutcomeOf(error);
+  }
+  return backToCodes(form, outcome, `order-${orderId}`);
 }

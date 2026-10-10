@@ -64,6 +64,7 @@ export type TaskId =
   | "newsletterNotice"
   | "feedbackNotice"
   | "feedbackNamedNotice"
+  | "shopNotice"
   | "gmailFallbackNotice"
   | "refusalTerms"
   | "teamPageNotice"
@@ -105,6 +106,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   newsletterNotice: "text",
   feedbackNotice: "text",
   feedbackNamedNotice: "text",
+  shopNotice: "text",
   gmailFallbackNotice: "text",
   refusalTerms: "text",
   teamPageNotice: "text",
@@ -246,6 +248,13 @@ export type OwnerTaskInputs = {
    * `noticeDescribesFeedbackFormsNamed`)? Until it does, every form is anonymous only.
    */
   feedbackNamedDescribed: boolean;
+  /**
+   * Does the notice in force, in every language, describe the members' shop (§NNN,
+   * `noticeDescribesMembersShop`)? Until it does, the members' zone draws no shop and an order is refused.
+   */
+  shopDescribed: boolean;
+  /** How many products members would see in the shop (§NNN): the row waits only while there is one. */
+  visibleShopProducts: number;
   /**
    * Does the notice in force, in every language, say a message may leave through the club's Gmail
    * while Mailgun is stopped (§622, `noticeDescribesGmailFallback`)? Until it does, «Gmail preia când
@@ -531,6 +540,18 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       push("feedbackNamedNotice", {
         owner: "club",
         state: input.feedbackNamedDescribed ? "done" : "open",
+      });
+    }
+    /*
+      The members' shop (§NNN), «Spune-ne ceva»'s shape: open while a product is visible and the notice
+      in force does not name `{{membersShop}}` (the club put something in the shop and members see
+      nothing: the club must hear why), done by itself the day a notice naming it takes effect, and
+      absent while the shop is empty and the notice is silent.
+    */
+    if (input.shopDescribed || input.visibleShopProducts > 0) {
+      push("shopNotice", {
+        owner: "club",
+        state: input.shopDescribed ? "done" : "open",
       });
     }
     /*

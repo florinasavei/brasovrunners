@@ -169,6 +169,8 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/members/page.tsx", prop: "p", step: "cardPadTop", sm: 2, xsBefore: 2 },
   { file: "src/app/[locale]/members-area/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 2 },
   { file: "src/app/[locale]/members-area/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3, count: 5 },
+  // The members' shop and «Comenzile mele» (§NNN): the zone's own section gap.
+  { file: "src/app/[locale]/members-area/MembersShop.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3, count: 2 },
   { file: "src/app/[locale]/legal/privacy/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
   { file: "src/app/[locale]/legal/terms/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
   { file: "src/app/[locale]/gallery/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
