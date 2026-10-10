@@ -68,7 +68,7 @@ describe("«Pagini»'s row: every entry an address of the section", () => {
     }
   });
 
-  it("lights «Pagini» in the main bar on every one of the five addresses, never «Setări» or «Evenimente»", () => {
+  it("lights «Pagini» in the main bar on every one of the five addresses, never «Setări» or «Alergări»", () => {
     for (const locale of routing.locales) {
       const bar = barFor(locale);
       for (const { path: address } of ADDRESSES) {

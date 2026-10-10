@@ -1576,7 +1576,7 @@ languages go live together; that is the rule, not a setting.
    outside the advertised places, taking none of them; the name «Lista de invitați speciali» is the backoffice's
    alone and appears on no public page and in no participant's email.
 6. **Invitations by email** — members, partners, guests the club wants at the start, without asking
-   them to fight the public form (§647). «Evenimente» → «Editează» on the race → «Înscrierile primite»
+   them to fight the public form (§647). «Alergări» → «Editează» on the race → «Înscrierile primite»
    → «Trimite invitații» opens the «Invitații» section of the race's registrations list:
    - tick members from the members' zone (search by name or address), and/or type other people one per
      line — the name, then the email address;

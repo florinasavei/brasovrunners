@@ -315,7 +315,7 @@ describe("offeredFilters offers a box only where ticking it would change the pag
     expect(offer.groups.find((entry) => entry.group === "surface")).toEqual({ group: "surface", values: ["ASPHALT"] });
   });
 
-  it("offers «Colaborare» while some events carry a partner, «Eveniment de noapte» while some dates are dark, and «Înscrieri deschise» while some are open", () => {
+  it("offers «Colaborare» while some events carry a partner, «Alergare de noapte» while some dates are dark, and «Înscrieri deschise» while some are open", () => {
     const rows = [
       row("a", { coHosts: [{ name: "Salvamont" }] }),
       row("b", { night: true }),
