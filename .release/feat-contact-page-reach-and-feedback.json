@@ -1,0 +1,7 @@
+{
+  "branch": "feat/contact-page-reach-and-feedback",
+  "decisionsTitle": "The contact page: the phone on the page, where the runs are, a way on after every send; the feedback form shorter on a phone (amending §461, §565, §676, §678, §679)",
+  "decisionsSection": "**The ask, 2026-10-10:** improve the contact page as a whole, `/ro/contact` and `/en/contact`, then «Spune-ne ceva», the feedback form. The owner's own sentence on what bothers them was not filled in the brief, so this round builds what an audit of both pages at 320 pixels and on a laptop found, small and medium items only, and keeps today's look (the facelift is a later release).\n\n**Intent (written first; the landing reads the final text below).** The contact page shows the club's public phone, says where the runs are, and offers a way on after a send; the feedback form asks the right question for «Cum a fost», keeps its five faces on one row at 320 pixels, folds the «why did you stop coming» boxes, and offers a way on after a send.",
+  "changelogLine": "- **Contact, easier to use** — the club's phone on the page, a pointer to the calendar, «Scrie alt mesaj» after a send; «Spune-ne ceva» asks «Ce ți-a plăcut, ce nu?», keeps its faces on one row on a phone and folds the reasons for no longer coming. §NNN.",
+  "batchLine": "the contact page and «Spune-ne ceva», easier on a phone"
+}
