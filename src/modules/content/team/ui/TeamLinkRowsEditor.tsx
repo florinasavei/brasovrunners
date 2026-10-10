@@ -1,17 +1,12 @@
 "use client";
 
-import AddIcon from "@mui/icons-material/Add";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import DeleteIcon from "@mui/icons-material/Delete";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import IconButton from "@mui/material/IconButton";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import { type ComponentProps, useState } from "react";
 import { useRecall } from "@/shared/forms/recall";
+import GlyphButton from "@/shared/ui/GlyphButton";
 import { DEFAULT_TEAM_LINK_KIND, isTeamLinkKind, MAX_TEAM_LINK_LABEL, MAX_TEAM_LINK_URL, MAX_TEAM_LINKS, TEAM_LINK_KINDS, type TeamLinkKind } from "../links";
 import TeamLinkGlyph from "./TeamLinkGlyph";
 
@@ -96,7 +91,7 @@ function TeamLinkRowsEditorIsland({
   };
 
   // 44 px targets (BR-REQ-041-01 criterion 6).
-  const square = { minHeight: 44, minWidth: 44 } as const;
+  const square = { minHeight: 44, minWidth: 44, px: 1, "& .MuiButton-startIcon": { m: 0 } } as const;
 
   return (
     <Stack spacing={1.5} id={recall.idOf("links")} tabIndex={-1} sx={{ outline: "none" }}>
@@ -170,31 +165,25 @@ function TeamLinkRowsEditorIsland({
               />
             </Stack>
             <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end" }}>
-              <IconButton aria-label={`${labels.moveUp} ${n}`} onClick={() => move(index, -1)} disabled={index === 0} sx={square}>
-                <ArrowUpwardIcon fontSize="small" />
-              </IconButton>
-              <IconButton aria-label={`${labels.moveDown} ${n}`} onClick={() => move(index, 1)} disabled={index === rows.length - 1} sx={square}>
-                <ArrowDownwardIcon fontSize="small" />
-              </IconButton>
-              <IconButton aria-label={`${labels.remove} ${n}`} onClick={() => remove(key)} sx={square}>
-                <DeleteIcon fontSize="small" />
-              </IconButton>
+              <GlyphButton icon="moveUp" type="button" variant="text" aria-label={`${labels.moveUp} ${n}`} onClick={() => move(index, -1)} disabled={index === 0} sx={square} />
+              <GlyphButton icon="moveDown" type="button" variant="text" aria-label={`${labels.moveDown} ${n}`} onClick={() => move(index, 1)} disabled={index === rows.length - 1} sx={square} />
+              <GlyphButton icon="delete" type="button" variant="text" aria-label={`${labels.remove} ${n}`} onClick={() => remove(key)} sx={square} />
             </Stack>
           </Stack>
         );
       })}
       {/* Stops at `MAX_TEAM_LINKS` rather than offering a row the save would refuse. */}
-      <Button
+      <GlyphButton
+        icon="add"
         type="button"
         variant="text"
         size="small"
-        startIcon={<AddIcon />}
         onClick={add}
         disabled={rows.length >= MAX_TEAM_LINKS}
         sx={{ alignSelf: "flex-start", textTransform: "none", minHeight: 44 }}
       >
         {labels.add}
-      </Button>
+      </GlyphButton>
     </Stack>
   );
 }

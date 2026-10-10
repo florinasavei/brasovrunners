@@ -5847,7 +5847,10 @@
           "staticPages": "Public pages are static: the CDN answers a visitor, and every read goes through the public cache.",
           "lightDefault": "The site starts light; dark only from the footer's button, never from the phone's setting.",
           "pageTint": "The public pages' tint is the club's setting, with a contrast guard: readable text on any tint.",
-          "fontSize": "The text size on public pages is a club setting, from a bounded scale."
+          "fontSize": "The text size on public pages is a club setting, from a bounded scale.",
+          "colourLiterals": "No colour written straight into code: colours come from the theme, and the exceptions sit in a list that can only shrink.",
+          "iconImports": "Icons come from the registries, by name; the backoffice never imports one directly and a public page imports one file per icon, never the whole package.",
+          "primitives": "A button or a pill is the house's own (GlyphButton, ButtonLink, GlyphChip), not a bare MUI Button, IconButton or Chip written again."
         }
       },
       "plan": {

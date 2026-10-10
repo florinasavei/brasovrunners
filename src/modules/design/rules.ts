@@ -24,4 +24,7 @@ export const DESIGN_RULES: readonly DesignRule[] = [
   { id: "lightDefault", where: ["src/theme/AppTheme.tsx", "src/shared/ui/ThemeModeToggle.tsx"] },
   { id: "pageTint", where: ["src/modules/appearance/domain/site-tint.ts", "tests/unit/appearance/site-tint.test.ts"] },
   { id: "fontSize", where: ["src/modules/appearance/domain/site-font-size.ts", "tests/unit/appearance/site-font-size.test.ts"] },
+  { id: "colourLiterals", where: ["tests/unit/design/colour-literals.test.ts", "tests/unit/design/guards-allowlist.ts"] },
+  { id: "iconImports", where: ["tests/unit/design/icon-imports.test.ts", "tests/unit/design/guards-allowlist.ts"] },
+  { id: "primitives", where: ["tests/unit/design/primitives.test.ts", "tests/unit/design/guards-allowlist.ts"] },
 ];

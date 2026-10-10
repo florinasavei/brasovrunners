@@ -1,0 +1,239 @@
+import type { Entry } from "./scan";
+
+/**
+ * The design system's ratchet (§NNN): today's offenders of the three guards, each with its reason.
+ *
+ * The list can only shrink. A new offender fails its test (fix it, never add it); a file that was
+ * fixed fails its test as a stale entry (delete the entry); and `PINNED` below must equal each
+ * list's length and its hits (the sum of the entries' counts), so a shrink is a deliberate edit of the numbers in one reviewed file. There is no
+ * inline escape (`// eslint-disable`-style): this file is the only door.
+ *
+ * Files under `src/modules/content/shop`, `src/modules/content/team` and `src/app/[locale]/admin/shop`,
+ * and the pages that edit them (`admin/pages/team/page.tsx`, `admin/pages/members/ShopCard.tsx`), are
+ * never listed: they were fixed with a token, a registry name or a primitive, and stay so.
+ */
+export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[] } = {
+  colours: [
+    { path: "src/app/api/resting/route.ts", reason: "the resting page is static HTML outside the theme provider; its hairline is a translucent grey that reads on both modes", count: 1 },
+    { path: "src/app/global-error.tsx", reason: "the last-resort error page renders without the theme provider (it replaces the root layout), so it carries its own plain colours", count: 5 },
+    { path: "src/modules/content/events/fields.ts", reason: "an error message's example («such as #1a73e8»), not a colour used", count: 1 },
+    { path: "src/modules/content/events/ui/DifficultyStepField.tsx", reason: "an rgba() built from the theme's own channel variable (§526); the literal is the fallback syntax, not a hue", count: 1 },
+    { path: "src/modules/content/events/ui/bib-colours.ts", reason: "the bib colours the club may pick for a race number are data, not the site's palette", count: 6 },
+    { path: "src/modules/content/rich-text/ui/ImageCropBox.tsx", reason: "the crop frame's dimming scrim and handle: black and white at an opacity over any picture, in both modes", count: 2 },
+    { path: "src/modules/content/rich-text/ui/PictureLightboxDialog.tsx", reason: "the lightbox's near-black backdrop: a scrim over a picture, the same in both modes", count: 1 },
+    { path: "src/modules/content/rich-text/ui/RichTextEditor.tsx", reason: "inline styles in the editor's serialised picture-placeholder DOM, which is outside React's theme", count: 2 },
+    { path: "src/modules/events/share-card-design.ts", reason: "the share card is drawn to an image (Satori) with no theme provider; it computes rgba() from the brand hex it is given", count: 1 },
+    { path: "src/modules/media/video-poster.ts", reason: "the test stub's poster frame, a flat fill that is never shown to a visitor", count: 1 },
+    { path: "src/modules/newsletter/ui/NewsletterSignup.tsx", reason: "the native dialog's ::backdrop scrim, which MUI's theme does not reach", count: 1 },
+    { path: "src/shared/ui/SocialIcon.tsx", reason: "the social networks' own brand colours (Facebook, Strava, Instagram gradient): theirs, not the club's palette", count: 5 },
+    { path: "src/shared/ui/VideoFacade.tsx", reason: "the play button's dark scrim over the video poster, the same over any picture", count: 1 },
+  ],
+  icons: [
+    { path: "src/app/[locale]/admin/(list)/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/checkin/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/error.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/guide/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
+    { path: "src/app/[locale]/admin/pages/(list)/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 4 },
+    { path: "src/app/[locale]/admin/pages/members/CodesCard.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 3 },
+    { path: "src/app/[locale]/admin/pages/members/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
+    { path: "src/app/[locale]/admin/registrations/(list)/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 4 },
+    { path: "src/app/[locale]/admin/registrations/[id]/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
+    { path: "src/app/[locale]/admin/tasks/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/devs/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
+    { path: "src/modules/club-todo/ui/ClubTodoPanel.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 5 },
+    { path: "src/modules/content/events/ui/BibPictureField.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
+    { path: "src/modules/content/events/ui/CoHostRowsEditor.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 4 },
+    { path: "src/modules/content/events/ui/EventDraftPreview.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 7 },
+    { path: "src/modules/content/events/ui/EventListFields.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 3 },
+    { path: "src/modules/content/events/ui/LinkRowsEditor.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 4 },
+    { path: "src/modules/content/events/ui/PlaceToBeAnnounced.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
+    { path: "src/modules/content/events/ui/PublishCheck.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
+    { path: "src/modules/content/events/ui/RaceStartNotSet.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
+    { path: "src/modules/content/events/ui/ScheduleRowsEditor.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
+    { path: "src/modules/content/events/ui/SectionMap.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
+    { path: "src/modules/content/events/ui/SeriesScope.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
+    { path: "src/modules/content/menu/ui/MenuOrderList.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 9 },
+    { path: "src/modules/content/pages/ui/PagesSubNav.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 5 },
+    { path: "src/modules/content/rich-text/ui/ImageCropBox.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
+    { path: "src/modules/content/rich-text/ui/LazyRichTextEditor.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
+    { path: "src/modules/content/rich-text/ui/RichTextEditor.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 33 },
+    { path: "src/modules/diagnostics/ui/NetworkProbes.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
+    { path: "src/modules/legal-documents/ui/LegalBodyEditor.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 7 },
+    { path: "src/modules/media/ui/GalleryPicker.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 7 },
+    { path: "src/modules/newsletter/ui/NewsletterPreview.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
+    { path: "src/modules/newsletter/ui/SubscriberListFields.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 3 },
+    { path: "src/modules/notifications/ui/DeliveryTimingSwitch.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
+    { path: "src/modules/registrations/ui/DeskRow.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
+    { path: "src/modules/registrations/ui/InviteForm.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
+    { path: "src/modules/registrations/ui/QueuePanel.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
+    { path: "src/modules/registrations/ui/RegistrationRowMenu.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
+    { path: "src/modules/staff-identity/ui/AdminTabs.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 12 },
+    { path: "src/modules/staff-identity/ui/ColumnVisibility.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
+  ],
+  primitives: [
+    { path: "src/app/[locale]/admin/(list)/page.tsx", reason: "a bare MUI Button: GlyphButton / GlyphButtonLink by an action-icons name when the file is next touched; a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 2 },
+    { path: "src/app/[locale]/admin/checkin/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/app/[locale]/admin/error.tsx", reason: "a bare MUI Button: GlyphButton / GlyphButtonLink by an action-icons name when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/admin/events/[id]/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/app/[locale]/admin/gallery/(list)/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/app/[locale]/admin/gallery/[id]/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/app/[locale]/admin/legal/(list)/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/app/[locale]/admin/legal/new/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/app/[locale]/admin/pages/(list)/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/app/[locale]/admin/pages/[id]/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/app/[locale]/admin/pages/faq/page.tsx", reason: "a bare MUI Button: GlyphButton / GlyphButtonLink by an action-icons name when the file is next touched; a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 2 },
+    { path: "src/app/[locale]/admin/pages/members/CodesCard.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/app/[locale]/admin/pages/members/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/app/[locale]/admin/registrations/(list)/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/app/[locale]/admin/registrations/[id]/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/app/[locale]/admin/settings/costs/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/app/[locale]/admin/staff/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/app/[locale]/admin/tasks/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/app/[locale]/contact/feedback/page.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/contact/page.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/devs/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/app/[locale]/error.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/events/[slug]/declaration/page.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/members-area/page.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/registrations/declare/[token]/page.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/registrations/family/[token]/page.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/registrations/list/[token]/page.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/registrations/manage/[token]/page.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched; a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 2 },
+    { path: "src/app/[locale]/registrations/mine/[token]/page.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched; a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 2 },
+    { path: "src/app/[locale]/registrations/mine/page.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/registrations/resend/page.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched", count: 1 },
+    { path: "src/app/[locale]/sign-in/page.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched", count: 1 },
+    { path: "src/modules/club-todo/ui/ClubTodoPanel.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/modules/content/events/ui/BibPictureField.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/content/events/ui/CoHostRowsEditor.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched; a bare MUI IconButton: the house has no icon-only primitive yet, add one before migrating", count: 2 },
+    { path: "src/modules/content/events/ui/CreateAndPublishButton.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/content/events/ui/EventDraftPreview.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/content/events/ui/LinkRowsEditor.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched; a bare MUI IconButton: the house has no icon-only primitive yet, add one before migrating", count: 2 },
+    { path: "src/modules/content/events/ui/PlaceToBeAnnounced.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/content/events/ui/ScheduleRowsEditor.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched; a bare MUI IconButton: the house has no icon-only primitive yet, add one before migrating", count: 2 },
+    { path: "src/modules/content/gallery/ui/PhotoReplaceButton.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/content/gallery/ui/PhotoUploader.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/content/member-codes/ui/CopyCodeButton.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/content/menu/ui/MenuOrderList.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/content/rich-text/ui/ImageCropBox.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/content/rich-text/ui/PictureLightboxDialog.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/content/rich-text/ui/RichTextEditor.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/deadlines/ui/DeadlinesPanel.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/modules/diagnostics/ui/MonthCostsPanel.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/modules/diagnostics/ui/NetworkProbes.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched; a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 2 },
+    { path: "src/modules/events/ui/CalendarSection.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/events/ui/CalendarStepLink.tsx", reason: "a bare MUI IconButton: the house has no icon-only primitive yet, add one before migrating", count: 1 },
+    { path: "src/modules/events/ui/EventCard.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/modules/events/ui/EventPageView.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/events/ui/InstagramShareButton.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/events/ui/ListingFilterPanel.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/events/ui/NativeShareButton.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/events/ui/RegistrationDoorButton.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/events/ui/SeriesCard.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/modules/events/ui/SeriesDates.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/modules/events/ui/ShareLinks.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/feedback/ui/EventFeedbackButton.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/feedback/ui/EventPickerFilter.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/modules/group-run-declarations/ui/DeclarationOffer.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/group-run-declarations/ui/GroupRunDeclarationsPanel.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/modules/legal-documents/ui/LegalBodyEditor.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/media/ui/GalleryPicker.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/newsletter/ui/NewsletterPreview.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/newsletter/ui/NewsletterSignup.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/notifications/ui/OutboxQueuePanel.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/modules/notifications/ui/ParticipantMessageComposer.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/registrations/ui/ActionLinkNotice.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/registrations/ui/AskFirstButton.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/registrations/ui/CheckYourEmail.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/registrations/ui/DeskEmailChip.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/modules/registrations/ui/DeskRow.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/modules/registrations/ui/EmailTwice.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/registrations/ui/HiddenListChip.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/modules/registrations/ui/InvitationsPanel.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/modules/registrations/ui/InviteForm.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/registrations/ui/MemberChip.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/modules/registrations/ui/QrScanButton.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/registrations/ui/QueuePanel.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/modules/registrations/ui/ReadAndAgree.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/registrations/ui/RegistrationRowMenu.tsx", reason: "a bare MUI IconButton: the house has no icon-only primitive yet, add one before migrating", count: 1 },
+    { path: "src/modules/registrations/ui/SummaryStrip.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
+    { path: "src/modules/registrations/ui/TurnstileWidget.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/registrations/ui/registration-form.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
+    { path: "src/modules/staff-identity/ui/ColumnVisibility.tsx", reason: "a bare MUI IconButton: the house has no icon-only primitive yet, add one before migrating", count: 1 },
+  ],
+};
+
+/** Per rule, the entries and the hits (the sum of the counts): lower them in the same edit that removes an entry or a count. */
+export const PINNED = {
+  colours: { entries: 13, hits: 28 },
+  icons: { entries: 40, hits: 143 },
+  primitives: { entries: 89, hits: 97 },
+} as const;
+
+/**
+ * The icon registries: the files that are a name-to-glyph table and so may import
+ * `@mui/icons-material` themselves. An explicit list, not a file-name pattern: a component whose
+ * name merely says "Glyph" (`GlyphSelect.tsx`, `GlyphButton.tsx`) is not one, and a new registry is
+ * a reviewed edit of this file.
+ */
+export const ICON_REGISTRIES: ReadonlySet<string> = new Set([
+  "src/shared/ui/action-icons.ts",
+  "src/modules/events/ui/glyphs.ts",
+  "src/modules/weather/ui/glyphs.ts",
+  "src/modules/content/events/ui/section-glyphs.ts",
+  "src/modules/events/ui/link-glyphs.ts",
+  "src/modules/events/ui/difficulty-glyphs.ts",
+  "src/modules/events/ui/co-host-glyphs.tsx",
+  "src/modules/feedback/ui/branch-glyph.ts",
+  "src/shared/ui/button-glyph.ts",
+  "src/shared/ui/panel-glyphs.ts",
+  "src/modules/content/team/ui/TeamLinkGlyph.tsx",
+]);
+
+export const isIconRegistry = (file: string): boolean => ICON_REGISTRIES.has(file);
+
+/** Where the primitives are written in a scanned area: not a place to forbid MUI's own button. */
+export const PRIMITIVE_FILES: ReadonlySet<string> = new Set(["src/modules/events/ui/GlyphChip.tsx"]);
+
+/** `src/app/**` and every `src/modules/<area>/**\/ui/**`: the pages and the areas' components. */
+export const inPrimitiveScope = (file: string): boolean => file.startsWith("src/app/") || (file.startsWith("src/modules/") && file.includes("/ui/"));
+
+/**
+ * Where a file is backoffice for the icon guard (§NNN): a backoffice file asks `action-icons.ts` by
+ * name (§318, §521); a public one imports its one icon file directly, so the registry's table stays
+ * off public routes. A route and a few areas are backoffice by their path; the rest are the files of
+ * a mixed area (`registrations`, `newsletter`) that only the staff's screens render, listed by name.
+ */
+const BACKOFFICE_PREFIXES = [
+  "src/app/[locale]/admin/",
+  "src/app/[locale]/devs/",
+  "src/modules/club-todo/",
+  "src/modules/content/",
+  "src/modules/design/",
+  "src/modules/diagnostics/",
+  "src/modules/legal-documents/ui/",
+  "src/modules/media/ui/",
+  "src/modules/notifications/ui/",
+  "src/modules/staff-identity/",
+];
+/**
+ * Public files under a backoffice prefix: the members' zone's codes and the rich text a visitor reads,
+ * with the lightbox that enlarges its pictures. A single-file icon import there is the rule.
+ */
+const PUBLIC_PREFIXES = [
+  "src/modules/content/member-codes/",
+  "src/modules/content/rich-text/ui/PictureLightbox",
+  "src/modules/content/rich-text/ui/RichText.tsx",
+  "src/modules/content/rich-text/ui/RichTextVideo.tsx",
+];
+const BACKOFFICE_FILES: ReadonlySet<string> = new Set([
+  "src/modules/newsletter/ui/NewsletterPreview.tsx",
+  "src/modules/newsletter/ui/SubscriberListFields.tsx",
+  "src/modules/registrations/ui/DeskRow.tsx",
+  "src/modules/registrations/ui/InviteForm.tsx",
+  "src/modules/registrations/ui/QueuePanel.tsx",
+  "src/modules/registrations/ui/RegistrationRowMenu.tsx",
+]);
+
+export const isBackoffice = (file: string): boolean =>
+  !PUBLIC_PREFIXES.some((prefix) => file.startsWith(prefix)) && (BACKOFFICE_FILES.has(file) || BACKOFFICE_PREFIXES.some((prefix) => file.startsWith(prefix)));
