@@ -2117,15 +2117,18 @@
           "cropTitle": "Partea care se tipărește",
           "cropHelp": {
             "header": "Trage dreptunghiul peste partea care vrei să apară sus, pe toată lățimea numărului.",
-            "sponsors": "Trage dreptunghiul peste sponsori. „Toată imaginea” pune imaginea întreagă în bandă."
+            "sponsors": "Trage dreptunghiul peste sponsori. „Toată imaginea” pune imaginea întreagă în bandă.",
+            "memberCard": "Trage dreptunghiul peste partea care vrei să apară în spatele cifrelor, pe tot numărul."
           },
           "cropReset": {
             "header": "Înapoi la mijloc",
-            "sponsors": "Toată imaginea"
+            "sponsors": "Toată imaginea",
+            "memberCard": "Înapoi la mijloc"
           },
           "shape": {
             "header": "Forma: {ratio} la 1, cât banda de sus a numărului.",
-            "sponsors": "Forma: {ratio} la 1, cât banda cu sponsori."
+            "sponsors": "Forma: {ratio} la 1, cât banda cu sponsori.",
+            "memberCard": "Forma: {ratio} la 1, cât numărul întreg fără rândul de jos."
           }
         },
         "footer": {
@@ -2151,13 +2154,22 @@
           "enabledHelp": "Formularul întreabă „Vreau numărul de membru” sub bifa de membru {club}. Se tipărește doar pentru o adresă a unui cont din «Echipa». Numărul rămâne în aceeași ordine.",
           "previewAlt": "Numărul de concurs al unui membru, cu designul membrilor, pentru un alergător cu numele „Nume Prenume”",
           "previewCaption": "Previzualizare — numărul unui membru",
-          "bandColour": "Culoarea benzii pentru membri",
-          "bandColourHelp": "Folosită când nu alegi o imagine, și sub eticheta de pe imagine.",
-          "eventColour": "Culoarea evenimentului",
+          "style": "Fundalul numărului de membru",
+          "styleHelp": "„Tot numărul”: fundal pe tot numărul, cifre și nume albe, eticheta pe o bandă portocalie. „Doar banda de sus”: numărul obișnuit, cu altă bandă sus.",
+          "styles": {
+            "card": "Tot numărul — degradeul clubului, o culoare sau o fotografie",
+            "band": "Doar banda de sus"
+          },
+          "bandOnly": "{colour} — doar pe bandă",
+          "cardImageSrc": "Fotografie pe tot numărul, pentru membri",
+          "cardImageSrcHelp": "Doar cu „Tot numărul”. Stă sub un văl bleumarin, ca cifrele albe să se citească. Fără ea: culoarea aleasă sau degradeul tricoului.",
+          "bandColour": "Culoarea membrilor",
+          "bandColourHelp": "Pe bandă: culoarea benzii. Pe tot numărul: fundalul, fără fotografie; gol înseamnă degradeul tricoului. Verdele și portocaliul rămân doar pe bandă.",
+          "eventColour": "Implicită: a evenimentului, sau degradeul clubului",
           "headerImageSrc": "Imagine în locul benzii, pentru membri",
-          "headerImageSrcHelp": "Ca imaginea de sus a numărului, doar pe numerele membrilor. Fără ea, banda are culoarea aleasă mai sus.",
+          "headerImageSrcHelp": "Doar cu „Doar banda de sus”. Ca imaginea de sus a numărului, doar pe numerele membrilor. Fără ea, banda are culoarea aleasă mai sus.",
           "label": "Eticheta",
-          "labelHelp": "Un rând scurt pe banda numărului de membru, cel mult {max} de caractere. Gol: «Membru {club}»."
+          "labelHelp": "Un rând scurt, cel mult {max} de caractere, pe bandă sau cu majuscule pe banda portocalie. Gol: «Membru {club}»."
         }
       },
       "bibColour": "Culoarea numerelor de concurs (BIB)",

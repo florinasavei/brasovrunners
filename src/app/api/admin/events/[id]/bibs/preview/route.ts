@@ -55,10 +55,15 @@ const SAMPLE_NAME = "Nume Prenume";
  * chose — so the gate is the one every staff role already passes for a real bib. The same
  * renderer as the paper, never a second drawing (§180): the preview is a preview of the print.
  */
-/** The design's pictures, read and turned into what `next/og` draws (`bib-pictures.ts`); the members' header for a member's bib (§664). */
+/** The design's pictures, read and turned into what `next/og` draws (`bib-pictures.ts`); the members' header or card photograph for a member's bib (§664, §NNN). */
 async function imagePictures(design: BibDesign, member = false) {
   const loaded = await loadBibPictures(design, BIB_PICTURE_WIDTH.preview, member);
-  return { header: bibPictureForImage(loaded.header), sponsors: bibPictureForImage(loaded.sponsors), memberHeader: bibPictureForImage(loaded.memberHeader) };
+  return {
+    header: bibPictureForImage(loaded.header),
+    sponsors: bibPictureForImage(loaded.sponsors),
+    memberHeader: bibPictureForImage(loaded.memberHeader),
+    memberCard: bibPictureForImage(loaded.memberCard),
+  };
 }
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }): Promise<Response> {
