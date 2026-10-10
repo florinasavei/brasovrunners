@@ -14,12 +14,13 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V2.84`** (released 2026-10-10 09:26 UTC, migration `0133_members_shop` applied). The race of
-  21 November is published and takes real registrations — every change is a change to a live system.
-- **QA: `BR-V2.84`**, the same release. **In flight:** `BR-V2.85`, «the members' zone shows no way into the
-  backoffice» (§684): branch `fix/members-zone-shows-no-backoffice`, landed on `batch/2026-10-10-ab`; its pull request
-  into `qa` comes once the batch's commit passes `yarn check`. No migration. A session that finds the batch branch pushed
-  without a pull request opens it (`batch/2026-10-10-ab` → `qa`) and merges it on green.
+- **Production = QA = `BR-V2.85`** (released 2026-10-10 10:25 UTC; `BR-V2.84`'s migration `0133_members_shop` was
+  approved and applied the same morning). The race of 21 November is published and takes real registrations — every
+  change is a change to a live system.
+- **In flight:** `chore/licence-all-rights-reserved` — `LICENSE` becomes a plain all-rights-reserved notice in the
+  club's name (the owner, 2026-10-10: «Keep it public, but make sure people don't steal it … Especially other run
+  clubs»); its pull request into `qa`, then production on the owner's word. The repository **stays public**, so every
+  "the repository is public" rule below still holds.
 - **Nothing else is building.** No worktree holds unmerged work; old worktrees under `.claude/worktrees/` can be removed
   (`git worktree remove --force <path>`; a merged branch's worktree is safe to drop).
 
@@ -54,19 +55,21 @@ This section replaces the plan of 2026-09-30; it is what a session with none of 
 safety form, a flower icon, reaching one person the club names); anonymous by default with an incognito icon, named on
 request, then the sender chooses the club or the safety person; a filterable event picker; the newsletter last on the
 contact page (§676–§680). `BR-V2.82`: members' race numbers print first, on their own pages (§681). `BR-V2.83`: a plain
-rain hour has its own cloud (§682). `BR-V2.84`: the members' shop (§683).
+rain hour has its own cloud (§682). `BR-V2.84`: the members' shop (§683). `BR-V2.85`: the members' zone shows no
+way into the backoffice, not even to a colleague (§684).
 
 ## Building
 
 | Item | Branch | Notes |
 | --- | --- | --- |
-| The members' zone shows no way into the backoffice, not even to a colleague (§684) | `fix/members-zone-shows-no-backoffice` | landed on `batch/2026-10-10-ab` as `BR-V2.85`; pull request into `qa` next, then production on the owner's word |
+| The repository's licence: all rights reserved, readable but not reusable without the club's written permission | `chore/licence-all-rights-reserved` | pull request into `qa`, then production on the owner's word |
+| Permissions per person on top of the roles, the first «Gestionează magazinul» | `feat/permissions-per-person` (to build; the brief is the section below) | held for the owner's choice between this and a new role |
 
 ## Ready for the next release
 
 | Item | Branch |
 | --- | --- |
-| — | nothing else: `BR-V2.85` above is the next release |
+| — | nothing ready: the licence above is the next release |
 
 ### Asked for on 2026-10-10, to start from the laptop
 
