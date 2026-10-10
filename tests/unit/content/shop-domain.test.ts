@@ -22,7 +22,6 @@ import {
   stockToSave,
   variantLinesAsTyped,
   variantsFromSizes,
-  variantsInShopOrder,
   formatMeasure,
   measureAsTyped,
 } from "@/modules/content/shop/domain";
@@ -284,7 +283,7 @@ describe("§NNN «Mărimile»: ticks in a fixed order, a stock each, the free la
     expect(variantsFromSizes({ ...form, sizes: [...STANDARD_SIZES], extraVariants: Array.from({ length: 12 }, (_, i) => `V${i}`).join("\n") })).toEqual({ ok: false, path: "extraVariants", error: "tooMany" });
   });
 
-  it("opens the stored variants back as ticks, boxes and lines, and sorts any list into the shop's order", () => {
+  it("opens the stored variants back as ticks, boxes and lines", () => {
     const stored = [
       { label: "Copii", stock: 3 },
       { label: "M", stock: null },
@@ -292,7 +291,6 @@ describe("§NNN «Mărimile»: ticks in a fixed order, a stock each, the free la
       { label: "s", stock: 5 },
     ];
     expect(sizesAsForm(stored)).toEqual({ sizes: ["M", "S"], sizeStock: { M: "", S: "5" }, oneSize: true, stock: "2", extraVariants: "Copii: 3" });
-    expect(variantsInShopOrder(stored).map((variant) => variant.label)).toEqual(["s", "M", null, "Copii"]);
   });
 });
 

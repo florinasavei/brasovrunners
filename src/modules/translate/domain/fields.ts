@@ -18,8 +18,8 @@
  *   the page's introduction — one form per card, each posting the same names; since §691 also a
  *   card's sub-role line and its responsibilities, and each box under the chart (its title and its
  *   text, `bodyRoBody` / `bodyEnBody`), one form per box;
- * - «Magazin» (§NNN): a product's title and description and «Cum se plătește» — plain texts, one form
- *   each, posting `titleEn` / `descriptionEn` and `paymentEn`;
+ * - «Magazin» (§NNN): a product's title, its description — a rich text, `descriptionRoBody` /
+ *   `descriptionEnBody` — and «Cum se plătește» (`paymentEn`, plain);
  * - «Întrebări frecvente» (§525): each card's question, «Categorie» and answer (`faq[<n>].…`), and
  *   the page's introduction — the whole page one form;
  * - «Membri» (§524, §572): «Beneficiile membrilor» and the members' zone, each its own form posting
@@ -65,13 +65,13 @@ const ENGLISH_FIELD_PATTERNS: readonly RegExp[] = [
   // «Echipa»: the role, a link row's label, the words about the person and the page's introduction.
   /^roleEn$/,
   /^links\[\d{1,2}\]\.labelEn$/,
-  /^(bio|intro)EnBody$/,
+  /^(bio|intro|description)EnBody$/,
   // «Echipa» as an organisational chart (§691): a card's sub-role line and its «Responsabilități»
   // (one per line — the lines travel as they are), and a box's title and text under the chart.
   // `titleEn` is also the shop product's title (§NNN).
   /^(subtitle|responsibilities)En$/,
   /^titleEn$/,
-  // «Magazin» (§NNN): a product's description and «Cum se plătește», plain multi-line texts. «Coduri de reducere» also posts `descriptionEn` but has no button yet.
+  // «Magazin» (§NNN): «Cum se plătește», and the plain `descriptionEn` of a product's older form; «Coduri de reducere» also posts `descriptionEn` but has no button yet.
   /^(description|payment)En$/,
   /^bodyEnBody$/,
   // «Întrebări frecvente» (§525): a card's question, its category and its answer.
@@ -88,9 +88,9 @@ const NEWSLETTER_RICH_TEXT = /^newsletterBodyEn$/;
 
 /**
  * The rich texts that spell their pair `…RoBody` / `…EnBody`: «Echipa»'s bio and introduction
- * (§474), a question's answer on «Întrebări frecvente» (§525), and «Membri»'s two texts (§524, §572).
+ * (§474), a shop product's description (§NNN), a question's answer on «Întrebări frecvente» (§525), and «Membri»'s two texts (§524, §572).
  */
-const TEAM_RICH_TEXT = /^(?:bio|intro|body|benefits|zone|faq\[\d{1,3}\]\.answer)EnBody$/;
+const TEAM_RICH_TEXT = /^(?:bio|intro|description|body|benefits|zone|faq\[\d{1,3}\]\.answer)EnBody$/;
 
 /** Whether `name` is an English box the club types words into — the whole of what may be translated. */
 export function isTranslatableEnglishField(name: string): boolean {

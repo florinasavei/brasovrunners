@@ -103,6 +103,12 @@ test.describe("§353 every island finds its words, and a public page carries onl
     const href = await editor.getAttribute("href");
     expect(href).toBeTruthy();
     await expectWords(page, href as string);
+    // An existing product's page too — the only one drawing the picture field with its crop box (§NNN).
+    await page.goto("/ro/admin/shop");
+    const product = page.locator('a[href^="/ro/admin/shop/products/"]:not([href$="/new"])').first();
+    const productHref = await product.getAttribute("href");
+    expect(productHref).toBeTruthy();
+    await expectWords(page, productHref as string);
   });
 
   test("the site root is a real redirect to the listing, the query kept", async ({ request }) => {

@@ -4,7 +4,7 @@ import TeamPhotoImage from "@/modules/content/team/ui/TeamPhotoImage";
 
 /**
  * A product's pictures in the members' zone (§NNN): the cover large, in its crop, and under it the
- * rest as a strip of thumbnails, each a plain link to the picture's own file — no script, no
+ * rest as a scrolling strip of thumbnails (CSS scroll-snap, no script), each a plain link to the picture's own file — no script, no
  * lightbox, 44-pixel targets (BR-REQ-041-01 criterion 6). A product with one picture draws the
  * cover alone. The pictures are decorative beside the name: `alt` stays empty, the link's name says
  * which picture it is.
@@ -18,9 +18,9 @@ export default function ProductPictureStrip({ pictures, openLabel }: { pictures:
         <TeamPhotoImage src={cover.webUrl} photo={{ width: cover.width, height: cover.height, crop: cover.crop }} radius={8} loading="lazy" testId="product-cover" />
       </Box>
       {rest.length > 0 && (
-        <Box component="ul" sx={{ listStyle: "none", m: 0, mt: 1, p: 0, display: "flex", flexWrap: "wrap", gap: 1 }}>
+        <Box component="ul" sx={{ listStyle: "none", m: 0, mt: 1, p: 0, display: "flex", gap: 1, overflowX: "auto", scrollSnapType: "x mandatory", pb: 0.5 }}>
           {rest.map((picture, index) => (
-            <Box component="li" key={`${picture.webUrl}-${index}`} sx={{ m: 0 }}>
+            <Box component="li" key={`${picture.webUrl}-${index}`} sx={{ m: 0, flex: "0 0 auto", scrollSnapAlign: "start" }}>
               <Box
                 component="a"
                 href={picture.webUrl}

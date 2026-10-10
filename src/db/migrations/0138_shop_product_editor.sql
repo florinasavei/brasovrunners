@@ -22,3 +22,7 @@ ALTER TABLE "shop_product_pictures" ADD CONSTRAINT "shop_product_pictures_media_
 CREATE INDEX "shop_product_pictures_product_idx" ON "shop_product_pictures" USING btree ("product_id","position");
 --> statement-breakpoint
 ALTER TABLE "shop_products" ADD CONSTRAINT "shop_products_size_chart_shape" CHECK ("shop_products"."size_chart" IS NULL OR (jsonb_typeof("shop_products"."size_chart") = 'object' AND jsonb_typeof("shop_products"."size_chart" -> 'columns') = 'array' AND jsonb_array_length("shop_products"."size_chart" -> 'columns') <= 4 AND jsonb_typeof("shop_products"."size_chart" -> 'rows') = 'object'));
+
+--> statement-breakpoint
+-- A product's one photo of §683 becomes its first picture (the cover, with its crop); idempotent: a product that already has a picture is left alone.
+INSERT INTO "shop_product_pictures" ("product_id", "media_asset_id", "crop", "position") SELECT "id", "photo_media_asset_id", "photo_crop", 1 FROM "shop_products" WHERE "photo_media_asset_id" IS NOT NULL AND NOT EXISTS (SELECT 1 FROM "shop_product_pictures" WHERE "shop_product_pictures"."product_id" = "shop_products"."id");

@@ -41,6 +41,7 @@ describe("§464 the boxes that may be translated", () => {
       "bodyEnBody",
       // «Magazin» (§NNN): a product's description and «Cum se plătește».
       "descriptionEn",
+      "descriptionEnBody",
       "paymentEn",
     ]) {
       expect(isTranslatableEnglishField(name), name).toBe(true);
@@ -75,13 +76,15 @@ describe("§464 the boxes that may be translated", () => {
     expect(isRichTextField("bodyEnBody")).toBe(true);
     expect(isRichTextField("titleEn")).toBe(false);
     expect(isRichTextField("responsibilitiesEn")).toBe(false);
-    // The shop's texts (§NNN) are plain multi-line boxes.
+    // The shop's description is a rich text since the editor's rebuild (§NNN); the code's and the payment words stay plain.
+    expect(isRichTextField("descriptionEnBody")).toBe(true);
     expect(isRichTextField("descriptionEn")).toBe(false);
     expect(isRichTextField("paymentEn")).toBe(false);
   });
 
   it("finds the Romanian twin by the pair's own spelling", () => {
     expect(romanianTwinCandidates("descriptionEn")).toEqual(["descriptionRo", "description"]);
+    expect(romanianTwinCandidates("descriptionEnBody")).toEqual(["descriptionRoBody"]);
     expect(romanianTwinCandidates("paymentEn")).toEqual(["paymentRo", "payment"]);
     expect(romanianTwinCandidates("translations.en.body")).toEqual(["translations.ro.body"]);
     expect(romanianTwinCandidates("event.schedule[2].en")).toEqual(["event.schedule[2].ro"]);

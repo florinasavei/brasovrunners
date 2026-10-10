@@ -285,16 +285,6 @@ export function sizesAsForm(variants: readonly VariantLine[]): { sizes: Standard
   return { sizes, sizeStock, oneSize, stock, extraVariants: variantLinesAsTyped(extra.length ? extra : []).lines };
 }
 
-/** The label the pages show for a variant: «Mărime unică» (the caller's word) for the one with no label. */
-export function variantsInShopOrder<V extends { label: string | null }>(variants: readonly V[]): V[] {
-  const rank = (label: string | null) => {
-    if (label === null) return STANDARD_SIZES.length;
-    const size = standardSizeOf(label);
-    return size === null ? STANDARD_SIZES.length + 1 : STANDARD_SIZES.indexOf(size);
-  };
-  return [...variants].sort((a, b) => rank(a.label) - rank(b.label));
-}
-
 // --- «Tabelul de mărimi» (§NNN) ------------------------------------------------------------------
 
 export type SizeChartColumn = { ro: string; en: string };
