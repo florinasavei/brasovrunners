@@ -167,13 +167,13 @@ describe("§541 the photo field's wiring", () => {
     expect(markup).toContain("Calitate");
   });
 
-  it("the upload button is a type=button that opens the hidden file input, which keeps the form's id", () => {
+  it("the upload control is a label for the hidden file input, which keeps the form's id", () => {
     const markup = render({});
-    // The visible control must not submit the form, and the input the click opens keeps `inputId`.
-    expect(/<button[^>]*type="button"[^>]*id="field-photoAssetId"/.test(markup)).toBe(true);
-    expect(/<input[^>]*id="team-photo-t"[^>]*type="file"/.test(markup)).toBe(true);
-    const source = readFileSync(path.join(process.cwd(), "src/modules/content/team/ui/TeamPhotoField.tsx"), "utf8");
-    expect(source).toContain("fileInput.current?.click()");
+    // The native picker: a `<label for>` around the input, so it opens without JavaScript and the e2e upload path finds the input.
+    const label = /<label[^>]*>/.exec(markup)?.[0] ?? "";
+    expect(label).toContain('for="team-photo-t"');
+    expect(label).toContain('id="field-photoAssetId"');
+    expect(/<label[^>]*>(?:(?!<\/label>).)*<input[^>]*id="team-photo-t"[^>]*type="file"/.test(markup)).toBe(true);
   });
 
   it("a card without a photograph posts neither, and has no crop box", () => {

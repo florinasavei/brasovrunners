@@ -1,6 +1,4 @@
-import AddCircleIcon from "@mui/icons-material/AddCircle";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
-import EditIcon from "@mui/icons-material/Edit";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import StorefrontIcon from "@mui/icons-material/Storefront";
@@ -38,6 +36,7 @@ import TeamPhotoField, { type TeamPhotoLabels } from "@/modules/content/team/ui/
 import TeamPhotoImage from "@/modules/content/team/ui/TeamPhotoImage";
 import ActionForm, { type RefusalMessages } from "@/shared/forms/ActionForm";
 import RecallField, { RecallCheckbox, RecallHidden } from "@/shared/forms/recall";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
@@ -52,6 +51,9 @@ import {
   saveShopProductAction,
   saveShopSettingsAction,
 } from "./actions";
+
+const AddCircleIcon = ACTION_ICONS.add;
+const EditIcon = ACTION_ICONS.edit;
 
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 

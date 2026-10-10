@@ -3,10 +3,14 @@ import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import CardMembershipIcon from "@mui/icons-material/CardMembership";
 import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ConstructionIcon from "@mui/icons-material/Construction";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
+import EventBusyIcon from "@mui/icons-material/EventBusy";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HandshakeIcon from "@mui/icons-material/Handshake";
+import HelpIcon from "@mui/icons-material/Help";
 import HikingIcon from "@mui/icons-material/Hiking";
 import LocalCafeIcon from "@mui/icons-material/LocalCafe";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
@@ -16,11 +20,15 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PaidIcon from "@mui/icons-material/Paid";
 import ScienceIcon from "@mui/icons-material/Science";
 import SportsScoreIcon from "@mui/icons-material/SportsScore";
+import ScheduleIcon from "@mui/icons-material/Schedule";
 import StarIcon from "@mui/icons-material/Star";
 import StraightenIcon from "@mui/icons-material/Straighten";
 import TerrainIcon from "@mui/icons-material/Terrain";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import TranslateIcon from "@mui/icons-material/Translate";
 import TuneIcon from "@mui/icons-material/Tune";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import type { ComponentType } from "react";
@@ -144,6 +152,17 @@ export const GLYPHS = {
   // metaphor a confirmed place gets elsewhere.
   filters: TuneIcon,
   registration: EventAvailableIcon,
+  // A state's own word with its picture (a backoffice chip is a `GlyphChip` too, §NNN): the event
+  // that is over or called off, a row shown or hidden on the site, a text in one language only, and
+  // the steps of a plan.
+  done: CheckCircleIcon,
+  cancelled: EventBusyIcon,
+  visible: VisibilityIcon,
+  hidden: VisibilityOffIcon,
+  language: TranslateIcon,
+  open: HelpIcon,
+  planned: ScheduleIcon,
+  building: ConstructionIcon,
 };
 
 export type GlyphName = keyof typeof GLYPHS;

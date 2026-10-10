@@ -12,6 +12,12 @@ type Props = Omit<ButtonProps, "startIcon" | "endIcon" | "component" | "href" | 
    * `type="submit"` inside the form the Server Component rendered.
    */
   href?: string;
+  /**
+   * Set, the button is a `<label>` for the file input with this id — the input sits among its
+   * children, hidden: the native file picker, which opens without JavaScript and which the e2e
+   * upload path drives. Never with `href`.
+   */
+  htmlFor?: string;
 };
 
 /**
@@ -34,11 +40,18 @@ type Props = Omit<ButtonProps, "startIcon" | "endIcon" | "component" | "href" | 
  * never MUI's `Button` with its own `startIcon` import: the design guards (`tests/unit/design/`,
  * §NNN) refuse both a bare MUI `Button` and a direct `@mui/icons-material` import.
  */
-export default function GlyphButton({ icon, href, children, ...props }: Props) {
+export default function GlyphButton({ icon, href, htmlFor, children, ...props }: Props) {
   const Icon = ACTION_ICONS[icon];
   const startIcon = <Icon fontSize="small" />;
   // With an `href`, MUI's ButtonBase renders its link component, a plain `<a>` — the element
   // `component="a"` used to ask for at every call site.
+  if (htmlFor !== undefined) {
+    return (
+      <Button {...({ component: "label", htmlFor } as object)} startIcon={startIcon} {...props}>
+        {children}
+      </Button>
+    );
+  }
   return href === undefined ? (
     <Button startIcon={startIcon} {...props}>
       {children}

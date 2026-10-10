@@ -37,6 +37,7 @@ import LockIcon from "@mui/icons-material/Lock";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LogoutIcon from "@mui/icons-material/Logout";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
 import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
@@ -66,6 +67,7 @@ import TranslateIcon from "@mui/icons-material/Translate";
 import UndoIcon from "@mui/icons-material/Undo";
 import UploadIcon from "@mui/icons-material/Upload";
 import VerifiedIcon from "@mui/icons-material/Verified";
+import ViewAgendaIcon from "@mui/icons-material/ViewAgenda";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import IncognitoIcon from "./IncognitoIcon";
@@ -218,7 +220,10 @@ export type ActionIconName =
   | "signOut"
   // A row one place earlier or later in an editor's list (§NNN): the two arrows, never a verb of their own.
   | "moveUp"
-  | "moveDown";
+  | "moveDown"
+  // The guide a page of the backoffice opens on (the design page's samples) and the titled texts of a page (§691).
+  | "guide"
+  | "boxes";
 // No runner here: the public send buttons wear it through `SubmitButton`'s own `runner` flag,
 // because this table must never reach a public page (above).
 
@@ -305,4 +310,6 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   signOut: LogoutIcon,
   moveUp: ArrowUpwardIcon,
   moveDown: ArrowDownwardIcon,
+  guide: MenuBookIcon,
+  boxes: ViewAgendaIcon,
 };

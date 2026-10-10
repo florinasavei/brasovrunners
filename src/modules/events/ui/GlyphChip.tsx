@@ -80,7 +80,7 @@ export default function GlyphChip({
    * its own word. Both are palette entries with a stated `contrastText` (`theme/theme.ts`),
    * never a colour written here.
    */
-  color?: "default" | "primary" | "secondary";
+  color?: "default" | "primary" | "secondary" | "success" | "warning" | "error";
   variant?: "filled" | "outlined";
   /** Set, the chip is a link — the listing's type filter. */
   href?: string;
