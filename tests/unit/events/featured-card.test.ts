@@ -10,7 +10,7 @@ import type { PublicEvent } from "@/modules/events/repository";
  * The owner, 2026-09-26, of the hero that stood across the page above the cards: "vreau doar sa
  * fie primul, nu neaparat mai lat pe desktop, e ok sa afisam 2 sau 3 carduri, dar toate cardurile
  * trebuie sa aiba aceeasi latime". So the lead is `EventCard` with `featured`: the card's own
- * structure, told apart by its frame and background and the «Evenimentul principal» chip — and, in
+ * structure, told apart by its frame and background and the «Alergarea principală» chip (since 2026-10-10) — and, in
  * the club's race week (§78), the countdown and the desk's sentence once registration has closed.
  * The page draws it as the first `<li>` of the one grid the other cards are in.
  */

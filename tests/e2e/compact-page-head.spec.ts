@@ -40,7 +40,7 @@ test.describe("§569 the compact page head", () => {
       test.skip(!isPhone(), "a phone's first screen");
       await page.setViewportSize(phone);
       await page.goto("/ro/evenimente");
-      const title = page.getByRole("heading", { level: 1, name: "Evenimente" });
+      const title = page.getByRole("heading", { level: 1, name: "Alergări" });
       await expect(title).toBeVisible();
       await expect(page.locator("#main h1")).toHaveCount(1);
       expect(await fontSizeOf(page, "#main h1"), "the H1 at the phone's size").toBe(24);
@@ -75,7 +75,7 @@ test.describe("§569 the compact page head", () => {
   test("on a desktop the wordmark stands above the title at 16 pixels, and the title is 28", async ({ page }) => {
     test.skip(isPhone(), "the desktop's head");
     for (const [path, name] of [
-      ["/ro/evenimente", "Evenimente"],
+      ["/ro/evenimente", "Alergări"],
       ["/ro/calendar", "Calendar"],
       ["/ro/contact", "Scrie-ne"],
     ] as const) {

@@ -241,7 +241,7 @@ test.describe("BR-REQ-041-01 the filters work with no script at all", () => {
       const form = html.match(/<form\b[^>]*>/)?.[0] ?? "";
       expect(form).toContain('method="get"');
       expect(form).toContain('action="/ro/evenimente"');
-      expect(form).toContain('aria-label="Filtrele evenimentelor"');
+      expect(form).toContain('aria-label="Filtrele alergărilor"');
       expect(html).toMatch(/<details[^>]*data-testid="listing-filters"/);
       expect(html).toMatch(/<input type="checkbox" name="type" checked="" value="RACE"/);
       expect(html).toMatch(/<input type="checkbox" name="surface" value="TRAIL"/);

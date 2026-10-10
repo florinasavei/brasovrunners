@@ -456,10 +456,10 @@ test.describe("BR-REQ-011-01 the featured event leads the landing page", () => {
   test("shows the featured race as the first card, with both of its times", async ({ page }) => {
     await page.goto("/ro/evenimente");
 
-    // A card since §470, still a region named by its title, and the «Evenimentul principal» chip on it.
+    // A card since §470, still a region named by its title, and the «Alergarea principală» chip on it.
     const hero = page.getByRole("region", { name: /Crosul aniversar/ });
     await expect(hero).toBeVisible();
-    await expect(hero.getByText("Evenimentul principal", { exact: true })).toBeVisible();
+    await expect(hero.getByText("Alergarea principală", { exact: true })).toBeVisible();
 
     const heroText = await hero.innerText();
     // A race has two times, each named: the gathering and the gun.
@@ -595,7 +595,7 @@ test.describe("BR-REQ-040-01 the language switcher", () => {
     // The signpost an event page had none of: before this, the only way back to the listing
     // was the logo, which is a convention rather than something a visitor reads.
     const nav = page.getByRole("navigation", { name: "Navigare principală" });
-    const events = nav.getByRole("link", { name: "Evenimente" });
+    const events = nav.getByRole("link", { name: "Alergări" });
     const menu = nav.getByRole("button", { name: "Meniu" });
     // `.first()`: on a wide screen with a few standing pages both can be visible at once.
     await expect(events.or(menu).first()).toBeVisible();
@@ -614,7 +614,7 @@ test.describe("BR-REQ-040-01 the language switcher", () => {
       await events.click();
     } else {
       await menu.click();
-      const item = page.getByRole("menuitem", { name: "Evenimente" });
+      const item = page.getByRole("menuitem", { name: "Alergări" });
       // Polled: the menu grows in, and a box read mid-animation is the scaled-down one.
       await expect
         .poll(async () => roundToTenth((await item.boundingBox())?.height ?? 0))
