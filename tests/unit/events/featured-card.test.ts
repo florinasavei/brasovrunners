@@ -10,7 +10,7 @@ import type { PublicEvent } from "@/modules/events/repository";
  * The owner, 2026-09-26, of the hero that stood across the page above the cards: "vreau doar sa
  * fie primul, nu neaparat mai lat pe desktop, e ok sa afisam 2 sau 3 carduri, dar toate cardurile
  * trebuie sa aiba aceeasi latime". So the lead is `EventCard` with `featured`: the card's own
- * structure, told apart by its frame and background and the «Evenimentul principal» chip — and, in
+ * structure, told apart by its frame and background and the «Alergarea principală» chip (since 2026-10-10) — and, in
  * the club's race week (§78), the countdown and the desk's sentence once registration has closed.
  * The page draws it as the first `<li>` of the one grid the other cards are in.
  */
@@ -111,9 +111,9 @@ function cardRules(html: string): string {
 }
 
 describe("§470 the featured event is a card like the others", () => {
-  it("wears the «Evenimentul principal» chip first, and is a region named by its title", async () => {
+  it("wears the «Alergarea principală» chip first, and is a region named by its title", async () => {
     const html = withoutStyles(await card(race(), RACE_WEEK));
-    expect(chipLabels(html)[0]).toBe("Evenimentul principal");
+    expect(chipLabels(html)[0]).toBe("Alergarea principală");
     expect(html).toMatch(/<li\b[^>]*data-featured="true"/);
     expect(html).toMatch(/<section\b[^>]*aria-labelledby="featured-event-title"/);
     expect(html).toMatch(/<h2\b[^>]*id="featured-event-title"[^>]*>\s*<a href="\/ro\/evenimente\/crosul-aniversar">Crosul aniversar<\/a>/);
@@ -135,7 +135,7 @@ describe("§470 the featured event is a card like the others", () => {
         .replace(/ id="featured-event-title"/, "");
     const fromTitle = (html: string) => strip(html).slice(strip(html).indexOf("<h2"));
     expect(lead).not.toContain('data-testid="race-week-countdown"');
-    expect(chipLabels(lead)).toEqual(["Evenimentul principal", ...chipLabels(plain)]);
+    expect(chipLabels(lead)).toEqual(["Alergarea principală", ...chipLabels(plain)]);
     expect(fromTitle(lead)).toBe(fromTitle(plain));
   });
 

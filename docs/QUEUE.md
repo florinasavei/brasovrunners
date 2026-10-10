@@ -25,6 +25,11 @@ This section replaces the plan of 2026-09-30; it is what a session with none of 
     «Gestionează magazinul», a per-person permission ticked on «Echipa», and the shop's own top-bar section «Magazin»
     (migration `0134_staff_user_permissions`); `yarn handoff` and `docs/DISPATCHER.md` § When a session stops.
     **Two migrations: production stops at the `migrate.yml` run for the owner's approval.**
+- **`BR-V2.88` (§689), on `qa` once its pull request merges:** in Romanian the section is «Alergări», not «Evenimente» —
+  the menu, the listing's title and sentences (feminine grammar), «Alergarea principală», the filters, the backoffice tab,
+  the in-app guide; the address `/ro/evenimente`, English, the legal texts and the emails unchanged. Open questions for
+  the owner: should the registrations select's «Toate evenimentele», the night pill «Eveniment de noapte», «Evenimente
+  pentru membri» and English («Runs») follow?
 - **Three empty branches** on GitHub — `feat/team-org-chart`, `feat/design-system-page`, `feat/shop-order-for-member`
   (a copy of the currency branch): no work of their own, nobody remembers their purpose; delete them on GitHub
   (the session's git cannot delete a remote branch).
@@ -131,6 +136,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.88` | the section is «Alergări» (§689) |
 | `BR-V2.87` | a shop price in lei or in euro (§686) · permissions per person: «Gestionează magazinul» and the shop's own section (§687) · `yarn handoff` and the rules for a session that stops (§688) |
 | `BR-V2.86` | the licence: all rights reserved (§685) |
 | `BR-V2.85` | the members' zone shows no backoffice button (§684) |

@@ -41,7 +41,7 @@ export const TASK_TARGETS: Partial<Record<TaskId, TaskTarget>> = {
   groupRunSeriesTexts: { kind: "section", section: "legal" },
   // The people are invited on «Echipa» (§450).
   inviteStaff: { kind: "section", section: "staff" },
-  // The race is one save and a publish on «Evenimente» (`SETUP.md` §39).
+  // The race is one save and a publish on «Alergări» (`SETUP.md` §39).
   publishEvents: { kind: "section", section: "events" },
   // The queue, its stop header and «Reîncearcă emailurile eșuate» (§622); the switch and the cap are the panel above it.
   emailFailSafe: { kind: "settings", tab: "emails", hash: "outbox-queue" },

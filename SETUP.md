@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.87-2026-10-10 -->
+<!-- PROJECT_BASELINE: BR-V2.88-2026-10-10 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.87-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.88-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1576,7 +1576,7 @@ languages go live together; that is the rule, not a setting.
    outside the advertised places, taking none of them; the name «Lista de invitați speciali» is the backoffice's
    alone and appears on no public page and in no participant's email.
 6. **Invitations by email** — members, partners, guests the club wants at the start, without asking
-   them to fight the public form (§647). «Evenimente» → «Editează» on the race → «Înscrierile primite»
+   them to fight the public form (§647). «Alergări» → «Editează» on the race → «Înscrierile primite»
    → «Trimite invitații» opens the «Invitații» section of the race's registrations list:
    - tick members from the members' zone (search by name or address), and/or type other people one per
      line — the name, then the email address;
