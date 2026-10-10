@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.84-2026-10-10 -->
+<!-- PROJECT_BASELINE: BR-V2.85-2026-10-10 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.84-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.85-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -2790,6 +2790,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 120. Given a variant with a stock, when members order it, then the variant row is locked in the order's own transaction, an order larger than what is left is refused whole and nothing is taken, ten simultaneous orders for the last unit on ten connections yield exactly one order and a stock of zero, and a cancellation — by the member while placed, by the club until the hand-over — gives back exactly what the order took, once, even when pressed twice at once; the same member placing the same variant, quantity and note again within ten seconds of an order not cancelled is answered with that order, and nothing is taken, audited or sent twice, even when both presses race on two connections; a move of an order locks the product, the variant and then the order — the order a save that deletes a variant takes — so a cancellation racing such a save never deadlocks (2026-10-10, `DECISIONS.md` §683).
 121. An order keeps its own copy of the product's titles, the variant's label and the unit price; a product that any order names is archived instead of deleted; a save that leaves a variant's stock as loaded keeps the stock as it stands, so an order placed meanwhile is not undone; the ordering member's address is shown beside an order and written in the orders' CSV only for the roles that read members' addresses (2026-10-10, `DECISIONS.md` §683).
 122. The orders list on «Magazin» counts every order its filter names in «Comenzi · N», draws the newest 500 and says in one line when more exist (the CSV carries them all), and a verb pressed on a filtered list answers on the same filter, its fold open; a posted filter value outside the closed set of statuses or not a product id is dropped (2026-10-10, `DECISIONS.md` §683).
+123. The members' zone draws no link into the backoffice for any account — a member, a Contributor or an Administrator; the backoffice's layout alone admits a colleague and sends a member back to the zone (2026-10-10, `DECISIONS.md` §684).
 
 **Verification:** integration `auth/role-boundaries.test.ts`, `cms/crud.test.ts`, `registrations/test-kind.test.ts`; unit `staff/roles.test.ts`, `staff/zitadel-users.test.ts`, `registrations/row-verbs.test.ts`; e2e `cms-publish.spec.ts`
 

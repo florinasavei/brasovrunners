@@ -1,4 +1,3 @@
-import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import LogoutIcon from "@mui/icons-material/Logout";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
@@ -27,11 +26,10 @@ import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
 import { cachedUpcomingEvents } from "@/modules/public-cache/reads";
 import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
-import { canOpenMembersZone, isBackofficeRole } from "@/modules/staff-identity/domain/roles";
+import { canOpenMembersZone } from "@/modules/staff-identity/domain/roles";
 import { getCurrentAccount } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
-import ButtonLink from "@/shared/ui/ButtonLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
@@ -147,8 +145,9 @@ async function upcomingOrNone(locale: Locale, now: Date) {
  * which is shared by everybody (`page-settings.ts`). Both languages or neither (§352): a zone written
  * in one language shows the catalogue's sentence on both pages rather than the other language's text.
  *
- * A colleague sees the way to the backoffice as well; a member sees only the zone and the sign-out,
- * which lands on «Beneficiile membrilor».
+ * Everybody, a colleague included, sees only the zone and the sign-out, which lands on «Beneficiile
+ * membrilor». The zone shows no way into the backoffice, not even to a colleague (§684): a colleague
+ * goes to `/admin` directly, and the backoffice's own layout is the lock either way.
  *
  * **Why here and not under `/admin` (§524).** The zone is a public-tree route with the site's own
  * header and footer, not a page inside the backoffice's shell: everything under `/admin` sits
@@ -288,13 +287,6 @@ export default async function MembersAreaPage({ params, searchParams }: Props) {
       </Box>
 
       <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ alignItems: { sm: "center" } }}>
-        {/* A colleague is a member too, and their backoffice is one press away (§524). */}
-        {isBackofficeRole(account.role) && (
-          <ButtonLink href="/admin" variant="outlined" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }} data-testid="members-backoffice">
-            <AdminPanelSettingsIcon aria-hidden="true" sx={glyphSx("medium")} />
-            {t("openBackoffice")}
-          </ButtonLink>
-        )}
         <SignOut locale={locale} label={t("signOut")} />
       </Stack>
     </Container>
