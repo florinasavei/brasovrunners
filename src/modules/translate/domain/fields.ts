@@ -18,7 +18,7 @@
  *   the page's introduction — one form per card, each posting the same names; since §691 also a
  *   card's sub-role line and its responsibilities, and each box under the chart (its title and its
  *   text, `bodyRoBody` / `bodyEnBody`), one form per box;
- * - «Magazin» (§692): a product's title and description and «Cum se plătește» — plain texts, one form
+ * - «Magazin» (§NNN): a product's title and description and «Cum se plătește» — plain texts, one form
  *   each, posting `titleEn` / `descriptionEn` and `paymentEn`;
  * - «Întrebări frecvente» (§525): each card's question, «Categorie» and answer (`faq[<n>].…`), and
  *   the page's introduction — the whole page one form;
@@ -68,10 +68,10 @@ const ENGLISH_FIELD_PATTERNS: readonly RegExp[] = [
   /^(bio|intro)EnBody$/,
   // «Echipa» as an organisational chart (§691): a card's sub-role line and its «Responsabilități»
   // (one per line — the lines travel as they are), and a box's title and text under the chart.
-  // `titleEn` is also the shop product's title (§692).
+  // `titleEn` is also the shop product's title (§NNN).
   /^(subtitle|responsibilities)En$/,
   /^titleEn$/,
-  // «Magazin» (§692): a product's description and «Cum se plătește», plain multi-line texts.
+  // «Magazin» (§NNN): a product's description and «Cum se plătește», plain multi-line texts. «Coduri de reducere» also posts `descriptionEn` but has no button yet.
   /^(description|payment)En$/,
   /^bodyEnBody$/,
   // «Întrebări frecvente» (§525): a card's question, its category and its answer.

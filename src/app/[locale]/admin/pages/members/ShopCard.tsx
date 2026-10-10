@@ -248,7 +248,7 @@ function SettingsFold({
           >
             <input type="hidden" name="uiLocale" value={locale} />
             <Stack spacing={2}>
-              {/* «Copiază și tradu tot: RO → EN» (§464, §482, §692): the payment words' English from its Romanian. */}
+              {/* «Copiază și tradu tot: RO → EN» (§464, §482, §NNN): the payment words' English from its Romanian. */}
               <TranslateAllButton />
               <Box sx={pairSx}>
                 <RecallField
@@ -448,7 +448,7 @@ function ProductFields({
   const typed = product ? variantLinesAsTyped(product.variants) : { lines: "", singleStock: "" };
   return (
     <Stack spacing={2}>
-      {/* «Copiază și tradu tot: RO → EN» (§464, §482, §692): the product's English title and description from the Romanian. */}
+      {/* «Copiază și tradu tot: RO → EN» (§464, §482, §NNN): the product's English title and description from the Romanian. */}
       <TranslateAllButton />
       <Box sx={pairSx}>
         <RecallField

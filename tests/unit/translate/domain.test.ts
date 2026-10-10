@@ -39,7 +39,7 @@ describe("§464 the boxes that may be translated", () => {
       "responsibilitiesEn",
       "titleEn",
       "bodyEnBody",
-      // «Magazin» (§692): a product's description and «Cum se plătește».
+      // «Magazin» (§NNN): a product's description and «Cum se plătește».
       "descriptionEn",
       "paymentEn",
     ]) {
@@ -75,7 +75,7 @@ describe("§464 the boxes that may be translated", () => {
     expect(isRichTextField("bodyEnBody")).toBe(true);
     expect(isRichTextField("titleEn")).toBe(false);
     expect(isRichTextField("responsibilitiesEn")).toBe(false);
-    // The shop's texts (§692) are plain multi-line boxes.
+    // The shop's texts (§NNN) are plain multi-line boxes.
     expect(isRichTextField("descriptionEn")).toBe(false);
     expect(isRichTextField("paymentEn")).toBe(false);
   });

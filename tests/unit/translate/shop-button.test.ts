@@ -10,7 +10,7 @@ import type { TeamPhotoLabels } from "@/modules/content/team/ui/TeamPhotoField";
 import TranslateProvider, { type TranslateAction } from "@/modules/translate/ui/TranslateProvider";
 
 /**
- * §692 — «Copiază și tradu tot: RO → EN» on the shop's two forms (the product's, new and edit, and
+ * §NNN — «Copiază și tradu tot: RO → EN» on the shop's two forms (the product's, new and edit, and
  * «Cum se plătește»), the way «Echipa» has it (§464, §482): drawn where the layout offers
  * translation, absent where it does not, in both languages.
  */
@@ -72,7 +72,7 @@ function render(locale: "ro" | "en", offer: ComponentProps<typeof TranslateProvi
   return renderToStaticMarkup(createElement(NextIntlClientProvider, intl, createElement(TranslateProvider, { offer } as ComponentProps<typeof TranslateProvider>, card)));
 }
 
-describe("§692 the shop's forms carry «Copiază și tradu tot»", () => {
+describe("§NNN the shop's forms carry «Copiază și tradu tot»", () => {
   for (const locale of ["ro", "en"] as const) {
     it(`draws one button in each of the three forms, in ${locale}`, () => {
       const html = render(locale, { action, setupHref: null });
