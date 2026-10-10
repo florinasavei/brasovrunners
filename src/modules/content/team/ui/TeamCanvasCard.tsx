@@ -13,7 +13,7 @@ import TeamMemberLinks, { teamPhotoWidths } from "./TeamMemberLinks";
 import TeamPhotoImage from "./TeamPhotoImage";
 
 /**
- * One card of «Echipa»'s canvas (§NNN, amending §691; the president's drawing): a white card on the
+ * One card of «Echipa»'s canvas (§701, amending §691; the president's drawing): a white card on the
  * blue, in one of three shapes the card's level decides —
  *
  * - `wide`, row 1's single `.0`: the photo on the left, the words on the right, the president's

@@ -13,7 +13,7 @@ import TeamLinkGlyph from "./TeamLinkGlyph";
  * pixels tall (BR-REQ-041-01 criterion 6) and opens in a new tab with no referrer: the address is
  * whatever the club pasted, checked `https://` at the save.
  *
- * Shared by the grid's card and the canvas's (§NNN). `linkColor` is the canvas card's: its words
+ * Shared by the grid's card and the canvas's (§701). `linkColor` is the canvas card's: its words
  * keep the brand's light colours after dark, where the palette's link colour would not read on
  * white; the grid's card leaves it to the theme.
  */

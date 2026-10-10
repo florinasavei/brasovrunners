@@ -11,7 +11,7 @@ import { deleteShopProductAction } from "@/app/[locale]/admin/shop/actions";
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 
 /**
- * The product page's last card (§NNN, the rule of §683): «Șterge» a product no order names, «Arhivează»
+ * The product page's last card (§697, the rule of §683): «Șterge» a product no order names, «Arhivează»
  * one with any order — out of the shop and the list, its row kept for the orders' filter, every order
  * keeping its own copy. Asked first; the answer lands on the list.
  */

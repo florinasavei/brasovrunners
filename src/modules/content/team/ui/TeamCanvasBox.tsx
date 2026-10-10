@@ -8,7 +8,7 @@ import { riseIn } from "@/theme/motion";
 import type { PublicTeamBox } from "../repository";
 
 /**
- * One of the page's boxes (§691) at the bottom of the canvas (§NNN; the president's drawing: three
+ * One of the page's boxes (§691) at the bottom of the canvas (§701; the president's drawing: three
  * light boxes under the cards): its heading and the club's text through the renderer every page
  * uses, on the hero's tint — the card colour walked towards the club's blue, a step lighter than
  * the canvas and a step darker than a card, so the boxes read as the canvas's own footer rather

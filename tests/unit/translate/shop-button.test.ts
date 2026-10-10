@@ -10,9 +10,9 @@ import type { AdminShopProduct } from "@/modules/content/shop/repository";
 import TranslateProvider, { type TranslateAction } from "@/modules/translate/ui/TranslateProvider";
 
 /**
- * §NNN — «Copiază și tradu tot: RO → EN» on the shop's forms (the product's, new and edit, and
+ * §697 — «Copiază și tradu tot: RO → EN» on the shop's forms (the product's, new and edit, and
  * «Setări»'s «Cum se plătește»), the way «Echipa» has it (§464, §482): drawn where the layout offers
- * translation, absent where it does not, in both languages. Since the editor's rebuild (§NNN) the
+ * translation, absent where it does not, in both languages. Since the editor's rebuild (§697) the
  * product's button sits at the top of «Denumirea și prețul», the first card of the product's form.
  */
 vi.mock("@/app/[locale]/admin/shop/actions", () => ({
@@ -69,7 +69,7 @@ function render(locale: "ro" | "en", offer: ComponentProps<typeof TranslateProvi
   return renderToStaticMarkup(createElement(NextIntlClientProvider, intl, createElement(TranslateProvider, { offer } as ComponentProps<typeof TranslateProvider>, ...forms)));
 }
 
-describe("§NNN the shop's forms carry «Copiază și tradu tot»", () => {
+describe("§697 the shop's forms carry «Copiază și tradu tot»", () => {
   for (const locale of ["ro", "en"] as const) {
     it(`draws one button in each of the three forms, in ${locale}`, () => {
       const html = render(locale, { action, setupHref: null });

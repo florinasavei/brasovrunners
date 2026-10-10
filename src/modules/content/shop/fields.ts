@@ -18,7 +18,7 @@ import {
 } from "./domain";
 
 /**
- * What the club types for a product of «Magazin» (§683, §NNN), and what a member posts with an order.
+ * What the club types for a product of «Magazin» (§683, §697), and what a member posts with an order.
  *
  * A product: the title in Romanian **and** English — both required at every save, a product with no
  * name in one language is not a product the other half of the site can show (§28, §352) — the
@@ -99,7 +99,7 @@ export const productFieldsSchema = z
     /** The plain boxes (an older form, a script, a test); the editor posts `…Body` and these stay empty. */
     descriptionRo: fewLines(PRODUCT_DESCRIPTION_MAX),
     descriptionEn: fewLines(PRODUCT_DESCRIPTION_MAX),
-    /** The editor's documents (§NNN), tables and pictures allowed. */
+    /** The editor's documents (§697), tables and pictures allowed. */
     descriptionRoBody: richTextBox,
     descriptionEnBody: richTextBox,
     price: z.string().optional().default(""),
@@ -113,12 +113,12 @@ export const productFieldsSchema = z
     variants: z.string().optional().default(""),
     /** The «Stoc» box: «Mărime unică»'s stock, and the one variant's when nothing else is ticked or typed. */
     stock: z.string().optional().default(""),
-    /** «Mărimile» (§NNN): the ticked sizes, each one's stock, «Mărime unică», the free labels. */
+    /** «Mărimile» (§697): the ticked sizes, each one's stock, «Mărime unică», the free labels. */
     sizes: tickList,
     sizeStock: stringRecord,
     oneSize: ticked,
     extraVariants: z.string().optional().default(""),
-    /** «Tabelul de mărimi» (§NNN): the columns' two names and a cell per size and column. */
+    /** «Tabelul de mărimi» (§697): the columns' two names and a cell per size and column. */
     chartColumns: z.array(z.object({ ro: z.string().optional().default(""), en: z.string().optional().default("") })).optional().default([]),
     chartCells: z.record(z.string(), z.array(z.string())).optional().default({}),
     variantsLoaded: loadedStock,
@@ -178,7 +178,7 @@ export const productFieldsSchema = z
 
 export type ProductFields = z.output<typeof productFieldsSchema>;
 
-/** A picture added to a product (§NNN): a stored picture's id and the crop box's fractions, as `TeamPhotoField` posts them. */
+/** A picture added to a product (§697): a stored picture's id and the crop box's fractions, as `TeamPhotoField` posts them. */
 export const pictureFieldsSchema = z
   .object({
     photoAssetId: z

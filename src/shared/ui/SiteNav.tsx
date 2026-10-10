@@ -253,7 +253,7 @@ export default function SiteNav({
       })}
 
       {/*
-        The button sits at the row's right edge at every width (§NNN, the owner 2026-10-10: "the
+        The button sits at the row's right edge at every width (§699, the owner 2026-10-10: "the
         hamburger all the way to the right"): an auto margin takes the free room and the entries
         stay left beside the logo. A margin is outside `getBoundingClientRect().width`, so the
         measurement above does not count it, and a folded button is out of the flow.

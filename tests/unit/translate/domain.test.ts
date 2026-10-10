@@ -39,7 +39,7 @@ describe("§464 the boxes that may be translated", () => {
       "responsibilitiesEn",
       "titleEn",
       "bodyEnBody",
-      // «Magazin» (§NNN): a product's description and «Cum se plătește».
+      // «Magazin» (§697): a product's description and «Cum se plătește».
       "descriptionEn",
       "descriptionEnBody",
       "paymentEn",
@@ -76,7 +76,7 @@ describe("§464 the boxes that may be translated", () => {
     expect(isRichTextField("bodyEnBody")).toBe(true);
     expect(isRichTextField("titleEn")).toBe(false);
     expect(isRichTextField("responsibilitiesEn")).toBe(false);
-    // The shop's description is a rich text since the editor's rebuild (§NNN); the code's and the payment words stay plain.
+    // The shop's description is a rich text since the editor's rebuild (§697); the code's and the payment words stay plain.
     expect(isRichTextField("descriptionEnBody")).toBe(true);
     expect(isRichTextField("descriptionEn")).toBe(false);
     expect(isRichTextField("paymentEn")).toBe(false);

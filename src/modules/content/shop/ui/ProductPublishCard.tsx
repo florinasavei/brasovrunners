@@ -10,7 +10,7 @@ import Panel from "@/shared/ui/Panel";
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 
 /**
- * «Publicarea» (§NNN): «Vizibil în magazin» — members see the product and may order it — and the
+ * «Publicarea» (§697): «Vizibil în magazin» — members see the product and may order it — and the
  * form's one button: «Adaugă produsul» for a new product (which then opens on its own page, where
  * its pictures are added), «Salvează» for one that exists. The tick and the button are a bar of their
  * own after the card, sticky to the bottom while the long form scrolls — the card is no containing

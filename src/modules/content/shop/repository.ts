@@ -12,7 +12,7 @@ import { isUuid } from "@/shared/ids";
 import { readSizeChart, type ShopCurrency, type SizeChart, sizeChartRows } from "./domain";
 
 /**
- * The members' shop (§683, §NNN), read. The catalogue and the orders are read by the backoffice
+ * The members' shop (§683, §697), read. The catalogue and the orders are read by the backoffice
  * (the top-bar section «Magazin», behind `canReadShop` — a reader of the participant list or a
  * holder of «Gestionează magazinul», §687) and by the members' zone, behind the
  * account (`canOpenMembersZone`) — never by a public page, the public cache, a feed or a sitemap.
@@ -22,7 +22,7 @@ export type ShopPhoto = { webUrl: string; thumbUrl: string; width: number; heigh
 
 export type ShopVariantRow = { id: string; label: string | null; stock: number | null; position: number };
 
-/** One picture of the strip (§NNN): the row, its stored picture (null once removed from the store) and its place. */
+/** One picture of the strip (§697): the row, its stored picture (null once removed from the store) and its place. */
 export type ShopPictureRow = { id: string; assetId: string | null; photo: ShopPhoto | null; position: number };
 
 export type AdminShopProduct = {
@@ -32,7 +32,7 @@ export type AdminShopProduct = {
   /** The plain twins (§474): what the list and a search read. */
   descriptionRo: string | null;
   descriptionEn: string | null;
-  /** The editor's documents (§NNN), or the plain words as paragraphs for a product from before them. */
+  /** The editor's documents (§697), or the plain words as paragraphs for a product from before them. */
   descriptionRoJson: RichTextDoc | null;
   descriptionEnJson: RichTextDoc | null;
   /** In the minor unit of `currency` (§686). */
@@ -40,7 +40,7 @@ export type AdminShopProduct = {
   currency: ShopCurrency;
   /** The cover: the first picture of the strip, as the product's photo columns mirror it. */
   photo: ShopPhoto | null;
-  /** The strip, in order (§NNN). */
+  /** The strip, in order (§697). */
   pictures: ShopPictureRow[];
   sizeChart: SizeChart | null;
   visible: boolean;
@@ -79,7 +79,7 @@ async function variantsOf<T extends Record<string, unknown>>(db: Database<T>, pr
   return byProduct;
 }
 
-/** Each product's pictures in order (§NNN), one query for every product asked for. */
+/** Each product's pictures in order (§697), one query for every product asked for. */
 async function picturesOf<T extends Record<string, unknown>>(db: Database<T>, productIds: string[]): Promise<Map<string, ShopPictureRow[]>> {
   const byProduct = new Map<string, ShopPictureRow[]>();
   if (productIds.length === 0) return byProduct;
@@ -194,7 +194,7 @@ export async function listProductsForAdmin<T extends Record<string, unknown>>(db
   return adminProductsFrom(db, rows);
 }
 
-/** One product for its page (§NNN) — null for an id that is no product, or an archived one. */
+/** One product for its page (§697) — null for an id that is no product, or an archived one. */
 export async function readProductForAdmin<T extends Record<string, unknown>>(db: Database<T>, productId: string): Promise<AdminShopProduct | null> {
   if (!isUuid(productId)) return null;
   const rows = await db
@@ -257,18 +257,18 @@ export async function countVisibleProducts<T extends Record<string, unknown>>(db
   return Number(row?.n ?? 0);
 }
 
-/** The chart as one language reads it (§NNN): the column names and the rows in the variants' order; null when nothing is filled. */
+/** The chart as one language reads it (§697): the column names and the rows in the variants' order; null when nothing is filled. */
 export type MembersSizeChart = { columns: string[]; rows: { label: string; cells: (number | null)[] }[] };
 
 export type MembersShopProduct = {
   id: string;
   title: string;
-  /** The description in this language, a rich document (§NNN) — only when both languages are written (§352). */
+  /** The description in this language, a rich document (§697) — only when both languages are written (§352). */
   description: RichTextDoc | null;
   /** In the minor unit of `currency`, shown in that currency (§686). */
   priceBani: number;
   currency: ShopCurrency;
-  /** The strip (§NNN): the cover first, every picture still in the store. */
+  /** The strip (§697): the cover first, every picture still in the store. */
   pictures: ShopPhoto[];
   sizeChart: MembersSizeChart | null;
   /** Each variant and whether any is left: a sold-out variant is shown and not offered. */

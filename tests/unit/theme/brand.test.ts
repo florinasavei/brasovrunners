@@ -89,7 +89,7 @@ describe("BR-REQ-070-02 the palette is readable", () => {
   });
 
   /*
-    «Echipa»'s canvas (§NNN): the one public surface that keeps the brand's light colours after
+    «Echipa»'s canvas (§701): the one public surface that keeps the brand's light colours after
     dark, so its pairs are asserted here as drawn — the words on a card, on a box, and the card
     colour on the blue itself, the blue that carries white text — rather than through the palette
     the other pages read, which flips with the scheme.

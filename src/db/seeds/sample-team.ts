@@ -25,7 +25,7 @@ export async function seedSampleTeam(): Promise<number> {
       bioEn: "A sample card. Replace it with a real person, with their consent.",
       position: 1,
       visible: false,
-      // On the canvas (§NNN): the top row's wide card, and a tall one under it, once shown.
+      // On the canvas (§701): the top row's wide card, and a tall one under it, once shown.
       level: 1,
     },
     {

@@ -171,7 +171,7 @@ export const GRADIENT = {
 } as const;
 
 /**
- * «Echipa»'s canvas (§NNN; the president's drawing: a blue canvas, white cards, light boxes at the
+ * «Echipa»'s canvas (§701; the president's drawing: a blue canvas, white cards, light boxes at the
  * bottom, no lines). The one public surface that keeps the brand's light colours after dark — the
  * blue is the brand, and a white card on it is the drawing — so every token here is a light-scheme
  * value and the components name these rather than the palette, which flips.

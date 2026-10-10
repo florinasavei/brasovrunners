@@ -17,7 +17,7 @@ type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 export const PRODUCT_FORM_SCOPE = "product";
 
 /**
- * The product's one form (§NNN): four cards in the order a person fills them — the name and the
+ * The product's one form (§697): four cards in the order a person fills them — the name and the
  * price, the description, the sizes and the stock, the publication with the one button — posting
  * to `createShopProductAction` for a new product and `saveShopProductAction` for one that exists,
  * against the version it was loaded with (AGENTS.md §11.5). The pictures are not in it: they are

@@ -180,10 +180,10 @@ export function pictureSrcSet(masterSrc: string, masterWidth: number | null | un
  *   less the grid's gap and the card's own 16-pixel padding.
  * - `tile` — an album's grid: two tiles below `sm`, three to `md`, four from it.
  * - `cover` — the albums listing: one, two, three per row — and «Echipa»'s tall canvas card, drawn
- *   in the same one, two, three per row (§NNN).
+ *   in the same one, two, three per row (§701).
  * - `aside` — a photo column beside the words: «Echipa»'s wide canvas card, 280 pixels from `md`,
- *   240 from `sm`, the whole card on a phone, where it stacks (§NNN).
- * - `thumb` — a small canvas card's photo: 104 pixels from `sm`, 88 below (§NNN).
+ *   240 from `sm`, the whole card on a phone, where it stacks (§701).
+ * - `thumb` — a small canvas card's photo: 104 pixels from `sm`, 88 below (§701).
  */
 type SizeRule = { minWidth: number | null; vw: number; px: number };
 

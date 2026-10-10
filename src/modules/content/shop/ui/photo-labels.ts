@@ -6,7 +6,7 @@ import { HIGH_WEB_MAX, LOW_WEB_MAX, ORIGINAL_WEB_MAX, WEB_MAX } from "@/modules/
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 
 /**
- * The words «Echipa»'s picture field needs when it takes a product's picture (§683, §541, §NNN):
+ * The words «Echipa»'s picture field needs when it takes a product's picture (§683, §541, §697):
  * the upload, «Din galerie», the quality choice and the crop box — translated once on the server
  * and handed to the island as strings (AGENTS.md §14.5). One place for the product page's add form
  * and each picture's replace form.

@@ -42,7 +42,7 @@ export type PublicTeamMember = {
   /** In the club's order, up to twelve. */
   links: PublicTeamLink[];
   photo: TeamPhoto | null;
-  /** The canvas (§NNN): the card's level, a whole or half step from 1 to 9, or null for the grid. */
+  /** The canvas (§701): the card's level, a whole or half step from 1 to 9, or null for the grid. */
   level: number | null;
 };
 
@@ -70,7 +70,7 @@ export type AdminTeamMember = {
   /** As stored: one responsibility per line. */
   responsibilitiesRo: string | null;
   responsibilitiesEn: string | null;
-  /** The card's level on the canvas (§NNN), or null. */
+  /** The card's level on the canvas (§701), or null. */
   level: number | null;
   /** The stored document, or the plain words as paragraphs. */
   bioRo: RichTextDoc | null;

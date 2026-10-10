@@ -190,10 +190,10 @@ export function variantKey(label: string | null): string {
   return label === null ? "" : label.toLocaleLowerCase("ro");
 }
 
-// --- «Mărimile» (§NNN) ---------------------------------------------------------------------------
+// --- «Mărimile» (§697) ---------------------------------------------------------------------------
 
 /**
- * The sizes the editor offers as ticks, in the order the shop shows them (§NNN; the owner's sheet:
+ * The sizes the editor offers as ticks, in the order the shop shows them (§697; the owner's sheet:
  * nine sizes XXS–4XL for the shirts, one size for the buff). A size is a variant row (`label`), so
  * the stock, the locks and the orders of §683 are untouched: ticking «M» is the row «M».
  */
@@ -201,7 +201,7 @@ export const STANDARD_SIZES = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL", "
 export type StandardSize = (typeof STANDARD_SIZES)[number];
 /** «Mărime unică»: the one-variant product of §683 — the variant row with no label. */
 export const ONE_SIZE_LABEL = null;
-/** The most pictures a product carries (§NNN): a strip, not an album. */
+/** The most pictures a product carries (§697): a strip, not an album. */
 export const PICTURES_MAX = 8;
 /** «Tabelul de mărimi»: at most four measured columns — chest, length, sleeve, hip — and a column name's length. */
 export const SIZE_CHART_COLUMNS_MAX = 4;
@@ -285,7 +285,7 @@ export function sizesAsForm(variants: readonly VariantLine[]): { sizes: Standard
   return { sizes, sizeStock, oneSize, stock, extraVariants: variantLinesAsTyped(extra.length ? extra : []).lines };
 }
 
-// --- «Tabelul de mărimi» (§NNN) ------------------------------------------------------------------
+// --- «Tabelul de mărimi» (§697) ------------------------------------------------------------------
 
 export type SizeChartColumn = { ro: string; en: string };
 /** As stored: the measured columns in both languages, and one row of numbers (or null) per size label. */

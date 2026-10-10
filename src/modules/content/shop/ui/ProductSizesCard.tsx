@@ -40,7 +40,7 @@ function cellOf(chart: SizeChart | null, label: string, index: number): string {
 }
 
 /**
- * «Mărimile și stocul» (§NNN; the owner: «I need to be able to define size — can't you see the
+ * «Mărimile și stocul» (§697; the owner: «I need to be able to define size — can't you see the
  * Excel?»): the nine standard sizes as ticks, XXS–4XL in the shop's order, each with its stock box
  * (empty: no limit; «0»: sold out); «Mărime unică» for a buff or a sticker, with the «Stoc» box; and
  * «Alte variante» for what is not a size — a colour, a child's cut — one per line as §683 had them.

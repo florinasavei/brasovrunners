@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.91-2026-10-10 -->
+<!-- PROJECT_BASELINE: BR-V2.92-2026-10-11 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.91-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.92-2026-10-11`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1917,7 +1917,7 @@ fallback — the way the Neon plan works since `DECISIONS.md` §326 — is the f
 
 ## 43. Magazinul membrilor — open the members' shop
 
-The members' shop (`DECISIONS.md` §683, its editor rebuilt in §NNN) is built and closed: members see
+The members' shop (`DECISIONS.md` §683, its editor rebuilt in §697) is built and closed: members see
 nothing of it until the steps below are done, in this order (the last two are optional). Payment never
 goes through the site — the member pays by bank transfer or in cash, and an Administrator — or the
 colleague who runs the shop (step 6) — marks the order paid.

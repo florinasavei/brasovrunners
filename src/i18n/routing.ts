@@ -240,7 +240,7 @@ export const routing = defineRouting({
      */
     "/admin/shop": "/admin/shop",
     /**
-     * The shop's parts (§NNN): the orders and the payment words as tabs beside the product list, and
+     * The shop's parts (§697): the orders and the payment words as tabs beside the product list, and
      * one page per product — a list the owner found «not intuitive at all» as one card of folds.
      */
     "/admin/shop/orders": "/admin/shop/orders",

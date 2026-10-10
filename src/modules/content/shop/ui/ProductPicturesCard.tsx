@@ -39,7 +39,7 @@ type Props = {
 };
 
 /**
- * «Fotografiile» (§NNN; the owner: «I need to be able to add multiple pictures of the product»):
+ * «Fotografiile» (§697; the owner: «I need to be able to add multiple pictures of the product»):
  * the product's strip, the first picture its cover, each with ↑ / ↓ (plain forms, asking nothing,
  * the codes' arrows), «Scoate» (asked first — members see the strip) and a fold «Înlocuiește sau
  * decupează» holding «Echipa»'s picture field (§541) with the picture and its crop as stored, so a

@@ -236,7 +236,7 @@ export type ActionIconName =
   | "orders"
   | "orderFor"
   | "intro"
-  // «Tabelul de mărimi» (§NNN): the ruler on the product editor's size chart fold — the measures per size in centimetres.
+  // «Tabelul de mărimi» (§697): the ruler on the product editor's size chart fold — the measures per size in centimetres.
   | "sizeChart";
 // No runner here: the public send buttons wear it through `SubmitButton`'s own `runner` flag,
 // because this table must never reach a public page (above).

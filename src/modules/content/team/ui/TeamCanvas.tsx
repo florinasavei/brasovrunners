@@ -7,7 +7,7 @@ import TeamCanvasBox from "./TeamCanvasBox";
 import TeamCanvasCard, { type TeamCanvasWords } from "./TeamCanvasCard";
 
 /**
- * «Echipa»'s canvas (§NNN, amending §691; the owner, of §691's chart: «not with lines, some lines
+ * «Echipa»'s canvas (§701, amending §691; the owner, of §691's chart: «not with lines, some lines
  * are not clearly defined; can we have more like a canvas? And to be able to select levels»). A
  * full-width section in the club's ink blue — to the screen's edges on a phone, inside the page's
  * gutters with the theme's corners from `sm` — holding the rows `buildCanvasRows` made of the

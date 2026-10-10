@@ -18,7 +18,7 @@
  *   the page's introduction — one form per card, each posting the same names; since §691 also a
  *   card's sub-role line and its responsibilities, and each box under the chart (its title and its
  *   text, `bodyRoBody` / `bodyEnBody`), one form per box;
- * - «Magazin» (§NNN): a product's title, its description — a rich text, `descriptionRoBody` /
+ * - «Magazin» (§697): a product's title, its description — a rich text, `descriptionRoBody` /
  *   `descriptionEnBody` — and «Cum se plătește» (`paymentEn`, plain);
  * - «Întrebări frecvente» (§525): each card's question, «Categorie» and answer (`faq[<n>].…`), and
  *   the page's introduction — the whole page one form;
@@ -68,10 +68,10 @@ const ENGLISH_FIELD_PATTERNS: readonly RegExp[] = [
   /^(bio|intro|description)EnBody$/,
   // «Echipa» as an organisational chart (§691): a card's sub-role line and its «Responsabilități»
   // (one per line — the lines travel as they are), and a box's title and text under the chart.
-  // `titleEn` is also the shop product's title (§NNN).
+  // `titleEn` is also the shop product's title (§697).
   /^(subtitle|responsibilities)En$/,
   /^titleEn$/,
-  // «Magazin» (§NNN): «Cum se plătește», and the plain `descriptionEn` of a product's older form; «Coduri de reducere» also posts `descriptionEn` but has no button yet.
+  // «Magazin» (§697): «Cum se plătește», and the plain `descriptionEn` of a product's older form; «Coduri de reducere» also posts `descriptionEn` but has no button yet.
   /^(description|payment)En$/,
   /^bodyEnBody$/,
   // «Întrebări frecvente» (§525): a card's question, its category and its answer.
@@ -88,7 +88,7 @@ const NEWSLETTER_RICH_TEXT = /^newsletterBodyEn$/;
 
 /**
  * The rich texts that spell their pair `…RoBody` / `…EnBody`: «Echipa»'s bio and introduction
- * (§474), a shop product's description (§NNN), a question's answer on «Întrebări frecvente» (§525), and «Membri»'s two texts (§524, §572).
+ * (§474), a shop product's description (§697), a question's answer on «Întrebări frecvente» (§525), and «Membri»'s two texts (§524, §572).
  */
 const TEAM_RICH_TEXT = /^(?:bio|intro|description|body|benefits|zone|faq\[\d{1,3}\]\.answer)EnBody$/;
 

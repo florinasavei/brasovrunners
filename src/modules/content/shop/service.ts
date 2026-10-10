@@ -11,7 +11,7 @@ import { PICTURES_MAX, stockToSave, variantKey } from "./domain";
 import { type PictureFields, pictureFieldsSchema, type ProductFields, productFieldsSchema } from "./fields";
 
 /**
- * «Magazin»'s catalogue (§683, §NNN): add, write, move, delete or archive a product, and keep its
+ * «Magazin»'s catalogue (§683, §697): add, write, move, delete or archive a product, and keep its
  * pictures. Every write is `canManageShop`'s — the Administrator and the Superadministrator by rank,
  * a colleague given «Gestionează magazinul» (§687) — asserted here whatever the screen offered
  * (BR-REQ-060-01), and leaves an audit row with the product's id — never its words.
@@ -61,7 +61,7 @@ async function assertStoredPicture<T extends Record<string, unknown>>(db: Databa
  * (without regard to case), a kept one updated in place — its stock left as it stands unless the
  * Administrator changed the number the form loaded (`stockToSave`), so an order placed meanwhile is
  * never undone — a new one added, and one no longer listed deleted. **A size unticked that has any
- * order, cancelled ones included, is refused** (§NNN, `SHOP_SIZE_HAS_ORDERS`): the order keeps its own
+ * order, cancelled ones included, is refused** (§697, `SHOP_SIZE_HAS_ORDERS`): the order keeps its own
  * copy of the label, but its variant id would dangle and its stock would have nowhere to go back to.
  */
 async function writeVariants<T extends Record<string, unknown>>(tx: Transaction<T>, productId: string, fields: ProductFields, now: Date): Promise<void> {
@@ -269,7 +269,7 @@ export async function deleteProduct<T extends Record<string, unknown>>(
   });
 }
 
-// --- The pictures (§NNN) --------------------------------------------------------------------------
+// --- The pictures (§697) --------------------------------------------------------------------------
 
 /**
  * The product row locked for a change to its pictures — the writers' first lock (§683), so a
@@ -297,7 +297,7 @@ async function picturesOf<T extends Record<string, unknown>>(tx: Transaction<T>,
 
 /**
  * After every change: the positions renumbered 1…n from the order given, the first picture
- * mirrored onto the product's photo columns (the cover; nothing reads them new, §NNN), the
+ * mirrored onto the product's photo columns (the cover; nothing reads them new, §697), the
  * product's `updated_at` moved — never its `version`, which guards the product form's boxes, so a
  * picture added while the form is open does not turn its save into a CONFLICT — and one audit row,
  * `shop.product.pictures_changed`, with the product's id and how many pictures it has now.

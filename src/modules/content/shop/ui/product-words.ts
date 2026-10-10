@@ -5,7 +5,7 @@ import { refusalMessages } from "@/shared/forms/refusal-messages";
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 
 /**
- * The product page's boxes by the names its forms post (§NNN), for the refusal summary (§315): the
+ * The product page's boxes by the names its forms post (§697), for the refusal summary (§315): the
  * four cards' boxes, «Mărimile» as one box (the card), the chart as one, and the picture forms' box.
  * One place for the new product's page and an existing product's.
  */

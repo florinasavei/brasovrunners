@@ -14,7 +14,7 @@ type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 const CURRENCY_WORD: Record<ShopCurrency, "currencyRon" | "currencyEur"> = { RON: "currencyRon", EUR: "currencyEur" };
 
 /**
- * «Denumirea și prețul» (§NNN): the product's name in Română and English — both required at every
+ * «Denumirea și prețul» (§697): the product's name in Română and English — both required at every
  * save (§352) — and its price with «Moneda» beside it (lei or euro, never converted, §686).
  * The form's one «Copiază și tradu tot: RO → EN» (§482) sits at the top of this first card and
  * fills every English box of the form, the description's included.

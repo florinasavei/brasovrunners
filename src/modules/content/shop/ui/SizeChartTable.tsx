@@ -4,7 +4,7 @@ import { formatMeasure } from "@/modules/content/shop/domain";
 import type { MembersSizeChart } from "@/modules/content/shop/repository";
 
 /**
- * «Tabelul de mărimi» in the members' zone (§NNN): one row per size in the shop's order, one column
+ * «Tabelul de mărimi» in the members' zone (§697): one row per size in the shop's order, one column
  * per measure the club named — chest width, length — the numbers in the reader's locale («66,5» /
  * «66.5»). A table rather than free text because numbers in a grid read on a phone and free text
  * does not; it scrolls sideways when four columns do not fit. The caller folds it.

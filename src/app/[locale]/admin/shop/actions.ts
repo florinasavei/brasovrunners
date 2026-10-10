@@ -26,7 +26,7 @@ import { isUuid } from "@/shared/ids";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
 /**
- * «Magazin»'s writes (§683, §687, §690, §NNN), the codes' shape (§552): a refused product, picture or
+ * «Magazin»'s writes (§683, §687, §690, §697), the codes' shape (§552): a refused product, picture or
  * settings save returns, so every box comes back as typed (§315); every other outcome is a redirect
  * to the screen it belongs to — the product's own page, the list, the orders or the settings tab —
  * with a language-neutral code and a toast (§384). The door asks `canManageShop` of the actor — a
@@ -73,7 +73,7 @@ function ordersFilterOf(form: FormData): URLSearchParams {
 }
 
 /**
- * «Tabelul de mărimi» as the form posts it (§NNN): `chartColumns[<i>][ro|en]` for the column names
+ * «Tabelul de mărimi» as the form posts it (§697): `chartColumns[<i>][ro|en]` for the column names
  * and `chartCells[<label>][<i>]` for the cells — read by shape, never by a name taken from the POST
  * beyond the size label, which the service matches against the product's own variants.
  */
@@ -101,7 +101,7 @@ function chartOf(form: FormData): { chartColumns: { ro: string; en: string }[]; 
   };
 }
 
-/** The product's boxes as the five cards post them (§NNN); «Mărimile» by the standard sizes' own names. */
+/** The product's boxes as the five cards post them (§697); «Mărimile» by the standard sizes' own names. */
 function productFieldsOf(form: FormData) {
   const sizeStock: Record<string, string> = {};
   for (const size of STANDARD_SIZES) sizeStock[size] = text(form, `sizeStock[${size}]`);
@@ -176,7 +176,7 @@ export async function deleteShopProductAction(_previous: FormOutcome | null, for
   return backTo(form, "/admin/shop", outcome, "shop-products");
 }
 
-// --- The pictures (§NNN) --------------------------------------------------------------------------
+// --- The pictures (§697) --------------------------------------------------------------------------
 
 /** «Adaugă fotografia»: the picture `TeamPhotoField` posted, with its crop, at the end of the strip. */
 export async function addShopPictureAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {

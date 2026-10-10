@@ -167,7 +167,7 @@ function ProductCard({ product, locale, t }: { product: MembersShopProduct; loca
   const id = product.id.slice(0, 8);
   return (
     <Box component="li" sx={{ border: 1, borderColor: "divider", borderRadius: 2, p: 2, minWidth: 0 }} data-testid="members-shop-product">
-      {/* The strip (§NNN): the cover large, the rest as thumbnails that open the picture. */}
+      {/* The strip (§697): the cover large, the rest as thumbnails that open the picture. */}
       <ProductPictureStrip pictures={product.pictures} openLabel={t.raw("shop.pictureOpen")} />
       <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 700, overflowWrap: "anywhere" }}>
         {product.title}
@@ -177,7 +177,7 @@ function ProductCard({ product, locale, t }: { product: MembersShopProduct; loca
         {formatPrice(product.priceBani, product.currency, locale)}
       </Typography>
       {product.description && (
-        // The description as the club wrote it in the editor (§NNN): tables and pictures included, through the one renderer (AGENTS.md §11.3).
+        // The description as the club wrote it in the editor (§697): tables and pictures included, through the one renderer (AGENTS.md §11.3).
         <Box sx={{ mt: 0.5, "& > :last-child": { mb: 0 } }} data-testid="product-description">
           <RichText body={product.description} pictures="prose" />
         </Box>

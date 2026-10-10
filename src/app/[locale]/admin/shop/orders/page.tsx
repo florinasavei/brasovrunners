@@ -23,7 +23,7 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 /**
- * «Magazin» → «Comenzi» (§683, §690; its own page since §NNN): the orders under their filter, the
+ * «Magazin» → «Comenzi» (§683, §690; its own page since §697): the orders under their filter, the
  * CSV, the verbs, and «Adaugă o comandă pentru un membru». Read by `canReadShop`; the verbs and the
  * fold are `canManageShop`'s, asserted by every action and service (BR-REQ-060-01); the member's
  * address beside an order only for a role that already reads the members' addresses (§550).

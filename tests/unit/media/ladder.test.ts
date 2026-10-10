@@ -174,7 +174,7 @@ describe("§414 sizes", () => {
     expect(pictureSizes("cover")).toMatch(/calc\(100vw - 32px\)$/);
   });
 
-  it("measures «Echipa»'s canvas columns (§NNN): the photo beside the words, and a small card's thumbnail", () => {
+  it("measures «Echipa»'s canvas columns (§701): the photo beside the words, and a small card's thumbnail", () => {
     expect(pictureSizes("aside")).toBe("(min-width: 900px) 280px, (min-width: 600px) 240px, calc(100vw - 32px)");
     expect(pictureSizes("thumb")).toBe("(min-width: 600px) 104px, 88px");
     // A cropped photo is drawn wider than its fixed column too.

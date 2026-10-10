@@ -40,7 +40,7 @@ export const shopProducts = pgTable(
     descriptionRo: text("description_ro"),
     descriptionEn: text("description_en"),
     /**
-     * The description as the editor keeps it (§NNN): a rich text under the allowlist of
+     * The description as the editor keeps it (§697): a rich text under the allowlist of
      * `content/rich-text/domain/schema.ts`, tables and pictures allowed — the owner: «I need that
      * rich text editor so I can add table and pictures». Null for a product written before it or
      * with no description; `description_ro` / `description_en` are its plain twins.
@@ -48,7 +48,7 @@ export const shopProducts = pgTable(
     descriptionRoJson: jsonb("description_ro_json"),
     descriptionEnJson: jsonb("description_en_json"),
     /**
-     * «Tabelul de mărimi» (§NNN): `{ columns: [{ ro, en }], rows: { "S": [48, 66] } }` — at most four
+     * «Tabelul de mărimi» (§697): `{ columns: [{ ro, en }], rows: { "S": [48, 66] } }` — at most four
      * measured columns, named in both languages, and one row of numbers (or null) per size. The CHECK
      * holds the shape; the save (`fields.ts`) holds the rest: each row's label is a variant's, each
      * cell a number or null, each column both languages or neither.
@@ -64,7 +64,7 @@ export const shopProducts = pgTable(
     currency: text("currency", { enum: ["RON", "EUR"] }).notNull().default("RON"),
 
     /**
-     * The cover, mirrored from the first of `shop_product_pictures` by position (§NNN) every time
+     * The cover, mirrored from the first of `shop_product_pictures` by position (§697) every time
      * the pictures change; nothing reads it new — kept so code and rows from §683 keep working. It
      * was the product's one photo, kept as a card of «Echipa» keeps it (§459, §541).
      */
@@ -104,7 +104,7 @@ export const shopProducts = pgTable(
 export type ShopProduct = typeof shopProducts.$inferSelect;
 
 /**
- * A product's pictures (§NNN; the owner: «I need to be able to add multiple pictures of the
+ * A product's pictures (§697; the owner: «I need to be able to add multiple pictures of the
  * product»), in order: the first by `position` is the cover, mirrored onto
  * `shop_products.photo_media_asset_id` / `photo_crop`. Each is a stored picture of the gallery
  * (`media_assets`) with the crop box's four fractions (§541) or null for the whole picture. The

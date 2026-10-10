@@ -1,5 +1,5 @@
 /**
- * «Echipa» as a canvas with levels (§NNN, amending §691; the owner: «the president is top level 1,
+ * «Echipa» as a canvas with levels (§701, amending §691; the owner: «the president is top level 1,
  * then the advisor level 1.5 and the rest are level 2», and «not with lines»). A pure layout over
  * the shown cards, in the club's order:
  *

@@ -249,12 +249,12 @@ describe("§683 the members' shop", () => {
     await expect(at(17)).resolves.not.toMatchObject({ id: again.id });
   });
 
-  it("a save that drops a size with an order is refused naming «Mărimile» (§NNN); a cancellation afterwards gives the stock back once", async () => {
+  it("a save that drops a size with an order is refused naming «Mărimile» (§697); a cancellation afterwards gives the stock back once", async () => {
     const product = await createProduct(db, { actor: admin, fields: PRODUCT, now: NOW });
     const variants = await variantsOf(product.id);
     const placed = await order(member, product.id, variants.M.id, 1);
     // «M» no longer listed while an order names it: refused — the order's variant would dangle and
-    // its stock would have nowhere to go back to (§NNN, the rule §683's save did not have).
+    // its stock would have nowhere to go back to (§697, the rule §683's save did not have).
     await expect(saveProduct(db, { actor: admin, productId: product.id, expectedVersion: 1, fields: { ...PRODUCT, variants: "L" }, now: NOW })).rejects.toMatchObject({
       code: "SHOP_SIZE_HAS_ORDERS",
       fields: ["sizes"],

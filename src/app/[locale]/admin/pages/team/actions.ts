@@ -52,7 +52,7 @@ function fieldsOf(form: FormData) {
     photoAssetId: text(form, "photoAssetId"),
     // The part of the photograph the card shows, as the crop box drew it (§541).
     photoCrop: text(form, "photoCrop"),
-    // The sub-role and the responsibilities (§691), and the card's level on the canvas (§NNN).
+    // The sub-role and the responsibilities (§691), and the card's level on the canvas (§701).
     subtitleRo: text(form, "subtitleRo"),
     subtitleEn: text(form, "subtitleEn"),
     responsibilitiesRo: text(form, "responsibilitiesRo"),

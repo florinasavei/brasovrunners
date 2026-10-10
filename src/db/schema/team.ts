@@ -72,7 +72,7 @@ export const teamMembers = pgTable(
     /**
      * Whom this card answers to — another card, by reference (§691): `set null` on delete, never the
      * card itself (the CHECK below), a cycle of any length refused by the save (`service.ts`). Since
-     * §NNN the page draws no chart from it and the editor offers no box for it: the column stays
+     * §701 the page draws no chart from it and the editor offers no box for it: the column stays
      * (expand only), written null by every save that posts nothing, read by nobody.
      */
     reportsToId: uuid("reports_to_id").references((): AnyPgColumn => teamMembers.id, { onDelete: "set null" }),
@@ -82,7 +82,7 @@ export const teamMembers = pgTable(
      */
     placement: text("placement").notNull().default("below"),
     /**
-     * The card's level on the canvas (§NNN; the owner: «the president is top level 1, then the
+     * The card's level on the canvas (§701; the owner: «the president is top level 1, then the
      * advisor level 1.5 and the rest are level 2»). A whole or half step from 1 to 9: the whole
      * number is the row, top first; a `.0` card is the row's lead — wide on row 1, tall under it —
      * and a `.5` card is a small one beside the leads of its row (the president's counsellor). Null
@@ -145,7 +145,7 @@ export const teamMembers = pgTable(
     /** A card never answers to itself (§691); a longer cycle is the service's to refuse. */
     check("team_members_reports_to_not_self", sql`${t.reportsToId} IS NULL OR ${t.reportsToId} <> ${t.id}`),
     check("team_members_placement_known", sql`${t.placement} IN ('below', 'beside')`),
-    /** A level is on the canvas's scale of nine rows or it is nothing (§NNN); the half step is the save's rule. */
+    /** A level is on the canvas's scale of nine rows or it is nothing (§701); the half step is the save's rule. */
     check("team_members_level_range", sql`${t.level} IS NULL OR (${t.level} >= 1 AND ${t.level} <= 9)`),
   ],
 );

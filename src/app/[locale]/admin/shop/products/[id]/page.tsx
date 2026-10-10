@@ -34,7 +34,7 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 /**
- * One product's page (§NNN): «Fotografiile» first — the strip with its own small forms — then the
+ * One product's page (§697): «Fotografiile» first — the strip with its own small forms — then the
  * product's one form in four cards (the name and the price, the description, the sizes and the
  * stock, the publication), and last «Șterge» / «Arhivează». Read by `canReadShop` (the Organizer sees
  * the cards and no button); every verb is `canManageShop`'s, asserted by its action and its service

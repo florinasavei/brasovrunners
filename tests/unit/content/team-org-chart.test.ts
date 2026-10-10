@@ -12,7 +12,7 @@ import {
 /**
  * §691 — what a card's boxes of the organisational chart accept: the sub-role, the responsibilities,
  * and the parent and placement the save still keeps for their columns though no form posts them
- * since §NNN (the layout is `team-canvas.test.ts`'s now). Fixtures say «Președinte», «Rol A»,
+ * since §701 (the layout is `team-canvas.test.ts`'s now). Fixtures say «Președinte», «Rol A»,
  * «Partener 1»: no person's name, no real role, no partner.
  */
 

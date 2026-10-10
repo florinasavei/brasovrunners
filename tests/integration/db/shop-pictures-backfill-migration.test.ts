@@ -7,7 +7,7 @@ import { migrate } from "drizzle-orm/pglite/migrator";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 /**
- * Migration `0138_shop_product_editor` (`DECISIONS.md` §NNN), proven on real PostgreSQL (PGlite): a
+ * Migration `0138_shop_product_editor` (`DECISIONS.md` §697), proven on real PostgreSQL (PGlite): a
  * product written by §683 with one photo and a crop keeps it as its first picture, position 1, the
  * crop copied; a product with no photo gets none; the backfill is safe to run twice.
  */

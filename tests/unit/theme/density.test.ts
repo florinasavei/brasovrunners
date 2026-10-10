@@ -25,7 +25,7 @@ import { DENSITY } from "@/theme/density";
 const ROOT = join(__dirname, "..", "..", "..");
 
 /**
- * The public pages and the event components they are built from, and «Echipa»'s canvas (§NNN),
+ * The public pages and the event components they are built from, and «Echipa»'s canvas (§701),
  * whose phone spacing left `page.tsx` for `content/team/ui`; the backoffice is not public (the
  * editor's rows in that folder set no phone spacing).
  */
@@ -126,7 +126,7 @@ const ALLOWED: Array<{ file: string; line: string; reason: string }> = [
   {
     file: "src/modules/content/team/ui/TeamCanvas.tsx",
     line: "mx: { xs: -2, sm: 0 },",
-    reason: "the container's own 16-pixel gutter taken back, so the canvas runs edge to edge on a phone (§NNN) — alignment, not whitespace",
+    reason: "the container's own 16-pixel gutter taken back, so the canvas runs edge to edge on a phone (§701) — alignment, not whitespace",
   },
 ];
 
@@ -147,14 +147,14 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   // Its grid: two cards to a row from 320px, so the gap and the card's own padding are the tight steps.
   // §691: a card's padding is also a box's under the grid.
   { file: "src/app/[locale]/team/page.tsx", prop: "gap", step: "cardGridGap", sm: 2, xsBefore: 2 },
-  // §NNN: the canvas (`content/team/ui/TeamCanvas.tsx`), born on the scale — its padding and the
+  // §701: the canvas (`content/team/ui/TeamCanvas.tsx`), born on the scale — its padding and the
   // gap between its rows, a section's step on a phone, the page's 24 pixels from `sm`.
   { file: "src/modules/content/team/ui/TeamCanvas.tsx", prop: "px", step: "sectionGap", sm: 3, xsBefore: 3 },
   { file: "src/modules/content/team/ui/TeamCanvas.tsx", prop: "py", step: "sectionGap", sm: 3, xsBefore: 3 },
   { file: "src/modules/content/team/ui/TeamCanvas.tsx", prop: "gap", step: "sectionGap", sm: 3, xsBefore: 3 },
   { file: "src/app/[locale]/team/page.tsx", prop: "p", step: "cardPadTop", sm: 2, xsBefore: 2, count: 2 },
   { file: "src/app/[locale]/team/page.tsx", prop: "pb", step: "cardPadTop", sm: 3, xsBefore: 3, count: 2 },
-  // The grid under the canvas (§NNN), born on the scale: a section's room from the canvas above it.
+  // The grid under the canvas (§701), born on the scale: a section's room from the canvas above it.
   { file: "src/app/[locale]/team/page.tsx", prop: "mt", step: "sectionGap", sm: 3, xsBefore: 3 },
   // A group run's self-declaration (§393): born on the scale, the declare page's three containers.
   { file: "src/app/[locale]/events/[slug]/declaration/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 3 },

@@ -166,7 +166,7 @@ describe("§474 the words about a person as rich text, and their links", () => {
   });
 });
 
-describe("§NNN «Echipa» as a canvas with levels, each card opening in place, with the page's boxes (amending §691)", () => {
+describe("§701 «Echipa» as a canvas with levels, each card opening in place, with the page's boxes (amending §691)", () => {
   const card = (name: string, extra: Partial<PublicTeamMember> = {}): PublicTeamMember => ({ ...member(name), ...extra });
   const text = (...paragraphs: string[]) => doc(...paragraphs);
   const boxes = [

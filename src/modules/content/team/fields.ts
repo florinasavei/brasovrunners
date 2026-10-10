@@ -39,11 +39,11 @@ export const TEAM_SUBTITLE_MAX = 120;
 /** «Responsabilități» (§691): one per line, at most this many lines of this many characters. */
 export const TEAM_RESPONSIBILITIES_MAX_LINES = 12;
 export const TEAM_RESPONSIBILITY_LINE_MAX = 160;
-/** Where a card sat against the card it answered to (§691): kept for the column, drawn by nobody since §NNN. */
+/** Where a card sat against the card it answered to (§691): kept for the column, drawn by nobody since §701. */
 export const TEAM_PLACEMENTS = ["below", "beside"] as const;
 export type TeamPlacement = (typeof TEAM_PLACEMENTS)[number];
 /**
- * The canvas's levels (§NNN; the owner: «the president is top level 1, then the advisor level 1.5
+ * The canvas's levels (§701; the owner: «the president is top level 1, then the advisor level 1.5
  * and the rest are level 2»): whole and half steps from the top row to the ninth. The whole number
  * is the row; a `.0` card leads it, a `.5` card is a small one beside the leads. Nothing else — a
  * quarter step would be a third kind of card nobody drew — and null is "not on the canvas".
@@ -230,7 +230,7 @@ const reportsToField = z
   .transform((value) => (value === "" ? null : value.toLowerCase()));
 
 /**
- * «Nivel» as the editor posts it (§NNN): the select's value (`"1.5"`), a fixture's number, or nothing.
+ * «Nivel» as the editor posts it (§701): the select's value (`"1.5"`), a fixture's number, or nothing.
  * A comma decimal is read too, for a value typed by hand; anything off the scale is refused on the box.
  */
 const levelField = z
@@ -339,10 +339,10 @@ export const teamMemberFieldsSchema = z
     subtitleEn: optionalLine(TEAM_SUBTITLE_MAX),
     responsibilitiesRo: optionalResponsibilities,
     responsibilitiesEn: optionalResponsibilities,
-    /** Whom the card answers to, and where it sits against that card (§691): columns kept, posted by no form since §NNN. */
+    /** Whom the card answers to, and where it sits against that card (§691): columns kept, posted by no form since §701. */
     reportsToId: reportsToField,
     placement: z.enum(TEAM_PLACEMENTS).optional().default("below"),
-    /** The card's level on the canvas (§NNN), or nothing: the grid. */
+    /** The card's level on the canvas (§701), or nothing: the grid. */
     level: levelField,
   })
   .transform((fields, ctx) => {

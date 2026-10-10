@@ -313,7 +313,7 @@ describe("§690 the club places an order in a member's name", () => {
     expect(oldest).toContain("24,68 €");
 
     const t = await getTranslations("Admin");
-    // «Comenzi» is its own page since §NNN: the orders card alone, with the list's filter in the address.
+    // «Comenzi» is its own page since §697: the orders card alone, with the list's filter in the address.
     const render = (mayManage: boolean) =>
       renderToStaticMarkup(
         OrdersCard({
@@ -342,7 +342,7 @@ describe("§690 the club places an order in a member's name", () => {
     expect(en.Admin.members.shop.forMember.title).not.toBe(ro.Admin.members.shop.forMember.title);
     expect(en.Admin.members.shop.columns.placedBy).toBe("Placed by");
 
-    // «Produse» (§NNN): the list's row says the price in its currency.
+    // «Produse» (§697): the list's row says the price in its currency.
     const products = renderToStaticMarkup(ProductList({ products: await listProductsForAdmin(db), locale: "ro", words: t as never, mayManage: false }));
     expect(products).toContain("12,34 €");
   });

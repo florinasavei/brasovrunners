@@ -115,7 +115,7 @@ const inFaqIntro = sql`(${platformSettings.key} = ${FAQ_PAGE_SETTING_KEY} AND ${
  */
 const inMembersPage = sql`(${platformSettings.key} = ${MEMBERS_PAGE_SETTING_KEY} AND ${names(sql`${platformSettings.value}::text`)})`;
 
-/** Whether a shop product's description carries the asset in its text, either language (§NNN), hidden and archived products included. */
+/** Whether a shop product's description carries the asset in its text, either language (§697), hidden and archived products included. */
 const inShopDescription = sql`(${names(sql`${shopProducts.descriptionRoJson}::text`)} OR ${names(sql`${shopProducts.descriptionEnJson}::text`)})`;
 
 const referencedSomewhere = sql`(
@@ -146,7 +146,7 @@ const referencedSomewhere = sql`(
   -- A product's photo in the members' shop (§683), by id, hidden and archived products included:
   -- an archived product's row stays for its orders, and a hidden one is being prepared.
   OR EXISTS (SELECT 1 FROM ${shopProducts} WHERE ${shopProducts.photoMediaAssetId} = ${mediaAssets.id})
-  -- A picture of a product's strip (§NNN), by id, and a picture in a product's description, by address.
+  -- A picture of a product's strip (§697), by id, and a picture in a product's description, by address.
   OR EXISTS (SELECT 1 FROM ${shopProductPictures} WHERE ${shopProductPictures.mediaAssetId} = ${mediaAssets.id})
   OR EXISTS (SELECT 1 FROM ${shopProducts} WHERE ${inShopDescription})
   -- A picture in a newsletter sent (§550): the letter is in the subscribers' inboxes, which load
@@ -373,7 +373,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .select({ assetId: shopProducts.photoMediaAssetId })
     .from(shopProducts)
     .where(isNotNull(shopProducts.photoMediaAssetId));
-  // A product's strip and its description (§NNN): the same page.
+  // A product's strip and its description (§697): the same page.
   const inShopPictures = await db
     .select({ assetId: shopProductPictures.mediaAssetId })
     .from(shopProductPictures)

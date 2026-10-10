@@ -4,7 +4,7 @@ import type { Locale } from "@/i18n/routing";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import SubNav from "@/shared/ui/SubNav";
 
-/** The shop's three parts (§NNN): the products, the orders, the settings — each its own page under `/admin/shop`. */
+/** The shop's three parts (§697): the products, the orders, the settings — each its own page under `/admin/shop`. */
 export const SHOP_TABS = ["products", "orders", "settings"] as const;
 export type ShopTab = (typeof SHOP_TABS)[number];
 
@@ -21,7 +21,7 @@ const SettingsIcon = ACTION_ICONS.payment;
 const TAB_GLYPH = { products: ProductsIcon, orders: OrdersIcon, settings: SettingsIcon } as const;
 
 /**
- * «Magazin»'s row of secondary tabs (§360's shape, §NNN): «Produse», «Comenzi», «Setări». The shop
+ * «Magazin»'s row of secondary tabs (§360's shape, §697): «Produse», «Comenzi», «Setări». The shop
  * was one card of folds — the products, the orders and the payment words stacked on one page — and
  * the owner found it «not intuitive at all»; each part is a page now, and this row is the way between
  * them. Every reader of the shop (`canReadShop`) is offered all three: the Organizer reads them,

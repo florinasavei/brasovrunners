@@ -22,7 +22,7 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 /**
- * «Magazin» → «Setări» (§683; its own page since §NNN): «Cum se plătește» and «Cine primește
+ * «Magazin» → «Setări» (§683; its own page since §697): «Cum se plătește» and «Cine primește
  * comenzile». Read by `canReadShop`; written by `canManageShop`, asserted by the action and the
  * service (BR-REQ-060-01).
  */

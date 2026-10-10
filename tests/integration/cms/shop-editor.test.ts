@@ -12,7 +12,7 @@ import { MEMBERS_PAGE_SETTING_KEY } from "@/modules/content/members/page-setting
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the shop's editor rebuilt: one page per product with its five cards, many pictures with the
+ * §697 — the shop's editor rebuilt: one page per product with its five cards, many pictures with the
  * first as cover, «Mărimile» as ticks in a fixed order with a stock each and a size chart, a rich
  * description with plain twins; the members' zone drawing the cover, the strip, the description and
  * the chart. Proven on real PostgreSQL (PGlite) through the service, the repository and the pages,
@@ -134,7 +134,7 @@ async function statusOf(promise: Promise<unknown>): Promise<number | null> {
   }
 }
 
-describe("§NNN the shop's editor: pictures, sizes, chart, description", () => {
+describe("§697 the shop's editor: pictures, sizes, chart, description", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

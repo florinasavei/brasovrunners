@@ -113,7 +113,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  * Each card reads the page's own language alone — a pair written in one language only reads as
  * none on both pages (§352). A Server Component with no island of its own; a film in a text brings the renderer's (§403).
  *
- * Since §NNN (amending §691) a card may carry a level. While no shown card has one the page is the
+ * Since §701 (amending §691) a card may carry a level. While no shown card has one the page is the
  * grid it always was, with the page's boxes under it; otherwise it is the canvas the club's
  * president drew — the blue section with the levelled cards row by row, no lines, each card
  * opening in place, and the boxes at its bottom — and the cards without a level in the grid under
@@ -159,7 +159,7 @@ export default async function TeamPage({ params }: Props) {
       {members.length === 0 && <Typography variant="body1">{t("empty")}</Typography>}
 
       {onCanvas && (
-        // The canvas (§NNN): the levelled cards row by row, the page's boxes at its bottom.
+        // The canvas (§701): the levelled cards row by row, the page's boxes at its bottom.
         <TeamCanvas rows={rows} boxes={boxes} words={words} label={t("listLabel")} boxesLabel={t("boxesLabel")} />
       )}
 
@@ -200,7 +200,7 @@ export default async function TeamPage({ params }: Props) {
 /**
  * One person's card in the grid: the photograph in the crop the club drew (§541), the name, the
  * role title in the accent colour, the sub-role line, «Responsabilități» as bullets (§691), then
- * the words about them and their links (§474). The canvas's cards are `TeamCanvasCard` (§NNN).
+ * the words about them and their links (§474). The canvas's cards are `TeamCanvasCard` (§701).
  */
 function TeamCard({ member, index, words }: { member: PublicTeamMember; index: number; words: TeamCanvasWords }) {
   const hasMore = member.bio !== null || member.links.length > 0 || member.responsibilities.length > 0 || member.subtitle !== null;

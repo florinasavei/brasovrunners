@@ -255,7 +255,7 @@ describe("§683 the zone's outcome and the email's lines", () => {
   });
 });
 
-describe("§NNN «Mărimile»: ticks in a fixed order, a stock each, the free labels after", () => {
+describe("§697 «Mărimile»: ticks in a fixed order, a stock each, the free labels after", () => {
   const form = { sizes: [] as string[], sizeStock: {} as Record<string, string>, oneSize: false, stock: "", extraVariants: "" };
 
   it("orders the ticked sizes XXS–4XL whatever order they were posted in, then «Mărime unică», then the free labels", () => {
@@ -294,7 +294,7 @@ describe("§NNN «Mărimile»: ticks in a fixed order, a stock each, the free la
   });
 });
 
-describe("§NNN «Tabelul de mărimi»: up to four named columns and a number per size", () => {
+describe("§697 «Tabelul de mărimi»: up to four named columns and a number per size", () => {
   const labels = ["S", "M", null, "Copii"];
 
   it("keeps a column named in both languages and a row for a variant's label with a number in it; drops the rest", () => {

@@ -7,7 +7,7 @@ import type { TeamLinkKind } from "../links";
  * One glyph per link kind (§474): the footer's network marks (`SocialIcon`, §90, §112), a globe
  * for a website, a chain for anything else. No hooks, so server and client draw the same; never
  * `action-icons.ts` (§318). Decorative: the link's accessible name is its label. `color` is the
- * globe's and the chain's: the palette's muted text, or the canvas card's own ink (§NNN), which
+ * globe's and the chain's: the palette's muted text, or the canvas card's own ink (§701), which
  * stays light after dark.
  */
 export default function TeamLinkGlyph({ kind, size = 20, color = "text.secondary" }: { kind: TeamLinkKind; size?: number; color?: string }) {

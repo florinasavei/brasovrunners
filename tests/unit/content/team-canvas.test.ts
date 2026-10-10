@@ -3,7 +3,7 @@ import { buildCanvasRows, type CanvasCard, cardsOffCanvas } from "@/modules/cont
 import { isTeamLevel, TEAM_LEVEL_MAX, TEAM_LEVEL_MIN, TEAM_LEVELS, teamMemberFieldsSchema } from "@/modules/content/team/fields";
 
 /**
- * §NNN — «Echipa» as a canvas with levels: the pure layout over the shown cards' levels, and what
+ * §701 — «Echipa» as a canvas with levels: the pure layout over the shown cards' levels, and what
  * «Nivel» accepts. Fixtures say «Președinte», «Sfătuitor», «Rol A»: no person's name, no real role.
  */
 
@@ -11,7 +11,7 @@ type Card = CanvasCard & { id: string };
 const card = (id: string, level: number | null): Card => ({ id, level });
 const ids = (cards: readonly Card[]) => cards.map((c) => c.id);
 
-describe("§NNN buildCanvasRows", () => {
+describe("§701 buildCanvasRows", () => {
   it("makes one row per whole number, ascending, the .0 cards as leads and the .5 cards beside, each in the list's order", () => {
     const rows = buildCanvasRows([card("Rol B", 2), card("Președinte", 1), card("Sfătuitor", 1.5), card("Rol A", 2), card("Rol D", 3), card("Rol C", 2.5)]);
     expect(rows.map((row) => row.level)).toEqual([1, 2, 3]);
@@ -38,7 +38,7 @@ describe("§NNN buildCanvasRows", () => {
   });
 });
 
-describe("§NNN «Nivel» as the save keeps it", () => {
+describe("§701 «Nivel» as the save keeps it", () => {
   const base = { name: "Președinte", roleRo: "", roleEn: "", bioRo: "", bioEn: "", photoAssetId: "" };
   const issuesOf = (value: unknown) => {
     const parsed = teamMemberFieldsSchema.safeParse(value);

@@ -29,7 +29,7 @@ function sizesLine(product: AdminShopProduct, t: Words): string {
 }
 
 /**
- * «Produse» (§NNN): every product not archived, in the shop's order — the cover, the name, the
+ * «Produse» (§697): every product not archived, in the shop's order — the cover, the name, the
  * price, the sizes with their stock, whether members see it, how many orders name it — each a link
  * to its own page, and ↑ / ↓ for whoever manages the shop (the codes' arrows, which ask nothing).
  * «Adaugă un produs» opens the new product's page. The Organizer reads the list and is offered no arrow.

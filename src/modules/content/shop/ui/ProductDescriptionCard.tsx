@@ -16,7 +16,7 @@ const LANGUAGES = [
 ] as const;
 
 /**
- * «Descrierea» (§NNN; the owner: «I need that rich text editor so I can add table and pictures»):
+ * «Descrierea» (§697; the owner: «I need that rich text editor so I can add table and pictures»):
  * the product's words in the editor every page and event already uses — tables and pictures allowed,
  * the material, the care, the supplier's drawing — one language per tab (§572), both or neither
  * (§352), each editor mounting only when its fold is opened (§96). The save writes the document and

@@ -21,7 +21,7 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 /**
- * «Magazin» → «Produse» (§687, §NNN): the product list, the first of the shop's three tabs — the
+ * «Magazin» → «Produse» (§687, §697): the product list, the first of the shop's three tabs — the
  * owner found the one card of folds «not intuitive at all», so the products, the orders and the
  * settings are each a page, and a product is a page of its own.
  *

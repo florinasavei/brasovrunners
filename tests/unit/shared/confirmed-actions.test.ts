@@ -149,7 +149,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   deleteShopProductAction: [],
   saveShopSettingsAction: [],
   moveShopOrderAction: [],
-  // A picture taken off a product's strip (§NNN): members see the strip, so it asks; the add, the move and the recrop do not (below).
+  // A picture taken off a product's strip (§697): members see the strip, so it asks; the add, the move and the recrop do not (below).
   removeShopPictureAction: [],
   // An order the club places in a member's name (§690): it takes stock and may email the member.
   placeOrderForMemberAction: [],
@@ -234,7 +234,7 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   moveTeamBoxAction: "reorders the page's boxes, undone by moving back",
   moveDiscountCodeAction: "reorders the members' discount codes (§552), undone by moving back",
   moveShopProductAction: "reorders the members' shop (§683), undone by moving back",
-  // The product's pictures (§NNN): each its own small form on the product's page.
+  // The product's pictures (§697): each its own small form on the product's page.
   addShopPictureAction: "adds a picture at the end of the product's strip, undone by «Scoate fotografia», which asks",
   moveShopPictureAction: "reorders a product's pictures, undone by moving back",
   replaceShopPictureAction: "a new crop or another stored picture in the same place of the strip, undone by saving the previous one again",

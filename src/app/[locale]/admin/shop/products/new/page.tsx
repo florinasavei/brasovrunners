@@ -29,7 +29,7 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 /**
- * «Magazin» → «Adaugă un produs» (§NNN): the five cards for a product that does not exist yet — the
+ * «Magazin» → «Adaugă un produs» (§697): the five cards for a product that does not exist yet — the
  * pictures' card saying they come after the first save, then the form. For `canManageShop` alone: a
  * reader of the shop gets the 404 any typed address gets, and the action asserts it again (BR-REQ-060-01).
  */

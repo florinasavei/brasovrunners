@@ -68,7 +68,7 @@ describe("§691 the organisational chart and the page's boxes", () => {
       (row) => `${row.entityType}:${row.action}`,
     );
 
-  describe("whom a card answers to, and its level on the canvas (§NNN)", () => {
+  describe("whom a card answers to, and its level on the canvas (§701)", () => {
     it("stores the parent, the placement, the sub-role, the responsibilities and the level, and reads them per language on the public page", async () => {
       const president = await createTeamMember(db, { actor: actor("ADMIN"), fields: fields({ level: "1" }), now: T0 });
       const advisor = await createTeamMember(db, {
@@ -99,7 +99,7 @@ describe("§691 the organisational chart and the page's boxes", () => {
       expect(ro[0]).toMatchObject({ name: "Președinte", level: 1 });
       expect(ro[1]).toMatchObject({ name: "Rol A", subtitle: "Linia a doua", responsibilities: ["Una", "Două"], level: 1.5 });
       expect(en[1]).toMatchObject({ subtitle: "Second line", responsibilities: ["One", "Two"], level: 1.5 });
-      // The public read says nothing of the parent since §NNN: the canvas is drawn from the level alone.
+      // The public read says nothing of the parent since §701: the canvas is drawn from the level alone.
       expect(ro[1]).not.toHaveProperty("reportsToId");
       // The backoffice reads the same, both languages.
       const admin = await listTeamMembersForAdmin(db);

@@ -32,7 +32,7 @@ const VERB_GLYPH = { pay: "confirm", handOver: "checkIn", cancel: "cancel" } as 
 const OrderForIcon = ACTION_ICONS.orderFor;
 
 /**
- * «Comenzi» (§683, its own page since §NNN): the orders, newest first, under a GET filter (status,
+ * «Comenzi» (§683, its own page since §697): the orders, newest first, under a GET filter (status,
  * product) whose state is the address (§527's shape); the CSV of the same filter; the shop
  * manager's verbs on each row (`canManageShop`, §687), each asked first; and, at the top, «Adaugă o
  * comandă pentru un membru» (§690) for whoever may manage the shop. The member's address beside an

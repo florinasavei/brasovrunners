@@ -277,7 +277,7 @@ describe("§687 «Gestionează magazinul» — a permission per person", () => {
       expect(await statusOf(ShopSectionLayout({ children: "shop" }))).toBeNull();
     });
 
-    it("«Magazin» → «Comenzi» draws «Adaugă o comandă pentru un membru» for the grant's holder, with the member accounts; the Organizer, who reads only, gets none (§690, §NNN)", async () => {
+    it("«Magazin» → «Comenzi» draws «Adaugă o comandă pentru un membru» for the grant's holder, with the member accounts; the Organizer, who reads only, gets none (§690, §697)", async () => {
       const ordersCardOf = async () =>
         elements(await AdminShopOrdersPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({}) })).find((element) => element.type === OrdersCard);
       const productListOf = async () =>

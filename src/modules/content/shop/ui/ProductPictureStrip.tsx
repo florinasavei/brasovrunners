@@ -3,7 +3,7 @@ import type { ShopPhoto } from "@/modules/content/shop/repository";
 import TeamPhotoImage from "@/modules/content/team/ui/TeamPhotoImage";
 
 /**
- * A product's pictures in the members' zone (§NNN): the cover large, in its crop, and under it the
+ * A product's pictures in the members' zone (§697): the cover large, in its crop, and under it the
  * rest as a scrolling strip of thumbnails (CSS scroll-snap, no script), each a plain link to the picture's own file — no script, no
  * lightbox, 44-pixel targets (BR-REQ-041-01 criterion 6). A product with one picture draws the
  * cover alone. The pictures are decorative beside the name: `alt` stays empty, the link's name says

@@ -15,7 +15,7 @@ import { saveShopSettingsAction } from "@/app/[locale]/admin/shop/actions";
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 
 /**
- * «Cum se plătește și cine primește comenzile» (§683), the shop's «Setări» tab since §NNN: the
+ * «Cum se plătește și cine primește comenzile» (§683), the shop's «Setări» tab since §697: the
  * payment words in both languages or neither (§352) — shown under every unpaid order and in the
  * confirmation email — and one address for the club's notice of each order, or none. Whoever runs
  * the shop writes them (§687); the Organizer reads them. «Copiază și tradu tot: RO → EN» (§482) at the top.

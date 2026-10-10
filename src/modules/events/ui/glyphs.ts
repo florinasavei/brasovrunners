@@ -172,7 +172,7 @@ export const GLYPHS = {
   orders: ReceiptLongIcon,
   club: GroupsIcon,
   link: LinkIcon,
-  // «Mai multe» on a team card's fold (§NNN): the person, what the fold holds more of — the fold's
+  // «Mai multe» on a team card's fold (§701): the person, what the fold holds more of — the fold's
   // own arrow already says "this opens" (`disclosure.ts`), so never a second chevron here.
   person: PersonOutlinedIcon,
 };

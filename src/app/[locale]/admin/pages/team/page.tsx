@@ -145,7 +145,7 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
     photoAssetId: t("team.photo"),
     introRoBody: t("team.introRo"),
     introEnBody: t("team.introEn"),
-    // A card's sub-role and responsibilities, a box's title and text (§691), and the card's level on the canvas (§NNN).
+    // A card's sub-role and responsibilities, a box's title and text (§691), and the card's level on the canvas (§701).
     subtitleRo: t("team.subtitleRo"),
     subtitleEn: t("team.subtitleEn"),
     responsibilitiesRo: t("team.responsibilitiesRo"),
@@ -304,7 +304,7 @@ type Editing = {
   rich: ReturnType<typeof richTextEditorLabels>;
   links: TeamLinkRowsLabels;
   kinds: Record<TeamLinkKind, string>;
-  /** A level of the canvas as the reader writes a number — «1,5» in Romanian, "1.5" in English (§NNN). */
+  /** A level of the canvas as the reader writes a number — «1,5» in Romanian, "1.5" in English (§701). */
   levelLabel: (level: number) => string;
 };
 
@@ -622,7 +622,7 @@ function MemberFields({
       </Box>
       {/*
         The one-line sub-role under the role and «Responsabilități» one per line (§691), every pair
-        both languages or neither (§352); then the card's level on the canvas (§NNN).
+        both languages or neither (§352); then the card's level on the canvas (§701).
       */}
       <Box sx={pairSx}>
         <RecallField
@@ -665,7 +665,7 @@ function MemberFields({
         />
       </Box>
       {/*
-        «Nivel» (§NNN; the owner: «the president is top level 1, then the advisor level 1.5 and the
+        «Nivel» (§701; the owner: «the president is top level 1, then the advisor level 1.5 and the
         rest are level 2»): one number says the row and the card's shape — a whole number leads its
         row, a half step is a small card beside the leads — and nothing leaves the card in the grid.
         A native select of the scale, so a phone shows its own picker; the posted value is the
