@@ -36,6 +36,7 @@ import type { AdminOrder, AdminShopProduct, OrderableItem, OrdersQuery, ZoneAcco
 import type { ShopSettings } from "@/modules/content/shop/settings";
 import TeamPhotoField, { type TeamPhotoLabels } from "@/modules/content/team/ui/TeamPhotoField";
 import TeamPhotoImage from "@/modules/content/team/ui/TeamPhotoImage";
+import TranslateAllButton from "@/modules/translate/ui/TranslateAllButton";
 import ActionForm, { type RefusalMessages } from "@/shared/forms/ActionForm";
 import RecallField, { RecallCheckbox, RecallHidden } from "@/shared/forms/recall";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
@@ -247,6 +248,8 @@ function SettingsFold({
           >
             <input type="hidden" name="uiLocale" value={locale} />
             <Stack spacing={2}>
+              {/* «Copiază și tradu tot: RO → EN» (§464, §482, §692): the payment words' English from its Romanian. */}
+              <TranslateAllButton />
               <Box sx={pairSx}>
                 <RecallField
                   name="paymentRo"
@@ -445,6 +448,8 @@ function ProductFields({
   const typed = product ? variantLinesAsTyped(product.variants) : { lines: "", singleStock: "" };
   return (
     <Stack spacing={2}>
+      {/* «Copiază și tradu tot: RO → EN» (§464, §482, §692): the product's English title and description from the Romanian. */}
+      <TranslateAllButton />
       <Box sx={pairSx}>
         <RecallField
           name="titleRo"
