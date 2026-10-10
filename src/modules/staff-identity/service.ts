@@ -33,6 +33,7 @@ import {
   insertStaffUser,
   listStaffPermissions,
   listStaffUsers,
+  lockStaffUserRole,
   normalizeStaffEmail,
   type StaffAccount,
   updateStaffUserRole,
@@ -141,6 +142,13 @@ export async function setStaffPermission<T extends Record<string, unknown>>(
   }
   const now = input.now ?? new Date();
   return db.transaction(async (tx) => {
+    // The role again, under the row's lock: a role change between the check above and this
+    // write would otherwise leave a grant its cleanup never saw (§NNN).
+    const lockedRole = await lockStaffUserRole(tx, target.id);
+    if (!lockedRole) throw new DomainError("NOT_FOUND", "no such staff user");
+    if (input.on && !canGrantPermission(actor, lockedRole, input.permission)) {
+      throw new DomainError("FORBIDDEN", `role ${actor.role} may not give ${input.permission} to a ${lockedRole} (§NNN)`);
+    }
     const changed = input.on
       ? await insertStaffPermission(tx, { staffUserId: target.id, permission: input.permission, grantedByStaffUserId: actor.id, now })
       : (await deleteStaffPermissions(tx, target.id, input.permission)).length > 0;

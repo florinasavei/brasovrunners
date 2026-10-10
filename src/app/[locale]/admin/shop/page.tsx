@@ -1,7 +1,6 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -134,10 +133,6 @@ export default async function AdminShopPage({ params, searchParams }: Props) {
         {saved && <Alert severity="success">{t("saved")}</Alert>}
         {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
       </Box>
-
-      <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
-        {t("nav.shop")}
-      </Typography>
 
       <ShopCard
         products={products}

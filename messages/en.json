@@ -2742,10 +2742,10 @@
         "chipShop": "Shop",
         "saving": "Saving…",
         "grantTitle": "Give them the shop?",
-        "grantBody": "{name} will write the products, the payment words and the address for orders, and mark each order paid, handed over or cancelled, in the «Magazin» section. They do not see the members' addresses.",
+        "grantBody": "{name} will write the products, the payment words and the address for orders, and mark each order paid, handed over or cancelled, in the “Shop” section. They do not see the members' addresses.",
         "grant": "Give them the shop",
         "revokeTitle": "Take the shop away?",
-        "revokeBody": "{name} no longer sees the «Magazin» section from the next page they open.",
+        "revokeBody": "{name} no longer sees the “Shop” section from the next page they open.",
         "revoke": "Take the shop away"
       }
     },

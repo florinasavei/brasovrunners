@@ -223,3 +223,17 @@ export async function recordFirstSignIn<T extends Record<string, unknown>>(
     .returning();
   return row;
 }
+
+/**
+ * The colleague's role, read under the row's lock in the caller's transaction (§NNN): a grant
+ * checks the role it may be given to here, so a role change committing at the same moment runs
+ * before or after it, never between the check and the insert (the role change takes the same
+ * lock through its UPDATE and drops the grants the new role may not hold).
+ */
+export async function lockStaffUserRole<T extends Record<string, unknown>>(
+  db: Database<T>,
+  id: string,
+): Promise<StaffUser["role"] | undefined> {
+  const [row] = await db.select({ role: staffUsers.role }).from(staffUsers).where(eq(staffUsers.id, id)).for("update");
+  return row?.role;
+}
