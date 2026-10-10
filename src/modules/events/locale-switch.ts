@@ -93,7 +93,9 @@ export async function resolveLocaleSwitch(
     parsed.route === "/admin/legal/[id]" ||
     parsed.route === "/admin/legal/[id]/delete" ||
     parsed.route === "/admin/pages/[id]" ||
-    parsed.route === "/admin/gallery/[id]"
+    parsed.route === "/admin/gallery/[id]" ||
+    // A shop product's page (§697), the same rule.
+    parsed.route === "/admin/shop/products/[id]"
   ) {
     const id = parsed.params.id;
     if (!id) return listing;

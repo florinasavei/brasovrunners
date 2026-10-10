@@ -26,7 +26,7 @@ function domainToPunycode(domain: string): string {
  */
 
 /**
- * Version 2 (§74): Gmail dots are kept, so `a.savei@gmail.com` and `asavei@gmail.com` are two
+ * Version 2 (§74): Gmail dots are kept, so `s.ample@gmail.com` and `sample@gmail.com` are two
  * participants; the plus tag is still stripped and `googlemail.com` still collapses. Migration
  * `0030` re-canonicalized every version-1 row.
  */

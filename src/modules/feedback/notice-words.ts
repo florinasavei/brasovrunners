@@ -4,11 +4,11 @@ import ro from "../../../messages/ro.json";
 /**
  * What the privacy notice's `{{feedbackForms}}` becomes (§676): the forms' own name, quoted, in that
  * language — „Spune-ne ceva” / “Tell us something” — read from the catalogue the page's heading reads
- * (`Tell.title`), so the approved sentence names the forms a visitor sees. Outside a request,
+ * (`Tell.noticeName`, the title's words without «(anonim)», §699, so an approved notice keeps matching), so the approved sentence names the forms a visitor sees. Outside a request,
  * like `registrations/invitation-words.ts`, for the legal pages, the declaration and the token legend.
  */
 export function feedbackFormsClause(locale: string): string {
-  return locale === "en" ? `“${en.Tell.title}”` : `„${ro.Tell.title}”`;
+  return locale === "en" ? `“${en.Tell.noticeName}”` : `„${ro.Tell.noticeName}”`;
 }
 
 /**

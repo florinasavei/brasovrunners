@@ -19,7 +19,7 @@
  *   name. A field cannot be refused for something the person has no way to find.
  *
  * What is *not* folded is the name itself: every letter and digit, every hyphen and apostrophe,
- * every word, in order. "Ana Maria" is not "Ana-Maria", and "Munca Florin" is not "Florin Munca".
+ * every word, in order. "Ana Maria" is not "Ana-Maria", and "Sample Felix" is not "Felix Sample".
  *
  * `NFD` does the diacritics, and it is the platform's rather than a table's (`AGENTS.md` §1.5).
  * Decomposing turns every one of Romanian's ă â î ș ț — precomposed or already written as a

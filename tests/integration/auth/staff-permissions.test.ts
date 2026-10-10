@@ -52,7 +52,9 @@ const { GET: listGallery } = await import("@/app/api/admin/media/route");
 const { default: ShopSectionLayout } = await import("@/app/[locale]/admin/shop/layout");
 const { default: AdminMembersPage } = await import("@/app/[locale]/admin/pages/members/page");
 const { default: AdminShopPage } = await import("@/app/[locale]/admin/shop/page");
-const { default: ShopCard } = await import("@/app/[locale]/admin/pages/members/ShopCard");
+const { default: AdminShopOrdersPage } = await import("@/app/[locale]/admin/shop/orders/page");
+const { default: OrdersCard } = await import("@/modules/content/shop/ui/OrdersCard");
+const { default: ProductList } = await import("@/modules/content/shop/ui/ProductList");
 
 const NOW = new Date("2026-10-10T09:00:00.000Z");
 const PRODUCT = { titleRo: "Tricou exemplu", titleEn: "Sample t-shirt", descriptionRo: "", descriptionEn: "", price: "45", variants: "", stock: "", visible: true };
@@ -275,30 +277,34 @@ describe("§687 «Gestionează magazinul» — a permission per person", () => {
       expect(await statusOf(ShopSectionLayout({ children: "shop" }))).toBeNull();
     });
 
-    it("«Magazin» draws «Adaugă o comandă pentru un membru» for the grant's holder, with the member accounts; the Organizer, who reads only, gets none (§690)", async () => {
-      const shopCardOf = async () =>
-        elements(await AdminShopPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({}) })).find((element) => element.type === ShopCard);
+    it("«Magazin» → «Comenzi» draws «Adaugă o comandă pentru un membru» for the grant's holder, with the member accounts; the Organizer, who reads only, gets none (§690, §697)", async () => {
+      const ordersCardOf = async () =>
+        elements(await AdminShopOrdersPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({}) })).find((element) => element.type === OrdersCard);
+      const productListOf = async () =>
+        elements(await AdminShopPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({}) })).find((element) => element.type === ProductList);
       await setStaffPermission(db, admin, { targetId: volunteer.id, permission: "shop.manage", on: true, now: NOW });
       state.cookie = volunteer.id;
-      const holders = await shopCardOf();
-      expect(holders?.props).toMatchObject({ mayManage: true, path: "/ro/admin/shop" });
+      const holders = await ordersCardOf();
+      expect(holders?.props).toMatchObject({ mayManage: true, path: "/ro/admin/shop/orders" });
       expect((holders?.props.accounts as { id: string }[]).map((account) => account.id)).toContain(member.id);
+      expect((await productListOf())?.props).toMatchObject({ mayManage: true });
 
       state.cookie = organizer.id;
-      const organizers = await shopCardOf();
+      const organizers = await ordersCardOf();
       expect(organizers?.props).toMatchObject({ mayManage: false, accounts: [], items: [] });
+      expect((await productListOf())?.props).toMatchObject({ mayManage: false });
     });
 
     it("«Pagini» → «Membri» carries no shop card: one line to «Magazin» for a reader of the shop, none for the Redactor", async () => {
       state.cookie = organizer.id;
       const organizers = elements(await AdminMembersPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({}) }));
-      expect(organizers.some((element) => element.type === ShopCard)).toBe(false);
+      expect(organizers.some((element) => element.type === ProductList || element.type === OrdersCard)).toBe(false);
       expect(organizers.filter((element) => element.props["data-testid"] === "members-shop-moved")).toHaveLength(1);
 
       const [copywriter] = await db.insert(staffUsers).values({ email: "redactor@dev.test", displayName: "Redactor", role: "COPYWRITER" }).returning();
       state.cookie = copywriter.id;
       const copywriters = elements(await AdminMembersPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({}) }));
-      expect(copywriters.some((element) => element.type === ShopCard)).toBe(false);
+      expect(copywriters.some((element) => element.type === ProductList || element.type === OrdersCard)).toBe(false);
       expect(copywriters.filter((element) => element.props["data-testid"] === "members-shop-moved")).toEqual([]);
     });
   });

@@ -148,7 +148,7 @@ async function mixedEvent(): Promise<PublicEvent> {
   await register(event.id, { name: "Bogdan Ionescu", confirmedAt: at(2) });
   await register(event.id, { name: "Ascuns Confirmat", confirmedAt: at(3), listOptOut: true, bibNumber: 9431 });
   await register(event.id, { name: "Carmen Semneaza", status: "PENDING_DECLARATION", emailConfirmedAt: at(4) });
-  await register(event.id, { name: "Florin Asteapta", status: "WAITLISTED", waitlistedAt: at(6) });
+  await register(event.id, { name: "Felix Asteapta", status: "WAITLISTED", waitlistedAt: at(6) });
   return event;
 }
 
@@ -209,7 +209,7 @@ describe("§613 with a notice that describes the race number", () => {
       ["", "", "Participant (nume ascuns) Confirmat", ""],
       // Pending and waiting (§396's groups): no number exists before the confirmation (§548).
       ["", "—", "Carmen Semneaza Înscris, în așteptarea confirmării", ""],
-      ["", "—", "Florin Asteapta Pe lista de așteptare", ""],
+      ["", "—", "Felix Asteapta Pe lista de așteptare", ""],
     ]);
     expect(markup(html)).not.toContain("9431");
     // The caption names the number, only now.

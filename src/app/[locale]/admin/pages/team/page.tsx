@@ -15,6 +15,7 @@ import LazyRichTextEditor from "@/modules/content/rich-text/ui/LazyRichTextEdito
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import {
   TEAM_BIO_MAX,
+  TEAM_LEVELS,
   TEAM_NAME_MAX,
   TEAM_RESPONSIBILITIES_MAX_LINES,
   TEAM_RESPONSIBILITY_LINE_MAX,
@@ -104,8 +105,6 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
     readTeamPageSettings(db),
     noticeDescribesTeamPage(db, new Date()),
   ]);
-  // «Răspunde în fața» (§691): every card by name, so a form may name any other card as its parent.
-  const cardNames = members.map((member) => ({ id: member.id, name: member.name }));
   const mayEdit = canEditTeamPage(actor.role);
   const mayShow = canShowTeamMember(actor.role);
   const storage = isStorageConfigured();
@@ -127,6 +126,7 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
     },
     // The card's own words for each kind — what the page shows when a link has no label (§474).
     kinds: await teamLinkKindWords(),
+    levelLabel: (level) => new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(level),
   };
   // Each link row's four boxes by the name the editor posts, so the summary says "Linkul 2: adresa".
   const linkBoxes = Object.fromEntries(
@@ -145,13 +145,12 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
     photoAssetId: t("team.photo"),
     introRoBody: t("team.introRo"),
     introEnBody: t("team.introEn"),
-    // The chart (§691): a card's sub-role, responsibilities, parent and placement, and a box's title and text.
+    // A card's sub-role and responsibilities, a box's title and text (§691), and the card's level on the canvas (§701).
     subtitleRo: t("team.subtitleRo"),
     subtitleEn: t("team.subtitleEn"),
     responsibilitiesRo: t("team.responsibilitiesRo"),
     responsibilitiesEn: t("team.responsibilitiesEn"),
-    reportsToId: t("team.reportsTo"),
-    placement: t("team.placement"),
+    level: t("team.level"),
     titleRo: t("team.boxes.titleRo"),
     titleEn: t("team.boxes.titleEn"),
     bodyRoBody: t("team.boxes.bodyRo"),
@@ -260,7 +259,7 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
           </summary>
           <ActionForm action={createTeamMemberAction} messages={messages} scope="new" data-testid="team-create-form">
             <input type="hidden" name="uiLocale" value={locale} />
-            <MemberFields scope="new" member={null} cards={cardNames} words={t} photoLabels={photoLabels} editing={editing} storage={storage} />
+            <MemberFields scope="new" member={null} words={t} photoLabels={photoLabels} editing={editing} storage={storage} />
             <Box sx={{ mt: 2 }}>
               <GlyphSubmitButton label={t("team.create")} pendingLabel={t("editor.saving")} icon="add" size="medium" />
             </Box>
@@ -276,7 +275,6 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
             <MemberCard
               key={member.id}
               member={member}
-              cards={cardNames}
               first={index === 0}
               last={index === members.length - 1}
               locale={locale}
@@ -301,14 +299,13 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
 
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 
-/** A card as another card's possible parent: its id and the name the select shows (§691). */
-type CardName = { id: string; name: string };
-
 /** What the rich-text editors and the links' rows need, translated once on the server (§474). */
 type Editing = {
   rich: ReturnType<typeof richTextEditorLabels>;
   links: TeamLinkRowsLabels;
   kinds: Record<TeamLinkKind, string>;
+  /** A level of the canvas as the reader writes a number — «1,5» in Romanian, "1.5" in English (§701). */
+  levelLabel: (level: number) => string;
 };
 
 /**
@@ -423,7 +420,6 @@ function PageCard({
 /** One card on the screen: its line, its verbs, and its words in a fold. */
 function MemberCard({
   member,
-  cards,
   first,
   last,
   locale,
@@ -437,7 +433,6 @@ function MemberCard({
   storage,
 }: {
   member: AdminTeamMember;
-  cards: readonly CardName[];
   first: boolean;
   last: boolean;
   locale: Locale;
@@ -548,7 +543,7 @@ function MemberCard({
           <ActionForm action={saveTeamMemberAction} messages={messages} scope={scope} data-testid={`team-save-${member.id}`}>
             {hidden}
             <RecallHidden name="expectedVersion" value={member.version} />
-            <MemberFields scope={scope} member={member} cards={cards} words={t} photoLabels={photoLabels} editing={editing} storage={storage} />
+            <MemberFields scope={scope} member={member} words={t} photoLabels={photoLabels} editing={editing} storage={storage} />
             <Box sx={{ mt: 2 }}>
               <GlyphSubmitButton label={t("editor.save")} pendingLabel={t("editor.saving")} icon="save" size="medium" />
             </Box>
@@ -579,7 +574,6 @@ function oneSided(member: AdminTeamMember): boolean {
 function MemberFields({
   scope,
   member,
-  cards,
   words: t,
   photoLabels,
   editing,
@@ -587,17 +581,12 @@ function MemberFields({
 }: {
   scope: string;
   member: AdminTeamMember | null;
-  /** Every card by name — the choices of «Răspunde în fața» (§691), less this card itself. */
-  cards: readonly CardName[];
   words: Words;
   photoLabels: TeamPhotoLabels;
   editing: Editing;
   storage: boolean;
 }) {
   const pairSx = { display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 } as const;
-  const parents = cards.filter((card) => card.id !== member?.id);
-  // A parent that is gone or hidden still reads as stored; the select shows it only if it is still a card.
-  const reportsTo = parents.some((card) => card.id === member?.reportsToId) ? (member?.reportsToId ?? "") : "";
   return (
     <Stack spacing={2}>
       {/* «Copiază și tradu tot: RO → EN» (§464, §482): this card's role, sub-role, responsibilities
@@ -632,9 +621,8 @@ function MemberFields({
         />
       </Box>
       {/*
-        The organisational chart (§691): the one-line sub-role under the role, «Responsabilități» one
-        per line, whom the card answers to (a native select of the other cards by name, «— nimeni, în
-        vârf —» first) and where it sits against that card. Every pair both languages or neither (§352).
+        The one-line sub-role under the role and «Responsabilități» one per line (§691), every pair
+        both languages or neither (§352); then the card's level on the canvas (§701).
       */}
       <Box sx={pairSx}>
         <RecallField
@@ -676,34 +664,29 @@ function MemberFields({
           slotProps={{ htmlInput: { lang: "en" } }}
         />
       </Box>
+      {/*
+        «Nivel» (§701; the owner: «the president is top level 1, then the advisor level 1.5 and the
+        rest are level 2»): one number says the row and the card's shape — a whole number leads its
+        row, a half step is a small card beside the leads — and nothing leaves the card in the grid.
+        A native select of the scale, so a phone shows its own picker; the posted value is the
+        number as written, the label the reader's own decimal mark.
+      */}
       <Box sx={pairSx}>
         <RecallField
-          name="reportsToId"
+          name="level"
           select
           fullWidth
-          label={t("team.reportsTo")}
-          defaultValue={reportsTo}
-          helperText={t("team.reportsToHelp")}
+          label={t("team.level")}
+          defaultValue={member?.level === null || member?.level === undefined ? "" : String(member.level)}
+          helperText={t("team.levelHelp")}
           slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
         >
-          <option value="">{t("team.reportsToNone")}</option>
-          {parents.map((card) => (
-            <option key={card.id} value={card.id}>
-              {card.name}
+          <option value="">{t("team.levelNone")}</option>
+          {TEAM_LEVELS.map((level) => (
+            <option key={level} value={String(level)}>
+              {editing.levelLabel(level)}
             </option>
           ))}
-        </RecallField>
-        <RecallField
-          name="placement"
-          select
-          fullWidth
-          label={t("team.placement")}
-          defaultValue={member?.placement ?? "below"}
-          helperText={t("team.placementHelp")}
-          slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
-        >
-          <option value="below">{t("team.placementBelow")}</option>
-          <option value="beside">{t("team.placementBeside")}</option>
         </RecallField>
       </Box>
       {/*

@@ -4,7 +4,7 @@ import { foldName } from "./name-fold";
  * The signature on the declaration is the declarant's name, typed exactly (§314, reversing the
  * "a hint, not a validation" half of §283).
  *
- * The owner, looking at a signature of "Florin Munca2" under "You registered as Florin Munca":
+ * The owner, looking at a signature of "Felix Sample2" under "You registered as Felix Sample":
  * "can I also have this validation here? So I have to type the exact name?" §283 had refused it
  * on the ground that a string comparison would be the platform deciding what a person's name is.
  * It is not: the name was given by the same person, at registration, a few minutes or days

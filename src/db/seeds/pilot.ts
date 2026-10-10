@@ -5,6 +5,7 @@ import { registrations } from "@/db/schema/registrations";
 import { storedDifficulty } from "@/modules/events/domain/difficulty";
 import { atBrasov, nextWeekday, todayInBrasov } from "./sample-dates";
 import { seedSampleLegalDocuments } from "./sample-legal-documents";
+import { seedSampleShop } from "./sample-shop";
 import { seedSampleTeam } from "./sample-team";
 
 /**
@@ -32,6 +33,7 @@ async function seed() {
     «Echipa»'s two hidden placeholder cards (§459), only into an empty table.
   */
   await seedSampleTeam();
+  await seedSampleShop();
 
   /**
    * Registrations reference events, so the delete would fail halfway on the foreign key anyway;

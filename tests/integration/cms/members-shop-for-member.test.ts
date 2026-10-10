@@ -8,7 +8,6 @@ import { auditLogs } from "@/db/schema/audit-logs";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { shopOrders, shopProductVariants } from "@/db/schema/shop";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import type { TeamPhotoLabels } from "@/modules/content/team/ui/TeamPhotoField";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -25,12 +24,16 @@ const state = vi.hoisted(() => ({ db: undefined as unknown }));
 vi.mock("@/db/client", () => ({ getDb: () => state.db }));
 // The Server Actions the two screens post to; their door (the session) is not this file's.
 vi.mock("@/app/[locale]/members-area/actions", () => ({ placeShopOrderAction: async () => {}, cancelShopOrderAction: async () => {} }));
-vi.mock("@/app/[locale]/admin/pages/members/actions", () => ({
+vi.mock("@/app/[locale]/admin/shop/actions", () => ({
+  addShopPictureAction: async () => {},
   createShopProductAction: async () => {},
   deleteShopProductAction: async () => {},
   moveShopOrderAction: async () => {},
+  moveShopPictureAction: async () => {},
   moveShopProductAction: async () => {},
   placeOrderForMemberAction: async () => {},
+  removeShopPictureAction: async () => {},
+  replaceShopPictureAction: async () => {},
   saveShopProductAction: async () => {},
   saveShopSettingsAction: async () => {},
 }));
@@ -45,7 +48,8 @@ const { saveShopSettings } = await import("@/modules/content/shop/settings");
 const { listOrderableItems, listOrdersForAdmin, listOrdersOfMember, listProductsForAdmin, listZoneAccountsForOrder } = await import("@/modules/content/shop/repository");
 const { buildOrdersCsv } = await import("@/modules/content/shop/csv");
 const { getTranslations } = await import("next-intl/server");
-const { default: ShopCard } = await import("@/app/[locale]/admin/pages/members/ShopCard");
+const { default: OrdersCard } = await import("@/modules/content/shop/ui/OrdersCard");
+const { default: ProductList } = await import("@/modules/content/shop/ui/ProductList");
 const { default: MembersShop } = await import("@/app/[locale]/members-area/MembersShop");
 
 const NOW = new Date("2026-10-10T09:00:00.000Z");
@@ -309,25 +313,21 @@ describe("§690 the club places an order in a member's name", () => {
     expect(oldest).toContain("24,68 €");
 
     const t = await getTranslations("Admin");
+    // «Comenzi» is its own page since §697: the orders card alone, with the list's filter in the address.
     const render = (mayManage: boolean) =>
       renderToStaticMarkup(
-        ShopCard({
-          products: [],
-          settings: { paymentRo: null, paymentEn: null, ordersTo: null },
+        OrdersCard({
           orders: rows,
-          ordersTotal: rows.length,
-          ordersQuery: { status: null, productId: null },
+          total: rows.length,
+          query: { status: null, productId: null },
           productNames: [],
           accounts: [],
           items: [],
-          noticeDescribes: true,
-          storage: false,
-          path: "/ro/admin/shop",
+          path: "/ro/admin/shop/orders",
           locale: "ro",
           words: t as never,
           cancel: "Renunță",
           messages: { fieldError: "", summary: "", fields: {} } as never,
-          photoLabels: {} as unknown as TeamPhotoLabels,
           mayManage,
           showEmail: false,
         }),
@@ -342,28 +342,8 @@ describe("§690 the club places an order in a member's name", () => {
     expect(en.Admin.members.shop.forMember.title).not.toBe(ro.Admin.members.shop.forMember.title);
     expect(en.Admin.members.shop.columns.placedBy).toBe("Placed by");
 
-    const products = renderToStaticMarkup(
-      ShopCard({
-        products: await listProductsForAdmin(db),
-        settings: { paymentRo: null, paymentEn: null, ordersTo: null },
-        orders: [],
-        ordersTotal: 0,
-        ordersQuery: { status: null, productId: null },
-        productNames: [],
-        accounts: [],
-        items: [],
-        noticeDescribes: true,
-        storage: false,
-        path: "/ro/admin/shop",
-        locale: "ro",
-        words: t as never,
-        cancel: "Renunță",
-        messages: { fieldError: "", summary: "", fields: {} } as never,
-        photoLabels: {} as unknown as TeamPhotoLabels,
-        mayManage: false,
-        showEmail: false,
-      }),
-    );
+    // «Produse» (§697): the list's row says the price in its currency.
+    const products = renderToStaticMarkup(ProductList({ products: await listProductsForAdmin(db), locale: "ro", words: t as never, mayManage: false }));
     expect(products).toContain("12,34 €");
   });
 });

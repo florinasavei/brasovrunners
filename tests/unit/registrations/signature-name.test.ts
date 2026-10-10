@@ -10,7 +10,7 @@ import {
 /**
  * BR-REQ-033-02 criterion 15, §314 — the signature is the declarant's name, typed exactly.
  *
- * The owner, looking at a signature of "Florin Munca2" under "You registered as Florin Munca":
+ * The owner, looking at a signature of "Felix Sample2" under "You registered as Felix Sample":
  * "can I also have this validation here? So I have to type the exact name?" This reverses the
  * "a hint, not a validation" half of §283.
  *
@@ -23,22 +23,22 @@ import {
  */
 describe("BR-REQ-033-02 §314 the signature must be the declarant's exact name", () => {
   it("accepts the name exactly as registered", () => {
-    expect(signatureNameMatches("Florin Munca", "Florin Munca")).toBe(true);
+    expect(signatureNameMatches("Felix Sample", "Felix Sample")).toBe(true);
   });
 
   it("refuses an extra character — the signature the owner saw", () => {
-    expect(signatureNameMatches("Florin Munca2", "Florin Munca")).toBe(false);
-    expect(signatureNameMatches("Florin Munca.", "Florin Munca")).toBe(false);
+    expect(signatureNameMatches("Felix Sample2", "Felix Sample")).toBe(false);
+    expect(signatureNameMatches("Felix Sample.", "Felix Sample")).toBe(false);
   });
 
   it("refuses the names in another order", () => {
-    expect(signatureNameMatches("Munca Florin", "Florin Munca")).toBe(false);
+    expect(signatureNameMatches("Sample Felix", "Felix Sample")).toBe(false);
   });
 
   it("refuses a missing or an extra name", () => {
-    expect(signatureNameMatches("Florin", "Florin Munca")).toBe(false);
-    expect(signatureNameMatches("Munca", "Florin Munca")).toBe(false);
-    expect(signatureNameMatches("Florin Ion Munca", "Florin Munca")).toBe(false);
+    expect(signatureNameMatches("Felix", "Felix Sample")).toBe(false);
+    expect(signatureNameMatches("Sample", "Felix Sample")).toBe(false);
+    expect(signatureNameMatches("Felix Ion Sample", "Felix Sample")).toBe(false);
   });
 
   it("keeps a hyphen a hyphen: Ana Maria is not Ana-Maria", () => {
@@ -55,11 +55,11 @@ describe("BR-REQ-033-02 §314 the signature must be the declarant's exact name",
   });
 
   it("forgives case and the whitespace around and between the names", () => {
-    expect(signatureNameMatches("florin  munca ", "Florin Munca")).toBe(true);
-    expect(signatureNameMatches("FLORIN MUNCA", "Florin Munca")).toBe(true);
-    expect(signatureNameMatches("  Florin\tMunca", "Florin Munca")).toBe(true);
+    expect(signatureNameMatches("felix  sample ", "Felix Sample")).toBe(true);
+    expect(signatureNameMatches("FELIX SAMPLE", "Felix Sample")).toBe(true);
+    expect(signatureNameMatches("  Felix\tSample", "Felix Sample")).toBe(true);
     // The non-breaking space a phone's autocorrection leaves behind.
-    expect(signatureNameMatches("Florin\u00A0Munca", "Florin Munca")).toBe(true);
+    expect(signatureNameMatches("Felix\u00A0Sample", "Felix Sample")).toBe(true);
   });
 
   /**
@@ -89,13 +89,13 @@ describe("BR-REQ-033-02 §314 the signature must be the declarant's exact name",
   });
 
   it("forgives characters nobody can see", () => {
-    expect(signatureNameMatches("Florin\u200B Munca", "Florin Munca")).toBe(true);
-    expect(signatureNameMatches("Flo\u00ADrin Munca", "Florin Munca")).toBe(true);
+    expect(signatureNameMatches("Felix\u200B Sample", "Felix Sample")).toBe(true);
+    expect(signatureNameMatches("Fe\u00ADlix Sample", "Felix Sample")).toBe(true);
   });
 
   it("refuses a blank signature, whatever the expected name", () => {
-    expect(signatureNameMatches("", "Florin Munca")).toBe(false);
-    expect(signatureNameMatches("   ", "Florin Munca")).toBe(false);
+    expect(signatureNameMatches("", "Felix Sample")).toBe(false);
+    expect(signatureNameMatches("   ", "Felix Sample")).toBe(false);
     // And a registration with no name to match is not a licence to sign with nothing.
     expect(signatureNameMatches("", "")).toBe(false);
     expect(signatureNameMatches("anything", "  ")).toBe(false);
@@ -108,7 +108,7 @@ describe("BR-REQ-033-02 §314 the signature must be the declarant's exact name",
 
 describe("BR-REQ-033-02 §314 §108 whose name the signature must be", () => {
   it("is the participant's own name for an adult", () => {
-    expect(expectedSignatureName({ registeredName: "Florin Munca", guardianName: null })).toBe("Florin Munca");
+    expect(expectedSignatureName({ registeredName: "Felix Sample", guardianName: null })).toBe("Felix Sample");
   });
 
   it("is the parent's or guardian's for a minor — the parent signs", () => {
@@ -126,13 +126,13 @@ describe("BR-REQ-033-02 §314 §108 whose name the signature must be", () => {
  * name the same ones.
  */
 describe("§330 who signs, and which box is wrong", () => {
-  const adult = { registeredName: "Florin Munca", guardianName: null };
+  const adult = { registeredName: "Felix Sample", guardianName: null };
   const minor = { registeredName: "Maria Popescu", guardianName: "Ion Popescu" };
   const gateOn = { minorSigns: true };
   const gateOff = { minorSigns: false };
 
   it("expects one signature from an adult and two for a minor — the child's own and the parent's", () => {
-    expect(expectedSignatures(adult, gateOn)).toEqual({ typedName: "Florin Munca", minorTypedName: null });
+    expect(expectedSignatures(adult, gateOn)).toEqual({ typedName: "Felix Sample", minorTypedName: null });
     expect(expectedSignatures(minor, gateOn)).toEqual({ typedName: "Ion Popescu", minorTypedName: "Maria Popescu" });
     // An empty guardian is no guardian: the same truthiness `declarantValues` uses.
     expect(expectedSignatures({ registeredName: "Ana Pop", guardianName: "" }, gateOn)).toEqual({ typedName: "Ana Pop", minorTypedName: null });
@@ -170,7 +170,7 @@ describe("§330 who signs, and which box is wrong", () => {
 
   it("never finds an adult's absent second box wrong, whatever was posted in it", () => {
     const expected = expectedSignatures(adult, gateOn);
-    expect(mismatchedSignatures({ typedName: "Florin Munca", minorTypedName: "anybody" }, expected)).toEqual([]);
-    expect(mismatchedSignatures({ typedName: "Florin Munca2" }, expected)).toEqual(["typedName"]);
+    expect(mismatchedSignatures({ typedName: "Felix Sample", minorTypedName: "anybody" }, expected)).toEqual([]);
+    expect(mismatchedSignatures({ typedName: "Felix Sample2" }, expected)).toEqual(["typedName"]);
   });
 });

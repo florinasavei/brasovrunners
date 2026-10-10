@@ -52,13 +52,12 @@ function fieldsOf(form: FormData) {
     photoAssetId: text(form, "photoAssetId"),
     // The part of the photograph the card shows, as the crop box drew it (§541).
     photoCrop: text(form, "photoCrop"),
-    // The organisational chart (§691): the sub-role, the responsibilities, whom the card answers to and where it sits.
+    // The sub-role and the responsibilities (§691), and the card's level on the canvas (§701).
     subtitleRo: text(form, "subtitleRo"),
     subtitleEn: text(form, "subtitleEn"),
     responsibilitiesRo: text(form, "responsibilitiesRo"),
     responsibilitiesEn: text(form, "responsibilitiesEn"),
-    reportsToId: text(form, "reportsToId"),
-    placement: text(form, "placement") === "beside" ? "beside" : "below",
+    level: text(form, "level"),
   };
 }
 

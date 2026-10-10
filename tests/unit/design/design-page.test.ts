@@ -146,6 +146,7 @@ describe("BR-REQ-060-01 «Sistemul de design» draws the look from the code", ()
     expect(markup).toContain(">docs/REDESIGN.md<");
     expect(markup).toContain(ro.Admin.design.plan.statuses.default);
     expect(markup).toContain(ro.Admin.design.plan.statuses.planned);
+    expect(markup).toContain(ro.Admin.design.plan.statuses.decided);
   });
 
   it("names no person and no real event in its samples", async () => {
@@ -165,7 +166,7 @@ describe("BR-REQ-060-01 «Sistemul de design» draws the look from the code", ()
   it("holds every rule the brief names, in both catalogues", () => {
     const ids = DESIGN_RULES.map((rule) => rule.id);
     for (const id of ["staticPages", "lightDefault", "pageTint", "fontSize"]) expect(ids).toContain(id);
-    expect(ids.length).toBe(19);
+    expect(ids.length).toBe(21);
     for (const catalogue of [ro, en]) expect(Object.keys(catalogue.Admin.design.rules.items).sort()).toEqual([...ids].sort());
     for (const rule of DESIGN_RULES) for (const where of rule.where) expect(existsSync(where.replace(/\/$/, "")), where).toBe(true);
   });

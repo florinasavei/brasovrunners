@@ -137,7 +137,7 @@ describe("§364 the organizer's message to an event's participants", () => {
     { name: "carmen", status: "WAITLISTED" },
     { name: "dan", status: "WAITLIST_OFFERED", locale: "en" },
     { name: "elena", status: "PENDING_DECLARATION" },
-    { name: "florin", status: "PENDING_EMAIL_CONFIRMATION" },
+    { name: "felix", status: "PENDING_EMAIL_CONFIRMATION" },
     { name: "gabi", status: "CANCELLED" },
     { name: "horia", status: "EXPIRED" },
     { name: "test", status: "CONFIRMED", kind: "TEST" },
@@ -201,14 +201,14 @@ describe("§364 the organizer's message to an event's participants", () => {
       expect(row.idempotencyKey).toBe(`organizer-message:${SEND_ID}:registration:${row.registrationId}`);
     }
 
-    // Everybody active, in a second send: the four real ones and the test row — never florin, gabi or horia.
+    // Everybody active, in a second send: the four real ones and the test row — never felix, gabi or horia.
     const all = await send(event.id, { sendId: "1c1e6d4f-5a6b-4d2f-8e3c-8b9f0a1b2c3d" });
     expect(all).toEqual({ kind: "queued", real: 5, test: 1 });
     const second = (await queued()).filter((row) => row.idempotencyKey.includes("1c1e6d4f"));
     expect(second.map((row) => row.registrationId).sort()).toEqual(
       ["ana", "bogdan", "carmen", "dan", "elena", "test"].map((name) => byName(name).id).sort(),
     );
-    for (const name of ["florin", "gabi", "horia"]) expect(second.some((row) => row.registrationId === byName(name).id)).toBe(false);
+    for (const name of ["felix", "gabi", "horia"]) expect(second.some((row) => row.registrationId === byName(name).id)).toBe(false);
   });
 
   it("a second press of the same form queues nothing and writes no second audit row", async () => {

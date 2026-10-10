@@ -1629,6 +1629,7 @@
       "ONE_ADDRESS_ONLY": "La „Declarațiile semnate merg la” încape o singură adresă — cutia de arhivă. Pune-le pe celelalte la „Copie vizibilă (Cc)” sau „Copie ascunsă (Bcc)”. Nu s-a salvat nimic.",
       "CONFLICT": "Altcineva a salvat între timp. Reîncarcă pagina și aplică din nou modificările tale — nimic nu a fost suprascris.",
       "DECLARATION_HELD": "Nu s-a șters nimic: o declarație e păstrată pentru o reclamație sau un litigiu. Un Administrator scoate întâi păstrarea, din pagina înscrierii sau din semnăturile alergării.",
+      "SHOP_SIZE_HAS_ORDERS": "Nu s-a salvat: o mărime debifată are comenzi. Las-o bifată — poți pune stocul 0 ca să nu se mai comande.",
       "ERASE_NAME_MISMATCH": "Numele scris nu este numele înscrisului. Nu s-a șters nimic — scrie numele exact așa cum apare pe rând.",
       "LEGAL_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este a acestei versiuni. Nu s-a șters nimic — scrie exact textul cerut, de exemplu „GDPR 2”.",
       "LEGAL_DELETE_NEEDS_REASON": "Scrie un motiv. Este singurul lucru care rămâne după ștergere.",
@@ -5862,7 +5863,9 @@
           "fontSize": "Mărimea textului pe paginile publice e o setare a clubului, dintr-o scară cu limite.",
           "colourLiterals": "Nicio culoare scrisă direct în cod: culorile vin din temă, iar excepțiile sunt într-o listă care doar se scurtează.",
           "iconImports": "Pictogramele vin din registre, după nume; în backoffice nu se importă direct, iar pe paginile publice doar un fișier pe pictogramă, niciodată pachetul întreg.",
-          "primitives": "Un buton sau o pastilă e a casei (GlyphButton, ButtonLink, GlyphChip), nu un Button, IconButton sau Chip MUI pe care l-a scris cineva din nou."
+          "primitives": "Un buton sau o pastilă e a casei (GlyphButton, ButtonLink, GlyphChip), nu un Button, IconButton sau Chip MUI pe care l-a scris cineva din nou.",
+          "serverFirst": "Componentele de server mai întâi; o insulă de client își câștigă locul.",
+          "iconFamily": "O singură familie Material plină; o glifă pe fiecare buton și pliu."
         }
       },
       "plan": {
@@ -5889,7 +5892,7 @@
         "decisions": {
           "1": { "title": "Culoarea de accent", "default": "Un roz aprins lângă albastrul siglei, cu o nuanță mai închisă pentru textul alb; emailurile, PDF-urile, numerele de concurs și cardurile de distribuire rămân albastre." },
           "2": { "title": "Fontul titlurilor", "default": "Inter 800 pentru titluri, găzduit de noi, cu ș ț ă â î; textul rămâne Roboto." },
-          "3": { "title": "O pagină principală adevărată", "default": "`/ro` și `/en` devin pagina principală; `/events` rămâne lista, sub «Alergări»." },
+          "3": { "title": "O pagină principală adevărată", "default": "O pagină principală adevărată la `/ro` și `/en`, la care duce sigla, niciodată o intrare de meniu; se pornește și se oprește în «Aspect» → «Pagina principală»." },
           "4": { "title": "Cele patru cuvinte din meniu", "default": "«Alergări», «Calendar», «Comunitatea» — o pagină a clubului care leagă echipa, galeria, întrebările și zona membrilor — și «Despre noi»." },
           "5": { "title": "Unde duce «Vino cu noi»", "default": "La pagina următoarei alergări săptămânale; «Cum funcționează» deschide o pagină a clubului." },
           "6": { "title": "Fotografiile", "default": "Doar fotografii adevărate ale clubului, din galerie; oamenii dintr-o fotografie de pe prima pagină și-au dat acordul." },
@@ -6146,13 +6149,13 @@
               ]
             },
             {
-              "title": "Pagina «Echipa» ca organigramă: cine răspunde în fața cui, responsabilitățile și casetele",
+              "title": "Pagina «Echipa» ca panou cu niveluri: cine stă pe ce rând, responsabilitățile și casetele",
               "steps": [
                 "«Pagini» → «Echipa» → «Editează cardul» pe rândul persoanei, sau «Adaugă o persoană».",
                 "Sub rol scrie «Subtitlu (Română)» și «Subtitlu (English)» — o linie, de exemplu sub-rolul — apoi «Responsabilități (Română)» și «Responsabilități (English)», una pe rând. Fiecare pereche în ambele limbi sau în niciuna.",
-                "La «Răspunde în fața» alege cardul căruia îi răspunde persoana; «— nimeni, în vârf —» o lasă sus. La «Așezare» alegi «sub» (rândul de dedesubt) sau «alături de» (același rând, la dreapta). Un card nu poate răspunde în fața lui însuși sau a cuiva de sub el.",
-                "Apasă «Salvează». De îndată ce un card de pe site răspunde în fața altui card de pe site, pagina desenează organigrama; până atunci rămâne grila.",
-                "Textele de sub organigramă: «Casetele paginii» → «Adaugă o casetă»: titlul în ambele limbi și textul în editor — o poză, de exemplu sigla unui partener, se pune ca în orice text. O casetă nouă e ascunsă; Administratorul o pune pe site cu «Pune pe site»."
+                "La «Nivel» alegi rândul de pe panoul albastru: 1 e vârful (cardul lat), 2, 3… rândurile de sub el (carduri înalte); o jumătate — 1,5; 2,5 — e un card mic, alături de cardurile rândului său. «— fără nivel: cardul stă în grilă —» îl lasă în grila de sub panou.",
+                "Apasă «Salvează». De îndată ce un card de pe site are un nivel, pagina desenează panoul; până atunci rămâne grila. Pe site, fiecare card arată primele trei responsabilități și «Mai multe» le desface pe toate, cu descrierea și linkurile.",
+                "Textele de sub panou: «Casetele paginii» → «Adaugă o casetă»: titlul în ambele limbi și textul în editor — o poză, de exemplu sigla unui partener, se pune ca în orice text. O casetă nouă e ascunsă; Administratorul o pune pe site cu «Pune pe site»."
               ]
             }
           ]
@@ -7278,13 +7281,9 @@
       "responsibilitiesRo": "Responsabilități (Română)",
       "responsibilitiesEn": "Responsabilități (English)",
       "responsibilitiesHelp": "Una pe rând, cel mult {lines} rânduri de {max} caractere. Opțional, în ambele limbi sau în niciuna; pe site apar ca listă.",
-      "reportsTo": "Răspunde în fața",
-      "reportsToNone": "— nimeni, în vârf —",
-      "reportsToHelp": "Cardul căruia îi răspunde persoana. De îndată ce un card de pe site răspunde în fața altuia de pe site, pagina desenează organigrama; până atunci rămâne grila.",
-      "placement": "Așezare",
-      "placementBelow": "sub",
-      "placementBeside": "alături de",
-      "placementHelp": "Față de cardul ales: pe rândul de dedesubt, sau pe același rând, la dreapta lui.",
+      "level": "Nivel",
+      "levelNone": "— fără nivel: cardul stă în grilă —",
+      "levelHelp": "Rândul de pe panoul albastru: 1 e vârful, un card lat; 2, 3… rândurile de sub el, carduri înalte; o jumătate — 1,5; 2,5 — e un card mic, alături de rândul său. Fără nivel, cardul rămâne în grilă.",
       "boxes": {
         "heading": "Casetele paginii",
         "count": {
@@ -7465,7 +7464,6 @@
         "createBody": "Membrii îl văd în zona lor de îndată ce îl adaugi."
       },
       "shop": {
-        "heading": "Magazin",
         "count": {
           "one": "{count} produs",
           "few": "{count} produse",
@@ -7491,9 +7489,7 @@
         "createBody": "Dacă e bifat „Vizibil în magazin”, membrii îl văd de îndată.",
         "empty": "Nu este încă niciun produs.",
         "listLabel": "Produsele, în ordinea din magazin",
-        "stockUnlimited": "fără limită",
         "stockNoLimit": "fără limită",
-        "stockLine": "Stoc: {stock}",
         "visible": "Vizibil în magazin",
         "hidden": "Ascuns",
         "orders": {
@@ -7516,19 +7512,16 @@
         "titleEn": "Denumirea (English)",
         "descriptionRo": "Descriere (Română)",
         "descriptionEn": "Descriere (English)",
-        "descriptionHelp": "Material, mărimi, culoare — pe scurt.",
+        "descriptionHelp": "Text cu tabele și fotografii, dacă ajută: ce e produsul, din ce e făcut, cum se poartă. Cel mult {max} de caractere de text.",
         "price": "Prețul",
         "priceHelp": "De exemplu 45 sau 45,50; moneda e cea aleasă alături.",
         "currency": "Moneda",
         "currencyRon": "lei (RON)",
         "currencyEur": "euro (EUR)",
-        "variants": "Variante și stoc (opțional)",
-        "variantsHelp": "Câte una pe rând, de exemplu „M: 10” sau „L” (fără limită). Cel mult {max} variante, {length} de caractere fiecare. Gol: o singură variantă.",
         "stock": "Stoc (fără variante)",
-        "stockHelp": "Câte bucăți mai sunt, cel mult {max}. Gol: fără limită.",
         "visibleSwitch": "Vizibil în magazin",
         "photo": "Fotografia produsului",
-        "photoHelp": "După ce alegi fotografia, alegi partea care se vede în magazin. Se păstrează când salvezi produsul.",
+        "photoHelp": "După ce alegi fotografia, alegi partea care se vede în magazin. Fotografia se adaugă pe loc, fără să salvezi restul produsului.",
         "photoCrop": "Decupaj — ce se vede în magazin",
         "photoCropHelp": "Pornește pătrat (1:1). Poți alege alt format sau trage un dreptunghi peste fotografie.",
         "ordersHeading": "Comenzi",
@@ -7604,7 +7597,71 @@
           "status": "Starea",
           "note": "Nota"
         },
-        "movedTo": "Magazinul e la „Magazin”, în bara de sus."
+        "movedTo": "Magazinul e la „Magazin”, în bara de sus.",
+        "productsHeading": "Produse",
+        "tabs": {
+          "products": "Produse",
+          "orders": "Comenzi",
+          "settings": "Setări"
+        },
+        "open": "Deschide",
+        "backToList": "Înapoi la produse",
+        "sizesLine": "Mărimi: {sizes}",
+        "oneSize": "Mărime unică",
+        "oneSizeHelp": "Pentru un buff sau un abțibild — un singur fel. Stocul în căsuță; gol: fără limită.",
+        "sizesLegend": "Mărimile",
+        "sizesStockHelp": "Bifează mărimile pe care le vinzi, în ordinea din magazin. Lângă fiecare, câte bucăți mai sunt (cel mult {max}); gol: fără limită; 0: epuizat.",
+        "sizeStockLabel": "Stoc pentru {size}",
+        "extraVariants": "Alte variante (opțional)",
+        "extraVariantsHelp": "Ce nu e o mărime: o culoare, o croială pentru copii. Câte una pe rând, cu stocul după două puncte — „Albastru: 5” sau „Copii” (fără limită). Cel mult {max} variante în total, {length} de caractere fiecare.",
+        "cards": {
+          "name": "Denumirea și prețul",
+          "nameHelp": "Numele produsului în română și în engleză, prețul și moneda lui.",
+          "description": "Descrierea",
+          "descriptionHelp": "Material, îngrijire, desenul furnizorului — cu tabele și fotografii, dacă ajută. În ambele limbi sau în niciuna.",
+          "sizes": "Mărimile și stocul",
+          "sizesHelp": "Fiecare mărime bifată e o variantă pe care membrii o pot comanda. Debifarea unei mărimi care are comenzi e refuzată.",
+          "publish": "Publicarea",
+          "publishHelp": "Bifat, membrii văd produsul în zona lor și pot comanda. Nebifat, îl pregătești în liniște; clubul poate totuși adăuga o comandă pentru un membru."
+        },
+        "tabEmpty": "gol",
+        "descriptionEmpty": "Nimic scris încă.",
+        "archiveWhy": "Fiecare comandă păstrează o copie a produsului; de aceea el nu se șterge, ci se arhivează.",
+        "pictures": {
+          "title": "Fotografiile",
+          "help": "Prima fotografie e coperta: apare în listă și mare, în zona membrilor; celelalte, dedesubt, ca miniaturi. Cel mult {max}.",
+          "count": {
+            "one": "{count} fotografie",
+            "few": "{count} fotografii",
+            "other": "{count} de fotografii"
+          },
+          "afterSave": "Fotografiile se adaugă după prima salvare, pe pagina produsului.",
+          "empty": "Nicio fotografie încă.",
+          "gone": "Fotografia nu mai e în galerie.",
+          "cover": "Copertă",
+          "position": "Poziția {number}",
+          "moveUp": "Mută fotografia {number} mai în față",
+          "moveDown": "Mută fotografia {number} mai în spate",
+          "remove": "Scoate fotografia",
+          "removeTitle": "Scoți fotografia?",
+          "removeBody": "Dispare din produs; rămâne în galerie. Membrii văd schimbarea de îndată.",
+          "replace": "Înlocuiește sau decupează",
+          "save": "Salvează fotografia",
+          "add": "Adaugă o fotografie",
+          "addButton": "Adaugă fotografia",
+          "noStorage": "Stocarea imaginilor nu este configurată aici, așa că nu se pot adăuga fotografii."
+        },
+        "chart": {
+          "title": "Tabelul de mărimi",
+          "help": "Opțional. Cel mult {max} coloane măsurate — lățimea pieptului, lungimea — fiecare cu numele în ambele limbi, și câte un număr în centimetri pentru fiecare mărime bifată. Membrii îl văd sub produs.",
+          "column": "Coloana {number}",
+          "columnRo": "Numele coloanei (română)",
+          "columnEn": "Numele coloanei (engleză)",
+          "exampleRo": "Lățime piept (cm)",
+          "exampleEn": "Chest width (cm)",
+          "sizeColumn": "Mărimea",
+          "cellLabel": "{size}, coloana {number}"
+        }
       }
     },
     "declarationHold": {
@@ -8965,7 +9022,8 @@
     "emailMismatch": "Cele două adrese nu sunt aceeași — verifică literele."
   },
   "Tell": {
-    "title": "Spune-ne ceva",
+    "title": "Spune-ne ceva (anonim)",
+    "noticeName": "Spune-ne ceva",
     "intro": "Anonim, dacă nu alegi să-ți spui numele. Alege despre ce e vorba.",
     "backToContact": "Înapoi la Contact",
     "door": {
@@ -9588,6 +9646,10 @@
       "shopProductDeleted": "Produsul a fost șters.",
       "shopProductArchived": "Produsul avea comenzi, așa că a fost arhivat.",
       "shopSettingsSaved": "Plata și adresa pentru comenzi au fost salvate.",
+      "shopPictureAdded": "Fotografia a fost adăugată.",
+      "shopPictureMoved": "Ordinea fotografiilor a fost schimbată.",
+      "shopPictureRemoved": "Fotografia a fost scoasă din produs.",
+      "shopPictureReplaced": "Fotografia a fost salvată.",
       "shopOrderPaid": "Comanda a fost marcată plătită. Membrul primește un email.",
       "shopOrderHandedOver": "Comanda a fost marcată predată.",
       "shopOrderCancelled": "Comanda a fost anulată.",
@@ -9748,6 +9810,7 @@
     "lead": "Oamenii care țin {club} în mișcare: cine organizează, cine antrenează, cine te întâmpină la start.",
     "empty": "Echipa clubului apare aici în curând.",
     "listLabel": "Oamenii echipei",
+    "othersLabel": "Alți membri ai echipei",
     "linksLabel": "Linkuri: {name}",
     "linkKinds": {
       "STRAVA": "Strava",
@@ -9758,8 +9821,8 @@
     },
     "contact": "Vrei să ne ajuți sau ai o întrebare pentru echipă? <contact>Scrie-ne</contact>.",
     "responsibilities": "Responsabilități",
-    "besideLabel": "Alături de {name}",
-    "reportsLabel": "Răspund în fața: {name}",
+    "more": "Mai multe",
+    "moreAbout": "Mai multe despre {name}",
     "boxesLabel": "Despre echipă"
   },
   "Faq": {
@@ -9888,6 +9951,9 @@
       "noteLabel": "O notă pentru club (opțional, cel mult {max} de caractere)",
       "order": "Comandă",
       "ordering": "Se trimite comanda…",
+      "pictureOpen": "Fotografia {number}",
+      "sizeChart": "Tabelul de mărimi",
+      "sizeColumn": "Mărimea",
       "outcome": {
         "placed": "Comanda a fost primită. Ți-am trimis și un email cu ea și cu felul în care se plătește.",
         "cancelled": "Comanda a fost anulată.",

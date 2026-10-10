@@ -6,9 +6,11 @@ import type { TeamLinkKind } from "../links";
 /**
  * One glyph per link kind (§474): the footer's network marks (`SocialIcon`, §90, §112), a globe
  * for a website, a chain for anything else. No hooks, so server and client draw the same; never
- * `action-icons.ts` (§318). Decorative: the link's accessible name is its label.
+ * `action-icons.ts` (§318). Decorative: the link's accessible name is its label. `color` is the
+ * globe's and the chain's: the palette's muted text, or the canvas card's own ink (§701), which
+ * stays light after dark.
  */
-export default function TeamLinkGlyph({ kind, size = 20 }: { kind: TeamLinkKind; size?: number }) {
+export default function TeamLinkGlyph({ kind, size = 20, color = "text.secondary" }: { kind: TeamLinkKind; size?: number; color?: string }) {
   switch (kind) {
     case "STRAVA":
       return <SocialIcon network="strava" size={size} />;
@@ -17,8 +19,8 @@ export default function TeamLinkGlyph({ kind, size = 20 }: { kind: TeamLinkKind;
     case "FACEBOOK":
       return <SocialIcon network="facebook" size={size} />;
     case "WEBSITE":
-      return <LanguageIcon aria-hidden="true" sx={{ fontSize: size, flexShrink: 0, color: "text.secondary" }} />;
+      return <LanguageIcon aria-hidden="true" sx={{ fontSize: size, flexShrink: 0, color }} />;
     case "OTHER":
-      return <LinkIcon aria-hidden="true" sx={{ fontSize: size, flexShrink: 0, color: "text.secondary" }} />;
+      return <LinkIcon aria-hidden="true" sx={{ fontSize: size, flexShrink: 0, color }} />;
   }
 }

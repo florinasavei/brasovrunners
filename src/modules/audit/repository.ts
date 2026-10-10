@@ -515,6 +515,8 @@ export type AuditAction =
   | "shop.product.moved"
   | "shop.product.archived"
   | "shop.product.deleted"
+  /** A product's strip of pictures changed (§697): added, moved, removed or recropped, and how many it has now — never a title. */
+  | "shop.product.pictures_changed"
   | "shop.settings_saved"
   | "shop.order.placed"
   /** An order the club placed in a member's name (§690): the ids, the quantity and the two ticks — never a name or a note. */

@@ -8,6 +8,13 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.92-2026-10-11
+
+- **«Copiază și tradu tot: RO → EN» on the shop's forms** — the product's title and description and «Cum se plătește» get the same one-press translate button as «Echipa»; a volunteer with the shop grant does not see it yet. §697.
+- **«Contact direct» first** — the club's address and phone now stand above the contact form, which gets its own heading, «Trimite-ne un mesaj»; and «Spune-ne ceva» says «alergare» where it said «eveniment». §698.
+- **The ☰ at the right edge, «Spune-ne ceva (anonim)»** — the header's overflow button sits flush right at every width; the contact page's feedback heading and the wizard's title say it is anonymous; two more rules on the design page; no first name in the fixtures; the redesign plan's decision 3 decided. §699.
+- **The shop's editor, rebuilt** — «Magazin» is three tabs («Produse», «Comenzi», «Setări») and one page per product with its cards in order: many pictures with the first as cover, a rich description with tables and pictures, «Mărimile» as ticks XXS–4XL with a stock each and a size chart; the members' zone shows the cover, a picture strip, the description and the chart. A size that has orders cannot be unticked. §700.
+- **«Echipa» as a canvas with levels** — the team page is a blue canvas of white cards, no lines: each card gets a «Nivel» (1 the wide card at the top, 1.5 a small card beside it, 2, 3… the tall cards under), «Mai multe» opens a card in place with every responsibility, the bio and the links, the page's boxes close the canvas, and cards without a level stay in the grid. §701.
 ## BR-V2.91-2026-10-10
 
 - **A members' race number that looks like one** — «Fundalul numărului de membru» → «Tot numărul»: the whole card in the club kit's gradient, a colour or a gallery photograph under a navy veil, the number, the name and the race in white, and a «MEMBRU BRAȘOV RUNNERS» stripe in the kit's orange; «Doar banda de sus» keeps the old look. §695.

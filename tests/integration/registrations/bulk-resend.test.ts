@@ -113,7 +113,7 @@ describe("§606 the declaration resent to everyone who has not signed, in one pr
   async function theEvent() {
     const pending = [];
     for (const name of ["Ana", "Bogdan", "Corina", "Dan", "Elena"]) pending.push(await person(name, "PENDING_DECLARATION"));
-    const confirmed = await person("Florin", "CONFIRMED");
+    const confirmed = await person("Felix", "CONFIRMED");
     const justSent = await person("Gabriela", "PENDING_DECLARATION");
     await declarationEmail(justSent, new Date(NOW.getTime() - 10 * MINUTE));
     const stillQueued = await person("Horia", "PENDING_DECLARATION");

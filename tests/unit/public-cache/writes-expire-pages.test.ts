@@ -116,6 +116,11 @@ const WRITES: Record<string, Expected> = {
   "src/modules/content/shop/service.ts#saveProduct": SHOP_ONLY,
   "src/modules/content/shop/service.ts#moveProduct": SHOP_ONLY,
   "src/modules/content/shop/service.ts#deleteProduct": SHOP_ONLY,
+  // The product's pictures (§697): the strip is read in the same two places, per request behind the account.
+  "src/modules/content/shop/service.ts#addProductPicture": SHOP_ONLY,
+  "src/modules/content/shop/service.ts#moveProductPicture": SHOP_ONLY,
+  "src/modules/content/shop/service.ts#removeProductPicture": SHOP_ONLY,
+  "src/modules/content/shop/service.ts#replaceProductPicture": SHOP_ONLY,
   "src/modules/content/shop/settings.ts#saveShopSettings": SHOP_ONLY,
   "src/modules/content/shop/orders.ts#placeOrder": SHOP_ONLY,
   "src/modules/content/shop/orders.ts#placeOrderForMember": SHOP_ONLY,
