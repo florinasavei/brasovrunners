@@ -58,6 +58,7 @@ export default function GlyphChip({
   srSuffix,
   srLabel,
   closeMark = false,
+  testId,
 }: {
   glyph: GlyphName;
   label: string;
@@ -103,6 +104,8 @@ export default function GlyphChip({
    * `onDelete`, whose icon stops the click from reaching the link around the chip.
    */
   closeMark?: boolean;
+  /** `data-testid`, for a spec or a test that finds the chip by it. */
+  testId?: string;
 }) {
   const Icon = GLYPHS[glyph];
   /*
@@ -136,7 +139,7 @@ export default function GlyphChip({
     );
   // A chip with a tooltip says so, so a listing card lifts it above the title's cover (§486,
   // `CARD_TAP_SX`): a tap on the night pill opens its sunset rather than the event's page.
-  const marked = tooltip ? { "data-has-tooltip": "true" } : {};
+  const marked = { ...(tooltip ? { "data-has-tooltip": "true" } : {}), ...(testId ? { "data-testid": testId } : {}) };
   const chip = href ? (
     <Chip component="a" href={href} clickable size="small" color={color} variant={variant} icon={<Icon />} label={content} sx={sx} {...marked} />
   ) : (

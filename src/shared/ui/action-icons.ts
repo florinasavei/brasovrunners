@@ -1,4 +1,5 @@
 import AddIcon from "@mui/icons-material/Add";
+import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import ArchiveIcon from "@mui/icons-material/Archive";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
@@ -47,11 +48,13 @@ import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import PostAddIcon from "@mui/icons-material/PostAdd";
+import PaymentsIcon from "@mui/icons-material/Payments";
 import PrintIcon from "@mui/icons-material/Print";
 import PublicIcon from "@mui/icons-material/Public";
 import PublicOffIcon from "@mui/icons-material/PublicOff";
 import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import RateReviewIcon from "@mui/icons-material/RateReview";
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import RemoveDoneIcon from "@mui/icons-material/RemoveDone";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
@@ -60,6 +63,8 @@ import SearchIcon from "@mui/icons-material/Search";
 import SendIcon from "@mui/icons-material/Send";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import StarIcon from "@mui/icons-material/Star";
+import StorefrontIcon from "@mui/icons-material/Storefront";
+import SubjectIcon from "@mui/icons-material/Subject";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
@@ -223,7 +228,13 @@ export type ActionIconName =
   | "moveDown"
   // The guide a page of the backoffice opens on (the design page's samples) and the titled texts of a page (§691).
   | "guide"
-  | "boxes";
+  | "boxes"
+  // The members' shop (§NNN): the storefront on its card, the banknotes of «Cum se plătește», the receipt of the orders list, the cart of an order the club places for a member (§690), and the lines of text of the team page's introduction.
+  | "shop"
+  | "payment"
+  | "orders"
+  | "orderFor"
+  | "intro";
 // No runner here: the public send buttons wear it through `SubmitButton`'s own `runner` flag,
 // because this table must never reach a public page (above).
 
@@ -312,4 +323,9 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   moveDown: ArrowDownwardIcon,
   guide: MenuBookIcon,
   boxes: ViewAgendaIcon,
+  shop: StorefrontIcon,
+  payment: PaymentsIcon,
+  orders: ReceiptLongIcon,
+  orderFor: AddShoppingCartIcon,
+  intro: SubjectIcon,
 };

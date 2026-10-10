@@ -24,8 +24,7 @@ import { byFile, holdRatchet, importFacts, SOURCES } from "./scan";
  *
  * A registry is one of the files named in `ICON_REGISTRIES` in `guards-allowlist.ts` — an explicit
  * list, not a file-name pattern, so a new registry is a reviewed edit of that file and a
- * `FooGlyphCard.tsx` is not one by its name; `GlyphChip` is a primitive, listed as the file that
- * draws a chip's close mark. A failure prints `file:line — the import`.
+ * `FooGlyphCard.tsx` is not one by its name. A failure prints `file:line — the import`.
  */
 const facts = SOURCES.filter((source) => !isIconRegistry(source.file)).flatMap((source) =>
   importFacts(source)

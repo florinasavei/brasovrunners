@@ -5,13 +5,13 @@ import type { Entry } from "./scan";
  *
  * The list can only shrink. A new offender fails its test (fix it, never add it); a file that was
  * fixed fails its test as a stale entry (delete the entry); and `PINNED` below must equal each
- * list's length, so a shrink is a deliberate edit of two numbers in one reviewed file. There is no
+ * list's length and its hits (the sum of the entries' counts), so a shrink is a deliberate edit of the numbers in one reviewed file. There is no
  * inline escape (`// eslint-disable`-style): this file is the only door.
  *
- * Files under `src/modules/content/shop`, `src/modules/content/team` and `src/app/[locale]/admin/shop`
- * are never listed: they were fixed with a token, a registry name or a primitive, and stay so. The
- * pages that edit them (`admin/pages/team/page.tsx`, `admin/pages/members/ShopCard.tsx`,
- * `members-area/MembersShop.tsx`) are listed, each with its count, and leave when next touched.
+ * Files under `src/modules/content/shop`, `src/modules/content/team` and `src/app/[locale]/admin/shop`,
+ * and the pages that edit them (`admin/pages/team/page.tsx`, `admin/pages/members/ShopCard.tsx`), are
+ * never listed: they were fixed with a token, a registry name or a primitive, and stay so.
+ * `members-area/MembersShop.tsx` is listed with its count and leaves when next touched.
  */
 export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[] } = {
   colours: [
@@ -36,9 +36,7 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[] } 
     { path: "src/app/[locale]/admin/guide/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
     { path: "src/app/[locale]/admin/pages/(list)/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 4 },
     { path: "src/app/[locale]/admin/pages/members/CodesCard.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 3 },
-    { path: "src/app/[locale]/admin/pages/members/ShopCard.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 4 },
     { path: "src/app/[locale]/admin/pages/members/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
-    { path: "src/app/[locale]/admin/pages/team/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 3 },
     { path: "src/app/[locale]/admin/registrations/(list)/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 4 },
     { path: "src/app/[locale]/admin/registrations/[id]/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
     { path: "src/app/[locale]/admin/tasks/page.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
@@ -55,13 +53,10 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[] } 
     { path: "src/modules/content/events/ui/ScheduleRowsEditor.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
     { path: "src/modules/content/events/ui/SectionMap.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
     { path: "src/modules/content/events/ui/SeriesScope.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
-    { path: "src/modules/content/member-codes/ui/CopyCodeButton.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
-    { path: "src/modules/content/member-codes/ui/MemberCodes.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
     { path: "src/modules/content/menu/ui/MenuOrderList.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 9 },
     { path: "src/modules/content/pages/ui/PagesSubNav.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 5 },
     { path: "src/modules/content/rich-text/ui/ImageCropBox.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
     { path: "src/modules/content/rich-text/ui/LazyRichTextEditor.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
-    { path: "src/modules/content/rich-text/ui/PictureLightboxDialog.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
     { path: "src/modules/content/rich-text/ui/RichTextEditor.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 33 },
     { path: "src/modules/diagnostics/ui/NetworkProbes.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
     { path: "src/modules/legal-documents/ui/LegalBodyEditor.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 7 },
@@ -69,11 +64,7 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[] } 
     { path: "src/modules/newsletter/ui/NewsletterPreview.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
     { path: "src/modules/newsletter/ui/SubscriberListFields.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 3 },
     { path: "src/modules/notifications/ui/DeliveryTimingSwitch.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
-    { path: "src/modules/registrations/ui/ConfirmOnArrival.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
     { path: "src/modules/registrations/ui/DeskRow.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
-    { path: "src/modules/registrations/ui/FamilySittingConfirm.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
-    { path: "src/modules/registrations/ui/FamilySittingNext.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 4 },
-    { path: "src/modules/registrations/ui/FamilySittingOffer.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
     { path: "src/modules/registrations/ui/InviteForm.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
     { path: "src/modules/registrations/ui/QueuePanel.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
     { path: "src/modules/registrations/ui/RegistrationRowMenu.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§NNN) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
@@ -93,9 +84,7 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[] } 
     { path: "src/app/[locale]/admin/pages/[id]/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/admin/pages/faq/page.tsx", reason: "a bare MUI Button: GlyphButton / GlyphButtonLink by an action-icons name when the file is next touched; a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 2 },
     { path: "src/app/[locale]/admin/pages/members/CodesCard.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
-    { path: "src/app/[locale]/admin/pages/members/ShopCard.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/admin/pages/members/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
-    { path: "src/app/[locale]/admin/pages/team/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/admin/registrations/(list)/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/admin/registrations/[id]/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/admin/settings/costs/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
@@ -176,8 +165,12 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[] } 
   ],
 };
 
-/** One number per rule: lower it in the same edit that removes an entry. */
-export const PINNED = { colours: 13, icons: 49, primitives: 92 } as const;
+/** Per rule, the entries and the hits (the sum of the counts): lower them in the same edit that removes an entry or a count. */
+export const PINNED = {
+  colours: { entries: 13, hits: 28 },
+  icons: { entries: 40, hits: 143 },
+  primitives: { entries: 90, hits: 98 },
+} as const;
 
 /**
  * The icon registries: the files that are a name-to-glyph table and so may import
@@ -197,7 +190,6 @@ export const ICON_REGISTRIES: ReadonlySet<string> = new Set([
   "src/shared/ui/button-glyph.ts",
   "src/shared/ui/panel-glyphs.ts",
   "src/modules/content/team/ui/TeamLinkGlyph.tsx",
-  "src/modules/events/ui/GlyphChip.tsx",
 ]);
 
 export const isIconRegistry = (file: string): boolean => ICON_REGISTRIES.has(file);
@@ -226,17 +218,24 @@ const BACKOFFICE_PREFIXES = [
   "src/modules/notifications/ui/",
   "src/modules/staff-identity/",
 ];
+/**
+ * Public files under a backoffice prefix: the members' zone's codes and the rich text a visitor reads,
+ * with the lightbox that enlarges its pictures. A single-file icon import there is the rule.
+ */
+const PUBLIC_PREFIXES = [
+  "src/modules/content/member-codes/",
+  "src/modules/content/rich-text/ui/PictureLightbox",
+  "src/modules/content/rich-text/ui/RichText.tsx",
+  "src/modules/content/rich-text/ui/RichTextVideo.tsx",
+];
 const BACKOFFICE_FILES: ReadonlySet<string> = new Set([
   "src/modules/newsletter/ui/NewsletterPreview.tsx",
   "src/modules/newsletter/ui/SubscriberListFields.tsx",
-  "src/modules/registrations/ui/ConfirmOnArrival.tsx",
   "src/modules/registrations/ui/DeskRow.tsx",
-  "src/modules/registrations/ui/FamilySittingConfirm.tsx",
-  "src/modules/registrations/ui/FamilySittingNext.tsx",
-  "src/modules/registrations/ui/FamilySittingOffer.tsx",
   "src/modules/registrations/ui/InviteForm.tsx",
   "src/modules/registrations/ui/QueuePanel.tsx",
   "src/modules/registrations/ui/RegistrationRowMenu.tsx",
 ]);
 
-export const isBackoffice = (file: string): boolean => BACKOFFICE_FILES.has(file) || BACKOFFICE_PREFIXES.some((prefix) => file.startsWith(prefix));
+export const isBackoffice = (file: string): boolean =>
+  !PUBLIC_PREFIXES.some((prefix) => file.startsWith(prefix)) && (BACKOFFICE_FILES.has(file) || BACKOFFICE_PREFIXES.some((prefix) => file.startsWith(prefix)));

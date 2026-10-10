@@ -12,16 +12,19 @@ import GroupsIcon from "@mui/icons-material/Groups";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import HelpIcon from "@mui/icons-material/Help";
 import HikingIcon from "@mui/icons-material/Hiking";
+import LinkIcon from "@mui/icons-material/Link";
 import LocalCafeIcon from "@mui/icons-material/LocalCafe";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import ModeNightIcon from "@mui/icons-material/ModeNight";
 import MoneyOffIcon from "@mui/icons-material/MoneyOff";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PaidIcon from "@mui/icons-material/Paid";
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import ScienceIcon from "@mui/icons-material/Science";
 import SportsScoreIcon from "@mui/icons-material/SportsScore";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import StarIcon from "@mui/icons-material/Star";
+import StorefrontIcon from "@mui/icons-material/Storefront";
 import StraightenIcon from "@mui/icons-material/Straighten";
 import TerrainIcon from "@mui/icons-material/Terrain";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
@@ -163,6 +166,11 @@ export const GLYPHS = {
   open: HelpIcon,
   planned: ScheduleIcon,
   building: ConstructionIcon,
+  // The shop and the team page's chips (§NNN): the shop, an order, the club itself, a link.
+  shop: StorefrontIcon,
+  orders: ReceiptLongIcon,
+  club: GroupsIcon,
+  link: LinkIcon,
 };
 
 export type GlyphName = keyof typeof GLYPHS;

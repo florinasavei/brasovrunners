@@ -116,12 +116,12 @@ const show = (hits: Hit[]) => hits.map((hit) => `${hit.file}:${hit.line} — ${h
 /**
  * The ratchet (§NNN). `found` is what the scan found, by file, `allowed` the reviewed list of
  * today's offenders (each with the count it is pinned at), `pinned` the number of entries the list
- * must have. Ways to fail, each with its remedy: a new offender, or a listed file that offends more
+ * must have and the sum of their counts (a count raised in one entry passes no longer). Ways to fail, each with its remedy: a new offender, or a listed file that offends more
  * than its count (fix it — the list never grows, and each hit is printed as `file:line — text`), a
  * stale entry (the file no longer offends, or offends less than its count: delete or lower the
  * entry and the pin), a pin that disagrees with the list.
  */
-export function holdRatchet(rule: string, found: Map<string, Hit[]>, allowed: readonly Entry[], pinned: number, how: string) {
+export function holdRatchet(rule: string, found: Map<string, Hit[]>, allowed: readonly Entry[], pinned: { entries: number; hits: number }, how: string) {
   const listed = new Map(allowed.map((entry) => [entry.path, entry]));
   expect(listed.size, `${rule}: a path is listed twice`).toBe(allowed.length);
   for (const entry of allowed) {
@@ -145,5 +145,9 @@ export function holdRatchet(rule: string, found: Map<string, Hit[]>, allowed: re
   const fewer = allowed.filter((entry) => (found.get(entry.path)?.length ?? 0) < entry.count).map((entry) => `${entry.path}: ${found.get(entry.path)?.length} found, count ${entry.count}`);
   expect(fewer, `${rule}: a listed file offends less than its count — lower the count in guards-allowlist.ts`).toEqual([]);
 
-  expect(allowed.length, `${rule}: the list and PINNED.${rule} disagree — a shrink edits both`).toBe(pinned);
+  expect(allowed.length, `${rule}: the list and PINNED.${rule}.entries disagree — a shrink edits both`).toBe(pinned.entries);
+  expect(
+    allowed.reduce((sum, entry) => sum + entry.count, 0),
+    `${rule}: the entries' counts and PINNED.${rule}.hits disagree — raising or lowering a count edits both`,
+  ).toBe(pinned.hits);
 }
