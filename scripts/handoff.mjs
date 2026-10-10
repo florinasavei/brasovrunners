@@ -84,8 +84,10 @@ function unmergedBranches() {
     const ahead = Number(git("rev-list", "--count", "--no-merges", `origin/qa..${ref}`) || 0);
     if (ahead === 0) continue;
     const branch = ref.replace(/^origin\//, "");
+    // A batch branch carries no entry of its own: `yarn docs:land` consumed its branches' entries.
+    const isBatch = branch.startsWith("batch/");
     const entry = `.release/${slugOf(branch)}.json`;
-    const hasEntry = git("ls-tree", "--name-only", ref, entry) !== "";
+    const hasEntry = isBatch || git("ls-tree", "--name-only", ref, entry) !== "";
     rows.push({ branch, date, ahead, subject: git("log", "-1", "--format=%s", ref), hasEntry, migrations: migrationsAdded(ref) });
   }
   return rows;
@@ -126,7 +128,7 @@ out.push(...(pulls === null ? ["- (GitHub did not answer; list them by hand)"] :
 out.push("## Branches with work `qa` does not have", "");
 if (!branches.length) out.push("- none");
 for (const row of branches) {
-  const flags = [row.hasEntry ? "release entry ✓" : "**no release entry**", row.migrations.length ? `migrations: ${row.migrations.join(", ")}` : null].filter(Boolean).join(" · ");
+  const flags = [row.branch.startsWith("batch/") ? "a batch (its entries landed)" : row.hasEntry ? "release entry ✓" : "**no release entry**", row.migrations.length ? `migrations: ${row.migrations.join(", ")}` : null].filter(Boolean).join(" · ");
   out.push(`- \`${row.branch}\` — ${row.ahead} commit(s), last ${row.date.slice(0, 16)}: ${row.subject} · ${flags}`);
 }
 const clashes = [...claimed].filter(([, owners]) => owners.length > 1);

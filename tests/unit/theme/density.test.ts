@@ -136,9 +136,14 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   // «Echipa» (§459): born on the scale, the gallery's container.
   { file: "src/app/[locale]/team/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   // Its grid: two cards to a row from 320px, so the gap and the card's own padding are the tight steps.
-  { file: "src/app/[locale]/team/page.tsx", prop: "gap", step: "cardGridGap", sm: 2, xsBefore: 2 },
-  { file: "src/app/[locale]/team/page.tsx", prop: "p", step: "cardPadTop", sm: 2, xsBefore: 2 },
-  { file: "src/app/[locale]/team/page.tsx", prop: "pb", step: "cardPadTop", sm: 3, xsBefore: 3 },
+  // §691: the grid's gap is also the chart's tier gap; a card's padding is also a box's under the chart.
+  { file: "src/app/[locale]/team/page.tsx", prop: "gap", step: "cardGridGap", sm: 2, xsBefore: 2, count: 2 },
+  { file: "src/app/[locale]/team/page.tsx", prop: "p", step: "cardPadTop", sm: 2, xsBefore: 2, count: 2 },
+  { file: "src/app/[locale]/team/page.tsx", prop: "pb", step: "cardPadTop", sm: 3, xsBefore: 3, count: 2 },
+  // The chart's children on a phone (§691), born on the scale: indented behind a left rule, nothing from `sm`, where the connectors take over.
+  { file: "src/app/[locale]/team/page.tsx", prop: "mt", step: "gapSm", sm: 0, xsBefore: 1.5 },
+  { file: "src/app/[locale]/team/page.tsx", prop: "ml", step: "cardPadTop", sm: 0, xsBefore: 2 },
+  { file: "src/app/[locale]/team/page.tsx", prop: "pl", step: "sectionGap", sm: 0, xsBefore: 2.5 },
   // A group run's self-declaration (§393): born on the scale, the declare page's three containers.
   { file: "src/app/[locale]/events/[slug]/declaration/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 3 },
   { file: "src/app/[locale]/calendar/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
@@ -154,7 +159,7 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/gallery/[slug]/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3 },
   { file: "src/app/[locale]/gallery/[slug]/page.tsx", prop: "mt", step: "sectionGap", sm: 3, xsBefore: 3 },
   { file: "src/app/[locale]/team/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3, count: 2 }, // the lead, or the club's introduction in its place (§474)
-  { file: "src/app/[locale]/team/page.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
+  { file: "src/app/[locale]/team/page.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4, count: 2 }, // the boxes under the chart (§691), and the contact line
   // «Întrebări frecvente» (§525): born on the scale, «Echipa»'s container, lead and closing line,
   // and each answer's indent and the room under it inside its fold.
   { file: "src/app/[locale]/faq/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },

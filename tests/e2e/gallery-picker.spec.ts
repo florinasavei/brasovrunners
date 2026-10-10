@@ -375,7 +375,7 @@ test.describe.serial("§485 pictures from the gallery", () => {
     expect(preview && preview.height > preview.width).toBe(true);
     await form.getByRole("button", { name: "Adaugă cardul" }).click();
 
-    const card = page.getByRole("list", { name: "Cardurile echipei, în ordinea de pe pagină" }).getByRole("listitem").filter({ hasText: name });
+    const card = page.getByRole("list", { name: "Cardurile echipei, în ordinea de pe pagină" }).getByRole("listitem").filter({ has: page.getByRole("heading", { name, exact: true }) });
     await expect(card).toHaveCount(1, { timeout: 15_000 });
     // Hidden by default (§459), so the site's menu never gains «Echipa» from this spec.
     await expect(card.getByText("Ascuns", { exact: true })).toBeVisible();

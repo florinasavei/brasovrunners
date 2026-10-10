@@ -6,6 +6,7 @@ import type { Database } from "@/db/types";
 import type { ImageCrop } from "@/modules/content/rich-text/domain/schema";
 import { storedTeamPhotoCrop } from "@/modules/content/team/photo-crop";
 import { getStorage, objectKey } from "@/modules/media/storage";
+import { canOpenMembersZone, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { isUuid } from "@/shared/ids";
 import type { ShopCurrency } from "./domain";
 
@@ -127,6 +128,41 @@ export async function listProductNames<T extends Record<string, unknown>>(db: Da
     .select({ id: shopProducts.id, titleRo: shopProducts.titleRo, titleEn: shopProducts.titleEn, archived: shopProducts.archivedAt })
     .from(shopProducts)
     .orderBy(asc(shopProducts.position), asc(shopProducts.createdAt));
+}
+
+/** A product the club may place an order on for a member (§690), with its variants and what is left of each. */
+export type OrderableItem = { id: string; titleRo: string; titleEn: string; variants: ShopVariantRow[] };
+
+/**
+ * What «Adaugă o comandă pentru un membru» offers (§690): every product not archived — hidden ones
+ * too, the club types its sheet against products it may not show yet — in the list's order, each with
+ * its variants in position order and their stock, so a sold-out variant is offered disabled.
+ */
+export async function listOrderableItems<T extends Record<string, unknown>>(db: Database<T>): Promise<OrderableItem[]> {
+  const rows = await db
+    .select({ id: shopProducts.id, titleRo: shopProducts.titleRo, titleEn: shopProducts.titleEn })
+    .from(shopProducts)
+    .where(isNull(shopProducts.archivedAt))
+    .orderBy(asc(shopProducts.position), asc(shopProducts.createdAt));
+  const variants = await variantsOf(
+    db,
+    rows.map((row) => row.id),
+  );
+  return rows.map((row) => ({ ...row, variants: variants.get(row.id) ?? [] }));
+}
+
+/** A member account an order may be placed for (§690): the id, the name as the select shows it, the role. */
+export type ZoneAccount = { id: string; displayName: string; role: StaffRole };
+
+/**
+ * The accounts an order may be placed for (§690): every row on «Echipa» whose role opens the members'
+ * zone (`canOpenMembersZone` — the predicate, never a role's name written here), by name in Romanian
+ * order. The service asserts the same predicate again on the account posted.
+ */
+export async function listZoneAccountsForOrder<T extends Record<string, unknown>>(db: Database<T>): Promise<ZoneAccount[]> {
+  const rows = await db.select({ id: staffUsers.id, displayName: staffUsers.displayName, role: staffUsers.role }).from(staffUsers);
+  const collator = new Intl.Collator("ro", { sensitivity: "base" });
+  return rows.filter((row) => canOpenMembersZone(row.role)).sort((a, b) => collator.compare(a.displayName, b.displayName) || a.id.localeCompare(b.id));
 }
 
 /** How many products members see now — what `/admin/tasks`' row `shopNotice` waits on. */
@@ -256,6 +292,8 @@ export async function listOrdersForAdmin<T extends Record<string, unknown>>(db: 
       note: shopOrders.note,
       status: shopOrders.status,
       cancelledBy: shopOrders.cancelledBy,
+      /** `MEMBER` or `CLUB` (§690): the list marks a club-placed order and the CSV says who placed each. */
+      placedBy: shopOrders.placedBy,
       createdAt: shopOrders.createdAt,
       paidAt: shopOrders.paidAt,
       handedOverAt: shopOrders.handedOverAt,

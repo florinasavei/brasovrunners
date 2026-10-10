@@ -5,6 +5,7 @@ import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/temp
 import { describesMembersShop, MEMBERS_SHOP_MERGE_FIELD, mergeText } from "@/modules/legal-documents/domain/merge-fields";
 import {
   clubVerbsFor,
+  currencyWordOf,
   formatPrice,
   minorAsTyped,
   nextOrderStatus,
@@ -16,6 +17,7 @@ import {
   stockToSave,
   variantLinesAsTyped,
 } from "@/modules/content/shop/domain";
+import { orderForMemberFieldsSchema, productFieldsSchema } from "@/modules/content/shop/fields";
 import { membersShopMergeValues } from "@/modules/content/shop/notice-words";
 import { readShopOutcome } from "@/modules/content/shop/zone-outcome";
 import { shopOrderLine, shopOrderLines } from "@/modules/notifications/shop-order-words";
@@ -36,6 +38,9 @@ describe("§683, §686 the price, in lei or in euro", () => {
     expect(parsePriceToMinor("30€")).toBe(3000);
     expect(parsePriceToMinor("30 eur")).toBe(3000);
     expect(parsePriceToMinor("30 EURO")).toBe(3000);
+    // A leading euro sign, with or without a space (§686).
+    expect(parsePriceToMinor("€30")).toBe(3000);
+    expect(parsePriceToMinor("€ 30,25")).toBe(3025);
     expect(parsePriceToMinor("0")).toBe(0);
     expect(parsePriceToMinor("100000")).toBe(PRICE_BANI_MAX);
     // The box never says the currency: a word that is not one is refused, not read as lei.
@@ -57,6 +62,52 @@ describe("§683, §686 the price, in lei or in euro", () => {
     expect(minorAsTyped(4500)).toBe("45");
     expect(minorAsTyped(4550)).toBe("45,50");
     expect(orderTotalBani({ unitPriceBani: 4550, quantity: 3 })).toBe(13650);
+  });
+
+  it("reads the box's currency word for one purpose: refusing a price that contradicts «Moneda» (§686)", () => {
+    expect(currencyWordOf("45")).toBeNull();
+    expect(currencyWordOf("45 lei")).toBe("RON");
+    expect(currencyWordOf("30 €")).toBe("EUR");
+    expect(currencyWordOf("€30")).toBe("EUR");
+    expect(currencyWordOf("30 eur")).toBe("EUR");
+    expect(currencyWordOf("30 Euro")).toBe("EUR");
+    const product = { titleRo: "Tricou", titleEn: "T-shirt", variants: "", stock: "" };
+    const refused = (price: string, currency: string) => {
+      const parsed = productFieldsSchema.safeParse({ ...product, price, currency });
+      return parsed.success ? null : parsed.error.issues.map((issue) => issue.path.join("."));
+    };
+    // The word agrees, or there is none: fine. It contradicts the select: refused on the price box.
+    expect(refused("45 lei", "RON")).toBeNull();
+    expect(refused("€30", "EUR")).toBeNull();
+    expect(refused("45", "EUR")).toBeNull();
+    expect(refused("45 lei", "EUR")).toEqual(["price"]);
+    expect(refused("30 €", "RON")).toEqual(["price"]);
+    expect(refused("30 eur", "RON")).toEqual(["price"]);
+    expect(refused("30 euro", "RON")).toEqual(["price"]);
+    expect(refused("€30", "RON")).toEqual(["price"]);
+    // Lei is what an absent select means: «30 €» with no select is a contradiction too.
+    expect(refused("30 €", "")).toEqual(["price"]);
+  });
+});
+
+describe("§690 the club's order for a member, as the fold posts it", () => {
+  const product = "0f3a9f1e-6d1c-4e39-9d0b-7a8f2c4b5d61";
+  const variant = "9b2d4c6e-8f1a-4b3c-a5d7-e9f0a1b2c3d4";
+  const member = "6c1e2a3b-4d5f-4a6b-8c7d-9e0f1a2b3c4d";
+
+  it("splits the item into its product and variant, reads the ticks as a form posts them, and refuses a name or a half", () => {
+    const parsed = orderForMemberFieldsSchema.parse({ memberStaffUserId: member.toUpperCase(), item: `${product}:${variant}`, quantity: "2", note: " Din tabel ", emailMember: "on" });
+    expect(parsed).toEqual({ memberStaffUserId: member, productId: product, variantId: variant, quantity: 2, note: "Din tabel", emailMember: true, markPaid: false });
+    const paths = (value: unknown) => {
+      const result = orderForMemberFieldsSchema.safeParse(value);
+      return result.success ? [] : result.error.issues.map((issue) => issue.path.join("."));
+    };
+    expect(paths({ memberStaffUserId: "Membru A", item: `${product}:${variant}`, quantity: "1" })).toEqual(["memberStaffUserId"]);
+    expect(paths({ memberStaffUserId: member, item: product, quantity: "1" })).toEqual(["item"]);
+    expect(paths({ memberStaffUserId: member, item: `${product}:${variant}:x`, quantity: "1" })).toEqual(["item"]);
+    expect(paths({ memberStaffUserId: member, item: `${product}:${variant}`, quantity: "0" })).toEqual(["quantity"]);
+    expect(paths({ memberStaffUserId: member, item: `${product}:${variant}`, quantity: "6" })).toEqual(["quantity"]);
+    expect(paths({ memberStaffUserId: member, item: `${product}:${variant}`, quantity: "1", note: "x".repeat(301) })).toEqual(["note"]);
   });
 });
 

@@ -53,6 +53,7 @@ export async function GET(request: Request): Promise<Response> {
       date: t("members.shop.columns.date"),
       member: t("members.shop.columns.member"),
       email: t("members.shop.columns.email"),
+      placedBy: t("members.shop.columns.placedBy"),
       product: t("members.shop.columns.product"),
       variant: t("members.shop.columns.variant"),
       quantity: t("members.shop.columns.quantity"),
@@ -63,7 +64,12 @@ export async function GET(request: Request): Promise<Response> {
       note: t("members.shop.columns.note"),
     },
     rows,
-    { locale, withEmail, statusWord: (status) => t(`members.shop.status.${status}`) },
+    {
+      locale,
+      withEmail,
+      statusWord: (status) => t(`members.shop.status.${status}`),
+      placedByWord: (placedBy) => t(`members.shop.placedBy.${placedBy}`),
+    },
   );
 
   await recordAuditEvent(db, {

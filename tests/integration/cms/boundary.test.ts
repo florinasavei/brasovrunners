@@ -180,6 +180,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin",
       "/admin/checkin",
       "/admin/checkin/[code]",
+      // The design system page (§692), by hand.
+      "/admin/design",
       "/admin/events/[id]",
       "/admin/events/[id]/bibs",
       // The hard delete's confirmation screen (BR-REQ-037-06): written here by hand, like

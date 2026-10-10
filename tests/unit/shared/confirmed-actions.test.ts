@@ -134,6 +134,9 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   setTeamMemberVisibleAction: [],
   deleteTeamMemberAction: [],
   setTeamPagePublishedAction: [],
+  // «Casetele paginii» of «Echipa» (§691): on and off the site, and deleting, ask like a card's.
+  setTeamBoxVisibleAction: [],
+  deleteTeamBoxAction: [],
   // «Coduri de reducere» (§552): every write the members see — a code added, written, hidden or shown, deleted.
   createDiscountCodeAction: [],
   saveDiscountCodeAction: [],
@@ -146,6 +149,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   deleteShopProductAction: [],
   saveShopSettingsAction: [],
   moveShopOrderAction: [],
+  // An order the club places in a member's name (§690): it takes stock and may email the member.
+  placeOrderForMemberAction: [],
   // «Întrebări frecvente» (§525): the page's one save, which asks when a card is put on the site,
   // taken off or deleted (and nothing else), and the page's own publish switch.
   saveFaqPageAction: [],
@@ -221,6 +226,10 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   createTeamMemberAction: "adds a hidden card nobody sees until an Administrator shows it, which asks",
   saveTeamMemberAction: "an editorial save of a card's words and photo, like a page's; showing and deleting ask",
   moveTeamMemberAction: "reorders the team's cards, undone by moving back",
+  // «Casetele paginii» of «Echipa» (§691), the cards' own rules.
+  createTeamBoxAction: "adds a hidden box nobody sees until an Administrator shows it, which asks",
+  saveTeamBoxAction: "an editorial save of a box's title and text, like a card's; showing and deleting ask",
+  moveTeamBoxAction: "reorders the page's boxes, undone by moving back",
   moveDiscountCodeAction: "reorders the members' discount codes (§552), undone by moving back",
   moveShopProductAction: "reorders the members' shop (§683), undone by moving back",
   saveTeamPageIntroAction: "an editorial save of the page's introduction; publishing the page asks",

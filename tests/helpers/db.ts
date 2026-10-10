@@ -24,7 +24,7 @@ import { registrationInterests } from "@/db/schema/registration-interests";
 import { newsletterSends, newsletterSubscribers, newsletterTokens } from "@/db/schema/newsletter";
 import { registrations } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
-import { teamMembers } from "@/db/schema/team";
+import { teamMembers, teamPageBoxes } from "@/db/schema/team";
 import { faqQuestions } from "@/db/schema/faq";
 import { memberDiscountCodes } from "@/db/schema/member-discount-codes";
 import { shopOrders, shopProducts, shopProductVariants } from "@/db/schema/shop";
@@ -109,8 +109,9 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   // The invitations by email (§647): they reference the event, the address and the staff; their links went above.
   await db.delete(eventInvitations);
   await db.delete(emailOutbox);
-  // «Echipa»'s cards (§459) reference a photo: before the assets.
+  // «Echipa»'s cards (§459) reference a photo: before the assets. The page's boxes (§691) reference only staff rows.
   await db.delete(teamMembers);
+  await db.delete(teamPageBoxes);
   // «Întrebări frecvente»'s questions (§525) reference only staff rows.
   await db.delete(faqQuestions);
   // The members' discount codes (§552) reference only staff rows.
