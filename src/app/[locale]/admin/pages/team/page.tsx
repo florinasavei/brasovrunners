@@ -16,11 +16,18 @@ import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import LazyRichTextEditor from "@/modules/content/rich-text/ui/LazyRichTextEditor";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
-import { TEAM_BIO_MAX, TEAM_NAME_MAX, TEAM_ROLE_MAX } from "@/modules/content/team/fields";
+import {
+  TEAM_BIO_MAX,
+  TEAM_NAME_MAX,
+  TEAM_RESPONSIBILITIES_MAX_LINES,
+  TEAM_RESPONSIBILITY_LINE_MAX,
+  TEAM_ROLE_MAX,
+  TEAM_SUBTITLE_MAX,
+} from "@/modules/content/team/fields";
 import { MAX_TEAM_LINKS, type TeamLinkKind } from "@/modules/content/team/links";
 import { teamLinkKindWords } from "@/modules/content/team/ui/kind-words";
 import { readTeamPageSettings, TEAM_INTRO_MAX, teamIntroDocs, type TeamPageSettings } from "@/modules/content/team/page-settings";
-import { type AdminTeamMember, listTeamMembersForAdmin } from "@/modules/content/team/repository";
+import { type AdminTeamMember, listTeamBoxesForAdmin, listTeamMembersForAdmin } from "@/modules/content/team/repository";
 import PagesSubNav from "@/modules/content/pages/ui/PagesSubNav";
 import TeamLinkRowsEditor, { type TeamLinkRowsLabels } from "@/modules/content/team/ui/TeamLinkRowsEditor";
 import TeamPhotoField, { type TeamPhotoLabels } from "@/modules/content/team/ui/TeamPhotoField";
@@ -39,6 +46,7 @@ import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import SubmitButton from "@/shared/ui/SubmitButton";
+import BoxesCard from "./BoxesCard";
 import {
   createTeamMemberAction,
   deleteTeamMemberAction,
@@ -88,11 +96,14 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const db = getDb();
-  const [members, settings, noticeDescribed] = await Promise.all([
+  const [members, boxes, settings, noticeDescribed] = await Promise.all([
     listTeamMembersForAdmin(db),
+    listTeamBoxesForAdmin(db),
     readTeamPageSettings(db),
     noticeDescribesTeamPage(db, new Date()),
   ]);
+  // «Răspunde în fața» (§691): every card by name, so a form may name any other card as its parent.
+  const cardNames = members.map((member) => ({ id: member.id, name: member.name }));
   const mayEdit = canEditTeamPage(actor.role);
   const mayShow = canShowTeamMember(actor.role);
   const storage = isStorageConfigured();
@@ -132,6 +143,17 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
     photoAssetId: t("team.photo"),
     introRoBody: t("team.introRo"),
     introEnBody: t("team.introEn"),
+    // The chart (§691): a card's sub-role, responsibilities, parent and placement, and a box's title and text.
+    subtitleRo: t("team.subtitleRo"),
+    subtitleEn: t("team.subtitleEn"),
+    responsibilitiesRo: t("team.responsibilitiesRo"),
+    responsibilitiesEn: t("team.responsibilitiesEn"),
+    reportsToId: t("team.reportsTo"),
+    placement: t("team.placement"),
+    titleRo: t("team.boxes.titleRo"),
+    titleEn: t("team.boxes.titleEn"),
+    bodyRoBody: t("team.boxes.bodyRo"),
+    bodyEnBody: t("team.boxes.bodyEn"),
   });
   const photoLabels: TeamPhotoLabels = {
     legend: t("team.photo"),
@@ -236,7 +258,7 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
           </summary>
           <ActionForm action={createTeamMemberAction} messages={messages} scope="new" data-testid="team-create-form">
             <input type="hidden" name="uiLocale" value={locale} />
-            <MemberFields scope="new" member={null} words={t} photoLabels={photoLabels} editing={editing} storage={storage} />
+            <MemberFields scope="new" member={null} cards={cardNames} words={t} photoLabels={photoLabels} editing={editing} storage={storage} />
             <Box sx={{ mt: 2 }}>
               <GlyphSubmitButton label={t("team.create")} pendingLabel={t("editor.saving")} icon="add" size="medium" />
             </Box>
@@ -252,6 +274,7 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
             <MemberCard
               key={member.id}
               member={member}
+              cards={cardNames}
               first={index === 0}
               last={index === members.length - 1}
               locale={locale}
@@ -267,11 +290,17 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
           ))}
         </Stack>
       )}
+
+      {/* «Casetele paginii» (§691): the club's titled texts under the chart, in the discount codes' shape (§552). */}
+      <BoxesCard boxes={boxes} locale={locale} words={t} cancel={words.cancel} messages={messages} rich={editing.rich} mayEdit={mayEdit} mayShow={mayShow} />
     </Stack>
   );
 }
 
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
+
+/** A card as another card's possible parent: its id and the name the select shows (§691). */
+type CardName = { id: string; name: string };
 
 /** What the rich-text editors and the links' rows need, translated once on the server (§474). */
 type Editing = {
@@ -392,6 +421,7 @@ function PageCard({
 /** One card on the screen: its line, its verbs, and its words in a fold. */
 function MemberCard({
   member,
+  cards,
   first,
   last,
   locale,
@@ -405,6 +435,7 @@ function MemberCard({
   storage,
 }: {
   member: AdminTeamMember;
+  cards: readonly CardName[];
   first: boolean;
   last: boolean;
   locale: Locale;
@@ -515,7 +546,7 @@ function MemberCard({
           <ActionForm action={saveTeamMemberAction} messages={messages} scope={scope} data-testid={`team-save-${member.id}`}>
             {hidden}
             <RecallHidden name="expectedVersion" value={member.version} />
-            <MemberFields scope={scope} member={member} words={t} photoLabels={photoLabels} editing={editing} storage={storage} />
+            <MemberFields scope={scope} member={member} cards={cards} words={t} photoLabels={photoLabels} editing={editing} storage={storage} />
             <Box sx={{ mt: 2 }}>
               <GlyphSubmitButton label={t("editor.save")} pendingLabel={t("editor.saving")} icon="save" size="medium" />
             </Box>
@@ -529,7 +560,12 @@ function MemberCard({
 /** A pair with one side written (only a hand-made or older row can hold one): the next save refuses it. */
 function oneSided(member: AdminTeamMember): boolean {
   const written = (value: string | null) => (value ?? "").trim() !== "";
-  return written(member.roleRo) !== written(member.roleEn) || (member.bioRo === null) !== (member.bioEn === null);
+  return (
+    written(member.roleRo) !== written(member.roleEn) ||
+    written(member.subtitleRo) !== written(member.subtitleEn) ||
+    written(member.responsibilitiesRo) !== written(member.responsibilitiesEn) ||
+    (member.bioRo === null) !== (member.bioEn === null)
+  );
 }
 
 /**
@@ -541,6 +577,7 @@ function oneSided(member: AdminTeamMember): boolean {
 function MemberFields({
   scope,
   member,
+  cards,
   words: t,
   photoLabels,
   editing,
@@ -548,16 +585,22 @@ function MemberFields({
 }: {
   scope: string;
   member: AdminTeamMember | null;
+  /** Every card by name — the choices of «Răspunde în fața» (§691), less this card itself. */
+  cards: readonly CardName[];
   words: Words;
   photoLabels: TeamPhotoLabels;
   editing: Editing;
   storage: boolean;
 }) {
   const pairSx = { display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 } as const;
+  const parents = cards.filter((card) => card.id !== member?.id);
+  // A parent that is gone or hidden still reads as stored; the select shows it only if it is still a card.
+  const reportsTo = parents.some((card) => card.id === member?.reportsToId) ? (member?.reportsToId ?? "") : "";
   return (
     <Stack spacing={2}>
-      {/* «Copiază și tradu tot: RO → EN» (§464, §482): this card's role, words and link labels in
-          English from the Romanian, in this card's form alone — every card posts the same names. */}
+      {/* «Copiază și tradu tot: RO → EN» (§464, §482): this card's role, sub-role, responsibilities
+          (§691, line for line), words and link labels in English from the Romanian, in this card's
+          form alone — every card posts the same names (`translate/domain/fields.ts`). */}
       <TranslateAllButton />
       <RecallField
         name="name"
@@ -585,6 +628,81 @@ function MemberFields({
           helperText={t("team.bothOrNeither")}
           slotProps={{ htmlInput: { maxLength: TEAM_ROLE_MAX, lang: "en" } }}
         />
+      </Box>
+      {/*
+        The organisational chart (§691): the one-line sub-role under the role, «Responsabilități» one
+        per line, whom the card answers to (a native select of the other cards by name, «— nimeni, în
+        vârf —» first) and where it sits against that card. Every pair both languages or neither (§352).
+      */}
+      <Box sx={pairSx}>
+        <RecallField
+          name="subtitleRo"
+          label={t("team.subtitleRo")}
+          fullWidth
+          defaultValue={member?.subtitleRo ?? ""}
+          helperText={t("team.subtitleHelp")}
+          slotProps={{ htmlInput: { maxLength: TEAM_SUBTITLE_MAX, lang: "ro" } }}
+        />
+        <RecallField
+          name="subtitleEn"
+          label={t("team.subtitleEn")}
+          fullWidth
+          defaultValue={member?.subtitleEn ?? ""}
+          helperText={t("team.bothOrNeither")}
+          slotProps={{ htmlInput: { maxLength: TEAM_SUBTITLE_MAX, lang: "en" } }}
+        />
+      </Box>
+      <Box sx={pairSx}>
+        <RecallField
+          name="responsibilitiesRo"
+          label={t("team.responsibilitiesRo")}
+          fullWidth
+          multiline
+          minRows={3}
+          defaultValue={member?.responsibilitiesRo ?? ""}
+          helperText={t("team.responsibilitiesHelp", { lines: TEAM_RESPONSIBILITIES_MAX_LINES, max: TEAM_RESPONSIBILITY_LINE_MAX })}
+          slotProps={{ htmlInput: { lang: "ro" } }}
+        />
+        <RecallField
+          name="responsibilitiesEn"
+          label={t("team.responsibilitiesEn")}
+          fullWidth
+          multiline
+          minRows={3}
+          defaultValue={member?.responsibilitiesEn ?? ""}
+          helperText={t("team.bothOrNeither")}
+          slotProps={{ htmlInput: { lang: "en" } }}
+        />
+      </Box>
+      <Box sx={pairSx}>
+        <RecallField
+          name="reportsToId"
+          select
+          fullWidth
+          label={t("team.reportsTo")}
+          defaultValue={reportsTo}
+          helperText={t("team.reportsToHelp")}
+          slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+        >
+          <option value="">{t("team.reportsToNone")}</option>
+          {parents.map((card) => (
+            <option key={card.id} value={card.id}>
+              {card.name}
+            </option>
+          ))}
+        </RecallField>
+        <RecallField
+          name="placement"
+          select
+          fullWidth
+          label={t("team.placement")}
+          defaultValue={member?.placement ?? "below"}
+          helperText={t("team.placementHelp")}
+          slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+        >
+          <option value="below">{t("team.placementBelow")}</option>
+          <option value="beside">{t("team.placementBeside")}</option>
+        </RecallField>
       </Box>
       {/*
         The words about the person in the editor every page uses (§474): paragraphs, a list, a link

@@ -472,6 +472,13 @@ export type AuditAction =
   | "team_page.published"
   | "team_page.unpublished"
   | "team_page.intro_saved"
+  // «Casetele paginii» of «Echipa» (§691): the row by id, never its words.
+  | "team.box.created"
+  | "team.box.saved"
+  | "team.box.moved"
+  | "team.box.shown"
+  | "team.box.hidden"
+  | "team.box.deleted"
   /**
    * «Întrebări frecvente» (§525): the page saved as one — its introduction and every question,
    * the ids added, deleted, shown and taken off in the metadata, never the words (§12.12) — and
@@ -510,6 +517,8 @@ export type AuditAction =
   | "shop.product.deleted"
   | "shop.settings_saved"
   | "shop.order.placed"
+  /** An order the club placed in a member's name (§690): the ids, the quantity and the two ticks — never a name or a note. */
+  | "shop.order.placed_by_club"
   | "shop.order.paid"
   | "shop.order.handed_over"
   | "shop.order.cancelled"
@@ -568,6 +577,8 @@ export type RecordAuditInput = {
     | "staff_user"
     // `member_discount_code` for a code of the members' zone (§552).
     | "member_discount_code"
+    // `team_page_box` for a box under the chart of «Echipa» (§691).
+    | "team_page_box"
     // `shop_product` and `shop_order` for the members' shop (§683).
     | "shop_product"
     | "shop_order";

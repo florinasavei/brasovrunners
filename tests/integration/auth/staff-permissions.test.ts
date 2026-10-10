@@ -51,6 +51,7 @@ const { GET: exportOrders } = await import("@/app/api/admin/shop/orders/route");
 const { GET: listGallery } = await import("@/app/api/admin/media/route");
 const { default: ShopSectionLayout } = await import("@/app/[locale]/admin/shop/layout");
 const { default: AdminMembersPage } = await import("@/app/[locale]/admin/pages/members/page");
+const { default: AdminShopPage } = await import("@/app/[locale]/admin/shop/page");
 const { default: ShopCard } = await import("@/app/[locale]/admin/pages/members/ShopCard");
 
 const NOW = new Date("2026-10-10T09:00:00.000Z");
@@ -272,6 +273,20 @@ describe("§687 «Gestionează magazinul» — a permission per person", () => {
       expect(await statusOf(ShopSectionLayout({ children: "shop" }))).toBeNull();
       state.cookie = organizer.id;
       expect(await statusOf(ShopSectionLayout({ children: "shop" }))).toBeNull();
+    });
+
+    it("«Magazin» draws «Adaugă o comandă pentru un membru» for the grant's holder, with the member accounts; the Organizer, who reads only, gets none (§690)", async () => {
+      const shopCardOf = async () =>
+        elements(await AdminShopPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({}) })).find((element) => element.type === ShopCard);
+      await setStaffPermission(db, admin, { targetId: volunteer.id, permission: "shop.manage", on: true, now: NOW });
+      state.cookie = volunteer.id;
+      const holders = await shopCardOf();
+      expect(holders?.props).toMatchObject({ mayManage: true, path: "/ro/admin/shop" });
+      expect((holders?.props.accounts as { id: string }[]).map((account) => account.id)).toContain(member.id);
+
+      state.cookie = organizer.id;
+      const organizers = await shopCardOf();
+      expect(organizers?.props).toMatchObject({ mayManage: false, accounts: [], items: [] });
     });
 
     it("«Pagini» → «Membri» carries no shop card: one line to «Magazin» for a reader of the shop, none for the Redactor", async () => {

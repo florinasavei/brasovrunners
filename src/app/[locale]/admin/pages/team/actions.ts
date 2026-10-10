@@ -11,6 +11,7 @@ import {
   saveTeamMember,
   setTeamMemberVisible,
 } from "@/modules/content/team/service";
+import { createTeamBox, deleteTeamBox, moveTeamBox, saveTeamBox, setTeamBoxVisible } from "@/modules/content/team/boxes";
 import { teamLinkRowsOf } from "@/modules/content/team/links";
 import { saveTeamPageIntro, setTeamPagePublished } from "@/modules/content/team/page-settings";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -51,6 +52,23 @@ function fieldsOf(form: FormData) {
     photoAssetId: text(form, "photoAssetId"),
     // The part of the photograph the card shows, as the crop box drew it (§541).
     photoCrop: text(form, "photoCrop"),
+    // The organisational chart (§691): the sub-role, the responsibilities, whom the card answers to and where it sits.
+    subtitleRo: text(form, "subtitleRo"),
+    subtitleEn: text(form, "subtitleEn"),
+    responsibilitiesRo: text(form, "responsibilitiesRo"),
+    responsibilitiesEn: text(form, "responsibilitiesEn"),
+    reportsToId: text(form, "reportsToId"),
+    placement: text(form, "placement") === "beside" ? "beside" : "below",
+  };
+}
+
+/** A box's boxes (§691): the title in both languages and the rich text as the editor posts it. */
+function boxFieldsOf(form: FormData) {
+  return {
+    titleRo: text(form, "titleRo"),
+    titleEn: text(form, "titleEn"),
+    bodyRoBody: body(form, "bodyRoBody"),
+    bodyEnBody: body(form, "bodyEnBody"),
   };
 }
 
@@ -151,6 +169,72 @@ export async function saveTeamPageIntroAction(_previous: FormOutcome | null, for
     return refused(error, form);
   }
   return backTo(screen(form), { saved: "teamPageIntroSaved" }, "team-page");
+}
+
+/**
+ * «Casetele paginii» (§691): the boxes under the chart, in the cards' own shape — a refused add or
+ * save returns so every box comes back as typed (§315); everything else redirects to the box.
+ */
+export async function createTeamBoxAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  let id: string;
+  try {
+    const actor = await requireStaff();
+    id = (await createTeamBox(getDb(), { actor, fields: boxFieldsOf(form) })).id;
+  } catch (error) {
+    return refused(error, form);
+  }
+  return backTo(screen(form), { saved: "teamBoxCreated" }, `team-box-${id}`);
+}
+
+export async function saveTeamBoxAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const boxId = text(form, "boxId");
+  try {
+    const actor = await requireStaff();
+    await saveTeamBox(getDb(), { actor, boxId, expectedVersion: Number(text(form, "expectedVersion")), fields: boxFieldsOf(form) });
+  } catch (error) {
+    return refused(error, form);
+  }
+  return backTo(screen(form), { saved: "teamBoxSaved" }, `team-box-${boxId}`);
+}
+
+export async function setTeamBoxVisibleAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const boxId = text(form, "boxId");
+  const wanted = text(form, "visible") === "true";
+  let outcome: { error?: string; saved?: string };
+  try {
+    const actor = await requireStaff();
+    await setTeamBoxVisible(getDb(), { actor, boxId, expectedVersion: Number(text(form, "expectedVersion")), visible: wanted });
+    outcome = { saved: wanted ? "teamBoxShown" : "teamBoxHidden" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  return backTo(screen(form), outcome, outcome.error ? "admin-alert" : `team-box-${boxId}`);
+}
+
+/** One place up or down; lands on the box it moved, because the order is read on the list. */
+export async function moveTeamBoxAction(form: FormData): Promise<void> {
+  const boxId = text(form, "boxId");
+  let outcome: { error?: string; saved?: string };
+  try {
+    const actor = await requireStaff();
+    await moveTeamBox(getDb(), { actor, boxId, direction: text(form, "direction") === "up" ? "up" : "down" });
+    outcome = { saved: "teamBoxMoved" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  return backTo(screen(form), outcome, outcome.error ? "admin-alert" : `team-box-${boxId}`);
+}
+
+export async function deleteTeamBoxAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  let outcome: { error?: string; saved?: string };
+  try {
+    const actor = await requireStaff();
+    await deleteTeamBox(getDb(), { actor, boxId: text(form, "boxId") });
+    outcome = { saved: "teamBoxDeleted" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  return backTo(screen(form), outcome, outcome.error ? "admin-alert" : "team-boxes");
 }
 
 /** Put the page on the site in both languages, or take it off — asks first on the screen (§384). */

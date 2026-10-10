@@ -12,7 +12,7 @@ import type { PublicTeamLink, PublicTeamMember, PublicTeamPage } from "@/modules
  *
  * The catalogue is the real Romanian one; the public cache and Next's navigation are stubbed.
  */
-let page: PublicTeamPage = { published: false, intro: null, introText: null, members: [] };
+let page: PublicTeamPage = { published: false, intro: null, boxes: [], introText: null, members: [] };
 
 vi.mock("@/modules/public-cache/reads", () => ({ cachedTeamPage: async () => page }));
 vi.mock("next-intl/server", async () => {
@@ -62,14 +62,18 @@ const member = (name: string, links: PublicTeamLink[] = [], bio: RichTextDoc | n
   id: name,
   name,
   role: "Antrenor",
+  subtitle: null,
+  responsibilities: [],
   bio,
   links,
   photo: null,
+  reportsToId: null,
+  placement: "below",
 });
 
 describe("§459 the team page and its menu entry", () => {
   beforeEach(() => {
-    page = { published: false, intro: null, introText: null, members: [] };
+    page = { published: false, intro: null, boxes: [], introText: null, members: [] };
   });
 
   it("offers «Echipa» in the menu only when the header says the page is on the site", async () => {
@@ -81,12 +85,12 @@ describe("§459 the team page and its menu entry", () => {
   });
 
   it("is a 404 while the page is a draft, whatever the cards say", async () => {
-    page = { published: false, intro: null, introText: null, members: [] };
+    page = { published: false, intro: null, boxes: [], introText: null, members: [] };
     await expect(TeamPage({ params })).rejects.toThrow("NEXT_NOT_FOUND");
   });
 
   it("answers a sentence and asks not to be indexed while published with nobody on it", async () => {
-    page = { published: true, intro: null, introText: null, members: [] };
+    page = { published: true, intro: null, boxes: [], introText: null, members: [] };
     const markup = await html((await TeamPage({ params })) as ReactElement);
     expect(markup).toContain(messages.Team.empty);
     expect(markup).not.toContain('data-testid="team-grid"');
@@ -97,7 +101,7 @@ describe("§459 the team page and its menu entry", () => {
     page = {
       published: true,
       intro: doc("Cine suntem."),
-      introText: "Cine suntem.",
+      boxes: [], introText: "Cine suntem.",
       members: [member("Ana Popescu", [{ kind: "STRAVA", url: "https://www.strava.com/athletes/1", label: null }]), member("Mihai Ionescu")],
     };
     const markup = await html((await TeamPage({ params })) as ReactElement);
@@ -123,7 +127,7 @@ describe("§474 the words about a person as rich text, and their links", () => {
         { type: "bulletList", content: [{ type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "maraton" }] }] }] },
       ],
     };
-    page = { published: true, intro: doc("Cine suntem.", "Ce facem."), introText: "Cine suntem. Ce facem.", members: [member("Ana Popescu", [], bio)] };
+    page = { published: true, intro: doc("Cine suntem.", "Ce facem."), boxes: [], introText: "Cine suntem. Ce facem.", members: [member("Ana Popescu", [], bio)] };
     const markup = await html((await TeamPage({ params })) as ReactElement);
     expect(markup).toContain('data-testid="team-intro"');
     expect(markup).toContain("Ce facem.");
@@ -131,7 +135,7 @@ describe("§474 the words about a person as rich text, and their links", () => {
     expect(markup).toMatch(/<strong[^>]*>Tâmpa<\/strong>/);
     expect(markup).toMatch(/<ul[^>]*>[\s\S]*maraton[\s\S]*<\/ul>/);
     // Without an introduction of the club's, the platform's sentence stands.
-    page = { published: true, intro: null, introText: null, members: [member("Ana Popescu")] };
+    page = { published: true, intro: null, boxes: [], introText: null, members: [member("Ana Popescu")] };
     const plain = await html((await TeamPage({ params })) as ReactElement);
     expect(plain).not.toContain('data-testid="team-intro"');
   });
@@ -140,7 +144,7 @@ describe("§474 the words about a person as rich text, and their links", () => {
     page = {
       published: true,
       intro: null,
-      introText: null,
+      boxes: [], introText: null,
       members: [
         member("Ana Popescu", [
           { kind: "INSTAGRAM", url: "https://instagram.com/ana", label: null },
@@ -159,5 +163,87 @@ describe("§474 the words about a person as rich text, and their links", () => {
     expect(list.match(/target="_blank"/g)).toHaveLength(3);
     expect(list.match(/rel="noopener noreferrer"/g)).toHaveLength(3);
     expect(markup).toMatch(/min-height:44px/);
+  });
+});
+
+describe("§691 «Echipa» as an organisational chart, with the page's boxes", () => {
+  const card = (name: string, extra: Partial<PublicTeamMember> = {}): PublicTeamMember => ({ ...member(name), ...extra });
+  const text = (...paragraphs: string[]) => doc(...paragraphs);
+
+  it("draws the grid, not the chart, while no shown card answers to a shown one — a hidden parent counts for nothing", async () => {
+    page = {
+      published: true,
+      intro: null,
+      boxes: [],
+      introText: null,
+      // «Rol B» answers to a card that is not on the site: the page is the grid it always was.
+      members: [card("Președinte"), card("Rol B", { reportsToId: "hidden-card", placement: "below" })],
+    };
+    const markup = await html((await TeamPage({ params })) as ReactElement);
+    expect(markup).toContain('data-testid="team-grid"');
+    expect(markup).not.toContain('data-testid="team-chart"');
+  });
+
+  it("draws the chart tier by tier once a relation is set: the parent's children under it, a beside card at its tier, hidden cards nowhere", async () => {
+    page = {
+      published: true,
+      intro: null,
+      boxes: [],
+      introText: null,
+      members: [
+        card("Președinte", { subtitle: "Linia a doua", responsibilities: ["Strategia", "Partenerii"] }),
+        card("Consilier", { reportsToId: "Președinte", placement: "beside" }),
+        card("Rol A", { reportsToId: "Președinte", placement: "below" }),
+        card("Rol B", { reportsToId: "Președinte", placement: "below" }),
+        card("Rol A1", { reportsToId: "Rol A", placement: "below" }),
+      ],
+    };
+    const markup = await html((await TeamPage({ params })) as ReactElement);
+    expect(markup).toContain('data-testid="team-chart"');
+    expect(markup).not.toContain('data-testid="team-grid"');
+    // The sub-role and «Responsabilități» as a list, under the role in the accent colour.
+    expect(markup).toContain('data-testid="team-subtitle"');
+    expect(markup).toContain(">Linia a doua<");
+    expect(markup).toContain(`>${messages.Team.responsibilities}<`);
+    expect(markup).toMatch(/<ul[^>]*>[\s\S]*<li>Strategia<\/li><li>Partenerii<\/li>[\s\S]*<\/ul>/);
+    // The president's node holds the advisor beside it and the two roles under it; Rol A1 under Rol A.
+    expect(markup).toContain('aria-label="Alături de Președinte"');
+    expect(markup).toContain('aria-label="Răspund în fața: Președinte"');
+    expect(markup).toContain('aria-label="Răspund în fața: Rol A"');
+    const order = ["Președinte", "Consilier", "Rol A", "Rol A1", "Rol B"].map((name) => markup.indexOf(`>${name}<`));
+    expect(order.every((index) => index >= 0)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+    // Every card once, with no hidden card: five cards, five nodes.
+    expect(markup.match(/data-testid="team-card"/g)).toHaveLength(5);
+    expect(markup.match(/data-testid="team-chart-node"/g)).toHaveLength(5);
+    // Connectors in CSS, no script: the tier's stems are pseudo-elements on the server's own markup.
+    expect(markup).toMatch(/::before/);
+    expect(markup).not.toContain("<script");
+  });
+
+  it("draws the shown boxes under the chart in order, each a heading and the club's text through the renderer", async () => {
+    page = {
+      published: true,
+      intro: null,
+      boxes: [
+        { id: "b1", title: "Responsabilitate colectivă", body: text("Proiectul A.") },
+        { id: "b2", title: "Parteneriate", body: text("Partener 1.", "Partener 2.") },
+      ],
+      introText: null,
+      members: [card("Președinte"), card("Rol A", { reportsToId: "Președinte", placement: "below" })],
+    };
+    const markup = await html((await TeamPage({ params })) as ReactElement);
+    expect(markup).toContain('data-testid="team-boxes"');
+    expect(markup).toContain(`aria-label="${messages.Team.boxesLabel}"`);
+    expect(markup.match(/data-testid="team-box"/g)).toHaveLength(2);
+    expect(markup.indexOf("Responsabilitate colectivă")).toBeLessThan(markup.indexOf(">Parteneriate<"));
+    expect(markup).toContain("Partener 2.");
+    // The boxes come after the chart, before the contact line.
+    expect(markup.indexOf('data-testid="team-chart"')).toBeLessThan(markup.indexOf('data-testid="team-boxes"'));
+    // And the grid keeps its boxes too: the boxes do not need a relation.
+    page = { ...page, members: [card("Președinte")] };
+    const grid = await html((await TeamPage({ params })) as ReactElement);
+    expect(grid).toContain('data-testid="team-grid"');
+    expect(grid).toContain('data-testid="team-boxes"');
   });
 });

@@ -8,6 +8,11 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.89-2026-10-10
+
+- **«Adaugă o comandă pentru un membru»** — on «Magazin», an Administrator, or the colleague given «Gestionează magazinul», types in an order the club collected outside the site, for a member account, through the same stock and locks as the member's own order, marked «adăugată de club» in the list and the CSV; the member's email only when ticked, and «Marchează direct ca plătită» for a row already paid. A price box may say «€30»; a word in it that contradicts «Moneda» is refused. §690.
+- **«Echipa» as an organisational chart** — a card may say whom it answers to and whether it sits below or beside that person, carry a sub-role line and a «Responsabilități» list, and the page may carry titled rich-text boxes under the chart (the partners' logos as pictures); the page stays the grid until a relation is set, the chart is CSS alone, hidden cards and boxes are never in the HTML, and a box follows the cards' two gates. §691.
+- **«Sistemul de design» in the backoffice, and the redesign plan in the repository** — «Setări» → «Aspect» → «Sistemul de design» (`/admin/design`, the Redactor and up) draws the site's look from the code: every colour token with its hex and the asserted text/background pairs with their contrast ratio, the theme's type variants and self-hosted faces, the shapes, shadows and the 44-pixel rule, the public and backoffice buttons, every pill and glyph, sample cards and form blocks from made-up rows, and the house rules with where each lives; its last section is the redesign plan's twelve decisions and seven phases with a status each, whose full text is `docs/REDESIGN.md`. §692.
 ## BR-V2.88-2026-10-10
 
 - **The club's runs are «Alergări»** — in Romanian the menu, the listing's title, the backoffice tab and the menu-order entry say «Alergări», and the listing's sentences, filters, featured chip and past count say alergare / alergări (with «Înapoi la alergări» on an event page and «Toate alergările» in the members' zone); the address `/ro/evenimente`, English, the legal texts and the emails are unchanged. §689.

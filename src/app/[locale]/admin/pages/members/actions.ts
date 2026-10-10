@@ -13,7 +13,7 @@ import {
   setDiscountCodeHidden,
 } from "@/modules/content/member-codes/service";
 import type { OrderVerb } from "@/modules/content/shop/domain";
-import { moveOrderByClub } from "@/modules/content/shop/orders";
+import { moveOrderByClub, placeOrderForMember } from "@/modules/content/shop/orders";
 import { ordersFilterParams } from "@/modules/content/shop/repository";
 import { createProduct, deleteProduct, moveProduct, saveProduct } from "@/modules/content/shop/service";
 import { saveShopSettings } from "@/modules/content/shop/settings";
@@ -305,4 +305,34 @@ export async function moveShopOrderAction(_previous: FormOutcome | null, form: F
     outcome = codeOutcomeOf(error);
   }
   return backToShop(form, outcome, `order-${orderId}`, ordersFilterOf(form));
+}
+
+/**
+ * «Adaugă o comandă pentru un membru» (§690): the club places an order in a member's name. The door
+ * asks `canManageShop` of the actor, like every shop verb — a holder of «Gestionează magazinul»
+ * included (§687); the service asserts it and the member account again. A refusal returns, naming
+ * its box (§315); a placed order lands on «Magazin», on its row in the list, the filter kept, with a
+ * toast.
+ */
+export async function placeOrderForMemberAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  let id: string;
+  try {
+    const actor = await requireStaffCapability(canManageShop);
+    id = (
+      await placeOrderForMember(getDb(), {
+        actor,
+        fields: {
+          memberStaffUserId: text(form, "memberStaffUserId"),
+          item: text(form, "item"),
+          quantity: text(form, "quantity"),
+          note: text(form, "note"),
+          emailMember: text(form, "emailMember"),
+          markPaid: text(form, "markPaid"),
+        },
+      })
+    ).id;
+  } catch (error) {
+    return refused(error, form);
+  }
+  return backToShop(form, { saved: "shopOrderPlacedForMember" }, `order-${id}`, ordersFilterOf(form));
 }
