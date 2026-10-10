@@ -7,7 +7,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import { faqQuestions } from "@/db/schema/faq";
 import { newsletterSends } from "@/db/schema/newsletter";
 import { teamMembers, teamPageBoxes } from "@/db/schema/team";
-import { shopProducts } from "@/db/schema/shop";
+import { shopProductPictures, shopProducts } from "@/db/schema/shop";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { FAQ_PAGE_SETTING_KEY } from "@/modules/content/faq/page-settings";
@@ -115,6 +115,9 @@ const inFaqIntro = sql`(${platformSettings.key} = ${FAQ_PAGE_SETTING_KEY} AND ${
  */
 const inMembersPage = sql`(${platformSettings.key} = ${MEMBERS_PAGE_SETTING_KEY} AND ${names(sql`${platformSettings.value}::text`)})`;
 
+/** Whether a shop product's description carries the asset in its text, either language (§NNN), hidden and archived products included. */
+const inShopDescription = sql`(${names(sql`${shopProducts.descriptionRoJson}::text`)} OR ${names(sql`${shopProducts.descriptionEnJson}::text`)})`;
+
 const referencedSomewhere = sql`(
   EXISTS (SELECT 1 FROM ${galleryItems} WHERE ${galleryItems.mediaAssetId} = ${mediaAssets.id})
   OR EXISTS (SELECT 1 FROM ${galleryAlbums} WHERE ${galleryAlbums.coverMediaAssetId} = ${mediaAssets.id})
@@ -143,6 +146,9 @@ const referencedSomewhere = sql`(
   -- A product's photo in the members' shop (§683), by id, hidden and archived products included:
   -- an archived product's row stays for its orders, and a hidden one is being prepared.
   OR EXISTS (SELECT 1 FROM ${shopProducts} WHERE ${shopProducts.photoMediaAssetId} = ${mediaAssets.id})
+  -- A picture of a product's strip (§NNN), by id, and a picture in a product's description, by address.
+  OR EXISTS (SELECT 1 FROM ${shopProductPictures} WHERE ${shopProductPictures.mediaAssetId} = ${mediaAssets.id})
+  OR EXISTS (SELECT 1 FROM ${shopProducts} WHERE ${inShopDescription})
   -- A picture in a newsletter sent (§550): the letter is in the subscribers' inboxes, which load
   -- it from this address for as long as they keep the message, so a send keeps its pictures.
   OR EXISTS (SELECT 1 FROM ${newsletterSends} WHERE ${names(sql`${newsletterSends.body}::text`)})
@@ -367,6 +373,15 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .select({ assetId: shopProducts.photoMediaAssetId })
     .from(shopProducts)
     .where(isNotNull(shopProducts.photoMediaAssetId));
+  // A product's strip and its description (§NNN): the same page.
+  const inShopPictures = await db
+    .select({ assetId: shopProductPictures.mediaAssetId })
+    .from(shopProductPictures)
+    .where(isNotNull(shopProductPictures.mediaAssetId));
+  const inShopDescriptions = await db
+    .select({ assetId: mediaAssets.id })
+    .from(mediaAssets)
+    .where(sql`EXISTS (SELECT 1 FROM ${shopProducts} WHERE ${inShopDescription})`);
   // A picture in a newsletter sent (§550): one reference, the newsletter's page.
   const inNewsletters = await db
     .select({ assetId: mediaAssets.id })
@@ -400,6 +415,8 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
   for (const row of inFaq) add(row.assetId, { kind: "faq", id: FAQ_PAGE_SETTING_KEY, title: null });
   for (const row of inMembersPages) add(row.assetId, { kind: "membersPage", id: MEMBERS_PAGE_SETTING_KEY, title: null });
   for (const row of inShop) if (row.assetId) add(row.assetId, { kind: "membersPage", id: MEMBERS_PAGE_SETTING_KEY, title: null });
+  for (const row of inShopPictures) if (row.assetId) add(row.assetId, { kind: "membersPage", id: MEMBERS_PAGE_SETTING_KEY, title: null });
+  for (const row of inShopDescriptions) add(row.assetId, { kind: "membersPage", id: MEMBERS_PAGE_SETTING_KEY, title: null });
   for (const row of inNewsletters) add(row.assetId, { kind: "newsletter", id: "newsletter", title: null });
 
   return assets.map((asset) => ({
