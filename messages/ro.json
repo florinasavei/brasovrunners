@@ -6148,13 +6148,13 @@
               ]
             },
             {
-              "title": "Pagina «Echipa» ca organigramă: cine răspunde în fața cui, responsabilitățile și casetele",
+              "title": "Pagina «Echipa» ca panou cu niveluri: cine stă pe ce rând, responsabilitățile și casetele",
               "steps": [
                 "«Pagini» → «Echipa» → «Editează cardul» pe rândul persoanei, sau «Adaugă o persoană».",
                 "Sub rol scrie «Subtitlu (Română)» și «Subtitlu (English)» — o linie, de exemplu sub-rolul — apoi «Responsabilități (Română)» și «Responsabilități (English)», una pe rând. Fiecare pereche în ambele limbi sau în niciuna.",
-                "La «Răspunde în fața» alege cardul căruia îi răspunde persoana; «— nimeni, în vârf —» o lasă sus. La «Așezare» alegi «sub» (rândul de dedesubt) sau «alături de» (același rând, la dreapta). Un card nu poate răspunde în fața lui însuși sau a cuiva de sub el.",
-                "Apasă «Salvează». De îndată ce un card de pe site răspunde în fața altui card de pe site, pagina desenează organigrama; până atunci rămâne grila.",
-                "Textele de sub organigramă: «Casetele paginii» → «Adaugă o casetă»: titlul în ambele limbi și textul în editor — o poză, de exemplu sigla unui partener, se pune ca în orice text. O casetă nouă e ascunsă; Administratorul o pune pe site cu «Pune pe site»."
+                "La «Nivel» alegi rândul de pe panoul albastru: 1 e vârful (cardul lat), 2, 3… rândurile de sub el (carduri înalte); o jumătate — 1,5; 2,5 — e un card mic, alături de cardurile rândului său. «— fără nivel: cardul stă în grilă —» îl lasă în grila de sub panou.",
+                "Apasă «Salvează». De îndată ce un card de pe site are un nivel, pagina desenează panoul; până atunci rămâne grila. Pe site, fiecare card arată primele trei responsabilități și «Mai multe» le desface pe toate, cu descrierea și linkurile.",
+                "Textele de sub panou: «Casetele paginii» → «Adaugă o casetă»: titlul în ambele limbi și textul în editor — o poză, de exemplu sigla unui partener, se pune ca în orice text. O casetă nouă e ascunsă; Administratorul o pune pe site cu «Pune pe site»."
               ]
             }
           ]
@@ -7280,13 +7280,9 @@
       "responsibilitiesRo": "Responsabilități (Română)",
       "responsibilitiesEn": "Responsabilități (English)",
       "responsibilitiesHelp": "Una pe rând, cel mult {lines} rânduri de {max} caractere. Opțional, în ambele limbi sau în niciuna; pe site apar ca listă.",
-      "reportsTo": "Răspunde în fața",
-      "reportsToNone": "— nimeni, în vârf —",
-      "reportsToHelp": "Cardul căruia îi răspunde persoana. De îndată ce un card de pe site răspunde în fața altuia de pe site, pagina desenează organigrama; până atunci rămâne grila.",
-      "placement": "Așezare",
-      "placementBelow": "sub",
-      "placementBeside": "alături de",
-      "placementHelp": "Față de cardul ales: pe rândul de dedesubt, sau pe același rând, la dreapta lui.",
+      "level": "Nivel",
+      "levelNone": "— fără nivel: cardul stă în grilă —",
+      "levelHelp": "Rândul de pe panoul albastru: 1 e vârful, un card lat; 2, 3… rândurile de sub el, carduri înalte; o jumătate — 1,5; 2,5 — e un card mic, alături de rândul său. Fără nivel, cardul rămâne în grilă.",
       "boxes": {
         "heading": "Casetele paginii",
         "count": {
@@ -9751,6 +9747,7 @@
     "lead": "Oamenii care țin {club} în mișcare: cine organizează, cine antrenează, cine te întâmpină la start.",
     "empty": "Echipa clubului apare aici în curând.",
     "listLabel": "Oamenii echipei",
+    "othersLabel": "Alți membri ai echipei",
     "linksLabel": "Linkuri: {name}",
     "linkKinds": {
       "STRAVA": "Strava",
@@ -9761,8 +9758,8 @@
     },
     "contact": "Vrei să ne ajuți sau ai o întrebare pentru echipă? <contact>Scrie-ne</contact>.",
     "responsibilities": "Responsabilități",
-    "besideLabel": "Alături de {name}",
-    "reportsLabel": "Răspund în fața: {name}",
+    "more": "Mai multe",
+    "moreAbout": "Mai multe despre {name}",
     "boxesLabel": "Despre echipă"
   },
   "Faq": {

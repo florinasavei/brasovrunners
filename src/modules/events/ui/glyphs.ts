@@ -19,6 +19,7 @@ import ModeNightIcon from "@mui/icons-material/ModeNight";
 import MoneyOffIcon from "@mui/icons-material/MoneyOff";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PaidIcon from "@mui/icons-material/Paid";
+import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import ScienceIcon from "@mui/icons-material/Science";
 import SportsScoreIcon from "@mui/icons-material/SportsScore";
@@ -171,6 +172,9 @@ export const GLYPHS = {
   orders: ReceiptLongIcon,
   club: GroupsIcon,
   link: LinkIcon,
+  // «Mai multe» on a team card's fold (§NNN): the person, what the fold holds more of — the fold's
+  // own arrow already says "this opens" (`disclosure.ts`), so never a second chevron here.
+  person: PersonOutlinedIcon,
 };
 
 export type GlyphName = keyof typeof GLYPHS;

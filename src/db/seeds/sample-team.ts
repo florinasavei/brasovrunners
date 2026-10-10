@@ -25,6 +25,8 @@ export async function seedSampleTeam(): Promise<number> {
       bioEn: "A sample card. Replace it with a real person, with their consent.",
       position: 1,
       visible: false,
+      // On the canvas (§NNN): the top row's wide card, and a tall one under it, once shown.
+      level: 1,
     },
     {
       name: SAMPLE_TEAM_NAME,
@@ -32,6 +34,7 @@ export async function seedSampleTeam(): Promise<number> {
       roleEn: "Volunteer (sample)",
       position: 2,
       visible: false,
+      level: 2,
     },
   ]);
   return 2;

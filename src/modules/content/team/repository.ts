@@ -5,7 +5,7 @@ import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import type { ImageCrop, RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 import { getStorage, objectKey } from "@/modules/media/storage";
-import { responsibilityLines, storedTeamDoc, TEAM_PLACEMENTS, type TeamPlacement } from "./fields";
+import { responsibilityLines, storedTeamDoc } from "./fields";
 import { storedTeamPhotoCrop } from "./photo-crop";
 import { readTeamLinks, type TeamLink, type TeamLinkKind, teamLinkLabel } from "./links";
 import { readTeamPageSettings, teamIntroFor } from "./page-settings";
@@ -42,9 +42,8 @@ export type PublicTeamMember = {
   /** In the club's order, up to twelve. */
   links: PublicTeamLink[];
   photo: TeamPhoto | null;
-  /** The chart (§691): whom the card answers to, as stored — `buildOrgChart` decides what it means among the shown cards. */
-  reportsToId: string | null;
-  placement: TeamPlacement;
+  /** The canvas (§NNN): the card's level, a whole or half step from 1 to 9, or null for the grid. */
+  level: number | null;
 };
 
 /** One box under the chart (§691) in this language: a heading and the rich text. */
@@ -71,8 +70,8 @@ export type AdminTeamMember = {
   /** As stored: one responsibility per line. */
   responsibilitiesRo: string | null;
   responsibilitiesEn: string | null;
-  reportsToId: string | null;
-  placement: TeamPlacement;
+  /** The card's level on the canvas (§NNN), or null. */
+  level: number | null;
   /** The stored document, or the plain words as paragraphs. */
   bioRo: RichTextDoc | null;
   bioEn: RichTextDoc | null;
@@ -98,11 +97,6 @@ export type AdminTeamBox = {
   updatedAt: Date;
 };
 
-/** A stored placement, leniently: anything but a known word reads as `below`. */
-function placementOf(value: string): TeamPlacement {
-  return (TEAM_PLACEMENTS as readonly string[]).includes(value) ? (value as TeamPlacement) : "below";
-}
-
 const COLUMNS = {
   id: teamMembers.id,
   name: teamMembers.name,
@@ -112,8 +106,7 @@ const COLUMNS = {
   subtitleEn: teamMembers.subtitleEn,
   responsibilitiesRo: teamMembers.responsibilitiesRo,
   responsibilitiesEn: teamMembers.responsibilitiesEn,
-  reportsToId: teamMembers.reportsToId,
-  placement: teamMembers.placement,
+  level: teamMembers.level,
   bioRo: teamMembers.bioRo,
   bioEn: teamMembers.bioEn,
   bioRoJson: teamMembers.bioRoJson,
@@ -182,8 +175,7 @@ export async function listVisibleTeamMembers<T extends Record<string, unknown>>(
     bio: docPairFor(locale, storedTeamDoc(row.bioRoJson, row.bioRo), storedTeamDoc(row.bioEnJson, row.bioEn)),
     links: readTeamLinks(row.links, row.link).map((link) => ({ kind: link.kind, url: link.url, label: teamLinkLabel(link, locale) })),
     photo: photoOf(row),
-    reportsToId: row.reportsToId,
-    placement: placementOf(row.placement),
+    level: row.level,
   }));
 }
 
@@ -237,9 +229,8 @@ export async function listTeamMembersForAdmin<T extends Record<string, unknown>>
     .leftJoin(mediaAssets, eq(mediaAssets.id, teamMembers.photoMediaAssetId))
     .orderBy(asc(teamMembers.position), asc(teamMembers.createdAt));
 
-  return rows.map(({ photoKeyPrefix, photoWidth, photoHeight, photoCrop, bioRo, bioEn, bioRoJson, bioEnJson, link, links, placement, ...row }) => ({
+  return rows.map(({ photoKeyPrefix, photoWidth, photoHeight, photoCrop, bioRo, bioEn, bioRoJson, bioEnJson, link, links, ...row }) => ({
     ...row,
-    placement: placementOf(placement),
     bioRo: storedTeamDoc(bioRoJson, bioRo),
     bioEn: storedTeamDoc(bioEnJson, bioEn),
     links: readTeamLinks(links, link),

@@ -6148,13 +6148,13 @@
               ]
             },
             {
-              "title": "The «Team» page as an organisational chart: who answers to whom, the responsibilities and the boxes",
+              "title": "The «Team» page as a canvas with levels: who stands on which row, the responsibilities and the boxes",
               "steps": [
                 "«Pages» → «Team» → «Edit the card» on the person's row, or «Add a person».",
                 "Under the role write «Subtitle (Română)» and «Subtitle (English)» — one line, a sub-role for example — then «Responsibilities (Română)» and «Responsibilities (English)», one per line. Each pair in both languages or in neither.",
-                "At «Answers to» choose the card this person answers to; «— nobody, at the top —» leaves them at the top. At «Placement» choose «below» (the row under it) or «beside» (the same row, to its right). A card cannot answer to itself or to anyone under it.",
-                "Press «Save». As soon as a card on the site answers to another card on the site, the page draws the organisational chart; until then it stays the grid.",
-                "The texts under the chart: «The page's boxes» → «Add a box»: the title in both languages and the text in the editor — a picture, a partner's logo for example, goes in as in any text. A new box is hidden; the Administrator puts it on the site with «Put on the site»."
+                "At «Level» choose the row on the blue canvas: 1 is the top (the wide card), 2, 3… the rows under it (tall cards); a half — 1.5, 2.5 — is a small card beside the cards of its row. «— no level: the card stays in the grid —» leaves it in the grid under the canvas.",
+                "Press «Save». As soon as a card on the site has a level, the page draws the canvas; until then it stays the grid. On the site each card shows its first three responsibilities, and «More» opens all of them, with the description and the links.",
+                "The texts under the canvas: «The page's boxes» → «Add a box»: the title in both languages and the text in the editor — a picture, a partner's logo for example, goes in as in any text. A new box is hidden; the Administrator puts it on the site with «Put on the site»."
               ]
             }
           ]
@@ -7280,13 +7280,9 @@
       "responsibilitiesRo": "Responsibilities (Română)",
       "responsibilitiesEn": "Responsibilities (English)",
       "responsibilitiesHelp": "One per line, at most {lines} lines of {max} characters. Optional, in both languages or in neither; the site shows them as a list.",
-      "reportsTo": "Answers to",
-      "reportsToNone": "— nobody, at the top —",
-      "reportsToHelp": "The card this person answers to. As soon as a card on the site answers to another card on the site, the page draws the organisational chart; until then it stays the grid.",
-      "placement": "Placement",
-      "placementBelow": "below",
-      "placementBeside": "beside",
-      "placementHelp": "Against the chosen card: in the row under it, or in the same row, to its right.",
+      "level": "Level",
+      "levelNone": "— no level: the card stays in the grid —",
+      "levelHelp": "The row on the blue canvas: 1 is the top, one wide card; 2, 3… the rows under it, tall cards; a half — 1.5, 2.5 — is a small card beside its row. Without a level the card stays in the grid.",
       "boxes": {
         "heading": "The page's boxes",
         "count": {
@@ -9751,6 +9747,7 @@
     "lead": "The people who keep {club} running: who organizes, who coaches, who welcomes you at the start.",
     "empty": "The club's team will be introduced here soon.",
     "listLabel": "The team's people",
+    "othersLabel": "More of the team",
     "linksLabel": "Links: {name}",
     "linkKinds": {
       "STRAVA": "Strava",
@@ -9761,8 +9758,8 @@
     },
     "contact": "Want to help, or have a question for the team? <contact>Write to us</contact>.",
     "responsibilities": "Responsibilities",
-    "besideLabel": "Beside {name}",
-    "reportsLabel": "Answer to {name}",
+    "more": "More",
+    "moreAbout": "More about {name}",
     "boxesLabel": "About the team"
   },
   "Faq": {

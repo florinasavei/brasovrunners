@@ -68,9 +68,9 @@ describe("§691 the organisational chart and the page's boxes", () => {
       (row) => `${row.entityType}:${row.action}`,
     );
 
-  describe("whom a card answers to", () => {
-    it("stores the parent, the placement, the sub-role and the responsibilities, and reads them per language on the public page", async () => {
-      const president = await createTeamMember(db, { actor: actor("ADMIN"), fields: fields(), now: T0 });
+  describe("whom a card answers to, and its level on the canvas (§NNN)", () => {
+    it("stores the parent, the placement, the sub-role, the responsibilities and the level, and reads them per language on the public page", async () => {
+      const president = await createTeamMember(db, { actor: actor("ADMIN"), fields: fields({ level: "1" }), now: T0 });
       const advisor = await createTeamMember(db, {
         actor: actor("COPYWRITER"),
         fields: fields({
@@ -83,22 +83,53 @@ describe("§691 the organisational chart and the page's boxes", () => {
           responsibilitiesEn: "One\nTwo",
           reportsToId: president.id,
           placement: "beside",
+          level: "1.5",
         }),
         now: T0,
       });
-      expect(advisor).toMatchObject({ reportsToId: president.id, placement: "beside", subtitleRo: "Linia a doua", responsibilitiesRo: "Una\nDouă" });
-      // A root is always `below`, whatever was posted.
+      expect(advisor).toMatchObject({ reportsToId: president.id, placement: "beside", subtitleRo: "Linia a doua", responsibilitiesRo: "Una\nDouă", level: 1.5 });
+      // A root is always `below`, whatever was posted; the level is a number, exactly as posted.
       expect(president.placement).toBe("below");
+      expect(president.level).toBe(1);
 
       await show(president.id, president.version);
       await show(advisor.id, advisor.version);
       const ro = await listVisibleTeamMembers(db, "ro");
       const en = await listVisibleTeamMembers(db, "en");
-      expect(ro[1]).toMatchObject({ name: "Rol A", subtitle: "Linia a doua", responsibilities: ["Una", "Două"], reportsToId: president.id, placement: "beside" });
-      expect(en[1]).toMatchObject({ subtitle: "Second line", responsibilities: ["One", "Two"] });
+      expect(ro[0]).toMatchObject({ name: "Președinte", level: 1 });
+      expect(ro[1]).toMatchObject({ name: "Rol A", subtitle: "Linia a doua", responsibilities: ["Una", "Două"], level: 1.5 });
+      expect(en[1]).toMatchObject({ subtitle: "Second line", responsibilities: ["One", "Two"], level: 1.5 });
+      // The public read says nothing of the parent since §NNN: the canvas is drawn from the level alone.
+      expect(ro[1]).not.toHaveProperty("reportsToId");
       // The backoffice reads the same, both languages.
       const admin = await listTeamMembersForAdmin(db);
-      expect(admin.find((row) => row.id === advisor.id)).toMatchObject({ subtitleEn: "Second line", responsibilitiesEn: "One\nTwo", reportsToId: president.id, placement: "beside" });
+      expect(admin.find((row) => row.id === advisor.id)).toMatchObject({ subtitleEn: "Second line", responsibilitiesEn: "One\nTwo", level: 1.5 });
+    });
+
+    it("saves a level, clears it with an empty box, refuses a quarter step on the box, and the database refuses a level off the scale", async () => {
+      const a = await createTeamMember(db, { actor: actor("ADMIN"), fields: fields({ name: "A" }), now: T0 });
+      expect(a.level).toBeNull();
+      const levelled = await saveTeamMember(db, { actor: actor("ADMIN"), memberId: a.id, expectedVersion: a.version, fields: fields({ name: "A", level: "2.5" }), now: T0 });
+      expect(levelled.level).toBe(2.5);
+      const cleared = await saveTeamMember(db, { actor: actor("ADMIN"), memberId: a.id, expectedVersion: levelled.version, fields: fields({ name: "A", level: "" }), now: T0 });
+      expect(cleared.level).toBeNull();
+      const quarter = await refusal(saveTeamMember(db, { actor: actor("ADMIN"), memberId: a.id, expectedVersion: cleared.version, fields: fields({ name: "A", level: "1.25" }) }));
+      expect(quarter).toEqual({ code: "VALIDATION_ERROR", fields: ["level"] });
+      // Nothing was written by the refusal: still no level, at the version the clear left.
+      const [row] = await db.select({ level: teamMembers.level, version: teamMembers.version }).from(teamMembers).where(eq(teamMembers.id, a.id));
+      expect(row).toEqual({ level: null, version: cleared.version });
+      // The database's own range, whatever wrote it.
+      const constraintOf = async (promise: Promise<unknown>) => {
+        try {
+          await promise;
+        } catch (error) {
+          const cause = (error as { cause?: { message?: string } }).cause;
+          return `${(error as Error).message} ${cause?.message ?? ""}`;
+        }
+        throw new Error("expected the database to refuse");
+      };
+      expect(await constraintOf(db.update(teamMembers).set({ level: 10 }).where(eq(teamMembers.id, a.id)))).toMatch(/team_members_level_range/);
+      expect(await constraintOf(db.update(teamMembers).set({ level: 0.5 }).where(eq(teamMembers.id, a.id)))).toMatch(/team_members_level_range/);
     });
 
     it("refuses a card answering to itself, to a card that does not exist, and to a card under it — a circle of any length — naming the box", async () => {

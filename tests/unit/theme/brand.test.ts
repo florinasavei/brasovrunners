@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import messages from "@/../messages/ro.json";
 import en from "@/../messages/en.json";
 import { contrastRatio, MAX_CARD_STEP } from "@/modules/appearance/domain/tint-contrast";
-import { CLUB_NAME, COLOR, COLOR_DARK, FONT, GRADIENT, LOGO, SITE_TINT, SURFACE_GRADIENT, WORDMARK } from "@/theme/brand";
+import { CLUB_NAME, COLOR, COLOR_DARK, FONT, GRADIENT, LOGO, SITE_TINT, SURFACE_GRADIENT, TEAM_CANVAS, WORDMARK } from "@/theme/brand";
 import { ACCENT_PAIRS, type BrandPair, HERO_PAIRS, TEXT_PAIRS, TEXT_PAIRS_DARK } from "@/theme/brand-pairs";
 
 /** A pair's names, `COLOR.ink/COLOR.paper`, for the lists below that pin which pairs are asserted. */
@@ -86,6 +86,42 @@ describe("BR-REQ-070-02 the palette is readable", () => {
     for (const [name, value] of Object.entries(COLOR_DARK)) {
       expect(value, name).toMatch(/^#[0-9a-f]{6}$/);
     }
+  });
+
+  /*
+    «Echipa»'s canvas (§NNN): the one public surface that keeps the brand's light colours after
+    dark, so its pairs are asserted here as drawn — the words on a card, on a box, and the card
+    colour on the blue itself, the blue that carries white text — rather than through the palette
+    the other pages read, which flips with the scheme.
+  */
+  describe("the team canvas carries its words at AA, in either scheme, because it keeps the light colours", () => {
+    const pairs: Array<[string, string, string, string]> = [
+      ["the card colour", TEAM_CANVAS.card, "the canvas", TEAM_CANVAS.canvas],
+      ["the page colour", COLOR.paper, "the canvas", TEAM_CANVAS.canvas],
+      ["ink", TEAM_CANVAS.ink, "a card", TEAM_CANVAS.card],
+      ["muted ink", TEAM_CANVAS.inkMuted, "a card", TEAM_CANVAS.card],
+      ["the role title", TEAM_CANVAS.title, "a card", TEAM_CANVAS.card],
+      ["ink", TEAM_CANVAS.ink, "a box", TEAM_CANVAS.box],
+      ["muted ink", TEAM_CANVAS.inkMuted, "a box", TEAM_CANVAS.box],
+      ["a link", TEAM_CANVAS.title, "a box", TEAM_CANVAS.box],
+    ];
+    for (const [foreground, hex, background, on] of pairs) {
+      it(`clears AA for ${foreground} on ${background}`, () => {
+        expect(contrastRatio(hex, on)).toBeGreaterThanOrEqual(4.5);
+      });
+    }
+
+    it("is the ink blue under white cards and the hero's tint under the boxes — brand tokens, no colour of its own", () => {
+      // The large flat area keeps away from pure blue (`brand.ts`, the palette's note); the title on a card is the club's blue.
+      expect(TEAM_CANVAS.canvas).toBe(COLOR.blueInk);
+      expect(TEAM_CANVAS.card).toBe(COLOR.surface);
+      expect(TEAM_CANVAS.title).toBe(COLOR.blue);
+      expect(TEAM_CANVAS.box).toBe(GRADIENT.heroTint);
+      for (const [name, value] of Object.entries(TEAM_CANVAS)) expect(value, name).toMatch(/^#[0-9a-f]{6}$/);
+      // A box is a step darker than a card and a step lighter than the canvas: three surfaces the eye tells apart.
+      expect(contrastRatio(TEAM_CANVAS.card, TEAM_CANVAS.box)).toBeGreaterThan(1.05);
+      expect(contrastRatio(TEAM_CANVAS.box, TEAM_CANVAS.canvas)).toBeGreaterThan(4.5);
+    });
   });
 
   it("records that the secondary colour is a surface, not a text colour", () => {

@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { buildOrgChart, type OrgChartCard, type OrgChartNode } from "@/modules/content/team/domain/org-chart";
 import {
   responsibilityLines,
   TEAM_RESPONSIBILITIES_MAX_LINES,
@@ -11,73 +10,11 @@ import {
 } from "@/modules/content/team/fields";
 
 /**
- * §691 — «Echipa» as an organisational chart: the pure layout over the shown cards, and what a
- * card's new boxes accept. Fixtures say «Președinte», «Rol A», «Partener 1»: no person's name, no
- * real role, no partner.
+ * §691 — what a card's boxes of the organisational chart accept: the sub-role, the responsibilities,
+ * and the parent and placement the save still keeps for their columns though no form posts them
+ * since §NNN (the layout is `team-canvas.test.ts`'s now). Fixtures say «Președinte», «Rol A»,
+ * «Partener 1»: no person's name, no real role, no partner.
  */
-
-const card = (id: string, reportsToId: string | null = null, placement: "below" | "beside" = "below"): OrgChartCard => ({ id, reportsToId, placement });
-const ids = (nodes: readonly OrgChartNode<OrgChartCard>[]) => nodes.map((node) => node.card.id);
-
-describe("§691 buildOrgChart", () => {
-  it("puts cards with no relations in one tier, as roots, in the list's order, and says there is no relation", () => {
-    const chart = buildOrgChart([card("a"), card("b"), card("c")]);
-    expect(chart.hasRelations).toBe(false);
-    expect(ids(chart.roots)).toEqual(["a", "b", "c"]);
-    expect(chart.tiers).toHaveLength(1);
-    expect(ids(chart.tiers[0]!)).toEqual(["a", "b", "c"]);
-  });
-
-  it("hangs children under their parent in position order, tier by tier", () => {
-    const chart = buildOrgChart([card("p"), card("c2", "p"), card("c1", "p"), card("g", "c2")]);
-    expect(chart.hasRelations).toBe(true);
-    expect(ids(chart.roots)).toEqual(["p"]);
-    // The list's order, not the alphabet: c2 was listed before c1.
-    expect(ids(chart.roots[0]!.children)).toEqual(["c2", "c1"]);
-    expect(ids(chart.roots[0]!.children[0]!.children)).toEqual(["g"]);
-    expect(chart.tiers.map(ids)).toEqual([["p"], ["c2", "c1"], ["g"]]);
-  });
-
-  it("attaches a beside card to its parent at the parent's tier, after it, with its own children under it", () => {
-    const chart = buildOrgChart([card("p"), card("adv", "p", "beside"), card("c", "p"), card("x", "adv")]);
-    const root = chart.roots[0]!;
-    expect(ids(root.beside)).toEqual(["adv"]);
-    expect(ids(root.children)).toEqual(["c"]);
-    expect(ids(root.beside[0]!.children)).toEqual(["x"]);
-    expect(chart.tiers.map(ids)).toEqual([["p", "adv"], ["c", "x"]]);
-  });
-
-  it("makes a child whose parent is not among the shown cards a root — a hidden or deleted parent drops nobody", () => {
-    const chart = buildOrgChart([card("p"), card("orphan", "hidden-one"), card("c", "p")]);
-    expect(ids(chart.roots)).toEqual(["p", "orphan"]);
-    expect(chart.hasRelations).toBe(true);
-    // A card whose only relation is to a hidden parent is no relation at all: the grid stands.
-    expect(buildOrgChart([card("a"), card("b", "gone")]).hasRelations).toBe(false);
-  });
-
-  it("terminates on a stale cycle in the data, keeping every card exactly once", () => {
-    const chart = buildOrgChart([card("a", "b"), card("b", "a"), card("c", "a"), card("d")]);
-    const all: string[] = [];
-    const walk = (nodes: readonly OrgChartNode<OrgChartCard>[]) => {
-      for (const node of nodes) {
-        all.push(node.card.id);
-        walk(node.beside);
-        walk(node.children);
-      }
-    };
-    walk(chart.roots);
-    expect([...all].sort()).toEqual(["a", "b", "c", "d"]);
-    // `d` is the real root; the cycle's first card in the list's order becomes a root behind it.
-    expect(ids(chart.roots)).toEqual(["d", "a"]);
-    expect(ids(chart.roots[1]!.children)).toEqual(["b", "c"]);
-  });
-
-  it("never lets a card be its own parent, whatever the row says", () => {
-    const chart = buildOrgChart([card("a", "a")]);
-    expect(ids(chart.roots)).toEqual(["a"]);
-    expect(chart.hasRelations).toBe(false);
-  });
-});
 
 describe("§691 a card's sub-role, responsibilities, parent and placement", () => {
   const base = { name: "Președinte", roleRo: "", roleEn: "", bioRo: "", bioEn: "", photoAssetId: "" };

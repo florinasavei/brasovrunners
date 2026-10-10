@@ -39,9 +39,22 @@ export const TEAM_SUBTITLE_MAX = 120;
 /** «Responsabilități» (§691): one per line, at most this many lines of this many characters. */
 export const TEAM_RESPONSIBILITIES_MAX_LINES = 12;
 export const TEAM_RESPONSIBILITY_LINE_MAX = 160;
-/** Where a card sits against the card it answers to (§691): the tier under it, or its own tier to the right. */
+/** Where a card sat against the card it answered to (§691): kept for the column, drawn by nobody since §NNN. */
 export const TEAM_PLACEMENTS = ["below", "beside"] as const;
 export type TeamPlacement = (typeof TEAM_PLACEMENTS)[number];
+/**
+ * The canvas's levels (§NNN; the owner: «the president is top level 1, then the advisor level 1.5
+ * and the rest are level 2»): whole and half steps from the top row to the ninth. The whole number
+ * is the row; a `.0` card leads it, a `.5` card is a small one beside the leads. Nothing else — a
+ * quarter step would be a third kind of card nobody drew — and null is "not on the canvas".
+ */
+export const TEAM_LEVEL_MIN = 1;
+export const TEAM_LEVEL_MAX = 9;
+export const TEAM_LEVELS: readonly number[] = Array.from({ length: (TEAM_LEVEL_MAX - TEAM_LEVEL_MIN) * 2 + 1 }, (_, index) => TEAM_LEVEL_MIN + index / 2);
+
+export function isTeamLevel(value: number): boolean {
+  return Number.isFinite(value) && value >= TEAM_LEVEL_MIN && value <= TEAM_LEVEL_MAX && Number.isInteger(value * 2);
+}
 /** A box's title under the chart (§691), and its words counted as the page reads them. */
 export const TEAM_BOX_TITLE_MAX = 120;
 export const TEAM_BOX_BODY_MAX = 3000;
@@ -216,7 +229,26 @@ const reportsToField = z
   .refine((value) => value === "" || isUuid(value), "not a card id")
   .transform((value) => (value === "" ? null : value.toLowerCase()));
 
-/** Whether a card is asked to answer to itself — refused on the «Răspunde în fața» box (§691). */
+/**
+ * «Nivel» as the editor posts it (§NNN): the select's value (`"1.5"`), a fixture's number, or nothing.
+ * A comma decimal is read too, for a value typed by hand; anything off the scale is refused on the box.
+ */
+const levelField = z
+  .union([z.string(), z.number(), z.null()])
+  .optional()
+  .transform((value, ctx): number | null => {
+    if (value === undefined || value === null) return null;
+    const text = String(value).trim().replace(",", ".");
+    if (text === "") return null;
+    const parsed = Number(text);
+    if (!isTeamLevel(parsed)) {
+      ctx.addIssue({ code: "custom", message: `a level is a whole or half step from ${TEAM_LEVEL_MIN} to ${TEAM_LEVEL_MAX}` });
+      return z.NEVER;
+    }
+    return parsed;
+  });
+
+/** Whether a card is asked to answer to itself — refused on the `reportsToId` box (§691). */
 export function teamReportsToSelf(fields: { reportsToId: string | null }, selfId: string | null | undefined): boolean {
   return fields.reportsToId !== null && selfId !== null && selfId !== undefined && fields.reportsToId === selfId.toLowerCase();
 }
@@ -307,9 +339,11 @@ export const teamMemberFieldsSchema = z
     subtitleEn: optionalLine(TEAM_SUBTITLE_MAX),
     responsibilitiesRo: optionalResponsibilities,
     responsibilitiesEn: optionalResponsibilities,
-    /** Whom the card answers to, and where it sits against that card (§691). */
+    /** Whom the card answers to, and where it sits against that card (§691): columns kept, posted by no form since §NNN. */
     reportsToId: reportsToField,
     placement: z.enum(TEAM_PLACEMENTS).optional().default("below"),
+    /** The card's level on the canvas (§NNN), or nothing: the grid. */
+    level: levelField,
   })
   .transform((fields, ctx) => {
     refuseOneLanguage(ctx, { ro: fields.roleRo, en: fields.roleEn }, { ro: ["roleRo"], en: ["roleEn"] }, "the role");
@@ -351,6 +385,7 @@ export const teamMemberFieldsSchema = z
       reportsToId: fields.reportsToId,
       /** `beside` means something only against a parent; a root is always `below` (§691). */
       placement: (fields.reportsToId === null ? "below" : fields.placement) as TeamPlacement,
+      level: fields.level,
     };
   });
 

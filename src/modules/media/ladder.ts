@@ -179,7 +179,11 @@ export function pictureSrcSet(masterSrc: string, masterWidth: number | null | un
  * - `card` — a listing card's inner width: one card below `md` (900), two to `xl`, three from it,
  *   less the grid's gap and the card's own 16-pixel padding.
  * - `tile` — an album's grid: two tiles below `sm`, three to `md`, four from it.
- * - `cover` — the albums listing: one, two, three per row.
+ * - `cover` — the albums listing: one, two, three per row — and «Echipa»'s tall canvas card, drawn
+ *   in the same one, two, three per row (§NNN).
+ * - `aside` — a photo column beside the words: «Echipa»'s wide canvas card, 280 pixels from `md`,
+ *   240 from `sm`, the whole card on a phone, where it stacks (§NNN).
+ * - `thumb` — a small canvas card's photo: 104 pixels from `sm`, 88 below (§NNN).
  */
 type SizeRule = { minWidth: number | null; vw: number; px: number };
 
@@ -210,6 +214,15 @@ const COLUMNS = {
     { minWidth: 900, vw: 33.33, px: -27 },
     { minWidth: 600, vw: 50, px: -32 },
     { minWidth: null, vw: 100, px: -32 },
+  ],
+  aside: [
+    { minWidth: 900, vw: 0, px: 280 },
+    { minWidth: 600, vw: 0, px: 240 },
+    { minWidth: null, vw: 100, px: -32 },
+  ],
+  thumb: [
+    { minWidth: 600, vw: 0, px: 104 },
+    { minWidth: null, vw: 0, px: 88 },
   ],
 } as const satisfies Record<string, readonly SizeRule[]>;
 

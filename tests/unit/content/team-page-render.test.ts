@@ -2,7 +2,8 @@ import { type ComponentProps, createElement, type ReactElement, type ReactNode }
 import { renderToReadableStream } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
-import type { PublicTeamLink, PublicTeamMember, PublicTeamPage } from "@/modules/content/team/repository";
+import type { PublicTeamLink, PublicTeamMember, PublicTeamPage, TeamPhoto } from "@/modules/content/team/repository";
+import { ladderKeyPrefixOf, pictureSizes } from "@/modules/media/ladder";
 
 /**
  * §459 — «Echipa» as the server sends it: the menu offers the page only when the header says so
@@ -67,8 +68,7 @@ const member = (name: string, links: PublicTeamLink[] = [], bio: RichTextDoc | n
   bio,
   links,
   photo: null,
-  reportsToId: null,
-  placement: "below",
+  level: null,
 });
 
 describe("§459 the team page and its menu entry", () => {
@@ -166,84 +166,160 @@ describe("§474 the words about a person as rich text, and their links", () => {
   });
 });
 
-describe("§691 «Echipa» as an organisational chart, with the page's boxes", () => {
+describe("§NNN «Echipa» as a canvas with levels, each card opening in place, with the page's boxes (amending §691)", () => {
   const card = (name: string, extra: Partial<PublicTeamMember> = {}): PublicTeamMember => ({ ...member(name), ...extra });
   const text = (...paragraphs: string[]) => doc(...paragraphs);
+  const boxes = [
+    { id: "b1", title: "Responsabilitate colectivă", body: text("Proiectul A.") },
+    { id: "b2", title: "Parteneriate", body: text("Partener 1.", "Partener 2.") },
+  ];
+  const variants = (markup: string) => [...markup.matchAll(/data-testid="team-canvas-card" data-variant="(\w+)"/g)].map((match) => match[1]);
 
-  it("draws the grid, not the chart, while no shown card answers to a shown one — a hidden parent counts for nothing", async () => {
-    page = {
-      published: true,
-      intro: null,
-      boxes: [],
-      introText: null,
-      // «Rol B» answers to a card that is not on the site: the page is the grid it always was.
-      members: [card("Președinte"), card("Rol B", { reportsToId: "hidden-card", placement: "below" })],
-    };
+  it("draws the grid, not the canvas, while no shown card has a level — and the boxes under the grid", async () => {
+    page = { published: true, intro: null, boxes, introText: null, members: [card("Președinte"), card("Rol A", { subtitle: "Linia a doua" })] };
     const markup = await html((await TeamPage({ params })) as ReactElement);
     expect(markup).toContain('data-testid="team-grid"');
-    expect(markup).not.toContain('data-testid="team-chart"');
-  });
-
-  it("draws the chart tier by tier once a relation is set: the parent's children under it, a beside card at its tier, hidden cards nowhere", async () => {
-    page = {
-      published: true,
-      intro: null,
-      boxes: [],
-      introText: null,
-      members: [
-        card("Președinte", { subtitle: "Linia a doua", responsibilities: ["Strategia", "Partenerii"] }),
-        card("Consilier", { reportsToId: "Președinte", placement: "beside" }),
-        card("Rol A", { reportsToId: "Președinte", placement: "below" }),
-        card("Rol B", { reportsToId: "Președinte", placement: "below" }),
-        card("Rol A1", { reportsToId: "Rol A", placement: "below" }),
-      ],
-    };
-    const markup = await html((await TeamPage({ params })) as ReactElement);
-    expect(markup).toContain('data-testid="team-chart"');
-    expect(markup).not.toContain('data-testid="team-grid"');
-    // The sub-role and «Responsabilități» as a list, under the role in the accent colour.
-    expect(markup).toContain('data-testid="team-subtitle"');
+    expect(markup).not.toContain('data-testid="team-canvas"');
+    expect(markup.match(/data-testid="team-card"/g)).toHaveLength(2);
     expect(markup).toContain(">Linia a doua<");
-    expect(markup).toContain(`>${messages.Team.responsibilities}<`);
-    expect(markup).toMatch(/<ul[^>]*>[\s\S]*<li>Strategia<\/li><li>Partenerii<\/li>[\s\S]*<\/ul>/);
-    // The president's node holds the advisor beside it and the two roles under it; Rol A1 under Rol A.
-    expect(markup).toContain('aria-label="Alături de Președinte"');
-    expect(markup).toContain('aria-label="Răspund în fața: Președinte"');
-    expect(markup).toContain('aria-label="Răspund în fața: Rol A"');
-    const order = ["Președinte", "Consilier", "Rol A", "Rol A1", "Rol B"].map((name) => markup.indexOf(`>${name}<`));
-    expect(order.every((index) => index >= 0)).toBe(true);
-    expect([...order].sort((a, b) => a - b)).toEqual(order);
-    // Every card once, with no hidden card: five cards, five nodes.
-    expect(markup.match(/data-testid="team-card"/g)).toHaveLength(5);
-    expect(markup.match(/data-testid="team-chart-node"/g)).toHaveLength(5);
-    // Connectors in CSS, no script: the tier's stems are pseudo-elements on the server's own markup.
-    expect(markup).toMatch(/::before/);
-    expect(markup).not.toContain("<script");
-  });
-
-  it("draws the shown boxes under the chart in order, each a heading and the club's text through the renderer", async () => {
-    page = {
-      published: true,
-      intro: null,
-      boxes: [
-        { id: "b1", title: "Responsabilitate colectivă", body: text("Proiectul A.") },
-        { id: "b2", title: "Parteneriate", body: text("Partener 1.", "Partener 2.") },
-      ],
-      introText: null,
-      members: [card("Președinte"), card("Rol A", { reportsToId: "Președinte", placement: "below" })],
-    };
-    const markup = await html((await TeamPage({ params })) as ReactElement);
+    // The boxes under the grid, in order, a heading and the club's text through the renderer (§691).
     expect(markup).toContain('data-testid="team-boxes"');
     expect(markup).toContain(`aria-label="${messages.Team.boxesLabel}"`);
     expect(markup.match(/data-testid="team-box"/g)).toHaveLength(2);
+    expect(markup.indexOf('data-testid="team-grid"')).toBeLessThan(markup.indexOf('data-testid="team-boxes"'));
     expect(markup.indexOf("Responsabilitate colectivă")).toBeLessThan(markup.indexOf(">Parteneriate<"));
     expect(markup).toContain("Partener 2.");
-    // The boxes come after the chart, before the contact line.
-    expect(markup.indexOf('data-testid="team-chart"')).toBeLessThan(markup.indexOf('data-testid="team-boxes"'));
-    // And the grid keeps its boxes too: the boxes do not need a relation.
-    page = { ...page, members: [card("Președinte")] };
-    const grid = await html((await TeamPage({ params })) as ReactElement);
-    expect(grid).toContain('data-testid="team-grid"');
-    expect(grid).toContain('data-testid="team-boxes"');
+  });
+
+  it("draws the canvas once a card has a level: the president wide, the counsellor small beside her, the team tall under, the rest in the grid", async () => {
+    const bio: RichTextDoc = { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Aleargă de douăzeci de ani." }] }] };
+    page = {
+      published: true,
+      intro: null,
+      boxes,
+      introText: null,
+      members: [
+        card("Președinte", {
+          level: 1,
+          subtitle: "Linia a doua",
+          responsibilities: ["Strategia", "Partenerii", "Bugetul", "Voluntarii"],
+          bio,
+          links: [{ kind: "STRAVA", url: "https://www.strava.com/athletes/1", label: null }],
+        }),
+        card("Sfătuitor", { level: 1.5, responsibilities: ["Comunicarea"] }),
+        card("Rol A", { level: 2 }),
+        card("Rol B", { level: 2 }),
+        card("Rol C", { level: 2.5 }),
+        card("Rol D"),
+      ],
+    };
+    const markup = await html((await TeamPage({ params })) as ReactElement);
+    expect(markup).toContain('data-testid="team-canvas"');
+    // The canvas is «Oamenii echipei»; the grid under it is a second list with a name of its own.
+    expect(markup.match(new RegExp(`aria-label="${messages.Team.listLabel}"`, "g"))).toHaveLength(1);
+    expect(markup).toMatch(new RegExp(`<ul[^>]*aria-label="${messages.Team.othersLabel}"[^>]*data-testid="team-grid"`));
+    // Two rows, by whole number; the shapes by the level's step.
+    expect([...markup.matchAll(/data-testid="team-canvas-row" data-level="(\d)"/g)].map((match) => match[1])).toEqual(["1", "2"]);
+    expect(variants(markup)).toEqual(["wide", "small", "tall", "tall", "small"]);
+    // The club's order within a row and down the canvas, then the grid with the card that has no level.
+    const order = ["Președinte", "Sfătuitor", "Rol A", "Rol B", "Rol C", "Rol D"].map((name) => markup.indexOf(`>${name}<`));
+    expect(order.every((index) => index >= 0)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+    expect(markup).toContain('data-testid="team-grid"');
+    expect(markup.match(/data-testid="team-card"/g)).toHaveLength(1);
+    expect(markup.indexOf('data-testid="team-canvas"')).toBeLessThan(markup.indexOf('data-testid="team-grid"'));
+    // Closed, the president's card shows the sub-role, the role title and the first three responsibilities.
+    expect(markup).toContain('data-testid="team-subtitle"');
+    expect(markup).toContain(">Linia a doua<");
+    expect(markup).toContain(`>${messages.Team.responsibilities}<`);
+    expect(markup).toMatch(/data-testid="team-responsibilities"[\s\S]*?<li>Strategia<\/li><li>Partenerii<\/li><li>Bugetul<\/li><\/ul>/);
+    // «Mai multe»: a closed fold on the card, no script, the person's name in its accessible name, 44 pixels tall.
+    const fold = /<details[^>]*data-testid="team-more"[^>]*>([\s\S]*?)<\/details>/.exec(markup)?.[1] ?? "";
+    expect(fold).toContain(`aria-label="Mai multe despre Președinte"`);
+    expect(fold).toContain(`${messages.Team.more}</summary>`);
+    expect(markup).not.toMatch(/<details[^>]*\sopen/);
+    expect(markup).not.toContain("<script");
+    // Open, the fourth responsibility continues the list, then the words about the person and the links.
+    expect(fold).toMatch(/data-testid="team-responsibilities-rest"[\s\S]*?<li>Voluntarii<\/li>/);
+    expect(fold).toContain('data-testid="team-bio"');
+    expect(fold).toContain("Aleargă de douăzeci de ani.");
+    expect(fold).toContain('href="https://www.strava.com/athletes/1"');
+    expect(fold).toContain('rel="noopener noreferrer"');
+    expect(markup).toMatch(/min-height:44px/);
+    // A card with nothing beyond its three lines has no fold at all.
+    expect(markup.match(/data-testid="team-more"/g)).toHaveLength(1);
+    // The boxes at the bottom of the canvas, three across from `md`, and nowhere else.
+    expect(markup.match(/data-testid="team-boxes"/g)).toHaveLength(1);
+    expect(markup.indexOf('data-testid="team-boxes"')).toBeLessThan(markup.indexOf('data-testid="team-grid"'));
+    expect(markup.match(/data-testid="team-box"/g)).toHaveLength(2);
+    expect(markup).toContain("Partener 2.");
+    // The canvas's rows: the top row a wrapping flex row from `md`, the rows under a grid of three from `md`.
+    expect([...markup.matchAll(/data-testid="team-canvas-row" data-level="\d" data-layout="(\w+)"/g)].map((match) => match[1])).toEqual(["wide", "grid"]);
+    expect(markup).toMatch(/grid-template-columns:repeat\(3, minmax\(0, 1fr\)\)/);
+  });
+
+  it("draws the wide shape only for a single lead on the top row: two leads are tall in the grid, and three small cards wrap beside one wide card", async () => {
+    // Every card set to level 2 while the president's is hidden: five leads on the top row, none wide.
+    page = { published: true, intro: null, boxes: [], introText: null, members: ["Rol A", "Rol B", "Rol C", "Rol D", "Rol E"].map((name) => card(name, { level: 2 })) };
+    const five = await html((await TeamPage({ params })) as ReactElement);
+    expect(variants(five)).toEqual(["tall", "tall", "tall", "tall", "tall"]);
+    expect(five).toMatch(/data-testid="team-canvas-row" data-level="2" data-layout="grid"/);
+    // Two presidents at level 1: still the grid, neither crushed against the other.
+    page = { ...page, members: [card("Președinte", { level: 1 }), card("Vicepreședinte", { level: 1 }), card("Sfătuitor", { level: 1.5 })] };
+    const two = await html((await TeamPage({ params })) as ReactElement);
+    expect(variants(two)).toEqual(["tall", "tall", "small"]);
+    expect(two).toMatch(/data-testid="team-canvas-row" data-level="1" data-layout="grid"/);
+    expect(two).not.toMatch(/flex-wrap:wrap/);
+    // One president and three counsellors: the wide card keeps its 480-pixel floor from `md`, the
+    // small cards their 280-pixel column, and the row wraps rather than overflowing the canvas.
+    page = { ...page, members: [card("Președinte", { level: 1 }), card("Sfătuitor A", { level: 1.5 }), card("Sfătuitor B", { level: 1.5 }), card("Sfătuitor C", { level: 1.5 })] };
+    const three = await html((await TeamPage({ params })) as ReactElement);
+    expect(variants(three)).toEqual(["wide", "small", "small", "small"]);
+    expect(three).toMatch(/data-testid="team-canvas-row" data-level="1" data-layout="wide"/);
+    expect(three).toMatch(/flex-wrap:wrap/);
+    expect(three).toMatch(/@media \(min-width:900px\)\{[^}]*flex-basis:480px/);
+    expect(three).toMatch(/@media \(min-width:900px\)\{[^}]*min-width:480px/);
+    expect(three).toMatch(/@media \(min-width:900px\)\{[^}]*flex:0 0 280px/);
+  });
+
+  it("sizes each shape's photo for the column it is drawn in (§414): cover for tall, the 240/280 column for wide, the thumbnail for small", async () => {
+    const prefix = ladderKeyPrefixOf("3f2a1b4c-0000-4abc-8def-000000000002");
+    const photo: TeamPhoto = {
+      webUrl: `https://pub-example.r2.dev/production/${prefix}/web.webp`,
+      thumbUrl: `https://pub-example.r2.dev/production/${prefix}/thumb.webp`,
+      width: 1600,
+      height: 1600,
+      crop: null,
+    };
+    page = {
+      published: true,
+      intro: null,
+      boxes: [],
+      introText: null,
+      members: [card("Președinte", { level: 1, photo }), card("Sfătuitor", { level: 1.5, photo }), card("Rol A", { level: 2, photo })],
+    };
+    const markup = await html((await TeamPage({ params })) as ReactElement);
+    const sizesByVariant = [...markup.matchAll(/data-variant="(\w+)"[^]*?<img[^>]*\ssizes="([^"]+)"/g)].map((match) => [match[1], match[2]]);
+    expect(sizesByVariant).toEqual([
+      ["wide", pictureSizes("aside")],
+      ["small", pictureSizes("thumb")],
+      ["tall", pictureSizes("cover")],
+    ]);
+    // On a phone a tall card is the canvas's whole width — never half of it, as a tile would say.
+    expect(pictureSizes("cover")).toMatch(/calc\(100vw - 32px\)$/);
+    expect(markup).toContain(`srcSet="https://pub-example.r2.dev/production/${prefix}/`);
+  });
+
+  it("draws a lone 1.5 as a row of one small card, and the grid under it, with no boxes when there are none", async () => {
+    page = { published: true, intro: null, boxes: [], introText: null, members: [card("Sfătuitor", { level: 1.5 }), card("Rol A")] };
+    const markup = await html((await TeamPage({ params })) as ReactElement);
+    expect(variants(markup)).toEqual(["small"]);
+    expect(markup).toContain('data-testid="team-grid"');
+    expect(markup).not.toContain('data-testid="team-boxes"');
+    // Row 2's `.5` alone: small, in the grid of the rows under the top.
+    page = { ...page, members: [card("Președinte", { level: 1 }), card("Rol C", { level: 2.5 })] };
+    const two = await html((await TeamPage({ params })) as ReactElement);
+    expect(variants(two)).toEqual(["wide", "small"]);
+    expect(two).not.toContain('data-testid="team-grid"');
   });
 });
