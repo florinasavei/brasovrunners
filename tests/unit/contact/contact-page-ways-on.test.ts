@@ -77,8 +77,8 @@ afterEach(() => {
 
 describe("BR-REQ-070-04 the contact page's ways on (§NNN)", () => {
   it.each([
-    ["ro", "Sau sună-ne la"],
-    ["en", "Or call us at"],
+    ["ro", "Sună-ne la"],
+    ["en", "Call us at"],
   ] as const)("shows the club's phone as a tel: link under the form (%s)", async (lang, lead) => {
     locale = lang;
     const html = await render();
@@ -91,11 +91,37 @@ describe("BR-REQ-070-04 the contact page's ways on (§NNN)", () => {
     expect(html.indexOf('data-testid="contact-phone"')).toBeGreaterThan(html.indexOf("</form>"));
   });
 
+  it.each([
+    ["ro", "Alte căi de contact", "Scrie-ne direct la"],
+    ["en", "Other ways to reach us", "Write to us directly at"],
+  ] as const)("draws «Alte căi de contact» as its own section with a rule, a heading glyph and a glyph per row (%s)", async (lang, title, lead) => {
+    locale = lang;
+    const html = await render();
+    const section = /<section[^>]*data-testid="contact-ways"[^>]*>([\s\S]*?)<\/section>/.exec(html);
+    expect(section, "the section").not.toBeNull();
+    expect(section![0]).toMatch(/^<section[^>]*aria-labelledby="contact-ways-heading"/);
+    expect(section![1]).toMatch(new RegExp(`<h2[^>]*id="contact-ways-heading"[^>]*>[\\s\\S]*?data-testid="ContactPhoneOutlinedIcon"[\\s\\S]*?${title}</h2>`));
+    expect(section![1]).toContain('data-testid="EmailOutlinedIcon"');
+    expect(section![1]).toContain('data-testid="PhoneOutlinedIcon"');
+    expect(section![1]).toContain(lead);
+    expect(section![1]).toContain('href="mailto:club@mail.example.test"');
+    // Under the form, before «Spune-ne ceva» and the newsletter.
+    expect(html.indexOf('data-testid="contact-ways"')).toBeGreaterThan(html.indexOf("</form>"));
+  });
+
+  it("gives every section's heading a glyph, the page's title too", async () => {
+    const html = await render();
+    expect(html).toMatch(/<h1[^>]*>[\s\S]*?data-testid="ForumOutlinedIcon"[\s\S]*?Scrie-ne<\/h1>/);
+  });
+
   it("shows the phone where there is no form too, and no line when no number is set", async () => {
     formReaches = false;
     expect(await render()).toContain('data-testid="contact-phone"');
     phone = null;
-    expect(await render()).not.toContain('data-testid="contact-phone"');
+    const html = await render();
+    expect(html).not.toContain('data-testid="contact-phone"');
+    // No form and no phone: the address is the page's own sentence, so the section has nothing to hold.
+    expect(html).not.toContain('data-testid="contact-ways"');
   });
 
   it("names the calendar in the intro, in both languages", async () => {

@@ -81,6 +81,7 @@ describe("§569 the page head is compact on a phone", () => {
   it("changes no words: each page's H1 still reads its own key", () => {
     expect(read("src/app/[locale]/events/page.tsx")).toMatch(/variant="h1"[^>]*>\s*\{t\("title"\)\}/);
     expect(read("src/app/[locale]/calendar/page.tsx")).toMatch(/variant="h1"[^>]*>\s*\{t\("calendar\.pageTitle"\)\}/);
-    expect(read("src/app/[locale]/contact/page.tsx")).toMatch(/variant="h1"[^>]*>\s*\{t\("title"\)\}/);
+    // The contact page's title wears its section glyph before the words (§NNN): a picture, not a word.
+    expect(read("src/app/[locale]/contact/page.tsx")).toMatch(/variant="h1"[^>]*>\s*(<\w+Icon aria-hidden="true"[^>]*\/>\s*)?\{t\("title"\)\}/);
   });
 });

@@ -8915,8 +8915,11 @@
       "body": "Îți răspundem pe adresa ta de e-mail.",
       "another": "Scrie alt mesaj"
     },
-    "direct": "Sau scrie-ne direct la",
-    "phone": "Sau sună-ne la",
+    "direct": "Scrie-ne direct la",
+    "phone": "Sună-ne la",
+    "ways": {
+      "title": "Alte căi de contact"
+    },
     "off": {
       "writeTo": "Scrie-ne la",
       "none": "Formularul de contact nu este disponibil momentan.",
