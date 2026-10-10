@@ -304,7 +304,7 @@ async function picturesOf<T extends Record<string, unknown>>(tx: Transaction<T>,
  */
 async function settlePictures<T extends Record<string, unknown>>(
   tx: Transaction<T>,
-  input: { actor: Actor; productId: string; ordered: readonly ShopProductPicture[]; change: "added" | "moved" | "removed" | "cropped"; now: Date },
+  input: { actor: Actor; productId: string; ordered: readonly ShopProductPicture[]; change: "added" | "moved" | "removed" | "cropped" | "replaced"; now: Date },
 ): Promise<void> {
   for (const [index, picture] of input.ordered.entries()) {
     if (picture.position !== index + 1) {
@@ -389,8 +389,12 @@ export async function removeProductPicture<T extends Record<string, unknown>>(
   });
 }
 
-/** A new crop for one picture (§541's four fractions, or none): the file is never touched. */
-export async function recropProductPicture<T extends Record<string, unknown>>(
+/**
+ * One picture of the strip changed in place: a new crop (§541's four fractions, or none — the file is
+ * never touched), or another stored picture in the same place of the strip, the cover staying the
+ * cover. Which it was is the audit row's `change`.
+ */
+export async function replaceProductPicture<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; productId: string; pictureId: string; fields: unknown; now?: Date },
 ): Promise<void> {
@@ -398,19 +402,23 @@ export async function recropProductPicture<T extends Record<string, unknown>>(
   assertId(input.productId, "product");
   assertId(input.pictureId, "picture");
   const fields = parsePictureOrThrow(input.fields);
+  await assertStoredPicture(db, fields.assetId);
   const now = input.now ?? new Date();
   await db.transaction(async (tx) => {
     await lockProduct(tx, input.productId);
     const ordered = await picturesOf(tx, input.productId);
     const current = ordered.find((picture) => picture.id === input.pictureId);
-    // The crop belongs to the picture it was drawn over: a crop posted with another picture's id is a slip, refused.
-    if (!current || current.mediaAssetId !== fields.assetId) throw new DomainError("NOT_FOUND", "no such picture");
-    const [updated] = await tx.update(shopProductPictures).set({ crop: fields.crop, updatedAt: now }).where(eq(shopProductPictures.id, current.id)).returning();
+    if (!current) throw new DomainError("NOT_FOUND", "no such picture");
+    const [updated] = await tx
+      .update(shopProductPictures)
+      .set({ mediaAssetId: fields.assetId, crop: fields.crop, updatedAt: now })
+      .where(eq(shopProductPictures.id, current.id))
+      .returning();
     await settlePictures(tx, {
       actor: input.actor,
       productId: input.productId,
       ordered: ordered.map((picture) => (picture.id === updated.id ? updated : picture)),
-      change: "cropped",
+      change: current.mediaAssetId === fields.assetId ? "cropped" : "replaced",
       now,
     });
   });
