@@ -14,7 +14,7 @@ import {
 } from "@/modules/content/member-codes/service";
 import type { OrderVerb } from "@/modules/content/shop/domain";
 import { moveOrderByClub } from "@/modules/content/shop/orders";
-import { parseOrdersQuery } from "@/modules/content/shop/repository";
+import { ordersFilterParams } from "@/modules/content/shop/repository";
 import { createProduct, deleteProduct, moveProduct, saveProduct } from "@/modules/content/shop/service";
 import { saveShopSettings } from "@/modules/content/shop/settings";
 import { canEditMembersPage, canPublishMembersPage } from "@/modules/staff-identity/domain/roles";
@@ -121,11 +121,7 @@ async function backToCodes(
  * lands on the list the Administrator was reading, filtered, and its fold open.
  */
 function ordersFilterOf(form: FormData): URLSearchParams {
-  const query = parseOrdersQuery({ orderStatus: text(form, "orderStatus"), orderProduct: text(form, "orderProduct") });
-  const keep = new URLSearchParams();
-  if (query.status) keep.set("orderStatus", query.status);
-  if (query.productId) keep.set("orderProduct", query.productId);
-  return keep;
+  return ordersFilterParams({ orderStatus: text(form, "orderStatus"), orderProduct: text(form, "orderProduct") });
 }
 
 function codeOutcomeOf(error: unknown): { error: string } {

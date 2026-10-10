@@ -48,6 +48,7 @@ export default async function MembersShop({
   payment,
   shopOpen,
   outcome,
+  outcomeAtOrders = false,
   locale,
 }: {
   products: readonly MembersShopProduct[];
@@ -56,6 +57,8 @@ export default async function MembersShop({
   payment: string | null;
   shopOpen: boolean;
   outcome: ShopOutcome | null;
+  /** The answer came back to «Comenzile mele» (a placed order, or a cancel, refused or not). */
+  outcomeAtOrders?: boolean;
   locale: Locale;
 }) {
   const t = await getTranslations("Members");
@@ -66,7 +69,9 @@ export default async function MembersShop({
       {t(`shop.outcome.${outcome}`)}
     </Alert>
   ) : null;
-  const orderOutcome = outcome === "placed" || outcome === "cancelled";
+  // The answer is drawn where the redirect's anchor lands: «Comenzile mele» after an order or a cancel
+  // (a refused cancel included), otherwise the shop; the orders when the shop is not drawn at all.
+  const bannerInOrders = orders.length > 0 && (outcomeAtOrders || !showShop);
   return (
     <>
       {showShop && (
@@ -78,7 +83,7 @@ export default async function MembersShop({
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
             {t("shop.lead")}
           </Typography>
-          {!orderOutcome && banner}
+          {!bannerInOrders && banner}
           <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0, display: "grid", gap: 1.5, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" } }}>
             {products.map((product) => (
               <ProductCard key={product.id} product={product} locale={locale} t={t} />
@@ -93,7 +98,7 @@ export default async function MembersShop({
             <ReceiptLongIcon aria-hidden="true" sx={{ fontSize: 22 }} />
             {t("shop.ordersTitle")}
           </Typography>
-          {(orderOutcome || !showShop) && banner}
+          {bannerInOrders && banner}
           <Stack component="ol" spacing={1.5} sx={{ listStyle: "none", m: 0, p: 0 }}>
             {orders.map((order) => {
               const title = locale === "en" ? order.productTitleEn : order.productTitleRo;

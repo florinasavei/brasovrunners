@@ -441,6 +441,23 @@ describe("§NNN the members' shop", () => {
     // Never a stock number.
     expect(html).not.toMatch(/stoc: \d/i);
 
+    // A refused cancel comes back to «Comenzile mele» (`?shopAt=orders`): its answer is drawn there, under
+    // the orders' heading, never off-screen in the shop above.
+    const refused = renderToStaticMarkup(
+      await MembersShop({
+        products: await listProductsForMembers(db, "ro"),
+        orders: await listOrdersOfMember(db, member.id),
+        payment: "IBAN RO00 TEST",
+        shopOpen: true,
+        outcome: "CONFLICT",
+        outcomeAtOrders: true,
+        locale: "ro",
+      }),
+    );
+    const ordersAt = refused.indexOf('data-testid="members-orders"');
+    expect(ordersAt).toBeGreaterThan(-1);
+    expect(refused.indexOf('data-testid="members-shop-outcome"')).toBeGreaterThan(ordersAt);
+
     // The notice silent: no shop, but the member's own orders stay readable.
     const closed = renderToStaticMarkup(
       await MembersShop({ products: [], orders: await listOrdersOfMember(db, member.id), payment: null, shopOpen: false, outcome: null, locale: "ro" }),

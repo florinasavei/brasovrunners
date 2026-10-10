@@ -40,10 +40,10 @@ import { signOutAction } from "../admin/actions";
 import MembersShop from "./MembersShop";
 import { listOrdersOfMember, listProductsForMembers, type MemberOrder, type MembersShopProduct } from "@/modules/content/shop/repository";
 import { paymentWordsFor, readShopSettings } from "@/modules/content/shop/settings";
-import { readShopOutcome } from "@/modules/content/shop/zone-outcome";
+import { readShopOutcome, readShopOutcomeAtOrders } from "@/modules/content/shop/zone-outcome";
 import { noticeDescribesMembersShop } from "@/modules/legal-documents/repository";
 
-type Props = { params: Promise<{ locale: string }>; searchParams?: Promise<{ shop?: string | string[] }> };
+type Props = { params: Promise<{ locale: string }>; searchParams?: Promise<{ shop?: string | string[]; shopAt?: string | string[] }> };
 
 /** Reads the session, so it is never prerendered or cached (AGENTS.md §14.5). */
 export const dynamic = "force-dynamic";
@@ -187,7 +187,9 @@ export default async function MembersAreaPage({ params, searchParams }: Props) {
     codesOrNone(now),
     shopOrNone(account, locale, now),
   ]);
-  const shopOutcome = readShopOutcome((await searchParams)?.shop);
+  const shopQuery = await searchParams;
+  const shopOutcome = readShopOutcome(shopQuery?.shop);
+  const shopOutcomeAtOrders = readShopOutcomeAtOrders(shopQuery?.shopAt);
   /*
     A repeated members' run is one card with its dates, as on the listing (§113, §486): the dated
     ones grouped, those whose date is to be announced after them one by one — §533 refuses a series
@@ -251,7 +253,7 @@ export default async function MembersAreaPage({ params, searchParams }: Props) {
 
       {/* «Magazinul clubului» and «Comenzile mele» (§NNN): behind the notice, paid outside the site. */}
       {((shop.open && shop.products.length > 0) || shop.orders.length > 0) && (
-        <MembersShop products={shop.products} orders={shop.orders} payment={shop.payment} shopOpen={shop.open} outcome={shopOutcome} locale={locale} />
+        <MembersShop products={shop.products} orders={shop.orders} payment={shop.payment} shopOpen={shop.open} outcome={shopOutcome} outcomeAtOrders={shopOutcomeAtOrders} locale={locale} />
       )}
 
       <Box component="section" aria-labelledby="members-upcoming-title" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }} data-testid="members-upcoming">

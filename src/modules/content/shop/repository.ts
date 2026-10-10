@@ -200,6 +200,18 @@ export function parseOrdersQuery(params: Record<string, string | string[] | unde
   };
 }
 
+/**
+ * The same filter as address parameters, read through `parseOrdersQuery` — what a verb on the list
+ * posts back is kept only when the address would have kept it, so the answer lands on the same list.
+ */
+export function ordersFilterParams(params: Record<string, string | string[] | undefined>): URLSearchParams {
+  const query = parseOrdersQuery(params);
+  const keep = new URLSearchParams();
+  if (query.status) keep.set("orderStatus", query.status);
+  if (query.productId) keep.set("orderProduct", query.productId);
+  return keep;
+}
+
 /** The most orders the card draws; the CSV has every one under the filter. */
 export const ORDERS_SHOWN_MAX = 500;
 

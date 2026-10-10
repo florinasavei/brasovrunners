@@ -28,8 +28,10 @@ function text(form: FormData, name: string): string {
   return typeof value === "string" ? value : "";
 }
 
-function back(locale: Locale, outcome: ShopOutcome, anchor: string): never {
-  redirect(`${getPathname({ locale, href: { pathname: "/members-area", query: { shop: outcome } } })}#${anchor}`);
+/** `shopAt=orders` tells the page to draw the answer in «Comenzile mele», where the anchor lands. */
+function back(locale: Locale, outcome: ShopOutcome, anchor: "members-shop" | "members-orders"): never {
+  const query = anchor === "members-orders" ? { shop: outcome, shopAt: "orders" } : { shop: outcome };
+  redirect(`${getPathname({ locale, href: { pathname: "/members-area", query } })}#${anchor}`);
 }
 
 function outcomeOf(error: unknown): ShopOutcome {
