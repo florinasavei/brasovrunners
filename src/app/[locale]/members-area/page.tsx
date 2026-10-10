@@ -146,7 +146,7 @@ async function upcomingOrNone(locale: Locale, now: Date) {
  * in one language shows the catalogue's sentence on both pages rather than the other language's text.
  *
  * Everybody, a colleague included, sees only the zone and the sign-out, which lands on «Beneficiile
- * membrilor». The zone shows no way into the backoffice, not even to a colleague (§NNN): a colleague
+ * membrilor». The zone shows no way into the backoffice, not even to a colleague (§684): a colleague
  * goes to `/admin` directly, and the backoffice's own layout is the lock either way.
  *
  * **Why here and not under `/admin` (§524).** The zone is a public-tree route with the site's own
