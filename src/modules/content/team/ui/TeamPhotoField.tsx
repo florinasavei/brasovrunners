@@ -1,11 +1,6 @@
 "use client";
 
-import UploadIcon from "@mui/icons-material/Upload";
-import { ACTION_ICONS } from "@/shared/ui/action-icons";
-
-const ReplaceGlyph = ACTION_ICONS.replace;
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { type ChangeEvent, useState } from "react";
@@ -173,18 +168,17 @@ function PhotoField({ photo: initial, crop: initialCrop, labels, inputId }: Prop
             {labels.none}
           </Typography>
         )}
-        <Button
+        <GlyphButton
           id={recall.idOf("photoAssetId")}
-          component="label"
           htmlFor={inputId}
+          icon={photo.id ? "replace" : "upload"}
           variant="outlined"
-          startIcon={photo.id ? <ReplaceGlyph fontSize="small" /> : <UploadIcon fontSize="small" />}
           disabled={state === "uploading"}
           sx={{ minHeight: 44 }}
         >
           {state === "uploading" ? labels.uploading : photo.id ? labels.replace : labels.choose}
           <input id={inputId} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={onChoose} />
-        </Button>
+        </GlyphButton>
         <GlyphButton
           icon="gallery"
           variant="outlined"

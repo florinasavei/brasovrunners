@@ -12,6 +12,12 @@ type Props = Omit<ButtonProps, "startIcon" | "endIcon" | "component" | "href" | 
    * `type="submit"` inside the form the Server Component rendered.
    */
   href?: string;
+  /**
+   * Set, the button is a `<label>` for the file input with this id — the input sits among its
+   * children, hidden: the native file picker, which opens without JavaScript and which the e2e
+   * upload path drives. Never with `href`.
+   */
+  htmlFor?: string;
 };
 
 /**
@@ -29,14 +35,23 @@ type Props = Omit<ButtonProps, "startIcon" | "endIcon" | "component" | "href" | 
  * Since §521 every button wears a glyph, public pages included — but not through this. The
  * lookup by name ships the whole table to whatever renders it, so the table stays off public
  * pages (§318's restriction, which §521 keeps for the table alone; `action-icons.test.ts` walks
- * the imports). A public page's button imports its one icon file and hands it to MUI's
- * `startIcon`, or is `SubmitButton` with `runner` or `glyph`; never this.
+ * the imports). A public page's button is `ButtonLink`, or `SubmitButton` with `runner` or
+ * `glyph`, its glyph named in a registry listed in `ICON_REGISTRIES` (`tests/unit/design/guards-allowlist.ts`); never this, and
+ * never MUI's `Button` with its own `startIcon` import: the design guards (`tests/unit/design/`,
+ * §694) refuse both a bare MUI `Button` and a direct `@mui/icons-material` import.
  */
-export default function GlyphButton({ icon, href, children, ...props }: Props) {
+export default function GlyphButton({ icon, href, htmlFor, children, ...props }: Props) {
   const Icon = ACTION_ICONS[icon];
   const startIcon = <Icon fontSize="small" />;
   // With an `href`, MUI's ButtonBase renders its link component, a plain `<a>` — the element
   // `component="a"` used to ask for at every call site.
+  if (htmlFor !== undefined) {
+    return (
+      <Button component="label" htmlFor={htmlFor} startIcon={startIcon} {...(props as ButtonProps<"label">)}>
+        {children}
+      </Button>
+    );
+  }
   return href === undefined ? (
     <Button startIcon={startIcon} {...props}>
       {children}

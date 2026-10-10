@@ -1,6 +1,6 @@
-import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
 import Box from "@mui/material/Box";
 import { getTranslations } from "next-intl/server";
+import { TYPE_GLYPH } from "@/modules/events/ui/glyphs";
 import { BUTTON_GLYPH_PX, glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import ButtonLink from "@/shared/ui/ButtonLink";
 import GlyphButton from "@/shared/ui/GlyphButton";
@@ -8,6 +8,9 @@ import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import DesignSection, { Block, ROW_SX } from "./section";
+
+/** The public button's sample glyph, from the public registry by name (§694). */
+const RunIcon = TYPE_GLYPH.GROUP_RUN;
 
 const VARIANTS = ["contained", "outlined", "text"] as const;
 const SIZES = ["small", "medium", "large"] as const;
@@ -30,12 +33,12 @@ export default async function ButtonSection() {
         <Box sx={ROW_SX} data-testid="design-public-buttons">
           {VARIANTS.map((variant) => (
             <ButtonLink key={variant} href="/events" variant={variant} sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
-              <DirectionsRunIcon aria-hidden="true" sx={glyphSx("medium")} />
+              <RunIcon aria-hidden="true" sx={glyphSx("medium")} />
               {label}
             </ButtonLink>
           ))}
           <ButtonLink href="/events" variant="contained" disabled sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
-            <DirectionsRunIcon aria-hidden="true" sx={glyphSx("medium")} />
+            <RunIcon aria-hidden="true" sx={glyphSx("medium")} />
             {t("design.buttons.disabled")}
           </ButtonLink>
         </Box>
@@ -45,7 +48,7 @@ export default async function ButtonSection() {
         <Box sx={ROW_SX}>
           {SIZES.map((size) => (
             <ButtonLink key={size} href="/events" variant="outlined" size={size} sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
-              <DirectionsRunIcon aria-hidden="true" sx={glyphSx(size)} />
+              <RunIcon aria-hidden="true" sx={glyphSx(size)} />
               {label} · {size}
             </ButtonLink>
           ))}

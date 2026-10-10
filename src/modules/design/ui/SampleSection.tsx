@@ -1,4 +1,3 @@
-import MenuBookIcon from "@mui/icons-material/MenuBook";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
@@ -10,12 +9,14 @@ import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import EventCard from "@/modules/events/ui/EventCard";
 import SeriesCard from "@/modules/events/ui/SeriesCard";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { heroSurface } from "@/theme/surfaces";
 import { SAMPLE_NOW, SAMPLE_WEATHER, sampleRace, sampleSeries, sampleTeamMember } from "../fixtures";
 import DesignSection, { Block, Code } from "./section";
 
+const GuideIcon = ACTION_ICONS.guide;
 const SEVERITIES = ["success", "info", "warning", "error"] as const;
 
 /** The listing's grid, as `events/page.tsx` lays the cards: a list, two to a row from `md`. */
@@ -96,7 +97,7 @@ export default async function SampleSection({ locale }: { locale: Locale }) {
       <Block title={t("design.samples.fold")} note={t("design.samples.foldNote")}>
         <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, maxWidth: 560 }} data-testid="design-fold">
           <Typography component="summary" variant="subtitle1" sx={{ fontWeight: 600 }}>
-            <MenuBookIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
+            <GuideIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
             {t("design.samples.foldSummary")}
           </Typography>
           <Typography variant="body2">{t("design.samples.foldBody")}</Typography>

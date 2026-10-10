@@ -1,8 +1,8 @@
 # Vibecoding this repo — the one page to read before asking an AI to change anything
 
-<!-- PROJECT_BASELINE: BR-V2.89-2026-10-10 -->
+<!-- PROJECT_BASELINE: BR-V2.90-2026-10-10 -->
 
-**Baseline `BR-V2.89-2026-10-10`**
+**Baseline `BR-V2.90-2026-10-10`**
 
 The owner's word for how this platform is built: an AI agent writes, the owner reads and
 merges. This page is the short version of everything an agent trips over. `CLAUDE.md` is the
@@ -79,6 +79,7 @@ request and `.github/workflows/release.yml` lands and ships it
 - **Messages with `{x}` or a tag** are `t("key", values)` or `t.raw("key")`, never a bare `t("key")`: a production build prints it raw and `next dev` prints the key. Write a literal `<` as `'<'` (§370).
 - **No hostname of the club's in `src/`** — everything derives from `APP_BASE_URL`; a third party's fixed host (Cloudflare, Vercel, Facebook) goes in `PROVIDER_HOSTS` in `scripts/docs-check.mjs` with one line saying why.
 - **Migrations expand only.** Add a column or an enum value; never drop or rename in the same release (`yarn migrations:check`).
+- **The design system has guards (§694).** No colour literal outside `src/theme/brand.ts`, no `@mui/icons-material` barrel import, and in the backoffice no icon file imported directly (ask `shared/ui/action-icons.ts` by name; a public page imports its one icon file, or names it in a registry listed in `ICON_REGISTRIES` (`tests/unit/design/guards-allowlist.ts`)), no bare MUI `Button` / `IconButton` / `Chip` in a page or an area's `ui/` — `ButtonLink`, `GlyphButton`, `GlyphChip` instead. `tests/unit/design/` fails on a new offender; today's are listed with a reason in `guards-allowlist.ts`, a ratchet that only shrinks (a fixed file leaves the list and `PINNED` drops). The page `/admin/design` shows the system.
 - **Tap targets are 44 px** — every link and button on a public page; the e2e suite measures them.
 - **Personal data:** a public list shows names and clubs only; the desk never shows an address; nothing about a person goes in a URL; erase deletes, it does not blank.
 - **Legal text is the club's.** The platform ships templates; only a version approved in `/admin/legal` has effect. An agent never marks one approved.
