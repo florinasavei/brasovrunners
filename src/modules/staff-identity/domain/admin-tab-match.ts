@@ -20,5 +20,7 @@ export function activeAdminTabHref(
   const active =
     items.filter((item) => under(item.href)).sort((a, b) => b.href.length - a.href.length)[0] ??
     items.find((item) => item.alsoActiveOn?.some(under));
-  return active?.href ?? null;
+  // An address a tab also stands for wins over a bare section root when it is the more specific match — `/admin` is a prefix of every backoffice address — so «Setări» lights on `/admin/design` (§NNN).
+  const alsoActive = items.find((item) => item.alsoActiveOn?.some((address) => under(address) && address.length > (active?.href.length ?? 0)));
+  return (alsoActive ?? active)?.href ?? null;
 }

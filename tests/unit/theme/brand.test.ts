@@ -6,6 +6,10 @@ import messages from "@/../messages/ro.json";
 import en from "@/../messages/en.json";
 import { MAX_CARD_STEP } from "@/modules/appearance/domain/tint-contrast";
 import { CLUB_NAME, COLOR, COLOR_DARK, FONT, GRADIENT, LOGO, SITE_TINT, SURFACE_GRADIENT, WORDMARK } from "@/theme/brand";
+import { ACCENT_PAIRS, type BrandPair, HERO_PAIRS, TEXT_PAIRS, TEXT_PAIRS_DARK } from "@/theme/brand-pairs";
+
+/** A pair's names, `COLOR.ink/COLOR.paper`, for the lists below that pin which pairs are asserted. */
+const names = (pairs: readonly BrandPair[]) => pairs.map((pair) => `${pair.foreground.name}/${pair.background.name}`);
 
 /**
  * BR-REQ-070-02 criterion 4 — colour contrast meets the accessibility baseline.
@@ -38,40 +42,54 @@ describe("BR-REQ-070-02 the palette is readable", () => {
     expect(contrastRatio("#ffffff", "#ffffff")).toBeCloseTo(1, 5);
   });
 
-  const bodyText: [string, string, string][] = [
-    ["body text on the page", COLOR.ink, COLOR.paper],
-    ["body text on a card", COLOR.ink, COLOR.surface],
-    ["field labels on the page", COLOR.inkMuted, COLOR.paper],
-    ["field labels on a card", COLOR.inkMuted, COLOR.surface],
-    ["the club blue as text on the page", COLOR.blue, COLOR.paper],
-    ["the club blue as text on a card", COLOR.blue, COLOR.surface],
-    ["the hover shade on the page", COLOR.blueInk, COLOR.paper],
-    ["the hover shade on a card", COLOR.blueInk, COLOR.surface],
-    ["button text on the primary colour", COLOR.paper, COLOR.blue],
-    ["text on the secondary colour", COLOR.ink, COLOR.orange],
-  ];
+  /*
+    The pairs the pages render — body text on the page and on a card, field labels on both, the club
+    blue as text on both, the hover shade on both, button text on the primary colour, text on the
+    secondary colour — named by their tokens in `src/theme/brand-pairs.ts` since §NNN, which the
+    design-system page draws with these ratios. The list below pins which pairs are asserted, so a
+    pair dropped from the constant fails here rather than quietly leaving the page and the test.
+  */
+  it("asserts the ten light pairs the pages render", () => {
+    expect(names(TEXT_PAIRS)).toEqual([
+      "COLOR.ink/COLOR.paper",
+      "COLOR.ink/COLOR.surface",
+      "COLOR.inkMuted/COLOR.paper",
+      "COLOR.inkMuted/COLOR.surface",
+      "COLOR.blue/COLOR.paper",
+      "COLOR.blue/COLOR.surface",
+      "COLOR.blueInk/COLOR.paper",
+      "COLOR.blueInk/COLOR.surface",
+      "COLOR.paper/COLOR.blue",
+      "COLOR.ink/COLOR.orange",
+    ]);
+    expect(TEXT_PAIRS[0].foreground.hex).toBe(COLOR.ink);
+    expect(TEXT_PAIRS[0].background.hex).toBe(COLOR.paper);
+  });
 
-  for (const [label, foreground, background] of bodyText) {
-    it(`clears AA for ${label}`, () => {
-      expect(contrastRatio(foreground, background)).toBeGreaterThanOrEqual(4.5);
+  for (const { foreground, background } of TEXT_PAIRS) {
+    it(`clears AA for ${foreground.name} on ${background.name}`, () => {
+      expect(contrastRatio(foreground.hex, background.hex)).toBeGreaterThanOrEqual(4.5);
     });
   }
 
   // The same pairs after dark (`DECISIONS.md` §93).
-  const darkText: Array<[string, string, string]> = [
-    ["dark: body text on the page", COLOR_DARK.ink, COLOR_DARK.paper],
-    ["dark: body text on a card", COLOR_DARK.ink, COLOR_DARK.surface],
-    ["dark: field labels on the page", COLOR_DARK.inkMuted, COLOR_DARK.paper],
-    ["dark: field labels on a card", COLOR_DARK.inkMuted, COLOR_DARK.surface],
-    ["dark: the blue as text on the page", COLOR_DARK.blue, COLOR_DARK.paper],
-    ["dark: the blue as text on a card", COLOR_DARK.blue, COLOR_DARK.surface],
-    ["dark: the hover shade on the page", COLOR_DARK.blueInk, COLOR_DARK.paper],
-    ["dark: button text on the primary colour", COLOR_DARK.paper, COLOR_DARK.blue],
-    ["dark: text on the secondary colour", COLOR.ink, COLOR.orange],
-  ];
-  for (const [label, foreground, background] of darkText) {
-    it(`clears AA for ${label}`, () => {
-      expect(contrastRatio(foreground, background)).toBeGreaterThanOrEqual(4.5);
+  it("asserts the nine dark pairs", () => {
+    expect(names(TEXT_PAIRS_DARK)).toEqual([
+      "COLOR_DARK.ink/COLOR_DARK.paper",
+      "COLOR_DARK.ink/COLOR_DARK.surface",
+      "COLOR_DARK.inkMuted/COLOR_DARK.paper",
+      "COLOR_DARK.inkMuted/COLOR_DARK.surface",
+      "COLOR_DARK.blue/COLOR_DARK.paper",
+      "COLOR_DARK.blue/COLOR_DARK.surface",
+      "COLOR_DARK.blueInk/COLOR_DARK.paper",
+      "COLOR_DARK.paper/COLOR_DARK.blue",
+      "COLOR.ink/COLOR.orange",
+    ]);
+    expect(TEXT_PAIRS_DARK[0].foreground.hex).toBe(COLOR_DARK.ink);
+  });
+  for (const { foreground, background } of TEXT_PAIRS_DARK) {
+    it(`clears AA for dark: ${foreground.name} on ${background.name}`, () => {
+      expect(contrastRatio(foreground.hex, background.hex)).toBeGreaterThanOrEqual(4.5);
     });
   }
 
@@ -126,32 +144,36 @@ describe("BR-REQ-070-02 the palette is readable", () => {
  * outside the palette and no other test would see it.
  */
 describe("BR-REQ-070-02 the gradients are readable at both ends", () => {
-  const overHero: Array<[string, string, string]> = [
-    ["body text over the hero's light end", COLOR.ink, GRADIENT.heroTint],
-    ["body text over the hero's card end", COLOR.ink, COLOR.surface],
-    ["muted text over the hero's light end", COLOR.inkMuted, GRADIENT.heroTint],
-    ["the countdown over the hero's light end", COLOR.blue, GRADIENT.heroTint],
-    ["dark: body text over the hero's light end", COLOR_DARK.ink, GRADIENT.heroTintDark],
-    ["dark: muted text over the hero's light end", COLOR_DARK.inkMuted, GRADIENT.heroTintDark],
-    ["dark: the countdown over the hero's light end", COLOR_DARK.blue, GRADIENT.heroTintDark],
-  ];
+  // Body text, muted text and the countdown over the hero's light end and its card end, in both
+  // schemes; button text over both stops of the accent — the same pairs, from `brand-pairs.ts`.
+  it("asserts the seven hero pairs and the four accent pairs", () => {
+    expect(names(HERO_PAIRS)).toEqual([
+      "COLOR.ink/GRADIENT.heroTint",
+      "COLOR.ink/COLOR.surface",
+      "COLOR.inkMuted/GRADIENT.heroTint",
+      "COLOR.blue/GRADIENT.heroTint",
+      "COLOR_DARK.ink/GRADIENT.heroTintDark",
+      "COLOR_DARK.inkMuted/GRADIENT.heroTintDark",
+      "COLOR_DARK.blue/GRADIENT.heroTintDark",
+    ]);
+    expect(HERO_PAIRS[0].background.hex).toBe(GRADIENT.heroTint);
+    expect(names(ACCENT_PAIRS)).toEqual([
+      "COLOR.paper/COLOR.blue",
+      "COLOR.paper/COLOR.blueInk",
+      "COLOR_DARK.paper/COLOR_DARK.blue",
+      "COLOR_DARK.paper/COLOR_DARK.blueInk",
+    ]);
+  });
 
-  for (const [label, foreground, background] of overHero) {
-    it(`clears AA for ${label}`, () => {
-      expect(contrastRatio(foreground, background)).toBeGreaterThanOrEqual(4.5);
+  for (const { foreground, background } of HERO_PAIRS) {
+    it(`clears AA for ${foreground.name} over the hero's ${background.name}`, () => {
+      expect(contrastRatio(foreground.hex, background.hex)).toBeGreaterThanOrEqual(4.5);
     });
   }
 
-  const overAccent: Array<[string, string, string]> = [
-    ["button text over the accent's first stop", COLOR.paper, COLOR.blue],
-    ["button text over the accent's last stop", COLOR.paper, COLOR.blueInk],
-    ["dark: button text over the accent's first stop", COLOR_DARK.paper, COLOR_DARK.blue],
-    ["dark: button text over the accent's last stop", COLOR_DARK.paper, COLOR_DARK.blueInk],
-  ];
-
-  for (const [label, foreground, background] of overAccent) {
-    it(`clears AA for ${label}`, () => {
-      expect(contrastRatio(foreground, background)).toBeGreaterThanOrEqual(4.5);
+  for (const { foreground, background } of ACCENT_PAIRS) {
+    it(`clears AA for ${foreground.name} over the accent's ${background.name}`, () => {
+      expect(contrastRatio(foreground.hex, background.hex)).toBeGreaterThanOrEqual(4.5);
     });
   }
 

@@ -59,6 +59,7 @@ request and `.github/workflows/release.yml` lands and ships it
 | The event editor | `src/modules/content/events/` (fields.ts validates, service.ts saves, ui/ renders) |
 | A table or a column | `src/db/schema/*.ts`, then `yarn db:generate --name <what>` → `src/db/migrations/00NN_<what>.sql` (expand only) |
 | Colours, fonts, the logo | `src/theme/brand.ts` — the only file allowed a hex value |
+| The look — the tokens, the type, the components | `src/theme/brand.ts`, `src/theme/theme.ts`; see them drawn at `/admin/design` (§NNN) |
 | What `/devs` and `/admin/tasks` say | `src/modules/diagnostics/` |
 | A scheduled job | `src/modules/jobs/` (retention) and `src/modules/registrations/maintenance.ts` |
 
