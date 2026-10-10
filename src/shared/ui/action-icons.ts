@@ -216,7 +216,7 @@ export type ActionIconName =
   | "tickOn"
   | "tickOff"
   | "signOut"
-  // A row one place earlier or later in an editor's list (§694): the two arrows, never a verb of their own.
+  // A row one place earlier or later in an editor's list (§NNN): the two arrows, never a verb of their own.
   | "moveUp"
   | "moveDown";
 // No runner here: the public send buttons wear it through `SubmitButton`'s own `runner` flag,

@@ -167,6 +167,15 @@ describe("§541 the photo field's wiring", () => {
     expect(markup).toContain("Calitate");
   });
 
+  it("the upload button is a type=button that opens the hidden file input, which keeps the form's id", () => {
+    const markup = render({});
+    // The visible control must not submit the form, and the input the click opens keeps `inputId`.
+    expect(/<button[^>]*type="button"[^>]*id="field-photoAssetId"/.test(markup)).toBe(true);
+    expect(/<input[^>]*id="team-photo-t"[^>]*type="file"/.test(markup)).toBe(true);
+    const source = readFileSync(path.join(process.cwd(), "src/modules/content/team/ui/TeamPhotoField.tsx"), "utf8");
+    expect(source).toContain("fileInput.current?.click()");
+  });
+
   it("a card without a photograph posts neither, and has no crop box", () => {
     const markup = render({});
     expect(hidden(markup, "photoAssetId")).toBe("");

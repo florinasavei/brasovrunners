@@ -29,8 +29,10 @@ type Props = Omit<ButtonProps, "startIcon" | "endIcon" | "component" | "href" | 
  * Since §521 every button wears a glyph, public pages included — but not through this. The
  * lookup by name ships the whole table to whatever renders it, so the table stays off public
  * pages (§318's restriction, which §521 keeps for the table alone; `action-icons.test.ts` walks
- * the imports). A public page's button imports its one icon file and hands it to MUI's
- * `startIcon`, or is `SubmitButton` with `runner` or `glyph`; never this.
+ * the imports). A public page's button is `ButtonLink`, or `SubmitButton` with `runner` or
+ * `glyph`, its glyph named in `events/ui/glyphs.ts` (or the area's glyphs file); never this, and
+ * never MUI's `Button` with its own `startIcon` import: the design guards (`tests/unit/design/`,
+ * §NNN) refuse both a bare MUI `Button` and a direct `@mui/icons-material` import.
  */
 export default function GlyphButton({ icon, href, children, ...props }: Props) {
   const Icon = ACTION_ICONS[icon];
