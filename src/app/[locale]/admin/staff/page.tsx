@@ -17,7 +17,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { assignableRoles, canManageMember, canManageStaff } from "@/modules/staff-identity/domain/roles";
+import { assignableRoles, canGrantPermission, canManageMember, canManageStaff, holdsGrant, impliesPermission } from "@/modules/staff-identity/domain/roles";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { listStaff } from "@/modules/staff-identity/service";
@@ -36,7 +36,9 @@ import {
   revokeStaffAction,
   sendStaffPasswordResetAction,
   setStaffAccountActiveAction,
+  setStaffPermissionAction,
 } from "../actions";
+import GlyphButton from "@/shared/ui/GlyphButton";
 import { isZitadelInviteConfigured } from "@/modules/staff-identity/zitadel-users";
 import { checkInviteKey, hasNoAccount } from "@/modules/diagnostics/invite-key";
 import { refusedInvitations } from "@/modules/notifications/delivery-evidence";
@@ -168,7 +170,15 @@ export default async function StaffPage({ params, searchParams }: Props) {
     {
       key: "role",
       label: t("staff.columnRole"),
-      render: (member) => <Chip size="small" label={STAFF_ROLE_LABEL[member.role]} />,
+      render: (member) => (
+        <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 0.5 }}>
+          <Chip size="small" label={STAFF_ROLE_LABEL[member.role]} />
+          {/* «Gestionează magazinul» given on top of the role (§687) — only where it means something. */}
+          {holdsGrant(member, "shop.manage") && (
+            <Chip size="small" variant="outlined" color="secondary" label={t("staff.permissions.chipShop")} data-testid="staff-permission-shop" />
+          )}
+        </Stack>
+      ),
     },
     {
       key: "status",
@@ -457,6 +467,40 @@ export default async function StaffPage({ params, searchParams }: Props) {
                   />
                 </Stack>
               </ActionForm>
+
+              {/*
+                «Gestionează magazinul» (§687): a permission on top of the role, after the role
+                select. A press that asks first and then toasts, like the row's other verbs — the
+                box drawn ticked or empty — offered only where the service would accept it
+                (`canGrantPermission`): never a club member's row; an Administrator's or a
+                Superadministrator's has it by rank, drawn ticked and greyed, «inclus în rol».
+              */}
+              {canGrantPermission(actor, member.role, "shop.manage") ? (
+                <ActionForm
+                  action={setStaffPermissionAction}
+                  confirm={
+                    holdsGrant(member, "shop.manage")
+                      ? { title: t("staff.permissions.revokeTitle"), body: t("staff.permissions.revokeBody", { name: member.displayName }), confirmLabel: t("staff.permissions.revoke"), cancelLabel: words.cancel, destructive: true }
+                      : { title: t("staff.permissions.grantTitle"), body: t("staff.permissions.grantBody", { name: member.displayName }), confirmLabel: t("staff.permissions.grant"), cancelLabel: words.cancel }
+                  }
+                  data-testid="staff-permission-shop-form"
+                >
+                  <input type="hidden" name="uiLocale" value={locale} />
+                  <input type="hidden" name="staffUserId" value={member.id} />
+                  <input type="hidden" name="permission" value="shop.manage" />
+                  <input type="hidden" name="on" value={holdsGrant(member, "shop.manage") ? "0" : "1"} />
+                  <GlyphSubmitButton
+                    label={t("staff.permissions.shopManage")}
+                    pendingLabel={t("staff.permissions.saving")}
+                    icon={holdsGrant(member, "shop.manage") ? "tickOn" : "tickOff"}
+                    variant="text"
+                  />
+                </ActionForm>
+              ) : impliesPermission(member.role, "shop.manage") ? (
+                <GlyphButton icon="tickOn" variant="text" disabled sx={{ minHeight: 44 }} data-testid="staff-permission-shop-implied">
+                  {t("staff.permissions.shopManage")} · {t("staff.permissions.implied")}
+                </GlyphButton>
+              ) : null}
 
               {/*
                 The four verbs, in the same ⋮ every other list uses (§256), each asking before

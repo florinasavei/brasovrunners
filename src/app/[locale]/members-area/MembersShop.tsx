@@ -10,7 +10,7 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
-import { formatLei, ORDER_NOTE_MAX, ORDER_QUANTITY_MAX, orderTotalBani } from "@/modules/content/shop/domain";
+import { formatPrice, ORDER_NOTE_MAX, ORDER_QUANTITY_MAX, orderTotalBani } from "@/modules/content/shop/domain";
 import type { MemberOrder, MembersShopProduct } from "@/modules/content/shop/repository";
 import type { ShopOutcome } from "@/modules/content/shop/zone-outcome";
 import TeamPhotoImage from "@/modules/content/team/ui/TeamPhotoImage";
@@ -112,7 +112,7 @@ export default async function MembersShop({
                   </Stack>
                   <Typography variant="body2" sx={{ overflowWrap: "anywhere" }}>
                     {title}
-                    {order.variantLabel ? ` — ${order.variantLabel}` : ""} × {order.quantity} · {formatLei(orderTotalBani(order), locale)}
+                    {order.variantLabel ? ` — ${order.variantLabel}` : ""} × {order.quantity} · {formatPrice(orderTotalBani(order), order.currency, locale)}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     {formatDay(order.createdAt, { locale, timeZone: CLUB_TIME_ZONE, withTime: true })}
@@ -177,8 +177,9 @@ function ProductCard({ product, locale, t }: { product: MembersShopProduct; loca
       <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 700, overflowWrap: "anywhere" }}>
         {product.title}
       </Typography>
+      {/* In the product's own currency, lei or euro, never converted (§686). */}
       <Typography variant="body1" sx={{ fontWeight: 600 }}>
-        {formatLei(product.priceBani, locale)}
+        {formatPrice(product.priceBani, product.currency, locale)}
       </Typography>
       {product.description && (
         <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: "pre-line" }}>

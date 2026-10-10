@@ -1,6 +1,6 @@
 import { CSV_BOM } from "@/modules/newsletter/subscribers-csv";
 import { csvCell } from "@/modules/registrations/csv";
-import { formatLei, orderTotalBani } from "./domain";
+import { formatPrice, orderTotalBani } from "./domain";
 import type { AdminOrder } from "./repository";
 
 /**
@@ -8,7 +8,9 @@ import type { AdminOrder } from "./repository";
  * language — the registrations export's rules (`registrations/csv.ts`): every cell through the one
  * `csvCell` (no formula, quotes doubled), CRLF between lines, a BOM first for Excel on Windows (§550),
  * dates ISO 8601. The member's address only for a reader who already sees members' addresses (§550's
- * rule, `canSeeShopMemberAddresses`): otherwise the column is not in the file at all.
+ * rule, `canSeeShopMemberAddresses`): otherwise the column is not in the file at all. The unit price
+ * and the total are written in the order's own currency, named in the column after the unit price
+ * (§686) — an order placed in euro stays in euro whatever the product says now.
  */
 
 export type OrdersCsvHeader = {
@@ -20,6 +22,7 @@ export type OrdersCsvHeader = {
   variant: string;
   quantity: string;
   unitPrice: string;
+  currency: string;
   total: string;
   status: string;
   note: string;
@@ -31,7 +34,7 @@ export function buildOrdersCsv(
   options: { locale: string; withEmail: boolean; statusWord: (status: AdminOrder["status"]) => string },
 ): string {
   const columns = (row: Record<keyof OrdersCsvHeader, string>) =>
-    [row.number, row.date, row.member, ...(options.withEmail ? [row.email] : []), row.product, row.variant, row.quantity, row.unitPrice, row.total, row.status, row.note]
+    [row.number, row.date, row.member, ...(options.withEmail ? [row.email] : []), row.product, row.variant, row.quantity, row.unitPrice, row.currency, row.total, row.status, row.note]
       .map(csvCell)
       .join(",");
   const lines = [
@@ -45,8 +48,9 @@ export function buildOrdersCsv(
         product: options.locale === "en" ? row.productTitleEn : row.productTitleRo,
         variant: row.variantLabel ?? "",
         quantity: String(row.quantity),
-        unitPrice: formatLei(row.unitPriceBani, options.locale),
-        total: formatLei(orderTotalBani(row), options.locale),
+        unitPrice: formatPrice(row.unitPriceBani, row.currency, options.locale),
+        currency: row.currency,
+        total: formatPrice(orderTotalBani(row), row.currency, options.locale),
         status: options.statusWord(row.status),
         note: row.note ?? "",
       }),

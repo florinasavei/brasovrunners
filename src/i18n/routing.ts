@@ -232,6 +232,11 @@ export const routing = defineRouting({
      * backoffice cu «Newsletter»"). One spelling in both locales, a backoffice address.
      */
     "/admin/newsletter": "/admin/newsletter",
+    /**
+     * «Magazin» (§687): the members' shop — the catalogue, the payment words, the orders — its own
+     * section since a volunteer may run it; it was a card on «Pagini» → «Membri» (§683).
+     */
+    "/admin/shop": "/admin/shop",
     "/admin/checkin": "/admin/checkin",
     "/admin/checkin/[code]": "/admin/checkin/[code]",
     "/admin/legal": "/admin/legal",

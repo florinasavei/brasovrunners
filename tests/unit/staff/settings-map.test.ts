@@ -104,8 +104,8 @@ describe("BR-REQ-060-01 «Setări»: who opens which tab", () => {
 });
 
 describe("§516 the main bar, in the order the club opens things", () => {
-  it("is events, registrations, the desk, gallery, pages, newsletter, settings, tasks, team, legal, guide, system", () => {
-    expect([...ADMIN_SECTIONS]).toEqual(["events", "registrations", "checkin", "gallery", "pages", "newsletter", "settings", "tasks", "staff", "legal", "guide"]);
+  it("is events, registrations, the desk, gallery, pages, newsletter, shop, settings, tasks, team, legal, guide", () => {
+    expect([...ADMIN_SECTIONS]).toEqual(["events", "registrations", "checkin", "gallery", "pages", "newsletter", "shop", "settings", "tasks", "staff", "legal", "guide"]);
     expect(ADMIN_SECTIONS).not.toContain("emails");
   });
 

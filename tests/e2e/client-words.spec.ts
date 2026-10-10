@@ -72,6 +72,8 @@ test.describe("§353 every island finds its words, and a public page carries onl
       "/ro/admin/settings/costs",
       "/ro/admin/settings/platform",
       "/ro/admin/newsletter",
+      // «Magazin» (§687): the members' shop, its own section — the photo field and the confirm dialogs.
+      "/ro/admin/shop",
       "/ro/admin/tasks",
       "/ro/admin/staff",
       "/ro/admin/legal",

@@ -4,7 +4,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { Database, Transaction } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { enqueueEmail } from "@/modules/notifications/outbox";
-import { canManageShop, canOpenMembersZone } from "@/modules/staff-identity/domain/roles";
+import { canManageShop, canOpenMembersZone, type StaffActor } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import { nextOrderStatus, ORDER_REPEAT_WINDOW_MS, type OrderActor, type OrderVerb, stockAfterOrder } from "./domain";
@@ -32,7 +32,7 @@ import { readShopSettings } from "./settings";
  */
 
 type Account = Pick<StaffUser, "id" | "role" | "displayName" | "email">;
-type Actor = Pick<StaffUser, "id" | "role">;
+type Actor = Pick<StaffUser, "id"> & StaffActor;
 
 /** The idempotency key of one message about one order: once per order and per fact. */
 export function shopOrderEmailKey(orderId: string, what: "placed" | "paid" | "club"): string {
@@ -121,6 +121,9 @@ export async function placeOrder<T extends Record<string, unknown>>(
         variantLabel: variant.label,
         quantity: fields.quantity,
         unitPriceBani: product.priceBani,
+        // The currency travels with the price, read under the same locks (§686): a product priced in
+        // euro today and in lei tomorrow leaves this order in euro.
+        currency: product.currency,
         stockTaken: left !== null,
         note: fields.note,
         status: "PLACED",
@@ -243,7 +246,7 @@ export async function moveOrderByClub<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; orderId: string; verb: OrderVerb; now?: Date },
 ): Promise<ShopOrder> {
-  if (!canManageShop(input.actor.role)) throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not change an order`);
+  if (!canManageShop(input.actor)) throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not change an order`);
   if (!isUuid(input.orderId)) throw new DomainError("NOT_FOUND", "no such order");
   const now = input.now ?? new Date();
   return db.transaction(async (tx) => {
