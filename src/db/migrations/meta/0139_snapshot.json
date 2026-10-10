@@ -1,6 +1,6 @@
 {
   "id": "bc9d67dd-99b3-46a2-a643-50c8f947fbfb",
-  "prevId": "55031bcd-9d8f-405c-8cf8-a7c145f53cc5",
+  "prevId": "a29f68df-40b9-4897-a88f-d3cd72c48197",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -6322,6 +6322,118 @@
       },
       "isRLSEnabled": false
     },
+    "public.shop_product_pictures": {
+      "name": "shop_product_pictures",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "product_id": {
+          "name": "product_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "media_asset_id": {
+          "name": "media_asset_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "crop": {
+          "name": "crop",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "shop_product_pictures_product_idx": {
+          "name": "shop_product_pictures_product_idx",
+          "columns": [
+            {
+              "expression": "product_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "position",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "shop_product_pictures_product_id_shop_products_id_fk": {
+          "name": "shop_product_pictures_product_id_shop_products_id_fk",
+          "tableFrom": "shop_product_pictures",
+          "tableTo": "shop_products",
+          "columnsFrom": [
+            "product_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "shop_product_pictures_media_asset_id_media_assets_id_fk": {
+          "name": "shop_product_pictures_media_asset_id_media_assets_id_fk",
+          "tableFrom": "shop_product_pictures",
+          "tableTo": "media_assets",
+          "columnsFrom": [
+            "media_asset_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "shop_product_pictures_position_positive": {
+          "name": "shop_product_pictures_position_positive",
+          "value": "\"shop_product_pictures\".\"position\" >= 1"
+        }
+      },
+      "isRLSEnabled": false
+    },
     "public.shop_product_variants": {
       "name": "shop_product_variants",
       "schema": "",
@@ -6457,6 +6569,24 @@
         "description_en": {
           "name": "description_en",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description_ro_json": {
+          "name": "description_ro_json",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description_en_json": {
+          "name": "description_en_json",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "size_chart": {
+          "name": "size_chart",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         },
@@ -6629,6 +6759,10 @@
         "shop_products_version_positive": {
           "name": "shop_products_version_positive",
           "value": "\"shop_products\".\"version\" >= 1"
+        },
+        "shop_products_size_chart_shape": {
+          "name": "shop_products_size_chart_shape",
+          "value": "\"shop_products\".\"size_chart\" IS NULL OR (jsonb_typeof(\"shop_products\".\"size_chart\") = 'object' AND jsonb_typeof(\"shop_products\".\"size_chart\" -> 'columns') = 'array' AND jsonb_array_length(\"shop_products\".\"size_chart\" -> 'columns') <= 4 AND jsonb_typeof(\"shop_products\".\"size_chart\" -> 'rows') = 'object')"
         }
       },
       "isRLSEnabled": false
