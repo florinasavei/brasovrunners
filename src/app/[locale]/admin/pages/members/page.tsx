@@ -159,7 +159,7 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
       />
 
       {/*
-        «Magazin» left this page for a section of its own (§NNN): a volunteer given «Gestionează
+        «Magazin» left this page for a section of its own (§687): a volunteer given «Gestionează
         magazinul» cannot open «Pagini». One line here, for a reader of the shop who looks for it
         where it was — a link to the section, the bar's own word.
       */}

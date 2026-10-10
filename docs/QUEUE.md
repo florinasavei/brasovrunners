@@ -17,10 +17,17 @@ This section replaces the plan of 2026-09-30; it is what a session with none of 
 - **Production = QA = `BR-V2.85`** (released 2026-10-10 10:25 UTC; `BR-V2.84`'s migration `0133_members_shop` was
   approved and applied the same morning). The race of 21 November is published and takes real registrations — every
   change is a change to a live system.
-- **On `qa`, not yet on production: `BR-V2.86`**, `chore/licence-all-rights-reserved` (§685) — `LICENSE` becomes a plain all-rights-reserved notice in the
-  club's name (the owner, 2026-10-10: «Keep it public, but make sure people don't steal it … Especially other run
-  clubs»); production on the owner's word (no migration). The repository **stays public**, so every
-  "the repository is public" rule below still holds.
+- **On `qa`, not yet on production: `BR-V2.86` and `BR-V2.87`**, released together on the owner's «prod»:
+  - `BR-V2.86` (§685): `LICENSE` is a plain all-rights-reserved notice in the club's name, naming other running clubs
+    (the owner: «Keep it public, but make sure people don't steal it … Especially other run clubs»). The repository
+    **stays public**, so every "the repository is public" rule below still holds.
+  - `BR-V2.87` (§686–§688): a shop price in lei or euro, never converted (migration `0135_shop_price_currency`);
+    «Gestionează magazinul», a per-person permission ticked on «Echipa», and the shop's own top-bar section «Magazin»
+    (migration `0134_staff_user_permissions`); `yarn handoff` and `docs/DISPATCHER.md` § When a session stops.
+    **Two migrations: production stops at the `migrate.yml` run for the owner's approval.**
+- **Three empty branches** on GitHub — `feat/team-org-chart`, `feat/design-system-page`, `feat/shop-order-for-member`
+  (a copy of the currency branch): no work of their own, nobody remembers their purpose; delete them on GitHub
+  (the session's git cannot delete a remote branch).
 - **Nothing else is building.** No worktree holds unmerged work; old worktrees under `.claude/worktrees/` can be removed
   (`git worktree remove --force <path>`; a merged branch's worktree is safe to drop).
 
@@ -62,7 +69,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Item | Branch | Notes |
 | --- | --- | --- |
-| Permissions per person on top of the roles, the first «Gestionează magazinul», and the shop's own section «Magazin» | `feat/staff-permissions-shop-manage` | built on this branch: the owner chose permissions per person (§NNN) |
+| — | nothing is building |
 
 ## Ready for the next release
 
@@ -124,6 +131,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.87` | a shop price in lei or in euro (§686) · permissions per person: «Gestionează magazinul» and the shop's own section (§687) · `yarn handoff` and the rules for a session that stops (§688) |
 | `BR-V2.86` | the licence: all rights reserved (§685) |
 | `BR-V2.85` | the members' zone shows no backoffice button (§684) |
 | `BR-V2.84` | the members' shop (§683) |

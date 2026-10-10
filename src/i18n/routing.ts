@@ -233,7 +233,7 @@ export const routing = defineRouting({
      */
     "/admin/newsletter": "/admin/newsletter",
     /**
-     * «Magazin» (§NNN): the members' shop — the catalogue, the payment words, the orders — its own
+     * «Magazin» (§687): the members' shop — the catalogue, the payment words, the orders — its own
      * section since a volunteer may run it; it was a card on «Pagini» → «Membri» (§683).
      */
     "/admin/shop": "/admin/shop",

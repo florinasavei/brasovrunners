@@ -20,10 +20,10 @@ const CSV_LIMIT = 100_000;
  *
  * Whoever reads the shop may take it — `canReadShop`, the page's own gate, asserted here again
  * (BR-REQ-060-01): the Organizer, the Administrator, the Superadministrator; a volunteer, the
- * Redactor, the Tehnic and a member are refused whatever the link — unless, since §NNN, the colleague
+ * Redactor, the Tehnic and a member are refused whatever the link — unless, since §687, the colleague
  * holds «Gestionează magazinul» (the actor is asked, not the role). The member's address is a column
  * only for a reader who already sees members' addresses (§550) — asked of the role alone, so the
- * grant never adds it (§NNN). The download is recorded — who, the
+ * grant never adds it (§687). The download is recorded — who, the
  * filter's shape and how many rows, never a name or an address — because a file that leaves the site
  * is a copy the club has to account for.
  */

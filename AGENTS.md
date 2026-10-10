@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.86-2026-10-10 -->
+<!-- PROJECT_BASELINE: BR-V2.87-2026-10-10 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V2.86-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.87-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1128,7 +1128,7 @@ participant list.
 itself a higher one makes every rule below it decorative. The lockout guards key on that same
 role — the last SUPERADMIN can be neither demoted nor removed, by themselves or by anybody else.
 
-**Permissions per person, beside the ladder (§NNN).** One person holds one role, and the roles
+**Permissions per person, beside the ladder (§687).** One person holds one role, and the roles
 nest; a job that does not fit a rung — the first is running the members' shop without being an
 Administrator — is a **grant**, a row in `staff_user_permissions` (person, permission, who gave
 it, when). `STAFF_PERMISSIONS` in `roles.ts` names them; `shop.manage` («Gestionează magazinul»)
@@ -2356,7 +2356,7 @@ requireStaff()
 requireStaffRole("AUTHOR" | "EDITOR" | "ADMIN")
 ```
 
-The session's staff user carries its grants (§10.2, §NNN): `findStaffUserById` reads the row and
+The session's staff user carries its grants (§10.2, §687): `findStaffUserById` reads the row and
 its `staff_user_permissions` in one query, on every request, so a withdrawn grant stops at the
 next request exactly as a changed role does; the development switcher takes the same path.
 `requireStaffCapability(predicate)` hands the predicate that actor, never its role alone, and an

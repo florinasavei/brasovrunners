@@ -10,7 +10,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-060-01, §NNN — permissions per person on top of the role ladder: «Gestionează magazinul».
+ * BR-REQ-060-01, §687 — permissions per person on top of the role ladder: «Gestionează magazinul».
  *
  * Proven on real PostgreSQL (PGlite), through the real session (`session.ts`, the development
  * switcher's cookie): a grant is a row and an audit row, and the next request's session carries it;
@@ -82,7 +82,7 @@ async function statusOf(promise: Promise<unknown>): Promise<number | null> {
   }
 }
 
-describe("§NNN «Gestionează magazinul» — a permission per person", () => {
+describe("§687 «Gestionează magazinul» — a permission per person", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let superadmin: StaffUser;

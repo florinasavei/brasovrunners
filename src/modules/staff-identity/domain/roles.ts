@@ -81,7 +81,7 @@ export function atLeast(role: StaffRole, minimum: StaffRole): boolean {
 }
 
 /**
- * **Permissions per person, on top of the ladder (§NNN).**
+ * **Permissions per person, on top of the ladder (§687).**
  *
  * The owner, 2026-10-10: «we need to extend roles and permissions» — a person who runs the members'
  * shop without being an Administrator. Offered a new role or a grant per person, he chose the grant.
@@ -99,7 +99,7 @@ export const STAFF_PERMISSIONS = ["shop.manage"] as const;
 export type StaffPermission = (typeof STAFF_PERMISSIONS)[number];
 
 /**
- * Who is asking: the role, and the permissions granted to that person (§NNN). The session carries
+ * Who is asking: the role, and the permissions granted to that person (§687). The session carries
  * both (`session.ts`); a caller that has only the role passes the role. An actor without
  * `permissions` holds none — a forgotten read refuses, it never opens.
  */
@@ -107,7 +107,7 @@ export type StaffActor = { readonly role: StaffRole; readonly permissions?: Read
 
 /**
  * What every single-role predicate below takes: a bare role — `canX(actor.role)`, as every caller
- * wrote it before §NNN — or the actor, which a grant-aware predicate reads the grants of. The door
+ * wrote it before §687 — or the actor, which a grant-aware predicate reads the grants of. The door
  * (`requireStaffCapability`) passes the actor, so the same predicate answers at the page, the
  * action and the service.
  */
@@ -119,7 +119,7 @@ function roleOf(subject: StaffSubject): StaffRole {
 }
 
 /**
- * The rung from which a permission is part of the role, so nobody needs it granted (§NNN):
+ * The rung from which a permission is part of the role, so nobody needs it granted (§687):
  * «Gestionează magazinul» is the Administrator's and the Superadministrator's since §683.
  */
 const IMPLIED_FROM: Record<StaffPermission, StaffRole> = {
@@ -132,7 +132,7 @@ export function impliesPermission(role: StaffRole, permission: StaffPermission):
 }
 
 /**
- * **Who may be given a permission (§NNN):** a backoffice role below the rung that already has it —
+ * **Who may be given a permission (§687):** a backoffice role below the rung that already has it —
  * the volunteer, the Redactor, the Organizer, the Tehnic. Never a club member, who is no staff
  * (§524) and is offered no grant, and never the Administrator or the Superadministrator, whose role
  * already includes it. A grant row a role may not hold — a colleague demoted to member — grants
@@ -143,7 +143,7 @@ export function canHoldPermission(role: StaffRole, permission: StaffPermission):
 }
 
 /**
- * Whether `actor` may tick or untick `permission` on a colleague who holds `targetRole` (§NNN):
+ * Whether `actor` may tick or untick `permission` on a colleague who holds `targetRole` (§687):
  * whoever manages that colleague (`canManageMember`, §450 — the Administrator every row but a
  * Superadministrator's, the Superadministrator every row), on a role that may hold it. The service
  * refuses the actor's own row besides.
@@ -153,7 +153,7 @@ export function canGrantPermission(actor: StaffSubject, targetRole: StaffRole, p
 }
 
 /**
- * Whether a colleague holds `permission` **by a grant** that counts (§NNN) — a row their role may
+ * Whether a colleague holds `permission` **by a grant** that counts (§687) — a row their role may
  * hold. What «Echipa» draws a row's tick and chip from; never a door: a door asks the named
  * capability (`canManageShop`), which also counts the rank.
  */
@@ -161,7 +161,7 @@ export function holdsGrant(member: StaffActor, permission: StaffPermission): boo
   return canHoldPermission(member.role, permission) && (member.permissions?.has(permission) ?? false);
 }
 
-/** Whether the subject has `permission`, by rank or by a grant a role of theirs may hold (§NNN). */
+/** Whether the subject has `permission`, by rank or by a grant a role of theirs may hold (§687). */
 function hasPermission(subject: StaffSubject, permission: StaffPermission): boolean {
   const role = roleOf(subject);
   if (!isBackofficeRole(role)) return false;
@@ -231,7 +231,7 @@ export function canEditDiscountCodeWords(subject: StaffSubject): boolean {
  * Administrator's and the Superadministrator's: an order is money the club collects outside the site,
  * the threshold of changing a registration (`canManageRegistrations`).
  *
- * **And, since §NNN, whoever holds «Gestionează magazinul» (`shop.manage`)** — a volunteer, the
+ * **And, since §687, whoever holds «Gestionează magazinul» (`shop.manage`)** — a volunteer, the
  * Redactor, the Organizer or the Tehnic the Administrator ticked it for on «Echipa». The grant is
  * read only for a backoffice role (`hasPermission` asks `isBackofficeRole` first): a member with a
  * stale row gets nothing.
@@ -243,7 +243,7 @@ export function canManageShop(subject: StaffSubject): boolean {
 /**
  * Reading the shop — the catalogue, the orders and their CSV — without a verb that changes one: who
  * reads the participant list (`canReadRegistrations`, §289), the Organizer included, and whoever
- * runs the shop (`canManageShop`, a grant included since §NNN). Otherwise the Tehnic, the Redactor
+ * runs the shop (`canManageShop`, a grant included since §687). Otherwise the Tehnic, the Redactor
  * and the volunteer read none of it; an order names a member and what they paid.
  */
 export function canReadShop(subject: StaffSubject): boolean {
@@ -254,7 +254,7 @@ export function canReadShop(subject: StaffSubject): boolean {
 /**
  * The ordering member's address beside an order (§683): only for the roles that already read the
  * club's members' and subscribers' addresses (§550, `canSendNewsletter`) — the same rule, read once.
- * **By the role alone (§NNN):** «Gestionează magazinul» opens the shop's verbs and never an address;
+ * **By the role alone (§687):** «Gestionează magazinul» opens the shop's verbs and never an address;
  * a volunteer who runs the shop reads each order's member by name.
  */
 export function canSeeShopMemberAddresses(subject: StaffSubject): boolean {
@@ -874,7 +874,7 @@ export function canManageClubSettings(subject: StaffSubject): boolean {
  *                                             composer (§445); withdrawing an address asks
  *                                             `canManageRegistrations` for itself
  *     shop           canReadShop              `admin/shop/layout.tsx` — «Magazin», the members' shop
- *                                             (§683, its own section since §NNN); every verb asks
+ *                                             (§683, its own section since §687); every verb asks
  *                                             `canManageShop`, a grant included
  *     settings       canOpenSettings          `admin/settings/layout.tsx` — «Setări» (§516), each tab
  *                                             its own gate (`settings-tabs.ts`): «Emailuri», «Termene»,
@@ -898,7 +898,7 @@ export function canManageClubSettings(subject: StaffSubject): boolean {
  *
  * **In the order the club opens them (§516)**, which is the array's order and the bar's: the
  * events, who signed up, the race-day desk, the pictures, the pages, the newsletter, the shop
- * (§NNN), then the settings, what is owed, the team, the legal texts and the guide. A role is
+ * (§687), then the settings, what is owed, the team, the legal texts and the guide. A role is
  * offered the same order with its own gaps — the volunteer's bar is «Ziua cursei», «Ghid», and
  * «Ziua cursei», «Magazin», «Ghid» for a volunteer who runs the shop.
  *
@@ -1005,7 +1005,7 @@ export function visibleAdminSections(subject: StaffSubject): AdminSection[] {
     */
     newsletter: canSendNewsletter(role),
     /*
-      «Magazin» (§NNN): the members' shop, its own section — it was a card on «Pagini» → «Membri»
+      «Magazin» (§687): the members' shop, its own section — it was a card on «Pagini» → «Membri»
       (§683), a page a volunteer cannot open, so a volunteer given «Gestionează magazinul» had no way
       in. Offered to whoever reads the shop: the Organizer and the Administrators by role, and a
       holder of the grant whatever their rung — the one entry that reads the actor, not the role.

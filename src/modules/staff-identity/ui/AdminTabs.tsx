@@ -94,7 +94,7 @@ const ICONS: Record<AdminSection, typeof EventIcon> = {
   settings: TuneIcon,
   // The club's news to the people who asked for it (§445): a paper, not an envelope.
   newsletter: NewspaperIcon,
-  // «Magazin» (§NNN): the shop front the members' shop card already wore (§683).
+  // «Magazin» (§687): the shop front the members' shop card already wore (§683).
   shop: StorefrontIcon,
   staff: GroupIcon,
 };

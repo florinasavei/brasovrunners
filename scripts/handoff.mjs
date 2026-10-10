@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Where everything stands, for the session that takes over (§NNN) — the first command a session
+ * Where everything stands, for the session that takes over (§688) — the first command a session
  * runs when another one stopped: out of credits, past a usage limit, a laptop closed, a phone gone.
  *
  * Usage: yarn handoff            # prints a Markdown status to paste or read

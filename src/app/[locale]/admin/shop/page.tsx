@@ -28,7 +28,7 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 /**
- * «Magazin» — the members' shop as its own section of the backoffice (§NNN): the catalogue, «Cum se
+ * «Magazin» — the members' shop as its own section of the backoffice (§687): the catalogue, «Cum se
  * plătește», «Cine primește comenzile» and the orders, the card of §683 unchanged.
  *
  * It was a card on «Pagini» → «Membri», a page the volunteer cannot open; a volunteer given

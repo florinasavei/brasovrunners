@@ -1468,7 +1468,7 @@ export async function changeStaffRoleAction(_previous: FormOutcome | null, form:
 }
 
 /**
- * «Gestionează magazinul» on a colleague's row of «Echipa» (§NNN): ticked or unticked, asked first,
+ * «Gestionează magazinul» on a colleague's row of «Echipa» (§687): ticked or unticked, asked first,
  * then a toast. The permission is a closed set — never a name taken from the POST — and the service
  * asserts `canGrantPermission` again on the row it reads (BR-REQ-060-01).
  */

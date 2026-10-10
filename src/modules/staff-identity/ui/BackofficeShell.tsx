@@ -59,7 +59,7 @@ export default async function BackofficeShell({
     // /admin/settings lands on the reader's first tab.
     settings: getPathname({ locale, href: "/admin/settings" }),
     newsletter: getPathname({ locale, href: "/admin/newsletter" }),
-    // «Magazin» (§NNN): the members' shop, its own section — a grant opens it to any backoffice role.
+    // «Magazin» (§687): the members' shop, its own section — a grant opens it to any backoffice role.
     shop: getPathname({ locale, href: "/admin/shop" }),
     staff: getPathname({ locale, href: "/admin/staff" }),
   };

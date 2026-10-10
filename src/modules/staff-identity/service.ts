@@ -107,7 +107,7 @@ export async function assertMayManageAccount<T extends Record<string, unknown>>(
   return member;
 }
 
-/** The team, each row with the permissions granted to that person (§NNN) — «Echipa»'s ticks and chips. */
+/** The team, each row with the permissions granted to that person (§687) — «Echipa»'s ticks and chips. */
 export async function listStaff<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: StaffUser,
@@ -118,7 +118,7 @@ export async function listStaff<T extends Record<string, unknown>>(
 }
 
 /**
- * «Gestionează magazinul» ticked or unticked on a colleague's row of «Echipa» (§NNN).
+ * «Gestionează magazinul» ticked or unticked on a colleague's row of «Echipa» (§687).
  *
  * Asserted here whatever the page offered (BR-REQ-060-01): the team is the actor's to manage
  * (`canManageStaff`), the colleague's row is theirs to touch and the colleague's role may hold the
@@ -138,16 +138,16 @@ export async function setStaffPermission<T extends Record<string, unknown>>(
   if (!target) throw new DomainError("NOT_FOUND", "no such staff user");
   if (target.id === actor.id) throw new DomainError("FORBIDDEN", "an administrator cannot change their own permissions");
   if (!canGrantPermission(actor, target.role, input.permission)) {
-    throw new DomainError("FORBIDDEN", `role ${actor.role} may not give ${input.permission} to a ${target.role} (§NNN)`);
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not give ${input.permission} to a ${target.role} (§687)`);
   }
   const now = input.now ?? new Date();
   return db.transaction(async (tx) => {
     // The role again, under the row's lock: a role change between the check above and this
-    // write would otherwise leave a grant its cleanup never saw (§NNN).
+    // write would otherwise leave a grant its cleanup never saw (§687).
     const lockedRole = await lockStaffUserRole(tx, target.id);
     if (!lockedRole) throw new DomainError("NOT_FOUND", "no such staff user");
     if (input.on && !canGrantPermission(actor, lockedRole, input.permission)) {
-      throw new DomainError("FORBIDDEN", `role ${actor.role} may not give ${input.permission} to a ${lockedRole} (§NNN)`);
+      throw new DomainError("FORBIDDEN", `role ${actor.role} may not give ${input.permission} to a ${lockedRole} (§687)`);
     }
     const changed = input.on
       ? await insertStaffPermission(tx, { staffUserId: target.id, permission: input.permission, grantedByStaffUserId: actor.id, now })
@@ -367,7 +367,7 @@ export async function changeStaffRole<T extends Record<string, unknown>>(
   }
 
   /*
-    The person's grants go with a role that may not hold them (§NNN), in the same transaction as the
+    The person's grants go with a role that may not hold them (§687), in the same transaction as the
     role: a colleague made a club member keeps no grant (a member is no staff, §524), and one made an
     Administrator has the permission by rank — a grant left behind would come back, unseen, on a
     later demotion. Each removal is audited with the reason `role_change`.

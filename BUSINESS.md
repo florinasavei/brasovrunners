@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.86-2026-10-10 -->
+<!-- PROJECT_BASELINE: BR-V2.87-2026-10-10 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V2.86-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.87-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -697,7 +697,7 @@ A superadmin cannot change their own role or remove their own access, and the cl
 left without a superadmin: those refusals exist so the club cannot lock itself out of its own
 backoffice.
 
-**Permissions per person, beside the roles (`DECISIONS.md` §NNN).** Some jobs do not fit a rung:
+**Permissions per person, beside the roles (`DECISIONS.md` §687).** Some jobs do not fit a rung:
 the first is running the members' shop without being an administrator. Rather than a new role —
 which would hand the job to every role above it, and could not be combined with being the
 organizer — such a job is a permission given to one person: «Gestionează magazinul» is the first.

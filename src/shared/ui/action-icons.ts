@@ -209,7 +209,7 @@ export type ActionIconName =
   | "role"
   | "turnOn"
   | "turnOff"
-  // A permission on a colleague's row of «Echipa» (§NNN): the box ticked or empty — a press that
+  // A permission on a colleague's row of «Echipa» (§687): the box ticked or empty — a press that
   // asks first, never a bare checkbox, so the tick needs no client island of its own.
   | "tickOn"
   | "tickOff"

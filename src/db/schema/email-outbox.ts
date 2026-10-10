@@ -113,7 +113,7 @@ export const emailMessageType = pgEnum("email_message_type", [
   "SHOP_ORDER_PLACED",
   // «Comanda ta e plătită»: an Administrator marked the order paid. To the member, no token.
   "SHOP_ORDER_PAID",
-  // One per order to «Cine primește comenzile» on «Magazin» (its own section since §NNN), when the club set an address:
+  // One per order to «Cine primește comenzile» on «Magazin» (its own section since §687), when the club set an address:
   // who ordered what. No token; the club opens the list behind the sign-in.
   "SHOP_ORDER_CLUB_NOTICE",
 ]);

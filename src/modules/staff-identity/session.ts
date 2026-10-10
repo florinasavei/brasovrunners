@@ -91,7 +91,7 @@ export async function requireStaff(): Promise<StaffAccount> {
  * The rules that depend on the content itself ("their own drafts", "not a Superadministrator's
  * row") are the services' to assert after this one has answered.
  *
- * **The predicate is handed the actor, not the role, since §NNN.** Every single-role predicate takes
+ * **The predicate is handed the actor, not the role, since §687.** Every single-role predicate takes
  * a `StaffSubject` — a role or an actor with the permissions granted to that person — so one asking
  * the role alone answers as it did, and a grant-aware one (`canManageShop`) reads the grants the
  * session carried. Still a predicate, never a rank: the parameter's type says so.

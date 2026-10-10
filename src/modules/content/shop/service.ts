@@ -142,7 +142,7 @@ export async function saveProduct<T extends Record<string, unknown>>(
         descriptionRo: fields.descriptionRo,
         descriptionEn: fields.descriptionEn,
         priceBani: fields.priceBani,
-        // The currency may change after orders exist: each order keeps the one it was placed in (§NNN).
+        // The currency may change after orders exist: each order keeps the one it was placed in (§686).
         currency: fields.currency,
         photoMediaAssetId: fields.photoAssetId,
         photoCrop: fields.photoCrop,

@@ -22,7 +22,7 @@ import { staffUsers } from "./staff-users";
  * place in the list. A product that already has orders is archived rather than deleted: the orders
  * keep their own copy of the title, the price and its currency, and the row stays for the list's filter.
  *
- * The price has a currency, lei or euro, chosen per product (§NNN; the owner, 2026-10-10: the
+ * The price has a currency, lei or euro, chosen per product (§686; the owner, 2026-10-10: the
  * supplier prices the shirts in euro and members read «EUR, shown as EUR»). It is shown in that
  * currency everywhere, never converted: no rate, no sum charged (§683).
  */
@@ -42,7 +42,7 @@ export const shopProducts = pgTable(
      * lei-only days (§683): a rename is a contract change (AGENTS.md §7.6).
      */
     priceBani: integer("price_bani").notNull(),
-    /** «Moneda»: `RON` or `EUR` (`SHOP_CURRENCIES` in `content/shop/domain.ts`), never converted (§NNN). */
+    /** «Moneda»: `RON` or `EUR` (`SHOP_CURRENCIES` in `content/shop/domain.ts`), never converted (§686). */
     currency: text("currency", { enum: ["RON", "EUR"] }).notNull().default("RON"),
 
     /** The photo, as a card of «Echipa» keeps it (§459): `set null` if the picture is removed from the store. */
@@ -119,7 +119,7 @@ export type ShopOrderStatus = (typeof shopOrderStatus.enumValues)[number];
 /**
  * One order: one product, one variant, a quantity of one to five, by one member account (§524,
  * §662). What the member ordered is copied at the moment of the order — the titles, the variant's
- * label, the unit price and its currency (§NNN) — so an edited or archived product never changes an
+ * label, the unit price and its currency (§686) — so an edited or archived product never changes an
  * order already placed.
  * The member's name is copied too: an order is an accounting record the club keeps after the
  * account is removed from «Echipa» (`member_staff_user_id` then goes null; the address with it).
@@ -145,7 +145,7 @@ export const shopOrders = pgTable(
     quantity: integer("quantity").notNull(),
     /** The unit price in the minor unit of `currency` — bani for RON, cents for EUR — as it was at the order. */
     unitPriceBani: integer("unit_price_bani").notNull(),
-    /** The product's currency at the order, copied in the order's own transaction (§NNN); the product may change its own later. */
+    /** The product's currency at the order, copied in the order's own transaction (§686); the product may change its own later. */
     currency: text("currency", { enum: ["RON", "EUR"] }).notNull().default("RON"),
     /** Whether the order took from a counted stock: a cancellation gives back exactly what was taken. */
     stockTaken: boolean("stock_taken").notNull().default(false),

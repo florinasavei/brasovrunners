@@ -77,7 +77,7 @@ export async function POST(request: Request): Promise<Response> {
  * kinds of place a picture is used — the picker's «Folosită în» chips — never which page or who.
  *
  * Only the people who may put a picture somewhere (BR-REQ-060-01): whoever writes an event's or
- * a page's words, or sets an event's fields and albums — and whoever runs the shop (§NNN), whose
+ * a page's words, or sets an event's fields and albums — and whoever runs the shop (§687), whose
  * product photo field has a «Din galerie» of its own: `canManageShop` reads the actor, so a
  * colleague given «Gestionează magazinul» lists the gallery whatever their role. A volunteer's
  * backoffice is otherwise the desk, and the club's stored pictures, with their file names, are not

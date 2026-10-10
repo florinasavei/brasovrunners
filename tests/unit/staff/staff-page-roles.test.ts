@@ -161,10 +161,10 @@ describe("BR-REQ-060-01 the team page below the Administrator", () => {
 });
 
 /**
- * BR-REQ-060-01, §NNN — «Gestionează magazinul» on the rows: offered where the service would accept
+ * BR-REQ-060-01, §687 — «Gestionează magazinul» on the rows: offered where the service would accept
  * it, drawn ticked and greyed where the role has it by rank, absent elsewhere.
  */
-describe("BR-REQ-060-01 «Gestionează magazinul» on «Echipa» (§NNN)", () => {
+describe("BR-REQ-060-01 «Gestionează magazinul» on «Echipa» (§687)", () => {
   const tickForm = (row: ReactElement<Props>[]) => row.filter((element) => element.props["data-testid"] === "staff-permission-shop-form");
   const implied = (row: ReactElement<Props>[]) => row.filter((element) => element.props["data-testid"] === "staff-permission-shop-implied");
   const hidden = (row: ReactElement<Props>[], name: string) =>

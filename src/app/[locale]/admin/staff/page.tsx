@@ -173,7 +173,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
       render: (member) => (
         <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 0.5 }}>
           <Chip size="small" label={STAFF_ROLE_LABEL[member.role]} />
-          {/* «Gestionează magazinul» given on top of the role (§NNN) — only where it means something. */}
+          {/* «Gestionează magazinul» given on top of the role (§687) — only where it means something. */}
           {holdsGrant(member, "shop.manage") && (
             <Chip size="small" variant="outlined" color="secondary" label={t("staff.permissions.chipShop")} data-testid="staff-permission-shop" />
           )}
@@ -469,7 +469,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
               </ActionForm>
 
               {/*
-                «Gestionează magazinul» (§NNN): a permission on top of the role, after the role
+                «Gestionează magazinul» (§687): a permission on top of the role, after the role
                 select. A press that asks first and then toasts, like the row's other verbs — the
                 box drawn ticked or empty — offered only where the service would accept it
                 (`canGrantPermission`): never a club member's row; an Administrator's or a

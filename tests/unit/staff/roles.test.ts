@@ -439,7 +439,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     person never receives the participant list. «Newsletter» (§445) is the second cell of the same
     row: the Organizer writes to the subscribers as they write to an event's participants (§364,
     `canSendNewsletter` is `canMessageParticipants`), and the platform's helper writes to nobody.
-    «Magazin» (§NNN) is the third: the Organizer reads the shop as they read the list
+    «Magazin» (§687) is the third: the Organizer reads the shop as they read the list
     (`canReadShop` reads `canReadRegistrations`), since an order names a member and what they paid.
 
     Written as an exception the property test skips, and then asserted on its own below, so that
@@ -642,11 +642,11 @@ describe("BR-REQ-060-01 the batch's own settings ask the right predicate (§450)
 });
 
 /**
- * BR-REQ-060-01, §NNN — permissions per person on top of the ladder: «Gestionează magazinul»
+ * BR-REQ-060-01, §687 — permissions per person on top of the ladder: «Gestionează magazinul»
  * (`shop.manage`). A grant opens the shop's verbs to the backoffice role it is given to, never a
  * member's address, and never anything to a member.
  */
-describe("BR-REQ-060-01 «Gestionează magazinul» — a grant on top of the role (§NNN)", () => {
+describe("BR-REQ-060-01 «Gestionează magazinul» — a grant on top of the role (§687)", () => {
   const ORDER = ["MEMBER", "CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN", "SUPERADMIN"] as const;
   const holder = (role: StaffRole): StaffActor => ({ role, permissions: new Set(["shop.manage"] as const) });
   const without = (role: StaffRole): StaffActor => ({ role, permissions: new Set() });

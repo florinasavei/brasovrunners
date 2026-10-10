@@ -197,10 +197,10 @@ export async function deleteDiscountCodeAction(_previous: FormOutcome | null, fo
  * The shop's writes, the codes' shape: a refused product or settings save returns, so every box comes
  * back as typed (§315); every other outcome is a redirect to the card with a language-neutral code and
  * a toast (§384). The door asks `canManageShop` of the actor — a colleague holding «Gestionează
- * magazinul» included (§NNN) — and the service asserts it again (BR-REQ-060-01), so an Organizer who
+ * magazinul» included (§687) — and the service asserts it again (BR-REQ-060-01), so an Organizer who
  * reads the card is refused every verb on the server.
  *
- * The card lives on «Magazin» since §NNN, its own section (`/admin/shop`); it stays in this file so
+ * The card lives on «Magazin» since §687, its own section (`/admin/shop`); it stays in this file so
  * the shop's verbs keep one home. Every answer lands there, on the list the reader was reading.
  */
 async function backToShop(form: FormData, outcome: { error?: string; saved?: string }, anchor: string, keep?: URLSearchParams): Promise<never> {

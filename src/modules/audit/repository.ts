@@ -528,7 +528,7 @@ export type AuditAction =
    */
   | "staff.invitation_sent_now"
   /**
-   * «Gestionează magazinul» ticked or unticked on «Echipa» (§NNN): the colleague's row (the entity),
+   * «Gestionează magazinul» ticked or unticked on «Echipa» (§687): the colleague's row (the entity),
    * `staffUserId` and the `permission`; a revoke says why — `tick`, the box unticked, or
    * `role_change`, a new role that may not hold it. Never a name or an address.
    */

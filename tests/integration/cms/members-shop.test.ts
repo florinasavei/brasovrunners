@@ -56,7 +56,7 @@ const PRODUCT = {
   visible: true,
 };
 
-/** The CSV's header in Romanian, as the route builds it from the messages; the currency column after the unit price (§NNN). */
+/** The CSV's header in Romanian, as the route builds it from the messages; the currency column after the unit price (§686). */
 const CSV_HEADER = { number: "Nr.", date: "Data", member: "Membru", email: "Email", product: "Produs", variant: "Varianta", quantity: "Bucăți", unitPrice: "Preț", currency: "Monedă", total: "Total", status: "Starea", note: "Nota" };
 
 describe("§683 the members' shop", () => {
@@ -410,7 +410,7 @@ describe("§683 the members' shop", () => {
     expect(withEmail.split("\r\n")).toHaveLength(3);
   });
 
-  it("a product priced in euro is shown as euro everywhere, and an order keeps the currency it was placed in (§NNN)", async () => {
+  it("a product priced in euro is shown as euro everywhere, and an order keeps the currency it was placed in (§686)", async () => {
     const product = await createProduct(db, { actor: admin, fields: { ...PRODUCT, price: "12,34 €", currency: "EUR" }, now: NOW });
     expect(product).toMatchObject({ priceBani: 1234, currency: "EUR" });
     // The select absent from the post (an older form, a script): lei. A currency outside the two is refused, naming the box.

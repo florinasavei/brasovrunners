@@ -3,7 +3,7 @@ import { check, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/p
 import { staffUsers } from "./staff-users";
 
 /**
- * **Permissions per person, on top of the role ladder (§NNN).**
+ * **Permissions per person, on top of the role ladder (§687).**
  *
  * The roles nest (`domain/roles.ts`): each one is everything below it plus one thing more, so a
  * capability is a threshold. A grant is the other shape — one named power given to one person

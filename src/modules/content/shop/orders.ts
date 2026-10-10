@@ -121,7 +121,7 @@ export async function placeOrder<T extends Record<string, unknown>>(
         variantLabel: variant.label,
         quantity: fields.quantity,
         unitPriceBani: product.priceBani,
-        // The currency travels with the price, read under the same locks (§NNN): a product priced in
+        // The currency travels with the price, read under the same locks (§686): a product priced in
         // euro today and in lei tomorrow leaves this order in euro.
         currency: product.currency,
         stockTaken: left !== null,

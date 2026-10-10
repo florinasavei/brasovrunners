@@ -17,7 +17,7 @@ export const ORDER_NOTE_MAX = 300;
  */
 export const ORDER_REPEAT_WINDOW_MS = 10_000;
 /**
- * The currencies a shop price may be in (§NNN; the owner, 2026-10-10: the supplier prices the
+ * The currencies a shop price may be in (§686; the owner, 2026-10-10: the supplier prices the
  * shirts in euro, and members read «EUR, shown as EUR»): lei or euro, chosen per product, shown as
  * such everywhere, never converted — no rate, no sum charged (§683). An order copies the product's
  * currency with its unit price. The database keeps the same two letters, under a CHECK.
@@ -33,7 +33,7 @@ export const VARIANT_LABEL_MAX = 20;
 export const STOCK_MAX = 100_000;
 
 /**
- * A price as people read it, in its own currency (§NNN), the minor part only when there is one:
+ * A price as people read it, in its own currency (§686), the minor part only when there is one:
  * in lei «45 lei», «45,50 lei» (ro) and «45.50 lei» (en); in euro «30 €», «30,25 €» (ro, a no-break
  * space before the sign) and «€30», «€30.25» (en). The whole part is grouped the locale's way. The
  * one place a currency symbol is written: nothing else formats a shop price.

@@ -6,7 +6,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 export const dynamic = "force-dynamic";
 
 /**
- * «Magazin»'s gate (§NNN), above the `loading.tsx` boundary rather than inside it — the shape of
+ * «Magazin»'s gate (§687), above the `loading.tsx` boundary rather than inside it — the shape of
  * «Echipa»'s (`admin/staff/layout.tsx`), for the same reason: a `notFound()` raised after the
  * loading shell has flushed is a 200 with the not-found page in its body, and BR-REQ-060-01 asks
  * for a refusal. The page asserts the same predicate again, and every verb's action and service

@@ -18,7 +18,7 @@ export function normalizeStaffEmail(email: string): string {
 }
 
 /**
- * A staff row with the permissions granted to that person (§NNN) — what the session carries, so a
+ * A staff row with the permissions granted to that person (§687) — what the session carries, so a
  * grant-aware predicate (`canManageShop`) reads them from the actor it is handed.
  */
 export type StaffAccount = StaffUser & { permissions: ReadonlySet<StaffPermission> };
@@ -28,7 +28,7 @@ function permissionSet(listed: readonly string[] | null): ReadonlySet<StaffPermi
   return new Set((listed ?? []).filter((value): value is StaffPermission => (STAFF_PERMISSIONS as readonly string[]).includes(value)));
 }
 
-/** A row's grants as one array, in the same query as the row (§NNN): the session reads both at once. */
+/** A row's grants as one array, in the same query as the row (§687): the session reads both at once. */
 const grantedPermissions = sql<string[] | null>`(select array_agg(${staffUserPermissions.permission}) from ${staffUserPermissions} where ${staffUserPermissions.staffUserId} = ${staffUsers.id})`;
 
 /**
@@ -47,7 +47,7 @@ export async function findStaffUserById<T extends Record<string, unknown>>(
   return row ? { ...row, permissions: permissionSet(row.permissions) } : undefined;
 }
 
-/** The grants of every row (§NNN), for «Echipa»: the list is the team's handful, read in one query. */
+/** The grants of every row (§687), for «Echipa»: the list is the team's handful, read in one query. */
 export async function listStaffPermissions<T extends Record<string, unknown>>(
   db: Database<T>,
 ): Promise<Map<string, ReadonlySet<StaffPermission>>> {
@@ -225,7 +225,7 @@ export async function recordFirstSignIn<T extends Record<string, unknown>>(
 }
 
 /**
- * The colleague's role, read under the row's lock in the caller's transaction (§NNN): a grant
+ * The colleague's role, read under the row's lock in the caller's transaction (§687): a grant
  * checks the role it may be given to here, so a role change committing at the same moment runs
  * before or after it, never between the check and the insert (the role change takes the same
  * lock through its UPDATE and drops the grants the new role may not hold).
