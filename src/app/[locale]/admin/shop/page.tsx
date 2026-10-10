@@ -8,7 +8,15 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
-import { countOrdersForAdmin, listOrdersForAdmin, listProductNames, listProductsForAdmin, parseOrdersQuery } from "@/modules/content/shop/repository";
+import {
+  countOrdersForAdmin,
+  listOrderableItems,
+  listOrdersForAdmin,
+  listProductNames,
+  listProductsForAdmin,
+  listZoneAccountsForOrder,
+  parseOrdersQuery,
+} from "@/modules/content/shop/repository";
 import { readShopSettings } from "@/modules/content/shop/settings";
 import type { TeamPhotoLabels } from "@/modules/content/team/ui/TeamPhotoField";
 import { noticeDescribesMembersShop } from "@/modules/legal-documents/repository";
@@ -62,6 +70,10 @@ export default async function AdminShopPage({ params, searchParams }: Props) {
     noticeDescribesMembersShop(db, now),
     countOrdersForAdmin(db, ordersQuery),
   ]);
+  const mayManage = canManageShop(actor);
+  // «Adaugă o comandă pentru un membru» (§NNN): the member accounts and the orderable items, read only
+  // for whoever may place one — by role or by «Gestionează magazinul» (§687).
+  const [accounts, items] = mayManage ? await Promise.all([listZoneAccountsForOrder(db), listOrderableItems(db)]) : [[], []];
   const rich = richTextEditorLabels(await getTranslations("Admin.richText"));
   // The shop's boxes (§683), by the names their forms post.
   const messages = await refusalMessages({
@@ -76,6 +88,11 @@ export default async function AdminShopPage({ params, searchParams }: Props) {
     paymentRo: t("members.shop.paymentRo"),
     paymentEn: t("members.shop.paymentEn"),
     ordersTo: t("members.shop.ordersTo"),
+    // «Adaugă o comandă pentru un membru» (§NNN), by the names its form posts.
+    memberStaffUserId: t("members.shop.forMember.member"),
+    item: t("members.shop.forMember.item"),
+    quantity: t("members.shop.forMember.quantity"),
+    note: t("members.shop.forMember.note"),
   });
   const photoLabels: TeamPhotoLabels = {
     legend: t("members.shop.photo"),
@@ -141,6 +158,8 @@ export default async function AdminShopPage({ params, searchParams }: Props) {
         ordersTotal={ordersTotal}
         ordersQuery={ordersQuery}
         productNames={productNames}
+        accounts={accounts}
+        items={items}
         noticeDescribes={noticeDescribes}
         storage={isStorageConfigured()}
         path={getPathname({ locale, href: "/admin/shop" })}
@@ -149,7 +168,7 @@ export default async function AdminShopPage({ params, searchParams }: Props) {
         cancel={words.cancel}
         messages={messages}
         photoLabels={photoLabels}
-        mayManage={canManageShop(actor)}
+        mayManage={mayManage}
         showEmail={canSeeShopMemberAddresses(actor.role)}
       />
     </Stack>

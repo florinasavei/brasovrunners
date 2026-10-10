@@ -7254,6 +7254,26 @@
         "note": "Nota",
         "cancelledByMember": "Anulată de membru.",
         "cancelledByClub": "Anulată de club.",
+        "forMember": {
+          "title": "Adaugă o comandă pentru un membru",
+          "help": "Pentru comenzile strânse în afara site-ului. Comanda ia din același stoc, e marcată „adăugată de club” și apare la membru în „Comenzile mele”. Membrul are nevoie de cont pe „Echipa”.",
+          "member": "Membrul",
+          "memberNone": "Niciun cont de membru încă: adaugă-l întâi pe „Echipa”.",
+          "item": "Produsul și varianta",
+          "itemSoldOut": "{label} — stoc epuizat",
+          "quantity": "Bucăți",
+          "note": "Nota (opțional)",
+          "email": "Trimite-i membrului emailul de confirmare",
+          "paid": "Marchează direct ca plătită",
+          "add": "Adaugă comanda",
+          "ask": "Adaugi comanda pentru acest membru?",
+          "askBody": "Comanda ia din stoc ca una făcută de membru și apare la el în „Comenzile mele”. Emailurile pleacă doar dacă ai bifat.",
+          "placedByClub": "adăugată de club"
+        },
+        "placedBy": {
+          "MEMBER": "membru",
+          "CLUB": "club"
+        },
         "verbs": {
           "pay": {
             "title": "Marchezi comanda nr. {number} plătită?",
@@ -7276,6 +7296,7 @@
           "date": "Data",
           "member": "Membru",
           "email": "Email",
+          "placedBy": "Adăugată de",
           "product": "Produs",
           "variant": "Varianta",
           "quantity": "Bucăți",
@@ -9265,6 +9286,7 @@
       "shopOrderPaid": "Comanda a fost marcată plătită. Membrul primește un email.",
       "shopOrderHandedOver": "Comanda a fost marcată predată.",
       "shopOrderCancelled": "Comanda a fost anulată.",
+      "shopOrderPlacedForMember": "Comanda a fost adăugată pentru membru.",
       "staffPermissionGranted": "Gata: poate gestiona magazinul.",
       "staffPermissionRevoked": "Gata: nu mai gestionează magazinul."
     }
