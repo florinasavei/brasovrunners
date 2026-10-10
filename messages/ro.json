@@ -5707,6 +5707,7 @@
                 "«Înscrieri»: cine s-a înscris, cu filtre, export și pagina fiecărei înscrieri.",
                 "«Ziua cursei»: masa de ridicare a numerelor, pe telefon.",
                 "«Galerie» și «Pagini» (paginile standard — «Contact», «Echipa», «Întrebări frecvente», «Membri» — și paginile clubului).",
+                "«Magazin»: magazinul membrilor — produsele, plata și comenzile. Îl văd Organizatorul, Administratorii și colegul cu bifa «Gestionează magazinul».",
                 "«Setări»: «Emailuri» (ce primesc participanții, planul Mailgun, limita pe oră, drumurile prin Gmail, coada de trimitere), «Termene», «Aspect», «Costuri», «Anti-robot» și, la sfârșitul rândului, «Configurație» (pentru rolul Tehnic și Administratori).",
                 "«Sarcini» → «Club»: ce mai are clubul de făcut, citit din sistem, cu pașii sub fiecare rând. «Sarcini» → «De făcut»: lista clubului, scrisă și bifată de mână — adaugi un rând, îl dai cuiva, îi pui un termen, îl bifezi când e gata.",
                 "«Documente legale»: termenii, nota de confidențialitate (GDPR) și declarațiile.",
@@ -6380,7 +6381,8 @@
                 "«Echipa» → «Adaugă o persoană»: «Adresă de email», «Nume», «Rol» (Voluntar pentru masă), «Limbă preferată».",
                 "Apasă «Adaugă» și confirmă. Persoana primește invitația pe email și își alege parola.",
                 "Nu a primit-o: pe rândul ei, «Retrimite invitația» → «Trimite acum, fără să aștepte trecerea programată».",
-                "Alt rol: «Schimbă rolul». A plecat din echipă: «Retrage accesul»."
+                "Alt rol: «Schimbă rolul». A plecat din echipă: «Retrage accesul».",
+                "Magazinul fără rolul de Administrator: pe rândul colegului, bifează «Gestionează magazinul» și confirmă. Găsește «Magazin» în bara de sus; adresele membrilor nu le vede."
               ]
             },
             {
