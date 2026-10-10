@@ -2,7 +2,7 @@ import { z } from "zod";
 import { readTeamPhotoCrop } from "@/modules/content/team/photo-crop";
 import { refuseOneLanguage } from "@/shared/forms/both-languages";
 import { isUuid } from "@/shared/ids";
-import { ORDER_NOTE_MAX, ORDER_QUANTITY_MAX, parsePriceToMinor, parseVariantLines, SHOP_CURRENCIES, type VariantLine, variantKey } from "./domain";
+import { currencyWordOf, ORDER_NOTE_MAX, ORDER_QUANTITY_MAX, parsePriceToMinor, parseVariantLines, SHOP_CURRENCIES, type VariantLine, variantKey } from "./domain";
 
 /**
  * What the club types for a product of «Magazin» (§683), and what a member posts with an order.
@@ -94,6 +94,12 @@ export const productFieldsSchema = z
     refuseOneLanguage(ctx, { ro: fields.descriptionRo, en: fields.descriptionEn }, { ro: ["descriptionRo"], en: ["descriptionEn"] }, "the description");
     const priceBani = parsePriceToMinor(fields.price);
     if (priceBani === null) ctx.addIssue({ code: "custom", path: ["price"], message: "a price like 45 or 45,50" });
+    // A word in the box that contradicts «Moneda» («45 lei» with euro chosen, «30 €» with lei) is a
+    // slip somewhere — refused on the box, never settled for either side (§686).
+    const word = currencyWordOf(fields.price);
+    if (priceBani !== null && word !== null && word !== fields.currency) {
+      ctx.addIssue({ code: "custom", path: ["price"], message: `the price says ${word}, «Moneda» says ${fields.currency}` });
+    }
     const variants = parseVariantLines(fields.variants, fields.stock);
     if (!variants.ok) {
       // The empty variants box reads the «Stoc» box: its refusal is on that box.
@@ -155,3 +161,43 @@ export const orderFieldsSchema = z.object({
 });
 
 export type OrderFields = z.output<typeof orderFieldsSchema>;
+
+/** A form's checkbox as it is posted: `on` ticked, absent or empty unticked; a boolean from a test. */
+const ticked = z.union([z.boolean(), z.string()]).optional().transform((value) => value === true || value === "on" || value === "true");
+
+/**
+ * What the club posts on «Adaugă o comandă pentru un membru» (§690): the member account, the product
+ * and the variant as one choice («<productId>:<variantId>», the select's value), one to five, a note,
+ * and the two ticks — whether the member is emailed, and whether the order is marked paid at once.
+ * A refusal names its box.
+ */
+export const orderForMemberFieldsSchema = z
+  .object({
+    memberStaffUserId: z.string().trim().refine(isUuid, "not a member account"),
+    item: z
+      .string()
+      .trim()
+      .transform((value, ctx) => {
+        const [productId, variantId, ...extra] = value.split(":");
+        if (extra.length > 0 || !isUuid(productId ?? "") || !isUuid(variantId ?? "")) {
+          ctx.addIssue({ code: "custom", message: "not a product and a variant" });
+          return { productId: "", variantId: "" };
+        }
+        return { productId: productId.toLowerCase(), variantId: variantId.toLowerCase() };
+      }),
+    quantity: z.coerce.number().int().min(1).max(ORDER_QUANTITY_MAX),
+    note: fewLines(ORDER_NOTE_MAX),
+    emailMember: ticked,
+    markPaid: ticked,
+  })
+  .transform((fields) => ({
+    memberStaffUserId: fields.memberStaffUserId.toLowerCase(),
+    productId: fields.item.productId,
+    variantId: fields.item.variantId,
+    quantity: fields.quantity,
+    note: fields.note,
+    emailMember: fields.emailMember,
+    markPaid: fields.markPaid,
+  }));
+
+export type OrderForMemberFields = z.output<typeof orderForMemberFieldsSchema>;

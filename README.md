@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.88-2026-10-10 -->
+<!-- PROJECT_BASELINE: BR-V2.89-2026-10-10 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V2.88-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.89-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 > **Write code once, run forever, always vibe.**
 
@@ -120,6 +120,7 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`.githooks/pre-push`](./.githooks/pre-push) | Refuses a push to `qa` or `main`; those branches move through pull requests only |
 | [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md) | How to run this locally: prerequisites, first run, every command, and what will catch you out |
 | [`docs/VIBECODING.md`](./docs/VIBECODING.md) | The one page before asking an AI to change anything: the loop, where things live, adding a field end to end, the rules that bite |
+| [`docs/REDESIGN.md`](./docs/REDESIGN.md) | The redesign plan (2026): the twelve decisions only the club can make, what exists versus what is new, the visual system, the phases and their gates, the content the club provides, the open questions. Kept by the dispatcher; its rows and their statuses are drawn at `/admin/design` («Setări» → «Aspect» → «Sistemul de design») |
 | [`docs/PRACTICES.md`](./docs/PRACTICES.md) | Practice guides and checklists: code priorities, delivery, mobile-first, SEO, AIO, accessibility, performance, editorial, launch. Guidance, not authority |
 | [`docs/brand/README.md`](./docs/brand/README.md) | The club's logo, kit photograph and display typeface: what each file is, which of the two blues is authoritative, and why the kit font cannot set a Romanian word |
 | [`docs/PLATFORM.md`](./docs/PLATFORM.md) | Every account the platform runs on: plan, what it holds, who can recover it, and **what its limits stop the club from doing**. Operational fact, not authority; no secret and no hostname |

@@ -14,27 +14,22 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production = QA = `BR-V2.85`** (released 2026-10-10 10:25 UTC; `BR-V2.84`'s migration `0133_members_shop` was
-  approved and applied the same morning). The race of 21 November is published and takes real registrations — every
-  change is a change to a live system.
-- **On `qa`, not yet on production: `BR-V2.86` and `BR-V2.87`**, released together on the owner's «prod»:
-  - `BR-V2.86` (§685): `LICENSE` is a plain all-rights-reserved notice in the club's name, naming other running clubs
-    (the owner: «Keep it public, but make sure people don't steal it … Especially other run clubs»). The repository
-    **stays public**, so every "the repository is public" rule below still holds.
-  - `BR-V2.87` (§686–§688): a shop price in lei or euro, never converted (migration `0135_shop_price_currency`);
-    «Gestionează magazinul», a per-person permission ticked on «Echipa», and the shop's own top-bar section «Magazin»
-    (migration `0134_staff_user_permissions`); `yarn handoff` and `docs/DISPATCHER.md` § When a session stops.
-    **Two migrations: production stops at the `migrate.yml` run for the owner's approval.**
-- **`BR-V2.88` (§689), on `qa` once its pull request merges:** in Romanian the section is «Alergări», not «Evenimente» —
-  the menu, the listing's title and sentences (feminine grammar), «Alergarea principală», the filters, the backoffice tab,
-  the in-app guide; the address `/ro/evenimente`, English, the legal texts and the emails unchanged. Open questions for
-  the owner: should the registrations select's «Toate evenimentele», the night pill «Eveniment de noapte», «Evenimente
-  pentru membri» and English («Runs») follow?
-- **Three empty branches** on GitHub — `feat/team-org-chart`, `feat/design-system-page`, `feat/shop-order-for-member`
-  (a copy of the currency branch): no work of their own, nobody remembers their purpose; delete them on GitHub
-  (the session's git cannot delete a remote branch).
-- **Nothing else is building.** No worktree holds unmerged work; old worktrees under `.claude/worktrees/` can be removed
-  (`git worktree remove --force <path>`; a merged branch's worktree is safe to drop).
+- **Production: `BR-V2.85`.** Waiting for the owner's «prod», all in one `qa` → `main` release: `BR-V2.86` (§685, the
+  licence), `BR-V2.87` (§686–§688: shop prices in lei or euro, «Gestionează magazinul», `yarn handoff`), `BR-V2.88` (§689,
+  «Alergări») and `BR-V2.89` (§690–§692, below). **Four migrations, `0134`–`0137`: production stops at the `migrate.yml`
+  run for the owner's approval** (GitHub → Actions → the run → Review deployments → Production → Approve); Vercel's build
+  waits twenty minutes for it, then a redeploy.
+- **QA: `BR-V2.89`** — «Adaugă o comandă pentru un membru» on «Magazin» (§690, migration `0136`); «Echipa» as an
+  organisational chart with its boxes (§691, migration `0137`); «Sistemul de design» at `/admin/design` with the redesign
+  plan's decisions and phases, the full plan in `docs/REDESIGN.md` (§692).
+- **Nothing is building.** The three branches of §690–§692 are landed; their worktrees can be removed.
+- **Next, from the laptop:** the shop's real catalogue entered on QA through «Magazin» (three products with their sizes
+  and euro prices from the owner's sheet — never in the repository), then the owner's answers to the plan's twelve
+  decisions (`docs/REDESIGN.md`; silence takes the defaults). **The facelift is last in the queue.**
+- **Later, words only:** «Reguli» on the design page lacks two rows the brief named (Server Components first; one filled
+  icon family and a glyph on every button); §692's BR-REQ-041-01 criterion names the card's 44 px by its constant, not by
+  a test; the owner's first name sits in four e2e fixtures (`declaration-signature.spec.ts`, `signature-name.ts`,
+  `name-fold.ts`, `email-sample.ts`) and one page comment — one branch scrubs them.
 
 ### How a change is made here (the owner's standing rules, all still in force)
 
@@ -136,6 +131,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.89` | the club places an order for a member (§690) · «Echipa» as an organisational chart with its boxes (§691) · the design-system page and the redesign plan (§692) |
 | `BR-V2.88` | the section is «Alergări» (§689) |
 | `BR-V2.87` | a shop price in lei or in euro (§686) · permissions per person: «Gestionează magazinul» and the shop's own section (§687) · `yarn handoff` and the rules for a session that stops (§688) |
 | `BR-V2.86` | the licence: all rights reserved (§685) |
