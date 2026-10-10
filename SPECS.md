@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.90-2026-10-10 -->
+<!-- PROJECT_BASELINE: BR-V2.91-2026-10-10 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.90-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.91-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -1842,6 +1842,8 @@ way through every step, and none of them is a way around the allocator.
 66. Given the desk, then a row shows «Fără QR pe email — caută după nume» only while its email state asks somebody to act and the refused email is the QR confirmation or the race number's email it carries — this person's own, or any at an address that refuses mail — its tooltip saying it does not stop the number being handed out and what to tell the person, for an email owed «Spune-i persoanei: emailul cu QR nu i-a ajuns; numărul îl ridică după nume.» and never a press; a family member's owed one and every other email show nothing, and the chip carries no address and no provider words (2026-10-08, `DECISIONS.md` §671).
 67. Given a sheet of an event whose members' bib is on, holding at least one member's bib, then the PDF draws every member's bib first in number order, two to an A4 page, an odd last members' page with its lower half blank but cut, and then every other bib in number order, two to a page — a member's bib never shares a page with an ordinary one; a sheet with no member's bib prints exactly the pages it printed before (2026-10-09, `DECISIONS.md` §681).
 68. Given the sheet's route with `part=members` or `part=others`, then the file holds only the members' bibs or every bib but theirs, named `-members` or `-without-members`; any other value is the whole sheet; the role check is unchanged; and no download, whole or part, marks a bib printed — the bibs page shows «Doar numerele membrilor (PDF)» and «Fără numerele membrilor (PDF)» only while the sheet holds a member's bib (2026-10-09, `DECISIONS.md` §681).
+69. A members' design drawn «Tot numărul» fills the card above the sponsors' strip and the small print with the members' background: their photograph under the kit's navy at 0.7, else their colour when white reads on it at 4.5 : 1 or more, else the kit's gradient `GRADIENT.deep` → `GRADIENT.mid`. The lockup, the race, the number and the name are white on it, and the label is an orange stripe in capitals with the body ink, its foot on the background's foot. The sheet and the picture draw it at the same points, and the ordinary bib is unchanged (2026-10-10, `DECISIONS.md` §695).
+70. A design saved before the members' style existed reads as «Doar banda de sus» and prints as it did. A photograph that could not be fetched prints the colour or the gradient. A colour on which white does not read at AA prints the gradient, and the editor marks it «doar pentru bandă» (2026-10-10, `DECISIONS.md` §695).
 
 **Verification:** integration `registrations/bibs.test.ts`, `registrations/race-day.test.ts`, `cms/bib-design.test.ts`; unit `registrations/bibs-pdf.test.ts`, `registrations/bib-design.test.ts`; integration `registrations/void-bibs.test.ts` (16, 17); unit `registrations/race-number.test.ts` (16); unit `registrations/bib-footer.test.ts` (19); e2e `bib-design.spec.ts` (19)
 
@@ -2914,6 +2916,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 49. «Spune-ne ceva» is `md` wide. «Înapoi la Contact» is a 44-pixel button with an arrow. «Schimbă tipul mesajului» / "Change the kind of message" is an outlined button with a glyph beside the branch's name, drawn only when another branch is on. The sent page offers «Trimite alt mesaj» / "Send another message" (2026-10-10, `DECISIONS.md` §693).
 50. The event filter's chips each carry a glyph. «Evenimente speciale» / "Special events" holds every event that is not a group run, so the two chips split the list, and both are drawn whenever each holds an event. This amends §680's «Curse», which held races alone (2026-10-10, `DECISIONS.md` §693).
 51. «Cum a fost» asks «Ce ți-a plăcut, ce nu?» / "What did you like, and what not?". Its five faces stand in five columns at every width, each a 44-pixel target. «Dacă nu mai vii, ne spui de ce?» with its line is a native fold, closed unless a refusal brought a tick or a word back into it or named one of its boxes (2026-10-10, `DECISIONS.md` §693).
+52. The contact page is in sections, in §679's order: «Scrie-ne» with the form, «Alte căi de contact», «Spune-ne ceva» and the newsletter. Each section after the first opens with a divider and a heading with a glyph, and the title wears one too. «Alte căi de contact» holds the club's address, where the page does not already name it, and its public phone as a `tel:` link, each row with its glyph. It is never drawn after a send, nor when it would hold nothing (2026-10-10, `DECISIONS.md` §696).
 
 **Verification:** unit `contact/fields.test.ts`, `contact/message.test.ts`, `contact/recipients.test.ts`, `config/env.test.ts`, `diagnostics/configuration.test.ts`, `diagnostics/owner-tasks.test.ts`; integration `contact/service.test.ts`, `contact/recipients.test.ts`; e2e `contact.spec.ts`, `email-plan.spec.ts`; unit `contact/suspicion.test.ts` (11); unit `contact/message.test.ts` and integration `contact/service.test.ts` also cover 11
 

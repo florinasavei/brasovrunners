@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.91-2026-10-10
+
+- **A members' race number that looks like one** — «Fundalul numărului de membru» → «Tot numărul»: the whole card in the club kit's gradient, a colour or a gallery photograph under a navy veil, the number, the name and the race in white, and a «MEMBRU BRAȘOV RUNNERS» stripe in the kit's orange; «Doar banda de sus» keeps the old look. §695.
+- **The contact page in sections** — a divider and a glyph on every section's heading, and «Alte căi de contact» with the club's address and phone, each row with its glyph, in place of the two lines under the form. §696.
 ## BR-V2.90-2026-10-10
 
 - **Contact and «Spune-ne ceva», clearer** — the club's phone and the calendar on the contact page, «Scrie alt mesaj» / «Trimite alt mesaj» after a send; the feedback form wider, with a back button, «Schimbă tipul mesajului» beside the form's name, icons on the event filters and «Evenimente speciale» for every event but the group runs, «Ce ți-a plăcut, ce nu?» on «Cum a fost», five faces on one row, and the reasons for no longer coming folded. §693.
