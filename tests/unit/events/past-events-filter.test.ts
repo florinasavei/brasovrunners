@@ -205,7 +205,7 @@ describe("§611 the past section's own filter, independent of the cards ahead", 
     const html = await past({ type: "RACE", surface: "TRAIL" });
     expect(html).not.toMatch(/<details[^>]*data-testid="past-events"[^>]*open/);
     expect(html).not.toContain('data-filtered="true"');
-    expect(summary(html)).toBe("5 evenimente trecute");
+    expect(summary(html)).toBe("5 alergări trecute");
   });
 
   it("a uniform past window still draws the button, and its fold says why there is nothing to narrow — in both languages, no box", async () => {
@@ -217,7 +217,7 @@ describe("§611 the past section's own filter, independent of the cards ahead", 
     expect(html).toMatch(/<summary[^>]*>[\s\S]*?Filtre[\s\S]*?<\/summary>/);
     expect(inputs(html, "checkbox")).toEqual([]);
     expect(html).not.toContain("<form");
-    expect(html).toContain("Toate evenimentele trecute sunt la fel — Alergare de grup, Asfalt, Mediu (4–6), 5–10 km și Gratuit — așa că nu e nimic de filtrat aici.");
+    expect(html).toContain("Toate alergările trecute sunt la fel — Alergare de grup, Asfalt, Mediu (4–6), 5–10 km și Gratuit — așa că nu e nimic de filtrat aici.");
     currentLocale = "en";
     const en = await draw();
     expect(en).toContain("Every past event is the same — Group run, Asphalt, Medium (4–6), 5–10 km, and Free — so there is nothing to narrow here.");
@@ -241,7 +241,7 @@ describe("§611 the past section's own filter, independent of the cards ahead", 
   it("stays folded with nothing ticked, and draws nothing when there is no past at all", async () => {
     const plain = await past({});
     expect(plain).not.toMatch(/<details[^>]*data-testid="past-events"[^>]*open/);
-    expect(summary(plain)).toBe("5 evenimente trecute");
+    expect(summary(plain)).toBe("5 alergări trecute");
     expect(await markup(createElement(PastEvents, { rows: [], now: NOW, filter: NO_FILTER, facts, shownAbove: undefined, locale: "ro" }))).toBe("");
   });
 
@@ -249,7 +249,7 @@ describe("§611 the past section's own filter, independent of the cards ahead", 
     const html = await past({ "past-type": "COFFEE", type: "GROUP_RUN" });
     expect(html).toMatch(/<details[^>]*data-testid="past-events"[^>]*open=""/);
     expect(summary(html)).toBe("Din trecut — Cafea (0)");
-    expect(html).toContain("Niciun eveniment nu se potrivește filtrelor alese.");
+    expect(html).toContain("Nicio alergare nu se potrivește filtrelor alese.");
     expect(html).toContain('data-testid="past-filters"');
     // The tick's own link takes it away and keeps the cards ahead's tick.
     expect(html).toMatch(/aria-label="Scoate filtrul: [^"]+"[^>]*href="\/ro\/evenimente\?type=GROUP_RUN"/);
@@ -263,7 +263,7 @@ describe("§611 the past section's own filter, independent of the cards ahead", 
     expect(summaryEnd).toBeGreaterThan(0);
     expect(panelAt).toBeGreaterThan(summaryEnd);
     expect(cardsAt).toBeGreaterThan(panelAt);
-    expect(html).toContain('aria-label="Filtrele evenimentelor trecute"');
+    expect(html).toContain('aria-label="Filtrele alergărilor trecute"');
     expect(html).toContain('data-testid="past-active-filters"');
     expect(html).not.toContain('data-testid="listing-filters"');
     const boxes = inputs(html, "checkbox");
@@ -294,7 +294,7 @@ describe("§611 the past section's own filter, independent of the cards ahead", 
       ),
     );
     expect(html).toContain('data-testid="listing-filters"');
-    expect(html).toContain('aria-label="Filtrele evenimentelor"');
+    expect(html).toContain('aria-label="Filtrele alergărilor"');
     expect(inputs(html, "checkbox")).toEqual(["type=RACE", "type=GROUP_RUN"]);
     expect(inputs(html, "hidden")).toEqual(["view=list", "past-type=RACE", "past-type=HIKE", "past-night=1"]);
     // Unticking the one box above keeps the past's ticks and the layout.

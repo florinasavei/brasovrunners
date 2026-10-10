@@ -30,7 +30,7 @@ test.describe("BR-REQ-041-01 the listing's filters are one collapsed button", ()
     await expect(fold).toBeVisible();
     await expect(fold).not.toHaveAttribute("open", "");
     await expect(fold.locator("summary")).toHaveText("Filtre");
-    await expect(page.getByRole("form", { name: "Filtrele evenimentelor" })).toBeHidden();
+    await expect(page.getByRole("form", { name: "Filtrele alergărilor" })).toBeHidden();
     await expect(page.locator("#main").getByTestId("active-filters")).toHaveCount(0);
     await expect(heading(page, RACE)).toBeVisible();
 
@@ -53,7 +53,7 @@ test.describe("BR-REQ-041-01 the listing's filters are one collapsed button", ()
     }
     // Groups drawn from the calendar's own values, each only where it narrows: the seed has two
     // kinds, three surfaces, two difficulties — and every row is free, so no cost group at all.
-    const form = page.getByRole("form", { name: "Filtrele evenimentelor" });
+    const form = page.getByRole("form", { name: "Filtrele alergărilor" });
     await expect(form.getByRole("group", { name: "Tipul" })).toBeVisible();
     await expect(form.getByRole("group", { name: "Terenul" })).toBeVisible();
     await expect(form.getByRole("group", { name: "Dificultatea" })).toBeVisible();
@@ -121,7 +121,7 @@ test.describe("BR-REQ-041-01 the listing's filters are one collapsed button", ()
 
     // Nothing matches: the page says so in the filters' words, and the way back is on it.
     await page.goto("/ro/evenimente?type=RACE&difficulty=HARD");
-    await expect(page.locator("#main")).toContainText("Niciun eveniment nu se potrivește filtrelor alese.");
+    await expect(page.locator("#main")).toContainText("Nicio alergare nu se potrivește filtrelor alese.");
     await expect(page.locator("#main").getByTestId("active-filters").getByRole("link", { name: "Șterge filtrele" })).toBeVisible();
 
     // English, in English.
@@ -153,7 +153,7 @@ test.describe("BR-REQ-041-01 the listing's filters are one collapsed button", ()
     const pastPanel = section.getByTestId("past-filters");
     await expect(pastPanel.locator("summary")).toHaveText("Filtre (2)");
     await pastPanel.locator("summary").click();
-    await expect(page.getByRole("form", { name: "Filtrele evenimentelor trecute" })).toBeVisible();
+    await expect(page.getByRole("form", { name: "Filtrele alergărilor trecute" })).toBeVisible();
 
     // Untick «Concurs» there: only the past scope changes, and the heading names the kind left.
     await pastPanel.getByRole("checkbox", { name: "Concurs", exact: true }).uncheck();
@@ -193,7 +193,7 @@ test.describe("BR-REQ-041-01 the listing's filters are one collapsed button", ()
     await pastPanel.locator("summary").click();
     const sentence = section.getByTestId("past-filters-nothing");
     if ((await sentence.count()) > 0) {
-      await expect(sentence).toContainText("Toate evenimentele trecute sunt la fel");
+      await expect(sentence).toContainText("Toate alergările trecute sunt la fel");
       await expect(pastPanel.getByRole("checkbox")).toHaveCount(0);
     } else {
       await expect(pastPanel.getByRole("checkbox").first()).toBeVisible();
