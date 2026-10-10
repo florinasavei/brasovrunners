@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.89-2026-10-10 -->
+<!-- PROJECT_BASELINE: BR-V2.91-2026-10-10 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.89-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.91-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -24875,3 +24875,111 @@ The fixture rows, the sample weather and the sample member live in `src/modules/
 **The sample test names no one.** `design-page.test.ts` proves the page names no person without writing a name into the public repository: every fixture name is a placeholder («Membru A», «Alergare de probă»), the markup carries no address, and no sample member but «A». The card's button on «Aspect» carries the 44-pixel `TAP_TARGET` like its siblings.
 
 Baseline `BR-V2.89-2026-10-10`.
+
+## 693. The contact page shows the phone and the calendar and offers a way on after every send; «Spune-ne ceva» is wider and clearer (amending §461, §565, §676, §678, §680)
+
+**The ask, 2026-10-10:** improve the contact page as a whole, `/ro/contact` and `/en/contact`. The brief's sentence for what bothers the owner was left unfilled, so the round started from an audit of both pages at 320 pixels and on a laptop. Then came the owner's own words on the feedback form, from screenshots: «I need this to be wider», «I need the back link to have an icon and be bigger», «I want icons on these filters here, and instead of "curse" say "evenimente speciale" and use the icons», «"alt tip de mesaj" is not clear what it does, not clearly visible». Today's look and tokens stay; the facelift is a later release.
+
+**Decision — the contact page.**
+
+- **The phone on the page.** «Telefon public» (§565) was shown only in the footer's fold, closed by default, so a visitor who came to reach the club did not see it. The page now says «Sau sună-ne la <număr>» / "Or call us at <number>" as a `tel:` link on its own line under the form, under the address where there is no form, and under a delivery error. It is not shown after a send. No number set means no line. The read goes through the public cache and is tolerant of an outage, like every read on this page (§281).
+- **Where the runs are.** The intro adds one sentence, «Când și unde alergăm vezi în Calendar.» / "When and where we run is on the Calendar.", with the calendar linked. It answers the newcomer's most common question before they type it. The §546 word budgets still hold.
+- **A way on after a send.** The sent state adds «Scrie alt mesaj» / "Write another message", an outlined button with its glyph that leads back to the empty form. Before, the form was gone and only a reload of the bare address brought it back.
+- **The door's words.** «Deschide formularul anonim» becomes «Deschide formularul» / "Open the form". Since §678 every form offers «Cu nume și prenume» too, and the sentence above the button already says «anonim, dacă vrei». The shorter label also fits one line at 320 pixels, where the old one wrapped onto two.
+
+**Decision — «Spune-ne ceva».**
+
+- **Wider.** The wizard's container is `md`, not `sm`. Step 1's four cards, two per row from `sm`, no longer wrap every sentence onto four lines. A phone is unchanged.
+- **The way back.** «Înapoi la Contact» is a text button with a left arrow, a thumb's height, at body size. It is still a plain `<a>`, so the page keeps its one island.
+- **The way to another branch.** «Alt tip de mesaj», a small link under the send button, becomes «Schimbă tipul mesajului» / "Change the kind of message". It is an outlined button with a swap glyph beside the branch's name: on the right from `sm`, under the name on a narrow phone, before the form. It is drawn only when another branch is on. With one branch on there is nothing to change, and the top back button replaces the old bottom «Înapoi la Contact».
+- **The event filter's chips.** «Curse» / "Races" becomes «Evenimente speciale» / "Special events". It now holds every event that is not a group run: a race, and also a hike, a coffee or a special event, which «Curse» left under «Toate» only. The two chips split the list (`underChip`), and they are drawn whenever both hold an event. Each chip wears a glyph, `aria-hidden`: the calendar for «Toate», the trophy for «Evenimente speciale» (the registration form's own for a race), the group for «Alergări de grup». The chip key `race` is renamed `special`; an event's kind, `race`, is not.
+- **«Cum a fost» asks the right question.** Its message box asked «Ce s-a întâmplat?», the complaint's words, for a form about what one liked. It now asks «Ce ți-a plăcut, ce nu?» / "What did you like, and what not?", and the intro says «În afară de mesaj, totul e opțional.». The email to the club keeps its label.
+- **Five faces, one row.** At 320 pixels the rating's five faces wrapped four and one. They now stand in five equal columns at every width, at most 480 pixels wide, and a long label takes a second line. Each stays a 44-pixel target.
+- **«Dacă nu mai vii, ne spui de ce?» folded.** Six boxes and a line, meant for the few who stopped coming, were half the form on a phone. They now sit in a native `<details>` with the public fold's look (`DISCLOSURE_SX`) and a glyph. It starts closed and opens by itself when a refusal brought a tick or a word back into it, or named one of its boxes (`fold.ts`'s «refused»).
+- **A way on after a send.** The sent page adds «Trimite alt mesaj» / "Send another message", which leads back to step 1.
+
+**What does not change.** The order of the sections (§679), the address line under the form (§461), the anonymous default (§678), and who receives the complaint and «Girl Zone» (§676, §679). The honeypot, the timing check and Turnstile stay, and so does the newsletter's double opt-in. Every text the club types stays editable in the backoffice. The page stays rendered per request, as it already was: it reads the draft cookie and the outcome in the address. The round adds no new per-request read.
+
+**Left for the owner.**
+- *The address and the phone above the form.* A visitor who would rather write from their own mail or call scrolls past the whole form to find them. Moving them up reverses §461's placement, so it waits for the owner's word.
+- *«Eveniment» in «Spune-ne ceva».* «Evenimentul», «Cum a fost la un eveniment» and the cards' hints follow §689's open question on whether «Alergări» replaces «Evenimente» beyond the menu.
+- *The date box shows `mm/dd/yyyy`* in an English-language browser. A native date field takes the browser's format, not the page's, and a Romanian phone shows the day first.
+
+Baseline `BR-V2.90-2026-10-10`.
+
+## 694. The design system is binding: colours, icons and primitives have guards with a ratchet
+
+**The owner, 2026-10-10:** «I need a design system so we can be consistent in terms of colours, icons, components», and «component-based, vibe-coder friendly and easy to use».
+
+**What existed, and what did not.** The pieces were there: the tokens in `src/theme/brand.ts` (every hex of the site, with the AA pairs and the logo blue pinned by `brand.test.ts`), the two icon registries (`src/modules/events/ui/glyphs.ts` for public pages, `src/shared/ui/action-icons.ts` for the backoffice, §318, §521), the house primitives (`ButtonLink`, the `GlyphButton` family, `SubmitButton`, `GlyphChip`, `ChipLink`) and the design page `/admin/design`. Nothing FAILED when a page drifted: a raw hex in `sx`, an icon imported straight from `@mui/icons-material`, a bare MUI `Button` where `GlyphButton` exists.
+
+**Decision.** Three source-scanning vitest guards in `tests/unit/design/`, each reading `src/` with the TypeScript parser (comments, regular expressions and the migrations are never read), one shared walk in `scan.ts`:
+
+- `colour-literals.test.ts` refuses `rgb(`, `rgba(`, `hsl(`, `hsla(` and a `#` hex in a string or template literal outside `brand.ts` (told from an anchor by context, not by digits: a whole-string `#fff` is a colour unless it is the value of `href`, `to`, `id` or `hash`; inside a longer string a hex after `:`, `(`, `,` or a space in a CSS-like string is one; a hex with a digit still counts anywhere; the heuristic is documented in the test).
+- `icon-imports.test.ts` holds two rules, matching the house rule of §318 and §521 (a public button imports its ONE icon file so the registry's table stays off public routes): the barrel `@mui/icons-material` is refused everywhere outside a registry (never allowlisted), and a BACKOFFICE file (`isBackoffice` in `guards-allowlist.ts`: the admin routes, `/devs` and the staff areas by path, a few files of the mixed areas by name) may not import even one icon file but asks `action-icons.ts` by name. A public file importing `@mui/icons-material/<Name>` is the rule, never a defect, and is not listed. A registry is one of the eleven files of `ICON_REGISTRIES` (primitives such as `GlyphChip` are not registries: a chip's close mark is one icon file imported directly, which a public file may do), an explicit set, not a file-name pattern, so a new registry is a reviewed edit and a `FooGlyphCard.tsx` is not one by its name.
+- `primitives.test.ts` refuses `Button`, `IconButton` and `Chip` imported from MUI in `src/app/**` and an area's `ui/**` (named, default from `@mui/material/Button`, a namespace import, `export * from`, `export { default } from`, `import()`). The remedy depends on the route: backoffice, `GlyphButton` / `GlyphChip` by an action-icons name; public, `ButtonLink`, or `SubmitButton` with a glyph named in `events/ui/glyphs.ts` (GlyphButton ships the backoffice table, which `action-icons.test.ts` keeps off public routes); `GlyphChip` for a chip on either. `src/shared/`, where the primitives are written, is not scanned.
+
+**The ratchet.** Today's offenders are in one file, `guards-allowlist.ts`, each with a reason and a COUNT of its occurrences (13 colour entries with 28 hits: scrims, brand colours of third parties, the pages that render outside the theme; 40 backoffice files with 143 direct icon imports; 90 files with 98 bare MUI buttons and chips). A failure prints `file:line — the literal or import` for each hit. A new offender fails its test; the list is pinned twice, `PINNED` per rule as `{ entries, hits }` (the files, and the sum of their counts), so raising one entry's count fails even when the number of entries is the same; a listed file that offends more often than its count fails (so the most edited files cannot grow); a listed file that offends less, or no longer, fails until its count (or entry) is lowered; so a shrink is a deliberate edit of the numbers in one reviewed file. No big-bang migration: a file leaves the list when it is next touched, and the numbers only go down. The directories `src/modules/content/shop`, `src/modules/content/team` and `src/app/[locale]/admin/shop`, and the pages that edit them (`admin/pages/team/page.tsx`, `admin/pages/members/ShopCard.tsx`), are fixed, not listed: the shop's and the team page's glyphs are new `action-icons.ts` names (`shop`, `payment`, `orders`, `orderFor`, `intro`), their chips `GlyphChip` (new public registry names `shop`, `orders`, `club`, `link`; `GlyphChip` takes a `testId`), and the team editors use `GlyphButton` (new registry names `moveUp` and `moveDown`) instead of MUI's `IconButton` and a direct icon file; the photo's upload control stays a `<label for>` around the hidden file input (`GlyphButton` gains `htmlFor` for exactly that), the native picker the e2e upload path drives.
+
+**Public and backoffice, told by path.** `isBackoffice` names the backoffice by prefix and by file; seven public files once sat on that side and carried a wrong reason: the four components of the participant routes (`ConfirmOnArrival`, `FamilySittingConfirm`, `FamilySittingNext`, `FamilySittingOffer`), the members' zone's `member-codes/`, and the rich text a visitor reads with its lightbox (`PUBLIC_PREFIXES`). A public file imports its one icon file, as the house rule says, and is never listed.
+
+**The system, in files.** Tokens: `src/theme/brand.ts`. Registries: `src/modules/events/ui/glyphs.ts`, `src/shared/ui/action-icons.ts` and the area files listed in `ICON_REGISTRIES`; a public page names its glyph in one of those. Primitives: `src/shared/ui/ButtonLink.tsx`, `GlyphButton*.tsx`, `SubmitButton.tsx`, `ConfirmSubmitButton.tsx`, `src/modules/events/ui/GlyphChip.tsx`. The page: `/admin/design`. The guards: `tests/unit/design/`. `docs/VIBECODING.md` names all of it in one line.
+
+**Refused.** An ESLint plugin (a dependency, and a second place for the rules to live: a vitest scan like the house's others costs nothing to install and runs in `yarn check`). A `// eslint-disable`-style inline escape: the allowlist is one file, reviewed, and an escape in the middle of a component is invisible to the next reader. A big-bang migration of the 229 listed entries (some files stand under more than one rule): too much risk for no visitor-facing gain. The words rules catalogue (`src/modules/design/rules.ts`) has one «Reguli» row per guard, in both catalogues, with the test file and the allowlist as `code`; the design page's own components (and «Casetele paginii» of §691) were fixed rather than listed: state chips are `GlyphChip` (which takes the status colours now, with new public registry names `done`, `cancelled`, `visible`, `hidden`, `language`, `open`, `planned`, `building`), their icons registry names (`guide`, `boxes` in `action-icons.ts`).
+
+**Not run, and owed.** The team editor's and the shop card's markup changed on this branch (`BoxesCard` and the team page's chips are `GlyphChip`, `TeamLinkRowsEditor`'s IconButtons are `GlyphButton`, the photo upload is a `GlyphButton htmlFor` label); `tests/e2e/gallery-picker.spec.ts` and `tests/e2e/client-words.spec.ts` cover it in CI, and no Playwright ran in the rounds. The public `GLYPHS` table (`src/modules/events/ui/glyphs.ts`) now carries twelve backoffice-only names (`done`, `cancelled`, `visible`, `hidden`, `language`, `open`, `planned`, `building`, `shop`, `orders`, `club`, `link`), so every public `GlyphChip` island ships twelve more SVG components than before. **Owed:** a server-side status chip for the backoffice that takes an `action-icons.ts` name, after which those names leave the public table. The owner's rule that the header and the landing page are what every visitor pays for (`AGENTS.md` §1.5) is why it is written down.
+
+Baseline `BR-V2.90-2026-10-10`.
+
+## 695. A members' race number with a background of its own: the whole card in the kit's gradient, a colour or a photograph, with a «Membru» stripe (amending §664)
+
+**The owner, 2026-10-10:** «I do not like the BIB designer of the BVR members, I need a different design for them, different background.» The brief left the owner's sentence on what to change unfilled, so this round proposes three backgrounds as previews and builds all three as the club's choice per event, with a default.
+
+**What existed.** §664 gave a member's bib its own header and nothing else: a band colour or a picture across the top 62 points, and an 8-point label under the race's date. On paper that is the ordinary bib with a different top. From a metre away, a member's number cannot be told from anyone else's, and the label is the smallest text on the card.
+
+### The decision
+
+**1. A second style, «Tot numărul» / "The whole card", is the default for a club that turns the members' bib on now.** The editor's «Numărul membrilor» gains «Fundalul numărului de membru», with two choices: «Tot numărul — degradeul clubului, o culoare sau o fotografie» and «Doar banda de sus» (§664's look, unchanged). It is stored as `member.style` (`card` or `band`) inside `events.bib_design`, so there is no migration. A design saved before this key existed reads as `band` and prints as it did (§317's rule). The select offers `card` first while the members' switch is off.
+
+**2. What «Tot numărul» draws** (`bibs-pdf.ts`, `bib-image.tsx`, one geometry in `bib-geometry.ts`):
+
+- The card's whole area above the sponsors' strip and the small print is the members' background, inside the same 18-point white margin (§338).
+- The lockup, the race and its date sit where they always sit, in white. The number and the name are white too.
+- The label becomes a stripe across the card in the kit's orange, 20 points tall, its foot on the background's foot. The words are in capitals (`toLocaleUpperCase`, ș kept), bold and letter-spaced, in the body ink: «MEMBRU BRAȘOV RUNNERS» by default, or the club's own «Eticheta».
+- The sponsors' strip and the small print stay on white paper, unchanged, so a sponsor's dark logo and the 8-point line still read.
+- The stripe's height comes out of the number's area. The member's number line sits 10 points higher than the ordinary bib's, and the name below it 20 points higher. Neither touches anything.
+
+**3. The background, in the order the club's choices win** (`bib-design.ts#bibMemberCardBackground`):
+
+- **A photograph** from the gallery or an upload, through the same `BibPictureField` as every bib picture (§560). It has a place of its own, `memberCard`: the card's width by its height less the small print's one line, 559 × 363 points (about 1.54 : 1), with its own crop. It is fetched by `bib-pictures.ts` as a PNG like the others, only for a sheet or preview that draws a member's card. It lies under the kit's deepest navy at 0.7 opacity, so white reads at 6.1 : 1 even over a pure-white photograph. If it cannot be fetched, the sheet prints the next choice, never a failed sheet.
+- **A colour**: the members' colour select, the six bib colours of `bib-colours.ts`. Only those on which white reads at AA (4.5 : 1) are used on a card: red, purple, teal and black. Green (4.43) and orange (3.08) are labelled «doar pentru bandă» in the select and print the gradient on a card.
+- **The club kit's gradient**, the default: `GRADIENT.deep` to `GRADIENT.mid` from `theme/brand.ts`, top to bottom, the way the shirt is worn. Its third stop, the cyan by the hem, carries white at 2.9 : 1, so the card stops short of it. This is the kit's own ramp, not a new gradient; the site's three-gradient budget (§166) is for page surfaces and is untouched.
+
+**What the club changes per event:** the style, the colour, the photograph and its crop, the label. **What is fixed:** white words on the background; the orange stripe with ink words; the navy veil and its opacity; the gradient's two stops; the place of everything. Every colour comes from `theme/brand.ts` or the bib presets, none typed in the renderers (`BIB_MEMBER_CARD`).
+
+**4. Unchanged, on purpose.** The ordinary bib, byte for byte, whatever the members' design says (a test compares both renderers' output). The number, its band and its order (§173). Who wears the members' bib: wanted, offered and verified (§664). The members first on their own pages (§681). The desk, the export and the public list. The «tipărit» mark.
+
+### Refused
+
+- **The whole bib edge to edge.** A home printer cannot print the margin, and a bleed on one half of an A4 sheet and not the other is two designs (§338).
+- **The kit's full three-stop gradient.** White on its cyan end fails AA, and the number would stand on it.
+- **A darker green and orange made for the card.** That would be two new hexes outside `brand.ts` for one style. Those two print the gradient instead, and the editor says so.
+- **The small print on the background.** At 8 points it needs the paper, and a sponsor's logo is usually drawn for white.
+- **Migrating events that already offer the members' bib to the new style.** A saved design prints as it did until the club picks «Tot numărul» once (§317).
+
+Baseline `BR-V2.91-2026-10-10`.
+
+## 696. The contact page in sections, with dividers and a glyph on each heading; «Alte căi de contact» holds the address and the phone (amending §461, §565 and the contact-page round of the same day)
+
+**The owner, 2026-10-10,** with a screenshot of `/ro/contact` on QA: «First of all I need here sections, separators and icons».
+
+**Decision.**
+
+- **Four sections, in §679's order.** «Scrie-ne» with the form, then «Alte căi de contact» / "Other ways to reach us", «Spune-ne ceva» and the newsletter, with the club's identity line (§565) still the page's last. Every section after the first opens with a divider and a heading that wears its glyph in the primary colour: a contact card on «Alte căi de contact», the review glyph on «Spune-ne ceva», and a megaphone on the newsletter's heading. That heading is drawn by the newsletter's own box, which only this page uses. The title «Scrie-ne» wears conversation bubbles and stays the page's one `<h1>` with its words. Every glyph is decoration, `aria-hidden`; the words stay each heading's name. One shared `SECTION_SX` in the page draws the divider and the spacing, so the §380 density sites do not grow.
+- **«Alte căi de contact».** It replaces two lines under the form: §461's «Sau scrie-ne direct la …» and the contact-page round's «Sau sună-ne la …». The section has one row per way, each with its glyph: «Scrie-ne direct la» / "Write to us directly at" and the address or addresses (§442's order, «sau» between them), then «Sună-ne la» / "Call us at" and the phone as a `tel:` link. The rows stand 24 pixels apart, so the phone's inline 44-pixel reach (§480) never covers the address above it, and the address row opens under the section's heading, which nothing presses. The address is left out where the page already names it: with no form, and in a delivery error's alert. The phone stays in both of those states. The whole section is left out after a send, and when it would hold nothing.
+
+**What does not change.** The order of the sections (§679), the form and its words, the anonymous default (§678), the newsletter's double opt-in, and every text the club types in the backoffice.
+
+**Left for the owner.** Moving «Alte căi de contact» above the form. It would put the address and the phone first for a visitor who would rather write from their own mail or call, but it reverses §461's choice of the form first, so it waits for the owner's word.
+
+Baseline `BR-V2.91-2026-10-10`.

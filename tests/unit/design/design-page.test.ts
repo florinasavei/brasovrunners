@@ -165,7 +165,7 @@ describe("BR-REQ-060-01 «Sistemul de design» draws the look from the code", ()
   it("holds every rule the brief names, in both catalogues", () => {
     const ids = DESIGN_RULES.map((rule) => rule.id);
     for (const id of ["staticPages", "lightDefault", "pageTint", "fontSize"]) expect(ids).toContain(id);
-    expect(ids.length).toBe(16);
+    expect(ids.length).toBe(19);
     for (const catalogue of [ro, en]) expect(Object.keys(catalogue.Admin.design.rules.items).sort()).toEqual([...ids].sort());
     for (const rule of DESIGN_RULES) for (const where of rule.where) expect(existsSync(where.replace(/\/$/, "")), where).toBe(true);
   });

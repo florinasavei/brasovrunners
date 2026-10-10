@@ -2117,15 +2117,18 @@
           "cropTitle": "Partea care se tipărește",
           "cropHelp": {
             "header": "Trage dreptunghiul peste partea care vrei să apară sus, pe toată lățimea numărului.",
-            "sponsors": "Trage dreptunghiul peste sponsori. „Toată imaginea” pune imaginea întreagă în bandă."
+            "sponsors": "Trage dreptunghiul peste sponsori. „Toată imaginea” pune imaginea întreagă în bandă.",
+            "memberCard": "Trage dreptunghiul peste partea care vrei să apară în spatele cifrelor, pe tot numărul."
           },
           "cropReset": {
             "header": "Înapoi la mijloc",
-            "sponsors": "Toată imaginea"
+            "sponsors": "Toată imaginea",
+            "memberCard": "Înapoi la mijloc"
           },
           "shape": {
             "header": "Forma: {ratio} la 1, cât banda de sus a numărului.",
-            "sponsors": "Forma: {ratio} la 1, cât banda cu sponsori."
+            "sponsors": "Forma: {ratio} la 1, cât banda cu sponsori.",
+            "memberCard": "Forma: {ratio} la 1, cât numărul întreg fără rândul de jos."
           }
         },
         "footer": {
@@ -2151,13 +2154,22 @@
           "enabledHelp": "Formularul întreabă „Vreau numărul de membru” sub bifa de membru {club}. Se tipărește doar pentru o adresă a unui cont din «Echipa». Numărul rămâne în aceeași ordine.",
           "previewAlt": "Numărul de concurs al unui membru, cu designul membrilor, pentru un alergător cu numele „Nume Prenume”",
           "previewCaption": "Previzualizare — numărul unui membru",
-          "bandColour": "Culoarea benzii pentru membri",
-          "bandColourHelp": "Folosită când nu alegi o imagine, și sub eticheta de pe imagine.",
-          "eventColour": "Culoarea evenimentului",
+          "style": "Fundalul numărului de membru",
+          "styleHelp": "„Tot numărul”: fundal pe tot numărul, cifre și nume albe, eticheta pe o bandă portocalie. „Doar banda de sus”: numărul obișnuit, cu altă bandă sus.",
+          "styles": {
+            "card": "Tot numărul — degradeul clubului, o culoare sau o fotografie",
+            "band": "Doar banda de sus"
+          },
+          "bandOnly": "{colour} — doar pe bandă",
+          "cardImageSrc": "Fotografie pe tot numărul, pentru membri",
+          "cardImageSrcHelp": "Doar cu „Tot numărul”. Stă sub un văl bleumarin, ca cifrele albe să se citească. Fără ea: culoarea aleasă sau degradeul tricoului.",
+          "bandColour": "Culoarea membrilor",
+          "bandColourHelp": "Pe bandă: culoarea benzii. Pe tot numărul: fundalul, fără fotografie; gol înseamnă degradeul tricoului. Verdele și portocaliul rămân doar pe bandă.",
+          "eventColour": "Implicită: a evenimentului, sau degradeul clubului",
           "headerImageSrc": "Imagine în locul benzii, pentru membri",
-          "headerImageSrcHelp": "Ca imaginea de sus a numărului, doar pe numerele membrilor. Fără ea, banda are culoarea aleasă mai sus.",
+          "headerImageSrcHelp": "Doar cu „Doar banda de sus”. Ca imaginea de sus a numărului, doar pe numerele membrilor. Fără ea, banda are culoarea aleasă mai sus.",
           "label": "Eticheta",
-          "labelHelp": "Un rând scurt pe banda numărului de membru, cel mult {max} de caractere. Gol: «Membru {club}»."
+          "labelHelp": "Un rând scurt, cel mult {max} de caractere, pe bandă sau cu majuscule pe banda portocalie. Gol: «Membru {club}»."
         }
       },
       "bibColour": "Culoarea numerelor de concurs (BIB)",
@@ -5847,7 +5859,10 @@
           "staticPages": "Paginile publice sunt statice: CDN-ul răspunde unui vizitator, iar citirile trec prin cache-ul public.",
           "lightDefault": "Site-ul pornește deschis la culoare; întunecat doar din butonul din subsol, niciodată din setarea telefonului.",
           "pageTint": "Nuanța paginilor publice e setarea clubului, cu o gardă de contrast: text citibil pe orice nuanță.",
-          "fontSize": "Mărimea textului pe paginile publice e o setare a clubului, dintr-o scară cu limite."
+          "fontSize": "Mărimea textului pe paginile publice e o setare a clubului, dintr-o scară cu limite.",
+          "colourLiterals": "Nicio culoare scrisă direct în cod: culorile vin din temă, iar excepțiile sunt într-o listă care doar se scurtează.",
+          "iconImports": "Pictogramele vin din registre, după nume; în backoffice nu se importă direct, iar pe paginile publice doar un fișier pe pictogramă, niciodată pachetul întreg.",
+          "primitives": "Un buton sau o pastilă e a casei (GlyphButton, ButtonLink, GlyphChip), nu un Button, IconButton sau Chip MUI pe care l-a scris cineva din nou."
         }
       },
       "plan": {
@@ -8899,6 +8914,7 @@
     "title": "Scrie-ne",
     "intro": "O întrebare despre o alergare, o înscriere sau club? Îți răspundem pe e-mail.",
     "faqHint": "Poate găsești răspunsul la <faq>Întrebări frecvente</faq>.",
+    "runsHint": "Când și unde alergăm vezi în <calendar>Calendar</calendar>.",
     "name": "Numele tău",
     "email": "Adresa ta de e-mail",
     "message": "Mesajul",
@@ -8911,11 +8927,16 @@
     "sent": {
       "title": "Mesajul a plecat.",
       "bodyTo": "Îți răspundem pe {email}.",
-      "body": "Îți răspundem pe adresa ta de e-mail."
+      "body": "Îți răspundem pe adresa ta de e-mail.",
+      "another": "Scrie alt mesaj"
     },
-    "direct": "Sau scrie-ne direct la",
+    "direct": "Scrie-ne la",
+    "phone": "Sună-ne la",
+    "ways": {
+      "title": "Contact direct"
+    },
+    "formTitle": "Trimite-ne un mesaj",
     "off": {
-      "writeTo": "Scrie-ne la",
       "none": "Formularul de contact nu este disponibil momentan.",
       "or": "sau"
     },
@@ -8948,9 +8969,9 @@
     "intro": "Anonim, dacă nu alegi să-ți spui numele. Alege despre ce e vorba.",
     "backToContact": "Înapoi la Contact",
     "door": {
-      "intro": "Cum a fost la un eveniment, o sugestie sau o reclamație — anonim, dacă vrei.",
+      "intro": "Cum a fost la o alergare, o sugestie sau o reclamație — anonim, dacă vrei.",
       "introSafety": "Un formular confidențial pentru femeile care nu s-au simțit în siguranță la noi.",
-      "button": "Deschide formularul anonim"
+      "button": "Deschide formularul"
     },
     "choose": {
       "legend": "Despre ce e vorba?",
@@ -8974,8 +8995,8 @@
     "branches": {
       "howItWent": {
         "label": "Cum a fost",
-        "hint": "Un eveniment sau o alergare de grup: ce ți-a plăcut, ce nu.",
-        "intro": "Spune-ne cum a fost. În afară de ce s-a întâmplat, totul e opțional."
+        "hint": "O alergare a clubului, de grup sau specială: ce ți-a plăcut, ce nu.",
+        "intro": "Spune-ne cum a fost. În afară de mesaj, totul e opțional."
       },
       "suggestion": {
         "label": "O sugestie",
@@ -8985,7 +9006,7 @@
       "complaint": {
         "label": "O reclamație",
         "hint": "Ceva n-a mers cum trebuia.",
-        "intro": "Spune-ne ce s-a întâmplat; evenimentul și data sunt opționale."
+        "intro": "Spune-ne ce s-a întâmplat; alergarea și data sunt opționale."
       },
       "safety": {
         "label": "Girl Zone",
@@ -8999,17 +9020,17 @@
       "contact": "Dacă vrei să te contacteze {name}, lasă un email sau un telefon (opțional)",
       "contactHelp": "Doar dacă vrei să-ți răspundă."
     },
-    "event": "Evenimentul",
+    "event": "Alergarea",
     "eventGeneral": "Altceva / în general",
     "eventFilter": {
       "search": "Scrie o parte din nume sau din dată",
-      "noMatch": "Niciun eveniment găsit",
-      "open": "Deschide lista evenimentelor",
-      "close": "Închide lista evenimentelor",
+      "noMatch": "Nicio alergare găsită",
+      "open": "Deschide lista alergărilor",
+      "close": "Închide lista alergărilor",
       "kinds": "Arată",
       "chips": {
         "all": "Toate",
-        "race": "Curse",
+        "special": "Evenimente speciale",
         "group": "Alergări de grup"
       }
     },
@@ -9026,7 +9047,7 @@
       }
     },
     "message": {
-      "howItWent": "Ce s-a întâmplat?",
+      "howItWent": "Ce ți-a plăcut, ce nu?",
       "suggestion": "Sugestia ta",
       "complaint": "Ce s-a întâmplat?",
       "safety": "Ce s-a întâmplat?"
@@ -9064,7 +9085,7 @@
     "fieldNames": {
       "name": "Numele",
       "audience": "Cine să afle",
-      "event": "Evenimentul",
+      "event": "Alergarea",
       "date": "Data",
       "rating": "Cum a fost",
       "message": "Mesajul",
@@ -9081,7 +9102,8 @@
     "submit": "Trimite",
     "submitting": "Se trimite…",
     "incompleteHint": "Scrie mesajul ca să-l poți trimite.",
-    "otherBranches": "Alt tip de mesaj",
+    "otherBranches": "Schimbă tipul mesajului",
+    "sendAnother": "Trimite alt mesaj",
     "sent": {
       "title": "Mesajul a plecat",
       "body": "Mulțumim! Îl citim cu atenție.",

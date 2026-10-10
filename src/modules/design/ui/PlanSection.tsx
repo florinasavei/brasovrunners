@@ -1,5 +1,4 @@
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -7,6 +6,8 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
+import GlyphChip from "@/modules/events/ui/GlyphChip";
+import type { GlyphName } from "@/modules/events/ui/glyphs";
 import { type DecisionStatus, type PhaseStatus, REDESIGN_DECISIONS, REDESIGN_DOC_PATH, REDESIGN_PHASES } from "../redesign-plan";
 import DesignSection, { Block, Code } from "./section";
 
@@ -18,6 +19,16 @@ const STATUS_COLOR: Record<DecisionStatus | PhaseStatus, "default" | "success" |
   planned: "default",
   building: "primary",
   released: "success",
+};
+
+/** …and its picture, by name (§694): a state is a word with a glyph, never a bare chip. */
+const STATUS_GLYPH: Record<DecisionStatus | PhaseStatus, GlyphName> = {
+  default: "planned",
+  decided: "done",
+  open: "open",
+  planned: "planned",
+  building: "building",
+  released: "done",
 };
 
 /**
@@ -56,7 +67,7 @@ export default async function PlanSection() {
                   <TableCell sx={{ verticalAlign: "top", fontWeight: 600 }}>{t(`design.plan.decisions.${decision.id}.title`)}</TableCell>
                   <TableCell sx={{ verticalAlign: "top" }}>{t(`design.plan.decisions.${decision.id}.default`)}</TableCell>
                   <TableCell sx={{ verticalAlign: "top" }}>
-                    <Chip size="small" color={STATUS_COLOR[decision.status]} label={t(`design.plan.statuses.${decision.status}`)} />
+                    <GlyphChip glyph={STATUS_GLYPH[decision.status]} color={STATUS_COLOR[decision.status]} label={t(`design.plan.statuses.${decision.status}`)} />
                   </TableCell>
                 </TableRow>
               ))}
@@ -83,7 +94,7 @@ export default async function PlanSection() {
                   <TableCell sx={{ verticalAlign: "top", fontWeight: 600 }}>{t(`design.plan.phases.${phase.id}.title`)}</TableCell>
                   <TableCell sx={{ verticalAlign: "top" }}>{t(`design.plan.phases.${phase.id}.gate`)}</TableCell>
                   <TableCell sx={{ verticalAlign: "top" }}>
-                    <Chip size="small" color={STATUS_COLOR[phase.status]} label={t(`design.plan.statuses.${phase.status}`)} />
+                    <GlyphChip glyph={STATUS_GLYPH[phase.status]} color={STATUS_COLOR[phase.status]} label={t(`design.plan.statuses.${phase.status}`)} />
                   </TableCell>
                 </TableRow>
               ))}

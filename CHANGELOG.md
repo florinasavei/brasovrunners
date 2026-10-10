@@ -8,6 +8,14 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.91-2026-10-10
+
+- **A members' race number that looks like one** — «Fundalul numărului de membru» → «Tot numărul»: the whole card in the club kit's gradient, a colour or a gallery photograph under a navy veil, the number, the name and the race in white, and a «MEMBRU BRAȘOV RUNNERS» stripe in the kit's orange; «Doar banda de sus» keeps the old look. §695.
+- **The contact page in sections** — a divider and a glyph on every section's heading, and «Alte căi de contact» with the club's address and phone, each row with its glyph, in place of the two lines under the form. §696.
+## BR-V2.90-2026-10-10
+
+- **Contact and «Spune-ne ceva», clearer** — the club's phone and the calendar on the contact page, «Scrie alt mesaj» / «Trimite alt mesaj» after a send; the feedback form wider, with a back button, «Schimbă tipul mesajului» beside the form's name, icons on the event filters and «Evenimente speciale» for every event but the group runs, «Ce ți-a plăcut, ce nu?» on «Cum a fost», five faces on one row, and the reasons for no longer coming folded. §693.
+- **The design system is binding** — colours, icons and buttons or chips are now checked by three tests in `yarn check`: a new raw colour, an icon imported from the whole `@mui/icons-material` package (or one by one in a backoffice file) or a bare MUI `Button` / `IconButton` / `Chip` fails, and today's exceptions sit in one list that can only shrink. §694.
 ## BR-V2.89-2026-10-10
 
 - **«Adaugă o comandă pentru un membru»** — on «Magazin», an Administrator, or the colleague given «Gestionează magazinul», types in an order the club collected outside the site, for a member account, through the same stock and locks as the member's own order, marked «adăugată de club» in the list and the CSV; the member's email only when ticked, and «Marchează direct ca plătită» for a row already paid. A price box may say «€30»; a word in it that contradicts «Moneda» is refused. §690.

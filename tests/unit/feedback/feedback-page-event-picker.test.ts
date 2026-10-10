@@ -158,13 +158,13 @@ describe("BR-REQ-070-04 «Evenimentul»: the native select stays, the island sta
     // The island's rows say what the native options say.
     expect(props.options.map((option) => (option.when ? `${option.label} — ${option.when}` : option.label))).toEqual(options.map((option) => option.text));
     expect(props.words).toEqual({
-      label: "Evenimentul",
+      label: "Alergarea",
       search: "Scrie o parte din nume sau din dată",
-      noMatch: "Niciun eveniment găsit",
-      open: "Deschide lista evenimentelor",
-      close: "Închide lista evenimentelor",
+      noMatch: "Nicio alergare găsită",
+      open: "Deschide lista alergărilor",
+      close: "Închide lista alergărilor",
       kinds: "Arată",
-      chips: { all: "Toate", race: "Curse", group: "Alergări de grup" },
+      chips: { all: "Toate", special: "Evenimente speciale", group: "Alergări de grup" },
     });
   });
 
@@ -174,7 +174,7 @@ describe("BR-REQ-070-04 «Evenimentul»: the native select stays, the island sta
     await render();
     const props = islandProps[0] as { words: Record<string, unknown>; options: PickerOption[] };
     expect(props.options[0].label).toBe("Something else / in general");
-    expect(props.words).toMatchObject({ label: "The event", noMatch: "No event found", chips: { all: "All", race: "Races", group: "Group runs" } });
+    expect(props.words).toMatchObject({ label: "The event", noMatch: "No event found", chips: { all: "All", special: "Special events", group: "Group runs" } });
   });
 });
 
@@ -190,7 +190,7 @@ describe("EventPickerFilter on the server draws only the select it was given", (
       options,
       selected: "",
       error: false,
-      words: { label: "Evenimentul", search: "", noMatch: "", open: "", close: "", kinds: "Arată", chips: { all: "Toate", race: "Curse", group: "Alergări de grup" } },
+      words: { label: "Evenimentul", search: "", noMatch: "", open: "", close: "", kinds: "Arată", chips: { all: "Toate", special: "Evenimente speciale", group: "Alergări de grup" } },
     };
     return renderToStaticMarkup(
       createElement(
@@ -216,11 +216,14 @@ describe("EventPickerFilter on the server draws only the select it was given", (
     const reserved = html.slice(0, html.length - SELECT.length).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
     expect(reserved).toMatch(/^<div[^>]*aria-hidden="true"[^>]*>/);
     expect(html).toMatch(/visibility:hidden;\}@media \(scripting: none\)\{\.css-[\w-]+\{display:none;\}\}/);
-    for (const words of ["Toate", "Curse", "Alergări de grup"]) expect(reserved).toContain(words);
+    for (const words of ["Toate", "Evenimente speciale", "Alergări de grup"]) expect(reserved).toContain(words);
+    // Each chip wears its glyph (§NNN), hidden from a screen reader: the words are its name.
+    for (const glyph of ["EventIcon", "EmojiEventsIcon", "GroupsIcon"]) expect(reserved).toContain(`data-testid="${glyph}"`);
     // Nothing a reader or a test could take for the chips themselves.
     expect(reserved).not.toContain('role="group"');
     expect(reserved).not.toContain('role="button"');
     expect(reserved).not.toContain("aria-pressed");
-    expect(reserved).not.toContain("data-testid");
+    // The glyphs carry MUI's own test ids; the chips' own are not there.
+    expect(reserved).not.toContain('data-testid="feedback-event-chip');
   });
 });
