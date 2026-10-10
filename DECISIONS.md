@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.90-2026-10-10 -->
+<!-- PROJECT_BASELINE: BR-V2.91-2026-10-10 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.90-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.91-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -24930,3 +24930,56 @@ Baseline `BR-V2.90-2026-10-10`.
 **Not run, and owed.** The team editor's and the shop card's markup changed on this branch (`BoxesCard` and the team page's chips are `GlyphChip`, `TeamLinkRowsEditor`'s IconButtons are `GlyphButton`, the photo upload is a `GlyphButton htmlFor` label); `tests/e2e/gallery-picker.spec.ts` and `tests/e2e/client-words.spec.ts` cover it in CI, and no Playwright ran in the rounds. The public `GLYPHS` table (`src/modules/events/ui/glyphs.ts`) now carries twelve backoffice-only names (`done`, `cancelled`, `visible`, `hidden`, `language`, `open`, `planned`, `building`, `shop`, `orders`, `club`, `link`), so every public `GlyphChip` island ships twelve more SVG components than before. **Owed:** a server-side status chip for the backoffice that takes an `action-icons.ts` name, after which those names leave the public table. The owner's rule that the header and the landing page are what every visitor pays for (`AGENTS.md` §1.5) is why it is written down.
 
 Baseline `BR-V2.90-2026-10-10`.
+
+## 695. A members' race number with a background of its own: the whole card in the kit's gradient, a colour or a photograph, with a «Membru» stripe (amending §664)
+
+**The owner, 2026-10-10:** «I do not like the BIB designer of the BVR members, I need a different design for them, different background.» The brief left the owner's sentence on what to change unfilled, so this round proposes three backgrounds as previews and builds all three as the club's choice per event, with a default.
+
+**What existed.** §664 gave a member's bib its own header and nothing else: a band colour or a picture across the top 62 points, and an 8-point label under the race's date. On paper that is the ordinary bib with a different top. From a metre away, a member's number cannot be told from anyone else's, and the label is the smallest text on the card.
+
+### The decision
+
+**1. A second style, «Tot numărul» / "The whole card", is the default for a club that turns the members' bib on now.** The editor's «Numărul membrilor» gains «Fundalul numărului de membru», with two choices: «Tot numărul — degradeul clubului, o culoare sau o fotografie» and «Doar banda de sus» (§664's look, unchanged). It is stored as `member.style` (`card` or `band`) inside `events.bib_design`, so there is no migration. A design saved before this key existed reads as `band` and prints as it did (§317's rule). The select offers `card` first while the members' switch is off.
+
+**2. What «Tot numărul» draws** (`bibs-pdf.ts`, `bib-image.tsx`, one geometry in `bib-geometry.ts`):
+
+- The card's whole area above the sponsors' strip and the small print is the members' background, inside the same 18-point white margin (§338).
+- The lockup, the race and its date sit where they always sit, in white. The number and the name are white too.
+- The label becomes a stripe across the card in the kit's orange, 20 points tall, its foot on the background's foot. The words are in capitals (`toLocaleUpperCase`, ș kept), bold and letter-spaced, in the body ink: «MEMBRU BRAȘOV RUNNERS» by default, or the club's own «Eticheta».
+- The sponsors' strip and the small print stay on white paper, unchanged, so a sponsor's dark logo and the 8-point line still read.
+- The stripe's height comes out of the number's area. The member's number line sits 10 points higher than the ordinary bib's, and the name below it 20 points higher. Neither touches anything.
+
+**3. The background, in the order the club's choices win** (`bib-design.ts#bibMemberCardBackground`):
+
+- **A photograph** from the gallery or an upload, through the same `BibPictureField` as every bib picture (§560). It has a place of its own, `memberCard`: the card's width by its height less the small print's one line, 559 × 363 points (about 1.54 : 1), with its own crop. It is fetched by `bib-pictures.ts` as a PNG like the others, only for a sheet or preview that draws a member's card. It lies under the kit's deepest navy at 0.7 opacity, so white reads at 6.1 : 1 even over a pure-white photograph. If it cannot be fetched, the sheet prints the next choice, never a failed sheet.
+- **A colour**: the members' colour select, the six bib colours of `bib-colours.ts`. Only those on which white reads at AA (4.5 : 1) are used on a card: red, purple, teal and black. Green (4.43) and orange (3.08) are labelled «doar pentru bandă» in the select and print the gradient on a card.
+- **The club kit's gradient**, the default: `GRADIENT.deep` to `GRADIENT.mid` from `theme/brand.ts`, top to bottom, the way the shirt is worn. Its third stop, the cyan by the hem, carries white at 2.9 : 1, so the card stops short of it. This is the kit's own ramp, not a new gradient; the site's three-gradient budget (§166) is for page surfaces and is untouched.
+
+**What the club changes per event:** the style, the colour, the photograph and its crop, the label. **What is fixed:** white words on the background; the orange stripe with ink words; the navy veil and its opacity; the gradient's two stops; the place of everything. Every colour comes from `theme/brand.ts` or the bib presets, none typed in the renderers (`BIB_MEMBER_CARD`).
+
+**4. Unchanged, on purpose.** The ordinary bib, byte for byte, whatever the members' design says (a test compares both renderers' output). The number, its band and its order (§173). Who wears the members' bib: wanted, offered and verified (§664). The members first on their own pages (§681). The desk, the export and the public list. The «tipărit» mark.
+
+### Refused
+
+- **The whole bib edge to edge.** A home printer cannot print the margin, and a bleed on one half of an A4 sheet and not the other is two designs (§338).
+- **The kit's full three-stop gradient.** White on its cyan end fails AA, and the number would stand on it.
+- **A darker green and orange made for the card.** That would be two new hexes outside `brand.ts` for one style. Those two print the gradient instead, and the editor says so.
+- **The small print on the background.** At 8 points it needs the paper, and a sponsor's logo is usually drawn for white.
+- **Migrating events that already offer the members' bib to the new style.** A saved design prints as it did until the club picks «Tot numărul» once (§317).
+
+Baseline `BR-V2.91-2026-10-10`.
+
+## 696. The contact page in sections, with dividers and a glyph on each heading; «Alte căi de contact» holds the address and the phone (amending §461, §565 and the contact-page round of the same day)
+
+**The owner, 2026-10-10,** with a screenshot of `/ro/contact` on QA: «First of all I need here sections, separators and icons».
+
+**Decision.**
+
+- **Four sections, in §679's order.** «Scrie-ne» with the form, then «Alte căi de contact» / "Other ways to reach us", «Spune-ne ceva» and the newsletter, with the club's identity line (§565) still the page's last. Every section after the first opens with a divider and a heading that wears its glyph in the primary colour: a contact card on «Alte căi de contact», the review glyph on «Spune-ne ceva», and a megaphone on the newsletter's heading. That heading is drawn by the newsletter's own box, which only this page uses. The title «Scrie-ne» wears conversation bubbles and stays the page's one `<h1>` with its words. Every glyph is decoration, `aria-hidden`; the words stay each heading's name. One shared `SECTION_SX` in the page draws the divider and the spacing, so the §380 density sites do not grow.
+- **«Alte căi de contact».** It replaces two lines under the form: §461's «Sau scrie-ne direct la …» and the contact-page round's «Sau sună-ne la …». The section has one row per way, each with its glyph: «Scrie-ne direct la» / "Write to us directly at" and the address or addresses (§442's order, «sau» between them), then «Sună-ne la» / "Call us at" and the phone as a `tel:` link. The rows stand 24 pixels apart, so the phone's inline 44-pixel reach (§480) never covers the address above it, and the address row opens under the section's heading, which nothing presses. The address is left out where the page already names it: with no form, and in a delivery error's alert. The phone stays in both of those states. The whole section is left out after a send, and when it would hold nothing.
+
+**What does not change.** The order of the sections (§679), the form and its words, the anonymous default (§678), the newsletter's double opt-in, and every text the club types in the backoffice.
+
+**Left for the owner.** Moving «Alte căi de contact» above the form. It would put the address and the phone first for a visitor who would rather write from their own mail or call, but it reverses §461's choice of the form first, so it waits for the owner's word.
+
+Baseline `BR-V2.91-2026-10-10`.
