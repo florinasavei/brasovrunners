@@ -292,7 +292,7 @@ describe("§396 what the pending and waiting rows may contain", () => {
     await createRegistration(event.id, { name: "Dan Oferit", email: "dan@example.org", status: "WAITLIST_OFFERED", confirmedAt: undefined, emailConfirmedAt: at(1) });
     // The waiting list, by `waitlisted_at` — inserted out of order on purpose.
     await createRegistration(event.id, { name: "Elena Doi", email: "elena@example.org", status: "WAITLISTED", confirmedAt: undefined, waitlistedAt: at(8) });
-    await createRegistration(event.id, { name: "Florin Unu", email: "florin@example.org", status: "WAITLISTED", confirmedAt: undefined, waitlistedAt: at(5) });
+    await createRegistration(event.id, { name: "Felix Unu", email: "felix@example.org", status: "WAITLISTED", confirmedAt: undefined, waitlistedAt: at(5) });
 
     // Everything below is absent, each for its own reason.
     await createRegistration(event.id, { name: "Ana Confirmata", email: "ana@example.org" }); // the confirmed list's, not this one's
@@ -308,13 +308,13 @@ describe("§396 what the pending and waiting rows may contain", () => {
     expect(rows).toEqual([
       { displayName: "Dan Oferit", clubName: null, group: "PENDING" },
       { displayName: "Carmen Pop", clubName: null, group: "PENDING" },
-      { displayName: "Florin Unu", clubName: null, group: "WAITLISTED" },
+      { displayName: "Felix Unu", clubName: null, group: "WAITLISTED" },
       { displayName: "Elena Doi", clubName: null, group: "WAITLISTED" },
     ]);
     expect(await countPublicStartListOthers(db, event.id, 1, true)).toEqual({ pending: 2, waitlisted: 2, outsidePending: 0 });
 
     // A page is a slice of the same order.
-    expect((await listPublicStartListOthers(db, event.id, 1, true, { offset: 1, limit: 2 })).map((row) => row.displayName)).toEqual(["Carmen Pop", "Florin Unu"]);
+    expect((await listPublicStartListOthers(db, event.id, 1, true, { offset: 1, limit: 2 })).map((row) => row.displayName)).toEqual(["Carmen Pop", "Felix Unu"]);
   });
 
   it("returns the name, the club and the group — no state, no date, no identifier, no address", async () => {
@@ -397,7 +397,7 @@ describe("§628 the waiting-list rows follow the event's own switch", () => {
   async function waitingAndPending() {
     const event = await createEvent();
     await createRegistration(event.id, { name: "Carmen Pop", email: "carmen@example.org", status: "PENDING_DECLARATION", confirmedAt: undefined, emailConfirmedAt: at(3), privacyNoticeVersion: 2 });
-    await createRegistration(event.id, { name: "Florin Unu", email: "florin@example.org", status: "WAITLISTED", confirmedAt: undefined, waitlistedAt: at(5), privacyNoticeVersion: 2 });
+    await createRegistration(event.id, { name: "Felix Unu", email: "felix@example.org", status: "WAITLISTED", confirmedAt: undefined, waitlistedAt: at(5), privacyNoticeVersion: 2 });
     // Under the older notice (§421): never a row, whatever the switch says.
     await createRegistration(event.id, { name: "Vechi Lista", email: "old-waiting@example.org", status: "WAITLISTED", confirmedAt: undefined, waitlistedAt: at(1), privacyNoticeVersion: 1 });
     // Did not tick: never a row either.
@@ -419,7 +419,7 @@ describe("§628 the waiting-list rows follow the event's own switch", () => {
     const event = await waitingAndPending();
     expect(await listPublicStartListOthers(db, event.id, 2, true)).toEqual([
       { displayName: "Carmen Pop", clubName: null, group: "PENDING" },
-      { displayName: "Florin Unu", clubName: null, group: "WAITLISTED" },
+      { displayName: "Felix Unu", clubName: null, group: "WAITLISTED" },
     ]);
     expect(await countPublicStartListOthers(db, event.id, 2, true)).toEqual({ pending: 1, waitlisted: 1, outsidePending: 0 });
   });

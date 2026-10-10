@@ -112,7 +112,7 @@ describe("§384 the dialog's count is the send's recipients", () => {
     { name: "carmen", status: "WAITLISTED" },
     { name: "dan", status: "WAITLIST_OFFERED" },
     { name: "elena", status: "PENDING_DECLARATION" },
-    { name: "florin", status: "PENDING_EMAIL_CONFIRMATION" },
+    { name: "felix", status: "PENDING_EMAIL_CONFIRMATION" },
     { name: "gabi", status: "CANCELLED" },
     { name: "horia", status: "EXPIRED" },
     { name: "test", status: "CONFIRMED", kind: "TEST", checkedIn: true },

@@ -35,8 +35,8 @@ test.describe("§420 a lapsed or moved-on registration link never shows the wron
     const suffix = `${tag}-${test.info().project.name}-${Date.now().toString(36)}`;
     const email = `e2e-linkstatus-${suffix}@test.invalid`;
     const values: Record<string, string> = {
-      firstName: "Florin",
-      lastName: `Munca ${suffix}`,
+      firstName: "Felix",
+      lastName: `Sample ${suffix}`,
       email,
       birthDate: "1990-05-17",
       city: "Brașov",

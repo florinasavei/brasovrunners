@@ -5,7 +5,7 @@
  * both languages; the full text is the repository document `REDESIGN_DOC_PATH`, English, kept by
  * the dispatcher — a typed list and a document, never a Markdown renderer in the page.
  *
- * Today every decision is `default` (the dispatcher's default stands until the club answers) and
+ * Today decision 3 is `decided` (2026-10-10) and the others are `default` (the dispatcher's default stands until the club answers) and
  * every phase `planned`. `decided` is the club's answer in writing, `open` a question the club
  * reopened; `building` a phase whose chains run, `released` one on production.
  */
@@ -18,7 +18,7 @@ export type RedesignPhase = { readonly id: 0 | 1 | 2 | 3 | 4 | 5 | 6; readonly s
 export const REDESIGN_DECISIONS: readonly RedesignDecision[] = [
   { id: 1, status: "default" },
   { id: 2, status: "default" },
-  { id: 3, status: "default" },
+  { id: 3, status: "decided" },
   { id: 4, status: "default" },
   { id: 5, status: "default" },
   { id: 6, status: "default" },

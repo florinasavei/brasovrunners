@@ -187,7 +187,7 @@ describe("§570 who is on the sponsor list", () => {
     await seedRow(event.id, "Carmen", { status: "WAITLISTED" });
     await seedRow(event.id, "Dan", { status: "CANCELLED" });
     await seedRow(event.id, "Elena", { status: "EXPIRED" });
-    await seedRow(event.id, "Florin", { status: "PENDING_EMAIL_CONFIRMATION" });
+    await seedRow(event.id, "Felix", { status: "PENDING_EMAIL_CONFIRMATION" });
     await seedRow(event.id, "Gelu", { kind: "TEST" });
     await seedRow(event.id, "Horia", { promoConsent: false });
     // Under §562's notice, which promised the partners would receive nothing.

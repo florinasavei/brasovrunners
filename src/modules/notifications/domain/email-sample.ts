@@ -274,12 +274,12 @@ export const EMAIL_SAMPLE_FORMER_WHEN: Readonly<Record<EmailLocale, readonly str
 };
 
 /**
- * The sample inviter before §359: "Florin", which is also a real first name at the club — a text
- * the club signs "Florin" is its own. So it is not refused as a word: it is looked for only inside
+ * The sample inviter before §359: "Felix", which is also a real first name at the club — a text
+ * the club signs "Felix" is its own. So it is not refused as a word: it is looked for only inside
  * the platform's own invitation sentence, where a text saved from the old editor still carries it
  * (`email-copy-fields.ts`), exactly as the bib and the status are.
  */
-export const EMAIL_SAMPLE_FORMER_INVITER: readonly string[] = ["Florin"];
+export const EMAIL_SAMPLE_FORMER_INVITER: readonly string[] = ["Felix"];
 
 /**
  * The preview's family on one address (§446): who the sample address holds — the sample runner, as

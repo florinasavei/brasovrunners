@@ -250,7 +250,13 @@ export default function SiteNav({
         );
       })}
 
-      <Box component="span" ref={moreRef} sx={overflow.length === 0 ? FOLDED : undefined}>
+      {/*
+        The button sits at the row's right edge at every width (§NNN, the owner 2026-10-10: "the
+        hamburger all the way to the right"): an auto margin takes the free room and the entries
+        stay left beside the logo. A margin is outside `getBoundingClientRect().width`, so the
+        measurement above does not count it, and a folded button is out of the flow.
+      */}
+      <Box component="span" ref={moreRef} sx={overflow.length === 0 ? FOLDED : { ml: "auto" }}>
         <Button
           id="site-nav-more"
           // The accessible name in every width; on a phone the visible label is the glyph.

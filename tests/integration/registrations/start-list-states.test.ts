@@ -147,7 +147,7 @@ async function mixedEvent(waitlistPublic = true): Promise<PublicEvent> {
   await register(event.id, { name: "Carmen Semneaza", status: "PENDING_DECLARATION", emailConfirmedAt: at(5) });
   await register(event.id, { name: "Dan Oferta", status: "WAITLIST_OFFERED", emailConfirmedAt: at(4) });
   await register(event.id, { name: "Elena Asteapta", status: "WAITLISTED", waitlistedAt: at(9) });
-  await register(event.id, { name: "Florin Primul", status: "WAITLISTED", waitlistedAt: at(6), club: "Club Munte" });
+  await register(event.id, { name: "Felix Primul", status: "WAITLISTED", waitlistedAt: at(6), club: "Club Munte" });
   // Never on the list, whatever the notice says.
   await register(event.id, { name: "Ascuns Asteapta", status: "WAITLISTED", waitlistedAt: at(7), listOptOut: true });
   await register(event.id, { name: "Ascuns Semneaza", status: "PENDING_DECLARATION", emailConfirmedAt: at(4), listOptOut: true });
@@ -162,7 +162,7 @@ const NEVER = ["Ascuns", "Adresa Nedovedita", "Retras Anulat", "Expirat Demult",
 
 /** The names in the order the table prints them. */
 function rowNames(html: string): string[] {
-  const names = ["Ana Popescu", "Bogdan Ionescu", "Carmen Semneaza", "Dan Oferta", "Elena Asteapta", "Florin Primul"];
+  const names = ["Ana Popescu", "Bogdan Ionescu", "Carmen Semneaza", "Dan Oferta", "Elena Asteapta", "Felix Primul"];
   return names.filter((name) => html.includes(name)).sort((a, b) => html.indexOf(a) - html.indexOf(b));
 }
 
@@ -187,7 +187,7 @@ describe("§396 with a notice that describes the states", () => {
 
     const html = renderToStaticMarkup(await StartList({ event }));
 
-    expect(rowNames(html)).toEqual(["Ana Popescu", "Bogdan Ionescu", "Dan Oferta", "Carmen Semneaza", "Florin Primul", "Elena Asteapta"]);
+    expect(rowNames(html)).toEqual(["Ana Popescu", "Bogdan Ionescu", "Dan Oferta", "Carmen Semneaza", "Felix Primul", "Elena Asteapta"]);
     // Two named confirmed, the anonymous confirmed one, two pending, two waiting.
     expect(stateWords(html)).toEqual(["CONFIRMED", "CONFIRMED", "CONFIRMED", "PENDING", "PENDING", "WAITLISTED", "WAITLISTED"]);
     for (const word of ["Confirmat", "Înscris, în așteptarea confirmării", "Pe lista de așteptare"]) expect(html).toContain(word);
@@ -210,7 +210,7 @@ describe("§396 with a notice that describes the states", () => {
 
     const html = renderToStaticMarkup(await StartList({ event }));
 
-    expect(rowNames(html)).toEqual(["Ana Popescu", "Bogdan Ionescu", "Dan Oferta", "Carmen Semneaza", "Florin Primul", "Elena Asteapta"]);
+    expect(rowNames(html)).toEqual(["Ana Popescu", "Bogdan Ionescu", "Dan Oferta", "Carmen Semneaza", "Felix Primul", "Elena Asteapta"]);
     for (const word of ["Confirmed", "Registered, awaiting confirmation", "On the waiting list"]) expect(html).toContain(word);
     expect(html).toContain("2 registered, awaiting confirmation · 2 on the waiting list");
     for (const name of NEVER) expect(html).not.toContain(name);
@@ -228,11 +228,11 @@ describe("§396 with a notice that describes the states", () => {
     await register(event.id, { name: "Carmen Semneaza", status: "PENDING_DECLARATION", emailConfirmedAt: at(5), privacyNoticeVersion: 1 });
     await register(event.id, { name: "Elena Asteapta", status: "WAITLISTED", waitlistedAt: at(9), privacyNoticeVersion: 1 });
     await register(event.id, { name: "Dan Oferta", status: "WAITLIST_OFFERED", emailConfirmedAt: at(4), privacyNoticeVersion: 2 });
-    await register(event.id, { name: "Florin Primul", status: "WAITLISTED", waitlistedAt: at(6), privacyNoticeVersion: 2 });
+    await register(event.id, { name: "Felix Primul", status: "WAITLISTED", waitlistedAt: at(6), privacyNoticeVersion: 2 });
 
     const html = renderToStaticMarkup(await StartList({ event }));
 
-    expect(rowNames(html)).toEqual(["Ana Popescu", "Dan Oferta", "Florin Primul"]);
+    expect(rowNames(html)).toEqual(["Ana Popescu", "Dan Oferta", "Felix Primul"]);
     expect(html).toContain("1 înscris în așteptarea confirmării · 1 pe lista de așteptare");
   });
 });
@@ -249,7 +249,7 @@ describe("§396 with a notice approved before it", () => {
     expect(html).not.toContain("Pe lista de așteptare");
     expect(html).not.toContain("în așteptarea confirmării");
     expect(html).not.toContain("start-list-others-summary");
-    for (const name of ["Carmen", "Dan Oferta", "Elena", "Florin", ...NEVER]) expect(html).not.toContain(name);
+    for (const name of ["Carmen", "Dan Oferta", "Elena", "Felix", ...NEVER]) expect(html).not.toContain(name);
     expect(html).toContain(ro.Event.startList.note.slice(0, 40));
   });
 
@@ -283,7 +283,7 @@ describe("§628 with the event's waiting list private", () => {
     expect(html).not.toContain('data-state="WAITLISTED"');
     expect(html).toContain("Apar cu numele și: 2 înscriși în așteptarea confirmării<");
     expect(html).not.toContain("Club Munte");
-    for (const name of ["Elena", "Florin", ...NEVER]) expect(html).not.toContain(name);
+    for (const name of ["Elena", "Felix", ...NEVER]) expect(html).not.toContain(name);
     expect(html).toContain(ro.Event.startList.captionStatesNoWaitlist);
     expect(html).not.toContain(ro.Event.startList.captionStates);
     expect(html).toContain(ro.Event.startList.noteStatesNoWaitlist.slice(-80));
