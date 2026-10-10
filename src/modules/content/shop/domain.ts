@@ -190,6 +190,201 @@ export function variantKey(label: string | null): string {
   return label === null ? "" : label.toLocaleLowerCase("ro");
 }
 
+// --- «Mărimile» (§NNN) ---------------------------------------------------------------------------
+
+/**
+ * The sizes the editor offers as ticks, in the order the shop shows them (§NNN; the owner's sheet:
+ * nine sizes XXS–4XL for the shirts, one size for the buff). A size is a variant row (`label`), so
+ * the stock, the locks and the orders of §683 are untouched: ticking «M» is the row «M».
+ */
+export const STANDARD_SIZES = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL"] as const;
+export type StandardSize = (typeof STANDARD_SIZES)[number];
+/** «Mărime unică»: the one-variant product of §683 — the variant row with no label. */
+export const ONE_SIZE_LABEL = null;
+/** The most pictures a product carries (§NNN): a strip, not an album. */
+export const PICTURES_MAX = 8;
+/** «Tabelul de mărimi»: at most four measured columns — chest, length, sleeve, hip — and a column name's length. */
+export const SIZE_CHART_COLUMNS_MAX = 4;
+export const SIZE_CHART_COLUMN_MAX = 40;
+
+/** The canonical spelling of a standard size, or null for a label that is none («m» is «M»). */
+export function standardSizeOf(label: string | null): StandardSize | null {
+  if (label === null) return null;
+  const key = label.trim().toLocaleLowerCase("ro");
+  return STANDARD_SIZES.find((size) => size.toLocaleLowerCase("ro") === key) ?? null;
+}
+
+/**
+ * What «Mărimile» posts: the ticked standard sizes (`sizes[]`), each one's stock (`sizeStock[<label>]`),
+ * «Mărime unică» with the «Stoc» box, and the free labels one per line («Albastru», «Copii: 5»).
+ */
+export type SizesForm = {
+  sizes: readonly string[];
+  sizeStock: Readonly<Record<string, string>>;
+  oneSize: boolean;
+  stock: string;
+  extraVariants: string;
+};
+
+export type SizesFormError = { path: "sizes" | "stock" | "extraVariants"; error: VariantLinesError | "unknownSize" | "standardAsExtra" };
+
+/**
+ * The sizes form as variants, in the fixed order: the standard sizes as `STANDARD_SIZES` lists
+ * them, then «Mărime unică», then the free labels as typed. Nothing ticked and nothing typed is the
+ * one-variant product with the «Stoc» box's number, as §683's empty box was. A free label that
+ * spells a standard size is refused (tick it instead); the whole list is at most `VARIANTS_MAX`.
+ */
+export function variantsFromSizes(form: SizesForm): { ok: true; variants: VariantLine[] } | { ok: false } & SizesFormError {
+  const ticked = new Set<StandardSize>();
+  for (const posted of form.sizes) {
+    const size = standardSizeOf(posted);
+    if (size === null) return { ok: false, path: "sizes", error: "unknownSize" };
+    ticked.add(size);
+  }
+  const variants: VariantLine[] = [];
+  for (const size of STANDARD_SIZES) {
+    if (!ticked.has(size)) continue;
+    const stock = readStock(form.sizeStock[size] ?? "");
+    if (stock === "invalid") return { ok: false, path: "sizes", error: "stock" };
+    variants.push({ label: size, stock });
+  }
+  const extra = form.extraVariants.trim() === "" ? { ok: true as const, variants: [] as VariantLine[] } : parseVariantLines(form.extraVariants, "");
+  if (!extra.ok) return { ok: false, path: "extraVariants", error: extra.error };
+  if (extra.variants.some((variant) => standardSizeOf(variant.label) !== null)) return { ok: false, path: "extraVariants", error: "standardAsExtra" };
+  if (form.oneSize || (variants.length === 0 && extra.variants.length === 0)) {
+    const stock = readStock(form.stock);
+    if (stock === "invalid") return { ok: false, path: "stock", error: "stock" };
+    variants.push({ label: ONE_SIZE_LABEL, stock });
+  }
+  variants.push(...extra.variants);
+  if (variants.length > VARIANTS_MAX) return { ok: false, path: "extraVariants", error: "tooMany" };
+  return { ok: true, variants };
+}
+
+/** The stored variants back as the form opens them: which sizes are ticked, each stock, «Mărime unică», the free labels. */
+export function sizesAsForm(variants: readonly VariantLine[]): { sizes: StandardSize[]; sizeStock: Record<string, string>; oneSize: boolean; stock: string; extraVariants: string } {
+  const sizes: StandardSize[] = [];
+  const sizeStock: Record<string, string> = {};
+  const extra: VariantLine[] = [];
+  let oneSize = false;
+  let stock = "";
+  for (const variant of variants) {
+    if (variant.label === null) {
+      oneSize = true;
+      stock = variant.stock === null ? "" : String(variant.stock);
+      continue;
+    }
+    const size = standardSizeOf(variant.label);
+    if (size === null) {
+      extra.push(variant);
+      continue;
+    }
+    sizes.push(size);
+    sizeStock[size] = variant.stock === null ? "" : String(variant.stock);
+  }
+  return { sizes, sizeStock, oneSize, stock, extraVariants: variantLinesAsTyped(extra.length ? extra : []).lines };
+}
+
+// --- «Tabelul de mărimi» (§NNN) ------------------------------------------------------------------
+
+export type SizeChartColumn = { ro: string; en: string };
+/** As stored: the measured columns in both languages, and one row of numbers (or null) per size label. */
+export type SizeChart = { columns: SizeChartColumn[]; rows: Record<string, (number | null)[]> };
+
+/** What the editor posts: a column's two names (`chartColumns[<i>][ro|en]`) and a cell per size and column (`chartCells[<label>][<i>]`). */
+export type SizeChartForm = { columns: readonly { ro: string; en: string }[]; cells: Readonly<Record<string, readonly string[]>> };
+
+export type SizeChartError = "tooMany" | "oneLanguage" | "column" | "cell";
+
+function readMeasure(text: string): number | null | "invalid" {
+  const trimmed = text.trim();
+  if (trimmed === "") return null;
+  const match = /^(\d{1,4})(?:[.,](\d{1,2}))?$/.exec(trimmed);
+  if (!match) return "invalid";
+  return Number(`${match[1]}.${match[2] ?? "0"}`);
+}
+
+/**
+ * The chart as posted, kept only where it says something: a column with neither name is dropped
+ * with its cells, a column with one name is refused (§352), a cell is a number («48», «66,5») or
+ * empty, a row is kept only for a label among the product's variants and only when a cell is filled.
+ * No column left is no chart (null).
+ */
+export function parseSizeChart(form: SizeChartForm, labels: readonly (string | null)[]): { ok: true; chart: SizeChart | null } | { ok: false; error: SizeChartError } {
+  const kept: { index: number; column: SizeChartColumn }[] = [];
+  form.columns.forEach((column, index) => {
+    const ro = column.ro.replace(/\s+/g, " ").trim();
+    const en = column.en.replace(/\s+/g, " ").trim();
+    if (ro === "" && en === "") return;
+    kept.push({ index, column: { ro, en } });
+  });
+  if (kept.length > SIZE_CHART_COLUMNS_MAX) return { ok: false, error: "tooMany" };
+  for (const { column } of kept) {
+    if (column.ro === "" || column.en === "") return { ok: false, error: "oneLanguage" };
+    if (column.ro.length > SIZE_CHART_COLUMN_MAX || column.en.length > SIZE_CHART_COLUMN_MAX) return { ok: false, error: "column" };
+  }
+  if (kept.length === 0) return { ok: true, chart: null };
+  const known = new Map(labels.filter((label): label is string => label !== null).map((label) => [variantKey(label), label]));
+  const rows: Record<string, (number | null)[]> = {};
+  for (const [posted, cells] of Object.entries(form.cells)) {
+    const label = known.get(variantKey(posted));
+    if (label === undefined) continue;
+    const row: (number | null)[] = [];
+    for (const { index } of kept) {
+      const measure = readMeasure(cells[index] ?? "");
+      if (measure === "invalid") return { ok: false, error: "cell" };
+      row.push(measure);
+    }
+    if (row.some((cell) => cell !== null)) rows[label] = row;
+  }
+  return { ok: true, chart: { columns: kept.map((entry) => entry.column), rows } };
+}
+
+/** A stored chart read leniently: a malformed row is no chart, never a broken page. */
+export function readSizeChart(value: unknown): SizeChart | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const { columns, rows } = value as { columns?: unknown; rows?: unknown };
+  if (!Array.isArray(columns) || !rows || typeof rows !== "object" || Array.isArray(rows)) return null;
+  const cols: SizeChartColumn[] = [];
+  for (const column of columns) {
+    if (!column || typeof column !== "object") return null;
+    const { ro, en } = column as { ro?: unknown; en?: unknown };
+    if (typeof ro !== "string" || typeof en !== "string") return null;
+    cols.push({ ro, en });
+  }
+  if (cols.length === 0 || cols.length > SIZE_CHART_COLUMNS_MAX) return null;
+  const out: Record<string, (number | null)[]> = {};
+  for (const [label, cells] of Object.entries(rows as Record<string, unknown>)) {
+    if (!Array.isArray(cells)) return null;
+    const row = cells.slice(0, cols.length).map((cell) => (typeof cell === "number" && Number.isFinite(cell) ? cell : null));
+    while (row.length < cols.length) row.push(null);
+    out[label] = row;
+  }
+  return { columns: cols, rows: out };
+}
+
+/** The chart's rows in the variants' order, for the one language the page reads — nothing for a variant without a row. */
+export function sizeChartRows(chart: SizeChart, variants: readonly { label: string | null }[]): { label: string; cells: (number | null)[] }[] {
+  const byKey = new Map(Object.entries(chart.rows).map(([label, cells]) => [variantKey(label), { label, cells }]));
+  const rows: { label: string; cells: (number | null)[] }[] = [];
+  for (const variant of variants) {
+    if (variant.label === null) continue;
+    const row = byKey.get(variantKey(variant.label));
+    if (row) rows.push({ label: variant.label, cells: row.cells });
+  }
+  return rows;
+}
+
+/** A measure as people read it: «66,5» in Romanian, «66.5» in English, whole numbers bare. */
+export function formatMeasure(value: number, locale: string): string {
+  return new Intl.NumberFormat(locale === "en" ? "en-GB" : "ro-RO", { maximumFractionDigits: 2 }).format(value);
+}
+
+/** A measure as the editor's box shows it again: «48», «66,5». */
+export function measureAsTyped(value: number | null): string {
+  return value === null ? "" : String(value).replace(".", ",");
+}
+
 /**
  * The stock a save writes for a variant that already existed (§683): the typed number when the
  * Administrator changed it from what the form loaded, and otherwise the stock as it stands now — so

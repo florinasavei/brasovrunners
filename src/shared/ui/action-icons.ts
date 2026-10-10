@@ -64,6 +64,7 @@ import SendIcon from "@mui/icons-material/Send";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import StarIcon from "@mui/icons-material/Star";
 import StorefrontIcon from "@mui/icons-material/Storefront";
+import StraightenIcon from "@mui/icons-material/Straighten";
 import SubjectIcon from "@mui/icons-material/Subject";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
@@ -234,7 +235,9 @@ export type ActionIconName =
   | "payment"
   | "orders"
   | "orderFor"
-  | "intro";
+  | "intro"
+  // «Tabelul de mărimi» (§NNN): the ruler on the product editor's size chart fold — the measures per size in centimetres.
+  | "sizeChart";
 // No runner here: the public send buttons wear it through `SubmitButton`'s own `runner` flag,
 // because this table must never reach a public page (above).
 
@@ -328,4 +331,5 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   orders: ReceiptLongIcon,
   orderFor: AddShoppingCartIcon,
   intro: SubjectIcon,
+  sizeChart: StraightenIcon,
 };

@@ -869,7 +869,7 @@ async function renderRow(
     };
     payloadActionUrl =
       row.messageType === "SHOP_ORDER_CLUB_NOTICE"
-        ? `${env.APP_BASE_URL}${getPathname({ locale, href: "/admin/shop" })}#shop-orders`
+        ? `${env.APP_BASE_URL}${getPathname({ locale, href: "/admin/shop/orders" })}#shop-orders`
         : `${env.APP_BASE_URL}${getPathname({ locale, href: "/members-area" })}#members-shop`;
   }
   // The update's one button is the event's own page (§331): public, no token — and, like every

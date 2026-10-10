@@ -1917,9 +1917,14 @@ fallback — the way the Neon plan works since `DECISIONS.md` §326 — is the f
 
 ## 43. Magazinul membrilor — open the members' shop
 
-The members' shop (`DECISIONS.md` §683) is built and closed: members see nothing of it until the
-four steps below are done, in this order (the fifth is optional). Payment never goes through the site — the member pays by
-bank transfer or in cash, and an Administrator — or the colleague who runs the shop (step 5) — marks the order paid.
+The members' shop (`DECISIONS.md` §683, its editor rebuilt in §NNN) is built and closed: members see
+nothing of it until the steps below are done, in this order (the last two are optional). Payment never
+goes through the site — the member pays by bank transfer or in cash, and an Administrator — or the
+colleague who runs the shop (step 6) — marks the order paid.
+
+«Magazin» in the backoffice's top bar has three tabs: **«Produse»** (the product list), **«Comenzi»**
+(the orders) and **«Setări»** (how to pay and who hears of an order). A product is a page of its own,
+with its cards in the order you fill them.
 
 1. **Approve the privacy notice that names the shop.** `/admin/legal` → the «GDPR» card →
    «Regenerează din șablon» → confirm. Section 5 gains the shop's paragraph (what an order keeps,
@@ -1928,34 +1933,53 @@ bank transfer or in cash, and an Administrator — or the colleague who runs the
    «Salvează ciorna», then «Aprobă și publică». Until a notice naming `{{membersShop}}` is in force
    in both languages, the members' zone draws no shop and an order is refused; `/admin/tasks`
    shows the row «Nota de confidențialitate: magazinul membrilor» while a product is visible.
-2. **Write how to pay and who hears of an order.** «Magazin» in the backoffice's top bar (its own
-   section since §687; it was a card on «Pagini» → «Membri») → «Cum se plătește și cine primește
-   comenzile»: the payment words in Română
-   and English (both or neither — the club's IBAN and, for example, «sau numerar la alergare»),
+2. **Write how to pay and who hears of an order.** «Magazin» → «Setări»: the payment words in Română
+   and English (both or neither — the club's IBAN and, for example, «sau numerar la alergare»;
+   «Copiază și tradu tot: RO → EN» fills the English from the Romanian once DeepL is set up, §464),
    and optionally one address for «Cine primește comenzile». With the address empty no email is
-   sent to the club; the orders are in the card's list either way.
-3. **Add the products.** The same card → «Adaugă un produs»: the name in both languages, the
-   description in both or neither, the price («45» or «45,50») with its currency in «Moneda» —
-   lei or euro, chosen per product, shown to members as such and never converted; an order keeps
-   the currency it was placed in — the variants one per line
-   with their stock («M: 10», «L» for no limit; empty for one variant, its stock in «Stoc»), a
-   photo with its crop, and «Vizibil în magazin» when it should be on sale. A product that has
-   orders is archived rather than deleted.
-4. **Run the orders.** Under the products, «Comenzi»: filter by state and product, «Marchează
-   plătită» when the money arrives (the member gets an email), «Marchează predată» at the
-   hand-over, «Anulează» before the hand-over (the stock goes back). «Descarcă CSV» downloads the
-   filtered list. The Organizer reads the card and the CSV and changes nothing.
-5. **Give the shop to the colleague who runs it** (optional, §687). On «Echipa», on that
+   sent to the club; the orders are in «Comenzi» either way.
+3. **Add a product.** «Magazin» → «Produse» → «Adaugă un produs». The page has the cards in order:
+   - **«Denumirea și prețul»** — the name in both languages (the translate button at the top), the
+     price («45» or «45,50») and «Moneda»: lei or euro, chosen per product, shown to members as such
+     and never converted; an order keeps the currency it was placed in.
+   - **«Descrierea»** — the rich-text editor, one tab per language, both or neither: material, care,
+     the supplier's drawing; tables and pictures are allowed («Imagine» inserts one from the gallery
+     or an upload).
+   - **«Mărimile și stocul»** — tick the sizes you sell among XXS · XS · S · M · L · XL · XXL · 3XL ·
+     4XL; beside each ticked size, how many are left (empty: no limit; 0: sold out). «Mărime unică»
+     for a buff or a sticker, with its own «Stoc» box. «Alte variante» for what is not a size — a
+     colour, a children's cut — one per line, «Albastru: 5» or «Copii». Under them, the fold
+     **«Tabelul de mărimi»**: up to four measured columns named in both languages (for example
+     «Lățime piept (cm)» / «Chest width (cm)») and a number per ticked size; members see it as a table
+     under the product. Every ticked size is a variant members order; a size that has orders cannot
+     be unticked — set its stock to 0 instead.
+   - **«Publicarea»** — «Vizibil în magazin» when it should be on sale, and «Adaugă produsul».
+   The new product opens on its own page, where **«Fotografiile»** is the first card: «Adaugă o
+   fotografie» (upload with the quality choice, or «Din galerie»), choose the crop, «Adaugă
+   fotografia» — up to eight. The first is the cover: it shows in the list and large in the members'
+   zone, the rest as thumbnails under it. ↑ / ↓ reorder, «Scoate fotografia» removes one from the
+   product (it stays in the gallery), «Înlocuiește sau decupează» puts another picture in its place
+   or changes its crop. «Salvează» at the end of the page saves the four cards; a picture is saved
+   by its own button at once. A product that has orders is archived rather than deleted («Șterge» /
+   «Arhivează», the last card).
+4. **Reorder the products.** On «Produse», ↑ / ↓ beside each product; the members' zone shows the
+   same order. Each row says the price, the sizes with their stock, how many pictures and how many
+   orders it has, and whether it is visible.
+5. **Run the orders.** «Magazin» → «Comenzi»: filter by state and product, «Marchează plătită» when
+   the money arrives (the member gets an email), «Marchează predată» at the hand-over, «Anulează»
+   before the hand-over (the stock goes back). «Descarcă CSV» downloads the filtered list. The
+   Organizer reads every tab and the CSV and changes nothing.
+6. **Give the shop to the colleague who runs it** (optional, §687). On «Echipa», on that
    colleague's row, after the role: tick «Gestionează magazinul» and confirm. They find the shop
-   under «Magazin» in their top bar from the next page they open, and do steps 2–4 themselves —
+   under «Magazin» in their top bar from the next page they open, and do steps 2–5 themselves —
    whatever their role: a volunteer, a Redactor, an Organizer or a Tehnic. They never see the
    members' addresses (only the Organizer and the Administrators do, by role); an Administrator
    needs no tick — the role includes it. Untick it to take it back; a colleague made a member
    loses it by themselves.
-6. **Type in the orders collected outside the site** (`DECISIONS.md` §690) — a supplier's sheet,
+7. **Type in the orders collected outside the site** (`DECISIONS.md` §690) — a supplier's sheet,
    say. Each person in it needs an account on «Echipa» first (a member, or a colleague); then,
-   on «Magazin», under «Comenzi», the fold «Adaugă o comandă pentru un membru»: the member from the list, the
-   product and its variant (a sold-out variant is offered greyed), how many, a note if any, and two
+   on «Magazin» → «Comenzi», the fold «Adaugă o comandă pentru un membru»: the member from the list, the
+   product and its size (a sold-out one is offered greyed), how many, a note if any, and two
    ticks — «Trimite-i membrului emailul de confirmare» (off: the member gets no email) and
    «Marchează direct ca plătită» (for a row already paid: the order lands as «Plătită», with the
    «plătită» email only if the first tick is on). The club's own «Cine primește comenzile» mailbox
@@ -1963,4 +1987,4 @@ bank transfer or in cash, and an Administrator — or the colleague who runs the
    typing it; the order takes from the same stock as a member's own and shows in the member's
    «Comenzile mele» like any order, marked «adăugată de club» in the list and «club» in the CSV's
    column «Adăugată de». Whoever runs the shop may do it: an Administrator, or the colleague given
-   «Gestionează magazinul» in step 5.
+   «Gestionează magazinul» in step 6.

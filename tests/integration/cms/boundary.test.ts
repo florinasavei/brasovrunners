@@ -234,8 +234,13 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/settings/deadlines",
       "/admin/settings/emails",
       "/admin/settings/platform",
-      // «Magazin» (§687): the members' shop, its own section — the card of §683, by hand.
+      // «Magazin» (§687): the members' shop, its own section; since §NNN a product list with «Comenzi» and
+      // «Setări» as tabs and one page per product, each written here by hand.
       "/admin/shop",
+      "/admin/shop/orders",
+      "/admin/shop/products/[id]",
+      "/admin/shop/products/new",
+      "/admin/shop/settings",
       "/admin/staff",
       "/admin/tasks",
       // The club's month, its own page since §251.

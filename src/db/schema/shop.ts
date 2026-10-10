@@ -33,9 +33,27 @@ export const shopProducts = pgTable(
 
     titleRo: text("title_ro").notNull(),
     titleEn: text("title_en").notNull(),
-    /** A line or a few, both languages or neither. */
+    /**
+     * The description's plain words, both languages or neither — written by every save from the
+     * rich document (§474's twin: what a search, a listing or an older reader gets).
+     */
     descriptionRo: text("description_ro"),
     descriptionEn: text("description_en"),
+    /**
+     * The description as the editor keeps it (§NNN): a rich text under the allowlist of
+     * `content/rich-text/domain/schema.ts`, tables and pictures allowed — the owner: «I need that
+     * rich text editor so I can add table and pictures». Null for a product written before it or
+     * with no description; `description_ro` / `description_en` are its plain twins.
+     */
+    descriptionRoJson: jsonb("description_ro_json"),
+    descriptionEnJson: jsonb("description_en_json"),
+    /**
+     * «Tabelul de mărimi» (§NNN): `{ columns: [{ ro, en }], rows: { "S": [48, 66] } }` — at most four
+     * measured columns, named in both languages, and one row of numbers (or null) per size. The CHECK
+     * holds the shape; the save (`fields.ts`) holds the rest: each row's label is a variant's, each
+     * cell a number or null, each column both languages or neither.
+     */
+    sizeChart: jsonb("size_chart"),
     /**
      * The price in the minor unit of `currency`: bani for RON («45 lei» is 4500), cents for EUR
      * («12,34 €» is 1234). An integer, so no sum is ever rounded. The column keeps its name from the
@@ -45,9 +63,13 @@ export const shopProducts = pgTable(
     /** «Moneda»: `RON` or `EUR` (`SHOP_CURRENCIES` in `content/shop/domain.ts`), never converted (§686). */
     currency: text("currency", { enum: ["RON", "EUR"] }).notNull().default("RON"),
 
-    /** The photo, as a card of «Echipa» keeps it (§459): `set null` if the picture is removed from the store. */
+    /**
+     * The cover, mirrored from the first of `shop_product_pictures` by position (§NNN) every time
+     * the pictures change; nothing reads it new — kept so code and rows from §683 keep working. It
+     * was the product's one photo, kept as a card of «Echipa» keeps it (§459, §541).
+     */
     photoMediaAssetId: uuid("photo_media_asset_id").references(() => mediaAssets.id, { onDelete: "set null" }),
-    /** The part of the photo the card shows, `{ x, y, w, h }` fractions (§541); null is the whole photo. */
+    /** The cover's crop, `{ x, y, w, h }` fractions (§541), mirrored with it; null is the whole photo. */
     photoCrop: jsonb("photo_crop"),
 
     /** «Vizibil în magazin»: members see it and may order it. A new product starts hidden. */
@@ -71,11 +93,43 @@ export const shopProducts = pgTable(
     check("shop_products_currency_known", sql`${t.currency} IN ('RON', 'EUR')`),
     check("shop_products_position_positive", sql`${t.position} >= 1`),
     check("shop_products_version_positive", sql`${t.version} >= 1`),
+    check(
+      "shop_products_size_chart_shape",
+      sql`${t.sizeChart} IS NULL OR (jsonb_typeof(${t.sizeChart}) = 'object' AND jsonb_typeof(${t.sizeChart} -> 'columns') = 'array' AND jsonb_array_length(${t.sizeChart} -> 'columns') <= 4 AND jsonb_typeof(${t.sizeChart} -> 'rows') = 'object')`,
+    ),
     index("shop_products_visible_position_idx").on(t.visible, t.position),
   ],
 );
 
 export type ShopProduct = typeof shopProducts.$inferSelect;
+
+/**
+ * A product's pictures (§NNN; the owner: «I need to be able to add multiple pictures of the
+ * product»), in order: the first by `position` is the cover, mirrored onto
+ * `shop_products.photo_media_asset_id` / `photo_crop`. Each is a stored picture of the gallery
+ * (`media_assets`) with the crop box's four fractions (§541) or null for the whole picture. The
+ * product's delete cascades; a picture removed from the store leaves the row without its asset,
+ * which the pages skip.
+ */
+export const shopProductPictures = pgTable(
+  "shop_product_pictures",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => shopProducts.id, { onDelete: "cascade" }),
+    mediaAssetId: uuid("media_asset_id").references(() => mediaAssets.id, { onDelete: "set null" }),
+    /** `{ x, y, w, h }` fractions of the picture (§541), or null for the whole of it. */
+    crop: jsonb("crop"),
+    /** Where the picture sits, lowest first; 1 is the cover. */
+    position: integer("position").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [check("shop_product_pictures_position_positive", sql`${t.position} >= 1`), index("shop_product_pictures_product_idx").on(t.productId, t.position)],
+);
+
+export type ShopProductPicture = typeof shopProductPictures.$inferSelect;
 
 /**
  * One way a product is ordered — «S», «M», «L», «XL» — or the product's only one, with no label.

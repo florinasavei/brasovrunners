@@ -17,7 +17,10 @@ export type DomainErrorCode =
   | "CONFLICT"
   // An erase refused because a declaration is held for a complaint or a dispute (§556): its own
   // code, so every form that shows `Admin.errors` says so rather than "somebody else saved".
-  | "DECLARATION_HELD";
+  | "DECLARATION_HELD"
+  // A shop size unticked while an order names it (§NNN): the order's variant would dangle and its
+  // stock would have nowhere to go back to, so the save says which box rather than "not valid".
+  | "SHOP_SIZE_HAS_ORDERS";
 
 export class DomainError extends Error {
   readonly code: DomainErrorCode;

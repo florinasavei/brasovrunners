@@ -1,22 +1,39 @@
 import { z } from "zod";
+import { resolveRichPair, richTextBox } from "@/modules/content/team/fields";
 import { readTeamPhotoCrop } from "@/modules/content/team/photo-crop";
 import { refuseOneLanguage } from "@/shared/forms/both-languages";
 import { isUuid } from "@/shared/ids";
-import { currencyWordOf, ORDER_NOTE_MAX, ORDER_QUANTITY_MAX, parsePriceToMinor, parseVariantLines, SHOP_CURRENCIES, type VariantLine, variantKey } from "./domain";
+import {
+  currencyWordOf,
+  ORDER_NOTE_MAX,
+  ORDER_QUANTITY_MAX,
+  parsePriceToMinor,
+  parseSizeChart,
+  parseVariantLines,
+  SHOP_CURRENCIES,
+  type SizeChart,
+  type VariantLine,
+  variantKey,
+  variantsFromSizes,
+} from "./domain";
 
 /**
- * What the club types for a product of «Magazin» (§683), and what a member posts with an order.
+ * What the club types for a product of «Magazin» (§683, §NNN), and what a member posts with an order.
  *
  * A product: the title in Romanian **and** English — both required at every save, a product with no
  * name in one language is not a product the other half of the site can show (§28, §352) — the
- * description both or neither, a price with its currency — lei or euro, «Moneda», never converted
- * (§686); absent from the post it is lei — the photo of «Echipa»'s card (§541's crop), the
- * variants and their stock (`domain.ts#parseVariantLines`), and «Vizibil în magazin». A refusal names
- * its box, the rest comes back as typed (§315).
+ * description both or neither, a rich text with its plain twin (§474: `descriptionRoBody` /
+ * `descriptionEnBody` from the editor, or the plain boxes from an older form or a script), a price
+ * with its currency — lei or euro, «Moneda», never converted (§686); absent from the post it is lei —
+ * «Mărimile» (the ticked sizes with their stock, «Mărime unică», the free labels —
+ * `domain.ts#variantsFromSizes`; or §683's one box of lines, `parseVariantLines`, from an older form),
+ * «Tabelul de mărimi» (`parseSizeChart`) and «Vizibil în magazin». The pictures are their own rows and
+ * their own forms (`pictureFieldsSchema`). A refusal names its box, the rest comes back as typed (§315).
  */
 
 export const PRODUCT_TITLE_MAX = 80;
-export const PRODUCT_DESCRIPTION_MAX = 600;
+/** The description's plain words; a table or a picture in it counts for what it says, not for its JSON. */
+export const PRODUCT_DESCRIPTION_MAX = 4000;
 /** The club's payment words, each language. */
 export const PAYMENT_WORDS_MAX = 600;
 
@@ -64,12 +81,27 @@ const loadedStock = z
     }
   });
 
+/** A string or a list of strings as a form posts a group of ticks (`sizes[]`); absent is none ticked. */
+const tickList = z
+  .union([z.string(), z.array(z.string())])
+  .optional()
+  .transform((value): string[] | undefined => (value === undefined ? undefined : Array.isArray(value) ? value : [value]));
+
+/** A form's checkbox as it is posted: `on` ticked, absent or empty unticked; a boolean from a test. */
+const ticked = z.union([z.boolean(), z.string()]).optional().transform((value) => value === true || value === "on" || value === "true");
+
+const stringRecord = z.record(z.string(), z.string()).optional().default({});
+
 export const productFieldsSchema = z
   .object({
     titleRo: oneLine(PRODUCT_TITLE_MAX),
     titleEn: oneLine(PRODUCT_TITLE_MAX),
+    /** The plain boxes (an older form, a script, a test); the editor posts `…Body` and these stay empty. */
     descriptionRo: fewLines(PRODUCT_DESCRIPTION_MAX),
     descriptionEn: fewLines(PRODUCT_DESCRIPTION_MAX),
+    /** The editor's documents (§NNN), tables and pictures allowed. */
+    descriptionRoBody: richTextBox,
+    descriptionEnBody: richTextBox,
     price: z.string().optional().default(""),
     /** «Moneda»: one of `SHOP_CURRENCIES`; empty or absent (an older form, a test) is lei. */
     currency: z
@@ -77,21 +109,30 @@ export const productFieldsSchema = z
       .optional()
       .default("RON")
       .transform((value) => (value === "" ? "RON" : value)),
+    /** §683's box of lines — read only when «Mărimile» posted nothing (an older form, a script, a test). */
     variants: z.string().optional().default(""),
+    /** The «Stoc» box: «Mărime unică»'s stock, and the one variant's when nothing else is ticked or typed. */
     stock: z.string().optional().default(""),
+    /** «Mărimile» (§NNN): the ticked sizes, each one's stock, «Mărime unică», the free labels. */
+    sizes: tickList,
+    sizeStock: stringRecord,
+    oneSize: ticked,
+    extraVariants: z.string().optional().default(""),
+    /** «Tabelul de mărimi» (§NNN): the columns' two names and a cell per size and column. */
+    chartColumns: z.array(z.object({ ro: z.string().optional().default(""), en: z.string().optional().default("") })).optional().default([]),
+    chartCells: z.record(z.string(), z.array(z.string())).optional().default({}),
     variantsLoaded: loadedStock,
     visible: z.union([z.boolean(), z.string()]).optional().transform((value) => value === true || value === "on" || value === "true"),
-    photoAssetId: z
-      .string()
-      .optional()
-      .default("")
-      .transform((value) => value.trim())
-      .refine((value) => value === "" || isUuid(value), "not a picture id")
-      .transform((value) => (value === "" ? null : value.toLowerCase())),
-    photoCrop: z.union([z.string(), z.record(z.string(), z.unknown()), z.null()]).optional(),
   })
   .transform((fields, ctx) => {
-    refuseOneLanguage(ctx, { ro: fields.descriptionRo, en: fields.descriptionEn }, { ro: ["descriptionRo"], en: ["descriptionEn"] }, "the description");
+    // The description: the editor's documents when they were posted, else the plain boxes as paragraphs —
+    // both languages or neither, the plain twin written from the document (§474, §352).
+    const description = resolveRichPair(
+      ctx,
+      { ro: { plain: fields.descriptionRo ?? "", body: fields.descriptionRoBody }, en: { plain: fields.descriptionEn ?? "", body: fields.descriptionEnBody } },
+      { ro: { plain: "descriptionRo", body: "descriptionRoBody" }, en: { plain: "descriptionEn", body: "descriptionEnBody" } },
+      { max: PRODUCT_DESCRIPTION_MAX, tables: true, what: "the description" },
+    );
     const priceBani = parsePriceToMinor(fields.price);
     if (priceBani === null) ctx.addIssue({ code: "custom", path: ["price"], message: "a price like 45 or 45,50" });
     // A word in the box that contradicts «Moneda» («45 lei» with euro chosen, «30 €» with lei) is a
@@ -100,30 +141,62 @@ export const productFieldsSchema = z
     if (priceBani !== null && word !== null && word !== fields.currency) {
       ctx.addIssue({ code: "custom", path: ["price"], message: `the price says ${word}, «Moneda» says ${fields.currency}` });
     }
-    const variants = parseVariantLines(fields.variants, fields.stock);
-    if (!variants.ok) {
-      // The empty variants box reads the «Stoc» box: its refusal is on that box.
-      const path = fields.variants.trim() === "" ? "stock" : "variants";
-      ctx.addIssue({ code: "custom", path: [path], message: `the variants: ${variants.error}` });
+    // «Mărimile» when the form posted them; §683's lines otherwise. Nothing of either is the one variant.
+    const sizesPosted = fields.sizes !== undefined || fields.oneSize || fields.extraVariants.trim() !== "" || Object.keys(fields.sizeStock).length > 0;
+    let variants: VariantLine[] = [];
+    if (sizesPosted || fields.variants.trim() === "") {
+      const read = variantsFromSizes({ sizes: fields.sizes ?? [], sizeStock: fields.sizeStock, oneSize: fields.oneSize, stock: fields.stock, extraVariants: fields.extraVariants });
+      if (read.ok) variants = read.variants;
+      else ctx.addIssue({ code: "custom", path: [read.path], message: `the sizes: ${read.error}` });
+    } else {
+      const read = parseVariantLines(fields.variants, fields.stock);
+      if (read.ok) variants = read.variants;
+      else ctx.addIssue({ code: "custom", path: ["variants"], message: `the variants: ${read.error}` });
     }
-    const crop = readTeamPhotoCrop(fields.photoCrop);
-    if (crop === "invalid") ctx.addIssue({ code: "custom", path: ["photoAssetId"], message: "not a crop of the photo" });
+    let sizeChart: SizeChart | null = null;
+    const chart = parseSizeChart(
+      { columns: fields.chartColumns, cells: fields.chartCells },
+      variants.map((variant) => variant.label),
+    );
+    if (chart.ok) sizeChart = chart.chart;
+    else ctx.addIssue({ code: "custom", path: ["chartColumns"], message: `the size chart: ${chart.error}` });
     return {
       titleRo: fields.titleRo,
       titleEn: fields.titleEn,
-      descriptionRo: fields.descriptionRo,
-      descriptionEn: fields.descriptionEn,
+      descriptionRo: description.ro.plain,
+      descriptionEn: description.en.plain,
+      descriptionRoJson: description.ro.doc,
+      descriptionEnJson: description.en.doc,
       priceBani: priceBani ?? 0,
       currency: fields.currency,
-      variants: variants.ok ? variants.variants : ([] as VariantLine[]),
+      variants,
       variantsLoaded: fields.variantsLoaded,
+      sizeChart,
       visible: fields.visible,
-      photoAssetId: fields.photoAssetId,
-      photoCrop: fields.photoAssetId && crop !== "invalid" ? crop : null,
     };
   });
 
 export type ProductFields = z.output<typeof productFieldsSchema>;
+
+/** A picture added to a product (§NNN): a stored picture's id and the crop box's fractions, as `TeamPhotoField` posts them. */
+export const pictureFieldsSchema = z
+  .object({
+    photoAssetId: z
+      .string()
+      .optional()
+      .default("")
+      .transform((value) => value.trim())
+      .refine((value) => isUuid(value), "choose a picture")
+      .transform((value) => value.toLowerCase()),
+    photoCrop: z.union([z.string(), z.record(z.string(), z.unknown()), z.null()]).optional(),
+  })
+  .transform((fields, ctx) => {
+    const crop = readTeamPhotoCrop(fields.photoCrop);
+    if (crop === "invalid") ctx.addIssue({ code: "custom", path: ["photoAssetId"], message: "not a crop of the picture" });
+    return { assetId: fields.photoAssetId, crop: crop === "invalid" ? null : crop };
+  });
+
+export type PictureFields = z.output<typeof pictureFieldsSchema>;
 
 /** The form's loaded stock, as the hidden field carries it: `{ "": 10 }` or `{ "m": 4, "l": null }`. */
 export function loadedStockJson(variants: readonly { label: string | null; stock: number | null }[]): string {
@@ -161,9 +234,6 @@ export const orderFieldsSchema = z.object({
 });
 
 export type OrderFields = z.output<typeof orderFieldsSchema>;
-
-/** A form's checkbox as it is posted: `on` ticked, absent or empty unticked; a boolean from a test. */
-const ticked = z.union([z.boolean(), z.string()]).optional().transform((value) => value === true || value === "on" || value === "true");
 
 /**
  * What the club posts on «Adaugă o comandă pentru un membru» (§690): the member account, the product
