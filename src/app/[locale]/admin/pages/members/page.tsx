@@ -24,7 +24,7 @@ import PagesSubNav from "@/modules/content/pages/ui/PagesSubNav";
 import LazyRichTextEditor from "@/modules/content/rich-text/ui/LazyRichTextEditor";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import { clubToday, listDiscountCodesForAdmin } from "@/modules/content/member-codes/repository";
-import { listOrdersForAdmin, listProductNames, listProductsForAdmin, parseOrdersQuery } from "@/modules/content/shop/repository";
+import { countOrdersForAdmin, listOrdersForAdmin, listProductNames, listProductsForAdmin, parseOrdersQuery } from "@/modules/content/shop/repository";
 import { readShopSettings } from "@/modules/content/shop/settings";
 import type { TeamPhotoLabels } from "@/modules/content/team/ui/TeamPhotoField";
 import { noticeDescribesMembersShop } from "@/modules/legal-documents/repository";
@@ -136,6 +136,7 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
         listOrdersForAdmin(db, ordersQuery),
         listProductNames(db),
         noticeDescribesMembersShop(db, now),
+        countOrdersForAdmin(db, ordersQuery),
       ])
     : null;
   const shopPhotoLabels: TeamPhotoLabels = {
@@ -247,6 +248,7 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
           products={shop[0]}
           settings={shop[1]}
           orders={shop[2]}
+          ordersTotal={shop[5]}
           ordersQuery={ordersQuery}
           productNames={shop[3]}
           noticeDescribes={shop[4]}

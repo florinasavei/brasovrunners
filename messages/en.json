@@ -7224,6 +7224,7 @@
         "filterClear": "All orders",
         "csv": "Download CSV",
         "ordersEmpty": "No orders.",
+        "ordersMore": "Showing the newest {shown} of {total}. The CSV has them all.",
         "orderNumber": "Order no. {number}",
         "status": {
           "PLACED": "Placed",
@@ -9521,12 +9522,14 @@
       "cancelFold": "I want to cancel the order",
       "cancelHelp": "The order is cancelled for good; you can place it again any time. Once it is paid, write to the club.",
       "cancel": "Cancel the order",
+      "cancelling": "Cancelling the order…",
       "soldOut": "Sold out.",
       "variant": "Variant",
       "variantSoldOut": "{label} — sold out",
       "quantity": "Quantity",
       "noteLabel": "A note for the club (optional, at most {max} characters)",
       "order": "Order",
+      "ordering": "Sending the order…",
       "outcome": {
         "placed": "Your order has been received. We have also emailed it to you, with how to pay.",
         "cancelled": "The order has been cancelled.",

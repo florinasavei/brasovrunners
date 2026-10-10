@@ -1,4 +1,4 @@
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, gte, isNull, ne, sql } from "drizzle-orm";
 import { type ShopOrder, type ShopOrderStatus, shopOrders, shopProducts, shopProductVariants } from "@/db/schema/shop";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { Database, Transaction } from "@/db/types";
@@ -7,7 +7,7 @@ import { enqueueEmail } from "@/modules/notifications/outbox";
 import { canManageShop, canOpenMembersZone } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
-import { nextOrderStatus, type OrderActor, type OrderVerb, stockAfterOrder } from "./domain";
+import { nextOrderStatus, ORDER_REPEAT_WINDOW_MS, type OrderActor, type OrderVerb, stockAfterOrder } from "./domain";
 import { orderFieldsSchema } from "./fields";
 import { readShopSettings } from "./settings";
 
@@ -22,7 +22,9 @@ import { readShopSettings } from "./settings";
  * members ordering the last one at once queue on the row, and the second reads what the first left
  * (`tests/concurrency/shop-stock.test.ts`). The check constraint refuses a negative stock whatever
  * the code does. A cancellation gives back exactly what the order took (`stock_taken`), under the
- * same lock.
+ * same lock. Every writer locks product, then variant, then order (`moveOrder`). The same order
+ * pressed twice within `ORDER_REPEAT_WINDOW_MS` is answered with the first, read under the variant's
+ * lock, so a double tap takes, audits and sends once.
  *
  * Every write asserts its role here (BR-REQ-060-01) and leaves an audit row with the order's id and
  * its move — never the note, a title, a name or an address. The emails are queued in the same
@@ -78,6 +80,27 @@ export async function placeOrder<T extends Record<string, unknown>>(
       .where(and(eq(shopProductVariants.id, fields.variantId), eq(shopProductVariants.productId, fields.productId)))
       .for("update");
     if (!variant) throw new DomainError("NOT_FOUND", "no such product in the shop");
+
+    // The same press twice — a double tap, a form sent again — is one order. Read under the variant's
+    // lock, so a repeat racing the first waits for it and then sees it (each statement reads what was
+    // committed before it, READ COMMITTED): the order already placed is the answer, and nothing is
+    // taken, audited or sent again.
+    const [repeat] = await tx
+      .select()
+      .from(shopOrders)
+      .where(
+        and(
+          eq(shopOrders.memberStaffUserId, input.account.id),
+          eq(shopOrders.variantId, variant.id),
+          eq(shopOrders.quantity, fields.quantity),
+          sql`${shopOrders.note} IS NOT DISTINCT FROM ${fields.note}`,
+          ne(shopOrders.status, "CANCELLED"),
+          gte(shopOrders.createdAt, new Date(now.getTime() - ORDER_REPEAT_WINDOW_MS)),
+        ),
+      )
+      .orderBy(desc(shopOrders.createdAt))
+      .limit(1);
+    if (repeat) return repeat;
 
     const left = stockAfterOrder(variant.stock, fields.quantity);
     if (left === "insufficient") throw new DomainError("CONFLICT", "fewer left than ordered");
@@ -143,15 +166,39 @@ export async function placeOrder<T extends Record<string, unknown>>(
 
 const VERB_AUDIT = { pay: "shop.order.paid", handOver: "shop.order.handed_over", cancel: "shop.order.cancelled" } as const;
 
-/** One move of one order, locked, with the stock given back on a cancellation that took some. */
+/**
+ * One move of one order, locked, with the stock given back on a cancellation that took some.
+ *
+ * **The lock order is every shop writer's: product, then variant, then order.** An order placed locks
+ * the product (shared) and the variant; a product saved updates the product, locks its variants and
+ * deletes a variant no longer listed — whose `ON DELETE SET NULL` then writes the orders that name it;
+ * a product deleted locks the product and cascades the same way. Locking the order first and the
+ * variant after, as a cancellation that gives stock back would, closes a cycle with that save
+ * (a 40P01, answered as a 500). So the order's product and variant are read unlocked, those two
+ * are locked in the common order, and only then the order — re-read under its lock, its status and
+ * its two ids checked again: a variant deleted in between leaves the order without one, and nothing
+ * to give back to.
+ */
 async function moveOrder<T extends Record<string, unknown>>(
   tx: Transaction<T>,
   input: { actorId: string; orderId: string; verb: OrderVerb; by: OrderActor; ownerId?: string; now: Date },
 ): Promise<{ order: ShopOrder; from: ShopOrderStatus }> {
-  const [current] = await tx.select().from(shopOrders).where(eq(shopOrders.id, input.orderId)).for("update");
   // A member's own door names only their own orders: anybody else's is "no such order", never "not yours".
-  if (!current || (input.ownerId !== undefined && current.memberStaffUserId !== input.ownerId)) {
-    throw new DomainError("NOT_FOUND", "no such order");
+  const owned = (row: Pick<ShopOrder, "memberStaffUserId"> | undefined) =>
+    row !== undefined && (input.ownerId === undefined || row.memberStaffUserId === input.ownerId);
+  const [seen] = await tx
+    .select({ productId: shopOrders.productId, variantId: shopOrders.variantId, memberStaffUserId: shopOrders.memberStaffUserId })
+    .from(shopOrders)
+    .where(eq(shopOrders.id, input.orderId))
+    .limit(1);
+  if (!seen || !owned(seen)) throw new DomainError("NOT_FOUND", "no such order");
+  if (seen.productId) await tx.select({ id: shopProducts.id }).from(shopProducts).where(eq(shopProducts.id, seen.productId)).for("share");
+  if (seen.variantId) await tx.select({ id: shopProductVariants.id }).from(shopProductVariants).where(eq(shopProductVariants.id, seen.variantId)).for("update");
+  const [current] = await tx.select().from(shopOrders).where(eq(shopOrders.id, input.orderId)).for("update");
+  if (!current || !owned(current)) throw new DomainError("NOT_FOUND", "no such order");
+  // The ids only ever go to null (a delete's SET NULL), never to another row; anything else is a move to try again.
+  if ((current.productId !== null && current.productId !== seen.productId) || (current.variantId !== null && current.variantId !== seen.variantId)) {
+    throw new DomainError("CONFLICT", "the order changed while it was read");
   }
   const next = nextOrderStatus(current.status, input.verb, input.by);
   if (next === null) throw new DomainError("CONFLICT", `an order ${current.status} cannot ${input.verb}`);

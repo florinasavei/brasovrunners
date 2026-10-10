@@ -10,6 +10,12 @@ import type { ShopOrderStatus } from "@/db/schema/shop";
 export const ORDER_QUANTITY_MAX = 5;
 /** What a member may write with an order. */
 export const ORDER_NOTE_MAX = 300;
+/**
+ * How long an identical order — the same member, variant, quantity and note, not cancelled — counts as
+ * the same press (§NNN): a double tap, or a form sent again, answers with the order already placed and
+ * takes nothing twice. A member who wants the same thing twice orders again after this.
+ */
+export const ORDER_REPEAT_WINDOW_MS = 10_000;
 /** A price above this is a typo, not a t-shirt: 100 000 lei, in bani. */
 export const PRICE_BANI_MAX = 10_000_000;
 /** The most variants a product offers, and the longest label one has. */

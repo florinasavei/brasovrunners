@@ -14,6 +14,7 @@ import {
 } from "@/modules/content/member-codes/service";
 import type { OrderVerb } from "@/modules/content/shop/domain";
 import { moveOrderByClub } from "@/modules/content/shop/orders";
+import { parseOrdersQuery } from "@/modules/content/shop/repository";
 import { createProduct, deleteProduct, moveProduct, saveProduct } from "@/modules/content/shop/service";
 import { saveShopSettings } from "@/modules/content/shop/settings";
 import { canEditMembersPage, canPublishMembersPage } from "@/modules/staff-identity/domain/roles";
@@ -102,10 +103,29 @@ function codeFieldsOf(form: FormData) {
   };
 }
 
-async function backToCodes(form: FormData, outcome: { error?: string; saved?: string }, anchor = "members-codes"): Promise<never> {
+async function backToCodes(
+  form: FormData,
+  outcome: { error?: string; saved?: string },
+  anchor = "members-codes",
+  keep?: URLSearchParams,
+): Promise<never> {
   await flashOutcome(outcome);
-  const query = outcome.error ? `?error=${outcome.error}` : `?saved=${outcome.saved ?? "1"}`;
-  redirect(`${screen(form)}${query}#${outcome.error ? "admin-alert" : anchor}`);
+  const query = new URLSearchParams(outcome.error ? { error: outcome.error } : { saved: outcome.saved ?? "1" });
+  for (const [name, value] of keep ?? []) query.set(name, value);
+  redirect(`${screen(form)}?${query.toString()}#${outcome.error ? "admin-alert" : anchor}`);
+}
+
+/**
+ * The orders list's filter, posted back by a verb (§NNN) and read through the address's own parser —
+ * a status from the closed set, a product id that is a UUID, anything else dropped — so the answer
+ * lands on the list the Administrator was reading, filtered, and its fold open.
+ */
+function ordersFilterOf(form: FormData): URLSearchParams {
+  const query = parseOrdersQuery({ orderStatus: text(form, "orderStatus"), orderProduct: text(form, "orderProduct") });
+  const keep = new URLSearchParams();
+  if (query.status) keep.set("orderStatus", query.status);
+  if (query.productId) keep.set("orderProduct", query.productId);
+  return keep;
 }
 
 function codeOutcomeOf(error: unknown): { error: string } {
@@ -275,5 +295,5 @@ export async function moveShopOrderAction(_previous: FormOutcome | null, form: F
   } catch (error) {
     outcome = codeOutcomeOf(error);
   }
-  return backToCodes(form, outcome, `order-${orderId}`);
+  return backToCodes(form, outcome, `order-${orderId}`, ordersFilterOf(form));
 }

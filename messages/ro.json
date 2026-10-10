@@ -7224,6 +7224,7 @@
         "filterClear": "Toate comenzile",
         "csv": "Descarcă CSV",
         "ordersEmpty": "Nicio comandă.",
+        "ordersMore": "Se văd cele mai noi {shown} din {total}. CSV-ul le are pe toate.",
         "orderNumber": "Comanda nr. {number}",
         "status": {
           "PLACED": "Plasată",
@@ -9521,12 +9522,14 @@
       "cancelFold": "Vreau să anulez comanda",
       "cancelHelp": "Comanda se anulează de tot; o poți face din nou oricând. După ce e plătită, scrie-i clubului.",
       "cancel": "Anulează comanda",
+      "cancelling": "Se anulează comanda…",
       "soldOut": "Stoc epuizat.",
       "variant": "Varianta",
       "variantSoldOut": "{label} — stoc epuizat",
       "quantity": "Bucăți",
       "noteLabel": "O notă pentru club (opțional, cel mult {max} de caractere)",
       "order": "Comandă",
+      "ordering": "Se trimite comanda…",
       "outcome": {
         "placed": "Comanda a fost primită. Ți-am trimis și un email cu ea și cu felul în care se plătește.",
         "cancelled": "Comanda a fost anulată.",

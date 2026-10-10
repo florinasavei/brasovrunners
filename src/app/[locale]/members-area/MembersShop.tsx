@@ -4,7 +4,6 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -15,8 +14,8 @@ import { formatLei, ORDER_NOTE_MAX, ORDER_QUANTITY_MAX, orderTotalBani } from "@
 import type { MemberOrder, MembersShopProduct } from "@/modules/content/shop/repository";
 import type { ShopOutcome } from "@/modules/content/shop/zone-outcome";
 import TeamPhotoImage from "@/modules/content/team/ui/TeamPhotoImage";
-import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import { FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
+import SubmitButton from "@/shared/ui/SubmitButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import { cancelShopOrderAction, placeShopOrderAction } from "./actions";
@@ -135,10 +134,11 @@ export default async function MembersShop({
                           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                             {t("shop.cancelHelp")}
                           </Typography>
-                          <Button type="submit" variant="outlined" color="error" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }} data-testid="member-order-cancel">
-                            <RemoveShoppingCartIcon aria-hidden="true" sx={glyphSx("medium")} />
-                            {t("shop.cancel")}
-                          </Button>
+                          <Box data-testid="member-order-cancel">
+                            <SubmitButton label={t("shop.cancel")} pendingLabel={t("shop.cancelling")} variant="outlined" color="error" size="medium">
+                              <RemoveShoppingCartIcon />
+                            </SubmitButton>
+                          </Box>
                         </Box>
                       </Box>
                     </>
@@ -222,11 +222,11 @@ function ProductCard({ product, locale, t }: { product: MembersShopProduct; loca
             </Typography>
             <Box component="textarea" id={`shop-note-${id}`} name="note" rows={2} maxLength={ORDER_NOTE_MAX} sx={{ ...CONTROL_SX, py: 1, resize: "vertical" }} />
           </Box>
-          <Box>
-            <Button type="submit" variant="contained" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }} data-testid="members-shop-order">
-              <ShoppingCartIcon aria-hidden="true" sx={glyphSx("medium")} />
-              {t("shop.order")}
-            </Button>
+          {/* The pending button (§NNN): a second tap while the order is in flight is held; the server answers a repeat with the same order. */}
+          <Box data-testid="members-shop-order">
+            <SubmitButton label={t("shop.order")} pendingLabel={t("shop.ordering")} size="medium">
+              <ShoppingCartIcon />
+            </SubmitButton>
           </Box>
         </Box>
       )}

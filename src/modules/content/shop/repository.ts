@@ -200,11 +200,24 @@ export function parseOrdersQuery(params: Record<string, string | string[] | unde
   };
 }
 
-/** The orders under the filter, newest first, with the member's address when the account still exists. */
-export async function listOrdersForAdmin<T extends Record<string, unknown>>(db: Database<T>, query: OrdersQuery, limit = 500) {
+/** The most orders the card draws; the CSV has every one under the filter. */
+export const ORDERS_SHOWN_MAX = 500;
+
+function ordersWhere(query: OrdersQuery): SQL | undefined {
   const conditions: SQL[] = [];
   if (query.status) conditions.push(eq(shopOrders.status, query.status));
   if (query.productId) conditions.push(eq(shopOrders.productId, query.productId));
+  return conditions.length > 0 ? and(...conditions) : undefined;
+}
+
+/** How many orders the filter names — the card's «Comenzi · N», counted, never the rows it drew. */
+export async function countOrdersForAdmin<T extends Record<string, unknown>>(db: Database<T>, query: OrdersQuery): Promise<number> {
+  const [row] = await db.select({ n: count() }).from(shopOrders).where(ordersWhere(query));
+  return Number(row?.n ?? 0);
+}
+
+/** The orders under the filter, newest first, with the member's address when the account still exists. */
+export async function listOrdersForAdmin<T extends Record<string, unknown>>(db: Database<T>, query: OrdersQuery, limit = ORDERS_SHOWN_MAX) {
   return db
     .select({
       id: shopOrders.id,
@@ -227,7 +240,7 @@ export async function listOrdersForAdmin<T extends Record<string, unknown>>(db: 
     })
     .from(shopOrders)
     .leftJoin(staffUsers, eq(staffUsers.id, shopOrders.memberStaffUserId))
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .where(ordersWhere(query))
     .orderBy(desc(shopOrders.createdAt), desc(shopOrders.number))
     .limit(limit);
 }

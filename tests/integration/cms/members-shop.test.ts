@@ -36,7 +36,7 @@ vi.mock("next-intl/server", () => ({
 const { createProduct, deleteProduct, moveProduct, saveProduct } = await import("@/modules/content/shop/service");
 const { cancelOwnOrder, moveOrderByClub, placeOrder } = await import("@/modules/content/shop/orders");
 const { readShopSettings, saveShopSettings } = await import("@/modules/content/shop/settings");
-const { countVisibleProducts, listOrdersForAdmin, listOrdersOfMember, listProductsForAdmin, listProductsForMembers } = await import(
+const { countOrdersForAdmin, countVisibleProducts, listOrdersForAdmin, listOrdersOfMember, listProductsForAdmin, listProductsForMembers } = await import(
   "@/modules/content/shop/repository"
 );
 const { buildOrdersCsv } = await import("@/modules/content/shop/csv");
@@ -193,6 +193,58 @@ describe("§NNN the members' shop", () => {
     expect(cancelled).toMatchObject({ status: "CANCELLED", cancelledBy: "MEMBER", cancelledByStaffUserId: member.id, stockTaken: false });
   });
 
+  it("the same press twice within ten seconds is one order: nothing taken, audited or sent again", async () => {
+    const product = await createProduct(db, { actor: admin, fields: PRODUCT, now: NOW });
+    const variants = await variantsOf(product.id);
+    const at = (seconds: number, note = "Pentru sâmbătă", account = member) =>
+      placeOrder(db, {
+        account,
+        locale: "ro",
+        noticeDescribes: true,
+        fields: { productId: product.id, variantId: variants.M.id, quantity: "1", note },
+        now: new Date(NOW.getTime() + seconds * 1000),
+      });
+    const first = await at(0);
+    // A double tap, three seconds on: the order already placed is the answer.
+    const repeat = await at(3);
+    expect(repeat.id).toBe(first.id);
+    expect((await variantsOf(product.id)).M.stock).toBe(1);
+    expect(await db.select().from(shopOrders)).toHaveLength(1);
+    const placedAudits = (await db.select().from(auditLogs).where(eq(auditLogs.entityType, "shop_order"))).filter((row) => row.action === "shop.order.placed");
+    expect(placedAudits).toHaveLength(1);
+    expect(await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "SHOP_ORDER_PLACED"))).toHaveLength(1);
+
+    // Another note, or another member, is another order.
+    const noted = await at(4, "Altă notă");
+    expect(noted.id).not.toBe(first.id);
+    expect((await variantsOf(product.id)).M.stock).toBe(0);
+    await cancelOwnOrder(db, { account: member, orderId: noted.id, now: NOW });
+    await expect(at(5, "Pentru sâmbătă", other)).resolves.toMatchObject({ memberStaffUserId: other.id });
+    await cancelOwnOrder(db, { account: other, orderId: (await listOrdersOfMember(db, other.id))[0].id, now: NOW });
+
+    // A cancelled order is no repeat to answer with: the same order again is a new one.
+    await cancelOwnOrder(db, { account: member, orderId: first.id, now: NOW });
+    const again = await at(6);
+    expect(again.id).not.toBe(first.id);
+    // Past the window the same order is wanted twice, and is placed twice.
+    await expect(at(17)).resolves.not.toMatchObject({ id: again.id });
+  });
+
+  it("a cancellation after a save removed the order's variant locks product, variant, order and gives nothing back", async () => {
+    const product = await createProduct(db, { actor: admin, fields: PRODUCT, now: NOW });
+    const variants = await variantsOf(product.id);
+    const placed = await order(member, product.id, variants.M.id, 1);
+    // «M» no longer listed: the variant is deleted and the order keeps its copy, without the id.
+    await saveProduct(db, { actor: admin, productId: product.id, expectedVersion: 1, fields: { ...PRODUCT, variants: "L" }, now: NOW });
+    const [orphan] = await db.select().from(shopOrders).where(eq(shopOrders.id, placed.id));
+    expect(orphan).toMatchObject({ variantId: null, productId: product.id, variantLabel: "M", stockTaken: true });
+    const cancelled = await moveOrderByClub(db, { actor: admin, orderId: placed.id, verb: "cancel", now: NOW });
+    expect(cancelled).toMatchObject({ status: "CANCELLED", stockTaken: false });
+    // Another member's order is no such order, before any lock is taken.
+    const mine = await order(member, product.id, (await variantsOf(product.id)).L.id, 1);
+    await expect(cancelOwnOrder(db, { account: other, orderId: mine.id, now: NOW })).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
   it("a save that leaves a stock untouched keeps what the orders took; a changed number is written", async () => {
     const product = await createProduct(db, { actor: admin, fields: PRODUCT, now: NOW });
     const variants = await variantsOf(product.id);
@@ -338,6 +390,10 @@ describe("§NNN the members' shop", () => {
     await moveOrderByClub(db, { actor: admin, orderId: placed.id, verb: "pay", now: NOW });
     expect(await listOrdersForAdmin(db, { status: "PAID", productId: null })).toHaveLength(1);
     expect(await listOrdersForAdmin(db, { status: null, productId: product.id })).toHaveLength(2);
+    // The card's «Comenzi · N» is the filter's count, not the rows drawn: past the limit it still says them all.
+    expect(await countOrdersForAdmin(db, { status: "PAID", productId: null })).toBe(1);
+    expect(await countOrdersForAdmin(db, { status: null, productId: null })).toBe(2);
+    expect(await listOrdersForAdmin(db, { status: null, productId: null }, 1)).toHaveLength(1);
     const rows = await listOrdersForAdmin(db, { status: null, productId: null });
     const header = { number: "Nr.", date: "Data", member: "Membru", email: "Email", product: "Produs", variant: "Varianta", quantity: "Bucăți", unitPrice: "Preț", total: "Total", status: "Starea", note: "Nota" };
     const word = (status: string) => status;

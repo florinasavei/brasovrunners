@@ -59,6 +59,7 @@ export default function ShopCard({
   products,
   settings,
   orders,
+  ordersTotal,
   ordersQuery,
   productNames,
   noticeDescribes,
@@ -75,6 +76,8 @@ export default function ShopCard({
   products: readonly AdminShopProduct[];
   settings: ShopSettings;
   orders: readonly AdminOrder[];
+  /** Every order the filter names, counted — `orders` stops at `ORDERS_SHOWN_MAX`. */
+  ordersTotal: number;
   ordersQuery: OrdersQuery;
   productNames: readonly { id: string; titleRo: string; titleEn: string }[];
   /** Whether the privacy notice in force names `{{membersShop}}` in every language: until then members see no shop. */
@@ -163,6 +166,7 @@ export default function ShopCard({
 
         <OrdersFold
           orders={orders}
+          total={ordersTotal}
           query={ordersQuery}
           productNames={productNames}
           path={path}
@@ -510,6 +514,7 @@ function ProductFields({
  */
 function OrdersFold({
   orders,
+  total,
   query,
   productNames,
   path,
@@ -520,6 +525,7 @@ function OrdersFold({
   showEmail,
 }: {
   orders: readonly AdminOrder[];
+  total: number;
   query: OrdersQuery;
   productNames: readonly { id: string; titleRo: string; titleEn: string }[];
   path: string;
@@ -534,7 +540,8 @@ function OrdersFold({
   if (query.status) csvParams.set("orderStatus", query.status);
   if (query.productId) csvParams.set("orderProduct", query.productId);
   const csvHref = `/api/admin/shop/orders?${csvParams.toString()}`;
-  const count = t(`members.shop.orders.${countForm(orders.length, locale)}`, { count: orders.length });
+  // The count is the filter's, not the rows drawn: past ORDERS_SHOWN_MAX the list says it stops, and the CSV has all.
+  const count = t(`members.shop.orders.${countForm(total, locale)}`, { count: total });
   return (
     <Box component="details" id="shop-orders" open={inUse || undefined} sx={{ ...BOXED_DISCLOSURE_SX, scrollMarginTop: 16 }} data-testid="shop-orders">
       <summary>
@@ -595,6 +602,11 @@ function OrdersFold({
             {t("members.shop.csv")}
           </GlyphButton>
         </Box>
+        {total > orders.length && (
+          <Typography variant="body2" color="text.secondary" data-testid="orders-more">
+            {t("members.shop.ordersMore", { shown: orders.length, total })}
+          </Typography>
+        )}
         {orders.length === 0 ? (
           <Typography variant="body2" data-testid="orders-empty">
             {t("members.shop.ordersEmpty")}
@@ -602,7 +614,7 @@ function OrdersFold({
         ) : (
           <Stack component="ol" spacing={1.5} sx={{ listStyle: "none", m: 0, p: 0 }} aria-label={t("members.shop.ordersHeading")}>
             {orders.map((order) => (
-              <OrderRow key={order.id} order={order} locale={locale} words={t} cancel={cancel} mayManage={mayManage} showEmail={showEmail} />
+              <OrderRow key={order.id} order={order} query={query} locale={locale} words={t} cancel={cancel} mayManage={mayManage} showEmail={showEmail} />
             ))}
           </Stack>
         )}
@@ -613,6 +625,7 @@ function OrdersFold({
 
 function OrderRow({
   order,
+  query,
   locale,
   words: t,
   cancel,
@@ -620,6 +633,8 @@ function OrderRow({
   showEmail,
 }: {
   order: AdminOrder;
+  /** The list's filter, posted with each verb so the answer lands on the same list, open (§NNN). */
+  query: OrdersQuery;
   locale: Locale;
   words: Words;
   cancel: string;
@@ -675,6 +690,8 @@ function OrderRow({
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="orderId" value={order.id} />
               <input type="hidden" name="verb" value={verb} />
+              {query.status && <input type="hidden" name="orderStatus" value={query.status} />}
+              {query.productId && <input type="hidden" name="orderProduct" value={query.productId} />}
               <GlyphButton icon={VERB_GLYPH[verb]} type="submit" variant="outlined" color={verb === "cancel" ? "error" : "primary"} sx={{ minHeight: 44 }}>
                 {t(`members.shop.verbs.${verb}.label`)}
               </GlyphButton>
