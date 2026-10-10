@@ -598,8 +598,9 @@ function MemberFields({
   const reportsTo = parents.some((card) => card.id === member?.reportsToId) ? (member?.reportsToId ?? "") : "";
   return (
     <Stack spacing={2}>
-      {/* «Copiază și tradu tot: RO → EN» (§464, §482): this card's role, words and link labels in
-          English from the Romanian, in this card's form alone — every card posts the same names. */}
+      {/* «Copiază și tradu tot: RO → EN» (§464, §482): this card's role, sub-role, responsibilities
+          (§NNN, line for line), words and link labels in English from the Romanian, in this card's
+          form alone — every card posts the same names (`translate/domain/fields.ts`). */}
       <TranslateAllButton />
       <RecallField
         name="name"
