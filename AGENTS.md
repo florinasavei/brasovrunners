@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.86-2026-10-10 -->
+<!-- PROJECT_BASELINE: BR-V2.87-2026-10-10 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V2.86-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.87-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1128,9 +1128,27 @@ participant list.
 itself a higher one makes every rule below it decorative. The lockout guards key on that same
 role — the last SUPERADMIN can be neither demoted nor removed, by themselves or by anybody else.
 
+**Permissions per person, beside the ladder (§687).** One person holds one role, and the roles
+nest; a job that does not fit a rung — the first is running the members' shop without being an
+Administrator — is a **grant**, a row in `staff_user_permissions` (person, permission, who gave
+it, when). `STAFF_PERMISSIONS` in `roles.ts` names them; `shop.manage` («Gestionează magazinul»)
+is the first, and a later one widens the table's CHECK in its own expand-only migration. A grant
+is read only through named predicates — `canManageShop` (Administrator up by rank, or the
+grant), `canReadShop` — which take a `StaffSubject` (a role, or the actor `{ role, permissions }`
+the session hands out), so the page, the action, the route and the service ask the same question
+of the same actor. Only a backoffice role below the rung that already implies it may hold one
+(`canHoldPermission`): never a member (§524), never the Administrator or the Superadministrator,
+who have it by rank. It is granted on «Echipa» by whoever manages that person's row
+(`canGrantPermission` = `canManageMember` and `canHoldPermission`, §450), never on one's own row;
+each change is one audit row, and a role change drops every grant the new role may not hold, in
+the same transaction. A grant is never a way to a member's or participant's address: the address
+columns stay the role's (§550's `canSeeShopMemberAddresses`).
+
 MUST NOT: a capability written as a list of roles; a second copy of the rank; a screen that
 gates on `canManageStaff` when what it actually needs is `canManageRegistrations` — the two were
-one function until `BR-V1.19` and the registrations screens were reading the wrong one.
+one function until `BR-V1.19` and the registrations screens were reading the wrong one; a page,
+action or service that reads a person's set of grants instead of a named predicate; a grant that
+opens an address column.
 
 ### 10.3 Participant identity
 
@@ -2337,6 +2355,12 @@ getCurrentStaffUser()
 requireStaff()
 requireStaffRole("AUTHOR" | "EDITOR" | "ADMIN")
 ```
+
+The session's staff user carries its grants (§10.2, §687): `findStaffUserById` reads the row and
+its `staff_user_permissions` in one query, on every request, so a withdrawn grant stops at the
+next request exactly as a changed role does; the development switcher takes the same path.
+`requireStaffCapability(predicate)` hands the predicate that actor, never its role alone, and an
+actor read without its grants holds none — a forgotten read refuses, it never opens.
 
 ### 13.2 Email action tokens
 

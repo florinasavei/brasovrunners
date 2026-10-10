@@ -530,6 +530,13 @@ export type AuditAction =
    */
   | "staff.invitation_sent_now"
   /**
+   * «Gestionează magazinul» ticked or unticked on «Echipa» (§687): the colleague's row (the entity),
+   * `staffUserId` and the `permission`; a revoke says why — `tick`, the box unticked, or
+   * `role_change`, a new role that may not hold it. Never a name or an address.
+   */
+  | "staff.permission.granted"
+  | "staff.permission.revoked"
+  /**
    * «Tradu din română» (§464): one row per press — who, which boxes by name, how many characters
    * went to which provider. Never the words, in either language. Also the day's meter: the
    * translation budget sums these rows' `characters` since the club's midnight.

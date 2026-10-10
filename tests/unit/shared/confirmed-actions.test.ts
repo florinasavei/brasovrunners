@@ -159,6 +159,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   // «Adaugă mai mulți membri» (§524): several accounts and invitations in one press.
   inviteMembersAction: [],
   changeStaffRoleAction: [],
+  // «Gestionează magazinul» ticked or unticked on a colleague's row (§687).
+  setStaffPermissionAction: [],
   resendStaffInviteAction: [],
   sendStaffPasswordResetAction: [],
   setStaffAccountActiveAction: [],

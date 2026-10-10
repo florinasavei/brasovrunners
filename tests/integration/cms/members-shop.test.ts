@@ -386,7 +386,7 @@ describe("§683 the members' shop", () => {
     const clubRow = rows.find((row) => row.messageType === "SHOP_ORDER_CLUB_NOTICE")!;
     const club = await renderOutboxMessage({ ...clubRow, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
     expect(club.subject).toContain("Ana Exemplu");
-    expect(club.text).toContain("/admin/pages/members#shop-orders");
+    expect(club.text).toContain("/admin/shop#shop-orders");
     expect(club.text).not.toContain("membru@example.org");
 
     await moveOrderByClub(db, { actor: admin, orderId: placed.id, verb: "pay", now: NOW });
@@ -425,7 +425,7 @@ describe("§683 the members' shop", () => {
     expect(withEmail.split("\r\n")).toHaveLength(3);
   });
 
-  it("a product priced in euro is shown as euro everywhere, and an order keeps the currency it was placed in (§NNN)", async () => {
+  it("a product priced in euro is shown as euro everywhere, and an order keeps the currency it was placed in (§686)", async () => {
     const product = await createProduct(db, { actor: admin, fields: { ...PRODUCT, price: "12,34 €", currency: "EUR" }, now: NOW });
     expect(product).toMatchObject({ priceBani: 1234, currency: "EUR" });
     // The select absent from the post (an older form, a script): lei. A currency outside the two is refused, naming the box.

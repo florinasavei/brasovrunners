@@ -1,5 +1,5 @@
 {
-  "id": "4dde44e9-d559-4783-80e3-f44232a46430",
+  "id": "95d91e11-b7de-4922-8764-1d381d0c2275",
   "prevId": "b71bd5be-d6b8-4a14-aa49-54d80a9a77c6",
   "version": "7",
   "dialect": "postgresql",
@@ -6076,13 +6076,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "currency": {
-          "name": "currency",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'RON'"
-        },
         "stock_taken": {
           "name": "stock_taken",
           "type": "boolean",
@@ -6277,10 +6270,6 @@
           "name": "shop_orders_unit_price_not_negative",
           "value": "\"shop_orders\".\"unit_price_bani\" >= 0"
         },
-        "shop_orders_currency_known": {
-          "name": "shop_orders_currency_known",
-          "value": "\"shop_orders\".\"currency\" IN ('RON', 'EUR')"
-        },
         "shop_orders_note_length": {
           "name": "shop_orders_note_length",
           "value": "\"shop_orders\".\"note\" IS NULL OR length(\"shop_orders\".\"note\") <= 300"
@@ -6436,13 +6425,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "currency": {
-          "name": "currency",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'RON'"
-        },
         "photo_media_asset_id": {
           "name": "photo_media_asset_id",
           "type": "uuid",
@@ -6588,10 +6570,6 @@
           "name": "shop_products_price_not_negative",
           "value": "\"shop_products\".\"price_bani\" >= 0"
         },
-        "shop_products_currency_known": {
-          "name": "shop_products_currency_known",
-          "value": "\"shop_products\".\"currency\" IN ('RON', 'EUR')"
-        },
         "shop_products_position_positive": {
           "name": "shop_products_position_positive",
           "value": "\"shop_products\".\"position\" >= 1"
@@ -6599,6 +6577,84 @@
         "shop_products_version_positive": {
           "name": "shop_products_version_positive",
           "value": "\"shop_products\".\"version\" >= 1"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.staff_user_permissions": {
+      "name": "staff_user_permissions",
+      "schema": "",
+      "columns": {
+        "staff_user_id": {
+          "name": "staff_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "permission": {
+          "name": "permission",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "granted_by_staff_user_id": {
+          "name": "granted_by_staff_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "granted_at": {
+          "name": "granted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "staff_user_permissions_staff_user_id_staff_users_id_fk": {
+          "name": "staff_user_permissions_staff_user_id_staff_users_id_fk",
+          "tableFrom": "staff_user_permissions",
+          "tableTo": "staff_users",
+          "columnsFrom": [
+            "staff_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "staff_user_permissions_granted_by_staff_user_id_staff_users_id_fk": {
+          "name": "staff_user_permissions_granted_by_staff_user_id_staff_users_id_fk",
+          "tableFrom": "staff_user_permissions",
+          "tableTo": "staff_users",
+          "columnsFrom": [
+            "granted_by_staff_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "staff_user_permissions_staff_user_id_permission_pk": {
+          "name": "staff_user_permissions_staff_user_id_permission_pk",
+          "columns": [
+            "staff_user_id",
+            "permission"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "staff_user_permissions_permission_known": {
+          "name": "staff_user_permissions_permission_known",
+          "value": "\"staff_user_permissions\".\"permission\" IN ('shop.manage')"
         }
       },
       "isRLSEnabled": false

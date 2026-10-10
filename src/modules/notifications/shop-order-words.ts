@@ -14,7 +14,7 @@ export type ShopOrderFacts = {
   titleEn: string;
   variant: string | null;
   quantity: number;
-  /** In the minor unit of `currency`, the order's own copy (§NNN): the total reads in it. */
+  /** In the minor unit of `currency`, the order's own copy (§686): the total reads in it. */
   unitPriceBani: number;
   currency: ShopCurrency;
   note: string | null;

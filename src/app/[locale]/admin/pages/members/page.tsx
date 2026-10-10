@@ -25,29 +25,13 @@ import LazyRichTextEditor from "@/modules/content/rich-text/ui/LazyRichTextEdito
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import { clubToday, listDiscountCodesForAdmin } from "@/modules/content/member-codes/repository";
 import {
-  countOrdersForAdmin,
-  listOrderableItems,
-  listOrdersForAdmin,
-  listProductNames,
-  listProductsForAdmin,
-  listZoneAccountsForOrder,
-  parseOrdersQuery,
-} from "@/modules/content/shop/repository";
-import { readShopSettings } from "@/modules/content/shop/settings";
-import type { TeamPhotoLabels } from "@/modules/content/team/ui/TeamPhotoField";
-import { noticeDescribesMembersShop } from "@/modules/legal-documents/repository";
-import { HIGH_WEB_MAX, LOW_WEB_MAX, ORIGINAL_WEB_MAX, WEB_MAX } from "@/modules/media/limits";
-import { isStorageConfigured } from "@/modules/media/storage";
-import {
   canEditDiscountCodeWords,
   canEditMembersPage,
   canManageDiscountCodes,
   canManageStaff,
-  canManageShop,
   canPublishMembersPage,
   canReadContent,
   canReadShop,
-  canSeeShopMemberAddresses,
 } from "@/modules/staff-identity/domain/roles";
 import { countMembers } from "@/modules/staff-identity/repository";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -61,11 +45,10 @@ import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import { saveMembersTextAction, setMembersPagePublishedAction } from "./actions";
 import CodesCard from "./CodesCard";
-import ShopCard from "./ShopCard";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ saved?: string; error?: string; orderStatus?: string; orderProduct?: string }>;
+  searchParams: Promise<{ saved?: string; error?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -120,90 +103,7 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
     descriptionEn: t("members.codes.descriptionEn"),
     link: t("members.codes.link"),
     validUntil: t("members.codes.validUntil"),
-    // The shop's boxes (§683), by the names their forms post.
-    titleRo: t("members.shop.titleRo"),
-    titleEn: t("members.shop.titleEn"),
-    price: t("members.shop.price"),
-    variants: t("members.shop.variants"),
-    stock: t("members.shop.stock"),
-    photoAssetId: t("members.shop.photo"),
-    paymentRo: t("members.shop.paymentRo"),
-    paymentEn: t("members.shop.paymentEn"),
-    ordersTo: t("members.shop.ordersTo"),
-    // «Adaugă o comandă pentru un membru» (§NNN), by the names its form posts.
-    memberStaffUserId: t("members.shop.forMember.member"),
-    item: t("members.shop.forMember.item"),
-    quantity: t("members.shop.forMember.quantity"),
-    note: t("members.shop.forMember.note"),
   });
-  /*
-    «Magazin» (§683): read only for a role that reads the shop (`canReadShop`, the Organizer up); the
-    Redactor and the Tehnic, who read this page's texts, are given no part of it — not even a count.
-  */
-  const now = new Date();
-  const ordersQuery = parseOrdersQuery(query);
-  const shop = canReadShop(actor.role)
-    ? await Promise.all([
-        listProductsForAdmin(db),
-        readShopSettings(db),
-        listOrdersForAdmin(db, ordersQuery),
-        listProductNames(db),
-        noticeDescribesMembersShop(db, now),
-        countOrdersForAdmin(db, ordersQuery),
-      ])
-    : null;
-  // «Adaugă o comandă pentru un membru» (§NNN): the member accounts and the orderable items, read only
-  // for whoever may place one. §NNN: the subject this takes follows `moveOrderByClub`'s.
-  const forMember = shop && canManageShop(actor.role) ? await Promise.all([listZoneAccountsForOrder(db), listOrderableItems(db)]) : null;
-  const shopPhotoLabels: TeamPhotoLabels = {
-    legend: t("members.shop.photo"),
-    choose: t("team.photoChoose"),
-    replace: t("team.photoReplace"),
-    remove: t("team.photoRemove"),
-    uploading: t("team.photoUploading"),
-    failed: t("team.photoFailed"),
-    none: t("team.photoNone"),
-    help: t("members.shop.photoHelp"),
-    fromGallery: t("team.photoFromGallery"),
-    gallery: {
-      loading: t("richText.imageGalleryLoading"),
-      empty: t("richText.imageGalleryEmpty"),
-      close: t("richText.linkCancel"),
-      filter: t("richText.imageGalleryFilter"),
-      noMatch: t("richText.imageGalleryNoMatch"),
-      sourceLegend: t("richText.imageGallerySourceLegend"),
-      sources: {
-        all: t("richText.imageGallerySourceAll"),
-        event: t("richText.imageGallerySourceEvent"),
-        album: t("richText.imageGallerySourceAlbum"),
-        page: t("richText.imageGallerySourcePage"),
-        team: t("richText.imageGallerySourceTeam"),
-      },
-    },
-    quality: {
-      legend: t("gallery.qualityLegend"),
-      low: t("gallery.qualityLow"),
-      normal: t("gallery.qualityNormal"),
-      high: t("gallery.qualityHigh"),
-      original: t("gallery.qualityOriginal"),
-      help: t("gallery.qualityHelp", {
-        lowMax: String(LOW_WEB_MAX),
-        normalMax: String(WEB_MAX),
-        highMax: String(HIGH_WEB_MAX),
-        originalMax: String(ORIGINAL_WEB_MAX),
-      }),
-    },
-    crop: {
-      title: t("members.shop.photoCrop"),
-      help: t("members.shop.photoCropHelp"),
-      reset: rich.imageCropReset,
-      position: rich.imageCropPosition,
-      ...rich.imageShapes,
-    },
-    chosen: rich.imageChosen,
-    stored: rich.imageStored,
-    picked: rich.imageFromGalleryPicked,
-  };
 
   return (
     <Stack spacing={3}>
@@ -258,28 +158,17 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
         mayEditWords={canEditDiscountCodeWords(actor.role)}
       />
 
-      {/* «Magazin» (§683): the members' shop — the Organizer reads it, the Administrator runs it. */}
-      {shop && (
-        <ShopCard
-          products={shop[0]}
-          settings={shop[1]}
-          orders={shop[2]}
-          ordersTotal={shop[5]}
-          ordersQuery={ordersQuery}
-          productNames={shop[3]}
-          accounts={forMember?.[0] ?? []}
-          items={forMember?.[1] ?? []}
-          noticeDescribes={shop[4]}
-          storage={isStorageConfigured()}
-          path={getPathname({ locale, href: "/admin/pages/members" })}
-          locale={locale}
-          words={t}
-          cancel={words.cancel}
-          messages={messages}
-          photoLabels={shopPhotoLabels}
-          mayManage={canManageShop(actor.role)}
-          showEmail={canSeeShopMemberAddresses(actor.role)}
-        />
+      {/*
+        «Magazin» left this page for a section of its own (§687): a volunteer given «Gestionează
+        magazinul» cannot open «Pagini». One line here, for a reader of the shop who looks for it
+        where it was — a link to the section, the bar's own word.
+      */}
+      {canReadShop(actor) && (
+        <Typography variant="body2" data-testid="members-shop-moved">
+          <MuiLink href={getPathname({ locale, href: "/admin/shop" })} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}>
+            {t("members.shop.movedTo")}
+          </MuiLink>
+        </Typography>
       )}
     </Stack>
   );

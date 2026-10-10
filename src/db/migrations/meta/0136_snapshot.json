@@ -1,6 +1,6 @@
 {
-  "id": "1cc1545a-ba4f-4786-961b-33395fb4413e",
-  "prevId": "95d91e11-b7de-4922-8764-1d381d0c2275",
+  "id": "08291586-b5b3-4257-8e0d-9e0674cbe2ee",
+  "prevId": "1cc1545a-ba4f-4786-961b-33395fb4413e",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -6096,6 +6096,19 @@
           "primaryKey": false,
           "notNull": false
         },
+        "placed_by": {
+          "name": "placed_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'MEMBER'"
+        },
+        "placed_by_staff_user_id": {
+          "name": "placed_by_staff_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "status": {
           "name": "status",
           "type": "shop_order_status",
@@ -6251,6 +6264,19 @@
           "onDelete": "set null",
           "onUpdate": "no action"
         },
+        "shop_orders_placed_by_staff_user_id_staff_users_id_fk": {
+          "name": "shop_orders_placed_by_staff_user_id_staff_users_id_fk",
+          "tableFrom": "shop_orders",
+          "tableTo": "staff_users",
+          "columnsFrom": [
+            "placed_by_staff_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
         "shop_orders_cancelled_by_staff_user_id_staff_users_id_fk": {
           "name": "shop_orders_cancelled_by_staff_user_id_staff_users_id_fk",
           "tableFrom": "shop_orders",
@@ -6288,6 +6314,10 @@
         "shop_orders_cancelled_by_known": {
           "name": "shop_orders_cancelled_by_known",
           "value": "\"shop_orders\".\"cancelled_by\" IS NULL OR \"shop_orders\".\"cancelled_by\" IN ('MEMBER', 'CLUB')"
+        },
+        "shop_orders_placed_by_known": {
+          "name": "shop_orders_placed_by_known",
+          "value": "\"shop_orders\".\"placed_by\" IN ('MEMBER', 'CLUB')"
         }
       },
       "isRLSEnabled": false

@@ -10,7 +10,7 @@ import { currencyWordOf, ORDER_NOTE_MAX, ORDER_QUANTITY_MAX, parsePriceToMinor, 
  * A product: the title in Romanian **and** English — both required at every save, a product with no
  * name in one language is not a product the other half of the site can show (§28, §352) — the
  * description both or neither, a price with its currency — lei or euro, «Moneda», never converted
- * (§NNN); absent from the post it is lei — the photo of «Echipa»'s card (§541's crop), the
+ * (§686); absent from the post it is lei — the photo of «Echipa»'s card (§541's crop), the
  * variants and their stock (`domain.ts#parseVariantLines`), and «Vizibil în magazin». A refusal names
  * its box, the rest comes back as typed (§315).
  */

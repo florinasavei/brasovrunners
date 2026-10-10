@@ -27,7 +27,7 @@ import { shopOrderLine, shopOrderLines } from "@/modules/notifications/shop-orde
  * may follow which and for whom, the variants box, the privacy notice's marker that gates the shop
  * (BR-REQ-060-01: the member's verbs and the club's are different sets), and the email's lines.
  */
-describe("§683, §NNN the price, in lei or in euro", () => {
+describe("§683, §686 the price, in lei or in euro", () => {
   it("is kept in the minor unit and read as people write it, a trailing currency word dropped", () => {
     expect(parsePriceToMinor("45")).toBe(4500);
     expect(parsePriceToMinor("45,5")).toBe(4550);
@@ -238,7 +238,7 @@ describe("§683 the zone's outcome and the email's lines", () => {
   it("says the order on one line and the payment words after the club's text, each half in its language", () => {
     expect(shopOrderLine("ro", order)).toBe("Comanda nr. 12: Tricou club — M × 2 — 90 lei");
     expect(shopOrderLine("en", order)).toBe("Order no. 12: Club t-shirt — M × 2 — 90 lei");
-    // An order placed in euro reads in euro, whatever the product says now (§NNN).
+    // An order placed in euro reads in euro, whatever the product says now (§686).
     expect(shopOrderLine("ro", { ...order, unitPriceBani: 3025, currency: "EUR" })).toBe("Comanda nr. 12: Tricou club — M × 2 — 60,50\u00A0€");
     expect(shopOrderLine("en", { ...order, unitPriceBani: 3025, currency: "EUR" })).toBe("Order no. 12: Club t-shirt — M × 2 — €60.50");
     expect(shopOrderLines("ro", order, { payment: true })).toEqual(["Cum se plătește: IBAN RO00 TEST 0000 — sau numerar", "Nota comenzii: „Pentru sâmbătă”"]);

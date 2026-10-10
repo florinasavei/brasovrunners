@@ -10,7 +10,7 @@ import type { AdminOrder } from "./repository";
  * dates ISO 8601. The member's address only for a reader who already sees members' addresses (§550's
  * rule, `canSeeShopMemberAddresses`): otherwise the column is not in the file at all. The unit price
  * and the total are written in the order's own currency, named in the column after the unit price
- * (§NNN) — an order placed in euro stays in euro whatever the product says now. After the member's
+ * (§686) — an order placed in euro stays in euro whatever the product says now. After the member's
  * name (and the address, when it is there), who placed the order: the member, or the club (§NNN).
  */
 

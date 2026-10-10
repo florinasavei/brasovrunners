@@ -177,7 +177,7 @@ function ProductCard({ product, locale, t }: { product: MembersShopProduct; loca
       <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 700, overflowWrap: "anywhere" }}>
         {product.title}
       </Typography>
-      {/* In the product's own currency, lei or euro, never converted (§NNN). */}
+      {/* In the product's own currency, lei or euro, never converted (§686). */}
       <Typography variant="body1" sx={{ fontWeight: 600 }}>
         {formatPrice(product.priceBani, product.currency, locale)}
       </Typography>

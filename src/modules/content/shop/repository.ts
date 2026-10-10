@@ -12,7 +12,8 @@ import type { ShopCurrency } from "./domain";
 
 /**
  * The members' shop (§683), read. The catalogue and the orders are read by the backoffice
- * («Pagini» → «Membri» → «Magazin», behind `canReadShop`) and by the members' zone, behind the
+ * (the top-bar section «Magazin», behind `canReadShop` — a reader of the participant list or a
+ * holder of «Gestionează magazinul», §687) and by the members' zone, behind the
  * account (`canOpenMembersZone`) — never by a public page, the public cache, a feed or a sitemap.
  */
 
@@ -26,7 +27,7 @@ export type AdminShopProduct = {
   titleEn: string;
   descriptionRo: string | null;
   descriptionEn: string | null;
-  /** In the minor unit of `currency` (§NNN). */
+  /** In the minor unit of `currency` (§686). */
   priceBani: number;
   currency: ShopCurrency;
   photoAssetId: string | null;
@@ -177,7 +178,7 @@ export type MembersShopProduct = {
   id: string;
   title: string;
   description: string | null;
-  /** In the minor unit of `currency`, shown in that currency (§NNN). */
+  /** In the minor unit of `currency`, shown in that currency (§686). */
   priceBani: number;
   currency: ShopCurrency;
   photo: ShopPhoto | null;

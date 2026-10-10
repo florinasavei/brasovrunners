@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.86-2026-10-10 -->
+<!-- PROJECT_BASELINE: BR-V2.87-2026-10-10 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.86-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.87-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1918,8 +1918,8 @@ fallback — the way the Neon plan works since `DECISIONS.md` §326 — is the f
 ## 43. Magazinul membrilor — open the members' shop
 
 The members' shop (`DECISIONS.md` §683) is built and closed: members see nothing of it until the
-four steps below are done, in this order. Payment never goes through the site — the member pays by
-bank transfer or in cash, and an Administrator marks the order paid.
+four steps below are done, in this order (the fifth is optional). Payment never goes through the site — the member pays by
+bank transfer or in cash, and an Administrator — or the colleague who runs the shop (step 5) — marks the order paid.
 
 1. **Approve the privacy notice that names the shop.** `/admin/legal` → the «GDPR» card →
    «Regenerează din șablon» → confirm. Section 5 gains the shop's paragraph (what an order keeps,
@@ -1928,8 +1928,9 @@ bank transfer or in cash, and an Administrator marks the order paid.
    «Salvează ciorna», then «Aprobă și publică». Until a notice naming `{{membersShop}}` is in force
    in both languages, the members' zone draws no shop and an order is refused; `/admin/tasks`
    shows the row «Nota de confidențialitate: magazinul membrilor» while a product is visible.
-2. **Write how to pay and who hears of an order.** «Pagini» → «Pagini standard» → «Membri» →
-   the card «Magazin» → «Cum se plătește și cine primește comenzile»: the payment words in Română
+2. **Write how to pay and who hears of an order.** «Magazin» in the backoffice's top bar (its own
+   section since §687; it was a card on «Pagini» → «Membri») → «Cum se plătește și cine primește
+   comenzile»: the payment words in Română
    and English (both or neither — the club's IBAN and, for example, «sau numerar la alergare»),
    and optionally one address for «Cine primește comenzile». With the address empty no email is
    sent to the club; the orders are in the card's list either way.
@@ -1944,6 +1945,13 @@ bank transfer or in cash, and an Administrator marks the order paid.
    plătită» when the money arrives (the member gets an email), «Marchează predată» at the
    hand-over, «Anulează» before the hand-over (the stock goes back). «Descarcă CSV» downloads the
    filtered list. The Organizer reads the card and the CSV and changes nothing.
+5. **Give the shop to the colleague who runs it** (optional, §687). On «Echipa», on that
+   colleague's row, after the role: tick «Gestionează magazinul» and confirm. They find the shop
+   under «Magazin» in their top bar from the next page they open, and do steps 2–4 themselves —
+   whatever their role: a volunteer, a Redactor, an Organizer or a Tehnic. They never see the
+   members' addresses (only the Organizer and the Administrators do, by role); an Administrator
+   needs no tick — the role includes it. Untick it to take it back; a colleague made a member
+   loses it by themselves.
 5. **Type in the orders collected outside the site** (`DECISIONS.md` §NNN) — a supplier's sheet,
    say. Each person in it needs an account on «Echipa» first (a member, or a colleague); then,
    under «Comenzi», the fold «Adaugă o comandă pentru un membru»: the member from the list, the
