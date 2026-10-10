@@ -158,16 +158,6 @@ export async function setStaffPermission<T extends Record<string, unknown>>(
   });
 }
 
-/** The tick on: `setStaffPermission` with `on: true`. */
-export async function grantPermission<T extends Record<string, unknown>>(db: Database<T>, actor: StaffUser, targetId: string, permission: StaffPermission, now?: Date): Promise<{ changed: boolean }> {
-  return setStaffPermission(db, actor, { targetId, permission, on: true, now });
-}
-
-/** The tick off: `setStaffPermission` with `on: false`. */
-export async function revokePermission<T extends Record<string, unknown>>(db: Database<T>, actor: StaffUser, targetId: string, permission: StaffPermission, now?: Date): Promise<{ changed: boolean }> {
-  return setStaffPermission(db, actor, { targetId, permission, on: false, now });
-}
-
 export async function inviteStaffUser<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: StaffUser,

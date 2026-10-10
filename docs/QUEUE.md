@@ -62,7 +62,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Item | Branch | Notes |
 | --- | --- | --- |
-| Permissions per person on top of the roles, the first «Gestionează magazinul» | `feat/permissions-per-person` (to build; the brief is the section below) | held for the owner's choice between this and a new role |
+| Permissions per person on top of the roles, the first «Gestionează magazinul», and the shop's own section «Magazin» | `feat/staff-permissions-shop-manage` | built on this branch: the owner chose permissions per person (§NNN) |
 
 ## Ready for the next release
 
@@ -73,19 +73,10 @@ way into the backoffice, not even to a colleague (§684).
 ### Asked for on 2026-10-10, to start from the laptop
 
 - **The shop's real catalogue.** The owner: «on the laptop I will also give you an excel to see the exact variants of
-  products». Read the sheet, then either enter the products through «Membri» → «Magazin» on QA, or — if the variants do
+  products». Read the sheet, then either enter the products through the top bar's «Magazin» on QA, or — if the variants do
   not fit today's model (one list of labels per product, an optional stock per label, one price per product) — say
   what the sheet needs (a price per variant, two dimensions such as size × colour, a photo per variant) before changing
   the schema. No real prices or products go into the repository: it is public.
-- **A shop owner's permissions — «we need to extend roles and permissions».** Today the shop's verbs (the catalogue, the
-  payment words, the recipient, «Marchează plătită / predată», «Anulează») are the Administrator's and the
-  Superadministrator's (`canManageShop`), the Organizer reads, nobody else sees the card (§683). The owner wants a person
-  who runs the shop without being an Administrator. The roles are one ladder today (`staff-identity/domain/roles.ts`,
-  `atLeast`), so the design is the first step: either **a new rung** (a «Responsabil magazin» who is otherwise a
-  Contributor) or **permissions granted per person on top of the ladder** (a `staff_user_permissions` row such as
-  `shop.manage`, shown as ticks on «Echipa», asserted on the server like every role check — BR-REQ-060-01), which also
-  serves the next such ask. The second is the proposal; it needs a decision section, a migration (expand-only), «Echipa»
-  ticks, the audit, and the shop's checks reading the grant. Ask the owner which before building.
 
 ## Next, queued
 
@@ -113,7 +104,7 @@ way into the backoffice, not even to a colleague (§684).
 | Two daily deep health monitors (§577) | cron-job.org: `GET /api/health?deep=1` on production and on QA at 04:02, notifications on failure — the hourly health check is shallow now and no longer sees a stalled outbox; the steps are on `/admin/tasks` |
 | The privacy notice from the new template, on production | `/admin/legal` → the notice → «Versiune nouă» → «Pornește de la șablon» → approve: until then «Descarcă lista pentru sponsori» refuses (§570), and the newsletter and the members' zone are not described |
 | Vercel back to Hobby | after the 21 November race: production was moved to Pro on 2026-09-30 (the function quota) |
-| Open the members' shop on production (§683) | approve a privacy notice from the template in `/admin/legal` (section 5 names the shop, `{{membersShop}}`; a lawyer reads the accounting-records retention first), then «Membri» → «Magazin»: «Cum se plătește», «Cine primește comenzile», the products — `SETUP.md` §43; `/admin/tasks` shows `shopNotice` until then |
+| Open the members' shop on production (§683) | approve a privacy notice from the template in `/admin/legal` (section 5 names the shop, `{{membersShop}}`; a lawyer reads the accounting-records retention first), then the top bar's «Magazin»: «Cum se plătește», «Cine primește comenzile», the products — `SETUP.md` §43; `/admin/tasks` shows `shopNotice` until then |
 | The members' race-number design | the owner, 2026-10-09: «I want different BIB design for BVR members». A members' own design exists since §664 (its own header colour or picture and a label, chosen in the event's bib card) and members print on their own pages since §681 — say what else should differ (a colour band, the club's logo, a «Membru» stripe, the number's colour) |
 | The club's own Google calendar | proposed, not built: the site would keep a Google calendar of the club's events in step (Calendar API through a service account the club creates in its Google account, its key on both Vercel projects). Needs the owner's yes and the account; the public `.ics` feed and the calendar page already exist (§107, §672, §674) |
 | Two major upgrades (dev tooling) | say yes or no: `drizzle-kit` (drops the old `esbuild` audit line) and ESLint 10 (9.39 is past support) — §584 |

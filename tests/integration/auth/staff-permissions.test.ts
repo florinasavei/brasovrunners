@@ -19,7 +19,8 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * below the Administrator; a role a grant may not stay with takes it away in the same transaction,
  * audited `role_change`. Then the shop's doors: a volunteer holding it writes the catalogue, the
  * settings and an order's status, and the same volunteer without it is refused `FORBIDDEN` — at
- * the service and at the door. The orders CSV gives the holder the file without the address column;
+ * the service and at the door. The orders CSV gives the holder the file without the address column,
+ * and the gallery list behind the product photo's «Din galerie» answers the holder alone;
  * «Magazin»'s gate answers 404 without the grant; «Membri» no longer carries the shop.
  */
 const state = vi.hoisted(() => ({ db: undefined as unknown, cookie: undefined as string | undefined }));
@@ -42,11 +43,12 @@ vi.mock("next-intl/server", () => {
 
 const { getCurrentStaffUser, requireStaffCapability } = await import("@/modules/staff-identity/session");
 const { canManageShop, canReadShop } = await import("@/modules/staff-identity/domain/roles");
-const { changeStaffRole, grantPermission, listStaff, revokePermission } = await import("@/modules/staff-identity/service");
+const { changeStaffRole, listStaff, setStaffPermission } = await import("@/modules/staff-identity/service");
 const { createProduct } = await import("@/modules/content/shop/service");
 const { moveOrderByClub, placeOrder } = await import("@/modules/content/shop/orders");
 const { saveShopSettings } = await import("@/modules/content/shop/settings");
 const { GET: exportOrders } = await import("@/app/api/admin/shop/orders/route");
+const { GET: listGallery } = await import("@/app/api/admin/media/route");
 const { default: ShopSectionLayout } = await import("@/app/[locale]/admin/shop/layout");
 const { default: AdminMembersPage } = await import("@/app/[locale]/admin/pages/members/page");
 const { default: ShopCard } = await import("@/app/[locale]/admin/pages/members/ShopCard");
@@ -116,7 +118,7 @@ describe("§NNN «Gestionează magazinul» — a permission per person", () => {
     state.cookie = volunteer.id;
     await expect(requireStaffCapability(canManageShop)).rejects.toMatchObject({ code: "FORBIDDEN" });
 
-    expect(await grantPermission(db, admin, volunteer.id, "shop.manage", NOW)).toEqual({ changed: true });
+    expect(await setStaffPermission(db, admin, { targetId: volunteer.id, permission: "shop.manage", on: true, now: NOW })).toEqual({ changed: true });
     expect(await grantsOf(volunteer.id)).toEqual(["shop.manage"]);
     const [row] = await db.select().from(staffUserPermissions);
     expect(row.grantedByStaffUserId).toBe(admin.id);
@@ -131,15 +133,15 @@ describe("§NNN «Gestionează magazinul» — a permission per person", () => {
   });
 
   it("granting twice is one row and one audit; revoking stops it at the next request, audited `tick`; revoking again does nothing", async () => {
-    await grantPermission(db, admin, volunteer.id, "shop.manage", NOW);
-    expect(await grantPermission(db, admin, volunteer.id, "shop.manage", NOW)).toEqual({ changed: false });
+    await setStaffPermission(db, admin, { targetId: volunteer.id, permission: "shop.manage", on: true, now: NOW });
+    expect(await setStaffPermission(db, admin, { targetId: volunteer.id, permission: "shop.manage", on: true, now: NOW })).toEqual({ changed: false });
     expect(await grantsOf(volunteer.id)).toHaveLength(1);
 
     state.cookie = volunteer.id;
     expect((await requireStaffCapability(canManageShop)).id).toBe(volunteer.id);
-    expect(await revokePermission(db, admin, volunteer.id, "shop.manage", NOW)).toEqual({ changed: true });
+    expect(await setStaffPermission(db, admin, { targetId: volunteer.id, permission: "shop.manage", on: false, now: NOW })).toEqual({ changed: true });
     await expect(requireStaffCapability(canManageShop)).rejects.toMatchObject({ code: "FORBIDDEN" });
-    expect(await revokePermission(db, admin, volunteer.id, "shop.manage", NOW)).toEqual({ changed: false });
+    expect(await setStaffPermission(db, admin, { targetId: volunteer.id, permission: "shop.manage", on: false, now: NOW })).toEqual({ changed: false });
 
     expect((await auditsOf(volunteer.id)).map((entry) => [entry.action, (entry.metadata as { reason?: string }).reason])).toEqual([
       ["staff.permission.granted", undefined],
@@ -148,27 +150,27 @@ describe("§NNN «Gestionează magazinul» — a permission per person", () => {
   });
 
   it("refuses a member's row, an Administrator's, the actor's own and — for an Administrator — a Superadministrator's", async () => {
-    await expect(grantPermission(db, admin, member.id, "shop.manage", NOW)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(setStaffPermission(db, admin, { targetId: member.id, permission: "shop.manage", on: true, now: NOW })).rejects.toMatchObject({ code: "FORBIDDEN" });
     const [other] = await db.insert(staffUsers).values({ email: "admin2@dev.test", displayName: "Admin 2", role: "ADMIN" }).returning();
-    await expect(grantPermission(db, admin, other.id, "shop.manage", NOW)).rejects.toMatchObject({ code: "FORBIDDEN" });
-    await expect(grantPermission(db, admin, admin.id, "shop.manage", NOW)).rejects.toMatchObject({ code: "FORBIDDEN", message: expect.stringContaining("own") });
-    await expect(grantPermission(db, admin, superadmin.id, "shop.manage", NOW)).rejects.toMatchObject({ code: "FORBIDDEN" });
-    await expect(grantPermission(db, admin, "00000000-0000-4000-8000-000000000000", "shop.manage", NOW)).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(setStaffPermission(db, admin, { targetId: other.id, permission: "shop.manage", on: true, now: NOW })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(setStaffPermission(db, admin, { targetId: admin.id, permission: "shop.manage", on: true, now: NOW })).rejects.toMatchObject({ code: "FORBIDDEN", message: expect.stringContaining("own") });
+    await expect(setStaffPermission(db, admin, { targetId: superadmin.id, permission: "shop.manage", on: true, now: NOW })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(setStaffPermission(db, admin, { targetId: "00000000-0000-4000-8000-000000000000", permission: "shop.manage", on: true, now: NOW })).rejects.toMatchObject({ code: "NOT_FOUND" });
     expect(await db.select().from(staffUserPermissions)).toEqual([]);
     // A Superadministrator grants on the rows below the Administrator, as the Administrator does.
-    expect(await grantPermission(db, superadmin, organizer.id, "shop.manage", NOW)).toEqual({ changed: true });
+    expect(await setStaffPermission(db, superadmin, { targetId: organizer.id, permission: "shop.manage", on: true, now: NOW })).toEqual({ changed: true });
   });
 
   it("refuses every actor below the Administrator, the volunteer holding the grant included", async () => {
-    await grantPermission(db, admin, volunteer.id, "shop.manage", NOW);
+    await setStaffPermission(db, admin, { targetId: volunteer.id, permission: "shop.manage", on: true, now: NOW });
     const holder = { ...volunteer, permissions: new Set(["shop.manage"] as const) };
     for (const actor of [organizer, holder, member]) {
-      await expect(grantPermission(db, actor, organizer.id, "shop.manage", NOW)).rejects.toMatchObject({ code: "FORBIDDEN" });
+      await expect(setStaffPermission(db, actor, { targetId: organizer.id, permission: "shop.manage", on: true, now: NOW })).rejects.toMatchObject({ code: "FORBIDDEN" });
     }
   });
 
   it("a role that may not hold it takes it away in the same change, audited `role_change` — a member's and an Administrator's", async () => {
-    await grantPermission(db, admin, volunteer.id, "shop.manage", NOW);
+    await setStaffPermission(db, admin, { targetId: volunteer.id, permission: "shop.manage", on: true, now: NOW });
     await changeStaffRole(db, admin, volunteer.id, "MEMBER");
     expect(await grantsOf(volunteer.id)).toEqual([]);
     expect((await auditsOf(volunteer.id)).at(-1)).toEqual({
@@ -176,7 +178,7 @@ describe("§NNN «Gestionează magazinul» — a permission per person", () => {
       metadata: { staffUserId: volunteer.id, permission: "shop.manage", reason: "role_change" },
     });
 
-    await grantPermission(db, admin, organizer.id, "shop.manage", NOW);
+    await setStaffPermission(db, admin, { targetId: organizer.id, permission: "shop.manage", on: true, now: NOW });
     await changeStaffRole(db, admin, organizer.id, "COPYWRITER");
     expect(await grantsOf(organizer.id)).toEqual(["shop.manage"]);
     await changeStaffRole(db, admin, organizer.id, "ADMIN");
@@ -219,7 +221,7 @@ describe("§NNN «Gestionează magazinul» — a permission per person", () => {
       await expect(saveShopSettings(db, { actor: plain, fields: { paymentRo: "", paymentEn: "", ordersTo: "" }, now: NOW })).rejects.toMatchObject({ code: "FORBIDDEN" });
       await expect(moveOrderByClub(db, { actor: plain, orderId, verb: "pay", now: NOW })).rejects.toMatchObject({ code: "FORBIDDEN" });
 
-      await grantPermission(db, admin, volunteer.id, "shop.manage", NOW);
+      await setStaffPermission(db, admin, { targetId: volunteer.id, permission: "shop.manage", on: true, now: NOW });
       state.cookie = volunteer.id;
       // The actor the session hands out, as the actions pass it.
       const holder = await requireStaffCapability(canManageShop);
@@ -233,7 +235,7 @@ describe("§NNN «Gestionează magazinul» — a permission per person", () => {
       state.cookie = volunteer.id;
       expect((await exportOrders(new Request("http://localhost/api/admin/shop/orders?lang=ro"))).status).toBe(403);
 
-      await grantPermission(db, admin, volunteer.id, "shop.manage", NOW);
+      await setStaffPermission(db, admin, { targetId: volunteer.id, permission: "shop.manage", on: true, now: NOW });
       const response = await exportOrders(new Request("http://localhost/api/admin/shop/orders?lang=ro"));
       expect(response.status).toBe(200);
       const csv = await response.text();
@@ -249,10 +251,24 @@ describe("§NNN «Gestionează magazinul» — a permission per person", () => {
       expect(organizers.split(/\r?\n/)[0]).toContain(ro.Admin.members.shop.columns.email);
     });
 
+    it("«Din galerie» in the product photo field: the holder lists the gallery; the volunteer without the grant 403", async () => {
+      state.cookie = volunteer.id;
+      expect((await listGallery(new Request("http://localhost/api/admin/media"))).status).toBe(403);
+
+      await setStaffPermission(db, admin, { targetId: volunteer.id, permission: "shop.manage", on: true, now: NOW });
+      const response = await listGallery(new Request("http://localhost/api/admin/media"));
+      expect(response.status).toBe(200);
+      expect(await response.json()).toMatchObject({ assets: expect.any(Array) });
+
+      // Withdrawn, the list is closed again at the next request.
+      await setStaffPermission(db, admin, { targetId: volunteer.id, permission: "shop.manage", on: false, now: NOW });
+      expect((await listGallery(new Request("http://localhost/api/admin/media"))).status).toBe(403);
+    });
+
     it("«Magazin»'s gate: 404 for a volunteer without the grant, the section for one with it", async () => {
       state.cookie = volunteer.id;
       expect(await statusOf(ShopSectionLayout({ children: "shop" }))).toBe(404);
-      await grantPermission(db, admin, volunteer.id, "shop.manage", NOW);
+      await setStaffPermission(db, admin, { targetId: volunteer.id, permission: "shop.manage", on: true, now: NOW });
       expect(await statusOf(ShopSectionLayout({ children: "shop" }))).toBeNull();
       state.cookie = organizer.id;
       expect(await statusOf(ShopSectionLayout({ children: "shop" }))).toBeNull();
