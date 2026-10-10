@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 /**
  * BR-REQ-070-04, `DECISIONS.md` §NNN — the contact page's ways on: the club's public phone (§565) on the
- * page itself, not only in the footer's fold, as a `tel:` link under the form or the address; the
+ * page itself, not only in the footer's fold, as a `tel:` link in «Contact direct», above the form; the
  * calendar named in the intro, for the newcomer's «when and where do you run?»; and after a send, a
  * button back to an empty form. The page rendered on the server with the real catalogues (the
  * `contact-page-addresses.test.ts` shape).
@@ -79,7 +79,7 @@ describe("BR-REQ-070-04 the contact page's ways on (§NNN)", () => {
   it.each([
     ["ro", "Sună-ne la"],
     ["en", "Call us at"],
-  ] as const)("shows the club's phone as a tel: link under the form (%s)", async (lang, lead) => {
+  ] as const)("shows the club's phone as a tel: link above the form (%s)", async (lang, lead) => {
     locale = lang;
     const html = await render();
     const line = /<p[^>]*data-testid="contact-phone"[^>]*>([\s\S]*?)<\/p>/.exec(html);
@@ -87,14 +87,15 @@ describe("BR-REQ-070-04 the contact page's ways on (§NNN)", () => {
     expect(line![1]).toContain(lead);
     expect(line![1]).toContain(`href="tel:+40700000000"`);
     expect(line![1]).toContain(PHONE);
-    // Under the form, and above «Spune-ne ceva» and the newsletter wherever they are drawn.
-    expect(html.indexOf('data-testid="contact-phone"')).toBeGreaterThan(html.indexOf("</form>"));
+    // Above the form (§NNN; the owner: yes to the ways above the form), under the intro.
+    expect(html.indexOf('data-testid="contact-phone"')).toBeLessThan(html.indexOf("<form"));
+    expect(html.indexOf('data-testid="contact-phone"')).toBeGreaterThan(html.indexOf('data-testid="contact-calendar-link"'));
   });
 
   it.each([
-    ["ro", "Alte căi de contact", "Scrie-ne direct la"],
-    ["en", "Other ways to reach us", "Write to us directly at"],
-  ] as const)("draws «Alte căi de contact» as its own section with a rule, a heading glyph and a glyph per row (%s)", async (lang, title, lead) => {
+    ["ro", "Contact direct", "Scrie-ne la", "Trimite-ne un mesaj"],
+    ["en", "Reach us directly", "Write to us at", "Send us a message"],
+  ] as const)("draws «Contact direct» above the form, then the form as its own section with its heading (%s)", async (lang, title, lead, formTitle) => {
     locale = lang;
     const html = await render();
     const section = /<section[^>]*data-testid="contact-ways"[^>]*>([\s\S]*?)<\/section>/.exec(html);
@@ -105,8 +106,13 @@ describe("BR-REQ-070-04 the contact page's ways on (§NNN)", () => {
     expect(section![1]).toContain('data-testid="PhoneOutlinedIcon"');
     expect(section![1]).toContain(lead);
     expect(section![1]).toContain('href="mailto:club@mail.example.test"');
-    // Under the form, before «Spune-ne ceva» and the newsletter.
-    expect(html.indexOf('data-testid="contact-ways"')).toBeGreaterThan(html.indexOf("</form>"));
+    // Above the form, which is its own section under its own heading and glyph.
+    expect(html.indexOf('data-testid="contact-ways"')).toBeLessThan(html.indexOf("<form"));
+    const form = /<section[^>]*data-testid="contact-form-section"[^>]*>([\s\S]*?)<\/section>/.exec(html);
+    expect(form, "the form's section").not.toBeNull();
+    expect(form![0]).toMatch(/^<section[^>]*aria-labelledby="contact-form-heading"/);
+    expect(form![1]).toMatch(new RegExp(`^<h2[^>]*id="contact-form-heading"[^>]*>[\\s\\S]*?data-testid="SendOutlinedIcon"[\\s\\S]*?${formTitle}</h2>`));
+    expect(form![1]).toContain("<form");
   });
 
   it("gives every section's heading a glyph, the page's title too", async () => {
@@ -114,14 +120,16 @@ describe("BR-REQ-070-04 the contact page's ways on (§NNN)", () => {
     expect(html).toMatch(/<h1[^>]*>[\s\S]*?data-testid="ForumOutlinedIcon"[\s\S]*?Scrie-ne<\/h1>/);
   });
 
-  it("shows the phone where there is no form too, and no line when no number is set", async () => {
+  it("with no form, «Contact direct» gives the address and the phone, and the form's section says there is none", async () => {
     formReaches = false;
-    expect(await render()).toContain('data-testid="contact-phone"');
-    phone = null;
     const html = await render();
-    expect(html).not.toContain('data-testid="contact-phone"');
-    // No form and no phone: the address is the page's own sentence, so the section has nothing to hold.
-    expect(html).not.toContain('data-testid="contact-ways"');
+    expect(html).toContain('data-testid="contact-phone"');
+    expect(html).toContain('href="mailto:club@mail.example.test"');
+    expect(html).toContain(catalogues.ro.Contact.off.none);
+    // No form, no heading for it.
+    expect(html).not.toContain('id="contact-form-heading"');
+    phone = null;
+    expect(await render()).not.toContain('data-testid="contact-phone"');
   });
 
   it("names the calendar in the intro, in both languages", async () => {
@@ -137,11 +145,12 @@ describe("BR-REQ-070-04 the contact page's ways on (§NNN)", () => {
   it.each([
     ["ro", "Scrie alt mesaj"],
     ["en", "Write another message"],
-  ] as const)("after a send, offers an empty form again and leaves the phone out (%s)", async (lang, words) => {
+  ] as const)("after a send, offers an empty form again under «Contact direct», which stays (%s)", async (lang, words) => {
     locale = lang;
     const html = await render({ sent: "1" });
     expect(html).not.toContain("<form action");
     expect(html).toMatch(new RegExp(`<a[^>]*href="/${lang}/contact"[^>]*data-testid="contact-send-another"[^>]*>[\\s\\S]*?${words}</a>`));
-    expect(html).not.toContain('data-testid="contact-phone"');
+    expect(html).toContain('data-testid="contact-phone"');
+    expect(html).not.toContain('id="contact-form-heading"');
   });
 });

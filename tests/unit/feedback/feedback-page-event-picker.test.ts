@@ -158,11 +158,11 @@ describe("BR-REQ-070-04 «Evenimentul»: the native select stays, the island sta
     // The island's rows say what the native options say.
     expect(props.options.map((option) => (option.when ? `${option.label} — ${option.when}` : option.label))).toEqual(options.map((option) => option.text));
     expect(props.words).toEqual({
-      label: "Evenimentul",
+      label: "Alergarea",
       search: "Scrie o parte din nume sau din dată",
-      noMatch: "Niciun eveniment găsit",
-      open: "Deschide lista evenimentelor",
-      close: "Închide lista evenimentelor",
+      noMatch: "Nicio alergare găsită",
+      open: "Deschide lista alergărilor",
+      close: "Închide lista alergărilor",
       kinds: "Arată",
       chips: { all: "Toate", special: "Evenimente speciale", group: "Alergări de grup" },
     });

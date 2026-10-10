@@ -81,8 +81,8 @@ describe("§442 the contact page shows the addresses in force", () => {
   });
 
   it.each([
-    ["ro", "Scrie-ne direct la", " sau "],
-    ["en", "Write to us directly at", " or "],
+    ["ro", "Scrie-ne la", " sau "],
+    ["en", "Write to us at", " or "],
   ] as const)("§449 shows the addresses beside the form too, when the form works (%s)", async (lang, lead, join) => {
     formReaches = true;
     locale = lang;
@@ -92,7 +92,8 @@ describe("§442 the contact page shows the addresses in force", () => {
       expect(html).toContain(lead);
       const gmailAt = html.indexOf(`href="mailto:${GMAIL}"`);
       const mailboxAt = html.indexOf(`href="mailto:${MAILBOX}"`);
-      expect(gmailAt).toBeGreaterThan(html.indexOf("<form"));
+      // Above the form since §NNN (the owner: yes to «Contact direct» above the form).
+      expect(gmailAt).toBeLessThan(html.indexOf("<form"));
       expect(mailboxAt).toBeGreaterThan(gmailAt);
       expect(html.slice(gmailAt, mailboxAt)).toContain(join);
     } finally {

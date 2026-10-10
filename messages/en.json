@@ -8930,13 +8930,13 @@
       "body": "We will answer at your email address.",
       "another": "Write another message"
     },
-    "direct": "Write to us directly at",
+    "direct": "Write to us at",
     "phone": "Call us at",
     "ways": {
-      "title": "Other ways to reach us"
+      "title": "Reach us directly"
     },
+    "formTitle": "Send us a message",
     "off": {
-      "writeTo": "Write to us at",
       "none": "The contact form is not available at the moment.",
       "or": "or"
     },
