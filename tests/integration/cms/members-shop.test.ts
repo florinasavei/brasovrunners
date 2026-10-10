@@ -367,7 +367,7 @@ describe("§683 the members' shop", () => {
     const clubRow = rows.find((row) => row.messageType === "SHOP_ORDER_CLUB_NOTICE")!;
     const club = await renderOutboxMessage({ ...clubRow, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
     expect(club.subject).toContain("Ana Exemplu");
-    expect(club.text).toContain("/admin/pages/members#shop-orders");
+    expect(club.text).toContain("/admin/shop#shop-orders");
     expect(club.text).not.toContain("membru@example.org");
 
     await moveOrderByClub(db, { actor: admin, orderId: placed.id, verb: "pay", now: NOW });

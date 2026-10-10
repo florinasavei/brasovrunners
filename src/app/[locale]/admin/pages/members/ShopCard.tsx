@@ -46,11 +46,14 @@ const STATUSES: readonly ShopOrderStatus[] = ["PLACED", "PAID", "HANDED_OVER", "
 const VERB_GLYPH = { pay: "confirm", handOver: "checkIn", cancel: "cancel" } as const;
 
 /**
- * «Magazin» / "Shop" (§683): the members' shop on «Pagini» → «Membri», under the discount codes —
- * the catalogue, how the club is paid and who hears of an order, and the orders.
+ * «Magazin» / "Shop" (§683): the members' shop, rendered by its own top-bar section «Magazin»
+ * (`/admin/shop`, §NNN; the file stays where §683 put it) — the catalogue, how the club is paid and
+ * who hears of an order, and the orders.
  *
- * Read by whoever reads the participant list (`canReadShop`, §289): the Organizer reads all of it;
- * every verb is the Administrator's (`mayManage`) and its service asserts it again (BR-REQ-060-01).
+ * Read by `canReadShop` (whoever reads the participant list, §289, or holds the grant): the
+ * Organizer reads all of it; every verb is `canManageShop`'s (`mayManage`) — the Administrator by
+ * rank, or a colleague given «Gestionează magazinul» on «Echipa» (§NNN) — and its service asserts it
+ * again against the same actor (BR-REQ-060-01).
  * Every write the members see asks first and toasts (§384); moving a product does not ask, as the
  * codes' arrows do not. The member's address beside an order only for a reader who already sees the
  * members' addresses (§550, `showEmail`).
@@ -181,7 +184,7 @@ export default function ShopCard({
   );
 }
 
-/** «Cum se plătește» and «Cine primește comenzile»: the Administrator writes them; the Organizer reads them. */
+/** «Cum se plătește» and «Cine primește comenzile»: whoever runs the shop writes them (§NNN); the Organizer reads them. */
 function SettingsFold({
   settings,
   locale,
@@ -510,7 +513,7 @@ function ProductFields({
 /**
  * The orders, newest first, under a GET filter (status, product) whose state is the address (§527's
  * shape), the fold opening by itself while a filter is in use; the CSV of the same filter; and the
- * Administrator's verbs on each row, each asked first.
+ * shop manager's verbs on each row (`canManageShop`, §NNN), each asked first.
  */
 function OrdersFold({
   orders,

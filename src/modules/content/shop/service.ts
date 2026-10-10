@@ -4,7 +4,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database, Transaction } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { mediaAssetKeyPrefix } from "@/modules/content/team/repository";
-import { canManageShop } from "@/modules/staff-identity/domain/roles";
+import { canManageShop, type StaffActor } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import { stockToSave, variantKey } from "./domain";
@@ -17,7 +17,7 @@ import { type ProductFields, productFieldsSchema } from "./fields";
  * Nothing here expires the public cache: the shop is on no public page.
  */
 
-type Actor = Pick<StaffUser, "id" | "role">;
+type Actor = Pick<StaffUser, "id"> & StaffActor;
 
 function parseOrThrow(value: unknown): ProductFields {
   const parsed = productFieldsSchema.safeParse(value);
@@ -32,7 +32,7 @@ function parseOrThrow(value: unknown): ProductFields {
 }
 
 function assertMayManage(actor: Actor): void {
-  if (!canManageShop(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not manage the members' shop`);
+  if (!canManageShop(actor)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not manage the members' shop`);
 }
 
 function assertProductId(productId: string): void {

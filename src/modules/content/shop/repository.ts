@@ -10,7 +10,8 @@ import { isUuid } from "@/shared/ids";
 
 /**
  * The members' shop (§683), read. The catalogue and the orders are read by the backoffice
- * («Pagini» → «Membri» → «Magazin», behind `canReadShop`) and by the members' zone, behind the
+ * (the top-bar section «Magazin», behind `canReadShop` — a reader of the participant list or a
+ * holder of «Gestionează magazinul», §NNN) and by the members' zone, behind the
  * account (`canOpenMembersZone`) — never by a public page, the public cache, a feed or a sitemap.
  */
 

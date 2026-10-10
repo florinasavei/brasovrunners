@@ -251,9 +251,10 @@ it is the authority, this is the summary):
     a mailbox outside the domain, read daily; the registrar's and its verification service's senders whitelisted there;
     auto-renew on with a valid card; `DOMAIN_REGISTERED_ON` and `DOMAIN_RENEWAL_YEARS` on both Vercel projects (`SETUP.md` §26).
 20. **Open the members' shop** — approve a privacy notice from the template (section 5 names the shop,
-    `{{membersShop}}`; a lawyer reads the accounting-records period first), then on «Membri» → «Magazin»
+    `{{membersShop}}`; a lawyer reads the accounting-records period first), then in the top bar's «Magazin»
     write how to pay and who receives the orders, and add the products. Payment is never on the site.
     The steps are `SETUP.md` §43; `/admin/tasks` carries the row `shopNotice` while a product is visible.
+    A colleague who is not an Administrator runs it once given «Gestionează magazinul» on «Echipa».
 
 **The values behind items 10 and 11 are in `.env.local` and on both Vercel projects**, never in
 this repository — it is public, and `yarn secrets:check` blocks a commit that carries one. The
