@@ -166,8 +166,8 @@ test.describe("§480 the public pages at 360 px", () => {
     const privacyLine = privacy.locator("xpath=ancestor::p[1]");
     await expectInlineTarget(page, privacyLine, privacy, "the privacy notice under the form");
 
-    // The club's address after "Sau scrie-ne direct la", where the deployment names one.
-    const direct = page.locator("#main p", { hasText: "Sau scrie-ne direct la" });
+    // The club's address in «Alte căi de contact» (§NNN), where the deployment names one.
+    const direct = page.getByTestId("contact-email");
     if ((await direct.count()) > 0) {
       await expectInlineTarget(page, direct, direct.locator("a[href^='mailto:']").first(), "the club's address");
     }

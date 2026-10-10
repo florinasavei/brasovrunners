@@ -8918,8 +8918,11 @@
       "body": "We will answer at your email address.",
       "another": "Write another message"
     },
-    "direct": "Or write to us directly at",
-    "phone": "Or call us at",
+    "direct": "Write to us directly at",
+    "phone": "Call us at",
+    "ways": {
+      "title": "Other ways to reach us"
+    },
     "off": {
       "writeTo": "Write to us at",
       "none": "The contact form is not available at the moment.",

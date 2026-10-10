@@ -81,8 +81,8 @@ describe("§442 the contact page shows the addresses in force", () => {
   });
 
   it.each([
-    ["ro", "Sau scrie-ne direct la", " sau "],
-    ["en", "Or write to us directly at", " or "],
+    ["ro", "Scrie-ne direct la", " sau "],
+    ["en", "Write to us directly at", " or "],
   ] as const)("§449 shows the addresses beside the form too, when the form works (%s)", async (lang, lead, join) => {
     formReaches = true;
     locale = lang;
