@@ -93,6 +93,12 @@ const WRITES: Record<string, Expected> = {
   "src/modules/content/team/service.ts#deleteTeamMember": ["pages"],
   "src/modules/content/team/page-settings.ts#saveTeamPageIntro": ["pages"],
   "src/modules/content/team/page-settings.ts#setTeamPagePublished": ["pages"],
+  // «Casetele paginii» under the chart of «Echipa» (§NNN): read by the team page, under `pages` like its cards.
+  "src/modules/content/team/boxes.ts#createTeamBox": ["pages"],
+  "src/modules/content/team/boxes.ts#saveTeamBox": ["pages"],
+  "src/modules/content/team/boxes.ts#moveTeamBox": ["pages"],
+  "src/modules/content/team/boxes.ts#setTeamBoxVisible": ["pages"],
+  "src/modules/content/team/boxes.ts#deleteTeamBox": ["pages"],
   "src/modules/content/faq/service.ts#saveFaqPage": ["pages"],
   "src/modules/content/faq/page-settings.ts#setFaqPagePublished": ["pages"],
   "src/modules/content/members/page-settings.ts#saveMembersText": ["pages"],

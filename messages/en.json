@@ -4627,7 +4627,8 @@
       "usedInTeamIntro": "On the team page: the introduction",
       "usedInFaq": "On the FAQ page",
       "usedInMembersPage": "On the members' pages",
-      "usedInNewsletter": "In a newsletter sent"
+      "usedInNewsletter": "In a newsletter sent",
+      "usedInTeamBox": "On the team page: the box {title}"
     },
     "gallery": {
       "title": "Photo gallery",
@@ -5886,6 +5887,16 @@
               "steps": [
                 "The event's settings (date, place, places, registration), publishing, the gallery and the registrations. If a text depends on a wrong setting, tell the Administrator."
               ]
+            },
+            {
+              "title": "The «Team» page as an organisational chart: who answers to whom, the responsibilities and the boxes",
+              "steps": [
+                "«Pages» → «Team» → «Edit the card» on the person's row, or «Add a person».",
+                "Under the role write «Subtitle (Română)» and «Subtitle (English)» — one line, a sub-role for example — then «Responsibilities (Română)» and «Responsibilities (English)», one per line. Each pair in both languages or in neither.",
+                "At «Answers to» choose the card this person answers to; «— nobody, at the top —» leaves them at the top. At «Placement» choose «below» (the row under it) or «beside» (the same row, to its right). A card cannot answer to itself or to anyone under it.",
+                "Press «Save». As soon as a card on the site answers to another card on the site, the page draws the organisational chart; until then it stays the grid.",
+                "The texts under the chart: «The page's boxes» → «Add a box»: the title in both languages and the text in the editor — a picture, a partner's logo for example, goes in as in any text. A new box is hidden; the Administrator puts it on the site with «Put on the site»."
+              ]
             }
           ]
         },
@@ -7002,6 +7013,50 @@
         "moveUp": "Move up link",
         "moveDown": "Move down link",
         "row": "Link"
+      },
+      "subtitleRo": "Subtitle (Română)",
+      "subtitleEn": "Subtitle (English)",
+      "subtitleHelp": "One line under the role, a sub-role for example. Optional, in both languages or in neither.",
+      "responsibilitiesRo": "Responsibilities (Română)",
+      "responsibilitiesEn": "Responsibilities (English)",
+      "responsibilitiesHelp": "One per line, at most {lines} lines of {max} characters. Optional, in both languages or in neither; the site shows them as a list.",
+      "reportsTo": "Answers to",
+      "reportsToNone": "— nobody, at the top —",
+      "reportsToHelp": "The card this person answers to. As soon as a card on the site answers to another card on the site, the page draws the organisational chart; until then it stays the grid.",
+      "placement": "Placement",
+      "placementBelow": "below",
+      "placementBeside": "beside",
+      "placementHelp": "Against the chosen card: in the row under it, or in the same row, to its right.",
+      "boxes": {
+        "heading": "The page's boxes",
+        "count": {
+          "one": "{count} box",
+          "few": "{count} boxes",
+          "other": "{count} boxes"
+        },
+        "help": "The texts under the chart, each with its own title: a shared responsibility, the partnerships, a note on decisions. A new box is hidden until it is put on the site.",
+        "add": "Add a box",
+        "create": "Add the box",
+        "empty": "There is no box yet.",
+        "listLabel": "The page's boxes, in the page's order",
+        "noText": "No text",
+        "moveUp": "Move the box “{title}” up",
+        "moveDown": "Move the box “{title}” down",
+        "showTitle": "Put the box “{title}” on the site?",
+        "showBody": "The box appears under the chart while the page is published.",
+        "hideTitle": "Take the box “{title}” off the site?",
+        "hideBody": "The box stays here, hidden; you can put it back at any time.",
+        "deleteTitle": "Delete the box “{title}”?",
+        "deleteBody": "The box is gone for good. Its pictures stay in Pictures for a week and are then deleted on their own, if nothing uses them any more.",
+        "delete": "Delete the box",
+        "edit": "Edit the box",
+        "titleRo": "Title (Română)",
+        "titleEn": "Title (English)",
+        "titleHelp": "The box's title, as it appears on the page.",
+        "titleEnHelp": "Required, like the Romanian one.",
+        "bodyRo": "The text (Română)",
+        "bodyEn": "The text (English)",
+        "bodyHelp": "In both languages or in neither, at most {max} characters each. As on a page: paragraphs, lists, a link in the text, a picture (a partner's logo, for example) — no tables."
       }
     },
     "faq": {
@@ -9244,7 +9299,13 @@
       "shopSettingsSaved": "The payment words and the orders address have been saved.",
       "shopOrderPaid": "The order has been marked paid. The member receives an email.",
       "shopOrderHandedOver": "The order has been marked handed over.",
-      "shopOrderCancelled": "The order has been cancelled."
+      "shopOrderCancelled": "The order has been cancelled.",
+      "teamBoxCreated": "The box was added, hidden until it is put on the site.",
+      "teamBoxSaved": "The box was saved.",
+      "teamBoxShown": "The box is on the site.",
+      "teamBoxHidden": "The box was taken off the site.",
+      "teamBoxMoved": "The order of the boxes was changed.",
+      "teamBoxDeleted": "The box was deleted."
     }
   },
   "Network": {
@@ -9401,7 +9462,11 @@
       "WEBSITE": "Website",
       "OTHER": "Link"
     },
-    "contact": "Want to help, or have a question for the team? <contact>Write to us</contact>."
+    "contact": "Want to help, or have a question for the team? <contact>Write to us</contact>.",
+    "responsibilities": "Responsibilities",
+    "besideLabel": "Beside {name}",
+    "reportsLabel": "Answer to {name}",
+    "boxesLabel": "About the team"
   },
   "Faq": {
     "title": "Frequently asked questions",

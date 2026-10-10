@@ -34,6 +34,31 @@ export const TEAM_ROLE_MAX = 80;
 export const TEAM_BIO_MAX = 1500;
 /** A rich-text document as the editor posts it — the ceiling every editorial body has. */
 export const TEAM_RICH_TEXT_JSON_MAX = 200_000;
+/** The one-line sub-role under the role title (§NNN): «Parteneriate sportive și echipamente». */
+export const TEAM_SUBTITLE_MAX = 120;
+/** «Responsabilități» (§NNN): one per line, at most this many lines of this many characters. */
+export const TEAM_RESPONSIBILITIES_MAX_LINES = 12;
+export const TEAM_RESPONSIBILITY_LINE_MAX = 160;
+/** Where a card sits against the card it answers to (§NNN): the tier under it, or its own tier to the right. */
+export const TEAM_PLACEMENTS = ["below", "beside"] as const;
+export type TeamPlacement = (typeof TEAM_PLACEMENTS)[number];
+/** A box's title under the chart (§NNN), and its words counted as the page reads them. */
+export const TEAM_BOX_TITLE_MAX = 120;
+export const TEAM_BOX_BODY_MAX = 3000;
+
+/** One line: every run of whitespace, a line break included, made one space, then trimmed. */
+export function normalizeTeamLine(value: string): string {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+/** «Responsabilități» as the page draws them: one per line, blank lines dropped (§NNN). */
+export function responsibilityLines(text: string | null | undefined): string[] {
+  return (text ?? "")
+    .replace(/\r\n?/g, "\n")
+    .split("\n")
+    .map((line) => line.replace(/\s+/g, " ").trim())
+    .filter((line) => line !== "");
+}
 
 /**
  * Trimmed, CRLF made LF, at most one empty line in a row. Runs before the length check, since a
@@ -151,6 +176,51 @@ const optionalText = (max: number) =>
     .pipe(z.string().max(max))
     .transform((value) => (value === "" ? null : value));
 
+/** An optional one-line text (the sub-role, §NNN): absent reads as empty. */
+const optionalLine = (max: number) =>
+  z
+    .string()
+    .optional()
+    .default("")
+    .transform(normalizeTeamLine)
+    .pipe(z.string().max(max))
+    .transform((value) => (value === "" ? null : value));
+
+/**
+ * «Responsabilități» as typed, one per line (§NNN): blank lines dropped, at most
+ * `TEAM_RESPONSIBILITIES_MAX_LINES` lines of `TEAM_RESPONSIBILITY_LINE_MAX` characters, kept
+ * joined by one line break; nothing typed is null.
+ */
+const optionalResponsibilities = z
+  .string()
+  .optional()
+  .default("")
+  .transform(responsibilityLines)
+  .superRefine((lines, ctx) => {
+    if (lines.length > TEAM_RESPONSIBILITIES_MAX_LINES) {
+      ctx.addIssue({ code: "custom", message: `at most ${TEAM_RESPONSIBILITIES_MAX_LINES} responsibilities, one per line` });
+    }
+    const long = lines.findIndex((line) => line.length > TEAM_RESPONSIBILITY_LINE_MAX);
+    if (long !== -1) {
+      ctx.addIssue({ code: "custom", message: `responsibility ${long + 1} is longer than ${TEAM_RESPONSIBILITY_LINE_MAX} characters` });
+    }
+  })
+  .transform((lines) => (lines.length === 0 ? null : lines.join("\n")));
+
+/** The card this one answers to (§NNN): a uuid or nothing; whether it exists is the service's to check. */
+const reportsToField = z
+  .string()
+  .optional()
+  .default("")
+  .transform((value) => value.trim())
+  .refine((value) => value === "" || isUuid(value), "not a card id")
+  .transform((value) => (value === "" ? null : value.toLowerCase()));
+
+/** Whether a card is asked to answer to itself — refused on the «Răspunde în fața» box (§NNN). */
+export function teamReportsToSelf(fields: { reportsToId: string | null }, selfId: string | null | undefined): boolean {
+  return fields.reportsToId !== null && selfId !== null && selfId !== undefined && fields.reportsToId === selfId.toLowerCase();
+}
+
 /** A plain box of the older form, absent reading as empty. */
 const plainBox = (max: number) => z.string().optional().default("").transform(normalizeTeamText).pipe(z.string().max(max));
 
@@ -232,9 +302,24 @@ export const teamMemberFieldsSchema = z
       .transform((value) => (value === "" ? null : value.toLowerCase())),
     /** The crop's four fractions (§541): JSON from the field, or an object from a fixture. */
     photoCrop: z.union([z.string(), z.record(z.string(), z.unknown()), z.null()]).optional(),
+    /** The organisational chart (§NNN): the sub-role line and the responsibilities, both or neither. */
+    subtitleRo: optionalLine(TEAM_SUBTITLE_MAX),
+    subtitleEn: optionalLine(TEAM_SUBTITLE_MAX),
+    responsibilitiesRo: optionalResponsibilities,
+    responsibilitiesEn: optionalResponsibilities,
+    /** Whom the card answers to, and where it sits against that card (§NNN). */
+    reportsToId: reportsToField,
+    placement: z.enum(TEAM_PLACEMENTS).optional().default("below"),
   })
   .transform((fields, ctx) => {
     refuseOneLanguage(ctx, { ro: fields.roleRo, en: fields.roleEn }, { ro: ["roleRo"], en: ["roleEn"] }, "the role");
+    refuseOneLanguage(ctx, { ro: fields.subtitleRo, en: fields.subtitleEn }, { ro: ["subtitleRo"], en: ["subtitleEn"] }, "the subtitle");
+    refuseOneLanguage(
+      ctx,
+      { ro: fields.responsibilitiesRo, en: fields.responsibilitiesEn },
+      { ro: ["responsibilitiesRo"], en: ["responsibilitiesEn"] },
+      "the responsibilities",
+    );
     const bio = resolveRichPair(
       ctx,
       { ro: { plain: fields.bioRo, body: fields.bioRoBody }, en: { plain: fields.bioEn, body: fields.bioEnBody } },
@@ -259,10 +344,53 @@ export const teamMemberFieldsSchema = z
       link: links[0]?.url ?? null,
       photoAssetId: fields.photoAssetId,
       photoCrop: fields.photoAssetId && crop !== "invalid" ? crop : null,
+      subtitleRo: fields.subtitleRo,
+      subtitleEn: fields.subtitleEn,
+      responsibilitiesRo: fields.responsibilitiesRo,
+      responsibilitiesEn: fields.responsibilitiesEn,
+      reportsToId: fields.reportsToId,
+      /** `beside` means something only against a parent; a root is always `below` (§NNN). */
+      placement: (fields.reportsToId === null ? "below" : fields.placement) as TeamPlacement,
     };
   });
 
 export type TeamMemberFields = z.output<typeof teamMemberFieldsSchema>;
+
+/** A required one-line title in one language (a box's, §NNN). */
+const requiredLine = (max: number) => z.string().optional().default("").transform(normalizeTeamLine).pipe(z.string().min(1).max(max));
+
+/**
+ * One box under the chart (§NNN): a title in both languages, always, and a rich text in both or
+ * neither (§352) with a bio's allowlist — no table, the box is read on a phone. The plain boxes are
+ * for a caller without the editor (fixtures); the posted document wins.
+ */
+export const teamBoxFieldsSchema = z
+  .object({
+    titleRo: requiredLine(TEAM_BOX_TITLE_MAX),
+    titleEn: requiredLine(TEAM_BOX_TITLE_MAX),
+    bodyRo: plainBox(TEAM_BOX_BODY_MAX),
+    bodyEn: plainBox(TEAM_BOX_BODY_MAX),
+    bodyRoBody: richTextBox,
+    bodyEnBody: richTextBox,
+  })
+  .transform((fields, ctx) => {
+    const body = resolveRichPair(
+      ctx,
+      { ro: { plain: fields.bodyRo, body: fields.bodyRoBody }, en: { plain: fields.bodyEn, body: fields.bodyEnBody } },
+      { ro: { plain: "bodyRo", body: "bodyRoBody" }, en: { plain: "bodyEn", body: "bodyEnBody" } },
+      { max: TEAM_BOX_BODY_MAX, tables: false, what: "the text" },
+    );
+    return {
+      titleRo: fields.titleRo,
+      titleEn: fields.titleEn,
+      bodyRo: body.ro.plain,
+      bodyEn: body.en.plain,
+      bodyRoJson: body.ro.doc,
+      bodyEnJson: body.en.doc,
+    };
+  });
+
+export type TeamBoxFields = z.output<typeof teamBoxFieldsSchema>;
 
 /** A refusal's path as the form's box name: `links.1.url` → `links[1].url`. */
 export function teamFieldName(path: readonly PropertyKey[]): string {
