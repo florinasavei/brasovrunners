@@ -1,7 +1,7 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import type { AdminSection, StaffRole } from "@/modules/staff-identity/domain/roles";
+import type { AdminSection, StaffActor, StaffRole } from "@/modules/staff-identity/domain/roles";
 import * as roles from "@/modules/staff-identity/domain/roles";
 import {
   allowedTransitions,
@@ -369,6 +369,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
       "gallery",
       "pages",
       "newsletter",
+      "shop",
       "settings",
       "tasks",
       "legal",
@@ -403,6 +404,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
       "gallery",
       "pages",
       "newsletter",
+      "shop",
       "settings",
       "tasks",
       "staff",
@@ -419,6 +421,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
       "gallery",
       "pages",
       "newsletter",
+      "shop",
       "settings",
       "tasks",
       "staff",
@@ -436,14 +439,16 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     person never receives the participant list. «Newsletter» (§445) is the second cell of the same
     row: the Organizer writes to the subscribers as they write to an event's participants (§364,
     `canSendNewsletter` is `canMessageParticipants`), and the platform's helper writes to nobody.
+    «Magazin» (§NNN) is the third: the Organizer reads the shop as they read the list
+    (`canReadShop` reads `canReadRegistrations`), since an order names a member and what they paid.
 
     Written as an exception the property test skips, and then asserted on its own below, so that
     it stays exactly these cells. A weakened invariant with nothing guarding the weakening is how
     the defect this whole block exists for got in.
   */
-  const NOT_INHERITED_BY_DEV = new Set<AdminSection>(["registrations", "newsletter"]);
+  const NOT_INHERITED_BY_DEV = new Set<AdminSection>(["registrations", "newsletter", "shop"]);
 
-  it("never offers a higher role less than a lower one, apart from DEV, the participant list and the newsletter", () => {
+  it("never offers a higher role less than a lower one, apart from DEV, the participant list, the newsletter and the shop", () => {
     // The property, across every pair in the hierarchy. An equality test against a role name
     // fails this immediately, which is the whole point of asserting it rather than the lists.
     for (let lower = 0; lower < STAFF_ROLES.length; lower += 1) {
@@ -462,7 +467,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     }
   });
 
-  it("keeps the exception to exactly those two sections, and only for DEV", () => {
+  it("keeps the exception to exactly those three sections, and only for DEV", () => {
     // What the skip above is allowed to hide. Any second hole in the ladder fails here rather
     // than passing quietly inside the loop.
     for (let lower = 0; lower < STAFF_ROLES.length; lower += 1) {
@@ -635,3 +640,113 @@ describe("BR-REQ-060-01 the batch's own settings ask the right predicate (§450)
     expect(source("src/modules/newsletter/service.ts")).toMatch(/if \(!canManageRegistrations\(actor\.role\)\)/);
   });
 });
+
+/**
+ * BR-REQ-060-01, §NNN — permissions per person on top of the ladder: «Gestionează magazinul»
+ * (`shop.manage`). A grant opens the shop's verbs to the backoffice role it is given to, never a
+ * member's address, and never anything to a member.
+ */
+describe("BR-REQ-060-01 «Gestionează magazinul» — a grant on top of the role (§NNN)", () => {
+  const ORDER = ["MEMBER", "CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN", "SUPERADMIN"] as const;
+  const holder = (role: StaffRole): StaffActor => ({ role, permissions: new Set(["shop.manage"] as const) });
+  const without = (role: StaffRole): StaffActor => ({ role, permissions: new Set() });
+
+  it.each(["CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV"] as const)("a %s holding it runs and reads the shop, and sees addresses only as the role does", (role) => {
+    expect(roles.canManageShop(holder(role))).toBe(true);
+    expect(roles.canReadShop(holder(role))).toBe(true);
+    expect(roles.canSeeShopMemberAddresses(holder(role))).toBe(roles.canSeeShopMemberAddresses(role));
+    // Nothing else moves with it: the grant is the shop, not a rank.
+    expect(roles.canManageRegistrations(holder(role))).toBe(roles.canManageRegistrations(role));
+    expect(roles.canReadRegistrations(holder(role))).toBe(roles.canReadRegistrations(role));
+    expect(roles.canSendNewsletter(holder(role))).toBe(roles.canSendNewsletter(role));
+  });
+
+  it("a volunteer without it — or with an empty or missing set — gets the shop no more than before", () => {
+    for (const subject of [without("CONTRIBUTOR"), { role: "CONTRIBUTOR" } as StaffActor, "CONTRIBUTOR" as const]) {
+      expect(roles.canManageShop(subject)).toBe(false);
+      expect(roles.canReadShop(subject)).toBe(false);
+    }
+  });
+
+  it("a member with a stale grant row gets nothing: a member is no staff (§524)", () => {
+    expect(roles.canManageShop(holder("MEMBER"))).toBe(false);
+    expect(roles.canReadShop(holder("MEMBER"))).toBe(false);
+    expect(roles.canSeeShopMemberAddresses(holder("MEMBER"))).toBe(false);
+    expect(visibleAdminSections(holder("MEMBER"))).toEqual([]);
+  });
+
+  it("the Administrators have it by rank, with or without a row", () => {
+    for (const role of ["ADMIN", "SUPERADMIN"] as const) {
+      expect(roles.canManageShop(role)).toBe(true);
+      expect(roles.canManageShop(without(role))).toBe(true);
+      expect(roles.impliesPermission(role, "shop.manage")).toBe(true);
+    }
+    expect(ORDER.filter((role) => roles.impliesPermission(role, "shop.manage"))).toEqual(["ADMIN", "SUPERADMIN"]);
+  });
+
+  it("canHoldPermission: every backoffice role below the Administrator; never a member, never the rank that has it", () => {
+    expect(ORDER.map((role) => roles.canHoldPermission(role, "shop.manage"))).toEqual([false, true, true, true, true, false, false]);
+  });
+
+  // Actor (row) × target role (column), STAFF_ROLES order: who may tick «Gestionează magazinul» for whom.
+  const GRANTS: Record<StaffRole, readonly boolean[]> = {
+    MEMBER: [false, false, false, false, false, false, false],
+    CONTRIBUTOR: [false, false, false, false, false, false, false],
+    COPYWRITER: [false, false, false, false, false, false, false],
+    MODERATOR: [false, false, false, false, false, false, false],
+    DEV: [false, false, false, false, false, false, false],
+    // An Administrator: the volunteer, the Redactor, the Organizer, the Tehnic — never a member,
+    // never an Administrator (it is in the role), never a Superadministrator's row.
+    ADMIN: [false, true, true, true, true, false, false],
+    SUPERADMIN: [false, true, true, true, true, false, false],
+  };
+  const grantPairs = ORDER.flatMap((actor) => ORDER.map((target, index) => [actor, target, GRANTS[actor][index]] as const));
+
+  it.each(grantPairs)("canGrantPermission(%s, %s, shop.manage) is %s", (actor, target, expected) => {
+    expect(roles.canGrantPermission(actor, target, "shop.manage")).toBe(expected);
+    // The actor's own grants change nothing about who they may grant to.
+    expect(roles.canGrantPermission(holder(actor), target, "shop.manage")).toBe(expected);
+  });
+
+  it("an Administrator never grants on their own row's role, nor on a Superadministrator's; a Superadministrator's row is a Superadministrator's (§450)", () => {
+    expect(roles.canGrantPermission("ADMIN", "ADMIN", "shop.manage")).toBe(false);
+    expect(roles.canGrantPermission("ADMIN", "SUPERADMIN", "shop.manage")).toBe(false);
+    expect(roles.canGrantPermission("SUPERADMIN", "CONTRIBUTOR", "shop.manage")).toBe(true);
+  });
+
+  it("a volunteer holding it is offered «Magazin» and nothing else new, in the bar's order", () => {
+    expect(visibleAdminSections(holder("CONTRIBUTOR"))).toEqual(["checkin", "shop", "guide"]);
+    expect(visibleAdminSections(without("CONTRIBUTOR"))).toEqual(["checkin", "guide"]);
+    for (const role of ORDER) {
+      const added = visibleAdminSections(holder(role)).filter((section) => !visibleAdminSections(role).includes(section));
+      expect(added, role).toEqual(roles.canHoldPermission(role, "shop.manage") && !roles.canReadShop(role) ? ["shop"] : []);
+    }
+    // The Tehnic holding it reads the shop's orders by name — and still not the participant list.
+    expect(visibleAdminSections(holder("DEV"))).toContain("shop");
+    expect(visibleAdminSections(holder("DEV"))).not.toContain("registrations");
+  });
+
+  it("a role-only subject and an actor without grants are offered the same sections", () => {
+    for (const role of ORDER) expect(visibleAdminSections(without(role)), role).toEqual(visibleAdminSections(role));
+  });
+
+  it("the known permissions are one, and a grant is never read except through a named predicate", () => {
+    expect([...roles.STAFF_PERMISSIONS]).toEqual(["shop.manage"]);
+    // No page, action or service reads the set itself: the grant is a predicate's business.
+    const offenders = (["src/app", "src/modules"] as const).flatMap((dir) => grepPermissionsHas(path.join(process.cwd(), dir)));
+    expect(offenders).toEqual([]);
+  });
+});
+
+/** Files under `dir` that ask `.permissions.has(` — allowed in `domain/roles.ts` alone. */
+function grepPermissionsHas(dir: string): string[] {
+  const found: string[] = [];
+  for (const entry of readdirSync(dir)) {
+    const full = path.join(dir, entry);
+    if (statSync(full).isDirectory()) found.push(...grepPermissionsHas(full));
+    else if (/\.tsx?$/.test(entry) && !full.endsWith(path.join("domain", "roles.ts")) && /\.permissions\??\.has\(/.test(readFileSync(full, "utf8"))) {
+      found.push(path.relative(process.cwd(), full));
+    }
+  }
+  return found;
+}

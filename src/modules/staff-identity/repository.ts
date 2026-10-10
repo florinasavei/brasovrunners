@@ -1,7 +1,8 @@
-import { asc, eq, inArray, ne, sql } from "drizzle-orm";
+import { and, asc, eq, getTableColumns, inArray, ne, sql } from "drizzle-orm";
+import { staffUserPermissions } from "@/db/schema/staff-user-permissions";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
-import type { StaffRole } from "./domain/roles";
+import { STAFF_PERMISSIONS, type StaffPermission, type StaffRole } from "./domain/roles";
 
 /**
  * Reading and writing `staff_users` (AGENTS.md §12.1).
@@ -16,12 +17,74 @@ export function normalizeStaffEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
+/**
+ * A staff row with the permissions granted to that person (§NNN) — what the session carries, so a
+ * grant-aware predicate (`canManageShop`) reads them from the actor it is handed.
+ */
+export type StaffAccount = StaffUser & { permissions: ReadonlySet<StaffPermission> };
+
+/** The known permissions among those a row lists — a value the code does not know grants nothing. */
+function permissionSet(listed: readonly string[] | null): ReadonlySet<StaffPermission> {
+  return new Set((listed ?? []).filter((value): value is StaffPermission => (STAFF_PERMISSIONS as readonly string[]).includes(value)));
+}
+
+/** A row's grants as one array, in the same query as the row (§NNN): the session reads both at once. */
+const grantedPermissions = sql<string[] | null>`(select array_agg(${staffUserPermissions.permission}) from ${staffUserPermissions} where ${staffUserPermissions.staffUserId} = ${staffUsers.id})`;
+
+/**
+ * One row by id, with its permissions — one query, re-read on every request by the session, so a
+ * withdrawn grant stops at the next request as a changed role does.
+ */
 export async function findStaffUserById<T extends Record<string, unknown>>(
   db: Database<T>,
   id: string,
-): Promise<StaffUser | undefined> {
-  const [row] = await db.select().from(staffUsers).where(eq(staffUsers.id, id)).limit(1);
-  return row;
+): Promise<StaffAccount | undefined> {
+  const [row] = await db
+    .select({ ...getTableColumns(staffUsers), permissions: grantedPermissions })
+    .from(staffUsers)
+    .where(eq(staffUsers.id, id))
+    .limit(1);
+  return row ? { ...row, permissions: permissionSet(row.permissions) } : undefined;
+}
+
+/** The grants of every row (§NNN), for «Echipa»: the list is the team's handful, read in one query. */
+export async function listStaffPermissions<T extends Record<string, unknown>>(
+  db: Database<T>,
+): Promise<Map<string, ReadonlySet<StaffPermission>>> {
+  const rows = await db.select().from(staffUserPermissions);
+  const byPerson = new Map<string, string[]>();
+  for (const row of rows) byPerson.set(row.staffUserId, [...(byPerson.get(row.staffUserId) ?? []), row.permission]);
+  return new Map([...byPerson].map(([id, listed]) => [id, permissionSet(listed)]));
+}
+
+/** A grant written; `false` when it was there already (the primary key), so a second tick writes and audits nothing. */
+export async function insertStaffPermission<T extends Record<string, unknown>>(
+  db: Database<T>,
+  input: { staffUserId: string; permission: StaffPermission; grantedByStaffUserId: string; now: Date },
+): Promise<boolean> {
+  const inserted = await db
+    .insert(staffUserPermissions)
+    .values({ staffUserId: input.staffUserId, permission: input.permission, grantedByStaffUserId: input.grantedByStaffUserId, grantedAt: input.now })
+    .onConflictDoNothing()
+    .returning({ permission: staffUserPermissions.permission });
+  return inserted.length > 0;
+}
+
+/** Grants removed — one, or every one a person has when `permission` is omitted; the permissions that went. */
+export async function deleteStaffPermissions<T extends Record<string, unknown>>(
+  db: Database<T>,
+  staffUserId: string,
+  permission?: StaffPermission,
+): Promise<StaffPermission[]> {
+  const removed = await db
+    .delete(staffUserPermissions)
+    .where(
+      permission
+        ? and(eq(staffUserPermissions.staffUserId, staffUserId), eq(staffUserPermissions.permission, permission))
+        : eq(staffUserPermissions.staffUserId, staffUserId),
+    )
+    .returning({ permission: staffUserPermissions.permission });
+  return [...permissionSet(removed.map((row) => row.permission))];
 }
 
 export async function findStaffUserByEmail<T extends Record<string, unknown>>(

@@ -1,12 +1,11 @@
 import { cookies } from "next/headers";
 import { auth } from "@/auth";
 import { getDb } from "@/db/client";
-import type { StaffUser } from "@/db/schema/staff-users";
 import { DomainError } from "@/shared/errors/domain-error";
 import { env } from "@/shared/config/env";
 import { isDevStaffSwitcherEnabled } from "./dev-switcher";
-import { isBackofficeRole, type StaffRole } from "./domain/roles";
-import { findStaffUserById } from "./repository";
+import { isBackofficeRole, type StaffSubject } from "./domain/roles";
+import { findStaffUserById, type StaffAccount } from "./repository";
 import { DEV_STAFF_COOKIE } from "./dev-staff-cookie";
 
 /**
@@ -41,7 +40,7 @@ export { DEV_STAFF_COOKIE };
  * Whoever is signed in — a member or a colleague — or null (§524). For the members' zone and the
  * sign-in page; never a door to anything staff may do, which is `getCurrentStaffUser`'s.
  */
-export async function getCurrentAccount(): Promise<StaffUser | null> {
+export async function getCurrentAccount(): Promise<StaffAccount | null> {
   if (isDevStaffSwitcherEnabled()) {
     const id = (await cookies()).get(DEV_STAFF_COOKIE)?.value;
     if (!id) return null;
@@ -64,12 +63,12 @@ export async function getCurrentAccount(): Promise<StaffUser | null> {
 }
 
 /** The staff member signing this request, or null — and null for a member, who is no staff (§524). */
-export async function getCurrentStaffUser(): Promise<StaffUser | null> {
+export async function getCurrentStaffUser(): Promise<StaffAccount | null> {
   const account = await getCurrentAccount();
   return account && isBackofficeRole(account.role) ? account : null;
 }
 
-export async function requireStaff(): Promise<StaffUser> {
+export async function requireStaff(): Promise<StaffAccount> {
   const staffUser = await getCurrentStaffUser();
   if (!staffUser) {
     throw new DomainError(
@@ -91,10 +90,15 @@ export async function requireStaff(): Promise<StaffUser> {
  * `tests/unit/staff/no-raw-role-checks.test.ts` refuses a raw role comparison anywhere else.
  * The rules that depend on the content itself ("their own drafts", "not a Superadministrator's
  * row") are the services' to assert after this one has answered.
+ *
+ * **The predicate is handed the actor, not the role, since §NNN.** Every single-role predicate takes
+ * a `StaffSubject` — a role or an actor with the permissions granted to that person — so one asking
+ * the role alone answers as it did, and a grant-aware one (`canManageShop`) reads the grants the
+ * session carried. Still a predicate, never a rank: the parameter's type says so.
  */
-export async function requireStaffCapability(capability: (role: StaffRole) => boolean): Promise<StaffUser> {
+export async function requireStaffCapability(capability: (subject: StaffSubject) => boolean): Promise<StaffAccount> {
   const staffUser = await requireStaff();
-  if (!capability(staffUser.role)) {
+  if (!capability(staffUser)) {
     throw new DomainError(
       "FORBIDDEN",
       `role ${staffUser.role} may not ${capability.name || "do this"}`,
