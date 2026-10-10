@@ -15,7 +15,7 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { countForm } from "@/i18n/count-form";
 import type { Locale } from "@/i18n/routing";
 import type { ShopOrderStatus } from "@/db/schema/shop";
-import { baniAsTyped, clubVerbsFor, formatLei, orderTotalBani, type OrderVerb, STOCK_MAX, VARIANT_LABEL_MAX, VARIANTS_MAX, variantLinesAsTyped } from "@/modules/content/shop/domain";
+import { clubVerbsFor, formatPrice, minorAsTyped, orderTotalBani, type OrderVerb, SHOP_CURRENCIES, STOCK_MAX, VARIANT_LABEL_MAX, VARIANTS_MAX, variantLinesAsTyped } from "@/modules/content/shop/domain";
 import { loadedStockJson, PAYMENT_WORDS_MAX, PRODUCT_DESCRIPTION_MAX, PRODUCT_TITLE_MAX } from "@/modules/content/shop/fields";
 import type { AdminOrder, AdminShopProduct, OrdersQuery } from "@/modules/content/shop/repository";
 import type { ShopSettings } from "@/modules/content/shop/settings";
@@ -318,7 +318,7 @@ function ProductRow({
           <Typography variant="subtitle1" sx={{ fontWeight: 700, overflowWrap: "anywhere" }}>
             {title}
           </Typography>
-          <Typography variant="body2">{formatLei(product.priceBani, locale)}</Typography>
+          <Typography variant="body2">{formatPrice(product.priceBani, product.currency, locale)}</Typography>
           <Typography variant="body2" color="text.secondary">
             {t("members.shop.stockLine", { stock: stockWords(product, t) })}
           </Typography>
@@ -392,7 +392,8 @@ function ProductRow({
 
 /**
  * A product's boxes: the titles and the descriptions side by side from `sm` (both titles required, the
- * descriptions both or neither, §352), the price in lei, the variants one per line with their stock,
+ * descriptions both or neither, §352), the price with its currency beside it («Moneda», lei or euro,
+ * §NNN — a native select, no client island), the variants one per line with their stock,
  * the «Stoc» box for a product without variants, «Vizibil în magazin», and the photo through «Echipa»'s
  * own picture field (§459, §541: upload or «Din galerie», then the crop box). The stock the form loaded
  * travels with it, so a save that did not touch a number leaves it as it stands now (§683).
@@ -454,15 +455,28 @@ function ProductFields({
           slotProps={{ htmlInput: { maxLength: PRODUCT_DESCRIPTION_MAX, lang: "en" } }}
         />
       </Box>
-      <RecallField
-        name="price"
-        label={t("members.shop.price")}
-        required
-        defaultValue={product ? baniAsTyped(product.priceBani) : ""}
-        helperText={t("members.shop.priceHelp")}
-        slotProps={{ htmlInput: { inputMode: "decimal", maxLength: 12 } }}
-        sx={{ maxWidth: 260 }}
-      />
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, alignItems: "flex-start" }}>
+        <RecallField
+          name="price"
+          label={t("members.shop.price")}
+          required
+          defaultValue={product ? minorAsTyped(product.priceBani) : ""}
+          helperText={t("members.shop.priceHelp")}
+          slotProps={{ htmlInput: { inputMode: "decimal", maxLength: 12 } }}
+          sx={{ flex: "1 1 160px", maxWidth: 260 }}
+        />
+        <RecallField
+          select
+          name="currency"
+          label={t("members.shop.currency")}
+          defaultValue={product?.currency ?? SHOP_CURRENCIES[0]}
+          slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+          sx={{ flex: "0 1 180px", minWidth: 160 }}
+        >
+          <option value="RON">{t("members.shop.currencyRon")}</option>
+          <option value="EUR">{t("members.shop.currencyEur")}</option>
+        </RecallField>
+      </Box>
       <RecallField
         name="variants"
         label={t("members.shop.variants")}
@@ -658,7 +672,7 @@ function OrderRow({
         {!order.memberEmail ? ` · ${t("members.shop.accountGone")}` : ""}
       </Typography>
       <Typography variant="body2" sx={{ overflowWrap: "anywhere" }}>
-        {what} · {formatLei(orderTotalBani(order), locale)}
+        {what} · {formatPrice(orderTotalBani(order), order.currency, locale)}
       </Typography>
       <Typography variant="body2" color="text.secondary">
         {formatDay(order.createdAt, { locale, timeZone: CLUB_TIME_ZONE, withTime: true })}

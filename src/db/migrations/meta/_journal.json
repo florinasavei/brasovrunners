@@ -918,6 +918,13 @@
       "when": 1791589106117,
       "tag": "0133_members_shop",
       "breakpoints": true
+    },
+    {
+      "idx": 131,
+      "version": "7",
+      "when": 1791630194420,
+      "tag": "0134_shop_price_currency",
+      "breakpoints": true
     }
   ]
 }

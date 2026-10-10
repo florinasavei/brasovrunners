@@ -99,6 +99,7 @@ export async function createProduct<T extends Record<string, unknown>>(
         descriptionRo: fields.descriptionRo,
         descriptionEn: fields.descriptionEn,
         priceBani: fields.priceBani,
+        currency: fields.currency,
         photoMediaAssetId: fields.photoAssetId,
         photoCrop: fields.photoCrop,
         visible: fields.visible,
@@ -115,7 +116,7 @@ export async function createProduct<T extends Record<string, unknown>>(
       action: "shop.product.created",
       entityType: "shop_product",
       entityId: row.id,
-      metadata: { visible: row.visible, variants: fields.variants.length, photo: fields.photoAssetId !== null },
+      metadata: { visible: row.visible, currency: row.currency, variants: fields.variants.length, photo: fields.photoAssetId !== null },
       now,
     });
     return row;
@@ -141,6 +142,8 @@ export async function saveProduct<T extends Record<string, unknown>>(
         descriptionRo: fields.descriptionRo,
         descriptionEn: fields.descriptionEn,
         priceBani: fields.priceBani,
+        // The currency may change after orders exist: each order keeps the one it was placed in (§NNN).
+        currency: fields.currency,
         photoMediaAssetId: fields.photoAssetId,
         photoCrop: fields.photoCrop,
         visible: fields.visible,
@@ -157,7 +160,7 @@ export async function saveProduct<T extends Record<string, unknown>>(
       action: "shop.product.saved",
       entityType: "shop_product",
       entityId: updated.id,
-      metadata: { version: updated.version, visible: updated.visible, variants: fields.variants.length },
+      metadata: { version: updated.version, visible: updated.visible, currency: updated.currency, variants: fields.variants.length },
       now,
     });
     return updated;
