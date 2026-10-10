@@ -349,6 +349,10 @@ const NO_EVENT: ReadonlySet<EmailMessageType> = new Set([
   "LEGAL_TEMPLATES_CHANGED",
   "UNREACHABLE_WINDOW_OPENED",
   "UNREACHABLE_WINDOW_CLOSED",
+  // The members' shop (§683): about an order, no event.
+  "SHOP_ORDER_PLACED",
+  "SHOP_ORDER_PAID",
+  "SHOP_ORDER_CLUB_NOTICE",
 ]);
 /** Messages about no one registration: the two above, and "registration is open". */
 // A group run's self-declaration (§393) is about a signature, never a registration: no status to state.
@@ -359,6 +363,9 @@ const NO_REGISTRATION: ReadonlySet<EmailMessageType> = new Set([
   "LEGAL_TEMPLATES_CHANGED",
   "UNREACHABLE_WINDOW_OPENED",
   "UNREACHABLE_WINDOW_CLOSED",
+  "SHOP_ORDER_PLACED",
+  "SHOP_ORDER_PAID",
+  "SHOP_ORDER_CLUB_NOTICE",
   "REGISTRATION_OPENED",
   // An invitation (§647): to an address, before any registration exists.
   "EVENT_INVITATION",

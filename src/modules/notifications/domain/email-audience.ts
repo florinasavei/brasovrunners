@@ -56,6 +56,11 @@ export const EMAIL_AUDIENCE = {
   EVENT_INVITATION: "public",
   UNREACHABLE_WINDOW_OPENED: "staff",
   UNREACHABLE_WINDOW_CLOSED: "staff",
+  // The members' shop (§683): to a member's account, and to the club's mailbox for orders — Echipa's
+  // people and the club, about no registration: never a participant's message.
+  SHOP_ORDER_PLACED: "staff",
+  SHOP_ORDER_PAID: "staff",
+  SHOP_ORDER_CLUB_NOTICE: "staff",
 } as const satisfies Record<EmailMessageType, EmailAudience>;
 
 export function audienceOf(messageType: EmailMessageType): EmailAudience {

@@ -911,6 +911,13 @@
       "when": 1791454226021,
       "tag": "0132_calendar_sequence",
       "breakpoints": true
+    },
+    {
+      "idx": 130,
+      "version": "7",
+      "when": 1791589106117,
+      "tag": "0133_members_shop",
+      "breakpoints": true
     }
   ]
 }

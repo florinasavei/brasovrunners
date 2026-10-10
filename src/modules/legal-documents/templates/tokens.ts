@@ -13,6 +13,7 @@ import {
   EVENT_INVITATIONS_MERGE_FIELD,
   FEEDBACK_FORMS_MERGE_FIELD,
   FEEDBACK_FORMS_NAMED_MERGE_FIELD,
+  MEMBERS_SHOP_MERGE_FIELD,
   DEADLINE_MERGE_FIELDS,
   deadlineMergeValues,
   LIST_NUMBERS_MERGE_FIELD,
@@ -30,6 +31,7 @@ import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 import { gmailFallbackClause } from "@/modules/notifications/fallback-notice-words";
 import { eventInvitationsClause } from "@/modules/registrations/invitation-words";
 import { feedbackFormsClause, feedbackFormsNamedClause } from "@/modules/feedback/notice-words";
+import { membersShopClause } from "@/modules/content/shop/notice-words";
 
 /**
  * The declaration's merge fields, in one list (`DECISIONS.md` §190).
@@ -214,6 +216,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${FEEDBACK_FORMS_NAMED_MERGE_FIELD}}}`,
     messageKey: FEEDBACK_FORMS_NAMED_MERGE_FIELD,
     example: inBoth((locale) => feedbackFormsNamedClause(locale)),
+  },
+  // The privacy notice's marker for the members' shop (§683): the zone section's name, and the switch —
+  // the zone draws the shop, and an order is taken, only while it is named (`describesMembersShop`).
+  {
+    token: `{{${MEMBERS_SHOP_MERGE_FIELD}}}`,
+    messageKey: MEMBERS_SHOP_MERGE_FIELD,
+    example: inBoth((locale) => membersShopClause(locale)),
   },
 ];
 

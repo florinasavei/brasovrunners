@@ -19,6 +19,7 @@ import {
   describesEventInvitations,
   describesFeedbackForms,
   describesFeedbackFormsNamed,
+  describesMembersShop,
   describesListNumbers,
   describesGmailFallback,
   describesListSocials,
@@ -293,6 +294,17 @@ export async function noticeDescribesFeedbackForms<T extends Record<string, unkn
 export async function noticeDescribesFeedbackFormsNamed<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesFeedbackFormsNamed(notice.body));
+}
+
+/**
+ * Whether the privacy notice in force describes the members' shop (§683, `describesMembersShop`) — in
+ * every language, like `noticeDescribesFeedbackForms`: one shop serves both, and a member in either was
+ * told only what their language's notice says. For the members' zone (drawn per request, behind the
+ * account, never cached), the order action and `/admin/tasks`.
+ */
+export async function noticeDescribesMembersShop<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesMembersShop(notice.body));
 }
 
 /**

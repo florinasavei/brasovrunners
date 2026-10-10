@@ -130,6 +130,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.84` | the members' shop (§683) |
 | `BR-V2.83` | plain rain has its own cloud (§682) |
 | `BR-V2.82` | members' race numbers print first, on their own pages (§681) |
 | `BR-V2.81` | the feedback form's event picker filters (§680) |

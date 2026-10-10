@@ -108,6 +108,14 @@ export const emailMessageType = pgEnum("email_message_type", [
   // given back, how many deadlines moved, which claims were not revived, and what to check.
   // Once per window (a `pings` one too), to the same people.
   "UNREACHABLE_WINDOW_CLOSED",
+  // The members' shop (§683): «Comanda ta a fost primită» to the member — the order and the club's
+  // payment words; payment is outside the site. The order's id in the payload; no token.
+  "SHOP_ORDER_PLACED",
+  // «Comanda ta e plătită»: an Administrator marked the order paid. To the member, no token.
+  "SHOP_ORDER_PAID",
+  // One per order to «Cine primește comenzile» on «Membri» → «Magazin», when the club set an address:
+  // who ordered what. No token; the club opens the list behind the sign-in.
+  "SHOP_ORDER_CLUB_NOTICE",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];
