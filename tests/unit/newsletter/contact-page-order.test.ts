@@ -14,11 +14,14 @@ const jsx = body.slice(body.indexOf("return ("));
 
 describe("BR-REQ-070-04 the contact page's sections, in order (§679)", () => {
   it("draws the form, then «Spune-ne ceva», then the newsletter, then only the identity line", () => {
+    // «Contact direct» above the form (§NNN), the form, «Spune-ne ceva», the newsletter.
+    const ways = jsx.indexOf('data-testid="contact-ways"');
     const form = jsx.indexOf("<form action={submitContactAction}>");
     const feedback = jsx.indexOf("id={FEEDBACK_SECTION_ID}");
     const newsletter = jsx.indexOf("<NewsletterSignup");
     const identity = jsx.indexOf('<ClubIdentity shape="line" />');
-    for (const [name, at] of Object.entries({ form, feedback, newsletter, identity })) expect(at, name).toBeGreaterThan(-1);
+    for (const [name, at] of Object.entries({ ways, form, feedback, newsletter, identity })) expect(at, name).toBeGreaterThan(-1);
+    expect(ways).toBeLessThan(form);
     expect(form).toBeLessThan(feedback);
     expect(feedback).toBeLessThan(newsletter);
     expect(newsletter).toBeLessThan(identity);

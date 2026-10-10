@@ -247,7 +247,7 @@ async function pickEventByTyping(page: Page, firstSlug: string | undefined, fixt
   await expect(page.locator('select[name="event"]')).toHaveCount(0);
   await expect(page.locator('[name="event"]')).toHaveCount(1);
 
-  const box = island.getByRole("combobox", { name: "Evenimentul" });
+  const box = island.getByRole("combobox", { name: "Alergarea" });
   const listbox = page.getByRole("listbox");
   const options = listbox.getByRole("option");
   const titles = listbox.getByTestId("feedback-event-option-title");
@@ -289,7 +289,7 @@ async function pickEventByTyping(page: Page, firstSlug: string | undefined, fixt
   const title = (await options.nth(1).getByTestId("feedback-event-option-title").innerText()).trim();
 
   await box.fill("zzz-niciun-eveniment");
-  await expect(page.getByTestId("feedback-event-no-match")).toHaveText("Niciun eveniment găsit");
+  await expect(page.getByTestId("feedback-event-no-match")).toHaveText("Nicio alergare găsită");
   await expect(options.first()).toHaveText("Altceva / în general");
 
   // Part of the title, lower case and without its diacritics: the filter finds it all the same.

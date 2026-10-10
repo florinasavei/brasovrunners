@@ -8930,13 +8930,13 @@
       "body": "Îți răspundem pe adresa ta de e-mail.",
       "another": "Scrie alt mesaj"
     },
-    "direct": "Scrie-ne direct la",
+    "direct": "Scrie-ne la",
     "phone": "Sună-ne la",
     "ways": {
-      "title": "Alte căi de contact"
+      "title": "Contact direct"
     },
+    "formTitle": "Trimite-ne un mesaj",
     "off": {
-      "writeTo": "Scrie-ne la",
       "none": "Formularul de contact nu este disponibil momentan.",
       "or": "sau"
     },
@@ -8969,7 +8969,7 @@
     "intro": "Anonim, dacă nu alegi să-ți spui numele. Alege despre ce e vorba.",
     "backToContact": "Înapoi la Contact",
     "door": {
-      "intro": "Cum a fost la un eveniment, o sugestie sau o reclamație — anonim, dacă vrei.",
+      "intro": "Cum a fost la o alergare, o sugestie sau o reclamație — anonim, dacă vrei.",
       "introSafety": "Un formular confidențial pentru femeile care nu s-au simțit în siguranță la noi.",
       "button": "Deschide formularul"
     },
@@ -8995,7 +8995,7 @@
     "branches": {
       "howItWent": {
         "label": "Cum a fost",
-        "hint": "Un eveniment sau o alergare de grup: ce ți-a plăcut, ce nu.",
+        "hint": "O alergare a clubului, de grup sau specială: ce ți-a plăcut, ce nu.",
         "intro": "Spune-ne cum a fost. În afară de mesaj, totul e opțional."
       },
       "suggestion": {
@@ -9006,7 +9006,7 @@
       "complaint": {
         "label": "O reclamație",
         "hint": "Ceva n-a mers cum trebuia.",
-        "intro": "Spune-ne ce s-a întâmplat; evenimentul și data sunt opționale."
+        "intro": "Spune-ne ce s-a întâmplat; alergarea și data sunt opționale."
       },
       "safety": {
         "label": "Girl Zone",
@@ -9020,13 +9020,13 @@
       "contact": "Dacă vrei să te contacteze {name}, lasă un email sau un telefon (opțional)",
       "contactHelp": "Doar dacă vrei să-ți răspundă."
     },
-    "event": "Evenimentul",
+    "event": "Alergarea",
     "eventGeneral": "Altceva / în general",
     "eventFilter": {
       "search": "Scrie o parte din nume sau din dată",
-      "noMatch": "Niciun eveniment găsit",
-      "open": "Deschide lista evenimentelor",
-      "close": "Închide lista evenimentelor",
+      "noMatch": "Nicio alergare găsită",
+      "open": "Deschide lista alergărilor",
+      "close": "Închide lista alergărilor",
       "kinds": "Arată",
       "chips": {
         "all": "Toate",
@@ -9085,7 +9085,7 @@
     "fieldNames": {
       "name": "Numele",
       "audience": "Cine să afle",
-      "event": "Evenimentul",
+      "event": "Alergarea",
       "date": "Data",
       "rating": "Cum a fost",
       "message": "Mesajul",

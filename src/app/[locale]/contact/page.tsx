@@ -9,6 +9,7 @@ import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
 import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
 import RateReviewIcon from "@mui/icons-material/RateReview";
 import RateReviewOutlinedIcon from "@mui/icons-material/RateReviewOutlined";
+import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import Container from "@mui/material/Container";
 import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
@@ -94,14 +95,15 @@ const fieldId = (name: string) => `c-${name}`;
 
 /**
  * The page in sections (§NNN; the owner, 2026-10-10: «I need here sections, separators and icons»):
- * «Scrie-ne» with the form, «Alte căi de contact», «Spune-ne ceva», the newsletter. Each section after
- * the first opens with a rule and a heading that wears its glyph; the newsletter's box draws the same.
+ * «Scrie-ne» and its intro, «Contact direct», «Trimite-ne un mesaj» with the form, «Spune-ne ceva», the
+ * newsletter. Each section after «Contact direct» opens with a rule and a heading that wears its glyph;
+ * the newsletter's box draws the same.
  */
 const SECTION_SX = { mt: { xs: DENSITY.sectionGapLg, sm: 4 }, pt: { xs: DENSITY.sectionGap, sm: 3 }, borderTop: 1, borderColor: "divider", scrollMarginTop: 16 } as const;
 /** A section's heading: its glyph before the words, in the primary colour, decoration only. */
 const SECTION_HEADING_SX = { fontSize: "1.35rem", mb: 1, display: "flex", alignItems: "center", gap: 1 } as const;
 const SECTION_GLYPH_SX = { fontSize: 26, color: "primary.main", flexShrink: 0 } as const;
-/** A row of «Alte căi de contact»: its glyph beside the words, both on the row's middle line. */
+/** A row of «Contact direct»: its glyph beside the words, both on the row's middle line. */
 const WAY_ROW_SX = { display: "flex", alignItems: "center", gap: 1.5 } as const;
 const WAY_GLYPH_SX = { fontSize: 22, color: "text.secondary", flexShrink: 0 } as const;
 
@@ -167,9 +169,11 @@ export default async function ContactPage({ params, searchParams }: Props) {
   // Guarded, because this is the page that has to work when nothing else does: a database
   // that is not answering falls back to `CONTACT_FORM_TO`, never to an error page (§164).
   const formAvailable = await cachedContactFormReaches();
-  // «Alte căi de contact»: the address where the page does not already name it, the phone when one is set; never after a send.
-  const emailWay = !sent && formAvailable && error !== "DELIVERY" && writeTo.length > 0;
-  const waysOpen = !sent && (emailWay || Boolean(phone));
+  // «Contact direct»: the address except where a delivery error's alert names it, the phone when one is set.
+  const emailWay = error !== "DELIVERY" && writeTo.length > 0;
+  const waysOpen = emailWay || Boolean(phone);
+  // The form's own heading, while the form itself is drawn.
+  const formDrawn = !sent && formAvailable;
   // A thumb's 44 pixels that do not stretch the sentence's line (§480, the 360-px density pass).
   const inlineLink = INLINE_TAP_TARGET;
   // The first address reaches above its words; a second one («a sau b») may wrap to the line under
@@ -255,6 +259,64 @@ export default async function ContactPage({ params, searchParams }: Props) {
         )}
       </Typography>
 
+      {/*
+        «Contact direct» (§NNN; the owner, 2026-10-10, yes to «Alte căi de contact» above the form): the
+        club's address (§442, §449) and its public phone (§565), one row per way with its glyph, under the
+        intro and above the form — the first thing a visitor who would rather write from their own mail or
+        call reads, reversing §461's form-first. Drawn in every state that has a row: after a send too, and
+        where there is no form, where it is the club's address the page gives. The address alone is left out
+        of a delivery error's state, whose alert names it. The links keep the page's inline 44-pixel reach
+        (§480), and the rows stand 24 pixels apart, so the phone's reach above its words never covers the
+        address above it. No rule above it: it stands under the intro, as part of the page's head.
+      */}
+      {waysOpen && (
+        <Box component="section" aria-labelledby="contact-ways-heading" data-testid="contact-ways">
+          <Typography id="contact-ways-heading" variant="h2" sx={SECTION_HEADING_SX}>
+            <ContactPhoneOutlinedIcon aria-hidden="true" sx={SECTION_GLYPH_SX} />
+            {t("ways.title")}
+          </Typography>
+          <Stack spacing={3} sx={{ pt: 1.5 }}>
+          {emailWay && (
+            <Box sx={WAY_ROW_SX}>
+              <EmailOutlinedIcon aria-hidden="true" sx={WAY_GLYPH_SX} />
+              <Typography variant="body1" data-testid="contact-email">
+                {t("direct")} {addressLinks}
+              </Typography>
+            </Box>
+          )}
+          {phone && (
+            <Box sx={WAY_ROW_SX}>
+              <PhoneOutlinedIcon aria-hidden="true" sx={WAY_GLYPH_SX} />
+              <Typography variant="body1" data-testid="contact-phone">
+                {t("phone")}{" "}
+                <MuiLink href={telHref(phone)} sx={{ ...inlineLink, whiteSpace: "nowrap" }}>
+                  {phone}
+                </MuiLink>
+              </Typography>
+            </Box>
+          )}
+          </Stack>
+        </Box>
+      )}
+
+      {/*
+        «Trimite-ne un mesaj» (§NNN): the form's own section. Under «Contact direct» it opens with the rule
+        and a heading with its glyph, like every section after it; right under the intro (no contact row to
+        show) it needs no rule. The heading only while the form is drawn: after a send the section holds the
+        confirmation, and with no form, the sentence that says so.
+      */}
+      <Box
+        component="section"
+        aria-labelledby={formDrawn ? "contact-form-heading" : undefined}
+        data-testid="contact-form-section"
+        sx={waysOpen ? SECTION_SX : undefined}
+      >
+      {formDrawn && (
+        <Typography id="contact-form-heading" variant="h2" sx={SECTION_HEADING_SX}>
+          <SendOutlinedIcon aria-hidden="true" sx={SECTION_GLYPH_SX} />
+          {t("formTitle")}
+        </Typography>
+      )}
       {sent ? (
         <>
           <Alert severity="success" role="status">
@@ -278,16 +340,8 @@ export default async function ContactPage({ params, searchParams }: Props) {
           </Button>
         </>
       ) : !formAvailable ? (
-        // No form on this deployment: the club's address, when the club has named one (§8).
-        <Typography variant="body1">
-          {writeTo.length > 0 ? (
-            <>
-              {t("off.writeTo")} {addressLinks}
-            </>
-          ) : (
-            t("off.none")
-          )}
-        </Typography>
+        // No form on this deployment: «Contact direct» above names the club's address, when the club has named one (§8, §NNN).
+        <Typography variant="body1">{t("off.none")}</Typography>
       ) : (
         <>
           {/* The redirect's landing: focusable, so a rejection is read rather than hunted for (§47). */}
@@ -393,47 +447,9 @@ export default async function ContactPage({ params, searchParams }: Props) {
               />
             </Stack>
           </form>
-
         </>
       )}
-
-      {/*
-        «Alte căi de contact» (§NNN): its own section under the form, one row per way with its glyph — the
-        club's address (§449, here since §461 as the line «Sau scrie-ne direct la» under the form) and its
-        public phone (§565). The address is left out where the page already names it — with no form, and in
-        a delivery error's alert — and the whole section after a send. The links keep the page's inline
-        44-pixel reach (§480), and the rows stand 24 pixels apart, so the phone's reach above its words
-        never covers the address above it.
-      */}
-      {waysOpen && (
-        <Box component="section" aria-labelledby="contact-ways-heading" data-testid="contact-ways" sx={SECTION_SX}>
-          <Typography id="contact-ways-heading" variant="h2" sx={SECTION_HEADING_SX}>
-            <ContactPhoneOutlinedIcon aria-hidden="true" sx={SECTION_GLYPH_SX} />
-            {t("ways.title")}
-          </Typography>
-          <Stack spacing={3} sx={{ pt: 1.5 }}>
-          {emailWay && (
-            <Box sx={WAY_ROW_SX}>
-              <EmailOutlinedIcon aria-hidden="true" sx={WAY_GLYPH_SX} />
-              <Typography variant="body1" data-testid="contact-email">
-                {t("direct")} {addressLinks}
-              </Typography>
-            </Box>
-          )}
-          {phone && (
-            <Box sx={WAY_ROW_SX}>
-              <PhoneOutlinedIcon aria-hidden="true" sx={WAY_GLYPH_SX} />
-              <Typography variant="body1" data-testid="contact-phone">
-                {t("phone")}{" "}
-                <MuiLink href={telHref(phone)} sx={{ ...inlineLink, whiteSpace: "nowrap" }}>
-                  {phone}
-                </MuiLink>
-              </Typography>
-            </Box>
-          )}
-          </Stack>
-        </Box>
-      )}
+      </Box>
 
       {/* «Spune-ne ceva» (§676): one section and one button to the anonymous wizard, under the form and
           above the newsletter (§679). */}

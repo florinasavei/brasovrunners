@@ -158,7 +158,7 @@ test.describe("§480 the public pages at 360 px", () => {
     await expectInlineTarget(page, paragraph, link, "«scrie-ne»");
   });
 
-  test("the contact page: the privacy line keeps its lines, and the first box is one gap under the intro", async ({ page }) => {
+  test("the contact page: the privacy line keeps its lines, and the first box is one gap under the form's heading", async ({ page }) => {
     await page.goto("/ro/contact");
     await expect(page.getByRole("heading", { level: 1, name: "Scrie-ne" })).toBeVisible();
 
@@ -172,15 +172,16 @@ test.describe("§480 the public pages at 360 px", () => {
       await expectInlineTarget(page, direct, direct.locator("a[href^='mailto:']").first(), "the club's address");
     }
 
-    // The asterisk legend is gone (§546): the first box sits under the intro, by the intro's margin alone.
+    // The asterisk legend is gone (§546): the first box sits under the form's own heading
+    // («Trimite-ne un mesaj», §NNN), by the heading's margin alone.
     const gap = await page.evaluate(() => {
-      const intro = [...document.querySelectorAll("#main p")].find((p) => p.textContent?.startsWith("O întrebare"));
+      const heading = document.getElementById("contact-form-heading");
       const field = document.getElementById("c-name")?.closest(".MuiFormControl-root");
-      if (!intro || !field) return Number.NaN;
-      return field.getBoundingClientRect().top - intro.getBoundingClientRect().bottom;
+      if (!heading || !field) return Number.NaN;
+      return field.getBoundingClientRect().top - heading.getBoundingClientRect().bottom;
     });
-    // `DENSITY.sectionGap` on a phone, 24 pixels from `sm`.
-    const expected = isPhone() ? 16 : 24;
+    // The heading's 8 pixels at every width.
+    const expected = 8;
     expect(Math.abs(gap - expected), `the first box is ${gap}px under the intro, ${expected} expected`).toBeLessThanOrEqual(1);
   });
 });
