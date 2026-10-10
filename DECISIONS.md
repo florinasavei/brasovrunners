@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.84-2026-10-10 -->
+<!-- PROJECT_BASELINE: BR-V2.85-2026-10-10 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.84-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.85-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -24718,3 +24718,13 @@ Baseline `BR-V2.83-2026-10-10`.
 **Refused.** Payment on the site (the owner's decision: no card form, no payment provider, nothing to keep under PCI). A cart with several products in one order: one product line per order keeps the stock rule, the statuses and the emails one thing each — a member who wants two products orders twice. Orders from anybody but a member account: no public shop, no participant account. Shipping: hand-over in person. A client island for the order form or a dynamic variants editor: native controls and one box of lines do the same with no script.
 
 Baseline `BR-V2.84-2026-10-10`.
+
+## 684. The members' zone shows no way into the backoffice, not even to a colleague
+
+**The owner, 2026-10-10:** «Why is there a back-office access from member zone?» — then, told it was drawn only for a colleague signed in to the zone: «Yes, remove it».
+
+**Decision.** Amends §524. The zone drew «Deschide backoffice-ul» for every account with a backoffice role (Contributor and above), a colleague being a member too. It is gone: every account, a member or a colleague, sees in the zone only the club's words, the runs, the codes, the shop and the sign-out. A colleague goes to `/admin` directly. Nothing about the lock changes — it never was the button: the backoffice's layout asserts the staff role on the server (BR-REQ-060-01) and still sends a member who types `/admin` back to the zone. The catalogue's key `Members.openBackoffice` goes with it.
+
+**Refused:** keeping the button for the Superadministrator alone — the zone is the members' page, and a page members see should not advertise the club's back room to anyone looking over a shoulder.
+
+Baseline `BR-V2.85-2026-10-10`.

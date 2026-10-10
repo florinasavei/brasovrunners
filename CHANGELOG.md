@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.85-2026-10-10
+
+- **The members' zone has no backoffice button** — a colleague signed in to «Zona membrilor» sees the zone and the sign-out, like every member; the backoffice is `/admin`, behind its own lock as before. §684.
 ## BR-V2.84-2026-10-10
 
 - **«Magazin» — the members' shop** — the club's merchandise in the members' zone: an Administrator keeps the catalogue on «Membri» → «Magazin» (both languages, a price in lei, variants with an optional stock, a photo), a member orders one product at a time and sees «Comenzile mele», payment happens outside the site and the Administrator marks it paid, handed over or cancelled; a double tap on «Comandă» is one order, three emails, a CSV, and the shop stays closed until the privacy notice names it. §683.
