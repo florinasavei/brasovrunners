@@ -166,7 +166,9 @@ export default async function TeamPage({ params }: Props) {
       {gridMembers.length > 0 && (
         <Box
           component="ul"
-          aria-label={t("listLabel")}
+          // Under the canvas the grid is a second list, named as one («Alți membri ai echipei»):
+          // two regions with one name are one list twice to a screen reader.
+          aria-label={onCanvas ? t("othersLabel") : t("listLabel")}
           data-testid="team-grid"
           // Under the canvas, the cards with no level keep a section's room from it.
           sx={onCanvas ? { ...GRID_SX, mt: { xs: DENSITY.sectionGap, sm: 3 } } : GRID_SX}

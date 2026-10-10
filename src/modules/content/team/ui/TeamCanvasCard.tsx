@@ -3,6 +3,7 @@ import Card from "@mui/material/Card";
 import Typography from "@mui/material/Typography";
 import RichText from "@/modules/content/rich-text/ui/RichText";
 import { GLYPHS } from "@/modules/events/ui/glyphs";
+import type { PictureColumn } from "@/modules/media/ladder";
 import { DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { TEAM_CANVAS } from "@/theme/brand";
 import { riseIn } from "@/theme/motion";
@@ -15,7 +16,8 @@ import TeamPhotoImage from "./TeamPhotoImage";
  * One card of «Echipa»'s canvas (§NNN, amending §691; the president's drawing): a white card on the
  * blue, in one of three shapes the card's level decides —
  *
- * - `wide`, row 1's `.0`: the photo on the left, the words on the right, the president's card;
+ * - `wide`, row 1's single `.0`: the photo on the left, the words on the right, the president's
+ *   card — only while she is alone at the lead; two leads on row 1 are drawn tall, like a row under;
  * - `tall`, a `.0` on the rows under: the photo on top, the words under it, three to a row;
  * - `small`, any `.5`: compact, the photo on the left, beside the leads of its row — the
  *   counsellor at the president's side. No label of its own: the role title the club typed says
@@ -26,9 +28,15 @@ import TeamPhotoImage from "./TeamPhotoImage";
  * click into each person to see more details» — is a `details` fold on the card itself, server
  * rendered and closed, no script and no route of its own: open, it continues the responsibilities
  * to the last one, then the words about the person and their links (§474). Nothing hidden is kept
- * out of the HTML; the fold only folds. The summary is a 44-pixel target with the chevron glyph by
- * its registry name (§521, §694) and the person's name in its accessible name, so twenty «Mai
- * multe» on one page are twenty different buttons to a screen reader.
+ * out of the HTML; the fold only folds. The summary is a 44-pixel target that draws its own arrow
+ * (`DISCLOSURE_SX`, §325) and, after it, the person glyph by its registry name (`GLYPHS.person`,
+ * §521, §694): the arrow says "this opens", the glyph says what is inside — never a second
+ * chevron that would not turn. The person's name is in its accessible name, so twenty «Mai multe»
+ * on one page are twenty different buttons to a screen reader.
+ *
+ * The photo's `sizes` is the column the shape is drawn in (§414): a tall card is one, two, three to
+ * a row like an album's cover (`cover`), a wide card's photo is the 240/280-pixel column beside the
+ * words (`aside`), a small card's the 88/104-pixel thumbnail (`thumb`).
  *
  * Every colour is `TEAM_CANVAS`'s (`theme/brand.ts`): the card keeps the brand's light colours
  * after dark, where the palette's ink and link colours would not read on white. A Server Component:
@@ -49,7 +57,7 @@ export type TeamCanvasWords = {
 /** How many responsibilities a closed card shows; the rest are behind «Mai multe». */
 export const CANVAS_SHOWN_RESPONSIBILITIES = 3;
 
-const MoreIcon = GLYPHS.more;
+const PersonIcon = GLYPHS.person;
 
 const SMALL_TEXT = { xs: "0.8125rem", sm: "0.875rem" } as const;
 
@@ -66,6 +74,9 @@ const PHOTO_WIDTH: Record<TeamCanvasVariant, string | number | Record<string, st
   tall: "100%",
   small: { xs: 88, sm: 104 },
 };
+
+/** The ladder column each shape's photo is drawn in (`media/ladder.ts`, §414), so `sizes` says its true width. */
+const PHOTO_COLUMN: Record<TeamCanvasVariant, PictureColumn> = { wide: "aside", tall: "cover", small: "thumb" };
 
 /** The words about a person (§474) at the card's size, in the card's own colours. */
 const BIO_SX = {
@@ -124,7 +135,7 @@ export default function TeamCanvasCard({
           {/* Our own WebP ladder (§414) in the crop the club drew (§541); the name is beside it, so `alt` is empty. */}
           <TeamPhotoImage
             src={member.photo.thumbUrl}
-            {...teamPhotoWidths(member.photo, variant === "wide" ? "card" : "tile")}
+            {...teamPhotoWidths(member.photo, PHOTO_COLUMN[variant])}
             photo={member.photo}
             loading={index < 4 ? "eager" : "lazy"}
             testId="team-photo"
@@ -160,7 +171,7 @@ export default function TeamCanvasCard({
         {hasMore && (
           <Box component="details" data-testid="team-more" sx={{ ...DISCLOSURE_SX, mt: 0.5 }}>
             <Typography component="summary" variant="body2" aria-label={words.moreAbout(member.name)} sx={{ fontWeight: 600, color: TEAM_CANVAS.title }}>
-              <MoreIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
+              <PersonIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
               {words.more}
             </Typography>
             {rest.length > 0 && (

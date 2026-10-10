@@ -56,11 +56,11 @@ export default function TeamMemberLinks({
 }
 
 /**
- * The photo's `srcset` and `sizes` (§414), or neither: a card is a column of the grid — the album
- * grid's `tile` widths, two, three and four to a row — or, on the canvas, a listing card's column
- * (`card`, the wide card's photo) — and the photograph is drawn wider than its card by what the
- * frame magnifies: the crop's `1 / w`, or a square's cover (`teamPhotoFrame`, §541). A picture from
- * before the ladder keeps its thumbnail.
+ * The photo's `srcset` and `sizes` (§414), or neither: a grid card is a column of the grid — the
+ * album grid's `tile` widths, two, three and four to a row — and a canvas card's is the column its
+ * shape is drawn in (`TeamCanvasCard`'s `PHOTO_COLUMN`: `cover`, `aside`, `thumb`) — and the
+ * photograph is drawn wider than its card by what the frame magnifies: the crop's `1 / w`, or a
+ * square's cover (`teamPhotoFrame`, §541). A picture from before the ladder keeps its thumbnail.
  */
 export function teamPhotoWidths(photo: TeamPhoto, column: PictureColumn): { srcSet?: string; sizes?: string } {
   const srcSet = pictureSrcSet(photo.webUrl, photo.width);

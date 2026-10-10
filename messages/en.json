@@ -9744,6 +9744,7 @@
     "lead": "The people who keep {club} running: who organizes, who coaches, who welcomes you at the start.",
     "empty": "The club's team will be introduced here soon.",
     "listLabel": "The team's people",
+    "othersLabel": "More of the team",
     "linksLabel": "Links: {name}",
     "linkKinds": {
       "STRAVA": "Strava",

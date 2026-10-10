@@ -2,7 +2,8 @@ import { type ComponentProps, createElement, type ReactElement, type ReactNode }
 import { renderToReadableStream } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
-import type { PublicTeamLink, PublicTeamMember, PublicTeamPage } from "@/modules/content/team/repository";
+import type { PublicTeamLink, PublicTeamMember, PublicTeamPage, TeamPhoto } from "@/modules/content/team/repository";
+import { ladderKeyPrefixOf, pictureSizes } from "@/modules/media/ladder";
 
 /**
  * §459 — «Echipa» as the server sends it: the menu offers the page only when the header says so
@@ -214,7 +215,9 @@ describe("§NNN «Echipa» as a canvas with levels, each card opening in place, 
     };
     const markup = await html((await TeamPage({ params })) as ReactElement);
     expect(markup).toContain('data-testid="team-canvas"');
-    expect(markup).toContain(`aria-label="${messages.Team.listLabel}"`);
+    // The canvas is «Oamenii echipei»; the grid under it is a second list with a name of its own.
+    expect(markup.match(new RegExp(`aria-label="${messages.Team.listLabel}"`, "g"))).toHaveLength(1);
+    expect(markup).toMatch(new RegExp(`<ul[^>]*aria-label="${messages.Team.othersLabel}"[^>]*data-testid="team-grid"`));
     // Two rows, by whole number; the shapes by the level's step.
     expect([...markup.matchAll(/data-testid="team-canvas-row" data-level="(\d)"/g)].map((match) => match[1])).toEqual(["1", "2"]);
     expect(variants(markup)).toEqual(["wide", "small", "tall", "tall", "small"]);
@@ -250,8 +253,61 @@ describe("§NNN «Echipa» as a canvas with levels, each card opening in place, 
     expect(markup.indexOf('data-testid="team-boxes"')).toBeLessThan(markup.indexOf('data-testid="team-grid"'));
     expect(markup.match(/data-testid="team-box"/g)).toHaveLength(2);
     expect(markup).toContain("Partener 2.");
-    // The canvas's rows: the top row a flex row from `md`, the rows under a grid of three from `md`.
+    // The canvas's rows: the top row a wrapping flex row from `md`, the rows under a grid of three from `md`.
+    expect([...markup.matchAll(/data-testid="team-canvas-row" data-level="\d" data-layout="(\w+)"/g)].map((match) => match[1])).toEqual(["wide", "grid"]);
     expect(markup).toMatch(/grid-template-columns:repeat\(3, minmax\(0, 1fr\)\)/);
+  });
+
+  it("draws the wide shape only for a single lead on the top row: two leads are tall in the grid, and three small cards wrap beside one wide card", async () => {
+    // Every card set to level 2 while the president's is hidden: five leads on the top row, none wide.
+    page = { published: true, intro: null, boxes: [], introText: null, members: ["Rol A", "Rol B", "Rol C", "Rol D", "Rol E"].map((name) => card(name, { level: 2 })) };
+    const five = await html((await TeamPage({ params })) as ReactElement);
+    expect(variants(five)).toEqual(["tall", "tall", "tall", "tall", "tall"]);
+    expect(five).toMatch(/data-testid="team-canvas-row" data-level="2" data-layout="grid"/);
+    // Two presidents at level 1: still the grid, neither crushed against the other.
+    page = { ...page, members: [card("Președinte", { level: 1 }), card("Vicepreședinte", { level: 1 }), card("Sfătuitor", { level: 1.5 })] };
+    const two = await html((await TeamPage({ params })) as ReactElement);
+    expect(variants(two)).toEqual(["tall", "tall", "small"]);
+    expect(two).toMatch(/data-testid="team-canvas-row" data-level="1" data-layout="grid"/);
+    expect(two).not.toMatch(/flex-wrap:wrap/);
+    // One president and three counsellors: the wide card keeps its 480-pixel floor from `md`, the
+    // small cards their 280-pixel column, and the row wraps rather than overflowing the canvas.
+    page = { ...page, members: [card("Președinte", { level: 1 }), card("Sfătuitor A", { level: 1.5 }), card("Sfătuitor B", { level: 1.5 }), card("Sfătuitor C", { level: 1.5 })] };
+    const three = await html((await TeamPage({ params })) as ReactElement);
+    expect(variants(three)).toEqual(["wide", "small", "small", "small"]);
+    expect(three).toMatch(/data-testid="team-canvas-row" data-level="1" data-layout="wide"/);
+    expect(three).toMatch(/flex-wrap:wrap/);
+    expect(three).toMatch(/@media \(min-width:900px\)\{[^}]*flex-basis:480px/);
+    expect(three).toMatch(/@media \(min-width:900px\)\{[^}]*min-width:480px/);
+    expect(three).toMatch(/@media \(min-width:900px\)\{[^}]*flex:0 0 280px/);
+  });
+
+  it("sizes each shape's photo for the column it is drawn in (§414): cover for tall, the 240/280 column for wide, the thumbnail for small", async () => {
+    const prefix = ladderKeyPrefixOf("3f2a1b4c-0000-4abc-8def-000000000002");
+    const photo: TeamPhoto = {
+      webUrl: `https://pub-example.r2.dev/production/${prefix}/web.webp`,
+      thumbUrl: `https://pub-example.r2.dev/production/${prefix}/thumb.webp`,
+      width: 1600,
+      height: 1600,
+      crop: null,
+    };
+    page = {
+      published: true,
+      intro: null,
+      boxes: [],
+      introText: null,
+      members: [card("Președinte", { level: 1, photo }), card("Sfătuitor", { level: 1.5, photo }), card("Rol A", { level: 2, photo })],
+    };
+    const markup = await html((await TeamPage({ params })) as ReactElement);
+    const sizesByVariant = [...markup.matchAll(/data-variant="(\w+)"[^]*?<img[^>]*\ssizes="([^"]+)"/g)].map((match) => [match[1], match[2]]);
+    expect(sizesByVariant).toEqual([
+      ["wide", pictureSizes("aside")],
+      ["small", pictureSizes("thumb")],
+      ["tall", pictureSizes("cover")],
+    ]);
+    // On a phone a tall card is the canvas's whole width — never half of it, as a tile would say.
+    expect(pictureSizes("cover")).toMatch(/calc\(100vw - 32px\)$/);
+    expect(markup).toContain(`srcSet="https://pub-example.r2.dev/production/${prefix}/`);
   });
 
   it("draws a lone 1.5 as a row of one small card, and the grid under it, with no boxes when there are none", async () => {

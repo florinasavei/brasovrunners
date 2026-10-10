@@ -5,9 +5,8 @@ import { describe, expect, it } from "vitest";
 import messages from "@/../messages/ro.json";
 import en from "@/../messages/en.json";
 import { contrastRatio, MAX_CARD_STEP } from "@/modules/appearance/domain/tint-contrast";
-import { CLUB_NAME, COLOR, COLOR_DARK, FONT, GRADIENT, LOGO, SITE_TINT, SURFACE_GRADIENT, WORDMARK } from "@/theme/brand";
+import { CLUB_NAME, COLOR, COLOR_DARK, FONT, GRADIENT, LOGO, SITE_TINT, SURFACE_GRADIENT, TEAM_CANVAS, WORDMARK } from "@/theme/brand";
 import { ACCENT_PAIRS, type BrandPair, HERO_PAIRS, TEXT_PAIRS, TEXT_PAIRS_DARK } from "@/theme/brand-pairs";
-import { TEAM_CANVAS } from "@/theme/brand";
 
 /** A pair's names, `COLOR.ink/COLOR.paper`, for the lists below that pin which pairs are asserted. */
 const names = (pairs: readonly BrandPair[]) => pairs.map((pair) => `${pair.foreground.name}/${pair.background.name}`);

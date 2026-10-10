@@ -24,8 +24,12 @@ import { DENSITY } from "@/theme/density";
 
 const ROOT = join(__dirname, "..", "..", "..");
 
-/** The public pages and the event components they are built from; the backoffice is not public. */
-const TARGET_DIRS = ["src/app/[locale]", "src/modules/events/ui"];
+/**
+ * The public pages and the event components they are built from, and «Echipa»'s canvas (§NNN),
+ * whose phone spacing left `page.tsx` for `content/team/ui`; the backoffice is not public (the
+ * editor's rows in that folder set no phone spacing).
+ */
+const TARGET_DIRS = ["src/app/[locale]", "src/modules/events/ui", "src/modules/content/team/ui"];
 const EXCLUDED_DIRS = ["src/app/[locale]/admin", "src/app/[locale]/devs"];
 
 const posix = (path: string) => relative(ROOT, path).split(sep).join("/");
@@ -119,6 +123,11 @@ const ALLOWED: Array<{ file: string; line: string; reason: string }> = [
     line: "py: { xs: 4, sm: 8 } }}>",
     reason: "one sentence centred on an otherwise empty page; the room is the layout",
   },
+  {
+    file: "src/modules/content/team/ui/TeamCanvas.tsx",
+    line: "mx: { xs: -2, sm: 0 },",
+    reason: "the container's own 16-pixel gutter taken back, so the canvas runs edge to edge on a phone (§NNN) — alignment, not whitespace",
+  },
 ];
 
 type DensityStep = keyof typeof DENSITY;
@@ -136,8 +145,13 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   // «Echipa» (§459): born on the scale, the gallery's container.
   { file: "src/app/[locale]/team/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   // Its grid: two cards to a row from 320px, so the gap and the card's own padding are the tight steps.
-  // §691: a card's padding is also a box's under the grid. §NNN: the canvas's own cards are `content/team/ui`'s, off this scale.
+  // §691: a card's padding is also a box's under the grid.
   { file: "src/app/[locale]/team/page.tsx", prop: "gap", step: "cardGridGap", sm: 2, xsBefore: 2 },
+  // §NNN: the canvas (`content/team/ui/TeamCanvas.tsx`), born on the scale — its padding and the
+  // gap between its rows, a section's step on a phone, the page's 24 pixels from `sm`.
+  { file: "src/modules/content/team/ui/TeamCanvas.tsx", prop: "px", step: "sectionGap", sm: 3, xsBefore: 3 },
+  { file: "src/modules/content/team/ui/TeamCanvas.tsx", prop: "py", step: "sectionGap", sm: 3, xsBefore: 3 },
+  { file: "src/modules/content/team/ui/TeamCanvas.tsx", prop: "gap", step: "sectionGap", sm: 3, xsBefore: 3 },
   { file: "src/app/[locale]/team/page.tsx", prop: "p", step: "cardPadTop", sm: 2, xsBefore: 2, count: 2 },
   { file: "src/app/[locale]/team/page.tsx", prop: "pb", step: "cardPadTop", sm: 3, xsBefore: 3, count: 2 },
   // The grid under the canvas (§NNN), born on the scale: a section's room from the canvas above it.

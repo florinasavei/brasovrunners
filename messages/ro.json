@@ -9744,6 +9744,7 @@
     "lead": "Oamenii care țin {club} în mișcare: cine organizează, cine antrenează, cine te întâmpină la start.",
     "empty": "Echipa clubului apare aici în curând.",
     "listLabel": "Oamenii echipei",
+    "othersLabel": "Alți membri ai echipei",
     "linksLabel": "Linkuri: {name}",
     "linkKinds": {
       "STRAVA": "Strava",

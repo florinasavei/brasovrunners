@@ -8,7 +8,6 @@ import ConstructionIcon from "@mui/icons-material/Construction";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import HelpIcon from "@mui/icons-material/Help";
@@ -20,6 +19,7 @@ import ModeNightIcon from "@mui/icons-material/ModeNight";
 import MoneyOffIcon from "@mui/icons-material/MoneyOff";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PaidIcon from "@mui/icons-material/Paid";
+import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import ScienceIcon from "@mui/icons-material/Science";
 import SportsScoreIcon from "@mui/icons-material/SportsScore";
@@ -172,8 +172,9 @@ export const GLYPHS = {
   orders: ReceiptLongIcon,
   club: GroupsIcon,
   link: LinkIcon,
-  // «Mai multe» on a team card's fold (§NNN): the chevron that says "this opens downward".
-  more: ExpandMoreIcon,
+  // «Mai multe» on a team card's fold (§NNN): the person, what the fold holds more of — the fold's
+  // own arrow already says "this opens" (`disclosure.ts`), so never a second chevron here.
+  person: PersonOutlinedIcon,
 };
 
 export type GlyphName = keyof typeof GLYPHS;
