@@ -4,13 +4,14 @@ import ro from "../../../messages/ro.json";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
 import { describesMembersShop, MEMBERS_SHOP_MERGE_FIELD, mergeText } from "@/modules/legal-documents/domain/merge-fields";
 import {
-  baniAsTyped,
   clubVerbsFor,
-  formatLei,
+  formatPrice,
+  minorAsTyped,
   nextOrderStatus,
   orderTotalBani,
-  parseLeiToBani,
+  parsePriceToMinor,
   parseVariantLines,
+  PRICE_BANI_MAX,
   stockAfterOrder,
   stockToSave,
   variantLinesAsTyped,
@@ -24,22 +25,37 @@ import { shopOrderLine, shopOrderLines } from "@/modules/notifications/shop-orde
  * may follow which and for whom, the variants box, the privacy notice's marker that gates the shop
  * (BR-REQ-060-01: the member's verbs and the club's are different sets), and the email's lines.
  */
-describe("§683 the price in lei", () => {
-  it("is kept in bani and read as people write it", () => {
-    expect(parseLeiToBani("45")).toBe(4500);
-    expect(parseLeiToBani("45,5")).toBe(4550);
-    expect(parseLeiToBani("45.50")).toBe(4550);
-    expect(parseLeiToBani(" 45 lei ")).toBe(4500);
-    expect(parseLeiToBani("0")).toBe(0);
-    for (const bad of ["", "-5", "45,505", "abc", "1e3", "45,", "9999999"]) expect(parseLeiToBani(bad), bad).toBeNull();
+describe("§683, §686 the price, in lei or in euro", () => {
+  it("is kept in the minor unit and read as people write it, a trailing currency word dropped", () => {
+    expect(parsePriceToMinor("45")).toBe(4500);
+    expect(parsePriceToMinor("45,5")).toBe(4550);
+    expect(parsePriceToMinor("45.50")).toBe(4550);
+    expect(parsePriceToMinor(" 45 lei ")).toBe(4500);
+    expect(parsePriceToMinor("30,25")).toBe(3025);
+    expect(parsePriceToMinor("30.25 €")).toBe(3025);
+    expect(parsePriceToMinor("30€")).toBe(3000);
+    expect(parsePriceToMinor("30 eur")).toBe(3000);
+    expect(parsePriceToMinor("30 EURO")).toBe(3000);
+    expect(parsePriceToMinor("0")).toBe(0);
+    expect(parsePriceToMinor("100000")).toBe(PRICE_BANI_MAX);
+    // The box never says the currency: a word that is not one is refused, not read as lei.
+    for (const bad of ["", "-5", "30,255", "abc", "1e3", "45,", "9999999", "100000,01", "30 usd"]) expect(parsePriceToMinor(bad), bad).toBeNull();
   });
 
-  it("is shown «45 lei», with bani only when there are some", () => {
-    expect(formatLei(4500, "ro")).toBe("45 lei");
-    expect(formatLei(4550, "ro")).toBe("45,50 lei");
-    expect(formatLei(4505, "en")).toBe("45.05 lei");
-    expect(baniAsTyped(4500)).toBe("45");
-    expect(baniAsTyped(4550)).toBe("45,50");
+  it("is shown in its own currency — the minor part only when there is one, grouped the locale's way, never converted", () => {
+    expect(formatPrice(4500, "RON", "ro")).toBe("45 lei");
+    expect(formatPrice(4550, "RON", "ro")).toBe("45,50 lei");
+    expect(formatPrice(4505, "RON", "en")).toBe("45.05 lei");
+    expect(formatPrice(123400, "RON", "ro")).toBe("1.234 lei");
+    // Euro: the sign after a no-break space in Romanian, before the amount in English.
+    expect(formatPrice(3025, "EUR", "ro")).toBe("30,25\u00A0€");
+    expect(formatPrice(3000, "EUR", "ro")).toBe("30\u00A0€");
+    expect(formatPrice(3025, "EUR", "en")).toBe("€30.25");
+    expect(formatPrice(3000, "EUR", "en")).toBe("€30");
+    expect(formatPrice(123456, "EUR", "ro")).toBe("1.234,56\u00A0€");
+    expect(formatPrice(123456, "EUR", "en")).toBe("€1,234.56");
+    expect(minorAsTyped(4500)).toBe("45");
+    expect(minorAsTyped(4550)).toBe("45,50");
     expect(orderTotalBani({ unitPriceBani: 4550, quantity: 3 })).toBe(13650);
   });
 });
@@ -161,6 +177,7 @@ describe("§683 the zone's outcome and the email's lines", () => {
     variant: "M",
     quantity: 2,
     unitPriceBani: 4500,
+    currency: "RON" as const,
     note: "Pentru sâmbătă",
     paymentRo: "IBAN RO00 TEST 0000 — sau numerar",
     paymentEn: "IBAN RO00 TEST 0000 — or cash",
@@ -170,6 +187,9 @@ describe("§683 the zone's outcome and the email's lines", () => {
   it("says the order on one line and the payment words after the club's text, each half in its language", () => {
     expect(shopOrderLine("ro", order)).toBe("Comanda nr. 12: Tricou club — M × 2 — 90 lei");
     expect(shopOrderLine("en", order)).toBe("Order no. 12: Club t-shirt — M × 2 — 90 lei");
+    // An order placed in euro reads in euro, whatever the product says now (§686).
+    expect(shopOrderLine("ro", { ...order, unitPriceBani: 3025, currency: "EUR" })).toBe("Comanda nr. 12: Tricou club — M × 2 — 60,50\u00A0€");
+    expect(shopOrderLine("en", { ...order, unitPriceBani: 3025, currency: "EUR" })).toBe("Order no. 12: Club t-shirt — M × 2 — €60.50");
     expect(shopOrderLines("ro", order, { payment: true })).toEqual(["Cum se plătește: IBAN RO00 TEST 0000 — sau numerar", "Nota comenzii: „Pentru sâmbătă”"]);
     expect(shopOrderLines("en", { ...order, paymentEn: null }, { payment: true })[0]).toBe("The club will tell you how to pay.");
     expect(shopOrderLines("en", { ...order, note: null }, { payment: false })).toEqual([]);

@@ -8,6 +8,14 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.88-2026-10-10
+
+- **The club's runs are «Alergări»** — in Romanian the menu, the listing's title, the backoffice tab and the menu-order entry say «Alergări», and the listing's sentences, filters, featured chip and past count say alergare / alergări (with «Înapoi la alergări» on an event page and «Toate alergările» in the members' zone); the address `/ro/evenimente`, English, the legal texts and the emails are unchanged. §689.
+## BR-V2.87-2026-10-10
+
+- **A shop price in lei or in euro** — «Moneda» beside the price in the editor; the zone, the orders, the CSV (a currency column) and the emails show each price in its own currency, never converted, and an order keeps the currency it was placed in. §686.
+- **«Gestionează magazinul» — the shop for a colleague who is not an Administrator** — on «Echipa», a tick after the role gives a volunteer, a Redactor, an Organizer or a Tehnic the members' shop, its «Din galerie» included, asked first and audited; the shop moves from «Pagini» → «Membri» to its own section «Magazin» in the top bar, and the grant never shows a member's address. §687.
+- **`yarn handoff` — where everything stands when a session stops** — one read-only command prints production's and qa's baselines, the open pull requests, every unmerged branch with its release entry and migrations, the next free migration number and any local work not on GitHub; `docs/DISPATCHER.md` § When a session stops says how to work so a stop costs nothing, and the prompt to resume. §688.
 ## BR-V2.86-2026-10-10
 
 - **The repository's licence is all rights reserved** — the code and the documents are the club's, readable but not reusable without its written permission; the MIT grant ends with this release. §685.

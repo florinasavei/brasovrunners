@@ -153,7 +153,7 @@ test.describe("BR-REQ-051-01 a copywriter writes and may not publish; a voluntee
     await signIn(page, "Dev Contributor");
     await expect(page).toHaveURL(/\/ro\/admin\/checkin$/);
     await expect(page.getByRole("tab", { name: "Ziua cursei" })).toBeVisible();
-    await expect(page.getByRole("tab", { name: "Evenimente" })).toHaveCount(0);
+    await expect(page.getByRole("tab", { name: "Alergări" })).toHaveCount(0);
   });
 
   test.describe.configure({ mode: "parallel" });

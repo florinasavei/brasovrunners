@@ -17,7 +17,7 @@ import { moveOrderByClub } from "@/modules/content/shop/orders";
 import { ordersFilterParams } from "@/modules/content/shop/repository";
 import { createProduct, deleteProduct, moveProduct, saveProduct } from "@/modules/content/shop/service";
 import { saveShopSettings } from "@/modules/content/shop/settings";
-import { canEditMembersPage, canPublishMembersPage } from "@/modules/staff-identity/domain/roles";
+import { canEditMembersPage, canManageShop, canPublishMembersPage } from "@/modules/staff-identity/domain/roles";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashOutcome } from "@/shared/feedback/flash";
@@ -196,9 +196,21 @@ export async function deleteDiscountCodeAction(_previous: FormOutcome | null, fo
 /**
  * The shop's writes, the codes' shape: a refused product or settings save returns, so every box comes
  * back as typed (§315); every other outcome is a redirect to the card with a language-neutral code and
- * a toast (§384). The door is a staff session; the service asserts `canManageShop` again
- * (BR-REQ-060-01), so an Organizer who reads the card is refused every verb on the server.
+ * a toast (§384). The door asks `canManageShop` of the actor — a colleague holding «Gestionează
+ * magazinul» included (§687) — and the service asserts it again (BR-REQ-060-01), so an Organizer who
+ * reads the card is refused every verb on the server.
+ *
+ * The card lives on «Magazin» since §687, its own section (`/admin/shop`); it stays in this file so
+ * the shop's verbs keep one home. Every answer lands there, on the list the reader was reading.
  */
+async function backToShop(form: FormData, outcome: { error?: string; saved?: string }, anchor: string, keep?: URLSearchParams): Promise<never> {
+  await flashOutcome(outcome);
+  const query = new URLSearchParams(outcome.error ? { error: outcome.error } : { saved: outcome.saved ?? "1" });
+  for (const [name, value] of keep ?? []) query.set(name, value);
+  const shop = getPathname({ locale: toLocale(form.get("uiLocale")), href: "/admin/shop" });
+  redirect(`${shop}?${query.toString()}#${outcome.error ? "admin-alert" : anchor}`);
+}
+
 function productFieldsOf(form: FormData) {
   return {
     titleRo: text(form, "titleRo"),
@@ -206,6 +218,7 @@ function productFieldsOf(form: FormData) {
     descriptionRo: text(form, "descriptionRo"),
     descriptionEn: text(form, "descriptionEn"),
     price: text(form, "price"),
+    currency: text(form, "currency"),
     variants: text(form, "variants"),
     stock: text(form, "stock"),
     variantsLoaded: text(form, "variantsLoaded"),
@@ -218,23 +231,23 @@ function productFieldsOf(form: FormData) {
 export async function createShopProductAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   let id: string;
   try {
-    const actor = await requireStaff();
+    const actor = await requireStaffCapability(canManageShop);
     id = (await createProduct(getDb(), { actor, fields: productFieldsOf(form) })).id;
   } catch (error) {
     return refused(error, form);
   }
-  return backToCodes(form, { saved: "shopProductCreated" }, `product-${id}`);
+  return backToShop(form, { saved: "shopProductCreated" }, `product-${id}`);
 }
 
 export async function saveShopProductAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const productId = text(form, "productId");
   try {
-    const actor = await requireStaff();
+    const actor = await requireStaffCapability(canManageShop);
     await saveProduct(getDb(), { actor, productId, expectedVersion: Number(text(form, "expectedVersion")), fields: productFieldsOf(form) });
   } catch (error) {
     return refused(error, form);
   }
-  return backToCodes(form, { saved: "shopProductSaved" }, `product-${productId}`);
+  return backToShop(form, { saved: "shopProductSaved" }, `product-${productId}`);
 }
 
 /** One place up or down; lands on the product it moved. A plain form: moving asks nothing first. */
@@ -242,32 +255,32 @@ export async function moveShopProductAction(form: FormData): Promise<void> {
   const productId = text(form, "productId");
   let outcome: { error?: string; saved?: string };
   try {
-    const actor = await requireStaff();
+    const actor = await requireStaffCapability(canManageShop);
     await moveProduct(getDb(), { actor, productId, direction: text(form, "direction") === "up" ? "up" : "down" });
     outcome = { saved: "shopProductMoved" };
   } catch (error) {
     outcome = codeOutcomeOf(error);
   }
-  return backToCodes(form, outcome, `product-${productId}`);
+  return backToShop(form, outcome, `product-${productId}`);
 }
 
 /** Deletes a product, or archives it when an order names it — the toast says which. */
 export async function deleteShopProductAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   let outcome: { error?: string; saved?: string };
   try {
-    const actor = await requireStaff();
+    const actor = await requireStaffCapability(canManageShop);
     const done = await deleteProduct(getDb(), { actor, productId: text(form, "productId") });
     outcome = done === "archived" ? { saved: "shopProductArchived" } : { saved: "shopProductDeleted" };
   } catch (error) {
     outcome = codeOutcomeOf(error);
   }
-  return backToCodes(form, outcome, "members-shop");
+  return backToShop(form, outcome, "members-shop");
 }
 
 /** «Cum se plătește» and «Cine primește comenzile»: both languages or neither, one address or none. */
 export async function saveShopSettingsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   try {
-    const actor = await requireStaff();
+    const actor = await requireStaffCapability(canManageShop);
     await saveShopSettings(getDb(), {
       actor,
       fields: { paymentRo: text(form, "paymentRo"), paymentEn: text(form, "paymentEn"), ordersTo: text(form, "ordersTo") },
@@ -275,7 +288,7 @@ export async function saveShopSettingsAction(_previous: FormOutcome | null, form
   } catch (error) {
     return refused(error, form);
   }
-  return backToCodes(form, { saved: "shopSettingsSaved" }, "members-shop");
+  return backToShop(form, { saved: "shopSettingsSaved" }, "members-shop");
 }
 
 /** «Marchează plătită», «Marchează predată», «Anulează» on an order — the verb a closed set, never a name from the POST. */
@@ -285,11 +298,11 @@ export async function moveShopOrderAction(_previous: FormOutcome | null, form: F
   const orderId = text(form, "orderId");
   let outcome: { error?: string; saved?: string };
   try {
-    const actor = await requireStaff();
+    const actor = await requireStaffCapability(canManageShop);
     await moveOrderByClub(getDb(), { actor, orderId, verb });
     outcome = verb === "pay" ? { saved: "shopOrderPaid" } : verb === "handOver" ? { saved: "shopOrderHandedOver" } : { saved: "shopOrderCancelled" };
   } catch (error) {
     outcome = codeOutcomeOf(error);
   }
-  return backToCodes(form, outcome, `order-${orderId}`, ordersFilterOf(form));
+  return backToShop(form, outcome, `order-${orderId}`, ordersFilterOf(form));
 }

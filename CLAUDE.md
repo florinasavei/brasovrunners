@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.86-2026-10-10 -->
+<!-- PROJECT_BASELINE: BR-V2.88-2026-10-10 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V2.86-2026-10-10`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V2.88-2026-10-10`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -53,6 +53,9 @@ yarn docs:land    land a batch's documents: a dispatcher's manifest, or `--tree`
                   own `.release/*.json` entries (`.release/README.md`)
 yarn ship         merge a landed PR into qa, release it and wait for production; from a phone,
                   the label `ship` on the PR runs all of it on GitHub (`docs/RUNBOOKS.md`)
+yarn handoff      where everything stands, for a session taking over from one that stopped
+                  (credits, a limit): baselines, open PRs, unmerged branches, the next migration
+                  number, local work not on GitHub (`docs/DISPATCHER.md` § When a session stops)
 ```
 
 Full list with explanations: [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md). Do not write a
@@ -64,6 +67,9 @@ process. Concurrency tests must not use it; see `docs/DEVELOPMENT.md`.
 
 ## Read order
 
+−1. **Taking over from a session that stopped** (credits, a usage limit, a closed laptop)? Run
+   `yarn handoff` first, then `docs/QUEUE.md` § «Where things stand» and `docs/DISPATCHER.md`
+   § When a session stops.
 0. [`docs/VIBECODING.md`](./docs/VIBECODING.md) — one page: the loop, where things live, the rules that bite.
 1. This file.
 2. `WEEKEND.md` — the pilot this replaced, kept for its reasoning, not its scope table.
@@ -251,9 +257,10 @@ it is the authority, this is the summary):
     a mailbox outside the domain, read daily; the registrar's and its verification service's senders whitelisted there;
     auto-renew on with a valid card; `DOMAIN_REGISTERED_ON` and `DOMAIN_RENEWAL_YEARS` on both Vercel projects (`SETUP.md` §26).
 20. **Open the members' shop** — approve a privacy notice from the template (section 5 names the shop,
-    `{{membersShop}}`; a lawyer reads the accounting-records period first), then on «Membri» → «Magazin»
+    `{{membersShop}}`; a lawyer reads the accounting-records period first), then in the top bar's «Magazin»
     write how to pay and who receives the orders, and add the products. Payment is never on the site.
     The steps are `SETUP.md` §43; `/admin/tasks` carries the row `shopNotice` while a product is visible.
+    A colleague who is not an Administrator runs it once given «Gestionează magazinul» on «Echipa».
 
 **The values behind items 10 and 11 are in `.env.local` and on both Vercel projects**, never in
 this repository — it is public, and `yarn secrets:check` blocks a commit that carries one. The

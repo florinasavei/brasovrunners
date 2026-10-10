@@ -152,7 +152,7 @@ export default async function SiteHeader() {
            * menu. And the first section stays on the row even at 320px ("at least one item
            * before the menu — mobile first"): the language switcher stacks RO over EN on a
            * phone, the menu button is the ☰ glyph there, and the gaps tighten, which together
-           * buy the ~100px "Evenimente" needs. Nothing overflows — the nav shrinks before the
+           * buy the ~100px "Evenimente" needed — "Alergări" (§689) needs less. Nothing overflows — the nav shrinks before the
            * row does (BR-REQ-041-01 criterion 1) — and the header is 60px instead of 112px.
            */
           flexWrap: "nowrap",

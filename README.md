@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.86-2026-10-10 -->
+<!-- PROJECT_BASELINE: BR-V2.88-2026-10-10 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V2.86-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.88-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 > **Write code once, run forever, always vibe.**
 
@@ -95,6 +95,7 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`scripts/idle-cost.mjs`](./scripts/idle-cost.mjs) | `yarn idle:measure [--hours 24] [--neon-project <id>] [--vercel-project <name>]` — read-only: Neon's wakes from its operations log, classed inside or outside the 04:00 maintenance window, and the last hour of Vercel's requests by kind; the procedure and the before-and-after table are `docs/PLATFORM.md` § Idle cost |
 | [`scripts/smoke.mjs`](./scripts/smoke.mjs) | `yarn smoke <base-url>` — turns `/api/health?deep=1` into an exit code. Ends every deployment: a green build is not a working site |
 | [`scripts/ship.mjs`](./scripts/ship.mjs) | `yarn ship <batch PR> <new baseline> <previous baseline> "<title>"` — one small release end to end: merges the batch PR into `qa` when green, opens and merges the `qa → main` PR, approves the gated migration run, and waits for production's `/api/health` to name the new baseline. Production's origin comes from `SHIP_PRODUCTION_URL` in the environment or `.env.local` (`docs/DISPATCHER.md`, `DECISIONS.md` §368) |
+| [`scripts/handoff.mjs`](./scripts/handoff.mjs) | `yarn handoff` — where everything stands, for the session that takes over: production's and `qa`'s baselines, the open pull requests, every branch with work `qa` does not have (its release entry and migrations), the next free migration number, and local work not on GitHub. Read-only (`docs/DISPATCHER.md` § When a session stops, `DECISIONS.md` §688) |
 | [`scripts/ship-checks.mjs`](./scripts/ship-checks.mjs) | How `yarn ship` reads a pull request's checks: nothing is judged while one is pending, and the same checks with none pending must be read twice, 30 s apart, before a PR is called green or red (`docs/DISPATCHER.md`, `DECISIONS.md` §426) |
 | [`scripts/land-batch.mjs`](./scripts/land-batch.mjs) | `yarn docs:land <manifest.json> [--apply]` — lands a batch's documentation from the chains' structured results: bumps the baseline, numbers the decisions, numbers each decision placeholder in the code by the commit that wrote it, appends DECISIONS.md and CHANGELOG.md, adds the SPECS.md criteria. A dry run without `--apply` (`docs/DISPATCHER.md`, `DECISIONS.md` §368) |
 | [`scripts/land-entry.mjs`](./scripts/land-entry.mjs) | What `yarn docs:land` makes of one item's saved results — its DECISIONS title and body, its CHANGELOG bullet, its SPECS criteria — kept apart from `land-batch.mjs`, which writes files on import, so the rules are testable (`docs/DISPATCHER.md`, `DECISIONS.md` §426) |

@@ -23,7 +23,7 @@
     "skipToContent": "Sari la conținut",
     "nav": {
       "label": "Navigare principală",
-      "events": "Evenimente",
+      "events": "Alergări",
       "calendar": "Calendar",
       "gallery": "Galerie",
       "team": "Echipa",
@@ -39,16 +39,16 @@
   },
   "Events": {
     "undatedTitle": "Data sau ora se anunță",
-    "title": "Evenimente",
+    "title": "Alergări",
     "intro": "Alergări, ture pe munte și antrenamente organizate de club — întotdeauna gratuite.",
-    "empty": "Nu sunt evenimente publicate momentan. Revino în curând.",
-    "noUpcoming": "Nu sunt evenimente viitoare programate. Cel mai recent eveniment al clubului:",
-    "featured": "Evenimentul principal",
-    "pastCount": "{count, plural, one {# eveniment trecut} few {# evenimente trecute} other {# de evenimente trecute}}",
+    "empty": "Nu sunt alergări publicate momentan. Revino în curând.",
+    "noUpcoming": "Nu sunt alergări viitoare programate. Cea mai recentă alergare a clubului:",
+    "featured": "Alergarea principală",
+    "pastCount": "{count, plural, one {# alergare trecută} few {# alergări trecute} other {# de alergări trecute}}",
     "pastCountFiltered": "Din trecut, după filtre ({count})",
     "filter": {
-      "label": "Filtrele evenimentelor",
-      "labelPast": "Filtrele evenimentelor trecute",
+      "label": "Filtrele alergărilor",
+      "labelPast": "Filtrele alergărilor trecute",
       "button": "Filtre",
       "buttonCount": "Filtre ({count})",
       "groups": {
@@ -66,15 +66,15 @@
         "OVER_21": "Peste 21 km"
       },
       "partner": "Colaborare",
-      "night": "Eveniment de noapte",
+      "night": "Alergare de noapte",
       "registration": "Înscrieri deschise",
       "apply": "Aplică",
       "clear": "Șterge filtrele",
       "remove": "Scoate filtrul",
       "active": "Filtre active",
-      "activePast": "Filtre active pentru evenimentele trecute",
-      "none": "Niciun eveniment nu se potrivește filtrelor alese.",
-      "pastNothingToNarrow": "Toate evenimentele trecute sunt la fel — {values} — așa că nu e nimic de filtrat aici."
+      "activePast": "Filtre active pentru alergările trecute",
+      "none": "Nicio alergare nu se potrivește filtrelor alese.",
+      "pastNothingToNarrow": "Toate alergările trecute sunt la fel — {values} — așa că nu e nimic de filtrat aici."
     },
     "calendar": {
       "previous": "Luna anterioară",
@@ -116,7 +116,7 @@
     "pastCountOfType": "Din trecut — {type} ({count})"
   },
   "Event": {
-    "backToEvents": "Înapoi la evenimente",
+    "backToEvents": "Înapoi la alergări",
     "editInBackoffice": "Editează",
     "previewDoor": "previzualizare",
     "opensInNewTab": "se deschide într-o filă nouă",
@@ -601,7 +601,7 @@
       "clearTime": "Șterge ora"
     },
     "nav": {
-      "events": "Evenimente",
+      "events": "Alergări",
       "registrations": "Înscrieri",
       "staff": "Echipa",
       "legal": "Documente legale",
@@ -626,7 +626,8 @@
       "registeredWaitlisted": "{count} pe lista de așteptare",
       "registeredOutside": "invitați speciali: {count}",
       "registeredMoreEvents": "+{count} altele",
-      "newsletter": "Newsletter"
+      "newsletter": "Newsletter",
+      "shop": "Magazin"
     },
     "outbox": {
       "status": {
@@ -2734,6 +2735,18 @@
         "invited": "contul exista, invitația trimisă din nou",
         "failed": "eșuat: {reason}",
         "unconfigured": "fără cheie de invitații: contul se face din consola Zitadel"
+      },
+      "permissions": {
+        "shopManage": "Gestionează magazinul",
+        "implied": "inclus în rol",
+        "chipShop": "Magazin",
+        "saving": "Se salvează…",
+        "grantTitle": "Îi dai magazinul?",
+        "grantBody": "{name} va putea scrie produsele, plata și adresa pentru comenzi și va marca fiecare comandă plătită, predată sau anulată, din secțiunea «Magazin». Adresele membrilor nu le vede.",
+        "grant": "Dă-i magazinul",
+        "revokeTitle": "Îi iei magazinul?",
+        "revokeBody": "{name} nu mai vede secțiunea «Magazin» de la următoarea pagină pe care o deschide.",
+        "revoke": "Ia-i magazinul"
       }
     },
     "queue": {
@@ -4512,7 +4525,7 @@
       "saving": "Se salvează…",
       "readOnly": "Ordinea o alege Administratorul; aici vezi ordinea din meniu.",
       "entries": {
-        "events": "Evenimente",
+        "events": "Alergări",
         "calendar": "Calendar",
         "contact": "Contact",
         "gallery": "Galerie",
@@ -5008,7 +5021,7 @@
         "EVENT_INVITATION": "Când un administrator trimite invitații din lista înscrierilor unui eveniment, și la Retrimite. Un link spre formular, cu numele și adresa completate; locul e păstrat până la termen.",
         "SHOP_ORDER_PLACED": "Când un membru comandă din magazinul membrilor: comanda și cum se plătește. Butonul duce în zona membrilor.",
         "SHOP_ORDER_PAID": "Când un administrator marchează comanda plătită: membrului care a comandat. Butonul duce în zona membrilor.",
-        "SHOP_ORDER_CLUB_NOTICE": "La fiecare comandă din magazin, la adresa din «Membri» → «Magazin» → «Cine primește comenzile», dacă e scrisă."
+        "SHOP_ORDER_CLUB_NOTICE": "La fiecare comandă din magazin, la adresa din «Magazin» → «Cine primește comenzile», dacă e scrisă."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
@@ -5913,10 +5926,11 @@
               "title": "Bara de sus: ce găsești în fiecare tab",
               "steps": [
                 "Vezi doar taburile rolului tău; restul nu există pentru tine, și e în regulă.",
-                "«Evenimente»: se deschide pe cele viitoare; la «Starea» alegi «Toate» sau alta. «Eveniment nou» și «Editează» sunt aici; un rol care doar citește vede «Deschide».",
+                "«Alergări»: se deschide pe cele viitoare; la «Starea» alegi «Toate» sau alta. «Eveniment nou» și «Editează» sunt aici; un rol care doar citește vede «Deschide».",
                 "«Înscrieri»: cine s-a înscris, cu filtre, export și pagina fiecărei înscrieri.",
                 "«Ziua cursei»: masa de ridicare a numerelor, pe telefon.",
                 "«Galerie» și «Pagini» (paginile standard — «Contact», «Echipa», «Întrebări frecvente», «Membri» — și paginile clubului).",
+                "«Magazin»: magazinul membrilor — produsele, plata și comenzile. Îl văd Organizatorul, Administratorii și colegul cu bifa «Gestionează magazinul».",
                 "«Setări»: «Emailuri» (ce primesc participanții, planul Mailgun, limita pe oră, drumurile prin Gmail, coada de trimitere), «Termene», «Aspect», «Costuri», «Anti-robot» și, la sfârșitul rândului, «Configurație» (pentru rolul Tehnic și Administratori).",
                 "«Setări» → «Aspect» → «Sistemul de design»: culorile, literele, butoanele și pastilele site-ului, așa cum sunt în cod, și planul redesign-ului — pentru oricine citește conținutul clubului.",
                 "«Sarcini» → «Club»: ce mai are clubul de făcut, citit din sistem, cu pașii sub fiecare rând. «Sarcini» → «De făcut»: lista clubului, scrisă și bifată de mână — adaugi un rând, îl dai cuiva, îi pui un termen, îl bifezi când e gata.",
@@ -6060,7 +6074,7 @@
             {
               "title": "Corectează textul unui eveniment",
               "steps": [
-                "«Evenimente» → «Editează» pe rândul evenimentului.",
+                "«Alergări» → «Editează» pe rândul evenimentului.",
                 "Deschide cardul cu textul: «Titlu și rezumat», «Descrierea evenimentului» sau «Program, regulament și declarație» (apoi «Programul zilei și ce să aduci» ori «Regulamentul»).",
                 "Scrie în tabul «Română» și în tabul «English».",
                 "Jos, la un eveniment publicat, bifează «Am înțeles că modific conținut publicat.».",
@@ -6124,7 +6138,7 @@
               "title": "Vezi cine s-a înscris",
               "steps": [
                 "Apasă «Înscrieri» în bara de sus.",
-                "La «Evenimente» alege evenimentul (sau «Toate evenimentele»), la «Stare» ce te interesează, apoi «Filtrează».",
+                "La «Alergări» alege evenimentul (sau «Toate evenimentele»), la «Stare» ce te interesează, apoi «Filtrează».",
                 "Cauți pe cineva: scrie o parte din nume în «Caută după nume» și apasă «Filtrează». Fără un eveniment ales, caută în toate.",
                 "Coloana «Unde a ajuns» spune pasul fiecăruia. Apasă pe nume ca să deschizi înscrierea: «Parcursul înscrierii» și «Cronologie» spun tot ce s-a întâmplat.",
                 "Coloana «Până când» spune până când poate semna, accepta sau confirma fiecare — aceeași oră ca în cronologia înscrierii.",
@@ -6168,7 +6182,7 @@
             {
               "title": "Descarcă și tipărește numerele de concurs",
               "steps": [
-                "«Evenimente» → «Deschide» pe cursă.",
+                "«Alergări» → «Deschide» pe cursă.",
                 "Deschide cardul «Participare și înscrieri», apoi «Alocare și tipărire».",
                 "«Vezi numerele» ca să le verifici pe ecran.",
                 "«Descarcă toate numerele (PDF)»: câte două numere A5 pe o foaie A4, cu linia de tăiere. «Câte unul pe pagină» dacă vrei unul singur, centrat pe A4.",
@@ -6191,7 +6205,7 @@
             {
               "title": "Trimite un mesaj participanților",
               "steps": [
-                "«Evenimente» → «Deschide» → cardul «Înscrierile primite» → «Trimite un mesaj participanților».",
+                "«Alergări» → «Deschide» → cardul «Înscrierile primite» → «Trimite un mesaj participanților».",
                 "La «Cui îi trimiți» alege grupul (toți, «Doar confirmații», lista de așteptare sau cei fără declarație) și vezi câți sunt.",
                 "Scrie «Subiect» și «Mesajul», în română și în engleză.",
                 "La «Cum arată emailul» citește ambele variante: «Înscris în română» și «Înscris în engleză».",
@@ -6224,7 +6238,7 @@
               "title": "Pregătește ziua cursei",
               "steps": [
                 "Tipărește numerele (vezi mai sus).",
-                "«Evenimente» → «Deschide» → «Înscrierile primite»: tipărește câteva «Formular declarație pe hârtie (PDF)» și, dacă apare, «Formular declarație pentru un minor (PDF)».",
+                "«Alergări» → «Deschide» → «Înscrierile primite»: tipărește câteva «Formular declarație pe hârtie (PDF)» și, dacă apare, «Formular declarație pentru un minor (PDF)».",
                 "Tot acolo, «Fișă de urgență»: telefoanele și contactele de urgență ale celor confirmați, pe o pagină. O iei la cursă și o distrugi după.",
                 "Voluntarii: roagă un Administrator să le facă conturi cu rolul Voluntar, apoi arată-le secțiunea „Ziua cursei” din ghidul acesta.",
                 "În ziua cursei: «Ziua cursei» în bara de sus."
@@ -6233,14 +6247,14 @@
             {
               "title": "O schimbare la eveniment",
               "steps": [
-                "«Evenimente» → «Deschide»: vezi evenimentul cu toate cardurile lui, fără «Salvează».",
+                "«Alergări» → «Deschide»: vezi evenimentul cu toate cardurile lui, fără «Salvează».",
                 "Scrie-i Administratorului ce trebuie schimbat: data, locul, traseul, costul, locurile, înscrierile sau textele. Doar Administratorul anunță participanții despre schimbare."
               ]
             },
             {
               "title": "Declarațiile semnate",
               "steps": [
-                "Toate ale unui eveniment: «Evenimente» → «Deschide» → «Înscrierile primite» → «Declarațiile semnate (PDF)».",
+                "Toate ale unui eveniment: «Alergări» → «Deschide» → «Înscrierile primite» → «Declarațiile semnate (PDF)».",
                 "A unei singure persoane: deschide înscrierea → «Declarația semnată (PDF)».",
                 "Conțin acte de identitate: păstrează-le doar în arhiva clubului."
               ]
@@ -6265,7 +6279,7 @@
             {
               "title": "Creează un eveniment",
               "steps": [
-                "«Evenimente» → «Eveniment nou».",
+                "«Alergări» → «Eveniment nou».",
                 "Fiecare card e o parte a paginii publice, în ordinea de pe site. Harta de sus, «Pagina, de sus în jos», te duce la fiecare card.",
                 "«Ce fel de eveniment» → «Tip eveniment» (Concurs, Alergare de grup și celelalte).",
                 "«Titlu și rezumat»: «Titlu» și «Rezumat», în tabul «Română» și în tabul «English».",
@@ -6279,7 +6293,7 @@
             {
               "title": "Editează un eveniment",
               "steps": [
-                "«Evenimente» → «Editează» pe rândul lui.",
+                "«Alergări» → «Editează» pe rândul lui.",
                 "Un card închis spune pe linia lui ce lipsește, pe limbi. Deschide cardul și schimbă ce trebuie.",
                 "Scrie în «Română» și în «English»: un text opțional se scrie în ambele limbi sau în niciuna.",
                 "Jos, în cardul «Salvare», la un eveniment publicat bifează «Am înțeles că modific conținut publicat.».",
@@ -6291,7 +6305,7 @@
             {
               "title": "Scara de dificultate a clubului",
               "steps": [
-                "«Evenimente» → «Editează» → cardul «Ce fel de eveniment»: alegi «Dificultate» (categoria) și, alături, «Nivelul» — unul din cele trei ale categoriei.",
+                "«Alergări» → «Editează» → cardul «Ce fel de eveniment»: alegi «Dificultate» (categoria) și, alături, «Nivelul» — unul din cele trei ale categoriei.",
                 "Scara are 15 niveluri, în ordine: ușor 1–3, mediu 4–6, greuț 7–9, greu 10–12, foarte greu 13–15. Pe site, pastila arată doar categoria, „Mediu”; punctele indicatorului arată nivelul din categorie.",
                 "Ce înseamnă fiecare categorie și nivel: apasă semnul de întrebare de lângă «Dificultate» sau «Nivelul».",
                 "Nivelul în celelalte categorii: primul când traseul e la capătul ușor al categoriei, al treilea când e aproape de următoarea (mai lung, mai abrupt, noaptea, noroi). Nu știi? Cel din mijloc.",
@@ -6323,28 +6337,28 @@
             {
               "title": "Publică un eveniment sau scoate-l de pe site",
               "steps": [
-                "«Evenimente» → «Editează» → cardul «Publicare».",
+                "«Alergări» → «Editează» → cardul «Publicare».",
                 "O ciornă: apasă «Publică» — trece pe site dintr-o apăsare, fără «Trimite spre verificare».",
                 "În fereastră apasă din nou «Publică». Ambele limbi apar împreună.",
                 "Lipsește ceva? Apare «Nu se poate publica încă», cu lista: completează, «Salvează», apoi «Publică».",
-                "Mai multe deodată: pe lista «Evenimente» bifează-le și apasă «Publică cele bifate».",
+                "Mai multe deodată: pe lista «Alergări» bifează-le și apasă «Publică cele bifate».",
                 "Ca să-l scoți de pe site: «Mută în ciornă». După ce a avut loc: «Arhivează»."
               ]
             },
             {
               "title": "Repetă un eveniment (o serie săptămânală)",
               "steps": [
-                "«Evenimente» → «Editează» → cardul «Recurență».",
+                "«Alergări» → «Editează» → cardul «Recurență».",
                 "Bifează «Repetă evenimentul», alege zilele și până când.",
                 "Apasă «Creează datele» și confirmă.",
-                "Site-ul creează singur datele noi, cu {horizon} înainte. Cele create ca ciornă apar pe lista «Evenimente» cu «Publică» pe rând; «Publică automat de acum» le publică singure de acum încolo.",
+                "Site-ul creează singur datele noi, cu {horizon} înainte. Cele create ca ciornă apar pe lista «Alergări» cu «Publică» pe rând; «Publică automat de acum» le publică singure de acum încolo.",
                 "O copie, nu o serie: pe listă, «Alte acțiuni» (⋮) → «Duplică». Copia e o ciornă."
               ]
             },
             {
               "title": "Deschide înscrierile la o cursă",
               "steps": [
-                "«Evenimente» → «Editează» → cardul «Participare și înscrieri».",
+                "«Alergări» → «Editează» → cardul «Participare și înscrieri».",
                 "«Modul de înscriere» → «Înscrieri pe site».",
                 "«Număr de locuri» și, lângă el, «Lista de așteptare»: «Nelimitată», «Limitată la un număr de locuri», cu câte persoane scrii tu, sau «Fără listă de așteptare». Sub «Limitată…», gol sau 0 o face nelimitată; doar «Fără listă de așteptare» închide lista. Sub ele, «Locurile din lista de așteptare se alocă automat»: «Da» dă fiecare loc eliberat sau adăugat primului de pe listă; «Nu», dacă vrei să alegi tu (vezi „Alege tu cine primește un loc eliberat”).",
                 "«Perioada de înscriere»: «Înscrierile se deschid» și «Înscrierile se închid».",
@@ -6357,7 +6371,7 @@
             {
               "title": "Alege tu cine primește un loc eliberat",
               "steps": [
-                "«Evenimente» → «Editează» pe rândul cursei → cardul «Participare și înscrieri».",
+                "«Alergări» → «Editează» pe rândul cursei → cardul «Participare și înscrieri».",
                 "La «Locurile din lista de așteptare se alocă automat» alege «Nu» și apasă «Salvează». Pe «Nu», un loc eliberat sau adăugat rămâne liber până îl dai tu.",
                 "Nu e nevoie să mărești «Număr de locuri»: dacă nu e niciun loc liber, «Trimite-i oferta» adaugă un loc suplimentar, după ce confirmi (capacitatea crește cu unu, iar jurnalul înscrierii spune cine l-a adăugat și pentru cine).",
                 "Cardul «Înscrierile primite» → «Coada de înscrieri»: pe rândul persoanei numite din lista de așteptare apasă «Trimite-i oferta». Același buton e și pe pagina înscrierii ei.",
@@ -6402,7 +6416,7 @@
               "title": "Invită pe cineva la un eveniment, pe email",
               "steps": [
                 "Pentru membri, parteneri și oaspeți: fiecare primește un email cu un link spre formular, cu numele și adresa deja completate.",
-                "«Evenimente» → «Editează» pe rândul cursei → cardul «Înscrierile primite» → «Trimite invitații»: se deschide secțiunea «Invitații» a listei.",
+                "«Alergări» → «Editează» pe rândul cursei → cardul «Înscrierile primite» → «Trimite invitații»: se deschide secțiunea «Invitații» a listei.",
                 "Bifează membrii din listă sau scrie alte persoane, câte una pe rând: numele, apoi adresa. Alege «Zile până expiră» și «Limba invitației» (pentru adresele noi); bifează «Pe lista de invitați speciali (nu ocupă un loc)» pentru organizatori, voluntari și pacemakeri. Se poate trimite și după închiderea înscrierilor, până la start.",
                 "«Trimite invitațiile» întreabă întâi: câte invitații, câte locuri libere și, pe o cursă plină, câte locuri suplimentare se adaugă și cât devine capacitatea.",
                 "Fiecare invitație ține un loc până la termen; dacă nu e acceptată, locul se eliberează singur. Persoana completează restul și semnează ea declarația.",
@@ -6423,7 +6437,7 @@
             {
               "title": "Anulează un eveniment",
               "steps": [
-                "«Evenimente» → «Editează» → cardul «Starea evenimentului» (jos, între cardurile care nu apar pe pagină).",
+                "«Alergări» → «Editează» → cardul «Starea evenimentului» (jos, între cardurile care nu apar pe pagină).",
                 "La «Starea evenimentului» alege «Anulat».",
                 "În cardul «Salvare» apare «Anulezi evenimentul»: scrie «Motivul anulării» în română și în engleză.",
                 "Bifează «Anunță participanții că evenimentul a fost anulat». Fără bifă nu pleacă niciun email.",
@@ -6471,7 +6485,7 @@
             {
               "title": "Retrimite declarația celor care nu au semnat",
               "steps": [
-                "«Evenimente» → «Editează» pe rândul cursei → cardul «Înscrierile primite».",
+                "«Alergări» → «Editează» pe rândul cursei → cardul «Înscrierile primite».",
                 "Deasupra cozii apasă «Retrimite declarația tuturor care nu au semnat». Butonul e gri când nu așteaptă nimeni: sub el scrie «Nimeni nu așteaptă semnarea declarației.»",
                 "Fereastra spune câți așteaptă semnarea și pe câți îi sare: pe cei al căror email cu declarația a plecat în ultima oră sau e încă în coadă, și pe cei ajunși la limita de retrimiteri. Citește, apoi apasă din nou «Retrimite declarația tuturor care nu au semnat».",
                 "Sus apare «La coadă:» cu câți primesc emailul și câți au fost săriți. Emailurile pleacă prin coada de trimitere, în ritmul ei (vezi „Emailurile întârzie sau Mailgun a refuzat”).",
@@ -6485,7 +6499,7 @@
             {
               "title": "Alocă numerele și marchează-le tipărite",
               "steps": [
-                "«Evenimente» → «Editează» → «Participare și înscrieri» → «Alocare și tipărire».",
+                "«Alergări» → «Editează» → «Participare și înscrieri» → «Alocare și tipărire».",
                 "Apasă «Alocă numerele» și confirmă: fiecare înscriere confirmată fără număr primește următorul număr liber; numerele date rămân.",
                 "«Înscrieri» → alege cursa → «Filtrează». Pe aceeași pagină descarci numerele netipărite, le tipărești, apoi apeși butonul care le marchează ca printate.",
                 "Numerele pentru tipar sunt câte două A5 pe o foaie A4 (vezi „Descarcă și tipărește numerele de concurs” la Organizator)."
@@ -6494,7 +6508,7 @@
             {
               "title": "Numere de rezervă pentru cine se înscrie la masă",
               "steps": [
-                "«Evenimente» → «Editează» → «Participare și înscrieri» → «Alocare și tipărire» → «Numere de rezervă pentru înscrierile de la fața locului».",
+                "«Alergări» → «Editează» → «Participare și înscrieri» → «Alocare și tipărire» → «Numere de rezervă pentru înscrierile de la fața locului».",
                 "La «Câte» scrie câte numere goale vrei, apoi apasă «Tipărește» și confirmă. Fereastra spune de la ce număr încep: de atunci nimeni înscris online nu le mai primește.",
                 "Apasă «Descarcă foaia» și tipărește-o. Fiecare număr are linia pentru nume goală; la masă se scrie numele cu markerul, iar formularul propune următorul număr liber.",
                 "Ai nevoie de ele din nou? «Retipărește rezervele libere (PDF)» pune pe foaie doar numerele încă nedate și nu rezervă altele."
@@ -6555,7 +6569,7 @@
             {
               "title": "Mulțumiri după cursă",
               "steps": [
-                "«Evenimente» → la «Starea» alege «Încheiate» și «Aplică» → «Editează» → «Înscrierile primite» → «Mulțumiri după cursă».",
+                "«Alergări» → la «Starea» alege «Încheiate» și «Aplică» → «Editează» → «Înscrierile primite» → «Mulțumiri după cursă».",
                 "La «Link (opțional)» pune adresa pozelor sau a rezultatelor.",
                 "Apasă «Trimite mulțumirile» și confirmă. Pleacă o singură dată, la toți cei marcați prezenți."
               ]
@@ -6591,7 +6605,8 @@
                 "«Echipa» → «Adaugă o persoană»: «Adresă de email», «Nume», «Rol» (Voluntar pentru masă), «Limbă preferată».",
                 "Apasă «Adaugă» și confirmă. Persoana primește invitația pe email și își alege parola.",
                 "Nu a primit-o: pe rândul ei, «Retrimite invitația» → «Trimite acum, fără să aștepte trecerea programată».",
-                "Alt rol: «Schimbă rolul». A plecat din echipă: «Retrage accesul»."
+                "Alt rol: «Schimbă rolul». A plecat din echipă: «Retrage accesul».",
+                "Magazinul fără rolul de Administrator: pe rândul colegului, bifează «Gestionează magazinul» și confirmă. Găsește «Magazin» în bara de sus; adresele membrilor nu le vede."
               ]
             },
             {
@@ -6684,10 +6699,10 @@
                 "Ce e în vigoare la fiecare text: capul cardului spune «În vigoare: versiunea…» sau «Nicio versiune în vigoare»; filtrele «În vigoare», «Înlocuite» și «Retrase» arată restul.",
                 "Fără termeni, notă și o declarație de cursă aprobate nu se poate înscrie nimeni. Pentru o cursă pe asfalt editorul alege declarația de asfalt, dacă e aprobată, altfel pe cea pentru eveniment montan. O alergare de grup oferă declarația doar dacă o bifează și dacă textul ei (asfalt sau teren accidentat) e aprobat.",
                 "Până aprobi nota nouă, lista publică de participanți arată doar confirmații; după aceea, lista de așteptare apare doar la evenimentele cu «Lista de așteptare e publică» bifat.",
-                "Coloana «BIB» din lista «Cine vine» (numărul de concurs) apare după ce aprobi nota de confidențialitate din șablonul nou. Mai întâi scrie-le celor deja înscriși: «Evenimente» → «Deschide» → cardul «Înscrierile primite» → «Trimite un mesaj participanților»; spune-le că numărul lor va apărea lângă nume și că, dacă nu vor, apasă «Nu vreau să apar pe lista de participanți & rezultate» în «Înscrierile mele» (numărul dispare odată cu numele).",
+                "Coloana «BIB» din lista «Cine vine» (numărul de concurs) apare după ce aprobi nota de confidențialitate din șablonul nou. Mai întâi scrie-le celor deja înscriși: «Alergări» → «Deschide» → cardul «Înscrierile primite» → «Trimite un mesaj participanților»; spune-le că numărul lor va apărea lângă nume și că, dacă nu vor, apasă «Nu vreau să apar pe lista de participanți & rezultate» în «Înscrierile mele» (numărul dispare odată cu numele).",
                 "Apoi aprobi nota: cardul «GDPR» → «Regenerează din șablon» → ciorna → «Salvează ciorna» → «Aprobă și publică». De atunci coloana arată numărul fiecărui confirmat care are număr, oricare ar fi nota sub care s-a înscris; un confirmat fără număr are „—”. «Sarcini» → «Club» are rândul ei până atunci.",
                 "Ciorne sau versiuni de care nu mai ai nevoie: bifează-le în tabel, apasă «Șterge versiunile bifate» și verifică lista. Doar ciorne: «Șterge ciornele» și confirmă. Cu o versiune aprobată în listă: la «Confirmarea» scrii textul cerut (de exemplu „DELETE 2”), la «Motivul» de ce, apoi «Șterge versiunile».",
-                "Declarațiile semnate la o alergare de grup, când semnatarul cere ștergerea: «Evenimente» → «Editează» la alergare → «Declarații semnate (alergare de grup)» → «Șterge mai multe deodată»: bifează-le, completează o dată «Motivul ștergerii», apasă «Șterge cele bifate» și confirmă. În jurnal rămân numele tău și motivul, nu și al celui care a semnat."
+                "Declarațiile semnate la o alergare de grup, când semnatarul cere ștergerea: «Alergări» → «Editează» la alergare → «Declarații semnate (alergare de grup)» → «Șterge mai multe deodată»: bifează-le, completează o dată «Motivul ștergerii», apasă «Șterge cele bifate» și confirmă. În jurnal rămân numele tău și motivul, nu și al celui care a semnat."
               ]
             },
             {
@@ -7428,8 +7443,11 @@
         "descriptionRo": "Descriere (Română)",
         "descriptionEn": "Descriere (English)",
         "descriptionHelp": "Material, mărimi, culoare — pe scurt.",
-        "price": "Prețul, în lei",
-        "priceHelp": "De exemplu 45 sau 45,50.",
+        "price": "Prețul",
+        "priceHelp": "De exemplu 45 sau 45,50; moneda e cea aleasă alături.",
+        "currency": "Moneda",
+        "currencyRon": "lei (RON)",
+        "currencyEur": "euro (EUR)",
         "variants": "Variante și stoc (opțional)",
         "variantsHelp": "Câte una pe rând, de exemplu „M: 10” sau „L” (fără limită). Cel mult {max} variante, {length} de caractere fiecare. Gol: o singură variantă.",
         "stock": "Stoc (fără variante)",
@@ -7486,10 +7504,12 @@
           "variant": "Varianta",
           "quantity": "Bucăți",
           "unitPrice": "Preț bucata",
+          "currency": "Monedă",
           "total": "Total",
           "status": "Starea",
           "note": "Nota"
-        }
+        },
+        "movedTo": "Magazinul e la „Magazin”, în bara de sus."
       }
     },
     "declarationHold": {
@@ -9468,7 +9488,9 @@
       "shopSettingsSaved": "Plata și adresa pentru comenzi au fost salvate.",
       "shopOrderPaid": "Comanda a fost marcată plătită. Membrul primește un email.",
       "shopOrderHandedOver": "Comanda a fost marcată predată.",
-      "shopOrderCancelled": "Comanda a fost anulată."
+      "shopOrderCancelled": "Comanda a fost anulată.",
+      "staffPermissionGranted": "Gata: poate gestiona magazinul.",
+      "staffPermissionRevoked": "Gata: nu mai gestionează magazinul."
     }
   },
   "Network": {
@@ -9721,7 +9743,7 @@
     "signOut": "Ieși din cont",
     "upcomingTitle": "Următoarele alergări",
     "upcomingEmpty": "Nicio alergare anunțată acum.",
-    "upcomingAll": "Toate evenimentele",
+    "upcomingAll": "Toate alergările",
     "eventsTitle": "Evenimente pentru membri",
     "codesTitle": "Coduri de reducere",
     "copyCode": "Copiază codul",

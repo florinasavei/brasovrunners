@@ -7,10 +7,12 @@ import type { ImageCrop } from "@/modules/content/rich-text/domain/schema";
 import { storedTeamPhotoCrop } from "@/modules/content/team/photo-crop";
 import { getStorage, objectKey } from "@/modules/media/storage";
 import { isUuid } from "@/shared/ids";
+import type { ShopCurrency } from "./domain";
 
 /**
  * The members' shop (§683), read. The catalogue and the orders are read by the backoffice
- * («Pagini» → «Membri» → «Magazin», behind `canReadShop`) and by the members' zone, behind the
+ * (the top-bar section «Magazin», behind `canReadShop` — a reader of the participant list or a
+ * holder of «Gestionează magazinul», §687) and by the members' zone, behind the
  * account (`canOpenMembersZone`) — never by a public page, the public cache, a feed or a sitemap.
  */
 
@@ -24,7 +26,9 @@ export type AdminShopProduct = {
   titleEn: string;
   descriptionRo: string | null;
   descriptionEn: string | null;
+  /** In the minor unit of `currency` (§686). */
   priceBani: number;
+  currency: ShopCurrency;
   photoAssetId: string | null;
   photo: ShopPhoto | null;
   visible: boolean;
@@ -70,6 +74,7 @@ const PRODUCT_COLUMNS = {
   descriptionRo: shopProducts.descriptionRo,
   descriptionEn: shopProducts.descriptionEn,
   priceBani: shopProducts.priceBani,
+  currency: shopProducts.currency,
   photoAssetId: shopProducts.photoMediaAssetId,
   keyPrefix: mediaAssets.keyPrefix,
   width: mediaAssets.width,
@@ -105,6 +110,7 @@ export async function listProductsForAdmin<T extends Record<string, unknown>>(db
     descriptionRo: row.descriptionRo,
     descriptionEn: row.descriptionEn,
     priceBani: row.priceBani,
+    currency: row.currency,
     photoAssetId: row.photoAssetId,
     photo: photoOf(row),
     visible: row.visible,
@@ -136,7 +142,9 @@ export type MembersShopProduct = {
   id: string;
   title: string;
   description: string | null;
+  /** In the minor unit of `currency`, shown in that currency (§686). */
   priceBani: number;
+  currency: ShopCurrency;
   photo: ShopPhoto | null;
   /** Each variant and whether any is left: a sold-out variant is shown and not offered. */
   variants: { id: string; label: string | null; soldOut: boolean }[];
@@ -160,6 +168,7 @@ export async function listProductsForMembers<T extends Record<string, unknown>>(
     title: locale === "en" ? row.titleEn : row.titleRo,
     description: row.descriptionRo && row.descriptionEn ? (locale === "en" ? row.descriptionEn : row.descriptionRo) : null,
     priceBani: row.priceBani,
+    currency: row.currency,
     photo: photoOf(row),
     variants: (variants.get(row.id) ?? []).map((variant) => ({ id: variant.id, label: variant.label, soldOut: variant.stock !== null && variant.stock <= 0 })),
   }));
@@ -176,6 +185,7 @@ export async function listOrdersOfMember<T extends Record<string, unknown>>(db: 
       variantLabel: shopOrders.variantLabel,
       quantity: shopOrders.quantity,
       unitPriceBani: shopOrders.unitPriceBani,
+      currency: shopOrders.currency,
       note: shopOrders.note,
       status: shopOrders.status,
       createdAt: shopOrders.createdAt,
@@ -242,6 +252,7 @@ export async function listOrdersForAdmin<T extends Record<string, unknown>>(db: 
       variantLabel: shopOrders.variantLabel,
       quantity: shopOrders.quantity,
       unitPriceBani: shopOrders.unitPriceBani,
+      currency: shopOrders.currency,
       note: shopOrders.note,
       status: shopOrders.status,
       cancelledBy: shopOrders.cancelledBy,

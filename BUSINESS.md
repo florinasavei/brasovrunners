@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.86-2026-10-10 -->
+<!-- PROJECT_BASELINE: BR-V2.88-2026-10-10 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V2.86-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.88-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -696,6 +696,17 @@ sign-in with that address. Nobody outside the list can sign in at all.
 A superadmin cannot change their own role or remove their own access, and the club can never be
 left without a superadmin: those refusals exist so the club cannot lock itself out of its own
 backoffice.
+
+**Permissions per person, beside the roles (`DECISIONS.md` §687).** Some jobs do not fit a rung:
+the first is running the members' shop without being an administrator. Rather than a new role —
+which would hand the job to every role above it, and could not be combined with being the
+organizer — such a job is a permission given to one person: «Gestionează magazinul» is the first.
+Only a colleague with a backoffice role below the one that already includes it may be given it
+(a volunteer, a copywriter, an organizer, a technical helper — never a member, and an admin has it
+by rank); it is given and taken away on the team page by whoever may manage that person, never by
+the person themselves, and every change is recorded. Changing the person's role to one that may
+not hold it takes it away. A permission opens the job and nothing more: it is never a way to a
+member's or a participant's address.
 
 Participants are not application roles. Having permission to write articles does not grant access to participant data.
 

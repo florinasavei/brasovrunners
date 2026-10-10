@@ -56,6 +56,9 @@ const PRODUCT = {
   visible: true,
 };
 
+/** The CSV's header in Romanian, as the route builds it from the messages; the currency column after the unit price (§686). */
+const CSV_HEADER = { number: "Nr.", date: "Data", member: "Membru", email: "Email", product: "Produs", variant: "Varianta", quantity: "Bucăți", unitPrice: "Preț", currency: "Monedă", total: "Total", status: "Starea", note: "Nota" };
+
 describe("§683 the members' shop", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
@@ -367,7 +370,7 @@ describe("§683 the members' shop", () => {
     const clubRow = rows.find((row) => row.messageType === "SHOP_ORDER_CLUB_NOTICE")!;
     const club = await renderOutboxMessage({ ...clubRow, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
     expect(club.subject).toContain("Ana Exemplu");
-    expect(club.text).toContain("/admin/pages/members#shop-orders");
+    expect(club.text).toContain("/admin/shop#shop-orders");
     expect(club.text).not.toContain("membru@example.org");
 
     await moveOrderByClub(db, { actor: admin, orderId: placed.id, verb: "pay", now: NOW });
@@ -395,10 +398,9 @@ describe("§683 the members' shop", () => {
     expect(await countOrdersForAdmin(db, { status: null, productId: null })).toBe(2);
     expect(await listOrdersForAdmin(db, { status: null, productId: null }, 1)).toHaveLength(1);
     const rows = await listOrdersForAdmin(db, { status: null, productId: null });
-    const header = { number: "Nr.", date: "Data", member: "Membru", email: "Email", product: "Produs", variant: "Varianta", quantity: "Bucăți", unitPrice: "Preț", total: "Total", status: "Starea", note: "Nota" };
     const word = (status: string) => status;
-    const withEmail = buildOrdersCsv(header, rows, { locale: "ro", withEmail: true, statusWord: word });
-    const without = buildOrdersCsv(header, rows, { locale: "ro", withEmail: false, statusWord: word });
+    const withEmail = buildOrdersCsv(CSV_HEADER, rows, { locale: "ro", withEmail: true, statusWord: word });
+    const without = buildOrdersCsv(CSV_HEADER, rows, { locale: "ro", withEmail: false, statusWord: word });
     expect(withEmail).toContain("membru@example.org");
     expect(without).not.toContain("membru@example.org");
     expect(without).not.toContain("Email");
@@ -406,6 +408,52 @@ describe("§683 the members' shop", () => {
     expect(withEmail).toContain("'=HYPERLINK(1)");
     expect(withEmail.startsWith("﻿")).toBe(true);
     expect(withEmail.split("\r\n")).toHaveLength(3);
+  });
+
+  it("a product priced in euro is shown as euro everywhere, and an order keeps the currency it was placed in (§686)", async () => {
+    const product = await createProduct(db, { actor: admin, fields: { ...PRODUCT, price: "12,34 €", currency: "EUR" }, now: NOW });
+    expect(product).toMatchObject({ priceBani: 1234, currency: "EUR" });
+    // The select absent from the post (an older form, a script): lei. A currency outside the two is refused, naming the box.
+    const plain = await createProduct(db, { actor: admin, fields: { ...PRODUCT, titleRo: "Buff", titleEn: "Buff", variants: "", stock: "" }, now: NOW });
+    expect(plain.currency).toBe("RON");
+    await expect(createProduct(db, { actor: admin, fields: { ...PRODUCT, currency: "USD" }, now: NOW })).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["currency"] });
+    expect((await listProductsForAdmin(db)).map((row) => [row.titleRo, row.currency])).toEqual([
+      ["Tricou exemplu", "EUR"],
+      ["Buff", "RON"],
+    ]);
+    const audit = await db.select().from(auditLogs).where(eq(auditLogs.entityType, "shop_product"));
+    expect(JSON.stringify(audit.map((row) => row.metadataJson))).not.toContain("1234");
+
+    const zone = renderToStaticMarkup(await MembersShop({ products: await listProductsForMembers(db, "ro"), orders: [], payment: null, shopOpen: true, outcome: null, locale: "ro" }));
+    expect(zone).toContain("12,34\u00A0€");
+    expect(zone).toContain("45 lei");
+    const zoneEn = renderToStaticMarkup(await MembersShop({ products: await listProductsForMembers(db, "en"), orders: [], payment: null, shopOpen: true, outcome: null, locale: "en" }));
+    expect(zoneEn).toContain("€12.34");
+
+    const placed = await order(member, product.id, (await variantsOf(product.id)).M.id, 2);
+    expect(placed).toMatchObject({ currency: "EUR", unitPriceBani: 1234 });
+    // The product goes back to lei at a new price: the order stays in euro, at its own price.
+    await saveProduct(db, { actor: admin, productId: product.id, expectedVersion: product.version, fields: { ...PRODUCT, price: "60", currency: "RON" }, now: NOW });
+    const [mine] = await listOrdersOfMember(db, member.id);
+    expect(mine).toMatchObject({ currency: "EUR", unitPriceBani: 1234 });
+    const orders = renderToStaticMarkup(
+      await MembersShop({ products: await listProductsForMembers(db, "ro"), orders: await listOrdersOfMember(db, member.id), payment: null, shopOpen: true, outcome: null, locale: "ro" }),
+    );
+    expect(orders).toContain("24,68\u00A0€");
+    expect(orders).toContain("60 lei");
+
+    const rows = await listOrdersForAdmin(db, { status: null, productId: null });
+    expect(rows[0].currency).toBe("EUR");
+    const csv = buildOrdersCsv(CSV_HEADER, rows, { locale: "en", withEmail: false, statusWord: (status) => status });
+    const [header, line] = csv.slice(1).split("\r\n");
+    expect(header).toBe("Nr.,Data,Membru,Produs,Varianta,Bucăți,Preț,Monedă,Total,Starea,Nota");
+    expect(line).toContain(",€12.34,EUR,€24.68,");
+
+    const [placedRow] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "SHOP_ORDER_PLACED"));
+    const message = await renderOutboxMessage({ ...placedRow, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
+    expect(message.text).toContain("Tricou exemplu — M × 2 — 24,68\u00A0€");
+    expect(message.text).toContain("Sample t-shirt — M × 2 — €24.68");
+    expect(message.text).not.toMatch(/\d lei/);
   });
 
   it("a member's account removed: the order stays with the name, without the address", async () => {

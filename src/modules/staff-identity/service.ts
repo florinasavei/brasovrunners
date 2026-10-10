@@ -7,18 +7,35 @@ import { type DeliveryChoice, markedForNow } from "@/modules/notifications/domai
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { assertRoomToSendNow, outboxIdsForKey } from "@/modules/notifications/send-at-once";
 import { DomainError } from "@/shared/errors/domain-error";
-import { canAssignRole, canManageMember, canManageStaff, isBackofficeRole, isSuperadmin, STAFF_ROLES, type StaffRole } from "./domain/roles";
+import {
+  canAssignRole,
+  canGrantPermission,
+  canHoldPermission,
+  canManageMember,
+  canManageStaff,
+  isBackofficeRole,
+  isSuperadmin,
+  STAFF_PERMISSIONS,
+  STAFF_ROLES,
+  type StaffPermission,
+  type StaffRole,
+} from "./domain/roles";
 import { MEMBER_ROWS_MAX, type MemberRow } from "./domain/member-rows";
 import { STAFF_ROLE_LABEL } from "./domain/staff-labels";
 import {
   countSuperadministrators,
+  deleteStaffPermissions,
   deleteStaffUser,
   findStaffUserByEmail,
   findStaffUserById,
   findStaffUsersAmong,
+  insertStaffPermission,
   insertStaffUser,
+  listStaffPermissions,
   listStaffUsers,
+  lockStaffUserRole,
   normalizeStaffEmail,
+  type StaffAccount,
   updateStaffUserRole,
 } from "./repository";
 
@@ -90,12 +107,63 @@ export async function assertMayManageAccount<T extends Record<string, unknown>>(
   return member;
 }
 
+/** The team, each row with the permissions granted to that person (§687) — «Echipa»'s ticks and chips. */
 export async function listStaff<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: StaffUser,
-): Promise<StaffUser[]> {
+): Promise<StaffAccount[]> {
   assertAdministrator(actor);
-  return listStaffUsers(db);
+  const [rows, grants] = await Promise.all([listStaffUsers(db), listStaffPermissions(db)]);
+  return rows.map((row) => ({ ...row, permissions: grants.get(row.id) ?? new Set<StaffPermission>() }));
+}
+
+/**
+ * «Gestionează magazinul» ticked or unticked on a colleague's row of «Echipa» (§687).
+ *
+ * Asserted here whatever the page offered (BR-REQ-060-01): the team is the actor's to manage
+ * (`canManageStaff`), the colleague's row is theirs to touch and the colleague's role may hold the
+ * permission (`canGrantPermission` — never a club member, never an Administrator, who has it by
+ * rank, never a Superadministrator's row for an Administrator), and never the actor's own row, as a
+ * role change is not. Idempotent: a second grant is the row already there and audits nothing; a
+ * revoke of a grant that is not there is nothing done and audits nothing. Each change that happened
+ * is one audit row — the colleague's id and the permission, never a name or an address.
+ */
+export async function setStaffPermission<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: StaffUser,
+  input: { targetId: string; permission: StaffPermission; on: boolean; now?: Date },
+): Promise<{ changed: boolean }> {
+  assertAdministrator(actor);
+  const target = await findStaffUserById(db, input.targetId);
+  if (!target) throw new DomainError("NOT_FOUND", "no such staff user");
+  if (target.id === actor.id) throw new DomainError("FORBIDDEN", "an administrator cannot change their own permissions");
+  if (!canGrantPermission(actor, target.role, input.permission)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not give ${input.permission} to a ${target.role} (§687)`);
+  }
+  const now = input.now ?? new Date();
+  return db.transaction(async (tx) => {
+    // The role again, under the row's lock: a role change between the check above and this
+    // write would otherwise leave a grant its cleanup never saw (§687).
+    const lockedRole = await lockStaffUserRole(tx, target.id);
+    if (!lockedRole) throw new DomainError("NOT_FOUND", "no such staff user");
+    if (input.on && !canGrantPermission(actor, lockedRole, input.permission)) {
+      throw new DomainError("FORBIDDEN", `role ${actor.role} may not give ${input.permission} to a ${lockedRole} (§687)`);
+    }
+    const changed = input.on
+      ? await insertStaffPermission(tx, { staffUserId: target.id, permission: input.permission, grantedByStaffUserId: actor.id, now })
+      : (await deleteStaffPermissions(tx, target.id, input.permission)).length > 0;
+    if (changed) {
+      await recordAuditEvent(tx, {
+        actorStaffUserId: actor.id,
+        action: input.on ? "staff.permission.granted" : "staff.permission.revoked",
+        entityType: "staff_user",
+        entityId: target.id,
+        metadata: input.on ? { staffUserId: target.id, permission: input.permission } : { staffUserId: target.id, permission: input.permission, reason: "tick" },
+        now,
+      });
+    }
+    return { changed };
+  });
 }
 
 export async function inviteStaffUser<T extends Record<string, unknown>>(
@@ -298,9 +366,31 @@ export async function changeStaffRole<T extends Record<string, unknown>>(
     throw new DomainError("CONFLICT", "the last superadministrator cannot be demoted");
   }
 
-  const updated = await updateStaffUserRole(db, targetId, role);
-  if (!updated) throw new DomainError("NOT_FOUND", "no such staff user");
-  return updated;
+  /*
+    The person's grants go with a role that may not hold them (§687), in the same transaction as the
+    role: a colleague made a club member keeps no grant (a member is no staff, §524), and one made an
+    Administrator has the permission by rank — a grant left behind would come back, unseen, on a
+    later demotion. Each removal is audited with the reason `role_change`.
+  */
+  const now = new Date();
+  return db.transaction(async (tx) => {
+    const updated = await updateStaffUserRole(tx, targetId, role);
+    if (!updated) throw new DomainError("NOT_FOUND", "no such staff user");
+    for (const permission of STAFF_PERMISSIONS) {
+      if (canHoldPermission(role, permission)) continue;
+      const removed = await deleteStaffPermissions(tx, targetId, permission);
+      if (removed.length === 0) continue;
+      await recordAuditEvent(tx, {
+        actorStaffUserId: actor.id,
+        action: "staff.permission.revoked",
+        entityType: "staff_user",
+        entityId: targetId,
+        metadata: { staffUserId: targetId, permission, reason: "role_change" },
+        now,
+      });
+    }
+    return updated;
+  });
 }
 
 /**
