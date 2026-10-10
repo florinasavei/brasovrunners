@@ -475,7 +475,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       feedbackDescribed: await noticeDescribesFeedbackForms(db, now),
       feedbackBranchesOn: branchesSwitchedOn(await readFeedbackSettings(db)).length,
       feedbackNamedDescribed: await noticeDescribesFeedbackFormsNamed(db, now),
-      // §NNN: the members' shop, described by the notice in force; the row waits only while a product is visible.
+      // §683: the members' shop, described by the notice in force; the row waits only while a product is visible.
       shopDescribed: await noticeDescribesMembersShop(db, now),
       visibleShopProducts: await countVisibleProducts(db),
       gmailFallbackDescribed: await noticeDescribesGmailFallback(db, now),

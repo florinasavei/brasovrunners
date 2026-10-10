@@ -1,5 +1,5 @@
 /**
- * What the members' zone says after «Comandă» or «Anulează comanda» (§NNN): one code in the address
+ * What the members' zone says after «Comandă» or «Anulează comanda» (§683): one code in the address
  * (`?shop=`), a closed set read strictly — anything else is nothing — and turned into a sentence by
  * the page (`Members.shop.outcome.<code>`). Never a name, a note or a number in the URL.
  */

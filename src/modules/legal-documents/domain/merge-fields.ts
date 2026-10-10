@@ -133,7 +133,7 @@ export const EVENT_INVITATIONS_MERGE_FIELD = "eventInvitations";
 export const FEEDBACK_FORMS_MERGE_FIELD = "feedbackForms";
 
 /**
- * The privacy notice's marker for the members' shop (§NNN): the zone's section name, quoted, in the
+ * The privacy notice's marker for the members' shop (§683): the zone's section name, quoted, in the
  * reader's language (`content/shop/notice-words.ts`) — „Magazinul clubului” / “The club's shop” — in
  * section 5's paragraph that says what an order keeps (the member, the order, the note), why (to fulfil
  * it, art. 6(1)(b)), for how long, and that payment is outside the site. The gate, §562's and §613's
@@ -541,7 +541,7 @@ export function describesFeedbackForms(body: unknown): boolean {
 }
 
 /**
- * Whether a privacy notice describes the members' shop (§NNN): it names `{{membersShop}}`. The gate
+ * Whether a privacy notice describes the members' shop (§683): it names `{{membersShop}}`. The gate
  * for the zone's «Magazinul clubului» and for every order, and what `/admin/tasks`' row `shopNotice`
  * reads. Pure.
  */

@@ -5,7 +5,7 @@ import { locale } from "./locale";
 import { staffUsers } from "./staff-users";
 
 /**
- * «Magazin» — the members' shop (§NNN; the owner, 2026-10-08): the club's merchandise — t-shirts,
+ * «Magazin» — the members' shop (§683; the owner, 2026-10-08): the club's merchandise — t-shirts,
  * buffs, stickers — offered to its members inside the members' zone (§524), ordered there, and paid
  * outside the site, by bank transfer or cash; an Administrator marks an order paid. The owner,
  * 2026-10-09: «Payment is not on the site». No card, no payment provider, no amount charged: a

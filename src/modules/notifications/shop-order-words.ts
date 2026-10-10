@@ -2,7 +2,7 @@ import type { EmailLocale } from "@/infrastructure/email/adapter";
 import { formatLei, orderTotalBani } from "@/modules/content/shop/domain";
 
 /**
- * The members' shop's three emails (§NNN), the order's facts in each half's own language — the
+ * The members' shop's three emails (§683), the order's facts in each half's own language — the
  * platform's lines, kept whoever wrote the message's words (the club's text replaces only the subject
  * and the body, §247): the bold line with the order, then the payment words the club set on «Magazin»
  * and the note the member wrote. Read at the send from the order's own copy (`render.ts`), so an

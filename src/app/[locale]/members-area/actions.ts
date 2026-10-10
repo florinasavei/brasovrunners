@@ -11,7 +11,7 @@ import { getCurrentAccount } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 
 /**
- * The members' zone's two verbs (§NNN): «Comandă» and a member's own «Anulează comanda». The door is
+ * The members' zone's two verbs (§683): «Comandă» and a member's own «Anulează comanda». The door is
  * the account (§524, `getCurrentAccount`) — the club's member accounts, never a participant account
  * (AGENTS.md §10.3) — and the service asserts `canOpenMembersZone` again, the shop's notice gate for
  * an order, and that a cancelled order is the member's own (BR-REQ-060-01). Each answer is a redirect

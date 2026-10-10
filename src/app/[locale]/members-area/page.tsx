@@ -91,7 +91,7 @@ async function codesOrNone(now: Date): Promise<MembersDiscountCode[]> {
 }
 
 /**
- * «Magazinul clubului» and «Comenzile mele» (§NNN): read here, per request, behind the account — the
+ * «Magazinul clubului» and «Comenzile mele» (§683): read here, per request, behind the account — the
  * products only while the privacy notice in force names `{{membersShop}}` in every language, the
  * member's own orders always. Nothing while the database is away, like the codes.
  */
@@ -251,7 +251,7 @@ export default async function MembersAreaPage({ params, searchParams }: Props) {
       {/* «Coduri de reducere» (§552): the partners' codes, for the members alone (§517). */}
       {codes.length > 0 && <MemberCodes codes={codes} locale={locale} />}
 
-      {/* «Magazinul clubului» and «Comenzile mele» (§NNN): behind the notice, paid outside the site. */}
+      {/* «Magazinul clubului» and «Comenzile mele» (§683): behind the notice, paid outside the site. */}
       {((shop.open && shop.products.length > 0) || shop.orders.length > 0) && (
         <MembersShop products={shop.products} orders={shop.orders} payment={shop.payment} shopOpen={shop.open} outcome={shopOutcome} outcomeAtOrders={shopOutcomeAtOrders} locale={locale} />
       )}

@@ -1,7 +1,7 @@
 import type { ShopOrderStatus } from "@/db/schema/shop";
 
 /**
- * The members' shop (§NNN), pure: the price in words, an order's total, what an order does to a
+ * The members' shop (§683), pure: the price in words, an order's total, what an order does to a
  * stock, and which status may follow which. No database, no request — the service asserts each of
  * these again on the server, under the row's lock (`orders.ts`), and the screens only read them.
  */
@@ -12,7 +12,7 @@ export const ORDER_QUANTITY_MAX = 5;
 export const ORDER_NOTE_MAX = 300;
 /**
  * How long an identical order — the same member, variant, quantity and note, not cancelled — counts as
- * the same press (§NNN): a double tap, or a form sent again, answers with the order already placed and
+ * the same press (§683): a double tap, or a form sent again, answers with the order already placed and
  * takes nothing twice. A member who wants the same thing twice orders again after this.
  */
 export const ORDER_REPEAT_WINDOW_MS = 10_000;
@@ -158,7 +158,7 @@ export function variantKey(label: string | null): string {
 }
 
 /**
- * The stock a save writes for a variant that already existed (§NNN): the typed number when the
+ * The stock a save writes for a variant that already existed (§683): the typed number when the
  * Administrator changed it from what the form loaded, and otherwise the stock as it stands now — so
  * an order placed while the form was open is never undone by a save that did not touch the number.
  */

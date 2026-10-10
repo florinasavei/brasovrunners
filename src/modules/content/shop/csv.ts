@@ -4,7 +4,7 @@ import { formatLei, orderTotalBani } from "./domain";
 import type { AdminOrder } from "./repository";
 
 /**
- * «Descarcă CSV» of the shop's orders (§NNN): the list's columns, the filter's rows, in the reader's
+ * «Descarcă CSV» of the shop's orders (§683): the list's columns, the filter's rows, in the reader's
  * language — the registrations export's rules (`registrations/csv.ts`): every cell through the one
  * `csvCell` (no formula, quotes doubled), CRLF between lines, a BOM first for Excel on Windows (§550),
  * dates ISO 8601. The member's address only for a reader who already sees members' addresses (§550's

@@ -9,7 +9,7 @@ import { getStorage, objectKey } from "@/modules/media/storage";
 import { isUuid } from "@/shared/ids";
 
 /**
- * The members' shop (§NNN), read. The catalogue and the orders are read by the backoffice
+ * The members' shop (§683), read. The catalogue and the orders are read by the backoffice
  * («Pagini» → «Membri» → «Magazin», behind `canReadShop`) and by the members' zone, behind the
  * account (`canOpenMembersZone`) — never by a public page, the public cache, a feed or a sitemap.
  */

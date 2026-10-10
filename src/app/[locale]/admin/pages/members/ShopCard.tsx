@@ -46,7 +46,7 @@ const STATUSES: readonly ShopOrderStatus[] = ["PLACED", "PAID", "HANDED_OVER", "
 const VERB_GLYPH = { pay: "confirm", handOver: "checkIn", cancel: "cancel" } as const;
 
 /**
- * «Magazin» / "Shop" (§NNN): the members' shop on «Pagini» → «Membri», under the discount codes —
+ * «Magazin» / "Shop" (§683): the members' shop on «Pagini» → «Membri», under the discount codes —
  * the catalogue, how the club is paid and who hears of an order, and the orders.
  *
  * Read by whoever reads the participant list (`canReadShop`, §289): the Organizer reads all of it;
@@ -395,7 +395,7 @@ function ProductRow({
  * descriptions both or neither, §352), the price in lei, the variants one per line with their stock,
  * the «Stoc» box for a product without variants, «Vizibil în magazin», and the photo through «Echipa»'s
  * own picture field (§459, §541: upload or «Din galerie», then the crop box). The stock the form loaded
- * travels with it, so a save that did not touch a number leaves it as it stands now (§NNN).
+ * travels with it, so a save that did not touch a number leaves it as it stands now (§683).
  */
 function ProductFields({
   product,
@@ -633,7 +633,7 @@ function OrderRow({
   showEmail,
 }: {
   order: AdminOrder;
-  /** The list's filter, posted with each verb so the answer lands on the same list, open (§NNN). */
+  /** The list's filter, posted with each verb so the answer lands on the same list, open (§683). */
   query: OrdersQuery;
   locale: Locale;
   words: Words;

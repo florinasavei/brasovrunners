@@ -14,7 +14,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 const CSV_LIMIT = 100_000;
 
 /**
- * «Descarcă CSV» on «Magazin»'s orders (§NNN): the filter the list shows (`orderStatus`,
+ * «Descarcă CSV» on «Magazin»'s orders (§683): the filter the list shows (`orderStatus`,
  * `orderProduct`), in the reader's language (`lang`), as a UTF-8 file with a BOM — the newsletter
  * list's route (§550), the registrations export's rules.
  *

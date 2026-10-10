@@ -11,13 +11,13 @@ import { createProduct, saveProduct } from "@/modules/content/shop/service";
 import { isDomainError } from "@/shared/errors/domain-error";
 
 /**
- * §NNN — the members' shop never oversells, proven with real connections racing.
+ * §683 — the members' shop never oversells, proven with real connections racing.
  *
  * A variant with a stock of one and ten members pressing «Comandă» at the same moment, each on its
  * own connection: the variant row is locked (`SELECT … FOR UPDATE`) in the order's own transaction,
  * so the ten queue on it, the first takes the one, and the nine after it read a stock of nothing and
  * are refused whole (CONFLICT). Then the stock comes back exactly once when that order is cancelled
- * twice at once. A member's double tap — the same order twice at once — is one order (§NNN), and a
+ * twice at once. A member's double tap — the same order twice at once — is one order (§683), and a
  * cancellation racing a save that deletes the order's variant takes the locks in the same order as the
  * save (product, variant, order) and so never deadlocks. PGlite, one connection, cannot show any of it
  * (`tests/helpers/db.ts`).
@@ -25,7 +25,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error("tests/concurrency needs a real PostgreSQL: set DATABASE_URL and migrate first.");
 
-describe("§NNN ten members order the last one at once", () => {
+describe("§683 ten members order the last one at once", () => {
   const pool = new pg.Pool({ connectionString: DATABASE_URL, max: 20 });
   const db = drizzle(pool);
   const NOW = new Date("2026-10-10T09:00:00.000Z");

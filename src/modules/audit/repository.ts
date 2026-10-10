@@ -498,7 +498,7 @@ export type AuditAction =
   | "member_code.moved"
   | "member_code.deleted"
   /**
-   * «Magazin» — the members' shop (§NNN): a product added, written, moved, archived (it had orders)
+   * «Magazin» — the members' shop (§683): a product added, written, moved, archived (it had orders)
    * or deleted; the shop's settings saved; an order placed by a member, marked paid, handed over or
    * cancelled; the orders' CSV downloaded. The row's id and the shape of the change — never a title,
    * a note, a name or an address.
@@ -561,7 +561,7 @@ export type RecordAuditInput = {
     | "staff_user"
     // `member_discount_code` for a code of the members' zone (§552).
     | "member_discount_code"
-    // `shop_product` and `shop_order` for the members' shop (§NNN).
+    // `shop_product` and `shop_order` for the members' shop (§683).
     | "shop_product"
     | "shop_order";
   /** Null only for an act about no single row — an export of every event's registrations (§322). */

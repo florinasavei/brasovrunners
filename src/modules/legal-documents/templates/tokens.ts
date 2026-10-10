@@ -217,7 +217,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: FEEDBACK_FORMS_NAMED_MERGE_FIELD,
     example: inBoth((locale) => feedbackFormsNamedClause(locale)),
   },
-  // The privacy notice's marker for the members' shop (§NNN): the zone section's name, and the switch —
+  // The privacy notice's marker for the members' shop (§683): the zone section's name, and the switch —
   // the zone draws the shop, and an order is taken, only while it is named (`describesMembersShop`).
   {
     token: `{{${MEMBERS_SHOP_MERGE_FIELD}}}`,

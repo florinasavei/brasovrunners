@@ -33,7 +33,7 @@ const CONTROL_SX = {
 } as const;
 
 /**
- * «Magazinul clubului» and «Comenzile mele» in the members' zone (§NNN), drawn on the server with
+ * «Magazinul clubului» and «Comenzile mele» in the members' zone (§683), drawn on the server with
  * plain forms and native controls — no client island, so an order works with JavaScript off.
  *
  * The page calls this only behind the account (`canOpenMembersZone`), and draws the shop only while
@@ -227,7 +227,7 @@ function ProductCard({ product, locale, t }: { product: MembersShopProduct; loca
             </Typography>
             <Box component="textarea" id={`shop-note-${id}`} name="note" rows={2} maxLength={ORDER_NOTE_MAX} sx={{ ...CONTROL_SX, py: 1, resize: "vertical" }} />
           </Box>
-          {/* The pending button (§NNN): a second tap while the order is in flight is held; the server answers a repeat with the same order. */}
+          {/* The pending button (§683): a second tap while the order is in flight is held; the server answers a repeat with the same order. */}
           <Box data-testid="members-shop-order">
             <SubmitButton label={t("shop.order")} pendingLabel={t("shop.ordering")} size="medium">
               <ShoppingCartIcon />

@@ -138,7 +138,7 @@ describe("owner tasks", () => {
     expect(stateOf({ ...LAUNCHED, feedbackNamedDescribed: false }, "feedbackNotice")).toBe("done");
   });
 
-  it("§NNN: the shop's notice row is open while a product is visible and the notice is silent, done once it names the shop, absent otherwise", () => {
+  it("§683: the shop's notice row is open while a product is visible and the notice is silent, done once it names the shop, absent otherwise", () => {
     expect(stateOf({ ...LAUNCHED, shopDescribed: false }, "shopNotice")).toBe("open");
     expect(stateOf(LAUNCHED, "shopNotice")).toBe("done");
     expect(stateOf({ ...LAUNCHED, visibleShopProducts: 0 }, "shopNotice")).toBe("done");

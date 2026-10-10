@@ -11,7 +11,7 @@ import { stockToSave, variantKey } from "./domain";
 import { type ProductFields, productFieldsSchema } from "./fields";
 
 /**
- * «Magazin»'s catalogue (§NNN): add, write, move, delete or archive a product. Every write is the
+ * «Magazin»'s catalogue (§683): add, write, move, delete or archive a product. Every write is the
  * Administrator's and the Superadministrator's (`canManageShop`), asserted here whatever the screen
  * offered (BR-REQ-060-01), and leaves an audit row with the product's id — never its words.
  * Nothing here expires the public cache: the shop is on no public page.

@@ -112,7 +112,7 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
     descriptionEn: t("members.codes.descriptionEn"),
     link: t("members.codes.link"),
     validUntil: t("members.codes.validUntil"),
-    // The shop's boxes (§NNN), by the names their forms post.
+    // The shop's boxes (§683), by the names their forms post.
     titleRo: t("members.shop.titleRo"),
     titleEn: t("members.shop.titleEn"),
     price: t("members.shop.price"),
@@ -124,7 +124,7 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
     ordersTo: t("members.shop.ordersTo"),
   });
   /*
-    «Magazin» (§NNN): read only for a role that reads the shop (`canReadShop`, the Organizer up); the
+    «Magazin» (§683): read only for a role that reads the shop (`canReadShop`, the Organizer up); the
     Redactor and the Tehnic, who read this page's texts, are given no part of it — not even a count.
   */
   const now = new Date();
@@ -242,7 +242,7 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
         mayEditWords={canEditDiscountCodeWords(actor.role)}
       />
 
-      {/* «Magazin» (§NNN): the members' shop — the Organizer reads it, the Administrator runs it. */}
+      {/* «Magazin» (§683): the members' shop — the Organizer reads it, the Administrator runs it. */}
       {shop && (
         <ShopCard
           products={shop[0]}

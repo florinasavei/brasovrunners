@@ -842,7 +842,7 @@ async function renderRow(
     payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: "/admin/legal/new" })}`;
   }
   /*
-    The members' shop's three (§NNN): the order's id is the payload — no participant, no token. The
+    The members' shop's three (§683): the order's id is the payload — no participant, no token. The
     facts are read here, at the send, from the order's own copy (title, variant, price, note) and the
     shop's payment words as they stand now; the member's name greets the member. An order gone (it
     never is: orders are not deleted) withdraws the message. The member's button opens the members'

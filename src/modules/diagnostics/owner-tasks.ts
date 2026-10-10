@@ -249,11 +249,11 @@ export type OwnerTaskInputs = {
    */
   feedbackNamedDescribed: boolean;
   /**
-   * Does the notice in force, in every language, describe the members' shop (§NNN,
+   * Does the notice in force, in every language, describe the members' shop (§683,
    * `noticeDescribesMembersShop`)? Until it does, the members' zone draws no shop and an order is refused.
    */
   shopDescribed: boolean;
-  /** How many products members would see in the shop (§NNN): the row waits only while there is one. */
+  /** How many products members would see in the shop (§683): the row waits only while there is one. */
   visibleShopProducts: number;
   /**
    * Does the notice in force, in every language, say a message may leave through the club's Gmail
@@ -543,7 +543,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       });
     }
     /*
-      The members' shop (§NNN), «Spune-ne ceva»'s shape: open while a product is visible and the notice
+      The members' shop (§683), «Spune-ne ceva»'s shape: open while a product is visible and the notice
       in force does not name `{{membersShop}}` (the club put something in the shop and members see
       nothing: the club must hear why), done by itself the day a notice naming it takes effect, and
       absent while the shop is empty and the notice is silent.

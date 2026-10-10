@@ -3,7 +3,7 @@ import { ordersFilterParams } from "@/modules/content/shop/repository";
 import { readShopOutcome, readShopOutcomeAtOrders } from "@/modules/content/shop/zone-outcome";
 
 // BR-REQ-060-01 — the members' shop: what a verb on the orders list carries back, and where the
-// members' zone draws an answer (§NNN).
+// members' zone draws an answer (§683).
 describe("the orders list keeps its filter across a verb", () => {
   const product = "0b6c1e9e-2f7a-4c1d-9a51-3e2f4d5c6b7a";
 

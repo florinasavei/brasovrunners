@@ -116,7 +116,7 @@ async function backToCodes(
 }
 
 /**
- * The orders list's filter, posted back by a verb (§NNN) and read through the address's own parser —
+ * The orders list's filter, posted back by a verb (§683) and read through the address's own parser —
  * a status from the closed set, a product id that is a UUID, anything else dropped — so the answer
  * lands on the list the Administrator was reading, filtered, and its fold open.
  */
@@ -191,7 +191,7 @@ export async function deleteDiscountCodeAction(_previous: FormOutcome | null, fo
   return backToCodes(form, outcome);
 }
 
-// --- «Magazin» — the members' shop (§NNN) --------------------------------------------------------
+// --- «Magazin» — the members' shop (§683) --------------------------------------------------------
 
 /**
  * The shop's writes, the codes' shape: a refused product or settings save returns, so every box comes

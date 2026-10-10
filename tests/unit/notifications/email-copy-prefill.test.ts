@@ -83,7 +83,7 @@ const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
   // The outage grace's two (§657): the window's instants and counts are their paragraphs, not fields.
   UNREACHABLE_WINDOW_OPENED: [],
   UNREACHABLE_WINDOW_CLOSED: [],
-  // The members' shop (§NNN): the order is the platform's bold line and lines after the words, not fields.
+  // The members' shop (§683): the order is the platform's bold line and lines after the words, not fields.
   SHOP_ORDER_PLACED: [],
   SHOP_ORDER_PAID: [],
   SHOP_ORDER_CLUB_NOTICE: [],

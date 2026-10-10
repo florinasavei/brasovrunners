@@ -131,7 +131,7 @@ const referencedSomewhere = sql`(
   OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inFaqIntro})
   -- A picture in the members' pages (§524), kept in their platform setting.
   OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inMembersPage})
-  -- A product's photo in the members' shop (§NNN), by id, hidden and archived products included:
+  -- A product's photo in the members' shop (§683), by id, hidden and archived products included:
   -- an archived product's row stays for its orders, and a hidden one is being prepared.
   OR EXISTS (SELECT 1 FROM ${shopProducts} WHERE ${shopProducts.photoMediaAssetId} = ${mediaAssets.id})
   -- A picture in a newsletter sent (§550): the letter is in the subscribers' inboxes, which load
@@ -347,7 +347,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .select({ assetId: mediaAssets.id })
     .from(mediaAssets)
     .innerJoin(platformSettings, inMembersPage);
-  // A product's photo in the members' shop (§NNN): the members' page holds the shop, so it reads as that page.
+  // A product's photo in the members' shop (§683): the members' page holds the shop, so it reads as that page.
   const inShop = await db
     .select({ assetId: shopProducts.photoMediaAssetId })
     .from(shopProducts)

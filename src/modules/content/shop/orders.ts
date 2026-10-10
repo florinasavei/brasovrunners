@@ -12,7 +12,7 @@ import { orderFieldsSchema } from "./fields";
 import { readShopSettings } from "./settings";
 
 /**
- * The members' shop's orders (§NNN). A member orders from the members' zone, behind their own
+ * The members' shop's orders (§683). A member orders from the members' zone, behind their own
  * account (§524, §662 — never a participant account, AGENTS.md §10.3); an Administrator marks the
  * order paid, handed over, or cancels it. Payment is outside the site: nothing here takes, stores or
  * sends a card number or a sum to anyone.
@@ -40,7 +40,7 @@ export function shopOrderEmailKey(orderId: string, what: "placed" | "paid" | "cl
 }
 
 /**
- * A member's order. `noticeDescribes` is the gate the zone reads (§NNN, the §562 pattern): until the
+ * A member's order. `noticeDescribes` is the gate the zone reads (§683, the §562 pattern): until the
  * privacy notice in force names `{{membersShop}}` in every language, the action refuses the order as
  * the zone shows no shop — the caller reads it (`noticeDescribesMembersShop`) and passes it in.
  */

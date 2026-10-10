@@ -14,7 +14,7 @@ import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/temp
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the members' shop: the catalogue kept by an Administrator on «Pagini» → «Membri» →
+ * §683 — the members' shop: the catalogue kept by an Administrator on «Pagini» → «Membri» →
  * «Magazin», orders from the members' zone behind the member's own account, payment outside the site.
  *
  * Proven on real PostgreSQL (PGlite): an order with and without a stock, an order larger than the
@@ -56,7 +56,7 @@ const PRODUCT = {
   visible: true,
 };
 
-describe("§NNN the members' shop", () => {
+describe("§683 the members' shop", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

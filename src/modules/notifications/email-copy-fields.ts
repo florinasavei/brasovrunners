@@ -349,7 +349,7 @@ const NO_EVENT: ReadonlySet<EmailMessageType> = new Set([
   "LEGAL_TEMPLATES_CHANGED",
   "UNREACHABLE_WINDOW_OPENED",
   "UNREACHABLE_WINDOW_CLOSED",
-  // The members' shop (§NNN): about an order, no event.
+  // The members' shop (§683): about an order, no event.
   "SHOP_ORDER_PLACED",
   "SHOP_ORDER_PAID",
   "SHOP_ORDER_CLUB_NOTICE",

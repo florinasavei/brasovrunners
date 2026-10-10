@@ -2,7 +2,7 @@ import en from "../../../../messages/en.json";
 import ro from "../../../../messages/ro.json";
 
 /**
- * What the privacy notice's `{{membersShop}}` becomes (§NNN): the shop section's own name in the
+ * What the privacy notice's `{{membersShop}}` becomes (§683): the shop section's own name in the
  * members' zone, quoted, in that language — „Magazinul clubului” / “The club's shop” — read from the
  * catalogue the section's heading reads (`Members.shop.title`), so the approved sentence names what a
  * member sees. Outside a request, like `feedback/notice-words.ts`, for the legal pages, the declaration

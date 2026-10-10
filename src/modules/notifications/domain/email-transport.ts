@@ -80,7 +80,7 @@ export const EMAIL_GROUP_OF: Readonly<Record<EmailMessageType, EmailGroup>> = {
   // the club's own domain, the very thing that may be gone when the first one leaves.
   UNREACHABLE_WINDOW_OPENED: "club",
   UNREACHABLE_WINDOW_CLOSED: "club",
-  // The members' shop (§NNN): the member's two answer their own order, as a runner's confirmation does;
+  // The members' shop (§683): the member's two answer their own order, as a runner's confirmation does;
   // the club's notice goes to the club's own mailbox.
   SHOP_ORDER_PLACED: "confirmations",
   SHOP_ORDER_PAID: "confirmations",

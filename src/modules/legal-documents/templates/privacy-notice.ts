@@ -103,7 +103,7 @@
  * needs an art. 9(2) condition as well — (f), legal claims, or (a), explicit consent given by sending,
  * are the candidates. The lawyer decides the words, in both languages; the code reads only the marker.
  *
- * `{{membersShop}}` at the end of section 5 (§NNN) is the members' zone's shop section, quoted, in the
+ * `{{membersShop}}` at the end of section 5 (§683) is the members' zone's shop section, quoted, in the
  * paragraph that says what an order keeps (the member, the order, the note), why (art. 6(1)(b), and
  * 6(1)(c) for the accounting records), that payment is outside the site and no card data is handled,
  * and how long (until the hand-over, then the period the law requires for accounting records); and the

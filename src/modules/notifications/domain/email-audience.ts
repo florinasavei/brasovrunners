@@ -56,7 +56,7 @@ export const EMAIL_AUDIENCE = {
   EVENT_INVITATION: "public",
   UNREACHABLE_WINDOW_OPENED: "staff",
   UNREACHABLE_WINDOW_CLOSED: "staff",
-  // The members' shop (§NNN): to a member's account, and to the club's mailbox for orders — Echipa's
+  // The members' shop (§683): to a member's account, and to the club's mailbox for orders — Echipa's
   // people and the club, about no registration: never a participant's message.
   SHOP_ORDER_PLACED: "staff",
   SHOP_ORDER_PAID: "staff",

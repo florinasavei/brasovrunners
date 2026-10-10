@@ -9,7 +9,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { shopSettingsSchema } from "./fields";
 
 /**
- * The shop's two settings (§NNN), one `platform_settings` row (a key-value store, no migration):
+ * The shop's two settings (§683), one `platform_settings` row (a key-value store, no migration):
  * «Cum se plătește» — the club's words for paying outside the site, both languages or neither, shown
  * under every order and in the confirmation email — and «Cine primește comenzile», the address the
  * club's notice of each order goes to, or none (then only the list says it). Written by an

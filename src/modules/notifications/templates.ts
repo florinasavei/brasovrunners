@@ -1003,7 +1003,7 @@ export type TemplateData = {
    */
   unreachableWindow?: UnreachableWindowFacts;
   /**
-   * The members' shop's order (§NNN), from the order's own copy at the send: the bold line, the
+   * The members' shop's order (§683), from the order's own copy at the send: the bold line, the
    * payment words and the note, each half in its own language (`shop-order-words.ts`).
    */
   shopOrder?: ShopOrderFacts;
@@ -1719,7 +1719,7 @@ const T = {
       body: (d: TemplateData) => windowClosedBody("ro", d.unreachableWindow),
       action: "Deschide «Sarcini»",
     },
-    // The members' shop (§NNN): to the member, the order received — and how to pay, outside the site.
+    // The members' shop (§683): to the member, the order received — and how to pay, outside the site.
     shopOrderPlaced: {
       subject: (d: TemplateData) => `Comanda ta a fost primită: ${shopOrderTitle("ro", d.shopOrder)}`,
       facts: (d: TemplateData) => (d.shopOrder ? { line: shopOrderLine("ro", d.shopOrder), links: [] } : undefined),
@@ -1736,7 +1736,7 @@ const T = {
       body: () => ["Clubul a primit plata pentru comanda ta. Produsul ți-l predă un organizator, la o alergare sau unde vă înțelegeți."],
       action: "Deschide zona membrilor",
     },
-    // To «Cine primește comenzile» (§NNN): who ordered what; the list, behind the sign-in, has the rest.
+    // To «Cine primește comenzile» (§683): who ordered what; the list, behind the sign-in, has the rest.
     shopOrderClubNotice: {
       subject: (d: TemplateData) => `Comandă nouă în magazin: ${shopOrderTitle("ro", d.shopOrder)} — ${d.shopOrder?.memberName ?? "un membru"}`,
       greeting: () => "Salut,",
@@ -2423,7 +2423,7 @@ const T = {
       body: (d: TemplateData) => windowClosedBody("en", d.unreachableWindow),
       action: "Open «Tasks»",
     },
-    // The members' shop (§NNN): to the member, the order received — and how to pay, outside the site.
+    // The members' shop (§683): to the member, the order received — and how to pay, outside the site.
     shopOrderPlaced: {
       subject: (d: TemplateData) => `Your order has been received: ${shopOrderTitle("en", d.shopOrder)}`,
       facts: (d: TemplateData) => (d.shopOrder ? { line: shopOrderLine("en", d.shopOrder), links: [] } : undefined),
@@ -2440,7 +2440,7 @@ const T = {
       body: () => ["The club has received the payment for your order. An organizer will hand it over to you, at a run or wherever you agree."],
       action: "Open the members' area",
     },
-    // To «Cine primește comenzile» (§NNN): who ordered what; the list, behind the sign-in, has the rest.
+    // To «Cine primește comenzile» (§683): who ordered what; the list, behind the sign-in, has the rest.
     shopOrderClubNotice: {
       subject: (d: TemplateData) => `New order in the shop: ${shopOrderTitle("en", d.shopOrder)} — ${d.shopOrder?.memberName ?? "a member"}`,
       greeting: () => "Hello,",
@@ -3381,7 +3381,7 @@ export function buildTemplateContent(
         : []),
       // Where the person stood in the line when this was rendered (§629), after the body whoever wrote it.
       ...(messageType === "WAITLIST_JOINED" && data.waitlistStanding ? [copy.waitlistPosition(data.waitlistStanding)] : []),
-      // The members' shop (§NNN): how to pay (the member's two) and the order's note, after the body whoever wrote it.
+      // The members' shop (§683): how to pay (the member's two) and the order's note, after the body whoever wrote it.
       ...((messageType === "SHOP_ORDER_PLACED" || messageType === "SHOP_ORDER_PAID" || messageType === "SHOP_ORDER_CLUB_NOTICE") && data.shopOrder
         ? shopOrderLines(locale, data.shopOrder, { payment: messageType === "SHOP_ORDER_PLACED" })
         : []),
@@ -3514,7 +3514,7 @@ export function buildTemplateContent(
         // …nor the outage grace's two (§657): to the Administrators, about no event and nobody's data.
         messageType === "UNREACHABLE_WINDOW_OPENED" ||
         messageType === "UNREACHABLE_WINDOW_CLOSED" ||
-        // …nor the members' shop's three (§NNN): about an order, no event and no registration.
+        // …nor the members' shop's three (§683): about an order, no event and no registration.
         messageType === "SHOP_ORDER_PLACED" ||
         messageType === "SHOP_ORDER_PAID" ||
         messageType === "SHOP_ORDER_CLUB_NOTICE"

@@ -131,7 +131,7 @@ export function canEditDiscountCodeWords(role: StaffRole): boolean {
 }
 
 /**
- * **«Magazin» — the members' shop (§NNN).** The catalogue, the payment words, the recipient of the
+ * **«Magazin» — the members' shop (§683).** The catalogue, the payment words, the recipient of the
  * club's order notice, and every verb on an order — marked paid, handed over, cancelled — are the
  * Administrator's and the Superadministrator's: an order is money the club collects outside the site,
  * the threshold of changing a registration (`canManageRegistrations`).
@@ -150,7 +150,7 @@ export function canReadShop(role: StaffRole): boolean {
 }
 
 /**
- * The ordering member's address beside an order (§NNN): only for the roles that already read the
+ * The ordering member's address beside an order (§683): only for the roles that already read the
  * club's members' and subscribers' addresses (§550, `canSendNewsletter`) — the same rule, read once.
  */
 export function canSeeShopMemberAddresses(role: StaffRole): boolean {

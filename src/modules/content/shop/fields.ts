@@ -5,7 +5,7 @@ import { isUuid } from "@/shared/ids";
 import { ORDER_NOTE_MAX, ORDER_QUANTITY_MAX, parseLeiToBani, parseVariantLines, type VariantLine, variantKey } from "./domain";
 
 /**
- * What the club types for a product of «Magazin» (§NNN), and what a member posts with an order.
+ * What the club types for a product of «Magazin» (§683), and what a member posts with an order.
  *
  * A product: the title in Romanian **and** English — both required at every save, a product with no
  * name in one language is not a product the other half of the site can show (§28, §352) — the
@@ -117,7 +117,7 @@ export function loadedStockJson(variants: readonly { label: string | null; stock
 }
 
 /**
- * «Cum se plătește» and «Cine primește comenzile» (§NNN): the payment words both languages or neither
+ * «Cum se plătește» and «Cine primește comenzile» (§683): the payment words both languages or neither
  * (§352), plain text — an IBAN, «sau cash la alergare» — and one address, or none.
  */
 export const shopSettingsSchema = z

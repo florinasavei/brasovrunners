@@ -108,7 +108,7 @@ export const emailMessageType = pgEnum("email_message_type", [
   // given back, how many deadlines moved, which claims were not revived, and what to check.
   // Once per window (a `pings` one too), to the same people.
   "UNREACHABLE_WINDOW_CLOSED",
-  // The members' shop (§NNN): «Comanda ta a fost primită» to the member — the order and the club's
+  // The members' shop (§683): «Comanda ta a fost primită» to the member — the order and the club's
   // payment words; payment is outside the site. The order's id in the payload; no token.
   "SHOP_ORDER_PLACED",
   // «Comanda ta e plătită»: an Administrator marked the order paid. To the member, no token.

@@ -20,11 +20,11 @@ import { readShopOutcome } from "@/modules/content/shop/zone-outcome";
 import { shopOrderLine, shopOrderLines } from "@/modules/notifications/shop-order-words";
 
 /**
- * §NNN — the members' shop, pure: the price in words, an order's total, the stock rule, which status
+ * §683 — the members' shop, pure: the price in words, an order's total, the stock rule, which status
  * may follow which and for whom, the variants box, the privacy notice's marker that gates the shop
  * (BR-REQ-060-01: the member's verbs and the club's are different sets), and the email's lines.
  */
-describe("§NNN the price in lei", () => {
+describe("§683 the price in lei", () => {
   it("is kept in bani and read as people write it", () => {
     expect(parseLeiToBani("45")).toBe(4500);
     expect(parseLeiToBani("45,5")).toBe(4550);
@@ -44,7 +44,7 @@ describe("§NNN the price in lei", () => {
   });
 });
 
-describe("§NNN the stock", () => {
+describe("§683 the stock", () => {
   it("is taken whole or not at all, and an unlimited variant takes nothing", () => {
     expect(stockAfterOrder(null, 5)).toBeNull();
     expect(stockAfterOrder(3, 3)).toBe(0);
@@ -63,7 +63,7 @@ describe("§NNN the stock", () => {
   });
 });
 
-describe("§NNN an order's status", () => {
+describe("§683 an order's status", () => {
   it("is paid and handed over by the club only, handed over only once paid", () => {
     expect(nextOrderStatus("PLACED", "pay", "CLUB")).toBe("PAID");
     expect(nextOrderStatus("PLACED", "pay", "MEMBER")).toBeNull();
@@ -89,7 +89,7 @@ describe("§NNN an order's status", () => {
   });
 });
 
-describe("§NNN the variants box", () => {
+describe("§683 the variants box", () => {
   it("reads one variant per line with an optional stock, and the «Stoc» box when empty", () => {
     expect(parseVariantLines("S\nM: 10\n\nXL: 0", "")).toEqual({
       ok: true,
@@ -118,7 +118,7 @@ describe("§NNN the variants box", () => {
   });
 });
 
-describe("§NNN the privacy notice's marker gates the shop", () => {
+describe("§683 the privacy notice's marker gates the shop", () => {
   it("is named in section 5 of both templates, and read by the gate", () => {
     expect(MEMBERS_SHOP_MERGE_FIELD).toBe("membersShop");
     for (const body of [privacyNoticeRo, privacyNoticeEn]) {
@@ -146,7 +146,7 @@ describe("§NNN the privacy notice's marker gates the shop", () => {
   });
 });
 
-describe("§NNN the zone's outcome and the email's lines", () => {
+describe("§683 the zone's outcome and the email's lines", () => {
   it("reads only a code of the closed set from the address", () => {
     expect(readShopOutcome("placed")).toBe("placed");
     expect(readShopOutcome(["CONFLICT", "x"])).toBe("CONFLICT");

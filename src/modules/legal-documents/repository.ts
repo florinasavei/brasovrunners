@@ -297,7 +297,7 @@ export async function noticeDescribesFeedbackFormsNamed<T extends Record<string,
 }
 
 /**
- * Whether the privacy notice in force describes the members' shop (§NNN, `describesMembersShop`) — in
+ * Whether the privacy notice in force describes the members' shop (§683, `describesMembersShop`) — in
  * every language, like `noticeDescribesFeedbackForms`: one shop serves both, and a member in either was
  * told only what their language's notice says. For the members' zone (drawn per request, behind the
  * account, never cached), the order action and `/admin/tasks`.

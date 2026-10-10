@@ -64,7 +64,7 @@ const NOT_WAITED_FOR: ReadonlySet<EmailMessageType> = new Set<EmailMessageType>(
   "UNREACHABLE_WINDOW_CLOSED",
   // An invitation (§647): sent by an Administrator's press, to somebody who is on no page waiting for it.
   "EVENT_INVITATION",
-  // The members' shop (§NNN): the zone shows the order itself, whatever the email; nobody on a public page waits.
+  // The members' shop (§683): the zone shows the order itself, whatever the email; nobody on a public page waits.
   "SHOP_ORDER_PLACED",
   "SHOP_ORDER_PAID",
   "SHOP_ORDER_CLUB_NOTICE",
