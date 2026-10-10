@@ -53,6 +53,9 @@ yarn docs:land    land a batch's documents: a dispatcher's manifest, or `--tree`
                   own `.release/*.json` entries (`.release/README.md`)
 yarn ship         merge a landed PR into qa, release it and wait for production; from a phone,
                   the label `ship` on the PR runs all of it on GitHub (`docs/RUNBOOKS.md`)
+yarn handoff      where everything stands, for a session taking over from one that stopped
+                  (credits, a limit): baselines, open PRs, unmerged branches, the next migration
+                  number, local work not on GitHub (`docs/DISPATCHER.md` § When a session stops)
 ```
 
 Full list with explanations: [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md). Do not write a
@@ -64,6 +67,9 @@ process. Concurrency tests must not use it; see `docs/DEVELOPMENT.md`.
 
 ## Read order
 
+−1. **Taking over from a session that stopped** (credits, a usage limit, a closed laptop)? Run
+   `yarn handoff` first, then `docs/QUEUE.md` § «Where things stand» and `docs/DISPATCHER.md`
+   § When a session stops.
 0. [`docs/VIBECODING.md`](./docs/VIBECODING.md) — one page: the loop, where things live, the rules that bite.
 1. This file.
 2. `WEEKEND.md` — the pilot this replaced, kept for its reasoning, not its scope table.
