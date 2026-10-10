@@ -275,7 +275,7 @@ describe("§687 «Gestionează magazinul» — a permission per person", () => {
       expect(await statusOf(ShopSectionLayout({ children: "shop" }))).toBeNull();
     });
 
-    it("«Magazin» draws «Adaugă o comandă pentru un membru» for the grant's holder, with the member accounts; the Organizer, who reads only, gets none (§NNN)", async () => {
+    it("«Magazin» draws «Adaugă o comandă pentru un membru» for the grant's holder, with the member accounts; the Organizer, who reads only, gets none (§690)", async () => {
       const shopCardOf = async () =>
         elements(await AdminShopPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({}) })).find((element) => element.type === ShopCard);
       await setStaffPermission(db, admin, { targetId: volunteer.id, permission: "shop.manage", on: true, now: NOW });

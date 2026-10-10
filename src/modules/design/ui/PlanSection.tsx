@@ -21,7 +21,7 @@ const STATUS_COLOR: Record<DecisionStatus | PhaseStatus, "default" | "success" |
 };
 
 /**
- * «Planul redesign-ului» (§NNN): two sentences — where the full text is, and that the side-by-side
+ * «Planul redesign-ului» (§692): two sentences — where the full text is, and that the side-by-side
  * of today's look and the new one comes with phase 1 — then the twelve decisions and the seven
  * phases from `redesign-plan.ts`, each with its status; the words of every row from the catalogue,
  * in both languages.

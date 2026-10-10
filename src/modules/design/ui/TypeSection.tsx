@@ -29,7 +29,7 @@ const DIACRITICS = "ș ț ă â î Ș Ț Ă Â Î 0123456789";
 const firstFamily = (fontFamily: unknown) => (typeof fontFamily === "string" ? fontFamily.split(",")[0].trim() : "—");
 
 /**
- * «Tipografie» (§NNN): every variant of the theme rendered as itself with a sample sentence in the
+ * «Tipografie» (§692): every variant of the theme rendered as itself with a sample sentence in the
  * reader's language, and beside it the family, the weight and the size read from
  * `theme.typography[variant]`; then the faces with the Romanian letters in each; then the two font
  * roles of `FONT`. Headings are drawn as paragraphs so the page's own outline stays its own.

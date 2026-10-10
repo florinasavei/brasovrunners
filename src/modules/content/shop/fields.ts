@@ -166,7 +166,7 @@ export type OrderFields = z.output<typeof orderFieldsSchema>;
 const ticked = z.union([z.boolean(), z.string()]).optional().transform((value) => value === true || value === "on" || value === "true");
 
 /**
- * What the club posts on «Adaugă o comandă pentru un membru» (§NNN): the member account, the product
+ * What the club posts on «Adaugă o comandă pentru un membru» (§690): the member account, the product
  * and the variant as one choice («<productId>:<variantId>», the select's value), one to five, a note,
  * and the two ticks — whether the member is emailed, and whether the order is marked paid at once.
  * A refusal names its box.

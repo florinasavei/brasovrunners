@@ -5721,7 +5721,7 @@
         "weight": "weight",
         "size": "size",
         "faces": "The loaded faces",
-        "facesNote": "The Romanian letters in each face. Facón has none: the logotype stays BRASOV RUNNERS, without the ș.",
+        "facesNote": "The Romanian letters in each face. Facón has none: the logotype stays in capitals, without the ș.",
         "faceNames": {
           "roboto": "Roboto — body and headings",
           "inter": "Inter — the theme lab",
@@ -5806,7 +5806,7 @@
         "select": "Surface",
         "optionAsphalt": "Asphalt",
         "optionTrail": "Trail",
-        "checkbox": "I want to appear on the participant list.",
+        "checkbox": "I want to appear on the participants & results list.",
         "checkboxHelp": "The name only, and only if you tick.",
         "alerts": "Alerts",
         "alert": {

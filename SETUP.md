@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.88-2026-10-10 -->
+<!-- PROJECT_BASELINE: BR-V2.89-2026-10-10 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.88-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.89-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1952,7 +1952,7 @@ bank transfer or in cash, and an Administrator — or the colleague who runs the
    members' addresses (only the Organizer and the Administrators do, by role); an Administrator
    needs no tick — the role includes it. Untick it to take it back; a colleague made a member
    loses it by themselves.
-6. **Type in the orders collected outside the site** (`DECISIONS.md` §NNN) — a supplier's sheet,
+6. **Type in the orders collected outside the site** (`DECISIONS.md` §690) — a supplier's sheet,
    say. Each person in it needs an account on «Echipa» first (a member, or a colleague); then,
    on «Magazin», under «Comenzi», the fold «Adaugă o comandă pentru un membru»: the member from the list, the
    product and its variant (a sold-out variant is offered greyed), how many, a note if any, and two

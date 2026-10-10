@@ -6,7 +6,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 export const dynamic = "force-dynamic";
 
 /**
- * The gate of «Sistemul de design» (§NNN), above the `loading.tsx` boundary for the reason the
+ * The gate of «Sistemul de design» (§692), above the `loading.tsx` boundary for the reason the
  * staff section's layout gives: a `notFound()` raised after the shell has flushed cannot change the
  * status any more, and BR-REQ-060-01 asks for a refusal, not a 200 with a not-found body. Whoever
  * reads the club's content — the Redactor and up (`canReadContent`) — reads the look; a volunteer

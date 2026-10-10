@@ -5721,7 +5721,7 @@
         "weight": "grosimea",
         "size": "mărimea",
         "faces": "Fețele încărcate",
-        "facesNote": "Literele românești în fiecare față. Facón nu le are: logotipul rămâne BRASOV RUNNERS, fără ș.",
+        "facesNote": "Literele românești în fiecare față. Facón nu le are: logotipul rămâne cu majuscule, fără ș.",
         "faceNames": {
           "roboto": "Roboto — textul și titlurile",
           "inter": "Inter — laboratorul temei",
@@ -5805,8 +5805,8 @@
         "fieldRefused": "Scrie numele întreg.",
         "select": "Suprafața",
         "optionAsphalt": "Asfalt",
-        "optionTrail": "Trail",
-        "checkbox": "Vreau să apar pe lista participanților.",
+        "optionTrail": "Teren accidentat",
+        "checkbox": "Vreau să apar pe lista de participanți & rezultate.",
         "checkboxHelp": "Doar numele, doar dacă bifezi.",
         "alerts": "Alertele",
         "alert": {

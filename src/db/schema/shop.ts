@@ -153,7 +153,7 @@ export const shopOrders = pgTable(
     note: text("note"),
 
     /**
-     * Who placed it (§NNN): `MEMBER` — the member themself, from the zone — or `CLUB`, an Administrator
+     * Who placed it (§690): `MEMBER` — the member themself, from the zone — or `CLUB`, an Administrator
      * on «Adaugă o comandă pentru un membru», through the same locks and stock rule, in the member's
      * name. Every row from before the column is a member's own order.
      */

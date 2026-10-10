@@ -4,7 +4,7 @@ import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 
 /**
- * The design-system page's sections (§NNN), in the page's order: each an anchor the contents row
+ * The design-system page's sections (§692), in the page's order: each an anchor the contents row
  * points at and a heading, so a colleague lands on «Butoane» rather than scrolling for it. The ids
  * are the page's contract — the test asserts every one is on the page.
  */

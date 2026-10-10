@@ -56,7 +56,7 @@ export function usedHere(references: readonly { kind: string; id: string }[], sc
 // A newsletter sent (§550) is no place a picker chooses from: it keeps its pictures, and has no chip.
 export function pictureUseOf(kind: "album" | "page" | "event" | "team" | "teamIntro" | "teamBox" | "faq" | "membersPage" | "newsletter"): PictureUse | null {
   if (kind === "newsletter") return null;
-  // The page's introduction and a box under its chart (§NNN) are both «Echipa».
+  // The page's introduction and a box under its chart (§691) are both «Echipa».
   if (kind === "teamIntro" || kind === "teamBox") return "team";
   if (kind === "faq" || kind === "membersPage") return "page";
   return kind;

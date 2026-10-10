@@ -102,7 +102,7 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
     readTeamPageSettings(db),
     noticeDescribesTeamPage(db, new Date()),
   ]);
-  // «Răspunde în fața» (§NNN): every card by name, so a form may name any other card as its parent.
+  // «Răspunde în fața» (§691): every card by name, so a form may name any other card as its parent.
   const cardNames = members.map((member) => ({ id: member.id, name: member.name }));
   const mayEdit = canEditTeamPage(actor.role);
   const mayShow = canShowTeamMember(actor.role);
@@ -143,7 +143,7 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
     photoAssetId: t("team.photo"),
     introRoBody: t("team.introRo"),
     introEnBody: t("team.introEn"),
-    // The chart (§NNN): a card's sub-role, responsibilities, parent and placement, and a box's title and text.
+    // The chart (§691): a card's sub-role, responsibilities, parent and placement, and a box's title and text.
     subtitleRo: t("team.subtitleRo"),
     subtitleEn: t("team.subtitleEn"),
     responsibilitiesRo: t("team.responsibilitiesRo"),
@@ -291,7 +291,7 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
         </Stack>
       )}
 
-      {/* «Casetele paginii» (§NNN): the club's titled texts under the chart, in the discount codes' shape (§552). */}
+      {/* «Casetele paginii» (§691): the club's titled texts under the chart, in the discount codes' shape (§552). */}
       <BoxesCard boxes={boxes} locale={locale} words={t} cancel={words.cancel} messages={messages} rich={editing.rich} mayEdit={mayEdit} mayShow={mayShow} />
     </Stack>
   );
@@ -299,7 +299,7 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
 
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 
-/** A card as another card's possible parent: its id and the name the select shows (§NNN). */
+/** A card as another card's possible parent: its id and the name the select shows (§691). */
 type CardName = { id: string; name: string };
 
 /** What the rich-text editors and the links' rows need, translated once on the server (§474). */
@@ -585,7 +585,7 @@ function MemberFields({
 }: {
   scope: string;
   member: AdminTeamMember | null;
-  /** Every card by name — the choices of «Răspunde în fața» (§NNN), less this card itself. */
+  /** Every card by name — the choices of «Răspunde în fața» (§691), less this card itself. */
   cards: readonly CardName[];
   words: Words;
   photoLabels: TeamPhotoLabels;
@@ -599,7 +599,7 @@ function MemberFields({
   return (
     <Stack spacing={2}>
       {/* «Copiază și tradu tot: RO → EN» (§464, §482): this card's role, sub-role, responsibilities
-          (§NNN, line for line), words and link labels in English from the Romanian, in this card's
+          (§691, line for line), words and link labels in English from the Romanian, in this card's
           form alone — every card posts the same names (`translate/domain/fields.ts`). */}
       <TranslateAllButton />
       <RecallField
@@ -630,7 +630,7 @@ function MemberFields({
         />
       </Box>
       {/*
-        The organisational chart (§NNN): the one-line sub-role under the role, «Responsabilități» one
+        The organisational chart (§691): the one-line sub-role under the role, «Responsabilități» one
         per line, whom the card answers to (a native select of the other cards by name, «— nimeni, în
         vârf —» first) and where it sits against that card. Every pair both languages or neither (§352).
       */}

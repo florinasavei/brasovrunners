@@ -97,7 +97,7 @@ const inTeamBio = sql`(${names(sql`${teamMembers.bioRoJson}::text`)} OR ${names(
 const inTeamIntro = sql`(${platformSettings.key} = ${TEAM_PAGE_SETTING_KEY} AND ${names(sql`${platformSettings.value}::text`)})`;
 
 /**
- * Whether a box under the chart of «Echipa» carries the asset in its text, either language (§NNN):
+ * Whether a box under the chart of «Echipa» carries the asset in its text, either language (§691):
  * the partners' logos are pictures in that text, hidden boxes included — a box being prepared is
  * a box somebody is about to show.
  */
@@ -132,7 +132,7 @@ const referencedSomewhere = sql`(
   OR EXISTS (SELECT 1 FROM ${teamMembers} WHERE ${inTeamBio})
   -- A picture in the team page's introduction (§474), kept in its platform setting.
   OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inTeamIntro})
-  -- A picture in a box under the team page's chart (§NNN), by address, hidden boxes included.
+  -- A picture in a box under the team page's chart (§691), by address, hidden boxes included.
   OR EXISTS (SELECT 1 FROM ${teamPageBoxes} WHERE ${inTeamBox})
   -- A picture in an answer of «Întrebări frecvente» (§525), hidden questions included, and in
   -- the page's introduction.
@@ -235,7 +235,7 @@ export async function countMediaAssets<T extends Record<string, unknown>>(
   return row ?? { total: 0, unreferenced: 0, sweepable: 0 };
 }
 
-/** `teamBox` (§NNN): a box under the team page's chart, by its id, titled in the reader's language. */
+/** `teamBox` (§691): a box under the team page's chart, by its id, titled in the reader's language. */
 export type MediaReference = { kind: "album" | "page" | "event" | "team" | "teamIntro" | "teamBox" | "faq" | "membersPage" | "newsletter"; id: string; title: string | null };
 
 export type MediaAssetRow = {
@@ -347,7 +347,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .select({ assetId: mediaAssets.id })
     .from(mediaAssets)
     .innerJoin(platformSettings, inTeamIntro);
-  // A picture in a box under the team page's chart (§NNN): the box, titled in the reader's language.
+  // A picture in a box under the team page's chart (§691): the box, titled in the reader's language.
   const inTeamBoxes = await db
     .select({ assetId: mediaAssets.id, id: teamPageBoxes.id, title: locale === "en" ? teamPageBoxes.titleEn : teamPageBoxes.titleRo })
     .from(mediaAssets)

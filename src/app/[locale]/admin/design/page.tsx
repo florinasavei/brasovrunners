@@ -11,7 +11,7 @@ type Props = { params: Promise<{ locale: string }> };
 export const dynamic = "force-dynamic";
 
 /**
- * «Sistemul de design» / "Design system" (§NNN): the site's look as the code draws it — the
+ * «Sistemul de design» / "Design system" (§692): the site's look as the code draws it — the
  * tokens, the type, the shapes, the buttons, the pills, sample cards, every glyph — and the
  * redesign plan with a status per row. Reached from «Setări» → «Aspect»; read by whoever reads the
  * club's content (`canReadContent`), which the layout asserts for the status code and this page

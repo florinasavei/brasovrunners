@@ -15,12 +15,12 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Echipa» as an organisational chart, on real PostgreSQL (PGlite): whom a card answers to
+ * §691 — «Echipa» as an organisational chart, on real PostgreSQL (PGlite): whom a card answers to
  * (a stored card, never itself, never a circle), the children of a deleted parent, the public read
  * of the new pairs, and the page's boxes with §459's two gates, their audit rows and their pictures.
  * Fixtures say «Președinte» and «Rol A»: no person, no partner.
  */
-describe("§NNN the organisational chart and the page's boxes", () => {
+describe("§691 the organisational chart and the page's boxes", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   const staff: Partial<Record<StaffRole, StaffUser>> = {};

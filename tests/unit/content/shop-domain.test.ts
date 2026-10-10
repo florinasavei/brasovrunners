@@ -90,7 +90,7 @@ describe("§683, §686 the price, in lei or in euro", () => {
   });
 });
 
-describe("§NNN the club's order for a member, as the fold posts it", () => {
+describe("§690 the club's order for a member, as the fold posts it", () => {
   const product = "0f3a9f1e-6d1c-4e39-9d0b-7a8f2c4b5d61";
   const variant = "9b2d4c6e-8f1a-4b3c-a5d7-e9f0a1b2c3d4";
   const member = "6c1e2a3b-4d5f-4a6b-8c7d-9e0f1a2b3c4d";

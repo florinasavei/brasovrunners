@@ -20,7 +20,7 @@ import DesignSection, { Block, Code, ROW_SX } from "./section";
 const LEVELS = Array.from({ length: DIFFICULTY_LEVEL_COUNT }, (_, index) => index + 1);
 
 /**
- * «Pastile și glife» (§NNN): the route's pills built from the sample rows by `buildRoutePills` —
+ * «Pastile și glife» (§692): the route's pills built from the sample rows by `buildRoutePills` —
  * the same function the listing card and the backoffice list call, so the page cannot draw them in
  * another order — the fifteen difficulty gauges in a row, the card's marks, the calendar entry in
  * each state it has, and the listing's filter chips, ticked and not. Every glyph crosses to

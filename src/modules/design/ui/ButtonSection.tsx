@@ -13,7 +13,7 @@ const VARIANTS = ["contained", "outlined", "text"] as const;
 const SIZES = ["small", "medium", "large"] as const;
 
 /**
- * «Butoane» (§NNN). The public button is `ButtonLink` with its glyph as its first child — one icon
+ * «Butoane» (§692). The public button is `ButtonLink` with its glyph as its first child — one icon
  * file, imported here as a public page would (§498, §521), never `startIcon`, which from a Server
  * Component is an element handed to a client component (§370). The backoffice's are `GlyphButton`,
  * `GlyphSubmitButton` and `GlyphButtonLink`, which take the verb's glyph by name from

@@ -1,5 +1,5 @@
 /**
- * The house rules «Reguli» draws (§NNN), as data: each rule's id names its sentence in the
+ * The house rules «Reguli» draws (§692), as data: each rule's id names its sentence in the
  * catalogues (`Admin.design.rules.items.<id>`, both languages) and `where` lists the files or the
  * tests that hold it — paths, which are code and so live here rather than in the catalogue, whose
  * words a screen shows in the club's language and which never name a repository path (§511).

@@ -15,7 +15,7 @@ import { readShopSettings } from "./settings";
 /**
  * The members' shop's orders (§683). A member orders from the members' zone, behind their own
  * account (§524, §662 — never a participant account, AGENTS.md §10.3); an Administrator marks the
- * order paid, handed over, or cancels it — and, since §NNN, places an order in a member's name
+ * order paid, handed over, or cancels it — and, since §690, places an order in a member's name
  * («Adaugă o comandă pentru un membru»: the sheet the club collected outside the site, typed in).
  * Payment is outside the site: nothing here takes, stores or sends a card number or a sum to anyone.
  *
@@ -59,7 +59,7 @@ function parseOrThrow<Out>(schema: z.ZodType<Out>, value: unknown): Out {
  * One order's facts, whichever door it came through: the member it is for (the name and the language
  * copied onto the row, the address the confirmation goes to), what is ordered, who is placing it and
  * what to send. `onlyVisible` is the member's door — the zone offers visible products alone; the club
- * types its sheet against any product not archived (§NNN).
+ * types its sheet against any product not archived (§690).
  */
 type OrderCore = {
   member: Pick<StaffUser, "id" | "displayName" | "email">;
@@ -80,7 +80,7 @@ type OrderCore = {
 };
 
 /**
- * The one sequence every order goes through (§683, §NNN): the product share-locked, the variant
+ * The one sequence every order goes through (§683, §690): the product share-locked, the variant
  * locked, the repeat answered, the stock taken, the row written with its copies, the audit row, the
  * emails as flags. Returns the order and whether it was placed now or found as a repeat — a repeat
  * is already placed, paid or not, and the caller leaves it as it is.
@@ -110,7 +110,7 @@ async function insertOrder<T extends Record<string, unknown>>(tx: Transaction<T>
   // The same press twice — a double tap, a form sent again — is one order. Read under the variant's
   // lock, so a repeat racing the first waits for it and then sees it (each statement reads what was
   // committed before it, READ COMMITTED): the order already placed is the answer, and nothing is
-  // taken, audited or sent again. The club's press for a member counts the same way (§NNN).
+  // taken, audited or sent again. The club's press for a member counts the same way (§690).
   const [repeat] = await tx
     .select()
     .from(shopOrders)
@@ -253,7 +253,7 @@ export async function placeOrder<T extends Record<string, unknown>>(
 }
 
 /**
- * «Adaugă o comandă pentru un membru» (§NNN): the club places an order in a member's name — the
+ * «Adaugă o comandă pentru un membru» (§690): the club places an order in a member's name — the
  * sheet it collected outside the site, typed in by a colleague who checks each row. The same
  * `insertOrder` as the member's own «Comandă»: the same locks, the same stock rule, the same repeat
  * window; marked `placed_by = CLUB` with the colleague's account, audited as

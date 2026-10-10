@@ -129,7 +129,7 @@ export default async function BackofficeShell({
           ...(countPills.length > 0 ? { countPills } : {}),
         } : {}),
     // `/devs` is «Setări»'s last tab and no section of its own (§520): the bar lights «Setări» there —
-    // and on «Sistemul de design» (§NNN), reached from «Setări» → «Aspect».
+    // and on «Sistemul de design» (§692), reached from «Setări» → «Aspect».
     ...(section === "settings" ? { alsoActiveOn: [getPathname({ locale, href: "/devs" }), getPathname({ locale, href: "/admin/design" })] } : {}),
   }));
 

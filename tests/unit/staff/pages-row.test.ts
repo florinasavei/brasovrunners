@@ -78,7 +78,7 @@ describe("«Pagini»'s row: every entry an address of the section", () => {
       expect(activeAdminTabHref(bar, `/${locale}/admin/settings/emails`)).toBe(`/${locale}/admin/settings`);
       expect(activeAdminTabHref(bar, `/${locale}/admin/events/new`)).toBe(`/${locale}/admin`);
       expect(activeAdminTabHref(bar, `/${locale}/devs`)).toBe(`/${locale}/admin/settings`);
-      // «Sistemul de design» (§NNN) sits under `/admin`, whose bare root is a prefix of every backoffice
+      // «Sistemul de design» (§692) sits under `/admin`, whose bare root is a prefix of every backoffice
       // address: the address «Setări» also stands for wins over that root, so the bar lights «Setări».
       expect(activeAdminTabHref(bar, `/${locale}/admin/design`)).toBe(`/${locale}/admin/settings`);
       expect(activeAdminTabHref(bar, `/${locale}/evenimente`)).toBeNull();

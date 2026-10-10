@@ -68,10 +68,10 @@ const BIO_SX = {
 /** The club's introduction (§474): the page's lead, in the renderer's own type, a little quieter. */
 const INTRO_SX = { color: "text.secondary", mb: { xs: DENSITY.sectionGap, sm: 3 }, "& > :last-child": { mb: 0 } } as const;
 
-/** A chart card's width (§NNN): the whole column on a phone, a fixed column from `sm`, so a tier wraps evenly. */
+/** A chart card's width (§691): the whole column on a phone, a fixed column from `sm`, so a tier wraps evenly. */
 const CHART_CARD_WIDTH = { xs: "100%", sm: 240, md: 264 } as const;
 
-/** The connectors' line: the theme's hairline, two pixels, never a hex of its own (§NNN). */
+/** The connectors' line: the theme's hairline, two pixels, never a hex of its own (§691). */
 const LINE = 2;
 const LINE_COLOR = "divider";
 /** The stem's height between a card and the tier under it, in pixels. */
@@ -110,7 +110,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 /** What every card needs besides the person: the catalogue's words, once. */
 type CardWords = {
   linksLabel: (name: string) => string;
-  /** The chart's two lists (§NNN): the cards beside this one, and the cards that answer to it. */
+  /** The chart's two lists (§691): the cards beside this one, and the cards that answer to it. */
   besideLabel: (name: string) => string;
   reportsLabel: (name: string) => string;
   responsibilities: string;
@@ -137,7 +137,7 @@ const TIER_SX = {
  * Each card reads the page's own language alone — a pair written in one language only reads as
  * none on both pages (§352). A Server Component with no island of its own; a film in a text brings the renderer's (§403).
  *
- * Since §NNN the cards may say whom they answer to. While no shown card names a shown parent the
+ * Since §691 the cards may say whom they answer to. While no shown card names a shown parent the
  * page is the grid it always was; otherwise it is the organisational chart the club's president
  * drew — tier by tier, each parent's children grouped under it, connectors in CSS and no script —
  * and under it the page's boxes, the club's titled texts in the editor every page uses.
@@ -180,7 +180,7 @@ export default async function TeamPage({ params }: Props) {
       {members.length === 0 ? (
         <Typography variant="body1">{t("empty")}</Typography>
       ) : chart.hasRelations ? (
-        // The organisational chart (§NNN): the roots' tier, and under each card the cards that answer to it.
+        // The organisational chart (§691): the roots' tier, and under each card the cards that answer to it.
         <Box
           component="ul"
           aria-label={t("listLabel")}
@@ -214,7 +214,7 @@ export default async function TeamPage({ params }: Props) {
       )}
 
       {boxes.length > 0 && (
-        // The page's boxes (§NNN): the club's titled texts under the chart, in its order.
+        // The page's boxes (§691): the club's titled texts under the chart, in its order.
         <Box component="section" aria-label={t("boxesLabel")} data-testid="team-boxes" sx={{ mt: { xs: DENSITY.sectionGapLg, sm: 4 }, display: "grid", gap: 2 }}>
           {boxes.map((box, index) => (
             <TeamBox key={box.id} box={box} index={index} />
@@ -232,7 +232,7 @@ export default async function TeamPage({ params }: Props) {
 }
 
 /**
- * One node of the chart (§NNN): the card, the cards that sit beside it at its own tier to its
+ * One node of the chart (§691): the card, the cards that sit beside it at its own tier to its
  * right, and under the group the tier of cards that answer to it. The connectors are CSS alone,
  * on Server Components: a stem under the group, a rule across the children's tier, and a stem
  * down to each child; on a phone, one column, the children indented behind a left rule with a
@@ -316,7 +316,7 @@ function ChartNode({ node, index, words }: { node: OrgChartNode<PublicTeamMember
 /**
  * One person's card, the same in the grid and in the chart: the photograph in the crop the club
  * drew (§541), the name, the role title in the accent colour, the sub-role line, «Responsabilități»
- * as bullets (§NNN), then the words about them and their links (§474).
+ * as bullets (§691), then the words about them and their links (§474).
  */
 function TeamCard({
   member,
@@ -385,7 +385,7 @@ function TeamCard({
   );
 }
 
-/** One box under the chart (§NNN): its heading and the club's text through the page's renderer. */
+/** One box under the chart (§691): its heading and the club's text through the page's renderer. */
 function TeamBox({ box, index }: { box: PublicTeamBox; index: number }) {
   return (
     <Card component="article" variant="outlined" data-testid="team-box" sx={riseIn(index)}>
@@ -435,7 +435,7 @@ function MemberLinks({ links, label, kindWords: words }: { links: readonly Publi
 /**
  * The photo's `srcset` and `sizes` (§414), or neither: a card is a column of the grid — the album
  * grid's `tile` widths, two, three and four to a row — or, in the chart, a listing card's column
- * (`card`, §NNN) — and the photograph is drawn wider than its card by what the frame magnifies: the
+ * (`card`, §691) — and the photograph is drawn wider than its card by what the frame magnifies: the
  * crop's `1 / w`, or a square's cover (`teamPhotoFrame`, §541). A picture from before the ladder
  * keeps its thumbnail.
  */

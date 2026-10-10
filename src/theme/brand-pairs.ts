@@ -1,7 +1,7 @@
 import { COLOR, COLOR_DARK, GRADIENT } from "./brand";
 
 /**
- * The text-on-background pairs the pages actually render, named by their tokens (§NNN).
+ * The text-on-background pairs the pages actually render, named by their tokens (§692).
  *
  * They lived as prose rows inside `tests/unit/theme/brand.test.ts` — "body text on a card" — and
  * the design-system page (`/admin/design`) draws the same table with each pair's ratio, so the

@@ -16,7 +16,7 @@ import DesignSection, { Block, Code, ROW_SX } from "./section";
 const SHADOWS = [1, 2, 3, 4] as const;
 
 /**
- * «Forme și umbre» (§NNN): the corner radius, the four shadows on cards, the breakpoints with
+ * «Forme și umbre» (§692): the corner radius, the four shadows on cards, the breakpoints with
  * their pixels, the spacing unit, the phone density scale and the 44-pixel rule drawn as the square
  * it is — every value read from `theme.ts`, `density.ts` and `tap-target.ts`.
  */

@@ -10,7 +10,7 @@ import { isUuid } from "@/shared/ids";
 import { type TeamBoxFields, teamBoxFieldsSchema } from "./fields";
 
 /**
- * «Casetele paginii» (§NNN): the titled texts under the chart of «Echipa» — add, write, move,
+ * «Casetele paginii» (§691): the titled texts under the chart of «Echipa» — add, write, move,
  * show or hide, delete. §459's two gates, reused rather than a rule of their own: writing a box is
  * `canEditTeamPage` (the Redactor's and the Administrator's, like a card's words); showing one,
  * hiding one and deleting one that is on the site is `canShowTeamMember` (the Administrator's, the

@@ -43,7 +43,7 @@ function GradientBar({ name, css }: { name: string; css: string }) {
 }
 
 /**
- * «Culori» (§NNN): every key of `COLOR` and `COLOR_DARK` as a swatch, the site tints with the
+ * «Culori» (§692): every key of `COLOR` and `COLOR_DARK` as a swatch, the site tints with the
  * names the «Aspect» tab gives them, the gradients as bars, then the pairs `brand.test.ts` holds at
  * AA with each one's ratio — from the one contrast helper (`tint-contrast.ts`), never a second
  * formula. Read, never copied: a token added to `brand.ts` is on this page at the next render.

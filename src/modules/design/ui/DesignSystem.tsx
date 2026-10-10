@@ -16,7 +16,7 @@ import ShapeSection from "./ShapeSection";
 import TypeSection from "./TypeSection";
 
 /**
- * «Sistemul de design» (§NNN; the owner, 2026-10-10: «that Claude design artifact should go
+ * «Sistemul de design» (§692; the owner, 2026-10-10: «that Claude design artifact should go
  * somewhere in the app so we can all access it, and we need a design system page, similar to
  * Flyward»): one backoffice page that draws the site's tokens, type, shapes, buttons, pills,
  * samples and glyphs **from the code** — imports, never a copy that drifts — and carries the

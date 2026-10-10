@@ -58,7 +58,7 @@ export default async function AdminAppearancePage({ params, searchParams }: Prop
       <SiteTintPanel locale={locale} state={state} mayEdit={canManageClubSettings(actor.role)} openWhen={{ primary: true }} />
       <SiteFontSizePanel locale={locale} state={fontSize} mayEdit={canManageClubSettings(actor.role)} openWhen={{ primary: true }} />
 
-      {/* «Sistemul de design» (§NNN): the look as the code draws it, and the redesign plan — one card, one button, for whoever reads this tab. */}
+      {/* «Sistemul de design» (§692): the look as the code draws it, and the redesign plan — one card, one button, for whoever reads this tab. */}
       <Panel glyph="appearance" title={t("design.card.title")} intro={t("design.card.intro")} id="design-system" data-testid="design-system-card">
         <GlyphButtonLink icon="preview" href="/admin/design" variant="outlined" size="small" sx={TAP_TARGET}>
           {t("design.card.open")}

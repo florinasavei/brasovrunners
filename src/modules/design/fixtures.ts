@@ -3,7 +3,7 @@ import type { PublicEvent } from "@/modules/events/repository";
 import type { WeatherReading } from "@/modules/weather/domain/forecast";
 
 /**
- * The sample rows the design-system page draws its cards and pills from (§NNN): made-up events
+ * The sample rows the design-system page draws its cards and pills from (§692): made-up events
  * shaped like the listing's own (`listPublishedEvents`' rows), so `EventCard`, `SeriesCard` and
  * `buildRoutePills` render exactly what they render on the site. Nothing here is read from the
  * database and nothing names a person — the repository is public — and every word the club

@@ -1,7 +1,7 @@
 import type { TeamPlacement } from "../fields";
 
 /**
- * «Echipa» as an organisational chart (§NNN; the club's president: «structura organizațională
+ * «Echipa» as an organisational chart (§691; the club's president: «structura organizațională
  * și responsabilități»). A pure layout over the shown cards, in the club's order:
  *
  * - a card whose `reportsToId` names a shown card hangs under it (`below`), or sits at its tier to

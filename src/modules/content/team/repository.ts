@@ -34,20 +34,20 @@ export type PublicTeamMember = {
   id: string;
   name: string;
   role: string | null;
-  /** The sub-role line under the role (§NNN), or null unless both languages are written. */
+  /** The sub-role line under the role (§691), or null unless both languages are written. */
   subtitle: string | null;
-  /** «Responsabilități» (§NNN), one per line, empty unless both languages are written. */
+  /** «Responsabilități» (§691), one per line, empty unless both languages are written. */
   responsibilities: string[];
   bio: RichTextDoc | null;
   /** In the club's order, up to twelve. */
   links: PublicTeamLink[];
   photo: TeamPhoto | null;
-  /** The chart (§NNN): whom the card answers to, as stored — `buildOrgChart` decides what it means among the shown cards. */
+  /** The chart (§691): whom the card answers to, as stored — `buildOrgChart` decides what it means among the shown cards. */
   reportsToId: string | null;
   placement: TeamPlacement;
 };
 
-/** One box under the chart (§NNN) in this language: a heading and the rich text. */
+/** One box under the chart (§691) in this language: a heading and the rich text. */
 export type PublicTeamBox = { id: string; title: string; body: RichTextDoc };
 
 export type PublicTeamPage = {
@@ -57,7 +57,7 @@ export type PublicTeamPage = {
   /** The introduction's words, for the page's meta description. */
   introText: string | null;
   members: PublicTeamMember[];
-  /** The shown boxes under the chart, in the club's order (§NNN). */
+  /** The shown boxes under the chart, in the club's order (§691). */
   boxes: PublicTeamBox[];
 };
 
@@ -188,7 +188,7 @@ export async function listVisibleTeamMembers<T extends Record<string, unknown>>(
 }
 
 /**
- * The shown boxes under the chart (§NNN), in the club's order, in this language. A box whose text
+ * The shown boxes under the chart (§691), in the club's order, in this language. A box whose text
  * is written in one language only (a row from before the rule, or a hand-written one) is left out
  * on both pages, as every half pair is (§352); a title is always both.
  */
@@ -247,7 +247,7 @@ export async function listTeamMembersForAdmin<T extends Record<string, unknown>>
   }));
 }
 
-/** Every box, shown or not, in the club's order — the backoffice's «Casetele paginii» (§NNN). */
+/** Every box, shown or not, in the club's order — the backoffice's «Casetele paginii» (§691). */
 export async function listTeamBoxesForAdmin<T extends Record<string, unknown>>(db: Database<T>): Promise<AdminTeamBox[]> {
   const rows = await db.select().from(teamPageBoxes).orderBy(asc(teamPageBoxes.position), asc(teamPageBoxes.createdAt));
   return rows.map((row) => ({

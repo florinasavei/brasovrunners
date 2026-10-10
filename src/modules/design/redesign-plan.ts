@@ -1,5 +1,5 @@
 /**
- * The redesign plan's rows, as data (§NNN): the twelve decisions only the club can make and the
+ * The redesign plan's rows, as data (§692): the twelve decisions only the club can make and the
  * seven phases, each with a status the dispatcher moves as the work lands. The words of each row
  * are in the catalogues (`Admin.design.plan.decisions.<id>`, `Admin.design.plan.phases.<id>`), in
  * both languages; the full text is the repository document `REDESIGN_DOC_PATH`, English, kept by

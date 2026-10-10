@@ -11,7 +11,7 @@ import type { AdminOrder } from "./repository";
  * rule, `canSeeShopMemberAddresses`): otherwise the column is not in the file at all. The unit price
  * and the total are written in the order's own currency, named in the column after the unit price
  * (§686) — an order placed in euro stays in euro whatever the product says now. After the member's
- * name (and the address, when it is there), who placed the order: the member, or the club (§NNN).
+ * name (and the address, when it is there), who placed the order: the member, or the club (§690).
  */
 
 export type OrdersCsvHeader = {
@@ -37,7 +37,7 @@ export function buildOrdersCsv(
     locale: string;
     withEmail: boolean;
     statusWord: (status: AdminOrder["status"]) => string;
-    /** «membru» / «club» — the words of the column «Adăugată de» (§NNN). */
+    /** «membru» / «club» — the words of the column «Adăugată de» (§690). */
     placedByWord: (placedBy: AdminOrder["placedBy"]) => string;
   },
 ): string {

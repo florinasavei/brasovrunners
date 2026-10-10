@@ -69,7 +69,7 @@ describe("BR-REQ-060-01 «Setări»: who opens which tab", () => {
       expect(visibleAdminSections(role) as string[], role).not.toContain("devs");
       if (offersConfigurationTab(role)) expect(visibleAdminSections(role), role).toContain("settings");
     }
-    // …and on «Sistemul de design» (§NNN), the other page «Setări» stands for without a tab of its own.
+    // …and on «Sistemul de design» (§692), the other page «Setări» stands for without a tab of its own.
     expect(read("src/modules/staff-identity/ui/BackofficeShell.tsx")).toContain(
       'alsoActiveOn: [getPathname({ locale, href: "/devs" }), getPathname({ locale, href: "/admin/design" })]',
     );

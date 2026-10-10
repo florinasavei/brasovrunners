@@ -12,7 +12,7 @@ import type { TeamPhotoLabels } from "@/modules/content/team/ui/TeamPhotoField";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Adaugă o comandă pentru un membru»: the club places an order in a member's name, through
+ * §690 — «Adaugă o comandă pentru un membru»: the club places an order in a member's name, through
  * the member order's own locks and stock rule (`insertOrder`, one sequence for both doors), marked
  * `placed_by = CLUB` with the acting account, audited; the member's confirmation only when asked, the
  * club's own notice never; «Marchează direct ca plătită» moves it to PAID through the one transition
@@ -79,7 +79,7 @@ const CSV_HEADER = {
 };
 const CSV_WORDS = { statusWord: (status: string) => status, placedByWord: (placedBy: "MEMBER" | "CLUB") => (placedBy === "CLUB" ? "club" : "membru") };
 
-describe("§NNN the club places an order in a member's name", () => {
+describe("§690 the club places an order in a member's name", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

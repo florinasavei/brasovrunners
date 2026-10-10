@@ -8,7 +8,7 @@ import { DESIGN_RULES } from "../rules";
 import DesignSection, { Code } from "./section";
 
 /**
- * «Reguli» (§NNN): the rules that bite when the look is touched, each with where it lives — the
+ * «Reguli» (§692): the rules that bite when the look is touched, each with where it lives — the
  * file, the test or the check — as a path in `code`, never a link: nothing here points off the
  * site. The sentences are the catalogue's (`design.rules.items.<id>`), the paths `rules.ts`'s: a
  * screen's words never name a repository path (§511), so the paths are code, read beside the words.

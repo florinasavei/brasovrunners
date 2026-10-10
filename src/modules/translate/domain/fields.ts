@@ -15,7 +15,7 @@
  *   "Linkuri și fișiere" row's label, a programme row's words;
  * - the organizer's note on an update, the cancellation's reason, a message to the participants;
  * - «Echipa» (§474, §482): a card's role, its words about the person and its links' labels, and
- *   the page's introduction — one form per card, each posting the same names; since §NNN also a
+ *   the page's introduction — one form per card, each posting the same names; since §691 also a
  *   card's sub-role line and its responsibilities, and each box under the chart (its title and its
  *   text, `bodyRoBody` / `bodyEnBody`), one form per box;
  * - «Întrebări frecvente» (§525): each card's question, «Categorie» and answer (`faq[<n>].…`), and
@@ -64,7 +64,7 @@ const ENGLISH_FIELD_PATTERNS: readonly RegExp[] = [
   /^roleEn$/,
   /^links\[\d{1,2}\]\.labelEn$/,
   /^(bio|intro)EnBody$/,
-  // «Echipa» as an organisational chart (§NNN): a card's sub-role line and its «Responsabilități»
+  // «Echipa» as an organisational chart (§691): a card's sub-role line and its «Responsabilități»
   // (one per line — the lines travel as they are), and a box's title and text under the chart.
   // `titleEn` is also the shop product's box; a product's name is the club's words as well, and
   // that form carries no button.

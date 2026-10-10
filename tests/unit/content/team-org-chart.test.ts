@@ -11,7 +11,7 @@ import {
 } from "@/modules/content/team/fields";
 
 /**
- * §NNN — «Echipa» as an organisational chart: the pure layout over the shown cards, and what a
+ * §691 — «Echipa» as an organisational chart: the pure layout over the shown cards, and what a
  * card's new boxes accept. Fixtures say «Președinte», «Rol A», «Partener 1»: no person's name, no
  * real role, no partner.
  */
@@ -19,7 +19,7 @@ import {
 const card = (id: string, reportsToId: string | null = null, placement: "below" | "beside" = "below"): OrgChartCard => ({ id, reportsToId, placement });
 const ids = (nodes: readonly OrgChartNode<OrgChartCard>[]) => nodes.map((node) => node.card.id);
 
-describe("§NNN buildOrgChart", () => {
+describe("§691 buildOrgChart", () => {
   it("puts cards with no relations in one tier, as roots, in the list's order, and says there is no relation", () => {
     const chart = buildOrgChart([card("a"), card("b"), card("c")]);
     expect(chart.hasRelations).toBe(false);
@@ -79,7 +79,7 @@ describe("§NNN buildOrgChart", () => {
   });
 });
 
-describe("§NNN a card's sub-role, responsibilities, parent and placement", () => {
+describe("§691 a card's sub-role, responsibilities, parent and placement", () => {
   const base = { name: "Președinte", roleRo: "", roleEn: "", bioRo: "", bioEn: "", photoAssetId: "" };
   const issuesOf = (value: unknown) => {
     const parsed = teamMemberFieldsSchema.safeParse(value);
@@ -136,7 +136,7 @@ describe("§NNN a card's sub-role, responsibilities, parent and placement", () =
   });
 });
 
-describe("§NNN a box under the chart", () => {
+describe("§691 a box under the chart", () => {
   const issuesOf = (value: unknown) => {
     const parsed = teamBoxFieldsSchema.safeParse(value);
     return parsed.success ? [] : parsed.error.issues.map((issue) => issue.path.join("."));

@@ -49,14 +49,14 @@ function assertMayEdit(actor: Actor): void {
   }
 }
 
-/** The «Răspunde în fața» box refused (§NNN), with the rest of the card kept (§315). */
+/** The «Răspunde în fața» box refused (§691), with the rest of the card kept (§315). */
 function refuseReportsTo(message: string): never {
   throw new DomainError("VALIDATION_ERROR", message, ["reportsToId"]);
 }
 
 /**
  * The card this one answers to must be a stored card, not itself and not one of its own
- * descendants — a cycle of any length (§NNN). Read inside the save's transaction, so a parent
+ * descendants — a cycle of any length (§691). Read inside the save's transaction, so a parent
  * re-pointed by a colleague in the same moment is still seen: the walk follows `reports_to_id`
  * upward from the chosen parent and stops on the saved card, on the top, or on a stale cycle in
  * the data (a visited set), which it then also refuses rather than looping.
@@ -94,7 +94,7 @@ export async function createTeamMember<T extends Record<string, unknown>>(
   await assertPhotoExists(db, fields);
 
   const created = await db.transaction(async (tx) => {
-    // A new card answers to nobody's descendant: only "exists" and the data's own soundness apply (§NNN).
+    // A new card answers to nobody's descendant: only "exists" and the data's own soundness apply (§691).
     await assertReportsToIsSound(tx, fields, null);
     const [last] = await tx
       .select({ position: sql<number>`coalesce(max(${teamMembers.position}), 0)`.mapWith(Number) })
@@ -114,7 +114,7 @@ export async function createTeamMember<T extends Record<string, unknown>>(
         photoMediaAssetId: fields.photoAssetId,
         // §541; null is the whole photograph.
         photoCrop: fields.photoCrop,
-        // The chart (§NNN).
+        // The chart (§691).
         subtitleRo: fields.subtitleRo,
         subtitleEn: fields.subtitleEn,
         responsibilitiesRo: fields.responsibilitiesRo,
@@ -158,7 +158,7 @@ export async function saveTeamMember<T extends Record<string, unknown>>(
   await assertPhotoExists(db, fields);
 
   const row = await db.transaction(async (tx) => {
-    // Not itself, not a descendant of its own, and a card that exists — read under the same transaction (§NNN).
+    // Not itself, not a descendant of its own, and a card that exists — read under the same transaction (§691).
     await assertReportsToIsSound(tx, fields, input.memberId);
     const [updated] = await tx
       .update(teamMembers)
@@ -175,7 +175,7 @@ export async function saveTeamMember<T extends Record<string, unknown>>(
         photoMediaAssetId: fields.photoAssetId,
         // §541; null is the whole photograph.
         photoCrop: fields.photoCrop,
-        // The chart (§NNN).
+        // The chart (§691).
         subtitleRo: fields.subtitleRo,
         subtitleEn: fields.subtitleEn,
         responsibilitiesRo: fields.responsibilitiesRo,

@@ -57,7 +57,7 @@ export const teamMembers = pgTable(
     links: jsonb("links"),
 
     /**
-     * The organisational chart (§NNN; the club's president: «structura organizațională și
+     * The organisational chart (§691; the club's president: «structura organizațională și
      * responsabilități»). One line under the role title — the sub-role, «Parteneriate sportive și
      * echipamente» — both languages or neither (§352), checked at the save.
      */
@@ -132,7 +132,7 @@ export const teamMembers = pgTable(
       sql`${t.links} IS NULL OR CASE WHEN jsonb_typeof(${t.links}) = 'array' THEN jsonb_array_length(${t.links}) <= 12 AND NOT jsonb_path_exists(${t.links}, '$[*] ? (!(@.url.type() == "string" && @.url starts with "https://"))') ELSE false END`,
     ),
     index("team_members_visible_position_idx").on(t.visible, t.position),
-    /** A card never answers to itself (§NNN); a longer cycle is the service's to refuse. */
+    /** A card never answers to itself (§691); a longer cycle is the service's to refuse. */
     check("team_members_reports_to_not_self", sql`${t.reportsToId} IS NULL OR ${t.reportsToId} <> ${t.id}`),
     check("team_members_placement_known", sql`${t.placement} IN ('below', 'beside')`),
   ],
@@ -141,7 +141,7 @@ export const teamMembers = pgTable(
 export type TeamMember = typeof teamMembers.$inferSelect;
 
 /**
- * «Casetele paginii» (§NNN): the titled texts under the chart of «Echipa» — a shared
+ * «Casetele paginii» (§691): the titled texts under the chart of «Echipa» — a shared
  * responsibility, the partnerships the founder keeps (the partners' logos are pictures in the
  * text), a governance note — any number, in the club's order. A title in both languages, a body in
  * the rich-text editor with a bio's allowlist (paragraphs, lists, links, pictures; no table),

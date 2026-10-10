@@ -130,11 +130,11 @@ export async function listProductNames<T extends Record<string, unknown>>(db: Da
     .orderBy(asc(shopProducts.position), asc(shopProducts.createdAt));
 }
 
-/** A product the club may place an order on for a member (§NNN), with its variants and what is left of each. */
+/** A product the club may place an order on for a member (§690), with its variants and what is left of each. */
 export type OrderableItem = { id: string; titleRo: string; titleEn: string; variants: ShopVariantRow[] };
 
 /**
- * What «Adaugă o comandă pentru un membru» offers (§NNN): every product not archived — hidden ones
+ * What «Adaugă o comandă pentru un membru» offers (§690): every product not archived — hidden ones
  * too, the club types its sheet against products it may not show yet — in the list's order, each with
  * its variants in position order and their stock, so a sold-out variant is offered disabled.
  */
@@ -151,11 +151,11 @@ export async function listOrderableItems<T extends Record<string, unknown>>(db: 
   return rows.map((row) => ({ ...row, variants: variants.get(row.id) ?? [] }));
 }
 
-/** A member account an order may be placed for (§NNN): the id, the name as the select shows it, the role. */
+/** A member account an order may be placed for (§690): the id, the name as the select shows it, the role. */
 export type ZoneAccount = { id: string; displayName: string; role: StaffRole };
 
 /**
- * The accounts an order may be placed for (§NNN): every row on «Echipa» whose role opens the members'
+ * The accounts an order may be placed for (§690): every row on «Echipa» whose role opens the members'
  * zone (`canOpenMembersZone` — the predicate, never a role's name written here), by name in Romanian
  * order. The service asserts the same predicate again on the account posted.
  */
@@ -292,7 +292,7 @@ export async function listOrdersForAdmin<T extends Record<string, unknown>>(db: 
       note: shopOrders.note,
       status: shopOrders.status,
       cancelledBy: shopOrders.cancelledBy,
-      /** `MEMBER` or `CLUB` (§NNN): the list marks a club-placed order and the CSV says who placed each. */
+      /** `MEMBER` or `CLUB` (§690): the list marks a club-placed order and the CSV says who placed each. */
       placedBy: shopOrders.placedBy,
       createdAt: shopOrders.createdAt,
       paidAt: shopOrders.paidAt,

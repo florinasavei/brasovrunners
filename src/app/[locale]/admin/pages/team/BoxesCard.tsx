@@ -25,7 +25,7 @@ type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 type RichLabels = ReturnType<typeof richTextEditorLabels>;
 
 /**
- * «Casetele paginii» (§NNN): the titled texts under the chart of «Echipa» — one fold under the
+ * «Casetele paginii» (§691): the titled texts under the chart of «Echipa» — one fold under the
  * cards' list, closed until opened (§336), the count on its line, in the shape of the discount
  * codes' card (§552). Each box is a row with its title, its state and its verbs, and its boxes in a
  * fold of their own: the title in both languages and the text in the rich-text editor, one fold

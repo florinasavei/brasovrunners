@@ -308,7 +308,7 @@ export async function moveShopOrderAction(_previous: FormOutcome | null, form: F
 }
 
 /**
- * «Adaugă o comandă pentru un membru» (§NNN): the club places an order in a member's name. The door
+ * «Adaugă o comandă pentru un membru» (§690): the club places an order in a member's name. The door
  * asks `canManageShop` of the actor, like every shop verb — a holder of «Gestionează magazinul»
  * included (§687); the service asserts it and the member account again. A refusal returns, naming
  * its box (§315); a placed order lands on «Magazin», on its row in the list, the filter kept, with a

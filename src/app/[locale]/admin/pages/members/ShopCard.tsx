@@ -104,7 +104,7 @@ export default function ShopCard({
   ordersTotal: number;
   ordersQuery: OrdersQuery;
   productNames: readonly { id: string; titleRo: string; titleEn: string }[];
-  /** «Adaugă o comandă pentru un membru» (§NNN): the member accounts and the items it offers; empty for a reader who may not. */
+  /** «Adaugă o comandă pentru un membru» (§690): the member accounts and the items it offers; empty for a reader who may not. */
   accounts: readonly ZoneAccount[];
   items: readonly OrderableItem[];
   /** Whether the privacy notice in force names `{{membersShop}}` in every language: until then members see no shop. */
@@ -678,7 +678,7 @@ function OrdersFold({
 }
 
 /**
- * «Adaugă o comandă pentru un membru» (§NNN): the club types in an order it collected outside the
+ * «Adaugă o comandă pentru un membru» (§690): the club types in an order it collected outside the
  * site — a member account from the select (no free-text name: an order is an account's record), the
  * product and the variant as one choice (a sold-out variant offered disabled, never with a count),
  * one to five, a note, and two ticks: whether the member gets «Comanda ta a fost primită», and whether
@@ -816,7 +816,7 @@ function OrderRow({
           {t("members.shop.orderNumber", { number: order.number })}
         </Typography>
         <Chip size="small" color={order.status === "CANCELLED" ? "default" : order.status === "PLACED" ? "warning" : "success"} label={t(`members.shop.status.${order.status}`)} />
-        {/* Placed by the club in the member's name (§NNN): said on the row, as the CSV says it in its column. */}
+        {/* Placed by the club in the member's name (§690): said on the row, as the CSV says it in its column. */}
         {order.placedBy === "CLUB" && <Chip size="small" variant="outlined" label={t("members.shop.forMember.placedByClub")} data-testid="order-placed-by-club" />}
       </Stack>
       <Typography variant="body2" sx={{ overflowWrap: "anywhere" }}>

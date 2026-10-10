@@ -24,7 +24,7 @@ function GlyphGrid({ entries, testId }: { entries: [string, ComponentType<SvgIco
 }
 
 /**
- * «Iconografie» (§NNN): every name of the public registry (`glyphs.ts`, §112) and of the backoffice's
+ * «Iconografie» (§692): every name of the public registry (`glyphs.ts`, §112) and of the backoffice's
  * verbs (`action-icons.ts`, §318), drawn from the registries themselves with the count in each
  * heading — add a glyph there and it is here. The backoffice may read the verbs' table; a public page
  * never does (`action-icons.test.ts` walks the imports).

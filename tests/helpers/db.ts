@@ -109,7 +109,7 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   // The invitations by email (§647): they reference the event, the address and the staff; their links went above.
   await db.delete(eventInvitations);
   await db.delete(emailOutbox);
-  // «Echipa»'s cards (§459) reference a photo: before the assets. The page's boxes (§NNN) reference only staff rows.
+  // «Echipa»'s cards (§459) reference a photo: before the assets. The page's boxes (§691) reference only staff rows.
   await db.delete(teamMembers);
   await db.delete(teamPageBoxes);
   // «Întrebări frecvente»'s questions (§525) reference only staff rows.

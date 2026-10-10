@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 
 /**
- * BR-REQ-060-01 (§NNN) — «Sistemul de design», the backoffice page that draws the site's look from
+ * BR-REQ-060-01 (§692) — «Sistemul de design», the backoffice page that draws the site's look from
  * the code, rendered on the server as the page renders it, in both languages.
  *
  * What is held: every section anchor the contents row points at is on the page; every key of

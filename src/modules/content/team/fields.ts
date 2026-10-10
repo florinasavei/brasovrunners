@@ -34,15 +34,15 @@ export const TEAM_ROLE_MAX = 80;
 export const TEAM_BIO_MAX = 1500;
 /** A rich-text document as the editor posts it — the ceiling every editorial body has. */
 export const TEAM_RICH_TEXT_JSON_MAX = 200_000;
-/** The one-line sub-role under the role title (§NNN): «Parteneriate sportive și echipamente». */
+/** The one-line sub-role under the role title (§691): «Parteneriate sportive și echipamente». */
 export const TEAM_SUBTITLE_MAX = 120;
-/** «Responsabilități» (§NNN): one per line, at most this many lines of this many characters. */
+/** «Responsabilități» (§691): one per line, at most this many lines of this many characters. */
 export const TEAM_RESPONSIBILITIES_MAX_LINES = 12;
 export const TEAM_RESPONSIBILITY_LINE_MAX = 160;
-/** Where a card sits against the card it answers to (§NNN): the tier under it, or its own tier to the right. */
+/** Where a card sits against the card it answers to (§691): the tier under it, or its own tier to the right. */
 export const TEAM_PLACEMENTS = ["below", "beside"] as const;
 export type TeamPlacement = (typeof TEAM_PLACEMENTS)[number];
-/** A box's title under the chart (§NNN), and its words counted as the page reads them. */
+/** A box's title under the chart (§691), and its words counted as the page reads them. */
 export const TEAM_BOX_TITLE_MAX = 120;
 export const TEAM_BOX_BODY_MAX = 3000;
 
@@ -51,7 +51,7 @@ export function normalizeTeamLine(value: string): string {
   return value.replace(/\s+/g, " ").trim();
 }
 
-/** «Responsabilități» as the page draws them: one per line, blank lines dropped (§NNN). */
+/** «Responsabilități» as the page draws them: one per line, blank lines dropped (§691). */
 export function responsibilityLines(text: string | null | undefined): string[] {
   return (text ?? "")
     .replace(/\r\n?/g, "\n")
@@ -176,7 +176,7 @@ const optionalText = (max: number) =>
     .pipe(z.string().max(max))
     .transform((value) => (value === "" ? null : value));
 
-/** An optional one-line text (the sub-role, §NNN): absent reads as empty. */
+/** An optional one-line text (the sub-role, §691): absent reads as empty. */
 const optionalLine = (max: number) =>
   z
     .string()
@@ -187,7 +187,7 @@ const optionalLine = (max: number) =>
     .transform((value) => (value === "" ? null : value));
 
 /**
- * «Responsabilități» as typed, one per line (§NNN): blank lines dropped, at most
+ * «Responsabilități» as typed, one per line (§691): blank lines dropped, at most
  * `TEAM_RESPONSIBILITIES_MAX_LINES` lines of `TEAM_RESPONSIBILITY_LINE_MAX` characters, kept
  * joined by one line break; nothing typed is null.
  */
@@ -207,7 +207,7 @@ const optionalResponsibilities = z
   })
   .transform((lines) => (lines.length === 0 ? null : lines.join("\n")));
 
-/** The card this one answers to (§NNN): a uuid or nothing; whether it exists is the service's to check. */
+/** The card this one answers to (§691): a uuid or nothing; whether it exists is the service's to check. */
 const reportsToField = z
   .string()
   .optional()
@@ -216,7 +216,7 @@ const reportsToField = z
   .refine((value) => value === "" || isUuid(value), "not a card id")
   .transform((value) => (value === "" ? null : value.toLowerCase()));
 
-/** Whether a card is asked to answer to itself — refused on the «Răspunde în fața» box (§NNN). */
+/** Whether a card is asked to answer to itself — refused on the «Răspunde în fața» box (§691). */
 export function teamReportsToSelf(fields: { reportsToId: string | null }, selfId: string | null | undefined): boolean {
   return fields.reportsToId !== null && selfId !== null && selfId !== undefined && fields.reportsToId === selfId.toLowerCase();
 }
@@ -302,12 +302,12 @@ export const teamMemberFieldsSchema = z
       .transform((value) => (value === "" ? null : value.toLowerCase())),
     /** The crop's four fractions (§541): JSON from the field, or an object from a fixture. */
     photoCrop: z.union([z.string(), z.record(z.string(), z.unknown()), z.null()]).optional(),
-    /** The organisational chart (§NNN): the sub-role line and the responsibilities, both or neither. */
+    /** The organisational chart (§691): the sub-role line and the responsibilities, both or neither. */
     subtitleRo: optionalLine(TEAM_SUBTITLE_MAX),
     subtitleEn: optionalLine(TEAM_SUBTITLE_MAX),
     responsibilitiesRo: optionalResponsibilities,
     responsibilitiesEn: optionalResponsibilities,
-    /** Whom the card answers to, and where it sits against that card (§NNN). */
+    /** Whom the card answers to, and where it sits against that card (§691). */
     reportsToId: reportsToField,
     placement: z.enum(TEAM_PLACEMENTS).optional().default("below"),
   })
@@ -349,18 +349,18 @@ export const teamMemberFieldsSchema = z
       responsibilitiesRo: fields.responsibilitiesRo,
       responsibilitiesEn: fields.responsibilitiesEn,
       reportsToId: fields.reportsToId,
-      /** `beside` means something only against a parent; a root is always `below` (§NNN). */
+      /** `beside` means something only against a parent; a root is always `below` (§691). */
       placement: (fields.reportsToId === null ? "below" : fields.placement) as TeamPlacement,
     };
   });
 
 export type TeamMemberFields = z.output<typeof teamMemberFieldsSchema>;
 
-/** A required one-line title in one language (a box's, §NNN). */
+/** A required one-line title in one language (a box's, §691). */
 const requiredLine = (max: number) => z.string().optional().default("").transform(normalizeTeamLine).pipe(z.string().min(1).max(max));
 
 /**
- * One box under the chart (§NNN): a title in both languages, always, and a rich text in both or
+ * One box under the chart (§691): a title in both languages, always, and a rich text in both or
  * neither (§352) with a bio's allowlist — no table, the box is read on a phone. The plain boxes are
  * for a caller without the editor (fixtures); the posted document wins.
  */

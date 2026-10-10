@@ -71,7 +71,7 @@ export default async function AdminShopPage({ params, searchParams }: Props) {
     countOrdersForAdmin(db, ordersQuery),
   ]);
   const mayManage = canManageShop(actor);
-  // «Adaugă o comandă pentru un membru» (§NNN): the member accounts and the orderable items, read only
+  // «Adaugă o comandă pentru un membru» (§690): the member accounts and the orderable items, read only
   // for whoever may place one — by role or by «Gestionează magazinul» (§687).
   const [accounts, items] = mayManage ? await Promise.all([listZoneAccountsForOrder(db), listOrderableItems(db)]) : [[], []];
   const rich = richTextEditorLabels(await getTranslations("Admin.richText"));
@@ -88,7 +88,7 @@ export default async function AdminShopPage({ params, searchParams }: Props) {
     paymentRo: t("members.shop.paymentRo"),
     paymentEn: t("members.shop.paymentEn"),
     ordersTo: t("members.shop.ordersTo"),
-    // «Adaugă o comandă pentru un membru» (§NNN), by the names its form posts.
+    // «Adaugă o comandă pentru un membru» (§690), by the names its form posts.
     memberStaffUserId: t("members.shop.forMember.member"),
     item: t("members.shop.forMember.item"),
     quantity: t("members.shop.forMember.quantity"),

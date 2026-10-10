@@ -166,7 +166,7 @@ describe("§474 the words about a person as rich text, and their links", () => {
   });
 });
 
-describe("§NNN «Echipa» as an organisational chart, with the page's boxes", () => {
+describe("§691 «Echipa» as an organisational chart, with the page's boxes", () => {
   const card = (name: string, extra: Partial<PublicTeamMember> = {}): PublicTeamMember => ({ ...member(name), ...extra });
   const text = (...paragraphs: string[]) => doc(...paragraphs);
 

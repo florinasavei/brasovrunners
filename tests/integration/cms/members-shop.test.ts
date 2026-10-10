@@ -56,7 +56,7 @@ const PRODUCT = {
   visible: true,
 };
 
-/** The CSV's header in Romanian, as the route builds it from the messages; the currency column after the unit price (§686), who placed it after the member (§NNN). */
+/** The CSV's header in Romanian, as the route builds it from the messages; the currency column after the unit price (§686), who placed it after the member (§690). */
 const CSV_HEADER = {
   number: "Nr.",
   date: "Data",

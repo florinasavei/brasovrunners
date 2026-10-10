@@ -33,7 +33,7 @@ describe("BR-REQ-070-02 the palette is readable", () => {
   /*
     The pairs the pages render — body text on the page and on a card, field labels on both, the club
     blue as text on both, the hover shade on both, button text on the primary colour, text on the
-    secondary colour — named by their tokens in `src/theme/brand-pairs.ts` since §NNN, which the
+    secondary colour — named by their tokens in `src/theme/brand-pairs.ts` since §692, which the
     design-system page draws with these ratios. The list below pins which pairs are asserted, so a
     pair dropped from the constant fails here rather than quietly leaving the page and the test.
   */

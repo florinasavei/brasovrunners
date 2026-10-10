@@ -52,7 +52,7 @@ function fieldsOf(form: FormData) {
     photoAssetId: text(form, "photoAssetId"),
     // The part of the photograph the card shows, as the crop box drew it (§541).
     photoCrop: text(form, "photoCrop"),
-    // The organisational chart (§NNN): the sub-role, the responsibilities, whom the card answers to and where it sits.
+    // The organisational chart (§691): the sub-role, the responsibilities, whom the card answers to and where it sits.
     subtitleRo: text(form, "subtitleRo"),
     subtitleEn: text(form, "subtitleEn"),
     responsibilitiesRo: text(form, "responsibilitiesRo"),
@@ -62,7 +62,7 @@ function fieldsOf(form: FormData) {
   };
 }
 
-/** A box's boxes (§NNN): the title in both languages and the rich text as the editor posts it. */
+/** A box's boxes (§691): the title in both languages and the rich text as the editor posts it. */
 function boxFieldsOf(form: FormData) {
   return {
     titleRo: text(form, "titleRo"),
@@ -172,7 +172,7 @@ export async function saveTeamPageIntroAction(_previous: FormOutcome | null, for
 }
 
 /**
- * «Casetele paginii» (§NNN): the boxes under the chart, in the cards' own shape — a refused add or
+ * «Casetele paginii» (§691): the boxes under the chart, in the cards' own shape — a refused add or
  * save returns so every box comes back as typed (§315); everything else redirects to the box.
  */
 export async function createTeamBoxAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {

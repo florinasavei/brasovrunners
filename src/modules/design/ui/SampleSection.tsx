@@ -22,7 +22,7 @@ const SEVERITIES = ["success", "info", "warning", "error"] as const;
 const CARD_LIST_SX = { listStyle: "none", m: 0, p: 0, display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" } } as const;
 
 /**
- * «Mostre» (§NNN): the listing's two cards from the sample rows — the very components the site
+ * «Mostre» (§692): the listing's two cards from the sample rows — the very components the site
  * renders, `EventCard` and `SeriesCard` — the lead's frame and surface, a team card in its no-photo
  * state (the public team page draws it inline, so its shape is repeated here), the form's field
  * with a helper and a refusal, a native select, the house checkbox, an alert of each severity and
