@@ -107,6 +107,14 @@ describe("§524 a member signs in and is no staff", () => {
     expect(html).not.toContain('data-testid="members-backoffice"');
   });
 
+  it("shows an Administrator no way into the backoffice either (§684)", async () => {
+    state.cookie = admin.id;
+    const html = renderToStaticMarkup(await MembersAreaPage({ params: Promise.resolve({ locale: "ro" }) }));
+    expect(html).toContain('data-testid="members-sign-out"');
+    expect(html).not.toContain('data-testid="members-backoffice"');
+    expect(html).not.toMatch(/href="\/ro\/admin/);
+  });
+
   it("says the platform's sentence when the zone is written in one language only, or not at all", async () => {
     state.cookie = member.id;
     const html = renderToStaticMarkup(await MembersAreaPage({ params: Promise.resolve({ locale: "ro" }) }));
