@@ -57,6 +57,16 @@ test.describe("§262 the sections on a phone's header row", () => {
       client: document.documentElement.clientWidth,
     }));
     expect(overflow.scroll).toBeLessThanOrEqual(overflow.client + 1);
+
+    // The overflow button sits flush at the navigation's right edge (the owner, 2026-10-10).
+    // Wait for SiteNav's client measurement: the server render has the whole row and no button.
+    await expect(page.getByRole("navigation", { name: "Navigare principală" })).toHaveAttribute("data-measured", "true");
+    await expect(page.locator("#site-nav-more")).toBeVisible();
+    const nav = await page.getByRole("navigation", { name: "Navigare principală" }).boundingBox();
+    const more = await page.locator("#site-nav-more").boundingBox();
+    expect(nav).not.toBeNull();
+    expect(more).not.toBeNull();
+    expect(nav!.x + nav!.width - (more!.x + more!.width)).toBeLessThanOrEqual(1);
   });
 
   test("puts the language switcher in the footer on a phone and in the header on a desktop", async ({ page }) => {

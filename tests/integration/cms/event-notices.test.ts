@@ -150,7 +150,7 @@ describe("§331 the participants hear about a change when the organizer asks", (
     { name: "carmen", status: "WAITLISTED" },
     { name: "dan", status: "WAITLIST_OFFERED", locale: "en" },
     { name: "elena", status: "PENDING_EMAIL_CONFIRMATION" },
-    { name: "florin", status: "CANCELLED" },
+    { name: "felix", status: "CANCELLED" },
     { name: "gabi", status: "EXPIRED" },
     { name: "test", status: "CONFIRMED", kind: "TEST" },
   ];
@@ -263,7 +263,7 @@ describe("§331 the participants hear about a change when the organizer asks", (
     for (const name of ["ana", "bogdan", "carmen", "dan", "test"]) {
       expect(told.get(byName(name).id)?.locale).toBe(byName(name).locale);
     }
-    for (const name of ["elena", "florin", "gabi"]) expect(told.has(byName(name).id)).toBe(false);
+    for (const name of ["elena", "felix", "gabi"]) expect(told.has(byName(name).id)).toBe(false);
     expect(notices).toHaveLength(5);
     // What travels is which facts changed, never their values: nothing old is in the row.
     expect(told.get(byName("ana").id)?.payloadJson).toEqual({ changes: ["place"] });
@@ -676,7 +676,7 @@ describe("§331 the participants hear about a change when the organizer asks", (
     await seedRegistrations(source.id, [{ name: "ana", status: "CONFIRMED" }, { name: "test", status: "CONFIRMED", kind: "TEST" }]);
     await seedRegistrations(ran.id, [{ name: "bogdan", status: "CONFIRMED" }]);
     await seedRegistrations(second.id, [{ name: "carmen", status: "CONFIRMED" }, { name: "dan", status: "WAITLISTED" }, { name: "elena", status: "CANCELLED" }]);
-    await seedRegistrations(third.id, [{ name: "florin", status: "PENDING_DECLARATION", locale: "en" }]);
+    await seedRegistrations(third.id, [{ name: "felix", status: "PENDING_DECLARATION", locale: "en" }]);
 
     // What the editor page reads: this date's real count, and each later date's (never one already run).
     const later = (await db.select().from(events).where(eq(events.repeatOf, source.id)))
@@ -704,7 +704,7 @@ describe("§331 the participants hear about a change when the organizer asks", (
     const result = await save(source.id, { fields: { locationName: "Poiana Brașov" }, notice: { notify: true }, scope: "all" });
     expect(result.notice).toMatchObject({ kind: "update" });
     const sent = result.notice?.kind === "update" ? result.notice.queued : -1;
-    // Ana, Carmen, Dan and Florin: not the test row, not Bogdan's morning that is over, not Elena.
+    // Ana, Carmen, Dan and Felix: not the test row, not Bogdan's morning that is over, not Elena.
     expect(sent).toBe(4);
     expect(spec.email).toBe(`${sent} participanți`);
   });

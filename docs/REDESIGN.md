@@ -17,7 +17,7 @@ objects; a different answer changes the phases, not the rules.
 | --- | --- | --- | --- |
 | 1 | The accent colour | a hot-pink accent token (and a darker «pinkInk» that carries white text at AA) beside the logo blue; the logo mark drawn in ink in the header; emails, PDFs, race numbers and share cards stay blue | the logo is pure blue and a brand test pins it |
 | 2 | The heading face | Inter 800 (one new weight file; Inter is self-hosted with ș ț ă â î) for headings; body stays Roboto | a face is a licence and a look the club owns |
-| 3 | A real home page | yes: `/ro` and `/en` become the landing page; `/events` stays the listing under «Alergări»; canonicals and the sitemap move | it reverses §353 (the root is a redirect, for SEO) |
+| 3 | A real home page — **decided (2026-10-10)** | a real home page at `/ro` and `/en`, reached from the logo — never a menu entry — switchable on and off in «Aspect» → «Pagina principală»; `/events` stays the listing under «Alergări»; canonicals and the sitemap move | it reverses §353 (the root is a redirect, for SEO) |
 | 4 | The four menu words | «Alergări» = the listing; «Calendar»; «Comunitatea» = a club page linking «Echipa», «Galerie», «Întrebări» and the members' zone; «Despre noi» = a club page | the club decides what each word points to |
 | 5 | Where «Vino cu noi» goes | the next weekly run's page; the band's «Cum funcționează» opens a club page | there is no sign-up for runners |
 | 6 | Photographs | real club photos only, from the gallery; no stock or generated pictures; people in a home-page photo have agreed | consent and the club's own face |
@@ -70,6 +70,8 @@ The scope: the public layout sets `data-look="2026"` when «Aspectul nou» is on
 switches the dark scheme; the overrides read under that attribute as plain-object selectors. Off,
 every page is pixel-identical to today; the backoffice never carries the attribute.
 
+**Component-based, by the owner's rule (2026-10-10).** One named Server Component per section under `src/modules/home/ui/` — `Hero`, `NextRunCard`, `RunCardGrid`, `StepsBand`, `WhyList`, `PhotoStrip`, `NumbersBand`; the calendar's `KindChips`, `NextEventPanel`, `SubscribeBox` likewise — typed props, no element-valued prop, tokens only from `brand.ts`; each drawn with a fixture on `/admin/design` → «Mostre» and listed in `docs/VIBECODING.md` → «Where things live»; carousels are CSS scroll-snap strips, no island; everything the club sees is a setting.
+
 What does not change: hex only in `brand.ts`; AA for every pair; the gradient budget of three; fonts
 as repository files (§460); the filled icon family (§318); the email emphasis colour; light by default,
 dark through the footer's button (§93); the club's page tint under both looks.
@@ -97,7 +99,7 @@ side.
 | 0 | Decisions and assets — no code: the twelve answers; the hero, one cover per run and race, six strip pictures in the gallery; the numbers | answers in writing, photos uploaded |
 | 1 | Tokens and the public shell: the pink pair, Inter 800, the public scope, the setting «Aspectul nou», the header CTA and socials, the watermark; the design-system page shows both looks | brand and font tests green, header one row at 320 px, the club's yes on QA |
 | 2 | Cover photos on events, and the event kind: a cover column with its crop, the editor's picker, the ladder; weekly or special derived from the series; the photo tag | listing specs green; every weekly run and the race carry a cover |
-| 3 | The home page: the root becomes a page; hero, next run, weekly and special, the band, why, the strip, the numbers; redirect, canonicals, sitemap | LCP under 2.5 s on a 320 px phone, root tests rewritten, the club's yes on QA |
+| 3 | The home page: the root becomes a page; hero, next run, weekly and special, the band, why, the strip, the numbers; redirect, canonicals, sitemap. Every part a setting: «Pagina principală activă»; the hero picture with its crop and two lines and the three buttons' targets; N gallery pictures per strip or carousel, in order; the founding date and the runners figure; an unset strip is not drawn | LCP under 2.5 s on a 320 px phone, root tests rewritten, the club's yes on QA |
 | 4 | The calendar: filter chips with the kind, three colours and a legend, the next-event panel, the subscribe box, the title block | first week above the fold at 320 px, filters work with scripts off |
 | 5 | The listing and the event page: cards with their photo and pills, the arrow if approved, the event page's head | listing and event specs green |
 | 6 | The flip and the clean-up: «Aspectul nou» on in production; one release later the old look's code goes; the decisions amended | a week on production without the way back being used |

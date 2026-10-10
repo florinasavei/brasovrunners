@@ -8,7 +8,7 @@ import { checkInviteKey, hasNoAccount } from "@/modules/diagnostics/invite-key";
  * status code it came back with.
  */
 const deps = { issuer: "https://id.example.test", token: "pat" };
-const reader = { authMode: "provider" as const, readerEmail: "Florin@Example.ro" };
+const reader = { authMode: "provider" as const, readerEmail: "Felix@Example.ro" };
 
 function answering(respond: () => Response | Promise<Response>) {
   const calls: Array<{ url: string; body: unknown; signal: AbortSignal | null | undefined }> = [];
@@ -24,7 +24,7 @@ const listing = (users: Array<Record<string, unknown>>) =>
 
 describe("§288 the invitation key, tested rather than merely present", () => {
   it("asks for the organization's human users, once, with the bearer token and a timeout", async () => {
-    const { call, calls } = answering(() => listing([{ userId: "1", human: { email: { email: "florin@example.ro" } } }]));
+    const { call, calls } = answering(() => listing([{ userId: "1", human: { email: { email: "felix@example.ro" } } }]));
     const check = await checkInviteKey(reader, { ...deps, fetch: call });
     expect(check.kind).toBe("ok");
     expect(calls).toHaveLength(1);
@@ -39,10 +39,10 @@ describe("§288 the invitation key, tested rather than merely present", () => {
       listing([
         {
           userId: "1",
-          username: "florin@example.ro",
-          preferredLoginName: "florin@example.ro@club.zitadel.cloud",
-          loginNames: ["florin@example.ro@club.zitadel.cloud"],
-          human: { email: { email: "Florin@Example.ro" } },
+          username: "felix@example.ro",
+          preferredLoginName: "felix@example.ro@club.zitadel.cloud",
+          loginNames: ["felix@example.ro@club.zitadel.cloud"],
+          human: { email: { email: "Felix@Example.ro" } },
         },
         { userId: "2", username: "mihai", loginNames: ["mihai@club.zitadel.cloud"], human: { email: { email: "mihai@example.ro" } } },
       ]),
@@ -123,7 +123,7 @@ describe("§288 the invitation key, tested rather than merely present", () => {
   it("claims no missing account from a listing that stopped at its ceiling (§524)", async () => {
     const full = (users: Array<Record<string, unknown>>) => answering(() => listing(users));
     // The reader found, the listing full to the ceiling: the key works, and no row is said to lack an account.
-    const found = full([{ human: { email: { email: "florin@example.ro" } } }, { human: { email: { email: "x@y.ro" } } }]);
+    const found = full([{ human: { email: { email: "felix@example.ro" } } }, { human: { email: { email: "x@y.ro" } } }]);
     const ok = await checkInviteKey(reader, { ...deps, fetch: found.call, pageSize: 2, max: 2 });
     expect(ok).toMatchObject({ kind: "ok", complete: false });
     expect(hasNoAccount(ok, "ghost@example.ro")).toBe(false);

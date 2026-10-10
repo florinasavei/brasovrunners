@@ -190,7 +190,7 @@ async function seedEvent(tag: string, waitlistPublic = true): Promise<Seeded> {
         socials: { strava: null, instagram: "carmen.semneaza", shown: true },
       },
       { name: "Elena Asteapta", status: "WAITLISTED", ticked: true, minutes: 6 },
-      { name: "Florin Asteapta", status: "WAITLISTED", ticked: true, minutes: 5 },
+      { name: "Felix Asteapta", status: "WAITLISTED", ticked: true, minutes: 5 },
       { name: "Ascuns Asteapta", status: "WAITLISTED", ticked: false, minutes: 7 },
       { name: "Retras Anulat", status: "CANCELLED", ticked: true, minutes: 8 },
       { name: "Adresa Nedovedita", status: "PENDING_EMAIL_CONFIRMATION", ticked: true, minutes: 9 },
@@ -340,7 +340,7 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
           expect.stringContaining("Bogdan Confirmat"),
           expect.stringContaining("Participant (nume ascuns)"),
           expect.stringContaining("Carmen Semneaza"),
-          expect.stringContaining("Florin Asteapta"),
+          expect.stringContaining("Felix Asteapta"),
           expect.stringContaining("Elena Asteapta"),
         ]);
         await expect(ro.list).toContainText("Înscris, în așteptarea confirmării");
@@ -441,7 +441,7 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
         await expect(ro.list).toContainText("Carmen Semneaza");
         await expect(ro.list).toContainText("Înscris, în așteptarea confirmării");
         await expect(ro.list).not.toContainText("Pe lista de așteptare");
-        for (const never of ["Florin", "Elena"]) await expect(ro.list).not.toContainText(never);
+        for (const never of ["Felix", "Elena"]) await expect(ro.list).not.toContainText(never);
         await expect(ro.list.getByTestId("start-list-others-summary")).toHaveText("Apar cu numele și: 1 înscris în așteptarea confirmării");
         const lines = ro.list.getByTestId("start-list-legend-line");
         expect(await lines.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-state")))).toEqual(["CONFIRMED", "PENDING"]);
@@ -537,7 +537,7 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
         // No state words, so nothing to explain (§556).
         await expect(off.list.getByTestId("start-list-legend")).toHaveCount(0);
         await expect(off.list.getByTestId("start-list-state-help")).toHaveCount(0);
-        for (const never of ["Carmen", "Florin", "Elena", "Retras", "Adresa"]) await expect(off.list).not.toContainText(never);
+        for (const never of ["Carmen", "Felix", "Elena", "Retras", "Adresa"]) await expect(off.list).not.toContainText(never);
         // Ana's tick stands, but no notice in force describes it: no link to Strava or Instagram at all.
         await expect(off.list.getByTestId("start-list-socials")).toHaveCount(0);
         await expect(socialLinks(off.list)).toHaveCount(0);

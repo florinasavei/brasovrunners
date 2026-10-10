@@ -5862,7 +5862,9 @@
           "fontSize": "Mărimea textului pe paginile publice e o setare a clubului, dintr-o scară cu limite.",
           "colourLiterals": "Nicio culoare scrisă direct în cod: culorile vin din temă, iar excepțiile sunt într-o listă care doar se scurtează.",
           "iconImports": "Pictogramele vin din registre, după nume; în backoffice nu se importă direct, iar pe paginile publice doar un fișier pe pictogramă, niciodată pachetul întreg.",
-          "primitives": "Un buton sau o pastilă e a casei (GlyphButton, ButtonLink, GlyphChip), nu un Button, IconButton sau Chip MUI pe care l-a scris cineva din nou."
+          "primitives": "Un buton sau o pastilă e a casei (GlyphButton, ButtonLink, GlyphChip), nu un Button, IconButton sau Chip MUI pe care l-a scris cineva din nou.",
+          "serverFirst": "Componentele de server mai întâi; o insulă de client își câștigă locul.",
+          "iconFamily": "O singură familie Material plină; o glifă pe fiecare buton și pliu."
         }
       },
       "plan": {
@@ -5889,7 +5891,7 @@
         "decisions": {
           "1": { "title": "Culoarea de accent", "default": "Un roz aprins lângă albastrul siglei, cu o nuanță mai închisă pentru textul alb; emailurile, PDF-urile, numerele de concurs și cardurile de distribuire rămân albastre." },
           "2": { "title": "Fontul titlurilor", "default": "Inter 800 pentru titluri, găzduit de noi, cu ș ț ă â î; textul rămâne Roboto." },
-          "3": { "title": "O pagină principală adevărată", "default": "`/ro` și `/en` devin pagina principală; `/events` rămâne lista, sub «Alergări»." },
+          "3": { "title": "O pagină principală adevărată", "default": "O pagină principală adevărată la `/ro` și `/en`, la care duce sigla, niciodată o intrare de meniu; se pornește și se oprește în «Aspect» → «Pagina principală»." },
           "4": { "title": "Cele patru cuvinte din meniu", "default": "«Alergări», «Calendar», «Comunitatea» — o pagină a clubului care leagă echipa, galeria, întrebările și zona membrilor — și «Despre noi»." },
           "5": { "title": "Unde duce «Vino cu noi»", "default": "La pagina următoarei alergări săptămânale; «Cum funcționează» deschide o pagină a clubului." },
           "6": { "title": "Fotografiile", "default": "Doar fotografii adevărate ale clubului, din galerie; oamenii dintr-o fotografie de pe prima pagină și-au dat acordul." },
@@ -8965,7 +8967,8 @@
     "emailMismatch": "Cele două adrese nu sunt aceeași — verifică literele."
   },
   "Tell": {
-    "title": "Spune-ne ceva",
+    "title": "Spune-ne ceva (anonim)",
+    "noticeName": "Spune-ne ceva",
     "intro": "Anonim, dacă nu alegi să-ți spui numele. Alege despre ce e vorba.",
     "backToContact": "Înapoi la Contact",
     "door": {

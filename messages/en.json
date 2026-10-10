@@ -5862,7 +5862,9 @@
           "fontSize": "The text size on public pages is a club setting, from a bounded scale.",
           "colourLiterals": "No colour written straight into code: colours come from the theme, and the exceptions sit in a list that can only shrink.",
           "iconImports": "Icons come from the registries, by name; the backoffice never imports one directly and a public page imports one file per icon, never the whole package.",
-          "primitives": "A button or a pill is the house's own (GlyphButton, ButtonLink, GlyphChip), not a bare MUI Button, IconButton or Chip written again."
+          "primitives": "A button or a pill is the house's own (GlyphButton, ButtonLink, GlyphChip), not a bare MUI Button, IconButton or Chip written again.",
+          "serverFirst": "Server Components first; a client island earns its place.",
+          "iconFamily": "One filled Material family; a glyph on every button and fold."
         }
       },
       "plan": {
@@ -5889,7 +5891,7 @@
         "decisions": {
           "1": { "title": "The accent colour", "default": "A hot pink beside the logo blue, with a darker ink for white text; emails, PDFs, race numbers and share cards stay blue." },
           "2": { "title": "The heading face", "default": "Inter 800 for headings, self-hosted with ș ț ă â î; the body stays Roboto." },
-          "3": { "title": "A real home page", "default": "`/ro` and `/en` become the landing page; `/events` stays the listing, under «Alergări»." },
+          "3": { "title": "A real home page", "default": "A real home page at `/ro` and `/en`, reached from the logo — never a menu entry — switchable on and off in «Aspect» → «Pagina principală»." },
           "4": { "title": "The four menu words", "default": "«Alergări», «Calendar», «Comunitatea» — a club page linking the team, the gallery, the FAQ and the members' zone — and «Despre noi»." },
           "5": { "title": "Where «Vino cu noi» goes", "default": "To the next weekly run's page; «Cum funcționează» opens a club page." },
           "6": { "title": "Photographs", "default": "Real club photos from the gallery only; people in a home-page photo have agreed." },
@@ -8965,7 +8967,8 @@
     "emailMismatch": "The two addresses are not the same — check the letters."
   },
   "Tell": {
-    "title": "Tell us something",
+    "title": "Tell us something (anonymous)",
+    "noticeName": "Tell us something",
     "intro": "Anonymous unless you choose to give your name. Choose what it is about.",
     "backToContact": "Back to Contact",
     "door": {
