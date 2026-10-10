@@ -1484,7 +1484,7 @@ export async function setStaffPermissionAction(_previous: FormOutcome | null, fo
     const permission = STAFF_PERMISSIONS.find((known) => known === posted);
     if (!permission) throw new DomainError("VALIDATION_ERROR", "no such permission");
     await setStaffPermission(getDb(), actor, { targetId: text(form, "staffUserId"), permission, on });
-    outcome = { saved: on ? "staffPermissionGranted" : "staffPermissionRevoked" };
+    outcome = on ? { saved: "staffPermissionGranted" } : { saved: "staffPermissionRevoked" };
   } catch (error) {
     outcome = outcomeOf(error);
   }
