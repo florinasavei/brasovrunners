@@ -1,6 +1,6 @@
 Brașov Runners repository handoff
 Repository: https://github.com/florinasavei/brasovrunners
-Baseline: BR-V2.85-2026-10-10
+Baseline: BR-V2.86-2026-10-10
 
 Authoritative/current root documentation:
 - README.md      Entry point
@@ -10,7 +10,7 @@ Authoritative/current root documentation:
 - SETUP.md       GitHub/provider/environment setup
 - DECISIONS.md   Planning rationale/history (context only)
 
-Licence: MIT, copyright Brașov Runners (LICENSE)
+Licence: all rights reserved, copyright Brașov Runners (LICENSE)
 
 Current mode: M1 complete in code - event pages, the whole of an event in the backoffice
 (create, duplicate, configure, publish, archive, delete), the full registration lifecycle,
