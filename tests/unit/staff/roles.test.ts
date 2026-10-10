@@ -531,6 +531,10 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     // §552: the members' discount codes are the Administrator's; their words the Membri texts' rule.
     canManageDiscountCodes: /**/ [false, false, false, false, false, true, true],
     canEditDiscountCodeWords: [false, false, true, false, false, true, true],
+    // §NNN: the members' shop — the Administrator writes, the Organizer reads; Tehnic and the Redactor nothing.
+    canManageShop: /*         */ [false, false, false, false, false, true, true],
+    canReadShop: /*           */ [false, false, false, true, false, true, true],
+    canSeeShopMemberAddresses: [false, false, false, true, false, true, true],
   };
   // Exported functions of one argument that are not about a role.
   const NOT_A_ROLE_CAPABILITY = new Set(["isLiveContent", "assignableRoles", "visibleAdminSections", "atLeast"]);

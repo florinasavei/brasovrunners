@@ -186,7 +186,8 @@ describe("§369 the queue panel's times are the event's own", () => {
   it("reads the club's zone only where the event itself is in it", async () => {
     const event = await createEvent();
     await register(event.id, "Ana Popescu", { status: "CONFIRMED", confirmedAt: NOW });
-    await register(event.id, "Maria Asteapta", { status: "WAITLISTED", waitlistedAt: WAITLISTED_AT });
+    // The form's own time pinned too: left to the clock, a run at 10:05 in Brașov printed the very time this test refuses.
+    await register(event.id, "Maria Asteapta", { status: "WAITLISTED", waitlistedAt: WAITLISTED_AT, createdAt: WAITLISTED_AT });
 
     const html = await renderPanel({ ...event, timezone: CLUB_TIME_ZONE });
     expect(html).toContain("17:05");

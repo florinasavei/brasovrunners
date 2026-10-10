@@ -37,8 +37,13 @@ import { PAGE_WIDTH } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
 import { headingRule } from "@/theme/surfaces";
 import { signOutAction } from "../admin/actions";
+import MembersShop from "./MembersShop";
+import { listOrdersOfMember, listProductsForMembers, type MemberOrder, type MembersShopProduct } from "@/modules/content/shop/repository";
+import { paymentWordsFor, readShopSettings } from "@/modules/content/shop/settings";
+import { readShopOutcome, readShopOutcomeAtOrders } from "@/modules/content/shop/zone-outcome";
+import { noticeDescribesMembersShop } from "@/modules/legal-documents/repository";
 
-type Props = { params: Promise<{ locale: string }> };
+type Props = { params: Promise<{ locale: string }>; searchParams?: Promise<{ shop?: string | string[]; shopAt?: string | string[] }> };
 
 /** Reads the session, so it is never prerendered or cached (AGENTS.md §14.5). */
 export const dynamic = "force-dynamic";
@@ -82,6 +87,32 @@ async function codesOrNone(now: Date): Promise<MembersDiscountCode[]> {
     unstable_rethrow(error);
     if (!isDatabaseAwayError(error)) throw error;
     return [];
+  }
+}
+
+/**
+ * «Magazinul clubului» and «Comenzile mele» (§NNN): read here, per request, behind the account — the
+ * products only while the privacy notice in force names `{{membersShop}}` in every language, the
+ * member's own orders always. Nothing while the database is away, like the codes.
+ */
+async function shopOrNone(
+  account: { id: string },
+  locale: Locale,
+  now: Date,
+): Promise<{ open: boolean; products: MembersShopProduct[]; orders: MemberOrder[]; payment: string | null }> {
+  try {
+    const db = getDb();
+    const open = await noticeDescribesMembersShop(db, now);
+    const [products, orders, settings] = await Promise.all([
+      open ? listProductsForMembers(db, locale) : Promise.resolve([]),
+      listOrdersOfMember(db, account.id),
+      readShopSettings(db),
+    ]);
+    return { open, products, orders, payment: paymentWordsFor(settings, locale) };
+  } catch (error) {
+    unstable_rethrow(error);
+    if (!isDatabaseAwayError(error)) throw error;
+    return { open: false, products: [], orders: [], payment: null };
   }
 }
 
@@ -130,7 +161,7 @@ async function upcomingOrNone(locale: Locale, now: Date) {
  * Under the club's words, «Următoarele alergări»: the next published events, from the listing's
  * own cached read (§333) — nothing a stranger could not see, and no query of its own.
  */
-export default async function MembersAreaPage({ params }: Props) {
+export default async function MembersAreaPage({ params, searchParams }: Props) {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
@@ -149,12 +180,16 @@ export default async function MembersAreaPage({ params }: Props) {
 
   const t = await getTranslations("Members");
   const now = new Date();
-  const [zone, upcoming, membersEvents, codes] = await Promise.all([
+  const [zone, upcoming, membersEvents, codes, shop] = await Promise.all([
     zoneOrAway(locale),
     upcomingOrNone(locale, now),
     membersOnlyOrNone(account, locale, now),
     codesOrNone(now),
+    shopOrNone(account, locale, now),
   ]);
+  const shopQuery = await searchParams;
+  const shopOutcome = readShopOutcome(shopQuery?.shop);
+  const shopOutcomeAtOrders = readShopOutcomeAtOrders(shopQuery?.shopAt);
   /*
     A repeated members' run is one card with its dates, as on the listing (§113, §486): the dated
     ones grouped, those whose date is to be announced after them one by one — §533 refuses a series
@@ -215,6 +250,11 @@ export default async function MembersAreaPage({ params }: Props) {
 
       {/* «Coduri de reducere» (§552): the partners' codes, for the members alone (§517). */}
       {codes.length > 0 && <MemberCodes codes={codes} locale={locale} />}
+
+      {/* «Magazinul clubului» and «Comenzile mele» (§NNN): behind the notice, paid outside the site. */}
+      {((shop.open && shop.products.length > 0) || shop.orders.length > 0) && (
+        <MembersShop products={shop.products} orders={shop.orders} payment={shop.payment} shopOpen={shop.open} outcome={shopOutcome} outcomeAtOrders={shopOutcomeAtOrders} locale={locale} />
+      )}
 
       <Box component="section" aria-labelledby="members-upcoming-title" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }} data-testid="members-upcoming">
         <Typography id="members-upcoming-title" variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>

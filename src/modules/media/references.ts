@@ -7,6 +7,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import { faqQuestions } from "@/db/schema/faq";
 import { newsletterSends } from "@/db/schema/newsletter";
 import { teamMembers } from "@/db/schema/team";
+import { shopProducts } from "@/db/schema/shop";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { FAQ_PAGE_SETTING_KEY } from "@/modules/content/faq/page-settings";
@@ -130,6 +131,9 @@ const referencedSomewhere = sql`(
   OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inFaqIntro})
   -- A picture in the members' pages (§524), kept in their platform setting.
   OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inMembersPage})
+  -- A product's photo in the members' shop (§NNN), by id, hidden and archived products included:
+  -- an archived product's row stays for its orders, and a hidden one is being prepared.
+  OR EXISTS (SELECT 1 FROM ${shopProducts} WHERE ${shopProducts.photoMediaAssetId} = ${mediaAssets.id})
   -- A picture in a newsletter sent (§550): the letter is in the subscribers' inboxes, which load
   -- it from this address for as long as they keep the message, so a send keeps its pictures.
   OR EXISTS (SELECT 1 FROM ${newsletterSends} WHERE ${names(sql`${newsletterSends.body}::text`)})
@@ -343,6 +347,11 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .select({ assetId: mediaAssets.id })
     .from(mediaAssets)
     .innerJoin(platformSettings, inMembersPage);
+  // A product's photo in the members' shop (§NNN): the members' page holds the shop, so it reads as that page.
+  const inShop = await db
+    .select({ assetId: shopProducts.photoMediaAssetId })
+    .from(shopProducts)
+    .where(isNotNull(shopProducts.photoMediaAssetId));
   // A picture in a newsletter sent (§550): one reference, the newsletter's page.
   const inNewsletters = await db
     .select({ assetId: mediaAssets.id })
@@ -374,6 +383,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
   for (const row of inTeamIntros) add(row.assetId, { kind: "teamIntro", id: TEAM_PAGE_SETTING_KEY, title: null });
   for (const row of inFaq) add(row.assetId, { kind: "faq", id: FAQ_PAGE_SETTING_KEY, title: null });
   for (const row of inMembersPages) add(row.assetId, { kind: "membersPage", id: MEMBERS_PAGE_SETTING_KEY, title: null });
+  for (const row of inShop) if (row.assetId) add(row.assetId, { kind: "membersPage", id: MEMBERS_PAGE_SETTING_KEY, title: null });
   for (const row of inNewsletters) add(row.assetId, { kind: "newsletter", id: "newsletter", title: null });
 
   return assets.map((asset) => ({

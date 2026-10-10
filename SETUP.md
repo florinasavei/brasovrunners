@@ -1914,3 +1914,31 @@ The price it quotes is the one `docs/PLATFORM.md` § Subscriptions records, chec
 on top; the catalogue is `src/modules/diagnostics/domain/vercel-plan.ts`. Re-check it with the
 other vendors' prices. Reading the plan from Vercel's own answer first, with this setting as the
 fallback — the way the Neon plan works since `DECISIONS.md` §326 — is the follow-up.
+
+## 43. Magazinul membrilor — open the members' shop
+
+The members' shop (`DECISIONS.md` §NNN) is built and closed: members see nothing of it until the
+four steps below are done, in this order. Payment never goes through the site — the member pays by
+bank transfer or in cash, and an Administrator marks the order paid.
+
+1. **Approve the privacy notice that names the shop.** `/admin/legal` → the «GDPR» card →
+   «Regenerează din șablon» → confirm. Section 5 gains the shop's paragraph (what an order keeps,
+   why, for how long, that payment is outside the site). A lawyer should read it first, above all
+   how long the orders are kept as accounting records. Open the draft, fill in what is left,
+   «Salvează ciorna», then «Aprobă și publică». Until a notice naming `{{membersShop}}` is in force
+   in both languages, the members' zone draws no shop and an order is refused; `/admin/tasks`
+   shows the row «Nota de confidențialitate: magazinul membrilor» while a product is visible.
+2. **Write how to pay and who hears of an order.** «Pagini» → «Pagini standard» → «Membri» →
+   the card «Magazin» → «Cum se plătește și cine primește comenzile»: the payment words in Română
+   and English (both or neither — the club's IBAN and, for example, «sau numerar la alergare»),
+   and optionally one address for «Cine primește comenzile». With the address empty no email is
+   sent to the club; the orders are in the card's list either way.
+3. **Add the products.** The same card → «Adaugă un produs»: the name in both languages, the
+   description in both or neither, the price in lei («45» or «45,50»), the variants one per line
+   with their stock («M: 10», «L» for no limit; empty for one variant, its stock in «Stoc»), a
+   photo with its crop, and «Vizibil în magazin» when it should be on sale. A product that has
+   orders is archived rather than deleted.
+4. **Run the orders.** Under the products, «Comenzi»: filter by state and product, «Marchează
+   plătită» when the money arrives (the member gets an email), «Marchează predată» at the
+   hand-over, «Anulează» before the hand-over (the stock goes back). «Descarcă CSV» downloads the
+   filtered list. The Organizer reads the card and the CSV and changes nothing.
