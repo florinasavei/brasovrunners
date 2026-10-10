@@ -47,7 +47,7 @@ import { findStaffUsersAmong } from "@/modules/staff-identity/repository";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { countAccountLines, createMemberAccounts, type MemberAccountLine } from "@/modules/staff-identity/member-accounts";
 import { invalidAddresses } from "@/modules/contact/domain/recipients";
-import { canDeleteEvent, canHardDeleteEvent, canManageRegistrations, canManageStaff, canManageTestRegistrations, type EditorialStatus, isBackofficeRole, type StaffRole } from "@/modules/staff-identity/domain/roles";
+import { canDeleteEvent, canHardDeleteEvent, canManageRegistrations, canManageStaff, canManageTestRegistrations, type EditorialStatus, isBackofficeRole, STAFF_PERMISSIONS, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { sendEventThanks } from "@/modules/notifications/event-mail";
 import { BULK_RESEND_CLOSED, BULK_RESEND_LIMITED, resendDeclarationToAllPending } from "@/modules/registrations/admin-service";
 import { DELIVERY_CHOICE_FIELD, deliveryChoiceOf } from "@/modules/notifications/domain/send-at-once";
@@ -66,6 +66,7 @@ import {
   inviteStaffUser,
   resendStaffInvitation,
   revokeStaffUser,
+  setStaffPermission,
 } from "@/modules/staff-identity/service";
 import { env } from "@/shared/config/env";
 import { readBibDesignForm } from "@/modules/registrations/bib-design-query";
@@ -1459,6 +1460,31 @@ export async function changeStaffRoleAction(_previous: FormOutcome | null, form:
     const actor = await requireStaffCapability(canManageStaff);
     await changeStaffRole(getDb(), actor, text(form, "staffUserId"), text(form, "role") as StaffRole);
     outcome = { saved: "role" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+
+  return backTo(path, outcome);
+}
+
+/**
+ * «Gestionează magazinul» on a colleague's row of «Echipa» (§NNN): ticked or unticked, asked first,
+ * then a toast. The permission is a closed set — never a name taken from the POST — and the service
+ * asserts `canGrantPermission` again on the row it reads (BR-REQ-060-01).
+ */
+export async function setStaffPermissionAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const path = getPathname({ locale, href: "/admin/staff" });
+  const posted = text(form, "permission");
+  const on = text(form, "on") === "1";
+
+  let outcome: { error?: string; saved?: string };
+  try {
+    const actor = await requireStaffCapability(canManageStaff);
+    const permission = STAFF_PERMISSIONS.find((known) => known === posted);
+    if (!permission) throw new DomainError("VALIDATION_ERROR", "no such permission");
+    await setStaffPermission(getDb(), actor, { targetId: text(form, "staffUserId"), permission, on });
+    outcome = { saved: on ? "staffPermissionGranted" : "staffPermissionRevoked" };
   } catch (error) {
     outcome = outcomeOf(error);
   }

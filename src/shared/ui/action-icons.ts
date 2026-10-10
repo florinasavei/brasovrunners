@@ -2,6 +2,8 @@ import AddIcon from "@mui/icons-material/Add";
 import ArchiveIcon from "@mui/icons-material/Archive";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import CardMembershipIcon from "@mui/icons-material/CardMembership";
+import CheckBoxIcon from "@mui/icons-material/CheckBox";
+import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CloseIcon from "@mui/icons-material/Close";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
@@ -207,6 +209,10 @@ export type ActionIconName =
   | "role"
   | "turnOn"
   | "turnOff"
+  // A permission on a colleague's row of «Echipa» (§NNN): the box ticked or empty — a press that
+  // asks first, never a bare checkbox, so the tick needs no client island of its own.
+  | "tickOn"
+  | "tickOff"
   | "signOut";
 // No runner here: the public send buttons wear it through `SubmitButton`'s own `runner` flag,
 // because this table must never reach a public page (above).
@@ -289,5 +295,7 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   role: ManageAccountsIcon,
   turnOn: ToggleOnIcon,
   turnOff: ToggleOffIcon,
+  tickOn: CheckBoxIcon,
+  tickOff: CheckBoxOutlineBlankIcon,
   signOut: LogoutIcon,
 };

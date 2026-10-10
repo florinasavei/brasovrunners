@@ -626,7 +626,8 @@
       "registeredWaitlisted": "{count} pe lista de așteptare",
       "registeredOutside": "invitați speciali: {count}",
       "registeredMoreEvents": "+{count} altele",
-      "newsletter": "Newsletter"
+      "newsletter": "Newsletter",
+      "shop": "Magazin"
     },
     "outbox": {
       "status": {
@@ -2734,6 +2735,18 @@
         "invited": "contul exista, invitația trimisă din nou",
         "failed": "eșuat: {reason}",
         "unconfigured": "fără cheie de invitații: contul se face din consola Zitadel"
+      },
+      "permissions": {
+        "shopManage": "Gestionează magazinul",
+        "implied": "inclus în rol",
+        "chipShop": "Magazin",
+        "saving": "Se salvează…",
+        "grantTitle": "Îi dai magazinul?",
+        "grantBody": "{name} va putea scrie produsele, plata și adresa pentru comenzi și va marca fiecare comandă plătită, predată sau anulată, din secțiunea «Magazin». Adresele membrilor nu le vede.",
+        "grant": "Dă-i magazinul",
+        "revokeTitle": "Îi iei magazinul?",
+        "revokeBody": "{name} nu mai vede secțiunea «Magazin» de la următoarea pagină pe care o deschide.",
+        "revoke": "Ia-i magazinul"
       }
     },
     "queue": {
@@ -5008,7 +5021,7 @@
         "EVENT_INVITATION": "Când un administrator trimite invitații din lista înscrierilor unui eveniment, și la Retrimite. Un link spre formular, cu numele și adresa completate; locul e păstrat până la termen.",
         "SHOP_ORDER_PLACED": "Când un membru comandă din magazinul membrilor: comanda și cum se plătește. Butonul duce în zona membrilor.",
         "SHOP_ORDER_PAID": "Când un administrator marchează comanda plătită: membrului care a comandat. Butonul duce în zona membrilor.",
-        "SHOP_ORDER_CLUB_NOTICE": "La fiecare comandă din magazin, la adresa din «Membri» → «Magazin» → «Cine primește comenzile», dacă e scrisă."
+        "SHOP_ORDER_CLUB_NOTICE": "La fiecare comandă din magazin, la adresa din «Magazin» → «Cine primește comenzile», dacă e scrisă."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
@@ -7265,7 +7278,8 @@
           "total": "Total",
           "status": "Starea",
           "note": "Nota"
-        }
+        },
+        "movedTo": "Magazinul e la „Magazin”, în bara de sus."
       }
     },
     "declarationHold": {
@@ -9244,7 +9258,9 @@
       "shopSettingsSaved": "Plata și adresa pentru comenzi au fost salvate.",
       "shopOrderPaid": "Comanda a fost marcată plătită. Membrul primește un email.",
       "shopOrderHandedOver": "Comanda a fost marcată predată.",
-      "shopOrderCancelled": "Comanda a fost anulată."
+      "shopOrderCancelled": "Comanda a fost anulată.",
+      "staffPermissionGranted": "Gata: poate gestiona magazinul.",
+      "staffPermissionRevoked": "Gata: nu mai gestionează magazinul."
     }
   },
   "Network": {

@@ -152,13 +152,21 @@ export function canGrantPermission(actor: StaffSubject, targetRole: StaffRole, p
   return canManageMember(roleOf(actor), targetRole) && canHoldPermission(targetRole, permission);
 }
 
+/**
+ * Whether a colleague holds `permission` **by a grant** that counts (§NNN) — a row their role may
+ * hold. What «Echipa» draws a row's tick and chip from; never a door: a door asks the named
+ * capability (`canManageShop`), which also counts the rank.
+ */
+export function holdsGrant(member: StaffActor, permission: StaffPermission): boolean {
+  return canHoldPermission(member.role, permission) && (member.permissions?.has(permission) ?? false);
+}
+
 /** Whether the subject has `permission`, by rank or by a grant a role of theirs may hold (§NNN). */
 function hasPermission(subject: StaffSubject, permission: StaffPermission): boolean {
   const role = roleOf(subject);
   if (!isBackofficeRole(role)) return false;
   if (impliesPermission(role, permission)) return true;
-  if (typeof subject === "string") return false;
-  return canHoldPermission(role, permission) && (subject.permissions?.has(permission) ?? false);
+  return typeof subject !== "string" && holdsGrant(subject, permission);
 }
 
 /**

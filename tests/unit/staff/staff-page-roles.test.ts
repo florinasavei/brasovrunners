@@ -55,6 +55,7 @@ vi.mock("@/app/[locale]/admin/actions", () => ({
   revokeStaffAction: vi.fn(),
   sendStaffPasswordResetAction: vi.fn(),
   setStaffAccountActiveAction: vi.fn(),
+  setStaffPermissionAction: vi.fn(),
 }));
 
 const { default: StaffPage } = await import("@/app/[locale]/admin/staff/page");
@@ -156,5 +157,64 @@ describe("BR-REQ-060-01 the team page, read by a Superadministrator (§450)", ()
 describe("BR-REQ-060-01 the team page below the Administrator", () => {
   it.each(STAFF_ROLES.filter((role) => role !== "ADMIN" && role !== "SUPERADMIN"))("answers 404 to a %s", async (role) => {
     await expect(render(role)).rejects.toThrow("NOT_FOUND");
+  });
+});
+
+/**
+ * BR-REQ-060-01, §NNN — «Gestionează magazinul» on the rows: offered where the service would accept
+ * it, drawn ticked and greyed where the role has it by rank, absent elsewhere.
+ */
+describe("BR-REQ-060-01 «Gestionează magazinul» on «Echipa» (§NNN)", () => {
+  const tickForm = (row: ReactElement<Props>[]) => row.filter((element) => element.props["data-testid"] === "staff-permission-shop-form");
+  const implied = (row: ReactElement<Props>[]) => row.filter((element) => element.props["data-testid"] === "staff-permission-shop-implied");
+  const hidden = (row: ReactElement<Props>[], name: string) =>
+    row.filter((element) => element.type === "input" && element.props.name === name).map((element) => element.props.value);
+
+  it.each(["CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV"] as const)("an Administrator is offered the tick on a %s row, posting the permission and its new state", async (role) => {
+    const page = await render("ADMIN");
+    const row = page.rows.get(`m-${role}`)!;
+    expect(tickForm(row)).toHaveLength(1);
+    expect(hidden(row, "permission")).toEqual(["shop.manage"]);
+    expect(hidden(row, "on")).toEqual(["1"]);
+    expect(implied(row)).toEqual([]);
+  });
+
+  it("a row that holds it posts the tick off, and its role cell carries the chip «Magazin»", async () => {
+    actor = member("reader", "ADMIN");
+    const holder = { ...member("m-holder", "CONTRIBUTOR"), permissions: new Set(["shop.manage"]) } as unknown as StaffUser;
+    team = [actor, holder];
+    const tree = await StaffPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({}) });
+    const table = elements(tree).find((element) => typeof element.props.rowActions === "function")!;
+    const row = elements((table.props.rowActions as (row: StaffUser) => ReactNode)(holder));
+    expect(hidden(row, "on")).toEqual(["0"]);
+    const roleColumn = (table.props.columns as { key: string; render: (row: StaffUser) => ReactNode }[]).find((column) => column.key === "role")!;
+    const cell = elements(roleColumn.render(holder));
+    expect(cell.filter((element) => element.props["data-testid"] === "staff-permission-shop").map((element) => element.props.label)).toEqual(["Magazin"]);
+    expect(elements(roleColumn.render(member("m-plain", "CONTRIBUTOR"))).filter((element) => element.props["data-testid"] === "staff-permission-shop")).toEqual([]);
+  });
+
+  it("an Administrator's row is drawn ticked and greyed, «inclus în rol»; a member's row has no tick", async () => {
+    const page = await render("ADMIN");
+    const admin = page.rows.get("m-ADMIN")!;
+    expect(tickForm(admin)).toEqual([]);
+    expect(implied(admin)).toHaveLength(1);
+    expect(implied(admin)[0].props.disabled).toBe(true);
+    const memberRow = page.rows.get("m-MEMBER")!;
+    expect(tickForm(memberRow)).toEqual([]);
+    expect(implied(memberRow)).toEqual([]);
+  });
+
+  it("nothing on the reader's own row or on a Superadministrator's row an Administrator reads", async () => {
+    const page = await render("ADMIN");
+    expect(page.rows.get("reader")).toEqual([]);
+    expect(tickForm(page.rows.get("m-SUPERADMIN")!)).toEqual([]);
+    expect(implied(page.rows.get("m-SUPERADMIN")!)).toEqual([]);
+  });
+
+  it("a Superadministrator is offered it on the same rows, and sees the top role's row greyed", async () => {
+    const page = await render("SUPERADMIN");
+    for (const role of ["CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV"] as const) expect(tickForm(page.rows.get(`m-${role}`)!), role).toHaveLength(1);
+    expect(implied(page.rows.get("m-SUPERADMIN")!)).toHaveLength(1);
+    expect(tickForm(page.rows.get("m-MEMBER")!)).toEqual([]);
   });
 });

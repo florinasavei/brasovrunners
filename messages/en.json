@@ -626,7 +626,8 @@
       "registeredWaitlisted": "{count} on the waiting list",
       "registeredOutside": "special guests: {count}",
       "registeredMoreEvents": "+{count} more",
-      "newsletter": "Newsletter"
+      "newsletter": "Newsletter",
+      "shop": "Shop"
     },
     "outbox": {
       "status": {
@@ -2734,6 +2735,18 @@
         "invited": "the account existed, invitation sent again",
         "failed": "failed: {reason}",
         "unconfigured": "no invitation key: the account is made in the Zitadel console"
+      },
+      "permissions": {
+        "shopManage": "Manages the shop",
+        "implied": "included in the role",
+        "chipShop": "Shop",
+        "saving": "Saving…",
+        "grantTitle": "Give them the shop?",
+        "grantBody": "{name} will write the products, the payment words and the address for orders, and mark each order paid, handed over or cancelled, in the «Magazin» section. They do not see the members' addresses.",
+        "grant": "Give them the shop",
+        "revokeTitle": "Take the shop away?",
+        "revokeBody": "{name} no longer sees the «Magazin» section from the next page they open.",
+        "revoke": "Take the shop away"
       }
     },
     "queue": {
@@ -5008,7 +5021,7 @@
         "EVENT_INVITATION": "When an administrator sends invitations from an event's registrations list, and on Resend. One link to the form, with the name and address filled in; the place is kept until the deadline.",
         "SHOP_ORDER_PLACED": "When a member orders from the members' shop: the order and how to pay. The button opens the members' area.",
         "SHOP_ORDER_PAID": "When an administrator marks the order paid: to the member who ordered. The button opens the members' area.",
-        "SHOP_ORDER_CLUB_NOTICE": "On every order in the shop, to the address in «Membri» → «Magazin» → “Who receives the orders”, if one is written."
+        "SHOP_ORDER_CLUB_NOTICE": "On every order in the shop, to the address in «Magazin» → “Who receives the orders”, if one is written."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "after the form is sent",
@@ -7265,7 +7278,8 @@
           "total": "Total",
           "status": "Status",
           "note": "Note"
-        }
+        },
+        "movedTo": "The shop is under “Shop” in the top bar."
       }
     },
     "declarationHold": {
@@ -9244,7 +9258,9 @@
       "shopSettingsSaved": "The payment words and the orders address have been saved.",
       "shopOrderPaid": "The order has been marked paid. The member receives an email.",
       "shopOrderHandedOver": "The order has been marked handed over.",
-      "shopOrderCancelled": "The order has been cancelled."
+      "shopOrderCancelled": "The order has been cancelled.",
+      "staffPermissionGranted": "Done: they can manage the shop.",
+      "staffPermissionRevoked": "Done: they no longer manage the shop."
     }
   },
   "Network": {
