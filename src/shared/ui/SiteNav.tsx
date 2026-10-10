@@ -181,6 +181,8 @@ export default function SiteNav({
     };
 
     measure();
+    // A marker for tests: the first measurement has run, so the row is what a reader sees.
+    nav.dataset.measured = "true";
     const observer = new ResizeObserver(measure);
     observer.observe(nav);
     for (const el of itemRefs.current) if (el) observer.observe(el);
