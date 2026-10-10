@@ -41,29 +41,45 @@ export default function ProductForm({
   rich: ReturnType<typeof richTextEditorLabels>;
   noticeDescribes: boolean;
 }) {
-  const title = product ? (locale === "en" ? product.titleEn : product.titleRo) : null;
+  const cards = (
+    <Stack spacing={2}>
+      <ProductNameCard product={product} words={t} />
+      <ProductDescriptionCard product={product} words={t} rich={rich} />
+      <ProductSizesCard product={product} words={t} scope={PRODUCT_FORM_SCOPE} />
+      <ProductPublishCard product={product} words={t} noticeDescribes={noticeDescribes} />
+    </Stack>
+  );
+  // Two elements rather than one with a chosen action: the §384 guard reads each posting site's
+  // question beside its action's name, so each form says its own.
+  if (!product) {
+    return (
+      <ActionForm
+        action={createShopProductAction}
+        messages={messages}
+        scope={PRODUCT_FORM_SCOPE}
+        id="product-form"
+        data-testid="product-create-form"
+        confirm={{ title: t("members.shop.createTitle"), body: t("members.shop.createBody"), confirmLabel: t("members.shop.create"), cancelLabel: cancel }}
+      >
+        <input type="hidden" name="uiLocale" value={locale} />
+        {cards}
+      </ActionForm>
+    );
+  }
+  const title = locale === "en" ? product.titleEn : product.titleRo;
   return (
     <ActionForm
-      action={product ? saveShopProductAction : createShopProductAction}
+      action={saveShopProductAction}
       messages={messages}
       scope={PRODUCT_FORM_SCOPE}
       id="product-form"
-      data-testid={product ? `product-save-${product.id}` : "product-create-form"}
-      confirm={
-        product
-          ? { title: t("members.shop.saveTitle", { title: title ?? "" }), body: t("members.shop.saveBody"), confirmLabel: t("editor.save"), cancelLabel: cancel }
-          : { title: t("members.shop.createTitle"), body: t("members.shop.createBody"), confirmLabel: t("members.shop.create"), cancelLabel: cancel }
-      }
+      data-testid={`product-save-${product.id}`}
+      confirm={{ title: t("members.shop.saveTitle", { title }), body: t("members.shop.saveBody"), confirmLabel: t("editor.save"), cancelLabel: cancel }}
     >
       <input type="hidden" name="uiLocale" value={locale} />
-      {product && <input type="hidden" name="productId" value={product.id} />}
-      {product && <RecallHidden name="expectedVersion" value={product.version} />}
-      <Stack spacing={2}>
-        <ProductNameCard product={product} words={t} />
-        <ProductDescriptionCard product={product} words={t} rich={rich} />
-        <ProductSizesCard product={product} words={t} scope={PRODUCT_FORM_SCOPE} />
-        <ProductPublishCard product={product} words={t} noticeDescribes={noticeDescribes} />
-      </Stack>
+      <input type="hidden" name="productId" value={product.id} />
+      <RecallHidden name="expectedVersion" value={product.version} />
+      {cards}
     </ActionForm>
   );
 }

@@ -22,6 +22,7 @@ import { isStorageConfigured } from "@/modules/media/storage";
 import { canManageShop, canReadShop } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { confirmWords } from "@/shared/feedback/confirm-words";
+import { isUuid } from "@/shared/ids";
 import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 
@@ -47,6 +48,8 @@ export default async function AdminShopProductPage({ params, searchParams }: Pro
 
   const actor = await requireStaff();
   if (!canReadShop(actor)) notFound();
+  // The id's shape before any lookup (§376), after the role check: a malformed id is the same 404 an unknown one gets.
+  if (!isUuid(id)) notFound();
 
   const db = getDb();
   const product = await readProductForAdmin(db, id);
