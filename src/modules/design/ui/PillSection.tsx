@@ -1,5 +1,4 @@
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
@@ -69,8 +68,8 @@ export default async function PillSection({ locale }: { locale: Locale }) {
           <GlyphChip glyph="night" variant="outlined" label={tEvent("night.chip")} />
           <GlyphChip glyph="series" variant="outlined" label={t("design.pills.series")} />
           <GlyphChip glyph="discount" variant="outlined" label={t("design.pills.discount")} />
-          <Chip size="small" color="error" label={tEvent("cancelled")} />
-          <Chip size="small" label={tEvent("completed")} />
+          <GlyphChip glyph="cancelled" color="error" label={tEvent("cancelled")} />
+          <GlyphChip glyph="done" label={tEvent("completed")} />
         </Box>
       </Block>
 

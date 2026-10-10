@@ -1,9 +1,5 @@
-import EditIcon from "@mui/icons-material/Edit";
-import NotesIcon from "@mui/icons-material/Subject";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import MuiLink from "@mui/material/Link";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
@@ -14,6 +10,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
+import GlyphChip from "@/modules/events/ui/GlyphChip";
 import LazyRichTextEditor from "@/modules/content/rich-text/ui/LazyRichTextEditor";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import {
@@ -42,6 +39,7 @@ import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm, { type RefusalMessages } from "@/shared/forms/ActionForm";
 import RecallField, { RecallHidden } from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
@@ -56,6 +54,10 @@ import {
   setTeamMemberVisibleAction,
   setTeamPagePublishedAction,
 } from "./actions";
+
+const AddPersonIcon = ACTION_ICONS.addPerson;
+const IntroIcon = ACTION_ICONS.intro;
+const EditIcon = ACTION_ICONS.edit;
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -253,7 +255,7 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
       {mayEdit && (
         <Box component="details" id="team-new" sx={BOXED_DISCLOSURE_SX}>
           <summary>
-            <PersonAddIcon aria-hidden sx={FOLD_GLYPH_SX} />
+            <AddPersonIcon aria-hidden sx={FOLD_GLYPH_SX} />
             {t("team.add")}
           </summary>
           <ActionForm action={createTeamMemberAction} messages={messages} scope="new" data-testid="team-create-form">
@@ -345,7 +347,7 @@ function PageCard({
           <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
             {t("team.pageHeading")}
           </Typography>
-          <Chip size="small" color={published ? "success" : "default"} label={published ? t("team.pagePublished") : t("team.pageDraft")} />
+          <GlyphChip glyph={published ? "visible" : "hidden"} color={published ? "success" : "default"} label={published ? t("team.pagePublished") : t("team.pageDraft")} />
         </Stack>
         <Typography variant="body2" color="text.secondary">
           {published ? t("team.pagePublishedHelp", { ro, en }) : t("team.pageDraftHelp")}
@@ -376,7 +378,7 @@ function PageCard({
         {mayEdit && (
           <Box component="details" sx={BOXED_DISCLOSURE_SX}>
             <summary>
-              <NotesIcon aria-hidden sx={FOLD_GLYPH_SX} />
+              <IntroIcon aria-hidden sx={FOLD_GLYPH_SX} />
               {t("team.introFold")}
             </summary>
             <ActionForm action={saveTeamPageIntroAction} messages={messages} scope="intro" data-testid="team-intro-form">
@@ -477,10 +479,10 @@ function MemberCard({
             </Typography>
           )}
           <Stack direction="row" spacing={1} sx={{ mt: 0.5, flexWrap: "wrap", gap: 0.5 }}>
-            <Chip size="small" color={member.visible ? "success" : "default"} label={member.visible ? t("team.visible") : t("team.hidden")} />
-            {!member.photo && <Chip size="small" variant="outlined" label={t("team.noPhoto")} />}
-            {member.links.length > 0 && <Chip size="small" variant="outlined" label={t("team.linkCount", { count: member.links.length })} />}
-            {oneSided(member) && <Chip size="small" variant="outlined" color="warning" label={t("team.oneLanguage")} />}
+            <GlyphChip glyph={member.visible ? "visible" : "hidden"} color={member.visible ? "success" : "default"} label={member.visible ? t("team.visible") : t("team.hidden")} />
+            {!member.photo && <GlyphChip glyph="hidden" variant="outlined" label={t("team.noPhoto")} />}
+            {member.links.length > 0 && <GlyphChip glyph="link" variant="outlined" label={t("team.linkCount", { count: member.links.length })} />}
+            {oneSided(member) && <GlyphChip glyph="language" variant="outlined" color="warning" label={t("team.oneLanguage")} />}
           </Stack>
         </Box>
       </Stack>

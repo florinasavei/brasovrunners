@@ -1,8 +1,4 @@
-import AddCircleIcon from "@mui/icons-material/AddCircle";
-import EditIcon from "@mui/icons-material/Edit";
-import ViewAgendaIcon from "@mui/icons-material/ViewAgenda";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { getTranslations } from "next-intl/server";
@@ -12,14 +8,20 @@ import LazyRichTextEditor from "@/modules/content/rich-text/ui/LazyRichTextEdito
 import type { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import { TEAM_BOX_BODY_MAX, TEAM_BOX_TITLE_MAX } from "@/modules/content/team/fields";
 import type { AdminTeamBox } from "@/modules/content/team/repository";
+import GlyphChip from "@/modules/events/ui/GlyphChip";
 import TranslateAllButton from "@/modules/translate/ui/TranslateAllButton";
 import ActionForm, { type RefusalMessages } from "@/shared/forms/ActionForm";
 import RecallField, { RecallHidden } from "@/shared/forms/recall";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { createTeamBoxAction, deleteTeamBoxAction, moveTeamBoxAction, saveTeamBoxAction, setTeamBoxVisibleAction } from "./actions";
+
+const BoxesIcon = ACTION_ICONS.boxes;
+const AddIcon = ACTION_ICONS.add;
+const EditIcon = ACTION_ICONS.edit;
 
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 type RichLabels = ReturnType<typeof richTextEditorLabels>;
@@ -58,7 +60,7 @@ export default function BoxesCard({
   return (
     <Box component="details" id="team-boxes" sx={{ ...BOXED_DISCLOSURE_SX, scrollMarginTop: 16 }} data-testid="team-boxes">
       <summary>
-        <ViewAgendaIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
+        <BoxesIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
         {t("team.boxes.heading")} · {count}
       </summary>
       <Stack spacing={2} sx={{ mt: 1.5 }}>
@@ -69,7 +71,7 @@ export default function BoxesCard({
         {mayEdit && (
           <Box component="details" sx={BOXED_DISCLOSURE_SX}>
             <summary>
-              <AddCircleIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
+              <AddIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
               {t("team.boxes.add")}
             </summary>
             <ActionForm action={createTeamBoxAction} messages={messages} scope="box-new" data-testid="team-box-create-form">
@@ -147,9 +149,9 @@ function BoxRow({
         {title}
       </Typography>
       <Stack direction="row" sx={{ mt: 0.5, flexWrap: "wrap", gap: 0.5 }}>
-        <Chip size="small" color={box.visible ? "success" : "default"} label={box.visible ? t("team.visible") : t("team.hidden")} />
-        {(box.bodyRo === null) !== (box.bodyEn === null) && <Chip size="small" variant="outlined" color="warning" label={t("team.oneLanguage")} />}
-        {box.bodyRo === null && box.bodyEn === null && <Chip size="small" variant="outlined" label={t("team.boxes.noText")} />}
+        <GlyphChip glyph={box.visible ? "visible" : "hidden"} color={box.visible ? "success" : "default"} label={box.visible ? t("team.visible") : t("team.hidden")} />
+        {(box.bodyRo === null) !== (box.bodyEn === null) && <GlyphChip glyph="language" variant="outlined" color="warning" label={t("team.oneLanguage")} />}
+        {box.bodyRo === null && box.bodyEn === null && <GlyphChip glyph="hidden" variant="outlined" label={t("team.boxes.noText")} />}
       </Stack>
 
       <Stack direction="row" sx={{ mt: 1.5, flexWrap: "wrap", gap: 1 }}>

@@ -1,16 +1,10 @@
-import AddCircleIcon from "@mui/icons-material/AddCircle";
-import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
-import EditIcon from "@mui/icons-material/Edit";
-import PaymentsIcon from "@mui/icons-material/Payments";
-import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
-import StorefrontIcon from "@mui/icons-material/Storefront";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import GlyphChip from "@/modules/events/ui/GlyphChip";
 import type { getTranslations } from "next-intl/server";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { countForm } from "@/i18n/count-form";
@@ -38,6 +32,7 @@ import TeamPhotoField, { type TeamPhotoLabels } from "@/modules/content/team/ui/
 import TeamPhotoImage from "@/modules/content/team/ui/TeamPhotoImage";
 import ActionForm, { type RefusalMessages } from "@/shared/forms/ActionForm";
 import RecallField, { RecallCheckbox, RecallHidden } from "@/shared/forms/recall";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
@@ -52,6 +47,13 @@ import {
   saveShopProductAction,
   saveShopSettingsAction,
 } from "./actions";
+
+const AddIcon = ACTION_ICONS.add;
+const EditIcon = ACTION_ICONS.edit;
+const ShopIcon = ACTION_ICONS.shop;
+const PaymentIcon = ACTION_ICONS.payment;
+const OrdersIcon = ACTION_ICONS.orders;
+const OrderForIcon = ACTION_ICONS.orderFor;
 
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 
@@ -127,11 +129,11 @@ export default function ShopCard({
     <Paper variant="outlined" id="members-shop" sx={{ p: { xs: 1.5, sm: 2 }, scrollMarginTop: 16 }} data-testid="members-shop">
       <Stack spacing={1.5}>
         <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
-          <StorefrontIcon aria-hidden="true" sx={{ fontSize: 22 }} />
+          <ShopIcon aria-hidden="true" sx={{ fontSize: 22 }} />
           <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 700 }}>
             {t("members.shop.heading")}
           </Typography>
-          <Chip size="small" variant="outlined" label={count} />
+          <GlyphChip glyph="shop" variant="outlined" label={count} />
         </Stack>
         <Typography variant="body2" color="text.secondary">
           {t("members.shop.help")}
@@ -148,7 +150,7 @@ export default function ShopCard({
         {mayManage && (
           <Box component="details" sx={BOXED_DISCLOSURE_SX}>
             <summary>
-              <AddCircleIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
+              <AddIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
               {t("members.shop.add")}
             </summary>
             <ActionForm
@@ -231,7 +233,7 @@ function SettingsFold({
   return (
     <Box component="details" sx={BOXED_DISCLOSURE_SX} data-testid="shop-settings">
       <summary>
-        <PaymentsIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
+        <PaymentIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
         {t("members.shop.settings")}
       </summary>
       <Stack spacing={1.5} sx={{ mt: 1.5 }}>
@@ -355,9 +357,9 @@ function ProductRow({
         </Box>
       </Stack>
       <Stack direction="row" sx={{ mt: 0.5, flexWrap: "wrap", gap: 0.5 }}>
-        <Chip size="small" color={product.visible ? "success" : "default"} label={product.visible ? t("members.shop.visible") : t("members.shop.hidden")} />
-        {product.orders > 0 && <Chip size="small" variant="outlined" label={t(`members.shop.orders.${countForm(product.orders, locale)}`, { count: product.orders })} />}
-        {(product.descriptionRo === null) !== (product.descriptionEn === null) && <Chip size="small" variant="outlined" color="warning" label={t("members.shop.oneLanguage")} />}
+        <GlyphChip glyph={product.visible ? "visible" : "hidden"} color={product.visible ? "success" : "default"} label={product.visible ? t("members.shop.visible") : t("members.shop.hidden")} />
+        {product.orders > 0 && <GlyphChip glyph="orders" variant="outlined" label={t(`members.shop.orders.${countForm(product.orders, locale)}`, { count: product.orders })} />}
+        {(product.descriptionRo === null) !== (product.descriptionEn === null) && <GlyphChip glyph="language" variant="outlined" color="warning" label={t("members.shop.oneLanguage")} />}
       </Stack>
 
       {mayManage && (
@@ -598,7 +600,7 @@ function OrdersFold({
   return (
     <Box component="details" id="shop-orders" open={inUse || undefined} sx={{ ...BOXED_DISCLOSURE_SX, scrollMarginTop: 16 }} data-testid="shop-orders">
       <summary>
-        <ReceiptLongIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
+        <OrdersIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
         {t("members.shop.ordersHeading")} · {count}
       </summary>
       <Stack spacing={2} sx={{ mt: 1.5 }}>
@@ -714,7 +716,7 @@ function ForMemberFold({
   return (
     <Box component="details" id="shop-order-for-member" sx={BOXED_DISCLOSURE_SX} data-testid="shop-order-for-member">
       <summary>
-        <AddShoppingCartIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
+        <OrderForIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
         {t("members.shop.forMember.title")}
       </summary>
       <Stack spacing={1.5} sx={{ mt: 1.5 }}>
@@ -815,9 +817,9 @@ function OrderRow({
         <Typography variant="subtitle2" component="p" sx={{ fontWeight: 700 }}>
           {t("members.shop.orderNumber", { number: order.number })}
         </Typography>
-        <Chip size="small" color={order.status === "CANCELLED" ? "default" : order.status === "PLACED" ? "warning" : "success"} label={t(`members.shop.status.${order.status}`)} />
+        <GlyphChip glyph={order.status === "CANCELLED" ? "cancelled" : order.status === "PLACED" ? "planned" : "done"} color={order.status === "CANCELLED" ? "default" : order.status === "PLACED" ? "warning" : "success"} label={t(`members.shop.status.${order.status}`)} />
         {/* Placed by the club in the member's name (§690): said on the row, as the CSV says it in its column. */}
-        {order.placedBy === "CLUB" && <Chip size="small" variant="outlined" label={t("members.shop.forMember.placedByClub")} data-testid="order-placed-by-club" />}
+        {order.placedBy === "CLUB" && <GlyphChip glyph="club" variant="outlined" label={t("members.shop.forMember.placedByClub")} testId="order-placed-by-club" />}
       </Stack>
       <Typography variant="body2" sx={{ overflowWrap: "anywhere" }}>
         {order.memberName}
