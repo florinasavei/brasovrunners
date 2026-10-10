@@ -4,7 +4,7 @@ import { platformSettings } from "@/db/schema/platform-settings";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
-import { canManageShop } from "@/modules/staff-identity/domain/roles";
+import { canManageShop, type StaffActor } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { shopSettingsSchema } from "./fields";
 
@@ -45,9 +45,9 @@ export function paymentWordsFor(settings: ShopSettings, locale: string): string 
 
 export async function saveShopSettings<T extends Record<string, unknown>>(
   db: Database<T>,
-  input: { actor: Pick<StaffUser, "id" | "role">; fields: unknown; now?: Date },
+  input: { actor: Pick<StaffUser, "id"> & StaffActor; fields: unknown; now?: Date },
 ): Promise<ShopSettings> {
-  if (!canManageShop(input.actor.role)) throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not change the shop's settings`);
+  if (!canManageShop(input.actor)) throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not change the shop's settings`);
   const parsed = shopSettingsSchema.safeParse(input.fields);
   if (!parsed.success) {
     throw new DomainError(

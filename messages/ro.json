@@ -626,7 +626,8 @@
       "registeredWaitlisted": "{count} pe lista de așteptare",
       "registeredOutside": "invitați speciali: {count}",
       "registeredMoreEvents": "+{count} altele",
-      "newsletter": "Newsletter"
+      "newsletter": "Newsletter",
+      "shop": "Magazin"
     },
     "outbox": {
       "status": {
@@ -2734,6 +2735,18 @@
         "invited": "contul exista, invitația trimisă din nou",
         "failed": "eșuat: {reason}",
         "unconfigured": "fără cheie de invitații: contul se face din consola Zitadel"
+      },
+      "permissions": {
+        "shopManage": "Gestionează magazinul",
+        "implied": "inclus în rol",
+        "chipShop": "Magazin",
+        "saving": "Se salvează…",
+        "grantTitle": "Îi dai magazinul?",
+        "grantBody": "{name} va putea scrie produsele, plata și adresa pentru comenzi și va marca fiecare comandă plătită, predată sau anulată, din secțiunea «Magazin». Adresele membrilor nu le vede.",
+        "grant": "Dă-i magazinul",
+        "revokeTitle": "Îi iei magazinul?",
+        "revokeBody": "{name} nu mai vede secțiunea «Magazin» de la următoarea pagină pe care o deschide.",
+        "revoke": "Ia-i magazinul"
       }
     },
     "queue": {
@@ -5009,7 +5022,7 @@
         "EVENT_INVITATION": "Când un administrator trimite invitații din lista înscrierilor unui eveniment, și la Retrimite. Un link spre formular, cu numele și adresa completate; locul e păstrat până la termen.",
         "SHOP_ORDER_PLACED": "Când un membru comandă din magazinul membrilor: comanda și cum se plătește. Butonul duce în zona membrilor.",
         "SHOP_ORDER_PAID": "Când un administrator marchează comanda plătită: membrului care a comandat. Butonul duce în zona membrilor.",
-        "SHOP_ORDER_CLUB_NOTICE": "La fiecare comandă din magazin, la adresa din «Membri» → «Magazin» → «Cine primește comenzile», dacă e scrisă."
+        "SHOP_ORDER_CLUB_NOTICE": "La fiecare comandă din magazin, la adresa din «Magazin» → «Cine primește comenzile», dacă e scrisă."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
@@ -5695,6 +5708,7 @@
                 "«Înscrieri»: cine s-a înscris, cu filtre, export și pagina fiecărei înscrieri.",
                 "«Ziua cursei»: masa de ridicare a numerelor, pe telefon.",
                 "«Galerie» și «Pagini» (paginile standard — «Contact», «Echipa», «Întrebări frecvente», «Membri» — și paginile clubului).",
+                "«Magazin»: magazinul membrilor — produsele, plata și comenzile. Îl văd Organizatorul, Administratorii și colegul cu bifa «Gestionează magazinul».",
                 "«Setări»: «Emailuri» (ce primesc participanții, planul Mailgun, limita pe oră, drumurile prin Gmail, coada de trimitere), «Termene», «Aspect», «Costuri», «Anti-robot» și, la sfârșitul rândului, «Configurație» (pentru rolul Tehnic și Administratori).",
                 "«Sarcini» → «Club»: ce mai are clubul de făcut, citit din sistem, cu pașii sub fiecare rând. «Sarcini» → «De făcut»: lista clubului, scrisă și bifată de mână — adaugi un rând, îl dai cuiva, îi pui un termen, îl bifezi când e gata.",
                 "«Documente legale»: termenii, nota de confidențialitate (GDPR) și declarațiile.",
@@ -6378,7 +6392,8 @@
                 "«Echipa» → «Adaugă o persoană»: «Adresă de email», «Nume», «Rol» (Voluntar pentru masă), «Limbă preferată».",
                 "Apasă «Adaugă» și confirmă. Persoana primește invitația pe email și își alege parola.",
                 "Nu a primit-o: pe rândul ei, «Retrimite invitația» → «Trimite acum, fără să aștepte trecerea programată».",
-                "Alt rol: «Schimbă rolul». A plecat din echipă: «Retrage accesul»."
+                "Alt rol: «Schimbă rolul». A plecat din echipă: «Retrage accesul».",
+                "Magazinul fără rolul de Administrator: pe rândul colegului, bifează «Gestionează magazinul» și confirmă. Găsește «Magazin» în bara de sus; adresele membrilor nu le vede."
               ]
             },
             {
@@ -7259,8 +7274,11 @@
         "descriptionRo": "Descriere (Română)",
         "descriptionEn": "Descriere (English)",
         "descriptionHelp": "Material, mărimi, culoare — pe scurt.",
-        "price": "Prețul, în lei",
-        "priceHelp": "De exemplu 45 sau 45,50.",
+        "price": "Prețul",
+        "priceHelp": "De exemplu 45 sau 45,50; moneda e cea aleasă alături.",
+        "currency": "Moneda",
+        "currencyRon": "lei (RON)",
+        "currencyEur": "euro (EUR)",
         "variants": "Variante și stoc (opțional)",
         "variantsHelp": "Câte una pe rând, de exemplu „M: 10” sau „L” (fără limită). Cel mult {max} variante, {length} de caractere fiecare. Gol: o singură variantă.",
         "stock": "Stoc (fără variante)",
@@ -7317,10 +7335,12 @@
           "variant": "Varianta",
           "quantity": "Bucăți",
           "unitPrice": "Preț bucata",
+          "currency": "Monedă",
           "total": "Total",
           "status": "Starea",
           "note": "Nota"
-        }
+        },
+        "movedTo": "Magazinul e la „Magazin”, în bara de sus."
       }
     },
     "declarationHold": {
@@ -9300,6 +9320,8 @@
       "shopOrderPaid": "Comanda a fost marcată plătită. Membrul primește un email.",
       "shopOrderHandedOver": "Comanda a fost marcată predată.",
       "shopOrderCancelled": "Comanda a fost anulată.",
+      "staffPermissionGranted": "Gata: poate gestiona magazinul.",
+      "staffPermissionRevoked": "Gata: nu mai gestionează magazinul.",
       "teamBoxCreated": "Caseta a fost adăugată, ascunsă până este pusă pe site.",
       "teamBoxSaved": "Caseta a fost salvată.",
       "teamBoxShown": "Caseta este pe site.",

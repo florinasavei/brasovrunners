@@ -626,7 +626,8 @@
       "registeredWaitlisted": "{count} on the waiting list",
       "registeredOutside": "special guests: {count}",
       "registeredMoreEvents": "+{count} more",
-      "newsletter": "Newsletter"
+      "newsletter": "Newsletter",
+      "shop": "Shop"
     },
     "outbox": {
       "status": {
@@ -2734,6 +2735,18 @@
         "invited": "the account existed, invitation sent again",
         "failed": "failed: {reason}",
         "unconfigured": "no invitation key: the account is made in the Zitadel console"
+      },
+      "permissions": {
+        "shopManage": "Manages the shop",
+        "implied": "included in the role",
+        "chipShop": "Shop",
+        "saving": "Saving…",
+        "grantTitle": "Give them the shop?",
+        "grantBody": "{name} will write the products, the payment words and the address for orders, and mark each order paid, handed over or cancelled, in the “Shop” section. They do not see the members' addresses.",
+        "grant": "Give them the shop",
+        "revokeTitle": "Take the shop away?",
+        "revokeBody": "{name} no longer sees the “Shop” section from the next page they open.",
+        "revoke": "Take the shop away"
       }
     },
     "queue": {
@@ -5009,7 +5022,7 @@
         "EVENT_INVITATION": "When an administrator sends invitations from an event's registrations list, and on Resend. One link to the form, with the name and address filled in; the place is kept until the deadline.",
         "SHOP_ORDER_PLACED": "When a member orders from the members' shop: the order and how to pay. The button opens the members' area.",
         "SHOP_ORDER_PAID": "When an administrator marks the order paid: to the member who ordered. The button opens the members' area.",
-        "SHOP_ORDER_CLUB_NOTICE": "On every order in the shop, to the address in «Membri» → «Magazin» → “Who receives the orders”, if one is written."
+        "SHOP_ORDER_CLUB_NOTICE": "On every order in the shop, to the address in «Magazin» → “Who receives the orders”, if one is written."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "after the form is sent",
@@ -5695,6 +5708,7 @@
                 "«Registrations»: who signed up, with filters, the export and each registration's page.",
                 "«Race day»: the number pickup desk, on a phone.",
                 "«Gallery» and «Pages» (the standard pages — «Contact», «The team», «FAQ», «Members» — and the club's own pages).",
+                "«Shop»: the members' shop — the products, the payment and the orders. For the Organizer, the Administrators and a colleague ticked «Manages the shop».",
                 "«Settings»: «Emails» (what participants receive, the Mailgun plan, the hourly limit, the Gmail routes, the sending queue), «Deadlines», «Appearance», «Costs», «Anti-bot» and, at the end of the row, «Configuration» (for the Technical role and the Administrators).",
                 "«Tasks» → «Club»: what the club still has to do, read from the system, with the steps under each row. «Tasks» → «To do»: the club's list, typed and ticked by hand — add a line, give it to somebody, set a due day, tick it when it is done.",
                 "«Legal documents»: the terms, the privacy notice (GDPR) and the declarations.",
@@ -6378,7 +6392,8 @@
                 "«Staff» → «Add someone»: «Email address», «Name», «Role» (Voluntar for the desk), «Preferred language».",
                 "Press «Add» and confirm. The person gets the invitation by email and chooses a password.",
                 "It never arrived: on their row, «Resend the invitation» → «Send now, without waiting for the scheduled round».",
-                "Another role: «Change role». Left the team: «Revoke access»."
+                "Another role: «Change role». Left the team: «Revoke access».",
+                "The shop without the Administrator role: on the colleague's row, tick «Manages the shop» and confirm. They find «Shop» in the top bar; they never see the members' addresses."
               ]
             },
             {
@@ -7259,8 +7274,11 @@
         "descriptionRo": "Description (Română)",
         "descriptionEn": "Description (English)",
         "descriptionHelp": "Material, sizes, colour — briefly.",
-        "price": "Price, in lei",
-        "priceHelp": "For example 45 or 45.50.",
+        "price": "Price",
+        "priceHelp": "For example 45 or 45.50; the currency is the one chosen beside it.",
+        "currency": "Currency",
+        "currencyRon": "lei (RON)",
+        "currencyEur": "euro (EUR)",
         "variants": "Variants and stock (optional)",
         "variantsHelp": "One per line, for example “M: 10” or “L” (no limit). At most {max} variants, {length} characters each. Empty: one variant.",
         "stock": "Stock (no variants)",
@@ -7317,10 +7335,12 @@
           "variant": "Variant",
           "quantity": "Quantity",
           "unitPrice": "Unit price",
+          "currency": "Currency",
           "total": "Total",
           "status": "Status",
           "note": "Note"
-        }
+        },
+        "movedTo": "The shop is under “Shop” in the top bar."
       }
     },
     "declarationHold": {
@@ -9300,6 +9320,8 @@
       "shopOrderPaid": "The order has been marked paid. The member receives an email.",
       "shopOrderHandedOver": "The order has been marked handed over.",
       "shopOrderCancelled": "The order has been cancelled.",
+      "staffPermissionGranted": "Done: they can manage the shop.",
+      "staffPermissionRevoked": "Done: they no longer manage the shop.",
       "teamBoxCreated": "The box was added, hidden until it is put on the site.",
       "teamBoxSaved": "The box was saved.",
       "teamBoxShown": "The box is on the site.",

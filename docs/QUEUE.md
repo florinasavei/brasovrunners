@@ -9,83 +9,81 @@ Legend: **building** — a change is being implemented, reviewed and fixed on it
 **ready** — reviewed, waiting for the next small release · **waiting on the owner** — a
 decision or a click only the club can make · **released** — on production, with its baseline.
 
-## Release plan (2026-09-30, evening — the owner is away from 2026-10-01 noon and works from the phone)
+## Where things stand — 2026-10-10, written for the next session (laptop or phone)
 
-Where things stand at 09:20 on 2026-10-01, written so that a session with no access to the laptop can carry on
-(the dispatcher's own notes lived under `D:/tmp/handoff/` on the laptop; from here on this page is the queue).
+The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
+This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production = qa = QA: `BR-V2.52`** (released 09:10 on 2026-10-01; health ok). **The race is published on
-  production and takes real registrations since the morning of 2026-10-01** — every change from here on is a change to a
-  live system: one batch a day at most, CI's e2e as the gate, and a release only on the owner's word. What the day
-  shipped: `BR-V2.51` (§600 the card's two times as a list where the row wraps; §601 a picture in a description opens
-  large in place with pinch-zoom; §602 the listing's filters reach the past events; §603 the phone card's short weekday)
-  and `BR-V2.52` (§604 every race's «când» lines up with one named time too — a container query sized for the short and
-  the long date — and the pills' tooltips say «circa 10 km» once, without «(aproximativ)»). No migration is due after
-  `0116`. **Nothing is waiting in qa.**
-- **Mailgun is paid since 2026-10-01** (the owner's word: «Am luat mailgun plătit»). The platform still has to be told:
-  «Setări» → «Emailuri» → the Mailgun plan (`platform_settings.emailPlan`) — until it names the paid tier the outbox
-  defers everything past Free's hundred a day to the reset. `/admin/tasks` is the go-live list read from the system;
-  `/admin/emails` shows the day's volume; `/api/health?deep=1` the outbox and the jobs.
-- **Word fixes from the phone (the owner: «e posibil să îți mai dau diverse spell checks»):** the lightest change there
-  is. A remote session branches from `origin/qa`, edits `messages/ro.json` and `messages/en.json` (both languages
-  or neither; a word that says "about" says it once — «circa 10 km», never «circa 10 km (aproximativ)»), updates the
-  tests that pin the words (`grep -rn "<old words>" tests/`), runs `yarn check`, writes `.release/<branch>.json`,
-  pushes and opens a pull request into `qa`; the label `ship` lands and releases it (`docs/RUNBOOKS.md` § Every
-  release: the label). Never a push to `qa` or `main`; never a pull request whose head is `main` (a sync branch
-  cut at `main`'s tip instead — `update-branch` on a main-headed pull request merges qa into main, an unplanned release).
-- **The release from the phone**, when something new sits in qa: GitHub app → the repository → **Actions** → **release**
-  → **Run workflow** → `pr` = the batch pull request's number, `baseline` empty → Run; it merges `qa` into
-  `main`, runs a production migration if one is due and waits for production's health; the run's Summary says each
-  step. If the step «the qa run» stops because GitHub started no run on qa's merge commit (it happened on 2026-10-01
-  09:05), open the `qa` → `main` pull request by hand and merge it on green; production's health flips to the new
-  baseline within two minutes.
-- **Open questions for the owner** (from the night's reviews; none blocks anything): phones 412–470 px wide now get the
-  list form too (§604 — say if the one-line row was preferred there); «Înscrieri deschise» is offered as a filter
-  whenever past events exist (§602); the picture preview shows the whole picture, not the organizer's crop, and a tap
-  on the picture closes it (§601); the e2e never exercises a one-named-time race card (no such card in the seed) — the
-  unit test pins its markup; a few code comments still quote «(aproximativ)»/«(estimativ)»; «Aproximativ» vs
-  «Estimativ» as the editor's word; the racing flag's aria; Vercel back to Free after the race; `yarn idle:measure`
-  is meaningless while the site has visitors.
-- **Decided today, recorded in the sections:** a full race never gets a place from the desk — raise the capacity first
-  (§589, §592); the address is confirmed for all or for none, the declaration per person, a cancellation per person
-  (§588, §592); «Retrimite familiei» sends one email for the family's earliest step; the site costs as little as possible
-  (§577: one daily window at 04:00, a shallow health check, the anti-bot check on touch).
-- **How a change is made** (`docs/DISPATCHER.md`): one branch per change, a brief, an adversarial review, the
-  `.release/<branch>.json` entry, one batch PR into qa a day, `yarn check` before the push, e2e in CI only.
-  The owner's standing words: plain words, both languages or neither, a glyph on every button and fold, free tiers,
-  fewer CI runs, fewer tests («cut the bullshit and tests»), no Romanian in the README.
+- **Production = QA = `BR-V2.85`** (released 2026-10-10 10:25 UTC; `BR-V2.84`'s migration `0133_members_shop` was
+  approved and applied the same morning). The race of 21 November is published and takes real registrations — every
+  change is a change to a live system.
+- **On `qa`, not yet on production: `BR-V2.86` and `BR-V2.87`**, released together on the owner's «prod»:
+  - `BR-V2.86` (§685): `LICENSE` is a plain all-rights-reserved notice in the club's name, naming other running clubs
+    (the owner: «Keep it public, but make sure people don't steal it … Especially other run clubs»). The repository
+    **stays public**, so every "the repository is public" rule below still holds.
+  - `BR-V2.87` (§686–§688): a shop price in lei or euro, never converted (migration `0135_shop_price_currency`);
+    «Gestionează magazinul», a per-person permission ticked on «Echipa», and the shop's own top-bar section «Magazin»
+    (migration `0134_staff_user_permissions`); `yarn handoff` and `docs/DISPATCHER.md` § When a session stops.
+    **Two migrations: production stops at the `migrate.yml` run for the owner's approval.**
+- **Three empty branches** on GitHub — `feat/team-org-chart`, `feat/design-system-page`, `feat/shop-order-for-member`
+  (a copy of the currency branch): no work of their own, nobody remembers their purpose; delete them on GitHub
+  (the session's git cannot delete a remote branch).
+- **Nothing else is building.** No worktree holds unmerged work; old worktrees under `.claude/worktrees/` can be removed
+  (`git worktree remove --force <path>`; a merged branch's worktree is safe to drop).
 
-- **From 2026-10-01 12:00 the owner works remote from GitHub, on holiday** (his word, 2026-09-30 23:20). What works
-  without the laptop: a change is built by a remote agent that branches from `origin/qa`, runs the tests (PGlite, no
-  database), writes its `.release/<branch>.json`, pushes and opens a pull request into `qa`; the landing and the release
-  are the label `ship` on that pull request (`docs/RUNBOOKS.md` § Every release: the label — one pull request at a time,
-  straight to production; `dry_run` by hand shows the diff only). The night of 2026-09-30 ran three changes that way:
-  a cancellation offers the freed place to the waiting list, both starts named with a racing flag, the distance marked
-  «aproximativ»; their pull requests are on GitHub. The laptop's own kits (`premerge`/`land` scripts under
-  `D:/tmp/handoff/`) are not needed for that path.
-### Follow-ups, in order (none blocks the race)
+### How a change is made here (the owner's standing rules, all still in force)
 
-- `yarn npm audit` leftovers: `esbuild` 0.18 through `drizzle-kit`, ESLint 9.39's end of support — major upgrades of two
-  dev dependencies, each its own change, after the owner's yes (§584).
-- Measure Neon after §577: `yarn idle:measure` on production on 2026-10-01 (5.7 CU-hours a day before it); the
-  cron-job.org job pings are the next suspect if it does not fall below 2.
-- After the 21 November race: Vercel production back from Pro to Hobby (moved to Pro on 2026-09-30 for the function
-  quota).
+- **One branch per change**, cut from `origin/qa` with `--no-track`, carrying its `.release/<branch>.json`
+  (`.release/README.md`); never an edit to `DECISIONS.md`, `CHANGELOG.md`, `SPECS.md` or a baseline on the branch.
+- **A batch** collects reviewed branches: `git checkout -B batch/<date>-<x> origin/qa --no-track` → `yarn batch:merge
+  <branch>…` → `yarn docs:land --tree --apply` → `yarn docs:check` → one commit (the hook runs `yarn check`; on a busy
+  machine `VITEST_MAX_WORKERS=4 git commit …`) → push → a pull request into `qa` → merge on green CI.
+- **Two-step release:** QA first; production only on the owner's word («prod»). The release is a `qa` → `main` pull
+  request merged on green. **A release with a migration stops at the `migrate.yml` run on `main`, gated by the
+  Production environment: only the owner can approve it** (GitHub → Actions → the run → Review deployments → Production
+  → Approve). The session's GitHub app is refused that call (403), so ask the owner for the click and give the link;
+  Vercel's production build waits up to 20 minutes for the migration (`scripts/wait-for-migration.mjs`) and needs a
+  redeploy after that.
+- **Never** push to `qa` or `main`; never `--no-verify`; never a credential in the repository (it is public:
+  `yarn secrets:check`); the club's domain in no file but `SETUP.md` §26; no person's name in code or documents (a role
+  instead: «the safety person», «an organizer»); no `@mui/x-data-grid`.
+- **Agents** (`.claude/workflows/`, `docs/DISPATCHER.md`): `br-chain` implements, reviews adversarially, fixes and
+  re-reviews one branch; `br-fix-round` runs one more round. Only the `brief` reaches the implementer, so the intent and
+  the checklist go inside it. One workflow at a time. Rounds never run Playwright, `next build` or a whole test
+  directory — one test file per vitest call (`--maxWorkers=2`); CI's e2e is the gate. Never copy the main checkout's
+  `.env.local` (it holds real values) into a worktree — agents did, twice; delete any copy found. Never edit
+  `br-chain.js` or `br-fix-round.js`.
+- **A clock-dependent test** fails only at one minute of the day (the queue panel test refused «10:05» and ran at
+  10:05 Brașov time — fixed in `BR-V2.84`): pin every time a test asserts on.
+
+### What shipped since 2026-10-08 (the details are in `CHANGELOG.md` and the sections)
+
+`BR-V2.77`–`BR-V2.81`: «Spune-ne ceva», one wizard from Contact — feedback, suggestion, complaint and «Girl Zone» (the
+safety form, a flower icon, reaching one person the club names); anonymous by default with an incognito icon, named on
+request, then the sender chooses the club or the safety person; a filterable event picker; the newsletter last on the
+contact page (§676–§680). `BR-V2.82`: members' race numbers print first, on their own pages (§681). `BR-V2.83`: a plain
+rain hour has its own cloud (§682). `BR-V2.84`: the members' shop (§683). `BR-V2.85`: the members' zone shows no
+way into the backoffice, not even to a colleague (§684).
+
 ## Building
-
-Since the evening of 2026-09-24 at most four changes are built at once: eleven in parallel exhausted the development machine and every run had to be recovered.
 
 | Item | Branch | Notes |
 | --- | --- | --- |
-| Each person waiting is told where they stand — the position only where places are allocated automatically; by hand, how many others wait and that the club chooses (while the organizers hand out freed places a position would promise an order the club does not follow) — and the event page says how many wait | `feat/waiting-list-position-for-each` | fix round on the owner's narrowing, then the next batch |
-| The setting says what it does, «Locurile din lista de așteptare se alocă automat», and «BID» is spelled «BIB» everywhere | `fix/waitlist-setting-says-places-are-allocated` | fix round: the English help under 200 characters |
-| The cancel dialog says the person is emailed, what the reason does, and where the place goes by the event's setting («eu ca admin trebuie să primesc în pop-up când anulez pe cineva că se va trimite și un mail») | `fix/cancel-dialog-says-the-person-is-emailed` | words only |
+| — | nothing is building |
 
 ## Ready for the next release
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V2.52` |
+| The repository's licence: all rights reserved (§685) | `BR-V2.86`, on `qa`; production on the owner's word |
+
+### Asked for on 2026-10-10, to start from the laptop
+
+- **The shop's real catalogue.** The owner: «on the laptop I will also give you an excel to see the exact variants of
+  products». Read the sheet, then either enter the products through the top bar's «Magazin» on QA, or — if the variants do
+  not fit today's model (one list of labels per product, an optional stock per label, one price per product) — say
+  what the sheet needs (a price per variant, two dimensions such as size × colour, a photo per variant) before changing
+  the schema. No real prices or products go into the repository: it is public.
 
 ## Next, queued
 
@@ -113,6 +111,9 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 | Two daily deep health monitors (§577) | cron-job.org: `GET /api/health?deep=1` on production and on QA at 04:02, notifications on failure — the hourly health check is shallow now and no longer sees a stalled outbox; the steps are on `/admin/tasks` |
 | The privacy notice from the new template, on production | `/admin/legal` → the notice → «Versiune nouă» → «Pornește de la șablon» → approve: until then «Descarcă lista pentru sponsori» refuses (§570), and the newsletter and the members' zone are not described |
 | Vercel back to Hobby | after the 21 November race: production was moved to Pro on 2026-09-30 (the function quota) |
+| Open the members' shop on production (§683) | approve a privacy notice from the template in `/admin/legal` (section 5 names the shop, `{{membersShop}}`; a lawyer reads the accounting-records retention first), then the top bar's «Magazin»: «Cum se plătește», «Cine primește comenzile», the products — `SETUP.md` §43; `/admin/tasks` shows `shopNotice` until then |
+| The members' race-number design | the owner, 2026-10-09: «I want different BIB design for BVR members». A members' own design exists since §664 (its own header colour or picture and a label, chosen in the event's bib card) and members print on their own pages since §681 — say what else should differ (a colour band, the club's logo, a «Membru» stripe, the number's colour) |
+| The club's own Google calendar | proposed, not built: the site would keep a Google calendar of the club's events in step (Calendar API through a service account the club creates in its Google account, its key on both Vercel projects). Needs the owner's yes and the account; the public `.ics` feed and the calendar page already exist (§107, §672, §674) |
 | Two major upgrades (dev tooling) | say yes or no: `drizzle-kit` (drops the old `esbuild` audit line) and ESLint 10 (9.39 is past support) — §584 |
 
 ## Later
@@ -130,6 +131,8 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.87` | a shop price in lei or in euro (§686) · permissions per person: «Gestionează magazinul» and the shop's own section (§687) · `yarn handoff` and the rules for a session that stops (§688) |
+| `BR-V2.86` | the licence: all rights reserved (§685) |
 | `BR-V2.85` | the members' zone shows no backoffice button (§684) |
 | `BR-V2.84` | the members' shop (§683) |
 | `BR-V2.83` | plain rain has its own cloud (§682) |

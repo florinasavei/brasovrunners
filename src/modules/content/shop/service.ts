@@ -4,7 +4,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database, Transaction } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { mediaAssetKeyPrefix } from "@/modules/content/team/repository";
-import { canManageShop } from "@/modules/staff-identity/domain/roles";
+import { canManageShop, type StaffActor } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import { stockToSave, variantKey } from "./domain";
@@ -17,7 +17,7 @@ import { type ProductFields, productFieldsSchema } from "./fields";
  * Nothing here expires the public cache: the shop is on no public page.
  */
 
-type Actor = Pick<StaffUser, "id" | "role">;
+type Actor = Pick<StaffUser, "id"> & StaffActor;
 
 function parseOrThrow(value: unknown): ProductFields {
   const parsed = productFieldsSchema.safeParse(value);
@@ -32,7 +32,7 @@ function parseOrThrow(value: unknown): ProductFields {
 }
 
 function assertMayManage(actor: Actor): void {
-  if (!canManageShop(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not manage the members' shop`);
+  if (!canManageShop(actor)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not manage the members' shop`);
 }
 
 function assertProductId(productId: string): void {
@@ -99,6 +99,7 @@ export async function createProduct<T extends Record<string, unknown>>(
         descriptionRo: fields.descriptionRo,
         descriptionEn: fields.descriptionEn,
         priceBani: fields.priceBani,
+        currency: fields.currency,
         photoMediaAssetId: fields.photoAssetId,
         photoCrop: fields.photoCrop,
         visible: fields.visible,
@@ -115,7 +116,7 @@ export async function createProduct<T extends Record<string, unknown>>(
       action: "shop.product.created",
       entityType: "shop_product",
       entityId: row.id,
-      metadata: { visible: row.visible, variants: fields.variants.length, photo: fields.photoAssetId !== null },
+      metadata: { visible: row.visible, currency: row.currency, variants: fields.variants.length, photo: fields.photoAssetId !== null },
       now,
     });
     return row;
@@ -141,6 +142,8 @@ export async function saveProduct<T extends Record<string, unknown>>(
         descriptionRo: fields.descriptionRo,
         descriptionEn: fields.descriptionEn,
         priceBani: fields.priceBani,
+        // The currency may change after orders exist: each order keeps the one it was placed in (§686).
+        currency: fields.currency,
         photoMediaAssetId: fields.photoAssetId,
         photoCrop: fields.photoCrop,
         visible: fields.visible,
@@ -157,7 +160,7 @@ export async function saveProduct<T extends Record<string, unknown>>(
       action: "shop.product.saved",
       entityType: "shop_product",
       entityId: updated.id,
-      metadata: { version: updated.version, visible: updated.visible, variants: fields.variants.length },
+      metadata: { version: updated.version, visible: updated.visible, currency: updated.currency, variants: fields.variants.length },
       now,
     });
     return updated;

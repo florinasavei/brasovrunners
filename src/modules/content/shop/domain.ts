@@ -16,7 +16,15 @@ export const ORDER_NOTE_MAX = 300;
  * takes nothing twice. A member who wants the same thing twice orders again after this.
  */
 export const ORDER_REPEAT_WINDOW_MS = 10_000;
-/** A price above this is a typo, not a t-shirt: 100 000 lei, in bani. */
+/**
+ * The currencies a shop price may be in (§686; the owner, 2026-10-10: the supplier prices the
+ * shirts in euro, and members read «EUR, shown as EUR»): lei or euro, chosen per product, shown as
+ * such everywhere, never converted — no rate, no sum charged (§683). An order copies the product's
+ * currency with its unit price. The database keeps the same two letters, under a CHECK.
+ */
+export const SHOP_CURRENCIES = ["RON", "EUR"] as const;
+export type ShopCurrency = (typeof SHOP_CURRENCIES)[number];
+/** A price above this is a typo, not a t-shirt: 100 000 lei or euro, in the minor unit. */
 export const PRICE_BANI_MAX = 10_000_000;
 /** The most variants a product offers, and the longest label one has. */
 export const VARIANTS_MAX = 20;
@@ -25,33 +33,43 @@ export const VARIANT_LABEL_MAX = 20;
 export const STOCK_MAX = 100_000;
 
 /**
- * A price as people read it: «45 lei», «45,50 lei» in Romanian and «45.50 lei» in English — the
- * whole lei alone when there are no bani. The currency is the club's, never converted.
+ * A price as people read it, in its own currency (§686), the minor part only when there is one:
+ * in lei «45 lei», «45,50 lei» (ro) and «45.50 lei» (en); in euro «30 €», «30,25 €» (ro, a no-break
+ * space before the sign) and «€30», «€30.25» (en). The whole part is grouped the locale's way. The
+ * one place a currency symbol is written: nothing else formats a shop price.
  */
-export function formatLei(bani: number, locale: string): string {
-  const lei = Math.trunc(bani / 100);
-  const rest = Math.abs(bani % 100);
-  const whole = new Intl.NumberFormat(locale === "en" ? "en-GB" : "ro-RO", { maximumFractionDigits: 0, useGrouping: true }).format(lei);
-  if (rest === 0) return `${whole} lei`;
-  return `${whole}${locale === "en" ? "." : ","}${String(rest).padStart(2, "0")} lei`;
+export function formatPrice(minor: number, currency: ShopCurrency, locale: string): string {
+  const en = locale === "en";
+  const whole = new Intl.NumberFormat(en ? "en-GB" : "ro-RO", { maximumFractionDigits: 0, useGrouping: true }).format(Math.trunc(minor / 100));
+  const rest = Math.abs(minor % 100);
+  const amount = rest === 0 ? whole : `${whole}${en ? "." : ","}${String(rest).padStart(2, "0")}`;
+  if (currency === "EUR") return en ? `€${amount}` : `${amount}\u00A0€`;
+  return `${amount} lei`;
 }
 
-/** The price typed in the editor, back into bani: «45», «45,5», «45.50», «45 lei». Null for anything else. */
-export function parseLeiToBani(typed: string): number | null {
-  const cleaned = typed.trim().replace(/\s*lei$/i, "").replace(/\s+/g, "");
+/**
+ * The price typed in the editor, back into the minor unit: «45», «45,5», «45.50», «45 lei», «30.25 €»,
+ * «30 eur». A trailing currency word is dropped whatever it says — the currency is the select's, not
+ * the box's. Null for anything else.
+ */
+export function parsePriceToMinor(typed: string): number | null {
+  const cleaned = typed
+    .trim()
+    .replace(/\s*(?:lei|euro|eur|€)$/i, "")
+    .replace(/\s+/g, "");
   const match = /^(\d{1,6})(?:[.,](\d{1,2}))?$/.exec(cleaned);
   if (!match) return null;
-  const bani = Number(match[1]) * 100 + Number((match[2] ?? "").padEnd(2, "0") || "0");
-  return bani <= PRICE_BANI_MAX ? bani : null;
+  const minor = Number(match[1]) * 100 + Number((match[2] ?? "").padEnd(2, "0") || "0");
+  return minor <= PRICE_BANI_MAX ? minor : null;
 }
 
-/** The price as the editor's box shows it again: «45» or «45,50». */
-export function baniAsTyped(bani: number): string {
-  const rest = bani % 100;
-  return rest === 0 ? String(bani / 100) : `${Math.trunc(bani / 100)},${String(rest).padStart(2, "0")}`;
+/** The price as the editor's box shows it again: «45» or «45,50», whatever the currency. */
+export function minorAsTyped(minor: number): string {
+  const rest = minor % 100;
+  return rest === 0 ? String(minor / 100) : `${Math.trunc(minor / 100)},${String(rest).padStart(2, "0")}`;
 }
 
-/** An order's total, in bani: the unit price copied at the order, times the quantity. */
+/** An order's total, in the minor unit of the order's currency: the unit price copied at the order, times the quantity. */
 export function orderTotalBani(order: { unitPriceBani: number; quantity: number }): number {
   return order.unitPriceBani * order.quantity;
 }

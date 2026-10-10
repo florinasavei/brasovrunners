@@ -81,11 +81,101 @@ export function atLeast(role: StaffRole, minimum: StaffRole): boolean {
 }
 
 /**
+ * **Permissions per person, on top of the ladder (§687).**
+ *
+ * The owner, 2026-10-10: «we need to extend roles and permissions» — a person who runs the members'
+ * shop without being an Administrator. Offered a new role or a grant per person, he chose the grant.
+ * A rung would not do: the ladder nests (`atLeast`), so a «Responsabil magazin» rung would hand the
+ * shop to every role above it or need a third set-shaped gap beside `MAY_EDIT_TEXTS`; one person
+ * holds one role, so the colleague who runs the shop could not also be the Organizer; and every
+ * later "X without being Administrator" would be one more role.
+ *
+ * A grant is one named power given to one person (`staff_user_permissions`), whatever their rung.
+ * It is read only through the named predicates below — `canManageShop`, `canReadShop` — never by a
+ * page or a service asking the set itself, so a page, its action and its service still name one
+ * predicate (BR-REQ-060-01).
+ */
+export const STAFF_PERMISSIONS = ["shop.manage"] as const;
+export type StaffPermission = (typeof STAFF_PERMISSIONS)[number];
+
+/**
+ * Who is asking: the role, and the permissions granted to that person (§687). The session carries
+ * both (`session.ts`); a caller that has only the role passes the role. An actor without
+ * `permissions` holds none — a forgotten read refuses, it never opens.
+ */
+export type StaffActor = { readonly role: StaffRole; readonly permissions?: ReadonlySet<StaffPermission> };
+
+/**
+ * What every single-role predicate below takes: a bare role — `canX(actor.role)`, as every caller
+ * wrote it before §687 — or the actor, which a grant-aware predicate reads the grants of. The door
+ * (`requireStaffCapability`) passes the actor, so the same predicate answers at the page, the
+ * action and the service.
+ */
+export type StaffSubject = StaffRole | StaffActor;
+
+/** The role of a subject — the only way a predicate below reads one. */
+function roleOf(subject: StaffSubject): StaffRole {
+  return typeof subject === "string" ? subject : subject.role;
+}
+
+/**
+ * The rung from which a permission is part of the role, so nobody needs it granted (§687):
+ * «Gestionează magazinul» is the Administrator's and the Superadministrator's since §683.
+ */
+const IMPLIED_FROM: Record<StaffPermission, StaffRole> = {
+  "shop.manage": "ADMIN",
+};
+
+/** Whether `role` has `permission` by rank alone — «Echipa» draws it ticked and greyed, «inclus în rol». */
+export function impliesPermission(role: StaffRole, permission: StaffPermission): boolean {
+  return atLeast(role, IMPLIED_FROM[permission]);
+}
+
+/**
+ * **Who may be given a permission (§687):** a backoffice role below the rung that already has it —
+ * the volunteer, the Redactor, the Organizer, the Tehnic. Never a club member, who is no staff
+ * (§524) and is offered no grant, and never the Administrator or the Superadministrator, whose role
+ * already includes it. A grant row a role may not hold — a colleague demoted to member — grants
+ * nothing: every read below asks this first.
+ */
+export function canHoldPermission(role: StaffRole, permission: StaffPermission): boolean {
+  return isBackofficeRole(role) && !impliesPermission(role, permission);
+}
+
+/**
+ * Whether `actor` may tick or untick `permission` on a colleague who holds `targetRole` (§687):
+ * whoever manages that colleague (`canManageMember`, §450 — the Administrator every row but a
+ * Superadministrator's, the Superadministrator every row), on a role that may hold it. The service
+ * refuses the actor's own row besides.
+ */
+export function canGrantPermission(actor: StaffSubject, targetRole: StaffRole, permission: StaffPermission): boolean {
+  return canManageMember(roleOf(actor), targetRole) && canHoldPermission(targetRole, permission);
+}
+
+/**
+ * Whether a colleague holds `permission` **by a grant** that counts (§687) — a row their role may
+ * hold. What «Echipa» draws a row's tick and chip from; never a door: a door asks the named
+ * capability (`canManageShop`), which also counts the rank.
+ */
+export function holdsGrant(member: StaffActor, permission: StaffPermission): boolean {
+  return canHoldPermission(member.role, permission) && (member.permissions?.has(permission) ?? false);
+}
+
+/** Whether the subject has `permission`, by rank or by a grant a role of theirs may hold (§687). */
+function hasPermission(subject: StaffSubject, permission: StaffPermission): boolean {
+  const role = roleOf(subject);
+  if (!isBackofficeRole(role)) return false;
+  if (impliesPermission(role, permission)) return true;
+  return typeof subject !== "string" && holdsGrant(subject, permission);
+}
+
+/**
  * **Whether a role is staff at all — the backoffice's line (§524).** Every role from the volunteer
  * up. A member is not: `session.ts` answers "no staff session" for one, so the backoffice, `/devs`,
  * the staff preview and every staff route handler treat a member as signed out.
  */
-export function isBackofficeRole(role: StaffRole): boolean {
+export function isBackofficeRole(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return atLeast(role, "CONTRIBUTOR");
 }
 
@@ -93,7 +183,8 @@ export function isBackofficeRole(role: StaffRole): boolean {
  * **The members' zone (§524)** — the club's member-only page, behind the sign-in. Every account the
  * club has made: a member, and every colleague, who is a member of the club first.
  */
-export function canOpenMembersZone(role: StaffRole): boolean {
+export function canOpenMembersZone(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return atLeast(role, "MEMBER");
 }
 
@@ -101,7 +192,8 @@ export function canOpenMembersZone(role: StaffRole): boolean {
  * Writing the members' pages — the public benefits and the member-only words (§524): words, so the
  * Redactor's and the Administrator's, like «Echipa»'s introduction (§459).
  */
-export function canEditMembersPage(role: StaffRole): boolean {
+export function canEditMembersPage(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return canEditTexts(role);
 }
 
@@ -109,7 +201,8 @@ export function canEditMembersPage(role: StaffRole): boolean {
  * Putting «Beneficiile membrilor» on the site, or taking it off (§524): crossing public view, the
  * Administrator's since §201 — the threshold of publishing «Echipa».
  */
-export function canPublishMembersPage(role: StaffRole): boolean {
+export function canPublishMembersPage(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return atLeast(role, "ADMIN");
 }
 
@@ -118,7 +211,8 @@ export function canPublishMembersPage(role: StaffRole): boolean {
  * it, moving it and deleting it — the Administrator's (and the Superadministrator's), who runs the
  * club (§450): a code is the club's word to a partner, not words on a page.
  */
-export function canManageDiscountCodes(role: StaffRole): boolean {
+export function canManageDiscountCodes(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return atLeast(role, "ADMIN");
 }
 
@@ -126,7 +220,8 @@ export function canManageDiscountCodes(role: StaffRole): boolean {
  * The words around a code (§552) — the partner's name and the description in both languages — the
  * rule of the Membri texts (`canEditMembersPage`, §524): the Redactor's and the Administrator's.
  */
-export function canEditDiscountCodeWords(role: StaffRole): boolean {
+export function canEditDiscountCodeWords(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return canEditMembersPage(role);
 }
 
@@ -135,25 +230,35 @@ export function canEditDiscountCodeWords(role: StaffRole): boolean {
  * club's order notice, and every verb on an order — marked paid, handed over, cancelled — are the
  * Administrator's and the Superadministrator's: an order is money the club collects outside the site,
  * the threshold of changing a registration (`canManageRegistrations`).
+ *
+ * **And, since §687, whoever holds «Gestionează magazinul» (`shop.manage`)** — a volunteer, the
+ * Redactor, the Organizer or the Tehnic the Administrator ticked it for on «Echipa». The grant is
+ * read only for a backoffice role (`hasPermission` asks `isBackofficeRole` first): a member with a
+ * stale row gets nothing.
  */
-export function canManageShop(role: StaffRole): boolean {
-  return atLeast(role, "ADMIN");
+export function canManageShop(subject: StaffSubject): boolean {
+  return hasPermission(subject, "shop.manage");
 }
 
 /**
  * Reading the shop — the catalogue, the orders and their CSV — without a verb that changes one: who
- * reads the participant list (`canReadRegistrations`, §289), the Organizer included. The Tehnic, the
- * Redactor and the volunteer read none of it; an order names a member and what they paid.
+ * reads the participant list (`canReadRegistrations`, §289), the Organizer included, and whoever
+ * runs the shop (`canManageShop`, a grant included since §687). Otherwise the Tehnic, the Redactor
+ * and the volunteer read none of it; an order names a member and what they paid.
  */
-export function canReadShop(role: StaffRole): boolean {
-  return canReadRegistrations(role);
+export function canReadShop(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
+  return canReadRegistrations(role) || canManageShop(subject);
 }
 
 /**
  * The ordering member's address beside an order (§683): only for the roles that already read the
  * club's members' and subscribers' addresses (§550, `canSendNewsletter`) — the same rule, read once.
+ * **By the role alone (§687):** «Gestionează magazinul» opens the shop's verbs and never an address;
+ * a volunteer who runs the shop reads each order's member by name.
  */
-export function canSeeShopMemberAddresses(role: StaffRole): boolean {
+export function canSeeShopMemberAddresses(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return canSendNewsletter(role);
 }
 
@@ -166,7 +271,8 @@ export type EditorialStatus = (typeof EDITORIAL_STATUSES)[number];
  * A Contributor proposes and does not decide, which is the whole difference between the two
  * bottom roles.
  */
-export function isEditorial(role: StaffRole): boolean {
+export function isEditorial(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return atLeast(role, "MODERATOR");
 }
 
@@ -201,7 +307,8 @@ const MAY_EDIT_TEXTS: ReadonlySet<StaffRole> = new Set<StaffRole>([
   "SUPERADMIN",
 ]);
 
-export function canEditTexts(role: StaffRole): boolean {
+export function canEditTexts(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return MAY_EDIT_TEXTS.has(role);
 }
 
@@ -369,7 +476,8 @@ export function canTransitionEvent(
  * Pages and albums borrowed this gate for their own settings; they ask `isEditorial` now, so
  * nothing about them moved.
  */
-export function canEditEventFields(role: StaffRole): boolean {
+export function canEditEventFields(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return atLeast(role, "ADMIN");
 }
 
@@ -385,12 +493,14 @@ export function canEditEventFields(role: StaffRole): boolean {
  * Since §542 the Organizer does not configure one either (`canEditEventFields`): they open an
  * event the Administrator created to read it and to run its queue and its desk.
  */
-export function canCreateEvent(role: StaffRole): boolean {
+export function canCreateEvent(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return atLeast(role, "ADMIN");
 }
 
 /** A page is words; a copywriter starts one as a draft. Deleting and ordering stay editorial. */
-export function canCreatePage(role: StaffRole): boolean {
+export function canCreatePage(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return canEditTexts(role);
 }
 
@@ -399,7 +509,8 @@ export function canCreatePage(role: StaffRole): boolean {
  * Redactor's and the Administrator's, like a page's text: adding one, writing it, putting its
  * photo, moving it, and deleting one that is not on the site. A new card starts hidden.
  */
-export function canEditTeamPage(role: StaffRole): boolean {
+export function canEditTeamPage(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return canEditTexts(role);
 }
 
@@ -408,7 +519,8 @@ export function canEditTeamPage(role: StaffRole): boolean {
  * of crossing public view, which is the Administrator's since §201: the same threshold as
  * publishing a page, so nothing the Redactor writes goes up on its own.
  */
-export function canShowTeamMember(role: StaffRole): boolean {
+export function canShowTeamMember(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return atLeast(role, "ADMIN");
 }
 
@@ -417,7 +529,8 @@ export function canShowTeamMember(role: StaffRole): boolean {
  * words, so writing, moving and deleting a hidden one is the Redactor's and the Administrator's,
  * as a team card is (§459).
  */
-export function canEditFaqPage(role: StaffRole): boolean {
+export function canEditFaqPage(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return canEditTexts(role);
 }
 
@@ -425,7 +538,8 @@ export function canEditFaqPage(role: StaffRole): boolean {
  * Showing a question on the site, taking it off, deleting one that is on it, and publishing the
  * page: crossing public view, the Administrator's since §201 — «Echipa»'s threshold.
  */
-export function canShowFaqItem(role: StaffRole): boolean {
+export function canShowFaqItem(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return atLeast(role, "ADMIN");
 }
 
@@ -435,7 +549,8 @@ export function canShowFaqItem(role: StaffRole): boolean {
  * existed. An event with any registration against it is refused outright by the service,
  * whoever asks.
  */
-export function canDeleteEvent(role: StaffRole): boolean {
+export function canDeleteEvent(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return atLeast(role, "ADMIN");
 }
 
@@ -459,7 +574,8 @@ export function canDeleteEvent(role: StaffRole): boolean {
  * event's exact title typed by hand, and a reason — the audit rows it leaves, and the fact
  * that this verb is absent from every bulk control.
  */
-export function canHardDeleteEvent(role: StaffRole): boolean {
+export function canHardDeleteEvent(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return canDeleteEvent(role) && canManageRegistrations(role);
 }
 
@@ -496,7 +612,8 @@ const MAY_READ_REGISTRATIONS: ReadonlySet<StaffRole> = new Set<StaffRole>([
   "SUPERADMIN",
 ]);
 
-export function canReadRegistrations(role: StaffRole): boolean {
+export function canReadRegistrations(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return MAY_READ_REGISTRATIONS.has(role);
 }
 
@@ -518,7 +635,8 @@ export function canReadRegistrations(role: StaffRole): boolean {
  * alone (`canEditEventFields`). The volunteer and the Redactor are out as they are out of the
  * participant list.
  */
-export function canMessageParticipants(role: StaffRole): boolean {
+export function canMessageParticipants(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return isEditorial(role) && canReadRegistrations(role);
 }
 
@@ -531,7 +649,8 @@ export function canMessageParticipants(role: StaffRole): boolean {
  * typed-address withdrawal (the notice's "or by writing to us") — is the Administrator's, as the
  * "Anunță-mă" list's withdrawal is (§146), through `canManageRegistrations`.
  */
-export function canSendNewsletter(role: StaffRole): boolean {
+export function canSendNewsletter(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return canMessageParticipants(role);
 }
 
@@ -543,7 +662,8 @@ export function canSendNewsletter(role: StaffRole): boolean {
  * Tehnic role is out, as it is out of the list itself (§289); the volunteer, the Redactor and a
  * member likewise. Asserted in the route and in the read, never by hiding the button.
  */
-export function canExportSponsorList(role: StaffRole): boolean {
+export function canExportSponsorList(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return canReadRegistrations(role);
 }
 
@@ -556,7 +676,8 @@ export function canExportSponsorList(role: StaffRole): boolean {
  * The press saves nothing — it fills a box in the browser, and the save that follows asserts its
  * own right to that box — so this gate guards the club's translation allowance, not a text.
  */
-export function canTranslateTexts(role: StaffRole): boolean {
+export function canTranslateTexts(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return canEditTexts(role) || canMessageParticipants(role);
 }
 
@@ -569,7 +690,8 @@ export function canTranslateTexts(role: StaffRole): boolean {
  * different powers, and they are kept apart although both are the Administrator's since §450:
  * changing a registration and deciding who is on the staff may move apart again.
  */
-export function canManageRegistrations(role: StaffRole): boolean {
+export function canManageRegistrations(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return atLeast(role, "ADMIN");
 }
 
@@ -586,7 +708,8 @@ export function canManageRegistrations(role: StaffRole): boolean {
  * declaration, give them a number by hand, check them in. Each of those is audited under the
  * volunteer's own id.
  */
-export function canWorkTheDesk(role: StaffRole): boolean {
+export function canWorkTheDesk(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return atLeast(role, "CONTRIBUTOR");
 }
 
@@ -595,7 +718,8 @@ export function canWorkTheDesk(role: StaffRole): boolean {
  * `participants`, so it sits on the same side of the line as reading them. The environment is
  * the other half of the gate: never in production, refused twice.
  */
-export function canManageTestRegistrations(role: StaffRole): boolean {
+export function canManageTestRegistrations(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return atLeast(role, "ADMIN");
 }
 
@@ -606,7 +730,8 @@ export function canManageTestRegistrations(role: StaffRole): boolean {
  * and never anything about a participant, so it is the one screen a technical helper can be
  * given without also being given the club's participant list.
  */
-export function canSeeDiagnostics(role: StaffRole): boolean {
+export function canSeeDiagnostics(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return atLeast(role, "DEV");
 }
 
@@ -624,7 +749,8 @@ export function canSeeDiagnostics(role: StaffRole): boolean {
  * Superadministrator, never changes or removes one — and the service refuses their own row, so
  * an Administrator promotes nobody above their own rank and cannot promote themselves.
  */
-export function canManageStaff(role: StaffRole): boolean {
+export function canManageStaff(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return atLeast(role, "ADMIN");
 }
 
@@ -657,7 +783,8 @@ export function canManageMember(actor: StaffRole, target: StaffRole): boolean {
  * service counts so the last of them is never demoted or removed (§450). Named here so no call
  * site compares a role to a string of its own (`tests/unit/staff/no-raw-role-checks.test.ts`).
  */
-export function isSuperadmin(role: StaffRole): boolean {
+export function isSuperadmin(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return role === "SUPERADMIN";
 }
 
@@ -676,7 +803,8 @@ export function assignableRoles(actor: StaffRole): StaffRole[] {
  * rewritten, approval is still one-way, and deleting an approved version still asks for the typed
  * phrase and a reason — those guards are in `legal-documents/service.ts`, not in a rank.
  */
-export function canWriteLegalTexts(role: StaffRole): boolean {
+export function canWriteLegalTexts(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return atLeast(role, "ADMIN");
 }
 
@@ -699,7 +827,8 @@ export function canWriteLegalTexts(role: StaffRole): boolean {
  * club's copies — are `canManageClubSettings`, the Administrator's: each changes
  * what the club promises or pays, not whether the platform runs.
  */
-export function canManagePlatform(role: StaffRole): boolean {
+export function canManagePlatform(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return atLeast(role, "SUPERADMIN");
 }
 
@@ -711,7 +840,8 @@ export function canManagePlatform(role: StaffRole): boolean {
  * allowance (§80), giving older pictures their sizes (§414). Each changes what the club promises,
  * says or pays; none of them can stop the platform — those are `canManagePlatform`.
  */
-export function canManageClubSettings(role: StaffRole): boolean {
+export function canManageClubSettings(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return atLeast(role, "ADMIN");
 }
 
@@ -743,6 +873,9 @@ export function canManageClubSettings(role: StaffRole): boolean {
  *     newsletter     canSendNewsletter        `admin/newsletter/page.tsx` — the subscribers and the
  *                                             composer (§445); withdrawing an address asks
  *                                             `canManageRegistrations` for itself
+ *     shop           canReadShop              `admin/shop/layout.tsx` — «Magazin», the members' shop
+ *                                             (§683, its own section since §687); every verb asks
+ *                                             `canManageShop`, a grant included
  *     settings       canOpenSettings          `admin/settings/layout.tsx` — «Setări» (§516), each tab
  *                                             its own gate (`settings-tabs.ts`): «Emailuri», «Termene»,
  *                                             «Aspect» canReadContent, «Costuri» and
@@ -764,9 +897,10 @@ export function canManageClubSettings(role: StaffRole): boolean {
  * from the Redactor up is offered; the bar lights «Setări» on `/devs` (`BackofficeShell`).
  *
  * **In the order the club opens them (§516)**, which is the array's order and the bar's: the
- * events, who signed up, the race-day desk, the pictures, the pages, the newsletter, then the
- * settings, what is owed, the team, the legal texts and the guide. A role is
- * offered the same order with its own gaps — the volunteer's bar is «Ziua cursei», «Ghid».
+ * events, who signed up, the race-day desk, the pictures, the pages, the newsletter, the shop
+ * (§687), then the settings, what is owed, the team, the legal texts and the guide. A role is
+ * offered the same order with its own gaps — the volunteer's bar is «Ziua cursei», «Ghid», and
+ * «Ziua cursei», «Magazin», «Ghid» for a volunteer who runs the shop.
  *
  * The hierarchy makes one property testable and worth stating: a higher role is offered every
  * section a lower one is. `tests/unit/staff/roles.test.ts` asserts it across every pair, which
@@ -779,6 +913,7 @@ export const ADMIN_SECTIONS = [
   "gallery",
   "pages",
   "newsletter",
+  "shop",
   "settings",
   "tasks",
   "staff",
@@ -813,7 +948,8 @@ export type AdminSection = (typeof ADMIN_SECTIONS)[number];
  * sees of a participant is still only the desk: a name, a state and a number, never an address
  * (`AGENTS.md` §15.11).
  */
-export function canReadContent(role: StaffRole): boolean {
+export function canReadContent(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return atLeast(role, "COPYWRITER");
 }
 
@@ -826,7 +962,8 @@ export function canReadContent(role: StaffRole): boolean {
  * is editorial work (`MAY_EDIT_TEXTS` says why `DEV` is out of it), and the volunteer gets none.
  * The preview writes nothing, so reading is enough; the route asserts this, never a hidden card.
  */
-export function canPreviewEventDraft(role: StaffRole): boolean {
+export function canPreviewEventDraft(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return canEditTexts(role) || canEditEventFields(role) || canReadRegistrations(role);
 }
 
@@ -836,11 +973,13 @@ export function canPreviewEventDraft(role: StaffRole): boolean {
  * `canReadContent` or the higher `canManageRegistrations` — because that module reads its
  * predicates from this one and importing back would cycle; a unit test holds the two equal.
  */
-export function canOpenSettings(role: StaffRole): boolean {
+export function canOpenSettings(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
   return canReadContent(role);
 }
 
-export function visibleAdminSections(role: StaffRole): AdminSection[] {
+export function visibleAdminSections(subject: StaffSubject): AdminSection[] {
+  const role = roleOf(subject);
   /*
     Each section's own gate, filtered over `ADMIN_SECTIONS` so the bar's order is the array's —
     by how often the club opens them (§516) — and a role only ever loses a tab, never reorders one.
@@ -865,6 +1004,13 @@ export function visibleAdminSections(role: StaffRole): AdminSection[] {
       who writes to nobody (§38), which is the ladder's second deliberate hole beside the list.
     */
     newsletter: canSendNewsletter(role),
+    /*
+      «Magazin» (§687): the members' shop, its own section — it was a card on «Pagini» → «Membri»
+      (§683), a page a volunteer cannot open, so a volunteer given «Gestionează magazinul» had no way
+      in. Offered to whoever reads the shop: the Organizer and the Administrators by role, and a
+      holder of the grant whatever their rung — the one entry that reads the actor, not the role.
+    */
+    shop: canReadShop(subject),
     /*
       «Setări» (§516): the club's settings as one row of tabs — the email page (§250, which had no
       entry at all until the owner's "I am missing the email templates config … in this navbar"),

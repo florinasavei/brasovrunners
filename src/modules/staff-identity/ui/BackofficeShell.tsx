@@ -10,7 +10,7 @@ import type { Locale } from "@/i18n/routing";
 import type { StaffUser } from "@/db/schema/staff-users";
 import { getDb } from "@/db/client";
 import { registeredBadgeBreakdown, registeredBadgeHint } from "@/modules/registrations/nav-count";
-import { type AdminSection, canReadRegistrations, visibleAdminSections } from "../domain/roles";
+import { type AdminSection, canReadRegistrations, type StaffActor, visibleAdminSections } from "../domain/roles";
 import { STAFF_ROLE_LABEL } from "../domain/staff-labels";
 import AdminTabs, { type AdminTab, type CountPill } from "./AdminTabs";
 import { PAGE_WIDTH } from "@/theme/brand";
@@ -39,7 +39,7 @@ export default async function BackofficeShell({
   children,
 }: {
   locale: Locale;
-  staffUser: Pick<StaffUser, "displayName" | "email" | "role">;
+  staffUser: Pick<StaffUser, "displayName" | "email" | "role"> & Pick<StaffActor, "permissions">;
   /** The sign-out Server Action; handed in so this module never imports the app's actions. */
   signOut: (form: FormData) => Promise<void>;
   children: ReactNode;
@@ -59,6 +59,8 @@ export default async function BackofficeShell({
     // /admin/settings lands on the reader's first tab.
     settings: getPathname({ locale, href: "/admin/settings" }),
     newsletter: getPathname({ locale, href: "/admin/newsletter" }),
+    // «Magazin» (§687): the members' shop, its own section — a grant opens it to any backoffice role.
+    shop: getPathname({ locale, href: "/admin/shop" }),
     staff: getPathname({ locale, href: "/admin/staff" }),
   };
 
@@ -117,7 +119,7 @@ export default async function BackofficeShell({
       })
     : undefined;
 
-  const tabs: AdminTab[] = visibleAdminSections(staffUser.role).map((section) => ({
+  const tabs: AdminTab[] = visibleAdminSections(staffUser).map((section) => ({
     href: SECTION_HREF[section],
     label: t(`nav.${section}`),
     section,
