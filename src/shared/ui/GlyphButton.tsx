@@ -38,7 +38,7 @@ type Props = Omit<ButtonProps, "startIcon" | "endIcon" | "component" | "href" | 
  * the imports). A public page's button is `ButtonLink`, or `SubmitButton` with `runner` or
  * `glyph`, its glyph named in a registry listed in `ICON_REGISTRIES` (`tests/unit/design/guards-allowlist.ts`); never this, and
  * never MUI's `Button` with its own `startIcon` import: the design guards (`tests/unit/design/`,
- * §NNN) refuse both a bare MUI `Button` and a direct `@mui/icons-material` import.
+ * §694) refuse both a bare MUI `Button` and a direct `@mui/icons-material` import.
  */
 export default function GlyphButton({ icon, href, htmlFor, children, ...props }: Props) {
   const Icon = ACTION_ICONS[icon];

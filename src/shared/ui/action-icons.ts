@@ -223,13 +223,13 @@ export type ActionIconName =
   | "tickOn"
   | "tickOff"
   | "signOut"
-  // A row one place earlier or later in an editor's list (§NNN): the two arrows, never a verb of their own.
+  // A row one place earlier or later in an editor's list (§694): the two arrows, never a verb of their own.
   | "moveUp"
   | "moveDown"
   // The guide a page of the backoffice opens on (the design page's samples) and the titled texts of a page (§691).
   | "guide"
   | "boxes"
-  // The members' shop (§NNN): the storefront on its card, the banknotes of «Cum se plătește», the receipt of the orders list, the cart of an order the club places for a member (§690), and the lines of text of the team page's introduction.
+  // The members' shop (§694): the storefront on its card, the banknotes of «Cum se plătește», the receipt of the orders list, the cart of an order the club places for a member (§690), and the lines of text of the team page's introduction.
   | "shop"
   | "payment"
   | "orders"

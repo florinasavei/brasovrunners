@@ -3,7 +3,7 @@ import { ALLOWED, inPrimitiveScope, PINNED, PRIMITIVE_FILES } from "./guards-all
 import { byFile, holdRatchet, importFacts, SOURCES } from "./scan";
 
 /**
- * BR-REQ-041-01 criterion 6, BR-REQ-070-02, §NNN — a button and a chip are the house's own.
+ * BR-REQ-041-01 criterion 6, BR-REQ-070-02, §694 — a button and a chip are the house's own.
  *
  * `ButtonLink` (a link that looks like a button), `GlyphButton` / `GlyphButtonLink` /
  * `GlyphSubmitButton` (a verb with its glyph), `SubmitButton` and `ConfirmSubmitButton` (a form's
@@ -41,7 +41,7 @@ const offenders = byFile(
   ),
 );
 
-describe("§NNN buttons and chips are the house primitives", () => {
+describe("§694 buttons and chips are the house primitives", () => {
   it("scopes pages and areas, not the primitives", () => {
     expect(inPrimitiveScope("src/app/[locale]/contact/page.tsx")).toBe(true);
     expect(inPrimitiveScope("src/modules/events/ui/EventCard.tsx")).toBe(true);

@@ -4,7 +4,7 @@ import ts from "typescript";
 import { expect } from "vitest";
 
 /**
- * The scanning half of the design system's guards (§NNN): one walk of `src/`, the helpers the three
+ * The scanning half of the design system's guards (§694): one walk of `src/`, the helpers the three
  * tests share, and the ratchet itself. The three tests say what they refuse; this says how a source
  * file is read and how a list of today's offenders is held to shrinking.
  *
@@ -114,7 +114,7 @@ export function byFile(hits: Hit[]): Map<string, Hit[]> {
 const show = (hits: Hit[]) => hits.map((hit) => `${hit.file}:${hit.line} — ${hit.text}`);
 
 /**
- * The ratchet (§NNN). `found` is what the scan found, by file, `allowed` the reviewed list of
+ * The ratchet (§694). `found` is what the scan found, by file, `allowed` the reviewed list of
  * today's offenders (each with the count it is pinned at), `pinned` the number of entries the list
  * must have and the sum of their counts (a count raised in one entry passes no longer). Ways to fail, each with its remedy: a new offender, or a listed file that offends more
  * than its count (fix it — the list never grows, and each hit is printed as `file:line — text`), a

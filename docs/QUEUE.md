@@ -15,21 +15,29 @@ The owner, 2026-10-10: «Soon I need to start a new session from the laptop … 
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
 - **Production: `BR-V2.85`.** Waiting for the owner's «prod», all in one `qa` → `main` release: `BR-V2.86` (§685, the
-  licence), `BR-V2.87` (§686–§688: shop prices in lei or euro, «Gestionează magazinul», `yarn handoff`), `BR-V2.88` (§689,
-  «Alergări») and `BR-V2.89` (§690–§692, below). **Four migrations, `0134`–`0137`: production stops at the `migrate.yml`
-  run for the owner's approval** (GitHub → Actions → the run → Review deployments → Production → Approve); Vercel's build
-  waits twenty minutes for it, then a redeploy.
-- **QA: `BR-V2.89`** — «Adaugă o comandă pentru un membru» on «Magazin» (§690, migration `0136`); «Echipa» as an
-  organisational chart with its boxes (§691, migration `0137`); «Sistemul de design» at `/admin/design` with the redesign
-  plan's decisions and phases, the full plan in `docs/REDESIGN.md` (§692).
-- **Nothing is building.** The three branches of §690–§692 are landed; their worktrees can be removed.
-- **Next, from the laptop:** the shop's real catalogue entered on QA through «Magazin» (three products with their sizes
-  and euro prices from the owner's sheet — never in the repository), then the owner's answers to the plan's twelve
-  decisions (`docs/REDESIGN.md`; silence takes the defaults). **The facelift is last in the queue.**
-- **Later, words only:** «Reguli» on the design page lacks two rows the brief named (Server Components first; one filled
-  icon family and a glyph on every button); §692's BR-REQ-041-01 criterion names the card's 44 px by its constant, not by
-  a test; the owner's first name sits in four e2e fixtures (`declaration-signature.spec.ts`, `signature-name.ts`,
-  `name-fold.ts`, `email-sample.ts`) and one page comment — one branch scrubs them.
+  licence), `BR-V2.87` (§686–§688), `BR-V2.88` (§689, «Alergări»), `BR-V2.89` (§690–§692: the order for a member, «Echipa»
+  as an organisational chart, «Sistemul de design») and `BR-V2.90` (§693–§694, below). **Four migrations, `0134`–`0137`:
+  production stops at the `migrate.yml` run for the owner's approval** (GitHub → Actions → the run → Review deployments →
+  Production → Approve); Vercel's build waits twenty minutes for it, then a redeploy.
+- **QA: `BR-V2.90`** — the design system made binding (three guards with a ratchet allowlist; the shop's and team's
+  editors on registry icons and house chips) and the contact page's round from the phone session (the public phone, the
+  calendar link, a way on after a send; «Spune-ne ceva» wider and clearer).
+- **Building: `feat/shop-product-editor`** — the shop's editor rebuilt: `/admin/shop` as a product list with «Produse ·
+  Comenzi · Setări», one page per product with named cards (name and price with the translate button, many pictures with
+  the first as cover, a rich description with tables and pictures, «Mărimile» as a tick row XXS–4XL with a stock box each
+  and a size chart in cm, «Vizibil» and «Salvează» always in sight); the zone shows the cover, a picture strip and the
+  chart; migration `0138`; it carries the translate button's branch (`feat/shop-translate-button`, reviewed). Lands as
+  the next batch once reviewed.
+- **Next, from the laptop:** the shop's real catalogue entered on QA through the new editor (three products with their
+  sizes and euro prices from the owner's sheet — never in the repository); the owner's answers to the plan's twelve
+  decisions (`docs/REDESIGN.md`; decision 3 — a real home page off the logo, not a menu entry, switchable on and off with
+  its hero, carousels and pictures as settings — is decided); then the facelift, last, component by component.
+- **Phone session, in flight:** a different race-number design for the club's members (§664 amended), on its own branch.
+- **Later, words only:** two «Reguli» rows the design page still lacks; §692's BR-REQ-041-01 criterion names the card's
+  44 px by its constant, not by a test; the owner's first name in four e2e fixtures (`declaration-signature.spec.ts`,
+  `signature-name.ts`, `name-fold.ts`, `email-sample.ts`) and one page comment; the twelve backoffice-only names in the
+  public glyph table (a server-side status chip takes them out); a volunteer holding «Gestionează magazinul» cannot
+  translate yet (`canTranslateTexts`) — the owner decides.
 
 ### How a change is made here (the owner's standing rules, all still in force)
 
@@ -131,6 +139,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.90` | the contact page shows the phone and the calendar; «Spune-ne ceva» wider, with icons and clearer buttons (§693) · the design system's guards (§694) |
 | `BR-V2.89` | the club places an order for a member (§690) · «Echipa» as an organisational chart with its boxes (§691) · the design-system page and the redesign plan (§692) |
 | `BR-V2.88` | the section is «Alergări» (§689) |
 | `BR-V2.87` | a shop price in lei or in euro (§686) · permissions per person: «Gestionează magazinul» and the shop's own section (§687) · `yarn handoff` and the rules for a session that stops (§688) |

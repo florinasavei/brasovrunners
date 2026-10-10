@@ -155,7 +155,7 @@ export const GLYPHS = {
   // metaphor a confirmed place gets elsewhere.
   filters: TuneIcon,
   registration: EventAvailableIcon,
-  // A state's own word with its picture (a backoffice chip is a `GlyphChip` too, §NNN): the event
+  // A state's own word with its picture (a backoffice chip is a `GlyphChip` too, §694): the event
   // that is over or called off, a row shown or hidden on the site, a text in one language only, and
   // the steps of a plan.
   done: CheckCircleIcon,
@@ -166,7 +166,7 @@ export const GLYPHS = {
   open: HelpIcon,
   planned: ScheduleIcon,
   building: ConstructionIcon,
-  // The shop and the team page's chips (§NNN): the shop, an order, the club itself, a link.
+  // The shop and the team page's chips (§694): the shop, an order, the club itself, a link.
   shop: StorefrontIcon,
   orders: ReceiptLongIcon,
   club: GroupsIcon,

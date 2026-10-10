@@ -9,7 +9,7 @@ import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import DesignSection, { Block, ROW_SX } from "./section";
 
-/** The public button's sample glyph, from the public registry by name (§NNN). */
+/** The public button's sample glyph, from the public registry by name (§694). */
 const RunIcon = TYPE_GLYPH.GROUP_RUN;
 
 const VARIANTS = ["contained", "outlined", "text"] as const;

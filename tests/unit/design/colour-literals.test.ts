@@ -3,7 +3,7 @@ import { ALLOWED, PINNED } from "./guards-allowlist";
 import { byFile, holdRatchet, SOURCES, stringLiterals } from "./scan";
 
 /**
- * BR-REQ-070-02, §NNN — colour comes from the theme, never from a literal.
+ * BR-REQ-070-02, §694 — colour comes from the theme, never from a literal.
  *
  * The owner, 2026-10-10: «I need a design system so we can be consistent in terms of colours,
  * icons, components». Every hex of the site is a token in `src/theme/brand.ts` (and the PDF's in
@@ -59,7 +59,7 @@ const offenders = byFile(
   ),
 );
 
-describe("§NNN colours come from the theme", () => {
+describe("§694 colours come from the theme", () => {
   it("reads strings, not comments — and finds a colour where there is one", () => {
     expect(isColour("0 0 0 9999px rgba(0,0,0,0.45)")).toBe(true);
     expect(isColour("color:#666;margin:0")).toBe(true);

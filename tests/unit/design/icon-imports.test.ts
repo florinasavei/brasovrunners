@@ -3,7 +3,7 @@ import { ALLOWED, isBackoffice, isIconRegistry, PINNED } from "./guards-allowlis
 import { byFile, holdRatchet, importFacts, SOURCES } from "./scan";
 
 /**
- * BR-REQ-060-01, BR-REQ-041-01, §318, §521, §NNN — icons come from the registries, by name.
+ * BR-REQ-060-01, BR-REQ-041-01, §318, §521, §694 — icons come from the registries, by name.
  *
  * One filled Material family, one picture per verb. The backoffice asks `src/shared/ui/action-icons.ts`
  * by name (`icon="save"` on a `GlyphButton`, a glyph name on a `GlyphChip`); that table never reaches
@@ -35,7 +35,7 @@ const facts = SOURCES.filter((source) => !isIconRegistry(source.file)).flatMap((
 const barrel = facts.filter((fact) => fact.text === "@mui/icons-material");
 const offenders = byFile(facts.filter((fact) => fact.text !== "@mui/icons-material" && isBackoffice(fact.file)));
 
-describe("§NNN icons come from the registries", () => {
+describe("§694 icons come from the registries", () => {
   it("knows a registry and a backoffice file when it sees one", () => {
     expect(isIconRegistry("src/shared/ui/action-icons.ts")).toBe(true);
     expect(isIconRegistry("src/modules/events/ui/glyphs.ts")).toBe(true);

@@ -21,7 +21,7 @@ const STATUS_COLOR: Record<DecisionStatus | PhaseStatus, "default" | "success" |
   released: "success",
 };
 
-/** …and its picture, by name (§NNN): a state is a word with a glyph, never a bare chip. */
+/** …and its picture, by name (§694): a state is a word with a glyph, never a bare chip. */
 const STATUS_GLYPH: Record<DecisionStatus | PhaseStatus, GlyphName> = {
   default: "planned",
   decided: "done",
