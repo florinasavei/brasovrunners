@@ -11,11 +11,20 @@ import {
   nextOrderStatus,
   orderTotalBani,
   parsePriceToMinor,
+  parseSizeChart,
   parseVariantLines,
   PRICE_BANI_MAX,
+  readSizeChart,
+  sizeChartRows,
+  sizesAsForm,
+  STANDARD_SIZES,
   stockAfterOrder,
   stockToSave,
   variantLinesAsTyped,
+  variantsFromSizes,
+  variantsInShopOrder,
+  formatMeasure,
+  measureAsTyped,
 } from "@/modules/content/shop/domain";
 import { orderForMemberFieldsSchema, productFieldsSchema } from "@/modules/content/shop/fields";
 import { membersShopMergeValues } from "@/modules/content/shop/notice-words";
@@ -244,5 +253,84 @@ describe("§683 the zone's outcome and the email's lines", () => {
     expect(shopOrderLines("ro", order, { payment: true })).toEqual(["Cum se plătește: IBAN RO00 TEST 0000 — sau numerar", "Nota comenzii: „Pentru sâmbătă”"]);
     expect(shopOrderLines("en", { ...order, paymentEn: null }, { payment: true })[0]).toBe("The club will tell you how to pay.");
     expect(shopOrderLines("en", { ...order, note: null }, { payment: false })).toEqual([]);
+  });
+});
+
+describe("§NNN «Mărimile»: ticks in a fixed order, a stock each, the free labels after", () => {
+  const form = { sizes: [] as string[], sizeStock: {} as Record<string, string>, oneSize: false, stock: "", extraVariants: "" };
+
+  it("orders the ticked sizes XXS–4XL whatever order they were posted in, then «Mărime unică», then the free labels", () => {
+    expect(STANDARD_SIZES).toEqual(["XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL"]);
+    expect(variantsFromSizes({ ...form, sizes: ["4XL", "s", "M"], sizeStock: { S: "5", M: "", "4XL": "0" }, oneSize: true, stock: "2", extraVariants: "Copii: 3\nAlbastru" })).toEqual({
+      ok: true,
+      variants: [
+        { label: "S", stock: 5 },
+        { label: "M", stock: null },
+        { label: "4XL", stock: 0 },
+        { label: null, stock: 2 },
+        { label: "Copii", stock: 3 },
+        { label: "Albastru", stock: null },
+      ],
+    });
+    // Nothing ticked and nothing typed is §683's one-variant product with the «Stoc» box.
+    expect(variantsFromSizes({ ...form, stock: "7" })).toEqual({ ok: true, variants: [{ label: null, stock: 7 }] });
+  });
+
+  it("refuses an unknown tick, a bad stock, a free label that spells a size, and too many in all — naming the box", () => {
+    expect(variantsFromSizes({ ...form, sizes: ["XXXL"] })).toEqual({ ok: false, path: "sizes", error: "unknownSize" });
+    expect(variantsFromSizes({ ...form, sizes: ["M"], sizeStock: { M: "zece" } })).toEqual({ ok: false, path: "sizes", error: "stock" });
+    expect(variantsFromSizes({ ...form, oneSize: true, stock: "-1" })).toEqual({ ok: false, path: "stock", error: "stock" });
+    expect(variantsFromSizes({ ...form, extraVariants: "xl: 2" })).toEqual({ ok: false, path: "extraVariants", error: "standardAsExtra" });
+    expect(variantsFromSizes({ ...form, sizes: [...STANDARD_SIZES], extraVariants: Array.from({ length: 12 }, (_, i) => `V${i}`).join("\n") })).toEqual({ ok: false, path: "extraVariants", error: "tooMany" });
+  });
+
+  it("opens the stored variants back as ticks, boxes and lines, and sorts any list into the shop's order", () => {
+    const stored = [
+      { label: "Copii", stock: 3 },
+      { label: "M", stock: null },
+      { label: null, stock: 2 },
+      { label: "s", stock: 5 },
+    ];
+    expect(sizesAsForm(stored)).toEqual({ sizes: ["M", "S"], sizeStock: { M: "", S: "5" }, oneSize: true, stock: "2", extraVariants: "Copii: 3" });
+    expect(variantsInShopOrder(stored).map((variant) => variant.label)).toEqual(["s", "M", null, "Copii"]);
+  });
+});
+
+describe("§NNN «Tabelul de mărimi»: up to four named columns and a number per size", () => {
+  const labels = ["S", "M", null, "Copii"];
+
+  it("keeps a column named in both languages and a row for a variant's label with a number in it; drops the rest", () => {
+    expect(
+      parseSizeChart(
+        { columns: [{ ro: " Lățime  piept (cm)", en: "Chest width (cm)" }, { ro: "", en: "" }, { ro: "Lungime (cm)", en: "Length (cm)" }], cells: { S: ["48", "", "66,5"], m: ["50", "", ""], XL: ["99", "", "99"], Copii: ["", "", ""] } },
+        labels,
+      ),
+    ).toEqual({
+      ok: true,
+      chart: { columns: [{ ro: "Lățime piept (cm)", en: "Chest width (cm)" }, { ro: "Lungime (cm)", en: "Length (cm)" }], rows: { S: [48, 66.5], M: [50, null] } },
+    });
+    expect(parseSizeChart({ columns: [{ ro: "", en: "" }], cells: { S: ["48"] } }, labels)).toEqual({ ok: true, chart: null });
+  });
+
+  it("refuses a column in one language, a fifth column, a long name and a cell that is not a number", () => {
+    expect(parseSizeChart({ columns: [{ ro: "Piept", en: "" }], cells: {} }, labels)).toEqual({ ok: false, error: "oneLanguage" });
+    expect(parseSizeChart({ columns: Array.from({ length: 5 }, (_, i) => ({ ro: `C${i}`, en: `C${i}` })), cells: {} }, labels)).toEqual({ ok: false, error: "tooMany" });
+    expect(parseSizeChart({ columns: [{ ro: "x".repeat(41), en: "Chest" }], cells: {} }, labels)).toEqual({ ok: false, error: "column" });
+    expect(parseSizeChart({ columns: [{ ro: "Piept", en: "Chest" }], cells: { S: ["mult"] } }, labels)).toEqual({ ok: false, error: "cell" });
+  });
+
+  it("reads a stored chart leniently, lists its rows in the variants' order, and shows a measure the reader's way", () => {
+    const chart = readSizeChart({ columns: [{ ro: "Piept", en: "Chest" }], rows: { M: [50.5], S: [48, 1], Copii: ["x"] } });
+    expect(chart).toEqual({ columns: [{ ro: "Piept", en: "Chest" }], rows: { M: [50.5], S: [48], Copii: [null] } });
+    expect(sizeChartRows(chart!, [{ label: "S" }, { label: "M" }, { label: null }, { label: "XL" }])).toEqual([
+      { label: "S", cells: [48] },
+      { label: "M", cells: [50.5] },
+    ]);
+    expect(readSizeChart({ columns: [], rows: {} })).toBeNull();
+    expect(readSizeChart("nu")).toBeNull();
+    expect(formatMeasure(50.5, "ro")).toBe("50,5");
+    expect(formatMeasure(50.5, "en")).toBe("50.5");
+    expect(measureAsTyped(66.5)).toBe("66,5");
+    expect(measureAsTyped(null)).toBe("");
   });
 });
