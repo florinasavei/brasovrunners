@@ -1,5 +1,8 @@
 "use client";
 
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import EventIcon from "@mui/icons-material/Event";
+import GroupsIcon from "@mui/icons-material/Groups";
 import Autocomplete, { autocompleteClasses } from "@mui/material/Autocomplete";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
@@ -48,6 +51,13 @@ export type EventPickerWords = {
 };
 
 const NO_MATCH_VALUE = "\u0000no-match";
+
+/**
+ * Each chip's glyph (§NNN; the owner, 2026-10-10: «I want icons on these filters»): the calendar for
+ * every event, the trophy for the special ones (the registration form's own for a race), the group for
+ * the group runs. Decoration: the chip's words are its name.
+ */
+const CHIP_GLYPH = { all: EventIcon, special: EmojiEventsIcon, group: GroupsIcon } as const satisfies Record<PickerChip, unknown>;
 
 /** A thumb's row (BR-REQ-041-01 criterion 6). */
 const ROW_PX = 44;
@@ -103,18 +113,22 @@ export default function EventPickerFilter({
         ...(reserved && { visibility: "hidden", "@media (scripting: none)": { display: "none" } }),
       }}
     >
-      {PICKER_CHIPS.map((kind) => (
+      {PICKER_CHIPS.map((kind) => {
+        const Glyph = CHIP_GLYPH[kind];
+        return (
         <Chip
           key={kind}
+          icon={<Glyph aria-hidden="true" />}
           label={words.chips[kind]}
           data-testid={reserved ? undefined : `feedback-event-chip-${kind}`}
           aria-pressed={reserved ? undefined : chip === kind}
           color={chip === kind ? "primary" : "default"}
           variant={chip === kind ? "filled" : "outlined"}
           onClick={reserved ? undefined : () => setChip(kind)}
-          sx={{ height: "auto", minHeight: ROW_PX, borderRadius: ROW_PX / 2, px: 0.5 }}
+          sx={{ height: "auto", minHeight: ROW_PX, borderRadius: ROW_PX / 2, px: 0.5, "& .MuiChip-icon": { fontSize: 20 } }}
         />
-      ))}
+        );
+      })}
     </Box>
   );
 

@@ -8595,6 +8595,7 @@
     "title": "Scrie-ne",
     "intro": "O întrebare despre o alergare, o înscriere sau club? Îți răspundem pe e-mail.",
     "faqHint": "Poate găsești răspunsul la <faq>Întrebări frecvente</faq>.",
+    "runsHint": "Când și unde alergăm vezi în <calendar>Calendar</calendar>.",
     "name": "Numele tău",
     "email": "Adresa ta de e-mail",
     "message": "Mesajul",
@@ -8607,9 +8608,11 @@
     "sent": {
       "title": "Mesajul a plecat.",
       "bodyTo": "Îți răspundem pe {email}.",
-      "body": "Îți răspundem pe adresa ta de e-mail."
+      "body": "Îți răspundem pe adresa ta de e-mail.",
+      "another": "Scrie alt mesaj"
     },
     "direct": "Sau scrie-ne direct la",
+    "phone": "Sau sună-ne la",
     "off": {
       "writeTo": "Scrie-ne la",
       "none": "Formularul de contact nu este disponibil momentan.",
@@ -8646,7 +8649,7 @@
     "door": {
       "intro": "Cum a fost la un eveniment, o sugestie sau o reclamație — anonim, dacă vrei.",
       "introSafety": "Un formular confidențial pentru femeile care nu s-au simțit în siguranță la noi.",
-      "button": "Deschide formularul anonim"
+      "button": "Deschide formularul"
     },
     "choose": {
       "legend": "Despre ce e vorba?",
@@ -8671,7 +8674,7 @@
       "howItWent": {
         "label": "Cum a fost",
         "hint": "Un eveniment sau o alergare de grup: ce ți-a plăcut, ce nu.",
-        "intro": "Spune-ne cum a fost. În afară de ce s-a întâmplat, totul e opțional."
+        "intro": "Spune-ne cum a fost. În afară de mesaj, totul e opțional."
       },
       "suggestion": {
         "label": "O sugestie",
@@ -8705,7 +8708,7 @@
       "kinds": "Arată",
       "chips": {
         "all": "Toate",
-        "race": "Curse",
+        "special": "Evenimente speciale",
         "group": "Alergări de grup"
       }
     },
@@ -8722,7 +8725,7 @@
       }
     },
     "message": {
-      "howItWent": "Ce s-a întâmplat?",
+      "howItWent": "Ce ți-a plăcut, ce nu?",
       "suggestion": "Sugestia ta",
       "complaint": "Ce s-a întâmplat?",
       "safety": "Ce s-a întâmplat?"
@@ -8777,7 +8780,8 @@
     "submit": "Trimite",
     "submitting": "Se trimite…",
     "incompleteHint": "Scrie mesajul ca să-l poți trimite.",
-    "otherBranches": "Alt tip de mesaj",
+    "otherBranches": "Schimbă tipul mesajului",
+    "sendAnother": "Trimite alt mesaj",
     "sent": {
       "title": "Mesajul a plecat",
       "body": "Mulțumim! Îl citim cu atenție.",

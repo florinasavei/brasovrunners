@@ -8,6 +8,7 @@ import {
   pickerKind,
   pickerNoEventFound,
   type PickerOption,
+  underChip,
 } from "@/modules/feedback/domain/event-picker";
 
 /**
@@ -52,7 +53,7 @@ describe("BR-REQ-070-04 the feedback form's event picker filters as you type (§
   });
 
   it("puts «Altceva / în general» first while the box is empty or nothing typed matches an event, whichever chip", () => {
-    for (const chip of ["all", "race", "group"] as const) {
+    for (const chip of ["all", "special", "group"] as const) {
       for (const typed of ["", "   ", "nimic-de-gasit", "altceva"]) {
         expect(filterPickerOptions(ALL, typed, chip)[0]).toBe(GENERAL);
       }
@@ -66,7 +67,7 @@ describe("BR-REQ-070-04 the feedback form's event picker filters as you type (§
   it("takes «Altceva» out while what was typed matches an event, so the first match is the row Enter picks", () => {
     // MUI highlights the value chosen whenever it is among the rows, and «Altceva» is the value by default:
     // with it in the list, «crosul» + Enter picked «Altceva» (the review of 2026-10-09).
-    for (const chip of ["all", "race", "group"] as const) {
+    for (const chip of ["all", "special", "group"] as const) {
       for (const typed of ["crosul", "happy", "tampa", "oct"]) {
         const shown = filterPickerOptions(ALL, typed, chip);
         if (shown.some((option) => option.value !== GENERAL_VALUE)) expect(values(shown)).not.toContain(GENERAL_VALUE);
@@ -85,16 +86,20 @@ describe("BR-REQ-070-04 the feedback form's event picker filters as you type (§
     expect(pickerNoEventFound(filterPickerOptions(ALL, "", "all"))).toBe(false);
   });
 
-  it("narrows to a kind with a chip; «Toate» keeps the others (a hike) too", () => {
-    expect(values(filterPickerOptions(ALL, "", "race"))).toEqual([GENERAL_VALUE, "crosul-brasovului", "semimaratonul-tampa"]);
+  it("narrows with a chip: «Evenimente speciale» is everything but the group runs, a hike too (§NNN); «Toate» keeps every kind", () => {
+    expect(values(filterPickerOptions(ALL, "", "special"))).toEqual([GENERAL_VALUE, "crosul-brasovului", "drumetie-pe-tampa", "semimaratonul-tampa"]);
     expect(values(filterPickerOptions(ALL, "", "group"))).toEqual([GENERAL_VALUE, "happy-monday-2026-10-05", "happy-monday-2026-09-28"]);
     expect(values(filterPickerOptions(ALL, "", "all"))).toContain("drumetie-pe-tampa");
-    expect(values(filterPickerOptions(ALL, "tampa", "race"))).toEqual(["semimaratonul-tampa"]);
+    expect(values(filterPickerOptions(ALL, "tampa", "special"))).toEqual(["drumetie-pe-tampa", "semimaratonul-tampa"]);
+    // The two chips split the events: each one is under exactly one of them.
+    for (const event of EVENTS) expect([underChip(event.kind, "special"), underChip(event.kind, "group")].filter(Boolean)).toHaveLength(1);
   });
 
-  it("draws the chips only when both a race and a group run are among the options", () => {
+  it("draws the chips only when both a special event and a group run are among the options", () => {
     expect(pickerChipsShown(ALL)).toBe(true);
-    expect(pickerChipsShown(ALL.filter((option) => option.kind !== "race"))).toBe(false);
+    // A hike alone is a special event: the chips are still drawn.
+    expect(pickerChipsShown(ALL.filter((option) => option.kind !== "race"))).toBe(true);
+    expect(pickerChipsShown(ALL.filter((option) => option.kind === "group" || option.value === GENERAL_VALUE))).toBe(false);
     expect(pickerChipsShown(ALL.filter((option) => option.kind !== "group"))).toBe(false);
   });
 

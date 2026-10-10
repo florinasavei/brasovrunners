@@ -48,6 +48,7 @@ vi.mock("@/modules/public-cache/reads", () => ({
   cachedContactFormReaches: async () => formReaches,
   cachedShownContactAddresses: async () => [GMAIL, MAILBOX],
   cachedPublishedEventBySlug: async () => null,
+  cachedPublicPhone: async () => null,
 }));
 vi.mock("@/modules/registrations/form-draft", () => ({ readFormDraft: async () => null }));
 vi.mock("@/app/[locale]/contact/actions", () => ({ submitContactAction: async () => undefined }));

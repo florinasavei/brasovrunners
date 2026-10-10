@@ -122,6 +122,8 @@ test.describe("BR-REQ-070-04 the contact form", () => {
     await expect(page.getByText("Mesajul a plecat.")).toBeVisible();
     // The address is said back from the draft cookie, never from the URL (§14.5).
     await expect(page.getByText(`Îți răspundem pe ${email}.`)).toBeVisible();
+    // A way on (§NNN): the empty form again.
+    await expect(page.getByTestId("contact-send-another")).toHaveAttribute("href", "/ro/contact");
 
     // §427: and in a toast, inside the live region, with a close button a thumb can hit.
     const toast = page.getByTestId("toast");
