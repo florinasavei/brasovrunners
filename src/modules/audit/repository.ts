@@ -510,6 +510,8 @@ export type AuditAction =
   | "shop.product.deleted"
   | "shop.settings_saved"
   | "shop.order.placed"
+  /** An order the club placed in a member's name (§NNN): the ids, the quantity and the two ticks — never a name or a note. */
+  | "shop.order.placed_by_club"
   | "shop.order.paid"
   | "shop.order.handed_over"
   | "shop.order.cancelled"

@@ -112,6 +112,7 @@ const WRITES: Record<string, Expected> = {
   "src/modules/content/shop/service.ts#deleteProduct": SHOP_ONLY,
   "src/modules/content/shop/settings.ts#saveShopSettings": SHOP_ONLY,
   "src/modules/content/shop/orders.ts#placeOrder": SHOP_ONLY,
+  "src/modules/content/shop/orders.ts#placeOrderForMember": SHOP_ONLY,
   "src/modules/content/shop/orders.ts#moveOrderByClub": SHOP_ONLY,
   "src/modules/content/shop/orders.ts#cancelOwnOrder": SHOP_ONLY,
 

@@ -925,6 +925,13 @@
       "when": 1791630194420,
       "tag": "0134_shop_price_currency",
       "breakpoints": true
+    },
+    {
+      "idx": 132,
+      "version": "7",
+      "when": 1791632080193,
+      "tag": "0135_shop_order_placed_by",
+      "breakpoints": true
     }
   ]
 }

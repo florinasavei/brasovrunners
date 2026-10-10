@@ -7239,6 +7239,26 @@
         "note": "Note",
         "cancelledByMember": "Cancelled by the member.",
         "cancelledByClub": "Cancelled by the club.",
+        "forMember": {
+          "title": "Add an order for a member",
+          "help": "For orders collected outside the site. The order takes from the same stock, is marked “added by the club” and shows in the member's “My orders”. The member needs an account on “Team” first.",
+          "member": "Member",
+          "memberNone": "No member account yet: add it on “Team” first.",
+          "item": "Item and variant",
+          "itemSoldOut": "{label} — sold out",
+          "quantity": "Quantity",
+          "note": "Note (optional)",
+          "email": "Send the member the confirmation email",
+          "paid": "Mark as paid right away",
+          "add": "Add the order",
+          "ask": "Add the order for this member?",
+          "askBody": "The order takes from the stock like one the member placed and shows in their “My orders”. Emails go out only if ticked.",
+          "placedByClub": "added by the club"
+        },
+        "placedBy": {
+          "MEMBER": "member",
+          "CLUB": "club"
+        },
         "verbs": {
           "pay": {
             "title": "Mark order no. {number} paid?",
@@ -7261,6 +7281,7 @@
           "date": "Date",
           "member": "Member",
           "email": "Email",
+          "placedBy": "Placed by",
           "product": "Item",
           "variant": "Variant",
           "quantity": "Quantity",
@@ -9248,7 +9269,8 @@
       "shopSettingsSaved": "The payment words and the orders address have been saved.",
       "shopOrderPaid": "The order has been marked paid. The member receives an email.",
       "shopOrderHandedOver": "The order has been marked handed over.",
-      "shopOrderCancelled": "The order has been cancelled."
+      "shopOrderCancelled": "The order has been cancelled.",
+      "shopOrderPlacedForMember": "The order has been added for the member."
     }
   },
   "Network": {

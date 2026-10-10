@@ -152,6 +152,15 @@ export const shopOrders = pgTable(
     /** What the member wrote with the order, at most 300 characters, or null. */
     note: text("note"),
 
+    /**
+     * Who placed it (§NNN): `MEMBER` — the member themself, from the zone — or `CLUB`, an Administrator
+     * on «Adaugă o comandă pentru un membru», through the same locks and stock rule, in the member's
+     * name. Every row from before the column is a member's own order.
+     */
+    placedBy: text("placed_by", { enum: ["MEMBER", "CLUB"] }).notNull().default("MEMBER"),
+    /** The colleague who placed it for the member; null for a member's own order. */
+    placedByStaffUserId: uuid("placed_by_staff_user_id").references(() => staffUsers.id, { onDelete: "set null" }),
+
     status: shopOrderStatus("status").notNull().default("PLACED"),
     paidAt: timestamp("paid_at", { withTimezone: true }),
     handedOverAt: timestamp("handed_over_at", { withTimezone: true }),
@@ -170,6 +179,7 @@ export const shopOrders = pgTable(
     check("shop_orders_currency_known", sql`${t.currency} IN ('RON', 'EUR')`),
     check("shop_orders_note_length", sql`${t.note} IS NULL OR length(${t.note}) <= 300`),
     check("shop_orders_cancelled_by_known", sql`${t.cancelledBy} IS NULL OR ${t.cancelledBy} IN ('MEMBER', 'CLUB')`),
+    check("shop_orders_placed_by_known", sql`${t.placedBy} IN ('MEMBER', 'CLUB')`),
     index("shop_orders_status_idx").on(t.status),
     index("shop_orders_created_at_idx").on(t.createdAt),
     index("shop_orders_member_idx").on(t.memberStaffUserId),

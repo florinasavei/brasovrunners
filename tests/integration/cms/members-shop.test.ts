@@ -56,8 +56,24 @@ const PRODUCT = {
   visible: true,
 };
 
-/** The CSV's header in Romanian, as the route builds it from the messages; the currency column after the unit price (§NNN). */
-const CSV_HEADER = { number: "Nr.", date: "Data", member: "Membru", email: "Email", product: "Produs", variant: "Varianta", quantity: "Bucăți", unitPrice: "Preț", currency: "Monedă", total: "Total", status: "Starea", note: "Nota" };
+/** The CSV's header in Romanian, as the route builds it from the messages; the currency column after the unit price, who placed it after the member (§NNN). */
+const CSV_HEADER = {
+  number: "Nr.",
+  date: "Data",
+  member: "Membru",
+  email: "Email",
+  placedBy: "Adăugată de",
+  product: "Produs",
+  variant: "Varianta",
+  quantity: "Bucăți",
+  unitPrice: "Preț",
+  currency: "Monedă",
+  total: "Total",
+  status: "Starea",
+  note: "Nota",
+};
+/** The CSV's words for the two columns that carry a code, as the route reads them from the messages. */
+const CSV_WORDS = { statusWord: (status: string) => status, placedByWord: (placedBy: "MEMBER" | "CLUB") => (placedBy === "CLUB" ? "club" : "membru") };
 
 describe("§683 the members' shop", () => {
   let db: TestDatabase;
@@ -398,9 +414,8 @@ describe("§683 the members' shop", () => {
     expect(await countOrdersForAdmin(db, { status: null, productId: null })).toBe(2);
     expect(await listOrdersForAdmin(db, { status: null, productId: null }, 1)).toHaveLength(1);
     const rows = await listOrdersForAdmin(db, { status: null, productId: null });
-    const word = (status: string) => status;
-    const withEmail = buildOrdersCsv(CSV_HEADER, rows, { locale: "ro", withEmail: true, statusWord: word });
-    const without = buildOrdersCsv(CSV_HEADER, rows, { locale: "ro", withEmail: false, statusWord: word });
+    const withEmail = buildOrdersCsv(CSV_HEADER, rows, { locale: "ro", withEmail: true, ...CSV_WORDS });
+    const without = buildOrdersCsv(CSV_HEADER, rows, { locale: "ro", withEmail: false, ...CSV_WORDS });
     expect(withEmail).toContain("membru@example.org");
     expect(without).not.toContain("membru@example.org");
     expect(without).not.toContain("Email");
@@ -444,9 +459,10 @@ describe("§683 the members' shop", () => {
 
     const rows = await listOrdersForAdmin(db, { status: null, productId: null });
     expect(rows[0].currency).toBe("EUR");
-    const csv = buildOrdersCsv(CSV_HEADER, rows, { locale: "en", withEmail: false, statusWord: (status) => status });
+    const csv = buildOrdersCsv(CSV_HEADER, rows, { locale: "en", withEmail: false, ...CSV_WORDS });
     const [header, line] = csv.slice(1).split("\r\n");
-    expect(header).toBe("Nr.,Data,Membru,Produs,Varianta,Bucăți,Preț,Monedă,Total,Starea,Nota");
+    expect(header).toBe("Nr.,Data,Membru,Adăugată de,Produs,Varianta,Bucăți,Preț,Monedă,Total,Starea,Nota");
+    expect(line).toContain(",membru,Sample t-shirt,");
     expect(line).toContain(",€12.34,EUR,€24.68,");
 
     const [placedRow] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "SHOP_ORDER_PLACED"));

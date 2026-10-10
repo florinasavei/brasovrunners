@@ -24,7 +24,15 @@ import PagesSubNav from "@/modules/content/pages/ui/PagesSubNav";
 import LazyRichTextEditor from "@/modules/content/rich-text/ui/LazyRichTextEditor";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import { clubToday, listDiscountCodesForAdmin } from "@/modules/content/member-codes/repository";
-import { countOrdersForAdmin, listOrdersForAdmin, listProductNames, listProductsForAdmin, parseOrdersQuery } from "@/modules/content/shop/repository";
+import {
+  countOrdersForAdmin,
+  listOrderableItems,
+  listOrdersForAdmin,
+  listProductNames,
+  listProductsForAdmin,
+  listZoneAccountsForOrder,
+  parseOrdersQuery,
+} from "@/modules/content/shop/repository";
 import { readShopSettings } from "@/modules/content/shop/settings";
 import type { TeamPhotoLabels } from "@/modules/content/team/ui/TeamPhotoField";
 import { noticeDescribesMembersShop } from "@/modules/legal-documents/repository";
@@ -122,6 +130,11 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
     paymentRo: t("members.shop.paymentRo"),
     paymentEn: t("members.shop.paymentEn"),
     ordersTo: t("members.shop.ordersTo"),
+    // «Adaugă o comandă pentru un membru» (§NNN), by the names its form posts.
+    memberStaffUserId: t("members.shop.forMember.member"),
+    item: t("members.shop.forMember.item"),
+    quantity: t("members.shop.forMember.quantity"),
+    note: t("members.shop.forMember.note"),
   });
   /*
     «Magazin» (§683): read only for a role that reads the shop (`canReadShop`, the Organizer up); the
@@ -139,6 +152,9 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
         countOrdersForAdmin(db, ordersQuery),
       ])
     : null;
+  // «Adaugă o comandă pentru un membru» (§NNN): the member accounts and the orderable items, read only
+  // for whoever may place one. §NNN: the subject this takes follows `moveOrderByClub`'s.
+  const forMember = shop && canManageShop(actor.role) ? await Promise.all([listZoneAccountsForOrder(db), listOrderableItems(db)]) : null;
   const shopPhotoLabels: TeamPhotoLabels = {
     legend: t("members.shop.photo"),
     choose: t("team.photoChoose"),
@@ -251,6 +267,8 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
           ordersTotal={shop[5]}
           ordersQuery={ordersQuery}
           productNames={shop[3]}
+          accounts={forMember?.[0] ?? []}
+          items={forMember?.[1] ?? []}
           noticeDescribes={shop[4]}
           storage={isStorageConfigured()}
           path={getPathname({ locale, href: "/admin/pages/members" })}

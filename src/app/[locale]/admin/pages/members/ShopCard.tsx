@@ -1,4 +1,5 @@
 import AddCircleIcon from "@mui/icons-material/AddCircle";
+import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import EditIcon from "@mui/icons-material/Edit";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
@@ -15,9 +16,23 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { countForm } from "@/i18n/count-form";
 import type { Locale } from "@/i18n/routing";
 import type { ShopOrderStatus } from "@/db/schema/shop";
-import { clubVerbsFor, formatPrice, minorAsTyped, orderTotalBani, type OrderVerb, SHOP_CURRENCIES, STOCK_MAX, VARIANT_LABEL_MAX, VARIANTS_MAX, variantLinesAsTyped } from "@/modules/content/shop/domain";
+import {
+  clubVerbsFor,
+  formatPrice,
+  minorAsTyped,
+  ORDER_NOTE_MAX,
+  ORDER_QUANTITY_MAX,
+  orderTotalBani,
+  type OrderVerb,
+  SHOP_CURRENCIES,
+  type ShopCurrency,
+  STOCK_MAX,
+  VARIANT_LABEL_MAX,
+  VARIANTS_MAX,
+  variantLinesAsTyped,
+} from "@/modules/content/shop/domain";
 import { loadedStockJson, PAYMENT_WORDS_MAX, PRODUCT_DESCRIPTION_MAX, PRODUCT_TITLE_MAX } from "@/modules/content/shop/fields";
-import type { AdminOrder, AdminShopProduct, OrdersQuery } from "@/modules/content/shop/repository";
+import type { AdminOrder, AdminShopProduct, OrderableItem, OrdersQuery, ZoneAccount } from "@/modules/content/shop/repository";
 import type { ShopSettings } from "@/modules/content/shop/settings";
 import TeamPhotoField, { type TeamPhotoLabels } from "@/modules/content/team/ui/TeamPhotoField";
 import TeamPhotoImage from "@/modules/content/team/ui/TeamPhotoImage";
@@ -33,6 +48,7 @@ import {
   deleteShopProductAction,
   moveShopOrderAction,
   moveShopProductAction,
+  placeOrderForMemberAction,
   saveShopProductAction,
   saveShopSettingsAction,
 } from "./actions";
@@ -41,6 +57,9 @@ type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 
 /** The order's statuses in the filter's order. */
 const STATUSES: readonly ShopOrderStatus[] = ["PLACED", "PAID", "HANDED_OVER", "CANCELLED"];
+
+/** Each currency's word in «Moneda», by its code — typed on `ShopCurrency`, so a third currency is a compile error here (§NNN). */
+const CURRENCY_WORD: Record<ShopCurrency, "currencyRon" | "currencyEur"> = { RON: "currencyRon", EUR: "currencyEur" };
 
 /** Each club verb's glyph, by name (§170): the registry never crosses into a client island as an element. */
 const VERB_GLYPH = { pay: "confirm", handOver: "checkIn", cancel: "cancel" } as const;
@@ -62,6 +81,8 @@ export default function ShopCard({
   ordersTotal,
   ordersQuery,
   productNames,
+  accounts,
+  items,
   noticeDescribes,
   storage,
   path,
@@ -80,6 +101,9 @@ export default function ShopCard({
   ordersTotal: number;
   ordersQuery: OrdersQuery;
   productNames: readonly { id: string; titleRo: string; titleEn: string }[];
+  /** «Adaugă o comandă pentru un membru» (§NNN): the member accounts and the items it offers; empty for a reader who may not. */
+  accounts: readonly ZoneAccount[];
+  items: readonly OrderableItem[];
   /** Whether the privacy notice in force names `{{membersShop}}` in every language: until then members see no shop. */
   noticeDescribes: boolean;
   /** Whether this deployment can store a photo at all. */
@@ -169,10 +193,13 @@ export default function ShopCard({
           total={ordersTotal}
           query={ordersQuery}
           productNames={productNames}
+          accounts={accounts}
+          items={items}
           path={path}
           locale={locale}
           words={t}
           cancel={cancel}
+          messages={messages}
           mayManage={mayManage}
           showEmail={showEmail}
         />
@@ -473,8 +500,11 @@ function ProductFields({
           slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
           sx={{ flex: "0 1 180px", minWidth: 160 }}
         >
-          <option value="RON">{t("members.shop.currencyRon")}</option>
-          <option value="EUR">{t("members.shop.currencyEur")}</option>
+          {SHOP_CURRENCIES.map((currency) => (
+            <option key={currency} value={currency}>
+              {t(`members.shop.${CURRENCY_WORD[currency]}`)}
+            </option>
+          ))}
         </RecallField>
       </Box>
       <RecallField
@@ -531,10 +561,13 @@ function OrdersFold({
   total,
   query,
   productNames,
+  accounts,
+  items,
   path,
   locale,
   words: t,
   cancel,
+  messages,
   mayManage,
   showEmail,
 }: {
@@ -542,10 +575,13 @@ function OrdersFold({
   total: number;
   query: OrdersQuery;
   productNames: readonly { id: string; titleRo: string; titleEn: string }[];
+  accounts: readonly ZoneAccount[];
+  items: readonly OrderableItem[];
   path: string;
   locale: Locale;
   words: Words;
   cancel: string;
+  messages: RefusalMessages;
   mayManage: boolean;
   showEmail: boolean;
 }) {
@@ -563,6 +599,7 @@ function OrdersFold({
         {t("members.shop.ordersHeading")} · {count}
       </summary>
       <Stack spacing={2} sx={{ mt: 1.5 }}>
+        {mayManage && <ForMemberFold accounts={accounts} items={items} query={query} locale={locale} words={t} cancel={cancel} messages={messages} />}
         <Box component="form" method="get" action={`${path}#shop-orders`} role="search" aria-label={t("members.shop.filterLabel")}>
           <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1.5, alignItems: "center" }}>
             <TextField
@@ -637,6 +674,117 @@ function OrdersFold({
   );
 }
 
+/**
+ * «Adaugă o comandă pentru un membru» (§NNN): the club types in an order it collected outside the
+ * site — a member account from the select (no free-text name: an order is an account's record), the
+ * product and the variant as one choice (a sold-out variant offered disabled, never with a count),
+ * one to five, a note, and two ticks: whether the member gets «Comanda ta a fost primită», and whether
+ * the order is marked paid at once. Native controls, asked before the write, the list's filter posted
+ * back so the answer lands on the new row. Drawn for `mayManage` only; the service asserts it again.
+ */
+function ForMemberFold({
+  accounts,
+  items,
+  query,
+  locale,
+  words: t,
+  cancel,
+  messages,
+}: {
+  accounts: readonly ZoneAccount[];
+  items: readonly OrderableItem[];
+  query: OrdersQuery;
+  locale: Locale;
+  words: Words;
+  cancel: string;
+  messages: RefusalMessages;
+}) {
+  const selectSx = { minWidth: 220, flex: "1 1 220px", maxWidth: { sm: 420 } } as const;
+  const options = items.flatMap((item) => {
+    const title = locale === "en" ? item.titleEn : item.titleRo;
+    return item.variants.map((variant) => {
+      const label = variant.label ? `${title} — ${variant.label}` : title;
+      const soldOut = variant.stock !== null && variant.stock <= 0;
+      return { value: `${item.id}:${variant.id}`, label: soldOut ? t("members.shop.forMember.itemSoldOut", { label }) : label, soldOut };
+    });
+  });
+  return (
+    <Box component="details" id="shop-order-for-member" sx={BOXED_DISCLOSURE_SX} data-testid="shop-order-for-member">
+      <summary>
+        <AddShoppingCartIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
+        {t("members.shop.forMember.title")}
+      </summary>
+      <Stack spacing={1.5} sx={{ mt: 1.5 }}>
+        <Typography variant="body2" color="text.secondary">
+          {t("members.shop.forMember.help")}
+        </Typography>
+        {accounts.length === 0 ? (
+          <Alert severity="info">{t("members.shop.forMember.memberNone")}</Alert>
+        ) : (
+          <ActionForm
+            action={placeOrderForMemberAction}
+            messages={messages}
+            scope="order-for-member"
+            data-testid="order-for-member-form"
+            confirm={{ title: t("members.shop.forMember.ask"), body: t("members.shop.forMember.askBody"), confirmLabel: t("members.shop.forMember.add"), cancelLabel: cancel }}
+          >
+            <input type="hidden" name="uiLocale" value={locale} />
+            {query.status && <input type="hidden" name="orderStatus" value={query.status} />}
+            {query.productId && <input type="hidden" name="orderProduct" value={query.productId} />}
+            <Stack spacing={2}>
+              <Stack direction="row" sx={{ flexWrap: "wrap", gap: 2 }}>
+                <RecallField select required name="memberStaffUserId" label={t("members.shop.forMember.member")} defaultValue="" slotProps={{ select: { native: true }, inputLabel: { shrink: true } }} sx={selectSx}>
+                  <option value="" disabled>
+                    —
+                  </option>
+                  {accounts.map((account) => (
+                    <option key={account.id} value={account.id}>
+                      {account.displayName}
+                    </option>
+                  ))}
+                </RecallField>
+                <RecallField select required name="item" label={t("members.shop.forMember.item")} defaultValue="" slotProps={{ select: { native: true }, inputLabel: { shrink: true } }} sx={selectSx}>
+                  <option value="" disabled>
+                    —
+                  </option>
+                  {options.map((option) => (
+                    <option key={option.value} value={option.value} disabled={option.soldOut}>
+                      {option.label}
+                    </option>
+                  ))}
+                </RecallField>
+                <RecallField select name="quantity" label={t("members.shop.forMember.quantity")} defaultValue="1" slotProps={{ select: { native: true }, inputLabel: { shrink: true } }} sx={{ minWidth: 110, flex: "0 1 110px" }}>
+                  {Array.from({ length: ORDER_QUANTITY_MAX }, (_, index) => (
+                    <option key={index + 1} value={index + 1}>
+                      {index + 1}
+                    </option>
+                  ))}
+                </RecallField>
+              </Stack>
+              <RecallField name="note" label={t("members.shop.forMember.note")} fullWidth multiline minRows={2} slotProps={{ htmlInput: { maxLength: ORDER_NOTE_MAX } }} />
+              <Box component="label" sx={{ display: "inline-flex", alignItems: "center", gap: 1, minHeight: 44, cursor: "pointer" }}>
+                <RecallCheckbox name="emailMember" defaultChecked={false} style={{ width: 20, height: 20 }} />
+                <Typography component="span" variant="body2">
+                  {t("members.shop.forMember.email")}
+                </Typography>
+              </Box>
+              <Box component="label" sx={{ display: "inline-flex", alignItems: "center", gap: 1, minHeight: 44, cursor: "pointer" }}>
+                <RecallCheckbox name="markPaid" defaultChecked={false} style={{ width: 20, height: 20 }} />
+                <Typography component="span" variant="body2">
+                  {t("members.shop.forMember.paid")}
+                </Typography>
+              </Box>
+              <Box>
+                <GlyphSubmitButton label={t("members.shop.forMember.add")} pendingLabel={t("editor.saving")} icon="add" size="medium" />
+              </Box>
+            </Stack>
+          </ActionForm>
+        )}
+      </Stack>
+    </Box>
+  );
+}
+
 function OrderRow({
   order,
   query,
@@ -665,6 +813,8 @@ function OrderRow({
           {t("members.shop.orderNumber", { number: order.number })}
         </Typography>
         <Chip size="small" color={order.status === "CANCELLED" ? "default" : order.status === "PLACED" ? "warning" : "success"} label={t(`members.shop.status.${order.status}`)} />
+        {/* Placed by the club in the member's name (§NNN): said on the row, as the CSV says it in its column. */}
+        {order.placedBy === "CLUB" && <Chip size="small" variant="outlined" label={t("members.shop.forMember.placedByClub")} data-testid="order-placed-by-club" />}
       </Stack>
       <Typography variant="body2" sx={{ overflowWrap: "anywhere" }}>
         {order.memberName}

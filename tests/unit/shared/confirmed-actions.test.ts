@@ -146,6 +146,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   deleteShopProductAction: [],
   saveShopSettingsAction: [],
   moveShopOrderAction: [],
+  // An order the club places in a member's name (§NNN): it takes stock and may email the member.
+  placeOrderForMemberAction: [],
   // «Întrebări frecvente» (§525): the page's one save, which asks when a card is put on the site,
   // taken off or deleted (and nothing else), and the page's own publish switch.
   saveFaqPageAction: [],
