@@ -75,6 +75,8 @@ export type BibSheetInput = {
   generatedAt: Date;
   /** Two bibs to a page — the default — or one; see `bibSheetSlots`. */
   layout?: BibSheetLayout;
+  /** Which bibs of `rows` go into the file, the members' always first (§681; `sheetPages`); absent is all. */
+  part?: BibSheetPart;
   /** What the club decided this bib shows (§249); absent is the platform's own design. */
   design?: BibDesign;
   /**
@@ -131,6 +133,52 @@ export function bibSheetSlots(count: number, layout: BibSheetLayout = "two"): Bi
     width: BIB_PAPER.width,
     height: BIB_PAPER.height,
   }));
+}
+
+/**
+ * Which bibs of the sheet go into the file (§681): `all` — the default, the club's one click — or
+ * only the members' (`members`), or every bib but theirs (`others`: the ordinary bibs and the
+ * desk's spares), so the members' pile can be printed on other card and handed out apart.
+ */
+export type BibSheetPart = "all" | "members" | "others";
+
+/** One printed page: its bibs in order, upper half first; `null` is a half left blank. */
+export type BibSheetPage<R> = Array<R | null>;
+
+/**
+ * The sheet's bibs grouped into its pages (§681, amending §338 and §664).
+ *
+ * **A members' bib never shares an A4 page with an ordinary one.** While the event offers the
+ * members' bib (`membersOn`) and a row on the sheet is a member's (`BibSheetRow.member`), the
+ * members' bibs come first, in the order they came (the number's), two to a page; an odd count
+ * leaves the lower half of the last members' page blank — the cut is still drawn, nothing else.
+ * Then every other bib in the order it came, the desk's spares (§444) where they were among
+ * them, two to a page as before. With no member's bib on the sheet the pages are exactly the
+ * rows split into pairs, the last one's lower half blank on an odd count — what every sheet
+ * printed before this — so that file is byte for byte the same.
+ *
+ * With `one` (§79) every page holds one bib, the members' first. `members` keeps only their pile,
+ * `others` only the rest; either may be empty, which the renderer prints as its «—» page.
+ */
+export function sheetPages<R extends Pick<BibSheetRow, "member">>(
+  rows: readonly R[],
+  options: { part?: BibSheetPart; layout?: BibSheetLayout; membersOn?: boolean } = {},
+): BibSheetPage<R>[] {
+  const perPage = options.layout === "one" ? 1 : 2;
+  const isMember = (row: R) => options.membersOn !== false && row.member === true;
+  const members = rows.filter(isMember);
+  const others = rows.filter((row) => !isMember(row));
+  const part = options.part ?? "all";
+  const piles = part === "members" ? [members] : part === "others" ? [others] : members.length > 0 ? [members, others] : [rows];
+  return piles.flatMap((pile) => {
+    const pages: BibSheetPage<R>[] = [];
+    for (let start = 0; start < pile.length; start += perPage) {
+      const page: BibSheetPage<R> = pile.slice(start, start + perPage);
+      while (page.length < perPage) page.push(null);
+      pages.push(page);
+    }
+    return pages;
+  });
 }
 
 /** Where the page is cut: exactly half-way down, the upper bib's foot and the lower bib's top. */
@@ -494,19 +542,23 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   };
 
   const perPage = input.layout === "one" ? 1 : 2;
-  const slots = bibSheetSlots(input.rows.length, input.layout);
-  slots.forEach((slot, index) => {
-    // The first bib of a page opens it; the second, if there is one, joins it below the cut.
-    if (index % perPage === 0) {
-      doc.addPage();
-      if (perPage === 2) drawCut();
-    }
-    drawBib(input.rows[index], slot);
-    if (perPage === 1) drawTrimGuide(slot);
+  // The places on one page, upper half first (or the one centred place with `one`).
+  const slots = bibSheetSlots(perPage, input.layout);
+  // The members' pile first, on pages of its own, while the event offers their bib (§681).
+  const pages = sheetPages(input.rows, { part: input.part, layout: input.layout, membersOn: design.member.enabled });
+  pages.forEach((page) => {
+    // Every page opens with its cut — a blank lower half included — and its bibs in order.
+    doc.addPage();
+    if (perPage === 2) drawCut();
+    page.forEach((row, index) => {
+      if (row === null) return;
+      drawBib(row, slots[index]);
+      if (perPage === 1) drawTrimGuide(slots[index]);
+    });
   });
 
   // A sheet with nothing to print is still a valid file that says so, rather than an error.
-  if (input.rows.length === 0) {
+  if (pages.length === 0) {
     doc.addPage();
     doc.font("body").fontSize(12).fillColor(COLOR.inkMuted).text("—", BIB_MARGIN, BIB_MARGIN);
   }

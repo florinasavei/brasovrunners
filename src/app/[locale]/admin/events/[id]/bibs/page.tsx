@@ -55,6 +55,12 @@ export default async function EventBibsPage({ params }: Props) {
     memberBibOn && event
       ? bibPreviewUrl({ eventId: id, locale, number: String(event.bibStartNumber), colour: event.bibColour, design: event.design, member: true })
       : null;
+  /*
+    The members' bibs print first, on pages of their own (§681): the two part downloads appear only
+    when the sheet holds one, and the grid shows the paper's order — the members' pile, then the rest.
+  */
+  const memberBibs = memberBibOn ? bibs.filter((bib) => bib.member).length : 0;
+  const shown = memberBibs > 0 ? [...bibs.filter((bib) => bib.member), ...bibs.filter((bib) => !bib.member)] : bibs;
   const unverifiedHref = `${getPathname({ locale, href: "/admin/registrations" })}?${new URLSearchParams({ eventId: id, status: "CONFIRMED", memberBib: "asked" }).toString()}`;
 
   return (
@@ -77,14 +83,43 @@ export default async function EventBibsPage({ params }: Props) {
       */}
       {bibs.length > 0 && (
         <Box>
-          <GlyphButton
-            icon="pdf"
-            href={`/api/admin/events/${id}/bibs?locale=${locale}`}
-            variant="contained"
-            sx={{ minHeight: 44 }}
-          >
-            {t("bibs.downloadAll", { count: bibs.length })}
-          </GlyphButton>
+          <Stack direction="row" useFlexGap sx={{ flexWrap: "wrap", gap: 1 }}>
+            <GlyphButton
+              icon="pdf"
+              href={`/api/admin/events/${id}/bibs?locale=${locale}`}
+              variant="contained"
+              sx={{ minHeight: 44 }}
+            >
+              {t("bibs.downloadAll", { count: bibs.length })}
+            </GlyphButton>
+            {memberBibs > 0 && (
+              <>
+                <GlyphButton
+                  icon="pdf"
+                  href={`/api/admin/events/${id}/bibs?locale=${locale}&part=members`}
+                  variant="outlined"
+                  sx={{ minHeight: 44 }}
+                  data-testid="bibs-download-members"
+                >
+                  {t("bibs.downloadMembers")}
+                </GlyphButton>
+                <GlyphButton
+                  icon="pdf"
+                  href={`/api/admin/events/${id}/bibs?locale=${locale}&part=others`}
+                  variant="outlined"
+                  sx={{ minHeight: 44 }}
+                  data-testid="bibs-download-others"
+                >
+                  {t("bibs.downloadOthers")}
+                </GlyphButton>
+              </>
+            )}
+          </Stack>
+          {memberBibs > 0 && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              {t("bibs.membersFirstHint")}
+            </Typography>
+          )}
         </Box>
       )}
       {memberSample && (
@@ -99,7 +134,7 @@ export default async function EventBibsPage({ params }: Props) {
             sx={{ width: "100%", height: "auto", display: "block" }}
           />
           <Typography component="figcaption" variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-            {t("bibs.memberSampleCaption", { count: bibs.filter((bib) => bib.member).length })}
+            {t("bibs.memberSampleCaption", { count: memberBibs })}
           </Typography>
         </Box>
       )}
@@ -128,7 +163,7 @@ export default async function EventBibsPage({ params }: Props) {
             gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)" },
           }}
         >
-          {bibs.map((bib) => (
+          {shown.map((bib) => (
             <Box component="li" key={bib.id}>
               {/* No rounded corner: the picture draws the paper's edge itself (A5 bibs, §338), and
                   a radius here clipped that edge's corners — as the editor preview and the desk row

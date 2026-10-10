@@ -4740,6 +4740,9 @@
       "helpNone": "No number yet: every registration gets one when it is confirmed.",
       "helpSome": "{total} numbers given.",
       "downloadAll": "Download every number ({count}) — a PDF to print",
+      "downloadMembers": "Members' numbers only (PDF)",
+      "downloadOthers": "Without members' numbers (PDF)",
+      "membersFirstHint": "Members' numbers print first, on their own pages, so you can print them on different card.",
       "assignedNone": "There was nothing to number. A number is given only to a real, confirmed registration: {notConfirmed} have not confirmed yet (email or declaration), and {test} are test registrations, which never get one.",
       "downloadSpares": "Reprint the free spares (PDF)",
       "sparesFree": "Reserved for the desk: {from}–{to}, {free} of {total} still free. The reprint carries only the free ones.",
@@ -5926,6 +5929,7 @@
                 "Numbers go in order of confirmation, from «Race numbers (BIB) start at». «Assign numbers» is the Administrator's.",
                 "The desk's spares: «Reprint the free spares (PDF)» prints again the ones not yet given. Only the Administrator reserves new spare numbers.",
                 "The members' number: whoever asked «I want the members' number» and has the address of an account on «Staff» gets the members' band and label; the number is the same. «See the bibs» names the rest.",
+                "Members' numbers print first, on their own pages. On the numbers' page, «Members' numbers only (PDF)» and «Without members' numbers (PDF)» split them, so you can print them on different card.",
                 "On the site, the «Who's coming» list shows the «BIB» column once the club approves the new privacy notice. Before that, the Administrator writes to those already registered with «Send a message to participants»; anyone who does not want to appear presses «I do not want to appear on the participants & results list» in «My registrations», and the number leaves with the name. From the approval on, the column shows the number of every confirmed runner who has one, whichever notice they registered under; a confirmed runner without one shows “—”."
               ]
             },

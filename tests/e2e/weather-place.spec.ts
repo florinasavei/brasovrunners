@@ -206,8 +206,11 @@ test.describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
     const pill = pills.first();
     await expect(pill).toBeVisible();
     await expect(pill).toContainText("14 °C");
-    // The sky's glyph, then the stub's 20% after a drop (§677) — two glyphs, neither an umbrella.
+    // The sky's glyph, then the stub's 20% after a drop (§677) — two glyphs, neither an umbrella,
+    // and the sky's never the drop (§682): the two draw different paths.
     await expect(pill.locator("svg")).toHaveCount(2);
+    const [skyPath, dropPath] = await pill.locator("svg path").evaluateAll((paths) => paths.map((path) => path.getAttribute("d")));
+    expect(skyPath).not.toBe(dropPath);
     await expect(pill.getByTestId("card-weather-chance")).toHaveText("20 %");
     // The word is for a screen reader, the chance with it; the wind is the page's.
     await expect(pill).toContainText("Vremea la start: Parțial noros, 14 °C, 20% șanse de ploaie");
