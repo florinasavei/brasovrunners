@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.86-2026-10-10
+
+- **The repository's licence is all rights reserved** — the code and the documents are the club's, readable but not reusable without its written permission; the MIT grant ends with this release. §685.
 ## BR-V2.85-2026-10-10
 
 - **The members' zone has no backoffice button** — a colleague signed in to «Zona membrilor» sees the zone and the sign-out, like every member; the backoffice is `/admin`, behind its own lock as before. §684.
