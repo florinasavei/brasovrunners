@@ -5842,7 +5842,11 @@
           "motion": "Motion is CSS only and sits behind the preference for less motion.",
           "density": "Phone density comes from one scale; from sm up nothing changes.",
           "fonts": "Fonts are repository files, never fetched from Google at build.",
-          "panels": "Backoffice cards are boxed folds with a glyph before the title."
+          "panels": "Backoffice cards are boxed folds with a glyph before the title.",
+          "staticPages": "Public pages are static: the CDN answers a visitor, and every read goes through the public cache.",
+          "lightDefault": "The site starts light; dark only from the footer's button, never from the phone's setting.",
+          "pageTint": "The public pages' tint is the club's setting, with a contrast guard: readable text on any tint.",
+          "fontSize": "The text size on public pages is a club setting, from a bounded scale."
         }
       },
       "plan": {

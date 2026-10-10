@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from "node:fs";
 import { type ComponentProps, createElement, type ReactElement, type ReactNode } from "react";
 import { renderToReadableStream } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -151,7 +152,22 @@ describe("BR-REQ-060-01 «Sistemul de design» draws the look from the code", ()
     const markup = await page();
     expect(markup).toContain("Alergare de probă");
     expect(markup).toContain("Membru A");
-    expect(markup).not.toMatch(/Florin|Amalia|Brașov Running Festival/);
+    expect(markup.replace(/<style[\s\S]*?<\/style>/g, "")).not.toMatch(/[\w.-]+@[\w-]+/);
+    // Every fixture name is a placeholder, never a person's or a real event's.
+    const fixtures = readFileSync("src/modules/design/fixtures.ts", "utf8");
+    const names = [...fixtures.matchAll(/\b(?:name|run|race|partner):\s*"([^"]+)"/g)].map((m) => m[1]);
+    expect(names.length).toBeGreaterThan(0);
+    for (const name of names) expect(name, name).toMatch(/^(Membru A|Member A)$|probă|Sample/);
+    // Markup people-like words are the fixtures' only: the one sample member's name.
+    expect([...markup.matchAll(/(?:Membru|Member) [A-Z]/g)].every((m) => /^(Membru|Member) A$/.test(m[0]))).toBe(true);
+  });
+
+  it("holds every rule the brief names, in both catalogues", () => {
+    const ids = DESIGN_RULES.map((rule) => rule.id);
+    for (const id of ["staticPages", "lightDefault", "pageTint", "fontSize"]) expect(ids).toContain(id);
+    expect(ids.length).toBe(16);
+    for (const catalogue of [ro, en]) expect(Object.keys(catalogue.Admin.design.rules.items).sort()).toEqual([...ids].sort());
+    for (const rule of DESIGN_RULES) for (const where of rule.where) expect(existsSync(where.replace(/\/$/, "")), where).toBe(true);
   });
 });
 

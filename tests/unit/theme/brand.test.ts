@@ -4,7 +4,7 @@ import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
 import messages from "@/../messages/ro.json";
 import en from "@/../messages/en.json";
-import { MAX_CARD_STEP } from "@/modules/appearance/domain/tint-contrast";
+import { contrastRatio, MAX_CARD_STEP } from "@/modules/appearance/domain/tint-contrast";
 import { CLUB_NAME, COLOR, COLOR_DARK, FONT, GRADIENT, LOGO, SITE_TINT, SURFACE_GRADIENT, WORDMARK } from "@/theme/brand";
 import { ACCENT_PAIRS, type BrandPair, HERO_PAIRS, TEXT_PAIRS, TEXT_PAIRS_DARK } from "@/theme/brand-pairs";
 
@@ -22,18 +22,6 @@ const names = (pairs: readonly BrandPair[]) => pairs.map((pair) => `${pair.foreg
  * The full audit of criterion 4 is an e2e concern (`seo.spec.ts`, not built). This covers the
  * half that is decidable from the tokens alone, which is the half that a brand swap breaks.
  */
-
-/** WCAG 2.1 relative luminance. */
-function luminance(hex: string): number {
-  const channels = [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16) / 255);
-  const [r, g, b] = channels.map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
-
-function contrastRatio(a: string, b: string): number {
-  const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x);
-  return (light + 0.05) / (dark + 0.05);
-}
 
 describe("BR-REQ-070-02 the palette is readable", () => {
   it("computes a known ratio, so the helper itself is not the thing under test", () => {

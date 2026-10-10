@@ -20,4 +20,8 @@ export const DESIGN_RULES: readonly DesignRule[] = [
   { id: "density", where: ["src/theme/density.ts", "tests/unit/theme/density.test.ts"] },
   { id: "fonts", where: ["src/theme/fonts/", "src/app/[locale]/layout.tsx"] },
   { id: "panels", where: ["src/shared/ui/Panel.tsx", "src/shared/ui/panel-glyphs.ts"] },
+  { id: "staticPages", where: ["tests/unit/public-cache/static-public-routes.test.ts", "src/modules/public-cache/reads.ts"] },
+  { id: "lightDefault", where: ["src/theme/AppTheme.tsx", "src/shared/ui/ThemeModeToggle.tsx"] },
+  { id: "pageTint", where: ["src/modules/appearance/domain/site-tint.ts", "tests/unit/appearance/site-tint.test.ts"] },
+  { id: "fontSize", where: ["src/modules/appearance/domain/site-font-size.ts", "tests/unit/appearance/site-font-size.test.ts"] },
 ];

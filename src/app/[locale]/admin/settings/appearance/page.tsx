@@ -16,6 +16,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import SettingsSubNav from "@/modules/staff-identity/ui/SettingsSubNav";
 import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import Panel from "@/shared/ui/Panel";
+import { TAP_TARGET } from "@/shared/ui/tap-target";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -59,7 +60,7 @@ export default async function AdminAppearancePage({ params, searchParams }: Prop
 
       {/* «Sistemul de design» (§NNN): the look as the code draws it, and the redesign plan — one card, one button, for whoever reads this tab. */}
       <Panel glyph="appearance" title={t("design.card.title")} intro={t("design.card.intro")} id="design-system" data-testid="design-system-card">
-        <GlyphButtonLink icon="preview" href="/admin/design" variant="outlined" size="small">
+        <GlyphButtonLink icon="preview" href="/admin/design" variant="outlined" size="small" sx={TAP_TARGET}>
           {t("design.card.open")}
         </GlyphButtonLink>
       </Panel>
