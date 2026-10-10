@@ -1629,6 +1629,7 @@
       "ONE_ADDRESS_ONLY": "La „Declarațiile semnate merg la” încape o singură adresă — cutia de arhivă. Pune-le pe celelalte la „Copie vizibilă (Cc)” sau „Copie ascunsă (Bcc)”. Nu s-a salvat nimic.",
       "CONFLICT": "Altcineva a salvat între timp. Reîncarcă pagina și aplică din nou modificările tale — nimic nu a fost suprascris.",
       "DECLARATION_HELD": "Nu s-a șters nimic: o declarație e păstrată pentru o reclamație sau un litigiu. Un Administrator scoate întâi păstrarea, din pagina înscrierii sau din semnăturile alergării.",
+      "SHOP_SIZE_HAS_ORDERS": "Nu s-a salvat: o mărime debifată are comenzi. Las-o bifată — poți pune stocul 0 ca să nu se mai comande.",
       "ERASE_NAME_MISMATCH": "Numele scris nu este numele înscrisului. Nu s-a șters nimic — scrie numele exact așa cum apare pe rând.",
       "LEGAL_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este a acestei versiuni. Nu s-a șters nimic — scrie exact textul cerut, de exemplu „GDPR 2”.",
       "LEGAL_DELETE_NEEDS_REASON": "Scrie un motiv. Este singurul lucru care rămâne după ștergere.",
@@ -7465,7 +7466,6 @@
         "createBody": "Membrii îl văd în zona lor de îndată ce îl adaugi."
       },
       "shop": {
-        "heading": "Magazin",
         "count": {
           "one": "{count} produs",
           "few": "{count} produse",
@@ -7491,9 +7491,7 @@
         "createBody": "Dacă e bifat „Vizibil în magazin”, membrii îl văd de îndată.",
         "empty": "Nu este încă niciun produs.",
         "listLabel": "Produsele, în ordinea din magazin",
-        "stockUnlimited": "fără limită",
         "stockNoLimit": "fără limită",
-        "stockLine": "Stoc: {stock}",
         "visible": "Vizibil în magazin",
         "hidden": "Ascuns",
         "orders": {
@@ -7522,10 +7520,7 @@
         "currency": "Moneda",
         "currencyRon": "lei (RON)",
         "currencyEur": "euro (EUR)",
-        "variants": "Variante și stoc (opțional)",
-        "variantsHelp": "Câte una pe rând, de exemplu „M: 10” sau „L” (fără limită). Cel mult {max} variante, {length} de caractere fiecare. Gol: o singură variantă.",
         "stock": "Stoc (fără variante)",
-        "stockHelp": "Câte bucăți mai sunt, cel mult {max}. Gol: fără limită.",
         "visibleSwitch": "Vizibil în magazin",
         "photo": "Fotografia produsului",
         "photoHelp": "După ce alegi fotografia, alegi partea care se vede în magazin. Se păstrează când salvezi produsul.",
@@ -7604,7 +7599,71 @@
           "status": "Starea",
           "note": "Nota"
         },
-        "movedTo": "Magazinul e la „Magazin”, în bara de sus."
+        "movedTo": "Magazinul e la „Magazin”, în bara de sus.",
+        "productsHeading": "Produse",
+        "tabs": {
+          "products": "Produse",
+          "orders": "Comenzi",
+          "settings": "Setări"
+        },
+        "open": "Deschide",
+        "backToList": "Înapoi la produse",
+        "sizesLine": "Mărimi: {sizes}",
+        "oneSize": "Mărime unică",
+        "oneSizeHelp": "Pentru un buff sau un abțibild — un singur fel. Stocul în căsuță; gol: fără limită.",
+        "sizesLegend": "Mărimile",
+        "sizesStockHelp": "Bifează mărimile pe care le vinzi, în ordinea din magazin. Lângă fiecare, câte bucăți mai sunt (cel mult {max}); gol: fără limită; 0: epuizat.",
+        "sizeStockLabel": "Stoc pentru {size}",
+        "extraVariants": "Alte variante (opțional)",
+        "extraVariantsHelp": "Ce nu e o mărime: o culoare, o croială pentru copii. Câte una pe rând, cu stocul după două puncte — „Albastru: 5” sau „Copii” (fără limită). Cel mult {max} variante în total, {length} de caractere fiecare.",
+        "cards": {
+          "name": "Denumirea și prețul",
+          "nameHelp": "Numele produsului în română și în engleză, prețul și moneda lui.",
+          "description": "Descrierea",
+          "descriptionHelp": "Material, îngrijire, desenul furnizorului — cu tabele și fotografii, dacă ajută. În ambele limbi sau în niciuna.",
+          "sizes": "Mărimile și stocul",
+          "sizesHelp": "Fiecare mărime bifată e o variantă pe care membrii o pot comanda. Debifarea unei mărimi care are comenzi e refuzată.",
+          "publish": "Publicarea",
+          "publishHelp": "Bifat, membrii văd produsul în zona lor și pot comanda. Nebifat, îl pregătești în liniște; clubul poate totuși adăuga o comandă pentru un membru."
+        },
+        "tabEmpty": "gol",
+        "descriptionEmpty": "Nimic scris încă.",
+        "archiveWhy": "Fiecare comandă păstrează o copie a produsului; de aceea el nu se șterge, ci se arhivează.",
+        "pictures": {
+          "title": "Fotografiile",
+          "help": "Prima fotografie e coperta: apare în listă și mare, în zona membrilor; celelalte, dedesubt, ca miniaturi. Cel mult {max}.",
+          "count": {
+            "one": "{count} fotografie",
+            "few": "{count} fotografii",
+            "other": "{count} de fotografii"
+          },
+          "afterSave": "Fotografiile se adaugă după prima salvare, pe pagina produsului.",
+          "empty": "Nicio fotografie încă.",
+          "gone": "Fotografia nu mai e în galerie.",
+          "cover": "Copertă",
+          "position": "Poziția {number}",
+          "moveUp": "Mută fotografia {number} mai în față",
+          "moveDown": "Mută fotografia {number} mai în spate",
+          "remove": "Scoate fotografia",
+          "removeTitle": "Scoți fotografia?",
+          "removeBody": "Dispare din produs; rămâne în galerie. Membrii văd schimbarea de îndată.",
+          "replace": "Înlocuiește sau decupează",
+          "save": "Salvează fotografia",
+          "add": "Adaugă o fotografie",
+          "addButton": "Adaugă fotografia",
+          "noStorage": "Stocarea imaginilor nu este configurată aici, așa că nu se pot adăuga fotografii."
+        },
+        "chart": {
+          "title": "Tabelul de mărimi",
+          "help": "Opțional. Cel mult {max} coloane măsurate — lățimea pieptului, lungimea — fiecare cu numele în ambele limbi, și câte un număr în centimetri pentru fiecare mărime bifată. Membrii îl văd sub produs.",
+          "column": "Coloana {number}",
+          "columnRo": "Numele coloanei (română)",
+          "columnEn": "Numele coloanei (engleză)",
+          "exampleRo": "Lățime piept (cm)",
+          "exampleEn": "Chest width (cm)",
+          "sizeColumn": "Mărimea",
+          "cellLabel": "{size}, coloana {number}"
+        }
       }
     },
     "declarationHold": {
@@ -9588,6 +9647,10 @@
       "shopProductDeleted": "Produsul a fost șters.",
       "shopProductArchived": "Produsul avea comenzi, așa că a fost arhivat.",
       "shopSettingsSaved": "Plata și adresa pentru comenzi au fost salvate.",
+      "shopPictureAdded": "Fotografia a fost adăugată.",
+      "shopPictureMoved": "Ordinea fotografiilor a fost schimbată.",
+      "shopPictureRemoved": "Fotografia a fost scoasă din produs.",
+      "shopPictureReplaced": "Fotografia a fost salvată.",
       "shopOrderPaid": "Comanda a fost marcată plătită. Membrul primește un email.",
       "shopOrderHandedOver": "Comanda a fost marcată predată.",
       "shopOrderCancelled": "Comanda a fost anulată.",
@@ -9888,6 +9951,9 @@
       "noteLabel": "O notă pentru club (opțional, cel mult {max} de caractere)",
       "order": "Comandă",
       "ordering": "Se trimite comanda…",
+      "pictureOpen": "Fotografia {number}",
+      "sizeChart": "Tabelul de mărimi",
+      "sizeColumn": "Mărimea",
       "outcome": {
         "placed": "Comanda a fost primită. Ți-am trimis și un email cu ea și cu felul în care se plătește.",
         "cancelled": "Comanda a fost anulată.",

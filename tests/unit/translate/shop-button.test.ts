@@ -1,30 +1,36 @@
-import { type ComponentProps, createElement } from "react";
+import { type ComponentProps, createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { NextIntlClientProvider } from "next-intl";
 import { createTranslator } from "next-intl";
 import { describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
+import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import type { AdminShopProduct } from "@/modules/content/shop/repository";
-import type { TeamPhotoLabels } from "@/modules/content/team/ui/TeamPhotoField";
 import TranslateProvider, { type TranslateAction } from "@/modules/translate/ui/TranslateProvider";
 
 /**
- * §NNN — «Copiază și tradu tot: RO → EN» on the shop's two forms (the product's, new and edit, and
- * «Cum se plătește»), the way «Echipa» has it (§464, §482): drawn where the layout offers
- * translation, absent where it does not, in both languages.
+ * §NNN — «Copiază și tradu tot: RO → EN» on the shop's forms (the product's, new and edit, and
+ * «Setări»'s «Cum se plătește»), the way «Echipa» has it (§464, §482): drawn where the layout offers
+ * translation, absent where it does not, in both languages. Since the editor's rebuild (§NNN) the
+ * product's button sits at the top of «Denumirea și prețul», the first card of the product's form.
  */
-vi.mock("@/app/[locale]/admin/pages/members/actions", () => ({
+vi.mock("@/app/[locale]/admin/shop/actions", () => ({
+  addShopPictureAction: async () => {},
   createShopProductAction: async () => {},
   deleteShopProductAction: async () => {},
   moveShopOrderAction: async () => {},
+  moveShopPictureAction: async () => {},
   moveShopProductAction: async () => {},
   placeOrderForMemberAction: async () => {},
+  removeShopPictureAction: async () => {},
+  replaceShopPictureAction: async () => {},
   saveShopProductAction: async () => {},
   saveShopSettingsAction: async () => {},
 }));
 
-const { default: ShopCard } = await import("@/app/[locale]/admin/pages/members/ShopCard");
+const { default: ProductForm } = await import("@/modules/content/shop/ui/ProductForm");
+const { default: ShopSettingsCard } = await import("@/modules/content/shop/ui/ShopSettingsCard");
 
 const action: TranslateAction = async () => ({ ok: false, reason: "notConfigured" });
 
@@ -34,10 +40,13 @@ const PRODUCT: AdminShopProduct = {
   titleEn: "T-shirt",
   descriptionRo: "Bumbac",
   descriptionEn: null,
+  descriptionRoJson: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Bumbac" }] }] },
+  descriptionEnJson: null,
   priceBani: 5000,
   currency: "RON",
-  photoAssetId: null,
   photo: null,
+  pictures: [],
+  sizeChart: null,
   visible: true,
   position: 0,
   version: 1,
@@ -48,38 +57,26 @@ const PRODUCT: AdminShopProduct = {
 function render(locale: "ro" | "en", offer: ComponentProps<typeof TranslateProvider>["offer"]) {
   const messages = locale === "en" ? en : ro;
   const words = createTranslator({ locale, messages: messages.Admin as unknown as Record<string, string>, namespace: undefined });
-  const card = ShopCard({
-    products: [PRODUCT],
-    settings: { paymentRo: "Transfer", paymentEn: null, ordersTo: null },
-    orders: [],
-    ordersTotal: 0,
-    ordersQuery: { status: null, productId: null },
-    productNames: [],
-    accounts: [],
-    items: [],
-    noticeDescribes: true,
-    storage: false,
-    path: "/ro/admin/shop",
-    locale,
-    words: words as never,
-    cancel: "Cancel",
-    messages: { fieldError: "", summary: "", fields: {} } as never,
-    photoLabels: {} as unknown as TeamPhotoLabels,
-    mayManage: true,
-    showEmail: false,
-  });
+  const rich = richTextEditorLabels(createTranslator({ locale, messages: messages.Admin.richText as unknown as Record<string, string>, namespace: undefined }) as never);
+  const common = { locale, words: words as never, cancel: "Cancel", messages: { fieldError: "", summary: "", fields: {} } as never };
+  // «Cum se plătește», «Adaugă un produs» and the one product's edit form — the three forms the shop has.
+  const forms: ReactNode[] = [
+    ShopSettingsCard({ ...common, settings: { paymentRo: "Transfer", paymentEn: null, ordersTo: null }, mayManage: true }),
+    ProductForm({ ...common, product: null, rich, noticeDescribes: true }),
+    ProductForm({ ...common, product: PRODUCT, rich, noticeDescribes: true }),
+  ];
   const intl = { locale, messages: { Translate: messages.Translate } } as unknown as ComponentProps<typeof NextIntlClientProvider>;
-  return renderToStaticMarkup(createElement(NextIntlClientProvider, intl, createElement(TranslateProvider, { offer } as ComponentProps<typeof TranslateProvider>, card)));
+  return renderToStaticMarkup(createElement(NextIntlClientProvider, intl, createElement(TranslateProvider, { offer } as ComponentProps<typeof TranslateProvider>, ...forms)));
 }
 
 describe("§NNN the shop's forms carry «Copiază și tradu tot»", () => {
   for (const locale of ["ro", "en"] as const) {
     it(`draws one button in each of the three forms, in ${locale}`, () => {
       const html = render(locale, { action, setupHref: null });
-      // «Cum se plătește», «Adaugă un produs» and the one product's edit form.
       expect((html.match(/data-testid="translate-all"/g) ?? []).length).toBe(3);
       expect(html).toContain((locale === "en" ? en : ro).Translate.all);
-      for (const name of ["titleEn", "descriptionEn", "paymentEn"]) expect(html).toContain(`name="${name}"`);
+      // The boxes the press fills: the title, the rich description's English document, the payment words.
+      for (const name of ["titleEn", "descriptionEnBody", "paymentEn"]) expect(html).toContain(`name="${name}"`);
     });
   }
 

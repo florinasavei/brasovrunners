@@ -1,7 +1,5 @@
-import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
@@ -9,11 +7,13 @@ import type { getTranslations } from "next-intl/server";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { countForm } from "@/i18n/count-form";
 import type { Locale } from "@/i18n/routing";
+import GlyphChip from "@/modules/events/ui/GlyphChip";
 import type { ShopOrderStatus } from "@/db/schema/shop";
 import { clubVerbsFor, formatPrice, ORDER_NOTE_MAX, ORDER_QUANTITY_MAX, orderTotalBani, type OrderVerb } from "@/modules/content/shop/domain";
 import type { AdminOrder, OrderableItem, OrdersQuery, ZoneAccount } from "@/modules/content/shop/repository";
 import ActionForm, { type RefusalMessages } from "@/shared/forms/ActionForm";
 import RecallField, { RecallCheckbox } from "@/shared/forms/recall";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
@@ -28,6 +28,8 @@ const STATUSES: readonly ShopOrderStatus[] = ["PLACED", "PAID", "HANDED_OVER", "
 
 /** Each club verb's glyph, by name (§170): the registry never crosses into a client island as an element. */
 const VERB_GLYPH = { pay: "confirm", handOver: "checkIn", cancel: "cancel" } as const;
+/** The fold's glyph (§694): the cart of an order the club places for a member, from the one registry. */
+const OrderForIcon = ACTION_ICONS.orderFor;
 
 /**
  * «Comenzi» (§683, its own page since §NNN): the orders, newest first, under a GET filter (status,
@@ -190,7 +192,7 @@ function ForMemberFold({
   return (
     <Box component="details" id="shop-order-for-member" sx={BOXED_DISCLOSURE_SX} data-testid="shop-order-for-member">
       <summary>
-        <AddShoppingCartIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
+        <OrderForIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
         {t("members.shop.forMember.title")}
       </summary>
       <Stack spacing={1.5} sx={{ mt: 1.5 }}>
@@ -291,9 +293,13 @@ function OrderRow({
         <Typography variant="subtitle2" component="p" sx={{ fontWeight: 700 }}>
           {t("members.shop.orderNumber", { number: order.number })}
         </Typography>
-        <Chip size="small" color={order.status === "CANCELLED" ? "default" : order.status === "PLACED" ? "warning" : "success"} label={t(`members.shop.status.${order.status}`)} />
+        <GlyphChip
+          glyph={order.status === "CANCELLED" ? "cancelled" : order.status === "PLACED" ? "planned" : "done"}
+          color={order.status === "CANCELLED" ? "default" : order.status === "PLACED" ? "warning" : "success"}
+          label={t(`members.shop.status.${order.status}`)}
+        />
         {/* Placed by the club in the member's name (§690): said on the row, as the CSV says it in its column. */}
-        {order.placedBy === "CLUB" && <Chip size="small" variant="outlined" label={t("members.shop.forMember.placedByClub")} data-testid="order-placed-by-club" />}
+        {order.placedBy === "CLUB" && <GlyphChip glyph="club" variant="outlined" label={t("members.shop.forMember.placedByClub")} testId="order-placed-by-club" />}
       </Stack>
       <Typography variant="body2" sx={{ overflowWrap: "anywhere" }}>
         {order.memberName}

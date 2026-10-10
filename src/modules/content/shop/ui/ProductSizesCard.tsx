@@ -1,4 +1,3 @@
-import StraightenIcon from "@mui/icons-material/Straighten";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -20,6 +19,7 @@ import { loadedStockJson } from "@/modules/content/shop/fields";
 import type { AdminShopProduct } from "@/modules/content/shop/repository";
 import RecallField, { RecallCheckbox } from "@/shared/forms/recall";
 import { fieldId } from "@/shared/forms/outcome";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import Panel from "@/shared/ui/Panel";
 
@@ -28,6 +28,8 @@ type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 const TICK_ROW_SX = { display: "flex", alignItems: "center", gap: 1, minHeight: 44 } as const;
 const TICK_SX = { width: 20, height: 20, flexShrink: 0 } as const;
 const STOCK_BOX_SX = { width: 112 } as const;
+/** The chart fold's glyph from the one registry (§694): the ruler. */
+const ChartIcon = ACTION_ICONS.sizeChart;
 
 /** The chart's cell for one size and column, as the editor shows it again. */
 function cellOf(chart: SizeChart | null, label: string, index: number): string {
@@ -121,7 +123,7 @@ export default function ProductSizesCard({ product, words: t, scope }: { product
 
         <Box component="details" open={chart ? true : undefined} sx={BOXED_DISCLOSURE_SX} data-testid="size-chart-fold">
           <summary>
-            <StraightenIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
+            <ChartIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
             {t("members.shop.chart.title")}
           </summary>
           <Stack spacing={1.5} sx={{ mt: 1.5 }}>

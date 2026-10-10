@@ -1629,6 +1629,7 @@
       "ONE_ADDRESS_ONLY": "“Signed declarations go to” takes one address — the archive mailbox. Put the others under “Visible copy (Cc)” or “Hidden copy (Bcc)”. Nothing was saved.",
       "CONFLICT": "Someone else saved while you were editing. Reload the page and reapply your changes — nothing of yours was overwritten.",
       "DECLARATION_HELD": "Nothing was erased: a declaration is kept for a complaint or a dispute. An Administrator removes the keep first, on the registration's page or the run's signatures.",
+      "SHOP_SIZE_HAS_ORDERS": "Not saved: an unticked size has orders. Keep it ticked — set its stock to 0 so nobody orders it any more.",
       "ERASE_NAME_MISMATCH": "The name you typed is not this participant's name. Nothing was erased — type the name exactly as the row shows it.",
       "LEGAL_CONFIRMATION_MISMATCH": "What you typed does not name this version. Nothing was deleted — type the phrase exactly as asked, for example “GDPR 2”.",
       "LEGAL_DELETE_NEEDS_REASON": "Type a reason. It is the only thing left after the deletion.",
@@ -7465,7 +7466,6 @@
         "createBody": "Members see it in their area as soon as you add it."
       },
       "shop": {
-        "heading": "Shop",
         "count": {
           "one": "{count} item",
           "few": "{count} items",
@@ -7491,9 +7491,7 @@
         "createBody": "If “Visible in the shop” is ticked, members see it at once.",
         "empty": "There are no items yet.",
         "listLabel": "The items, in the shop's order",
-        "stockUnlimited": "no limit",
         "stockNoLimit": "no limit",
-        "stockLine": "Stock: {stock}",
         "visible": "Visible in the shop",
         "hidden": "Hidden",
         "orders": {
@@ -7522,10 +7520,7 @@
         "currency": "Currency",
         "currencyRon": "lei (RON)",
         "currencyEur": "euro (EUR)",
-        "variants": "Variants and stock (optional)",
-        "variantsHelp": "One per line, for example “M: 10” or “L” (no limit). At most {max} variants, {length} characters each. Empty: one variant.",
         "stock": "Stock (no variants)",
-        "stockHelp": "How many are left, at most {max}. Empty: no limit.",
         "visibleSwitch": "Visible in the shop",
         "photo": "The item's photo",
         "photoHelp": "Once you choose the photo, you choose the part the shop shows. It is kept when you save the item.",
@@ -7604,7 +7599,71 @@
           "status": "Status",
           "note": "Note"
         },
-        "movedTo": "The shop is under “Shop” in the top bar."
+        "movedTo": "The shop is under “Shop” in the top bar.",
+        "productsHeading": "Items",
+        "tabs": {
+          "products": "Items",
+          "orders": "Orders",
+          "settings": "Settings"
+        },
+        "open": "Open",
+        "backToList": "Back to the items",
+        "sizesLine": "Sizes: {sizes}",
+        "oneSize": "One size",
+        "oneSizeHelp": "For a buff or a sticker — one kind only. The stock in the box; empty: no limit.",
+        "sizesLegend": "The sizes",
+        "sizesStockHelp": "Tick the sizes you sell, in the shop's order. Beside each, how many are left (at most {max}); empty: no limit; 0: sold out.",
+        "sizeStockLabel": "Stock for {size}",
+        "extraVariants": "Other variants (optional)",
+        "extraVariantsHelp": "What is not a size: a colour, a children's cut. One per line, the stock after a colon — “Blue: 5” or “Children” (no limit). At most {max} variants in all, {length} characters each.",
+        "cards": {
+          "name": "Name and price",
+          "nameHelp": "The item's name in Romanian and in English, its price and its currency.",
+          "description": "Description",
+          "descriptionHelp": "Material, care, the supplier's drawing — with tables and pictures where they help. In both languages or neither.",
+          "sizes": "Sizes and stock",
+          "sizesHelp": "Every ticked size is a variant members can order. Unticking a size that has orders is refused.",
+          "publish": "Publication",
+          "publishHelp": "Ticked, members see the item in their zone and can order. Unticked, you prepare it quietly; the club can still add an order for a member."
+        },
+        "tabEmpty": "empty",
+        "descriptionEmpty": "Nothing written yet.",
+        "archiveWhy": "Each order keeps its own copy of the item; that is why it is archived rather than deleted.",
+        "pictures": {
+          "title": "Pictures",
+          "help": "The first picture is the cover: it shows in the list and large in the members' zone; the rest underneath, as thumbnails. At most {max}.",
+          "count": {
+            "one": "{count} picture",
+            "few": "{count} pictures",
+            "other": "{count} pictures"
+          },
+          "afterSave": "Pictures are added after the first save, on the item's page.",
+          "empty": "No pictures yet.",
+          "gone": "The picture is no longer in the gallery.",
+          "cover": "Cover",
+          "position": "Position {number}",
+          "moveUp": "Move picture {number} forward",
+          "moveDown": "Move picture {number} back",
+          "remove": "Remove the picture",
+          "removeTitle": "Remove the picture?",
+          "removeBody": "It leaves the item; it stays in the gallery. Members see the change at once.",
+          "replace": "Replace or crop",
+          "save": "Save the picture",
+          "add": "Add a picture",
+          "addButton": "Add the picture",
+          "noStorage": "Picture storage is not configured here, so no photo can be added."
+        },
+        "chart": {
+          "title": "Size chart",
+          "help": "Optional. At most {max} measured columns — chest width, length — each named in both languages, and one number in centimetres per ticked size. Members see it under the item.",
+          "column": "Column {number}",
+          "columnRo": "Column name (Romanian)",
+          "columnEn": "Column name (English)",
+          "exampleRo": "Lățime piept (cm)",
+          "exampleEn": "Chest width (cm)",
+          "sizeColumn": "Size",
+          "cellLabel": "{size}, column {number}"
+        }
       }
     },
     "declarationHold": {
@@ -9588,6 +9647,10 @@
       "shopProductDeleted": "The item has been deleted.",
       "shopProductArchived": "The item had orders, so it has been archived.",
       "shopSettingsSaved": "The payment words and the orders address have been saved.",
+      "shopPictureAdded": "The picture has been added.",
+      "shopPictureMoved": "The pictures' order has been changed.",
+      "shopPictureRemoved": "The picture has been removed from the item.",
+      "shopPictureReplaced": "The picture has been saved.",
       "shopOrderPaid": "The order has been marked paid. The member receives an email.",
       "shopOrderHandedOver": "The order has been marked handed over.",
       "shopOrderCancelled": "The order has been cancelled.",
@@ -9888,6 +9951,9 @@
       "noteLabel": "A note for the club (optional, at most {max} characters)",
       "order": "Order",
       "ordering": "Sending the order…",
+      "pictureOpen": "Picture {number}",
+      "sizeChart": "Size chart",
+      "sizeColumn": "Size",
       "outcome": {
         "placed": "Your order has been received. We have also emailed it to you, with how to pay.",
         "cancelled": "The order has been cancelled.",

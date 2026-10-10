@@ -249,16 +249,24 @@ describe("§683 the members' shop", () => {
     await expect(at(17)).resolves.not.toMatchObject({ id: again.id });
   });
 
-  it("a cancellation after a save removed the order's variant locks product, variant, order and gives nothing back", async () => {
+  it("a save that drops a size with an order is refused naming «Mărimile» (§NNN); a cancellation afterwards gives the stock back once", async () => {
     const product = await createProduct(db, { actor: admin, fields: PRODUCT, now: NOW });
     const variants = await variantsOf(product.id);
     const placed = await order(member, product.id, variants.M.id, 1);
-    // «M» no longer listed: the variant is deleted and the order keeps its copy, without the id.
-    await saveProduct(db, { actor: admin, productId: product.id, expectedVersion: 1, fields: { ...PRODUCT, variants: "L" }, now: NOW });
-    const [orphan] = await db.select().from(shopOrders).where(eq(shopOrders.id, placed.id));
-    expect(orphan).toMatchObject({ variantId: null, productId: product.id, variantLabel: "M", stockTaken: true });
+    // «M» no longer listed while an order names it: refused — the order's variant would dangle and
+    // its stock would have nowhere to go back to (§NNN, the rule §683's save did not have).
+    await expect(saveProduct(db, { actor: admin, productId: product.id, expectedVersion: 1, fields: { ...PRODUCT, variants: "L" }, now: NOW })).rejects.toMatchObject({
+      code: "SHOP_SIZE_HAS_ORDERS",
+      fields: ["sizes"],
+    });
+    const [kept] = await db.select().from(shopOrders).where(eq(shopOrders.id, placed.id));
+    expect(kept).toMatchObject({ variantId: variants.M.id, productId: product.id, variantLabel: "M", stockTaken: true });
+    expect((await variantsOf(product.id)).M.stock).toBe(1);
     const cancelled = await moveOrderByClub(db, { actor: admin, orderId: placed.id, verb: "cancel", now: NOW });
     expect(cancelled).toMatchObject({ status: "CANCELLED", stockTaken: false });
+    expect((await variantsOf(product.id)).M.stock).toBe(2);
+    // A cancelled order still names the size: the save stays refused until the order is gone with its product.
+    await expect(saveProduct(db, { actor: admin, productId: product.id, expectedVersion: 1, fields: { ...PRODUCT, variants: "L" }, now: NOW })).rejects.toMatchObject({ code: "SHOP_SIZE_HAS_ORDERS" });
     // Another member's order is no such order, before any lock is taken.
     const mine = await order(member, product.id, (await variantsOf(product.id)).L.id, 1);
     await expect(cancelOwnOrder(db, { account: other, orderId: mine.id, now: NOW })).rejects.toMatchObject({ code: "NOT_FOUND" });
@@ -386,7 +394,7 @@ describe("§683 the members' shop", () => {
     const clubRow = rows.find((row) => row.messageType === "SHOP_ORDER_CLUB_NOTICE")!;
     const club = await renderOutboxMessage({ ...clubRow, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
     expect(club.subject).toContain("Ana Exemplu");
-    expect(club.text).toContain("/admin/shop#shop-orders");
+    expect(club.text).toContain("/admin/shop/orders#shop-orders");
     expect(club.text).not.toContain("membru@example.org");
 
     await moveOrderByClub(db, { actor: admin, orderId: placed.id, verb: "pay", now: NOW });

@@ -1,9 +1,7 @@
-import PaymentsIcon from "@mui/icons-material/Payments";
-import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
-import StorefrontIcon from "@mui/icons-material/Storefront";
 import { getTranslations } from "next-intl/server";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import SubNav from "@/shared/ui/SubNav";
 
 /** The shop's three parts (§NNN): the products, the orders, the settings — each its own page under `/admin/shop`. */
@@ -16,7 +14,11 @@ const TAB_ROUTE = {
   settings: "/admin/shop/settings",
 } as const satisfies Record<ShopTab, string>;
 
-const TAB_GLYPH = { products: StorefrontIcon, orders: ReceiptLongIcon, settings: PaymentsIcon } as const;
+/** Each tab's glyph from the one registry (§694): the storefront, the receipt, the banknotes. */
+const ProductsIcon = ACTION_ICONS.shop;
+const OrdersIcon = ACTION_ICONS.orders;
+const SettingsIcon = ACTION_ICONS.payment;
+const TAB_GLYPH = { products: ProductsIcon, orders: OrdersIcon, settings: SettingsIcon } as const;
 
 /**
  * «Magazin»'s row of secondary tabs (§360's shape, §NNN): «Produse», «Comenzi», «Setări». The shop

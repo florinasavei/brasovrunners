@@ -1,18 +1,17 @@
-import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
-import CropIcon from "@mui/icons-material/Crop";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { getTranslations } from "next-intl/server";
 import { countForm } from "@/i18n/count-form";
 import type { Locale } from "@/i18n/routing";
+import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { PICTURES_MAX } from "@/modules/content/shop/domain";
 import type { AdminShopProduct, ShopPictureRow } from "@/modules/content/shop/repository";
 import TeamPhotoField, { type TeamPhotoLabels } from "@/modules/content/team/ui/TeamPhotoField";
 import TeamPhotoImage from "@/modules/content/team/ui/TeamPhotoImage";
 import ActionForm, { type RefusalMessages } from "@/shared/forms/ActionForm";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
@@ -21,6 +20,10 @@ import SubmitButton from "@/shared/ui/SubmitButton";
 import { addShopPictureAction, moveShopPictureAction, removeShopPictureAction, replaceShopPictureAction } from "@/app/[locale]/admin/shop/actions";
 
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
+
+/** The two folds' glyphs from the one registry (§694): a picture added beside the others, and one put in a stored one's place (§673). */
+const AddIcon = ACTION_ICONS.upload;
+const ReplaceIcon = ACTION_ICONS.replace;
 
 type Props = {
   /** Null on the new product's page: the pictures come once the product exists. */
@@ -87,7 +90,7 @@ export default function ProductPicturesCard({ product, locale, words: t, cancel,
           {mayManage && storage && pictures.length < PICTURES_MAX && (
             <Box component="details" open={pictures.length === 0 || undefined} sx={BOXED_DISCLOSURE_SX} data-testid="picture-add">
               <summary>
-                <AddPhotoAlternateIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
+                <AddIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
                 {t("members.shop.pictures.add")}
               </summary>
               <ActionForm action={addShopPictureAction} messages={messages} scope="picture-new" data-testid="picture-add-form">
@@ -140,9 +143,11 @@ function PictureRow({
           </Typography>
         )}
         <Stack spacing={0.5}>
-          <Stack direction="row" sx={{ gap: 0.5, flexWrap: "wrap" }}>
-            {first && <Chip size="small" color="primary" label={t("members.shop.pictures.cover")} data-testid="picture-cover" />}
-            <Chip size="small" variant="outlined" label={t("members.shop.pictures.position", { number: picture.position })} />
+          <Stack direction="row" sx={{ gap: 0.5, flexWrap: "wrap", alignItems: "center" }}>
+            {first && <GlyphChip glyph="featured" color="primary" label={t("members.shop.pictures.cover")} testId="picture-cover" />}
+            <Typography variant="body2" color="text.secondary">
+              {t("members.shop.pictures.position", { number: picture.position })}
+            </Typography>
           </Stack>
           {mayManage && (
             <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
@@ -176,7 +181,7 @@ function PictureRow({
       {mayManage && storage && picture.photo && picture.assetId && (
         <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mt: 1.5 }}>
           <summary>
-            <CropIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
+            <ReplaceIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
             {t("members.shop.pictures.replace")}
           </summary>
           <ActionForm action={replaceShopPictureAction} messages={messages} scope={scope} data-testid={`picture-replace-${picture.id}`}>

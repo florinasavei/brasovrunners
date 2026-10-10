@@ -168,7 +168,7 @@ function ProductCard({ product, locale, t }: { product: MembersShopProduct; loca
   return (
     <Box component="li" sx={{ border: 1, borderColor: "divider", borderRadius: 2, p: 2, minWidth: 0 }} data-testid="members-shop-product">
       {/* The strip (§NNN): the cover large, the rest as thumbnails that open the picture. */}
-      <ProductPictureStrip pictures={product.pictures} openLabel={t("shop.pictureOpen")} />
+      <ProductPictureStrip pictures={product.pictures} openLabel={t.raw("shop.pictureOpen")} />
       <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 700, overflowWrap: "anywhere" }}>
         {product.title}
       </Typography>

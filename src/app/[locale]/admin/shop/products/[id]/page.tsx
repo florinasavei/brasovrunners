@@ -1,6 +1,5 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
@@ -8,6 +7,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
+import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import { formatPrice } from "@/modules/content/shop/domain";
 import { readProductForAdmin } from "@/modules/content/shop/repository";
@@ -77,8 +77,8 @@ export default async function AdminShopProductPage({ params, searchParams }: Pro
         <Typography variant="h1" sx={{ fontSize: "1.5rem", overflowWrap: "anywhere" }} data-testid="product-title">
           {title}
         </Typography>
-        <Chip size="small" variant="outlined" label={formatPrice(product.priceBani, product.currency, locale)} />
-        <Chip size="small" color={product.visible ? "success" : "default"} label={product.visible ? t("members.shop.visible") : t("members.shop.hidden")} />
+        <GlyphChip glyph="shop" variant="outlined" label={formatPrice(product.priceBani, product.currency, locale)} />
+        <GlyphChip glyph={product.visible ? "visible" : "hidden"} color={product.visible ? "success" : "default"} label={product.visible ? t("members.shop.visible") : t("members.shop.hidden")} />
       </Stack>
       {!mayManage && <Alert severity="info">{t("members.shop.readOnly")}</Alert>}
 

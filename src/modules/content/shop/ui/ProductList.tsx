@@ -1,11 +1,11 @@
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { getTranslations } from "next-intl/server";
 import { countForm } from "@/i18n/count-form";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { formatPrice } from "@/modules/content/shop/domain";
 import type { AdminShopProduct } from "@/modules/content/shop/repository";
 import TeamPhotoImage from "@/modules/content/team/ui/TeamPhotoImage";
@@ -83,13 +83,15 @@ function ProductRow({ product, first, last, locale, words: t, mayManage }: { pro
           <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }}>
             {t("members.shop.sizesLine", { sizes: sizesLine(product, t) })}
           </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {t(`members.shop.pictures.count.${countForm(product.pictures.length, locale)}`, { count: product.pictures.length })}
+          </Typography>
         </Box>
       </Stack>
       <Stack direction="row" sx={{ mt: 0.5, flexWrap: "wrap", gap: 0.5 }}>
-        <Chip size="small" color={product.visible ? "success" : "default"} label={product.visible ? t("members.shop.visible") : t("members.shop.hidden")} />
-        {product.pictures.length > 0 && <Chip size="small" variant="outlined" label={t(`members.shop.pictures.count.${countForm(product.pictures.length, locale)}`, { count: product.pictures.length })} />}
-        {product.orders > 0 && <Chip size="small" variant="outlined" label={t(`members.shop.orders.${countForm(product.orders, locale)}`, { count: product.orders })} />}
-        {(product.descriptionRoJson === null) !== (product.descriptionEnJson === null) && <Chip size="small" variant="outlined" color="warning" label={t("members.shop.oneLanguage")} />}
+        <GlyphChip glyph={product.visible ? "visible" : "hidden"} color={product.visible ? "success" : "default"} label={product.visible ? t("members.shop.visible") : t("members.shop.hidden")} />
+        {product.orders > 0 && <GlyphChip glyph="orders" variant="outlined" label={t(`members.shop.orders.${countForm(product.orders, locale)}`, { count: product.orders })} />}
+        {(product.descriptionRoJson === null) !== (product.descriptionEnJson === null) && <GlyphChip glyph="language" variant="outlined" color="warning" label={t("members.shop.oneLanguage")} />}
       </Stack>
       <Stack direction="row" sx={{ mt: 1.5, flexWrap: "wrap", gap: 1 }}>
         <GlyphButton icon={mayManage ? "edit" : "preview"} href={href} variant="outlined" sx={TAP_TARGET} data-testid="product-open">
