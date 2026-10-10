@@ -1,5 +1,5 @@
 import type { EmailLocale } from "@/infrastructure/email/adapter";
-import { formatLei, orderTotalBani } from "@/modules/content/shop/domain";
+import { formatPrice, orderTotalBani, type ShopCurrency } from "@/modules/content/shop/domain";
 
 /**
  * The members' shop's three emails (§683), the order's facts in each half's own language — the
@@ -14,7 +14,9 @@ export type ShopOrderFacts = {
   titleEn: string;
   variant: string | null;
   quantity: number;
+  /** In the minor unit of `currency`, the order's own copy (§NNN): the total reads in it. */
   unitPriceBani: number;
+  currency: ShopCurrency;
   note: string | null;
   /** «Cum se plătește» in each language, both or neither (§352). */
   paymentRo: string | null;
@@ -28,10 +30,10 @@ export function shopOrderTitle(locale: EmailLocale, order: ShopOrderFacts | unde
   return locale === "ro" ? order.titleRo : order.titleEn;
 }
 
-/** «Comanda nr. 12: Tricou — M × 2 — 90 lei». */
+/** «Comanda nr. 12: Tricou — M × 2 — 90 lei», or «… — 60,50 €» for an order placed in euro. */
 export function shopOrderLine(locale: EmailLocale, order: ShopOrderFacts): string {
   const what = `${shopOrderTitle(locale, order)}${order.variant ? ` — ${order.variant}` : ""} × ${order.quantity}`;
-  const total = formatLei(orderTotalBani(order), locale);
+  const total = formatPrice(orderTotalBani(order), order.currency, locale);
   return locale === "ro" ? `Comanda nr. ${order.number}: ${what} — ${total}` : `Order no. ${order.number}: ${what} — ${total}`;
 }
 

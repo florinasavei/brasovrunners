@@ -218,6 +218,7 @@ function productFieldsOf(form: FormData) {
     descriptionRo: text(form, "descriptionRo"),
     descriptionEn: text(form, "descriptionEn"),
     price: text(form, "price"),
+    currency: text(form, "currency"),
     variants: text(form, "variants"),
     stock: text(form, "stock"),
     variantsLoaded: text(form, "variantsLoaded"),

@@ -861,6 +861,7 @@ async function renderRow(
       variant: order.variantLabel,
       quantity: order.quantity,
       unitPriceBani: order.unitPriceBani,
+      currency: order.currency,
       note: order.note,
       paymentRo: settings.paymentRo,
       paymentEn: settings.paymentEn,

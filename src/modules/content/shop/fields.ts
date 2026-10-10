@@ -2,14 +2,15 @@ import { z } from "zod";
 import { readTeamPhotoCrop } from "@/modules/content/team/photo-crop";
 import { refuseOneLanguage } from "@/shared/forms/both-languages";
 import { isUuid } from "@/shared/ids";
-import { ORDER_NOTE_MAX, ORDER_QUANTITY_MAX, parseLeiToBani, parseVariantLines, type VariantLine, variantKey } from "./domain";
+import { ORDER_NOTE_MAX, ORDER_QUANTITY_MAX, parsePriceToMinor, parseVariantLines, SHOP_CURRENCIES, type VariantLine, variantKey } from "./domain";
 
 /**
  * What the club types for a product of «Magazin» (§683), and what a member posts with an order.
  *
  * A product: the title in Romanian **and** English — both required at every save, a product with no
  * name in one language is not a product the other half of the site can show (§28, §352) — the
- * description both or neither, a price in lei, the photo of «Echipa»'s card (§541's crop), the
+ * description both or neither, a price with its currency — lei or euro, «Moneda», never converted
+ * (§NNN); absent from the post it is lei — the photo of «Echipa»'s card (§541's crop), the
  * variants and their stock (`domain.ts#parseVariantLines`), and «Vizibil în magazin». A refusal names
  * its box, the rest comes back as typed (§315).
  */
@@ -70,6 +71,12 @@ export const productFieldsSchema = z
     descriptionRo: fewLines(PRODUCT_DESCRIPTION_MAX),
     descriptionEn: fewLines(PRODUCT_DESCRIPTION_MAX),
     price: z.string().optional().default(""),
+    /** «Moneda»: one of `SHOP_CURRENCIES`; empty or absent (an older form, a test) is lei. */
+    currency: z
+      .union([z.enum(SHOP_CURRENCIES), z.literal("")])
+      .optional()
+      .default("RON")
+      .transform((value) => (value === "" ? "RON" : value)),
     variants: z.string().optional().default(""),
     stock: z.string().optional().default(""),
     variantsLoaded: loadedStock,
@@ -85,8 +92,8 @@ export const productFieldsSchema = z
   })
   .transform((fields, ctx) => {
     refuseOneLanguage(ctx, { ro: fields.descriptionRo, en: fields.descriptionEn }, { ro: ["descriptionRo"], en: ["descriptionEn"] }, "the description");
-    const priceBani = parseLeiToBani(fields.price);
-    if (priceBani === null) ctx.addIssue({ code: "custom", path: ["price"], message: "a price in lei, like 45 or 45,50" });
+    const priceBani = parsePriceToMinor(fields.price);
+    if (priceBani === null) ctx.addIssue({ code: "custom", path: ["price"], message: "a price like 45 or 45,50" });
     const variants = parseVariantLines(fields.variants, fields.stock);
     if (!variants.ok) {
       // The empty variants box reads the «Stoc» box: its refusal is on that box.
@@ -101,6 +108,7 @@ export const productFieldsSchema = z
       descriptionRo: fields.descriptionRo,
       descriptionEn: fields.descriptionEn,
       priceBani: priceBani ?? 0,
+      currency: fields.currency,
       variants: variants.ok ? variants.variants : ([] as VariantLine[]),
       variantsLoaded: fields.variantsLoaded,
       visible: fields.visible,

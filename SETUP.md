@@ -1935,7 +1935,9 @@ bank transfer or in cash, and an Administrator — or the colleague who runs the
    and optionally one address for «Cine primește comenzile». With the address empty no email is
    sent to the club; the orders are in the card's list either way.
 3. **Add the products.** The same card → «Adaugă un produs»: the name in both languages, the
-   description in both or neither, the price in lei («45» or «45,50»), the variants one per line
+   description in both or neither, the price («45» or «45,50») with its currency in «Moneda» —
+   lei or euro, chosen per product, shown to members as such and never converted; an order keeps
+   the currency it was placed in — the variants one per line
    with their stock («M: 10», «L» for no limit; empty for one variant, its stock in «Stoc»), a
    photo with its crop, and «Vizibil în magazin» when it should be on sale. A product that has
    orders is archived rather than deleted.

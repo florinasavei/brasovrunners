@@ -57,6 +57,7 @@ export async function GET(request: Request): Promise<Response> {
       variant: t("members.shop.columns.variant"),
       quantity: t("members.shop.columns.quantity"),
       unitPrice: t("members.shop.columns.unitPrice"),
+      currency: t("members.shop.columns.currency"),
       total: t("members.shop.columns.total"),
       status: t("members.shop.columns.status"),
       note: t("members.shop.columns.note"),

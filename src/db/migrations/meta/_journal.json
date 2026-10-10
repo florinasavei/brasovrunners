@@ -925,6 +925,13 @@
       "when": 1791630202720,
       "tag": "0134_staff_user_permissions",
       "breakpoints": true
+    },
+    {
+      "idx": 132,
+      "version": "7",
+      "when": 1791637251132,
+      "tag": "0135_shop_price_currency",
+      "breakpoints": true
     }
   ]
 }
