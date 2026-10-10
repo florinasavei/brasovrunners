@@ -309,14 +309,15 @@ export async function moveShopOrderAction(_previous: FormOutcome | null, form: F
 
 /**
  * «Adaugă o comandă pentru un membru» (§NNN): the club places an order in a member's name. The door
- * is a staff session; the service asserts `canManageShop` and the member account again. A refusal
- * returns, naming its box (§315); a placed order lands on its row in the list, the filter kept, with
- * a toast.
+ * asks `canManageShop` of the actor, like every shop verb — a holder of «Gestionează magazinul»
+ * included (§687); the service asserts it and the member account again. A refusal returns, naming
+ * its box (§315); a placed order lands on «Magazin», on its row in the list, the filter kept, with a
+ * toast.
  */
 export async function placeOrderForMemberAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   let id: string;
   try {
-    const actor = await requireStaff();
+    const actor = await requireStaffCapability(canManageShop);
     id = (
       await placeOrderForMember(getDb(), {
         actor,
@@ -333,5 +334,5 @@ export async function placeOrderForMemberAction(_previous: FormOutcome | null, f
   } catch (error) {
     return refused(error, form);
   }
-  return backToCodes(form, { saved: "shopOrderPlacedForMember" }, `order-${id}`, ordersFilterOf(form));
+  return backToShop(form, { saved: "shopOrderPlacedForMember" }, `order-${id}`, ordersFilterOf(form));
 }

@@ -48,7 +48,7 @@ export function formatPrice(minor: number, currency: ShopCurrency, locale: strin
 }
 
 /**
- * The currency word the price box carries, when it carries one (§NNN): a trailing «lei», «eur»,
+ * The currency word the price box carries, when it carries one (§686): a trailing «lei», «eur»,
  * «euro» or «€», or a leading «€» («€30», «€ 30»). The box's word is read for one thing only —
  * refusing a price that contradicts «Moneda» beside it («45 lei» with euro chosen) — and never to
  * choose the currency: that is the select's. Null when the box is a bare number.
@@ -63,7 +63,7 @@ export function currencyWordOf(typed: string): ShopCurrency | null {
 
 /**
  * The price typed in the editor, back into the minor unit: «45», «45,5», «45.50», «45 lei», «30.25 €»,
- * «€30», «30 eur». A currency word — trailing, or a leading «€» (§NNN) — is dropped whatever it says:
+ * «€30», «30 eur». A currency word — trailing, or a leading «€» (§686) — is dropped whatever it says:
  * the currency is the select's, not the box's (`fields.ts` refuses the contradiction). Null for anything else.
  */
 export function parsePriceToMinor(typed: string): number | null {

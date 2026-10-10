@@ -95,7 +95,7 @@ export const productFieldsSchema = z
     const priceBani = parsePriceToMinor(fields.price);
     if (priceBani === null) ctx.addIssue({ code: "custom", path: ["price"], message: "a price like 45 or 45,50" });
     // A word in the box that contradicts «Moneda» («45 lei» with euro chosen, «30 €» with lei) is a
-    // slip somewhere — refused on the box, never settled for either side (§NNN).
+    // slip somewhere — refused on the box, never settled for either side (§686).
     const word = currencyWordOf(fields.price);
     if (priceBani !== null && word !== null && word !== fields.currency) {
       ctx.addIssue({ code: "custom", path: ["price"], message: `the price says ${word}, «Moneda» says ${fields.currency}` });

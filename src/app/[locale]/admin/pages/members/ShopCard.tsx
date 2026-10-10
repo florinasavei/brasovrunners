@@ -58,7 +58,7 @@ type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 /** The order's statuses in the filter's order. */
 const STATUSES: readonly ShopOrderStatus[] = ["PLACED", "PAID", "HANDED_OVER", "CANCELLED"];
 
-/** Each currency's word in «Moneda», by its code — typed on `ShopCurrency`, so a third currency is a compile error here (§NNN). */
+/** Each currency's word in «Moneda», by its code — typed on `ShopCurrency`, so a third currency is a compile error here (§686). */
 const CURRENCY_WORD: Record<ShopCurrency, "currencyRon" | "currencyEur"> = { RON: "currencyRon", EUR: "currencyEur" };
 
 /** Each club verb's glyph, by name (§170): the registry never crosses into a client island as an element. */

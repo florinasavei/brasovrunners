@@ -220,6 +220,21 @@ describe("§NNN the club places an order in a member's name", () => {
     expect(await audits()).toEqual(["shop.order.placed_by_club"]);
   });
 
+  it("§687: a volunteer holding «Gestionează magazinul» places an order for a member; the same volunteer without it is refused", async () => {
+    const [volunteer] = await db.insert(staffUsers).values({ email: "voluntar@example.org", displayName: "Voluntar", role: "CONTRIBUTOR" }).returning();
+    const product = await createProduct(db, { actor: admin, fields: PRODUCT, now: NOW });
+    const variants = await variantsOf(product.id);
+    // Without the grant the role alone opens nothing: refused on the server, nothing taken.
+    await expect(forMember(volunteer, member.id, product.id, variants.M.id, 1)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(await db.select().from(shopOrders)).toEqual([]);
+    // With it — the session's grants, as `requireStaffCapability(canManageShop)` hands the actor on.
+    const holder = { ...volunteer, permissions: new Set(["shop.manage"] as const) };
+    const placed = await forMember(holder, member.id, product.id, variants.M.id, 1);
+    expect(placed).toMatchObject({ memberStaffUserId: member.id, placedBy: "CLUB", placedByStaffUserId: volunteer.id, status: "PLACED" });
+    expect((await variantsOf(product.id)).M.stock).toBe(1);
+    expect(await audits()).toEqual(["shop.order.placed_by_club"]);
+  });
+
   it("the same press twice within ten seconds is one order, paid or not; past the window it is placed again", async () => {
     const product = await createProduct(db, { actor: admin, fields: PRODUCT, now: NOW });
     const variants = await variantsOf(product.id);
@@ -307,7 +322,7 @@ describe("§NNN the club places an order in a member's name", () => {
           items: [],
           noticeDescribes: true,
           storage: false,
-          path: "/ro/admin/pages/members",
+          path: "/ro/admin/shop",
           locale: "ro",
           words: t as never,
           cancel: "Renunță",
@@ -339,7 +354,7 @@ describe("§NNN the club places an order in a member's name", () => {
         items: [],
         noticeDescribes: true,
         storage: false,
-        path: "/ro/admin/pages/members",
+        path: "/ro/admin/shop",
         locale: "ro",
         words: t as never,
         cancel: "Renunță",

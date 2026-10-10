@@ -38,7 +38,7 @@ describe("§683, §686 the price, in lei or in euro", () => {
     expect(parsePriceToMinor("30€")).toBe(3000);
     expect(parsePriceToMinor("30 eur")).toBe(3000);
     expect(parsePriceToMinor("30 EURO")).toBe(3000);
-    // A leading euro sign, with or without a space (§NNN).
+    // A leading euro sign, with or without a space (§686).
     expect(parsePriceToMinor("€30")).toBe(3000);
     expect(parsePriceToMinor("€ 30,25")).toBe(3025);
     expect(parsePriceToMinor("0")).toBe(0);
@@ -64,7 +64,7 @@ describe("§683, §686 the price, in lei or in euro", () => {
     expect(orderTotalBani({ unitPriceBani: 4550, quantity: 3 })).toBe(13650);
   });
 
-  it("reads the box's currency word for one purpose: refusing a price that contradicts «Moneda» (§NNN)", () => {
+  it("reads the box's currency word for one purpose: refusing a price that contradicts «Moneda» (§686)", () => {
     expect(currencyWordOf("45")).toBeNull();
     expect(currencyWordOf("45 lei")).toBe("RON");
     expect(currencyWordOf("30 €")).toBe("EUR");

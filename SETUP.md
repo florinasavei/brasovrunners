@@ -1952,9 +1952,9 @@ bank transfer or in cash, and an Administrator — or the colleague who runs the
    members' addresses (only the Organizer and the Administrators do, by role); an Administrator
    needs no tick — the role includes it. Untick it to take it back; a colleague made a member
    loses it by themselves.
-5. **Type in the orders collected outside the site** (`DECISIONS.md` §NNN) — a supplier's sheet,
+6. **Type in the orders collected outside the site** (`DECISIONS.md` §NNN) — a supplier's sheet,
    say. Each person in it needs an account on «Echipa» first (a member, or a colleague); then,
-   under «Comenzi», the fold «Adaugă o comandă pentru un membru»: the member from the list, the
+   on «Magazin», under «Comenzi», the fold «Adaugă o comandă pentru un membru»: the member from the list, the
    product and its variant (a sold-out variant is offered greyed), how many, a note if any, and two
    ticks — «Trimite-i membrului emailul de confirmare» (off: the member gets no email) and
    «Marchează direct ca plătită» (for a row already paid: the order lands as «Plătită», with the
@@ -1962,4 +1962,5 @@ bank transfer or in cash, and an Administrator — or the colleague who runs the
    is never emailed for an order the club typed itself. One row at a time, checked by the person
    typing it; the order takes from the same stock as a member's own and shows in the member's
    «Comenzile mele» like any order, marked «adăugată de club» in the list and «club» in the CSV's
-   column «Adăugată de».
+   column «Adăugată de». Whoever runs the shop may do it: an Administrator, or the colleague given
+   «Gestionează magazinul» in step 5.

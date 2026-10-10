@@ -270,8 +270,7 @@ export async function placeOrderForMember<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; fields: unknown; now?: Date },
 ): Promise<ShopOrder> {
-  // §NNN: the subject this takes follows `moveOrderByClub`'s.
-  if (!canManageShop(input.actor.role)) throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not place an order for a member`);
+  if (!canManageShop(input.actor)) throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not place an order for a member`);
   const fields = parseOrThrow(orderForMemberFieldsSchema, input.fields);
   const now = input.now ?? new Date();
   return db.transaction(async (tx) => {
