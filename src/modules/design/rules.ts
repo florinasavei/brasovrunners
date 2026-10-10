@@ -28,5 +28,5 @@ export const DESIGN_RULES: readonly DesignRule[] = [
   { id: "iconImports", where: ["tests/unit/design/icon-imports.test.ts", "tests/unit/design/guards-allowlist.ts"] },
   { id: "primitives", where: ["tests/unit/design/primitives.test.ts", "tests/unit/design/guards-allowlist.ts"] },
   { id: "serverFirst", where: ["tests/unit/shared/public-islands-weight.test.ts", "tests/unit/shared/server-element-props.test.ts", "AGENTS.md"] },
-  { id: "iconFamily", where: ["src/shared/ui/action-icons.ts", "src/modules/events/ui/glyphs.ts", "tests/unit/shared/action-icons.test.ts", "tests/unit/events/conditions-fold-and-public-glyphs.test.ts"] },
+  { id: "iconFamily", where: ["src/shared/ui/action-icons.ts", "src/modules/events/ui/glyphs.ts", "tests/unit/shared/action-icons.test.ts", "tests/unit/shared/glyph-on-every-button-and-fold.test.ts"] },
 ];

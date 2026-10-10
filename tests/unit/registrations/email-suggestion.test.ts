@@ -58,7 +58,7 @@ describe("§233 did you mean", () => {
       no mail server, so this is silent about it — and being silent is right, because refusing
       what it cannot verify would turn a typo into a lockout (§205).
     */
-    expect(suggestEmail("felix.asavei@prinicipal33.com")).toBeNull();
+    expect(suggestEmail("sample.runner@exemplu33.com")).toBeNull();
   });
 
   it("says nothing about something that is not an address yet", () => {

@@ -505,16 +505,10 @@ describe("§359 the save refuses a sample value", () => {
     }
   });
 
-  it("accepts an invitation the club signs \"Felix\", and finds the old sample inviter only inside the platform's own sentence", () => {
+  it("accepts an invitation the club signs with any first name (the sample inviter is recognised only as today's)", () => {
     expect(sampleValuesIn(entry("Bun venit", ["Te așteptăm la prima ședință. Semnat, Felix."]), "STAFF_INVITATION", "ro")).toEqual([]);
     const old = entry("Ești în echipa Brașov Runners", ["Felix te-a adăugat în echipa care administrează site-ul Brașov Runners, ca Organizator."]);
-    expect(sampleValuesIn(old, "STAFF_INVITATION", "ro")).toEqual([
-      { field: "body", value: "Organizator", placeholder: "staffRole" },
-      { field: "body", value: "Felix", placeholder: "inviterName" },
-    ]);
-    expect(replaceSampleValues(old, "STAFF_INVITATION", "ro").paragraphs).toEqual([
-      "{inviterName} te-a adăugat în echipa care administrează site-ul Brașov Runners, ca {staffRole}.",
-    ]);
+    expect(sampleValuesIn(old, "STAFF_INVITATION", "ro")).toEqual([{ field: "body", value: "Organizator", placeholder: "staffRole" }]);
   });
 
   it("finds the bib and the status where the platform's own sentence carried them, and only there", () => {

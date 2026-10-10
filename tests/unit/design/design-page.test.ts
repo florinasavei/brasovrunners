@@ -146,6 +146,7 @@ describe("BR-REQ-060-01 «Sistemul de design» draws the look from the code", ()
     expect(markup).toContain(">docs/REDESIGN.md<");
     expect(markup).toContain(ro.Admin.design.plan.statuses.default);
     expect(markup).toContain(ro.Admin.design.plan.statuses.planned);
+    expect(markup).toContain(ro.Admin.design.plan.statuses.decided);
   });
 
   it("names no person and no real event in its samples", async () => {
