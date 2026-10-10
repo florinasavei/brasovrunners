@@ -230,7 +230,7 @@ describe("§664 the members' design", () => {
 
   it("falls back field by field: a wrong colour, a foreign picture, a switch that is not a boolean", () => {
     const member = readBibDesign({ member: { enabled: "yes", bandColour: "red", headerImageSrc: "https://elsewhere.example/a.png", label: "Membru" } }).member;
-    expect(member).toEqual({ enabled: false, bandColour: null, headerImageSrc: null, headerImageCrop: null, label: "Membru" });
+    expect(member).toEqual({ ...DEFAULT_BIB_MEMBER_DESIGN, label: "Membru" });
     expect(readBibDesign({ member: "on" }).member).toEqual(DEFAULT_BIB_MEMBER_DESIGN);
     expect(readBibDesign({ member: { enabled: true, bandColour: "#C62828" } }).member.bandColour).toBe("#c62828");
   });
@@ -259,7 +259,8 @@ describe("§664 the members' design", () => {
 
   it("saves through the same schema the form posts to", () => {
     const parsed = bibDesignSchema.parse({ ...DEFAULT_BIB_DESIGN, member: { enabled: true, bandColour: "#6a1b9a", headerImageSrc: null, headerImageCrop: null, label: "  Membru BVR " } });
-    expect(parsed.member).toEqual({ enabled: true, bandColour: "#6a1b9a", headerImageSrc: null, headerImageCrop: null, label: "Membru BVR" });
+    // A form of before the members' style (§NNN) saves the header alone, as it printed.
+    expect(parsed.member).toEqual({ ...DEFAULT_BIB_MEMBER_DESIGN, enabled: true, bandColour: "#6a1b9a", label: "Membru BVR" });
     // A form without the members' section (an older caller) saves the members' bib off.
     const without: Record<string, unknown> = { ...DEFAULT_BIB_DESIGN };
     delete without.member;

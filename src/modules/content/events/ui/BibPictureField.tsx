@@ -70,7 +70,8 @@ type Props = {
 
 /** The form's field names for a place: the picture's address, its crop, and what a refused save brings back. */
 export function bibPictureFieldNames(slot: BibPictureSlot, place?: "member") {
-  const key = place === "member" ? "member.headerImage" : slot === "header" ? "headerImage" : "sponsorImage";
+  // A member's card (§NNN) is a place of its own, always the members'.
+  const key = slot === "memberCard" ? "member.cardImage" : place === "member" ? "member.headerImage" : slot === "header" ? "headerImage" : "sponsorImage";
   return {
     src: `${BIB_DESIGN_FORM_PREFIX}${key}Src`,
     crop: `${BIB_DESIGN_FORM_PREFIX}${key}Crop`,
@@ -131,7 +132,7 @@ function PictureField({ slot, picture: initial, crop: initialCrop, scope, labels
   const cropInput = useRef<HTMLInputElement>(null);
   const first = useRef(true);
   const lang = typeof document === "undefined" ? "ro" : document.documentElement.lang || "ro";
-  const inputId = place === "member" ? "bib-picture-member-header" : `bib-picture-${slot}`;
+  const inputId = slot === "memberCard" ? "bib-picture-member-card" : place === "member" ? "bib-picture-member-header" : `bib-picture-${slot}`;
   const sized = picture.src !== "" && picture.width > 0 && picture.height > 0;
 
   // The preview listens to the form's `change` (`BibDesignPreview`); a hidden field set by React

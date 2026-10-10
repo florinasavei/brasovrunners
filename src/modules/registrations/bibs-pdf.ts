@@ -4,10 +4,13 @@ import PDFDocument from "pdfkit";
 import { CLUB_NAME, COLOR } from "@/theme/brand";
 import {
   bandTextColour,
+  BIB_MEMBER_CARD,
   type BibDesign,
   bibBandColour,
   bibMemberBandColour,
+  bibMemberCardBackground,
   bibMemberLabel,
+  bibMemberStripeText,
   DEFAULT_BIB_DESIGN,
   numberScaleFactor,
 } from "./bib-design";
@@ -87,7 +90,7 @@ export type BibSheetInput = {
    * caps their size and hands over what it got — `null` where it got nothing, which prints the
    * coloured band exactly as before (§249).
    */
-  pictures?: { header?: Buffer | null; sponsors?: Buffer | null; memberHeader?: Buffer | null };
+  pictures?: { header?: Buffer | null; sponsors?: Buffer | null; memberHeader?: Buffer | null; memberCard?: Buffer | null };
   /**
    * The platform's words for the members' label when the club typed none (§664) — «Membru {club}» —
    * in the sheet's language, from the caller's catalogue. Absent, a member's bib carries no label
@@ -314,6 +317,24 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     label: memberLabel || null,
     footer: footerFor(memberPicture !== null),
   };
+  /*
+    «Tot numărul» (§NNN): the members' background over the whole card above the small print — their
+    photograph under the veil, their colour, or the kit's gradient (`bibMemberCardBackground`) — the
+    race and the lockup on it as on a band, the label a stripe. A photograph that could not be
+    fetched prints the colour or the gradient, never a failed sheet. The small print is laid out as
+    under a band: the race's title and date are on the card.
+  */
+  const memberCardPicture =
+    design.member.enabled && design.member.style === "card" && input.pictures?.memberCard ? embed(input.pictures.memberCard) : null;
+  const memberCard =
+    design.member.enabled && design.member.style === "card"
+      ? {
+          background: bibMemberCardBackground(design.member, memberCardPicture !== null),
+          picture: memberCardPicture,
+          stripe: memberLabel ? bibMemberStripeText(memberLabel) : null,
+          footer: footerFor(false),
+        }
+      : null;
 
   const chunks: Buffer[] = [];
   doc.on("data", (chunk: Buffer) => chunks.push(chunk));
@@ -327,10 +348,16 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     const left = slot.x + BIB_MARGIN;
     const top = slot.y + BIB_MARGIN;
     const bottom = top + BIB_CARD.height;
-    // The members' header only while the switch is on (§664); everything under it is the one design.
+    // The members' design only while the switch is on (§664): their header, or their whole card (§NNN).
+    const card = row.member === true ? memberCard : null;
     const header = row.member === true && design.member.enabled ? memberHeader : eventHeader;
-    const footerLines = header.footer.lines;
-    const footerHeight = header.footer.height;
+    const footerLines = card ? card.footer.lines : header.footer.lines;
+    const footerHeight = card ? card.footer.height : header.footer.height;
+    // Everything above the sponsors' strip and the small print: a member's card's background (§NNN).
+    const cardHeight = BIB_CARD.height - footerHeight - sponsorHeight;
+    // The number and the name: white on a member's card, the body ink on the white paper.
+    const ink = card ? BIB_MEMBER_CARD.text : COLOR.ink;
+    const stripeHeight = card?.stripe ? L.memberStripeHeight : 0;
 
     /*
       The club's own picture across the top (§249), or the coloured band with the lockup and the
@@ -338,15 +365,9 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       and it is drawn to cover the strip, so a photograph of any proportion fills it without
       being squashed: the club's crop in the strip's 9.02:1 (§560), or centred and cut to it.
     */
-    if (header.picture) {
-      drawPicture("header", header.picture, left, top, header.crop);
-    } else {
-      // The band first, across the card: it is what says which race this is before anybody is
-      // close enough to read a word of it.
-      doc.rect(left, top, BIB_CARD.width, L.bandHeight).fill(header.band);
-
-      // The lockup at the left of the band, white on whatever colour the band is; the race and
-      // its date at the right, in whichever of white and ink can be read on it.
+    // The lockup at the left of the band, white on whatever colour the band is; the race and its
+    // date at the right, in whichever of white and ink can be read on it.
+    const drawHeaderWords = (textColour: string) => {
       if (design.showLogo) {
         doc.image(lockup, left + L.inset, top + (L.bandHeight - L.logoWidth / L.logoRatio) / 2, { width: L.logoWidth });
       }
@@ -356,14 +377,14 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
         doc
           .font("bold")
           .fontSize(L.titleSize)
-          .fillColor(header.bandText)
+          .fillColor(textColour)
           .text(input.eventTitle, headerLeft, top + L.titleTop, { width: headerWidth, align: "right", lineBreak: false, ellipsis: true });
       }
       if (design.showDate) {
         doc
           .font("body")
           .fontSize(L.dateSize)
-          .fillColor(header.bandText)
+          .fillColor(textColour)
           .text(input.eventDate, headerLeft, top + (design.showEventTitle ? L.dateTop : L.dateTopAlone), {
             width: headerWidth,
             align: "right",
@@ -371,6 +392,50 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
             ellipsis: true,
           });
       }
+    };
+
+    if (card) {
+      /*
+        A member's card (§NNN): the background first, then the same lockup and race on it in white.
+        The photograph is clipped to the card's coloured part and veiled in the kit's navy, so the
+        words read on any photograph — a white one included (`member-bib-card.test.ts`).
+      */
+      const background = card.background;
+      if (background.kind === "picture" && card.picture) {
+        doc.save();
+        doc.rect(left, top, BIB_CARD.width, cardHeight).clip();
+        drawPicture("memberCard", card.picture, left, top, design.member.cardImageCrop);
+        doc.rect(left, top, BIB_CARD.width, cardHeight).fillOpacity(BIB_MEMBER_CARD.veilOpacity).fill(BIB_MEMBER_CARD.veil);
+        doc.restore();
+        doc.fillOpacity(1);
+      } else if (background.kind === "colour") {
+        doc.rect(left, top, BIB_CARD.width, cardHeight).fill(background.colour);
+      } else if (background.kind === "gradient") {
+        const ramp = doc.linearGradient(left, top, left, top + cardHeight);
+        ramp.stop(0, background.stops[0]).stop(1, background.stops[1]);
+        doc.rect(left, top, BIB_CARD.width, cardHeight).fill(ramp);
+      }
+      drawHeaderWords(BIB_MEMBER_CARD.text);
+      /*
+        The stripe across the card, its foot on the background's foot, the label in capitals, bold,
+        letter-spaced and centred by hand without a width so pdfkit cannot wrap it (§317's lesson).
+      */
+      if (card.stripe) {
+        const stripeTop = top + cardHeight - L.memberStripeHeight;
+        doc.rect(left, stripeTop, BIB_CARD.width, L.memberStripeHeight).fill(BIB_MEMBER_CARD.stripe);
+        doc.font("bold").fontSize(L.memberStripeSize).fillColor(BIB_MEMBER_CARD.stripeText);
+        const options = { lineBreak: false, characterSpacing: L.memberStripeSpacing };
+        const stripeWidth = doc.widthOfString(card.stripe, options);
+        const stripeTextHeight = doc.heightOfString(card.stripe, options);
+        doc.text(card.stripe, left + (BIB_CARD.width - stripeWidth) / 2, stripeTop + (L.memberStripeHeight - stripeTextHeight) / 2, options);
+      }
+    } else if (header.picture) {
+      drawPicture("header", header.picture, left, top, header.crop);
+    } else {
+      // The band first, across the card: it is what says which race this is before anybody is
+      // close enough to read a word of it.
+      doc.rect(left, top, BIB_CARD.width, L.bandHeight).fill(header.band);
+      drawHeaderWords(header.bandText);
     }
 
     /*
@@ -379,7 +444,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       band) behind it, so it reads on any photograph; on a band, the band. The text is drawn without a
       width, right-aligned by hand at the card's inset, so pdfkit cannot wrap it (§317's lesson).
     */
-    if (header.label) {
+    if (header.label && !card) {
       doc.font("body").fontSize(L.memberLabelSize);
       const labelWidth = doc.widthOfString(header.label);
       const labelHeight = doc.heightOfString(header.label, { lineBreak: false });
@@ -412,7 +477,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     const digits = String(row.bibNumber);
     const numberSize = bibNumberPoints(digits, numberScaleFactor(design));
     const sponsorTop = bottom - footerHeight - sponsorHeight;
-    const numberArea = BIB_CARD.height - L.bandHeight - footerHeight - nameBlock - sponsorHeight;
+    const numberArea = BIB_CARD.height - L.bandHeight - footerHeight - nameBlock - sponsorHeight - stripeHeight;
     const numberTop = top + L.bandHeight + (nameAbove ? nameBlock : 0);
 
     /*
@@ -447,7 +512,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       doc
         .font("bold")
         .fontSize(L.nameSize)
-        .fillColor(COLOR.ink)
+        .fillColor(ink)
         .text(row.registeredName, left + L.inset, stripTop + L.nameTop, {
           width: BIB_CARD.width - 2 * L.inset,
           align: "center",
@@ -458,7 +523,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
 
     if (nameAbove) drawName(top + L.bandHeight);
 
-    doc.font("bold").fontSize(numberSize).fillColor(COLOR.ink);
+    doc.font("bold").fontSize(numberSize).fillColor(ink);
     const numberHeight = doc.heightOfString(digits, { width: BIB_CARD.width, lineBreak: false });
     doc.text(digits, left, numberTop + (numberArea - numberHeight) / 2, {
       width: BIB_CARD.width,
@@ -467,7 +532,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     });
 
     // The name under the number, large enough to read at a finish line.
-    if (design.showName && !nameAbove) drawName(sponsorTop - L.nameBlock);
+    if (design.showName && !nameAbove) drawName(sponsorTop - stripeHeight - L.nameBlock);
 
     // The sponsors' strip above the small print (§249): the club's crop in the strip's shape, or
     // the whole picture with its own proportion kept (§560).

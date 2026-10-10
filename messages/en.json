@@ -2117,15 +2117,18 @@
           "cropTitle": "The part that prints",
           "cropHelp": {
             "header": "Drag the rectangle over the part you want across the top of the number.",
-            "sponsors": "Drag the rectangle over the sponsors. “The whole picture” puts all of it in the strip."
+            "sponsors": "Drag the rectangle over the sponsors. “The whole picture” puts all of it in the strip.",
+            "memberCard": "Drag the rectangle over the part you want behind the digits, across the whole number."
           },
           "cropReset": {
             "header": "Back to the middle",
-            "sponsors": "The whole picture"
+            "sponsors": "The whole picture",
+            "memberCard": "Back to the middle"
           },
           "shape": {
             "header": "Shape: {ratio} to 1, the size of the number's top strip.",
-            "sponsors": "Shape: {ratio} to 1, the size of the sponsors' strip."
+            "sponsors": "Shape: {ratio} to 1, the size of the sponsors' strip.",
+            "memberCard": "Shape: {ratio} to 1, the whole number less its bottom line."
           }
         },
         "footer": {
@@ -2151,13 +2154,22 @@
           "enabledHelp": "The form asks “I want the members' number” under the {club} member tick. It prints only for an address of an account on «Staff». The number keeps its order.",
           "previewAlt": "A member's race number, in the members' design, for a runner named “Nume Prenume”",
           "previewCaption": "Preview — a member's number",
-          "bandColour": "The members' band colour",
-          "bandColourHelp": "Used when you choose no picture, and under the label on a picture.",
-          "eventColour": "The event's colour",
+          "style": "The members' number background",
+          "styleHelp": "\"The whole card\": a background across the number, white digits and name, the label on an orange stripe. \"Top band only\": the ordinary number with another top band.",
+          "styles": {
+            "card": "The whole card — the club's gradient, a colour or a photograph",
+            "band": "Top band only"
+          },
+          "bandOnly": "{colour} — band only",
+          "cardImageSrc": "Photograph across the whole card, for members",
+          "cardImageSrcHelp": "Only with \"The whole card\". It sits under a navy veil so the white digits read. Without one: the chosen colour or the club kit's gradient.",
+          "bandColour": "The members' colour",
+          "bandColourHelp": "On a band: the band's colour. On the whole card: the background when there is no photograph; empty means the kit's gradient. Green and orange stay band only.",
+          "eventColour": "Default: the event's, or the club's gradient",
           "headerImageSrc": "Picture instead of the band, for members",
-          "headerImageSrcHelp": "Like the number's top picture, on members' numbers only. Without one, the band takes the colour chosen above.",
+          "headerImageSrcHelp": "Only with \"Top band only\". Like the number's top picture, on members' numbers only. Without one, the band takes the colour chosen above.",
           "label": "Label",
-          "labelHelp": "One short line on the member's band, at most {max} characters. Empty: «{club} member»."
+          "labelHelp": "One short line, at most {max} characters, on the band or in capitals on the orange stripe. Empty: «{club} member»."
         }
       },
       "bibColour": "Colour of the race numbers (BIB)",

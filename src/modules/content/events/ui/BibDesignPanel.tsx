@@ -11,9 +11,11 @@ import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import { isStorageConfigured } from "@/modules/media/storage";
 import {
   BIB_MEMBER_LABEL_MAX,
+  BIB_MEMBER_STYLES,
   BIB_NAME_POSITIONS,
   BIB_NUMBER_SCALES,
   type BibDesign,
+  bibMemberCardColourReadable,
   DEFAULT_BIB_DESIGN,
 } from "@/modules/registrations/bib-design";
 import { CLUB_NAME } from "@/theme/brand";
@@ -57,9 +59,10 @@ import { BIB_COLOURS } from "./bib-colours";
  * line's box is the panel's second island, for its character count; everything else posts
  * itself, and the preview above follows all of it through the same query-string mirror.
  *
- * **«Numărul membrilor» is the last group** (§664): the switch, the members' header — a colour or
- * a picture through the same `BibPictureField` as the main header, under the members' field names —
- * and «Eticheta», with a preview of a member's bib of its own. Everything else a member's bib
+ * **«Numărul membrilor» is the last group** (§664): the switch, «Fundalul» — the whole card (§NNN)
+ * or the header alone — a colour, the card's photograph and the header's picture through the same
+ * `BibPictureField` as the main header, under the members' field names, and «Eticheta», with a
+ * preview of a member's bib of its own. Everything else a member's bib
  * prints is the design above; who gets one is the registration's tick and the club's member list.
  */
 export default async function BibDesignPanel({
@@ -96,9 +99,10 @@ export default async function BibDesignPanel({
     Nothing is offered when there is no store configured — a local machine without R2.
   */
   const storage = isStorageConfigured();
-  const facts = storage ? await readBibPictureFacts(getDb(), [design.headerImageSrc, design.sponsorImageSrc, design.member.headerImageSrc]) : new Map<string, never>();
+  const facts = storage ? await readBibPictureFacts(getDb(), [design.headerImageSrc, design.sponsorImageSrc, design.member.headerImageSrc, design.member.cardImageSrc]) : new Map<string, never>();
   const rich = richTextEditorLabels(await getTranslations("Admin.richText"));
   const ratioWords = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 });
+  const cardRatioWords = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
   // What the footer's two switches would print here: this deployment's own values, never a
   // literal — on QA the host is QA's, and the mailbox may not be set at all (§317).
   const siteHost = bibWebsiteHost(env.APP_BASE_URL);
@@ -131,12 +135,26 @@ export default async function BibDesignPanel({
    */
   const picture = (slot: BibPictureSlot, place?: "member") => {
     const field = slot === "header" ? "headerImageSrc" : "sponsorImageSrc";
-    const src = place === "member" ? design.member.headerImageSrc : design[field];
+    // A member's card (§NNN) is the members' own place; their header is the header's place under their fields (§664).
+    const card = slot === "memberCard";
+    const src = card ? design.member.cardImageSrc : place === "member" ? design.member.headerImageSrc : design[field];
     const stored = src ? facts.get(src) : undefined;
-    const crop = place === "member" ? design.member.headerImageCrop : design[slot === "header" ? "headerImageCrop" : "sponsorImageCrop"];
+    const crop = card
+      ? design.member.cardImageCrop
+      : place === "member"
+        ? design.member.headerImageCrop
+        : design[slot === "header" ? "headerImageCrop" : "sponsorImageCrop"];
     const labels: BibPictureLabels = {
-      legend: place === "member" ? t("editor.bibDesign.member.headerImageSrc") : t(`editor.bibDesign.${field}`),
-      help: place === "member" ? t("editor.bibDesign.member.headerImageSrcHelp") : t(`editor.bibDesign.${field}Help`),
+      legend: card
+        ? t("editor.bibDesign.member.cardImageSrc")
+        : place === "member"
+          ? t("editor.bibDesign.member.headerImageSrc")
+          : t(`editor.bibDesign.${field}`),
+      help: card
+        ? t("editor.bibDesign.member.cardImageSrcHelp")
+        : place === "member"
+          ? t("editor.bibDesign.member.headerImageSrcHelp")
+          : t(`editor.bibDesign.${field}Help`),
       none: t("editor.bibDesign.noPicture"),
       choose: t("editor.bibDesign.picture.choose"),
       replace: t("editor.bibDesign.picture.replace"),
@@ -163,7 +181,8 @@ export default async function BibDesignPanel({
         ...rich.imageShapes,
       },
       // The place's shape in words: the paper's width to the strip's height (`bib-picture-frame.ts`).
-      shape: t(`editor.bibDesign.picture.shape.${slot}`, { ratio: ratioWords.format(BIB_PICTURE_RATIO[slot]) }),
+      // The card's 1.54 would round to «2 la 1»; the strips' 9 and 22 read whole (§NNN).
+      shape: t(`editor.bibDesign.picture.shape.${slot}`, { ratio: (card ? cardRatioWords : ratioWords).format(BIB_PICTURE_RATIO[slot]) }),
       chosen: rich.imageChosen,
       stored: rich.imageStored,
       picked: rich.imageFromGalleryPicked,
@@ -303,6 +322,23 @@ export default async function BibDesignPanel({
                 }}
               />
             )}
+            {/* «Fundalul» (§NNN): the whole card, or the header alone. While the members' bib is off the
+                select starts on the whole card, whatever was stored; once it is on, the stored choice. */}
+            <RecallField
+              select
+              name="event.bibDesign.member.style"
+              label={t("editor.bibDesign.member.style")}
+              helperText={t("editor.bibDesign.member.styleHelp")}
+              defaultValue={design.member.enabled ? design.member.style : "card"}
+              slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+              sx={{ width: { sm: 360 } }}
+            >
+              {BIB_MEMBER_STYLES.map((style) => (
+                <option key={style} value={style}>
+                  {t(`editor.bibDesign.member.styles.${style}`)}
+                </option>
+              ))}
+            </RecallField>
             <RecallField
               select
               name="event.bibDesign.member.bandColour"
@@ -315,13 +351,17 @@ export default async function BibDesignPanel({
               <option value="">{t("editor.bibDesign.member.eventColour")}</option>
               {BIB_COLOURS.map((choice) => (
                 <option key={choice.hex} value={choice.hex}>
-                  {t(`editor.bibColours.${choice.key}`)}
+                  {/* White does not read on it at AA: on the whole card it prints the club's gradient (§NNN). */}
+                  {bibMemberCardColourReadable(choice.hex)
+                    ? t(`editor.bibColours.${choice.key}`)
+                    : t("editor.bibDesign.member.bandOnly", { colour: t(`editor.bibColours.${choice.key}`) })}
                 </option>
               ))}
               {design.member.bandColour && !BIB_COLOURS.some((choice) => choice.hex === design.member.bandColour) && (
                 <option value={design.member.bandColour}>{design.member.bandColour}</option>
               )}
             </RecallField>
+            {storage && picture("memberCard", "member")}
             {storage && picture("header", "member")}
             <BibFooterTextField
               name="event.bibDesign.member.label"
