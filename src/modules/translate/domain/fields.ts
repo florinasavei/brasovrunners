@@ -15,7 +15,9 @@
  *   "Linkuri și fișiere" row's label, a programme row's words;
  * - the organizer's note on an update, the cancellation's reason, a message to the participants;
  * - «Echipa» (§474, §482): a card's role, its words about the person and its links' labels, and
- *   the page's introduction — one form per card, each posting the same names;
+ *   the page's introduction — one form per card, each posting the same names; since §NNN also a
+ *   card's sub-role line and its responsibilities, and each box under the chart (its title and its
+ *   text, `bodyRoBody` / `bodyEnBody`), one form per box;
  * - «Întrebări frecvente» (§525): each card's question, «Categorie» and answer (`faq[<n>].…`), and
  *   the page's introduction — the whole page one form;
  * - «Membri» (§524, §572): «Beneficiile membrilor» and the members' zone, each its own form posting
@@ -62,6 +64,13 @@ const ENGLISH_FIELD_PATTERNS: readonly RegExp[] = [
   /^roleEn$/,
   /^links\[\d{1,2}\]\.labelEn$/,
   /^(bio|intro)EnBody$/,
+  // «Echipa» as an organisational chart (§NNN): a card's sub-role line and its «Responsabilități»
+  // (one per line — the lines travel as they are), and a box's title and text under the chart.
+  // `titleEn` is also the shop product's box; a product's name is the club's words as well, and
+  // that form carries no button.
+  /^(subtitle|responsibilities)En$/,
+  /^titleEn$/,
+  /^bodyEnBody$/,
   // «Întrebări frecvente» (§525): a card's question, its category and its answer.
   /^faq\[\d{1,3}\]\.(question|category)En$/,
   /^faq\[\d{1,3}\]\.answerEnBody$/,
@@ -78,7 +87,7 @@ const NEWSLETTER_RICH_TEXT = /^newsletterBodyEn$/;
  * The rich texts that spell their pair `…RoBody` / `…EnBody`: «Echipa»'s bio and introduction
  * (§474), a question's answer on «Întrebări frecvente» (§525), and «Membri»'s two texts (§524, §572).
  */
-const TEAM_RICH_TEXT = /^(?:bio|intro|benefits|zone|faq\[\d{1,3}\]\.answer)EnBody$/;
+const TEAM_RICH_TEXT = /^(?:bio|intro|body|benefits|zone|faq\[\d{1,3}\]\.answer)EnBody$/;
 
 /** Whether `name` is an English box the club types words into — the whole of what may be translated. */
 export function isTranslatableEnglishField(name: string): boolean {

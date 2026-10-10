@@ -6,7 +6,7 @@ import { recordAuditEvent } from "@/modules/audit/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canEditTeamPage, canShowTeamMember } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
-import { type TeamMemberFields, teamFieldName, teamMemberFieldsSchema } from "./fields";
+import { type TeamMemberFields, teamFieldName, teamMemberFieldsSchema, teamReportsToSelf } from "./fields";
 import { mediaAssetKeyPrefix } from "./repository";
 
 /**
@@ -49,6 +49,40 @@ function assertMayEdit(actor: Actor): void {
   }
 }
 
+/** The «Răspunde în fața» box refused (§NNN), with the rest of the card kept (§315). */
+function refuseReportsTo(message: string): never {
+  throw new DomainError("VALIDATION_ERROR", message, ["reportsToId"]);
+}
+
+/**
+ * The card this one answers to must be a stored card, not itself and not one of its own
+ * descendants — a cycle of any length (§NNN). Read inside the save's transaction, so a parent
+ * re-pointed by a colleague in the same moment is still seen: the walk follows `reports_to_id`
+ * upward from the chosen parent and stops on the saved card, on the top, or on a stale cycle in
+ * the data (a visited set), which it then also refuses rather than looping.
+ */
+async function assertReportsToIsSound<T extends Record<string, unknown>>(
+  tx: Database<T>,
+  fields: TeamMemberFields,
+  selfId: string | null,
+): Promise<void> {
+  if (fields.reportsToId === null) return;
+  if (teamReportsToSelf(fields, selfId)) refuseReportsTo("a card cannot answer to itself");
+  const visited = new Set<string>();
+  let current: string | null = fields.reportsToId;
+  while (current !== null) {
+    if (selfId !== null && current === selfId) refuseReportsTo("the chosen card already answers to this one: that would be a circle");
+    if (visited.has(current)) refuseReportsTo("the chosen card is on a circle of its own");
+    visited.add(current);
+    const [row] = await tx.select({ reportsToId: teamMembers.reportsToId }).from(teamMembers).where(eq(teamMembers.id, current)).limit(1);
+    if (!row) {
+      if (current === fields.reportsToId) refuseReportsTo("the chosen card does not exist");
+      return;
+    }
+    current = row.reportsToId;
+  }
+}
+
 /** Add a card at the end of the list, hidden until an Administrator shows it. */
 export async function createTeamMember<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -60,6 +94,8 @@ export async function createTeamMember<T extends Record<string, unknown>>(
   await assertPhotoExists(db, fields);
 
   const created = await db.transaction(async (tx) => {
+    // A new card answers to nobody's descendant: only "exists" and the data's own soundness apply (§NNN).
+    await assertReportsToIsSound(tx, fields, null);
     const [last] = await tx
       .select({ position: sql<number>`coalesce(max(${teamMembers.position}), 0)`.mapWith(Number) })
       .from(teamMembers);
@@ -78,6 +114,13 @@ export async function createTeamMember<T extends Record<string, unknown>>(
         photoMediaAssetId: fields.photoAssetId,
         // §541; null is the whole photograph.
         photoCrop: fields.photoCrop,
+        // The chart (§NNN).
+        subtitleRo: fields.subtitleRo,
+        subtitleEn: fields.subtitleEn,
+        responsibilitiesRo: fields.responsibilitiesRo,
+        responsibilitiesEn: fields.responsibilitiesEn,
+        reportsToId: fields.reportsToId,
+        placement: fields.placement,
         position: (last?.position ?? 0) + 1,
         visible: false,
         createdByStaffUserId: input.actor.id,
@@ -115,6 +158,8 @@ export async function saveTeamMember<T extends Record<string, unknown>>(
   await assertPhotoExists(db, fields);
 
   const row = await db.transaction(async (tx) => {
+    // Not itself, not a descendant of its own, and a card that exists — read under the same transaction (§NNN).
+    await assertReportsToIsSound(tx, fields, input.memberId);
     const [updated] = await tx
       .update(teamMembers)
       .set({
@@ -130,6 +175,13 @@ export async function saveTeamMember<T extends Record<string, unknown>>(
         photoMediaAssetId: fields.photoAssetId,
         // §541; null is the whole photograph.
         photoCrop: fields.photoCrop,
+        // The chart (§NNN).
+        subtitleRo: fields.subtitleRo,
+        subtitleEn: fields.subtitleEn,
+        responsibilitiesRo: fields.responsibilitiesRo,
+        responsibilitiesEn: fields.responsibilitiesEn,
+        reportsToId: fields.reportsToId,
+        placement: fields.placement,
         updatedByStaffUserId: input.actor.id,
         version: input.expectedVersion + 1,
         updatedAt: now,

@@ -4640,7 +4640,8 @@
       "usedInTeamIntro": "Pe pagina Echipa: introducerea",
       "usedInFaq": "Pe pagina «Întrebări frecvente»",
       "usedInMembersPage": "Pe paginile membrilor",
-      "usedInNewsletter": "Într-un newsletter trimis"
+      "usedInNewsletter": "Într-un newsletter trimis",
+      "usedInTeamBox": "Pe pagina Echipa: caseta {title}"
     },
     "gallery": {
       "title": "Galerie foto",
@@ -5900,6 +5901,16 @@
               "steps": [
                 "Setările evenimentului (data, locul, locurile, înscrierile), publicarea, galeria și înscrierile. Dacă un text depinde de o setare greșită, spune-i Administratorului."
               ]
+            },
+            {
+              "title": "Pagina «Echipa» ca organigramă: cine răspunde în fața cui, responsabilitățile și casetele",
+              "steps": [
+                "«Pagini» → «Echipa» → «Editează cardul» pe rândul persoanei, sau «Adaugă o persoană».",
+                "Sub rol scrie «Subtitlu (Română)» și «Subtitlu (English)» — o linie, de exemplu sub-rolul — apoi «Responsabilități (Română)» și «Responsabilități (English)», una pe rând. Fiecare pereche în ambele limbi sau în niciuna.",
+                "La «Răspunde în fața» alege cardul căruia îi răspunde persoana; «— nimeni, în vârf —» o lasă sus. La «Așezare» alegi «sub» (rândul de dedesubt) sau «alături de» (același rând, la dreapta). Un card nu poate răspunde în fața lui însuși sau a cuiva de sub el.",
+                "Apasă «Salvează». De îndată ce un card de pe site răspunde în fața altui card de pe site, pagina desenează organigrama; până atunci rămâne grila.",
+                "Textele de sub organigramă: «Casetele paginii» → «Adaugă o casetă»: titlul în ambele limbi și textul în editor — o poză, de exemplu sigla unui partener, se pune ca în orice text. O casetă nouă e ascunsă; Administratorul o pune pe site cu «Pune pe site»."
+              ]
             }
           ]
         },
@@ -7017,6 +7028,50 @@
         "moveUp": "Mută mai sus linkul",
         "moveDown": "Mută mai jos linkul",
         "row": "Linkul"
+      },
+      "subtitleRo": "Subtitlu (Română)",
+      "subtitleEn": "Subtitlu (English)",
+      "subtitleHelp": "O linie sub rol, de exemplu un sub-rol. Opțional, în ambele limbi sau în niciuna.",
+      "responsibilitiesRo": "Responsabilități (Română)",
+      "responsibilitiesEn": "Responsabilități (English)",
+      "responsibilitiesHelp": "Una pe rând, cel mult {lines} rânduri de {max} caractere. Opțional, în ambele limbi sau în niciuna; pe site apar ca listă.",
+      "reportsTo": "Răspunde în fața",
+      "reportsToNone": "— nimeni, în vârf —",
+      "reportsToHelp": "Cardul căruia îi răspunde persoana. De îndată ce un card de pe site răspunde în fața altuia de pe site, pagina desenează organigrama; până atunci rămâne grila.",
+      "placement": "Așezare",
+      "placementBelow": "sub",
+      "placementBeside": "alături de",
+      "placementHelp": "Față de cardul ales: pe rândul de dedesubt, sau pe același rând, la dreapta lui.",
+      "boxes": {
+        "heading": "Casetele paginii",
+        "count": {
+          "one": "{count} casetă",
+          "few": "{count} casete",
+          "other": "{count} de casete"
+        },
+        "help": "Textele de sub organigramă, fiecare cu titlul ei: o responsabilitate comună, parteneriatele, o notă despre decizii. O casetă nouă e ascunsă până este pusă pe site.",
+        "add": "Adaugă o casetă",
+        "create": "Adaugă caseta",
+        "empty": "Nu este încă nicio casetă.",
+        "listLabel": "Casetele paginii, în ordinea de pe pagină",
+        "noText": "Fără text",
+        "moveUp": "Mută caseta „{title}” mai sus",
+        "moveDown": "Mută caseta „{title}” mai jos",
+        "showTitle": "Pui pe site caseta „{title}”?",
+        "showBody": "Caseta apare sub organigramă cât timp pagina este publicată.",
+        "hideTitle": "Scoți de pe site caseta „{title}”?",
+        "hideBody": "Caseta rămâne aici, ascunsă; o poți pune la loc oricând.",
+        "deleteTitle": "Ștergi caseta „{title}”?",
+        "deleteBody": "Caseta dispare de tot. Pozele din ea rămân o săptămână în Imagini și se șterg apoi singure, dacă nu le mai folosește nimic.",
+        "delete": "Șterge caseta",
+        "edit": "Editează caseta",
+        "titleRo": "Titlu (Română)",
+        "titleEn": "Titlu (English)",
+        "titleHelp": "Titlul casetei, așa cum apare pe pagină.",
+        "titleEnHelp": "Obligatoriu, ca și cel în română.",
+        "bodyRo": "Textul (Română)",
+        "bodyEn": "Textul (English)",
+        "bodyHelp": "În ambele limbi sau în niciuna, cel mult {max} de caractere în fiecare. Ca într-o pagină: paragrafe, liste, un link în text, o poză (sigla unui partener, de exemplu) — fără tabele."
       }
     },
     "faq": {
@@ -9288,7 +9343,13 @@
       "shopOrderCancelled": "Comanda a fost anulată.",
       "shopOrderPlacedForMember": "Comanda a fost adăugată pentru membru.",
       "staffPermissionGranted": "Gata: poate gestiona magazinul.",
-      "staffPermissionRevoked": "Gata: nu mai gestionează magazinul."
+      "staffPermissionRevoked": "Gata: nu mai gestionează magazinul.",
+      "teamBoxCreated": "Caseta a fost adăugată, ascunsă până este pusă pe site.",
+      "teamBoxSaved": "Caseta a fost salvată.",
+      "teamBoxShown": "Caseta este pe site.",
+      "teamBoxHidden": "Caseta a fost scoasă de pe site.",
+      "teamBoxMoved": "Ordinea casetelor a fost schimbată.",
+      "teamBoxDeleted": "Caseta a fost ștearsă."
     }
   },
   "Network": {
@@ -9445,7 +9506,11 @@
       "WEBSITE": "Site personal",
       "OTHER": "Link"
     },
-    "contact": "Vrei să ne ajuți sau ai o întrebare pentru echipă? <contact>Scrie-ne</contact>."
+    "contact": "Vrei să ne ajuți sau ai o întrebare pentru echipă? <contact>Scrie-ne</contact>.",
+    "responsibilities": "Responsabilități",
+    "besideLabel": "Alături de {name}",
+    "reportsLabel": "Răspund în fața: {name}",
+    "boxesLabel": "Despre echipă"
   },
   "Faq": {
     "title": "Întrebări frecvente",

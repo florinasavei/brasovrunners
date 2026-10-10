@@ -1,6 +1,6 @@
 {
-  "id": "08291586-b5b3-4257-8e0d-9e0674cbe2ee",
-  "prevId": "1cc1545a-ba4f-4786-961b-33395fb4413e",
+  "id": "55031bcd-9d8f-405c-8cf8-a7c145f53cc5",
+  "prevId": "08291586-b5b3-4257-8e0d-9e0674cbe2ee",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -6096,19 +6096,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "placed_by": {
-          "name": "placed_by",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'MEMBER'"
-        },
-        "placed_by_staff_user_id": {
-          "name": "placed_by_staff_user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
         "status": {
           "name": "status",
           "type": "shop_order_status",
@@ -6264,19 +6251,6 @@
           "onDelete": "set null",
           "onUpdate": "no action"
         },
-        "shop_orders_placed_by_staff_user_id_staff_users_id_fk": {
-          "name": "shop_orders_placed_by_staff_user_id_staff_users_id_fk",
-          "tableFrom": "shop_orders",
-          "tableTo": "staff_users",
-          "columnsFrom": [
-            "placed_by_staff_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
         "shop_orders_cancelled_by_staff_user_id_staff_users_id_fk": {
           "name": "shop_orders_cancelled_by_staff_user_id_staff_users_id_fk",
           "tableFrom": "shop_orders",
@@ -6314,10 +6288,6 @@
         "shop_orders_cancelled_by_known": {
           "name": "shop_orders_cancelled_by_known",
           "value": "\"shop_orders\".\"cancelled_by\" IS NULL OR \"shop_orders\".\"cancelled_by\" IN ('MEMBER', 'CLUB')"
-        },
-        "shop_orders_placed_by_known": {
-          "name": "shop_orders_placed_by_known",
-          "value": "\"shop_orders\".\"placed_by\" IN ('MEMBER', 'CLUB')"
         }
       },
       "isRLSEnabled": false
@@ -6880,6 +6850,43 @@
           "primaryKey": false,
           "notNull": false
         },
+        "subtitle_ro": {
+          "name": "subtitle_ro",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "subtitle_en": {
+          "name": "subtitle_en",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "responsibilities_ro": {
+          "name": "responsibilities_ro",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "responsibilities_en": {
+          "name": "responsibilities_en",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reports_to_id": {
+          "name": "reports_to_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "placement": {
+          "name": "placement",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'below'"
+        },
         "photo_media_asset_id": {
           "name": "photo_media_asset_id",
           "type": "uuid",
@@ -6963,6 +6970,19 @@
         }
       },
       "foreignKeys": {
+        "team_members_reports_to_id_team_members_id_fk": {
+          "name": "team_members_reports_to_id_team_members_id_fk",
+          "tableFrom": "team_members",
+          "tableTo": "team_members",
+          "columnsFrom": [
+            "reports_to_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
         "team_members_photo_media_asset_id_media_assets_id_fk": {
           "name": "team_members_photo_media_asset_id_media_assets_id_fk",
           "tableFrom": "team_members",
@@ -7022,6 +7042,182 @@
         "team_members_links_is_a_short_array_of_https_links": {
           "name": "team_members_links_is_a_short_array_of_https_links",
           "value": "\"team_members\".\"links\" IS NULL OR CASE WHEN jsonb_typeof(\"team_members\".\"links\") = 'array' THEN jsonb_array_length(\"team_members\".\"links\") <= 12 AND NOT jsonb_path_exists(\"team_members\".\"links\", '$[*] ? (!(@.url.type() == \"string\" && @.url starts with \"https://\"))') ELSE false END"
+        },
+        "team_members_reports_to_not_self": {
+          "name": "team_members_reports_to_not_self",
+          "value": "\"team_members\".\"reports_to_id\" IS NULL OR \"team_members\".\"reports_to_id\" <> \"team_members\".\"id\""
+        },
+        "team_members_placement_known": {
+          "name": "team_members_placement_known",
+          "value": "\"team_members\".\"placement\" IN ('below', 'beside')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.team_page_boxes": {
+      "name": "team_page_boxes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "title_ro": {
+          "name": "title_ro",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title_en": {
+          "name": "title_en",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "body_ro_json": {
+          "name": "body_ro_json",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "body_en_json": {
+          "name": "body_en_json",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "body_ro": {
+          "name": "body_ro",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "body_en": {
+          "name": "body_en",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "visible": {
+          "name": "visible",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_by_staff_user_id": {
+          "name": "created_by_staff_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_by_staff_user_id": {
+          "name": "updated_by_staff_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "team_page_boxes_visible_position_idx": {
+          "name": "team_page_boxes_visible_position_idx",
+          "columns": [
+            {
+              "expression": "visible",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "position",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "team_page_boxes_created_by_staff_user_id_staff_users_id_fk": {
+          "name": "team_page_boxes_created_by_staff_user_id_staff_users_id_fk",
+          "tableFrom": "team_page_boxes",
+          "tableTo": "staff_users",
+          "columnsFrom": [
+            "created_by_staff_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "team_page_boxes_updated_by_staff_user_id_staff_users_id_fk": {
+          "name": "team_page_boxes_updated_by_staff_user_id_staff_users_id_fk",
+          "tableFrom": "team_page_boxes",
+          "tableTo": "staff_users",
+          "columnsFrom": [
+            "updated_by_staff_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "team_page_boxes_title_ro_present": {
+          "name": "team_page_boxes_title_ro_present",
+          "value": "length(btrim(\"team_page_boxes\".\"title_ro\")) > 0"
+        },
+        "team_page_boxes_title_en_present": {
+          "name": "team_page_boxes_title_en_present",
+          "value": "length(btrim(\"team_page_boxes\".\"title_en\")) > 0"
+        },
+        "team_page_boxes_position_positive": {
+          "name": "team_page_boxes_position_positive",
+          "value": "\"team_page_boxes\".\"position\" >= 1"
+        },
+        "team_page_boxes_version_positive": {
+          "name": "team_page_boxes_version_positive",
+          "value": "\"team_page_boxes\".\"version\" >= 1"
         }
       },
       "isRLSEnabled": false
