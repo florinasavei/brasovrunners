@@ -47,6 +47,8 @@ type Expected = readonly PublicContent[] | { readonly nothingPublic: string };
 
 const DRAFT = { nothingPublic: "creates a draft, which is on no public page until a publish (which expires)" } as const;
 
+const SHOP_ONLY = { nothingPublic: "the members' shop is read only in the members' zone and the backoffice, per request behind the account (§683)" } as const;
+
 const MEMBERS_ZONE_ONLY = { nothingPublic: "a discount code is read only in the members' zone, per request behind the account; no public page or public read carries one" } as const;
 
 /**
@@ -102,6 +104,16 @@ const WRITES: Record<string, Expected> = {
   "src/modules/content/member-codes/service.ts#setDiscountCodeHidden": MEMBERS_ZONE_ONLY,
   "src/modules/content/member-codes/service.ts#moveDiscountCode": MEMBERS_ZONE_ONLY,
   "src/modules/content/member-codes/service.ts#deleteDiscountCode": MEMBERS_ZONE_ONLY,
+  // The members' shop (§683): read only in the members' zone and the backoffice, per request behind the
+  // account — never a public page, the public cache, a feed or a sitemap.
+  "src/modules/content/shop/service.ts#createProduct": SHOP_ONLY,
+  "src/modules/content/shop/service.ts#saveProduct": SHOP_ONLY,
+  "src/modules/content/shop/service.ts#moveProduct": SHOP_ONLY,
+  "src/modules/content/shop/service.ts#deleteProduct": SHOP_ONLY,
+  "src/modules/content/shop/settings.ts#saveShopSettings": SHOP_ONLY,
+  "src/modules/content/shop/orders.ts#placeOrder": SHOP_ONLY,
+  "src/modules/content/shop/orders.ts#moveOrderByClub": SHOP_ONLY,
+  "src/modules/content/shop/orders.ts#cancelOwnOrder": SHOP_ONLY,
 
   // The gallery.
   "src/modules/content/gallery/service.ts#createAlbum": DRAFT,

@@ -58,6 +58,9 @@ import {
 } from "@/modules/registrations/family-entries";
 import { familyReservationHoldsAt, reservedUntilPhrase } from "@/modules/registrations/domain/family-reservation";
 import { eventInvitations } from "@/db/schema/event-invitations";
+import { shopOrders } from "@/db/schema/shop";
+import { readShopSettings } from "@/modules/content/shop/settings";
+import { isUuid } from "@/shared/ids";
 import { events } from "@/db/schema/events";
 import { countEligibleWaitlisted, countOccupied, readWaitlistPosition } from "@/modules/registrations/repository";
 import { computeOccupied, computePublicAvailability } from "@/modules/registrations/domain/capacity";
@@ -837,6 +840,36 @@ async function renderRow(
     data.participantName = typeof payload.displayName === "string" ? payload.displayName : "";
     data.legalTemplateKeys = Array.isArray(payload.keys) ? payload.keys.filter((key): key is string => typeof key === "string") : [];
     payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: "/admin/legal/new" })}`;
+  }
+  /*
+    The members' shop's three (§683): the order's id is the payload — no participant, no token. The
+    facts are read here, at the send, from the order's own copy (title, variant, price, note) and the
+    shop's payment words as they stand now; the member's name greets the member. An order gone (it
+    never is: orders are not deleted) withdraws the message. The member's button opens the members'
+    zone, the club's its list behind the sign-in — both from `APP_BASE_URL` (AGENTS.md §8).
+  */
+  if (row.messageType === "SHOP_ORDER_PLACED" || row.messageType === "SHOP_ORDER_PAID" || row.messageType === "SHOP_ORDER_CLUB_NOTICE") {
+    const orderId = (row.payloadJson as { orderId?: unknown } | null)?.orderId;
+    const [order] = typeof orderId === "string" && isUuid(orderId) ? await db.select().from(shopOrders).where(eq(shopOrders.id, orderId)).limit(1) : [];
+    if (!order) throw new OutboxMessageWithdrawn("the shop order is gone");
+    const settings = await readShopSettings(db);
+    data.participantName = row.messageType === "SHOP_ORDER_CLUB_NOTICE" ? "" : order.memberName;
+    data.shopOrder = {
+      number: order.number,
+      titleRo: order.productTitleRo,
+      titleEn: order.productTitleEn,
+      variant: order.variantLabel,
+      quantity: order.quantity,
+      unitPriceBani: order.unitPriceBani,
+      note: order.note,
+      paymentRo: settings.paymentRo,
+      paymentEn: settings.paymentEn,
+      memberName: order.memberName,
+    };
+    payloadActionUrl =
+      row.messageType === "SHOP_ORDER_CLUB_NOTICE"
+        ? `${env.APP_BASE_URL}${getPathname({ locale, href: "/admin/pages/members" })}#shop-orders`
+        : `${env.APP_BASE_URL}${getPathname({ locale, href: "/members-area" })}#members-shop`;
   }
   // The update's one button is the event's own page (§331): public, no token — and, like every
   // action, absent from a club copy.

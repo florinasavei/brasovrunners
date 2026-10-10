@@ -34,6 +34,7 @@ export const TASK_TARGETS: Partial<Record<TaskId, TaskTarget>> = {
   newsletterNotice: { kind: "section", section: "legal" },
   feedbackNotice: { kind: "section", section: "legal" },
   feedbackNamedNotice: { kind: "section", section: "legal" },
+  shopNotice: { kind: "section", section: "legal" },
   gmailFallbackNotice: { kind: "section", section: "legal" },
   refusalTerms: { kind: "section", section: "legal" },
   teamPageNotice: { kind: "section", section: "legal" },

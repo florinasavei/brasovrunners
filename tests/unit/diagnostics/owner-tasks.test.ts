@@ -35,6 +35,8 @@ const LAUNCHED: OwnerTaskInputs = {
   feedbackDescribed: true,
   feedbackBranchesOn: 2,
   feedbackNamedDescribed: true,
+  shopDescribed: true,
+  visibleShopProducts: 1,
   gmailFallbackDescribed: true,
   refusalDescribed: true,
   teamPageDescribed: true,
@@ -134,6 +136,19 @@ describe("owner tasks", () => {
     expect(stateOf(LAUNCHED, "feedbackNamedNotice")).toBe("done");
     // Its own answer, not the forms': a notice naming the forms and not the named mode leaves it open.
     expect(stateOf({ ...LAUNCHED, feedbackNamedDescribed: false }, "feedbackNotice")).toBe("done");
+  });
+
+  it("§683: the shop's notice row is open while a product is visible and the notice is silent, done once it names the shop, absent otherwise", () => {
+    expect(stateOf({ ...LAUNCHED, shopDescribed: false }, "shopNotice")).toBe("open");
+    expect(stateOf(LAUNCHED, "shopNotice")).toBe("done");
+    expect(stateOf({ ...LAUNCHED, visibleShopProducts: 0 }, "shopNotice")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, shopDescribed: false, visibleShopProducts: 0 }).some((task) => task.id === "shopNotice")).toBe(false);
+    expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "shopNotice")).toBe(false);
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.shopNotice;
+      expect(item.title && item.todo && item.done).toBeTruthy();
+      expect(item.how.length).toBeGreaterThan(0);
+    }
     expect(ownerTasks({ ...LAUNCHED, feedbackNamedDescribed: false, feedbackBranchesOn: 0 }).some((task) => task.id === "feedbackNamedNotice")).toBe(false);
     expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "feedbackNamedNotice")).toBe(false);
     for (const catalogue of [ro, en]) {
@@ -392,6 +407,7 @@ describe("owner tasks", () => {
       "newsletterNotice",
       "feedbackNotice",
       "feedbackNamedNotice",
+      "shopNotice",
       "gmailFallbackNotice",
       "refusalTerms",
       "teamPageNotice",

@@ -29,6 +29,7 @@ import {
   noticeDescribesNewsletter,
   noticeDescribesFeedbackForms,
   noticeDescribesFeedbackFormsNamed,
+  noticeDescribesMembersShop,
   noticeDescribesTeamPage,
   termsDescribeRefusal,
   raceDeclarationsCurrent,
@@ -36,6 +37,7 @@ import {
 } from "@/modules/legal-documents/repository";
 import { branchesSwitchedOn } from "@/modules/feedback/domain/branches";
 import { readFeedbackSettings } from "@/modules/feedback/settings";
+import { countVisibleProducts } from "@/modules/content/shop/repository";
 import {
   countTasks,
   filterTasks,
@@ -473,6 +475,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       feedbackDescribed: await noticeDescribesFeedbackForms(db, now),
       feedbackBranchesOn: branchesSwitchedOn(await readFeedbackSettings(db)).length,
       feedbackNamedDescribed: await noticeDescribesFeedbackFormsNamed(db, now),
+      // §683: the members' shop, described by the notice in force; the row waits only while a product is visible.
+      shopDescribed: await noticeDescribesMembersShop(db, now),
+      visibleShopProducts: await countVisibleProducts(db),
       gmailFallbackDescribed: await noticeDescribesGmailFallback(db, now),
       // §636: the terms in force carry the club's right to refuse a registration, in every language.
       refusalDescribed: await termsDescribeRefusal(db, now),
