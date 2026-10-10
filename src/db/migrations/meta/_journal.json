@@ -946,6 +946,13 @@
       "when": 1791644695995,
       "tag": "0137_team_org_chart",
       "breakpoints": true
+    },
+    {
+      "idx": 135,
+      "version": "7",
+      "when": 1791652682807,
+      "tag": "0138_shop_product_editor",
+      "breakpoints": true
     }
   ]
 }
