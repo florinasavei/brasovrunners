@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.87-2026-10-10 -->
+<!-- PROJECT_BASELINE: BR-V2.88-2026-10-10 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.87-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.88-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -401,6 +401,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 200. A listing card's weather pill shows, after the degrees, a drop and the hour's chance of rain in the locale's format («20 %» / "20%") whenever the forecast has a chance that does not round to 0, and nothing at 0 % or without one unless rain is likely; the drop and the figure are in the primary colour exactly when the §429 rain-likely rule holds, otherwise in the secondary text colour; a likely hour with no chance to show (likely by its amount alone, with no chance or one that rounds to 0) draws the drop alone, in the primary colour, with no figure; and a screen reader hears the chance in words («20% șanse de ploaie») after the degrees (amending criterion 90; 2026-10-08, `DECISIONS.md` §677).
 201. No weather glyph on a card, the featured hero or the event page is a closed umbrella: showers and heavy rain (WMO 65, 80–82) draw a cloud with rain falling from it (`RainyIcon`), the rain-likely mark on a card is the drop of criterion 90's amendment, and on the hero's line and the event page's row it is a drop before «ploaie probabilă» (amending criteria 90 and 91; 2026-10-08, `DECISIONS.md` §677).
 202. Amends criterion 201. No sky glyph on a card, the featured hero or the event page is the drop: drizzle (WMO 51, 53, 55), plain rain (61, 63) and showers and heavy rain (65, 80–82) draw three rain clouds by intensity — `RainyLightIcon`, `RainyIcon`, `RainyHeavyIcon`, each one path on the 24-unit viewBox, sharing one cloud with two, three and four strokes — and `WaterDrop` is drawn only as the chance's mark, so a plain rain hour's pill draws exactly one drop, after the degrees (2026-10-10, `DECISIONS.md` §682).
+203. In Romanian, the public menu's first entry — the section listing the club's runs — reads «Alergări» (not «Evenimente»), followed by Calendar and Contact, and its address stays `/ro/evenimente` (2026-10-10, `DECISIONS.md` §689).
 
 **Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects, `event-pages.spec.ts` (criterion 12); unit `registrations/form-errors.test.ts`, `events/listing.test.ts`, `theme/brand.test.ts`; release check on a real device
 
@@ -532,6 +533,7 @@ coffee is run on nothing.
 69. Given an event whose distance is ticked «Aproximativ», then the emails' facts block (the HTML part and the plain text), the calendar entry's facts line and the share picture say the long form, «circa 10 km (aproximativ)», never the bare number; an exact distance reads «10 km» as before; a duplicate, every date a series makes and the draft preview keep the tick (2026-10-01, `DECISIONS.md` §598).
 70. Given an event whose «Vremea» is «Text scris de club» (`custom`) and whose translation in the page's language has a weather text, when its page or preview is rendered, then the «Vremea» / «Weather» row shows that text as written and escaped, with no forecast, no Open-Meteo credit and no «?», and Open-Meteo is not asked. Given no text in that language, there is no row, never the other language's text; given an event cancelled or completed, there is no row either, whatever its text. Given «Fără vreme» (`off`), there is no row and no request. Given «Prognoza automată» (`forecast`, the default), the row is the forecast as before and the club's text is never shown beside it; an unknown stored value reads as the forecast (2026-10-05, `DECISIONS.md` §666).
 71. When rain is likely, the event page's weather block and weather row draw a drop, never an umbrella, before «ploaie probabilă» / "rain likely" (on the row «ploaie probabilă N %» / "rain likely N%"); on a dry hour the row still shows no chance (amending criteria 45 and 48; 2026-10-08, `DECISIONS.md` §677).
+72. In Romanian, the featured event's chip reads «Alergarea principală», and the listing's sentences name its items alergare / alergări: «Filtrele alergărilor», «Filtrele alergărilor trecute», «Nicio alergare nu se potrivește filtrelor alese.» and a past count of «# alergări trecute»; English keeps «Featured event» (2026-10-10, `DECISIONS.md` §689).
 
 **Verification:** integration `events/configuration.test.ts`, `registrations/interest.test.ts`, `cms/series-edit.test.ts`; unit `events/zoned-time.test.ts`, `events/ical.test.ts`, `events/co-hosts.test.ts`, `content/event-co-hosts-field.test.ts`; e2e `event-pages.spec.ts`; unit `events/registration-window.test.ts` (13, 18)
 
@@ -2134,6 +2136,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 53. The page editor has no order box and the custom pages' list no ↑ / ↓: a new page is written after every page there is, so it is last in the menu until it is moved, and the list shows each page's place in the whole menu (2026-09-29, `DECISIONS.md` §571).
 54. Given a selected picture in a rich text, when «Înlocuiește» uploads a new file through the one upload, then the same image node takes the new address and stored size, keeps its alt, caption, width share and placement, has its crop and card centre cleared, and nothing else in the document moves; every other rich-text box of the same form — the other language's text, mounted or still folded — changes each image carrying the old address the same way, keeping its own alt and caption, and a box of another form is not touched (2026-10-08, `DECISIONS.md` §673).
 55. Given a picture replaced in a text, when the editor uploads the new one, then the old picture is not deleted; once a save no longer names it, the orphan sweep deletes it after its week like any picture removed from a text, and the new one is kept (2026-10-08, `DECISIONS.md` §673).
+56. In Romanian, the site-menu entry for the club's runs is named «Alergări» in «Ordinea meniului», as it is in the menu itself (2026-10-10, `DECISIONS.md` §689).
 
 **Verification:** integration `cms/pages.test.ts`; integration `cms/boundary.test.ts`; integration `cms/media-references.test.ts`; unit `content/rich-text.test.ts`; e2e `pages.spec.ts`
 

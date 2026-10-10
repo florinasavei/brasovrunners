@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.87-2026-10-10 -->
+<!-- PROJECT_BASELINE: BR-V2.88-2026-10-10 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.87-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.88-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -24794,3 +24794,15 @@ Baseline `BR-V2.87-2026-10-10`.
 **Refused:** a scheduled job that writes the status somewhere on its own — the state is already in git and on GitHub, and one command reading them cannot go stale; a hook that refuses a session's stop — a session does not choose when its credits end.
 
 Baseline `BR-V2.87-2026-10-10`.
+
+## 689. The club's runs are «Alergări», not «Evenimente»
+
+**The owner, 2026-10-10:** «În loc de "Evenimente" trebuie să zicem "Alergări"». The club's events are runs — races and group runs — and the section's name should say so.
+
+**Decision.** In Romanian, the section that lists the club's runs is «Alergări»: the public menu's entry (`Site.nav.events`), the listing's title and its metadata title (`Events.title`), the backoffice's main tab and the event list's heading (`Admin.nav.events`, which also labels the registrations list's event select), and the entry in «Ordinea meniului» (`Admin.menuOrder.entries.events`). The public listing's own sentences say alergare / alergări with Romanian grammar — «alergare» is feminine, so the articles and adjectives follow: «Nu sunt alergări publicate momentan. Revino în curând.», «Nu sunt alergări viitoare programate. Cea mai recentă alergare a clubului:», the featured chip «Alergarea principală», the past count «# alergare trecută / # alergări trecute / # de alergări trecute», «Filtrele alergărilor», «Filtrele alergărilor trecute», the filter «Alergare de noapte», «Filtre active pentru alergările trecute», «Nicio alergare nu se potrivește filtrelor alese.», «Toate alergările trecute sunt la fel — … — așa că nu e nimic de filtrat aici.». Two links that name the listing follow it: the event page's «Înapoi la alergări» and the members' zone's «Toate alergările». The in-app guide («Ghid», `Admin.guide.sections`) follows the tab too: every step that names the tab or the registrations list's select says «Alergări» (and «lista «Alergări»»), as `SETUP.md`'s steps do — a guide that sends staff to a label no longer on the screen is wrong; where the guide means events in general («evenimentul», «Evenimentele în calendarul lui») it keeps the word.
+
+**What did not change, and why.** The address `/ro/evenimente` and every pathname: links to it are already shared and indexed, and a renamed address would break them for a word. English (`messages/en.json`): «Events» is the owner's word only in Romanian; he may ask for «Runs» separately. The legal templates and the email templates: their wording is approved text or counsel-read, and «eveniment» there is the legal and registration term (the declaration, the terms, the confirmations). The event page's own words about one event («Înscrie-te la eveniment», «Regulamentul evenimentului», «Evenimentul s-a încheiat», the type names such as «Alt eveniment», the card's night pill «Eveniment de noapte» for a non-group-run date) — an event may be a hike, a meetup or a partner's event, not only a run. The backoffice's prose beyond the tab and the menu entry («Toate evenimentele» in the registrations select, the editor's words such as «Eveniment nou»), `Registration*`, `Feedback`, `Tell`, `Newsletter` (its topics «Evenimente mari» / «Evenimente speciale» are the subscribers' own choices) and `Devs`. The members' zone's «Evenimente pentru membri» stays: what the club offers its members alone need not be a run. The owner may ask for any of these to follow.
+
+**One mismatch left for the owner.** The listing's night filter now reads «Alergare de noapte», and it also matches night hikes and meetups, whose card pill still says «Eveniment de noapte» (`Event.night.pill`): on such a card the filter and its active-filter chip name it differently from the pill on it. It was kept because the filter is the listing's word and the owner's; if he prefers, the filter can say «De noapte» or the pill can follow.
+
+Baseline `BR-V2.88-2026-10-10`.

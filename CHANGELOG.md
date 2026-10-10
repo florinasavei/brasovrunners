@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.88-2026-10-10
+
+- **The club's runs are «Alergări»** — in Romanian the menu, the listing's title, the backoffice tab and the menu-order entry say «Alergări», and the listing's sentences, filters, featured chip and past count say alergare / alergări (with «Înapoi la alergări» on an event page and «Toate alergările» in the members' zone); the address `/ro/evenimente`, English, the legal texts and the emails are unchanged. §689.
 ## BR-V2.87-2026-10-10
 
 - **A shop price in lei or in euro** — «Moneda» beside the price in the editor; the zone, the orders, the CSV (a currency column) and the emails show each price in its own currency, never converted, and an order keeps the currency it was placed in. §686.
