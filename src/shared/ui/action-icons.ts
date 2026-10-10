@@ -1,5 +1,7 @@
 import AddIcon from "@mui/icons-material/Add";
 import ArchiveIcon from "@mui/icons-material/Archive";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import CardMembershipIcon from "@mui/icons-material/CardMembership";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
@@ -213,7 +215,10 @@ export type ActionIconName =
   // asks first, never a bare checkbox, so the tick needs no client island of its own.
   | "tickOn"
   | "tickOff"
-  | "signOut";
+  | "signOut"
+  // A row one place earlier or later in an editor's list (§694): the two arrows, never a verb of their own.
+  | "moveUp"
+  | "moveDown";
 // No runner here: the public send buttons wear it through `SubmitButton`'s own `runner` flag,
 // because this table must never reach a public page (above).
 
@@ -298,4 +303,6 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   tickOn: CheckBoxIcon,
   tickOff: CheckBoxOutlineBlankIcon,
   signOut: LogoutIcon,
+  moveUp: ArrowUpwardIcon,
+  moveDown: ArrowDownwardIcon,
 };
