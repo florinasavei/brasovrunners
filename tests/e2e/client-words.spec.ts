@@ -69,6 +69,8 @@ test.describe("§353 every island finds its words, and a public page carries onl
       // «Setări»'s other tabs (§516): the forms that moved, with their islands.
       "/ro/admin/settings/deadlines",
       "/ro/admin/settings/appearance",
+      // «Sistemul de design» (§NNN): the backoffice buttons it draws are islands with their own words.
+      "/ro/admin/design",
       "/ro/admin/settings/costs",
       "/ro/admin/settings/platform",
       "/ro/admin/newsletter",

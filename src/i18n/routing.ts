@@ -212,6 +212,8 @@ export const routing = defineRouting({
     /** The repository's documents, rendered for the roles that read `/devs` (`DECISIONS.md` §88). */
     "/devs/docs/[name]": "/devs/docs/[name]",
     "/admin/guide": "/admin/guide",
+    /** «Sistemul de design» (§NNN): the look as the code draws it, and the redesign plan; reached from «Setări» → «Aspect». */
+    "/admin/design": "/admin/design",
     /** What a staff member's network lets through, and what to ask IT to allow (§436). */
     "/admin/network": "/admin/network",
     /**
