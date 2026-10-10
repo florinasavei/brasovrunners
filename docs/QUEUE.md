@@ -17,9 +17,9 @@ This section replaces the plan of 2026-09-30; it is what a session with none of 
 - **Production = QA = `BR-V2.85`** (released 2026-10-10 10:25 UTC; `BR-V2.84`'s migration `0133_members_shop` was
   approved and applied the same morning). The race of 21 November is published and takes real registrations — every
   change is a change to a live system.
-- **In flight:** `chore/licence-all-rights-reserved` — `LICENSE` becomes a plain all-rights-reserved notice in the
+- **On `qa`, not yet on production: `BR-V2.86`**, `chore/licence-all-rights-reserved` (§685) — `LICENSE` becomes a plain all-rights-reserved notice in the
   club's name (the owner, 2026-10-10: «Keep it public, but make sure people don't steal it … Especially other run
-  clubs»); its pull request into `qa`, then production on the owner's word. The repository **stays public**, so every
+  clubs»); production on the owner's word (no migration). The repository **stays public**, so every
   "the repository is public" rule below still holds.
 - **Nothing else is building.** No worktree holds unmerged work; old worktrees under `.claude/worktrees/` can be removed
   (`git worktree remove --force <path>`; a merged branch's worktree is safe to drop).
@@ -62,14 +62,13 @@ way into the backoffice, not even to a colleague (§684).
 
 | Item | Branch | Notes |
 | --- | --- | --- |
-| The repository's licence: all rights reserved, readable but not reusable without the club's written permission | `chore/licence-all-rights-reserved` | pull request into `qa`, then production on the owner's word |
 | Permissions per person on top of the roles, the first «Gestionează magazinul» | `feat/permissions-per-person` (to build; the brief is the section below) | held for the owner's choice between this and a new role |
 
 ## Ready for the next release
 
 | Item | Branch |
 | --- | --- |
-| — | nothing ready: the licence above is the next release |
+| The repository's licence: all rights reserved (§685) | `BR-V2.86`, on `qa`; production on the owner's word |
 
 ### Asked for on 2026-10-10, to start from the laptop
 
@@ -134,6 +133,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.86` | the licence: all rights reserved (§685) |
 | `BR-V2.85` | the members' zone shows no backoffice button (§684) |
 | `BR-V2.84` | the members' shop (§683) |
 | `BR-V2.83` | plain rain has its own cloud (§682) |

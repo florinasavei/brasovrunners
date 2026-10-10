@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.85-2026-10-10 -->
+<!-- PROJECT_BASELINE: BR-V2.86-2026-10-10 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V2.85-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.86-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 > **Write code once, run forever, always vibe.**
 
@@ -86,7 +86,7 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | --- | --- |
 | [`CLAUDE.md`](./CLAUDE.md) | Entry point for AI coding agents: current mode, live commands, the rules that cannot be broken, the pilot fast lane |
 | [`WEEKEND.md`](./WEEKEND.md) | The pilot scope: what one weekend builds, in order, and what it defers and why |
-| [`LICENSE`](./LICENSE) | all rights reserved, copyright Brașov Runners; readable, not reusable without the club's written permission (§NNN); the club owns the platform per BR-BUS-101 |
+| [`LICENSE`](./LICENSE) | all rights reserved, copyright Brașov Runners; readable, not reusable without the club's written permission (§685); the club owns the platform per BR-BUS-101 |
 | [`MANIFEST.txt`](./MANIFEST.txt) | One-page handoff summary of the baseline and the headline decisions |
 | [`CHANGELOG.md`](./CHANGELOG.md) | One entry per baseline, newest first; top heading must equal the marker |
 | [`scripts/db-migrate.mjs`](./scripts/db-migrate.mjs) | `yarn db:migrate:env <local\|qa\|production>` — the only supported way to migrate a deployed database. Prints the target and the pending migrations before applying; production needs `--yes` (`AGENTS.md` §7.6) |

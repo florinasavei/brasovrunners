@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.85-2026-10-10 -->
+<!-- PROJECT_BASELINE: BR-V2.86-2026-10-10 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.85-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.86-2026-10-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -24728,3 +24728,15 @@ Baseline `BR-V2.84-2026-10-10`.
 **Refused:** keeping the button for the Superadministrator alone — the zone is the members' page, and a page members see should not advertise the club's back room to anyone looking over a shoulder.
 
 Baseline `BR-V2.85-2026-10-10`.
+
+## 685. The repository is all rights reserved: readable, not reusable without the club's permission
+
+**The owner, 2026-10-10:** «update the license so people don't steal it».
+
+**Decision.** Amends §19's licence paragraph. `LICENSE` was MIT, which lets anyone use, copy, modify and sell the platform. It is now a plain all-rights-reserved notice in the club's name: the repository is published so it can be read, and reading it grants nothing — no use, copy, modification, hosting or derived work without Brașov Runners' written permission. `package.json` says `"license": "UNLICENSED"`, the npm convention for a proprietary package; README's index row and `MANIFEST.txt` say the same.
+
+**What it cannot do.** A licence cannot be withdrawn from copies already taken: anything published before 2026-10-10 stays available under MIT to whoever took it then, and the notice says so rather than pretend otherwise. Third-party parts keep their own licences — the dependencies, the fonts with their licence files (SIL OFL, the kit typeface's own terms), the `flag-icons` SVGs (MIT) — and the notice names them. The repository can also be made private; the cost of that on the free GitHub plan (no required reviewers on the Production environment, a monthly cap on Actions minutes) is in `docs/QUEUE.md`.
+
+**Not a lawyer's text.** It is the plain form; a Romanian lawyer may want the club's legal name and CIF in it, and a contact address. **Refused:** a source-available licence with conditions (PolyForm, BSL) — the owner asked for no reuse at all, and a plain reservation of rights says exactly that.
+
+Baseline `BR-V2.86-2026-10-10`.
