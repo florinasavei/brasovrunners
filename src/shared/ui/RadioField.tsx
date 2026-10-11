@@ -1,18 +1,18 @@
-"use client";
-
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Radio from "@mui/material/Radio";
+import Box from "@mui/material/Box";
 import type { ReactNode } from "react";
-import { CHECKBOX_TAP_TARGET } from "./tap-target";
+import { TAP_TARGET } from "./tap-target";
 
 /**
- * A labelled radio a Server Component can render safely — `CheckboxField`'s twin, for the
- * same reason: `FormControlLabel` takes its control as an element-valued prop, and an element
- * made on the server and passed across the boundary can arrive as a lazy reference and throw.
- * Made here, on the client side of the boundary, it always arrives whole.
+ * A labelled radio, native (§NNN, amending §678): a `<label>` around a plain `<input type="radio">`,
+ * so the browser alone keeps the group — one `name`, one checked — with no JavaScript and no island.
  *
- * One radio per call; the group is the shared `name`, as in plain HTML. `defaultChecked` on
- * one of them is the form's default without any JavaScript.
+ * It was MUI's `Radio` in a `FormControlLabel`; outside a `RadioGroup` that keeps its own "checked"
+ * state per radio and is never told when a sibling takes the choice, so after a click on the second
+ * option both were drawn selected (the owner, 2026-10-11). The house's cards (`BranchChoice`) are
+ * native for the same reason.
+ *
+ * One radio per call; the group is the shared `name`. `defaultChecked` on one of them is the form's
+ * default. The row is 44 pixels tall at least (BR-REQ-041-01 criterion 6).
  */
 export default function RadioField({
   name,
@@ -26,5 +26,21 @@ export default function RadioField({
   /** The label, which may contain a link. */
   children: ReactNode;
 }) {
-  return <FormControlLabel control={<Radio name={name} value={value} defaultChecked={defaultChecked} sx={CHECKBOX_TAP_TARGET} />} label={children} />;
+  return (
+    <Box
+      component="label"
+      sx={{
+        ...TAP_TARGET,
+        display: "flex",
+        alignItems: "center",
+        gap: 1.5,
+        cursor: "pointer",
+        "& input": { flex: "none", width: 24, height: 24, m: 0, ml: 1.5, accentColor: "var(--mui-palette-primary-main)", cursor: "pointer" },
+        "&:has(input:focus-visible)": { outline: "2px solid var(--mui-palette-primary-main)", outlineOffset: "-2px", borderRadius: 1 },
+      }}
+    >
+      <input type="radio" name={name} value={value} defaultChecked={defaultChecked} />
+      <Box component="span">{children}</Box>
+    </Box>
+  );
 }
