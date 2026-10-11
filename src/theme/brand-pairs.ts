@@ -1,4 +1,4 @@
-import { COLOR, COLOR_DARK, GRADIENT } from "./brand";
+import { COLOR, COLOR_DARK, GRADIENT, LOOK_ACCENT } from "./brand";
 
 /**
  * The text-on-background pairs the pages actually render, named by their tokens (§692).
@@ -114,5 +114,85 @@ export const LOOK_PAIRS_DARK: readonly BrandPair[] = [
   pair(dark("inkStrong"), dark("surface")),
 ];
 
+/** The four shades of an accent, by day and after dark (`LOOK_ACCENT`, or a typed colour's derivation). */
+type AccentKey = "accent" | "accentInk" | "accentDeep" | "accentTint";
+type AccentScheme = Readonly<Record<AccentKey, string>>;
+
+/**
+ * The accent's pairs (§723), for any accent: the same ten of each scheme `LOOK_PAIRS` holds for the
+ * pink — its words on the page, a card and its band, the words on its fill and on the pressed fill,
+ * the hot shade as text and as a fill, and the body's and the muted ink on its band. `name` labels the
+ * accent's own tokens (`LOOK_ACCENT.blue.light.accentInk`); the page's tokens keep theirs.
+ * `tests/unit/appearance/look-accent.test.ts` holds every preset and a spread of typed colours to them.
+ */
+export function accentPairsOf(name: string, shades: { light: AccentScheme; dark: AccentScheme }): BrandPair[] {
+  const own = (scheme: "light" | "dark", key: AccentKey): BrandToken => ({ name: `${name}.${scheme}.${key}`, hex: shades[scheme][key] });
+  const lightPairs = (fill: BrandToken) => [
+    pair(own("light", "accentInk"), light("paper")),
+    pair(own("light", "accentInk"), light("surface")),
+    pair(own("light", "accentInk"), own("light", "accentTint")),
+    pair(fill, own("light", "accentInk")),
+    pair(fill, own("light", "accentDeep")),
+    pair(own("light", "accent"), light("paper")),
+    pair(own("light", "accent"), light("surface")),
+    pair(fill, own("light", "accent")),
+    pair(light("ink"), own("light", "accentTint")),
+    pair(light("inkMuted"), own("light", "accentTint")),
+  ];
+  const darkPairs = (fill: BrandToken) => [
+    pair(own("dark", "accentInk"), dark("paper")),
+    pair(own("dark", "accentInk"), dark("surface")),
+    pair(own("dark", "accentInk"), own("dark", "accentTint")),
+    pair(fill, own("dark", "accentInk")),
+    pair(fill, own("dark", "accentDeep")),
+    pair(own("dark", "accent"), dark("paper")),
+    pair(own("dark", "accent"), dark("surface")),
+    pair(fill, own("dark", "accent")),
+    pair(dark("ink"), own("dark", "accentTint")),
+    pair(dark("inkMuted"), own("dark", "accentTint")),
+  ];
+  // The words on a fill: white by day, the dark page after dark — `primary.contrastText` under the look.
+  return [...lightPairs(light("surface")), ...darkPairs(dark("paper"))];
+}
+
+/** The pairs of the presets other than the pink (whose pairs are `LOOK_PAIRS` above), both schemes. */
+export const LOOK_ACCENT_PAIRS: readonly BrandPair[] = (["blue", "orange"] as const).flatMap((preset) => accentPairsOf(`LOOK_ACCENT.${preset}`, LOOK_ACCENT[preset]));
+
 /** Every pair the page draws and the test asserts, in one list. */
-export const BRAND_PAIRS: readonly BrandPair[] = [...TEXT_PAIRS, ...TEXT_PAIRS_DARK, ...HERO_PAIRS, ...ACCENT_PAIRS, ...LOOK_PAIRS, ...LOOK_PAIRS_DARK];
+export const BRAND_PAIRS: readonly BrandPair[] = [
+  ...TEXT_PAIRS,
+  ...TEXT_PAIRS_DARK,
+  ...HERO_PAIRS,
+  ...ACCENT_PAIRS,
+  ...LOOK_PAIRS,
+  ...LOOK_PAIRS_DARK,
+  ...LOOK_ACCENT_PAIRS,
+];
+
+/**
+ * The calendar's three colours by kind (the facelift's phase 4, `docs/REDESIGN.md` § What exists
+ * versus what is new): a weekly run in the accent's pale band (the club's accent; the names below
+ * are the default pink's), a special event in the green, any other date in the warm grey — each
+ * entry's fill, the words on it and the dot the legend and the entry lead with. One table, read by
+ * the calendar's styles (`events/ui/calendar-tone-sx.ts`, which draws an accent token through the
+ * setting's variables, never as the pink's own colour) and held at AA by
+ * `tests/unit/theme/brand.test.ts`: the words on the fill, and the dot on the page and on a card (a
+ * dot is a mark, 3 : 1 would do; the dots meet 4.5 : 1 anyway) — the pink's here, every other
+ * accent's through `accentPairsOf`. Never colour alone: the legend says each colour's word, and
+ * every entry keeps its glyphs and its accessible name.
+ */
+export const CALENDAR_TONE_TOKENS = {
+  weekly: { fill: "accentTint", ink: "ink", dot: "accent" },
+  special: { fill: "kindSpecial", ink: "kindSpecialInk", dot: "kindSpecialInk" },
+  other: { fill: "kindOther", ink: "ink", dot: "inkMuted" },
+} as const satisfies Record<string, { fill: keyof typeof COLOR; ink: keyof typeof COLOR; dot: keyof typeof COLOR }>;
+
+/** The calendar's tones as pairs, both schemes: the words on each fill, each dot on the page and on a card. */
+export const CALENDAR_TONE_PAIRS: readonly BrandPair[] = (["light", "dark"] as const).flatMap((scheme) => {
+  const token = scheme === "light" ? light : dark;
+  return Object.values(CALENDAR_TONE_TOKENS).flatMap(({ fill, ink, dot }) => [
+    pair(token(ink), token(fill)),
+    pair(token(dot), token("paper")),
+    pair(token(dot), token("surface")),
+  ]);
+});

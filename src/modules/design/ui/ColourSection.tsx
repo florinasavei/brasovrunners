@@ -8,7 +8,7 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { contrastRatio, MIN_TEXT_CONTRAST } from "@/modules/appearance/domain/tint-contrast";
 import { COLOR, COLOR_DARK, GRADIENT, SITE_TINT, SURFACE_GRADIENT } from "@/theme/brand";
-import { ACCENT_PAIRS, type BrandPair, HERO_PAIRS, LOOK_PAIRS, LOOK_PAIRS_DARK, TEXT_PAIRS, TEXT_PAIRS_DARK } from "@/theme/brand-pairs";
+import { ACCENT_PAIRS, type BrandPair, HERO_PAIRS, LOOK_ACCENT_PAIRS, LOOK_PAIRS, LOOK_PAIRS_DARK, TEXT_PAIRS, TEXT_PAIRS_DARK } from "@/theme/brand-pairs";
 import DesignSection, { Block, CELL_GRID_SX, Code, SWATCH_PX } from "./section";
 
 /** WCAG 2.1's threshold for large text (18 pt, or 14 pt bold): what a heading may fall to. */
@@ -57,6 +57,7 @@ export default async function ColourSection() {
     { title: t("design.colours.pairsAccent"), pairs: ACCENT_PAIRS },
     { title: t("design.colours.pairsLook"), pairs: LOOK_PAIRS },
     { title: t("design.colours.pairsLookDark"), pairs: LOOK_PAIRS_DARK },
+    { title: t("design.colours.pairsLookAccents"), pairs: LOOK_ACCENT_PAIRS },
   ];
   const level = (ratio: number) =>
     ratio >= MIN_TEXT_CONTRAST ? t("design.colours.aa") : ratio >= LARGE_TEXT_CONTRAST ? t("design.colours.aaLarge") : t("design.colours.below");

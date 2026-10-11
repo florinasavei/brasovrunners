@@ -219,6 +219,41 @@ export const GRADIENT = {
 } as const;
 
 /**
+ * The new look's accent presets (§723, amending §708; the owner, 2026-10-11: «this should be a
+ * configuration in the theme»): «Setări» → «Aspect» → «Aspectul nou» → «Culoarea de accent». Each is
+ * the four shades the look wears — `accent` (the mark, a rule, a large word), `accentInk` (the words:
+ * `primary.main` under the look), `accentDeep` (a pressed button), `accentTint` (a pale band, the
+ * weekly runs' chip) — by day and after dark. A colour the club types instead is derived by the same
+ * rules (`modules/appearance/domain/accent-shades.ts`), and every preset is held to them, pair by pair,
+ * by `tests/unit/appearance/look-accent.test.ts`. The logo stays the club's blue under all of them (§711).
+ */
+export const LOOK_ACCENT = {
+  /** «Roz», the default: phase 1's tokens (§708), unchanged. */
+  pink: {
+    light: { accent: COLOR.accent, accentInk: COLOR.accentInk, accentDeep: COLOR.accentDeep, accentTint: COLOR.accentTint },
+    dark: { accent: COLOR_DARK.accent, accentInk: COLOR_DARK.accentInk, accentDeep: COLOR_DARK.accentDeep, accentTint: COLOR_DARK.accentTint },
+  },
+  /**
+   * «Albastru»: the club's blue as today's look wears it — the logo blue, its ink blue for words, the
+   * hero's tint for the band — and one deeper step for the pressed button (white on it 12.4:1; after
+   * dark, a lighter step, 10.7:1 on the dark card).
+   */
+  blue: {
+    light: { accent: COLOR.blue, accentInk: COLOR.blueInk, accentDeep: "#092591", accentTint: GRADIENT.heroTint },
+    dark: { accent: COLOR_DARK.blue, accentInk: COLOR_DARK.blueInk, accentDeep: "#becdff", accentTint: GRADIENT.heroTintDark },
+  },
+  /**
+   * «Portocaliu»: the club's secondary orange, as the derivation makes it (the test asserts the
+   * match). By day the orange itself is 2.6:1 on the page, too light to carry words, so its shades
+   * walk towards brown until they do; after dark the orange is kept as it is.
+   */
+  orange: {
+    light: { accent: "#a16620", accentInk: "#794d18", accentDeep: "#5e3c13", accentTint: "#f6f0e9" },
+    dark: { accent: COLOR.orange, accentInk: "#df9c4b", accentDeep: "#e8b77c", accentTint: "#352c25" },
+  },
+} as const;
+
+/**
  * «Echipa»'s canvas (§701; the president's drawing: a blue canvas, white cards, light boxes at the
  * bottom, no lines). The one public surface that keeps the brand's light colours after dark — the
  * blue is the brand, and a white card on it is the drawing — so every token here is a light-scheme

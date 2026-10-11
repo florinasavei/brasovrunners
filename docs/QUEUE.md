@@ -14,29 +14,28 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V2.94`** (released 2026-10-11 by `yarn ship` in 22 minutes: §706–§709, migration `0141`). Waiting
-  for «prod»: `BR-V2.95` (§710–§719, below) — migration `0142` stops at `migrate.yml` for the approval, which
-  `yarn ship` gives itself.
-- **QA: `BR-V2.95`** — **the home page** (phase 3: «Setări» → «Aspect» → «Pagina principală», off; the hero, the next
-  run, weekly and special, «Prima dată la noi?», «De ce», the photo strip, the numbers — every part a setting, the panel in
-  folds; the root a 307 to the listing while off); **«Traseul»** with Garmin Connect | Strava tabs, each map loaded only on
-  the visitor's press, and an uploaded GPX («Linkuri și fișiere» above the rows, or the GPX row's button) under them; the
-  members' zone in three tabs («Coduri de reducere», «Magazin» once the notice names the shop, «Alergări»); «Spune-ne
-  ceva» keeps the chosen event, day and chip in the address, and its backoffice card separates the four forms; the move
-  buttons say what they do; the logo stays blue under «Aspectul nou»; the section bar's arrows on a laptop; `yarn
-  test:clock` and 66 calendar-bombed tests defused.
-- **Building:** the calendar's redesign (facelift phase 4) in the phone session, on `feat/facelift-phase-4-calendar` —
-  its PR into `qa` is batched by the laptop after AL; the concurrency suite's 1 December bomb (`fix/test-clock-follow-ups`).
-- **Next, on QA, the owner's:** «Aspectul nou» on, then «Pagina principală» with the club's photographs and words; the
-  route's maps and a GPX on a real run; then phase 5 (the listing and the event page) per `docs/REDESIGN.md`.
+- **Production: `BR-V2.95`** (released 2026-10-11 evening: §710–§719, migration `0142`; both `migrate.yml` runs' smoke
+  steps raced the old build's 308 at the root and were rerun once the new build was live — the production rerun needs its
+  environment's approval again). Waiting for «prod»: `BR-V2.96` (§720–§723, below) — no migration.
+- **QA: `BR-V2.96`** — under «Aspectul nou»: **the calendar's redesign** (facelift phase 4, built in the phone
+  session: the title block, kind and surface chips that work with scripts off, three colours with a legend, «Următorul
+  eveniment», the subscribe box with Outlook, the look after dark); **the accent colour is the club's setting** («Roz» by
+  default, «Albastru», «Portocaliu», «Personalizat» — shades derived and held at AA); the language as one round button in
+  the bottom-right corner, and «Urmărește-ne» with Instagram, Facebook and Strava at the desktop header's end. For
+  everyone: «Contact direct» after «Spune-ne ceva», right before the newsletter.
+- **Nothing is building.** The chains' worktrees under `.claude/worktrees/` can go.
+- **Next, on QA, the owner's:** «Aspectul nou» on; the accent; «Pagina principală» with the club's photographs and words;
+  a run's Garmin/Strava maps and GPX; then phase 5 (the listing and the event page) per `docs/REDESIGN.md`.
 - **Waiting on the owner:** a look at QA (phone and laptop) before «Aspectul nou» or the home page goes on in production;
-  the photographs (the hero, a cover per run and race, the strip); the privacy notice from the new template (Strava and
-  Garmin maps; the shop); «Tot numărul»'s default background; `shopNotice`; the Google calendar.
-- **Later:** the e2e specs on written 2027 dates (earliest 2027-04-14) want a dates-from-today helper; pass `now` through
-  `readRegistrationTokenContext`, the email state's `openRefusalsWhere` and the guardian rule; maybe a nightly `yarn
-  test:clock`; `OrdersCard` and `ProductList` to `StatusChip`, then five names leave the public table; at 320 px the
-  members' current tab can sit past the row's edge; the cards' titles under the new look (phase 5); `TeamPhotoLabels` is
-  copied in three editors.
+  the photographs (the hero, a cover per run and race, the strip); the privacy notice from the new template (the maps, the
+  shop); «Tot numărul»'s default background; `shopNotice`; the Google calendar.
+- **Later:** `yarn smoke` should accept a 308 to the listing too (the old build's answer while a release's migration runs,
+  so a change of the root's answer never races its own migration again); the e2e specs on written 2027 dates (earliest
+  2027-04-14) want a dates-from-today helper; pass `now` through `readRegistrationTokenContext`, the email state's
+  `openRefusalsWhere` and the guardian rule; the concurrency suite fails on a seeded database (run it on a migrated, unseeded
+  one); maybe a nightly `yarn test:clock`; `OrdersCard` and `ProductList` to `StatusChip`; at 320 px the members' current
+  tab can sit past the row's edge; the cards' titles under the new look (phase 5); `TeamPhotoLabels` copied in three
+  editors; the calendar's first week clears the fold at 320 px by 5 px only.
 
 ### How a change is made here (the owner's standing rules, all still in force)
 
@@ -138,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.96` | the facelift's phase 4: the calendar (§720) · «Contact direct» after «Spune-ne ceva», right before the newsletter (§721) (§721) · the floating language switch and «Urmărește-ne» (§722) · the accent colour as a setting (§723) |
 | `BR-V2.95` | the move buttons say what they do (§710) · the logo stays blue under the new look (§711) · tests read their fixture's calendar: `yarn test:clock` (§712) · arrows on the tab bars (§713) · the home page's four lower sections, as components (§714) · the members' zone in tabs (§715) · «Spune-ne ceva»: the event in the address, the forms separated (§716) · a home page at the site's root behind «Pagina principală», off, with its eight sections and the panel in folds (phase 3, parts A and C) (§717) · the route's maps, links and GPX (§718) · the concurrency suite past 1 December (§719) |
 | `BR-V2.94` | the shop's loose ends (§706) · the backoffice status chip (§707) · the facelift's phase 1 (§708) · the facelift's phase 2 (§709) |
 | `BR-V2.93` | the contact wizard's radios (§702) · the ship waits on required checks only (§703) · the shop's member emails behind one switch (§704) · the size-guide picture (§705) |

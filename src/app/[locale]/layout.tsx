@@ -158,7 +158,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   // «Mărimea textului» (§530): the club's text size for the public pages, the same way — one rule
   // on the root font size, nothing at all for the default.
   const fontSizeStyle = siteFontSizeStyle(await cachedSiteFontSize());
-  // «Aspectul nou» (§708): the facelift's scope on <html> and the pink primary — nothing at all while off.
+  // «Aspectul nou» (§708): the facelift's scope on <html> and the club's accent as the primary (pink by default) — nothing at all while off.
   const look = await cachedSiteLook();
   const lookStyle = siteLookStyle(look);
 
@@ -173,8 +173,9 @@ export default async function LocaleLayout({ children, params }: Props) {
         {tintStyle && <style data-site-tint="">{tintStyle}</style>}
         {/* Public pages only, both schemes (`modules/appearance/domain/site-font-size.ts`); its text is a step's own number. */}
         {fontSizeStyle && <style data-site-font-size="">{fontSizeStyle}</style>}
-        {/* The new look's pink primary, under its scope, both schemes (`modules/appearance/domain/site-look.ts`);
-            its text is written from `brand.ts`'s tokens alone. */}
+        {/* The new look's accent as the primary (pink by default), under its scope, both schemes
+            (`modules/appearance/domain/site-look.ts`); its text is a preset's tokens or the shades
+            derived from a checked #rrggbb, never raw typed text. */}
         {lookStyle && <style data-site-look="">{lookStyle}</style>}
         {/* Sets data-light / data-dark on <html> before paint, so a dark page never flashes light
             (§93). Light unless the visitor pressed the switch — the owner: "by default we are on
@@ -242,8 +243,9 @@ export default async function LocaleLayout({ children, params }: Props) {
                   {/* The mountain mark under the content, the new look only and never in the backoffice (§708). */}
                   {look.on && <LookWatermark />}
                   {/* The build stamp is the fold's own last line at every width (`SiteFooter`,
-                      §608), not a label of its own here. */}
-                  <SiteFooter />
+                      §608), not a label of its own here. Under «Aspectul nou» the footer also
+                      draws the language as the floating round button above its bar (§722). */}
+                  <SiteFooter newLook={look.on} />
                 </Box>
               </IntlErrorHandling>
             </NextIntlClientProvider>

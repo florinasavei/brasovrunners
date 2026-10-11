@@ -5,6 +5,7 @@ import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { CLUB_TIME_ZONE, formatTime } from "@/i18n/dates";
 import Link from "next/link";
 import { getPathname } from "@/i18n/navigation";
+import { UNDER_LOOK } from "@/theme/look";
 import { fadeInSoft } from "@/theme/motion";
 import { DENSITY } from "@/theme/density";
 import {
@@ -20,6 +21,7 @@ import {
 import { calendarAddress, type CalendarLayoutName, type CalendarPeriod } from "../domain/calendar-path";
 import type { PublicEvent } from "../repository";
 import { editionDifference, groupSeries, usualOf } from "../domain/series";
+import { calendarTone } from "../domain/calendar-kind";
 import CalendarEventChip from "./CalendarEventChip";
 import type { EditionNote } from "./EditionMark";
 import { readCoHosts } from "../domain/co-hosts";
@@ -134,6 +136,7 @@ export default async function EventCalendar({
         // "Colaborare" in its tooltip — it never names a partner (there may be several).
         partner={partnerPhrase(tEvent, readCoHosts(event).length > 0)}
         dense={dense}
+        tone={calendarTone(event)}
       />
     );
   };
@@ -239,6 +242,8 @@ export default async function EventCalendar({
           borderColor: "divider",
           borderRadius: 1,
           overflow: "hidden",
+          // The facelift's card (phase 4): a 16-pixel radius on the paper, under «Aspectul nou» only.
+          [UNDER_LOOK]: { borderRadius: "16px", bgcolor: "background.paper" },
         }}
       >
         {weekdayNames.map((name) => (

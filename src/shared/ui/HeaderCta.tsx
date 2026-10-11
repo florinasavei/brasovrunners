@@ -6,8 +6,8 @@ import ArrowButtonLink from "./ArrowButtonLink";
 
 /**
  * «Vino cu noi» / "Join us" in the header under «Aspectul nou» (§708; `docs/REDESIGN.md`, decision
- * 5): the pink pill with its arrow, to the next weekly run's page — or the listing when no weekly
- * run is ahead (`nextWeeklyRun`). The header decides the address; this draws it.
+ * 5): the accent pill (pink by default) with its arrow, to the next weekly run's page — or the
+ * listing when no weekly run is ahead (`nextWeeklyRun`). The header decides the address; this draws it.
  *
  * Inside the new look's scope only (`onlyUnderLook`): the backoffice shares this header and never
  * shows it. On a phone a tighter pill (`compactOnPhone`) keeps the arrow (§521) and the row one row at

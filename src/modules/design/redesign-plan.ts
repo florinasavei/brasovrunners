@@ -17,7 +17,7 @@
  * until the club answers).
  * Phases 1, 2 and 3 are `building` — phase 1 behind the setting, off until the club's yes on QA; phase 2's
  * gate is the club's photographs; phase 3 (the page, its setting and its eight sections) behind
- * «Pagina principală», off, its gate the club's photographs and its yes on QA — and the rest `planned`. `decided` is the club's answer in writing, `open` a question the club
+ * «Pagina principală», off, its gate the club's photographs and its yes on QA; and so is phase 4, the calendar, behind «Aspectul nou» — and the rest `planned`. `decided` is the club's answer in writing, `open` a question the club
  * reopened; `building` a phase whose chains run, `released` one on production.
  */
 export type DecisionStatus = "default" | "decided" | "open";
@@ -48,7 +48,8 @@ export const REDESIGN_PHASES: readonly RedesignPhase[] = [
   { id: 2, status: "building" },
   // Phase 3 (§714): the page at the root, «Pagina principală» and its eight sections — built, off; the gate is QA's.
   { id: 3, status: "building" },
-  { id: 4, status: "planned" },
+  // Phase 4: the calendar's chips, colours and legend, the next-event panel, the subscribe box — built behind «Aspectul nou», off.
+  { id: 4, status: "building" },
   { id: 5, status: "planned" },
   { id: 6, status: "planned" },
 ];

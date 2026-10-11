@@ -13,18 +13,31 @@ const body = page.slice(page.indexOf("export default async function ContactPage"
 const jsx = body.slice(body.indexOf("return ("));
 
 describe("BR-REQ-070-04 the contact page's sections, in order (§679)", () => {
-  it("draws the form, then «Spune-ne ceva», then the newsletter, then only the identity line", () => {
-    // «Contact direct» above the form (§NNN), the form, «Spune-ne ceva», the newsletter.
+  it("draws the form, then «Spune-ne ceva», then «Contact direct», then the newsletter, then only the identity line", () => {
+    // The form, «Spune-ne ceva», «Contact direct» (§721, amending §698), the newsletter.
     const ways = jsx.indexOf('data-testid="contact-ways"');
     const form = jsx.indexOf("<form action={submitContactAction}>");
     const feedback = jsx.indexOf("id={FEEDBACK_SECTION_ID}");
     const newsletter = jsx.indexOf("<NewsletterSignup");
     const identity = jsx.indexOf('<ClubIdentity shape="line" />');
     for (const [name, at] of Object.entries({ ways, form, feedback, newsletter, identity })) expect(at, name).toBeGreaterThan(-1);
-    expect(ways).toBeLessThan(form);
     expect(form).toBeLessThan(feedback);
-    expect(feedback).toBeLessThan(newsletter);
+    expect(feedback).toBeLessThan(ways);
+    expect(ways).toBeLessThan(newsletter);
     expect(newsletter).toBeLessThan(identity);
+  });
+
+  it("gives «Contact direct» the rule every later section has, and the form's own section, right under the intro, none", () => {
+    // §721, amending §698: the form's section is the page's head and draws no rule; «Contact direct», now
+    // under «Spune-ne ceva», opens with the one every section after the form has.
+    const openingTag = (testId: string) => {
+      const at = jsx.indexOf(`data-testid="${testId}"`);
+      expect(at, testId).toBeGreaterThan(-1);
+      // From the `<Box` that carries the id to the first `>` after it: the tag's own attributes.
+      return jsx.slice(jsx.lastIndexOf("<Box", at), jsx.indexOf(">", at) + 1);
+    };
+    expect(openingTag("contact-ways")).toContain("sx={SECTION_SX}");
+    expect(openingTag("contact-form-section")).not.toContain("sx=");
   });
 
   it("draws no section, form or button after the newsletter's box", () => {

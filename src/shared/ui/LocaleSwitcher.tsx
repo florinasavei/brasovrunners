@@ -59,6 +59,11 @@ const CODE_SX = {
   [SM_UP]: { position: "static", width: "auto", height: "auto", overflow: "visible", clip: "auto" },
 } as const;
 
+/** The one link to a page in another language: the server finds that page's address (`/api/locale`). */
+export function localeSwitchHref(to: string, pathname: string): string {
+  return `/api/locale?to=${to}&from=${encodeURIComponent(pathname)}`;
+}
+
 export default function LocaleSwitcher() {
   const t = useTranslations("Site");
   const active = useLocale();
@@ -146,7 +151,7 @@ export default function LocaleSwitcher() {
         ) : (
           <Link
             key={locale}
-            href={`/api/locale?to=${locale}&from=${encodeURIComponent(pathname)}`}
+            href={localeSwitchHref(locale, pathname)}
             rel="nofollow"
             aria-label={name}
             title={name}

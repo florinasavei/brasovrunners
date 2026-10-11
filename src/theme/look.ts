@@ -57,6 +57,34 @@ export function onlyUnderLook<T>(display: T) {
   return { display: "none", [UNDER_LOOK]: { display } } as const;
 }
 
+/**
+ * The reverse: what today's look draws and the new one replaces — the header's and the phone
+ * footer's language switcher, which the floating round button replaces (§722) — keeps its own
+ * `display` (a breakpoint object too) everywhere but inside the scope, where it is not drawn. The
+ * backoffice, outside the scope, keeps it.
+ */
+export function notUnderLook<T>(display: T) {
+  return { display, [UNDER_LOOK]: { display: "none" } } as const;
+}
+
+/**
+ * The other half of `onlyUnderLook`: today's element, drawn while the setting is off and hidden
+ * under the new look, where a new component stands in its place (the calendar's subscribe row
+ * gives way to `SubscribeBox`, phase 4). Off, the rule matches nothing and the page is as it was.
+ */
+export const OFF_UNDER_LOOK = { [UNDER_LOOK]: { display: "none" } } as const;
+
+/**
+ * The accent's pale band under the new look (§723): the one shade MUI's palette has no slot for. The
+ * other three ride on MUI's own primary — `primary.light` is `accent`, `primary.main` is `accentInk`,
+ * `primary.dark` is `accentDeep` — and all four are written by the layout's one stylesheet
+ * (`modules/appearance/domain/site-look.ts`) from the club's accent, light and dark, so a rule that
+ * names this variable follows the club's choice in either scheme and needs no dark twin.
+ */
+export const LOOK_ACCENT_TINT_VARIABLE = "--br-accent-tint";
+/** The band's colour, for an `sx` written under `UNDER_LOOK`: `{ [UNDER_LOOK]: { bgcolor: LOOK_ACCENT_TINT } }`. */
+export const LOOK_ACCENT_TINT = `var(${LOOK_ACCENT_TINT_VARIABLE})`;
+
 /** Headings under the new look: the display face at 800, set a little tighter (decision 2). */
 export const LOOK_HEADING = { fontWeight: 800, letterSpacing: "-0.02em" } as const;
 
