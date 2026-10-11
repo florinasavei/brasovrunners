@@ -157,6 +157,9 @@ export const routing = defineRouting({
      */
     "/members": { ro: "/membri", en: "/members" },
     "/members-area": { ro: "/zona-membri", en: "/members-area" },
+    /** The zone's other two tabs (§709): the partners' codes and the shop, each an address of its own, under the private segment. */
+    "/members-area/codes": { ro: "/zona-membri/coduri", en: "/members-area/codes" },
+    "/members-area/shop": { ro: "/zona-membri/magazin", en: "/members-area/shop" },
 
     /** The two public legal routes (§9.2), linked from the footer in both locales. */
     "/legal/privacy": { ro: "/confidentialitate", en: "/privacy" },

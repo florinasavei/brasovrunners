@@ -107,6 +107,41 @@ describe("§524 a member signs in and is no staff", () => {
     expect(html).not.toContain('data-testid="members-backoffice"');
   });
 
+  it("§709 draws three tabs in the owner's order, each page asserting the door itself", async () => {
+    const { default: CodesPage } = await import("@/app/[locale]/members-area/codes/page");
+    const { default: ShopPage } = await import("@/app/[locale]/members-area/shop/page");
+    const params = { params: Promise.resolve({ locale: "ro" }) };
+    // Signed out: every tab sends the stranger to the sign-in, not just the zone's own address.
+    expect(await redirectedTo(CodesPage(params))).toBe("/ro/autentificare?to=members");
+    expect(await redirectedTo(ShopPage(params))).toBe("/ro/autentificare?to=members");
+
+    state.cookie = member.id;
+    const pages = [
+      [CodesPage, "codes"],
+      [ShopPage, "shop"],
+      [MembersAreaPage, "runs"],
+    ] as const;
+    for (const [Page, active] of pages) {
+      const html = renderToStaticMarkup(await Page(params));
+      const nav = html.match(/<nav [^>]*>[\s\S]*?<\/nav>/)?.[0] ?? "";
+      expect([...nav.matchAll(/href="([^"]+)"/g)].map((m) => m[1])).toEqual(["/ro/zona-membri/coduri", "/ro/zona-membri/magazin", "/ro/zona-membri"]);
+      expect(nav.replace(/<style[\s\S]*?<\/style>/g, "").replace(/<[^>]+>/g, "|").split("|").filter(Boolean)).toEqual([ro.Members.tabs.codes, ro.Members.tabs.shop, ro.Members.tabs.runs]);
+      const current = [...nav.matchAll(/<a [^>]*aria-current="page"[^>]*>/g)].map((m) => m[0]);
+      expect(current).toHaveLength(1);
+      expect(current[0]).toContain(`href="${{ codes: "/ro/zona-membri/coduri", shop: "/ro/zona-membri/magazin", runs: "/ro/zona-membri" }[active]}"`);
+      expect(html).toContain('data-testid="members-sign-out"');
+      expect(html.includes(ro.Members.upcomingTitle)).toBe(active === "runs");
+    }
+  });
+
+  it("§709 answers an Administrator on the tabs too, and none shows the backoffice", async () => {
+    const { default: ShopPage } = await import("@/app/[locale]/members-area/shop/page");
+    state.cookie = admin.id;
+    const html = renderToStaticMarkup(await ShopPage({ params: Promise.resolve({ locale: "ro" }) }));
+    expect(html).toContain(ro.Members.shopEmpty);
+    expect(html).not.toMatch(/href="\/ro\/admin/);
+  });
+
   it("shows an Administrator no way into the backoffice either (§684)", async () => {
     state.cookie = admin.id;
     const html = renderToStaticMarkup(await MembersAreaPage({ params: Promise.resolve({ locale: "ro" }) }));

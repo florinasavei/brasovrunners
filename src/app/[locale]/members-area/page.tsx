@@ -1,22 +1,15 @@
-import LogoutIcon from "@mui/icons-material/Logout";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Container from "@mui/material/Container";
 import MuiLink from "@mui/material/Link";
-import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
-import { hasLocale } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { notFound, redirect, unstable_rethrow } from "next/navigation";
+import { getTranslations } from "next-intl/server";
+import { unstable_rethrow } from "next/navigation";
 import { getDb } from "@/db/client";
 import { formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
-import { routing, type Locale } from "@/i18n/routing";
+import type { Locale } from "@/i18n/routing";
 import { readMembersZone } from "@/modules/content/members/page-settings";
-import { listDiscountCodesForMembers, type MembersDiscountCode } from "@/modules/content/member-codes/repository";
-import MemberCodes from "@/modules/content/member-codes/ui/MemberCodes";
 import { datedOrNull } from "@/modules/events/domain/dated";
 import { groupSeries, seriesLookup } from "@/modules/events/domain/series";
 import { membersOnlyEventsFor } from "@/modules/events/members-only";
@@ -26,22 +19,10 @@ import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
 import { cachedUpcomingEvents } from "@/modules/public-cache/reads";
 import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
-import { canOpenMembersZone } from "@/modules/staff-identity/domain/roles";
-import { getCurrentAccount } from "@/modules/staff-identity/session";
-import { env } from "@/shared/config/env";
-import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
-import { TAP_TARGET } from "@/shared/ui/tap-target";
-import { PAGE_WIDTH } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
-import { headingRule } from "@/theme/surfaces";
-import { signOutAction } from "../admin/actions";
-import MembersShop from "./MembersShop";
-import { listOrdersOfMember, listProductsForMembers, type MemberOrder, type MembersShopProduct } from "@/modules/content/shop/repository";
-import { paymentWordsFor, readShopSettings } from "@/modules/content/shop/settings";
-import { readShopOutcome, readShopOutcomeAtOrders } from "@/modules/content/shop/zone-outcome";
-import { noticeDescribesMembersShop } from "@/modules/legal-documents/repository";
+import ZoneFrame, { openZone } from "./zone";
 
-type Props = { params: Promise<{ locale: string }>; searchParams?: Promise<{ shop?: string | string[]; shopAt?: string | string[] }> };
+type Props = { params: Promise<{ locale: string }> };
 
 /** Reads the session, so it is never prerendered or cached (AGENTS.md §14.5). */
 export const dynamic = "force-dynamic";
@@ -64,9 +45,9 @@ async function zoneOrAway(locale: Locale): Promise<RichTextDoc | null | "away"> 
 }
 
 /**
- * The club's events for its members alone (§552), and its discount codes (§552): read here, per
- * request, behind the account this page asked for — live, never through the public cache, which is
- * shared by everybody. Empty while the database is away, like «Următoarele alergări».
+ * The club's events for its members alone (§552): read here, per request, behind the account this
+ * page asked for — live, never through the public cache, which is shared by everybody. Empty while
+ * the database is away, like «Următoarele alergări».
  */
 async function membersOnlyOrNone(account: Parameters<typeof membersOnlyEventsFor>[0], locale: Locale, now: Date) {
   try {
@@ -75,42 +56,6 @@ async function membersOnlyOrNone(account: Parameters<typeof membersOnlyEventsFor
     unstable_rethrow(error);
     if (!isDatabaseAwayError(error)) throw error;
     return [];
-  }
-}
-
-async function codesOrNone(now: Date): Promise<MembersDiscountCode[]> {
-  try {
-    return await listDiscountCodesForMembers(getDb(), now);
-  } catch (error) {
-    unstable_rethrow(error);
-    if (!isDatabaseAwayError(error)) throw error;
-    return [];
-  }
-}
-
-/**
- * «Magazinul clubului» and «Comenzile mele» (§683): read here, per request, behind the account — the
- * products only while the privacy notice in force names `{{membersShop}}` in every language, the
- * member's own orders always. Nothing while the database is away, like the codes.
- */
-async function shopOrNone(
-  account: { id: string },
-  locale: Locale,
-  now: Date,
-): Promise<{ open: boolean; products: MembersShopProduct[]; orders: MemberOrder[]; payment: string | null; emailMembers: boolean }> {
-  try {
-    const db = getDb();
-    const open = await noticeDescribesMembersShop(db, now);
-    const [products, orders, settings] = await Promise.all([
-      open ? listProductsForMembers(db, locale) : Promise.resolve([]),
-      listOrdersOfMember(db, account.id),
-      readShopSettings(db),
-    ]);
-    return { open, products, orders, payment: paymentWordsFor(settings, locale), emailMembers: settings.emailMembers };
-  } catch (error) {
-    unstable_rethrow(error);
-    if (!isDatabaseAwayError(error)) throw error;
-    return { open: false, products: [], orders: [], payment: null, emailMembers: true };
   }
 }
 
@@ -134,7 +79,10 @@ async function upcomingOrNone(locale: Locale, now: Date) {
 }
 
 /**
- * The members' zone (§524): one page of the club's words for its members alone, behind the sign-in.
+ * The members' zone (§524), its third tab «Alergări» (§709) and the zone's own address: the club's
+ * words for its members alone, the events for members alone, the next runs. The codes and the shop
+ * are the other two tabs, `codes/page.tsx` and `shop/page.tsx`; the frame, the door (`openZone`) and
+ * the sign-out are `zone.tsx`.
  *
  * The door is the account, never the staff session: a member (`MEMBER`) and every colleague open it
  * (`canOpenMembersZone`). Signed out, the visitor is sent to the sign-in in the members' words
@@ -160,35 +108,14 @@ async function upcomingOrNone(locale: Locale, now: Date) {
  * Under the club's words, «Următoarele alergări»: the next published events, from the listing's
  * own cached read (§333) — nothing a stranger could not see, and no query of its own.
  */
-export default async function MembersAreaPage({ params, searchParams }: Props) {
-  const { locale } = await params;
-  if (!hasLocale(routing.locales, locale)) notFound();
-  setRequestLocale(locale);
-
-  if (env.STAFF_AUTH_MODE === "disabled") notFound();
-  let account: Awaited<ReturnType<typeof getCurrentAccount>>;
-  try {
-    account = await getCurrentAccount();
-  } catch (error) {
-    unstable_rethrow(error);
-    if (!isDatabaseAwayError(error)) throw error;
-    return <Resting locale={locale} />;
-  }
-  if (!account) redirect(getPathname({ locale, href: { pathname: "/sign-in", query: { to: "members" } } }));
-  if (!canOpenMembersZone(account.role)) notFound();
+export default async function MembersAreaPage({ params }: Props) {
+  const opened = await openZone((await params).locale);
+  if ("resting" in opened) return opened.resting;
+  const { locale, account } = opened;
 
   const t = await getTranslations("Members");
   const now = new Date();
-  const [zone, upcoming, membersEvents, codes, shop] = await Promise.all([
-    zoneOrAway(locale),
-    upcomingOrNone(locale, now),
-    membersOnlyOrNone(account, locale, now),
-    codesOrNone(now),
-    shopOrNone(account, locale, now),
-  ]);
-  const shopQuery = await searchParams;
-  const shopOutcome = readShopOutcome(shopQuery?.shop);
-  const shopOutcomeAtOrders = readShopOutcomeAtOrders(shopQuery?.shopAt);
+  const [zone, upcoming, membersEvents] = await Promise.all([zoneOrAway(locale), upcomingOrNone(locale, now), membersOnlyOrNone(account, locale, now)]);
   /*
     A repeated members' run is one card with its dates, as on the listing (§113, §486): the dated
     ones grouped, those whose date is to be announced after them one by one — §533 refuses a series
@@ -205,14 +132,7 @@ export default async function MembersAreaPage({ params, searchParams }: Props) {
   ];
 
   return (
-    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
-      <Typography variant="h1" gutterBottom sx={headingRule}>
-        {t("zoneTitle")}
-      </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }} data-testid="members-greeting">
-        {t("zoneGreeting", { name: account.displayName })}
-      </Typography>
-
+    <ZoneFrame t={t} locale={locale} account={account} active="runs">
       {zone === "away" ? (
         <Alert severity="info" sx={{ mb: 3 }}>
           {t("zoneAway")}
@@ -247,14 +167,6 @@ export default async function MembersAreaPage({ params, searchParams }: Props) {
         </Box>
       )}
 
-      {/* «Coduri de reducere» (§552): the partners' codes, for the members alone (§517). */}
-      {codes.length > 0 && <MemberCodes codes={codes} locale={locale} />}
-
-      {/* «Magazinul clubului» and «Comenzile mele» (§683): behind the notice, paid outside the site. */}
-      {((shop.open && shop.products.length > 0) || shop.orders.length > 0) && (
-        <MembersShop products={shop.products} orders={shop.orders} payment={shop.payment} shopOpen={shop.open} outcome={shopOutcome} emailMembers={shop.emailMembers} outcomeAtOrders={shopOutcomeAtOrders} locale={locale} />
-      )}
-
       <Box component="section" aria-labelledby="members-upcoming-title" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }} data-testid="members-upcoming">
         <Typography id="members-upcoming-title" variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
           {t("upcomingTitle")}
@@ -285,40 +197,6 @@ export default async function MembersAreaPage({ params, searchParams }: Props) {
           {t("upcomingAll")}
         </MuiLink>
       </Box>
-
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ alignItems: { sm: "center" } }}>
-        <SignOut locale={locale} label={t("signOut")} />
-      </Stack>
-    </Container>
-  );
-}
-
-/** The sign-out, landing on «Beneficiile membrilor» rather than the team's door (§524). */
-function SignOut({ locale, label }: { locale: Locale; label: string }) {
-  return (
-    <form action={signOutAction}>
-      <input type="hidden" name="uiLocale" value={locale} />
-      <input type="hidden" name="from" value="members" />
-      <Button type="submit" variant="text" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }} data-testid="members-sign-out">
-        <LogoutIcon aria-hidden="true" sx={glyphSx("medium")} />
-        {label}
-      </Button>
-    </form>
-  );
-}
-
-/** The database is away (§447): the zone cannot say who is signed in, so it says that, and offers the sign-out. */
-async function Resting({ locale }: { locale: Locale }) {
-  const t = await getTranslations("Members");
-  return (
-    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
-      <Typography variant="h1" gutterBottom sx={headingRule}>
-        {t("zoneTitle")}
-      </Typography>
-      <Alert severity="info" sx={{ mb: 3 }}>
-        {t("zoneAway")}
-      </Alert>
-      <SignOut locale={locale} label={t("signOut")} />
-    </Container>
+    </ZoneFrame>
   );
 }

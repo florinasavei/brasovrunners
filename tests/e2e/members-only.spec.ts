@@ -54,6 +54,11 @@ test.describe("§552 events and codes for the members alone", () => {
     await expect(events.getByRole("heading", { name: "Evenimente pentru membri" })).toBeVisible();
     await expect(events.getByRole("link", { name: fixture.title })).toBeVisible();
 
+    // The codes are the first tab (§709), an address of their own; «Alergări» brings the member back.
+    await expect(page.getByTestId("member-code")).toHaveCount(0);
+    await page.getByTestId("members-tabs").getByRole("link", { name: "Coduri de reducere" }).click();
+    await expect(page).toHaveURL(/\/ro\/zona-membri\/coduri$/);
+    await hydrated(page);
     const code = page.getByTestId("member-code").filter({ hasText: fixture.partner });
     await expect(code).toContainText(fixture.code);
     await expect(code).toContainText("10% la tot.");
@@ -62,7 +67,10 @@ test.describe("§552 events and codes for the members alone", () => {
     const box = await copy.boundingBox();
     expect(Math.round((box?.height ?? 0) * 10) / 10).toBeGreaterThanOrEqual(44);
 
-    await events.getByRole("link", { name: fixture.title }).click();
+    await page.getByTestId("members-tabs").getByRole("link", { name: "Alergări" }).click();
+    await expect(page).toHaveURL(/\/ro\/zona-membri$/);
+    await hydrated(page);
+    await page.getByTestId("members-events").getByRole("link", { name: fixture.title }).click();
     await expect(page).toHaveURL(new RegExp(`/ro/evenimente/${fixture.ro}$`));
     await expect(page.getByRole("heading", { level: 1, name: fixture.title })).toBeVisible();
     await expect(page.getByText("Doar pentru membri").first()).toBeVisible();

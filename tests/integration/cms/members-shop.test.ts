@@ -428,7 +428,7 @@ describe("§683 the members' shop", () => {
     expect(message.text).toContain("Nota comenzii: „Mărimea M”");
     expect(message.text).toContain("Salut, Ana Exemplu");
     // No card, no token, and the button opens the members' zone.
-    expect(message.text).toContain("/ro/zona-membri#members-shop");
+    expect(message.text).toContain("/ro/zona-membri/magazin#members-shop");
 
     const clubRow = rows.find((row) => row.messageType === "SHOP_ORDER_CLUB_NOTICE")!;
     const club = await renderOutboxMessage({ ...clubRow, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
