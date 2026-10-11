@@ -1,6 +1,7 @@
 import { DIFFICULTY_BANDS, type DifficultyBand, difficultyBandOf, difficultyLevelOf, type StoredDifficulty } from "./difficulty";
 import { readCoHosts, type CoHostSource } from "./co-hosts";
 import { EVENT_COST_TYPES, type EventCostType } from "./cost";
+import { eventKind, type EventKindFacts } from "./event-kind";
 import { EVENT_SURFACES, EVENT_TYPES, type EventSurface, type EventType } from "./event-type";
 import type { RegistrationCta } from "./registration-cta";
 
@@ -57,8 +58,21 @@ export type FilterGroup = (typeof FILTER_GROUPS)[number];
 export const FILTER_FLAGS = ["partner", "night", "registration"] as const;
 export type FilterFlag = (typeof FILTER_FLAGS)[number];
 
+/**
+ * «Eveniment special» in «Tipul» (§NNN, amending §413 and §720 — the owner, 2026-10-11, of the
+ * listing's panel: «Aici la tip trebuie să pot vedea și evenimentele speciale»): one more box in the
+ * type group, `?type=SPECIAL`, for every date that is not a date of a standing weekly series — the
+ * kind §709 derives from the series (`eventKind`, `docs/REDESIGN.md` decision 9), never a flag the
+ * club ticks. A race is a race AND special, so the box is a second answer an event carries in the
+ * group, beside its type, and the group's OR holds: «Alergare de grup» with «Eveniment special» shows
+ * every group run and every special date. Not «Ediție specială» (§168), which stays a weekly date.
+ */
+export const SPECIAL_TYPE = "SPECIAL";
+export type TypeChoice = EventType | typeof SPECIAL_TYPE;
+const TYPE_CHOICES: readonly TypeChoice[] = [...EVENT_TYPES, SPECIAL_TYPE];
+
 type GroupValues = {
-  type: EventType;
+  type: TypeChoice;
   surface: EventSurface;
   // A box per band, not per level (§526): fifteen boxes would be a list to read, and «Greu»
   // ticked means every step of it — the address keeps §413's `?difficulty=HARD`.
@@ -68,7 +82,7 @@ type GroupValues = {
 };
 
 const GROUP_VALUES: { [G in FilterGroup]: readonly GroupValues[G][] } = {
-  type: EVENT_TYPES,
+  type: TYPE_CHOICES,
   surface: EVENT_SURFACES,
   difficulty: DIFFICULTY_BANDS,
   distance: DISTANCE_BANDS,
@@ -89,8 +103,9 @@ export const NO_FILTER: ListingFilter = {
 };
 
 /**
- * What a filter has to know of an event: its closed-set columns and whatever `readCoHosts` reads.
- * The registration door is not among them — it is the caller's answer (`FilterFacts.door`).
+ * What a filter has to know of an event: its closed-set columns, whatever `readCoHosts` reads, and
+ * the series' cadence the kind is derived from (`EventKindFacts`, on every public row already — no
+ * new read). The registration door is not among them — it is the caller's answer (`FilterFacts.door`).
  */
 export type FilterableEvent = {
   type: string;
@@ -98,7 +113,8 @@ export type FilterableEvent = {
   distanceMeters: number | null;
   costType: string | null;
 } & StoredDifficulty &
-  CoHostSource;
+  CoHostSource &
+  EventKindFacts;
 
 /** The two answers a filter cannot give from the row alone — the caller's, per event (see the file's head). */
 export type FilterFacts<T> = {
@@ -281,6 +297,15 @@ function valueOf(event: FilterableEvent, group: FilterGroup): string | null {
   }
 }
 
+/**
+ * Whether an event carries a value in a group: its own value, and in «Tipul» also «Eveniment special»
+ * when the date is not of a weekly series (§NNN) — the one group where an event carries two answers.
+ */
+function carries(event: FilterableEvent, group: FilterGroup, value: string): boolean {
+  if (group === "type" && value === SPECIAL_TYPE) return eventKind(event) === "special";
+  return valueOf(event, group) === value;
+}
+
 function flagOf<T extends FilterableEvent>(event: T, flag: FilterFlag, facts: FilterFacts<T>): boolean {
   switch (flag) {
     case "partner":
@@ -296,15 +321,15 @@ function flagOf<T extends FilterableEvent>(event: T, flag: FilterFlag, facts: Fi
 }
 
 /**
- * Whether an event passes the filter: every group with a tick must contain the event's own value
- * (an unanswered question matches no tick), and every flag that is on must hold.
+ * Whether an event passes the filter: every group with a tick must have a ticked value the event
+ * carries (an unanswered question matches no tick; «Eveniment special» matches every special date,
+ * whatever its type, §NNN), and every flag that is on must hold.
  */
 export function matchesListingFilter<T extends FilterableEvent>(event: T, filter: ListingFilter, facts: FilterFacts<T>): boolean {
   for (const group of FILTER_GROUPS) {
     const ticked = filter[group] as string[];
     if (ticked.length === 0) continue;
-    const value = valueOf(event, group);
-    if (value === null || !ticked.includes(value)) return false;
+    if (!ticked.some((value) => carries(event, group, value))) return false;
   }
   for (const flag of FILTER_FLAGS) {
     if (filter[flag] && !flagOf(event, flag, facts)) return false;
@@ -330,6 +355,11 @@ export type FilterOffer = {
  * row already answers the same way is nothing to choose between — unless the address already
  * ticks something in it, which always stays so a filtered page can say what it is filtered by.
  *
+ * **«Eveniment special» is a choice on its own** (§NNN): its other side is a weekly run — a stated
+ * answer, not a question left blank — so where it narrows it is offered even when no type does (every
+ * date a group run, some weekly and some not). A type never stands alone: every event has one, so
+ * where one type narrows a second one does too.
+ *
  * Read off every event the page shows, the lead event included — the lead follows the filter now
  * (§413) — and never off the filtered rows, so ticking one box never takes another away.
  */
@@ -338,9 +368,9 @@ export function offeredFilters<T extends FilterableEvent>(events: readonly T[], 
   const groups = FILTER_GROUPS.map((group) => {
     const ticked = filter[group] as string[];
     const eligible = (GROUP_VALUES[group] as readonly string[]).filter((value) =>
-      narrows(events.filter((event) => valueOf(event, group) === value).length),
+      narrows(events.filter((event) => carries(event, group, value)).length),
     );
-    const offerAll = eligible.length >= 2;
+    const offerAll = eligible.length >= 2 || (group === "type" && eligible.includes(SPECIAL_TYPE));
     const values = (GROUP_VALUES[group] as readonly string[]).filter(
       (value) => ticked.includes(value) || (offerAll && eligible.includes(value)),
     );

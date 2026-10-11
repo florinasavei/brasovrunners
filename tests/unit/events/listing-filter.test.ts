@@ -44,6 +44,8 @@ const row = (id: string, fields: Partial<Row> = {}): Row => ({
   coHosts: null,
   coHostName: null,
   coHostUrl: null,
+  // A date of no series: special (§709), as every row was before «Eveniment special» was a box (§NNN).
+  seriesCadence: null,
   // The window a row carries when nothing about registration is under test: open, from before
   // `NOW` to well after it.
   registrationMode: "INTERNAL",

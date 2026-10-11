@@ -29,7 +29,7 @@ import { monthRange, parseMonth, parseYear, yearRange } from "@/modules/events/d
 import { calendarPeriodPath, readCalendarSegments } from "@/modules/events/domain/calendar-path";
 import { getPathname } from "@/i18n/navigation";
 import { cachedPublishedEventsBetween, cachedSiteLook, cachedUpcomingEvents } from "@/modules/public-cache/reads";
-import { kindQuery, matchesKind, parseKindChoice } from "@/modules/events/domain/calendar-kind";
+import { kindQuery, matchesKind, LOOK_HIDDEN_VALUES, offerUnderLook, parseKindChoice, specialOnChip } from "@/modules/events/domain/calendar-kind";
 import type { EventSurface } from "@/modules/events/domain/event-type";
 import { nextCalendarEvent } from "@/modules/events/domain/next-event";
 import KindChips from "@/modules/events/ui/KindChips";
@@ -189,7 +189,16 @@ export default async function CalendarPage({ params, query: asked, period: segme
   const periodPath = calendarPeriodPath(getPathname({ locale, href: "/calendar" }), view, layout);
   // Under «Aspectul nou» the surface is a chip (`KindChips`): what the panel still offers there.
   const offeredSurfaces = (offer.groups.find((entry) => entry.group === "surface")?.values ?? []) as EventSurface[];
-  const panelUnderLook = offersAnything({ groups: offer.groups.filter((entry) => entry.group !== "surface"), flags: offer.flags }) || activeFilterCount({ ...filter, surface: [] }) > 0;
+  // «Eveniment special» is the chips' too (the kind): neither offered nor counted under the look.
+  const lookOffer = offerUnderLook(offer, filter);
+  const panelUnderLook =
+    offersAnything({ groups: lookOffer.groups.filter((entry) => entry.group !== "surface"), flags: lookOffer.flags }) ||
+    activeFilterCount({
+      ...filter,
+      surface: [],
+      // The chips say a lone SPECIAL; beside another type or a kind it is the panel's to count.
+      type: specialOnChip(kind, filter) ? filter.type.filter((value) => !LOOK_HIDDEN_VALUES.some((hidden) => hidden.value === value)) : filter.type,
+    }) > 0;
 
   /*
     The next-event panel (phase 4) is read only while the look is on (§708): off, the page reads
@@ -267,6 +276,8 @@ export default async function CalendarPage({ params, query: asked, period: segme
           offer={offer}
           carry={kindQuery(kind)}
           lookChips={["surface"]}
+          lookChipValues={LOOK_HIDDEN_VALUES}
+          lookChipTicks={specialOnChip(kind, filter)}
         />
       </CalendarFilterSlot>
 
