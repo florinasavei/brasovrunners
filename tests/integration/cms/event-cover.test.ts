@@ -166,7 +166,7 @@ async function saveWith(eventId: string, fields: Record<string, unknown>, scope:
   });
 }
 
-async function refusal(promise: Promise<unknown>): Promise<{ code: string; fields: string[] }> {
+async function refusal(promise: Promise<unknown>): Promise<{ code: string; fields: readonly string[] }> {
   const error = await promise.then(
     () => null,
     (caught: unknown) => caught,
