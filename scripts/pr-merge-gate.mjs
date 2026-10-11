@@ -30,9 +30,10 @@ export function requiredContexts(listed) {
   return [...new Set([...github, ...HOUSE_CHECKS])];
 }
 
-/** The one line to print when GitHub's required list could not be read; null when it was. */
+/** The one line to print when GitHub's required list is unreadable (null) or lists nothing ([]); null when it listed checks. */
 export function sourceLine(listed) {
-  return Array.isArray(listed) && listed.length > 0 ? null : "required list unreadable — using the house's checks";
+  if (!Array.isArray(listed)) return "required list unreadable — using the house's checks";
+  return listed.length > 0 ? null : "no check is required by GitHub — using the house's checks";
 }
 
 /**
@@ -44,7 +45,8 @@ export function judgeMergeGate(pr, requiredList) {
   const required = requiredContexts(requiredList);
   const state = String(pr.mergeStateStatus ?? "UNKNOWN").toUpperCase();
   const entries = (pr.statusCheckRollup ?? []).map(readEntry);
-  const isRequired = (name) => required.includes(name);
+  // A sharded check (`e2e 3/8`) belongs to its aggregate (`e2e`), which registers only after every shard ends.
+  const isRequired = (name) => required.some((r) => name === r || name.startsWith(`${r} `) || name.startsWith(`${r}/`));
 
   if (state === "DIRTY") return { mergeable: false, waitingOn: [], stop: "the pull request has conflicts with its base" };
   if (state === "BEHIND") return { mergeable: false, waitingOn: [], stop: "the pull request is behind its base: update the branch" };
@@ -55,9 +57,9 @@ export function judgeMergeGate(pr, requiredList) {
   const pending = entries.filter((e) => e.verdict === "pending");
   const waitingOn = pending.map((e) => ({ name: e.name, required: isRequired(e.name) }));
   const requiredPending = waitingOn.filter((w) => w.required);
-  // A required context that has not registered yet is waited for only while GitHub itself blocks the merge.
-  const seen = new Set(entries.map((e) => e.name));
-  const absent = state === "CLEAN" || state === "UNSTABLE" || state === "HAS_HOOKS" ? [] : required.filter((name) => !seen.has(name));
+  // A required context that has not registered yet is waited for unless GitHub says everything required is green (CLEAN, HAS_HOOKS).
+  const seen = (name) => entries.some((e) => e.name === name);
+  const absent = state === "CLEAN" || state === "HAS_HOOKS" ? [] : required.filter((name) => !seen(name));
   for (const name of absent) waitingOn.push({ name, required: true });
 
   if (requiredPending.length || absent.length || !MERGEABLE_STATES.has(state)) {

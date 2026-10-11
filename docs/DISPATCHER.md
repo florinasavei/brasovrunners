@@ -187,7 +187,7 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
   continues from step 3. It waits for the `qa` push's run by its status and opens the release
   PR only once that run is green, so the release PR's run finds the tree tested and skips; at
   the end, and at any stop, it prints each step's m:ss and appends one JSON line to
-  `SHIP_TIMES_FILE` (§504). The release PR merges when GitHub's required checks are green; a Vercel
+  `SHIP_TIMES_FILE` (§504). The release PR merges when GitHub's required checks and the house's four (`tested-tree`, `docs-check`, `e2e` with its shards, `migrate`) are green; a Vercel
   status is never waited on (§NNN) — each poll prints `waiting on: <name> (required|not required)…`.
 - **Production's waits** (step 1, the previous baseline; step 7, the new one) print what production
   answers on the first reading and then every two minutes (§658): «no answer for N min: <the fetch

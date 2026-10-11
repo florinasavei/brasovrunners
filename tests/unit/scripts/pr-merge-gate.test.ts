@@ -7,16 +7,17 @@ import { HOUSE_CHECKS, gateLine, judgeMergeGate, sourceLine, waitForMergeGate } 
  */
 const run = (name: string, conclusion: string | null, status = "COMPLETED") => ({ __typename: "CheckRun", name, status, conclusion });
 const house = [run("tested-tree", "SUCCESS"), run("e2e", "SUCCESS"), run("migrate", "SUCCESS")];
+const houseAnd = (...more: object[]) => [...house, ...more];
 const context = (name: string, state: string) => ({ __typename: "StatusContext", context: name, state });
 
 describe("§NNN ship: the merge gate", () => {
   it("merges on UNSTABLE when only a status nobody requires is pending, and names it", () => {
-    const pr = { mergeStateStatus: "UNSTABLE", statusCheckRollup: [run("docs-check", "SUCCESS"), context("Vercel – a-project", "PENDING")] };
+    const pr = { mergeStateStatus: "UNSTABLE", statusCheckRollup: houseAnd(run("docs-check", "SUCCESS"), context("Vercel – a-project", "PENDING")) };
     expect(judgeMergeGate(pr, ["docs-check"])).toEqual({ mergeable: true, waitingOn: [{ name: "Vercel – a-project", required: false }] });
   });
 
   it("merges on CLEAN and HAS_HOOKS; a skipped or neutral required context counts as green", () => {
-    const rollup = [run("docs-check", "SKIPPED"), run("e2e", "NEUTRAL")];
+    const rollup = [run("docs-check", "SKIPPED"), run("e2e", "NEUTRAL"), run("tested-tree", "SUCCESS"), run("migrate", "SUCCESS")];
     expect(judgeMergeGate({ mergeStateStatus: "CLEAN", statusCheckRollup: rollup }, ["docs-check", "e2e"]).mergeable).toBe(true);
     expect(judgeMergeGate({ mergeStateStatus: "HAS_HOOKS", statusCheckRollup: rollup }, ["docs-check"]).mergeable).toBe(true);
   });
@@ -30,7 +31,7 @@ describe("§NNN ship: the merge gate", () => {
       { name: "Vercel – x", required: false },
     ]);
     expect(gateLine(judged)).toBe("waiting on: docs-check (required), Vercel – x (not required)…");
-    expect(judgeMergeGate({ mergeStateStatus: "UNKNOWN", statusCheckRollup: [run("docs-check", "SUCCESS")] }, ["docs-check"]).mergeable).toBe(false);
+    expect(judgeMergeGate({ mergeStateStatus: "UNKNOWN", statusCheckRollup: houseAnd(run("docs-check", "SUCCESS")) }, ["docs-check"]).mergeable).toBe(false);
   });
 
   it("waits for a required context that has not registered while GitHub still blocks the merge", () => {
@@ -43,19 +44,19 @@ describe("§NNN ship: the merge gate", () => {
     expect(judgeMergeGate({ mergeStateStatus: "BEHIND", statusCheckRollup: [] }, ["docs-check"]).stop).toMatch(/update the branch/);
     const failed = judgeMergeGate({ mergeStateStatus: "BLOCKED", statusCheckRollup: [run("docs-check", "FAILURE")] }, ["docs-check"]);
     expect(failed.stop).toBe("a required check failed: docs-check");
-    const vercelRed = { mergeStateStatus: "UNSTABLE", statusCheckRollup: [run("docs-check", "SUCCESS"), context("Vercel – x", "FAILURE")] };
+    const vercelRed = { mergeStateStatus: "UNSTABLE", statusCheckRollup: houseAnd(run("docs-check", "SUCCESS"), context("Vercel – x", "FAILURE")) };
     expect(judgeMergeGate(vercelRed, ["docs-check"]).mergeable).toBe(true);
   });
 
   it("falls back to the house's checks when GitHub's list cannot be read, and never requires a Vercel status", () => {
     expect(HOUSE_CHECKS).toEqual(["tested-tree", "docs-check", "e2e", "migrate"]);
-    const rollup = [run("tested-tree", "SUCCESS"), run("docs-check", "SUCCESS"), run("e2e", null, "IN_PROGRESS"), context("Vercel – x", "PENDING")];
+    const rollup = [run("tested-tree", "SUCCESS"), run("docs-check", "SUCCESS"), run("migrate", "SUCCESS"), run("e2e", null, "IN_PROGRESS"), context("Vercel – x", "PENDING")];
     for (const unreadable of [null, undefined, []]) {
       const judged = judgeMergeGate({ mergeStateStatus: "UNSTABLE", statusCheckRollup: rollup }, unreadable as string[] | null);
       expect(judged.mergeable).toBe(false);
       expect(judged.waitingOn.filter((w) => w.required)).toEqual([{ name: "e2e", required: true }]);
     }
-    const done = [...rollup.slice(0, 2), run("e2e", "SUCCESS"), rollup[3]];
+    const done = [...rollup.slice(0, 3), run("e2e", "SUCCESS"), rollup[4]];
     expect(judgeMergeGate({ mergeStateStatus: "UNSTABLE", statusCheckRollup: done }, null).mergeable).toBe(true);
     expect(judgeMergeGate({ mergeStateStatus: "BLOCKED", statusCheckRollup: [run("docs-check", "FAILURE")] }, null).stop).toMatch(/docs-check/);
   });
@@ -67,20 +68,36 @@ describe("§NNN ship: the merge gate", () => {
     const wait = judgeMergeGate({ mergeStateStatus: "UNSTABLE", statusCheckRollup: [...base, run("e2e", null, "IN_PROGRESS")] }, ["docs-check"]);
     expect(wait.mergeable).toBe(false);
     expect(wait.waitingOn).toEqual([{ name: "e2e", required: true }]);
-    // a house check that never registered is ignored while GitHub says the merge is possible
-    expect(judgeMergeGate({ mergeStateStatus: "UNSTABLE", statusCheckRollup: [run("docs-check", "SUCCESS")] }, ["docs-check"]).mergeable).toBe(true);
+    // a house check that has not registered is waited for on UNSTABLE; CLEAN alone may merge
+    const partial = [run("docs-check", "SUCCESS")];
+    const unstable = judgeMergeGate({ mergeStateStatus: "UNSTABLE", statusCheckRollup: partial }, ["docs-check"]);
+    expect(unstable.mergeable).toBe(false);
+    expect(unstable.waitingOn.map((w) => w.name)).toEqual(["tested-tree", "e2e", "migrate"]);
+    expect(judgeMergeGate({ mergeStateStatus: "CLEAN", statusCheckRollup: partial }, ["docs-check"]).mergeable).toBe(true);
+  });
+
+  it("counts the e2e shards as the e2e aggregate, which registers only after the last shard", () => {
+    const base = [run("docs-check", "SUCCESS"), run("tested-tree", "SUCCESS"), run("migrate", "SUCCESS")];
+    const shards = (conclusions: (string | null)[]) => conclusions.map((c, i) => run(`e2e ${i + 1}/8`, c, c ? "COMPLETED" : "IN_PROGRESS"));
+    const waiting = judgeMergeGate({ mergeStateStatus: "UNSTABLE", statusCheckRollup: [...base, ...shards(["SUCCESS", null, "SUCCESS"])] }, ["docs-check"]);
+    expect(waiting.mergeable).toBe(false);
+    expect(waiting.waitingOn).toEqual([{ name: "e2e 2/8", required: true }, { name: "e2e", required: true }]);
+    const failed = judgeMergeGate({ mergeStateStatus: "UNSTABLE", statusCheckRollup: [...base, ...shards(["SUCCESS", "FAILURE", null])] }, ["docs-check"]);
+    expect(failed.stop).toBe("a required check failed: e2e 2/8");
+    const done = [...base, ...shards(Array(8).fill("SUCCESS")), run("e2e", "SUCCESS")];
+    expect(judgeMergeGate({ mergeStateStatus: "UNSTABLE", statusCheckRollup: done }, ["docs-check"]).mergeable).toBe(true);
   });
 
   it("marks the fallback once: the line names the unreadable list, and is silent when GitHub answered", () => {
     expect(sourceLine(null)).toBe("required list unreadable — using the house's checks");
-    expect(sourceLine([])).toBe("required list unreadable — using the house's checks");
+    expect(sourceLine([])).toBe("no check is required by GitHub — using the house's checks");
     expect(sourceLine(["docs-check"])).toBeNull();
   });
 
   it("polls until mergeable, printing each pending poll, and stops at the cap", async () => {
     const readings = [
       { mergeStateStatus: "BLOCKED", statusCheckRollup: [...house, run("docs-check", null, "QUEUED")] },
-      { mergeStateStatus: "UNSTABLE", statusCheckRollup: [run("docs-check", "SUCCESS"), context("Vercel – x", "PENDING")] },
+      { mergeStateStatus: "UNSTABLE", statusCheckRollup: houseAnd(run("docs-check", "SUCCESS"), context("Vercel – x", "PENDING")) },
     ];
     let i = 0;
     const slept: number[] = [];
