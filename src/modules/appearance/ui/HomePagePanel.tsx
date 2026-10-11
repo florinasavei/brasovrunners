@@ -155,7 +155,7 @@ export default async function HomePagePanel({ locale, state, mayEdit, pages, sav
               name={`${box.stem}${suffix(language)}`}
               label={boxLabel(box.stem, language)}
               fullWidth
-              multiline={box.max > 120}
+              multiline={box.max >= 120}
               defaultValue={valueAt(box, language)}
               placeholder={key ? platform[language](key) : undefined}
               slotProps={{ htmlInput: { maxLength: box.max, lang: language }, inputLabel: { shrink: true } }}
@@ -212,7 +212,7 @@ export default async function HomePagePanel({ locale, state, mayEdit, pages, sav
           {t("homePage.readOnly")}
         </Typography>
       ) : (
-        <Stack spacing={2} sx={{ mt: 1.5 }}>
+        <Stack spacing={2} sx={{ mt: 1.5, maxWidth: 720 }}>
           <ActionForm
             action={updateHomePageAction}
             messages={await refusalMessages({
