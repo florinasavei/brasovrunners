@@ -175,6 +175,17 @@ test.describe("§708 the header under «Aspectul nou»", () => {
       }
 
       await expectFloatingLanguage(page, 320, 720);
+      // The footer's Instagram paints with a gradient of its own, never the header's hidden one (§NNN).
+      const ownGradient = await page
+        .locator("footer")
+        .locator('a[href*="instagram"] svg')
+        .first()
+        .evaluate((svg) => {
+          const id = /url\(#(.+)\)/.exec(svg.getAttribute("fill") ?? "")?.[1];
+          const gradient = id ? document.getElementById(id) : null;
+          return Boolean(gradient && svg.contains(gradient));
+        });
+      expect(ownGradient).toBe(true);
 
       // §NNN: on a computer, «Urmărește-ne» with Instagram, Facebook and Strava is the header row's last item.
       await page.setViewportSize({ width: 1280, height: 800 });

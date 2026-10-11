@@ -55,6 +55,7 @@ vi.mock("@/shared/ui/ButtonLink", () => ({
 
 import SiteHeader from "@/shared/ui/SiteHeader";
 import LookWatermark from "@/shared/ui/LookWatermark";
+import SocialIcon from "@/shared/ui/SocialIcon";
 
 const weekly = (date: string) => ({
   type: "GROUP_RUN",
@@ -138,6 +139,19 @@ describe("§708 the header while «Aspectul nou» is on", () => {
     const on = await header();
     expect(on).toContain('href="/events"');
     expect(on).not.toContain("/events/[slug]");
+  });
+
+  it("§NNN gives each Instagram mark a gradient of its own, so the footer's never points at the header's hidden one", () => {
+    const html = renderToStaticMarkup(
+      createElement("div", null, createElement(SocialIcon, { network: "instagram" }), createElement(SocialIcon, { network: "instagram" })),
+    );
+    const ids = [...html.matchAll(/<linearGradient id="([^"]+)"/g)].map((match) => match[1]);
+    expect(ids).toHaveLength(2);
+    expect(new Set(ids).size).toBe(2);
+    for (const id of ids) {
+      expect(id).toMatch(/^social-mark-instagram-[A-Za-z0-9_-]+$/);
+      expect(html).toContain(`fill="url(#${id})"`);
+    }
   });
 
   it("draws the watermark, which the layout renders only while on", () => {

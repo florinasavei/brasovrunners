@@ -13,7 +13,7 @@ import { weatherListWords } from "@/modules/weather/words";
 import { telHref } from "@/modules/contact/domain/public-phone";
 import { cachedPublicPhone, cachedShownContactAddresses } from "@/modules/public-cache/reads";
 import { DENSITY } from "@/theme/density";
-import { UNDER_LOOK } from "@/theme/look";
+import { notUnderLook } from "@/theme/look";
 import BuildBadge from "./BuildBadge";
 import ClubIdentity from "./ClubIdentity";
 import { clubSocialLinks } from "./club-socials";
@@ -555,7 +555,7 @@ export default async function SiteFooter({ newLook = false }: { newLook?: boolea
             nothing on the bar to separate, so the rule goes with this box. Under «Aspectul nou»
             (§NNN) the language is the floating round button above the bar's right end, so this
             box is not drawn at any width there. */}
-        <Box sx={{ display: { xs: "flex", sm: "none" }, [UNDER_LOOK]: { display: "none" }, flex: "0 0 auto", alignItems: "center", ...footerGapSx(["columnGap"], 0) }}>
+        <Box sx={{ ...notUnderLook({ xs: "flex", sm: "none" }), flex: "0 0 auto", alignItems: "center", ...footerGapSx(["columnGap"], 0) }}>
           <Box
             aria-hidden="true"
             data-testid="footer-language-rule"

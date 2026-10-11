@@ -10,7 +10,7 @@ import { cachedHomePage, cachedPublishedPages, cachedSiteLook, cachedUpcomingEve
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import { buildInfo } from "@/shared/config/build-info";
 import { CLUB_NAME, HEADER_MARK_HEIGHT, HEADER_MARK_HEIGHT_PX, LOGO, PAGE_WIDTH } from "@/theme/brand";
-import { UNDER_LOOK } from "@/theme/look";
+import { notUnderLook, onlyUnderLook } from "@/theme/look";
 import { KEYFRAMES, MOTION_OK } from "@/theme/motion";
 import { clubSocialLinks } from "./club-socials";
 import HeaderCta from "./HeaderCta";
@@ -282,7 +282,7 @@ export default async function SiteHeader() {
           shows only where its content does, so it takes no room in the backoffice or on a phone.
         */}
         {joinHref && (
-          <Box sx={{ order: 4, flexShrink: 0, display: "none", [UNDER_LOOK]: { display: { xs: "none", md: "flex" } }, ml: 1 }}>
+          <Box sx={{ order: 4, flexShrink: 0, ...onlyUnderLook({ xs: "none", md: "flex" }), ml: 1 }}>
             <HeaderSocials links={socials} label={site("followUs")} />
           </Box>
         )}
@@ -305,7 +305,7 @@ export default async function SiteHeader() {
           floating round button in the bottom-right corner (`FloatingLocaleSwitch`, drawn by the
           footer), and «Urmărește-ne» takes the far end of the row.
         */}
-        <Box sx={{ order: 3, ml: "auto", flexShrink: 0, display: { xs: "none", sm: "flex" }, [UNDER_LOOK]: { display: "none" }, alignItems: "center", gap: { xs: 0, sm: 0.5 } }}>
+        <Box sx={{ order: 3, ml: "auto", flexShrink: 0, ...notUnderLook({ xs: "none", sm: "flex" }), alignItems: "center", gap: { xs: 0, sm: 0.5 } }}>
           <LocaleSwitcher />
         </Box>
       </Container>
