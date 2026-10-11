@@ -156,10 +156,20 @@ export default function AdminTabs({ items }: { items: readonly AdminTab[] }) {
       // of these sections should light up no tab, and MUI warns about a value it cannot find.
       value={active?.href ?? false}
       variant="scrollable"
-      scrollButtons={false}
+      // Arrows only while the tabs overflow (`auto`), on a phone as well: eleven tabs overflow a laptop
+      // and nothing else said that more sections hide past the edge (the owner, 2026-10-11, §NNN).
+      scrollButtons="auto"
+      allowScrollButtonsMobile
       // At 320px three tabs do not fit; scrolling them is right, and the divider makes it look
       // like the row it is rather than like clipped text.
-      sx={{ mb: 3, borderBottom: 1, borderColor: "divider", minHeight: 44 }}
+      sx={{
+        mb: 3,
+        borderBottom: 1,
+        borderColor: "divider",
+        minHeight: 44,
+        // 44 px wide: a thumb must hit the arrow (BR-REQ-041-01 criterion 6); MUI draws 40.
+        "& .MuiTabs-scrollButtons": { width: 44, flexShrink: 0 },
+      }}
     >
       {items.map((item) => {
         const Icon = ICONS[item.section];

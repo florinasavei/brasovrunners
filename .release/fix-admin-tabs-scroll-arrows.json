@@ -1,0 +1,11 @@
+{
+  "branch": "fix/admin-tabs-scroll-arrows",
+  "decisionsTitle": "Arrows on the backoffice's tab bars when their tabs do not fit",
+  "decisionsSection": "The owner, 2026-10-11, looking at the section bar on a laptop, eleven tabs with the twelfth cut off at the right edge: the bar needs arrows in case it does not fit all. `AdminTabs` scrolled but set `scrollButtons={false}`, so nothing said that sections hid past the edge.\n\n**Decision.** `AdminTabs` and the editor's language tabs (`LocaleTabPanels`) use `scrollButtons=\"auto\"` with `allowScrollButtonsMobile`: MUI draws the arrows only while the tabs overflow, on a phone as well, and draws none when everything fits. Each arrow is 44 pixels wide (BR-REQ-041-01 criterion 6). The preview's two-tab bar does not scroll and is unchanged.\n\n**Refused.** A wrapper component around `Tabs` (`AGENTS.md` §1.3), and arrows hand-drawn beside the bar: MUI already measures the overflow and disables an arrow at its end.",
+  "changelogLine": "- **Arrows on the backoffice's tab bars when their tabs do not fit** — the section bar and the editors' language tabs show scroll arrows (44 px) only while they overflow, on a phone too. §NNN.",
+  "specsCriteria": [
+    { "requirement": "BR-REQ-041-01", "text": "A backoffice tab bar whose tabs overflow shows scroll arrows, on a phone too, each a 44-pixel target, and shows none when the tabs fit (2026-10-11, `DECISIONS.md` §NNN)." }
+  ],
+  "docsNotes": "",
+  "batchLine": "Arrows on the backoffice's overflowing tab bars"
+}
