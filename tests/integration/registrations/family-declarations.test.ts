@@ -12,6 +12,7 @@ import { currentFamilyStep, familySigningSteps } from "@/modules/registrations/d
 import { issueActionToken } from "@/modules/action-tokens/repository";
 import type { FamilySigningPass } from "@/modules/registrations/family-signing";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { atTheClock } from "../../helpers/clock";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -447,7 +448,7 @@ describe("§471 the brief's scenario: entered from B, A put off, the minor signe
 
     // A done pass signs nobody, and puts nobody off.
     expect(await consumeAndSignFamilyDeclaration(bLink.secret, pass, a.id, await signing("Ana Pop"), at(24))).toMatchObject({ ok: false });
-    expect(await skipFamilyDeclaration(bLink.secret, pass, a.id, at(24))).toMatchObject({ ok: false });
+    expect(await atTheClock(at(24), () => skipFamilyDeclaration(bLink.secret, pass, a.id, at(24)))).toMatchObject({ ok: false });
 
     // A's own emailed link, untouched by the skip, still signs A: three acceptances.
     expect(await consumeAndSignDeclaration(aLink.secret, await signing("Ana Pop"), at(25))).toMatchObject({
@@ -461,7 +462,9 @@ describe("§471 the brief's scenario: entered from B, A put off, the minor signe
     const { event, a, b, c } = await familyWithMinor();
     const aLink = await declarationLink(a.id, at(20));
 
-    const skipped = await skipFamilyDeclaration(aLink.secret, null, a.id, at(21));
+    // The skip reads its link through `readRegistrationTokenContext`, which takes the real clock
+    // (§NNN): the press happens at at(21), on the fixture's calendar, not on the day this runs.
+    const skipped = await atTheClock(at(21), () => skipFamilyDeclaration(aLink.secret, null, a.id, at(21)));
     if (!skipped.ok) throw new Error("the skip was refused");
     expect(skipped.pass).toMatchObject({ binding: "link", originId: a.id, skippedIds: [a.id], signedIds: [], done: false });
     expect(skipped.steps.map((step) => [step.id, step.state])).toEqual([
@@ -477,7 +480,7 @@ describe("§471 the brief's scenario: entered from B, A put off, the minor signe
 
     expect(await consumeAndSignFamilyDeclaration(aLink.secret, skipped.pass, b.id, await signing("Maria Pop"), at(22))).toMatchObject({ ok: true });
     // Another person's id is refused as a skip on a link that is not theirs, without a pass.
-    expect(await skipFamilyDeclaration(aLink.secret, null, c.id, at(22))).toMatchObject({ ok: false });
+    expect(await atTheClock(at(22), () => skipFamilyDeclaration(aLink.secret, null, c.id, at(22)))).toMatchObject({ ok: false });
     expect((await rowsOf(event.id)).find((row) => row.id === a.id)?.status).toBe("PENDING_DECLARATION");
   });
 
@@ -495,7 +498,7 @@ describe("§471 the brief's scenario: entered from B, A put off, the minor signe
     const outboxBefore = await db.select().from(emailOutbox);
 
     for (let view = 0; view < 3; view++) {
-      await readRegistrationTokenContext(bLink.secret, "COMPLETE_DECLARATION", { charge: false });
+      await atTheClock(at(22), () => readRegistrationTokenContext(bLink.secret, "COMPLETE_DECLARATION", { charge: false }));
       expect(await familyPassHolds(db, bLink.secret, pass, at(22))).toBe(true);
       expect(currentFamilyStep(await familyStepsOfPass(db, pass))?.id).toBe(a.id);
       expect(await spentLinkHasFamilyLeft(bLink.secret, at(22))).toBe(true);

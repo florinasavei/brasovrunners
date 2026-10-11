@@ -91,6 +91,7 @@ yarn test                all tests
 yarn test:unit           pure-rule tests only
 yarn test:integration    database tests only
 yarn test:concurrency    the two-connection suite; needs the database running
+yarn test:clock          the suite with the real clock moved to +1 month, +1 year and +10 years; minutes (§ Tests that the calendar breaks)
 yarn test:watch          re-run on change
 yarn test:e2e            browser tests, mobile and desktop; needs the database running
 yarn db:seed:legal       the sample legal documents alone; never deletes, safe on a live database
