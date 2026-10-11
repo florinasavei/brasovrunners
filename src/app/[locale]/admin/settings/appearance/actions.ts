@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
+import { updateHomePage } from "@/modules/appearance/home-page";
 import { updateSiteFontSize } from "@/modules/appearance/site-font-size";
 import { updateSiteLook } from "@/modules/appearance/site-look";
 import { SITE_TINT_REFUSAL, updateSiteTint } from "@/modules/appearance/site-tint";
@@ -87,4 +88,43 @@ export async function updateSiteLookAction(_previous: FormOutcome | null, form: 
   revalidatePath(path);
   await flashOutcome({ saved: "siteLook" });
   redirect(`${path}?saved=siteLook#admin-alert`);
+}
+
+/**
+ * «Pagina principală» (§NNN): the home page at the site's root on or off, its hero picture and its two
+ * lines. A club setting (§450) — the Administrator's at the door, and the service asserts it again.
+ * Asked first (§384): the root becomes the page, or the listing's redirect again, from the next visit.
+ * The picture's two hidden fields are read only when the form carried them (`TeamPhotoField`, stem
+ * `hero`); a missing field is `undefined`, which keeps the picture as it was.
+ */
+export async function updateHomePageAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/settings/appearance" });
+  const field = (name: string) => {
+    const value = form.get(name);
+    return value === null ? undefined : value;
+  };
+
+  try {
+    const actor = await requireStaffCapability(canManageClubSettings);
+    await updateHomePage(
+      getDb(),
+      actor,
+      {
+        page: field("page"),
+        heroAssetId: field("heroAssetId"),
+        heroCrop: field("heroCrop"),
+        headlineRo: field("headlineRo"),
+        headlineEn: field("headlineEn"),
+        sublineRo: field("sublineRo"),
+        sublineEn: field("sublineEn"),
+      },
+      new Date(),
+    );
+  } catch (error) {
+    return refused(error, form);
+  }
+  revalidatePath(path);
+  await flashOutcome({ saved: "homePage" });
+  redirect(`${path}?saved=homePage#admin-alert`);
 }

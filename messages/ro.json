@@ -1572,6 +1572,8 @@
       "siteFontSizeBody": "Fiecare pagină publică a site-ului se deschide de acum cu textul la mărimea aleasă, pentru toți vizitatorii, în ambele teme. Backoffice-ul rămâne cum e. Poți reveni oricând la «Normal».",
       "siteLookTitle": "Schimbi aspectul site-ului?",
       "siteLookBody": "Fiecare pagină publică se deschide de acum în aspectul ales, pentru toți vizitatorii. Backoffice-ul, emailurile și PDF-urile rămân cum sunt. Poți reveni oricând la «Aspectul de azi».",
+      "homePageTitle": "Salvezi pagina principală?",
+      "homePageBody": "Adresa site-ului deschide de acum ce ai ales, pentru toți vizitatorii: pagina principală sau lista de alergări. Poți reveni oricând.",
       "translationBudgetTitle": "Salvezi bugetul de traduceri?",
       "translationBudgetBody": "Numărul nou se aplică de la următoarea apăsare pe „Tradu din română”. Ce s-a tradus azi rămâne numărat.",
       "deliveryTimingTitle": "Schimbi când pleacă emailurile?",
@@ -4567,6 +4569,44 @@
         "faq": "Întrebări frecvente"
       }
     },
+    "homePage": {
+      "title": "Pagina principală",
+      "intro": "O pagină de start la adresa site-ului: alergarea următoare, alergările săptămânale și evenimentele speciale. Se ajunge la ea din siglă, nu din meniu.",
+      "introMore": "Oprită, adresa site-ului duce la «Alergări», ca până acum. Fotografia și cele două rânduri sunt opționale: fără ele, pagina arată un loc gol pentru fotografie și un text implicit.",
+      "current": "Acum: {state}",
+      "updatedAt": "Setat {when}.",
+      "legend": "Ce deschide adresa site-ului",
+      "default": "implicit",
+      "choices": {
+        "off": {
+          "name": "Lista de alergări",
+          "help": "Adresa site-ului duce la «Alergări», ca până acum."
+        },
+        "on": {
+          "name": "Pagina principală",
+          "help": "Adresa site-ului deschide pagina principală, iar sigla duce la ea."
+        }
+      },
+      "heroLegend": "Fotografia de sus",
+      "heroHelp": "O fotografie adevărată a clubului, cu acordul celor care se recunosc în ea. Fără ea, pagina arată un loc gol.",
+      "heroCropTitle": "Decupaj — ce se vede sus pe pagină",
+      "heroCropHelp": "Pornește de la cel mai mare dreptunghi 16:9. Poți alege alt format sau trage un dreptunghi peste fotografie.",
+      "headlineLegend": "Titlul mare",
+      "headlineRo": "Titlul (română)",
+      "headlineEn": "Titlul (engleză)",
+      "headlineHelp": "Ultimul cuvânt apare colorat. Gol în ambele limbi: un titlu implicit.",
+      "sublineLegend": "Rândul de sub titlu",
+      "sublineRo": "Rândul de sub titlu (română)",
+      "sublineEn": "Rândul de sub titlu (engleză)",
+      "sublineHelp": "Una-două propoziții. Gol în ambele limbi: un text implicit.",
+      "save": "Salvează pagina principală",
+      "saving": "Se salvează…",
+      "saved": "Pagina principală a fost salvată.",
+      "readOnly": "Pagina principală o setează Administratorul; vezi aici alegerea în vigoare.",
+      "noStorage": "Stocarea imaginilor nu este configurată aici, așa că nu se poate alege o fotografie.",
+      "open": "Deschide pagina principală",
+      "scope": "Se schimbă doar ce deschide adresa site-ului și unde duce sigla. «Alergări» rămâne în meniu, la aceeași adresă."
+    },
     "look": {
       "title": "Aspectul nou",
       "intro": "Noul aspect al paginilor publice: roz lângă albastrul siglei, titluri mai apăsate, butoane rotunjite, «Vino cu noi» în antet.",
@@ -4699,6 +4739,7 @@
       "usedInTeamIntro": "Pe pagina Echipa: introducerea",
       "usedInFaq": "Pe pagina «Întrebări frecvente»",
       "usedInMembersPage": "Pe paginile membrilor",
+      "usedInHomePage": "Pe pagina principală",
       "usedInNewsletter": "Într-un newsletter trimis",
       "usedInTeamBox": "Pe pagina Echipa: caseta {title}"
     },
@@ -5878,6 +5919,8 @@
         "intro": "Componentele site-ului, desenate din rândurile de probă — exact codul care le desenează și pe site.",
         "cards": "Cardurile listei · EventCard, SeriesCard",
         "cardsNote": "Un eveniment cu o singură dată și o serie; datele sunt inventate și nu numesc pe nimeni.",
+        "home": "Pagina principală",
+        "homeNote": "Secțiunile paginii principale, din date de probă: titlul cu fotografia (aici locul gol), următoarea alergare și cardurile unei secțiuni.",
         "featured": "Evenimentul principal · featuredCard",
         "featuredNote": "Primul card al listei, la lățimea celorlalte, deosebit prin ramă și fundal.",
         "team": "Cardul echipei",
@@ -9579,6 +9622,7 @@
       "siteTint": "Fundalul site-ului a fost salvat.",
       "siteFontSize": "Mărimea textului a fost salvată.",
       "siteLook": "Aspectul site-ului a fost salvat.",
+      "homePage": "Pagina principală a fost salvată.",
       "clubTodoAdded": "Adăugat pe listă.",
       "clubTodoSaved": "Rând salvat.",
       "clubTodoUnchanged": "Rândul spunea deja asta; nimic de schimbat.",
@@ -9891,6 +9935,34 @@
       "goneBody": "Ți-am șters adresa din lista de noutăți. Poți reveni oricând de pe pagina de contact.",
       "invalidBody": "A expirat sau abonamentul nu mai există. Fiecare email nou de la noi are un link nou; te poți și abona din nou de pe pagina de contact."
     }
+  },
+  "Home": {
+    "meta": {
+      "title": "{club} — alergări de grup în Brașov",
+      "description": "Alergările de grup ale clubului, turele pe munte și evenimentele speciale, cu următoarea alergare și vremea la start. Întotdeauna gratuite."
+    },
+    "hero": {
+      "headline": "Alergăm împreună prin Brașov",
+      "subline": "Alergări de grup, ture pe munte și evenimente speciale organizate de club — întotdeauna gratuite. Vino la prima alergare, te așteptăm.",
+      "join": "Vino cu noi",
+      "calendar": "Vezi calendarul"
+    },
+    "nextRun": {
+      "title": "Următoarea alergare",
+      "sunset": "Apus la {time}"
+    },
+    "weekly": {
+      "title": "Alergările săptămânale",
+      "intro": "Același loc și aceeași oră în fiecare săptămână: vii când poți.",
+      "empty": "Nicio alergare săptămânală anunțată acum.",
+      "next": "Următoarea: {when}"
+    },
+    "special": {
+      "title": "Evenimente speciale",
+      "intro": "Curse, ture pe munte și tot ce nu se repetă în fiecare săptămână.",
+      "empty": "Niciun eveniment special anunțat acum."
+    },
+    "more": "Vezi toate alergările"
   },
   "Team": {
     "title": "Echipa",

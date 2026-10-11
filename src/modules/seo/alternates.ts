@@ -20,6 +20,8 @@ export type HreflangLanguages = Partial<Record<Locale | "x-default", string>>;
 /** The public pages whose address takes no parameter, and which exist in every locale. */
 // «Beneficiile membrilor» (§524) is one; the members' zone never is.
 export type StaticPublicRoute =
+  // The site's root, while «Pagina principală» is on (§NNN): `/ro` and `/en` are the home page.
+  | "/"
   | "/events"
   | "/calendar"
   | "/gallery"

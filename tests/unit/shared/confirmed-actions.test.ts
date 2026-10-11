@@ -187,6 +187,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   updateSiteFontSizeAction: [],
   // «Aspectul nou» (§708): every visitor sees the chosen look from the next page view.
   updateSiteLookAction: [],
+  // «Pagina principală» (§NNN): the site's address opens the home page or the listing, for every visitor, from the next visit.
+  updateHomePageAction: [],
   // Who receives the signed declarations and the confirmations, with personal data in them.
   updateClubNoticesAction: [],
   // «Răspunsurile din calendar merg la» (§672): every invitation from now on asks, and the answers go there.

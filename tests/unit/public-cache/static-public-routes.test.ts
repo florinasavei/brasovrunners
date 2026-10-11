@@ -42,6 +42,8 @@ const code = (file: string): string => source(file).replace(/\/\*[\s\S]*?\*\//g,
 
 /** The static public routes: made on first visit, kept by the CDN, expired by writes and their clock. */
 const STATIC_PAGES = [
+  // The site's root (§NNN): the home page while «Pagina principală» is on, a kept 307 to the listing while it is off.
+  "src/app/[locale]/page.tsx",
   "src/app/[locale]/events/page.tsx",
   "src/app/[locale]/events/[slug]/page.tsx",
   "src/app/[locale]/calendar/page.tsx",
@@ -107,7 +109,6 @@ const PER_REQUEST: Record<string, string> = {
 
 /** Routes that render nothing of their own: they only throw Next's redirect or its 404. */
 const NEVER_RENDERED: Record<string, string> = {
-  "src/app/[locale]/page.tsx": "a permanent redirect to the listing; the proxy answers /ro and /en before it (§353)",
   "src/app/[locale]/[...rest]/page.tsx": "notFound() for any path no page claims",
 };
 
@@ -427,7 +428,8 @@ describe("§549 a static public page never prefetches a per-request address", ()
   });
 
   it("prefetches exactly the static public pages", () => {
-    const pathnameOf = (file: string) => file.replace(/^src\/app\/\[locale\]/, "").replace(/\/page\.tsx$/, "");
+    // The root page is `/`, the pathname `routing.pathnames` and the links name it by.
+    const pathnameOf = (file: string) => file.replace(/^src\/app\/\[locale\]/, "").replace(/\/page\.tsx$/, "") || "/";
     expect([...PREFETCHED_PATHNAMES].sort()).toEqual(STATIC_PAGES.map(pathnameOf).sort());
   });
 });

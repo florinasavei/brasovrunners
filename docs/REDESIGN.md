@@ -8,7 +8,10 @@ two mock-ups, a landing page and a calendar page — and said it is the last ite
 must be planned carefully. This page is that plan: the decisions, what exists, the visual system,
 the constraints, the phases, the content the club provides, and the open questions. On 2026-10-11
 the owner approved starting phase 1 with the plan's defaults, so decisions 1, 2 and 12 are taken by
-their defaults and phase 1 is built behind the setting, off (§ Phase 1, as built).
+their defaults and phase 1 is built behind the setting, off (§ Phase 1, as built). Later the same day he
+asked for the home page — «start the homepage now, with empty photo slots and the plan's defaults» — so
+decisions 5, 6 and 10 and open questions 6 and 7 are taken by their defaults too, and phase 3's part A is
+built behind its own setting, off (§ Phase 3, part A, as built).
 
 ## Decisions only the club can make
 
@@ -21,12 +24,12 @@ objects; a different answer changes the phases, not the rules.
 | 2 | The heading face — **decided by default (2026-10-11)** | Inter 800 (one new weight file; Inter is self-hosted with ș ț ă â î) for headings; body stays Roboto | a face is a licence and a look the club owns |
 | 3 | A real home page — **decided (2026-10-10)** | a real home page at `/ro` and `/en`, reached from the logo — never a menu entry — switchable on and off in «Aspect» → «Pagina principală»; `/events` stays the listing under «Alergări»; canonicals and the sitemap move | it reverses §353 (the root is a redirect, for SEO) |
 | 4 | The four menu words | «Alergări» = the listing; «Calendar»; «Comunitatea» = a club page linking «Echipa», «Galerie», «Întrebări» and the members' zone; «Despre noi» = a club page | the club decides what each word points to |
-| 5 | Where «Vino cu noi» goes | the next weekly run's page; the band's «Cum funcționează» opens a club page | there is no sign-up for runners |
-| 6 | Photographs | real club photos only, from the gallery; no stock or generated pictures; people in a home-page photo have agreed | consent and the club's own face |
+| 5 | Where «Vino cu noi» goes — **decided by default (2026-10-11)** | the next weekly run's page; the band's «Cum funcționează» opens a club page | there is no sign-up for runners |
+| 6 | Photographs — **decided by default (2026-10-11)** | real club photos only, from the gallery; no stock or generated pictures; people in a home-page photo have agreed | consent and the club's own face |
 | 7 | The Instagram block | a static strip of six gallery pictures with a link; no live feed | an embed is forbidden (AGENTS.md §18.3); a feed needs a Meta app and a token |
 | 8 | The numbers band | typed in «Aspect» → «Pagina principală»: the founding date (years computed), «alergători activi»; «2×/săptămână» and «100% gratuit» computed from the events | invented figures are forbidden (BUSINESS.md §7) |
 | 9 | What «Evenimente speciale» means — **decided by default (2026-10-11)** | everything that is not a weekly series; the chip «Ediție specială» keeps its meaning (§168) | the mock-up's word and today's flag differ |
-| 10 | The round arrow on cards | only on the home page's cards, keeping the whole-card tap; the listing keeps its text door | it reverses §319 |
+| 10 | The round arrow on cards — **decided by default (2026-10-11)** | only on the home page's cards, keeping the whole-card tap; the listing keeps its text door | it reverses §319 |
 | 11 | Icons | the filled Material family stays; the lighter look comes from colour, weight and spacing | a second family touches every glyph (§318) |
 | 12 | How it ships — **decided by default (2026-10-11)** | behind one setting, «Aspectul nou», read like the page tint: on for QA, off on production until the club approves on QA; the old look deleted one release after the flip; the backoffice keeps today's look | a live site with real registrations needs a one-press way back |
 
@@ -101,7 +104,7 @@ side.
 | 0 | Decisions and assets — no code: the twelve answers; the hero, one cover per run and race, six strip pictures in the gallery; the numbers | answers in writing, photos uploaded |
 | 1 | Tokens and the public shell: the pink pair, Inter 800, the public scope, the setting «Aspectul nou», the header CTA and socials, the watermark; the design-system page shows both looks — **built behind the setting, off (2026-10-11)** | brand and font tests green, header one row at 320 px, the club's yes on QA |
 | 2 | Cover photos on events, and the event kind: a cover column with its crop, the editor's picker, the ladder; weekly or special derived from the series; the photo tag — **built on `feat/facelift-phase-2`, awaiting release** | listing specs green; every weekly run and the race carry a cover |
-| 3 | The home page: the root becomes a page; hero, next run, weekly and special, the band, why, the strip, the numbers; redirect, canonicals, sitemap. Every part a setting: «Pagina principală activă»; the hero picture with its crop and two lines and the three buttons' targets; N gallery pictures per strip or carousel, in order; the founding date and the runners figure; an unset strip is not drawn | LCP under 2.5 s on a 320 px phone, root tests rewritten, the club's yes on QA |
+| 3 | The home page: the root becomes a page; hero, next run, weekly and special, the band, why, the strip, the numbers; redirect, canonicals, sitemap. Every part a setting: «Pagina principală activă»; the hero picture with its crop and two lines and the three buttons' targets; N gallery pictures per strip or carousel, in order; the founding date and the runners figure; an unset strip is not drawn — **part A (the page, its setting, the hero, the next run, the run sections) built behind «Pagina principală», off (2026-10-11)** | LCP under 2.5 s on a 320 px phone, root tests rewritten, the club's yes on QA |
 | 4 | The calendar: filter chips with the kind, three colours and a legend, the next-event panel, the subscribe box, the title block | first week above the fold at 320 px, filters work with scripts off |
 | 5 | The listing and the event page: cards with their photo and pills, the arrow if approved, the event page's head | listing and event specs green |
 | 6 | The flip and the clean-up: «Aspectul nou» on in production; one release later the old look's code goes; the decisions amended | a week on production without the way back being used |
@@ -132,6 +135,39 @@ public pages; off (the default), no rule matches and every page is what it was.
 What phase 1 leaves for the gate: the club's look at QA with the setting on, phone and laptop; the
 header's one row at 320 px measured by the e2e suite with the setting on.
 
+### Phase 3, part A, as built
+
+On the branch `feat/home-page` (2026-10-11), with decisions 3, 5, 6 and 10 and open questions 6 and 7 at
+their defaults. Everything below is drawn only while «Setări» → «Aspect» → «Pagina principală» is on;
+off (the default), the root answers a 307 to the listing and the logo still leads there. It is its own
+switch, independent of «Aspectul nou»: the page wears whichever look is in force.
+
+| Part | Where | Notes |
+| --- | --- | --- |
+| The setting | `src/modules/appearance/home-page.ts`, `domain/home-page.ts`, `ui/HomePagePanel.tsx` | one `platform_settings` row `homePage`: on/off, the hero's picture (id, key prefix, size, crop) and its two lines in both languages or neither; Administrator only, audited `home_page.changed`, expires the static pages; no migration |
+| The route | `src/app/[locale]/page.tsx` | static (§549); on: the page, canonical to itself; off: a 307 to the listing (no longer §353's 308, which browsers keep for good); the proxy no longer answers `/ro` and `/en` |
+| The logo | `src/shared/ui/LogoLink.tsx`, `SiteHeader.tsx` | leads to `/` while the page is on, to the listing while it is off; never a menu entry |
+| The sitemap | `src/app/sitemap.ts` | on: `/ro` and `/en` at priority 1, the listing at 0.9; off: as before |
+| `HomePage` | `src/modules/home/ui/HomePage.tsx` | the one `main`; the sections below in order |
+| `Hero` | `src/modules/home/ui/Hero.tsx` | the one `h1`, the last word in the accent; «Vino cu noi» (the next weekly run, else the listing) and «Vezi calendarul» as `ArrowButtonLink`s; the photograph eager with `fetchpriority="high"`, or the empty slot |
+| `NextRunCard` | `src/modules/home/ui/NextRunCard.tsx` | the soonest group run or race still going ahead: its cover, the kind's tag, when, where, the forecast's words at the start (Open-Meteo's condition code), «Apus la …», the round arrow |
+| `RunCardGrid` | `src/modules/home/ui/RunCardGrid.tsx` | the weekly runs and the special events (`eventKind`, §709), one card per series, at most six each; a CSS scroll-snap strip on a phone, three to a row from `md`; «Vezi toate alergările» to the listing |
+| The parts | `HomePicture.tsx`, `RunTag.tsx`, `RoundArrow.tsx`, `card-sx.ts` | the 16∶9 frame or the empty slot (the mountain mark), the kind's pill in its tokens with its word, the arrow inside the card's one link |
+| What they show | `src/modules/home/home-content.ts`, `domain/sections.ts` | read from the listing's cached upcoming events and the forecast's cached hour: nothing new asked of the database |
+| The samples | `/admin/design` → «Mostre» → «Pagina principală» | the same components from `design/fixtures.ts#sampleHome` |
+
+**Turning it on, on QA:** «Setări» → «Aspect» → «Pagina principală» → choose «Pagina principală» →
+optionally a photograph («Din galerie» or an upload, then the crop) and the two lines in Romanian and
+English → «Salvează pagina principală» → confirm (an Administrator). The way back is the same card,
+«Lista de alergări».
+
+**What part B adds next:** the band «Prima dată» with its five steps and «Cum funcționează» to a club
+page, «De ce» and the quote, the photo strip (six gallery pictures, in order) and the numbers band (the
+founding date and «alergători activi» typed, the other two computed), each a component under
+`src/modules/home/ui/` with its fixture, and the hero's three buttons' targets as settings — all in
+the same `homePage` row. Then the gate: LCP under 2.5 s on a 320-pixel phone, measured on QA with the
+club's photograph, and the club's yes on QA.
+
 ## Content and assets the club must provide
 
 | What | Who | Shape | Where it goes |
@@ -161,8 +197,8 @@ the design-system page (phase 1's proof surface); the org chart is drawn with to
 - [ ] Does the calendar page carry a hero photo? Default: no.
 - [ ] Does the listing keep the collapsed «Filtre» panel beside the new chips? Default: the chips carry the kind and the surface; the panel keeps the rest.
 - [ ] A separate Outlook row in the subscribe box? Default: yes, with Outlook's host in `PROVIDER_HOSTS`.
-- [ ] The weather words on the next-run card from Open-Meteo's condition code? Default: yes.
-- [ ] Should «Următoarea alergare» ever be a club-chosen event? Default: the soonest run; the featured flag keeps marking the race.
+- [x] The weather words on the next-run card from Open-Meteo's condition code? Default: yes — taken (2026-10-11, phase 3 part A).
+- [x] Should «Următoarea alergare» ever be a club-chosen event? Default: the soonest run; the featured flag keeps marking the race — taken (2026-10-11): the soonest group run or race.
 
 If nobody answers anything: phases 1 and 2 start with every default above once today's chains have
 landed; phase 3 waits for the photographs.

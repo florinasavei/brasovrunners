@@ -10,6 +10,7 @@ import { teamMembers, teamPageBoxes } from "@/db/schema/team";
 import { shopProductPictures, shopProducts } from "@/db/schema/shop";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
+import { HOME_PAGE_SETTING_KEY } from "@/modules/appearance/domain/home-page";
 import { FAQ_PAGE_SETTING_KEY } from "@/modules/content/faq/page-settings";
 import { MEMBERS_PAGE_SETTING_KEY } from "@/modules/content/members/page-settings";
 import { TEAM_PAGE_SETTING_KEY } from "@/modules/content/team/page-settings";
@@ -115,6 +116,13 @@ const inFaqIntro = sql`(${platformSettings.key} = ${FAQ_PAGE_SETTING_KEY} AND ${
  */
 const inMembersPage = sql`(${platformSettings.key} = ${MEMBERS_PAGE_SETTING_KEY} AND ${names(sql`${platformSettings.value}::text`)})`;
 
+/**
+ * Whether the home page's hero carries the asset (§NNN): its one `platform_settings` row keeps the
+ * picture's key prefix beside its id (copied at the save, so the public read asks the store nothing),
+ * read as its text like the team's introduction, the page on or off: a hero being prepared is a hero.
+ */
+const inHomePage = sql`(${platformSettings.key} = ${HOME_PAGE_SETTING_KEY} AND ${names(sql`${platformSettings.value}::text`)})`;
+
 /** Whether a shop product's description carries the asset in its text, either language (§697), hidden and archived products included. */
 const inShopDescription = sql`(${names(sql`${shopProducts.descriptionRoJson}::text`)} OR ${names(sql`${shopProducts.descriptionEnJson}::text`)})`;
 
@@ -146,6 +154,8 @@ const referencedSomewhere = sql`(
   OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inFaqIntro})
   -- A picture in the members' pages (§524), kept in their platform setting.
   OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inMembersPage})
+  -- The home page's hero (§NNN), kept in its platform setting.
+  OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inHomePage})
   -- A product's photo in the members' shop (§683), by id, hidden and archived products included:
   -- an archived product's row stays for its orders, and a hidden one is being prepared.
   OR EXISTS (SELECT 1 FROM ${shopProducts} WHERE ${shopProducts.photoMediaAssetId} = ${mediaAssets.id})
@@ -247,7 +257,7 @@ export async function countMediaAssets<T extends Record<string, unknown>>(
 }
 
 /** `teamBox` (§691): a box under the team page's chart, by its id, titled in the reader's language. */
-export type MediaReference = { kind: "album" | "page" | "event" | "team" | "teamIntro" | "teamBox" | "faq" | "membersPage" | "newsletter"; id: string; title: string | null };
+export type MediaReference = { kind: "album" | "page" | "event" | "team" | "teamIntro" | "teamBox" | "faq" | "membersPage" | "homePage" | "newsletter"; id: string; title: string | null };
 
 export type MediaAssetRow = {
   id: string;
@@ -381,6 +391,11 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .select({ assetId: mediaAssets.id })
     .from(mediaAssets)
     .innerJoin(platformSettings, inMembersPage);
+  // The home page's hero (§NNN): one reference, «Setări» → «Aspect» → «Pagina principală».
+  const inHomePages = await db
+    .select({ assetId: mediaAssets.id })
+    .from(mediaAssets)
+    .innerJoin(platformSettings, inHomePage);
   // A product's photo in the members' shop (§683): the members' page holds the shop, so it reads as that page.
   const inShop = await db
     .select({ assetId: shopProducts.photoMediaAssetId })
@@ -436,6 +451,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
   for (const row of inShopPictures) if (row.assetId) add(row.assetId, { kind: "membersPage", id: MEMBERS_PAGE_SETTING_KEY, title: null });
   for (const row of inShopGuides) if (row.assetId) add(row.assetId, { kind: "membersPage", id: MEMBERS_PAGE_SETTING_KEY, title: null });
   for (const row of inShopDescriptions) add(row.assetId, { kind: "membersPage", id: MEMBERS_PAGE_SETTING_KEY, title: null });
+  for (const row of inHomePages) add(row.assetId, { kind: "homePage", id: HOME_PAGE_SETTING_KEY, title: null });
   for (const row of inNewsletters) add(row.assetId, { kind: "newsletter", id: "newsletter", title: null });
 
   return assets.map((asset) => ({

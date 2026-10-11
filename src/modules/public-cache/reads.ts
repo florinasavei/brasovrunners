@@ -14,6 +14,8 @@ import { DEFAULT_SITE_FONT_SIZE_SETTING, parseSiteFontSize, type SiteFontSizeSet
 import { readSiteFontSize } from "@/modules/appearance/site-font-size";
 import { DEFAULT_SITE_LOOK_SETTING, parseSiteLook, type SiteLookSetting } from "@/modules/appearance/domain/site-look";
 import { readSiteLook } from "@/modules/appearance/site-look";
+import { DEFAULT_HOME_PAGE_SETTING, type HomePageSetting, parseHomePage } from "@/modules/appearance/domain/home-page";
+import { readHomePage } from "@/modules/appearance/home-page";
 import { readMenuOrder } from "@/modules/content/menu/menu-order";
 import { parseStoredMenuOrder } from "@/modules/content/menu/order";
 import {
@@ -801,6 +803,23 @@ export async function cachedSiteLook(): Promise<SiteLookSetting> {
     return parseSiteLook(read.value);
   } catch {
     return DEFAULT_SITE_LOOK_SETTING;
+  }
+}
+
+/**
+ * «Pagina principală» (§NNN): whether the site's root is the home page, its hero picture and its two
+ * lines — read by the root and by the header (the logo leads to the home page while it is on), so it
+ * is cached like the look beside it, and a save expires it (`updateHomePage`). When the database
+ * cannot answer, the last good copy (§447), then off: the root goes to the listing, as it always did.
+ */
+export async function cachedHomePage(): Promise<HomePageSetting> {
+  try {
+    const read = await readWithLastGood("settings:home-page", () =>
+      publicRead(["settings.home-page"], ["settings"], async () => (await readHomePage(getDb())).setting),
+    );
+    return parseHomePage(read.value);
+  } catch {
+    return DEFAULT_HOME_PAGE_SETTING;
   }
 }
 

@@ -184,6 +184,10 @@ export function pictureSrcSet(masterSrc: string, masterWidth: number | null | un
  * - `aside` — a photo column beside the words: «Echipa»'s wide canvas card, 280 pixels from `md`,
  *   240 from `sm`, the whole card on a phone, where it stacks (§701).
  * - `thumb` — a small canvas card's photo: 104 pixels from `sm`, 88 below (§701).
+ * - `hero` — the home page's hero photograph and its next-run card (§NNN): half the page's column from
+ *   `md` (two columns, a 32-pixel gap), 728 at its widest; the whole column below.
+ * - `homeCard` — a card of the home page's runs (§NNN), its picture edge to edge: three to a row from
+ *   `md`; below it a strip that shows 46 % of the column from `sm` and 82 % on a phone.
  */
 type SizeRule = { minWidth: number | null; vw: number; px: number };
 
@@ -223,6 +227,18 @@ const COLUMNS = {
   thumb: [
     { minWidth: 600, vw: 0, px: 104 },
     { minWidth: null, vw: 0, px: 88 },
+  ],
+  hero: [
+    { minWidth: 1536, vw: 0, px: 728 },
+    { minWidth: 900, vw: 50, px: -40 },
+    { minWidth: 600, vw: 100, px: -48 },
+    { minWidth: null, vw: 100, px: -32 },
+  ],
+  homeCard: [
+    { minWidth: 1536, vw: 0, px: 488 },
+    { minWidth: 900, vw: 33.33, px: -24 },
+    { minWidth: 600, vw: 46, px: -22 },
+    { minWidth: null, vw: 82, px: -26 },
   ],
 } as const satisfies Record<string, readonly SizeRule[]>;
 

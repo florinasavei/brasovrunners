@@ -6,9 +6,11 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
+import { readHomePage } from "@/modules/appearance/home-page";
 import { readSiteFontSize } from "@/modules/appearance/site-font-size";
 import { readSiteLook } from "@/modules/appearance/site-look";
 import { readSiteTint } from "@/modules/appearance/site-tint";
+import HomePagePanel from "@/modules/appearance/ui/HomePagePanel";
 import SiteFontSizePanel from "@/modules/appearance/ui/SiteFontSizePanel";
 import SiteLookPanel from "@/modules/appearance/ui/SiteLookPanel";
 import SiteTintPanel from "@/modules/appearance/ui/SiteTintPanel";
@@ -29,8 +31,8 @@ export const dynamic = "force-dynamic";
 
 /**
  * «Setări» → «Aspect» (§488, moved from Pagini → «Aspect» by §516): how the public pages look.
- * Three settings: the site's light background tint, since §530 its text size, and since §708 «Aspectul
- * nou», the facelift's look on or off. Read by whoever reads the club's content;
+ * Four settings: the site's light background tint, since §530 its text size, since §708 «Aspectul
+ * nou», the facelift's look on or off, and since §NNN «Pagina principală», the home page at the root. Read by whoever reads the club's content;
  * changed by the Administrator (`canManageClubSettings`, §450), which the action and the service
  * assert again (BR-REQ-060-01).
  */
@@ -48,6 +50,7 @@ export default async function AdminAppearancePage({ params, searchParams }: Prop
   const state = await readSiteTint(db);
   const fontSize = await readSiteFontSize(db);
   const look = await readSiteLook(db);
+  const home = await readHomePage(db);
 
   return (
     <Stack spacing={3}>
@@ -57,6 +60,7 @@ export default async function AdminAppearancePage({ params, searchParams }: Prop
         {saved === "siteTint" && <Alert severity="success">{t("appearance.saved")}</Alert>}
         {saved === "siteFontSize" && <Alert severity="success">{t("fontSize.saved")}</Alert>}
         {saved === "siteLook" && <Alert severity="success">{t("look.saved")}</Alert>}
+        {saved === "homePage" && <Alert severity="success">{t("homePage.saved")}</Alert>}
       </Box>
 
       {/* The tab's cards open on arrival (§336's `primary`, §516): each is a single choice. */}
@@ -64,6 +68,8 @@ export default async function AdminAppearancePage({ params, searchParams }: Prop
       <SiteFontSizePanel locale={locale} state={fontSize} mayEdit={canManageClubSettings(actor.role)} openWhen={{ primary: true }} />
       {/* «Aspectul nou» (§708): the facelift's look on the public pages, one switch. */}
       <SiteLookPanel locale={locale} state={look} mayEdit={canManageClubSettings(actor.role)} openWhen={{ primary: true }} />
+      {/* «Pagina principală» (§NNN): the home page at the site's root, one switch, its hero's picture and two lines. */}
+      <HomePagePanel locale={locale} state={home} mayEdit={canManageClubSettings(actor.role)} openWhen={{ primary: true }} />
 
       {/* «Sistemul de design» (§692): the look as the code draws it, and the redesign plan — one card, one button, for whoever reads this tab. */}
       <Panel glyph="appearance" title={t("design.card.title")} intro={t("design.card.intro")} id="design-system" data-testid="design-system-card">

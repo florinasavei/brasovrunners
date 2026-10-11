@@ -13,7 +13,10 @@ import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { heroSurface } from "@/theme/surfaces";
-import { SAMPLE_NOW, SAMPLE_WEATHER, sampleRace, sampleSeries, sampleTeamMember } from "../fixtures";
+import Hero from "@/modules/home/ui/Hero";
+import NextRunCard from "@/modules/home/ui/NextRunCard";
+import RunCardGrid from "@/modules/home/ui/RunCardGrid";
+import { SAMPLE_NOW, SAMPLE_WEATHER, sampleHome, sampleRace, sampleSeries, sampleTeamMember } from "../fixtures";
 import DesignSection, { Block, Code } from "./section";
 
 const GuideIcon = ACTION_ICONS.guide;
@@ -34,6 +37,7 @@ export default async function SampleSection({ locale }: { locale: Locale }) {
   const race = sampleRace(locale);
   const series = sampleSeries(locale);
   const member = sampleTeamMember(locale);
+  const home = sampleHome(locale, await getTranslations("Home"), await getTranslations("Event"));
 
   return (
     <DesignSection id="samples" title={t("design.sections.samples")} intro={t("design.samples.intro")}>
@@ -53,6 +57,16 @@ export default async function SampleSection({ locale }: { locale: Locale }) {
             </Typography>
           </Box>
         </Box>
+      </Block>
+
+      {/* The home page's sections (§NNN), the components the root draws, from the same sample rows. */}
+      <Block title={t("design.samples.home")} note={t("design.samples.homeNote")}>
+        <Stack spacing={4} data-testid="design-home">
+          <Hero {...home.hero} headingAs="p" />
+          {home.nextRun && <NextRunCard {...home.nextRun} />}
+          <RunCardGrid {...home.weekly} />
+          <RunCardGrid {...home.special} />
+        </Stack>
       </Block>
 
       <Block title={t("design.samples.team")} note={t("design.samples.teamNote")}>
