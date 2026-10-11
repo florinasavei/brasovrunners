@@ -94,8 +94,8 @@ describe("§NNN «Prima dată», «De ce» and the strip: the stored shapes", ()
   it("gives a strip picture the ladder's srcset for its square tile, and an older picture its thumbnail alone", () => {
     const [laddered, older, poster] = stripPictures([
       { id: "a", keyPrefix: PICTURE(1), width: 2400, height: 1600, alt: " Start " },
-      { id: "b", keyPrefix: "0b6f3f9e-2a41-4c3d-9e5f-1a2b3c4d5e6f", width: 2400, height: 1600 },
-      { id: "c", keyPrefix: "yt-abc", width: 480, height: 360 },
+      { id: "b", keyPrefix: "0b6f3f9e-2a41-4c3d-9e5f-1a2b3c4d5e6f", width: 2400, height: 1600, alt: "" },
+      { id: "c", keyPrefix: "yt-abc", width: 480, height: 360, alt: "" },
     ]);
     expect(laddered.src).toMatch(/\/thumb\.webp$/);
     expect(laddered.srcSet).toContain("/480w.webp 480w");

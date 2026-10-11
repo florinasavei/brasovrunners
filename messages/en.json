@@ -10059,7 +10059,7 @@
   "HomeSections": {
     "steps": {
       "title": "First time with us?",
-      "lead": "Five steps, from the calendar to the start. You need no account and you sign up for nothing.",
+      "lead": "Five steps, from the calendar to the start. You need no account.",
       "number": "Step {number}",
       "items": {
         "1": "Pick a run on the calendar.",

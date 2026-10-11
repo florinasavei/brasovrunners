@@ -22,8 +22,12 @@ export type StripPicture = {
   alt: string;
 };
 
-/** A stored picture as the store holds it (`media_assets`): its key prefix and its size. */
-export type StoredStripPicture = { id: string; keyPrefix: string; width: number; height: number; alt?: string };
+/**
+ * A stored picture as the store holds it (`media_assets`): its key prefix and its size. The alt is
+ * required: gallery photos carry none of their own, so the wiring passes the album-based text
+ * (`Gallery.photoAlt`) or a chosen empty string, never a silent default.
+ */
+export type StoredStripPicture = { id: string; keyPrefix: string; width: number; height: number; alt: string };
 
 /** The strip's tile is a square: a wider photograph is cut to it, so the rung is chosen that much wider. */
 export const STRIP_TILE_RATIO = 1;
@@ -44,7 +48,7 @@ export function stripPictures(stored: readonly StoredStripPicture[]): StripPictu
         sizes: srcSet ? pictureSizes("strip", 100, coverMagnification(picture.width, picture.height, STRIP_TILE_RATIO)) : undefined,
         width: picture.width,
         height: picture.height,
-        alt: picture.alt?.trim() ?? "",
+        alt: picture.alt.trim(),
       };
     });
 }

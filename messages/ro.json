@@ -10059,7 +10059,7 @@
   "HomeSections": {
     "steps": {
       "title": "Prima dată cu noi?",
-      "lead": "Cinci pași, de la calendar la start. Nu ai nevoie de cont și nu te înscrii nicăieri.",
+      "lead": "Cinci pași, de la calendar la start. Nu ai nevoie de cont.",
       "number": "Pasul {number}",
       "items": {
         "1": "Alege o alergare din calendar.",

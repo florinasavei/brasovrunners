@@ -145,7 +145,7 @@ describe("§NNN the photo strip — PhotoStrip", () => {
     currentLocale = "en";
     const pictures = stripPictures([
       { id: "a", keyPrefix: LADDER, width: 2400, height: 1600, alt: "The start" },
-      { id: "b", keyPrefix: "0b6f3f9e-2a41-4c3d-9e5f-1a2b3c4d5e6f", width: 1200, height: 1200 },
+      { id: "b", keyPrefix: "0b6f3f9e-2a41-4c3d-9e5f-1a2b3c4d5e6f", width: 1200, height: 1200, alt: "" },
     ]);
     const markup = await html(PhotoStrip({ content: { title: { ro: "Poze", en: "Photos" } }, pictures, instagram, locale: "en" }));
     expect(markup).toContain(">Photos<");
@@ -163,7 +163,7 @@ describe("§NNN the photo strip — PhotoStrip", () => {
 
   it("links the club's Instagram as a link in a new tab and the gallery, never an embed; no Instagram, no link", async () => {
     currentLocale = "ro";
-    const pictures = stripPictures([{ id: "a", keyPrefix: LADDER, width: 2400, height: 1600 }]);
+    const pictures = stripPictures([{ id: "a", keyPrefix: LADDER, width: 2400, height: 1600, alt: "" }]);
     const markup = await html(PhotoStrip({ content: { title: null }, pictures, instagram, locale: "ro" }));
     expect(markup).toMatch(/<a[^>]*href="https:\/\/example\.org\/club"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
     expect(markup).toContain(escaped(ro.HomeSections.strip.instagram));
@@ -179,7 +179,7 @@ describe("§NNN the photo strip — PhotoStrip", () => {
     const empty = await html(PhotoStrip({ content: { title: null }, pictures: [], instagram: null, locale: "ro", emptySlots: 6 }));
     expect(empty.match(/data-testid="home-strip-empty"/g)).toHaveLength(6);
     expect(empty).not.toContain("<img");
-    const pictures = stripPictures([{ id: "a", keyPrefix: LADDER, width: 2400, height: 1600 }]);
+    const pictures = stripPictures([{ id: "a", keyPrefix: LADDER, width: 2400, height: 1600, alt: "" }]);
     const both = await html(PhotoStrip({ content: { title: null }, pictures, instagram: null, locale: "ro", emptySlots: 6 }));
     expect(both).not.toContain('data-testid="home-strip-empty"');
   });

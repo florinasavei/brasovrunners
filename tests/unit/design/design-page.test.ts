@@ -144,7 +144,9 @@ describe("BR-REQ-060-01 «Sistemul de design» draws the look from the code", ()
       expect(markup).toContain(`<style data-design-look="">${lookPaletteCss()}</style>`);
       // The header's own «Vino cu noi» in both boxes (drawn only under the scope), and the mark.
       expect(markup.match(/data-testid="header-cta"/g)).toHaveLength(2);
-      expect(markup).toContain('data-testid="mountain-mark"');
+      // Scoped to the look section: the home samples' empty strip tiles draw the mark too.
+      const lookSection = markup.slice(markup.indexOf('data-testid="design-mountain-mark"'));
+      expect(lookSection).toContain('data-testid="mountain-mark"');
       // Which token MUI's primary takes, light and dark, by name.
       for (const key of Object.keys(LOOK_PRIMARY_TOKENS.light) as (keyof typeof LOOK_PRIMARY_TOKENS.light)[]) {
         expect(markup).toContain(`COLOR.${LOOK_PRIMARY_TOKENS.light[key]}`);

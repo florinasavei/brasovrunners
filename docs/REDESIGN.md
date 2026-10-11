@@ -132,28 +132,6 @@ public pages; off (the default), no rule matches and every page is what it was.
 What phase 1 leaves for the gate: the club's look at QA with the setting on, phone and laptop; the
 header's one row at 320 px measured by the e2e suite with the setting on.
 
-### Phase 3, part B: the four sections, as built
-
-On the branch `feat/home-sections` (2026-10-11), with decisions 6, 7 and 8 at their defaults: the
-four sections below the next run, as components with their domain, their fixtures and their tests.
-No route and no setting here — the page, «Pagina principală» and its four reserved slots are the
-sibling chain's (`feat/home-page`); a third chain puts these components into those slots.
-
-| Section | Component | What the club types (domain) | Notes |
-| --- | --- | --- | --- |
-| «Prima dată» | `src/modules/home/ui/StepsBand.tsx` | `domain/steps.ts`: heading, sentence, five steps, the button's words, the club page «Cum funcționează» opens (`targetPageId`) | five glyphs fixed by position; no target page, no button; an `<ol>` stacked on a phone, five across from `md` |
-| «De ce» and the quote | `WhyList.tsx` | `domain/why.ts`: heading, four reasons (title and sentence), the quote and who said it | the quote in Caveat (`--font-signature`, never preloaded), drawn only when the club wrote one: the platform lends no one's words |
-| The photo strip | `PhotoStrip.tsx` | `domain/photo-strip.ts`: heading, up to twelve stored pictures of the gallery by id, in order | CSS scroll snap, no script; square tiles with the ladder's `srcset` (`strip` column in `media/ladder.ts`), lazy; the gallery's door and an Instagram **link**; no picture, no section |
-| The numbers band | `NumbersBand.tsx` | `domain/numbers.ts`: the founding day and «alergători activi» | years computed on the club's calendar; runs a week and «100%» free read off the weekly series (`homeFigures`); a figure without its fact is left out, a band with none is not drawn |
-
-Every text the club types is Romanian and English or neither (`domain/home-text.ts`); an empty box
-draws the platform's words from the catalogues (`HomeSections.*`). The glyphs are a registry of their
-own (`ui/home-glyphs.ts`, in `ICON_REGISTRIES`), not the public `GLYPHS` table; the fills are
-`ui/home-surfaces.ts` — the hero's tint today, the pale pink (`accentTint`) under «Aspectul nou», each
-with its dark twin (`UNDER_LOOK_DARK` in `theme/look.ts`). The strip's `<img>` sources are built on
-the server by `strip-pictures.ts`. All four are drawn on `/admin/design` → «Mostre», in the new look's
-preview, from `src/modules/design/fixtures.ts`.
-
 ## Content and assets the club must provide
 
 | What | Who | Shape | Where it goes |
