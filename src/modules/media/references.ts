@@ -25,7 +25,7 @@ import { bodyImageSrc, deleteAssetObjects, getStorage, objectKey } from "./stora
  * `body_json`, an event translation's `body_json`, `excerpt_json`, `rules_json`, `schedule_json` or
  * `route_description` (§387: the map is a picture in that text) — where the image node
  * carries the variant's address and that address contains the asset's opaque `key_prefix` — and,
- * the same way, by an event's bib design (§560). Drafts count: a picture in a draft is
+ * the same way, by an event's bib design (§560) — and, by id, by an event's cover (§NNN). Drafts count: a picture in a draft is
  * a picture somebody is about to publish, and the sweep must never take it. The check is one
  * SQL predicate, used by the sweep, the media list and the delete, so the three cannot
  * disagree about what "in use" means.
@@ -125,6 +125,9 @@ const referencedSomewhere = sql`(
   OR EXISTS (SELECT 1 FROM ${eventTranslations} WHERE ${inEventTranslation})
   -- A race number's header strip or sponsors' band (§560), by address in the event's bib design.
   OR EXISTS (SELECT 1 FROM ${events} WHERE ${inBibDesign})
+  -- An event's cover (the facelift's phase 2, §NNN), by id, drafts, series dates and past events
+  -- included: the column has no foreign key (events.ts says why), so this is what keeps the picture.
+  OR EXISTS (SELECT 1 FROM ${events} WHERE ${events.coverMediaAssetId} = ${mediaAssets.id})
   -- No events.video_poster_url any more (§485): a film is a figure in the description, whose
   -- poster the event translation's own body names above (migration 0092 carried every stored
   -- poster there). The column is unread and leaves the database in BR-V2.11 (§491).
@@ -341,6 +344,14 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .innerJoin(events, inBibDesign)
     .leftJoin(eventTranslations, eq(eventTranslations.eventId, events.id));
 
+  // An event's cover (§NNN): the event, named in the reader's language — every date of a series that
+  // wears it, so the list says which dates a delete would take it from.
+  const inCovers = await db
+    .select({ assetId: mediaAssets.id, id: events.id, title: eventTranslations.title, locale: eventTranslations.locale })
+    .from(mediaAssets)
+    .innerJoin(events, eq(events.coverMediaAssetId, mediaAssets.id))
+    .leftJoin(eventTranslations, eq(eventTranslations.eventId, events.id));
+
   const inTeam = await db
     .select({ assetId: teamMembers.photoMediaAssetId, id: teamMembers.id, title: teamMembers.name })
     .from(teamMembers)
@@ -412,7 +423,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
   for (const row of [...inPages].sort((a) => (a.locale === locale ? -1 : 1))) {
     add(row.assetId, { kind: "page", id: row.id, title: row.title });
   }
-  for (const row of [...inEvents, ...inBibDesigns].sort((a) => (a.locale === locale ? -1 : 1))) {
+  for (const row of [...inEvents, ...inBibDesigns, ...inCovers].sort((a) => (a.locale === locale ? -1 : 1))) {
     add(row.assetId, { kind: "event", id: row.id, title: row.title });
   }
   for (const row of inTeam) if (row.assetId) add(row.assetId, { kind: "team", id: row.id, title: row.title });

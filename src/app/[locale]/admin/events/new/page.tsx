@@ -10,6 +10,7 @@ import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import CourseBox from "@/modules/content/events/ui/boxes/CourseBox";
 import CoHostsBox from "@/modules/content/events/ui/boxes/CoHostsBox";
+import CoverBox from "@/modules/content/events/ui/boxes/CoverBox";
 import KindBox from "@/modules/content/events/ui/boxes/KindBox";
 import LinksBox from "@/modules/content/events/ui/boxes/LinksBox";
 import ProgrammeRulesBox from "@/modules/content/events/ui/boxes/ProgrammeRulesBox";
@@ -242,6 +243,8 @@ export default async function NewEventPage({ params, searchParams }: Props) {
               {/* Not a section of the page: the marks, the address. The status is in the first
                   card since §448 — "Programat", "Anulat" or "Încheiat", as on the editor. */}
               <EditorGroup label={t("editor.groups.offPage")} />
+              {/* «Copertă» (§NNN): the card's photo under the new look — not on today's page, so here. */}
+              <CoverBox {...box} />
               <PromotionBox {...box} />
               <AddressBox languages={languages} slugLocked={false} creating />
               {/* «Previzualizare» (§579): the card and the page from these boxes, before «Creează». */}

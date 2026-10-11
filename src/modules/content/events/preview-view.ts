@@ -1,4 +1,5 @@
 import { placeNameIn } from "@/modules/events/domain/place";
+import { readRepeatRule } from "@/modules/events/domain/repeat";
 import { withoutPlaces } from "@/modules/events/domain/schedule";
 import type { PublicEventPage } from "@/modules/events/repository";
 import { readBibDesign } from "@/modules/registrations/bib-design";
@@ -103,6 +104,14 @@ export function previewPageOf(event: EditableEvent, translation: EditableTransla
     coHostUrl: event.coHostUrl,
     links: event.links,
     isSpecial: event.isSpecial,
+    /*
+      «Copertă» and the kind (the facelift's phase 2, §NNN): no page draws either yet, so the preview
+      carries no cover — its picture's facts are a read of the store this mapping does not make; the
+      phase that draws the cover on the card gives the preview its own — and the kind's cadence only
+      when this date is the series' source, whose rule the row holds.
+    */
+    cover: null,
+    seriesCadence: readRepeatRule(event.repeatRule)?.cadence ?? null,
     // For the members alone (§552): the staff preview shows it as a member will see it.
     membersOnly: event.membersOnly,
     seoTitle: translation.seoTitle,

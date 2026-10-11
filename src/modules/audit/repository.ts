@@ -338,6 +338,12 @@ export type AuditAction =
    */
   | "event.waitlist_count_public_changed"
   /**
+   * «Copertă» set, changed or removed (the facelift's phase 2, §NNN): the picture from and to, by id
+   * (never a file name), and whether the new one is cropped — on a create that carries one, and on
+   * every date a save changed it, a series' dates included.
+   */
+  | "event.cover_changed"
+  /**
    * «Lista ascunsă» changed on an event (§647): the switch, the hidden list's first number or «Numără și
    * lista ascunsă» — `from` and `to` name only the ones that moved, on every date a save changed them.
    */

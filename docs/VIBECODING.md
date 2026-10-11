@@ -57,6 +57,7 @@ request and `.github/workflows/release.yml` lands and ships it
 | An email | `src/modules/notifications/templates.ts` (RO + EN copy), `render.ts` (data, links, attachments), the enum in `src/db/schema/email-outbox.ts` |
 | A legal text template | `src/modules/legal-documents/templates/` |
 | The event editor | `src/modules/content/events/` (fields.ts validates, service.ts saves, ui/ renders) |
+| An event's cover picture or its kind (weekly / special) | «Copertă» in the editor (`ui/boxes/CoverBox.tsx`); the kind and the photo tag in `src/modules/events/domain/event-kind.ts`; the `<img>` sources in `src/modules/events/cover.ts` — both read off the public row (`cover`, `seriesCadence`) |
 | A table or a column | `src/db/schema/*.ts`, then `yarn db:generate --name <what>` → `src/db/migrations/00NN_<what>.sql` (expand only) |
 | Colours, fonts, the logo | `src/theme/brand.ts` — the only file allowed a hex value |
 | The look — the tokens, the type, the components | `src/theme/brand.ts`, `src/theme/theme.ts`; see them drawn at `/admin/design` (§692) |

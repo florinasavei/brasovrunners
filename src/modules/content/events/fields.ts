@@ -4,7 +4,8 @@ import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
 import { EVENT_REMINDER_MAX_HOURS } from "@/modules/deadlines/domain/deadlines";
 import { parseTypedCoordinates } from "@/modules/weather/domain/place";
 import { isFacebookLink, isStravaLink } from "@/modules/events/domain/event-type";
-import { EMPTY_DOC, parseRichText } from "@/modules/content/rich-text/domain/schema";
+import { EMPTY_DOC, type ImageCrop, parseRichText } from "@/modules/content/rich-text/domain/schema";
+import { readTeamPhotoCrop } from "@/modules/content/team/photo-crop";
 import { DEFAULT_DIFFICULTY_STEP, DIFFICULTY_BANDS, DIFFICULTY_STEPS, type DifficultyStep } from "@/modules/events/domain/difficulty";
 import { EVENT_SURFACES, EVENT_TYPES } from "@/modules/events/domain/event-type";
 import {
@@ -213,17 +214,14 @@ const wholeNumberWithDefault = (fallback: number, options: { min: number; max: n
     .optional()
     .transform((value) => (value === null || value === undefined ? fallback : value));
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const optionalUuid = z
   .string()
   .trim()
   .transform((value) => (value === "" ? null : value))
   .nullable()
-  .refine(
-    (value) =>
-      value === null ||
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value),
-    { message: "must be an identifier chosen from the list" },
-  );
+  .refine((value) => value === null || UUID_PATTERN.test(value), { message: "must be an identifier chosen from the list" });
 
 /**
  * What the box for an https link carries, so the browser refuses `http://` and `www.` first (§315).
@@ -318,6 +316,35 @@ function placeRule(
       message: "a meeting point in English is required, unless the place is to be announced later",
     });
   }
+}
+
+/**
+ * «Copertă» (the facelift's phase 2, §NNN): the picture's id must be a stored picture's — a UUID here,
+ * a row of the store in `service.ts` — and its crop four fractions of it (§541). Named on the
+ * picture's box, like the shop's size guide (§705). Absent (`undefined`) is a caller that does not
+ * edit the cover, and an empty id is "no cover"; neither is refused.
+ */
+function coverRule(fields: { coverAssetId?: string; coverCrop?: unknown }, ctx: z.RefinementCtx): void {
+  if (fields.coverAssetId === undefined || fields.coverAssetId === "") return;
+  if (!UUID_PATTERN.test(fields.coverAssetId)) {
+    ctx.addIssue({ code: "custom", path: ["coverAssetId"], message: "the cover: choose a picture" });
+  } else if (readTeamPhotoCrop(fields.coverCrop) === "invalid") {
+    ctx.addIssue({ code: "custom", path: ["coverAssetId"], message: "the cover: not a crop of the picture" });
+  }
+}
+
+/**
+ * The cover's two columns as a save writes them (§NNN), or `undefined` for a caller that did not
+ * post the picture's box — the partners' discipline (§169): a form without the box, a script, a
+ * fixture never takes a cover off by not mentioning it. An empty id clears both; a crop is kept only
+ * with its picture, and a crop of the whole picture is no crop (`meaningfulCrop`, inside
+ * `readTeamPhotoCrop`). Read after `coverRule` has refused anything malformed.
+ */
+export function postedCover(fields: { coverAssetId?: string; coverCrop?: unknown }): { coverMediaAssetId: string | null; coverCrop: ImageCrop | null } | undefined {
+  if (fields.coverAssetId === undefined) return undefined;
+  if (fields.coverAssetId === "") return { coverMediaAssetId: null, coverCrop: null };
+  const crop = readTeamPhotoCrop(fields.coverCrop);
+  return { coverMediaAssetId: fields.coverAssetId.toLowerCase(), coverCrop: crop === "invalid" ? null : crop };
 }
 
 /**
@@ -825,6 +852,14 @@ export const eventFieldsSchema = z
      */
     isSpecial: z.boolean().optional().default(false),
     /**
+     * «Copertă» (the facelift's phase 2, §NNN): the stored picture's id and its crop, posted by the
+     * box's picture field (`TeamPhotoField`, its stem `event.cover`) as two hidden inputs. Absent means
+     * this caller is not editing the cover; an empty id clears it. Judged by `coverRule` below and
+     * written through `postedCover`.
+     */
+    coverAssetId: z.string().trim().optional(),
+    coverCrop: z.union([z.string(), z.record(z.string(), z.unknown()), z.null()]).optional(),
+    /**
      * «Doar pentru membrii BVR» (§552): the event exists only for a signed-in member and the
      * backoffice. Absent means this caller is not editing it — the partners' discipline — so a
      * fixture or an older form never turns a members' event public by not mentioning it.
@@ -971,7 +1006,8 @@ export const eventFieldsSchema = z
   })
   .strict()
   .superRefine(placeRule)
-  .superRefine(costRule);
+  .superRefine(costRule)
+  .superRefine(coverRule);
 
 export type EventFieldsInput = z.infer<typeof eventFieldsSchema>;
 
