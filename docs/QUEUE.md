@@ -14,26 +14,23 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V2.85`.** Waiting for the owner's «prod», all in one `qa` → `main` release: `BR-V2.86` (§685, the
-  licence), `BR-V2.87` (§686–§688), `BR-V2.88` (§689), `BR-V2.89` (§690–§692), `BR-V2.90` (§693–§694), `BR-V2.91`
-  (§695–§696) and `BR-V2.92` (§697–§701, below). **Six migrations, `0134`–`0139`: production stops at the
-  `migrate.yml` run for the owner's approval** (GitHub → Actions → the run → Review deployments → Production → Approve);
-  Vercel's build waits twenty minutes for it, then a redeploy; `yarn smoke` ends it. The laptop session runs the release.
-- **QA: `BR-V2.92`** — the shop's editor rebuilt («Produse · Comenzi · Setări», one page per product, many pictures
-  with the first as cover, a rich description with tables and pictures, «Mărimile» XXS–4XL with a stock each and a size
-  chart, a sticky «Salvează»; migration `0138`); «Echipa» as a canvas with levels (1 · 1.5 · 2 …), no lines, each card
-  opening in place (migration `0139`); the contact page's «Contact direct» above the form and «alergare» in the feedback
-  form (the phone's #395); five small fixes (the ☰ flush right, «Spune-ne ceva (anonim)», two more «Reguli», no first
-  name in the fixtures, the plan's decision 3 decided).
-- **Nothing is building.** Every branch of the day is landed; the chains' worktrees under `.claude/worktrees/` can go.
-- **Next, from the laptop:** the shop's real catalogue typed on QA through the new editor (three products with their
-  sizes, pictures and euro prices from the owner's sheet — never in the repository); then the owner's remaining plan
-  decisions (`docs/REDESIGN.md`) and the facelift, last, component by component (phase 1: the tokens, the public scope,
-  «Aspectul nou», the header's CTA; phase 2: cover photos on events and the event kind).
+- **Production: `BR-V2.92`** (released 2026-10-11 06:06 RO: §685–§701, migrations `0134`–`0139`; the laptop session
+  approved the migration run with the owner's standing authorisation). Waiting for «prod»: `BR-V2.93` (§702–§705,
+  below) — one migration (`0140`) stops at `migrate.yml` for the approval; `yarn ship` now merges the release PR on
+  GitHub's required checks plus the house's own, never on a Vercel status.
+- **QA: `BR-V2.93`** — «Spune-ne ceva»'s radios are one native group each (the drawn dot lied; the value never
+  did); «Ghid de mărimi»: a size-chart picture per product opened from beside the size select; «Îi scriem membrului pe
+  email despre comenzi», one switch for the shop's member emails; `yarn ship`'s merge gate.
+- **Nothing is building.** The chains' worktrees under `.claude/worktrees/` can go.
+- **Next, from the laptop:** the shop's real catalogue typed on QA through the editor (three products, their sizes, the
+  size-guide picture, euro prices from the owner's sheet — never in the repository), then the facelift, last, phase by
+  phase per `docs/REDESIGN.md` once the owner answers its decisions and the photographs exist.
+- **Waiting on the owner:** should `tested-tree` and `e2e` join `docs-check` as GitHub's required checks on `main` and
+  `qa` (today only `docs-check` is required)? «Tot numărul»'s default background; the remaining plan decisions;
+  `shopNotice`; the Google calendar.
 - **Later:** a server-side status chip for the backoffice so the twelve backoffice-only names leave the public glyph
-  table (§694); a volunteer holding «Gestionează magazinul» cannot translate yet (`canTranslateTexts`); «Tot numărul»'s
-  default background (gradient, colour or photo); «Nivel» offers 1–9 where 1–4 may do; a product saved before the editor
-  shows its variants in the stored order until saved once — each the owner's call.
+  table (§694); a volunteer holding «Gestionează magazinul» cannot translate yet (`canTranslateTexts`); the settings
+  card's title and save dialog still name only the payment words and the address (the switch sits in it now).
 
 ### How a change is made here (the owner's standing rules, all still in force)
 
@@ -135,6 +132,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.93` | the contact wizard's radios (§702) · the ship waits on required checks only (§703) · the shop's member emails behind one switch (§704) · the size-guide picture (§705) |
 | `BR-V2.92` | the translate button on the shop's forms (§697) · «Contact direct» above the form; «alergare» in «Spune-ne ceva» (§698) · five small fixes (§699) · the shop's editor rebuilt (§700) · «Echipa» as a canvas with levels and folds (§701) |
 | `BR-V2.91` | the members' race number on a background of its own (§695) · the contact page in sections, with a glyph on each heading and «Alte căi de contact» (§696) |
 | `BR-V2.90` | the contact page shows the phone and the calendar; «Spune-ne ceva» wider, with icons and clearer buttons (§693) · the design system's guards (§694) |
