@@ -23,6 +23,7 @@ import {
 } from "@/modules/events/domain/co-hosts";
 import CoHostLinkGlyph from "@/modules/events/ui/co-host-glyphs";
 import { identicalInBothLanguages } from "@/shared/forms/both-languages";
+import TipSpan from "@/shared/ui/TipSpan";
 import type { HtmlConstraints } from "@/shared/forms/constraints";
 import { useRecall } from "@/shared/forms/recall";
 import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
@@ -246,12 +247,16 @@ function CoHostRowsEditorIsland({
                 <Typography variant="subtitle2" sx={{ flex: 1, minWidth: 0, overflowWrap: "anywhere" }}>
                   {title.trim() ? title : labels.partnerNew}
                 </Typography>
-                <IconButton aria-label={`${labels.moveUp} ${n}`} onClick={() => movePartner(index, -1)} disabled={index === 0} sx={square}>
-                  <ArrowUpwardIcon fontSize="small" />
-                </IconButton>
-                <IconButton aria-label={`${labels.moveDown} ${n}`} onClick={() => movePartner(index, 1)} disabled={index === rows.length - 1} sx={square}>
-                  <ArrowDownwardIcon fontSize="small" />
-                </IconButton>
+                <TipSpan title={labels.moveUp}>
+                  <IconButton aria-label={`${labels.moveUp} ${n}`} onClick={() => movePartner(index, -1)} disabled={index === 0} sx={square}>
+                    <ArrowUpwardIcon fontSize="small" />
+                  </IconButton>
+                </TipSpan>
+                <TipSpan title={labels.moveDown}>
+                  <IconButton aria-label={`${labels.moveDown} ${n}`} onClick={() => movePartner(index, 1)} disabled={index === rows.length - 1} sx={square}>
+                    <ArrowDownwardIcon fontSize="small" />
+                  </IconButton>
+                </TipSpan>
                 <IconButton aria-label={`${labels.remove} ${n}`} onClick={() => removePartner(key)} sx={square}>
                   <DeleteIcon fontSize="small" />
                 </IconButton>
@@ -390,22 +395,26 @@ function CoHostRowsEditorIsland({
                       </Stack>
                       <TranslateFieldButton en={box("labelEn")} />
                       <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end" }}>
-                        <IconButton
-                          aria-label={`${labels.moveLinkUp} ${ln}`}
-                          onClick={() => moveLink(key, linkIndex, -1)}
-                          disabled={linkIndex === 0}
-                          sx={square}
-                        >
-                          <ArrowUpwardIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          aria-label={`${labels.moveLinkDown} ${ln}`}
-                          onClick={() => moveLink(key, linkIndex, 1)}
-                          disabled={linkIndex === links.length - 1}
-                          sx={square}
-                        >
-                          <ArrowDownwardIcon fontSize="small" />
-                        </IconButton>
+                        <TipSpan title={labels.moveLinkUp}>
+                          <IconButton
+                            aria-label={`${labels.moveLinkUp} ${ln}`}
+                            onClick={() => moveLink(key, linkIndex, -1)}
+                            disabled={linkIndex === 0}
+                            sx={square}
+                          >
+                            <ArrowUpwardIcon fontSize="small" />
+                          </IconButton>
+                        </TipSpan>
+                        <TipSpan title={labels.moveLinkDown}>
+                          <IconButton
+                            aria-label={`${labels.moveLinkDown} ${ln}`}
+                            onClick={() => moveLink(key, linkIndex, 1)}
+                            disabled={linkIndex === links.length - 1}
+                            sx={square}
+                          >
+                            <ArrowDownwardIcon fontSize="small" />
+                          </IconButton>
+                        </TipSpan>
                         <IconButton aria-label={`${labels.removeLink} ${ln}`} onClick={() => removeLink(key, linkKey)} sx={square}>
                           <DeleteIcon fontSize="small" />
                         </IconButton>

@@ -16,7 +16,6 @@ import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
-import SubmitButton from "@/shared/ui/SubmitButton";
 import { addShopPictureAction, moveShopPictureAction, removeShopPictureAction, replaceShopPictureAction } from "@/app/[locale]/admin/shop/actions";
 
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
@@ -155,14 +154,14 @@ function PictureRow({
                 <Box component="form" action={moveShopPictureAction}>
                   {hidden}
                   <input type="hidden" name="direction" value="up" />
-                  <SubmitButton label="↑" pendingLabel="↑" variant="outlined" ariaLabel={t("members.shop.pictures.moveUp", { number: picture.position })} />
+                  <GlyphSubmitButton icon="moveUp" label={t("members.shop.pictures.moveUpWord")} pendingLabel={t("members.shop.pictures.moveUpWord")} tooltip={t("members.shop.pictures.moveUpTip")} variant="outlined" ariaLabel={t("members.shop.pictures.moveUp", { number: picture.position })} />
                 </Box>
               )}
               {!last && (
                 <Box component="form" action={moveShopPictureAction}>
                   {hidden}
                   <input type="hidden" name="direction" value="down" />
-                  <SubmitButton label="↓" pendingLabel="↓" variant="outlined" ariaLabel={t("members.shop.pictures.moveDown", { number: picture.position })} />
+                  <GlyphSubmitButton icon="moveDown" label={t("members.shop.pictures.moveDownWord")} pendingLabel={t("members.shop.pictures.moveDownWord")} tooltip={t("members.shop.pictures.moveDownTip")} variant="outlined" ariaLabel={t("members.shop.pictures.moveDown", { number: picture.position })} />
                 </Box>
               )}
               <ActionForm

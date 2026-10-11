@@ -17,7 +17,6 @@ import RecallField, { RecallHidden } from "@/shared/forms/recall";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
-import SubmitButton from "@/shared/ui/SubmitButton";
 import {
   createDiscountCodeAction,
   deleteDiscountCodeAction,
@@ -182,14 +181,14 @@ function CodeRow({
             <Box component="form" action={moveDiscountCodeAction}>
               {hidden}
               <input type="hidden" name="direction" value="up" />
-              <SubmitButton label="↑" pendingLabel="↑" variant="outlined" ariaLabel={t("members.codes.moveUp", { partner: code.partnerName })} />
+              <GlyphSubmitButton icon="moveUp" label={t("members.codes.moveUpWord")} pendingLabel={t("members.codes.moveUpWord")} tooltip={t("members.codes.moveUpTip")} variant="outlined" ariaLabel={t("members.codes.moveUp", { partner: code.partnerName })} />
             </Box>
           )}
           {!last && (
             <Box component="form" action={moveDiscountCodeAction}>
               {hidden}
               <input type="hidden" name="direction" value="down" />
-              <SubmitButton label="↓" pendingLabel="↓" variant="outlined" ariaLabel={t("members.codes.moveDown", { partner: code.partnerName })} />
+              <GlyphSubmitButton icon="moveDown" label={t("members.codes.moveDownWord")} pendingLabel={t("members.codes.moveDownWord")} tooltip={t("members.codes.moveDownTip")} variant="outlined" ariaLabel={t("members.codes.moveDown", { partner: code.partnerName })} />
             </Box>
           )}
           <ActionForm
