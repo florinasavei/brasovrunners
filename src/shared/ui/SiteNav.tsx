@@ -6,7 +6,7 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { useTranslations } from "next-intl";
 import { useSelectedLayoutSegments } from "next/navigation";
-import { useLayoutEffect, useRef, useState, type ComponentProps, type MouseEvent } from "react";
+import { useLayoutEffect, useRef, useState, type ComponentProps, type MouseEvent, type ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
 import { prefetchFor } from "@/i18n/prefetch";
 import { pageMenuKey, sortByMenuOrder } from "@/modules/content/menu/order";
@@ -111,6 +111,7 @@ export default function SiteNav({
   showFaq = false,
   showContact = false,
   order = [],
+  children,
 }: {
   pages?: readonly NavPage[];
   showGallery?: boolean;
@@ -119,6 +120,12 @@ export default function SiteNav({
   showContact?: boolean;
   /** The club's stored order, keys first to last (§571); an entry it does not name keeps its default place after them. */
   order?: readonly string[];
+  /**
+   * What «Aspectul nou» puts at the row's right end, as the nav's children, before the ☰ (§708): «Vino cu noi» and the
+   * socials. Inside the nav so the measurement below subtracts its room and the ☰ stays the
+   * row's last item (§699). Absent while the setting is off.
+   */
+  children?: ReactNode;
 }) {
   const t = useTranslations("Site.nav");
   const segments = useSelectedLayoutSegments();
@@ -149,6 +156,15 @@ export default function SiteNav({
 
   const navRef = useRef<HTMLElement>(null);
   const moreRef = useRef<HTMLElement>(null);
+  const trailingRef = useRef<HTMLElement>(null);
+  /*
+    The trailing group is the public header's: inside the backoffice shell (`/admin`, `/devs`, both
+    rendering `BackofficeShell`) it is not drawn at all — not even as the look's `display: none` DOM —
+    so a staff page's row is the one it always was. The layout above cannot know the route without
+    turning every static public page dynamic, so the choice is made here, where the segments are.
+  */
+  const inBackoffice = selected === "admin" || selected === "devs";
+  const hasTrailing = Boolean(children) && !inBackoffice;
   const itemRefs = useRef<Array<HTMLElement | null>>([]);
   // Everything, until measured: the server render and a no-JavaScript reader get the whole row.
   const [visibleCount, setVisibleCount] = useState(items.length);
@@ -163,7 +179,9 @@ export default function SiteNav({
       // Fractional widths: `offsetWidth` rounds each entry, and a row of rounded widths can sum
       // to a pixel more than the row, which is one entry clipped on its last letter.
       const width = (el: HTMLElement | null) => el?.getBoundingClientRect().width ?? 0;
-      const available = nav.clientWidth;
+      // The trailing group's room (zero where it is not drawn, or its children are `display: none` outside the look's scope).
+      const trailingWidth = width(trailingRef.current);
+      const available = nav.clientWidth - (trailingWidth > 0 ? trailingWidth + gap : 0);
       const widths = itemRefs.current.slice(0, items.length).map(width);
       const more = width(moreRef.current);
 
@@ -186,8 +204,9 @@ export default function SiteNav({
     const observer = new ResizeObserver(measure);
     observer.observe(nav);
     for (const el of itemRefs.current) if (el) observer.observe(el);
+    if (trailingRef.current) observer.observe(trailingRef.current);
     return () => observer.disconnect();
-  }, [items.length]);
+  }, [items.length, hasTrailing]);
 
   const overflow = items.slice(visibleCount);
   const currentIsFolded = overflow.some((item) => item.current);
@@ -258,7 +277,12 @@ export default function SiteNav({
         stay left beside the logo. A margin is outside `getBoundingClientRect().width`, so the
         measurement above does not count it, and a folded button is out of the flow.
       */}
-      <Box component="span" ref={moreRef} sx={overflow.length === 0 ? FOLDED : { ml: "auto" }}>
+      {hasTrailing && (
+        <Box component="span" ref={trailingRef} sx={{ ml: "auto", display: "flex", alignItems: "center", gap: { xs: 0, sm: 0.5 } }}>
+          {children}
+        </Box>
+      )}
+      <Box component="span" ref={moreRef} sx={overflow.length === 0 ? FOLDED : hasTrailing ? undefined : { ml: "auto" }}>
         <Button
           id="site-nav-more"
           // The accessible name in every width; on a phone the visible label is the glyph.

@@ -7,6 +7,7 @@ import type { Locale } from "@/i18n/routing";
 import ButtonSection from "./ButtonSection";
 import ColourSection from "./ColourSection";
 import IconSection from "./IconSection";
+import LookSection from "./LookSection";
 import PillSection from "./PillSection";
 import PlanSection from "./PlanSection";
 import RuleSection from "./RuleSection";
@@ -23,8 +24,8 @@ import TypeSection from "./TypeSection";
  * redesign plan's decisions and phases with a status each. The content, apart from the page's
  * gate: `page.tsx` asserts who may read it and renders this, so a test can render this alone.
  *
- * The side-by-side of today's look and the new one is not here yet; it comes with the facelift's
- * phase 1 (`docs/REDESIGN.md`), and the plan's section says so.
+ * Since the facelift's phase 1 (§708, `docs/REDESIGN.md`) the page opens on today's look and the new
+ * one side by side («Aspectul nou», `LookSection`), drawn by the same components and rules.
  */
 export default async function DesignSystem({ locale }: { locale: Locale }) {
   const t = await getTranslations("Admin");
@@ -55,6 +56,7 @@ export default async function DesignSystem({ locale }: { locale: Locale }) {
         </Box>
       </Box>
 
+      <LookSection />
       <ColourSection />
       <TypeSection />
       <ShapeSection />

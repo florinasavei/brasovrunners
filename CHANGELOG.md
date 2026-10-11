@@ -8,6 +8,12 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.94-2026-10-11
+
+- **The shop's loose ends** — the size guide's alt comes from the catalogue and its button also shows for a one-size product, a volunteer holding «Gestionează magazinul» may press «Tradu», and the settings card's dialog names the member emails. §706.
+- **Visitors download fewer icons** — the backoffice's status chips have their own small registry (`StatusChip`), so backoffice-only glyphs leave the public chip's table; nothing changes on screen. §707.
+- **«Aspectul nou» (off until the club says yes on QA)** — a switch under «Setări» → «Aspect» that dresses the public pages in the facelift's first layer: a pink primary beside the logo blue, Inter 800 headings, pill buttons, «Vino cu noi» to the next weekly run in the header with Facebook and Instagram, the logo in ink and a mountain mark at the foot of the page; the backoffice, emails and PDFs never change, and `/admin/design` shows both looks side by side. §708.
+- **A cover photo for every event** — the event editor's new «Copertă» card picks a club photo from the gallery or an upload, with its crop; a series carries it, and the events list marks the upcoming events still without one. Each event's kind (a weekly run or a special event) is now worked out from its series. Nothing changes on the public pages yet: the new look draws both in its next phases. §709.
 ## BR-V2.93-2026-10-11
 
 - **«Spune-ne ceva»'s radios are one group each** — picking «Cu nume și prenume» now unchecks «Anonim» (and the same for «Cine să afle?»): native radios replace MUI's, which drew both selected. §702.

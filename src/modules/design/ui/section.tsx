@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
  * points at and a heading, so a colleague lands on «Butoane» rather than scrolling for it. The ids
  * are the page's contract — the test asserts every one is on the page.
  */
-export const DESIGN_SECTION_IDS = ["colours", "type", "shape", "buttons", "pills", "samples", "icons", "rules", "plan"] as const;
+export const DESIGN_SECTION_IDS = ["look", "colours", "type", "shape", "buttons", "pills", "samples", "icons", "rules", "plan"] as const;
 export type DesignSectionId = (typeof DESIGN_SECTION_IDS)[number];
 
 /** A section: its anchor, its heading at the backoffice's size, one sentence under it, then its blocks. */

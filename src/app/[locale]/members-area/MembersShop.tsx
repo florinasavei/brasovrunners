@@ -175,14 +175,14 @@ export default async function MembersShop({
  * plain values (§318); on a pointer device the button also shows the picture small on hover or focus
  * (`SizeGuideHover`, the owner's «tooltip cu o poză»), and a phone has the press alone.
  */
-function SizeGuideButton({ guide, title, label }: { guide: ShopPhoto; title: string; label: string }) {
+function SizeGuideButton({ guide, alt, label }: { guide: ShopPhoto; alt: string; label: string }) {
   return (
     <Box sx={{ flex: "0 0 auto" }} data-testid="size-guide">
-      <SizeGuideHover thumbUrl={guide.thumbUrl} width={guide.width} height={guide.height} crop={guide.crop}>
+      <SizeGuideHover thumbUrl={guide.thumbUrl} srcSet={pictureSrcSet(guide.webUrl, guide.width)} width={guide.width} height={guide.height} crop={guide.crop}>
         <PictureLightbox
           src={guide.webUrl}
           srcSet={pictureSrcSet(guide.webUrl, guide.width)}
-          alt={`${label} — ${title}`}
+          alt={alt}
           caption=""
           crop={guide.crop}
           intrinsic={{ width: guide.width, height: guide.height }}
@@ -241,7 +241,15 @@ function ProductCard({ product, locale, t }: { product: MembersShopProduct; loca
           <input type="hidden" name="uiLocale" value={locale} />
           <input type="hidden" name="productId" value={product.id} />
           {single ? (
-            <input type="hidden" name="variantId" value={offered[0].id} />
+            <>
+              <input type="hidden" name="variantId" value={offered[0].id} />
+              {/* A one-size product has no select, and the guide still opens from the same button, in the same words. */}
+              {product.sizeGuide && (
+                <Box sx={{ display: "flex" }}>
+                  <SizeGuideButton guide={product.sizeGuide} alt={t("shop.sizeGuideAlt", { title: product.title })} label={t("shop.sizeGuide")} />
+                </Box>
+              )}
+            </>
           ) : (
             // The size select and, beside it on a laptop and under it on a phone, «Ghid de mărimi» (amends §700).
             <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, alignItems: { xs: "stretch", sm: "flex-end" }, gap: 1.25 }}>
@@ -257,7 +265,7 @@ function ProductCard({ product, locale, t }: { product: MembersShopProduct; loca
                   ))}
                 </Box>
               </Box>
-              {product.sizeGuide && <SizeGuideButton guide={product.sizeGuide} title={product.title} label={t("shop.sizeGuide")} />}
+              {product.sizeGuide && <SizeGuideButton guide={product.sizeGuide} alt={t("shop.sizeGuideAlt", { title: product.title })} label={t("shop.sizeGuide")} />}
             </Box>
           )}
           <Box component="label" htmlFor={`shop-quantity-${id}`} sx={{ display: "grid", gap: 0.5 }}>

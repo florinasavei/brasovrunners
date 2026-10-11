@@ -6,6 +6,7 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { updateSiteFontSize } from "@/modules/appearance/site-font-size";
+import { updateSiteLook } from "@/modules/appearance/site-look";
 import { SITE_TINT_REFUSAL, updateSiteTint } from "@/modules/appearance/site-tint";
 import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
@@ -66,4 +67,24 @@ export async function updateSiteFontSizeAction(_previous: FormOutcome | null, fo
   revalidatePath(path);
   await flashOutcome({ saved: "siteFontSize" });
   redirect(`${path}?saved=siteFontSize#admin-alert`);
+}
+
+/**
+ * «Aspectul nou» (§708): the facelift's look on the public pages, on or off. A club setting (§450) —
+ * the Administrator's at the door, and the service asserts it again. Asked first (§384): every
+ * visitor sees the chosen look from the next page view; the backoffice never changes.
+ */
+export async function updateSiteLookAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/settings/appearance" });
+
+  try {
+    const actor = await requireStaffCapability(canManageClubSettings);
+    await updateSiteLook(getDb(), actor, { look: form.get("look") }, new Date());
+  } catch (error) {
+    return refused(error, form);
+  }
+  revalidatePath(path);
+  await flashOutcome({ saved: "siteLook" });
+  redirect(`${path}?saved=siteLook#admin-alert`);
 }

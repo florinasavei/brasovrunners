@@ -108,6 +108,16 @@ describe("§464 «Tradu din română»", () => {
     expect(await db.select().from(auditLogs)).toHaveLength(0);
   });
 
+  it("answers a volunteer holding the shop grant (§687), and still refuses one without it", async () => {
+    const input = { items: [{ field: "translations.en.title", kind: "text", text: "Tura" }] };
+    const volunteer = await staff("CONTRIBUTOR");
+    const withGrant = { ...volunteer, permissions: new Set(["shop.manage"] as const) };
+    const { translator, requests } = fakeTranslator();
+    expect(await translateClubTexts(db, volunteer, input, { translator, now: NOW })).toEqual({ ok: false, reason: "forbidden" });
+    expect((await translateClubTexts(db, withGrant, input, { translator, now: NOW })).ok).toBe(true);
+    expect(requests).toHaveLength(1);
+  });
+
   it("refuses the whole press when any box is not the club's content: a legal text, a participant's field, a slug", async () => {
     const admin = await staff("ADMIN");
     for (const field of ["legal.bodyEn", "bodyJson", "email", "healthNote", "translations.en.slug", "translations.ro.title"]) {
