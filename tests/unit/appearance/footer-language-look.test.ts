@@ -7,8 +7,8 @@ import { LOOK_PREVIEW, LOOK_ROOT } from "@/theme/look";
 
 /**
  * BR-REQ-041-01 (§NNN, amending §722) — under «Aspectul nou» the language is the footer's own
- * switcher, both languages on the bar at every width: the owner, 2026-10-11, «language switcher
- * trebuie să fie în footer să văd ambele limbi, ca înainte». §722's floating round button, which
+ * switcher, both languages on the bar at every width: the owner, 2026-10-11, «și language switcher-ul
+ * trebuie să fie în footer, să văd ambele limbi, ca înainte!» §722's floating round button, which
  * offered only the other language, is gone. Off, the bar is what it was: the flags on a phone only,
  * the header's copy from `sm`. The catalogues are the real ones; Next's navigation is stubbed, and
  * the footer's reads with it.

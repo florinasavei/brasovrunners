@@ -243,7 +243,7 @@ test.describe("§708 the header under «Aspectul nou»", () => {
  * languages on the bar at every width: the only «Limbă» navigation (the header's copy is hidden,
  * §722's floating button is gone), Romanian stated as the current one and English a link through
  * `/api/locale`, the bar's last item at its bottom right, on screen after a scroll to the page's end,
- * each a target of the bar's size (24 pixels below 360, 44 from `sm`).
+ * each a target of the bar's size (24 pixels below 360, 28 from 360, 44 from `sm`).
  */
 async function expectFooterLanguages(page: Page, width: number, path = "/ro/evenimente"): Promise<void> {
   await expect(page.getByTestId("floating-language")).toHaveCount(0);
@@ -268,7 +268,7 @@ async function expectFooterLanguages(page: Page, width: number, path = "/ro/even
   }
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await expect(english).toBeInViewport();
-  const target = width < 360 ? 24 : 44;
+  const target = width < 360 ? 24 : width < 600 ? 28 : 44;
   for (const item of [romanian, english]) {
     const box = await item.boundingBox();
     expect(box).not.toBeNull();

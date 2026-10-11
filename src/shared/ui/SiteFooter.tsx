@@ -182,8 +182,8 @@ import ThemeModeToggle from "./ThemeModeToggle";
  *
  * ## The language under «Aspectul nou» (§NNN, amending §722)
  *
- * The owner, 2026-10-11, after §722's floating round button: «language switcher trebuie să fie în
- * footer să văd ambele limbi, ca înainte». So under the look the bar's own copy — the rule, then RO and
+ * The owner, 2026-10-11, after §722's floating round button: «și language switcher-ul trebuie să fie în
+ * footer, să văd ambele limbi, ca înainte!» So under the look the bar's own copy — the rule, then RO and
  * EN, the current one stated — is drawn at every width, the bar's last item at its bottom right, and
  * the header's copy stays hidden there (`notUnderLook`): one «Limbă» at every width, both languages
  * in it. Off, and in the backoffice (outside the look's scope), the bar is what it was: the flags on a
