@@ -66,10 +66,21 @@ export function kindFilter(filter: ListingFilter): ListingFilter {
   return withoutValue(filter, "type", SPECIAL_TYPE);
 }
 
-/** The chip shown active: the address's kind, or «special» when the box is the only type ticked (two types is an OR the chip would misname). */
-export function chipKind(kind: EventKind | null, filter: ListingFilter): EventKind | null {
+/** Whether a ticked «Eveniment special» is the kind chip's to say: it is the only type ticked and the address names no kind (two types is an OR, a kind an AND, the chip would misname both). */
+export function specialOnChip(kind: EventKind | null, filter: ListingFilter): boolean {
   const types = filter.type as string[];
-  return kind ?? (types.length === 1 && types[0] === SPECIAL_TYPE ? "special" : null);
+  return kind === null && types.length === 1 && types[0] === SPECIAL_TYPE;
+}
+
+/** The chip shown active: the address's kind, or «special» when the chip says the tick; null otherwise. */
+export function chipKind(kind: EventKind | null, filter: ListingFilter): EventKind | null {
+  return kind ?? (specialOnChip(kind, filter) ? "special" : null);
+}
+
+/** Whether a kind chip is lit, «Toate evenimentele» included: none when a ticked SPECIAL is not the chip's to say — it shows as the panel's own active chip instead. */
+export function kindChipActive(option: EventKind | null, kind: EventKind | null, filter: ListingFilter): boolean {
+  if ((filter.type as string[]).includes(SPECIAL_TYPE) && !specialOnChip(kind, filter)) return false;
+  return option === chipKind(kind, filter);
 }
 
 /** Whether a date passes the kind asked for; every date passes when none is. */

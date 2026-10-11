@@ -94,6 +94,7 @@ export default async function ListingFilterPanel({
   shared = [],
   lookChips = [],
   lookChipValues = [],
+  lookChipTicks = true,
 }: {
   locale: Locale;
   pathname: "/events" | "/calendar";
@@ -109,6 +110,8 @@ export default async function ListingFilterPanel({
   lookChips?: readonly FilterGroup[];
   /** Single values the chips carry under the look (`LOOK_HIDDEN_VALUES`): their box and active chip are hidden there, the input stays. */
   lookChipValues?: readonly { group: FilterGroup; value: string }[];
+  /** Whether the chips say those values' ticks (`specialOnChip`): false shows their active chip under the look too, and counts it. */
+  lookChipTicks?: boolean;
 }) {
   const t = await getTranslations("Events");
   const formatter = await getFormatter();
@@ -178,7 +181,10 @@ export default async function ListingFilterPanel({
   // Under the look, what the chips do not carry: the button's count, and whether the active row has anything left to say.
   const onChips = (group: FilterGroup | FilterFlag, value?: string) =>
     (lookChips as readonly string[]).includes(group) || lookChipValues.some((one) => one.group === group && one.value === value);
-  const panelCount = ticked.filter(({ group, value }) => !onChips(group, value)).length;
+  // The active chip and the count: a single value's tick is the chips' only when they say it (`lookChipTicks`).
+  const tickOnChips = (group: FilterGroup | FilterFlag, value?: string) =>
+    (lookChips as readonly string[]).includes(group) || (lookChipTicks && onChips(group, value));
+  const panelCount = ticked.filter(({ group, value }) => !tickOnChips(group, value)).length;
   const countWords = (n: number) => (n > 0 ? t("filter.buttonCount", { count: n }) : t("filter.button"));
 
   const option = (group: FilterGroup | FilterFlag, value: string, checked: boolean) => {
@@ -310,7 +316,7 @@ export default async function ListingFilterPanel({
             />
             );
             // A tick the chips carry under the look is said there, not twice.
-            return onChips(group, value) ? (
+            return tickOnChips(group, value) ? (
               <Box component="span" key={`${group}=${value}`} sx={{ display: "contents", [UNDER_LOOK]: { display: "none" } }}>
                 {chip}
               </Box>
