@@ -17,7 +17,7 @@ objects; a different answer changes the phases, not the rules.
 
 | # | Decision | Default | Why it is the club's |
 | --- | --- | --- | --- |
-| 1 | The accent colour — **decided by default (2026-10-11)** | a hot-pink accent token (and a darker «pinkInk» that carries white text at AA) beside the logo blue; the logo mark drawn in ink in the header; emails, PDFs, race numbers and share cards stay blue | the logo is pure blue and a brand test pins it |
+| 1 | The accent colour — **decided by default (2026-10-11)** | a hot-pink accent token (and a darker «pinkInk» that carries white text at AA) beside the logo blue; the logo stays the club's blue under both looks (the owner overrode the ink default, 2026-10-11); emails, PDFs, race numbers and share cards stay blue | the logo is pure blue and a brand test pins it |
 | 2 | The heading face — **decided by default (2026-10-11)** | Inter 800 (one new weight file; Inter is self-hosted with ș ț ă â î) for headings; body stays Roboto | a face is a licence and a look the club owns |
 | 3 | A real home page — **decided (2026-10-10)** | a real home page at `/ro` and `/en`, reached from the logo — never a menu entry — switchable on and off in «Aspect» → «Pagina principală»; `/events` stays the listing under «Alergări»; canonicals and the sitemap move | it reverses §353 (the root is a redirect, for SEO) |
 | 4 | The four menu words | «Alergări» = the listing; «Calendar»; «Comunitatea» = a club page linking «Echipa», «Galerie», «Întrebări» and the members' zone; «Despre noi» = a club page | the club decides what each word points to |
@@ -125,7 +125,7 @@ public pages; off (the default), no rule matches and every page is what it was.
 | The setting | `src/modules/appearance/site-look.ts`, `ui/SiteLookPanel.tsx` | Administrator only, audited `site_look.changed`, expires the static pages |
 | «Vino cu noi» | `src/shared/ui/HeaderCta.tsx`, `ArrowButtonLink.tsx`; target `src/modules/events/domain/next-weekly-run.ts` | the next weekly run's page, else the listing; a tighter pill below `sm` that keeps its arrow (§521); drawn into the nav's trailing group before the ☰, and not in the backoffice |
 | Socials | `src/shared/ui/HeaderSocials.tsx` | Facebook and Instagram from the footer's list, from `md` up |
-| The logo in ink | `src/shared/ui/SiteHeader.tsx` | `grayscale(1)` on the supplied lockup under the scope |
+| The logo, blue | `src/shared/ui/SiteHeader.tsx` | the supplied lockup, unfiltered, under both looks |
 | The watermark | `src/shared/ui/MountainMark.tsx`, `LookWatermark.tsx` | the mountain mark, faint, between the content and the footer |
 | Both looks side by side | `/admin/design` → «Aspectul nou» (`src/modules/design/ui/LookSection.tsx`) | the same components twice, the right box under the preview scope |
 
