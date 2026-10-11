@@ -131,7 +131,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
       .insert(events)
       .values({
         type: "MEETUP",
-        startsAt: new Date("2026-12-01T09:00:00.000Z"),
+        startsAt: new Date(Date.now() + 60 * 24 * 3_600_000), // always ahead of the real clock this case submits at (§NNN)
         registrationMode: "INTERNAL",
         capacity,
         waitlistCapacity,
@@ -290,8 +290,8 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
           ),
         );
 
-      // Real time: the approved privacy notice the seed left in this database is effective
-      // from the day it was seeded, and the event starts in December 2026 either way.
+      // Real time (the event starts 60 days after it, whatever day that is): the approved privacy notice the seed left in this database is effective
+      // from the day it was seeded.
       const later = new Date();
       await Promise.all(
         people.map((person) =>

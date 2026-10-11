@@ -17,14 +17,19 @@ describe("BR-REQ-090-02 yarn test:clock — the suite with the real clock moved 
     expect(resolveDate("+10y", from).toISOString()).toBe("2036-10-11T07:00:00.000Z");
     expect(resolveDate("2031-06-01T00:00:00Z", from).toISOString()).toBe("2031-06-01T00:00:00.000Z");
     expect(() => resolveDate("next week", from)).toThrow(/Not a date/);
+    // A month ahead of the 31st is the last day of the next month, not a spill into the one after.
+    expect(resolveDate("+1m", new Date("2026-01-31T07:00:00.000Z")).toISOString()).toBe("2026-02-28T07:00:00.000Z");
+    expect(resolveDate("+1y", new Date("2028-02-29T07:00:00.000Z")).toISOString()).toBe("2029-02-28T07:00:00.000Z");
+    expect(parseArguments(["--concurrency", "+2m"])).toMatchObject({ dates: ["+2m"], concurrency: true });
   });
 
   it("runs the three default dates on two workers unless told otherwise", () => {
-    expect(parseArguments([])).toEqual({ dates: DEFAULT_DATES, workers: 2, filters: [] });
+    expect(parseArguments([])).toEqual({ dates: DEFAULT_DATES, workers: 2, concurrency: false, filters: [] });
     expect(DEFAULT_DATES).toEqual(["+1m", "+1y", "+10y"]);
     expect(parseArguments(["--workers", "4", "+1y", "--", "tests/integration/registrations"])).toEqual({
       dates: ["+1y"],
       workers: 4,
+      concurrency: false,
       filters: ["tests/integration/registrations"],
     });
     expect(() => parseArguments(["--workers", "two"])).toThrow(/whole number/);
