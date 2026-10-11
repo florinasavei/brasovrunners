@@ -47,6 +47,7 @@ const PRODUCT: AdminShopProduct = {
   photo: null,
   pictures: [],
   sizeChart: null,
+  sizeGuide: null,
   visible: true,
   position: 0,
   version: 1,
@@ -64,6 +65,9 @@ function render(locale: "ro" | "en", offer: ComponentProps<typeof TranslateProvi
     ShopSettingsCard({ ...common, settings: { paymentRo: "Transfer", paymentEn: null, ordersTo: null, emailMembers: true }, mayManage: true }),
     ProductForm({ ...common, product: null, rich, noticeDescribes: true }),
     ProductForm({ ...common, product: PRODUCT, rich, noticeDescribes: true }),
+    ShopSettingsCard({ ...common, settings: { paymentRo: "Transfer", paymentEn: null, ordersTo: null }, mayManage: true }),
+    ProductForm({ ...common, product: null, rich, noticeDescribes: true, guideLabels: {} as never, storage: false }),
+    ProductForm({ ...common, product: PRODUCT, rich, noticeDescribes: true, guideLabels: {} as never, storage: false }),
   ];
   const intl = { locale, messages: { Translate: messages.Translate } } as unknown as ComponentProps<typeof NextIntlClientProvider>;
   return renderToStaticMarkup(createElement(NextIntlClientProvider, intl, createElement(TranslateProvider, { offer } as ComponentProps<typeof TranslateProvider>, ...forms)));

@@ -149,6 +149,8 @@ const referencedSomewhere = sql`(
   -- A picture of a product's strip (§697), by id, and a picture in a product's description, by address.
   OR EXISTS (SELECT 1 FROM ${shopProductPictures} WHERE ${shopProductPictures.mediaAssetId} = ${mediaAssets.id})
   OR EXISTS (SELECT 1 FROM ${shopProducts} WHERE ${inShopDescription})
+  -- A product's size-guide picture (amends §700), by id.
+  OR EXISTS (SELECT 1 FROM ${shopProducts} WHERE ${shopProducts.sizeGuideMediaAssetId} = ${mediaAssets.id})
   -- A picture in a newsletter sent (§550): the letter is in the subscribers' inboxes, which load
   -- it from this address for as long as they keep the message, so a send keeps its pictures.
   OR EXISTS (SELECT 1 FROM ${newsletterSends} WHERE ${names(sql`${newsletterSends.body}::text`)})
@@ -378,6 +380,11 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .select({ assetId: shopProductPictures.mediaAssetId })
     .from(shopProductPictures)
     .where(isNotNull(shopProductPictures.mediaAssetId));
+  // A product's size-guide picture (amends §700): the same page.
+  const inShopGuides = await db
+    .select({ assetId: shopProducts.sizeGuideMediaAssetId })
+    .from(shopProducts)
+    .where(isNotNull(shopProducts.sizeGuideMediaAssetId));
   const inShopDescriptions = await db
     .select({ assetId: mediaAssets.id })
     .from(mediaAssets)
@@ -416,6 +423,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
   for (const row of inMembersPages) add(row.assetId, { kind: "membersPage", id: MEMBERS_PAGE_SETTING_KEY, title: null });
   for (const row of inShop) if (row.assetId) add(row.assetId, { kind: "membersPage", id: MEMBERS_PAGE_SETTING_KEY, title: null });
   for (const row of inShopPictures) if (row.assetId) add(row.assetId, { kind: "membersPage", id: MEMBERS_PAGE_SETTING_KEY, title: null });
+  for (const row of inShopGuides) if (row.assetId) add(row.assetId, { kind: "membersPage", id: MEMBERS_PAGE_SETTING_KEY, title: null });
   for (const row of inShopDescriptions) add(row.assetId, { kind: "membersPage", id: MEMBERS_PAGE_SETTING_KEY, title: null });
   for (const row of inNewsletters) add(row.assetId, { kind: "newsletter", id: "newsletter", title: null });
 

@@ -332,3 +332,34 @@ describe("§697 «Tabelul de mărimi»: up to four named columns and a number pe
     expect(measureAsTyped(null)).toBe("");
   });
 });
+
+describe("«Ghid de mărimi» (amends §700): one picture with its crop, or none", () => {
+  const base = { titleRo: "Tricou de probă", titleEn: "Sample shirt", price: "45" };
+  const ID = "3f1c6a52-8d3e-4f7a-9b21-0c5d7e8f9a10";
+  const parse = (extra: Record<string, unknown>) => productFieldsSchema.safeParse({ ...base, ...extra });
+
+  it("takes a picture's id and four fractions, lower-cases the id, and keeps the crop only with a picture", () => {
+    const read = parse({ sizeGuideAssetId: ID.toUpperCase(), sizeGuideCrop: JSON.stringify({ x: 0.1, y: 0.2, w: 0.5, h: 0.6 }) });
+    expect(read.success && read.data.sizeGuideAssetId).toBe(ID);
+    expect(read.success && read.data.sizeGuideCrop).toEqual({ x: 0.1, y: 0.2, w: 0.5, h: 0.6 });
+    const whole = parse({ sizeGuideAssetId: ID, sizeGuideCrop: "" });
+    expect(whole.success && whole.data.sizeGuideCrop).toBeNull();
+  });
+
+  it("an empty or absent field is no guide", () => {
+    for (const extra of [{}, { sizeGuideAssetId: "" }, { sizeGuideAssetId: "  ", sizeGuideCrop: JSON.stringify({ x: 0, y: 0, w: 0.5, h: 0.5 }) }]) {
+      const read = parse(extra);
+      expect(read.success && read.data.sizeGuideAssetId).toBeNull();
+      expect(read.success && read.data.sizeGuideCrop).toBeNull();
+    }
+  });
+
+  it("refuses an id that is no UUID and a crop that is no box, each naming the picture's box", () => {
+    const badId = parse({ sizeGuideAssetId: "nu-e-un-id" });
+    expect(!badId.success && badId.error.issues.map((issue) => issue.path.join("."))).toEqual(["sizeGuideAssetId"]);
+    for (const crop of ["nu e json", JSON.stringify({ x: 0.9, y: 0, w: 0.5, h: 0.5 }), JSON.stringify({ x: 0 })]) {
+      const badCrop = parse({ sizeGuideAssetId: ID, sizeGuideCrop: crop });
+      expect(!badCrop.success && badCrop.error.issues.map((issue) => issue.path.join("."))).toEqual(["sizeGuideAssetId"]);
+    }
+  });
+});

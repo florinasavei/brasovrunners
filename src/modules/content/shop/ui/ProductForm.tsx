@@ -3,6 +3,7 @@ import type { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import type { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import type { AdminShopProduct } from "@/modules/content/shop/repository";
+import type { TeamPhotoLabels } from "@/modules/content/team/ui/TeamPhotoField";
 import ActionForm, { type RefusalMessages } from "@/shared/forms/ActionForm";
 import { RecallHidden } from "@/shared/forms/recall";
 import { createShopProductAction, saveShopProductAction } from "@/app/[locale]/admin/shop/actions";
@@ -32,6 +33,8 @@ export default function ProductForm({
   messages,
   rich,
   noticeDescribes,
+  guideLabels,
+  storage,
 }: {
   product: AdminShopProduct | null;
   locale: Locale;
@@ -40,12 +43,16 @@ export default function ProductForm({
   messages: RefusalMessages;
   rich: ReturnType<typeof richTextEditorLabels>;
   noticeDescribes: boolean;
+  /** The picture field's words for «Ghidul de mărimi», its legend the field's name. */
+  guideLabels: TeamPhotoLabels;
+  /** Whether this deployment can store a picture at all. */
+  storage: boolean;
 }) {
   const cards = (
     <Stack spacing={2}>
       <ProductNameCard product={product} words={t} />
       <ProductDescriptionCard product={product} words={t} rich={rich} />
-      <ProductSizesCard product={product} words={t} scope={PRODUCT_FORM_SCOPE} />
+      <ProductSizesCard product={product} words={t} scope={PRODUCT_FORM_SCOPE} guideLabels={guideLabels} storage={storage} />
       <ProductPublishCard product={product} words={t} noticeDescribes={noticeDescribes} />
     </Stack>
   );

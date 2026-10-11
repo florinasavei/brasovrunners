@@ -55,6 +55,14 @@ export const shopProducts = pgTable(
      */
     sizeChart: jsonb("size_chart"),
     /**
+     * «Ghidul de mărimi» (amends §700): the supplier's size-chart picture, one per product, a stored
+     * picture of the gallery that the members' zone opens large from beside the size select. Optional;
+     * a picture removed from the store leaves the column null.
+     */
+    sizeGuideMediaAssetId: uuid("size_guide_media_asset_id").references(() => mediaAssets.id, { onDelete: "set null" }),
+    /** The guide's crop, `{ x, y, w, h }` fractions (§541); null is the whole picture. */
+    sizeGuideCrop: jsonb("size_guide_crop"),
+    /**
      * The price in the minor unit of `currency`: bani for RON («45 lei» is 4500), cents for EUR
      * («12,34 €» is 1234). An integer, so no sum is ever rounded. The column keeps its name from the
      * lei-only days (§683): a rename is a contract change (AGENTS.md §7.6).

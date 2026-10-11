@@ -49,10 +49,10 @@ function assertId(id: string, what: string): void {
 }
 
 /** A picture's id must name a stored picture, never a film's poster (§485) — «Echipa»'s rule (§459). */
-async function assertStoredPicture<T extends Record<string, unknown>>(db: Database<T>, assetId: string): Promise<void> {
+async function assertStoredPicture<T extends Record<string, unknown>>(db: Database<T>, assetId: string, field = "photoAssetId"): Promise<void> {
   const keyPrefix = await mediaAssetKeyPrefix(db, assetId);
   if (keyPrefix === null || keyPrefix.startsWith("yt-")) {
-    throw new DomainError("VALIDATION_ERROR", "the picture is not a stored picture", ["photoAssetId"]);
+    throw new DomainError("VALIDATION_ERROR", "the picture is not a stored picture", [field]);
   }
 }
 
@@ -108,6 +108,9 @@ function productColumns(fields: ProductFields) {
     // The currency may change after orders exist: each order keeps the one it was placed in (§686).
     currency: fields.currency,
     sizeChart: fields.sizeChart,
+    // «Ghidul de mărimi»: the picture and its crop together; none clears both.
+    sizeGuideMediaAssetId: fields.sizeGuideAssetId,
+    sizeGuideCrop: fields.sizeGuideAssetId ? fields.sizeGuideCrop : null,
     visible: fields.visible,
   };
 }
@@ -119,6 +122,7 @@ export async function createProduct<T extends Record<string, unknown>>(
 ): Promise<ShopProduct> {
   assertMayManage(input.actor);
   const fields = parseOrThrow(input.fields);
+  if (fields.sizeGuideAssetId) await assertStoredPicture(db, fields.sizeGuideAssetId, "sizeGuideAssetId");
   const now = input.now ?? new Date();
   return db.transaction(async (tx) => {
     const [last] = await tx.select({ position: sql<number>`coalesce(max(${shopProducts.position}), 0)`.mapWith(Number) }).from(shopProducts);
@@ -139,7 +143,7 @@ export async function createProduct<T extends Record<string, unknown>>(
       action: "shop.product.created",
       entityType: "shop_product",
       entityId: row.id,
-      metadata: { visible: row.visible, currency: row.currency, variants: fields.variants.length, sizeChart: fields.sizeChart !== null },
+      metadata: { visible: row.visible, currency: row.currency, variants: fields.variants.length, sizeChart: fields.sizeChart !== null, sizeGuide: fields.sizeGuideAssetId !== null },
       now,
     });
     return row;
@@ -154,6 +158,7 @@ export async function saveProduct<T extends Record<string, unknown>>(
   assertMayManage(input.actor);
   assertId(input.productId, "product");
   const fields = parseOrThrow(input.fields);
+  if (fields.sizeGuideAssetId) await assertStoredPicture(db, fields.sizeGuideAssetId, "sizeGuideAssetId");
   const now = input.now ?? new Date();
   const row = await db.transaction(async (tx) => {
     const [updated] = await tx
@@ -173,7 +178,7 @@ export async function saveProduct<T extends Record<string, unknown>>(
       action: "shop.product.saved",
       entityType: "shop_product",
       entityId: updated.id,
-      metadata: { version: updated.version, visible: updated.visible, currency: updated.currency, variants: fields.variants.length, sizeChart: fields.sizeChart !== null },
+      metadata: { version: updated.version, visible: updated.visible, currency: updated.currency, variants: fields.variants.length, sizeChart: fields.sizeChart !== null, sizeGuide: fields.sizeGuideAssetId !== null },
       now,
     });
     return updated;

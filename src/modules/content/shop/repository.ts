@@ -43,6 +43,8 @@ export type AdminShopProduct = {
   /** The strip, in order (§697). */
   pictures: ShopPictureRow[];
   sizeChart: SizeChart | null;
+  /** «Ghid de mărimi»: the supplier's size-chart picture, or null (amends §700). */
+  sizeGuide: ShopSizeGuide | null;
   visible: boolean;
   position: number;
   version: number;
@@ -106,6 +108,32 @@ async function picturesOf<T extends Record<string, unknown>>(db: Database<T>, pr
   return byProduct;
 }
 
+/** A product's «Ghid de mărimi» (amends §700): the stored picture's id and the picture as the pages draw it, crop included. */
+export type ShopSizeGuide = { assetId: string; photo: ShopPhoto };
+
+/** Each product's size-guide picture, one query for every product asked for; a product with none, or whose picture left the store, is absent. */
+async function guidesOf<T extends Record<string, unknown>>(db: Database<T>, productIds: string[]): Promise<Map<string, ShopSizeGuide>> {
+  const byProduct = new Map<string, ShopSizeGuide>();
+  if (productIds.length === 0) return byProduct;
+  const rows = await db
+    .select({
+      id: shopProducts.id,
+      assetId: shopProducts.sizeGuideMediaAssetId,
+      crop: shopProducts.sizeGuideCrop,
+      keyPrefix: mediaAssets.keyPrefix,
+      width: mediaAssets.width,
+      height: mediaAssets.height,
+    })
+    .from(shopProducts)
+    .innerJoin(mediaAssets, eq(mediaAssets.id, shopProducts.sizeGuideMediaAssetId))
+    .where(inArray(shopProducts.id, productIds));
+  for (const row of rows) {
+    const photo = photoOf(row);
+    if (row.assetId && photo) byProduct.set(row.id, { assetId: row.assetId, photo });
+  }
+  return byProduct;
+}
+
 const PRODUCT_COLUMNS = {
   id: shopProducts.id,
   titleRo: shopProducts.titleRo,
@@ -150,9 +178,10 @@ type ProductRow = {
 /** The rows as the backoffice reads them, with their variants, pictures and order counts — three more queries, whatever the count. */
 async function adminProductsFrom<T extends Record<string, unknown>>(db: Database<T>, rows: ProductRow[]): Promise<AdminShopProduct[]> {
   const ids = rows.map((row) => row.id);
-  const [variants, pictures, counts] = await Promise.all([
+  const [variants, pictures, guides, counts] = await Promise.all([
     variantsOf(db, ids),
     picturesOf(db, ids),
+    guidesOf(db, ids),
     ids.length
       ? db
           .select({ productId: shopOrders.productId, n: count() })
@@ -175,6 +204,7 @@ async function adminProductsFrom<T extends Record<string, unknown>>(db: Database
     photo: photoOf(row),
     pictures: pictures.get(row.id) ?? [],
     sizeChart: readSizeChart(row.sizeChart),
+    sizeGuide: guides.get(row.id) ?? null,
     visible: row.visible,
     position: row.position,
     version: row.version,
@@ -271,6 +301,8 @@ export type MembersShopProduct = {
   /** The strip (§697): the cover first, every picture still in the store. */
   pictures: ShopPhoto[];
   sizeChart: MembersSizeChart | null;
+  /** The supplier's size-chart picture (amends §700), opened from beside the size select; null when none is chosen. */
+  sizeGuide: ShopPhoto | null;
   /** Each variant and whether any is left: a sold-out variant is shown and not offered. */
   variants: { id: string; label: string | null; soldOut: boolean }[];
 };
@@ -289,7 +321,7 @@ export async function listProductsForMembers<T extends Record<string, unknown>>(
     .where(and(eq(shopProducts.visible, true), isNull(shopProducts.archivedAt)))
     .orderBy(asc(shopProducts.position), asc(shopProducts.createdAt));
   const ids = rows.map((row) => row.id);
-  const [variants, pictures] = await Promise.all([variantsOf(db, ids), picturesOf(db, ids)]);
+  const [variants, pictures, guides] = await Promise.all([variantsOf(db, ids), picturesOf(db, ids), guidesOf(db, ids)]);
   return rows.map((row) => {
     const en = locale === "en";
     const ro = storedTeamDoc(row.descriptionRoJson, row.descriptionRo);
@@ -308,6 +340,7 @@ export async function listProductsForMembers<T extends Record<string, unknown>>(
       currency: row.currency,
       pictures: strip.length > 0 ? strip : cover ? [cover] : [],
       sizeChart: chart && chartRows.length > 0 ? { columns: chart.columns.map((column) => (en ? column.en : column.ro)), rows: chartRows } : null,
+      sizeGuide: guides.get(row.id)?.photo ?? null,
       variants: own.map((variant) => ({ id: variant.id, label: variant.label, soldOut: variant.stock !== null && variant.stock <= 0 })),
     };
   });

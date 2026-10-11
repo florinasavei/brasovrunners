@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { resolveRichPair, richTextBox } from "@/modules/content/team/fields";
+import type { ImageCrop } from "@/modules/content/rich-text/domain/schema";
 import { readTeamPhotoCrop } from "@/modules/content/team/photo-crop";
 import { refuseOneLanguage } from "@/shared/forms/both-languages";
 import { isUuid } from "@/shared/ids";
@@ -122,6 +123,13 @@ export const productFieldsSchema = z
     chartColumns: z.array(z.object({ ro: z.string().optional().default(""), en: z.string().optional().default("") })).optional().default([]),
     chartCells: z.record(z.string(), z.array(z.string())).optional().default({}),
     variantsLoaded: loadedStock,
+    /** «Ghidul de mărimi» (amends §700): a stored picture's id, or empty for none, and the crop box's fractions. */
+    sizeGuideAssetId: z
+      .string()
+      .optional()
+      .default("")
+      .transform((value) => value.trim()),
+    sizeGuideCrop: z.union([z.string(), z.record(z.string(), z.unknown()), z.null()]).optional(),
     visible: z.union([z.boolean(), z.string()]).optional().transform((value) => value === true || value === "on" || value === "true"),
   })
   .transform((fields, ctx) => {
@@ -160,6 +168,19 @@ export const productFieldsSchema = z
     );
     if (chart.ok) sizeChart = chart.chart;
     else ctx.addIssue({ code: "custom", path: ["chartColumns"], message: `the size chart: ${chart.error}` });
+    // The guide picture: empty is none (and clears the crop); anything else must be an id, with a crop of four fractions or none.
+    let sizeGuideAssetId: string | null = null;
+    let sizeGuideCrop: ImageCrop | null = null;
+    if (fields.sizeGuideAssetId !== "") {
+      if (isUuid(fields.sizeGuideAssetId)) {
+        sizeGuideAssetId = fields.sizeGuideAssetId.toLowerCase();
+        const read = readTeamPhotoCrop(fields.sizeGuideCrop);
+        if (read === "invalid") ctx.addIssue({ code: "custom", path: ["sizeGuideAssetId"], message: "the size guide: not a crop of the picture" });
+        else sizeGuideCrop = read;
+      } else {
+        ctx.addIssue({ code: "custom", path: ["sizeGuideAssetId"], message: "the size guide: choose a picture" });
+      }
+    }
     return {
       titleRo: fields.titleRo,
       titleEn: fields.titleEn,
@@ -172,6 +193,8 @@ export const productFieldsSchema = z
       variants,
       variantsLoaded: fields.variantsLoaded,
       sizeChart,
+      sizeGuideAssetId,
+      sizeGuideCrop,
       visible: fields.visible,
     };
   });

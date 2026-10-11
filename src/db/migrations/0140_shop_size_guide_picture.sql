@@ -1,0 +1,3 @@
+ALTER TABLE "shop_products" ADD COLUMN "size_guide_media_asset_id" uuid;--> statement-breakpoint
+ALTER TABLE "shop_products" ADD COLUMN "size_guide_crop" jsonb;--> statement-breakpoint
+ALTER TABLE "shop_products" ADD CONSTRAINT "shop_products_size_guide_media_asset_id_media_assets_id_fk" FOREIGN KEY ("size_guide_media_asset_id") REFERENCES "public"."media_assets"("id") ON DELETE set null ON UPDATE no action;

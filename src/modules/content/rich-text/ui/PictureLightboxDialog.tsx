@@ -6,6 +6,8 @@ import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import Typography from "@mui/material/Typography";
 import { type PointerEvent, useEffect, useId, useRef, useState } from "react";
+import type { ImageCrop } from "../domain/schema";
+import { cropGeometry, cropImageSx, cropWindowSx } from "./image-layout";
 import {
   IDENTITY,
   isDoubleTap,
@@ -45,6 +47,8 @@ export default function PictureLightboxDialog({
   caption,
   closeLabel,
   title,
+  crop,
+  intrinsic,
 }: {
   open: boolean;
   onClose: () => void;
@@ -54,6 +58,9 @@ export default function PictureLightboxDialog({
   caption: string;
   closeLabel: string;
   title: string;
+  /** The part of the picture to show, four fractions (§541), with the picture's size; absent shows it whole. */
+  crop?: ImageCrop | null;
+  intrinsic?: { width: number; height: number };
 }) {
   const titleId = useId();
   return (
@@ -67,7 +74,7 @@ export default function PictureLightboxDialog({
       <Box id={titleId} component="h2" sx={VISUALLY_HIDDEN}>
         {title}
       </Box>
-      <ZoomLayer onClose={onClose} src={src} srcSet={srcSet} alt={alt} caption={caption} closeLabel={closeLabel} />
+      <ZoomLayer onClose={onClose} src={src} srcSet={srcSet} alt={alt} caption={caption} closeLabel={closeLabel} crop={crop} intrinsic={intrinsic} />
     </Dialog>
   );
 }
@@ -86,6 +93,8 @@ function ZoomLayer({
   alt,
   caption,
   closeLabel,
+  crop,
+  intrinsic,
 }: {
   onClose: () => void;
   src: string;
@@ -93,6 +102,8 @@ function ZoomLayer({
   alt: string;
   caption: string;
   closeLabel: string;
+  crop?: ImageCrop | null;
+  intrinsic?: { width: number; height: number };
 }) {
   const [zoom, setZoomState] = useState<Zoom>(IDENTITY);
   const current = useRef<Zoom>(IDENTITY);
@@ -188,6 +199,7 @@ function ZoomLayer({
   };
 
   const zoomed = zoom.scale > 1;
+  const geometry = cropGeometry(crop, intrinsic ?? {});
   return (
     <Box
       ref={layer}
@@ -216,7 +228,7 @@ function ZoomLayer({
           {closeLabel}
         </Button>
       </Box>
-      <Box ref={frame} sx={{ minHeight: 0, overflow: "hidden" }}>
+      <Box ref={frame} sx={{ minHeight: 0, overflow: "hidden", ...(geometry ? { containerType: "size" } : {}) }}>
         <Box
           data-testid="picture-preview-zoom"
           // Every finger goes to the layer (the dialog is modal, the page does not scroll behind it),
@@ -227,17 +239,38 @@ function ZoomLayer({
             transform: zoomTransform(zoom),
             willChange: zoomed ? "transform" : undefined,
           }}
-          sx={{ height: "100%", px: 1 }}
+          sx={{ height: "100%", px: 1, ...(geometry ? { display: "grid", placeItems: "center" } : {}) }}
         >
-          <Box
-            component="img"
-            src={src}
-            srcSet={srcSet}
-            sizes={srcSet ? "100vw" : undefined}
-            alt={alt}
-            draggable={false}
-            sx={{ display: "block", width: "100%", height: "100%", objectFit: "contain", userSelect: "none" }}
-          />
+          {geometry ? (
+            // A cropped picture (the shop's size guide): a window of the crop's own shape, as large as
+            // the frame allows (`cqh` is the frame's height), with the photograph pulled to the corner.
+            <Box
+              data-testid="picture-preview-crop"
+              sx={{ ...cropWindowSx(geometry), width: `min(100%, calc(100cqh * ${geometry.aspectRatio}))`, aspectRatio: geometry.aspectRatio, borderRadius: 0 }}
+            >
+              <Box
+                component="img"
+                src={src}
+                srcSet={srcSet}
+                // The whole picture is drawn 1/w times the window, and the window is as wide as the screen
+                // or, for a tall crop, as the screen's height allows: ask for the rung that wide.
+                sizes={srcSet ? `calc(min(100vw, 100vh * ${geometry.aspectRatio}) / ${crop?.w ?? 1})` : undefined}
+                alt={alt}
+                draggable={false}
+                sx={{ ...cropImageSx(geometry), userSelect: "none" }}
+              />
+            </Box>
+          ) : (
+            <Box
+              component="img"
+              src={src}
+              srcSet={srcSet}
+              sizes={srcSet ? "100vw" : undefined}
+              alt={alt}
+              draggable={false}
+              sx={{ display: "block", width: "100%", height: "100%", objectFit: "contain", userSelect: "none" }}
+            />
+          )}
         </Box>
       </Box>
       {caption !== "" && (

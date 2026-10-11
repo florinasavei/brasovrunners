@@ -55,6 +55,14 @@ type Props = {
   labels: TeamPhotoLabels;
   /** Distinguishes two of these on one page (a card's form and the "add" form). */
   inputId: string;
+  /**
+   * The stem of the three hidden fields' names — `photo` gives `photoAssetId`, `photoCrop`,
+   * `photoPicture`. Another stem lets a second picture field share a form with the first (the shop's
+   * «Ghid de mărimi», `sizeGuide`, inside the product's form).
+   */
+  fieldPrefix?: string;
+  /** A new picture starts whole, with the free crop shape, instead of at its largest square — for a drawing that must not lose its edges (the size guide). */
+  wholePicture?: boolean;
 };
 
 /** A person's photo starts as a square (§541); the crop box offers §454's other shapes. */
@@ -89,11 +97,14 @@ function recalledPhoto(raw: string | undefined, id: string | undefined, fallback
   return fallback && fallback.id === id ? fallback : { ...EMPTY, id };
 }
 
-function PhotoField({ photo: initial, crop: initialCrop, labels, inputId }: Props) {
+function PhotoField({ photo: initial, crop: initialCrop, labels, inputId, fieldPrefix = "photo", wholePicture = false }: Props) {
   const recall = useRecall();
-  const [photo, setPhoto] = useState<TeamPhotoValue>(() => recalledPhoto(recall.value("photoPicture"), recall.value("photoAssetId"), initial));
+  const idName = `${fieldPrefix}AssetId`;
+  const cropName = `${fieldPrefix}Crop`;
+  const pictureName = `${fieldPrefix}Picture`;
+  const [photo, setPhoto] = useState<TeamPhotoValue>(() => recalledPhoto(recall.value(pictureName), recall.value(idName), initial));
   const [crop, setCrop] = useState<ImageCrop | null>(() => {
-    const recalled = recall.value("photoCrop");
+    const recalled = recall.value(cropName);
     if (recalled === undefined) return initialCrop;
     const read = readTeamPhotoCrop(recalled);
     return read === "invalid" ? null : read;
@@ -105,14 +116,14 @@ function PhotoField({ photo: initial, crop: initialCrop, labels, inputId }: Prop
   const [chosen, setChosen] = useState<ChosenFacts | null>(null);
   const [stored, setStored] = useState<StoredFacts | null>(null);
   const [picked, setPicked] = useState<{ name: string; width: number; height: number } | null>(null);
-  const named = recall.named("photoAssetId");
+  const named = recall.named(idName);
   const lang = typeof document === "undefined" ? "ro" : document.documentElement.lang || "ro";
   const sized = photo.id !== "" && photo.width > 0 && photo.height > 0;
 
   /** A new photo starts at its largest square (§541). */
   const take = (next: TeamPhotoValue) => {
     setPhoto(next);
-    setCrop(next.width > 0 && next.height > 0 ? initialTeamCrop(next) : null);
+    setCrop(!wholePicture && next.width > 0 && next.height > 0 ? initialTeamCrop(next) : null);
   };
 
   const onChoose = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -147,17 +158,27 @@ function PhotoField({ photo: initial, crop: initialCrop, labels, inputId }: Prop
       <Typography component="legend" variant="subtitle2" sx={{ mb: 1 }}>
         {labels.legend}
       </Typography>
-      <input type="hidden" name="photoAssetId" value={photo.id} />
-      <input type="hidden" name="photoCrop" value={photo.id && crop ? JSON.stringify(crop) : ""} />
+      <input type="hidden" name={idName} value={photo.id} />
+      <input type="hidden" name={cropName} value={photo.id && crop ? JSON.stringify(crop) : ""} />
       <input
         type="hidden"
-        name="photoPicture"
+        name={pictureName}
         value={photo.id ? JSON.stringify({ src: photo.src, preview: photo.preview, width: photo.width, height: photo.height }) : ""}
       />
       <Stack direction="row" spacing={2} sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
         {photo.id && photo.preview ? (
-          // At 96 px: the crop in its shape, or the default square.
-          sized ? (
+          // At 96 px: the crop in its shape, or the default square — a drawing with no crop (`wholePicture`) whole, in its own ratio.
+          sized && wholePicture && !crop ? (
+            // eslint-disable-next-line @next/next/no-img-element -- the club's own stored thumbnail, drawn whole
+            <img
+              src={photo.preview}
+              alt=""
+              data-testid={`${inputId}-preview`}
+              width={photo.width}
+              height={photo.height}
+              style={{ width: "auto", height: "auto", maxWidth: 96, maxHeight: 96, objectFit: "contain", borderRadius: 8, display: "block" }}
+            />
+          ) : sized ? (
             <TeamPhotoImage src={photo.preview} photo={{ width: photo.width, height: photo.height, crop }} width={96} radius={8} testId={`${inputId}-preview`} />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element -- the club's own stored picture, size unknown
@@ -169,7 +190,7 @@ function PhotoField({ photo: initial, crop: initialCrop, labels, inputId }: Prop
           </Typography>
         )}
         <GlyphButton
-          id={recall.idOf("photoAssetId")}
+          id={recall.idOf(idName)}
           htmlFor={inputId}
           icon={photo.id ? "replace" : "upload"}
           variant="outlined"
@@ -248,7 +269,7 @@ function PhotoField({ photo: initial, crop: initialCrop, labels, inputId }: Prop
             intrinsic={{ width: photo.width, height: photo.height }}
             crop={crop}
             onChange={setCrop}
-            resting={TEAM_PHOTO_SHAPE}
+            resting={wholePicture ? "free" : TEAM_PHOTO_SHAPE}
             labels={labels.crop}
             testId={`${inputId}-crop-surface`}
           />

@@ -178,6 +178,40 @@ describe("§601 the preview itself", () => {
     expect(html.match(/<button/g)).toHaveLength(1);
   });
 
+  it("amends §700: a cropped picture opens in a window of the crop's own shape, the ladder asked for at the window's width; uncropped is unchanged", async () => {
+    const { default: PictureLightboxDialog } = await import("@/modules/content/rich-text/ui/PictureLightboxDialog");
+    const srcSet = `${SRC.replace("web.webp", "w960.webp")} 960w, ${SRC} 2400w`;
+    const render = (extra: Record<string, unknown>) =>
+      (
+        renderToStaticMarkup(
+          createElement(PictureLightboxDialog, { open: true, onClose: () => {}, src: SRC, srcSet, alt: "Ghid de mărimi", caption: "", closeLabel: ro.Picture.close, title: "Ghid de mărimi", ...extra }),
+        )
+      );
+    const cropped = render({ crop: { x: 0.1, y: 0.1, w: 0.5, h: 0.5 }, intrinsic: { width: 2400, height: 1600 } });
+    // 2400 × 0.5 over 1600 × 0.5 = 1.5: the window's aspect ratio, in its own element.
+    const windowTag = /<div[^>]*data-testid="picture-preview-crop"[^>]*>/.exec(cropped)?.[0] ?? "";
+    expect(windowTag).toContain('data-testid="picture-preview-crop"');
+    expect(cropped).toContain("aspect-ratio:1.5");
+    expect(cropped).toContain("overflow:hidden");
+    // The picture inside is drawn twice the window's width, pulled to the crop's corner, with the ladder.
+    const image = /<img[^>]*>/.exec(cropped)?.[0] ?? "";
+    expect(cropped).toContain("width:200%");
+    expect(image).toContain(`srcSet="${srcSet}"`);
+    expect(cropped).toContain("sizes=\"calc(min(100vw, 100vh * 1.5) / 0.5)\"");
+    // Without a crop the markup is the whole picture as before.
+    const whole = withoutStyles(render({}));
+    expect(whole).not.toContain("picture-preview-crop");
+    expect(whole).toContain('sizes="100vw"');
+    expect(whole).toContain(srcSet);
+  });
+
+  it("amends §700: the shop's hover preview is a tooltip island that takes plain values and ignores touch", () => {
+    const hover = readFileSync(path.join(process.cwd(), "src/modules/content/shop/ui/SizeGuideHover.tsx"), "utf8");
+    expect(hover).toMatch(/^"use client"/);
+    expect(hover).toContain("disableTouchListener");
+    expect(hover).toMatch(/thumbUrl: string;\s+width: number;\s+height: number;\s+crop: ImageCrop \| null;\s+children: ReactNode;/);
+  });
+
   it("closes on Escape and a tap through MUI's dialog, Back through the history, and loads only on a tap", () => {
     const island = readFileSync(path.join(process.cwd(), "src/modules/content/rich-text/ui/PictureLightbox.tsx"), "utf8");
     const dialog = readFileSync(path.join(process.cwd(), "src/modules/content/rich-text/ui/PictureLightboxDialog.tsx"), "utf8");
