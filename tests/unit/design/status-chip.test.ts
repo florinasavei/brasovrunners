@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { FILTER_FLAGS } from "@/modules/events/domain/listing-filter";
 import { GLYPHS } from "@/modules/events/ui/glyphs";
 import { STATUS_GLYPHS } from "@/shared/ui/status-glyphs";
+import { isBackoffice } from "./guards-allowlist";
 import { SOURCES, stringLiterals, type Source } from "./scan";
 
 /**
@@ -22,40 +23,41 @@ import { SOURCES, stringLiterals, type Source } from "./scan";
  */
 const PENDING_SHOP = ["done", "cancelled", "planned", "visible", "hidden", "language", "orders", "club"];
 
-const BACKOFFICE_PREFIXES = [
-  "src/app/[locale]/admin/",
-  "src/app/[locale]/members-area/",
-  "src/app/[locale]/preview/",
-  "src/modules/design/",
-  "src/modules/staff-identity/",
-  "src/modules/content/shop/",
-  "src/modules/content/member-codes/",
-  "src/modules/content/pages/",
-  "src/modules/content/menu/",
-  "src/modules/content/faq/",
-  "src/modules/content/gallery/",
-  "src/modules/content/rich-text/",
-  "src/modules/content/members/",
-];
+/**
+ * Public files under a backoffice prefix of the house's classifier (`isBackoffice`): the team page's and the
+ * events' components are what a visitor reads, so they are public here too.
+ */
+const PUBLIC_UNDER_CONTENT = ["src/modules/content/team/", "src/modules/content/events/"];
 
-/** The files a visitor's pages are made of: everything that is not listed backoffice, and not a registry. */
-const isPublicFile = (file: string): boolean => !BACKOFFICE_PREFIXES.some((prefix) => file.startsWith(prefix)) && !file.endsWith("/glyphs.ts");
+/** The files a visitor's pages are made of: what the house classifier does not call backoffice, and not a registry. */
+const isPublicFile = (file: string): boolean =>
+  (!isBackoffice(file) || PUBLIC_UNDER_CONTENT.some((prefix) => file.startsWith(prefix))) && !file.endsWith("/glyphs.ts") && !file.endsWith("/status-glyphs.ts");
 
-/** The names a file really draws: `glyph="x"` / `glyph: "x"`, `GLYPHS.x`, `GLYPHS["x"]`. */
+/** The elements whose `glyph` is a chip's name: not a Panel's or a button's, which have their own tables. */
+const CHIP_ELEMENTS = new Set(["GlyphChip", "ChipLink", "StatusChip"]);
+const REGISTRY_TYPE = /(^|[^A-Za-z])(Status)?GlyphName($|[^A-Za-z])/;
+const registryTable = (name: string) => name === "GLYPHS" || name === "STATUS_GLYPHS";
+
+/** The names a file really draws: `glyph="x"` on a chip, `GLYPHS.x` / `STATUS_GLYPHS["x"]`, a table typed `GlyphName`. */
 function drawn(source: Source): Set<string> {
   const names = new Set<string>();
-  for (const literal of stringLiterals(source)) if (literal.name === "glyph") names.add(literal.text);
   const collect = (node: ts.Node) => {
     if (ts.isStringLiteralLike(node)) names.add(node.text);
     ts.forEachChild(node, collect);
   };
+  // `{ glyph: "x" }` objects count only in a file that names the registry's type exactly (a pill: `glyph: GlyphName`).
+  if (REGISTRY_TYPE.test(source.text)) for (const literal of stringLiterals(source)) if (literal.name === "glyph") names.add(literal.text);
   const visit = (node: ts.Node) => {
-    // A table typed by the glyph names (`Record<…, StatusGlyphName>`): its values are names drawn by whoever reads it.
-    if (ts.isVariableDeclaration(node) && node.initializer && node.type?.getText(source.tree).includes("GlyphName")) collect(node.initializer);
-    // `glyph={a ? "x" : "y"}`: every literal inside the attribute's expression is a name drawn.
-    if (ts.isJsxAttribute(node) && node.name.getText(source.tree) === "glyph" && node.initializer && ts.isJsxExpression(node.initializer) && node.initializer.expression) collect(node.initializer.expression);
-    if (ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression) && /GLYPHS$/.test(node.expression.text)) names.add(node.name.text);
-    if (ts.isElementAccessExpression(node) && ts.isIdentifier(node.expression) && /GLYPHS$/.test(node.expression.text) && ts.isStringLiteralLike(node.argumentExpression)) names.add(node.argumentExpression.text);
+    // A table typed by the registry's names (`Record<…, StatusGlyphName>`): its values are names drawn by whoever reads it.
+    if (ts.isVariableDeclaration(node) && node.initializer && node.type && REGISTRY_TYPE.test(node.type.getText(source.tree))) collect(node.initializer);
+    // `<GlyphChip glyph={a ? "x" : "y"} />`: every literal inside the attribute is a name drawn, on a chip only.
+    if (ts.isJsxAttribute(node) && node.name.getText(source.tree) === "glyph" && node.initializer) {
+      const element = node.parent.parent;
+      const tag = ts.isJsxOpeningElement(element) || ts.isJsxSelfClosingElement(element) ? element.tagName.getText(source.tree) : "";
+      if (CHIP_ELEMENTS.has(tag)) collect(node.initializer);
+    }
+    if (ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression) && registryTable(node.expression.text)) names.add(node.name.text);
+    if (ts.isElementAccessExpression(node) && ts.isIdentifier(node.expression) && registryTable(node.expression.text) && ts.isStringLiteralLike(node.argumentExpression)) names.add(node.argumentExpression.text);
     ts.forEachChild(node, visit);
   };
   visit(source.tree);
@@ -66,6 +68,7 @@ function drawn(source: Source): Set<string> {
 const DYNAMIC_PUBLIC: readonly string[] = FILTER_FLAGS;
 
 const usesStatusChip = (source: Source) => /from "@\/shared\/ui\/StatusChip"/.test(source.text);
+const importsStatusRegistry = (source: Source) => /from "@\/shared\/ui\/status-glyphs"/.test(source.text);
 
 describe("§694 the status chip keeps the public glyph table public", () => {
   it("the two tables share no name, but the shop's pending ones", () => {
@@ -73,8 +76,8 @@ describe("§694 the status chip keeps the public glyph table public", () => {
     expect(shared).toEqual([]);
   });
 
-  it("no public file draws a status chip", () => {
-    const offenders = SOURCES.filter(usesStatusChip)
+  it("no public file draws a status chip or imports its registry", () => {
+    const offenders = SOURCES.filter((source) => usesStatusChip(source) || importsStatusRegistry(source))
       .map((source) => source.file)
       .filter(isPublicFile);
     expect(offenders).toEqual([]);
