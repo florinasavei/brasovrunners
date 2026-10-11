@@ -356,7 +356,7 @@ describe("§697 the shop's editor: pictures, sizes, chart, description", () => {
 
     // The zone: the button beside the size select, the lightbox's trigger with the ladder and the words.
     const intl = (node: ReactNode) => renderToStaticMarkup(createElement(NextIntlClientProvider, { locale: "ro", messages: ro } as unknown as ComponentProps<typeof NextIntlClientProvider>, node));
-    const zone = async () => intl(await MembersShop({ products: await listProductsForMembers(db, "ro"), orders: [], payment: null, shopOpen: true, outcome: null, locale: "ro" }));
+    const zone = async () => intl(await MembersShop({ products: await listProductsForMembers(db, "ro"), orders: [], payment: null, shopOpen: true, outcome: null, locale: "ro", emailMembers: true }));
     const html = await zone();
     expect(html).toContain('data-testid="size-guide"');
     expect(html).toContain('data-testid="picture-preview-trigger"');
