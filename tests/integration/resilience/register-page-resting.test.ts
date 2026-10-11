@@ -1,7 +1,7 @@
 import { createElement, type ReactNode } from "react";
 import { createTranslator } from "next-intl";
 import { renderToStaticMarkup } from "react-dom/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import ro from "../../../messages/ro.json";
 
 /**
@@ -36,6 +36,9 @@ const state = vi.hoisted(() => ({
     sameBirthDate?: { typed: string; kept: string } | null;
   },
 }));
+
+/** Every test's clock: registration open, the race ahead (§NNN). */
+const OPEN = new Date("2026-10-01T09:00:00.000Z");
 
 const EVENT = {
   id: "00000000-0000-4000-8000-000000000001",
@@ -165,6 +168,13 @@ beforeEach(() => {
   forgetLastGood();
   resetBreaker();
   vi.spyOn(console, "error").mockImplementation(() => {});
+  // The page reads the real clock, and the sittings below are timed from it: both on the fixture's
+  // calendar, registration open and the race ahead, not on the day this runs (§NNN).
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(OPEN);
+});
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe("§447 the registration page while the database is away", () => {
