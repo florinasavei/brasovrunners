@@ -1,5 +1,7 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import Divider from "@mui/material/Divider";
+import { Fragment } from "react";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
@@ -96,8 +98,11 @@ export default async function FeedbackFormsPanel({ locale, state, noticeDescribe
           >
             <input type="hidden" name="uiLocale" value={locale} />
             <Stack spacing={2} sx={{ maxWidth: 520 }}>
-              {FEEDBACK_BRANCHES.map((branch) => (
-                <Box key={branch} component="fieldset" sx={{ border: 0, m: 0, p: 0 }} data-testid={`feedback-branch-${branch}`}>
+              {FEEDBACK_BRANCHES.map((branch, index) => (
+                <Fragment key={branch}>
+                {/* A separator between the four forms and before the save (§NNN). */}
+                {index > 0 && <Divider data-testid="feedback-branch-divider" />}
+                <Box component="fieldset" sx={{ border: 0, m: 0, p: 0 }} data-testid={`feedback-branch-${branch}`}>
                   <Typography component="legend" variant="subtitle2" sx={{ p: 0 }}>
                     {label(branch)}
                   </Typography>
@@ -129,7 +134,9 @@ export default async function FeedbackFormsPanel({ locale, state, noticeDescribe
                     )}
                   </Stack>
                 </Box>
+                </Fragment>
               ))}
+              <Divider data-testid="feedback-branch-divider" />
               <Box>
                 <GlyphSubmitButton label={t("emails.feedbackForms.save")} pendingLabel={t("emails.feedbackForms.saving")} icon="save" />
               </Box>

@@ -189,6 +189,7 @@ describe("EventPickerFilter on the server draws only the select it was given", (
       name: "event",
       options,
       selected: "",
+      initialChip: "all",
       error: false,
       words: { label: "Evenimentul", search: "", noMatch: "", open: "", close: "", kinds: "Arată", chips: { all: "Toate", special: "Evenimente speciale", group: "Alergări de grup" } },
     };

@@ -8,15 +8,18 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import TextField from "@mui/material/TextField";
 import { type ReactNode, useState, useSyncExternalStore } from "react";
+import { FEEDBACK_QUERY } from "../domain/branches";
 import {
   filterPickerOptions,
   GENERAL_VALUE,
   PICKER_CHIPS,
   type PickerChip,
   pickerChipsShown,
+  PICKER_CHIP_QUERY,
   pickerNoEventFound,
   type PickerOption,
 } from "../domain/event-picker";
+import { writeChoiceToAddress } from "./feedback-address";
 
 /**
  * «Evenimentul», filtered as one types (§680, amending §676) — the island the feedback page mounts
@@ -69,6 +72,7 @@ export default function EventPickerFilter({
   name,
   options,
   selected,
+  initialChip,
   error,
   helperText,
   words,
@@ -82,6 +86,8 @@ export default function EventPickerFilter({
   options: readonly PickerOption[];
   /** The slug the server preselected — the draft's, `?eveniment=`'s, or `""`. */
   selected: string;
+  /** The chip `?fel=` named (§NNN), `all` otherwise. */
+  initialChip: PickerChip;
   error: boolean;
   helperText?: string;
   words: EventPickerWords;
@@ -96,8 +102,14 @@ export default function EventPickerFilter({
     const native = document.getElementById(id);
     return native instanceof HTMLSelectElement && options.some((option) => option.value === native.value) ? native.value : selected;
   });
-  const [chip, setChip] = useState<PickerChip>("all");
+  const [chip, setChip] = useState<PickerChip>(initialChip);
   const chipsShown = pickerChipsShown(options);
+
+  // A chip pressed is in the address too (§NNN), «toate» as no word at all.
+  const pickChip = (kind: PickerChip) => {
+    setChip(kind);
+    writeChoiceToAddress({ [PICKER_CHIP_QUERY]: kind === "all" ? null : kind });
+  };
 
   // The chips; `reserved`, the same row holding the island's place before it runs — not seen, not read, not pressed.
   const chipRow = (reserved: boolean) => (
@@ -124,7 +136,7 @@ export default function EventPickerFilter({
           aria-pressed={reserved ? undefined : chip === kind}
           color={chip === kind ? "primary" : "default"}
           variant={chip === kind ? "filled" : "outlined"}
-          onClick={reserved ? undefined : () => setChip(kind)}
+          onClick={reserved ? undefined : () => pickChip(kind)}
           sx={{ height: "auto", minHeight: ROW_PX, borderRadius: ROW_PX / 2, px: 0.5, "& .MuiChip-icon": { fontSize: 20 } }}
         />
         );
@@ -158,7 +170,10 @@ export default function EventPickerFilter({
         options={options as PickerOption[]}
         value={chosen}
         onChange={(_event, next) => {
-          if (next && next.value !== NO_MATCH_VALUE) setValue(next.value);
+          if (next && next.value !== NO_MATCH_VALUE) {
+            setValue(next.value);
+            writeChoiceToAddress({ [FEEDBACK_QUERY.event]: next.value });
+          }
         }}
         disableClearable
         autoHighlight

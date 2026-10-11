@@ -470,6 +470,17 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await hydrated(page);
       await expect(posted).toHaveCount(1);
       await expect(posted).toHaveValue(offered[0]);
+      // What is picked goes into the address (§NNN), so the link can be shared with it chosen.
+      await page.locator("#f-date").fill("2026-10-05");
+      await expect(page).toHaveURL(/[?&]data=2026-10-05(&|$)/);
+      await expect(page).toHaveURL(new RegExp(`[?&]eveniment=${offered[0]}(&|$)`));
+      const groupChip = page.getByTestId("feedback-event-chip-group");
+      if (await groupChip.count()) {
+        await groupChip.click();
+        await expect(page).toHaveURL(/[?&]fel=group(&|$)/);
+        await page.getByTestId("feedback-event-chip-all").click();
+        await expect(page).not.toHaveURL(/[?&]fel=/);
+      }
 
       // An empty message: the browser lets spaces through, the server refuses them, and the form comes
       // back on its summary, on the same branch, with what was typed kept from the sealed draft.

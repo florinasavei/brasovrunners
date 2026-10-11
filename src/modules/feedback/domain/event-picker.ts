@@ -119,3 +119,31 @@ export function filterPickerOptions(options: readonly PickerOption[], typed: str
 export function pickerNoEventFound(filtered: readonly PickerOption[]): boolean {
   return !filtered.some((option) => option.value !== GENERAL_VALUE);
 }
+
+// --- The address (§NNN) ---------------------------------------------------------------------------
+
+/** The query word for the chip chosen (`?fel=`): «all» is the absence of it. */
+export const PICKER_CHIP_QUERY = "fel";
+
+/** The chip an address names, `all` for anything else. */
+export function readPickerChip(value: string | string[] | undefined): PickerChip {
+  const one = Array.isArray(value) ? value[0] : value;
+  return one === "special" || one === "group" ? one : "all";
+}
+
+/**
+ * The address's search string after a choice (§NNN): each change sets a word, or removes it on
+ * `null` or an empty value; a refusal's words (`error`, `fields`, `since`) and the sent mark go, as
+ * a link shared with the event chosen must not carry another person's outcome. Nothing personal is
+ * ever written: a slug, a day, a chip's name.
+ */
+export function addressSearchWith(current: string, changes: Readonly<Record<string, string | null>>): string {
+  const params = new URLSearchParams(current);
+  for (const stale of ["error", "fields", "since", "sent"]) params.delete(stale);
+  for (const [name, value] of Object.entries(changes)) {
+    if (value) params.set(name, value);
+    else params.delete(name);
+  }
+  const text = params.toString().replace(/%2C/g, ",");
+  return text ? `?${text}` : "";
+}

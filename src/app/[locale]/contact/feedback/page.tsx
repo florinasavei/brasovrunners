@@ -52,9 +52,10 @@ import {
   STOPPED_REASONS,
   wizardStep,
 } from "@/modules/feedback/domain/branches";
-import { GENERAL_VALUE, pickerFilters, pickerKind, type PickerOption } from "@/modules/feedback/domain/event-picker";
+import { GENERAL_VALUE, pickerFilters, pickerKind, type PickerOption, readPickerChip } from "@/modules/feedback/domain/event-picker";
 import { dayKey } from "@/modules/events/domain/calendar";
 import BranchChoice, { BranchGlyphTile } from "@/modules/feedback/ui/BranchChoice";
+import FeedbackAddressSync from "@/modules/feedback/ui/FeedbackAddressSync";
 import EventPickerFilter from "@/modules/feedback/ui/EventPickerFilter";
 import { branchLabelLang } from "@/modules/feedback/ui/branch-glyph";
 import IdentityChoice from "@/modules/feedback/ui/IdentityChoice";
@@ -82,6 +83,7 @@ type Search = {
   tip?: string;
   eveniment?: string;
   data?: string;
+  fel?: string;
   sent?: string;
   catre?: string;
   error?: string;
@@ -407,7 +409,9 @@ async function BranchForm({
         </Alert>
       )}
 
-      <form action={submitFeedbackAction} data-testid={`feedback-form-${BRANCH_SLUG[branch]}`}>
+      <form action={submitFeedbackAction} id="feedback-form" data-testid={`feedback-form-${BRANCH_SLUG[branch]}`}>
+        {/* The event and the day picked go into the address (§NNN), so the link can be shared with them chosen. */}
+        <FeedbackAddressSync formId="feedback-form" />
         <input type="hidden" name="locale" value={locale} />
         <input type="hidden" name="branch" value={branch} />
         {/* Bots fill every field; a human never sees or fills this one. */}
@@ -444,6 +448,7 @@ async function BranchForm({
                 name="event"
                 options={pickerOptions}
                 selected={chosenEvent}
+                initialChip={readPickerChip(search.fel)}
                 error={invalid.has("event")}
                 helperText={invalid.has("event") ? t("errors.field") : undefined}
                 words={{
