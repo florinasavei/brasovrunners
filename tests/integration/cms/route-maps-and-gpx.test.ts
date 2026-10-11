@@ -263,7 +263,7 @@ describe("BR-REQ-050-02 the GPX file (§NNN)", () => {
     expect(await readLocalObject(replacement.key)).toBeNull();
   });
 
-  it("goes with an ordinary delete of its last holder, and stays while another date names it (finding 1)", async () => {
+  it("goes with an ordinary delete of its last holder, and stays while another date names it", async () => {
     const event = await createDraft();
     const gpx = await upload();
     await save(event.id, event.version, { ...FIELDS, routeGpx: JSON.stringify(gpx) });
@@ -274,6 +274,28 @@ describe("BR-REQ-050-02 the GPX file (§NNN)", () => {
 
     await deleteEvent(db, { actor: admin, eventId: event.id });
     expect(await readLocalObject(gpx.key)).toBeNull();
+  });
+
+  it("lets go of the file a series save writes over on another date, not only this date's", async () => {
+    const event = await createDraft();
+    const first = await upload();
+    await save(event.id, event.version, { ...FIELDS, routeGpx: JSON.stringify(first) });
+    await repeatEvent(db, { actor: admin, eventId: event.id, rule: { cadence: "WEEKLY", weekdays: [], until: "2026-11-01", publish: false }, now: NOW });
+    const [date] = await db.select().from(events).where(eq(events.repeatOf, event.id)).orderBy(asc(events.startsAt));
+
+    // One date takes a file of its own, "from this date" style: only it changes.
+    const own = await upload();
+    await save(date.id, date.version, { ...FIELDS, startsAtWallTime: "2026-10-21T19:00", routeGpx: JSON.stringify(own) });
+    expect((await reload(date.id)).routeGpx).toEqual(own);
+
+    // The source then replaces the series' file on every date: both old objects have no holder left.
+    const next = await upload();
+    const source = await reload(event.id);
+    await save(source.id, source.version, { ...FIELDS, routeGpx: JSON.stringify(next) }, "all");
+    expect((await reload(date.id)).routeGpx).toEqual(next);
+    expect(await readLocalObject(first.key)).toBeNull();
+    expect(await readLocalObject(own.key)).toBeNull();
+    expect(await readLocalObject(next.key)).not.toBeNull();
   });
 
   it("is never taken by the pictures' sweep (§17, §73): it is no picture row", async () => {

@@ -15,6 +15,8 @@ import { DEFAULT_EVENT_LINK_KIND, EVENT_LINK_KINDS, type EventLinkKind, MAX_EVEN
 import { LINK_GLYPH } from "@/modules/events/ui/link-glyphs";
 import type { HtmlConstraints } from "@/shared/forms/constraints";
 import { useRecall } from "@/shared/forms/recall";
+import GlyphButton from "@/shared/ui/GlyphButton";
+import { ROUTE_GPX_INPUT_ID } from "./RouteGpxField";
 import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 
 export type LinkRowValue = { kind: string; url: string; labelRo: string; labelEn: string };
@@ -66,7 +68,7 @@ function LinkRowsEditorIsland({
   constraints,
 }: {
   initial: LinkRowValue[];
-  labels: { kind: string; url: string; labelRo: string; labelEn: string; add: string; remove: string; moveUp: string; moveDown: string; row: string };
+  labels: { kind: string; url: string; labelRo: string; labelEn: string; add: string; remove: string; moveUp: string; moveDown: string; row: string; uploadGpx: string };
   /** Each kind's word, already translated — the same word the page shows when a label is empty. */
   kindLabels: Record<EventLinkKind, string>;
   /** The boxes' HTML constraints, read off `fields.ts#eventLinkRowSchema` by the Server Component (§315). */
@@ -83,6 +85,9 @@ function LinkRowsEditorIsland({
     setRows((current) => [...current, { key: nextKey, value: EMPTY }]);
     setNextKey((key) => key + 1);
   };
+  // The kind chosen on a row, kept so a «GPX» row can offer the upload (§NNN); the box itself stays uncontrolled.
+  const setKind = (key: number, kind: string) =>
+    setRows((current) => current.map((row) => (row.key === key ? { ...row, value: { ...row.value, kind } } : row)));
   const remove = (key: number) => setRows((current) => current.filter((row) => row.key !== key));
   const move = (from: number, by: -1 | 1) =>
     setRows((current) => {
@@ -137,6 +142,7 @@ function LinkRowsEditorIsland({
                 defaultValue={value.kind || DEFAULT_EVENT_LINK_KIND}
                 size="small"
                 sx={{ width: { xs: "100%", sm: 220 }, flexShrink: 0 }}
+                onChange={(event) => setKind(key, event.target.value)}
                 slotProps={{ select: { renderValue: (chosen) => withGlyph(String(chosen)) }, inputLabel: { shrink: true } }}
               >
                 {EVENT_LINK_KINDS.map((kind) => (
@@ -180,6 +186,12 @@ function LinkRowsEditorIsland({
                 slotProps={{ htmlInput: { ...constraints.label } }}
               />
             </Stack>
+            {/* The route's GPX as a file instead of a link (§NNN): the same upload as the card's, by its input. */}
+            {labels.uploadGpx && (value.kind || DEFAULT_EVENT_LINK_KIND) === "GPX" && (
+              <GlyphButton htmlFor={ROUTE_GPX_INPUT_ID} icon="upload" variant="outlined" sx={{ alignSelf: "flex-start", minHeight: 44 }} data-testid="link-row-upload-gpx">
+                {labels.uploadGpx}
+              </GlyphButton>
+            )}
             {/* «Tradu din română» (§464): the English label from the Romanian one. */}
             <TranslateFieldButton en={name("labelEn")} />
             <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end" }}>

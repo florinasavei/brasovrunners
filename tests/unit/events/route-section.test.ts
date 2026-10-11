@@ -317,7 +317,7 @@ describe("BR-REQ-011-01 where the section sits (§387)", () => {
     expect(route).toBeGreaterThan(page.indexOf("<RegistrationCta"));
     expect(route).toBeLessThan(page.indexOf("<EventLinks"));
     expect(route).toBeLessThan(page.indexOf("<EventProgramme"));
-    expect(page).toContain("routeSection={hasRouteSection(event)}");
+    expect(page).toContain("routeSection={hasRouteSection(event, isStorageConfigured())}");
   });
 
   it("in the staff preview: the same order, the same words", () => {
@@ -327,7 +327,7 @@ describe("BR-REQ-011-01 where the section sits (§387)", () => {
     expect(route).toBeLessThan(preview.indexOf("<EventLinks"));
     // The mapping is `preview-view.ts` since §579, shared with the preview before saving.
     expect(read("src/modules/content/events/preview-view.ts")).toContain("routeDescriptionJson: translation.routeDescriptionJson");
-    expect(preview).toContain("routeSection={hasRouteSection(preview)}");
+    expect(preview).toContain("routeSection={hasRouteSection(preview, isStorageConfigured())}");
   });
 
   it("leaves the calendar file, the structured data and the email templates without it", () => {

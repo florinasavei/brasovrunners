@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
-import { courseSummary, type SummaryWords } from "@/modules/content/events/ui/box-summaries";
+import { courseSummary, linksSummary, type SummaryWords } from "@/modules/content/events/ui/box-summaries";
 import type { EventLinkKind } from "@/modules/events/domain/links";
 import { hasRouteSection } from "@/modules/events/domain/route-section";
 import EventRoute, { type RouteMapWords } from "@/modules/events/ui/EventRoute";
@@ -147,26 +147,31 @@ describe("BR-REQ-011-01 the GPX on the page (§NNN)", () => {
     expect(html).not.toContain('role="tablist"');
     expect(render({ routeGpx: GPX }, "en")).toContain(en.Event.routeMaps.gpx);
     expect(render({})).toBe("");
-    expect(hasRouteSection({ routeMaps: BOTH })).toBe(true);
-    expect(hasRouteSection({ routeGpx: GPX })).toBe(true);
-    expect(hasRouteSection({ routeMaps: [{ provider: "komoot", id: "1" }], routeGpx: { key: "elsewhere" } })).toBe(false);
+    expect(hasRouteSection({ routeMaps: BOTH }, true)).toBe(true);
+    expect(hasRouteSection({ routeGpx: GPX }, true)).toBe(true);
+    expect(hasRouteSection({ routeMaps: [{ provider: "komoot", id: "1" }], routeGpx: { key: "elsewhere" } }, true)).toBe(false);
   });
 });
 
 describe("BR-REQ-050-02 the editor's «Traseul» card (§NNN)", () => {
-  it("says on its closed line which maps and file are set", () => {
+  it("says on its closed line which maps are set, and «Linkuri și fișiere» counts the file", () => {
     const summary = ro.Admin.editor.boxes.summary as unknown as SummaryWords;
-    const line = courseSummary(summary, { distanceMeters: null, elevationGainMeters: null, routeUrl: null, nightOverride: false, routeMaps: BOTH, routeGpx: GPX }, { surface: null });
+    const line = courseSummary(summary, { distanceMeters: null, elevationGainMeters: null, routeUrl: null, nightOverride: false, routeMaps: BOTH }, { surface: null });
     expect(line).toContain("Garmin");
     expect(line).toContain("Strava");
-    expect(line).toContain("GPX");
     expect(line.indexOf("Garmin")).toBeLessThan(line.indexOf("Strava"));
+    expect(linksSummary(summary, { stravaEventUrl: null, facebookEventUrl: null, links: null, routeGpx: GPX }, {}, "ro")).toContain("GPX");
   });
 
-  it("asks for the two services and the file in the course card, Garmin first", () => {
+  it("asks for the two services in the course card, Garmin first, and the file in «Linkuri și fișiere», above the rows", () => {
     const source = readFileSync(path.join(process.cwd(), "src/modules/content/events/ui/boxes/CourseBox.tsx"), "utf8");
     expect(source.indexOf('name="event.routeGarmin"')).toBeGreaterThan(source.indexOf('name="event.routeUrl"'));
     expect(source.indexOf('name="event.routeStrava"')).toBeGreaterThan(source.indexOf('name="event.routeGarmin"'));
-    expect(source.indexOf('name="event.routeGpx"')).toBeGreaterThan(source.indexOf('name="event.routeStrava"'));
+    expect(source).not.toContain("event.routeGpx");
+    const links = readFileSync(path.join(process.cwd(), "src/modules/content/events/ui/boxes/LinksBox.tsx"), "utf8");
+    expect(links.indexOf('name="event.routeGpx"')).toBeGreaterThan(0);
+    expect(links.indexOf('name="event.routeGpx"')).toBeLessThan(links.indexOf("<LinkRowsEditor"));
+    const rows = readFileSync(path.join(process.cwd(), "src/modules/content/events/ui/LinkRowsEditor.tsx"), "utf8");
+    expect(rows).toContain("ROUTE_GPX_INPUT_ID");
   });
 });

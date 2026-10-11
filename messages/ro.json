@@ -2101,6 +2101,7 @@
         "remove": "Șterge linkul",
         "moveUp": "Mută mai sus linkul",
         "moveDown": "Mută mai jos linkul",
+        "uploadGpx": "Încarcă fișierul în loc de link",
         "row": "Linkul",
         "urlError": "Linkul {n}: adresa trebuie să înceapă cu https://",
         "kindError": "Linkul {n}: alege tipul din listă",

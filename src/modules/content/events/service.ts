@@ -1999,7 +1999,14 @@ async function applyToSeries<T extends Record<string, unknown>>(
      */
     discountNoteCleared?: boolean;
   },
-): Promise<{ applied: number; offered: number; dates: SavedDate[]; holds: WindowHoldsMoved[] }> {
+): Promise<{
+  applied: number;
+  offered: number;
+  dates: SavedDate[];
+  holds: WindowHoldsMoved[];
+  /** The GPX keys this save overwrote on the other dates (§NNN), for the store to let go of once nothing names them. */
+  gpxReplaced?: string[];
+}> {
   const { before, after, now } = input;
   const dates: SavedDate[] = [];
   // What the window's move did on each date this save wrote (§665).
@@ -2111,6 +2118,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
   const zone = after.timezone;
   let applied = 0;
   let offered = 0;
+  const gpxReplaced: string[] = [];
   for (const member of members) {
     const days = Math.round((wallDay(member.startsAt, zone) - wallDay(before.startsAt, zone)) / 86_400_000);
     const shift = (date: Date | null) => (date ? addWallClockInterval(date, zone, { days }) : null);
@@ -2160,6 +2168,12 @@ async function applyToSeries<T extends Record<string, unknown>>(
       }
     }
 
+    // A date that held a GPX of its own loses the file this save writes over it (§NNN): its key is
+    // handed back, so the store lets it go once no date names it any more.
+    if ("routeGpx" in changes) {
+      const replaced = routeGpxKeyOf(member.routeGpx);
+      if (replaced !== null && replaced !== routeGpxKeyOf(changes.routeGpx)) gpxReplaced.push(replaced);
+    }
     // Read before anything is written to this date, only when a notice needs to compare (§331).
     const memberTranslationsBefore = input.collect ? await listTranslationsForEvent(tx, member.id) : [];
     let touched = false;
@@ -2236,7 +2250,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
       }
     }
   }
-  return { applied, offered, dates, holds };
+  return { applied, offered, dates, holds, gpxReplaced };
 }
 
 /**
@@ -2632,6 +2646,8 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   */
   const deadlines = await currentDeadlines(db);
 
+  // The GPX keys a series save wrote over on the other dates (§NNN), released after the commit.
+  const seriesGpxKeys: string[] = [];
   const outcome = await db.transaction(async (tx) => {
     let savedEvent: EditableEvent = current;
     const savedTranslations: EditableTranslation[] = [];
@@ -2780,6 +2796,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       });
       appliedTo = series.applied;
       holdMoves.push(...series.holds);
+      seriesGpxKeys.push(...(series.gpxReplaced ?? []));
       offered += series.offered;
       otherDates.push(...series.dates);
     }
@@ -2807,11 +2824,10 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   // The one save of the whole event (§36), cancelling included: a cancelled event must never read
   // as scheduled, so the cached rows go the moment it commits (§28, §333).
   revalidatePublicContent("events");
-  // The GPX this date held before the save (§NNN), when the save replaced or removed it: deleted
-  // from the store once no date of the series and no duplicate names it any more.
-  if (parsedEventFields?.routeGpx !== undefined && routeGpxKeyOf(current.routeGpx) !== (parsedEventFields.routeGpx?.key ?? null)) {
-    await releaseRouteGpxAfterCommit(db, [routeGpxKeyOf(current.routeGpx)]);
-  }
+  // The GPX this date held before the save (§NNN), when the save replaced or removed it, and the ones
+  // it overwrote on the series' other dates: deleted from the store once no date and no duplicate names them.
+  const gpxLetGo = parsedEventFields?.routeGpx !== undefined && routeGpxKeyOf(current.routeGpx) !== (parsedEventFields.routeGpx?.key ?? null) ? [routeGpxKeyOf(current.routeGpx)] : [];
+  await releaseRouteGpxAfterCommit(db, [...gpxLetGo, ...seriesGpxKeys]);
   /*
     The date, the close, the participation window, the status, the capacity: any of them moves
     what the maintenance job has to do and when (§334). Only when the event row itself was saved
@@ -4016,7 +4032,7 @@ export async function deleteEvent<T extends Record<string, unknown>>(
   // A declaration covers the run's other dates too (§523): while the run has one, it moves there.
   const gpxKey = await db.transaction(async (tx) => {
     await rehomeGroupRunDeclarationsOfEvent(tx, input.eventId);
-    // A held declaration (§556) left on this date refuses the delete,and the transaction with it.
+    // A held declaration (§556) left on this date refuses the delete, and the transaction with it.
     await refuseHeldGroupRunDeclarationsOfEvent(tx, input.eventId);
     await deleteGroupRunDeclarationMessagesOfEvent(tx, input.eventId);
     const [gone] = await tx.delete(events).where(eq(events.id, input.eventId)).returning({ routeGpx: events.routeGpx });

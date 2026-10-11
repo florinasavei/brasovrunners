@@ -77,7 +77,7 @@ export default function EventRoute({
   /** The maps' and the file's words; without them the section draws neither. */
   mapWords?: RouteMapWords;
 }) {
-  if (!hasRouteSection({ routeDescriptionJson: descriptionJson, routeMaps, routeGpx })) return null;
+  if (!hasRouteSection({ routeDescriptionJson: descriptionJson, routeMaps, routeGpx }, isStorageConfigured())) return null;
 
   const rows: LinkRow[] = [];
   if (routeUrl && !routeUrlIsStravaMap(routeUrl, routeMaps)) {

@@ -2101,6 +2101,7 @@
         "remove": "Remove link",
         "moveUp": "Move up link",
         "moveDown": "Move down link",
+        "uploadGpx": "Upload the file instead of a link",
         "row": "Link",
         "urlError": "Link {n}: the address must start with https://",
         "kindError": "Link {n}: choose the kind from the list",

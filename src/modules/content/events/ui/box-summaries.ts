@@ -98,7 +98,7 @@ export type SummaryWords = {
     dayAuto: string;
     described: string;
     describedOneLanguage: string;
-    /** «Traseul»'s maps and GPX (§NNN): `Strava`, `Garmin`, `GPX` on the closed line. */
+    /** «Traseul»'s maps (§NNN) and the GPX file counted on «Linkuri și fișiere»: `Strava`, `Garmin`, `GPX`. */
     strava: string;
     garmin: string;
     gpx: string;
@@ -526,7 +526,7 @@ export function startListSummary(words: SummaryWords, visibility: string | null 
 }
 
 type CourseEvent = Pick<EditableEvent, "distanceMeters" | "elevationGainMeters" | "routeUrl" | "nightOverride"> &
-  Partial<Pick<EditableEvent, "elevationGainEstimated" | "distanceEstimated" | "routeMaps" | "routeGpx">>;
+  Partial<Pick<EditableEvent, "elevationGainEstimated" | "distanceEstimated" | "routeMaps">>;
 
 /**
  * The night event's word on the closed "Traseul" card (§394): `de noapte` for the organizer's "Da",
@@ -571,14 +571,13 @@ export function courseSummary(
     event?.routeUrl ? words.course.route : null,
     // «Traseul»'s maps and GPX (§NNN), in the page's order: «Garmin · Strava · GPX».
     ...readRouteMaps(event?.routeMaps).map((map) => words.course[map.provider]),
-    readRouteGpx(event?.routeGpx) ? words.course.gpx : null,
     described === 0 ? null : described === translations.length ? words.course.described : words.course.describedOneLanguage,
     ...identicalMarks(words, translations, ["routeDescription"]),
   ]);
   return line || words.nothing;
 }
 
-type LinksEvent = Pick<EditableEvent, "stravaEventUrl" | "facebookEventUrl" | "links">;
+type LinksEvent = Pick<EditableEvent, "stravaEventUrl" | "facebookEventUrl" | "links"> & Partial<Pick<EditableEvent, "routeGpx">>;
 
 /**
  * "Linkuri și fișiere": `Strava · Facebook · 3 fișiere (GPX, Hartă, Rezultate)`, or `Niciun link` — and
@@ -595,6 +594,8 @@ export function linksSummary(
   const line = join(words, [
     event?.stravaEventUrl ? words.links.strava : null,
     event?.facebookEventUrl ? words.links.facebook : null,
+    // The GPX file uploaded for «Traseul» (§NNN), counted beside the links.
+    readRouteGpx(event?.routeGpx) ? words.course.gpx : null,
     rows.length > 0
       ? `${counted(words.links.files, rows.length, locale)} (${[...new Set(rows.map((row) => kindLabels[row.kind] ?? row.kind))].join(", ")})`
       : null,

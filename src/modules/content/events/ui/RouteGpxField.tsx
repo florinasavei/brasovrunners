@@ -6,6 +6,9 @@ import { type ChangeEvent, useState } from "react";
 import { type GpxRefusal, gpxSizeWords, MAX_GPX_BYTES, type RouteGpx } from "@/modules/events/domain/route-gpx";
 import GlyphButton from "@/shared/ui/GlyphButton";
 
+/** The file input's id: the «Traseul (GPX)» link row's button is a label for it, so it opens with no script. */
+export const ROUTE_GPX_INPUT_ID = "event-route-gpx";
+
 export type RouteGpxFieldWords = {
   label: string;
   help: string;
@@ -43,7 +46,7 @@ export default function RouteGpxField({
   const [gpx, setGpx] = useState<RouteGpx | null>(initial);
   const [state, setState] = useState<"idle" | "uploading">("idle");
   const [error, setError] = useState<string | null>(null);
-  const inputId = "event-route-gpx";
+  const inputId = ROUTE_GPX_INPUT_ID;
 
   const onChoose = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

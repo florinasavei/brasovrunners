@@ -20,6 +20,7 @@ import EventFacts from "@/modules/events/ui/EventFacts";
 import EventLinks from "@/modules/events/ui/EventLinks";
 import EventRoute from "@/modules/events/ui/EventRoute";
 import { hasRouteSection } from "@/modules/events/domain/route-section";
+import { isStorageConfigured } from "@/modules/media/storage";
 import type { RouteMapWords } from "@/modules/events/ui/EventRoute";
 import EventProgramme from "@/modules/events/ui/EventProgramme";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
@@ -148,7 +149,7 @@ export default async function PreviewEventPage({ params }: Props) {
         locale={locale}
         heading={tEvent("links.heading")}
         kindLabels={linkKindLabels}
-        routeSection={hasRouteSection(preview)}
+        routeSection={hasRouteSection(preview, isStorageConfigured())}
       />
 
       <EventProgramme scheduleItems={preview.scheduleItems} scheduleJson={preview.scheduleJson} timeZone={preview.timezone} heading={t("editor.fields.schedule")} />

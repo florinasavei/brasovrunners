@@ -16,6 +16,7 @@ import { datedOrNull } from "@/modules/events/domain/dated";
 import { EVENT_LINK_KINDS, type EventLinkKind } from "@/modules/events/domain/links";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { hasRouteSection } from "@/modules/events/domain/route-section";
+import { isStorageConfigured } from "@/modules/media/storage";
 import type { RouteMapWords } from "@/modules/events/ui/EventRoute";
 import { googleCalendarUrl } from "@/modules/events/ical";
 import { instagramFileName } from "@/modules/events/instagram-share";
@@ -294,7 +295,7 @@ export default async function EventPageView({
         locale={locale}
         heading={t("links.heading")}
         kindLabels={linkKindLabels}
-        routeSection={hasRouteSection(event)}
+        routeSection={hasRouteSection(event, isStorageConfigured())}
       />
 
       {/* The programme (§96, §117), under `#schedule`: the timed rows, then the text. */}

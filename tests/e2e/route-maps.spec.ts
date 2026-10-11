@@ -52,7 +52,7 @@ async function watchProviders(page: Page): Promise<Request[]> {
 }
 
 test.describe.serial("BR-REQ-011-01 «Traseul»'s maps and GPX (§NNN)", () => {
-  test("are pasted and uploaded in the «Traseul» card, and the event is published", async ({ page }) => {
+  test("are pasted in «Traseul», the file uploaded in «Linkuri și fișiere», and the event is published", async ({ page }) => {
     test.setTimeout(test.info().timeout + 60_000);
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
     slug = `harta-traseului-${suffix}`;
@@ -79,8 +79,18 @@ test.describe.serial("BR-REQ-011-01 «Traseul»'s maps and GPX (§NNN)", () => {
     const course = await openEditorBox(page, "Traseul");
     await field("event.routeGarmin").fill(GARMIN_EMBED);
     await field("event.routeStrava").fill(STRAVA_EMBED);
-    await course.getByTestId("route-gpx-input").setInputFiles({ name: "Traseu Tâmpa.gpx", mimeType: "application/gpx+xml", buffer: TRACK });
-    await expect(course.getByTestId("route-gpx-current")).toContainText("Traseu Tâmpa.gpx", { timeout: 20_000 });
+    // The file is uploaded in «Linkuri și fișiere» (the owner looked for it on the GPX row), not in «Traseul».
+    await expect(course.getByTestId("route-gpx-input")).toHaveCount(0);
+    const links = await openEditorBox(page, "Linkuri și fișiere");
+    await links.getByTestId("route-gpx-input").setInputFiles({ name: "Traseu Tâmpa.gpx", mimeType: "application/gpx+xml", buffer: TRACK });
+    await expect(links.getByTestId("route-gpx-current")).toContainText("Traseu Tâmpa.gpx", { timeout: 20_000 });
+    // A row of kind GPX offers the same upload.
+    await links.getByRole("combobox", { name: "Tip" }).first().click();
+    await page.getByRole("option", { name: "Traseul (GPX)" }).click();
+    await expect(links.getByTestId("link-row-upload-gpx")).toBeVisible();
+    await links.getByRole("combobox", { name: "Tip" }).first().click();
+    await page.getByRole("option", { name: "Link", exact: true }).click();
+    await expect(links.getByTestId("link-row-upload-gpx")).toHaveCount(0);
 
     const excerpt = async (locale: "ro" | "en", text: string) => {
       const panel = languagePanel(page, "title", locale);
@@ -97,7 +107,7 @@ test.describe.serial("BR-REQ-011-01 «Traseul»'s maps and GPX (§NNN)", () => {
     await page.waitForURL(/saved=event/);
     // The closed card names what is set, and the box gives back the stored map, never other markup.
     await expect(page.locator("#box-course")).toContainText("Garmin");
-    await expect(page.locator("#box-course")).toContainText("GPX");
+    await expect(page.locator("#box-links")).toContainText("GPX");
     await openEditorBox(page, "Traseul");
     await expect(field("event.routeGarmin")).toHaveValue(GARMIN_LINK);
     await expect(field("event.routeStrava")).toHaveValue(new RegExp(`data-embed-id="${STRAVA_ID}"[\\s\\S]*data-token="${TOKEN}"`));

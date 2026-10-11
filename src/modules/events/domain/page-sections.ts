@@ -120,7 +120,16 @@ export type PageSectionText = {
  * draw — computed outside this file, since it needs the occurrence's own start against the sun,
  * not merely the stored columns `PageSectionEvent` carries.
  */
-export type PageSectionData = { event: PageSectionEvent; texts: readonly PageSectionText[]; night: boolean };
+export type PageSectionData = {
+  event: PageSectionEvent;
+  texts: readonly PageSectionText[];
+  night: boolean;
+  /**
+   * The caller's `isStorageConfigured()` (§NNN): an uploaded GPX draws «Traseul» only where the page
+   * can serve it. Left out, a GPX counts — this file reads no environment.
+   */
+  storageConfigured?: boolean;
+};
 
 export type PageSection = {
   id: PageSectionId;
@@ -185,7 +194,7 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
     anchor: "route",
     glyph: "course",
     automatic: false,
-    drawn: ({ event, texts, night }) =>
+    drawn: ({ event, texts, night, storageConfigured }) =>
       event.surface !== null ||
       difficultyLevelOf(event) !== null ||
       event.distanceMeters !== null ||
@@ -194,7 +203,7 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
       night ||
       texts.some((text) => hasRouteDescription(text.routeDescriptionJson)) ||
       // «Traseul»'s maps and GPX (§NNN) draw the route section on their own.
-      hasRouteMedia(event),
+      hasRouteMedia(event, storageConfigured ?? true),
   },
   // "Cost" (§343, §356): its own row in the facts, on every type, while a cost is stated. The
   // editor asks it inside card 1, «Ce fel de eveniment», since §466 (the owner, 2026-09-26:

@@ -1,4 +1,5 @@
 import { hasRouteSection, partitionEventLinks } from "@/modules/events/domain/route-section";
+import { isStorageConfigured } from "@/modules/media/storage";
 import type { EventNotificationRow } from "@/modules/events/repository";
 import type { EmailEventFacts } from "./domain/event-facts";
 
@@ -14,7 +15,7 @@ import type { EmailEventFacts } from "./domain/event-facts";
  */
 export function emailEventFacts(row: EventNotificationRow, pageUrl: string | null): EmailEventFacts {
   // The page's own rule (§387, §NNN): a description in this language, a map or a GPX.
-  const routeSection = hasRouteSection(row);
+  const routeSection = hasRouteSection(row, isStorageConfigured());
   return {
     startsAt: row.startsAt,
     raceStartsAt: row.raceStartsAt,

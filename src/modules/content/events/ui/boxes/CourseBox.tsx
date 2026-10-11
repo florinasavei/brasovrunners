@@ -8,9 +8,7 @@ import { readScheduleItems } from "@/modules/events/domain/schedule";
 import { startBoxValues } from "@/modules/events/domain/provisional-start";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { clubNightEvent, nightPlace } from "@/modules/events/night-event";
-import { readRouteGpx } from "@/modules/events/domain/route-gpx";
 import { routeMapFieldValue, routeMapOf } from "@/modules/events/domain/route-maps";
-import { isStorageConfigured } from "@/modules/media/storage";
 import { env } from "@/shared/config/env";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
@@ -22,7 +20,6 @@ import ApproximateIcon from "../ApproximateIcon";
 import { BLANK, courseSummary } from "../box-summaries";
 import GlyphSelect from "../GlyphSelect";
 import NightEventField from "../NightEventField";
-import RouteGpxField, { type RouteGpxFieldWords } from "../RouteGpxField";
 import { DEFAULT_TIMEZONE } from "./WhenBox";
 import { RouteDescriptionFields } from "../TranslationFields";
 import { BoxNote, type BoxProps, type LanguageEntry, summaryWords } from "./box-kit";
@@ -214,8 +211,9 @@ export default async function CourseBox({
           defaultValue={event?.routeUrl ?? ""}
           {...textFieldConstraints(eventInputConstraints("routeUrl"), { inputMode: "url" })}
         />
-        {/* «Traseul»'s maps and GPX (§NNN), Garmin first as the page's tabs: the link or the embed
-            code the service gives, read down to its id at the save; the GPX uploaded to the store. */}
+        {/* «Traseul»'s maps (§NNN), Garmin first as the page's tabs: the link or the embed
+            code the service gives, read down to its id at the save. The GPX file is uploaded in
+            «Linkuri și fișiere», on the «Traseul (GPX)» row's own card. */}
         <RecallField
           name="event.routeGarmin"
           label={t("editor.routeGarmin")}
@@ -236,16 +234,6 @@ export default async function CourseBox({
           maxRows={4}
           {...textFieldConstraints(eventInputConstraints("routeStrava"), { spellCheck: false, autoCapitalize: "off", autoCorrect: "off" })}
         />
-        {isStorageConfigured() ? (
-          <RouteGpxField
-            name="event.routeGpx"
-            initial={readRouteGpx(event?.routeGpx)}
-            words={t.raw("editor.routeGpx") as RouteGpxFieldWords}
-            locale={locale}
-          />
-        ) : (
-          <BoxNote>{t("editor.routeGpx.noStorage")}</BoxNote>
-        )}
         {routeDescription}
       </Stack>
     </Panel>
