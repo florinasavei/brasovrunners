@@ -21,6 +21,8 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/concurrency/**/*.test.ts"],
+    // `yarn test:clock --concurrency`: the real clock moved forward, as for the unit suite (`vitest.config.mts`).
+    setupFiles: process.env.TEST_CLOCK_AT || process.env.TEST_CLOCK_OFFSET_MS ? ["./tests/helpers/shifted-clock.mjs"] : [],
     fileParallelism: false,
     testTimeout: 30_000,
   },

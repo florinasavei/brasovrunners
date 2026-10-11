@@ -91,7 +91,7 @@ yarn test                all tests
 yarn test:unit           pure-rule tests only
 yarn test:integration    database tests only
 yarn test:concurrency    the two-connection suite; needs the database running
-yarn test:clock          the suite with the real clock moved to +1 month, +1 year and +10 years; about twenty minutes a date (§ Tests that the calendar breaks)
+yarn test:clock          the suite with the real clock moved to +1 month, +1 year and +10 years; about twenty minutes a date (§ Tests that the calendar breaks); `--concurrency` runs the two-connection suite instead, a minute a date
 yarn test:watch          re-run on change
 yarn test:e2e            browser tests, mobile and desktop; needs the database running
 yarn db:seed:legal       the sample legal documents alone; never deletes, safe on a live database
@@ -189,6 +189,10 @@ docker compose up -d db && yarn db:migrate
 yarn test:concurrency
 ```
 
+Run it on a migrated, **unseeded** database, as CI does: a seeded one carries a privacy notice
+effective from the day it was seeded, which is after the fixed `NOW` of the desk-race, family and
+spare-bibs files, and seven of their cases fail with "no approved privacy notice exists yet".
+
 **A failure one run in eight can be a plan, not a race.** The planner's choice follows the
 table's statistics, and the suite's own deletes and inserts move them — autovacuum on a table
 just emptied leaves "no rows" over pages that remain. `UPDATE … WHERE id IN (SELECT … LIMIT n FOR
@@ -241,10 +245,16 @@ row times keep moving; and only where neither fits, move every date of the fixtu
 keeping their distances (the race, the holds, the birth dates). A `src/` read that ignores a
 `now` its caller passed is reported to the owner, not changed by the test fix.
 
-What `test:clock` cannot reach: `tests/concurrency/` runs against a real PostgreSQL server whose
-`now()` is the real one, and `tests/e2e/` against a running server — read those by hand for a
-`new Date()` (or a form filled with a written date) compared with a fixed one. The seeds draw their
-dates from today (`src/db/seeds/sample-dates.ts`, §162) and never age.
+`yarn test:clock --concurrency +2m +1y` runs `tests/concurrency/` the same way (needs the database,
+serial, about a minute a date): the Node side of that suite reads the moved clock, while the real
+PostgreSQL server's `now()` stays real — so a fixture there derives its dates from `Date.now()`
+(an event 60 days ahead) rather than writing one, as `capacity.test.ts` does (§NNN). CI's `e2e` job
+runs that suite, so a date it cannot keep blocks every release.
+
+What `test:clock` cannot reach: `tests/e2e/` against a running server, and the database's own
+`now()` — read those by hand for a `new Date()` (or a form filled with a written date) compared
+with a fixed one. The seeds draw their dates from today (`src/db/seeds/sample-dates.ts`, §162) and
+never age.
 
 ## Where the flags come from
 
