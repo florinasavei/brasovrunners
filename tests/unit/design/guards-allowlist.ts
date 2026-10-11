@@ -166,8 +166,7 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[] } 
 export const PINNED = {
   colours: { entries: 13, hits: 28 },
   icons: { entries: 40, hits: 143 },
-  primitives: { entries: 89, hits: 96 },
-  primitives: { entries: 88, hits: 96 },
+  primitives: { entries: 88, hits: 95 },
 } as const;
 
 /**
