@@ -20,7 +20,7 @@ import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
 import { readMembersZone } from "@/modules/content/members/page-settings";
 import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
-import { listOrdersOfMember } from "@/modules/content/shop/repository";
+import { memberHasOrders } from "@/modules/content/shop/repository";
 import { noticeDescribesMembersShop } from "@/modules/legal-documents/repository";
 import { env } from "@/shared/config/env";
 import SubNav from "@/shared/ui/SubNav";
@@ -98,7 +98,7 @@ async function shopTabShown(accountId: string, now: Date): Promise<boolean> {
   try {
     const db = getDb();
     if (await noticeDescribesMembersShop(db, now)) return true;
-    return (await listOrdersOfMember(db, accountId)).length > 0;
+    return await memberHasOrders(db, accountId);
   } catch (error) {
     unstable_rethrow(error);
     if (!isDatabaseAwayError(error)) throw error;
@@ -111,8 +111,8 @@ export type FrameParts = { words: RichTextDoc | null | "away"; shop: boolean };
 
 /**
  * Read once per page, by the page, because the frame is drawn synchronously: the club's words for
- * its members (every tab shows them) and the tab list. The shop's own page passes `shop` when it
- * has already read what decides it.
+ * its members (every tab shows them) and the tab list. The shop's own page passes `shop`: it reads
+ * what decides the tab itself, in the same round as these (§NNN), so the frame does not ask twice.
  */
 export async function frameParts(account: Pick<Account, "id">, locale: Locale, now: Date, shop?: boolean): Promise<FrameParts> {
   const [words, shown] = await Promise.all([zoneOrAway(locale), shop ?? shopTabShown(account.id, now)]);

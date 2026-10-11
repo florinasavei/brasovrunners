@@ -10,7 +10,7 @@ import { paymentWordsFor, readShopSettings } from "@/modules/content/shop/settin
 import { readShopOutcome, readShopOutcomeAtOrders } from "@/modules/content/shop/zone-outcome";
 import { noticeDescribesMembersShop } from "@/modules/legal-documents/repository";
 import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
-import MembersShop from "../MembersShop";
+import MembersShop, { ShopOutcomeAlert } from "../MembersShop";
 import ZoneFrame, { frameParts, openZone } from "../zone";
 
 type Props = { params: Promise<{ locale: string }>; searchParams?: Promise<{ shop?: string | string[]; shopAt?: string | string[] }> };
@@ -51,6 +51,9 @@ async function shopOrNone(
  * `/members-area/shop`. «Comandă» and «Anulează comanda» (`actions.ts`) answer back to this address
  * with `?shop=` and `?shopAt=`. The door is asserted here, on this page, as on every tab (`openZone`,
  * BR-REQ-060-01), and the order action asserts it again.
+ *
+ * The frame's reads start together with the shop's rather than after them, and the 404 is decided
+ * once both are in: the common case, a shop to draw, pays one round of reads, not two.
  */
 export default async function MembersShopPage({ params, searchParams }: Props) {
   const opened = await openZone((await params).locale);
@@ -58,14 +61,24 @@ export default async function MembersShopPage({ params, searchParams }: Props) {
   const { locale, account } = opened;
   const t = await getTranslations("Members");
   const now = new Date();
-  const shop = await shopOrNone(account, locale, now);
+  const [shop, parts, query] = await Promise.all([shopOrNone(account, locale, now), frameParts(account, locale, now, true), searchParams]);
+  const outcome = readShopOutcome(query?.shop);
   /*
     The zone draws no shop before the privacy notice names `{{membersShop}}` (BR-REQ-053-01): no tab,
-    and no page at this address either, unless the member has orders of their own to see.
+    and no page at this address either, unless the member has orders of their own to see. The one
+    exception is the answer to a press (`?shop=`) made on a page drawn before the notice changed —
+    «Produsul nu mai e în magazin…» — which would otherwise end on a 404 where the button led: it is
+    drawn in the frame, with no «Magazin» tab to lead back here (§NNN), for that request alone. With
+    no answer in the address the 404 stays.
   */
-  if (shop !== "away" && !shop.open && shop.orders.length === 0) notFound();
-  const parts = await frameParts(account, locale, now, true);
-  const query = await searchParams;
+  if (shop !== "away" && !shop.open && shop.orders.length === 0) {
+    if (!outcome) notFound();
+    return (
+      <ZoneFrame t={t} locale={locale} account={account} active="shop" parts={{ ...parts, shop: false }}>
+        <ShopOutcomeAlert outcome={outcome} emailMembers={shop.emailMembers} t={t} />
+      </ZoneFrame>
+    );
+  }
   return (
     <ZoneFrame t={t} locale={locale} account={account} active="shop" parts={parts}>
       {shop === "away" ? (
@@ -78,7 +91,7 @@ export default async function MembersShopPage({ params, searchParams }: Props) {
           orders={shop.orders}
           payment={shop.payment}
           shopOpen={shop.open}
-          outcome={readShopOutcome(query?.shop)}
+          outcome={outcome}
           emailMembers={shop.emailMembers}
           outcomeAtOrders={readShopOutcomeAtOrders(query?.shopAt)}
           locale={locale}

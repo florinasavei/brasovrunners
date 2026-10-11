@@ -1,8 +1,12 @@
-import { renderToStaticMarkup } from "react-dom/server";
+import { eq } from "drizzle-orm";
+import type { ReactNode } from "react";
+import { renderToReadableStream, renderToStaticMarkup } from "react-dom/server";
 import { createTranslator } from "next-intl";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import ro from "../../../messages/ro.json";
+import { shopProductVariants } from "@/db/schema/shop";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
+import { getPathname } from "@/i18n/navigation";
 import { computeContentHash } from "@/modules/legal-documents/domain/content-hash";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -36,6 +40,9 @@ const { getCurrentAccount, getCurrentStaffUser, requireStaff, requireStaffCapabi
 const { canOpenMembersZone, canWorkTheDesk } = await import("@/modules/staff-identity/domain/roles");
 const { saveMembersText } = await import("@/modules/content/members/page-settings");
 const { insertLegalDocumentVersion } = await import("@/modules/legal-documents/repository");
+const { createProduct } = await import("@/modules/content/shop/service");
+const { placeOrder } = await import("@/modules/content/shop/orders");
+const { placeShopOrderAction } = await import("@/app/[locale]/members-area/actions");
 const { default: MembersAreaPage } = await import("@/app/[locale]/members-area/page");
 
 /** Where a Next `redirect()` pointed, read from the error it throws. */
@@ -48,6 +55,13 @@ async function redirectedTo(promise: Promise<unknown>): Promise<string> {
     throw error;
   }
   throw new Error("expected a redirect");
+}
+
+/** A page's markup with its async server components resolved (the shop's section is one, which the synchronous static renderer cannot draw). */
+async function markup(node: ReactNode): Promise<string> {
+  const stream = await renderToReadableStream(node);
+  await stream.allReady;
+  return new Response(stream).text();
 }
 
 describe("§524 a member signs in and is no staff", () => {
@@ -127,6 +141,16 @@ describe("§524 a member signs in and is no staff", () => {
     });
   }
 
+  /** A product on offer and one of its sizes, made as the shop's own tests make them: what a press on «Comandă» names. */
+  async function onOffer() {
+    const product = await createProduct(db, {
+      actor: admin,
+      fields: { titleRo: "Tricou exemplu", titleEn: "Sample t-shirt", descriptionRo: "Bumbac.", descriptionEn: "Cotton.", price: "45", variants: "M: 2\nL", stock: "", visible: true },
+    });
+    const [size] = await db.select().from(shopProductVariants).where(eq(shopProductVariants.productId, product.id)).limit(1);
+    return { product, size };
+  }
+
   const hrefsOf = (html: string) => (html.match(/<nav [^>]*>[\s\S]*?<\/nav>/)?.[0] ?? "");
 
   it("§NNN draws the tabs in the owner's order, the shop only once the notice names it, each page asserting the door itself", async () => {
@@ -146,13 +170,16 @@ describe("§524 a member signs in and is no staff", () => {
     await expect(ShopPage(params)).rejects.toMatchObject({ digest: expect.stringContaining("404") });
 
     await approveShopNotice();
+    // A product on offer, so the shop's own section is drawn rather than its empty sentence.
+    await onOffer();
+    // Each part's own marker: the codes (or their empty sentence), the shop's section, the next runs.
     const pages = [
-      [MembersAreaPage, "/ro/zona-membri"],
-      [ShopPage, "/ro/zona-membri/magazin"],
-      [RunsPage, "/ro/zona-membri/alergari"],
+      [MembersAreaPage, "/ro/zona-membri", /data-testid="members-codes(-empty)?"/],
+      [ShopPage, "/ro/zona-membri/magazin", /data-testid="members-shop"/],
+      [RunsPage, "/ro/zona-membri/alergari", /data-testid="members-upcoming"/],
     ] as const;
     for (const [Page, active] of pages) {
-      const html = renderToStaticMarkup(await Page(params));
+      const html = await markup(await Page(params));
       const nav = hrefsOf(html);
       expect([...nav.matchAll(/href="([^"]+)"/g)].map((m) => m[1])).toEqual(["/ro/zona-membri", "/ro/zona-membri/magazin", "/ro/zona-membri/alergari"]);
       expect(nav.replace(/<style[\s\S]*?<\/style>/g, "").replace(/<[^>]+>/g, "|").split("|").filter(Boolean)).toEqual([ro.Members.tabs.codes, ro.Members.tabs.shop, ro.Members.tabs.runs]);
@@ -161,6 +188,53 @@ describe("§524 a member signs in and is no staff", () => {
       expect(current[0]).toContain(`href="${active}"`);
       expect(html).toContain('data-testid="members-sign-out"');
       expect(html.includes(ro.Members.upcomingTitle)).toBe(active === "/ro/zona-membri/alergari");
+      // Each tab's own part is on its own page and on no other: a tab is a page, not a section of one long page.
+      for (const [, tab, own] of pages) expect(own.test(html), `${tab} drawn on ${active}`).toBe(tab === active);
+    }
+    // The runs' address in English is its file-system name (`routing.ts`), as the Romanian one is «alergari».
+    expect(getPathname({ locale: "en", href: "/members-area/runs" })).toBe("/en/members-area/runs");
+  });
+
+  it("§NNN keeps «Magazin» for a member with an order while no notice names the shop: the tab, their orders and nothing to buy", async () => {
+    const { default: ShopPage } = await import("@/app/[locale]/members-area/shop/page");
+    const { product, size } = await onOffer();
+    // The order was placed while the notice named the shop; none in force names it now.
+    await placeOrder(db, { account: member, locale: "ro", noticeDescribes: true, fields: { productId: product.id, variantId: size.id, quantity: "1", note: "" } });
+    state.cookie = member.id;
+    const params = { params: Promise.resolve({ locale: "ro" }) };
+    for (const Page of [MembersAreaPage, ShopPage]) {
+      const nav = hrefsOf(await markup(await Page(params)));
+      expect([...nav.matchAll(/href="([^"]+)"/g)].map((m) => m[1])).toEqual(["/ro/zona-membri", "/ro/zona-membri/magazin", "/ro/zona-membri/alergari"]);
+    }
+    const html = await markup(await ShopPage(params));
+    expect(html).toContain('data-testid="members-orders"');
+    expect(html).not.toContain('data-testid="members-shop"');
+  });
+
+  it("§NNN lands a press made on a page drawn before the notice changed on its answer, inside the zone and never on a 404", async () => {
+    const { default: ShopPage } = await import("@/app/[locale]/members-area/shop/page");
+    const { product, size } = await onOffer();
+    state.cookie = member.id;
+    // The page was drawn while the notice named the shop; no notice in force names it now, and the member has no order.
+    const press = new FormData();
+    for (const [name, value] of Object.entries({ uiLocale: "ro", productId: product.id, variantId: size.id, quantity: "1", note: "" })) press.set(name, value);
+    const to = await redirectedTo(placeShopOrderAction(press));
+    expect(to).toBe("/ro/zona-membri/magazin?shop=NOT_FOUND#members-shop");
+    // What the browser then asks for: the query, never the fragment.
+    const answer = new URLSearchParams(to.slice(to.indexOf("?") + 1, to.indexOf("#")));
+    const html = renderToStaticMarkup(await ShopPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({ shop: answer.get("shop") ?? undefined }) }));
+    expect(html).toContain('data-testid="members-shop-outcome"');
+    expect(html).toContain(ro.Members.shop.outcome.NOT_FOUND);
+    // In the zone's frame, with no «Magazin» tab to lead back here and nothing of the shop itself.
+    expect(html).toContain('data-testid="members-greeting"');
+    expect(html).toContain('data-testid="members-sign-out"');
+    expect([...hrefsOf(html).matchAll(/href="([^"]+)"/g)].map((m) => m[1])).toEqual(["/ro/zona-membri", "/ro/zona-membri/alergari"]);
+    expect(html).not.toContain('data-testid="members-shop"');
+    // Only for that request: with no answer in the address, or none the page knows, it is still a 404.
+    const notFound = { digest: expect.stringContaining("404") };
+    await expect(ShopPage({ params: Promise.resolve({ locale: "ro" }) })).rejects.toMatchObject(notFound);
+    for (const search of [{}, { shop: "whatever" }, { shopAt: "orders" }]) {
+      await expect(ShopPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve(search) })).rejects.toMatchObject(notFound);
     }
   });
 

@@ -37,7 +37,7 @@ vi.mock("next-intl/server", () => ({
 const { createProduct, deleteProduct, moveProduct, saveProduct } = await import("@/modules/content/shop/service");
 const { cancelOwnOrder, moveOrderByClub, placeOrder } = await import("@/modules/content/shop/orders");
 const { readShopSettings, saveShopSettings } = await import("@/modules/content/shop/settings");
-const { countOrdersForAdmin, countVisibleProducts, listOrdersForAdmin, listOrdersOfMember, listProductsForAdmin, listProductsForMembers } = await import(
+const { countOrdersForAdmin, countVisibleProducts, listOrdersForAdmin, listOrdersOfMember, listProductsForAdmin, listProductsForMembers, memberHasOrders } = await import(
   "@/modules/content/shop/repository"
 );
 const { buildOrdersCsv } = await import("@/modules/content/shop/csv");
@@ -340,6 +340,20 @@ describe("§683 the members' shop", () => {
     expect(await noticeDescribesMembersShop(db, NOW)).toBe(false);
     await approveNotice({ ro: privacyNoticeRo, en: privacyNoticeEn });
     expect(await noticeDescribesMembersShop(db, NOW)).toBe(true);
+  });
+
+  it("memberHasOrders is one yes or no: no before an order, yes after one, for a cancelled order too, and never for another member's", async () => {
+    const product = await createProduct(db, { actor: admin, fields: PRODUCT, now: NOW });
+    const variants = await variantsOf(product.id);
+    expect(await memberHasOrders(db, member.id)).toBe(false);
+    const placed = await order(member, product.id, variants.L.id, 1);
+    expect(await memberHasOrders(db, member.id)).toBe(true);
+    // Another member's orders are theirs alone.
+    expect(await memberHasOrders(db, other.id)).toBe(false);
+    // A cancelled order is still an order the member may read, so «Magazin» stays among their tabs.
+    await cancelOwnOrder(db, { account: member, orderId: placed.id, now: NOW });
+    expect(await memberHasOrders(db, member.id)).toBe(true);
+    expect(await listOrdersOfMember(db, member.id)).toHaveLength(1);
   });
 
   it("deleting a product with orders archives it: out of the shop and the editor, the orders keep their copy", async () => {

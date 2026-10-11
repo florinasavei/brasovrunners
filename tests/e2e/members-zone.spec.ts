@@ -32,7 +32,6 @@ test.describe("§524 the members' zone", () => {
     await expect(page).toHaveURL(/\/ro\/zona-membri\/alergari$/);
     await expect(page.getByTestId("members-tabs").getByRole("link", { name: "Alergări" })).toHaveAttribute("aria-current", "page");
     await expect(page.getByTestId("members-upcoming")).toBeVisible();
-    await page.goto("/ro/zona-membri");
 
     await page.goto("/ro/admin");
     await expect(page).toHaveURL(/\/ro\/zona-membri$/);
