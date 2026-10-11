@@ -103,7 +103,7 @@ describe("§NNN a typed accent", () => {
   });
 
   it(`derives readable, ordered shades for ${TYPED.length} typed colours across the wheel`, () => {
-    expect(TYPED.length).toBeGreaterThan(300);
+    expect(TYPED.length).toBe(432);
     for (const hex of TYPED) assertReadable(hex, deriveAccentShades(hex));
   });
 
