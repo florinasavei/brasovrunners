@@ -5721,7 +5721,7 @@
       "sideBySide": "Today's look and the new one are drawn side by side under «The new look», by the same components.",
       "contents": "On this page",
       "look": {
-        "intro": "Today's look and the new one, drawn by the same components: the difference between them is only what the new look changes. On the site it is switched on under «Setări» → «Aspect» → «Aspectul nou».",
+        "intro": "Today's look and the new one, drawn by the same components: they differ only in what the new look changes. On the site it is switched on under «Settings» → «Appearance» → «The new look».",
         "sideBySide": "Side by side",
         "sideBySideNote": "The same code twice; only the box on the right wears the new look.",
         "today": "Today's look",

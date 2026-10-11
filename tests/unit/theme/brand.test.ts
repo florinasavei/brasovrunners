@@ -154,20 +154,6 @@ describe("BR-REQ-070-02 the palette is readable", () => {
 });
 
 /**
- * BR-REQ-070-02 criterion 4, again, for the gradients (§166).
- *
- * A flat background is one colour and one ratio. A gradient is a *range*, and a reader lands
- * somewhere in it: the countdown sits over the light end of the hero and the body text runs
- * across the whole of it. So every pair is asserted against **both stops**, in both schemes,
- * which is what stops "more gradients and shiny Front-End stuff" from costing somebody the
- * one sentence the hero exists to say.
- *
- * The accent gradient's two stops are the palette's own blue and its ink-blue, so their
- * ratios against button text are asserted above; what is asserted here is that the gradient
- * is actually made of them, because a hand-written stop inside the CSS string would be a hex
- * outside the palette and no other test would see it.
- */
-/**
  * BR-REQ-070-02 criterion 4, for «Aspectul nou» (§NNN): the facelift's tokens, each with its dark
  * twin, and every pair the new look draws held at AA — and the pink that carries words held under
  * every page tint the club may choose, because it is never lighter than the muted ink §488 already
@@ -223,6 +209,20 @@ describe("BR-REQ-070-02 the new look's palette is readable", () => {
   });
 });
 
+/**
+ * BR-REQ-070-02 criterion 4, again, for the gradients (§166).
+ *
+ * A flat background is one colour and one ratio. A gradient is a *range*, and a reader lands
+ * somewhere in it: the countdown sits over the light end of the hero and the body text runs
+ * across the whole of it. So every pair is asserted against **both stops**, in both schemes,
+ * which is what stops "more gradients and shiny Front-End stuff" from costing somebody the
+ * one sentence the hero exists to say.
+ *
+ * The accent gradient's two stops are the palette's own blue and its ink-blue, so their
+ * ratios against button text are asserted above; what is asserted here is that the gradient
+ * is actually made of them, because a hand-written stop inside the CSS string would be a hex
+ * outside the palette and no other test would see it.
+ */
 describe("BR-REQ-070-02 the gradients are readable at both ends", () => {
   // Body text, muted text and the countdown over the hero's light end and its card end, in both
   // schemes; button text over both stops of the accent — the same pairs, from `brand-pairs.ts`.

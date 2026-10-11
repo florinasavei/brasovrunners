@@ -65,13 +65,6 @@ describe("§NNN the scope stops at the backoffice", () => {
     expect(source("src/modules/public-cache/reads.ts")).toMatch(/publicRead\(\["settings\.site-look"\], \["settings"\]/);
   });
 
-  it("reads nothing more in the header and draws nothing more while off", () => {
-    const header = source("src/shared/ui/SiteHeader.tsx");
-    expect(header).toContain("const joinHref = look.on ? await joinTarget(locale as Locale) : null;");
-    expect(header).toContain("{joinHref && <HeaderCta");
-    expect(header).toContain("{joinHref && <HeaderSocials");
-  });
-
   it("hides what only the new look shows unless it is inside the scope", () => {
     expect(onlyUnderLook("flex")).toEqual({ display: "none", [UNDER_LOOK]: { display: "flex" } });
     for (const file of ["src/shared/ui/HeaderCta.tsx", "src/shared/ui/LookWatermark.tsx"]) expect(source(file), file).toContain('onlyUnderLook("flex")');

@@ -10,12 +10,12 @@ import ArrowButtonLink from "./ArrowButtonLink";
  * run is ahead (`nextWeeklyRun`). The header decides the address; this draws it.
  *
  * Inside the new look's scope only (`onlyUnderLook`): the backoffice shares this header and never
- * shows it. On a phone the words alone (`compactOnPhone`), so the row stays one row at 320 pixels
- * with the logo, the first section and the ☰ (§569, §699).
+ * shows it. On a phone a tighter pill (`compactOnPhone`) keeps the arrow (§521) and the row one row at
+ * 320 pixels with the logo, the first section and the ☰ (§569, §699).
  */
 export default function HeaderCta({ href, label }: { href: ComponentProps<typeof Link>["href"]; label: string }) {
   return (
-    <Box sx={{ order: 3, flexShrink: 0, alignItems: "center", ...onlyUnderLook("flex") }}>
+    <Box sx={{ flexShrink: 0, alignItems: "center", ...onlyUnderLook("flex") }}>
       <ArrowButtonLink href={href} label={label} size="small" compactOnPhone data-testid="header-cta" />
     </Box>
   );

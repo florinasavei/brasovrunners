@@ -267,17 +267,22 @@ export default async function SiteHeader() {
             showFaq={sections.faq}
             showContact={sections.contact}
             order={order}
-          />
+          >
+            {joinHref && (
+              <>
+                <HeaderCta href={joinHref} label={site("cta.join")} />
+                <HeaderSocials links={socials} />
+              </>
+            )}
+          </SiteNav>
         </Box>
 
         {/*
-          «Vino cu noi» and the two social marks, under «Aspectul nou» only (§NNN): rendered while the
-          setting is on, and drawn only inside its scope, so the backoffice never shows them. Between
-          the sections and the language, where the row's action belongs; the sections' nav measures
-          what is left and folds the rest into its ☰, so the row stays one row at every width.
+          «Vino cu noi» and the two social marks, under «Aspectul nou» only (§NNN): passed to the nav
+          as its children (the trailing group), so they sit before the ☰ and the ☰ stays the row's right edge
+          (§699), and the nav measures what is left and folds the rest into it, so the row stays one
+          row at every width. Drawn only inside the look's scope, so the backoffice never shows them.
         */}
-        {joinHref && <HeaderCta href={joinHref} label={site("cta.join")} />}
-        {joinHref && <HeaderSocials links={socials} />}
 
         {/*
           The scheme switch left this row for the footer's bottom-left corner (§115), and on a

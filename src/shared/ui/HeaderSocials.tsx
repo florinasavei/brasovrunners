@@ -20,7 +20,7 @@ export default function HeaderSocials({ links }: { links: readonly ClubSocialLin
   return (
     <Box
       data-testid="header-socials"
-      sx={{ order: 3, flexShrink: 0, alignItems: "center", display: "none", [UNDER_LOOK]: { display: { xs: "none", md: "flex" } } }}
+      sx={{ flexShrink: 0, alignItems: "center", display: "none", [UNDER_LOOK]: { display: { xs: "none", md: "flex" } } }}
     >
       {links.map((entry) => (
         <MuiLink

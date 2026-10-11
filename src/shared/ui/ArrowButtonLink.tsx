@@ -1,7 +1,7 @@
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import type { ComponentProps } from "react";
 import type { Link } from "@/i18n/navigation";
-import { glyphSx, WITH_GLYPH_SX } from "./button-glyph";
+import { BUTTON_GLYPH_PX, glyphSx, WITH_GLYPH_SX } from "./button-glyph";
 import ButtonLink from "./ButtonLink";
 import { TAP_TARGET } from "./tap-target";
 
@@ -15,8 +15,9 @@ type Props = {
   variant?: "contained" | "outlined";
   size?: Size;
   /**
-   * Below `sm`, the words alone and a tighter pill: the header's row at 320 pixels has no room for
-   * the arrow beside the logo, the first section and the ☰ (§569's one row, §262's first entry).
+   * Below `sm`, a tighter pill (less padding, a smaller gap and arrow) that keeps its arrow, since a
+   * button wears its glyph at every width (§521): the header's row at 320 pixels has room for the
+   * logo, the first section and the ☰ beside it (§569's one row, §262's first entry).
    */
   compactOnPhone?: boolean;
   "data-testid"?: string;
@@ -53,11 +54,11 @@ export default function ArrowButtonLink({ href, label, variant = "contained", si
         whiteSpace: "nowrap",
         flexShrink: 0,
         ...(variant === "outlined" ? { color: "text.primary", borderColor: "currentColor" } : {}),
-        ...(compactOnPhone ? { px: { xs: 1.25, sm: size === "small" ? 1.25 : 2 } } : {}),
+        ...(compactOnPhone ? { px: { xs: 1, sm: size === "small" ? 1.25 : 2 }, gap: { xs: 0.25, sm: 1 } } : {}),
       }}
     >
       {label}
-      <ArrowForwardIcon aria-hidden="true" sx={{ ...glyphSx(size), ...(compactOnPhone ? { display: { xs: "none", sm: "inline-block" } } : {}) }} />
+      <ArrowForwardIcon aria-hidden="true" sx={{ ...glyphSx(size), ...(compactOnPhone ? { fontSize: { xs: 16, sm: BUTTON_GLYPH_PX[size] } } : {}) }} />
     </ButtonLink>
   );
 }

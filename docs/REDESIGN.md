@@ -70,7 +70,7 @@ ink, 44 px tall. Chips: the existing `GlyphChip`. One inline mountain SVG under 
 
 The scope: the public layout sets `data-look="2026"` when «Aspectul nou» is on, the way `data-dark`
 switches the dark scheme; the overrides read under that attribute as plain-object selectors. Off,
-every page is pixel-identical to today; the backoffice never carries the attribute.
+every page is pixel-identical to today. The attribute is on `<html>` wherever the setting is on, the backoffice's pages included (they share the root layout); every rule stops at the backoffice shell's `data-backoffice` marker, so staff never see the look.
 
 **Component-based, by the owner's rule (2026-10-10).** One named Server Component per section under `src/modules/home/ui/` — `Hero`, `NextRunCard`, `RunCardGrid`, `StepsBand`, `WhyList`, `PhotoStrip`, `NumbersBand`; the calendar's `KindChips`, `NextEventPanel`, `SubscribeBox` likewise — typed props, no element-valued prop, tokens only from `brand.ts`; each drawn with a fixture on `/admin/design` → «Mostre» and listed in `docs/VIBECODING.md` → «Where things live»; carousels are CSS scroll-snap strips, no island; everything the club sees is a setting.
 
