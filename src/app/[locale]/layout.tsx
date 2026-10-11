@@ -244,7 +244,7 @@ export default async function LocaleLayout({ children, params }: Props) {
                   {look.on && <LookWatermark />}
                   {/* The build stamp is the fold's own last line at every width (`SiteFooter`,
                       §608), not a label of its own here. Under «Aspectul nou» the footer also
-                      draws the language as the floating round button above its bar (§NNN). */}
+                      draws the language as the floating round button above its bar (§722). */}
                   <SiteFooter newLook={look.on} />
                 </Box>
               </IntlErrorHandling>

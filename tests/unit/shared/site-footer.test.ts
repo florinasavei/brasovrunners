@@ -172,7 +172,7 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's one doo
     expect(panel, "the panel's own box is zero wide").toMatch(/width:0;/);
     expect(panel).toMatch(/overflow:visible;/);
     // The one `:has()` allowed is the new look's scope stopping at the backoffice (`theme/look.ts`,
-    // §NNN: the phone's flags leave the bar under «Aspectul nou»), which reads no state of the fold.
+    // §722: the phone's flags leave the bar under «Aspectul nou»), which reads no state of the fold.
     expect(css, "no rule reads the fold's state from outside it").not.toMatch(/:has\((?!\[data-backoffice\]\))/);
 
     // One row that never wraps, aligned to the top so an open fold grows downward only.

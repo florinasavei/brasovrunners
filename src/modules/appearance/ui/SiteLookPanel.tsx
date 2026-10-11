@@ -42,7 +42,7 @@ const CHOICES = ["off", "on"] as const;
  * side-by-side, where both looks are drawn from the same rules. A role that may not change it reads
  * the choice in force.
  *
- * Since §NNN the same form carries «Culoarea de accent»: the presets of `LOOK_ACCENT` (`theme/brand.ts`),
+ * Since §723 the same form carries «Culoarea de accent»: the presets of `LOOK_ACCENT` (`theme/brand.ts`),
  * each drawn in miniature by day and after dark (`AccentPreview`), and «Personalizat», the one client
  * island (`CustomAccentOption`), live as the colour is typed. One save sets both, so the club never
  * saves a look in an accent it has not seen.
@@ -117,7 +117,7 @@ export default async function SiteLookPanel({ locale, state, mayEdit, openWhen }
                   </Box>
                 ))}
               </Box>
-              {/* «Culoarea de accent» (§NNN): a preset or a typed colour, worn only under the new look. */}
+              {/* «Culoarea de accent» (§723): a preset or a typed colour, worn only under the new look. */}
               <Box component="fieldset" sx={{ border: 0, p: 0, m: 0 }} data-testid="site-look-accent">
                 <Typography component="legend" variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
                   {t("look.accent.legend")}

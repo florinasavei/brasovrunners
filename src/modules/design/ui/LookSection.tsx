@@ -59,7 +59,7 @@ async function Sample({ preview }: { preview: boolean }) {
         {/* The header's own component: drawn only under the look's scope, so the left column shows the gap it leaves. */}
         <HeaderCta href="/events" label={site("cta.join")} />
       </Box>
-      {/* «Urmărește-ne» (§NNN): the header's own group, from `md` up and under the look's scope only. */}
+      {/* «Urmărește-ne» (§722): the header's own group, from `md` up and under the look's scope only. */}
       {socials.length > 0 && (
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "center" }}>
           <Typography variant="body2" color="text.secondary">
@@ -68,7 +68,7 @@ async function Sample({ preview }: { preview: boolean }) {
           <HeaderSocials links={socials} label={site("followUs")} />
         </Box>
       )}
-      {/* The floating language button (§NNN), drawn in the flow here rather than in the screen's corner. */}
+      {/* The floating language button (§722), drawn in the flow here rather than in the screen's corner. */}
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "center" }}>
         <Typography variant="body2" color="text.secondary">
           {t("design.look.language")}
@@ -88,7 +88,7 @@ async function Sample({ preview }: { preview: boolean }) {
  * carries the preview scope (`theme/look.ts`), and the page draws the new look's palette variables
  * for it with the very stylesheet the public layout draws (`lookPaletteCss`). Then the mapping of
  * MUI's primary onto the pink tokens, light and dark, the accent presets the club may choose instead
- * (§NNN, `LOOK_ACCENT`: each in miniature with its four shades), and the mountain mark at its sizes.
+ * (§723, `LOOK_ACCENT`: each in miniature with its four shades), and the mountain mark at its sizes.
  * The side-by-side wears the default pink: the design page reads no setting. The new tokens
  * themselves are swatches under «Culori», their pairs in its table.
  */
@@ -143,7 +143,7 @@ export default async function LookSection() {
         </Box>
       </Block>
 
-      {/* «Culorile de accent» (§NNN): every preset the club may choose, its four shades by day and after dark. */}
+      {/* «Culorile de accent» (§723): every preset the club may choose, its four shades by day and after dark. */}
       <Block title={t("design.look.accentsTitle")} note={t("design.look.accentsNote")}>
         <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" } }} data-testid="design-look-accents">
           {LOOK_ACCENT_PRESETS.map((preset) => (

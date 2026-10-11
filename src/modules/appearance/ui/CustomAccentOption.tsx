@@ -31,7 +31,7 @@ type Props = {
 };
 
 /**
- * «Personalizat» for the new look's accent (§NNN): a colour typed as `#rrggbb`, with the browser's own
+ * «Personalizat» for the new look's accent (§723): a colour typed as `#rrggbb`, with the browser's own
  * colour picker beside it, and the accent in miniature redrawn as it is typed — by day and after dark,
  * from the very shades the server will derive (`accent-shades.ts`), with their values written out. The
  * server decides; this only says it early.

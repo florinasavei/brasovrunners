@@ -219,7 +219,7 @@ export const GRADIENT = {
 } as const;
 
 /**
- * The new look's accent presets (§NNN, amending §708; the owner, 2026-10-11: «this should be a
+ * The new look's accent presets (§723, amending §708; the owner, 2026-10-11: «this should be a
  * configuration in the theme»): «Setări» → «Aspect» → «Aspectul nou» → «Culoarea de accent». Each is
  * the four shades the look wears — `accent` (the mark, a rule, a large word), `accentInk` (the words:
  * `primary.main` under the look), `accentDeep` (a pressed button), `accentTint` (a pale band, the

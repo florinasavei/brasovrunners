@@ -71,7 +71,7 @@ describe("§708 the scope stops at the backoffice", () => {
     expect(source("src/shared/ui/HeaderSocials.tsx")).toContain('display: "none", [UNDER_LOOK]: { display: { xs: "none", md: "flex" } }');
   });
 
-  it("§NNN moves the language to one floating button under the look, and leaves today's two copies alone while off", () => {
+  it("§722 moves the language to one floating button under the look, and leaves today's two copies alone while off", () => {
     const layout = source("src/app/[locale]/layout.tsx");
     expect(layout).toContain("<SiteFooter newLook={look.on} />");
     const footer = source("src/shared/ui/SiteFooter.tsx");
@@ -107,7 +107,7 @@ describe("§708 the pink primary", () => {
     expect(light).toContain(`${PRIMARY_VARIABLES.main}:${COLOR.accentInk};${PRIMARY_VARIABLES.main}Channel:160 22 80`);
     expect(dark).toContain(`${PRIMARY_VARIABLES.contrastText}:${COLOR_DARK.paper}`);
     // No colour that is not a token: every hex in the sheet is one of the eight it names, or the pink's
-    // pale band in either scheme (`--br-accent-tint`, §NNN).
+    // pale band in either scheme (`--br-accent-tint`, §723).
     const tokens = new Set([...Object.values(LOOK_PRIMARY.light), ...Object.values(LOOK_PRIMARY.dark), COLOR.accentTint, COLOR_DARK.accentTint]);
     for (const hex of css.match(/#[0-9a-f]{3,8}/gi) ?? []) expect(tokens.has(hex), hex).toBe(true);
     // Nothing a browser would read as markup inside the <style> element.

@@ -17,7 +17,7 @@ import { LOOK_ACCENT_TINT, UNDER_LOOK } from "@/theme/look";
 
 /**
  * A band across the page — «Prima dată», the numbers: the hero's tint today, the accent's pale band
- * under the look — the club's accent (§NNN), whose stylesheet sets the variable light and dark, so the
+ * under the look — the club's accent (§723), whose stylesheet sets the variable light and dark, so the
  * one rule serves both schemes (it outranks the `[data-dark]` rule by its scope).
  */
 export const HOME_BAND_SX = {

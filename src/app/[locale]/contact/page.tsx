@@ -96,7 +96,7 @@ const fieldId = (name: string) => `c-${name}`;
 /**
  * The page in sections (§NNN; the owner, 2026-10-10: «I need here sections, separators and icons»):
  * «Scrie-ne» and its intro, «Trimite-ne un mesaj» with the form, «Spune-ne ceva», «Contact direct», the
- * newsletter (§NNN, amending §698). Each section after the form opens with a rule and a heading that wears its glyph;
+ * newsletter (§721, amending §698). Each section after the form opens with a rule and a heading that wears its glyph;
  * the newsletter's box draws the same.
  */
 const SECTION_SX = { mt: { xs: DENSITY.sectionGapLg, sm: 4 }, pt: { xs: DENSITY.sectionGap, sm: 3 }, borderTop: 1, borderColor: "divider", scrollMarginTop: 16 } as const;
@@ -260,7 +260,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
       </Typography>
 
       {/*
-        «Trimite-ne un mesaj» (§NNN): the form's own section, right under the intro: a heading with its glyph and
+        «Trimite-ne un mesaj» (§721): the form's own section, right under the intro: a heading with its glyph and
         no rule, as the page's head. The heading only while the form is drawn: after a send the section holds the
         confirmation, and with no form, the sentence that says so.
       */}
@@ -298,7 +298,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
           </Button>
         </>
       ) : !formAvailable ? (
-        // No form on this deployment: «Contact direct» below names the club's address, when the club has named one (§8, §NNN).
+        // No form on this deployment: «Contact direct» below names the club's address, when the club has named one (§8, §721).
         <Typography variant="body1">{t("off.none")}</Typography>
       ) : (
         <>
@@ -410,7 +410,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
       </Box>
 
       {/* «Spune-ne ceva» (§676): one section and one button to the anonymous wizard, under the form, above «Contact direct» and
-          the newsletter (§679, §NNN). */}
+          the newsletter (§679, §721). */}
       {feedbackOpen && (
         <Box
           component="section"
@@ -442,7 +442,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
       )}
 
       {/*
-        «Contact direct» (§NNN; the owner, 2026-10-11: «partea de Contact Direct ar trebui să fie după
+        «Contact direct» (§721; the owner, 2026-10-11: «partea de Contact Direct ar trebui să fie după
         «Spune-ne ceva (anonim)», fix înainte de newsletter», amending §698): the club's address (§442, §449)
         and its public phone (§565), one row per way with its glyph, as the section just above the newsletter,
         after the form and «Spune-ne ceva». It opens with the rule and heading every section after the form

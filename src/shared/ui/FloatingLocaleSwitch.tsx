@@ -16,7 +16,7 @@ export const FLOATING_SWITCH_SIZE = 44;
 export const FLOATING_SWITCH_GAP = 12;
 
 /**
- * The language under «Aspectul nou» (§NNN, amending §708 and §262): one small round button in the
+ * The language under «Aspectul nou» (§722, amending §708 and §262): one small round button in the
  * bottom-right corner of the screen, on every public page, that stays there while the page scrolls.
  * The owner, 2026-10-11: «the language switchers are always on the bottom right». Under the look the
  * header's copy of `LocaleSwitcher` (from `sm`) and the footer's (on a phone) are `display: none`, so
@@ -56,7 +56,7 @@ export default function FloatingLocaleSwitch({ inline = false }: { inline?: bool
       data-testid="floating-language"
       sx={{
         ...onlyUnderLook("flex"),
-        // A printed page has no use for a floating control (§NNN).
+        // A printed page has no use for a floating control (§722).
         "@media print": { display: "none !important" },
         ...(inline
           ? {}

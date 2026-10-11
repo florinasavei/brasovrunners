@@ -73,7 +73,7 @@ describe("the site look setting", () => {
     expect(cache.revalidatePublicContent).not.toHaveBeenCalled();
   });
 
-  it("§NNN saves a preset accent beside the switch, and names it in the audit only when it changed", async () => {
+  it("§723 saves a preset accent beside the switch, and names it in the audit only when it changed", async () => {
     await updateSiteLook(db, admin, { look: "on", accent: "blue" }, NOW);
     expect((await readSiteLook(db)).setting).toEqual({ on: true, accent: "blue" });
     // A flip of the switch alone keeps the accent and audits as it always did.
@@ -90,7 +90,7 @@ describe("the site look setting", () => {
     expect(cache.revalidatePublicContent).toHaveBeenCalledTimes(3);
   });
 
-  it("§NNN saves a typed accent lower-cased, a missing # and spaces forgiven, and goes back to a preset", async () => {
+  it("§723 saves a typed accent lower-cased, a missing # and spaces forgiven, and goes back to a preset", async () => {
     await updateSiteLook(db, admin, { look: "on", accent: "custom", hex: "  1F6FEB " }, NOW);
     expect((await readSiteLook(db)).setting).toEqual({ on: true, accent: "custom", hex: "#1f6feb" });
     await updateSiteLook(db, admin, { look: "on", accent: "pink", hex: "#1f6feb" }, NOW);
@@ -103,7 +103,7 @@ describe("the site look setting", () => {
     );
   });
 
-  it("§NNN refuses a grey, a value that is no colour and an accent that is no choice, with nothing written", async () => {
+  it("§723 refuses a grey, a value that is no colour and an accent that is no choice, with nothing written", async () => {
     await expect(updateSiteLook(db, admin, { look: "on", accent: "custom", hex: "#808080" }, NOW)).rejects.toMatchObject({
       code: "VALIDATION_ERROR",
       fields: ["hex", "accentTooGrey"],

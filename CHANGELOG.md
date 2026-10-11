@@ -8,6 +8,12 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.96-2026-10-11
+
+- **The calendar under «Aspectul nou»** — always-visible chips for the kind (weekly runs, special events) and the surface, three colours by kind with a legend, the next event with its pills and weather beside the month, and a subscribe box with Google, Apple, Outlook, the .ics and the address to copy; with the setting off the calendar is unchanged. §720.
+- **«Contact direct» moves under «Spune-ne ceva».** The contact page now reads: the form, the anonymous forms, the club's address and phone, then the newsletter §721.
+- **«Aspectul nou»: the language floats bottom-right, «Urmărește-ne» tops the desktop header** — under the new look the RO/EN switch is one small round button in the bottom-right corner of every public page, above the footer's bar, that stays while you scroll; on a computer the header ends with «Urmărește-ne» / "Follow us" and Instagram, Facebook and Strava. The footer's Instagram mark is no longer blank on a phone under the new look. Off, nothing changes; the backoffice never does. §722.
+- **The new look's accent colour is the club's choice** — «Setări» → «Aspect» → «Aspectul nou» → «Culoarea de accent»: pink (the default), the club's blue, the club's orange, or a colour you type. The site works out the readable shades by day and at night, at AA, and shows them before you save. The logo stays blue, and the backoffice, emails and PDFs do not change. §723.
 ## BR-V2.95-2026-10-11
 
 - **The move buttons say what they do** — «Mai sus» / «Mai jos» with an arrow glyph and a tooltip on the team cards and boxes, the FAQ, the discount codes, the shop and the to-do list, instead of a bare «↑» / «↓»; a test refuses a symbol-only button. §710.

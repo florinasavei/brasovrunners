@@ -7,7 +7,7 @@ import { HEX_COLOR } from "./tint-contrast";
 
 /**
  * «Aspectul nou» — the facelift's look on the public pages, one switch and its accent colour (§708;
- * the accent since §NNN; `docs/REDESIGN.md`, decisions 1 and 12; the shape of «Aspectul site-ului»,
+ * the accent since §723; `docs/REDESIGN.md`, decisions 1 and 12; the shape of «Aspectul site-ului»,
  * §488, and «Mărimea textului», §530).
  *
  * Pure: no database, no environment. Stored as `{ on }`, with the accent beside it once the club has

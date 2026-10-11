@@ -176,7 +176,7 @@ test.describe("§708 the header under «Aspectul nou»", () => {
       }
 
       await expectFloatingLanguage(page, 320, 720);
-      // The footer's Instagram paints with a gradient of its own, never the header's hidden one (§NNN).
+      // The footer's Instagram paints with a gradient of its own, never the header's hidden one (§722).
       const ownGradient = await page
         .locator("footer")
         .locator('a[href*="instagram"] svg')
@@ -188,14 +188,14 @@ test.describe("§708 the header under «Aspectul nou»", () => {
         });
       expect(ownGradient).toBe(true);
 
-      // §NNN: on a computer, «Urmărește-ne» with Instagram, Facebook and Strava is the header row's last item.
+      // §722: on a computer, «Urmărește-ne» with Instagram, Facebook and Strava is the header row's last item.
       await page.setViewportSize({ width: 1280, height: 800 });
       await expect(nav).toHaveAttribute("data-measured", "true");
       const socials = page.getByRole("navigation", { name: "Urmărește-ne" });
       await expect(socials).toBeVisible();
       await expect(socials.getByTestId("header-socials-label")).toHaveText("Urmărește-ne");
       expect(await socials.locator("a").evaluateAll((links) => links.map((link) => link.getAttribute("data-network")))).toEqual(["instagram", "facebook", "strava"]);
-      // Each mark says whose profile it is and where, in the page's language (`Site.followOn`, §NNN), never the network alone.
+      // Each mark says whose profile it is and where, in the page's language (`Site.followOn`, §722), never the network alone.
       expect(await socials.locator("a").evaluateAll((links) => links.map((link) => link.getAttribute("aria-label")))).toEqual([
         `${CLUB_NAME} pe Instagram`,
         `${CLUB_NAME} pe Facebook`,
@@ -235,7 +235,7 @@ test.describe("§708 the header under «Aspectul nou»", () => {
 });
 
 /**
- * §NNN — under «Aspectul nou» the language is one round button in the bottom-right corner: the only
+ * §722 — under «Aspectul nou» the language is one round button in the bottom-right corner: the only
  * «Limbă» navigation at this width (the header's and the footer's copies are hidden), a 44-pixel target
  * just above the footer's bar, still on screen after a scroll to the page's end, and covering none of
  * the page's own controls there.

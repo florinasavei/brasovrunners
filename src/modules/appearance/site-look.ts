@@ -21,7 +21,7 @@ import {
 } from "./domain/site-look";
 
 /**
- * «Aspectul nou» (§708, its accent colour since §NNN): one `platform_settings` row, written by an
+ * «Aspectul nou» (§708, its accent colour since §723): one `platform_settings` row, written by an
  * Administrator under «Setări» → «Aspect», audited, read by the locale layout and the header through
  * the public cache (§333). No migration: the settings table takes any key (§100).
  */

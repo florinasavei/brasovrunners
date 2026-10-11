@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 /**
  * BR-REQ-070-04, `DECISIONS.md` §NNN — the contact page's ways on: the club's public phone (§565) on the
- * page itself, not only in the footer's fold, as a `tel:` link in «Contact direct», after the form and just before the newsletter (§NNN, amending §698); the
+ * page itself, not only in the footer's fold, as a `tel:` link in «Contact direct», after the form and just before the newsletter (§721, amending §698); the
  * calendar named in the intro, for the newcomer's «when and where do you run?»; and after a send, a
  * button back to an empty form. The page rendered on the server with the real catalogues (the
  * `contact-page-addresses.test.ts` shape).
@@ -87,7 +87,7 @@ describe("BR-REQ-070-04 the contact page's ways on (§NNN)", () => {
     expect(line![1]).toContain(lead);
     expect(line![1]).toContain(`href="tel:+40700000000"`);
     expect(line![1]).toContain(PHONE);
-    // Below the form (§NNN; the owner, 2026-10-11, amending §698).
+    // Below the form (§721; the owner, 2026-10-11, amending §698).
     expect(html.indexOf('data-testid="contact-phone"')).toBeGreaterThan(html.indexOf("<form"));
   });
 

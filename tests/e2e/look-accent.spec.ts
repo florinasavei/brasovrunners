@@ -5,7 +5,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
 /**
- * BR-REQ-070-02, `DECISIONS.md` §NNN — the new look's accent colour is the club's setting, walked as
+ * BR-REQ-070-02, `DECISIONS.md` §723 — the new look's accent colour is the club's setting, walked as
  * the club walks it: «Setări» → «Aspect» → «Aspectul nou» → «Culoarea de accent», a preset or a
  * colour typed into «Personalizat», saved behind the question. A public page then wears it as MUI's
  * primary and the band's variable; the backoffice, which shares the layout, never does; a grey is
@@ -58,7 +58,7 @@ async function rootVariable(page: Page, name: string): Promise<string> {
   return page.evaluate((variable) => getComputedStyle(document.documentElement).getPropertyValue(variable).trim().toLowerCase(), name);
 }
 
-test.describe("§NNN the new look's accent colour", () => {
+test.describe("§723 the new look's accent colour", () => {
   test.describe.configure({ mode: "serial" });
   test.beforeEach(() => {
     test.skip(test.info().project.name !== "desktop", "one shared platform_settings row");

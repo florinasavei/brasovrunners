@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { SOURCES, type Source } from "./scan";
 
 /**
- * BR-REQ-070-02, §NNN (amending §708 and §694) — a page never names the pink, or a preset: the
+ * BR-REQ-070-02, §723 (amending §708 and §694) — a page never names the pink, or a preset: the
  * accent is the club's setting.
  *
  * Under «Aspectul nou» the accent is the club's choice (pink, blue, orange, or a colour it types).
@@ -159,7 +159,7 @@ const FINE: Record<string, string> = {
   "a variable named like a key": "const ink = COLOR[accentKey];",
 };
 
-describe("§NNN a page names neither the pink nor a preset", () => {
+describe("§723 a page names neither the pink nor a preset", () => {
   it("reads the real tree: the tokens where they are defined, the presets where they are used", () => {
     expect(SOURCES.length).toBeGreaterThan(500);
     expect(accentReads(sourceAt("src/theme/brand.ts")).some((read) => read.kind === "token")).toBe(true);

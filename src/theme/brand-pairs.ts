@@ -119,7 +119,7 @@ type AccentKey = "accent" | "accentInk" | "accentDeep" | "accentTint";
 type AccentScheme = Readonly<Record<AccentKey, string>>;
 
 /**
- * The accent's pairs (§NNN), for any accent: the same ten of each scheme `LOOK_PAIRS` holds for the
+ * The accent's pairs (§723), for any accent: the same ten of each scheme `LOOK_PAIRS` holds for the
  * pink — its words on the page, a card and its band, the words on its fill and on the pressed fill,
  * the hot shade as text and as a fill, and the body's and the muted ink on its band. `name` labels the
  * accent's own tokens (`LOOK_ACCENT.blue.light.accentInk`); the page's tokens keep theirs.

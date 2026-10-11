@@ -14,7 +14,7 @@ const jsx = body.slice(body.indexOf("return ("));
 
 describe("BR-REQ-070-04 the contact page's sections, in order (§679)", () => {
   it("draws the form, then «Spune-ne ceva», then «Contact direct», then the newsletter, then only the identity line", () => {
-    // The form, «Spune-ne ceva», «Contact direct» (§NNN, amending §698), the newsletter.
+    // The form, «Spune-ne ceva», «Contact direct» (§721, amending §698), the newsletter.
     const ways = jsx.indexOf('data-testid="contact-ways"');
     const form = jsx.indexOf("<form action={submitContactAction}>");
     const feedback = jsx.indexOf("id={FEEDBACK_SECTION_ID}");
@@ -28,7 +28,7 @@ describe("BR-REQ-070-04 the contact page's sections, in order (§679)", () => {
   });
 
   it("gives «Contact direct» the rule every later section has, and the form's own section, right under the intro, none", () => {
-    // §NNN, amending §698: the form's section is the page's head and draws no rule; «Contact direct», now
+    // §721, amending §698: the form's section is the page's head and draws no rule; «Contact direct», now
     // under «Spune-ne ceva», opens with the one every section after the form has.
     const openingTag = (testId: string) => {
       const at = jsx.indexOf(`data-testid="${testId}"`);

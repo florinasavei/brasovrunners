@@ -2,7 +2,7 @@ import { COLOR, COLOR_DARK } from "@/theme/brand";
 import { contrastRatio, HEX_COLOR, MIN_TEXT_CONTRAST, relativeLuminance } from "./tint-contrast";
 
 /**
- * The new look's accent from one colour (§NNN, amending §708): the four shades «Aspectul nou» wears —
+ * The new look's accent from one colour (§723, amending §708): the four shades «Aspectul nou» wears —
  * `accent` (the mark, a rule, a large word), `accentInk` (the words: MUI's `primary.main` under the
  * look), `accentDeep` (a pressed button) and `accentTint` (a pale band or the weekly runs' chip) — in
  * the light scheme and after dark, derived from the colour the club types so every pair the look draws

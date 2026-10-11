@@ -135,7 +135,7 @@ export default async function SiteHeader() {
   const home = await cachedHomePage();
   const joinHref = look.on ? await joinTarget(locale as Locale) : null;
   const site = await getTranslations("Site");
-  // «Urmărește-ne» (§NNN): Instagram, Facebook and Strava, from the footer's one list, in the owner's order,
+  // «Urmărește-ne» (§722): Instagram, Facebook and Strava, from the footer's one list, in the owner's order,
   // each named «{club} pe …» (`Site.followOn`).
   const socials = look.on ? headerSocials(await clubSocialLinks(), site) : [];
 
@@ -275,7 +275,7 @@ export default async function SiteHeader() {
           it, so the row stays one row at every width. Drawn only inside the look's scope, so the
           backoffice never shows it.
 
-          «Urmărește-ne» with Instagram, Facebook and Strava (§NNN, amending §708): the row's last item
+          «Urmărește-ne» with Instagram, Facebook and Strava (§722, amending §708): the row's last item
           from `md` up — the top right the owner asked for — after the nav and its ☰. Outside the nav,
           in the place the language switcher leaves under the look, so the nav measures its own box
           without it and folds a section into the ☰ before the row would ever wrap. The language is
@@ -302,7 +302,7 @@ export default async function SiteHeader() {
           and the hidden one is out of the accessibility tree, so exactly one "Limbă" navigation
           is announced at every width.
 
-          Under «Aspectul nou» (§NNN) this copy is not drawn at any width: the language is the
+          Under «Aspectul nou» (§722) this copy is not drawn at any width: the language is the
           floating round button in the bottom-right corner (`FloatingLocaleSwitch`, drawn by the
           footer), and «Urmărește-ne» takes the far end of the row.
         */}

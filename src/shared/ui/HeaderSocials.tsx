@@ -7,7 +7,7 @@ import SocialIcon from "./SocialIcon";
 import type { SocialNetwork } from "./SocialIcon";
 
 /**
- * The header's order of the club's profiles (§NNN): the owner's, «Insta, Facebook, Strava» — not the
+ * The header's order of the club's profiles (§722): the owner's, «Insta, Facebook, Strava» — not the
  * footer's, which keeps its own. A network the environment leaves unset is simply not drawn.
  */
 export const HEADER_SOCIAL_ORDER: readonly SocialNetwork[] = ["instagram", "facebook", "strava"];
@@ -30,7 +30,7 @@ export function headerSocials(links: readonly ClubSocialLink[], site: Words): Cl
 
 /**
  * «Urmărește-ne» / "Follow us" and the club's Instagram, Facebook and Strava, at the top right of the
- * header under «Aspectul nou» (§NNN, amending §708). The owner, 2026-10-11, with a screenshot of the
+ * header under «Aspectul nou» (§722, amending §708). The owner, 2026-10-11, with a screenshot of the
  * new-look header: «on the desktop version, the social media button must be in the top right with an
  * indicator saying "Follow us" and these 3 buttons: Insta, Facebook, Strava». The links come from the
  * one list the footer reads (`clubSocialLinks`, §565) — never a second list — in the header's order

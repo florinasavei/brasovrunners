@@ -59,7 +59,7 @@ export function onlyUnderLook<T>(display: T) {
 
 /**
  * The reverse: what today's look draws and the new one replaces — the header's and the phone
- * footer's language switcher, which the floating round button replaces (§NNN) — keeps its own
+ * footer's language switcher, which the floating round button replaces (§722) — keeps its own
  * `display` (a breakpoint object too) everywhere but inside the scope, where it is not drawn. The
  * backoffice, outside the scope, keeps it.
  */
@@ -75,7 +75,7 @@ export function notUnderLook<T>(display: T) {
 export const OFF_UNDER_LOOK = { [UNDER_LOOK]: { display: "none" } } as const;
 
 /**
- * The accent's pale band under the new look (§NNN): the one shade MUI's palette has no slot for. The
+ * The accent's pale band under the new look (§723): the one shade MUI's palette has no slot for. The
  * other three ride on MUI's own primary — `primary.light` is `accent`, `primary.main` is `accentInk`,
  * `primary.dark` is `accentDeep` — and all four are written by the layout's one stylesheet
  * (`modules/appearance/domain/site-look.ts`) from the club's accent, light and dark, so a rule that

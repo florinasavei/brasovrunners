@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — «Aspectul nou»'s card as the Administrator opens it: beside the switch, «Culoarea de accent»
+ * §723 — «Aspectul nou»'s card as the Administrator opens it: beside the switch, «Culoarea de accent»
  * with a radio per preset, each drawn in miniature by day and after dark, and «Personalizat» with its
  * box, its picker and the derived shades; the accent in force is the one ticked and named. A role that
  * may not change it reads the accent in force and no form. Drawn from the real catalogues.
@@ -40,7 +40,7 @@ const draw = async (setting: Setting, mayEdit = true) => renderToStaticMarkup(aw
 /** The `<input>` of a radio by its value, as React writes it. */
 const radio = (html: string, value: string) => html.match(new RegExp(`<input[^>]*name="accent"[^>]*value="${value}"[^>]*>`))?.[0] ?? "";
 
-describe("§NNN «Culoarea de accent» on the look's card", () => {
+describe("§723 «Culoarea de accent» on the look's card", () => {
   it("offers every preset and «Personalizat» in both languages, the pink ticked and named when the club never chose", async () => {
     for (const language of ["ro", "en"] as const) {
       locale = language;

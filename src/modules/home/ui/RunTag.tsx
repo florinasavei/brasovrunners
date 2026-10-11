@@ -9,7 +9,7 @@ export type RunTagProps = { kind: CoverTag["kind"]; glyph: CoverTag["glyph"]; la
 
 /**
  * The kind's colours (the plan's visual system, phase 1's tokens, §708) belong to «Aspectul nou»: a
- * weekly run in the accent's pale band with the accent that carries words — the club's accent (§NNN),
+ * weekly run in the accent's pale band with the accent that carries words — the club's accent (§723),
  * through the layout's variables, so the same rule serves both schemes and every accent, each pair held
  * at AA by `tests/unit/appearance/look-accent.test.ts` — and a special event in its green, held by
  * `LOOK_PAIRS` and `LOOK_PAIRS_DARK`. Tokens from `brand.ts`, never a literal, written under the look's

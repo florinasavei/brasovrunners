@@ -18,7 +18,7 @@ import { useId } from "react";
  * Instagram mark is its gradient — yellow to pink to violet, corner to corner — since §112
  * (the owner: "the instagram icon should be colored"): one flat pink beside Facebook's blue
  * disc and Strava's orange read as the odd one out. The gradient is a `<defs>` in the same
- * SVG, under an id of its own per mark (`useId`, §NNN). It was one shared id, the browser taking
+ * SVG, under an id of its own per mark (`useId`, §722). It was one shared id, the browser taking
  * the first, which was harmless until «Aspectul nou» drew a mark in the header that is
  * `display: none` on a phone: a gradient inside a hidden SVG paints nothing, so the footer's
  * Instagram, pointing at the header's, was an empty square below `md`.

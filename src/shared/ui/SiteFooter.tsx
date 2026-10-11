@@ -181,7 +181,7 @@ import ThemeModeToggle from "./ThemeModeToggle";
  * footer did not already have is two items of the fold: the identity line (`ClubIdentity`'s
  * `fold`) after the links, and the public phone beside «Scrie-ne». The marks stay on the bar, once.
  *
- * ## The language under «Aspectul nou» (§NNN)
+ * ## The language under «Aspectul nou» (§722)
  *
  * `newLook` is the layout's reading of the club's setting (§708). While it is on, the bar draws the
  * floating round button (`FloatingLocaleSwitch`) just above itself in the bottom-right corner, and the
@@ -553,7 +553,7 @@ export default async function SiteFooter({ newLook = false }: { newLook?: boolea
             side. Decoration, so hidden from assistive technology — the languages are their own
             named navigation already. From `sm` the languages are in the header and there is
             nothing on the bar to separate, so the rule goes with this box. Under «Aspectul nou»
-            (§NNN) the language is the floating round button above the bar's right end, so this
+            (§722) the language is the floating round button above the bar's right end, so this
             box is not drawn at any width there. */}
         <Box sx={{ ...notUnderLook({ xs: "flex", sm: "none" }), flex: "0 0 auto", alignItems: "center", ...footerGapSx(["columnGap"], 0) }}>
           <Box
@@ -564,7 +564,7 @@ export default async function SiteFooter({ newLook = false }: { newLook?: boolea
           <LocaleSwitcher />
         </Box>
       </Box>
-      {/* «Aspectul nou» (§NNN): the language, a round button floating just above the bar's right
+      {/* «Aspectul nou» (§722): the language, a round button floating just above the bar's right
           end — the bar is sticky, so it stays on screen while the page scrolls. */}
       {newLook && <FloatingLocaleSwitch />}
     </Box>

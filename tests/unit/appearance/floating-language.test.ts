@@ -3,7 +3,7 @@ import { renderToReadableStream } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * BR-REQ-041-01 (§NNN, amending §708 and §262) — under «Aspectul nou» the language is one small round
+ * BR-REQ-041-01 (§722, amending §708 and §262) — under «Aspectul nou» the language is one small round
  * button floating in the bottom-right corner, drawn by the footer just above its sticky bar: one press
  * to the language the visitor is not reading, through `/api/locale` (BR-REQ-040-01 criterion 5), named
  * by that language in its own words and showing its flag and code. Off (the default) the footer draws
@@ -50,7 +50,7 @@ async function render(element: ReactElement, locale: "ro" | "en" = "ro"): Promis
   return new Response(stream).text();
 }
 
-describe("§NNN the language as a floating round button under «Aspectul nou»", () => {
+describe("§722 the language as a floating round button under «Aspectul nou»", () => {
   it("is not in the footer while the setting is off, and the phone's flags stay on the bar", async () => {
     const off = await render((await SiteFooter()) as ReactElement);
     expect(off).not.toContain('data-testid="floating-language"');

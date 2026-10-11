@@ -73,7 +73,7 @@ export async function updateSiteFontSizeAction(_previous: FormOutcome | null, fo
 }
 
 /**
- * «Aspectul nou» (§708): the facelift's look on the public pages, on or off, and since §NNN its
+ * «Aspectul nou» (§708): the facelift's look on the public pages, on or off, and since §723 its
  * accent colour — a preset or «Personalizat». A club setting (§450) — the Administrator's at the door,
  * and the service asserts it again. Asked first (§384): every visitor sees the chosen look from the
  * next page view; the backoffice never changes. The typed colour's box is `accentHex`, apart from the

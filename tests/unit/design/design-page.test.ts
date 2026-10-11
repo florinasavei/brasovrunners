@@ -144,7 +144,7 @@ describe("BR-REQ-060-01 «Sistemul de design» draws the look from the code", ()
       expect(scoped.filter((tag) => tag.includes('data-testid="design-calendar-look"'))).toHaveLength(1);
       // The palette the public layout draws, for the preview box, from the same function.
       expect(markup).toContain(`<style data-design-look="">${lookPaletteCss()}</style>`);
-      // The language row's words and the floating button, in the flow (§NNN).
+      // The language row's words and the floating button, in the flow (§722).
       expect(markup).toContain(words.language);
       expect(markup).toContain('data-testid="floating-language"');
       // The header's own «Vino cu noi» in both boxes (drawn only under the scope), and the mark.
@@ -157,7 +157,7 @@ describe("BR-REQ-060-01 «Sistemul de design» draws the look from the code", ()
         expect(markup).toContain(`COLOR.${LOOK_PRIMARY_TOKENS.light[key]}`);
         expect(markup).toContain(`COLOR_DARK.${LOOK_PRIMARY_TOKENS.dark[key]}`);
       }
-      // §NNN — every accent preset the club may choose, in miniature, with its four shades by day and after dark.
+      // §723 — every accent preset the club may choose, in miniature, with its four shades by day and after dark.
       const accents = markup.slice(markup.indexOf('data-testid="design-look-accents"'), markup.indexOf('data-testid="design-mountain-mark"'));
       for (const [preset, shades] of Object.entries(LOOK_ACCENT)) {
         expect(accents, preset).toContain(`data-testid="design-look-accent-${preset}"`);

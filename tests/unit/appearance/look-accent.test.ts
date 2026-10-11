@@ -22,7 +22,7 @@ import { accentPairsOf, LOOK_ACCENT_PAIRS, LOOK_PAIRS, LOOK_PAIRS_DARK } from "@
 import { LOOK_ACCENT_TINT, LOOK_ACCENT_TINT_VARIABLE, LOOK_PREVIEW, LOOK_PREVIEW_DARK, LOOK_ROOT, LOOK_ROOT_DARK, UNDER_LOOK } from "@/theme/look";
 
 /**
- * §NNN (amending §708) — the new look's accent is the club's setting: a preset (pink, the default;
+ * §723 (amending §708) — the new look's accent is the club's setting: a preset (pink, the default;
  * blue; orange) or a colour it types, from which the server derives the four shades the look wears,
  * by day and after dark. Held here: every preset and a spread of typed colours clear AA on every pair
  * the look draws in both schemes; the shades keep their order (the hover deeper by day, lighter after
@@ -64,7 +64,7 @@ function assertReadable(name: string, shades: AccentShades) {
   expect(relativeLuminance(shades.dark.accentDeep), `${name} dark order`).toBeGreaterThan(relativeLuminance(shades.dark.accentInk));
 }
 
-describe("§NNN the accent presets", () => {
+describe("§723 the accent presets", () => {
   it("offers pink first, the default, then blue and orange", () => {
     expect(LOOK_ACCENT_PRESETS).toEqual(["pink", "blue", "orange"]);
     expect(Object.keys(LOOK_ACCENT)).toEqual([...LOOK_ACCENT_PRESETS]);
@@ -94,7 +94,7 @@ describe("§NNN the accent presets", () => {
   });
 });
 
-describe("§NNN a typed accent", () => {
+describe("§723 a typed accent", () => {
   it("is refused when it is not #rrggbb or is a grey, and accepted otherwise", () => {
     for (const bad of ["red", "#fff", "#12345g", "d6176f", "#d6176f00", ""]) expect(judgeAccent(bad), bad).toBe("notAColour");
     for (const grey of ["#808080", "#000000", "#ffffff", COLOR.inkMuted, COLOR.ink, COLOR.paper]) expect(judgeAccent(grey), grey).toBe("tooGrey");
@@ -119,7 +119,7 @@ describe("§NNN a typed accent", () => {
   });
 });
 
-describe("§NNN the setting carries the accent", () => {
+describe("§723 the setting carries the accent", () => {
   it("reads every row written before the accent existed as the pink, and a typed grey as the pink too", () => {
     expect(lookAccentOf({ on: true })).toEqual({ accent: "pink" });
     expect(parseSiteLook({ on: true, accent: "blue" })).toEqual({ on: true, accent: "blue" });
@@ -161,7 +161,7 @@ describe("§NNN the setting carries the accent", () => {
   });
 });
 
-describe("§NNN everything that wears the accent follows the setting", () => {
+describe("§723 everything that wears the accent follows the setting", () => {
   it("draws the home band and the weekly tag from the layout's variables, one rule for both schemes", () => {
     expect(LOOK_ACCENT_TINT).toBe(`var(${LOOK_ACCENT_TINT_VARIABLE})`);
     expect(HOME_BAND_SX[UNDER_LOOK]).toEqual({ bgcolor: LOOK_ACCENT_TINT });

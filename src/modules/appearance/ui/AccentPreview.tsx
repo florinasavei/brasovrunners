@@ -10,7 +10,7 @@ export type AccentPreviewWords = {
 };
 
 /**
- * An accent in miniature (§NNN, «Culoarea de accent»): by day on the left and after dark on the right,
+ * An accent in miniature (§723, «Culoarea de accent»): by day on the left and after dark on the right,
  * each on its own page colour — the pill «Vino cu noi» on `accentInk` with the words on its fill, the
  * weekly runs' chip on `accentTint` in `accentInk`, and a short rule in `accent` — the three places the
  * club will see the colour first. Every value is a shade of the accent or a `brand.ts` token.

@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * §708 — «Aspectul nou» in the header, rendered: with the setting off (or no row at all) the header
  * is the markup it was, with no button, no social marks and no watermark; with it on, «Vino cu noi»
  * leads to the next weekly run (else the listing) from the nav's children (its trailing group), and
- * «Urmărește-ne» with the footer's three marks is the row's last item after the nav (§NNN). The client islands and the
+ * «Urmărește-ne» with the footer's three marks is the row's last item after the nav (§722). The client islands and the
  * data reads are stubbed; the Server Components under test render for real.
  */
 const state = vi.hoisted(() => ({
@@ -135,7 +135,7 @@ describe("§708 the header while «Aspectul nou» is on", () => {
     expect(nav).not.toContain('data-testid="header-socials"');
   });
 
-  it("§NNN draws «Urmărește-ne» with Instagram, Facebook and Strava, in that order, after the nav — the row's last item", async () => {
+  it("§722 draws «Urmărește-ne» with Instagram, Facebook and Strava, in that order, after the nav — the row's last item", async () => {
     state.look = { on: true };
     const on = await header();
     const navEnd = on.indexOf("</nav>");
@@ -163,7 +163,7 @@ describe("§708 the header while «Aspectul nou» is on", () => {
     expect(css, "hidden inside the scope").toContain(`${LOOK_ROOT} .${className},${LOOK_PREVIEW} .${className}{display:none;}`);
   });
 
-  it("§NNN names each mark by the club and the network, in both languages, from the catalogues", async () => {
+  it("§722 names each mark by the club and the network, in both languages, from the catalogues", async () => {
     const { createTranslator } = await import("next-intl");
     const ro = createTranslator({ locale: "ro", messages: (await import("../../../messages/ro.json")).default, namespace: "Site" });
     const en = createTranslator({ locale: "en", messages: (await import("../../../messages/en.json")).default, namespace: "Site" });
@@ -181,7 +181,7 @@ describe("§708 the header while «Aspectul nou» is on", () => {
     expect(on).not.toContain("/events/[slug]");
   });
 
-  it("§NNN gives each Instagram mark a gradient of its own, so the footer's never points at the header's hidden one", () => {
+  it("§722 gives each Instagram mark a gradient of its own, so the footer's never points at the header's hidden one", () => {
     const html = renderToStaticMarkup(
       createElement("div", null, createElement(SocialIcon, { network: "instagram" }), createElement(SocialIcon, { network: "instagram" })),
     );

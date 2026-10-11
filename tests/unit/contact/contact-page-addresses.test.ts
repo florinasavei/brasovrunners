@@ -92,7 +92,7 @@ describe("§442 the contact page shows the addresses in force", () => {
       expect(html).toContain(lead);
       const gmailAt = html.indexOf(`href="mailto:${GMAIL}"`);
       const mailboxAt = html.indexOf(`href="mailto:${MAILBOX}"`);
-      // Below the form since §NNN, amending §698 (the owner: «Contact direct» after «Spune-ne ceva», right before the newsletter).
+      // Below the form since §721, amending §698 (the owner: «Contact direct» after «Spune-ne ceva», right before the newsletter).
       expect(gmailAt).toBeGreaterThan(html.indexOf("<form"));
       expect(mailboxAt).toBeGreaterThan(gmailAt);
       expect(html.slice(gmailAt, mailboxAt)).toContain(join);
