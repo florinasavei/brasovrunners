@@ -12,6 +12,8 @@ import { DEFAULT_SITE_TINT_SETTING, parseSiteTint, type SiteTintSetting } from "
 import { readSiteTint } from "@/modules/appearance/site-tint";
 import { DEFAULT_SITE_FONT_SIZE_SETTING, parseSiteFontSize, type SiteFontSizeSetting } from "@/modules/appearance/domain/site-font-size";
 import { readSiteFontSize } from "@/modules/appearance/site-font-size";
+import { DEFAULT_SITE_LOOK_SETTING, parseSiteLook, type SiteLookSetting } from "@/modules/appearance/domain/site-look";
+import { readSiteLook } from "@/modules/appearance/site-look";
 import { readMenuOrder } from "@/modules/content/menu/menu-order";
 import { parseStoredMenuOrder } from "@/modules/content/menu/order";
 import {
@@ -782,6 +784,23 @@ export async function cachedSiteFontSize(): Promise<SiteFontSizeSetting> {
     return parseSiteFontSize(read.value);
   } catch {
     return DEFAULT_SITE_FONT_SIZE_SETTING;
+  }
+}
+
+/**
+ * «Aspectul nou» (§708): whether the public pages wear the facelift's look, read by the locale layout
+ * (the scope and the pink primary) and the header («Vino cu noi», the socials) beside the tint, and
+ * cached for the same reason — a save expires it (`updateSiteLook`). When the database cannot answer,
+ * the last good copy (§447), then off: today's look, never a page that fails over its look.
+ */
+export async function cachedSiteLook(): Promise<SiteLookSetting> {
+  try {
+    const read = await readWithLastGood("settings:site-look", () =>
+      publicRead(["settings.site-look"], ["settings"], async () => (await readSiteLook(getDb())).setting),
+    );
+    return parseSiteLook(read.value);
+  } catch {
+    return DEFAULT_SITE_LOOK_SETTING;
   }
 }
 

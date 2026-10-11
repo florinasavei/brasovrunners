@@ -153,6 +153,24 @@ describe("the fonts are files in the repository, never a download at build (§46
     }
   });
 
+  it("BR-REQ-101-01: Inter 800 (the heading face of «Aspectul nou», §708) is in the Inter family and, like Caveat, never preloaded", () => {
+    const source = readFileSync(LAYOUT, "utf8");
+    /** One `const <name> = localFont({ … });` declaration of the layout, whole. */
+    const declaration = (name: string) => {
+      const match = source.match(new RegExp(`const ${name} = localFont\\(\\{[\\s\\S]*?\\n\\}\\);`));
+      expect(match, `const ${name} = localFont(...)`).not.toBeNull();
+      return match![0];
+    };
+    const inter = declaration("inter");
+    expect(inter).toMatch(/\{\s*path: "\.\.\/\.\.\/theme\/fonts\/Inter-800\.woff2", weight: "800", style: "normal"\s*\}/);
+    expect(inter).toContain("preload: false");
+    const signature = declaration("signature");
+    expect(signature).toContain("Caveat-500.woff2");
+    expect(signature).toContain("preload: false");
+    // The body face is the one that is preloaded: the check above is not vacuous.
+    expect(declaration("roboto")).not.toContain("preload: false");
+  });
+
   it("no WOFF2 in src/theme/fonts/ is shipped without the layout naming it", () => {
     const shipped = readdirSync(FONTS).filter((file) => file.endsWith(".woff2"));
     expect(shipped.sort()).toEqual(layoutFontFiles().filter((file) => file.endsWith(".woff2")).sort());

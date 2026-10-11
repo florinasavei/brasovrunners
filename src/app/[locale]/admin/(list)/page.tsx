@@ -44,6 +44,7 @@ import { seriesHorizonEnd } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase } from "@/modules/deadlines/domain/duration-words";
 import { deadlinesForThisRequest } from "@/modules/deadlines/request";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
+import StatusChip from "@/shared/ui/StatusChip";
 import PartnerChip from "@/modules/events/ui/PartnerChip";
 import RoutePills from "@/modules/events/ui/RoutePills";
 import { buildRoutePills } from "@/modules/events/ui/route-pills";
@@ -284,7 +285,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                 {translations[0]?.title ?? event.id}
               </Link>
               {members.length > 1 && (
-                <GlyphChip glyph="series" variant="outlined" label={datesWords(members.length)} />
+                <StatusChip glyph="series" variant="outlined" label={datesWords(members.length)} />
               )}
               {members.some((member) => member.event.featured) && (
                 <Chip size="small" color="primary" label={t("events.featured")} />
@@ -300,6 +301,12 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
               )}
               {!next.event.dateToBeAnnounced && next.event.timeToBeAnnounced && (
                 <Chip size="small" variant="outlined" color="warning" label={t("events.timeToBeAnnounced")} data-testid="time-to-be-announced-chip" />
+              )}
+              {/* No cover yet (the facelift's phase 2, §709): the next date's, the one a card will show —
+                  only while it is still to come, since a past date's card is history. Every weekly
+                  run and the race carry one before the new look goes live (the plan's gate). */}
+              {next.event.coverMediaAssetId === null && (next.event.endsAt ?? next.event.startsAt).getTime() >= now.getTime() && (
+                <Chip size="small" variant="outlined" color="warning" label={t("events.noCover")} data-testid="no-cover-chip" />
               )}
               {/* For the members alone (§552): on no public surface, so the list says so beside the type. */}
               {next.event.membersOnly && (

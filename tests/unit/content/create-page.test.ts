@@ -66,6 +66,8 @@ describe("the create page is the editor's page", () => {
       "<LinksBox",
       "<ProgrammeRulesBox",
       't("editor.groups.offPage")',
+      // «Copertă» (§709), on both pages: a new event can be created with its cover.
+      "<CoverBox",
       "<PromotionBox",
       "<AddressBox",
       'id="box-save"',

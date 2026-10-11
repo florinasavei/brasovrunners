@@ -7,7 +7,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
-import GlyphChip from "@/modules/events/ui/GlyphChip";
+import StatusChip from "@/shared/ui/StatusChip";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import { formatPrice } from "@/modules/content/shop/domain";
 import { readProductForAdmin } from "@/modules/content/shop/repository";
@@ -80,8 +80,8 @@ export default async function AdminShopProductPage({ params, searchParams }: Pro
         <Typography variant="h1" sx={{ fontSize: "1.5rem", overflowWrap: "anywhere" }} data-testid="product-title">
           {title}
         </Typography>
-        <GlyphChip glyph="shop" variant="outlined" label={formatPrice(product.priceBani, product.currency, locale)} />
-        <GlyphChip glyph={product.visible ? "visible" : "hidden"} color={product.visible ? "success" : "default"} label={product.visible ? t("members.shop.visible") : t("members.shop.hidden")} />
+        <StatusChip glyph="shop" variant="outlined" label={formatPrice(product.priceBani, product.currency, locale)} />
+        <StatusChip glyph={product.visible ? "visible" : "hidden"} color={product.visible ? "success" : "default"} label={product.visible ? t("members.shop.visible") : t("members.shop.hidden")} />
       </Stack>
       {!mayManage && <Alert severity="info">{t("members.shop.readOnly")}</Alert>}
 

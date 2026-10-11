@@ -169,6 +169,7 @@ const WRITES: Record<string, Expected> = {
   "src/modules/contact/public-phone.ts#updatePublicPhone": ["settings"],
   "src/modules/appearance/site-tint.ts#updateSiteTint": ["settings"],
   "src/modules/appearance/site-font-size.ts#updateSiteFontSize": ["settings"],
+  "src/modules/appearance/site-look.ts#updateSiteLook": ["settings"],
   "src/modules/deadlines/deadlines.ts#updateDeadlines": ["settings"],
 };
 

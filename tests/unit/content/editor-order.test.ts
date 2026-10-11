@@ -50,6 +50,8 @@ const EDITOR_ORDER = [
   // «Program, regulament și declarație»: three cards in one (§481), and the public list (§512).
   "<ProgrammeRulesBox",
   't("editor.groups.offPage")',
+  // «Copertă» (§709): the card's photo under the new look, not on today's page.
+  "<CoverBox",
   "<PromotionBox",
   "<AddressBox",
   'id="box-save"',
@@ -149,7 +151,7 @@ describe("§350 the editor's boxes, in order (§406: the page's)", () => {
     }
     // The first box holds the status again (§448) and wears the mark for it; the course, the
     // links, the partners, the promotion and the list reach nobody.
-    for (const box of ["<CourseBox", "<LinksBox", "<CoHostsBox", "<PromotionBox"]) {
+    for (const box of ["<CourseBox", "<LinksBox", "<CoHostsBox", "<CoverBox", "<PromotionBox"]) {
       const start = at(EDIT, box);
       expect(EDIT.slice(start, EDIT.indexOf(">", start) + 1), box).not.toContain("risk=");
     }

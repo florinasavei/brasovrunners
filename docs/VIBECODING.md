@@ -1,8 +1,8 @@
 # Vibecoding this repo — the one page to read before asking an AI to change anything
 
-<!-- PROJECT_BASELINE: BR-V2.93-2026-10-11 -->
+<!-- PROJECT_BASELINE: BR-V2.94-2026-10-11 -->
 
-**Baseline `BR-V2.93-2026-10-11`**
+**Baseline `BR-V2.94-2026-10-11`**
 
 The owner's word for how this platform is built: an AI agent writes, the owner reads and
 merges. This page is the short version of everything an agent trips over. `CLAUDE.md` is the
@@ -57,9 +57,11 @@ request and `.github/workflows/release.yml` lands and ships it
 | An email | `src/modules/notifications/templates.ts` (RO + EN copy), `render.ts` (data, links, attachments), the enum in `src/db/schema/email-outbox.ts` |
 | A legal text template | `src/modules/legal-documents/templates/` |
 | The event editor | `src/modules/content/events/` (fields.ts validates, service.ts saves, ui/ renders) |
+| An event's cover picture or its kind (weekly / special) | «Copertă» in the editor (`ui/boxes/CoverBox.tsx`); the kind and the photo tag in `src/modules/events/domain/event-kind.ts`; the `<img>` sources in `src/modules/events/cover.ts` — both read off the public row (`cover`, `seriesCadence`) |
 | A table or a column | `src/db/schema/*.ts`, then `yarn db:generate --name <what>` → `src/db/migrations/00NN_<what>.sql` (expand only) |
 | Colours, fonts, the logo | `src/theme/brand.ts` — the only file allowed a hex value |
 | The look — the tokens, the type, the components | `src/theme/brand.ts`, `src/theme/theme.ts`; see them drawn at `/admin/design` (§692) |
+| The facelift («Aspectul nou», off by default): the pink, Inter 800, the pill with its arrow, «Vino cu noi», the mountains | the scope `src/theme/look.ts` (write a new-look rule under `UNDER_LOOK`, never test the setting in a page); the pink `src/modules/appearance/domain/site-look.ts`; the parts `src/shared/ui/ArrowButtonLink.tsx`, `HeaderCta.tsx`, `HeaderSocials.tsx`, `MountainMark.tsx`, `LookWatermark.tsx`; both looks side by side at `/admin/design` → «Aspectul nou»; the plan `docs/REDESIGN.md` |
 | What `/devs` and `/admin/tasks` say | `src/modules/diagnostics/` |
 | A scheduled job | `src/modules/jobs/` (retention) and `src/modules/registrations/maintenance.ts` |
 
@@ -79,7 +81,7 @@ request and `.github/workflows/release.yml` lands and ships it
 - **Messages with `{x}` or a tag** are `t("key", values)` or `t.raw("key")`, never a bare `t("key")`: a production build prints it raw and `next dev` prints the key. Write a literal `<` as `'<'` (§370).
 - **No hostname of the club's in `src/`** — everything derives from `APP_BASE_URL`; a third party's fixed host (Cloudflare, Vercel, Facebook) goes in `PROVIDER_HOSTS` in `scripts/docs-check.mjs` with one line saying why.
 - **Migrations expand only.** Add a column or an enum value; never drop or rename in the same release (`yarn migrations:check`).
-- **The design system has guards (§694).** No colour literal outside `src/theme/brand.ts`, no `@mui/icons-material` barrel import, and in the backoffice no icon file imported directly (ask `shared/ui/action-icons.ts` by name; a public page imports its one icon file, or names it in a registry listed in `ICON_REGISTRIES` (`tests/unit/design/guards-allowlist.ts`)), no bare MUI `Button` / `IconButton` / `Chip` in a page or an area's `ui/` — `ButtonLink`, `GlyphButton`, `GlyphChip` instead. `tests/unit/design/` fails on a new offender; today's are listed with a reason in `guards-allowlist.ts`, a ratchet that only shrinks (a fixed file leaves the list and `PINNED` drops). The page `/admin/design` shows the system.
+- **The design system has guards (§694).** No colour literal outside `src/theme/brand.ts`, no `@mui/icons-material` barrel import, and in the backoffice no icon file imported directly (ask `shared/ui/action-icons.ts` by name; a public page imports its one icon file, or names it in a registry listed in `ICON_REGISTRIES` (`tests/unit/design/guards-allowlist.ts`)), no bare MUI `Button` / `IconButton` / `Chip` in a page or an area's `ui/` — `ButtonLink`, `GlyphButton`, `GlyphChip` instead — and in the backoffice a state's chip is `StatusChip` (`shared/ui/status-glyphs.ts`), the public table keeping only the names public pages draw. `tests/unit/design/` fails on a new offender; today's are listed with a reason in `guards-allowlist.ts`, a ratchet that only shrinks (a fixed file leaves the list and `PINNED` drops). The page `/admin/design` shows the system.
 - **Tap targets are 44 px** — every link and button on a public page; the e2e suite measures them.
 - **Personal data:** a public list shows names and clubs only; the desk never shows an address; nothing about a person goes in a URL; erase deletes, it does not blank.
 - **Legal text is the club's.** The platform ships templates; only a version approved in `/admin/legal` has effect. An agent never marks one approved.

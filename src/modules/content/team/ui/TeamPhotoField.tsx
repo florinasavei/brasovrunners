@@ -4,7 +4,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { type ChangeEvent, useState } from "react";
-import { presetCrop } from "@/modules/content/rich-text/domain/picture-frame";
+import { type FixedPreset, presetCrop } from "@/modules/content/rich-text/domain/picture-frame";
 import type { ImageCrop } from "@/modules/content/rich-text/domain/schema";
 import ImageCropBox, { type ImageCropLabels } from "@/modules/content/rich-text/ui/ImageCropBox";
 import GalleryPicker, { type GalleryPickerLabels } from "@/modules/media/ui/GalleryPicker";
@@ -63,6 +63,11 @@ type Props = {
   fieldPrefix?: string;
   /** A new picture starts whole, with the free crop shape, instead of at its largest square — for a drawing that must not lose its edges (the size guide). */
   wholePicture?: boolean;
+  /**
+   * The shape a new picture starts in and the crop box rests on, when it is not a person's square —
+   * an event's cover starts at its largest 16∶9, the card's own frame (§454, the facelift's phase 2).
+   */
+  shape?: FixedPreset;
 };
 
 /** A person's photo starts as a square (§541); the crop box offers §454's other shapes. */
@@ -97,7 +102,7 @@ function recalledPhoto(raw: string | undefined, id: string | undefined, fallback
   return fallback && fallback.id === id ? fallback : { ...EMPTY, id };
 }
 
-function PhotoField({ photo: initial, crop: initialCrop, labels, inputId, fieldPrefix = "photo", wholePicture = false }: Props) {
+function PhotoField({ photo: initial, crop: initialCrop, labels, inputId, fieldPrefix = "photo", wholePicture = false, shape = TEAM_PHOTO_SHAPE }: Props) {
   const recall = useRecall();
   const idName = `${fieldPrefix}AssetId`;
   const cropName = `${fieldPrefix}Crop`;
@@ -120,10 +125,10 @@ function PhotoField({ photo: initial, crop: initialCrop, labels, inputId, fieldP
   const lang = typeof document === "undefined" ? "ro" : document.documentElement.lang || "ro";
   const sized = photo.id !== "" && photo.width > 0 && photo.height > 0;
 
-  /** A new photo starts at its largest square (§541). */
+  /** A new photo starts at its largest square (§541), or at its largest `shape` when the field was given one. */
   const take = (next: TeamPhotoValue) => {
     setPhoto(next);
-    setCrop(!wholePicture && next.width > 0 && next.height > 0 ? initialTeamCrop(next) : null);
+    setCrop(!wholePicture && next.width > 0 && next.height > 0 ? presetCrop(shape, next) : null);
   };
 
   const onChoose = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -269,7 +274,7 @@ function PhotoField({ photo: initial, crop: initialCrop, labels, inputId, fieldP
             intrinsic={{ width: photo.width, height: photo.height }}
             crop={crop}
             onChange={setCrop}
-            resting={wholePicture ? "free" : TEAM_PHOTO_SHAPE}
+            resting={wholePicture ? "free" : shape}
             labels={labels.crop}
             testId={`${inputId}-crop-surface`}
           />

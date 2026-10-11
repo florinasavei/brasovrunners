@@ -336,6 +336,10 @@ function eventFieldsFrom(form: FormData) {
     // A checkbox like the one above it, and unlike it in every other way: any number of
     // events may be special (§168), so nothing is cleared when one is ticked.
     isSpecial: form.get("event.isSpecial") === "on",
+    // «Copertă» (§709): the picture field's two hidden inputs, read only when the form carried the
+    // box — a form without it is "not editing the cover", never "no cover".
+    coverAssetId: form.has("event.coverAssetId") ? value("coverAssetId") : undefined,
+    coverCrop: form.has("event.coverAssetId") ? value("coverCrop") : undefined,
     // «Doar pentru membrii BVR» (§552): read only when the form carried its marker, as §451's box —
     // a form without it is "not editing it", never "public".
     membersOnly: form.get("event.membersOnly.present") === "1" ? form.get("event.membersOnly") === "on" : undefined,

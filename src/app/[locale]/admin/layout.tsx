@@ -92,7 +92,7 @@ export default async function AdminLayout({ children, params }: Props) {
   // whole-record button greyed with «Creditul DeepL s-a terminat — vezi Costuri», no per-box one.
   // Spent is the meter at 100 % or the usage read answered 456 (`creditIsSpent`); any other
   // unread credit is not a spent one: the buttons stay and DeepL's own answer decides.
-  const mayTranslate = canTranslateTexts(staffUser.role);
+  const mayTranslate = canTranslateTexts(staffUser);
   const configured = mayTranslate && isTranslationConfigured(env);
   const creditSpent = configured && creditIsSpent(await readTranslationCredit(env));
   const tasksPath = getPathname({ locale, href: "/admin/tasks" });

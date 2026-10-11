@@ -70,12 +70,14 @@ import {
   hiddenListBandIssue,
   missingPublicFields,
   newEventSchema,
+  postedCover,
   type TranslationFields,
   translationFieldsSchema,
 } from "./fields";
 import {
   type EditableEvent,
   type EditableTranslation,
+  findCoverPicture,
   findTakenSlugs,
   findTranslationById,
   findTranslationWithEventById,
@@ -593,6 +595,9 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     offersGroupRunDeclaration: fields.offersGroupRunDeclaration === true && groupRunDeclarationKeyFor(fields) !== null,
     featured: fields.featured,
     isSpecial: fields.isSpecial,
+    // «Copertă» (§709), by the partners' discipline: a caller that did not post the picture's box
+    // writes nothing, so no save takes a cover off by not mentioning it; an empty box clears both.
+    ...(postedCover(fields) ?? {}),
     // «Doar pentru membrii BVR» (§552), by the partners' discipline: a caller that said nothing
     // writes nothing. Turned on, it withdraws the event from every public read at once and cancels
     // nothing; turned off, the save's cache expiry puts it everywhere at once (§333).
@@ -1694,6 +1699,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
   const fields = normalizeForMode(normalizeForType(parseOrThrow(eventFieldsSchema, ignoreHiddenFields(input.fields))));
   await assertCoherentRegistrationBlock(db, fields, now);
   await assertDateToBeAnnouncedAllowed(db, fields, current);
+  await assertStoredCover(db, fields, current);
   const times = resolveTimes(fields, switchesAfterSave(fields, current));
   // The same rule as the editor's save (§331): a cancellation says why, and tells whom it was asked to.
   const request = readNoticeRequest(input.actor, current, fields.eventStatus, input.notice, input.cancellation);
@@ -1735,6 +1741,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
     await auditWaitlistAutoOffer(tx, input.actor, current, saved, now);
     await auditWaitlistCountPublic(tx, input.actor, current, saved, now);
     await auditHiddenList(tx, input.actor, current, saved, now);
+    await auditCover(tx, input.actor, current, saved, now);
     // The holds the window gave follow it (§665): under the event lock, in this transaction.
     holdsQueued = (await moveWindowHolds(tx, { actorStaffUserId: input.actor.id, before: current, after: saved, now, deadlines })).queued;
     // The place's name in each language is the event's (§362): written with the row, under its version.
@@ -1849,6 +1856,10 @@ const SERIES_COLUMNS = [
   "offersGroupRunDeclaration",
   // Who sees the event (§552): "from this date" makes a weekly run the members' on every later date.
   "membersOnly",
+  // «Copertă» (§709), like the route (§49): the Wednesday run wears one cover every Wednesday, and
+  // "from this date" or "all" carries a new one — the picture and its crop together.
+  "coverMediaAssetId",
+  "coverCrop",
   "registrationMode",
   // «Se deschid în curând» (§451) travels with the opening date it stands in for, which the
   // series carries as a time column below.
@@ -1998,6 +2009,12 @@ async function applyToSeries<T extends Record<string, unknown>>(
         : !sameValue(before[column], after[column]);
     if (differs) rowChanges[column] = after[column];
   }
+  // The cover's crop is a window on its picture (§709): the two travel together, so a crop moved on
+  // this date never lands on another date's own picture, nor on a date with none (the CHECK refuses that).
+  if ("coverMediaAssetId" in rowChanges || "coverCrop" in rowChanges) {
+    rowChanges.coverMediaAssetId = after.coverMediaAssetId;
+    rowChanges.coverCrop = after.coverCrop;
+  }
   const timeChanges = SERIES_TIME_COLUMNS.filter((column) => !sameValue(before[column], after[column]));
   const scheduleChanged = !sameValue(before.scheduleItems, after.scheduleItems);
   const translationChanges = input.translationsAfter.flatMap((saved) => {
@@ -2146,6 +2163,9 @@ async function applyToSeries<T extends Record<string, unknown>>(
         await auditWaitlistCountPublic(tx, input.actor, member, { id: member.id, waitlistCountPublic: changes.waitlistCountPublic }, now);
       }
       await auditHiddenList(tx, input.actor, member, { ...hiddenListOf(member), ...hiddenListChanges(changes), id: member.id }, now);
+      if (changes.coverMediaAssetId !== undefined) {
+        await auditCover(tx, input.actor, member, { id: member.id, coverMediaAssetId: changes.coverMediaAssetId, coverCrop: changes.coverCrop ?? null }, now);
+      }
       // This date's holds follow its own window and start as the save leaves them (§665).
       holds.push(
         await moveWindowHolds(tx, {
@@ -2248,6 +2268,49 @@ async function auditWaitlistCountPublic<T extends Record<string, unknown>>(
     metadata: { from: before.waitlistCountPublic, to: after.waitlistCountPublic },
     now,
   });
+}
+
+/**
+ * The trail of «Copertă» (the facelift's phase 2, §709): who set, changed or removed an event's cover,
+ * on which date, from which picture to which (ids, never a file name), and whether the new one is
+ * cropped — in the save's transaction, only when the picture or its crop moved. A cover is the face of
+ * the event on every card, so the trail says who chose it; a picture stays where the pictures page
+ * shows it, «folosită la» the event.
+ */
+async function auditCover<T extends Record<string, unknown>>(
+  tx: Database<T> | Transaction<T>,
+  actor: Actor,
+  before: { coverMediaAssetId: string | null; coverCrop: unknown } | null,
+  after: { id: string; coverMediaAssetId: string | null; coverCrop: unknown },
+  now: Date,
+): Promise<void> {
+  const from = before?.coverMediaAssetId ?? null;
+  if (from === after.coverMediaAssetId && sameValue(before?.coverCrop ?? null, after.coverCrop ?? null)) return;
+  await recordAuditEvent(tx, {
+    actorStaffUserId: actor.id,
+    action: "event.cover_changed",
+    entityType: "event",
+    entityId: after.id,
+    metadata: { from, to: after.coverMediaAssetId, cropped: after.coverCrop !== null && after.coverCrop !== undefined },
+    now,
+  });
+}
+
+/**
+ * A cover's id must name a stored picture, never a film's poster (§485) — the shop's rule (§705),
+ * asked only when the save moves the picture: an unchanged cover is not read again. Before the
+ * transaction, like every other refusal of a save.
+ */
+async function assertStoredCover<T extends Record<string, unknown>>(
+  db: Database<T>,
+  fields: Pick<EventFieldsInput, "coverAssetId" | "coverCrop">,
+  current: { coverMediaAssetId: string | null } | null,
+): Promise<void> {
+  const posted = postedCover(fields);
+  if (!posted?.coverMediaAssetId || posted.coverMediaAssetId === current?.coverMediaAssetId) return;
+  if (!(await findCoverPicture(db, posted.coverMediaAssetId))) {
+    throw new DomainError("VALIDATION_ERROR", "the cover: the picture is not a stored picture", ["coverAssetId"]);
+  }
 }
 
 /** The four «Lista ascunsă» columns of a row (§647), as the trail compares them. */
@@ -2501,6 +2564,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     }
     await assertCoherentRegistrationBlock(db, parsedEventFields, now);
     await assertDateToBeAnnouncedAllowed(db, parsedEventFields, current);
+    await assertStoredCover(db, parsedEventFields, current);
   }
   const times = parsedEventFields ? resolveTimes(parsedEventFields, switchesAfterSave(parsedEventFields, current)) : undefined;
   // The notice and the cancellation's reason, refused here like any other box (§331, §315).
@@ -2577,6 +2641,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       await auditWaitlistAutoOffer(tx, input.actor, current, savedEvent, now);
       await auditWaitlistCountPublic(tx, input.actor, current, savedEvent, now);
       await auditHiddenList(tx, input.actor, current, savedEvent, now);
+      await auditCover(tx, input.actor, current, savedEvent, now);
       /*
         The holds the participation window gave follow it (§665): a changed deadline, a window switched on
         or off, a moved start — or holds given under an older window than the one stored. Under the event
@@ -2787,6 +2852,8 @@ function blankEventRow(now: Date): EditableEvent {
     costUrl: null,
     featured: false,
     isSpecial: false,
+    coverMediaAssetId: null,
+    coverCrop: null,
     bibStartNumber: 1,
     bibColour: null,
     walkInBibStart: null,
@@ -3053,6 +3120,7 @@ async function prepareEventCreate<T extends Record<string, unknown>>(
   await assertCoherentRegistrationBlock(db, parsed, now);
   // A new event has nobody registered and repeats only after it exists (`repeatEvent` asks then).
   await assertDateToBeAnnouncedAllowed(db, parsed, null);
+  await assertStoredCover(db, parsed, null);
   // A new event has no spares yet (§444): only the race's own series is judged (§647).
   const hiddenListNumbers = hiddenListNumbersToJudge(parsed, null);
   if (hiddenListNumbers) assertHiddenListNumbers(hiddenListNumbers, null);
@@ -3105,6 +3173,8 @@ async function insertPreparedEvent<T extends Record<string, unknown>>(
       updatedAt: now,
     })
     .returning();
+  // A new event created with its cover (§709): the trail names who chose it, as a save's would.
+  await auditCover(tx, actor, null, event, now);
 
   // Through the same function a save writes with: the rich summary's words become the
   // plain `excerpt`, the empty documents become null, a group run gets no programme.
@@ -3346,6 +3416,10 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // The links travel with the route (§332), to a duplicate and to every date of a repeat:
     // last year's GPX and rules are this year's starting point, and a weekly run's are the same.
     links: source.links,
+    // «Copertă» (§709), like the route: every date of a repeat wears the series' cover, and a
+    // duplicate starts with last year's until the club picks this year's.
+    coverMediaAssetId: source.coverMediaAssetId,
+    coverCrop: source.coverCrop,
     // Not carried by a *duplicate*: next year's race has its own Strava and Facebook event pages.
     // A *repeat* is different — a recurring Strava club event and a Facebook event with several
     // dates keep one address for every occurrence — so `repeatEvent` and the job put the source's

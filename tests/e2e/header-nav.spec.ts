@@ -1,4 +1,7 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Browser } from "@playwright/test";
+import { confirmDialog } from "./support/confirm";
+import { signIn } from "./support/featured-event";
+import { openFold } from "./support/fold";
 
 /**
  * BR-REQ-041-01 criterion 1, `DECISIONS.md` §262 — the header row of a phone.
@@ -87,5 +90,91 @@ test.describe("§262 the sections on a phone's header row", () => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await expect(page.locator("header").getByRole("navigation", { name: "Limbă" })).toHaveCount(1);
     await expect(page.locator("footer").getByRole("navigation", { name: "Limbă" })).toHaveCount(0);
+  });
+});
+
+/**
+ * §708, the facelift's phase 1 gate — the header with «Aspectul nou» on, measured. «Vino cu noi»
+ * joins the row (§699's ☰ stays its right edge: the button sits before it, inside the nav's
+ * trailing group), and the row must still be one row at 320px with «Alergări» on it (§262, §569)
+ * and no sideways overflow. The setting is switched through «Setări» → «Aspect», as the club does
+ * (a direct write would not expire the public cache's copy), and put back whatever happens.
+ * Desktop project only: one shared `platform_settings` row.
+ */
+async function setLook(browser: Browser, choice: "on" | "off"): Promise<void> {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  try {
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/settings/appearance");
+    const panel = page.locator("#main").getByTestId("site-look");
+    // The tab's cards are plain sections today (a `<section>` has no summary to press); a fold is opened.
+    if (await panel.evaluate((element) => element.tagName === "DETAILS")) await openFold(panel);
+    await panel.getByTestId(`site-look-option-${choice}`).click();
+    await panel.getByRole("button", { name: "Salvează aspectul" }).click();
+    await confirmDialog(page, "Schimbi aspectul site-ului?");
+    // The page's own alert (the toast repeats the same words).
+    await expect(page.locator("#admin-alert").getByText("Aspectul site-ului a fost salvat", { exact: false })).toBeVisible();
+  } finally {
+    await context.close();
+  }
+}
+
+test.describe("§708 the header under «Aspectul nou»", () => {
+  // One shared `platform_settings` row: 'off' must never run while 'on' has it switched on.
+  test.describe.configure({ mode: "serial" });
+  test.beforeEach(() => {
+    test.skip(test.info().project.name !== "desktop", "one shared platform_settings row");
+  });
+
+  test("off: no attribute, no button, no socials, no watermark", async ({ page, browser }) => {
+    test.slow();
+    // Saved off through the screen first, so a run stopped mid-'on' cannot leave this one reading the new look.
+    await setLook(browser, "off");
+    await page.setViewportSize({ width: 320, height: 720 });
+    await page.goto("/ro/evenimente");
+    await expect(page.locator("html")).not.toHaveAttribute("data-look", /.*/);
+    for (const testId of ["header-cta", "header-socials", "look-watermark"]) await expect(page.getByTestId(testId)).toHaveCount(0);
+  });
+
+  test("on: one row at 320px, Alergări on it, «Vino cu noi» with its arrow before the ☰ at the right edge", async ({ page, browser }) => {
+    test.slow();
+    await setLook(browser, "on");
+    try {
+      await page.setViewportSize({ width: 320, height: 720 });
+      await page.goto("/ro/evenimente");
+      await expect(page.locator("html")).toHaveAttribute("data-look", "2026");
+
+      const nav = page.getByRole("navigation", { name: "Navigare principală" });
+      await expect(nav).toHaveAttribute("data-measured", "true");
+      const cta = page.getByTestId("header-cta");
+      await expect(cta).toBeVisible();
+      // The arrow is kept on a phone (§521).
+      await expect(cta.locator("svg")).toBeVisible();
+      await expect(nav.getByRole("link", { name: "Alergări", exact: true })).toBeVisible();
+
+      const overflow = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
+      expect(overflow.scroll).toBeLessThanOrEqual(overflow.client + 1);
+
+      // One row: the header is no taller than a single 44px target plus its padding.
+      const header = await page.locator("header").boundingBox();
+      expect(header).not.toBeNull();
+      expect(header!.height).toBeLessThanOrEqual(72);
+
+      const ctaBox = await cta.boundingBox();
+      expect(ctaBox).not.toBeNull();
+      if (await page.locator("#site-nav-more").isVisible()) {
+        const more = await page.locator("#site-nav-more").boundingBox();
+        expect(more).not.toBeNull();
+        // Same row, the button before the ☰, and the ☰ at the row's right edge (the container's gutter).
+        expect(Math.abs(ctaBox!.y + ctaBox!.height / 2 - (more!.y + more!.height / 2))).toBeLessThanOrEqual(8);
+        expect(ctaBox!.x + ctaBox!.width).toBeLessThanOrEqual(more!.x + 1);
+        expect(320 - (more!.x + more!.width)).toBeLessThanOrEqual(24);
+      } else {
+        expect(320 - (ctaBox!.x + ctaBox!.width)).toBeLessThanOrEqual(24);
+      }
+    } finally {
+      await setLook(browser, "off");
+    }
   });
 });
