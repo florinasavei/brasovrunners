@@ -121,6 +121,10 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
       remove: t("team.linkRows.remove"),
       moveUp: t("team.linkRows.moveUp"),
       moveDown: t("team.linkRows.moveDown"),
+      moveUpWord: t("team.linkRows.moveUpWord"),
+      moveDownWord: t("team.linkRows.moveDownWord"),
+      moveUpTip: t("team.linkRows.moveUpTip"),
+      moveDownTip: t("team.linkRows.moveDownTip"),
       row: t("team.linkRows.row"),
     },
     // The card's own words for each kind — what the page shows when a link has no label (§474).

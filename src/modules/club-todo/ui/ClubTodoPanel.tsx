@@ -139,7 +139,8 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
         data-item-id={item.id}
         sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}
       >
-        <Stack direction="row" spacing={1} sx={{ alignItems: "flex-start" }}>
+        {/* Below `sm` the move buttons (a glyph and words, about 110 px each) drop to a row under the text rather than squeeze it at 320 px. */}
+        <Stack direction="row" sx={{ alignItems: "flex-start", flexWrap: { xs: "wrap", sm: "nowrap" }, gap: 1 }}>
           {mayEdit ? (
             <Box component="form" action={setClubTodoDoneAction} sx={{ flexShrink: 0 }}>
               {context}
@@ -174,7 +175,7 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
             </Box>
           )}
 
-          <Box sx={{ flex: 1, minWidth: 0, pt: 1.25 }}>
+          <Box sx={{ flex: { xs: "1 1 calc(100% - 52px)", sm: 1 }, minWidth: 0, pt: 1.25 }}>
             <Typography
               variant="body2"
               sx={{
@@ -219,7 +220,7 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
 
           {/* ↑ and ↓ among the open lines shown: none at an end, rather than an arrow that does nothing (the pages list's rule). */}
           {mayEdit && !item.done && (
-            <Stack spacing={0.5} sx={{ flexShrink: 0 }}>
+            <Stack direction={{ xs: "row", sm: "column" }} sx={{ flexShrink: 0, gap: 0.5, flexBasis: { xs: "100%", sm: "auto" }, pl: { xs: "52px", sm: 0 } }}>
               {index > 0 && (
                 <Box component="form" action={moveClubTodoAction}>
                   {context}

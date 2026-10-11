@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * BR-REQ-060-01 (the backoffice's verbs); `DECISIONS.md` §NNN — a button says what it does in
+ * BR-REQ-041-01 (a glyph on every button); `DECISIONS.md` §NNN — a button says what it does in
  * words. The owner, 2026-10-11, of the arrow on a card in «Echipa»: «Nu înțeleg ce face butonul ăsta
  * cu săgeata, are nevoie de vreun tooltip». A bare «↓» is a symbol the reader must interpret, a
  * phone has no hover to explain it, and a tooltip alone would leave the button itself mute: the
@@ -78,6 +78,17 @@ describe("a button says what it does in words (§NNN)", () => {
         expect(tag, `${site} ${icon}`).toContain("tooltip={t(");
         expect(tag, `${site} ${icon}`).toContain(`${icon}Word`);
       }
+    }
+  });
+  it("the client editors' move buttons carry a tooltip, and the team card's links also the words", () => {
+    const team = readFileSync(path.join(ROOT, "src/modules/content/team/ui/TeamLinkRowsEditor.tsx"), "utf8");
+    expect(team).toContain("labels.moveUpWord");
+    expect(team).toContain("labels.moveDownWord");
+    expect(team.match(/<TipSpan /g)?.length).toBe(2);
+    for (const file of ["CoHostRowsEditor", "LinkRowsEditor"]) {
+      const source = readFileSync(path.join(ROOT, `src/modules/content/events/ui/${file}.tsx`), "utf8");
+      const arrows = source.match(/<Arrow(?:Up|Down)wardIcon/g)?.length ?? 0;
+      expect(source.match(/<TipSpan /g)?.length, file).toBe(arrows);
     }
   });
 });

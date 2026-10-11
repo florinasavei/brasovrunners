@@ -7355,6 +7355,10 @@
         "remove": "Șterge linkul",
         "moveUp": "Mută mai sus linkul",
         "moveDown": "Mută mai jos linkul",
+        "moveUpWord": "Mai sus",
+        "moveDownWord": "Mai jos",
+        "moveUpTip": "Mută linkul cu un loc mai sus. Cardul de pe pagina Echipa arată linkurile în această ordine.",
+        "moveDownTip": "Mută linkul cu un loc mai jos. Cardul de pe pagina Echipa arată linkurile în această ordine.",
         "row": "Linkul"
       },
       "subtitleRo": "Subtitlu (Română)",

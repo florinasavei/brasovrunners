@@ -14,6 +14,7 @@ import { type ComponentProps, useState } from "react";
 import { DEFAULT_EVENT_LINK_KIND, EVENT_LINK_KINDS, type EventLinkKind, MAX_EVENT_LINKS } from "@/modules/events/domain/links";
 import { LINK_GLYPH } from "@/modules/events/ui/link-glyphs";
 import type { HtmlConstraints } from "@/shared/forms/constraints";
+import TipSpan from "@/shared/ui/TipSpan";
 import { useRecall } from "@/shared/forms/recall";
 import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 
@@ -183,12 +184,16 @@ function LinkRowsEditorIsland({
             {/* «Tradu din română» (§464): the English label from the Romanian one. */}
             <TranslateFieldButton en={name("labelEn")} />
             <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end" }}>
-              <IconButton aria-label={`${labels.moveUp} ${n}`} onClick={() => move(index, -1)} disabled={index === 0} sx={square}>
-                <ArrowUpwardIcon fontSize="small" />
-              </IconButton>
-              <IconButton aria-label={`${labels.moveDown} ${n}`} onClick={() => move(index, 1)} disabled={index === rows.length - 1} sx={square}>
-                <ArrowDownwardIcon fontSize="small" />
-              </IconButton>
+              <TipSpan title={labels.moveUp}>
+                <IconButton aria-label={`${labels.moveUp} ${n}`} onClick={() => move(index, -1)} disabled={index === 0} sx={square}>
+                  <ArrowUpwardIcon fontSize="small" />
+                </IconButton>
+              </TipSpan>
+              <TipSpan title={labels.moveDown}>
+                <IconButton aria-label={`${labels.moveDown} ${n}`} onClick={() => move(index, 1)} disabled={index === rows.length - 1} sx={square}>
+                  <ArrowDownwardIcon fontSize="small" />
+                </IconButton>
+              </TipSpan>
               <IconButton aria-label={`${labels.remove} ${n}`} onClick={() => remove(key)} sx={square}>
                 <DeleteIcon fontSize="small" />
               </IconButton>

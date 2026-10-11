@@ -396,6 +396,8 @@ export default function SubmitButton({
       // the register action counts for `/api/health`. Set only around this one send: the form's
       // data is read while `requestSubmit` dispatches, and a press of the finger afterwards posts
       // no such word.
+      const callerName = button.getAttribute("name");
+      const callerValue = button.getAttribute("value");
       if (byValve) {
         button.name = BOT_CHECK_SIGNAL_FIELD;
         button.value = "held-press-valve";
@@ -404,8 +406,11 @@ export default function SubmitButton({
         releaseHeldPress(form, button, !pendingNow.current);
       } finally {
         if (byValve) {
-          button.removeAttribute("name");
-          button.removeAttribute("value");
+          // Put back what the caller passed (`name`/`value`), not erase it.
+          if (callerName === null) button.removeAttribute("name");
+          else button.setAttribute("name", callerName);
+          if (callerValue === null) button.removeAttribute("value");
+          else button.setAttribute("value", callerValue);
         }
       }
     };

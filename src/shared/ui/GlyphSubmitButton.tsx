@@ -32,12 +32,19 @@ type Props = Omit<SubmitButtonProps, "glyph" | "runner"> & {
  * lives here for the same reason: MUI's `Tooltip` is the backoffice's cost, never a visitor's. It
  * wraps a span, not the button, because the button is `SubmitButton`'s to render and a tooltip
  * needs a node that takes a ref; the span's hover and the button's focus both open it.
+ *
+ * Two limits, accepted (§NNN). `describeChild` puts `aria-describedby` on the span, not on the button
+ * that takes focus, so a screen reader does not read the sentence on the button: the words on the
+ * button and its named `ariaLabel` carry what matters, and the tooltip is the sighted extra. And a
+ * long press opens it after 700 ms, which is longer than a deliberate tap; a finger that lifts after
+ * that may still press, so reading the tip on a phone can move the row, and a move is undone by
+ * the opposite move.
  */
 export default function GlyphSubmitButton({ icon, tooltip, ...props }: Props) {
   const button = <SubmitButton {...props} glyph={ACTION_ICONS[icon]} />;
   if (!tooltip) return button;
   return (
-    <Tooltip title={tooltip} describeChild enterTouchDelay={400} leaveTouchDelay={4000}>
+    <Tooltip title={tooltip} describeChild enterTouchDelay={700} leaveTouchDelay={4000}>
       <Box component="span" sx={{ display: "inline-flex" }}>
         {button}
       </Box>
