@@ -1,6 +1,7 @@
-import { expect, test, type Browser } from "@playwright/test";
+import { expect, test, type Browser, type Page } from "@playwright/test";
+import { CLUB_NAME } from "../../src/theme/brand";
 import { confirmDialog } from "./support/confirm";
-import { signIn } from "./support/featured-event";
+import { FEATURED, signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
 /**
@@ -134,10 +135,10 @@ test.describe("§708 the header under «Aspectul nou»", () => {
     await page.setViewportSize({ width: 320, height: 720 });
     await page.goto("/ro/evenimente");
     await expect(page.locator("html")).not.toHaveAttribute("data-look", /.*/);
-    for (const testId of ["header-cta", "header-socials", "look-watermark"]) await expect(page.getByTestId(testId)).toHaveCount(0);
+    for (const testId of ["header-cta", "header-socials", "look-watermark", "floating-language"]) await expect(page.getByTestId(testId)).toHaveCount(0);
   });
 
-  test("on: one row at 320px, Alergări on it, «Vino cu noi» with its arrow before the ☰ at the right edge", async ({ page, browser }) => {
+  test("on: one row at 320px, Alergări on it, «Vino cu noi» with its arrow before the ☰ at the right edge; the language floats bottom-right and «Urmărește-ne» ends the desktop row", async ({ page, browser }) => {
     test.slow();
     await setLook(browser, "on");
     try {
@@ -173,8 +174,107 @@ test.describe("§708 the header under «Aspectul nou»", () => {
       } else {
         expect(320 - (ctaBox!.x + ctaBox!.width)).toBeLessThanOrEqual(24);
       }
+
+      await expectFloatingLanguage(page, 320, 720);
+      // The footer's Instagram paints with a gradient of its own, never the header's hidden one (§NNN).
+      const ownGradient = await page
+        .locator("footer")
+        .locator('a[href*="instagram"] svg')
+        .first()
+        .evaluate((svg) => {
+          const id = /url\(#(.+)\)/.exec(svg.getAttribute("fill") ?? "")?.[1];
+          const gradient = id ? document.getElementById(id) : null;
+          return Boolean(gradient && svg.contains(gradient));
+        });
+      expect(ownGradient).toBe(true);
+
+      // §NNN: on a computer, «Urmărește-ne» with Instagram, Facebook and Strava is the header row's last item.
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await expect(nav).toHaveAttribute("data-measured", "true");
+      const socials = page.getByRole("navigation", { name: "Urmărește-ne" });
+      await expect(socials).toBeVisible();
+      await expect(socials.getByTestId("header-socials-label")).toHaveText("Urmărește-ne");
+      expect(await socials.locator("a").evaluateAll((links) => links.map((link) => link.getAttribute("data-network")))).toEqual(["instagram", "facebook", "strava"]);
+      // Each mark says whose profile it is and where, in the page's language (`Site.followOn`, §NNN), never the network alone.
+      expect(await socials.locator("a").evaluateAll((links) => links.map((link) => link.getAttribute("aria-label")))).toEqual([
+        `${CLUB_NAME} pe Instagram`,
+        `${CLUB_NAME} pe Facebook`,
+        `${CLUB_NAME} pe Strava`,
+      ]);
+      for (const link of await socials.locator("a").all()) {
+        const box = await link.boundingBox();
+        expect(box).not.toBeNull();
+        expect(box!.width).toBeGreaterThanOrEqual(44);
+        expect(box!.height).toBeGreaterThanOrEqual(44);
+      }
+      const navBox = await nav.boundingBox();
+      const socialsBox = await socials.boundingBox();
+      const headerBox = await page.locator("header").boundingBox();
+      expect(navBox).not.toBeNull();
+      expect(socialsBox).not.toBeNull();
+      // After the nav (and its ☰), on the same row, and the header still one row.
+      expect(socialsBox!.x).toBeGreaterThanOrEqual(navBox!.x + navBox!.width - 1);
+      expect(Math.abs(socialsBox!.y + socialsBox!.height / 2 - (navBox!.y + navBox!.height / 2))).toBeLessThanOrEqual(8);
+      expect(headerBox!.height).toBeLessThanOrEqual(80);
+      const hrefs = await socials.locator("a").evaluateAll((links) => links.map((link) => link.getAttribute("href")));
+      expect(hrefs).toEqual([
+        process.env.CLUB_INSTAGRAM_URL || "https://www.instagram.com/e2e-club",
+        process.env.CLUB_FACEBOOK_URL || "https://www.facebook.com/e2e-club",
+        process.env.CLUB_STRAVA_URL || "https://www.strava.com/clubs/e2e-club",
+      ]);
+      await expectFloatingLanguage(page, 1280, 800);
+
+      // An event page, the longest content and the registration call to action, at a phone's width.
+      await page.setViewportSize({ width: 320, height: 720 });
+      await page.goto(`/ro/evenimente/${FEATURED.slug}`);
+      await expectFloatingLanguage(page, 320, 720);
     } finally {
       await setLook(browser, "off");
     }
   });
 });
+
+/**
+ * §NNN — under «Aspectul nou» the language is one round button in the bottom-right corner: the only
+ * «Limbă» navigation at this width (the header's and the footer's copies are hidden), a 44-pixel target
+ * just above the footer's bar, still on screen after a scroll to the page's end, and covering none of
+ * the page's own controls there.
+ */
+async function expectFloatingLanguage(page: Page, width: number, height: number): Promise<void> {
+  const language = page.getByRole("navigation", { name: "Limbă" });
+  await expect(language).toHaveCount(1);
+  await expect(language).toHaveAttribute("data-testid", "floating-language");
+  const english = language.getByRole("link", { name: "English" });
+  await expect(english).toBeVisible();
+  await expect(english).toHaveAttribute("href", /^\/api\/locale\?to=en&from=%2Fro%2Fevenimente/);
+
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await expect(english).toBeInViewport();
+  const box = await english.boundingBox();
+  const bar = await page.locator("footer").boundingBox();
+  expect(box).not.toBeNull();
+  expect(bar).not.toBeNull();
+  expect(box!.width).toBeGreaterThanOrEqual(44);
+  expect(box!.height).toBeGreaterThanOrEqual(44);
+  // The bottom-right corner: within the gutter of the right edge (a desktop scrollbar included), above the bar.
+  expect(width - (box!.x + box!.width)).toBeLessThanOrEqual(36);
+  expect(box!.y + box!.height).toBeLessThanOrEqual(bar!.y);
+  expect(box!.y + box!.height).toBeLessThanOrEqual(height);
+
+  // Nothing the page offers is under it at the page's end.
+  const covered = await english.evaluate((button) => {
+    const own = button.getBoundingClientRect();
+    return [...document.querySelectorAll("a, button, summary, input, select, textarea")]
+      .filter((element) => element !== button && !button.contains(element))
+      .filter((element) => {
+        const style = getComputedStyle(element);
+        if (style.visibility === "hidden" || style.display === "none") return false;
+        const rect = element.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return false;
+        return rect.left < own.right && rect.right > own.left && rect.top < own.bottom && rect.bottom > own.top;
+      })
+      .map((element) => element.outerHTML.slice(0, 120));
+  });
+  expect(covered).toEqual([]);
+  await page.evaluate(() => window.scrollTo(0, 0));
+}

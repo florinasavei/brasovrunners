@@ -242,8 +242,9 @@ export default async function LocaleLayout({ children, params }: Props) {
                   {/* The mountain mark under the content, the new look only and never in the backoffice (§708). */}
                   {look.on && <LookWatermark />}
                   {/* The build stamp is the fold's own last line at every width (`SiteFooter`,
-                      §608), not a label of its own here. */}
-                  <SiteFooter />
+                      §608), not a label of its own here. Under «Aspectul nou» the footer also
+                      draws the language as the floating round button above its bar (§NNN). */}
+                  <SiteFooter newLook={look.on} />
                 </Box>
               </IntlErrorHandling>
             </NextIntlClientProvider>

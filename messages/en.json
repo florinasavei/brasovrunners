@@ -22,6 +22,12 @@
     "themeLight": "Light theme",
     "skipToContent": "Skip to content",
     "cta": { "join": "Join us" },
+    "followUs": "Follow us",
+    "followOn": {
+      "instagram": "{club} on Instagram",
+      "facebook": "{club} on Facebook",
+      "strava": "{club} on Strava"
+    },
     "nav": {
       "label": "Main navigation",
       "events": "Events",
@@ -5930,6 +5936,8 @@
         "primary": "See the runs",
         "secondary": "How it works",
         "cta": "The header's button:",
+        "socials": "The header's right end, on a computer:",
+        "language": "The language, in the bottom-right corner:",
         "primaryTitle": "The primary colour under the new look",
         "primaryNote": "MUI's primary colour variables, redefined on the public pages only while the new look is on.",
         "variable": "Variable",

@@ -241,6 +241,10 @@ describe("§369 the club's name leaves the platform only through the constant", 
           "Registration.memberBibWantedHelp",
           // The home page's title in a search result (§714): the club's name first.
           "Home.meta.title",
+          // The header's «Urmărește-ne» marks, each named by the club and the network (§NNN).
+          "Site.followOn.facebook",
+          "Site.followOn.instagram",
+          "Site.followOn.strava",
         ].sort(),
       );
     }
@@ -275,6 +279,9 @@ describe("§369 the club's name leaves the platform only through the constant", 
       expect(found, key).toHaveLength(expected);
       for (const call of found) expect(call, key).toMatch(/,\s*\{\s*club:\s*CLUB_NAME\s*\}$/);
     }
+    // The header's marks (§NNN) are read through one template key, which the scan above cannot count: the call hands each the constant.
+    const headerSocials = readFileSync(path.join(process.cwd(), "src/shared/ui/HeaderSocials.tsx"), "utf8");
+    expect(headerSocials).toMatch(/site\(`followOn\.\$\{network\}`, \{ club: CLUB_NAME \}\)/);
     // The task steps are read raw and filled by the page from its own values.
     const tasks = readFileSync(path.join(process.cwd(), "src/app/[locale]/admin/tasks/page.tsx"), "utf8");
     expect(tasks).toMatch(/club:\s*CLUB_NAME,/);

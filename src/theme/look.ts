@@ -57,6 +57,16 @@ export function onlyUnderLook<T>(display: T) {
   return { display: "none", [UNDER_LOOK]: { display } } as const;
 }
 
+/**
+ * The reverse: what today's look draws and the new one replaces — the header's and the phone
+ * footer's language switcher, which the floating round button replaces (§NNN) — keeps its own
+ * `display` (a breakpoint object too) everywhere but inside the scope, where it is not drawn. The
+ * backoffice, outside the scope, keeps it.
+ */
+export function notUnderLook<T>(display: T) {
+  return { display, [UNDER_LOOK]: { display: "none" } } as const;
+}
+
 /** Headings under the new look: the display face at 800, set a little tighter (decision 2). */
 export const LOOK_HEADING = { fontWeight: 800, letterSpacing: "-0.02em" } as const;
 

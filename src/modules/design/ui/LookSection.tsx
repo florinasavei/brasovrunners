@@ -9,7 +9,10 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { LOOK_PRIMARY, LOOK_PRIMARY_TOKENS, lookPaletteCss, PRIMARY_VARIABLES } from "@/modules/appearance/domain/site-look";
 import ArrowButtonLink from "@/shared/ui/ArrowButtonLink";
+import { clubSocialLinks } from "@/shared/ui/club-socials";
+import FloatingLocaleSwitch from "@/shared/ui/FloatingLocaleSwitch";
 import HeaderCta from "@/shared/ui/HeaderCta";
+import HeaderSocials, { headerSocials } from "@/shared/ui/HeaderSocials";
 import MountainMark from "@/shared/ui/MountainMark";
 import { LOOK_PREVIEW_ATTRIBUTE, LOOK_VALUE } from "@/theme/look";
 import DesignSection, { Block, Code } from "./section";
@@ -23,6 +26,7 @@ import DesignSection, { Block, Code } from "./section";
 async function Sample({ preview }: { preview: boolean }) {
   const t = await getTranslations("Admin");
   const site = await getTranslations("Site");
+  const socials = headerSocials(await clubSocialLinks(), site);
   return (
     <Box
       {...(preview ? { [LOOK_PREVIEW_ATTRIBUTE]: LOOK_VALUE } : {})}
@@ -51,6 +55,22 @@ async function Sample({ preview }: { preview: boolean }) {
         </Typography>
         {/* The header's own component: drawn only under the look's scope, so the left column shows the gap it leaves. */}
         <HeaderCta href="/events" label={site("cta.join")} />
+      </Box>
+      {/* «Urmărește-ne» (§NNN): the header's own group, from `md` up and under the look's scope only. */}
+      {socials.length > 0 && (
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "center" }}>
+          <Typography variant="body2" color="text.secondary">
+            {t("design.look.socials")}
+          </Typography>
+          <HeaderSocials links={socials} label={site("followUs")} />
+        </Box>
+      )}
+      {/* The floating language button (§NNN), drawn in the flow here rather than in the screen's corner. */}
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "center" }}>
+        <Typography variant="body2" color="text.secondary">
+          {t("design.look.language")}
+        </Typography>
+        <FloatingLocaleSwitch inline />
       </Box>
       <Box sx={{ color: "primary.light" }}>
         <MountainMark width={96} />
@@ -129,7 +149,7 @@ export default async function LookSection() {
           ))}
         </Box>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          <Code>MountainMark</Code> · <Code>LookWatermark</Code> · <Code>ArrowButtonLink</Code> · <Code>HeaderCta</Code> · <Code>HeaderSocials</Code>
+          <Code>MountainMark</Code> · <Code>LookWatermark</Code> · <Code>ArrowButtonLink</Code> · <Code>HeaderCta</Code> · <Code>HeaderSocials</Code> · <Code>FloatingLocaleSwitch</Code>
         </Typography>
       </Block>
     </DesignSection>
