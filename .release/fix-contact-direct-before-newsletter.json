@@ -6,7 +6,7 @@
   "specsCriteria": [
     {
       "requirement": "BR-REQ-070-04",
-      "text": "On `/contact` the sections come in this order: the form, «Spune-ne ceva», «Contact direct», the newsletter, then the identity line (2026-10-11, `DECISIONS.md` §NNN)."
+      "text": "On `/contact` the sections come in this order: the form, «Spune-ne ceva», «Contact direct», the newsletter, then the identity line; «Contact direct» opens with a rule like every section after the form, and the form's section, right under the intro, has none. This amends criterion 53 (2026-10-11, `DECISIONS.md` §NNN)."
     }
   ],
   "docsNotes": "",
