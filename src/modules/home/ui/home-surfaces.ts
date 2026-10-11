@@ -1,24 +1,29 @@
-import { COLOR, COLOR_DARK, GRADIENT } from "@/theme/brand";
-import { UNDER_LOOK, UNDER_LOOK_DARK } from "@/theme/look";
+import { GRADIENT } from "@/theme/brand";
+import { LOOK_ACCENT_TINT, UNDER_LOOK } from "@/theme/look";
 
 /**
  * The home page's sections' surfaces (§714), as plain `sx` objects a Server Component can spread
  * (§166: never a function of the theme, which cannot cross into MUI's client components). Colour
  * comes from `brand.ts`'s tokens only (§694); every pair of words on these fills is held at AA by
- * `tests/unit/theme/brand.test.ts` (`HERO_PAIRS` for today's look, `LOOK_PAIRS` for the new one).
+ * `tests/unit/theme/brand.test.ts` (`HERO_PAIRS` for today's look) and, for every accent the club may
+ * choose, by `tests/unit/appearance/look-accent.test.ts`.
  *
  * Today's look and the new one, by the scope (`theme/look.ts`), never by reading the setting: under
- * «Aspectul nou» the band turns the pale pink (`accentTint`) the plan gives it, and after dark each
- * look takes its own twin. The words on a band are `text.primary` / `text.secondary`; a glyph or a
- * figure is the palette's primary, the blue today and the pink under the look.
+ * «Aspectul nou» the band turns the accent's pale band (`accentTint`, pink by default) the plan gives
+ * it, light or dark by the variable the layout's stylesheet sets. The words on a band are
+ * `text.primary` / `text.secondary`; a glyph or a figure is the palette's primary, the blue today
+ * and the club's accent under the look.
  */
 
-/** A band across the page — «Prima dată», the numbers: the hero's tint today, the pale pink under the look. */
+/**
+ * A band across the page — «Prima dată», the numbers: the hero's tint today, the accent's pale band
+ * under the look — the club's accent (§723), whose stylesheet sets the variable light and dark, so the
+ * one rule serves both schemes (it outranks the `[data-dark]` rule by its scope).
+ */
 export const HOME_BAND_SX = {
   bgcolor: GRADIENT.heroTint,
   "[data-dark] &": { bgcolor: GRADIENT.heroTintDark },
-  [UNDER_LOOK]: { bgcolor: COLOR.accentTint },
-  [UNDER_LOOK_DARK]: { bgcolor: COLOR_DARK.accentTint },
+  [UNDER_LOOK]: { bgcolor: LOOK_ACCENT_TINT },
 } as const;
 
 /** The round seat of a step's or a reason's glyph: the card colour, the glyph in the primary, 48 pixels. */

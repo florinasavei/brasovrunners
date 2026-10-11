@@ -12,7 +12,7 @@ import {
   siteLookStyle,
 } from "@/modules/appearance/domain/site-look";
 import { COLOR, COLOR_DARK } from "@/theme/brand";
-import { LOOK_ATTRIBUTE, LOOK_PREVIEW, LOOK_PREVIEW_DARK, LOOK_ROOT, LOOK_ROOT_DARK, LOOK_VALUE, onlyUnderLook, UNDER_LOOK } from "@/theme/look";
+import { LOOK_ATTRIBUTE, LOOK_PREVIEW, LOOK_PREVIEW_DARK, LOOK_ROOT, LOOK_ROOT_DARK, LOOK_VALUE, notUnderLook, onlyUnderLook, UNDER_LOOK } from "@/theme/look";
 import { HOVER_OK } from "@/theme/motion";
 import { accentOnHover } from "@/theme/surfaces";
 import { theme } from "@/theme/theme";
@@ -70,6 +70,21 @@ describe("§708 the scope stops at the backoffice", () => {
     for (const file of ["src/shared/ui/HeaderCta.tsx", "src/shared/ui/LookWatermark.tsx"]) expect(source(file), file).toContain('onlyUnderLook("flex")');
     expect(source("src/shared/ui/HeaderSocials.tsx")).toContain('display: "none", [UNDER_LOOK]: { display: { xs: "none", md: "flex" } }');
   });
+
+  it("§722 moves the language to one floating button under the look, and leaves today's two copies alone while off", () => {
+    const layout = source("src/app/[locale]/layout.tsx");
+    expect(layout).toContain("<SiteFooter newLook={look.on} />");
+    const footer = source("src/shared/ui/SiteFooter.tsx");
+    // Drawn only while the setting is on, and then only inside the scope (the backoffice renders the same footer).
+    expect(footer).toContain("{newLook && <FloatingLocaleSwitch />}");
+    expect(source("src/shared/ui/FloatingLocaleSwitch.tsx")).toContain('...onlyUnderLook("flex")');
+    // The phone's flags on the footer's bar and the header's copy from `sm`: hidden under the scope, untouched off it.
+    expect(footer).toContain('...notUnderLook({ xs: "flex", sm: "none" })');
+    expect(source("src/shared/ui/SiteHeader.tsx")).toContain('...notUnderLook({ xs: "none", sm: "flex" })');
+    expect(notUnderLook({ xs: "none", sm: "flex" })).toEqual({ display: { xs: "none", sm: "flex" }, [UNDER_LOOK]: { display: "none" } });
+    // «Urmărește-ne»'s box in the header: no room taken outside the scope, nor below `md` inside it.
+    expect(source("src/shared/ui/SiteHeader.tsx")).toContain('...onlyUnderLook({ xs: "none", md: "flex" })');
+  });
 });
 
 describe("§708 the pink primary", () => {
@@ -91,8 +106,9 @@ describe("§708 the pink primary", () => {
     expect(dark.startsWith(`${LOOK_ROOT_DARK},${LOOK_PREVIEW_DARK}{`)).toBe(true);
     expect(light).toContain(`${PRIMARY_VARIABLES.main}:${COLOR.accentInk};${PRIMARY_VARIABLES.main}Channel:160 22 80`);
     expect(dark).toContain(`${PRIMARY_VARIABLES.contrastText}:${COLOR_DARK.paper}`);
-    // No colour that is not a token: every hex in the sheet is one of the eight it names.
-    const tokens = new Set([...Object.values(LOOK_PRIMARY.light), ...Object.values(LOOK_PRIMARY.dark)]);
+    // No colour that is not a token: every hex in the sheet is one of the eight it names, or the pink's
+    // pale band in either scheme (`--br-accent-tint`, §723).
+    const tokens = new Set([...Object.values(LOOK_PRIMARY.light), ...Object.values(LOOK_PRIMARY.dark), COLOR.accentTint, COLOR_DARK.accentTint]);
     for (const hex of css.match(/#[0-9a-f]{3,8}/gi) ?? []) expect(tokens.has(hex), hex).toBe(true);
     // Nothing a browser would read as markup inside the <style> element.
     expect(css).not.toMatch(/[<>]/);

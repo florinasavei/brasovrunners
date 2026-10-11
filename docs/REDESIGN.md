@@ -22,7 +22,7 @@ objects; a different answer changes the phases, not the rules.
 
 | # | Decision | Default | Why it is the club's |
 | --- | --- | --- | --- |
-| 1 | The accent colour — **decided by default (2026-10-11)** | a hot-pink accent token (and a darker «pinkInk» that carries white text at AA) beside the logo blue; the logo stays the club's blue under both looks (the owner overrode the ink default, 2026-10-11); emails, PDFs, race numbers and share cards stay blue | the logo is pure blue and a brand test pins it |
+| 1 | The accent colour — **decided by default (2026-10-11), then made the club's setting** | a hot-pink accent token (and a darker «pinkInk» that carries white text at AA) beside the logo blue; the logo stays the club's blue under both looks (the owner overrode the ink default, 2026-10-11); emails, PDFs, race numbers and share cards stay blue. Since the owner's «this should be a configuration in the theme» (2026-10-11) the pink is the default of «Aspectul nou» → «Culoarea de accent»: pink, blue, orange, or a colour the club types, its readable shades derived on the server | the logo is pure blue and a brand test pins it |
 | 2 | The heading face — **decided by default (2026-10-11)** | Inter 800 (one new weight file; Inter is self-hosted with ș ț ă â î) for headings; body stays Roboto | a face is a licence and a look the club owns |
 | 3 | A real home page — **decided (2026-10-10)** | a real home page at `/ro` and `/en`, reached from the logo — never a menu entry — switchable on and off in «Aspect» → «Pagina principală»; `/events` stays the listing under «Alergări»; canonicals and the sitemap move | it reverses §353 (the root is a redirect, for SEO) |
 | 4 | The four menu words | «Alergări» = the listing; «Calendar»; «Comunitatea» = a club page linking «Echipa», «Galerie», «Întrebări» and the members' zone; «Despre noi» = a club page | the club decides what each word points to |
@@ -42,7 +42,7 @@ a handful of settings and the look.
 
 | Element | Today | New |
 | --- | --- | --- |
-| Header | `SiteHeader` + `SiteNav`: logo, six entries, language switch; socials in the footer | a CTA slot and the two social icons, inside the one-row-at-320-px rule |
+| Header | `SiteHeader` + `SiteNav`: logo, six entries, language switch; socials in the footer | a CTA slot; «Urmărește-ne» with Instagram, Facebook and Strava at the top right on a computer; the language as a round button floating bottom-right (owner, 2026-10-11) — inside the one-row-at-320-px rule |
 | Hero | nothing: the root answers a 308 to `/events` (§353) | the route, a hero component, a setting for the picture, its crop and two lines; redirect, canonicals and sitemap move |
 | «Următoarea alergare» | the featured card (§470), the weather pill (§402), sunset computed (`sun.ts`) | the «soonest run» rule, weather words, an «Apus» line, the photo tag |
 | Weekly and special sections | a series is one card (§113); the pills | the split rule, the short weekday line, **a cover photo per event** (events have no picture field) |
@@ -66,7 +66,9 @@ active-runners figure.
 New tokens in `src/theme/brand.ts`, each with a dark twin and an AA assertion: `accent` (the pink),
 `accentInk` (white text at 4.5:1), `accentTint` (bands and weekly chips), `kindSpecial` and its ink
 (green), `kindOther` (grey), `inkStrong` (headings). On public pages, under the new look, `primary`
-becomes the pink pair; the backoffice, the emails, the PDFs, the race numbers and the share cards keep
+becomes the accent — the pink pair by default, or the preset or colour the club chose under «Culoarea
+de accent» — and a component wears the accent only through `primary.*` and `LOOK_ACCENT_TINT`, never
+by naming a pink token; the backoffice, the emails, the PDFs, the race numbers and the share cards keep
 the logo blue. Headings Inter 800, letter-spacing −0.02 em; the two-tone word a `span`, not a
 gradient; Caveat only where drawn, never preloaded. Cards: 16 px radius, one soft shadow, the photo on
 top, a tag pill. Buttons: pill-shaped, a trailing arrow glyph (§521), `contained` pink and `outlined`
@@ -107,7 +109,7 @@ side.
 | 1 | Tokens and the public shell: the pink pair, Inter 800, the public scope, the setting «Aspectul nou», the header CTA and socials, the watermark; the design-system page shows both looks — **built behind the setting, off (2026-10-11)** | brand and font tests green, header one row at 320 px, the club's yes on QA |
 | 2 | Cover photos on events, and the event kind: a cover column with its crop, the editor's picker, the ladder; weekly or special derived from the series; the photo tag — **built on `feat/facelift-phase-2`, awaiting release** | listing specs green; every weekly run and the race carry a cover |
 | 3 | The home page: the root becomes a page; hero, next run, weekly and special, the band, why, the strip, the numbers; redirect, canonicals, sitemap. Every part a setting: «Pagina principală activă»; the hero picture with its crop and two lines and the three buttons' targets; N gallery pictures per strip or carousel, in order; the founding date and the runners figure; an unset strip is not drawn — **built behind «Pagina principală», off (2026-10-11): part A the page, its setting, the hero, the next run and the run sections; part B the four lower sections; part C their wiring and the panel in folds** | LCP under 2.5 s on a 320 px phone, root tests rewritten, the club's yes on QA |
-| 4 | The calendar: filter chips with the kind, three colours and a legend, the next-event panel, the subscribe box, the title block | first week above the fold at 320 px, filters work with scripts off |
+| 4 | The calendar: filter chips with the kind, three colours and a legend, the next-event panel, the subscribe box, the title block — **built behind «Aspectul nou», off (2026-10-11)** | first week above the fold at 320 px, filters work with scripts off |
 | 5 | The listing and the event page: cards with their photo and pills, the arrow if approved, the event page's head | listing and event specs green |
 | 6 | The flip and the clean-up: «Aspectul nou» on in production; one release later the old look's code goes; the decisions amended | a week on production without the way back being used |
 
@@ -129,10 +131,12 @@ public pages; off (the default), no rule matches and every page is what it was.
 | Pill buttons, Inter 800 headings | `src/theme/theme.ts` | theme overrides under the scope; `h1`–`h3` that state no weight of their own (a card's title keeps its 500 until phase 5); Inter 800 is `src/theme/fonts/Inter-800.woff2`, not preloaded |
 | The setting | `src/modules/appearance/site-look.ts`, `ui/SiteLookPanel.tsx` | Administrator only, audited `site_look.changed`, expires the static pages |
 | «Vino cu noi» | `src/shared/ui/HeaderCta.tsx`, `ArrowButtonLink.tsx`; target `src/modules/events/domain/next-weekly-run.ts` | the next weekly run's page, else the listing; a tighter pill below `sm` that keeps its arrow (§521); drawn into the nav's trailing group before the ☰, and not in the backoffice |
-| Socials | `src/shared/ui/HeaderSocials.tsx` | Facebook and Instagram from the footer's list, from `md` up |
+| «Urmărește-ne» | `src/shared/ui/HeaderSocials.tsx` | the owner, 2026-10-11: «Urmărește-ne» / "Follow us" and Instagram, Facebook and Strava, in that order, from the footer's one list; the header row's last item, its top right, after the nav and its ☰, from `md` up (§722, amending §708's two marks inside the nav) |
+| The language | `src/shared/ui/FloatingLocaleSwitch.tsx`, drawn by `SiteFooter.tsx` | the owner, 2026-10-11: «the language switchers are always on the bottom right» — one 44-pixel round button showing the other language's flag and code, floating just above the footer's sticky bar in the bottom-right corner on every public page, so it stays while one scrolls and rises with the bar when its fold opens; the header's copy and the phone's flags on the bar are hidden under the scope (§722, amending §262 under the look) |
 | The logo, blue | `src/shared/ui/SiteHeader.tsx` | the supplied lockup, unfiltered, under both looks |
 | The watermark | `src/shared/ui/MountainMark.tsx`, `LookWatermark.tsx` | the mountain mark, faint, between the content and the footer |
-| Both looks side by side | `/admin/design` → «Aspectul nou» (`src/modules/design/ui/LookSection.tsx`) | the same components twice, the right box under the preview scope |
+| Both looks side by side | `/admin/design` → «Aspectul nou» (`src/modules/design/ui/LookSection.tsx`) | the same components twice, the right box under the preview scope; under them every accent preset with its four shades |
+| The accent, the club's | presets `LOOK_ACCENT` in `src/theme/brand.ts`; a typed colour's shades `src/modules/appearance/domain/accent-shades.ts`; the form's «Culoarea de accent» in `ui/SiteLookPanel.tsx`, «Personalizat» `ui/CustomAccentOption.tsx`, the miniature `ui/AccentPreview.tsx` | pink (the default), blue (the club's blue as today's look wears it), orange, or a typed `#rrggbb` that is not a grey; four shades a scheme — `accent`, `accentInk`, `accentDeep`, `accentTint` — written by the layout's one stylesheet onto MUI's primary and `--br-accent-tint` (`LOOK_ACCENT_TINT` in `src/theme/look.ts`), so a rule under the look asks for `primary.*` or that variable and never names the pink; every preset and 432 typed colours held at AA in both schemes by `tests/unit/appearance/look-accent.test.ts` |
 
 What phase 1 leaves for the gate: the club's look at QA with the setting on, phone and laptop; the
 header's one row at 320 px measured by the e2e suite with the setting on.
@@ -186,6 +190,24 @@ back is the same card, «Lista de alergări».
 
 **The gate:** LCP under 2.5 s on a 320-pixel phone, measured on QA with the club's photograph in the
 hero, and the club's yes on QA.
+
+### Phase 4, as built
+
+On the branch `feat/facelift-phase-4-calendar` (2026-10-11), with the plan's defaults for its open
+questions: no hero photo on the calendar; the chips carry the kind and the surface, the collapsed
+«Filtre» panel the rest; a separate Outlook row. Drawn only under «Aspectul nou»; off, the calendar
+is today's and reads nothing more.
+
+| Part | Where | Notes |
+| --- | --- | --- |
+| The title block | `src/app/[locale]/calendar/page.tsx` | the kit-face wordmark in the accent (§292 keeps it above the one `h1`); the `h1` «Calendar» drawn as the eyebrow from `sm`; the line «Planifică-ți următoarea alergare.» in Inter 800 with its last word in the accent, and the subline — from `sm`, so a phone's first week stays above the fold |
+| The kind | `src/modules/events/domain/calendar-kind.ts` | `?kind=weekly` / `?kind=special` from §709's `eventKind`, one choice; the live twin answers it (`i18n/live-twin.ts`) |
+| `KindChips` | `src/modules/events/ui/KindChips.tsx` | «Toate evenimentele», «Alergări săptămânale», «Evenimente speciale», then the period's surfaces — `ChipLink`s to the address with the choice made, every other filter kept; a sideways strip on a phone. The «Filtre» panel hides its surface group under the look (`lookChips`) and keeps the boxes in its form |
+| Three colours and a legend | `calendar-tone-sx.ts`, `CalendarLegend.tsx`; tokens `CALENDAR_TONE_TOKENS` in `src/theme/brand-pairs.ts` | weekly in the club's accent, pink by default (the band `LOOK_ACCENT_TINT`, a dot in `primary.light`: the setting's variables, never the pink's tokens), special green (`kindSpecial`), other grey (`kindOther`: a coffee, a shoe test); every pair AA in both schemes (`brand.test.ts`, the weekly one under every accent with `look-accent.test.ts`); the legend says each colour's word |
+| `NextEventPanel` | `src/modules/events/ui/NextEventPanel.tsx` | the next date still ahead that the page's filters let through (`domain/next-event.ts`), from the listing's cached read; its day, the title, time and place, the route pills and the weather at the start, «Vezi detalii»; read only while the look is on |
+| `SubscribeBox` | `src/modules/events/ui/SubscribeBox.tsx` | «Vrei să nu ratezi alergările?»: Google, Apple (`webcal://`), Outlook (`outlook.live.com`, in `PROVIDER_HOSTS`), the `.ics`, the address to copy in a fold; today's «Adaugă în calendarul tău» row is hidden under the look |
+| Two columns | the page | from `md` the month and, beside it, the panel and the box; on a phone they follow the month |
+| On the design page | `/admin/design` → «Mostre» → «Calendarul, sub aspectul nou» | the four parts with made-up data inside a preview box |
 
 ## Content and assets the club must provide
 

@@ -11,7 +11,7 @@ type Props = {
   href: ComponentProps<typeof Link>["href"];
   /** The words; the arrow follows them. */
   label: string;
-  /** `contained`: the primary fill (the pink under «Aspectul nou»). `outlined`: the ink outline. */
+  /** `contained`: the primary fill (the accent under «Aspectul nou», pink by default). `outlined`: the ink outline. */
   variant?: "contained" | "outlined";
   size?: Size;
   /**
@@ -33,7 +33,7 @@ type Props = {
  * and drawn as the button's last child — never `endIcon`, which from a Server Component is an
  * element handed to a client component (§370). So a page, public or the design page, passes words
  * and an address, never an icon. `outlined` is ink, not the primary: the plan's «outlined ink»,
- * the quiet partner of the pink one.
+ * the quiet partner of the accent-filled one.
  *
  * A Server Component: `ButtonLink` is the one client boundary, and children cross it safely.
  */

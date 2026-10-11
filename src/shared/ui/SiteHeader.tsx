@@ -10,15 +10,15 @@ import { cachedHomePage, cachedPublishedPages, cachedSiteLook, cachedUpcomingEve
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import { buildInfo } from "@/shared/config/build-info";
 import { CLUB_NAME, HEADER_MARK_HEIGHT, HEADER_MARK_HEIGHT_PX, LOGO, PAGE_WIDTH } from "@/theme/brand";
+import { notUnderLook, onlyUnderLook } from "@/theme/look";
 import { KEYFRAMES, MOTION_OK } from "@/theme/motion";
 import { clubSocialLinks } from "./club-socials";
 import HeaderCta from "./HeaderCta";
-import HeaderSocials from "./HeaderSocials";
+import HeaderSocials, { headerSocials } from "./HeaderSocials";
 import LocaleSwitcher from "./LocaleSwitcher";
 import LogoLink from "./LogoLink";
 import NewBuildNotice from "./NewBuildNotice";
 import SiteNav from "./SiteNav";
-import type { SocialNetwork } from "./SocialIcon";
 
 /**
  * The club's standing pages, for the navigation — or nothing at all, whatever goes wrong.
@@ -62,9 +62,6 @@ async function navigationPages(locale: Locale) {
     return [];
   }
 }
-
-/** The header's two marks under the new look: the plan's mock-up draws Facebook and Instagram; Strava stays in the footer. */
-const HEADER_NETWORKS: ReadonlySet<SocialNetwork> = new Set(["facebook", "instagram"]);
 
 /**
  * Where «Vino cu noi» goes (§708, the redesign's decision 5): the next weekly run's page, read from
@@ -137,8 +134,10 @@ export default async function SiteHeader() {
   // «Pagina principală» (§714): while it is on, the logo leads to it — the home page is never a menu entry.
   const home = await cachedHomePage();
   const joinHref = look.on ? await joinTarget(locale as Locale) : null;
-  const socials = look.on ? (await clubSocialLinks()).filter((entry) => HEADER_NETWORKS.has(entry.network)) : [];
   const site = await getTranslations("Site");
+  // «Urmărește-ne» (§722): Instagram, Facebook and Strava, from the footer's one list, in the owner's order,
+  // each named «{club} pe …» (`Site.followOn`).
+  const socials = look.on ? headerSocials(await clubSocialLinks(), site) : [];
 
   return (
     <>
@@ -266,21 +265,28 @@ export default async function SiteHeader() {
             showContact={sections.contact}
             order={order}
           >
-            {joinHref && (
-              <>
-                <HeaderCta href={joinHref} label={site("cta.join")} />
-                <HeaderSocials links={socials} />
-              </>
-            )}
+            {joinHref && <HeaderCta href={joinHref} label={site("cta.join")} />}
           </SiteNav>
         </Box>
 
         {/*
-          «Vino cu noi» and the two social marks, under «Aspectul nou» only (§708): passed to the nav
-          as its children (the trailing group), so they sit before the ☰ and the ☰ stays the row's right edge
-          (§699), and the nav measures what is left and folds the rest into it, so the row stays one
-          row at every width. Drawn only inside the look's scope, so the backoffice never shows them.
+          «Vino cu noi», under «Aspectul nou» only (§708): passed to the nav as its child (the trailing
+          group), so it sits before the ☰, and the nav measures what is left and folds the rest into
+          it, so the row stays one row at every width. Drawn only inside the look's scope, so the
+          backoffice never shows it.
+
+          «Urmărește-ne» with Instagram, Facebook and Strava (§722, amending §708): the row's last item
+          from `md` up — the top right the owner asked for — after the nav and its ☰. Outside the nav,
+          in the place the language switcher leaves under the look, so the nav measures its own box
+          without it and folds a section into the ☰ before the row would ever wrap. The language is
+          the floating round button above the footer's bar there (`FloatingLocaleSwitch`). The box
+          shows only where its content does, so it takes no room in the backoffice or on a phone.
         */}
+        {socials.length > 0 && (
+          <Box sx={{ order: 4, flexShrink: 0, ...onlyUnderLook({ xs: "none", md: "flex" }), ml: 1 }}>
+            <HeaderSocials links={socials} label={site("followUs")} />
+          </Box>
+        )}
 
         {/*
           The scheme switch left this row for the footer's bottom-left corner (§115), and on a
@@ -295,8 +301,12 @@ export default async function SiteHeader() {
           `display: none` rather than a second component: the footer renders its own switcher
           and the hidden one is out of the accessibility tree, so exactly one "Limbă" navigation
           is announced at every width.
+
+          Under «Aspectul nou» (§722) this copy is not drawn at any width: the language is the
+          floating round button in the bottom-right corner (`FloatingLocaleSwitch`, drawn by the
+          footer), and «Urmărește-ne» takes the far end of the row.
         */}
-        <Box sx={{ order: 3, ml: "auto", flexShrink: 0, display: { xs: "none", sm: "flex" }, alignItems: "center", gap: { xs: 0, sm: 0.5 } }}>
+        <Box sx={{ order: 3, ml: "auto", flexShrink: 0, ...notUnderLook({ xs: "none", sm: "flex" }), alignItems: "center", gap: { xs: 0, sm: 0.5 } }}>
           <LocaleSwitcher />
         </Box>
       </Container>
