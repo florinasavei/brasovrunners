@@ -7,6 +7,7 @@ import CalendarEventChip from "@/modules/events/ui/CalendarEventChip";
 import { difficultyLevelGlyph } from "@/modules/events/ui/difficulty-glyphs";
 import { FILTER_OPTION_SX } from "@/modules/events/ui/filter-chip-sx";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
+import StatusChip from "@/shared/ui/StatusChip";
 import { GLYPHS } from "@/modules/events/ui/glyphs";
 import { buildRoutePills } from "@/modules/events/ui/route-pills";
 import RoutePills from "@/modules/events/ui/RoutePills";
@@ -68,8 +69,8 @@ export default async function PillSection({ locale }: { locale: Locale }) {
           <GlyphChip glyph="night" variant="outlined" label={tEvent("night.chip")} />
           <GlyphChip glyph="series" variant="outlined" label={t("design.pills.series")} />
           <GlyphChip glyph="discount" variant="outlined" label={t("design.pills.discount")} />
-          <GlyphChip glyph="cancelled" color="error" label={tEvent("cancelled")} />
-          <GlyphChip glyph="done" label={tEvent("completed")} />
+          <StatusChip glyph="cancelled" color="error" label={tEvent("cancelled")} />
+          <StatusChip glyph="done" label={tEvent("completed")} />
         </Box>
       </Block>
 

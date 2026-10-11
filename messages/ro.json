@@ -5838,7 +5838,9 @@
         "public": "Glife publice · {count}",
         "publicNote": "`glyphs.ts`: tipurile, suprafețele, cele cinci benzi și cele cincisprezece trepte, costul și marcajele cardului.",
         "backoffice": "Glife de acțiune · {count}",
-        "backofficeNote": "`action-icons.ts`: un verb, o glifă, oriunde e scris; nicio pagină publică nu importă tabelul."
+        "backofficeNote": "`action-icons.ts`: un verb, o glifă, oriunde e scris; nicio pagină publică nu importă tabelul.",
+        "status": "Glife de stare · {count}",
+        "statusNote": "`status-glyphs.ts`: cuvântul unei stări cu poza lui, desenat de `StatusChip`; doar backoffice-ul și zona membrilor îl folosesc."
       },
       "rules": {
         "intro": "Regulile care te prind când atingi aspectul; fiecare are un test sau o verificare.",

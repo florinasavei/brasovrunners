@@ -5838,7 +5838,9 @@
         "public": "Public glyphs · {count}",
         "publicNote": "`glyphs.ts`: the types, the surfaces, the five bands and the fifteen steps, the cost and the card's marks.",
         "backoffice": "Action glyphs · {count}",
-        "backofficeNote": "`action-icons.ts`: one verb, one glyph, wherever it is written; no public page imports the table."
+        "backofficeNote": "`action-icons.ts`: one verb, one glyph, wherever it is written; no public page imports the table.",
+        "status": "Status glyphs · {count}",
+        "statusNote": "`status-glyphs.ts`: a state's word with its picture, drawn by `StatusChip`; only the backoffice and the members' area use it."
       },
       "rules": {
         "intro": "The rules that bite when the look is touched; each has a test or a check.",

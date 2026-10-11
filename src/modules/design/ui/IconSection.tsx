@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import type { ComponentType } from "react";
 import { GLYPHS } from "@/modules/events/ui/glyphs";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
+import { STATUS_GLYPHS } from "@/shared/ui/status-glyphs";
 import DesignSection, { Block } from "./section";
 
 /** Every glyph of a registry at 24 pixels with its name under it, in a grid that fills the width. */
@@ -33,6 +34,7 @@ export default async function IconSection() {
   const t = await getTranslations("Admin");
   const glyphs = Object.entries(GLYPHS) as [string, ComponentType<SvgIconProps>][];
   const verbs = Object.entries(ACTION_ICONS) as [string, ComponentType<SvgIconProps>][];
+  const states = Object.entries(STATUS_GLYPHS) as [string, ComponentType<SvgIconProps>][];
 
   return (
     <DesignSection id="icons" title={t("design.sections.icons")} intro={t("design.icons.intro")}>
@@ -41,6 +43,9 @@ export default async function IconSection() {
       </Block>
       <Block title={t("design.icons.backoffice", { count: verbs.length })} note={t("design.icons.backofficeNote")}>
         <GlyphGrid entries={verbs} testId="design-action-icons" />
+      </Block>
+      <Block title={t("design.icons.status", { count: states.length })} note={t("design.icons.statusNote")}>
+        <GlyphGrid entries={states} testId="design-status-glyphs" />
       </Block>
     </DesignSection>
   );
