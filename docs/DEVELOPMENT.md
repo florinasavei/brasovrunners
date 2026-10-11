@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.94-2026-10-11 -->
+<!-- PROJECT_BASELINE: BR-V2.95-2026-10-11 -->
 
 # Running this locally
 
-**Baseline `BR-V2.94-2026-10-11`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V2.95-2026-10-11`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -91,6 +91,7 @@ yarn test                all tests
 yarn test:unit           pure-rule tests only
 yarn test:integration    database tests only
 yarn test:concurrency    the two-connection suite; needs the database running
+yarn test:clock          the suite with the real clock moved to +1 month, +1 year and +10 years; about twenty minutes a date (§ Tests that the calendar breaks); `--concurrency` runs the two-connection suite instead, a minute a date
 yarn test:watch          re-run on change
 yarn test:e2e            browser tests, mobile and desktop; needs the database running
 yarn db:seed:legal       the sample legal documents alone; never deletes, safe on a live database
@@ -188,6 +189,10 @@ docker compose up -d db && yarn db:migrate
 yarn test:concurrency
 ```
 
+Run it on a migrated, **unseeded** database, as CI does: a seeded one carries a privacy notice
+effective from the day it was seeded, which is after the fixed `NOW` of the desk-race, family and
+spare-bibs files, and seven of their cases fail with "no approved privacy notice exists yet".
+
 **A failure one run in eight can be a plan, not a race.** The planner's choice follows the
 table's statistics, and the suite's own deletes and inserts move them — autovacuum on a table
 just emptied leaves "no rows" over pages that remain. `UPDATE … WHERE id IN (SELECT … LIMIT n FOR
@@ -207,6 +212,49 @@ Tests are named by the requirement they cover. `tests/unit/` holds pure rules;
 should use `expectViolation` from `tests/helpers/constraints.ts` — Drizzle wraps driver
 errors, so matching on the message would pass for any failure at all, including a typo in the
 query. The helper checks the SQLSTATE code and the constraint name instead.
+
+### Tests that the calendar breaks
+
+**The practice: a test that writes a date either hands that date to everything it calls as `now`,
+or pins the real clock to it around the call that reads `new Date()` (`atTheClock` in
+`tests/helpers/clock.ts`) — never lets code compare a fixture date with the day the suite runs.**
+
+On 2026-10-11 at 07:00Z a release's pre-commit hook went red on a test that had passed that
+morning: its fixture race started at 07:00Z, and the skip it pressed read its link through
+`readRegistrationTokenContext`, which takes `new Date()` although the caller passes `now`. Nothing
+in the release touched it — the calendar did (§712).
+
+`yarn test:clock` finds those tests before the day. It runs the suite three times with the real
+clock moved forward — +1 month, +1 year, +10 years — through `TEST_CLOCK_AT` and
+`tests/helpers/shifted-clock.mjs`: every argument-less `new Date()`, `Date()` and `Date.now()`, and
+PGlite's own `now()`, read the moved date, while a date the test writes stays as written; a Node
+process a test starts (a script it runs) reads the same moved clock. A test that fails there and
+passes under `yarn test` is a bomb. About twenty minutes a date on two workers, so it is not in
+`yarn check`; run it before a release batch, and after writing a test with dated fixtures:
+
+```bash
+yarn test                                          the baseline: what fails today is broken, not a bomb
+yarn test:clock                                    the three dates, two workers (the machine is shared)
+yarn test:clock +3d 2031-06-01 -- tests/integration/registrations   other dates, some files
+```
+
+To defuse one, in this order of preference: pass the fixture's `now` to the function that takes
+one; where the path reads the real clock itself, wrap that call in
+`atTheClock(instant, () => …)` at the instant the test means — never the whole file, so PGlite's
+row times keep moving; and only where neither fits, move every date of the fixture together,
+keeping their distances (the race, the holds, the birth dates). A `src/` read that ignores a
+`now` its caller passed is reported to the owner, not changed by the test fix.
+
+`yarn test:clock --concurrency +2m +1y` runs `tests/concurrency/` the same way (needs the database,
+serial, about a minute a date): the Node side of that suite reads the moved clock, while the real
+PostgreSQL server's `now()` stays real — so a fixture there derives its dates from `Date.now()`
+(an event 60 days ahead) rather than writing one, as `capacity.test.ts` does (§719). CI's `e2e` job
+runs that suite, so a date it cannot keep blocks every release.
+
+What `test:clock` cannot reach: `tests/e2e/` against a running server, and the database's own
+`now()` — read those by hand for a `new Date()` (or a form filled with a written date) compared
+with a fixed one. The seeds draw their dates from today (`src/db/seeds/sample-dates.ts`, §162) and
+never age.
 
 ## Where the flags come from
 

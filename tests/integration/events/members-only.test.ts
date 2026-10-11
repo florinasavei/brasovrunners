@@ -11,6 +11,7 @@ import { computeContentHash, type LegalDocumentTranslationInput } from "@/module
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { ANOTHER_LINK_INVALID } from "@/modules/registrations/domain/family";
+import { atTheClock } from "../../helpers/clock";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -59,7 +60,7 @@ const { generateMetadata: twinMetadata, default: LiveEventDetailPage } = await i
 const { submitRegistrationAction } = await import("@/app/[locale]/events/[slug]/register/actions");
 const { default: RegisterPage } = await import("@/app/[locale]/events/[slug]/register/page");
 const { default: GroupRunDeclarationPage } = await import("@/app/[locale]/events/[slug]/declaration/page");
-const { default: MembersAreaPage } = await import("@/app/[locale]/members-area/page");
+const { default: MembersAreaPage } = await import("@/app/[locale]/members-area/runs/page");
 const { default: EventCard } = await import("@/modules/events/ui/EventCard");
 const { default: StartList } = await import("@/modules/events/ui/StartList");
 const { default: EventFeedbackButton } = await import("@/modules/feedback/ui/EventFeedbackButton");
@@ -382,16 +383,17 @@ describe("§552 events for the members alone", () => {
         now: NOW,
       });
       state.cookie = member.id;
-      const cards = elementsOf(await MembersAreaPage({ params: Promise.resolve({ locale: "ro" }) }), EventCard);
+      // The zone lists what is ahead by the real clock: it is opened at NOW, before both dates (§712).
+      const cards = elementsOf(await atTheClock(NOW, () => MembersAreaPage({ params: Promise.resolve({ locale: "ro" }) })), EventCard);
       expect(cards).toHaveLength(1);
       expect((cards[0].props.event as { slug: string }).slug).toBe("crosul-membrilor");
       expect(slugs(cards[0].props.seriesDates as { slug: string }[])).toEqual(["crosul-membrilor", "crosul-membrilor-2"]);
     });
 
     it("the registration form: 404 to a stranger; for a member, the account's address, not asked", async () => {
-      // The page reads the wall clock: published before it, so the window is open today.
+      // The page reads the wall clock: it is opened at NOW, published before it and the race ahead (§712).
       await db.update(events).set({ publishedAt: new Date("2026-01-01T00:00:00.000Z") }).where(eq(events.id, membersEventId));
-      const page = () => RegisterPage({ params: params(), searchParams: Promise.resolve({}) });
+      const page = () => atTheClock(NOW, () => RegisterPage({ params: params(), searchParams: Promise.resolve({}) }));
       expect(await isNotFound(page())).toBe(true);
       state.cookie = member.id;
       const texts = textsOf(await page());

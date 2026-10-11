@@ -35,7 +35,6 @@ import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
-import SubmitButton from "@/shared/ui/SubmitButton";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 
 type Props = {
@@ -140,7 +139,8 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
         data-item-id={item.id}
         sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}
       >
-        <Stack direction="row" spacing={1} sx={{ alignItems: "flex-start" }}>
+        {/* Below `sm` the move buttons (a glyph and words, about 110 px each) drop to a row under the text rather than squeeze it at 320 px. */}
+        <Stack direction="row" sx={{ alignItems: "flex-start", flexWrap: { xs: "wrap", sm: "nowrap" }, gap: 1 }}>
           {mayEdit ? (
             <Box component="form" action={setClubTodoDoneAction} sx={{ flexShrink: 0 }}>
               {context}
@@ -175,7 +175,7 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
             </Box>
           )}
 
-          <Box sx={{ flex: 1, minWidth: 0, pt: 1.25 }}>
+          <Box sx={{ flex: { xs: "1 1 calc(100% - 52px)", sm: 1 }, minWidth: 0, pt: 1.25 }}>
             <Typography
               variant="body2"
               sx={{
@@ -219,14 +219,14 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
           </Box>
 
           {/* ↑ and ↓ among the open lines shown: none at an end, rather than an arrow that does nothing (the pages list's rule). */}
-          {mayEdit && !item.done && (
-            <Stack spacing={0.5} sx={{ flexShrink: 0 }}>
+          {mayEdit && !item.done && siblings.length > 1 && (
+            <Stack direction={{ xs: "row", sm: "column" }} sx={{ flexShrink: 0, gap: 0.5, flexBasis: { xs: "100%", sm: "auto" }, pl: { xs: "52px", sm: 0 } }}>
               {index > 0 && (
                 <Box component="form" action={moveClubTodoAction}>
                   {context}
                   <input type="hidden" name="itemId" value={item.id} />
                   <input type="hidden" name="direction" value="up" />
-                  <SubmitButton label="↑" pendingLabel="↑" variant="outlined" ariaLabel={t("clubTodo.moveUp", { text: label })} />
+                  <GlyphSubmitButton icon="moveUp" label={t("clubTodo.moveUpWord")} pendingLabel={t("clubTodo.moveUpWord")} tooltip={t("clubTodo.moveUpTip")} variant="outlined" ariaLabel={t("clubTodo.moveUp", { text: label })} />
                 </Box>
               )}
               {index < siblings.length - 1 && (
@@ -234,7 +234,7 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
                   {context}
                   <input type="hidden" name="itemId" value={item.id} />
                   <input type="hidden" name="direction" value="down" />
-                  <SubmitButton label="↓" pendingLabel="↓" variant="outlined" ariaLabel={t("clubTodo.moveDown", { text: label })} />
+                  <GlyphSubmitButton icon="moveDown" label={t("clubTodo.moveDownWord")} pendingLabel={t("clubTodo.moveDownWord")} tooltip={t("clubTodo.moveDownTip")} variant="outlined" ariaLabel={t("clubTodo.moveDown", { text: label })} />
                 </Box>
               )}
             </Stack>

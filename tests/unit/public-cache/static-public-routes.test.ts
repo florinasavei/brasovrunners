@@ -42,6 +42,8 @@ const code = (file: string): string => source(file).replace(/\/\*[\s\S]*?\*\//g,
 
 /** The static public routes: made on first visit, kept by the CDN, expired by writes and their clock. */
 const STATIC_PAGES = [
+  // The site's root (§714): the home page while «Pagina principală» is on, a kept 307 to the listing while it is off.
+  "src/app/[locale]/page.tsx",
   "src/app/[locale]/events/page.tsx",
   "src/app/[locale]/events/[slug]/page.tsx",
   "src/app/[locale]/calendar/page.tsx",
@@ -83,6 +85,8 @@ const PER_REQUEST: Record<string, string> = {
   "src/app/[locale]/contact/feedback/page.tsx": "«Spune-ne ceva»'s wizard: the draft cookie, the render time the timing check reads, ?tip/?sent/?error (§676)",
   "src/app/[locale]/members/page.tsx": "the sign-in button reads the session (§524)",
   "src/app/[locale]/members-area/page.tsx": "the members' zone reads the session and sends a stranger to the sign-in (§524, AGENTS.md §14.5)",
+  "src/app/[locale]/members-area/runs/page.tsx": "the zone's «Alergări» tab: the same door as the zone, per request (§715)",
+  "src/app/[locale]/members-area/shop/page.tsx": "the zone's «Magazin» tab: the same door as the zone, the member's own orders (§715)",
   "src/app/[locale]/sign-in/page.tsx": "reads the session, ?to= and ?error= (§26)",
   "src/app/[locale]/preview/events/[id]/page.tsx": "staff only: a draft shown to whoever the session says may read it (BR-REQ-060-01)",
   "src/app/[locale]/preview/draft/page.tsx": "staff only: the editor's preview frame, for the roles the session says may preview (§579)",
@@ -107,7 +111,6 @@ const PER_REQUEST: Record<string, string> = {
 
 /** Routes that render nothing of their own: they only throw Next's redirect or its 404. */
 const NEVER_RENDERED: Record<string, string> = {
-  "src/app/[locale]/page.tsx": "a permanent redirect to the listing; the proxy answers /ro and /en before it (§353)",
   "src/app/[locale]/[...rest]/page.tsx": "notFound() for any path no page claims",
 };
 
@@ -427,7 +430,8 @@ describe("§549 a static public page never prefetches a per-request address", ()
   });
 
   it("prefetches exactly the static public pages", () => {
-    const pathnameOf = (file: string) => file.replace(/^src\/app\/\[locale\]/, "").replace(/\/page\.tsx$/, "");
+    // The root page is `/`, the pathname `routing.pathnames` and the links name it by.
+    const pathnameOf = (file: string) => file.replace(/^src\/app\/\[locale\]/, "").replace(/\/page\.tsx$/, "") || "/";
     expect([...PREFETCHED_PATHNAMES].sort()).toEqual(STATIC_PAGES.map(pathnameOf).sort());
   });
 });

@@ -273,6 +273,10 @@ const PROVIDER_HOSTS = [
   "www.strava.com",
   "strava.com",
   "strava.app.link",
+  // «Traseul»'s maps (§718): Strava's embed host and Garmin Connect's course pages, built from a
+  // stored id — the link always, the map's iframe only when the visitor presses; no script of theirs.
+  "strava-embeds.com",
+  "connect.garmin.com",
   // Instagram, for the link the backoffice builds from a username (§106).
   "www.instagram.com",
   // Google Calendar's "add this event" address, one tap from the event page (§107).

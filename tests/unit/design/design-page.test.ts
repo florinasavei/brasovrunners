@@ -133,21 +133,46 @@ describe("BR-REQ-060-01 «Sistemul de design» draws the look from the code", ()
       const escaped = (text: string) => text.replace(/'/g, "&#x27;");
       expect(markup).toContain(escaped(words.today));
       expect(markup).toContain(escaped(words.new));
-      // One box wears the preview scope; the other is the same markup without it. «Mostre» draws the
-      // calendar's parts under the look (the facelift's phase 4) in one more preview box.
+      // One box of the side-by-side wears the preview scope; the other is the same markup without
+      // it. The only other boxes that wear it are «Mostre»'s home page sections (§714) and the
+      // calendar's parts under the look (the facelift's phase 4).
       const elements = markup.replace(/<style[\s\S]*?<\/style>/g, "");
-      expect(elements.match(new RegExp(`${LOOK_PREVIEW_ATTRIBUTE}="${LOOK_VALUE}"`, "g"))).toHaveLength(2);
-      expect(elements).toContain('data-testid="design-calendar-look"');
+      const scoped = [...elements.matchAll(new RegExp(`<[^>]*${LOOK_PREVIEW_ATTRIBUTE}="${LOOK_VALUE}"[^>]*>`, "g"))].map((m) => m[0]);
+      expect(scoped).toHaveLength(3);
+      expect(scoped.filter((tag) => tag.includes('data-testid="design-look-new"'))).toHaveLength(1);
+      expect(scoped.filter((tag) => tag.includes('data-testid="design-home"'))).toHaveLength(1);
+      expect(scoped.filter((tag) => tag.includes('data-testid="design-calendar-look"'))).toHaveLength(1);
       // The palette the public layout draws, for the preview box, from the same function.
       expect(markup).toContain(`<style data-design-look="">${lookPaletteCss()}</style>`);
       // The header's own «Vino cu noi» in both boxes (drawn only under the scope), and the mark.
       expect(markup.match(/data-testid="header-cta"/g)).toHaveLength(2);
-      expect(markup).toContain('data-testid="mountain-mark"');
+      // Scoped to the look section: the home samples' empty strip tiles draw the mark too.
+      const lookSection = markup.slice(markup.indexOf('data-testid="design-mountain-mark"'));
+      expect(lookSection).toContain('data-testid="mountain-mark"');
       // Which token MUI's primary takes, light and dark, by name.
       for (const key of Object.keys(LOOK_PRIMARY_TOKENS.light) as (keyof typeof LOOK_PRIMARY_TOKENS.light)[]) {
         expect(markup).toContain(`COLOR.${LOOK_PRIMARY_TOKENS.light[key]}`);
         expect(markup).toContain(`COLOR_DARK.${LOOK_PRIMARY_TOKENS.dark[key]}`);
       }
+    }
+  });
+
+  it("draws the home page's four sections on «Mostre», in the new look's preview, with their sample content (§714)", async () => {
+    for (const locale of ["ro", "en"] as const) {
+      currentLocale = locale;
+      const markup = await page();
+      const words = (locale === "ro" ? ro : en).HomeSections;
+      const escaped = (text: string) => text.replace(/'/g, "&#x27;");
+      for (const id of ["home-steps", "home-why", "home-strip", "home-numbers"]) expect(markup, `${locale}: ${id}`).toContain(`data-testid="${id}"`);
+      expect(markup).toContain(escaped(words.steps.title));
+      expect(markup).toContain(escaped(words.why.items["1"].title));
+      // The strip's empty places, drawn on this page only; no picture, since the page has no club photo.
+      expect(markup.match(/data-testid="home-strip-empty"/g)).toHaveLength(6);
+      expect(markup.slice(markup.indexOf('data-testid="home-strip"'))).not.toMatch(/<img[^>]*srcSet/i);
+      // The sample quote, said by the sample member and nobody else.
+      expect(markup).toContain(locale === "ro" ? "Membru A" : "Member A");
+      // The figures read by the page's own function: ten years, 120 runners, one run a week, all free.
+      for (const figure of ["years", "runners", "perWeek", "free"]) expect(markup).toContain(`data-figure="${figure}"`);
     }
   });
 

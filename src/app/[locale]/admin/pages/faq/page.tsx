@@ -1,6 +1,5 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import MuiLink from "@mui/material/Link";
 import Paper from "@mui/material/Paper";
@@ -402,14 +401,10 @@ function QuestionCard({
       <Stack direction="row" sx={{ mt: 1.5, flexWrap: "wrap", alignItems: "center", gap: 1 }}>
         {/* The arrows are the save itself, with the move (`parseFaqMove`): nothing typed is lost. */}
         {item && index > 0 && (
-          <Button type="submit" name="move" value={`${index}:up`} variant="outlined" sx={{ minHeight: 44, minWidth: 44 }} aria-label={t("faq.moveUpNamed", { question: title })}>
-            ↑
-          </Button>
+          <GlyphSubmitButton icon="moveUp" name="move" value={`${index}:up`} label={t("faq.moveUpWord")} pendingLabel={t("faq.moveUpWord")} tooltip={t("faq.moveUpTip")} variant="outlined" ariaLabel={t("faq.moveUpNamed", { question: title })} />
         )}
         {item && index < count - 1 && (
-          <Button type="submit" name="move" value={`${index}:down`} variant="outlined" sx={{ minHeight: 44, minWidth: 44 }} aria-label={t("faq.moveDownNamed", { question: title })}>
-            ↓
-          </Button>
+          <GlyphSubmitButton icon="moveDown" name="move" value={`${index}:down`} label={t("faq.moveDownWord")} pendingLabel={t("faq.moveDownWord")} tooltip={t("faq.moveDownTip")} variant="outlined" ariaLabel={t("faq.moveDownNamed", { question: title })} />
         )}
         {mayShow && (
           <Box component="label" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minHeight: 44, cursor: "pointer" }}>

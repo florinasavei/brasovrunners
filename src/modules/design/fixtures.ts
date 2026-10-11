@@ -1,5 +1,8 @@
 import type { Locale } from "@/i18n/routing";
 import type { PublicEvent } from "@/modules/events/repository";
+import { homeFigures, type HomeFigure, type NumbersContent } from "@/modules/home/domain/numbers";
+import { EMPTY_STEPS, type StepsContent } from "@/modules/home/domain/steps";
+import { EMPTY_WHY, type WhyContent } from "@/modules/home/domain/why";
 import type { WeatherReading } from "@/modules/weather/domain/forecast";
 
 /**
@@ -148,6 +151,31 @@ export const SAMPLE_WEATHER: WeatherReading = {
   humidity: 82,
   uvIndex: 1,
 };
+
+/**
+ * The home page's four sections (§714) as the design page draws them: the platform's words where
+ * the club has typed none (the starting state), one sample quote said by the sample member — a
+ * quote is never the platform's, so the page needs one to show its face — and the numbers read by
+ * the very function the page calls, from a made-up founding day and runners' count and the sample
+ * weekly series above (a free Monday run: «1×» and «100%»). The strip has no picture: the page has
+ * no club photo to show (decision 6), so it draws its empty places.
+ */
+export const SAMPLE_HOME_STEPS: StepsContent = EMPTY_STEPS;
+
+export const SAMPLE_HOME_WHY: WhyContent = {
+  ...EMPTY_WHY,
+  quote: { ro: "Am venit pentru alergare și am rămas pentru oameni.", en: "I came for the running and stayed for the people." },
+  quoteBy: { ro: "Membru A", en: "Member A" },
+};
+
+/** Six empty places, the row a laptop shows. */
+export const SAMPLE_HOME_STRIP_SLOTS = 6;
+
+export const SAMPLE_HOME_NUMBERS: NumbersContent = { foundedOn: "2016-05-01", activeRunners: 120 };
+
+export function sampleHomeFigures(locale: Locale): HomeFigure[] {
+  return homeFigures(SAMPLE_HOME_NUMBERS, sampleSeries(locale), SAMPLE_NOW);
+}
 
 /** A team card's person, with no photograph: the no-photo state. */
 export function sampleTeamMember(locale: Locale): { name: string; role: string } {

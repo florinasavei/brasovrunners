@@ -16,7 +16,6 @@ import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
-import SubmitButton from "@/shared/ui/SubmitButton";
 import { createTeamBoxAction, deleteTeamBoxAction, moveTeamBoxAction, saveTeamBoxAction, setTeamBoxVisibleAction } from "./actions";
 
 const BoxesIcon = ACTION_ICONS.boxes;
@@ -159,14 +158,14 @@ function BoxRow({
           <Box component="form" action={moveTeamBoxAction}>
             {hidden}
             <input type="hidden" name="direction" value="up" />
-            <SubmitButton label="↑" pendingLabel="↑" variant="outlined" ariaLabel={t("team.boxes.moveUp", { title })} />
+            <GlyphSubmitButton icon="moveUp" label={t("team.boxes.moveUpWord")} pendingLabel={t("team.boxes.moveUpWord")} tooltip={t("team.boxes.moveUpTip")} variant="outlined" ariaLabel={t("team.boxes.moveUp", { title })} />
           </Box>
         )}
         {mayEdit && !last && (
           <Box component="form" action={moveTeamBoxAction}>
             {hidden}
             <input type="hidden" name="direction" value="down" />
-            <SubmitButton label="↓" pendingLabel="↓" variant="outlined" ariaLabel={t("team.boxes.moveDown", { title })} />
+            <GlyphSubmitButton icon="moveDown" label={t("team.boxes.moveDownWord")} pendingLabel={t("team.boxes.moveDownWord")} tooltip={t("team.boxes.moveDownTip")} variant="outlined" ariaLabel={t("team.boxes.moveDown", { title })} />
           </Box>
         )}
         {mayShow && (

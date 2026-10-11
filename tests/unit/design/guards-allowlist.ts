@@ -81,7 +81,7 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[] } 
     { path: "src/app/[locale]/admin/legal/new/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/admin/pages/(list)/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/admin/pages/[id]/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
-    { path: "src/app/[locale]/admin/pages/faq/page.tsx", reason: "a bare MUI Button: GlyphButton / GlyphButtonLink by an action-icons name when the file is next touched; a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 2 },
+    { path: "src/app/[locale]/admin/pages/faq/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/admin/pages/members/CodesCard.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/admin/pages/members/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/admin/registrations/(list)/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
@@ -94,7 +94,6 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[] } 
     { path: "src/app/[locale]/devs/page.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/app/[locale]/error.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched", count: 1 },
     { path: "src/app/[locale]/events/[slug]/declaration/page.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched", count: 1 },
-    { path: "src/app/[locale]/members-area/page.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched", count: 1 },
     { path: "src/app/[locale]/registrations/declare/[token]/page.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched", count: 1 },
     { path: "src/app/[locale]/registrations/family/[token]/page.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched", count: 1 },
     { path: "src/app/[locale]/registrations/list/[token]/page.tsx", reason: "a bare MUI Button: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts (a public page never reaches GlyphButton, whose table is the backoffice's) when the file is next touched", count: 1 },
@@ -167,7 +166,7 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[] } 
 export const PINNED = {
   colours: { entries: 13, hits: 28 },
   icons: { entries: 40, hits: 143 },
-  primitives: { entries: 89, hits: 97 },
+  primitives: { entries: 88, hits: 95 },
 } as const;
 
 /**
@@ -189,6 +188,8 @@ export const ICON_REGISTRIES: ReadonlySet<string> = new Set([
   "src/shared/ui/panel-glyphs.ts",
   "src/shared/ui/status-glyphs.ts",
   "src/modules/content/team/ui/TeamLinkGlyph.tsx",
+  // The home page's steps and reasons (§714): its own table, so the public GLYPHS stays as it is (§707).
+  "src/modules/home/ui/home-glyphs.ts",
 ]);
 
 export const isIconRegistry = (file: string): boolean => ICON_REGISTRIES.has(file);

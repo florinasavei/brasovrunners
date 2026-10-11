@@ -1,8 +1,8 @@
 # Vibecoding this repo — the one page to read before asking an AI to change anything
 
-<!-- PROJECT_BASELINE: BR-V2.94-2026-10-11 -->
+<!-- PROJECT_BASELINE: BR-V2.95-2026-10-11 -->
 
-**Baseline `BR-V2.94-2026-10-11`**
+**Baseline `BR-V2.95-2026-10-11`**
 
 The owner's word for how this platform is built: an AI agent writes, the owner reads and
 merges. This page is the short version of everything an agent trips over. `CLAUDE.md` is the
@@ -57,11 +57,14 @@ request and `.github/workflows/release.yml` lands and ships it
 | An email | `src/modules/notifications/templates.ts` (RO + EN copy), `render.ts` (data, links, attachments), the enum in `src/db/schema/email-outbox.ts` |
 | A legal text template | `src/modules/legal-documents/templates/` |
 | The event editor | `src/modules/content/events/` (fields.ts validates, service.ts saves, ui/ renders) |
+| «Traseul»'s Strava / Garmin Connect maps and its GPX file | the parsers `src/modules/events/domain/route-maps.ts` (ids only, never the pasted HTML), the file's checks `route-gpx.ts`; the page `events/ui/EventRoute.tsx`, `RouteMapPanel.tsx` (the press), `RouteMapTabs.tsx`; the editor's map boxes in `ui/boxes/CourseBox.tsx`, the GPX upload in `ui/boxes/LinksBox.tsx` (`RouteGpxField.tsx`, and the GPX row's button in `LinkRowsEditor.tsx`), the upload's route `src/app/api/admin/route-gpx/route.ts` |
 | An event's cover picture or its kind (weekly / special) | «Copertă» in the editor (`ui/boxes/CoverBox.tsx`); the kind and the photo tag in `src/modules/events/domain/event-kind.ts`; the `<img>` sources in `src/modules/events/cover.ts` — both read off the public row (`cover`, `seriesCadence`) |
+| The home page («Pagina principală», off by default): the hero, «Următoarea alergare», the weekly runs, the special events | one Server Component per section with typed props in `src/modules/home/ui/` (`HomePage`, `Hero`, `NextRunCard`, `RunCardGrid`, and their parts `HomePicture`, `RunTag`, `RoundArrow`); what they show `src/modules/home/home-content.ts` and `domain/sections.ts`; the switch and every section's words, pictures and figures `src/modules/appearance/home-page.ts` (the lower sections' boxes `domain/home-sections-form.ts`) and its card `ui/HomePagePanel.tsx` («Setări» → «Aspect», a fold per part); the route `src/app/[locale]/page.tsx` (off: a 307 to the listing); each drawn at `/admin/design` → «Mostre» from `src/modules/design/home-fixtures.ts`. A new section is a component there, a fixture and a row here |
 | A table or a column | `src/db/schema/*.ts`, then `yarn db:generate --name <what>` → `src/db/migrations/00NN_<what>.sql` (expand only) |
 | Colours, fonts, the logo | `src/theme/brand.ts` — the only file allowed a hex value |
 | The look — the tokens, the type, the components | `src/theme/brand.ts`, `src/theme/theme.ts`; see them drawn at `/admin/design` (§692) |
 | The facelift («Aspectul nou», off by default): the pink, Inter 800, the pill with its arrow, «Vino cu noi», the mountains | the scope `src/theme/look.ts` (write a new-look rule under `UNDER_LOOK`, never test the setting in a page); the pink `src/modules/appearance/domain/site-look.ts`; the parts `src/shared/ui/ArrowButtonLink.tsx`, `HeaderCta.tsx`, `HeaderSocials.tsx`, `MountainMark.tsx`, `LookWatermark.tsx`; both looks side by side at `/admin/design` → «Aspectul nou»; the plan `docs/REDESIGN.md` |
+| The home page's sections — «Prima dată», «De ce» and the quote, the photo strip, the numbers band | one Server Component each in `src/modules/home/ui/` (`StepsBand`, `WhyList`, `PhotoStrip`, `NumbersBand`), typed props, glyphs by name from `home-glyphs.ts`, fills from `home-surfaces.ts`; what the club types and the figures in `src/modules/home/domain/` (both languages or neither; a figure without its fact is left out); the strip's `<img>` sources in `src/modules/home/strip-pictures.ts`, its pictures added, moved and taken out by `changeStripPicture`; drawn under the run sections by `HomePage` while their switches are on, and with fixtures on `/admin/design` → «Mostre» |
 | The calendar under «Aspectul nou» (phase 4): the kind chips, the three colours and their legend, the next event, the subscribe box | `KindChips`, `CalendarLegend`, `NextEventPanel`, `SubscribeBox` in `src/modules/events/ui/`; the kind filter and the tones in `src/modules/events/domain/calendar-kind.ts`, their styles in `calendar-tone-sx.ts`, their tokens `CALENDAR_TONE_TOKENS` (`src/theme/brand-pairs.ts`); drawn at `/admin/design` → «Mostre» |
 | What `/devs` and `/admin/tasks` say | `src/modules/diagnostics/` |
 | A scheduled job | `src/modules/jobs/` (retention) and `src/modules/registrations/maintenance.ts` |

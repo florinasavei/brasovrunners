@@ -42,8 +42,8 @@ export const LOOK_PREVIEW_DARK = `[data-dark] [${LOOK_PREVIEW_ATTRIBUTE}="${LOOK
 export const UNDER_LOOK = `${LOOK_ROOT} &, ${LOOK_PREVIEW} &`;
 
 /**
- * The same after dark: a rule that names a `brand.ts` token by value writes its `COLOR_DARK` twin
- * here (the calendar's tones, phase 4). More specific than `UNDER_LOOK`, so it wins wherever both match.
+ * The same after dark, for a fill that has a dark twin (`COLOR_DARK`): more specific than
+ * `UNDER_LOOK` (one attribute more), so it wins wherever both match, whatever the order.
  */
 export const UNDER_LOOK_DARK = `${LOOK_ROOT_DARK} &, ${LOOK_PREVIEW_DARK} &`;
 

@@ -11,7 +11,6 @@ import {
   STATIC_PAGE_BROWSER_CACHE_CONTROL,
 } from "@/i18n/live-twin";
 import { resolveMovedBackofficePath } from "@/i18n/moved-paths";
-import { localeRootTarget } from "@/i18n/root-redirect";
 import { routing } from "@/i18n/routing";
 import { REQUEST_PATH_HEADER } from "@/modules/resilience/domain/resting-page";
 import { isPrivatePath } from "@/shared/security/private-paths";
@@ -66,18 +65,13 @@ export default function proxy(request: NextRequest) {
     return redirect;
   }
 
-  /**
-   * A locale's root is the listing (§353): `/ro` → `/ro/evenimente`, a real 308 with an empty
-   * body, the query kept. Answered here rather than by `app/[locale]/page.tsx`'s
-   * `permanentRedirect`, which runs after the layout has started streaming and so could only
-   * send a 200 and an error document carrying a client-side hop.
-   */
-  const listing = localeRootTarget(url.pathname);
-  if (listing) {
-    const target = new URL(listing, url);
-    target.search = url.search;
-    return NextResponse.redirect(target, 308);
-  }
+  /*
+    A locale's root (`/ro`, `/en`) is not answered here any more (§714, amending §353): it is the
+    home page while «Pagina principală» is on, and a 307 to the listing while it is off — a setting,
+    which the proxy cannot read without waking the database on the site's most-visited address. The
+    root's page decides (`app/[locale]/page.tsx`), statically: the CDN keeps its answer, the redirect
+    included, until a save of the setting expires it.
+  */
 
   /*
     The calendar's period moved from the query into the path (§574): `/ro/calendar?month=2026-10`
@@ -110,21 +104,12 @@ export default function proxy(request: NextRequest) {
   }
   const response = intlProxy(request);
 
-  /**
-   * And `/` in one hop rather than two. next-intl answers it with a redirect to a locale's root
-   * (`/ro`, 307), which the branch above would then send on to the listing; pointing next-intl's
-   * own redirect at the listing instead keeps its choice of locale and its status, and saves the
-   * visitor a round trip.
-   */
+  /*
+    `/` is next-intl's: a 307 to `/ro`, the default locale's root, which is the home page or the
+    listing's redirect as the setting says (§714). It used to be pointed straight at the listing (§353),
+    which would now skip the home page.
+  */
   const location = response.headers.get("location");
-  if (location) {
-    const target = new URL(location, url);
-    const retarget = localeRootTarget(target.pathname);
-    if (retarget) {
-      target.pathname = retarget;
-      response.headers.set("location", target.toString());
-    }
-  }
 
   /*
     The listing, the calendar and an event page are static for an anonymous visitor at their bare

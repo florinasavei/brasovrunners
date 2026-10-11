@@ -80,6 +80,7 @@ import {
 } from "@/modules/content/events/ui/publish-check";
 import { readCoHosts } from "@/modules/events/domain/co-hosts";
 import { clubNightEvent } from "@/modules/events/night-event";
+import { isStorageConfigured } from "@/modules/media/storage";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import type { ConfirmSpec, EmailCount } from "@/shared/feedback/notice";
 import ActionForm from "@/shared/forms/ActionForm";
@@ -399,7 +400,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   // The page this event makes, section by section (§406): the cards' numbers and states, the map.
   // Night (§394) is the occurrence's own start against the sun, the same answer the headlamp pill
   // and the card's closed line draw — not a stored column, so it is read here, not in the data.
-  const flow = await pageFlow({ event, texts: orderedTranslations, night: clubNightEvent(event).night });
+  const flow = await pageFlow({ event, texts: orderedTranslations, night: clubNightEvent(event).night, storageConfigured: isStorageConfigured() });
   /*
     And what publication does not refuse but a reader would notice (§354, bilingual everywhere):
     a long text whose English says the Romanian word for word — the English "Happy Monday" date

@@ -184,6 +184,13 @@ export function pictureSrcSet(masterSrc: string, masterWidth: number | null | un
  * - `aside` — a photo column beside the words: «Echipa»'s wide canvas card, 280 pixels from `md`,
  *   240 from `sm`, the whole card on a phone, where it stacks (§701).
  * - `thumb` — a small canvas card's photo: 104 pixels from `sm`, 88 below (§701).
+ * - `hero` — the home page's hero photograph and its next-run card (§714): half the page's column from
+ *   `md` (two columns, a 32-pixel gap), 728 at its widest; the whole column below.
+ * - `homeCard` — a card of the home page's runs (§714), its picture edge to edge: three to a row from
+ *   `md`; below it a strip that shows 46 % of the column from `sm` and 82 % on a phone.
+ * - `strip` — the home page's photo strip (§714), a sideways row of square tiles in the page's
+ *   column with 12-pixel gaps: six to the row from `md` (238 pixels at the widest), two and a half
+ *   from `sm`, and on a phone a tile of 72 per cent with the next one peeking in.
  */
 type SizeRule = { minWidth: number | null; vw: number; px: number };
 
@@ -223,6 +230,24 @@ const COLUMNS = {
   thumb: [
     { minWidth: 600, vw: 0, px: 104 },
     { minWidth: null, vw: 0, px: 88 },
+  ],
+  hero: [
+    { minWidth: 1536, vw: 0, px: 728 },
+    { minWidth: 900, vw: 50, px: -40 },
+    { minWidth: 600, vw: 100, px: -48 },
+    { minWidth: null, vw: 100, px: -32 },
+  ],
+  homeCard: [
+    { minWidth: 1536, vw: 0, px: 488 },
+    { minWidth: 900, vw: 33.33, px: -24 },
+    { minWidth: 600, vw: 46, px: -22 },
+    { minWidth: null, vw: 82, px: -26 },
+  ],
+  strip: [
+    { minWidth: 1536, vw: 0, px: 238 },
+    { minWidth: 900, vw: 16.67, px: -18 },
+    { minWidth: 600, vw: 40, px: -19 },
+    { minWidth: null, vw: 72, px: -23 },
   ],
 } as const satisfies Record<string, readonly SizeRule[]>;
 
