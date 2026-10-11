@@ -7,8 +7,10 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { readSiteFontSize } from "@/modules/appearance/site-font-size";
+import { readSiteLook } from "@/modules/appearance/site-look";
 import { readSiteTint } from "@/modules/appearance/site-tint";
 import SiteFontSizePanel from "@/modules/appearance/ui/SiteFontSizePanel";
+import SiteLookPanel from "@/modules/appearance/ui/SiteLookPanel";
 import SiteTintPanel from "@/modules/appearance/ui/SiteTintPanel";
 import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
 import { canOpenSettingsTab } from "@/modules/staff-identity/domain/settings-tabs";
@@ -27,7 +29,8 @@ export const dynamic = "force-dynamic";
 
 /**
  * «Setări» → «Aspect» (§488, moved from Pagini → «Aspect» by §516): how the public pages look.
- * Two settings: the site's light background tint and, since §530, its text size. Read by whoever reads the club's content;
+ * Three settings: the site's light background tint, since §530 its text size, and since §NNN «Aspectul
+ * nou», the facelift's look on or off. Read by whoever reads the club's content;
  * changed by the Administrator (`canManageClubSettings`, §450), which the action and the service
  * assert again (BR-REQ-060-01).
  */
@@ -44,6 +47,7 @@ export default async function AdminAppearancePage({ params, searchParams }: Prop
   const db = getDb();
   const state = await readSiteTint(db);
   const fontSize = await readSiteFontSize(db);
+  const look = await readSiteLook(db);
 
   return (
     <Stack spacing={3}>
@@ -52,11 +56,14 @@ export default async function AdminAppearancePage({ params, searchParams }: Prop
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {saved === "siteTint" && <Alert severity="success">{t("appearance.saved")}</Alert>}
         {saved === "siteFontSize" && <Alert severity="success">{t("fontSize.saved")}</Alert>}
+        {saved === "siteLook" && <Alert severity="success">{t("look.saved")}</Alert>}
       </Box>
 
-      {/* The tab's two cards open on arrival (§336's `primary`, §516): each is a single choice. */}
+      {/* The tab's cards open on arrival (§336's `primary`, §516): each is a single choice. */}
       <SiteTintPanel locale={locale} state={state} mayEdit={canManageClubSettings(actor.role)} openWhen={{ primary: true }} />
       <SiteFontSizePanel locale={locale} state={fontSize} mayEdit={canManageClubSettings(actor.role)} openWhen={{ primary: true }} />
+      {/* «Aspectul nou» (§NNN): the facelift's look on the public pages, one switch. */}
+      <SiteLookPanel locale={locale} state={look} mayEdit={canManageClubSettings(actor.role)} openWhen={{ primary: true }} />
 
       {/* «Sistemul de design» (§692): the look as the code draws it, and the redesign plan — one card, one button, for whoever reads this tab. */}
       <Panel glyph="appearance" title={t("design.card.title")} intro={t("design.card.intro")} id="design-system" data-testid="design-system-card">

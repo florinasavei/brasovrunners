@@ -5,8 +5,11 @@
  * both languages; the full text is the repository document `REDESIGN_DOC_PATH`, English, kept by
  * the dispatcher — a typed list and a document, never a Markdown renderer in the page.
  *
- * Today decision 3 is `decided` (2026-10-10) and the others are `default` (the dispatcher's default stands until the club answers) and
- * every phase `planned`. `decided` is the club's answer in writing, `open` a question the club
+ * Today decision 3 is `decided` (2026-10-10), and decisions 1, 2 and 12 are `decided` by their
+ * defaults (the owner, 2026-10-11: phase 1 starts with the plan's defaults — the pink pair, Inter 800,
+ * one setting «Aspectul nou»; §NNN); the others are `default` (the dispatcher's default stands until
+ * the club answers). Phase 1 is `building` — built behind the setting, off until the club's yes on
+ * QA — and the rest `planned`. `decided` is the club's answer in writing, `open` a question the club
  * reopened; `building` a phase whose chains run, `released` one on production.
  */
 export type DecisionStatus = "default" | "decided" | "open";
@@ -16,8 +19,8 @@ export type RedesignDecision = { readonly id: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 
 export type RedesignPhase = { readonly id: 0 | 1 | 2 | 3 | 4 | 5 | 6; readonly status: PhaseStatus };
 
 export const REDESIGN_DECISIONS: readonly RedesignDecision[] = [
-  { id: 1, status: "default" },
-  { id: 2, status: "default" },
+  { id: 1, status: "decided" },
+  { id: 2, status: "decided" },
   { id: 3, status: "decided" },
   { id: 4, status: "default" },
   { id: 5, status: "default" },
@@ -27,12 +30,12 @@ export const REDESIGN_DECISIONS: readonly RedesignDecision[] = [
   { id: 9, status: "default" },
   { id: 10, status: "default" },
   { id: 11, status: "default" },
-  { id: 12, status: "default" },
+  { id: 12, status: "decided" },
 ];
 
 export const REDESIGN_PHASES: readonly RedesignPhase[] = [
   { id: 0, status: "planned" },
-  { id: 1, status: "planned" },
+  { id: 1, status: "building" },
   { id: 2, status: "planned" },
   { id: 3, status: "planned" },
   { id: 4, status: "planned" },

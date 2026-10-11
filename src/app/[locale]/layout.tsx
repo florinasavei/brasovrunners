@@ -16,10 +16,13 @@ import EnvironmentNotice from "@/shared/ui/EnvironmentNotice";
 import SiteFooter from "@/shared/ui/SiteFooter";
 import SiteHeader from "@/shared/ui/SiteHeader";
 import { siteFontSizeStyle } from "@/modules/appearance/domain/site-font-size";
+import { siteLookStyle } from "@/modules/appearance/domain/site-look";
 import { siteTintStyle } from "@/modules/appearance/domain/site-tint";
-import { cachedSiteFontSize, cachedSiteTint } from "@/modules/public-cache/reads";
+import { cachedSiteFontSize, cachedSiteLook, cachedSiteTint } from "@/modules/public-cache/reads";
 import AppTheme from "@/theme/AppTheme";
 import { CLUB_NAME } from "@/theme/brand";
+import { LOOK_ATTRIBUTE, LOOK_VALUE } from "@/theme/look";
+import LookWatermark from "@/shared/ui/LookWatermark";
 
 /**
  * Every face is a file in the repository, never a download at build (§460). `next/font/google`
@@ -49,12 +52,19 @@ const roboto = localFont({
 /**
  * Two more faces for the theme lab (`theme/preview.ts`, BR-REQ-090-06), self-hosted like
  * Roboto; nothing names them until a preview says so.
+ *
+ * Inter 800 is the headings' face under «Aspectul nou» (§NNN, `FONT.lookDisplay`): Google's own file
+ * of the same release and request as the other three (Inter v20, latin and latin-ext in one WOFF2,
+ * §460's recipe). Not preloaded, like the rest of this family: only the new look's scope names it,
+ * so with the setting off no browser fetches it, and with it on the headings swap in once it lands
+ * rather than every visitor of every page paying 52 KB up front for a look that may be off.
  */
 const inter = localFont({
   src: [
     { path: "../../theme/fonts/Inter-400.woff2", weight: "400", style: "normal" },
     { path: "../../theme/fonts/Inter-500.woff2", weight: "500", style: "normal" },
     { path: "../../theme/fonts/Inter-700.woff2", weight: "700", style: "normal" },
+    { path: "../../theme/fonts/Inter-800.woff2", weight: "800", style: "normal" },
   ],
   display: "swap",
   variable: "--font-inter",
@@ -148,16 +158,24 @@ export default async function LocaleLayout({ children, params }: Props) {
   // «Mărimea textului» (§530): the club's text size for the public pages, the same way — one rule
   // on the root font size, nothing at all for the default.
   const fontSizeStyle = siteFontSizeStyle(await cachedSiteFontSize());
+  // «Aspectul nou» (§NNN): the facelift's scope on <html> and the pink primary — nothing at all while off.
+  const look = await cachedSiteLook();
+  const lookStyle = siteLookStyle(look);
 
   return (
     // suppressHydrationWarning: MUI's CSS-variable theme initialises on the client.
-    <html lang={locale} suppressHydrationWarning>
+    // `data-look`: the new look's scope (`theme/look.ts`), absent while the setting is off; its
+    // rules stop at the backoffice's marker, so staff pages look as they always did.
+    <html lang={locale} suppressHydrationWarning {...(look.on ? { [LOOK_ATTRIBUTE]: LOOK_VALUE } : {})}>
       <body className={`${roboto.variable} ${facon.variable} ${inter.variable} ${nunito.variable} ${signature.variable}`}>
         {/* Drawn on the server, before the first paint; light scheme and public pages only
             (`modules/appearance/domain/site-tint.ts`). Its text is a preset or a checked #rrggbb, never raw typed text. */}
         {tintStyle && <style data-site-tint="">{tintStyle}</style>}
         {/* Public pages only, both schemes (`modules/appearance/domain/site-font-size.ts`); its text is a step's own number. */}
         {fontSizeStyle && <style data-site-font-size="">{fontSizeStyle}</style>}
+        {/* The new look's pink primary, under its scope, both schemes (`modules/appearance/domain/site-look.ts`);
+            its text is written from `brand.ts`'s tokens alone. */}
+        {lookStyle && <style data-site-look="">{lookStyle}</style>}
         {/* Sets data-light / data-dark on <html> before paint, so a dark page never flashes light
             (§93). Light unless the visitor pressed the switch — the owner: "by default we are on
             white, ignore browser settings; dark is enabled only by the button". */}
@@ -221,6 +239,8 @@ export default async function LocaleLayout({ children, params }: Props) {
                   </Box>
                   <SiteHeader />
                   <Box sx={{ flex: 1 }}>{children}</Box>
+                  {/* The mountain mark under the content, the new look only and never in the backoffice (§NNN). */}
+                  {look.on && <LookWatermark />}
                   {/* The build stamp is the fold's own last line at every width (`SiteFooter`,
                       §608), not a label of its own here. */}
                   <SiteFooter />
