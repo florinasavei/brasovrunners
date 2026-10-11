@@ -218,9 +218,6 @@ export default function ProductSizesCard({
 
         {/* «Ghidul de mărimi» (amends §700): the supplier's drawing, one picture, whole unless cropped; the zone opens it large beside the size select. */}
         <Stack spacing={1} data-testid="size-guide-field">
-          <Typography variant="body2" color="text.secondary">
-            {t("members.shop.sizes.guideHelp")}
-          </Typography>
           {storage || guide ? (
             <TeamPhotoField
               photo={guide ? { id: guide.assetId, src: guide.photo.webUrl, preview: guide.photo.thumbUrl, width: guide.photo.width, height: guide.photo.height } : null}

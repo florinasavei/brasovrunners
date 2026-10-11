@@ -15,8 +15,8 @@ import { formatPrice, ORDER_NOTE_MAX, ORDER_QUANTITY_MAX, orderTotalBani } from 
 import PictureLightbox from "@/modules/content/rich-text/ui/PictureLightbox";
 import type { MemberOrder, MembersShopProduct, ShopPhoto } from "@/modules/content/shop/repository";
 import { pictureSrcSet } from "@/modules/media/ladder";
-import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import ProductPictureStrip from "@/modules/content/shop/ui/ProductPictureStrip";
+import SizeGuideHover from "@/modules/content/shop/ui/SizeGuideHover";
 import SizeChartTable from "@/modules/content/shop/ui/SizeChartTable";
 import type { ShopOutcome } from "@/modules/content/shop/zone-outcome";
 import RichText from "@/modules/content/rich-text/ui/RichText";
@@ -25,9 +25,6 @@ import SubmitButton from "@/shared/ui/SubmitButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import { cancelShopOrderAction, placeShopOrderAction } from "./actions";
-
-/** The ruler glyph from the one registry (§694). */
-const SizeGuideIcon = ACTION_ICONS.sizeChart;
 
 /** The native controls' look on a public page: a 44 px box with the theme's border, no client island. */
 const CONTROL_SX = {
@@ -171,28 +168,31 @@ export default async function MembersShop({
  * «Ghid de mărimi» (amends §700): the supplier's size-chart picture, opened large through the same
  * lightbox a description's picture uses (§601: pinch-zoom, Back closes) — a press, not a hover, because
  * members order from a phone. The trigger is the lightbox's own button; what it holds is a 44-pixel
- * outlined face with the ruler glyph by registry name. The picture's ladder `srcset` and the crop
- * go to the island as plain values (§318).
+ * outlined face with the ruler glyph. The picture's ladder `srcset` and the crop go to the islands as
+ * plain values (§318); on a pointer device the button also shows the picture small on hover or focus
+ * (`SizeGuideHover`, the owner's «tooltip cu o poză»), and a phone has the press alone.
  */
 function SizeGuideButton({ guide, title, label }: { guide: ShopPhoto; title: string; label: string }) {
   return (
     <Box sx={{ flex: "0 0 auto" }} data-testid="size-guide">
-      <PictureLightbox
-        src={guide.webUrl}
-        srcSet={pictureSrcSet(guide.webUrl, guide.width)}
-        alt={`${label} — ${title}`}
-        caption=""
-        crop={guide.crop}
-        intrinsic={{ width: guide.width, height: guide.height }}
-      >
-        <Box
-          component="span"
-          sx={{ ...CONTROL_SX, display: "inline-flex", alignItems: "center", gap: 0.75, color: "primary.main", borderColor: "primary.main", fontWeight: 500, whiteSpace: "nowrap" }}
+      <SizeGuideHover thumbUrl={guide.thumbUrl} width={guide.width} height={guide.height} crop={guide.crop}>
+        <PictureLightbox
+          src={guide.webUrl}
+          srcSet={pictureSrcSet(guide.webUrl, guide.width)}
+          alt={`${label} — ${title}`}
+          caption=""
+          crop={guide.crop}
+          intrinsic={{ width: guide.width, height: guide.height }}
         >
-          <SizeGuideIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
-          {label}
-        </Box>
-      </PictureLightbox>
+          <Box
+            component="span"
+            sx={{ ...CONTROL_SX, display: "inline-flex", alignItems: "center", gap: 0.75, color: "primary.main", borderColor: "primary.main", fontWeight: 500, whiteSpace: "nowrap" }}
+          >
+            <StraightenIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
+            {label}
+          </Box>
+        </PictureLightbox>
+      </SizeGuideHover>
     </Box>
   );
 }

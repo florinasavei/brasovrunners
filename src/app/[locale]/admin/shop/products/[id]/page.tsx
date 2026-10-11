@@ -105,7 +105,7 @@ export default async function AdminShopProductPage({ params, searchParams }: Pro
             messages={messages}
             rich={rich}
             noticeDescribes={noticeDescribes}
-            guideLabels={shopPhotoLabels(t, rich, t("members.shop.sizes.guide"))}
+            guideLabels={shopPhotoLabels(t, rich, t("members.shop.sizes.guide"), { help: t("members.shop.sizes.guideHelp"), cropHelp: t("members.shop.sizes.guideCropHelp") })}
             storage={isStorageConfigured()}
           />
           <ProductRemoveCard product={product} locale={locale} words={t} cancel={words.cancel} />

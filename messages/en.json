@@ -7664,7 +7664,8 @@
         },
         "sizes": {
           "guide": "Size guide (one picture)",
-          "guideHelp": "The supplier's drawing with the measurements; the member opens it from beside the sizes. Optional."
+          "guideHelp": "The supplier's drawing with the measurements; the member opens it from beside the sizes. Optional. It is kept when you save the product.",
+          "guideCropHelp": "It starts whole, as it came. Crop only if the drawing has margins to cut off; the arrows move the box, Shift with them resizes it."
         }
       }
     },

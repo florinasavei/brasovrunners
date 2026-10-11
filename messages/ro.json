@@ -7664,7 +7664,8 @@
         },
         "sizes": {
           "guide": "Ghidul de mărimi (o poză)",
-          "guideHelp": "Desenul furnizorului cu măsurile; membrul îl deschide de lângă mărimi. Opțional."
+          "guideHelp": "Desenul furnizorului cu măsurile; membrul îl deschide de lângă mărimi. Opțional. Se păstrează când salvezi produsul.",
+          "guideCropHelp": "Pornește întreagă, cum a venit. Decupează doar dacă desenul are margini de tăiat; Săgețile mută decupajul, Shift cu ele îl redimensionează."
         }
       }
     },

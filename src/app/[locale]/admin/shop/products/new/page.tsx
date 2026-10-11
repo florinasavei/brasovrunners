@@ -83,7 +83,7 @@ export default async function AdminShopNewProductPage({ params, searchParams }: 
         messages={messages}
         rich={rich}
         noticeDescribes={noticeDescribes}
-        guideLabels={shopPhotoLabels(t, rich, t("members.shop.sizes.guide"))}
+        guideLabels={shopPhotoLabels(t, rich, t("members.shop.sizes.guide"), { help: t("members.shop.sizes.guideHelp"), cropHelp: t("members.shop.sizes.guideCropHelp") })}
         storage={isStorageConfigured()}
       />
     </Stack>

@@ -362,13 +362,21 @@ describe("§697 the shop's editor: pictures, sizes, chart, description", () => {
     expect(html).toContain('data-testid="picture-preview-trigger"');
     expect(html).toContain(`${ro.Members.shop.sizeGuide} — Tricou de probă`);
     expect(html).toContain(ro.Members.shop.sizeGuide);
+    // The hover preview (the owner's «tooltip cu o poză») wraps the button: its small picture is not drawn until a pointer rests on it.
+    expect(html).not.toContain('data-testid="size-guide-hover-picture"');
 
     // The editor's field carries the stored picture under the guide's own names.
     const words = (await getTranslations("Admin")) as never;
     const rich = richTextEditorLabels((await getTranslations("Admin.richText")) as never);
-    const sizes = intl(ProductSizesCard({ product: read, words, guideLabels: shopPhotoLabels(words, rich, ro.Admin.members.shop.sizes.guide), storage: true }));
+    const sizes = intl(ProductSizesCard({ product: read, words, guideLabels: shopPhotoLabels(words, rich, ro.Admin.members.shop.sizes.guide, { help: ro.Admin.members.shop.sizes.guideHelp, cropHelp: ro.Admin.members.shop.sizes.guideCropHelp }), storage: true }));
     expect(sizes).toContain('name="sizeGuideAssetId"');
     expect(sizes).toContain(`value="${guide.assetId}"`);
+    // The field says what is true of it: kept with the product's save, starts whole — not the strip's help.
+    expect(sizes).toContain(ro.Admin.members.shop.sizes.guideCropHelp.slice(0, 20));
+    expect(sizes).not.toContain(ro.Admin.members.shop.photoHelp);
+    // A refused guide or crop is named by its label in the summary, never the raw box name.
+    const { productRefusalMessages } = await import("@/modules/content/shop/ui/product-words");
+    expect((await productRefusalMessages(words)).fields.sizeGuideAssetId).toBe(ro.Admin.members.shop.sizes.guide);
 
     // The pictures page counts it as the shop's and refuses its delete.
     const byId = new Map((await listMediaAssetsForAdmin(db, "ro")).map((row) => [row.id, row]));

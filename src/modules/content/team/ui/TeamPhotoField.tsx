@@ -167,8 +167,18 @@ function PhotoField({ photo: initial, crop: initialCrop, labels, inputId, fieldP
       />
       <Stack direction="row" spacing={2} sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
         {photo.id && photo.preview ? (
-          // At 96 px: the crop in its shape, or the default square.
-          sized ? (
+          // At 96 px: the crop in its shape, or the default square — a drawing with no crop (`wholePicture`) whole, in its own ratio.
+          sized && wholePicture && !crop ? (
+            // eslint-disable-next-line @next/next/no-img-element -- the club's own stored thumbnail, drawn whole
+            <img
+              src={photo.preview}
+              alt=""
+              data-testid={`${inputId}-preview`}
+              width={photo.width}
+              height={photo.height}
+              style={{ width: "auto", height: "auto", maxWidth: 96, maxHeight: 96, objectFit: "contain", borderRadius: 8, display: "block" }}
+            />
+          ) : sized ? (
             <TeamPhotoImage src={photo.preview} photo={{ width: photo.width, height: photo.height, crop }} width={96} radius={8} testId={`${inputId}-preview`} />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element -- the club's own stored picture, size unknown

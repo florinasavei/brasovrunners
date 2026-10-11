@@ -252,8 +252,9 @@ function ZoomLayer({
                 component="img"
                 src={src}
                 srcSet={srcSet}
-                // The whole picture is drawn 1/w times the window: ask for the rung that wide.
-                sizes={srcSet ? `${Math.ceil(100 / (crop?.w ?? 1))}vw` : undefined}
+                // The whole picture is drawn 1/w times the window, and the window is as wide as the screen
+                // or, for a tall crop, as the screen's height allows: ask for the rung that wide.
+                sizes={srcSet ? `calc(min(100vw, 100vh * ${geometry.aspectRatio}) / ${crop?.w ?? 1})` : undefined}
                 alt={alt}
                 draggable={false}
                 sx={{ ...cropImageSx(geometry), userSelect: "none" }}
