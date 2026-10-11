@@ -89,6 +89,7 @@ describe("§526 the listing's difficulty boxes tick a band — every step of it"
     coHosts: null,
     coHostName: null,
     coHostUrl: null,
+    seriesCadence: null,
     difficultyLevel,
   });
   const facts = { night: () => false, door: () => false };

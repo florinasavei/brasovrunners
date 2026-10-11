@@ -10,8 +10,9 @@ import type { EventType } from "./event-type";
  * «Evenimente speciale» are one choice, not boxes. It lives in the query on the period's path
  * like every filter (§574), so a link, the GET chips and a script-less visit read the same state;
  * a value that names no kind is ignored, as `?type=NOPE` always was. The listing does not read it
- * (its look is phase 5's), so it is not one of `FILTER_GROUPS`, and the listing's panel never
- * offers it.
+ * (its look is phase 5's), so it is not one of `FILTER_GROUPS`. The panel's own question for the
+ * same kind is «Eveniment special» in «Tipul» (`?type=SPECIAL`, §NNN), on the listing and the
+ * calendar under both looks; the two read one rule (`eventKind`) and AND like any two filters.
  *
  * **The tone.** Three colours by kind, with a legend: a weekly run, a special event — a race, a
  * hike, a run held once, another club's race the club goes to, a «Eveniment special» evening —

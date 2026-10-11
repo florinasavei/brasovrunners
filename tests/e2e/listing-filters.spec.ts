@@ -288,6 +288,39 @@ test.describe("BR-REQ-041-01 the filters work with no script at all", () => {
       await expect(heading(page, RACE)).toHaveCount(0);
     });
 
+    test("«Eveniment special» is a box of «Tipul»: every date of no weekly series, OR with the types (§NNN)", async ({ page }) => {
+      // The owner, 2026-10-11: «Aici la tip trebuie să pot vedea și evenimentele speciale». The seed
+      // has no weekly series, so its three dates are all special and the box narrows nothing there —
+      // it is reached from an address that ticks it, which always offers it (§413).
+      await page.goto("/ro/evenimente?type=special");
+      await expect(heading(page, RACE)).toBeVisible();
+      await expect(heading(page, TRAIL_RUN)).toBeAttached();
+      await expect(heading(page, INTERVALS)).toBeAttached();
+      await expect(panel(page).locator("summary")).toHaveText("Filtre (1)");
+      await expect(box(page, "type", "SPECIAL")).toBeChecked();
+      const active = page.locator("#main").getByTestId("active-filters");
+      await expect(active.getByRole("link", { name: "Scoate filtrul: Eveniment special" })).toHaveAttribute("href", "/ro/evenimente");
+
+      const fold = panel(page);
+      await fold.locator("summary").click();
+      const group = page.getByRole("form", { name: "Filtrele alergărilor" }).getByRole("group", { name: "Tipul" });
+      const special = group.locator("label").filter({ hasText: /^\s*Eveniment special\s*$/ });
+      await expect(special).toBeVisible();
+      const target = await special.boundingBox();
+      expect(Math.round(target!.height * 10) / 10).toBeGreaterThanOrEqual(44);
+
+      // With «Concurs» too: OR within the group — the race, and every special date beside it.
+      await fold.getByRole("checkbox", { name: "Concurs", exact: true }).check();
+      await fold.getByRole("button", { name: "Aplică", exact: true }).click();
+      await expect(page).toHaveURL(/\/ro\/evenimente\?type=RACE&type=SPECIAL$/);
+      await expect(heading(page, RACE)).toBeVisible();
+      await expect(heading(page, TRAIL_RUN)).toBeAttached();
+
+      // English, in English.
+      await page.goto("/en/events?type=SPECIAL");
+      await expect(page.locator("#main").getByTestId("active-filters").getByRole("link", { name: "Remove filter: Special event" })).toBeVisible();
+    });
+
     test("on the calendar: the same fold, tick «Concurs», press «Aplică», read the narrowed year", async ({ page }) => {
       // The year the race falls in (it is three weeks out, so this year or the next).
       let year = new Date().getFullYear();

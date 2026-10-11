@@ -22,6 +22,7 @@ import {
   NO_FILTER,
   offersAnything,
   scopedName,
+  SPECIAL_TYPE,
   withoutValue,
   type FilterFlag,
   type FilterGroup,
@@ -125,7 +126,8 @@ export default async function ListingFilterPanel({
   const label = (group: FilterGroup | FilterFlag, value: string): string => {
     switch (group) {
       case "type":
-        return tEvent(`type.${value}`);
+        // «Eveniment special» is the kind's own word (§709's photo tag), not a type's (§NNN).
+        return value === SPECIAL_TYPE ? tEvent("kind.special") : tEvent(`type.${value}`);
       case "surface":
         return tEvent(`surface.${value}`);
       case "difficulty":
@@ -153,6 +155,9 @@ export default async function ListingFilterPanel({
         return "night";
       case "registration":
         return "registration";
+      case "type":
+        // The calendar's «Evenimente speciale» chip's sparkle (`KindChips`), so one kind wears one glyph.
+        return value === SPECIAL_TYPE ? "special" : (`type:${value}` as GlyphName);
       default:
         return `${group}:${value}` as GlyphName;
     }
