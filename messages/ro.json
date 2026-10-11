@@ -7475,7 +7475,7 @@
         "settings": "Cum se plătește, cine primește comenzile și emailurile către membri",
         "settingsHelp": "Cuvintele apar sub fiecare comandă neplătită și în emailul de confirmare. Adresa primește câte un email pentru fiecare comandă; bifa de mai jos spune dacă primește email și membrul.",
         "settingsTitle": "Salvezi plata, adresa pentru comenzi și emailurile către membri?",
-        "settingsBody": "Membrii văd noile cuvinte de îndată ce salvezi, iar bifa «Îi scriem membrului pe email» se aplică la următoarea comandă.",
+        "settingsBody": "Membrii văd noile cuvinte de îndată ce salvezi, iar bifa «Îi scriem membrului pe email despre comenzi» se aplică de la următorul email (o comandă nouă sau una marcată plătită).",
         "paymentRo": "Cum se plătește (Română)",
         "paymentEn": "Cum se plătește (English)",
         "paymentHelp": "De exemplu contul IBAN al clubului și „sau numerar la alergare”.",

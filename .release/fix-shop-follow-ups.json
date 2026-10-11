@@ -5,7 +5,7 @@
   "changelogLine": "- **The shop's loose ends** — the size guide's alt comes from the catalogue and its button also shows for a one-size product, a volunteer holding «Gestionează magazinul» may press «Tradu», and the settings card's dialog names the member emails. §NNN.",
   "specsCriteria": [
     { "requirement": "BR-REQ-060-01", "text": "Whoever holds the shop grant may press the translate button and the service answers them; a volunteer without it is refused as before (2026-10-11, `DECISIONS.md` §NNN)." },
-    { "requirement": "BR-REQ-041-01", "text": "A product with one size shows «Ghid de mărimi» through the same 44-pixel button when it has a guide (2026-10-11, `DECISIONS.md` §NNN)." }
+    { "requirement": "BR-REQ-060-01", "text": "The members' zone draws «Ghid de mărimi» also for a product with one size and no select, through the same 44-pixel button on its own row above the quantity (amends criterion 139) (2026-10-11, `DECISIONS.md` §NNN)." }
   ],
   "docsNotes": "",
   "batchLine": "the shop's loose ends"

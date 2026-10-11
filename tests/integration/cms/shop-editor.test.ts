@@ -364,7 +364,7 @@ describe("§697 the shop's editor: pictures, sizes, chart, description", () => {
     expect(html).toContain(ro.Members.shop.sizeGuide);
     // The hover preview (the owner's «tooltip cu o poză») wraps the button: its small picture is not drawn until a pointer rests on it.
     expect(html).not.toContain('data-testid="size-guide-hover-picture"');
-    // A one-size product has no select, and the same button opens the same guide (§706).
+    // A one-size product has no select, and the same button opens the same guide (§NNN).
     const solo = await createProduct(db, { actor: admin, fields: { ...SHIRT, titleRo: "Buff de probă", titleEn: "Sample buff", sizes: [], sizeStock: {}, extraVariants: "", oneSize: "1", sizeGuideAssetId: guide.assetId }, now: NOW });
     const soloHtml = await zone();
     const soloCard = soloHtml.slice(soloHtml.indexOf("Buff de probă"));
