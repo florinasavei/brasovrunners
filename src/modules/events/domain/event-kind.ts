@@ -41,7 +41,7 @@ export function eventKind(event: EventKindFacts): EventKind {
 /**
  * The photo tag (the plan's «tag pill» on a card's photo, drawn from phase 5): the kind's word,
  * `Event.kind.<kind>` in the catalogues, and a glyph named in the public registry
- * (`events/ui/glyphs.ts`) — the series' own arrows for a weekly run, the event type's glyph for a
+ * (`events/ui/glyphs.ts`) — the public repeat arrows (§486) for a weekly run, the event type's glyph for a
  * special one (a race's flag, a hike's boot), so a special tag still says what the event is. Data
  * only: the pill, its colours (`kindSpecial`, the accent tint) and its place over the picture are
  * phase 5's, under «Aspectul nou».
@@ -51,10 +51,10 @@ export type CoverTag = {
   /** The catalogue key under `Event`: «Săptămânal» / "Weekly", «Eveniment special» / "Special event". */
   labelKey: `kind.${EventKind}`;
   /** A name of `events/ui/glyphs.ts`, so the pill crosses the server/client boundary as a string (§370). */
-  glyph: "series" | `type:${EventType}`;
+  glyph: "repeat" | `type:${EventType}`;
 };
 
 export function coverTag(event: EventKindFacts & { type: EventType }): CoverTag {
   const kind = eventKind(event);
-  return { kind, labelKey: `kind.${kind}`, glyph: kind === "weekly" ? "series" : `type:${event.type}` };
+  return { kind, labelKey: `kind.${kind}`, glyph: kind === "weekly" ? "repeat" : `type:${event.type}` };
 }

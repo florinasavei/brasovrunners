@@ -42,8 +42,8 @@ describe("§NNN the event's kind", () => {
     for (const [, messages] of MESSAGES) expect(messages.Event.kind.special).not.toBe(messages.Event.special);
   });
 
-  it("gives the photo tag the kind's word and a glyph of the public registry — the series' arrows, or the type's own", () => {
-    expect(coverTag({ seriesCadence: "WEEKLY", type: "GROUP_RUN" })).toEqual({ kind: "weekly", labelKey: "kind.weekly", glyph: "series" });
+  it("gives the photo tag the kind's word and a glyph of the public registry — the repeat arrows, or the type's own", () => {
+    expect(coverTag({ seriesCadence: "WEEKLY", type: "GROUP_RUN" })).toEqual({ kind: "weekly", labelKey: "kind.weekly", glyph: "repeat" });
     expect(coverTag({ seriesCadence: null, type: "RACE" })).toEqual({ kind: "special", labelKey: "kind.special", glyph: "type:RACE" });
     for (const type of EVENT_TYPES) {
       for (const seriesCadence of [null, ...REPEAT_CADENCES]) {

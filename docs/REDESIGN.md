@@ -23,7 +23,7 @@ objects; a different answer changes the phases, not the rules.
 | 6 | Photographs | real club photos only, from the gallery; no stock or generated pictures; people in a home-page photo have agreed | consent and the club's own face |
 | 7 | The Instagram block | a static strip of six gallery pictures with a link; no live feed | an embed is forbidden (AGENTS.md §18.3); a feed needs a Meta app and a token |
 | 8 | The numbers band | typed in «Aspect» → «Pagina principală»: the founding date (years computed), «alergători activi»; «2×/săptămână» and «100% gratuit» computed from the events | invented figures are forbidden (BUSINESS.md §7) |
-| 9 | What «Evenimente speciale» means | everything that is not a weekly series; the chip «Ediție specială» keeps its meaning (§168) | the mock-up's word and today's flag differ |
+| 9 | What «Evenimente speciale» means — **decided by default (2026-10-11)** | everything that is not a weekly series; the chip «Ediție specială» keeps its meaning (§168) | the mock-up's word and today's flag differ |
 | 10 | The round arrow on cards | only on the home page's cards, keeping the whole-card tap; the listing keeps its text door | it reverses §319 |
 | 11 | Icons | the filled Material family stays; the lighter look comes from colour, weight and spacing | a second family touches every glyph (§318) |
 | 12 | How it ships | behind one setting, «Aspectul nou», read like the page tint: on for QA, off on production until the club approves on QA; the old look deleted one release after the flip; the backoffice keeps today's look | a live site with real registrations needs a one-press way back |
@@ -38,7 +38,7 @@ a handful of settings and the look.
 | Header | `SiteHeader` + `SiteNav`: logo, six entries, language switch; socials in the footer | a CTA slot and the two social icons, inside the one-row-at-320-px rule |
 | Hero | nothing: the root answers a 308 to `/events` (§353) | the route, a hero component, a setting for the picture, its crop and two lines; redirect, canonicals and sitemap move |
 | «Următoarea alergare» | the featured card (§470), the weather pill (§402), sunset computed (`sun.ts`) | the «soonest run» rule, weather words, an «Apus» line, the photo tag |
-| Weekly and special sections | a series is one card (§113); the pills; since phase 2 a cover per event (`events.cover_media_asset_id` and its crop, the editor's «Copertă») and the kind (`eventKind`) | the split rule, the short weekday line, the cover drawn on each card |
+| Weekly and special sections | a series is one card (§113); the pills | the split rule, the short weekday line, **a cover photo per event** (events have no picture field) |
 | «Prima dată» band | nothing | the words (a setting), five icons, a target page |
 | «De ce» items and the quote | Caveat is self-hosted | the words, four icons; Caveat on the home page |
 | Photo strip and Instagram | the gallery and its R2 ladder; social addresses as environment values | six chosen pictures and the strip; no feed |
@@ -52,10 +52,7 @@ a handful of settings and the look.
 
 The four data gaps, in order of size: a cover photo per event; the home page's words, pictures and
 numbers as settings; an event kind derived from the series and the type; the founding date and the
-active-runners figure. Phase 2 closed the first and the third: a cover column with its crop, carried
-by a series, and `events/domain/event-kind.ts` — weekly for a date of a standing weekly series,
-special for everything else, the type giving the photo tag its glyph — both on the public read
-(`cover`, `seriesCadence`) for phases 3–5 to draw.
+active-runners figure.
 
 ## The visual system
 
@@ -101,7 +98,7 @@ side.
 | --- | --- | --- |
 | 0 | Decisions and assets — no code: the twelve answers; the hero, one cover per run and race, six strip pictures in the gallery; the numbers | answers in writing, photos uploaded |
 | 1 | Tokens and the public shell: the pink pair, Inter 800, the public scope, the setting «Aspectul nou», the header CTA and socials, the watermark; the design-system page shows both looks | brand and font tests green, header one row at 320 px, the club's yes on QA |
-| 2 | Cover photos on events, and the event kind: a cover column with its crop, the editor's picker, the ladder; weekly or special derived from the series; the photo tag | listing specs green; every weekly run and the race carry a cover |
+| 2 | Cover photos on events, and the event kind: a cover column with its crop, the editor's picker, the ladder; weekly or special derived from the series; the photo tag — **built on `feat/facelift-phase-2`, awaiting release** | listing specs green; every weekly run and the race carry a cover |
 | 3 | The home page: the root becomes a page; hero, next run, weekly and special, the band, why, the strip, the numbers; redirect, canonicals, sitemap. Every part a setting: «Pagina principală activă»; the hero picture with its crop and two lines and the three buttons' targets; N gallery pictures per strip or carousel, in order; the founding date and the runners figure; an unset strip is not drawn | LCP under 2.5 s on a 320 px phone, root tests rewritten, the club's yes on QA |
 | 4 | The calendar: filter chips with the kind, three colours and a legend, the next-event panel, the subscribe box, the title block | first week above the fold at 320 px, filters work with scripts off |
 | 5 | The listing and the event page: cards with their photo and pills, the arrow if approved, the event page's head | listing and event specs green |
