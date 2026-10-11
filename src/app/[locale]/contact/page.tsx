@@ -409,8 +409,8 @@ export default async function ContactPage({ params, searchParams }: Props) {
       )}
       </Box>
 
-      {/* «Spune-ne ceva» (§676): one section and one button to the anonymous wizard, under the form and
-          above the newsletter (§679). */}
+      {/* «Spune-ne ceva» (§676): one section and one button to the anonymous wizard, under the form, above «Contact direct» and
+          the newsletter (§679, §NNN). */}
       {feedbackOpen && (
         <Box
           component="section"
