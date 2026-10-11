@@ -10,7 +10,7 @@ import { getTranslations } from "next-intl/server";
 import CalendarAddress from "@/modules/events/ui/CalendarAddress";
 import { calendarFeedLinks, feedAddressHints } from "@/modules/events/ui/CalendarIntroFold";
 import { DISCLOSURE_SUMMARY_SX, DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
-import { CLUB_NAME, COLOR, COLOR_DARK } from "@/theme/brand";
+import { CLUB_NAME, COLOR } from "@/theme/brand";
 import { UNDER_LOOK, UNDER_LOOK_DARK } from "@/theme/look";
 
 /**
@@ -78,7 +78,8 @@ export default async function SubscribeBox({ locale, baseUrl, addressId = "calen
         border: 1,
         borderColor: "divider",
         [UNDER_LOOK]: { bgcolor: COLOR.accentTint, borderColor: "transparent" },
-        [UNDER_LOOK_DARK]: { bgcolor: COLOR_DARK.accentTint },
+        // After dark a quiet card on the page, the mock-up's: the deep pink band would outweigh the month beside it.
+        [UNDER_LOOK_DARK]: { bgcolor: "background.paper", borderColor: "divider" },
       }}
     >
       <Box sx={{ display: "flex", gap: 1.5, alignItems: "flex-start", mb: 1.5 }}>

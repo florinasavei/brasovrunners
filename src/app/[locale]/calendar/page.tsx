@@ -45,6 +45,7 @@ import CalendarSection from "@/modules/events/ui/CalendarSection";
 import type { CalendarLayout, CalendarView } from "@/modules/events/ui/EventCalendar";
 import { pageAlternates, staticRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
+import MountainMark from "@/shared/ui/MountainMark";
 import Wordmark from "@/shared/ui/Wordmark";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
@@ -229,7 +230,11 @@ export default async function CalendarPage({ params, query: asked, period: segme
       {/* The title block under «Aspectul nou» (phase 4): the H1 above becomes the eyebrow, and the
           line the mock-up leads with, its last word in the pink, stands under it with the subline —
           from `sm` only, so a phone's first week stays above the fold (§569). Off, not drawn. */}
-      <Box sx={{ display: "none", [UNDER_LOOK]: { display: { xs: "none", sm: "block" }, mb: 2 } }} data-testid="calendar-title-block">
+      <Box sx={{ display: "none", position: "relative", [UNDER_LOOK]: { display: { xs: "none", sm: "block" }, mb: 2 } }} data-testid="calendar-title-block">
+        {/* The mountain mark behind the line, faint, from `md` (the mock-up's ridge): decoration in `currentColor`, never a picture. */}
+        <Box aria-hidden="true" sx={MOUNTAIN_SX}>
+          <MountainMark width={360} />
+        </Box>
         <Typography component="p" sx={TAGLINE_SX}>
           {t("calendar.look.taglineLead")}{" "}
           <Box component="span" sx={{ color: COLOR.accent, [UNDER_LOOK_DARK]: { color: COLOR_DARK.accent } }}>
@@ -314,8 +319,21 @@ const TITLE_UNDER_LOOK = {
   [UNDER_LOOK_DARK]: { color: { sm: COLOR_DARK.accentInk } },
 } as const;
 
+/** The ridge behind the title block: faint by day, a little stronger after dark, where the mock-up draws it. */
+const MOUNTAIN_SX = {
+  position: "absolute",
+  right: 0,
+  bottom: 0,
+  display: { xs: "none", md: "block" },
+  color: "text.primary",
+  opacity: 0.06,
+  pointerEvents: "none",
+  [UNDER_LOOK_DARK]: { opacity: 0.09 },
+} as const;
+
 /** The title block's line: the display face at 800, set tight, in the stronger ink. */
 const TAGLINE_SX = {
+  position: "relative",
   m: 0,
   fontFamily: `${FONT.lookDisplay}, ${FONT.fallback}`,
   fontWeight: 800,
