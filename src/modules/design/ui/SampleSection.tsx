@@ -9,11 +9,13 @@ import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import EventCard from "@/modules/events/ui/EventCard";
 import SeriesCard from "@/modules/events/ui/SeriesCard";
+import HomePageSamples from "./HomePageSamples";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { heroSurface } from "@/theme/surfaces";
 import { SAMPLE_NOW, SAMPLE_WEATHER, sampleRace, sampleSeries, sampleTeamMember } from "../fixtures";
+import HomeSamples from "./HomeSamples";
 import DesignSection, { Block, Code } from "./section";
 
 const GuideIcon = ACTION_ICONS.guide;
@@ -24,7 +26,8 @@ const CARD_LIST_SX = { listStyle: "none", m: 0, p: 0, display: "grid", gap: 2, g
 
 /**
  * «Mostre» (§692): the listing's two cards from the sample rows — the very components the site
- * renders, `EventCard` and `SeriesCard` — the lead's frame and surface, a team card in its no-photo
+ * renders, `EventCard` and `SeriesCard` — the lead's frame and surface, the home page's four sections in the
+ * new look's preview (`HomeSamples`, §NNN), a team card in its no-photo
  * state (the public team page draws it inline, so its shape is repeated here), the form's field
  * with a helper and a refusal, a native select, the house checkbox, an alert of each severity and
  * the backoffice fold. Server Components throughout; what reaches a client component is a string.
@@ -44,6 +47,11 @@ export default async function SampleSection({ locale }: { locale: Locale }) {
         </Box>
       </Block>
 
+      {/* The home page's first sections (§NNN): the components the site's root draws, from the sample rows. */}
+      <Block title={t("design.samples.homeTop")} note={t("design.samples.homeTopNote")}>
+        <HomePageSamples locale={locale} />
+      </Block>
+
       <Block title={t("design.samples.featured")} note={t("design.samples.featuredNote")}>
         <Box component="ul" sx={CARD_LIST_SX} data-testid="design-featured">
           <EventCard event={race} index={0} now={SAMPLE_NOW} featured={{ raceWeekDays: 7 }} />
@@ -53,6 +61,10 @@ export default async function SampleSection({ locale }: { locale: Locale }) {
             </Typography>
           </Box>
         </Box>
+      </Block>
+
+      <Block title={t("design.samples.home")} note={t("design.samples.homeNote")}>
+        <HomeSamples locale={locale} />
       </Block>
 
       <Block title={t("design.samples.team")} note={t("design.samples.teamNote")}>

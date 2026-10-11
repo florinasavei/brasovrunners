@@ -25,6 +25,7 @@ import GroupsIcon from "@mui/icons-material/Groups";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutlineOutlined";
 import HistoryIcon from "@mui/icons-material/History";
+import HomeIcon from "@mui/icons-material/Home";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import HubIcon from "@mui/icons-material/Hub";
@@ -150,6 +151,8 @@ export const PANEL_GLYPHS = {
   invite: PersonAddIcon,
   members: GroupAddIcon,
   appearance: PaletteIcon,
+  // «Pagina principală» (§NNN): the home page at the site's root, under «Aspect».
+  home: HomeIcon,
   textSize: FormatSizeIcon,
   costs: PaidIcon,
   database: StorageIcon,

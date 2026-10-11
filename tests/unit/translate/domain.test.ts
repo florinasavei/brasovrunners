@@ -43,6 +43,19 @@ describe("§464 the boxes that may be translated", () => {
       "descriptionEn",
       "descriptionEnBody",
       "paymentEn",
+      "headlineEn",
+      "sublineEn",
+      "buttonJoinEn",
+      "buttonCalendarEn",
+      "buttonHowEn",
+      // «Pagina principală»'s lower sections (§NNN): «Prima dată», «De ce» and the quote, the strip's heading.
+      "stepsTitleEn",
+      "step5TitleEn",
+      "step5BodyEn",
+      "stepsLinkEn",
+      "why4BodyEn",
+      "quoteByEn",
+      "stripTitleEn",
     ]) {
       expect(isTranslatableEnglishField(name), name).toBe(true);
     }

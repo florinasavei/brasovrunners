@@ -101,6 +101,9 @@ export default async function AdminPicturesPage({ params, searchParams }: Props)
       case "membersPage":
         // The members' pages (§524): the screen that holds both texts.
         return <Link href="/admin/pages/members">{t("pictures.usedInMembersPage")}</Link>;
+      case "homePage":
+        // The home page's hero or photo strip (§NNN): «Setări» → «Aspect», at its card.
+        return <Link href={{ pathname: "/admin/settings/appearance", hash: "home-page" }}>{t("pictures.usedInHomePage")}</Link>;
       case "newsletter":
         // A newsletter sent (§550): its letter keeps the picture for the inboxes that hold it.
         return <Link href={{ pathname: "/admin/newsletter", hash: "newsletter" }}>{t("pictures.usedInNewsletter")}</Link>;

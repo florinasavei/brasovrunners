@@ -224,6 +224,8 @@ describe("§369 the club's name leaves the platform only through the constant", 
           "Team.lead",
           // «Întrebări frecvente» (§525): the page's lead and its description.
           "Faq.lead",
+          // The home page's numbers band's heading, read by a screen reader (§NNN).
+          "HomeSections.numbers.title",
           // A group run's safety rules (§556): the first line names the club's run, by surface.
           "Event.safetyRules.intro",
           "Event.safetyRules.introMountain",
@@ -237,6 +239,8 @@ describe("§369 the club's name leaves the platform only through the constant", 
           "Admin.editor.bibDesign.member.labelHelp",
           "Admin.bibs.memberLabelDefault",
           "Registration.memberBibWantedHelp",
+          // The home page's title in a search result (§NNN): the club's name first.
+          "Home.meta.title",
         ].sort(),
       );
     }
@@ -259,6 +263,10 @@ describe("§369 the club's name leaves the platform only through the constant", 
       // The members' race number (§664): the form's wish and the designer's switch.
       memberBibWantedHelp: 1,
       "editor.bibDesign.member.enabledHelp": 1,
+      // The home page's title (§NNN), in the root's metadata.
+      "meta.title": 1,
+      // The home page's numbers band (§NNN).
+      "numbers.title": 1,
     };
     const sources = sourceFiles(path.join(process.cwd(), "src")).map((file) => readFileSync(file, "utf8"));
     for (const [key, expected] of Object.entries(calls)) {

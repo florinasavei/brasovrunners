@@ -188,6 +188,8 @@ export const ICON_REGISTRIES: ReadonlySet<string> = new Set([
   "src/shared/ui/panel-glyphs.ts",
   "src/shared/ui/status-glyphs.ts",
   "src/modules/content/team/ui/TeamLinkGlyph.tsx",
+  // The home page's steps and reasons (§NNN): its own table, so the public GLYPHS stays as it is (§707).
+  "src/modules/home/ui/home-glyphs.ts",
 ]);
 
 export const isIconRegistry = (file: string): boolean => ICON_REGISTRIES.has(file);

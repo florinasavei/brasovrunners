@@ -11,6 +11,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  */
 const state = vi.hoisted(() => ({
   look: { on: false } as { on: boolean },
+  home: { on: false } as { on: boolean },
   upcoming: [] as unknown[],
 }));
 
@@ -25,6 +26,7 @@ vi.mock("@/modules/content/menu/on-site", () => ({
 vi.mock("@/modules/public-cache/reads", () => ({
   cachedPublishedPages: async () => [],
   cachedSiteLook: async () => state.look,
+  cachedHomePage: async () => state.home,
   cachedUpcomingEvents: async () => state.upcoming,
 }));
 vi.mock("@/modules/resilience/last-good", () => ({
@@ -41,7 +43,9 @@ vi.mock("@/shared/ui/club-socials", () => ({
 vi.mock("@/shared/ui/SiteNav", () => ({
   default: ({ children }: { children?: ReactNode }) => createElement("nav", { "data-testid": "nav" }, children),
 }));
-vi.mock("@/shared/ui/LogoLink", () => ({ default: ({ children }: { children: ReactNode }) => createElement("a", { href: "/" }, children) }));
+vi.mock("@/shared/ui/LogoLink", () => ({
+  default: ({ children, href }: { children: ReactNode; href?: string }) => createElement("a", { href: href ?? "/events", "data-testid": "logo" }, children),
+}));
 vi.mock("@/shared/ui/LocaleSwitcher", () => ({ default: () => createElement("span", null, "locale") }));
 vi.mock("@/shared/ui/NewBuildNotice", () => ({ default: () => null }));
 vi.mock("@/shared/ui/ButtonLink", () => ({
@@ -65,7 +69,19 @@ const header = async () => renderToStaticMarkup(await SiteHeader());
 
 beforeEach(() => {
   state.look = { on: false };
+  state.home = { on: false };
   state.upcoming = [];
+});
+
+describe("§NNN the logo leads to the home page while «Pagina principală» is on", () => {
+  it("leads to the listing while it is off, and to the site's root while it is on — never a menu entry", async () => {
+    expect(await header()).toContain('<a href="/events" data-testid="logo">');
+    state.home = { on: true };
+    const on = await header();
+    expect(on).toContain('<a href="/" data-testid="logo">');
+    // The nav is handed nothing new: the home page is reached from the logo alone.
+    expect(on).toContain('<nav data-testid="nav"></nav>');
+  });
 });
 
 describe("§708 the header while «Aspectul nou» is off", () => {

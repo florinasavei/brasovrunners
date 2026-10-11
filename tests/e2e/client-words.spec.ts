@@ -10,8 +10,8 @@ import { FEATURED, hydrated, signIn } from "./support/featured-event";
  * Locally a missing message throws (`src/i18n/errors.ts`), so an island left without its words
  * surfaces here as the error page, not as a key nobody reads.
  *
- * And the root: `/ro` is a real 308 now, answered by the proxy before anything renders, rather
- * than a 200 carrying an error document and a client-side hop.
+ * The root, which §353 made a real 308 from the proxy, is the home page's now (§NNN): its answer is
+ * `home-page.spec.ts`'s to check.
  */
 
 /** A catalogue key rendered in place of its sentence: "Site.nav.more", "Admin.pickers.dateTyped". */
@@ -114,20 +114,9 @@ test.describe("§353 every island finds its words, and a public page carries onl
     }
   });
 
-  test("the site root is a real redirect to the listing, the query kept", async ({ request }) => {
-    const ro = await request.get("/ro?from=qr", { maxRedirects: 0 });
-    expect(ro.status()).toBe(308);
-    expect(ro.headers()["location"]).toMatch(/\/ro\/evenimente\?from=qr$/);
-    // No page behind it: the old answer was a 300 KB error document.
-    expect((await ro.body()).length).toBeLessThan(200);
-
-    const en = await request.get("/en", { maxRedirects: 0 });
-    expect(en.status()).toBe(308);
-    expect(en.headers()["location"]).toMatch(/\/en\/events$/);
-
-    // `/` in one hop, with next-intl's own locale and temporary status.
-    const root = await request.get("/", { maxRedirects: 0 });
-    expect(root.status()).toBe(307);
-    expect(root.headers()["location"]).toMatch(/\/ro\/evenimente$/);
-  });
+  /*
+    The site's root moved to `home-page.spec.ts` (§NNN, amending §353): it is the home page or a
+    temporary redirect to the listing as «Pagina principală» says, and that spec switches the one
+    shared setting serially, which a check here running beside it could not survive.
+  */
 });
