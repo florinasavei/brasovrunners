@@ -6143,8 +6143,8 @@
         "cardsNote": "A single-date event and a series; the data is made up and names nobody.",
         "calendarLook": "The calendar, under the new look",
         "calendarLookNote": "KindChips, the colours' legend, NextEventPanel and SubscribeBox, with made-up data, drawn under the new look.",
-        "homeTop": "Home page · Hero, NextRunCard, RunCardGrid",
-        "homeTopNote": "The home page's sections, from sample data: the headline with its photograph (here the empty slot), the next run and a section's cards.",
+        "homeTop": "Home page · Hero, RunSection",
+        "homeTopNote": "The home page from sample data: the headline with its photograph (here the empty slot), then the run sections, drawn with the cards of «Alergări» (ListingCard).",
         "featured": "The featured event · featuredCard",
         "featuredNote": "The listing's first card, at the others' width, told apart by its frame and background.",
         "team": "The team card",
@@ -6242,7 +6242,7 @@
           "7": { "title": "The Instagram block", "default": "A static strip of six gallery pictures with a link; no live feed." },
           "8": { "title": "The numbers band", "default": "Typed under «Aspect» → «Pagina principală»: the founding date and the active runners; the rest computed from the events." },
           "9": { "title": "What «Evenimente speciale» means", "default": "Everything that is not a weekly series; the chip «Ediție specială» keeps its meaning." },
-          "10": { "title": "The round arrow on cards", "default": "Only on the home page's cards, keeping the whole-card tap; the listing keeps its text door." },
+          "10": { "title": "The round arrow on cards", "default": "None: the home page shows the very cards of «Alergări», with their text door, «Descrierea completă a evenimentului»." },
           "11": { "title": "Icons", "default": "The filled Material family stays; the lighter look comes from colour, weight and spacing." },
           "12": { "title": "How it ships", "default": "Behind one setting, «Aspectul nou»: on for QA, off on production until the club approves; the old look deleted one release after the flip." }
         },
@@ -10204,13 +10204,11 @@
       "how": "How it works"
     },
     "nextRun": {
-      "title": "Next run",
-      "sunset": "Sunset at {time}"
+      "title": "Next run"
     },
     "weekly": {
       "title": "Weekly runs",
-      "intro": "The same place and the same time every week: come when you can.",
-      "next": "Next: {when}"
+      "intro": "The same place and the same time every week: come when you can."
     },
     "special": {
       "title": "Special events",

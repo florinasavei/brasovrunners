@@ -6143,8 +6143,8 @@
         "cardsNote": "Un eveniment cu o singură dată și o serie; datele sunt inventate și nu numesc pe nimeni.",
         "calendarLook": "Calendarul, sub aspectul nou",
         "calendarLookNote": "KindChips, legenda culorilor, NextEventPanel și SubscribeBox, cu date inventate, desenate sub aspectul nou.",
-        "homeTop": "Pagina principală · Hero, NextRunCard, RunCardGrid",
-        "homeTopNote": "Secțiunile paginii principale, din date de probă: titlul cu fotografia (aici locul gol), următoarea alergare și cardurile unei secțiuni.",
+        "homeTop": "Pagina principală · Hero, RunSection",
+        "homeTopNote": "Pagina principală din date de probă: titlul cu fotografia (aici locul gol), apoi secțiunile de alergări, desenate cu cardurile din «Alergări» (ListingCard).",
         "featured": "Evenimentul principal · featuredCard",
         "featuredNote": "Primul card al listei, la lățimea celorlalte, deosebit prin ramă și fundal.",
         "team": "Cardul echipei",
@@ -6242,7 +6242,7 @@
           "7": { "title": "Blocul Instagram", "default": "O bandă statică de șase poze din galerie, cu un link; fără flux în direct." },
           "8": { "title": "Banda cu cifre", "default": "Scrise în «Aspect» → «Pagina principală»: data înființării și alergătorii activi; restul calculat din evenimente." },
           "9": { "title": "Ce înseamnă «Evenimente speciale»", "default": "Tot ce nu e o serie săptămânală; pastila «Ediție specială» își păstrează sensul." },
-          "10": { "title": "Săgeata rotundă de pe carduri", "default": "Doar pe cardurile primei pagini, păstrând apăsarea pe tot cardul; lista își păstrează ușa cu text." },
+          "10": { "title": "Săgeata rotundă de pe carduri", "default": "Niciuna: prima pagină arată chiar cardurile din «Alergări», cu ușa lor cu text, «Descrierea completă a evenimentului»." },
           "11": { "title": "Iconițele", "default": "Rămâne familia Material plină; aerul mai ușor vine din culoare, grosime și spațiere." },
           "12": { "title": "Cum se lansează", "default": "În spatele unei singure setări, «Aspectul nou»: pornită pe QA, oprită în producție până aprobă clubul; aspectul vechi e șters la o lansare după comutare." }
         },
@@ -10204,13 +10204,11 @@
       "how": "Cum funcționează"
     },
     "nextRun": {
-      "title": "Următoarea alergare",
-      "sunset": "Apus la {time}"
+      "title": "Următoarea alergare"
     },
     "weekly": {
       "title": "Alergările săptămânale",
-      "intro": "Același loc și aceeași oră în fiecare săptămână: vii când poți.",
-      "next": "Următoarea: {when}"
+      "intro": "Același loc și aceeași oră în fiecare săptămână: vii când poți."
     },
     "special": {
       "title": "Evenimente speciale",

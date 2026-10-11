@@ -1,50 +1,33 @@
 import { getTranslations } from "next-intl/server";
-import { formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { type HomePageSetting, buttonLabelIn, heroLines, splitHeadline } from "@/modules/appearance/domain/home-page";
-import { coverSources } from "@/modules/events/cover";
-import { coverTag } from "@/modules/events/domain/event-kind";
-import type { EventType } from "@/modules/events/domain/event-type";
 import { nextWeeklyRun } from "@/modules/events/domain/next-weekly-run";
-import { recurrenceOf } from "@/modules/events/domain/series";
-import { clubNightEvent } from "@/modules/events/night-event";
+import { seriesLookup } from "@/modules/events/domain/series";
 import type { PublicEvent } from "@/modules/events/repository";
-import { recurrenceSentence } from "@/modules/events/ui/series-sentence";
-import { type PictureColumn, pictureSizes, pictureSrcSet } from "@/modules/media/ladder";
+import { pictureSizes, pictureSrcSet } from "@/modules/media/ladder";
 import { getStorage, isStorageConfigured, objectKey } from "@/modules/media/storage";
 import { cachedPublishedPages, cachedUpcomingEvents } from "@/modules/public-cache/reads";
 import { readWithLastGood, type Resilient } from "@/modules/resilience/last-good";
 import { forecastsForEvents } from "@/modules/weather/source";
-import { weatherWords } from "@/modules/weather/words";
 import { clubSocialLinks } from "@/shared/ui/club-socials";
 import { homeFigures } from "./domain/numbers";
 import { type HomeCard, homeSections } from "./domain/sections";
 import { type StripPicture, stripPictures } from "./strip-pictures";
 import type { HomePictureSources } from "./ui/HomePicture";
 import type { HomePageProps } from "./ui/HomePage";
-import type { RunCardItem } from "./ui/RunCardGrid";
-import type { RunTagProps } from "./ui/RunTag";
+import type { RunSectionCard } from "./ui/RunSection";
 
 /**
  * Everything the home page draws, as the typed props of its components (§714): read once, on the
  * server, from what the site already reads — the listing's cached upcoming events (§333, with their
  * last good copy behind them, §447), the forecast's cached hour (§402), the setting the root already
- * read — so a visit the CDN does not answer still asks the database nothing new. The components get
- * words and addresses, never a row: `HomePage` and its sections are drawn from a fixture on the design
- * page the same way.
+ * read — so a visit the CDN does not answer still asks the database nothing new. The hero and the
+ * lower sections get words and addresses; the three run sections get the listing's own rows, because
+ * they draw the listing's own cards (§NNN), which read what they read on the listing — the same
+ * cached availability entry per open race card (§409), never a query of their own. `HomePage` and its
+ * sections are drawn from a fixture on the design page the same way.
  */
 export type HomeContent = { props: HomePageProps; read: Resilient<PublicEvent[]> };
-
-/** A cover or the hero, as an `img` draws it — or null when there is none, or no store to name it in. */
-function pictureOf(cover: unknown, column: PictureColumn): HomePictureSources | null {
-  try {
-    const sources = coverSources(cover, column);
-    return sources ? { src: sources.src, srcSet: sources.srcSet, sizes: sources.sizes, width: sources.width, height: sources.height, crop: sources.crop } : null;
-  } catch {
-    // A cover with no store configured to name it in (a laptop without R2): an empty slot, never a broken page.
-    return null;
-  }
-}
 
 /** The hero's photograph from the setting: the same sources an event's cover gets (§414, §601), or the empty slot. */
 export function heroPicture(setting: HomePageSetting): HomePictureSources | null {
@@ -94,12 +77,8 @@ function clubPageHref(pageId: string | null, pages: Awaited<ReturnType<typeof pu
   return page ? { pathname: "/pages/[slug]" as const, params: { slug: page.slug } } : null;
 }
 
-/** The place in words, or null while it is to be announced (§328) or unnamed. */
-const placeOf = (event: PublicEvent): string | null => (event.locationToBeAnnounced ? null : (event.locationName ?? null));
-
 export async function readHomeContent(locale: Locale, now: Date, setting: HomePageSetting): Promise<HomeContent> {
   const t = await getTranslations({ locale, namespace: "Home" });
-  const tEvent = await getTranslations({ locale, namespace: "Event" });
   const tSections = await getTranslations({ locale, namespace: "HomeSections" });
 
   // The listing's own read (held to its clock window, §549), under a key of the home page's own.
@@ -107,12 +86,23 @@ export async function readHomeContent(locale: Locale, now: Date, setting: HomePa
   const upcoming = read.value;
   const sections = homeSections(upcoming);
 
-  const tagOf = (event: PublicEvent): RunTagProps => {
-    const tag = coverTag({ seriesCadence: event.seriesCadence, type: event.type as EventType });
-    return { kind: tag.kind, glyph: tag.glyph, label: tEvent(tag.labelKey) };
-  };
-  const when = (event: PublicEvent, position: "start" | "inline" = "start") =>
-    formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true, position });
+  /*
+    The listing's cards, as `events/page.tsx` hands them theirs (§NNN): a series' every date ahead,
+    the forecast at the first one's start (§416) — one call for every card, the next run's included,
+    each place asked once and nothing outside the seven days — and, for a date alone on its card, the
+    series it belongs to, read off the whole list (§486), so the next run of a weekly series still
+    wears «Săptămânal».
+  */
+  const seriesOf = seriesLookup(upcoming);
+  const shownCards = [...sections.weekly, ...sections.special];
+  const forecasts = await forecastsForEvents([...(sections.next ? [sections.next] : []), ...shownCards.map((card) => card.members[0])], now);
+  const cardOf = (key: string, members: readonly PublicEvent[]): RunSectionCard => ({
+    key,
+    members,
+    weather: forecasts.get(members[0].id)?.start ?? null,
+    seriesDates: seriesOf(members[0]),
+  });
+  const cardsOf = (cards: readonly HomeCard<PublicEvent>[]) => cards.map((card) => cardOf(card.key, card.members));
 
   // «Vino cu noi»: the next weekly run, as the header's button reads it (§708, decision 5), else the listing.
   const weeklyRun = nextWeeklyRun(upcoming);
@@ -122,40 +112,10 @@ export async function readHomeContent(locale: Locale, now: Date, setting: HomePa
   const howHref = clubPageHref(setting.buttons.how?.pageId ?? null, pages);
   const stepsHref = clubPageHref(setting.steps.targetPageId, pages);
 
-  let nextRun: HomePageProps["nextRun"] = null;
-  if (sections.next) {
-    const next = sections.next;
-    const forecast = (await forecastsForEvents([next], now)).get(next.id)?.start ?? null;
-    const words = forecast ? weatherWords(forecast, locale) : null;
-    const sunset = clubNightEvent(next).sunset;
-    nextRun = {
-      heading: t("nextRun.title"),
-      slug: next.slug,
-      title: next.title,
-      when: when(next),
-      place: placeOf(next),
-      sunset: sunset ? t("nextRun.sunset", { time: sunset }) : null,
-      weather: forecast && words ? { glyph: forecast.glyph, words: [words.summary, words.temperature].filter(Boolean).join(", ") } : null,
-      picture: pictureOf(next.cover, "hero"),
-      tag: tagOf(next),
-    };
-  }
-
-  const cardOf = async (card: HomeCard<PublicEvent>): Promise<RunCardItem> => {
-    const shown = card.shown;
-    const ahead = card.members.filter((member) => member.eventStatus !== "CANCELLED");
-    // A weekly run says its rhythm and then its next date; a date alone (or a special event) says when and where.
-    const rhythm = card.kind === "weekly" && recurrenceOf(ahead, shown.timezone).kind === "weekly";
-    return {
-      key: card.key,
-      slug: shown.slug,
-      title: shown.title,
-      when: rhythm ? await recurrenceSentence(ahead, shown.timezone, locale) : when(shown),
-      detail: rhythm ? t("weekly.next", { when: when(shown, "inline") }) : placeOf(shown),
-      picture: pictureOf(shown.cover, "homeCard"),
-      tag: tagOf(shown),
-    };
-  };
+  // «Următoarea alergare»: that one date, on the listing's single-date card.
+  const nextRun: HomePageProps["nextRun"] = sections.next
+    ? { id: "next-run", title: t("nextRun.title"), intro: null, cards: [cardOf(sections.next.id, [sections.next])], now, more: null }
+    : null;
 
   const props: HomePageProps = {
     hero: {
@@ -172,7 +132,8 @@ export async function readHomeContent(locale: Locale, now: Date, setting: HomePa
       id: "weekly",
       title: t("weekly.title"),
       intro: t("weekly.intro"),
-      cards: await Promise.all(sections.weekly.map(cardOf)),
+      cards: cardsOf(sections.weekly),
+      now,
       // The listing, under the weekly runs only when it holds more of them than the section shows.
       more: sections.moreWeekly > 0 ? { label: t("more") } : null,
     },
@@ -180,7 +141,8 @@ export async function readHomeContent(locale: Locale, now: Date, setting: HomePa
       id: "special",
       title: t("special.title"),
       intro: t("special.intro"),
-      cards: await Promise.all(sections.special.map(cardOf)),
+      cards: cardsOf(sections.special),
+      now,
       // The listing holds every event: the link under the last section, whatever the counts.
       more: { label: t("more") },
     },

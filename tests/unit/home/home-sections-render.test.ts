@@ -20,8 +20,12 @@ vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl");
   const ro = (await import("../../../messages/ro.json")).default;
   const en = (await import("../../../messages/en.json")).default;
+  const { createFormatter } = await import("next-intl");
   return {
     getTranslations: async (namespace: string) => createTranslator({ locale: currentLocale, messages: currentLocale === "ro" ? ro : en, namespace: namespace as "HomeSections" }),
+    // The run sections draw the listing's own cards (§NNN), which read the reader's language and its formats.
+    getFormatter: async () => createFormatter({ locale: currentLocale, timeZone: "Europe/Bucharest" }),
+    getLocale: async () => currentLocale,
   };
 });
 vi.mock("@/i18n/navigation", () => {
@@ -237,11 +241,8 @@ const { default: HomePage } = await import("@/modules/home/ui/HomePage");
 
 describe("§714 the home page draws the four under the run sections, each only while the club switched it on", () => {
   const props = () => {
-    const words = (namespace: "Home" | "Event") => {
-      const translate = createTranslator({ locale: "ro", messages: ro, namespace });
-      return (key: string, values?: Record<string, string>) => translate(key as never, values as never);
-    };
-    return sampleHome("ro", words("Home"), words("Event"));
+    const translate = createTranslator({ locale: "ro", messages: ro, namespace: "Home" });
+    return sampleHome("ro", (key: string, values?: Record<string, string>) => translate(key as never, values as never));
   };
   const order = (markup: string) =>
     [...markup.matchAll(/data-testid="(home-hero|home-next-run|home-weekly|home-special|home-steps|home-why|home-strip|home-numbers)"/g)].map((match) => match[1]);

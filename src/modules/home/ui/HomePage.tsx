@@ -7,19 +7,22 @@ import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
 import Hero, { type HeroProps } from "./Hero";
-import NextRunCard, { type NextRunCardProps } from "./NextRunCard";
 import NumbersBand, { type NumbersBandProps } from "./NumbersBand";
 import PhotoStrip, { type PhotoStripProps } from "./PhotoStrip";
-import RunCardGrid, { type RunCardGridProps } from "./RunCardGrid";
+import RunSection, { type RunSectionProps } from "./RunSection";
 import StepsBand, { type StepsBandProps } from "./StepsBand";
 import WhyList, { type WhyListProps } from "./WhyList";
 
 export type HomePageProps = {
   hero: HeroProps;
-  /** Null when no run is ahead: the card is not drawn, and the sections below say what there is. */
-  nextRun: NextRunCardProps | null;
-  weekly: RunCardGridProps;
-  special: RunCardGridProps;
+  /**
+   * «Următoarea alergare», one listing card (§NNN); null when no run is ahead: the section is not
+   * drawn, and the sections below say what there is.
+   */
+  nextRun: RunSectionProps | null;
+  /** The weekly runs and the special events, each a section of the listing's own cards (§NNN). */
+  weekly: RunSectionProps;
+  special: RunSectionProps;
   /** «Prima dată»: the club's words or the platform's, and the club page «Cum funcționează» opens. */
   steps: StepsBandProps;
   /** «De ce» and the quote. */
@@ -42,7 +45,8 @@ export type HomePageProps = {
  * the hero, the next run, the weekly runs, the special events, «Prima dată», «De ce» and the quote,
  * the photo strip and the numbers band — each a named Server Component with typed props under
  * `src/modules/home/ui/`, drawn with a fixture on the design page's «Mostre» (the owner's rule of
- * 2026-10-10: component-based, easy for whoever vibe-codes next). A section the club switched off is
+ * 2026-10-10: component-based, easy for whoever vibe-codes next). The three run sections draw the
+ * listing's own cards (`RunSection` → `ListingCard`, §NNN), never cards of their own. A section the club switched off is
  * not drawn; a section with nothing true to show (no card, no picture, no figure) draws nothing itself.
  *
  * The page's one `main` and its one `h1`: the hero's, or — with the hero switched off — the same
@@ -66,9 +70,9 @@ export default function HomePage({ hero, nextRun, weekly, special, steps, why, s
       {freshness && <LastGoodNotice read={freshness} />}
       <Stack spacing={{ xs: 4, md: 6 }}>
         {shown("hero") && <Hero {...hero} />}
-        {shown("nextRun") && nextRun && <NextRunCard {...nextRun} />}
-        {shown("weekly") && <RunCardGrid {...weekly} />}
-        {shown("special") && <RunCardGrid {...special} />}
+        {shown("nextRun") && nextRun && <RunSection {...nextRun} />}
+        {shown("weekly") && <RunSection {...weekly} />}
+        {shown("special") && <RunSection {...special} />}
         {shown("steps") && <StepsBand {...steps} />}
         {shown("why") && <WhyList {...why} />}
         {shown("strip") && <PhotoStrip {...strip} />}
