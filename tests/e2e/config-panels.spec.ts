@@ -20,13 +20,23 @@ test.describe("§265 the configuration panels", () => {
   test("the section bar shows scroll arrows only while its tabs overflow (BR-REQ-041-01, §79 amended)", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     const arrows = page.locator(".MuiTabs-scrollButtons");
-    // A laptop: the Administrator's eleven sections do not fit, so the right arrow is there.
+    // A laptop: the Administrator's eleven sections do not fit, so both arrows are there.
     await page.setViewportSize({ width: 1024, height: 800 });
     await page.goto("/ro/admin/tasks");
     await hydrated(page);
-    await expect(arrows.first()).toBeVisible();
-    // A screen wide enough for every tab: MUI draws no arrow at all.
-    await page.setViewportSize({ width: 2600, height: 800 });
+    await expect(arrows).toHaveCount(2);
+    // The end arrow is the one in use at the start: drawn, and not disabled (the start one is, at opacity 0).
+    await page.locator(".MuiTabs-scroller").first().evaluate((element) => {
+      element.scrollLeft = 0;
+    });
+    await expect(arrows.last()).toBeVisible();
+    await expect(arrows.last()).not.toHaveClass(/Mui-disabled/);
+    // A role with few sections: they fit even on a laptop, so MUI draws no arrow at all.
+    await page.context().clearCookies();
+    await signIn(page, "Dev Technical");
+    await page.goto("/ro/devs");
+    await hydrated(page);
+    await expect(page.locator(".MuiTabs-scroller").first()).toBeVisible();
     await expect(arrows).toHaveCount(0);
   });
 

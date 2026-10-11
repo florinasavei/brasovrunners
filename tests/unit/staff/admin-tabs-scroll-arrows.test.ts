@@ -9,9 +9,10 @@ import { describe, expect, it } from "vitest";
  */
 describe("AdminTabs", () => {
   const source = readFileSync("src/modules/staff-identity/ui/AdminTabs.tsx", "utf8");
+  const code = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
   it("draws 44 px arrows when the tabs overflow, and none on a phone", () => {
     expect(source).toContain('scrollButtons="auto"');
-    expect(source).not.toMatch(/^\s*allowScrollButtonsMobile\s*$/m);
+    expect(code).not.toContain("allowScrollButtonsMobile");
     expect(source).not.toContain("scrollButtons={false}");
     expect(source).toMatch(/"& \.MuiTabs-scrollButtons": \{ width: 44, flexShrink: 0/);
   });
