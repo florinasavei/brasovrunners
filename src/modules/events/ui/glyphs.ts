@@ -2,17 +2,13 @@ import AltRouteIcon from "@mui/icons-material/AltRoute";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import CardMembershipIcon from "@mui/icons-material/CardMembership";
-import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import ConstructionIcon from "@mui/icons-material/Construction";
+import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
-import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HandshakeIcon from "@mui/icons-material/Handshake";
-import HelpIcon from "@mui/icons-material/Help";
 import HikingIcon from "@mui/icons-material/Hiking";
-import LinkIcon from "@mui/icons-material/Link";
 import LocalCafeIcon from "@mui/icons-material/LocalCafe";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import ModeNightIcon from "@mui/icons-material/ModeNight";
@@ -21,11 +17,10 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PaidIcon from "@mui/icons-material/Paid";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import ScheduleIcon from "@mui/icons-material/Schedule";
 import ScienceIcon from "@mui/icons-material/Science";
 import SportsScoreIcon from "@mui/icons-material/SportsScore";
-import ScheduleIcon from "@mui/icons-material/Schedule";
 import StarIcon from "@mui/icons-material/Star";
-import StorefrontIcon from "@mui/icons-material/Storefront";
 import StraightenIcon from "@mui/icons-material/Straighten";
 import TerrainIcon from "@mui/icons-material/Terrain";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
@@ -91,7 +86,7 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
 /**
  * Every glyph by a name a Server Component can hand to `GlyphChip`: `type:RACE`,
  * `surface:TRAIL`, `difficulty:EASY`, `cost:FREE`, `featured` for the hero's star,
- * `special` for an edition apart (§168), `series` for a repeated event's count (§113), and
+ * `special` for an edition apart (§168), and
  * `distance` and `elevation` for the two numbers of a route (§356).
  *
  * The star is taken: it is the one event the site leads with. A special edition is the
@@ -137,10 +132,9 @@ export const GLYPHS = {
   ...prefixed("cost", COST_GLYPH),
   featured: StarIcon,
   special: AutoAwesomeIcon,
-  series: EventRepeatIcon,
   // The repeat chip on a listing card (§486) — the single date of a series, the series card and
   // the featured card alike: a wheel of arrows, «ca o rotiță» (the owner), not the calendar
-  // `series` draws, which reads as one more date at 16–20 pixels.
+  // glyph the backoffice's `series` chip draws (`status-glyphs.ts`), which reads as one more date at 16–20 pixels.
   repeat: AutorenewIcon,
   distance: StraightenIcon,
   elevation: TrendingUpIcon,
@@ -156,25 +150,22 @@ export const GLYPHS = {
   // metaphor a confirmed place gets elsewhere.
   filters: TuneIcon,
   registration: EventAvailableIcon,
-  // A state's own word with its picture (a backoffice chip is a `GlyphChip` too, §694): the event
-  // that is over or called off, a row shown or hidden on the site, a text in one language only, and
-  // the steps of a plan.
-  done: CheckCircleIcon,
-  cancelled: EventBusyIcon,
-  visible: VisibilityIcon,
-  hidden: VisibilityOffIcon,
-  language: TranslateIcon,
-  open: HelpIcon,
-  planned: ScheduleIcon,
-  building: ConstructionIcon,
-  // The shop and the team page's chips (§694): the shop, an order, the club itself, a link.
-  shop: StorefrontIcon,
-  orders: ReceiptLongIcon,
-  club: GroupsIcon,
-  link: LinkIcon,
   // «Mai multe» on a team card's fold (§701): the person, what the fold holds more of — the fold's
   // own arrow already says "this opens" (`disclosure.ts`), so never a second chevron here.
   person: PersonOutlinedIcon,
+  // The members' zone's order chip (`members-area/MembersShop.tsx`, public) draws these three; the
+  // backoffice draws them through `StatusChip` from its own table (BOTH_SURFACES in the tripwire, §NNN).
+  done: CheckCircleIcon,
+  cancelled: EventBusyIcon,
+  planned: ScheduleIcon,
+  // Held here only while the backoffice shop's orders card and product list still draw them through
+  // `GlyphChip`: `tests/unit/design/status-chip.test.ts` lists them as PENDING_SHOP, to leave when a
+  // later change moves those two files to `StatusChip` (with `orders` and `club` in its table, §NNN).
+  visible: VisibilityIcon,
+  hidden: VisibilityOffIcon,
+  language: TranslateIcon,
+  orders: ReceiptLongIcon,
+  club: GroupsIcon,
 };
 
 export type GlyphName = keyof typeof GLYPHS;

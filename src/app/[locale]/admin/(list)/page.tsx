@@ -44,6 +44,7 @@ import { seriesHorizonEnd } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase } from "@/modules/deadlines/domain/duration-words";
 import { deadlinesForThisRequest } from "@/modules/deadlines/request";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
+import StatusChip from "@/shared/ui/StatusChip";
 import PartnerChip from "@/modules/events/ui/PartnerChip";
 import RoutePills from "@/modules/events/ui/RoutePills";
 import { buildRoutePills } from "@/modules/events/ui/route-pills";
@@ -284,7 +285,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                 {translations[0]?.title ?? event.id}
               </Link>
               {members.length > 1 && (
-                <GlyphChip glyph="series" variant="outlined" label={datesWords(members.length)} />
+                <StatusChip glyph="series" variant="outlined" label={datesWords(members.length)} />
               )}
               {members.some((member) => member.event.featured) && (
                 <Chip size="small" color="primary" label={t("events.featured")} />

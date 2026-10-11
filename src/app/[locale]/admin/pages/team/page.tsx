@@ -10,7 +10,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
-import GlyphChip from "@/modules/events/ui/GlyphChip";
+import StatusChip from "@/shared/ui/StatusChip";
 import LazyRichTextEditor from "@/modules/content/rich-text/ui/LazyRichTextEditor";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import {
@@ -344,7 +344,7 @@ function PageCard({
           <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
             {t("team.pageHeading")}
           </Typography>
-          <GlyphChip glyph={published ? "visible" : "hidden"} color={published ? "success" : "default"} label={published ? t("team.pagePublished") : t("team.pageDraft")} />
+          <StatusChip glyph={published ? "visible" : "hidden"} color={published ? "success" : "default"} label={published ? t("team.pagePublished") : t("team.pageDraft")} />
         </Stack>
         <Typography variant="body2" color="text.secondary">
           {published ? t("team.pagePublishedHelp", { ro, en }) : t("team.pageDraftHelp")}
@@ -474,10 +474,10 @@ function MemberCard({
             </Typography>
           )}
           <Stack direction="row" spacing={1} sx={{ mt: 0.5, flexWrap: "wrap", gap: 0.5 }}>
-            <GlyphChip glyph={member.visible ? "visible" : "hidden"} color={member.visible ? "success" : "default"} label={member.visible ? t("team.visible") : t("team.hidden")} />
-            {!member.photo && <GlyphChip glyph="hidden" variant="outlined" label={t("team.noPhoto")} />}
-            {member.links.length > 0 && <GlyphChip glyph="link" variant="outlined" label={t("team.linkCount", { count: member.links.length })} />}
-            {oneSided(member) && <GlyphChip glyph="language" variant="outlined" color="warning" label={t("team.oneLanguage")} />}
+            <StatusChip glyph={member.visible ? "visible" : "hidden"} color={member.visible ? "success" : "default"} label={member.visible ? t("team.visible") : t("team.hidden")} />
+            {!member.photo && <StatusChip glyph="hidden" variant="outlined" label={t("team.noPhoto")} />}
+            {member.links.length > 0 && <StatusChip glyph="link" variant="outlined" label={t("team.linkCount", { count: member.links.length })} />}
+            {oneSided(member) && <StatusChip glyph="language" variant="outlined" color="warning" label={t("team.oneLanguage")} />}
           </Stack>
         </Box>
       </Stack>

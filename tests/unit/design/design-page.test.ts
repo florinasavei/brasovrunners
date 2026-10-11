@@ -65,6 +65,7 @@ const { REDESIGN_DECISIONS, REDESIGN_PHASES } = await import("@/modules/design/r
 const { COLOR, COLOR_DARK, SITE_TINT } = await import("@/theme/brand");
 const { BRAND_PAIRS } = await import("@/theme/brand-pairs");
 const { GLYPHS } = await import("@/modules/events/ui/glyphs");
+const { STATUS_GLYPHS } = await import("@/shared/ui/status-glyphs");
 const { ACTION_ICONS } = await import("@/shared/ui/action-icons");
 
 afterEach(() => {
@@ -124,8 +125,10 @@ describe("BR-REQ-060-01 «Sistemul de design» draws the look from the code", ()
     const markup = await page();
     for (const name of Object.keys(GLYPHS)) expect(markup, `glyph ${name}`).toContain(`>${name}</div>`);
     for (const name of Object.keys(ACTION_ICONS)) expect(markup, `action icon ${name}`).toContain(`>${name}</div>`);
+    for (const name of Object.keys(STATUS_GLYPHS)) expect(markup, `status glyph ${name}`).toContain(`>${name}</div>`);
     expect(markup).toContain(`· ${Object.keys(GLYPHS).length}<`);
     expect(markup).toContain(`· ${Object.keys(ACTION_ICONS).length}<`);
+    expect(markup).toContain(`· ${Object.keys(STATUS_GLYPHS).length}<`);
   });
 
   it("lists every rule with where it lives, and every decision and phase of the plan with a status", async () => {

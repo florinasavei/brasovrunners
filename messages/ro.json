@@ -5838,7 +5838,9 @@
         "public": "Glife publice · {count}",
         "publicNote": "`glyphs.ts`: tipurile, suprafețele, cele cinci benzi și cele cincisprezece trepte, costul și marcajele cardului.",
         "backoffice": "Glife de acțiune · {count}",
-        "backofficeNote": "`action-icons.ts`: un verb, o glifă, oriunde e scris; nicio pagină publică nu importă tabelul."
+        "backofficeNote": "`action-icons.ts`: un verb, o glifă, oriunde e scris; nicio pagină publică nu importă tabelul.",
+        "status": "Glife de stare · {count}",
+        "statusNote": "`status-glyphs.ts`: cuvântul unei stări cu poza lui, desenat de `StatusChip`; doar backoffice-ul îl folosește."
       },
       "rules": {
         "intro": "Regulile care te prind când atingi aspectul; fiecare are un test sau o verificare.",
@@ -5863,7 +5865,7 @@
           "fontSize": "Mărimea textului pe paginile publice e o setare a clubului, dintr-o scară cu limite.",
           "colourLiterals": "Nicio culoare scrisă direct în cod: culorile vin din temă, iar excepțiile sunt într-o listă care doar se scurtează.",
           "iconImports": "Pictogramele vin din registre, după nume; în backoffice nu se importă direct, iar pe paginile publice doar un fișier pe pictogramă, niciodată pachetul întreg.",
-          "primitives": "Un buton sau o pastilă e a casei (GlyphButton, ButtonLink, GlyphChip), nu un Button, IconButton sau Chip MUI pe care l-a scris cineva din nou.",
+          "primitives": "Un buton sau o pastilă e a casei (GlyphButton, ButtonLink, GlyphChip, StatusChip), nu un Button, IconButton sau Chip MUI pe care l-a scris cineva din nou.",
           "serverFirst": "Componentele de server mai întâi; o insulă de client își câștigă locul.",
           "iconFamily": "O singură familie Material plină; o glifă pe fiecare buton și pliu."
         }

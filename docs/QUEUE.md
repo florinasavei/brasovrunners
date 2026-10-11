@@ -28,8 +28,10 @@ This section replaces the plan of 2026-09-30; it is what a session with none of 
 - **Waiting on the owner:** should `tested-tree` and `e2e` join `docs-check` as GitHub's required checks on `main` and
   `qa` (today only `docs-check` is required)? «Tot numărul»'s default background; the remaining plan decisions;
   `shopNotice`; the Google calendar.
-- **Later:** a server-side status chip for the backoffice so the twelve backoffice-only names leave the public glyph
-  table (§694); a volunteer holding «Gestionează magazinul» cannot translate yet (`canTranslateTexts`); the settings
+- **Later:** the backoffice shop's chips (`OrdersCard`, `ProductList`, which only `/admin/shop` renders) move to `StatusChip`,
+  with `orders` and `club` added to `src/shared/ui/status-glyphs.ts`; then `visible`, `hidden`, `language`, `orders` and `club`
+  leave the public glyph table and `PENDING_SHOP` in `tests/unit/design/status-chip.test.ts` (`done`, `cancelled`, `planned` stay
+  public: the members' zone draws them, `BOTH_SURFACES`); a volunteer holding «Gestionează magazinul» cannot translate yet (`canTranslateTexts`); the settings
   card's title and save dialog still name only the payment words and the address (the switch sits in it now).
 
 ### How a change is made here (the owner's standing rules, all still in force)

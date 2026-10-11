@@ -8,7 +8,7 @@ import LazyRichTextEditor from "@/modules/content/rich-text/ui/LazyRichTextEdito
 import type { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import { TEAM_BOX_BODY_MAX, TEAM_BOX_TITLE_MAX } from "@/modules/content/team/fields";
 import type { AdminTeamBox } from "@/modules/content/team/repository";
-import GlyphChip from "@/modules/events/ui/GlyphChip";
+import StatusChip from "@/shared/ui/StatusChip";
 import TranslateAllButton from "@/modules/translate/ui/TranslateAllButton";
 import ActionForm, { type RefusalMessages } from "@/shared/forms/ActionForm";
 import RecallField, { RecallHidden } from "@/shared/forms/recall";
@@ -149,9 +149,9 @@ function BoxRow({
         {title}
       </Typography>
       <Stack direction="row" sx={{ mt: 0.5, flexWrap: "wrap", gap: 0.5 }}>
-        <GlyphChip glyph={box.visible ? "visible" : "hidden"} color={box.visible ? "success" : "default"} label={box.visible ? t("team.visible") : t("team.hidden")} />
-        {(box.bodyRo === null) !== (box.bodyEn === null) && <GlyphChip glyph="language" variant="outlined" color="warning" label={t("team.oneLanguage")} />}
-        {box.bodyRo === null && box.bodyEn === null && <GlyphChip glyph="hidden" variant="outlined" label={t("team.boxes.noText")} />}
+        <StatusChip glyph={box.visible ? "visible" : "hidden"} color={box.visible ? "success" : "default"} label={box.visible ? t("team.visible") : t("team.hidden")} />
+        {(box.bodyRo === null) !== (box.bodyEn === null) && <StatusChip glyph="language" variant="outlined" color="warning" label={t("team.oneLanguage")} />}
+        {box.bodyRo === null && box.bodyEn === null && <StatusChip glyph="hidden" variant="outlined" label={t("team.boxes.noText")} />}
       </Stack>
 
       <Stack direction="row" sx={{ mt: 1.5, flexWrap: "wrap", gap: 1 }}>
