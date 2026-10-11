@@ -234,7 +234,7 @@ describe("§697 the shop's editor: pictures, sizes, chart, description", () => {
     // The zone draws the table through the one renderer, in the reader's language.
     const [zone] = await listProductsForMembers(db, "en");
     expect(JSON.stringify(zone.description)).toContain("Organic cotton.");
-    const html = renderToStaticMarkup(await MembersShop({ products: [zone], orders: [], payment: null, shopOpen: true, outcome: null, locale: "en" }));
+    const html = renderToStaticMarkup(await MembersShop({ products: [zone], orders: [], payment: null, shopOpen: true, emailMembers: true, outcome: null, locale: "en" }));
     expect(html).toContain('data-testid="product-description"');
     expect(html).toContain("<table");
     expect(html).toContain("Material");
@@ -321,7 +321,7 @@ describe("§697 the shop's editor: pictures, sizes, chart, description", () => {
     // XL is ticked here, so its row is kept too — in the sizes' order, whatever order the cells were posted in.
     expect(products[0].sizeChart).toEqual({ columns: ["Lățime piept (cm)"], rows: [{ label: "S", cells: [48] }, { label: "M", cells: [50.5] }, { label: "XL", cells: [99] }] });
 
-    const html = renderToStaticMarkup(await MembersShop({ products, orders: [], payment: null, shopOpen: true, outcome: null, locale: "ro" }));
+    const html = renderToStaticMarkup(await MembersShop({ products, orders: [], payment: null, shopOpen: true, emailMembers: true, outcome: null, locale: "ro" }));
     expect((html.match(/data-testid="product-cover"/g) ?? []).length).toBe(1);
     expect((html.match(/data-testid="product-picture-thumb"/g) ?? []).length).toBe(2);
     expect(html).toContain('aria-label="Fotografia 2"');
@@ -332,7 +332,7 @@ describe("§697 the shop's editor: pictures, sizes, chart, description", () => {
     expect(options).toEqual(["S", "M", "XL", "Copii"]);
 
     // The English zone reads the column's English name and the English number.
-    const en = renderToStaticMarkup(await MembersShop({ products: await listProductsForMembers(db, "en"), orders: [], payment: null, shopOpen: true, outcome: null, locale: "en" }));
+    const en = renderToStaticMarkup(await MembersShop({ products: await listProductsForMembers(db, "en"), orders: [], payment: null, shopOpen: true, emailMembers: true, outcome: null, locale: "en" }));
     expect(en).toContain("Chest width (cm)");
     expect(en).toContain("50.5");
 

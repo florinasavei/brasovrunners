@@ -85,7 +85,7 @@ type OrderCore = {
  * emails as flags. Returns the order and whether it was placed now or found as a repeat — a repeat
  * is already placed, paid or not, and the caller leaves it as it is.
  */
-async function insertOrder<T extends Record<string, unknown>>(tx: Transaction<T>, core: OrderCore): Promise<{ order: ShopOrder; repeat: boolean }> {
+async function insertOrder<T extends Record<string, unknown>>(tx: Transaction<T>, core: OrderCore): Promise<{ order: ShopOrder; repeat: boolean; emailMember: boolean }> {
   const { now } = core;
   // The product first, share-locked — the order every writer takes, product then variant: a delete
   // (which locks the product to count its orders) waits for this order or this order waits for the
@@ -126,7 +126,7 @@ async function insertOrder<T extends Record<string, unknown>>(tx: Transaction<T>
     )
     .orderBy(desc(shopOrders.createdAt))
     .limit(1);
-  if (repeat) return { order: repeat, repeat: true };
+  if (repeat) return { order: repeat, repeat: true, emailMember: false };
 
   const left = stockAfterOrder(variant.stock, core.quantity);
   if (left === "insufficient") throw new DomainError("CONFLICT", "fewer left than ordered");
@@ -160,7 +160,7 @@ async function insertOrder<T extends Record<string, unknown>>(tx: Transaction<T>
     })
     .returning();
 
-  // «Îi scriem membrului pe email despre comenzi» (§702): off, the member is written to by neither email.
+  // «Îi scriem membrului pe email despre comenzi» (§NNN): off, the member is written to by neither email.
   const settings = await readShopSettings(tx);
   const emailMember = core.emailMember && settings.emailMembers;
   if (core.placedBy === "CLUB") {
@@ -218,7 +218,7 @@ async function insertOrder<T extends Record<string, unknown>>(tx: Transaction<T>
       });
     }
   }
-  return { order, repeat: false };
+  return { order, repeat: false, emailMember };
 }
 
 /**
@@ -304,7 +304,7 @@ export async function placeOrderForMember<T extends Record<string, unknown>>(
     // above (re-locking a row one's own transaction holds queues on nothing) — and moves it through
     // `nextOrderStatus(PLACED, "pay", "CLUB")`, never by writing PAID by hand.
     const { order } = await moveOrder(tx, { actorId: input.actor.id, orderId: placed.order.id, verb: "pay", by: "CLUB", now });
-    if (fields.emailMember && (await readShopSettings(tx)).emailMembers) {
+    if (placed.emailMember) {
       await enqueueEmail(tx, {
         participantId: null,
         registrationId: null,

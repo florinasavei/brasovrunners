@@ -9,7 +9,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { shopSettingsSchema } from "./fields";
 
 /**
- * The shop's settings (§683, §702), one `platform_settings` row (a key-value store, no migration):
+ * The shop's settings (§683, §NNN), one `platform_settings` row (a key-value store, no migration):
  * «Cum se plătește» — the club's words for paying outside the site, both languages or neither, shown
  * under every order and in the confirmation email — and «Cine primește comenzile», the address the
  * club's notice of each order goes to, or none (then only the list says it). Written by an
@@ -28,7 +28,7 @@ const storedSchema = z.object({
   paymentRo: z.string().nullable().catch(null),
   paymentEn: z.string().nullable().catch(null),
   ordersTo: z.email().nullable().catch(null),
-  // Missing (a row saved before §702) is on: the shop wrote to its members from the start (§683).
+  // Missing (a row saved before §NNN) is on: the shop wrote to its members from the start (§683).
   emailMembers: z.boolean().catch(true),
 });
 

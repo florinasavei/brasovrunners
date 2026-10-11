@@ -17,7 +17,7 @@ import {
   replaceProductPicture,
   saveProduct,
 } from "@/modules/content/shop/service";
-import { saveShopSettings } from "@/modules/content/shop/settings";
+import { readShopSettings, saveShopSettings } from "@/modules/content/shop/settings";
 import { canManageShop } from "@/modules/staff-identity/domain/roles";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -260,7 +260,9 @@ export async function moveShopOrderAction(_previous: FormOutcome | null, form: F
   try {
     const actor = await requireStaffCapability(canManageShop);
     await moveOrderByClub(getDb(), { actor, orderId, verb });
-    outcome = verb === "pay" ? { saved: "shopOrderPaid" } : verb === "handOver" ? { saved: "shopOrderHandedOver" } : { saved: "shopOrderCancelled" };
+    // The words follow the switch (§NNN): off, the member was told nothing, and the banner says so.
+    const emailed = verb === "pay" ? (await readShopSettings(getDb())).emailMembers : true;
+    outcome = verb === "pay" ? { saved: emailed ? "shopOrderPaid" : "shopOrderPaidNoEmail" } : verb === "handOver" ? { saved: "shopOrderHandedOver" } : { saved: "shopOrderCancelled" };
   } catch (error) {
     outcome = outcomeOf(error);
   }

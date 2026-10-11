@@ -1940,7 +1940,7 @@ with its cards in the order you fill them.
    sent to the club; the orders are in «Comenzi» either way. The box **«Îi scriem membrului pe email
    despre comenzi»** (on by default) is the one switch for the member's two emails — «Comanda ta a
    fost primită» and «Comanda ta e plătită»; off, the member gets neither (the club's own notice is
-   a different thing and stays), and the per-order tick on «Comenzi» is not offered (§702).
+   a different thing and stays), and the per-order tick on «Comenzi» is not offered (§NNN).
 3. **Add a product.** «Magazin» → «Produse» → «Adaugă un produs». The page has the cards in order:
    - **«Denumirea și prețul»** — the name in both languages (the translate button at the top), the
      price («45» or «45,50») and «Moneda»: lei or euro, chosen per product, shown to members as such
@@ -1969,7 +1969,7 @@ with its cards in the order you fill them.
    same order. Each row says the price, the sizes with their stock, how many pictures and how many
    orders it has, and whether it is visible.
 5. **Run the orders.** «Magazin» → «Comenzi»: filter by state and product, «Marchează plătită» when
-   the money arrives (the member gets an email), «Marchează predată» at the hand-over, «Anulează»
+   the money arrives (the member gets an email while «Îi scriem membrului…» is on), «Marchează predată» at the hand-over, «Anulează»
    before the hand-over (the stock goes back). «Descarcă CSV» downloads the filtered list. The
    Organizer reads every tab and the CSV and changes nothing.
 6. **Give the shop to the colleague who runs it** (optional, §687). On «Echipa», on that

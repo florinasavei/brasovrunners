@@ -70,7 +70,7 @@ export default function OrdersCard({
   messages: RefusalMessages;
   mayManage: boolean;
   showEmail: boolean;
-  /** The shop's switch «Îi scriem membrului pe email despre comenzi» (§702): off, the fold's email tick is not drawn. */
+  /** The shop's switch «Îi scriem membrului pe email despre comenzi» (§NNN): off, the fold's email tick is not drawn. */
   emailMembers: boolean;
 }) {
   const inUse = query.status !== null || query.productId !== null;
@@ -149,7 +149,7 @@ export default function OrdersCard({
         ) : (
           <Stack component="ol" spacing={1.5} sx={{ listStyle: "none", m: 0, p: 0 }} aria-label={t("members.shop.ordersHeading")}>
             {orders.map((order) => (
-              <OrderRow key={order.id} order={order} query={query} locale={locale} words={t} cancel={cancel} mayManage={mayManage} showEmail={showEmail} />
+              <OrderRow key={order.id} order={order} query={query} locale={locale} words={t} cancel={cancel} mayManage={mayManage} showEmail={showEmail} emailMembers={emailMembers} />
             ))}
           </Stack>
         )}
@@ -285,6 +285,7 @@ function OrderRow({
   cancel,
   mayManage,
   showEmail,
+  emailMembers,
 }: {
   order: AdminOrder;
   /** The list's filter, posted with each verb so the answer lands on the same list (§683). */
@@ -294,6 +295,7 @@ function OrderRow({
   cancel: string;
   mayManage: boolean;
   showEmail: boolean;
+  emailMembers: boolean;
 }) {
   const title = locale === "en" ? order.productTitleEn : order.productTitleRo;
   const what = `${title}${order.variantLabel ? ` — ${order.variantLabel}` : ""} × ${order.quantity}`;
@@ -341,7 +343,7 @@ function OrderRow({
               action={moveShopOrderAction}
               confirm={{
                 title: t(`members.shop.verbs.${verb}.title`, { number: order.number }),
-                body: t(`members.shop.verbs.${verb}.body`),
+                body: t(verb === "pay" && !emailMembers ? "members.shop.verbs.pay.bodyNoEmail" : `members.shop.verbs.${verb}.body`),
                 confirmLabel: t(`members.shop.verbs.${verb}.label`),
                 cancelLabel: cancel,
                 destructive: verb === "cancel",

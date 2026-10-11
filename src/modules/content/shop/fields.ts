@@ -218,7 +218,7 @@ export const shopSettingsSchema = z
       .transform((value) => value.trim().toLowerCase())
       .pipe(z.union([z.literal(""), z.email().max(320)]))
       .transform((value) => (value === "" ? null : value)),
-    /** «Îi scriem membrului pe email despre comenzi» (§702): the one switch for the member's two emails; a caller that does not name it leaves it on, the form posts `on` or `off`. */
+    /** «Îi scriem membrului pe email despre comenzi» (§NNN): the one switch for the member's two emails; a caller that does not name it leaves it on, the form posts `on` or `off`. */
     emailMembers: z
       .union([z.boolean(), z.string()])
       .optional()
