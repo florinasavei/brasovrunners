@@ -10,9 +10,9 @@ import { describe, expect, it } from "vitest";
  * phone has no hover to explain it, and a tooltip alone would leave the button itself mute: the
  * words are on the button, the glyph before them is the registry's, the tooltip says what changes.
  *
- * What this refuses, in every source file under `src/`: a `label` or `pendingLabel` that is a
- * string literal with no letter in it («↑», «×», «+»), and a native button or MUI `Button` whose
- * only content is such a symbol. A label that is a translated key is not a literal and is the
+ * What this refuses, in every source file under `src/` (an AST walk): any `label` or `*Label`
+ * attribute whose string literal has no letter or digit in it («↑», «×», «+»), and any element whose
+ * tag ends in `Button` (`Button`, `Mui.Button`, a wrapper) whose only content is such a symbol. A label that is a translated key is not a literal and is the
  * catalogue's business: `tests/unit/i18n` holds every key to both languages.
  */
 const ROOT = path.resolve(__dirname, "../../..");
@@ -41,13 +41,13 @@ function symbolOnlyButtons(source: string): string[] {
   const visit = (node: ts.Node) => {
     if (ts.isJsxAttribute(node) && /^(?:label|.*Label)$/.test(node.name.getText())) {
       const init = node.initializer;
-      const literal = init && ts.isStringLiteral(init) ? init : init && ts.isJsxExpression(init) && init.expression && ts.isStringLiteral(init.expression) ? init.expression : null;
+      const literal = init && ts.isStringLiteralLike(init) ? init : init && ts.isJsxExpression(init) && init.expression && ts.isStringLiteralLike(init.expression) ? init.expression : null;
       if (literal && isSymbol(literal.text)) found.push(`${node.name.getText()}="${literal.text}"`);
     }
-    if (ts.isJsxElement(node) && /(?:^|[a-z])Button$|^button$/.test(node.openingElement.tagName.getText())) {
+    if (ts.isJsxElement(node) && /(?:^|[a-z.])Button$|^button$/.test(node.openingElement.tagName.getText())) {
       const content = node.children.filter((child) => !(ts.isJsxText(child) && child.text.trim() === ""));
       const only = content.length === 1 ? content[0] : null;
-      const text = only && ts.isJsxText(only) ? only.text : only && ts.isJsxExpression(only) && only.expression && ts.isStringLiteral(only.expression) ? only.expression.text : null;
+      const text = only && ts.isJsxText(only) ? only.text : only && ts.isJsxExpression(only) && only.expression && ts.isStringLiteralLike(only.expression) ? only.expression.text : null;
       if (text !== null && isSymbol(text)) found.push(`button content «${text.trim()}»`);
     }
     ts.forEachChild(node, visit);
@@ -70,6 +70,8 @@ describe("a button says what it does in words (§NNN)", () => {
     expect(symbolOnlyButtons('<SubmitButton label="×" pendingLabel="Se salvează…" />')).not.toEqual([]);
     expect(symbolOnlyButtons('<Button type="submit">\n  ↑\n</Button>')).not.toEqual([]);
     expect(symbolOnlyButtons('<Button>+</Button>')).not.toEqual([]);
+    expect(symbolOnlyButtons('<Button>{`↑`}</Button>')).not.toEqual([]);
+    expect(symbolOnlyButtons('<Mui.Button>↑</Mui.Button>')).not.toEqual([]);
     // The shapes a line-based pattern missed: a `=>` in a prop, a wrapper, a label under another name.
     expect(symbolOnlyButtons("<Button onClick={() => go(-1)}>↑</Button>")).not.toEqual([]);
     expect(symbolOnlyButtons('<GlyphButton icon="moveUp">↑</GlyphButton>')).not.toEqual([]);
