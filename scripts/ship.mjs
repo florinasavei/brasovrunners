@@ -29,7 +29,7 @@ import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
-import { waitForMergeGate } from "./pr-merge-gate.mjs";
+import { gateLine, sourceLine, waitForMergeGate } from "./pr-merge-gate.mjs";
 import {
   createClock,
   formatDuration,
@@ -156,8 +156,16 @@ async function settledChecks(pr, { tolerate } = {}) {
   if (judged.verdict !== "green") stop(`PR #${pr} is not green: ${judged.red.join(", ")}`);
 }
 
-/** The contexts the base branch's protection requires, or null when GitHub will not say (§NNN). */
-function requiredContexts(base) {
+/**
+ * The contexts GitHub requires on the PR, or null when it will not say (§NNN). `gh pr checks --required`
+ * needs only pull-request read, which SHIP_TOKEN has; branch protection needs Administration, which it has not.
+ */
+function requiredContexts(pr, base) {
+  const viaPr = ghMayFail("pr", "checks", pr, "--required", "--json", "name");
+  try {
+    const list = JSON.parse(viaPr);
+    if (Array.isArray(list) && list.length) return [...new Set(list.map((c) => c.name))];
+  } catch {}
   const out = ghMayFail("api", `repos/${REPO}/branches/${base}/protection/required_status_checks`, "--jq", "[.contexts[]?, (.checks[]?.context)] | unique");
   try {
     const list = JSON.parse(out);
@@ -169,18 +177,21 @@ function requiredContexts(base) {
 
 /** Waits until GitHub would merge the PR on its required checks alone; a status nobody requires is named, never waited on (§NNN). */
 async function mergeGate(pr, base) {
+  let sourced = false;
   const read = () => {
     const pull = JSON.parse(ghMayFail("pr", "view", pr, "--json", "mergeStateStatus,statusCheckRollup") || "{}");
-    return { pr: pull, required: requiredContexts(base) };
+    const required = requiredContexts(pr, base);
+    const note = sourced ? null : sourceLine(required);
+    sourced = true;
+    if (note) console.log(`  ${note}`);
+    return { pr: pull, required };
   };
   const waited = await waitForMergeGate(read, {
     sleep,
     every: 30,
     polls: 180,
     onPoll: (judged, i, state) => {
-      if (i % 4 !== 0) return;
-      const names = judged.waitingOn.map((w) => `${w.name} (${w.required ? "required" : "not required"})`);
-      console.log(`  waiting on: ${names.length ? names.join(", ") : `GitHub's merge state ${state || "UNKNOWN"}`}…`);
+      console.log(`  ${gateLine(judged, state)}`);
     },
   });
   if (waited.status === "stopped") stop(`PR #${pr}: ${waited.judged.stop}`);

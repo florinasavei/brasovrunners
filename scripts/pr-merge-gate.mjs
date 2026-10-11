@@ -1,5 +1,5 @@
 /**
- * Whether a pull request may be merged, judged only on what GitHub requires (§NNN, amends §504 and §658).
+ * Whether a pull request may be merged, judged only on what GitHub requires (§NNN, amends §426).
  *
  * `yarn ship` once polled twenty minutes for «Vercel – <project>» on a release PR whose merge GitHub
  * did not need it for: `mergeStateStatus` said `UNSTABLE` (mergeable, a status that is not required
@@ -7,7 +7,7 @@
  * `statusCheckRollup` as `gh pr view --json` returns it, and the required contexts.
  */
 
-/** The house's own checks, used only when GitHub's list of required contexts cannot be read. */
+/** The house's own checks: always required beside whatever GitHub lists (Vercel is in neither). */
 export const HOUSE_CHECKS = ["tested-tree", "docs-check", "e2e", "migrate"];
 
 const MERGEABLE_STATES = new Set(["CLEAN", "UNSTABLE", "HAS_HOOKS"]);
@@ -24,9 +24,15 @@ function readEntry(entry) {
   return { name, verdict: "pending" };
 }
 
-/** The required contexts: GitHub's list when it is a non-empty array, else the house's checks. */
+/** The required contexts: GitHub's list (when readable) joined with the house's checks. */
 export function requiredContexts(listed) {
-  return Array.isArray(listed) && listed.length > 0 ? listed : HOUSE_CHECKS;
+  const github = Array.isArray(listed) ? listed : [];
+  return [...new Set([...github, ...HOUSE_CHECKS])];
+}
+
+/** The one line to print when GitHub's required list could not be read; null when it was. */
+export function sourceLine(listed) {
+  return Array.isArray(listed) && listed.length > 0 ? null : "required list unreadable — using the house's checks";
 }
 
 /**
