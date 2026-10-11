@@ -71,6 +71,8 @@ const WRITES: Record<string, Expected> = {
   "src/modules/content/events/service.ts#createEventAndPublish": ["events"],
   "src/modules/content/events/service.ts#duplicateEvent": { nothingPublic: "a fresh draft: publication and the featured flag are never copied" },
   "src/modules/content/events/service.ts#repeatEvent": ["events"],
+  // «Traseul»'s GPX (§NNN): the stored file goes only once no event row names it, so no page links to it.
+  "src/modules/content/events/route-gpx.ts#releaseRouteGpx": { nothingPublic: "deletes a stored GPX only after the save that let go of it expired the events; no event row names it" },
   "src/modules/content/events/service.ts#materializeStandingRepeats": ["events"],
   "src/modules/content/events/service.ts#stopRepeat": ["events"],
   "src/modules/content/events/service.ts#setRepeatPublish": {

@@ -45,7 +45,7 @@ import { readPostedRouteGpx, type RouteGpx } from "@/modules/events/domain/route
 function routeMapField<M extends RouteMap>(parse: (input: string) => ParsedRouteMap<M>, message: string) {
   return z
     .string()
-    .max(MAX_ROUTE_MAP_INPUT + 200)
+    .max(MAX_ROUTE_MAP_INPUT)
     .transform((value, ctx): M | null => {
       const parsed = parse(value);
       if (!parsed.ok) {

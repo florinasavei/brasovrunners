@@ -9,7 +9,7 @@ import { startBoxValues } from "@/modules/events/domain/provisional-start";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { clubNightEvent, nightPlace } from "@/modules/events/night-event";
 import { readRouteGpx } from "@/modules/events/domain/route-gpx";
-import { MAX_ROUTE_MAP_INPUT, routeMapFieldValue, routeMapOf } from "@/modules/events/domain/route-maps";
+import { routeMapFieldValue, routeMapOf } from "@/modules/events/domain/route-maps";
 import { isStorageConfigured } from "@/modules/media/storage";
 import { env } from "@/shared/config/env";
 import { textFieldConstraints } from "@/shared/forms/constraints";
@@ -224,7 +224,7 @@ export default async function CourseBox({
           multiline
           minRows={1}
           maxRows={4}
-          slotProps={{ htmlInput: { maxLength: MAX_ROUTE_MAP_INPUT, spellCheck: false, autoCapitalize: "off", autoCorrect: "off" } }}
+          {...textFieldConstraints(eventInputConstraints("routeGarmin"), { spellCheck: false, autoCapitalize: "off", autoCorrect: "off" })}
         />
         <RecallField
           name="event.routeStrava"
@@ -234,7 +234,7 @@ export default async function CourseBox({
           multiline
           minRows={1}
           maxRows={4}
-          slotProps={{ htmlInput: { maxLength: MAX_ROUTE_MAP_INPUT, spellCheck: false, autoCapitalize: "off", autoCorrect: "off" } }}
+          {...textFieldConstraints(eventInputConstraints("routeStrava"), { spellCheck: false, autoCapitalize: "off", autoCorrect: "off" })}
         />
         {isStorageConfigured() ? (
           <RouteGpxField
