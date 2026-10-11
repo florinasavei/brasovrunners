@@ -10,7 +10,8 @@
  *      (an already-merged PR continues from step 3);
  *   3. waits for `qa`'s docs-check run on that merge to complete (§504);
  *   4. only then opens (or takes) the `qa → main` release PR, so its run finds the tree tested;
- *   5. waits for its checks — a Vercel deployment's red is reported, not stopped on — and merges it;
+ *   5. waits until GitHub would let it merge — the checks the base branch requires, never a Vercel
+ *      status (§NNN) — and merges it;
  *   6. if the release changes a migration, approves the gated `migrate.yml` run (`DECISIONS.md` §31)
  *      and waits for it;
  *   7. waits until production's `/api/health` reports the new baseline.
@@ -28,6 +29,7 @@ import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
+import { waitForMergeGate } from "./pr-merge-gate.mjs";
 import {
   createClock,
   formatDuration,
@@ -154,6 +156,40 @@ async function settledChecks(pr, { tolerate } = {}) {
   if (judged.verdict !== "green") stop(`PR #${pr} is not green: ${judged.red.join(", ")}`);
 }
 
+/** The contexts the base branch's protection requires, or null when GitHub will not say (§NNN). */
+function requiredContexts(base) {
+  const out = ghMayFail("api", `repos/${REPO}/branches/${base}/protection/required_status_checks`, "--jq", "[.contexts[]?, (.checks[]?.context)] | unique");
+  try {
+    const list = JSON.parse(out);
+    return Array.isArray(list) ? list : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Waits until GitHub would merge the PR on its required checks alone; a status nobody requires is named, never waited on (§NNN). */
+async function mergeGate(pr, base) {
+  const read = () => {
+    const pull = JSON.parse(ghMayFail("pr", "view", pr, "--json", "mergeStateStatus,statusCheckRollup") || "{}");
+    return { pr: pull, required: requiredContexts(base) };
+  };
+  const waited = await waitForMergeGate(read, {
+    sleep,
+    every: 30,
+    polls: 180,
+    onPoll: (judged, i, state) => {
+      if (i % 4 !== 0) return;
+      const names = judged.waitingOn.map((w) => `${w.name} (${w.required ? "required" : "not required"})`);
+      console.log(`  waiting on: ${names.length ? names.join(", ") : `GitHub's merge state ${state || "UNKNOWN"}`}…`);
+    },
+  });
+  if (waited.status === "stopped") stop(`PR #${pr}: ${waited.judged.stop}`);
+  if (waited.status === "timeout") stop(`PR #${pr}: not mergeable after ninety minutes (${waited.judged.waitingOn.map((w) => w.name).join(", ") || "GitHub's merge state"})`);
+  console.log(`PR #${pr} is mergeable on GitHub's required checks`);
+  const open = waited.judged.waitingOn;
+  if (open.length) console.log(`  not waited on: ${open.map((w) => w.name).join(", ")}`);
+}
+
 /** The newest push run of `workflow` on exactly `sha`, or null while none has appeared. */
 function pushRunOf(workflow, sha) {
   const runs = JSON.parse(
@@ -224,8 +260,8 @@ if (!release) {
 }
 console.log(`== release PR #${release}`);
 
-// A Vercel deployment check can be red for Hobby's daily deploy limit alone; the qa run judged the code.
-await settledChecks(release, { tolerate: /^Vercel\b/i });
+// The qa run judged the code; a Vercel status, red for Hobby's deploy limit or still pending, is not required (§NNN).
+await mergeGate(release, "main");
 const migrationExpected = releaseChangesMigrations();
 await merge(release);
 // From here the release is in main: a STOP in this step or the next is never re-labelled, and

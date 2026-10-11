@@ -591,7 +591,8 @@ carries a newer baseline than `qa`'s) ships as it is.
 1. GitHub app → the pull request → **Labels** → tick **ship**.
 2. The run starts (**Actions** → **release**). It merges `qa` in, lands the entry as one commit
    pushed to the branch, then runs `yarn ship`: the pull request's checks on the landed tree, the
-   merge into `qa`, `qa`'s run, the `qa → main` release PR, the production migration approved,
+   merge into `qa`, `qa`'s run, the `qa → main` release PR (merged when GitHub's required checks
+   are green; a Vercel status is never waited on, §NNN), the production migration approved,
    and production's `/api/health` reporting the new baseline. About an hour.
 3. It ends with a comment on the pull request: "Released BR-V2.NN…" or "The release stopped",
    followed, when ship itself stopped, by ship's reason. The run's **Summary** page says, in a
