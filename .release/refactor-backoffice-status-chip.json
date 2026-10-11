@@ -6,7 +6,7 @@
   "specsCriteria": [
     {
       "requirement": "BR-REQ-070-02",
-      "text": "The public glyph table (`modules/events/ui/glyphs.ts`) and the backoffice's (`shared/ui/status-glyphs.ts`) share no name except the three the members' zone draws (`done`, `cancelled`, `planned`) and the backoffice shop's listed pending ones, no public file imports `StatusChip` or its registry, and every name of either table is drawn, by a real chip `glyph` use, a registry-typed object or the imported registry read by name, in a file of its own surface; planted regressions in synthetic sources are caught (2026-10-11, `DECISIONS.md` §NNN)."
+      "text": "The public glyph table (`modules/events/ui/glyphs.ts`) and the backoffice's (`shared/ui/status-glyphs.ts`) share no name except the three the members' zone draws (`done`, `cancelled`, `planned`) and the backoffice shop's listed pending ones, no public file imports `StatusChip` or its registry, and every name of either table is drawn, by a real chip `glyph` use, a registry-typed object or the imported registry read by name, in a file of its own surface, bar the backoffice shop's listed pending names, which the backoffice shop must still draw; planted regressions in synthetic sources are caught (2026-10-11, `DECISIONS.md` §NNN)."
     }
   ],
   "docsNotes": "",

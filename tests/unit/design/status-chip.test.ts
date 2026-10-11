@@ -211,6 +211,7 @@ describe("§694 the status chip keeps the public glyph table public", () => {
         "src/modules/events/ui/X.tsx",
         [
           `import Panel from "@/shared/ui/Panel";`,
+          `import { GLYPHS } from "@/modules/events/ui/glyphs";`,
           `// GLYPHS.series is the repeated event's count; a GlyphName: "series"`,
           `const config = { glyph: "series" };`,
           `export const X = () => <Panel glyph="series" title={config.glyph} />;`,
