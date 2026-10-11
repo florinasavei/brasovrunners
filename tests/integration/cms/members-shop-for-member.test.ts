@@ -179,6 +179,16 @@ describe("§690 the club places an order in a member's name", () => {
     expect(audit.metadataJson).toMatchObject({ emailed: true });
   });
 
+  it("§NNN: with the shop's member emails off, the ticks queue nothing and the audit row says emailed: false", async () => {
+    await saveShopSettings(db, { actor: admin, fields: { paymentRo: "", paymentEn: "", ordersTo: "comenzi@example.org", emailMembers: "off" }, now: NOW });
+    const product = await createProduct(db, { actor: admin, fields: PRODUCT, now: NOW });
+    const told = await forMember(admin, member.id, product.id, (await variantsOf(product.id)).L.id, 1, { emailMember: true, markPaid: true });
+    expect(told.status).toBe("PAID");
+    expect(await emails()).toEqual([]);
+    const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "shop.order.placed_by_club"));
+    expect(audit.metadataJson).toMatchObject({ emailed: false });
+  });
+
   it("«Marchează direct ca plătită» moves the order to PAID through the one transition, in the same transaction, both audit rows written", async () => {
     const product = await createProduct(db, { actor: admin, fields: PRODUCT, now: NOW });
     const variants = await variantsOf(product.id);
@@ -274,7 +284,7 @@ describe("§690 the club places an order in a member's name", () => {
     const order = await forMember(admin, member.id, product.id, variants.M.id, 2);
     const mine = await listOrdersOfMember(db, member.id);
     expect(mine.map((row) => [row.id, row.status, row.currency])).toEqual([[order.id, "PLACED", "EUR"]]);
-    const html = renderToStaticMarkup(await MembersShop({ products: [], orders: mine, payment: "IBAN RO00 TEST", shopOpen: false, outcome: null, locale: "ro" }));
+    const html = renderToStaticMarkup(await MembersShop({ products: [], orders: mine, payment: "IBAN RO00 TEST", shopOpen: false, emailMembers: true, outcome: null, locale: "ro" }));
     expect(html).toContain("24,68 €");
     expect(html).toContain('data-testid="member-order-cancel"');
     // Nothing says "club" to the member: an order is an order.
@@ -314,14 +324,14 @@ describe("§690 the club places an order in a member's name", () => {
 
     const t = await getTranslations("Admin");
     // «Comenzi» is its own page since §697: the orders card alone, with the list's filter in the address.
-    const render = (mayManage: boolean) =>
+    const render = (mayManage: boolean, emailMembers = true) =>
       renderToStaticMarkup(
         OrdersCard({
           orders: rows,
           total: rows.length,
           query: { status: null, productId: null },
           productNames: [],
-          accounts: [],
+          accounts: [{ id: member.id, displayName: "Membru A", role: "MEMBER" as const }],
           items: [],
           path: "/ro/admin/shop/orders",
           locale: "ro",
@@ -330,6 +340,7 @@ describe("§690 the club places an order in a member's name", () => {
           messages: { fieldError: "", summary: "", fields: {} } as never,
           mayManage,
           showEmail: false,
+          emailMembers,
         }),
       );
     const readOnly = render(false);
@@ -337,6 +348,13 @@ describe("§690 the club places an order in a member's name", () => {
     expect(readOnly).toContain("12,34 €");
     expect((readOnly.match(/data-testid="order-placed-by-club"/g) ?? []).length).toBe(1);
     expect(readOnly).toContain(ro.Admin.members.shop.forMember.placedByClub);
+    // §NNN: the email tick is drawn while the shop's switch is on; off, a one-line note takes its place.
+    const folded = render(true);
+    expect(folded).toContain('name="emailMember"');
+    const switchedOff = render(true, false);
+    expect(switchedOff).not.toContain('name="emailMember"');
+    expect(switchedOff).toContain(ro.Admin.members.shop.forMember.emailOff.replace(/"/g, "&quot;"));
+    expect(en.Admin.members.shop.forMember.emailOff).not.toBe(ro.Admin.members.shop.forMember.emailOff);
     // The fold is the Administrator's alone.
     expect(readOnly).not.toContain('data-testid="shop-order-for-member"');
     expect(en.Admin.members.shop.forMember.title).not.toBe(ro.Admin.members.shop.forMember.title);

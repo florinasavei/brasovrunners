@@ -52,6 +52,7 @@ export default function OrdersCard({
   messages,
   mayManage,
   showEmail,
+  emailMembers,
 }: {
   orders: readonly AdminOrder[];
   /** Every order the filter names, counted — `orders` stops at `ORDERS_SHOWN_MAX`. */
@@ -69,6 +70,8 @@ export default function OrdersCard({
   messages: RefusalMessages;
   mayManage: boolean;
   showEmail: boolean;
+  /** The shop's switch «Îi scriem membrului pe email despre comenzi» (§NNN): off, the fold's email tick is not drawn. */
+  emailMembers: boolean;
 }) {
   const inUse = query.status !== null || query.productId !== null;
   const csvParams = new URLSearchParams({ lang: locale });
@@ -80,7 +83,7 @@ export default function OrdersCard({
   return (
     <Panel glyph="registrations" title={t("members.shop.ordersHeading")} aside={count} id="shop-orders" data-testid="shop-orders">
       <Stack spacing={2}>
-        {mayManage && <ForMemberFold accounts={accounts} items={items} query={query} locale={locale} words={t} cancel={cancel} messages={messages} />}
+        {mayManage && <ForMemberFold accounts={accounts} items={items} query={query} locale={locale} words={t} cancel={cancel} messages={messages} emailMembers={emailMembers} />}
         <Box component="form" method="get" action={`${path}#shop-orders`} role="search" aria-label={t("members.shop.filterLabel")}>
           <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1.5, alignItems: "center" }}>
             <TextField
@@ -146,7 +149,7 @@ export default function OrdersCard({
         ) : (
           <Stack component="ol" spacing={1.5} sx={{ listStyle: "none", m: 0, p: 0 }} aria-label={t("members.shop.ordersHeading")}>
             {orders.map((order) => (
-              <OrderRow key={order.id} order={order} query={query} locale={locale} words={t} cancel={cancel} mayManage={mayManage} showEmail={showEmail} />
+              <OrderRow key={order.id} order={order} query={query} locale={locale} words={t} cancel={cancel} mayManage={mayManage} showEmail={showEmail} emailMembers={emailMembers} />
             ))}
           </Stack>
         )}
@@ -171,6 +174,7 @@ function ForMemberFold({
   words: t,
   cancel,
   messages,
+  emailMembers,
 }: {
   accounts: readonly ZoneAccount[];
   items: readonly OrderableItem[];
@@ -179,6 +183,7 @@ function ForMemberFold({
   words: Words;
   cancel: string;
   messages: RefusalMessages;
+  emailMembers: boolean;
 }) {
   const selectSx = { minWidth: 220, flex: "1 1 220px", maxWidth: { sm: 420 } } as const;
   const options = items.flatMap((item) => {
@@ -243,12 +248,18 @@ function ForMemberFold({
                 </RecallField>
               </Stack>
               <RecallField name="note" label={t("members.shop.forMember.note")} fullWidth multiline minRows={2} slotProps={{ htmlInput: { maxLength: ORDER_NOTE_MAX } }} />
-              <Box component="label" sx={{ display: "inline-flex", alignItems: "center", gap: 1, minHeight: 44, cursor: "pointer" }}>
-                <RecallCheckbox name="emailMember" defaultChecked={false} style={{ width: 20, height: 20 }} />
-                <Typography component="span" variant="body2">
-                  {t("members.shop.forMember.email")}
+              {emailMembers ? (
+                <Box component="label" sx={{ display: "inline-flex", alignItems: "center", gap: 1, minHeight: 44, cursor: "pointer" }}>
+                  <RecallCheckbox name="emailMember" defaultChecked={false} style={{ width: 20, height: 20 }} />
+                  <Typography component="span" variant="body2">
+                    {t("members.shop.forMember.email")}
+                  </Typography>
+                </Box>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  {t("members.shop.forMember.emailOff")}
                 </Typography>
-              </Box>
+              )}
               <Box component="label" sx={{ display: "inline-flex", alignItems: "center", gap: 1, minHeight: 44, cursor: "pointer" }}>
                 <RecallCheckbox name="markPaid" defaultChecked={false} style={{ width: 20, height: 20 }} />
                 <Typography component="span" variant="body2">
@@ -274,6 +285,7 @@ function OrderRow({
   cancel,
   mayManage,
   showEmail,
+  emailMembers,
 }: {
   order: AdminOrder;
   /** The list's filter, posted with each verb so the answer lands on the same list (§683). */
@@ -283,6 +295,7 @@ function OrderRow({
   cancel: string;
   mayManage: boolean;
   showEmail: boolean;
+  emailMembers: boolean;
 }) {
   const title = locale === "en" ? order.productTitleEn : order.productTitleRo;
   const what = `${title}${order.variantLabel ? ` — ${order.variantLabel}` : ""} × ${order.quantity}`;
@@ -330,7 +343,7 @@ function OrderRow({
               action={moveShopOrderAction}
               confirm={{
                 title: t(`members.shop.verbs.${verb}.title`, { number: order.number }),
-                body: t(`members.shop.verbs.${verb}.body`),
+                body: t(verb === "pay" && !emailMembers ? "members.shop.verbs.pay.bodyNoEmail" : `members.shop.verbs.${verb}.body`),
                 confirmLabel: t(`members.shop.verbs.${verb}.label`),
                 cancelLabel: cancel,
                 destructive: verb === "cancel",

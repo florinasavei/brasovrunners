@@ -50,6 +50,7 @@ export default async function MembersShop({
   orders,
   payment,
   shopOpen,
+  emailMembers,
   outcome,
   outcomeAtOrders = false,
   locale,
@@ -60,6 +61,8 @@ export default async function MembersShop({
   payment: string | null;
   shopOpen: boolean;
   outcome: ShopOutcome | null;
+  /** The shop's switch (§NNN): off, no email was sent, and the placed-order banner must not say one was. */
+  emailMembers: boolean;
   /** The answer came back to «Comenzile mele» (a placed order, or a cancel, refused or not). */
   outcomeAtOrders?: boolean;
   locale: Locale;
@@ -69,7 +72,7 @@ export default async function MembersShop({
   if (!showShop && orders.length === 0) return null;
   const banner = outcome ? (
     <Alert severity={outcome === "placed" || outcome === "cancelled" ? "success" : "error"} sx={{ mb: 2 }} data-testid="members-shop-outcome">
-      {t(`shop.outcome.${outcome}`)}
+      {t(`shop.outcome.${outcome === "placed" && !emailMembers ? "placedNoEmail" : outcome}`)}
     </Alert>
   ) : null;
   // The answer is drawn where the redirect's anchor lands: «Comenzile mele» after an order or a cancel

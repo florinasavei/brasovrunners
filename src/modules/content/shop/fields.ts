@@ -218,6 +218,11 @@ export const shopSettingsSchema = z
       .transform((value) => value.trim().toLowerCase())
       .pipe(z.union([z.literal(""), z.email().max(320)]))
       .transform((value) => (value === "" ? null : value)),
+    /** «Îi scriem membrului pe email despre comenzi» (§NNN): the one switch for the member's two emails; a caller that does not name it leaves it on, the form posts `on` or `off`. */
+    emailMembers: z
+      .union([z.boolean(), z.string()])
+      .optional()
+      .transform((value) => (value === undefined ? true : value === true || value === "on" || value === "true")),
   })
   .superRefine((fields, ctx) => {
     refuseOneLanguage(ctx, { ro: fields.paymentRo, en: fields.paymentEn }, { ro: ["paymentRo"], en: ["paymentEn"] }, "the payment words");

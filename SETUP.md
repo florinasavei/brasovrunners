@@ -1937,7 +1937,10 @@ with its cards in the order you fill them.
    and English (both or neither — the club's IBAN and, for example, «sau numerar la alergare»;
    «Copiază și tradu tot: RO → EN» fills the English from the Romanian once DeepL is set up, §464),
    and optionally one address for «Cine primește comenzile». With the address empty no email is
-   sent to the club; the orders are in «Comenzi» either way.
+   sent to the club; the orders are in «Comenzi» either way. The box **«Îi scriem membrului pe email
+   despre comenzi»** (on by default) is the one switch for the member's two emails — «Comanda ta a
+   fost primită» and «Comanda ta e plătită»; off, the member gets neither (the club's own notice is
+   a different thing and stays), and the per-order tick on «Comenzi» is not offered (§NNN).
 3. **Add a product.** «Magazin» → «Produse» → «Adaugă un produs». The page has the cards in order:
    - **«Denumirea și prețul»** — the name in both languages (the translate button at the top), the
      price («45» or «45,50») and «Moneda»: lei or euro, chosen per product, shown to members as such
@@ -1966,7 +1969,7 @@ with its cards in the order you fill them.
    same order. Each row says the price, the sizes with their stock, how many pictures and how many
    orders it has, and whether it is visible.
 5. **Run the orders.** «Magazin» → «Comenzi»: filter by state and product, «Marchează plătită» when
-   the money arrives (the member gets an email), «Marchează predată» at the hand-over, «Anulează»
+   the money arrives (the member gets an email while «Îi scriem membrului…» is on), «Marchează predată» at the hand-over, «Anulează»
    before the hand-over (the stock goes back). «Descarcă CSV» downloads the filtered list. The
    Organizer reads every tab and the CSV and changes nothing.
 6. **Give the shop to the colleague who runs it** (optional, §687). On «Echipa», on that
@@ -1980,7 +1983,8 @@ with its cards in the order you fill them.
    say. Each person in it needs an account on «Echipa» first (a member, or a colleague); then,
    on «Magazin» → «Comenzi», the fold «Adaugă o comandă pentru un membru»: the member from the list, the
    product and its size (a sold-out one is offered greyed), how many, a note if any, and two
-   ticks — «Trimite-i membrului emailul de confirmare» (off: the member gets no email) and
+   ticks — «Trimite-i membrului emailul de confirmare» (off: the member gets no email; not drawn at all while the
+   «Setări» switch is off) and
    «Marchează direct ca plătită» (for a row already paid: the order lands as «Plătită», with the
    «plătită» email only if the first tick is on). The club's own «Cine primește comenzile» mailbox
    is never emailed for an order the club typed itself. One row at a time, checked by the person
