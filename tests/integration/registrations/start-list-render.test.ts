@@ -6,6 +6,7 @@ import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { resolveDisplayName } from "@/modules/registrations/names";
 import ro from "../../../messages/ro.json";
+import { atTheClock } from "../../helpers/clock";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 import type { PublicEvent } from "@/modules/events/repository";
 
@@ -37,7 +38,12 @@ vi.mock("next-intl/server", () => ({
   getLocale: async () => "ro",
 }));
 
-const { default: StartList } = await import("@/modules/events/ui/StartList");
+const { default: StartListNow } = await import("@/modules/events/ui/StartList");
+/**
+ * The list asks the real clock whether its event is still ahead; it is rendered at NOW, on the
+ * fixture's calendar, so it does not go empty once the real clock passes the race (§NNN).
+ */
+const StartList = (props: Parameters<typeof StartListNow>[0]) => atTheClock(NOW, () => StartListNow(props));
 
 const NOW = new Date("2026-09-24T10:00:00.000Z");
 

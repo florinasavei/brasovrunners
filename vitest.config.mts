@@ -13,6 +13,13 @@ export default defineConfig({
      * `local` and `test` except that.
      */
     env: { APP_ENV: "test" },
+    /**
+     * The calendar-proof check (§NNN): `yarn test:clock` sets `TEST_CLOCK_AT` and the real clock
+     * of every test file reads that date instead of today, so a fixture the calendar will reach
+     * fails now rather than on the morning it is reached. Unset — every ordinary run — nothing
+     * is loaded.
+     */
+    setupFiles: process.env.TEST_CLOCK_AT || process.env.TEST_CLOCK_OFFSET_MS ? ["./tests/helpers/shifted-clock.mjs"] : [],
     include: ["tests/**/*.test.ts"],
     // The concurrency suite needs two real connections to a PostgreSQL server, which this
     // command must never require: `yarn check` runs on every commit and in CI without a

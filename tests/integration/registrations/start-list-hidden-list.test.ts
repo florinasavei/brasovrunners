@@ -10,6 +10,7 @@ import { findPublishedEventBySlug, type PublicEvent } from "@/modules/events/rep
 import { resolveDisplayName } from "@/modules/registrations/names";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
+import { atTheClock } from "../../helpers/clock";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -37,7 +38,12 @@ vi.mock("next-intl/server", () => ({
   getLocale: async () => "ro",
 }));
 
-const { default: StartList } = await import("@/modules/events/ui/StartList");
+const { default: StartListNow } = await import("@/modules/events/ui/StartList");
+/**
+ * The list asks the real clock whether its event is still ahead; it is rendered at NOW, on the
+ * fixture's calendar, so it does not go empty once the real clock passes the race (§NNN).
+ */
+const StartList = (props: Parameters<typeof StartListNow>[0]) => atTheClock(NOW, () => StartListNow(props));
 
 const NOW = new Date("2026-09-24T10:00:00.000Z");
 
@@ -109,8 +115,8 @@ async function seeded(): Promise<string> {
 const BACKOFFICE_NAME = /lista ascuns|hidden list|invitați speciali|invitat special|special guest/i;
 
 /** The rendered list — and, every time, the proof it never names the hidden list. */
-const render = async (event: PublicEvent) => {
-  const html = renderToStaticMarkup(await StartList({ event }));
+const render = async (event: PublicEvent, list: typeof StartList = StartList) => {
+  const html = renderToStaticMarkup(await list({ event }));
   expect(html).not.toMatch(BACKOFFICE_NAME);
   return html;
 };
@@ -191,7 +197,8 @@ describe("§647 «Cine vine» and the hidden list's two ticks", () => {
     const page = await findPublishedEventBySlug(db, "ro", "cros-cu-locuri-ascunse");
     if (!page) throw new Error("the event did not publish");
 
-    const html = await render(page as unknown as PublicEvent);
+    // This event is drawn from the real clock (60 days ahead), so it renders at the real clock.
+    const html = await render(page as unknown as PublicEvent, StartListNow);
     // Ana, and Elena's hold among «în curs de confirmare», which only a capped event's known counts add.
     expect(html).toContain("Cine vine (2)");
     expect(summary(html)).toMatch(/^2 înscriși — 1 confirma\S* \(1 cu numele afișat\), 1 în curs de confirmare$/);

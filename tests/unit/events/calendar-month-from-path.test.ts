@@ -2,6 +2,7 @@ import { createElement, type ReactElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { NextRequest } from "next/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { atTheClock } from "../../helpers/clock";
 
 /**
  * §574 (amending §116, §137, §475, §549) — the month shown is the month in the address, and the
@@ -147,7 +148,9 @@ describe("the old addresses (§574)", () => {
   });
 
   it("is a 308 from the proxy for a named period and a no-store 307 for this month, in both languages, before anything renders", () => {
-    const ask = (address: string, method = "GET") => proxy(new NextRequest(`http://localhost:4000${address}`, { method }));
+    // The proxy reads the real clock to know which months it may name; it is asked at NOW, so
+    // October 2026 stays a named period whatever day this runs (§NNN).
+    const ask = (address: string, method = "GET") => atTheClock(NOW, () => proxy(new NextRequest(`http://localhost:4000${address}`, { method })));
     const october = ask("/ro/calendar?month=2026-10");
     expect(october.status).toBe(308);
     expect(new URL(october.headers.get("location") ?? "").pathname).toBe("/ro/calendar/2026-10");

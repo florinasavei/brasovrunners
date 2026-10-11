@@ -19,6 +19,7 @@ import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository
 import { DomainError } from "@/shared/errors/domain-error";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
+import { atTheClock } from "../../helpers/clock";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 import { fakeNextCache } from "../../helpers/next-cache";
 
@@ -312,12 +313,14 @@ describe("§579 «Previzualizare» before saving: the unsaved event, drawn by th
       form.set("event.startsAtWallTime", "2030-10-07T19:00");
     };
     for (const locale of ["ro", "en"] as const) {
-      const answer = await preview(await editorForm(race), locale);
+      // The preview and its door read the real clock: pressed at NOW, the race (2030) ahead (§NNN).
+      const form = await editorForm(race);
+      const answer = await atTheClock(NOW, () => preview(form, locale));
       expect(answer.outcome).toBe("ready");
       if (answer.outcome !== "ready") return;
       const word = (locale === "ro" ? ro : en).Event.previewDoor;
-      const card = await markup(answer.card);
-      const page = await markup(answer.page);
+      const card = await atTheClock(NOW, () => markup(answer.card));
+      const page = await atTheClock(NOW, () => markup(answer.page));
       for (const html of [card, page]) {
         expect(html).toContain('data-testid="preview-door"');
         expect(html).toContain(word);
