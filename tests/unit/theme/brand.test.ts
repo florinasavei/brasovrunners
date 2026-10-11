@@ -4,9 +4,9 @@ import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
 import messages from "@/../messages/ro.json";
 import en from "@/../messages/en.json";
-import { contrastRatio, MAX_CARD_STEP } from "@/modules/appearance/domain/tint-contrast";
+import { contrastRatio, MAX_CARD_STEP, relativeLuminance } from "@/modules/appearance/domain/tint-contrast";
 import { CLUB_NAME, COLOR, COLOR_DARK, FONT, GRADIENT, LOGO, SITE_TINT, SURFACE_GRADIENT, TEAM_CANVAS, WORDMARK } from "@/theme/brand";
-import { ACCENT_PAIRS, type BrandPair, HERO_PAIRS, TEXT_PAIRS, TEXT_PAIRS_DARK } from "@/theme/brand-pairs";
+import { ACCENT_PAIRS, type BrandPair, HERO_PAIRS, LOOK_PAIRS, LOOK_PAIRS_DARK, TEXT_PAIRS, TEXT_PAIRS_DARK } from "@/theme/brand-pairs";
 
 /** A pair's names, `COLOR.ink/COLOR.paper`, for the lists below that pin which pairs are asserted. */
 const names = (pairs: readonly BrandPair[]) => pairs.map((pair) => `${pair.foreground.name}/${pair.background.name}`);
@@ -150,6 +150,62 @@ describe("BR-REQ-070-02 the palette is readable", () => {
     for (const [name, value] of Object.entries(COLOR)) {
       expect(value, name).toMatch(/^#[0-9a-f]{6}$/);
     }
+  });
+});
+
+/**
+ * BR-REQ-070-02 criterion 4, for «Aspectul nou» (§NNN): the facelift's tokens, each with its dark
+ * twin, and every pair the new look draws held at AA — and the pink that carries words held under
+ * every page tint the club may choose, because it is never lighter than the muted ink §488 already
+ * holds there.
+ */
+describe("BR-REQ-070-02 the new look's palette is readable", () => {
+  const LOOK_TOKENS = ["accent", "accentInk", "accentDeep", "accentTint", "kindSpecial", "kindSpecialInk", "kindOther", "inkStrong"] as const;
+
+  it("has every new token in both schemes, in six-digit hex", () => {
+    for (const key of LOOK_TOKENS) {
+      expect(COLOR[key], key).toMatch(/^#[0-9a-f]{6}$/);
+      expect(COLOR_DARK[key], key).toMatch(/^#[0-9a-f]{6}$/);
+    }
+  });
+
+  it("asserts the seventeen pairs of each scheme", () => {
+    expect(LOOK_PAIRS).toHaveLength(17);
+    expect(LOOK_PAIRS_DARK).toHaveLength(17);
+    expect(names(LOOK_PAIRS).slice(0, 5)).toEqual([
+      "COLOR.accentInk/COLOR.paper",
+      "COLOR.accentInk/COLOR.surface",
+      "COLOR.accentInk/COLOR.accentTint",
+      "COLOR.surface/COLOR.accentInk",
+      "COLOR.surface/COLOR.accentDeep",
+    ]);
+    // The dark list is the light one with the dark tokens, and the dark page under the fills.
+    expect(names(LOOK_PAIRS_DARK)).toEqual(
+      names(LOOK_PAIRS).map((name) => name.replace(/COLOR\./g, "COLOR_DARK.").replace(/COLOR_DARK\.surface\/COLOR_DARK\.accent/g, "COLOR_DARK.paper/COLOR_DARK.accent")),
+    );
+  });
+
+  for (const { foreground, background } of [...LOOK_PAIRS, ...LOOK_PAIRS_DARK]) {
+    it(`clears AA for ${foreground.name} on ${background.name}`, () => {
+      expect(contrastRatio(foreground.hex, background.hex)).toBeGreaterThanOrEqual(4.5);
+    });
+  }
+
+  it("keeps the pink that carries words no lighter than the muted ink, so every page tint carries it", () => {
+    expect(relativeLuminance(COLOR.accentInk)).toBeLessThanOrEqual(relativeLuminance(COLOR.inkMuted));
+    for (const [tint, background] of Object.entries(SITE_TINT)) {
+      expect(contrastRatio(COLOR.accentInk, background), tint).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it("orders the pinks as the blues are ordered: resting, then the hover, deeper by day and lighter after dark", () => {
+    expect(relativeLuminance(COLOR.accentDeep)).toBeLessThan(relativeLuminance(COLOR.accentInk));
+    expect(relativeLuminance(COLOR_DARK.accentDeep)).toBeGreaterThan(relativeLuminance(COLOR_DARK.accentInk));
+  });
+
+  it("keeps the logo blue the logo's", () => {
+    expect(COLOR.blue).toBe("#0000ff");
+    expect(COLOR.accentInk).not.toBe(COLOR.blue);
   });
 });
 

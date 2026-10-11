@@ -21,6 +21,7 @@
     "themeDark": "Dark theme",
     "themeLight": "Light theme",
     "skipToContent": "Skip to content",
+    "cta": { "join": "Join us" },
     "nav": {
       "label": "Main navigation",
       "events": "Events",
@@ -1564,6 +1565,8 @@
       "siteTintBody": "Every public page of the site opens with the chosen background from now on, for every visitor. The dark theme and the backoffice stay as they are. You can go back to “White” at any time.",
       "siteFontSizeTitle": "Change the text size?",
       "siteFontSizeBody": "Every public page of the site now opens with its text at the chosen size, for every visitor, in both themes. The backoffice stays as it is. You can go back to «Normal» at any time.",
+      "siteLookTitle": "Change the site's look?",
+      "siteLookBody": "Every public page now opens in the chosen look, for every visitor. The backoffice, the emails and the PDFs stay as they are. You can go back to «Today's look» at any time.",
       "translationBudgetTitle": "Save the translation budget?",
       "translationBudgetBody": "The new number applies from the next press of \"Translate from Romanian\". What was translated today stays counted.",
       "deliveryTimingTitle": "Change when emails leave?",
@@ -4546,6 +4549,31 @@
         "faq": "Frequently asked questions"
       }
     },
+    "look": {
+      "title": "The new look",
+      "intro": "The public pages' new look: pink beside the logo blue, bolder headings, rounded buttons, «Join us» in the header.",
+      "introMore": "Off until the club approves it on QA; then it is the one-press way back. The page tint and the text size stay as you chose them, under both looks.",
+      "current": "Now: {look}",
+      "updatedAt": "Set {when}.",
+      "legend": "The public pages' look",
+      "default": "default",
+      "save": "Save the look",
+      "saving": "Saving…",
+      "saved": "The site's look was saved.",
+      "readOnly": "The Administrator chooses the look; here you see the choice in force.",
+      "compare": "See them side by side",
+      "scope": "Public pages only. The backoffice, the emails, the PDFs, the race numbers and the share pictures stay blue.",
+      "choices": {
+        "off": {
+          "name": "Today's look",
+          "help": "The logo blue, today's headings, today's buttons."
+        },
+        "on": {
+          "name": "The new look",
+          "help": "Pink and Inter headings, rounded buttons with an arrow, «Join us» and the socials in the header, the mountains at the foot of the page."
+        }
+      }
+    },
     "fontSize": {
       "title": "Text size",
       "intro": "How large the text is on the public pages: headings, paragraphs and buttons grow or shrink together.",
@@ -5690,9 +5718,30 @@
     "design": {
       "title": "Design system",
       "intro": "The site's colours, type, shapes, buttons, pills and glyphs, read from the code at every render — the page cannot fall behind it. For whoever reads the club's content.",
-      "sideBySide": "The side-by-side with the new look comes with phase 1 of the redesign.",
+      "sideBySide": "Today's look and the new one are drawn side by side under «The new look», by the same components.",
       "contents": "On this page",
+      "look": {
+        "intro": "Today's look and the new one, drawn by the same components: they differ only in what the new look changes. On the site it is switched on under «Settings» → «Appearance» → «The new look».",
+        "sideBySide": "Side by side",
+        "sideBySideNote": "The same code twice; only the box on the right wears the new look.",
+        "today": "Today's look",
+        "new": "The new look",
+        "heading": "We run together through Brașov",
+        "body": "A paragraph of the site, at the text size, with",
+        "link": "a link",
+        "primary": "See the runs",
+        "secondary": "How it works",
+        "cta": "The header's button:",
+        "primaryTitle": "The primary colour under the new look",
+        "primaryNote": "MUI's primary colour variables, redefined on the public pages only while the new look is on.",
+        "variable": "Variable",
+        "lightScheme": "Light theme",
+        "darkScheme": "Dark theme",
+        "markTitle": "The mountains",
+        "markNote": "An inline drawing under 2 KB, in the colour of the text around it: the mark at the foot of the public pages under the new look."
+      },
       "sections": {
+        "look": "The new look",
         "colours": "Colours",
         "type": "Type",
         "shape": "Shape and shadow",
@@ -5717,6 +5766,8 @@
         "pairsDark": "Dark scheme",
         "pairsHero": "Over the featured event's gradient",
         "pairsAccent": "Over the pressed button's gradient",
+        "pairsLook": "The new look, light theme",
+        "pairsLookDark": "The new look, dark theme",
         "sample": "Sample",
         "foreground": "Text",
         "background": "Background",
@@ -5738,6 +5789,7 @@
         "faceNames": {
           "roboto": "Roboto — body and headings",
           "inter": "Inter — the theme lab",
+          "interHeading": "Inter 800 — the new look's headings",
           "nunito": "Nunito — the theme lab",
           "signature": "Caveat — the declaration's signature",
           "facon": "Facón — the kit's logotype"
@@ -5746,6 +5798,7 @@
         "rolesNote": "Two roles, not one family: a club typeface changes the headings and leaves the body alone.",
         "display": "Headings (display)",
         "body": "Body (body)",
+        "lookDisplay": "Headings, the new look (lookDisplay)",
         "wordmark": "Logotype (wordmark)",
         "fallback": "Fallback (fallback)"
       },
@@ -5863,6 +5916,7 @@
           "lightDefault": "The site starts light; dark only from the footer's button, never from the phone's setting.",
           "pageTint": "The public pages' tint is the club's setting, with a contrast guard: readable text on any tint.",
           "fontSize": "The text size on public pages is a club setting, from a bounded scale.",
+          "newLook": "The new look is drawn only under its attribute, on the public pages; off, no rule matches.",
           "colourLiterals": "No colour written straight into code: colours come from the theme, and the exceptions sit in a list that can only shrink.",
           "iconImports": "Icons come from the registries, by name; the backoffice never imports one directly and a public page imports one file per icon, never the whole package.",
           "primitives": "A button or a pill is the house's own (GlyphButton, ButtonLink, GlyphChip, StatusChip), not a bare MUI Button, IconButton or Chip written again.",
@@ -5872,7 +5926,7 @@
       },
       "plan": {
         "intro1": "The plan's full text, in English, is kept by the dispatcher in the repository:",
-        "intro2": "The side-by-side of today's look and the new one comes to this page with phase 1.",
+        "intro2": "The side-by-side of today's look and the new one is now at the top of the page, under «The new look».",
         "decisionsTitle": "The club's decisions",
         "decisionsNote": "Twelve choices; each has the default the dispatcher builds if nobody objects.",
         "phasesTitle": "The phases",
@@ -9506,6 +9560,7 @@
       "feedbackForms": "The “Tell us something” forms were saved.",
       "siteTint": "The site's background was saved.",
       "siteFontSize": "The site's text size was saved.",
+      "siteLook": "The site's look was saved.",
       "clubTodoAdded": "Added to the list.",
       "clubTodoSaved": "Line saved.",
       "clubTodoUnchanged": "The line already said this; nothing changed.",

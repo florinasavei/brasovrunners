@@ -1,5 +1,6 @@
 import { createTheme } from "@mui/material/styles";
 import { COLOR, COLOR_DARK, FONT, HEADER_CLEARANCE_PX } from "./brand";
+import { LOOK_BUTTON_RADIUS, LOOK_HEADING, UNDER_LOOK } from "./look";
 import { KEYFRAMES } from "./motion";
 
 /** Material's filled "Error" glyph (a circle with an exclamation mark), as a mask for invalid fields (§309). */
@@ -151,6 +152,31 @@ export const buildTheme = (options: ThemeOptions) => createTheme({
     MuiCardContent: {
       styleOverrides: {
         root: { padding: 12, "&:last-child": { paddingBottom: 12 } },
+      },
+    },
+    /*
+      «Aspectul nou» (§NNN): what the facelift's phase 1 changes about MUI's own components, each
+      rule under the look's scope (`theme/look.ts`) — the public pages while the club's setting is
+      on, or the design page's preview box — so with the setting off, and in the backoffice always,
+      nothing here matches. The pink `primary` is not here: it is MUI's own palette variables,
+      redefined under the same scope by the layout's one stylesheet (`site-look.ts`), because MUI
+      keeps those variables in a layer an override here cannot outrank.
+
+      A theme override sits below a component's own `sx` (MUI's layers), so a button or a heading
+      that states its own radius or weight keeps it: the look changes the defaults, never a choice.
+    */
+    MuiButton: {
+      styleOverrides: {
+        // Pill-shaped (decision 1 of `docs/REDESIGN.md`'s visual system).
+        root: { [UNDER_LOOK]: { borderRadius: LOOK_BUTTON_RADIUS } },
+      },
+    },
+    MuiTypography: {
+      styleOverrides: {
+        // The headings in Inter 800, a little tighter (decision 2); the body stays Roboto.
+        h1: { [UNDER_LOOK]: { fontFamily: `${FONT.lookDisplay}, ${FONT.fallback}`, ...LOOK_HEADING } },
+        h2: { [UNDER_LOOK]: { fontFamily: `${FONT.lookDisplay}, ${FONT.fallback}`, ...LOOK_HEADING } },
+        h3: { [UNDER_LOOK]: { fontFamily: `${FONT.lookDisplay}, ${FONT.fallback}`, ...LOOK_HEADING } },
       },
     },
     MuiCssBaseline: {

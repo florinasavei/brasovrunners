@@ -3,10 +3,12 @@
 <!-- The working copy lives in the owner's Claude document; this file is the repository's version,
      kept in step by the dispatcher. No person's name appears here: the repository is public. -->
 
-**As of 2026-10-10.** The owner and the club's president asked for a facelift of the public site —
+**As of 2026-10-11.** The owner and the club's president asked for a facelift of the public site —
 two mock-ups, a landing page and a calendar page — and said it is the last item in the queue and
 must be planned carefully. This page is that plan: the decisions, what exists, the visual system,
-the constraints, the phases, the content the club provides, and the open questions.
+the constraints, the phases, the content the club provides, and the open questions. On 2026-10-11
+the owner approved starting phase 1 with the plan's defaults, so decisions 1, 2 and 12 are taken by
+their defaults and phase 1 is built behind the setting, off (§ Phase 1, as built).
 
 ## Decisions only the club can make
 
@@ -15,8 +17,8 @@ objects; a different answer changes the phases, not the rules.
 
 | # | Decision | Default | Why it is the club's |
 | --- | --- | --- | --- |
-| 1 | The accent colour | a hot-pink accent token (and a darker «pinkInk» that carries white text at AA) beside the logo blue; the logo mark drawn in ink in the header; emails, PDFs, race numbers and share cards stay blue | the logo is pure blue and a brand test pins it |
-| 2 | The heading face | Inter 800 (one new weight file; Inter is self-hosted with ș ț ă â î) for headings; body stays Roboto | a face is a licence and a look the club owns |
+| 1 | The accent colour — **decided by default (2026-10-11)** | a hot-pink accent token (and a darker «pinkInk» that carries white text at AA) beside the logo blue; the logo mark drawn in ink in the header; emails, PDFs, race numbers and share cards stay blue | the logo is pure blue and a brand test pins it |
+| 2 | The heading face — **decided by default (2026-10-11)** | Inter 800 (one new weight file; Inter is self-hosted with ș ț ă â î) for headings; body stays Roboto | a face is a licence and a look the club owns |
 | 3 | A real home page — **decided (2026-10-10)** | a real home page at `/ro` and `/en`, reached from the logo — never a menu entry — switchable on and off in «Aspect» → «Pagina principală»; `/events` stays the listing under «Alergări»; canonicals and the sitemap move | it reverses §353 (the root is a redirect, for SEO) |
 | 4 | The four menu words | «Alergări» = the listing; «Calendar»; «Comunitatea» = a club page linking «Echipa», «Galerie», «Întrebări» and the members' zone; «Despre noi» = a club page | the club decides what each word points to |
 | 5 | Where «Vino cu noi» goes | the next weekly run's page; the band's «Cum funcționează» opens a club page | there is no sign-up for runners |
@@ -26,7 +28,7 @@ objects; a different answer changes the phases, not the rules.
 | 9 | What «Evenimente speciale» means | everything that is not a weekly series; the chip «Ediție specială» keeps its meaning (§168) | the mock-up's word and today's flag differ |
 | 10 | The round arrow on cards | only on the home page's cards, keeping the whole-card tap; the listing keeps its text door | it reverses §319 |
 | 11 | Icons | the filled Material family stays; the lighter look comes from colour, weight and spacing | a second family touches every glyph (§318) |
-| 12 | How it ships | behind one setting, «Aspectul nou», read like the page tint: on for QA, off on production until the club approves on QA; the old look deleted one release after the flip; the backoffice keeps today's look | a live site with real registrations needs a one-press way back |
+| 12 | How it ships — **decided by default (2026-10-11)** | behind one setting, «Aspectul nou», read like the page tint: on for QA, off on production until the club approves on QA; the old look deleted one release after the flip; the backoffice keeps today's look | a live site with real registrations needs a one-press way back |
 
 ## What exists versus what is new
 
@@ -68,7 +70,7 @@ ink, 44 px tall. Chips: the existing `GlyphChip`. One inline mountain SVG under 
 
 The scope: the public layout sets `data-look="2026"` when «Aspectul nou» is on, the way `data-dark`
 switches the dark scheme; the overrides read under that attribute as plain-object selectors. Off,
-every page is pixel-identical to today; the backoffice never carries the attribute.
+every page is pixel-identical to today. The attribute is on `<html>` wherever the setting is on, the backoffice's pages included (they share the root layout); every rule stops at the backoffice shell's `data-backoffice` marker, so staff never see the look.
 
 **Component-based, by the owner's rule (2026-10-10).** One named Server Component per section under `src/modules/home/ui/` — `Hero`, `NextRunCard`, `RunCardGrid`, `StepsBand`, `WhyList`, `PhotoStrip`, `NumbersBand`; the calendar's `KindChips`, `NextEventPanel`, `SubscribeBox` likewise — typed props, no element-valued prop, tokens only from `brand.ts`; each drawn with a fixture on `/admin/design` → «Mostre» and listed in `docs/VIBECODING.md` → «Where things live»; carousels are CSS scroll-snap strips, no island; everything the club sees is a setting.
 
@@ -97,7 +99,7 @@ side.
 | Phase | What | Gate |
 | --- | --- | --- |
 | 0 | Decisions and assets — no code: the twelve answers; the hero, one cover per run and race, six strip pictures in the gallery; the numbers | answers in writing, photos uploaded |
-| 1 | Tokens and the public shell: the pink pair, Inter 800, the public scope, the setting «Aspectul nou», the header CTA and socials, the watermark; the design-system page shows both looks | brand and font tests green, header one row at 320 px, the club's yes on QA |
+| 1 | Tokens and the public shell: the pink pair, Inter 800, the public scope, the setting «Aspectul nou», the header CTA and socials, the watermark; the design-system page shows both looks — **built behind the setting, off (2026-10-11)** | brand and font tests green, header one row at 320 px, the club's yes on QA |
 | 2 | Cover photos on events, and the event kind: a cover column with its crop, the editor's picker, the ladder; weekly or special derived from the series; the photo tag | listing specs green; every weekly run and the race carry a cover |
 | 3 | The home page: the root becomes a page; hero, next run, weekly and special, the band, why, the strip, the numbers; redirect, canonicals, sitemap. Every part a setting: «Pagina principală activă»; the hero picture with its crop and two lines and the three buttons' targets; N gallery pictures per strip or carousel, in order; the founding date and the runners figure; an unset strip is not drawn | LCP under 2.5 s on a 320 px phone, root tests rewritten, the club's yes on QA |
 | 4 | The calendar: filter chips with the kind, three colours and a legend, the next-event panel, the subscribe box, the title block | first week above the fold at 320 px, filters work with scripts off |
@@ -106,6 +108,29 @@ side.
 
 No dates: the pace is the owner's and the club's. At one batch a day, phases 1–6 are about three
 weeks of calendar time.
+
+### Phase 1, as built
+
+On the branch `feat/facelift-phase-1` (2026-10-11), with decisions 1, 2 and 12 at their defaults.
+Everything below is drawn only while «Setări» → «Aspect» → «Aspectul nou» is on, and only on the
+public pages; off (the default), no rule matches and every page is what it was.
+
+| Part | Where | Notes |
+| --- | --- | --- |
+| Tokens | `src/theme/brand.ts` (`COLOR` / `COLOR_DARK`) | `accent` (the hot pink, `#d6176f`), `accentInk` (the pink that carries words — the plan's «pinkInk»), `accentDeep` (hover), `accentTint`, `kindSpecial` + `kindSpecialInk`, `kindOther`, `inkStrong`; each with a dark twin |
+| AA pairs | `src/theme/brand-pairs.ts` (`LOOK_PAIRS`, `LOOK_PAIRS_DARK`) | 17 a scheme, held by `tests/unit/theme/brand.test.ts`; `accentInk` is no lighter than `inkMuted`, so every page tint carries it |
+| Scope | `src/theme/look.ts` | `data-look="2026"` on `<html>`, `:not(:has([data-backoffice]))`; `data-look-preview` for the design page's box |
+| Pink `primary` | `src/modules/appearance/domain/site-look.ts` | MUI's `--mui-palette-primary-*` variables redefined under the scope, one unlayered stylesheet from the layout, like the tint |
+| Pill buttons, Inter 800 headings | `src/theme/theme.ts` | theme overrides under the scope; `h1`–`h3` that state no weight of their own (a card's title keeps its 500 until phase 5); Inter 800 is `src/theme/fonts/Inter-800.woff2`, not preloaded |
+| The setting | `src/modules/appearance/site-look.ts`, `ui/SiteLookPanel.tsx` | Administrator only, audited `site_look.changed`, expires the static pages |
+| «Vino cu noi» | `src/shared/ui/HeaderCta.tsx`, `ArrowButtonLink.tsx`; target `src/modules/events/domain/next-weekly-run.ts` | the next weekly run's page, else the listing; a tighter pill below `sm` that keeps its arrow (§521); drawn into the nav's trailing group before the ☰, and not in the backoffice |
+| Socials | `src/shared/ui/HeaderSocials.tsx` | Facebook and Instagram from the footer's list, from `md` up |
+| The logo in ink | `src/shared/ui/SiteHeader.tsx` | `grayscale(1)` on the supplied lockup under the scope |
+| The watermark | `src/shared/ui/MountainMark.tsx`, `LookWatermark.tsx` | the mountain mark, faint, between the content and the footer |
+| Both looks side by side | `/admin/design` → «Aspectul nou» (`src/modules/design/ui/LookSection.tsx`) | the same components twice, the right box under the preview scope |
+
+What phase 1 leaves for the gate: the club's look at QA with the setting on, phone and laptop; the
+header's one row at 320 px measured by the e2e suite with the setting on.
 
 ## Content and assets the club must provide
 

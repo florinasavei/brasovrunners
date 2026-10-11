@@ -1,17 +1,25 @@
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import type { ComponentProps } from "react";
+import type { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { menuOrderOnSite, menuSectionsOnSite } from "@/modules/content/menu/on-site";
-import { cachedPublishedPages } from "@/modules/public-cache/reads";
+import { nextWeeklyRun } from "@/modules/events/domain/next-weekly-run";
+import { cachedPublishedPages, cachedSiteLook, cachedUpcomingEvents } from "@/modules/public-cache/reads";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import { buildInfo } from "@/shared/config/build-info";
 import { CLUB_NAME, HEADER_MARK_HEIGHT, HEADER_MARK_HEIGHT_PX, LOGO, PAGE_WIDTH } from "@/theme/brand";
+import { UNDER_LOOK } from "@/theme/look";
 import { KEYFRAMES, MOTION_OK } from "@/theme/motion";
+import { clubSocialLinks } from "./club-socials";
+import HeaderCta from "./HeaderCta";
+import HeaderSocials from "./HeaderSocials";
 import LocaleSwitcher from "./LocaleSwitcher";
 import LogoLink from "./LogoLink";
 import NewBuildNotice from "./NewBuildNotice";
 import SiteNav from "./SiteNav";
+import type { SocialNetwork } from "./SocialIcon";
 
 /**
  * The club's standing pages, for the navigation — or nothing at all, whatever goes wrong.
@@ -56,6 +64,26 @@ async function navigationPages(locale: Locale) {
   }
 }
 
+/** The header's two marks under the new look: the plan's mock-up draws Facebook and Instagram; Strava stays in the footer. */
+const HEADER_NETWORKS: ReadonlySet<SocialNetwork> = new Set(["facebook", "instagram"]);
+
+/**
+ * Where «Vino cu noi» goes (§NNN, the redesign's decision 5): the next weekly run's page, read from
+ * the listing's own cached read — no query of its own, and the static page is held no longer than
+ * the listing's clock window, as the listing is (§549) — or the listing itself when no weekly run is
+ * ahead, and whatever goes wrong (a build with no database, an outage): a button that always leads
+ * somewhere.
+ */
+async function joinTarget(locale: Locale): Promise<ComponentProps<typeof Link>["href"]> {
+  try {
+    const run = nextWeeklyRun(await cachedUpcomingEvents(locale, new Date()));
+    if (run) return { pathname: "/events/[slug]", params: { slug: run.slug } };
+  } catch {
+    // The listing, below.
+  }
+  return "/events";
+}
+
 /**
  * The site header: the club's logo, whole, and a way back to the first page.
  *
@@ -98,6 +126,18 @@ export default async function SiteHeader() {
    * them (`modules/content/menu/on-site.ts`), so the card greys exactly what the menu leaves out.
    */
   const [sections, order] = await Promise.all([menuSectionsOnSite(locale as Locale), menuOrderOnSite()]);
+  /*
+    «Aspectul nou» (§NNN): the header's call to action and the socials, only while the club's setting
+    is on — off, nothing is read and nothing is drawn, so the header is what it was. On a backoffice
+    page (which shares this header) the listing's cached read still runs, since this layout-level
+    component cannot know the route without making every static public page dynamic; it is the
+    public cache's, so no query on a warm cache (the socials are environment values), and `SiteNav`
+    draws none of it there.
+  */
+  const look = await cachedSiteLook();
+  const joinHref = look.on ? await joinTarget(locale as Locale) : null;
+  const socials = look.on ? (await clubSocialLinks()).filter((entry) => HEADER_NETWORKS.has(entry.network)) : [];
+  const site = await getTranslations("Site");
 
   return (
     <>
@@ -188,6 +228,14 @@ export default async function SiteHeader() {
                 height: HEADER_MARK_HEIGHT,
                 width: "auto",
                 [variant.hideOn]: { display: "none" },
+                /*
+                  Under «Aspectul nou» the logo is drawn in ink (§NNN, the redesign's decision 1): the
+                  supplied artwork's pure blue, through `grayscale`, is the luminance of that blue — a
+                  near-black within a step of `inkStrong` — and its light-grey strokes stay light grey,
+                  which a mask in one colour would flatten. The white one after dark stays white. The
+                  file is untouched, and the emails, PDFs and share cards keep the blue lockup.
+                */
+                [UNDER_LOOK]: { filter: "grayscale(1)" },
               }}
             />
           ))}
@@ -223,8 +271,22 @@ export default async function SiteHeader() {
             showFaq={sections.faq}
             showContact={sections.contact}
             order={order}
-          />
+          >
+            {joinHref && (
+              <>
+                <HeaderCta href={joinHref} label={site("cta.join")} />
+                <HeaderSocials links={socials} />
+              </>
+            )}
+          </SiteNav>
         </Box>
+
+        {/*
+          «Vino cu noi» and the two social marks, under «Aspectul nou» only (§NNN): passed to the nav
+          as its children (the trailing group), so they sit before the ☰ and the ☰ stays the row's right edge
+          (§699), and the nav measures what is left and folds the rest into it, so the row stays one
+          row at every width. Drawn only inside the look's scope, so the backoffice never shows them.
+        */}
 
         {/*
           The scheme switch left this row for the footer's bottom-left corner (§115), and on a

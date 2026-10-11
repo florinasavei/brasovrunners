@@ -21,6 +21,7 @@
     "themeDark": "Temă întunecată",
     "themeLight": "Temă luminoasă",
     "skipToContent": "Sari la conținut",
+    "cta": { "join": "Vino cu noi" },
     "nav": {
       "label": "Navigare principală",
       "events": "Alergări",
@@ -1564,6 +1565,8 @@
       "siteTintBody": "Fiecare pagină publică a site-ului se deschide de acum cu fundalul ales, pentru toți vizitatorii. Tema întunecată și backoffice-ul rămân cum sunt. Poți reveni oricând la «Alb».",
       "siteFontSizeTitle": "Schimbi mărimea textului?",
       "siteFontSizeBody": "Fiecare pagină publică a site-ului se deschide de acum cu textul la mărimea aleasă, pentru toți vizitatorii, în ambele teme. Backoffice-ul rămâne cum e. Poți reveni oricând la «Normal».",
+      "siteLookTitle": "Schimbi aspectul site-ului?",
+      "siteLookBody": "Fiecare pagină publică se deschide de acum în aspectul ales, pentru toți vizitatorii. Backoffice-ul, emailurile și PDF-urile rămân cum sunt. Poți reveni oricând la «Aspectul de azi».",
       "translationBudgetTitle": "Salvezi bugetul de traduceri?",
       "translationBudgetBody": "Numărul nou se aplică de la următoarea apăsare pe „Tradu din română”. Ce s-a tradus azi rămâne numărat.",
       "deliveryTimingTitle": "Schimbi când pleacă emailurile?",
@@ -4546,6 +4549,31 @@
         "faq": "Întrebări frecvente"
       }
     },
+    "look": {
+      "title": "Aspectul nou",
+      "intro": "Noul aspect al paginilor publice: roz lângă albastrul siglei, titluri mai apăsate, butoane rotunjite, «Vino cu noi» în antet.",
+      "introMore": "Oprit până aprobă clubul pe QA; apoi e calea înapoi dintr-o apăsare. Nuanța fundalului și mărimea textului rămân cum le-ai ales, în ambele aspecte.",
+      "current": "Acum: {look}",
+      "updatedAt": "Setat {when}.",
+      "legend": "Aspectul paginilor publice",
+      "default": "implicit",
+      "save": "Salvează aspectul",
+      "saving": "Se salvează…",
+      "saved": "Aspectul site-ului a fost salvat.",
+      "readOnly": "Aspectul îl alege Administratorul; vezi aici alegerea în vigoare.",
+      "compare": "Vezi-le una lângă alta",
+      "scope": "Doar paginile publice. Backoffice-ul, emailurile, PDF-urile, numerele de concurs și imaginile de distribuire rămân albastre.",
+      "choices": {
+        "off": {
+          "name": "Aspectul de azi",
+          "help": "Albastrul siglei, titlurile de acum, butoanele de acum."
+        },
+        "on": {
+          "name": "Aspectul nou",
+          "help": "Roz și titluri Inter, butoane rotunjite cu săgeată, «Vino cu noi» și rețelele sociale în antet, munții în josul paginii."
+        }
+      }
+    },
     "fontSize": {
       "title": "Mărimea textului",
       "intro": "Cât de mare e textul pe paginile publice: titlurile, paragrafele și butoanele cresc sau scad împreună.",
@@ -5690,9 +5718,30 @@
     "design": {
       "title": "Sistemul de design",
       "intro": "Culorile, literele, formele, butoanele, pastilele și glifele site-ului, citite din cod la fiecare afișare — pagina nu poate rămâne în urma lui. Pentru oricine citește conținutul clubului.",
-      "sideBySide": "Comparația cu noul aspect, una lângă alta, vine cu faza 1 a redesign-ului.",
+      "sideBySide": "Aspectul de azi și cel nou sunt desenate unul lângă altul, la «Aspectul nou», de aceleași componente.",
       "contents": "Cuprinsul paginii",
+      "look": {
+        "intro": "Aspectul de azi și cel nou, desenate de aceleași componente: diferența dintre ele e numai ce schimbă aspectul nou. Pe site îl pornește «Setări» → «Aspect» → «Aspectul nou».",
+        "sideBySide": "Unul lângă altul",
+        "sideBySideNote": "Același cod de două ori; doar caseta din dreapta poartă aspectul nou.",
+        "today": "Aspectul de azi",
+        "new": "Aspectul nou",
+        "heading": "Alergăm împreună prin Brașov",
+        "body": "Un paragraf al site-ului, la mărimea textului, cu",
+        "link": "un link",
+        "primary": "Vezi alergările",
+        "secondary": "Cum funcționează",
+        "cta": "Butonul din antet:",
+        "primaryTitle": "Culoarea principală sub aspectul nou",
+        "primaryNote": "Variabilele MUI ale culorii principale, redefinite numai pe paginile publice cât timp aspectul nou e pornit.",
+        "variable": "Variabila",
+        "lightScheme": "Tema deschisă",
+        "darkScheme": "Tema întunecată",
+        "markTitle": "Munții",
+        "markNote": "Un desen în linie, sub 2 KB, în culoarea textului din jur: semnul de la baza paginilor publice sub aspectul nou."
+      },
       "sections": {
+        "look": "Aspectul nou",
         "colours": "Culori",
         "type": "Tipografie",
         "shape": "Forme și umbre",
@@ -5717,6 +5766,8 @@
         "pairsDark": "Tema întunecată",
         "pairsHero": "Peste gradientul evenimentului principal",
         "pairsAccent": "Peste gradientul butonului apăsat",
+        "pairsLook": "Aspectul nou, tema deschisă",
+        "pairsLookDark": "Aspectul nou, tema întunecată",
         "sample": "Mostră",
         "foreground": "Text",
         "background": "Fundal",
@@ -5738,6 +5789,7 @@
         "faceNames": {
           "roboto": "Roboto — textul și titlurile",
           "inter": "Inter — laboratorul temei",
+          "interHeading": "Inter 800 — titlurile aspectului nou",
           "nunito": "Nunito — laboratorul temei",
           "signature": "Caveat — semnătura declarației",
           "facon": "Facón — logotipul de pe echipament"
@@ -5746,6 +5798,7 @@
         "rolesNote": "Două roluri, nu o familie: un font al clubului schimbă titlurile și lasă textul în pace.",
         "display": "Titluri (display)",
         "body": "Text (body)",
+        "lookDisplay": "Titluri, aspectul nou (lookDisplay)",
         "wordmark": "Logotip (wordmark)",
         "fallback": "Rezerva (fallback)"
       },
@@ -5863,6 +5916,7 @@
           "lightDefault": "Site-ul pornește deschis la culoare; întunecat doar din butonul din subsol, niciodată din setarea telefonului.",
           "pageTint": "Nuanța paginilor publice e setarea clubului, cu o gardă de contrast: text citibil pe orice nuanță.",
           "fontSize": "Mărimea textului pe paginile publice e o setare a clubului, dintr-o scară cu limite.",
+          "newLook": "Aspectul nou se desenează doar sub atributul lui, pe paginile publice; oprit, nicio regulă nu se potrivește.",
           "colourLiterals": "Nicio culoare scrisă direct în cod: culorile vin din temă, iar excepțiile sunt într-o listă care doar se scurtează.",
           "iconImports": "Pictogramele vin din registre, după nume; în backoffice nu se importă direct, iar pe paginile publice doar un fișier pe pictogramă, niciodată pachetul întreg.",
           "primitives": "Un buton sau o pastilă e a casei (GlyphButton, ButtonLink, GlyphChip, StatusChip), nu un Button, IconButton sau Chip MUI pe care l-a scris cineva din nou.",
@@ -5872,7 +5926,7 @@
       },
       "plan": {
         "intro1": "Textul complet al planului, în engleză, e ținut de dispecer în depozit:",
-        "intro2": "Comparația dintre aspectul de azi și cel nou, una lângă alta, vine pe această pagină cu faza 1.",
+        "intro2": "Comparația dintre aspectul de azi și cel nou e acum în capul paginii, la «Aspectul nou».",
         "decisionsTitle": "Deciziile clubului",
         "decisionsNote": "Douăsprezece alegeri; fiecare are implicitul pe care îl construiește dispecerul dacă nimeni nu se opune.",
         "phasesTitle": "Fazele",
@@ -9506,6 +9560,7 @@
       "feedbackForms": "Formularele „Spune-ne ceva” au fost salvate.",
       "siteTint": "Fundalul site-ului a fost salvat.",
       "siteFontSize": "Mărimea textului a fost salvată.",
+      "siteLook": "Aspectul site-ului a fost salvat.",
       "clubTodoAdded": "Adăugat pe listă.",
       "clubTodoSaved": "Rând salvat.",
       "clubTodoUnchanged": "Rândul spunea deja asta; nimic de schimbat.",
