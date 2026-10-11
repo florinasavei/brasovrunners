@@ -75,7 +75,17 @@ export default async function AdminShopNewProductPage({ params, searchParams }: 
         storage={isStorageConfigured()}
         mayManage
       />
-      <ProductForm product={null} locale={locale} words={t} cancel={words.cancel} messages={messages} rich={rich} noticeDescribes={noticeDescribes} />
+      <ProductForm
+        product={null}
+        locale={locale}
+        words={t}
+        cancel={words.cancel}
+        messages={messages}
+        rich={rich}
+        noticeDescribes={noticeDescribes}
+        guideLabels={shopPhotoLabels(t, rich, t("members.shop.sizes.guide"))}
+        storage={isStorageConfigured()}
+      />
     </Stack>
   );
 }

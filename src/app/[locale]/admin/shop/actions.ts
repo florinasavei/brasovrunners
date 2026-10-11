@@ -122,6 +122,8 @@ function productFieldsOf(form: FormData) {
     extraVariants: text(form, "extraVariants"),
     ...chartOf(form),
     variantsLoaded: text(form, "variantsLoaded"),
+    sizeGuideAssetId: text(form, "sizeGuideAssetId"),
+    sizeGuideCrop: text(form, "sizeGuideCrop"),
     visible: form.get("visible") === "on",
   };
 }

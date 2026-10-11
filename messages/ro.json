@@ -7661,6 +7661,10 @@
           "exampleEn": "Chest width (cm)",
           "sizeColumn": "Mărimea",
           "cellLabel": "{size}, coloana {number}"
+        },
+        "sizes": {
+          "guide": "Ghidul de mărimi (o poză)",
+          "guideHelp": "Desenul furnizorului cu măsurile; membrul îl deschide de lângă mărimi. Opțional."
         }
       }
     },
@@ -9953,6 +9957,7 @@
       "ordering": "Se trimite comanda…",
       "pictureOpen": "Fotografia {number}",
       "sizeChart": "Tabelul de mărimi",
+      "sizeGuide": "Ghid de mărimi",
       "sizeColumn": "Mărimea",
       "outcome": {
         "placed": "Comanda a fost primită. Ți-am trimis și un email cu ea și cu felul în care se plătește.",

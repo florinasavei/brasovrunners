@@ -12,7 +12,10 @@ import { getTranslations } from "next-intl/server";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { formatPrice, ORDER_NOTE_MAX, ORDER_QUANTITY_MAX, orderTotalBani } from "@/modules/content/shop/domain";
-import type { MemberOrder, MembersShopProduct } from "@/modules/content/shop/repository";
+import PictureLightbox from "@/modules/content/rich-text/ui/PictureLightbox";
+import type { MemberOrder, MembersShopProduct, ShopPhoto } from "@/modules/content/shop/repository";
+import { pictureSrcSet } from "@/modules/media/ladder";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import ProductPictureStrip from "@/modules/content/shop/ui/ProductPictureStrip";
 import SizeChartTable from "@/modules/content/shop/ui/SizeChartTable";
 import type { ShopOutcome } from "@/modules/content/shop/zone-outcome";
@@ -22,6 +25,9 @@ import SubmitButton from "@/shared/ui/SubmitButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import { cancelShopOrderAction, placeShopOrderAction } from "./actions";
+
+/** The ruler glyph from the one registry (§694). */
+const SizeGuideIcon = ACTION_ICONS.sizeChart;
 
 /** The native controls' look on a public page: a 44 px box with the theme's border, no client island. */
 const CONTROL_SX = {
@@ -161,6 +167,36 @@ export default async function MembersShop({
   );
 }
 
+/**
+ * «Ghid de mărimi» (amends §700): the supplier's size-chart picture, opened large through the same
+ * lightbox a description's picture uses (§601: pinch-zoom, Back closes) — a press, not a hover, because
+ * members order from a phone. The trigger is the lightbox's own button; what it holds is a 44-pixel
+ * outlined face with the ruler glyph by registry name. The picture's ladder `srcset` and the crop
+ * go to the island as plain values (§318).
+ */
+function SizeGuideButton({ guide, title, label }: { guide: ShopPhoto; title: string; label: string }) {
+  return (
+    <Box sx={{ flex: "0 0 auto" }} data-testid="size-guide">
+      <PictureLightbox
+        src={guide.webUrl}
+        srcSet={pictureSrcSet(guide.webUrl, guide.width)}
+        alt={`${label} — ${title}`}
+        caption=""
+        crop={guide.crop}
+        intrinsic={{ width: guide.width, height: guide.height }}
+      >
+        <Box
+          component="span"
+          sx={{ ...CONTROL_SX, display: "inline-flex", alignItems: "center", gap: 0.75, color: "primary.main", borderColor: "primary.main", fontWeight: 500, whiteSpace: "nowrap" }}
+        >
+          <SizeGuideIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
+          {label}
+        </Box>
+      </PictureLightbox>
+    </Box>
+  );
+}
+
 function ProductCard({ product, locale, t }: { product: MembersShopProduct; locale: Locale; t: Awaited<ReturnType<typeof getTranslations<"Members">>> }) {
   const offered = product.variants.filter((variant) => !variant.soldOut);
   const single = product.variants.length === 1 && product.variants[0].label === null;
@@ -204,17 +240,21 @@ function ProductCard({ product, locale, t }: { product: MembersShopProduct; loca
           {single ? (
             <input type="hidden" name="variantId" value={offered[0].id} />
           ) : (
-            <Box component="label" htmlFor={`shop-variant-${id}`} sx={{ display: "grid", gap: 0.5 }}>
-              <Typography component="span" variant="body2">
-                {t("shop.variant")}
-              </Typography>
-              <Box component="select" id={`shop-variant-${id}`} name="variantId" required sx={CONTROL_SX}>
-                {product.variants.map((variant) => (
-                  <option key={variant.id} value={variant.id} disabled={variant.soldOut}>
-                    {variant.soldOut ? t("shop.variantSoldOut", { label: variant.label ?? "" }) : variant.label}
-                  </option>
-                ))}
+            // The size select and, beside it on a laptop and under it on a phone, «Ghid de mărimi» (amends §700).
+            <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, alignItems: { xs: "stretch", sm: "flex-end" }, gap: 1.25 }}>
+              <Box component="label" htmlFor={`shop-variant-${id}`} sx={{ display: "grid", gap: 0.5, flex: { sm: "1 1 0" }, minWidth: 0 }}>
+                <Typography component="span" variant="body2">
+                  {t("shop.variant")}
+                </Typography>
+                <Box component="select" id={`shop-variant-${id}`} name="variantId" required sx={CONTROL_SX}>
+                  {product.variants.map((variant) => (
+                    <option key={variant.id} value={variant.id} disabled={variant.soldOut}>
+                      {variant.soldOut ? t("shop.variantSoldOut", { label: variant.label ?? "" }) : variant.label}
+                    </option>
+                  ))}
+                </Box>
               </Box>
+              {product.sizeGuide && <SizeGuideButton guide={product.sizeGuide} title={product.title} label={t("shop.sizeGuide")} />}
             </Box>
           )}
           <Box component="label" htmlFor={`shop-quantity-${id}`} sx={{ display: "grid", gap: 0.5 }}>

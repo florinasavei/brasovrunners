@@ -65,6 +65,8 @@ const { default: AdminShopPage } = await import("@/app/[locale]/admin/shop/page"
 const { default: AdminShopNewProductPage } = await import("@/app/[locale]/admin/shop/products/new/page");
 const { default: AdminShopProductPage } = await import("@/app/[locale]/admin/shop/products/[id]/page");
 const { default: AdminShopSettingsPage } = await import("@/app/[locale]/admin/shop/settings/page");
+const { richTextEditorLabels } = await import("@/modules/content/rich-text/ui/labels");
+const { shopPhotoLabels } = await import("@/modules/content/shop/ui/photo-labels");
 const { default: ProductForm } = await import("@/modules/content/shop/ui/ProductForm");
 const { default: ProductList } = await import("@/modules/content/shop/ui/ProductList");
 const { default: ProductPicturesCard } = await import("@/modules/content/shop/ui/ProductPicturesCard");
@@ -342,6 +344,58 @@ describe("§697 the shop's editor: pictures, sizes, chart, description", () => {
     expect((await listProductsForMembers(db, "ro")).find((row) => row.id === old.id)?.pictures).toHaveLength(1);
   });
 
+  it("«Ghid de mărimi»: a save keeps the picture and its crop, an empty field clears both, the zone draws the button and the lightbox only while one is set, and the pictures page counts it and refuses its delete", async () => {
+    const [guide, loose] = await Promise.all([upload("guide.jpg"), upload("loose.jpg")]);
+    const crop = JSON.stringify({ x: 0.1, y: 0.1, w: 0.5, h: 0.5 });
+    const product = await createProduct(db, { actor: admin, fields: { ...SHIRT, sizeGuideAssetId: guide.assetId, sizeGuideCrop: crop }, now: NOW });
+    expect(product.sizeGuideMediaAssetId).toBe(guide.assetId);
+    expect(product.sizeGuideCrop).toEqual({ x: 0.1, y: 0.1, w: 0.5, h: 0.5 });
+    const read = (await readProductForAdmin(db, product.id))!;
+    expect(read.sizeGuide?.assetId).toBe(guide.assetId);
+    expect(read.sizeGuide?.photo.crop).toEqual({ x: 0.1, y: 0.1, w: 0.5, h: 0.5 });
+
+    // The zone: the button beside the size select, the lightbox's trigger with the ladder and the words.
+    const intl = (node: ReactNode) => renderToStaticMarkup(createElement(NextIntlClientProvider, { locale: "ro", messages: ro } as unknown as ComponentProps<typeof NextIntlClientProvider>, node));
+    const zone = async () => intl(await MembersShop({ products: await listProductsForMembers(db, "ro"), orders: [], payment: null, shopOpen: true, outcome: null, locale: "ro" }));
+    const html = await zone();
+    expect(html).toContain('data-testid="size-guide"');
+    expect(html).toContain('data-testid="picture-preview-trigger"');
+    expect(html).toContain(`${ro.Members.shop.sizeGuide} — Tricou de probă`);
+    expect(html).toContain(ro.Members.shop.sizeGuide);
+
+    // The editor's field carries the stored picture under the guide's own names.
+    const words = (await getTranslations("Admin")) as never;
+    const rich = richTextEditorLabels((await getTranslations("Admin.richText")) as never);
+    const sizes = intl(ProductSizesCard({ product: read, words, guideLabels: shopPhotoLabels(words, rich, ro.Admin.members.shop.sizes.guide), storage: true }));
+    expect(sizes).toContain('name="sizeGuideAssetId"');
+    expect(sizes).toContain(`value="${guide.assetId}"`);
+
+    // The pictures page counts it as the shop's and refuses its delete.
+    const byId = new Map((await listMediaAssetsForAdmin(db, "ro")).map((row) => [row.id, row]));
+    expect(byId.get(guide.assetId)?.references).toEqual([{ kind: "membersPage", id: MEMBERS_PAGE_SETTING_KEY, title: null }]);
+    expect(byId.get(loose.assetId)?.references).toEqual([]);
+    const refused = await deleteMediaAsset(db, { actor: admin, assetId: guide.assetId }).catch((e: unknown) => e);
+    expect(isDomainError(refused) && refused.code).toBe("VALIDATION_ERROR");
+
+    // A picture that is no stored one, or a bad crop, is refused naming the box.
+    const notStored = await saveProduct(db, { actor: admin, productId: product.id, expectedVersion: product.version, fields: { ...SHIRT, sizeGuideAssetId: "0b5f8c3e-2d44-4a6b-8e1f-7a9c1d2e3f40" }, now: NOW }).catch((e: unknown) => e);
+    expect(isDomainError(notStored) && notStored.fields).toEqual(["sizeGuideAssetId"]);
+    const badCrop = await saveProduct(db, { actor: admin, productId: product.id, expectedVersion: product.version, fields: { ...SHIRT, sizeGuideAssetId: guide.assetId, sizeGuideCrop: "{}" }, now: NOW }).catch((e: unknown) => e);
+    expect(isDomainError(badCrop) && badCrop.fields).toEqual(["sizeGuideAssetId"]);
+
+    // Another picture, no crop, replaces it; an empty field clears both, and the zone draws nothing.
+    const swapped = await saveProduct(db, { actor: admin, productId: product.id, expectedVersion: product.version, fields: { ...SHIRT, sizeGuideAssetId: loose.assetId }, now: NOW });
+    expect(swapped.sizeGuideMediaAssetId).toBe(loose.assetId);
+    expect(swapped.sizeGuideCrop).toBeNull();
+    const cleared = await saveProduct(db, { actor: admin, productId: product.id, expectedVersion: swapped.version, fields: { ...SHIRT, sizeGuideAssetId: "", sizeGuideCrop: crop }, now: NOW });
+    expect(cleared.sizeGuideMediaAssetId).toBeNull();
+    expect(cleared.sizeGuideCrop).toBeNull();
+    expect((await readProductForAdmin(db, product.id))!.sizeGuide).toBeNull();
+    const after = await zone();
+    expect(after).not.toContain('data-testid="size-guide"');
+    expect(after).not.toContain('data-testid="picture-preview-trigger"');
+  });
+
   it("the cards say what is stored: the list's row, the sizes' ticks and stock boxes, the chart's cells, the pictures with their cover", async () => {
     const product = await createProduct(db, { actor: admin, fields: SHIRT, now: NOW });
     const [a, b] = await Promise.all([upload("a.jpg"), upload("b.jpg")]);
@@ -360,7 +414,7 @@ describe("§697 the shop's editor: pictures, sizes, chart, description", () => {
     expect(list).toContain('data-testid="product-add-link"');
     expect(html(ProductList({ products: await listProductsForAdmin(db), locale: "ro", words: t, mayManage: false }))).not.toContain('data-testid="product-add-link"');
 
-    const sizes = renderToStaticMarkup(ProductSizesCard({ product: read, words: t }));
+    const sizes = renderToStaticMarkup(ProductSizesCard({ product: read, words: t, guideLabels: {} as never, storage: false }));
     expect(sizes).toMatch(/name="sizes\[S\]"[^>]*checked/);
     expect(sizes).toMatch(/name="sizes\[M\]"[^>]*checked/);
     expect(sizes).not.toMatch(/name="sizes\[L\]"[^>]*checked/);

@@ -7661,6 +7661,10 @@
           "exampleEn": "Chest width (cm)",
           "sizeColumn": "Size",
           "cellLabel": "{size}, column {number}"
+        },
+        "sizes": {
+          "guide": "Size guide (one picture)",
+          "guideHelp": "The supplier's drawing with the measurements; the member opens it from beside the sizes. Optional."
         }
       }
     },
@@ -9953,6 +9957,7 @@
       "ordering": "Sending the order…",
       "pictureOpen": "Picture {number}",
       "sizeChart": "Size chart",
+      "sizeGuide": "Size guide",
       "sizeColumn": "Size",
       "outcome": {
         "placed": "Your order has been received. We have also emailed it to you, with how to pay.",

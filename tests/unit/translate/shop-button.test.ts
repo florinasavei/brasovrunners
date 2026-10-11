@@ -47,6 +47,7 @@ const PRODUCT: AdminShopProduct = {
   photo: null,
   pictures: [],
   sizeChart: null,
+  sizeGuide: null,
   visible: true,
   position: 0,
   version: 1,
@@ -62,8 +63,8 @@ function render(locale: "ro" | "en", offer: ComponentProps<typeof TranslateProvi
   // «Cum se plătește», «Adaugă un produs» and the one product's edit form — the three forms the shop has.
   const forms: ReactNode[] = [
     ShopSettingsCard({ ...common, settings: { paymentRo: "Transfer", paymentEn: null, ordersTo: null }, mayManage: true }),
-    ProductForm({ ...common, product: null, rich, noticeDescribes: true }),
-    ProductForm({ ...common, product: PRODUCT, rich, noticeDescribes: true }),
+    ProductForm({ ...common, product: null, rich, noticeDescribes: true, guideLabels: {} as never, storage: false }),
+    ProductForm({ ...common, product: PRODUCT, rich, noticeDescribes: true, guideLabels: {} as never, storage: false }),
   ];
   const intl = { locale, messages: { Translate: messages.Translate } } as unknown as ComponentProps<typeof NextIntlClientProvider>;
   return renderToStaticMarkup(createElement(NextIntlClientProvider, intl, createElement(TranslateProvider, { offer } as ComponentProps<typeof TranslateProvider>, ...forms)));

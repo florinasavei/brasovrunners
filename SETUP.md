@@ -1951,7 +1951,11 @@ with its cards in the order you fill them.
      colour, a children's cut — one per line, «Albastru: 5» or «Copii». Under them, the fold
      **«Tabelul de mărimi»**: up to four measured columns named in both languages (for example
      «Lățime piept (cm)» / «Chest width (cm)») and a number per ticked size; members see it as a table
-     under the product. Every ticked size is a variant members order; a size that has orders cannot
+     under the product. Under the sizes, **«Ghidul de mărimi (o poză)»**: the supplier's size-chart
+     drawing, one picture per product, optional (upload, or «Din galerie»; it starts whole — crop
+     only if it has margins; «Scoate» clears it). Members get a «Ghid de mărimi» button beside the
+     size select that opens it large, with pinch-zoom; without a picture there is no button. Every
+     ticked size is a variant members order; a size that has orders cannot
      be unticked — set its stock to 0 instead.
    - **«Publicarea»** — «Vizibil în magazin» when it should be on sale, and «Adaugă produsul».
    The new product opens on its own page, where **«Fotografiile»** is the first card: «Adaugă o

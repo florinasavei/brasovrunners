@@ -17,6 +17,7 @@ import {
 } from "@/modules/content/shop/domain";
 import { loadedStockJson } from "@/modules/content/shop/fields";
 import type { AdminShopProduct } from "@/modules/content/shop/repository";
+import TeamPhotoField, { type TeamPhotoLabels } from "@/modules/content/team/ui/TeamPhotoField";
 import RecallField, { RecallCheckbox } from "@/shared/forms/recall";
 import { fieldId } from "@/shared/forms/outcome";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
@@ -52,7 +53,22 @@ function cellOf(chart: SizeChart | null, label: string, index: number): string {
  * length — and a number per size; the zone draws it as a table under the product. Rows for sizes not
  * ticked are dropped at the save.
  */
-export default function ProductSizesCard({ product, words: t, scope }: { product: AdminShopProduct | null; words: Words; scope?: string }) {
+export default function ProductSizesCard({
+  product,
+  words: t,
+  scope,
+  guideLabels,
+  storage,
+}: {
+  product: AdminShopProduct | null;
+  words: Words;
+  scope?: string;
+  /** The picture field's words, its legend «Ghidul de mărimi (o poză)». */
+  guideLabels: TeamPhotoLabels;
+  /** Whether this deployment can store a picture at all. */
+  storage: boolean;
+}) {
+  const guide = product?.sizeGuide ?? null;
   const form = sizesAsForm(product?.variants ?? []);
   const ticked = new Set<string>(form.sizes);
   const extraLabels = (product?.variants ?? []).map((variant) => variant.label).filter((label): label is string => label !== null && standardSizeOf(label) === null);
@@ -199,6 +215,27 @@ export default function ProductSizesCard({ product, words: t, scope }: { product
             </Box>
           </Stack>
         </Box>
+
+        {/* «Ghidul de mărimi» (amends §700): the supplier's drawing, one picture, whole unless cropped; the zone opens it large beside the size select. */}
+        <Stack spacing={1} data-testid="size-guide-field">
+          <Typography variant="body2" color="text.secondary">
+            {t("members.shop.sizes.guideHelp")}
+          </Typography>
+          {storage || guide ? (
+            <TeamPhotoField
+              photo={guide ? { id: guide.assetId, src: guide.photo.webUrl, preview: guide.photo.thumbUrl, width: guide.photo.width, height: guide.photo.height } : null}
+              crop={guide?.photo.crop ?? null}
+              labels={guideLabels}
+              inputId="shop-size-guide"
+              fieldPrefix="sizeGuide"
+              wholePicture
+            />
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              {t("members.shop.pictures.noStorage")}
+            </Typography>
+          )}
+        </Stack>
       </Stack>
     </Panel>
   );
