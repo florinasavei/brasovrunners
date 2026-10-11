@@ -121,9 +121,9 @@ public pages; off (the default), no rule matches and every page is what it was.
 | AA pairs | `src/theme/brand-pairs.ts` (`LOOK_PAIRS`, `LOOK_PAIRS_DARK`) | 17 a scheme, held by `tests/unit/theme/brand.test.ts`; `accentInk` is no lighter than `inkMuted`, so every page tint carries it |
 | Scope | `src/theme/look.ts` | `data-look="2026"` on `<html>`, `:not(:has([data-backoffice]))`; `data-look-preview` for the design page's box |
 | Pink `primary` | `src/modules/appearance/domain/site-look.ts` | MUI's `--mui-palette-primary-*` variables redefined under the scope, one unlayered stylesheet from the layout, like the tint |
-| Pill buttons, Inter 800 headings | `src/theme/theme.ts` | theme overrides under the scope; `h1`–`h3`; Inter 800 is `src/theme/fonts/Inter-800.woff2`, not preloaded |
+| Pill buttons, Inter 800 headings | `src/theme/theme.ts` | theme overrides under the scope; `h1`–`h3` that state no weight of their own (a card's title keeps its 500 until phase 5); Inter 800 is `src/theme/fonts/Inter-800.woff2`, not preloaded |
 | The setting | `src/modules/appearance/site-look.ts`, `ui/SiteLookPanel.tsx` | Administrator only, audited `site_look.changed`, expires the static pages |
-| «Vino cu noi» | `src/shared/ui/HeaderCta.tsx`, `ArrowButtonLink.tsx`; target `src/modules/events/domain/next-weekly-run.ts` | the next weekly run's page, else the listing; words alone below `sm` |
+| «Vino cu noi» | `src/shared/ui/HeaderCta.tsx`, `ArrowButtonLink.tsx`; target `src/modules/events/domain/next-weekly-run.ts` | the next weekly run's page, else the listing; a tighter pill below `sm` that keeps its arrow (§521); drawn into the nav's trailing group before the ☰, and not in the backoffice |
 | Socials | `src/shared/ui/HeaderSocials.tsx` | Facebook and Instagram from the footer's list, from `md` up |
 | The logo in ink | `src/shared/ui/SiteHeader.tsx` | `grayscale(1)` on the supplied lockup under the scope |
 | The watermark | `src/shared/ui/MountainMark.tsx`, `LookWatermark.tsx` | the mountain mark, faint, between the content and the footer |

@@ -108,22 +108,29 @@ async function setLook(browser: Browser, choice: "on" | "off"): Promise<void> {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/settings/appearance");
     const panel = page.locator("#main").getByTestId("site-look");
-    await openFold(panel);
+    // The tab's cards are plain sections today (a `<section>` has no summary to press); a fold is opened.
+    if (await panel.evaluate((element) => element.tagName === "DETAILS")) await openFold(panel);
     await panel.getByTestId(`site-look-option-${choice}`).click();
     await panel.getByRole("button", { name: "Salvează aspectul" }).click();
     await confirmDialog(page, "Schimbi aspectul site-ului?");
-    await expect(page.locator("#main").getByText("Aspectul site-ului a fost salvat", { exact: false })).toBeVisible();
+    // The page's own alert (the toast repeats the same words).
+    await expect(page.locator("#admin-alert").getByText("Aspectul site-ului a fost salvat", { exact: false })).toBeVisible();
   } finally {
     await context.close();
   }
 }
 
 test.describe("§NNN the header under «Aspectul nou»", () => {
+  // One shared `platform_settings` row: 'off' must never run while 'on' has it switched on.
+  test.describe.configure({ mode: "serial" });
   test.beforeEach(() => {
     test.skip(test.info().project.name !== "desktop", "one shared platform_settings row");
   });
 
-  test("off: no attribute, no button, no socials, no watermark", async ({ page }) => {
+  test("off: no attribute, no button, no socials, no watermark", async ({ page, browser }) => {
+    test.slow();
+    // Saved off through the screen first, so a run stopped mid-'on' cannot leave this one reading the new look.
+    await setLook(browser, "off");
     await page.setViewportSize({ width: 320, height: 720 });
     await page.goto("/ro/evenimente");
     await expect(page.locator("html")).not.toHaveAttribute("data-look", /.*/);

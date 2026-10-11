@@ -69,21 +69,18 @@ beforeEach(() => {
 });
 
 describe("§NNN the header while «Aspectul nou» is off", () => {
-  it("draws no button, no social marks and nothing else new, and is the same with no row at all", async () => {
+  it("draws no button, no social marks and nothing else new, and hands the nav no children at all", async () => {
     state.upcoming = [weekly("2026-10-13T16:00:00.000Z"), weekly("2026-10-20T16:00:00.000Z")];
     const off = await header();
     for (const testId of ["header-cta", "header-socials", "look-watermark"]) expect(off).not.toContain(testId);
     expect(off).not.toContain("Facebook");
-    // A missing row reads as the default (`{ on: false }`): the very same markup.
-    state.look = { on: false };
-    expect(await header()).toBe(off);
-  });
-
-  it("puts no attribute on <html>: the layout adds it only through `look.on`", () => {
-    // The layout's one expression, as written: an empty spread while off.
-    const attribute = (look: { on: boolean }) => (look.on ? { "data-look": "2026" } : {});
-    expect(attribute({ on: false })).toEqual({});
-    expect(attribute({ on: true })).toEqual({ "data-look": "2026" });
+    /*
+      The nav receives nothing: any truthy child (an empty fragment included) would set its
+      `hasTrailing`, draw the trailing group and take `ml: auto` off the ☰ — today's header
+      changed while the look is off. (The layout's `data-look` expression is pinned by
+      `site-look.test.ts`'s source assertion.)
+    */
+    expect(off).toContain('<nav data-testid="nav"></nav>');
   });
 });
 

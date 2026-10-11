@@ -128,7 +128,11 @@ export default async function SiteHeader() {
   const [sections, order] = await Promise.all([menuSectionsOnSite(locale as Locale), menuOrderOnSite()]);
   /*
     «Aspectul nou» (§NNN): the header's call to action and the socials, only while the club's setting
-    is on — off, nothing is read and nothing is drawn, so the header is what it was.
+    is on — off, nothing is read and nothing is drawn, so the header is what it was. On a backoffice
+    page (which shares this header) the listing's cached read still runs, since this layout-level
+    component cannot know the route without making every static public page dynamic; it is the
+    public cache's, so no query on a warm cache (the socials are environment values), and `SiteNav`
+    draws none of it there.
   */
   const look = await cachedSiteLook();
   const joinHref = look.on ? await joinTarget(locale as Locale) : null;

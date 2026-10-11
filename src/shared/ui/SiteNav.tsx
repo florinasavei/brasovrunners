@@ -157,7 +157,14 @@ export default function SiteNav({
   const navRef = useRef<HTMLElement>(null);
   const moreRef = useRef<HTMLElement>(null);
   const trailingRef = useRef<HTMLElement>(null);
-  const hasTrailing = Boolean(children);
+  /*
+    The trailing group is the public header's: inside the backoffice shell (`/admin`, `/devs`, both
+    rendering `BackofficeShell`) it is not drawn at all — not even as the look's `display: none` DOM —
+    so a staff page's row is the one it always was. The layout above cannot know the route without
+    turning every static public page dynamic, so the choice is made here, where the segments are.
+  */
+  const inBackoffice = selected === "admin" || selected === "devs";
+  const hasTrailing = Boolean(children) && !inBackoffice;
   const itemRefs = useRef<Array<HTMLElement | null>>([]);
   // Everything, until measured: the server render and a no-JavaScript reader get the whole row.
   const [visibleCount, setVisibleCount] = useState(items.length);
@@ -172,7 +179,7 @@ export default function SiteNav({
       // Fractional widths: `offsetWidth` rounds each entry, and a row of rounded widths can sum
       // to a pixel more than the row, which is one entry clipped on its last letter.
       const width = (el: HTMLElement | null) => el?.getBoundingClientRect().width ?? 0;
-      // The trailing group's room (zero where its children are `display: none`, as in the backoffice).
+      // The trailing group's room (zero where it is not drawn, or its children are `display: none` outside the look's scope).
       const trailingWidth = width(trailingRef.current);
       const available = nav.clientWidth - (trailingWidth > 0 ? trailingWidth + gap : 0);
       const widths = itemRefs.current.slice(0, items.length).map(width);
