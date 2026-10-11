@@ -360,10 +360,17 @@ describe("§697 the shop's editor: pictures, sizes, chart, description", () => {
     const html = await zone();
     expect(html).toContain('data-testid="size-guide"');
     expect(html).toContain('data-testid="picture-preview-trigger"');
-    expect(html).toContain(`${ro.Members.shop.sizeGuide} — Tricou de probă`);
+    expect(html).toContain(ro.Members.shop.sizeGuideAlt.replace("{title}", "Tricou de probă"));
     expect(html).toContain(ro.Members.shop.sizeGuide);
     // The hover preview (the owner's «tooltip cu o poză») wraps the button: its small picture is not drawn until a pointer rests on it.
     expect(html).not.toContain('data-testid="size-guide-hover-picture"');
+    // A one-size product has no select, and the same button opens the same guide (§706).
+    const solo = await createProduct(db, { actor: admin, fields: { ...SHIRT, titleRo: "Buff de probă", titleEn: "Sample buff", sizes: [], sizeStock: {}, extraVariants: "", oneSize: "1", sizeGuideAssetId: guide.assetId }, now: NOW });
+    const soloHtml = await zone();
+    const soloCard = soloHtml.slice(soloHtml.indexOf("Buff de probă"));
+    expect(soloCard).toContain('data-testid="size-guide"');
+    expect(soloCard).toContain(ro.Members.shop.sizeGuideAlt.replace("{title}", "Buff de probă"));
+    await db.delete(shopProducts).where(eq(shopProducts.id, solo.id));
 
     // The editor's field carries the stored picture under the guide's own names.
     const words = (await getTranslations("Admin")) as never;

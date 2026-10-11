@@ -139,6 +139,14 @@ describe("§464 who may press (BR-REQ-060-01)", () => {
   it("is whoever writes the club's words: Redactor, Organizer, Administrator, Superadministrator", () => {
     expect(STAFF_ROLES.filter(canTranslateTexts)).toEqual(["COPYWRITER", "MODERATOR", "ADMIN", "SUPERADMIN"]);
   });
+
+  it("is also whoever holds «Gestionează magazinul» (§687), by the grant and never by a role below the backoffice", () => {
+    const grant = new Set(["shop.manage"] as const);
+    expect(canTranslateTexts({ role: "CONTRIBUTOR", permissions: grant })).toBe(true);
+    expect(canTranslateTexts({ role: "CONTRIBUTOR", permissions: new Set() })).toBe(false);
+    expect(canTranslateTexts({ role: "CONTRIBUTOR" })).toBe(false);
+    expect(canTranslateTexts({ role: "MEMBER", permissions: grant })).toBe(false);
+  });
 });
 
 describe("§464 placeholders never reach the provider as words", () => {
