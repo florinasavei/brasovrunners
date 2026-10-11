@@ -2,18 +2,21 @@ import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import RemoveShoppingCartIcon from "@mui/icons-material/RemoveShoppingCart";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import StorefrontIcon from "@mui/icons-material/Storefront";
+import StraightenIcon from "@mui/icons-material/Straighten";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
+import GlyphChip from "@/modules/events/ui/GlyphChip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
-import { formatLei, ORDER_NOTE_MAX, ORDER_QUANTITY_MAX, orderTotalBani } from "@/modules/content/shop/domain";
+import { formatPrice, ORDER_NOTE_MAX, ORDER_QUANTITY_MAX, orderTotalBani } from "@/modules/content/shop/domain";
 import type { MemberOrder, MembersShopProduct } from "@/modules/content/shop/repository";
+import ProductPictureStrip from "@/modules/content/shop/ui/ProductPictureStrip";
+import SizeChartTable from "@/modules/content/shop/ui/SizeChartTable";
 import type { ShopOutcome } from "@/modules/content/shop/zone-outcome";
-import TeamPhotoImage from "@/modules/content/team/ui/TeamPhotoImage";
+import RichText from "@/modules/content/rich-text/ui/RichText";
 import { FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
@@ -108,11 +111,11 @@ export default async function MembersShop({
                     <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 700 }}>
                       {t("shop.orderNumber", { number: order.number })}
                     </Typography>
-                    <Chip size="small" color={order.status === "CANCELLED" ? "default" : order.status === "PLACED" ? "warning" : "success"} label={t(`shop.status.${order.status}`)} />
+                    <GlyphChip glyph={order.status === "CANCELLED" ? "cancelled" : order.status === "PLACED" ? "planned" : "done"} color={order.status === "CANCELLED" ? "default" : order.status === "PLACED" ? "warning" : "success"} label={t(`shop.status.${order.status}`)} />
                   </Stack>
                   <Typography variant="body2" sx={{ overflowWrap: "anywhere" }}>
                     {title}
-                    {order.variantLabel ? ` — ${order.variantLabel}` : ""} × {order.quantity} · {formatLei(orderTotalBani(order), locale)}
+                    {order.variantLabel ? ` — ${order.variantLabel}` : ""} × {order.quantity} · {formatPrice(orderTotalBani(order), order.currency, locale)}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     {formatDay(order.createdAt, { locale, timeZone: CLUB_TIME_ZONE, withTime: true })}
@@ -164,26 +167,31 @@ function ProductCard({ product, locale, t }: { product: MembersShopProduct; loca
   const id = product.id.slice(0, 8);
   return (
     <Box component="li" sx={{ border: 1, borderColor: "divider", borderRadius: 2, p: 2, minWidth: 0 }} data-testid="members-shop-product">
-      {product.photo && (
-        <Box sx={{ mb: 1.5, maxWidth: 320 }}>
-          <TeamPhotoImage
-            src={product.photo.webUrl}
-            photo={{ width: product.photo.width, height: product.photo.height, crop: product.photo.crop }}
-            radius={8}
-            loading="lazy"
-          />
-        </Box>
-      )}
+      {/* The strip (§697): the cover large, the rest as thumbnails that open the picture. */}
+      <ProductPictureStrip pictures={product.pictures} openLabel={t.raw("shop.pictureOpen")} />
       <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 700, overflowWrap: "anywhere" }}>
         {product.title}
       </Typography>
+      {/* In the product's own currency, lei or euro, never converted (§686). */}
       <Typography variant="body1" sx={{ fontWeight: 600 }}>
-        {formatLei(product.priceBani, locale)}
+        {formatPrice(product.priceBani, product.currency, locale)}
       </Typography>
       {product.description && (
-        <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: "pre-line" }}>
-          {product.description}
-        </Typography>
+        // The description as the club wrote it in the editor (§697): tables and pictures included, through the one renderer (AGENTS.md §11.3).
+        <Box sx={{ mt: 0.5, "& > :last-child": { mb: 0 } }} data-testid="product-description">
+          <RichText body={product.description} pictures="prose" />
+        </Box>
+      )}
+      {product.sizeChart && (
+        <Box component="details" sx={{ mt: 1 }} data-testid="product-size-chart">
+          <Box component="summary" sx={{ ...TAP_TARGET, display: "inline-flex", alignItems: "center", cursor: "pointer", color: "text.secondary", gap: 0.75 }}>
+            <StraightenIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
+            {t("shop.sizeChart")}
+          </Box>
+          <Box sx={{ mt: 1 }}>
+            <SizeChartTable chart={product.sizeChart} sizeColumn={t("shop.sizeColumn")} locale={locale} />
+          </Box>
+        </Box>
       )}
       {offered.length === 0 ? (
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>

@@ -594,7 +594,7 @@ describe("§562 the newsletter page's second fold", () => {
     await seedRow(event.id, "Carmen Coada", "WAITLISTED");
     await seedRow(event.id, "Dan Anulat", "CANCELLED");
     await seedRow(event.id, "Elena Expirata", "EXPIRED");
-    await seedRow(event.id, "Florin Neconfirmat", "PENDING_EMAIL_CONFIRMATION");
+    await seedRow(event.id, "Felix Neconfirmat", "PENDING_EMAIL_CONFIRMATION");
     await seedRow(event.id, "Gelu Test", "CONFIRMED", "TEST");
     await seedRow(event.id, "Horia Nu", "CONFIRMED", "REAL", false);
 

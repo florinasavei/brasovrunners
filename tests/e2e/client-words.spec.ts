@@ -69,9 +69,17 @@ test.describe("§353 every island finds its words, and a public page carries onl
       // «Setări»'s other tabs (§516): the forms that moved, with their islands.
       "/ro/admin/settings/deadlines",
       "/ro/admin/settings/appearance",
+      // «Sistemul de design» (§692): the backoffice buttons it draws are islands with their own words.
+      "/ro/admin/design",
       "/ro/admin/settings/costs",
       "/ro/admin/settings/platform",
       "/ro/admin/newsletter",
+      // «Magazin» (§687, §697): the product list, the orders with their confirm dialogs, the settings with
+      // the translate button, and the new product's page with its rich-text editors and the photo field.
+      "/ro/admin/shop",
+      "/ro/admin/shop/orders",
+      "/ro/admin/shop/settings",
+      "/ro/admin/shop/products/new",
       "/ro/admin/tasks",
       "/ro/admin/staff",
       "/ro/admin/legal",
@@ -95,6 +103,15 @@ test.describe("§353 every island finds its words, and a public page carries onl
     const href = await editor.getAttribute("href");
     expect(href).toBeTruthy();
     await expectWords(page, href as string);
+    // An existing product's page too — the only one drawing the picture field with its crop box (§697).
+    await page.goto("/ro/admin/shop");
+    const products = page.locator('a[href^="/ro/admin/shop/products/"]:not([href$="/new"])');
+    // A database without the sample product (the seed makes one) has nothing to open.
+    if ((await products.count()) > 0) {
+      const productHref = await products.first().getAttribute("href");
+      expect(productHref).toBeTruthy();
+      await expectWords(page, productHref as string);
+    }
   });
 
   test("the site root is a real redirect to the listing, the query kept", async ({ request }) => {

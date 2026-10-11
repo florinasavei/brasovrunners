@@ -153,7 +153,7 @@ test.describe("§282 a browser that fills the hidden field does not cost the clu
     await expect(page.locator("#main").getByTestId("registrations-search-everywhere")).toContainText(
       "Caut în toate evenimentele",
     );
-    await expect(page.getByRole("combobox", { name: "Evenimente" })).toHaveText("Toate evenimentele, pentru căutarea după nume");
+    await expect(page.getByRole("combobox", { name: "Alergări" })).toHaveText("Toate evenimentele, pentru căutarea după nume");
     // The row is marked, in words a phone shows (the table on a laptop, the card on a phone).
     await expect(page.locator('#main [data-testid="resubmitted-chip"]:visible')).toContainText("Reînscriere ×1");
 

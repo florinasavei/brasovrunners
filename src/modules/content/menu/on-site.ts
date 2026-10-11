@@ -76,7 +76,7 @@ async function offersContact(): Promise<boolean> {
   }
 }
 
-/** Whether each of the platform's sections is in the menu now. «Evenimente» and «Calendar» always are. */
+/** Whether each of the platform's sections is in the menu now. «Alergări» and «Calendar» always are. */
 export async function menuSectionsOnSite(locale: Locale): Promise<Record<MenuSectionKey, boolean>> {
   const [gallery, team, faq, contact] = await Promise.all([
     hasPublishedAlbum(locale),

@@ -194,11 +194,21 @@ describe("§249 the bib's design, saved and read back", () => {
       expectedVersion: event.version,
       fields: {
         ...EVENT_FIELDS,
-        bibDesign: { ...DEFAULT_BIB_DESIGN, member: { enabled: true, bandColour: "#6A1B9A", headerImageSrc: PICTURE, headerImageCrop: JSON.stringify(crop), label: `  Membru\n${"B".repeat(40)}` } },
+        bibDesign: { ...DEFAULT_BIB_DESIGN, member: { enabled: true, style: "card", bandColour: "#6A1B9A", headerImageSrc: PICTURE, headerImageCrop: JSON.stringify(crop), cardImageSrc: PICTURE, cardImageCrop: JSON.stringify(crop), label: `  Membru\n${"B".repeat(40)}` } },
       },
     });
     const member = (await findEventForBibs(db, event.id, "ro"))?.design.member;
-    expect(member).toEqual({ enabled: true, bandColour: "#6a1b9a", headerImageSrc: PICTURE, headerImageCrop: crop, label: `Membru ${"B".repeat(17)}` });
+    // The whole card and its photograph (§NNN) are stored beside the header's, each with its crop.
+    expect(member).toEqual({
+      enabled: true,
+      style: "card",
+      bandColour: "#6a1b9a",
+      headerImageSrc: PICTURE,
+      headerImageCrop: crop,
+      cardImageSrc: PICTURE,
+      cardImageCrop: crop,
+      label: `Membru ${"B".repeat(17)}`,
+    });
   });
 
   it("reads a members' object that is not one as off, and keeps the rest of the design", async () => {

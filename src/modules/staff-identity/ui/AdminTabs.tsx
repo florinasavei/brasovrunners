@@ -20,6 +20,7 @@ import ListAltIcon from "@mui/icons-material/ListAlt";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import NewspaperIcon from "@mui/icons-material/Newspaper";
 import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
+import StorefrontIcon from "@mui/icons-material/Storefront";
 import TuneIcon from "@mui/icons-material/Tune";
 
 export type AdminTab = {
@@ -93,6 +94,8 @@ const ICONS: Record<AdminSection, typeof EventIcon> = {
   settings: TuneIcon,
   // The club's news to the people who asked for it (§445): a paper, not an envelope.
   newsletter: NewspaperIcon,
+  // «Magazin» (§687): the shop front the members' shop card already wore (§683).
+  shop: StorefrontIcon,
   staff: GroupIcon,
 };
 

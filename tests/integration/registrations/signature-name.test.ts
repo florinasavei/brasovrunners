@@ -59,8 +59,8 @@ async function createEvent(capacity = 10): Promise<EventForRegistration> {
 }
 
 const submission = (overrides: Record<string, unknown>) => ({
-  firstName: "Florin",
-  lastName: "Munca",
+  firstName: "Felix",
+  lastName: "Sample",
   birthDate: "1990-05-17",
   sex: "FEMALE",
   nationality: "RO",
@@ -69,7 +69,7 @@ const submission = (overrides: Record<string, unknown>) => ({
   phone: "+40711111111",
   emergencyContactName: "Ion Popescu",
   emergencyContactPhone: "+40722222222",
-  email: "florin@example.ro",
+  email: "felix@example.ro",
   locale: "ro",
   privacyAcknowledged: true,
   fitnessDeclared: true,
@@ -132,29 +132,29 @@ describe("BR-REQ-033-02 §314 a signature that is not the declarant's name", () 
     await approve();
     const event = await createEvent();
     const { row, secret } = await awaitingDeclaration(event);
-    expect(row.registeredName).toBe("Florin Munca");
+    expect(row.registeredName).toBe("Felix Sample");
 
     // The signature the owner saw.
-    expect(await refusal(consumeAndSignDeclaration(secret, await signing("Florin Munca2"), NOW))).toEqual({
+    expect(await refusal(consumeAndSignDeclaration(secret, await signing("Felix Sample2"), NOW))).toEqual({
       code: "VALIDATION_ERROR",
       fields: ["typedName"],
     });
     expect(await state(row.id)).toEqual({ status: "PENDING_DECLARATION", acceptances: 0, spent: 0, live: 1 });
 
     // The names in the other order, and a blank one: each its own refusal of the same field.
-    expect((await refusal(consumeAndSignDeclaration(secret, await signing("Munca Florin"), NOW))).fields).toEqual(["typedName"]);
+    expect((await refusal(consumeAndSignDeclaration(secret, await signing("Sample Felix"), NOW))).fields).toEqual(["typedName"]);
     expect((await refusal(consumeAndSignDeclaration(secret, await signing("   "), NOW))).fields).toEqual(["typedName"]);
     expect(await state(row.id)).toEqual({ status: "PENDING_DECLARATION", acceptances: 0, spent: 0, live: 1 });
 
     // The right name, as a phone types it: lower case, a stray space. Signed, from the same link.
-    const signed = await consumeAndSignDeclaration(secret, await signing("florin  munca "), NOW);
+    const signed = await consumeAndSignDeclaration(secret, await signing("felix  sample "), NOW);
     expect(signed.ok).toBe(true);
     expect(await state(row.id)).toEqual({ status: "CONFIRMED", acceptances: 1, spent: 1, live: 0 });
 
     // What is recorded is what was typed (trimmed, as every typed name is): the rule decides
     // acceptance, it never rewrites the signature into the registered spelling.
     const [acceptance] = await db.select().from(declarationAcceptances);
-    expect(acceptance.typedName).toBe("florin  munca");
+    expect(acceptance.typedName).toBe("felix  sample");
   });
 
   /**
@@ -216,10 +216,10 @@ describe("BR-REQ-033-02 §314 a signature that is not the declarant's name", () 
     const event = await createEvent();
     const { secret } = await awaitingDeclaration(event);
     // A post that carries the minor's boxes too (a hand-made one): an adult has no second signer.
-    const signed = await consumeAndSignDeclaration(secret, { ...(await signing("Florin Munca")), minorTypedName: "Somebody", minorIdDocument: "XX 999999" }, NOW);
+    const signed = await consumeAndSignDeclaration(secret, { ...(await signing("Felix Sample")), minorTypedName: "Somebody", minorIdDocument: "XX 999999" }, NOW);
     expect(signed.ok).toBe(true);
     const [acceptance] = await db.select().from(declarationAcceptances);
-    expect(acceptance).toMatchObject({ typedName: "Florin Munca", idDocument: "BV 123456", minorTypedName: null, minorIdDocument: null });
+    expect(acceptance).toMatchObject({ typedName: "Felix Sample", idDocument: "BV 123456", minorTypedName: null, minorIdDocument: null });
   });
 
   /*
@@ -241,7 +241,7 @@ describe("BR-REQ-033-02 §314 a signature that is not the declarant's name", () 
 
     // Past the thirty minutes, with somebody waiting: the hold is one the signing would release.
     const lapsed = new Date(NOW.getTime() + 31 * 60_000);
-    expect(await refusal(consumeAndSignDeclaration(secret, await signing("Florin Munca2"), lapsed))).toEqual({
+    expect(await refusal(consumeAndSignDeclaration(secret, await signing("Felix Sample2"), lapsed))).toEqual({
       code: "VALIDATION_ERROR",
       fields: ["typedName"],
     });
@@ -252,7 +252,7 @@ describe("BR-REQ-033-02 §314 a signature that is not the declarant's name", () 
 
     // The same link with the right name reaches the allocator, which does what it always did
     // with a hold that lapsed while somebody waited: the place is offered on, this one queues.
-    const signed = await consumeAndSignDeclaration(secret, await signing("Florin Munca"), lapsed);
+    const signed = await consumeAndSignDeclaration(secret, await signing("Felix Sample"), lapsed);
     expect(signed.ok).toBe(true);
     expect(await state(row.id)).toEqual({ status: "WAITLISTED", acceptances: 0, spent: 1, live: 0 });
   });

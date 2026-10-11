@@ -171,6 +171,28 @@ export const GRADIENT = {
 } as const;
 
 /**
+ * «Echipa»'s canvas (§701; the president's drawing: a blue canvas, white cards, light boxes at the
+ * bottom, no lines). The one public surface that keeps the brand's light colours after dark — the
+ * blue is the brand, and a white card on it is the drawing — so every token here is a light-scheme
+ * value and the components name these rather than the palette, which flips.
+ *
+ * `canvas` is the ink blue, not the pure one: the large flat area §23 above keeps away from pure
+ * blue, and at 9.9:1 under white it is also the blue that carries white text at AA. The cards are
+ * the card colour, their words the ink, the role title the club's blue (8.59:1 on a card), the boxes
+ * the hero's tint — the card colour walked towards the blue, already asserted under ink and muted
+ * ink. `tests/unit/theme/brand.test.ts` holds every pair.
+ */
+export const TEAM_CANVAS = {
+  canvas: COLOR.blueInk,
+  card: COLOR.surface,
+  box: GRADIENT.heroTint,
+  ink: COLOR.ink,
+  inkMuted: COLOR.inkMuted,
+  title: COLOR.blue,
+  line: COLOR.line,
+} as const;
+
+/**
  * The gradients as CSS values, light and dark, assembled once.
  *
  * A component picks one of these and its `[data-dark]` twin — MUI writes the scheme onto

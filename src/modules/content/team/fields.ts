@@ -34,6 +34,44 @@ export const TEAM_ROLE_MAX = 80;
 export const TEAM_BIO_MAX = 1500;
 /** A rich-text document as the editor posts it — the ceiling every editorial body has. */
 export const TEAM_RICH_TEXT_JSON_MAX = 200_000;
+/** The one-line sub-role under the role title (§691): «Parteneriate sportive și echipamente». */
+export const TEAM_SUBTITLE_MAX = 120;
+/** «Responsabilități» (§691): one per line, at most this many lines of this many characters. */
+export const TEAM_RESPONSIBILITIES_MAX_LINES = 12;
+export const TEAM_RESPONSIBILITY_LINE_MAX = 160;
+/** Where a card sat against the card it answered to (§691): kept for the column, drawn by nobody since §701. */
+export const TEAM_PLACEMENTS = ["below", "beside"] as const;
+export type TeamPlacement = (typeof TEAM_PLACEMENTS)[number];
+/**
+ * The canvas's levels (§701; the owner: «the president is top level 1, then the advisor level 1.5
+ * and the rest are level 2»): whole and half steps from the top row to the ninth. The whole number
+ * is the row; a `.0` card leads it, a `.5` card is a small one beside the leads. Nothing else — a
+ * quarter step would be a third kind of card nobody drew — and null is "not on the canvas".
+ */
+export const TEAM_LEVEL_MIN = 1;
+export const TEAM_LEVEL_MAX = 9;
+export const TEAM_LEVELS: readonly number[] = Array.from({ length: (TEAM_LEVEL_MAX - TEAM_LEVEL_MIN) * 2 + 1 }, (_, index) => TEAM_LEVEL_MIN + index / 2);
+
+export function isTeamLevel(value: number): boolean {
+  return Number.isFinite(value) && value >= TEAM_LEVEL_MIN && value <= TEAM_LEVEL_MAX && Number.isInteger(value * 2);
+}
+/** A box's title under the chart (§691), and its words counted as the page reads them. */
+export const TEAM_BOX_TITLE_MAX = 120;
+export const TEAM_BOX_BODY_MAX = 3000;
+
+/** One line: every run of whitespace, a line break included, made one space, then trimmed. */
+export function normalizeTeamLine(value: string): string {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+/** «Responsabilități» as the page draws them: one per line, blank lines dropped (§691). */
+export function responsibilityLines(text: string | null | undefined): string[] {
+  return (text ?? "")
+    .replace(/\r\n?/g, "\n")
+    .split("\n")
+    .map((line) => line.replace(/\s+/g, " ").trim())
+    .filter((line) => line !== "");
+}
 
 /**
  * Trimmed, CRLF made LF, at most one empty line in a row. Runs before the length check, since a
@@ -151,6 +189,70 @@ const optionalText = (max: number) =>
     .pipe(z.string().max(max))
     .transform((value) => (value === "" ? null : value));
 
+/** An optional one-line text (the sub-role, §691): absent reads as empty. */
+const optionalLine = (max: number) =>
+  z
+    .string()
+    .optional()
+    .default("")
+    .transform(normalizeTeamLine)
+    .pipe(z.string().max(max))
+    .transform((value) => (value === "" ? null : value));
+
+/**
+ * «Responsabilități» as typed, one per line (§691): blank lines dropped, at most
+ * `TEAM_RESPONSIBILITIES_MAX_LINES` lines of `TEAM_RESPONSIBILITY_LINE_MAX` characters, kept
+ * joined by one line break; nothing typed is null.
+ */
+const optionalResponsibilities = z
+  .string()
+  .optional()
+  .default("")
+  .transform(responsibilityLines)
+  .superRefine((lines, ctx) => {
+    if (lines.length > TEAM_RESPONSIBILITIES_MAX_LINES) {
+      ctx.addIssue({ code: "custom", message: `at most ${TEAM_RESPONSIBILITIES_MAX_LINES} responsibilities, one per line` });
+    }
+    const long = lines.findIndex((line) => line.length > TEAM_RESPONSIBILITY_LINE_MAX);
+    if (long !== -1) {
+      ctx.addIssue({ code: "custom", message: `responsibility ${long + 1} is longer than ${TEAM_RESPONSIBILITY_LINE_MAX} characters` });
+    }
+  })
+  .transform((lines) => (lines.length === 0 ? null : lines.join("\n")));
+
+/** The card this one answers to (§691): a uuid or nothing; whether it exists is the service's to check. */
+const reportsToField = z
+  .string()
+  .optional()
+  .default("")
+  .transform((value) => value.trim())
+  .refine((value) => value === "" || isUuid(value), "not a card id")
+  .transform((value) => (value === "" ? null : value.toLowerCase()));
+
+/**
+ * «Nivel» as the editor posts it (§701): the select's value (`"1.5"`), a fixture's number, or nothing.
+ * A comma decimal is read too, for a value typed by hand; anything off the scale is refused on the box.
+ */
+const levelField = z
+  .union([z.string(), z.number(), z.null()])
+  .optional()
+  .transform((value, ctx): number | null => {
+    if (value === undefined || value === null) return null;
+    const text = String(value).trim().replace(",", ".");
+    if (text === "") return null;
+    const parsed = Number(text);
+    if (!isTeamLevel(parsed)) {
+      ctx.addIssue({ code: "custom", message: `a level is a whole or half step from ${TEAM_LEVEL_MIN} to ${TEAM_LEVEL_MAX}` });
+      return z.NEVER;
+    }
+    return parsed;
+  });
+
+/** Whether a card is asked to answer to itself — refused on the `reportsToId` box (§691). */
+export function teamReportsToSelf(fields: { reportsToId: string | null }, selfId: string | null | undefined): boolean {
+  return fields.reportsToId !== null && selfId !== null && selfId !== undefined && fields.reportsToId === selfId.toLowerCase();
+}
+
 /** A plain box of the older form, absent reading as empty. */
 const plainBox = (max: number) => z.string().optional().default("").transform(normalizeTeamText).pipe(z.string().max(max));
 
@@ -232,9 +334,26 @@ export const teamMemberFieldsSchema = z
       .transform((value) => (value === "" ? null : value.toLowerCase())),
     /** The crop's four fractions (§541): JSON from the field, or an object from a fixture. */
     photoCrop: z.union([z.string(), z.record(z.string(), z.unknown()), z.null()]).optional(),
+    /** The organisational chart (§691): the sub-role line and the responsibilities, both or neither. */
+    subtitleRo: optionalLine(TEAM_SUBTITLE_MAX),
+    subtitleEn: optionalLine(TEAM_SUBTITLE_MAX),
+    responsibilitiesRo: optionalResponsibilities,
+    responsibilitiesEn: optionalResponsibilities,
+    /** Whom the card answers to, and where it sits against that card (§691): columns kept, posted by no form since §701. */
+    reportsToId: reportsToField,
+    placement: z.enum(TEAM_PLACEMENTS).optional().default("below"),
+    /** The card's level on the canvas (§701), or nothing: the grid. */
+    level: levelField,
   })
   .transform((fields, ctx) => {
     refuseOneLanguage(ctx, { ro: fields.roleRo, en: fields.roleEn }, { ro: ["roleRo"], en: ["roleEn"] }, "the role");
+    refuseOneLanguage(ctx, { ro: fields.subtitleRo, en: fields.subtitleEn }, { ro: ["subtitleRo"], en: ["subtitleEn"] }, "the subtitle");
+    refuseOneLanguage(
+      ctx,
+      { ro: fields.responsibilitiesRo, en: fields.responsibilitiesEn },
+      { ro: ["responsibilitiesRo"], en: ["responsibilitiesEn"] },
+      "the responsibilities",
+    );
     const bio = resolveRichPair(
       ctx,
       { ro: { plain: fields.bioRo, body: fields.bioRoBody }, en: { plain: fields.bioEn, body: fields.bioEnBody } },
@@ -259,10 +378,54 @@ export const teamMemberFieldsSchema = z
       link: links[0]?.url ?? null,
       photoAssetId: fields.photoAssetId,
       photoCrop: fields.photoAssetId && crop !== "invalid" ? crop : null,
+      subtitleRo: fields.subtitleRo,
+      subtitleEn: fields.subtitleEn,
+      responsibilitiesRo: fields.responsibilitiesRo,
+      responsibilitiesEn: fields.responsibilitiesEn,
+      reportsToId: fields.reportsToId,
+      /** `beside` means something only against a parent; a root is always `below` (§691). */
+      placement: (fields.reportsToId === null ? "below" : fields.placement) as TeamPlacement,
+      level: fields.level,
     };
   });
 
 export type TeamMemberFields = z.output<typeof teamMemberFieldsSchema>;
+
+/** A required one-line title in one language (a box's, §691). */
+const requiredLine = (max: number) => z.string().optional().default("").transform(normalizeTeamLine).pipe(z.string().min(1).max(max));
+
+/**
+ * One box under the chart (§691): a title in both languages, always, and a rich text in both or
+ * neither (§352) with a bio's allowlist — no table, the box is read on a phone. The plain boxes are
+ * for a caller without the editor (fixtures); the posted document wins.
+ */
+export const teamBoxFieldsSchema = z
+  .object({
+    titleRo: requiredLine(TEAM_BOX_TITLE_MAX),
+    titleEn: requiredLine(TEAM_BOX_TITLE_MAX),
+    bodyRo: plainBox(TEAM_BOX_BODY_MAX),
+    bodyEn: plainBox(TEAM_BOX_BODY_MAX),
+    bodyRoBody: richTextBox,
+    bodyEnBody: richTextBox,
+  })
+  .transform((fields, ctx) => {
+    const body = resolveRichPair(
+      ctx,
+      { ro: { plain: fields.bodyRo, body: fields.bodyRoBody }, en: { plain: fields.bodyEn, body: fields.bodyEnBody } },
+      { ro: { plain: "bodyRo", body: "bodyRoBody" }, en: { plain: "bodyEn", body: "bodyEnBody" } },
+      { max: TEAM_BOX_BODY_MAX, tables: false, what: "the text" },
+    );
+    return {
+      titleRo: fields.titleRo,
+      titleEn: fields.titleEn,
+      bodyRo: body.ro.plain,
+      bodyEn: body.en.plain,
+      bodyRoJson: body.ro.doc,
+      bodyEnJson: body.en.doc,
+    };
+  });
+
+export type TeamBoxFields = z.output<typeof teamBoxFieldsSchema>;
 
 /** A refusal's path as the form's box name: `links.1.url` → `links[1].url`. */
 export function teamFieldName(path: readonly PropertyKey[]): string {

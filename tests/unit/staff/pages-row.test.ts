@@ -26,7 +26,7 @@ const barFor = (locale: string) => [
   { href: `/${locale}/admin` },
   { href: `/${locale}/admin/pages` },
   { href: `/${locale}/admin/gallery` },
-  { href: `/${locale}/admin/settings`, alsoActiveOn: [`/${locale}/devs`] },
+  { href: `/${locale}/admin/settings`, alsoActiveOn: [`/${locale}/devs`, `/${locale}/admin/design`] },
   { href: `/${locale}/admin/tasks` },
 ];
 
@@ -68,7 +68,7 @@ describe("«Pagini»'s row: every entry an address of the section", () => {
     }
   });
 
-  it("lights «Pagini» in the main bar on every one of the five addresses, never «Setări» or «Evenimente»", () => {
+  it("lights «Pagini» in the main bar on every one of the five addresses, never «Setări» or «Alergări»", () => {
     for (const locale of routing.locales) {
       const bar = barFor(locale);
       for (const { path: address } of ADDRESSES) {
@@ -78,6 +78,9 @@ describe("«Pagini»'s row: every entry an address of the section", () => {
       expect(activeAdminTabHref(bar, `/${locale}/admin/settings/emails`)).toBe(`/${locale}/admin/settings`);
       expect(activeAdminTabHref(bar, `/${locale}/admin/events/new`)).toBe(`/${locale}/admin`);
       expect(activeAdminTabHref(bar, `/${locale}/devs`)).toBe(`/${locale}/admin/settings`);
+      // «Sistemul de design» (§692) sits under `/admin`, whose bare root is a prefix of every backoffice
+      // address: the address «Setări» also stands for wins over that root, so the bar lights «Setări».
+      expect(activeAdminTabHref(bar, `/${locale}/admin/design`)).toBe(`/${locale}/admin/settings`);
       expect(activeAdminTabHref(bar, `/${locale}/evenimente`)).toBeNull();
     }
   });

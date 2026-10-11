@@ -129,7 +129,7 @@ async function mixedEvent(): Promise<PublicEvent> {
   await register(event.id, { name: "Ana Popescu", confirmedAt: at(1), stravaUrl: STRAVA, instagramHandle: "ana.pop", listSocials: true });
   await register(event.id, { name: "Bogdan Ionescu", confirmedAt: at(2), stravaUrl: STRAVA, instagramHandle: "bogdan.ion", listSocials: false });
   await register(event.id, { name: "Ascuns Confirmat", confirmedAt: at(3), listOptOut: true, instagramHandle: "hidden.runner", listSocials: true });
-  await register(event.id, { name: "Florin Asteapta", status: "WAITLISTED", waitlistedAt: at(6), instagramHandle: "florin.runs", listSocials: true });
+  await register(event.id, { name: "Felix Asteapta", status: "WAITLISTED", waitlistedAt: at(6), instagramHandle: "felix.runs", listSocials: true });
   return event;
 }
 
@@ -162,7 +162,7 @@ describe("§500 with a notice that describes the socials", () => {
       { network: "strava", href: STRAVA, label: "Ana Popescu pe Strava" },
       { network: "instagram", href: "https://www.instagram.com/ana.pop/", label: "Ana Popescu pe Instagram" },
       // The waiting list is behind §396's gate too, which the platform's notice also opens.
-      { network: "instagram", href: "https://www.instagram.com/florin.runs/", label: "Florin Asteapta pe Instagram" },
+      { network: "instagram", href: "https://www.instagram.com/felix.runs/", label: "Felix Asteapta pe Instagram" },
     ]);
     // Unticked: the name, never the socials — nor anything of a hidden runner's.
     expect(html).not.toContain("bogdan.ion");
@@ -179,7 +179,7 @@ describe("§500 with a notice that describes the socials", () => {
 
     const labels = socialLinks(renderToStaticMarkup(await StartList({ event }))).map((link) => link.label);
 
-    expect(labels).toEqual(["Ana Popescu on Strava", "Ana Popescu on Instagram", "Florin Asteapta on Instagram"]);
+    expect(labels).toEqual(["Ana Popescu on Strava", "Ana Popescu on Instagram", "Felix Asteapta on Instagram"]);
   });
 
   it("never prints a stored value that is not the network's own address", async () => {

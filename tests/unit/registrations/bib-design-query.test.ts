@@ -43,12 +43,16 @@ const EVERYTHING_OFF: BibDesign = {
   showEventInFooter: true,
   showWebsite: true,
   footerText: "Cronometraj: Start & Go + 50% · Urgențe organizator 0722 000 000",
-  // The members' bib (§664): on, a colour, a picture with its crop and a label with a diacritic and an ampersand.
+  // The members' bib (§664): on, the whole card (§NNN), a colour, both pictures with their crops and a
+  // label with a diacritic and an ampersand.
   member: {
     enabled: true,
+    style: "card",
     bandColour: "#6a1b9a",
     headerImageSrc: LOCAL,
     headerImageCrop: { x: 0, y: 0.25, w: 1, h: 0.2 },
+    cardImageSrc: OURS,
+    cardImageCrop: { x: 0.1, y: 0.05, w: 0.8, h: 0.6 },
     label: "Membru Brașov & co",
   },
 };
@@ -149,7 +153,7 @@ describe("§249 the design on the wire: encode, then parse", () => {
       headerImageCrop: null,
       sponsorImageCrop: null,
       // The members' design (§664): off, nothing chosen, as a query that says nothing about it.
-      member: { enabled: false, bandColour: null, headerImageSrc: null, headerImageCrop: null, label: "" },
+      member: { enabled: false, style: "band", bandColour: null, headerImageSrc: null, headerImageCrop: null, cardImageSrc: null, cardImageCrop: null, label: "" },
     });
   });
 
@@ -158,6 +162,9 @@ describe("§249 the design on the wire: encode, then parse", () => {
     expect(params.get("memberEnabled")).toBe("1");
     expect(params.get("memberBandColour")).toBe("#6a1b9a");
     expect(params.get("memberLabel")).toBe("Membru Brașov & co");
+    // The whole card and its photograph (§NNN), under the members' keys too.
+    expect(params.get("memberStyle")).toBe("card");
+    expect(params.get("memberCardImageSrc")).toBe(OURS);
     // The main header's keys are untouched by the members' picture.
     expect(params.get("headerImageSrc")).toBe(OURS);
     expect(params.has("member")).toBe(false);
@@ -168,7 +175,7 @@ describe("§249 the design on the wire: encode, then parse", () => {
 
   it("§664 drops the members' crop with its picture, and a colour that is not a hex triplet", () => {
     const params = new URLSearchParams({ memberEnabled: "1", memberBandColour: "red; background: url(x)", memberHeaderImageCrop: '{"x":0,"y":0,"w":1,"h":0.5}' });
-    expect(bibDesignFromQuery(params).member).toEqual({ enabled: true, bandColour: null, headerImageSrc: null, headerImageCrop: null, label: "" });
+    expect(bibDesignFromQuery(params).member).toEqual({ enabled: true, style: "band", bandColour: null, headerImageSrc: null, headerImageCrop: null, cardImageSrc: null, cardImageCrop: null, label: "" });
   });
 });
 
@@ -193,16 +200,22 @@ describe("§249 the form, read the same way for the save and for the preview", (
       [`${BIB_DESIGN_FORM_PREFIX}member.bandColour`]: "#c62828",
       [`${BIB_DESIGN_FORM_PREFIX}member.headerImageSrc`]: OURS,
       [`${BIB_DESIGN_FORM_PREFIX}member.headerImageCrop`]: '{"x":0,"y":0.1,"w":1,"h":0.2}',
+      [`${BIB_DESIGN_FORM_PREFIX}member.style`]: "card",
+      [`${BIB_DESIGN_FORM_PREFIX}member.cardImageSrc`]: LOCAL,
+      [`${BIB_DESIGN_FORM_PREFIX}member.cardImageCrop`]: '{"x":0.1,"y":0,"w":0.8,"h":0.7}',
       [`${BIB_DESIGN_FORM_PREFIX}member.label`]: " Membru BVR ",
     });
     expect(readBibDesignForm(form).member).toEqual({
       enabled: true,
+      style: "card",
       bandColour: "#c62828",
       headerImageSrc: OURS,
       headerImageCrop: '{"x":0,"y":0.1,"w":1,"h":0.2}',
+      cardImageSrc: LOCAL,
+      cardImageCrop: '{"x":0.1,"y":0,"w":0.8,"h":0.7}',
       label: " Membru BVR ",
     });
-    expect(readBibDesignForm(posted({})).member).toEqual({ enabled: false, bandColour: null, headerImageSrc: null, headerImageCrop: null, label: "" });
+    expect(readBibDesignForm(posted({})).member).toEqual({ enabled: false, style: "band", bandColour: null, headerImageSrc: null, headerImageCrop: null, cardImageSrc: null, cardImageCrop: null, label: "" });
     expect(isBibDesignInput("event.bibDesign.member.enabled")).toBe(true);
   });
 
@@ -240,7 +253,7 @@ describe("§249 the form, read the same way for the save and for the preview", (
       // As typed; the schema trims it, for the save and the preview alike.
       footerText: " Cronometraj: StartTime ",
       // Nothing posted for the members' section (§664): off.
-      member: { enabled: false, bandColour: null, headerImageSrc: null, headerImageCrop: null, label: "" },
+      member: { enabled: false, style: "band", bandColour: null, headerImageSrc: null, headerImageCrop: null, cardImageSrc: null, cardImageCrop: null, label: "" },
     });
   });
 

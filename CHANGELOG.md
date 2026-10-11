@@ -8,6 +8,37 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.92-2026-10-11
+
+- **«Copiază și tradu tot: RO → EN» on the shop's forms** — the product's title and description and «Cum se plătește» get the same one-press translate button as «Echipa»; a volunteer with the shop grant does not see it yet. §697.
+- **«Contact direct» first** — the club's address and phone now stand above the contact form, which gets its own heading, «Trimite-ne un mesaj»; and «Spune-ne ceva» says «alergare» where it said «eveniment». §698.
+- **The ☰ at the right edge, «Spune-ne ceva (anonim)»** — the header's overflow button sits flush right at every width; the contact page's feedback heading and the wizard's title say it is anonymous; two more rules on the design page; no first name in the fixtures; the redesign plan's decision 3 decided. §699.
+- **The shop's editor, rebuilt** — «Magazin» is three tabs («Produse», «Comenzi», «Setări») and one page per product with its cards in order: many pictures with the first as cover, a rich description with tables and pictures, «Mărimile» as ticks XXS–4XL with a stock each and a size chart; the members' zone shows the cover, a picture strip, the description and the chart. A size that has orders cannot be unticked. §700.
+- **«Echipa» as a canvas with levels** — the team page is a blue canvas of white cards, no lines: each card gets a «Nivel» (1 the wide card at the top, 1.5 a small card beside it, 2, 3… the tall cards under), «Mai multe» opens a card in place with every responsibility, the bio and the links, the page's boxes close the canvas, and cards without a level stay in the grid. §701.
+## BR-V2.91-2026-10-10
+
+- **A members' race number that looks like one** — «Fundalul numărului de membru» → «Tot numărul»: the whole card in the club kit's gradient, a colour or a gallery photograph under a navy veil, the number, the name and the race in white, and a «MEMBRU BRAȘOV RUNNERS» stripe in the kit's orange; «Doar banda de sus» keeps the old look. §695.
+- **The contact page in sections** — a divider and a glyph on every section's heading, and «Alte căi de contact» with the club's address and phone, each row with its glyph, in place of the two lines under the form. §696.
+## BR-V2.90-2026-10-10
+
+- **Contact and «Spune-ne ceva», clearer** — the club's phone and the calendar on the contact page, «Scrie alt mesaj» / «Trimite alt mesaj» after a send; the feedback form wider, with a back button, «Schimbă tipul mesajului» beside the form's name, icons on the event filters and «Evenimente speciale» for every event but the group runs, «Ce ți-a plăcut, ce nu?» on «Cum a fost», five faces on one row, and the reasons for no longer coming folded. §693.
+- **The design system is binding** — colours, icons and buttons or chips are now checked by three tests in `yarn check`: a new raw colour, an icon imported from the whole `@mui/icons-material` package (or one by one in a backoffice file) or a bare MUI `Button` / `IconButton` / `Chip` fails, and today's exceptions sit in one list that can only shrink. §694.
+## BR-V2.89-2026-10-10
+
+- **«Adaugă o comandă pentru un membru»** — on «Magazin», an Administrator, or the colleague given «Gestionează magazinul», types in an order the club collected outside the site, for a member account, through the same stock and locks as the member's own order, marked «adăugată de club» in the list and the CSV; the member's email only when ticked, and «Marchează direct ca plătită» for a row already paid. A price box may say «€30»; a word in it that contradicts «Moneda» is refused. §690.
+- **«Echipa» as an organisational chart** — a card may say whom it answers to and whether it sits below or beside that person, carry a sub-role line and a «Responsabilități» list, and the page may carry titled rich-text boxes under the chart (the partners' logos as pictures); the page stays the grid until a relation is set, the chart is CSS alone, hidden cards and boxes are never in the HTML, and a box follows the cards' two gates. §691.
+- **«Sistemul de design» in the backoffice, and the redesign plan in the repository** — «Setări» → «Aspect» → «Sistemul de design» (`/admin/design`, the Redactor and up) draws the site's look from the code: every colour token with its hex and the asserted text/background pairs with their contrast ratio, the theme's type variants and self-hosted faces, the shapes, shadows and the 44-pixel rule, the public and backoffice buttons, every pill and glyph, sample cards and form blocks from made-up rows, and the house rules with where each lives; its last section is the redesign plan's twelve decisions and seven phases with a status each, whose full text is `docs/REDESIGN.md`. §692.
+## BR-V2.88-2026-10-10
+
+- **The club's runs are «Alergări»** — in Romanian the menu, the listing's title, the backoffice tab and the menu-order entry say «Alergări», and the listing's sentences, filters, featured chip and past count say alergare / alergări (with «Înapoi la alergări» on an event page and «Toate alergările» in the members' zone); the address `/ro/evenimente`, English, the legal texts and the emails are unchanged. §689.
+## BR-V2.87-2026-10-10
+
+- **A shop price in lei or in euro** — «Moneda» beside the price in the editor; the zone, the orders, the CSV (a currency column) and the emails show each price in its own currency, never converted, and an order keeps the currency it was placed in. §686.
+- **«Gestionează magazinul» — the shop for a colleague who is not an Administrator** — on «Echipa», a tick after the role gives a volunteer, a Redactor, an Organizer or a Tehnic the members' shop, its «Din galerie» included, asked first and audited; the shop moves from «Pagini» → «Membri» to its own section «Magazin» in the top bar, and the grant never shows a member's address. §687.
+- **`yarn handoff` — where everything stands when a session stops** — one read-only command prints production's and qa's baselines, the open pull requests, every unmerged branch with its release entry and migrations, the next free migration number and any local work not on GitHub; `docs/DISPATCHER.md` § When a session stops says how to work so a stop costs nothing, and the prompt to resume. §688.
+## BR-V2.86-2026-10-10
+
+- **The repository's licence is all rights reserved** — the code and the documents are the club's, readable but not reusable without its written permission; the MIT grant ends with this release. §685.
 ## BR-V2.85-2026-10-10
 
 - **The members' zone has no backoffice button** — a colleague signed in to «Zona membrilor» sees the zone and the sign-out, like every member; the backoffice is `/admin`, behind its own lock as before. §684.

@@ -108,21 +108,29 @@ async function loadOne(src: string | null, maxWidth: number): Promise<LoadedBibP
 
 /**
  * Both places' pictures for a renderer, each `null` where there is none or it could not be read —
- * and the members' header (§664), read only when `members` says a member's bib will be drawn and the
- * members' switch is on: a sheet of no member's bib fetches nothing more than before.
+ * and the members' own (§664), read only when `members` says a member's bib will be drawn and the
+ * members' switch is on: their header for «Doar banda de sus», their card's photograph for «Tot
+ * numărul» (§NNN), never both. A sheet of no member's bib fetches nothing more than before.
  */
 export async function loadBibPictures(
-  design: { headerImageSrc: string | null; sponsorImageSrc: string | null; member?: { enabled: boolean; headerImageSrc: string | null } },
+  design: {
+    headerImageSrc: string | null;
+    sponsorImageSrc: string | null;
+    member?: { enabled: boolean; style?: "band" | "card"; headerImageSrc: string | null; cardImageSrc?: string | null };
+  },
   maxWidth: number,
   members = false,
 ): Promise<Record<BibPictureSlot | "memberHeader", LoadedBibPicture | null>> {
-  const memberSrc = members && design.member?.enabled ? design.member.headerImageSrc : null;
-  const [header, sponsors, memberHeader] = await Promise.all([
+  const member = members && design.member?.enabled ? design.member : null;
+  const memberHeaderSrc = member && member.style !== "card" ? member.headerImageSrc : null;
+  const memberCardSrc = member && member.style === "card" ? (member.cardImageSrc ?? null) : null;
+  const [header, sponsors, memberHeader, memberCard] = await Promise.all([
     loadOne(design.headerImageSrc, maxWidth),
     loadOne(design.sponsorImageSrc, maxWidth),
-    loadOne(memberSrc, maxWidth),
+    loadOne(memberHeaderSrc, maxWidth),
+    loadOne(memberCardSrc, maxWidth),
   ]);
-  return { header, sponsors, memberHeader };
+  return { header, sponsors, memberHeader, memberCard };
 }
 
 /** A loaded picture as `next/og` takes it: an inline PNG, with its size. */

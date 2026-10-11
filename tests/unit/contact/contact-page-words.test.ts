@@ -59,6 +59,7 @@ vi.mock("@/modules/public-cache/reads", () => ({
   cachedPublishedEventBySlug: async () => null,
   cachedNewsletterOffered: async () => true,
   cachedEmailWaitMinutes: async () => null,
+  cachedPublicPhone: async () => null,
 }));
 vi.mock("@/modules/content/faq/on-site", () => ({ faqOnSite: async () => true }));
 vi.mock("@/modules/registrations/form-draft", () => ({ readFormDraft: async () => null }));

@@ -118,7 +118,7 @@ test.describe("§560 the sponsors' band: upload, crop, preview", () => {
  * is saved, so the featured event the registration specs configure is left as it was.
  */
 test.describe("§664 the members' number, designed in the panel", () => {
-  test("the switch, the colour and the label redraw the members' preview", async ({ page }) => {
+  test("the switch, the background, the colour and the label redraw the members' preview", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     await page.reload();
@@ -136,7 +136,15 @@ test.describe("§664 the members' number, designed in the panel", () => {
     await enabled.check();
     await expect(preview).toHaveAttribute("src", /[?&]memberEnabled=1(&|$)/, { timeout: 10_000 });
 
-    await members.getByLabel("Culoarea benzii pentru membri").selectOption({ label: "Violet" });
+    // «Fundalul» (§NNN): the whole card first for a club that has not offered the members' bib yet.
+    const style = members.getByLabel("Fundalul numărului de membru");
+    await expect(style).toHaveValue("card");
+    await expect(preview).toHaveAttribute("src", /[?&]memberStyle=card(&|$)/, { timeout: 10_000 });
+    await style.selectOption("band");
+    await expect(preview).toHaveAttribute("src", /[?&]memberStyle=band(&|$)/, { timeout: 10_000 });
+    await style.selectOption("card");
+
+    await members.getByLabel("Culoarea membrilor").selectOption({ label: "Violet" });
     await expect(preview).toHaveAttribute("src", /[?&]memberBandColour=%236a1b9a(&|$)/, { timeout: 10_000 });
 
     await members.getByRole("textbox", { name: "Eticheta" }).fill("BVR");

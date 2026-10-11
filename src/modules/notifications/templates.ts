@@ -1743,7 +1743,7 @@ const T = {
       facts: (d: TemplateData) => (d.shopOrder ? { line: shopOrderLine("ro", d.shopOrder), links: [] } : undefined),
       body: (d: TemplateData) => [
         `${d.shopOrder?.memberName || "Un membru"} a comandat din magazinul membrilor.`,
-        "Comenzile, cu „Marchează plătită” și „Marchează predată”, sunt în backoffice, la Pagini → Membri → Magazin. Plata nu trece prin site.",
+        "Comenzile, cu „Marchează plătită” și „Marchează predată”, sunt în backoffice, la „Magazin”, în bara de sus. Plata nu trece prin site.",
       ],
       action: "Deschide comenzile",
     },
@@ -2447,7 +2447,7 @@ const T = {
       facts: (d: TemplateData) => (d.shopOrder ? { line: shopOrderLine("en", d.shopOrder), links: [] } : undefined),
       body: (d: TemplateData) => [
         `${d.shopOrder?.memberName || "A member"} has placed an order in the members' shop.`,
-        "The orders, with “Mark paid” and “Mark handed over”, are in the backoffice, under Pages → Members → Shop. Payment does not go through the site.",
+        "The orders, with “Mark paid” and “Mark handed over”, are in the backoffice, under “Shop”, in the top bar. Payment does not go through the site.",
       ],
       action: "Open the orders",
     },

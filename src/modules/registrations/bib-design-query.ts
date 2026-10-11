@@ -34,9 +34,12 @@ export const BIB_DESIGN_FORM_PREFIX = "event.bibDesign.";
  */
 const MEMBER_QUERY = {
   enabled: "memberEnabled",
+  style: "memberStyle",
   bandColour: "memberBandColour",
   headerImageSrc: "memberHeaderImageSrc",
   headerImageCrop: "memberHeaderImageCrop",
+  cardImageSrc: "memberCardImageSrc",
+  cardImageCrop: "memberCardImageCrop",
   label: "memberLabel",
 } as const;
 
@@ -74,10 +77,15 @@ export type BibDesignFormValues = {
 /** «Numărul membrilor» as the panel posts it; `bib-design.ts#bibMemberSchema` validates it. */
 export type BibMemberFormValues = {
   enabled: boolean;
-  /** The colour select: a hex triplet, or null for the event's band. */
+  /** «Fundalul» (§NNN): `card` or `band`; anything else is the schema's to refuse. */
+  style: string;
+  /** The colour select: a hex triplet, or null for the event's band (the kit's gradient on a card). */
   bandColour: string | null;
   headerImageSrc: string | null;
   headerImageCrop: BibCropValue;
+  /** «Tot numărul»'s photograph and its crop in the card's shape (§NNN). */
+  cardImageSrc: string | null;
+  cardImageCrop: BibCropValue;
   /** As typed: the schema keeps it to one line and `BIB_MEMBER_LABEL_MAX`. */
   label: string;
 };
@@ -137,9 +145,12 @@ export function readBibDesignForm(get: (name: string) => string | null): BibDesi
     footerText: field("footerText") ?? "",
     member: {
       enabled: field("member.enabled") === "on",
+      style: field("member.style")?.trim() || "band",
       bandColour: field("member.bandColour")?.trim() || null,
       headerImageSrc: field("member.headerImageSrc")?.trim() || null,
       headerImageCrop: field("member.headerImageCrop")?.trim() || null,
+      cardImageSrc: field("member.cardImageSrc")?.trim() || null,
+      cardImageCrop: field("member.cardImageCrop")?.trim() || null,
       label: field("member.label") ?? "",
     },
   };
@@ -174,11 +185,17 @@ export function bibDesignSearchParams(values: BibDesignFormValues, into = new UR
   // The members' header and label (§664), absent when empty, like the main ones.
   const member = values.member;
   into.set(MEMBER_QUERY.enabled, member.enabled ? "1" : "0");
+  into.set(MEMBER_QUERY.style, member.style);
   if (member.bandColour) into.set(MEMBER_QUERY.bandColour, member.bandColour);
   if (member.headerImageSrc) {
     into.set(MEMBER_QUERY.headerImageSrc, member.headerImageSrc);
     const crop = member.headerImageCrop;
     if (crop) into.set(MEMBER_QUERY.headerImageCrop, typeof crop === "string" ? crop : JSON.stringify({ x: crop.x, y: crop.y, w: crop.w, h: crop.h }));
+  }
+  if (member.cardImageSrc) {
+    into.set(MEMBER_QUERY.cardImageSrc, member.cardImageSrc);
+    const crop = member.cardImageCrop;
+    if (crop) into.set(MEMBER_QUERY.cardImageCrop, typeof crop === "string" ? crop : JSON.stringify({ x: crop.x, y: crop.y, w: crop.w, h: crop.h }));
   }
   if (member.label.trim()) into.set(MEMBER_QUERY.label, member.label);
   return into;
@@ -220,9 +237,12 @@ export function bibDesignValuesFromQuery(params: URLSearchParams): Partial<BibDe
   const enabled = params.get(MEMBER_QUERY.enabled);
   values.member = {
     enabled: enabled === "1",
+    style: params.get(MEMBER_QUERY.style) || "band",
     bandColour: params.get(MEMBER_QUERY.bandColour) || null,
     headerImageSrc: params.get(MEMBER_QUERY.headerImageSrc) || null,
     headerImageCrop: params.get(MEMBER_QUERY.headerImageCrop) || null,
+    cardImageSrc: params.get(MEMBER_QUERY.cardImageSrc) || null,
+    cardImageCrop: params.get(MEMBER_QUERY.cardImageCrop) || null,
     label: params.get(MEMBER_QUERY.label) ?? "",
   };
   return values;

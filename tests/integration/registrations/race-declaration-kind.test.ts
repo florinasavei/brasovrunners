@@ -59,8 +59,8 @@ async function createRace(surface: "ASPHALT" | "TRAIL" | null, declarationDocume
 }
 
 const submission = {
-  firstName: "Florin",
-  lastName: "Munca",
+  firstName: "Felix",
+  lastName: "Sample",
   birthDate: "1990-05-17",
   sex: "FEMALE",
   nationality: "RO",
@@ -69,7 +69,7 @@ const submission = {
   phone: "+40711111111",
   emergencyContactName: "Ion Popescu",
   emergencyContactPhone: "+40722222222",
-  email: "florin@example.ro",
+  email: "felix@example.ro",
   locale: "ro",
   privacyAcknowledged: true,
   fitnessDeclared: true,
@@ -129,7 +129,7 @@ describe("§515 the event's own declaration: trail or road", () => {
     const [row] = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
     await confirmEmail(db, event, row.id, NOW);
 
-    const signing = { accepted: true, typedName: "Florin Munca", idDocument: "BV 123456" };
+    const signing = { accepted: true, typedName: "Felix Sample", idDocument: "BV 123456" };
     // The trail text is not what this event's page shows: the version check refuses it (§57).
     await expect(
       signDeclaration(db, event, row.id, { ...signing, documentId: trail.id, contentSha256: trail.contentSha256 }, NOW),

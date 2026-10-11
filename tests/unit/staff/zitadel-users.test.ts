@@ -172,7 +172,7 @@ describe("the accounts the key can see", () => {
         new Response(
           JSON.stringify({
             result: [
-              { userId: "1", username: "Florin@Example.ro", loginNames: ["Florin@Example.ro@club.zitadel.cloud"], human: { email: { email: "Florin@Example.ro" } } },
+              { userId: "1", username: "Felix@Example.ro", loginNames: ["Felix@Example.ro@club.zitadel.cloud"], human: { email: { email: "Felix@Example.ro" } } },
               { userId: "2", username: "mihai", preferredLoginName: "mihai@club.zitadel.cloud", human: { email: { email: "mihai@example.ro" } } },
               { userId: "3" },
             ],
@@ -185,8 +185,8 @@ describe("the accounts the key can see", () => {
     if (listed.kind !== "listed") return;
     expect(listed.count).toBe(3);
     expect([...listed.accounts].sort()).toEqual([
-      "florin@example.ro",
-      "florin@example.ro@club.zitadel.cloud",
+      "felix@example.ro",
+      "felix@example.ro@club.zitadel.cloud",
       "mihai",
       "mihai@club.zitadel.cloud",
       "mihai@example.ro",

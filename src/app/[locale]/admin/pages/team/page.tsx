@@ -1,9 +1,5 @@
-import EditIcon from "@mui/icons-material/Edit";
-import NotesIcon from "@mui/icons-material/Subject";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import MuiLink from "@mui/material/Link";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
@@ -14,13 +10,22 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
+import GlyphChip from "@/modules/events/ui/GlyphChip";
 import LazyRichTextEditor from "@/modules/content/rich-text/ui/LazyRichTextEditor";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
-import { TEAM_BIO_MAX, TEAM_NAME_MAX, TEAM_ROLE_MAX } from "@/modules/content/team/fields";
+import {
+  TEAM_BIO_MAX,
+  TEAM_LEVELS,
+  TEAM_NAME_MAX,
+  TEAM_RESPONSIBILITIES_MAX_LINES,
+  TEAM_RESPONSIBILITY_LINE_MAX,
+  TEAM_ROLE_MAX,
+  TEAM_SUBTITLE_MAX,
+} from "@/modules/content/team/fields";
 import { MAX_TEAM_LINKS, type TeamLinkKind } from "@/modules/content/team/links";
 import { teamLinkKindWords } from "@/modules/content/team/ui/kind-words";
 import { readTeamPageSettings, TEAM_INTRO_MAX, teamIntroDocs, type TeamPageSettings } from "@/modules/content/team/page-settings";
-import { type AdminTeamMember, listTeamMembersForAdmin } from "@/modules/content/team/repository";
+import { type AdminTeamMember, listTeamBoxesForAdmin, listTeamMembersForAdmin } from "@/modules/content/team/repository";
 import PagesSubNav from "@/modules/content/pages/ui/PagesSubNav";
 import TeamLinkRowsEditor, { type TeamLinkRowsLabels } from "@/modules/content/team/ui/TeamLinkRowsEditor";
 import TeamPhotoField, { type TeamPhotoLabels } from "@/modules/content/team/ui/TeamPhotoField";
@@ -35,10 +40,12 @@ import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm, { type RefusalMessages } from "@/shared/forms/ActionForm";
 import RecallField, { RecallHidden } from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import SubmitButton from "@/shared/ui/SubmitButton";
+import BoxesCard from "./BoxesCard";
 import {
   createTeamMemberAction,
   deleteTeamMemberAction,
@@ -48,6 +55,10 @@ import {
   setTeamMemberVisibleAction,
   setTeamPagePublishedAction,
 } from "./actions";
+
+const AddPersonIcon = ACTION_ICONS.addPerson;
+const IntroIcon = ACTION_ICONS.intro;
+const EditIcon = ACTION_ICONS.edit;
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -88,8 +99,9 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const db = getDb();
-  const [members, settings, noticeDescribed] = await Promise.all([
+  const [members, boxes, settings, noticeDescribed] = await Promise.all([
     listTeamMembersForAdmin(db),
+    listTeamBoxesForAdmin(db),
     readTeamPageSettings(db),
     noticeDescribesTeamPage(db, new Date()),
   ]);
@@ -114,6 +126,7 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
     },
     // The card's own words for each kind — what the page shows when a link has no label (§474).
     kinds: await teamLinkKindWords(),
+    levelLabel: (level) => new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(level),
   };
   // Each link row's four boxes by the name the editor posts, so the summary says "Linkul 2: adresa".
   const linkBoxes = Object.fromEntries(
@@ -132,6 +145,16 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
     photoAssetId: t("team.photo"),
     introRoBody: t("team.introRo"),
     introEnBody: t("team.introEn"),
+    // A card's sub-role and responsibilities, a box's title and text (§691), and the card's level on the canvas (§701).
+    subtitleRo: t("team.subtitleRo"),
+    subtitleEn: t("team.subtitleEn"),
+    responsibilitiesRo: t("team.responsibilitiesRo"),
+    responsibilitiesEn: t("team.responsibilitiesEn"),
+    level: t("team.level"),
+    titleRo: t("team.boxes.titleRo"),
+    titleEn: t("team.boxes.titleEn"),
+    bodyRoBody: t("team.boxes.bodyRo"),
+    bodyEnBody: t("team.boxes.bodyEn"),
   });
   const photoLabels: TeamPhotoLabels = {
     legend: t("team.photo"),
@@ -231,7 +254,7 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
       {mayEdit && (
         <Box component="details" id="team-new" sx={BOXED_DISCLOSURE_SX}>
           <summary>
-            <PersonAddIcon aria-hidden sx={FOLD_GLYPH_SX} />
+            <AddPersonIcon aria-hidden sx={FOLD_GLYPH_SX} />
             {t("team.add")}
           </summary>
           <ActionForm action={createTeamMemberAction} messages={messages} scope="new" data-testid="team-create-form">
@@ -267,6 +290,9 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
           ))}
         </Stack>
       )}
+
+      {/* «Casetele paginii» (§691): the club's titled texts under the chart, in the discount codes' shape (§552). */}
+      <BoxesCard boxes={boxes} locale={locale} words={t} cancel={words.cancel} messages={messages} rich={editing.rich} mayEdit={mayEdit} mayShow={mayShow} />
     </Stack>
   );
 }
@@ -278,6 +304,8 @@ type Editing = {
   rich: ReturnType<typeof richTextEditorLabels>;
   links: TeamLinkRowsLabels;
   kinds: Record<TeamLinkKind, string>;
+  /** A level of the canvas as the reader writes a number — «1,5» in Romanian, "1.5" in English (§701). */
+  levelLabel: (level: number) => string;
 };
 
 /**
@@ -316,7 +344,7 @@ function PageCard({
           <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
             {t("team.pageHeading")}
           </Typography>
-          <Chip size="small" color={published ? "success" : "default"} label={published ? t("team.pagePublished") : t("team.pageDraft")} />
+          <GlyphChip glyph={published ? "visible" : "hidden"} color={published ? "success" : "default"} label={published ? t("team.pagePublished") : t("team.pageDraft")} />
         </Stack>
         <Typography variant="body2" color="text.secondary">
           {published ? t("team.pagePublishedHelp", { ro, en }) : t("team.pageDraftHelp")}
@@ -347,7 +375,7 @@ function PageCard({
         {mayEdit && (
           <Box component="details" sx={BOXED_DISCLOSURE_SX}>
             <summary>
-              <NotesIcon aria-hidden sx={FOLD_GLYPH_SX} />
+              <IntroIcon aria-hidden sx={FOLD_GLYPH_SX} />
               {t("team.introFold")}
             </summary>
             <ActionForm action={saveTeamPageIntroAction} messages={messages} scope="intro" data-testid="team-intro-form">
@@ -446,10 +474,10 @@ function MemberCard({
             </Typography>
           )}
           <Stack direction="row" spacing={1} sx={{ mt: 0.5, flexWrap: "wrap", gap: 0.5 }}>
-            <Chip size="small" color={member.visible ? "success" : "default"} label={member.visible ? t("team.visible") : t("team.hidden")} />
-            {!member.photo && <Chip size="small" variant="outlined" label={t("team.noPhoto")} />}
-            {member.links.length > 0 && <Chip size="small" variant="outlined" label={t("team.linkCount", { count: member.links.length })} />}
-            {oneSided(member) && <Chip size="small" variant="outlined" color="warning" label={t("team.oneLanguage")} />}
+            <GlyphChip glyph={member.visible ? "visible" : "hidden"} color={member.visible ? "success" : "default"} label={member.visible ? t("team.visible") : t("team.hidden")} />
+            {!member.photo && <GlyphChip glyph="hidden" variant="outlined" label={t("team.noPhoto")} />}
+            {member.links.length > 0 && <GlyphChip glyph="link" variant="outlined" label={t("team.linkCount", { count: member.links.length })} />}
+            {oneSided(member) && <GlyphChip glyph="language" variant="outlined" color="warning" label={t("team.oneLanguage")} />}
           </Stack>
         </Box>
       </Stack>
@@ -529,7 +557,12 @@ function MemberCard({
 /** A pair with one side written (only a hand-made or older row can hold one): the next save refuses it. */
 function oneSided(member: AdminTeamMember): boolean {
   const written = (value: string | null) => (value ?? "").trim() !== "";
-  return written(member.roleRo) !== written(member.roleEn) || (member.bioRo === null) !== (member.bioEn === null);
+  return (
+    written(member.roleRo) !== written(member.roleEn) ||
+    written(member.subtitleRo) !== written(member.subtitleEn) ||
+    written(member.responsibilitiesRo) !== written(member.responsibilitiesEn) ||
+    (member.bioRo === null) !== (member.bioEn === null)
+  );
 }
 
 /**
@@ -556,8 +589,9 @@ function MemberFields({
   const pairSx = { display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 } as const;
   return (
     <Stack spacing={2}>
-      {/* «Copiază și tradu tot: RO → EN» (§464, §482): this card's role, words and link labels in
-          English from the Romanian, in this card's form alone — every card posts the same names. */}
+      {/* «Copiază și tradu tot: RO → EN» (§464, §482): this card's role, sub-role, responsibilities
+          (§691, line for line), words and link labels in English from the Romanian, in this card's
+          form alone — every card posts the same names (`translate/domain/fields.ts`). */}
       <TranslateAllButton />
       <RecallField
         name="name"
@@ -585,6 +619,75 @@ function MemberFields({
           helperText={t("team.bothOrNeither")}
           slotProps={{ htmlInput: { maxLength: TEAM_ROLE_MAX, lang: "en" } }}
         />
+      </Box>
+      {/*
+        The one-line sub-role under the role and «Responsabilități» one per line (§691), every pair
+        both languages or neither (§352); then the card's level on the canvas (§701).
+      */}
+      <Box sx={pairSx}>
+        <RecallField
+          name="subtitleRo"
+          label={t("team.subtitleRo")}
+          fullWidth
+          defaultValue={member?.subtitleRo ?? ""}
+          helperText={t("team.subtitleHelp")}
+          slotProps={{ htmlInput: { maxLength: TEAM_SUBTITLE_MAX, lang: "ro" } }}
+        />
+        <RecallField
+          name="subtitleEn"
+          label={t("team.subtitleEn")}
+          fullWidth
+          defaultValue={member?.subtitleEn ?? ""}
+          helperText={t("team.bothOrNeither")}
+          slotProps={{ htmlInput: { maxLength: TEAM_SUBTITLE_MAX, lang: "en" } }}
+        />
+      </Box>
+      <Box sx={pairSx}>
+        <RecallField
+          name="responsibilitiesRo"
+          label={t("team.responsibilitiesRo")}
+          fullWidth
+          multiline
+          minRows={3}
+          defaultValue={member?.responsibilitiesRo ?? ""}
+          helperText={t("team.responsibilitiesHelp", { lines: TEAM_RESPONSIBILITIES_MAX_LINES, max: TEAM_RESPONSIBILITY_LINE_MAX })}
+          slotProps={{ htmlInput: { lang: "ro" } }}
+        />
+        <RecallField
+          name="responsibilitiesEn"
+          label={t("team.responsibilitiesEn")}
+          fullWidth
+          multiline
+          minRows={3}
+          defaultValue={member?.responsibilitiesEn ?? ""}
+          helperText={t("team.bothOrNeither")}
+          slotProps={{ htmlInput: { lang: "en" } }}
+        />
+      </Box>
+      {/*
+        «Nivel» (§701; the owner: «the president is top level 1, then the advisor level 1.5 and the
+        rest are level 2»): one number says the row and the card's shape — a whole number leads its
+        row, a half step is a small card beside the leads — and nothing leaves the card in the grid.
+        A native select of the scale, so a phone shows its own picker; the posted value is the
+        number as written, the label the reader's own decimal mark.
+      */}
+      <Box sx={pairSx}>
+        <RecallField
+          name="level"
+          select
+          fullWidth
+          label={t("team.level")}
+          defaultValue={member?.level === null || member?.level === undefined ? "" : String(member.level)}
+          helperText={t("team.levelHelp")}
+          slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+        >
+          <option value="">{t("team.levelNone")}</option>
+          {TEAM_LEVELS.map((level) => (
+            <option key={level} value={String(level)}>
+              {editing.levelLabel(level)}
+            </option>
+          ))}
+        </RecallField>
       </Box>
       {/*
         The words about the person in the editor every page uses (§474): paragraphs, a list, a link

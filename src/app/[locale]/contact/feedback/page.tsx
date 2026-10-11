@@ -1,9 +1,13 @@
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import EditNoteIcon from "@mui/icons-material/EditNote";
+import EventBusyIcon from "@mui/icons-material/EventBusy";
 import SentimentDissatisfiedIcon from "@mui/icons-material/SentimentDissatisfied";
 import SentimentNeutralIcon from "@mui/icons-material/SentimentNeutral";
 import SentimentSatisfiedIcon from "@mui/icons-material/SentimentSatisfied";
 import SentimentVeryDissatisfiedIcon from "@mui/icons-material/SentimentVeryDissatisfied";
 import SentimentVerySatisfiedIcon from "@mui/icons-material/SentimentVerySatisfied";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
@@ -70,6 +74,7 @@ import CheckboxField from "@/shared/ui/CheckboxField";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { INLINE_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
+import { DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { DENSITY } from "@/theme/density";
 import { submitFeedbackAction } from "./actions";
 
@@ -162,22 +167,47 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
   }
 
   return (
-    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
-      <Typography variant="body2" sx={{ mb: 1 }}>
-        <Link href="/contact" style={INLINE_TAP_TARGET}>
-          {t("backToContact")}
-        </Link>
-      </Typography>
+    // `md`, not `sm` (§NNN; the owner, 2026-10-10: «I need this to be wider»): step 1's four cards, two
+    // a row from `sm`, no longer wrap every sentence onto four lines; a phone is unchanged.
+    <Container id="main" component="main" maxWidth="md" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
+      {/* A button with its arrow, a thumb's height (§NNN; the owner: «the back link to have an icon and be
+          bigger»); a plain `<a>`, so the page keeps its one island. Pulled left by its own padding, so the
+          arrow lines up with the heading. */}
+      <Button
+        component="a"
+        href={contactPath}
+        variant="text"
+        data-testid="feedback-back"
+        sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX, ml: -1, mb: 1, px: 1, fontSize: "1rem", textTransform: "none" }}
+      >
+        <ArrowBackIcon aria-hidden="true" sx={glyphSx("medium")} />
+        {t("backToContact")}
+      </Button>
       <Typography variant="h1" gutterBottom>
         {t("title")}
       </Typography>
 
       {sentBranch && offered.includes(sentBranch) ? (
+        <>
         <Alert severity="success" role="status" data-testid="feedback-sent">
           <AlertTitle>{t("sent.title")}</AlertTitle>
           {/* Who got it (§678): the safety person — her form's own reader, or the one a named message chose — or the club. */}
           {sentReader(sentBranch, search.catre) === "person" ? t("sent.safety", { name: safetyName }) : t("sent.body")}
         </Alert>
+        {/* A way on after the send (§NNN): another message, from the wizard's first step. */}
+        <Button
+          component="a"
+          href={path}
+          variant="outlined"
+          size="large"
+          fullWidth
+          data-testid="feedback-send-another"
+          sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX, mt: 3 }}
+        >
+          <EditNoteIcon aria-hidden="true" sx={glyphSx("large")} />
+          {t("sendAnother")}
+        </Button>
+        </>
       ) : step.kind === "choose" ? (
         <ChooseStep branches={step.branches} path={path} query={query} t={t} />
       ) : (
@@ -189,7 +219,6 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
           query={query}
           now={now}
           safetyName={safetyName}
-          contactPath={contactPath}
           identity={identity}
         />
       )}
@@ -236,7 +265,6 @@ async function BranchForm({
   query,
   now,
   safetyName,
-  contactPath,
   identity,
 }: {
   branch: FeedbackBranch;
@@ -246,7 +274,6 @@ async function BranchForm({
   query: ReturnType<typeof readFeedbackQuery>;
   now: Date;
   safetyName: string;
-  contactPath: string;
   identity: Identity | null;
 }) {
   const t = await getTranslations("Tell");
@@ -269,6 +296,8 @@ async function BranchForm({
   const chosenEvent = kept("event") ?? (query.eventSlug && events.some((event) => event.slug === query.eventSlug) ? query.eventSlug : "");
   const ratingTyped = kept("rating") ?? "";
   const reasonsTyped = new Set((kept("reasons") ?? "").split(",").filter(Boolean));
+  // The reasons' fold opens on arrival only when a refusal brought something back into it (`fold.ts`'s «refused»).
+  const reasonsOpen = reasonsTyped.size > 0 || Boolean(kept("reasonOther")) || invalid.has("reasons") || invalid.has("reasonOther");
   // «Anonim» unless the refused post had chosen the name (§678), and its «Cine să afle?».
   const named = identity !== null && kept("identity") === "named";
   const audienceKept = FEEDBACK_AUDIENCES.find((answer) => answer === kept("audience"));
@@ -319,11 +348,28 @@ async function BranchForm({
   return (
     <>
       {/* The glyph the visitor chose on step 1, beside the branch's name. */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1 }}>
-        <BranchGlyphTile branch={branch} />
-        <Typography variant="h2" lang={branchLabelLang(branch, locale)} sx={{ fontSize: "1.35rem", m: 0 }}>
-          {t(`branches.${branch}.label`)}
-        </Typography>
+      {/* The glyph and the name on the left; «Schimbă tipul mesajului» on the right, or under them on a
+          narrow phone (§NNN; the owner, of the old «Alt tip de mesaj» under the send button: «not clear what
+          it does, not clearly visible»). Only when there is another branch to go to. */}
+      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 2, rowGap: 1, mb: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <BranchGlyphTile branch={branch} />
+          <Typography variant="h2" lang={branchLabelLang(branch, locale)} sx={{ fontSize: "1.35rem", m: 0 }}>
+            {t(`branches.${branch}.label`)}
+          </Typography>
+        </Box>
+        {otherBranches && (
+          <Button
+            component="a"
+            href={otherBranches}
+            variant="outlined"
+            data-testid="feedback-other-branches"
+            sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX, ml: { sm: "auto" }, textTransform: "none" }}
+          >
+            <SwapHorizIcon aria-hidden="true" sx={glyphSx("medium")} />
+            {t("otherBranches")}
+          </Button>
+        )}
       </Box>
       {branch === "safety" ? (
         // Above the form, in the person's language (§676): who reads it, and that the site keeps nothing —
@@ -407,7 +453,7 @@ async function BranchForm({
                   open: t("eventFilter.open"),
                   close: t("eventFilter.close"),
                   kinds: t("eventFilter.kinds"),
-                  chips: { all: t("eventFilter.chips.all"), race: t("eventFilter.chips.race"), group: t("eventFilter.chips.group") },
+                  chips: { all: t("eventFilter.chips.all"), special: t("eventFilter.chips.special"), group: t("eventFilter.chips.group") },
                 }}
               >
                 {nativePicker}
@@ -430,7 +476,9 @@ async function BranchForm({
               <Typography component="legend" variant="body1" sx={{ mb: 1 }}>
                 {t("rating.legend")}
               </Typography>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+              {/* Five columns at every width (§NNN): at 320 pixels the five faces wrapped four and one;
+                  a label longer than its column («Foarte bine») takes a second line instead. */}
+              <Box sx={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: 0.75, maxWidth: 480 }}>
                 {RATINGS.map((rating) => {
                   const Face = FACES[rating];
                   return (
@@ -439,14 +487,15 @@ async function BranchForm({
                       component="label"
                       sx={{
                         ...TAP_TARGET,
-                        minWidth: 56,
-                        display: "inline-flex",
+                        minWidth: 0,
+                        display: "flex",
                         flexDirection: "column",
                         alignItems: "center",
                         justifyContent: "center",
                         gap: 0.25,
-                        px: 1,
+                        px: 0.25,
                         py: 0.5,
+                        textAlign: "center",
                         border: 1,
                         borderColor: "divider",
                         borderRadius: 1,
@@ -463,7 +512,7 @@ async function BranchForm({
                         style={{ position: "absolute", opacity: 0, width: 1, height: 1 }}
                       />
                       <Face aria-hidden="true" sx={{ fontSize: 28 }} />
-                      <Typography component="span" variant="caption">
+                      <Typography component="span" variant="caption" sx={{ lineHeight: 1.2, overflowWrap: "anywhere" }}>
                         {t(`rating.faces.${rating}`)}
                       </Typography>
                     </Box>
@@ -481,24 +530,42 @@ async function BranchForm({
             fullWidth
             slotProps={{ htmlInput: { maxLength: FEEDBACK_TEXT_MAX } }}
           />
+          {/*
+            «Dacă nu mai vii, ne spui de ce?» folded (§NNN): six boxes and a line are for the few who stopped
+            coming, and open they were half the form on a phone. A native `<details>`, no island; it opens by
+            itself when a refusal brought back a tick or a word in it, or named one of its boxes.
+          */}
           {fields.includes("reasons") && (
-            <Box component="fieldset" id={fieldId("reasons")} sx={{ border: 0, m: 0, p: 0 }}>
-              <Typography component="legend" variant="body1">
+            <Box
+              component="details"
+              open={reasonsOpen || undefined}
+              data-testid="feedback-reasons"
+              sx={DISCLOSURE_SX}
+            >
+              <summary>
+                <EventBusyIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
                 {t("reasons.legend")}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {t("reasons.help")}
-              </Typography>
-              {STOPPED_REASONS.map((reason) => (
-                <Box key={reason}>
-                  <CheckboxField name="reasons" value={reason} defaultChecked={reasonsTyped.has(reason)}>
-                    {t(`reasons.items.${reason}`)}
-                  </CheckboxField>
+              </summary>
+              <Stack spacing={2} sx={{ mt: 1 }}>
+                <Box component="fieldset" id={fieldId("reasons")} sx={{ border: 0, m: 0, p: 0, minWidth: 0 }}>
+                  <Typography component="legend" variant="body2" color="text.secondary">
+                    {t("reasons.help")}
+                  </Typography>
+                  {STOPPED_REASONS.map((reason) => (
+                    <Box key={reason}>
+                      <CheckboxField name="reasons" value={reason} defaultChecked={reasonsTyped.has(reason)}>
+                        {t(`reasons.items.${reason}`)}
+                      </CheckboxField>
+                    </Box>
+                  ))}
                 </Box>
-              ))}
+                {fields.includes("reasonOther") && (
+                  <TextField {...box("reasonOther")} label={t("reasonOther")} fullWidth slotProps={{ htmlInput: { maxLength: FEEDBACK_LINE_MAX } }} />
+                )}
+              </Stack>
             </Box>
           )}
-          {fields.includes("reasonOther") && (
+          {fields.includes("reasonOther") && !fields.includes("reasons") && (
             <TextField {...box("reasonOther")} label={t("reasonOther")} fullWidth slotProps={{ htmlInput: { maxLength: FEEDBACK_LINE_MAX } }} />
           )}
           {fields.includes("whereWhen") && (
@@ -528,17 +595,6 @@ async function BranchForm({
         </Stack>
       </form>
 
-      <Typography variant="body2" sx={{ mt: 3 }}>
-        {otherBranches ? (
-          <MuiLink href={otherBranches} sx={INLINE_TAP_TARGET}>
-            {t("otherBranches")}
-          </MuiLink>
-        ) : (
-          <MuiLink href={contactPath} sx={INLINE_TAP_TARGET}>
-            {t("backToContact")}
-          </MuiLink>
-        )}
-      </Typography>
     </>
   );
 }

@@ -48,6 +48,7 @@ vi.mock("@/modules/public-cache/reads", () => ({
   cachedContactFormReaches: async () => formReaches,
   cachedShownContactAddresses: async () => [GMAIL, MAILBOX],
   cachedPublishedEventBySlug: async () => null,
+  cachedPublicPhone: async () => null,
 }));
 vi.mock("@/modules/registrations/form-draft", () => ({ readFormDraft: async () => null }));
 vi.mock("@/app/[locale]/contact/actions", () => ({ submitContactAction: async () => undefined }));
@@ -80,8 +81,8 @@ describe("§442 the contact page shows the addresses in force", () => {
   });
 
   it.each([
-    ["ro", "Sau scrie-ne direct la", " sau "],
-    ["en", "Or write to us directly at", " or "],
+    ["ro", "Scrie-ne la", " sau "],
+    ["en", "Write to us at", " or "],
   ] as const)("§449 shows the addresses beside the form too, when the form works (%s)", async (lang, lead, join) => {
     formReaches = true;
     locale = lang;
@@ -91,7 +92,8 @@ describe("§442 the contact page shows the addresses in force", () => {
       expect(html).toContain(lead);
       const gmailAt = html.indexOf(`href="mailto:${GMAIL}"`);
       const mailboxAt = html.indexOf(`href="mailto:${MAILBOX}"`);
-      expect(gmailAt).toBeGreaterThan(html.indexOf("<form"));
+      // Above the form since §NNN (the owner: yes to «Contact direct» above the form).
+      expect(gmailAt).toBeLessThan(html.indexOf("<form"));
       expect(mailboxAt).toBeGreaterThan(gmailAt);
       expect(html.slice(gmailAt, mailboxAt)).toContain(join);
     } finally {

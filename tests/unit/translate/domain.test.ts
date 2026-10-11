@@ -34,6 +34,15 @@ describe("§464 the boxes that may be translated", () => {
       "cancel.reasonEn",
       "subjectEn",
       "bodyEn",
+      // «Echipa» as an organisational chart (§691): a card's sub-role and responsibilities, a box's title and text.
+      "subtitleEn",
+      "responsibilitiesEn",
+      "titleEn",
+      "bodyEnBody",
+      // «Magazin» (§697): a product's description and «Cum se plătește».
+      "descriptionEn",
+      "descriptionEnBody",
+      "paymentEn",
     ]) {
       expect(isTranslatableEnglishField(name), name).toBe(true);
     }
@@ -63,12 +72,26 @@ describe("§464 the boxes that may be translated", () => {
     expect(isRichTextField("translations.en.routeDescription")).toBe(true);
     expect(isRichTextField("translations.en.title")).toBe(false);
     expect(isRichTextField("bodyEn")).toBe(false);
+    // A box under «Echipa»'s chart (§691): its text is a rich text, its title a plain box.
+    expect(isRichTextField("bodyEnBody")).toBe(true);
+    expect(isRichTextField("titleEn")).toBe(false);
+    expect(isRichTextField("responsibilitiesEn")).toBe(false);
+    // The shop's description is a rich text since the editor's rebuild (§697); the code's and the payment words stay plain.
+    expect(isRichTextField("descriptionEnBody")).toBe(true);
+    expect(isRichTextField("descriptionEn")).toBe(false);
+    expect(isRichTextField("paymentEn")).toBe(false);
   });
 
   it("finds the Romanian twin by the pair's own spelling", () => {
+    expect(romanianTwinCandidates("descriptionEn")).toEqual(["descriptionRo", "description"]);
+    expect(romanianTwinCandidates("descriptionEnBody")).toEqual(["descriptionRoBody"]);
+    expect(romanianTwinCandidates("paymentEn")).toEqual(["paymentRo", "payment"]);
     expect(romanianTwinCandidates("translations.en.body")).toEqual(["translations.ro.body"]);
     expect(romanianTwinCandidates("event.schedule[2].en")).toEqual(["event.schedule[2].ro"]);
     expect(romanianTwinCandidates("notice.noteEn")).toEqual(["notice.noteRo", "notice.note"]);
+    // «Echipa»'s chart (§691): the responsibilities' textarea and a box's rich text.
+    expect(romanianTwinCandidates("responsibilitiesEn")).toEqual(["responsibilitiesRo", "responsibilities"]);
+    expect(romanianTwinCandidates("bodyEnBody")).toEqual(["bodyRoBody"]);
     // The meeting place's Romanian box has no suffix (§362).
     expect(romanianTwinCandidates("event.locationNameEn")).toContain("event.locationName");
   });

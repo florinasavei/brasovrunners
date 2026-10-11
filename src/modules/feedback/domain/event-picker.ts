@@ -19,10 +19,23 @@ import { foldForSearch } from "@/modules/registrations/country-search";
 /** What an event is, for the chips: a race, a group run, or anything else (a hike, a coffee…). */
 export type PickerKind = "race" | "group" | "other";
 
-/** The chip that is pressed: every kind, or one of the two the chips name. */
-export type PickerChip = "all" | "race" | "group";
+/**
+ * The chip that is pressed: every kind, the special events, or the group runs.
+ *
+ * «Evenimente speciale» (§NNN; the owner, 2026-10-10: «instead of "curse" say "evenimente speciale"»)
+ * is every event that is not a group run — a race, and also a hike, a coffee, a special event — where
+ * «Curse» held races alone and left the rest under «Toate» only. The two chips now split the list.
+ */
+export type PickerChip = "all" | "special" | "group";
 
-export const PICKER_CHIPS: readonly PickerChip[] = ["all", "race", "group"];
+export const PICKER_CHIPS: readonly PickerChip[] = ["all", "special", "group"];
+
+/** Whether an event's kind is under a chip. */
+export function underChip(kind: PickerKind, chip: PickerChip): boolean {
+  if (chip === "all") return true;
+  if (chip === "group") return kind === "group";
+  return kind !== "group";
+}
 
 /**
  * One row of the picker as the server hands it to the island — plain data, never an element (§370).
@@ -61,9 +74,10 @@ export function pickerKind(type: EventType): PickerKind {
   return "other";
 }
 
-/** The chips are drawn only when both kinds they name are among the options; otherwise one would empty the list. */
+/** The chips are drawn only when both chips would hold an event; otherwise one would empty the list. */
 export function pickerChipsShown(options: readonly PickerOption[]): boolean {
-  return options.some((option) => option.kind === "race") && options.some((option) => option.kind === "group");
+  const events = options.filter((option) => option.value !== GENERAL_VALUE);
+  return events.some((option) => underChip(option.kind, "special")) && events.some((option) => underChip(option.kind, "group"));
 }
 
 /** What a row is searched by: its title and its day, in the reader's words and as `YYYY-MM-DD`, folded. */
@@ -85,8 +99,8 @@ function haystack(option: PickerOption): string {
  * - **Every word typed must be found**, anywhere in the title or the day, without its accents or
  *   its case: «crosul» finds «Crosul», «brasov» finds «Brașov», «happy oct» finds the October
  *   Mondays of «Happy Monday».
- * - **A chip narrows to its kind**; «Toate» keeps every kind, the other events (a hike, a coffee)
- *   included.
+ * - **A chip narrows the list**: «Alergări de grup» to the group runs, «Evenimente speciale» to
+ *   everything else (`underChip`); «Toate» keeps every kind.
  */
 export function filterPickerOptions(options: readonly PickerOption[], typed: string, chip: PickerChip): PickerOption[] {
   const words = foldForSearch(typed).split(/\s+/).filter(Boolean);
@@ -94,7 +108,7 @@ export function filterPickerOptions(options: readonly PickerOption[], typed: str
   const events = options.filter(
     (option) =>
       option.value !== GENERAL_VALUE &&
-      (chip === "all" || option.kind === chip) &&
+      underChip(option.kind, chip) &&
       (words.length === 0 || words.every((word) => haystack(option).includes(word))),
   );
   if (words.length > 0 && events.length > 0) return events;

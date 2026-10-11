@@ -129,7 +129,11 @@ describe("§450 no raw role checks outside roles.ts and the door", () => {
 
   it("the door takes a predicate, not a role", () => {
     const session = readFileSync(path.join(ROOT, "src/modules/staff-identity/session.ts"), "utf8");
-    expect(session).toMatch(/export async function requireStaffCapability\(capability: \(role: StaffRole\) => boolean\)/);
+    // Since §687 the predicate is handed the actor — the role and the person's grants — so a
+    // grant-aware predicate (`canManageShop`) answers at the door as it does in the service. Still
+    // a predicate: a rank cannot be passed where a function is asked.
+    expect(session).toMatch(/export async function requireStaffCapability\(capability: \(subject: StaffSubject\) => boolean\)/);
+    expect(session).toMatch(/if \(!capability\(staffUser\)\)/);
     expect(session).not.toMatch(/export async function requireStaffRole/);
   });
 });

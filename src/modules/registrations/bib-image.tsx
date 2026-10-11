@@ -6,10 +6,13 @@ import { brandFonts } from "@/theme/pdf/fonts";
 import { env } from "@/shared/config/env";
 import {
   bandTextColour,
+  BIB_MEMBER_CARD,
   type BibDesign,
   bibBandColour,
   bibMemberBandColour,
+  bibMemberCardBackground,
   bibMemberLabel,
+  bibMemberStripeText,
   bibPictureUrl,
   DEFAULT_BIB_DESIGN,
   numberScaleFactor,
@@ -178,6 +181,8 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const band = asMember ? bibMemberBandColour(design.member, input.bandColour) : bibBandColour(input.bandColour);
   const bandText = bandTextColour(band);
   const memberLabel = asMember ? bibMemberLabel(design.member, input.memberLabelDefault ?? "") : "";
+  // «Tot numărul» (§NNN): the members' background over the whole card, the label a stripe.
+  const asCard = asMember && design.member.style === "card";
   // A picture the club uploaded (§249): the one the route read (§560), or — when the caller read
   // none — the design's own address made absolute; the band when there is none.
   const pictureOf = (slot: BibPictureSlot, src: string | null): BibImagePicture | null => {
@@ -185,8 +190,20 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
     const address = bibPictureUrl(src, env.APP_BASE_URL);
     return address ? { src: address, width: 0, height: 0 } : null;
   };
-  // A member's bib draws the members' picture or none — never the event's (§664): its band instead.
-  const header = asMember
+  // A member's card draws its own photograph, never a header (§NNN); a member's band draws the
+  // members' picture or none — never the event's (§664): its band instead.
+  const cardPicture = asCard
+    ? input.pictures
+      ? (input.pictures.memberCard ?? null)
+      : (() => {
+          const address = bibPictureUrl(design.member.cardImageSrc, env.APP_BASE_URL);
+          return address ? { src: address, width: 0, height: 0 } : null;
+        })()
+    : null;
+  const cardBackground = asCard ? bibMemberCardBackground(design.member, cardPicture !== null) : null;
+  const header = asCard
+    ? null
+    : asMember
     ? input.pictures
       ? (input.pictures.memberHeader ?? null)
       : (() => {
@@ -199,6 +216,15 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   // Told which header this picture draws, as the sheet is (§317).
   const footerLines = bibImageFooterLines(input, header !== null);
   const footerHeight = L.footerHeight + Math.max(0, footerLines.length - 1) * BIB_FOOTER_LINE.lineHeight;
+  // A member's card's coloured part: everything above the sponsors' strip and the small print (§NNN).
+  const cardHeight = BIB_CARD.height - footerHeight - (sponsors ? L.sponsorHeight : 0);
+  const stripe = asCard && memberLabel ? bibMemberStripeText(memberLabel) : "";
+  // The background's own box: under an opaque stripe it stops half-way, so the flow's sub-pixel
+  // rounding never shows a line of it between the stripe and the small print.
+  const backgroundHeight = px(cardHeight - (stripe ? L.memberStripeHeight / 2 : 0));
+  // The number and the name: white on a member's card, the body ink on the white paper.
+  const ink = asCard ? BIB_MEMBER_CARD.text : COLOR.ink;
+  const headerText = asCard ? BIB_MEMBER_CARD.text : bandText;
   // The race and its date at the right of the band, in what the lockup leaves — the sheet's width.
   const headerTextWidth = BIB_CARD.width - (design.showLogo ? L.logoWidth + 3 * L.inset : 2 * L.inset);
   /**
@@ -243,7 +269,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
           ) : null}
         </div>
       ) : (
-        <div style={{ ...ONE_LINE, fontSize: px(L.nameSize), fontWeight: 700 }}>{input.registeredName}</div>
+        <div style={{ ...ONE_LINE, fontSize: px(L.nameSize), fontWeight: 700, color: ink }}>{input.registeredName}</div>
       )}
     </div>
   ) : null;
@@ -262,6 +288,42 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
           padding: px(BIB_MARGIN) - PAPER_EDGE,
         }}
       >
+        {/* A member's card (§NNN): its background behind everything, at the sheet's points — the
+            photograph in the card's shape under the navy veil, the colour, or the kit's gradient. */}
+        {cardBackground ? (
+          <div
+            style={{
+              display: "flex",
+              position: "absolute",
+              top: px(BIB_MARGIN) - PAPER_EDGE,
+              left: px(BIB_MARGIN) - PAPER_EDGE,
+              width: px(BIB_CARD.width),
+              height: backgroundHeight,
+              overflow: "hidden",
+              ...(cardBackground.kind === "colour"
+                ? { background: cardBackground.colour }
+                : cardBackground.kind === "gradient"
+                  ? { backgroundImage: `linear-gradient(180deg, ${cardBackground.stops[0]} 0%, ${cardBackground.stops[1]} 100%)` }
+                  : {}),
+            }}
+          >
+            {cardBackground.kind === "picture" && cardPicture ? placedPicture("memberCard", cardPicture, design, design.member.cardImageCrop) : null}
+            {cardBackground.kind === "picture" ? (
+              <div
+                style={{
+                  display: "flex",
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: px(BIB_CARD.width),
+                  height: backgroundHeight,
+                  background: BIB_MEMBER_CARD.veil,
+                  opacity: BIB_MEMBER_CARD.veilOpacity,
+                }}
+              />
+            ) : null}
+          </div>
+        ) : null}
         {/* The club's own header picture across the top (§249), or the coloured band with the
             lockup and the race on it. The picture replaces the band whole: a band *and* a
             picture is two headers, and the club chose the picture. It covers the strip, centred,
@@ -276,7 +338,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
               height: px(L.bandHeight),
               position: "relative",
               padding: `0 ${px(L.inset)}px`,
-              background: band,
+              background: asCard ? "transparent" : band,
             }}
           >
             {design.showLogo ? (
@@ -308,7 +370,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
                   top: px(L.titleTop),
                   right: px(L.inset),
                   maxWidth: px(headerTextWidth),
-                  color: bandText,
+                  color: headerText,
                   fontWeight: 700,
                   fontSize: px(L.titleSize),
                 }}
@@ -324,7 +386,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
                   top: px(design.showEventTitle ? L.dateTop : L.dateTopAlone),
                   right: px(L.inset),
                   maxWidth: px(headerTextWidth),
-                  color: bandText,
+                  color: headerText,
                   fontSize: px(L.dateSize),
                 }}
               >
@@ -335,7 +397,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
         )}
         {/* The members' label (§664), at the sheet's points (`BIB_LAYOUT.memberTag*`): absolute over
             the header's right, a filled tag on the members' picture, the band itself on a band. */}
-        {memberLabel ? (
+        {memberLabel && !asCard ? (
           <div
             style={{
               display: "flex",
@@ -365,13 +427,33 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
             justifyContent: "center",
             fontSize: numberSize,
             fontWeight: 700,
-            color: COLOR.ink,
+            color: ink,
             lineHeight: 1,
           }}
         >
           {digits}
         </div>
         {design.namePosition === "below" ? name : null}
+        {/* A member's card's stripe (§NNN): its foot on the background's foot, the label in capitals. */}
+        {stripe ? (
+          <div
+            style={{
+              display: "flex",
+              flexShrink: 0,
+              height: px(L.memberStripeHeight),
+              alignItems: "center",
+              justifyContent: "center",
+              background: BIB_MEMBER_CARD.stripe,
+              color: BIB_MEMBER_CARD.stripeText,
+              fontSize: px(L.memberStripeSize),
+              fontWeight: 700,
+              letterSpacing: px(L.memberStripeSpacing),
+              whiteSpace: "nowrap",
+            }}
+          >
+            {stripe}
+          </div>
+        ) : null}
         {/* The sponsors' strip, when the club has one (§249): above the small print, across
             the card less its inset: the club's crop in the strip's shape, or the whole picture
             fitted with its own proportion kept (§560). */}

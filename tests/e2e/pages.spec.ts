@@ -257,7 +257,7 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
     await confirmDialog(page, "Schimbi ordinea meniului?");
     await expect(page).toHaveURL(/saved=menuOrder/);
 
-    // The public menu's first entry is the page now, before «Evenimente»; no rule between the groups.
+    // The public menu's first entry is the page now, before «Alergări»; no rule between the groups.
     await page.goto(`/ro/pagini/${slug}`, { waitUntil: "networkidle" });
     const nav = page.getByRole("navigation", { name: "Navigare principală" });
     // On a phone the row may fold every entry into «Meniu» (a long title first does not fit at 320 px),

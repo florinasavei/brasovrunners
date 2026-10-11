@@ -7,8 +7,8 @@ import { confirmDialog } from "./support/confirm";
 /**
  * BR-REQ-033-02 criterion 15, §314 — the signature on the declaration is the registered name.
  *
- * The owner, looking at the signing form with "Florin Munca2" typed under "You registered as
- * Florin Munca — type the same name": "can I also have this validation here? So I have to type
+ * The owner, looking at the signing form with "Felix Sample2" typed under "You registered as
+ * Felix Sample — type the same name": "can I also have this validation here? So I have to type
  * the exact name? and this name should be bolded!"
  *
  * Two journeys: with JavaScript, where the browser itself refuses the press and points at the
@@ -40,10 +40,10 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
 
     const suffix = `${tag}-${test.info().project.name}-${Date.now().toString(36)}`;
     const email = `e2e-sign-${suffix}@test.invalid`;
-    const guardianName = minor ? `Maria Munca ${suffix}` : null;
+    const guardianName = minor ? `Maria Sample ${suffix}` : null;
     const values: Record<string, string> = {
-      firstName: "Florin",
-      lastName: `Munca ${suffix}`,
+      firstName: "Felix",
+      lastName: `Sample ${suffix}`,
       email,
       // A minor is fourteen to seventeen since the minimum age (§321): fifteen years before this
       // year is fourteen or fifteen today and on any race day the seed can hold, and still under
@@ -189,7 +189,7 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
       const plain = await context.newPage();
       await plain.goto(registration.link);
       await fillTheRest(plain);
-      await plain.locator('[name="typedName"]').fill("Munca Florin");
+      await plain.locator('[name="typedName"]').fill("Sample Felix");
       await plain.getByRole("button", { name: "Semnează", exact: true }).click();
 
       // Its own refusal — never "the link is no longer valid" — and what to do about it.
@@ -210,7 +210,7 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
       await expect(underBox).not.toContainText("Dacă numele de la înscriere este greșit");
       await expect(summary).not.toContainText("Semnătura trebuie să fie exact");
       // Nothing about the person in the address: the code, and only the code.
-      expect(plain.url()).not.toContain("Munca");
+      expect(plain.url()).not.toContain("Sample");
       expect(await registrationStatus(registration.id)).toBe("PENDING_DECLARATION");
 
       // What was typed came back: one thing left to correct.
@@ -218,7 +218,7 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
       if (await plain.locator('[name="idDocument"]').count()) {
         await expect(plain.locator('[name="idDocument"]')).toHaveValue("BV 123456");
       }
-      await expect(plain.locator('[name="typedName"]')).toHaveValue("Munca Florin");
+      await expect(plain.locator('[name="typedName"]')).toHaveValue("Sample Felix");
 
       await plain.locator('[name="typedName"]').fill(registration.registeredName.toLowerCase());
       await plain.getByRole("button", { name: "Semnează", exact: true }).click();

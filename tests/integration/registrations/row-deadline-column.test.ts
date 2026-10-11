@@ -182,7 +182,7 @@ async function seed() {
   await register(race.id, "Dan Oferit", { status: "WAITLIST_OFFERED", offerCreatedAt: new Date(now - HOUR), holdExpiresAt: at.offer });
   // A family's reservation outranks the link while it holds (§543).
   await register(race.id, "Elena Rezervat", { status: "PENDING_EMAIL_CONFIRMATION", holdExpiresAt: at.reserved, emailLinkExpiresAt: new Date(now + 40 * HOUR) });
-  await register(race.id, "Florin Link", { status: "PENDING_EMAIL_CONFIRMATION", emailLinkExpiresAt: at.link });
+  await register(race.id, "Felix Link", { status: "PENDING_EMAIL_CONFIRMATION", emailLinkExpiresAt: at.link });
   return { race, at };
 }
 
@@ -226,7 +226,7 @@ describe("§650 «Până când» on the registrations list", () => {
       expect(said.get("Carmen Depășit")).toBe(`${day(at.kept)} — termenul a trecut, locul e păstrat`);
       expect(said.get("Dan Oferit")).toBe(`Poate accepta până ${inline(at.offer)}`);
       expect(said.get("Elena Rezervat")).toBe(`Locul e rezervat până ${inline(at.reserved)}`);
-      expect(said.get("Florin Link")).toBe(`Linkul e valabil până ${inline(at.link)}`);
+      expect(said.get("Felix Link")).toBe(`Linkul e valabil până ${inline(at.link)}`);
       await db.delete(staffUsers);
     }
   });
@@ -237,8 +237,8 @@ describe("§650 «Până când» on the registrations list", () => {
     expect(REGISTRATION_SORT_KEYS).toContain("untilWhen");
     const order = async (dir: "asc" | "desc") =>
       (await listRegistrationsForAdmin(db, { eventId: race.id }, { limit: 25, offset: 0, sort: "untilWhen", dir }, now)).map((row) => row.registeredName);
-    expect(await order("asc")).toEqual(["Carmen Depășit", "Elena Rezervat", "Dan Oferit", "Florin Link", "Bogdan Semnează", "Ana Confirmată"]);
-    expect(await order("desc")).toEqual(["Bogdan Semnează", "Florin Link", "Dan Oferit", "Elena Rezervat", "Carmen Depășit", "Ana Confirmată"]);
+    expect(await order("asc")).toEqual(["Carmen Depășit", "Elena Rezervat", "Dan Oferit", "Felix Link", "Bogdan Semnează", "Ana Confirmată"]);
+    expect(await order("desc")).toEqual(["Bogdan Semnează", "Felix Link", "Dan Oferit", "Elena Rezervat", "Carmen Depășit", "Ana Confirmată"]);
     // The SQL's cases are the helper's: sorting the rows by `rowDeadlineOf` gives the same order.
     const rows = await listRegistrationsForAdmin(db, { eventId: race.id });
     const byHelper = [...rows]
@@ -259,7 +259,7 @@ describe("§650 «Până când» on the registrations list", () => {
     expect(last("Carmen Depășit")).toEqual([at.kept.toISOString(), "kept"]);
     expect(last("Dan Oferit")).toEqual([at.offer.toISOString(), "offer"]);
     expect(last("Elena Rezervat")).toEqual([at.reserved.toISOString(), "reserved"]);
-    expect(last("Florin Link")).toEqual([at.link.toISOString(), "link"]);
+    expect(last("Felix Link")).toEqual([at.link.toISOString(), "link"]);
     expect(last("Ana Confirmată")).toEqual(["", ""]);
   });
 

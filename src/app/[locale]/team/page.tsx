@@ -2,7 +2,6 @@ import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Container from "@mui/material/Container";
-import MuiLink from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
@@ -10,14 +9,14 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound, unstable_rethrow } from "next/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import RichText from "@/modules/content/rich-text/ui/RichText";
-import { teamLinkHost, type TeamLinkKind } from "@/modules/content/team/links";
+import { buildCanvasRows, cardsOffCanvas } from "@/modules/content/team/domain/canvas";
 import { teamMetaDescription } from "@/modules/content/team/meta-description";
-import { type PublicTeamLink, type PublicTeamMember, type PublicTeamPage, teamPageOnSite } from "@/modules/content/team/repository";
+import { type PublicTeamBox, type PublicTeamMember, type PublicTeamPage, teamPageOnSite } from "@/modules/content/team/repository";
 import { teamLinkKindWords } from "@/modules/content/team/ui/kind-words";
-import TeamLinkGlyph from "@/modules/content/team/ui/TeamLinkGlyph";
-import { teamPhotoFrame } from "@/modules/content/team/ui/team-photo-frame";
+import TeamCanvas from "@/modules/content/team/ui/TeamCanvas";
+import type { TeamCanvasWords } from "@/modules/content/team/ui/TeamCanvasCard";
+import TeamMemberLinks, { teamPhotoWidths } from "@/modules/content/team/ui/TeamMemberLinks";
 import TeamPhotoImage from "@/modules/content/team/ui/TeamPhotoImage";
-import { pictureSizes, pictureSrcSet } from "@/modules/media/ladder";
 import { cachedTeamPage } from "@/modules/public-cache/reads";
 import { pageAlternates, staticRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
@@ -62,6 +61,19 @@ const BIO_SX = {
 const INTRO_SX = { color: "text.secondary", mb: { xs: DENSITY.sectionGap, sm: 3 }, "& > :last-child": { mb: 0 } } as const;
 
 /**
+ * The grid of cards (§459): two to a row on a phone from 320px, three from `sm`, four from `md` —
+ * the album grid's columns, so `sizes` is the `tile` column's.
+ */
+const GRID_SX = {
+  listStyle: "none",
+  m: 0,
+  p: 0,
+  display: "grid",
+  gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", sm: "repeat(3, minmax(0, 1fr))", md: "repeat(4, minmax(0, 1fr))" },
+  gap: { xs: DENSITY.cardGridGap, sm: 2 },
+} as const;
+
+/**
  * The page's state and cards, or null when the database cannot say. A DRAFT page is a 404, as an
  * unpublished standing page is; a page the database cannot answer for stands with a sentence where
  * the cards would be — the contact page's rule for a read that may not answer (§281).
@@ -100,6 +112,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  * `/admin/pages/team` — without one the page reads the catalogue's sentence. A DRAFT page is a 404.
  * Each card reads the page's own language alone — a pair written in one language only reads as
  * none on both pages (§352). A Server Component with no island of its own; a film in a text brings the renderer's (§403).
+ *
+ * Since §701 (amending §691) a card may carry a level. While no shown card has one the page is the
+ * grid it always was, with the page's boxes under it; otherwise it is the canvas the club's
+ * president drew — the blue section with the levelled cards row by row, no lines, each card
+ * opening in place, and the boxes at its bottom — and the cards without a level in the grid under
+ * the canvas.
  */
 export default async function TeamPage({ params }: Props) {
   const { locale } = await params;
@@ -110,7 +128,17 @@ export default async function TeamPage({ params }: Props) {
   const page = await teamOrNull(locale);
   if (page && !page.published) notFound();
   const members = page?.members ?? [];
-  const kindWords = await teamLinkKindWords();
+  const boxes = page?.boxes ?? [];
+  const words: TeamCanvasWords = {
+    more: t("more"),
+    moreAbout: (name) => t("moreAbout", { name }),
+    linksLabel: (name) => t("linksLabel", { name }),
+    responsibilities: t("responsibilities"),
+    kinds: await teamLinkKindWords(),
+  };
+  const rows = buildCanvasRows(members);
+  const onCanvas = rows.length > 0;
+  const gridMembers = onCanvas ? cardsOffCanvas(members) : members;
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -128,57 +156,34 @@ export default async function TeamPage({ params }: Props) {
         </Typography>
       )}
 
-      {members.length === 0 ? (
-        <Typography variant="body1">{t("empty")}</Typography>
-      ) : (
+      {members.length === 0 && <Typography variant="body1">{t("empty")}</Typography>}
+
+      {onCanvas && (
+        // The canvas (§701): the levelled cards row by row, the page's boxes at its bottom.
+        <TeamCanvas rows={rows} boxes={boxes} words={words} label={t("listLabel")} boxesLabel={t("boxesLabel")} />
+      )}
+
+      {gridMembers.length > 0 && (
         <Box
           component="ul"
-          aria-label={t("listLabel")}
+          // Under the canvas the grid is a second list, named as one («Alți membri ai echipei»):
+          // two regions with one name are one list twice to a screen reader.
+          aria-label={onCanvas ? t("othersLabel") : t("listLabel")}
           data-testid="team-grid"
-          sx={{
-            listStyle: "none",
-            m: 0,
-            p: 0,
-            display: "grid",
-            // Two to a row on a phone from 320px, three from `sm`, four from `md` — the album
-            // grid's columns, so `sizes` is the `tile` column's.
-            gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", sm: "repeat(3, minmax(0, 1fr))", md: "repeat(4, minmax(0, 1fr))" },
-            gap: { xs: DENSITY.cardGridGap, sm: 2 },
-          }}
+          // Under the canvas, the cards with no level keep a section's room from it.
+          sx={onCanvas ? { ...GRID_SX, mt: { xs: DENSITY.sectionGap, sm: 3 } } : GRID_SX}
         >
-          {members.map((member, index) => (
-            <Card key={member.id} component="li" variant="outlined" sx={riseIn(index)}>
-              {member.photo && (
-                // Our own WebP ladder, sized on upload (§414), in the crop the club drew — or, with
-                // none, the square it always was (§541). The name is right under it: `alt` is empty.
-                <TeamPhotoImage
-                  src={member.photo.thumbUrl}
-                  {...photoWidths(member.photo)}
-                  photo={member.photo}
-                  loading={index < 4 ? "eager" : "lazy"}
-                  testId="team-photo"
-                />
-              )}
-              <CardContent sx={{ p: { xs: DENSITY.cardPadTop, sm: 2 }, "&:last-child": { pb: { xs: DENSITY.cardPadTop, sm: 3 } } }}>
-                <Typography variant="h2" sx={{ fontSize: { xs: "1rem", sm: "1.25rem" }, mb: 0.25, overflowWrap: "anywhere" }}>
-                  {member.name}
-                </Typography>
-                {member.role && (
-                  <Typography variant="body2" color="primary" sx={{ fontWeight: 600, mb: member.bio ? 1 : 0, fontSize: SMALL_TEXT }}>
-                    {member.role}
-                  </Typography>
-                )}
-                {member.bio && (
-                  // Through the renderer's allowlist, never markup the club did not type (§11.3).
-                  <Box sx={BIO_SX} data-testid="team-bio">
-                    <RichText body={member.bio} pictures="tile" />
-                  </Box>
-                )}
-                {member.links.length > 0 && (
-                  <MemberLinks links={member.links} label={t("linksLabel", { name: member.name })} kindWords={kindWords} />
-                )}
-              </CardContent>
-            </Card>
+          {gridMembers.map((member, index) => (
+            <TeamCard key={member.id} member={member} index={index} words={words} />
+          ))}
+        </Box>
+      )}
+
+      {!onCanvas && boxes.length > 0 && (
+        // The page's boxes (§691) under the grid, in its order; on the canvas they are its bottom row.
+        <Box component="section" aria-label={t("boxesLabel")} data-testid="team-boxes" sx={{ mt: { xs: DENSITY.sectionGapLg, sm: 4 }, display: "grid", gap: 2 }}>
+          {boxes.map((box, index) => (
+            <TeamBox key={box.id} box={box} index={index} />
           ))}
         </Box>
       )}
@@ -193,44 +198,75 @@ export default async function TeamPage({ params }: Props) {
 }
 
 /**
- * A person's links (§474), one row each in the club's order: the network's mark (§90), the club's
- * label in this language — or, without one, the network's name, and for a site or anything else
- * its host ("ana-alearga.ro"), so nobody is surprised by what opens. Every row is at least 44
- * pixels tall (BR-REQ-041-01 criterion 6) and opens in a new tab with no referrer: the address is
- * whatever the club pasted, checked `https://` at the save.
+ * One person's card in the grid: the photograph in the crop the club drew (§541), the name, the
+ * role title in the accent colour, the sub-role line, «Responsabilități» as bullets (§691), then
+ * the words about them and their links (§474). The canvas's cards are `TeamCanvasCard` (§701).
  */
-function MemberLinks({ links, label, kindWords: words }: { links: readonly PublicTeamLink[]; label: string; kindWords: Record<TeamLinkKind, string> }) {
+function TeamCard({ member, index, words }: { member: PublicTeamMember; index: number; words: TeamCanvasWords }) {
+  const hasMore = member.bio !== null || member.links.length > 0 || member.responsibilities.length > 0 || member.subtitle !== null;
   return (
-    // `role="list"` restated for WebKit, which drops it from a list with no markers (§169).
-    <Box component="ul" role="list" aria-label={label} data-testid="team-links" sx={{ listStyle: "none", m: 0, mt: 0.5, p: 0 }}>
-      {links.map((link, index) => (
-        <Box component="li" role="listitem" key={index}>
-          <MuiLink
-            href={link.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-link-kind={link.kind}
-            sx={{ display: "flex", alignItems: "center", gap: 1, minHeight: 44, overflowWrap: "anywhere", fontSize: SMALL_TEXT }}
-          >
-            <TeamLinkGlyph kind={link.kind} size={18} />
-            <Box component="span" sx={{ minWidth: 0 }}>
-              {link.label ?? (link.kind === "WEBSITE" || link.kind === "OTHER" ? teamLinkHost(link.url) : words[link.kind])}
+    <Card component="li" variant="outlined" data-testid="team-card" sx={{ ...riseIn(index), position: "relative" }}>
+      {member.photo && (
+        // Our own WebP ladder, sized on upload (§414), in the crop the club drew — or, with
+        // none, the square it always was (§541). The name is right under it: `alt` is empty.
+        <TeamPhotoImage
+          src={member.photo.thumbUrl}
+          {...teamPhotoWidths(member.photo, "tile")}
+          photo={member.photo}
+          loading={index < 4 ? "eager" : "lazy"}
+          testId="team-photo"
+        />
+      )}
+      <CardContent sx={{ p: { xs: DENSITY.cardPadTop, sm: 2 }, "&:last-child": { pb: { xs: DENSITY.cardPadTop, sm: 3 } } }}>
+        <Typography variant="h2" sx={{ fontSize: { xs: "1rem", sm: "1.25rem" }, mb: 0.25, overflowWrap: "anywhere" }}>
+          {member.name}
+        </Typography>
+        {member.role && (
+          <Typography variant="body2" color="primary" sx={{ fontWeight: 600, mb: hasMore ? 0.5 : 0, fontSize: SMALL_TEXT }}>
+            {member.role}
+          </Typography>
+        )}
+        {member.subtitle && (
+          <Typography variant="body2" color="text.secondary" data-testid="team-subtitle" sx={{ mb: 1, fontSize: SMALL_TEXT, overflowWrap: "anywhere" }}>
+            {member.subtitle}
+          </Typography>
+        )}
+        {member.responsibilities.length > 0 && (
+          <Box data-testid="team-responsibilities" sx={{ mb: member.bio || member.links.length > 0 ? 1 : 0 }}>
+            <Typography component="h3" variant="subtitle2" sx={{ fontSize: SMALL_TEXT, fontWeight: 700, mt: 0.5 }}>
+              {words.responsibilities}
+            </Typography>
+            <Box component="ul" sx={{ m: 0, pl: 2.5, color: "text.secondary", "& li": { fontSize: SMALL_TEXT, lineHeight: 1.45, overflowWrap: "anywhere" } }}>
+              {member.responsibilities.map((line, lineIndex) => (
+                <li key={lineIndex}>{line}</li>
+              ))}
             </Box>
-          </MuiLink>
-        </Box>
-      ))}
-    </Box>
+          </Box>
+        )}
+        {member.bio && (
+          // Through the renderer's allowlist, never markup the club did not type (§11.3).
+          <Box sx={BIO_SX} data-testid="team-bio">
+            <RichText body={member.bio} pictures="tile" />
+          </Box>
+        )}
+        {member.links.length > 0 && <TeamMemberLinks links={member.links} label={words.linksLabel(member.name)} kindWords={words.kinds} fontSize={SMALL_TEXT} />}
+      </CardContent>
+    </Card>
   );
 }
 
-/**
- * The photo's `srcset` and `sizes` (§414), or neither: a card is a column of the grid — the album
- * grid's `tile` widths, two, three and four to a row — and the photograph is drawn wider than its
- * card by what the frame magnifies: the crop's `1 / w`, or a square's cover (`teamPhotoFrame`,
- * §541). A picture from before the ladder keeps its thumbnail.
- */
-function photoWidths(photo: NonNullable<PublicTeamMember["photo"]>): { srcSet?: string; sizes?: string } {
-  const srcSet = pictureSrcSet(photo.webUrl, photo.width);
-  if (!srcSet) return {};
-  return { srcSet, sizes: pictureSizes("tile", 100, teamPhotoFrame(photo).magnify) };
+/** One box under the grid (§691): its heading and the club's text through the page's renderer. */
+function TeamBox({ box, index }: { box: PublicTeamBox; index: number }) {
+  return (
+    <Card component="article" variant="outlined" data-testid="team-box" sx={riseIn(index)}>
+      <CardContent sx={{ p: { xs: DENSITY.cardPadTop, sm: 2 }, "&:last-child": { pb: { xs: DENSITY.cardPadTop, sm: 3 } } }}>
+        <Typography variant="h2" sx={{ fontSize: { xs: "1.125rem", sm: "1.375rem" }, mb: 1, overflowWrap: "anywhere" }}>
+          {box.title}
+        </Typography>
+        <Box sx={{ "& > :last-child": { mb: 0 }, overflowWrap: "anywhere" }}>
+          <RichText body={box.body} />
+        </Box>
+      </CardContent>
+    </Card>
+  );
 }

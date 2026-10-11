@@ -6,8 +6,8 @@ import { platformSettings } from "@/db/schema/platform-settings";
 import { staffUsers } from "@/db/schema/staff-users";
 import { faqQuestions } from "@/db/schema/faq";
 import { newsletterSends } from "@/db/schema/newsletter";
-import { teamMembers } from "@/db/schema/team";
-import { shopProducts } from "@/db/schema/shop";
+import { teamMembers, teamPageBoxes } from "@/db/schema/team";
+import { shopProductPictures, shopProducts } from "@/db/schema/shop";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { FAQ_PAGE_SETTING_KEY } from "@/modules/content/faq/page-settings";
@@ -96,6 +96,13 @@ const inTeamBio = sql`(${names(sql`${teamMembers.bioRoJson}::text`)} OR ${names(
  */
 const inTeamIntro = sql`(${platformSettings.key} = ${TEAM_PAGE_SETTING_KEY} AND ${names(sql`${platformSettings.value}::text`)})`;
 
+/**
+ * Whether a box under the chart of «Echipa» carries the asset in its text, either language (§691):
+ * the partners' logos are pictures in that text, hidden boxes included — a box being prepared is
+ * a box somebody is about to show.
+ */
+const inTeamBox = sql`(${names(sql`${teamPageBoxes.bodyRoJson}::text`)} OR ${names(sql`${teamPageBoxes.bodyEnJson}::text`)})`;
+
 /** Whether a question of «Întrebări frecvente» carries the asset in its answer, either language (§525). */
 const inFaqAnswer = sql`(${names(sql`${faqQuestions.answerRoJson}::text`)} OR ${names(sql`${faqQuestions.answerEnJson}::text`)})`;
 
@@ -107,6 +114,9 @@ const inFaqIntro = sql`(${platformSettings.key} = ${FAQ_PAGE_SETTING_KEY} AND ${
  * both languages of both in their one `platform_settings` row — read as its text, like the team's.
  */
 const inMembersPage = sql`(${platformSettings.key} = ${MEMBERS_PAGE_SETTING_KEY} AND ${names(sql`${platformSettings.value}::text`)})`;
+
+/** Whether a shop product's description carries the asset in its text, either language (§697), hidden and archived products included. */
+const inShopDescription = sql`(${names(sql`${shopProducts.descriptionRoJson}::text`)} OR ${names(sql`${shopProducts.descriptionEnJson}::text`)})`;
 
 const referencedSomewhere = sql`(
   EXISTS (SELECT 1 FROM ${galleryItems} WHERE ${galleryItems.mediaAssetId} = ${mediaAssets.id})
@@ -125,6 +135,8 @@ const referencedSomewhere = sql`(
   OR EXISTS (SELECT 1 FROM ${teamMembers} WHERE ${inTeamBio})
   -- A picture in the team page's introduction (§474), kept in its platform setting.
   OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inTeamIntro})
+  -- A picture in a box under the team page's chart (§691), by address, hidden boxes included.
+  OR EXISTS (SELECT 1 FROM ${teamPageBoxes} WHERE ${inTeamBox})
   -- A picture in an answer of «Întrebări frecvente» (§525), hidden questions included, and in
   -- the page's introduction.
   OR EXISTS (SELECT 1 FROM ${faqQuestions} WHERE ${inFaqAnswer})
@@ -134,6 +146,9 @@ const referencedSomewhere = sql`(
   -- A product's photo in the members' shop (§683), by id, hidden and archived products included:
   -- an archived product's row stays for its orders, and a hidden one is being prepared.
   OR EXISTS (SELECT 1 FROM ${shopProducts} WHERE ${shopProducts.photoMediaAssetId} = ${mediaAssets.id})
+  -- A picture of a product's strip (§697), by id, and a picture in a product's description, by address.
+  OR EXISTS (SELECT 1 FROM ${shopProductPictures} WHERE ${shopProductPictures.mediaAssetId} = ${mediaAssets.id})
+  OR EXISTS (SELECT 1 FROM ${shopProducts} WHERE ${inShopDescription})
   -- A picture in a newsletter sent (§550): the letter is in the subscribers' inboxes, which load
   -- it from this address for as long as they keep the message, so a send keeps its pictures.
   OR EXISTS (SELECT 1 FROM ${newsletterSends} WHERE ${names(sql`${newsletterSends.body}::text`)})
@@ -226,7 +241,8 @@ export async function countMediaAssets<T extends Record<string, unknown>>(
   return row ?? { total: 0, unreferenced: 0, sweepable: 0 };
 }
 
-export type MediaReference = { kind: "album" | "page" | "event" | "team" | "teamIntro" | "faq" | "membersPage" | "newsletter"; id: string; title: string | null };
+/** `teamBox` (§691): a box under the team page's chart, by its id, titled in the reader's language. */
+export type MediaReference = { kind: "album" | "page" | "event" | "team" | "teamIntro" | "teamBox" | "faq" | "membersPage" | "newsletter"; id: string; title: string | null };
 
 export type MediaAssetRow = {
   id: string;
@@ -337,6 +353,11 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .select({ assetId: mediaAssets.id })
     .from(mediaAssets)
     .innerJoin(platformSettings, inTeamIntro);
+  // A picture in a box under the team page's chart (§691): the box, titled in the reader's language.
+  const inTeamBoxes = await db
+    .select({ assetId: mediaAssets.id, id: teamPageBoxes.id, title: locale === "en" ? teamPageBoxes.titleEn : teamPageBoxes.titleRo })
+    .from(mediaAssets)
+    .innerJoin(teamPageBoxes, inTeamBox);
   // A picture in an answer of «Întrebări frecvente», or in its introduction (§525): one reference, the page.
   const inFaq = await db
     .select({ assetId: mediaAssets.id })
@@ -352,6 +373,15 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .select({ assetId: shopProducts.photoMediaAssetId })
     .from(shopProducts)
     .where(isNotNull(shopProducts.photoMediaAssetId));
+  // A product's strip and its description (§697): the same page.
+  const inShopPictures = await db
+    .select({ assetId: shopProductPictures.mediaAssetId })
+    .from(shopProductPictures)
+    .where(isNotNull(shopProductPictures.mediaAssetId));
+  const inShopDescriptions = await db
+    .select({ assetId: mediaAssets.id })
+    .from(mediaAssets)
+    .where(sql`EXISTS (SELECT 1 FROM ${shopProducts} WHERE ${inShopDescription})`);
   // A picture in a newsletter sent (§550): one reference, the newsletter's page.
   const inNewsletters = await db
     .select({ assetId: mediaAssets.id })
@@ -381,9 +411,12 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
   for (const row of inTeam) if (row.assetId) add(row.assetId, { kind: "team", id: row.id, title: row.title });
   for (const row of inTeamBios) add(row.assetId, { kind: "team", id: row.id, title: row.title });
   for (const row of inTeamIntros) add(row.assetId, { kind: "teamIntro", id: TEAM_PAGE_SETTING_KEY, title: null });
+  for (const row of inTeamBoxes) add(row.assetId, { kind: "teamBox", id: row.id, title: row.title });
   for (const row of inFaq) add(row.assetId, { kind: "faq", id: FAQ_PAGE_SETTING_KEY, title: null });
   for (const row of inMembersPages) add(row.assetId, { kind: "membersPage", id: MEMBERS_PAGE_SETTING_KEY, title: null });
   for (const row of inShop) if (row.assetId) add(row.assetId, { kind: "membersPage", id: MEMBERS_PAGE_SETTING_KEY, title: null });
+  for (const row of inShopPictures) if (row.assetId) add(row.assetId, { kind: "membersPage", id: MEMBERS_PAGE_SETTING_KEY, title: null });
+  for (const row of inShopDescriptions) add(row.assetId, { kind: "membersPage", id: MEMBERS_PAGE_SETTING_KEY, title: null });
   for (const row of inNewsletters) add(row.assetId, { kind: "newsletter", id: "newsletter", title: null });
 
   return assets.map((asset) => ({

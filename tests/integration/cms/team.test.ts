@@ -303,7 +303,7 @@ describe("§459 the team page's cards", () => {
     await setTeamMemberVisible(db, { actor: actor("ADMIN"), memberId: card.id, expectedVersion: card.version, visible: true });
 
     const draft = await readPublicTeamPage(db, "ro");
-    expect(draft).toEqual({ published: false, intro: null, introText: null, members: [] });
+    expect(draft).toEqual({ published: false, intro: null, introText: null, members: [], boxes: [] });
     expect(teamPageOnSite(draft)).toBe(false);
 
     expect(await refusal(setTeamPagePublished(db, { actor: actor("COPYWRITER"), published: true }))).toMatchObject({ code: "FORBIDDEN" });

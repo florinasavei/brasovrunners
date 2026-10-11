@@ -111,7 +111,7 @@ describe("§683 ten members order the last one at once", () => {
     expect(await db.select().from(shopOrders).where(eq(shopOrders.productId, product.id))).toHaveLength(1);
   });
 
-  it("a cancellation racing a save that deletes the order's variant never deadlocks", async () => {
+  it("a cancellation racing a save that removes the order's size never deadlocks: the save is refused (§700), the stock comes back once", async () => {
     const fields = { titleRo: "Buff cu mărimi", titleEn: "Sized buff", price: "20", variants: "S: 5\nM: 5", stock: "", visible: true };
     for (let round = 0; round < 25; round++) {
       const product = await createProduct(db, { actor: admin, fields, now: NOW });
@@ -124,6 +124,36 @@ describe("§683 ten members order the last one at once", () => {
         fields: { productId: product.id, variantId: small.id, quantity: "1", note: "" },
         now: NOW,
       });
+      const [cancelled, saved] = await Promise.allSettled([
+        moveOrderByClub(db, { actor: admin, orderId: placed.id, verb: "cancel", now: NOW }),
+        saveProduct(db, { actor: admin, productId: product.id, expectedVersion: product.version, fields: { ...fields, variants: "M: 5" }, now: NOW }),
+      ]);
+      // The cancellation always completes; a deadlock (40P01) would reject it or the save with a database error.
+      if (cancelled.status === "rejected") throw cancelled.reason;
+      expect(saved.status).toBe("rejected");
+      const refusal = (saved as PromiseRejectedResult).reason;
+      expect(isDomainError(refusal) && refusal.code).toBe("SHOP_SIZE_HAS_ORDERS");
+      expect(refusal.fields).toEqual(["sizes"]);
+      const [after] = await db.select().from(shopOrders).where(eq(shopOrders.id, placed.id));
+      expect(after).toMatchObject({ status: "CANCELLED", variantId: small.id, stockTaken: false });
+      const [variant] = await db.select().from(shopProductVariants).where(eq(shopProductVariants.id, small.id));
+      expect(variant.stock).toBe(5);
+    }
+  });
+
+  it("a cancellation racing a save that removes another, order-free size never deadlocks, and both complete", async () => {
+    const fields = { titleRo: "Buff două mărimi", titleEn: "Two-size buff", price: "20", variants: "S: 5\nM: 5", stock: "", visible: true };
+    for (let round = 0; round < 25; round++) {
+      const product = await createProduct(db, { actor: admin, fields, now: NOW });
+      otherProducts.push(product.id);
+      const [medium] = await db.select().from(shopProductVariants).where(and(eq(shopProductVariants.productId, product.id), eq(shopProductVariants.label, "M")));
+      const placed = await placeOrder(db, {
+        account: members[(round % 9) + 1],
+        locale: "ro",
+        noticeDescribes: true,
+        fields: { productId: product.id, variantId: medium.id, quantity: "1", note: "" },
+        now: NOW,
+      });
       const results = await Promise.allSettled([
         moveOrderByClub(db, { actor: admin, orderId: placed.id, verb: "cancel", now: NOW }),
         saveProduct(db, { actor: admin, productId: product.id, expectedVersion: product.version, fields: { ...fields, variants: "M: 5" }, now: NOW }),
@@ -131,8 +161,10 @@ describe("§683 ten members order the last one at once", () => {
       for (const result of results) {
         if (result.status === "rejected") throw result.reason;
       }
+      const rows = await db.select().from(shopProductVariants).where(eq(shopProductVariants.productId, product.id));
+      expect(rows.map((row) => row.label)).toEqual(["M"]);
       const [after] = await db.select().from(shopOrders).where(eq(shopOrders.id, placed.id));
-      expect(after).toMatchObject({ status: "CANCELLED", variantId: null, stockTaken: false });
+      expect(after).toMatchObject({ status: "CANCELLED", variantId: medium.id, stockTaken: false });
     }
   });
 });

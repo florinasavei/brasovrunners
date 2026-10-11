@@ -67,9 +67,11 @@ describe("§480 a link inside a sentence keeps 44 pixels without stretching its 
     // instead of reaching over the first address's lower half.
     expect(contact).toContain("sx={index === 0 ? inlineLink : stretchedLink}");
     expect(contact).toMatch(/const stretchedLink = \{ display: "inline-flex", alignItems: "center", \.\.\.TAP_TARGET \}/);
-    // The address line keeps 24 pixels over it at every width, room for the first address's
-    // 21.6-pixel reach above its words, clear of the send button.
-    expect(contact).toMatch(/<Typography variant="body1" sx=\{\{ mt: 3 \}\}>\s*\{t\("direct"\)\}/);
+    // «Alte căi de contact» (§NNN): the address and the phone stand in rows 24 pixels apart, room
+    // for the phone's 21.6-pixel reach above its words, clear of the address above it; the address
+    // row opens under the section's heading, which nothing presses.
+    const ways = contact.slice(contact.indexOf('data-testid="contact-ways"'));
+    expect(ways).toMatch(/^[^]*?<Stack spacing=\{3\}[^>]*>[^]*?\{t\("direct"\)\} \{addressLinks\}[^]*?\{t\("phone"\)\}/);
   });
 });
 

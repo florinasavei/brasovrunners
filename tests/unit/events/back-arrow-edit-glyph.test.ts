@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * BR-REQ-011-01 (§469) — the event page's «Înapoi la evenimente» link opens with a left arrow and
+ * BR-REQ-011-01 (§469) — the event page's «Înapoi la alergări» link opens with a left arrow and
  * the staff «Editează» button carries Material's Edit pencil. The page is a Server Component that
  * reads the database, so — as `page-sections.test.ts` does — it is read as source: each glyph is a
  * child element inside its control, before the words, never a prop across the client boundary (§318).

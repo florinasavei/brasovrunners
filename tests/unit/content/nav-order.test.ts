@@ -53,7 +53,7 @@ function hrefs(markup: string): string[] {
 }
 
 describe("§537 the public menu's order", () => {
-  it("is Evenimente, Calendar, Contact, Echipa, Întrebări frecvente, then the club's pages", async () => {
+  it("is Alergări, Calendar, Contact, Echipa, Întrebări frecvente, then the club's pages", async () => {
     const markup = await html(
       createElement(SiteNav, {
         showTeam: true,
@@ -82,7 +82,7 @@ describe("§571 the club's one menu order", () => {
     { id: ISTORIC, slug: "istoric", title: "Istoric" },
   ];
 
-  it("puts a custom page before «Evenimente» and «Contact» after it, where the club placed them", async () => {
+  it("puts a custom page before «Alergări» and «Contact» after it, where the club placed them", async () => {
     const markup = await html(
       createElement(SiteNav, {
         showTeam: true,

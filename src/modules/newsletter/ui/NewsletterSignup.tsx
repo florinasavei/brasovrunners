@@ -8,6 +8,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
+import CampaignOutlinedIcon from "@mui/icons-material/CampaignOutlined";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { requestNewsletterManageLinkAction, submitNewsletterAction } from "@/app/[locale]/contact/actions";
@@ -108,7 +109,9 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
       data-testid="newsletter-section"
       sx={{ mt: { xs: DENSITY.sectionGapLg, sm: 4 }, pt: { xs: DENSITY.sectionGap, sm: 3 }, borderTop: 1, borderColor: "divider", scrollMarginTop: 16 }}
     >
-      <Typography id="newsletter-heading" variant="h2" sx={{ fontSize: "1.35rem", mb: 1 }}>
+      {/* The contact page's sections each wear a glyph before their heading (§NNN): the megaphone here. */}
+      <Typography id="newsletter-heading" variant="h2" sx={{ fontSize: "1.35rem", mb: 1, display: "flex", alignItems: "center", gap: 1 }}>
+        <CampaignOutlinedIcon aria-hidden="true" sx={{ fontSize: 26, color: "primary.main", flexShrink: 0 }} />
         {t("heading")}
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>

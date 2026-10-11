@@ -23,7 +23,7 @@
     "skipToContent": "Sari la conținut",
     "nav": {
       "label": "Navigare principală",
-      "events": "Evenimente",
+      "events": "Alergări",
       "calendar": "Calendar",
       "gallery": "Galerie",
       "team": "Echipa",
@@ -39,16 +39,16 @@
   },
   "Events": {
     "undatedTitle": "Data sau ora se anunță",
-    "title": "Evenimente",
+    "title": "Alergări",
     "intro": "Alergări, ture pe munte și antrenamente organizate de club — întotdeauna gratuite.",
-    "empty": "Nu sunt evenimente publicate momentan. Revino în curând.",
-    "noUpcoming": "Nu sunt evenimente viitoare programate. Cel mai recent eveniment al clubului:",
-    "featured": "Evenimentul principal",
-    "pastCount": "{count, plural, one {# eveniment trecut} few {# evenimente trecute} other {# de evenimente trecute}}",
+    "empty": "Nu sunt alergări publicate momentan. Revino în curând.",
+    "noUpcoming": "Nu sunt alergări viitoare programate. Cea mai recentă alergare a clubului:",
+    "featured": "Alergarea principală",
+    "pastCount": "{count, plural, one {# alergare trecută} few {# alergări trecute} other {# de alergări trecute}}",
     "pastCountFiltered": "Din trecut, după filtre ({count})",
     "filter": {
-      "label": "Filtrele evenimentelor",
-      "labelPast": "Filtrele evenimentelor trecute",
+      "label": "Filtrele alergărilor",
+      "labelPast": "Filtrele alergărilor trecute",
       "button": "Filtre",
       "buttonCount": "Filtre ({count})",
       "groups": {
@@ -66,15 +66,15 @@
         "OVER_21": "Peste 21 km"
       },
       "partner": "Colaborare",
-      "night": "Eveniment de noapte",
+      "night": "Alergare de noapte",
       "registration": "Înscrieri deschise",
       "apply": "Aplică",
       "clear": "Șterge filtrele",
       "remove": "Scoate filtrul",
       "active": "Filtre active",
-      "activePast": "Filtre active pentru evenimentele trecute",
-      "none": "Niciun eveniment nu se potrivește filtrelor alese.",
-      "pastNothingToNarrow": "Toate evenimentele trecute sunt la fel — {values} — așa că nu e nimic de filtrat aici."
+      "activePast": "Filtre active pentru alergările trecute",
+      "none": "Nicio alergare nu se potrivește filtrelor alese.",
+      "pastNothingToNarrow": "Toate alergările trecute sunt la fel — {values} — așa că nu e nimic de filtrat aici."
     },
     "calendar": {
       "previous": "Luna anterioară",
@@ -116,7 +116,7 @@
     "pastCountOfType": "Din trecut — {type} ({count})"
   },
   "Event": {
-    "backToEvents": "Înapoi la evenimente",
+    "backToEvents": "Înapoi la alergări",
     "editInBackoffice": "Editează",
     "previewDoor": "previzualizare",
     "opensInNewTab": "se deschide într-o filă nouă",
@@ -601,7 +601,7 @@
       "clearTime": "Șterge ora"
     },
     "nav": {
-      "events": "Evenimente",
+      "events": "Alergări",
       "registrations": "Înscrieri",
       "staff": "Echipa",
       "legal": "Documente legale",
@@ -626,7 +626,8 @@
       "registeredWaitlisted": "{count} pe lista de așteptare",
       "registeredOutside": "invitați speciali: {count}",
       "registeredMoreEvents": "+{count} altele",
-      "newsletter": "Newsletter"
+      "newsletter": "Newsletter",
+      "shop": "Magazin"
     },
     "outbox": {
       "status": {
@@ -1628,6 +1629,7 @@
       "ONE_ADDRESS_ONLY": "La „Declarațiile semnate merg la” încape o singură adresă — cutia de arhivă. Pune-le pe celelalte la „Copie vizibilă (Cc)” sau „Copie ascunsă (Bcc)”. Nu s-a salvat nimic.",
       "CONFLICT": "Altcineva a salvat între timp. Reîncarcă pagina și aplică din nou modificările tale — nimic nu a fost suprascris.",
       "DECLARATION_HELD": "Nu s-a șters nimic: o declarație e păstrată pentru o reclamație sau un litigiu. Un Administrator scoate întâi păstrarea, din pagina înscrierii sau din semnăturile alergării.",
+      "SHOP_SIZE_HAS_ORDERS": "Nu s-a salvat: o mărime debifată are comenzi. Las-o bifată — poți pune stocul 0 ca să nu se mai comande.",
       "ERASE_NAME_MISMATCH": "Numele scris nu este numele înscrisului. Nu s-a șters nimic — scrie numele exact așa cum apare pe rând.",
       "LEGAL_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este a acestei versiuni. Nu s-a șters nimic — scrie exact textul cerut, de exemplu „GDPR 2”.",
       "LEGAL_DELETE_NEEDS_REASON": "Scrie un motiv. Este singurul lucru care rămâne după ștergere.",
@@ -2116,15 +2118,18 @@
           "cropTitle": "Partea care se tipărește",
           "cropHelp": {
             "header": "Trage dreptunghiul peste partea care vrei să apară sus, pe toată lățimea numărului.",
-            "sponsors": "Trage dreptunghiul peste sponsori. „Toată imaginea” pune imaginea întreagă în bandă."
+            "sponsors": "Trage dreptunghiul peste sponsori. „Toată imaginea” pune imaginea întreagă în bandă.",
+            "memberCard": "Trage dreptunghiul peste partea care vrei să apară în spatele cifrelor, pe tot numărul."
           },
           "cropReset": {
             "header": "Înapoi la mijloc",
-            "sponsors": "Toată imaginea"
+            "sponsors": "Toată imaginea",
+            "memberCard": "Înapoi la mijloc"
           },
           "shape": {
             "header": "Forma: {ratio} la 1, cât banda de sus a numărului.",
-            "sponsors": "Forma: {ratio} la 1, cât banda cu sponsori."
+            "sponsors": "Forma: {ratio} la 1, cât banda cu sponsori.",
+            "memberCard": "Forma: {ratio} la 1, cât numărul întreg fără rândul de jos."
           }
         },
         "footer": {
@@ -2150,13 +2155,22 @@
           "enabledHelp": "Formularul întreabă „Vreau numărul de membru” sub bifa de membru {club}. Se tipărește doar pentru o adresă a unui cont din «Echipa». Numărul rămâne în aceeași ordine.",
           "previewAlt": "Numărul de concurs al unui membru, cu designul membrilor, pentru un alergător cu numele „Nume Prenume”",
           "previewCaption": "Previzualizare — numărul unui membru",
-          "bandColour": "Culoarea benzii pentru membri",
-          "bandColourHelp": "Folosită când nu alegi o imagine, și sub eticheta de pe imagine.",
-          "eventColour": "Culoarea evenimentului",
+          "style": "Fundalul numărului de membru",
+          "styleHelp": "„Tot numărul”: fundal pe tot numărul, cifre și nume albe, eticheta pe o bandă portocalie. „Doar banda de sus”: numărul obișnuit, cu altă bandă sus.",
+          "styles": {
+            "card": "Tot numărul — degradeul clubului, o culoare sau o fotografie",
+            "band": "Doar banda de sus"
+          },
+          "bandOnly": "{colour} — doar pe bandă",
+          "cardImageSrc": "Fotografie pe tot numărul, pentru membri",
+          "cardImageSrcHelp": "Doar cu „Tot numărul”. Stă sub un văl bleumarin, ca cifrele albe să se citească. Fără ea: culoarea aleasă sau degradeul tricoului.",
+          "bandColour": "Culoarea membrilor",
+          "bandColourHelp": "Pe bandă: culoarea benzii. Pe tot numărul: fundalul, fără fotografie; gol înseamnă degradeul tricoului. Verdele și portocaliul rămân doar pe bandă.",
+          "eventColour": "Implicită: a evenimentului, sau degradeul clubului",
           "headerImageSrc": "Imagine în locul benzii, pentru membri",
-          "headerImageSrcHelp": "Ca imaginea de sus a numărului, doar pe numerele membrilor. Fără ea, banda are culoarea aleasă mai sus.",
+          "headerImageSrcHelp": "Doar cu „Doar banda de sus”. Ca imaginea de sus a numărului, doar pe numerele membrilor. Fără ea, banda are culoarea aleasă mai sus.",
           "label": "Eticheta",
-          "labelHelp": "Un rând scurt pe banda numărului de membru, cel mult {max} de caractere. Gol: «Membru {club}»."
+          "labelHelp": "Un rând scurt, cel mult {max} de caractere, pe bandă sau cu majuscule pe banda portocalie. Gol: «Membru {club}»."
         }
       },
       "bibColour": "Culoarea numerelor de concurs (BIB)",
@@ -2734,6 +2748,18 @@
         "invited": "contul exista, invitația trimisă din nou",
         "failed": "eșuat: {reason}",
         "unconfigured": "fără cheie de invitații: contul se face din consola Zitadel"
+      },
+      "permissions": {
+        "shopManage": "Gestionează magazinul",
+        "implied": "inclus în rol",
+        "chipShop": "Magazin",
+        "saving": "Se salvează…",
+        "grantTitle": "Îi dai magazinul?",
+        "grantBody": "{name} va putea scrie produsele, plata și adresa pentru comenzi și va marca fiecare comandă plătită, predată sau anulată, din secțiunea «Magazin». Adresele membrilor nu le vede.",
+        "grant": "Dă-i magazinul",
+        "revokeTitle": "Îi iei magazinul?",
+        "revokeBody": "{name} nu mai vede secțiunea «Magazin» de la următoarea pagină pe care o deschide.",
+        "revoke": "Ia-i magazinul"
       }
     },
     "queue": {
@@ -4512,7 +4538,7 @@
       "saving": "Se salvează…",
       "readOnly": "Ordinea o alege Administratorul; aici vezi ordinea din meniu.",
       "entries": {
-        "events": "Evenimente",
+        "events": "Alergări",
         "calendar": "Calendar",
         "contact": "Contact",
         "gallery": "Galerie",
@@ -4627,7 +4653,8 @@
       "usedInTeamIntro": "Pe pagina Echipa: introducerea",
       "usedInFaq": "Pe pagina «Întrebări frecvente»",
       "usedInMembersPage": "Pe paginile membrilor",
-      "usedInNewsletter": "Într-un newsletter trimis"
+      "usedInNewsletter": "Într-un newsletter trimis",
+      "usedInTeamBox": "Pe pagina Echipa: caseta {title}"
     },
     "gallery": {
       "title": "Galerie foto",
@@ -5008,7 +5035,7 @@
         "EVENT_INVITATION": "Când un administrator trimite invitații din lista înscrierilor unui eveniment, și la Retrimite. Un link spre formular, cu numele și adresa completate; locul e păstrat până la termen.",
         "SHOP_ORDER_PLACED": "Când un membru comandă din magazinul membrilor: comanda și cum se plătește. Butonul duce în zona membrilor.",
         "SHOP_ORDER_PAID": "Când un administrator marchează comanda plătită: membrului care a comandat. Butonul duce în zona membrilor.",
-        "SHOP_ORDER_CLUB_NOTICE": "La fiecare comandă din magazin, la adresa din «Membri» → «Magazin» → «Cine primește comenzile», dacă e scrisă."
+        "SHOP_ORDER_CLUB_NOTICE": "La fiecare comandă din magazin, la adresa din «Magazin» → «Cine primește comenzile», dacă e scrisă."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
@@ -5660,6 +5687,238 @@
       "confirmationRetry": "Cui nu a confirmat, linkul pleacă singur din nou la {retry} după ultimul email, cel mult {times}; se socotește și «Retrimite». Termenul nu se mută.",
       "confirmationRetryOff": "Nu se retrimite singur: în „Termene”, numărul de retrimiteri e 0."
     },
+    "design": {
+      "title": "Sistemul de design",
+      "intro": "Culorile, literele, formele, butoanele, pastilele și glifele site-ului, citite din cod la fiecare afișare — pagina nu poate rămâne în urma lui. Pentru oricine citește conținutul clubului.",
+      "sideBySide": "Comparația cu noul aspect, una lângă alta, vine cu faza 1 a redesign-ului.",
+      "contents": "Cuprinsul paginii",
+      "sections": {
+        "colours": "Culori",
+        "type": "Tipografie",
+        "shape": "Forme și umbre",
+        "buttons": "Butoane",
+        "pills": "Pastile și glife",
+        "samples": "Mostre",
+        "icons": "Iconografie",
+        "rules": "Reguli",
+        "plan": "Planul redesign-ului"
+      },
+      "colours": {
+        "intro": "Fiecare valoare de aici e citită din fișierul mărcii, singurul care are voie să scrie o culoare; pagina nu copiază nimic.",
+        "light": "Tema deschisă · COLOR",
+        "dark": "Tema întunecată · COLOR_DARK",
+        "tints": "Fundalurile paginilor publice · SITE_TINT",
+        "tintsNote": "Nuanțele dintre care alege clubul la «Aspectul site-ului»; fiecare ține textul la AA și cardurile albe vizibile.",
+        "gradients": "Gradientele · GRADIENT, SURFACE_GRADIENT",
+        "gradientsNote": "Trei gradiente pe site, atât; cel al tricoului nu poartă niciodată text.",
+        "pairs": "Perechile text / fundal",
+        "pairsNote": "Perechile pe care le desenează paginile, cu raportul de contrast WCAG 2.1 — același calcul care refuză o culoare «Personalizat»; testul `brand.test.ts` le ține pe toate la AA (4,5 : 1).",
+        "pairsLight": "Tema deschisă",
+        "pairsDark": "Tema întunecată",
+        "pairsHero": "Peste gradientul evenimentului principal",
+        "pairsAccent": "Peste gradientul butonului apăsat",
+        "sample": "Mostră",
+        "foreground": "Text",
+        "background": "Fundal",
+        "ratio": "Raport",
+        "level": "Nivel",
+        "aa": "AA",
+        "aaLarge": "AA (text mare)",
+        "below": "sub AA"
+      },
+      "type": {
+        "intro": "Variantele temei, așa cum le definește fișierul temei, și fețele pe care le încarcă aspectul paginii.",
+        "sample": "Alergăm împreună prin Brașov: pe asfalt, pe munte și prin Șchei.",
+        "variants": "Variantele temei",
+        "family": "familia",
+        "weight": "grosimea",
+        "size": "mărimea",
+        "faces": "Fețele încărcate",
+        "facesNote": "Literele românești în fiecare față. Facón nu le are: logotipul rămâne cu majuscule, fără ș.",
+        "faceNames": {
+          "roboto": "Roboto — textul și titlurile",
+          "inter": "Inter — laboratorul temei",
+          "nunito": "Nunito — laboratorul temei",
+          "signature": "Caveat — semnătura declarației",
+          "facon": "Facón — logotipul de pe echipament"
+        },
+        "roles": "Rolurile · FONT",
+        "rolesNote": "Două roluri, nu o familie: un font al clubului schimbă titlurile și lasă textul în pace.",
+        "display": "Titluri (display)",
+        "body": "Text (body)",
+        "wordmark": "Logotip (wordmark)",
+        "fallback": "Rezerva (fallback)"
+      },
+      "shape": {
+        "intro": "Raza colțurilor, umbrele, punctele de rupere, unitatea de spațiere, scara de densitate pe telefon și regula de 44 px.",
+        "radius": "Raza colțurilor",
+        "shadows": "Umbrele",
+        "shadowsNote": "Primele patru trepte ale scării MUI, pe carduri; un card ridicat sub cursor urcă la a treia.",
+        "shadow": "Umbra {n}",
+        "breakpoints": "Punctele de rupere",
+        "key": "Cheia",
+        "spacing": "Unitatea de spațiere",
+        "density": "Densitatea pe telefon · DENSITY",
+        "densityNote": "Pașii pentru xs, în unități de spațiere; de la sm în sus paginile își păstrează valorile.",
+        "units": "unități",
+        "tapTarget": "Ținta de atins",
+        "tapTargetNote": "Orice buton sau link de pe o pagină publică are cel puțin 44 × 44 px; testele e2e le măsoară (BR-REQ-041-01)."
+      },
+      "buttons": {
+        "intro": "Fiecare buton poartă o glifă înaintea cuvintelor; de unde vine glifa diferă între site și backoffice.",
+        "public": "Butoanele publice · ButtonLink",
+        "publicNote": "Glifa e primul copil al butonului, dintr-un singur fișier de iconiță; paginile publice nu importă niciodată `action-icons.ts`.",
+        "sample": "Vezi evenimentele",
+        "disabled": "Dezactivat",
+        "sizes": "Mărimile",
+        "sizesNote": "Glifa are mărimea slotului MUI: {small}, {medium} și {large} px.",
+        "backoffice": "Butoanele din backoffice · GlyphButton, GlyphSubmitButton, GlyphButtonLink",
+        "backofficeNote": "Glifa vine după nume din `action-icons.ts` și e desenată pe partea clientului; butonul de trimitere arată alergătorul cât timp cererea e pe drum.",
+        "save": "Salvează",
+        "saving": "Se salvează…",
+        "open": "Deschide pagina"
+      },
+      "pills": {
+        "intro": "Pastilele și marcajele cardurilor, construite din rânduri de probă cu aceleași funcții ca pe site.",
+        "route": "Pastilele traseului · RoutePills",
+        "routeNote": "Construite cu `buildRoutePills`: suprafața, dificultatea, distanța, urcarea, noaptea, costul — apoi vremea la start, pe primul rând.",
+        "difficulty": "Cele cincisprezece trepte",
+        "difficultyNote": "Un indicator per treaptă: segmentele benzii aprinse, acul la treaptă, punctele treptei.",
+        "marks": "Marcajele cardului",
+        "marksNote": "Ce poartă un card deasupra titlului: evenimentul principal, ediția specială, repetarea, colaborarea, membrii, noaptea, starea.",
+        "weekly": "Săptămânal",
+        "partner": "Colaborare",
+        "series": "Serie",
+        "discount": "Reducere",
+        "calendar": "Intrarea din calendar · CalendarEventChip",
+        "calendarNote": "O alergare obișnuită, o cursă în culoarea clubului, o dată anulată și intrarea îngustă din grila lunii.",
+        "calendarStates": {
+          "quiet": "o alergare",
+          "filled": "o cursă",
+          "cancelled": "anulată",
+          "dense": "în grila lunii"
+        },
+        "calendarMoved": "Nu în locul obișnuit",
+        "calendarNight": "Eveniment de noapte",
+        "filter": "Pastila de filtru · ChipLink",
+        "filterNote": "Un filtru activ cu semnul de scoatere, unul inactiv, «Șterge filtrele», și două bife din panoul de filtre, una bifată."
+      },
+      "samples": {
+        "intro": "Componentele site-ului, desenate din rândurile de probă — exact codul care le desenează și pe site.",
+        "cards": "Cardurile listei · EventCard, SeriesCard",
+        "cardsNote": "Un eveniment cu o singură dată și o serie; datele sunt inventate și nu numesc pe nimeni.",
+        "featured": "Evenimentul principal · featuredCard",
+        "featuredNote": "Primul card al listei, la lățimea celorlalte, deosebit prin ramă și fundal.",
+        "team": "Cardul echipei",
+        "teamNote": "Starea fără fotografie; pagina publică «Echipa» îl desenează la fel, cu poza deasupra.",
+        "form": "Formularul",
+        "formNote": "Câmpul casei cu ajutorul lui și cu un refuz, un select nativ și bifa casei.",
+        "field": "Numele",
+        "fieldHelp": "Așa cum apare pe actul de identitate.",
+        "fieldRefused": "Scrie numele întreg.",
+        "select": "Suprafața",
+        "optionAsphalt": "Asfalt",
+        "optionTrail": "Teren accidentat",
+        "checkbox": "Vreau să apar pe lista de participanți & rezultate.",
+        "checkboxHelp": "Doar numele, doar dacă bifezi.",
+        "alerts": "Alertele",
+        "alert": {
+          "success": "S-a salvat.",
+          "info": "Ceva de știut, fără grabă.",
+          "warning": "Verifică înainte să continui.",
+          "error": "Nu s-a putut salva."
+        },
+        "fold": "Pliul din backoffice",
+        "foldNote": "Un pliu nativ al browserului, cu rama și bara lui; se deschide fără JavaScript.",
+        "foldSummary": "Un pliu închis",
+        "foldBody": "Ce e înăuntru se vede după o apăsare pe bară."
+      },
+      "icons": {
+        "intro": "Cele două registre de glife, citite întregi; un nume adăugat acolo apare aici.",
+        "public": "Glife publice · {count}",
+        "publicNote": "`glyphs.ts`: tipurile, suprafețele, cele cinci benzi și cele cincisprezece trepte, costul și marcajele cardului.",
+        "backoffice": "Glife de acțiune · {count}",
+        "backofficeNote": "`action-icons.ts`: un verb, o glifă, oriunde e scris; nicio pagină publică nu importă tabelul."
+      },
+      "rules": {
+        "intro": "Regulile care te prind când atingi aspectul; fiecare are un test sau o verificare.",
+        "rule": "Regula",
+        "where": "Unde trăiește",
+        "items": {
+          "hex": "O culoare în hex se scrie într-un singur fișier; `yarn check` refuză alta.",
+          "pairs": "Fiecare pereche text / fundal pe care o desenează paginile ține AA, 4,5 : 1.",
+          "elementProps": "O componentă de server nu dă niciodată un element unei componente de client: iconița trece ca nume.",
+          "actionIcons": "O pagină publică nu importă niciodată tabelul glifelor de acțiune.",
+          "oneFilePerGlyph": "Un fișier per glifă din `@mui/icons-material`, niciodată tot pachetul.",
+          "tapTarget": "Fiecare buton și link de pe o pagină publică are cel puțin 44 px.",
+          "bothLanguages": "Fiecare cuvânt există în ambele cataloage, sub un spațiu de nume dintr-un singur cuvânt.",
+          "gradients": "Trei gradiente, fiecare un obiect simplu, niciodată o funcție a temei.",
+          "motion": "Mișcarea e numai CSS și stă în spatele preferinței pentru mai puțină mișcare.",
+          "density": "Densitatea pe telefon vine dintr-o singură scară; de la sm în sus nimic nu se schimbă.",
+          "fonts": "Fonturile sunt fișiere din depozit, niciodată de la Google la build.",
+          "panels": "Cardurile din backoffice sunt pliuri încadrate, cu o glifă înaintea titlului.",
+          "staticPages": "Paginile publice sunt statice: CDN-ul răspunde unui vizitator, iar citirile trec prin cache-ul public.",
+          "lightDefault": "Site-ul pornește deschis la culoare; întunecat doar din butonul din subsol, niciodată din setarea telefonului.",
+          "pageTint": "Nuanța paginilor publice e setarea clubului, cu o gardă de contrast: text citibil pe orice nuanță.",
+          "fontSize": "Mărimea textului pe paginile publice e o setare a clubului, dintr-o scară cu limite.",
+          "colourLiterals": "Nicio culoare scrisă direct în cod: culorile vin din temă, iar excepțiile sunt într-o listă care doar se scurtează.",
+          "iconImports": "Pictogramele vin din registre, după nume; în backoffice nu se importă direct, iar pe paginile publice doar un fișier pe pictogramă, niciodată pachetul întreg.",
+          "primitives": "Un buton sau o pastilă e a casei (GlyphButton, ButtonLink, GlyphChip), nu un Button, IconButton sau Chip MUI pe care l-a scris cineva din nou.",
+          "serverFirst": "Componentele de server mai întâi; o insulă de client își câștigă locul.",
+          "iconFamily": "O singură familie Material plină; o glifă pe fiecare buton și pliu."
+        }
+      },
+      "plan": {
+        "intro1": "Textul complet al planului, în engleză, e ținut de dispecer în depozit:",
+        "intro2": "Comparația dintre aspectul de azi și cel nou, una lângă alta, vine pe această pagină cu faza 1.",
+        "decisionsTitle": "Deciziile clubului",
+        "decisionsNote": "Douăsprezece alegeri; fiecare are implicitul pe care îl construiește dispecerul dacă nimeni nu se opune.",
+        "phasesTitle": "Fazele",
+        "phasesNote": "Fiecare fază pornește când poarta celei dinainte e trecută; fazele 1 și 2 pot merge în paralel.",
+        "number": "Nr.",
+        "decision": "Decizia",
+        "default": "Implicit",
+        "phase": "Faza",
+        "gate": "Poarta",
+        "status": "Stare",
+        "statuses": {
+          "default": "implicit",
+          "decided": "decis",
+          "open": "deschis",
+          "planned": "planificat",
+          "building": "în lucru",
+          "released": "lansat"
+        },
+        "decisions": {
+          "1": { "title": "Culoarea de accent", "default": "Un roz aprins lângă albastrul siglei, cu o nuanță mai închisă pentru textul alb; emailurile, PDF-urile, numerele de concurs și cardurile de distribuire rămân albastre." },
+          "2": { "title": "Fontul titlurilor", "default": "Inter 800 pentru titluri, găzduit de noi, cu ș ț ă â î; textul rămâne Roboto." },
+          "3": { "title": "O pagină principală adevărată", "default": "O pagină principală adevărată la `/ro` și `/en`, la care duce sigla, niciodată o intrare de meniu; se pornește și se oprește în «Aspect» → «Pagina principală»." },
+          "4": { "title": "Cele patru cuvinte din meniu", "default": "«Alergări», «Calendar», «Comunitatea» — o pagină a clubului care leagă echipa, galeria, întrebările și zona membrilor — și «Despre noi»." },
+          "5": { "title": "Unde duce «Vino cu noi»", "default": "La pagina următoarei alergări săptămânale; «Cum funcționează» deschide o pagină a clubului." },
+          "6": { "title": "Fotografiile", "default": "Doar fotografii adevărate ale clubului, din galerie; oamenii dintr-o fotografie de pe prima pagină și-au dat acordul." },
+          "7": { "title": "Blocul Instagram", "default": "O bandă statică de șase poze din galerie, cu un link; fără flux în direct." },
+          "8": { "title": "Banda cu cifre", "default": "Scrise în «Aspect» → «Pagina principală»: data înființării și alergătorii activi; restul calculat din evenimente." },
+          "9": { "title": "Ce înseamnă «Evenimente speciale»", "default": "Tot ce nu e o serie săptămânală; pastila «Ediție specială» își păstrează sensul." },
+          "10": { "title": "Săgeata rotundă de pe carduri", "default": "Doar pe cardurile primei pagini, păstrând apăsarea pe tot cardul; lista își păstrează ușa cu text." },
+          "11": { "title": "Iconițele", "default": "Rămâne familia Material plină; aerul mai ușor vine din culoare, grosime și spațiere." },
+          "12": { "title": "Cum se lansează", "default": "În spatele unei singure setări, «Aspectul nou»: pornită pe QA, oprită în producție până aprobă clubul; aspectul vechi e șters la o lansare după comutare." }
+        },
+        "phases": {
+          "0": { "title": "Deciziile și materialele — fără cod", "gate": "Răspunsurile în scris, fotografiile urcate." },
+          "1": { "title": "Tokenii și învelișul public", "gate": "Testele de brand și de fonturi verzi, antetul pe un rând la 320 px, da-ul clubului pe QA." },
+          "2": { "title": "Pozele de copertă pe evenimente și felul evenimentului", "gate": "Testele listei verzi; fiecare alergare săptămânală și cursa au copertă." },
+          "3": { "title": "Pagina principală", "gate": "LCP sub 2,5 s pe un telefon de 320 px, testele rădăcinii rescrise, da-ul clubului pe QA." },
+          "4": { "title": "Calendarul", "gate": "Prima săptămână deasupra pliului la 320 px; filtrele merg fără scripturi." },
+          "5": { "title": "Lista și pagina evenimentului", "gate": "Testele listei și ale evenimentului verzi." },
+          "6": { "title": "Comutarea și curățenia", "gate": "O săptămână în producție fără să fie folosită calea înapoi." }
+        }
+      },
+      "card": {
+        "title": "Sistemul de design",
+        "intro": "Culorile, literele, butoanele și pastilele site-ului, așa cum sunt în cod, și planul redesign-ului.",
+        "open": "Deschide «Sistemul de design»"
+      }
+    },
     "guide": {
       "title": "Ghid de utilizare",
       "intro": "Fiecare treabă are pașii ei, numerotați; cuvintele «așa», îngroșate, sunt exact cele de pe buton. Dacă un buton lipsește, nu ai rolul pentru el.",
@@ -5690,11 +5949,13 @@
               "title": "Bara de sus: ce găsești în fiecare tab",
               "steps": [
                 "Vezi doar taburile rolului tău; restul nu există pentru tine, și e în regulă.",
-                "«Evenimente»: se deschide pe cele viitoare; la «Starea» alegi «Toate» sau alta. «Eveniment nou» și «Editează» sunt aici; un rol care doar citește vede «Deschide».",
+                "«Alergări»: se deschide pe cele viitoare; la «Starea» alegi «Toate» sau alta. «Eveniment nou» și «Editează» sunt aici; un rol care doar citește vede «Deschide».",
                 "«Înscrieri»: cine s-a înscris, cu filtre, export și pagina fiecărei înscrieri.",
                 "«Ziua cursei»: masa de ridicare a numerelor, pe telefon.",
                 "«Galerie» și «Pagini» (paginile standard — «Contact», «Echipa», «Întrebări frecvente», «Membri» — și paginile clubului).",
+                "«Magazin»: magazinul membrilor — produsele, plata și comenzile. Îl văd Organizatorul, Administratorii și colegul cu bifa «Gestionează magazinul».",
                 "«Setări»: «Emailuri» (ce primesc participanții, planul Mailgun, limita pe oră, drumurile prin Gmail, coada de trimitere), «Termene», «Aspect», «Costuri», «Anti-robot» și, la sfârșitul rândului, «Configurație» (pentru rolul Tehnic și Administratori).",
+                "«Setări» → «Aspect» → «Sistemul de design»: culorile, literele, butoanele și pastilele site-ului, așa cum sunt în cod, și planul redesign-ului — pentru oricine citește conținutul clubului.",
                 "«Sarcini» → «Club»: ce mai are clubul de făcut, citit din sistem, cu pașii sub fiecare rând. «Sarcini» → «De făcut»: lista clubului, scrisă și bifată de mână — adaugi un rând, îl dai cuiva, îi pui un termen, îl bifezi când e gata.",
                 "«Documente legale»: termenii, nota de confidențialitate (GDPR) și declarațiile.",
                 "«Echipa» și «Ghid» (pagina aceasta)."
@@ -5836,7 +6097,7 @@
             {
               "title": "Corectează textul unui eveniment",
               "steps": [
-                "«Evenimente» → «Editează» pe rândul evenimentului.",
+                "«Alergări» → «Editează» pe rândul evenimentului.",
                 "Deschide cardul cu textul: «Titlu și rezumat», «Descrierea evenimentului» sau «Program, regulament și declarație» (apoi «Programul zilei și ce să aduci» ori «Regulamentul»).",
                 "Scrie în tabul «Română» și în tabul «English».",
                 "Jos, la un eveniment publicat, bifează «Am înțeles că modific conținut publicat.».",
@@ -5886,6 +6147,16 @@
               "steps": [
                 "Setările evenimentului (data, locul, locurile, înscrierile), publicarea, galeria și înscrierile. Dacă un text depinde de o setare greșită, spune-i Administratorului."
               ]
+            },
+            {
+              "title": "Pagina «Echipa» ca panou cu niveluri: cine stă pe ce rând, responsabilitățile și casetele",
+              "steps": [
+                "«Pagini» → «Echipa» → «Editează cardul» pe rândul persoanei, sau «Adaugă o persoană».",
+                "Sub rol scrie «Subtitlu (Română)» și «Subtitlu (English)» — o linie, de exemplu sub-rolul — apoi «Responsabilități (Română)» și «Responsabilități (English)», una pe rând. Fiecare pereche în ambele limbi sau în niciuna.",
+                "La «Nivel» alegi rândul de pe panoul albastru: 1 e vârful (cardul lat), 2, 3… rândurile de sub el (carduri înalte); o jumătate — 1,5; 2,5 — e un card mic, alături de cardurile rândului său. «— fără nivel: cardul stă în grilă —» îl lasă în grila de sub panou.",
+                "Apasă «Salvează». De îndată ce un card de pe site are un nivel, pagina desenează panoul; până atunci rămâne grila. Pe site, fiecare card arată primele trei responsabilități și «Mai multe» le desface pe toate, cu descrierea și linkurile.",
+                "Textele de sub panou: «Casetele paginii» → «Adaugă o casetă»: titlul în ambele limbi și textul în editor — o poză, de exemplu sigla unui partener, se pune ca în orice text. O casetă nouă e ascunsă; Administratorul o pune pe site cu «Pune pe site»."
+              ]
             }
           ]
         },
@@ -5900,7 +6171,7 @@
               "title": "Vezi cine s-a înscris",
               "steps": [
                 "Apasă «Înscrieri» în bara de sus.",
-                "La «Evenimente» alege evenimentul (sau «Toate evenimentele»), la «Stare» ce te interesează, apoi «Filtrează».",
+                "La «Alergări» alege evenimentul (sau «Toate evenimentele»), la «Stare» ce te interesează, apoi «Filtrează».",
                 "Cauți pe cineva: scrie o parte din nume în «Caută după nume» și apasă «Filtrează». Fără un eveniment ales, caută în toate.",
                 "Coloana «Unde a ajuns» spune pasul fiecăruia. Apasă pe nume ca să deschizi înscrierea: «Parcursul înscrierii» și «Cronologie» spun tot ce s-a întâmplat.",
                 "Coloana «Până când» spune până când poate semna, accepta sau confirma fiecare — aceeași oră ca în cronologia înscrierii.",
@@ -5944,7 +6215,7 @@
             {
               "title": "Descarcă și tipărește numerele de concurs",
               "steps": [
-                "«Evenimente» → «Deschide» pe cursă.",
+                "«Alergări» → «Deschide» pe cursă.",
                 "Deschide cardul «Participare și înscrieri», apoi «Alocare și tipărire».",
                 "«Vezi numerele» ca să le verifici pe ecran.",
                 "«Descarcă toate numerele (PDF)»: câte două numere A5 pe o foaie A4, cu linia de tăiere. «Câte unul pe pagină» dacă vrei unul singur, centrat pe A4.",
@@ -5967,7 +6238,7 @@
             {
               "title": "Trimite un mesaj participanților",
               "steps": [
-                "«Evenimente» → «Deschide» → cardul «Înscrierile primite» → «Trimite un mesaj participanților».",
+                "«Alergări» → «Deschide» → cardul «Înscrierile primite» → «Trimite un mesaj participanților».",
                 "La «Cui îi trimiți» alege grupul (toți, «Doar confirmații», lista de așteptare sau cei fără declarație) și vezi câți sunt.",
                 "Scrie «Subiect» și «Mesajul», în română și în engleză.",
                 "La «Cum arată emailul» citește ambele variante: «Înscris în română» și «Înscris în engleză».",
@@ -6000,7 +6271,7 @@
               "title": "Pregătește ziua cursei",
               "steps": [
                 "Tipărește numerele (vezi mai sus).",
-                "«Evenimente» → «Deschide» → «Înscrierile primite»: tipărește câteva «Formular declarație pe hârtie (PDF)» și, dacă apare, «Formular declarație pentru un minor (PDF)».",
+                "«Alergări» → «Deschide» → «Înscrierile primite»: tipărește câteva «Formular declarație pe hârtie (PDF)» și, dacă apare, «Formular declarație pentru un minor (PDF)».",
                 "Tot acolo, «Fișă de urgență»: telefoanele și contactele de urgență ale celor confirmați, pe o pagină. O iei la cursă și o distrugi după.",
                 "Voluntarii: roagă un Administrator să le facă conturi cu rolul Voluntar, apoi arată-le secțiunea „Ziua cursei” din ghidul acesta.",
                 "În ziua cursei: «Ziua cursei» în bara de sus."
@@ -6009,14 +6280,14 @@
             {
               "title": "O schimbare la eveniment",
               "steps": [
-                "«Evenimente» → «Deschide»: vezi evenimentul cu toate cardurile lui, fără «Salvează».",
+                "«Alergări» → «Deschide»: vezi evenimentul cu toate cardurile lui, fără «Salvează».",
                 "Scrie-i Administratorului ce trebuie schimbat: data, locul, traseul, costul, locurile, înscrierile sau textele. Doar Administratorul anunță participanții despre schimbare."
               ]
             },
             {
               "title": "Declarațiile semnate",
               "steps": [
-                "Toate ale unui eveniment: «Evenimente» → «Deschide» → «Înscrierile primite» → «Declarațiile semnate (PDF)».",
+                "Toate ale unui eveniment: «Alergări» → «Deschide» → «Înscrierile primite» → «Declarațiile semnate (PDF)».",
                 "A unei singure persoane: deschide înscrierea → «Declarația semnată (PDF)».",
                 "Conțin acte de identitate: păstrează-le doar în arhiva clubului."
               ]
@@ -6041,7 +6312,7 @@
             {
               "title": "Creează un eveniment",
               "steps": [
-                "«Evenimente» → «Eveniment nou».",
+                "«Alergări» → «Eveniment nou».",
                 "Fiecare card e o parte a paginii publice, în ordinea de pe site. Harta de sus, «Pagina, de sus în jos», te duce la fiecare card.",
                 "«Ce fel de eveniment» → «Tip eveniment» (Concurs, Alergare de grup și celelalte).",
                 "«Titlu și rezumat»: «Titlu» și «Rezumat», în tabul «Română» și în tabul «English».",
@@ -6055,7 +6326,7 @@
             {
               "title": "Editează un eveniment",
               "steps": [
-                "«Evenimente» → «Editează» pe rândul lui.",
+                "«Alergări» → «Editează» pe rândul lui.",
                 "Un card închis spune pe linia lui ce lipsește, pe limbi. Deschide cardul și schimbă ce trebuie.",
                 "Scrie în «Română» și în «English»: un text opțional se scrie în ambele limbi sau în niciuna.",
                 "Jos, în cardul «Salvare», la un eveniment publicat bifează «Am înțeles că modific conținut publicat.».",
@@ -6067,7 +6338,7 @@
             {
               "title": "Scara de dificultate a clubului",
               "steps": [
-                "«Evenimente» → «Editează» → cardul «Ce fel de eveniment»: alegi «Dificultate» (categoria) și, alături, «Nivelul» — unul din cele trei ale categoriei.",
+                "«Alergări» → «Editează» → cardul «Ce fel de eveniment»: alegi «Dificultate» (categoria) și, alături, «Nivelul» — unul din cele trei ale categoriei.",
                 "Scara are 15 niveluri, în ordine: ușor 1–3, mediu 4–6, greuț 7–9, greu 10–12, foarte greu 13–15. Pe site, pastila arată doar categoria, „Mediu”; punctele indicatorului arată nivelul din categorie.",
                 "Ce înseamnă fiecare categorie și nivel: apasă semnul de întrebare de lângă «Dificultate» sau «Nivelul».",
                 "Nivelul în celelalte categorii: primul când traseul e la capătul ușor al categoriei, al treilea când e aproape de următoarea (mai lung, mai abrupt, noaptea, noroi). Nu știi? Cel din mijloc.",
@@ -6099,28 +6370,28 @@
             {
               "title": "Publică un eveniment sau scoate-l de pe site",
               "steps": [
-                "«Evenimente» → «Editează» → cardul «Publicare».",
+                "«Alergări» → «Editează» → cardul «Publicare».",
                 "O ciornă: apasă «Publică» — trece pe site dintr-o apăsare, fără «Trimite spre verificare».",
                 "În fereastră apasă din nou «Publică». Ambele limbi apar împreună.",
                 "Lipsește ceva? Apare «Nu se poate publica încă», cu lista: completează, «Salvează», apoi «Publică».",
-                "Mai multe deodată: pe lista «Evenimente» bifează-le și apasă «Publică cele bifate».",
+                "Mai multe deodată: pe lista «Alergări» bifează-le și apasă «Publică cele bifate».",
                 "Ca să-l scoți de pe site: «Mută în ciornă». După ce a avut loc: «Arhivează»."
               ]
             },
             {
               "title": "Repetă un eveniment (o serie săptămânală)",
               "steps": [
-                "«Evenimente» → «Editează» → cardul «Recurență».",
+                "«Alergări» → «Editează» → cardul «Recurență».",
                 "Bifează «Repetă evenimentul», alege zilele și până când.",
                 "Apasă «Creează datele» și confirmă.",
-                "Site-ul creează singur datele noi, cu {horizon} înainte. Cele create ca ciornă apar pe lista «Evenimente» cu «Publică» pe rând; «Publică automat de acum» le publică singure de acum încolo.",
+                "Site-ul creează singur datele noi, cu {horizon} înainte. Cele create ca ciornă apar pe lista «Alergări» cu «Publică» pe rând; «Publică automat de acum» le publică singure de acum încolo.",
                 "O copie, nu o serie: pe listă, «Alte acțiuni» (⋮) → «Duplică». Copia e o ciornă."
               ]
             },
             {
               "title": "Deschide înscrierile la o cursă",
               "steps": [
-                "«Evenimente» → «Editează» → cardul «Participare și înscrieri».",
+                "«Alergări» → «Editează» → cardul «Participare și înscrieri».",
                 "«Modul de înscriere» → «Înscrieri pe site».",
                 "«Număr de locuri» și, lângă el, «Lista de așteptare»: «Nelimitată», «Limitată la un număr de locuri», cu câte persoane scrii tu, sau «Fără listă de așteptare». Sub «Limitată…», gol sau 0 o face nelimitată; doar «Fără listă de așteptare» închide lista. Sub ele, «Locurile din lista de așteptare se alocă automat»: «Da» dă fiecare loc eliberat sau adăugat primului de pe listă; «Nu», dacă vrei să alegi tu (vezi „Alege tu cine primește un loc eliberat”).",
                 "«Perioada de înscriere»: «Înscrierile se deschid» și «Înscrierile se închid».",
@@ -6133,7 +6404,7 @@
             {
               "title": "Alege tu cine primește un loc eliberat",
               "steps": [
-                "«Evenimente» → «Editează» pe rândul cursei → cardul «Participare și înscrieri».",
+                "«Alergări» → «Editează» pe rândul cursei → cardul «Participare și înscrieri».",
                 "La «Locurile din lista de așteptare se alocă automat» alege «Nu» și apasă «Salvează». Pe «Nu», un loc eliberat sau adăugat rămâne liber până îl dai tu.",
                 "Nu e nevoie să mărești «Număr de locuri»: dacă nu e niciun loc liber, «Trimite-i oferta» adaugă un loc suplimentar, după ce confirmi (capacitatea crește cu unu, iar jurnalul înscrierii spune cine l-a adăugat și pentru cine).",
                 "Cardul «Înscrierile primite» → «Coada de înscrieri»: pe rândul persoanei numite din lista de așteptare apasă «Trimite-i oferta». Același buton e și pe pagina înscrierii ei.",
@@ -6178,7 +6449,7 @@
               "title": "Invită pe cineva la un eveniment, pe email",
               "steps": [
                 "Pentru membri, parteneri și oaspeți: fiecare primește un email cu un link spre formular, cu numele și adresa deja completate.",
-                "«Evenimente» → «Editează» pe rândul cursei → cardul «Înscrierile primite» → «Trimite invitații»: se deschide secțiunea «Invitații» a listei.",
+                "«Alergări» → «Editează» pe rândul cursei → cardul «Înscrierile primite» → «Trimite invitații»: se deschide secțiunea «Invitații» a listei.",
                 "Bifează membrii din listă sau scrie alte persoane, câte una pe rând: numele, apoi adresa. Alege «Zile până expiră» și «Limba invitației» (pentru adresele noi); bifează «Pe lista de invitați speciali (nu ocupă un loc)» pentru organizatori, voluntari și pacemakeri. Se poate trimite și după închiderea înscrierilor, până la start.",
                 "«Trimite invitațiile» întreabă întâi: câte invitații, câte locuri libere și, pe o cursă plină, câte locuri suplimentare se adaugă și cât devine capacitatea.",
                 "Fiecare invitație ține un loc până la termen; dacă nu e acceptată, locul se eliberează singur. Persoana completează restul și semnează ea declarația.",
@@ -6199,7 +6470,7 @@
             {
               "title": "Anulează un eveniment",
               "steps": [
-                "«Evenimente» → «Editează» → cardul «Starea evenimentului» (jos, între cardurile care nu apar pe pagină).",
+                "«Alergări» → «Editează» → cardul «Starea evenimentului» (jos, între cardurile care nu apar pe pagină).",
                 "La «Starea evenimentului» alege «Anulat».",
                 "În cardul «Salvare» apare «Anulezi evenimentul»: scrie «Motivul anulării» în română și în engleză.",
                 "Bifează «Anunță participanții că evenimentul a fost anulat». Fără bifă nu pleacă niciun email.",
@@ -6247,7 +6518,7 @@
             {
               "title": "Retrimite declarația celor care nu au semnat",
               "steps": [
-                "«Evenimente» → «Editează» pe rândul cursei → cardul «Înscrierile primite».",
+                "«Alergări» → «Editează» pe rândul cursei → cardul «Înscrierile primite».",
                 "Deasupra cozii apasă «Retrimite declarația tuturor care nu au semnat». Butonul e gri când nu așteaptă nimeni: sub el scrie «Nimeni nu așteaptă semnarea declarației.»",
                 "Fereastra spune câți așteaptă semnarea și pe câți îi sare: pe cei al căror email cu declarația a plecat în ultima oră sau e încă în coadă, și pe cei ajunși la limita de retrimiteri. Citește, apoi apasă din nou «Retrimite declarația tuturor care nu au semnat».",
                 "Sus apare «La coadă:» cu câți primesc emailul și câți au fost săriți. Emailurile pleacă prin coada de trimitere, în ritmul ei (vezi „Emailurile întârzie sau Mailgun a refuzat”).",
@@ -6261,7 +6532,7 @@
             {
               "title": "Alocă numerele și marchează-le tipărite",
               "steps": [
-                "«Evenimente» → «Editează» → «Participare și înscrieri» → «Alocare și tipărire».",
+                "«Alergări» → «Editează» → «Participare și înscrieri» → «Alocare și tipărire».",
                 "Apasă «Alocă numerele» și confirmă: fiecare înscriere confirmată fără număr primește următorul număr liber; numerele date rămân.",
                 "«Înscrieri» → alege cursa → «Filtrează». Pe aceeași pagină descarci numerele netipărite, le tipărești, apoi apeși butonul care le marchează ca printate.",
                 "Numerele pentru tipar sunt câte două A5 pe o foaie A4 (vezi „Descarcă și tipărește numerele de concurs” la Organizator)."
@@ -6270,7 +6541,7 @@
             {
               "title": "Numere de rezervă pentru cine se înscrie la masă",
               "steps": [
-                "«Evenimente» → «Editează» → «Participare și înscrieri» → «Alocare și tipărire» → «Numere de rezervă pentru înscrierile de la fața locului».",
+                "«Alergări» → «Editează» → «Participare și înscrieri» → «Alocare și tipărire» → «Numere de rezervă pentru înscrierile de la fața locului».",
                 "La «Câte» scrie câte numere goale vrei, apoi apasă «Tipărește» și confirmă. Fereastra spune de la ce număr încep: de atunci nimeni înscris online nu le mai primește.",
                 "Apasă «Descarcă foaia» și tipărește-o. Fiecare număr are linia pentru nume goală; la masă se scrie numele cu markerul, iar formularul propune următorul număr liber.",
                 "Ai nevoie de ele din nou? «Retipărește rezervele libere (PDF)» pune pe foaie doar numerele încă nedate și nu rezervă altele."
@@ -6331,7 +6602,7 @@
             {
               "title": "Mulțumiri după cursă",
               "steps": [
-                "«Evenimente» → la «Starea» alege «Încheiate» și «Aplică» → «Editează» → «Înscrierile primite» → «Mulțumiri după cursă».",
+                "«Alergări» → la «Starea» alege «Încheiate» și «Aplică» → «Editează» → «Înscrierile primite» → «Mulțumiri după cursă».",
                 "La «Link (opțional)» pune adresa pozelor sau a rezultatelor.",
                 "Apasă «Trimite mulțumirile» și confirmă. Pleacă o singură dată, la toți cei marcați prezenți."
               ]
@@ -6367,7 +6638,8 @@
                 "«Echipa» → «Adaugă o persoană»: «Adresă de email», «Nume», «Rol» (Voluntar pentru masă), «Limbă preferată».",
                 "Apasă «Adaugă» și confirmă. Persoana primește invitația pe email și își alege parola.",
                 "Nu a primit-o: pe rândul ei, «Retrimite invitația» → «Trimite acum, fără să aștepte trecerea programată».",
-                "Alt rol: «Schimbă rolul». A plecat din echipă: «Retrage accesul»."
+                "Alt rol: «Schimbă rolul». A plecat din echipă: «Retrage accesul».",
+                "Magazinul fără rolul de Administrator: pe rândul colegului, bifează «Gestionează magazinul» și confirmă. Găsește «Magazin» în bara de sus; adresele membrilor nu le vede."
               ]
             },
             {
@@ -6460,10 +6732,10 @@
                 "Ce e în vigoare la fiecare text: capul cardului spune «În vigoare: versiunea…» sau «Nicio versiune în vigoare»; filtrele «În vigoare», «Înlocuite» și «Retrase» arată restul.",
                 "Fără termeni, notă și o declarație de cursă aprobate nu se poate înscrie nimeni. Pentru o cursă pe asfalt editorul alege declarația de asfalt, dacă e aprobată, altfel pe cea pentru eveniment montan. O alergare de grup oferă declarația doar dacă o bifează și dacă textul ei (asfalt sau teren accidentat) e aprobat.",
                 "Până aprobi nota nouă, lista publică de participanți arată doar confirmații; după aceea, lista de așteptare apare doar la evenimentele cu «Lista de așteptare e publică» bifat.",
-                "Coloana «BIB» din lista «Cine vine» (numărul de concurs) apare după ce aprobi nota de confidențialitate din șablonul nou. Mai întâi scrie-le celor deja înscriși: «Evenimente» → «Deschide» → cardul «Înscrierile primite» → «Trimite un mesaj participanților»; spune-le că numărul lor va apărea lângă nume și că, dacă nu vor, apasă «Nu vreau să apar pe lista de participanți & rezultate» în «Înscrierile mele» (numărul dispare odată cu numele).",
+                "Coloana «BIB» din lista «Cine vine» (numărul de concurs) apare după ce aprobi nota de confidențialitate din șablonul nou. Mai întâi scrie-le celor deja înscriși: «Alergări» → «Deschide» → cardul «Înscrierile primite» → «Trimite un mesaj participanților»; spune-le că numărul lor va apărea lângă nume și că, dacă nu vor, apasă «Nu vreau să apar pe lista de participanți & rezultate» în «Înscrierile mele» (numărul dispare odată cu numele).",
                 "Apoi aprobi nota: cardul «GDPR» → «Regenerează din șablon» → ciorna → «Salvează ciorna» → «Aprobă și publică». De atunci coloana arată numărul fiecărui confirmat care are număr, oricare ar fi nota sub care s-a înscris; un confirmat fără număr are „—”. «Sarcini» → «Club» are rândul ei până atunci.",
                 "Ciorne sau versiuni de care nu mai ai nevoie: bifează-le în tabel, apasă «Șterge versiunile bifate» și verifică lista. Doar ciorne: «Șterge ciornele» și confirmă. Cu o versiune aprobată în listă: la «Confirmarea» scrii textul cerut (de exemplu „DELETE 2”), la «Motivul» de ce, apoi «Șterge versiunile».",
-                "Declarațiile semnate la o alergare de grup, când semnatarul cere ștergerea: «Evenimente» → «Editează» la alergare → «Declarații semnate (alergare de grup)» → «Șterge mai multe deodată»: bifează-le, completează o dată «Motivul ștergerii», apasă «Șterge cele bifate» și confirmă. În jurnal rămân numele tău și motivul, nu și al celui care a semnat."
+                "Declarațiile semnate la o alergare de grup, când semnatarul cere ștergerea: «Alergări» → «Editează» la alergare → «Declarații semnate (alergare de grup)» → «Șterge mai multe deodată»: bifează-le, completează o dată «Motivul ștergerii», apasă «Șterge cele bifate» și confirmă. În jurnal rămân numele tău și motivul, nu și al celui care a semnat."
               ]
             },
             {
@@ -7002,6 +7274,46 @@
         "moveUp": "Mută mai sus linkul",
         "moveDown": "Mută mai jos linkul",
         "row": "Linkul"
+      },
+      "subtitleRo": "Subtitlu (Română)",
+      "subtitleEn": "Subtitlu (English)",
+      "subtitleHelp": "O linie sub rol, de exemplu un sub-rol. Opțional, în ambele limbi sau în niciuna.",
+      "responsibilitiesRo": "Responsabilități (Română)",
+      "responsibilitiesEn": "Responsabilități (English)",
+      "responsibilitiesHelp": "Una pe rând, cel mult {lines} rânduri de {max} caractere. Opțional, în ambele limbi sau în niciuna; pe site apar ca listă.",
+      "level": "Nivel",
+      "levelNone": "— fără nivel: cardul stă în grilă —",
+      "levelHelp": "Rândul de pe panoul albastru: 1 e vârful, un card lat; 2, 3… rândurile de sub el, carduri înalte; o jumătate — 1,5; 2,5 — e un card mic, alături de rândul său. Fără nivel, cardul rămâne în grilă.",
+      "boxes": {
+        "heading": "Casetele paginii",
+        "count": {
+          "one": "{count} casetă",
+          "few": "{count} casete",
+          "other": "{count} de casete"
+        },
+        "help": "Textele de sub organigramă, fiecare cu titlul ei: o responsabilitate comună, parteneriatele, o notă despre decizii. O casetă nouă e ascunsă până este pusă pe site.",
+        "add": "Adaugă o casetă",
+        "create": "Adaugă caseta",
+        "empty": "Nu este încă nicio casetă.",
+        "listLabel": "Casetele paginii, în ordinea de pe pagină",
+        "noText": "Fără text",
+        "moveUp": "Mută caseta „{title}” mai sus",
+        "moveDown": "Mută caseta „{title}” mai jos",
+        "showTitle": "Pui pe site caseta „{title}”?",
+        "showBody": "Caseta apare sub organigramă cât timp pagina este publicată.",
+        "hideTitle": "Scoți de pe site caseta „{title}”?",
+        "hideBody": "Caseta rămâne aici, ascunsă; o poți pune la loc oricând.",
+        "deleteTitle": "Ștergi caseta „{title}”?",
+        "deleteBody": "Caseta dispare de tot. Pozele din ea rămân o săptămână în Imagini și se șterg apoi singure, dacă nu le mai folosește nimic.",
+        "delete": "Șterge caseta",
+        "edit": "Editează caseta",
+        "titleRo": "Titlu (Română)",
+        "titleEn": "Titlu (English)",
+        "titleHelp": "Titlul casetei, așa cum apare pe pagină.",
+        "titleEnHelp": "Obligatoriu, ca și cel în română.",
+        "bodyRo": "Textul (Română)",
+        "bodyEn": "Textul (English)",
+        "bodyHelp": "În ambele limbi sau în niciuna, cel mult {max} de caractere în fiecare. Ca într-o pagină: paragrafe, liste, un link în text, o poză (sigla unui partener, de exemplu) — fără tabele."
       }
     },
     "faq": {
@@ -7152,7 +7464,6 @@
         "createBody": "Membrii îl văd în zona lor de îndată ce îl adaugi."
       },
       "shop": {
-        "heading": "Magazin",
         "count": {
           "one": "{count} produs",
           "few": "{count} produse",
@@ -7178,9 +7489,7 @@
         "createBody": "Dacă e bifat „Vizibil în magazin”, membrii îl văd de îndată.",
         "empty": "Nu este încă niciun produs.",
         "listLabel": "Produsele, în ordinea din magazin",
-        "stockUnlimited": "fără limită",
         "stockNoLimit": "fără limită",
-        "stockLine": "Stoc: {stock}",
         "visible": "Vizibil în magazin",
         "hidden": "Ascuns",
         "orders": {
@@ -7203,16 +7512,16 @@
         "titleEn": "Denumirea (English)",
         "descriptionRo": "Descriere (Română)",
         "descriptionEn": "Descriere (English)",
-        "descriptionHelp": "Material, mărimi, culoare — pe scurt.",
-        "price": "Prețul, în lei",
-        "priceHelp": "De exemplu 45 sau 45,50.",
-        "variants": "Variante și stoc (opțional)",
-        "variantsHelp": "Câte una pe rând, de exemplu „M: 10” sau „L” (fără limită). Cel mult {max} variante, {length} de caractere fiecare. Gol: o singură variantă.",
+        "descriptionHelp": "Text cu tabele și fotografii, dacă ajută: ce e produsul, din ce e făcut, cum se poartă. Cel mult {max} de caractere de text.",
+        "price": "Prețul",
+        "priceHelp": "De exemplu 45 sau 45,50; moneda e cea aleasă alături.",
+        "currency": "Moneda",
+        "currencyRon": "lei (RON)",
+        "currencyEur": "euro (EUR)",
         "stock": "Stoc (fără variante)",
-        "stockHelp": "Câte bucăți mai sunt, cel mult {max}. Gol: fără limită.",
         "visibleSwitch": "Vizibil în magazin",
         "photo": "Fotografia produsului",
-        "photoHelp": "După ce alegi fotografia, alegi partea care se vede în magazin. Se păstrează când salvezi produsul.",
+        "photoHelp": "După ce alegi fotografia, alegi partea care se vede în magazin. Fotografia se adaugă pe loc, fără să salvezi restul produsului.",
         "photoCrop": "Decupaj — ce se vede în magazin",
         "photoCropHelp": "Pornește pătrat (1:1). Poți alege alt format sau trage un dreptunghi peste fotografie.",
         "ordersHeading": "Comenzi",
@@ -7236,6 +7545,26 @@
         "note": "Nota",
         "cancelledByMember": "Anulată de membru.",
         "cancelledByClub": "Anulată de club.",
+        "forMember": {
+          "title": "Adaugă o comandă pentru un membru",
+          "help": "Pentru comenzile strânse în afara site-ului. Comanda ia din același stoc, e marcată „adăugată de club” și apare la membru în „Comenzile mele”. Membrul are nevoie de cont pe „Echipa”.",
+          "member": "Membrul",
+          "memberNone": "Niciun cont de membru încă: adaugă-l întâi pe „Echipa”.",
+          "item": "Produsul și varianta",
+          "itemSoldOut": "{label} — stoc epuizat",
+          "quantity": "Bucăți",
+          "note": "Nota (opțional)",
+          "email": "Trimite-i membrului emailul de confirmare",
+          "paid": "Marchează direct ca plătită",
+          "add": "Adaugă comanda",
+          "ask": "Adaugi comanda pentru acest membru?",
+          "askBody": "Comanda ia din stoc ca una făcută de membru și apare la el în „Comenzile mele”. Emailurile pleacă doar dacă ai bifat.",
+          "placedByClub": "adăugată de club"
+        },
+        "placedBy": {
+          "MEMBER": "membru",
+          "CLUB": "club"
+        },
         "verbs": {
           "pay": {
             "title": "Marchezi comanda nr. {number} plătită?",
@@ -7258,13 +7587,80 @@
           "date": "Data",
           "member": "Membru",
           "email": "Email",
+          "placedBy": "Adăugată de",
           "product": "Produs",
           "variant": "Varianta",
           "quantity": "Bucăți",
           "unitPrice": "Preț bucata",
+          "currency": "Monedă",
           "total": "Total",
           "status": "Starea",
           "note": "Nota"
+        },
+        "movedTo": "Magazinul e la „Magazin”, în bara de sus.",
+        "productsHeading": "Produse",
+        "tabs": {
+          "products": "Produse",
+          "orders": "Comenzi",
+          "settings": "Setări"
+        },
+        "open": "Deschide",
+        "backToList": "Înapoi la produse",
+        "sizesLine": "Mărimi: {sizes}",
+        "oneSize": "Mărime unică",
+        "oneSizeHelp": "Pentru un buff sau un abțibild — un singur fel. Stocul în căsuță; gol: fără limită.",
+        "sizesLegend": "Mărimile",
+        "sizesStockHelp": "Bifează mărimile pe care le vinzi, în ordinea din magazin. Lângă fiecare, câte bucăți mai sunt (cel mult {max}); gol: fără limită; 0: epuizat.",
+        "sizeStockLabel": "Stoc pentru {size}",
+        "extraVariants": "Alte variante (opțional)",
+        "extraVariantsHelp": "Ce nu e o mărime: o culoare, o croială pentru copii. Câte una pe rând, cu stocul după două puncte — „Albastru: 5” sau „Copii” (fără limită). Cel mult {max} variante în total, {length} de caractere fiecare.",
+        "cards": {
+          "name": "Denumirea și prețul",
+          "nameHelp": "Numele produsului în română și în engleză, prețul și moneda lui.",
+          "description": "Descrierea",
+          "descriptionHelp": "Material, îngrijire, desenul furnizorului — cu tabele și fotografii, dacă ajută. În ambele limbi sau în niciuna.",
+          "sizes": "Mărimile și stocul",
+          "sizesHelp": "Fiecare mărime bifată e o variantă pe care membrii o pot comanda. Debifarea unei mărimi care are comenzi e refuzată.",
+          "publish": "Publicarea",
+          "publishHelp": "Bifat, membrii văd produsul în zona lor și pot comanda. Nebifat, îl pregătești în liniște; clubul poate totuși adăuga o comandă pentru un membru."
+        },
+        "tabEmpty": "gol",
+        "descriptionEmpty": "Nimic scris încă.",
+        "archiveWhy": "Fiecare comandă păstrează o copie a produsului; de aceea el nu se șterge, ci se arhivează.",
+        "pictures": {
+          "title": "Fotografiile",
+          "help": "Prima fotografie e coperta: apare în listă și mare, în zona membrilor; celelalte, dedesubt, ca miniaturi. Cel mult {max}.",
+          "count": {
+            "one": "{count} fotografie",
+            "few": "{count} fotografii",
+            "other": "{count} de fotografii"
+          },
+          "afterSave": "Fotografiile se adaugă după prima salvare, pe pagina produsului.",
+          "empty": "Nicio fotografie încă.",
+          "gone": "Fotografia nu mai e în galerie.",
+          "cover": "Copertă",
+          "position": "Poziția {number}",
+          "moveUp": "Mută fotografia {number} mai în față",
+          "moveDown": "Mută fotografia {number} mai în spate",
+          "remove": "Scoate fotografia",
+          "removeTitle": "Scoți fotografia?",
+          "removeBody": "Dispare din produs; rămâne în galerie. Membrii văd schimbarea de îndată.",
+          "replace": "Înlocuiește sau decupează",
+          "save": "Salvează fotografia",
+          "add": "Adaugă o fotografie",
+          "addButton": "Adaugă fotografia",
+          "noStorage": "Stocarea imaginilor nu este configurată aici, așa că nu se pot adăuga fotografii."
+        },
+        "chart": {
+          "title": "Tabelul de mărimi",
+          "help": "Opțional. Cel mult {max} coloane măsurate — lățimea pieptului, lungimea — fiecare cu numele în ambele limbi, și câte un număr în centimetri pentru fiecare mărime bifată. Membrii îl văd sub produs.",
+          "column": "Coloana {number}",
+          "columnRo": "Numele coloanei (română)",
+          "columnEn": "Numele coloanei (engleză)",
+          "exampleRo": "Lățime piept (cm)",
+          "exampleEn": "Chest width (cm)",
+          "sizeColumn": "Mărimea",
+          "cellLabel": "{size}, coloana {number}"
         }
       }
     },
@@ -8575,6 +8971,7 @@
     "title": "Scrie-ne",
     "intro": "O întrebare despre o alergare, o înscriere sau club? Îți răspundem pe e-mail.",
     "faqHint": "Poate găsești răspunsul la <faq>Întrebări frecvente</faq>.",
+    "runsHint": "Când și unde alergăm vezi în <calendar>Calendar</calendar>.",
     "name": "Numele tău",
     "email": "Adresa ta de e-mail",
     "message": "Mesajul",
@@ -8587,11 +8984,16 @@
     "sent": {
       "title": "Mesajul a plecat.",
       "bodyTo": "Îți răspundem pe {email}.",
-      "body": "Îți răspundem pe adresa ta de e-mail."
+      "body": "Îți răspundem pe adresa ta de e-mail.",
+      "another": "Scrie alt mesaj"
     },
-    "direct": "Sau scrie-ne direct la",
+    "direct": "Scrie-ne la",
+    "phone": "Sună-ne la",
+    "ways": {
+      "title": "Contact direct"
+    },
+    "formTitle": "Trimite-ne un mesaj",
     "off": {
-      "writeTo": "Scrie-ne la",
       "none": "Formularul de contact nu este disponibil momentan.",
       "or": "sau"
     },
@@ -8620,13 +9022,14 @@
     "emailMismatch": "Cele două adrese nu sunt aceeași — verifică literele."
   },
   "Tell": {
-    "title": "Spune-ne ceva",
+    "title": "Spune-ne ceva (anonim)",
+    "noticeName": "Spune-ne ceva",
     "intro": "Anonim, dacă nu alegi să-ți spui numele. Alege despre ce e vorba.",
     "backToContact": "Înapoi la Contact",
     "door": {
-      "intro": "Cum a fost la un eveniment, o sugestie sau o reclamație — anonim, dacă vrei.",
+      "intro": "Cum a fost la o alergare, o sugestie sau o reclamație — anonim, dacă vrei.",
       "introSafety": "Un formular confidențial pentru femeile care nu s-au simțit în siguranță la noi.",
-      "button": "Deschide formularul anonim"
+      "button": "Deschide formularul"
     },
     "choose": {
       "legend": "Despre ce e vorba?",
@@ -8650,8 +9053,8 @@
     "branches": {
       "howItWent": {
         "label": "Cum a fost",
-        "hint": "Un eveniment sau o alergare de grup: ce ți-a plăcut, ce nu.",
-        "intro": "Spune-ne cum a fost. În afară de ce s-a întâmplat, totul e opțional."
+        "hint": "O alergare a clubului, de grup sau specială: ce ți-a plăcut, ce nu.",
+        "intro": "Spune-ne cum a fost. În afară de mesaj, totul e opțional."
       },
       "suggestion": {
         "label": "O sugestie",
@@ -8661,7 +9064,7 @@
       "complaint": {
         "label": "O reclamație",
         "hint": "Ceva n-a mers cum trebuia.",
-        "intro": "Spune-ne ce s-a întâmplat; evenimentul și data sunt opționale."
+        "intro": "Spune-ne ce s-a întâmplat; alergarea și data sunt opționale."
       },
       "safety": {
         "label": "Girl Zone",
@@ -8675,17 +9078,17 @@
       "contact": "Dacă vrei să te contacteze {name}, lasă un email sau un telefon (opțional)",
       "contactHelp": "Doar dacă vrei să-ți răspundă."
     },
-    "event": "Evenimentul",
+    "event": "Alergarea",
     "eventGeneral": "Altceva / în general",
     "eventFilter": {
       "search": "Scrie o parte din nume sau din dată",
-      "noMatch": "Niciun eveniment găsit",
-      "open": "Deschide lista evenimentelor",
-      "close": "Închide lista evenimentelor",
+      "noMatch": "Nicio alergare găsită",
+      "open": "Deschide lista alergărilor",
+      "close": "Închide lista alergărilor",
       "kinds": "Arată",
       "chips": {
         "all": "Toate",
-        "race": "Curse",
+        "special": "Evenimente speciale",
         "group": "Alergări de grup"
       }
     },
@@ -8702,7 +9105,7 @@
       }
     },
     "message": {
-      "howItWent": "Ce s-a întâmplat?",
+      "howItWent": "Ce ți-a plăcut, ce nu?",
       "suggestion": "Sugestia ta",
       "complaint": "Ce s-a întâmplat?",
       "safety": "Ce s-a întâmplat?"
@@ -8740,7 +9143,7 @@
     "fieldNames": {
       "name": "Numele",
       "audience": "Cine să afle",
-      "event": "Evenimentul",
+      "event": "Alergarea",
       "date": "Data",
       "rating": "Cum a fost",
       "message": "Mesajul",
@@ -8757,7 +9160,8 @@
     "submit": "Trimite",
     "submitting": "Se trimite…",
     "incompleteHint": "Scrie mesajul ca să-l poți trimite.",
-    "otherBranches": "Alt tip de mesaj",
+    "otherBranches": "Schimbă tipul mesajului",
+    "sendAnother": "Trimite alt mesaj",
     "sent": {
       "title": "Mesajul a plecat",
       "body": "Mulțumim! Îl citim cu atenție.",
@@ -9242,9 +9646,22 @@
       "shopProductDeleted": "Produsul a fost șters.",
       "shopProductArchived": "Produsul avea comenzi, așa că a fost arhivat.",
       "shopSettingsSaved": "Plata și adresa pentru comenzi au fost salvate.",
+      "shopPictureAdded": "Fotografia a fost adăugată.",
+      "shopPictureMoved": "Ordinea fotografiilor a fost schimbată.",
+      "shopPictureRemoved": "Fotografia a fost scoasă din produs.",
+      "shopPictureReplaced": "Fotografia a fost salvată.",
       "shopOrderPaid": "Comanda a fost marcată plătită. Membrul primește un email.",
       "shopOrderHandedOver": "Comanda a fost marcată predată.",
-      "shopOrderCancelled": "Comanda a fost anulată."
+      "shopOrderCancelled": "Comanda a fost anulată.",
+      "shopOrderPlacedForMember": "Comanda a fost adăugată pentru membru.",
+      "staffPermissionGranted": "Gata: poate gestiona magazinul.",
+      "staffPermissionRevoked": "Gata: nu mai gestionează magazinul.",
+      "teamBoxCreated": "Caseta a fost adăugată, ascunsă până este pusă pe site.",
+      "teamBoxSaved": "Caseta a fost salvată.",
+      "teamBoxShown": "Caseta este pe site.",
+      "teamBoxHidden": "Caseta a fost scoasă de pe site.",
+      "teamBoxMoved": "Ordinea casetelor a fost schimbată.",
+      "teamBoxDeleted": "Caseta a fost ștearsă."
     }
   },
   "Network": {
@@ -9393,6 +9810,7 @@
     "lead": "Oamenii care țin {club} în mișcare: cine organizează, cine antrenează, cine te întâmpină la start.",
     "empty": "Echipa clubului apare aici în curând.",
     "listLabel": "Oamenii echipei",
+    "othersLabel": "Alți membri ai echipei",
     "linksLabel": "Linkuri: {name}",
     "linkKinds": {
       "STRAVA": "Strava",
@@ -9401,7 +9819,11 @@
       "WEBSITE": "Site personal",
       "OTHER": "Link"
     },
-    "contact": "Vrei să ne ajuți sau ai o întrebare pentru echipă? <contact>Scrie-ne</contact>."
+    "contact": "Vrei să ne ajuți sau ai o întrebare pentru echipă? <contact>Scrie-ne</contact>.",
+    "responsibilities": "Responsabilități",
+    "more": "Mai multe",
+    "moreAbout": "Mai multe despre {name}",
+    "boxesLabel": "Despre echipă"
   },
   "Faq": {
     "title": "Întrebări frecvente",
@@ -9497,7 +9919,7 @@
     "signOut": "Ieși din cont",
     "upcomingTitle": "Următoarele alergări",
     "upcomingEmpty": "Nicio alergare anunțată acum.",
-    "upcomingAll": "Toate evenimentele",
+    "upcomingAll": "Toate alergările",
     "eventsTitle": "Evenimente pentru membri",
     "codesTitle": "Coduri de reducere",
     "copyCode": "Copiază codul",
@@ -9529,6 +9951,9 @@
       "noteLabel": "O notă pentru club (opțional, cel mult {max} de caractere)",
       "order": "Comandă",
       "ordering": "Se trimite comanda…",
+      "pictureOpen": "Fotografia {number}",
+      "sizeChart": "Tabelul de mărimi",
+      "sizeColumn": "Mărimea",
       "outcome": {
         "placed": "Comanda a fost primită. Ți-am trimis și un email cu ea și cu felul în care se plătește.",
         "cancelled": "Comanda a fost anulată.",

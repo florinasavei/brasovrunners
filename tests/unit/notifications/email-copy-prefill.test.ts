@@ -497,7 +497,7 @@ describe("§359 the save refuses a sample value", () => {
   it("accepts the fields, and ordinary words a running club writes", () => {
     const words = entry("Ne vedem la {eventTitle}, {participantName}!", [
       "Numărul tău: {bibNumber}. Codul: {checkinCode}. Ce să aduci: {eventChecklist}. Start: {eventStartsAtFormatted}.",
-      "Traseul are 42 de kilometri. Organizatorii te așteaptă; semnat, Florin, Organizator.",
+      "Traseul are 42 de kilometri. Organizatorii te așteaptă; semnat, Felix, Organizator.",
       "Înscrierea ta este confirmată.",
     ]);
     for (const messageType of ["EVENT_REMINDER", "REGISTRATION_CONFIRMED", "REGISTRATION_STATE_NOTICE"] as const) {
@@ -505,16 +505,10 @@ describe("§359 the save refuses a sample value", () => {
     }
   });
 
-  it("accepts an invitation the club signs \"Florin\", and finds the old sample inviter only inside the platform's own sentence", () => {
-    expect(sampleValuesIn(entry("Bun venit", ["Te așteptăm la prima ședință. Semnat, Florin."]), "STAFF_INVITATION", "ro")).toEqual([]);
-    const old = entry("Ești în echipa Brașov Runners", ["Florin te-a adăugat în echipa care administrează site-ul Brașov Runners, ca Organizator."]);
-    expect(sampleValuesIn(old, "STAFF_INVITATION", "ro")).toEqual([
-      { field: "body", value: "Organizator", placeholder: "staffRole" },
-      { field: "body", value: "Florin", placeholder: "inviterName" },
-    ]);
-    expect(replaceSampleValues(old, "STAFF_INVITATION", "ro").paragraphs).toEqual([
-      "{inviterName} te-a adăugat în echipa care administrează site-ul Brașov Runners, ca {staffRole}.",
-    ]);
+  it("accepts an invitation the club signs with any first name (the sample inviter is recognised only as today's)", () => {
+    expect(sampleValuesIn(entry("Bun venit", ["Te așteptăm la prima ședință. Semnat, Felix."]), "STAFF_INVITATION", "ro")).toEqual([]);
+    const old = entry("Ești în echipa Brașov Runners", ["Felix te-a adăugat în echipa care administrează site-ul Brașov Runners, ca Organizator."]);
+    expect(sampleValuesIn(old, "STAFF_INVITATION", "ro")).toEqual([{ field: "body", value: "Organizator", placeholder: "staffRole" }]);
   });
 
   it("finds the bib and the status where the platform's own sentence carried them, and only there", () => {

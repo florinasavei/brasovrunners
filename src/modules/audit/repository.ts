@@ -472,6 +472,13 @@ export type AuditAction =
   | "team_page.published"
   | "team_page.unpublished"
   | "team_page.intro_saved"
+  // «Casetele paginii» of «Echipa» (§691): the row by id, never its words.
+  | "team.box.created"
+  | "team.box.saved"
+  | "team.box.moved"
+  | "team.box.shown"
+  | "team.box.hidden"
+  | "team.box.deleted"
   /**
    * «Întrebări frecvente» (§525): the page saved as one — its introduction and every question,
    * the ids added, deleted, shown and taken off in the metadata, never the words (§12.12) — and
@@ -508,8 +515,12 @@ export type AuditAction =
   | "shop.product.moved"
   | "shop.product.archived"
   | "shop.product.deleted"
+  /** A product's strip of pictures changed (§697): added, moved, removed or recropped, and how many it has now — never a title. */
+  | "shop.product.pictures_changed"
   | "shop.settings_saved"
   | "shop.order.placed"
+  /** An order the club placed in a member's name (§690): the ids, the quantity and the two ticks — never a name or a note. */
+  | "shop.order.placed_by_club"
   | "shop.order.paid"
   | "shop.order.handed_over"
   | "shop.order.cancelled"
@@ -527,6 +538,13 @@ export type AuditAction =
    * address.
    */
   | "staff.invitation_sent_now"
+  /**
+   * «Gestionează magazinul» ticked or unticked on «Echipa» (§687): the colleague's row (the entity),
+   * `staffUserId` and the `permission`; a revoke says why — `tick`, the box unticked, or
+   * `role_change`, a new role that may not hold it. Never a name or an address.
+   */
+  | "staff.permission.granted"
+  | "staff.permission.revoked"
   /**
    * «Tradu din română» (§464): one row per press — who, which boxes by name, how many characters
    * went to which provider. Never the words, in either language. Also the day's meter: the
@@ -561,6 +579,8 @@ export type RecordAuditInput = {
     | "staff_user"
     // `member_discount_code` for a code of the members' zone (§552).
     | "member_discount_code"
+    // `team_page_box` for a box under the chart of «Echipa» (§691).
+    | "team_page_box"
     // `shop_product` and `shop_order` for the members' shop (§683).
     | "shop_product"
     | "shop_order";

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { imageCropSchema, meaningfulCrop } from "@/modules/content/rich-text/domain/schema";
-import { COLOR } from "@/theme/brand";
+import { contrastRatio, MIN_TEXT_CONTRAST } from "@/modules/appearance/domain/tint-contrast";
+import { COLOR, GRADIENT } from "@/theme/brand";
 import { bibDesignValuesFromQuery } from "./bib-design-query";
 import { bibFooterText } from "./bib-footer";
 
@@ -138,16 +139,38 @@ const memberColour = z
   .nullable()
   .catch(null);
 
+/**
+ * How a member's bib differs (§NNN, amending §664; the owner, 2026-10-10: «I do not like the BIB
+ * designer of the BVR members, I need a different design for them, different background»):
+ *
+ * - `band` — «Doar banda de sus»: §664's look, the members' header and a small label on it.
+ * - `card` — «Tot numărul»: the whole card above the small print is the members' background — a
+ *   photograph under the navy veil, one of the bib colours that carries white at AA, or the club
+ *   kit's gradient — with the number, the name, the race and the lockup in white and the label a
+ *   stripe in the kit's orange (`bibMemberCard`).
+ *
+ * A design saved before this key existed reads as `band` and prints as it did; the editor offers
+ * `card` first to a club that has not switched the members' bib on yet.
+ */
+export const BIB_MEMBER_STYLES = ["card", "band"] as const;
+export type BibMemberStyle = (typeof BIB_MEMBER_STYLES)[number];
+
 export const bibMemberSchema = z
   .object({
     /** «Membrii primesc un număr cu design propriu». */
     enabled: z.boolean().catch(false),
+    /** «Fundalul»: the whole card, or the header alone (§NNN). */
+    style: z.enum(BIB_MEMBER_STYLES).catch("band"),
     /** The members' band colour, or null for the event's. */
     bandColour: memberColour,
     /** A picture across the top instead of a band, one this site stored (§249). */
     headerImageSrc: storedPicture,
     /** Its crop in the header's shape (§560); none without a picture. */
     headerImageCrop: storedCrop,
+    /** «Tot numărul»'s photograph (§NNN), one this site stored, under the navy veil. */
+    cardImageSrc: storedPicture,
+    /** Its crop in the card's shape (`bib-picture-frame.ts`, `memberCard`); none without a picture. */
+    cardImageCrop: storedCrop,
     /** «Eticheta»: the short line on the member's band; empty is the platform's own words. */
     label: z
       .string()
@@ -156,15 +179,22 @@ export const bibMemberSchema = z
   })
   .strict()
   // A crop belongs to its picture (§560), here as in the main header.
-  .transform((member) => ({ ...member, headerImageCrop: member.headerImageSrc ? member.headerImageCrop : null }));
+  .transform((member) => ({
+    ...member,
+    headerImageCrop: member.headerImageSrc ? member.headerImageCrop : null,
+    cardImageCrop: member.cardImageSrc ? member.cardImageCrop : null,
+  }));
 
 export type BibMemberDesign = z.infer<typeof bibMemberSchema>;
 
 export const DEFAULT_BIB_MEMBER_DESIGN: BibMemberDesign = {
   enabled: false,
+  style: "band",
   bandColour: null,
   headerImageSrc: null,
   headerImageCrop: null,
+  cardImageSrc: null,
+  cardImageCrop: null,
   label: "",
 };
 
@@ -195,6 +225,52 @@ export function bibMemberLabel(member: BibMemberDesign, fallback: string): strin
  */
 export function bibMemberBandColour(member: BibMemberDesign, eventColour: string | null | undefined): string {
   return member.bandColour ?? bibBandColour(eventColour);
+}
+
+/**
+ * «Tot numărul»'s fixed parts (§NNN): what the club cannot change, so every members' card is the
+ * club's whatever the event. The words on the background are white (`COLOR.surface`); the stripe is
+ * the kit's orange with the body ink on it (6.2 : 1); the photograph lies under the kit's deepest
+ * navy at `veil` opacity — at 0.7 white still reads at 6 : 1 over a pure-white photograph, which
+ * `member-bib-card.test.ts` computes rather than trusts. The gradient is the kit's own ramp
+ * (`GRADIENT`, `theme/brand.ts`), its first two stops, top to bottom, the way the shirt is worn: the
+ * third, the cyan by the hem, carries white at under 3 : 1, so the number never stands on it.
+ */
+export const BIB_MEMBER_CARD = {
+  text: COLOR.surface,
+  stripe: COLOR.orange,
+  stripeText: COLOR.ink,
+  veil: GRADIENT.deep,
+  veilOpacity: 0.7,
+  gradient: [GRADIENT.deep, GRADIENT.mid],
+} as const;
+
+/** Whether white reads at AA on a colour — what a members' card colour must do (§NNN). */
+export function bibMemberCardColourReadable(colour: string): boolean {
+  return /^#[0-9a-f]{6}$/i.test(colour) && contrastRatio(BIB_MEMBER_CARD.text, colour) >= MIN_TEXT_CONTRAST;
+}
+
+/**
+ * The background of a member's bib drawn «Tot numărul» (§NNN), in the order the club's choices win:
+ * the photograph the renderer really holds; else the members' colour, when white reads on it at AA
+ * (the green and the orange of the bib colours do not, and print the gradient instead — the editor
+ * says so); else the kit's gradient, the default. Never the event's own band or picture: a member's
+ * bib must not pass for the ordinary one.
+ */
+export type BibMemberCardBackground =
+  | { kind: "picture" }
+  | { kind: "colour"; colour: string }
+  | { kind: "gradient"; stops: readonly [string, string] };
+
+export function bibMemberCardBackground(member: BibMemberDesign, pictureDrawn: boolean): BibMemberCardBackground {
+  if (pictureDrawn) return { kind: "picture" };
+  if (member.bandColour && bibMemberCardColourReadable(member.bandColour)) return { kind: "colour", colour: member.bandColour };
+  return { kind: "gradient", stops: BIB_MEMBER_CARD.gradient };
+}
+
+/** The stripe's words: the label in capitals, in the sheet's language's own casing (ș stays ș). */
+export function bibMemberStripeText(label: string, locale = "ro"): string {
+  return label.toLocaleUpperCase(locale);
 }
 
 export const bibDesignSchema = z

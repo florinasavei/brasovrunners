@@ -212,6 +212,8 @@ export const routing = defineRouting({
     /** The repository's documents, rendered for the roles that read `/devs` (`DECISIONS.md` §88). */
     "/devs/docs/[name]": "/devs/docs/[name]",
     "/admin/guide": "/admin/guide",
+    /** «Sistemul de design» (§692): the look as the code draws it, and the redesign plan; reached from «Setări» → «Aspect». */
+    "/admin/design": "/admin/design",
     /** What a staff member's network lets through, and what to ask IT to allow (§436). */
     "/admin/network": "/admin/network",
     /**
@@ -232,6 +234,19 @@ export const routing = defineRouting({
      * backoffice cu «Newsletter»"). One spelling in both locales, a backoffice address.
      */
     "/admin/newsletter": "/admin/newsletter",
+    /**
+     * «Magazin» (§687): the members' shop — the catalogue, the payment words, the orders — its own
+     * section since a volunteer may run it; it was a card on «Pagini» → «Membri» (§683).
+     */
+    "/admin/shop": "/admin/shop",
+    /**
+     * The shop's parts (§697): the orders and the payment words as tabs beside the product list, and
+     * one page per product — a list the owner found «not intuitive at all» as one card of folds.
+     */
+    "/admin/shop/orders": "/admin/shop/orders",
+    "/admin/shop/settings": "/admin/shop/settings",
+    "/admin/shop/products/new": "/admin/shop/products/new",
+    "/admin/shop/products/[id]": "/admin/shop/products/[id]",
     "/admin/checkin": "/admin/checkin",
     "/admin/checkin/[code]": "/admin/checkin/[code]",
     "/admin/legal": "/admin/legal",

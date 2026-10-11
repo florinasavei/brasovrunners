@@ -98,6 +98,16 @@ export const BIB_LAYOUT = {
   memberTagTop: 45,
   memberTagHeight: 13,
   memberTagPad: 5,
+  /**
+   * A member's bib drawn «Tot numărul» (§NNN): the whole card above the small print is the members'
+   * background, and the label is a stripe across it, `memberStripeHeight` points tall, its foot on
+   * the background's foot — just above the sponsors' strip or the small print, which stay on white.
+   * The words are bold, `memberStripeSize` points, `memberStripeSpacing` apart, centred. The stripe's
+   * height comes out of the number's area; the name below the number moves up by it, nothing else.
+   */
+  memberStripeHeight: 20,
+  memberStripeSize: 10,
+  memberStripeSpacing: 1.2,
 } as const;
 
 /**

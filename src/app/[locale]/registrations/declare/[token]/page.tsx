@@ -775,7 +775,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                   one. Presentation only — what makes it a signature is the record beneath. */}
               {/*
                 The name they registered with — or the parent's, for a minor (§108) — shown in bold,
-                and since §314 required: the owner, of a signature reading "Florin Munca2", "can I
+                and since §314 required: the owner, of a signature reading "Felix Sample2", "can I
                 also have this validation here? So I have to type the exact name?" This reverses
                 the "hint, not a validation" half of §283; the island refuses a mismatch before
                 the press and `signDeclaration` refuses it regardless. Strings in, never elements

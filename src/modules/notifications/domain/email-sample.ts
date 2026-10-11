@@ -274,14 +274,6 @@ export const EMAIL_SAMPLE_FORMER_WHEN: Readonly<Record<EmailLocale, readonly str
 };
 
 /**
- * The sample inviter before §359: "Florin", which is also a real first name at the club — a text
- * the club signs "Florin" is its own. So it is not refused as a word: it is looked for only inside
- * the platform's own invitation sentence, where a text saved from the old editor still carries it
- * (`email-copy-fields.ts`), exactly as the bib and the status are.
- */
-export const EMAIL_SAMPLE_FORMER_INVITER: readonly string[] = ["Florin"];
-
-/**
  * The preview's family on one address (§446): who the sample address holds — the sample runner, as
  * the email names a registered person, first name and initial — and the person the form named.
  * Machinery lines of the message, never fields of the closed set: no club text can hold them.
@@ -339,8 +331,7 @@ const EVERY_LOCALE: readonly EmailLocale[] = ["ro", "en"];
  *
  * Not here, on purpose: the bib (42) and the status ("confirmată", "confirmed"), which are too
  * ordinary to refuse on their own — "42 de kilometri" is a sentence a running club writes. They
- * are found where the platform's own sentence carried them (`email-copy-fields.ts`), and so is the
- * inviter's former name (`EMAIL_SAMPLE_FORMER_INVITER`). Nor the organizer's note and the
+ * are found where the platform's own sentence carried them (`email-copy-fields.ts`). Nor the organizer's note and the
  * cancellation reason: they are the platform's lines around the words, never part of the editor's
  * text. Nor the organizer's message (§364): it is written per send, has no editor on the page, and
  * its sample holds only placeholders and ordinary words.

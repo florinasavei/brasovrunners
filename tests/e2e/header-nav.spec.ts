@@ -15,7 +15,7 @@ import { expect, test } from "@playwright/test";
  * menu is the right answer. Both are asserted, because "it fits on my phone" and "nothing
  * overflows at 320" are two different promises.
  */
-const SECTIONS = ["Evenimente", "Calendar"] as const;
+const SECTIONS = ["Alergări", "Calendar"] as const;
 
 test.describe("§262 the sections on a phone's header row", () => {
   test("shows Events, Calendar and Contact on the row at a phone's width", async ({ page }) => {
@@ -30,7 +30,7 @@ test.describe("§262 the sections on a phone's header row", () => {
     }
   });
 
-  test("orders the sections Evenimente, Calendar, Contact, then the rest (§537)", async ({ page }) => {
+  test("orders the sections Alergări, Calendar, Contact, then the rest (§537)", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto("/ro/evenimente");
 
@@ -51,12 +51,24 @@ test.describe("§262 the sections on a phone's header row", () => {
     await page.goto("/ro/evenimente");
 
     // The first section is on the row at 320px, and nothing overflows the document sideways.
-    await expect(page.getByRole("navigation", { name: "Navigare principală" }).getByRole("link", { name: "Evenimente", exact: true })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Navigare principală" }).getByRole("link", { name: "Alergări", exact: true })).toBeVisible();
     const overflow = await page.evaluate(() => ({
       scroll: document.documentElement.scrollWidth,
       client: document.documentElement.clientWidth,
     }));
     expect(overflow.scroll).toBeLessThanOrEqual(overflow.client + 1);
+
+    // The overflow button sits flush at the navigation's right edge (the owner, 2026-10-10).
+    // Wait for SiteNav's client measurement: the server render has the whole row and no button.
+    await expect(page.getByRole("navigation", { name: "Navigare principală" })).toHaveAttribute("data-measured", "true");
+    // The button exists only when some section folds; where nothing does (the desktop project), it stays hidden by design.
+    if (await page.locator("#site-nav-more").isVisible()) {
+      const nav = await page.getByRole("navigation", { name: "Navigare principală" }).boundingBox();
+      const more = await page.locator("#site-nav-more").boundingBox();
+      expect(nav).not.toBeNull();
+      expect(more).not.toBeNull();
+      expect(nav!.x + nav!.width - (more!.x + more!.width)).toBeLessThanOrEqual(1);
+    }
   });
 
   test("puts the language switcher in the footer on a phone and in the header on a desktop", async ({ page }) => {

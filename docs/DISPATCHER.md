@@ -19,7 +19,9 @@ Paste this into a new session (Fable, ultracode on), from the repository's root:
 ```text
 You are the dispatcher for this repository. Read CLAUDE.md, docs/VIBECODING.md,
 docs/DISPATCHER.md and docs/QUEUE.md, then your memory's latest handoff note if you have one.
-Verify the state before acting: `git worktree list`, `gh pr list`, production's /api/health.
+Verify the state before acting: `yarn handoff` (production's and qa's baselines, the open pull
+requests, every unmerged branch, the next free migration number, local work not on GitHub),
+then production's /api/health.
 
 Then run the loop in docs/DISPATCHER.md § The loop until the queue's "building" and "ready"
 rows are shipped or blocked on the owner: one card per item, the model the card's table names,
@@ -344,3 +346,52 @@ page. What the dispatcher keeps from it:
     and the GitHub backstop called nothing (its base-URL secrets were unset, so it skipped green), so
     no job ran for seven hours. `SETUP.md` §40 moves both to the address no registrar can hold and
     adds the second health monitor; the dispatcher checks `/devs` → Stare after any name incident.
+
+## When a session stops — credits, a usage limit, a closed laptop (§NNN)
+
+On 2026-10-10 the owner moved between a phone session and a laptop session on another account,
+and each ran out of credits or hit its limit with work in flight. Nothing was lost, but the
+session that took over found two finished branches it had never heard of, three empty branches
+whose purpose only the owner knew, and two migrations both numbered `0134`. A session can stop at
+any minute, so it works as if it will.
+
+**What every session does, all the time, so that a stop costs nothing:**
+
+1. **Push after every commit.** A commit that lives only in a worktree dies with the container.
+   `yarn handoff` lists any worktree with uncommitted or unpushed work; it should list none
+   whenever the session is between steps.
+2. **Write the branch's `.release/<branch>.json` with its first commit**, intent included in
+   `decisionsSection`. A stranger can then review it, finish it and land it without the
+   conversation that made it. A branch with no commits says nothing: if a branch is created for
+   later, its first commit is the release entry with the owner's words, never an empty branch.
+3. **Take the migration number from `yarn handoff`**, which counts `qa` and every unmerged branch.
+   Two branches holding the same number are renumbered at batch time — the later one becomes the
+   next number, its snapshot's `prevId` pointing at the one that landed.
+4. **Keep `docs/QUEUE.md` § «Where things stand» true in every batch** — what production and `qa`
+   carry, what is in flight on which branch, what waits on the owner. It is the one page a new
+   session reads; a batch that changes the state and not the page is not done.
+5. **One dispatcher merges into `qa` at a time.** When two sessions run, one owns the batches; the
+   other builds on feature branches only, until the owner says it owns them.
+
+**What the session that takes over does first:**
+
+1. `yarn handoff`, and read its four lists.
+2. `docs/QUEUE.md` § «Where things stand», then this page.
+3. Review every unmerged branch it did not build before landing it (`.claude/workflows/br-fix-round.js`
+   with the finding «review and finish»), and ask the owner what any branch without a release
+   entry is for, rather than guessing.
+4. Tell the owner in a few lines what it found and what it will do.
+
+**The prompt to resume**, for the owner to paste into the new session:
+
+```text
+The previous session on this repository stopped (credits or a usage limit). Take over as the
+dispatcher. First run `yarn handoff`, then read CLAUDE.md, docs/QUEUE.md § «Where things stand»
+and docs/DISPATCHER.md § «When a session stops». Review and finish any unmerged branch before
+landing it; ask me about any branch you cannot explain. Tell me in a few lines what you found
+and what you will do next, then carry on.
+```
+
+**What the owner can do before a session stops**, when there is warning (a usage bar, a known
+reset time): ask it for «status for the next session». It pushes everything, updates «Where
+things stand», and answers with `yarn handoff`'s output and the open questions.
