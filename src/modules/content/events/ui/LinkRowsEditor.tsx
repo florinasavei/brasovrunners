@@ -14,7 +14,10 @@ import { type ComponentProps, useState } from "react";
 import { DEFAULT_EVENT_LINK_KIND, EVENT_LINK_KINDS, type EventLinkKind, MAX_EVENT_LINKS } from "@/modules/events/domain/links";
 import { LINK_GLYPH } from "@/modules/events/ui/link-glyphs";
 import type { HtmlConstraints } from "@/shared/forms/constraints";
+import TipSpan from "@/shared/ui/TipSpan";
 import { useRecall } from "@/shared/forms/recall";
+import GlyphButton from "@/shared/ui/GlyphButton";
+import { ROUTE_GPX_INPUT_ID } from "./RouteGpxField";
 import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 
 export type LinkRowValue = { kind: string; url: string; labelRo: string; labelEn: string };
@@ -66,7 +69,7 @@ function LinkRowsEditorIsland({
   constraints,
 }: {
   initial: LinkRowValue[];
-  labels: { kind: string; url: string; labelRo: string; labelEn: string; add: string; remove: string; moveUp: string; moveDown: string; row: string };
+  labels: { kind: string; url: string; labelRo: string; labelEn: string; add: string; remove: string; moveUp: string; moveDown: string; row: string; uploadGpx: string };
   /** Each kind's word, already translated — the same word the page shows when a label is empty. */
   kindLabels: Record<EventLinkKind, string>;
   /** The boxes' HTML constraints, read off `fields.ts#eventLinkRowSchema` by the Server Component (§315). */
@@ -78,6 +81,11 @@ function LinkRowsEditorIsland({
     (initial.length > 0 ? initial : [EMPTY]).map((value, index) => ({ key: index, value })),
   );
   const [nextKey, setNextKey] = useState(rows.length);
+  // The kind a row's box shows once it was changed, by the row's key, kept only to decide whether a «GPX»
+  // row offers the upload (§718). The box itself stays uncontrolled and its `defaultValue` stays the row's
+  // initial kind: a default that followed the choice is what MUI warns about. A key is never reused, so a
+  // removed row's entry is inert.
+  const [chosenKinds, setChosenKinds] = useState<Record<number, string>>({});
 
   const add = () => {
     setRows((current) => [...current, { key: nextKey, value: EMPTY }]);
@@ -113,6 +121,7 @@ function LinkRowsEditorIsland({
       {rows.map(({ key, value }, index) => {
         const name = (box: keyof LinkRowValue) => `event.links[${index}].${box}`;
         const n = index + 1;
+        const shownKind = chosenKinds[key] ?? (value.kind || DEFAULT_EVENT_LINK_KIND);
         return (
           <Stack
             key={key}
@@ -137,6 +146,7 @@ function LinkRowsEditorIsland({
                 defaultValue={value.kind || DEFAULT_EVENT_LINK_KIND}
                 size="small"
                 sx={{ width: { xs: "100%", sm: 220 }, flexShrink: 0 }}
+                onChange={(event) => setChosenKinds((current) => ({ ...current, [key]: event.target.value }))}
                 slotProps={{ select: { renderValue: (chosen) => withGlyph(String(chosen)) }, inputLabel: { shrink: true } }}
               >
                 {EVENT_LINK_KINDS.map((kind) => (
@@ -180,15 +190,25 @@ function LinkRowsEditorIsland({
                 slotProps={{ htmlInput: { ...constraints.label } }}
               />
             </Stack>
+            {/* The route's GPX as a file instead of a link (§718): the same upload as the card's, by its input. */}
+            {labels.uploadGpx && shownKind === "GPX" && (
+              <GlyphButton htmlFor={ROUTE_GPX_INPUT_ID} icon="upload" variant="outlined" sx={{ alignSelf: "flex-start", minHeight: 44 }} data-testid="link-row-upload-gpx">
+                {labels.uploadGpx}
+              </GlyphButton>
+            )}
             {/* «Tradu din română» (§464): the English label from the Romanian one. */}
             <TranslateFieldButton en={name("labelEn")} />
             <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end" }}>
-              <IconButton aria-label={`${labels.moveUp} ${n}`} onClick={() => move(index, -1)} disabled={index === 0} sx={square}>
-                <ArrowUpwardIcon fontSize="small" />
-              </IconButton>
-              <IconButton aria-label={`${labels.moveDown} ${n}`} onClick={() => move(index, 1)} disabled={index === rows.length - 1} sx={square}>
-                <ArrowDownwardIcon fontSize="small" />
-              </IconButton>
+              <TipSpan title={labels.moveUp}>
+                <IconButton aria-label={`${labels.moveUp} ${n}`} onClick={() => move(index, -1)} disabled={index === 0} sx={square}>
+                  <ArrowUpwardIcon fontSize="small" />
+                </IconButton>
+              </TipSpan>
+              <TipSpan title={labels.moveDown}>
+                <IconButton aria-label={`${labels.moveDown} ${n}`} onClick={() => move(index, 1)} disabled={index === rows.length - 1} sx={square}>
+                  <ArrowDownwardIcon fontSize="small" />
+                </IconButton>
+              </TipSpan>
               <IconButton aria-label={`${labels.remove} ${n}`} onClick={() => remove(key)} sx={square}>
                 <DeleteIcon fontSize="small" />
               </IconButton>

@@ -113,6 +113,9 @@ async function seed(row: Partial<typeof registrations.$inferInsert> = {}): Promi
       listOptOut: false,
       confirmedAt: NOW,
       bibNumber: 17,
+      // Written at NOW, as the row's other instants: left to the column's default it is the day the
+      // suite runs, and a minor's birth date stops being a minor's at registration (§712).
+      answersWrittenAt: NOW,
       ...row,
     })
     .returning({ id: registrations.id });

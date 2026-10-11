@@ -3,6 +3,7 @@
 import Box from "@mui/material/Box";
 import type { ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
+import { prefetchFor } from "@/i18n/prefetch";
 
 /**
  * The site logo as a locale-aware link home.
@@ -19,16 +20,17 @@ import { Link } from "@/i18n/navigation";
  *
  * The 44px minimum height is BR-REQ-041-01 criterion 6: a logo is a tap target on a phone.
  *
- * `href="/events"`, not `"/"` (§342): the root itself 308-redirects to the listing
- * (`app/[locale]/page.tsx`), so a literal `/` here sent every tap through that redirect. A nav
- * link should go straight to where it lands, the same rule the sitemap and the JSON-LD `url`
- * follow — one hop fewer, and one less "page with redirect" for a crawler to report.
+ * `href` is the listing while the root redirects there (§342: a nav link goes straight to where it
+ * lands, one hop fewer and one less "page with redirect" for a crawler), and the root itself while
+ * «Pagina principală» is on (§714, `docs/REDESIGN.md` decision 3: the home page is reached from the
+ * logo, never from a menu entry). The header reads the setting and says which; both are static pages.
  */
-export default function LogoLink({ children, label }: { children: ReactNode; label: string }) {
+export default function LogoLink({ children, label, href = "/events" }: { children: ReactNode; label: string; href?: "/" | "/events" }) {
   return (
     <Box
       component={Link}
-      href="/events"
+      href={href}
+      prefetch={prefetchFor(href)}
       aria-label={label}
       sx={{
         display: "inline-flex",

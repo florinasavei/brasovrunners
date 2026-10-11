@@ -7,6 +7,7 @@ import TextField from "@mui/material/TextField";
 import { type ComponentProps, useState } from "react";
 import { useRecall } from "@/shared/forms/recall";
 import GlyphButton from "@/shared/ui/GlyphButton";
+import TipSpan from "@/shared/ui/TipSpan";
 import { DEFAULT_TEAM_LINK_KIND, isTeamLinkKind, MAX_TEAM_LINK_LABEL, MAX_TEAM_LINK_URL, MAX_TEAM_LINKS, TEAM_LINK_KINDS, type TeamLinkKind } from "../links";
 import TeamLinkGlyph from "./TeamLinkGlyph";
 
@@ -21,6 +22,11 @@ export type TeamLinkRowsLabels = {
   remove: string;
   moveUp: string;
   moveDown: string;
+  /** The words on the button, and the sentence of its tooltip (§710). */
+  moveUpWord: string;
+  moveDownWord: string;
+  moveUpTip: string;
+  moveDownTip: string;
   row: string;
 };
 
@@ -92,6 +98,7 @@ function TeamLinkRowsEditorIsland({
 
   // 44 px targets (BR-REQ-041-01 criterion 6).
   const square = { minHeight: 44, minWidth: 44, px: 1, "& .MuiButton-startIcon": { m: 0 } } as const;
+  const word = { minHeight: 44, px: 1, textTransform: "none" } as const;
 
   return (
     <Stack spacing={1.5} id={recall.idOf("links")} tabIndex={-1} sx={{ outline: "none" }}>
@@ -165,8 +172,16 @@ function TeamLinkRowsEditorIsland({
               />
             </Stack>
             <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end" }}>
-              <GlyphButton icon="moveUp" type="button" variant="text" aria-label={`${labels.moveUp} ${n}`} onClick={() => move(index, -1)} disabled={index === 0} sx={square} />
-              <GlyphButton icon="moveDown" type="button" variant="text" aria-label={`${labels.moveDown} ${n}`} onClick={() => move(index, 1)} disabled={index === rows.length - 1} sx={square} />
+              <TipSpan title={labels.moveUpTip}>
+                <GlyphButton icon="moveUp" type="button" variant="text" aria-label={`${labels.moveUp} ${n}`} onClick={() => move(index, -1)} disabled={index === 0} sx={word}>
+                  {labels.moveUpWord}
+                </GlyphButton>
+              </TipSpan>
+              <TipSpan title={labels.moveDownTip}>
+                <GlyphButton icon="moveDown" type="button" variant="text" aria-label={`${labels.moveDown} ${n}`} onClick={() => move(index, 1)} disabled={index === rows.length - 1} sx={word}>
+                  {labels.moveDownWord}
+                </GlyphButton>
+              </TipSpan>
               <GlyphButton icon="delete" type="button" variant="text" aria-label={`${labels.remove} ${n}`} onClick={() => remove(key)} sx={square} />
             </Stack>
           </Stack>

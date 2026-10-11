@@ -184,8 +184,9 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/members/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   { file: "src/app/[locale]/members/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3, count: 2 },
   { file: "src/app/[locale]/members/page.tsx", prop: "p", step: "cardPadTop", sm: 2, xsBefore: 2 },
-  { file: "src/app/[locale]/members-area/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 2 },
-  { file: "src/app/[locale]/members-area/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3, count: 5 },
+  { file: "src/app/[locale]/members-area/zone.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 2 },
+  { file: "src/app/[locale]/members-area/runs/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3, count: 2 },
+  { file: "src/app/[locale]/members-area/zone.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3, count: 3 },
   // The members' shop and «Comenzile mele» (§683): the zone's own section gap.
   { file: "src/app/[locale]/members-area/MembersShop.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3, count: 2 },
   { file: "src/app/[locale]/legal/privacy/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },

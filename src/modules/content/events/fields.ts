@@ -35,6 +35,26 @@ import {
   normalizeEventLinkUrl,
   type EventLink,
 } from "@/modules/events/domain/links";
+import { MAX_ROUTE_MAP_INPUT, type ParsedRouteMap, parseGarminCourse, parseStravaRoute, type RouteMap } from "@/modules/events/domain/route-maps";
+import { readPostedRouteGpx, type RouteGpx } from "@/modules/events/domain/route-gpx";
+
+/**
+ * One map field of «Traseul» (§718): the paste read by its provider's parser, "" as "none", and a
+ * refusal naming the field — never the pasted text kept.
+ */
+function routeMapField<M extends RouteMap>(parse: (input: string) => ParsedRouteMap<M>, message: string) {
+  return z
+    .string()
+    .max(MAX_ROUTE_MAP_INPUT)
+    .transform((value, ctx): M | null => {
+      const parsed = parse(value);
+      if (!parsed.ok) {
+        ctx.addIssue({ code: "custom", message });
+        return z.NEVER;
+      }
+      return parsed.map;
+    });
+}
 
 /**
  * Exactly which fields the backoffice may write (BR-REQ-050-01 criterion 1).
@@ -771,6 +791,33 @@ export const eventFieldsSchema = z
     // Where the run goes, as opposed to where it starts (BR-REQ-011-01 criterion 8). A link
     // and never a file: media storage is deferred (`AGENTS.md` §17).
     routeUrl: httpsUrl("a route link must start with https://"),
+    /**
+     * «Traseul»'s maps (§718): what the club pasted for Strava and for Garmin Connect — the route's
+     * link or the service's embed code — read down to the id and the strictly-patterned values
+     * (`route-maps.ts`); the pasted text is never kept. Absent means this caller is not editing the
+     * maps (the partners' discipline, §169); "" is "no map of this service".
+     */
+    routeStrava: routeMapField(parseStravaRoute, "the Strava route: paste the route's link (strava.com/routes/…) or the embed code Strava gives").optional(),
+    routeGarmin: routeMapField(parseGarminCourse, "the Garmin Connect course: paste the course's link (connect.garmin.com/…/course/…) or the embed code Garmin gives").optional(),
+    /**
+     * «Traseul»'s GPX (§718): the editor's hidden input — the JSON the upload answered
+     * (`/api/admin/route-gpx`), or "" after «Scoate». Absent means this caller is not editing it.
+     * Anything that is not a GPX the upload wrote is refused; the save also asks that it be this
+     * environment's (`service.ts`).
+     */
+    routeGpx: z
+      .string()
+      .max(2000)
+      .optional()
+      .transform((value, ctx): RouteGpx | null | undefined => {
+        if (value === undefined) return undefined;
+        const gpx = readPostedRouteGpx(value);
+        if (gpx === undefined) {
+          ctx.addIssue({ code: "custom", message: "the GPX file: upload it again" });
+          return z.NEVER;
+        }
+        return gpx;
+      }),
     // A film of the event (criterion 9): a YouTube link, or nothing. Checked for a video id
     // here so the page never meets a link it cannot embed.
     // The club's Strava group event for this occurrence (criterion 10): a Strava page, or nothing.

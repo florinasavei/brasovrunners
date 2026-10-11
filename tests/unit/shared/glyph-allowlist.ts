@@ -3,11 +3,11 @@
  * button in `file` whose source contains `words`; `glyph-on-every-button-and-fold.test.ts` reads it,
  * and checks every entry still matches something, so a stale line fails rather than lingers.
  *
- * Two more exceptions are rules in the test itself, since they are recognised by shape, not file:
- * the order arrows «↑» / «↓», as a `label` or as the button's only words (the label *is* the
- * glyph), and a self-closing `<button />` or
- * `component="button"` with no children (an invisible overlay over a control that draws its own
- * picture, such as the telephone's flag).
+ * One more exception is a rule in the test itself, since it is recognised by shape, not file: a
+ * self-closing `<button />` or `component="button"` with no children (an invisible overlay over a
+ * control that draws its own picture, such as the telephone's flag). The order arrows «↑» / «↓»
+ * stopped being one in §710: a move wears a glyph and words, and `no-symbol-buttons.test.ts`
+ * refuses a bare symbol.
  */
 export const WITHOUT_GLYPH: ReadonlyArray<{ file: string; words: string; reason: string }> = [
   {

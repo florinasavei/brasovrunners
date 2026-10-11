@@ -1,0 +1,4 @@
+ALTER TABLE "events" ADD COLUMN "route_maps" jsonb;--> statement-breakpoint
+ALTER TABLE "events" ADD COLUMN "route_gpx" jsonb;--> statement-breakpoint
+ALTER TABLE "events" ADD CONSTRAINT "events_route_maps_is_a_short_array_of_ids" CHECK ("events"."route_maps" IS NULL OR CASE WHEN jsonb_typeof("events"."route_maps") = 'array' THEN jsonb_array_length("events"."route_maps") <= 2 AND jsonb_array_length("events"."route_maps") = jsonb_array_length(jsonb_path_query_array("events"."route_maps", '$[*] ? ((@.provider == "strava" || @.provider == "garmin") && @.id like_regex "^[0-9]{1,20}$")')) ELSE false END);--> statement-breakpoint
+ALTER TABLE "events" ADD CONSTRAINT "events_route_gpx_names_a_gpx_key" CHECK ("events"."route_gpx" IS NULL OR (jsonb_typeof("events"."route_gpx") = 'object' AND COALESCE(("events"."route_gpx" ->> 'key') ~ '^[a-z]+/route-gpx/[0-9a-f-]{36}/[a-z0-9-]{1,60}\.gpx$', false)));

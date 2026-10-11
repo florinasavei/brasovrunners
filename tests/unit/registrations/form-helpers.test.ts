@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
+import { atTheClock } from "../../helpers/clock";
 
 /**
  * §546 — fewer words on the registration form. The owner, 2026-09-28: «sunt prea multe descrieri
@@ -25,6 +26,13 @@ import ro from "../../../messages/ro.json";
 /** `waitlist`: the event's «Lista de așteptare e publică» (§628), on unless a test says otherwise. */
 /** `refusal`: the terms in force carry the club's right to refuse (§636), off unless a test says otherwise. */
 const state = vi.hoisted(() => ({ locale: "ro" as "ro" | "en", list: false, familyOpen: false, waitlist: true, refusal: false }));
+
+/**
+ * The moment the page is rendered at: registration open, the race ahead. The page reads the real
+ * clock (`new Date()`), so without it the form 404s once the calendar passes the fixture's close
+ * (§712).
+ */
+const OPEN = new Date("2026-10-01T09:00:00.000Z");
 
 const EVENT = {
   id: "00000000-0000-4000-8000-000000000001",
@@ -111,11 +119,13 @@ const { default: RegisterPage } = await import("@/app/[locale]/events/[slug]/reg
 const { forgetLastGood } = await import("@/modules/resilience/last-good");
 
 async function render(): Promise<string> {
-  const page = await RegisterPage({
-    params: Promise.resolve({ locale: state.locale, slug: EVENT.slug }),
-    searchParams: Promise.resolve({}),
+  return atTheClock(OPEN, async () => {
+    const page = await RegisterPage({
+      params: Promise.resolve({ locale: state.locale, slug: EVENT.slug }),
+      searchParams: Promise.resolve({}),
+    });
+    return renderToStaticMarkup(page);
   });
-  return renderToStaticMarkup(page);
 }
 
 /** What a reader reads: the markup's text, its entities decoded. */

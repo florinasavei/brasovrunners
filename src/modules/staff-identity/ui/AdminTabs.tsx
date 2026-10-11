@@ -138,15 +138,24 @@ export default function AdminTabs({ items }: { items: readonly AdminTab[] }) {
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const scroller = root.current?.querySelector<HTMLElement>(".MuiTabs-scroller");
-    const selected = root.current?.querySelector<HTMLElement>('[aria-selected="true"]');
-    if (!scroller || !selected) return;
-    const bar = scroller.getBoundingClientRect();
-    const tab = selected.getBoundingClientRect();
-    if (tab.left >= bar.left - 1 && tab.right <= bar.right + 1) return;
-    // The scroller's own `scrollLeft`, never `scrollIntoView`: that also scrolls the *page*
-    // to bring the bar into view, which on a phone yanks the viewport away from whatever the
-    // volunteer was about to tap (the e2e walk-in test caught it on 2026-09-18).
-    scroller.scrollLeft = selected.offsetLeft - (scroller.clientWidth - selected.offsetWidth) / 2;
+    if (!scroller) return;
+    const centre = () => {
+      const selected = root.current?.querySelector<HTMLElement>('[aria-selected="true"]');
+      if (!selected) return;
+      const bar = scroller.getBoundingClientRect();
+      const tab = selected.getBoundingClientRect();
+      if (tab.left >= bar.left - 1 && tab.right <= bar.right + 1) return;
+      // The scroller's own `scrollLeft`, never `scrollIntoView`: that also scrolls the *page*
+      // to bring the bar into view, which on a phone yanks the viewport away from whatever the
+      // volunteer was about to tap (the e2e walk-in test caught it on 2026-09-18).
+      scroller.scrollLeft = selected.offsetLeft - (scroller.clientWidth - selected.offsetWidth) / 2;
+    };
+    centre();
+    // MUI draws its arrows after mount, once an IntersectionObserver has measured the overflow,
+    // and that narrows the scroller by 88 px: centre again for the width the bar ends up with.
+    const observer = new ResizeObserver(centre);
+    observer.observe(scroller);
+    return () => observer.disconnect();
   }, [active?.href]);
 
   return (
@@ -156,10 +165,22 @@ export default function AdminTabs({ items }: { items: readonly AdminTab[] }) {
       // of these sections should light up no tab, and MUI warns about a value it cannot find.
       value={active?.href ?? false}
       variant="scrollable"
-      scrollButtons={false}
+      // Arrows only while the tabs overflow (`auto`), and not on a phone (no `allowScrollButtonsMobile`):
+      // eleven tabs overflow a laptop and nothing said that more sections hide past the edge (the owner,
+      // 2026-10-11, amending §79). A thumb scrolls the bar; MUI's arrows re-laid the 320 px desk out after
+      // mount, which §79 dropped them for. The arrows are pointer-only (MUI gives them no role and no tab
+      // stop): a keyboard moves through the tablist with the arrow keys. A disabled one is invisible, not grey.
+      scrollButtons="auto"
       // At 320px three tabs do not fit; scrolling them is right, and the divider makes it look
       // like the row it is rather than like clipped text.
-      sx={{ mb: 3, borderBottom: 1, borderColor: "divider", minHeight: 44 }}
+      sx={{
+        mb: 3,
+        borderBottom: 1,
+        borderColor: "divider",
+        minHeight: 44,
+        // 44 px wide: a thumb must hit the arrow (BR-REQ-041-01 criterion 6); MUI draws 40.
+        "& .MuiTabs-scrollButtons": { width: 44, flexShrink: 0 },
+      }}
     >
       {items.map((item) => {
         const Icon = ICONS[item.section];

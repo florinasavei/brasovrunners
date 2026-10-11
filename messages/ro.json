@@ -453,6 +453,24 @@
     "age": "Vârstă",
     "openRoute": "Vezi traseul",
     "routeJump": "Despre traseu",
+    "routeMaps": {
+      "tabs": "Hărțile traseului",
+      "garmin": {
+        "tab": "Garmin Connect",
+        "show": "Arată harta pe Garmin Connect",
+        "notice": "Harta se încarcă de la Garmin când apeși; Garmin vede adresa ta IP.",
+        "open": "Deschide în Garmin Connect",
+        "frame": "Harta traseului pe Garmin Connect"
+      },
+      "strava": {
+        "tab": "Strava",
+        "show": "Arată harta pe Strava",
+        "notice": "Harta se încarcă de la Strava când apeși; Strava vede adresa ta IP.",
+        "open": "Deschide în Strava",
+        "frame": "Harta traseului pe Strava"
+      },
+      "gpx": "Descarcă traseul (GPX)"
+    },
     "video": {
       "title": "Filmul evenimentului (YouTube)",
       "notice": "Playerul este al YouTube și se încarcă abia când îl deschizi.",
@@ -1572,6 +1590,8 @@
       "siteFontSizeBody": "Fiecare pagină publică a site-ului se deschide de acum cu textul la mărimea aleasă, pentru toți vizitatorii, în ambele teme. Backoffice-ul rămâne cum e. Poți reveni oricând la «Normal».",
       "siteLookTitle": "Schimbi aspectul site-ului?",
       "siteLookBody": "Fiecare pagină publică se deschide de acum în aspectul ales, pentru toți vizitatorii. Backoffice-ul, emailurile și PDF-urile rămân cum sunt. Poți reveni oricând la «Aspectul de azi».",
+      "homePageTitle": "Salvezi pagina principală?",
+      "homePageBody": "Adresa site-ului deschide de acum ce ai ales, pentru toți vizitatorii: pagina principală sau lista de alergări. Poți reveni oricând.",
       "translationBudgetTitle": "Salvezi bugetul de traduceri?",
       "translationBudgetBody": "Numărul nou se aplică de la următoarea apăsare pe „Tradu din română”. Ce s-a tradus azi rămâne numărat.",
       "deliveryTimingTitle": "Schimbi când pleacă emailurile?",
@@ -1940,6 +1960,28 @@
       "routeUrl": "Link către traseu",
       "routeUrlHelp": "Unde poate fi văzut traseul — un traseu sau o activitate Strava, sau orice alt link https://. Lasă gol dacă nu există unul.",
       "routeDescriptionHelp": "Opțional, în ambele limbi sau în niciuna: opriri, pante, ce să aștepți, o hartă (butonul de imagine). Apare pe pagină la „Traseul”.",
+      "routeGarmin": "Garmin Connect: linkul sau codul de încorporare",
+      "routeGarminHelp": "Lipește linkul traseului de pe Garmin Connect (…/course/…) sau codul de încorporare (Share → Embed). Pe pagină apar harta, încărcată doar când vizitatorul apasă, și linkul.",
+      "routeStrava": "Strava: linkul sau codul de încorporare",
+      "routeStravaHelp": "Lipește linkul traseului de pe Strava (strava.com/routes/…) sau codul de încorporare (Share → Embed). Pe pagină apar harta, încărcată doar când vizitatorul apasă, și linkul.",
+      "routeGpx": {
+        "label": "Fișierul GPX al traseului",
+        "help": "Încarcă fișierul de pe calculator sau telefon; apare pe pagină sub hărți, ca «Descarcă traseul (GPX)». Un GPX ținut în altă parte îl poți adăuga mai jos ca link.",
+        "upload": "Încarcă un GPX",
+        "replace": "Înlocuiește fișierul",
+        "remove": "Scoate fișierul",
+        "uploading": "Se încarcă…",
+        "none": "Niciun fișier GPX.",
+        "removed": "Fișierul se scoate la salvare.",
+        "noStorage": "Stocarea fișierelor nu este configurată aici, așa că nu se poate încărca un GPX.",
+        "errors": {
+          "tooLarge": "Fișierul are mai mult de 4 MB.",
+          "notGpx": "Fișierul nu este un GPX: elementul lui de bază nu este gpx.",
+          "notXml": "Fișierul nu este un document XML.",
+          "empty": "Fișierul este gol.",
+          "failed": "Încărcarea nu a reușit. Încearcă din nou."
+        }
+      },
       "repeatHelp": "Fă din acest eveniment o serie, la interval fix. Următoarele {horizon} se creează acum, restul le creează site-ul; fiecare dată se poate muta sau anula separat.",
       "repeatUntil": "Până la (opțional)",
       "repeatUntilHelp": "Lasă gol pentru o serie fără sfârșit.",
@@ -2061,6 +2103,7 @@
         "remove": "Șterge linkul",
         "moveUp": "Mută mai sus linkul",
         "moveDown": "Mută mai jos linkul",
+        "uploadGpx": "Încarcă fișierul în loc de link",
         "row": "Linkul",
         "urlError": "Linkul {n}: adresa trebuie să înceapă cu https://",
         "kindError": "Linkul {n}: alege tipul din listă",
@@ -2549,11 +2592,14 @@
             "day": "de zi",
             "dayAuto": "de zi (automat)",
             "described": "cu descriere",
-            "describedOneLanguage": "descriere într-o singură limbă"
+            "describedOneLanguage": "descriere într-o singură limbă",
+            "strava": "Strava",
+            "garmin": "Garmin"
           },
           "links": {
             "strava": "Strava",
             "facebook": "Facebook",
+            "gpxUploaded": "GPX încărcat",
             "files": {
               "one": "{count} link",
               "few": "{count} linkuri",
@@ -4313,8 +4359,12 @@
       "doneBy": "Bifat de {by}, {when}",
       "tick": "Bifează: {text}",
       "untick": "Debifează: {text}",
-      "moveUp": "Mută mai sus: {text}",
-      "moveDown": "Mută mai jos: {text}",
+      "moveUp": "Mai sus: {text}",
+      "moveDown": "Mai jos: {text}",
+      "moveUpWord": "Mai sus",
+      "moveDownWord": "Mai jos",
+      "moveUpTip": "Mută linia cu un loc mai sus între cele deschise. Toată echipa vede lista în această ordine.",
+      "moveDownTip": "Mută linia cu un loc mai jos între cele deschise. Toată echipa vede lista în această ordine.",
       "edit": "Modifică",
       "doneTitle": "Arată terminate ({count})",
       "add": {
@@ -4567,6 +4617,135 @@
         "faq": "Întrebări frecvente"
       }
     },
+    "homePage": {
+      "title": "Pagina principală",
+      "intro": "Pagina de start la adresa site-ului, de la fotografia de sus la cifrele clubului. Se ajunge la ea din siglă, nu din meniu.",
+      "introMore": "Oprită, adresa duce la «Alergări», ca până acum. O căsuță goală în ambele limbi înseamnă textul implicit, scris cu gri; o fotografie nealeasă e un loc gol.",
+      "current": "Acum: {state}",
+      "updatedAt": "Setat {when}.",
+      "legend": "Ce deschide adresa site-ului",
+      "default": "implicit",
+      "choices": {
+        "off": {
+          "name": "Lista de alergări",
+          "help": "Adresa site-ului duce la «Alergări», ca până acum."
+        },
+        "on": {
+          "name": "Pagina principală",
+          "help": "Adresa site-ului deschide pagina principală, iar sigla duce la ea."
+        }
+      },
+      "heroLegend": "Fotografia de sus",
+      "heroHelp": "O fotografie adevărată a clubului, cu acordul celor care se recunosc în ea. Fără ea, pagina arată un loc gol.",
+      "heroCropTitle": "Decupaj — ce se vede sus pe pagină",
+      "heroCropHelp": "Pornește de la cel mai mare dreptunghi 16:9. Poți alege alt format sau trage un dreptunghi peste fotografie.",
+      "headlineLegend": "Titlul mare",
+      "headlineRo": "Titlul (română)",
+      "headlineEn": "Titlul (engleză)",
+      "headlineHelp": "Ultimul cuvânt apare colorat. Gol în ambele limbi: un titlu implicit.",
+      "sublineLegend": "Rândul de sub titlu",
+      "sublineRo": "Rândul de sub titlu (română)",
+      "sublineEn": "Rândul de sub titlu (engleză)",
+      "sublineHelp": "Una-două propoziții. Gol în ambele limbi: un text implicit.",
+      "buttonsLegend": "Butoanele de sus",
+      "buttonsHelp": "«Vino cu noi» duce la următoarea alergare săptămânală, «Vezi calendarul» la calendar. Eticheta, în ambele limbi sau în niciuna: gol înseamnă cuvintele implicite.",
+      "buttonJoinRo": "«Vino cu noi» (română)",
+      "buttonJoinEn": "«Vino cu noi» (engleză)",
+      "buttonCalendarRo": "«Vezi calendarul» (română)",
+      "buttonCalendarEn": "«Vezi calendarul» (engleză)",
+      "buttonHowRo": "«Cum funcționează» (română)",
+      "buttonHowEn": "«Cum funcționează» (engleză)",
+      "buttonHowHelp": "O pagină a clubului din «Pagini personalizate». Fără pagină, butonul nu apare; o pagină nepublicată apare abia după ce o publici. Eticheta e opțională: goală, «Cum funcționează».",
+      "sectionsHelp": "Bifează secțiunile care apar, în ordinea de mai jos. Ultimele patru pornesc oprite: completează-le întâi, apoi bifează-le.",
+      "sections": {
+        "hero": "Fotografia, titlul și butoanele",
+        "nextRun": "Următoarea alergare",
+        "weekly": "Alergările săptămânale",
+        "special": "Evenimentele speciale",
+        "steps": "Prima dată — cinci pași pentru cine vine prima oară",
+        "why": "De ce — patru motive și citatul",
+        "strip": "Banda de fotografii — doar cu cel puțin o fotografie",
+        "numbers": "Cifrele clubului — doar cele care se pot afla"
+      },
+      "save": "Salvează pagina principală",
+      "saving": "Se salvează…",
+      "saved": "Pagina principală a fost salvată.",
+      "readOnly": "Pagina principală o setează Administratorul; vezi aici alegerea în vigoare.",
+      "noStorage": "Stocarea imaginilor nu este configurată aici, așa că nu se poate alege o fotografie.",
+      "open": "Deschide pagina principală",
+      "scope": "Se schimbă doar ce deschide adresa site-ului și unde duce sigla. «Alergări» rămâne în meniu, la aceeași adresă.",
+      "buttonHowPage": "Pagina butonului «Cum funcționează» de sus",
+      "folds": {
+        "sections": "Ce secțiuni arată pagina",
+        "sectionsAside": "{shown} din {total} arătate",
+        "hero": "Sus: fotografia, titlul și butoanele",
+        "heroWithPhoto": "Cu fotografie",
+        "heroEmpty": "Fără fotografie",
+        "steps": "Prima dată",
+        "stepsIntro": "Cinci pași pentru cine n-a mai alergat cu clubul, de la calendar la cafeaua de după. Butonul «Cum funcționează» apare doar cu o pagină aleasă.",
+        "why": "De ce și citatul",
+        "whyIntro": "Patru motive, fiecare cu titlul și propoziția lui, și un citat cu autorul lui. Citatul apare doar dacă e scris în ambele limbi: pagina nu inventează vorbele nimănui.",
+        "strip": "Banda de fotografii: titlul",
+        "stripIntro": "Fotografiile se aleg mai jos, în «Fotografiile benzii»; fără niciuna, banda nu apare.",
+        "numbers": "Cifrele clubului",
+        "numbersAside": "{filled} din 2 completate",
+        "numbersIntro": "Anii se socotesc din data înființării, iar alergările pe săptămână și «100% gratuit» din alergările săptămânale din calendar. O cifră fără datele ei nu apare.",
+        "wordsClub": "Textele clubului",
+        "wordsPlatform": "Textele implicite"
+      },
+      "inLanguage": {
+        "ro": "{box} (română)",
+        "en": "{box} (engleză)"
+      },
+      "boxes": {
+        "stepsTitle": "Prima dată: titlul",
+        "stepsLead": "Prima dată: propoziția de sub titlu",
+        "stepTitle": "Prima dată: pasul {number}, titlul",
+        "stepBody": "Prima dată: pasul {number}, propoziția",
+        "stepsLink": "Prima dată: eticheta butonului",
+        "whyTitle": "De ce: titlul",
+        "reasonTitle": "De ce: motivul {number}, titlul",
+        "reasonBody": "De ce: motivul {number}, propoziția",
+        "quote": "Citatul",
+        "quoteBy": "Cine a spus-o",
+        "stripTitle": "Banda de fotografii: titlul"
+      },
+      "pageLabel": "Pagina pe care o deschide «Cum funcționează»",
+      "pageNone": "Niciuna — butonul nu apare",
+      "pageDraft": "{title} (nepublicată)",
+      "stepsPage": "Prima dată: pagina butonului «Cum funcționează»",
+      "stepsPageHelp": "O pagină a clubului din «Pagini personalizate», deschisă în limba cititorului. O pagină nepublicată apare abia după ce o publici.",
+      "numbers": {
+        "foundedOn": "Data înființării clubului",
+        "foundedOnHelp": "Pagina arată câți ani au trecut, întregi. Goală: cifra nu apare.",
+        "activeRunners": "Alergători activi",
+        "activeRunnersHelp": "Câți oameni aleargă cu clubul, după numărătoarea voastră. Gol: cifra nu apare."
+      },
+      "strip": {
+        "title": "Fotografiile benzii",
+        "intro": "Până la {max} fotografii ale clubului, în ordinea de aici, fiecare pătrată, cu mijlocul ei. Doar fotografii cu acordul celor care se recunosc în ele.",
+        "count": {
+          "one": "{count} fotografie",
+          "few": "{count} fotografii",
+          "other": "{count} de fotografii"
+        },
+        "none": "Nicio fotografie încă: banda nu apare pe pagină.",
+        "position": "Locul {number}",
+        "up": "Mai sus",
+        "down": "Mai jos",
+        "moveUp": "Mută fotografia {number} mai sus",
+        "moveDown": "Mută fotografia {number} mai jos",
+        "remove": "Scoate",
+        "removeNamed": "Scoate fotografia {number} din bandă",
+        "removeTitle": "Scoți fotografia din bandă?",
+        "removeBody": "Iese din banda paginii principale; rămâne în galerie. Vizitatorii văd schimbarea de la următoarea vizită.",
+        "addLegend": "Adaugă o fotografie în bandă",
+        "addHelp": "Încarcă una sau alege «Din galerie». Se adaugă la sfârșitul benzii.",
+        "add": "Adaugă în bandă",
+        "full": "Banda are {max} fotografii, cât încape. Scoate una ca să adaugi alta.",
+        "saved": "Banda de fotografii a fost salvată."
+      }
+    },
     "look": {
       "title": "Aspectul nou",
       "intro": "Noul aspect al paginilor publice: roz lângă albastrul siglei, titluri mai apăsate, butoane rotunjite, «Vino cu noi» în antet.",
@@ -4699,6 +4878,7 @@
       "usedInTeamIntro": "Pe pagina Echipa: introducerea",
       "usedInFaq": "Pe pagina «Întrebări frecvente»",
       "usedInMembersPage": "Pe paginile membrilor",
+      "usedInHomePage": "Pe pagina principală",
       "usedInNewsletter": "Într-un newsletter trimis",
       "usedInTeamBox": "Pe pagina Echipa: caseta {title}"
     },
@@ -5878,6 +6058,8 @@
         "intro": "Componentele site-ului, desenate din rândurile de probă — exact codul care le desenează și pe site.",
         "cards": "Cardurile listei · EventCard, SeriesCard",
         "cardsNote": "Un eveniment cu o singură dată și o serie; datele sunt inventate și nu numesc pe nimeni.",
+        "homeTop": "Pagina principală · Hero, NextRunCard, RunCardGrid",
+        "homeTopNote": "Secțiunile paginii principale, din date de probă: titlul cu fotografia (aici locul gol), următoarea alergare și cardurile unei secțiuni.",
         "featured": "Evenimentul principal · featuredCard",
         "featuredNote": "Primul card al listei, la lățimea celorlalte, deosebit prin ramă și fundal.",
         "team": "Cardul echipei",
@@ -5902,7 +6084,9 @@
         "fold": "Pliul din backoffice",
         "foldNote": "Un pliu nativ al browserului, cu rama și bara lui; se deschide fără JavaScript.",
         "foldSummary": "Un pliu închis",
-        "foldBody": "Ce e înăuntru se vede după o apăsare pe bară."
+        "foldBody": "Ce e înăuntru se vede după o apăsare pe bară.",
+        "home": "Pagina principală · StepsBand, WhyList, PhotoStrip, NumbersBand",
+        "homeNote": "Cele patru secțiuni, în aspectul nou, cu textele de pornire și cifre de probă. Locurile goale ale fâșiei apar doar aici: pe site, fâșia fără fotografii nu se desenează."
       },
       "icons": {
         "intro": "Cele două registre de glife, citite întregi; un nume adăugat acolo apare aici.",
@@ -7286,8 +7470,12 @@
       "hidden": "Ascuns",
       "noPhoto": "Fără fotografie",
       "oneLanguage": "Text într-o singură limbă",
-      "moveUpNamed": "Mută mai sus: {name}",
-      "moveDownNamed": "Mută mai jos: {name}",
+      "moveUpNamed": "Mai sus: {name}",
+      "moveDownNamed": "Mai jos: {name}",
+      "moveUpWord": "Mai sus",
+      "moveDownWord": "Mai jos",
+      "moveUpTip": "Mută cardul cu un loc mai devreme în listă. Pe pagina Echipa, între cardurile de același nivel, apare mai aproape de început.",
+      "moveDownTip": "Mută cardul cu un loc mai târziu în listă. Pe pagina Echipa, între cardurile de același nivel, apare mai aproape de sfârșit.",
       "show": "Pune pe site",
       "hide": "Scoate de pe site",
       "showTitle": "Pui pe site cardul „{name}”?",
@@ -7345,8 +7533,12 @@
         "labelEn": "Eticheta (English)",
         "add": "Adaugă un link",
         "remove": "Șterge linkul",
-        "moveUp": "Mută mai sus linkul",
-        "moveDown": "Mută mai jos linkul",
+        "moveUp": "Mai sus: linkul",
+        "moveDown": "Mai jos: linkul",
+        "moveUpWord": "Mai sus",
+        "moveDownWord": "Mai jos",
+        "moveUpTip": "Mută linkul cu un loc mai sus. Cardul de pe pagina Echipa arată linkurile în această ordine.",
+        "moveDownTip": "Mută linkul cu un loc mai jos. Cardul de pe pagina Echipa arată linkurile în această ordine.",
         "row": "Linkul"
       },
       "subtitleRo": "Subtitlu (Română)",
@@ -7371,8 +7563,12 @@
         "empty": "Nu este încă nicio casetă.",
         "listLabel": "Casetele paginii, în ordinea de pe pagină",
         "noText": "Fără text",
-        "moveUp": "Mută caseta „{title}” mai sus",
-        "moveDown": "Mută caseta „{title}” mai jos",
+        "moveUp": "Mai sus: caseta „{title}”",
+        "moveDown": "Mai jos: caseta „{title}”",
+        "moveUpWord": "Mai sus",
+        "moveDownWord": "Mai jos",
+        "moveUpTip": "Mută caseta cu un loc mai devreme în listă. Casetele apar pe pagina Echipa, sub carduri, în ordinea listei.",
+        "moveDownTip": "Mută caseta cu un loc mai târziu în listă. Casetele apar pe pagina Echipa, sub carduri, în ordinea listei.",
         "showTitle": "Pui pe site caseta „{title}”?",
         "showBody": "Caseta apare sub organigramă cât timp pagina este publicată.",
         "hideTitle": "Scoți de pe site caseta „{title}”?",
@@ -7402,8 +7598,12 @@
       "listLabel": "Întrebările, în ordinea de pe pagină",
       "visible": "Pe site",
       "hidden": "Ascunsă",
-      "moveUpNamed": "Mută mai sus: {question}",
-      "moveDownNamed": "Mută mai jos: {question}",
+      "moveUpNamed": "Mai sus: {question}",
+      "moveDownNamed": "Mai jos: {question}",
+      "moveUpWord": "Mai sus",
+      "moveDownWord": "Mai jos",
+      "moveUpTip": "Mută întrebarea cu un loc mai sus. Pe pagina de întrebări frecvente apar în această ordine. Ce ai scris în formular se salvează odată cu mutarea.",
+      "moveDownTip": "Mută întrebarea cu un loc mai jos. Pe pagina de întrebări frecvente apar în această ordine. Ce ai scris în formular se salvează odată cu mutarea.",
       "introHeading": "Introducerea paginii",
       "introHelp": "Opțională, în ambele limbi sau în niciuna, cel mult {max} de caractere; fără ea, pagina începe cu fraza de mai jos. Poate avea linkuri, poze și tabele.",
       "introDefault": "«{lead}»",
@@ -7508,8 +7708,12 @@
         "expired": "Expirat",
         "until": "Până {day}",
         "oneLanguage": "Descriere într-o singură limbă",
-        "moveUp": "Mută codul {partner} mai sus",
-        "moveDown": "Mută codul {partner} mai jos",
+        "moveUp": "Mai sus: codul {partner}",
+        "moveDown": "Mai jos: codul {partner}",
+        "moveUpWord": "Mai sus",
+        "moveDownWord": "Mai jos",
+        "moveUpTip": "Mută codul cu un loc mai sus. Membrii văd codurile în această ordine.",
+        "moveDownTip": "Mută codul cu un loc mai jos. Membrii văd codurile în această ordine.",
         "showTitle": "Arăți din nou codul {partner}?",
         "showBody": "Membrii îl vor vedea în zona lor.",
         "show": "Arată",
@@ -7576,8 +7780,12 @@
           "other": "{count} de comenzi"
         },
         "oneLanguage": "Descriere într-o singură limbă",
-        "moveUp": "Mută {title} mai sus",
-        "moveDown": "Mută {title} mai jos",
+        "moveUp": "Mai sus: {title}",
+        "moveDown": "Mai jos: {title}",
+        "moveUpWord": "Mai sus",
+        "moveDownWord": "Mai jos",
+        "moveUpTip": "Mută produsul cu un loc mai sus. Membrii văd produsele în această ordine.",
+        "moveDownTip": "Mută produsul cu un loc mai jos. Membrii văd produsele în această ordine.",
         "deleteTitle": "Scoți produsul {title}?",
         "deleteBody": "Produsul dispare de tot.",
         "archiveBody": "Produsul are comenzi: se arhivează, nu se șterge. Iese din magazin și din listă; comenzile rămân cum sunt.",
@@ -7720,8 +7928,12 @@
           "gone": "Fotografia nu mai e în galerie.",
           "cover": "Copertă",
           "position": "Poziția {number}",
-          "moveUp": "Mută fotografia {number} mai în față",
-          "moveDown": "Mută fotografia {number} mai în spate",
+          "moveUp": "Mai în față: fotografia {number}",
+          "moveDown": "Mai în spate: fotografia {number}",
+          "moveUpWord": "Mai în față",
+          "moveDownWord": "Mai în spate",
+          "moveUpTip": "Mută fotografia cu un loc mai în față. Prima fotografie este coperta.",
+          "moveDownTip": "Mută fotografia cu un loc mai în spate. Prima fotografie este coperta.",
           "remove": "Scoate fotografia",
           "removeTitle": "Scoți fotografia?",
           "removeBody": "Dispare din produs; rămâne în galerie. Membrii văd schimbarea de îndată.",
@@ -9579,6 +9791,8 @@
       "siteTint": "Fundalul site-ului a fost salvat.",
       "siteFontSize": "Mărimea textului a fost salvată.",
       "siteLook": "Aspectul site-ului a fost salvat.",
+      "homePage": "Pagina principală a fost salvată.",
+      "homeStrip": "Banda de fotografii a fost salvată.",
       "clubTodoAdded": "Adăugat pe listă.",
       "clubTodoSaved": "Rând salvat.",
       "clubTodoUnchanged": "Rândul spunea deja asta; nimic de schimbat.",
@@ -9892,6 +10106,33 @@
       "invalidBody": "A expirat sau abonamentul nu mai există. Fiecare email nou de la noi are un link nou; te poți și abona din nou de pe pagina de contact."
     }
   },
+  "Home": {
+    "meta": {
+      "title": "{club} — alergări de grup în Brașov",
+      "description": "Alergările de grup ale clubului, turele pe munte și evenimentele speciale, cu următoarea alergare și vremea la start. Întotdeauna gratuite."
+    },
+    "hero": {
+      "headline": "Alergăm împreună prin Brașov",
+      "subline": "Alergări de grup, ture pe munte și evenimente speciale organizate de club — întotdeauna gratuite. Vino la prima alergare, te așteptăm.",
+      "join": "Vino cu noi",
+      "calendar": "Vezi calendarul",
+      "how": "Cum funcționează"
+    },
+    "nextRun": {
+      "title": "Următoarea alergare",
+      "sunset": "Apus la {time}"
+    },
+    "weekly": {
+      "title": "Alergările săptămânale",
+      "intro": "Același loc și aceeași oră în fiecare săptămână: vii când poți.",
+      "next": "Următoarea: {when}"
+    },
+    "special": {
+      "title": "Evenimente speciale",
+      "intro": "Curse, ture pe munte și tot ce nu se repetă în fiecare săptămână."
+    },
+    "more": "Vezi toate alergările"
+  },
   "Team": {
     "title": "Echipa",
     "lead": "Oamenii care țin {club} în mișcare: cine organizează, cine antrenează, cine te întâmpină la start.",
@@ -10004,11 +10245,20 @@
     "zoneEmpty": "Clubul pune aici, în curând, ce e doar pentru membri.",
     "zoneAway": "Baza de date a site-ului se odihnește acum. Revino în câteva minute.",
     "signOut": "Ieși din cont",
+    "signOutPending": "Se încheie sesiunea…",
     "upcomingTitle": "Următoarele alergări",
     "upcomingEmpty": "Nicio alergare anunțată acum.",
     "upcomingAll": "Toate alergările",
     "eventsTitle": "Evenimente pentru membri",
     "codesTitle": "Coduri de reducere",
+    "tabsLabel": "Părțile zonei membrilor",
+    "tabs": {
+      "codes": "Coduri de reducere",
+      "shop": "Magazin",
+      "runs": "Alergări"
+    },
+    "codesEmpty": "Niciun cod de reducere deocamdată. Clubul le pune aici când are unul de la un partener.",
+    "shopEmpty": "Magazinul clubului nu are produse acum și nu ai nicio comandă.",
     "copyCode": "Copiază codul",
     "codeCopied": "Copiat",
     "codeValidUntil": "Valabil până {day}, inclusiv.",
@@ -10051,6 +10301,90 @@
         "CONFLICT": "Nu mai sunt destule bucăți pentru comanda ta, sau comanda și-a schimbat starea între timp.",
         "VALIDATION_ERROR": "Verifică varianta, cantitatea (1–5) și nota (cel mult 300 de caractere).",
         "FORBIDDEN": "Contul tău nu poate face asta."
+      }
+    }
+  },
+  "HomeSections": {
+    "steps": {
+      "title": "Prima dată la noi?",
+      "lead": "Cinci pași, de la calendar la start. Nu ai nevoie de cont.",
+      "number": "Pasul {number}",
+      "items": {
+        "1": {
+          "title": "Alege o alergare",
+          "body": "Alege o alergare din calendar."
+        },
+        "2": {
+          "title": "Vino la start",
+          "body": "Vino la locul de start, la ora scrisă."
+        },
+        "3": {
+          "title": "Salută-ne",
+          "body": "Salută-ne și spune-ne că e prima dată."
+        },
+        "4": {
+          "title": "Aleargă cu noi",
+          "body": "Aleargă cu grupul, în ritmul tău."
+        },
+        "5": {
+          "title": "Rămâi la o vorbă",
+          "body": "Rămâi după alergare, la o vorbă."
+        }
+      },
+      "link": "Cum funcționează"
+    },
+    "why": {
+      "title": "De ce să alergi cu noi",
+      "items": {
+        "1": {
+          "title": "Împreună",
+          "body": "Alergi alături de alții, nu singur."
+        },
+        "2": {
+          "title": "Munții de lângă oraș",
+          "body": "Brașovul are trasee la câțiva pași de centru."
+        },
+        "3": {
+          "title": "Fără taxă",
+          "body": "Alergările de grup sunt gratuite."
+        },
+        "4": {
+          "title": "Pentru oricine",
+          "body": "Începător sau maratonist, găsești un ritm potrivit."
+        }
+      },
+      "quote": "„{quote}”",
+      "quoteBy": "— {name}"
+    },
+    "strip": {
+      "title": "Din alergările noastre",
+      "region": "Fotografii de la alergări, într-un rând care se derulează în lateral",
+      "gallery": "Vezi galeria",
+      "instagram": "Urmărește-ne pe Instagram",
+      "emptySlot": "Loc pentru o fotografie",
+      "photoAlt": "Fotografie de la alergările clubului, {n} din {total}"
+    },
+    "numbers": {
+      "title": "{club} în cifre",
+      "years": {
+        "one": "an de alergări împreună",
+        "few": "ani de alergări împreună",
+        "other": "de ani de alergări împreună"
+      },
+      "runners": {
+        "one": "alergător activ",
+        "few": "alergători activi",
+        "other": "de alergători activi"
+      },
+      "perWeek": {
+        "figure": "{count}×",
+        "one": "alergare pe săptămână",
+        "few": "alergări pe săptămână",
+        "other": "de alergări pe săptămână"
+      },
+      "free": {
+        "figure": "{count}%",
+        "label": "alergările de grup, gratuite"
       }
     }
   }

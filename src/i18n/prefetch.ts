@@ -15,6 +15,8 @@
  * holds the two together, and walks every link a static page renders).
  */
 export const PREFETCHED_PATHNAMES: ReadonlySet<string> = new Set([
+  // The site's root (§714): the home page, or a redirect the CDN keeps — static either way.
+  "/",
   "/events",
   "/events/[slug]",
   "/calendar",
