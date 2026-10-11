@@ -77,9 +77,11 @@ describe("§NNN the root page: the home page while the setting is on, a temporar
     expect(page).not.toMatch(/^export const dynamic/m);
   });
 
-  it("declares itself canonical in each language only while it is the home page", () => {
+  it("declares itself canonical in each language only while it is the home page, and carries the club's block", () => {
     expect(page).toMatch(/if \(!\(await cachedHomePage\(\)\)\.on\) return \{\};/);
     expect(page).toContain('alternates: pageAlternates(locale, staticRouteUrls(env.APP_BASE_URL, "/"))');
+    // BR-REQ-052-02 criterion 1: the homepage's one SportsOrganization block, at the root's own address.
+    expect(page).toContain('<JsonLd data={sportsOrganizationJsonLd(CLUB_NAME, staticRouteUrl(env.APP_BASE_URL, "/", locale))} />');
   });
 
   it("is no longer answered by the proxy", () => {

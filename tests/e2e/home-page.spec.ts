@@ -100,6 +100,11 @@ test.describe("§NNN the site's root and «Pagina principală»", () => {
       // Canonical to itself, with the English root as its alternate.
       await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/ro$/);
       await expect(page.locator('link[rel="alternate"][hreflang="en"]')).toHaveAttribute("href", /\/en$/);
+      // The homepage's one SportsOrganization block (BR-REQ-052-02 criterion 1), at the root's address.
+      const blocks = await page.locator('script[type="application/ld+json"]').allTextContents();
+      const organizations = blocks.map((text) => JSON.parse(text) as { "@type"?: string; url?: string }).filter((block) => block["@type"] === "SportsOrganization");
+      expect(organizations).toHaveLength(1);
+      expect(organizations[0].url).toMatch(/\/ro$/);
       // The logo leads home; the menu has no entry for it.
       await expect(page.getByRole("link", { name: "Brașov Runners" }).first()).toHaveAttribute("href", "/ro");
       const sitemap = await (await request.get("/sitemap.xml")).text();

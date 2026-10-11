@@ -37,6 +37,11 @@ export default function HomePage({ hero, nextRun, weekly, special, freshness }: 
         {nextRun && <NextRunCard {...nextRun} />}
         <RunCardGrid {...weekly} />
         <RunCardGrid {...special} />
+        {/*
+          Part B's four sections go here, in the plan's order, each with its own typed props
+          (`feat/home-sections`, wired by the phase's third chain): «Prima dată» (`StepsBand`), «De ce»
+          and the quote (`WhyList`), the photo strip (`PhotoStrip`), the numbers band (`NumbersBand`).
+        */}
       </Stack>
     </Container>
   );
