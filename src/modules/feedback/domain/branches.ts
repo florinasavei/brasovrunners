@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ADDRESS_QUERY, type PickerChip, readPickerChip } from "./event-picker";
 import { type AppEnvironment, markSubjectForEnvironment } from "@/infrastructure/email/delivery";
 
 /**
@@ -39,8 +40,8 @@ export const BRANCH_SLUG: Readonly<Record<FeedbackBranch, string>> = {
   safety: "siguranta",
 };
 
-/** The address bar's three names: the branch, the event's slug and the day of the run. */
-export const FEEDBACK_QUERY = { branch: "tip", event: "eveniment", date: "data" } as const;
+/** The address bar's four names: the branch, the event's slug, the day of the run and the chip (`ADDRESS_QUERY`). */
+export const FEEDBACK_QUERY = { branch: "tip", ...ADDRESS_QUERY } as const;
 
 export function branchFromSlug(value: string | null | undefined): FeedbackBranch | null {
   return FEEDBACK_BRANCHES.find((branch) => BRANCH_SLUG[branch] === value) ?? null;
@@ -127,20 +128,21 @@ export function readDay(value: string | null | undefined): string | null {
   return !Number.isNaN(at.getTime()) && at.toISOString().slice(0, 10) === value ? value : null;
 }
 
-export type FeedbackQuery = { branch: FeedbackBranch | null; eventSlug: string | null; date: string | null };
+export type FeedbackQuery = { branch: FeedbackBranch | null; eventSlug: string | null; date: string | null; chip: PickerChip };
 
 /**
- * `?tip=`, `?eveniment=` and `?data=`, read and never trusted: an unknown branch is no branch, a
+ * `?tip=`, `?eveniment=`, `?data=` and `?filtru=`, read and never trusted: an unknown branch is no branch, a
  * slug that is not a slug is no event, a date that is not a day is no date. Whether the slug names a
  * published event is the page's question — an unknown one simply leaves «Altceva» selected.
  */
-export function readFeedbackQuery(query: { tip?: string | string[]; eveniment?: string | string[]; data?: string | string[] }): FeedbackQuery {
+export function readFeedbackQuery(query: { tip?: string | string[]; eveniment?: string | string[]; data?: string | string[]; filtru?: string | string[] }): FeedbackQuery {
   const one = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
   const slug = one(query.eveniment);
   return {
     branch: branchFromSlug(one(query.tip)),
     eventSlug: typeof slug === "string" && slug.length <= 200 && SLUG.test(slug) ? slug : null,
     date: readDay(one(query.data)),
+    chip: readPickerChip(query.filtru),
   };
 }
 

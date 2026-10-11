@@ -119,3 +119,74 @@ export function filterPickerOptions(options: readonly PickerOption[], typed: str
 export function pickerNoEventFound(filtered: readonly PickerOption[]): boolean {
   return !filtered.some((option) => option.value !== GENERAL_VALUE);
 }
+
+// --- The address (§NNN) ---------------------------------------------------------------------------
+
+/**
+ * The three words the browser may write into the address, in Romanian like every other word of it
+ * (`tip=cum-a-fost`, `catre=clubul`): the event's slug, the day, and the chip. `FEEDBACK_QUERY`
+ * (`branches.ts`) spreads this, so the server reads exactly what the browser writes.
+ */
+export const ADDRESS_QUERY = { event: "eveniment", date: "data", chip: "filtru" } as const;
+
+/** The only keys the browser writes (`addressSearchWith` refuses any other): never a message, a rating, an identity, a name, a contact or an audience. */
+export const CLIENT_ADDRESS_KEYS: readonly string[] = Object.values(ADDRESS_QUERY);
+
+/** The chip as the address names it: «all» is no word at all. */
+export const CHIP_SLUG: Readonly<Record<Exclude<PickerChip, "all">, string>> = { special: "speciale", group: "grup" };
+
+/** The chip's word in the address, `null` for «toate». */
+export function chipSlug(chip: PickerChip): string | null {
+  return chip === "all" ? null : CHIP_SLUG[chip];
+}
+
+/** The chip an address names (`?filtru=speciale|grup`), `all` for anything else. */
+export function readPickerChip(value: string | string[] | undefined): PickerChip {
+  const one = Array.isArray(value) ? value[0] : value;
+  return one === CHIP_SLUG.special ? "special" : one === CHIP_SLUG.group ? "group" : "all";
+}
+
+/**
+ * The chip the form opens on: the one the address asked for, unless it would hide what the list is for.
+ * Chips that are not drawn (`pickerChipsShown`: the events are of one kind only) have nothing to press
+ * back to «Toate», so a shared `?filtru=` must never narrow such a list — it would leave no event to
+ * choose: `all`. And when the event chosen is not under the chip, the chip yields (`all`), so the event
+ * stays in the list it is chosen from. An event the list does not hold, and «Altceva», leave the
+ * requested chip alone.
+ */
+export function initialChipFor(options: readonly PickerOption[], selected: string, requested: PickerChip): PickerChip {
+  if (!pickerChipsShown(options)) return "all";
+  if (requested === "all" || selected === GENERAL_VALUE) return requested;
+  const chosen = options.find((option) => option.value === selected);
+  return chosen && !underChip(chosen.kind, requested) ? "all" : requested;
+}
+
+/**
+ * The address's search string after a choice (§NNN): each change sets a word, or removes it on `null`
+ * or an empty value - only the three of `CLIENT_ADDRESS_KEYS`; a refusal's words (`error`, `fields`,
+ * `since`) and the sent mark go, as a link shared with the event chosen must not carry another
+ * person's outcome. Nothing personal is ever written: a slug, a day, a chip's name.
+ */
+export function addressSearchWith(current: string, changes: Readonly<Record<string, string | null>>): string {
+  const params = new URLSearchParams(current);
+  for (const stale of ["error", "fields", "since", "sent"]) params.delete(stale);
+  for (const [name, value] of Object.entries(changes)) {
+    if (!CLIENT_ADDRESS_KEYS.includes(name)) continue;
+    if (value) params.set(name, value);
+    else params.delete(name);
+  }
+  const text = params.toString().replace(/%2C/g, ",");
+  return text ? `?${text}` : "";
+}
+
+/** The search of «Schimbă tipul mesajului»: the three words the choice keeps, never the branch. */
+export function switchSearch(current: string): string {
+  const from = new URLSearchParams(current);
+  const kept = new URLSearchParams();
+  for (const name of CLIENT_ADDRESS_KEYS) {
+    const value = from.get(name);
+    if (value) kept.set(name, value);
+  }
+  const text = kept.toString();
+  return text ? `?${text}` : "";
+}

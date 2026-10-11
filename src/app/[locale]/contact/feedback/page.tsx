@@ -52,9 +52,10 @@ import {
   STOPPED_REASONS,
   wizardStep,
 } from "@/modules/feedback/domain/branches";
-import { GENERAL_VALUE, pickerFilters, pickerKind, type PickerOption } from "@/modules/feedback/domain/event-picker";
+import { chipSlug, GENERAL_VALUE, initialChipFor, pickerFilters, pickerKind, type PickerOption } from "@/modules/feedback/domain/event-picker";
 import { dayKey } from "@/modules/events/domain/calendar";
 import BranchChoice, { BranchGlyphTile } from "@/modules/feedback/ui/BranchChoice";
+import FeedbackAddressSync from "@/modules/feedback/ui/FeedbackAddressSync";
 import EventPickerFilter from "@/modules/feedback/ui/EventPickerFilter";
 import { branchLabelLang } from "@/modules/feedback/ui/branch-glyph";
 import IdentityChoice from "@/modules/feedback/ui/IdentityChoice";
@@ -82,6 +83,7 @@ type Search = {
   tip?: string;
   eveniment?: string;
   data?: string;
+  filtru?: string;
   sent?: string;
   catre?: string;
   error?: string;
@@ -243,9 +245,10 @@ function ChooseStep({ branches, path, query, t }: { branches: FeedbackBranch[]; 
         {t("intro")}
       </Typography>
       <form method="get" action={path} data-testid="feedback-choose">
-        {/* The event and the day a link chose ride on to the form, unread until it draws. */}
+        {/* The event, the day and the chip a link chose ride on to the form, unread until it draws. */}
         {query.eventSlug && <input type="hidden" name={FEEDBACK_QUERY.event} value={query.eventSlug} />}
         {query.date && <input type="hidden" name={FEEDBACK_QUERY.date} value={query.date} />}
+        {chipSlug(query.chip) && <input type="hidden" name={FEEDBACK_QUERY.chip} value={chipSlug(query.chip) ?? ""} />}
         <BranchChoice branches={branches} chosen={chosen} />
         <Button type="submit" variant="contained" size="large" fullWidth sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX, mt: 3 }}>
           {t("choose.next")}
@@ -289,6 +292,7 @@ async function BranchForm({
 
   // The picker (§676): published events of every kind, the last 90 days and the next 30, the held ones first.
   const withEvent = fields.includes("event");
+  const withDate = fields.includes("date");
   const from = new Date(dayStart(now).getTime() - PICKER_PAST_DAYS * DAY_MS);
   const to = new Date(dayStart(now).getTime() + (PICKER_FUTURE_DAYS + 1) * DAY_MS);
   const events = withEvent ? pickerOrder((await orNull(() => cachedPublishedEventsBetween(locale, from, to))) ?? [], now) : [];
@@ -343,7 +347,26 @@ async function BranchForm({
       ))}
     </TextField>
   );
-  const otherBranches = single ? null : getPathname({ locale, href: { pathname: "/contact/feedback", query: { ...(query.eventSlug ? { [FEEDBACK_QUERY.event]: query.eventSlug } : {}), ...(query.date ? { [FEEDBACK_QUERY.date]: query.date } : {}) } } });
+  // The chip yields to an event it would hide, and is «Toate» whenever the chips are not drawn (§NNN).
+  const chip = initialChipFor(pickerOptions, chosenEvent, query.chip);
+  // What «Schimbă tipul mesajului» carries to the other branch: this form's own choice where it has the picker —
+  // the event the list holds, the chip after it yielded — and the address's words as they came, unread, where it
+  // has none (a suggestion has no picker, and a slug the other form may read must not be lost on the way).
+  const carriedEvent = withEvent ? chosenEvent : query.eventSlug;
+  const carriedChip = withEvent ? chip : query.chip;
+  const otherBranches = single
+    ? null
+    : getPathname({
+        locale,
+        href: {
+          pathname: "/contact/feedback",
+          query: {
+            ...(carriedEvent ? { [FEEDBACK_QUERY.event]: carriedEvent } : {}),
+            ...(query.date ? { [FEEDBACK_QUERY.date]: query.date } : {}),
+            ...(chipSlug(carriedChip) ? { [FEEDBACK_QUERY.chip]: chipSlug(carriedChip) } : {}),
+          },
+        },
+      });
 
   return (
     <>
@@ -364,6 +387,7 @@ async function BranchForm({
             href={otherBranches}
             variant="outlined"
             data-testid="feedback-other-branches"
+            data-feedback-switch=""
             sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX, ml: { sm: "auto" }, textTransform: "none" }}
           >
             <SwapHorizIcon aria-hidden="true" sx={glyphSx("medium")} />
@@ -407,7 +431,10 @@ async function BranchForm({
         </Alert>
       )}
 
-      <form action={submitFeedbackAction} data-testid={`feedback-form-${BRANCH_SLUG[branch]}`}>
+      <form action={submitFeedbackAction} id="feedback-form" data-testid={`feedback-form-${BRANCH_SLUG[branch]}`}>
+        {/* The event and the day picked go into the address (§NNN), so the link can be shared with them chosen —
+            only on a form that has one of the two boxes; a suggestion has neither, and its address stays as it came. */}
+        {(withEvent || withDate) && <FeedbackAddressSync formId="feedback-form" />}
         <input type="hidden" name="locale" value={locale} />
         <input type="hidden" name="branch" value={branch} />
         {/* Bots fill every field; a human never sees or fills this one. */}
@@ -444,6 +471,7 @@ async function BranchForm({
                 name="event"
                 options={pickerOptions}
                 selected={chosenEvent}
+                initialChip={chip}
                 error={invalid.has("event")}
                 helperText={invalid.has("event") ? t("errors.field") : undefined}
                 words={{
@@ -461,7 +489,7 @@ async function BranchForm({
             ) : (
               nativePicker
             ))}
-          {fields.includes("date") && (
+          {withDate && (
             <TextField
               {...box("date", t("dateHelp"))}
               defaultValue={kept("date") ?? query.date ?? ""}
