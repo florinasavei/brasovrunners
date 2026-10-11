@@ -1,4 +1,5 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
+import { CLUB_NAME } from "../../src/theme/brand";
 import { confirmDialog } from "./support/confirm";
 import { FEATURED, signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
@@ -194,6 +195,12 @@ test.describe("§708 the header under «Aspectul nou»", () => {
       await expect(socials).toBeVisible();
       await expect(socials.getByTestId("header-socials-label")).toHaveText("Urmărește-ne");
       expect(await socials.locator("a").evaluateAll((links) => links.map((link) => link.getAttribute("data-network")))).toEqual(["instagram", "facebook", "strava"]);
+      // Each mark says whose profile it is and where, in the page's language (`Site.followOn`, §NNN), never the network alone.
+      expect(await socials.locator("a").evaluateAll((links) => links.map((link) => link.getAttribute("aria-label")))).toEqual([
+        `${CLUB_NAME} pe Instagram`,
+        `${CLUB_NAME} pe Facebook`,
+        `${CLUB_NAME} pe Strava`,
+      ]);
       for (const link of await socials.locator("a").all()) {
         const box = await link.boundingBox();
         expect(box).not.toBeNull();

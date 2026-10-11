@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import MuiLink from "@mui/material/Link";
+import { CLUB_NAME } from "@/theme/brand";
 import { UNDER_LOOK } from "@/theme/look";
 import type { ClubSocialLink } from "./club-socials";
 import SocialIcon from "./SocialIcon";
@@ -11,9 +12,20 @@ import type { SocialNetwork } from "./SocialIcon";
  */
 export const HEADER_SOCIAL_ORDER: readonly SocialNetwork[] = ["instagram", "facebook", "strava"];
 
-/** The links in the header's order, the networks it does not name left out. */
-export function headerSocials(links: readonly ClubSocialLink[]): ClubSocialLink[] {
-  return HEADER_SOCIAL_ORDER.flatMap((network) => links.filter((entry) => entry.network === network));
+/** The `Site` catalogue's translator, as far as the header's marks need it: a key and the club's name. */
+type Words = (key: string, values?: Record<string, string>) => string;
+
+/**
+ * The links in the header's order, the networks it does not name left out, each named by whose profile it
+ * is and where: «{club} pe Instagram» / "{club} on Instagram" (`Site.followOn`, the club's name from
+ * `CLUB_NAME`, §369). A mark met on its own — a screen reader going from link to link — then says both,
+ * which the group's «Urmărește-ne» does not repeat on each one. The footer's marks stay the network alone,
+ * under their own group's name (`clubSocialLinks`).
+ */
+export function headerSocials(links: readonly ClubSocialLink[], site: Words): ClubSocialLink[] {
+  return HEADER_SOCIAL_ORDER.flatMap((network) =>
+    links.filter((entry) => entry.network === network).map((entry) => ({ ...entry, label: site(`followOn.${network}`, { club: CLUB_NAME }) })),
+  );
 }
 
 /**
@@ -28,8 +40,8 @@ export function headerSocials(links: readonly ClubSocialLink[]): ClubSocialLink[
  * the look the language left the header for the floating button, so the far right is free. The words
  * are the group's indicator, not a link; the group is a navigation named by the same words, which a
  * screen reader hears once (the visible copy is hidden from it). Each mark is a 44-pixel target
- * (BR-REQ-041-01 criterion 6) whose accessible name is the network's, the mark decoration; off-site,
- * so a new tab and `rel`, as in the footer.
+ * (BR-REQ-041-01 criterion 6) whose accessible name is «{club} pe {network}» (`headerSocials`), the
+ * mark decoration; off-site, so a new tab and `rel`, as in the footer.
  *
  * Drawn from `md` up (the desktop): on a phone and a small tablet the footer's bar already carries the
  * marks and the header keeps its one row (§569). Inside the new look's scope only, so the backoffice —

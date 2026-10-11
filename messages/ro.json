@@ -23,6 +23,11 @@
     "skipToContent": "Sari la conținut",
     "cta": { "join": "Vino cu noi" },
     "followUs": "Urmărește-ne",
+    "followOn": {
+      "instagram": "{club} pe Instagram",
+      "facebook": "{club} pe Facebook",
+      "strava": "{club} pe Strava"
+    },
     "nav": {
       "label": "Navigare principală",
       "events": "Alergări",

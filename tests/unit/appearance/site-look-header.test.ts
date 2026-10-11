@@ -17,7 +17,8 @@ const state = vi.hoisted(() => ({
 
 vi.mock("next-intl/server", () => ({
   getLocale: async () => "ro",
-  getTranslations: async () => (key: string) => key,
+  // A message's key, and after it the club's name where the message takes one: enough to see what was asked for.
+  getTranslations: async () => (key: string, values?: { club?: string }) => (values?.club ? `${key}:${values.club}` : key),
 }));
 vi.mock("@/modules/content/menu/on-site", () => ({
   menuSectionsOnSite: async () => ({ gallery: false, team: false, faq: false, contact: false }),
@@ -46,16 +47,19 @@ vi.mock("@/shared/ui/SiteNav", () => ({
 vi.mock("@/shared/ui/LogoLink", () => ({
   default: ({ children, href }: { children: ReactNode; href?: string }) => createElement("a", { href: href ?? "/events", "data-testid": "logo" }, children),
 }));
-vi.mock("@/shared/ui/LocaleSwitcher", () => ({ default: () => createElement("span", null, "locale") }));
+vi.mock("@/shared/ui/LocaleSwitcher", () => ({ default: () => createElement("span", { "data-testid": "locale-switcher" }, "locale") }));
 vi.mock("@/shared/ui/NewBuildNotice", () => ({ default: () => null }));
 vi.mock("@/shared/ui/ButtonLink", () => ({
   default: ({ href, children, ...rest }: { href: unknown; children: ReactNode } & Record<string, unknown>) =>
     createElement("a", { href: typeof href === "string" ? href : `${(href as { pathname: string }).pathname}|${JSON.stringify((href as { params: unknown }).params)}`, "data-testid": rest["data-testid"] }, children),
 }));
 
+import { HEADER_SOCIAL_ORDER } from "@/shared/ui/HeaderSocials";
 import SiteHeader from "@/shared/ui/SiteHeader";
 import LookWatermark from "@/shared/ui/LookWatermark";
 import SocialIcon from "@/shared/ui/SocialIcon";
+import { CLUB_NAME } from "@/theme/brand";
+import { LOOK_PREVIEW, LOOK_ROOT } from "@/theme/look";
 
 const weekly = (date: string) => ({
   type: "GROUP_RUN",
@@ -67,6 +71,21 @@ const weekly = (date: string) => ({
 });
 
 const header = async () => renderToStaticMarkup(await SiteHeader());
+
+/**
+ * The box Emotion drew around `marker`, its class and every rule it wrote for that class: the server writes a
+ * `<style>` beside each element, so the markup carries the `display` the box has at each width and the one it
+ * has inside the look's scope.
+ */
+function boxAround(markup: string, marker: string): { className: string; css: string } {
+  const at = markup.indexOf(marker);
+  const className = /\b(css-[\w-]+)"/.exec(markup.slice(markup.lastIndexOf("<div", at), at))?.[1] ?? "";
+  const css = [...markup.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)]
+    .map((match) => match[1])
+    .filter((rules) => className !== "" && rules.includes(`.${className}`))
+    .join("");
+  return { className, css };
+}
 
 beforeEach(() => {
   state.look = { on: false };
@@ -130,8 +149,29 @@ describe("§708 the header while «Aspectul nou» is on", () => {
     const order = ["instagram", "facebook", "strava"].map((network) => group.indexOf(`data-network="${network}"`));
     for (const at of order) expect(at).toBeGreaterThan(-1);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
-    // The language switcher's header copy is still rendered (the backoffice shows it); the look's scope hides it on a public page.
-    expect(on).toContain("locale");
+    // Each mark says whose profile it is and where (`Site.followOn`, the club's name from `CLUB_NAME`), never the network alone.
+    for (const network of HEADER_SOCIAL_ORDER) {
+      expect(group).toContain(`aria-label="followOn.${network}:${CLUB_NAME}"`);
+      expect(group).toContain(`title="followOn.${network}:${CLUB_NAME}"`);
+    }
+    // The language switcher's header copy is still rendered — the backoffice, outside the look's scope, shows it from `sm` —
+    // and its box is hidden inside the scope (`notUnderLook`): a public page's one «Limbă» is the floating button.
+    expect(on).toContain('<span data-testid="locale-switcher">locale</span>');
+    const { className, css } = boxAround(on, 'data-testid="locale-switcher"');
+    expect(className, "the switcher sits in a styled box").not.toBe("");
+    expect(css, "shown from sm outside the scope").toMatch(/@media \(min-width:600px\)\{[^{]+\{[^}]*display:flex;/);
+    expect(css, "hidden inside the scope").toContain(`${LOOK_ROOT} .${className},${LOOK_PREVIEW} .${className}{display:none;}`);
+  });
+
+  it("§NNN names each mark by the club and the network, in both languages, from the catalogues", async () => {
+    const { createTranslator } = await import("next-intl");
+    const ro = createTranslator({ locale: "ro", messages: (await import("../../../messages/ro.json")).default, namespace: "Site" });
+    const en = createTranslator({ locale: "en", messages: (await import("../../../messages/en.json")).default, namespace: "Site" });
+    for (const network of HEADER_SOCIAL_ORDER) {
+      const name = network[0].toUpperCase() + network.slice(1);
+      expect(ro(`followOn.${network}`, { club: CLUB_NAME })).toBe(`${CLUB_NAME} pe ${name}`);
+      expect(en(`followOn.${network}`, { club: CLUB_NAME })).toBe(`${CLUB_NAME} on ${name}`);
+    }
   });
 
   it("leads to the listing when no weekly run is ahead", async () => {

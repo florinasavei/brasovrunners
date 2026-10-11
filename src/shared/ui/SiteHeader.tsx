@@ -134,9 +134,10 @@ export default async function SiteHeader() {
   // «Pagina principală» (§714): while it is on, the logo leads to it — the home page is never a menu entry.
   const home = await cachedHomePage();
   const joinHref = look.on ? await joinTarget(locale as Locale) : null;
-  // «Urmărește-ne» (§NNN): Instagram, Facebook and Strava, from the footer's one list, in the owner's order.
-  const socials = look.on ? headerSocials(await clubSocialLinks()) : [];
   const site = await getTranslations("Site");
+  // «Urmărește-ne» (§NNN): Instagram, Facebook and Strava, from the footer's one list, in the owner's order,
+  // each named «{club} pe …» (`Site.followOn`).
+  const socials = look.on ? headerSocials(await clubSocialLinks(), site) : [];
 
   return (
     <>

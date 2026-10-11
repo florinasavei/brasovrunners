@@ -23,6 +23,11 @@
     "skipToContent": "Skip to content",
     "cta": { "join": "Join us" },
     "followUs": "Follow us",
+    "followOn": {
+      "instagram": "{club} on Instagram",
+      "facebook": "{club} on Facebook",
+      "strava": "{club} on Strava"
+    },
     "nav": {
       "label": "Main navigation",
       "events": "Events",

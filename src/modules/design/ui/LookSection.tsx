@@ -26,7 +26,7 @@ import DesignSection, { Block, Code } from "./section";
 async function Sample({ preview }: { preview: boolean }) {
   const t = await getTranslations("Admin");
   const site = await getTranslations("Site");
-  const socials = headerSocials(await clubSocialLinks());
+  const socials = headerSocials(await clubSocialLinks(), site);
   return (
     <Box
       {...(preview ? { [LOOK_PREVIEW_ATTRIBUTE]: LOOK_VALUE } : {})}
