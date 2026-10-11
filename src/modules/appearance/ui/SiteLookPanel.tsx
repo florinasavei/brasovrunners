@@ -5,7 +5,11 @@ import { getTranslations } from "next-intl/server";
 import { updateSiteLookAction } from "@/app/[locale]/admin/settings/appearance/actions";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
+import { CUSTOM_LOOK_ACCENT, DEFAULT_LOOK_ACCENT, LOOK_ACCENT_PRESETS, lookAccentOf } from "@/modules/appearance/domain/site-look";
 import type { SiteLookState } from "@/modules/appearance/site-look";
+import { LOOK_ACCENT } from "@/theme/brand";
+import AccentPreview from "./AccentPreview";
+import CustomAccentOption from "./CustomAccentOption";
 import ActionForm from "@/shared/forms/ActionForm";
 import { RecallRadio } from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
@@ -37,16 +41,28 @@ const CHOICES = ["off", "on"] as const;
  * not drawn here — the backoffice never wears it — but one button opens the design page's
  * side-by-side, where both looks are drawn from the same rules. A role that may not change it reads
  * the choice in force.
+ *
+ * Since §NNN the same form carries «Culoarea de accent»: the presets of `LOOK_ACCENT` (`theme/brand.ts`),
+ * each drawn in miniature by day and after dark (`AccentPreview`), and «Personalizat», the one client
+ * island (`CustomAccentOption`), live as the colour is typed. One save sets both, so the club never
+ * saves a look in an accent it has not seen.
  */
 export default async function SiteLookPanel({ locale, state, mayEdit, openWhen }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const choice = state.setting.on ? "on" : "off";
+  const accent = lookAccentOf(state.setting);
+  const accentName =
+    accent.accent === CUSTOM_LOOK_ACCENT ? `${t("look.accent.custom.name")} (${accent.hex})` : t(`look.accent.presets.${accent.accent}.name`);
+  const preview = { button: t("look.accent.preview.button"), tag: t("look.accent.preview.tag") };
 
   return (
     <Panel glyph="preview" title={t("look.title")} intro={t("look.intro")} introMore={t("look.introMore")} id="site-look" data-testid="site-look" openWhen={openWhen}>
       <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="site-look-current">
         {t("look.current", { look: t(`look.choices.${choice}.name`) })}
+      </Typography>
+      <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="site-look-accent-current">
+        {t("look.accent.current", { accent: accentName })}
       </Typography>
       {state.updatedAt && (
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
@@ -64,7 +80,7 @@ export default async function SiteLookPanel({ locale, state, mayEdit, openWhen }
         <Box sx={{ mt: 1.5 }}>
           <ActionForm
             action={updateSiteLookAction}
-            messages={await refusalMessages({ look: t("look.legend") })}
+            messages={await refusalMessages({ look: t("look.legend"), accent: t("look.accent.legend"), accentHex: t("look.accent.hexLabel") })}
             confirm={{
               title: t("confirm.siteLookTitle"),
               body: t("confirm.siteLookBody"),
@@ -100,6 +116,52 @@ export default async function SiteLookPanel({ locale, state, mayEdit, openWhen }
                     </Box>
                   </Box>
                 ))}
+              </Box>
+              {/* «Culoarea de accent» (§NNN): a preset or a typed colour, worn only under the new look. */}
+              <Box component="fieldset" sx={{ border: 0, p: 0, m: 0 }} data-testid="site-look-accent">
+                <Typography component="legend" variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                  {t("look.accent.legend")}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+                  {t("look.accent.intro")}
+                </Typography>
+                {LOOK_ACCENT_PRESETS.map((preset) => (
+                  // A plain label with children, never `FormControlLabel`'s element prop (§370); 44px to a thumb.
+                  <Box
+                    key={preset}
+                    component="label"
+                    sx={{ display: "flex", flexWrap: { xs: "wrap", sm: "nowrap" }, alignItems: "center", gap: 1.25, minHeight: 44, py: 0.5, cursor: "pointer" }}
+                    data-testid={`site-look-accent-option-${preset}`}
+                  >
+                    <RecallRadio name="accent" value={preset} defaultChecked={accent.accent === preset} style={{ width: 20, height: 20, flexShrink: 0 }} />
+                    <AccentPreview shades={LOOK_ACCENT[preset]} words={preview} />
+                    <Box component="span" sx={{ minWidth: 0, flexBasis: { xs: "calc(100% - 32px)", sm: "auto" } }}>
+                      <Typography component="span" variant="body2" sx={{ display: "block", fontWeight: 500 }}>
+                        {t(`look.accent.presets.${preset}.name`)}
+                        {preset === DEFAULT_LOOK_ACCENT ? ` · ${t("look.default")}` : ""}
+                      </Typography>
+                      <Typography component="span" variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                        {t(`look.accent.presets.${preset}.help`)}
+                      </Typography>
+                    </Box>
+                  </Box>
+                ))}
+                <CustomAccentOption
+                  initialHex={accent.accent === CUSTOM_LOOK_ACCENT ? accent.hex : LOOK_ACCENT[DEFAULT_LOOK_ACCENT].light.accent}
+                  defaultChecked={accent.accent === CUSTOM_LOOK_ACCENT}
+                  words={{
+                    name: t("look.accent.custom.name"),
+                    help: t("look.accent.custom.help"),
+                    hexLabel: t("look.accent.hexLabel"),
+                    pickerLabel: t("look.accent.pickerLabel"),
+                    rule: t("look.accent.rule"),
+                    shades: t("look.accent.shades"),
+                    ok: t("look.accent.verdict.ok"),
+                    notAColour: t("look.accent.verdict.notAColour"),
+                    tooGrey: t("look.accent.verdict.tooGrey"),
+                  }}
+                  preview={preview}
+                />
               </Box>
               <Box>
                 <GlyphSubmitButton label={t("look.save")} pendingLabel={t("look.saving")} icon="save" />

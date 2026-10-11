@@ -9,9 +9,9 @@ import MountainMark from "./MountainMark";
  *
  * The locale layout renders it only while the setting is on, and it is drawn only inside the new
  * look's scope (`onlyUnderLook`), so a backoffice page — inside the same layout — never shows it.
- * Decoration: hidden from assistive technology, no tap target, no text. The colour is the hot pink
- * (`primary.light` under the look, `brand.ts`'s `accent`) at a fifth of its strength, so it reads as
- * a mark on the page and never as something to read.
+ * Decoration: hidden from assistive technology, no tap target, no text. The colour is the accent
+ * (pink by default: `primary.light` under the look, the setting's `accent` shade) at a fifth of its
+ * strength, so it reads as a mark on the page and never as something to read.
  */
 export default function LookWatermark() {
   return (

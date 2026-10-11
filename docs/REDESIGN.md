@@ -22,7 +22,7 @@ objects; a different answer changes the phases, not the rules.
 
 | # | Decision | Default | Why it is the club's |
 | --- | --- | --- | --- |
-| 1 | The accent colour — **decided by default (2026-10-11)** | a hot-pink accent token (and a darker «pinkInk» that carries white text at AA) beside the logo blue; the logo stays the club's blue under both looks (the owner overrode the ink default, 2026-10-11); emails, PDFs, race numbers and share cards stay blue | the logo is pure blue and a brand test pins it |
+| 1 | The accent colour — **decided by default (2026-10-11), then made the club's setting** | a hot-pink accent token (and a darker «pinkInk» that carries white text at AA) beside the logo blue; the logo stays the club's blue under both looks (the owner overrode the ink default, 2026-10-11); emails, PDFs, race numbers and share cards stay blue. Since the owner's «this should be a configuration in the theme» (2026-10-11) the pink is the default of «Aspectul nou» → «Culoarea de accent»: pink, blue, orange, or a colour the club types, its readable shades derived on the server | the logo is pure blue and a brand test pins it |
 | 2 | The heading face — **decided by default (2026-10-11)** | Inter 800 (one new weight file; Inter is self-hosted with ș ț ă â î) for headings; body stays Roboto | a face is a licence and a look the club owns |
 | 3 | A real home page — **decided (2026-10-10)** | a real home page at `/ro` and `/en`, reached from the logo — never a menu entry — switchable on and off in «Aspect» → «Pagina principală»; `/events` stays the listing under «Alergări»; canonicals and the sitemap move | it reverses §353 (the root is a redirect, for SEO) |
 | 4 | The four menu words | «Alergări» = the listing; «Calendar»; «Comunitatea» = a club page linking «Echipa», «Galerie», «Întrebări» and the members' zone; «Despre noi» = a club page | the club decides what each word points to |
@@ -66,7 +66,9 @@ active-runners figure.
 New tokens in `src/theme/brand.ts`, each with a dark twin and an AA assertion: `accent` (the pink),
 `accentInk` (white text at 4.5:1), `accentTint` (bands and weekly chips), `kindSpecial` and its ink
 (green), `kindOther` (grey), `inkStrong` (headings). On public pages, under the new look, `primary`
-becomes the pink pair; the backoffice, the emails, the PDFs, the race numbers and the share cards keep
+becomes the accent — the pink pair by default, or the preset or colour the club chose under «Culoarea
+de accent» — and a component wears the accent only through `primary.*` and `LOOK_ACCENT_TINT`, never
+by naming a pink token; the backoffice, the emails, the PDFs, the race numbers and the share cards keep
 the logo blue. Headings Inter 800, letter-spacing −0.02 em; the two-tone word a `span`, not a
 gradient; Caveat only where drawn, never preloaded. Cards: 16 px radius, one soft shadow, the photo on
 top, a tag pill. Buttons: pill-shaped, a trailing arrow glyph (§521), `contained` pink and `outlined`
@@ -133,7 +135,8 @@ public pages; off (the default), no rule matches and every page is what it was.
 | The language | `src/shared/ui/FloatingLocaleSwitch.tsx`, drawn by `SiteFooter.tsx` | the owner, 2026-10-11: «the language switchers are always on the bottom right» — one 44-pixel round button showing the other language's flag and code, floating just above the footer's sticky bar in the bottom-right corner on every public page, so it stays while one scrolls and rises with the bar when its fold opens; the header's copy and the phone's flags on the bar are hidden under the scope (§NNN, amending §262 under the look) |
 | The logo, blue | `src/shared/ui/SiteHeader.tsx` | the supplied lockup, unfiltered, under both looks |
 | The watermark | `src/shared/ui/MountainMark.tsx`, `LookWatermark.tsx` | the mountain mark, faint, between the content and the footer |
-| Both looks side by side | `/admin/design` → «Aspectul nou» (`src/modules/design/ui/LookSection.tsx`) | the same components twice, the right box under the preview scope |
+| Both looks side by side | `/admin/design` → «Aspectul nou» (`src/modules/design/ui/LookSection.tsx`) | the same components twice, the right box under the preview scope; under them every accent preset with its four shades |
+| The accent, the club's | presets `LOOK_ACCENT` in `src/theme/brand.ts`; a typed colour's shades `src/modules/appearance/domain/accent-shades.ts`; the form's «Culoarea de accent» in `ui/SiteLookPanel.tsx`, «Personalizat» `ui/CustomAccentOption.tsx`, the miniature `ui/AccentPreview.tsx` | pink (the default), blue (the club's blue as today's look wears it), orange, or a typed `#rrggbb` that is not a grey; four shades a scheme — `accent`, `accentInk`, `accentDeep`, `accentTint` — written by the layout's one stylesheet onto MUI's primary and `--br-accent-tint` (`LOOK_ACCENT_TINT` in `src/theme/look.ts`), so a rule under the look asks for `primary.*` or that variable and never names the pink; every preset and 432 typed colours held at AA in both schemes by `tests/unit/appearance/look-accent.test.ts` |
 
 What phase 1 leaves for the gate: the club's look at QA with the setting on, phone and laptop; the
 header's one row at 320 px measured by the e2e suite with the setting on.

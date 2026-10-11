@@ -8,7 +8,7 @@ import { routing, type Locale } from "@/i18n/routing";
 import { HOME_SECTION_KEYS } from "@/modules/appearance/domain/home-page";
 import { changeStripPicture, updateHomePage } from "@/modules/appearance/home-page";
 import { updateSiteFontSize } from "@/modules/appearance/site-font-size";
-import { updateSiteLook } from "@/modules/appearance/site-look";
+import { LOOK_ACCENT_REFUSAL, updateSiteLook } from "@/modules/appearance/site-look";
 import { SITE_TINT_REFUSAL, updateSiteTint } from "@/modules/appearance/site-tint";
 import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
@@ -17,6 +17,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
 const REFUSAL_MARKERS: readonly string[] = Object.values(SITE_TINT_REFUSAL);
+const ACCENT_REFUSAL_MARKERS: readonly string[] = Object.values(LOOK_ACCENT_REFUSAL);
 
 /** Which language to land back in: the form carries it, because an action has no request locale. */
 function localeOf(form: FormData): Locale {
@@ -72,9 +73,11 @@ export async function updateSiteFontSizeAction(_previous: FormOutcome | null, fo
 }
 
 /**
- * «Aspectul nou» (§708): the facelift's look on the public pages, on or off. A club setting (§450) —
- * the Administrator's at the door, and the service asserts it again. Asked first (§384): every
- * visitor sees the chosen look from the next page view; the backoffice never changes.
+ * «Aspectul nou» (§708): the facelift's look on the public pages, on or off, and since §NNN its
+ * accent colour — a preset or «Personalizat». A club setting (§450) — the Administrator's at the door,
+ * and the service asserts it again. Asked first (§384): every visitor sees the chosen look from the
+ * next page view; the backoffice never changes. The typed colour's box is `accentHex`, apart from the
+ * tint card's `hex` on the same page.
  */
 export async function updateSiteLookAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
@@ -82,9 +85,15 @@ export async function updateSiteLookAction(_previous: FormOutcome | null, form: 
 
   try {
     const actor = await requireStaffCapability(canManageClubSettings);
-    await updateSiteLook(getDb(), actor, { look: form.get("look") }, new Date());
+    await updateSiteLook(getDb(), actor, { look: form.get("look"), accent: form.get("accent") ?? undefined, hex: form.get("accentHex") ?? undefined }, new Date());
   } catch (error) {
-    return refused(error, form);
+    // The service names the box `hex`; on this form it is `accentHex`.
+    const refusal = refused(error, form, {
+      fieldNames: (failure) => failure.fields.filter((name) => !ACCENT_REFUSAL_MARKERS.includes(name)).map((name) => (name === "hex" ? "accentHex" : name)),
+    });
+    // A grey says the rule in words (the catalogue's sentence): the box is filled correctly, the colour is what is wrong.
+    if (isDomainError(error) && error.fields.includes(LOOK_ACCENT_REFUSAL.tooGrey)) return { ...refusal, error: "SITE_ACCENT_TOO_GREY" };
+    return refusal;
   }
   revalidatePath(path);
   await flashOutcome({ saved: "siteLook" });

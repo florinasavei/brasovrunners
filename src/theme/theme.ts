@@ -158,9 +158,9 @@ export const buildTheme = (options: ThemeOptions) => createTheme({
       «Aspectul nou» (§708): what the facelift's phase 1 changes about MUI's own components, each
       rule under the look's scope (`theme/look.ts`) — the public pages while the club's setting is
       on, or the design page's preview box — so with the setting off, and in the backoffice always,
-      nothing here matches. The pink `primary` is not here: it is MUI's own palette variables,
-      redefined under the same scope by the layout's one stylesheet (`site-look.ts`), because MUI
-      keeps those variables in a layer an override here cannot outrank.
+      nothing here matches. The accent `primary` (pink by default) is not here: it is MUI's own
+      palette variables, redefined under the same scope by the layout's one stylesheet
+      (`site-look.ts`), because MUI keeps those variables in a layer an override here cannot outrank.
 
       A theme override sits below a component's own `sx` (MUI's layers), so a button or a heading
       that states its own radius or weight keeps it: the look changes the defaults, never a choice.

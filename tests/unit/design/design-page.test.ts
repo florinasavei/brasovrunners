@@ -62,7 +62,7 @@ const { default: DesignSectionLayout } = await import("@/app/[locale]/admin/desi
 const { DESIGN_SECTION_IDS } = await import("@/modules/design/ui/section");
 const { DESIGN_RULES } = await import("@/modules/design/rules");
 const { REDESIGN_DECISIONS, REDESIGN_PHASES } = await import("@/modules/design/redesign-plan");
-const { COLOR, COLOR_DARK, SITE_TINT } = await import("@/theme/brand");
+const { COLOR, COLOR_DARK, LOOK_ACCENT, SITE_TINT } = await import("@/theme/brand");
 const { BRAND_PAIRS } = await import("@/theme/brand-pairs");
 const { GLYPHS } = await import("@/modules/events/ui/glyphs");
 const { STATUS_GLYPHS } = await import("@/shared/ui/status-glyphs");
@@ -157,6 +157,14 @@ describe("BR-REQ-060-01 «Sistemul de design» draws the look from the code", ()
         expect(markup).toContain(`COLOR.${LOOK_PRIMARY_TOKENS.light[key]}`);
         expect(markup).toContain(`COLOR_DARK.${LOOK_PRIMARY_TOKENS.dark[key]}`);
       }
+      // §NNN — every accent preset the club may choose, in miniature, with its four shades by day and after dark.
+      const accents = markup.slice(markup.indexOf('data-testid="design-look-accents"'), markup.indexOf('data-testid="design-mountain-mark"'));
+      for (const [preset, shades] of Object.entries(LOOK_ACCENT)) {
+        expect(accents, preset).toContain(`data-testid="design-look-accent-${preset}"`);
+        expect(accents, preset).toContain((locale === "ro" ? ro : en).Admin.look.accent.presets[preset as keyof typeof LOOK_ACCENT].name);
+        for (const hex of [...Object.values(shades.light), ...Object.values(shades.dark)]) expect(accents, `${preset} ${hex}`).toContain(hex);
+      }
+      expect(accents.match(/data-testid="accent-preview"/g)).toHaveLength(Object.keys(LOOK_ACCENT).length);
     }
   });
 

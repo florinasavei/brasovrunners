@@ -791,7 +791,7 @@ export async function cachedSiteFontSize(): Promise<SiteFontSizeSetting> {
 
 /**
  * «Aspectul nou» (§708): whether the public pages wear the facelift's look, read by the locale layout
- * (the scope and the pink primary) and the header («Vino cu noi», the socials) beside the tint, and
+ * (the scope and the accent as the primary) and the header («Vino cu noi», the socials) beside the tint, and
  * cached for the same reason — a save expires it (`updateSiteLook`). When the database cannot answer,
  * the last good copy (§447), then off: today's look, never a page that fails over its look.
  */

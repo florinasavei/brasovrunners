@@ -74,6 +74,17 @@ export function notUnderLook<T>(display: T) {
  */
 export const OFF_UNDER_LOOK = { [UNDER_LOOK]: { display: "none" } } as const;
 
+/**
+ * The accent's pale band under the new look (§NNN): the one shade MUI's palette has no slot for. The
+ * other three ride on MUI's own primary — `primary.light` is `accent`, `primary.main` is `accentInk`,
+ * `primary.dark` is `accentDeep` — and all four are written by the layout's one stylesheet
+ * (`modules/appearance/domain/site-look.ts`) from the club's accent, light and dark, so a rule that
+ * names this variable follows the club's choice in either scheme and needs no dark twin.
+ */
+export const LOOK_ACCENT_TINT_VARIABLE = "--br-accent-tint";
+/** The band's colour, for an `sx` written under `UNDER_LOOK`: `{ [UNDER_LOOK]: { bgcolor: LOOK_ACCENT_TINT } }`. */
+export const LOOK_ACCENT_TINT = `var(${LOOK_ACCENT_TINT_VARIABLE})`;
+
 /** Headings under the new look: the display face at 800, set a little tighter (decision 2). */
 export const LOOK_HEADING = { fontWeight: 800, letterSpacing: "-0.02em" } as const;
 

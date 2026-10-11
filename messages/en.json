@@ -1704,6 +1704,7 @@
       "LEGAL_TERMS_ACCEPTED": "Nothing was deleted: someone registered or signed while this version was in force. You can withdraw it instead — it stays on the record and is no longer offered.",
       "SITE_TINT_UNREADABLE": "The colour was not saved: on it, the page's text or the secondary text would have a contrast under 4.5 : 1 (level AA). Choose a lighter colour.",
       "SITE_TINT_TOO_DARK": "The colour was not saved: it is too dark for a light page, and the white cards would no longer stand out. Choose a lighter colour.",
+      "SITE_ACCENT_TOO_GREY": "The look was not saved: the accent colour is too close to grey, and the buttons and links would not stand out from the text. Choose a colour.",
       "UNDER_MINIMUM_AGE": "Nothing was registered: by the birth date typed, this person is not yet {age} old on the day of the race, the minimum age for this event. Check the date with them.",
       "NEON_QUOTA_BELOW_USAGE": "The limit was not sent: it must be above what has been spent so far, or it would stop the database the moment it is saved.",
       "NEON_QUOTA_UNCONFIRMED": "Nothing changed: a new or changed limit on production needs the confirmation box ticked — when it is reached, the site stops until the next period.",
@@ -4788,7 +4789,7 @@
     },
     "look": {
       "title": "The new look",
-      "intro": "The public pages' new look: pink beside the logo blue, bolder headings, rounded buttons, «Join us» in the header.",
+      "intro": "The public pages' new look: an accent colour beside the logo blue (pink, unless you choose another), bolder headings, rounded buttons, «Join us» in the header.",
       "introMore": "Off until the club approves it on QA; then it is the one-press way back. The page tint and the text size stay as you chose them, under both looks.",
       "current": "Now: {look}",
       "updatedAt": "Set {when}.",
@@ -4807,7 +4808,43 @@
         },
         "on": {
           "name": "The new look",
-          "help": "Pink and Inter headings, rounded buttons with an arrow, «Join us» and the socials in the header, the mountains at the foot of the page."
+          "help": "The accent colour below and Inter headings, rounded buttons with an arrow, «Join us» and the socials in the header, the mountains at the foot of the page."
+        }
+      },
+      "accent": {
+        "legend": "The accent colour",
+        "intro": "The colour of the buttons, the links and the bands under the new look. The logo stays blue.",
+        "current": "Accent colour: {accent}",
+        "presets": {
+          "pink": {
+            "name": "Pink",
+            "help": "The redesign plan's pink."
+          },
+          "blue": {
+            "name": "Blue",
+            "help": "The club's blue, the one today's look wears."
+          },
+          "orange": {
+            "name": "Orange",
+            "help": "The club's orange. Darker by day, so text on it can be read."
+          }
+        },
+        "custom": {
+          "name": "Custom",
+          "help": "Type a colour; the site makes the shades that can be read from it, by day and at night."
+        },
+        "hexLabel": "Colour",
+        "pickerLabel": "Pick the accent colour",
+        "rule": "Any colour that is not a grey. The buttons, the links and the bands get darker or lighter shades of it, with a contrast of at least 4.5 : 1 (level AA), in the light theme and the dark one.",
+        "shades": "The shades, by day and at night:",
+        "verdict": {
+          "ok": "That works. This is how it looks, by day and at night.",
+          "notAColour": "Type the colour as # followed by six digits or letters from a to f.",
+          "tooGrey": "It is too close to grey: on the site it would not stand out from the text. Choose a colour."
+        },
+        "preview": {
+          "button": "Join us",
+          "tag": "Weekly"
         }
       }
     },
@@ -5978,7 +6015,10 @@
         "lightScheme": "Light theme",
         "darkScheme": "Dark theme",
         "markTitle": "The mountains",
-        "markNote": "An inline drawing under 2 KB, in the colour of the text around it: the mark at the foot of the public pages under the new look."
+        "markNote": "An inline drawing under 2 KB, in the colour of the text around it: the mark at the foot of the public pages under the new look.",
+        "accentsTitle": "The accent colours",
+        "accentsNote": "The club chooses it in «Settings» → «Appearance» → «The new look» → «The accent colour»: four shades, day and night; a typed colour too. The box above shows the pink.",
+        "shade": "Shade"
       },
       "sections": {
         "look": "The new look",
@@ -6008,6 +6048,7 @@
         "pairsAccent": "Over the pressed button's gradient",
         "pairsLook": "The new look, light theme",
         "pairsLookDark": "The new look, dark theme",
+        "pairsLookAccents": "The new look, the other accent colours (blue, orange), by day and at night",
         "sample": "Sample",
         "foreground": "Text",
         "background": "Background",
@@ -6192,7 +6233,7 @@
           "released": "released"
         },
         "decisions": {
-          "1": { "title": "The accent colour", "default": "A hot pink beside the logo blue, with a darker ink for white text; emails, PDFs, race numbers and share cards stay blue." },
+          "1": { "title": "The accent colour", "default": "A hot pink beside the logo blue, or the blue, the orange or a colour the club chooses under «The new look»; emails, PDFs, race numbers and share cards stay blue." },
           "2": { "title": "The heading face", "default": "Inter 800 for headings, self-hosted with ș ț ă â î; the body stays Roboto." },
           "3": { "title": "A real home page", "default": "A real home page at `/ro` and `/en`, reached from the logo — never a menu entry — switchable on and off in «Aspect» → «Pagina principală»." },
           "4": { "title": "The four menu words", "default": "«Alergări», «Calendar», «Comunitatea» — a club page linking the team, the gallery, the FAQ and the members' zone — and «Despre noi»." },

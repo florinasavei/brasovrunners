@@ -106,8 +106,9 @@ describe("§708 the pink primary", () => {
     expect(dark.startsWith(`${LOOK_ROOT_DARK},${LOOK_PREVIEW_DARK}{`)).toBe(true);
     expect(light).toContain(`${PRIMARY_VARIABLES.main}:${COLOR.accentInk};${PRIMARY_VARIABLES.main}Channel:160 22 80`);
     expect(dark).toContain(`${PRIMARY_VARIABLES.contrastText}:${COLOR_DARK.paper}`);
-    // No colour that is not a token: every hex in the sheet is one of the eight it names.
-    const tokens = new Set([...Object.values(LOOK_PRIMARY.light), ...Object.values(LOOK_PRIMARY.dark)]);
+    // No colour that is not a token: every hex in the sheet is one of the eight it names, or the pink's
+    // pale band in either scheme (`--br-accent-tint`, §NNN).
+    const tokens = new Set([...Object.values(LOOK_PRIMARY.light), ...Object.values(LOOK_PRIMARY.dark), COLOR.accentTint, COLOR_DARK.accentTint]);
     for (const hex of css.match(/#[0-9a-f]{3,8}/gi) ?? []) expect(tokens.has(hex), hex).toBe(true);
     // Nothing a browser would read as markup inside the <style> element.
     expect(css).not.toMatch(/[<>]/);
