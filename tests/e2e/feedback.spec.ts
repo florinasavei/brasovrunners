@@ -435,7 +435,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await identity.getByRole("radio", { name: "Cu nume și prenume" }).check();
       // One group (§702): choosing the named mode unchecks «Anonim».
       await expect(identity.getByRole("radio", { name: "Anonim" })).not.toBeChecked();
-      await expect(identity.locator('input[type="radio"]:checked')).toHaveCount(1);
+      await expect(identity.locator('input[name="identity"]:checked')).toHaveCount(1);
       await expect(safetyForm.locator('[name="name"]')).toBeVisible();
       await expect(safetyForm.locator('[name="name"]')).toHaveAttribute("maxlength", "80");
       await expect(safetyForm.locator('[name="contact"]')).toBeVisible();
