@@ -19,7 +19,7 @@ export default defineConfig({
      * fails now rather than on the morning it is reached. Unset — every ordinary run — nothing
      * is loaded.
      */
-    setupFiles: process.env.TEST_CLOCK_AT ? ["./tests/helpers/shifted-clock.ts"] : [],
+    setupFiles: process.env.TEST_CLOCK_AT || process.env.TEST_CLOCK_OFFSET_MS ? ["./tests/helpers/shifted-clock.mjs"] : [],
     include: ["tests/**/*.test.ts"],
     // The concurrency suite needs two real connections to a PostgreSQL server, which this
     // command must never require: `yarn check` runs on every commit and in CI without a

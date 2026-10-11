@@ -209,6 +209,42 @@ should use `expectViolation` from `tests/helpers/constraints.ts` — Drizzle wra
 errors, so matching on the message would pass for any failure at all, including a typo in the
 query. The helper checks the SQLSTATE code and the constraint name instead.
 
+### Tests that the calendar breaks
+
+**The practice: a test that writes a date either hands that date to everything it calls as `now`,
+or pins the real clock to it around the call that reads `new Date()` (`atTheClock` in
+`tests/helpers/clock.ts`) — never lets code compare a fixture date with the day the suite runs.**
+
+On 2026-10-11 at 07:00Z a release's pre-commit hook went red on a test that had passed that
+morning: its fixture race started at 07:00Z, and the skip it pressed read its link through
+`readRegistrationTokenContext`, which takes `new Date()` although the caller passes `now`. Nothing
+in the release touched it — the calendar did (§NNN).
+
+`yarn test:clock` finds those tests before the day. It runs the suite three times with the real
+clock moved forward — +1 month, +1 year, +10 years — through `TEST_CLOCK_AT` and
+`tests/helpers/shifted-clock.mjs`: every argument-less `new Date()`, `Date()` and `Date.now()`, and
+PGlite's own `now()`, read the moved date, while a date the test writes stays as written. A test
+that fails there and passes under `yarn test` is a bomb. Minutes, so it is not in `yarn check`;
+run it before a release batch, and after writing a test with dated fixtures:
+
+```bash
+yarn test                                          the baseline: what fails today is broken, not a bomb
+yarn test:clock                                    the three dates, two workers (the machine is shared)
+yarn test:clock +3d 2031-06-01 -- tests/integration/registrations   other dates, some files
+```
+
+To defuse one, in this order of preference: pass the fixture's `now` to the function that takes
+one; where the path reads the real clock itself, wrap that call in
+`atTheClock(instant, () => …)` at the instant the test means — never the whole file, so PGlite's
+row times keep moving; and only where neither fits, move every date of the fixture together,
+keeping their distances (the race, the holds, the birth dates). A `src/` read that ignores a
+`now` its caller passed is reported to the owner, not changed by the test fix.
+
+What `test:clock` cannot reach: `tests/concurrency/` runs against a real PostgreSQL server whose
+`now()` is the real one, and `tests/e2e/` against a running server — read those by hand for a
+`new Date()` (or a form filled with a written date) compared with a fixed one. The seeds draw their
+dates from today (`src/db/seeds/sample-dates.ts`, §162) and never age.
+
 ## Where the flags come from
 
 `public/flags/` is **generated** and git-ignored: `scripts/sync-flags.mjs` copies the 4:3 SVGs

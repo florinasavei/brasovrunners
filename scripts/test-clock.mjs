@@ -13,7 +13,7 @@
 //                                            the worker count (2 by default: the machine is shared),
 //                                            and, after `--`, the files or folders to run
 //
-// Exit code 1 when any date has a failure. The shift itself is `tests/helpers/shifted-clock.ts`,
+// Exit code 1 when any date has a failure. The shift itself is `tests/helpers/shifted-clock.mjs`,
 // loaded by `vitest.config.mts` only while `TEST_CLOCK_AT` is set.
 
 import { spawnSync } from "node:child_process";
@@ -84,7 +84,9 @@ function main() {
       const run = spawnSync(
         process.execPath,
         [vitest, "run", `--maxWorkers=${workers}`, "--reporter=dot", "--reporter=json", `--outputFile.json=${output}`, ...filters],
-        { stdio: ["ignore", "ignore", "inherit"], env: { ...process.env, TEST_CLOCK_AT: at } },
+        // One offset for every process of the run, so a script a test spawns minutes in reads the
+        // same moved clock as the test (`tests/helpers/shifted-clock.mjs`).
+        { stdio: ["ignore", "ignore", "inherit"], env: { ...process.env, TEST_CLOCK_AT: at, TEST_CLOCK_OFFSET_MS: String(Date.parse(at) - Date.now()) } },
       );
       let report;
       try {

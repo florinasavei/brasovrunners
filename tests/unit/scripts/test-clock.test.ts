@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { execFileSync } from "node:child_process";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_DATES, failuresOf, parseArguments, resolveDate } from "../../../scripts/test-clock.mjs";
 
 /**
@@ -42,21 +43,39 @@ describe("BR-REQ-090-02 yarn test:clock — the suite with the real clock moved 
   });
 });
 
-describe("§NNN tests/helpers/shifted-clock.ts — the real clock reads the date it is given", () => {
-  const RealDate = Date;
-  afterEach(() => {
+describe("§NNN tests/helpers/shifted-clock.mjs — the real clock reads the date it is given", () => {
+  const MOVED = Symbol.for("brasovrunners.shifted-clock");
+  const KEYS = ["TEST_CLOCK_AT", "TEST_CLOCK_OFFSET_MS", "NODE_OPTIONS"] as const;
+  const global = globalThis as unknown as Record<symbol, unknown>;
+  let saved: { date: DateConstructor; moved: unknown; env: Record<string, string | undefined> };
+  let RealDate: DateConstructor;
+
+  // This file may itself run under `yarn test:clock`, with the clock already moved: it saves that
+  // state, starts from an unmoved process, and puts everything back.
+  beforeEach(() => {
+    saved = { date: Date, moved: global[MOVED], env: Object.fromEntries(KEYS.map((key) => [key, process.env[key]])) };
+    RealDate = typeof saved.moved === "function" ? (saved.moved as DateConstructor) : Date;
     globalThis.Date = RealDate;
-    vi.unstubAllEnvs();
+    delete global[MOVED];
+    for (const key of KEYS) delete process.env[key];
+    vi.resetModules();
+  });
+  afterEach(() => {
+    globalThis.Date = saved.date;
+    global[MOVED] = saved.moved;
+    for (const key of KEYS) {
+      if (saved.env[key] === undefined) delete process.env[key];
+      else process.env[key] = saved.env[key];
+    }
     vi.resetModules();
   });
 
   it("moves every argument-less read and leaves a written date exactly as written", async () => {
-    vi.stubEnv("TEST_CLOCK_AT", "2040-02-29T12:00:00.000Z");
-    vi.resetModules();
-    await import("../../helpers/shifted-clock");
+    process.env.TEST_CLOCK_AT = "2040-02-29T12:00:00.000Z";
+    await import("../../helpers/shifted-clock.mjs");
 
     expect(new Date().getUTCFullYear()).toBe(2040);
-    expect(Date.now() - RealDate.parse("2040-02-29T12:00:00.000Z")).toBeLessThan(60_000);
+    expect(Math.abs(Date.now() - RealDate.parse("2040-02-29T12:00:00.000Z"))).toBeLessThan(60_000);
     expect(String(Date())).toContain("2040");
     expect(new Date("2026-10-11T07:00:00.000Z").toISOString()).toBe("2026-10-11T07:00:00.000Z");
     expect(new Date(0).getTime()).toBe(0);
@@ -64,9 +83,16 @@ describe("§NNN tests/helpers/shifted-clock.ts — the real clock reads the date
     expect(Date.UTC(2030, 0, 1)).toBe(RealDate.UTC(2030, 0, 1));
   });
 
+  it("a Node process the test starts reads the same moved clock (a script the test compares with)", async () => {
+    process.env.TEST_CLOCK_AT = "2040-02-29T12:00:00.000Z";
+    await import("../../helpers/shifted-clock.mjs");
+
+    const child = Number(execFileSync(process.execPath, ["-e", "process.stdout.write(String(Date.now()))"], { env: process.env, encoding: "utf8" }));
+    expect(Math.abs(child - Date.now())).toBeLessThan(60_000);
+  });
+
   it("refuses a value that is not a date rather than running the suite on today", async () => {
-    vi.stubEnv("TEST_CLOCK_AT", "someday");
-    vi.resetModules();
-    await expect(import("../../helpers/shifted-clock")).rejects.toThrow(/not a date/);
+    process.env.TEST_CLOCK_AT = "someday";
+    await expect(import("../../helpers/shifted-clock.mjs")).rejects.toThrow(/not a date/);
   });
 });

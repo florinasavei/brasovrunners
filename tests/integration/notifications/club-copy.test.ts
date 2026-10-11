@@ -17,6 +17,7 @@ import type { DeclarationPdfInput } from "@/modules/registrations/declaration-pd
 import { findRegistrationDetailForAdmin, listOutboxHistory } from "@/modules/registrations/admin-repository";
 import { confirmEmail, type EventForRegistration, signDeclaration, submitRegistration } from "@/modules/registrations/service";
 import { addTestRegistrations } from "@/modules/registrations/test-registrations";
+import { atTheClock } from "../../helpers/clock";
 import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -221,7 +222,10 @@ describe("BR-REQ-033-02 criterion 14 no club-bound message carries a token, a li
 
     // A club mailbox that bounces its copy says nothing about the participant's address (§76) — nor one that
     // bounces the archive copy or the confirmation notice, which carry the participant's id (§670).
-    const bounced = () => findRegistrationDetailForAdmin(db, registration.id).then((detail) => detail?.emailState?.detail ?? null);
+    // The page's email state asks the database's own clock whether the race is still ahead (§NNN): the
+    // detail is read at NOW, before the race, on the fixture's calendar rather than the day this runs.
+    const bounced = () =>
+      atTheClock(NOW, () => findRegistrationDetailForAdmin(db, registration.id, NOW)).then((detail) => detail?.emailState?.detail ?? null);
     const [copy] = rows.filter((row) => row.participantId === null);
     await db.update(emailOutbox).set({ status: "BOUNCED", lastError: "550 club mailbox full" }).where(eq(emailOutbox.id, copy.id));
     expect(await bounced()).toBeNull();
