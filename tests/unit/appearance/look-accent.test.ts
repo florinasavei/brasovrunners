@@ -19,7 +19,6 @@ import { contrastRatio, relativeLuminance } from "@/modules/appearance/domain/ti
 import { HOME_BAND_SX } from "@/modules/home/ui/home-surfaces";
 import { COLOR, COLOR_DARK, LOOK_ACCENT, SITE_TINT } from "@/theme/brand";
 import { accentPairsOf, LOOK_ACCENT_PAIRS, LOOK_PAIRS, LOOK_PAIRS_DARK } from "@/theme/brand-pairs";
-import { SOURCES } from "../design/scan";
 import { LOOK_ACCENT_TINT, LOOK_ACCENT_TINT_VARIABLE, LOOK_PREVIEW, LOOK_PREVIEW_DARK, LOOK_ROOT, LOOK_ROOT_DARK, UNDER_LOOK } from "@/theme/look";
 
 /**
@@ -29,8 +28,9 @@ import { LOOK_ACCENT_TINT, LOOK_ACCENT_TINT_VARIABLE, LOOK_PREVIEW, LOOK_PREVIEW
  * the look draws in both schemes; the shades keep their order (the hover deeper by day, lighter after
  * dark) and the words' shade stays no lighter than the muted ink, so every page tint carries it; the
  * pink is phase 1's tokens unchanged and the orange is the derivation's; a grey and a malformed value
- * are refused; and nothing on a public page names the pink directly any more — it all follows the
- * setting through the layout's variables.
+ * are refused; and the home band and the weekly tag wear the accent through the layout's variables.
+ * That no page names the pink or a preset itself is `tests/unit/design/accent-tokens.test.ts`'s walk
+ * of `src/`, beside the design system's other guards.
  */
 const ROOT = path.resolve(__dirname, "../../..");
 const source = (file: string) => readFileSync(path.join(ROOT, file), "utf8").replace(/\r\n/g, "\n");
@@ -166,12 +166,5 @@ describe("§NNN everything that wears the accent follows the setting", () => {
     expect(LOOK_ACCENT_TINT).toBe(`var(${LOOK_ACCENT_TINT_VARIABLE})`);
     expect(HOME_BAND_SX[UNDER_LOOK]).toEqual({ bgcolor: LOOK_ACCENT_TINT });
     expect(source("src/modules/home/ui/RunTag.tsx")).toContain('weekly: underLook({ bg: LOOK_ACCENT_TINT, ink: "primary.main" }, { bg: LOOK_ACCENT_TINT, ink: "primary.main" })');
-  });
-
-  it("names the pink's tokens nowhere but the theme's own files: a page asks for primary or the band's variable", () => {
-    const offenders = SOURCES.filter((file) => !["src/theme/brand.ts", "src/theme/brand-pairs.ts"].includes(file.file))
-      .filter((file) => /\bCOLOR(?:_DARK)?\.accent(?:Ink|Deep|Tint)?\b/.test(file.text))
-      .map((file) => file.file);
-    expect(offenders).toEqual([]);
   });
 });

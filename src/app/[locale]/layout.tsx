@@ -173,8 +173,9 @@ export default async function LocaleLayout({ children, params }: Props) {
         {tintStyle && <style data-site-tint="">{tintStyle}</style>}
         {/* Public pages only, both schemes (`modules/appearance/domain/site-font-size.ts`); its text is a step's own number. */}
         {fontSizeStyle && <style data-site-font-size="">{fontSizeStyle}</style>}
-        {/* The new look's pink primary, under its scope, both schemes (`modules/appearance/domain/site-look.ts`);
-            its text is written from `brand.ts`'s tokens alone. */}
+        {/* The new look's accent as the primary (pink by default), under its scope, both schemes
+            (`modules/appearance/domain/site-look.ts`); its text is a preset's tokens or the shades
+            derived from a checked #rrggbb, never raw typed text. */}
         {lookStyle && <style data-site-look="">{lookStyle}</style>}
         {/* Sets data-light / data-dark on <html> before paint, so a dark page never flashes light
             (§93). Light unless the visitor pressed the switch — the owner: "by default we are on
