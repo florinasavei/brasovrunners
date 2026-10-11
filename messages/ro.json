@@ -5836,7 +5836,7 @@
       },
       "feedbackForms": {
         "title": "Spune-ne ceva",
-        "intro": "Patru formulare anonime pe pagina de contact, sub formularul de contact și deasupra newsletterului. Fiecare e oprit până îl pornești aici și primește la o singură adresă.",
+        "intro": "Patru formulare anonime pe pagina de contact, sub formularul de contact, înaintea lui „Contact direct” și a newsletterului. Fiecare e oprit până îl pornești aici și primește la o singură adresă.",
         "aside": "Pornite: {on} din {all}",
         "noticeMissing": "Nota de confidențialitate în vigoare nu descrie încă formularele: pe site nu apare nimic până nu aprobi o notă nouă (vezi „Sarcini”).",
         "updatedAt": "Setat {when}.",
