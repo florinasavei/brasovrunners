@@ -1827,9 +1827,9 @@
       "cover": {
         "intro": "Fotografia de sus a evenimentului, păstrată pentru noul aspect; deocamdată nicio pagină nu o afișează. Doar fotografii adevărate ale clubului. Într-o serie, la salvare alegi și datele care o primesc.",
         "legend": "Fotografia de copertă",
-        "help": "După ce alegi fotografia, alegi partea care se vede pe card. Se păstrează când salvezi evenimentul.",
-        "cropTitle": "Decupaj — ce se vede pe card",
-        "cropHelp": "Pornește de la cel mai mare dreptunghi 16:9, forma cardului. Poți alege alt format sau trage un dreptunghi peste fotografie.",
+        "help": "După ce alegi fotografia, alegi partea din ea pentru noul aspect. Se păstrează când salvezi evenimentul.",
+        "cropTitle": "Decupaj — partea pentru noul aspect",
+        "cropHelp": "Pornește de la cel mai mare dreptunghi 16:9. Poți alege alt format sau trage un dreptunghi peste fotografie.",
         "set": "aleasă",
         "missing": "lipsește",
         "noStorage": "Stocarea imaginilor nu este configurată aici, așa că nu se poate alege o copertă."

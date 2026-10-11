@@ -9,8 +9,9 @@ type Words = (key: string, values?: Record<string, string>) => string;
 /**
  * The home page's sections from the sample rows (§714): the props `Hero` and the three `RunSection`s
  * take on the site, built from the same made-up events as the design page's cards (`fixtures.ts`) —
- * the run sections hand the listing's own cards those rows (§NNN), the next run the series' first
- * date alone (so it wears «Săptămânal»), the weekly runs the series, the special events the race —
+ * the run sections hand the listing's own cards those rows (§NNN): the next run gets its series'
+ * card, as `readHomeContent` gives it for a date of a series, the weekly runs the same series, the
+ * special events the race —
  * with the hero's empty photo slot the club starts from (never a stock picture, decision 6) and the
  * platform's own words from the catalogue (`home` is the `Home` namespace). Nothing here is read from
  * the database and nothing names a person: the repository is public. A file of its own beside
@@ -31,7 +32,7 @@ export function sampleHome(locale: Locale, home: Words): HomePageProps {
       id: "next-run",
       title: home("nextRun.title"),
       intro: null,
-      cards: [{ key: series[0].id, members: [series[0]], weather: SAMPLE_WEATHER, seriesDates: series }],
+      cards: [{ key: "sample-run", members: series, weather: SAMPLE_WEATHER }],
       now: SAMPLE_NOW,
       more: null,
     },

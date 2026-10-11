@@ -90,8 +90,7 @@ export async function readHomeContent(locale: Locale, now: Date, setting: HomePa
     The listing's cards, as `events/page.tsx` hands them theirs (§NNN): a series' every date ahead,
     the forecast at the first one's start (§416) — one call for every card, the next run's included,
     each place asked once and nothing outside the seven days — and, for a date alone on its card, the
-    series it belongs to, read off the whole list (§486), so the next run of a weekly series still
-    wears «Săptămânal».
+    series it belongs to, read off the whole list (§486), so that date still wears its series' chip.
   */
   const seriesOf = seriesLookup(upcoming);
   const shownCards = [...sections.weekly, ...sections.special];

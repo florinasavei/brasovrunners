@@ -1827,9 +1827,9 @@
       "cover": {
         "intro": "The event's top photo, kept for the new look; no page shows it yet. Real photos of the club only. In a series, you also choose at Save which dates get it.",
         "legend": "Cover photo",
-        "help": "Once you choose the photo, you choose the part the card shows. It is kept when you save the event.",
-        "cropTitle": "Crop — what the card shows",
-        "cropHelp": "It starts at the largest 16:9 rectangle, the card's shape. You can choose another shape or drag a rectangle over the photo.",
+        "help": "Once you choose the photo, you choose the part of it for the new look. It is kept when you save the event.",
+        "cropTitle": "Crop — the part for the new look",
+        "cropHelp": "It starts at the largest 16:9 rectangle. You can choose another shape or drag a rectangle over the photo.",
         "set": "chosen",
         "missing": "missing",
         "noStorage": "Picture storage is not configured here, so no cover can be chosen."
