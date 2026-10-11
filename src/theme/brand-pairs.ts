@@ -1,4 +1,4 @@
-import { COLOR, COLOR_DARK, GRADIENT } from "./brand";
+import { COLOR, COLOR_DARK, GRADIENT, LOOK_ACCENT } from "./brand";
 
 /**
  * The text-on-background pairs the pages actually render, named by their tokens (§692).
@@ -114,5 +114,57 @@ export const LOOK_PAIRS_DARK: readonly BrandPair[] = [
   pair(dark("inkStrong"), dark("surface")),
 ];
 
+/** The four shades of an accent, by day and after dark (`LOOK_ACCENT`, or a typed colour's derivation). */
+type AccentKey = "accent" | "accentInk" | "accentDeep" | "accentTint";
+type AccentScheme = Readonly<Record<AccentKey, string>>;
+
+/**
+ * The accent's pairs (§NNN), for any accent: the same ten of each scheme `LOOK_PAIRS` holds for the
+ * pink — its words on the page, a card and its band, the words on its fill and on the pressed fill,
+ * the hot shade as text and as a fill, and the body's and the muted ink on its band. `name` labels the
+ * accent's own tokens (`LOOK_ACCENT.blue.light.accentInk`); the page's tokens keep theirs.
+ * `tests/unit/appearance/look-accent.test.ts` holds every preset and a spread of typed colours to them.
+ */
+export function accentPairsOf(name: string, shades: { light: AccentScheme; dark: AccentScheme }): BrandPair[] {
+  const own = (scheme: "light" | "dark", key: AccentKey): BrandToken => ({ name: `${name}.${scheme}.${key}`, hex: shades[scheme][key] });
+  const lightPairs = (fill: BrandToken) => [
+    pair(own("light", "accentInk"), light("paper")),
+    pair(own("light", "accentInk"), light("surface")),
+    pair(own("light", "accentInk"), own("light", "accentTint")),
+    pair(fill, own("light", "accentInk")),
+    pair(fill, own("light", "accentDeep")),
+    pair(own("light", "accent"), light("paper")),
+    pair(own("light", "accent"), light("surface")),
+    pair(fill, own("light", "accent")),
+    pair(light("ink"), own("light", "accentTint")),
+    pair(light("inkMuted"), own("light", "accentTint")),
+  ];
+  const darkPairs = (fill: BrandToken) => [
+    pair(own("dark", "accentInk"), dark("paper")),
+    pair(own("dark", "accentInk"), dark("surface")),
+    pair(own("dark", "accentInk"), own("dark", "accentTint")),
+    pair(fill, own("dark", "accentInk")),
+    pair(fill, own("dark", "accentDeep")),
+    pair(own("dark", "accent"), dark("paper")),
+    pair(own("dark", "accent"), dark("surface")),
+    pair(fill, own("dark", "accent")),
+    pair(dark("ink"), own("dark", "accentTint")),
+    pair(dark("inkMuted"), own("dark", "accentTint")),
+  ];
+  // The words on a fill: white by day, the dark page after dark — `primary.contrastText` under the look.
+  return [...lightPairs(light("surface")), ...darkPairs(dark("paper"))];
+}
+
+/** The pairs of the presets other than the pink (whose pairs are `LOOK_PAIRS` above), both schemes. */
+export const LOOK_ACCENT_PAIRS: readonly BrandPair[] = (["blue", "orange"] as const).flatMap((preset) => accentPairsOf(`LOOK_ACCENT.${preset}`, LOOK_ACCENT[preset]));
+
 /** Every pair the page draws and the test asserts, in one list. */
-export const BRAND_PAIRS: readonly BrandPair[] = [...TEXT_PAIRS, ...TEXT_PAIRS_DARK, ...HERO_PAIRS, ...ACCENT_PAIRS, ...LOOK_PAIRS, ...LOOK_PAIRS_DARK];
+export const BRAND_PAIRS: readonly BrandPair[] = [
+  ...TEXT_PAIRS,
+  ...TEXT_PAIRS_DARK,
+  ...HERO_PAIRS,
+  ...ACCENT_PAIRS,
+  ...LOOK_PAIRS,
+  ...LOOK_PAIRS_DARK,
+  ...LOOK_ACCENT_PAIRS,
+];

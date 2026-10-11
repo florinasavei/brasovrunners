@@ -1664,6 +1664,7 @@
       "LEGAL_TERMS_ACCEPTED": "Nu s-a șters nimic: cineva s-a înscris sau a semnat cât a fost în vigoare această versiune. O poți retrage — rămâne în evidență și nu se mai oferă.",
       "SITE_TINT_UNREADABLE": "Culoarea nu s-a salvat: pe ea, textul paginii sau textul secundar ar avea un contrast sub 4,5 : 1 (nivelul AA). Alege o culoare mai deschisă.",
       "SITE_TINT_TOO_DARK": "Culoarea nu s-a salvat: e prea închisă pentru o pagină deschisă, iar cardurile albe n-ar mai ieși în evidență. Alege o culoare mai deschisă.",
+      "SITE_ACCENT_TOO_GREY": "Aspectul nu s-a salvat: culoarea de accent e prea aproape de gri, iar butoanele și linkurile n-ar ieși în evidență față de text. Alege o culoare.",
       "UNDER_MINIMUM_AGE": "Nu s-a înscris nimic: după data nașterii scrise, persoana nu are {age} împliniți în ziua cursei, iar aceasta este vârsta minimă de participare la eveniment. Verifică data cu persoana.",
       "NEON_QUOTA_BELOW_USAGE": "Limita nu a fost trimisă: trebuie să fie peste consumul de până acum, altfel ar opri baza chiar la salvare.",
       "NEON_QUOTA_UNCONFIRMED": "Nu s-a schimbat nimic: o limită nouă sau schimbată pe producție cere bifa de confirmare — când e atinsă, site-ul se oprește până la perioada următoare.",
@@ -4748,7 +4749,7 @@
     },
     "look": {
       "title": "Aspectul nou",
-      "intro": "Noul aspect al paginilor publice: roz lângă albastrul siglei, titluri mai apăsate, butoane rotunjite, «Vino cu noi» în antet.",
+      "intro": "Noul aspect al paginilor publice: o culoare de accent lângă albastrul siglei (roz, dacă nu alegi alta), titluri mai apăsate, butoane rotunjite, «Vino cu noi» în antet.",
       "introMore": "Oprit până aprobă clubul pe QA; apoi e calea înapoi dintr-o apăsare. Nuanța fundalului și mărimea textului rămân cum le-ai ales, în ambele aspecte.",
       "current": "Acum: {look}",
       "updatedAt": "Setat {when}.",
@@ -4767,7 +4768,43 @@
         },
         "on": {
           "name": "Aspectul nou",
-          "help": "Roz și titluri Inter, butoane rotunjite cu săgeată, «Vino cu noi» și rețelele sociale în antet, munții în josul paginii."
+          "help": "Culoarea de accent de mai jos și titluri Inter, butoane rotunjite cu săgeată, «Vino cu noi» și rețelele sociale în antet, munții în josul paginii."
+        }
+      },
+      "accent": {
+        "legend": "Culoarea de accent",
+        "intro": "Culoarea butoanelor, a linkurilor și a benzilor sub aspectul nou. Sigla rămâne albastră.",
+        "current": "Culoarea de accent: {accent}",
+        "presets": {
+          "pink": {
+            "name": "Roz",
+            "help": "Rozul planului de redesign."
+          },
+          "blue": {
+            "name": "Albastru",
+            "help": "Albastrul clubului, cel din aspectul de azi."
+          },
+          "orange": {
+            "name": "Portocaliu",
+            "help": "Portocaliul clubului. Ziua e mai închis, ca textul să se citească pe el."
+          }
+        },
+        "custom": {
+          "name": "Personalizat",
+          "help": "Scrie o culoare; site-ul îi face singur nuanțele care se citesc, ziua și noaptea."
+        },
+        "hexLabel": "Culoarea",
+        "pickerLabel": "Alege culoarea de accent",
+        "rule": "Orice culoare care nu e gri. Butoanele, linkurile și benzile primesc nuanțe mai închise sau mai deschise, cu un contrast de cel puțin 4,5 : 1 (nivelul AA), pe tema deschisă și pe cea întunecată.",
+        "shades": "Nuanțele, ziua și noaptea:",
+        "verdict": {
+          "ok": "Se poate. Așa arată, ziua și noaptea.",
+          "notAColour": "Scrie culoarea ca # urmat de șase cifre sau litere de la a la f.",
+          "tooGrey": "E prea aproape de gri: pe site n-ar ieși în evidență față de text. Alege o culoare."
+        },
+        "preview": {
+          "button": "Vino cu noi",
+          "tag": "Săptămânal"
         }
       }
     },
@@ -5936,7 +5973,10 @@
         "lightScheme": "Tema deschisă",
         "darkScheme": "Tema întunecată",
         "markTitle": "Munții",
-        "markNote": "Un desen în linie, sub 2 KB, în culoarea textului din jur: semnul de la baza paginilor publice sub aspectul nou."
+        "markNote": "Un desen în linie, sub 2 KB, în culoarea textului din jur: semnul de la baza paginilor publice sub aspectul nou.",
+        "accentsTitle": "Culorile de accent",
+        "accentsNote": "Ce poate alege clubul în «Aspectul nou»: patru nuanțe fiecare, ziua și noaptea. O culoare scrisă de club le primește după aceleași reguli. Caseta de mai sus arată rozul.",
+        "shade": "Nuanța"
       },
       "sections": {
         "look": "Aspectul nou",
@@ -5966,6 +6006,7 @@
         "pairsAccent": "Peste gradientul butonului apăsat",
         "pairsLook": "Aspectul nou, tema deschisă",
         "pairsLookDark": "Aspectul nou, tema întunecată",
+        "pairsLookAccents": "Aspectul nou, celelalte culori de accent (albastru, portocaliu), ziua și noaptea",
         "sample": "Mostră",
         "foreground": "Text",
         "background": "Fundal",
@@ -6148,7 +6189,7 @@
           "released": "lansat"
         },
         "decisions": {
-          "1": { "title": "Culoarea de accent", "default": "Un roz aprins lângă albastrul siglei, cu o nuanță mai închisă pentru textul alb; emailurile, PDF-urile, numerele de concurs și cardurile de distribuire rămân albastre." },
+          "1": { "title": "Culoarea de accent", "default": "Un roz aprins lângă albastrul siglei, sau albastrul, portocaliul ori o culoare aleasă de club în «Aspectul nou»; emailurile, PDF-urile, numerele și cardurile de distribuire rămân albastre." },
           "2": { "title": "Fontul titlurilor", "default": "Inter 800 pentru titluri, găzduit de noi, cu ș ț ă â î; textul rămâne Roboto." },
           "3": { "title": "O pagină principală adevărată", "default": "O pagină principală adevărată la `/ro` și `/en`, la care duce sigla, niciodată o intrare de meniu; se pornește și se oprește în «Aspect» → «Pagina principală»." },
           "4": { "title": "Cele patru cuvinte din meniu", "default": "«Alergări», «Calendar», «Comunitatea» — o pagină a clubului care leagă echipa, galeria, întrebările și zona membrilor — și «Despre noi»." },

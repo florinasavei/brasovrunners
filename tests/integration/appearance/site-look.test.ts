@@ -73,6 +73,51 @@ describe("the site look setting", () => {
     expect(cache.revalidatePublicContent).not.toHaveBeenCalled();
   });
 
+  it("§NNN saves a preset accent beside the switch, and names it in the audit only when it changed", async () => {
+    await updateSiteLook(db, admin, { look: "on", accent: "blue" }, NOW);
+    expect((await readSiteLook(db)).setting).toEqual({ on: true, accent: "blue" });
+    // A flip of the switch alone keeps the accent and audits as it always did.
+    await updateSiteLook(db, admin, { look: "off" }, NOW);
+    expect((await readSiteLook(db)).setting).toEqual({ on: false, accent: "blue" });
+    await updateSiteLook(db, admin, { look: "off", accent: "blue" }, NOW);
+    expect((await auditRows()).map((row) => row.metadataJson)).toEqual(
+      expect.arrayContaining([
+        { from: "off", to: "on", accentFrom: "pink", accentTo: "blue" },
+        { from: "on", to: "off" },
+        { from: "off", to: "off" },
+      ]),
+    );
+    expect(cache.revalidatePublicContent).toHaveBeenCalledTimes(3);
+  });
+
+  it("§NNN saves a typed accent lower-cased, a missing # and spaces forgiven, and goes back to a preset", async () => {
+    await updateSiteLook(db, admin, { look: "on", accent: "custom", hex: "  1F6FEB " }, NOW);
+    expect((await readSiteLook(db)).setting).toEqual({ on: true, accent: "custom", hex: "#1f6feb" });
+    await updateSiteLook(db, admin, { look: "on", accent: "pink", hex: "#1f6feb" }, NOW);
+    expect((await readSiteLook(db)).setting).toEqual({ on: true, accent: "pink" });
+    expect((await auditRows()).map((row) => row.metadataJson)).toEqual(
+      expect.arrayContaining([
+        { from: "off", to: "on", accentFrom: "pink", accentTo: "custom #1f6feb" },
+        { from: "on", to: "on", accentFrom: "custom #1f6feb", accentTo: "pink" },
+      ]),
+    );
+  });
+
+  it("§NNN refuses a grey, a value that is no colour and an accent that is no choice, with nothing written", async () => {
+    await expect(updateSiteLook(db, admin, { look: "on", accent: "custom", hex: "#808080" }, NOW)).rejects.toMatchObject({
+      code: "VALIDATION_ERROR",
+      fields: ["hex", "accentTooGrey"],
+    });
+    await expect(updateSiteLook(db, admin, { look: "on", accent: "custom", hex: "pink" }, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["hex"] });
+    await expect(updateSiteLook(db, admin, { look: "on", accent: "custom" }, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["hex"] });
+    await expect(updateSiteLook(db, admin, { look: "on", accent: "green" }, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["accent"] });
+    await expect(updateSiteLook(db, admin, { look: "on", accent: "toString" }, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["accent"] });
+    await expect(updateSiteLook(db, organizer, { look: "on", accent: "blue" }, NOW)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(await readSiteLook(db)).toEqual({ setting: { on: false }, updatedAt: null });
+    expect(await auditRows()).toHaveLength(0);
+    expect(cache.revalidatePublicContent).not.toHaveBeenCalled();
+  });
+
   it("reads a row it cannot understand as off", async () => {
     await db.insert(platformSettings).values({ key: SITE_LOOK_SETTING_KEY, value: { on: "yes" }, updatedAt: NOW });
     expect(await readSiteLook(db)).toEqual({ setting: { on: false }, updatedAt: NOW });
