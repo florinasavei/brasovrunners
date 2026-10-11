@@ -219,7 +219,7 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
           </Box>
 
           {/* ↑ and ↓ among the open lines shown: none at an end, rather than an arrow that does nothing (the pages list's rule). */}
-          {mayEdit && !item.done && (
+          {mayEdit && !item.done && siblings.length > 1 && (
             <Stack direction={{ xs: "row", sm: "column" }} sx={{ flexShrink: 0, gap: 0.5, flexBasis: { xs: "100%", sm: "auto" }, pl: { xs: "52px", sm: 0 } }}>
               {index > 0 && (
                 <Box component="form" action={moveClubTodoAction}>

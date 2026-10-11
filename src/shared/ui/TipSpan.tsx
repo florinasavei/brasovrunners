@@ -3,6 +3,7 @@
 import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
 import type { ReactNode } from "react";
+import { readingTimeMs, TOOLTIP_TEXT_SX } from "./tooltip-text";
 
 /**
  * A tooltip around a control that may be disabled (§NNN): MUI's `Tooltip` needs a node that takes a
@@ -14,7 +15,7 @@ import type { ReactNode } from "react";
  */
 export default function TipSpan({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <Tooltip title={title} describeChild enterTouchDelay={700} leaveTouchDelay={4000}>
+    <Tooltip title={title} describeChild enterTouchDelay={700} leaveTouchDelay={readingTimeMs(title)} slotProps={{ tooltip: { sx: TOOLTIP_TEXT_SX } }}>
       <Box component="span" sx={{ display: "inline-flex" }}>
         {children}
       </Box>

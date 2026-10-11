@@ -3,6 +3,7 @@
 import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
 import { ACTION_ICONS, type ActionIconName } from "./action-icons";
+import { readingTimeMs, TOOLTIP_TEXT_SX } from "./tooltip-text";
 import SubmitButton, { type SubmitButtonProps } from "./SubmitButton";
 
 type Props = Omit<SubmitButtonProps, "glyph" | "runner"> & {
@@ -44,7 +45,7 @@ export default function GlyphSubmitButton({ icon, tooltip, ...props }: Props) {
   const button = <SubmitButton {...props} glyph={ACTION_ICONS[icon]} />;
   if (!tooltip) return button;
   return (
-    <Tooltip title={tooltip} describeChild enterTouchDelay={700} leaveTouchDelay={4000}>
+    <Tooltip title={tooltip} describeChild enterTouchDelay={700} leaveTouchDelay={readingTimeMs(tooltip)} slotProps={{ tooltip: { sx: TOOLTIP_TEXT_SX } }}>
       <Box component="span" sx={{ display: "inline-flex" }}>
         {button}
       </Box>
