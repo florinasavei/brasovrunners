@@ -194,7 +194,7 @@ export const ICON_REGISTRIES: ReadonlySet<string> = new Set([
 export const isIconRegistry = (file: string): boolean => ICON_REGISTRIES.has(file);
 
 /** Where the primitives are written in a scanned area: not a place to forbid MUI's own button. */
-export const PRIMITIVE_FILES: ReadonlySet<string> = new Set(["src/modules/events/ui/GlyphChip.tsx", "src/shared/ui/StatusChip.tsx"]);
+export const PRIMITIVE_FILES: ReadonlySet<string> = new Set(["src/modules/events/ui/GlyphChip.tsx"]);
 
 /** `src/app/**` and every `src/modules/<area>/**\/ui/**`: the pages and the areas' components. */
 export const inPrimitiveScope = (file: string): boolean => file.startsWith("src/app/") || (file.startsWith("src/modules/") && file.includes("/ui/"));

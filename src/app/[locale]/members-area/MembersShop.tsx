@@ -5,7 +5,7 @@ import StorefrontIcon from "@mui/icons-material/Storefront";
 import StraightenIcon from "@mui/icons-material/Straighten";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import StatusChip from "@/shared/ui/StatusChip";
+import GlyphChip from "@/modules/events/ui/GlyphChip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
@@ -117,7 +117,7 @@ export default async function MembersShop({
                     <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 700 }}>
                       {t("shop.orderNumber", { number: order.number })}
                     </Typography>
-                    <StatusChip glyph={order.status === "CANCELLED" ? "cancelled" : order.status === "PLACED" ? "planned" : "done"} color={order.status === "CANCELLED" ? "default" : order.status === "PLACED" ? "warning" : "success"} label={t(`shop.status.${order.status}`)} />
+                    <GlyphChip glyph={order.status === "CANCELLED" ? "cancelled" : order.status === "PLACED" ? "planned" : "done"} color={order.status === "CANCELLED" ? "default" : order.status === "PLACED" ? "warning" : "success"} label={t(`shop.status.${order.status}`)} />
                   </Stack>
                   <Typography variant="body2" sx={{ overflowWrap: "anywhere" }}>
                     {title}

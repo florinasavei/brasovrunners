@@ -5,7 +5,7 @@ import type { getTranslations } from "next-intl/server";
 import { countForm } from "@/i18n/count-form";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import StatusChip from "@/shared/ui/StatusChip";
+import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { formatPrice } from "@/modules/content/shop/domain";
 import type { AdminShopProduct } from "@/modules/content/shop/repository";
 import TeamPhotoImage from "@/modules/content/team/ui/TeamPhotoImage";
@@ -89,9 +89,9 @@ function ProductRow({ product, first, last, locale, words: t, mayManage }: { pro
         </Box>
       </Stack>
       <Stack direction="row" sx={{ mt: 0.5, flexWrap: "wrap", gap: 0.5 }}>
-        <StatusChip glyph={product.visible ? "visible" : "hidden"} color={product.visible ? "success" : "default"} label={product.visible ? t("members.shop.visible") : t("members.shop.hidden")} />
-        {product.orders > 0 && <StatusChip glyph="orders" variant="outlined" label={t(`members.shop.orders.${countForm(product.orders, locale)}`, { count: product.orders })} />}
-        {(product.descriptionRoJson === null) !== (product.descriptionEnJson === null) && <StatusChip glyph="language" variant="outlined" color="warning" label={t("members.shop.oneLanguage")} />}
+        <GlyphChip glyph={product.visible ? "visible" : "hidden"} color={product.visible ? "success" : "default"} label={product.visible ? t("members.shop.visible") : t("members.shop.hidden")} />
+        {product.orders > 0 && <GlyphChip glyph="orders" variant="outlined" label={t(`members.shop.orders.${countForm(product.orders, locale)}`, { count: product.orders })} />}
+        {(product.descriptionRoJson === null) !== (product.descriptionEnJson === null) && <GlyphChip glyph="language" variant="outlined" color="warning" label={t("members.shop.oneLanguage")} />}
       </Stack>
       <Stack direction="row" sx={{ mt: 1.5, flexWrap: "wrap", gap: 1 }}>
         <GlyphButton icon={mayManage ? "edit" : "preview"} href={href} variant="outlined" sx={TAP_TARGET} data-testid="product-open">

@@ -67,7 +67,7 @@ export default async function PillSection({ locale }: { locale: Locale }) {
           <GlyphChip glyph="partner" variant="outlined" label={t("design.pills.partner")} />
           <GlyphChip glyph="membersOnly" color="primary" label={tEvent("membersOnly")} />
           <GlyphChip glyph="night" variant="outlined" label={tEvent("night.chip")} />
-          <GlyphChip glyph="series" variant="outlined" label={t("design.pills.series")} />
+          <StatusChip glyph="series" variant="outlined" label={t("design.pills.series")} />
           <GlyphChip glyph="discount" variant="outlined" label={t("design.pills.discount")} />
           <StatusChip glyph="cancelled" color="error" label={tEvent("cancelled")} />
           <StatusChip glyph="done" label={tEvent("completed")} />
