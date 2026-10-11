@@ -1,0 +1,14 @@
+{
+  "branch": "fix/contact-direct-before-newsletter",
+  "decisionsTitle": "«Contact direct» after «Spune-ne ceva (anonim)», right before the newsletter (amending §698)",
+  "decisionsSection": "**The owner, 2026-10-11:** «ceva nu-mi place la pagina de contact, partea de Contact Direct ar trebui să fie după «Spune-ne ceva (anonim)», fix înainte de newsletter».\n\n**Decision.** On `/contact` the order is now: the intro, «Trimite-ne un mesaj» with the form, «Spune-ne ceva», «Contact direct», the newsletter, the identity line. This reverses the part of §698 that put «Contact direct» above the form (and so returns to §461's form-first order for the form itself).\n\n- **The form** stands right under the intro and needs no rule above it; it keeps its heading and glyph.\n- **«Contact direct»** keeps its heading, its glyph, its address and phone rows, and every state in which it is drawn (after a send, with no form). It now opens with the rule every later section has.\n- **What does not change.** The wording of the section, the 24-pixel rows and the inline 44-pixel reach of the links, the newsletter last (§679), and the identity line under everything. The help text of «Spune-ne ceva» in the backoffice names the new position.\n\n**Tests.** `contact-page-order.test.ts` pins the order form, feedback, ways, newsletter, identity; `contact-page-ways-on.test.ts` now expects the phone and the ways below the form.\n\nBaseline unchanged by the branch.",
+  "changelogLine": "- **«Contact direct» moves under «Spune-ne ceva».** The contact page now reads: the form, the anonymous forms, the club's address and phone, then the newsletter §NNN.",
+  "specsCriteria": [
+    {
+      "requirement": "BR-REQ-070-04",
+      "text": "On `/contact` the sections come in this order: the form, «Spune-ne ceva», «Contact direct», the newsletter, then the identity line; «Contact direct» opens with a rule like every section after the form, and the form's section, right under the intro, has none. This amends criterion 53 (2026-10-11, `DECISIONS.md` §NNN)."
+    }
+  ],
+  "docsNotes": "",
+  "batchLine": "«Contact direct» after «Spune-ne ceva», right before the newsletter (§NNN)"
+}
