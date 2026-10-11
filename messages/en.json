@@ -107,7 +107,41 @@
       "googleHintWhy": "The button does nothing? Google hides a calendar rather than removing it, and keeps an old copy by its address.",
       "googleHintHow": "On the web: calendar.google.com → “+” beside “Other calendars” → “From URL” → paste the address, with ?v=2 at the end.",
       "phoneAppHint": "On Android the “Apple / Outlook” button does nothing, and the Google Calendar app cannot add a calendar by its address: use calendar.google.com in the browser, “From URL”.",
-      "androidSync": "On Android, nothing after “Calendar added”? Google Calendar → Menu → Settings → your account → “Show more” → 🏃 BVR → Sync."
+      "androidSync": "On Android, nothing after “Calendar added”? Google Calendar → Menu → Settings → your account → “Show more” → 🏃 BVR → Sync.",
+      "look": {
+        "taglineLead": "Plan your next",
+        "taglineWord": "run",
+        "taglineEnd": ".",
+        "subline": "See when we run, where we meet and what suits you.",
+        "kinds": {
+          "label": "Which events the calendar shows",
+          "all": "All events",
+          "weekly": "Weekly runs",
+          "special": "Special events"
+        },
+        "legend": {
+          "label": "What the colours mean",
+          "weekly": "Weekly runs",
+          "special": "Special events",
+          "other": "Other events"
+        },
+        "nextEvent": {
+          "title": "Next event",
+          "details": "See the details",
+          "time": "Time",
+          "place": "Place"
+        },
+        "subscribe": {
+          "title": "Don't want to miss a run?",
+          "intro": "Add the {club} calendar to your favourite app.",
+          "rows": "Where to add it",
+          "google": "Google Calendar",
+          "apple": "Apple Calendar",
+          "outlook": "Outlook Calendar",
+          "ics": "Download the .ics file",
+          "feed": "The calendar's address, for any app"
+        }
+      }
     },
     "raceWeek": {
       "today": "Today, {when}",
@@ -5878,6 +5912,8 @@
         "intro": "The site's components, drawn from the sample rows — the very code that draws them on the site.",
         "cards": "The listing's cards · EventCard, SeriesCard",
         "cardsNote": "A single-date event and a series; the data is made up and names nobody.",
+        "calendarLook": "The calendar, under the new look",
+        "calendarLookNote": "KindChips, the colours' legend, NextEventPanel and SubscribeBox, with made-up data, drawn under the new look.",
         "featured": "The featured event · featuredCard",
         "featuredNote": "The listing's first card, at the others' width, told apart by its frame and background.",
         "team": "The team card",

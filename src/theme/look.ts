@@ -42,6 +42,12 @@ export const LOOK_PREVIEW_DARK = `[data-dark] [${LOOK_PREVIEW_ATTRIBUTE}="${LOOK
 export const UNDER_LOOK = `${LOOK_ROOT} &, ${LOOK_PREVIEW} &`;
 
 /**
+ * The same after dark: a rule that names a `brand.ts` token by value writes its `COLOR_DARK` twin
+ * here (the calendar's tones, phase 4). More specific than `UNDER_LOOK`, so it wins wherever both match.
+ */
+export const UNDER_LOOK_DARK = `${LOOK_ROOT_DARK} &, ${LOOK_PREVIEW_DARK} &`;
+
+/**
  * The elements a page draws only under the new look — the header's «Vino cu noi» and socials, the
  * mountain watermark — are hidden by default and shown inside the scope, so the backoffice, which
  * renders inside the same header and layout, never shows them even while the setting is on.
@@ -50,6 +56,13 @@ export const UNDER_LOOK = `${LOOK_ROOT} &, ${LOOK_PREVIEW} &`;
 export function onlyUnderLook<T>(display: T) {
   return { display: "none", [UNDER_LOOK]: { display } } as const;
 }
+
+/**
+ * The other half of `onlyUnderLook`: today's element, drawn while the setting is off and hidden
+ * under the new look, where a new component stands in its place (the calendar's subscribe row
+ * gives way to `SubscribeBox`, phase 4). Off, the rule matches nothing and the page is as it was.
+ */
+export const OFF_UNDER_LOOK = { [UNDER_LOOK]: { display: "none" } } as const;
 
 /** Headings under the new look: the display face at 800, set a little tighter (decision 2). */
 export const LOOK_HEADING = { fontWeight: 800, letterSpacing: "-0.02em" } as const;

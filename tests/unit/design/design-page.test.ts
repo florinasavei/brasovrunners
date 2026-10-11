@@ -133,9 +133,11 @@ describe("BR-REQ-060-01 «Sistemul de design» draws the look from the code", ()
       const escaped = (text: string) => text.replace(/'/g, "&#x27;");
       expect(markup).toContain(escaped(words.today));
       expect(markup).toContain(escaped(words.new));
-      // One box wears the preview scope; the other is the same markup without it.
+      // One box wears the preview scope; the other is the same markup without it. «Mostre» draws the
+      // calendar's parts under the look (the facelift's phase 4) in one more preview box.
       const elements = markup.replace(/<style[\s\S]*?<\/style>/g, "");
-      expect(elements.match(new RegExp(`${LOOK_PREVIEW_ATTRIBUTE}="${LOOK_VALUE}"`, "g"))).toHaveLength(1);
+      expect(elements.match(new RegExp(`${LOOK_PREVIEW_ATTRIBUTE}="${LOOK_VALUE}"`, "g"))).toHaveLength(2);
+      expect(elements).toContain('data-testid="design-calendar-look"');
       // The palette the public layout draws, for the preview box, from the same function.
       expect(markup).toContain(`<style data-design-look="">${lookPaletteCss()}</style>`);
       // The header's own «Vino cu noi» in both boxes (drawn only under the scope), and the mark.

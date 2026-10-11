@@ -6,7 +6,17 @@ import messages from "@/../messages/ro.json";
 import en from "@/../messages/en.json";
 import { contrastRatio, MAX_CARD_STEP, relativeLuminance } from "@/modules/appearance/domain/tint-contrast";
 import { CLUB_NAME, COLOR, COLOR_DARK, FONT, GRADIENT, LOGO, SITE_TINT, SURFACE_GRADIENT, TEAM_CANVAS, WORDMARK } from "@/theme/brand";
-import { ACCENT_PAIRS, type BrandPair, HERO_PAIRS, LOOK_PAIRS, LOOK_PAIRS_DARK, TEXT_PAIRS, TEXT_PAIRS_DARK } from "@/theme/brand-pairs";
+import {
+  ACCENT_PAIRS,
+  type BrandPair,
+  CALENDAR_TONE_PAIRS,
+  CALENDAR_TONE_TOKENS,
+  HERO_PAIRS,
+  LOOK_PAIRS,
+  LOOK_PAIRS_DARK,
+  TEXT_PAIRS,
+  TEXT_PAIRS_DARK,
+} from "@/theme/brand-pairs";
 
 /** A pair's names, `COLOR.ink/COLOR.paper`, for the lists below that pin which pairs are asserted. */
 const names = (pairs: readonly BrandPair[]) => pairs.map((pair) => `${pair.foreground.name}/${pair.background.name}`);
@@ -187,6 +197,19 @@ describe("BR-REQ-070-02 the new look's palette is readable", () => {
 
   for (const { foreground, background } of [...LOOK_PAIRS, ...LOOK_PAIRS_DARK]) {
     it(`clears AA for ${foreground.name} on ${background.name}`, () => {
+      expect(contrastRatio(foreground.hex, background.hex)).toBeGreaterThanOrEqual(4.5);
+    });
+  }
+
+  // The calendar's three colours by kind (the facelift's phase 4): the words on each fill and each dot on the page and a card, light and dark.
+  it("draws the calendar's three tones from the phase-1 tokens: pink, green, grey", () => {
+    expect(CALENDAR_TONE_TOKENS.weekly.fill).toBe("accentTint");
+    expect(CALENDAR_TONE_TOKENS.special.fill).toBe("kindSpecial");
+    expect(CALENDAR_TONE_TOKENS.other.fill).toBe("kindOther");
+    expect(CALENDAR_TONE_PAIRS).toHaveLength(18);
+  });
+  for (const { foreground, background } of CALENDAR_TONE_PAIRS) {
+    it(`clears AA for the calendar's ${foreground.name} on ${background.name}`, () => {
       expect(contrastRatio(foreground.hex, background.hex)).toBeGreaterThanOrEqual(4.5);
     });
   }

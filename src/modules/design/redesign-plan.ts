@@ -10,7 +10,7 @@
  * 800, one setting «Aspectul nou» (§708); «Evenimente speciale» is everything that is not a weekly
  * series (§709)); the others are `default` (the dispatcher's default stands until the club answers).
  * Phases 1 and 2 are `building` — phase 1 behind the setting, off until the club's yes on QA; phase 2's
- * gate is the club's photographs — and the rest `planned`. `decided` is the club's answer in writing, `open` a question the club
+ * gate is the club's photographs — and so is phase 4, the calendar, behind the same setting — and the rest `planned`. `decided` is the club's answer in writing, `open` a question the club
  * reopened; `building` a phase whose chains run, `released` one on production.
  */
 export type DecisionStatus = "default" | "decided" | "open";
@@ -40,7 +40,8 @@ export const REDESIGN_PHASES: readonly RedesignPhase[] = [
   // Phase 2 (§709): the cover per event, the editor's «Copertă», the kind — built; the club's photos are its gate.
   { id: 2, status: "building" },
   { id: 3, status: "planned" },
-  { id: 4, status: "planned" },
+  // Phase 4: the calendar's chips, colours and legend, the next-event panel, the subscribe box — built behind «Aspectul nou», off.
+  { id: 4, status: "building" },
   { id: 5, status: "planned" },
   { id: 6, status: "planned" },
 ];

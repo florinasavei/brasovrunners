@@ -33,6 +33,7 @@ import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import ChipLink from "@/shared/ui/ChipLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
+import { UNDER_LOOK } from "@/theme/look";
 import FilterAutoApply from "./FilterAutoApply";
 import { FILTER_BUTTON_SX, FILTER_OPTION_SX } from "./filter-chip-sx";
 import { GLYPHS, type GlyphName } from "./glyphs";
@@ -73,6 +74,12 @@ import { GLYPHS, type GlyphName } from "./glyphs";
  * `carry` is the OTHER scope's ticks, kept as hidden inputs in this form and in every link here, so a
  * tick in one panel — submitted natively or by `FilterAutoApply`, which reads the form's own fields —
  * never drops the other's.
+ *
+ * **Under «Aspectul nou», a group may move to the chips** (the facelift's phase 4): `lookChips`
+ * names the groups the calendar's always-visible chips carry (`KindChips`: the surface). Under the
+ * look only, those groups' boxes and their active chips are hidden here and the button counts the
+ * rest; the boxes stay in the form, ticked as the address says, so a submit — native or the
+ * island's — keeps them. Off, and on the listing, which passes none, nothing changes.
  */
 export default async function ListingFilterPanel({
   locale,
@@ -84,6 +91,7 @@ export default async function ListingFilterPanel({
   scope = "upcoming",
   carry = {},
   shared = [],
+  lookChips = [],
 }: {
   locale: Locale;
   pathname: "/events" | "/calendar";
@@ -95,6 +103,8 @@ export default async function ListingFilterPanel({
   carry?: Record<string, string | string[]>;
   /** The past scope's window when nothing narrows it: the value each group has in common, for the sentence in the fold. */
   shared?: { group: FilterGroup; value: string }[];
+  /** The groups the calendar's chips carry under the new look (`KindChips`), hidden here under it. */
+  lookChips?: readonly FilterGroup[];
 }) {
   const t = await getTranslations("Events");
   const formatter = await getFormatter();
@@ -157,6 +167,11 @@ export default async function ListingFilterPanel({
     ...FILTER_FLAGS.filter((flag) => filter[flag]).map((flag) => ({ group: flag, value: "1" })),
   ];
 
+  // Under the look, what the chips do not carry: the button's count, and whether the active row has anything left to say.
+  const onChips = (group: FilterGroup | FilterFlag) => (lookChips as readonly string[]).includes(group);
+  const panelCount = ticked.filter(({ group }) => !onChips(group)).length;
+  const countWords = (n: number) => (n > 0 ? t("filter.buttonCount", { count: n }) : t("filter.button"));
+
   const option = (group: FilterGroup | FilterFlag, value: string, checked: boolean) => {
     const Icon = GLYPHS[glyph(group, value)];
     // A band's gauge names the levels it ticks on hover (§528): «Greuț: nivelurile 7–9 din 15». A
@@ -184,7 +199,18 @@ export default async function ListingFilterPanel({
         <Box component="summary" sx={FILTER_BUTTON_SX}>
           <span>
             <GLYPHS.filters aria-hidden="true" />
-            {count > 0 ? t("filter.buttonCount", { count }) : t("filter.button")}
+            {panelCount === count ? (
+              countWords(count)
+            ) : (
+              <>
+                <Box component="span" sx={{ [UNDER_LOOK]: { display: "none" } }}>
+                  {countWords(count)}
+                </Box>
+                <Box component="span" sx={{ display: "none", [UNDER_LOOK]: { display: "inline" } }}>
+                  {countWords(panelCount)}
+                </Box>
+              </>
+            )}
             <ExpandMoreIcon className="filters-caret" aria-hidden="true" sx={{ transition: "transform 120ms" }} />
           </span>
         </Box>
@@ -222,7 +248,7 @@ export default async function ListingFilterPanel({
             (Array.isArray(value) ? value : [value]).map((one) => <input key={`${name}=${one}`} type="hidden" name={name} value={one} />),
           )}
           {offer.groups.map(({ group, values }) => (
-            <Box component="fieldset" key={group} sx={FIELDSET_SX}>
+            <Box component="fieldset" key={group} data-filter-group={group} sx={onChips(group) ? { ...FIELDSET_SX, [UNDER_LOOK]: { display: "none" } } : FIELDSET_SX}>
               <Typography component="legend" variant="subtitle2" sx={{ p: 0 }}>
                 {t(`filter.groups.${group}`)}
               </Typography>
@@ -259,9 +285,10 @@ export default async function ListingFilterPanel({
           data-testid={past ? "past-active-filters" : "active-filters"}
           role="group"
           aria-label={past ? t("filter.activePast") : t("filter.active")}
-          sx={{ flexWrap: "wrap", columnGap: 0.5, alignItems: "center" }}
+          sx={{ flexWrap: "wrap", columnGap: 0.5, alignItems: "center", ...(panelCount === 0 ? { [UNDER_LOOK]: { display: "none" } } : {}) }}
         >
-          {ticked.map(({ group, value }) => (
+          {ticked.map(({ group, value }) => {
+            const chip = (
             <ChipLink
               key={`${group}=${value}`}
               href={hrefFor(withoutValue(filter, group, value))}
@@ -272,7 +299,16 @@ export default async function ListingFilterPanel({
               keepScroll
               ariaLabel={`${t("filter.remove")}: ${label(group, value)}`}
             />
-          ))}
+            );
+            // A tick the chips carry under the look is said there, not twice.
+            return onChips(group) ? (
+              <Box component="span" key={`${group}=${value}`} sx={{ display: "contents", [UNDER_LOOK]: { display: "none" } }}>
+                {chip}
+              </Box>
+            ) : (
+              chip
+            );
+          })}
           <ChipLink href={hrefFor(NO_FILTER)} label={t("filter.clear")} keepScroll />
         </Stack>
       )}

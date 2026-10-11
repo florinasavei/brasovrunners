@@ -102,7 +102,7 @@ side.
 | 1 | Tokens and the public shell: the pink pair, Inter 800, the public scope, the setting «Aspectul nou», the header CTA and socials, the watermark; the design-system page shows both looks — **built behind the setting, off (2026-10-11)** | brand and font tests green, header one row at 320 px, the club's yes on QA |
 | 2 | Cover photos on events, and the event kind: a cover column with its crop, the editor's picker, the ladder; weekly or special derived from the series; the photo tag — **built on `feat/facelift-phase-2`, awaiting release** | listing specs green; every weekly run and the race carry a cover |
 | 3 | The home page: the root becomes a page; hero, next run, weekly and special, the band, why, the strip, the numbers; redirect, canonicals, sitemap. Every part a setting: «Pagina principală activă»; the hero picture with its crop and two lines and the three buttons' targets; N gallery pictures per strip or carousel, in order; the founding date and the runners figure; an unset strip is not drawn | LCP under 2.5 s on a 320 px phone, root tests rewritten, the club's yes on QA |
-| 4 | The calendar: filter chips with the kind, three colours and a legend, the next-event panel, the subscribe box, the title block | first week above the fold at 320 px, filters work with scripts off |
+| 4 | The calendar: filter chips with the kind, three colours and a legend, the next-event panel, the subscribe box, the title block — **built behind «Aspectul nou», off (2026-10-11)** | first week above the fold at 320 px, filters work with scripts off |
 | 5 | The listing and the event page: cards with their photo and pills, the arrow if approved, the event page's head | listing and event specs green |
 | 6 | The flip and the clean-up: «Aspectul nou» on in production; one release later the old look's code goes; the decisions amended | a week on production without the way back being used |
 
@@ -131,6 +131,24 @@ public pages; off (the default), no rule matches and every page is what it was.
 
 What phase 1 leaves for the gate: the club's look at QA with the setting on, phone and laptop; the
 header's one row at 320 px measured by the e2e suite with the setting on.
+
+### Phase 4, as built
+
+On the branch `feat/facelift-phase-4-calendar` (2026-10-11), with the plan's defaults for its open
+questions: no hero photo on the calendar; the chips carry the kind and the surface, the collapsed
+«Filtre» panel the rest; a separate Outlook row. Drawn only under «Aspectul nou»; off, the calendar
+is today's and reads nothing more.
+
+| Part | Where | Notes |
+| --- | --- | --- |
+| The title block | `src/app/[locale]/calendar/page.tsx` | the kit-face wordmark in the pink (§292 keeps it above the one `h1`); the `h1` «Calendar» drawn as the eyebrow from `sm`; the line «Planifică-ți următoarea alergare.» in Inter 800 with its last word in the pink, and the subline — from `sm`, so a phone's first week stays above the fold |
+| The kind | `src/modules/events/domain/calendar-kind.ts` | `?kind=weekly` / `?kind=special` from §709's `eventKind`, one choice; the live twin answers it (`i18n/live-twin.ts`) |
+| `KindChips` | `src/modules/events/ui/KindChips.tsx` | «Toate evenimentele», «Alergări săptămânale», «Evenimente speciale», then the period's surfaces — `ChipLink`s to the address with the choice made, every other filter kept; a sideways strip on a phone. The «Filtre» panel hides its surface group under the look (`lookChips`) and keeps the boxes in its form |
+| Three colours and a legend | `calendar-tone-sx.ts`, `CalendarLegend.tsx`; tokens `CALENDAR_TONE_TOKENS` in `src/theme/brand-pairs.ts` | weekly pink (`accentTint`, a dot in `accent`), special green (`kindSpecial`), other grey (`kindOther`: a coffee, a shoe test); every pair AA in both schemes (`brand.test.ts`); the legend says each colour's word |
+| `NextEventPanel` | `src/modules/events/ui/NextEventPanel.tsx` | the next date still ahead that the page's filters let through (`domain/next-event.ts`), from the listing's cached read; its day, the title, time and place, the route pills and the weather at the start, «Vezi detalii»; read only while the look is on |
+| `SubscribeBox` | `src/modules/events/ui/SubscribeBox.tsx` | «Vrei să nu ratezi alergările?»: Google, Apple (`webcal://`), Outlook (`outlook.live.com`, in `PROVIDER_HOSTS`), the `.ics`, the address to copy in a fold; today's «Adaugă în calendarul tău» row is hidden under the look |
+| Two columns | the page | from `md` the month and, beside it, the panel and the box; on a phone they follow the month |
+| On the design page | `/admin/design` → «Mostre» → «Calendarul, sub aspectul nou» | the four parts with made-up data inside a preview box |
 
 ## Content and assets the club must provide
 

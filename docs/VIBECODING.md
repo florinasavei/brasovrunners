@@ -62,6 +62,7 @@ request and `.github/workflows/release.yml` lands and ships it
 | Colours, fonts, the logo | `src/theme/brand.ts` — the only file allowed a hex value |
 | The look — the tokens, the type, the components | `src/theme/brand.ts`, `src/theme/theme.ts`; see them drawn at `/admin/design` (§692) |
 | The facelift («Aspectul nou», off by default): the pink, Inter 800, the pill with its arrow, «Vino cu noi», the mountains | the scope `src/theme/look.ts` (write a new-look rule under `UNDER_LOOK`, never test the setting in a page); the pink `src/modules/appearance/domain/site-look.ts`; the parts `src/shared/ui/ArrowButtonLink.tsx`, `HeaderCta.tsx`, `HeaderSocials.tsx`, `MountainMark.tsx`, `LookWatermark.tsx`; both looks side by side at `/admin/design` → «Aspectul nou»; the plan `docs/REDESIGN.md` |
+| The calendar under «Aspectul nou» (phase 4): the kind chips, the three colours and their legend, the next event, the subscribe box | `KindChips`, `CalendarLegend`, `NextEventPanel`, `SubscribeBox` in `src/modules/events/ui/`; the kind filter and the tones in `src/modules/events/domain/calendar-kind.ts`, their styles in `calendar-tone-sx.ts`, their tokens `CALENDAR_TONE_TOKENS` (`src/theme/brand-pairs.ts`); drawn at `/admin/design` → «Mostre» |
 | What `/devs` and `/admin/tasks` say | `src/modules/diagnostics/` |
 | A scheduled job | `src/modules/jobs/` (retention) and `src/modules/registrations/maintenance.ts` |
 

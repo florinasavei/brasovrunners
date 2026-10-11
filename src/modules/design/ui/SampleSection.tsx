@@ -7,7 +7,14 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
+import CalendarLegend, { calendarLegendWords } from "@/modules/events/ui/CalendarLegend";
 import EventCard from "@/modules/events/ui/EventCard";
+import KindChips from "@/modules/events/ui/KindChips";
+import NextEventPanel from "@/modules/events/ui/NextEventPanel";
+import SubscribeBox from "@/modules/events/ui/SubscribeBox";
+import { NO_FILTER } from "@/modules/events/domain/listing-filter";
+import { env } from "@/shared/config/env";
+import { LOOK_PREVIEW_ATTRIBUTE, LOOK_VALUE } from "@/theme/look";
 import SeriesCard from "@/modules/events/ui/SeriesCard";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import CheckboxField from "@/shared/ui/CheckboxField";
@@ -31,6 +38,7 @@ const CARD_LIST_SX = { listStyle: "none", m: 0, p: 0, display: "grid", gap: 2, g
  */
 export default async function SampleSection({ locale }: { locale: Locale }) {
   const t = await getTranslations("Admin");
+  const tEvents = await getTranslations("Events");
   const race = sampleRace(locale);
   const series = sampleSeries(locale);
   const member = sampleTeamMember(locale);
@@ -51,6 +59,19 @@ export default async function SampleSection({ locale }: { locale: Locale }) {
             <Typography variant="body2">
               <Code>heroSurface</Code> · <Code>featuredCard</Code>
             </Typography>
+          </Box>
+        </Box>
+      </Block>
+
+      {/* The calendar's three parts under «Aspectul nou» (the facelift's phase 4), inside a preview box:
+          they are drawn only under the look, and the box carries its scope. */}
+      <Block title={t("design.samples.calendarLook")} note={t("design.samples.calendarLookNote")}>
+        <Box {...{ [LOOK_PREVIEW_ATTRIBUTE]: LOOK_VALUE }} data-testid="design-calendar-look" sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2, display: "grid", gap: 2 }}>
+          <KindChips path={`/${locale}/calendar/2026-11`} kind="special" filter={{ ...NO_FILTER, surface: ["TRAIL"] }} surfaces={["ASPHALT", "TRAIL"]} />
+          <CalendarLegend {...calendarLegendWords(tEvents)} />
+          <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 340px))" }, alignItems: "start" }}>
+            <NextEventPanel event={race} locale={locale} weather={SAMPLE_WEATHER} />
+            <SubscribeBox locale={locale} baseUrl={env.APP_BASE_URL} addressId="design-calendar-feed-address" />
           </Box>
         </Box>
       </Block>

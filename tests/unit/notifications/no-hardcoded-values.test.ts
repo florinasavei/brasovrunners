@@ -237,6 +237,8 @@ describe("§369 the club's name leaves the platform only through the constant", 
           "Admin.editor.bibDesign.member.labelHelp",
           "Admin.bibs.memberLabelDefault",
           "Registration.memberBibWantedHelp",
+          // The calendar's subscribe box under «Aspectul nou» (the facelift's phase 4): «Adaugă calendarul {club} …».
+          "Events.calendar.look.subscribe.intro",
         ].sort(),
       );
     }

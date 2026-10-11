@@ -107,7 +107,41 @@
       "googleHintWhy": "Nu merge butonul? Google ascunde calendarul în loc să-l scoată și ține o copie veche după adresă.",
       "googleHintHow": "Pe web: calendar.google.com → „+” lângă „Alte calendare” → „Din URL” → lipește adresa, cu ?v=2 la final.",
       "phoneAppHint": "Pe Android, butonul „Apple / Outlook” nu face nimic, iar aplicația Google Calendar nu adaugă un calendar după adresă: folosește calendar.google.com în browser, „Din URL”.",
-      "androidSync": "Pe Android nu-l vezi după „Calendar adăugat”? Google Calendar → Meniu → Setări → contul tău → „Afișează mai multe” → 🏃 BVR → Sincronizare."
+      "androidSync": "Pe Android nu-l vezi după „Calendar adăugat”? Google Calendar → Meniu → Setări → contul tău → „Afișează mai multe” → 🏃 BVR → Sincronizare.",
+      "look": {
+        "taglineLead": "Planifică-ți următoarea",
+        "taglineWord": "alergare",
+        "taglineEnd": ".",
+        "subline": "Vezi când alergăm, unde ne întâlnim și ce ți se potrivește.",
+        "kinds": {
+          "label": "Ce evenimente arată calendarul",
+          "all": "Toate evenimentele",
+          "weekly": "Alergări săptămânale",
+          "special": "Evenimente speciale"
+        },
+        "legend": {
+          "label": "Ce înseamnă culorile",
+          "weekly": "Alergări săptămânale",
+          "special": "Evenimente speciale",
+          "other": "Alte evenimente"
+        },
+        "nextEvent": {
+          "title": "Următorul eveniment",
+          "details": "Vezi detalii",
+          "time": "Ora",
+          "place": "Locul"
+        },
+        "subscribe": {
+          "title": "Vrei să nu ratezi alergările?",
+          "intro": "Adaugă calendarul {club} în aplicația ta preferată.",
+          "rows": "Unde îl adaugi",
+          "google": "Google Calendar",
+          "apple": "Apple Calendar",
+          "outlook": "Outlook Calendar",
+          "ics": "Descarcă fișierul .ics",
+          "feed": "Adresa calendarului, pentru orice aplicație"
+        }
+      }
     },
     "raceWeek": {
       "today": "Azi, {when}",
@@ -5878,6 +5912,8 @@
         "intro": "Componentele site-ului, desenate din rândurile de probă — exact codul care le desenează și pe site.",
         "cards": "Cardurile listei · EventCard, SeriesCard",
         "cardsNote": "Un eveniment cu o singură dată și o serie; datele sunt inventate și nu numesc pe nimeni.",
+        "calendarLook": "Calendarul, sub aspectul nou",
+        "calendarLookNote": "KindChips, legenda culorilor, NextEventPanel și SubscribeBox, cu date inventate, desenate sub aspectul nou.",
         "featured": "Evenimentul principal · featuredCard",
         "featuredNote": "Primul card al listei, la lățimea celorlalte, deosebit prin ramă și fundal.",
         "team": "Cardul echipei",

@@ -1,3 +1,4 @@
+import { parseKindChoice } from "@/modules/events/domain/calendar-kind";
 import { activeFilterCount, parseListingFilter } from "@/modules/events/domain/listing-filter";
 import { DEV_STAFF_COOKIE } from "@/modules/staff-identity/dev-staff-cookie";
 import { PREFETCHED_PATHNAMES } from "./prefetch";
@@ -60,9 +61,13 @@ function asParams(search: URLSearchParams): Record<string, string[]> {
   return params;
 }
 
-/** Whether the address ticks any filter the calendar offers (§413): the `upcoming` scope, the names it reads. */
+/**
+ * Whether the address ticks any filter the calendar offers (§413): the `upcoming` scope, the names it
+ * reads — and the kind its chips choose under «Aspectul nou» (`?kind=weekly`, the facelift's phase 4).
+ */
 function asksAFilter(search: URLSearchParams): boolean {
-  return activeFilterCount(parseListingFilter(asParams(search), "upcoming")) > 0;
+  const params = asParams(search);
+  return activeFilterCount(parseListingFilter(params, "upcoming")) > 0 || parseKindChoice(params) !== null;
 }
 
 /** Whether the address ticks any filter the listing offers: the cards ahead's, or the past section's own (§611). */

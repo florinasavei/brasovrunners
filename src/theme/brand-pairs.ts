@@ -116,3 +116,28 @@ export const LOOK_PAIRS_DARK: readonly BrandPair[] = [
 
 /** Every pair the page draws and the test asserts, in one list. */
 export const BRAND_PAIRS: readonly BrandPair[] = [...TEXT_PAIRS, ...TEXT_PAIRS_DARK, ...HERO_PAIRS, ...ACCENT_PAIRS, ...LOOK_PAIRS, ...LOOK_PAIRS_DARK];
+
+/**
+ * The calendar's three colours by kind (the facelift's phase 4, `docs/REDESIGN.md` § What exists
+ * versus what is new): a weekly run in the pale pink, a special event in the green, any other
+ * date in the warm grey — each entry's fill, the words on it and the dot the legend and the entry
+ * lead with. One table, read by the calendar's styles (`events/ui/calendar-tone-sx.ts`) and held
+ * at AA by `tests/unit/theme/brand.test.ts`: the words on the fill, and the dot on the page and on
+ * a card (a dot is a mark, 3 : 1 would do; the dots meet 4.5 : 1 anyway). Never colour alone: the
+ * legend says each colour's word, and every entry keeps its glyphs and its accessible name.
+ */
+export const CALENDAR_TONE_TOKENS = {
+  weekly: { fill: "accentTint", ink: "ink", dot: "accent" },
+  special: { fill: "kindSpecial", ink: "kindSpecialInk", dot: "kindSpecialInk" },
+  other: { fill: "kindOther", ink: "ink", dot: "inkMuted" },
+} as const satisfies Record<string, { fill: keyof typeof COLOR; ink: keyof typeof COLOR; dot: keyof typeof COLOR }>;
+
+/** The calendar's tones as pairs, both schemes: the words on each fill, each dot on the page and on a card. */
+export const CALENDAR_TONE_PAIRS: readonly BrandPair[] = (["light", "dark"] as const).flatMap((scheme) => {
+  const token = scheme === "light" ? light : dark;
+  return Object.values(CALENDAR_TONE_TOKENS).flatMap(({ fill, ink, dot }) => [
+    pair(token(ink), token(fill)),
+    pair(token(dot), token("paper")),
+    pair(token(dot), token("surface")),
+  ]);
+});
