@@ -193,7 +193,7 @@ describe("§723 a page names neither the pink nor a preset", () => {
     for (const file of ["src/theme/brand.ts", "src/theme/look.ts", "src/modules/appearance/ui/SiteLookPanel.tsx", "src/modules/design/ui/LookSection.tsx"]) {
       expect(refused(sourceOf(file, preset)), `${file} may use the presets`).toEqual([]);
     }
-    for (const file of ["src/modules/home/ui/RunTag.tsx", "src/app/[locale]/calendar/page.tsx", "src/shared/ui/HeaderCta.tsx", "src/modules/appearance-notes/Note.tsx", "src/modules/designs/ui/X.tsx"]) {
+    for (const file of ["src/modules/home/ui/RunTag.tsx", "src/app/[locale]/calendar/page.tsx", "src/shared/ui/ArrowButtonLink.tsx", "src/modules/appearance-notes/Note.tsx", "src/modules/designs/ui/X.tsx"]) {
       expect(refused(sourceOf(file, preset)), `${file} may not use the presets`).toHaveLength(1);
     }
   });

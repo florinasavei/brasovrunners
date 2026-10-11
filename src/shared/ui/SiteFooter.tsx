@@ -13,12 +13,11 @@ import { weatherListWords } from "@/modules/weather/words";
 import { telHref } from "@/modules/contact/domain/public-phone";
 import { cachedPublicPhone, cachedShownContactAddresses } from "@/modules/public-cache/reads";
 import { DENSITY } from "@/theme/density";
-import { notUnderLook } from "@/theme/look";
+import { UNDER_LOOK } from "@/theme/look";
 import BuildBadge from "./BuildBadge";
 import ClubIdentity from "./ClubIdentity";
 import { clubSocialLinks } from "./club-socials";
 import { DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_SX } from "./disclosure";
-import FloatingLocaleSwitch from "./FloatingLocaleSwitch";
 import { foldLineSx, footerGapSx, footerTargetSx, PHONE_WIDE } from "./footer-target";
 import LocaleSwitcher from "./LocaleSwitcher";
 import SocialIcon from "./SocialIcon";
@@ -181,14 +180,16 @@ import ThemeModeToggle from "./ThemeModeToggle";
  * footer did not already have is two items of the fold: the identity line (`ClubIdentity`'s
  * `fold`) after the links, and the public phone beside «Scrie-ne». The marks stay on the bar, once.
  *
- * ## The language under «Aspectul nou» (§722)
+ * ## The language under «Aspectul nou» (§NNN, amending §722)
  *
- * `newLook` is the layout's reading of the club's setting (§708). While it is on, the bar draws the
- * floating round button (`FloatingLocaleSwitch`) just above itself in the bottom-right corner, and the
- * phone's two flags with their rule leave the bar under the look's scope — one «Limbă» at every width.
- * Off (the default), the bar is what it was and the button is not in the markup.
+ * The owner, 2026-10-11, after §722's floating round button: «language switcher trebuie să fie în
+ * footer să văd ambele limbi, ca înainte». So under the look the bar's own copy — the rule, then RO and
+ * EN, the current one stated — is drawn at every width, the bar's last item at its bottom right, and
+ * the header's copy stays hidden there (`notUnderLook`): one «Limbă» at every width, both languages
+ * in it. Off, and in the backoffice (outside the look's scope), the bar is what it was: the flags on a
+ * phone only, the header's copy from `sm`. CSS alone, so the footer reads no setting.
  */
-export default async function SiteFooter({ newLook = false }: { newLook?: boolean } = {}) {
+export default async function SiteFooter() {
   const legal = await getTranslations("Legal");
   const footer = await getTranslations("Footer");
   const locale = (await getLocale()) as "ro" | "en";
@@ -553,9 +554,22 @@ export default async function SiteFooter({ newLook = false }: { newLook?: boolea
             side. Decoration, so hidden from assistive technology — the languages are their own
             named navigation already. From `sm` the languages are in the header and there is
             nothing on the bar to separate, so the rule goes with this box. Under «Aspectul nou»
-            (§722) the language is the floating round button above the bar's right end, so this
-            box is not drawn at any width there. */}
-        <Box sx={{ ...notUnderLook({ xs: "flex", sm: "none" }), flex: "0 0 auto", alignItems: "center", ...footerGapSx(["columnGap"], 0) }}>
+            (§NNN, amending §722) this box is drawn at every width — the header's copy is hidden
+            there — so both languages are on the bar, its last item at the bottom right, with the
+            bar's own spacing from `sm` (the 44-pixel flag-and-code links, a gap either side of the
+            rule). From `sm` the fold is only as wide as its words, so an auto margin carries the
+            box to the bar's right end; on a phone the fold already takes the free room, and the
+            margin is zero. */}
+        <Box
+          data-testid="footer-language"
+          sx={{
+            display: { xs: "flex", sm: "none" },
+            [UNDER_LOOK]: { display: "flex", ml: "auto" },
+            flex: "0 0 auto",
+            alignItems: "center",
+            ...footerGapSx(["columnGap"], 0.5),
+          }}
+        >
           <Box
             aria-hidden="true"
             data-testid="footer-language-rule"
@@ -564,9 +578,6 @@ export default async function SiteFooter({ newLook = false }: { newLook?: boolea
           <LocaleSwitcher />
         </Box>
       </Box>
-      {/* «Aspectul nou» (§722): the language, a round button floating just above the bar's right
-          end — the bar is sticky, so it stays on screen while the page scrolls. */}
-      {newLook && <FloatingLocaleSwitch />}
     </Box>
   );
 }
