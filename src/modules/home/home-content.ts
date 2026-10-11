@@ -72,13 +72,25 @@ function stripOf(setting: HomePageSetting, alt: (n: number, total: number) => st
 }
 
 /**
+ * The published club pages, read once per render the way the header reads them (`SiteHeader.tsx`,
+ * §447): the navigation's cached list with its last good copy behind it, and an empty list when even
+ * that fails — so an outage drops a button, never the site's most-visited page.
+ */
+async function publishedPages(locale: Locale) {
+  try {
+    return (await readWithLastGood(`nav:pages:${locale}`, () => cachedPublishedPages(locale))).value;
+  } catch {
+    return [];
+  }
+}
+
+/**
  * A club page chosen by its id, at its own address in the reader's language — or null while it is not
  * published there (a draft, or a page since unpublished): the button is then not drawn, never a 404.
- * Read from the navigation's own cached list of published pages, so it asks the database nothing new.
  */
-async function clubPageHref(pageId: string | null, locale: Locale) {
+function clubPageHref(pageId: string | null, pages: Awaited<ReturnType<typeof publishedPages>>) {
   if (!pageId) return null;
-  const page = (await cachedPublishedPages(locale)).find((candidate) => candidate.id === pageId);
+  const page = pages.find((candidate) => candidate.id === pageId);
   return page ? { pathname: "/pages/[slug]" as const, params: { slug: page.slug } } : null;
 }
 
@@ -106,8 +118,9 @@ export async function readHomeContent(locale: Locale, now: Date, setting: HomePa
   const weeklyRun = nextWeeklyRun(upcoming);
   const lines = heroLines(setting, locale);
   // The two «Cum funcționează» buttons: each a club page, at its own address in this language, or none.
-  const howHref = await clubPageHref(setting.buttons.how?.pageId ?? null, locale);
-  const stepsHref = await clubPageHref(setting.steps.targetPageId, locale);
+  const pages = setting.buttons.how?.pageId || setting.steps.targetPageId ? await publishedPages(locale) : [];
+  const howHref = clubPageHref(setting.buttons.how?.pageId ?? null, pages);
+  const stepsHref = clubPageHref(setting.steps.targetPageId, pages);
 
   let nextRun: HomePageProps["nextRun"] = null;
   if (sections.next) {

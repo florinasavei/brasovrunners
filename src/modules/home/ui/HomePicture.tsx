@@ -58,8 +58,8 @@ export default function HomePicture({ picture, eager = false, testId }: Props) {
     width: picture.width,
     height: picture.height,
     loading: eager ? ("eager" as const) : ("lazy" as const),
-    decoding: "async" as const,
-    ...(eager ? { fetchPriority: "high" as const } : {}),
+    // The eager hero image is decoded with the page, never deferred: `decoding` is set on the lazy ones only.
+    ...(eager ? { fetchPriority: "high" as const } : { decoding: "async" as const }),
     draggable: false,
   };
   const geometry = cropGeometry(picture.crop, picture);

@@ -11,9 +11,8 @@ the owner approved starting phase 1 with the plan's defaults, so decisions 1, 2 
 their defaults and phase 1 is built behind the setting, off (§ Phase 1, as built). Later the same day he
 asked for the home page — «start the homepage now, with empty photo slots and the plan's defaults» — so
 decisions 5, 6 and 10 and open questions 6 and 7 are taken by their defaults too, and phase 3's part A is
-built behind its own setting, off (§ Phase 3, part A, as built); parts B and C then built the four lower
-sections and wired them into the page and its setting, taking decisions 7 and 8 by their defaults
-(§ Phase 3, parts B and C, as built). The home page is complete behind its switch, waiting for the
+built behind its own setting, off; parts B and C then built the four lower sections and wired them into
+the page and its setting, taking decisions 7 and 8 by their defaults (all of it § Phase 3, as built). The home page is complete behind its switch, waiting for the
 club's photographs and words on QA.
 
 ## Decisions only the club can make
@@ -138,10 +137,11 @@ public pages; off (the default), no rule matches and every page is what it was.
 What phase 1 leaves for the gate: the club's look at QA with the setting on, phone and laptop; the
 header's one row at 320 px measured by the e2e suite with the setting on.
 
-### Phase 3, part A, as built
+### Phase 3, as built
 
-On the branch `feat/home-page` (2026-10-11), with decisions 3, 5, 6 and 10 and open questions 6 and 7 at
-their defaults. Everything below is drawn only while «Setări» → «Aspect» → «Pagina principală» is on;
+On the branch `feat/home-page` (2026-10-11): part A (the page, its setting, the hero, the next run and the
+run sections) with decisions 3, 5, 6 and 10 and open questions 6 and 7 at their defaults, then parts B and C
+(the four lower sections, wired into the page and its setting) with decisions 7 and 8 at theirs. Everything below is drawn only while «Setări» → «Aspect» → «Pagina principală» is on;
 off (the default), the root answers a 307 to the listing and the logo still leads there. It is its own
 switch, independent of «Aspectul nou»: the page wears whichever look is in force.
 
@@ -159,16 +159,13 @@ switch, independent of «Aspectul nou»: the page wears whichever look is in for
 | What they show | `src/modules/home/home-content.ts`, `domain/sections.ts` | read from the listing's cached upcoming events and the forecast's cached hour: nothing new asked of the database |
 | The samples | `/admin/design` → «Mostre» → «Pagina principală» | the same components from `design/home-fixtures.ts#sampleHome` |
 
-### Phase 3, parts B and C, as built
-
-Part B (`feat/home-sections`) built the four lower sections as components with their domain and
-fixtures; part C wired them into the page and the setting and folded the panel, on `feat/home-page`
-(2026-10-11), with decisions 7 and 8 at their defaults. Each is drawn only while its switch is on — off
-by default — and, under it, only with something true to show.
+**The four lower sections.** Part B (`feat/home-sections`) built them as components with their domain and
+fixtures; part C wired them into the page and the setting and folded the panel. Each is drawn only while its
+switch is on — off by default — and, under it, only with something true to show.
 
 | Part | Where | Notes |
 | --- | --- | --- |
-| «Prima dată» | `src/modules/home/ui/StepsBand.tsx`, `domain/steps.ts` | a heading, one sentence, five numbered steps (an `<ol>`), «Cum funcționează» as an outlined arrow pill to a club page — not drawn until one is chosen and published |
+| «Prima dată» | `src/modules/home/ui/StepsBand.tsx`, `domain/steps.ts` | a heading, one sentence, five numbered steps (an `<ol>`, each a title over one sentence), «Cum funcționează» as an outlined arrow pill to a club page — not drawn until one is chosen and published |
 | «De ce» and the quote | `src/modules/home/ui/WhyList.tsx`, `domain/why.ts` | four reasons with their glyphs; the quote in Caveat, drawn only when the club wrote it in both languages, its author only beside it |
 | The photo strip | `src/modules/home/ui/PhotoStrip.tsx`, `domain/photo-strip.ts`, `strip-pictures.ts` | up to twelve of the club's stored pictures in its order, square tiles in a CSS scroll-snap row, lazy, with the ladder's `srcset` (a `strip` column in `media/ladder.ts`); the gallery's door and the club's Instagram as a link, never a feed; no picture, no section |
 | The numbers | `src/modules/home/ui/NumbersBand.tsx`, `domain/numbers.ts` | the years from the founding day and «alergători activi» as typed; the runs a week and «100%» free computed from the weekly series ahead; a figure without its fact is left out, no figure no band |
@@ -180,7 +177,8 @@ by default — and, under it, only with something true to show.
 | The page | `src/modules/home/ui/HomePage.tsx`, `home-content.ts` | the eight sections in the plan's order; the club page and the Instagram read from what the site already caches |
 | The samples | `/admin/design` → «Mostre» | the four from `design/fixtures.ts` inside the new look's preview box, beside part A's |
 
-**Turning it on, on QA:** «Setări» → «Aspect» → «Pagina principală». Fill each fold you want (an empty box
+**Turning it on, on QA:** sign in, «Setări» → «Aspect», and put «Aspectul nou» on first (the page wears
+whichever look is in force; the new one is the one to judge), then «Pagina principală». Fill each fold you want (an empty box
 is the platform's sentence, shown in grey), choose the club page for «Cum funcționează», add the strip's
 pictures under «Fotografiile benzii», then open «Ce secțiuni arată pagina» and tick the four lower
 sections, choose «Pagina principală» → «Salvează pagina principală» → confirm (an Administrator). The way

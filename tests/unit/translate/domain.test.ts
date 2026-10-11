@@ -50,7 +50,8 @@ describe("§464 the boxes that may be translated", () => {
       "buttonHowEn",
       // «Pagina principală»'s lower sections (§NNN): «Prima dată», «De ce» and the quote, the strip's heading.
       "stepsTitleEn",
-      "step5En",
+      "step5TitleEn",
+      "step5BodyEn",
       "stepsLinkEn",
       "why4BodyEn",
       "quoteByEn",

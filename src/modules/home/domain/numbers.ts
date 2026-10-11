@@ -10,8 +10,8 @@ import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
  *
  * - **Years** — from the founding date the club types: whole years to today, on the club's calendar.
  * - **Active runners** — the number the club types; it is the club's claim, the site only prints it.
- * - **Runs a week** — the weekly runs' weekdays, summed over every standing series that repeats every
- *   week (the listing's own recognition, `groupSeries` + `recurrenceOf`, §113 — the one «Vino cu noi»
+ * - **Runs a week** — the weekly runs' weekdays, summed over every standing group-run series that repeats
+ *   every week (the listing's own recognition, `groupSeries` + `recurrenceOf`, §113 — the one «Vino cu noi»
  *   reads, §708): a Tuesday run and a Thursday run are «2×».
  * - **Free** — drawn as «100%» only when every coming date of those weekly runs says «Gratuit»: the
  *   band states a promise, and a share under it is a sentence for a page, not a badge.
@@ -61,10 +61,16 @@ export function yearsSince(foundedOn: string, now: Date): number | null {
   return years >= 1 ? years : null;
 }
 
-/** The weekly series among the upcoming dates, each with the weekdays it runs on. */
+/**
+ * The weekly group runs among the upcoming dates, each with the weekdays it runs on. A weekly coffee,
+ * hike or meetup is no «alergare», and a series whose coming dates are all cancelled is not running:
+ * neither adds a weekday, so the band never says more than the calendar does.
+ */
 function weeklySeries<T extends NumbersEvent>(upcoming: readonly T[]): { members: readonly T[]; weekdays: number }[] {
   const weekly: { members: readonly T[]; weekdays: number }[] = [];
   for (const series of groupSeries(upcoming)) {
+    if (!series.members.every((member) => member.type === "GROUP_RUN")) continue;
+    if (series.members.every((member) => member.eventStatus === "CANCELLED")) continue;
     const recurrence = recurrenceOf(series.members, series.members[0].timezone);
     if (recurrence.kind === "weekly") weekly.push({ members: series.members, weekdays: recurrence.weekdays.length });
   }

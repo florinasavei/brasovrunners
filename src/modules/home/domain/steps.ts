@@ -18,14 +18,17 @@ export const STEP_COUNT = STEP_GLYPHS.length;
 
 /**
  * What the club types for the band, every box optional (both languages or neither): an empty box
- * draws the platform's sentence. `targetPageId` is the custom page «Cum funcționează» opens (a
+ * draws the platform's sentence. Each step is a short title and one sentence under it, as a reason
+ * of «De ce» is. `targetPageId` is the custom page «Cum funcționează» opens (a
  * `pages` row's id; the wiring resolves its slug per language), or none, and then the button is
  * not drawn.
  */
+export type StepContent = { title: HomeText | null; body: HomeText | null };
+
 export type StepsContent = {
   title: HomeText | null;
   lead: HomeText | null;
-  steps: readonly (HomeText | null)[];
+  steps: readonly StepContent[];
   linkLabel: HomeText | null;
   targetPageId: string | null;
 };
@@ -34,7 +37,7 @@ export type StepsContent = {
 export const EMPTY_STEPS: StepsContent = {
   title: null,
   lead: null,
-  steps: STEP_GLYPHS.map(() => null),
+  steps: STEP_GLYPHS.map(() => ({ title: null, body: null })),
   linkLabel: null,
   targetPageId: null,
 };
@@ -43,7 +46,7 @@ export const EMPTY_STEPS: StepsContent = {
 export const stepsContentSchema = z.object({
   title: homeTextSchema(80),
   lead: homeTextSchema(200),
-  steps: z.array(homeTextSchema(120)).length(STEP_COUNT).readonly(),
+  steps: z.array(z.object({ title: homeTextSchema(60), body: homeTextSchema(120) })).length(STEP_COUNT).readonly(),
   linkLabel: homeTextSchema(40),
   targetPageId: z.uuid().nullable().default(null),
 });

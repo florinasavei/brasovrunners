@@ -24,7 +24,12 @@ describe("§NNN the lower sections' boxes", () => {
   it("are one name per pair, never two boxes with the same name", () => {
     const names = HOME_SECTION_BOXES.flatMap((box) => [`${box.stem}Ro`, `${box.stem}En`]);
     expect(new Set(names).size).toBe(names.length);
-    expect(STEPS_BOXES.map((box) => box.stem)).toEqual(["stepsTitle", "stepsLead", "step1", "step2", "step3", "step4", "step5", "stepsLink"]);
+    expect(STEPS_BOXES.map((box) => box.stem)).toEqual([
+      "stepsTitle",
+      "stepsLead",
+      ...[1, 2, 3, 4, 5].flatMap((n) => [`step${n}Title`, `step${n}Body`]),
+      "stepsLink",
+    ]);
     expect(WHY_BOXES).toHaveLength(1 + 8 + 2);
     expect(STRIP_BOXES.map((box) => box.stem)).toEqual(["stripTitle"]);
   });
@@ -49,17 +54,17 @@ describe("§NNN the lower sections' boxes", () => {
 
 describe("§NNN what the form posts, read", () => {
   it("reads the club's words where written and the platform's (null) where both boxes are empty", () => {
-    const read = postedSteps(form({ stepsTitleRo: " Nou aici? ", stepsTitleEn: "New here?", step2Ro: "Vino", step2En: "Come", stepsPageId: PAGE }));
+    const read = postedSteps(form({ stepsTitleRo: " Nou aici? ", stepsTitleEn: "New here?", step2TitleRo: "Vino", step2TitleEn: "Come", step2BodyRo: "La start", step2BodyEn: "To the start", stepsPageId: PAGE }));
     expect(read).toEqual({
       ok: true,
-      value: { title: { ro: "Nou aici?", en: "New here?" }, lead: null, steps: [null, { ro: "Vino", en: "Come" }, null, null, null], linkLabel: null, targetPageId: PAGE },
+      value: { title: { ro: "Nou aici?", en: "New here?" }, lead: null, steps: [{ title: null, body: null }, { title: { ro: "Vino", en: "Come" }, body: { ro: "La start", en: "To the start" } }, ...Array.from({ length: 3 }, () => ({ title: null, body: null }))], linkLabel: null, targetPageId: PAGE },
     });
     const why = postedWhy(form({ why3TitleRo: "Gratuit", why3TitleEn: "Free" }));
     expect(why.ok && why.value.items[2]).toEqual({ title: { ro: "Gratuit", en: "Free" }, body: null });
   });
 
   it("names the empty side of a pair written in one language only", () => {
-    expect(postedSteps(form({ step4Ro: "", step4En: "Run" }))).toEqual({ ok: false, field: "step4Ro" });
+    expect(postedSteps(form({ step4BodyRo: "", step4BodyEn: "Run" }))).toEqual({ ok: false, field: "step4BodyRo" });
     expect(postedWhy(form({ why2BodyRo: "Munți", why2BodyEn: "  " }))).toEqual({ ok: false, field: "why2BodyEn" });
     expect(postedWhy(form({ quoteByRo: "", quoteByEn: "Member A" }))).toEqual({ ok: false, field: "quoteByRo" });
     expect(postedStripTitle(form({ stripTitleRo: "Poze" }), EMPTY_STRIP)).toEqual({ ok: false, field: "stripTitleEn" });

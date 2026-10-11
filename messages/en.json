@@ -4652,7 +4652,8 @@
       "boxes": {
         "stepsTitle": "First time: the heading",
         "stepsLead": "First time: the sentence under the heading",
-        "step": "First time: step {number}",
+        "stepTitle": "First time: step {number}, its title",
+        "stepBody": "First time: step {number}, its sentence",
         "stepsLink": "First time: the button's label",
         "whyTitle": "Why: the heading",
         "reasonTitle": "Why: reason {number}, its title",
@@ -10224,11 +10225,26 @@
       "lead": "Five steps, from the calendar to the start. You need no account.",
       "number": "Step {number}",
       "items": {
-        "1": "Pick a run on the calendar.",
-        "2": "Come to the start, at the time it says.",
-        "3": "Say hello and tell us it is your first time.",
-        "4": "Run with the group, at your own pace.",
-        "5": "Stay after the run for a chat."
+        "1": {
+          "title": "Pick a run",
+          "body": "Pick a run on the calendar."
+        },
+        "2": {
+          "title": "Come to the start",
+          "body": "Come to the start, at the time it says."
+        },
+        "3": {
+          "title": "Say hello",
+          "body": "Say hello and tell us it is your first time."
+        },
+        "4": {
+          "title": "Run with us",
+          "body": "Run with the group, at your own pace."
+        },
+        "5": {
+          "title": "Stay for a chat",
+          "body": "Stay after the run for a chat."
+        }
       },
       "link": "How it works"
     },

@@ -24,7 +24,7 @@ export type StepsBandProps = {
  * calendar to the coffee, and «Cum funcționează», which opens a club page (decision 5).
  *
  * The steps are an ordered list (`<ol>`), each a glyph from the home registry (`home-glyphs.ts`, by
- * the name `STEP_GLYPHS` gives its place) in a round seat, its number and its sentence: stacked on a
+ * the name `STEP_GLYPHS` gives its place) in a round seat, its number, its title and the sentence under it: stacked on a
  * phone, five across from `md`. A Server Component with no island: the glyphs are drawn here, and
  * the one link is the house `ArrowButtonLink` (§708), 44 pixels with its trailing arrow (§521).
  */
@@ -33,7 +33,8 @@ export default async function StepsBand({ content, locale, href }: StepsBandProp
   const steps = STEP_GLYPHS.map((glyph, index) => ({
     glyph,
     number: index + 1,
-    text: pickText(content.steps[index], locale) ?? t(`steps.items.${index + 1}`),
+    title: pickText(content.steps[index]?.title, locale) ?? t(`steps.items.${index + 1}.title`),
+    text: pickText(content.steps[index]?.body, locale) ?? t(`steps.items.${index + 1}.body`),
   }));
 
   return (
@@ -67,7 +68,10 @@ export default async function StepsBand({ content, locale, href }: StepsBandProp
                 <Typography variant="overline" component="p" color="text.secondary" sx={{ lineHeight: 1.6 }}>
                   {t("steps.number", { number: step.number })}
                 </Typography>
-                <Typography sx={{ fontWeight: 600, overflowWrap: "anywhere" }}>{step.text}</Typography>
+                <Typography sx={{ fontWeight: 600, overflowWrap: "anywhere" }}>{step.title}</Typography>
+                <Typography color="text.secondary" sx={{ overflowWrap: "anywhere" }}>
+                  {step.text}
+                </Typography>
               </Box>
             </Box>
           );

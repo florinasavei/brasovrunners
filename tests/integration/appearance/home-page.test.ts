@@ -179,7 +179,7 @@ describe("the home page setting", () => {
       admin,
       {
         page: "on",
-        steps: form({ stepsTitleRo: "Prima oară?", stepsTitleEn: "First time?", step3Ro: "Salută", step3En: "Say hello", stepsPageId: pageId }),
+        steps: form({ stepsTitleRo: "Prima oară?", stepsTitleEn: "First time?", step3TitleRo: "Salută", step3TitleEn: "Say hello", stepsPageId: pageId }),
         why: form({ why2BodyRo: "Munții sunt aproape.", why2BodyEn: "The mountains are close.", quoteRo: "Vorbe", quoteEn: "Words", quoteByRo: "Membru A", quoteByEn: "Member A" }),
         strip: form({ stripTitleRo: "Poze", stripTitleEn: "Photos" }),
         numbers: form({ foundedOn: "2015-04-01", activeRunners: " 120 " }),
@@ -189,7 +189,8 @@ describe("the home page setting", () => {
     const saved = (await readHomePage(db)).setting;
     expect(saved.steps.title).toEqual({ ro: "Prima oară?", en: "First time?" });
     expect(saved.steps.lead).toBeNull();
-    expect(saved.steps.steps).toEqual([null, null, { ro: "Salută", en: "Say hello" }, null, null]);
+    expect(saved.steps.steps.map((step) => step.title)).toEqual([null, null, { ro: "Salută", en: "Say hello" }, null, null]);
+    expect(saved.steps.steps.every((step) => step.body === null)).toBe(true);
     expect(saved.steps.targetPageId).toBe(pageId);
     expect(saved.why.items[1]).toEqual({ title: null, body: { ro: "Munții sunt aproape.", en: "The mountains are close." } });
     expect(saved.why.quote).toEqual({ ro: "Vorbe", en: "Words" });
@@ -210,7 +211,7 @@ describe("the home page setting", () => {
 
   it("refuses a lower section's box in one language only, one over its length, a page not the club's and a figure that is not one, naming the box", async () => {
     const refusal = (input: Parameters<typeof updateHomePage>[2]) => updateHomePage(db, admin, { page: "on", ...input }, NOW);
-    await expect(refusal({ steps: form({ step5Ro: "Cafea", step5En: " " }) })).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["step5En"] });
+    await expect(refusal({ steps: form({ step5TitleRo: "Cafea", step5TitleEn: " " }) })).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["step5TitleEn"] });
     await expect(refusal({ steps: form({ stepsTitleRo: "", stepsTitleEn: "Only English" }) })).rejects.toMatchObject({ fields: ["stepsTitleRo"] });
     await expect(refusal({ steps: form({ stepsPageId: "00000000-0000-4000-8000-000000000999" }) })).rejects.toMatchObject({ fields: ["stepsPageId"] });
     await expect(refusal({ steps: form({ stepsPageId: "not-a-page" }) })).rejects.toMatchObject({ fields: ["stepsPageId"] });

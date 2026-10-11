@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { mediaAssets } from "@/db/schema/gallery";
 import { platformSettings } from "@/db/schema/platform-settings";
 import type { StaffUser } from "@/db/schema/staff-users";
@@ -209,62 +209,71 @@ export async function updateHomePage<T extends Record<string, unknown>>(
   }
   const headline = pairOf(input, "headline", HOME_HEADLINE_MAX);
   const subline = pairOf(input, "subline", HOME_SUBLINE_MAX);
-  const before = await readHomePage(db);
-  const hero = await postedHero(db, input, before.setting.hero);
-  const buttons = await postedButtons(db, input, before.setting.buttons);
-  const sections = postedSections(input, before.setting.sections);
-  const steps = await postedStepsSection(db, input.steps, before.setting.steps);
-  const why = section(input.why, before.setting.why, postedWhy);
-  const strip = section(input.strip, before.setting.strip, (read) => postedStripTitle(read, before.setting.strip));
-  const numbers = section(input.numbers, before.setting.numbers, postedNumbers);
-  // The previous row first: a field a later release wrote is carried, never dropped by this save.
-  const next: HomePageSetting = { ...before.setting, on: CHOICES[input.page], hero, headline, subline, buttons, sections, steps, why, strip, numbers };
-  const changed = (pick: (setting: HomePageSetting) => unknown) => JSON.stringify(pick(before.setting)) !== JSON.stringify(pick(next));
+  const on = CHOICES[input.page];
+  // Read, merged and written under one lock: a strip change that overlaps this save waits its turn
+  // instead of being written over (or writing over this one) from a stale read.
+  const state = await db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(${HOME_PAGE_LOCK_KEY})`);
+    const before = await readHomePage(tx);
+    const hero = await postedHero(tx, input, before.setting.hero);
+    const buttons = await postedButtons(tx, input, before.setting.buttons);
+    const sections = postedSections(input, before.setting.sections);
+    const steps = await postedStepsSection(tx, input.steps, before.setting.steps);
+    const why = section(input.why, before.setting.why, postedWhy);
+    const strip = section(input.strip, before.setting.strip, (read) => postedStripTitle(read, before.setting.strip));
+    const numbers = section(input.numbers, before.setting.numbers, postedNumbers);
+    // The previous row first: a field a later release wrote is carried, never dropped by this save.
+    const next: HomePageSetting = { ...before.setting, on, hero, headline, subline, buttons, sections, steps, why, strip, numbers };
+    const changed = (pick: (setting: HomePageSetting) => unknown) => JSON.stringify(pick(before.setting)) !== JSON.stringify(pick(next));
 
-  await writeHomePage(db, actor, next, now, {
-    // By id and by switch, never the words, a figure or a file name: what changed, not a copy of it.
-    from: describeHomePage(before.setting),
-    to: describeHomePage(next),
-    heroFrom: before.setting.hero?.assetId ?? null,
-    heroTo: next.hero?.assetId ?? null,
-    heroCropped: next.hero?.crop !== null && next.hero !== null,
-    wordsChanged: changed((setting) => [setting.headline, setting.subline, setting.buttons]),
-    sectionsChanged: changed((setting) => setting.sections),
-    contentChanged: changed((setting) => [setting.steps, setting.why, setting.strip.title, setting.numbers]),
+    await writeHomePage(tx, actor, next, now, {
+      // By id and by switch, never the words, a figure or a file name: what changed, not a copy of it.
+      from: describeHomePage(before.setting),
+      to: describeHomePage(next),
+      heroFrom: before.setting.hero?.assetId ?? null,
+      heroTo: next.hero?.assetId ?? null,
+      heroCropped: next.hero?.crop !== null && next.hero !== null,
+      wordsChanged: changed((setting) => [setting.headline, setting.subline, setting.buttons]),
+      sectionsChanged: changed((setting) => setting.sections),
+      contentChanged: changed((setting) => [setting.steps, setting.why, setting.strip.title, setting.numbers]),
+    });
+    return { setting: next, updatedAt: now };
   });
-  return { setting: next, updatedAt: now };
+  revalidatePublicContent("settings");
+  return state;
 }
 
+/** One lock for every read-merge-write of the row: the page's save and the strip's three forms (§NNN). */
+const HOME_PAGE_LOCK_KEY = 7_203_300_101;
+
 /**
- * Writes the row over what was there and its audit row in one transaction, then expires the public
- * cache's settings: the root and every header read it from there (§333), and the static pages are
- * made again at their next visit (§549).
+ * Writes the row over what was there and its audit row, inside the caller's transaction (and its
+ * lock). The caller expires the public cache's settings once the transaction has committed: the root
+ * and every header read it from there (§333), and the static pages are made again at their next
+ * visit (§549) — never before, or a rebuild could read the row as it was.
  */
 async function writeHomePage<T extends Record<string, unknown>>(
-  db: Database<T>,
+  tx: Database<T>,
   actor: Pick<StaffUser, "id">,
   next: HomePageSetting,
   now: Date,
   metadata: Record<string, unknown>,
 ): Promise<void> {
-  await db.transaction(async (tx) => {
-    await tx
-      .insert(platformSettings)
-      .values({ key: HOME_PAGE_SETTING_KEY, value: next, updatedAt: now, updatedByStaffUserId: actor.id })
-      .onConflictDoUpdate({
-        target: platformSettings.key,
-        set: { value: next, updatedAt: now, updatedByStaffUserId: actor.id },
-      });
-    await recordAuditEvent(tx, {
-      actorStaffUserId: actor.id,
-      action: "home_page.changed",
-      entityType: "platform_setting",
-      entityId: HOME_PAGE_SETTING_ENTITY_ID,
-      metadata,
-      now,
+  await tx
+    .insert(platformSettings)
+    .values({ key: HOME_PAGE_SETTING_KEY, value: next, updatedAt: now, updatedByStaffUserId: actor.id })
+    .onConflictDoUpdate({
+      target: platformSettings.key,
+      set: { value: next, updatedAt: now, updatedByStaffUserId: actor.id },
     });
+  await recordAuditEvent(tx, {
+    actorStaffUserId: actor.id,
+    action: "home_page.changed",
+    entityType: "platform_setting",
+    entityId: HOME_PAGE_SETTING_ENTITY_ID,
+    metadata,
+    now,
   });
-  revalidatePublicContent("settings");
 }
 
 /** What the strip's three small forms post: the picture, and for a move its direction. */
@@ -292,34 +301,41 @@ export async function changeStripPicture<T extends Record<string, unknown>>(
   const refuse = (why: string) => new DomainError("VALIDATION_ERROR", `stripAssetId: ${why}`, ["stripAssetId"]);
   if (typeof input.assetId !== "string" || !UUID.test(input.assetId)) throw refuse("choose a picture");
   const assetId = input.assetId;
-  const before = await readHomePage(db);
-  const pictures = before.setting.strip.pictures;
-  let next: HomePageSetting["strip"]["pictures"];
-  if (change === "add") {
-    if (pictures.some((picture) => picture.assetId === assetId)) throw refuse("already in the strip");
-    if (pictures.length >= MAX_STRIP_PICTURES) throw refuse(`at most ${MAX_STRIP_PICTURES} pictures`);
-    const [asset] = await db
-      .select({ id: mediaAssets.id, keyPrefix: mediaAssets.keyPrefix, width: mediaAssets.width, height: mediaAssets.height })
-      .from(mediaAssets)
-      .where(eq(mediaAssets.id, assetId))
-      .limit(1);
-    if (!asset || asset.keyPrefix.startsWith("yt-") || !asset.width || !asset.height) throw refuse("no such picture in the store");
-    next = [...pictures, { assetId: asset.id, keyPrefix: asset.keyPrefix, width: asset.width, height: asset.height }];
-  } else if (change === "move") {
-    if (input.direction !== "up" && input.direction !== "down") throw refuse("not a direction");
-    next = moveStripPicture(pictures, assetId, input.direction);
-  } else {
-    next = pictures.filter((picture) => picture.assetId !== assetId);
-  }
-  // Nothing to do — the picture was taken out or moved already (a second press, a stale page): no write, no audit row.
-  if (JSON.stringify(next) === JSON.stringify(pictures)) return before;
-  const setting: HomePageSetting = { ...before.setting, strip: { ...before.setting.strip, pictures: next } };
-  await writeHomePage(db, actor, setting, now, {
-    from: describeHomePage(before.setting),
-    to: describeHomePage(setting),
-    strip: change,
-    stripPicture: assetId,
-    stripCount: next.length,
+  let wrote = false;
+  const state = await db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(${HOME_PAGE_LOCK_KEY})`);
+    const before = await readHomePage(tx);
+    const pictures = before.setting.strip.pictures;
+    let next: HomePageSetting["strip"]["pictures"];
+    if (change === "add") {
+      if (pictures.some((picture) => picture.assetId === assetId)) throw refuse("already in the strip");
+      if (pictures.length >= MAX_STRIP_PICTURES) throw refuse(`at most ${MAX_STRIP_PICTURES} pictures`);
+      const [asset] = await tx
+        .select({ id: mediaAssets.id, keyPrefix: mediaAssets.keyPrefix, width: mediaAssets.width, height: mediaAssets.height })
+        .from(mediaAssets)
+        .where(eq(mediaAssets.id, assetId))
+        .limit(1);
+      if (!asset || asset.keyPrefix.startsWith("yt-") || !asset.width || !asset.height) throw refuse("no such picture in the store");
+      next = [...pictures, { assetId: asset.id, keyPrefix: asset.keyPrefix, width: asset.width, height: asset.height }];
+    } else if (change === "move") {
+      if (input.direction !== "up" && input.direction !== "down") throw refuse("not a direction");
+      next = moveStripPicture(pictures, assetId, input.direction);
+    } else {
+      next = pictures.filter((picture) => picture.assetId !== assetId);
+    }
+    // Nothing to do — the picture was taken out or moved already (a second press, a stale page): no write, no audit row.
+    if (JSON.stringify(next) === JSON.stringify(pictures)) return before;
+    const setting: HomePageSetting = { ...before.setting, strip: { ...before.setting.strip, pictures: next } };
+    await writeHomePage(tx, actor, setting, now, {
+      from: describeHomePage(before.setting),
+      to: describeHomePage(setting),
+      strip: change,
+      stripPicture: assetId,
+      stripCount: next.length,
+    });
+    wrote = true;
+    return { setting, updatedAt: now };
   });
-  return { setting, updatedAt: now };
+  if (wrote) revalidatePublicContent("settings");
+  return state;
 }

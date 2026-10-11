@@ -25,7 +25,7 @@ type Props = { params: Promise<{ locale: string }> };
  * keep landing on the listing after the club switched the home page on. The proxy no longer answers
  * the root itself (it cannot read a setting without waking the database on the site's most-visited
  * address): this page does, and since it is static the redirect is decided once, kept by the CDN as
- * a redirect with an empty page, and made again when the setting is saved.
+ * a redirect (Next's redirect document, about 66 KB, not an empty page), and made again when the setting is saved.
  *
  * **On** — the home page: the hero, the next run, the weekly runs and the special events, then the
  * four lower sections the club switched on («Prima dată», «De ce», the photo strip, the numbers)

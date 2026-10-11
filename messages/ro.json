@@ -4652,7 +4652,8 @@
       "boxes": {
         "stepsTitle": "Prima dată: titlul",
         "stepsLead": "Prima dată: propoziția de sub titlu",
-        "step": "Prima dată: pasul {number}",
+        "stepTitle": "Prima dată: pasul {number}, titlul",
+        "stepBody": "Prima dată: pasul {number}, propoziția",
         "stepsLink": "Prima dată: eticheta butonului",
         "whyTitle": "De ce: titlul",
         "reasonTitle": "De ce: motivul {number}, titlul",
@@ -10220,15 +10221,30 @@
   },
   "HomeSections": {
     "steps": {
-      "title": "Prima dată cu noi?",
+      "title": "Prima dată la noi?",
       "lead": "Cinci pași, de la calendar la start. Nu ai nevoie de cont.",
       "number": "Pasul {number}",
       "items": {
-        "1": "Alege o alergare din calendar.",
-        "2": "Vino la locul de start, la ora scrisă.",
-        "3": "Salută-ne și spune-ne că e prima dată.",
-        "4": "Aleargă cu grupul, în ritmul tău.",
-        "5": "Rămâi după alergare, la o vorbă."
+        "1": {
+          "title": "Alege o alergare",
+          "body": "Alege o alergare din calendar."
+        },
+        "2": {
+          "title": "Vino la start",
+          "body": "Vino la locul de start, la ora scrisă."
+        },
+        "3": {
+          "title": "Salută-ne",
+          "body": "Salută-ne și spune-ne că e prima dată."
+        },
+        "4": {
+          "title": "Aleargă cu noi",
+          "body": "Aleargă cu grupul, în ritmul tău."
+        },
+        "5": {
+          "title": "Rămâi la o vorbă",
+          "body": "Rămâi după alergare, la o vorbă."
+        }
       },
       "link": "Cum funcționează"
     },

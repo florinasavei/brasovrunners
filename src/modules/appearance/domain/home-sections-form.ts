@@ -19,11 +19,14 @@ import { WHY_COUNT, whyContentSchema, type WhyContent } from "@/modules/home/dom
 /** One pair of boxes: the stem of its two names, where it sits in the section's value, and its length. */
 export type HomeTextBox = Readonly<{ stem: string; path: readonly (string | number)[]; max: number }>;
 
-/** «Prima dată»: the heading, the sentence, the five steps and the button's words. */
+/** «Prima dată»: the heading, the sentence, the five steps (a title and a sentence each) and the button's words. */
 export const STEPS_BOXES: readonly HomeTextBox[] = [
   { stem: "stepsTitle", path: ["title"], max: 80 },
   { stem: "stepsLead", path: ["lead"], max: 200 },
-  ...Array.from({ length: STEP_COUNT }, (_, index) => ({ stem: `step${index + 1}`, path: ["steps", index], max: 120 })),
+  ...Array.from({ length: STEP_COUNT }, (_, index) => [
+    { stem: `step${index + 1}Title`, path: ["steps", index, "title"], max: 60 },
+    { stem: `step${index + 1}Body`, path: ["steps", index, "body"], max: 120 },
+  ]).flat(),
   { stem: "stepsLink", path: ["linkLabel"], max: 40 },
 ];
 

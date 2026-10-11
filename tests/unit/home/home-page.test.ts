@@ -209,6 +209,14 @@ describe("§NNN the sections the club switches, the third button, the empty sect
     for (const testId of ["home-next-run", "home-weekly", "home-special"]) expect(html, testId).not.toContain(`data-testid="${testId}"`);
   });
 
+  it("keeps the page's one h1 with the hero off: visually hidden, first in main, the headline's own words", () => {
+    const html = draw({ show: { hero: false } });
+    expect(html).not.toContain('data-testid="home-hero"');
+    expect(html.match(/<h1\b/g)).toHaveLength(1);
+    expect(html).toMatch(/<main[^>]*><h1[^>]*data-testid="home-h1-hidden"[^>]*>Alergăm împreună prin Brașov<\/h1>/);
+    expect(draw({})).not.toContain("home-h1-hidden");
+  });
+
   it("does not draw a section with no cards: no heading, no sentence", () => {
     const html = draw({ weekly: { ...props().weekly, cards: [] } });
     expect(html).not.toContain('data-testid="home-weekly"');

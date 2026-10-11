@@ -79,8 +79,8 @@ const BUTTONS = [
 
 /** The sentences a box stands in for when it is empty: the platform's own, from `HomeSections` (none for the quote). */
 function platformKey(stem: string): string | null {
-  const step = /^step(\d)$/.exec(stem);
-  if (step) return `steps.items.${step[1]}`;
+  const step = /^step(\d)(Title|Body)$/.exec(stem);
+  if (step) return `steps.items.${step[1]}.${step[2].toLowerCase()}`;
   const why = /^why(\d)(Title|Body)$/.exec(stem);
   if (why) return `why.items.${why[1]}.${why[2].toLowerCase()}`;
   const fixed: Record<string, string> = { stepsTitle: "steps.title", stepsLead: "steps.lead", stepsLink: "steps.link", whyTitle: "why.title", stripTitle: "strip.title" };
@@ -125,10 +125,10 @@ export default async function HomePagePanel({ locale, state, mayEdit, pages, sav
 
   /** A box's label in one language: «Prima dată: pasul 3 (engleză)». */
   const boxLabel = (stem: string, language: (typeof LANGUAGES)[number]) => {
-    const step = /^step(\d)$/.exec(stem);
+    const step = /^step(\d)(Title|Body)$/.exec(stem);
     const why = /^why(\d)(Title|Body)$/.exec(stem);
     const box = step
-      ? t("homePage.boxes.step", { number: step[1] })
+      ? t(`homePage.boxes.step${step[2]}`, { number: step[1] })
       : why
         ? t(`homePage.boxes.reason${why[2]}`, { number: why[1] })
         : t(`homePage.boxes.${stem}`);

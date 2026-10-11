@@ -51,18 +51,18 @@ describe("§NNN «Prima dată», «De ce» and the strip: the stored shapes", ()
   });
 
   it("reads a band the club wrote, and refuses a step in one language or a page that is not one", () => {
-    const steps = Array.from({ length: STEP_COUNT }, () => ({ ro: "", en: "" }));
-    steps[2] = { ro: "Salut", en: "Hi" };
+    const steps = Array.from({ length: STEP_COUNT }, () => ({ title: { ro: "", en: "" }, body: { ro: "", en: "" } }));
+    steps[2] = { title: { ro: "Salut", en: "Hello" }, body: { ro: "Zi bună", en: "Hi" } };
     const parsed = stepsContentSchema.parse({ title: { ro: "Prima dată?", en: "First time?" }, steps, targetPageId: PAGE_ID });
     expect(parsed.title).toEqual({ ro: "Prima dată?", en: "First time?" });
-    expect(parsed.steps[2]).toEqual({ ro: "Salut", en: "Hi" });
-    expect(parsed.steps[0]).toBeNull();
+    expect(parsed.steps[2]).toEqual({ title: { ro: "Salut", en: "Hello" }, body: { ro: "Zi bună", en: "Hi" } });
+    expect(parsed.steps[0]).toEqual({ title: null, body: null });
     expect(parsed.lead).toBeNull();
     expect(parsed.targetPageId).toBe(PAGE_ID);
 
     const oneSided = [...steps];
-    oneSided[4] = { ro: "Cafea", en: "" };
-    expect(stepsContentSchema.safeParse({ steps: oneSided }).error?.issues[0]?.path).toEqual(["steps", 4, "en"]);
+    oneSided[4] = { title: { ro: "Cafea", en: "" }, body: { ro: "", en: "" } };
+    expect(stepsContentSchema.safeParse({ steps: oneSided }).error?.issues[0]?.path).toEqual(["steps", 4, "title", "en"]);
     expect(stepsContentSchema.safeParse({ steps, targetPageId: "not-a-page" }).success).toBe(false);
     expect(stepsContentSchema.safeParse({ steps: steps.slice(0, 4) }).success).toBe(false);
   });
@@ -169,6 +169,19 @@ describe("§NNN the numbers band reads its figures, never invents one", () => {
     expect(homeFigures({ foundedOn: null, activeRunners: null }, cancelledPaid, NOW).map((f) => f.id)).toEqual(["perWeek", "free"]);
     const unstated = tuesdays.map((event) => ({ ...event, costType: null }));
     expect(homeFigures({ foundedOn: null, activeRunners: null }, unstated, NOW).map((f) => f.id)).toEqual(["perWeek"]);
+  });
+
+  it("counts weekly group runs only: a weekly coffee changes neither the weekdays nor «100%»", () => {
+    const coffees = ["2026-10-14T15:30:00Z", "2026-10-21T15:30:00Z", "2026-10-28T16:30:00Z"].map((at) => run(at, { type: "COFFEE", title: "Cafea de miercuri", costType: "PAID" }));
+    const without = homeFigures({ foundedOn: null, activeRunners: null }, tuesdays, NOW);
+    expect(homeFigures({ foundedOn: null, activeRunners: null }, [...tuesdays, ...coffees], NOW)).toEqual(without);
+    expect(homeFigures({ foundedOn: null, activeRunners: null }, coffees, NOW)).toEqual([]);
+  });
+
+  it("skips a weekly series whose coming dates are all cancelled", () => {
+    const cancelled = thursdays.map((event) => ({ ...event, eventStatus: "CANCELLED" }));
+    expect(homeFigures({ foundedOn: null, activeRunners: null }, [...tuesdays, ...cancelled], NOW)).toEqual(homeFigures({ foundedOn: null, activeRunners: null }, tuesdays, NOW));
+    expect(homeFigures({ foundedOn: null, activeRunners: null }, cancelled, NOW)).toEqual([]);
   });
 
   it("refuses a founding day that is not a day and a runners' count that is not a count", () => {

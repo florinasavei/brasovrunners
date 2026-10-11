@@ -1,9 +1,10 @@
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import { DEFAULT_SECTION_SHOWN, type HomeSectionKey } from "@/modules/appearance/domain/home-page";
 import type { Resilient } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
-import { PAGE_WIDTH } from "@/theme/brand";
+import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
 import Hero, { type HeroProps } from "./Hero";
 import NextRunCard, { type NextRunCardProps } from "./NextRunCard";
@@ -44,13 +45,24 @@ export type HomePageProps = {
  * 2026-10-10: component-based, easy for whoever vibe-codes next). A section the club switched off is
  * not drawn; a section with nothing true to show (no card, no picture, no figure) draws nothing itself.
  *
- * The page's one `main` and its one `h1` (the hero's). Works with scripts off: nothing here is an
+ * The page's one `main` and its one `h1`: the hero's, or — with the hero switched off — the same
+ * headline in a visually hidden `h1` first in `main`, so the page never has none (a heading outline and
+ * a screen reader's landmark need one). Works with scripts off: nothing here is an
  * island but the links the house already has.
  */
+/** Out of sight, still read aloud and still in the outline (the usual clip, no `display: none`). */
+const VISUALLY_HIDDEN = { position: "absolute", width: "1px", height: "1px", p: 0, m: "-1px", overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 } as const;
+
 export default function HomePage({ hero, nextRun, weekly, special, steps, why, strip, numbers, show = {}, freshness }: HomePageProps) {
   const shown = (key: HomeSectionKey) => show[key] ?? DEFAULT_SECTION_SHOWN[key];
+  const headline = [hero.headline.lead, hero.headline.accent].filter(Boolean).join(" ").trim() || CLUB_NAME;
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 4 } }} data-testid="home-page">
+      {!shown("hero") && (
+        <Typography variant="h1" data-testid="home-h1-hidden" sx={VISUALLY_HIDDEN}>
+          {headline}
+        </Typography>
+      )}
       {freshness && <LastGoodNotice read={freshness} />}
       <Stack spacing={{ xs: 4, md: 6 }}>
         {shown("hero") && <Hero {...hero} />}

@@ -78,7 +78,10 @@ describe("§NNN «Prima dată» — StepsBand", () => {
       expect(markup).toContain(escaped(words().steps.title));
       expect(markup).toContain(escaped(words().steps.lead));
       expect(markup.match(/<li[^>]*data-step="/g)).toHaveLength(5);
-      for (const n of ["1", "2", "3", "4", "5"] as const) expect(markup).toContain(escaped(words().steps.items[n]));
+      for (const n of ["1", "2", "3", "4", "5"] as const) {
+        expect(markup).toContain(escaped(words().steps.items[n].title));
+        expect(markup).toContain(escaped(words().steps.items[n].body));
+      }
       expect(markup).toMatch(/<ol/);
       // Five glyphs, drawn here as decoration.
       expect(markup.match(/<svg[^>]*aria-hidden="true"/g)?.length).toBeGreaterThanOrEqual(5);
@@ -88,14 +91,16 @@ describe("§NNN «Prima dată» — StepsBand", () => {
   });
 
   it("draws the club's words in the reader's language, and «Cum funcționează» to the page it names, 44 pixels tall", async () => {
-    const steps = EMPTY_STEPS.steps.map((step, index) => (index === 0 ? { ro: "Alege luni", en: "Pick a Monday" } : step));
+    const steps = EMPTY_STEPS.steps.map((step, index) => (index === 0 ? { title: { ro: "Luni", en: "Monday" }, body: { ro: "Alege luni", en: "Pick a Monday" } } : step));
     const content = { ...EMPTY_STEPS, title: { ro: "Nou aici?", en: "New here?" }, steps };
     currentLocale = "en";
     const markup = await html(StepsBand({ content, locale: "en", href: { pathname: "/pages/[slug]", params: { slug: "how" } } }));
     expect(markup).toContain("New here?");
     expect(markup).not.toContain("Nou aici?");
     expect(markup).toContain("Pick a Monday");
-    expect(markup).toContain(escaped(en.HomeSections.steps.items["2"]));
+    expect(markup).toContain("Monday");
+    expect(markup).toContain(escaped(en.HomeSections.steps.items["2"].title));
+    expect(markup).toContain(escaped(en.HomeSections.steps.items["2"].body));
     expect(markup).toMatch(/<a[^>]*href="\/en\/pages\/how"/);
     expect(markup).toContain(escaped(en.HomeSections.steps.link));
     expect(markup).toMatch(/min-height:\s*44px/);
