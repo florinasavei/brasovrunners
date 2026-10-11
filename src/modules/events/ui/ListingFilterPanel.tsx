@@ -93,6 +93,7 @@ export default async function ListingFilterPanel({
   carry = {},
   shared = [],
   lookChips = [],
+  lookChipValues = [],
 }: {
   locale: Locale;
   pathname: "/events" | "/calendar";
@@ -106,6 +107,8 @@ export default async function ListingFilterPanel({
   shared?: { group: FilterGroup; value: string }[];
   /** The groups the calendar's chips carry under the new look (`KindChips`), hidden here under it. */
   lookChips?: readonly FilterGroup[];
+  /** Single values the chips carry under the look (`LOOK_HIDDEN_VALUES`): their box and active chip are hidden there, the input stays. */
+  lookChipValues?: readonly { group: FilterGroup; value: string }[];
 }) {
   const t = await getTranslations("Events");
   const formatter = await getFormatter();
@@ -173,8 +176,9 @@ export default async function ListingFilterPanel({
   ];
 
   // Under the look, what the chips do not carry: the button's count, and whether the active row has anything left to say.
-  const onChips = (group: FilterGroup | FilterFlag) => (lookChips as readonly string[]).includes(group);
-  const panelCount = ticked.filter(({ group }) => !onChips(group)).length;
+  const onChips = (group: FilterGroup | FilterFlag, value?: string) =>
+    (lookChips as readonly string[]).includes(group) || lookChipValues.some((one) => one.group === group && one.value === value);
+  const panelCount = ticked.filter(({ group, value }) => !onChips(group, value)).length;
   const countWords = (n: number) => (n > 0 ? t("filter.buttonCount", { count: n }) : t("filter.button"));
 
   const option = (group: FilterGroup | FilterFlag, value: string, checked: boolean) => {
@@ -184,7 +188,7 @@ export default async function ListingFilterPanel({
     // a script; the band's word is what a screen reader hears, as before.
     const title = group === "difficulty" && isDifficultyBand(value) ? bandTitle(value) : undefined;
     return (
-      <Box component="label" key={`${group}=${value}`} sx={FILTER_OPTION_SX} title={title}>
+      <Box component="label" key={`${group}=${value}`} sx={onChips(group, value) ? { ...FILTER_OPTION_SX, [UNDER_LOOK]: { display: "none" } } : FILTER_OPTION_SX} title={title}>
         <span>
           <input type="checkbox" name={scopedName(group, scope)} value={value} defaultChecked={checked} />
           <Icon aria-hidden="true" />
@@ -306,7 +310,7 @@ export default async function ListingFilterPanel({
             />
             );
             // A tick the chips carry under the look is said there, not twice.
-            return onChips(group) ? (
+            return onChips(group, value) ? (
               <Box component="span" key={`${group}=${value}`} sx={{ display: "contents", [UNDER_LOOK]: { display: "none" } }}>
                 {chip}
               </Box>

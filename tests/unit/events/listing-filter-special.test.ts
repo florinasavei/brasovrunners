@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { chipKind, kindFilter, LOOK_HIDDEN_VALUES, offerUnderLook } from "@/modules/events/domain/calendar-kind";
 import {
   activeFilterCount,
   listingFilterQuery,
@@ -115,5 +116,33 @@ describe("the panel offers «Eveniment special» only where it narrows", () => {
 
   it("the past window's sentence names the shared type, never the kind", () => {
     expect(singleValues([RACE, row("race-2", "RACE", null)])).toEqual([{ group: "type", value: "RACE" }]);
+  });
+});
+
+describe("under «Aspectul nou» the calendar's chips carry the kind, so the box and the chips never contradict", () => {
+  const offer = offeredFilters(ROWS, parseListingFilter({}), facts);
+
+  it("does not offer «Eveniment special» in the panel's «Tipul» under the look, and the listing's offer keeps it", () => {
+    expect(offer.groups.find((entry) => entry.group === "type")?.values).toContain(SPECIAL_TYPE);
+    const under = offerUnderLook(offer, parseListingFilter({}));
+    expect(under.groups.find((entry) => entry.group === "type")?.values).not.toContain(SPECIAL_TYPE);
+    expect(LOOK_HIDDEN_VALUES).toEqual([{ group: "type", value: SPECIAL_TYPE }]);
+  });
+
+  it("leaves nothing when special was the only thing the panel offered", () => {
+    const only = offeredFilters([WEDNESDAY, ONE_OFF], parseListingFilter({}), facts);
+    const under = offerUnderLook(only, parseListingFilter({}));
+    expect(under.groups.some((entry) => entry.group === "type")).toBe(false);
+  });
+
+  it("drops a ticked SPECIAL from a kind link, keeps every other tick, and reads a lone SPECIAL as the special chip", () => {
+    const filter = parseListingFilter({ type: ["special", "RACE"], surface: "TRAIL" });
+    const link = kindFilter(filter);
+    expect(link.type).toEqual(["RACE"]);
+    expect(link.surface).toEqual(filter.surface);
+    expect(listingFilterQuery(link).type).toBe("RACE");
+    expect(chipKind(null, filter)).toBe("special");
+    expect(chipKind("weekly", filter)).toBe("weekly");
+    expect(chipKind(null, parseListingFilter({ type: "RACE" }))).toBeNull();
   });
 });

@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import { getTranslations } from "next-intl/server";
 import { EVENT_KINDS, type EventKind } from "@/modules/events/domain/event-kind";
 import { EVENT_SURFACES, type EventSurface } from "@/modules/events/domain/event-type";
-import { kindQuery } from "@/modules/events/domain/calendar-kind";
+import { chipKind, kindFilter, kindQuery } from "@/modules/events/domain/calendar-kind";
 import { listingFilterQuery, type ListingFilter } from "@/modules/events/domain/listing-filter";
 import ChipLink from "@/shared/ui/ChipLink";
 import { UNDER_LOOK } from "@/theme/look";
@@ -81,12 +81,12 @@ export default async function KindChips({ path, kind, filter, surfaces }: KindCh
       }}
     >
       {([null, ...EVENT_KINDS] as const).map((option) => {
-        const active = option === kind;
+        const active = option === chipKind(kind, filter);
         const key = option ?? "all";
         return (
           <ChipLink
             key={key}
-            href={href(option, filter)}
+            href={href(option, kindFilter(filter))}
             label={t(`calendar.look.kinds.${key}`)}
             glyph={KIND_GLYPH[key]}
             active={active}
