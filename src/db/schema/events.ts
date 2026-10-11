@@ -515,6 +515,27 @@ export const events = pgTable(
     isSpecial: boolean("is_special").notNull().default(false),
 
     /**
+     * «Copertă» (the facelift's phase 2, §709; `docs/REDESIGN.md`): the event's cover picture — a
+     * stored picture of the gallery (`media_assets`, §66), a real photograph of the club and never a
+     * stock or generated one (the plan's decision 6) — with its crop, the four fractions of §541, or
+     * null for the whole picture. The listing card, the home page's cards and the calendar's panel
+     * draw it from phase 3 on; until then nothing public reads it but the public cache's row.
+     *
+     * **No foreign key, on purpose.** `gallery.ts` imports this file (an album belongs to an event), so
+     * a `references(() => mediaAssets.id)` here would make the two schema files import each other, and
+     * which one evaluates first would decide whether the enums exist yet. The guard is the one every
+     * picture held by address already has (the bib design's, §560): `media/references.ts` counts the
+     * column, so neither the sweep nor a delete from the pictures page can take a picture a cover
+     * uses, and every read joins the store, so an id that names nothing is no cover rather than a
+     * broken one. The save refuses an id that is no stored picture (`service.ts`).
+     *
+     * A series carries both by scope like the route (§49, §130), and a repeat or a duplicate copies
+     * them: the Wednesday run wears the same cover every Wednesday.
+     */
+    coverMediaAssetId: uuid("cover_media_asset_id"),
+    coverCrop: jsonb("cover_crop"),
+
+    /**
      * Where this race's numbers start, and what colour they are printed (§173; the owner:
      * "cred că ar fi mai ușor să dăm numerele de concurs în ordinea înscrierii, așa se face de
      * obicei, dar există un prefix de cursă — spre exemplu numerele pot începe cu 1 acum dar la
@@ -888,6 +909,9 @@ export const events = pgTable(
     ),
 
     check("events_version_positive", sql`${t.version} >= 1`),
+
+    /** A cover's crop is a window on a picture (§709): no crop without the picture it crops. */
+    check("events_cover_crop_needs_picture", sql`${t.coverCrop} IS NULL OR ${t.coverMediaAssetId} IS NOT NULL`),
 
     /**
      * A published event has a first-publication date.

@@ -209,7 +209,7 @@ describe("§601 the preview itself", () => {
     const hover = readFileSync(path.join(process.cwd(), "src/modules/content/shop/ui/SizeGuideHover.tsx"), "utf8");
     expect(hover).toMatch(/^"use client"/);
     expect(hover).toContain("disableTouchListener");
-    expect(hover).toMatch(/thumbUrl: string;\s+width: number;\s+height: number;\s+crop: ImageCrop \| null;\s+children: ReactNode;/);
+    expect(hover).toMatch(/thumbUrl: string;[\s\S]*?srcSet\?: string;\s+width: number;\s+height: number;\s+crop: ImageCrop \| null;\s+children: ReactNode;/);
   });
 
   it("closes on Escape and a tap through MUI's dialog, Back through the history, and loads only on a tap", () => {

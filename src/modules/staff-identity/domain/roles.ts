@@ -671,14 +671,17 @@ export function canExportSponsorList(subject: StaffSubject): boolean {
  * «Tradu din română» (§464): whoever writes words the club publishes or sends — the Redactor's
  * texts (`canEditTexts`) and the Organizer's notes, reasons and messages to the participants
  * (`canMessageParticipants`). So the Redactor, the Organizer, the Administrator and the
- * Superadministrator; never the volunteer, and never Tehnic, who writes no text of the club's.
+ * Superadministrator, and a person holding the shop grant (§687); never a volunteer without it, and never
+ * Tehnic, who writes no text of the club's.
  *
  * The press saves nothing — it fills a box in the browser, and the save that follows asserts its
  * own right to that box — so this gate guards the club's translation allowance, not a text.
  */
 export function canTranslateTexts(subject: StaffSubject): boolean {
   const role = roleOf(subject);
-  return canEditTexts(role) || canMessageParticipants(role);
+  // And whoever holds «Gestionează magazinul» (§687): the shop's forms carry the button, and a grant
+  // that wrote the words may translate them. By the grant itself, never by a role.
+  return canEditTexts(role) || canMessageParticipants(role) || hasPermission(subject, "shop.manage");
 }
 
 /**

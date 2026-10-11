@@ -5,7 +5,7 @@ import { isTranslatorError, type Translator, type TranslatorFailure } from "@/in
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { type RichTextDoc, richTextSchema } from "@/modules/content/rich-text/domain/schema";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
-import { canTranslateTexts } from "@/modules/staff-identity/domain/roles";
+import { canTranslateTexts, type StaffActor } from "@/modules/staff-identity/domain/roles";
 import { charactersTranslatedToday, readTranslationBudget } from "./budget";
 import { budgetAllows, charactersToSend } from "./domain/budget";
 import { creditAllows, type TranslationCredit } from "./domain/credit";
@@ -88,7 +88,7 @@ function prepare(raw: unknown): Prepared[] | null {
 
 export async function translateClubTexts<T extends Record<string, unknown>>(
   db: Database<T>,
-  actor: Pick<StaffUser, "id" | "role">,
+  actor: Pick<StaffUser, "id" | "role"> & Pick<StaffActor, "permissions">,
   raw: unknown,
   deps: {
     translator: Translator | null;
@@ -100,7 +100,7 @@ export async function translateClubTexts<T extends Record<string, unknown>>(
     credit?: () => Promise<TranslationCredit | null>;
   },
 ): Promise<TranslateOutcome> {
-  if (!canTranslateTexts(actor.role)) return { ok: false, reason: "forbidden" };
+  if (!canTranslateTexts(actor)) return { ok: false, reason: "forbidden" };
   if (!deps.translator) return { ok: false, reason: "notConfigured" };
 
   const items = prepare(raw);

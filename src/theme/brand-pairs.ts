@@ -67,5 +67,52 @@ export const ACCENT_PAIRS: readonly BrandPair[] = [
   pair(dark("paper"), dark("blueInk")),
 ];
 
+/**
+ * The new look's pairs (§708, «Aspectul nou»; `docs/REDESIGN.md` § The visual system): the pink as
+ * `primary` — words on the page, a card and the pale pink band, and white on its fill and on the
+ * hover's — the hot pink itself, the band under ink, the kinds' fills under their words, and the
+ * headings' stronger ink. Drawn only on the public pages while the setting is on.
+ */
+export const LOOK_PAIRS: readonly BrandPair[] = [
+  pair(light("accentInk"), light("paper")),
+  pair(light("accentInk"), light("surface")),
+  pair(light("accentInk"), light("accentTint")),
+  pair(light("surface"), light("accentInk")),
+  pair(light("surface"), light("accentDeep")),
+  pair(light("accent"), light("paper")),
+  pair(light("accent"), light("surface")),
+  pair(light("surface"), light("accent")),
+  pair(light("ink"), light("accentTint")),
+  pair(light("inkMuted"), light("accentTint")),
+  pair(light("kindSpecialInk"), light("kindSpecial")),
+  pair(light("kindSpecialInk"), light("paper")),
+  pair(light("kindSpecialInk"), light("surface")),
+  pair(light("ink"), light("kindOther")),
+  pair(light("inkMuted"), light("kindOther")),
+  pair(light("inkStrong"), light("paper")),
+  pair(light("inkStrong"), light("surface")),
+];
+
+/** The same pairs after dark: a fill under the dark page colour where the light one takes white. */
+export const LOOK_PAIRS_DARK: readonly BrandPair[] = [
+  pair(dark("accentInk"), dark("paper")),
+  pair(dark("accentInk"), dark("surface")),
+  pair(dark("accentInk"), dark("accentTint")),
+  pair(dark("paper"), dark("accentInk")),
+  pair(dark("paper"), dark("accentDeep")),
+  pair(dark("accent"), dark("paper")),
+  pair(dark("accent"), dark("surface")),
+  pair(dark("paper"), dark("accent")),
+  pair(dark("ink"), dark("accentTint")),
+  pair(dark("inkMuted"), dark("accentTint")),
+  pair(dark("kindSpecialInk"), dark("kindSpecial")),
+  pair(dark("kindSpecialInk"), dark("paper")),
+  pair(dark("kindSpecialInk"), dark("surface")),
+  pair(dark("ink"), dark("kindOther")),
+  pair(dark("inkMuted"), dark("kindOther")),
+  pair(dark("inkStrong"), dark("paper")),
+  pair(dark("inkStrong"), dark("surface")),
+];
+
 /** Every pair the page draws and the test asserts, in one list. */
-export const BRAND_PAIRS: readonly BrandPair[] = [...TEXT_PAIRS, ...TEXT_PAIRS_DARK, ...HERO_PAIRS, ...ACCENT_PAIRS];
+export const BRAND_PAIRS: readonly BrandPair[] = [...TEXT_PAIRS, ...TEXT_PAIRS_DARK, ...HERO_PAIRS, ...ACCENT_PAIRS, ...LOOK_PAIRS, ...LOOK_PAIRS_DARK];

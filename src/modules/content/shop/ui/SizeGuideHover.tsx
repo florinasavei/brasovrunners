@@ -17,29 +17,34 @@ const PREVIEW_WIDTH = 320;
  * as `children`, and the picture's address, size and crop go in as plain values (§318), so no element
  * crosses the boundary as a prop (§370). Touch never opens it (`disableTouchListener`): a phone
  * has the press, which opens the picture large, and a tooltip there would sit over the select.
- * The small file is the card's thumbnail, so a page of products pays nothing until a pointer rests on one.
+ * The picture is fetched only on hover, from the ladder rung that fits the crop; the thumbnail is the fallback when there is no ladder, so a page of products pays nothing until a pointer rests on one.
  */
 export default function SizeGuideHover({
   thumbUrl,
+  srcSet,
   width,
   height,
   crop,
   children,
 }: {
   thumbUrl: string;
+  /** The master's ladder (`pictureSrcSet`), so a tight crop is drawn from a rung wide enough for it; absent, the thumbnail alone. */
+  srcSet?: string;
   width: number;
   height: number;
   crop: ImageCrop | null;
   children: ReactNode;
 }) {
   const geometry = cropGeometry(crop, { width, height });
+  // The whole picture is drawn 1/crop.w times the window's width, so the browser picks the rung for that, not for the window.
+  const sizes = `${Math.ceil(PREVIEW_WIDTH / (crop?.w || 1))}px`;
   const picture = geometry ? (
     <Box data-testid="size-guide-hover-picture" sx={{ ...cropWindowSx(geometry), width: PREVIEW_WIDTH, maxWidth: "100%", borderRadius: 0.5 }}>
-      <Box component="img" src={thumbUrl} alt="" draggable={false} sx={cropImageSx(geometry)} />
+      <Box component="img" src={thumbUrl} srcSet={srcSet} sizes={srcSet ? sizes : undefined} alt="" draggable={false} sx={cropImageSx(geometry)} />
     </Box>
   ) : (
     // eslint-disable-next-line @next/next/no-img-element -- the club's own stored thumbnail; a tooltip's picture
-    <img data-testid="size-guide-hover-picture" src={thumbUrl} alt="" width={PREVIEW_WIDTH} style={{ display: "block", width: PREVIEW_WIDTH, maxWidth: "100%", height: "auto" }} />
+    <img data-testid="size-guide-hover-picture" src={thumbUrl} srcSet={srcSet} sizes={srcSet ? sizes : undefined} alt="" width={PREVIEW_WIDTH} style={{ display: "block", width: PREVIEW_WIDTH, maxWidth: "100%", height: "auto" }} />
   );
   return (
     <Tooltip

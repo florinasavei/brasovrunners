@@ -53,6 +53,33 @@ export const COLOR = {
   surface: "#ffffff",
   /** Hairlines and dividers. */
   line: "#e2e0d8",
+
+  /*
+    The new look's tokens (§708; `docs/REDESIGN.md` § The visual system, decision 1): drawn only
+    under «Aspectul nou», on the public pages, never in the backoffice, an email, a PDF, a race
+    number or a share card — those keep the logo blue. Each has a twin in `COLOR_DARK` and its pairs
+    in `brand-pairs.ts` (`LOOK_PAIRS`), held at AA by `tests/unit/theme/brand.test.ts`.
+  */
+  /** The hot pink: the mark, a rule, a large word. 4.77:1 on the page, white on it 4.99:1. */
+  accent: "#d6176f",
+  /**
+   * The pink that carries words: `primary` under the new look — a link, an outline, a contained
+   * button's fill under white text (7.6:1). No lighter than `inkMuted`, so every page tint the club
+   * may choose (§488 holds `inkMuted` at AA on it) carries it too — the test asserts the order.
+   */
+  accentInk: "#a01650",
+  /** A contained pink button under the pointer: deeper still, white on it 10.4:1. */
+  accentDeep: "#7e0e3c",
+  /** A pale pink band or chip under ink or `accentInk` (the weekly runs' chip in a later phase). */
+  accentTint: "#fde8f1",
+  /** A special event's fill in the calendar and its chips (a later phase): a pale green. */
+  kindSpecial: "#dcefe0",
+  /** The words on `kindSpecial`, and a green as text on the page or a card. */
+  kindSpecialInk: "#1d5e2a",
+  /** Any other event's fill: a warm grey under ink. */
+  kindOther: "#ecebe6",
+  /** Headings under the new look, a step darker than the body's ink. */
+  inkStrong: "#0f0e0d",
 } as const;
 
 /**
@@ -80,6 +107,27 @@ export const COLOR_DARK = {
   inkMuted: "#b5b2a9",
   /** Hairlines and dividers. */
   line: "#2c3038",
+
+  /*
+    The new look's twins (§708): lighter pinks of the same hue on the dark page, as the blue lifts
+    (the order resting → hover reads the same way), and the fills walked towards the dark surface.
+  */
+  /** The hot pink after dark: 6.56:1 on the page. */
+  accent: "#ff5fa2",
+  /** `primary` under the new look after dark: text 8.64:1 on the page, and a fill under the dark page colour. */
+  accentInk: "#ff8cc0",
+  /** A contained pink button under the pointer, lighter still. */
+  accentDeep: "#ffb3d6",
+  /** The pale pink band after dark. */
+  accentTint: "#3b1a2a",
+  /** A special event's fill after dark. */
+  kindSpecial: "#173b22",
+  /** The words on it, and green as text on the dark page. */
+  kindSpecialInk: "#8fd9a0",
+  /** Any other event's fill after dark. */
+  kindOther: "#2a2d33",
+  /** Headings under the new look after dark. */
+  inkStrong: "#ffffff",
 } as const;
 
 /**
@@ -252,6 +300,13 @@ export const FONT = {
    * designer's read-me names "Roboto Black Italic" as the base font Facón was drawn from.
    */
   wordmark: "var(--font-facon)",
+  /**
+   * The headings' face under «Aspectul nou» (§708, the redesign's decision 2): Inter at 800, a
+   * repository file like every face (§460), `letter-spacing: -0.02em`. Only the new look's scope
+   * names it (`theme/look.ts`), so with the look off no page asks for the file; the body stays
+   * `body` (Roboto) under both looks.
+   */
+  lookDisplay: "var(--font-inter)",
   /** Used when a webfont has not loaded yet, and when it fails to. */
   fallback: '"Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
 } as const;

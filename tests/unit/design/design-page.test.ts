@@ -65,7 +65,10 @@ const { REDESIGN_DECISIONS, REDESIGN_PHASES } = await import("@/modules/design/r
 const { COLOR, COLOR_DARK, SITE_TINT } = await import("@/theme/brand");
 const { BRAND_PAIRS } = await import("@/theme/brand-pairs");
 const { GLYPHS } = await import("@/modules/events/ui/glyphs");
+const { STATUS_GLYPHS } = await import("@/shared/ui/status-glyphs");
 const { ACTION_ICONS } = await import("@/shared/ui/action-icons");
+const { LOOK_PRIMARY_TOKENS, lookPaletteCss } = await import("@/modules/appearance/domain/site-look");
+const { LOOK_PREVIEW_ATTRIBUTE, LOOK_VALUE } = await import("@/theme/look");
 
 afterEach(() => {
   currentLocale = "ro";
@@ -120,12 +123,40 @@ describe("BR-REQ-060-01 «Sistemul de design» draws the look from the code", ()
     expect(markup).not.toContain(ro.Admin.design.colours.below);
   });
 
+  it("draws today's look and the new one side by side, the new one under the preview scope alone (§708)", async () => {
+    for (const locale of ["ro", "en"] as const) {
+      currentLocale = locale;
+      const markup = await page();
+      const words = (locale === "ro" ? ro : en).Admin.design.look;
+      expect(markup).toContain('data-testid="design-look-today"');
+      expect(markup).toContain('data-testid="design-look-new"');
+      const escaped = (text: string) => text.replace(/'/g, "&#x27;");
+      expect(markup).toContain(escaped(words.today));
+      expect(markup).toContain(escaped(words.new));
+      // One box wears the preview scope; the other is the same markup without it.
+      const elements = markup.replace(/<style[\s\S]*?<\/style>/g, "");
+      expect(elements.match(new RegExp(`${LOOK_PREVIEW_ATTRIBUTE}="${LOOK_VALUE}"`, "g"))).toHaveLength(1);
+      // The palette the public layout draws, for the preview box, from the same function.
+      expect(markup).toContain(`<style data-design-look="">${lookPaletteCss()}</style>`);
+      // The header's own «Vino cu noi» in both boxes (drawn only under the scope), and the mark.
+      expect(markup.match(/data-testid="header-cta"/g)).toHaveLength(2);
+      expect(markup).toContain('data-testid="mountain-mark"');
+      // Which token MUI's primary takes, light and dark, by name.
+      for (const key of Object.keys(LOOK_PRIMARY_TOKENS.light) as (keyof typeof LOOK_PRIMARY_TOKENS.light)[]) {
+        expect(markup).toContain(`COLOR.${LOOK_PRIMARY_TOKENS.light[key]}`);
+        expect(markup).toContain(`COLOR_DARK.${LOOK_PRIMARY_TOKENS.dark[key]}`);
+      }
+    }
+  });
+
   it("draws every glyph of both registries by name, with the counts", async () => {
     const markup = await page();
     for (const name of Object.keys(GLYPHS)) expect(markup, `glyph ${name}`).toContain(`>${name}</div>`);
     for (const name of Object.keys(ACTION_ICONS)) expect(markup, `action icon ${name}`).toContain(`>${name}</div>`);
+    for (const name of Object.keys(STATUS_GLYPHS)) expect(markup, `status glyph ${name}`).toContain(`>${name}</div>`);
     expect(markup).toContain(`· ${Object.keys(GLYPHS).length}<`);
     expect(markup).toContain(`· ${Object.keys(ACTION_ICONS).length}<`);
+    expect(markup).toContain(`· ${Object.keys(STATUS_GLYPHS).length}<`);
   });
 
   it("lists every rule with where it lives, and every decision and phase of the plan with a status", async () => {
@@ -165,8 +196,8 @@ describe("BR-REQ-060-01 «Sistemul de design» draws the look from the code", ()
 
   it("holds every rule the brief names, in both catalogues", () => {
     const ids = DESIGN_RULES.map((rule) => rule.id);
-    for (const id of ["staticPages", "lightDefault", "pageTint", "fontSize"]) expect(ids).toContain(id);
-    expect(ids.length).toBe(21);
+    for (const id of ["staticPages", "lightDefault", "pageTint", "fontSize", "newLook"]) expect(ids).toContain(id);
+    expect(ids.length).toBe(22);
     for (const catalogue of [ro, en]) expect(Object.keys(catalogue.Admin.design.rules.items).sort()).toEqual([...ids].sort());
     for (const rule of DESIGN_RULES) for (const where of rule.where) expect(existsSync(where.replace(/\/$/, "")), where).toBe(true);
   });

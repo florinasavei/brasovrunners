@@ -72,7 +72,7 @@ async function approve() {
 async function createEvent(): Promise<EventInput> {
   const [event] = await db
     .insert(events)
-    .values({ type: "RACE", startsAt: new Date("2026-10-11T07:00:00.000Z"), registrationMode: "INTERNAL", capacity: 20, locationName: "Parcul Tractorul", editorialStatus: "PUBLISHED", publishedAt: NOW })
+    .values({ type: "RACE", startsAt: new Date("2031-10-11T07:00:00.000Z"), registrationMode: "INTERNAL", capacity: 20, locationName: "Parcul Tractorul", editorialStatus: "PUBLISHED", publishedAt: NOW })
     .returning();
   await db.insert(eventTranslations).values([
     { eventId: event.id, locale: "ro", title: "Crosul familiei", slug: "crosul-familiei" },
@@ -81,7 +81,7 @@ async function createEvent(): Promise<EventInput> {
   return { id: event.id, raceId: null, capacity: event.capacity, registrationMode: "INTERNAL", registrationOpensAt: null, registrationClosesAt: null, startsAt: event.startsAt, eventStatus: event.eventStatus, publishedAt: NOW };
 }
 
-const BIRTH_DATES: Record<string, string> = { Ana: "1985-03-02", Maria: "1990-07-11", Ion: "1987-02-14", Vecina: "1979-01-01", Ionut: "2011-05-20" };
+const BIRTH_DATES: Record<string, string> = { Ana: "1985-03-02", Maria: "1990-07-11", Ion: "1987-02-14", Vecina: "1979-01-01", Ionut: "2016-05-20" };
 
 const submission = (firstName: string, at: Date, overrides: Record<string, unknown> = {}) => ({
   firstName,

@@ -187,6 +187,7 @@ export const ICON_REGISTRIES: ReadonlySet<string> = new Set([
   "src/modules/feedback/ui/branch-glyph.ts",
   "src/shared/ui/button-glyph.ts",
   "src/shared/ui/panel-glyphs.ts",
+  "src/shared/ui/status-glyphs.ts",
   "src/modules/content/team/ui/TeamLinkGlyph.tsx",
 ]);
 
