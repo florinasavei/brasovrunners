@@ -158,7 +158,6 @@ describe("§552 no public read path meets a members' row or a code (source walk)
       expect(
         path.startsWith("src/app/[locale]/admin/") ||
           path === "src/app/[locale]/members-area/page.tsx" ||
-          path === "src/app/[locale]/members-area/codes/page.tsx" ||
           path.startsWith("src/modules/content/member-codes/") ||
           path === "src/db/client.ts",
         path,

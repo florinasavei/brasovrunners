@@ -3,6 +3,8 @@ import { createTranslator } from "next-intl";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import ro from "../../../messages/ro.json";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
+import { computeContentHash } from "@/modules/legal-documents/domain/content-hash";
+import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -33,6 +35,7 @@ vi.mock("next-intl/server", () => ({
 const { getCurrentAccount, getCurrentStaffUser, requireStaff, requireStaffCapability } = await import("@/modules/staff-identity/session");
 const { canOpenMembersZone, canWorkTheDesk } = await import("@/modules/staff-identity/domain/roles");
 const { saveMembersText } = await import("@/modules/content/members/page-settings");
+const { insertLegalDocumentVersion } = await import("@/modules/legal-documents/repository");
 const { default: MembersAreaPage } = await import("@/app/[locale]/members-area/page");
 
 /** Where a Next `redirect()` pointed, read from the error it throws. */
@@ -107,39 +110,84 @@ describe("§524 a member signs in and is no staff", () => {
     expect(html).not.toContain('data-testid="members-backoffice"');
   });
 
-  it("§709 draws three tabs in the owner's order, each page asserting the door itself", async () => {
-    const { default: CodesPage } = await import("@/app/[locale]/members-area/codes/page");
+  /** The privacy notice from the platform's template, approved: the one fact that lets the zone draw a shop. */
+  async function approveShopNotice() {
+    const translations = [
+      { locale: "ro" as const, title: "Nota de confidențialitate", body: privacyNoticeRo },
+      { locale: "en" as const, title: "Privacy notice", body: privacyNoticeEn },
+    ];
+    await insertLegalDocumentVersion(db, {
+      key: "PRIVACY_NOTICE",
+      version: 1,
+      effectiveAt: new Date(Date.now() - 3_600_000),
+      isApproved: true,
+      contentSha256: computeContentHash(translations),
+      translations,
+      now: new Date(),
+    });
+  }
+
+  const hrefsOf = (html: string) => (html.match(/<nav [^>]*>[\s\S]*?<\/nav>/)?.[0] ?? "");
+
+  it("§NNN draws the tabs in the owner's order, the shop only once the notice names it, each page asserting the door itself", async () => {
     const { default: ShopPage } = await import("@/app/[locale]/members-area/shop/page");
+    const { default: RunsPage } = await import("@/app/[locale]/members-area/runs/page");
     const params = { params: Promise.resolve({ locale: "ro" }) };
     // Signed out: every tab sends the stranger to the sign-in, not just the zone's own address.
-    expect(await redirectedTo(CodesPage(params))).toBe("/ro/autentificare?to=members");
-    expect(await redirectedTo(ShopPage(params))).toBe("/ro/autentificare?to=members");
+    for (const Page of [MembersAreaPage, ShopPage, RunsPage]) expect(await redirectedTo(Page(params))).toBe("/ro/autentificare?to=members");
 
     state.cookie = member.id;
+    // No notice naming the shop in force: no «Magazin» tab, and its address is a 404 (BR-REQ-053-01).
+    for (const [Page, active] of [[MembersAreaPage, "/ro/zona-membri"], [RunsPage, "/ro/zona-membri/alergari"]] as const) {
+      const nav = hrefsOf(renderToStaticMarkup(await Page(params)));
+      expect([...nav.matchAll(/href="([^"]+)"/g)].map((m) => m[1])).toEqual(["/ro/zona-membri", "/ro/zona-membri/alergari"]);
+      expect([...nav.matchAll(/<a [^>]*aria-current="page"[^>]*>/g)].map((m) => m[0])[0]).toContain(`href="${active}"`);
+    }
+    await expect(ShopPage(params)).rejects.toMatchObject({ digest: expect.stringContaining("404") });
+
+    await approveShopNotice();
     const pages = [
-      [CodesPage, "codes"],
-      [ShopPage, "shop"],
-      [MembersAreaPage, "runs"],
+      [MembersAreaPage, "/ro/zona-membri"],
+      [ShopPage, "/ro/zona-membri/magazin"],
+      [RunsPage, "/ro/zona-membri/alergari"],
     ] as const;
     for (const [Page, active] of pages) {
       const html = renderToStaticMarkup(await Page(params));
-      const nav = html.match(/<nav [^>]*>[\s\S]*?<\/nav>/)?.[0] ?? "";
-      expect([...nav.matchAll(/href="([^"]+)"/g)].map((m) => m[1])).toEqual(["/ro/zona-membri/coduri", "/ro/zona-membri/magazin", "/ro/zona-membri"]);
+      const nav = hrefsOf(html);
+      expect([...nav.matchAll(/href="([^"]+)"/g)].map((m) => m[1])).toEqual(["/ro/zona-membri", "/ro/zona-membri/magazin", "/ro/zona-membri/alergari"]);
       expect(nav.replace(/<style[\s\S]*?<\/style>/g, "").replace(/<[^>]+>/g, "|").split("|").filter(Boolean)).toEqual([ro.Members.tabs.codes, ro.Members.tabs.shop, ro.Members.tabs.runs]);
       const current = [...nav.matchAll(/<a [^>]*aria-current="page"[^>]*>/g)].map((m) => m[0]);
       expect(current).toHaveLength(1);
-      expect(current[0]).toContain(`href="${{ codes: "/ro/zona-membri/coduri", shop: "/ro/zona-membri/magazin", runs: "/ro/zona-membri" }[active]}"`);
+      expect(current[0]).toContain(`href="${active}"`);
       expect(html).toContain('data-testid="members-sign-out"');
-      expect(html.includes(ro.Members.upcomingTitle)).toBe(active === "runs");
+      expect(html.includes(ro.Members.upcomingTitle)).toBe(active === "/ro/zona-membri/alergari");
     }
   });
 
-  it("§709 answers an Administrator on the tabs too, and none shows the backoffice", async () => {
+  it("§NNN shows the club's words for members above the tabs, on every tab", async () => {
     const { default: ShopPage } = await import("@/app/[locale]/members-area/shop/page");
+    const { default: RunsPage } = await import("@/app/[locale]/members-area/runs/page");
+    const doc = (text: string) => JSON.stringify({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
+    await saveMembersText(db, { actor: admin, text: "zone", fields: { zoneRoBody: doc("Vorbele clubului."), zoneEnBody: doc("The club's words.") } });
+    await approveShopNotice();
+    state.cookie = member.id;
+    for (const Page of [MembersAreaPage, ShopPage, RunsPage]) {
+      const html = renderToStaticMarkup(await Page({ params: Promise.resolve({ locale: "ro" }) }));
+      expect(html).toContain("Vorbele clubului.");
+      expect(html.indexOf("Vorbele clubului.")).toBeLessThan(html.indexOf('data-testid="members-tabs"'));
+    }
+  });
+
+  it("§NNN answers an Administrator on the tabs too, and none shows the backoffice", async () => {
+    const { default: ShopPage } = await import("@/app/[locale]/members-area/shop/page");
+    const { default: RunsPage } = await import("@/app/[locale]/members-area/runs/page");
     state.cookie = admin.id;
-    const html = renderToStaticMarkup(await ShopPage({ params: Promise.resolve({ locale: "ro" }) }));
-    expect(html).toContain(ro.Members.shopEmpty);
-    expect(html).not.toMatch(/href="\/ro\/admin/);
+    await approveShopNotice();
+    for (const Page of [ShopPage, RunsPage]) {
+      const html = renderToStaticMarkup(await Page({ params: Promise.resolve({ locale: "ro" }) }));
+      expect(html).not.toMatch(/href="\/ro\/admin/);
+    }
+    expect(renderToStaticMarkup(await ShopPage({ params: Promise.resolve({ locale: "ro" }) }))).toContain(ro.Members.shopEmpty);
   });
 
   it("shows an Administrator no way into the backoffice either (§684)", async () => {

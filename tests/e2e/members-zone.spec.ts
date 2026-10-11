@@ -16,24 +16,22 @@ test.describe("§524 the members' zone", () => {
 
     await expect(page.getByRole("heading", { level: 1, name: "Zona membrilor" })).toBeVisible();
     await expect(page.getByTestId("members-greeting")).toContainText("Dev Member");
-    await expect(page.getByTestId("members-upcoming")).toBeVisible();
     await expect(page.getByTestId("members-backoffice")).toHaveCount(0);
 
-    // The three tabs (§709), in the owner's order, each an address of its own; «Alergări» is the zone's own.
-    const tabs = page.getByTestId("members-tabs").getByRole("link");
-    await expect(tabs).toHaveText(["Coduri de reducere", "Magazin", "Alergări"]);
-    await expect(page.getByTestId("members-tabs").getByRole("link", { name: "Alergări" })).toHaveAttribute("aria-current", "page");
-    for (const name of ["Coduri de reducere", "Magazin", "Alergări"]) {
-      const box = await page.getByTestId("members-tabs").getByRole("link", { name }).boundingBox();
+    // The tabs (§NNN), in the owner's order, each an address of its own; «Coduri de reducere» is the zone's own,
+    // and «Magazin» is drawn only once the privacy notice in force names the shop (BR-REQ-053-01).
+    const tabs = page.getByTestId("members-tabs");
+    await expect(tabs.getByRole("link", { name: "Coduri de reducere" })).toHaveAttribute("aria-current", "page");
+    await expect(tabs.getByRole("link", { name: "Alergări" })).toBeVisible();
+    for (const name of ["Coduri de reducere", "Alergări"]) {
+      const box = await tabs.getByRole("link", { name }).boundingBox();
       expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
     }
-    await page.getByTestId("members-tabs").getByRole("link", { name: "Magazin" }).click();
-    await expect(page).toHaveURL(/\/ro\/zona-membri\/magazin$/);
-    await expect(page.getByTestId("members-tabs").getByRole("link", { name: "Magazin" })).toHaveAttribute("aria-current", "page");
     await expect(page.getByTestId("members-upcoming")).toHaveCount(0);
-    await page.getByTestId("members-tabs").getByRole("link", { name: "Coduri de reducere" }).click();
-    await expect(page).toHaveURL(/\/ro\/zona-membri\/coduri$/);
-    await expect(page.getByTestId("members-upcoming")).toHaveCount(0);
+    await tabs.getByRole("link", { name: "Alergări" }).click();
+    await expect(page).toHaveURL(/\/ro\/zona-membri\/alergari$/);
+    await expect(page.getByTestId("members-tabs").getByRole("link", { name: "Alergări" })).toHaveAttribute("aria-current", "page");
+    await expect(page.getByTestId("members-upcoming")).toBeVisible();
     await page.goto("/ro/zona-membri");
 
     await page.goto("/ro/admin");

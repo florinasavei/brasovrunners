@@ -1,7 +1,8 @@
+import Alert from "@mui/material/Alert";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { unstable_rethrow } from "next/navigation";
+import { notFound, unstable_rethrow } from "next/navigation";
 import { getDb } from "@/db/client";
 import type { Locale } from "@/i18n/routing";
 import { listOrdersOfMember, listProductsForMembers, type MemberOrder, type MembersShopProduct } from "@/modules/content/shop/repository";
@@ -10,7 +11,7 @@ import { readShopOutcome, readShopOutcomeAtOrders } from "@/modules/content/shop
 import { noticeDescribesMembersShop } from "@/modules/legal-documents/repository";
 import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
 import MembersShop from "../MembersShop";
-import ZoneFrame, { openZone } from "../zone";
+import ZoneFrame, { frameParts, openZone } from "../zone";
 
 type Props = { params: Promise<{ locale: string }>; searchParams?: Promise<{ shop?: string | string[]; shopAt?: string | string[] }> };
 
@@ -22,13 +23,13 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
 /**
  * «Magazinul clubului» and «Comenzile mele» (§683): read here, per request, behind the account — the
  * products only while the privacy notice in force names `{{membersShop}}` in every language, the
- * member's own orders always. Nothing while the database is away, like the codes.
+ * member's own orders always. `"away"` while the database is (§447).
  */
 async function shopOrNone(
   account: { id: string },
   locale: Locale,
   now: Date,
-): Promise<{ open: boolean; products: MembersShopProduct[]; orders: MemberOrder[]; payment: string | null; emailMembers: boolean }> {
+): Promise<{ open: boolean; products: MembersShopProduct[]; orders: MemberOrder[]; payment: string | null; emailMembers: boolean } | "away"> {
   try {
     const db = getDb();
     const open = await noticeDescribesMembersShop(db, now);
@@ -41,12 +42,12 @@ async function shopOrNone(
   } catch (error) {
     unstable_rethrow(error);
     if (!isDatabaseAwayError(error)) throw error;
-    return { open: false, products: [], orders: [], payment: null, emailMembers: true };
+    return "away";
   }
 }
 
 /**
- * The members' zone, tab «Magazin» (§709, §683): the club's shop and the member's own orders, at
+ * The members' zone, tab «Magazin» (§NNN, §683): the club's shop and the member's own orders, at
  * `/members-area/shop`. «Comandă» and «Anulează comanda» (`actions.ts`) answer back to this address
  * with `?shop=` and `?shopAt=`. The door is asserted here, on this page, as on every tab (`openZone`,
  * BR-REQ-060-01), and the order action asserts it again.
@@ -56,12 +57,22 @@ export default async function MembersShopPage({ params, searchParams }: Props) {
   if ("resting" in opened) return opened.resting;
   const { locale, account } = opened;
   const t = await getTranslations("Members");
-  const shop = await shopOrNone(account, locale, new Date());
+  const now = new Date();
+  const shop = await shopOrNone(account, locale, now);
+  /*
+    The zone draws no shop before the privacy notice names `{{membersShop}}` (BR-REQ-053-01): no tab,
+    and no page at this address either, unless the member has orders of their own to see.
+  */
+  if (shop !== "away" && !shop.open && shop.orders.length === 0) notFound();
+  const parts = await frameParts(account, locale, now, true);
   const query = await searchParams;
-  const hasShop = (shop.open && shop.products.length > 0) || shop.orders.length > 0;
   return (
-    <ZoneFrame t={t} locale={locale} account={account} active="shop">
-      {hasShop ? (
+    <ZoneFrame t={t} locale={locale} account={account} active="shop" parts={parts}>
+      {shop === "away" ? (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          {t("zoneAway")}
+        </Alert>
+      ) : (shop.open && shop.products.length > 0) || shop.orders.length > 0 ? (
         <MembersShop
           products={shop.products}
           orders={shop.orders}
