@@ -47,8 +47,12 @@ test.describe("§NNN the site's root and «Pagina principală»", () => {
     const ro = await request.get("/ro?from=qr", { maxRedirects: 0 });
     expect(ro.status()).toBe(307);
     expect(ro.headers()["location"]).toMatch(/\/ro\/evenimente$/);
-    // A redirect, not a page: §353's old answer was a 300 KB error document.
-    expect((await ro.body()).length).toBeLessThan(2_000);
+    /*
+      A real status line, not §353's old soft redirect (a 200 carrying a client-side hop). The body is
+      Next's own document for a redirect decided in a prerender, which a browser does not show and the
+      CDN keeps with the status; the home page is not in it.
+    */
+    expect(await ro.text()).not.toContain('data-testid="home-page"');
     const en = await request.get("/en", { maxRedirects: 0 });
     expect(en.status()).toBe(307);
     expect(en.headers()["location"]).toMatch(/\/en\/events$/);

@@ -1,8 +1,5 @@
-import { formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
-import { splitHeadline } from "@/modules/appearance/domain/home-page";
 import type { PublicEvent } from "@/modules/events/repository";
-import type { HomePageProps } from "@/modules/home/ui/HomePage";
 import type { WeatherReading } from "@/modules/weather/domain/forecast";
 
 /**
@@ -151,70 +148,6 @@ export const SAMPLE_WEATHER: WeatherReading = {
   humidity: 82,
   uvIndex: 1,
 };
-
-/** A translator for one namespace, as `getTranslations` hands it back: the fixture asks the catalogue for its words. */
-type Words = (key: string, values?: Record<string, string>) => string;
-
-/**
- * The home page's sections from the sample rows (§NNN): the props `HomePage`, `Hero`, `NextRunCard`
- * and `RunCardGrid` take on the site, built from the same made-up events as the cards above, with
- * the empty photo slots the club starts from (no picture is a stock one, decision 6) and the
- * platform's own words from the catalogue (`home` is the `Home` namespace, `event` the `Event` one).
- */
-export function sampleHome(locale: Locale, home: Words, event: Words): HomePageProps {
-  const series = sampleSeries(locale);
-  const race = sampleRace(locale);
-  const timeZone = series[0].timezone;
-  const when = (startsAt: Date, position: "start" | "inline" = "start") => formatDay(startsAt, { locale, timeZone, style: "long", withTime: true, position });
-  const weeklyTag = { kind: "weekly" as const, glyph: "repeat" as const, label: event("kind.weekly") };
-  const specialTag = { kind: "special" as const, glyph: "type:RACE" as const, label: event("kind.special") };
-  return {
-    hero: {
-      headline: splitHeadline(home("hero.headline")),
-      subline: home("hero.subline"),
-      picture: null,
-      primary: { label: home("hero.join"), href: "/events" },
-      secondary: { label: home("hero.calendar"), href: "/calendar" },
-    },
-    nextRun: {
-      heading: home("nextRun.title"),
-      slug: series[0].slug,
-      title: series[0].title,
-      when: when(series[0].startsAt),
-      place: series[0].locationName,
-      sunset: home("nextRun.sunset", { time: "18:58" }),
-      weather: { glyph: SAMPLE_WEATHER.glyph, words: locale === "ro" ? "Averse, 9 °C" : "Showers, 9 °C" },
-      picture: null,
-      tag: weeklyTag,
-    },
-    weekly: {
-      id: "weekly",
-      title: home("weekly.title"),
-      intro: home("weekly.intro"),
-      cards: [
-        {
-          key: "sample-run",
-          slug: series[0].slug,
-          title: series[0].title,
-          when: when(series[0].startsAt),
-          detail: home("weekly.next", { when: when(series[0].startsAt, "inline") }),
-          picture: null,
-          tag: weeklyTag,
-        },
-      ],
-      empty: home("weekly.empty"),
-      more: null,
-    },
-    special: {
-      id: "special",
-      title: home("special.title"),
-      intro: home("special.intro"),
-      cards: [{ key: "sample-race", slug: race.slug, title: race.title, when: when(race.startsAt), detail: race.locationName, picture: null, tag: specialTag }],
-      empty: home("special.empty"),
-      more: { label: home("more") },
-    },
-  };
-}
 
 /** A team card's person, with no photograph: the no-photo state. */
 export function sampleTeamMember(locale: Locale): { name: string; role: string } {

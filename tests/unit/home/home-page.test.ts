@@ -22,7 +22,7 @@ vi.mock("next-intl/server", () => ({ getLocale: async () => "ro", getTranslation
 
 const { homeSections, HOME_SECTION_LIMIT, RUN_TYPES } = await import("@/modules/home/domain/sections");
 const { DEFAULT_HOME_PAGE_SETTING, heroLines, parseHomePage, postedPair, splitHeadline } = await import("@/modules/appearance/domain/home-page");
-const { sampleHome } = await import("@/modules/design/fixtures");
+const { sampleHome } = await import("@/modules/design/home-fixtures");
 const { default: HomePage } = await import("@/modules/home/ui/HomePage");
 const { default: HomePicture } = await import("@/modules/home/ui/HomePicture");
 const ro = (await import("../../../messages/ro.json")).default;
@@ -157,6 +157,16 @@ describe("§NNN the home page's components, drawn from the design page's fixture
     expect(card).toMatch(/loading="lazy"/);
     expect(card).not.toMatch(/fetchpriority/i);
     expect(card).toContain('data-crop="set"');
+  });
+});
+
+describe("§NNN «Mostre» draws the same components", () => {
+  it("draws the hero, the next run and both sections, the hero's heading a paragraph so the design page keeps its one h1", async () => {
+    const { default: HomePageSamples } = await import("@/modules/design/ui/HomePageSamples");
+    const html = renderToStaticMarkup(await HomePageSamples({ locale: "ro" }));
+    expect(html).not.toMatch(/<h1\b/);
+    expect(html).toMatch(/<p [^>]*id="home-hero-title"/);
+    for (const testId of ["home-hero", "home-next-run", "home-weekly", "home-special"]) expect(html, testId).toContain(`data-testid="${testId}"`);
   });
 });
 
