@@ -1,0 +1,11 @@
+{
+  "branch": "fix/contact-radio-groups",
+  "decisionsTitle": "The contact wizard's radio groups are one group each",
+  "decisionsSection": "**The owner, 2026-10-11, from his phone, on «Spune-ne ceva (anonim)» → Girl Zone:** \"The radio buttons from the contact form are completely broken, I can select both options, this is not how a radio should work.\" Both «Anonim» and «Cu nume și prenume» under «Cum vrei să trimiți?» were drawn selected at once.\n\n**Cause.** `RadioField` wrapped MUI's `Radio` in a `FormControlLabel`. Outside a `RadioGroup`, each MUI radio keeps its own \"checked\" state and is never told when a sibling takes the choice; the server's HTML had one `name` and one `checked`, but after hydration a click on the second option left the first one's own state — and its drawn dot — selected. The same two-radio pattern drew «Cine să afle?».\n\n**Decision (amends §678).** `RadioField` is a native `<label>` around a plain `<input type=\"radio\">`, as the step-1 cards already were: one `name` per question (`identity`, `audience`), distinct values, exactly one `defaultChecked` («Anonim»; the branch's own reader), the question a `<legend>` in a `<fieldset>`, the helper lines kept, a 44-pixel row. The browser keeps the group; the CSS `:has` rules that show the named-only part keep working. The server already read the one field and refused an unknown value (`z.enum`), and an anonymous post still stores nothing of the person.\n\n**Refused.** A client island (a controlled `RadioGroup`) to manage the choice: a native group needs none, and the page stays server-rendered.",
+  "changelogLine": "- **«Spune-ne ceva»'s radios are one group each** — picking «Cu nume și prenume» now unchecks «Anonim» (and the same for «Cine să afle?»): native radios replace MUI's, which drew both selected. §NNN.",
+  "specsCriteria": [
+    { "requirement": "BR-REQ-070-04", "text": "Each question of «Spune-ne ceva» is one radio group: one name, one checked option, «Anonim» the default; picking the other unchecks it (2026-10-11, `DECISIONS.md` §NNN)." }
+  ],
+  "docsNotes": "",
+  "batchLine": "the contact wizard's radios"
+}
