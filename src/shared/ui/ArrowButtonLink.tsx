@@ -47,7 +47,8 @@ export default function ArrowButtonLink({ href, label, variant = "contained", si
         fontWeight: 600,
         whiteSpace: "nowrap",
         flexShrink: 0,
-        ...(variant === "outlined" ? { color: "text.primary", borderColor: "currentColor" } : {}),      }}
+        ...(variant === "outlined" ? { color: "text.primary", borderColor: "currentColor" } : {}),
+      }}
     >
       {label}
       <ArrowForwardIcon aria-hidden="true" sx={glyphSx(size)} />

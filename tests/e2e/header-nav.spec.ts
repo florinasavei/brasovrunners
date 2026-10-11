@@ -257,6 +257,15 @@ async function expectFooterLanguages(page: Page, width: number, path = "/ro/even
   await expect(english).toBeVisible();
   await expect(english).toHaveAttribute("href", new RegExp(`^/api/locale\\?to=en&from=${encodeURIComponent(path).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
 
+  if (width < 600) {
+    // The bar stays one row under the look: «GDPR», the marks, the rule, RO and EN share a centre line.
+    const centre = (b: { y: number; height: number }) => b.y + b.height / 2;
+    const gdpr = await page.locator("footer").getByRole("link", { name: /GDPR/ }).first().boundingBox();
+    const lang = await language.boundingBox();
+    expect(gdpr).not.toBeNull();
+    expect(lang).not.toBeNull();
+    expect(Math.abs(centre(gdpr!) - centre(lang!))).toBeLessThanOrEqual(2);
+  }
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await expect(english).toBeInViewport();
   const target = width < 360 ? 24 : 44;

@@ -571,7 +571,7 @@
         },
         "idDocumentHelp": "Your identity card (e.g. “BV 123456”) or your passport. It is masked in the copies sent by email; the platform deletes it {days} after the run and keeps no copy of the document.",
         "emailHelp": "We send the signed declaration here, as a PDF.",
-        "languageNote": "The declaration is signed in this page's language, and the PDF and the email are in it too. For the other language, switch the language in the header before you sign.",
+        "languageNote": "The declaration is signed in this page's language, and the PDF and the email are in it too. For the other language, switch the language (RO / EN) before you sign.",
         "adultsOnly": "Sign it only for yourself, if you are at least {age} old on the day of the run; never on behalf of someone else, nor of a minor.",
         "accept": "I am at least {age} old, I have read the declaration above and sign it on my own responsibility",
         "acceptInline": "Tick this box so you can sign.",
@@ -4788,7 +4788,7 @@
     },
     "look": {
       "title": "The new look",
-      "intro": "The public pages' new look: an accent colour beside the logo blue (pink, unless you choose another), bolder headings, rounded buttons, «Join us» in the header.",
+      "intro": "The public pages' new look: an accent colour beside the logo blue (pink, unless you choose another), bolder headings, rounded buttons, «Follow us» with the socials in the header.",
       "introMore": "Off until the club approves it on QA; then it is the one-press way back. The page tint and the text size stay as you chose them, under both looks.",
       "current": "Now: {look}",
       "updatedAt": "Set {when}.",
@@ -4807,7 +4807,7 @@
         },
         "on": {
           "name": "The new look",
-          "help": "The accent colour below and Inter headings, rounded buttons with an arrow, «Join us» and the socials in the header, the mountains at the foot of the page."
+          "help": "The accent colour below and Inter headings, rounded buttons with an arrow, «Follow us» and the socials in the header, both languages in the footer, the mountains at the foot of the page."
         }
       },
       "accent": {
