@@ -211,7 +211,7 @@ export default async function CourseBox({
           defaultValue={event?.routeUrl ?? ""}
           {...textFieldConstraints(eventInputConstraints("routeUrl"), { inputMode: "url" })}
         />
-        {/* «Traseul»'s maps (§NNN), Garmin first as the page's tabs: the link or the embed
+        {/* «Traseul»'s maps (§718), Garmin first as the page's tabs: the link or the embed
             code the service gives, read down to its id at the save. The GPX file is uploaded in
             «Linkuri și fișiere», on the «Traseul (GPX)» row's own card. */}
         <RecallField

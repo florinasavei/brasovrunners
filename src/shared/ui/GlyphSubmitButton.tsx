@@ -11,7 +11,7 @@ type Props = Omit<SubmitButtonProps, "glyph" | "runner"> & {
   icon: ActionIconName;
   /**
    * One sentence saying what the press does and what it changes, shown on hover, on keyboard focus
-   * and on a long press (§NNN). It repeats nothing the label says: «Mai sus» is the label, «cardul
+   * and on a long press (§710). It repeats nothing the label says: «Mai sus» is the label, «cardul
    * apare mai devreme pe pagină» is the tooltip. A phone has no hover, so the words that matter stay
    * on the button; this is the extra.
    */
@@ -34,7 +34,7 @@ type Props = Omit<SubmitButtonProps, "glyph" | "runner"> & {
  * wraps a span, not the button, because the button is `SubmitButton`'s to render and a tooltip
  * needs a node that takes a ref; the span's hover and the button's focus both open it.
  *
- * Two limits, accepted (§NNN). `describeChild` puts `aria-describedby` on the span, not on the button
+ * Two limits, accepted (§710). `describeChild` puts `aria-describedby` on the span, not on the button
  * that takes focus, so a screen reader does not read the sentence on the button: the words on the
  * button and its named `ariaLabel` carry what matters, and the tooltip is the sighted extra. And a
  * long press opens it after 700 ms, which is longer than a deliberate tap; a finger that lifts after

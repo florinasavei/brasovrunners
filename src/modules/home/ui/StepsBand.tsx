@@ -19,7 +19,7 @@ export type StepsBandProps = {
 };
 
 /**
- * «Prima dată» (§NNN; `docs/REDESIGN.md` § What exists versus what is new): the home page's band for
+ * «Prima dată» (§714; `docs/REDESIGN.md` § What exists versus what is new): the home page's band for
  * someone who has never run with the club — a heading, one sentence, five numbered steps from the
  * calendar to the coffee, and «Cum funcționează», which opens a club page (decision 5).
  *

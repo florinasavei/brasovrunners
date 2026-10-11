@@ -222,7 +222,7 @@ describe("BR-REQ-033-02 criterion 14 no club-bound message carries a token, a li
 
     // A club mailbox that bounces its copy says nothing about the participant's address (§76) — nor one that
     // bounces the archive copy or the confirmation notice, which carry the participant's id (§670).
-    // The page's email state asks the database's own clock whether the race is still ahead (§NNN): the
+    // The page's email state asks the database's own clock whether the race is still ahead (§712): the
     // detail is read at NOW, before the race, on the fixture's calendar rather than the day this runs.
     const bounced = () =>
       atTheClock(NOW, () => findRegistrationDetailForAdmin(db, registration.id, NOW)).then((detail) => detail?.emailState?.detail ?? null);

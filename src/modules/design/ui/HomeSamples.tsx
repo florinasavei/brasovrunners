@@ -9,7 +9,7 @@ import { LOOK_PREVIEW_ATTRIBUTE, LOOK_VALUE } from "@/theme/look";
 import { SAMPLE_HOME_STEPS, SAMPLE_HOME_STRIP_SLOTS, SAMPLE_HOME_WHY, sampleHomeFigures } from "../fixtures";
 
 /**
- * The home page's four sections on «Mostre» (§NNN; `docs/REDESIGN.md` § The visual system: «each
+ * The home page's four sections on «Mostre» (§714; `docs/REDESIGN.md` § The visual system: «each
  * drawn with a fixture on /admin/design → Mostre»): `StepsBand`, `WhyList`, `PhotoStrip` and
  * `NumbersBand`, the very components the home page renders, from the sample content in
  * `fixtures.ts`. Inside the new look's preview box (`theme/look.ts`), because the home page is the

@@ -256,7 +256,7 @@ export const events = pgTable(
     routeUrl: text("route_url"),
 
     /**
-     * «Traseul»'s maps (§NNN): at most one Strava route and one Garmin Connect course,
+     * «Traseul»'s maps (§718): at most one Strava route and one Garmin Connect course,
      * `[{ provider, id, style?, mapHash?, token? }]` — the ids and the strictly-patterned values
      * `events/domain/route-maps.ts` reads out of the link or the embed code the club pasted, never
      * the pasted HTML. The page builds the link and the map's address from them, and loads the map
@@ -266,7 +266,7 @@ export const events = pgTable(
     routeMaps: jsonb("route_maps"),
 
     /**
-     * «Traseul»'s GPX file (§NNN): `{ key, name, size, uploadedAt }` — the object the club uploaded to
+     * «Traseul»'s GPX file (§718): `{ key, name, size, uploadedAt }` — the object the club uploaded to
      * the site's storage (`AGENTS.md` §17), under `<env>/route-gpx/<uuid>/<name>.gpx`, kept outside
      * the pictures' sweep (it is no `media_assets` row). Read through `events/domain/route-gpx.ts#readRouteGpx`.
      * Null is "no file". Carried by a series and a duplicate like the route; the object is deleted
@@ -871,7 +871,7 @@ export const events = pgTable(
     ),
 
     /**
-     * «Traseul»'s maps (§NNN): an array of at most two, each naming a known provider and an id of
+     * «Traseul»'s maps (§718): an array of at most two, each naming a known provider and an id of
      * digits — the parser's guarantee, held at the layer a seed or a hand-written `UPDATE` reaches.
      * Counted the positive way — every entry must match the good filter — because a negated jsonpath
      * filter over a missing member is "unknown", which a CHECK lets through.
@@ -881,7 +881,7 @@ export const events = pgTable(
       sql`${t.routeMaps} IS NULL OR CASE WHEN jsonb_typeof(${t.routeMaps}) = 'array' THEN jsonb_array_length(${t.routeMaps}) <= 2 AND jsonb_array_length(${t.routeMaps}) = jsonb_array_length(jsonb_path_query_array(${t.routeMaps}, '$[*] ? ((@.provider == "strava" || @.provider == "garmin") && @.id like_regex "^[0-9]{1,20}$")')) ELSE false END`,
     ),
     /**
-     * «Traseul»'s GPX (§NNN): an object whose key is one of the GPX keys the upload writes. The
+     * «Traseul»'s GPX (§718): an object whose key is one of the GPX keys the upload writes. The
      * `COALESCE` turns a missing key's NULL into a refusal: a CHECK passes on NULL.
      */
     check(

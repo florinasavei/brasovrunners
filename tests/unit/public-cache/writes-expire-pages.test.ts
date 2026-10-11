@@ -71,7 +71,7 @@ const WRITES: Record<string, Expected> = {
   "src/modules/content/events/service.ts#createEventAndPublish": ["events"],
   "src/modules/content/events/service.ts#duplicateEvent": { nothingPublic: "a fresh draft: publication and the featured flag are never copied" },
   "src/modules/content/events/service.ts#repeatEvent": ["events"],
-  // «Traseul»'s GPX (§NNN): the stored file goes only once no event row names it, so no page links to it.
+  // «Traseul»'s GPX (§718): the stored file goes only once no event row names it, so no page links to it.
   "src/modules/content/events/route-gpx.ts#releaseRouteGpx": { nothingPublic: "deletes a stored GPX only after the save that let go of it expired the events; no event row names it" },
   "src/modules/content/events/service.ts#materializeStandingRepeats": ["events"],
   "src/modules/content/events/service.ts#stopRepeat": ["events"],
@@ -172,7 +172,7 @@ const WRITES: Record<string, Expected> = {
   "src/modules/appearance/site-tint.ts#updateSiteTint": ["settings"],
   "src/modules/appearance/site-font-size.ts#updateSiteFontSize": ["settings"],
   "src/modules/appearance/site-look.ts#updateSiteLook": ["settings"],
-  // «Pagina principală» (§NNN): the root and every header (the logo's address).
+  // «Pagina principală» (§714): the root and every header (the logo's address).
   "src/modules/appearance/home-page.ts#updateHomePage": ["settings"],
   "src/modules/appearance/home-page.ts#changeStripPicture": ["settings"],
   "src/modules/deadlines/deadlines.ts#updateDeadlines": ["settings"],

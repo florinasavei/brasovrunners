@@ -4,7 +4,7 @@ import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featur
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
- * BR-REQ-011-01 and BR-REQ-050-02 (§NNN) — «Traseul»'s Strava and Garmin Connect maps, behind one
+ * BR-REQ-011-01 and BR-REQ-050-02 (§718) — «Traseul»'s Strava and Garmin Connect maps, behind one
  * press each, and the GPX file the club uploads.
  *
  * The owner, 2026-10-11: «so basically I need to put all: Garmin Connect embedded, Strava embedded,
@@ -51,7 +51,7 @@ async function watchProviders(page: Page): Promise<Request[]> {
   return seen;
 }
 
-test.describe.serial("BR-REQ-011-01 «Traseul»'s maps and GPX (§NNN)", () => {
+test.describe.serial("BR-REQ-011-01 «Traseul»'s maps and GPX (§718)", () => {
   test("are pasted in «Traseul», the file uploaded in «Linkuri și fișiere», and the event is published", async ({ page }) => {
     test.setTimeout(test.info().timeout + 60_000);
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;

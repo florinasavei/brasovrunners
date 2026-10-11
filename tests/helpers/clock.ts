@@ -1,7 +1,7 @@
 import { vi } from "vitest";
 
 /**
- * `work`, with the real clock reading `instant` while it runs (§NNN).
+ * `work`, with the real clock reading `instant` while it runs (§712).
  *
  * For a path that reads `new Date()` although the test gave its own `now` — a page, a route, a
  * Server Action, the proxy, a link's read (`readRegistrationTokenContext`), the guardian rule — so

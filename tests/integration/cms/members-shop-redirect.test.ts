@@ -3,7 +3,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, §683 — the members' shop verbs answer back to «Magazin», the zone's shop tab, whatever the
+ * §715, §683 — the members' shop verbs answer back to «Magazin», the zone's shop tab, whatever the
  * outcome: `/ro/zona-membri/magazin?shop=…` (and `&shopAt=orders#members-orders` for an order's own
  * answers), the English twin under `/en/members-area/shop`. The action asserts the door itself; a
  * signed-out press goes to the sign-in, not to the tab.
@@ -35,7 +35,7 @@ function form(entries: Record<string, string>): FormData {
   return data;
 }
 
-describe("§NNN the shop's verbs answer on «Magazin»", () => {
+describe("§715 the shop's verbs answer on «Magazin»", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let member: StaffUser;

@@ -27,7 +27,7 @@ export type HeroProps = {
 };
 
 /**
- * The home page's first screen (the facelift's phase 3, §NNN; `docs/REDESIGN.md` § The visual system):
+ * The home page's first screen (the facelift's phase 3, §714; `docs/REDESIGN.md` § The visual system):
  * the page's one `h1` with its last word in the accent (a `span`, never a gradient), one line under
  * it, two pill buttons with their arrows (a third, «Cum funcționează», once the club names its page) (`ArrowButtonLink`, §708) and the club's photograph.
  *

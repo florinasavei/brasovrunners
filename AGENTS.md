@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.94-2026-10-11 -->
+<!-- PROJECT_BASELINE: BR-V2.95-2026-10-11 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V2.94-2026-10-11`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.95-2026-10-11`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -3264,7 +3264,7 @@ two WebP variants, with `sharp` (already installed by Next) rotating and strippi
 `<env>/<opaque prefix>/<variant>.webp`, so two environments can share one bucket. The original
 file is not kept: the browser shrinks it before upload and the server re-encodes what arrives.
 
-One file that is not a picture (§NNN): the GPX of an event's «Traseul», uploaded through
+One file that is not a picture (§718): the GPX of an event's «Traseul», uploaded through
 `/api/admin/route-gpx`, checked for what it is (an XML document whose root is `<gpx>`, at most
 4 MB) and kept as given under `<env>/route-gpx/<uuid>/<name>.gpx`. `put` takes an optional
 `contentDisposition`, which R2 stores so the file downloads under its name; `/api/media` gives the
@@ -3392,7 +3392,7 @@ Target WCAG 2.2 AA:
 - indexed queries/server pagination;
 - no full participant dataset to client;
 - no external social embeds; a third party's film or map only behind a press, as a native
-  `<details>` that loads nothing until opened, and never the provider's script (§69, §NNN);
+  `<details>` that loads nothing until opened, and never the provider's script (§69, §718);
 - measure before optimizing;
 - capacity correctness over cache cleverness;
 - Core Web Vitals targets at p75 mobile: LCP 2.5 s, INP 200 ms, CLS 0.1;

@@ -5,7 +5,7 @@ import { ADDRESS_QUERY } from "../domain/event-picker";
 import { writeChoiceToAddress } from "./feedback-address";
 
 /**
- * Writes the event and the day a person picks into the address (§NNN), for the two boxes that are
+ * Writes the event and the day a person picks into the address (§716), for the two boxes that are
  * plain native fields — the event's select when the list is short or before the filtering island runs,
  * and the day's date box. It draws nothing: one listener on the form it sits in. The filtering island
  * writes its own choice.

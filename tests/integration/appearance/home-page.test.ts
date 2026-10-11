@@ -16,7 +16,7 @@ const cache = vi.hoisted(() => ({ revalidatePublicContent: vi.fn() }));
 vi.mock("@/modules/public-cache/cache", () => cache);
 
 /**
- * §NNN — «Pagina principală» under «Setări» → «Aspect»: one `platform_settings` row, the
+ * §714 — «Pagina principală» under «Setări» → «Aspect»: one `platform_settings` row, the
  * Administrator's (§450), audited; off with no row; the hero's picture a stored one of the club's,
  * its crop four fractions; the two lines both languages or neither (§352).
  */

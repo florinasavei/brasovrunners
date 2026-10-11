@@ -470,7 +470,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await hydrated(page);
       await expect(posted).toHaveCount(1);
       await expect(posted).toHaveValue(offered[0]);
-      // The day picked goes into the address (§NNN), so the link can be shared with it chosen.
+      // The day picked goes into the address (§716), so the link can be shared with it chosen.
       await page.locator("#f-date").fill("2026-10-05");
       await expect(page).toHaveURL(/[?&]data=2026-10-05(&|$)/);
 
@@ -521,7 +521,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await hydrated(page);
       let pickedTitle = await pickEventByTyping(page, offered[0], pickerFixture);
 
-      // The event picked and a chip pressed are in the address, in Romanian (§NNN), without a navigation;
+      // The event picked and a chip pressed are in the address, in Romanian (§716), without a navigation;
       // the spec's own race first, then its own group run (which stays the event sent below).
       const island = page.getByTestId("feedback-event-filter");
       const box = island.getByRole("combobox", { name: "Alergarea" });

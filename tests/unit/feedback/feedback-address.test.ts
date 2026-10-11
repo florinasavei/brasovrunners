@@ -10,7 +10,7 @@ import {
   switchSearch,
 } from "@/modules/feedback/domain/event-picker";
 
-/** The chosen event, day and chip in the address (§NNN): BR-REQ-070-04. */
+/** The chosen event, day and chip in the address (§716): BR-REQ-070-04. */
 describe("addressSearchWith", () => {
   it("puts the event in beside the branch", () => {
     expect(addressSearchWith("?tip=cum-a-fost", { eveniment: "cursa-x" })).toBe("?tip=cum-a-fost&eveniment=cursa-x");

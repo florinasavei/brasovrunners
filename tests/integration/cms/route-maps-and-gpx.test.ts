@@ -7,7 +7,7 @@ import { expectViolation, SQLSTATE } from "../../helpers/constraints";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-050-02 and BR-REQ-011-01 (§NNN) — «Traseul»'s Strava and Garmin Connect maps and its GPX,
+ * BR-REQ-050-02 and BR-REQ-011-01 (§718) — «Traseul»'s Strava and Garmin Connect maps and its GPX,
  * end to end: saved through the editor's service from what the club pasted (ids only, never the
  * HTML), cleared per field, refused naming the field, held by the database's own CHECKs, read back
  * by the public query, carried by a series edit, a repeat and a duplicate; the GPX uploaded through
@@ -110,7 +110,7 @@ async function refusal(operation: Promise<unknown>): Promise<string> {
 
 const upload = () => storeRouteGpx(getStorage(), { bytes: TRACK, name: "Traseu Tâmpa.gpx", environment: "test", now: NOW });
 
-describe("BR-REQ-050-02 the maps are saved from what the club pasted (§NNN)", () => {
+describe("BR-REQ-050-02 the maps are saved from what the club pasted (§718)", () => {
   it("stores the ids and Strava's three values — never the pasted HTML — Garmin first, and the public page reads them", async () => {
     const event = await createDraft();
     await save(event.id, event.version, { ...FIELDS, routeStrava: STRAVA_EMBED, routeGarmin: GARMIN_LINK });
@@ -195,7 +195,7 @@ describe("BR-REQ-050-02 the maps are saved from what the club pasted (§NNN)", (
   });
 });
 
-describe("BR-REQ-050-02 the GPX file (§NNN)", () => {
+describe("BR-REQ-050-02 the GPX file (§718)", () => {
   it("is uploaded only by whoever may change the event, checked for what it is, and stored as given", async () => {
     const post = (file: File) => {
       const body = new FormData();

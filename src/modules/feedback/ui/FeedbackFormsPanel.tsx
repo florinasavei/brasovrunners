@@ -103,7 +103,7 @@ export default async function FeedbackFormsPanel({ locale, state, noticeDescribe
                 const Glyph = FEEDBACK_BRANCH_GLYPH[branch];
                 return (
                   <Fragment key={branch}>
-                    {/* A separator between the four forms (§NNN). */}
+                    {/* A separator between the four forms (§716). */}
                     {index > 0 && <Divider data-testid="feedback-branch-divider" />}
                     <Box component="fieldset" sx={{ border: 0, m: 0, p: 0 }} data-testid={`feedback-branch-${branch}`}>
                       <Typography component="legend" variant="subtitle2" sx={{ p: 0 }}>

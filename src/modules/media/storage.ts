@@ -32,7 +32,7 @@ import { formerKeyPrefixOf, isLadderKeyPrefix, LADDER_WIDTHS } from "./ladder";
 export type StoredVariant = "web" | "thumb" | number;
 
 /**
- * What a put may say beyond the type (§NNN): how the object is handed to a browser. Only the GPX of
+ * What a put may say beyond the type (§718): how the object is handed to a browser. Only the GPX of
  * «Traseul» sets it — a file to save, `attachment; filename=…` — and only R2 stores it, because R2
  * serves the object itself; `/api/media` gives the same header in the other two modes, read off the
  * key (`events/domain/route-gpx.ts#routeGpxHeaders`).
@@ -170,7 +170,7 @@ export async function readLocalObject(key: string): Promise<{ body: Buffer; cont
   if (env.STORAGE_MODE === "fake") return fakeObject(key);
   if (env.STORAGE_MODE === "local") {
     try {
-      // The disk keeps no type: a GPX of «Traseul» (§NNN) is told by its key, everything else is a WebP variant.
+      // The disk keeps no type: a GPX of «Traseul» (§718) is told by its key, everything else is a WebP variant.
       return { body: await readFile(safeLocalPath(key)), contentType: isRouteGpxKey(key) ? routeGpxHeaders(key).contentType : "image/webp" };
     } catch {
       return null;
@@ -199,7 +199,7 @@ function r2Storage(): Storage {
           Key: key,
           Body: body,
           ContentType: contentType,
-          // A GPX downloads under its own name rather than opening as text (§NNN).
+          // A GPX downloads under its own name rather than opening as text (§718).
           ...(options?.contentDisposition ? { ContentDisposition: options.contentDisposition } : {}),
           // A year, immutable: the key never changes meaning, and a replaced photo is a new key.
           CacheControl: "public, max-age=31536000, immutable",

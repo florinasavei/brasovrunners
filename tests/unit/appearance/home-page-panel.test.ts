@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — «Pagina principală»'s panel as the Administrator opens it: one fold per part of the page,
+ * §717 — «Pagina principală»'s panel as the Administrator opens it: one fold per part of the page,
  * every fold closed on arrival (§336) with a line that says what is in it — «5 din 8 arătate»,
  * «Cu fotografie» / «Fără fotografie», «Textele clubului» / «Textele implicite», «1 din 2 completate»
  * and the strip's picture count — drawn from the real catalogue.
@@ -47,7 +47,7 @@ const fold = (html: string, id: string) => {
   return html.slice(Math.max(0, html.lastIndexOf("<details", start)), html.indexOf("</summary>", start) + 10);
 };
 
-describe("§NNN the home page panel's folds", () => {
+describe("§717 the home page panel's folds", () => {
   it("says «Cu fotografie» for a chosen hero photograph and counts the strip's pictures", async () => {
     const picture = (n: number) => ({ assetId: `00000000-0000-4000-8000-00000000000${n}`, keyPrefix: `gallery/p${n}`, width: 1600, height: 900 });
     const html = await draw({

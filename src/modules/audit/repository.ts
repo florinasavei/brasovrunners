@@ -405,7 +405,7 @@ export type AuditAction =
   | "site_font_size.changed"
   /** «Aspectul nou»: the facelift's look on the public pages switched on or off (§708). */
   | "site_look.changed"
-  /** «Pagina principală»: the home page at the site's root on or off, its hero picture and its two lines (§NNN). */
+  /** «Pagina principală»: the home page at the site's root on or off, its hero picture and its two lines (§714). */
   | "home_page.changed"
   /** «Ordinea meniului»: the site menu's one order, every entry's key from first to last (§571). */
   | "menu_order.changed"

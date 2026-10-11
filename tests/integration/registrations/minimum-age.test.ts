@@ -60,7 +60,7 @@ vi.mock("@/modules/staff-identity/session", () => ({
 const { createRegistrationAction: createRegistrationActionNow } = await import("@/app/[locale]/admin/registrations/actions");
 /**
  * The staff form's action takes the request's own `new Date()`; it is pressed at NOW, before the
- * race, on the fixture's calendar — not on the day this runs, which refuses it once the race is past (§NNN).
+ * race, on the fixture's calendar — not on the day this runs, which refuses it once the race is past (§712).
  */
 const createRegistrationAction = (...args: Parameters<typeof createRegistrationActionNow>) => atTheClock(NOW, () => createRegistrationActionNow(...args));
 
@@ -202,7 +202,7 @@ describe("§321 the public form", () => {
   it("keeps the guardian rule as it was: fourteen to seventeen without a parent is refused for the parent", async () => {
     const event = await createRace();
     // The guardian rule asks the real clock whether the person is under eighteen (`fields.ts`), not
-    // the `now` passed: the form is sent at NOW, while the 2011 birth date is still a minor's (§NNN).
+    // the `now` passed: the form is sent at NOW, while the 2011 birth date is still a minor's (§712).
     const refused = await refusal(
       atTheClock(NOW, () => submitRegistration(db, event, submission({ birthDate: "2011-05-17", guardianName: undefined }), NOW)),
     );
@@ -269,7 +269,7 @@ describe("§321 a staff entry and the desk's walk-in", () => {
       name the refusal is about `guardianName` and never about age; with it the fourteen-year-old
       is entered at the desk, the parent on the row. An adult's entry goes all the way too.
     */
-    // At NOW, as the guardian rule reads the real clock (§NNN): the fourteen-year-old is a minor then.
+    // At NOW, as the guardian rule reads the real clock (§712): the fourteen-year-old is a minor then.
     const refused = await refusal(atTheClock(NOW, () => createRegistrationByStaff(db, volunteer, staffEntry(event, FOURTEEN_ON_RACE_DAY, true), NOW)));
     expect(refused?.fields ?? []).not.toContain(UNDER_MINIMUM_AGE);
     expect(refused?.fields).toContain("guardianName");

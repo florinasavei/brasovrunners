@@ -6,7 +6,7 @@ import { checkGpx, cleanGpxName, type GpxRefusal, readRouteGpx, type RouteGpx, r
 import type { Storage } from "@/modules/media/storage";
 
 /**
- * The GPX of «Traseul» in the store (§NNN): put on upload, deleted when no event names it.
+ * The GPX of «Traseul» in the store (§718): put on upload, deleted when no event names it.
  *
  * The upload writes the object at once and answers what the row will store; the event's save
  * writes the row (the editor posts it with everything else), so a series edit and a duplicate carry

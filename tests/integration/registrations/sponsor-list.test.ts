@@ -64,7 +64,7 @@ vi.mock("next-intl/server", () => ({
 const { GET: downloadSponsorListNow } = await import("@/app/api/admin/registrations/sponsor-list/route");
 /**
  * The route asks the real clock who is an adult today: it is called at NOW, so the sixteen-year-old
- * of the fixture stays a minor whatever day this runs (§NNN).
+ * of the fixture stays a minor whatever day this runs (§712).
  */
 const downloadSponsorList = (...args: Parameters<typeof downloadSponsorListNow>) => atTheClock(NOW, () => downloadSponsorListNow(...args));
 const { GET: exportRegistrations } = await import("@/app/api/admin/registrations/export/route");

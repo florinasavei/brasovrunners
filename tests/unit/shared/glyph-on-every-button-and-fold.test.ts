@@ -180,7 +180,7 @@ describe("§521 a glyph on every button", () => {
       expect(allowed.reason, allowed.file).toMatch(/\S/);
       expect(read(allowed.file), `${allowed.file}: ${allowed.words}`).toContain(allowed.words);
     }
-    // The move buttons are no exception any more (§NNN): a glyph, words and a tooltip, and still the row's name as the accessible name.
+    // The move buttons are no exception any more (§710): a glyph, words and a tooltip, and still the row's name as the accessible name.
     for (const file of ["src/app/[locale]/admin/pages/team/page.tsx", "src/modules/club-todo/ui/ClubTodoPanel.tsx"]) {
       const text = read(file);
       expect(text, file).toMatch(/icon="moveUp"[^>]*ariaLabel=/);

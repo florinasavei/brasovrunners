@@ -317,7 +317,7 @@ function eventFieldsFrom(form: FormData) {
     // who may not edit the place) reads as "not editing" rather than as a cleared pair.
     coordinates: form.has("event.coordinates") ? value("coordinates") : undefined,
     routeUrl: value("routeUrl"),
-    // «Traseul»'s maps and GPX (§NNN): only when the form carried the boxes, so a form without them
+    // «Traseul»'s maps and GPX (§718): only when the form carried the boxes, so a form without them
     // (a reader who may not change the settings) is "not editing the maps", never "no maps".
     routeStrava: form.has("event.routeStrava") ? value("routeStrava") : undefined,
     routeGarmin: form.has("event.routeGarmin") ? value("routeGarmin") : undefined,

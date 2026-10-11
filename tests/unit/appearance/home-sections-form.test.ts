@@ -13,14 +13,14 @@ import { EMPTY_STRIP } from "@/modules/home/domain/photo-strip";
 import { isTranslatableEnglishField } from "@/modules/translate/domain/fields";
 
 /**
- * BR-REQ-050-03 (§NNN) — «Pagina principală»'s four lower sections as its form posts them: every box a
+ * BR-REQ-050-03 (§714) — «Pagina principală»'s four lower sections as its form posts them: every box a
  * pair named `<stem>Ro` / `<stem>En`, read through the sections' own schemas, a refusal naming the box
  * the club must fix, and every English box one «Copiază și tradu tot» may fill.
  */
 const form = (fields: Record<string, string>) => (name: string) => fields[name];
 const PAGE = "6f1c2e1a-3b4d-4e5f-8a6b-7c8d9e0f1a2b";
 
-describe("§NNN the lower sections' boxes", () => {
+describe("§714 the lower sections' boxes", () => {
   it("are one name per pair, never two boxes with the same name", () => {
     const names = HOME_SECTION_BOXES.flatMap((box) => [`${box.stem}Ro`, `${box.stem}En`]);
     expect(new Set(names).size).toBe(names.length);
@@ -52,7 +52,7 @@ describe("§NNN the lower sections' boxes", () => {
   });
 });
 
-describe("§NNN what the form posts, read", () => {
+describe("§714 what the form posts, read", () => {
   it("reads the club's words where written and the platform's (null) where both boxes are empty", () => {
     const read = postedSteps(form({ stepsTitleRo: " Nou aici? ", stepsTitleEn: "New here?", step2TitleRo: "Vino", step2TitleEn: "Come", step2BodyRo: "La start", step2BodyEn: "To the start", stepsPageId: PAGE }));
     expect(read).toEqual({

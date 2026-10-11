@@ -31,7 +31,7 @@ async function codesOrAway(now: Date): Promise<MembersDiscountCode[] | "away"> {
 }
 
 /**
- * The members' zone (§524) and its first tab, «Coduri de reducere» (§NNN, §552): the partners' codes
+ * The members' zone (§524) and its first tab, «Coduri de reducere» (§715, §552): the partners' codes
  * for the members alone (§517), at the zone's own address `/members-area`. The shop and the runs are
  * `shop/page.tsx` and `runs/page.tsx`; the frame, the door (`openZone`) and the sign-out are `zone.tsx`.
  *

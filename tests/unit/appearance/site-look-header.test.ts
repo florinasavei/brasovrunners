@@ -73,7 +73,7 @@ beforeEach(() => {
   state.upcoming = [];
 });
 
-describe("§NNN the logo leads to the home page while «Pagina principală» is on", () => {
+describe("§714 the logo leads to the home page while «Pagina principală» is on", () => {
   it("leads to the listing while it is off, and to the site's root while it is on — never a menu entry", async () => {
     expect(await header()).toContain('<a href="/events" data-testid="logo">');
     state.home = { on: true };

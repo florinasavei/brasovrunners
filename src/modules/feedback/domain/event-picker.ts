@@ -120,7 +120,7 @@ export function pickerNoEventFound(filtered: readonly PickerOption[]): boolean {
   return !filtered.some((option) => option.value !== GENERAL_VALUE);
 }
 
-// --- The address (§NNN) ---------------------------------------------------------------------------
+// --- The address (§716) ---------------------------------------------------------------------------
 
 /**
  * The three words the browser may write into the address, in Romanian like every other word of it
@@ -162,7 +162,7 @@ export function initialChipFor(options: readonly PickerOption[], selected: strin
 }
 
 /**
- * The address's search string after a choice (§NNN): each change sets a word, or removes it on `null`
+ * The address's search string after a choice (§716): each change sets a word, or removes it on `null`
  * or an empty value - only the three of `CLIENT_ADDRESS_KEYS`; a refusal's words (`error`, `fields`,
  * `since`) and the sent mark go, as a link shared with the event chosen must not carry another
  * person's outcome. Nothing personal is ever written: a slug, a day, a chip's name.

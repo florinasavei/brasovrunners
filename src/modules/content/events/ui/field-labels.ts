@@ -94,7 +94,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.costAmount": inBox("registration", t("editor.costAmount")),
     "event.costUrl": inBox("registration", t("editor.costDonationUrl")),
     "event.routeUrl": inBox("course", t("editor.routeUrl")),
-    // «Traseul»'s two maps (§NNN).
+    // «Traseul»'s two maps (§718).
     "event.routeGarmin": inBox("course", t("editor.routeGarmin")),
     "event.routeStrava": inBox("course", t("editor.routeStrava")),
     "event.distanceMeters": inBox("course", t("editor.distanceMeters")),
@@ -103,7 +103,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.offersGroupRunDeclaration": inProgrammeRules("declaration", t("editor.groupRunDeclaration.label")),
     "event.stravaEventUrl": inBox("links", t("editor.stravaEventUrl")),
     "event.facebookEventUrl": inBox("links", t("editor.facebookEventUrl")),
-    // The route's GPX file is uploaded in this card, above the rows (§NNN): a refused one names «Linkuri și fișiere».
+    // The route's GPX file is uploaded in this card, above the rows (§718): a refused one names «Linkuri și fișiere».
     "event.routeGpx": inBox("links", t("editor.routeGpx.label")),
     "event.featured": inBox("promotion", t("editor.featured")),
     "event.isSpecial": inBox("promotion", t("editor.special")),

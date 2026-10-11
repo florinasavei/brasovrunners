@@ -19,7 +19,7 @@ const state = vi.hoisted(() => ({ locale: "ro" as "ro" | "en", kitShirt: false }
 /**
  * The moment the page is rendered at: registration open, the race ahead. The page reads the real
  * clock (`new Date()`), so without it the form 404s once the calendar passes the fixture's close
- * (§NNN).
+ * (§712).
  */
 const OPEN = new Date("2026-10-01T09:00:00.000Z");
 

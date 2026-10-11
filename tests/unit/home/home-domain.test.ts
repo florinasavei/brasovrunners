@@ -9,14 +9,14 @@ import { HOME_GLYPHS } from "@/modules/home/ui/home-glyphs";
 import { coverMagnification, pictureSizes } from "@/modules/media/ladder";
 
 /**
- * BR-REQ-041-01 (§NNN) — the home page's four sections, their domain: what the club may type for
+ * BR-REQ-041-01 (§714) — the home page's four sections, their domain: what the club may type for
  * «Prima dată», «De ce», the photo strip and the numbers band, both languages or neither (§352), and
  * the figures the band reads off the events, never invented (decision 8, BUSINESS.md §7).
  */
 const PAGE_ID = "6f1c2e1a-3b4d-4e5f-8a6b-7c8d9e0f1a2b";
 const PICTURE = (n: number) => `0b6f3f9e-2a41-8c3d-9e5f-1a2b3c4d5e${String(n).padStart(2, "0")}`;
 
-describe("§NNN a home text is Romanian and English, or neither", () => {
+describe("§714 a home text is Romanian and English, or neither", () => {
   const schema = homeTextSchema(20);
 
   it("keeps a pair written in both, trimmed, and reads neither as the default (null)", () => {
@@ -41,7 +41,7 @@ describe("§NNN a home text is Romanian and English, or neither", () => {
   });
 });
 
-describe("§NNN «Prima dată», «De ce» and the strip: the stored shapes", () => {
+describe("§714 «Prima dată», «De ce» and the strip: the stored shapes", () => {
   it("has five steps and four reasons, each with a glyph of the home registry", () => {
     expect(EMPTY_STEPS.steps).toHaveLength(STEP_COUNT);
     expect(STEP_COUNT).toBe(5);
@@ -121,7 +121,7 @@ describe("§NNN «Prima dată», «De ce» and the strip: the stored shapes", ()
   });
 });
 
-describe("§NNN the numbers band reads its figures, never invents one", () => {
+describe("§714 the numbers band reads its figures, never invents one", () => {
   const NOW = new Date("2026-10-11T10:00:00Z");
   const run = (startsAt: string, overrides: Partial<NumbersEvent> = {}): NumbersEvent => ({
     type: "GROUP_RUN",

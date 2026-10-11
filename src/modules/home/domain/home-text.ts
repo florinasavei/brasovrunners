@@ -3,7 +3,7 @@ import type { Locale } from "@/i18n/routing";
 import { isWrittenText, refuseOneLanguage } from "@/shared/forms/both-languages";
 
 /**
- * A text the club types for the home page's sections (§NNN; `docs/REDESIGN.md`, phase 3): Romanian
+ * A text the club types for the home page's sections (§714; `docs/REDESIGN.md`, phase 3): Romanian
  * **and** English, both or neither (§352, `shared/forms/both-languages.ts`). Neither means «the
  * platform's words»: every box of the four sections starts empty and the page draws the default
  * sentence from the catalogues (`HomeSections.*`) until the club writes its own, so the page has

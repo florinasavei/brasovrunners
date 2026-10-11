@@ -10,7 +10,7 @@ import { FEATURED, hydrated, signIn } from "./support/featured-event";
  * Locally a missing message throws (`src/i18n/errors.ts`), so an island left without its words
  * surfaces here as the error page, not as a key nobody reads.
  *
- * The root, which §353 made a real 308 from the proxy, is the home page's now (§NNN): its answer is
+ * The root, which §353 made a real 308 from the proxy, is the home page's now (§714): its answer is
  * `home-page.spec.ts`'s to check.
  */
 
@@ -115,7 +115,7 @@ test.describe("§353 every island finds its words, and a public page carries onl
   });
 
   /*
-    The site's root moved to `home-page.spec.ts` (§NNN, amending §353): it is the home page or a
+    The site's root moved to `home-page.spec.ts` (§714, amending §353): it is the home page or a
     temporary redirect to the listing as «Pagina principală» says, and that spec switches the one
     shared setting serially, which a check here running beside it could not survive.
   */

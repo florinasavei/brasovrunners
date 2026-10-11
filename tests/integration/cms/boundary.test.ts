@@ -265,7 +265,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       // «Beneficiile membrilor» and the members' zone behind the sign-in (§524), by hand.
       "/members",
       "/members-area",
-      // The zone's two other tabs (§NNN).
+      // The zone's two other tabs (§715).
       "/members-area/runs",
       "/members-area/shop",
       // The newsletter's two link pages (§445): the confirmation and the subscriber's own page.

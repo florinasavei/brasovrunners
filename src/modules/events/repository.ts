@@ -141,7 +141,7 @@ const PUBLIC_COLUMNS = {
   longitude: unlessToBeAnnounced<number | null>(events.longitude),
   // The course, when the club has drawn one somewhere (BR-REQ-011-01 criterion 8).
   routeUrl: events.routeUrl,
-  // «Traseul»'s maps and GPX (§NNN): ids and a file the club published for anybody — read only
+  // «Traseul»'s maps and GPX (§718): ids and a file the club published for anybody — read only
   // through `readRouteMaps` and `readRouteGpx`.
   routeMaps: events.routeMaps,
   routeGpx: events.routeGpx,
@@ -645,7 +645,7 @@ export async function findEventNotificationRows<T extends Record<string, unknown
       // route section exists — a route-kind link moves into it and out of "Linkuri și fișiere",
       // exactly as the page draws it (`partitionEventLinks`).
       routeDescriptionJson: eventTranslations.routeDescriptionJson,
-      // «Traseul»'s maps and GPX (§NNN): with them the route section exists without a description too.
+      // «Traseul»'s maps and GPX (§718): with them the route section exists without a description too.
       routeMaps: events.routeMaps,
       routeGpx: events.routeGpx,
       // "What to bring", the translation's line (§81); the map and the Strava event are the

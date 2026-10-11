@@ -3,7 +3,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Pagina principală» is read from the public cache (`cachedHomePage`), the root's and the
+ * §714 — «Pagina principală» is read from the public cache (`cachedHomePage`), the root's and the
  * header's one read of it. A save is seen at the next visit; and when the database cannot answer, the
  * last good copy is what the root reads (§447), never a throw over the site's most-visited address.
  */
@@ -32,7 +32,7 @@ async function visit() {
   return cachedHomePage();
 }
 
-describe("§NNN the home page's setting is read from the public cache", () => {
+describe("§714 the home page's setting is read from the public cache", () => {
   let admin: StaffUser;
 
   beforeAll(async () => {

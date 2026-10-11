@@ -33,7 +33,7 @@ export const dynamic = "force-dynamic";
 /**
  * «Setări» → «Aspect» (§488, moved from Pagini → «Aspect» by §516): how the public pages look.
  * Four settings: the site's light background tint, since §530 its text size, since §708 «Aspectul
- * nou», the facelift's look on or off, and since §NNN «Pagina principală», the home page at the root. Read by whoever reads the club's content;
+ * nou», the facelift's look on or off, and since §714 «Pagina principală», the home page at the root. Read by whoever reads the club's content;
  * changed by the Administrator (`canManageClubSettings`, §450), which the action and the service
  * assert again (BR-REQ-060-01).
  */
@@ -72,7 +72,7 @@ export default async function AdminAppearancePage({ params, searchParams }: Prop
       <SiteFontSizePanel locale={locale} state={fontSize} mayEdit={canManageClubSettings(actor.role)} openWhen={{ primary: true }} />
       {/* «Aspectul nou» (§708): the facelift's look on the public pages, one switch. */}
       <SiteLookPanel locale={locale} state={look} mayEdit={canManageClubSettings(actor.role)} openWhen={{ primary: true }} />
-      {/* «Pagina principală» (§NNN): the home page at the site's root, one switch, and a fold for each part of the page. */}
+      {/* «Pagina principală» (§714): the home page at the site's root, one switch, and a fold for each part of the page. */}
       <HomePagePanel locale={locale} state={home} mayEdit={canManageClubSettings(actor.role)} pages={pages} saved={saved} openWhen={{ primary: true }} />
 
       {/* «Sistemul de design» (§692): the look as the code draws it, and the redesign plan — one card, one button, for whoever reads this tab. */}

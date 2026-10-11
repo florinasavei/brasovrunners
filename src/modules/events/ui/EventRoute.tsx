@@ -17,7 +17,7 @@ import { eventLinkRow, LinkList, type LinkRow } from "./EventLinks";
 import RouteMapPanel, { type RouteMapProviderWords } from "./RouteMapPanel";
 import RouteMapTabs from "./RouteMapTabs";
 
-/** «Traseul»'s words for the maps and the GPX (§NNN), the `Event.routeMaps` sub-tree of the catalogue. */
+/** «Traseul»'s words for the maps and the GPX (§718), the `Event.routeMaps` sub-tree of the catalogue. */
 export type RouteMapWords = {
   /** The tabs' accessible name: «Hărțile traseului». */
   tabs: string;
@@ -34,7 +34,7 @@ export type RouteMapWords = {
  * link (a Strava route or activity, with Strava's mark, §61) and the GPX and map links of
  * "Linkuri și fișiere" (§332), drawn exactly as that section draws them.
  *
- * Since §NNN, the event's own maps and file under them: Garmin Connect and Strava in tabs (the
+ * Since §718, the event's own maps and file under them: Garmin Connect and Strava in tabs (the
  * owner's layout, Garmin first; one service alone needs no tabs), each map behind its own press
  * (`RouteMapPanel`), then the GPX the club uploaded, «Descarcă traseul (GPX)», whether or not there
  * is a map. The route link is not drawn when it is the very Strava route the Strava tab opens.
@@ -65,9 +65,9 @@ export default function EventRoute({
   links: unknown;
   /** The route link (`events.route_url`), or null. */
   routeUrl: string | null;
-  /** «Traseul»'s maps as stored (`events.route_maps`, §NNN). */
+  /** «Traseul»'s maps as stored (`events.route_maps`, §718). */
   routeMaps?: unknown;
-  /** «Traseul»'s GPX as stored (`events.route_gpx`, §NNN). */
+  /** «Traseul»'s GPX as stored (`events.route_gpx`, §718). */
   routeGpx?: unknown;
   locale: "ro" | "en";
   heading: string;

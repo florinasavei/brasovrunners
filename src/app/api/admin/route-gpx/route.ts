@@ -8,7 +8,7 @@ import { env } from "@/shared/config/env";
 import { isDomainError } from "@/shared/errors/domain-error";
 
 /**
- * The GPX of «Traseul» (§NNN), from the event editor: `POST` multipart with a `file`; answers the
+ * The GPX of «Traseul» (§718), from the event editor: `POST` multipart with a `file`; answers the
  * value the editor puts in its hidden input (`event.routeGpx`), which the event's save stores.
  *
  * Only whoever may change the event's settings (`canEditEventFields`, the route field's own rule):

@@ -82,7 +82,7 @@ function LinkRowsEditorIsland({
   );
   const [nextKey, setNextKey] = useState(rows.length);
   // The kind a row's box shows once it was changed, by the row's key, kept only to decide whether a «GPX»
-  // row offers the upload (§NNN). The box itself stays uncontrolled and its `defaultValue` stays the row's
+  // row offers the upload (§718). The box itself stays uncontrolled and its `defaultValue` stays the row's
   // initial kind: a default that followed the choice is what MUI warns about. A key is never reused, so a
   // removed row's entry is inert.
   const [chosenKinds, setChosenKinds] = useState<Record<number, string>>({});
@@ -190,7 +190,7 @@ function LinkRowsEditorIsland({
                 slotProps={{ htmlInput: { ...constraints.label } }}
               />
             </Stack>
-            {/* The route's GPX as a file instead of a link (§NNN): the same upload as the card's, by its input. */}
+            {/* The route's GPX as a file instead of a link (§718): the same upload as the card's, by its input. */}
             {labels.uploadGpx && shownKind === "GPX" && (
               <GlyphButton htmlFor={ROUTE_GPX_INPUT_ID} icon="upload" variant="outlined" sx={{ alignSelf: "flex-start", minHeight: 44 }} data-testid="link-row-upload-gpx">
                 {labels.uploadGpx}

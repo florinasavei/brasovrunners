@@ -33,7 +33,7 @@ export type PhotoStripProps = {
 const GAP_PX = 12;
 
 /**
- * The photo strip (§NNN; `docs/REDESIGN.md`, decisions 6 and 7): the club's own pictures in a row
+ * The photo strip (§714; `docs/REDESIGN.md`, decisions 6 and 7): the club's own pictures in a row
  * that scrolls sideways under the thumb — CSS scroll snap, no script, no island — six to the row on a
  * laptop, two and a half on a tablet, one and a bit on a phone, so the next one peeks in and says
  * «there is more». Then the gallery's door and the club's Instagram as a plain link: a link, never a

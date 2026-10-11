@@ -1,5 +1,5 @@
 /**
- * «Traseul»'s GPX file (§NNN): the track the club uploads to the site's own storage (`AGENTS.md`
+ * «Traseul»'s GPX file (§718): the track the club uploads to the site's own storage (`AGENTS.md`
  * §17), so a runner downloads it from the event page and loads it on a watch — beside the
  * Strava and Garmin Connect maps, and beside the GPX *link* kind of «Linkuri și fișiere» (§332),
  * which stays for a file the club keeps elsewhere.

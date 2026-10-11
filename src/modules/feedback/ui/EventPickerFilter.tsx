@@ -86,7 +86,7 @@ export default function EventPickerFilter({
   options: readonly PickerOption[];
   /** The slug the server preselected — the draft's, `?eveniment=`'s, or `""`. */
   selected: string;
-  /** The chip `?filtru=` named (§NNN), `all` otherwise, when the event chosen is not under it or when the chips are not drawn (`initialChipFor`). */
+  /** The chip `?filtru=` named (§716), `all` otherwise, when the event chosen is not under it or when the chips are not drawn (`initialChipFor`). */
   initialChip: PickerChip;
   error: boolean;
   helperText?: string;
@@ -105,7 +105,7 @@ export default function EventPickerFilter({
   const [chip, setChip] = useState<PickerChip>(initialChip);
   const chipsShown = pickerChipsShown(options);
 
-  // A chip pressed is in the address too (§NNN), «toate» as no word at all.
+  // A chip pressed is in the address too (§716), «toate» as no word at all.
   const pickChip = (kind: PickerChip) => {
     setChip(kind);
     writeChoiceToAddress({ [ADDRESS_QUERY.chip]: chipSlug(kind) });

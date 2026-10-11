@@ -807,7 +807,7 @@ export async function cachedSiteLook(): Promise<SiteLookSetting> {
 }
 
 /**
- * «Pagina principală» (§NNN): whether the site's root is the home page, its hero picture and its two
+ * «Pagina principală» (§714): whether the site's root is the home page, its hero picture and its two
  * lines — read by the root and by the header (the logo leads to the home page while it is on), so it
  * is cached like the look beside it, and a save expires it (`updateHomePage`). When the database
  * cannot answer, the last good copy (§447), then off: the root goes to the listing, as it always did.

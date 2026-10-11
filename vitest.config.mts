@@ -14,7 +14,7 @@ export default defineConfig({
      */
     env: { APP_ENV: "test" },
     /**
-     * The calendar-proof check (§NNN): `yarn test:clock` sets `TEST_CLOCK_AT` and the real clock
+     * The calendar-proof check (§712): `yarn test:clock` sets `TEST_CLOCK_AT` and the real clock
      * of every test file reads that date instead of today, so a fixture the calendar will reach
      * fails now rather than on the morning it is reached. Unset — every ordinary run — nothing
      * is loaded.

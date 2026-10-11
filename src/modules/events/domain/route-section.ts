@@ -13,7 +13,7 @@ import { readRouteMaps } from "./route-maps";
  * environment schema — and the one place that decides what the section holds, so the page, the staff preview and
  * the facts' route row cannot disagree about which link is drawn where:
  * - the section exists only when this language's route description says something, or — since
- *   §NNN — the event has a Strava or Garmin Connect map or an uploaded GPX (`hasRouteSection`); an
+ *   §718 — the event has a Strava or Garmin Connect map or an uploaded GPX (`hasRouteSection`); an
  *   event with none of them keeps every link where it was;
  * - with it, the links of the route's own kinds — the GPX track and the route's map — leave
  *   "Linkuri și fișiere" for the section, and so does the route link (`route_url`, a Strava route
@@ -53,7 +53,7 @@ export function hasRouteDescription(json: unknown): boolean {
 export type RouteSectionSource = { routeDescriptionJson?: unknown; routeMaps?: unknown; routeGpx?: unknown };
 
 /**
- * Whether the page draws «Traseul» under `#route` (§387, widened by §NNN): this language's route
+ * Whether the page draws «Traseul» under `#route` (§387, widened by §718): this language's route
  * description says something, or the event has a Strava or Garmin Connect map, or a GPX file the
  * club uploaded. The maps and the file are facts of the event, the same in both languages; the
  * description is per language. One rule for the page, the preview, the facts' route row and the
@@ -64,7 +64,7 @@ export function hasRouteSection(source: RouteSectionSource, storageConfigured: b
 }
 
 /**
- * Whether the event has a map or a GPX file of its own for «Traseul» (§NNN). A GPX counts only where
+ * Whether the event has a map or a GPX file of its own for «Traseul» (§718). A GPX counts only where
  * storage is configured — the page draws the download only there, and an empty heading is worse than none.
  */
 export function hasRouteMedia(source: Pick<RouteSectionSource, "routeMaps" | "routeGpx">, storageConfigured: boolean): boolean {

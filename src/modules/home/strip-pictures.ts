@@ -3,7 +3,7 @@ import { getStorage, objectKey } from "@/modules/media/storage";
 
 /**
  * Everything the strip's `<img>` needs, built on the server from a stored picture of the gallery
- * (§NNN): the master's address, the ladder's `srcset` and `sizes` for the strip's square tile (§414,
+ * (§714): the master's address, the ladder's `srcset` and `sizes` for the strip's square tile (§414,
  * §601 — a phone downloads a rung its tile needs, never the 2400-pixel master), the picture's own
  * size, and the words a screen reader hears. A picture stored before the ladder has no `srcset` and
  * draws its thumbnail, as every older picture does (§414).

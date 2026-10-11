@@ -383,7 +383,7 @@ describe("§552 events for the members alone", () => {
         now: NOW,
       });
       state.cookie = member.id;
-      // The zone lists what is ahead by the real clock: it is opened at NOW, before both dates (§NNN).
+      // The zone lists what is ahead by the real clock: it is opened at NOW, before both dates (§712).
       const cards = elementsOf(await atTheClock(NOW, () => MembersAreaPage({ params: Promise.resolve({ locale: "ro" }) })), EventCard);
       expect(cards).toHaveLength(1);
       expect((cards[0].props.event as { slug: string }).slug).toBe("crosul-membrilor");
@@ -391,7 +391,7 @@ describe("§552 events for the members alone", () => {
     });
 
     it("the registration form: 404 to a stranger; for a member, the account's address, not asked", async () => {
-      // The page reads the wall clock: it is opened at NOW, published before it and the race ahead (§NNN).
+      // The page reads the wall clock: it is opened at NOW, published before it and the race ahead (§712).
       await db.update(events).set({ publishedAt: new Date("2026-01-01T00:00:00.000Z") }).where(eq(events.id, membersEventId));
       const page = () => atTheClock(NOW, () => RegisterPage({ params: params(), searchParams: Promise.resolve({}) }));
       expect(await isNotFound(page())).toBe(true);

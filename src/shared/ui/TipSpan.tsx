@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import { readingTimeMs, TOOLTIP_TEXT_SX } from "./tooltip-text";
 
 /**
- * A tooltip around a control that may be disabled (§NNN): MUI's `Tooltip` needs a node that takes a
+ * A tooltip around a control that may be disabled (§710): MUI's `Tooltip` needs a node that takes a
  * ref and hears the pointer, and a disabled button hears nothing, so the span carries it. The title
  * is a string, never an element. Backoffice only: the tooltip is the backoffice's cost, not a
  * visitor's. `describeChild` keeps the control's own name as its name; the sentence describes the

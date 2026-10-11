@@ -547,7 +547,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
       ? {}
       : { latitude: fields.coordinates?.latitude ?? null, longitude: fields.coordinates?.longitude ?? null }),
     routeUrl: fields.routeUrl,
-    // «Traseul»'s maps and GPX (§NNN), by the partners' discipline: a caller that posted neither map
+    // «Traseul»'s maps and GPX (§718), by the partners' discipline: a caller that posted neither map
     // field writes no maps, and one that posted no GPX input leaves the file alone.
     ...(fields.routeStrava === undefined && fields.routeGarmin === undefined
       ? {}
@@ -1838,7 +1838,7 @@ const SERIES_COLUMNS = [
   // The links are the route's kin (§332): the GPX and the rules do not change from one
   // Wednesday to the next, so a series edit carries them like the route.
   "links",
-  // «Traseul»'s maps and GPX (§NNN), like the route they show: the Wednesday run is drawn on the
+  // «Traseul»'s maps and GPX (§718), like the route they show: the Wednesday run is drawn on the
   // same map every Wednesday, and "from this date" carries a new one.
   "routeMaps",
   "routeGpx",
@@ -2004,7 +2004,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
   offered: number;
   dates: SavedDate[];
   holds: WindowHoldsMoved[];
-  /** The GPX keys this save overwrote on the other dates (§NNN), for the store to let go of once nothing names them. */
+  /** The GPX keys this save overwrote on the other dates (§718), for the store to let go of once nothing names them. */
   gpxReplaced?: string[];
 }> {
   const { before, after, now } = input;
@@ -2168,7 +2168,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
       }
     }
 
-    // A date that held a GPX of its own loses the file this save writes over it (§NNN): its key is
+    // A date that held a GPX of its own loses the file this save writes over it (§718): its key is
     // handed back, so the store lets it go once no date names it any more.
     if ("routeGpx" in changes) {
       const replaced = routeGpxKeyOf(member.routeGpx);
@@ -2343,7 +2343,7 @@ async function assertStoredCover<T extends Record<string, unknown>>(
 }
 
 /**
- * A GPX of «Traseul» (§NNN) posted with a save must be this environment's — a key another
+ * A GPX of «Traseul» (§718) posted with a save must be this environment's — a key another
  * environment's upload wrote is a file this site cannot serve. Asked only when the save moves the
  * file: an unchanged one is not read again.
  */
@@ -2356,7 +2356,7 @@ function assertRouteGpxOfThisEnvironment(fields: Pick<EventFieldsInput, "routeGp
 }
 
 /**
- * The GPX objects a committed save or erase let go of (§NNN), deleted when no event row names them
+ * The GPX objects a committed save or erase let go of (§718), deleted when no event row names them
  * any more. Best effort and after the commit: a store having a bad minute leaves a file nobody
  * links to, never a page linking to a file that is gone; and a store that is not configured has
  * nothing to delete.
@@ -2646,7 +2646,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   */
   const deadlines = await currentDeadlines(db);
 
-  // The GPX keys a series save wrote over on the other dates (§NNN), released after the commit.
+  // The GPX keys a series save wrote over on the other dates (§718), released after the commit.
   const seriesGpxKeys: string[] = [];
   const outcome = await db.transaction(async (tx) => {
     let savedEvent: EditableEvent = current;
@@ -2824,7 +2824,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   // The one save of the whole event (§36), cancelling included: a cancelled event must never read
   // as scheduled, so the cached rows go the moment it commits (§28, §333).
   revalidatePublicContent("events");
-  // The GPX this date held before the save (§NNN), when the save replaced or removed it, and the ones
+  // The GPX this date held before the save (§718), when the save replaced or removed it, and the ones
   // it overwrote on the series' other dates: deleted from the store once no date and no duplicate names them.
   const gpxLetGo = parsedEventFields?.routeGpx !== undefined && routeGpxKeyOf(current.routeGpx) !== (parsedEventFields.routeGpx?.key ?? null) ? [routeGpxKeyOf(current.routeGpx)] : [];
   await releaseRouteGpxAfterCommit(db, [...gpxLetGo, ...seriesGpxKeys]);
@@ -3479,7 +3479,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // The links travel with the route (§332), to a duplicate and to every date of a repeat:
     // last year's GPX and rules are this year's starting point, and a weekly run's are the same.
     links: source.links,
-    // «Traseul»'s maps and GPX (§NNN), like the route: one object, named by both rows, deleted
+    // «Traseul»'s maps and GPX (§718), like the route: one object, named by both rows, deleted
     // only when the last of them lets go of it.
     routeMaps: source.routeMaps,
     routeGpx: source.routeGpx,
@@ -4039,7 +4039,7 @@ export async function deleteEvent<T extends Record<string, unknown>>(
     return routeGpxKeyOf(gone?.routeGpx);
   });
   revalidatePublicContent("events");
-  // Its GPX (§NNN) goes with it, unless another date of the series or a duplicate still names it.
+  // Its GPX (§718) goes with it, unless another date of the series or a duplicate still names it.
   if (gpxKey) await releaseRouteGpxAfterCommit(db, [gpxKey]);
 }
 
@@ -4160,7 +4160,7 @@ export async function hardDeleteEvent<T extends Record<string, unknown>>(
   // The event, and an album that pointed at it, leave the public pages (`reads.ts` files the album
   // under both kinds, so this one call reaches it).
   revalidatePublicContent("events");
-  // Its GPX (§NNN) goes with it, unless another date of the series or a duplicate still names it.
+  // Its GPX (§718) goes with it, unless another date of the series or a duplicate still names it.
   if (erased.gpxKey) await releaseRouteGpxAfterCommit(db, [erased.gpxKey]);
   return { registrationsErased: erased.registrationsErased };
 }

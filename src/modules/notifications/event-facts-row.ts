@@ -14,7 +14,7 @@ import type { EmailEventFacts } from "./domain/event-facts";
  * the same way, and neither imports the other.
  */
 export function emailEventFacts(row: EventNotificationRow, pageUrl: string | null): EmailEventFacts {
-  // The page's own rule (§387, §NNN): a description in this language, a map or a GPX.
+  // The page's own rule (§387, §718): a description in this language, a map or a GPX.
   const routeSection = hasRouteSection(row, isStorageConfigured());
   return {
     startsAt: row.startsAt,

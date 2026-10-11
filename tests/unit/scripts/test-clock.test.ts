@@ -3,12 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_DATES, failuresOf, parseArguments, resolveDate } from "../../../scripts/test-clock.mjs";
 
 /**
- * §NNN — the calendar-proof check (BR-REQ-090-02). On 2026-10-11 at 07:00Z a release's pre-commit
+ * §712 — the calendar-proof check (BR-REQ-090-02). On 2026-10-11 at 07:00Z a release's pre-commit
  * hook went red on a test that had passed that morning: its fixture race started at 07:00Z and the
  * link page it reached read the real clock. `yarn test:clock` runs the suite with the clock moved
  * forward so such a test fails before the day; these pin what it moves and what it reports.
  */
-describe("BR-REQ-090-02 yarn test:clock — the suite with the real clock moved forward (§NNN)", () => {
+describe("BR-REQ-090-02 yarn test:clock — the suite with the real clock moved forward (§712)", () => {
   const from = new Date("2026-10-11T07:00:00.000Z");
 
   it("reads a date as an ISO instant or as days, months or years ahead", () => {
@@ -48,7 +48,7 @@ describe("BR-REQ-090-02 yarn test:clock — the suite with the real clock moved 
   });
 });
 
-describe("§NNN tests/helpers/shifted-clock.mjs — the real clock reads the date it is given", () => {
+describe("§712 tests/helpers/shifted-clock.mjs — the real clock reads the date it is given", () => {
   const MOVED = Symbol.for("shifted clock: the unmoved Date");
   const KEYS = ["TEST_CLOCK_AT", "TEST_CLOCK_OFFSET_MS", "NODE_OPTIONS"] as const;
   const global = globalThis as unknown as Record<symbol, unknown>;

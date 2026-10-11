@@ -5,7 +5,7 @@ import { readLocalObject } from "@/modules/media/storage";
  * Serves a stored object in the two modes that have no bucket — `local` (a developer's disk)
  * and `fake` (tests). In `r2` mode the address of an object is Cloudflare's, this route is never
  * linked, and asking it for anything is a 404. Only ever objects this application wrote: the WebP
- * variants of a picture, and since §NNN the GPX of «Traseul», which goes out as a file to save
+ * variants of a picture, and since §718 the GPX of «Traseul», which goes out as a file to save
  * under its own name (`routeGpxHeaders`) — the header R2 stores with the object.
  */
 export async function GET(

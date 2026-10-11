@@ -26,7 +26,7 @@ export type RouteGpxFieldWords = {
 };
 
 /**
- * The route's GPX file in «Linkuri și fișiere» (§NNN): «Încarcă un GPX», «Înlocuiește fișierul», «Scoate
+ * The route's GPX file in «Linkuri și fișiere» (§718): «Încarcă un GPX», «Înlocuiește fișierul», «Scoate
  * fișierul». The file goes to `/api/admin/route-gpx` the moment it is chosen — checked there for
  * what it is, an XML document whose root is `<gpx>`, never by its extension — and the answer lands
  * in the hidden input `event.routeGpx`, which the event's one save stores; «Scoate» empties it, and

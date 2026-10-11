@@ -347,7 +347,7 @@ async function BranchForm({
       ))}
     </TextField>
   );
-  // The chip yields to an event it would hide, and is «Toate» whenever the chips are not drawn (§NNN).
+  // The chip yields to an event it would hide, and is «Toate» whenever the chips are not drawn (§716).
   const chip = initialChipFor(pickerOptions, chosenEvent, query.chip);
   // What «Schimbă tipul mesajului» carries to the other branch: this form's own choice where it has the picker —
   // the event the list holds, the chip after it yielded — and the address's words as they came, unread, where it
@@ -432,7 +432,7 @@ async function BranchForm({
       )}
 
       <form action={submitFeedbackAction} id="feedback-form" data-testid={`feedback-form-${BRANCH_SLUG[branch]}`}>
-        {/* The event and the day picked go into the address (§NNN), so the link can be shared with them chosen —
+        {/* The event and the day picked go into the address (§716), so the link can be shared with them chosen —
             only on a form that has one of the two boxes; a suggestion has neither, and its address stays as it came. */}
         {(withEvent || withDate) && <FeedbackAddressSync formId="feedback-form" />}
         <input type="hidden" name="locale" value={locale} />

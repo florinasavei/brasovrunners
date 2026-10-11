@@ -88,7 +88,7 @@ function platformKey(stem: string): string | null {
 }
 
 /**
- * «Pagina principală» (§NNN; `docs/REDESIGN.md`, decision 3): a real home page at `/ro` and `/en`,
+ * «Pagina principală» (§714; `docs/REDESIGN.md`, decision 3): a real home page at `/ro` and `/en`,
  * reached from the logo and never from a menu entry — one switch, off until the club says yes, and
  * then the one-press way back to the listing at the root.
  *

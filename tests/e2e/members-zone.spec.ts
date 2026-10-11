@@ -18,7 +18,7 @@ test.describe("§524 the members' zone", () => {
     await expect(page.getByTestId("members-greeting")).toContainText("Dev Member");
     await expect(page.getByTestId("members-backoffice")).toHaveCount(0);
 
-    // The tabs (§NNN), in the owner's order, each an address of its own; «Coduri de reducere» is the zone's own,
+    // The tabs (§715), in the owner's order, each an address of its own; «Coduri de reducere» is the zone's own,
     // and «Magazin» is drawn only once the privacy notice in force names the shop (BR-REQ-053-01).
     const tabs = page.getByTestId("members-tabs");
     await expect(tabs.getByRole("link", { name: "Coduri de reducere" })).toHaveAttribute("aria-current", "page");

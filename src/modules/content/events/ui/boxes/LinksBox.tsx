@@ -20,7 +20,7 @@ import { BoxNote, type BoxProps, summaryWords } from "./box-kit";
  * "Ce fel de eveniment", and moved whole). The GPX on Google Drive, the map on a platform, a PDF,
  * the album, the results, and the Strava and Facebook events, which the page draws in the route's
  * row; with a route description, the GPX and the map go to `#route` (§387).
- * Links — and, since §NNN, one uploaded file: the route's GPX, above the rows, which a «Traseul (GPX)»
+ * Links — and, since §718, one uploaded file: the route's GPX, above the rows, which a «Traseul (GPX)»
  * row also offers as «Încarcă fișierul în loc de link» (the owner looked for it on that row). Nothing
  * else is uploaded here (`AGENTS.md` §17). The rows keep their Romanian and English labels side by
  * side in the row, never in tabs: a label belongs to its one row.

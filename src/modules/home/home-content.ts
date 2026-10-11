@@ -26,7 +26,7 @@ import type { RunCardItem } from "./ui/RunCardGrid";
 import type { RunTagProps } from "./ui/RunTag";
 
 /**
- * Everything the home page draws, as the typed props of its components (§NNN): read once, on the
+ * Everything the home page draws, as the typed props of its components (§714): read once, on the
  * server, from what the site already reads — the listing's cached upcoming events (§333, with their
  * last good copy behind them, §447), the forecast's cached hour (§402), the setting the root already
  * read — so a visit the CDN does not answer still asks the database nothing new. The components get

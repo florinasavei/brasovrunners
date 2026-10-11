@@ -4,7 +4,7 @@ import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
 /**
- * BR-REQ-041-01 (a glyph on every button); `DECISIONS.md` §NNN — a button says what it does in
+ * BR-REQ-041-01 (a glyph on every button); `DECISIONS.md` §710 — a button says what it does in
  * words. The owner, 2026-10-11, of the arrow on a card in «Echipa»: «Nu înțeleg ce face butonul ăsta
  * cu săgeata, are nevoie de vreun tooltip». A bare «↓» is a symbol the reader must interpret, a
  * phone has no hover to explain it, and a tooltip alone would leave the button itself mute: the
@@ -56,7 +56,7 @@ function symbolOnlyButtons(source: string): string[] {
   return found;
 }
 
-describe("a button says what it does in words (§NNN)", () => {
+describe("a button says what it does in words (§710)", () => {
   it("no source file writes a symbol-only label or a symbol-only button", () => {
     const offenders = sourceFiles(path.join(ROOT, "src")).flatMap((file) => {
       const found = symbolOnlyButtons(readFileSync(file, "utf8"));

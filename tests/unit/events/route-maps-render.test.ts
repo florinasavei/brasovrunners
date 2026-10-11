@@ -12,7 +12,7 @@ import EventRoute, { type RouteMapWords } from "@/modules/events/ui/EventRoute";
 import { withClientWords } from "../../helpers/client-words";
 
 /**
- * BR-REQ-011-01 (§NNN) — «Traseul» on the page: Garmin Connect and Strava in tabs, Garmin first, each
+ * BR-REQ-011-01 (§718) — «Traseul» on the page: Garmin Connect and Strava in tabs, Garmin first, each
  * map behind its own press and its link beside it; one service alone with no tabs; the GPX below,
  * with or without a map. The page draws the links and the iframes from the stored ids only, and an
  * iframe sits inside a closed `<details>` — the facade that keeps the browser from asking Strava or
@@ -51,7 +51,7 @@ const render = (props: { routeMaps?: unknown; routeGpx?: unknown; routeUrl?: str
 /** Every iframe, with whether it sits inside a `<details>` that is not open. */
 const iframes = (html: string) => [...html.matchAll(/<iframe\b[^>]*>/g)].map((match) => match[0]);
 
-describe("BR-REQ-011-01 the maps on the page (§NNN)", () => {
+describe("BR-REQ-011-01 the maps on the page (§718)", () => {
   it("draws Garmin Connect and Strava as tabs, Garmin first, with the right roles, and the first one chosen", () => {
     const html = render({ routeMaps: BOTH });
     expect(html).toContain('role="tablist"');
@@ -129,7 +129,7 @@ describe("BR-REQ-011-01 the maps on the page (§NNN)", () => {
   });
 });
 
-describe("BR-REQ-011-01 the GPX on the page (§NNN)", () => {
+describe("BR-REQ-011-01 the GPX on the page (§718)", () => {
   it("draws «Descarcă traseul (GPX)» under the maps, with its name and size, as a download", () => {
     const html = render({ routeMaps: BOTH, routeGpx: GPX });
     const link = /<a[^>]*data-testid="route-gpx-download"[^>]*>/.exec(html)?.[0] ?? "";
@@ -153,7 +153,7 @@ describe("BR-REQ-011-01 the GPX on the page (§NNN)", () => {
   });
 });
 
-describe("BR-REQ-050-02 the editor's «Traseul» card (§NNN)", () => {
+describe("BR-REQ-050-02 the editor's «Traseul» card (§718)", () => {
   it("says on its closed line which maps are set, and «Linkuri și fișiere» counts the file", () => {
     const summary = ro.Admin.editor.boxes.summary as unknown as SummaryWords;
     const line = courseSummary(summary, { distanceMeters: null, elevationGainMeters: null, routeUrl: null, nightOverride: false, routeMaps: BOTH }, { surface: null });

@@ -216,7 +216,7 @@ describe("isStaticPublicAnswer", () => {
     expect(isStaticPublicAnswer("/ro/calendar/2026-10", search(""), false)).toBe(true);
     expect(isStaticPublicAnswer("/en/calendar/2026-10/list", search(""), false)).toBe(true);
     expect(isStaticPublicAnswer("/ro/calendar/2026-10", search("type=RACE"), false)).toBe(false);
-    // The site's root (§NNN) is the twelfth: the home page, or the listing's kept redirect.
+    // The site's root (§714) is the twelfth: the home page, or the listing's kept redirect.
     expect(PREFETCHED_PATHNAMES.size).toBe(12);
   });
 

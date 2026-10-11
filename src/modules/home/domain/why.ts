@@ -2,7 +2,7 @@ import { z } from "zod";
 import { homeTextSchema, type HomeText } from "./home-text";
 
 /**
- * «De ce» — the home page's four reasons and the quote (§NNN; `docs/REDESIGN.md` § What exists
+ * «De ce» — the home page's four reasons and the quote (§714; `docs/REDESIGN.md` § What exists
  * versus what is new: «the words, four icons; Caveat on the home page»). Four items, each a glyph,
  * a short title and one sentence; under them, a sentence someone said about the club, in the
  * handwriting face, with who said it.

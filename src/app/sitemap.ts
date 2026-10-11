@@ -50,7 +50,7 @@ export const dynamic = "force-dynamic";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const entries: MetadataRoute.Sitemap = [];
-  // «Pagina principală» (§NNN): while it is on, the root is a page of its own and the landing page.
+  // «Pagina principală» (§714): while it is on, the root is a page of its own and the landing page.
   const homeOn = (await cachedHomePage()).on;
 
   for (const locale of routing.locales) {
@@ -59,7 +59,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const events = (await readWithLastGood(`sitemap:events:${locale}`, () => cachedSitemapEvents(locale), now)).value;
 
     /**
-     * The site root, only while «Pagina principală» is on (§NNN): then `/ro` and `/en` are the home
+     * The site root, only while «Pagina principală» is on (§714): then `/ro` and `/en` are the home
      * page, canonical to themselves, and the landing page at priority 1. While it is off the root is
      * a redirect to the listing and stays out — a URL that redirects asks a crawler to discover the
      * same page twice — and the listing is the landing page, at priority 1.

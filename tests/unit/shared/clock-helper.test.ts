@@ -3,7 +3,7 @@ import { atTheClock } from "../../helpers/clock";
 
 const instant = new Date("2020-06-01T00:00:00Z");
 
-describe("atTheClock (§NNN)", () => {
+describe("atTheClock (§719)", () => {
   it("keeps the date frozen until a thenable that is not a Promise settles", async () => {
     const thenable = {
       then(resolve: (value: number) => void) {

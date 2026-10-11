@@ -4,7 +4,7 @@ import { cropGeometry, cropImageSx } from "@/modules/content/rich-text/ui/image-
 import MountainMark from "@/shared/ui/MountainMark";
 
 /**
- * What an `<img>` needs to draw a picture of the home page (§NNN): the master, the ladder's `srcset`
+ * What an `<img>` needs to draw a picture of the home page (§714): the master, the ladder's `srcset`
  * and `sizes` (§414, §601), the picture's own size and the crop the club drew — built on the server
  * from an event's `cover` (`events/cover.ts#coverSources`) or the hero's setting. Strings and
  * numbers only, so a fixture on the design page draws the same component.

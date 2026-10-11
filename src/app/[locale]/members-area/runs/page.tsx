@@ -62,7 +62,7 @@ async function upcomingOrNone(locale: Locale, now: Date) {
 }
 
 /**
- * The members' zone, tab «Alergări» (§NNN, §524, §552): the events for members alone and the next
+ * The members' zone, tab «Alergări» (§715, §524, §552): the events for members alone and the next
  * runs, at `/members-area/runs`. The club's words for members are the frame's, above the tabs
  * (`zone.tsx`); the door is `openZone`, asserted here as on every tab (BR-REQ-060-01).
  *

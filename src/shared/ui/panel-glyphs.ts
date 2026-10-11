@@ -151,7 +151,7 @@ export const PANEL_GLYPHS = {
   invite: PersonAddIcon,
   members: GroupAddIcon,
   appearance: PaletteIcon,
-  // «Pagina principală» (§NNN): the home page at the site's root, under «Aspect».
+  // «Pagina principală» (§714): the home page at the site's root, under «Aspect».
   home: HomeIcon,
   textSize: FormatSizeIcon,
   costs: PaidIcon,

@@ -14,7 +14,7 @@ import {
 } from "@/modules/events/domain/route-gpx";
 
 /**
- * BR-REQ-011-01 (§NNN) — «Traseul»'s GPX file: checked for what it is — an XML document whose root
+ * BR-REQ-011-01 (§718) — «Traseul»'s GPX file: checked for what it is — an XML document whose root
  * is `<gpx>` — never by its extension; stored under a key of its own; served as a file to save under
  * its own name. The tracks here are made up.
  */
@@ -27,7 +27,7 @@ const TRACK = `<?xml version="1.0" encoding="UTF-8"?>
 `;
 const ID = "0123abcd-0123-4abc-8def-0123456789ab";
 
-describe("BR-REQ-011-01 a GPX is checked by what it is (§NNN)", () => {
+describe("BR-REQ-011-01 a GPX is checked by what it is (§718)", () => {
   it("accepts a GPX document: the declaration, a comment, the root, a byte-order mark, a namespace prefix", () => {
     expect(checkGpx(bytes(TRACK))).toEqual({ ok: true });
     expect(checkGpx(bytes(`\uFEFF${TRACK}`))).toEqual({ ok: true });
@@ -53,7 +53,7 @@ describe("BR-REQ-011-01 a GPX is checked by what it is (§NNN)", () => {
   });
 });
 
-describe("BR-REQ-011-01 the GPX's key, name and headers (§NNN)", () => {
+describe("BR-REQ-011-01 the GPX's key, name and headers (§718)", () => {
   it("keys it by environment and a fresh id, and downloads it under the club's name, plain", () => {
     const key = routeGpxKey("qa", ID, "Traseu Tâmpa — 2026.GPX");
     expect(key).toBe(`qa/route-gpx/${ID}/traseu-tampa-2026.gpx`);

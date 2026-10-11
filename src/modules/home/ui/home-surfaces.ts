@@ -2,7 +2,7 @@ import { COLOR, COLOR_DARK, GRADIENT } from "@/theme/brand";
 import { UNDER_LOOK, UNDER_LOOK_DARK } from "@/theme/look";
 
 /**
- * The home page's sections' surfaces (§NNN), as plain `sx` objects a Server Component can spread
+ * The home page's sections' surfaces (§714), as plain `sx` objects a Server Component can spread
  * (§166: never a function of the theme, which cannot cross into MUI's client components). Colour
  * comes from `brand.ts`'s tokens only (§694); every pair of words on these fills is held at AA by
  * `tests/unit/theme/brand.test.ts` (`HERO_PAIRS` for today's look, `LOOK_PAIRS` for the new one).

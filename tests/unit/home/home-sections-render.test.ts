@@ -4,7 +4,7 @@ import { renderToReadableStream } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 /**
- * BR-REQ-041-01 (§NNN) — the home page's four sections as components: `StepsBand`, `WhyList`,
+ * BR-REQ-041-01 (§714) — the home page's four sections as components: `StepsBand`, `WhyList`,
  * `PhotoStrip` and `NumbersBand`, rendered on the server as the page will render them, in both
  * languages, with the real catalogues.
  *
@@ -69,7 +69,7 @@ async function html(element: ReactElement | null | Promise<ReactElement | null>)
 const escaped = (text: string) => text.replace(/&/g, "&amp;").replace(/'/g, "&#x27;").replace(/"/g, "&quot;");
 const words = () => (currentLocale === "ro" ? ro : en).HomeSections;
 
-describe("§NNN «Prima dată» — StepsBand", () => {
+describe("§714 «Prima dată» — StepsBand", () => {
   it("draws the platform's heading, sentence and five numbered steps while the club wrote nothing, in both languages", async () => {
     for (const locale of ["ro", "en"] as const) {
       currentLocale = locale;
@@ -107,7 +107,7 @@ describe("§NNN «Prima dată» — StepsBand", () => {
   });
 });
 
-describe("§NNN «De ce» — WhyList", () => {
+describe("§714 «De ce» — WhyList", () => {
   it("draws four reasons with their glyphs, and no quote until the club writes one", async () => {
     for (const locale of ["ro", "en"] as const) {
       currentLocale = locale;
@@ -138,7 +138,7 @@ describe("§NNN «De ce» — WhyList", () => {
   });
 });
 
-describe("§NNN the photo strip — PhotoStrip", () => {
+describe("§714 the photo strip — PhotoStrip", () => {
   const LADDER = "0b6f3f9e-2a41-8c3d-9e5f-1a2b3c4d5e6f";
   const instagram = { network: "instagram" as const, href: "https://example.org/club", label: "Instagram" };
 
@@ -190,7 +190,7 @@ describe("§NNN the photo strip — PhotoStrip", () => {
   });
 });
 
-describe("§NNN the numbers band — NumbersBand", () => {
+describe("§714 the numbers band — NumbersBand", () => {
   it("draws nothing when no figure has its fact", async () => {
     expect(await NumbersBand({ figures: [], locale: "ro" })).toBeNull();
   });
@@ -235,7 +235,7 @@ const { createTranslator } = await import("next-intl");
 const { sampleHome } = await import("@/modules/design/home-fixtures");
 const { default: HomePage } = await import("@/modules/home/ui/HomePage");
 
-describe("§NNN the home page draws the four under the run sections, each only while the club switched it on", () => {
+describe("§714 the home page draws the four under the run sections, each only while the club switched it on", () => {
   const props = () => {
     const words = (namespace: "Home" | "Event") => {
       const translate = createTranslator({ locale: "ro", messages: ro, namespace });
@@ -269,7 +269,7 @@ describe("§NNN the home page draws the four under the run sections, each only w
   });
 });
 
-describe("§NNN the sections stay Server Components on the house's primitives", () => {
+describe("§714 the sections stay Server Components on the house's primitives", () => {
   it("has no client directive, no colour literal, no MUI button, and draws icons by registry name", () => {
     for (const name of ["StepsBand", "WhyList", "PhotoStrip", "NumbersBand"]) {
       const source = readFileSync(`src/modules/home/ui/${name}.tsx`, "utf8");

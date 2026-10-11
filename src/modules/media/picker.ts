@@ -58,7 +58,7 @@ export function pictureUseOf(kind: "album" | "page" | "event" | "team" | "teamIn
   if (kind === "newsletter") return null;
   // The page's introduction and a box under its chart (§691) are both «Echipa».
   if (kind === "teamIntro" || kind === "teamBox") return "team";
-  // The home page's hero (§NNN) is a page the club sets up too.
+  // The home page's hero (§714) is a page the club sets up too.
   if (kind === "faq" || kind === "membersPage" || kind === "homePage") return "page";
   return kind;
 }

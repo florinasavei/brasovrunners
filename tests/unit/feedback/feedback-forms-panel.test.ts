@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { FEEDBACK_BRANCHES } from "@/modules/feedback/domain/branches";
 
 /**
- * BR-REQ-070-04, `DECISIONS.md` §NNN — the backoffice card that switches «Spune-ne ceva»'s four forms
+ * BR-REQ-070-04, `DECISIONS.md` §716 — the backoffice card that switches «Spune-ne ceva»'s four forms
  * on and off: each form's glyph before its legend (as on the public contact page, §696), and a
  * separator between the four forms — three of them, and nothing before the save button.
  */

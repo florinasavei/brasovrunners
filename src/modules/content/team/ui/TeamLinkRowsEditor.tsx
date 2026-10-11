@@ -22,7 +22,7 @@ export type TeamLinkRowsLabels = {
   remove: string;
   moveUp: string;
   moveDown: string;
-  /** The words on the button, and the sentence of its tooltip (§NNN). */
+  /** The words on the button, and the sentence of its tooltip (§710). */
   moveUpWord: string;
   moveDownWord: string;
   moveUpTip: string;

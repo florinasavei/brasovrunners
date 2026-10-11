@@ -5,7 +5,7 @@ import { STEP_COUNT, stepsContentSchema, type StepsContent } from "@/modules/hom
 import { WHY_COUNT, whyContentSchema, type WhyContent } from "@/modules/home/domain/why";
 
 /**
- * «Pagina principală»'s four lower sections as the setting's form posts them (§NNN): «Prima dată»,
+ * «Pagina principală»'s four lower sections as the setting's form posts them (§714): «Prima dată»,
  * «De ce» and the quote, the photo strip's heading, and the numbers. Each box is a pair the form
  * posts as `<stem>Ro` and `<stem>En`, read through the sections' own schemas (`modules/home/domain/`,
  * both languages or neither, §352), and a refusal names the box the club must fix — the empty side of

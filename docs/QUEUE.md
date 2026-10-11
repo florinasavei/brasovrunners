@@ -14,24 +14,29 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V2.93`** (released 2026-10-11 10:20 RO by `yarn ship` in 27 minutes: §702–§705, migration `0140`, the
-  migration run approved by the script). Waiting for «prod»: `BR-V2.94` (§706–§709, below) — migration 0141 stops at `migrate.yml` for the approval, which `yarn ship` gives itself.
-- **QA: `BR-V2.94`** — the shop's loose ends (the guide's alt and one-size button, a «Gestionează magazinul» holder may
-  translate, the settings dialog names the switch); the backoffice's own `StatusChip` so backoffice-only glyphs leave the public
-  table; **the facelift's phase 1** behind «Setări» → «Aspect» → «Aspectul nou» (off by default: the pink pair, Inter 800, the
-  header's «Vino cu noi» and socials, the mountain mark, both looks on `/admin/design`); the facelift's phase 2: a «Copertă» per event with its crop, carried by a series, and the kind («săptămânal» or «special») derived from the series — data, editor and cache only, nothing drawn yet;
-  GitHub now requires `docs-check`, `tested-tree` and `e2e` on `qa` and `main`.
-- **Nothing is building.** The chains' worktrees under `.claude/worktrees/` can go.
-- **Next, from the laptop:** turn «Aspectul nou» on in QA's «Aspect» (never on production) so the owner can look; then
-  phase 3 (the home page) once the photographs exist, and phases 4–5 per `docs/REDESIGN.md`;
-  the shop's real catalogue typed on QA through the editor (never in the repository).
-- **Waiting on the owner:** a look at QA with «Aspectul nou» on; the plan's remaining decisions (4–11) and the photographs
-  (the hero, one cover per run and race, six strip pictures); «Tot numărul»'s default background; `shopNotice`; the Google
-  calendar.
-- **Later:** `OrdersCard` and `ProductList` move to `StatusChip` with `orders` and `club` added to `status-glyphs.ts`, then
-  `visible`, `hidden`, `language`, `orders`, `club` leave the public table (`done`, `cancelled`, `planned` stay: the members'
-  zone draws them); under the new look the cards' titles keep weight 500 and h4–h6 stay Roboto until phase 5; the e2e header
-  gate runs serially on the one `platform_settings` row.
+- **Production: `BR-V2.94`** (released 2026-10-11 by `yarn ship` in 22 minutes: §706–§709, migration `0141`). Waiting
+  for «prod»: `BR-V2.95` (§710–§719, below) — migration `0142` stops at `migrate.yml` for the approval, which
+  `yarn ship` gives itself.
+- **QA: `BR-V2.95`** — **the home page** (phase 3: «Setări» → «Aspect» → «Pagina principală», off; the hero, the next
+  run, weekly and special, «Prima dată la noi?», «De ce», the photo strip, the numbers — every part a setting, the panel in
+  folds; the root a 307 to the listing while off); **«Traseul»** with Garmin Connect | Strava tabs, each map loaded only on
+  the visitor's press, and an uploaded GPX («Linkuri și fișiere» above the rows, or the GPX row's button) under them; the
+  members' zone in three tabs («Coduri de reducere», «Magazin» once the notice names the shop, «Alergări»); «Spune-ne
+  ceva» keeps the chosen event, day and chip in the address, and its backoffice card separates the four forms; the move
+  buttons say what they do; the logo stays blue under «Aspectul nou»; the section bar's arrows on a laptop; `yarn
+  test:clock` and 66 calendar-bombed tests defused.
+- **Building:** the calendar's redesign (facelift phase 4) in the phone session, on `feat/facelift-phase-4-calendar` —
+  its PR into `qa` is batched by the laptop after AL; the concurrency suite's 1 December bomb (`fix/test-clock-follow-ups`).
+- **Next, on QA, the owner's:** «Aspectul nou» on, then «Pagina principală» with the club's photographs and words; the
+  route's maps and a GPX on a real run; then phase 5 (the listing and the event page) per `docs/REDESIGN.md`.
+- **Waiting on the owner:** a look at QA (phone and laptop) before «Aspectul nou» or the home page goes on in production;
+  the photographs (the hero, a cover per run and race, the strip); the privacy notice from the new template (Strava and
+  Garmin maps; the shop); «Tot numărul»'s default background; `shopNotice`; the Google calendar.
+- **Later:** the e2e specs on written 2027 dates (earliest 2027-04-14) want a dates-from-today helper; pass `now` through
+  `readRegistrationTokenContext`, the email state's `openRefusalsWhere` and the guardian rule; maybe a nightly `yarn
+  test:clock`; `OrdersCard` and `ProductList` to `StatusChip`, then five names leave the public table; at 320 px the
+  members' current tab can sit past the row's edge; the cards' titles under the new look (phase 5); `TeamPhotoLabels` is
+  copied in three editors.
 
 ### How a change is made here (the owner's standing rules, all still in force)
 
@@ -133,6 +138,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.95` | the move buttons say what they do (§710) · the logo stays blue under the new look (§711) · tests read their fixture's calendar: `yarn test:clock` (§712) · arrows on the tab bars (§713) · the home page's four lower sections, as components (§714) · the members' zone in tabs (§715) · «Spune-ne ceva»: the event in the address, the forms separated (§716) · a home page at the site's root behind «Pagina principală», off, with its eight sections and the panel in folds (phase 3, parts A and C) (§717) · the route's maps, links and GPX (§718) · the concurrency suite past 1 December (§719) |
 | `BR-V2.94` | the shop's loose ends (§706) · the backoffice status chip (§707) · the facelift's phase 1 (§708) · the facelift's phase 2 (§709) |
 | `BR-V2.93` | the contact wizard's radios (§702) · the ship waits on required checks only (§703) · the shop's member emails behind one switch (§704) · the size-guide picture (§705) |
 | `BR-V2.92` | the translate button on the shop's forms (§697) · «Contact direct» above the form; «alergare» in «Spune-ne ceva» (§698) · five small fixes (§699) · the shop's editor rebuilt (§700) · «Echipa» as a canvas with levels and folds (§701) |

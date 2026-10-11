@@ -6,7 +6,7 @@
  * One more exception is a rule in the test itself, since it is recognised by shape, not file: a
  * self-closing `<button />` or `component="button"` with no children (an invisible overlay over a
  * control that draws its own picture, such as the telephone's flag). The order arrows «↑» / «↓»
- * stopped being one in §NNN: a move wears a glyph and words, and `no-symbol-buttons.test.ts`
+ * stopped being one in §710: a move wears a glyph and words, and `no-symbol-buttons.test.ts`
  * refuses a bare symbol.
  */
 export const WITHOUT_GLYPH: ReadonlyArray<{ file: string; words: string; reason: string }> = [

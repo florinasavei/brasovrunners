@@ -85,7 +85,7 @@ export type PageSectionEvent = {
   distanceMeters: number | null;
   elevationGainMeters: number | null;
   routeUrl: string | null;
-  /** «Traseul»'s maps and GPX (§NNN), as stored; absent on a caller from before them. */
+  /** «Traseul»'s maps and GPX (§718), as stored; absent on a caller from before them. */
   routeMaps?: unknown;
   routeGpx?: unknown;
   stravaEventUrl: string | null;
@@ -125,7 +125,7 @@ export type PageSectionData = {
   texts: readonly PageSectionText[];
   night: boolean;
   /**
-   * The caller's `isStorageConfigured()` (§NNN): an uploaded GPX draws «Traseul» only where the page
+   * The caller's `isStorageConfigured()` (§718): an uploaded GPX draws «Traseul» only where the page
    * can serve it. Left out, a GPX counts — this file reads no environment.
    */
   storageConfigured?: boolean;
@@ -202,7 +202,7 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
       written(event.routeUrl) ||
       night ||
       texts.some((text) => hasRouteDescription(text.routeDescriptionJson)) ||
-      // «Traseul»'s maps and GPX (§NNN) draw the route section on their own.
+      // «Traseul»'s maps and GPX (§718) draw the route section on their own.
       hasRouteMedia(event, storageConfigured ?? true),
   },
   // "Cost" (§343, §356): its own row in the facts, on every type, while a cost is stated. The

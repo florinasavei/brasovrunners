@@ -183,7 +183,7 @@ export type SubmitButtonProps = {
    * "↓" to everybody who can see which row it is in, and nothing at all to anybody who cannot.
    */
   ariaLabel?: string;
-  /** `name` and `value` of the native submit: which of several buttons of one form was pressed (the FAQ's moves, §NNN). A button with a `name` is busy only while its own `name`/`value` is the submission in flight. */
+  /** `name` and `value` of the native submit: which of several buttons of one form was pressed (the FAQ's moves, §710). A button with a `name` is busy only while its own `name`/`value` is the submission in flight. */
   name?: string;
   value?: string;
 };

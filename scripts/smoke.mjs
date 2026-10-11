@@ -21,7 +21,7 @@ function fail(message) {
 }
 
 /**
- * The site's root in each language (§NNN, amending §353): with «Pagina principală» off it is a static
+ * The site's root in each language (§714, amending §353): with «Pagina principală» off it is a static
  * page that redirects — a 307 to the listing — and with it on it is the home page, a 200. Never the
  * 308 §353 had, and never a 200 that is an error document (a redirect thrown from a page once
  * reached production that way): a 200 must carry the home page's own marker and no Next error

@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — the home page, phase 3 part A (`docs/REDESIGN.md`, decision 3): what it shows from the
+ * §714 — the home page, phase 3 part A (`docs/REDESIGN.md`, decision 3): what it shows from the
  * upcoming events, the hero's two lines, and the components drawn from the design page's fixture —
  * one `h1`, one `main`, the hero's picture the one eager one, empty photo slots and never a stock
  * picture, the kind told in words, the round arrow inside the card's one link.
@@ -41,7 +41,7 @@ const row = (type: string, title: string, startsAt: string, overrides: Partial<R
 });
 const weekly = (startsAt: string, overrides: Partial<Row> = {}) => row("GROUP_RUN", "Alergare de probă", startsAt, { seriesCadence: "WEEKLY", ...overrides });
 
-describe("§NNN what the home page shows from the upcoming events", () => {
+describe("§714 what the home page shows from the upcoming events", () => {
   it("leads with the soonest run still going ahead — a group run or a race, never a hike or a cancelled date", () => {
     const hike = row("HIKE", "Tură de probă", "2026-10-12T06:00:00Z");
     const cancelled = weekly("2026-10-13T15:30:00Z", { eventStatus: "CANCELLED" });
@@ -75,7 +75,7 @@ describe("§NNN what the home page shows from the upcoming events", () => {
   });
 });
 
-describe("§NNN the hero's two lines", () => {
+describe("§714 the hero's two lines", () => {
   it("reads the club's lines in one language, or none for the platform's own, never the other language's", () => {
     const setting = parseHomePage({ on: true, hero: null, headline: { ro: "Alergăm împreună", en: "We run together" }, subline: null });
     expect(heroLines(setting, "en")).toEqual({ headline: "We run together", subline: null });
@@ -104,7 +104,7 @@ describe("§NNN the hero's two lines", () => {
   });
 });
 
-describe("§NNN the home page's components, drawn from the design page's fixture", () => {
+describe("§714 the home page's components, drawn from the design page's fixture", () => {
   const words = (catalogue: Record<string, unknown>) => (key: string, values: Record<string, string> = {}) => {
     const text = key.split(".").reduce<unknown>((node, part) => (node as Record<string, unknown>)[part], catalogue) as string;
     return text.replace(/\{(\w+)\}/g, (_, name: string) => values[name] ?? `{${name}}`);
@@ -162,7 +162,7 @@ describe("§NNN the home page's components, drawn from the design page's fixture
   });
 });
 
-describe("§NNN «Mostre» draws the same components", () => {
+describe("§714 «Mostre» draws the same components", () => {
   it("draws the hero, the next run and both sections, the hero's heading a paragraph so the design page keeps its one h1", async () => {
     const { default: HomePageSamples } = await import("@/modules/design/ui/HomePageSamples");
     const html = renderToStaticMarkup(await HomePageSamples({ locale: "ro" }));
@@ -172,7 +172,7 @@ describe("§NNN «Mostre» draws the same components", () => {
   });
 });
 
-describe("§NNN the sections are components of their own, with typed props", () => {
+describe("§714 the sections are components of their own, with typed props", () => {
   const ROOT = path.resolve(__dirname, "../../..");
   const source = (file: string) => readFileSync(path.join(ROOT, file), "utf8");
 
@@ -186,7 +186,7 @@ describe("§NNN the sections are components of their own, with typed props", () 
   });
 });
 
-describe("§NNN the sections the club switches, the third button, the empty section and the tag's colours", () => {
+describe("§714 the sections the club switches, the third button, the empty section and the tag's colours", () => {
   const words = (catalogue: Record<string, unknown>) => (key: string, values: Record<string, string> = {}) => {
     const text = key.split(".").reduce<unknown>((node, part) => (node as Record<string, unknown>)[part], catalogue) as string;
     return text.replace(/\{(\w+)\}/g, (_, name: string) => values[name] ?? `{${name}}`);

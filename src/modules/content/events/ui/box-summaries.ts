@@ -98,11 +98,11 @@ export type SummaryWords = {
     dayAuto: string;
     described: string;
     describedOneLanguage: string;
-    /** «Traseul»'s maps (§NNN): `Strava`, `Garmin`. */
+    /** «Traseul»'s maps (§718): `Strava`, `Garmin`. */
     strava: string;
     garmin: string;
   };
-  /** `gpxUploaded` is the route's GPX file, uploaded in «Linkuri și fișiere» (§NNN): «GPX încărcat». */
+  /** `gpxUploaded` is the route's GPX file, uploaded in «Linkuri și fișiere» (§718): «GPX încărcat». */
   links: { strava: string; facebook: string; gpxUploaded: string; files: CountWords; none: string; labelOneLanguage: string };
   coHosts: { with: string; described: string; describedOneLanguage: string; none: string };
   promotion: { featured: string; special: string; none: string };
@@ -569,7 +569,7 @@ export function courseSummary(
       : null,
     event ? nightSummary(words, event.nightOverride, labels.night === true) : null,
     event?.routeUrl ? words.course.route : null,
-    // «Traseul»'s maps and GPX (§NNN), in the page's order: «Garmin · Strava · GPX».
+    // «Traseul»'s maps and GPX (§718), in the page's order: «Garmin · Strava · GPX».
     ...readRouteMaps(event?.routeMaps).map((map) => words.course[map.provider]),
     described === 0 ? null : described === translations.length ? words.course.described : words.course.describedOneLanguage,
     ...identicalMarks(words, translations, ["routeDescription"]),
@@ -594,7 +594,7 @@ export function linksSummary(
   const line = join(words, [
     event?.stravaEventUrl ? words.links.strava : null,
     event?.facebookEventUrl ? words.links.facebook : null,
-    // The route's GPX file, uploaded in this card (§NNN), said beside the links: «GPX încărcat».
+    // The route's GPX file, uploaded in this card (§718), said beside the links: «GPX încărcat».
     readRouteGpx(event?.routeGpx) ? words.links.gpxUploaded : null,
     rows.length > 0
       ? `${counted(words.links.files, rows.length, locale)} (${[...new Set(rows.map((row) => kindLabels[row.kind] ?? row.kind))].join(", ")})`

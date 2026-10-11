@@ -1,4 +1,4 @@
-// `yarn test:clock` — the calendar-proof check (§NNN, `docs/DEVELOPMENT.md` § Tests that the
+// `yarn test:clock` — the calendar-proof check (§712, `docs/DEVELOPMENT.md` § Tests that the
 // calendar breaks).
 //
 // Runs the unit and database suite with the real clock moved forward — once per date — and prints

@@ -1,5 +1,5 @@
 /**
- * The home page's cards, in one place (§NNN; `docs/REDESIGN.md` § The visual system: «Cards: 16 px
+ * The home page's cards, in one place (§714; `docs/REDESIGN.md` § The visual system: «Cards: 16 px
  * radius, one soft shadow, the photo on top, a tag pill»). Plain objects, as `events/ui/card-layout.ts`
  * is, whose whole-card tap these follow (§486): the title's link is stretched over the card, so a
  * thumb anywhere on it opens the event, and the card wears the focus ring while the keyboard is on

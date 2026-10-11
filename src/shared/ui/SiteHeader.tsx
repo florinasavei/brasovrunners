@@ -134,7 +134,7 @@ export default async function SiteHeader() {
     draws none of it there.
   */
   const look = await cachedSiteLook();
-  // «Pagina principală» (§NNN): while it is on, the logo leads to it — the home page is never a menu entry.
+  // «Pagina principală» (§714): while it is on, the logo leads to it — the home page is never a menu entry.
   const home = await cachedHomePage();
   const joinHref = look.on ? await joinTarget(locale as Locale) : null;
   const socials = look.on ? (await clubSocialLinks()).filter((entry) => HEADER_NETWORKS.has(entry.network)) : [];
@@ -229,7 +229,7 @@ export default async function SiteHeader() {
                 height: HEADER_MARK_HEIGHT,
                 width: "auto",
                 [variant.hideOn]: { display: "none" },
-                // The logo is the club's blue under both looks (§NNN, amending §708): no filter, no ink.
+                // The logo is the club's blue under both looks (§711, amending §708): no filter, no ink.
               }}
             />
           ))}

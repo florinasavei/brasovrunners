@@ -134,7 +134,7 @@ describe("BR-REQ-060-01 «Sistemul de design» draws the look from the code", ()
       expect(markup).toContain(escaped(words.today));
       expect(markup).toContain(escaped(words.new));
       // One box of the side-by-side wears the preview scope; the other is the same markup without
-      // it. The only other box that wears it is «Mostre»'s home page sections (§NNN).
+      // it. The only other box that wears it is «Mostre»'s home page sections (§714).
       const elements = markup.replace(/<style[\s\S]*?<\/style>/g, "");
       const scoped = [...elements.matchAll(new RegExp(`<[^>]*${LOOK_PREVIEW_ATTRIBUTE}="${LOOK_VALUE}"[^>]*>`, "g"))].map((m) => m[0]);
       expect(scoped).toHaveLength(2);
@@ -155,7 +155,7 @@ describe("BR-REQ-060-01 «Sistemul de design» draws the look from the code", ()
     }
   });
 
-  it("draws the home page's four sections on «Mostre», in the new look's preview, with their sample content (§NNN)", async () => {
+  it("draws the home page's four sections on «Mostre», in the new look's preview, with their sample content (§714)", async () => {
     for (const locale of ["ro", "en"] as const) {
       currentLocale = locale;
       const markup = await page();

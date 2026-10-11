@@ -104,7 +104,7 @@ const TWINS: readonly Twin[] = [
 /**
  * The static public pages' internal paths (`/ro/events/crosul`), one pattern per route of
  * `PREFETCHED_PATHNAMES`: a `[slug]` is one segment, a catch-all `[...period]` one or more. The
- * root, `/`, is the locale alone (`/ro`, §NNN).
+ * root, `/`, is the locale alone (`/ro`, §714).
  */
 const STATIC_PAGES: readonly RegExp[] = [...PREFETCHED_PATHNAMES].map((pathname) =>
   pathname === "/"

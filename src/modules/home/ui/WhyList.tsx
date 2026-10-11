@@ -17,7 +17,7 @@ export type WhyListProps = {
 const HAND_FONT = "var(--font-signature), cursive";
 
 /**
- * «De ce» (§NNN; `docs/REDESIGN.md` § What exists versus what is new): four reasons to run with the
+ * «De ce» (§714; `docs/REDESIGN.md` § What exists versus what is new): four reasons to run with the
  * club, each a glyph of the home registry, a short title and one sentence — one column on a phone, two
  * from `sm`, four from `md` — and under them the quote the club chose, in the handwriting face, with
  * who said it.

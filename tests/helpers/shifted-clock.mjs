@@ -1,4 +1,4 @@
-// The real clock, moved forward — the calendar-proof check (§NNN, `docs/DEVELOPMENT.md` § Tests that
+// The real clock, moved forward — the calendar-proof check (§712, `docs/DEVELOPMENT.md` § Tests that
 // the calendar breaks).
 //
 // A test that pins its fixture to a date ("the race starts 2026-10-11T07:00Z") and then reaches code

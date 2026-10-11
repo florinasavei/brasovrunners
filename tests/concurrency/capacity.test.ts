@@ -131,7 +131,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
       .insert(events)
       .values({
         type: "MEETUP",
-        startsAt: new Date(Date.now() + 60 * 24 * 3_600_000), // always ahead of the real clock this case submits at (§NNN)
+        startsAt: new Date(Date.now() + 60 * 24 * 3_600_000), // always ahead of the real clock this case submits at (§719)
         registrationMode: "INTERNAL",
         capacity,
         waitlistCapacity,

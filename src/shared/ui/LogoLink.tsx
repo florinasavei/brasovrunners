@@ -22,7 +22,7 @@ import { prefetchFor } from "@/i18n/prefetch";
  *
  * `href` is the listing while the root redirects there (§342: a nav link goes straight to where it
  * lands, one hop fewer and one less "page with redirect" for a crawler), and the root itself while
- * «Pagina principală» is on (§NNN, `docs/REDESIGN.md` decision 3: the home page is reached from the
+ * «Pagina principală» is on (§714, `docs/REDESIGN.md` decision 3: the home page is reached from the
  * logo, never from a menu entry). The header reads the setting and says which; both are static pages.
  */
 export default function LogoLink({ children, label, href = "/events" }: { children: ReactNode; label: string; href?: "/" | "/events" }) {

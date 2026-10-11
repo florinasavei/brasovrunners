@@ -4,7 +4,7 @@ import { signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
 /**
- * §NNN, the facelift's phase 3 part A (`docs/REDESIGN.md`, decision 3) — the site's root, both ways.
+ * §714, the facelift's phase 3 part A (`docs/REDESIGN.md`, decision 3) — the site's root, both ways.
  *
  * Off (the default): `/ro` and `/en` answer a temporary redirect to the listing with no page behind it
  * (no longer §353's 308, which a browser keeps for good), `/` goes to `/ro` in one hop, the logo leads
@@ -18,7 +18,7 @@ import { openFold } from "./support/fold";
  * expire the static root the CDN keeps), and put back off whatever happens. Serial, desktop project
  * only: one shared `platform_settings` row, and 'off' must never run while 'on' has it switched on.
  */
-/** The four lower sections' switches (§NNN), off by default. */
+/** The four lower sections' switches (§714), off by default. */
 const LOWER = ["steps", "why", "strip", "numbers"] as const;
 
 async function setHome(browser: Browser, choice: "on" | "off", lower = false): Promise<void> {
@@ -45,7 +45,7 @@ async function setHome(browser: Browser, choice: "on" | "off", lower = false): P
   }
 }
 
-test.describe("§NNN the site's root and «Pagina principală»", () => {
+test.describe("§714 the site's root and «Pagina principală»", () => {
   test.describe.configure({ mode: "serial" });
   test.beforeEach(() => {
     test.skip(test.info().project.name !== "desktop", "one shared platform_settings row");

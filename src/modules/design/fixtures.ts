@@ -153,7 +153,7 @@ export const SAMPLE_WEATHER: WeatherReading = {
 };
 
 /**
- * The home page's four sections (§NNN) as the design page draws them: the platform's words where
+ * The home page's four sections (§714) as the design page draws them: the platform's words where
  * the club has typed none (the starting state), one sample quote said by the sample member — a
  * quote is never the platform's, so the page needs one to show its face — and the numbers read by
  * the very function the page calls, from a made-up founding day and runners' count and the sample

@@ -16,7 +16,7 @@ import { CLUB_NAME } from "@/theme/brand";
 type Props = { params: Promise<{ locale: string }> };
 
 /**
- * The site's root: the home page while «Pagina principală» is on, the listing otherwise (§NNN,
+ * The site's root: the home page while «Pagina principală» is on, the listing otherwise (§714,
  * amending §353 and §251; `docs/REDESIGN.md`, decision 3).
  *
  * **Off** — the default, and what a database without the row reads — the root answers a **307** to

@@ -92,7 +92,7 @@ export async function updateSiteLookAction(_previous: FormOutcome | null, form: 
 }
 
 /**
- * «Pagina principală» (§NNN): the home page at the site's root on or off, its hero picture and its two
+ * «Pagina principală» (§714): the home page at the site's root on or off, its hero picture and its two
  * lines. A club setting (§450) — the Administrator's at the door, and the service asserts it again.
  * Asked first (§384): the root becomes the page, or the listing's redirect again, from the next visit.
  * The picture's two hidden fields are read only when the form carried them (`TeamPhotoField`, stem
@@ -145,7 +145,7 @@ export async function updateHomePageAction(_previous: FormOutcome | null, form: 
 }
 
 /**
- * The photo strip's pictures (§NNN), one small form each — add, move a place, take out — beside the
+ * The photo strip's pictures (§714), one small form each — add, move a place, take out — beside the
  * page's own form, as a product's pictures are (§697). The Administrator's at the door, and the
  * service asserts it again. Taking a picture out is asked first (§384); adding one and moving one are
  * not, as on a product, since «Scoate» and the other arrow undo them.

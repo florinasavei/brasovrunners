@@ -30,7 +30,7 @@ export type NextRunCardProps = {
 const FACT_ICON_SX = { fontSize: 20, color: "text.secondary", flexShrink: 0 } as const;
 
 /**
- * «Următoarea alergare» (the facelift's phase 3, §NNN): the soonest run still going ahead
+ * «Următoarea alergare» (the facelift's phase 3, §714): the soonest run still going ahead
  * (`homeSections`, open question 7's default), as one wide card — its cover on top on a phone and
  * beside the words from `md`, the kind's tag over the picture, the title as the link to its page over
  * the whole card, then when, where, the forecast's words at the start (open question 6's default:

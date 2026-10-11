@@ -149,7 +149,7 @@ describe("the old addresses (§574)", () => {
 
   it("is a 308 from the proxy for a named period and a no-store 307 for this month, in both languages, before anything renders", () => {
     // The proxy reads the real clock to know which months it may name; it is asked at NOW, so
-    // October 2026 stays a named period whatever day this runs (§NNN).
+    // October 2026 stays a named period whatever day this runs (§712).
     const ask = (address: string, method = "GET") => atTheClock(NOW, () => proxy(new NextRequest(`http://localhost:4000${address}`, { method })));
     const october = ask("/ro/calendar?month=2026-10");
     expect(october.status).toBe(308);

@@ -50,7 +50,7 @@ test.describe("§552 events and codes for the members alone", () => {
     await expect(page).toHaveURL(/\/ro\/zona-membri$/, { timeout: 30_000 });
     await hydrated(page);
 
-    // The codes are the first tab (§NNN), the zone's own address; the runs are the third, at their own.
+    // The codes are the first tab (§715), the zone's own address; the runs are the third, at their own.
     await expect(page.getByTestId("members-events")).toHaveCount(0);
     const code = page.getByTestId("member-code").filter({ hasText: fixture.partner });
     await expect(code).toContainText(fixture.code);

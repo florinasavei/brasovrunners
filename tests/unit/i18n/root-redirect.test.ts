@@ -7,7 +7,7 @@ import { prefetchFor } from "@/i18n/prefetch";
 import proxy from "@/proxy";
 
 /**
- * §NNN (amending §353) — the site's root is the root page's to answer, not the proxy's.
+ * §714 (amending §353) — the site's root is the root page's to answer, not the proxy's.
  *
  * §353 answered `/ro` and `/en` in the proxy with a 308 to the listing, because a redirect thrown
  * from a page that was rendered per request came after the layout had started streaming. Since the
@@ -21,7 +21,7 @@ const ROOT = path.resolve(__dirname, "../../..");
 const source = (file: string) => readFileSync(path.join(ROOT, file), "utf8").replace(/\r\n/g, "\n");
 const code = (file: string) => source(file).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`])\/\/.*$/gm, "$1");
 
-describe("§NNN the locale root reaches its page", () => {
+describe("§714 the locale root reaches its page", () => {
   it("lets /ro and /en through to the root page, never a redirect of the proxy's own", () => {
     for (const address of ["http://localhost:4000/ro", "http://localhost:4000/en", "http://localhost:4000/ro/", "http://localhost:4000/ro?utm_source=newsletter"]) {
       const response = proxy(new NextRequest(address));
@@ -60,7 +60,7 @@ describe("§NNN the locale root reaches its page", () => {
   });
 });
 
-describe("§NNN the root page: the home page while the setting is on, a temporary redirect while it is off", () => {
+describe("§714 the root page: the home page while the setting is on, a temporary redirect while it is off", () => {
   const page = code("src/app/[locale]/page.tsx");
 
   it("reads the setting from the public cache and redirects with next-intl's temporary redirect when off", () => {

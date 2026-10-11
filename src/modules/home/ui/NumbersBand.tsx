@@ -14,7 +14,7 @@ export type NumbersBandProps = {
 };
 
 /**
- * The numbers band (§NNN; `docs/REDESIGN.md`, decision 8): up to four figures — the club's years and
+ * The numbers band (§714; `docs/REDESIGN.md`, decision 8): up to four figures — the club's years and
  * its active runners, as the club typed them; the weekly runs a week and «100%» free, read off the
  * events — each a large number in the primary over a short line. Two to the row on a phone, four
  * from `md`. A figure without its fact is left out by the domain, and a band with none is not drawn:

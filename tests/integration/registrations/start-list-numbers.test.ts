@@ -42,7 +42,7 @@ vi.mock("next-intl/server", () => ({
 const { default: StartListNow } = await import("@/modules/events/ui/StartList");
 /**
  * The list asks the real clock whether its event is still ahead; it is rendered at NOW, on the
- * fixture's calendar, so it does not go empty once the real clock passes the race (§NNN).
+ * fixture's calendar, so it does not go empty once the real clock passes the race (§712).
  */
 const StartList = (props: Parameters<typeof StartListNow>[0]) => atTheClock(NOW, () => StartListNow(props));
 

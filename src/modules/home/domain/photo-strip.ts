@@ -2,7 +2,7 @@ import { z } from "zod";
 import { homeTextSchema, type HomeText } from "./home-text";
 
 /**
- * The photo strip (§NNN; `docs/REDESIGN.md`, decisions 6 and 7): the pictures the club chose from
+ * The photo strip (§714; `docs/REDESIGN.md`, decisions 6 and 7): the pictures the club chose from
  * its own gallery, in its order, drawn as a row that scrolls sideways with the thumb (CSS scroll
  * snap, no script), and a link to the club's Instagram — a link, never a feed: an embed is forbidden
  * (AGENTS.md §18.3) and a feed needs a Meta app and a token.

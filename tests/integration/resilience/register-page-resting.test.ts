@@ -37,7 +37,7 @@ const state = vi.hoisted(() => ({
   },
 }));
 
-/** Every test's clock: registration open, the race ahead (§NNN). */
+/** Every test's clock: registration open, the race ahead (§712). */
 const OPEN = new Date("2026-10-01T09:00:00.000Z");
 
 const EVENT = {
@@ -169,7 +169,7 @@ beforeEach(() => {
   resetBreaker();
   vi.spyOn(console, "error").mockImplementation(() => {});
   // The page reads the real clock, and the sittings below are timed from it: both on the fixture's
-  // calendar, registration open and the race ahead, not on the day this runs (§NNN).
+  // calendar, registration open and the race ahead, not on the day this runs (§712).
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(OPEN);
 });

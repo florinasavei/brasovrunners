@@ -65,7 +65,7 @@ type Props = {
   wholePicture?: boolean;
   /**
    * No crop box and no crop: the picture is drawn by its own frame's rule — the home page's photo strip
-   * (§NNN), whose square tiles show each picture's middle. The crop field posts empty.
+   * (§714), whose square tiles show each picture's middle. The crop field posts empty.
    */
   noCrop?: boolean;
   /**

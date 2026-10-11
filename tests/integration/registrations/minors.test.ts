@@ -159,7 +159,7 @@ describe("a minor registered by a parent (§108)", () => {
     const event = await createEvent(db);
     try {
       // The guardian rule reads the real clock (`fields.ts`), not the `now` passed: sent at NOW, while
-      // the fixture's birth date is still a minor's (§NNN).
+      // the fixture's birth date is still a minor's (§712).
       await atTheClock(NOW, () => submitRegistration(db, event, submission({}), NOW));
       expect.unreachable("a minor without a guardian was accepted");
     } catch (error) {

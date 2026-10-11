@@ -66,7 +66,7 @@ export default function proxy(request: NextRequest) {
   }
 
   /*
-    A locale's root (`/ro`, `/en`) is not answered here any more (§NNN, amending §353): it is the
+    A locale's root (`/ro`, `/en`) is not answered here any more (§714, amending §353): it is the
     home page while «Pagina principală» is on, and a 307 to the listing while it is off — a setting,
     which the proxy cannot read without waking the database on the site's most-visited address. The
     root's page decides (`app/[locale]/page.tsx`), statically: the CDN keeps its answer, the redirect
@@ -106,7 +106,7 @@ export default function proxy(request: NextRequest) {
 
   /*
     `/` is next-intl's: a 307 to `/ro`, the default locale's root, which is the home page or the
-    listing's redirect as the setting says (§NNN). It used to be pointed straight at the listing (§353),
+    listing's redirect as the setting says (§714). It used to be pointed straight at the listing (§353),
     which would now skip the home page.
   */
   const location = response.headers.get("location");

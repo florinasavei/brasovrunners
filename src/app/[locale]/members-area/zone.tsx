@@ -31,7 +31,7 @@ import { headingRule } from "@/theme/surfaces";
 import { signOutAction } from "../admin/actions";
 
 /**
- * The members' zone's three parts (§NNN), in the owner's order: the partners' codes, the club's shop,
+ * The members' zone's three parts (§715), in the owner's order: the partners' codes, the club's shop,
  * the runs. The zone drew all of it on one long page, and a member after the shop scrolled past the
  * codes and the runs. «Coduri de reducere» is the zone's own address (`/members-area`), drawn
  * directly: every link made before the tabs — the sign-in's landing, the members' page's button —
@@ -90,7 +90,7 @@ async function zoneOrAway(locale: Locale): Promise<RichTextDoc | null | "away"> 
 }
 
 /**
- * Whether «Magazin» is among the tabs (§NNN, §683): while the privacy notice in force names
+ * Whether «Magazin» is among the tabs (§715, §683): while the privacy notice in force names
  * `{{membersShop}}` in every language, or the member has orders of their own — the zone draws no shop
  * before the notice describes it (BR-REQ-053-01). False while the database is away.
  */
@@ -112,7 +112,7 @@ export type FrameParts = { words: RichTextDoc | null | "away"; shop: boolean };
 /**
  * Read once per page, by the page, because the frame is drawn synchronously: the club's words for
  * its members (every tab shows them) and the tab list. The shop's own page passes `shop`: it reads
- * what decides the tab itself, in the same round as these (§NNN), so the frame does not ask twice.
+ * what decides the tab itself, in the same round as these (§715), so the frame does not ask twice.
  */
 export async function frameParts(account: Pick<Account, "id">, locale: Locale, now: Date, shop?: boolean): Promise<FrameParts> {
   const [words, shown] = await Promise.all([zoneOrAway(locale), shop ?? shopTabShown(account.id, now)]);

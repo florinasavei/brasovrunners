@@ -117,7 +117,7 @@ const inFaqIntro = sql`(${platformSettings.key} = ${FAQ_PAGE_SETTING_KEY} AND ${
 const inMembersPage = sql`(${platformSettings.key} = ${MEMBERS_PAGE_SETTING_KEY} AND ${names(sql`${platformSettings.value}::text`)})`;
 
 /**
- * Whether the home page carries the asset (§NNN) — its hero or a picture of its photo strip: its one
+ * Whether the home page carries the asset (§714) — its hero or a picture of its photo strip: its one
  * `platform_settings` row keeps each picture's key prefix beside its id (copied at the save, so the
  * public read asks the store nothing), read as its text like the team's introduction, the page on or
  * off and the strip shown or not: a page being prepared is a page.
@@ -155,7 +155,7 @@ const referencedSomewhere = sql`(
   OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inFaqIntro})
   -- A picture in the members' pages (§524), kept in their platform setting.
   OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inMembersPage})
-  -- The home page's hero and photo strip (§NNN), kept in its platform setting.
+  -- The home page's hero and photo strip (§714), kept in its platform setting.
   OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inHomePage})
   -- A product's photo in the members' shop (§683), by id, hidden and archived products included:
   -- an archived product's row stays for its orders, and a hidden one is being prepared.
@@ -392,7 +392,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .select({ assetId: mediaAssets.id })
     .from(mediaAssets)
     .innerJoin(platformSettings, inMembersPage);
-  // The home page's hero or strip (§NNN): one reference, «Setări» → «Aspect» → «Pagina principală».
+  // The home page's hero or strip (§714): one reference, «Setări» → «Aspect» → «Pagina principală».
   const inHomePages = await db
     .select({ assetId: mediaAssets.id })
     .from(mediaAssets)

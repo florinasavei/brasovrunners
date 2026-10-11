@@ -153,7 +153,7 @@ describe("§524 a member signs in and is no staff", () => {
 
   const hrefsOf = (html: string) => (html.match(/<nav [^>]*>[\s\S]*?<\/nav>/)?.[0] ?? "");
 
-  it("§NNN draws the tabs in the owner's order, the shop only once the notice names it, each page asserting the door itself", async () => {
+  it("§715 draws the tabs in the owner's order, the shop only once the notice names it, each page asserting the door itself", async () => {
     const { default: ShopPage } = await import("@/app/[locale]/members-area/shop/page");
     const { default: RunsPage } = await import("@/app/[locale]/members-area/runs/page");
     const params = { params: Promise.resolve({ locale: "ro" }) };
@@ -195,7 +195,7 @@ describe("§524 a member signs in and is no staff", () => {
     expect(getPathname({ locale: "en", href: "/members-area/runs" })).toBe("/en/members-area/runs");
   });
 
-  it("§NNN keeps «Magazin» for a member with an order while no notice names the shop: the tab, their orders and nothing to buy", async () => {
+  it("§715 keeps «Magazin» for a member with an order while no notice names the shop: the tab, their orders and nothing to buy", async () => {
     const { default: ShopPage } = await import("@/app/[locale]/members-area/shop/page");
     const { product, size } = await onOffer();
     // The order was placed while the notice named the shop; none in force names it now.
@@ -211,7 +211,7 @@ describe("§524 a member signs in and is no staff", () => {
     expect(html).not.toContain('data-testid="members-shop"');
   });
 
-  it("§NNN lands a press made on a page drawn before the notice changed on its answer, inside the zone and never on a 404", async () => {
+  it("§715 lands a press made on a page drawn before the notice changed on its answer, inside the zone and never on a 404", async () => {
     const { default: ShopPage } = await import("@/app/[locale]/members-area/shop/page");
     const { product, size } = await onOffer();
     state.cookie = member.id;
@@ -238,7 +238,7 @@ describe("§524 a member signs in and is no staff", () => {
     }
   });
 
-  it("§NNN shows the club's words for members above the tabs, on every tab", async () => {
+  it("§715 shows the club's words for members above the tabs, on every tab", async () => {
     const { default: ShopPage } = await import("@/app/[locale]/members-area/shop/page");
     const { default: RunsPage } = await import("@/app/[locale]/members-area/runs/page");
     const doc = (text: string) => JSON.stringify({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
@@ -252,7 +252,7 @@ describe("§524 a member signs in and is no staff", () => {
     }
   });
 
-  it("§NNN answers an Administrator on the tabs too, and none shows the backoffice", async () => {
+  it("§715 answers an Administrator on the tabs too, and none shows the backoffice", async () => {
     const { default: ShopPage } = await import("@/app/[locale]/members-area/shop/page");
     const { default: RunsPage } = await import("@/app/[locale]/members-area/runs/page");
     state.cookie = admin.id;

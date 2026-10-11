@@ -8,7 +8,7 @@ import { SAMPLE_HOME_STEPS, SAMPLE_HOME_WHY, SAMPLE_WEATHER, sampleHomeFigures, 
 type Words = (key: string, values?: Record<string, string>) => string;
 
 /**
- * The home page's first sections from the sample rows (§NNN): the props `Hero`, `NextRunCard` and
+ * The home page's first sections from the sample rows (§714): the props `Hero`, `NextRunCard` and
  * `RunCardGrid` take on the site, built from the same made-up events as the design page's cards
  * (`fixtures.ts`), with the empty photo slots the club starts from (never a stock picture, decision 6)
  * and the platform's own words from the catalogue (`home` is the `Home` namespace, `event` the `Event`

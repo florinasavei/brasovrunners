@@ -1,7 +1,7 @@
 import { addressSearchWith, switchSearch } from "../domain/event-picker";
 
 /**
- * Puts a choice into the address without a navigation (§NNN): `history.replaceState` with `null` as
+ * Puts a choice into the address without a navigation (§716): `history.replaceState` with `null` as
  * the state, as Next's documentation has it - Next then copies its own internal state and syncs the
  * router (`useSearchParams`), where the page's own `window.history.state` carries `__NA` and makes
  * Next skip that sync. The link in the bar can be shared with the event already chosen, and the back

@@ -313,7 +313,7 @@ describe("§579 «Previzualizare» before saving: the unsaved event, drawn by th
       form.set("event.startsAtWallTime", "2030-10-07T19:00");
     };
     for (const locale of ["ro", "en"] as const) {
-      // The preview and its door read the real clock: pressed at NOW, the race (2030) ahead (§NNN).
+      // The preview and its door read the real clock: pressed at NOW, the race (2030) ahead (§712).
       const form = await editorForm(race);
       const answer = await atTheClock(NOW, () => preview(form, locale));
       expect(answer.outcome).toBe("ready");

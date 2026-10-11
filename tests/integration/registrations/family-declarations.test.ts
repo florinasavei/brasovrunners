@@ -463,7 +463,7 @@ describe("§471 the brief's scenario: entered from B, A put off, the minor signe
     const aLink = await declarationLink(a.id, at(20));
 
     // The skip reads its link through `readRegistrationTokenContext`, which takes the real clock
-    // (§NNN): the press happens at at(21), on the fixture's calendar, not on the day this runs.
+    // (§712): the press happens at at(21), on the fixture's calendar, not on the day this runs.
     const skipped = await atTheClock(at(21), () => skipFamilyDeclaration(aLink.secret, null, a.id, at(21)));
     if (!skipped.ok) throw new Error("the skip was refused");
     expect(skipped.pass).toMatchObject({ binding: "link", originId: a.id, skippedIds: [a.id], signedIds: [], done: false });

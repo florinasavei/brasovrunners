@@ -27,7 +27,7 @@ import {
 import { type PostedField, postedNumbers, postedSteps, postedStripTitle, postedWhy, type SectionRead, STEPS_PAGE_FIELD } from "./domain/home-sections-form";
 
 /**
- * «Pagina principală» (§NNN): one `platform_settings` row, written by an Administrator under «Setări» →
+ * «Pagina principală» (§714): one `platform_settings` row, written by an Administrator under «Setări» →
  * «Aspect», audited, read by the site's root and the header through the public cache (§333). No
  * migration: the settings table takes any key (§100). `domain/home-page.ts` says what it holds.
  */
@@ -243,7 +243,7 @@ export async function updateHomePage<T extends Record<string, unknown>>(
   return state;
 }
 
-/** One lock for every read-merge-write of the row: the page's save and the strip's three forms (§NNN). */
+/** One lock for every read-merge-write of the row: the page's save and the strip's three forms (§717). */
 const HOME_PAGE_LOCK_KEY = 7_203_300_101;
 
 /**
@@ -280,7 +280,7 @@ async function writeHomePage<T extends Record<string, unknown>>(
 export type StripPictureInput = { assetId?: unknown; direction?: unknown };
 
 /**
- * One picture added to the strip, moved a place, or taken out of it (§NNN): the strip's own small
+ * One picture added to the strip, moved a place, or taken out of it (§714): the strip's own small
  * forms under «Pagina principală», each a save of its own like a product's pictures (§697), so a slow
  * upload never holds the page's boxes hostage. The Administrator's (§450), audited as the page's
  * change, by the picture's id. Adding reads the picture's key prefix and size from the store and keeps

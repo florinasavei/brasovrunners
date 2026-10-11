@@ -7,7 +7,7 @@ import SocialIcon from "@/shared/ui/SocialIcon";
 import WatchIcon from "@mui/icons-material/Watch";
 import { type RouteMap, routeMapEmbedSrc, routeMapLink } from "../domain/route-maps";
 
-/** One service's words in «Traseul» (§NNN), in the reader's language. */
+/** One service's words in «Traseul» (§718), in the reader's language. */
 export type RouteMapProviderWords = {
   /** The tab: «Garmin Connect», «Strava». */
   tab: string;
@@ -22,7 +22,7 @@ export type RouteMapProviderWords = {
 };
 
 /**
- * One service's map in «Traseul» (§NNN), behind one press, and its link.
+ * One service's map in «Traseul» (§718), behind one press, and its link.
  *
  * The press is the house's facade for a third party (§69, §110, §266, §403): a native `<details>`,
  * rendered here on the server, whose closed state is the line «Arată harta pe …» — and a closed

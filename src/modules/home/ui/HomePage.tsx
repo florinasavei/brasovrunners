@@ -38,7 +38,7 @@ export type HomePageProps = {
 };
 
 /**
- * The home page (the facelift's phase 3, §NNN; `docs/REDESIGN.md`, decision 3), in the plan's order:
+ * The home page (the facelift's phase 3, §714; `docs/REDESIGN.md`, decision 3), in the plan's order:
  * the hero, the next run, the weekly runs, the special events, «Prima dată», «De ce» and the quote,
  * the photo strip and the numbers band — each a named Server Component with typed props under
  * `src/modules/home/ui/`, drawn with a fixture on the design page's «Mostre» (the owner's rule of

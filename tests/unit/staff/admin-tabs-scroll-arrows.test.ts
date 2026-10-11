@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 /**
- * BR-REQ-041-01 criterion 6, `DECISIONS.md` §NNN (amends §79): the backoffice section bar shows scroll
+ * BR-REQ-041-01 criterion 6, `DECISIONS.md` §713 (amends §79): the backoffice section bar shows scroll
  * arrows only while it overflows (`auto`), not on a phone, each a 44-pixel target. Read as source:
  * the arrows are drawn after the browser measures, which a static render cannot; the behaviour is
  * walked in `tests/e2e/config-panels.spec.ts`.

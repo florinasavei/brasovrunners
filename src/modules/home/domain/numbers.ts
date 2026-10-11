@@ -4,7 +4,7 @@ import { groupSeries, recurrenceOf, type SeriesMember } from "@/modules/events/d
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 
 /**
- * The numbers band (§NNN; `docs/REDESIGN.md`, decision 8): four figures, two the club types and two
+ * The numbers band (§714; `docs/REDESIGN.md`, decision 8): four figures, two the club types and two
  * the site reads off the events. **Never invented** (BUSINESS.md §7): a figure without its fact is
  * left out, never guessed, and the band with none is not drawn.
  *

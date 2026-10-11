@@ -12,7 +12,7 @@ import {
 } from "@/modules/events/domain/route-maps";
 
 /**
- * BR-REQ-011-01 (§NNN) — «Traseul»'s Strava and Garmin Connect maps: what the club pastes — the
+ * BR-REQ-011-01 (§718) — «Traseul»'s Strava and Garmin Connect maps: what the club pastes — the
  * route's link or the service's embed code — is read down to the id and, for Strava, three values
  * on strict patterns; anything else is refused, and the page builds the link and the map's address
  * from those values alone. Every id and token here is invented: the repository is public.
@@ -31,7 +31,7 @@ const STRAVA_EMBED = stravaEmbed(
 /** Garmin's share menu, its quotes as mixed as Garmin writes them. */
 const GARMIN_EMBED = `<iframe src=https://connect.garmin.com/embed/course/${GARMIN_ID} width='465' height='548' title='Course Embed'></iframe>`;
 
-describe("BR-REQ-011-01 the Strava field (§NNN)", () => {
+describe("BR-REQ-011-01 the Strava field (§718)", () => {
   it("reads the route's link, with or without www, a trailing slash or a query", () => {
     for (const link of [
       `https://www.strava.com/routes/${STRAVA_ID}`,
@@ -110,7 +110,7 @@ describe("BR-REQ-011-01 the Strava field (§NNN)", () => {
   });
 });
 
-describe("BR-REQ-011-01 the Garmin Connect field (§NNN)", () => {
+describe("BR-REQ-011-01 the Garmin Connect field (§718)", () => {
   it("reads the course's link in both of Garmin's shapes, the embed address and the embed code", () => {
     for (const input of [
       `https://connect.garmin.com/modern/course/${GARMIN_ID}`,
@@ -143,7 +143,7 @@ describe("BR-REQ-011-01 the Garmin Connect field (§NNN)", () => {
   });
 });
 
-describe("BR-REQ-011-01 what the page builds from the stored ids (§NNN)", () => {
+describe("BR-REQ-011-01 what the page builds from the stored ids (§718)", () => {
   const strava = { provider: "strava" as const, id: STRAVA_ID, style: "hybrid", mapHash: "11.66/45.6375/25.5935", token: TOKEN };
 
   it("links to the route on the service, from the id alone", () => {

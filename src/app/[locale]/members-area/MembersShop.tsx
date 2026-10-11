@@ -46,7 +46,7 @@ type MembersWords = Awaited<ReturnType<typeof getTranslations<"Members">>>;
  * success for an order placed or cancelled, an error for a refusal; with the shop's emails switched
  * off (§704) a placed order's answer names none. It stands among the shop and the orders below and,
  * when there is neither — a press made on a page drawn before the notice changed — alone, drawn by
- * the shop's page (§NNN).
+ * the shop's page (§715).
  */
 export function ShopOutcomeAlert({ outcome, emailMembers, t }: { outcome: ShopOutcome; emailMembers: boolean; t: MembersWords }) {
   return (

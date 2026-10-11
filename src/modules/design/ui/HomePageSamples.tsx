@@ -7,7 +7,7 @@ import RunCardGrid from "@/modules/home/ui/RunCardGrid";
 import { sampleHome } from "../home-fixtures";
 
 /**
- * «Mostre» → the home page's first sections (§NNN): `Hero`, `NextRunCard` and `RunCardGrid`, the very
+ * «Mostre» → the home page's first sections (§714): `Hero`, `NextRunCard` and `RunCardGrid`, the very
  * components the site's root draws, from the sample rows (`home-fixtures.ts`) — the empty photo slots
  * the club starts from and the platform's own words. The hero's heading is a paragraph here, so the
  * design page keeps its one `h1`. Server Components throughout.

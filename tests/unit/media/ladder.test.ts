@@ -181,7 +181,7 @@ describe("§414 sizes", () => {
     expect(pictureSizes("thumb", 100, 2)).toBe("(min-width: 600px) 208px, 176px");
   });
 
-  it("measures the home page's photo strip (§NNN): six square tiles from md, two and a half from sm, one and a bit on a phone", () => {
+  it("measures the home page's photo strip (§714): six square tiles from md, two and a half from sm, one and a bit on a phone", () => {
     expect(pictureSizes("strip")).toBe("(min-width: 1536px) 238px, (min-width: 900px) calc(16.67vw - 18px), (min-width: 600px) calc(40vw - 19px), calc(72vw - 23px)");
     // A 3:2 photograph cut to the square tile is drawn 1.5 times the tile's width.
     expect(pictureSizes("strip", 100, coverMagnification(2400, 1600, 1))).toBe("(min-width: 1536px) 357px, (min-width: 900px) calc(25.01vw - 27px), (min-width: 600px) calc(60vw - 28px), calc(108vw - 34px)");

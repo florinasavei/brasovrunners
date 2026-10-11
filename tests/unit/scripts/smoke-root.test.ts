@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 import { judgeRoot } from "../../../scripts/smoke.mjs";
 
 /**
- * BR-REQ-040-01 — the smoke's verdict on the site's root (§NNN, amending §353): a 307 to the listing
+ * BR-REQ-040-01 — the smoke's verdict on the site's root (§717, amending §353): a 307 to the listing
  * while «Pagina principală» is off, the home page's 200 when it is on, and never a 200 that is an
  * error document (the §353 failure mode: a redirect thrown from a page answered 200 with `__next_error__`).
  */
-describe("§NNN the smoke's verdict on the root", () => {
+describe("§717 the smoke's verdict on the root", () => {
   it("accepts a 307 to the listing in either language, and the home page's 200", () => {
     expect(judgeRoot("ro", 307, "/ro/evenimente", "")).toMatchObject({ ok: true });
     expect(judgeRoot("en", 307, "https://club.example/en/events", "")).toMatchObject({ ok: true });

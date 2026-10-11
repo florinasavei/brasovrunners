@@ -2,7 +2,7 @@ import { z } from "zod";
 import { homeTextSchema, type HomeText } from "./home-text";
 
 /**
- * «Prima dată» — the home page's band for a newcomer (§NNN; `docs/REDESIGN.md` § What exists versus
+ * «Prima dată» — the home page's band for a newcomer (§714; `docs/REDESIGN.md` § What exists versus
  * what is new: «the words (a setting), five icons, a target page»): a heading, one sentence, five
  * numbered steps from the calendar to the start, and «Cum funcționează», which opens a club page
  * (decision 5: there is no sign-up for runners, so the band explains rather than registers).

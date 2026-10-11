@@ -17,7 +17,7 @@ import type { PickerOption } from "@/modules/feedback/domain/event-picker";
  *
  * The three words a choice puts in the address (`?eveniment=`, `?data=`, `?filtru=`) ride on to the other
  * branch from every form — read and settled by a form with the picker, passed on unread by one without
- * (§NNN) — and the address's own island is mounted only on a form that has the event or the day box.
+ * (§716) — and the address's own island is mounted only on a form that has the event or the day box.
  */
 let locale: "ro" | "en" = "ro";
 let draft: Record<string, string> | null = null;
@@ -194,7 +194,7 @@ describe("BR-REQ-070-04 «Evenimentul»: the native select stays, the island sta
     });
   });
 
-  it("opens on the chip the address names (?filtru=), «toate» without one (§NNN)", async () => {
+  it("opens on the chip the address names (?filtru=), «toate» without one (§716)", async () => {
     rows = events(12);
     await render({ tip: "cum-a-fost", filtru: "grup" });
     await render({ tip: "cum-a-fost", filtru: "speciale" });

@@ -7,7 +7,7 @@ import { EMPTY_WHY, whyContentSchema } from "@/modules/home/domain/why";
 import { isWrittenText, missingLanguage, type TextLanguage } from "@/shared/forms/both-languages";
 
 /**
- * «Pagina principală» (the facelift's phase 3, §NNN; `docs/REDESIGN.md`, decision 3): a real home page
+ * «Pagina principală» (the facelift's phase 3, §714; `docs/REDESIGN.md`, decision 3): a real home page
  * at `/ro` and `/en`, reached from the logo and never from a menu entry, switched on and off by the
  * club under «Setări» → «Aspect». Off — the default, and what a database without the row reads — the
  * root goes to the listing as it always did, and nothing on any page changes.

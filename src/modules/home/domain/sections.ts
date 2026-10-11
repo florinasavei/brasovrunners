@@ -2,7 +2,7 @@ import { eventKind, type EventKind, type EventKindFacts } from "@/modules/events
 import { groupSeries, type Series, type SeriesMember } from "@/modules/events/domain/series";
 
 /**
- * What the home page shows from the upcoming events (the facelift's phase 3, §NNN; `docs/REDESIGN.md`,
+ * What the home page shows from the upcoming events (the facelift's phase 3, §714; `docs/REDESIGN.md`,
  * decisions 9 and 10, open question 7): «Următoarea alergare», then the weekly runs and the special
  * events, each section a card per event as the listing groups them (§113: a series is one card).
  *

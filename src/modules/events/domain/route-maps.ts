@@ -1,5 +1,5 @@
 /**
- * «Traseul»'s maps (§NNN; the owner, 2026-10-11: «so basically I need to put all: Garmin Connect
+ * «Traseul»'s maps (§718; the owner, 2026-10-11: «so basically I need to put all: Garmin Connect
  * embedded, Strava embedded, Garmin Connect link, Strava link AND GPX file»).
  *
  * The club pastes what the service gave it — the route's link, or the embed code from the

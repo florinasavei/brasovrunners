@@ -13,7 +13,7 @@ import type { StepGlyph } from "../domain/steps";
 import type { WhyGlyph } from "../domain/why";
 
 /**
- * The home page's glyphs, by name (§NNN; §318, §521, §694): the five steps of «Prima dată» and the
+ * The home page's glyphs, by name (§714; §318, §521, §694): the five steps of «Prima dată» and the
  * four reasons of «De ce». The domain names them (`STEP_GLYPHS`, `WHY_GLYPHS`); this table is the one
  * place the icon files are imported, one file per glyph, never the barrel (§90), and the sections —
  * Server Components — draw them on the server, so no element ever crosses into a client component

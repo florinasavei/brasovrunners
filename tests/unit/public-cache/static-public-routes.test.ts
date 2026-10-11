@@ -42,7 +42,7 @@ const code = (file: string): string => source(file).replace(/\/\*[\s\S]*?\*\//g,
 
 /** The static public routes: made on first visit, kept by the CDN, expired by writes and their clock. */
 const STATIC_PAGES = [
-  // The site's root (§NNN): the home page while «Pagina principală» is on, a kept 307 to the listing while it is off.
+  // The site's root (§714): the home page while «Pagina principală» is on, a kept 307 to the listing while it is off.
   "src/app/[locale]/page.tsx",
   "src/app/[locale]/events/page.tsx",
   "src/app/[locale]/events/[slug]/page.tsx",
@@ -85,8 +85,8 @@ const PER_REQUEST: Record<string, string> = {
   "src/app/[locale]/contact/feedback/page.tsx": "«Spune-ne ceva»'s wizard: the draft cookie, the render time the timing check reads, ?tip/?sent/?error (§676)",
   "src/app/[locale]/members/page.tsx": "the sign-in button reads the session (§524)",
   "src/app/[locale]/members-area/page.tsx": "the members' zone reads the session and sends a stranger to the sign-in (§524, AGENTS.md §14.5)",
-  "src/app/[locale]/members-area/runs/page.tsx": "the zone's «Alergări» tab: the same door as the zone, per request (§NNN)",
-  "src/app/[locale]/members-area/shop/page.tsx": "the zone's «Magazin» tab: the same door as the zone, the member's own orders (§NNN)",
+  "src/app/[locale]/members-area/runs/page.tsx": "the zone's «Alergări» tab: the same door as the zone, per request (§715)",
+  "src/app/[locale]/members-area/shop/page.tsx": "the zone's «Magazin» tab: the same door as the zone, the member's own orders (§715)",
   "src/app/[locale]/sign-in/page.tsx": "reads the session, ?to= and ?error= (§26)",
   "src/app/[locale]/preview/events/[id]/page.tsx": "staff only: a draft shown to whoever the session says may read it (BR-REQ-060-01)",
   "src/app/[locale]/preview/draft/page.tsx": "staff only: the editor's preview frame, for the roles the session says may preview (§579)",

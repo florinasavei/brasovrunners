@@ -47,7 +47,7 @@ async function shopOrNone(
 }
 
 /**
- * The members' zone, tab «Magazin» (§NNN, §683): the club's shop and the member's own orders, at
+ * The members' zone, tab «Magazin» (§715, §683): the club's shop and the member's own orders, at
  * `/members-area/shop`. «Comandă» and «Anulează comanda» (`actions.ts`) answer back to this address
  * with `?shop=` and `?shopAt=`. The door is asserted here, on this page, as on every tab (`openZone`,
  * BR-REQ-060-01), and the order action asserts it again.
@@ -68,7 +68,7 @@ export default async function MembersShopPage({ params, searchParams }: Props) {
     and no page at this address either, unless the member has orders of their own to see. The one
     exception is the answer to a press (`?shop=`) made on a page drawn before the notice changed —
     «Produsul nu mai e în magazin…» — which would otherwise end on a 404 where the button led: it is
-    drawn in the frame, with no «Magazin» tab to lead back here (§NNN), for that request alone. With
+    drawn in the frame, with no «Magazin» tab to lead back here (§715), for that request alone. With
     no answer in the address the 404 stays.
   */
   if (shop !== "away" && !shop.open && shop.orders.length === 0) {

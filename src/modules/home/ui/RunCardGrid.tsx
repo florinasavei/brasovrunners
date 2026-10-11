@@ -31,7 +31,7 @@ export type RunCardGridProps = {
 };
 
 /**
- * A section of the home page's runs (the facelift's phase 3, §NNN): the weekly runs, or the special
+ * A section of the home page's runs (the facelift's phase 3, §714): the weekly runs, or the special
  * events (decision 9) — a heading, a line, and a card per event with its cover on top, the kind's tag
  * over the picture, the title as the link over the whole card, a line or two of when, and the round
  * arrow (decision 10).
