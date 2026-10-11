@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { HOUSE_CHECKS, gateLine, judgeMergeGate, sourceLine, waitForMergeGate } from "../../../scripts/pr-merge-gate.mjs";
 
 /**
- * §NNN — `yarn ship` waits for what GitHub requires, not for every status on the PR. On 2026-10-10
+ * §703 — `yarn ship` waits for what GitHub requires, not for every status on the PR. On 2026-10-10
  * it polled twenty minutes for «Vercel – <project>», which the merge never needed (UNSTABLE).
  */
 const run = (name: string, conclusion: string | null, status = "COMPLETED") => ({ __typename: "CheckRun", name, status, conclusion });
@@ -10,7 +10,7 @@ const house = [run("tested-tree", "SUCCESS"), run("e2e", "SUCCESS"), run("migrat
 const houseAnd = (...more: object[]) => [...house, ...more];
 const context = (name: string, state: string) => ({ __typename: "StatusContext", context: name, state });
 
-describe("§NNN ship: the merge gate", () => {
+describe("§703 ship: the merge gate", () => {
   it("merges on UNSTABLE when only a status nobody requires is pending, and names it", () => {
     const pr = { mergeStateStatus: "UNSTABLE", statusCheckRollup: houseAnd(run("docs-check", "SUCCESS"), context("Vercel – a-project", "PENDING")) };
     expect(judgeMergeGate(pr, ["docs-check"])).toEqual({ mergeable: true, waitingOn: [{ name: "Vercel – a-project", required: false }] });

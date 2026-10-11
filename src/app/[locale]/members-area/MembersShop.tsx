@@ -64,7 +64,7 @@ export default async function MembersShop({
   payment: string | null;
   shopOpen: boolean;
   outcome: ShopOutcome | null;
-  /** The shop's switch (§NNN): off, no email was sent, and the placed-order banner must not say one was. */
+  /** The shop's switch (§704): off, no email was sent, and the placed-order banner must not say one was. */
   emailMembers: boolean;
   /** The answer came back to «Comenzile mele» (a placed order, or a cancel, refused or not). */
   outcomeAtOrders?: boolean;

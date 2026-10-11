@@ -262,7 +262,7 @@ export async function moveShopOrderAction(_previous: FormOutcome | null, form: F
   try {
     const actor = await requireStaffCapability(canManageShop);
     await moveOrderByClub(getDb(), { actor, orderId, verb });
-    // The words follow the switch (§NNN): off, the member was told nothing, and the banner says so.
+    // The words follow the switch (§704): off, the member was told nothing, and the banner says so.
     const emailed = verb === "pay" ? (await readShopSettings(getDb())).emailMembers : true;
     outcome = verb === "pay" ? { saved: emailed ? "shopOrderPaid" : "shopOrderPaidNoEmail" } : verb === "handOver" ? { saved: "shopOrderHandedOver" } : { saved: "shopOrderCancelled" };
   } catch (error) {

@@ -1,5 +1,5 @@
 /**
- * Whether a pull request may be merged, judged only on what GitHub requires (§NNN, amends §426).
+ * Whether a pull request may be merged, judged only on what GitHub requires (§703, amends §426).
  *
  * `yarn ship` once polled twenty minutes for «Vercel – <project>» on a release PR whose merge GitHub
  * did not need it for: `mergeStateStatus` said `UNSTABLE` (mergeable, a status that is not required

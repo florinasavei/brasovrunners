@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.92-2026-10-11 -->
+<!-- PROJECT_BASELINE: BR-V2.93-2026-10-11 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.92-2026-10-11`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.93-2026-10-11`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1940,7 +1940,7 @@ with its cards in the order you fill them.
    sent to the club; the orders are in «Comenzi» either way. The box **«Îi scriem membrului pe email
    despre comenzi»** (on by default) is the one switch for the member's two emails — «Comanda ta a
    fost primită» and «Comanda ta e plătită»; off, the member gets neither (the club's own notice is
-   a different thing and stays), and the per-order tick on «Comenzi» is not offered (§NNN).
+   a different thing and stays), and the per-order tick on «Comenzi» is not offered (§704).
 3. **Add a product.** «Magazin» → «Produse» → «Adaugă un produs». The page has the cards in order:
    - **«Denumirea și prețul»** — the name in both languages (the translate button at the top), the
      price («45» or «45,50») and «Moneda»: lei or euro, chosen per product, shown to members as such

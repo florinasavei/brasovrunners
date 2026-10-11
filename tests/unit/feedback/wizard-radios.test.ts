@@ -5,7 +5,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * BR-REQ-070-04, `DECISIONS.md` §NNN (amending §678) — each question of «Spune-ne ceva» is one native
+ * BR-REQ-070-04, `DECISIONS.md` §702 (amending §678) — each question of «Spune-ne ceva» is one native
  * radio group: one `name`, exactly one checked, so picking the other unchecks it in the browser alone.
  * The owner saw both drawn selected when the options were MUI radios outside a `RadioGroup`.
  */
@@ -27,7 +27,7 @@ function groups(html: string) {
   return byName;
 }
 
-describe("the wizard's radios are one group each (§NNN)", () => {
+describe("the wizard's radios are one group each (§702)", () => {
   for (const inLocale of ["ro", "en"] as const) {
     for (const wayBack of ["email", "contact"] as const) {
       for (const named of [false, true]) {

@@ -179,7 +179,7 @@ describe("§690 the club places an order in a member's name", () => {
     expect(audit.metadataJson).toMatchObject({ emailed: true });
   });
 
-  it("§NNN: with the shop's member emails off, the ticks queue nothing and the audit row says emailed: false", async () => {
+  it("§704: with the shop's member emails off, the ticks queue nothing and the audit row says emailed: false", async () => {
     await saveShopSettings(db, { actor: admin, fields: { paymentRo: "", paymentEn: "", ordersTo: "comenzi@example.org", emailMembers: "off" }, now: NOW });
     const product = await createProduct(db, { actor: admin, fields: PRODUCT, now: NOW });
     const told = await forMember(admin, member.id, product.id, (await variantsOf(product.id)).L.id, 1, { emailMember: true, markPaid: true });
@@ -348,7 +348,7 @@ describe("§690 the club places an order in a member's name", () => {
     expect(readOnly).toContain("12,34 €");
     expect((readOnly.match(/data-testid="order-placed-by-club"/g) ?? []).length).toBe(1);
     expect(readOnly).toContain(ro.Admin.members.shop.forMember.placedByClub);
-    // §NNN: the email tick is drawn while the shop's switch is on; off, a one-line note takes its place.
+    // §704: the email tick is drawn while the shop's switch is on; off, a one-line note takes its place.
     const folded = render(true);
     expect(folded).toContain('name="emailMember"');
     const switchedOff = render(true, false);

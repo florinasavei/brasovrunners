@@ -3,7 +3,7 @@
  * Ship one small batch to production, end to end — the release step of `docs/DISPATCHER.md`.
  *
  * Usage: yarn ship <batch PR> <new baseline> <previous baseline> "<release title>"
- *        yarn ship 163 BR-V2.92-2026-10-11 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
+ *        yarn ship 163 BR-V2.93-2026-10-11 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
  *
  *   1. waits until production reports the previous baseline: one release at a time;
  *   2. waits for the batch PR's checks to settle (§426), stops unless green, merges it into `qa`
@@ -11,7 +11,7 @@
  *   3. waits for `qa`'s docs-check run on that merge to complete (§504);
  *   4. only then opens (or takes) the `qa → main` release PR, so its run finds the tree tested;
  *   5. waits until GitHub would let it merge — the checks the base branch requires, never a Vercel
- *      status (§NNN) — and merges it;
+ *      status (§703) — and merges it;
  *   6. if the release changes a migration, approves the gated `migrate.yml` run (`DECISIONS.md` §31)
  *      and waits for it;
  *   7. waits until production's `/api/health` reports the new baseline.
@@ -157,7 +157,7 @@ async function settledChecks(pr, { tolerate } = {}) {
 }
 
 /**
- * The contexts GitHub requires on the PR, or null when it will not say (§NNN). `gh pr checks --required`
+ * The contexts GitHub requires on the PR, or null when it will not say (§703). `gh pr checks --required`
  * needs only pull-request read, which SHIP_TOKEN has; branch protection needs Administration, which it has not.
  */
 function requiredContexts(pr, base) {
@@ -175,7 +175,7 @@ function requiredContexts(pr, base) {
   }
 }
 
-/** Waits until GitHub would merge the PR on its required checks alone; a status nobody requires is named, never waited on (§NNN). */
+/** Waits until GitHub would merge the PR on its required checks alone; a status nobody requires is named, never waited on (§703). */
 async function mergeGate(pr, base) {
   let sourced = false;
   const read = () => {
@@ -271,7 +271,7 @@ if (!release) {
 }
 console.log(`== release PR #${release}`);
 
-// The qa run judged the code; a Vercel status, red for Hobby's deploy limit or still pending, is not required (§NNN).
+// The qa run judged the code; a Vercel status, red for Hobby's deploy limit or still pending, is not required (§703).
 await mergeGate(release, "main");
 const migrationExpected = releaseChangesMigrations();
 await merge(release);

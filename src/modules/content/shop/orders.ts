@@ -160,7 +160,7 @@ async function insertOrder<T extends Record<string, unknown>>(tx: Transaction<T>
     })
     .returning();
 
-  // «Îi scriem membrului pe email despre comenzi» (§NNN): off, the member is written to by neither email.
+  // «Îi scriem membrului pe email despre comenzi» (§704): off, the member is written to by neither email.
   const settings = await readShopSettings(tx);
   const emailMember = core.emailMember && settings.emailMembers;
   if (core.placedBy === "CLUB") {

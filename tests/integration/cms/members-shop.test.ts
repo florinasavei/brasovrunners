@@ -358,7 +358,7 @@ describe("§683 the members' shop", () => {
     expect(kept.productTitleRo).toBe("Tricou exemplu");
   });
 
-  it("§NNN: «Îi scriem membrului pe email despre comenzi» defaults to on, is saved from the form's tick, and off queues no email to the member — the club's notice stays", async () => {
+  it("§704: «Îi scriem membrului pe email despre comenzi» defaults to on, is saved from the form's tick, and off queues no email to the member — the club's notice stays", async () => {
     expect((await readShopSettings(db)).emailMembers).toBe(true);
     const base = { paymentRo: "", paymentEn: "", ordersTo: "comenzi@example.org" };
     await saveShopSettings(db, { actor: admin, fields: { ...base, emailMembers: "off" }, now: NOW });
@@ -378,7 +378,7 @@ describe("§683 the members' shop", () => {
     expect(types).toEqual(["SHOP_ORDER_CLUB_NOTICE", "SHOP_ORDER_CLUB_NOTICE", "SHOP_ORDER_PAID", "SHOP_ORDER_PLACED"]);
   });
 
-  it("§NNN: a membersShop row saved before the switch (no emailMembers key) still reads as on and queues the member's email", async () => {
+  it("§704: a membersShop row saved before the switch (no emailMembers key) still reads as on and queues the member's email", async () => {
     await db.insert(platformSettings).values({ key: "membersShop", value: { paymentRo: "", paymentEn: "", ordersTo: "comenzi@example.org" }, updatedAt: NOW });
     expect((await readShopSettings(db)).emailMembers).toBe(true);
     const product = await createProduct(db, { actor: admin, fields: PRODUCT, now: NOW });
@@ -386,7 +386,7 @@ describe("§683 the members' shop", () => {
     expect((await db.select().from(emailOutbox)).map((row) => row.messageType).sort()).toEqual(["SHOP_ORDER_CLUB_NOTICE", "SHOP_ORDER_PLACED"]);
   });
 
-  it("§NNN: with the switch off, the words the member and the club read name no email that was not sent", () => {
+  it("§704: with the switch off, the words the member and the club read name no email that was not sent", () => {
     for (const catalogue of [ro, en]) {
       const shop = catalogue.Members.shop.outcome as Record<string, string>;
       expect(shop.placedNoEmail).toBeTruthy();
@@ -576,7 +576,7 @@ describe("§683 the members' shop", () => {
     expect(closed).not.toContain('data-testid="members-shop"');
     expect(closed).toContain('data-testid="members-orders"');
     expect(closed).toContain(ro.Members.shop.paymentByClub);
-    // §NNN: the placed-order banner follows the switch: off, it says nothing of an email that was never sent.
+    // §704: the placed-order banner follows the switch: off, it says nothing of an email that was never sent.
     const placedOff = renderToStaticMarkup(
       await MembersShop({ products: [], orders: await listOrdersOfMember(db, member.id), payment: null, shopOpen: false, emailMembers: false, outcome: "placed", outcomeAtOrders: true, locale: "ro" }),
     );

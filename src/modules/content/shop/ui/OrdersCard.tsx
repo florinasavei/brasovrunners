@@ -70,7 +70,7 @@ export default function OrdersCard({
   messages: RefusalMessages;
   mayManage: boolean;
   showEmail: boolean;
-  /** The shop's switch «Îi scriem membrului pe email despre comenzi» (§NNN): off, the fold's email tick is not drawn. */
+  /** The shop's switch «Îi scriem membrului pe email despre comenzi» (§704): off, the fold's email tick is not drawn. */
   emailMembers: boolean;
 }) {
   const inUse = query.status !== null || query.productId !== null;

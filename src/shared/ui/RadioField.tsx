@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { TAP_TARGET } from "./tap-target";
 
 /**
- * A labelled radio, native (§NNN, amending §678): a `<label>` around a plain `<input type="radio">`,
+ * A labelled radio, native (§702, amending §678): a `<label>` around a plain `<input type="radio">`,
  * so the browser alone keeps the group — one `name`, one checked — with no JavaScript and no island.
  *
  * It was MUI's `Radio` in a `FormControlLabel`; outside a `RadioGroup` that keeps its own "checked"
