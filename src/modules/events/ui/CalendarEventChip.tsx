@@ -3,6 +3,9 @@
 import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
 import NextLink from "next/link";
+import { UNDER_LOOK } from "@/theme/look";
+import type { CalendarTone } from "../domain/calendar-kind";
+import { toneDotSx, toneEntrySx } from "./calendar-tone-sx";
 import EditionMark, { EditionGlyph, type EditionNote } from "./EditionMark";
 import { GLYPHS, type GlyphName } from "./glyphs";
 import PartnerMark from "./PartnerMark";
@@ -71,6 +74,7 @@ export default function CalendarEventChip({
   night = null,
   partner,
   dense,
+  tone = "other",
 }: {
   href: string;
   time: string;
@@ -87,6 +91,12 @@ export default function CalendarEventChip({
   partner: string | null;
   /** Inside a grid cell (small type, one line) rather than an agenda row. */
   dense: boolean;
+  /**
+   * The date's colour under «Aspectul nou» (phase 4, `calendarTone`): a weekly run, a special event
+   * or another date, with a dot before the glyphs — the legend under the grid says each colour's
+   * word. Off, nothing reads it. A string, so it crosses from the Server Component as data; the grey when unsaid.
+   */
+  tone?: CalendarTone;
 }) {
   const lines = calendarEntryLines({ time, title, note, night, partner });
   const name = calendarEntryName(lines);
@@ -117,8 +127,16 @@ export default function CalendarEventChip({
           color: filled ? "primary.contrastText" : "text.primary",
           textDecoration: cancelled ? "line-through" : "none",
           "&:hover": { filter: "brightness(0.95)" },
+          ...toneEntrySx(tone),
         }}
+        data-tone={tone}
       >
+        {/* The kind's dot, under the new look only; in a phone's 40-pixel column the fill says it alone. */}
+        <Box
+          component="span"
+          aria-hidden="true"
+          sx={dense ? { ...toneDotSx(tone), [UNDER_LOOK]: { ...toneDotSx(tone)[UNDER_LOOK], display: { xs: "none", sm: "inline-block" } } } : toneDotSx(tone)}
+        />
         <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.25, flexShrink: 0 }} aria-hidden="true">
           {glyphs.map((glyphName) => {
             const Glyph = GLYPHS[glyphName];

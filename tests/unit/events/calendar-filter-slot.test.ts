@@ -58,7 +58,8 @@ describe("BR-REQ-041-01 criterion 12: the calendar's filter slot does not depend
     const page = readFileSync(path.join(ROOT, "src/app/[locale]/calendar/page.tsx"), "utf8");
     expect(page).toMatch(/<CalendarFilterSlot shown=\{[^}]*offersAnything\(offer\)/);
     // The panel inside the slot is the one whose form and chips go to the period's own path.
-    expect(page).toMatch(/<CalendarFilterSlot shown=\{[^}]*\}>\s*<ListingFilterPanel\b[^>]*\bpath=\{periodPath\}[^>]*\/>\s*<\/CalendarFilterSlot>/);
+    // Under «Aspectul nou» the slot is told whether the panel without its surface group has anything left (phase 4).
+    expect(page).toMatch(/<CalendarFilterSlot shown=\{[^}]*\}(?: shownUnderLook=\{\w+\})?>\s*<ListingFilterPanel\b[^>]*\bpath=\{periodPath\}[^>]*\/>\s*<\/CalendarFilterSlot>/);
     // The conditional render §413 had is gone: a `&&` in front of the panel would drop the box again.
     expect(page).not.toMatch(/&&\s*\(\s*<Box[^>]*>\s*<ListingFilterPanel/);
   });

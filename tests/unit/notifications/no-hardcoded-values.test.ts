@@ -245,6 +245,8 @@ describe("§369 the club's name leaves the platform only through the constant", 
           "Site.followOn.facebook",
           "Site.followOn.instagram",
           "Site.followOn.strava",
+          // The calendar's subscribe box under «Aspectul nou» (the facelift's phase 4): «Adaugă calendarul {club} …».
+          "Events.calendar.look.subscribe.intro",
         ].sort(),
       );
     }

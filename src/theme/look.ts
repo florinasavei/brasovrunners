@@ -67,6 +67,13 @@ export function notUnderLook<T>(display: T) {
   return { display, [UNDER_LOOK]: { display: "none" } } as const;
 }
 
+/**
+ * The other half of `onlyUnderLook`: today's element, drawn while the setting is off and hidden
+ * under the new look, where a new component stands in its place (the calendar's subscribe row
+ * gives way to `SubscribeBox`, phase 4). Off, the rule matches nothing and the page is as it was.
+ */
+export const OFF_UNDER_LOOK = { [UNDER_LOOK]: { display: "none" } } as const;
+
 /** Headings under the new look: the display face at 800, set a little tighter (decision 2). */
 export const LOOK_HEADING = { fontWeight: 800, letterSpacing: "-0.02em" } as const;
 

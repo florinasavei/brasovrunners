@@ -134,12 +134,14 @@ describe("BR-REQ-060-01 «Sistemul de design» draws the look from the code", ()
       expect(markup).toContain(escaped(words.today));
       expect(markup).toContain(escaped(words.new));
       // One box of the side-by-side wears the preview scope; the other is the same markup without
-      // it. The only other box that wears it is «Mostre»'s home page sections (§714).
+      // it. The only other boxes that wear it are «Mostre»'s home page sections (§714) and the
+      // calendar's parts under the look (the facelift's phase 4).
       const elements = markup.replace(/<style[\s\S]*?<\/style>/g, "");
       const scoped = [...elements.matchAll(new RegExp(`<[^>]*${LOOK_PREVIEW_ATTRIBUTE}="${LOOK_VALUE}"[^>]*>`, "g"))].map((m) => m[0]);
-      expect(scoped).toHaveLength(2);
+      expect(scoped).toHaveLength(3);
       expect(scoped.filter((tag) => tag.includes('data-testid="design-look-new"'))).toHaveLength(1);
       expect(scoped.filter((tag) => tag.includes('data-testid="design-home"'))).toHaveLength(1);
+      expect(scoped.filter((tag) => tag.includes('data-testid="design-calendar-look"'))).toHaveLength(1);
       // The palette the public layout draws, for the preview box, from the same function.
       expect(markup).toContain(`<style data-design-look="">${lookPaletteCss()}</style>`);
       // The language row's words and the floating button, in the flow (§NNN).

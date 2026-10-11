@@ -11,6 +11,7 @@ import type { Locale } from "@/i18n/routing";
 import type { PublicEvent } from "@/modules/events/repository";
 import CalendarHeader, { calendarStepHrefs } from "@/modules/events/ui/CalendarHeader";
 import CalendarAddress from "@/modules/events/ui/CalendarAddress";
+import CalendarLegend, { calendarLegendWords } from "@/modules/events/ui/CalendarLegend";
 import { calendarFeedLinks, feedAddressHints } from "@/modules/events/ui/CalendarIntroFold";
 import CalendarSwipe from "@/modules/events/ui/CalendarSwipe";
 import EventCalendar, { type CalendarLayout, type CalendarView } from "@/modules/events/ui/EventCalendar";
@@ -18,6 +19,7 @@ import InfoTip from "@/shared/ui/InfoTip";
 import { DISCLOSURE_SUMMARY_SX, DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { env } from "@/shared/config/env";
 import { DENSITY } from "@/theme/density";
+import { OFF_UNDER_LOOK, UNDER_LOOK } from "@/theme/look";
 
 /**
  * The club's month, and the three doors into a reader's own calendar (`DECISIONS.md` §107,
@@ -61,13 +63,16 @@ export default async function CalendarSection({
   const steps = calendarStepHrefs({ view, layout, query, locale, now });
 
   return (
-    <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 2 }, mb: { xs: DENSITY.sectionGapLg, sm: 4 } }}>
+    // Under «Aspectul nou» a phone gives this gap and the filter slot's back to the first week, under the chips row (phase 4, §569).
+    <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 2 }, mb: { xs: DENSITY.sectionGapLg, sm: 4 }, [UNDER_LOOK]: { mt: { xs: 0, sm: 2 } } }}>
       <Box component="section" aria-labelledby="calendar-title" id="calendar">
         <CalendarHeader view={view} now={now} query={query} layout={layout} />
         {/* A sideways swipe on a touch screen goes where the arrows go (§475). */}
         <CalendarSwipe previousHref={steps.previous} nextHref={steps.next}>
           <EventCalendar view={view} events={events} now={now} query={query} layout={layout} />
         </CalendarSwipe>
+        {/* What the three colours mean, under «Aspectul nou» only (phase 4): a word beside every colour. */}
+        <CalendarLegend {...calendarLegendWords(t)} />
       </Box>
 
       {/* "Add to your calendar" (§107, §139): three doors (the owner: "this subscription to
@@ -78,7 +83,8 @@ export default async function CalendarSection({
           address folded away, to copy (§674), and the "when does it update" behind an "i"
           (the feed is fresh on every read, §129; when the phone shows a change is the app's
           clock, and the owner asked why Google still showed the old hour). */}
-      <Box component="section" aria-labelledby="add-to-calendar" sx={{ mt: 2, p: 1.5, border: 1, borderColor: "divider", borderRadius: 2 }}>
+      {/* Under «Aspectul nou» the subscribe box in the second column says all of it (`SubscribeBox`, phase 4). */}
+      <Box component="section" aria-labelledby="add-to-calendar" sx={{ mt: 2, p: 1.5, border: 1, borderColor: "divider", borderRadius: 2, ...OFF_UNDER_LOOK }}>
         <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
           <Typography id="add-to-calendar" component="h3" variant="body2" sx={{ fontWeight: 600, mr: 0.5 }}>
             {t("calendar.addTitle")}
