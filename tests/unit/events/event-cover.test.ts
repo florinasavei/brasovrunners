@@ -4,7 +4,7 @@ import { readPublicCover } from "@/modules/events/domain/cover";
 import { pictureSizes } from "@/modules/media/ladder";
 
 /**
- * §NNN — the facelift's phase 2: an event's cover as the public row carries it (`cover`, read in SQL
+ * §709 — the facelift's phase 2: an event's cover as the public row carries it (`cover`, read in SQL
  * beside every public column, so it travels through the public cache) and the sources an `<img>`
  * draws it from — the ladder's `srcset` for a picture stored with one (§414), none for an older
  * picture, `sizes` asking for the crop's magnification (§241). Never a film's poster (§485), and a
@@ -13,7 +13,7 @@ import { pictureSizes } from "@/modules/media/ladder";
 const LADDER = "0b6f3f9e-2a41-8c3d-9e5f-1a2b3c4d5e6f"; // version 8: stored with its ladder (§414)
 const OLDER = "0b6f3f9e-2a41-4c3d-9e5f-1a2b3c4d5e6f"; // version 4: one file, drawn as it always was
 
-describe("§NNN the cover on the public row", () => {
+describe("§709 the cover on the public row", () => {
   it("reads the stored picture's prefix, size and crop, the whole picture when the crop is none or malformed", () => {
     expect(readPublicCover({ keyPrefix: LADDER, width: 2400, height: 1600, crop: null })).toEqual({ keyPrefix: LADDER, width: 2400, height: 1600, crop: null });
     const crop = { x: 0.1, y: 0.2, w: 0.5, h: 0.5 };

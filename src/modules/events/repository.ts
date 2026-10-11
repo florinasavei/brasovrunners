@@ -85,7 +85,7 @@ export type Database = NodePgDatabase<Schema> | PgliteDatabase<Schema>;
 export const OFFERS_MEMBER_BIB = sql<boolean>`coalesce((${events.bibDesign} #> '{member,enabled}') = 'true'::jsonb, false)`.mapWith(Boolean);
 
 /**
- * «Copertă» (the facelift's phase 2, §NNN) as a page draws it: the stored picture's key prefix and
+ * «Copertă» (the facelift's phase 2, §709) as a page draws it: the stored picture's key prefix and
  * size, and the crop — one JSON value, null when the event has none or its picture left the store,
  * and never a film's poster (§485). A scalar subquery on the picture's primary key, so it costs one
  * index probe per row and adds no join that could multiply rows. Read only through
@@ -158,7 +158,7 @@ const PUBLIC_COLUMNS = {
   featured: events.featured,
   // A special edition (§168): a badge on the card and the page, and a tie-break below.
   isSpecial: events.isSpecial,
-  // «Copertă» and the kind (the facelift's phase 2, §NNN), for phases 3–5 to draw: the cover's
+  // «Copertă» and the kind (the facelift's phase 2, §709), for phases 3–5 to draw: the cover's
   // stored picture and crop, and the cadence of the series the kind is derived from.
   cover: PUBLIC_COVER,
   seriesCadence: SERIES_CADENCE,

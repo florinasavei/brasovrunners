@@ -24,7 +24,7 @@ import TypeSection from "./TypeSection";
  * redesign plan's decisions and phases with a status each. The content, apart from the page's
  * gate: `page.tsx` asserts who may read it and renders this, so a test can render this alone.
  *
- * Since the facelift's phase 1 (§NNN, `docs/REDESIGN.md`) the page opens on today's look and the new
+ * Since the facelift's phase 1 (§708, `docs/REDESIGN.md`) the page opens on today's look and the new
  * one side by side («Aspectul nou», `LookSection`), drawn by the same components and rules.
  */
 export default async function DesignSystem({ locale }: { locale: Locale }) {

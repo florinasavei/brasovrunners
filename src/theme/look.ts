@@ -1,5 +1,5 @@
 /**
- * «Aspectul nou» — the scope the facelift's look is drawn under (§NNN; `docs/REDESIGN.md` § The
+ * «Aspectul nou» — the scope the facelift's look is drawn under (§708; `docs/REDESIGN.md` § The
  * visual system, decision 12).
  *
  * The locale layout puts `data-look="2026"` on `<html>` while the club's setting is on
@@ -54,5 +54,5 @@ export function onlyUnderLook<T>(display: T) {
 /** Headings under the new look: the display face at 800, set a little tighter (decision 2). */
 export const LOOK_HEADING = { fontWeight: 800, letterSpacing: "-0.02em" } as const;
 
-/** A button under the new look: a pill (§NNN). The height and the glyph are the primitive's (`ArrowButtonLink`). */
+/** A button under the new look: a pill (§708). The height and the glyph are the primitive's (`ArrowButtonLink`). */
 export const LOOK_BUTTON_RADIUS = 999;

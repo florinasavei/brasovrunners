@@ -60,7 +60,7 @@ async function Sample({ preview }: { preview: boolean }) {
 }
 
 /**
- * «Aspectul nou» on the design page (§NNN; phase 1 of `docs/REDESIGN.md`): today's look and the new
+ * «Aspectul nou» on the design page (§708; phase 1 of `docs/REDESIGN.md`): today's look and the new
  * one side by side, drawn by the site's own components and the theme's own rules — the right-hand box
  * carries the preview scope (`theme/look.ts`), and the page draws the new look's palette variables
  * for it with the very stylesheet the public layout draws (`lookPaletteCss`). Then the mapping of

@@ -29,7 +29,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * «Setări» → «Aspect» (§488, moved from Pagini → «Aspect» by §516): how the public pages look.
- * Three settings: the site's light background tint, since §530 its text size, and since §NNN «Aspectul
+ * Three settings: the site's light background tint, since §530 its text size, and since §708 «Aspectul
  * nou», the facelift's look on or off. Read by whoever reads the club's content;
  * changed by the Administrator (`canManageClubSettings`, §450), which the action and the service
  * assert again (BR-REQ-060-01).
@@ -62,7 +62,7 @@ export default async function AdminAppearancePage({ params, searchParams }: Prop
       {/* The tab's cards open on arrival (§336's `primary`, §516): each is a single choice. */}
       <SiteTintPanel locale={locale} state={state} mayEdit={canManageClubSettings(actor.role)} openWhen={{ primary: true }} />
       <SiteFontSizePanel locale={locale} state={fontSize} mayEdit={canManageClubSettings(actor.role)} openWhen={{ primary: true }} />
-      {/* «Aspectul nou» (§NNN): the facelift's look on the public pages, one switch. */}
+      {/* «Aspectul nou» (§708): the facelift's look on the public pages, one switch. */}
       <SiteLookPanel locale={locale} state={look} mayEdit={canManageClubSettings(actor.role)} openWhen={{ primary: true }} />
 
       {/* «Sistemul de design» (§692): the look as the code draws it, and the redesign plan — one card, one button, for whoever reads this tab. */}

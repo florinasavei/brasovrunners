@@ -4,7 +4,7 @@ import { LOOK_PREVIEW, LOOK_PREVIEW_DARK, LOOK_ROOT, LOOK_ROOT_DARK } from "@/th
 import { hexChannel } from "./site-tint";
 
 /**
- * «Aspectul nou» — the facelift's look on the public pages, one switch (§NNN; `docs/REDESIGN.md`,
+ * «Aspectul nou» — the facelift's look on the public pages, one switch (§708; `docs/REDESIGN.md`,
  * decision 12; the shape of «Aspectul site-ului», §488, and «Mărimea textului», §530).
  *
  * Pure: no database, no environment. Stored as `{ on: true }` or `{ on: false }`; no row is off.

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { nextWeeklyRun, type WeeklyRunCandidate } from "@/modules/events/domain/next-weekly-run";
 
 /**
- * §NNN — where «Vino cu noi» goes: the soonest date, still going ahead, of a series that recurs every
+ * §708 — where «Vino cu noi» goes: the soonest date, still going ahead, of a series that recurs every
  * week, as the listing recognises a series (the same type and title); nothing otherwise, and the
  * header links the listing.
  */
@@ -17,7 +17,7 @@ const row = (title: string, startsAt: string, extra: Partial<WeeklyRunCandidate>
   ...extra,
 });
 
-describe("§NNN the next weekly run", () => {
+describe("§708 the next weekly run", () => {
   it("is the soonest date of a weekly series, whatever order the rows came in", () => {
     const rows = [
       row("Alergare de probă", "2026-10-20T16:00:00.000Z"),

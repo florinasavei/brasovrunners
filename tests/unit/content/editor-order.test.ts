@@ -50,7 +50,7 @@ const EDITOR_ORDER = [
   // «Program, regulament și declarație»: three cards in one (§481), and the public list (§512).
   "<ProgrammeRulesBox",
   't("editor.groups.offPage")',
-  // «Copertă» (§NNN): the card's photo under the new look, not on today's page.
+  // «Copertă» (§709): the card's photo under the new look, not on today's page.
   "<CoverBox",
   "<PromotionBox",
   "<AddressBox",

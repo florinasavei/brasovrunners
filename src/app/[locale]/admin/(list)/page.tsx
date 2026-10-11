@@ -302,7 +302,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
               {!next.event.dateToBeAnnounced && next.event.timeToBeAnnounced && (
                 <Chip size="small" variant="outlined" color="warning" label={t("events.timeToBeAnnounced")} data-testid="time-to-be-announced-chip" />
               )}
-              {/* No cover yet (the facelift's phase 2, §NNN): the next date's, the one a card will show —
+              {/* No cover yet (the facelift's phase 2, §709): the next date's, the one a card will show —
                   only while it is still to come, since a past date's card is history. Every weekly
                   run and the race carry one before the new look goes live (the plan's gate). */}
               {next.event.coverMediaAssetId === null && (next.event.endsAt ?? next.event.startsAt).getTime() >= now.getTime() && (

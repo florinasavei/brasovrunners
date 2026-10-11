@@ -79,7 +79,7 @@ export const accentOnHover = {
   [HOVER_OK]: {
     "&:hover": { backgroundImage: SURFACE_GRADIENT.accent },
     "[data-dark] &:hover": { backgroundImage: SURFACE_GRADIENT.accentDark },
-    // Under «Aspectul nou» (§NNN) the primary is the pink: the blue ramp would flash blue under the
+    // Under «Aspectul nou» (§708) the primary is the pink: the blue ramp would flash blue under the
     // pointer, so the button keeps MUI's own hover — the deeper pink, `primary.dark` — and the
     // gradient budget stays three.
     [UNDER_LOOK]: { "&:hover": { backgroundImage: "none" } },

@@ -17,7 +17,7 @@ const VARIANTS = ["h1", "h2", "h3", "h4", "h5", "h6", "subtitle1", "subtitle2", 
 const FACES = [
   { key: "roboto", family: PREVIEW_FONTS.roboto.family, weight: 400, style: "normal" },
   { key: "inter", family: PREVIEW_FONTS.inter.family, weight: 400, style: "normal" },
-  // The new look's headings (§NNN): the same family at 800, its own file.
+  // The new look's headings (§708): the same family at 800, its own file.
   { key: "interHeading", family: FONT.lookDisplay, weight: 800, style: "normal" },
   { key: "nunito", family: PREVIEW_FONTS.nunito.family, weight: 400, style: "normal" },
   { key: "signature", family: "var(--font-signature)", weight: 500, style: "normal" },

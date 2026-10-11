@@ -4,7 +4,7 @@ import Chip from "@mui/material/Chip";
 import { STATUS_GLYPHS, type StatusGlyphName } from "./status-glyphs";
 
 /**
- * A backoffice chip with a glyph in front of its word (§112, §NNN, amending §694), for a Server
+ * A backoffice chip with a glyph in front of its word (§112, §707, amending §694), for a Server
  * Component to render. The look is `GlyphChip`'s — small, the palette's colours, the glyph before
  * the words — and nothing else of it: no tooltip, no link, no screen-reader extras.
  *

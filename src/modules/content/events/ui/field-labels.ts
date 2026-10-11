@@ -102,7 +102,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.facebookEventUrl": inBox("links", t("editor.facebookEventUrl")),
     "event.featured": inBox("promotion", t("editor.featured")),
     "event.isSpecial": inBox("promotion", t("editor.special")),
-    // «Copertă» (§NNN): a refused picture or crop names the picture's box.
+    // «Copertă» (§709): a refused picture or crop names the picture's box.
     "event.coverAssetId": inBox("cover", t("editor.cover.legend")),
     "event.schedule[].date": inProgrammeRules("programme", t("editor.programmeRows.date")),
     "event.schedule[].time": inProgrammeRules("programme", t("editor.programmeRows.time")),

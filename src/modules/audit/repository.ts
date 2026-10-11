@@ -338,7 +338,7 @@ export type AuditAction =
    */
   | "event.waitlist_count_public_changed"
   /**
-   * «Copertă» set, changed or removed (the facelift's phase 2, §NNN): the picture from and to, by id
+   * «Copertă» set, changed or removed (the facelift's phase 2, §709): the picture from and to, by id
    * (never a file name), and whether the new one is cropped — on a create that carries one, and on
    * every date a save changed it, a series' dates included.
    */
@@ -403,7 +403,7 @@ export type AuditAction =
   | "site_tint.changed"
   /** «Mărimea textului»: the public pages' text size, one of four steps (§530). */
   | "site_font_size.changed"
-  /** «Aspectul nou»: the facelift's look on the public pages switched on or off (§NNN). */
+  /** «Aspectul nou»: the facelift's look on the public pages switched on or off (§708). */
   | "site_look.changed"
   /** «Ordinea meniului»: the site menu's one order, every entry's key from first to last (§571). */
   | "menu_order.changed"

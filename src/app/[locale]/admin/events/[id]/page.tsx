@@ -953,7 +953,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                       status is in the first card since §448 (a notice over the title only once
                       cancelled or finished). */}
                   <EditorGroup label={t("editor.groups.offPage")} />
-                  {/* «Copertă» (§NNN): the card's photo under the new look — not on today's page, so here. */}
+                  {/* «Copertă» (§709): the card's photo under the new look — not on today's page, so here. */}
                   <CoverBox {...box} />
                   <PromotionBox {...box} />
                   <AddressBox languages={languages} slugLocked={slugLocked} creating={false} />

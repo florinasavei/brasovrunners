@@ -55,7 +55,7 @@ export const COLOR = {
   line: "#e2e0d8",
 
   /*
-    The new look's tokens (§NNN; `docs/REDESIGN.md` § The visual system, decision 1): drawn only
+    The new look's tokens (§708; `docs/REDESIGN.md` § The visual system, decision 1): drawn only
     under «Aspectul nou», on the public pages, never in the backoffice, an email, a PDF, a race
     number or a share card — those keep the logo blue. Each has a twin in `COLOR_DARK` and its pairs
     in `brand-pairs.ts` (`LOOK_PAIRS`), held at AA by `tests/unit/theme/brand.test.ts`.
@@ -109,7 +109,7 @@ export const COLOR_DARK = {
   line: "#2c3038",
 
   /*
-    The new look's twins (§NNN): lighter pinks of the same hue on the dark page, as the blue lifts
+    The new look's twins (§708): lighter pinks of the same hue on the dark page, as the blue lifts
     (the order resting → hover reads the same way), and the fills walked towards the dark surface.
   */
   /** The hot pink after dark: 6.56:1 on the page. */
@@ -301,7 +301,7 @@ export const FONT = {
    */
   wordmark: "var(--font-facon)",
   /**
-   * The headings' face under «Aspectul nou» (§NNN, the redesign's decision 2): Inter at 800, a
+   * The headings' face under «Aspectul nou» (§708, the redesign's decision 2): Inter at 800, a
    * repository file like every face (§460), `letter-spacing: -0.02em`. Only the new look's scope
    * names it (`theme/look.ts`), so with the look off no page asks for the file; the body stays
    * `body` (Roboto) under both looks.

@@ -3,7 +3,7 @@ import { onlyUnderLook } from "@/theme/look";
 import MountainMark from "./MountainMark";
 
 /**
- * The watermark of «Aspectul nou» (§NNN; phase 1 of `docs/REDESIGN.md`): the mountain mark, faint
+ * The watermark of «Aspectul nou» (§708; phase 1 of `docs/REDESIGN.md`): the mountain mark, faint
  * and centred, between a public page's content and the footer — the shell's one decoration, where
  * every page ends.
  *

@@ -7,7 +7,7 @@ type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 
 /**
  * The words «Echipa»'s picture field needs when it takes an event's cover (the facelift's phase 2,
- * §NNN; the field as the shop reused it, §705): the upload, «Din galerie», the quality choice and the
+ * §709; the field as the shop reused it, §705): the upload, «Din galerie», the quality choice and the
  * crop box — translated once on the server and handed to the island as strings (AGENTS.md §14.5).
  * The cover's own legend, help and crop captions; everything else is the house's one set.
  */

@@ -18,14 +18,14 @@ import { accentOnHover } from "@/theme/surfaces";
 import { theme } from "@/theme/theme";
 
 /**
- * §NNN — «Aspectul nou»: the facelift's look behind one setting, off by default. Off, nothing is
+ * §708 — «Aspectul nou»: the facelift's look behind one setting, off by default. Off, nothing is
  * drawn and no rule can match, so every public page is what it was; on, the look is drawn on the
  * public pages only, never in the backoffice, which shares the layout and the header.
  */
 const ROOT = path.resolve(__dirname, "../../..");
 const source = (file: string) => readFileSync(path.join(ROOT, file), "utf8").replace(/\r\n/g, "\n");
 
-describe("§NNN the setting «Aspectul nou»", () => {
+describe("§708 the setting «Aspectul nou»", () => {
   it("is off until the club switches it on, and reads anything else as off", () => {
     expect(DEFAULT_SITE_LOOK_SETTING).toEqual({ on: false });
     expect(parseSiteLook({ on: true })).toEqual({ on: true });
@@ -44,7 +44,7 @@ describe("§NNN the setting «Aspectul nou»", () => {
   });
 });
 
-describe("§NNN the scope stops at the backoffice", () => {
+describe("§708 the scope stops at the backoffice", () => {
   it("is the attribute on <html>, public pages only, and a preview box", () => {
     expect(LOOK_ROOT).toBe(`html[${LOOK_ATTRIBUTE}="${LOOK_VALUE}"]:not(:has([data-backoffice]))`);
     expect(LOOK_ROOT_DARK).toContain("[data-dark]");
@@ -72,7 +72,7 @@ describe("§NNN the scope stops at the backoffice", () => {
   });
 });
 
-describe("§NNN the pink primary", () => {
+describe("§708 the pink primary", () => {
   it("redefines MUI's own primary variables, which the theme reads", () => {
     const vars = theme.vars?.palette.primary;
     for (const [key, variable] of Object.entries(PRIMARY_VARIABLES)) {
@@ -99,7 +99,7 @@ describe("§NNN the pink primary", () => {
   });
 });
 
-describe("§NNN the theme's new-look rules are all under the scope", () => {
+describe("§708 the theme's new-look rules are all under the scope", () => {
   it("rounds the buttons into pills and sets the headings in Inter 800, under the scope and nowhere else", () => {
     const button = theme.components?.MuiButton?.styleOverrides?.root as Record<string, unknown>;
     expect(Object.keys(button)).toEqual([UNDER_LOOK]);

@@ -68,7 +68,7 @@ async function navigationPages(locale: Locale) {
 const HEADER_NETWORKS: ReadonlySet<SocialNetwork> = new Set(["facebook", "instagram"]);
 
 /**
- * Where «Vino cu noi» goes (§NNN, the redesign's decision 5): the next weekly run's page, read from
+ * Where «Vino cu noi» goes (§708, the redesign's decision 5): the next weekly run's page, read from
  * the listing's own cached read — no query of its own, and the static page is held no longer than
  * the listing's clock window, as the listing is (§549) — or the listing itself when no weekly run is
  * ahead, and whatever goes wrong (a build with no database, an outage): a button that always leads
@@ -127,7 +127,7 @@ export default async function SiteHeader() {
    */
   const [sections, order] = await Promise.all([menuSectionsOnSite(locale as Locale), menuOrderOnSite()]);
   /*
-    «Aspectul nou» (§NNN): the header's call to action and the socials, only while the club's setting
+    «Aspectul nou» (§708): the header's call to action and the socials, only while the club's setting
     is on — off, nothing is read and nothing is drawn, so the header is what it was. On a backoffice
     page (which shares this header) the listing's cached read still runs, since this layout-level
     component cannot know the route without making every static public page dynamic; it is the
@@ -229,7 +229,7 @@ export default async function SiteHeader() {
                 width: "auto",
                 [variant.hideOn]: { display: "none" },
                 /*
-                  Under «Aspectul nou» the logo is drawn in ink (§NNN, the redesign's decision 1): the
+                  Under «Aspectul nou» the logo is drawn in ink (§708, the redesign's decision 1): the
                   supplied artwork's pure blue, through `grayscale`, is the luminance of that blue — a
                   near-black within a step of `inkStrong` — and its light-grey strokes stay light grey,
                   which a mask in one colour would flatten. The white one after dark stays white. The
@@ -282,7 +282,7 @@ export default async function SiteHeader() {
         </Box>
 
         {/*
-          «Vino cu noi» and the two social marks, under «Aspectul nou» only (§NNN): passed to the nav
+          «Vino cu noi» and the two social marks, under «Aspectul nou» only (§708): passed to the nav
           as its children (the trailing group), so they sit before the ☰ and the ☰ stays the row's right edge
           (§699), and the nav measures what is left and folds the rest into it, so the row stays one
           row at every width. Drawn only inside the look's scope, so the backoffice never shows them.

@@ -94,7 +94,7 @@ test.describe("§262 the sections on a phone's header row", () => {
 });
 
 /**
- * §NNN, the facelift's phase 1 gate — the header with «Aspectul nou» on, measured. «Vino cu noi»
+ * §708, the facelift's phase 1 gate — the header with «Aspectul nou» on, measured. «Vino cu noi»
  * joins the row (§699's ☰ stays its right edge: the button sits before it, inside the nav's
  * trailing group), and the row must still be one row at 320px with «Alergări» on it (§262, §569)
  * and no sideways overflow. The setting is switched through «Setări» → «Aspect», as the club does
@@ -120,7 +120,7 @@ async function setLook(browser: Browser, choice: "on" | "off"): Promise<void> {
   }
 }
 
-test.describe("§NNN the header under «Aspectul nou»", () => {
+test.describe("§708 the header under «Aspectul nou»", () => {
   // One shared `platform_settings` row: 'off' must never run while 'on' has it switched on.
   test.describe.configure({ mode: "serial" });
   test.beforeEach(() => {

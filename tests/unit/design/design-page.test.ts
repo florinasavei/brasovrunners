@@ -123,7 +123,7 @@ describe("BR-REQ-060-01 «Sistemul de design» draws the look from the code", ()
     expect(markup).not.toContain(ro.Admin.design.colours.below);
   });
 
-  it("draws today's look and the new one side by side, the new one under the preview scope alone (§NNN)", async () => {
+  it("draws today's look and the new one side by side, the new one under the preview scope alone (§708)", async () => {
     for (const locale of ["ro", "en"] as const) {
       currentLocale = locale;
       const markup = await page();

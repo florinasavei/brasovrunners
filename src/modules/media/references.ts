@@ -25,7 +25,7 @@ import { bodyImageSrc, deleteAssetObjects, getStorage, objectKey } from "./stora
  * `body_json`, an event translation's `body_json`, `excerpt_json`, `rules_json`, `schedule_json` or
  * `route_description` (§387: the map is a picture in that text) — where the image node
  * carries the variant's address and that address contains the asset's opaque `key_prefix` — and,
- * the same way, by an event's bib design (§560) — and, by id, by an event's cover (§NNN). Drafts count: a picture in a draft is
+ * the same way, by an event's bib design (§560) — and, by id, by an event's cover (§709). Drafts count: a picture in a draft is
  * a picture somebody is about to publish, and the sweep must never take it. The check is one
  * SQL predicate, used by the sweep, the media list and the delete, so the three cannot
  * disagree about what "in use" means.
@@ -125,7 +125,7 @@ const referencedSomewhere = sql`(
   OR EXISTS (SELECT 1 FROM ${eventTranslations} WHERE ${inEventTranslation})
   -- A race number's header strip or sponsors' band (§560), by address in the event's bib design.
   OR EXISTS (SELECT 1 FROM ${events} WHERE ${inBibDesign})
-  -- An event's cover (the facelift's phase 2, §NNN), by id, drafts, series dates and past events
+  -- An event's cover (the facelift's phase 2, §709), by id, drafts, series dates and past events
   -- included: the column has no foreign key (events.ts says why), so this is what keeps the picture.
   OR EXISTS (SELECT 1 FROM ${events} WHERE ${events.coverMediaAssetId} = ${mediaAssets.id})
   -- No events.video_poster_url any more (§485): a film is a figure in the description, whose
@@ -344,7 +344,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .innerJoin(events, inBibDesign)
     .leftJoin(eventTranslations, eq(eventTranslations.eventId, events.id));
 
-  // An event's cover (§NNN): the event, named in the reader's language — every date of a series that
+  // An event's cover (§709): the event, named in the reader's language — every date of a series that
   // wears it, so the list says which dates a delete would take it from.
   const inCovers = await db
     .select({ assetId: mediaAssets.id, id: events.id, title: eventTranslations.title, locale: eventTranslations.locale })

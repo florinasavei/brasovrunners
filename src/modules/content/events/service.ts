@@ -595,7 +595,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     offersGroupRunDeclaration: fields.offersGroupRunDeclaration === true && groupRunDeclarationKeyFor(fields) !== null,
     featured: fields.featured,
     isSpecial: fields.isSpecial,
-    // «Copertă» (§NNN), by the partners' discipline: a caller that did not post the picture's box
+    // «Copertă» (§709), by the partners' discipline: a caller that did not post the picture's box
     // writes nothing, so no save takes a cover off by not mentioning it; an empty box clears both.
     ...(postedCover(fields) ?? {}),
     // «Doar pentru membrii BVR» (§552), by the partners' discipline: a caller that said nothing
@@ -1856,7 +1856,7 @@ const SERIES_COLUMNS = [
   "offersGroupRunDeclaration",
   // Who sees the event (§552): "from this date" makes a weekly run the members' on every later date.
   "membersOnly",
-  // «Copertă» (§NNN), like the route (§49): the Wednesday run wears one cover every Wednesday, and
+  // «Copertă» (§709), like the route (§49): the Wednesday run wears one cover every Wednesday, and
   // "from this date" or "all" carries a new one — the picture and its crop together.
   "coverMediaAssetId",
   "coverCrop",
@@ -2009,7 +2009,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
         : !sameValue(before[column], after[column]);
     if (differs) rowChanges[column] = after[column];
   }
-  // The cover's crop is a window on its picture (§NNN): the two travel together, so a crop moved on
+  // The cover's crop is a window on its picture (§709): the two travel together, so a crop moved on
   // this date never lands on another date's own picture, nor on a date with none (the CHECK refuses that).
   if ("coverMediaAssetId" in rowChanges || "coverCrop" in rowChanges) {
     rowChanges.coverMediaAssetId = after.coverMediaAssetId;
@@ -2271,7 +2271,7 @@ async function auditWaitlistCountPublic<T extends Record<string, unknown>>(
 }
 
 /**
- * The trail of «Copertă» (the facelift's phase 2, §NNN): who set, changed or removed an event's cover,
+ * The trail of «Copertă» (the facelift's phase 2, §709): who set, changed or removed an event's cover,
  * on which date, from which picture to which (ids, never a file name), and whether the new one is
  * cropped — in the save's transaction, only when the picture or its crop moved. A cover is the face of
  * the event on every card, so the trail says who chose it; a picture stays where the pictures page
@@ -3173,7 +3173,7 @@ async function insertPreparedEvent<T extends Record<string, unknown>>(
       updatedAt: now,
     })
     .returning();
-  // A new event created with its cover (§NNN): the trail names who chose it, as a save's would.
+  // A new event created with its cover (§709): the trail names who chose it, as a save's would.
   await auditCover(tx, actor, null, event, now);
 
   // Through the same function a save writes with: the rich summary's words become the
@@ -3416,7 +3416,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // The links travel with the route (§332), to a duplicate and to every date of a repeat:
     // last year's GPX and rules are this year's starting point, and a weekly run's are the same.
     links: source.links,
-    // «Copertă» (§NNN), like the route: every date of a repeat wears the series' cover, and a
+    // «Copertă» (§709), like the route: every date of a repeat wears the series' cover, and a
     // duplicate starts with last year's until the club picks this year's.
     coverMediaAssetId: source.coverMediaAssetId,
     coverCrop: source.coverCrop,

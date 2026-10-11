@@ -14,25 +14,24 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V2.92`** (released 2026-10-11 06:06 RO: §685–§701, migrations `0134`–`0139`; the laptop session
-  approved the migration run with the owner's standing authorisation). Waiting for «prod»: `BR-V2.93` (§702–§705,
-  below) — one migration (`0140`) stops at `migrate.yml` for the approval; `yarn ship` now merges the release PR on
-  GitHub's required checks plus the house's own, never on a Vercel status.
-- **QA: `BR-V2.93`** — «Spune-ne ceva»'s radios are one native group each (the drawn dot lied; the value never
-  did); «Ghid de mărimi»: a size-chart picture per product opened from beside the size select; «Îi scriem membrului pe
-  email despre comenzi», one switch for the shop's member emails; `yarn ship`'s merge gate.
+- **Production: `BR-V2.93`** (released 2026-10-11 10:20 RO by `yarn ship` in 27 minutes: §702–§705, migration `0140`, the
+  migration run approved by the script). Waiting for «prod»: `BR-V2.94` (§706–§709, below) — migration 0141 stops at `migrate.yml` for the approval, which `yarn ship` gives itself.
+- **QA: `BR-V2.94`** — the shop's loose ends (the guide's alt and one-size button, a «Gestionează magazinul» holder may
+  translate, the settings dialog names the switch); the backoffice's own `StatusChip` so backoffice-only glyphs leave the public
+  table; **the facelift's phase 1** behind «Setări» → «Aspect» → «Aspectul nou» (off by default: the pink pair, Inter 800, the
+  header's «Vino cu noi» and socials, the mountain mark, both looks on `/admin/design`); the facelift's phase 2: a «Copertă» per event with its crop, carried by a series, and the kind («săptămânal» or «special») derived from the series — data, editor and cache only, nothing drawn yet;
+  GitHub now requires `docs-check`, `tested-tree` and `e2e` on `qa` and `main`.
 - **Nothing is building.** The chains' worktrees under `.claude/worktrees/` can go.
-- **Next, from the laptop:** the shop's real catalogue typed on QA through the editor (three products, their sizes, the
-  size-guide picture, euro prices from the owner's sheet — never in the repository), then the facelift, last, phase by
-  phase per `docs/REDESIGN.md` once the owner answers its decisions and the photographs exist.
-- **Waiting on the owner:** should `tested-tree` and `e2e` join `docs-check` as GitHub's required checks on `main` and
-  `qa` (today only `docs-check` is required)? «Tot numărul»'s default background; the remaining plan decisions;
-  `shopNotice`; the Google calendar.
-- **Later:** the backoffice shop's chips (`OrdersCard`, `ProductList`, which only `/admin/shop` renders) move to `StatusChip`,
-  with `orders` and `club` added to `src/shared/ui/status-glyphs.ts`; then `visible`, `hidden`, `language`, `orders` and `club`
-  leave the public glyph table and `PENDING_SHOP` in `tests/unit/design/status-chip.test.ts` (`done`, `cancelled`, `planned` stay
-  public: the members' zone draws them, `BOTH_SURFACES`); a volunteer holding «Gestionează magazinul» cannot translate yet (`canTranslateTexts`); the settings
-  card's title and save dialog still name only the payment words and the address (the switch sits in it now).
+- **Next, from the laptop:** turn «Aspectul nou» on in QA's «Aspect» (never on production) so the owner can look; then
+  phase 3 (the home page) once the photographs exist, and phases 4–5 per `docs/REDESIGN.md`;
+  the shop's real catalogue typed on QA through the editor (never in the repository).
+- **Waiting on the owner:** a look at QA with «Aspectul nou» on; the plan's remaining decisions (4–11) and the photographs
+  (the hero, one cover per run and race, six strip pictures); «Tot numărul»'s default background; `shopNotice`; the Google
+  calendar.
+- **Later:** `OrdersCard` and `ProductList` move to `StatusChip` with `orders` and `club` added to `status-glyphs.ts`, then
+  `visible`, `hidden`, `language`, `orders`, `club` leave the public table (`done`, `cancelled`, `planned` stay: the members'
+  zone draws them); under the new look the cards' titles keep weight 500 and h4–h6 stay Roboto until phase 5; the e2e header
+  gate runs serially on the one `platform_settings` row.
 
 ### How a change is made here (the owner's standing rules, all still in force)
 
@@ -134,6 +133,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.94` | the shop's loose ends (§706) · the backoffice status chip (§707) · the facelift's phase 1 (§708) · the facelift's phase 2 (§709) |
 | `BR-V2.93` | the contact wizard's radios (§702) · the ship waits on required checks only (§703) · the shop's member emails behind one switch (§704) · the size-guide picture (§705) |
 | `BR-V2.92` | the translate button on the shop's forms (§697) · «Contact direct» above the form; «alergare» in «Spune-ne ceva» (§698) · five small fixes (§699) · the shop's editor rebuilt (§700) · «Echipa» as a canvas with levels and folds (§701) |
 | `BR-V2.91` | the members' race number on a background of its own (§695) · the contact page in sections, with a glyph on each heading and «Alte căi de contact» (§696) |

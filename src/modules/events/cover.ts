@@ -4,7 +4,7 @@ import { getStorage, objectKey } from "@/modules/media/storage";
 import { readPublicCover } from "./domain/cover";
 
 /**
- * Everything an `<img>` needs to draw an event's cover (the facelift's phase 2, §NNN): the master's
+ * Everything an `<img>` needs to draw an event's cover (the facelift's phase 2, §709): the master's
  * address, the ladder's `srcset` and `sizes` for the column it is drawn in (§414, §601), the small
  * file for a thumbnail, the picture's own size and the crop the club drew. Built on the server from
  * the public row's `cover` (`domain/cover.ts`), which came through the public cache with the row, so

@@ -6,7 +6,7 @@ import { COVER_SHAPE } from "@/modules/content/events/ui/boxes/CoverBox";
 import { eventFormFieldName } from "@/modules/content/events/form-names";
 
 /**
- * §NNN — the facelift's phase 2, the editor's side: «Copertă» is «Echipa»'s picture field under its
+ * §709 — the facelift's phase 2, the editor's side: «Copertă» is «Echipa»'s picture field under its
  * own stem (`event.cover`, as the shop's size guide took it, §705), resting on the card's 16∶9; the
  * action reads its two inputs only when the form carried them; a refusal names the box; and the
  * events list marks a line whose next date has no cover. Source assertions, like `editor-order.test.ts`:
@@ -19,7 +19,7 @@ const LIST = read("src/app/[locale]/admin/(list)/page.tsx");
 const LABELS = read("src/modules/content/events/ui/field-labels.ts");
 const MESSAGES = (["ro", "en"] as const).map((locale) => [locale, JSON.parse(read(`messages/${locale}.json`))] as const);
 
-describe("§NNN «Copertă» in the editor", () => {
+describe("§709 «Copertă» in the editor", () => {
   it("is the house's picture field — upload, «Din galerie», the crop box — under the event's stem, starting at 16:9", () => {
     expect(BOX).toContain("<TeamPhotoField");
     expect(BOX).toContain('fieldPrefix="event.cover"');
@@ -57,7 +57,7 @@ describe("§NNN «Copertă» in the editor", () => {
   });
 });
 
-describe("§NNN the events list says which lines lack a cover", () => {
+describe("§709 the events list says which lines lack a cover", () => {
   it("marks a line whose next date, still to come, has none", () => {
     const chip = LIST.slice(LIST.indexOf("next.event.coverMediaAssetId === null"), LIST.indexOf('data-testid="no-cover-chip"'));
     expect(chip).toContain("(next.event.endsAt ?? next.event.startsAt).getTime() >= now.getTime()");

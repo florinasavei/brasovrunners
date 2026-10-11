@@ -2,7 +2,7 @@ import type { EventType } from "./event-type";
 import type { RepeatCadence } from "./repeat";
 
 /**
- * What kind of date this is for the new look (the facelift's phase 2, §NNN; `docs/REDESIGN.md`,
+ * What kind of date this is for the new look (the facelift's phase 2, §709; `docs/REDESIGN.md`,
  * decision 9): a **weekly** run — a date of a standing series that repeats every week — or a
  * **special** event, which is everything else: a race, a hike, a coffee, a one-off run, a series
  * that repeats every two weeks or every month. The home page splits its cards by it (phase 3), the

@@ -105,7 +105,7 @@ export function previewPageOf(event: EditableEvent, translation: EditableTransla
     links: event.links,
     isSpecial: event.isSpecial,
     /*
-      «Copertă» and the kind (the facelift's phase 2, §NNN): no page draws either yet, so the preview
+      «Copertă» and the kind (the facelift's phase 2, §709): no page draws either yet, so the preview
       carries no cover — its picture's facts are a read of the store this mapping does not make; the
       phase that draws the cover on the card gives the preview its own — and the kind's cadence only
       when this date is the series' source, whose rule the row holds.

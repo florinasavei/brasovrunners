@@ -17,7 +17,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the facelift's phase 2: a cover picture per event (`events.cover_media_asset_id` and
+ * §709 — the facelift's phase 2: a cover picture per event (`events.cover_media_asset_id` and
  * `cover_crop`, migration `0141`, expand only) and the event's kind derived from its series.
  *
  * The cover is chosen in the editor's «Copertă» box and saved through the editor's real action by its
@@ -175,7 +175,7 @@ async function refusal(promise: Promise<unknown>): Promise<{ code: string; field
   return isDomainError(error) ? { code: error.code, fields: error.fields } : { code: "", fields: [] };
 }
 
-describe("§NNN «Copertă»: the column, the save and the trail", () => {
+describe("§709 «Copertă»: the column, the save and the trail", () => {
   it("is an expand-only migration: two nullable columns and a CHECK that a crop has its picture", async () => {
     const sql = readFileSync(join(process.cwd(), "src/db/migrations/0141_event_cover.sql"), "utf8").replace(/\r\n/g, "\n").trim();
     expect(sql).toBe(
@@ -256,7 +256,7 @@ describe("§NNN «Copertă»: the column, the save and the trail", () => {
   });
 });
 
-describe("§NNN «Copertă» across a series", () => {
+describe("§709 «Copertă» across a series", () => {
   it("is copied to every date a repeat makes, and kept by a duplicate", async () => {
     const picture = await storedPicture();
     const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, coverAssetId: picture.id, coverCrop: JSON.stringify(CROP), translations: TRANSLATIONS }, now: NOW });
@@ -304,7 +304,7 @@ describe("§NNN «Copertă» across a series", () => {
   });
 });
 
-describe("§NNN the public read: the cover and the kind travel with the row", () => {
+describe("§709 the public read: the cover and the kind travel with the row", () => {
   it("carries the stored picture and its crop on the page's read and the listing's, and none for an event without", async () => {
     const picture = await storedPicture();
     const event = await createEvent(db, { actor: admin, fields: { ...FIELDS, coverAssetId: picture.id, coverCrop: JSON.stringify(CROP), translations: TRANSLATIONS }, now: NOW });
@@ -343,7 +343,7 @@ describe("§NNN the public read: the cover and the kind travel with the row", ()
   });
 });
 
-describe("§NNN a picture used as a cover is the event's", () => {
+describe("§709 a picture used as a cover is the event's", () => {
   it("is never swept, is refused by the pictures page's delete, and is listed as used by the event", async () => {
     const picture = await storedPicture();
     const event = await createEvent(db, { actor: admin, fields: { ...FIELDS, coverAssetId: picture.id, coverCrop: "", translations: TRANSLATIONS }, now: NOW });

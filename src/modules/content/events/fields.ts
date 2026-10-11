@@ -319,7 +319,7 @@ function placeRule(
 }
 
 /**
- * «Copertă» (the facelift's phase 2, §NNN): the picture's id must be a stored picture's — a UUID here,
+ * «Copertă» (the facelift's phase 2, §709): the picture's id must be a stored picture's — a UUID here,
  * a row of the store in `service.ts` — and its crop four fractions of it (§541). Named on the
  * picture's box, like the shop's size guide (§705). Absent (`undefined`) is a caller that does not
  * edit the cover, and an empty id is "no cover"; neither is refused.
@@ -334,7 +334,7 @@ function coverRule(fields: { coverAssetId?: string; coverCrop?: unknown }, ctx: 
 }
 
 /**
- * The cover's two columns as a save writes them (§NNN), or `undefined` for a caller that did not
+ * The cover's two columns as a save writes them (§709), or `undefined` for a caller that did not
  * post the picture's box — the partners' discipline (§169): a form without the box, a script, a
  * fixture never takes a cover off by not mentioning it. An empty id clears both; a crop is kept only
  * with its picture, and a crop of the whole picture is no crop (`meaningfulCrop`, inside
@@ -852,7 +852,7 @@ export const eventFieldsSchema = z
      */
     isSpecial: z.boolean().optional().default(false),
     /**
-     * «Copertă» (the facelift's phase 2, §NNN): the stored picture's id and its crop, posted by the
+     * «Copertă» (the facelift's phase 2, §709): the stored picture's id and its crop, posted by the
      * box's picture field (`TeamPhotoField`, its stem `event.cover`) as two hidden inputs. Absent means
      * this caller is not editing the cover; an empty id clears it. Judged by `coverRule` below and
      * written through `postedCover`.

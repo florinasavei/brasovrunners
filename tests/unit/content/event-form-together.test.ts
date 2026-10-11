@@ -45,7 +45,7 @@ const FIELD_BOXES = [
   "CourseBox",
   "LinksBox",
   "CoHostsBox",
-  // «Copertă» (§NNN): the picture field posts `event.coverAssetId` and `event.coverCrop`.
+  // «Copertă» (§709): the picture field posts `event.coverAssetId` and `event.coverCrop`.
   "CoverBox",
   "PromotionBox",
   "AddressBox",

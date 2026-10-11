@@ -1,7 +1,7 @@
 import { groupSeries, recurrenceOf, type SeriesMember } from "./series";
 
 /**
- * Where «Vino cu noi» goes (§NNN; `docs/REDESIGN.md`, decision 5): the next weekly run — the
+ * Where «Vino cu noi» goes (§708; `docs/REDESIGN.md`, decision 5): the next weekly run — the
  * soonest date, still going ahead, of a series that recurs every week (`recurrenceOf`, §113) —
  * or nothing, and the caller links the listing instead.
  *

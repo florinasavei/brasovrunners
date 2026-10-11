@@ -155,7 +155,7 @@ export const buildTheme = (options: ThemeOptions) => createTheme({
       },
     },
     /*
-      «Aspectul nou» (§NNN): what the facelift's phase 1 changes about MUI's own components, each
+      «Aspectul nou» (§708): what the facelift's phase 1 changes about MUI's own components, each
       rule under the look's scope (`theme/look.ts`) — the public pages while the club's setting is
       on, or the design page's preview box — so with the setting off, and in the backoffice always,
       nothing here matches. The pink `primary` is not here: it is MUI's own palette variables,

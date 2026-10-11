@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — «Aspectul nou» in the header, rendered: with the setting off (or no row at all) the header
+ * §708 — «Aspectul nou» in the header, rendered: with the setting off (or no row at all) the header
  * is the markup it was, with no button, no social marks and no watermark; with it on, «Vino cu noi»
  * leads to the next weekly run (else the listing), the socials are the footer's two, and both sit in
  * the nav's children (its trailing group) so the ☰ stays the row's last item (§699). The client islands and the
@@ -68,7 +68,7 @@ beforeEach(() => {
   state.upcoming = [];
 });
 
-describe("§NNN the header while «Aspectul nou» is off", () => {
+describe("§708 the header while «Aspectul nou» is off", () => {
   it("draws no button, no social marks and nothing else new, and hands the nav no children at all", async () => {
     state.upcoming = [weekly("2026-10-13T16:00:00.000Z"), weekly("2026-10-20T16:00:00.000Z")];
     const off = await header();
@@ -84,7 +84,7 @@ describe("§NNN the header while «Aspectul nou» is off", () => {
   });
 });
 
-describe("§NNN the header while «Aspectul nou» is on", () => {
+describe("§708 the header while «Aspectul nou» is on", () => {
   it("draws «Vino cu noi» to the next weekly run and the footer's Facebook and Instagram, inside the nav's trailing group", async () => {
     state.look = { on: true };
     state.upcoming = [weekly("2026-10-20T16:00:00.000Z"), weekly("2026-10-13T16:00:00.000Z")];

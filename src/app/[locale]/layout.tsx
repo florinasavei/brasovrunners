@@ -53,7 +53,7 @@ const roboto = localFont({
  * Two more faces for the theme lab (`theme/preview.ts`, BR-REQ-090-06), self-hosted like
  * Roboto; nothing names them until a preview says so.
  *
- * Inter 800 is the headings' face under «Aspectul nou» (§NNN, `FONT.lookDisplay`): Google's own file
+ * Inter 800 is the headings' face under «Aspectul nou» (§708, `FONT.lookDisplay`): Google's own file
  * of the same release and request as the other three (Inter v20, latin and latin-ext in one WOFF2,
  * §460's recipe). Not preloaded, like the rest of this family: only the new look's scope names it,
  * so with the setting off no browser fetches it, and with it on the headings swap in once it lands
@@ -158,7 +158,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   // «Mărimea textului» (§530): the club's text size for the public pages, the same way — one rule
   // on the root font size, nothing at all for the default.
   const fontSizeStyle = siteFontSizeStyle(await cachedSiteFontSize());
-  // «Aspectul nou» (§NNN): the facelift's scope on <html> and the pink primary — nothing at all while off.
+  // «Aspectul nou» (§708): the facelift's scope on <html> and the pink primary — nothing at all while off.
   const look = await cachedSiteLook();
   const lookStyle = siteLookStyle(look);
 
@@ -239,7 +239,7 @@ export default async function LocaleLayout({ children, params }: Props) {
                   </Box>
                   <SiteHeader />
                   <Box sx={{ flex: 1 }}>{children}</Box>
-                  {/* The mountain mark under the content, the new look only and never in the backoffice (§NNN). */}
+                  {/* The mountain mark under the content, the new look only and never in the backoffice (§708). */}
                   {look.on && <LookWatermark />}
                   {/* The build stamp is the fold's own last line at every width (`SiteFooter`,
                       §608), not a label of its own here. */}

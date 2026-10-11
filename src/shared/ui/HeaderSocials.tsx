@@ -5,7 +5,7 @@ import type { ClubSocialLink } from "./club-socials";
 import SocialIcon from "./SocialIcon";
 
 /**
- * The header's two social marks under «Aspectul nou» (§NNN; `docs/REDESIGN.md`: «the two social
+ * The header's two social marks under «Aspectul nou» (§708; `docs/REDESIGN.md`: «the two social
  * icons, inside the one-row-at-320-px rule»): the club's Facebook and Instagram, from the one list
  * the footer reads (`clubSocialLinks`, §565) — never a second list.
  *

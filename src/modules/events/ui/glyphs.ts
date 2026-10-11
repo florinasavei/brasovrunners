@@ -154,13 +154,13 @@ export const GLYPHS = {
   // own arrow already says "this opens" (`disclosure.ts`), so never a second chevron here.
   person: PersonOutlinedIcon,
   // The members' zone's order chip (`members-area/MembersShop.tsx`, public) draws these three; the
-  // backoffice draws them through `StatusChip` from its own table (BOTH_SURFACES in the tripwire, §NNN).
+  // backoffice draws them through `StatusChip` from its own table (BOTH_SURFACES in the tripwire, §707).
   done: CheckCircleIcon,
   cancelled: EventBusyIcon,
   planned: ScheduleIcon,
   // Held here only while the backoffice shop's orders card and product list still draw them through
   // `GlyphChip`: `tests/unit/design/status-chip.test.ts` lists them as PENDING_SHOP, to leave when a
-  // later change moves those two files to `StatusChip` (with `orders` and `club` in its table, §NNN).
+  // later change moves those two files to `StatusChip` (with `orders` and `club` in its table, §707).
   visible: VisibilityIcon,
   hidden: VisibilityOffIcon,
   language: TranslateIcon,

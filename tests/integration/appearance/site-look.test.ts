@@ -11,7 +11,7 @@ const cache = vi.hoisted(() => ({ revalidatePublicContent: vi.fn() }));
 vi.mock("@/modules/public-cache/cache", () => cache);
 
 /**
- * §NNN — «Aspectul nou» under «Setări» → «Aspect»: one `platform_settings` row, the
+ * §708 — «Aspectul nou» under «Setări» → «Aspect»: one `platform_settings` row, the
  * Administrator's (§450), audited, on or off and nothing else; off with no row.
  */
 const NOW = new Date("2026-10-11T09:00:00.000Z");

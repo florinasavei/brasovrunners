@@ -15,7 +15,7 @@ import { BoxNote, type BoxProps, SettingsReadOnly } from "./box-kit";
 export const COVER_SHAPE = "16:9" as const;
 
 /**
- * «Copertă» (the facelift's phase 2, §NNN; `docs/REDESIGN.md`): the event's cover picture, chosen
+ * «Copertă» (the facelift's phase 2, §709; `docs/REDESIGN.md`): the event's cover picture, chosen
  * like every picture in the house — uploaded with the quality choice, or «Din galerie» (§485) — and
  * cropped in the crop box (§541), starting at the card's 16∶9. The field is «Echipa»'s, given its
  * own stem (`event.cover`) the way the shop's size guide took it (§705), so it posts

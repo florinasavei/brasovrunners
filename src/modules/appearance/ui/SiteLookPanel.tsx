@@ -29,7 +29,7 @@ type Props = {
 const CHOICES = ["off", "on"] as const;
 
 /**
- * «Aspectul nou» (§NNN; `docs/REDESIGN.md`, decision 12): the facelift's look on the public pages,
+ * «Aspectul nou» (§708; `docs/REDESIGN.md`, decision 12): the facelift's look on the public pages,
  * one switch — off until the club approves it on QA, and then the one-press way back.
  *
  * The shape of «Mărimea textului» beside it (§530): a Server Component, one form, a radio per

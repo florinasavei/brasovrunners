@@ -68,7 +68,7 @@ export const ACCENT_PAIRS: readonly BrandPair[] = [
 ];
 
 /**
- * The new look's pairs (§NNN, «Aspectul nou»; `docs/REDESIGN.md` § The visual system): the pink as
+ * The new look's pairs (§708, «Aspectul nou»; `docs/REDESIGN.md` § The visual system): the pink as
  * `primary` — words on the page, a card and the pale pink band, and white on its fill and on the
  * hover's — the hot pink itself, the band under ink, the kinds' fills under their words, and the
  * headings' stronger ink. Drawn only on the public pages while the setting is on.

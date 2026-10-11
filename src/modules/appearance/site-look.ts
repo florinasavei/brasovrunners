@@ -9,7 +9,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { DEFAULT_SITE_LOOK_SETTING, describeSiteLook, parseSiteLook, type SiteLookSetting } from "./domain/site-look";
 
 /**
- * «Aspectul nou» (§NNN): one `platform_settings` row, written by an Administrator under «Setări» →
+ * «Aspectul nou» (§708): one `platform_settings` row, written by an Administrator under «Setări» →
  * «Aspect», audited, read by the locale layout and the header through the public cache (§333).
  * No migration: the settings table takes any key (§100).
  */

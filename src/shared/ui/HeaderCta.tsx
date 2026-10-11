@@ -5,7 +5,7 @@ import { onlyUnderLook } from "@/theme/look";
 import ArrowButtonLink from "./ArrowButtonLink";
 
 /**
- * «Vino cu noi» / "Join us" in the header under «Aspectul nou» (§NNN; `docs/REDESIGN.md`, decision
+ * «Vino cu noi» / "Join us" in the header under «Aspectul nou» (§708; `docs/REDESIGN.md`, decision
  * 5): the pink pill with its arrow, to the next weekly run's page — or the listing when no weekly
  * run is ahead (`nextWeeklyRun`). The header decides the address; this draws it.
  *

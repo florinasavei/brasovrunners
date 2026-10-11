@@ -8,7 +8,7 @@ import { isBackoffice } from "./guards-allowlist";
 import { importFacts, SOURCES, type Source } from "./scan";
 
 /**
- * §NNN, amending §694 and §521 — the backoffice's status chip and its own registry. The public table
+ * §707, amending §694 and §521 — the backoffice's status chip and its own registry. The public table
  * (`modules/events/ui/glyphs.ts`, drawn by `GlyphChip`) keeps only the names public pages draw, so a
  * visitor never downloads a backoffice icon; `status-glyphs.ts` (drawn by `StatusChip`) holds the rest.
  * A tripwire, source-level like the other design tests: each table is held to its own surface, and a

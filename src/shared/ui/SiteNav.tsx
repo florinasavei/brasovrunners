@@ -121,7 +121,7 @@ export default function SiteNav({
   /** The club's stored order, keys first to last (§571); an entry it does not name keeps its default place after them. */
   order?: readonly string[];
   /**
-   * What «Aspectul nou» puts at the row's right end, as the nav's children, before the ☰ (§NNN): «Vino cu noi» and the
+   * What «Aspectul nou» puts at the row's right end, as the nav's children, before the ☰ (§708): «Vino cu noi» and the
    * socials. Inside the nav so the measurement below subtracts its room and the ☰ stays the
    * row's last item (§699). Absent while the setting is off.
    */

@@ -3,7 +3,7 @@ import { renderToReadableStream } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — the nav's trailing group, where «Aspectul nou» puts «Vino cu noi» and the socials: drawn
+ * §708 — the nav's trailing group, where «Aspectul nou» puts «Vino cu noi» and the socials: drawn
  * before the ☰ on a public page, and not drawn at all inside the backoffice shell (`/admin`,
  * `/devs`), so a staff page carries none of the look's hidden markup and its ☰ keeps `ml: auto`.
  */
@@ -34,7 +34,7 @@ async function html(element: ReactElement): Promise<string> {
 
 const withTrailing = () => createElement(SiteNav, null, createElement("span", { "data-testid": "trailing-child" }, "Vino cu noi"));
 
-describe("§NNN the nav's trailing group", () => {
+describe("§708 the nav's trailing group", () => {
   it("is drawn before the ☰ on a public page", async () => {
     route.segments = ["events"];
     const markup = await html(withTrailing());

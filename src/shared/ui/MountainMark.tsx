@@ -1,5 +1,5 @@
 /**
- * The mountain mark (§NNN; `docs/REDESIGN.md` § The visual system: «one inline mountain SVG under
+ * The mountain mark (§708; `docs/REDESIGN.md` § The visual system: «one inline mountain SVG under
  * 2 KB»): two ridges, the far one lighter, drawn in `currentColor` so the caller's text colour —
  * a theme token through `sx` — is its colour, and the dark scheme follows by itself.
  *

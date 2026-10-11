@@ -294,7 +294,7 @@ export async function findEventTitle<T extends Record<string, unknown>>(
 }
 
 /**
- * «Copertă»'s stored picture (the facelift's phase 2, §NNN), for the editor's box and the save: its
+ * «Copertă»'s stored picture (the facelift's phase 2, §709), for the editor's box and the save: its
  * key prefix (a film's poster, `yt-…`, is no picture to cover an event with, §485), its size for the
  * crop box, and its two addresses — the master the crop box draws over and the small file the box's
  * preview shows. Null when the id names no stored picture.

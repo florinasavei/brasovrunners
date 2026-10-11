@@ -7,7 +7,7 @@ import { REPEAT_CADENCES } from "@/modules/events/domain/repeat";
 import { GLYPHS } from "@/modules/events/ui/glyphs";
 
 /**
- * §NNN — the facelift's phase 2: the event's kind for the new look (`docs/REDESIGN.md`, decision 9),
+ * §709 — the facelift's phase 2: the event's kind for the new look (`docs/REDESIGN.md`, decision 9),
  * derived from the standing series the date belongs to and from nothing typed by hand. Weekly is a
  * date of a series that repeats every week; special is everything else. The photo tag is the kind's
  * word and a glyph of the public registry, so phase 5 can draw it from a Server Component.
@@ -15,7 +15,7 @@ import { GLYPHS } from "@/modules/events/ui/glyphs";
 const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf8");
 const MESSAGES = (["ro", "en"] as const).map((locale) => [locale, JSON.parse(read(`messages/${locale}.json`))] as const);
 
-describe("§NNN the event's kind", () => {
+describe("§709 the event's kind", () => {
   it("is weekly only for a date of a weekly series, and special for every other answer", () => {
     expect(eventKind({ seriesCadence: "WEEKLY" })).toBe("weekly");
     // Decision 9: «Evenimente speciale» is everything that is not a weekly series.

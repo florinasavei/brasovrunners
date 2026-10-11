@@ -13,7 +13,7 @@ import type { SvgIconProps } from "@mui/material/SvgIcon";
 import type { ComponentType } from "react";
 
 /**
- * The glyphs of the backoffice's status chips, by name (§NNN, amending §694 and §521): a state's word with its
+ * The glyphs of the backoffice's status chips, by name (§707, amending §694 and §521): a state's word with its
  * picture — a row shown or hidden on the site, a text in one language only, an order's or a plan's
  * step. `StatusChip` draws them. Kept apart from the public table (`modules/events/ui/glyphs.ts`,
  * drawn by `GlyphChip`) so a visitor never downloads an icon only the backoffice uses; `tests/unit/design/status-chip.test.ts` holds both tables to their own surfaces.

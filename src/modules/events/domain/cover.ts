@@ -3,7 +3,7 @@ import type { ImageCrop } from "@/modules/content/rich-text/domain/schema";
 import { storedTeamPhotoCrop } from "@/modules/content/team/photo-crop";
 
 /**
- * An event's cover as the public read carries it (the facelift's phase 2, §NNN): the stored
+ * An event's cover as the public read carries it (the facelift's phase 2, §709): the stored
  * picture's key prefix and size — what the ladder's `srcset` is built from (§414, §601) — and the
  * crop the club drew in «Copertă» (§541), or null for the whole picture. Read in SQL beside every
  * other public column (`events/repository.ts`, `cover`), so it travels through the public cache with

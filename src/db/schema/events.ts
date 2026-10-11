@@ -515,7 +515,7 @@ export const events = pgTable(
     isSpecial: boolean("is_special").notNull().default(false),
 
     /**
-     * «Copertă» (the facelift's phase 2, §NNN; `docs/REDESIGN.md`): the event's cover picture — a
+     * «Copertă» (the facelift's phase 2, §709; `docs/REDESIGN.md`): the event's cover picture — a
      * stored picture of the gallery (`media_assets`, §66), a real photograph of the club and never a
      * stock or generated one (the plan's decision 6) — with its crop, the four fractions of §541, or
      * null for the whole picture. The listing card, the home page's cards and the calendar's panel
@@ -910,7 +910,7 @@ export const events = pgTable(
 
     check("events_version_positive", sql`${t.version} >= 1`),
 
-    /** A cover's crop is a window on a picture (§NNN): no crop without the picture it crops. */
+    /** A cover's crop is a window on a picture (§709): no crop without the picture it crops. */
     check("events_cover_crop_needs_picture", sql`${t.coverCrop} IS NULL OR ${t.coverMediaAssetId} IS NOT NULL`),
 
     /**

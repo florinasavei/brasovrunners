@@ -336,7 +336,7 @@ function eventFieldsFrom(form: FormData) {
     // A checkbox like the one above it, and unlike it in every other way: any number of
     // events may be special (§168), so nothing is cleared when one is ticked.
     isSpecial: form.get("event.isSpecial") === "on",
-    // «Copertă» (§NNN): the picture field's two hidden inputs, read only when the form carried the
+    // «Copertă» (§709): the picture field's two hidden inputs, read only when the form carried the
     // box — a form without it is "not editing the cover", never "no cover".
     coverAssetId: form.has("event.coverAssetId") ? value("coverAssetId") : undefined,
     coverCrop: form.has("event.coverAssetId") ? value("coverCrop") : undefined,

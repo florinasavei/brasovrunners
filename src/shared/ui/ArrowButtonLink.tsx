@@ -24,7 +24,7 @@ type Props = {
 };
 
 /**
- * The new look's button (§NNN; `docs/REDESIGN.md` § The visual system): a link that reads as a
+ * The new look's button (§708; `docs/REDESIGN.md` § The visual system): a link that reads as a
  * pill — the theme rounds every MUI button under the look's scope (`theme/look.ts`) — with its
  * words first and a **trailing** arrow, 44 pixels tall. «Vino cu noi» in the header is the first;
  * the home page's three (phase 3) are the next.
