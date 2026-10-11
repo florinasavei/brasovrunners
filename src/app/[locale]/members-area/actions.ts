@@ -31,7 +31,7 @@ function text(form: FormData, name: string): string {
 /** `shopAt=orders` tells the page to draw the answer in «Comenzile mele», where the anchor lands. */
 function back(locale: Locale, outcome: ShopOutcome, anchor: "members-shop" | "members-orders"): never {
   const query = anchor === "members-orders" ? { shop: outcome, shopAt: "orders" } : { shop: outcome };
-  redirect(`${getPathname({ locale, href: { pathname: "/members-area", query } })}#${anchor}`);
+  redirect(`${getPathname({ locale, href: { pathname: "/members-area/shop", query } })}#${anchor}`);
 }
 
 function outcomeOf(error: unknown): ShopOutcome {

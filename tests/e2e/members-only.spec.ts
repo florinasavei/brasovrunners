@@ -50,10 +50,8 @@ test.describe("§552 events and codes for the members alone", () => {
     await expect(page).toHaveURL(/\/ro\/zona-membri$/, { timeout: 30_000 });
     await hydrated(page);
 
-    const events = page.getByTestId("members-events");
-    await expect(events.getByRole("heading", { name: "Evenimente pentru membri" })).toBeVisible();
-    await expect(events.getByRole("link", { name: fixture.title })).toBeVisible();
-
+    // The codes are the first tab (§NNN), the zone's own address; the runs are the third, at their own.
+    await expect(page.getByTestId("members-events")).toHaveCount(0);
     const code = page.getByTestId("member-code").filter({ hasText: fixture.partner });
     await expect(code).toContainText(fixture.code);
     await expect(code).toContainText("10% la tot.");
@@ -62,7 +60,13 @@ test.describe("§552 events and codes for the members alone", () => {
     const box = await copy.boundingBox();
     expect(Math.round((box?.height ?? 0) * 10) / 10).toBeGreaterThanOrEqual(44);
 
-    await events.getByRole("link", { name: fixture.title }).click();
+    await page.getByTestId("members-tabs").getByRole("link", { name: "Alergări" }).click();
+    await expect(page).toHaveURL(/\/ro\/zona-membri\/alergari$/);
+    await hydrated(page);
+    const events = page.getByTestId("members-events");
+    await expect(events.getByRole("heading", { name: "Evenimente pentru membri" })).toBeVisible();
+    await expect(events.getByRole("link", { name: fixture.title })).toBeVisible();
+    await page.getByTestId("members-events").getByRole("link", { name: fixture.title }).click();
     await expect(page).toHaveURL(new RegExp(`/ro/evenimente/${fixture.ro}$`));
     await expect(page.getByRole("heading", { level: 1, name: fixture.title })).toBeVisible();
     await expect(page.getByText("Doar pentru membri").first()).toBeVisible();

@@ -23,6 +23,11 @@ describe("BR-REQ-051-02 which paths must never be indexed or cached", () => {
     // The members' zone (§524), behind the sign-in.
     "/ro/zona-membri",
     "/en/members-area",
+    // Its tabs (§NNN).
+    "/ro/zona-membri/magazin",
+    "/ro/zona-membri/alergari",
+    "/en/members-area/shop",
+    "/en/members-area/runs",
   ])("treats %s as private", (path) => {
     expect(isPrivatePath(path)).toBe(true);
   });
