@@ -1,0 +1,9 @@
+{
+  "branch": "fix/logo-stays-blue",
+  "decisionsTitle": "The logo stays blue under «Aspectul nou» (amending §708, decision 1 of §692)",
+  "decisionsSection": "**The owner, 2026-10-11:** «dar logo-ul trebuie să rămână albastru, man!». Phase 1 (§708) applied decision 1's default, the logo mark drawn in ink, as `filter: grayscale(1)` on the supplied lockup under the look's scope.\n\n**Decision.** The owner overrides that part of decision 1: the pink accent pair stays, the logo is the club's blue under both looks, everywhere. The header draws the supplied lockup with no filter and no rule under `UNDER_LOOK`; the file is untouched, and the emails, PDFs, race numbers and share cards were always blue. `docs/REDESIGN.md` (decision 1's row, «Phase 1, as built») says so.\n\n**Refused.** A second, blue-preserving ink treatment, and a setting for it: the logo is the one mark that never changes colour.",
+  "changelogLine": "**The logo stays blue under «Aspectul nou»** — the header no longer greys the lockup; only the accent pair changes with the look §NNN.",
+  "specsCriteria": [],
+  "docsNotes": "",
+  "batchLine": "the logo stays blue under the new look"
+}
