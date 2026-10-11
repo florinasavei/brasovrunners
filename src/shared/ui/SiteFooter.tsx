@@ -180,7 +180,7 @@ import ThemeModeToggle from "./ThemeModeToggle";
  * footer did not already have is two items of the fold: the identity line (`ClubIdentity`'s
  * `fold`) after the links, and the public phone beside «Scrie-ne». The marks stay on the bar, once.
  *
- * ## The language under «Aspectul nou» (§NNN, amending §722)
+ * ## The language under «Aspectul nou» (§724, amending §722)
  *
  * The owner, 2026-10-11, after §722's floating round button: «și language switcher-ul trebuie să fie în
  * footer, să văd ambele limbi, ca înainte!» So under the look the bar's own copy — the rule, then RO and
@@ -554,7 +554,7 @@ export default async function SiteFooter() {
             side. Decoration, so hidden from assistive technology — the languages are their own
             named navigation already. From `sm` the languages are in the header and there is
             nothing on the bar to separate, so the rule goes with this box. Under «Aspectul nou»
-            (§NNN, amending §722) this box is drawn at every width — the header's copy is hidden
+            (§724, amending §722) this box is drawn at every width — the header's copy is hidden
             there — so both languages are on the bar, its last item at the bottom right, with the
             bar's own spacing from `sm` (the 44-pixel flag-and-code links, a gap either side of the
             rule). From `sm` the fold is only as wide as its words, so an auto margin carries the

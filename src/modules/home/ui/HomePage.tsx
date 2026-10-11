@@ -16,11 +16,11 @@ import WhyList, { type WhyListProps } from "./WhyList";
 export type HomePageProps = {
   hero: HeroProps;
   /**
-   * «Următoarea alergare», one listing card (§NNN); null when no run is ahead: the section is not
+   * «Următoarea alergare», one listing card (§726); null when no run is ahead: the section is not
    * drawn, and the sections below say what there is.
    */
   nextRun: RunSectionProps | null;
-  /** The weekly runs and the special events, each a section of the listing's own cards (§NNN). */
+  /** The weekly runs and the special events, each a section of the listing's own cards (§726). */
   weekly: RunSectionProps;
   special: RunSectionProps;
   /** «Prima dată»: the club's words or the platform's, and the club page «Cum funcționează» opens. */
@@ -46,7 +46,7 @@ export type HomePageProps = {
  * the photo strip and the numbers band — each a named Server Component with typed props under
  * `src/modules/home/ui/`, drawn with a fixture on the design page's «Mostre» (the owner's rule of
  * 2026-10-10: component-based, easy for whoever vibe-codes next). The three run sections draw the
- * listing's own cards (`RunSection` → `ListingCard`, §NNN), never cards of their own. A section the club switched off is
+ * listing's own cards (`RunSection` → `ListingCard`, §726), never cards of their own. A section the club switched off is
  * not drawn; a section with nothing true to show (no card, no picture, no figure) draws nothing itself.
  *
  * The page's one `main` and its one `h1`: the hero's, or — with the hero switched off — the same

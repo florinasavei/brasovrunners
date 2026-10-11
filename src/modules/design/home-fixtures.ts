@@ -9,7 +9,7 @@ type Words = (key: string, values?: Record<string, string>) => string;
 /**
  * The home page's sections from the sample rows (§714): the props `Hero` and the three `RunSection`s
  * take on the site, built from the same made-up events as the design page's cards (`fixtures.ts`) —
- * the run sections hand the listing's own cards those rows (§NNN): the next run gets its series'
+ * the run sections hand the listing's own cards those rows (§726): the next run gets its series'
  * card, as `readHomeContent` gives it for a date of a series, the weekly runs the same series, the
  * special events the race —
  * with the hero's empty photo slot the club starts from (never a stock picture, decision 6) and the

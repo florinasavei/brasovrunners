@@ -8,6 +8,12 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.97-2026-10-12
+
+- **«Urmărește-ne» is a label, «Vino cu noi» leaves the header, both languages back on the footer** — under «Aspectul nou» the header carries no call to action at any width, the phone too; «Urmărește-ne» is a plain indicator beside Instagram, Facebook and Strava; and the language is the footer's own switcher again, RO and EN on its bar at every width, in place of the floating round button. §724.
+- **«Eveniment special» in the filters' «Tipul»** — the listing's and the calendar's «Filtre» (under «Aspectul nou» the calendar's chips carry it) now offer the special events (every date that is not of a weekly series) beside «Alergare de grup» and «Concurs», wherever the list has both kinds; `?type=SPECIAL`. §725.
+- **The home page shows the cards of «Alergări»** — «Următoarea alergare», the weekly runs and the special events are drawn with the listing's very cards (chips, summary and picture, facts, weather, dates, registration, «Descrierea completă a evenimentului»), in the listing's grid; the home page's own cards, their empty cover slots and the round arrow are gone. §726.
+- **Internal: the build list reaches the builder** — the dispatcher's `br-chain` and `br-fix-round` gave their `checklist` to the reviewer alone, so implementers never saw the e2e recipes or the rule against copying the main checkout's `.env.local`; the builder, the fixer and the reviewer now all read it, and the setup line no longer says to copy that file. Nothing a visitor or the club sees. §727.
 ## BR-V2.96-2026-10-11
 
 - **The calendar under «Aspectul nou»** — always-visible chips for the kind (weekly runs, special events) and the surface, three colours by kind with a legend, the next event with its pills and weather beside the month, and a subscribe box with Google, Apple, Outlook, the .ics and the address to copy; with the setting off the calendar is unchanged. §720.

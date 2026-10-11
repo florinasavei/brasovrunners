@@ -7,7 +7,7 @@ import MountainMark from "@/shared/ui/MountainMark";
  * What an `<img>` needs to draw a picture of the home page (§714): the master, the ladder's `srcset`
  * and `sizes` (§414, §601), the picture's own size and the crop the club drew — built on the server
  * from the hero's setting (`home-content.ts#heroPicture`; the run sections draw the listing's own
- * cards since §NNN, with no picture of the home page's). Strings and numbers only, so a fixture on
+ * cards since §726, with no picture of the home page's). Strings and numbers only, so a fixture on
  * the design page draws the same component.
  */
 export type HomePictureSources = {

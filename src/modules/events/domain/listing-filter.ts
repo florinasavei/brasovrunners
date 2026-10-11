@@ -59,7 +59,7 @@ export const FILTER_FLAGS = ["partner", "night", "registration"] as const;
 export type FilterFlag = (typeof FILTER_FLAGS)[number];
 
 /**
- * «Eveniment special» in «Tipul» (§NNN, amending §413 and §720 — the owner, 2026-10-11, of the
+ * «Eveniment special» in «Tipul» (§725, amending §413 and §720 — the owner, 2026-10-11, of the
  * listing's panel: «Aici la tip trebuie să pot vedea și evenimentele speciale»): one more box in the
  * type group, `?type=SPECIAL`, for every date that is not a date of a standing weekly series — the
  * kind §709 derives from the series (`eventKind`, `docs/REDESIGN.md` decision 9), never a flag the
@@ -299,7 +299,7 @@ function valueOf(event: FilterableEvent, group: FilterGroup): string | null {
 
 /**
  * Whether an event carries a value in a group: its own value, and in «Tipul» also «Eveniment special»
- * when the date is not of a weekly series (§NNN) — the one group where an event carries two answers.
+ * when the date is not of a weekly series (§725) — the one group where an event carries two answers.
  */
 function carries(event: FilterableEvent, group: FilterGroup, value: string): boolean {
   if (group === "type" && value === SPECIAL_TYPE) return eventKind(event) === "special";
@@ -323,7 +323,7 @@ function flagOf<T extends FilterableEvent>(event: T, flag: FilterFlag, facts: Fi
 /**
  * Whether an event passes the filter: every group with a tick must have a ticked value the event
  * carries (an unanswered question matches no tick; «Eveniment special» matches every special date,
- * whatever its type, §NNN), and every flag that is on must hold.
+ * whatever its type, §725), and every flag that is on must hold.
  */
 export function matchesListingFilter<T extends FilterableEvent>(event: T, filter: ListingFilter, facts: FilterFacts<T>): boolean {
   for (const group of FILTER_GROUPS) {
@@ -355,7 +355,7 @@ export type FilterOffer = {
  * row already answers the same way is nothing to choose between — unless the address already
  * ticks something in it, which always stays so a filtered page can say what it is filtered by.
  *
- * **«Eveniment special» is a choice on its own** (§NNN): its other side is a weekly run — a stated
+ * **«Eveniment special» is a choice on its own** (§725): its other side is a weekly run — a stated
  * answer, not a question left blank — so where it narrows it is offered even when no type does (every
  * date a group run, some weekly and some not). A type never stands alone: every event has one, so
  * where one type narrows a second one does too.

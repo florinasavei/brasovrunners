@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PublicEvent } from "@/modules/events/repository";
 
 /**
- * BR-REQ-041-01 (§NNN, amending §717 and the redesign plan's decision 10) — the home page's three run
+ * BR-REQ-041-01 (§726, amending §717 and the redesign plan's decision 10) — the home page's three run
  * sections draw the listing's own cards. The owner, comparing the two on QA: «totuși aici pe homepage
  * ar trebui să văd fix tipul de carduri din alergări, ca să reutilizăm...».
  *
@@ -81,7 +81,7 @@ async function html(element: ReactElement): Promise<string> {
 
 const weeklySeries = (): PublicEvent[] => sampleSeries(currentLocale).map((row) => ({ ...row, seriesCadence: "WEEKLY" }));
 
-describe("§NNN the home page's run sections draw the listing's own cards", () => {
+describe("§726 the home page's run sections draw the listing's own cards", () => {
   it("draws a series as the listing's series card, the very same markup", async () => {
     for (const locale of ["ro", "en"] as const) {
       currentLocale = locale;
@@ -148,7 +148,7 @@ describe("§NNN the home page's run sections draw the listing's own cards", () =
   });
 });
 
-describe("§NNN the home page hands the cards what the listing hands them, from the read it already had", () => {
+describe("§726 the home page hands the cards what the listing hands them, from the read it already had", () => {
   it("gives the next run the listing's card for its series, the weekly section the series, the special one the race, and reads the forecast once for all", async () => {
     const series = weeklySeries();
     const race = sampleRace("ro");

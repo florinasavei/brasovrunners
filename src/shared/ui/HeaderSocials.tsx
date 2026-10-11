@@ -37,11 +37,11 @@ export function headerSocials(links: readonly ClubSocialLink[], site: Words): Cl
  * (`headerSocials`).
  *
  * The header draws it as the row's last item, after the nav (and its ☰, when a section folds): under
- * the look the language left the header for the footer's bar (§NNN), so the far right is free. The words
+ * the look the language left the header for the footer's bar (§724), so the far right is free. The words
  * are the group's indicator — a label, never a link or a button, so never focusable, no pointer, nothing
- * to press (the owner, 2026-10-11: «doar un indicator frumos, not clickable», §NNN); the group is a
+ * to press (the owner, 2026-10-11: «doar un indicator frumos, not clickable», §724); the group is a
  * navigation named by the same words, which a screen reader hears once (the visible copy is hidden from
- * it). The header carries no call to action beside it: «Vino cu noi» left the header (§NNN). Each mark is a 44-pixel target
+ * it). The header carries no call to action beside it: «Vino cu noi» left the header (§724). Each mark is a 44-pixel target
  * (BR-REQ-041-01 criterion 6) whose accessible name is «{club} pe {network}» (`headerSocials`), the
  * mark decoration; off-site, so a new tab and `rel`, as in the footer.
  *

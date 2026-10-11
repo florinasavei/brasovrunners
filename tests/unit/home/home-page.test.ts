@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
  * §714 — the home page, phase 3 part A (`docs/REDESIGN.md`, decision 3): what it shows from the
  * upcoming events, the hero's two lines, and the components drawn from the design page's fixture —
  * one `h1`, one `main`, the hero's picture the one eager one and its empty slot, never a stock
- * picture. Since §NNN the run sections draw the listing's own cards (`home-listing-cards.test.ts`
+ * picture. Since §726 the run sections draw the listing's own cards (`home-listing-cards.test.ts`
  * holds that they are the very same markup); here, that the page around them still holds.
  */
 let currentLocale: "ro" | "en" = "ro";
@@ -161,7 +161,7 @@ describe("§714 the home page's components, drawn from the design page's fixture
     const html = await markup("ro");
     expect(html).not.toContain("<img");
     expect(html).toContain('data-testid="home-hero-picture-empty"');
-    // The hero's slot alone: the cards are the listing's, with no slot of the home page's (§NNN).
+    // The hero's slot alone: the cards are the listing's, with no slot of the home page's (§726).
     expect(html.match(/data-testid="mountain-mark"/g)).toHaveLength(1);
   });
 
@@ -213,7 +213,7 @@ describe("§714 the sections are components of their own, with typed props", () 
     }
   });
 
-  it("has no card of its own any more: the run sections draw the listing's (§NNN)", () => {
+  it("has no card of its own any more: the run sections draw the listing's (§726)", () => {
     for (const gone of ["NextRunCard.tsx", "RunCardGrid.tsx", "RunTag.tsx", "RoundArrow.tsx", "card-sx.ts"]) {
       expect(existsSync(path.join(ROOT, "src/modules/home/ui", gone)), gone).toBe(false);
     }

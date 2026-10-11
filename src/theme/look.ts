@@ -59,7 +59,7 @@ export function onlyUnderLook<T>(display: T) {
 
 /**
  * The reverse: what today's look draws and the new one replaces — the header's language switcher,
- * whose place «Urmărește-ne» takes while the footer's bar carries the language (§722, §NNN) — keeps its own
+ * whose place «Urmărește-ne» takes while the footer's bar carries the language (§722, §724) — keeps its own
  * `display` (a breakpoint object too) everywhere but inside the scope, where it is not drawn. The
  * backoffice, outside the scope, keeps it.
  */

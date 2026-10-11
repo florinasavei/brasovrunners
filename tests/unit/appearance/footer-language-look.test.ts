@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 import { LOOK_PREVIEW, LOOK_ROOT } from "@/theme/look";
 
 /**
- * BR-REQ-041-01 (§NNN, amending §722) — under «Aspectul nou» the language is the footer's own
+ * BR-REQ-041-01 (§724, amending §722) — under «Aspectul nou» the language is the footer's own
  * switcher, both languages on the bar at every width: the owner, 2026-10-11, «și language switcher-ul
  * trebuie să fie în footer, să văd ambele limbi, ca înainte!» §722's floating round button, which
  * offered only the other language, is gone. Off, the bar is what it was: the flags on a phone only,
@@ -64,7 +64,7 @@ function classOf(markup: string, marker: string): string {
   return /class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)/.exec(tag)?.[1] ?? "";
 }
 
-describe("§NNN both languages on the footer's bar under «Aspectul nou»", () => {
+describe("§724 both languages on the footer's bar under «Aspectul nou»", () => {
   it("draws the bar's language box on a phone, hides it from `sm` outside the scope, and shows it at every width inside", async () => {
     const html = await footer("ro");
     const markup = markupOnly(html);

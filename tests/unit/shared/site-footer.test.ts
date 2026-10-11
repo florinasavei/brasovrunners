@@ -172,7 +172,7 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's one doo
     expect(panel, "the panel's own box is zero wide").toMatch(/width:0;/);
     expect(panel).toMatch(/overflow:visible;/);
     // The one `:has()` allowed is the new look's scope stopping at the backoffice (`theme/look.ts`,
-    // §NNN: the languages stay on the bar at every width under «Aspectul nou»), which reads no state of the fold.
+    // §724: the languages stay on the bar at every width under «Aspectul nou»), which reads no state of the fold.
     expect(css, "no rule reads the fold's state from outside it").not.toMatch(/:has\((?!\[data-backoffice\]\))/);
 
     // One row that never wraps, aligned to the top so an open fold grows downward only.
@@ -343,7 +343,7 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's one doo
     // The theme's `divider` colour (the default light palette's, in this render).
     expect(rule).toMatch(/background-color:rgba\(0, 0, 0, 0\.12\);/);
     // Its box is the phone's alone while the look is off: from `sm` the languages are in the header
-    // (under «Aspectul nou» it shows at every width, `footer-language-look.test.ts`, §NNN).
+    // (under «Aspectul nou» it shows at every width, `footer-language-look.test.ts`, §724).
     const box = rulesOf(css, /<div[^>]*class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)"[^>]*>\s*<div[^>]*data-testid="footer-language-rule"/.exec(markup)![1]!);
     expect(box).toMatch(/(^|[;{])display:flex;/);
     expect(box).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*display:none;/);

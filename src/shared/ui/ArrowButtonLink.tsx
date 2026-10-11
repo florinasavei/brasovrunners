@@ -21,7 +21,7 @@ type Props = {
  * The new look's button (§708; `docs/REDESIGN.md` § The visual system): a link that reads as a
  * pill — the theme rounds every MUI button under the look's scope (`theme/look.ts`) — with its
  * words first and a **trailing** arrow, 44 pixels tall. «Vino cu noi» in the header was the first
- * (it left the header, §NNN); the home page's three (phase 3) and the calendar's «Vezi detalii» wear it.
+ * (it left the header, §724); the home page's three (phase 3) and the calendar's «Vezi detalii» wear it.
  *
  * The arrow is the one glyph file, imported here as a public button imports its glyph (§498, §521),
  * and drawn as the button's last child — never `endIcon`, which from a Server Component is an

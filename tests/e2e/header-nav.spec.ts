@@ -95,7 +95,7 @@ test.describe("§262 the sections on a phone's header row", () => {
 });
 
 /**
- * §708, the facelift's phase 1 gate — the header with «Aspectul nou» on, measured. Since §NNN
+ * §708, the facelift's phase 1 gate — the header with «Aspectul nou» on, measured. Since §724
  * (amending §708 and §722) the header carries no «Vino cu noi» at any width, the phone too: the ☰
  * is the row's right edge on a phone (§699), «Urmărește-ne» — a label, then Instagram, Facebook
  * and Strava — the row's last item on a computer, and the row must still be one row at 320px with
@@ -150,7 +150,7 @@ test.describe("§708 the header under «Aspectul nou»", () => {
 
       const nav = page.getByRole("navigation", { name: "Navigare principală" });
       await expect(nav).toHaveAttribute("data-measured", "true");
-      // §NNN: no call to action in the header at any width, the phone too.
+      // §724: no call to action in the header at any width, the phone too.
       await expect(page.getByTestId("header-cta")).toHaveCount(0);
       await expect(page.locator("header").getByRole("link", { name: "Vino cu noi" })).toHaveCount(0);
       await expect(nav.getByRole("link", { name: "Alergări", exact: true })).toBeVisible();
@@ -191,7 +191,7 @@ test.describe("§708 the header under «Aspectul nou»", () => {
       await expect(socials).toBeVisible();
       const label = socials.getByTestId("header-socials-label");
       await expect(label).toHaveText("Urmărește-ne");
-      // §NNN: the words are a label — not a link, not a button, not focusable, no pointer.
+      // §724: the words are a label — not a link, not a button, not focusable, no pointer.
       const labelFacts = await label.evaluate((element) => ({
         inTarget: Boolean(element.closest("a, button, [role=button], [tabindex]")),
         tabIndex: (element as HTMLElement).tabIndex,
@@ -239,7 +239,7 @@ test.describe("§708 the header under «Aspectul nou»", () => {
 });
 
 /**
- * §NNN (amending §722) — under «Aspectul nou» the language is the footer's own switcher, both
+ * §724 (amending §722) — under «Aspectul nou» the language is the footer's own switcher, both
  * languages on the bar at every width: the only «Limbă» navigation (the header's copy is hidden,
  * §722's floating button is gone), Romanian stated as the current one and English a link through
  * `/api/locale`, the bar's last item at its bottom right, on screen after a scroll to the page's end,

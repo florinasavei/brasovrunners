@@ -103,7 +103,7 @@ export default async function SiteHeader() {
   const [sections, order] = await Promise.all([menuSectionsOnSite(locale as Locale), menuOrderOnSite()]);
   /*
     «Aspectul nou» (§708): the socials, only while the club's setting is on — off, nothing is drawn,
-    so the header is what it was. The header carries no call to action under the look (§NNN, amending
+    so the header is what it was. The header carries no call to action under the look (§724, amending
     §708 and §722): «Vino cu noi» left it at every width, the phone too, so the next weekly run is no
     longer read here and the ☰ is the phone's right edge again. The socials are environment values,
     so the look costs the header no query.
@@ -247,10 +247,10 @@ export default async function SiteHeader() {
         {/*
           «Urmărește-ne» with Instagram, Facebook and Strava (§722, amending §708): the row's last item
           from `md` up — the top right the owner asked for — after the nav and its ☰. The words are a
-          label, never a link or a button (§NNN): the three marks are the only targets. Outside the nav,
+          label, never a link or a button (§724): the three marks are the only targets. Outside the nav,
           in the place the language switcher leaves under the look, so the nav measures its own box
           without it and folds a section into the ☰ before the row would ever wrap. The language is on
-          the footer's bar there, both languages at every width (§NNN). The box shows only where its
+          the footer's bar there, both languages at every width (§724). The box shows only where its
           content does, so it takes no room in the backoffice or on a phone.
         */}
         {socials.length > 0 && (
@@ -273,7 +273,7 @@ export default async function SiteHeader() {
           and the hidden one is out of the accessibility tree, so exactly one "Limbă" navigation
           is announced at every width.
 
-          Under «Aspectul nou» (§722, §NNN) this copy is not drawn at any width: the language is the
+          Under «Aspectul nou» (§722, §724) this copy is not drawn at any width: the language is the
           footer's two flags with their codes, on its bar at every width, and «Urmărește-ne» takes the
           far end of the row.
         */}

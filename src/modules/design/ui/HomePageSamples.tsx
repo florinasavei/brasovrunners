@@ -9,7 +9,7 @@ import { sampleHome } from "../home-fixtures";
  * «Mostre» → the home page's first sections (§714): `Hero` and the three `RunSection`s, the very
  * components the site's root draws, from the sample rows (`home-fixtures.ts`) — the hero's empty
  * photo slot the club starts from, the platform's own words, and the run sections drawn with the
- * listing's own cards (`ListingCard`, §NNN). The hero's heading is a paragraph here, so the design
+ * listing's own cards (`ListingCard`, §726). The hero's heading is a paragraph here, so the design
  * page keeps its one `h1`. Server Components throughout.
  */
 export default async function HomePageSamples({ locale }: { locale: Locale }) {

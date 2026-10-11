@@ -23,7 +23,7 @@ export type ListingCardProps = {
 /**
  * One card of the listing «Alergări», whichever it is: a series is `SeriesCard`, a single date is
  * `EventCard` (§113, §366). The listing's grid and the home page's run sections both draw their
- * cards through it (§NNN), so what a run looks like is decided in one place and the two pages cannot
+ * cards through it (§726), so what a run looks like is decided in one place and the two pages cannot
  * drift apart. The lead event (`EventCard`'s `featured`, §470) is the listing's own and stays there.
  *
  * A Server Component: rows in, the listing's markup out — no element crosses into a client component (§370).

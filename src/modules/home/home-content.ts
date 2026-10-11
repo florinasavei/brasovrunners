@@ -23,7 +23,7 @@ import type { RunSectionCard } from "./ui/RunSection";
  * last good copy behind them, §447), the forecast's cached hour (§402), the setting the root already
  * read — so a visit the CDN does not answer still asks the database nothing new. The hero and the
  * lower sections get words and addresses; the three run sections get the listing's own rows, because
- * they draw the listing's own cards (§NNN), which read what they read on the listing — the same
+ * they draw the listing's own cards (§726), which read what they read on the listing — the same
  * cached availability entry per open race card (§409), never a query of their own. `HomePage` and its
  * sections are drawn from a fixture on the design page the same way.
  */
@@ -87,7 +87,7 @@ export async function readHomeContent(locale: Locale, now: Date, setting: HomePa
   const sections = homeSections(upcoming);
 
   /*
-    The listing's cards, as `events/page.tsx` hands them theirs (§NNN): a series' every date ahead,
+    The listing's cards, as `events/page.tsx` hands them theirs (§726): a series' every date ahead,
     the forecast at the first one's start (§416) — one call for every card, the next run's included,
     each place asked once and nothing outside the seven days — and, for a date alone on its card, the
     series it belongs to, read off the whole list (§486), so that date still wears its series' chip.

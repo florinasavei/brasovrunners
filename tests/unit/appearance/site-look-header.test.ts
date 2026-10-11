@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * §708 — «Aspectul nou» in the header, rendered: with the setting off (or no row at all) the header
  * is the markup it was, with no button, no social marks and no watermark; with it on, «Urmărește-ne»
  * with the footer's three marks is the row's last item after the nav (§722), its words a label, and the
- * header carries no «Vino cu noi» at any width (§NNN, amending §708 and §722). The client islands and the
+ * header carries no «Vino cu noi» at any width (§724, amending §708 and §722). The client islands and the
  * data reads are stubbed; the Server Components under test render for real.
  */
 const state = vi.hoisted(() => ({
@@ -126,7 +126,7 @@ describe("§708 the header while «Aspectul nou» is off", () => {
 });
 
 describe("§708 the header while «Aspectul nou» is on", () => {
-  it("§NNN draws no «Vino cu noi» at any width, the phone too: the nav is handed nothing and no weekly run is read", async () => {
+  it("§724 draws no «Vino cu noi» at any width, the phone too: the nav is handed nothing and no weekly run is read", async () => {
     state.look = { on: true };
     state.upcoming = [weekly("2026-10-20T16:00:00.000Z"), weekly("2026-10-13T16:00:00.000Z")];
     const on = await header();
@@ -139,7 +139,7 @@ describe("§708 the header while «Aspectul nou» is on", () => {
     expect(state.upcomingReads).toBe(0);
   });
 
-  it("§NNN draws «Urmărește-ne» as a label: a span hidden from a screen reader, never a link, a button or a focusable element", async () => {
+  it("§724 draws «Urmărește-ne» as a label: a span hidden from a screen reader, never a link, a button or a focusable element", async () => {
     state.look = { on: true };
     const on = await header();
     const label = /<span[^>]*data-testid="header-socials-label"[^>]*>followUs<\/span>/.exec(on);
@@ -175,7 +175,7 @@ describe("§708 the header while «Aspectul nou» is on", () => {
       expect(group).toContain(`title="followOn.${network}:${CLUB_NAME}"`);
     }
     // The language switcher's header copy is still rendered — the backoffice, outside the look's scope, shows it from `sm` —
-    // and its box is hidden inside the scope (`notUnderLook`): a public page's one «Limbă» is the footer's bar (§NNN).
+    // and its box is hidden inside the scope (`notUnderLook`): a public page's one «Limbă» is the footer's bar (§724).
     expect(on).toContain('<span data-testid="locale-switcher">locale</span>');
     const { className, css } = boxAround(on, 'data-testid="locale-switcher"');
     expect(className, "the switcher sits in a styled box").not.toBe("");

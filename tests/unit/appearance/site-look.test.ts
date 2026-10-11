@@ -71,7 +71,7 @@ describe("§708 the scope stops at the backoffice", () => {
     expect(source("src/shared/ui/HeaderSocials.tsx")).toContain('display: "none", [UNDER_LOOK]: { display: { xs: "none", md: "flex" } }');
   });
 
-  it("§NNN puts both languages on the footer's bar at every width under the look, and leaves today's two copies alone while off", () => {
+  it("§724 puts both languages on the footer's bar at every width under the look, and leaves today's two copies alone while off", () => {
     const layout = source("src/app/[locale]/layout.tsx");
     expect(layout).toContain("<SiteFooter />");
     const footer = source("src/shared/ui/SiteFooter.tsx");

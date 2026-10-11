@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * BR-REQ-041-01 — «Eveniment special» under «Aspectul nou» (`DECISIONS.md` §NNN, amending §720): the
+ * BR-REQ-041-01 — «Eveniment special» under «Aspectul nou» (`DECISIONS.md` §725, amending §720): the
  * rendered panel and chips, not only the domain helpers. The box and a lone tick's active chip are
  * the kind chips' under the look (`LOOK_HIDDEN_VALUES`, hidden by the look's rule, the input stays
  * in the form); a type group the chips carry whole is hidden whole; a tick the chips do not say

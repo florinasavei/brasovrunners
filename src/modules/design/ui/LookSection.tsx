@@ -50,7 +50,7 @@ async function Sample({ preview }: { preview: boolean }) {
         <ArrowButtonLink href="/events" label={t("design.look.primary")} />
         <ArrowButtonLink href="/events" label={t("design.look.secondary")} variant="outlined" />
       </Box>
-      {/* «Urmărește-ne» (§722): the header's own group, from `md` up and under the look's scope only — its words a label (§NNN). */}
+      {/* «Urmărește-ne» (§722): the header's own group, from `md` up and under the look's scope only — its words a label (§724). */}
       {socials.length > 0 && (
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "center" }}>
           <Typography variant="body2" color="text.secondary">

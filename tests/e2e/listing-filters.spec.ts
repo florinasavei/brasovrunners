@@ -288,7 +288,7 @@ test.describe("BR-REQ-041-01 the filters work with no script at all", () => {
       await expect(heading(page, RACE)).toHaveCount(0);
     });
 
-    test("«Eveniment special» is a box of «Tipul»: every date of no weekly series, OR with the types (§NNN)", async ({ page }) => {
+    test("«Eveniment special» is a box of «Tipul»: every date of no weekly series, OR with the types (§725)", async ({ page }) => {
       // The owner, 2026-10-11: «Aici la tip trebuie să pot vedea și evenimentele speciale». The seed
       // has no weekly series, so its three dates are all special and the box narrows nothing there —
       // it is reached from an address that ticks it, which always offers it (§413).

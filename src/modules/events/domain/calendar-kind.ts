@@ -12,7 +12,7 @@ import { SPECIAL_TYPE, withoutValue, type FilterOffer, type ListingFilter } from
  * like every filter (§574), so a link, the GET chips and a script-less visit read the same state;
  * a value that names no kind is ignored, as `?type=NOPE` always was. The listing does not read it
  * (its look is phase 5's), so it is not one of `FILTER_GROUPS`. The panel's own question for the
- * same kind is «Eveniment special» in «Tipul» (`?type=SPECIAL`, §NNN), on the listing and on the
+ * same kind is «Eveniment special» in «Tipul» (`?type=SPECIAL`, §725), on the listing and on the
  * calendar with the look off; both read one rule (`eventKind`). Under the look the chips carry the
  * kind, so the box is not offered there (`LOOK_HIDDEN_VALUES`), a kind link replaces a ticked
  * SPECIAL (`kindFilter`) and a lone `type=SPECIAL` reads as the «special» chip (`chipKind`):

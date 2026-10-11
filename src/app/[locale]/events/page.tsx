@@ -457,7 +457,7 @@ async function ListingBody({
       {featured && raceWeekDays !== null && (
         <EventCard event={featured} index={0} now={now} weather={weatherOf(featured)} featured={{ raceWeekDays }} seriesDates={seriesOf(featured)} />
       )}
-      {/* A series is the series card, a single date the event's (§113, §366): one component, the one the home page draws (§NNN). */}
+      {/* A series is the series card, a single date the event's (§113, §366): one component, the one the home page draws (§726). */}
       {cards.map((series, index) => (
         <ListingCard
           key={series.key}

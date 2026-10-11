@@ -186,7 +186,7 @@ export function pictureSrcSet(masterSrc: string, masterWidth: number | null | un
  * - `thumb` — a small canvas card's photo: 104 pixels from `sm`, 88 below (§701).
  * - `hero` — the home page's hero photograph (§714): half the page's column from `md` (two columns,
  *   a 32-pixel gap), 728 at its widest; the whole column below. The home page's run sections draw
- *   the listing's own cards since §NNN, so they have no column of their own here.
+ *   the listing's own cards since §726, so they have no column of their own here.
  * - `strip` — the home page's photo strip (§714), a sideways row of square tiles in the page's
  *   column with 12-pixel gaps: six to the row from `md` (238 pixels at the widest), two and a half
  *   from `sm`, and on a phone a tile of 72 per cent with the next one peeking in.

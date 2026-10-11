@@ -27,7 +27,7 @@ import { LOOK_ACCENT_TINT, LOOK_ACCENT_TINT_VARIABLE, LOOK_PREVIEW, LOOK_PREVIEW
  * dark) and the words' shade stays no lighter than the muted ink, so every page tint carries it; the
  * pink is phase 1's tokens unchanged and the orange is the derivation's; a grey and a malformed value
  * are refused; and the home band wears the accent through the layout's variables (the weekly tag
- * went with the home page's own cards, §NNN). That no page names the pink or a preset itself is
+ * went with the home page's own cards, §726). That no page names the pink or a preset itself is
  * `tests/unit/design/accent-tokens.test.ts`'s walk of `src/`, beside the design system's other guards.
  */
 const SIX_DIGIT = /^#[0-9a-f]{6}$/;

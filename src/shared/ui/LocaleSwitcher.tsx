@@ -86,7 +86,7 @@ export default function LocaleSwitcher() {
         footer's bar is one row on a phone, and the pair is two flags there: no letters, each a
         square of the bar's target (`footer-target.ts`: 24px below 360, 28px from 360), the
         current one ringed as well as `aria-current`. From `sm` up — the header's copy, the only
-        one shown there, or under «Aspectul nou» the footer's (§NNN) — it is the flag and the code
+        one shown there, or under «Aspectul nou» the footer's (§724) — it is the flag and the code
         at 44px, as before.
       */
       sx={{

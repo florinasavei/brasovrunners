@@ -23,7 +23,7 @@ vi.mock("next-intl/server", async () => {
   const { createFormatter } = await import("next-intl");
   return {
     getTranslations: async (namespace: string) => createTranslator({ locale: currentLocale, messages: currentLocale === "ro" ? ro : en, namespace: namespace as "HomeSections" }),
-    // The run sections draw the listing's own cards (§NNN), which read the reader's language and its formats.
+    // The run sections draw the listing's own cards (§726), which read the reader's language and its formats.
     getFormatter: async () => createFormatter({ locale: currentLocale, timeZone: "Europe/Bucharest" }),
     getLocale: async () => currentLocale,
   };

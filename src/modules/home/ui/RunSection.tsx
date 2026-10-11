@@ -22,7 +22,7 @@ export type RunSectionProps = {
 
 /**
  * A section of the home page's runs — «Următoarea alergare», «Alergările săptămânale», «Evenimente
- * speciale» (the facelift's phase 3, §717) — drawn with **the listing's own cards** (§NNN, amending
+ * speciale» (the facelift's phase 3, §717) — drawn with **the listing's own cards** (§726, amending
  * §717 and the plan's decision 10). The owner, comparing the two on QA: «totuși aici pe homepage ar
  * trebui să văd fix tipul de carduri din alergări, ca să reutilizăm». So a card here is `ListingCard`
  * — `SeriesCard` for a series, `EventCard` for a date — in the listing's own grid (`CARD_GRID_SX`):

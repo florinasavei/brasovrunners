@@ -15,7 +15,7 @@ import {
 } from "@/modules/events/domain/listing-filter";
 
 /**
- * BR-REQ-041-01 — «Eveniment special» in the filter's «Tipul» (`DECISIONS.md` §NNN, amending §413
+ * BR-REQ-041-01 — «Eveniment special» in the filter's «Tipul» (`DECISIONS.md` §725, amending §413
  * and §720; the owner, 2026-10-11: «Aici la tip trebuie să pot vedea și evenimentele speciale»).
  * A special event is every date that is not of a standing weekly series (§709's `eventKind`, read
  * off the series' cadence the public row already carries); the box is one more answer in the type

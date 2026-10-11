@@ -132,7 +132,7 @@ export default async function ListingFilterPanel({
   const label = (group: FilterGroup | FilterFlag, value: string): string => {
     switch (group) {
       case "type":
-        // «Eveniment special» is the kind's own word (§709's photo tag), not a type's (§NNN).
+        // «Eveniment special» is the kind's own word (§709's photo tag), not a type's (§725).
         return value === SPECIAL_TYPE ? tEvent("kind.special") : tEvent(`type.${value}`);
       case "surface":
         return tEvent(`surface.${value}`);

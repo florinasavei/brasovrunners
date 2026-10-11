@@ -123,7 +123,7 @@ export default function SiteNav({
   /**
    * What a public header puts at the row's right end, as the nav's children, before the ☰ (§708). Inside the nav so
    * the measurement below subtracts its room and the ☰ stays the row's last item (§699). Nothing passes it today:
-   * «Vino cu noi» was its one child under «Aspectul nou» and left the header (§NNN); the slot stays for the next.
+   * «Vino cu noi» was its one child under «Aspectul nou» and left the header (§724); the slot stays for the next.
    */
   children?: ReactNode;
 }) {

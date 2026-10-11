@@ -14,28 +14,28 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V2.95`** (released 2026-10-11 evening: §710–§719, migration `0142`; both `migrate.yml` runs' smoke
-  steps raced the old build's 308 at the root and were rerun once the new build was live — the production rerun needs its
-  environment's approval again). Waiting for «prod»: `BR-V2.96` (§720–§723, below) — no migration.
-- **QA: `BR-V2.96`** — under «Aspectul nou»: **the calendar's redesign** (facelift phase 4, built in the phone
-  session: the title block, kind and surface chips that work with scripts off, three colours with a legend, «Următorul
-  eveniment», the subscribe box with Outlook, the look after dark); **the accent colour is the club's setting** («Roz» by
-  default, «Albastru», «Portocaliu», «Personalizat» — shades derived and held at AA); the language as one round button in
-  the bottom-right corner, and «Urmărește-ne» with Instagram, Facebook and Strava at the desktop header's end. For
-  everyone: «Contact direct» after «Spune-ne ceva», right before the newsletter.
-- **Nothing is building.** The chains' worktrees under `.claude/worktrees/` can go.
-- **Next, on QA, the owner's:** «Aspectul nou» on; the accent; «Pagina principală» with the club's photographs and words;
-  a run's Garmin/Strava maps and GPX; then phase 5 (the listing and the event page) per `docs/REDESIGN.md`.
-- **Waiting on the owner:** a look at QA (phone and laptop) before «Aspectul nou» or the home page goes on in production;
-  the photographs (the hero, a cover per run and race, the strip); the privacy notice from the new template (the maps, the
-  shop); «Tot numărul»'s default background; `shopNotice`; the Google calendar.
-- **Later:** `yarn smoke` should accept a 308 to the listing too (the old build's answer while a release's migration runs,
-  so a change of the root's answer never races its own migration again); the e2e specs on written 2027 dates (earliest
-  2027-04-14) want a dates-from-today helper; pass `now` through `readRegistrationTokenContext`, the email state's
-  `openRefusalsWhere` and the guardian rule; the concurrency suite fails on a seeded database (run it on a migrated, unseeded
-  one); maybe a nightly `yarn test:clock`; `OrdersCard` and `ProductList` to `StatusChip`; at 320 px the members' current
-  tab can sit past the row's edge; the cards' titles under the new look (phase 5); `TeamPhotoLabels` copied in three
-  editors; the calendar's first week clears the fold at 320 px by 5 px only.
+- **Production: `BR-V2.96`** (released 2026-10-11 late: §720–§723, no migration). Waiting for «prod»:
+  `BR-V2.97` (§724–§727, below) — no migration.
+- **QA: `BR-V2.97`** — under «Aspectul nou»: «Urmărește-ne» is a label you cannot press, «Vino cu noi» left the
+  header at every width, and both languages are back on the footer's bar (the floating round button is gone); the home
+  page draws the listing's own cards («Următoarea alergare» a series' card for a weekly date). For everyone: «Eveniment
+  special» in the filters' «Tipul» (every date that is not of a weekly series). For the dispatcher: the chains hand the
+  checklist to the builder and the fixer, and the builder's preamble no longer says its `.env.local` is a copy of the main
+  checkout's.
+- **Nothing is building.**
+- **Next, on QA, the owner's:** «Aspectul nou» and «Pagina principală» on; the accent; the calendar; then phase 5 (the
+  listing and the event page) per `docs/REDESIGN.md`.
+- **Waiting on the owner:** a look at QA before «Aspectul nou» or the home page goes on in production; the photographs;
+  the privacy notice from the new template (the maps, the shop); «Tot numărul»'s default background; `shopNotice`; the
+  Google calendar.
+- **Later:** `yarn smoke` should accept a 308 to the listing too (a root-behaviour change raced its own migration on
+  2026-10-11); the e2e specs on written 2027 dates want a dates-from-today helper; pass `now` through
+  `readRegistrationTokenContext`, `openRefusalsWhere` and the guardian rule; the concurrency suite fails on a seeded
+  database; a nightly `yarn test:clock`; `OrdersCard` and `ProductList` to `StatusChip`; the members' current tab past
+  the row's edge at 320 px; the cards' titles under the new look (phase 5); `TeamPhotoLabels` copied in three editors;
+  the calendar's first week clears the fold by 5 px; a guard for computed `COLOR[...]` keys; `calendar-look.spec.ts` and
+  `header-nav.spec.ts` share the one «Aspectul nou» row (one worker only); about a dozen orphaned folders under
+  `.claude/worktrees/` (Windows long paths) to delete with a long-path-aware command.
 
 ### How a change is made here (the owner's standing rules, all still in force)
 
@@ -54,11 +54,14 @@ This section replaces the plan of 2026-09-30; it is what a session with none of 
   `yarn secrets:check`); the club's domain in no file but `SETUP.md` §26; no person's name in code or documents (a role
   instead: «the safety person», «an organizer»); no `@mui/x-data-grid`.
 - **Agents** (`.claude/workflows/`, `docs/DISPATCHER.md`): `br-chain` implements, reviews adversarially, fixes and
-  re-reviews one branch; `br-fix-round` runs one more round. Only the `brief` reaches the implementer, so the intent and
-  the checklist go inside it. One workflow at a time. Rounds never run Playwright, `next build` or a whole test
-  directory — one test file per vitest call (`--maxWorkers=2`); CI's e2e is the gate. Never copy the main checkout's
-  `.env.local` (it holds real values) into a worktree — agents did, twice; delete any copy found. Never edit
-  `br-chain.js` or `br-fix-round.js`.
+  re-reviews one branch; `br-fix-round` runs one more round. Since `BR-V2.97` the `brief` AND the `checklist` reach the
+  implementer and the fixer (before, the checklist reached the reviewer alone, so builders never saw the e2e recipes and
+  the env rule); the `intent` still reaches the reviewer alone, so it goes in the brief. One workflow at a time. A round
+  runs Playwright only for the spec its checklist names, on its own `E2E_PORT` and its own database, with a secret-free
+  env file made from `.env.example` — never the main checkout's `.env.local` (it holds real values; agents copied it four
+  times, the last on 2026-10-11 because `br-chain`'s own preamble called the worktree's file a copy of it; delete any copy
+  found and run `yarn secrets:check` in that worktree). `br-chain.js` and `br-fix-round.js` change only on a branch of
+  their own, reviewed like code.
 - **A clock-dependent test** fails only at one minute of the day (the queue panel test refused «10:05» and ran at
   10:05 Brașov time — fixed in `BR-V2.84`): pin every time a test asserts on.
 
@@ -137,6 +140,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.97` | the header's label and the footer's two languages (§724) · «Eveniment special» in the filter (§725) · the home page reuses the listing's cards (§726) · the chains' build list reaches the builder (§727) |
 | `BR-V2.96` | the facelift's phase 4: the calendar (§720) · «Contact direct» after «Spune-ne ceva», right before the newsletter (§721) (§721) · the floating language switch and «Urmărește-ne» (§722) · the accent colour as a setting (§723) |
 | `BR-V2.95` | the move buttons say what they do (§710) · the logo stays blue under the new look (§711) · tests read their fixture's calendar: `yarn test:clock` (§712) · arrows on the tab bars (§713) · the home page's four lower sections, as components (§714) · the members' zone in tabs (§715) · «Spune-ne ceva»: the event in the address, the forms separated (§716) · a home page at the site's root behind «Pagina principală», off, with its eight sections and the panel in folds (phase 3, parts A and C) (§717) · the route's maps, links and GPX (§718) · the concurrency suite past 1 December (§719) |
 | `BR-V2.94` | the shop's loose ends (§706) · the backoffice status chip (§707) · the facelift's phase 1 (§708) · the facelift's phase 2 (§709) |
