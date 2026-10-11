@@ -453,6 +453,24 @@
     "age": "Vârstă",
     "openRoute": "Vezi traseul",
     "routeJump": "Despre traseu",
+    "routeMaps": {
+      "tabs": "Hărțile traseului",
+      "garmin": {
+        "tab": "Garmin Connect",
+        "show": "Arată harta pe Garmin Connect",
+        "notice": "Harta se încarcă de la Garmin când apeși; Garmin vede adresa ta IP.",
+        "open": "Deschide în Garmin Connect",
+        "frame": "Harta traseului pe Garmin Connect"
+      },
+      "strava": {
+        "tab": "Strava",
+        "show": "Arată harta pe Strava",
+        "notice": "Harta se încarcă de la Strava când apeși; Strava vede adresa ta IP.",
+        "open": "Deschide în Strava",
+        "frame": "Harta traseului pe Strava"
+      },
+      "gpx": "Descarcă traseul (GPX)"
+    },
     "video": {
       "title": "Filmul evenimentului (YouTube)",
       "notice": "Playerul este al YouTube și se încarcă abia când îl deschizi.",
@@ -1940,6 +1958,28 @@
       "routeUrl": "Link către traseu",
       "routeUrlHelp": "Unde poate fi văzut traseul — un traseu sau o activitate Strava, sau orice alt link https://. Lasă gol dacă nu există unul.",
       "routeDescriptionHelp": "Opțional, în ambele limbi sau în niciuna: opriri, pante, ce să aștepți, o hartă (butonul de imagine). Apare pe pagină la „Traseul”.",
+      "routeGarmin": "Garmin Connect: linkul sau codul de încorporare",
+      "routeGarminHelp": "Lipește linkul traseului de pe Garmin Connect (…/course/…) sau codul de încorporare (Share → Embed). Pe pagină apar harta, încărcată doar când vizitatorul apasă, și linkul.",
+      "routeStrava": "Strava: linkul sau codul de încorporare",
+      "routeStravaHelp": "Lipește linkul traseului de pe Strava (strava.com/routes/…) sau codul de încorporare (Share → Embed). Pe pagină apar harta, încărcată doar când vizitatorul apasă, și linkul.",
+      "routeGpx": {
+        "label": "Fișierul GPX",
+        "help": "Un fișier .gpx, cel mult 4 MB. Vizitatorii îl descarcă de pe pagină, sub hărți. Se salvează odată cu evenimentul.",
+        "upload": "Încarcă un GPX",
+        "replace": "Înlocuiește fișierul",
+        "remove": "Scoate fișierul",
+        "uploading": "Se încarcă…",
+        "none": "Niciun fișier GPX.",
+        "removed": "Fișierul se scoate la salvare.",
+        "noStorage": "Stocarea fișierelor nu este configurată aici, așa că nu se poate încărca un GPX.",
+        "errors": {
+          "tooLarge": "Fișierul are mai mult de 4 MB.",
+          "notGpx": "Fișierul nu este un GPX: elementul lui de bază nu este gpx.",
+          "notXml": "Fișierul nu este un document XML.",
+          "empty": "Fișierul este gol.",
+          "failed": "Încărcarea nu a reușit. Încearcă din nou."
+        }
+      },
       "repeatHelp": "Fă din acest eveniment o serie, la interval fix. Următoarele {horizon} se creează acum, restul le creează site-ul; fiecare dată se poate muta sau anula separat.",
       "repeatUntil": "Până la (opțional)",
       "repeatUntilHelp": "Lasă gol pentru o serie fără sfârșit.",
@@ -2549,7 +2589,10 @@
             "day": "de zi",
             "dayAuto": "de zi (automat)",
             "described": "cu descriere",
-            "describedOneLanguage": "descriere într-o singură limbă"
+            "describedOneLanguage": "descriere într-o singură limbă",
+            "strava": "Strava",
+            "garmin": "Garmin",
+            "gpx": "GPX"
           },
           "links": {
             "strava": "Strava",

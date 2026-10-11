@@ -1,6 +1,7 @@
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { isRouteGpxKey, routeGpxHeaders } from "@/modules/events/domain/route-gpx";
 import { env } from "@/shared/config/env";
 import { formerKeyPrefixOf, isLadderKeyPrefix, LADDER_WIDTHS } from "./ladder";
 
@@ -30,8 +31,16 @@ import { formerKeyPrefixOf, isLadderKeyPrefix, LADDER_WIDTHS } from "./ladder";
 /** `web` (the master), `thumb`, or a rung of the ladder by its width (§414, `ladder.ts`). */
 export type StoredVariant = "web" | "thumb" | number;
 
+/**
+ * What a put may say beyond the type (§NNN): how the object is handed to a browser. Only the GPX of
+ * «Traseul» sets it — a file to save, `attachment; filename=…` — and only R2 stores it, because R2
+ * serves the object itself; `/api/media` gives the same header in the other two modes, read off the
+ * key (`events/domain/route-gpx.ts#routeGpxHeaders`).
+ */
+export type PutOptions = { contentDisposition?: string };
+
 export type Storage = {
-  put(key: string, body: Buffer, contentType: string): Promise<void>;
+  put(key: string, body: Buffer, contentType: string, options?: PutOptions): Promise<void>;
   /**
    * The object's bytes, or `null` when there is none (§281).
    *
@@ -161,7 +170,8 @@ export async function readLocalObject(key: string): Promise<{ body: Buffer; cont
   if (env.STORAGE_MODE === "fake") return fakeObject(key);
   if (env.STORAGE_MODE === "local") {
     try {
-      return { body: await readFile(safeLocalPath(key)), contentType: "image/webp" };
+      // The disk keeps no type: a GPX of «Traseul» (§NNN) is told by its key, everything else is a WebP variant.
+      return { body: await readFile(safeLocalPath(key)), contentType: isRouteGpxKey(key) ? routeGpxHeaders(key).contentType : "image/webp" };
     } catch {
       return null;
     }
@@ -182,13 +192,15 @@ function r2Storage(): Storage {
     },
   }));
   return {
-    async put(key, body, contentType) {
+    async put(key, body, contentType, options) {
       await client.send(
         new PutObjectCommand({
           Bucket: bucket,
           Key: key,
           Body: body,
           ContentType: contentType,
+          // A GPX downloads under its own name rather than opening as text (§NNN).
+          ...(options?.contentDisposition ? { ContentDisposition: options.contentDisposition } : {}),
           // A year, immutable: the key never changes meaning, and a replaced photo is a new key.
           CacheControl: "public, max-age=31536000, immutable",
         }),

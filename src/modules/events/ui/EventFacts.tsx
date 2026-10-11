@@ -26,7 +26,7 @@ import { costPaidToExternalOrganizer, costUrlHost } from "../domain/cost";
 import { isStravaLink, takesRegistrations } from "../domain/event-type";
 import { CLUB_LOCALITY } from "../domain/place";
 import { registrationState } from "../domain/registration-window";
-import { hasRouteDescription } from "../domain/route-section";
+import { hasRouteSection } from "../domain/route-section";
 import type { PublicEventPage } from "../repository";
 import { announcedDayInstant, datedOrNull } from "../domain/dated";
 import { whenTimes } from "../domain/when-times";
@@ -1120,7 +1120,7 @@ export default async function EventFacts({
     there instead — one in-page link, 44 pixels like the rest. The Strava event and the Facebook
     event stay: they are where people say "going", not the route.
   */
-  const routeSection = hasRouteDescription(event.routeDescriptionJson);
+  const routeSection = hasRouteSection(event);
   if (links && routeSection) {
     routeLinks.push(
       <Link href="#route" data-testid="route-jump" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, boxSizing: "border-box", minHeight: 44 }}>

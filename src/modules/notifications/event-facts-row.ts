@@ -1,4 +1,4 @@
-import { hasRouteDescription, partitionEventLinks } from "@/modules/events/domain/route-section";
+import { hasRouteSection, partitionEventLinks } from "@/modules/events/domain/route-section";
 import type { EventNotificationRow } from "@/modules/events/repository";
 import type { EmailEventFacts } from "./domain/event-facts";
 
@@ -13,7 +13,8 @@ import type { EmailEventFacts } from "./domain/event-facts";
  * the same way, and neither imports the other.
  */
 export function emailEventFacts(row: EventNotificationRow, pageUrl: string | null): EmailEventFacts {
-  const routeSection = hasRouteDescription(row.routeDescriptionJson);
+  // The page's own rule (§387, §NNN): a description in this language, a map or a GPX.
+  const routeSection = hasRouteSection(row);
   return {
     startsAt: row.startsAt,
     raceStartsAt: row.raceStartsAt,

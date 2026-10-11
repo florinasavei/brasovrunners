@@ -94,6 +94,10 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.costAmount": inBox("registration", t("editor.costAmount")),
     "event.costUrl": inBox("registration", t("editor.costDonationUrl")),
     "event.routeUrl": inBox("course", t("editor.routeUrl")),
+    // «Traseul»'s maps and GPX (§NNN).
+    "event.routeGarmin": inBox("course", t("editor.routeGarmin")),
+    "event.routeStrava": inBox("course", t("editor.routeStrava")),
+    "event.routeGpx": inBox("course", t("editor.routeGpx.label")),
     "event.distanceMeters": inBox("course", t("editor.distanceMeters")),
     "event.elevationGainMeters": inBox("course", t("editor.elevationGainMeters")),
     "event.nightOverride": inBox("course", t("editor.night.label")),

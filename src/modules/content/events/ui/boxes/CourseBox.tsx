@@ -8,6 +8,9 @@ import { readScheduleItems } from "@/modules/events/domain/schedule";
 import { startBoxValues } from "@/modules/events/domain/provisional-start";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { clubNightEvent, nightPlace } from "@/modules/events/night-event";
+import { readRouteGpx } from "@/modules/events/domain/route-gpx";
+import { MAX_ROUTE_MAP_INPUT, routeMapFieldValue, routeMapOf } from "@/modules/events/domain/route-maps";
+import { isStorageConfigured } from "@/modules/media/storage";
 import { env } from "@/shared/config/env";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
@@ -19,6 +22,7 @@ import ApproximateIcon from "../ApproximateIcon";
 import { BLANK, courseSummary } from "../box-summaries";
 import GlyphSelect from "../GlyphSelect";
 import NightEventField from "../NightEventField";
+import RouteGpxField, { type RouteGpxFieldWords } from "../RouteGpxField";
 import { DEFAULT_TIMEZONE } from "./WhenBox";
 import { RouteDescriptionFields } from "../TranslationFields";
 import { BoxNote, type BoxProps, type LanguageEntry, summaryWords } from "./box-kit";
@@ -210,6 +214,38 @@ export default async function CourseBox({
           defaultValue={event?.routeUrl ?? ""}
           {...textFieldConstraints(eventInputConstraints("routeUrl"), { inputMode: "url" })}
         />
+        {/* «Traseul»'s maps and GPX (§NNN), Garmin first as the page's tabs: the link or the embed
+            code the service gives, read down to its id at the save; the GPX uploaded to the store. */}
+        <RecallField
+          name="event.routeGarmin"
+          label={t("editor.routeGarmin")}
+          helperText={t("editor.routeGarminHelp")}
+          defaultValue={routeMapFieldValue(routeMapOf(event?.routeMaps, "garmin"))}
+          multiline
+          minRows={1}
+          maxRows={4}
+          slotProps={{ htmlInput: { maxLength: MAX_ROUTE_MAP_INPUT, spellCheck: false, autoCapitalize: "off", autoCorrect: "off" } }}
+        />
+        <RecallField
+          name="event.routeStrava"
+          label={t("editor.routeStrava")}
+          helperText={t("editor.routeStravaHelp")}
+          defaultValue={routeMapFieldValue(routeMapOf(event?.routeMaps, "strava"))}
+          multiline
+          minRows={1}
+          maxRows={4}
+          slotProps={{ htmlInput: { maxLength: MAX_ROUTE_MAP_INPUT, spellCheck: false, autoCapitalize: "off", autoCorrect: "off" } }}
+        />
+        {isStorageConfigured() ? (
+          <RouteGpxField
+            name="event.routeGpx"
+            initial={readRouteGpx(event?.routeGpx)}
+            words={t.raw("editor.routeGpx") as RouteGpxFieldWords}
+            locale={locale}
+          />
+        ) : (
+          <BoxNote>{t("editor.routeGpx.noStorage")}</BoxNote>
+        )}
         {routeDescription}
       </Stack>
     </Panel>

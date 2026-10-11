@@ -15,7 +15,8 @@ import { toCalendarEvent } from "@/modules/events/calendar";
 import { datedOrNull } from "@/modules/events/domain/dated";
 import { EVENT_LINK_KINDS, type EventLinkKind } from "@/modules/events/domain/links";
 import { registrationState } from "@/modules/events/domain/registration-window";
-import { hasRouteDescription } from "@/modules/events/domain/route-section";
+import { hasRouteSection } from "@/modules/events/domain/route-section";
+import type { RouteMapWords } from "@/modules/events/ui/EventRoute";
 import { googleCalendarUrl } from "@/modules/events/ical";
 import { instagramFileName } from "@/modules/events/instagram-share";
 import type { PublicEventPage } from "@/modules/events/repository";
@@ -275,10 +276,13 @@ export default async function EventPageView({
         descriptionJson={event.routeDescriptionJson}
         links={event.links}
         routeUrl={event.routeUrl}
+        routeMaps={event.routeMaps}
+        routeGpx={event.routeGpx}
         locale={locale}
         heading={t("routeSection")}
         openRouteLabel={t("openRoute")}
         kindLabels={linkKindLabels}
+        mapWords={t.raw("routeMaps") as RouteMapWords}
       />
 
       {/* "Linkuri și fișiere" (§332), under `#links`: right after the route's facts and the map,
@@ -290,7 +294,7 @@ export default async function EventPageView({
         locale={locale}
         heading={t("links.heading")}
         kindLabels={linkKindLabels}
-        routeSection={hasRouteDescription(event.routeDescriptionJson)}
+        routeSection={hasRouteSection(event)}
       />
 
       {/* The programme (§96, §117), under `#schedule`: the timed rows, then the text. */}

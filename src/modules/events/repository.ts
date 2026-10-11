@@ -141,6 +141,10 @@ const PUBLIC_COLUMNS = {
   longitude: unlessToBeAnnounced<number | null>(events.longitude),
   // The course, when the club has drawn one somewhere (BR-REQ-011-01 criterion 8).
   routeUrl: events.routeUrl,
+  // «Traseul»'s maps and GPX (§NNN): ids and a file the club published for anybody — read only
+  // through `readRouteMaps` and `readRouteGpx`.
+  routeMaps: events.routeMaps,
+  routeGpx: events.routeGpx,
   // No `video_url` / `video_poster_url` (§481): a film is a figure in the description, where
   // migration `0092` moved every stored link (BR-REQ-011-01 criterion 9), and the two columns
   // leave the database in BR-V2.11's contract migration (§491, AGENTS.md §7.6).
@@ -641,6 +645,9 @@ export async function findEventNotificationRows<T extends Record<string, unknown
       // route section exists — a route-kind link moves into it and out of "Linkuri și fișiere",
       // exactly as the page draws it (`partitionEventLinks`).
       routeDescriptionJson: eventTranslations.routeDescriptionJson,
+      // «Traseul»'s maps and GPX (§NNN): with them the route section exists without a description too.
+      routeMaps: events.routeMaps,
+      routeGpx: events.routeGpx,
       // "What to bring", the translation's line (§81); the map and the Strava event are the
       // event's own. The place's name in the runner's language when the club gave it one
       // (migration `0059`), else the event's — the same rule as `PUBLIC_COLUMNS`, and like it,

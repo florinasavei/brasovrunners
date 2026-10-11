@@ -41,6 +41,9 @@ export function previewPageOf(event: EditableEvent, translation: EditableTransla
     latitude: placeLater ? null : event.latitude,
     longitude: placeLater ? null : event.longitude,
     routeUrl: event.routeUrl,
+    // «Traseul»'s maps and GPX (§NNN), drawn in the preview as on the page.
+    routeMaps: event.routeMaps,
+    routeGpx: event.routeGpx,
     stravaEventUrl: event.stravaEventUrl,
     facebookEventUrl: event.facebookEventUrl,
     featured: event.featured,

@@ -3,7 +3,7 @@ import { readCoHosts } from "./co-hosts";
 import { difficultyLevelOf } from "./difficulty";
 import { type EventType, takesRegistrations } from "./event-type";
 import { readEventLinks } from "./links";
-import { hasRouteDescription } from "./route-section";
+import { hasRouteDescription, hasRouteMedia } from "./route-section";
 import { readScheduleItems } from "./schedule";
 
 /**
@@ -85,6 +85,9 @@ export type PageSectionEvent = {
   distanceMeters: number | null;
   elevationGainMeters: number | null;
   routeUrl: string | null;
+  /** «Traseul»'s maps and GPX (§NNN), as stored; absent on a caller from before them. */
+  routeMaps?: unknown;
+  routeGpx?: unknown;
   stravaEventUrl: string | null;
   facebookEventUrl: string | null;
   links: unknown;
@@ -189,7 +192,9 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
       event.elevationGainMeters !== null ||
       written(event.routeUrl) ||
       night ||
-      texts.some((text) => hasRouteDescription(text.routeDescriptionJson)),
+      texts.some((text) => hasRouteDescription(text.routeDescriptionJson)) ||
+      // «Traseul»'s maps and GPX (§NNN) draw the route section on their own.
+      hasRouteMedia(event),
   },
   // "Cost" (§343, §356): its own row in the facts, on every type, while a cost is stated. The
   // editor asks it inside card 1, «Ce fel de eveniment», since §466 (the owner, 2026-09-26:
