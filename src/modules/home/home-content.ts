@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
-import { type HomePageSetting, heroLines, splitHeadline } from "@/modules/appearance/domain/home-page";
+import { type HomePageSetting, buttonLabelIn, heroLines, splitHeadline } from "@/modules/appearance/domain/home-page";
 import { coverSources } from "@/modules/events/cover";
 import { coverTag } from "@/modules/events/domain/event-kind";
 import type { EventType } from "@/modules/events/domain/event-type";
@@ -121,8 +121,17 @@ export async function readHomeContent(locale: Locale, now: Date, setting: HomePa
       headline: splitHeadline(lines.headline ?? t("hero.headline")),
       subline: lines.subline ?? t("hero.subline"),
       picture: heroPicture(setting),
-      primary: { label: t("hero.join"), href: weeklyRun ? { pathname: "/events/[slug]", params: { slug: weeklyRun.slug } } : "/events" },
-      secondary: { label: t("hero.calendar"), href: "/calendar" },
+      primary: { label: buttonLabelIn(setting.buttons.join, locale) ?? t("hero.join"), href: weeklyRun ? { pathname: "/events/[slug]", params: { slug: weeklyRun.slug } } : "/events" },
+      secondary: { label: buttonLabelIn(setting.buttons.calendar, locale) ?? t("hero.calendar"), href: "/calendar" },
+      tertiary: setting.buttons.how
+        ? { label: setting.buttons.how.label[locale], href: { pathname: "/pages/[slug]", params: { slug: setting.buttons.how.slug } } }
+        : null,
+    },
+    show: {
+      hero: setting.sections.hero,
+      nextRun: setting.sections.nextRun,
+      weekly: setting.sections.weekly,
+      special: setting.sections.special,
     },
     nextRun,
     weekly: {
@@ -130,7 +139,6 @@ export async function readHomeContent(locale: Locale, now: Date, setting: HomePa
       title: t("weekly.title"),
       intro: t("weekly.intro"),
       cards: await Promise.all(sections.weekly.map(cardOf)),
-      empty: t("weekly.empty"),
       // The listing, under the weekly runs only when it holds more of them than the section shows.
       more: sections.moreWeekly > 0 ? { label: t("more") } : null,
     },
@@ -139,7 +147,6 @@ export async function readHomeContent(locale: Locale, now: Date, setting: HomePa
       title: t("special.title"),
       intro: t("special.intro"),
       cards: await Promise.all(sections.special.map(cardOf)),
-      empty: t("special.empty"),
       // The listing holds every event: the link under the last section, whatever the counts.
       more: { label: t("more") },
     },

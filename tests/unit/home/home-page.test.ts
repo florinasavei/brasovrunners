@@ -96,9 +96,11 @@ describe("§NNN the hero's two lines", () => {
 
   it("reads a film's poster as an empty slot and anything unreadable as off", () => {
     const poster = { assetId: "00000000-0000-4000-8000-000000000001", keyPrefix: "yt-abc", width: 1280, height: 720, crop: null };
-    expect(parseHomePage({ on: true, hero: poster, headline: null, subline: null })).toEqual({ on: true, hero: null, headline: null, subline: null });
-    expect(parseHomePage({ on: true, extra: 1 })).toEqual(DEFAULT_HOME_PAGE_SETTING);
-    expect(parseHomePage({ on: true })).toEqual({ on: true, hero: null, headline: null, subline: null });
+    expect(parseHomePage({ on: true, hero: poster, headline: null, subline: null })).toEqual({ ...DEFAULT_HOME_PAGE_SETTING, on: true });
+    expect(parseHomePage({ on: "yes" })).toEqual(DEFAULT_HOME_PAGE_SETTING);
+    expect(parseHomePage({ on: true })).toEqual({ ...DEFAULT_HOME_PAGE_SETTING, on: true });
+    // A field a later release wrote never turns the page off after a rollback.
+    expect(parseHomePage({ on: true, steps: { later: 1 } }).on).toBe(true);
   });
 });
 
@@ -181,5 +183,52 @@ describe("§NNN the sections are components of their own, with typed props", () 
       expect(text, name).not.toMatch(/:\s*(ReactNode|ReactElement|JSX\.Element)\b/);
       expect(text, name).not.toMatch(/#[0-9a-f]{3,8}\b|rgba?\(/i);
     }
+  });
+});
+
+describe("§NNN the sections the club switches, the third button, the empty section and the tag's colours", () => {
+  const words = (catalogue: Record<string, unknown>) => (key: string, values: Record<string, string> = {}) => {
+    const text = key.split(".").reduce<unknown>((node, part) => (node as Record<string, unknown>)[part], catalogue) as string;
+    return text.replace(/\{(\w+)\}/g, (_, name: string) => values[name] ?? `{${name}}`);
+  };
+  const props = () => sampleHome("ro", words(ro.Home), words(ro.Event));
+  const draw = (override: Record<string, unknown>) =>
+    renderToStaticMarkup(createElement(HomePage, { ...props(), ...override })).replace(/<style[^>]*>[^<]*<\/style>/g, "");
+
+  it("defaults the first four sections on and the four reserved slots off", async () => {
+    const { sectionShown, HOME_SECTION_KEYS } = await import("@/modules/appearance/domain/home-page");
+    expect([...HOME_SECTION_KEYS]).toEqual(["hero", "nextRun", "weekly", "special", "steps", "why", "strip", "numbers"]);
+    const shown = HOME_SECTION_KEYS.filter((key) => sectionShown(DEFAULT_HOME_PAGE_SETTING, key));
+    expect(shown).toEqual(["hero", "nextRun", "weekly", "special"]);
+    expect(DEFAULT_HOME_PAGE_SETTING.buttons).toEqual({ join: null, calendar: null, how: null });
+  });
+
+  it("does not draw a section the club left off", () => {
+    const html = draw({ show: { weekly: false, special: false, nextRun: false } });
+    expect(html).toContain('data-testid="home-hero"');
+    for (const testId of ["home-next-run", "home-weekly", "home-special"]) expect(html, testId).not.toContain(`data-testid="${testId}"`);
+  });
+
+  it("does not draw a section with no cards: no heading, no sentence", () => {
+    const html = draw({ weekly: { ...props().weekly, cards: [] } });
+    expect(html).not.toContain('data-testid="home-weekly"');
+    expect(html).toContain('data-testid="home-special"');
+    expect(html).not.toContain("home-weekly-empty");
+  });
+
+  it("draws the third button only when its page is named", () => {
+    expect(draw({})).not.toContain("home-hero-tertiary");
+    const hero = { ...props().hero, tertiary: { label: "Cum funcționează", href: { pathname: "/pages/[slug]", params: { slug: "cum-functioneaza" } } } };
+    const html = draw({ hero });
+    expect(html).toMatch(/data-testid="home-hero-tertiary">Cum funcționează<svg/);
+    expect(html).toContain("/pages/[slug]");
+  });
+
+  it("gives the tag its pink and green only under «Aspectul nou»: today's neutral otherwise", () => {
+    const text = readFileSync(path.resolve(__dirname, "../../../src/modules/home/ui/RunTag.tsx"), "utf8");
+    expect(text).toContain("UNDER_LOOK");
+    expect(text).toMatch(/bgcolor: "action\.selected"/);
+    // The plain (look-off) rule has no brand colour of its own: the tokens sit only inside the scope's selectors.
+    expect(text).not.toMatch(/^\s*bgcolor: COLOR\./m);
   });
 });

@@ -4,6 +4,7 @@ import { auditLogs } from "@/db/schema/audit-logs";
 import { mediaAssets } from "@/db/schema/gallery";
 import { platformSettings } from "@/db/schema/platform-settings";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
+import { DEFAULT_HOME_PAGE_SETTING } from "@/modules/appearance/domain/home-page";
 import { HOME_PAGE_SETTING_ENTITY_ID, HOME_PAGE_SETTING_KEY, readHomePage, updateHomePage } from "@/modules/appearance/home-page";
 import { listMediaAssetsForAdmin } from "@/modules/media/references";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -51,7 +52,7 @@ describe("the home page setting", () => {
   const words = { headlineRo: "Alergăm împreună", headlineEn: "We run together", sublineRo: "", sublineEn: "" };
 
   it("is off with an empty slot and the platform's lines until the club saves it", async () => {
-    expect(await readHomePage(db)).toEqual({ setting: { on: false, hero: null, headline: null, subline: null }, updatedAt: null });
+    expect(await readHomePage(db)).toEqual({ setting: DEFAULT_HOME_PAGE_SETTING, updatedAt: null });
   });
 
   it("saves on, the picture with its facts and crop, and both lines, with an audit row and the pages expired", async () => {
@@ -60,6 +61,7 @@ describe("the home page setting", () => {
     const { setting, updatedAt } = await readHomePage(db);
     expect(updatedAt).toEqual(NOW);
     expect(setting).toEqual({
+      ...DEFAULT_HOME_PAGE_SETTING,
       on: true,
       hero: { assetId: pictureId, keyPrefix: PREFIX, width: 2400, height: 1350, crop },
       headline: { ro: "Alergăm împreună", en: "We run together" },
@@ -72,7 +74,7 @@ describe("the home page setting", () => {
     expect(audit.actorStaffUserId).toBe(admin.id);
     expect(audit.entityType).toBe("platform_setting");
     expect(audit.entityId).toBe(HOME_PAGE_SETTING_ENTITY_ID);
-    expect(audit.metadataJson).toEqual({ from: "off", to: "on", heroFrom: null, heroTo: pictureId, heroCropped: true, wordsChanged: true });
+    expect(audit.metadataJson).toEqual({ from: "off", to: "on", heroFrom: null, heroTo: pictureId, heroCropped: true, wordsChanged: true, sectionsChanged: false });
   });
 
   it("keeps the picture when the form did not carry its box, and takes it off when the box is emptied", async () => {
@@ -115,6 +117,52 @@ describe("the home page setting", () => {
 
   it("reads a row it cannot understand as off", async () => {
     await db.insert(platformSettings).values({ key: HOME_PAGE_SETTING_KEY, value: { on: "yes" }, updatedAt: NOW });
-    expect((await readHomePage(db)).setting).toEqual({ on: false, hero: null, headline: null, subline: null });
+    expect((await readHomePage(db)).setting).toEqual(DEFAULT_HOME_PAGE_SETTING);
+  });
+
+  it("saves the hero's buttons and the sections' switches, and keeps both when a save does not carry them", async () => {
+    await updateHomePage(
+      db,
+      admin,
+      {
+        page: "on",
+        buttonJoinRo: "Hai cu noi",
+        buttonJoinEn: "Come along",
+        buttonHowRo: "Cum funcționează",
+        buttonHowEn: "How it works",
+        buttonHowSlug: " Cum-Functioneaza ",
+        sections: { weekly: false, steps: true },
+      },
+      NOW,
+    );
+    const saved = (await readHomePage(db)).setting;
+    expect(saved.buttons).toEqual({
+      join: { ro: "Hai cu noi", en: "Come along" },
+      calendar: null,
+      how: { label: { ro: "Cum funcționează", en: "How it works" }, slug: "cum-functioneaza" },
+    });
+    expect(saved.sections).toEqual({ hero: true, nextRun: true, weekly: false, special: true, steps: true, why: false, strip: false, numbers: false });
+    const [audit] = await auditRows();
+    expect(audit.metadataJson).toMatchObject({ wordsChanged: true, sectionsChanged: true });
+
+    // A save that carries neither (an older form) keeps both as they were.
+    await updateHomePage(db, admin, { page: "off" }, NOW);
+    expect((await readHomePage(db)).setting).toMatchObject({ on: false, buttons: saved.buttons, sections: saved.sections });
+  });
+
+  it("refuses a third button with words and no page, a page and no words, a bad address, and a label in one language only", async () => {
+    await expect(updateHomePage(db, admin, { page: "on", buttonHowRo: "Cum", buttonHowEn: "How", buttonHowSlug: "" }, NOW)).rejects.toMatchObject({ fields: ["buttonHowSlug"] });
+    await expect(updateHomePage(db, admin, { page: "on", buttonHowRo: "", buttonHowEn: "", buttonHowSlug: "cum" }, NOW)).rejects.toMatchObject({ fields: ["buttonHowRo"] });
+    await expect(updateHomePage(db, admin, { page: "on", buttonHowRo: "Cum", buttonHowEn: "How", buttonHowSlug: "../admin" }, NOW)).rejects.toMatchObject({ fields: ["buttonHowSlug"] });
+    await expect(updateHomePage(db, admin, { page: "on", buttonJoinRo: "Hai", buttonJoinEn: "" }, NOW)).rejects.toMatchObject({ fields: ["buttonJoinEn"] });
+    expect(await auditRows()).toHaveLength(0);
+  });
+
+  it("carries a field a later release wrote, on read and through this save", async () => {
+    await db.insert(platformSettings).values({ key: HOME_PAGE_SETTING_KEY, value: { on: true, steps: { title: "later" } }, updatedAt: NOW });
+    expect((await readHomePage(db)).setting.on).toBe(true);
+    await updateHomePage(db, admin, { page: "on" }, NOW);
+    const [row] = await db.select().from(platformSettings).where(eq(platformSettings.key, HOME_PAGE_SETTING_KEY));
+    expect(row.value).toMatchObject({ on: true, steps: { title: "later" } });
   });
 });

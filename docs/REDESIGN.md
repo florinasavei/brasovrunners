@@ -154,7 +154,7 @@ switch, independent of «Aspectul nou»: the page wears whichever look is in for
 | `RunCardGrid` | `src/modules/home/ui/RunCardGrid.tsx` | the weekly runs and the special events (`eventKind`, §709), one card per series, at most six each; a CSS scroll-snap strip on a phone, three to a row from `md`; «Vezi toate alergările» to the listing |
 | The parts | `HomePicture.tsx`, `RunTag.tsx`, `RoundArrow.tsx`, `card-sx.ts` | the 16∶9 frame or the empty slot (the mountain mark), the kind's pill in its tokens with its word, the arrow inside the card's one link |
 | What they show | `src/modules/home/home-content.ts`, `domain/sections.ts` | read from the listing's cached upcoming events and the forecast's cached hour: nothing new asked of the database |
-| The samples | `/admin/design` → «Mostre» → «Pagina principală» | the same components from `design/fixtures.ts#sampleHome` |
+| The samples | `/admin/design` → «Mostre» → «Pagina principală» | the same components from `design/home-fixtures.ts#sampleHome` |
 
 **Turning it on, on QA:** «Setări» → «Aspect» → «Pagina principală» → choose «Pagina principală» →
 optionally a photograph («Din galerie» or an upload, then the crop) and the two lines in Romanian and

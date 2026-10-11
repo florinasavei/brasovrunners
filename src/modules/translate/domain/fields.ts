@@ -20,6 +20,8 @@
  *   text, `bodyRoBody` / `bodyEnBody`), one form per box;
  * - «Magazin» (§697): a product's title, its description — a rich text, `descriptionRoBody` /
  *   `descriptionEnBody` — and «Cum se plătește» (`paymentEn`, plain);
+ * - «Pagina principală» (§NNN): the hero's headline and the line under it, and the labels of its
+ *   three buttons (`headlineEn`, `sublineEn`, `buttonJoinEn`, `buttonCalendarEn`, `buttonHowEn`);
  * - «Întrebări frecvente» (§525): each card's question, «Categorie» and answer (`faq[<n>].…`), and
  *   the page's introduction — the whole page one form;
  * - «Membri» (§524, §572): «Beneficiile membrilor» and the members' zone, each its own form posting
@@ -73,6 +75,8 @@ const ENGLISH_FIELD_PATTERNS: readonly RegExp[] = [
   /^titleEn$/,
   // «Magazin» (§697): «Cum se plătește», and the plain `descriptionEn` of a product's older form; «Coduri de reducere» also posts `descriptionEn` but has no button yet.
   /^(description|payment)En$/,
+  // «Pagina principală» (§NNN): the hero's headline and line, and its three buttons' labels.
+  /^(headline|subline|buttonJoin|buttonCalendar|buttonHow)En$/,
   /^bodyEnBody$/,
   // «Întrebări frecvente» (§525): a card's question, its category and its answer.
   /^faq\[\d{1,3}\]\.(question|category)En$/,

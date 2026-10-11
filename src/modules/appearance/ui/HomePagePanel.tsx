@@ -5,14 +5,15 @@ import { getTranslations } from "next-intl/server";
 import { updateHomePageAction } from "@/app/[locale]/admin/settings/appearance/actions";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
-import { HOME_HEADLINE_MAX, HOME_SUBLINE_MAX } from "@/modules/appearance/domain/home-page";
+import { HOME_BUTTON_MAX, HOME_HEADLINE_MAX, HOME_SECTION_KEYS, HOME_SLUG_MAX, HOME_SUBLINE_MAX } from "@/modules/appearance/domain/home-page";
 import type { HomePageState } from "@/modules/appearance/home-page";
 import { coverPhotoLabels } from "@/modules/content/events/ui/cover-labels";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import TeamPhotoField from "@/modules/content/team/ui/TeamPhotoField";
+import TranslateAllButton from "@/modules/translate/ui/TranslateAllButton";
 import { getStorage, isStorageConfigured, objectKey } from "@/modules/media/storage";
 import ActionForm from "@/shared/forms/ActionForm";
-import RecallField, { RecallRadio } from "@/shared/forms/recall";
+import RecallField, { RecallCheckbox, RecallRadio } from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
@@ -40,6 +41,12 @@ const HERO_SHAPE = "16:9" as const;
 const LINES = [
   { stem: "headline", max: HOME_HEADLINE_MAX },
   { stem: "subline", max: HOME_SUBLINE_MAX },
+] as const;
+
+/** The three buttons' label pairs, each in both languages or neither (§352). */
+const BUTTONS = [
+  { stem: "buttonJoin", key: "join" },
+  { stem: "buttonCalendar", key: "calendar" },
 ] as const;
 
 /**
@@ -97,6 +104,13 @@ export default async function HomePagePanel({ locale, state, mayEdit, openWhen }
               headlineEn: t("homePage.headlineEn"),
               sublineRo: t("homePage.sublineRo"),
               sublineEn: t("homePage.sublineEn"),
+              buttonJoinRo: t("homePage.buttonJoinRo"),
+              buttonJoinEn: t("homePage.buttonJoinEn"),
+              buttonCalendarRo: t("homePage.buttonCalendarRo"),
+              buttonCalendarEn: t("homePage.buttonCalendarEn"),
+              buttonHowRo: t("homePage.buttonHowRo"),
+              buttonHowEn: t("homePage.buttonHowEn"),
+              buttonHowSlug: t("homePage.buttonHowSlug"),
             })}
             confirm={{
               title: t("confirm.homePageTitle"),
@@ -160,6 +174,7 @@ export default async function HomePagePanel({ locale, state, mayEdit, openWhen }
                 </Typography>
               )}
 
+              <TranslateAllButton />
               {LINES.map(({ stem, max }) => (
                 <Box key={stem} component="fieldset" sx={{ border: 0, p: 0, m: 0 }}>
                   <Typography component="legend" variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
@@ -184,6 +199,75 @@ export default async function HomePagePanel({ locale, state, mayEdit, openWhen }
                   </Stack>
                 </Box>
               ))}
+
+              <Box component="fieldset" sx={{ border: 0, p: 0, m: 0 }}>
+                <Typography component="legend" variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                  {t("homePage.buttonsLegend")}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
+                  {t("homePage.buttonsHelp")}
+                </Typography>
+                <Stack spacing={1.5}>
+                  {BUTTONS.map(({ stem, key }) => (
+                    <Stack key={stem} direction={{ xs: "column", sm: "row" }} spacing={1.5}>
+                      {(["ro", "en"] as const).map((language) => {
+                        const name = `${stem}${language === "ro" ? "Ro" : "En"}`;
+                        return (
+                          <RecallField
+                            key={name}
+                            name={name}
+                            label={t(`homePage.${name}`)}
+                            fullWidth
+                            defaultValue={state.setting.buttons[key]?.[language] ?? ""}
+                            slotProps={{ htmlInput: { maxLength: HOME_BUTTON_MAX, lang: language } }}
+                          />
+                        );
+                      })}
+                    </Stack>
+                  ))}
+                  <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
+                    {(["ro", "en"] as const).map((language) => {
+                      const name = `buttonHow${language === "ro" ? "Ro" : "En"}`;
+                      return (
+                        <RecallField
+                          key={name}
+                          name={name}
+                          label={t(`homePage.${name}`)}
+                          fullWidth
+                          defaultValue={state.setting.buttons.how?.label[language] ?? ""}
+                          slotProps={{ htmlInput: { maxLength: HOME_BUTTON_MAX, lang: language } }}
+                        />
+                      );
+                    })}
+                  </Stack>
+                  <RecallField
+                    name="buttonHowSlug"
+                    label={t("homePage.buttonHowSlug")}
+                    fullWidth
+                    defaultValue={state.setting.buttons.how?.slug ?? ""}
+                    helperText={t("homePage.buttonHowHelp")}
+                    slotProps={{ htmlInput: { maxLength: HOME_SLUG_MAX, autoCapitalize: "none", autoCorrect: "off", spellCheck: false } }}
+                  />
+                </Stack>
+              </Box>
+
+              <Box component="fieldset" sx={{ border: 0, p: 0, m: 0 }} data-testid="home-page-sections">
+                <Typography component="legend" variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                  {t("homePage.sectionsLegend")}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+                  {t("homePage.sectionsHelp")}
+                </Typography>
+                <input type="hidden" name="sectionsPosted" value="1" />
+                {HOME_SECTION_KEYS.map((key) => (
+                  <Box key={key} component="label" sx={{ display: "flex", alignItems: "center", gap: 1.25, minHeight: 44, cursor: "pointer" }}>
+                    <RecallCheckbox name={`section_${key}`} defaultChecked={state.setting.sections[key]} style={{ width: 20, height: 20, flexShrink: 0 }} />
+                    <Typography component="span" variant="body2">
+                      {t(`homePage.sections.${key}`)}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
 
               <Box>
                 <GlyphSubmitButton label={t("homePage.save")} pendingLabel={t("homePage.saving")} icon="save" />

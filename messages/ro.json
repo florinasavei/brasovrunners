@@ -4599,6 +4599,28 @@
       "sublineRo": "Rândul de sub titlu (română)",
       "sublineEn": "Rândul de sub titlu (engleză)",
       "sublineHelp": "Una-două propoziții. Gol în ambele limbi: un text implicit.",
+      "buttonsLegend": "Butoanele de sus",
+      "buttonsHelp": "«Vino cu noi» duce la următoarea alergare săptămânală, «Vezi calendarul» la calendar. Eticheta, în ambele limbi sau în niciuna: gol înseamnă cuvintele implicite.",
+      "buttonJoinRo": "«Vino cu noi» (română)",
+      "buttonJoinEn": "«Vino cu noi» (engleză)",
+      "buttonCalendarRo": "«Vezi calendarul» (română)",
+      "buttonCalendarEn": "«Vezi calendarul» (engleză)",
+      "buttonHowRo": "Al treilea buton (română)",
+      "buttonHowEn": "Al treilea buton (engleză)",
+      "buttonHowSlug": "Adresa paginii pentru al treilea buton",
+      "buttonHowHelp": "De exemplu «cum-functioneaza»: adresa unei pagini a clubului (partea de după «pagini/»). Fără adresă, butonul «Cum funcționează» nu apare.",
+      "sectionsLegend": "Ce arată pagina",
+      "sectionsHelp": "Bifează secțiunile care apar. Ultimele patru vin într-o versiune următoare și doar își țin locul.",
+      "sections": {
+        "hero": "Fotografia, titlul și butoanele",
+        "nextRun": "Următoarea alergare",
+        "weekly": "Alergările săptămânale",
+        "special": "Evenimentele speciale",
+        "steps": "Prima dată (încă nu există)",
+        "why": "De ce (încă nu există)",
+        "strip": "Banda de fotografii (încă nu există)",
+        "numbers": "Cifrele clubului (încă nu există)"
+      },
       "save": "Salvează pagina principală",
       "saving": "Se salvează…",
       "saved": "Pagina principală a fost salvată.",
@@ -9954,13 +9976,11 @@
     "weekly": {
       "title": "Alergările săptămânale",
       "intro": "Același loc și aceeași oră în fiecare săptămână: vii când poți.",
-      "empty": "Nicio alergare săptămânală anunțată acum.",
       "next": "Următoarea: {when}"
     },
     "special": {
       "title": "Evenimente speciale",
-      "intro": "Curse, ture pe munte și tot ce nu se repetă în fiecare săptămână.",
-      "empty": "Niciun eveniment special anunțat acum."
+      "intro": "Curse, ture pe munte și tot ce nu se repetă în fiecare săptămână."
     },
     "more": "Vezi toate alergările"
   },

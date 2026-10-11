@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { eventTranslations, events } from "@/db/schema/events";
+import { platformSettings } from "@/db/schema/platform-settings";
 import { galleryAlbums, galleryAlbumTranslations } from "@/db/schema/gallery";
 import { pages, pageTranslations } from "@/db/schema/pages";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
@@ -95,6 +96,18 @@ describe("BR-REQ-070-02 criterion 2 — the sitemap", () => {
       expect(pathname === "/ro" || pathname === "/en").toBe(false);
       expect(pathname.startsWith("/ro/") || pathname.startsWith("/en/")).toBe(true);
     }
+  });
+
+  it("lists the home page at priority 1 in each language, with the other as its alternate, and the listing at 0.9 — only while «Pagina principală» is on", async () => {
+    await db.insert(platformSettings).values({ key: "homePage", value: { on: true } });
+
+    const entries = await sitemap();
+    const ro = entries.find((e) => e.url === `${BASE}/ro`);
+    const en = entries.find((e) => e.url === `${BASE}/en`);
+    expect(ro?.priority).toBe(1);
+    expect(en?.priority).toBe(1);
+    expect(ro?.alternates?.languages).toEqual({ ro: `${BASE}/ro`, en: `${BASE}/en`, "x-default": `${BASE}/ro` });
+    expect(entries.find((e) => e.url === `${BASE}/ro/evenimente`)?.priority).toBe(0.9);
   });
 
   it("lists a published standing page with its own slug per locale", async () => {

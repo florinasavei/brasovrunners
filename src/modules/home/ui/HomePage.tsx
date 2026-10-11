@@ -15,6 +15,8 @@ export type HomePageProps = {
   weekly: RunCardGridProps;
   special: RunCardGridProps;
   /** How fresh the events are (§281): a last good copy says so above the hero. A fixture leaves it out. */
+  /** Which sections are drawn (the club's switches, «Pagina principală»); one left out is on. */
+  show?: Partial<Record<"hero" | "nextRun" | "weekly" | "special", boolean>>;
   freshness?: Pick<Resilient<unknown>, "freshness" | "takenAt" | "restingUntil">;
 };
 
@@ -28,17 +30,19 @@ export type HomePageProps = {
  * The page's one `main` and its one `h1` (the hero's). Works with scripts off: nothing here is an
  * island but the links the house already has.
  */
-export default function HomePage({ hero, nextRun, weekly, special, freshness }: HomePageProps) {
+export default function HomePage({ hero, nextRun, weekly, special, show = {}, freshness }: HomePageProps) {
+  const shown = (key: keyof typeof show) => show[key] !== false;
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 4 } }} data-testid="home-page">
       {freshness && <LastGoodNotice read={freshness} />}
       <Stack spacing={{ xs: 4, md: 6 }}>
-        <Hero {...hero} />
-        {nextRun && <NextRunCard {...nextRun} />}
-        <RunCardGrid {...weekly} />
-        <RunCardGrid {...special} />
+        {shown("hero") && <Hero {...hero} />}
+        {shown("nextRun") && nextRun && <NextRunCard {...nextRun} />}
+        {shown("weekly") && <RunCardGrid {...weekly} />}
+        {shown("special") && <RunCardGrid {...special} />}
         {/*
-          Part B's four sections go here, in the plan's order, each with its own typed props
+          Part B's four sections go here (their switches, `steps`, `why`, `strip` and `numbers`, are in
+          the setting already, off by default; a section the club left off is not drawn), in the plan's order, each with its own typed props
           (`feat/home-sections`, wired by the phase's third chain): «Prima dată» (`StepsBand`), «De ce»
           and the quote (`WhyList`), the photo strip (`PhotoStrip`), the numbers band (`NumbersBand`).
         */}

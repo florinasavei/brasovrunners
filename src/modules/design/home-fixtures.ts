@@ -56,7 +56,6 @@ export function sampleHome(locale: Locale, home: Words, event: Words): HomePageP
           tag: weeklyTag,
         },
       ],
-      empty: home("weekly.empty"),
       more: null,
     },
     special: {
@@ -64,7 +63,6 @@ export function sampleHome(locale: Locale, home: Words, event: Words): HomePageP
       title: home("special.title"),
       intro: home("special.intro"),
       cards: [{ key: "sample-race", slug: race.slug, title: race.title, when: when(race.startsAt), detail: race.locationName, picture: null, tag: specialTag }],
-      empty: home("special.empty"),
       more: { label: home("more") },
     },
   };

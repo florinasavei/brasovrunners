@@ -26,8 +26,6 @@ export type RunCardGridProps = {
   title: string;
   intro: string;
   cards: readonly RunCardItem[];
-  /** What the section says when nothing of its kind is ahead. */
-  empty: string;
   /** «Toate alergările»: the listing, which holds every card the section leaves out. */
   more: { label: string } | null;
 };
@@ -46,7 +44,9 @@ export type RunCardGridProps = {
  *
  * A Server Component with typed props (§370).
  */
-export default function RunCardGrid({ id, title, intro, cards, empty, more }: RunCardGridProps) {
+export default function RunCardGrid({ id, title, intro, cards, more }: RunCardGridProps) {
+  // A section with nothing in it is not drawn: no heading over an empty row, no sentence about none.
+  if (cards.length === 0) return null;
   return (
     <Box component="section" aria-labelledby={`home-${id}-title`} id={id} data-testid={`home-${id}`}>
       <Typography variant="h2" id={`home-${id}-title`} sx={{ fontSize: { xs: "1.375rem", sm: "1.625rem" } }}>
@@ -55,59 +55,53 @@ export default function RunCardGrid({ id, title, intro, cards, empty, more }: Ru
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 1.5 }}>
         {intro}
       </Typography>
-      {cards.length === 0 ? (
-        <Typography variant="body2" data-testid={`home-${id}-empty`}>
-          {empty}
-        </Typography>
-      ) : (
-        <Box
-          component="ul"
-          data-testid={`home-${id}-cards`}
-          sx={{
-            listStyle: "none",
-            m: 0,
-            p: 0,
-            display: { xs: "flex", md: "grid" },
-            gap: 1.5,
-            gridTemplateColumns: { md: "repeat(3, minmax(0, 1fr))" },
-            // The phone's strip: one row that scrolls on its own, each card snapping to the start.
-            overflowX: { xs: "auto", md: "visible" },
-            scrollSnapType: { xs: "x mandatory", md: "none" },
-            scrollPaddingInline: 0,
-            // Room for the cards' shadow inside the strip's own box.
-            pb: { xs: 1, md: 0 },
-          }}
-        >
-          {cards.map((card) => (
-            <Box
-              key={card.key}
-              component="li"
-              sx={{ flex: { xs: "0 0 82%", sm: "0 0 46%" }, minWidth: 0, scrollSnapAlign: "start" }}
-            >
-              <Box component="article" sx={HOME_CARD_SX}>
-                <Box sx={HOME_CARD_PICTURE_SX}>
-                  <HomePicture picture={card.picture} />
-                  <RunTag {...card.tag} />
-                </Box>
-                <Box sx={HOME_CARD_BODY_SX}>
-                  <Typography variant="h3" sx={HOME_CARD_TITLE_SX}>
-                    <Link href={{ pathname: "/events/[slug]", params: { slug: card.slug } }}>{card.title}</Link>
+      <Box
+        component="ul"
+        data-testid={`home-${id}-cards`}
+        sx={{
+          listStyle: "none",
+          m: 0,
+          p: 0,
+          display: { xs: "flex", md: "grid" },
+          gap: 1.5,
+          gridTemplateColumns: { md: "repeat(3, minmax(0, 1fr))" },
+          // The phone's strip: one row that scrolls on its own, each card snapping to the start.
+          overflowX: { xs: "auto", md: "visible" },
+          scrollSnapType: { xs: "x mandatory", md: "none" },
+          scrollPaddingInline: 0,
+          // Room for the cards' shadow inside the strip's own box.
+          pb: { xs: 1, md: 0 },
+        }}
+      >
+        {cards.map((card) => (
+          <Box
+            key={card.key}
+            component="li"
+            sx={{ flex: { xs: "0 0 82%", sm: "0 0 46%" }, minWidth: 0, scrollSnapAlign: "start" }}
+          >
+            <Box component="article" sx={HOME_CARD_SX}>
+              <Box sx={HOME_CARD_PICTURE_SX}>
+                <HomePicture picture={card.picture} />
+                <RunTag {...card.tag} />
+              </Box>
+              <Box sx={HOME_CARD_BODY_SX}>
+                <Typography variant="h3" sx={HOME_CARD_TITLE_SX}>
+                  <Link href={{ pathname: "/events/[slug]", params: { slug: card.slug } }}>{card.title}</Link>
+                </Typography>
+                <Typography variant="body2">{card.when}</Typography>
+                {card.detail && (
+                  <Typography variant="body2" color="text.secondary">
+                    {card.detail}
                   </Typography>
-                  <Typography variant="body2">{card.when}</Typography>
-                  {card.detail && (
-                    <Typography variant="body2" color="text.secondary">
-                      {card.detail}
-                    </Typography>
-                  )}
-                  <Box sx={{ display: "flex", justifyContent: "flex-end", mt: "auto", pt: 1 }}>
-                    <RoundArrow />
-                  </Box>
+                )}
+                <Box sx={{ display: "flex", justifyContent: "flex-end", mt: "auto", pt: 1 }}>
+                  <RoundArrow />
                 </Box>
               </Box>
             </Box>
-          ))}
-        </Box>
-      )}
+          </Box>
+        ))}
+      </Box>
       {more && (
         <Box sx={{ mt: 2 }}>
           <ArrowButtonLink href="/events" label={more.label} variant="outlined" data-testid={`home-${id}-more`} />

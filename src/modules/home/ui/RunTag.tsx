@@ -2,18 +2,28 @@ import Box from "@mui/material/Box";
 import type { CoverTag } from "@/modules/events/domain/event-kind";
 import { GLYPHS } from "@/modules/events/ui/glyphs";
 import { COLOR, COLOR_DARK } from "@/theme/brand";
+import { LOOK_PREVIEW_DARK, LOOK_ROOT_DARK, UNDER_LOOK } from "@/theme/look";
 
 /** The tag's words and glyph: the kind (`coverTag`, §709) with its word already translated. */
 export type RunTagProps = { kind: CoverTag["kind"]; glyph: CoverTag["glyph"]; label: string };
 
 /**
- * The kind's colours (the plan's visual system, phase 1's tokens, §708): a weekly run in the pale pink
- * with the pink that carries words, a special event in its green — both pairs held at AA by
- * `LOOK_PAIRS` and `LOOK_PAIRS_DARK`, light and dark. Tokens from `brand.ts`, never a literal.
+ * The kind's colours (the plan's visual system, phase 1's tokens, §708) belong to «Aspectul nou»: a
+ * weekly run in the pale pink with the pink that carries words, a special event in its green — both
+ * pairs held at AA by `LOOK_PAIRS` and `LOOK_PAIRS_DARK`, light and dark. Tokens from `brand.ts`, never
+ * a literal, written under the look's scope (`theme/look.ts`); with the look off the pill is today's
+ * neutral, the theme's own selected tint and text, so the page keeps today's palette.
  */
+const underLook = (light: { bg: string; ink: string }, dark: { bg: string; ink: string }) => ({
+  bgcolor: "action.selected",
+  color: "text.primary",
+  [UNDER_LOOK]: { bgcolor: light.bg, color: light.ink },
+  [`${LOOK_ROOT_DARK} &, ${LOOK_PREVIEW_DARK} &`]: { bgcolor: dark.bg, color: dark.ink },
+});
+
 const KIND_SX = {
-  weekly: { bgcolor: COLOR.accentTint, color: COLOR.accentInk, "[data-dark] &": { bgcolor: COLOR_DARK.accentTint, color: COLOR_DARK.accentInk } },
-  special: { bgcolor: COLOR.kindSpecial, color: COLOR.kindSpecialInk, "[data-dark] &": { bgcolor: COLOR_DARK.kindSpecial, color: COLOR_DARK.kindSpecialInk } },
+  weekly: underLook({ bg: COLOR.accentTint, ink: COLOR.accentInk }, { bg: COLOR_DARK.accentTint, ink: COLOR_DARK.accentInk }),
+  special: underLook({ bg: COLOR.kindSpecial, ink: COLOR.kindSpecialInk }, { bg: COLOR_DARK.kindSpecial, ink: COLOR_DARK.kindSpecialInk }),
 } as const;
 
 /**

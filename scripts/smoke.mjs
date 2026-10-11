@@ -19,6 +19,35 @@ function fail(message) {
   process.exit(1);
 }
 
+/**
+ * The site's root in each language (§NNN, amending §353): with «Pagina principală» off it is a static
+ * page that redirects — a 307 to the listing — and with it on it is the home page, a 200. Never the
+ * 308 §353 had, and never a 200 that is an error document (a redirect thrown from a page once
+ * reached production that way). Asked twice, so the second answer shows whether the CDN holds it.
+ */
+async function checkRoots(baseUrl) {
+  for (const locale of ["ro", "en"]) {
+    const url = new URL(`/${locale}`, baseUrl);
+    for (const attempt of [1, 2]) {
+      const response = await fetch(url, { redirect: "manual", signal: AbortSignal.timeout(TIMEOUT_MS) }).catch((error) =>
+        fail(`Could not reach ${url.host}: ${error.message}`),
+      );
+      const location = response.headers.get("location") ?? "";
+      const cache = response.headers.get("x-vercel-cache") ?? "none";
+      const listing = new RegExp(`^(https?://[^/]+)?/${locale}/(evenimente|events)/?$`).test(location);
+      if (response.status === 307 && listing) {
+        console.log(`  /${locale} (${attempt}): 307 to ${location}, x-vercel-cache ${cache}`);
+      } else if (response.status === 200) {
+        console.log(`  /${locale} (${attempt}): 200, the home page, x-vercel-cache ${cache}`);
+      } else {
+        fail(`${url.host}/${locale} answered ${response.status}${location ? ` to ${location}` : ""}; expected a 307 to the listing or the home page's 200.`);
+      }
+      await response.arrayBuffer().catch(() => null);
+    }
+  }
+  console.log("");
+}
+
 async function main() {
   const [baseUrl, ...flags] = process.argv.slice(2);
   const allowDegraded = flags.includes("--allow-degraded");
@@ -52,11 +81,13 @@ async function main() {
 
   if (body.status === "ok") {
     console.log(`  ${url.host} is ok.\n`);
+    await checkRoots(baseUrl);
     return;
   }
 
   if (body.status === "degraded" && allowDegraded) {
     console.log(`  ${url.host} is degraded, accepted by --allow-degraded.\n`);
+    await checkRoots(baseUrl);
     return;
   }
 

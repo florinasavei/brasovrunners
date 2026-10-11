@@ -4599,6 +4599,28 @@
       "sublineRo": "Line under the headline (Romanian)",
       "sublineEn": "Line under the headline (English)",
       "sublineHelp": "One or two sentences. Empty in both languages: default words.",
+      "buttonsLegend": "The top buttons",
+      "buttonsHelp": "«Join us» leads to the next weekly run, «See the calendar» to the calendar. A label in both languages or neither: empty means the default words.",
+      "buttonJoinRo": "«Join us» (Romanian)",
+      "buttonJoinEn": "«Join us» (English)",
+      "buttonCalendarRo": "«See the calendar» (Romanian)",
+      "buttonCalendarEn": "«See the calendar» (English)",
+      "buttonHowRo": "Third button (Romanian)",
+      "buttonHowEn": "Third button (English)",
+      "buttonHowSlug": "The page address for the third button",
+      "buttonHowHelp": "For example «how-it-works»: the address of a club page (the part after «pages/»). With no address, the «How it works» button is not drawn.",
+      "sectionsLegend": "What the page shows",
+      "sectionsHelp": "Tick the sections that appear. The last four come in a later release and only hold their place.",
+      "sections": {
+        "hero": "The photograph, the headline and the buttons",
+        "nextRun": "The next run",
+        "weekly": "The weekly runs",
+        "special": "The special events",
+        "steps": "The first time (not built yet)",
+        "why": "Why (not built yet)",
+        "strip": "The photo strip (not built yet)",
+        "numbers": "The club's numbers (not built yet)"
+      },
       "save": "Save the home page",
       "saving": "Saving…",
       "saved": "The home page was saved.",
@@ -9954,13 +9976,11 @@
     "weekly": {
       "title": "Weekly runs",
       "intro": "The same place and the same time every week: come when you can.",
-      "empty": "No weekly run announced right now.",
       "next": "Next: {when}"
     },
     "special": {
       "title": "Special events",
-      "intro": "Races, mountain outings and everything that does not repeat every week.",
-      "empty": "No special event announced right now."
+      "intro": "Races, mountain outings and everything that does not repeat every week."
     },
     "more": "See all events"
   },

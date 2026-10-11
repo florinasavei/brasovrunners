@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
+import { HOME_SECTION_KEYS } from "@/modules/appearance/domain/home-page";
 import { updateHomePage } from "@/modules/appearance/home-page";
 import { updateSiteFontSize } from "@/modules/appearance/site-font-size";
 import { updateSiteLook } from "@/modules/appearance/site-look";
@@ -118,6 +119,15 @@ export async function updateHomePageAction(_previous: FormOutcome | null, form: 
         headlineEn: field("headlineEn"),
         sublineRo: field("sublineRo"),
         sublineEn: field("sublineEn"),
+        buttonJoinRo: field("buttonJoinRo"),
+        buttonJoinEn: field("buttonJoinEn"),
+        buttonCalendarRo: field("buttonCalendarRo"),
+        buttonCalendarEn: field("buttonCalendarEn"),
+        buttonHowRo: field("buttonHowRo"),
+        buttonHowEn: field("buttonHowEn"),
+        buttonHowSlug: field("buttonHowSlug"),
+        // A checkbox that is off posts nothing, so the form says it carried the switches at all.
+        sections: form.has("sectionsPosted") ? Object.fromEntries(HOME_SECTION_KEYS.map((key) => [key, form.has(`section_${key}`)])) : undefined,
       },
       new Date(),
     );

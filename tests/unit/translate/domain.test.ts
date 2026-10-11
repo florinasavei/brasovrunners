@@ -43,6 +43,11 @@ describe("§464 the boxes that may be translated", () => {
       "descriptionEn",
       "descriptionEnBody",
       "paymentEn",
+      "headlineEn",
+      "sublineEn",
+      "buttonJoinEn",
+      "buttonCalendarEn",
+      "buttonHowEn",
     ]) {
       expect(isTranslatableEnglishField(name), name).toBe(true);
     }

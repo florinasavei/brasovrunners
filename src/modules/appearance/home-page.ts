@@ -12,8 +12,13 @@ import {
   DEFAULT_HOME_PAGE_SETTING,
   describeHomePage,
   HOME_PAGE_SETTING_KEY,
+  HOME_BUTTON_MAX,
   HOME_HEADLINE_MAX,
+  HOME_PAGE_SLUG,
+  HOME_SECTION_KEYS,
+  HOME_SLUG_MAX,
   HOME_SUBLINE_MAX,
+  type HomeSectionKey,
   type HomeHeroPicture,
   type HomePageSetting,
   parseHomePage,
@@ -57,7 +62,19 @@ export type HomePageInput = {
   headlineEn?: unknown;
   sublineRo?: unknown;
   sublineEn?: unknown;
+  /** The hero's buttons: a label in each language, and «Cum funcționează»'s club page. All `undefined`: kept as they were. */
+  buttonJoinRo?: unknown;
+  buttonJoinEn?: unknown;
+  buttonCalendarRo?: unknown;
+  buttonCalendarEn?: unknown;
+  buttonHowRo?: unknown;
+  buttonHowEn?: unknown;
+  buttonHowSlug?: unknown;
+  /** Which sections are drawn, by key; `undefined`: kept as they were. A key left out keeps its value. */
+  sections?: Partial<Record<HomeSectionKey, boolean>>;
 };
+
+type PairStem = "headline" | "subline" | "buttonJoin" | "buttonCalendar" | "buttonHow";
 
 /**
  * The hero's picture as posted: kept as it was when the form did not carry the box (the partners'
@@ -83,7 +100,7 @@ async function postedHero<T extends Record<string, unknown>>(db: Database<T>, in
 }
 
 /** One pair of boxes, both languages or neither (§352); a box over its length is refused by name. */
-function pairOf(input: HomePageInput, stem: "headline" | "subline", max: number) {
+function pairOf(input: HomePageInput, stem: PairStem, max: number) {
   const pair = postedPair({ ro: input[`${stem}Ro`], en: input[`${stem}En`] });
   if (pair && "missing" in pair) {
     const field = `${stem}${pair.missing === "ro" ? "Ro" : "En"}`;
@@ -98,9 +115,45 @@ function pairOf(input: HomePageInput, stem: "headline" | "subline", max: number)
   return pair;
 }
 
+/** Whether the form carried any of the hero buttons' boxes: a save that did not (an older form) keeps them. */
+const carriesButtons = (input: HomePageInput) =>
+  [input.buttonJoinRo, input.buttonJoinEn, input.buttonCalendarRo, input.buttonCalendarEn, input.buttonHowRo, input.buttonHowEn, input.buttonHowSlug].some(
+    (value) => value !== undefined,
+  );
+
 /**
- * Saves «Pagina principală»: on or off, the hero's picture and its crop, the two lines in both
- * languages or neither. A club setting (§450): the Administrator's, asserted here as well as at the
+ * The three buttons as posted: two labels both languages or neither (§352), and «Cum funcționează» a
+ * pair of labels **and** the address of a club page, or none of them — a button with no place to go
+ * is never saved, and a place with no words is refused naming the box.
+ */
+function postedButtons(input: HomePageInput, before: HomePageSetting["buttons"]): HomePageSetting["buttons"] {
+  if (!carriesButtons(input)) return before;
+  const join = pairOf(input, "buttonJoin", HOME_BUTTON_MAX);
+  const calendar = pairOf(input, "buttonCalendar", HOME_BUTTON_MAX);
+  const label = pairOf(input, "buttonHow", HOME_BUTTON_MAX);
+  const slug = typeof input.buttonHowSlug === "string" ? input.buttonHowSlug.trim().toLowerCase() : "";
+  const refuse = (field: string, why: string) => new DomainError("VALIDATION_ERROR", `${field}: ${why}`, [field]);
+  if (slug && (slug.length > HOME_SLUG_MAX || !HOME_PAGE_SLUG.test(slug))) throw refuse("buttonHowSlug", "not the address of a page");
+  if (slug && !label) throw refuse("buttonHowRo", "a button needs its words");
+  if (!slug && label) throw refuse("buttonHowSlug", "a button needs a page to go to");
+  return { join, calendar, how: slug && label ? { label, slug } : null };
+}
+
+/** The switches as posted, over what was there: only the keys the form named, and only booleans. */
+function postedSections(input: HomePageInput, before: HomePageSetting["sections"]): HomePageSetting["sections"] {
+  if (input.sections === undefined) return before;
+  const next = { ...before };
+  for (const key of HOME_SECTION_KEYS) {
+    const value = input.sections[key];
+    if (typeof value === "boolean") next[key] = value;
+  }
+  return next;
+}
+
+/**
+ * Saves «Pagina principală»: on or off, the hero's picture and its crop, the lines and button labels in
+ * both languages or neither, «Cum funcționează»'s page and which sections the page draws. A club
+ * setting (§450): the Administrator's, asserted here as well as at the
  * action. Expires the public cache's settings, so the root and every header are made again at their
  * next visit (§549): the root becomes the page or the redirect, the logo leads to it or to the listing.
  */
@@ -120,7 +173,10 @@ export async function updateHomePage<T extends Record<string, unknown>>(
   const subline = pairOf(input, "subline", HOME_SUBLINE_MAX);
   const before = await readHomePage(db);
   const hero = await postedHero(db, input, before.setting.hero);
-  const next: HomePageSetting = { on: CHOICES[input.page], hero, headline, subline };
+  const buttons = postedButtons(input, before.setting.buttons);
+  const sections = postedSections(input, before.setting.sections);
+  // The previous row first: a field a later release wrote (part B) is carried, never dropped by this save.
+  const next: HomePageSetting = { ...before.setting, on: CHOICES[input.page], hero, headline, subline, buttons, sections };
 
   await db.transaction(async (tx) => {
     await tx
@@ -143,7 +199,9 @@ export async function updateHomePage<T extends Record<string, unknown>>(
         heroTo: next.hero?.assetId ?? null,
         heroCropped: next.hero?.crop !== null && next.hero !== null,
         wordsChanged:
-          JSON.stringify([before.setting.headline, before.setting.subline]) !== JSON.stringify([next.headline, next.subline]),
+          JSON.stringify([before.setting.headline, before.setting.subline, before.setting.buttons]) !==
+          JSON.stringify([next.headline, next.subline, next.buttons]),
+        sectionsChanged: JSON.stringify(before.setting.sections) !== JSON.stringify(next.sections),
       },
       now,
     });

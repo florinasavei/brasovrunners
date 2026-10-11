@@ -17,6 +17,8 @@ export type HeroProps = {
   primary: { label: string; href: Href };
   /** The quiet partner: the calendar. */
   secondary: { label: string; href: Href };
+  /** «Cum funcționează»: a club page the club named; null until it does, and then the button is not drawn. */
+  tertiary?: { label: string; href: Href } | null;
   /**
    * The heading's element: the page's one `h1` on the site, a paragraph where the hero is a sample
    * among others (the design page's «Mostre»), so that page keeps its own one `h1`. Same look either way.
@@ -27,7 +29,7 @@ export type HeroProps = {
 /**
  * The home page's first screen (the facelift's phase 3, §NNN; `docs/REDESIGN.md` § The visual system):
  * the page's one `h1` with its last word in the accent (a `span`, never a gradient), one line under
- * it, two pill buttons with their arrows (`ArrowButtonLink`, §708) and the club's photograph.
+ * it, two pill buttons with their arrows (a third, «Cum funcționează», once the club names its page) (`ArrowButtonLink`, §708) and the club's photograph.
  *
  * The words come first on a phone, so the first screen at 320 pixels is the heading and the buttons,
  * and the photograph follows; from `md` they sit side by side. The photograph is the one eager
@@ -36,7 +38,7 @@ export type HeroProps = {
  *
  * A Server Component with typed props: no state, no element-valued prop (§370), tokens only.
  */
-export default function Hero({ headline, subline, picture, primary, secondary, headingAs = "h1" }: HeroProps) {
+export default function Hero({ headline, subline, picture, primary, secondary, tertiary = null, headingAs = "h1" }: HeroProps) {
   return (
     <Box
       component="section"
@@ -72,6 +74,7 @@ export default function Hero({ headline, subline, picture, primary, secondary, h
         <Box sx={{ mt: { xs: 2, md: 3 }, display: "flex", flexWrap: "wrap", gap: 1.5 }}>
           <ArrowButtonLink href={primary.href} label={primary.label} data-testid="home-hero-primary" />
           <ArrowButtonLink href={secondary.href} label={secondary.label} variant="outlined" data-testid="home-hero-secondary" />
+          {tertiary && <ArrowButtonLink href={tertiary.href} label={tertiary.label} variant="outlined" data-testid="home-hero-tertiary" />}
         </Box>
       </Box>
       <Box sx={{ minWidth: 0, borderRadius: 2, overflow: "hidden" }}>

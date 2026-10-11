@@ -18,8 +18,14 @@ import { isWrittenText, missingLanguage, type TextLanguage } from "@/shared/form
  * - `headline`, `subline` — the hero's two lines, Romanian **and** English or neither (§352); neither
  *   reads the platform's own two lines from the catalogue (`Home.hero.*`).
  *
- * Part B of the phase adds the rest of the page's settings to the same row (the band, the strip, the
- * numbers); a value written by this part stays readable then, because every new field is optional.
+ * - `buttons` — the hero's three buttons' labels (both languages or neither) and «Cum funcționează»'s
+ *   club page.
+ * - `sections` — which sections the page draws: the hero, the next run, the weekly runs and the
+ *   special events (on), and the four reserved slots of part B (off until switched on).
+ *
+ * Part B's sections read their own settings from the same row; a value written by this part stays
+ * readable then, because every new field is optional, and the row is read loosely, so a field a later
+ * release wrote never turns the page off after a rollback.
  */
 
 /** The `platform_settings` key of the row. */
@@ -29,6 +35,20 @@ export const HOME_PAGE_SETTING_KEY = "homePage";
 export const HOME_HEADLINE_MAX = 80;
 /** The longest subline under it. */
 export const HOME_SUBLINE_MAX = 200;
+/** The longest label on one of the hero's three buttons. */
+export const HOME_BUTTON_MAX = 30;
+/** A club page's address, the last part of `/pages/<slug>`: lower case, digits and single hyphens. */
+export const HOME_PAGE_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export const HOME_SLUG_MAX = 80;
+
+/**
+ * The page's sections, in the order the page draws them. The first four are part A's and are on by
+ * default; the last four are part B's slots («Prima dată», «De ce», the photo strip, the numbers),
+ * reserved here so the setting's shape does not change when the sections arrive, and off by default
+ * until the club switches each on (the plan's «each off by default»).
+ */
+export const HOME_SECTION_KEYS = ["hero", "nextRun", "weekly", "special", "steps", "why", "strip", "numbers"] as const;
+export type HomeSectionKey = (typeof HOME_SECTION_KEYS)[number];
 
 const bilingual = (max: number) =>
   z
@@ -45,21 +65,61 @@ const heroSchema = z
   })
   .strict();
 
-export const homePageSchema = z
-  .object({
-    on: z.boolean(),
-    hero: heroSchema.nullable().default(null),
-    headline: bilingual(HOME_HEADLINE_MAX).nullable().default(null),
-    subline: bilingual(HOME_SUBLINE_MAX).nullable().default(null),
-  })
-  .strict();
+const buttonLabel = bilingual(HOME_BUTTON_MAX).nullable().default(null);
+
+/**
+ * The hero's three buttons. «Vino cu noi» goes to the next weekly run and «Vezi calendarul» to the
+ * calendar (the plan's targets, decision 5); a null label reads the platform's own word from the
+ * catalogue. «Cum funcționează» goes to a club page the club names by its address and is not drawn
+ * until it is set.
+ */
+const buttonsSchema = z.object({
+  join: buttonLabel,
+  calendar: buttonLabel,
+  how: z.object({ label: bilingual(HOME_BUTTON_MAX), slug: z.string().max(HOME_SLUG_MAX).regex(HOME_PAGE_SLUG) }).strict().nullable().default(null),
+});
+
+const sectionsSchema = z.object({
+  hero: z.boolean().default(true),
+  nextRun: z.boolean().default(true),
+  weekly: z.boolean().default(true),
+  special: z.boolean().default(true),
+  steps: z.boolean().default(false),
+  why: z.boolean().default(false),
+  strip: z.boolean().default(false),
+  numbers: z.boolean().default(false),
+});
+
+const DEFAULT_BUTTONS = { join: null, calendar: null, how: null } as const;
+const DEFAULT_SECTIONS = { hero: true, nextRun: true, weekly: true, special: true, steps: false, why: false, strip: false, numbers: false } as const;
+
+// Read loosely: a row written by a later release (part B, or a rollback from one) keeps what this
+// code understands and carries what it does not, so an unknown key never turns the page off.
+export const homePageSchema = z.looseObject({
+  on: z.boolean(),
+  hero: heroSchema.nullable().default(null),
+  headline: bilingual(HOME_HEADLINE_MAX).nullable().default(null),
+  subline: bilingual(HOME_SUBLINE_MAX).nullable().default(null),
+  buttons: buttonsSchema.default(DEFAULT_BUTTONS),
+  sections: sectionsSchema.default(DEFAULT_SECTIONS),
+});
 
 export type HomeHeroPicture = z.infer<typeof heroSchema>;
 export type HomePageSetting = z.infer<typeof homePageSchema>;
 export type BilingualText = Record<TextLanguage, string>;
 
 /** Off, with an empty photo slot and the platform's two lines: the plan's defaults (2026-10-11). */
-export const DEFAULT_HOME_PAGE_SETTING: HomePageSetting = { on: false, hero: null, headline: null, subline: null };
+export const DEFAULT_HOME_PAGE_SETTING: HomePageSetting = {
+  on: false,
+  hero: null,
+  headline: null,
+  subline: null,
+  buttons: { ...DEFAULT_BUTTONS },
+  sections: { ...DEFAULT_SECTIONS },
+};
+
+/** Whether a section is drawn: the club's switch, on for part A's four and off for part B's four. */
+export const sectionShown = (setting: Pick<HomePageSetting, "sections">, key: HomeSectionKey): boolean => setting.sections[key];
 
 /** A stored value this code can read, or the default (off) — never a throw over the site's root. */
 export function parseHomePage(value: unknown): HomePageSetting {
@@ -68,6 +128,11 @@ export function parseHomePage(value: unknown): HomePageSetting {
   // A film's poster (`yt-…`, §485) is never a photograph of the club: an empty slot, not a frame.
   if (parsed.data.hero?.keyPrefix.startsWith("yt-")) return { ...parsed.data, hero: null };
   return parsed.data;
+}
+
+/** The label of a hero button in one language: what the club typed, or null for the platform's own word. */
+export function buttonLabelIn(label: BilingualText | null, locale: TextLanguage): string | null {
+  return label?.[locale] ?? null;
 }
 
 /** One word for the audit row and the log. */
