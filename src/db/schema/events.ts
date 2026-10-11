@@ -873,15 +873,20 @@ export const events = pgTable(
     /**
      * «Traseul»'s maps (§NNN): an array of at most two, each naming a known provider and an id of
      * digits — the parser's guarantee, held at the layer a seed or a hand-written `UPDATE` reaches.
+     * Counted the positive way — every entry must match the good filter — because a negated jsonpath
+     * filter over a missing member is "unknown", which a CHECK lets through.
      */
     check(
       "events_route_maps_is_a_short_array_of_ids",
-      sql`${t.routeMaps} IS NULL OR CASE WHEN jsonb_typeof(${t.routeMaps}) = 'array' THEN jsonb_array_length(${t.routeMaps}) <= 2 AND NOT jsonb_path_exists(${t.routeMaps}, '$[*] ? (!((@.provider == "strava" || @.provider == "garmin") && @.id.type() == "string" && @.id like_regex "^[0-9]{1,20}$"))') ELSE false END`,
+      sql`${t.routeMaps} IS NULL OR CASE WHEN jsonb_typeof(${t.routeMaps}) = 'array' THEN jsonb_array_length(${t.routeMaps}) <= 2 AND jsonb_array_length(${t.routeMaps}) = jsonb_array_length(jsonb_path_query_array(${t.routeMaps}, '$[*] ? ((@.provider == "strava" || @.provider == "garmin") && @.id like_regex "^[0-9]{1,20}$")')) ELSE false END`,
     ),
-    /** «Traseul»'s GPX (§NNN): an object whose key is one of the GPX keys the upload writes. */
+    /**
+     * «Traseul»'s GPX (§NNN): an object whose key is one of the GPX keys the upload writes. The
+     * `COALESCE` turns a missing key's NULL into a refusal: a CHECK passes on NULL.
+     */
     check(
       "events_route_gpx_names_a_gpx_key",
-      sql`${t.routeGpx} IS NULL OR (jsonb_typeof(${t.routeGpx}) = 'object' AND jsonb_typeof(${t.routeGpx} -> 'key') = 'string' AND (${t.routeGpx} ->> 'key') ~ '^[a-z]+/route-gpx/[0-9a-f-]{36}/[a-z0-9-]{1,60}\\.gpx$')`,
+      sql`${t.routeGpx} IS NULL OR (jsonb_typeof(${t.routeGpx}) = 'object' AND COALESCE((${t.routeGpx} ->> 'key') ~ '^[a-z]+/route-gpx/[0-9a-f-]{36}/[a-z0-9-]{1,60}\\.gpx$', false))`,
     ),
 
     check(

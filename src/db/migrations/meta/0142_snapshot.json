@@ -1,5 +1,5 @@
 {
-  "id": "9dc3827f-83cb-4ac0-975b-5ccc8488db24",
+  "id": "63318d58-57fa-4ea5-b822-54d7e1e0f02c",
   "prevId": "de6ec5c4-9758-4a58-8fa4-597f4733f5e1",
   "version": "7",
   "dialect": "postgresql",
@@ -2351,11 +2351,11 @@
         },
         "events_route_maps_is_a_short_array_of_ids": {
           "name": "events_route_maps_is_a_short_array_of_ids",
-          "value": "\"events\".\"route_maps\" IS NULL OR CASE WHEN jsonb_typeof(\"events\".\"route_maps\") = 'array' THEN jsonb_array_length(\"events\".\"route_maps\") <= 2 AND NOT jsonb_path_exists(\"events\".\"route_maps\", '$[*] ? (!((@.provider == \"strava\" || @.provider == \"garmin\") && @.id.type() == \"string\" && @.id like_regex \"^[0-9]{1,20}$\"))') ELSE false END"
+          "value": "\"events\".\"route_maps\" IS NULL OR CASE WHEN jsonb_typeof(\"events\".\"route_maps\") = 'array' THEN jsonb_array_length(\"events\".\"route_maps\") <= 2 AND jsonb_array_length(\"events\".\"route_maps\") = jsonb_array_length(jsonb_path_query_array(\"events\".\"route_maps\", '$[*] ? ((@.provider == \"strava\" || @.provider == \"garmin\") && @.id like_regex \"^[0-9]{1,20}$\")')) ELSE false END"
         },
         "events_route_gpx_names_a_gpx_key": {
           "name": "events_route_gpx_names_a_gpx_key",
-          "value": "\"events\".\"route_gpx\" IS NULL OR (jsonb_typeof(\"events\".\"route_gpx\") = 'object' AND jsonb_typeof(\"events\".\"route_gpx\" -> 'key') = 'string' AND (\"events\".\"route_gpx\" ->> 'key') ~ '^[a-z]+/route-gpx/[0-9a-f-]{36}/[a-z0-9-]{1,60}\\.gpx$')"
+          "value": "\"events\".\"route_gpx\" IS NULL OR (jsonb_typeof(\"events\".\"route_gpx\") = 'object' AND COALESCE((\"events\".\"route_gpx\" ->> 'key') ~ '^[a-z]+/route-gpx/[0-9a-f-]{36}/[a-z0-9-]{1,60}\\.gpx$', false))"
         },
         "events_non_negative_measurements": {
           "name": "events_non_negative_measurements",
