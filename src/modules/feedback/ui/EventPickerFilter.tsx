@@ -86,7 +86,7 @@ export default function EventPickerFilter({
   options: readonly PickerOption[];
   /** The slug the server preselected — the draft's, `?eveniment=`'s, or `""`. */
   selected: string;
-  /** The chip `?filtru=` named (§NNN), `all` otherwise or when the event chosen is not under it (`initialChipFor`). */
+  /** The chip `?filtru=` named (§NNN), `all` otherwise, when the event chosen is not under it or when the chips are not drawn (`initialChipFor`). */
   initialChip: PickerChip;
   error: boolean;
   helperText?: string;
@@ -154,9 +154,10 @@ export default function EventPickerFilter({
   }
 
   // The events that match — «Altceva» first only while the box is empty or none does (`filterPickerOptions`)
-  // — and, when none does, a row that says so and cannot be chosen.
+  // — and, when none does, a row that says so and cannot be chosen. A chip that is not drawn never filters:
+  // nothing on the page could press it back to «Toate».
   const filter = (list: PickerOption[], state: { inputValue: string }): PickerOption[] => {
-    const shown = filterPickerOptions(list, state.inputValue, chip);
+    const shown = filterPickerOptions(list, state.inputValue, chipsShown ? chip : "all");
     return pickerNoEventFound(shown) ? [...shown, { value: NO_MATCH_VALUE, label: words.noMatch, kind: "other", day: null, when: null }] : shown;
   };
 

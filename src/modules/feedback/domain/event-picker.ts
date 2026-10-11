@@ -147,11 +147,15 @@ export function readPickerChip(value: string | string[] | undefined): PickerChip
 }
 
 /**
- * The chip the form opens on: the one the address asked for, unless the event chosen is not under it —
- * the chip yields (`all`), so the event stays in the list it is chosen from. An event the list does not
- * hold, and «Altceva», leave the requested chip alone.
+ * The chip the form opens on: the one the address asked for, unless it would hide what the list is for.
+ * Chips that are not drawn (`pickerChipsShown`: the events are of one kind only) have nothing to press
+ * back to «Toate», so a shared `?filtru=` must never narrow such a list — it would leave no event to
+ * choose: `all`. And when the event chosen is not under the chip, the chip yields (`all`), so the event
+ * stays in the list it is chosen from. An event the list does not hold, and «Altceva», leave the
+ * requested chip alone.
  */
 export function initialChipFor(options: readonly PickerOption[], selected: string, requested: PickerChip): PickerChip {
+  if (!pickerChipsShown(options)) return "all";
   if (requested === "all" || selected === GENERAL_VALUE) return requested;
   const chosen = options.find((option) => option.value === selected);
   return chosen && !underChip(chosen.kind, requested) ? "all" : requested;

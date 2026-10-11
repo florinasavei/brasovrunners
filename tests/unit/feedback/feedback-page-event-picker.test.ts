@@ -14,12 +14,18 @@ import type { PickerOption } from "@/modules/feedback/domain/event-picker";
  * itself, rendered on the server, draws nothing but the select it was given — and, when its chips will
  * be drawn, their row already, invisible and hidden from a screen reader, so the field does not jump as
  * the island takes over.
+ *
+ * The three words a choice puts in the address (`?eveniment=`, `?data=`, `?filtru=`) ride on to the other
+ * branch from every form — read and settled by a form with the picker, passed on unread by one without
+ * (§NNN) — and the address's own island is mounted only on a form that has the event or the day box.
  */
 let locale: "ro" | "en" = "ro";
 let draft: Record<string, string> | null = null;
 let second = false;
+let safetyOn = false;
 let rows: { id: string; slug: string; title: string; type: string; startsAt: Date; timezone: string }[] = [];
 const islandProps: Record<string, unknown>[] = [];
+const syncProps: Record<string, unknown>[] = [];
 
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl");
@@ -60,7 +66,7 @@ vi.mock("@/modules/public-cache/reads", () => ({
     howItWent: { on: true, to: "club@example.org" },
     suggestion: { on: second, to: second ? "club@example.org" : null },
     complaint: { on: false, to: null },
-    safety: { on: false, to: null, name: null },
+    safety: { on: safetyOn, to: safetyOn ? "club@example.org" : null, name: safetyOn ? "Ana" : null },
   }),
   cachedPublishedEventsBetween: async () => rows,
 }));
@@ -73,6 +79,13 @@ vi.mock("@/modules/feedback/ui/EventPickerFilter", () => ({
   default: ({ children, ...props }: { children: ReactNode }) => {
     islandProps.push(props);
     return createElement("div", { "data-island": "event-filter" }, children);
+  },
+}));
+// The address's island draws nothing; what the page hands it is recorded, so a form without it is told by its absence.
+vi.mock("@/modules/feedback/ui/FeedbackAddressSync", () => ({
+  default: (props: Record<string, unknown>) => {
+    syncProps.push(props);
+    return null;
   },
 }));
 
@@ -115,10 +128,18 @@ function nativeSelect(html: string) {
   return { tag, options };
 }
 
+/** Where «Schimbă tipul mesajului» goes, as the server wrote it: path and search, unescaped. */
+function switchHref(html: string): string {
+  const link = /<a[^>]*data-feedback-switch[^>]*>/.exec(html)?.[0] ?? "";
+  return /href="([^"]*)"/.exec(link)?.[1]?.replace(/&amp;/g, "&") ?? "";
+}
+
 beforeEach(() => {
   islandProps.length = 0;
+  syncProps.length = 0;
   draft = null;
   second = false;
+  safetyOn = false;
   locale = "ro";
 });
 
@@ -202,13 +223,51 @@ describe("BR-REQ-070-04 «Evenimentul»: the native select stays, the island sta
     rows = events(12);
     second = true;
     const html = await render({ tip: "cum-a-fost", eveniment: "happy-monday-1", data: "2026-10-04", filtru: "grup" });
-    const link = /<a[^>]*data-feedback-switch[^>]*>/.exec(html)?.[0] ?? "";
-    const href = /href="([^"]*)"/.exec(link)?.[1]?.replace(/&amp;/g, "&") ?? "";
-    expect(href).toBe("/ro/contact/feedback?eveniment=happy-monday-1&data=2026-10-04&filtru=grup");
+    expect(switchHref(html)).toBe("/ro/contact/feedback?eveniment=happy-monday-1&data=2026-10-04&filtru=grup");
     // The chip yields there too, as it does in the island.
     const yielded = await render({ tip: "cum-a-fost", eveniment: "crosul-brasovului-0", filtru: "grup" });
-    const next = /<a[^>]*data-feedback-switch[^>]*>/.exec(yielded)?.[0] ?? "";
-    expect(next).not.toContain("filtru=");
+    expect(switchHref(yielded)).toBe("/ro/contact/feedback?eveniment=crosul-brasovului-0");
+  });
+
+  it("passes the address's event, day and chip on unread through a form with no picker — «O sugestie», «Girl Zone»", async () => {
+    rows = events(12);
+    second = true;
+    safetyOn = true;
+    const asked = { eveniment: "happy-monday-1", data: "2026-10-04", filtru: "grup" };
+    for (const tip of ["sugestie", "siguranta"]) {
+      expect(switchHref(await render({ tip, ...asked })), tip).toBe("/ro/contact/feedback?eveniment=happy-monday-1&data=2026-10-04&filtru=grup");
+    }
+    // Unread: the slug is not looked up here — the form that reads it will.
+    expect(switchHref(await render({ tip: "sugestie", eveniment: "nu-exista-aici" }))).toBe("/ro/contact/feedback?eveniment=nu-exista-aici");
+    // These forms have no picker: no island, and an address left as it came.
+    expect(islandProps).toHaveLength(0);
+    expect(syncProps).toHaveLength(0);
+    // The form with the picker settles it instead: a slug the club does not publish is left out.
+    expect(switchHref(await render({ tip: "cum-a-fost", eveniment: "nu-exista-aici" }))).toBe("/ro/contact/feedback");
+  });
+
+  it("opens on «toate», whatever ?filtru= asks, when the events are of one kind: no chip is drawn to widen it back", async () => {
+    rows = events(12).map((row, index) => ({ ...row, type: "GROUP_RUN", slug: `happy-monday-${index}`, title: "Happy Monday" }));
+    second = true;
+    for (const filtru of ["speciale", "grup"]) await render({ tip: "cum-a-fost", filtru });
+    expect(islandProps.map((props) => props.initialChip)).toEqual(["all", "all"]);
+    // …and the word is not carried on from a list that cannot show it.
+    expect(switchHref(await render({ tip: "cum-a-fost", filtru: "speciale" }))).toBe("/ro/contact/feedback");
+  });
+
+  it("mounts the address island only on a form that has the event or the day box", async () => {
+    second = true;
+    safetyOn = true;
+    rows = events(12);
+    await render({ tip: "cum-a-fost" });
+    // A short list mounts no filtering island, and the select and the day box still write to the address.
+    rows = events(3);
+    await render({ tip: "cum-a-fost" });
+    expect(islandProps).toHaveLength(1);
+    expect(syncProps).toEqual([{ formId: "feedback-form" }, { formId: "feedback-form" }]);
+    syncProps.length = 0;
+    for (const tip of ["sugestie", "siguranta"]) await render({ tip });
+    expect(syncProps).toHaveLength(0);
   });
 
   it("carries the chip through step 1 as a hidden input", async () => {

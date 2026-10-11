@@ -71,6 +71,19 @@ describe("initialChipFor: the chip yields to an event it would hide", () => {
     expect(initialChipFor(options, "drumetie", "group")).toBe("all");
     expect(initialChipFor(options, "alergare", "special")).toBe("all");
   });
+  it("opens on «toate», whatever the address asks, when the chips are not drawn — the events are of one kind", () => {
+    const [general, race, group, hike] = options;
+    // Only group runs, only special events, none at all: the chips are not drawn, so nothing could press them back.
+    for (const list of [[general, group], [general, race, hike], [general], []]) {
+      for (const requested of ["special", "group", "all"] as const) {
+        for (const selected of ["", "alergare", "cursa", "nu-exista"]) {
+          expect(initialChipFor(list, selected, requested), `${list.length} rows, ${selected || "Altceva"}, ${requested}`).toBe("all");
+        }
+      }
+    }
+    // The same chip on a list that draws them stands.
+    expect(initialChipFor([general, race, group], "alergare", "group")).toBe("group");
+  });
 });
 
 describe("switchSearch: «Schimbă tipul mesajului» keeps the choice and never the branch", () => {
