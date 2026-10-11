@@ -98,12 +98,12 @@ export type SummaryWords = {
     dayAuto: string;
     described: string;
     describedOneLanguage: string;
-    /** «Traseul»'s maps (§NNN) and the GPX file counted on «Linkuri și fișiere»: `Strava`, `Garmin`, `GPX`. */
+    /** «Traseul»'s maps (§NNN): `Strava`, `Garmin`. */
     strava: string;
     garmin: string;
-    gpx: string;
   };
-  links: { strava: string; facebook: string; files: CountWords; none: string; labelOneLanguage: string };
+  /** `gpxUploaded` is the route's GPX file, uploaded in «Linkuri și fișiere» (§NNN): «GPX încărcat». */
+  links: { strava: string; facebook: string; gpxUploaded: string; files: CountWords; none: string; labelOneLanguage: string };
   coHosts: { with: string; described: string; describedOneLanguage: string; none: string };
   promotion: { featured: string; special: string; none: string };
   address: { locked: string; none: string; seoOneLanguage: string };
@@ -580,7 +580,7 @@ export function courseSummary(
 type LinksEvent = Pick<EditableEvent, "stravaEventUrl" | "facebookEventUrl" | "links"> & Partial<Pick<EditableEvent, "routeGpx">>;
 
 /**
- * "Linkuri și fișiere": `Strava · Facebook · 3 fișiere (GPX, Hartă, Rezultate)`, or `Niciun link` — and
+ * "Linkuri și fișiere": `Strava · Facebook · GPX încărcat · 3 fișiere (GPX, Hartă, Rezultate)`, or `Niciun link` — and
  * `etichetă într-o singură limbă` when a row carries a label in one language only (§354): the
  * page shows the kind's own word for it in both languages, and the next save will refuse it.
  */
@@ -594,8 +594,8 @@ export function linksSummary(
   const line = join(words, [
     event?.stravaEventUrl ? words.links.strava : null,
     event?.facebookEventUrl ? words.links.facebook : null,
-    // The GPX file uploaded for «Traseul» (§NNN), counted beside the links.
-    readRouteGpx(event?.routeGpx) ? words.course.gpx : null,
+    // The route's GPX file, uploaded in this card (§NNN), said beside the links: «GPX încărcat».
+    readRouteGpx(event?.routeGpx) ? words.links.gpxUploaded : null,
     rows.length > 0
       ? `${counted(words.links.files, rows.length, locale)} (${[...new Set(rows.map((row) => kindLabels[row.kind] ?? row.kind))].join(", ")})`
       : null,

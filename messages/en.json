@@ -1963,8 +1963,8 @@
       "routeStrava": "Strava: the link or the embed code",
       "routeStravaHelp": "Paste the route's link from Strava (strava.com/routes/…) or its embed code (Share → Embed). The page shows the map, loaded only when the visitor presses, and the link.",
       "routeGpx": {
-        "label": "The GPX file",
-        "help": "A .gpx file, at most 4 MB. Visitors download it from the page, under the maps. It is saved with the event.",
+        "label": "The route's GPX file",
+        "help": "Upload the file from a computer or a phone; it shows on the page under the maps, as «Download the route (GPX)». A GPX kept elsewhere can be added below as a link.",
         "upload": "Upload a GPX",
         "replace": "Replace the file",
         "remove": "Remove the file",
@@ -2592,12 +2592,12 @@
             "described": "with a description",
             "describedOneLanguage": "description in one language only",
             "strava": "Strava",
-            "garmin": "Garmin",
-            "gpx": "GPX"
+            "garmin": "Garmin"
           },
           "links": {
             "strava": "Strava",
             "facebook": "Facebook",
+            "gpxUploaded": "GPX uploaded",
             "files": {
               "one": "{count} link",
               "few": "{count} links",

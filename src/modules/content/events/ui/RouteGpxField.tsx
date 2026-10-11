@@ -4,10 +4,14 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { type ChangeEvent, useState } from "react";
 import { type GpxRefusal, gpxSizeWords, MAX_GPX_BYTES, type RouteGpx } from "@/modules/events/domain/route-gpx";
+import { LINK_GLYPH } from "@/modules/events/ui/link-glyphs";
 import GlyphButton from "@/shared/ui/GlyphButton";
 
 /** The file input's id: the «Traseul (GPX)» link row's button is a label for it, so it opens with no script. */
 export const ROUTE_GPX_INPUT_ID = "event-route-gpx";
+
+/** The GPX kind's own glyph: the one the link rows' kind select and the public page draw for it. */
+const GpxGlyph = LINK_GLYPH.GPX;
 
 export type RouteGpxFieldWords = {
   label: string;
@@ -22,7 +26,7 @@ export type RouteGpxFieldWords = {
 };
 
 /**
- * «Traseul»'s GPX file in the editor (§NNN): «Încarcă un GPX», «Înlocuiește fișierul», «Scoate
+ * The route's GPX file in «Linkuri și fișiere» (§NNN): «Încarcă un GPX», «Înlocuiește fișierul», «Scoate
  * fișierul». The file goes to `/api/admin/route-gpx` the moment it is chosen — checked there for
  * what it is, an XML document whose root is `<gpx>`, never by its extension — and the answer lands
  * in the hidden input `event.routeGpx`, which the event's one save stores; «Scoate» empties it, and
@@ -31,6 +35,8 @@ export type RouteGpxFieldWords = {
  *
  * The native file picker inside a `GlyphButton` label (the team photo's pattern, §694), so the
  * choice opens with no script; the upload itself needs one, as every upload of the backoffice does.
+ * The «Traseul (GPX)» link row's button is a second label for the same input and is not disabled with
+ * this card's own, so a choice made while an upload runs is dropped, never a second upload.
  */
 export default function RouteGpxField({
   name,
@@ -51,7 +57,8 @@ export default function RouteGpxField({
   const onChoose = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
-    if (!file) return;
+    // Both labels open this one input: a choice made while an upload runs is ignored.
+    if (!file || state === "uploading") return;
     setError(null);
     if (file.size > MAX_GPX_BYTES) {
       setError(words.errors.tooLarge);
@@ -78,7 +85,8 @@ export default function RouteGpxField({
 
   return (
     <Stack spacing={1} data-testid="route-gpx-field">
-      <Typography variant="subtitle2" component="p">
+      <Typography variant="subtitle2" component="p" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <GpxGlyph aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
         {words.label}
       </Typography>
       <input type="hidden" name={name} value={gpx ? JSON.stringify(gpx) : ""} />

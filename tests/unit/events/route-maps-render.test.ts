@@ -160,7 +160,11 @@ describe("BR-REQ-050-02 the editor's «Traseul» card (§NNN)", () => {
     expect(line).toContain("Garmin");
     expect(line).toContain("Strava");
     expect(line.indexOf("Garmin")).toBeLessThan(line.indexOf("Strava"));
-    expect(linksSummary(summary, { stravaEventUrl: null, facebookEventUrl: null, links: null, routeGpx: GPX }, {}, "ro")).toContain("GPX");
+    // The file is said as «GPX încărcat» / "GPX uploaded", never a bare «GPX» that reads like a link's kind.
+    expect(linksSummary(summary, { stravaEventUrl: null, facebookEventUrl: null, links: null, routeGpx: GPX }, {}, "ro")).toBe("GPX încărcat");
+    const summaryEn = en.Admin.editor.boxes.summary as unknown as SummaryWords;
+    expect(linksSummary(summaryEn, { stravaEventUrl: null, facebookEventUrl: null, links: null, routeGpx: GPX }, {}, "en")).toBe("GPX uploaded");
+    expect(linksSummary(summary, { stravaEventUrl: null, facebookEventUrl: null, links: null, routeGpx: null }, {}, "ro")).toBe("Niciun link");
   });
 
   it("asks for the two services in the course card, Garmin first, and the file in «Linkuri și fișiere», above the rows", () => {

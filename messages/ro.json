@@ -1963,8 +1963,8 @@
       "routeStrava": "Strava: linkul sau codul de încorporare",
       "routeStravaHelp": "Lipește linkul traseului de pe Strava (strava.com/routes/…) sau codul de încorporare (Share → Embed). Pe pagină apar harta, încărcată doar când vizitatorul apasă, și linkul.",
       "routeGpx": {
-        "label": "Fișierul GPX",
-        "help": "Un fișier .gpx, cel mult 4 MB. Vizitatorii îl descarcă de pe pagină, sub hărți. Se salvează odată cu evenimentul.",
+        "label": "Fișierul GPX al traseului",
+        "help": "Încarcă fișierul de pe calculator sau telefon; apare pe pagină sub hărți, ca «Descarcă traseul (GPX)». Un GPX ținut în altă parte îl poți adăuga mai jos ca link.",
         "upload": "Încarcă un GPX",
         "replace": "Înlocuiește fișierul",
         "remove": "Scoate fișierul",
@@ -2592,12 +2592,12 @@
             "described": "cu descriere",
             "describedOneLanguage": "descriere într-o singură limbă",
             "strava": "Strava",
-            "garmin": "Garmin",
-            "gpx": "GPX"
+            "garmin": "Garmin"
           },
           "links": {
             "strava": "Strava",
             "facebook": "Facebook",
+            "gpxUploaded": "GPX încărcat",
             "files": {
               "one": "{count} link",
               "few": "{count} linkuri",

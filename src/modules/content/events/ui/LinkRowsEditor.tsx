@@ -80,14 +80,16 @@ function LinkRowsEditorIsland({
     (initial.length > 0 ? initial : [EMPTY]).map((value, index) => ({ key: index, value })),
   );
   const [nextKey, setNextKey] = useState(rows.length);
+  // The kind a row's box shows once it was changed, by the row's key, kept only to decide whether a «GPX»
+  // row offers the upload (§NNN). The box itself stays uncontrolled and its `defaultValue` stays the row's
+  // initial kind: a default that followed the choice is what MUI warns about. A key is never reused, so a
+  // removed row's entry is inert.
+  const [chosenKinds, setChosenKinds] = useState<Record<number, string>>({});
 
   const add = () => {
     setRows((current) => [...current, { key: nextKey, value: EMPTY }]);
     setNextKey((key) => key + 1);
   };
-  // The kind chosen on a row, kept so a «GPX» row can offer the upload (§NNN); the box itself stays uncontrolled.
-  const setKind = (key: number, kind: string) =>
-    setRows((current) => current.map((row) => (row.key === key ? { ...row, value: { ...row.value, kind } } : row)));
   const remove = (key: number) => setRows((current) => current.filter((row) => row.key !== key));
   const move = (from: number, by: -1 | 1) =>
     setRows((current) => {
@@ -118,6 +120,7 @@ function LinkRowsEditorIsland({
       {rows.map(({ key, value }, index) => {
         const name = (box: keyof LinkRowValue) => `event.links[${index}].${box}`;
         const n = index + 1;
+        const shownKind = chosenKinds[key] ?? (value.kind || DEFAULT_EVENT_LINK_KIND);
         return (
           <Stack
             key={key}
@@ -142,7 +145,7 @@ function LinkRowsEditorIsland({
                 defaultValue={value.kind || DEFAULT_EVENT_LINK_KIND}
                 size="small"
                 sx={{ width: { xs: "100%", sm: 220 }, flexShrink: 0 }}
-                onChange={(event) => setKind(key, event.target.value)}
+                onChange={(event) => setChosenKinds((current) => ({ ...current, [key]: event.target.value }))}
                 slotProps={{ select: { renderValue: (chosen) => withGlyph(String(chosen)) }, inputLabel: { shrink: true } }}
               >
                 {EVENT_LINK_KINDS.map((kind) => (
@@ -187,7 +190,7 @@ function LinkRowsEditorIsland({
               />
             </Stack>
             {/* The route's GPX as a file instead of a link (§NNN): the same upload as the card's, by its input. */}
-            {labels.uploadGpx && (value.kind || DEFAULT_EVENT_LINK_KIND) === "GPX" && (
+            {labels.uploadGpx && shownKind === "GPX" && (
               <GlyphButton htmlFor={ROUTE_GPX_INPUT_ID} icon="upload" variant="outlined" sx={{ alignSelf: "flex-start", minHeight: 44 }} data-testid="link-row-upload-gpx">
                 {labels.uploadGpx}
               </GlyphButton>

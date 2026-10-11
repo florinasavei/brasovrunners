@@ -107,7 +107,7 @@ test.describe.serial("BR-REQ-011-01 «Traseul»'s maps and GPX (§NNN)", () => {
     await page.waitForURL(/saved=event/);
     // The closed card names what is set, and the box gives back the stored map, never other markup.
     await expect(page.locator("#box-course")).toContainText("Garmin");
-    await expect(page.locator("#box-links")).toContainText("GPX");
+    await expect(page.locator("#box-links")).toContainText("GPX încărcat");
     await openEditorBox(page, "Traseul");
     await expect(field("event.routeGarmin")).toHaveValue(GARMIN_LINK);
     await expect(field("event.routeStrava")).toHaveValue(new RegExp(`data-embed-id="${STRAVA_ID}"[\\s\\S]*data-token="${TOKEN}"`));
