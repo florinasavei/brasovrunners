@@ -23,6 +23,7 @@ import {
 } from "@/modules/registrations/signed-declaration";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { signingInput } from "../../helpers/declaration-signing";
+import { atTheClock } from "../../helpers/clock";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 import { mergeLegalBody } from "@/modules/legal-documents/domain/merge-fields";
 
@@ -157,7 +158,9 @@ describe("a minor registered by a parent (§108)", () => {
     await approve(db);
     const event = await createEvent(db);
     try {
-      await submitRegistration(db, event, submission({}), NOW);
+      // The guardian rule reads the real clock (`fields.ts`), not the `now` passed: sent at NOW, while
+      // the fixture's birth date is still a minor's (§NNN).
+      await atTheClock(NOW, () => submitRegistration(db, event, submission({}), NOW));
       expect.unreachable("a minor without a guardian was accepted");
     } catch (error) {
       expect(isDomainError(error) && error.code).toBe("VALIDATION_ERROR");

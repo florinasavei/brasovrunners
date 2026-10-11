@@ -223,9 +223,10 @@ in the release touched it — the calendar did (§NNN).
 `yarn test:clock` finds those tests before the day. It runs the suite three times with the real
 clock moved forward — +1 month, +1 year, +10 years — through `TEST_CLOCK_AT` and
 `tests/helpers/shifted-clock.mjs`: every argument-less `new Date()`, `Date()` and `Date.now()`, and
-PGlite's own `now()`, read the moved date, while a date the test writes stays as written. A test
-that fails there and passes under `yarn test` is a bomb. Minutes, so it is not in `yarn check`;
-run it before a release batch, and after writing a test with dated fixtures:
+PGlite's own `now()`, read the moved date, while a date the test writes stays as written; a Node
+process a test starts (a script it runs) reads the same moved clock. A test that fails there and
+passes under `yarn test` is a bomb. About twenty minutes a date on two workers, so it is not in
+`yarn check`; run it before a release batch, and after writing a test with dated fixtures:
 
 ```bash
 yarn test                                          the baseline: what fails today is broken, not a bomb

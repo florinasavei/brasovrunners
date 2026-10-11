@@ -44,7 +44,7 @@ describe("BR-REQ-090-02 yarn test:clock — the suite with the real clock moved 
 });
 
 describe("§NNN tests/helpers/shifted-clock.mjs — the real clock reads the date it is given", () => {
-  const MOVED = Symbol.for("brasovrunners.shifted-clock");
+  const MOVED = Symbol.for("shifted clock: the unmoved Date");
   const KEYS = ["TEST_CLOCK_AT", "TEST_CLOCK_OFFSET_MS", "NODE_OPTIONS"] as const;
   const global = globalThis as unknown as Record<symbol, unknown>;
   let saved: { date: DateConstructor; moved: unknown; env: Record<string, string | undefined> };

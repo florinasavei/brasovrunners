@@ -18,7 +18,7 @@
 // Vitest's own fake timers (`vi.useFakeTimers`, `vi.setSystemTime`) build on whatever `Date` is
 // global when they install, so a test that sets its own time still gets exactly that time.
 
-const MOVED = Symbol.for("brasovrunners.shifted-clock");
+const MOVED = Symbol.for("shifted clock: the unmoved Date");
 
 if (!globalThis[MOVED] && (process.env.TEST_CLOCK_OFFSET_MS || process.env.TEST_CLOCK_AT)) {
   const RealDate = Date;

@@ -20,6 +20,7 @@ import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { readSheet } from "../../helpers/xlsx";
 import { sharedWithSponsors } from "@/modules/registrations/domain/sponsor-share";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { atTheClock } from "../../helpers/clock";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -60,7 +61,12 @@ vi.mock("next-intl/server", () => ({
   },
 }));
 
-const { GET: downloadSponsorList } = await import("@/app/api/admin/registrations/sponsor-list/route");
+const { GET: downloadSponsorListNow } = await import("@/app/api/admin/registrations/sponsor-list/route");
+/**
+ * The route asks the real clock who is an adult today: it is called at NOW, so the sixteen-year-old
+ * of the fixture stays a minor whatever day this runs (§NNN).
+ */
+const downloadSponsorList = (...args: Parameters<typeof downloadSponsorListNow>) => atTheClock(NOW, () => downloadSponsorListNow(...args));
 const { GET: exportRegistrations } = await import("@/app/api/admin/registrations/export/route");
 
 const NOW = new Date("2026-09-29T10:00:00.000Z");
