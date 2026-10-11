@@ -17,7 +17,7 @@ const PREVIEW_WIDTH = 320;
  * as `children`, and the picture's address, size and crop go in as plain values (§318), so no element
  * crosses the boundary as a prop (§370). Touch never opens it (`disableTouchListener`): a phone
  * has the press, which opens the picture large, and a tooltip there would sit over the select.
- * The small file is the card's thumbnail, so a page of products pays nothing until a pointer rests on one.
+ * The picture is fetched only on hover, from the ladder rung that fits the crop; the thumbnail is the fallback when there is no ladder, so a page of products pays nothing until a pointer rests on one.
  */
 export default function SizeGuideHover({
   thumbUrl,

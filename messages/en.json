@@ -7475,7 +7475,7 @@
         "settings": "How to pay, who receives the orders and member emails",
         "settingsHelp": "The words appear under every unpaid order and in the confirmation email. The address receives one email per order; the tick below says whether the member gets one too.",
         "settingsTitle": "Save the payment words, the orders address and the member emails?",
-        "settingsBody": "Members see the new words as soon as you save, and the member-email tick applies from the next email (a new order or one marked paid).",
+        "settingsBody": "Members see the new words as soon as you save, and “Email the member about their orders” applies from the next email, for a new order or one marked paid.",
         "paymentRo": "How to pay (Română)",
         "paymentEn": "How to pay (English)",
         "paymentHelp": "For example the club's IBAN and “or cash at the run”.",
