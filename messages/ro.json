@@ -5902,7 +5902,9 @@
         "fold": "Pliul din backoffice",
         "foldNote": "Un pliu nativ al browserului, cu rama și bara lui; se deschide fără JavaScript.",
         "foldSummary": "Un pliu închis",
-        "foldBody": "Ce e înăuntru se vede după o apăsare pe bară."
+        "foldBody": "Ce e înăuntru se vede după o apăsare pe bară.",
+        "home": "Pagina principală · StepsBand, WhyList, PhotoStrip, NumbersBand",
+        "homeNote": "Cele patru secțiuni, în aspectul nou, cu textele de pornire și cifre de probă. Locurile goale ale fâșiei apar doar aici: pe site, fâșia fără fotografii nu se desenează."
       },
       "icons": {
         "intro": "Cele două registre de glife, citite întregi; un nume adăugat acolo apare aici.",
@@ -10051,6 +10053,74 @@
         "CONFLICT": "Nu mai sunt destule bucăți pentru comanda ta, sau comanda și-a schimbat starea între timp.",
         "VALIDATION_ERROR": "Verifică varianta, cantitatea (1–5) și nota (cel mult 300 de caractere).",
         "FORBIDDEN": "Contul tău nu poate face asta."
+      }
+    }
+  },
+  "HomeSections": {
+    "steps": {
+      "title": "Prima dată cu noi?",
+      "lead": "Cinci pași, de la calendar la start. Nu ai nevoie de cont și nu te înscrii nicăieri.",
+      "number": "Pasul {number}",
+      "items": {
+        "1": "Alege o alergare din calendar.",
+        "2": "Vino la locul de start, la ora scrisă.",
+        "3": "Salută-ne și spune-ne că e prima dată.",
+        "4": "Aleargă cu grupul, în ritmul tău.",
+        "5": "Rămâi după alergare, la o vorbă."
+      },
+      "link": "Cum funcționează"
+    },
+    "why": {
+      "title": "De ce să alergi cu noi",
+      "items": {
+        "1": {
+          "title": "Împreună",
+          "body": "Alergi alături de alții, nu singur."
+        },
+        "2": {
+          "title": "Munții de lângă oraș",
+          "body": "Brașovul are trasee la câțiva pași de centru."
+        },
+        "3": {
+          "title": "Fără taxă",
+          "body": "Alergările de grup sunt gratuite."
+        },
+        "4": {
+          "title": "Pentru oricine",
+          "body": "Începător sau maratonist, găsești un ritm potrivit."
+        }
+      },
+      "quote": "„{quote}”",
+      "quoteBy": "— {name}"
+    },
+    "strip": {
+      "title": "Din alergările noastre",
+      "region": "Fotografii de la alergări, într-un rând care se derulează în lateral",
+      "gallery": "Vezi galeria",
+      "instagram": "Urmărește-ne pe Instagram",
+      "emptySlot": "Loc pentru o fotografie"
+    },
+    "numbers": {
+      "title": "{club} în cifre",
+      "years": {
+        "one": "an de alergări împreună",
+        "few": "ani de alergări împreună",
+        "other": "de ani de alergări împreună"
+      },
+      "runners": {
+        "one": "alergător activ",
+        "few": "alergători activi",
+        "other": "de alergători activi"
+      },
+      "perWeek": {
+        "figure": "{count}×",
+        "one": "alergare pe săptămână",
+        "few": "alergări pe săptămână",
+        "other": "de alergări pe săptămână"
+      },
+      "free": {
+        "figure": "{count}%",
+        "label": "alergările de grup, gratuite"
       }
     }
   }

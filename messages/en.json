@@ -5902,7 +5902,9 @@
         "fold": "The backoffice fold",
         "foldNote": "The browser's own fold, with its frame and bar; it opens without JavaScript.",
         "foldSummary": "A closed fold",
-        "foldBody": "What is inside shows after a press on the bar."
+        "foldBody": "What is inside shows after a press on the bar.",
+        "home": "The home page · StepsBand, WhyList, PhotoStrip, NumbersBand",
+        "homeNote": "The four sections, in the new look, with the starting words and sample figures. The strip's empty places show here only: on the site a strip without photos is not drawn."
       },
       "icons": {
         "intro": "The two glyph registries, read whole; a name added there appears here.",
@@ -10051,6 +10053,74 @@
         "CONFLICT": "There are not enough left for your order, or the order changed its status in the meantime.",
         "VALIDATION_ERROR": "Check the variant, the quantity (1–5) and the note (at most 300 characters).",
         "FORBIDDEN": "Your account cannot do this."
+      }
+    }
+  },
+  "HomeSections": {
+    "steps": {
+      "title": "First time with us?",
+      "lead": "Five steps, from the calendar to the start. You need no account and you sign up for nothing.",
+      "number": "Step {number}",
+      "items": {
+        "1": "Pick a run on the calendar.",
+        "2": "Come to the start, at the time it says.",
+        "3": "Say hello and tell us it is your first time.",
+        "4": "Run with the group, at your own pace.",
+        "5": "Stay after the run for a chat."
+      },
+      "link": "How it works"
+    },
+    "why": {
+      "title": "Why run with us",
+      "items": {
+        "1": {
+          "title": "Together",
+          "body": "You run beside others, not alone."
+        },
+        "2": {
+          "title": "Mountains by the city",
+          "body": "Brașov has trails a few steps from the centre."
+        },
+        "3": {
+          "title": "No fee",
+          "body": "The group runs are free."
+        },
+        "4": {
+          "title": "For anyone",
+          "body": "Beginner or marathoner, you find a pace that suits you."
+        }
+      },
+      "quote": "“{quote}”",
+      "quoteBy": "— {name}"
+    },
+    "strip": {
+      "title": "From our runs",
+      "region": "Photographs from our runs, in a row that scrolls sideways",
+      "gallery": "See the gallery",
+      "instagram": "Follow us on Instagram",
+      "emptySlot": "A place for a photograph"
+    },
+    "numbers": {
+      "title": "{club} in numbers",
+      "years": {
+        "one": "year of running together",
+        "few": "years of running together",
+        "other": "years of running together"
+      },
+      "runners": {
+        "one": "active runner",
+        "few": "active runners",
+        "other": "active runners"
+      },
+      "perWeek": {
+        "figure": "{count}×",
+        "one": "run a week",
+        "few": "runs a week",
+        "other": "runs a week"
+      },
+      "free": {
+        "figure": "{count}%",
+        "label": "the group runs, free"
       }
     }
   }
