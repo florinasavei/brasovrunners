@@ -9,7 +9,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { shopSettingsSchema } from "./fields";
 
 /**
- * The shop's two settings (§683), one `platform_settings` row (a key-value store, no migration):
+ * The shop's settings (§683, §702), one `platform_settings` row (a key-value store, no migration):
  * «Cum se plătește» — the club's words for paying outside the site, both languages or neither, shown
  * under every order and in the confirmation email — and «Cine primește comenzile», the address the
  * club's notice of each order goes to, or none (then only the list says it). Written by an
@@ -20,14 +20,16 @@ export const SHOP_SETTING_KEY = "membersShop";
 /** The audit row's fixed entity id for this key — one per key, never reused (§483). */
 export const SHOP_SETTING_ENTITY_ID = "00000000-0000-4000-8000-00000000e0d5";
 
-export type ShopSettings = { paymentRo: string | null; paymentEn: string | null; ordersTo: string | null };
+export type ShopSettings = { paymentRo: string | null; paymentEn: string | null; ordersTo: string | null; emailMembers: boolean };
 
-export const DEFAULT_SHOP_SETTINGS: ShopSettings = { paymentRo: null, paymentEn: null, ordersTo: null };
+export const DEFAULT_SHOP_SETTINGS: ShopSettings = { paymentRo: null, paymentEn: null, ordersTo: null, emailMembers: true };
 
 const storedSchema = z.object({
   paymentRo: z.string().nullable().catch(null),
   paymentEn: z.string().nullable().catch(null),
   ordersTo: z.email().nullable().catch(null),
+  // Missing (a row saved before §702) is on: the shop wrote to its members from the start (§683).
+  emailMembers: z.boolean().catch(true),
 });
 
 export async function readShopSettings<T extends Record<string, unknown>>(db: Database<T>): Promise<ShopSettings> {
@@ -68,7 +70,7 @@ export async function saveShopSettings<T extends Record<string, unknown>>(
       action: "shop.settings_saved",
       entityType: "platform_setting",
       entityId: SHOP_SETTING_ENTITY_ID,
-      metadata: { paymentWords: value.paymentRo !== null, recipient: value.ordersTo !== null },
+      metadata: { paymentWords: value.paymentRo !== null, recipient: value.ordersTo !== null, emailMembers: value.emailMembers },
       now,
     });
   });

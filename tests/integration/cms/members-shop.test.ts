@@ -357,6 +357,26 @@ describe("§683 the members' shop", () => {
     expect(kept.productTitleRo).toBe("Tricou exemplu");
   });
 
+  it("§702: «Îi scriem membrului pe email despre comenzi» defaults to on, is saved from the form's tick, and off queues no email to the member — the club's notice stays", async () => {
+    expect((await readShopSettings(db)).emailMembers).toBe(true);
+    const base = { paymentRo: "", paymentEn: "", ordersTo: "comenzi@example.org" };
+    await saveShopSettings(db, { actor: admin, fields: { ...base, emailMembers: "off" }, now: NOW });
+    expect((await readShopSettings(db)).emailMembers).toBe(false);
+
+    const product = await createProduct(db, { actor: admin, fields: PRODUCT, now: NOW });
+    const placed = await order(member, product.id, (await variantsOf(product.id)).M.id, 1);
+    expect((await db.select().from(emailOutbox)).map((row) => row.messageType)).toEqual(["SHOP_ORDER_CLUB_NOTICE"]);
+    await moveOrderByClub(db, { actor: admin, orderId: placed.id, verb: "pay", now: NOW });
+    expect((await db.select().from(emailOutbox)).map((row) => row.messageType)).toEqual(["SHOP_ORDER_CLUB_NOTICE"]);
+
+    await saveShopSettings(db, { actor: admin, fields: { ...base, emailMembers: "on" }, now: NOW });
+    expect((await readShopSettings(db)).emailMembers).toBe(true);
+    const second = await order(member, product.id, (await variantsOf(product.id)).M.id, 1, { note: "a doua" });
+    await moveOrderByClub(db, { actor: admin, orderId: second.id, verb: "pay", now: NOW });
+    const types = (await db.select().from(emailOutbox)).map((row) => row.messageType).sort();
+    expect(types).toEqual(["SHOP_ORDER_CLUB_NOTICE", "SHOP_ORDER_CLUB_NOTICE", "SHOP_ORDER_PAID", "SHOP_ORDER_PLACED"]);
+  });
+
   it("queues «Comanda ta a fost primită» with the payment words, the club's notice when an address is set, and «plătită» on the club's press", async () => {
     await saveShopSettings(db, {
       actor: admin,

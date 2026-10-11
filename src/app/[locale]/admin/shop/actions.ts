@@ -243,7 +243,7 @@ export async function saveShopSettingsAction(_previous: FormOutcome | null, form
     const actor = await requireStaffCapability(canManageShop);
     await saveShopSettings(getDb(), {
       actor,
-      fields: { paymentRo: text(form, "paymentRo"), paymentEn: text(form, "paymentEn"), ordersTo: text(form, "ordersTo") },
+      fields: { paymentRo: text(form, "paymentRo"), paymentEn: text(form, "paymentEn"), ordersTo: text(form, "ordersTo"), emailMembers: form.has("emailMembers") ? "on" : "off" },
     });
   } catch (error) {
     return refused(error, form);

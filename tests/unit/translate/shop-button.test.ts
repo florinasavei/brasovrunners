@@ -61,7 +61,7 @@ function render(locale: "ro" | "en", offer: ComponentProps<typeof TranslateProvi
   const common = { locale, words: words as never, cancel: "Cancel", messages: { fieldError: "", summary: "", fields: {} } as never };
   // «Cum se plătește», «Adaugă un produs» and the one product's edit form — the three forms the shop has.
   const forms: ReactNode[] = [
-    ShopSettingsCard({ ...common, settings: { paymentRo: "Transfer", paymentEn: null, ordersTo: null }, mayManage: true }),
+    ShopSettingsCard({ ...common, settings: { paymentRo: "Transfer", paymentEn: null, ordersTo: null, emailMembers: true }, mayManage: true }),
     ProductForm({ ...common, product: null, rich, noticeDescribes: true }),
     ProductForm({ ...common, product: PRODUCT, rich, noticeDescribes: true }),
   ];
@@ -76,7 +76,7 @@ describe("§697 the shop's forms carry «Copiază și tradu tot»", () => {
       expect((html.match(/data-testid="translate-all"/g) ?? []).length).toBe(3);
       expect(html).toContain((locale === "en" ? en : ro).Translate.all);
       // The boxes the press fills: the title, the rich description's English document, the payment words.
-      for (const name of ["titleEn", "descriptionEnBody", "paymentEn"]) expect(html).toContain(`name="${name}"`);
+      for (const name of ["titleEn", "descriptionEnBody", "paymentEn", "emailMembers"]) expect(html).toContain(`name="${name}"`);
     });
   }
 

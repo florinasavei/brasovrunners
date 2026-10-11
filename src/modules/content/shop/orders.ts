@@ -160,6 +160,9 @@ async function insertOrder<T extends Record<string, unknown>>(tx: Transaction<T>
     })
     .returning();
 
+  // «Îi scriem membrului pe email despre comenzi» (§702): off, the member is written to by neither email.
+  const settings = await readShopSettings(tx);
+  const emailMember = core.emailMember && settings.emailMembers;
   if (core.placedBy === "CLUB") {
     await recordAuditEvent(tx, {
       actorStaffUserId: core.actor.id,
@@ -173,7 +176,7 @@ async function insertOrder<T extends Record<string, unknown>>(tx: Transaction<T>
         variantId: variant.id,
         quantity: order.quantity,
         paidAtOnce: core.paidAtOnce,
-        emailed: core.emailMember,
+        emailed: emailMember,
       },
       now,
     });
@@ -187,7 +190,7 @@ async function insertOrder<T extends Record<string, unknown>>(tx: Transaction<T>
       now,
     });
   }
-  if (core.emailMember) {
+  if (emailMember) {
     await enqueueEmail(tx, {
       participantId: null,
       registrationId: null,
@@ -202,7 +205,6 @@ async function insertOrder<T extends Record<string, unknown>>(tx: Transaction<T>
   }
   // The club's notice, when the club named a mailbox; the list says the same either way.
   if (core.emailClub) {
-    const settings = await readShopSettings(tx);
     if (settings.ordersTo) {
       await enqueueEmail(tx, {
         participantId: null,
@@ -302,7 +304,7 @@ export async function placeOrderForMember<T extends Record<string, unknown>>(
     // above (re-locking a row one's own transaction holds queues on nothing) — and moves it through
     // `nextOrderStatus(PLACED, "pay", "CLUB")`, never by writing PAID by hand.
     const { order } = await moveOrder(tx, { actorId: input.actor.id, orderId: placed.order.id, verb: "pay", by: "CLUB", now });
-    if (fields.emailMember) {
+    if (fields.emailMember && (await readShopSettings(tx)).emailMembers) {
       await enqueueEmail(tx, {
         participantId: null,
         registrationId: null,
@@ -403,7 +405,7 @@ export async function moveOrderByClub<T extends Record<string, unknown>>(
   const now = input.now ?? new Date();
   return db.transaction(async (tx) => {
     const { order } = await moveOrder(tx, { actorId: input.actor.id, orderId: input.orderId, verb: input.verb, by: "CLUB", now });
-    if (order.status === "PAID" && order.memberStaffUserId) {
+    if (order.status === "PAID" && order.memberStaffUserId && (await readShopSettings(tx)).emailMembers) {
       const [member] = await tx.select({ email: staffUsers.email }).from(staffUsers).where(eq(staffUsers.id, order.memberStaffUserId)).limit(1);
       if (member) {
         await enqueueEmail(tx, {
