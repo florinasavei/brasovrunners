@@ -8,6 +8,7 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { countOrdersForAdmin, listOrderableItems, listOrdersForAdmin, listProductNames, listZoneAccountsForOrder, parseOrdersQuery } from "@/modules/content/shop/repository";
+import { readShopSettings } from "@/modules/content/shop/settings";
 import OrdersCard from "@/modules/content/shop/ui/OrdersCard";
 import ShopTabs from "@/modules/content/shop/ui/ShopTabs";
 import { canManageShop, canReadShop, canSeeShopMemberAddresses } from "@/modules/staff-identity/domain/roles";
@@ -43,7 +44,7 @@ export default async function AdminShopOrdersPage({ params, searchParams }: Prop
   const db = getDb();
   const ordersQuery = parseOrdersQuery(query);
   const mayManage = canManageShop(actor);
-  const [orders, productNames, ordersTotal, accounts, items] = await Promise.all([
+  const [orders, productNames, ordersTotal, accounts, items, shopSettings] = await Promise.all([
     listOrdersForAdmin(db, ordersQuery),
     listProductNames(db),
     countOrdersForAdmin(db, ordersQuery),
@@ -51,6 +52,7 @@ export default async function AdminShopOrdersPage({ params, searchParams }: Prop
     // for whoever may place one — by role or by «Gestionează magazinul» (§687).
     mayManage ? listZoneAccountsForOrder(db) : Promise.resolve([]),
     mayManage ? listOrderableItems(db) : Promise.resolve([]),
+    readShopSettings(db),
   ]);
   const messages = await refusalMessages({
     memberStaffUserId: t("members.shop.forMember.member"),
@@ -82,6 +84,7 @@ export default async function AdminShopOrdersPage({ params, searchParams }: Prop
         messages={messages}
         mayManage={mayManage}
         showEmail={canSeeShopMemberAddresses(actor.role)}
+        emailMembers={shopSettings.emailMembers}
       />
     </Stack>
   );

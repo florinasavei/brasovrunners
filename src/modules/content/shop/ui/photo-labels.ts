@@ -11,7 +11,13 @@ type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
  * and handed to the island as strings (AGENTS.md §14.5). One place for the product page's add form
  * and each picture's replace form.
  */
-export function shopPhotoLabels(t: Words, rich: ReturnType<typeof richTextEditorLabels>, legend: string): TeamPhotoLabels {
+export function shopPhotoLabels(
+  t: Words,
+  rich: ReturnType<typeof richTextEditorLabels>,
+  legend: string,
+  /** The size guide's own captions: it is kept with the product's save and starts whole, which the strip's help does not say. */
+  override: { help: string; cropHelp: string } | null = null,
+): TeamPhotoLabels {
   return {
     legend,
     choose: t("team.photoChoose"),
@@ -20,7 +26,7 @@ export function shopPhotoLabels(t: Words, rich: ReturnType<typeof richTextEditor
     uploading: t("team.photoUploading"),
     failed: t("team.photoFailed"),
     none: t("team.photoNone"),
-    help: t("members.shop.photoHelp"),
+    help: override?.help ?? t("members.shop.photoHelp"),
     fromGallery: t("team.photoFromGallery"),
     gallery: {
       loading: t("richText.imageGalleryLoading"),
@@ -52,7 +58,7 @@ export function shopPhotoLabels(t: Words, rich: ReturnType<typeof richTextEditor
     },
     crop: {
       title: t("members.shop.photoCrop"),
-      help: t("members.shop.photoCropHelp"),
+      help: override?.cropHelp ?? t("members.shop.photoCropHelp"),
       reset: rich.imageCropReset,
       position: rich.imageCropPosition,
       ...rich.imageShapes,

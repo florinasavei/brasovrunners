@@ -7472,7 +7472,7 @@
         "help": "Produsele clubului, comandate de membri din zona membrilor. Plata nu se face pe site: membrul plătește prin transfer sau în numerar, iar tu marchezi comanda plătită.",
         "noticeMissing": "Nota de confidențialitate în vigoare nu descrie încă magazinul: membrii nu îl văd și nu pot comanda până nu aprobi o notă nouă (vezi „Sarcini”).",
         "readOnly": "Poți citi produsele și comenzile. Le schimbă un administrator.",
-        "settings": "Cum se plătește și cine primește comenzile",
+        "settings": "Cum se plătește, cine primește comenzile și emailurile către membri",
         "settingsHelp": "Cuvintele apar sub fiecare comandă neplătită și în emailul de confirmare. Adresa primește câte un email pentru fiecare comandă.",
         "settingsTitle": "Salvezi plata și adresa pentru comenzi?",
         "settingsBody": "Membrii văd noile cuvinte de îndată ce salvezi.",
@@ -7482,6 +7482,10 @@
         "bothOrNeither": "În ambele limbi sau în niciuna.",
         "ordersTo": "Cine primește comenzile (opțional)",
         "ordersToHelp": "O adresă de email. Goală: nu pleacă niciun email, comenzile sunt doar în lista de mai jos.",
+        "emailMembers": "Îi scriem membrului pe email despre comenzi",
+        "emailMembersHelp": "Pornit: confirmarea când comandă și „e plătită” când o marchezi. Oprit: niciun email către membru; anunțul către club rămâne.",
+        "on": "pornit",
+        "off": "oprit",
         "notSet": "nescris",
         "add": "Adaugă un produs",
         "create": "Adaugă produsul",
@@ -7555,6 +7559,7 @@
           "quantity": "Bucăți",
           "note": "Nota (opțional)",
           "email": "Trimite-i membrului emailul de confirmare",
+          "emailOff": "Emailurile către membri sunt oprite în „Setări”.",
           "paid": "Marchează direct ca plătită",
           "add": "Adaugă comanda",
           "ask": "Adaugi comanda pentru acest membru?",
@@ -7569,6 +7574,7 @@
           "pay": {
             "title": "Marchezi comanda nr. {number} plătită?",
             "body": "Membrul primește emailul „Comanda ta e plătită”. Plata a fost făcută în afara site-ului.",
+            "bodyNoEmail": "Membrul nu primește email (emailurile către membri sunt oprite). Plata a fost făcută în afara site-ului.",
             "label": "Marchează plătită"
           },
           "handOver": {
@@ -7661,6 +7667,11 @@
           "exampleEn": "Chest width (cm)",
           "sizeColumn": "Mărimea",
           "cellLabel": "{size}, coloana {number}"
+        },
+        "sizes": {
+          "guide": "Ghidul de mărimi (o poză)",
+          "guideHelp": "Desenul furnizorului cu măsurile; membrul îl deschide de lângă mărimi. Opțional. Se păstrează când salvezi produsul.",
+          "guideCropHelp": "Pornește întreagă, cum a venit. Decupează doar dacă desenul are margini de tăiat; Săgețile mută decupajul, Shift cu ele îl redimensionează."
         }
       }
     },
@@ -9645,12 +9656,13 @@
       "shopProductMoved": "Ordinea produselor a fost schimbată.",
       "shopProductDeleted": "Produsul a fost șters.",
       "shopProductArchived": "Produsul avea comenzi, așa că a fost arhivat.",
-      "shopSettingsSaved": "Plata și adresa pentru comenzi au fost salvate.",
+      "shopSettingsSaved": "Setările magazinului au fost salvate.",
       "shopPictureAdded": "Fotografia a fost adăugată.",
       "shopPictureMoved": "Ordinea fotografiilor a fost schimbată.",
       "shopPictureRemoved": "Fotografia a fost scoasă din produs.",
       "shopPictureReplaced": "Fotografia a fost salvată.",
       "shopOrderPaid": "Comanda a fost marcată plătită. Membrul primește un email.",
+      "shopOrderPaidNoEmail": "Comanda a fost marcată plătită. Membrul nu primește email: emailurile către membri sunt oprite în „Setări”.",
       "shopOrderHandedOver": "Comanda a fost marcată predată.",
       "shopOrderCancelled": "Comanda a fost anulată.",
       "shopOrderPlacedForMember": "Comanda a fost adăugată pentru membru.",
@@ -9953,9 +9965,11 @@
       "ordering": "Se trimite comanda…",
       "pictureOpen": "Fotografia {number}",
       "sizeChart": "Tabelul de mărimi",
+      "sizeGuide": "Ghid de mărimi",
       "sizeColumn": "Mărimea",
       "outcome": {
         "placed": "Comanda a fost primită. Ți-am trimis și un email cu ea și cu felul în care se plătește.",
+        "placedNoEmail": "Comanda a fost primită. Vezi mai jos cum se plătește.",
         "cancelled": "Comanda a fost anulată.",
         "NOT_FOUND": "Produsul nu mai e în magazin sau comanda nu mai există.",
         "CONFLICT": "Nu mai sunt destule bucăți pentru comanda ta, sau comanda și-a schimbat starea între timp.",

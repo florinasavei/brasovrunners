@@ -97,7 +97,7 @@ async function shopOrNone(
   account: { id: string },
   locale: Locale,
   now: Date,
-): Promise<{ open: boolean; products: MembersShopProduct[]; orders: MemberOrder[]; payment: string | null }> {
+): Promise<{ open: boolean; products: MembersShopProduct[]; orders: MemberOrder[]; payment: string | null; emailMembers: boolean }> {
   try {
     const db = getDb();
     const open = await noticeDescribesMembersShop(db, now);
@@ -106,11 +106,11 @@ async function shopOrNone(
       listOrdersOfMember(db, account.id),
       readShopSettings(db),
     ]);
-    return { open, products, orders, payment: paymentWordsFor(settings, locale) };
+    return { open, products, orders, payment: paymentWordsFor(settings, locale), emailMembers: settings.emailMembers };
   } catch (error) {
     unstable_rethrow(error);
     if (!isDatabaseAwayError(error)) throw error;
-    return { open: false, products: [], orders: [], payment: null };
+    return { open: false, products: [], orders: [], payment: null, emailMembers: true };
   }
 }
 
@@ -252,7 +252,7 @@ export default async function MembersAreaPage({ params, searchParams }: Props) {
 
       {/* «Magazinul clubului» and «Comenzile mele» (§683): behind the notice, paid outside the site. */}
       {((shop.open && shop.products.length > 0) || shop.orders.length > 0) && (
-        <MembersShop products={shop.products} orders={shop.orders} payment={shop.payment} shopOpen={shop.open} outcome={shopOutcome} outcomeAtOrders={shopOutcomeAtOrders} locale={locale} />
+        <MembersShop products={shop.products} orders={shop.orders} payment={shop.payment} shopOpen={shop.open} outcome={shopOutcome} emailMembers={shop.emailMembers} outcomeAtOrders={shopOutcomeAtOrders} locale={locale} />
       )}
 
       <Box component="section" aria-labelledby="members-upcoming-title" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }} data-testid="members-upcoming">

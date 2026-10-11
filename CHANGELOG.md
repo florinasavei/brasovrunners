@@ -8,6 +8,12 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.93-2026-10-11
+
+- **«Spune-ne ceva»'s radios are one group each** — picking «Cu nume și prenume» now unchecks «Anonim» (and the same for «Cine să afle?»): native radios replace MUI's, which drew both selected. §702.
+- **`yarn ship` waits only on the checks GitHub requires** — a Vercel status on the release PR no longer holds the merge; each poll says what it waits on and whether it is required. §703.
+- **«Îi scriem membrului pe email despre comenzi»** — one switch in «Magazin» → «Setări» for the shop's two member emails (received, paid); off, the member gets neither, the club's own notice stays, and the per-order tick for an order typed by the club is not offered; the member's and the Administrator's confirmations stop saying an email was sent. §704.
+- **«Ghid de mărimi» on a product** — the supplier's size-chart picture, chosen per product under «Mărimile»: it shows small on hover over a button beside the size select in the members' shop, and opens large on a press, with pinch-zoom. §705.
 ## BR-V2.92-2026-10-11
 
 - **«Copiază și tradu tot: RO → EN» on the shop's forms** — the product's title and description and «Cum se plătește» get the same one-press translate button as «Echipa»; a volunteer with the shop grant does not see it yet. §697.

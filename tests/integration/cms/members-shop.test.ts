@@ -6,6 +6,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { emailOutbox } from "@/db/schema/email-outbox";
+import { platformSettings } from "@/db/schema/platform-settings";
 import { shopOrders, shopProducts, shopProductVariants } from "@/db/schema/shop";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
@@ -357,6 +358,44 @@ describe("§683 the members' shop", () => {
     expect(kept.productTitleRo).toBe("Tricou exemplu");
   });
 
+  it("§704: «Îi scriem membrului pe email despre comenzi» defaults to on, is saved from the form's tick, and off queues no email to the member — the club's notice stays", async () => {
+    expect((await readShopSettings(db)).emailMembers).toBe(true);
+    const base = { paymentRo: "", paymentEn: "", ordersTo: "comenzi@example.org" };
+    await saveShopSettings(db, { actor: admin, fields: { ...base, emailMembers: "off" }, now: NOW });
+    expect((await readShopSettings(db)).emailMembers).toBe(false);
+
+    const product = await createProduct(db, { actor: admin, fields: PRODUCT, now: NOW });
+    const placed = await order(member, product.id, (await variantsOf(product.id)).M.id, 1);
+    expect((await db.select().from(emailOutbox)).map((row) => row.messageType)).toEqual(["SHOP_ORDER_CLUB_NOTICE"]);
+    await moveOrderByClub(db, { actor: admin, orderId: placed.id, verb: "pay", now: NOW });
+    expect((await db.select().from(emailOutbox)).map((row) => row.messageType)).toEqual(["SHOP_ORDER_CLUB_NOTICE"]);
+
+    await saveShopSettings(db, { actor: admin, fields: { ...base, emailMembers: "on" }, now: NOW });
+    expect((await readShopSettings(db)).emailMembers).toBe(true);
+    const second = await order(member, product.id, (await variantsOf(product.id)).M.id, 1, { note: "a doua" });
+    await moveOrderByClub(db, { actor: admin, orderId: second.id, verb: "pay", now: NOW });
+    const types = (await db.select().from(emailOutbox)).map((row) => row.messageType).sort();
+    expect(types).toEqual(["SHOP_ORDER_CLUB_NOTICE", "SHOP_ORDER_CLUB_NOTICE", "SHOP_ORDER_PAID", "SHOP_ORDER_PLACED"]);
+  });
+
+  it("§704: a membersShop row saved before the switch (no emailMembers key) still reads as on and queues the member's email", async () => {
+    await db.insert(platformSettings).values({ key: "membersShop", value: { paymentRo: "", paymentEn: "", ordersTo: "comenzi@example.org" }, updatedAt: NOW });
+    expect((await readShopSettings(db)).emailMembers).toBe(true);
+    const product = await createProduct(db, { actor: admin, fields: PRODUCT, now: NOW });
+    await order(member, product.id, (await variantsOf(product.id)).M.id, 1);
+    expect((await db.select().from(emailOutbox)).map((row) => row.messageType).sort()).toEqual(["SHOP_ORDER_CLUB_NOTICE", "SHOP_ORDER_PLACED"]);
+  });
+
+  it("§704: with the switch off, the words the member and the club read name no email that was not sent", () => {
+    for (const catalogue of [ro, en]) {
+      const shop = catalogue.Members.shop.outcome as Record<string, string>;
+      expect(shop.placedNoEmail).toBeTruthy();
+      expect(shop.placedNoEmail).not.toMatch(/email/i);
+      const verbs = catalogue.Admin.members.shop.verbs.pay as Record<string, string>;
+      expect(verbs.bodyNoEmail).toMatch(/nu primește|gets no/);
+    }
+  });
+
   it("queues «Comanda ta a fost primită» with the payment words, the club's notice when an address is set, and «plătită» on the club's press", async () => {
     await saveShopSettings(db, {
       actor: admin,
@@ -447,10 +486,10 @@ describe("§683 the members' shop", () => {
     const audit = await db.select().from(auditLogs).where(eq(auditLogs.entityType, "shop_product"));
     expect(JSON.stringify(audit.map((row) => row.metadataJson))).not.toContain("1234");
 
-    const zone = renderToStaticMarkup(await MembersShop({ products: await listProductsForMembers(db, "ro"), orders: [], payment: null, shopOpen: true, outcome: null, locale: "ro" }));
+    const zone = renderToStaticMarkup(await MembersShop({ products: await listProductsForMembers(db, "ro"), orders: [], payment: null, shopOpen: true, emailMembers: true, outcome: null, locale: "ro" }));
     expect(zone).toContain("12,34\u00A0€");
     expect(zone).toContain("45 lei");
-    const zoneEn = renderToStaticMarkup(await MembersShop({ products: await listProductsForMembers(db, "en"), orders: [], payment: null, shopOpen: true, outcome: null, locale: "en" }));
+    const zoneEn = renderToStaticMarkup(await MembersShop({ products: await listProductsForMembers(db, "en"), orders: [], payment: null, shopOpen: true, emailMembers: true, outcome: null, locale: "en" }));
     expect(zoneEn).toContain("€12.34");
 
     const placed = await order(member, product.id, (await variantsOf(product.id)).M.id, 2);
@@ -460,7 +499,7 @@ describe("§683 the members' shop", () => {
     const [mine] = await listOrdersOfMember(db, member.id);
     expect(mine).toMatchObject({ currency: "EUR", unitPriceBani: 1234 });
     const orders = renderToStaticMarkup(
-      await MembersShop({ products: await listProductsForMembers(db, "ro"), orders: await listOrdersOfMember(db, member.id), payment: null, shopOpen: true, outcome: null, locale: "ro" }),
+      await MembersShop({ products: await listProductsForMembers(db, "ro"), orders: await listOrdersOfMember(db, member.id), payment: null, shopOpen: true, emailMembers: true, outcome: null, locale: "ro" }),
     );
     expect(orders).toContain("24,68\u00A0€");
     expect(orders).toContain("60 lei");
@@ -497,7 +536,7 @@ describe("§683 the members' shop", () => {
         products: await listProductsForMembers(db, "ro"),
         orders: await listOrdersOfMember(db, member.id),
         payment: "IBAN RO00 TEST",
-        shopOpen: true,
+        shopOpen: true, emailMembers: true,
         outcome: "placed",
         locale: "ro",
       }),
@@ -520,7 +559,7 @@ describe("§683 the members' shop", () => {
         products: await listProductsForMembers(db, "ro"),
         orders: await listOrdersOfMember(db, member.id),
         payment: "IBAN RO00 TEST",
-        shopOpen: true,
+        shopOpen: true, emailMembers: true,
         outcome: "CONFLICT",
         outcomeAtOrders: true,
         locale: "ro",
@@ -532,13 +571,19 @@ describe("§683 the members' shop", () => {
 
     // The notice silent: no shop, but the member's own orders stay readable.
     const closed = renderToStaticMarkup(
-      await MembersShop({ products: [], orders: await listOrdersOfMember(db, member.id), payment: null, shopOpen: false, outcome: null, locale: "ro" }),
+      await MembersShop({ products: [], orders: await listOrdersOfMember(db, member.id), payment: null, shopOpen: false, emailMembers: true, outcome: null, locale: "ro" }),
     );
     expect(closed).not.toContain('data-testid="members-shop"');
     expect(closed).toContain('data-testid="members-orders"');
     expect(closed).toContain(ro.Members.shop.paymentByClub);
+    // §704: the placed-order banner follows the switch: off, it says nothing of an email that was never sent.
+    const placedOff = renderToStaticMarkup(
+      await MembersShop({ products: [], orders: await listOrdersOfMember(db, member.id), payment: null, shopOpen: false, emailMembers: false, outcome: "placed", outcomeAtOrders: true, locale: "ro" }),
+    );
+    expect(placedOff).toContain(ro.Members.shop.outcome.placedNoEmail);
+    expect(placedOff).not.toContain(ro.Members.shop.outcome.placed);
     // And with neither, nothing at all.
-    expect(renderToStaticMarkup(await MembersShop({ products: [], orders: [], payment: null, shopOpen: true, outcome: null, locale: "ro" }))).toBe("");
+    expect(renderToStaticMarkup(await MembersShop({ products: [], orders: [], payment: null, shopOpen: true, emailMembers: true, outcome: null, locale: "ro" }))).toBe("");
     expect(en.Members.shop.title).not.toBe(ro.Members.shop.title);
   });
 });

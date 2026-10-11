@@ -17,7 +17,7 @@ import {
   replaceProductPicture,
   saveProduct,
 } from "@/modules/content/shop/service";
-import { saveShopSettings } from "@/modules/content/shop/settings";
+import { readShopSettings, saveShopSettings } from "@/modules/content/shop/settings";
 import { canManageShop } from "@/modules/staff-identity/domain/roles";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -122,6 +122,8 @@ function productFieldsOf(form: FormData) {
     extraVariants: text(form, "extraVariants"),
     ...chartOf(form),
     variantsLoaded: text(form, "variantsLoaded"),
+    sizeGuideAssetId: text(form, "sizeGuideAssetId"),
+    sizeGuideCrop: text(form, "sizeGuideCrop"),
     visible: form.get("visible") === "on",
   };
 }
@@ -243,7 +245,7 @@ export async function saveShopSettingsAction(_previous: FormOutcome | null, form
     const actor = await requireStaffCapability(canManageShop);
     await saveShopSettings(getDb(), {
       actor,
-      fields: { paymentRo: text(form, "paymentRo"), paymentEn: text(form, "paymentEn"), ordersTo: text(form, "ordersTo") },
+      fields: { paymentRo: text(form, "paymentRo"), paymentEn: text(form, "paymentEn"), ordersTo: text(form, "ordersTo"), emailMembers: form.has("emailMembers") ? "on" : "off" },
     });
   } catch (error) {
     return refused(error, form);
@@ -260,7 +262,9 @@ export async function moveShopOrderAction(_previous: FormOutcome | null, form: F
   try {
     const actor = await requireStaffCapability(canManageShop);
     await moveOrderByClub(getDb(), { actor, orderId, verb });
-    outcome = verb === "pay" ? { saved: "shopOrderPaid" } : verb === "handOver" ? { saved: "shopOrderHandedOver" } : { saved: "shopOrderCancelled" };
+    // The words follow the switch (§704): off, the member was told nothing, and the banner says so.
+    const emailed = verb === "pay" ? (await readShopSettings(getDb())).emailMembers : true;
+    outcome = verb === "pay" ? { saved: emailed ? "shopOrderPaid" : "shopOrderPaidNoEmail" } : verb === "handOver" ? { saved: "shopOrderHandedOver" } : { saved: "shopOrderCancelled" };
   } catch (error) {
     outcome = outcomeOf(error);
   }

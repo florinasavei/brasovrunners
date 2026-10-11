@@ -3,6 +3,7 @@
 import Box from "@mui/material/Box";
 import { useTranslations } from "next-intl";
 import { lazy, type ReactNode, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import type { ImageCrop } from "../domain/schema";
 import { leavePreviewEntry, previewPopListener, pushPreviewEntry } from "./picture-preview-history";
 
 /**
@@ -31,12 +32,17 @@ export default function PictureLightbox({
   srcSet,
   alt,
   caption,
+  crop,
+  intrinsic,
   children,
 }: {
   src: string;
   srcSet?: string;
   alt: string;
   caption: string;
+  /** The part of the picture to show large, four fractions (§541), with the picture's own size; absent shows it whole. */
+  crop?: ImageCrop | null;
+  intrinsic?: { width: number; height: number };
   children: ReactNode;
 }) {
   const t = useTranslations("Picture");
@@ -101,6 +107,8 @@ export default function PictureLightbox({
             srcSet={srcSet}
             alt={alt}
             caption={caption}
+            crop={crop}
+            intrinsic={intrinsic}
             closeLabel={t("close")}
             title={alt || t("title")}
           />

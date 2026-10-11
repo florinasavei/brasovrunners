@@ -7,7 +7,7 @@ import { PAYMENT_WORDS_MAX } from "@/modules/content/shop/fields";
 import type { ShopSettings } from "@/modules/content/shop/settings";
 import TranslateAllButton from "@/modules/translate/ui/TranslateAllButton";
 import ActionForm, { type RefusalMessages } from "@/shared/forms/ActionForm";
-import RecallField from "@/shared/forms/recall";
+import RecallField, { RecallCheckbox } from "@/shared/forms/recall";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import { saveShopSettingsAction } from "@/app/[locale]/admin/shop/actions";
@@ -70,6 +70,17 @@ export default function ShopSettingsCard({
                 slotProps={{ htmlInput: { maxLength: PAYMENT_WORDS_MAX, lang: "en" } }}
               />
             </Box>
+            <Box>
+              <Box component="label" sx={{ display: "inline-flex", alignItems: "center", gap: 1, minHeight: 44, cursor: "pointer" }}>
+                <RecallCheckbox name="emailMembers" defaultChecked={settings.emailMembers} style={{ width: 20, height: 20 }} />
+                <Typography component="span" variant="body2">
+                  {t("members.shop.emailMembers")}
+                </Typography>
+              </Box>
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                {t("members.shop.emailMembersHelp")}
+              </Typography>
+            </Box>
             <RecallField
               name="ordersTo"
               label={t("members.shop.ordersTo")}
@@ -94,6 +105,9 @@ export default function ShopSettingsCard({
           </Typography>
           <Typography variant="body2" sx={{ whiteSpace: "pre-line" }}>
             {t("members.shop.ordersTo")}: {settings.ordersTo ?? t("members.shop.notSet")}
+          </Typography>
+          <Typography variant="body2">
+            {t("members.shop.emailMembers")}: {settings.emailMembers ? t("members.shop.on") : t("members.shop.off")}
           </Typography>
         </Stack>
       )}

@@ -24,5 +24,6 @@ export function productRefusalMessages(t: Words): Promise<RefusalMessages> {
     extraVariants: t("members.shop.extraVariants"),
     chartColumns: t("members.shop.chart.title"),
     photoAssetId: t("members.shop.photo"),
+    sizeGuideAssetId: t("members.shop.sizes.guide"),
   });
 }
