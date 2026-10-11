@@ -63,6 +63,11 @@ import { isBlankValue } from "@/shared/forms/blank-value";
 import { type BilingualText, isWrittenText, missingLanguage, type TextLanguage } from "@/shared/forms/both-languages";
 import { hasRichTextContent, parseRichText, type RichTextDoc, richTextToPlainText } from "@/modules/content/rich-text/domain/schema";
 import { attachYoutubePosters } from "@/modules/media/video-poster";
+import { getStorage, isStorageConfigured } from "@/modules/media/storage";
+import { readPostedRouteGpx } from "@/modules/events/domain/route-gpx";
+import { routeMapsToStore } from "@/modules/events/domain/route-maps";
+import { env } from "@/shared/config/env";
+import { releaseRouteGpx, routeGpxKeyOf } from "./route-gpx";
 import { DEFAULT_WEATHER_MODE, readWeatherMode, type WeatherMode } from "@/modules/weather/domain/mode";
 import {
   type EventFieldsInput,
@@ -542,6 +547,12 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
       ? {}
       : { latitude: fields.coordinates?.latitude ?? null, longitude: fields.coordinates?.longitude ?? null }),
     routeUrl: fields.routeUrl,
+    // «Traseul»'s maps and GPX (§718), by the partners' discipline: a caller that posted neither map
+    // field writes no maps, and one that posted no GPX input leaves the file alone.
+    ...(fields.routeStrava === undefined && fields.routeGarmin === undefined
+      ? {}
+      : { routeMaps: routeMapsToStore([fields.routeGarmin ?? null, fields.routeStrava ?? null]) }),
+    ...(fields.routeGpx === undefined ? {} : { routeGpx: fields.routeGpx }),
     // No `video_url` (§481): a film is a figure in the description (§266); the column is unread
     // and leaves the database in BR-V2.11 (§491).
     stravaEventUrl: fields.stravaEventUrl,
@@ -1827,6 +1838,10 @@ const SERIES_COLUMNS = [
   // The links are the route's kin (§332): the GPX and the rules do not change from one
   // Wednesday to the next, so a series edit carries them like the route.
   "links",
+  // «Traseul»'s maps and GPX (§718), like the route they show: the Wednesday run is drawn on the
+  // same map every Wednesday, and "from this date" carries a new one.
+  "routeMaps",
+  "routeGpx",
   "coHosts",
   // Not `locationName` and `locationAddress`: the place travels by what each language's page
   // shows (`placesShown`, §362), in `applyToSeries` below, with the names on each language's row.
@@ -1984,7 +1999,14 @@ async function applyToSeries<T extends Record<string, unknown>>(
      */
     discountNoteCleared?: boolean;
   },
-): Promise<{ applied: number; offered: number; dates: SavedDate[]; holds: WindowHoldsMoved[] }> {
+): Promise<{
+  applied: number;
+  offered: number;
+  dates: SavedDate[];
+  holds: WindowHoldsMoved[];
+  /** The GPX keys this save overwrote on the other dates (§718), for the store to let go of once nothing names them. */
+  gpxReplaced?: string[];
+}> {
   const { before, after, now } = input;
   const dates: SavedDate[] = [];
   // What the window's move did on each date this save wrote (§665).
@@ -2096,6 +2118,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
   const zone = after.timezone;
   let applied = 0;
   let offered = 0;
+  const gpxReplaced: string[] = [];
   for (const member of members) {
     const days = Math.round((wallDay(member.startsAt, zone) - wallDay(before.startsAt, zone)) / 86_400_000);
     const shift = (date: Date | null) => (date ? addWallClockInterval(date, zone, { days }) : null);
@@ -2145,6 +2168,12 @@ async function applyToSeries<T extends Record<string, unknown>>(
       }
     }
 
+    // A date that held a GPX of its own loses the file this save writes over it (§718): its key is
+    // handed back, so the store lets it go once no date names it any more.
+    if ("routeGpx" in changes) {
+      const replaced = routeGpxKeyOf(member.routeGpx);
+      if (replaced !== null && replaced !== routeGpxKeyOf(changes.routeGpx)) gpxReplaced.push(replaced);
+    }
     // Read before anything is written to this date, only when a notice needs to compare (§331).
     const memberTranslationsBefore = input.collect ? await listTranslationsForEvent(tx, member.id) : [];
     let touched = false;
@@ -2221,7 +2250,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
       }
     }
   }
-  return { applied, offered, dates, holds };
+  return { applied, offered, dates, holds, gpxReplaced };
 }
 
 /**
@@ -2311,6 +2340,30 @@ async function assertStoredCover<T extends Record<string, unknown>>(
   if (!(await findCoverPicture(db, posted.coverMediaAssetId))) {
     throw new DomainError("VALIDATION_ERROR", "the cover: the picture is not a stored picture", ["coverAssetId"]);
   }
+}
+
+/**
+ * A GPX of «Traseul» (§718) posted with a save must be this environment's — a key another
+ * environment's upload wrote is a file this site cannot serve. Asked only when the save moves the
+ * file: an unchanged one is not read again.
+ */
+function assertRouteGpxOfThisEnvironment(fields: Pick<EventFieldsInput, "routeGpx">, current: { routeGpx: unknown } | null): void {
+  const posted = fields.routeGpx;
+  if (!posted || posted.key === routeGpxKeyOf(current?.routeGpx)) return;
+  if (readPostedRouteGpx(JSON.stringify(posted), env.APP_ENV) === undefined) {
+    throw new DomainError("VALIDATION_ERROR", "the GPX file: upload it again", ["routeGpx"]);
+  }
+}
+
+/**
+ * The GPX objects a committed save or erase let go of (§718), deleted when no event row names them
+ * any more. Best effort and after the commit: a store having a bad minute leaves a file nobody
+ * links to, never a page linking to a file that is gone; and a store that is not configured has
+ * nothing to delete.
+ */
+async function releaseRouteGpxAfterCommit<T extends Record<string, unknown>>(db: Database<T>, keys: readonly (string | null)[]): Promise<void> {
+  if (!isStorageConfigured() || keys.every((key) => key === null)) return;
+  await releaseRouteGpx(db, getStorage(), keys).catch(() => undefined);
 }
 
 /** The four «Lista ascunsă» columns of a row (§647), as the trail compares them. */
@@ -2565,6 +2618,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     await assertCoherentRegistrationBlock(db, parsedEventFields, now);
     await assertDateToBeAnnouncedAllowed(db, parsedEventFields, current);
     await assertStoredCover(db, parsedEventFields, current);
+    assertRouteGpxOfThisEnvironment(parsedEventFields, current);
   }
   const times = parsedEventFields ? resolveTimes(parsedEventFields, switchesAfterSave(parsedEventFields, current)) : undefined;
   // The notice and the cancellation's reason, refused here like any other box (§331, §315).
@@ -2592,6 +2646,8 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   */
   const deadlines = await currentDeadlines(db);
 
+  // The GPX keys a series save wrote over on the other dates (§718), released after the commit.
+  const seriesGpxKeys: string[] = [];
   const outcome = await db.transaction(async (tx) => {
     let savedEvent: EditableEvent = current;
     const savedTranslations: EditableTranslation[] = [];
@@ -2740,6 +2796,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       });
       appliedTo = series.applied;
       holdMoves.push(...series.holds);
+      seriesGpxKeys.push(...(series.gpxReplaced ?? []));
       offered += series.offered;
       otherDates.push(...series.dates);
     }
@@ -2767,6 +2824,10 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   // The one save of the whole event (§36), cancelling included: a cancelled event must never read
   // as scheduled, so the cached rows go the moment it commits (§28, §333).
   revalidatePublicContent("events");
+  // The GPX this date held before the save (§718), when the save replaced or removed it, and the ones
+  // it overwrote on the series' other dates: deleted from the store once no date and no duplicate names them.
+  const gpxLetGo = parsedEventFields?.routeGpx !== undefined && routeGpxKeyOf(current.routeGpx) !== (parsedEventFields.routeGpx?.key ?? null) ? [routeGpxKeyOf(current.routeGpx)] : [];
+  await releaseRouteGpxAfterCommit(db, [...gpxLetGo, ...seriesGpxKeys]);
   /*
     The date, the close, the participation window, the status, the capacity: any of them moves
     what the maintenance job has to do and when (§334). Only when the event row itself was saved
@@ -2829,6 +2890,8 @@ function blankEventRow(now: Date): EditableEvent {
     coHostUrl: null,
     coHosts: null,
     links: null,
+    routeMaps: null,
+    routeGpx: null,
     repeatRule: null,
     repeatOf: null,
     scheduleItems: null,
@@ -3416,6 +3479,10 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // The links travel with the route (§332), to a duplicate and to every date of a repeat:
     // last year's GPX and rules are this year's starting point, and a weekly run's are the same.
     links: source.links,
+    // «Traseul»'s maps and GPX (§718), like the route: one object, named by both rows, deleted
+    // only when the last of them lets go of it.
+    routeMaps: source.routeMaps,
+    routeGpx: source.routeGpx,
     // «Copertă» (§709), like the route: every date of a repeat wears the series' cover, and a
     // duplicate starts with last year's until the club picks this year's.
     coverMediaAssetId: source.coverMediaAssetId,
@@ -3963,14 +4030,17 @@ export async function deleteEvent<T extends Record<string, unknown>>(
   // `event_translations` cascades from the event, and so do a group run's self-declarations
   // (§393) — whose outbox rows go first, in the same transaction, since nothing could render them.
   // A declaration covers the run's other dates too (§523): while the run has one, it moves there.
-  await db.transaction(async (tx) => {
+  const gpxKey = await db.transaction(async (tx) => {
     await rehomeGroupRunDeclarationsOfEvent(tx, input.eventId);
     // A held declaration (§556) left on this date refuses the delete, and the transaction with it.
     await refuseHeldGroupRunDeclarationsOfEvent(tx, input.eventId);
     await deleteGroupRunDeclarationMessagesOfEvent(tx, input.eventId);
-    await tx.delete(events).where(eq(events.id, input.eventId));
+    const [gone] = await tx.delete(events).where(eq(events.id, input.eventId)).returning({ routeGpx: events.routeGpx });
+    return routeGpxKeyOf(gone?.routeGpx);
   });
   revalidatePublicContent("events");
+  // Its GPX (§718) goes with it, unless another date of the series or a duplicate still names it.
+  if (gpxKey) await releaseRouteGpxAfterCommit(db, [gpxKey]);
 }
 
 export type HardDeleteEventInput = {
@@ -4083,12 +4153,14 @@ export async function hardDeleteEvent<T extends Record<string, unknown>>(
     // A held declaration (§556) left on this date refuses the erase, and the transaction with it.
     await refuseHeldGroupRunDeclarationsOfEvent(tx, plan.eventId);
     await deleteGroupRunDeclarationMessagesOfEvent(tx, plan.eventId);
-    await tx.delete(events).where(eq(events.id, plan.eventId));
+    const [gone] = await tx.delete(events).where(eq(events.id, plan.eventId)).returning({ routeGpx: events.routeGpx });
 
-    return { registrationsErased };
+    return { registrationsErased, gpxKey: routeGpxKeyOf(gone?.routeGpx) };
   });
   // The event, and an album that pointed at it, leave the public pages (`reads.ts` files the album
   // under both kinds, so this one call reaches it).
   revalidatePublicContent("events");
-  return erased;
+  // Its GPX (§718) goes with it, unless another date of the series or a duplicate still names it.
+  if (erased.gpxKey) await releaseRouteGpxAfterCommit(db, [erased.gpxKey]);
+  return { registrationsErased: erased.registrationsErased };
 }

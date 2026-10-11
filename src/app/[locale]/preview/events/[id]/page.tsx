@@ -19,7 +19,9 @@ import GroupRunSafetyRules from "@/modules/group-run-declarations/ui/GroupRunSaf
 import EventFacts from "@/modules/events/ui/EventFacts";
 import EventLinks from "@/modules/events/ui/EventLinks";
 import EventRoute from "@/modules/events/ui/EventRoute";
-import { hasRouteDescription } from "@/modules/events/domain/route-section";
+import { hasRouteSection } from "@/modules/events/domain/route-section";
+import { isStorageConfigured } from "@/modules/media/storage";
+import type { RouteMapWords } from "@/modules/events/ui/EventRoute";
 import EventProgramme from "@/modules/events/ui/EventProgramme";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
@@ -134,17 +136,20 @@ export default async function PreviewEventPage({ params }: Props) {
         descriptionJson={preview.routeDescriptionJson}
         links={preview.links}
         routeUrl={preview.routeUrl}
+        routeMaps={preview.routeMaps}
+        routeGpx={preview.routeGpx}
         locale={locale}
         heading={tEvent("routeSection")}
         openRouteLabel={tEvent("openRoute")}
         kindLabels={linkKindLabels}
+        mapWords={tEvent.raw("routeMaps") as RouteMapWords}
       />
       <EventLinks
         links={preview.links}
         locale={locale}
         heading={tEvent("links.heading")}
         kindLabels={linkKindLabels}
-        routeSection={hasRouteDescription(preview.routeDescriptionJson)}
+        routeSection={hasRouteSection(preview, isStorageConfigured())}
       />
 
       <EventProgramme scheduleItems={preview.scheduleItems} scheduleJson={preview.scheduleJson} timeZone={preview.timezone} heading={t("editor.fields.schedule")} />

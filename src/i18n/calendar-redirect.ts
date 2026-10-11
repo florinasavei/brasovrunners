@@ -9,7 +9,7 @@ import { type Locale, routing } from "./routing";
  * `?view=list`. They live in bookmarks, shared links and search results; each now answers a redirect
  * to the same period at its own path (`/ro/calendar/2026-10`), the filters kept, so it meets the
  * static period page the CDN answers rather than a render. The calendar's path is read from
- * `routing.pathnames`, like `root-redirect.ts`, so renaming it in one place cannot leave the old
+ * `routing.pathnames`, like `aliases.ts`, so renaming it in one place cannot leave the old
  * addresses pointing at a 404.
  *
  * Permanent only where the address alone fixes the target (a named month or year); an address

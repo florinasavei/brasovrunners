@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { routing } from "@/i18n/routing";
 import { LEGAL_PAGE_ROUTE, legalDocumentsInForce } from "@/modules/legal-documents/public-page";
-import { cachedFaqPage, cachedMembersPage, cachedSitemapAlbums, cachedSitemapEvents, cachedSitemapPages, cachedTeamPage } from "@/modules/public-cache/reads";
+import { cachedFaqPage, cachedHomePage, cachedMembersPage, cachedSitemapAlbums, cachedSitemapEvents, cachedSitemapPages, cachedTeamPage } from "@/modules/public-cache/reads";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import { faqPageOnSite } from "@/modules/content/faq/repository";
@@ -50,6 +50,8 @@ export const dynamic = "force-dynamic";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const entries: MetadataRoute.Sitemap = [];
+  // «Pagina principală» (§714): while it is on, the root is a page of its own and the landing page.
+  const homeOn = (await cachedHomePage()).on;
 
   for (const locale of routing.locales) {
     // Each read with its last good copy behind it (§447): a crawler that arrives during an outage
@@ -57,9 +59,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const events = (await readWithLastGood(`sitemap:events:${locale}`, () => cachedSitemapEvents(locale), now)).value;
 
     /**
-     * The site root is deliberately absent: it redirects to the events listing, and listing a
-     * URL that answers 308 asks a crawler to discover the same page twice. The listing is the
-     * landing page, so it carries priority 1.
+     * The site root, only while «Pagina principală» is on (§714): then `/ro` and `/en` are the home
+     * page, canonical to themselves, and the landing page at priority 1. While it is off the root is
+     * a redirect to the listing and stays out — a URL that redirects asks a crawler to discover the
+     * same page twice — and the listing is the landing page, at priority 1.
+     */
+    if (homeOn) {
+      entries.push({
+        url: staticRouteUrl(env.APP_BASE_URL, "/", locale),
+        alternates: { languages: hreflangLanguages(staticRouteUrls(env.APP_BASE_URL, "/")) },
+        changeFrequency: "weekly",
+        priority: 1,
+      });
+    }
+
+    /**
+     * The listing.
      *
      * Listed even with nothing on it, unlike a guard here once read: the page itself always
      * exists in both locales — `events/page.tsx` renders an empty state rather than 404ing —
@@ -71,7 +86,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: staticRouteUrl(env.APP_BASE_URL, "/events", locale),
       alternates: { languages: hreflangLanguages(staticRouteUrls(env.APP_BASE_URL, "/events")) },
       changeFrequency: "weekly",
-      priority: 1,
+      priority: homeOn ? 0.9 : 1,
     });
 
     for (const event of events) {

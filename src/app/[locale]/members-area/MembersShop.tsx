@@ -38,6 +38,24 @@ const CONTROL_SX = {
   color: "text.primary",
 } as const;
 
+/** The «Members» words as `getTranslations` gives them: read once, handed to the parts that draw them. */
+type MembersWords = Awaited<ReturnType<typeof getTranslations<"Members">>>;
+
+/**
+ * The answer to «Comandă» or «Anulează comanda», in the words of `Members.shop.outcome` (§683): a
+ * success for an order placed or cancelled, an error for a refusal; with the shop's emails switched
+ * off (§704) a placed order's answer names none. It stands among the shop and the orders below and,
+ * when there is neither — a press made on a page drawn before the notice changed — alone, drawn by
+ * the shop's page (§715).
+ */
+export function ShopOutcomeAlert({ outcome, emailMembers, t }: { outcome: ShopOutcome; emailMembers: boolean; t: MembersWords }) {
+  return (
+    <Alert severity={outcome === "placed" || outcome === "cancelled" ? "success" : "error"} sx={{ mb: 2 }} data-testid="members-shop-outcome">
+      {t(`shop.outcome.${outcome === "placed" && !emailMembers ? "placedNoEmail" : outcome}`)}
+    </Alert>
+  );
+}
+
 /**
  * «Magazinul clubului» and «Comenzile mele» in the members' zone (§683), drawn on the server with
  * plain forms and native controls — no client island, so an order works with JavaScript off.
@@ -73,11 +91,7 @@ export default async function MembersShop({
   const t = await getTranslations("Members");
   const showShop = shopOpen && products.length > 0;
   if (!showShop && orders.length === 0) return null;
-  const banner = outcome ? (
-    <Alert severity={outcome === "placed" || outcome === "cancelled" ? "success" : "error"} sx={{ mb: 2 }} data-testid="members-shop-outcome">
-      {t(`shop.outcome.${outcome === "placed" && !emailMembers ? "placedNoEmail" : outcome}`)}
-    </Alert>
-  ) : null;
+  const banner = outcome ? <ShopOutcomeAlert outcome={outcome} emailMembers={emailMembers} t={t} /> : null;
   // The answer is drawn where the redirect's anchor lands: «Comenzile mele» after an order or a cancel
   // (a refused cancel included), otherwise the shop; the orders when the shop is not drawn at all.
   const bannerInOrders = orders.length > 0 && (outcomeAtOrders || !showShop);
@@ -200,7 +214,7 @@ function SizeGuideButton({ guide, alt, label }: { guide: ShopPhoto; alt: string;
   );
 }
 
-function ProductCard({ product, locale, t }: { product: MembersShopProduct; locale: Locale; t: Awaited<ReturnType<typeof getTranslations<"Members">>> }) {
+function ProductCard({ product, locale, t }: { product: MembersShopProduct; locale: Locale; t: MembersWords }) {
   const offered = product.variants.filter((variant) => !variant.soldOut);
   const single = product.variants.length === 1 && product.variants[0].label === null;
   const id = product.id.slice(0, 8);

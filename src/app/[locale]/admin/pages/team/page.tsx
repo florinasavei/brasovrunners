@@ -44,7 +44,6 @@ import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
-import SubmitButton from "@/shared/ui/SubmitButton";
 import BoxesCard from "./BoxesCard";
 import {
   createTeamMemberAction,
@@ -122,6 +121,10 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
       remove: t("team.linkRows.remove"),
       moveUp: t("team.linkRows.moveUp"),
       moveDown: t("team.linkRows.moveDown"),
+      moveUpWord: t("team.linkRows.moveUpWord"),
+      moveDownWord: t("team.linkRows.moveDownWord"),
+      moveUpTip: t("team.linkRows.moveUpTip"),
+      moveDownTip: t("team.linkRows.moveDownTip"),
       row: t("team.linkRows.row"),
     },
     // The card's own words for each kind — what the page shows when a link has no label (§474).
@@ -487,14 +490,14 @@ function MemberCard({
           <Box component="form" action={moveTeamMemberAction}>
             {hidden}
             <input type="hidden" name="direction" value="up" />
-            <SubmitButton label="↑" pendingLabel="↑" variant="outlined" ariaLabel={t("team.moveUpNamed", { name: member.name })} />
+            <GlyphSubmitButton icon="moveUp" label={t("team.moveUpWord")} pendingLabel={t("team.moveUpWord")} tooltip={t("team.moveUpTip")} variant="outlined" ariaLabel={t("team.moveUpNamed", { name: member.name })} />
           </Box>
         )}
         {mayEdit && !last && (
           <Box component="form" action={moveTeamMemberAction}>
             {hidden}
             <input type="hidden" name="direction" value="down" />
-            <SubmitButton label="↓" pendingLabel="↓" variant="outlined" ariaLabel={t("team.moveDownNamed", { name: member.name })} />
+            <GlyphSubmitButton icon="moveDown" label={t("team.moveDownWord")} pendingLabel={t("team.moveDownWord")} tooltip={t("team.moveDownTip")} variant="outlined" ariaLabel={t("team.moveDownNamed", { name: member.name })} />
           </Box>
         )}
         {mayShow && (

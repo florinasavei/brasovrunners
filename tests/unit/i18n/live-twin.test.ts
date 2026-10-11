@@ -207,7 +207,7 @@ describe("mayBeSignedIn", () => {
  */
 describe("isStaticPublicAnswer", () => {
   it("is every static public page at its bare address, in both locales", () => {
-    for (const path of ["/ro/events", "/en/events/crosul", "/ro/calendar", "/ro/faq", "/en/team", "/ro/gallery", "/ro/gallery/album", "/ro/pages/despre", "/ro/legal/terms", "/en/legal/privacy"]) {
+    for (const path of ["/ro", "/en", "/ro/events", "/en/events/crosul", "/ro/calendar", "/ro/faq", "/en/team", "/ro/gallery", "/ro/gallery/album", "/ro/pages/despre", "/ro/legal/terms", "/en/legal/privacy"]) {
       expect(isStaticPublicAnswer(path, search(""), false), path).toBe(true);
     }
     // Next's own `_rsc` and a share's `utm_*` still reach the static page.
@@ -216,7 +216,8 @@ describe("isStaticPublicAnswer", () => {
     expect(isStaticPublicAnswer("/ro/calendar/2026-10", search(""), false)).toBe(true);
     expect(isStaticPublicAnswer("/en/calendar/2026-10/list", search(""), false)).toBe(true);
     expect(isStaticPublicAnswer("/ro/calendar/2026-10", search("type=RACE"), false)).toBe(false);
-    expect(PREFETCHED_PATHNAMES.size).toBe(11);
+    // The site's root (§714) is the twelfth: the home page, or the listing's kept redirect.
+    expect(PREFETCHED_PATHNAMES.size).toBe(12);
   });
 
   it("is never a twin's answer, a page rendered per request, or the backoffice", () => {

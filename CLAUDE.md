@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.94-2026-10-11 -->
+<!-- PROJECT_BASELINE: BR-V2.95-2026-10-11 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V2.94-2026-10-11`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V2.95-2026-10-11`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -35,6 +35,9 @@ yarn lint         ESLint
 yarn typecheck    tsc --noEmit
 yarn test         unit and database tests; no database or Docker needed (PGlite)
 yarn test:concurrency  two-connection suite (BR-REQ-051-01 criterion 5); needs the database
+yarn test:clock   the suite with the real clock at +1 month, +1 year, +10 years: a test that
+                  fails only there pins a date the calendar will reach (docs/DEVELOPMENT.md);
+                  `--concurrency` for the two-connection suite
 yarn test:e2e     Playwright, 320px mobile and desktop; needs the database running
 yarn test:e2e:dev  Playwright against `next dev`: every backoffice and public route, twice; minutes; not in CI (§370)
 yarn check        docs:check + secrets:check + migrations:check + typecheck + lint + test; CI and the pre-commit hook run this

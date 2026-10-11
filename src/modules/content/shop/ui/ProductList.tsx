@@ -12,7 +12,7 @@ import TeamPhotoImage from "@/modules/content/team/ui/TeamPhotoImage";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import Panel from "@/shared/ui/Panel";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { moveShopProductAction } from "@/app/[locale]/admin/shop/actions";
 
@@ -101,14 +101,14 @@ function ProductRow({ product, first, last, locale, words: t, mayManage }: { pro
           <Box component="form" action={moveShopProductAction}>
             {hidden}
             <input type="hidden" name="direction" value="up" />
-            <SubmitButton label="↑" pendingLabel="↑" variant="outlined" ariaLabel={t("members.shop.moveUp", { title })} />
+            <GlyphSubmitButton icon="moveUp" label={t("members.shop.moveUpWord")} pendingLabel={t("members.shop.moveUpWord")} tooltip={t("members.shop.moveUpTip")} variant="outlined" ariaLabel={t("members.shop.moveUp", { title })} />
           </Box>
         )}
         {mayManage && !last && (
           <Box component="form" action={moveShopProductAction}>
             {hidden}
             <input type="hidden" name="direction" value="down" />
-            <SubmitButton label="↓" pendingLabel="↓" variant="outlined" ariaLabel={t("members.shop.moveDown", { title })} />
+            <GlyphSubmitButton icon="moveDown" label={t("members.shop.moveDownWord")} pendingLabel={t("members.shop.moveDownWord")} tooltip={t("members.shop.moveDownTip")} variant="outlined" ariaLabel={t("members.shop.moveDown", { title })} />
           </Box>
         )}
       </Stack>

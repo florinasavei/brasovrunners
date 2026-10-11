@@ -453,6 +453,24 @@
     "age": "Age",
     "openRoute": "View the route",
     "routeJump": "About the route",
+    "routeMaps": {
+      "tabs": "Route maps",
+      "garmin": {
+        "tab": "Garmin Connect",
+        "show": "Show the map on Garmin Connect",
+        "notice": "The map loads from Garmin when you press; Garmin sees your IP address.",
+        "open": "Open in Garmin Connect",
+        "frame": "The route's map on Garmin Connect"
+      },
+      "strava": {
+        "tab": "Strava",
+        "show": "Show the map on Strava",
+        "notice": "The map loads from Strava when you press; Strava sees your IP address.",
+        "open": "Open in Strava",
+        "frame": "The route's map on Strava"
+      },
+      "gpx": "Download the route (GPX)"
+    },
     "video": {
       "title": "Event film (YouTube)",
       "notice": "The player is YouTube's and loads only when you open it.",
@@ -1572,6 +1590,8 @@
       "siteFontSizeBody": "Every public page of the site now opens with its text at the chosen size, for every visitor, in both themes. The backoffice stays as it is. You can go back to «Normal» at any time.",
       "siteLookTitle": "Change the site's look?",
       "siteLookBody": "Every public page now opens in the chosen look, for every visitor. The backoffice, the emails and the PDFs stay as they are. You can go back to «Today's look» at any time.",
+      "homePageTitle": "Save the home page?",
+      "homePageBody": "From now on the site's address opens what you chose, for every visitor: the home page or the events list. You can go back at any time.",
       "translationBudgetTitle": "Save the translation budget?",
       "translationBudgetBody": "The new number applies from the next press of \"Translate from Romanian\". What was translated today stays counted.",
       "deliveryTimingTitle": "Change when emails leave?",
@@ -1940,6 +1960,28 @@
       "routeUrl": "Route link",
       "routeUrlHelp": "Where the route can be seen — a Strava route or activity, or any other https:// link. Leave empty if there is not one.",
       "routeDescriptionHelp": "Optional, in both languages or neither: stops, climbs, what to expect, a map (the picture button). Shown on the page under “The route”.",
+      "routeGarmin": "Garmin Connect: the link or the embed code",
+      "routeGarminHelp": "Paste the course's link from Garmin Connect (…/course/…) or its embed code (Share → Embed). The page shows the map, loaded only when the visitor presses, and the link.",
+      "routeStrava": "Strava: the link or the embed code",
+      "routeStravaHelp": "Paste the route's link from Strava (strava.com/routes/…) or its embed code (Share → Embed). The page shows the map, loaded only when the visitor presses, and the link.",
+      "routeGpx": {
+        "label": "The route's GPX file",
+        "help": "Upload the file from a computer or a phone; it shows on the page under the maps, as «Download the route (GPX)». A GPX kept elsewhere can be added below as a link.",
+        "upload": "Upload a GPX",
+        "replace": "Replace the file",
+        "remove": "Remove the file",
+        "uploading": "Uploading…",
+        "none": "No GPX file.",
+        "removed": "The file is removed when you save.",
+        "noStorage": "File storage is not configured here, so a GPX cannot be uploaded.",
+        "errors": {
+          "tooLarge": "The file is larger than 4 MB.",
+          "notGpx": "The file is not a GPX: its root element is not gpx.",
+          "notXml": "The file is not an XML document.",
+          "empty": "The file is empty.",
+          "failed": "The upload did not work. Try again."
+        }
+      },
       "repeatHelp": "Make this event a series at a fixed interval. The next {horizon} are created now and the site creates the rest; each date can be moved or cancelled on its own.",
       "repeatUntil": "Until (optional)",
       "repeatUntilHelp": "Leave empty for a series without an end.",
@@ -2061,6 +2103,7 @@
         "remove": "Remove link",
         "moveUp": "Move up link",
         "moveDown": "Move down link",
+        "uploadGpx": "Upload the file instead of a link",
         "row": "Link",
         "urlError": "Link {n}: the address must start with https://",
         "kindError": "Link {n}: choose the kind from the list",
@@ -2549,11 +2592,14 @@
             "day": "day",
             "dayAuto": "day (automatic)",
             "described": "with a description",
-            "describedOneLanguage": "description in one language only"
+            "describedOneLanguage": "description in one language only",
+            "strava": "Strava",
+            "garmin": "Garmin"
           },
           "links": {
             "strava": "Strava",
             "facebook": "Facebook",
+            "gpxUploaded": "GPX uploaded",
             "files": {
               "one": "{count} link",
               "few": "{count} links",
@@ -4315,6 +4361,10 @@
       "untick": "Untick: {text}",
       "moveUp": "Move up: {text}",
       "moveDown": "Move down: {text}",
+      "moveUpWord": "Move up",
+      "moveDownWord": "Move down",
+      "moveUpTip": "Moves the line one place up among the open ones. The whole team sees the list in this order.",
+      "moveDownTip": "Moves the line one place down among the open ones. The whole team sees the list in this order.",
       "edit": "Change",
       "doneTitle": "Show done ({count})",
       "add": {
@@ -4567,6 +4617,135 @@
         "faq": "Frequently asked questions"
       }
     },
+    "homePage": {
+      "title": "Home page",
+      "intro": "The start page at the site's address, from the top photograph to the club's numbers. It is reached from the logo, not from the menu.",
+      "introMore": "Off, the address leads to «Events», as it always has. A box empty in both languages means the default words, shown in grey; a photograph not chosen is an empty slot.",
+      "current": "Now: {state}",
+      "updatedAt": "Set {when}.",
+      "legend": "What the site's address opens",
+      "default": "default",
+      "choices": {
+        "off": {
+          "name": "The events list",
+          "help": "The site's address leads to «Events», as it always has."
+        },
+        "on": {
+          "name": "The home page",
+          "help": "The site's address opens the home page, and the logo leads to it."
+        }
+      },
+      "heroLegend": "The top photograph",
+      "heroHelp": "A real photograph of the club, with the agreement of everyone recognisable in it. Without one, the page shows an empty slot.",
+      "heroCropTitle": "Crop — what shows at the top of the page",
+      "heroCropHelp": "It starts at the largest 16:9 rectangle. You can choose another shape or drag a rectangle over the photograph.",
+      "headlineLegend": "The headline",
+      "headlineRo": "Headline (Romanian)",
+      "headlineEn": "Headline (English)",
+      "headlineHelp": "The last word is coloured. Empty in both languages: a default headline.",
+      "sublineLegend": "The line under the headline",
+      "sublineRo": "Line under the headline (Romanian)",
+      "sublineEn": "Line under the headline (English)",
+      "sublineHelp": "One or two sentences. Empty in both languages: default words.",
+      "buttonsLegend": "The top buttons",
+      "buttonsHelp": "«Join us» leads to the next weekly run, «See the calendar» to the calendar. A label in both languages or neither: empty means the default words.",
+      "buttonJoinRo": "«Join us» (Romanian)",
+      "buttonJoinEn": "«Join us» (English)",
+      "buttonCalendarRo": "«See the calendar» (Romanian)",
+      "buttonCalendarEn": "«See the calendar» (English)",
+      "buttonHowRo": "«How it works» (Romanian)",
+      "buttonHowEn": "«How it works» (English)",
+      "buttonHowHelp": "A club page from «Custom pages». With no page the button is not drawn; an unpublished page appears once you publish it. The label is optional: empty, «How it works».",
+      "sectionsHelp": "Tick the sections that appear, in the order below. The last four start off: fill them in first, then tick them.",
+      "sections": {
+        "hero": "The photograph, the headline and the buttons",
+        "nextRun": "The next run",
+        "weekly": "The weekly runs",
+        "special": "The special events",
+        "steps": "First time — five steps for a newcomer",
+        "why": "Why — four reasons and the quote",
+        "strip": "The photo strip — only with at least one photograph",
+        "numbers": "The club's numbers — only those that can be known"
+      },
+      "save": "Save the home page",
+      "saving": "Saving…",
+      "saved": "The home page was saved.",
+      "readOnly": "The Administrator sets the home page; here you see the choice in force.",
+      "noStorage": "Picture storage is not configured here, so no photograph can be chosen.",
+      "open": "Open the home page",
+      "scope": "Only what the site's address opens and where the logo leads change. «Events» stays in the menu, at the same address.",
+      "buttonHowPage": "The page of the top «How it works» button",
+      "folds": {
+        "sections": "Which sections the page shows",
+        "sectionsAside": "{shown} of {total} shown",
+        "hero": "Top: the photograph, the headline and the buttons",
+        "heroWithPhoto": "With a photograph",
+        "heroEmpty": "No photograph",
+        "steps": "First time",
+        "stepsIntro": "Five steps for someone who has never run with the club, from the calendar to the coffee after. The «How it works» button appears only with a page chosen.",
+        "why": "Why, and the quote",
+        "whyIntro": "Four reasons, each with its title and sentence, and a quote with who said it. The quote appears only when it is written in both languages: the page puts words in nobody's mouth.",
+        "strip": "The photo strip: its heading",
+        "stripIntro": "The photographs are chosen below, under «The strip's photographs»; with none, the strip is not drawn.",
+        "numbers": "The club's numbers",
+        "numbersAside": "{filled} of 2 filled in",
+        "numbersIntro": "The years are counted from the founding day, and the runs a week and «100% free» from the weekly runs on the calendar. A figure without its facts is left out.",
+        "wordsClub": "The club's words",
+        "wordsPlatform": "The default words"
+      },
+      "inLanguage": {
+        "ro": "{box} (Romanian)",
+        "en": "{box} (English)"
+      },
+      "boxes": {
+        "stepsTitle": "First time: the heading",
+        "stepsLead": "First time: the sentence under the heading",
+        "stepTitle": "First time: step {number}, its title",
+        "stepBody": "First time: step {number}, its sentence",
+        "stepsLink": "First time: the button's label",
+        "whyTitle": "Why: the heading",
+        "reasonTitle": "Why: reason {number}, its title",
+        "reasonBody": "Why: reason {number}, its sentence",
+        "quote": "The quote",
+        "quoteBy": "Who said it",
+        "stripTitle": "The photo strip: its heading"
+      },
+      "pageLabel": "The page «How it works» opens",
+      "pageNone": "None — the button is not drawn",
+      "pageDraft": "{title} (not published)",
+      "stepsPage": "First time: the page of the «How it works» button",
+      "stepsPageHelp": "A club page from «Custom pages», opened in the reader's language. An unpublished page appears once you publish it.",
+      "numbers": {
+        "foundedOn": "The day the club was founded",
+        "foundedOnHelp": "The page shows how many whole years have passed. Empty: the figure is left out.",
+        "activeRunners": "Active runners",
+        "activeRunnersHelp": "How many people run with the club, by your own count. Empty: the figure is left out."
+      },
+      "strip": {
+        "title": "The strip's photographs",
+        "intro": "Up to {max} of the club's photographs, in the order here, each square, its middle. Only photographs with the agreement of everyone recognisable in them.",
+        "count": {
+          "one": "{count} photograph",
+          "few": "{count} photographs",
+          "other": "{count} photographs"
+        },
+        "none": "No photograph yet: the strip is not drawn on the page.",
+        "position": "Place {number}",
+        "up": "Up",
+        "down": "Down",
+        "moveUp": "Move photograph {number} up",
+        "moveDown": "Move photograph {number} down",
+        "remove": "Remove",
+        "removeNamed": "Remove photograph {number} from the strip",
+        "removeTitle": "Remove the photograph from the strip?",
+        "removeBody": "It leaves the home page's strip; it stays in the gallery. Visitors see the change from their next visit.",
+        "addLegend": "Add a photograph to the strip",
+        "addHelp": "Upload one or choose «From the gallery». It is added at the end of the strip.",
+        "add": "Add to the strip",
+        "full": "The strip holds {max} photographs, as many as it takes. Remove one to add another.",
+        "saved": "The photo strip was saved."
+      }
+    },
     "look": {
       "title": "The new look",
       "intro": "The public pages' new look: pink beside the logo blue, bolder headings, rounded buttons, «Join us» in the header.",
@@ -4699,6 +4878,7 @@
       "usedInTeamIntro": "On the team page: the introduction",
       "usedInFaq": "On the FAQ page",
       "usedInMembersPage": "On the members' pages",
+      "usedInHomePage": "On the home page",
       "usedInNewsletter": "In a newsletter sent",
       "usedInTeamBox": "On the team page: the box {title}"
     },
@@ -5878,6 +6058,8 @@
         "intro": "The site's components, drawn from the sample rows — the very code that draws them on the site.",
         "cards": "The listing's cards · EventCard, SeriesCard",
         "cardsNote": "A single-date event and a series; the data is made up and names nobody.",
+        "homeTop": "Home page · Hero, NextRunCard, RunCardGrid",
+        "homeTopNote": "The home page's sections, from sample data: the headline with its photograph (here the empty slot), the next run and a section's cards.",
         "featured": "The featured event · featuredCard",
         "featuredNote": "The listing's first card, at the others' width, told apart by its frame and background.",
         "team": "The team card",
@@ -5902,7 +6084,9 @@
         "fold": "The backoffice fold",
         "foldNote": "The browser's own fold, with its frame and bar; it opens without JavaScript.",
         "foldSummary": "A closed fold",
-        "foldBody": "What is inside shows after a press on the bar."
+        "foldBody": "What is inside shows after a press on the bar.",
+        "home": "The home page · StepsBand, WhyList, PhotoStrip, NumbersBand",
+        "homeNote": "The four sections, in the new look, with the starting words and sample figures. The strip's empty places show here only: on the site a strip without photos is not drawn."
       },
       "icons": {
         "intro": "The two glyph registries, read whole; a name added there appears here.",
@@ -7288,6 +7472,10 @@
       "oneLanguage": "Text in one language only",
       "moveUpNamed": "Move up: {name}",
       "moveDownNamed": "Move down: {name}",
+      "moveUpWord": "Move up",
+      "moveDownWord": "Move down",
+      "moveUpTip": "Moves the card one place earlier in the list. On the Team page, among the cards of the same level, it comes closer to the start.",
+      "moveDownTip": "Moves the card one place later in the list. On the Team page, among the cards of the same level, it comes closer to the end.",
       "show": "Put on the site",
       "hide": "Take off the site",
       "showTitle": "Put “{name}” on the site?",
@@ -7347,6 +7535,10 @@
         "remove": "Remove link",
         "moveUp": "Move up link",
         "moveDown": "Move down link",
+        "moveUpWord": "Move up",
+        "moveDownWord": "Move down",
+        "moveUpTip": "Moves the link one place up. The card on the Team page shows the links in this order.",
+        "moveDownTip": "Moves the link one place down. The card on the Team page shows the links in this order.",
         "row": "Link"
       },
       "subtitleRo": "Subtitle (Română)",
@@ -7371,8 +7563,12 @@
         "empty": "There is no box yet.",
         "listLabel": "The page's boxes, in the page's order",
         "noText": "No text",
-        "moveUp": "Move the box “{title}” up",
-        "moveDown": "Move the box “{title}” down",
+        "moveUp": "Move up: the box “{title}”",
+        "moveDown": "Move down: the box “{title}”",
+        "moveUpWord": "Move up",
+        "moveDownWord": "Move down",
+        "moveUpTip": "Moves the box one place earlier in the list. The boxes show on the Team page, under the cards, in the list's order.",
+        "moveDownTip": "Moves the box one place later in the list. The boxes show on the Team page, under the cards, in the list's order.",
         "showTitle": "Put the box “{title}” on the site?",
         "showBody": "The box appears under the chart while the page is published.",
         "hideTitle": "Take the box “{title}” off the site?",
@@ -7404,6 +7600,10 @@
       "hidden": "Hidden",
       "moveUpNamed": "Move up: {question}",
       "moveDownNamed": "Move down: {question}",
+      "moveUpWord": "Move up",
+      "moveDownWord": "Move down",
+      "moveUpTip": "Moves the question one place up. The FAQ page shows them in this order. What you typed in the form is saved with the move.",
+      "moveDownTip": "Moves the question one place down. The FAQ page shows them in this order. What you typed in the form is saved with the move.",
       "introHeading": "The page's introduction",
       "introHelp": "Optional, in both languages or in neither, at most {max} characters; without it the page opens with the sentence below. It may hold links, pictures and tables.",
       "introDefault": "“{lead}”",
@@ -7508,8 +7708,12 @@
         "expired": "Expired",
         "until": "Until {day}",
         "oneLanguage": "Description in one language only",
-        "moveUp": "Move the {partner} code up",
-        "moveDown": "Move the {partner} code down",
+        "moveUp": "Move up: the {partner} code",
+        "moveDown": "Move down: the {partner} code",
+        "moveUpWord": "Move up",
+        "moveDownWord": "Move down",
+        "moveUpTip": "Moves the code one place up. Members see the codes in this order.",
+        "moveDownTip": "Moves the code one place down. Members see the codes in this order.",
         "showTitle": "Show the {partner} code again?",
         "showBody": "Members will see it in their area.",
         "show": "Show",
@@ -7576,8 +7780,12 @@
           "other": "{count} orders"
         },
         "oneLanguage": "Description in one language only",
-        "moveUp": "Move {title} up",
-        "moveDown": "Move {title} down",
+        "moveUp": "Move up: {title}",
+        "moveDown": "Move down: {title}",
+        "moveUpWord": "Move up",
+        "moveDownWord": "Move down",
+        "moveUpTip": "Moves the product one place up. Members see the products in this order.",
+        "moveDownTip": "Moves the product one place down. Members see the products in this order.",
         "deleteTitle": "Remove the item {title}?",
         "deleteBody": "The item is deleted for good.",
         "archiveBody": "The item has orders: it is archived, not deleted. It leaves the shop and the list; the orders stay as they are.",
@@ -7720,8 +7928,12 @@
           "gone": "The picture is no longer in the gallery.",
           "cover": "Cover",
           "position": "Position {number}",
-          "moveUp": "Move picture {number} forward",
-          "moveDown": "Move picture {number} back",
+          "moveUp": "Move forward: picture {number}",
+          "moveDown": "Move back: picture {number}",
+          "moveUpWord": "Move forward",
+          "moveDownWord": "Move back",
+          "moveUpTip": "Moves the picture one place forward. The first picture is the cover.",
+          "moveDownTip": "Moves the picture one place back. The first picture is the cover.",
           "remove": "Remove the picture",
           "removeTitle": "Remove the picture?",
           "removeBody": "It leaves the item; it stays in the gallery. Members see the change at once.",
@@ -9579,6 +9791,8 @@
       "siteTint": "The site's background was saved.",
       "siteFontSize": "The site's text size was saved.",
       "siteLook": "The site's look was saved.",
+      "homePage": "The home page was saved.",
+      "homeStrip": "The photo strip was saved.",
       "clubTodoAdded": "Added to the list.",
       "clubTodoSaved": "Line saved.",
       "clubTodoUnchanged": "The line already said this; nothing changed.",
@@ -9892,6 +10106,33 @@
       "invalidBody": "It has expired or the subscription no longer exists. Every new email from us carries a new link; you can also subscribe again from the contact page."
     }
   },
+  "Home": {
+    "meta": {
+      "title": "{club} — group runs in Brașov",
+      "description": "The club's group runs, mountain outings and special events, with the next run and the weather at the start. Always free."
+    },
+    "hero": {
+      "headline": "We run together in Brașov",
+      "subline": "Group runs, mountain outings and special events organised by the club — always free. Come to your first run; we'll be waiting.",
+      "join": "Join us",
+      "calendar": "See the calendar",
+      "how": "How it works"
+    },
+    "nextRun": {
+      "title": "Next run",
+      "sunset": "Sunset at {time}"
+    },
+    "weekly": {
+      "title": "Weekly runs",
+      "intro": "The same place and the same time every week: come when you can.",
+      "next": "Next: {when}"
+    },
+    "special": {
+      "title": "Special events",
+      "intro": "Races, mountain outings and everything that does not repeat every week."
+    },
+    "more": "See all events"
+  },
   "Team": {
     "title": "The team",
     "lead": "The people who keep {club} running: who organizes, who coaches, who welcomes you at the start.",
@@ -10004,11 +10245,20 @@
     "zoneEmpty": "The club will soon put here what is for members only.",
     "zoneAway": "The site's database is resting right now. Come back in a few minutes.",
     "signOut": "Sign out",
+    "signOutPending": "Signing out…",
     "upcomingTitle": "The next runs",
     "upcomingEmpty": "No run is announced right now.",
     "upcomingAll": "Every event",
     "eventsTitle": "Events for members",
     "codesTitle": "Discount codes",
+    "tabsLabel": "Parts of the members' zone",
+    "tabs": {
+      "codes": "Discount codes",
+      "shop": "Shop",
+      "runs": "Runs"
+    },
+    "codesEmpty": "No discount codes yet. The club puts them here when a partner gives one.",
+    "shopEmpty": "The club's shop has no products right now, and you have no orders.",
     "copyCode": "Copy the code",
     "codeCopied": "Copied",
     "codeValidUntil": "Valid until {day}, inclusive.",
@@ -10051,6 +10301,90 @@
         "CONFLICT": "There are not enough left for your order, or the order changed its status in the meantime.",
         "VALIDATION_ERROR": "Check the variant, the quantity (1–5) and the note (at most 300 characters).",
         "FORBIDDEN": "Your account cannot do this."
+      }
+    }
+  },
+  "HomeSections": {
+    "steps": {
+      "title": "First time with us?",
+      "lead": "Five steps, from the calendar to the start. You need no account.",
+      "number": "Step {number}",
+      "items": {
+        "1": {
+          "title": "Pick a run",
+          "body": "Pick a run on the calendar."
+        },
+        "2": {
+          "title": "Come to the start",
+          "body": "Come to the start, at the time it says."
+        },
+        "3": {
+          "title": "Say hello",
+          "body": "Say hello and tell us it is your first time."
+        },
+        "4": {
+          "title": "Run with us",
+          "body": "Run with the group, at your own pace."
+        },
+        "5": {
+          "title": "Stay for a chat",
+          "body": "Stay after the run for a chat."
+        }
+      },
+      "link": "How it works"
+    },
+    "why": {
+      "title": "Why run with us",
+      "items": {
+        "1": {
+          "title": "Together",
+          "body": "You run beside others, not alone."
+        },
+        "2": {
+          "title": "Mountains by the city",
+          "body": "Brașov has trails a few steps from the centre."
+        },
+        "3": {
+          "title": "No fee",
+          "body": "The group runs are free."
+        },
+        "4": {
+          "title": "For anyone",
+          "body": "Beginner or marathoner, you find a pace that suits you."
+        }
+      },
+      "quote": "“{quote}”",
+      "quoteBy": "— {name}"
+    },
+    "strip": {
+      "title": "From our runs",
+      "region": "Photographs from our runs, in a row that scrolls sideways",
+      "gallery": "See the gallery",
+      "instagram": "Follow us on Instagram",
+      "emptySlot": "A place for a photograph",
+      "photoAlt": "A photograph from the club's runs, {n} of {total}"
+    },
+    "numbers": {
+      "title": "{club} in numbers",
+      "years": {
+        "one": "year of running together",
+        "few": "years of running together",
+        "other": "years of running together"
+      },
+      "runners": {
+        "one": "active runner",
+        "few": "active runners",
+        "other": "active runners"
+      },
+      "perWeek": {
+        "figure": "{count}×",
+        "one": "run a week",
+        "few": "runs a week",
+        "other": "runs a week"
+      },
+      "free": {
+        "figure": "{count}%",
+        "label": "the group runs, free"
       }
     }
   }

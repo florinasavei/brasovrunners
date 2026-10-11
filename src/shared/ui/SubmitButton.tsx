@@ -183,6 +183,9 @@ export type SubmitButtonProps = {
    * "↓" to everybody who can see which row it is in, and nothing at all to anybody who cannot.
    */
   ariaLabel?: string;
+  /** `name` and `value` of the native submit: which of several buttons of one form was pressed (the FAQ's moves, §710). A button with a `name` is busy only while its own `name`/`value` is the submission in flight. */
+  name?: string;
+  value?: string;
 };
 
 /**
@@ -243,8 +246,13 @@ export default function SubmitButton({
   fullWidth,
   ariaLabel,
   compact,
+  name,
+  value,
 }: SubmitButtonProps) {
-  const { pending } = useFormStatus();
+  const status = useFormStatus();
+  // One of several named submits of a form (the FAQ's moves): busy only when it is the one pressed,
+  // read from the submission's own entries, not every button of the form at once.
+  const pending = name === undefined ? status.pending : status.pending && status.data?.get(name) === value;
   const ref = useRef<HTMLButtonElement>(null);
   // Complete until measured: the first paint and a no-JavaScript render must not dim a button
   // that nothing has yet found fault with.
@@ -391,6 +399,8 @@ export default function SubmitButton({
       // the register action counts for `/api/health`. Set only around this one send: the form's
       // data is read while `requestSubmit` dispatches, and a press of the finger afterwards posts
       // no such word.
+      const callerName = button.getAttribute("name");
+      const callerValue = button.getAttribute("value");
       if (byValve) {
         button.name = BOT_CHECK_SIGNAL_FIELD;
         button.value = "held-press-valve";
@@ -399,8 +409,11 @@ export default function SubmitButton({
         releaseHeldPress(form, button, !pendingNow.current);
       } finally {
         if (byValve) {
-          button.removeAttribute("name");
-          button.removeAttribute("value");
+          // Put back what the caller passed (`name`/`value`), not erase it.
+          if (callerName === null) button.removeAttribute("name");
+          else button.setAttribute("name", callerName);
+          if (callerValue === null) button.removeAttribute("value");
+          else button.setAttribute("value", callerValue);
         }
       }
     };
@@ -568,6 +581,8 @@ export default function SubmitButton({
       <Button
         ref={ref}
         type="submit"
+        name={name}
+        value={value}
         color={color}
         variant={variant}
         size={size}

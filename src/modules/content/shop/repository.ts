@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, inArray, isNull, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNull, type SQL, sql } from "drizzle-orm";
 import { mediaAssets } from "@/db/schema/gallery";
 import { type ShopOrderStatus, shopOrders, shopOrderStatus, shopProductPictures, shopProducts, shopProductVariants } from "@/db/schema/shop";
 import { staffUsers } from "@/db/schema/staff-users";
@@ -368,6 +368,16 @@ export async function listOrdersOfMember<T extends Record<string, unknown>>(db: 
 }
 
 export type MemberOrder = Awaited<ReturnType<typeof listOrdersOfMember>>[number];
+
+/**
+ * Whether a member has an order of any state — the one row it asks for and no more. The zone's frame
+ * asks it on every tab (`zone.tsx`: «Magazin» stays among the tabs for a member with orders, the
+ * notice naming the shop or not), so it must not read «Comenzile mele» whole to learn the list is not empty.
+ */
+export async function memberHasOrders<T extends Record<string, unknown>>(db: Database<T>, memberId: string): Promise<boolean> {
+  const rows = await db.select({ one: sql`1` }).from(shopOrders).where(eq(shopOrders.memberStaffUserId, memberId)).limit(1);
+  return rows.length > 0;
+}
 
 /** The orders list's filter, read strictly from the address: anything unknown is «all». */
 export type OrdersQuery = { status: ShopOrderStatus | null; productId: string | null };

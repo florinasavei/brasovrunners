@@ -6,11 +6,10 @@ import type { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { menuOrderOnSite, menuSectionsOnSite } from "@/modules/content/menu/on-site";
 import { nextWeeklyRun } from "@/modules/events/domain/next-weekly-run";
-import { cachedPublishedPages, cachedSiteLook, cachedUpcomingEvents } from "@/modules/public-cache/reads";
+import { cachedHomePage, cachedPublishedPages, cachedSiteLook, cachedUpcomingEvents } from "@/modules/public-cache/reads";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import { buildInfo } from "@/shared/config/build-info";
 import { CLUB_NAME, HEADER_MARK_HEIGHT, HEADER_MARK_HEIGHT_PX, LOGO, PAGE_WIDTH } from "@/theme/brand";
-import { UNDER_LOOK } from "@/theme/look";
 import { KEYFRAMES, MOTION_OK } from "@/theme/motion";
 import { clubSocialLinks } from "./club-socials";
 import HeaderCta from "./HeaderCta";
@@ -135,6 +134,8 @@ export default async function SiteHeader() {
     draws none of it there.
   */
   const look = await cachedSiteLook();
+  // «Pagina principală» (§714): while it is on, the logo leads to it — the home page is never a menu entry.
+  const home = await cachedHomePage();
   const joinHref = look.on ? await joinTarget(locale as Locale) : null;
   const socials = look.on ? (await clubSocialLinks()).filter((entry) => HEADER_NETWORKS.has(entry.network)) : [];
   const site = await getTranslations("Site");
@@ -202,7 +203,7 @@ export default async function SiteHeader() {
         }}
       >
         <Box sx={{ order: 1, flexShrink: 0 }}>
-        <LogoLink label={CLUB_NAME}>
+        <LogoLink label={CLUB_NAME} href={home.on ? "/" : "/events"}>
           {/*
             Two files, one shown: the blue lockup by day and the white one after dark, chosen
             by the `data-dark` attribute the theme puts on <html> (§93) — CSS, so the swap
@@ -228,14 +229,7 @@ export default async function SiteHeader() {
                 height: HEADER_MARK_HEIGHT,
                 width: "auto",
                 [variant.hideOn]: { display: "none" },
-                /*
-                  Under «Aspectul nou» the logo is drawn in ink (§708, the redesign's decision 1): the
-                  supplied artwork's pure blue, through `grayscale`, is the luminance of that blue — a
-                  near-black within a step of `inkStrong` — and its light-grey strokes stay light grey,
-                  which a mask in one colour would flatten. The white one after dark stays white. The
-                  file is untouched, and the emails, PDFs and share cards keep the blue lockup.
-                */
-                [UNDER_LOOK]: { filter: "grayscale(1)" },
+                // The logo is the club's blue under both looks (§711, amending §708): no filter, no ink.
               }}
             />
           ))}

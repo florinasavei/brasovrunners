@@ -226,7 +226,9 @@ describe("§518 the wiring", () => {
     expect(button).toMatch(/const valve = setTimeout\(\(\) => send\(true\), RELEASE_AFTER_MS\);/);
     // The valve's send names itself as the submitter's word, only around that one send (§518).
     expect(button).toMatch(/if \(byValve\) \{\s*button\.name = BOT_CHECK_SIGNAL_FIELD;\s*button\.value = "held-press-valve";\s*\}/);
-    expect(button).toMatch(/finally \{\s*if \(byValve\) \{\s*button\.removeAttribute\("name"\);\s*button\.removeAttribute\("value"\);/);
+    // After the valve's send the button gets back the caller's own name and value (a named SubmitButton, §710),
+    // and loses them only when the caller passed none — never left carrying the valve's word.
+    expect(button).toMatch(/finally \{\s*if \(byValve\) \{[\s\S]*?if \(callerName === null\) button\.removeAttribute\("name"\);\s*else button\.setAttribute\("name", callerName\);\s*if \(callerValue === null\) button\.removeAttribute\("value"\);\s*else button\.setAttribute\("value", callerValue\);/);
     expect(button).not.toMatch(/sendBeacon|reportBotCheckSignal/);
     const page = read("src/modules/registrations/ui/registration-form.tsx");
     for (const [prop, key] of [
