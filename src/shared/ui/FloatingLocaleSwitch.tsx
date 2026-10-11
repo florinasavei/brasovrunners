@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { onlyUnderLook } from "@/theme/look";
 import Flag, { LANGUAGE_FLAG } from "./Flag";
+import { localeSwitchHref } from "./LocaleSwitcher";
 
 /** The round button's side: the minimum tap target (BR-REQ-041-01 criterion 6). */
 export const FLOATING_SWITCH_SIZE = 44;
@@ -55,6 +56,8 @@ export default function FloatingLocaleSwitch({ inline = false }: { inline?: bool
       data-testid="floating-language"
       sx={{
         ...onlyUnderLook("flex"),
+        // A printed page has no use for a floating control (§NNN).
+        "@media print": { display: "none !important" },
         ...(inline
           ? {}
           : {
@@ -65,7 +68,7 @@ export default function FloatingLocaleSwitch({ inline = false }: { inline?: bool
       }}
     >
       <Link
-        href={`/api/locale?to=${other}&from=${encodeURIComponent(pathname)}`}
+        href={localeSwitchHref(other, pathname)}
         rel="nofollow"
         hrefLang={other}
         aria-label={name}

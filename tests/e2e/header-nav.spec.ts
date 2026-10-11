@@ -1,6 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
-import { signIn } from "./support/featured-event";
+import { FEATURED, signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
 /**
@@ -209,7 +209,18 @@ test.describe("§708 the header under «Aspectul nou»", () => {
       expect(socialsBox!.x).toBeGreaterThanOrEqual(navBox!.x + navBox!.width - 1);
       expect(Math.abs(socialsBox!.y + socialsBox!.height / 2 - (navBox!.y + navBox!.height / 2))).toBeLessThanOrEqual(8);
       expect(headerBox!.height).toBeLessThanOrEqual(80);
+      const hrefs = await socials.locator("a").evaluateAll((links) => links.map((link) => link.getAttribute("href")));
+      expect(hrefs).toEqual([
+        process.env.CLUB_INSTAGRAM_URL || "https://www.instagram.com/e2e-club",
+        process.env.CLUB_FACEBOOK_URL || "https://www.facebook.com/e2e-club",
+        process.env.CLUB_STRAVA_URL || "https://www.strava.com/clubs/e2e-club",
+      ]);
       await expectFloatingLanguage(page, 1280, 800);
+
+      // An event page, the longest content and the registration call to action, at a phone's width.
+      await page.setViewportSize({ width: 320, height: 720 });
+      await page.goto(`/ro/evenimente/${FEATURED.slug}`);
+      await expectFloatingLanguage(page, 320, 720);
     } finally {
       await setLook(browser, "off");
     }

@@ -281,7 +281,7 @@ export default async function SiteHeader() {
           the floating round button above the footer's bar there (`FloatingLocaleSwitch`). The box
           shows only where its content does, so it takes no room in the backoffice or on a phone.
         */}
-        {joinHref && (
+        {socials.length > 0 && (
           <Box sx={{ order: 4, flexShrink: 0, ...onlyUnderLook({ xs: "none", md: "flex" }), ml: 1 }}>
             <HeaderSocials links={socials} label={site("followUs")} />
           </Box>
