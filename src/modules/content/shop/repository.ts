@@ -175,7 +175,7 @@ type ProductRow = {
   version: number;
 };
 
-/** The rows as the backoffice reads them, with their variants, pictures and order counts — three more queries, whatever the count. */
+/** The rows as the backoffice reads them, with their variants, pictures and order counts — four more queries (variants, pictures, size guides, order counts), whatever the count. */
 async function adminProductsFrom<T extends Record<string, unknown>>(db: Database<T>, rows: ProductRow[]): Promise<AdminShopProduct[]> {
   const ids = rows.map((row) => row.id);
   const [variants, pictures, guides, counts] = await Promise.all([

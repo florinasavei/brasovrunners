@@ -7473,9 +7473,9 @@
         "noticeMissing": "Nota de confidențialitate în vigoare nu descrie încă magazinul: membrii nu îl văd și nu pot comanda până nu aprobi o notă nouă (vezi „Sarcini”).",
         "readOnly": "Poți citi produsele și comenzile. Le schimbă un administrator.",
         "settings": "Cum se plătește, cine primește comenzile și emailurile către membri",
-        "settingsHelp": "Cuvintele apar sub fiecare comandă neplătită și în emailul de confirmare. Adresa primește câte un email pentru fiecare comandă.",
-        "settingsTitle": "Salvezi plata și adresa pentru comenzi?",
-        "settingsBody": "Membrii văd noile cuvinte de îndată ce salvezi.",
+        "settingsHelp": "Cuvintele apar sub fiecare comandă neplătită și în emailul de confirmare. Adresa primește câte un email pentru fiecare comandă; bifa de mai jos spune dacă primește email și membrul.",
+        "settingsTitle": "Salvezi plata, adresa pentru comenzi și emailurile către membri?",
+        "settingsBody": "Membrii văd noile cuvinte de îndată ce salvezi, iar bifa „Îi scriem membrului pe email despre comenzi” se aplică de la următorul email, la o comandă nouă sau una marcată plătită.",
         "paymentRo": "Cum se plătește (Română)",
         "paymentEn": "Cum se plătește (English)",
         "paymentHelp": "De exemplu contul IBAN al clubului și „sau numerar la alergare”.",
@@ -7671,7 +7671,7 @@
         "sizes": {
           "guide": "Ghidul de mărimi (o poză)",
           "guideHelp": "Desenul furnizorului cu măsurile; membrul îl deschide de lângă mărimi. Opțional. Se păstrează când salvezi produsul.",
-          "guideCropHelp": "Pornește întreagă, cum a venit. Decupează doar dacă desenul are margini de tăiat; Săgețile mută decupajul, Shift cu ele îl redimensionează."
+          "guideCropHelp": "Pornește întreagă, cum a venit. Decupează doar dacă desenul are margini de tăiat; săgețile mută decupajul, Shift cu ele îl redimensionează."
         }
       }
     },
@@ -9966,6 +9966,7 @@
       "pictureOpen": "Fotografia {number}",
       "sizeChart": "Tabelul de mărimi",
       "sizeGuide": "Ghid de mărimi",
+      "sizeGuideAlt": "Ghid de mărimi — {title}",
       "sizeColumn": "Mărimea",
       "outcome": {
         "placed": "Comanda a fost primită. Ți-am trimis și un email cu ea și cu felul în care se plătește.",

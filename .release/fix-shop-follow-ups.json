@@ -1,0 +1,18 @@
+{
+  "branch": "fix/shop-follow-ups",
+  "decisionsTitle": "The shop's loose ends: the guide's alt and one-size button, the grant may translate, the settings card names its switch",
+  "decisionsSection": "**Why.** BR-V2.93 shipped the size-guide picture (§705), the member-emails switch (§704), per-person grants (§687) and the translate button on the shop's forms (§697). Its review left three loose ends.\n\n**Decision.**\n\n- **The guide.** The lightbox's alt comes from the catalogue (`Members.shop.sizeGuideAlt`, with `{title}`) in the member's language, not a string joined in code. «Ghid de mărimi» also opens for a product with one size and therefore no select: the same button, the same words, on its own row above the quantity. The hover preview gets the master's `srcset` and a `sizes` scaled to the crop (the whole picture is drawn 1/crop.w times the window), so a tight crop is not stretched from the 640-pixel thumbnail. The crop help in Romanian reads «…de tăiat; săgețile…», lower case after the semicolon; the repository's comment counts four queries.\n- **The grant may translate.** `canTranslateTexts` is true for whoever holds `shop.manage` (by the grant, through `hasPermission`: a role outside the backoffice never qualifies). The shell and the service now pass the whole actor, whose grants the session already carries, so the button the shop's forms draw is no longer refused on the press; for everyone else the service refuses as before.\n- **The settings card names its switch.** The save dialog and the card's help in both languages now name the member emails as well as the payment words and the address.\n- **Review nits.** The English save dialog quotes the switch’s label word for word, the Romanian uses the block’s „…” quotes, and its parenthesis became a clause (the plain-words check allows none over six words). The hover preview’s comment says the ladder rung is fetched on hover, the thumbnail only the fallback. The sample one-size product is a neck gaiter, not a trademarked name.\n\n**Refused.** A guide that opens on hover alone (a phone has no hover; the press stays the way in, the hover is a bonus). A new role or a second permission for translating (one grant already means «runs the shop's words»; a permission per button would multiply the checkboxes on «Echipa»). A second query for the grants (the session read has them).",
+  "changelogLine": "- **The shop's loose ends** — the size guide's alt comes from the catalogue and its button also shows for a one-size product, a volunteer holding «Gestionează magazinul» may press «Tradu», and the settings card's dialog names the member emails. §NNN.",
+  "specsCriteria": [
+    {
+      "requirement": "BR-REQ-060-01",
+      "text": "Whoever holds the shop grant may press the translate button and the service answers them; a volunteer without it is refused as before (2026-10-11, `DECISIONS.md` §NNN)."
+    },
+    {
+      "requirement": "BR-REQ-060-01",
+      "text": "The members' zone draws «Ghid de mărimi» also for a product with one size and no select, through the same 44-pixel button on its own row above the quantity (amends criterion 139) (2026-10-11, `DECISIONS.md` §NNN)."
+    }
+  ],
+  "docsNotes": "",
+  "batchLine": "the shop's loose ends"
+}
