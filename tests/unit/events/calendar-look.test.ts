@@ -7,10 +7,11 @@ import { CALENDAR_TONES, calendarTone, kindQuery, matchesKind, parseKindChoice }
 import { NO_FILTER } from "@/modules/events/domain/listing-filter";
 import { nextCalendarEvent } from "@/modules/events/domain/next-event";
 import { liveTwinPathname } from "@/i18n/live-twin";
-import { toneDotSx, toneEntrySx } from "@/modules/events/ui/calendar-tone-sx";
-import { COLOR, COLOR_DARK } from "@/theme/brand";
+import { legendDotSx, toneDotSx, toneEntrySx } from "@/modules/events/ui/calendar-tone-sx";
+import { LOOK_PRIMARY_TOKENS } from "@/modules/appearance/domain/site-look";
+import { COLOR, COLOR_DARK, LOOK_ACCENT } from "@/theme/brand";
 import { CALENDAR_TONE_TOKENS } from "@/theme/brand-pairs";
-import { UNDER_LOOK, UNDER_LOOK_DARK } from "@/theme/look";
+import { LOOK_ACCENT_TINT, UNDER_LOOK, UNDER_LOOK_DARK } from "@/theme/look";
 
 /**
  * The facelift's phase 4 — the calendar under «Aspectul nou» (`docs/REDESIGN.md`): the kind as a
@@ -84,6 +85,17 @@ describe("the kind as a filter of the address", () => {
   });
 });
 
+/**
+ * What a tone's token is drawn in under the look: an accent shade as the slot of MUI's primary the
+ * setting's stylesheet writes it into (`LOOK_PRIMARY_TOKENS`), the band as `LOOK_ACCENT_TINT`, any
+ * other token its own colour in the scheme.
+ */
+function drawn(token: string, scheme: Record<string, string>): string {
+  if (token === "accentTint") return LOOK_ACCENT_TINT;
+  const slot = Object.entries(LOOK_PRIMARY_TOKENS.light).find(([key, name]) => key !== "contrastText" && name === token)?.[0];
+  return slot ? `primary.${slot}` : scheme[token];
+}
+
 describe("three colours by kind", () => {
   it("colours a weekly run pink, a special event green and a social date grey", () => {
     expect(calendarTone({ seriesCadence: "WEEKLY", type: "GROUP_RUN" })).toBe("weekly");
@@ -101,12 +113,33 @@ describe("three colours by kind", () => {
       const { fill, ink, dot } = CALENDAR_TONE_TOKENS[tone];
       const entry = toneEntrySx(tone);
       expect(Object.keys(entry)).toEqual([UNDER_LOOK, UNDER_LOOK_DARK]);
-      expect(entry[UNDER_LOOK]).toMatchObject({ bgcolor: COLOR[fill], color: COLOR[ink] });
-      expect(entry[UNDER_LOOK_DARK]).toMatchObject({ bgcolor: COLOR_DARK[fill], color: COLOR_DARK[ink] });
+      expect(entry[UNDER_LOOK]).toMatchObject({ bgcolor: drawn(fill, COLOR), color: drawn(ink, COLOR) });
+      expect(entry[UNDER_LOOK_DARK]).toMatchObject({ bgcolor: drawn(fill, COLOR_DARK), color: drawn(ink, COLOR_DARK) });
       const mark = toneDotSx(tone);
       // Off, the dot is not drawn at all.
       expect(mark.display).toBe("none");
-      expect(mark[UNDER_LOOK]).toMatchObject({ bgcolor: COLOR[dot] });
+      expect(mark[UNDER_LOOK]).toMatchObject({ bgcolor: drawn(dot, COLOR) });
+      expect(mark[UNDER_LOOK_DARK]).toMatchObject({ bgcolor: drawn(dot, COLOR_DARK) });
+      expect(legendDotSx(tone)).toMatchObject({ bgcolor: drawn(dot, COLOR), [UNDER_LOOK_DARK]: { bgcolor: drawn(dot, COLOR_DARK) } });
+    }
+  });
+
+  it("draws the weekly runs in the club's accent, through the layout's variables, never in the pink's own colour", () => {
+    // The pale band and the hot shade, as the setting's stylesheet writes them, one value for both schemes; the words keep the ink.
+    expect(toneEntrySx("weekly")[UNDER_LOOK]).toMatchObject({ bgcolor: LOOK_ACCENT_TINT, color: COLOR.ink });
+    expect(toneEntrySx("weekly")[UNDER_LOOK_DARK]).toMatchObject({ bgcolor: LOOK_ACCENT_TINT, color: COLOR_DARK.ink });
+    expect(toneDotSx("weekly")[UNDER_LOOK]).toMatchObject({ bgcolor: "primary.light" });
+    expect(legendDotSx("weekly").bgcolor).toBe("primary.light");
+    // The green and the grey are the platform's: their own tokens, light and dark.
+    expect(toneEntrySx("special")[UNDER_LOOK]).toMatchObject({ bgcolor: COLOR.kindSpecial, color: COLOR.kindSpecialInk });
+    expect(toneEntrySx("special")[UNDER_LOOK_DARK]).toMatchObject({ bgcolor: COLOR_DARK.kindSpecial, color: COLOR_DARK.kindSpecialInk });
+    expect(toneEntrySx("other")[UNDER_LOOK]).toMatchObject({ bgcolor: COLOR.kindOther, color: COLOR.ink });
+    expect(toneEntrySx("other")[UNDER_LOOK_DARK]).toMatchObject({ bgcolor: COLOR_DARK.kindOther, color: COLOR_DARK.ink });
+    // No tone names a shade of the pink itself, in either scheme: the accent the club chose reaches every entry.
+    const pink = [...Object.values(LOOK_ACCENT.pink.light), ...Object.values(LOOK_ACCENT.pink.dark)];
+    for (const tone of CALENDAR_TONES) {
+      const sx = JSON.stringify([toneEntrySx(tone), toneDotSx(tone), legendDotSx(tone)]);
+      for (const hex of pink) expect(sx, `${tone} names ${hex}`).not.toContain(hex);
     }
   });
 

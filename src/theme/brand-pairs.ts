@@ -171,12 +171,15 @@ export const BRAND_PAIRS: readonly BrandPair[] = [
 
 /**
  * The calendar's three colours by kind (the facelift's phase 4, `docs/REDESIGN.md` § What exists
- * versus what is new): a weekly run in the pale pink, a special event in the green, any other
- * date in the warm grey — each entry's fill, the words on it and the dot the legend and the entry
- * lead with. One table, read by the calendar's styles (`events/ui/calendar-tone-sx.ts`) and held
- * at AA by `tests/unit/theme/brand.test.ts`: the words on the fill, and the dot on the page and on
- * a card (a dot is a mark, 3 : 1 would do; the dots meet 4.5 : 1 anyway). Never colour alone: the
- * legend says each colour's word, and every entry keeps its glyphs and its accessible name.
+ * versus what is new): a weekly run in the accent's pale band (the club's accent; the names below
+ * are the default pink's), a special event in the green, any other date in the warm grey — each
+ * entry's fill, the words on it and the dot the legend and the entry lead with. One table, read by
+ * the calendar's styles (`events/ui/calendar-tone-sx.ts`, which draws an accent token through the
+ * setting's variables, never as the pink's own colour) and held at AA by
+ * `tests/unit/theme/brand.test.ts`: the words on the fill, and the dot on the page and on a card (a
+ * dot is a mark, 3 : 1 would do; the dots meet 4.5 : 1 anyway) — the pink's here, every other
+ * accent's through `accentPairsOf`. Never colour alone: the legend says each colour's word, and
+ * every entry keeps its glyphs and its accessible name.
  */
 export const CALENDAR_TONE_TOKENS = {
   weekly: { fill: "accentTint", ink: "ink", dot: "accent" },

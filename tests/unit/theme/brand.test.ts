@@ -5,9 +5,10 @@ import { describe, expect, it } from "vitest";
 import messages from "@/../messages/ro.json";
 import en from "@/../messages/en.json";
 import { contrastRatio, MAX_CARD_STEP, relativeLuminance } from "@/modules/appearance/domain/tint-contrast";
-import { CLUB_NAME, COLOR, COLOR_DARK, FONT, GRADIENT, LOGO, SITE_TINT, SURFACE_GRADIENT, TEAM_CANVAS, WORDMARK } from "@/theme/brand";
+import { CLUB_NAME, COLOR, COLOR_DARK, FONT, GRADIENT, LOGO, LOOK_ACCENT, SITE_TINT, SURFACE_GRADIENT, TEAM_CANVAS, WORDMARK } from "@/theme/brand";
 import {
   ACCENT_PAIRS,
+  accentPairsOf,
   type BrandPair,
   CALENDAR_TONE_PAIRS,
   CALENDAR_TONE_TOKENS,
@@ -213,6 +214,23 @@ describe("BR-REQ-070-02 the new look's palette is readable", () => {
       expect(contrastRatio(foreground.hex, background.hex)).toBeGreaterThanOrEqual(4.5);
     });
   }
+
+  it("holds the weekly runs at AA under every accent the club may choose: their pairs are the accent's own", () => {
+    // The weekly tone wears the club's accent (`calendar-tone-sx.ts`): the words on its band and its dot on the page and on
+    // a card are pairs `accentPairsOf` gives every accent, which `tests/unit/appearance/look-accent.test.ts` holds at AA
+    // for every preset and a spread of typed colours.
+    const { fill, ink, dot } = CALENDAR_TONE_TOKENS.weekly;
+    const held = names(accentPairsOf("ACCENT", LOOK_ACCENT.pink));
+    for (const [scheme, table] of [
+      ["light", "COLOR"],
+      ["dark", "COLOR_DARK"],
+    ] as const) {
+      const token = (key: string) => (key.startsWith("accent") ? `ACCENT.${scheme}.${key}` : `${table}.${key}`);
+      expect(held).toContain(`${token(ink)}/${token(fill)}`);
+      expect(held).toContain(`${token(dot)}/${token("paper")}`);
+      expect(held).toContain(`${token(dot)}/${token("surface")}`);
+    }
+  });
 
   it("keeps the pink that carries words no lighter than the muted ink, so every page tint carries it", () => {
     expect(relativeLuminance(COLOR.accentInk)).toBeLessThanOrEqual(relativeLuminance(COLOR.inkMuted));

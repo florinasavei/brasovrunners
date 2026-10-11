@@ -207,7 +207,7 @@ export default async function CalendarPage({ params, query: asked, period: segme
           de calendar" (`DECISIONS.md` §292). A
           paragraph that is an image to assistive technology, so the heading below stays the
           page's one `<h1>`; the font is the layout's, already loaded for every page. */}
-      <Box sx={{ [UNDER_LOOK]: { "& [data-testid='wordmark']": { color: COLOR.accent } }, [UNDER_LOOK_DARK]: { "& [data-testid='wordmark']": { color: COLOR_DARK.accent } } }}>
+      <Box sx={{ [UNDER_LOOK]: { "& [data-testid='wordmark']": { color: "primary.light" } } }}>
         <Wordmark />
       </Box>
 
@@ -228,7 +228,7 @@ export default async function CalendarPage({ params, query: asked, period: segme
         {t("calendar.pageIntro")}
       </Typography>
       {/* The title block under «Aspectul nou» (phase 4): the H1 above becomes the eyebrow, and the
-          line the mock-up leads with, its last word in the pink, stands under it with the subline —
+          line the mock-up leads with, its last word in the accent, stands under it with the subline —
           from `sm` only, so a phone's first week stays above the fold (§569). Off, not drawn. */}
       <Box sx={{ display: "none", position: "relative", [UNDER_LOOK]: { display: { xs: "none", sm: "block" }, mb: 2 } }} data-testid="calendar-title-block">
         {/* The mountain mark behind the line, faint, from `md` (the mock-up's ridge): decoration in `currentColor`, never a picture. */}
@@ -237,7 +237,7 @@ export default async function CalendarPage({ params, query: asked, period: segme
         </Box>
         <Typography component="p" sx={TAGLINE_SX}>
           {t("calendar.look.taglineLead")}{" "}
-          <Box component="span" sx={{ color: COLOR.accent, [UNDER_LOOK_DARK]: { color: COLOR_DARK.accent } }}>
+          <Box component="span" sx={{ color: "primary.light" }}>
             {t("calendar.look.taglineWord")}
           </Box>
           {t("calendar.look.taglineEnd")}
@@ -306,17 +306,20 @@ async function readNextEvent(locale: Locale, now: Date, filter: ListingFilter, k
  * Under the look: from `sm` the H1 drawn as the eyebrow over the title block's line (the mock-up's
  * «CALENDAR»); at every width without today's gradient rule under it and its gutter, the room the
  * always-visible chips take back on a phone, so the first week stays above the fold (§569).
+ *
+ * The club's accent («Culoarea de accent») reaches the title block through the layout's variables,
+ * which follow the scheme: the eyebrow in `primary.main` (the words' shade), the wordmark and the
+ * tagline's last word in `primary.light` (the hot one) — pink by default, exactly as before.
  */
 const TITLE_UNDER_LOOK = {
   [UNDER_LOOK]: {
     fontSize: { sm: "0.875rem" },
     letterSpacing: { sm: "0.2em" },
     textTransform: { sm: "uppercase" },
-    color: { sm: COLOR.accentInk },
+    color: { sm: "primary.main" },
     mb: { xs: 0, sm: 0.5 },
     "&::after": { display: "none" },
   },
-  [UNDER_LOOK_DARK]: { color: { sm: COLOR_DARK.accentInk } },
 } as const;
 
 /** The ridge behind the title block: faint by day, a little stronger after dark, where the mock-up draws it. */

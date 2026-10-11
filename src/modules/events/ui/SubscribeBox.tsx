@@ -10,8 +10,8 @@ import { getTranslations } from "next-intl/server";
 import CalendarAddress from "@/modules/events/ui/CalendarAddress";
 import { calendarFeedLinks, feedAddressHints } from "@/modules/events/ui/CalendarIntroFold";
 import { DISCLOSURE_SUMMARY_SX, DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
-import { CLUB_NAME, COLOR } from "@/theme/brand";
-import { UNDER_LOOK, UNDER_LOOK_DARK } from "@/theme/look";
+import { CLUB_NAME } from "@/theme/brand";
+import { LOOK_ACCENT_TINT, UNDER_LOOK, UNDER_LOOK_DARK } from "@/theme/look";
 
 /**
  * Outlook's own "add a calendar from the web" address (the facelift's phase 4; `docs/REDESIGN.md`
@@ -77,8 +77,9 @@ export default async function SubscribeBox({ locale, baseUrl, addressId = "calen
         borderRadius: "16px",
         border: 1,
         borderColor: "divider",
-        [UNDER_LOOK]: { bgcolor: COLOR.accentTint, borderColor: "transparent" },
-        // After dark a quiet card on the page, the mock-up's: the deep pink band would outweigh the month beside it.
+        // By day the accent's pale band — the club's accent, through the layout's variable.
+        [UNDER_LOOK]: { bgcolor: LOOK_ACCENT_TINT, borderColor: "transparent" },
+        // After dark a quiet card on the page, the mock-up's: the accent's deep band would outweigh the month beside it.
         [UNDER_LOOK_DARK]: { bgcolor: "background.paper", borderColor: "divider" },
       }}
     >

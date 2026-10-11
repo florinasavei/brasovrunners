@@ -10,7 +10,7 @@ import type { WeatherReading } from "@/modules/weather/domain/forecast";
 import CardWeather from "@/modules/weather/ui/CardWeather";
 import ArrowButtonLink from "@/shared/ui/ArrowButtonLink";
 import { COLOR, COLOR_DARK } from "@/theme/brand";
-import { UNDER_LOOK, UNDER_LOOK_DARK } from "@/theme/look";
+import { LOOK_ACCENT_TINT, UNDER_LOOK, UNDER_LOOK_DARK } from "@/theme/look";
 import { buildRoutePills } from "./route-pills";
 import RoutePills from "./RoutePills";
 
@@ -65,9 +65,9 @@ export default async function NextEventPanel({ event, locale, weather }: NextEve
           fontWeight: 700,
           letterSpacing: "0.04em",
           textTransform: "uppercase",
-          bgcolor: COLOR.accentTint,
-          color: COLOR.accentInk,
-          [UNDER_LOOK_DARK]: { bgcolor: COLOR_DARK.accentTint, color: COLOR_DARK.accentInk },
+          // The accent's pale band and its words: the club's accent through the layout's variables, one rule for both schemes.
+          bgcolor: LOOK_ACCENT_TINT,
+          color: "primary.main",
         }}
       >
         {t("calendar.look.nextEvent.title")}
