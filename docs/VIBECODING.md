@@ -60,6 +60,7 @@ request and `.github/workflows/release.yml` lands and ships it
 | A table or a column | `src/db/schema/*.ts`, then `yarn db:generate --name <what>` → `src/db/migrations/00NN_<what>.sql` (expand only) |
 | Colours, fonts, the logo | `src/theme/brand.ts` — the only file allowed a hex value |
 | The look — the tokens, the type, the components | `src/theme/brand.ts`, `src/theme/theme.ts`; see them drawn at `/admin/design` (§692) |
+| The facelift («Aspectul nou», off by default): the pink, Inter 800, the pill with its arrow, «Vino cu noi», the mountains | the scope `src/theme/look.ts` (write a new-look rule under `UNDER_LOOK`, never test the setting in a page); the pink `src/modules/appearance/domain/site-look.ts`; the parts `src/shared/ui/ArrowButtonLink.tsx`, `HeaderCta.tsx`, `HeaderSocials.tsx`, `MountainMark.tsx`, `LookWatermark.tsx`; both looks side by side at `/admin/design` → «Aspectul nou»; the plan `docs/REDESIGN.md` |
 | What `/devs` and `/admin/tasks` say | `src/modules/diagnostics/` |
 | A scheduled job | `src/modules/jobs/` (retention) and `src/modules/registrations/maintenance.ts` |
 
