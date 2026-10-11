@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { homeTextSchema, pickText } from "@/modules/home/domain/home-text";
 import { homeFigures, numbersContentSchema, readNumbersContent, yearsSince, type NumbersEvent } from "@/modules/home/domain/numbers";
-import { MAX_STRIP_PICTURES, orderStripPictures, readStripContent, stripContentSchema } from "@/modules/home/domain/photo-strip";
+import { MAX_STRIP_PICTURES, moveStripPicture, readStripContent, stripContentSchema } from "@/modules/home/domain/photo-strip";
 import { EMPTY_STEPS, readStepsContent, STEP_COUNT, stepsContentSchema } from "@/modules/home/domain/steps";
 import { EMPTY_WHY, readWhyContent, WHY_COUNT, whyContentSchema } from "@/modules/home/domain/why";
 import { STRIP_TILE_RATIO, stripPictures } from "@/modules/home/strip-pictures";
@@ -70,7 +70,7 @@ describe("§NNN «Prima dată», «De ce» and the strip: the stored shapes", ()
   it("reads a stored value that no longer parses as the empty section, never a throw", () => {
     for (const value of [null, undefined, 42, "x", { steps: [] }]) expect(readStepsContent(value)).toEqual(EMPTY_STEPS);
     expect(readWhyContent({ items: [] })).toEqual(EMPTY_WHY);
-    expect(readStripContent({ pictureIds: ["nope"] })).toEqual({ title: null, pictureIds: [] });
+    expect(readStripContent({ pictures: [{ assetId: "nope" }] })).toEqual({ title: null, pictures: [] });
     expect(readNumbersContent({ foundedOn: "2019-02-30" })).toEqual({ foundedOn: null, activeRunners: null });
   });
 
@@ -80,15 +80,26 @@ describe("§NNN «Prima dată», «De ce» and the strip: the stored shapes", ()
     expect(whyContentSchema.safeParse({ items, quote: { ro: "Vorbe", en: "" } }).success).toBe(false);
   });
 
-  it("holds the strip to stored pictures, at most twelve, each once, in the club's order", () => {
-    expect(stripContentSchema.parse({ pictureIds: [PICTURE(1), PICTURE(2)] }).pictureIds).toEqual([PICTURE(1), PICTURE(2)]);
-    expect(stripContentSchema.safeParse({ pictureIds: [PICTURE(1), PICTURE(1)] }).success).toBe(false);
-    expect(stripContentSchema.safeParse({ pictureIds: Array.from({ length: MAX_STRIP_PICTURES + 1 }, (_, i) => PICTURE(i)) }).success).toBe(false);
-    expect(stripContentSchema.safeParse({ pictureIds: ["https://example.org/stock.jpg"] }).success).toBe(false);
+  it("holds the strip to stored pictures with their facts, at most twelve, each once, in the club's order", () => {
+    const stored = (n: number) => ({ assetId: PICTURE(n), keyPrefix: PICTURE(n), width: 2400, height: 1600 });
+    expect(stripContentSchema.parse({ pictures: [stored(1), stored(2)] }).pictures.map((p) => p.assetId)).toEqual([PICTURE(1), PICTURE(2)]);
+    expect(stripContentSchema.safeParse({ pictures: [stored(1), stored(1)] }).success).toBe(false);
+    expect(stripContentSchema.safeParse({ pictures: Array.from({ length: MAX_STRIP_PICTURES + 1 }, (_, i) => stored(i)) }).success).toBe(false);
+    // A typed address is never a picture of the club's, and a picture without its facts is not kept.
+    expect(stripContentSchema.safeParse({ pictures: [{ assetId: "https://example.org/stock.jpg", keyPrefix: "x", width: 1, height: 1 }] }).success).toBe(false);
+    expect(stripContentSchema.safeParse({ pictures: [{ assetId: PICTURE(1) }] }).success).toBe(false);
+  });
 
-    // The store answers in its own order and without a picture deleted since: the club's order, no hole.
-    const found = [{ id: PICTURE(3) }, { id: PICTURE(1) }];
-    expect(orderStripPictures([PICTURE(1), PICTURE(2), PICTURE(3), PICTURE(1)], found).map((p) => p.id)).toEqual([PICTURE(1), PICTURE(3)]);
+  it("moves a picture one place with the arrows, and leaves the first or the last where it is", () => {
+    const strip = [1, 2, 3].map((n) => ({ assetId: PICTURE(n) }));
+    const ids = (pictures: { assetId: string }[]) => pictures.map((p) => p.assetId);
+    expect(ids(moveStripPicture(strip, PICTURE(2), "up"))).toEqual([PICTURE(2), PICTURE(1), PICTURE(3)]);
+    expect(ids(moveStripPicture(strip, PICTURE(2), "down"))).toEqual([PICTURE(1), PICTURE(3), PICTURE(2)]);
+    expect(ids(moveStripPicture(strip, PICTURE(1), "up"))).toEqual(ids(strip));
+    expect(ids(moveStripPicture(strip, PICTURE(3), "down"))).toEqual(ids(strip));
+    expect(ids(moveStripPicture(strip, PICTURE(9), "up"))).toEqual(ids(strip));
+    // The strip it was given is left as it was.
+    expect(ids(strip)).toEqual([PICTURE(1), PICTURE(2), PICTURE(3)]);
   });
 
   it("gives a strip picture the ladder's srcset for its square tile, and an older picture its thumbnail alone", () => {

@@ -6,7 +6,7 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { HOME_SECTION_KEYS } from "@/modules/appearance/domain/home-page";
-import { updateHomePage } from "@/modules/appearance/home-page";
+import { changeStripPicture, updateHomePage } from "@/modules/appearance/home-page";
 import { updateSiteFontSize } from "@/modules/appearance/site-font-size";
 import { updateSiteLook } from "@/modules/appearance/site-look";
 import { SITE_TINT_REFUSAL, updateSiteTint } from "@/modules/appearance/site-tint";
@@ -125,9 +125,14 @@ export async function updateHomePageAction(_previous: FormOutcome | null, form: 
         buttonCalendarEn: field("buttonCalendarEn"),
         buttonHowRo: field("buttonHowRo"),
         buttonHowEn: field("buttonHowEn"),
-        buttonHowSlug: field("buttonHowSlug"),
+        buttonHowPageId: field("buttonHowPageId"),
         // A checkbox that is off posts nothing, so the form says it carried the switches at all.
         sections: form.has("sectionsPosted") ? Object.fromEntries(HOME_SECTION_KEYS.map((key) => [key, form.has(`section_${key}`)])) : undefined,
+        // Each lower section's fold says it was carried, so an older form keeps what it did not show.
+        steps: form.has("stepsPosted") ? field : undefined,
+        why: form.has("whyPosted") ? field : undefined,
+        strip: form.has("stripPosted") ? field : undefined,
+        numbers: form.has("numbersPosted") ? field : undefined,
       },
       new Date(),
     );
@@ -137,4 +142,37 @@ export async function updateHomePageAction(_previous: FormOutcome | null, form: 
   revalidatePath(path);
   await flashOutcome({ saved: "homePage" });
   redirect(`${path}?saved=homePage#admin-alert`);
+}
+
+/**
+ * The photo strip's pictures (§NNN), one small form each — add, move a place, take out — beside the
+ * page's own form, as a product's pictures are (§697). The Administrator's at the door, and the
+ * service asserts it again. Taking a picture out is asked first (§384); adding one and moving one are
+ * not, as on a product, since «Scoate» and the other arrow undo them.
+ */
+async function stripPictureAction(change: "add" | "move" | "remove", form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/settings/appearance" });
+  try {
+    const actor = await requireStaffCapability(canManageClubSettings);
+    await changeStripPicture(getDb(), actor, change, { assetId: form.get("stripAssetId") ?? undefined, direction: form.get("direction") ?? undefined }, new Date());
+  } catch (error) {
+    return refused(error, form);
+  }
+  revalidatePath(path);
+  await flashOutcome({ saved: "homeStrip" });
+  redirect(`${path}?saved=homeStrip#home-strip-pictures`);
+}
+
+export async function addStripPictureAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  return stripPictureAction("add", form);
+}
+
+export async function removeStripPictureAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  return stripPictureAction("remove", form);
+}
+
+/** ↑ / ↓: a plain form with no confirmation (the shop's arrows), so it takes the form alone. */
+export async function moveStripPictureAction(form: FormData): Promise<void> {
+  await stripPictureAction("move", form);
 }

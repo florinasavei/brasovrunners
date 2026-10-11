@@ -172,6 +172,7 @@ const WRITES: Record<string, Expected> = {
   "src/modules/appearance/site-look.ts#updateSiteLook": ["settings"],
   // «Pagina principală» (§NNN): the root and every header (the logo's address).
   "src/modules/appearance/home-page.ts#updateHomePage": ["settings"],
+  "src/modules/appearance/home-page.ts#changeStripPicture": ["settings"],
   "src/modules/deadlines/deadlines.ts#updateDeadlines": ["settings"],
 };
 

@@ -226,6 +226,44 @@ describe("§NNN the numbers band — NumbersBand", () => {
   });
 });
 
+const { createTranslator } = await import("next-intl");
+const { sampleHome } = await import("@/modules/design/home-fixtures");
+const { default: HomePage } = await import("@/modules/home/ui/HomePage");
+
+describe("§NNN the home page draws the four under the run sections, each only while the club switched it on", () => {
+  const props = () => {
+    const words = (namespace: "Home" | "Event") => {
+      const translate = createTranslator({ locale: "ro", messages: ro, namespace });
+      return (key: string, values?: Record<string, string>) => translate(key as never, values as never);
+    };
+    return sampleHome("ro", words("Home"), words("Event"));
+  };
+  const order = (markup: string) =>
+    [...markup.matchAll(/data-testid="(home-hero|home-next-run|home-weekly|home-special|home-steps|home-why|home-strip|home-numbers)"/g)].map((match) => match[1]);
+
+  it("leaves the four off by default: the page the club had before it switched any on", async () => {
+    currentLocale = "ro";
+    const markup = await html(createElement(HomePage, props()));
+    expect(order(markup)).toEqual(["home-hero", "home-next-run", "home-weekly", "home-special"]);
+  });
+
+  it("draws them in the plan's order once switched on, the strip only with a picture and the band only with a figure", async () => {
+    currentLocale = "ro";
+    const on = { steps: true, why: true, strip: true, numbers: true };
+    const markup = await html(createElement(HomePage, { ...props(), show: on }));
+    // No picture chosen in the sample: the strip is not drawn, though its switch is on.
+    expect(order(markup)).toEqual(["home-hero", "home-next-run", "home-weekly", "home-special", "home-steps", "home-why", "home-numbers"]);
+    expect(markup.match(/<h1\b/g)).toHaveLength(1);
+    expect(markup.match(/<main\b/g)).toHaveLength(1);
+
+    const pictures = stripPictures([{ id: "a", keyPrefix: "0b6f3f9e-2a41-8c3d-9e5f-1a2b3c4d5e6f", width: 2400, height: 1600, alt: "" }]);
+    const withStrip = await html(createElement(HomePage, { ...props(), show: on, strip: { ...props().strip, pictures }, numbers: { figures: [], locale: "ro" } }));
+    expect(order(withStrip)).toEqual(["home-hero", "home-next-run", "home-weekly", "home-special", "home-steps", "home-why", "home-strip"]);
+    // Only the hero's picture is ever eager: the strip's tiles wait.
+    expect(withStrip).not.toMatch(/<img[^>]*loading="eager"[^>]*thumb/);
+  });
+});
+
 describe("§NNN the sections stay Server Components on the house's primitives", () => {
   it("has no client directive, no colour literal, no MUI button, and draws icons by registry name", () => {
     for (const name of ["StepsBand", "WhyList", "PhotoStrip", "NumbersBand"]) {

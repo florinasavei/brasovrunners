@@ -4571,8 +4571,8 @@
     },
     "homePage": {
       "title": "Home page",
-      "intro": "A start page at the site's address: the next run, the weekly runs and the special events. It is reached from the logo, not from the menu.",
-      "introMore": "Off, the site's address leads to «Events», as it always has. The photograph and the two lines are optional: without them the page shows an empty slot for the photograph and default words.",
+      "intro": "The start page at the site's address, from the top photograph to the club's numbers. It is reached from the logo, not from the menu.",
+      "introMore": "Off, the address leads to «Events», as it always has. A box empty in both languages means the default words, shown in grey; a photograph not chosen is an empty slot.",
       "current": "Now: {state}",
       "updatedAt": "Set {when}.",
       "legend": "What the site's address opens",
@@ -4605,21 +4605,19 @@
       "buttonJoinEn": "«Join us» (English)",
       "buttonCalendarRo": "«See the calendar» (Romanian)",
       "buttonCalendarEn": "«See the calendar» (English)",
-      "buttonHowRo": "Third button (Romanian)",
-      "buttonHowEn": "Third button (English)",
-      "buttonHowSlug": "The page address for the third button",
-      "buttonHowHelp": "For example «how-it-works»: the address of a club page (the part after «pages/»). With no address, the «How it works» button is not drawn.",
-      "sectionsLegend": "What the page shows",
-      "sectionsHelp": "Tick the sections that appear. The last four come in a later release and only hold their place.",
+      "buttonHowRo": "«How it works» (Romanian)",
+      "buttonHowEn": "«How it works» (English)",
+      "buttonHowHelp": "A club page from «Custom pages». With no page the button is not drawn; an unpublished page appears once you publish it. The label is optional: empty, «How it works».",
+      "sectionsHelp": "Tick the sections that appear, in the order below. The last four start off: fill them in first, then tick them.",
       "sections": {
         "hero": "The photograph, the headline and the buttons",
         "nextRun": "The next run",
         "weekly": "The weekly runs",
         "special": "The special events",
-        "steps": "The first time (not built yet)",
-        "why": "Why (not built yet)",
-        "strip": "The photo strip (not built yet)",
-        "numbers": "The club's numbers (not built yet)"
+        "steps": "First time — five steps for a newcomer",
+        "why": "Why — four reasons and the quote",
+        "strip": "The photo strip — only with at least one photograph",
+        "numbers": "The club's numbers — only those that can be known"
       },
       "save": "Save the home page",
       "saving": "Saving…",
@@ -4627,7 +4625,77 @@
       "readOnly": "The Administrator sets the home page; here you see the choice in force.",
       "noStorage": "Picture storage is not configured here, so no photograph can be chosen.",
       "open": "Open the home page",
-      "scope": "Only what the site's address opens and where the logo leads change. «Events» stays in the menu, at the same address."
+      "scope": "Only what the site's address opens and where the logo leads change. «Events» stays in the menu, at the same address.",
+      "buttonHowPage": "The page of the top «How it works» button",
+      "folds": {
+        "sections": "Which sections the page shows",
+        "sectionsAside": "{shown} of {total} shown",
+        "hero": "Top: the photograph, the headline and the buttons",
+        "heroWithPhoto": "With a photograph",
+        "heroEmpty": "No photograph",
+        "steps": "First time",
+        "stepsIntro": "Five steps for someone who has never run with the club, from the calendar to the coffee after. The «How it works» button appears only with a page chosen.",
+        "why": "Why, and the quote",
+        "whyIntro": "Four reasons, each with its title and sentence, and a quote with who said it. The quote appears only when it is written in both languages: the page puts words in nobody's mouth.",
+        "strip": "The photo strip: its heading",
+        "stripIntro": "The photographs are chosen below, under «The strip's photographs»; with none, the strip is not drawn.",
+        "numbers": "The club's numbers",
+        "numbersAside": "{filled} of 2 filled in",
+        "numbersIntro": "The years are counted from the founding day, and the runs a week and «100% free» from the weekly runs on the calendar. A figure without its facts is left out.",
+        "wordsClub": "The club's words",
+        "wordsPlatform": "The default words"
+      },
+      "inLanguage": {
+        "ro": "{box} (Romanian)",
+        "en": "{box} (English)"
+      },
+      "boxes": {
+        "stepsTitle": "First time: the heading",
+        "stepsLead": "First time: the sentence under the heading",
+        "step": "First time: step {number}",
+        "stepsLink": "First time: the button's label",
+        "whyTitle": "Why: the heading",
+        "reasonTitle": "Why: reason {number}, its title",
+        "reasonBody": "Why: reason {number}, its sentence",
+        "quote": "The quote",
+        "quoteBy": "Who said it",
+        "stripTitle": "The photo strip: its heading"
+      },
+      "pageLabel": "The page «How it works» opens",
+      "pageNone": "None — the button is not drawn",
+      "pageDraft": "{title} (not published)",
+      "stepsPage": "First time: the page of the «How it works» button",
+      "stepsPageHelp": "A club page from «Custom pages», opened in the reader's language. An unpublished page appears once you publish it.",
+      "numbers": {
+        "foundedOn": "The day the club was founded",
+        "foundedOnHelp": "The page shows how many whole years have passed. Empty: the figure is left out.",
+        "activeRunners": "Active runners",
+        "activeRunnersHelp": "How many people run with the club, by your own count. Empty: the figure is left out."
+      },
+      "strip": {
+        "title": "The strip's photographs",
+        "intro": "Up to {max} of the club's photographs, in the order here, each square, its middle. Only photographs with the agreement of everyone recognisable in them.",
+        "count": {
+          "one": "{count} photograph",
+          "few": "{count} photographs",
+          "other": "{count} photographs"
+        },
+        "none": "No photograph yet: the strip is not drawn on the page.",
+        "position": "Place {number}",
+        "up": "Up",
+        "down": "Down",
+        "moveUp": "Move photograph {number} up",
+        "moveDown": "Move photograph {number} down",
+        "remove": "Remove",
+        "removeNamed": "Remove photograph {number} from the strip",
+        "removeTitle": "Remove the photograph from the strip?",
+        "removeBody": "It leaves the home page's strip; it stays in the gallery. Visitors see the change from their next visit.",
+        "addLegend": "Add a photograph to the strip",
+        "addHelp": "Upload one or choose «From the gallery». It is added at the end of the strip.",
+        "add": "Add to the strip",
+        "full": "The strip holds {max} photographs, as many as it takes. Remove one to add another.",
+        "saved": "The photo strip was saved."
+      }
     },
     "look": {
       "title": "The new look",
@@ -9647,6 +9715,7 @@
       "siteFontSize": "The site's text size was saved.",
       "siteLook": "The site's look was saved.",
       "homePage": "The home page was saved.",
+      "homeStrip": "The photo strip was saved.",
       "clubTodoAdded": "Added to the list.",
       "clubTodoSaved": "Line saved.",
       "clubTodoUnchanged": "The line already said this; nothing changed.",
@@ -9969,7 +10038,8 @@
       "headline": "We run together in Brașov",
       "subline": "Group runs, mountain outings and special events organised by the club — always free. Come to your first run; we'll be waiting.",
       "join": "Join us",
-      "calendar": "See the calendar"
+      "calendar": "See the calendar",
+      "how": "How it works"
     },
     "nextRun": {
       "title": "Next run",
@@ -10190,7 +10260,8 @@
       "region": "Photographs from our runs, in a row that scrolls sideways",
       "gallery": "See the gallery",
       "instagram": "Follow us on Instagram",
-      "emptySlot": "A place for a photograph"
+      "emptySlot": "A place for a photograph",
+      "photoAlt": "A photograph from the club's runs, {n} of {total}"
     },
     "numbers": {
       "title": "{club} in numbers",

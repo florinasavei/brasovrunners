@@ -12,11 +12,14 @@ import type { PublicEvent } from "@/modules/events/repository";
 import { recurrenceSentence } from "@/modules/events/ui/series-sentence";
 import { type PictureColumn, pictureSizes, pictureSrcSet } from "@/modules/media/ladder";
 import { getStorage, isStorageConfigured, objectKey } from "@/modules/media/storage";
-import { cachedUpcomingEvents } from "@/modules/public-cache/reads";
+import { cachedPublishedPages, cachedUpcomingEvents } from "@/modules/public-cache/reads";
 import { readWithLastGood, type Resilient } from "@/modules/resilience/last-good";
 import { forecastsForEvents } from "@/modules/weather/source";
 import { weatherWords } from "@/modules/weather/words";
+import { clubSocialLinks } from "@/shared/ui/club-socials";
+import { homeFigures } from "./domain/numbers";
 import { type HomeCard, homeSections } from "./domain/sections";
+import { type StripPicture, stripPictures } from "./strip-pictures";
 import type { HomePictureSources } from "./ui/HomePicture";
 import type { HomePageProps } from "./ui/HomePage";
 import type { RunCardItem } from "./ui/RunCardGrid";
@@ -58,12 +61,34 @@ export function heroPicture(setting: HomePageSetting): HomePictureSources | null
   };
 }
 
+/**
+ * The strip's pictures from the setting, in the club's order, as their `<img>` draws them — or none
+ * with no store to name them in (a laptop without R2): an unset strip is not drawn, never a broken page.
+ */
+function stripOf(setting: HomePageSetting, alt: (n: number, total: number) => string): StripPicture[] {
+  const chosen = setting.strip.pictures;
+  if (chosen.length === 0 || !isStorageConfigured()) return [];
+  return stripPictures(chosen.map((picture, index) => ({ id: picture.assetId, keyPrefix: picture.keyPrefix, width: picture.width, height: picture.height, alt: alt(index + 1, chosen.length) })));
+}
+
+/**
+ * A club page chosen by its id, at its own address in the reader's language — or null while it is not
+ * published there (a draft, or a page since unpublished): the button is then not drawn, never a 404.
+ * Read from the navigation's own cached list of published pages, so it asks the database nothing new.
+ */
+async function clubPageHref(pageId: string | null, locale: Locale) {
+  if (!pageId) return null;
+  const page = (await cachedPublishedPages(locale)).find((candidate) => candidate.id === pageId);
+  return page ? { pathname: "/pages/[slug]" as const, params: { slug: page.slug } } : null;
+}
+
 /** The place in words, or null while it is to be announced (§328) or unnamed. */
 const placeOf = (event: PublicEvent): string | null => (event.locationToBeAnnounced ? null : (event.locationName ?? null));
 
 export async function readHomeContent(locale: Locale, now: Date, setting: HomePageSetting): Promise<HomeContent> {
   const t = await getTranslations({ locale, namespace: "Home" });
   const tEvent = await getTranslations({ locale, namespace: "Event" });
+  const tSections = await getTranslations({ locale, namespace: "HomeSections" });
 
   // The listing's own read (held to its clock window, §549), under a key of the home page's own.
   const read = await readWithLastGood(`home:events:${locale}`, () => cachedUpcomingEvents(locale, now), now);
@@ -80,6 +105,9 @@ export async function readHomeContent(locale: Locale, now: Date, setting: HomePa
   // «Vino cu noi»: the next weekly run, as the header's button reads it (§708, decision 5), else the listing.
   const weeklyRun = nextWeeklyRun(upcoming);
   const lines = heroLines(setting, locale);
+  // The two «Cum funcționează» buttons: each a club page, at its own address in this language, or none.
+  const howHref = await clubPageHref(setting.buttons.how?.pageId ?? null, locale);
+  const stepsHref = await clubPageHref(setting.steps.targetPageId, locale);
 
   let nextRun: HomePageProps["nextRun"] = null;
   if (sections.next) {
@@ -123,16 +151,9 @@ export async function readHomeContent(locale: Locale, now: Date, setting: HomePa
       picture: heroPicture(setting),
       primary: { label: buttonLabelIn(setting.buttons.join, locale) ?? t("hero.join"), href: weeklyRun ? { pathname: "/events/[slug]", params: { slug: weeklyRun.slug } } : "/events" },
       secondary: { label: buttonLabelIn(setting.buttons.calendar, locale) ?? t("hero.calendar"), href: "/calendar" },
-      tertiary: setting.buttons.how
-        ? { label: setting.buttons.how.label[locale], href: { pathname: "/pages/[slug]", params: { slug: setting.buttons.how.slug } } }
-        : null,
+      tertiary: howHref ? { label: buttonLabelIn(setting.buttons.how?.label ?? null, locale) ?? t("hero.how"), href: howHref } : null,
     },
-    show: {
-      hero: setting.sections.hero,
-      nextRun: setting.sections.nextRun,
-      weekly: setting.sections.weekly,
-      special: setting.sections.special,
-    },
+    show: setting.sections,
     nextRun,
     weekly: {
       id: "weekly",
@@ -150,6 +171,17 @@ export async function readHomeContent(locale: Locale, now: Date, setting: HomePa
       // The listing holds every event: the link under the last section, whatever the counts.
       more: { label: t("more") },
     },
+    steps: { content: setting.steps, locale, href: stepsHref },
+    why: { content: setting.why, locale },
+    strip: {
+      content: { title: setting.strip.title },
+      pictures: stripOf(setting, (n, total) => tSections("strip.photoAlt", { n, total })),
+      // The club's Instagram from the footer's one list (§565): a link, never a feed.
+      instagram: (await clubSocialLinks()).find((link) => link.network === "instagram") ?? null,
+      locale,
+    },
+    // The figures from the club's two facts and the same upcoming events the cards read; none, no band.
+    numbers: { figures: homeFigures(setting.numbers, upcoming, now), locale },
     freshness: read,
   };
   return { props, read };

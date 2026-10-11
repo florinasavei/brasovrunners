@@ -189,6 +189,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   updateSiteLookAction: [],
   // «Pagina principală» (§NNN): the site's address opens the home page or the listing, for every visitor, from the next visit.
   updateHomePageAction: [],
+  removeStripPictureAction: [],
   // Who receives the signed declarations and the confirmations, with personal data in them.
   updateClubNoticesAction: [],
   // «Răspunsurile din calendar merg la» (§672): every invitation from now on asks, and the answers go there.
@@ -241,6 +242,8 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   // The product's pictures (§697): each its own small form on the product's page.
   addShopPictureAction: "adds a picture at the end of the product's strip, undone by «Scoate fotografia», which asks",
   moveShopPictureAction: "reorders a product's pictures, undone by moving back",
+  addStripPictureAction: "adds a picture at the end of the home page's photo strip, undone by «Scoate», which asks",
+  moveStripPictureAction: "reorders the home page's photo strip, undone by moving back",
   replaceShopPictureAction: "a new crop or another stored picture in the same place of the strip, undone by saving the previous one again",
   saveTeamPageIntroAction: "an editorial save of the page's introduction; publishing the page asks",
   saveMembersTextAction: "an editorial save of the members' pages' words (§524), like a page's; publishing the page asks",

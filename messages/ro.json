@@ -4571,8 +4571,8 @@
     },
     "homePage": {
       "title": "Pagina principală",
-      "intro": "O pagină de start la adresa site-ului: alergarea următoare, alergările săptămânale și evenimentele speciale. Se ajunge la ea din siglă, nu din meniu.",
-      "introMore": "Oprită, adresa site-ului duce la «Alergări», ca până acum. Fotografia și cele două rânduri sunt opționale: fără ele, pagina arată un loc gol pentru fotografie și un text implicit.",
+      "intro": "Pagina de start la adresa site-ului, de la fotografia de sus la cifrele clubului. Se ajunge la ea din siglă, nu din meniu.",
+      "introMore": "Oprită, adresa duce la «Alergări», ca până acum. O căsuță goală în ambele limbi înseamnă textul implicit, scris cu gri; o fotografie nealeasă e un loc gol.",
       "current": "Acum: {state}",
       "updatedAt": "Setat {when}.",
       "legend": "Ce deschide adresa site-ului",
@@ -4605,21 +4605,19 @@
       "buttonJoinEn": "«Vino cu noi» (engleză)",
       "buttonCalendarRo": "«Vezi calendarul» (română)",
       "buttonCalendarEn": "«Vezi calendarul» (engleză)",
-      "buttonHowRo": "Al treilea buton (română)",
-      "buttonHowEn": "Al treilea buton (engleză)",
-      "buttonHowSlug": "Adresa paginii pentru al treilea buton",
-      "buttonHowHelp": "De exemplu «cum-functioneaza»: adresa unei pagini a clubului (partea de după «pagini/»). Fără adresă, butonul «Cum funcționează» nu apare.",
-      "sectionsLegend": "Ce arată pagina",
-      "sectionsHelp": "Bifează secțiunile care apar. Ultimele patru vin într-o versiune următoare și doar își țin locul.",
+      "buttonHowRo": "«Cum funcționează» (română)",
+      "buttonHowEn": "«Cum funcționează» (engleză)",
+      "buttonHowHelp": "O pagină a clubului din «Pagini personalizate». Fără pagină, butonul nu apare; o pagină nepublicată apare abia după ce o publici. Eticheta e opțională: goală, «Cum funcționează».",
+      "sectionsHelp": "Bifează secțiunile care apar, în ordinea de mai jos. Ultimele patru pornesc oprite: completează-le întâi, apoi bifează-le.",
       "sections": {
         "hero": "Fotografia, titlul și butoanele",
         "nextRun": "Următoarea alergare",
         "weekly": "Alergările săptămânale",
         "special": "Evenimentele speciale",
-        "steps": "Prima dată (încă nu există)",
-        "why": "De ce (încă nu există)",
-        "strip": "Banda de fotografii (încă nu există)",
-        "numbers": "Cifrele clubului (încă nu există)"
+        "steps": "Prima dată — cinci pași pentru cine vine prima oară",
+        "why": "De ce — patru motive și citatul",
+        "strip": "Banda de fotografii — doar cu cel puțin o fotografie",
+        "numbers": "Cifrele clubului — doar cele care se pot afla"
       },
       "save": "Salvează pagina principală",
       "saving": "Se salvează…",
@@ -4627,7 +4625,77 @@
       "readOnly": "Pagina principală o setează Administratorul; vezi aici alegerea în vigoare.",
       "noStorage": "Stocarea imaginilor nu este configurată aici, așa că nu se poate alege o fotografie.",
       "open": "Deschide pagina principală",
-      "scope": "Se schimbă doar ce deschide adresa site-ului și unde duce sigla. «Alergări» rămâne în meniu, la aceeași adresă."
+      "scope": "Se schimbă doar ce deschide adresa site-ului și unde duce sigla. «Alergări» rămâne în meniu, la aceeași adresă.",
+      "buttonHowPage": "Pagina butonului «Cum funcționează» de sus",
+      "folds": {
+        "sections": "Ce secțiuni arată pagina",
+        "sectionsAside": "{shown} din {total} arătate",
+        "hero": "Sus: fotografia, titlul și butoanele",
+        "heroWithPhoto": "Cu fotografie",
+        "heroEmpty": "Fără fotografie",
+        "steps": "Prima dată",
+        "stepsIntro": "Cinci pași pentru cine n-a mai alergat cu clubul, de la calendar la cafeaua de după. Butonul «Cum funcționează» apare doar cu o pagină aleasă.",
+        "why": "De ce și citatul",
+        "whyIntro": "Patru motive, fiecare cu titlul și propoziția lui, și un citat cu autorul lui. Citatul apare doar dacă e scris în ambele limbi: pagina nu inventează vorbele nimănui.",
+        "strip": "Banda de fotografii: titlul",
+        "stripIntro": "Fotografiile se aleg mai jos, în «Fotografiile benzii»; fără niciuna, banda nu apare.",
+        "numbers": "Cifrele clubului",
+        "numbersAside": "{filled} din 2 completate",
+        "numbersIntro": "Anii se socotesc din data înființării, iar alergările pe săptămână și «100% gratuit» din alergările săptămânale din calendar. O cifră fără datele ei nu apare.",
+        "wordsClub": "Textele clubului",
+        "wordsPlatform": "Textele implicite"
+      },
+      "inLanguage": {
+        "ro": "{box} (română)",
+        "en": "{box} (engleză)"
+      },
+      "boxes": {
+        "stepsTitle": "Prima dată: titlul",
+        "stepsLead": "Prima dată: propoziția de sub titlu",
+        "step": "Prima dată: pasul {number}",
+        "stepsLink": "Prima dată: eticheta butonului",
+        "whyTitle": "De ce: titlul",
+        "reasonTitle": "De ce: motivul {number}, titlul",
+        "reasonBody": "De ce: motivul {number}, propoziția",
+        "quote": "Citatul",
+        "quoteBy": "Cine a spus-o",
+        "stripTitle": "Banda de fotografii: titlul"
+      },
+      "pageLabel": "Pagina pe care o deschide «Cum funcționează»",
+      "pageNone": "Niciuna — butonul nu apare",
+      "pageDraft": "{title} (nepublicată)",
+      "stepsPage": "Prima dată: pagina butonului «Cum funcționează»",
+      "stepsPageHelp": "O pagină a clubului din «Pagini personalizate», deschisă în limba cititorului. O pagină nepublicată apare abia după ce o publici.",
+      "numbers": {
+        "foundedOn": "Data înființării clubului",
+        "foundedOnHelp": "Pagina arată câți ani au trecut, întregi. Goală: cifra nu apare.",
+        "activeRunners": "Alergători activi",
+        "activeRunnersHelp": "Câți oameni aleargă cu clubul, după numărătoarea voastră. Gol: cifra nu apare."
+      },
+      "strip": {
+        "title": "Fotografiile benzii",
+        "intro": "Până la {max} fotografii ale clubului, în ordinea de aici, fiecare pătrată, cu mijlocul ei. Doar fotografii cu acordul celor care se recunosc în ele.",
+        "count": {
+          "one": "{count} fotografie",
+          "few": "{count} fotografii",
+          "other": "{count} de fotografii"
+        },
+        "none": "Nicio fotografie încă: banda nu apare pe pagină.",
+        "position": "Locul {number}",
+        "up": "Mai sus",
+        "down": "Mai jos",
+        "moveUp": "Mută fotografia {number} mai sus",
+        "moveDown": "Mută fotografia {number} mai jos",
+        "remove": "Scoate",
+        "removeNamed": "Scoate fotografia {number} din bandă",
+        "removeTitle": "Scoți fotografia din bandă?",
+        "removeBody": "Iese din banda paginii principale; rămâne în galerie. Vizitatorii văd schimbarea de la următoarea vizită.",
+        "addLegend": "Adaugă o fotografie în bandă",
+        "addHelp": "Încarcă una sau alege «Din galerie». Se adaugă la sfârșitul benzii.",
+        "add": "Adaugă în bandă",
+        "full": "Banda are {max} fotografii, cât încape. Scoate una ca să adaugi alta.",
+        "saved": "Banda de fotografii a fost salvată."
+      }
     },
     "look": {
       "title": "Aspectul nou",
@@ -9647,6 +9715,7 @@
       "siteFontSize": "Mărimea textului a fost salvată.",
       "siteLook": "Aspectul site-ului a fost salvat.",
       "homePage": "Pagina principală a fost salvată.",
+      "homeStrip": "Banda de fotografii a fost salvată.",
       "clubTodoAdded": "Adăugat pe listă.",
       "clubTodoSaved": "Rând salvat.",
       "clubTodoUnchanged": "Rândul spunea deja asta; nimic de schimbat.",
@@ -9969,7 +10038,8 @@
       "headline": "Alergăm împreună prin Brașov",
       "subline": "Alergări de grup, ture pe munte și evenimente speciale organizate de club — întotdeauna gratuite. Vino la prima alergare, te așteptăm.",
       "join": "Vino cu noi",
-      "calendar": "Vezi calendarul"
+      "calendar": "Vezi calendarul",
+      "how": "Cum funcționează"
     },
     "nextRun": {
       "title": "Următoarea alergare",
@@ -10190,7 +10260,8 @@
       "region": "Fotografii de la alergări, într-un rând care se derulează în lateral",
       "gallery": "Vezi galeria",
       "instagram": "Urmărește-ne pe Instagram",
-      "emptySlot": "Loc pentru o fotografie"
+      "emptySlot": "Loc pentru o fotografie",
+      "photoAlt": "Fotografie de la alergările clubului, {n} din {total}"
     },
     "numbers": {
       "title": "{club} în cifre",

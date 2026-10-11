@@ -8,8 +8,8 @@ import { getStorage, objectKey } from "@/modules/media/storage";
  * size, and the words a screen reader hears. A picture stored before the ladder has no `srcset` and
  * draws its thumbnail, as every older picture does (§414).
  *
- * The wiring reads the ids the setting holds from `media_assets`, puts them in the club's order
- * (`orderStripPictures`) and hands them here; this asks the database nothing.
+ * The page hands it the pictures the setting holds, in the club's order, each with the facts copied
+ * from the store when it was added (`domain/photo-strip.ts`); this asks the database nothing.
  */
 export type StripPicture = {
   id: string;

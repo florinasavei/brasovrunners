@@ -8,15 +8,15 @@ import { readTeamPhotoCrop } from "@/modules/content/team/photo-crop";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
+import { pages } from "@/db/schema/pages";
+import { MAX_STRIP_PICTURES, moveStripPicture } from "@/modules/home/domain/photo-strip";
 import {
   DEFAULT_HOME_PAGE_SETTING,
   describeHomePage,
   HOME_PAGE_SETTING_KEY,
   HOME_BUTTON_MAX,
   HOME_HEADLINE_MAX,
-  HOME_PAGE_SLUG,
   HOME_SECTION_KEYS,
-  HOME_SLUG_MAX,
   HOME_SUBLINE_MAX,
   type HomeSectionKey,
   type HomeHeroPicture,
@@ -24,6 +24,7 @@ import {
   parseHomePage,
   postedPair,
 } from "./domain/home-page";
+import { type PostedField, postedNumbers, postedSteps, postedStripTitle, postedWhy, type SectionRead, STEPS_PAGE_FIELD } from "./domain/home-sections-form";
 
 /**
  * «Pagina principală» (§NNN): one `platform_settings` row, written by an Administrator under «Setări» →
@@ -69,9 +70,18 @@ export type HomePageInput = {
   buttonCalendarEn?: unknown;
   buttonHowRo?: unknown;
   buttonHowEn?: unknown;
-  buttonHowSlug?: unknown;
+  /** «Cum funcționează»'s club page, by its id; empty: no third button. */
+  buttonHowPageId?: unknown;
   /** Which sections are drawn, by key; `undefined`: kept as they were. A key left out keeps its value. */
   sections?: Partial<Record<HomeSectionKey, boolean>>;
+  /**
+   * The four lower sections' boxes, each a reader of the posted form by name (`home-sections-form.ts`),
+   * or `undefined` when the form did not carry that section's fold — which keeps it as it was.
+   */
+  steps?: PostedField;
+  why?: PostedField;
+  strip?: PostedField;
+  numbers?: PostedField;
 };
 
 type PairStem = "headline" | "subline" | "buttonJoin" | "buttonCalendar" | "buttonHow";
@@ -117,26 +127,53 @@ function pairOf(input: HomePageInput, stem: PairStem, max: number) {
 
 /** Whether the form carried any of the hero buttons' boxes: a save that did not (an older form) keeps them. */
 const carriesButtons = (input: HomePageInput) =>
-  [input.buttonJoinRo, input.buttonJoinEn, input.buttonCalendarRo, input.buttonCalendarEn, input.buttonHowRo, input.buttonHowEn, input.buttonHowSlug].some(
+  [input.buttonJoinRo, input.buttonJoinEn, input.buttonCalendarRo, input.buttonCalendarEn, input.buttonHowRo, input.buttonHowEn, input.buttonHowPageId].some(
     (value) => value !== undefined,
   );
 
 /**
- * The three buttons as posted: two labels both languages or neither (§352), and «Cum funcționează» a
- * pair of labels **and** the address of a club page, or none of them — a button with no place to go
- * is never saved, and a place with no words is refused naming the box.
+ * A club page («Pagini personalizate») chosen by its id, as posted: none for an empty choice, else a
+ * page that exists — published or not yet, since the page draws its button only once it is published,
+ * in each language at that language's own address. Anything else is refused naming the choice.
  */
-function postedButtons(input: HomePageInput, before: HomePageSetting["buttons"]): HomePageSetting["buttons"] {
+async function postedPageId<T extends Record<string, unknown>>(db: Database<T>, value: unknown, field: string): Promise<string | null> {
+  const id = typeof value === "string" ? value.trim() : "";
+  if (!id) return null;
+  const refuse = () => new DomainError("VALIDATION_ERROR", `${field}: not a page of the club`, [field]);
+  if (!UUID.test(id)) throw refuse();
+  const [page] = await db.select({ id: pages.id }).from(pages).where(eq(pages.id, id)).limit(1);
+  if (!page) throw refuse();
+  return page.id;
+}
+
+/**
+ * The three buttons as posted: two labels both languages or neither (§352), and «Cum funcționează» a
+ * club page with, optionally, its own pair of words — a button with no page to go to is never saved,
+ * so words with no page are refused naming the choice; no words, the platform's «Cum funcționează».
+ */
+async function postedButtons<T extends Record<string, unknown>>(db: Database<T>, input: HomePageInput, before: HomePageSetting["buttons"]): Promise<HomePageSetting["buttons"]> {
   if (!carriesButtons(input)) return before;
   const join = pairOf(input, "buttonJoin", HOME_BUTTON_MAX);
   const calendar = pairOf(input, "buttonCalendar", HOME_BUTTON_MAX);
   const label = pairOf(input, "buttonHow", HOME_BUTTON_MAX);
-  const slug = typeof input.buttonHowSlug === "string" ? input.buttonHowSlug.trim().toLowerCase() : "";
-  const refuse = (field: string, why: string) => new DomainError("VALIDATION_ERROR", `${field}: ${why}`, [field]);
-  if (slug && (slug.length > HOME_SLUG_MAX || !HOME_PAGE_SLUG.test(slug))) throw refuse("buttonHowSlug", "not the address of a page");
-  if (slug && !label) throw refuse("buttonHowRo", "a button needs its words");
-  if (!slug && label) throw refuse("buttonHowSlug", "a button needs a page to go to");
-  return { join, calendar, how: slug && label ? { label, slug } : null };
+  const pageId = await postedPageId(db, input.buttonHowPageId, "buttonHowPageId");
+  if (!pageId && label) throw new DomainError("VALIDATION_ERROR", "buttonHowPageId: a button needs a page to go to", ["buttonHowPageId"]);
+  return { join, calendar, how: pageId ? { label, pageId } : null };
+}
+
+/** One lower section as posted, or as it was when the form did not carry its fold; a refusal names the box. */
+function section<V>(read: PostedField | undefined, before: V, post: (read: PostedField) => SectionRead<V>): V {
+  if (!read) return before;
+  const result = post(read);
+  if (!result.ok) throw new DomainError("VALIDATION_ERROR", `${result.field}: not saved as written (both languages or neither, within its length)`, [result.field]);
+  return result.value;
+}
+
+/** «Prima dată» as posted, its «Cum funcționează» a club page that exists (the same rule as the hero's). */
+async function postedStepsSection<T extends Record<string, unknown>>(db: Database<T>, read: PostedField | undefined, before: HomePageSetting["steps"]): Promise<HomePageSetting["steps"]> {
+  const steps = section(read, before, postedSteps);
+  if (!read) return steps;
+  return { ...steps, targetPageId: await postedPageId(db, steps.targetPageId, STEPS_PAGE_FIELD) };
 }
 
 /** The switches as posted, over what was there: only the keys the form named, and only booleans. */
@@ -152,10 +189,11 @@ function postedSections(input: HomePageInput, before: HomePageSetting["sections"
 
 /**
  * Saves «Pagina principală»: on or off, the hero's picture and its crop, the lines and button labels in
- * both languages or neither, «Cum funcționează»'s page and which sections the page draws. A club
- * setting (§450): the Administrator's, asserted here as well as at the
- * action. Expires the public cache's settings, so the root and every header are made again at their
- * next visit (§549): the root becomes the page or the redirect, the logo leads to it or to the listing.
+ * both languages or neither, «Cum funcționează»'s page, which sections the page draws, and the words
+ * and figures of the four lower sections (each kept as it was when the form did not carry its fold).
+ * A club setting (§450): the Administrator's, asserted here as well as at the action. Expires the
+ * public cache's settings, so the root and every header are made again at their next visit (§549):
+ * the root becomes the page or the redirect, the logo leads to it or to the listing.
  */
 export async function updateHomePage<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -173,11 +211,42 @@ export async function updateHomePage<T extends Record<string, unknown>>(
   const subline = pairOf(input, "subline", HOME_SUBLINE_MAX);
   const before = await readHomePage(db);
   const hero = await postedHero(db, input, before.setting.hero);
-  const buttons = postedButtons(input, before.setting.buttons);
+  const buttons = await postedButtons(db, input, before.setting.buttons);
   const sections = postedSections(input, before.setting.sections);
-  // The previous row first: a field a later release wrote (part B) is carried, never dropped by this save.
-  const next: HomePageSetting = { ...before.setting, on: CHOICES[input.page], hero, headline, subline, buttons, sections };
+  const steps = await postedStepsSection(db, input.steps, before.setting.steps);
+  const why = section(input.why, before.setting.why, postedWhy);
+  const strip = section(input.strip, before.setting.strip, (read) => postedStripTitle(read, before.setting.strip));
+  const numbers = section(input.numbers, before.setting.numbers, postedNumbers);
+  // The previous row first: a field a later release wrote is carried, never dropped by this save.
+  const next: HomePageSetting = { ...before.setting, on: CHOICES[input.page], hero, headline, subline, buttons, sections, steps, why, strip, numbers };
+  const changed = (pick: (setting: HomePageSetting) => unknown) => JSON.stringify(pick(before.setting)) !== JSON.stringify(pick(next));
 
+  await writeHomePage(db, actor, next, now, {
+    // By id and by switch, never the words, a figure or a file name: what changed, not a copy of it.
+    from: describeHomePage(before.setting),
+    to: describeHomePage(next),
+    heroFrom: before.setting.hero?.assetId ?? null,
+    heroTo: next.hero?.assetId ?? null,
+    heroCropped: next.hero?.crop !== null && next.hero !== null,
+    wordsChanged: changed((setting) => [setting.headline, setting.subline, setting.buttons]),
+    sectionsChanged: changed((setting) => setting.sections),
+    contentChanged: changed((setting) => [setting.steps, setting.why, setting.strip.title, setting.numbers]),
+  });
+  return { setting: next, updatedAt: now };
+}
+
+/**
+ * Writes the row over what was there and its audit row in one transaction, then expires the public
+ * cache's settings: the root and every header read it from there (§333), and the static pages are
+ * made again at their next visit (§549).
+ */
+async function writeHomePage<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id">,
+  next: HomePageSetting,
+  now: Date,
+  metadata: Record<string, unknown>,
+): Promise<void> {
   await db.transaction(async (tx) => {
     await tx
       .insert(platformSettings)
@@ -191,22 +260,66 @@ export async function updateHomePage<T extends Record<string, unknown>>(
       action: "home_page.changed",
       entityType: "platform_setting",
       entityId: HOME_PAGE_SETTING_ENTITY_ID,
-      // By id and by switch, never the words or a file name: what changed, not a copy of it.
-      metadata: {
-        from: describeHomePage(before.setting),
-        to: describeHomePage(next),
-        heroFrom: before.setting.hero?.assetId ?? null,
-        heroTo: next.hero?.assetId ?? null,
-        heroCropped: next.hero?.crop !== null && next.hero !== null,
-        wordsChanged:
-          JSON.stringify([before.setting.headline, before.setting.subline, before.setting.buttons]) !==
-          JSON.stringify([next.headline, next.subline, next.buttons]),
-        sectionsChanged: JSON.stringify(before.setting.sections) !== JSON.stringify(next.sections),
-      },
+      metadata,
       now,
     });
   });
-  // The root and the header read it from the public cache (§333); the static pages are made again.
   revalidatePublicContent("settings");
-  return { setting: next, updatedAt: now };
+}
+
+/** What the strip's three small forms post: the picture, and for a move its direction. */
+export type StripPictureInput = { assetId?: unknown; direction?: unknown };
+
+/**
+ * One picture added to the strip, moved a place, or taken out of it (§NNN): the strip's own small
+ * forms under «Pagina principală», each a save of its own like a product's pictures (§697), so a slow
+ * upload never holds the page's boxes hostage. The Administrator's (§450), audited as the page's
+ * change, by the picture's id. Adding reads the picture's key prefix and size from the store and keeps
+ * them beside its id, as the hero does, so the public read asks the store nothing and the pictures
+ * page sees the picture used; a picture not in the store, a film's poster (§485), one already in the
+ * strip, or a thirteenth, is refused naming the box.
+ */
+export async function changeStripPicture<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  change: "add" | "move" | "remove",
+  input: StripPictureInput,
+  now: Date,
+): Promise<HomePageState> {
+  if (!canManageClubSettings(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not change the home page`);
+  }
+  const refuse = (why: string) => new DomainError("VALIDATION_ERROR", `stripAssetId: ${why}`, ["stripAssetId"]);
+  if (typeof input.assetId !== "string" || !UUID.test(input.assetId)) throw refuse("choose a picture");
+  const assetId = input.assetId;
+  const before = await readHomePage(db);
+  const pictures = before.setting.strip.pictures;
+  let next: HomePageSetting["strip"]["pictures"];
+  if (change === "add") {
+    if (pictures.some((picture) => picture.assetId === assetId)) throw refuse("already in the strip");
+    if (pictures.length >= MAX_STRIP_PICTURES) throw refuse(`at most ${MAX_STRIP_PICTURES} pictures`);
+    const [asset] = await db
+      .select({ id: mediaAssets.id, keyPrefix: mediaAssets.keyPrefix, width: mediaAssets.width, height: mediaAssets.height })
+      .from(mediaAssets)
+      .where(eq(mediaAssets.id, assetId))
+      .limit(1);
+    if (!asset || asset.keyPrefix.startsWith("yt-") || !asset.width || !asset.height) throw refuse("no such picture in the store");
+    next = [...pictures, { assetId: asset.id, keyPrefix: asset.keyPrefix, width: asset.width, height: asset.height }];
+  } else if (change === "move") {
+    if (input.direction !== "up" && input.direction !== "down") throw refuse("not a direction");
+    next = moveStripPicture(pictures, assetId, input.direction);
+  } else {
+    next = pictures.filter((picture) => picture.assetId !== assetId);
+  }
+  // Nothing to do — the picture was taken out or moved already (a second press, a stale page): no write, no audit row.
+  if (JSON.stringify(next) === JSON.stringify(pictures)) return before;
+  const setting: HomePageSetting = { ...before.setting, strip: { ...before.setting.strip, pictures: next } };
+  await writeHomePage(db, actor, setting, now, {
+    from: describeHomePage(before.setting),
+    to: describeHomePage(setting),
+    strip: change,
+    stripPicture: assetId,
+    stripCount: next.length,
+  });
+  return { setting, updatedAt: now };
 }

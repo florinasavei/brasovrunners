@@ -13,7 +13,7 @@ import { STRIP_WIDE_COUNT, type StripContent } from "../domain/photo-strip";
 import type { StripPicture } from "../strip-pictures";
 import { HOME_HEADING_SX, HOME_RADIUS_PX } from "./home-surfaces";
 
-type Props = {
+export type PhotoStripProps = {
   /** The heading the club typed, or the platform's. */
   content: Pick<StripContent, "title">;
   /** The chosen pictures, in the club's order, built by `strip-pictures.ts`. None, and nothing is drawn. */
@@ -46,7 +46,7 @@ const GAP_PX = 12;
  *
  * No picture, no section (phase 3: «an unset strip is not drawn»): returns null.
  */
-export default async function PhotoStrip({ content, pictures, instagram, locale, emptySlots = 0 }: Props) {
+export default async function PhotoStrip({ content, pictures, instagram, locale, emptySlots = 0 }: PhotoStripProps) {
   if (pictures.length === 0 && emptySlots <= 0) return null;
   const t = await getTranslations("HomeSections");
 

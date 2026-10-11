@@ -22,6 +22,10 @@
  *   `descriptionEnBody` — and «Cum se plătește» (`paymentEn`, plain);
  * - «Pagina principală» (§NNN): the hero's headline and the line under it, and the labels of its
  *   three buttons (`headlineEn`, `sublineEn`, `buttonJoinEn`, `buttonCalendarEn`, `buttonHowEn`);
+ *   «Prima dată»'s heading, sentence, five steps and button (`stepsTitleEn`, `stepsLeadEn`,
+ *   `step1En`…`step5En`, `stepsLinkEn`), «De ce»'s heading, four reasons, quote and its author
+ *   (`whyTitleEn`, `why1TitleEn`…`why4BodyEn`, `quoteEn`, `quoteByEn`) and the strip's heading
+ *   (`stripTitleEn`) — never the founding day or the runners' count, which are figures;
  * - «Întrebări frecvente» (§525): each card's question, «Categorie» and answer (`faq[<n>].…`), and
  *   the page's introduction — the whole page one form;
  * - «Membri» (§524, §572): «Beneficiile membrilor» and the members' zone, each its own form posting
@@ -77,6 +81,8 @@ const ENGLISH_FIELD_PATTERNS: readonly RegExp[] = [
   /^(description|payment)En$/,
   // «Pagina principală» (§NNN): the hero's headline and line, and its three buttons' labels.
   /^(headline|subline|buttonJoin|buttonCalendar|buttonHow)En$/,
+  // …and its lower sections' boxes (`appearance/domain/home-sections-form.ts`): «Prima dată», «De ce» and the quote, the strip's heading.
+  /^(stepsTitle|stepsLead|stepsLink|step[1-5]|whyTitle|why[1-4](?:Title|Body)|quote|quoteBy|stripTitle)En$/,
   /^bodyEnBody$/,
   // «Întrebări frecvente» (§525): a card's question, its category and its answer.
   /^faq\[\d{1,3}\]\.(question|category)En$/,

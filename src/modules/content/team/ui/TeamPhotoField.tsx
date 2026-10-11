@@ -64,6 +64,11 @@ type Props = {
   /** A new picture starts whole, with the free crop shape, instead of at its largest square — for a drawing that must not lose its edges (the size guide). */
   wholePicture?: boolean;
   /**
+   * No crop box and no crop: the picture is drawn by its own frame's rule — the home page's photo strip
+   * (§NNN), whose square tiles show each picture's middle. The crop field posts empty.
+   */
+  noCrop?: boolean;
+  /**
    * The shape a new picture starts in and the crop box rests on, when it is not a person's square —
    * an event's cover starts at its largest 16∶9, the card's own frame (§454, the facelift's phase 2).
    */
@@ -102,7 +107,7 @@ function recalledPhoto(raw: string | undefined, id: string | undefined, fallback
   return fallback && fallback.id === id ? fallback : { ...EMPTY, id };
 }
 
-function PhotoField({ photo: initial, crop: initialCrop, labels, inputId, fieldPrefix = "photo", wholePicture = false, shape = TEAM_PHOTO_SHAPE }: Props) {
+function PhotoField({ photo: initial, crop: initialCrop, labels, inputId, fieldPrefix = "photo", wholePicture = false, noCrop = false, shape = TEAM_PHOTO_SHAPE }: Props) {
   const recall = useRecall();
   const idName = `${fieldPrefix}AssetId`;
   const cropName = `${fieldPrefix}Crop`;
@@ -128,7 +133,7 @@ function PhotoField({ photo: initial, crop: initialCrop, labels, inputId, fieldP
   /** A new photo starts at its largest square (§541), or at its largest `shape` when the field was given one. */
   const take = (next: TeamPhotoValue) => {
     setPhoto(next);
-    setCrop(!wholePicture && next.width > 0 && next.height > 0 ? presetCrop(shape, next) : null);
+    setCrop(!wholePicture && !noCrop && next.width > 0 && next.height > 0 ? presetCrop(shape, next) : null);
   };
 
   const onChoose = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -266,7 +271,7 @@ function PhotoField({ photo: initial, crop: initialCrop, labels, inputId, fieldP
         {state === "failed" ? labels.failed : named && recall.fieldError ? recall.fieldError : labels.help}
       </Typography>
       {/* The crop box (§454, §485), at most a phone's width so the photo never outgrows the screen. */}
-      {sized && (
+      {sized && !noCrop && (
         <Box sx={{ mt: 1.5, maxWidth: 360 }} data-testid={`${inputId}-crop`}>
           <ImageCropBox
             key={`${photo.src}@${photo.width}x${photo.height}`}

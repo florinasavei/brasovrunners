@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { readHomePage } from "@/modules/appearance/home-page";
+import { listPagesForAdmin } from "@/modules/content/pages/repository";
 import { readSiteFontSize } from "@/modules/appearance/site-font-size";
 import { readSiteLook } from "@/modules/appearance/site-look";
 import { readSiteTint } from "@/modules/appearance/site-tint";
@@ -51,6 +52,8 @@ export default async function AdminAppearancePage({ params, searchParams }: Prop
   const fontSize = await readSiteFontSize(db);
   const look = await readSiteLook(db);
   const home = await readHomePage(db);
+  // The club's own pages, for the two «Cum funcționează» buttons: by their Romanian title, a draft marked.
+  const pages = (await listPagesForAdmin(db, "ro")).map((page) => ({ id: page.id, title: page.title ?? page.slug ?? page.id, published: page.editorialStatus === "PUBLISHED" }));
 
   return (
     <Stack spacing={3}>
@@ -61,6 +64,7 @@ export default async function AdminAppearancePage({ params, searchParams }: Prop
         {saved === "siteFontSize" && <Alert severity="success">{t("fontSize.saved")}</Alert>}
         {saved === "siteLook" && <Alert severity="success">{t("look.saved")}</Alert>}
         {saved === "homePage" && <Alert severity="success">{t("homePage.saved")}</Alert>}
+        {saved === "homeStrip" && <Alert severity="success">{t("homePage.strip.saved")}</Alert>}
       </Box>
 
       {/* The tab's cards open on arrival (§336's `primary`, §516): each is a single choice. */}
@@ -68,8 +72,8 @@ export default async function AdminAppearancePage({ params, searchParams }: Prop
       <SiteFontSizePanel locale={locale} state={fontSize} mayEdit={canManageClubSettings(actor.role)} openWhen={{ primary: true }} />
       {/* «Aspectul nou» (§708): the facelift's look on the public pages, one switch. */}
       <SiteLookPanel locale={locale} state={look} mayEdit={canManageClubSettings(actor.role)} openWhen={{ primary: true }} />
-      {/* «Pagina principală» (§NNN): the home page at the site's root, one switch, its hero's picture and two lines. */}
-      <HomePagePanel locale={locale} state={home} mayEdit={canManageClubSettings(actor.role)} openWhen={{ primary: true }} />
+      {/* «Pagina principală» (§NNN): the home page at the site's root, one switch, and a fold for each part of the page. */}
+      <HomePagePanel locale={locale} state={home} mayEdit={canManageClubSettings(actor.role)} pages={pages} saved={saved} openWhen={{ primary: true }} />
 
       {/* «Sistemul de design» (§692): the look as the code draws it, and the redesign plan — one card, one button, for whoever reads this tab. */}
       <Panel glyph="appearance" title={t("design.card.title")} intro={t("design.card.intro")} id="design-system" data-testid="design-system-card">

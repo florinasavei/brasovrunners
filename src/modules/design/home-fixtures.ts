@@ -2,7 +2,7 @@ import { formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { splitHeadline } from "@/modules/appearance/domain/home-page";
 import type { HomePageProps } from "@/modules/home/ui/HomePage";
-import { SAMPLE_WEATHER, sampleRace, sampleSeries } from "./fixtures";
+import { SAMPLE_HOME_STEPS, SAMPLE_HOME_WHY, SAMPLE_WEATHER, sampleHomeFigures, sampleRace, sampleSeries } from "./fixtures";
 
 /** A translator for one namespace, as `getTranslations` hands it back: the fixture asks the catalogue for its words. */
 type Words = (key: string, values?: Record<string, string>) => string;
@@ -65,5 +65,10 @@ export function sampleHome(locale: Locale, home: Words, event: Words): HomePageP
       cards: [{ key: "sample-race", slug: race.slug, title: race.title, when: when(race.startsAt), detail: race.locationName, picture: null, tag: specialTag }],
       more: { label: home("more") },
     },
+    // The four lower sections from `fixtures.ts`'s samples; the strip has no picture, so the page draws none.
+    steps: { content: SAMPLE_HOME_STEPS, locale, href: "/faq" },
+    why: { content: SAMPLE_HOME_WHY, locale },
+    strip: { content: { title: null }, pictures: [], instagram: null, locale },
+    numbers: { figures: sampleHomeFigures(locale), locale },
   };
 }

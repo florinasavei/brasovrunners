@@ -10,7 +10,7 @@ import { STEP_GLYPHS, type StepsContent } from "../domain/steps";
 import { HOME_GLYPHS } from "./home-glyphs";
 import { GLYPH_SEAT_SX, HOME_BAND_SX, HOME_HEADING_SX } from "./home-surfaces";
 
-type Props = {
+export type StepsBandProps = {
   /** What the club typed (`domain/steps.ts`); an empty box draws the platform's sentence. */
   content: StepsContent;
   locale: Locale;
@@ -28,7 +28,7 @@ type Props = {
  * phone, five across from `md`. A Server Component with no island: the glyphs are drawn here, and
  * the one link is the house `ArrowButtonLink` (§708), 44 pixels with its trailing arrow (§521).
  */
-export default async function StepsBand({ content, locale, href }: Props) {
+export default async function StepsBand({ content, locale, href }: StepsBandProps) {
   const t = await getTranslations("HomeSections");
   const steps = STEP_GLYPHS.map((glyph, index) => ({
     glyph,

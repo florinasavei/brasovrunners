@@ -1,5 +1,9 @@
 import { z } from "zod";
 import { imageCropSchema } from "@/modules/content/rich-text/domain/schema";
+import { EMPTY_NUMBERS, numbersContentSchema } from "@/modules/home/domain/numbers";
+import { EMPTY_STRIP, stripContentSchema } from "@/modules/home/domain/photo-strip";
+import { EMPTY_STEPS, stepsContentSchema } from "@/modules/home/domain/steps";
+import { EMPTY_WHY, whyContentSchema } from "@/modules/home/domain/why";
 import { isWrittenText, missingLanguage, type TextLanguage } from "@/shared/forms/both-languages";
 
 /**
@@ -19,13 +23,17 @@ import { isWrittenText, missingLanguage, type TextLanguage } from "@/shared/form
  *   reads the platform's own two lines from the catalogue (`Home.hero.*`).
  *
  * - `buttons` — the hero's three buttons' labels (both languages or neither) and «Cum funcționează»'s
- *   club page.
+ *   club page, by its id.
  * - `sections` — which sections the page draws: the hero, the next run, the weekly runs and the
- *   special events (on), and the four reserved slots of part B (off until switched on).
+ *   special events (on), and «Prima dată», «De ce», the photo strip and the numbers (off until the
+ *   club switches each on, once it has its words, its pictures or its figures).
+ * - `steps`, `why`, `strip`, `numbers` — what the club typed or chose for those four
+ *   (`modules/home/domain/`): every box both languages or neither, an empty one the platform's words;
+ *   the strip's pictures with their facts; the founding day and the runners' count.
  *
- * Part B's sections read their own settings from the same row; a value written by this part stays
- * readable then, because every new field is optional, and the row is read loosely, so a field a later
- * release wrote never turns the page off after a rollback.
+ * Every field but `on` is optional, and each of the four lower sections that no longer parses reads
+ * as its empty value rather than turning the page off; the row is read loosely, so a field a later
+ * release wrote is carried, never dropped, and never turns the page off after a rollback.
  */
 
 /** The `platform_settings` key of the row. */
@@ -37,15 +45,12 @@ export const HOME_HEADLINE_MAX = 80;
 export const HOME_SUBLINE_MAX = 200;
 /** The longest label on one of the hero's three buttons. */
 export const HOME_BUTTON_MAX = 30;
-/** A club page's address, the last part of `/pages/<slug>`: lower case, digits and single hyphens. */
-export const HOME_PAGE_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-export const HOME_SLUG_MAX = 80;
 
 /**
- * The page's sections, in the order the page draws them. The first four are part A's and are on by
- * default; the last four are part B's slots («Prima dată», «De ce», the photo strip, the numbers),
- * reserved here so the setting's shape does not change when the sections arrive, and off by default
- * until the club switches each on (the plan's «each off by default»).
+ * The page's sections, in the order the page draws them. The first four are on by default; the last
+ * four — «Prima dată», «De ce», the photo strip, the numbers — are off until the club switches each
+ * on (the plan's «each off by default»): their words start as the platform's, the strip has no
+ * picture and the numbers no figure the club gave.
  */
 export const HOME_SECTION_KEYS = ["hero", "nextRun", "weekly", "special", "steps", "why", "strip", "numbers"] as const;
 export type HomeSectionKey = (typeof HOME_SECTION_KEYS)[number];
@@ -70,13 +75,15 @@ const buttonLabel = bilingual(HOME_BUTTON_MAX).nullable().default(null);
 /**
  * The hero's three buttons. «Vino cu noi» goes to the next weekly run and «Vezi calendarul» to the
  * calendar (the plan's targets, decision 5); a null label reads the platform's own word from the
- * catalogue. «Cum funcționează» goes to a club page the club names by its address and is not drawn
- * until it is set.
+ * catalogue. «Cum funcționează» goes to a club page («Pagini personalizate») the club chooses, by its
+ * id — resolved to the page's own address in each language, since a page's address differs between
+ * them — and is not drawn until one is chosen and published; its label is the club's or the
+ * platform's. A value this code cannot read (an older shape) is no button, never the page off.
  */
 const buttonsSchema = z.object({
   join: buttonLabel,
   calendar: buttonLabel,
-  how: z.object({ label: bilingual(HOME_BUTTON_MAX), slug: z.string().max(HOME_SLUG_MAX).regex(HOME_PAGE_SLUG) }).strict().nullable().default(null),
+  how: z.object({ label: buttonLabel, pageId: z.uuid() }).strict().nullable().default(null).catch(null),
 });
 
 const sectionsSchema = z.object({
@@ -102,6 +109,11 @@ export const homePageSchema = z.looseObject({
   subline: bilingual(HOME_SUBLINE_MAX).nullable().default(null),
   buttons: buttonsSchema.default(DEFAULT_BUTTONS),
   sections: sectionsSchema.default(DEFAULT_SECTIONS),
+  // The four lower sections' contents: absent or unreadable, the empty section (the platform's words, no picture, no figure).
+  steps: stepsContentSchema.catch(EMPTY_STEPS),
+  why: whyContentSchema.catch(EMPTY_WHY),
+  strip: stripContentSchema.catch(EMPTY_STRIP),
+  numbers: numbersContentSchema.catch(EMPTY_NUMBERS),
 });
 
 export type HomeHeroPicture = z.infer<typeof heroSchema>;
@@ -116,18 +128,30 @@ export const DEFAULT_HOME_PAGE_SETTING: HomePageSetting = {
   subline: null,
   buttons: { ...DEFAULT_BUTTONS },
   sections: { ...DEFAULT_SECTIONS },
+  steps: EMPTY_STEPS,
+  why: EMPTY_WHY,
+  strip: EMPTY_STRIP,
+  numbers: EMPTY_NUMBERS,
 };
 
-/** Whether a section is drawn: the club's switch, on for part A's four and off for part B's four. */
+/** Whether a section is drawn by default: the first four on, the four lower ones off. */
+export const DEFAULT_SECTION_SHOWN: Readonly<Record<HomeSectionKey, boolean>> = DEFAULT_SECTIONS;
+
+/** Whether a section is drawn: the club's switch, on for the first four and off for the lower four until switched. */
 export const sectionShown = (setting: Pick<HomePageSetting, "sections">, key: HomeSectionKey): boolean => setting.sections[key];
 
 /** A stored value this code can read, or the default (off) — never a throw over the site's root. */
 export function parseHomePage(value: unknown): HomePageSetting {
   const parsed = homePageSchema.safeParse(value);
   if (!parsed.success) return DEFAULT_HOME_PAGE_SETTING;
-  // A film's poster (`yt-…`, §485) is never a photograph of the club: an empty slot, not a frame.
-  if (parsed.data.hero?.keyPrefix.startsWith("yt-")) return { ...parsed.data, hero: null };
-  return parsed.data;
+  // A film's poster (`yt-…`, §485) is never a photograph of the club: an empty slot, not a frame, and no tile in the strip.
+  const poster = (keyPrefix: string) => keyPrefix.startsWith("yt-");
+  const setting = parsed.data;
+  return {
+    ...setting,
+    hero: setting.hero && poster(setting.hero.keyPrefix) ? null : setting.hero,
+    strip: { ...setting.strip, pictures: setting.strip.pictures.filter((picture) => !poster(picture.keyPrefix)) },
+  };
 }
 
 /** The label of a hero button in one language: what the club typed, or null for the platform's own word. */

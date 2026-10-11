@@ -38,7 +38,7 @@ export const EMPTY_WHY: WhyContent = {
 
 export const whyContentSchema = z.object({
   title: homeTextSchema(80),
-  items: z.array(z.object({ title: homeTextSchema(60), body: homeTextSchema(200) })).length(WHY_COUNT),
+  items: z.array(z.object({ title: homeTextSchema(60), body: homeTextSchema(200) })).length(WHY_COUNT).readonly(),
   quote: homeTextSchema(280),
   quoteBy: homeTextSchema(80),
 });

@@ -7,7 +7,7 @@ import { CLUB_NAME } from "@/theme/brand";
 import type { HomeFigure } from "../domain/numbers";
 import { HOME_BAND_SX, VISUALLY_HIDDEN_SX } from "./home-surfaces";
 
-type Props = {
+export type NumbersBandProps = {
   /** The figures `homeFigures` read (`domain/numbers.ts`), in the band's order. None, and nothing is drawn. */
   figures: readonly HomeFigure[];
   locale: Locale;
@@ -24,7 +24,7 @@ type Props = {
  * figures speak for themselves to the eye. Each figure is its number and its words in one list item,
  * so «12 ani de alergări împreună» is read as one sentence. A Server Component with no island.
  */
-export default async function NumbersBand({ figures, locale }: Props) {
+export default async function NumbersBand({ figures, locale }: NumbersBandProps) {
   if (figures.length === 0) return null;
   const t = await getTranslations("HomeSections");
   const number = new Intl.NumberFormat(locale === "ro" ? "ro-RO" : "en-GB");

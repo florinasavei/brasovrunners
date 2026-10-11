@@ -43,7 +43,7 @@ export const EMPTY_STEPS: StepsContent = {
 export const stepsContentSchema = z.object({
   title: homeTextSchema(80),
   lead: homeTextSchema(200),
-  steps: z.array(homeTextSchema(120)).length(STEP_COUNT),
+  steps: z.array(homeTextSchema(120)).length(STEP_COUNT).readonly(),
   linkLabel: homeTextSchema(40),
   targetPageId: z.uuid().nullable().default(null),
 });

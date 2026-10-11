@@ -7,7 +7,7 @@ import { WHY_GLYPHS, type WhyContent } from "../domain/why";
 import { HOME_GLYPHS } from "./home-glyphs";
 import { GLYPH_SEAT_SX, HOME_HEADING_SX, HOME_RADIUS_PX } from "./home-surfaces";
 
-type Props = {
+export type WhyListProps = {
   /** What the club typed (`domain/why.ts`); an empty reason draws the platform's sentence, an empty quote nothing. */
   content: WhyContent;
   locale: Locale;
@@ -26,7 +26,7 @@ const HAND_FONT = "var(--font-signature), cursive";
  * words (`domain/why.ts`). A `<figure>` with its `<blockquote>` and `<figcaption>`, so a screen reader
  * hears a quotation and its author. A Server Component with no island.
  */
-export default async function WhyList({ content, locale }: Props) {
+export default async function WhyList({ content, locale }: WhyListProps) {
   const t = await getTranslations("HomeSections");
   const items = WHY_GLYPHS.map((glyph, index) => ({
     glyph,
