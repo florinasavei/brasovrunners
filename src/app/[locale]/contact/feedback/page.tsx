@@ -52,7 +52,7 @@ import {
   STOPPED_REASONS,
   wizardStep,
 } from "@/modules/feedback/domain/branches";
-import { GENERAL_VALUE, pickerFilters, pickerKind, type PickerOption, readPickerChip } from "@/modules/feedback/domain/event-picker";
+import { chipSlug, GENERAL_VALUE, initialChipFor, pickerFilters, pickerKind, type PickerOption } from "@/modules/feedback/domain/event-picker";
 import { dayKey } from "@/modules/events/domain/calendar";
 import BranchChoice, { BranchGlyphTile } from "@/modules/feedback/ui/BranchChoice";
 import FeedbackAddressSync from "@/modules/feedback/ui/FeedbackAddressSync";
@@ -83,7 +83,7 @@ type Search = {
   tip?: string;
   eveniment?: string;
   data?: string;
-  fel?: string;
+  filtru?: string;
   sent?: string;
   catre?: string;
   error?: string;
@@ -245,9 +245,10 @@ function ChooseStep({ branches, path, query, t }: { branches: FeedbackBranch[]; 
         {t("intro")}
       </Typography>
       <form method="get" action={path} data-testid="feedback-choose">
-        {/* The event and the day a link chose ride on to the form, unread until it draws. */}
+        {/* The event, the day and the chip a link chose ride on to the form, unread until it draws. */}
         {query.eventSlug && <input type="hidden" name={FEEDBACK_QUERY.event} value={query.eventSlug} />}
         {query.date && <input type="hidden" name={FEEDBACK_QUERY.date} value={query.date} />}
+        {chipSlug(query.chip) && <input type="hidden" name={FEEDBACK_QUERY.chip} value={chipSlug(query.chip) ?? ""} />}
         <BranchChoice branches={branches} chosen={chosen} />
         <Button type="submit" variant="contained" size="large" fullWidth sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX, mt: 3 }}>
           {t("choose.next")}
@@ -345,7 +346,21 @@ async function BranchForm({
       ))}
     </TextField>
   );
-  const otherBranches = single ? null : getPathname({ locale, href: { pathname: "/contact/feedback", query: { ...(query.eventSlug ? { [FEEDBACK_QUERY.event]: query.eventSlug } : {}), ...(query.date ? { [FEEDBACK_QUERY.date]: query.date } : {}) } } });
+  // The chip yields to an event it would hide (§NNN), and rides on to the other branch with the event and the day.
+  const chip = initialChipFor(pickerOptions, chosenEvent, query.chip);
+  const otherBranches = single
+    ? null
+    : getPathname({
+        locale,
+        href: {
+          pathname: "/contact/feedback",
+          query: {
+            ...(chosenEvent ? { [FEEDBACK_QUERY.event]: chosenEvent } : {}),
+            ...(query.date ? { [FEEDBACK_QUERY.date]: query.date } : {}),
+            ...(chipSlug(chip) ? { [FEEDBACK_QUERY.chip]: chipSlug(chip) } : {}),
+          },
+        },
+      });
 
   return (
     <>
@@ -366,6 +381,7 @@ async function BranchForm({
             href={otherBranches}
             variant="outlined"
             data-testid="feedback-other-branches"
+            data-feedback-switch=""
             sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX, ml: { sm: "auto" }, textTransform: "none" }}
           >
             <SwapHorizIcon aria-hidden="true" sx={glyphSx("medium")} />
@@ -448,7 +464,7 @@ async function BranchForm({
                 name="event"
                 options={pickerOptions}
                 selected={chosenEvent}
-                initialChip={readPickerChip(search.fel)}
+                initialChip={chip}
                 error={invalid.has("event")}
                 helperText={invalid.has("event") ? t("errors.field") : undefined}
                 words={{

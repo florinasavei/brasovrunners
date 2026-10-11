@@ -470,17 +470,9 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await hydrated(page);
       await expect(posted).toHaveCount(1);
       await expect(posted).toHaveValue(offered[0]);
-      // What is picked goes into the address (§NNN), so the link can be shared with it chosen.
+      // The day picked goes into the address (§NNN), so the link can be shared with it chosen.
       await page.locator("#f-date").fill("2026-10-05");
       await expect(page).toHaveURL(/[?&]data=2026-10-05(&|$)/);
-      await expect(page).toHaveURL(new RegExp(`[?&]eveniment=${offered[0]}(&|$)`));
-      const groupChip = page.getByTestId("feedback-event-chip-group");
-      if (await groupChip.count()) {
-        await groupChip.click();
-        await expect(page).toHaveURL(/[?&]fel=group(&|$)/);
-        await page.getByTestId("feedback-event-chip-all").click();
-        await expect(page).not.toHaveURL(/[?&]fel=/);
-      }
 
       // An empty message: the browser lets spaces through, the server refuses them, and the form comes
       // back on its summary, on the same branch, with what was typed kept from the sealed draft.
@@ -527,7 +519,45 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       // The event, picked by typing part of its title (§680; the owner: «I need to be able the filter
       // the events here») — through the filtering island, which the picker's own events make sure of.
       await hydrated(page);
-      const pickedTitle = await pickEventByTyping(page, offered[0], pickerFixture);
+      let pickedTitle = await pickEventByTyping(page, offered[0], pickerFixture);
+
+      // The event picked and a chip pressed are in the address, in Romanian (§NNN), without a navigation;
+      // the spec's own race first, then its own group run (which stays the event sent below).
+      const island = page.getByTestId("feedback-event-filter");
+      const box = island.getByRole("combobox", { name: "Alergarea" });
+      for (const [title, isRun] of [
+        [pickerFixture.races[0], false],
+        [pickerFixture.runs[0], true],
+      ] as const) {
+        await page.getByTestId("feedback-event-chip-all").click();
+        await box.fill(title);
+        await page.getByRole("listbox").getByRole("option").filter({ hasText: title }).first().click();
+        pickedTitle = title;
+        const pickedSlug = await page.locator('[name="event"]').inputValue();
+        expect(pickedSlug).not.toBe("");
+        await expect(page).toHaveURL(new RegExp(`[?&]eveniment=${pickedSlug}(&|$)`));
+        await expect(page).not.toHaveURL(/[?&](error|fields|since)=/);
+        await page.getByTestId("feedback-event-chip-group").click();
+        await expect(page).toHaveURL(/[?&]filtru=grup(&|$)/);
+        // «Schimbă tipul mesajului» keeps the event, the day and the chip, and never the branch.
+        const other = page.getByTestId("feedback-other-branches");
+        await expect(other).toHaveAttribute("href", /eveniment=.*filtru=grup/);
+        await expect(other).not.toHaveAttribute("href", /tip=/);
+        // The link opened in a new page chooses the same event and the chip — which yields to a race,
+        // a group run being the only kind that chip keeps.
+        const shared = await page.context().newPage();
+        try {
+          await shared.goto(page.url());
+          await hydrated(shared);
+          await expect(shared.locator('[name="event"]')).toHaveValue(pickedSlug);
+          await expect(shared.getByTestId("feedback-event-chip-group")).toHaveAttribute("aria-pressed", isRun ? "true" : "false");
+          await expect(shared.getByTestId("feedback-event-chip-all")).toHaveAttribute("aria-pressed", isRun ? "false" : "true");
+        } finally {
+          await shared.close();
+        }
+      }
+      await page.getByTestId("feedback-event-chip-all").click();
+      await expect(page).not.toHaveURL(/[?&]filtru=/);
 
       // Corrected and sent: the sent page, on the branch's slug.
       await page.locator('[name="message"]').fill("Foarte frumos, mulțumim.");

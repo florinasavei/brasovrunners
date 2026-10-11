@@ -16,6 +16,8 @@ import type { PickerOption } from "@/modules/feedback/domain/event-picker";
  * the island takes over.
  */
 let locale: "ro" | "en" = "ro";
+let draft: Record<string, string> | null = null;
+let second = false;
 let rows: { id: string; slug: string; title: string; type: string; startsAt: Date; timezone: string }[] = [];
 const islandProps: Record<string, unknown>[] = [];
 
@@ -46,7 +48,8 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children, ...rest }: { href: string; children: ReactNode }) => createElement("a", { href: `/${locale}${href}`, ...rest }, children),
-  getPathname: ({ href }: { href: string | { pathname: string } }) => `/${locale}${typeof href === "string" ? href : href.pathname}`,
+  getPathname: ({ href }: { href: string | { pathname: string; query?: Record<string, string> } }) =>
+    `/${locale}${typeof href === "string" ? href : `${href.pathname}${href.query && Object.keys(href.query).length ? `?${new URLSearchParams(href.query)}` : ""}`}`,
 }));
 vi.mock("@/modules/public-cache/reads", () => ({
   cachedBotCheckSiteKey: async () => null,
@@ -55,14 +58,14 @@ vi.mock("@/modules/public-cache/reads", () => ({
   cachedFeedbackFormsNamedDescribed: async () => false,
   cachedFeedbackOffer: async () => ({
     howItWent: { on: true, to: "club@example.org" },
-    suggestion: { on: false, to: null },
+    suggestion: { on: second, to: second ? "club@example.org" : null },
     complaint: { on: false, to: null },
     safety: { on: false, to: null, name: null },
   }),
   cachedPublishedEventsBetween: async () => rows,
 }));
 vi.mock("@/modules/contact/delivery", () => ({ contactSmtpRoadExists: () => true }));
-vi.mock("@/modules/registrations/form-draft", () => ({ readFormDraft: async () => null }));
+vi.mock("@/modules/registrations/form-draft", () => ({ readFormDraft: async () => draft }));
 vi.mock("@/modules/registrations/ui/BotCheck", () => ({ default: () => null }));
 vi.mock("@/app/[locale]/contact/feedback/actions", () => ({ submitFeedbackAction: async () => undefined }));
 // The island as the page hands it over: its props recorded, its children — the native select — drawn.
@@ -114,6 +117,8 @@ function nativeSelect(html: string) {
 
 beforeEach(() => {
   islandProps.length = 0;
+  draft = null;
+  second = false;
   locale = "ro";
 });
 
@@ -166,6 +171,52 @@ describe("BR-REQ-070-04 «Evenimentul»: the native select stays, the island sta
       kinds: "Arată",
       chips: { all: "Toate", special: "Evenimente speciale", group: "Alergări de grup" },
     });
+  });
+
+  it("opens on the chip the address names (?filtru=), «toate» without one (§NNN)", async () => {
+    rows = events(12);
+    await render({ tip: "cum-a-fost", filtru: "grup" });
+    await render({ tip: "cum-a-fost", filtru: "speciale" });
+    await render({ tip: "cum-a-fost" });
+    await render({ tip: "cum-a-fost", filtru: "group" });
+    expect(islandProps.map((props) => props.initialChip)).toEqual(["group", "special", "all", "all"]);
+  });
+
+  it("lets the chip yield to an event it would hide, and keeps it for one it shows", async () => {
+    rows = events(12);
+    await render({ tip: "cum-a-fost", filtru: "grup", eveniment: "crosul-brasovului-0" });
+    await render({ tip: "cum-a-fost", filtru: "grup", eveniment: "happy-monday-1" });
+    await render({ tip: "cum-a-fost", filtru: "speciale", eveniment: "happy-monday-1" });
+    expect(islandProps.map((props) => props.initialChip)).toEqual(["all", "group", "all"]);
+  });
+
+  it("lets the sealed draft win over the address for the event, and the chip yield to it", async () => {
+    rows = events(12);
+    draft = { event: "crosul-brasovului-0" };
+    await render({ tip: "cum-a-fost", error: "VALIDATION_ERROR", eveniment: "happy-monday-1", filtru: "grup" });
+    expect(islandProps[0].selected).toBe("crosul-brasovului-0");
+    expect(islandProps[0].initialChip).toBe("all");
+  });
+
+  it("carries the event, the day and the chip to «Schimbă tipul mesajului», never the branch", async () => {
+    rows = events(12);
+    second = true;
+    const html = await render({ tip: "cum-a-fost", eveniment: "happy-monday-1", data: "2026-10-04", filtru: "grup" });
+    const link = /<a[^>]*data-feedback-switch[^>]*>/.exec(html)?.[0] ?? "";
+    const href = /href="([^"]*)"/.exec(link)?.[1]?.replace(/&amp;/g, "&") ?? "";
+    expect(href).toBe("/ro/contact/feedback?eveniment=happy-monday-1&data=2026-10-04&filtru=grup");
+    // The chip yields there too, as it does in the island.
+    const yielded = await render({ tip: "cum-a-fost", eveniment: "crosul-brasovului-0", filtru: "grup" });
+    const next = /<a[^>]*data-feedback-switch[^>]*>/.exec(yielded)?.[0] ?? "";
+    expect(next).not.toContain("filtru=");
+  });
+
+  it("carries the chip through step 1 as a hidden input", async () => {
+    rows = events(12);
+    second = true;
+    const html = await render({ filtru: "speciale", eveniment: "crosul-brasovului-0" });
+    expect(html).toMatch(/<input[^>]*name="filtru"[^>]*value="speciale"|<input[^>]*value="speciale"[^>]*name="filtru"/);
+    expect(html).toMatch(/name="eveniment"/);
   });
 
   it("speaks English on /en", async () => {

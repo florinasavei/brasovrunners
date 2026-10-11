@@ -1,13 +1,14 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
-import { Fragment } from "react";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
+import { Fragment } from "react";
 import { updateFeedbackFormsAction } from "@/app/[locale]/admin/pages/contact/actions";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
+import { FEEDBACK_BRANCH_GLYPH } from "@/modules/feedback/ui/branch-glyph";
 import { branchesSwitchedOn, FEEDBACK_BRANCHES, type FeedbackBranch } from "@/modules/feedback/domain/branches";
 import { SAFETY_NAME_MAX, type FeedbackSettingsState } from "@/modules/feedback/settings";
 import { confirmWords } from "@/shared/feedback/confirm-words";
@@ -98,45 +99,48 @@ export default async function FeedbackFormsPanel({ locale, state, noticeDescribe
           >
             <input type="hidden" name="uiLocale" value={locale} />
             <Stack spacing={2} sx={{ maxWidth: 520 }}>
-              {FEEDBACK_BRANCHES.map((branch, index) => (
-                <Fragment key={branch}>
-                {/* A separator between the four forms and before the save (§NNN). */}
-                {index > 0 && <Divider data-testid="feedback-branch-divider" />}
-                <Box component="fieldset" sx={{ border: 0, m: 0, p: 0 }} data-testid={`feedback-branch-${branch}`}>
-                  <Typography component="legend" variant="subtitle2" sx={{ p: 0 }}>
-                    {label(branch)}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                    {t(`emails.feedbackForms.help.${branch}`)}
-                  </Typography>
-                  <CheckboxField name={`${branch}On`} defaultChecked={state[branch].on}>
-                    {t("emails.feedbackForms.switch")}
-                  </CheckboxField>
-                  <Stack spacing={1.5} sx={{ mt: 1 }}>
-                    <RecallField
-                      name={`${branch}To`}
-                      type="email"
-                      label={t("emails.feedbackForms.to")}
-                      defaultValue={state[branch].to ?? ""}
-                      size="small"
-                      helperText={branch === "safety" ? t("emails.feedbackForms.toHelpSafety") : t("emails.feedbackForms.toHelp")}
-                      slotProps={{ htmlInput: { maxLength: 320, autoComplete: "off", spellCheck: false } }}
-                    />
-                    {branch === "safety" && (
-                      <RecallField
-                        name="safetyName"
-                        label={t("emails.feedbackForms.safetyName")}
-                        defaultValue={state.safety.name ?? ""}
-                        size="small"
-                        helperText={t("emails.feedbackForms.safetyNameHelp")}
-                        slotProps={{ htmlInput: { maxLength: SAFETY_NAME_MAX, autoComplete: "off" } }}
-                      />
-                    )}
-                  </Stack>
-                </Box>
-                </Fragment>
-              ))}
-              <Divider data-testid="feedback-branch-divider" />
+              {FEEDBACK_BRANCHES.map((branch, index) => {
+                const Glyph = FEEDBACK_BRANCH_GLYPH[branch];
+                return (
+                  <Fragment key={branch}>
+                    {/* A separator between the four forms (§NNN). */}
+                    {index > 0 && <Divider data-testid="feedback-branch-divider" />}
+                    <Box component="fieldset" sx={{ border: 0, m: 0, p: 0 }} data-testid={`feedback-branch-${branch}`}>
+                      <Typography component="legend" variant="subtitle2" sx={{ p: 0 }}>
+                        <Glyph aria-hidden="true" fontSize="small" sx={{ verticalAlign: "middle", mr: 1 }} />
+                        {label(branch)}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                        {t(`emails.feedbackForms.help.${branch}`)}
+                      </Typography>
+                      <CheckboxField name={`${branch}On`} defaultChecked={state[branch].on}>
+                        {t("emails.feedbackForms.switch")}
+                      </CheckboxField>
+                      <Stack spacing={1.5} sx={{ mt: 1 }}>
+                        <RecallField
+                          name={`${branch}To`}
+                          type="email"
+                          label={t("emails.feedbackForms.to")}
+                          defaultValue={state[branch].to ?? ""}
+                          size="small"
+                          helperText={branch === "safety" ? t("emails.feedbackForms.toHelpSafety") : t("emails.feedbackForms.toHelp")}
+                          slotProps={{ htmlInput: { maxLength: 320, autoComplete: "off", spellCheck: false } }}
+                        />
+                        {branch === "safety" && (
+                          <RecallField
+                            name="safetyName"
+                            label={t("emails.feedbackForms.safetyName")}
+                            defaultValue={state.safety.name ?? ""}
+                            size="small"
+                            helperText={t("emails.feedbackForms.safetyNameHelp")}
+                            slotProps={{ htmlInput: { maxLength: SAFETY_NAME_MAX, autoComplete: "off" } }}
+                          />
+                        )}
+                      </Stack>
+                    </Box>
+                  </Fragment>
+                );
+              })}
               <Box>
                 <GlyphSubmitButton label={t("emails.feedbackForms.save")} pendingLabel={t("emails.feedbackForms.saving")} icon="save" />
               </Box>

@@ -8,14 +8,14 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import TextField from "@mui/material/TextField";
 import { type ReactNode, useState, useSyncExternalStore } from "react";
-import { FEEDBACK_QUERY } from "../domain/branches";
 import {
+  ADDRESS_QUERY,
+  chipSlug,
   filterPickerOptions,
   GENERAL_VALUE,
   PICKER_CHIPS,
   type PickerChip,
   pickerChipsShown,
-  PICKER_CHIP_QUERY,
   pickerNoEventFound,
   type PickerOption,
 } from "../domain/event-picker";
@@ -86,7 +86,7 @@ export default function EventPickerFilter({
   options: readonly PickerOption[];
   /** The slug the server preselected — the draft's, `?eveniment=`'s, or `""`. */
   selected: string;
-  /** The chip `?fel=` named (§NNN), `all` otherwise. */
+  /** The chip `?filtru=` named (§NNN), `all` otherwise or when the event chosen is not under it (`initialChipFor`). */
   initialChip: PickerChip;
   error: boolean;
   helperText?: string;
@@ -108,7 +108,7 @@ export default function EventPickerFilter({
   // A chip pressed is in the address too (§NNN), «toate» as no word at all.
   const pickChip = (kind: PickerChip) => {
     setChip(kind);
-    writeChoiceToAddress({ [PICKER_CHIP_QUERY]: kind === "all" ? null : kind });
+    writeChoiceToAddress({ [ADDRESS_QUERY.chip]: chipSlug(kind) });
   };
 
   // The chips; `reserved`, the same row holding the island's place before it runs — not seen, not read, not pressed.
@@ -172,7 +172,7 @@ export default function EventPickerFilter({
         onChange={(_event, next) => {
           if (next && next.value !== NO_MATCH_VALUE) {
             setValue(next.value);
-            writeChoiceToAddress({ [FEEDBACK_QUERY.event]: next.value });
+            writeChoiceToAddress({ [ADDRESS_QUERY.event]: next.value });
           }
         }}
         disableClearable

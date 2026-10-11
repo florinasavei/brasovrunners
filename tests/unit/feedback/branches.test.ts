@@ -91,13 +91,16 @@ describe("§676 the address bar, read and never trusted", () => {
       branch: "howItWent",
       eventSlug: "crosul-de-toamna",
       date: "2026-10-04",
+      chip: "all",
     });
+    expect(readFeedbackQuery({ filtru: "grup" }).chip).toBe("group");
+    expect(readFeedbackQuery({ filtru: "speciale" }).chip).toBe("special");
     expect(readFeedbackQuery({ tip: BRANCH_SLUG.safety }).branch).toBe("safety");
   });
 
   it("drops an unknown branch, a slug that is not one, and a day that does not exist", () => {
-    expect(readFeedbackQuery({ tip: "admin", eveniment: "../etc/passwd", data: "2026-02-31" })).toEqual({ branch: null, eventSlug: null, date: null });
-    expect(readFeedbackQuery({ eveniment: "<script>", data: "4.10.2026" })).toEqual({ branch: null, eventSlug: null, date: null });
+    expect(readFeedbackQuery({ tip: "admin", eveniment: "../etc/passwd", data: "2026-02-31" })).toEqual({ branch: null, eventSlug: null, date: null, chip: "all" });
+    expect(readFeedbackQuery({ eveniment: "<script>", data: "4.10.2026" })).toEqual({ branch: null, eventSlug: null, date: null, chip: "all" });
     expect(readDay("2028-02-29")).toBe("2028-02-29");
     expect(readDay("2027-02-29")).toBeNull();
   });

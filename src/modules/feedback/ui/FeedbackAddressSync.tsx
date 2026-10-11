@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { FEEDBACK_QUERY } from "../domain/branches";
+import { ADDRESS_QUERY } from "../domain/event-picker";
 import { writeChoiceToAddress } from "./feedback-address";
 
 /**
@@ -17,8 +17,8 @@ export default function FeedbackAddressSync({ formId }: { formId: string }) {
     const onChange = (event: Event) => {
       const target = event.target;
       if (!(target instanceof HTMLSelectElement || target instanceof HTMLInputElement)) return;
-      if (target.name === "event" && target instanceof HTMLSelectElement) writeChoiceToAddress({ [FEEDBACK_QUERY.event]: target.value });
-      if (target.name === "date" && target.type === "date") writeChoiceToAddress({ [FEEDBACK_QUERY.date]: target.value });
+      if (target.name === "event" && target instanceof HTMLSelectElement) writeChoiceToAddress({ [ADDRESS_QUERY.event]: target.value });
+      if (target.name === "date" && target.type === "date") writeChoiceToAddress({ [ADDRESS_QUERY.date]: target.value });
     };
     form.addEventListener("change", onChange);
     return () => form.removeEventListener("change", onChange);
