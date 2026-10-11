@@ -255,6 +255,25 @@ export const events = pgTable(
      */
     routeUrl: text("route_url"),
 
+    /**
+     * «Traseul»'s maps (§NNN): at most one Strava route and one Garmin Connect course,
+     * `[{ provider, id, style?, mapHash?, token? }]` — the ids and the strictly-patterned values
+     * `events/domain/route-maps.ts` reads out of the link or the embed code the club pasted, never
+     * the pasted HTML. The page builds the link and the map's address from them, and loads the map
+     * only when the visitor presses. Read through `readRouteMaps`, which drops anything else; null is
+     * "no maps". The same on every date of a series and carried by a duplicate, like the route (§49).
+     */
+    routeMaps: jsonb("route_maps"),
+
+    /**
+     * «Traseul»'s GPX file (§NNN): `{ key, name, size, uploadedAt }` — the object the club uploaded to
+     * the site's storage (`AGENTS.md` §17), under `<env>/route-gpx/<uuid>/<name>.gpx`, kept outside
+     * the pictures' sweep (it is no `media_assets` row). Read through `events/domain/route-gpx.ts#readRouteGpx`.
+     * Null is "no file". Carried by a series and a duplicate like the route; the object is deleted
+     * when the last row naming its key lets go of it.
+     */
+    routeGpx: jsonb("route_gpx"),
+
     // No `video_url` / `video_poster_url` here any more (§481, §491): a film is a `youtube` node in
     // the description (§266), carrying its own stored poster (§403); migration 0092 moved every
     // stored film there. BR-V2.10 stopped declaring the two columns and `events_video_url_is_https`;
@@ -849,6 +868,25 @@ export const events = pgTable(
     check(
       "events_links_is_a_short_array_of_https_links",
       sql`${t.links} IS NULL OR CASE WHEN jsonb_typeof(${t.links}) = 'array' THEN jsonb_array_length(${t.links}) <= 12 AND NOT jsonb_path_exists(${t.links}, '$[*] ? (!(@.url.type() == "string" && @.url starts with "https://"))') ELSE false END`,
+    ),
+
+    /**
+     * «Traseul»'s maps (§NNN): an array of at most two, each naming a known provider and an id of
+     * digits — the parser's guarantee, held at the layer a seed or a hand-written `UPDATE` reaches.
+     * Counted the positive way — every entry must match the good filter — because a negated jsonpath
+     * filter over a missing member is "unknown", which a CHECK lets through.
+     */
+    check(
+      "events_route_maps_is_a_short_array_of_ids",
+      sql`${t.routeMaps} IS NULL OR CASE WHEN jsonb_typeof(${t.routeMaps}) = 'array' THEN jsonb_array_length(${t.routeMaps}) <= 2 AND jsonb_array_length(${t.routeMaps}) = jsonb_array_length(jsonb_path_query_array(${t.routeMaps}, '$[*] ? ((@.provider == "strava" || @.provider == "garmin") && @.id like_regex "^[0-9]{1,20}$")')) ELSE false END`,
+    ),
+    /**
+     * «Traseul»'s GPX (§NNN): an object whose key is one of the GPX keys the upload writes. The
+     * `COALESCE` turns a missing key's NULL into a refusal: a CHECK passes on NULL.
+     */
+    check(
+      "events_route_gpx_names_a_gpx_key",
+      sql`${t.routeGpx} IS NULL OR (jsonb_typeof(${t.routeGpx}) = 'object' AND COALESCE((${t.routeGpx} ->> 'key') ~ '^[a-z]+/route-gpx/[0-9a-f-]{36}/[a-z0-9-]{1,60}\\.gpx$', false))`,
     ),
 
     check(

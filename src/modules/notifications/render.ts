@@ -9,7 +9,8 @@ import { eventDay, howItWentOpen, howItWentUrl } from "@/modules/feedback/links"
 import type { Locale } from "@/i18n/routing";
 import { issueActionToken } from "@/modules/action-tokens/repository";
 import { readEventChanges, readEventNoticeWords } from "@/modules/events/domain/event-changes";
-import { hasRouteDescription, partitionEventLinks } from "@/modules/events/domain/route-section";
+import { hasRouteSection, partitionEventLinks } from "@/modules/events/domain/route-section";
+import { isStorageConfigured } from "@/modules/media/storage";
 import { localizedSchedule, programmeLines, readScheduleItems } from "@/modules/events/domain/schedule";
 import { type EventNotificationRow, eventNotificationDetailsIn, findEventNotificationRows, findEventStartsAt } from "@/modules/events/repository";
 import { placeToBeAnnouncedWords } from "@/modules/events/calendar-labels";
@@ -628,7 +629,7 @@ async function renderRow(
   // raw count of the event's links. The addresses themselves stay on the page: the email names
   // where they are, never a raw Drive link in a message that is forwarded.
   if (data.eventUrl && eventDetails) {
-    const routeSection = hasRouteDescription(eventDetails.routeDescriptionJson);
+    const routeSection = hasRouteSection(eventDetails, isStorageConfigured());
     if (partitionEventLinks(eventDetails.links, routeSection).other.length > 0) data.eventLinksUrl = `${data.eventUrl}#links`;
   }
   /*

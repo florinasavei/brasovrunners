@@ -2,6 +2,8 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { EVENT_LINK_KINDS, type EventLinkKind, MAX_EVENT_LINKS, readEventLinks } from "@/modules/events/domain/links";
+import { readRouteGpx } from "@/modules/events/domain/route-gpx";
+import { isStorageConfigured } from "@/modules/media/storage";
 import { htmlConstraints, textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
 import Panel from "@/shared/ui/Panel";
@@ -9,7 +11,8 @@ import { eventInputConstraints } from "../../constraints";
 import { eventLinkRowSchema } from "../../fields";
 import { linksSummary } from "../box-summaries";
 import LinkRowsEditor from "../LinkRowsEditor";
-import { type BoxProps, summaryWords } from "./box-kit";
+import RouteGpxField, { type RouteGpxFieldWords } from "../RouteGpxField";
+import { BoxNote, type BoxProps, summaryWords } from "./box-kit";
 
 /**
  * "Linkuri și fișiere" (§332, §350, §358, §406): its own card, at the place the page draws its
@@ -17,7 +20,9 @@ import { type BoxProps, summaryWords } from "./box-kit";
  * "Ce fel de eveniment", and moved whole). The GPX on Google Drive, the map on a platform, a PDF,
  * the album, the results, and the Strava and Facebook events, which the page draws in the route's
  * row; with a route description, the GPX and the map go to `#route` (§387).
- * Links, never an upload (`AGENTS.md` §17). The rows keep their Romanian and English labels side by
+ * Links — and, since §NNN, one uploaded file: the route's GPX, above the rows, which a «Traseul (GPX)»
+ * row also offers as «Încarcă fișierul în loc de link» (the owner looked for it on that row). Nothing
+ * else is uploaded here (`AGENTS.md` §17). The rows keep their Romanian and English labels side by
  * side in the row, never in tabs: a label belongs to its one row.
  *
  * For a role that may only read the settings, the card is its heading and its line and nothing to
@@ -37,6 +42,7 @@ export default async function LinksBox({ event, mayEditSettings, locale, heading
     labelRo: link.labelRo ?? "",
     labelEn: link.labelEn ?? "",
   }));
+  const storage = isStorageConfigured();
   return (
     <Panel collapsible {...card}>
       <Stack spacing={2}>
@@ -56,6 +62,16 @@ export default async function LinksBox({ event, mayEditSettings, locale, heading
           defaultValue={event?.facebookEventUrl ?? ""}
           {...textFieldConstraints(eventInputConstraints("facebookEventUrl"), { inputMode: "url" })}
         />
+        {storage ? (
+          <RouteGpxField
+            name="event.routeGpx"
+            initial={readRouteGpx(event?.routeGpx)}
+            words={t.raw("editor.routeGpx") as RouteGpxFieldWords}
+            locale={locale}
+          />
+        ) : (
+          <BoxNote>{t("editor.routeGpx.noStorage")}</BoxNote>
+        )}
         <Typography variant="body2" color="text.secondary">
           {t("editor.linksHelp", { max: MAX_EVENT_LINKS })}
         </Typography>
@@ -76,6 +92,7 @@ export default async function LinksBox({ event, mayEditSettings, locale, heading
             moveUp: t("editor.linkRows.moveUp"),
             moveDown: t("editor.linkRows.moveDown"),
             row: t("editor.linkRows.row"),
+            uploadGpx: storage ? t("editor.linkRows.uploadGpx") : "",
           }}
         />
       </Stack>

@@ -453,6 +453,24 @@
     "age": "Age",
     "openRoute": "View the route",
     "routeJump": "About the route",
+    "routeMaps": {
+      "tabs": "Route maps",
+      "garmin": {
+        "tab": "Garmin Connect",
+        "show": "Show the map on Garmin Connect",
+        "notice": "The map loads from Garmin when you press; Garmin sees your IP address.",
+        "open": "Open in Garmin Connect",
+        "frame": "The route's map on Garmin Connect"
+      },
+      "strava": {
+        "tab": "Strava",
+        "show": "Show the map on Strava",
+        "notice": "The map loads from Strava when you press; Strava sees your IP address.",
+        "open": "Open in Strava",
+        "frame": "The route's map on Strava"
+      },
+      "gpx": "Download the route (GPX)"
+    },
     "video": {
       "title": "Event film (YouTube)",
       "notice": "The player is YouTube's and loads only when you open it.",
@@ -1942,6 +1960,28 @@
       "routeUrl": "Route link",
       "routeUrlHelp": "Where the route can be seen — a Strava route or activity, or any other https:// link. Leave empty if there is not one.",
       "routeDescriptionHelp": "Optional, in both languages or neither: stops, climbs, what to expect, a map (the picture button). Shown on the page under “The route”.",
+      "routeGarmin": "Garmin Connect: the link or the embed code",
+      "routeGarminHelp": "Paste the course's link from Garmin Connect (…/course/…) or its embed code (Share → Embed). The page shows the map, loaded only when the visitor presses, and the link.",
+      "routeStrava": "Strava: the link or the embed code",
+      "routeStravaHelp": "Paste the route's link from Strava (strava.com/routes/…) or its embed code (Share → Embed). The page shows the map, loaded only when the visitor presses, and the link.",
+      "routeGpx": {
+        "label": "The route's GPX file",
+        "help": "Upload the file from a computer or a phone; it shows on the page under the maps, as «Download the route (GPX)». A GPX kept elsewhere can be added below as a link.",
+        "upload": "Upload a GPX",
+        "replace": "Replace the file",
+        "remove": "Remove the file",
+        "uploading": "Uploading…",
+        "none": "No GPX file.",
+        "removed": "The file is removed when you save.",
+        "noStorage": "File storage is not configured here, so a GPX cannot be uploaded.",
+        "errors": {
+          "tooLarge": "The file is larger than 4 MB.",
+          "notGpx": "The file is not a GPX: its root element is not gpx.",
+          "notXml": "The file is not an XML document.",
+          "empty": "The file is empty.",
+          "failed": "The upload did not work. Try again."
+        }
+      },
       "repeatHelp": "Make this event a series at a fixed interval. The next {horizon} are created now and the site creates the rest; each date can be moved or cancelled on its own.",
       "repeatUntil": "Until (optional)",
       "repeatUntilHelp": "Leave empty for a series without an end.",
@@ -2063,6 +2103,7 @@
         "remove": "Remove link",
         "moveUp": "Move up link",
         "moveDown": "Move down link",
+        "uploadGpx": "Upload the file instead of a link",
         "row": "Link",
         "urlError": "Link {n}: the address must start with https://",
         "kindError": "Link {n}: choose the kind from the list",
@@ -2551,11 +2592,14 @@
             "day": "day",
             "dayAuto": "day (automatic)",
             "described": "with a description",
-            "describedOneLanguage": "description in one language only"
+            "describedOneLanguage": "description in one language only",
+            "strava": "Strava",
+            "garmin": "Garmin"
           },
           "links": {
             "strava": "Strava",
             "facebook": "Facebook",
+            "gpxUploaded": "GPX uploaded",
             "files": {
               "one": "{count} link",
               "few": "{count} links",

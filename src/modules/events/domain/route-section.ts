@@ -1,15 +1,20 @@
 import { hasRichTextContent, readRichText } from "@/modules/content/rich-text/domain/schema";
 import { type EventLink, type EventLinkKind, readEventLinks } from "./links";
+import { readRouteGpx } from "./route-gpx";
+import { readRouteMaps } from "./route-maps";
 
 /**
  * The route section of the event page, "Traseul" under `#route` (§387; the owner, 2026-09-25: "I
  * should be able to put 'descriere traseu/antrenament' with pit stops and all, basically a free
  * text, might also attach a map there; you can move the GPX and Strava link there").
  *
- * Pure, and the one place that decides what the section holds, so the page, the staff preview and
+ * Pure — no environment is read here: the callers say whether storage is configured
+ * (`isStorageConfigured()`), so a client island may import this file without the server's
+ * environment schema — and the one place that decides what the section holds, so the page, the staff preview and
  * the facts' route row cannot disagree about which link is drawn where:
- * - the section exists only when this language's route description says something
- *   (`hasRouteDescription`); an event without one keeps every link where it was;
+ * - the section exists only when this language's route description says something, or — since
+ *   §NNN — the event has a Strava or Garmin Connect map or an uploaded GPX (`hasRouteSection`); an
+ *   event with none of them keeps every link where it was;
  * - with it, the links of the route's own kinds — the GPX track and the route's map — leave
  *   "Linkuri și fișiere" for the section, and so does the route link (`route_url`, a Strava route
  *   or activity, which the facts' route row drew until then);
@@ -42,6 +47,28 @@ export const isRouteLinkKind = (kind: EventLinkKind): boolean => IS_ROUTE_KIND[k
  */
 export function hasRouteDescription(json: unknown): boolean {
   return json !== null && json !== undefined && hasRichTextContent(readRichText(json));
+}
+
+/** What decides whether this language's page has a route section: its description, the maps, the GPX. */
+export type RouteSectionSource = { routeDescriptionJson?: unknown; routeMaps?: unknown; routeGpx?: unknown };
+
+/**
+ * Whether the page draws «Traseul» under `#route` (§387, widened by §NNN): this language's route
+ * description says something, or the event has a Strava or Garmin Connect map, or a GPX file the
+ * club uploaded. The maps and the file are facts of the event, the same in both languages; the
+ * description is per language. One rule for the page, the preview, the facts' route row and the
+ * emails' deep links, so they cannot disagree about where the route's links are drawn.
+ */
+export function hasRouteSection(source: RouteSectionSource, storageConfigured: boolean): boolean {
+  return hasRouteDescription(source.routeDescriptionJson) || hasRouteMedia(source, storageConfigured);
+}
+
+/**
+ * Whether the event has a map or a GPX file of its own for «Traseul» (§NNN). A GPX counts only where
+ * storage is configured — the page draws the download only there, and an empty heading is worse than none.
+ */
+export function hasRouteMedia(source: Pick<RouteSectionSource, "routeMaps" | "routeGpx">, storageConfigured: boolean): boolean {
+  return readRouteMaps(source.routeMaps).length > 0 || (storageConfigured && readRouteGpx(source.routeGpx) !== null);
 }
 
 /**

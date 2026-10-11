@@ -8,6 +8,7 @@ import { readScheduleItems } from "@/modules/events/domain/schedule";
 import { startBoxValues } from "@/modules/events/domain/provisional-start";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { clubNightEvent, nightPlace } from "@/modules/events/night-event";
+import { routeMapFieldValue, routeMapOf } from "@/modules/events/domain/route-maps";
 import { env } from "@/shared/config/env";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
@@ -209,6 +210,29 @@ export default async function CourseBox({
           helperText={t("editor.routeUrlHelp")}
           defaultValue={event?.routeUrl ?? ""}
           {...textFieldConstraints(eventInputConstraints("routeUrl"), { inputMode: "url" })}
+        />
+        {/* «Traseul»'s maps (§NNN), Garmin first as the page's tabs: the link or the embed
+            code the service gives, read down to its id at the save. The GPX file is uploaded in
+            «Linkuri și fișiere», on the «Traseul (GPX)» row's own card. */}
+        <RecallField
+          name="event.routeGarmin"
+          label={t("editor.routeGarmin")}
+          helperText={t("editor.routeGarminHelp")}
+          defaultValue={routeMapFieldValue(routeMapOf(event?.routeMaps, "garmin"))}
+          multiline
+          minRows={1}
+          maxRows={4}
+          {...textFieldConstraints(eventInputConstraints("routeGarmin"), { spellCheck: false, autoCapitalize: "off", autoCorrect: "off" })}
+        />
+        <RecallField
+          name="event.routeStrava"
+          label={t("editor.routeStrava")}
+          helperText={t("editor.routeStravaHelp")}
+          defaultValue={routeMapFieldValue(routeMapOf(event?.routeMaps, "strava"))}
+          multiline
+          minRows={1}
+          maxRows={4}
+          {...textFieldConstraints(eventInputConstraints("routeStrava"), { spellCheck: false, autoCapitalize: "off", autoCorrect: "off" })}
         />
         {routeDescription}
       </Stack>
