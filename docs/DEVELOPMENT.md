@@ -189,6 +189,10 @@ docker compose up -d db && yarn db:migrate
 yarn test:concurrency
 ```
 
+Run it on a migrated, **unseeded** database, as CI does: a seeded one carries a privacy notice
+effective from the day it was seeded, which is after the fixed `NOW` of the desk-race, family and
+spare-bibs files, and seven of their cases fail with "no approved privacy notice exists yet".
+
 **A failure one run in eight can be a plan, not a race.** The planner's choice follows the
 table's statistics, and the suite's own deletes and inserts move them — autovacuum on a table
 just emptied leaves "no rows" over pages that remain. `UPDATE … WHERE id IN (SELECT … LIMIT n FOR

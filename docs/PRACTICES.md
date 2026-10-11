@@ -123,7 +123,9 @@ export function computeHoldDeadline(now: Date, event: EventTiming, minutes: numb
 No database access, no `new Date()` inside. Pass the clock in. This matters more here than in
 most projects, because half the domain is time-based: confirmation windows, holds, offer
 deadlines, event start. A rule that reads the wall clock internally cannot be tested without
-sleeping or mocking globals, and an agent asked to change it will guess.
+sleeping or mocking globals, and an agent asked to change it will guess. A test whose fixture
+carries a written date is run against a moved calendar by `yarn test:clock` (`--concurrency` for the
+two-connection suite): see `docs/DEVELOPMENT.md` § Tests that the calendar breaks.
 
 Keep IO at the edges: route handler reads, service orchestrates, pure functions decide.
 

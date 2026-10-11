@@ -101,7 +101,7 @@ function main() {
         [vitest, "run", ...suite, "--reporter=dot", "--reporter=json", `--outputFile.json=${output}`, ...filters],
         // One offset for every process of the run, so a script a test spawns minutes in reads the
         // same moved clock as the test (`tests/helpers/shifted-clock.mjs`).
-        { stdio: ["ignore", "ignore", "inherit"], env: { ...process.env, TEST_CLOCK_AT: at, TEST_CLOCK_OFFSET_MS: String(Date.parse(at) - Date.now()) } },
+        { stdio: ["ignore", "inherit", "inherit"], env: { ...process.env, TEST_CLOCK_AT: at, TEST_CLOCK_OFFSET_MS: String(Date.parse(at) - Date.now()) } },
       );
       let report;
       try {
