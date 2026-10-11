@@ -66,10 +66,10 @@ function CustomAccentOptionBody({ initialHex, defaultChecked, words, preview }: 
 
   return (
     <Box data-testid="site-look-accent-option-custom" sx={{ py: 0.5 }}>
-      <Box component="label" sx={{ display: "flex", alignItems: "center", gap: 1.25, minHeight: 44, cursor: "pointer" }}>
+      <Box component="label" sx={{ display: "flex", flexWrap: { xs: "wrap", sm: "nowrap" }, alignItems: "center", gap: 1.25, minHeight: 44, cursor: "pointer" }}>
         <RecallRadio name="accent" value="custom" defaultChecked={defaultChecked} style={{ width: 20, height: 20, flexShrink: 0 }} />
         <AccentPreview shades={shades} words={preview} />
-        <Box component="span" sx={{ minWidth: 0 }}>
+        <Box component="span" sx={{ minWidth: 0, flexBasis: { xs: "calc(100% - 32px)", sm: "auto" } }}>
           <Typography component="span" variant="body2" sx={{ display: "block", fontWeight: 500 }}>
             {words.name}
           </Typography>

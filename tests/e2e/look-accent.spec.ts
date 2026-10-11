@@ -18,6 +18,12 @@ import { openFold } from "./support/fold";
 const PRIMARY_MAIN = "--mui-palette-primary-main";
 const BAND = "--br-accent-tint";
 
+/** `#rrggbb` as the browser computes a colour. */
+function rgbOf(hex: string): string {
+  const n = Number.parseInt(hex.slice(1), 16);
+  return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`;
+}
+
 async function lookPanel(page: Page): Promise<Locator> {
   await page.goto("/ro/admin/settings/appearance");
   await hydrated(page);
@@ -66,6 +72,8 @@ test.describe("§NNN the new look's accent colour", () => {
       await expect(page.locator("html")).toHaveAttribute("data-look", "2026");
       expect(await rootVariable(page, PRIMARY_MAIN)).toBe(LOOK_ACCENT.blue.light.accentInk);
       expect(await rootVariable(page, BAND)).toBe(GRADIENT.heroTint);
+      const cta = page.getByTestId("header-cta").first();
+      expect(await cta.evaluate((element) => getComputedStyle(element).backgroundColor)).toBe(rgbOf(LOOK_ACCENT.blue.light.accentInk));
     } finally {
       await setLook(browser, "off", "pink");
     }
@@ -108,5 +116,14 @@ test.describe("§NNN the new look's accent colour", () => {
     } finally {
       await setLook(browser, "off", "pink");
     }
+  });
+
+  test("at 320px the screen does not scroll sideways and the options keep their words", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    await signIn(page, "Dev Administrator");
+    const panel = await lookPanel(page);
+    await panel.getByTestId("site-look-accent-option-orange").scrollIntoViewIfNeeded();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await expect(panel.getByTestId("site-look-accent-option-orange")).toContainText("Portocaliu");
   });
 });

@@ -158,7 +158,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   // «Mărimea textului» (§530): the club's text size for the public pages, the same way — one rule
   // on the root font size, nothing at all for the default.
   const fontSizeStyle = siteFontSizeStyle(await cachedSiteFontSize());
-  // «Aspectul nou» (§708): the facelift's scope on <html> and the pink primary — nothing at all while off.
+  // «Aspectul nou» (§708): the facelift's scope on <html> and the club's accent as the primary (pink by default) — nothing at all while off.
   const look = await cachedSiteLook();
   const lookStyle = siteLookStyle(look);
 

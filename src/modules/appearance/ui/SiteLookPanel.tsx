@@ -130,12 +130,12 @@ export default async function SiteLookPanel({ locale, state, mayEdit, openWhen }
                   <Box
                     key={preset}
                     component="label"
-                    sx={{ display: "flex", alignItems: "center", gap: 1.25, minHeight: 44, py: 0.5, cursor: "pointer" }}
+                    sx={{ display: "flex", flexWrap: { xs: "wrap", sm: "nowrap" }, alignItems: "center", gap: 1.25, minHeight: 44, py: 0.5, cursor: "pointer" }}
                     data-testid={`site-look-accent-option-${preset}`}
                   >
                     <RecallRadio name="accent" value={preset} defaultChecked={accent.accent === preset} style={{ width: 20, height: 20, flexShrink: 0 }} />
                     <AccentPreview shades={LOOK_ACCENT[preset]} words={preview} />
-                    <Box component="span" sx={{ minWidth: 0 }}>
+                    <Box component="span" sx={{ minWidth: 0, flexBasis: { xs: "calc(100% - 32px)", sm: "auto" } }}>
                       <Typography component="span" variant="body2" sx={{ display: "block", fontWeight: 500 }}>
                         {t(`look.accent.presets.${preset}.name`)}
                         {preset === DEFAULT_LOOK_ACCENT ? ` · ${t("look.default")}` : ""}
