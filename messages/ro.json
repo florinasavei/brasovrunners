@@ -21,7 +21,6 @@
     "themeDark": "Temă întunecată",
     "themeLight": "Temă luminoasă",
     "skipToContent": "Sari la conținut",
-    "cta": { "join": "Vino cu noi" },
     "followUs": "Urmărește-ne",
     "followOn": {
       "instagram": "{club} pe Instagram",
@@ -572,7 +571,7 @@
         },
         "idDocumentHelp": "Cartea de identitate (de ex. „BV 123456”) sau pașaportul. În copiile trimise pe e-mail apare mascat; platforma îl șterge la {days} după alergare și nu păstrează o copie a actului.",
         "emailHelp": "Aici îți trimitem declarația semnată, în PDF.",
-        "languageNote": "Declarația se semnează în limba acestei pagini, iar PDF-ul și emailul sunt tot în ea. Pentru cealaltă limbă, schimbă limba din antet înainte să semnezi.",
+        "languageNote": "Declarația se semnează în limba acestei pagini, iar PDF-ul și emailul sunt tot în ea. Pentru cealaltă limbă, schimbă limba (RO / EN) înainte să semnezi.",
         "adultsOnly": "O semnezi doar pentru tine, dacă ai împlinit {age} în ziua alergării; nu o semnezi în numele altcuiva, nici al unui minor.",
         "accept": "Am cel puțin {age} împliniți, am citit declarația de mai sus și o semnez pe propria răspundere",
         "acceptInline": "Bifează această casetă ca să poți semna.",
@@ -1825,11 +1824,11 @@
       "special": "Ediție specială",
       "specialHelp": "O ediție aparte, de exemplu aniversară sau caritabilă, cu un marcaj pe card și pe pagină. Într-o serie, marcajul rămâne doar pe data aceasta.",
       "cover": {
-        "intro": "Fotografia de sus de pe cardul evenimentului, în noul aspect al site-ului. Doar fotografii adevărate ale clubului, din galerie sau urcate acum. Într-o serie, la salvare alegi și datele care o primesc.",
+        "intro": "Fotografia de sus a evenimentului, păstrată pentru noul aspect; deocamdată nicio pagină nu o afișează. Doar fotografii adevărate ale clubului. Într-o serie, la salvare alegi și datele care o primesc.",
         "legend": "Fotografia de copertă",
-        "help": "După ce alegi fotografia, alegi partea care se vede pe card. Se păstrează când salvezi evenimentul.",
-        "cropTitle": "Decupaj — ce se vede pe card",
-        "cropHelp": "Pornește de la cel mai mare dreptunghi 16:9, forma cardului. Poți alege alt format sau trage un dreptunghi peste fotografie.",
+        "help": "După ce alegi fotografia, alegi partea din ea pentru noul aspect. Se păstrează când salvezi evenimentul.",
+        "cropTitle": "Decupaj — partea pentru noul aspect",
+        "cropHelp": "Pornește de la cel mai mare dreptunghi 16:9. Poți alege alt format sau trage un dreptunghi peste fotografie.",
         "set": "aleasă",
         "missing": "lipsește",
         "noStorage": "Stocarea imaginilor nu este configurată aici, așa că nu se poate alege o copertă."
@@ -4789,7 +4788,7 @@
     },
     "look": {
       "title": "Aspectul nou",
-      "intro": "Noul aspect al paginilor publice: o culoare de accent lângă albastrul siglei (roz, dacă nu alegi alta), titluri mai apăsate, butoane rotunjite, «Vino cu noi» în antet.",
+      "intro": "Noul aspect al paginilor publice: o culoare de accent lângă albastrul siglei (roz, dacă nu alegi alta), titluri mai apăsate, butoane rotunjite, «Urmărește-ne» cu rețelele sociale în antet.",
       "introMore": "Oprit până aprobă clubul pe QA; apoi e calea înapoi dintr-o apăsare. Nuanța fundalului și mărimea textului rămân cum le-ai ales, în ambele aspecte.",
       "current": "Acum: {look}",
       "updatedAt": "Setat {when}.",
@@ -4808,7 +4807,7 @@
         },
         "on": {
           "name": "Aspectul nou",
-          "help": "Culoarea de accent de mai jos și titluri Inter, butoane rotunjite cu săgeată, «Vino cu noi» și rețelele sociale în antet, munții în josul paginii."
+          "help": "Culoarea de accent de mai jos și titluri Inter, butoane rotunjite cu săgeată, «Urmărește-ne» și rețelele sociale în antet, ambele limbi în subsol, munții în josul paginii."
         }
       },
       "accent": {
@@ -6006,9 +6005,7 @@
         "link": "un link",
         "primary": "Vezi alergările",
         "secondary": "Cum funcționează",
-        "cta": "Butonul din antet:",
         "socials": "Dreapta antetului, pe calculator:",
-        "language": "Limba, în colțul din dreapta jos:",
         "primaryTitle": "Culoarea principală sub aspectul nou",
         "primaryNote": "Variabilele MUI ale culorii principale, redefinite numai pe paginile publice cât timp aspectul nou e pornit.",
         "variable": "Variabila",
@@ -6143,8 +6140,8 @@
         "cardsNote": "Un eveniment cu o singură dată și o serie; datele sunt inventate și nu numesc pe nimeni.",
         "calendarLook": "Calendarul, sub aspectul nou",
         "calendarLookNote": "KindChips, legenda culorilor, NextEventPanel și SubscribeBox, cu date inventate, desenate sub aspectul nou.",
-        "homeTop": "Pagina principală · Hero, NextRunCard, RunCardGrid",
-        "homeTopNote": "Secțiunile paginii principale, din date de probă: titlul cu fotografia (aici locul gol), următoarea alergare și cardurile unei secțiuni.",
+        "homeTop": "Pagina principală · Hero, RunSection",
+        "homeTopNote": "Pagina principală din date de probă: titlul cu fotografia (aici locul gol), apoi secțiunile de alergări, desenate cu cardurile din «Alergări» (ListingCard).",
         "featured": "Evenimentul principal · featuredCard",
         "featuredNote": "Primul card al listei, la lățimea celorlalte, deosebit prin ramă și fundal.",
         "team": "Cardul echipei",
@@ -6242,7 +6239,7 @@
           "7": { "title": "Blocul Instagram", "default": "O bandă statică de șase poze din galerie, cu un link; fără flux în direct." },
           "8": { "title": "Banda cu cifre", "default": "Scrise în «Aspect» → «Pagina principală»: data înființării și alergătorii activi; restul calculat din evenimente." },
           "9": { "title": "Ce înseamnă «Evenimente speciale»", "default": "Tot ce nu e o serie săptămânală; pastila «Ediție specială» își păstrează sensul." },
-          "10": { "title": "Săgeata rotundă de pe carduri", "default": "Doar pe cardurile primei pagini, păstrând apăsarea pe tot cardul; lista își păstrează ușa cu text." },
+          "10": { "title": "Săgeata rotundă de pe carduri", "default": "Niciuna: prima pagină arată chiar cardurile din «Alergări», cu ușa lor cu text, «Descrierea completă a evenimentului»." },
           "11": { "title": "Iconițele", "default": "Rămâne familia Material plină; aerul mai ușor vine din culoare, grosime și spațiere." },
           "12": { "title": "Cum se lansează", "default": "În spatele unei singure setări, «Aspectul nou»: pornită pe QA, oprită în producție până aprobă clubul; aspectul vechi e șters la o lansare după comutare." }
         },
@@ -10204,13 +10201,11 @@
       "how": "Cum funcționează"
     },
     "nextRun": {
-      "title": "Următoarea alergare",
-      "sunset": "Apus la {time}"
+      "title": "Următoarea alergare"
     },
     "weekly": {
       "title": "Alergările săptămânale",
-      "intro": "Același loc și aceeași oră în fiecare săptămână: vii când poți.",
-      "next": "Următoarea: {when}"
+      "intro": "Același loc și aceeași oră în fiecare săptămână: vii când poți."
     },
     "special": {
       "title": "Evenimente speciale",

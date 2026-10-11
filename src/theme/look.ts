@@ -48,8 +48,8 @@ export const UNDER_LOOK = `${LOOK_ROOT} &, ${LOOK_PREVIEW} &`;
 export const UNDER_LOOK_DARK = `${LOOK_ROOT_DARK} &, ${LOOK_PREVIEW_DARK} &`;
 
 /**
- * The elements a page draws only under the new look — the header's «Vino cu noi» and socials, the
- * mountain watermark — are hidden by default and shown inside the scope, so the backoffice, which
+ * The elements a page draws only under the new look — the header's «Urmărește-ne», the mountain
+ * watermark — are hidden by default and shown inside the scope, so the backoffice, which
  * renders inside the same header and layout, never shows them even while the setting is on.
  * `display` is the shown value (`inline-flex`, `flex`, `block`).
  */
@@ -58,8 +58,8 @@ export function onlyUnderLook<T>(display: T) {
 }
 
 /**
- * The reverse: what today's look draws and the new one replaces — the header's and the phone
- * footer's language switcher, which the floating round button replaces (§722) — keeps its own
+ * The reverse: what today's look draws and the new one replaces — the header's language switcher,
+ * whose place «Urmărește-ne» takes while the footer's bar carries the language (§722, §724) — keeps its own
  * `display` (a breakpoint object too) everywhere but inside the scope, where it is not drawn. The
  * backoffice, outside the scope, keeps it.
  */

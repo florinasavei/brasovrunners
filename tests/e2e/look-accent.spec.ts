@@ -72,8 +72,10 @@ test.describe("§723 the new look's accent colour", () => {
       await expect(page.locator("html")).toHaveAttribute("data-look", "2026");
       expect(await rootVariable(page, PRIMARY_MAIN)).toBe(LOOK_ACCENT.blue.light.accentInk);
       expect(await rootVariable(page, BAND)).toBe(GRADIENT.heroTint);
-      const cta = page.getByTestId("header-cta").first();
-      expect(await cta.evaluate((element) => getComputedStyle(element).backgroundColor)).toBe(rgbOf(LOOK_ACCENT.blue.light.accentInk));
+      // A filled pill wears it: the calendar's «Vezi detalii» (the header's «Vino cu noi» left the header, §724).
+      await page.goto("/ro/calendar");
+      const pill = page.getByTestId("calendar-next-details").first();
+      expect(await pill.evaluate((element) => getComputedStyle(element).backgroundColor)).toBe(rgbOf(LOOK_ACCENT.blue.light.accentInk));
     } finally {
       await setLook(browser, "off", "pink");
     }

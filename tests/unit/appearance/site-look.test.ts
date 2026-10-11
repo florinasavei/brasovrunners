@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
@@ -67,19 +67,19 @@ describe("§708 the scope stops at the backoffice", () => {
 
   it("hides what only the new look shows unless it is inside the scope", () => {
     expect(onlyUnderLook("flex")).toEqual({ display: "none", [UNDER_LOOK]: { display: "flex" } });
-    for (const file of ["src/shared/ui/HeaderCta.tsx", "src/shared/ui/LookWatermark.tsx"]) expect(source(file), file).toContain('onlyUnderLook("flex")');
+    expect(source("src/shared/ui/LookWatermark.tsx")).toContain('onlyUnderLook("flex")');
     expect(source("src/shared/ui/HeaderSocials.tsx")).toContain('display: "none", [UNDER_LOOK]: { display: { xs: "none", md: "flex" } }');
   });
 
-  it("§722 moves the language to one floating button under the look, and leaves today's two copies alone while off", () => {
+  it("§724 puts both languages on the footer's bar at every width under the look, and leaves today's two copies alone while off", () => {
     const layout = source("src/app/[locale]/layout.tsx");
-    expect(layout).toContain("<SiteFooter newLook={look.on} />");
+    expect(layout).toContain("<SiteFooter />");
     const footer = source("src/shared/ui/SiteFooter.tsx");
-    // Drawn only while the setting is on, and then only inside the scope (the backoffice renders the same footer).
-    expect(footer).toContain("{newLook && <FloatingLocaleSwitch />}");
-    expect(source("src/shared/ui/FloatingLocaleSwitch.tsx")).toContain('...onlyUnderLook("flex")');
-    // The phone's flags on the footer's bar and the header's copy from `sm`: hidden under the scope, untouched off it.
-    expect(footer).toContain('...notUnderLook({ xs: "flex", sm: "none" })');
+    // §722's floating round button is gone; the footer reads no setting.
+    expect(footer).not.toContain("FloatingLocaleSwitch");
+    expect(existsSync(path.join(ROOT, "src/shared/ui/FloatingLocaleSwitch.tsx"))).toBe(false);
+    // The phone's flags on the footer's bar, from `sm` too under the scope; the header's copy from `sm`, hidden under it.
+    expect(footer).toContain('display: { xs: "flex", sm: "none" },\n            [UNDER_LOOK]: { display: "flex", ml: "auto" },');
     expect(source("src/shared/ui/SiteHeader.tsx")).toContain('...notUnderLook({ xs: "none", sm: "flex" })');
     expect(notUnderLook({ xs: "none", sm: "flex" })).toEqual({ display: { xs: "none", sm: "flex" }, [UNDER_LOOK]: { display: "none" } });
     // «Urmărește-ne»'s box in the header: no room taken outside the scope, nor below `md` inside it.

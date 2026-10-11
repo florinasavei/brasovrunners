@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { type AccentShades, deriveAccentShades, judgeAccent, MIN_CHROMA } from "@/modules/appearance/domain/accent-shades";
 import {
@@ -28,12 +26,10 @@ import { LOOK_ACCENT_TINT, LOOK_ACCENT_TINT_VARIABLE, LOOK_PREVIEW, LOOK_PREVIEW
  * the look draws in both schemes; the shades keep their order (the hover deeper by day, lighter after
  * dark) and the words' shade stays no lighter than the muted ink, so every page tint carries it; the
  * pink is phase 1's tokens unchanged and the orange is the derivation's; a grey and a malformed value
- * are refused; and the home band and the weekly tag wear the accent through the layout's variables.
- * That no page names the pink or a preset itself is `tests/unit/design/accent-tokens.test.ts`'s walk
- * of `src/`, beside the design system's other guards.
+ * are refused; and the home band wears the accent through the layout's variables (the weekly tag
+ * went with the home page's own cards, §726). That no page names the pink or a preset itself is
+ * `tests/unit/design/accent-tokens.test.ts`'s walk of `src/`, beside the design system's other guards.
  */
-const ROOT = path.resolve(__dirname, "../../..");
-const source = (file: string) => readFileSync(path.join(ROOT, file), "utf8").replace(/\r\n/g, "\n");
 const SIX_DIGIT = /^#[0-9a-f]{6}$/;
 
 /** `hsl(h, s%, l%)` as `#rrggbb`, for a spread of typed colours. */
@@ -162,9 +158,8 @@ describe("§723 the setting carries the accent", () => {
 });
 
 describe("§723 everything that wears the accent follows the setting", () => {
-  it("draws the home band and the weekly tag from the layout's variables, one rule for both schemes", () => {
+  it("draws the home band from the layout's variables, one rule for both schemes", () => {
     expect(LOOK_ACCENT_TINT).toBe(`var(${LOOK_ACCENT_TINT_VARIABLE})`);
     expect(HOME_BAND_SX[UNDER_LOOK]).toEqual({ bgcolor: LOOK_ACCENT_TINT });
-    expect(source("src/modules/home/ui/RunTag.tsx")).toContain('weekly: underLook({ bg: LOOK_ACCENT_TINT, ink: "primary.main" }, { bg: LOOK_ACCENT_TINT, ink: "primary.main" })');
   });
 });

@@ -14,6 +14,7 @@ import {
   NO_FILTER,
   offeredFilters,
   singleValues,
+  SPECIAL_TYPE,
   type FilterFacts,
   type ListingFilter,
 } from "@/modules/events/domain/listing-filter";
@@ -120,7 +121,7 @@ export default async function PastEvents({
       <Typography component="summary" variant="h2" sx={{ ...DISCLOSURE_SUMMARY_SX, fontSize: "1.25rem", mb: 1.5 }}>
         <HistoryIcon aria-hidden sx={FOLD_GLYPH_SX} />
         {onlyOneType
-          ? t("pastCountOfType", { count: cards.length, type: tEvent(`type.${sourceType}`) })
+          ? t("pastCountOfType", { count: cards.length, type: sourceType === SPECIAL_TYPE ? tEvent("kind.special") : tEvent(`type.${sourceType}`) })
           : filtered
             ? t("pastCountFiltered", { count: cards.length })
             : t("pastCount", { count: cards.length })}

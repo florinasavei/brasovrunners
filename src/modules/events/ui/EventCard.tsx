@@ -72,6 +72,7 @@ export default async function EventCard({
   featured,
   seriesDates,
   previewDoor,
+  titleAs = "h2",
 }: {
   /** Undated only in the listing's «Data se anunță» section (§533): no countdown, «Când» says so. */
   event: PublicEventPage;
@@ -92,6 +93,8 @@ export default async function EventCard({
    * carries (`draftRegistrationDoor`); absent on every card a visitor reads.
    */
   previewDoor?: PreviewDoor;
+  /** The title's heading level: `h2` on the listing; `h3` under a section's own `h2` (the home page). */
+  titleAs?: "h2" | "h3";
 }) {
   const tEvent = await getTranslations("Event");
   const locale = (await getLocale()) as Locale;
@@ -146,7 +149,7 @@ export default async function EventCard({
         {/* The title is the card's link to its page, in the one style every card's title has
             (`CARD_TITLE_SX`): the club's blue, visited or not, underlined under a pointer or the
             keyboard. A screen reader hears the title, not every word on the card. */}
-        <Typography variant="h2" id={featured ? "featured-event-title" : undefined} sx={CARD_TITLE_SX}>
+        <Typography variant="h2" component={titleAs} id={featured ? "featured-event-title" : undefined} sx={CARD_TITLE_SX}>
           <Link href={{ pathname: "/events/[slug]", params: { slug: event.slug } }}>{event.title}</Link>
         </Typography>
 

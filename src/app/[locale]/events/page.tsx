@@ -8,7 +8,7 @@ import { hasLocale } from "next-intl";
 import { notFound, unstable_rethrow } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import EventCard from "@/modules/events/ui/EventCard";
-import SeriesCard from "@/modules/events/ui/SeriesCard";
+import ListingCard from "@/modules/events/ui/ListingCard";
 import { forecastsForEvents } from "@/modules/weather/source";
 import { groupSeries, seriesLookup } from "@/modules/events/domain/series";
 import { listingSections } from "@/modules/events/domain/listing";
@@ -457,20 +457,17 @@ async function ListingBody({
       {featured && raceWeekDays !== null && (
         <EventCard event={featured} index={0} now={now} weather={weatherOf(featured)} featured={{ raceWeekDays }} seriesDates={seriesOf(featured)} />
       )}
-      {cards.map((series, index) =>
-        series.members.length > 1 ? (
-          <SeriesCard key={series.key} members={series.members} index={index + offset} now={now} weather={weatherOf(series.members[0])} />
-        ) : (
-          <EventCard
-            key={series.key}
-            event={series.members[0]}
-            index={index + offset}
-            now={now}
-            weather={weatherOf(series.members[0])}
-            seriesDates={seriesOf(series.members[0])}
-          />
-        ),
-      )}
+      {/* A series is the series card, a single date the event's (§113, §366): one component, the one the home page draws (§726). */}
+      {cards.map((series, index) => (
+        <ListingCard
+          key={series.key}
+          members={series.members}
+          index={index + offset}
+          now={now}
+          weather={weatherOf(series.members[0])}
+          seriesDates={seriesOf(series.members[0])}
+        />
+      ))}
     </Box>
   );
 }

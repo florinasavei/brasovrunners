@@ -10,7 +10,9 @@
  * 800, one setting «Aspectul nou» (§708); «Evenimente speciale» is everything that is not a weekly
  * series (§709)); decisions 5, 6 and 10 are `decided` by their defaults too (the owner, 2026-10-11:
  * «start the homepage now, with empty photo slots and the plan's defaults» — «Vino cu noi» to the next
- * weekly run, real club photographs only, the round arrow on the home page's cards alone, §714), and
+ * weekly run, real club photographs only, the round arrow on the home page's cards alone, §714 — and
+ * decision 10 decided again by the owner: no round arrow at all, the home page draws the listing's own
+ * cards with their text door, §726), and
  * so are 7 and 8, built with the home page's lower sections (a static strip of the club's own gallery
  * pictures with a link to Instagram, never a feed; the numbers typed in «Pagina principală» and the
  * rest computed from the events, §714); the others are `default` (the dispatcher's default stands

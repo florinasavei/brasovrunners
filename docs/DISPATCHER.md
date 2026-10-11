@@ -127,8 +127,13 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
 
 - **When:** a new ask with a clear outcome.
 - **Run:** `Workflow({ name: "br-chain", args: { branch, tag, brief, intent, checklist, models, effort } })`.
-  `intent` is the owner's ask in their words; `checklist` is the reviewer's list, one `- ` line
-  per thing that must be true, each pointing at where to look.
+  `intent` is the owner's ask in their words; `checklist` is the build list, one `- ` line
+  per thing that must be true, each pointing at where to look. The builder, the fixer and the
+  reviewer all read it: the builder does every item, the fixer keeps every item true, the
+  reviewer checks each one citing `file:line`. So it holds the exact recipes too, not only what
+  the reviewer looks for: the files to change, the e2e environment (the secret-free `.env.local`
+  template, never a copy of the main checkout's file), the tests that must exist, the release
+  entry's fields.
 - **Models:** `{ impl: "sonnet", review: "opus", fix: "sonnet" }` for a precise brief;
   `{ impl: "fable" }` or `"opus"` when the card is cross-cutting or touches a rule that cannot be
   broken.
@@ -140,7 +145,9 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
 - **When:** a review left a blocker or should-fix, CI failed on a batch, or a chain stopped.
 - **Run:** `Workflow({ name: "br-fix-round", args: { branch, worktree, findings, intent, checklist, tag, models } })`,
   `findings` as the review returned them, with the dispatcher's decision written into `fix`
-  where the reviewer offered a choice. The worktree is the implementer's.
+  where the reviewer offered a choice. `checklist` is the chain's build list again: the fixer
+  keeps every item true while it fixes, and the re-reviewer checks each one. The worktree is
+  the implementer's.
 - **Models:** `{ fix: "sonnet", review: "opus" }`.
 
 ### Investigation
@@ -278,8 +285,9 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
   workflow (lesson 4).
 - A change on the maintenance job's critical path ships in two steps: `qa`, a soak, production on
   the owner's word (lesson 5).
-- A brief embeds the intent and the checklist in full, names every persisted identifier, and checks
-  who may use the mechanism it prescribes (lessons 6, 7).
+- A brief embeds the intent in full, names every persisted identifier, and checks who may use
+  the mechanism it prescribes; the checklist is the build list the builder, the fixer and the
+  reviewer all read (lessons 6, 7).
 - The load is read before each launch; a result from a run the machine rule forbids is not relied
   on (lesson 8). `src/db/migrations/meta` is backed up before any generate (lesson 9).
 - After a name incident, `/devs` → Stare: the jobs ran, by the `vercel.app` address (lesson 10).
@@ -325,10 +333,15 @@ page. What the dispatcher keeps from it:
 5. **Two-step release for anything on the maintenance job's critical path:** into `qa` first, a
    soak while QA's jobs run, production after the owner's word. This release's batch is the first
    shipped that way — the label `ship` is added only after the soak.
-6. **`br-chain` hands the implementer only the `brief`;** the intent and the checklist reach the
-   reviewer and the fixer. A brief that says «as the intent says» leaves the implementer to invent
-   names and semantics — the outage grace took six rounds partly for that. The rule: the brief
-   embeds the intent and the checklist in full, and names every persisted identifier.
+6. **`br-chain` hands the implementer the `brief` and the `checklist`, never the `intent`;** the
+   intent reaches the reviewer alone. A brief that says «as the intent says» leaves the
+   implementer to invent names and semantics — the outage grace took six rounds partly for that.
+   The rule: the brief embeds the intent in full and names every persisted identifier; the
+   checklist is the build list, and the builder, the fixer and the reviewer all read it. (This
+   lesson first said the checklist reached the reviewer and the fixer. It reached the reviewer
+   only: on 2026-10-11 builders reported «the brief's checklist was not included», skipped the
+   e2e recipes and, twice, copied the main checkout's real `.env.local`, the rule against it
+   being in the list they never saw. Fixed 2026-10-12.)
 7. **A brief checks the preconditions of the house mechanism it prescribes.** The first brief told
    the job to seat a revived claim «outside the places»: that column is «Lista de invitați
    speciali», an Administrator's verb under the event's switch (§643, §648), and the supplementary
