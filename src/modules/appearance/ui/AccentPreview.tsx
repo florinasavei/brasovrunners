@@ -3,7 +3,7 @@ import type { AccentShades } from "@/modules/appearance/domain/accent-shades";
 import { COLOR, COLOR_DARK } from "@/theme/brand";
 
 export type AccentPreviewWords = {
-  /** The pill's word: the header's «Vino cu noi». */
+  /** The pill's word: the hero's «Vino cu noi». */
   button: string;
   /** The pale chip's word: a weekly run's tag. */
   tag: string;

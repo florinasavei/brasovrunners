@@ -19,8 +19,8 @@ import { HEX_COLOR } from "./tint-contrast";
  * the setting is off — a database without the row renders byte for byte what it rendered before:
  *
  * 1. **The scope.** `data-look="2026"` on `<html>` (`theme/look.ts`): the theme's overrides — pill
- *    buttons, the headings in Inter 800 — and the header's «Vino cu noi», socials and watermark are
- *    written under it, public pages only (`:not(:has([data-backoffice]))`).
+ *    buttons, the headings in Inter 800 — and the header's socials, the footer's language switcher and
+ *    the watermark are written under it, public pages only (`:not(:has([data-backoffice]))`).
  * 2. **The accent as `primary`.** One small unlayered stylesheet (`siteLookStyle`) that redefines MUI's
  *    own `--mui-palette-primary-*` variables, and their channel twins (`alpha()` reads them), under
  *    the same scope, light and dark, and the one shade MUI has no slot for, the pale band

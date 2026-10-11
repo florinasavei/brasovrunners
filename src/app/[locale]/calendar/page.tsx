@@ -192,8 +192,8 @@ export default async function CalendarPage({ params, query: asked, period: segme
   const panelUnderLook = offersAnything({ groups: offer.groups.filter((entry) => entry.group !== "surface"), flags: offer.flags }) || activeFilterCount({ ...filter, surface: [] }) > 0;
 
   /*
-    The next-event panel (phase 4) is read only while the look is on, as the header's «Vino cu noi»
-    is (§708): off, the page reads nothing more than it did — no upcoming rows, no forecast, so the
+    The next-event panel (phase 4) is read only while the look is on (§708): off, the page reads
+    nothing more than it did — no upcoming rows, no forecast, so the
     static calendar keeps its day-long life. On, the listing's own cached rows (held to the next
     event's end) and the forecast at its start (cached an hour, §402, which holds the page an hour).
   */

@@ -1,7 +1,7 @@
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import type { ComponentProps } from "react";
 import type { Link } from "@/i18n/navigation";
-import { BUTTON_GLYPH_PX, glyphSx, WITH_GLYPH_SX } from "./button-glyph";
+import { glyphSx, WITH_GLYPH_SX } from "./button-glyph";
 import ButtonLink from "./ButtonLink";
 import { TAP_TARGET } from "./tap-target";
 
@@ -14,20 +14,14 @@ type Props = {
   /** `contained`: the primary fill (the accent under «Aspectul nou», pink by default). `outlined`: the ink outline. */
   variant?: "contained" | "outlined";
   size?: Size;
-  /**
-   * Below `sm`, a tighter pill (less padding, a smaller gap and arrow) that keeps its arrow, since a
-   * button wears its glyph at every width (§521): the header's row at 320 pixels has room for the
-   * logo, the first section and the ☰ beside it (§569's one row, §262's first entry).
-   */
-  compactOnPhone?: boolean;
   "data-testid"?: string;
 };
 
 /**
  * The new look's button (§708; `docs/REDESIGN.md` § The visual system): a link that reads as a
  * pill — the theme rounds every MUI button under the look's scope (`theme/look.ts`) — with its
- * words first and a **trailing** arrow, 44 pixels tall. «Vino cu noi» in the header is the first;
- * the home page's three (phase 3) are the next.
+ * words first and a **trailing** arrow, 44 pixels tall. «Vino cu noi» in the header was the first
+ * (it left the header, §NNN); the home page's three (phase 3) and the calendar's «Vezi detalii» wear it.
  *
  * The arrow is the one glyph file, imported here as a public button imports its glyph (§498, §521),
  * and drawn as the button's last child — never `endIcon`, which from a Server Component is an
@@ -37,7 +31,7 @@ type Props = {
  *
  * A Server Component: `ButtonLink` is the one client boundary, and children cross it safely.
  */
-export default function ArrowButtonLink({ href, label, variant = "contained", size = "medium", compactOnPhone = false, "data-testid": testId }: Props) {
+export default function ArrowButtonLink({ href, label, variant = "contained", size = "medium", "data-testid": testId }: Props) {
   return (
     <ButtonLink
       href={href}
@@ -54,11 +48,10 @@ export default function ArrowButtonLink({ href, label, variant = "contained", si
         whiteSpace: "nowrap",
         flexShrink: 0,
         ...(variant === "outlined" ? { color: "text.primary", borderColor: "currentColor" } : {}),
-        ...(compactOnPhone ? { px: { xs: 1, sm: size === "small" ? 1.25 : 2 }, gap: { xs: 0.25, sm: 1 } } : {}),
       }}
     >
       {label}
-      <ArrowForwardIcon aria-hidden="true" sx={{ ...glyphSx(size), ...(compactOnPhone ? { fontSize: { xs: 16, sm: BUTTON_GLYPH_PX[size] } } : {}) }} />
+      <ArrowForwardIcon aria-hidden="true" sx={glyphSx(size)} />
     </ButtonLink>
   );
 }

@@ -114,7 +114,7 @@ export async function readHomeContent(locale: Locale, now: Date, setting: HomePa
   const when = (event: PublicEvent, position: "start" | "inline" = "start") =>
     formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true, position });
 
-  // «Vino cu noi»: the next weekly run, as the header's button reads it (§708, decision 5), else the listing.
+  // «Vino cu noi», the hero's first button: the next weekly run (§708, decision 5), else the listing.
   const weeklyRun = nextWeeklyRun(upcoming);
   const lines = heroLines(setting, locale);
   // The two «Cum funcționează» buttons: each a club page, at its own address in this language, or none.

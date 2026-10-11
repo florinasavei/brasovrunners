@@ -21,7 +21,6 @@
     "themeDark": "Temă întunecată",
     "themeLight": "Temă luminoasă",
     "skipToContent": "Sari la conținut",
-    "cta": { "join": "Vino cu noi" },
     "followUs": "Urmărește-ne",
     "followOn": {
       "instagram": "{club} pe Instagram",
@@ -572,7 +571,7 @@
         },
         "idDocumentHelp": "Cartea de identitate (de ex. „BV 123456”) sau pașaportul. În copiile trimise pe e-mail apare mascat; platforma îl șterge la {days} după alergare și nu păstrează o copie a actului.",
         "emailHelp": "Aici îți trimitem declarația semnată, în PDF.",
-        "languageNote": "Declarația se semnează în limba acestei pagini, iar PDF-ul și emailul sunt tot în ea. Pentru cealaltă limbă, schimbă limba din antet înainte să semnezi.",
+        "languageNote": "Declarația se semnează în limba acestei pagini, iar PDF-ul și emailul sunt tot în ea. Pentru cealaltă limbă, schimbă limba (RO / EN) înainte să semnezi.",
         "adultsOnly": "O semnezi doar pentru tine, dacă ai împlinit {age} în ziua alergării; nu o semnezi în numele altcuiva, nici al unui minor.",
         "accept": "Am cel puțin {age} împliniți, am citit declarația de mai sus și o semnez pe propria răspundere",
         "acceptInline": "Bifează această casetă ca să poți semna.",
@@ -4789,7 +4788,7 @@
     },
     "look": {
       "title": "Aspectul nou",
-      "intro": "Noul aspect al paginilor publice: o culoare de accent lângă albastrul siglei (roz, dacă nu alegi alta), titluri mai apăsate, butoane rotunjite, «Vino cu noi» în antet.",
+      "intro": "Noul aspect al paginilor publice: o culoare de accent lângă albastrul siglei (roz, dacă nu alegi alta), titluri mai apăsate, butoane rotunjite, «Urmărește-ne» cu rețelele sociale în antet.",
       "introMore": "Oprit până aprobă clubul pe QA; apoi e calea înapoi dintr-o apăsare. Nuanța fundalului și mărimea textului rămân cum le-ai ales, în ambele aspecte.",
       "current": "Acum: {look}",
       "updatedAt": "Setat {when}.",
@@ -4808,7 +4807,7 @@
         },
         "on": {
           "name": "Aspectul nou",
-          "help": "Culoarea de accent de mai jos și titluri Inter, butoane rotunjite cu săgeată, «Vino cu noi» și rețelele sociale în antet, munții în josul paginii."
+          "help": "Culoarea de accent de mai jos și titluri Inter, butoane rotunjite cu săgeată, «Urmărește-ne» și rețelele sociale în antet, ambele limbi în subsol, munții în josul paginii."
         }
       },
       "accent": {
@@ -6006,9 +6005,7 @@
         "link": "un link",
         "primary": "Vezi alergările",
         "secondary": "Cum funcționează",
-        "cta": "Butonul din antet:",
         "socials": "Dreapta antetului, pe calculator:",
-        "language": "Limba, în colțul din dreapta jos:",
         "primaryTitle": "Culoarea principală sub aspectul nou",
         "primaryNote": "Variabilele MUI ale culorii principale, redefinite numai pe paginile publice cât timp aspectul nou e pornit.",
         "variable": "Variabila",

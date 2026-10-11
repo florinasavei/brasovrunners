@@ -144,11 +144,9 @@ describe("BR-REQ-060-01 «Sistemul de design» draws the look from the code", ()
       expect(scoped.filter((tag) => tag.includes('data-testid="design-calendar-look"'))).toHaveLength(1);
       // The palette the public layout draws, for the preview box, from the same function.
       expect(markup).toContain(`<style data-design-look="">${lookPaletteCss()}</style>`);
-      // The language row's words and the floating button, in the flow (§722).
-      expect(markup).toContain(words.language);
-      expect(markup).toContain('data-testid="floating-language"');
-      // The header's own «Vino cu noi» in both boxes (drawn only under the scope), and the mark.
-      expect(markup.match(/data-testid="header-cta"/g)).toHaveLength(2);
+      // §NNN: no «Vino cu noi» and no floating language button — neither is part of the look any more.
+      expect(markup).not.toContain('data-testid="header-cta"');
+      expect(markup).not.toContain('data-testid="floating-language"');
       // Scoped to the look section: the home samples' empty strip tiles draw the mark too.
       const lookSection = markup.slice(markup.indexOf('data-testid="design-mountain-mark"'));
       expect(lookSection).toContain('data-testid="mountain-mark"');
