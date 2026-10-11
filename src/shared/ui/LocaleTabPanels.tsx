@@ -464,9 +464,8 @@ export default function LocaleTabPanels({
             setActive(value);
           }}
           variant="scrollable"
-          scrollButtons="auto"
-          allowScrollButtonsMobile
-          sx={{ minHeight: 44, minWidth: 0, flex: "1 1 auto", "& .MuiTabs-scrollButtons": { width: 44 } }}
+          scrollButtons={false}
+          sx={{ minHeight: 44, minWidth: 0, flex: "1 1 auto" }}
         >
           {panels.map((panel, index) => {
             const flag = LANGUAGE_FLAG[panel.locale as keyof typeof LANGUAGE_FLAG];

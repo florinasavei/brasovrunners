@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
-import { signIn } from "./support/featured-event";
+import { hydrated, signIn } from "./support/featured-event";
 
 /**
  * BR-REQ-090-04, BR-REQ-090-05, `DECISIONS.md` §265 — the configuration screens are panels.
@@ -16,6 +16,19 @@ import { signIn } from "./support/featured-event";
  */
 test.describe("§265 the configuration panels", () => {
   test.skip(() => test.info().project.name !== "desktop", "one viewport is enough");
+
+  test("the section bar shows scroll arrows only while its tabs overflow (BR-REQ-041-01, §79 amended)", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    const arrows = page.locator(".MuiTabs-scrollButtons");
+    // A laptop: the Administrator's eleven sections do not fit, so the right arrow is there.
+    await page.setViewportSize({ width: 1024, height: 800 });
+    await page.goto("/ro/admin/tasks");
+    await hydrated(page);
+    await expect(arrows.first()).toBeVisible();
+    // A screen wide enough for every tab: MUI draws no arrow at all.
+    await page.setViewportSize({ width: 2600, height: 800 });
+    await expect(arrows).toHaveCount(0);
+  });
 
   test("keeps what is owed on «Sarcini», and the anti-bot switch and the costs on «Setări» (§516)", async ({ page }) => {
     await signIn(page, "Dev Administrator");
