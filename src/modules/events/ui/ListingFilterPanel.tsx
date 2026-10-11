@@ -257,7 +257,7 @@ export default async function ListingFilterPanel({
             (Array.isArray(value) ? value : [value]).map((one) => <input key={`${name}=${one}`} type="hidden" name={name} value={one} />),
           )}
           {offer.groups.map(({ group, values }) => (
-            <Box component="fieldset" key={group} data-filter-group={group} sx={onChips(group) ? { ...FIELDSET_SX, [UNDER_LOOK]: { display: "none" } } : FIELDSET_SX}>
+            <Box component="fieldset" key={group} data-filter-group={group} sx={values.every((value) => onChips(group, value)) ? { ...FIELDSET_SX, [UNDER_LOOK]: { display: "none" } } : FIELDSET_SX}>
               <Typography component="legend" variant="subtitle2" sx={{ p: 0 }}>
                 {t(`filter.groups.${group}`)}
               </Typography>

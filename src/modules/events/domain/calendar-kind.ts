@@ -66,9 +66,10 @@ export function kindFilter(filter: ListingFilter): ListingFilter {
   return withoutValue(filter, "type", SPECIAL_TYPE);
 }
 
-/** The chip shown active: the address's kind, or «special» when only the box asks for it. */
+/** The chip shown active: the address's kind, or «special» when the box is the only type ticked (two types is an OR the chip would misname). */
 export function chipKind(kind: EventKind | null, filter: ListingFilter): EventKind | null {
-  return kind ?? ((filter.type as string[]).includes(SPECIAL_TYPE) ? "special" : null);
+  const types = filter.type as string[];
+  return kind ?? (types.length === 1 && types[0] === SPECIAL_TYPE ? "special" : null);
 }
 
 /** Whether a date passes the kind asked for; every date passes when none is. */

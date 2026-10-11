@@ -141,8 +141,10 @@ describe("under «Aspectul nou» the calendar's chips carry the kind, so the box
     expect(link.type).toEqual(["RACE"]);
     expect(link.surface).toEqual(filter.surface);
     expect(listingFilterQuery(link).type).toBe("RACE");
-    expect(chipKind(null, filter)).toBe("special");
+    expect(chipKind(null, filter)).toBeNull();
+    expect(chipKind(null, parseListingFilter({ type: "special" }))).toBe("special");
     expect(chipKind("weekly", filter)).toBe("weekly");
     expect(chipKind(null, parseListingFilter({ type: "RACE" }))).toBeNull();
+    expect(chipKind(null, parseListingFilter({ type: ["GROUP_RUN", "SPECIAL"] }))).toBeNull();
   });
 });
