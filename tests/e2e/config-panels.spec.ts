@@ -31,11 +31,13 @@ test.describe("§265 the configuration panels", () => {
     });
     await expect(arrows.last()).toBeVisible();
     await expect(arrows.last()).not.toHaveClass(/Mui-disabled/);
-    // A role with few sections: they fit even on a laptop, so MUI draws no arrow at all.
+    // A role with two sections, «Ziua cursei» and «Ghid» (a volunteer's whole backoffice, §103): they fit with room
+    // to spare even on a laptop, so MUI draws no arrow at all. Not the Technical role: its eight sections nearly fill
+    // 1024 px, too close to the edge for "none" to be a safe thing to assert.
     await page.context().clearCookies();
-    await signIn(page, "Dev Technical");
-    await page.goto("/ro/devs");
-    await hydrated(page);
+    await signIn(page, "Dev Contributor");
+    // `signIn` has already taken the volunteer to the desk, which is where the bar is read.
+    await expect(page).toHaveURL(/\/ro\/admin\/checkin$/);
     await expect(page.locator(".MuiTabs-scroller").first()).toBeVisible();
     await expect(arrows).toHaveCount(0);
   });
