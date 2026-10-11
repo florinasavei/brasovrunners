@@ -1,11 +1,20 @@
 "use client";
 
+import Box from "@mui/material/Box";
+import Tooltip from "@mui/material/Tooltip";
 import { ACTION_ICONS, type ActionIconName } from "./action-icons";
 import SubmitButton, { type SubmitButtonProps } from "./SubmitButton";
 
 type Props = Omit<SubmitButtonProps, "glyph" | "runner"> & {
   /** The verb's glyph before the label, by name — never an element (`action-icons.ts`). */
   icon: ActionIconName;
+  /**
+   * One sentence saying what the press does and what it changes, shown on hover, on keyboard focus
+   * and on a long press (§NNN). It repeats nothing the label says: «Mai sus» is the label, «cardul
+   * apare mai devreme pe pagină» is the tooltip. A phone has no hover, so the words that matter stay
+   * on the button; this is the extra.
+   */
+  tooltip?: string;
 };
 
 /**
@@ -19,8 +28,19 @@ type Props = Omit<SubmitButtonProps, "glyph" | "runner"> & {
  * walks the imports and fails if a public route reaches the registry through anything.
  *
  * Everything else — the pending runner, the held press of §304, the slow hint, `compact` — is
- * `SubmitButton`'s, untouched: this hands it the resolved component and nothing more.
+ * `SubmitButton`'s, untouched: this hands it the resolved component and nothing more. The tooltip
+ * lives here for the same reason: MUI's `Tooltip` is the backoffice's cost, never a visitor's. It
+ * wraps a span, not the button, because the button is `SubmitButton`'s to render and a tooltip
+ * needs a node that takes a ref; the span's hover and the button's focus both open it.
  */
-export default function GlyphSubmitButton({ icon, ...props }: Props) {
-  return <SubmitButton {...props} glyph={ACTION_ICONS[icon]} />;
+export default function GlyphSubmitButton({ icon, tooltip, ...props }: Props) {
+  const button = <SubmitButton {...props} glyph={ACTION_ICONS[icon]} />;
+  if (!tooltip) return button;
+  return (
+    <Tooltip title={tooltip} describeChild enterTouchDelay={400} leaveTouchDelay={4000}>
+      <Box component="span" sx={{ display: "inline-flex" }}>
+        {button}
+      </Box>
+    </Tooltip>
+  );
 }

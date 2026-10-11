@@ -183,6 +183,9 @@ export type SubmitButtonProps = {
    * "↓" to everybody who can see which row it is in, and nothing at all to anybody who cannot.
    */
   ariaLabel?: string;
+  /** `name` and `value` of the native submit: which of several buttons of one form was pressed (the FAQ's moves, §NNN). */
+  name?: string;
+  value?: string;
 };
 
 /**
@@ -243,6 +246,8 @@ export default function SubmitButton({
   fullWidth,
   ariaLabel,
   compact,
+  name,
+  value,
 }: SubmitButtonProps) {
   const { pending } = useFormStatus();
   const ref = useRef<HTMLButtonElement>(null);
@@ -568,6 +573,8 @@ export default function SubmitButton({
       <Button
         ref={ref}
         type="submit"
+        name={name}
+        value={value}
         color={color}
         variant={variant}
         size={size}

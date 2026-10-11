@@ -35,7 +35,6 @@ import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
-import SubmitButton from "@/shared/ui/SubmitButton";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 
 type Props = {
@@ -226,7 +225,7 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
                   {context}
                   <input type="hidden" name="itemId" value={item.id} />
                   <input type="hidden" name="direction" value="up" />
-                  <SubmitButton label="↑" pendingLabel="↑" variant="outlined" ariaLabel={t("clubTodo.moveUp", { text: label })} />
+                  <GlyphSubmitButton icon="moveUp" label={t("clubTodo.moveUpWord")} pendingLabel={t("clubTodo.moveUpWord")} tooltip={t("clubTodo.moveUpTip")} variant="outlined" ariaLabel={t("clubTodo.moveUp", { text: label })} />
                 </Box>
               )}
               {index < siblings.length - 1 && (
@@ -234,7 +233,7 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
                   {context}
                   <input type="hidden" name="itemId" value={item.id} />
                   <input type="hidden" name="direction" value="down" />
-                  <SubmitButton label="↓" pendingLabel="↓" variant="outlined" ariaLabel={t("clubTodo.moveDown", { text: label })} />
+                  <GlyphSubmitButton icon="moveDown" label={t("clubTodo.moveDownWord")} pendingLabel={t("clubTodo.moveDownWord")} tooltip={t("clubTodo.moveDownTip")} variant="outlined" ariaLabel={t("clubTodo.moveDown", { text: label })} />
                 </Box>
               )}
             </Stack>
