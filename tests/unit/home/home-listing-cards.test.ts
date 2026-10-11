@@ -134,13 +134,22 @@ describe("§NNN the home page's run sections draw the listing's own cards", () =
     expect(listing).toMatch(/\{cards\.map\(\(series, index\) => \(\s*<ListingCard/);
   });
 
+  it("keeps the keyboard's ring on a card whose title is an h3, as on the home page (§486)", async () => {
+    const { CARD_TAP_SX } = await import("@/modules/events/ui/card-layout");
+    const keys = Object.keys(CARD_TAP_SX).filter((key) => key.includes("a:focus-visible"));
+    expect(keys).toEqual(["&:has(:is(h2, h3) a:focus-visible)"]);
+    const section = await html(createElement(RunSection, { id: "weekly", title: "Weekly", intro: null, cards: [{ key: "w", members: weeklySeries() }], now: SAMPLE_NOW, more: null }));
+    expect(section).toContain("<h3");
+    expect(section).not.toMatch(/<h2[^>]*>[^<]*<a/);
+  });
+
   it("draws nothing for a section with no card: no heading over an empty row", async () => {
     expect(await html(createElement("div", null, createElement(RunSection, { id: "weekly", title: "Weekly", intro: null, cards: [], now: SAMPLE_NOW, more: null })))).toBe("<div></div>");
   });
 });
 
 describe("§NNN the home page hands the cards what the listing hands them, from the read it already had", () => {
-  it("gives the next run its one date with its series, the weekly section the series, the special one the race, and reads the forecast once for all", async () => {
+  it("gives the next run the listing's card for its series, the weekly section the series, the special one the race, and reads the forecast once for all", async () => {
     const series = weeklySeries();
     const race = sampleRace("ro");
     upcoming.push(...series, race);
@@ -148,8 +157,9 @@ describe("§NNN the home page hands the cards what the listing hands them, from 
 
     expect(props.nextRun?.id).toBe("next-run");
     expect(props.nextRun?.cards).toHaveLength(1);
-    expect(props.nextRun?.cards[0].members).toEqual([series[0]]);
-    expect(props.nextRun?.cards[0].seriesDates).toEqual(series);
+    // A date of a weekly series is drawn as the listing draws it: the series' card, every date.
+    expect(props.nextRun?.cards[0].members).toEqual(series);
+    expect(props.nextRun?.cards[0].seriesDates).toBeUndefined();
 
     expect(props.weekly.cards).toHaveLength(1);
     expect(props.weekly.cards[0].members).toEqual(series);

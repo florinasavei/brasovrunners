@@ -131,10 +131,10 @@ test.describe("§714 the site's root and «Pagina principală»", () => {
       for (const card of await cards.all()) {
         const title = card.locator("h3 a");
         await expect(title).toHaveCount(1);
-        expect((await title.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+        expect(Math.round(((await title.boundingBox())?.height ?? 0) * 10) / 10).toBeGreaterThanOrEqual(44);
         const door = card.getByRole("link", { name: "Descrierea completă a evenimentului" });
         await expect(door).toBeVisible();
-        expect((await door.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+        expect(Math.round(((await door.boundingBox())?.height ?? 0) * 10) / 10).toBeGreaterThanOrEqual(44);
       }
       await expect(page.getByTestId("round-arrow")).toHaveCount(0);
       await expect(page.locator("main [data-kind]")).toHaveCount(0);

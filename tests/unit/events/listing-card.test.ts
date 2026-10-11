@@ -250,7 +250,7 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
       // button, a pill with a tooltip — above the cover, so a press on it is still a press on it.
       expect(rules).toContain(" :where(a, button, summary, [data-has-tooltip], [data-lifted]){position:relative;z-index:2;}");
       // The keyboard's ring is the card's, since the title's link targets the whole card (§486)…
-      expect(rules).toMatch(new RegExp(`:has\\(h2 a:focus-visible\\)\\{outline:2px solid;outline-color:${PRIMARY};outline-offset:2px;\\}`));
+      expect(rules).toMatch(new RegExp(`:has\\(:is\\(h2, h3\\) a:focus-visible\\)\\{outline:2px solid;outline-color:${PRIMARY};outline-offset:2px;\\}`));
       // …and the title keeps only its underline, no second ring around its words — where the card
       // can draw the ring. A browser without `:has` keeps the title's own ring (§486).
       expect(title).toMatch(new RegExp(` a:focus-visible\{[^}]*;text-decoration:underline;outline:2px solid;outline-color:${PRIMARY};outline-offset:2px;\}`));

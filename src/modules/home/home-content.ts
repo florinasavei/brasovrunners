@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { type HomePageSetting, buttonLabelIn, heroLines, splitHeadline } from "@/modules/appearance/domain/home-page";
 import { nextWeeklyRun } from "@/modules/events/domain/next-weekly-run";
-import { seriesLookup } from "@/modules/events/domain/series";
+import { groupSeries, seriesLookup } from "@/modules/events/domain/series";
 import type { PublicEvent } from "@/modules/events/repository";
 import { pictureSizes, pictureSrcSet } from "@/modules/media/ladder";
 import { getStorage, isStorageConfigured, objectKey } from "@/modules/media/storage";
@@ -95,12 +95,15 @@ export async function readHomeContent(locale: Locale, now: Date, setting: HomePa
   */
   const seriesOf = seriesLookup(upcoming);
   const shownCards = [...sections.weekly, ...sections.special];
-  const forecasts = await forecastsForEvents([...(sections.next ? [sections.next] : []), ...shownCards.map((card) => card.members[0])], now);
+  // «Următoarea alergare» is drawn as the listing would draw that date: its series' card when it belongs to a series (the whole series, as `groupSeries` holds it), else the date alone.
+  const nextMembers: readonly PublicEvent[] = sections.next ? (groupSeries(upcoming).find((series) => series.members.some((member) => member.id === sections.next!.id))?.members ?? [sections.next]) : [];
+  const forecasts = await forecastsForEvents([...nextMembers.slice(0, 1), ...shownCards.map((card) => card.members[0])], now);
   const cardOf = (key: string, members: readonly PublicEvent[]): RunSectionCard => ({
     key,
     members,
     weather: forecasts.get(members[0].id)?.start ?? null,
-    seriesDates: seriesOf(members[0]),
+    // A date alone on its card still wears its series' chip (§486); a series card has its own dates.
+    seriesDates: members.length > 1 ? undefined : seriesOf(members[0]),
   });
   const cardsOf = (cards: readonly HomeCard<PublicEvent>[]) => cards.map((card) => cardOf(card.key, card.members));
 
@@ -112,9 +115,9 @@ export async function readHomeContent(locale: Locale, now: Date, setting: HomePa
   const howHref = clubPageHref(setting.buttons.how?.pageId ?? null, pages);
   const stepsHref = clubPageHref(setting.steps.targetPageId, pages);
 
-  // «Următoarea alergare»: that one date, on the listing's single-date card.
+  // «Următoarea alergare»: what the listing draws for that date — a series' card, or the single-date card.
   const nextRun: HomePageProps["nextRun"] = sections.next
-    ? { id: "next-run", title: t("nextRun.title"), intro: null, cards: [cardOf(sections.next.id, [sections.next])], now, more: null }
+    ? { id: "next-run", title: t("nextRun.title"), intro: null, cards: [cardOf(sections.next.id, nextMembers)], now, more: null }
     : null;
 
   const props: HomePageProps = {
