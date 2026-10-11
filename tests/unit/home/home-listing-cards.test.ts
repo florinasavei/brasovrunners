@@ -89,7 +89,7 @@ describe("§NNN the home page's run sections draw the listing's own cards", () =
       const section = await html(
         createElement(RunSection, { id: "weekly", title: "Weekly", intro: "Intro", cards: [{ key: "w", members: series, weather: SAMPLE_WEATHER }], now: SAMPLE_NOW, more: null }),
       );
-      const listing = await html(createElement(SeriesCard, { members: series, index: 0, now: SAMPLE_NOW, weather: SAMPLE_WEATHER }));
+      const listing = await html(createElement(SeriesCard, { members: series, index: 0, now: SAMPLE_NOW, weather: SAMPLE_WEATHER, titleAs: "h3" }));
       expect(listing.startsWith("<li")).toBe(true);
       expect(section, locale).toContain(listing);
     }
@@ -111,8 +111,8 @@ describe("§NNN the home page's run sections draw the listing's own cards", () =
         more: null,
       }),
     );
-    const next = await html(createElement(EventCard, { event: series[0], index: 0, now: SAMPLE_NOW, weather: SAMPLE_WEATHER, seriesDates: series }));
-    const special = await html(createElement(EventCard, { event: race, index: 1, now: SAMPLE_NOW }));
+    const next = await html(createElement(EventCard, { event: series[0], index: 0, now: SAMPLE_NOW, weather: SAMPLE_WEATHER, seriesDates: series, titleAs: "h3" }));
+    const special = await html(createElement(EventCard, { event: race, index: 1, now: SAMPLE_NOW, titleAs: "h3" }));
     expect(section).toContain(next);
     expect(section).toContain(special);
     // The date of a weekly series says so with the series card's chip, as on «Alergări» (§486).
@@ -124,6 +124,11 @@ describe("§NNN the home page's run sections draw the listing's own cards", () =
     expect(await html(createElement(ListingCard, { members: series, index: 2, now: SAMPLE_NOW }))).toBe(await html(createElement(SeriesCard, { members: series, index: 2, now: SAMPLE_NOW })));
     const race = sampleRace("ro");
     expect(await html(createElement(ListingCard, { members: [race], index: 0, now: SAMPLE_NOW }))).toBe(await html(createElement(EventCard, { event: race, index: 0, now: SAMPLE_NOW })));
+    // The section's cards title themselves one level under the section's own `h2`; the listing's stay `h2`.
+    const under = await html(createElement(ListingCard, { members: series, index: 2, now: SAMPLE_NOW, titleAs: "h3" }));
+    expect(under).toContain("<h3");
+    expect(under).not.toContain("<h2");
+    expect(await html(createElement(ListingCard, { members: series, index: 2, now: SAMPLE_NOW }))).toContain("<h2");
     const listing = readFileSync("src/app/[locale]/events/page.tsx", "utf8");
     expect(listing).toContain('import ListingCard from "@/modules/events/ui/ListingCard";');
     expect(listing).toMatch(/\{cards\.map\(\(series, index\) => \(\s*<ListingCard/);

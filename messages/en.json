@@ -1825,7 +1825,7 @@
       "special": "A special edition",
       "specialHelp": "An edition apart, such as an anniversary or a charity run, with a badge on the card and the page. In a series, the badge stays on this date only.",
       "cover": {
-        "intro": "The photo at the top of the event's card, in the site's new look. Real photos of the club only, from the gallery or uploaded now. In a series, you also choose at Save which dates get it.",
+        "intro": "The event's top photo, kept for the new look; no page shows it yet. Real photos of the club only. In a series, you also choose at Save which dates get it.",
         "legend": "Cover photo",
         "help": "Once you choose the photo, you choose the part the card shows. It is kept when you save the event.",
         "cropTitle": "Crop — what the card shows",

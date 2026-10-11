@@ -129,7 +129,7 @@ test.describe("§714 the site's root and «Pagina principală»", () => {
       const cards = page.locator("main [data-testid^='home-'][data-testid$='-cards'] > li");
       expect(await cards.count()).toBeGreaterThan(0);
       for (const card of await cards.all()) {
-        const title = card.locator("h2 a");
+        const title = card.locator("h3 a");
         await expect(title).toHaveCount(1);
         expect((await title.boundingBox())!.height).toBeGreaterThanOrEqual(44);
         const door = card.getByRole("link", { name: "Descrierea completă a evenimentului" });

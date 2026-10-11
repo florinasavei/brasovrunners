@@ -48,7 +48,7 @@ export default function RunSection({ id, title, intro, cards, now, more }: RunSe
       )}
       <Box component="ul" sx={CARD_GRID_SX} data-testid={`home-${id}-cards`}>
         {cards.map(({ key, ...card }, index) => (
-          <ListingCard key={key} {...card} index={index} now={now} />
+          <ListingCard key={key} {...card} index={index} now={now} titleAs="h3" />
         ))}
       </Box>
       {more && (
