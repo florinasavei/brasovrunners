@@ -22,7 +22,7 @@ vi.mock("@/modules/staff-identity/session", () => ({
   requireStaffCapability: async () => state.actor,
 }));
 
-const { duplicateEvent, hardDeleteEvent, repeatEvent, saveEventAndTranslations } = await import("@/modules/content/events/service");
+const { deleteEvent, duplicateEvent, hardDeleteEvent, repeatEvent, saveEventAndTranslations } = await import("@/modules/content/events/service");
 const { findPublishedEventBySlug } = await import("@/modules/events/repository");
 const { sweepOrphanAssets } = await import("@/modules/media/references");
 const { getStorage, readLocalObject } = await import("@/modules/media/storage");
@@ -261,6 +261,19 @@ describe("BR-REQ-050-02 the GPX file (§NNN)", () => {
     const titled = await db.select().from(eventTranslations).where(eq(eventTranslations.eventId, copy.id));
     await hardDeleteEvent(db, { actor: { ...admin, role: "SUPERADMIN" }, eventId: copy.id, reason: "test", typedTitle: titled[0].title, now: NOW });
     expect(await readLocalObject(replacement.key)).toBeNull();
+  });
+
+  it("goes with an ordinary delete of its last holder, and stays while another date names it (finding 1)", async () => {
+    const event = await createDraft();
+    const gpx = await upload();
+    await save(event.id, event.version, { ...FIELDS, routeGpx: JSON.stringify(gpx) });
+    const copy = await duplicateEvent(db, { actor: admin, eventId: event.id });
+
+    await deleteEvent(db, { actor: admin, eventId: copy.id });
+    expect(await readLocalObject(gpx.key)).not.toBeNull();
+
+    await deleteEvent(db, { actor: admin, eventId: event.id });
+    expect(await readLocalObject(gpx.key)).toBeNull();
   });
 
   it("is never taken by the pictures' sweep (§17, §73): it is no picture row", async () => {

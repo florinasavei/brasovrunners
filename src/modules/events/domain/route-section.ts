@@ -1,5 +1,6 @@
 import { hasRichTextContent, readRichText } from "@/modules/content/rich-text/domain/schema";
 import { type EventLink, type EventLinkKind, readEventLinks } from "./links";
+import { env } from "@/shared/config/env";
 import { readRouteGpx } from "./route-gpx";
 import { readRouteMaps } from "./route-maps";
 
@@ -61,9 +62,13 @@ export function hasRouteSection(source: RouteSectionSource): boolean {
   return hasRouteDescription(source.routeDescriptionJson) || hasRouteMedia(source);
 }
 
-/** Whether the event has a map or a GPX file of its own for «Traseul» (§NNN). */
+/**
+ * Whether the event has a map or a GPX file of its own for «Traseul» (§NNN). A GPX counts only where
+ * storage is configured — the page draws the download only there, and an empty heading is worse than none.
+ */
 export function hasRouteMedia(source: Pick<RouteSectionSource, "routeMaps" | "routeGpx">): boolean {
-  return readRouteMaps(source.routeMaps).length > 0 || readRouteGpx(source.routeGpx) !== null;
+  return readRouteMaps(source.routeMaps).length > 0 ||
+    (env.STORAGE_MODE !== "unconfigured" && readRouteGpx(source.routeGpx) !== null);
 }
 
 /**

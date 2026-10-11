@@ -4014,14 +4014,17 @@ export async function deleteEvent<T extends Record<string, unknown>>(
   // `event_translations` cascades from the event, and so do a group run's self-declarations
   // (§393) — whose outbox rows go first, in the same transaction, since nothing could render them.
   // A declaration covers the run's other dates too (§523): while the run has one, it moves there.
-  await db.transaction(async (tx) => {
+  const gpxKey = await db.transaction(async (tx) => {
     await rehomeGroupRunDeclarationsOfEvent(tx, input.eventId);
-    // A held declaration (§556) left on this date refuses the delete, and the transaction with it.
+    // A held declaration (§556) left on this date refuses the delete,and the transaction with it.
     await refuseHeldGroupRunDeclarationsOfEvent(tx, input.eventId);
     await deleteGroupRunDeclarationMessagesOfEvent(tx, input.eventId);
-    await tx.delete(events).where(eq(events.id, input.eventId));
+    const [gone] = await tx.delete(events).where(eq(events.id, input.eventId)).returning({ routeGpx: events.routeGpx });
+    return routeGpxKeyOf(gone?.routeGpx);
   });
   revalidatePublicContent("events");
+  // Its GPX (§NNN) goes with it, unless another date of the series or a duplicate still names it.
+  if (gpxKey) await releaseRouteGpxAfterCommit(db, [gpxKey]);
 }
 
 export type HardDeleteEventInput = {

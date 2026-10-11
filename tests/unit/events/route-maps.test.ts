@@ -118,6 +118,7 @@ describe("BR-REQ-011-01 the Garmin Connect field (§NNN)", () => {
       `https://connect.garmin.com/embed/course/${GARMIN_ID}`,
       GARMIN_EMBED,
       `<iframe src="https://connect.garmin.com/embed/course/${GARMIN_ID}" width="465" height="548" frameborder="0"></iframe>`,
+      `<iframe src='https://connect.garmin.com/embed/course/${GARMIN_ID}' title="Cursa Brașov: Ștefan's" style='border:0' scrolling='no' allow='fullscreen' referrerpolicy='no-referrer' allowtransparency='true'></iframe>`,
     ]) {
       expect(parseGarminCourse(input), input).toEqual({ ok: true, map: { provider: "garmin", id: GARMIN_ID } });
     }

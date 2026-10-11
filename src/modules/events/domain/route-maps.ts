@@ -167,12 +167,19 @@ function garminCourseIdFromUrl(text: string): string | null {
   return match ? match[1] : null;
 }
 
-const GARMIN_IFRAME_ATTRIBUTES = new Set(["src", "width", "height", "title", "frameborder", "allowfullscreen", "loading"]);
+const GARMIN_IFRAME_ATTRIBUTES = new Set(["src", "width", "height", "title", "frameborder", "allowfullscreen", "loading",
+  "style",
+  "scrolling",
+  "allow",
+  "referrerpolicy",
+  "allowtransparency",
+]);
 
 /**
  * Garmin Connect's embed code: one `<iframe>` whose `src` is the course's embed address, with the
- * size and title Garmin writes beside it. Any other attribute — a `style`, an `onload`, a `srcdoc` —
- * or anything around the iframe: refused.
+ * size, title and presentation attributes Garmin writes beside it (the title and the rest are never
+ * kept; the iframe we draw is our own). An `on*` handler, a `srcdoc`, a `sandbox` or any other
+ * attribute — or anything around the iframe: refused.
  */
 function garminFromEmbed(text: string): string | null {
   const match = /^<iframe(\s[^<>]*)?>\s*(?:<\/iframe>)?$/i.exec(text);
@@ -184,8 +191,6 @@ function garminFromEmbed(text: string): string | null {
     const value = attributes.get(size);
     if (value !== undefined && !/^[0-9]{1,4}(?:px|%)?$/.test(value)) return null;
   }
-  const title = attributes.get("title");
-  if (title !== undefined && !/^[A-Za-z0-9 .,-]{0,80}$/.test(title)) return null;
   const loading = attributes.get("loading");
   if (loading !== undefined && loading !== "lazy" && loading !== "eager") return null;
   const src = attributes.get("src");
