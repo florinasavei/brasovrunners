@@ -63,6 +63,7 @@ request and `.github/workflows/release.yml` lands and ships it
 | Colours, fonts, the logo | `src/theme/brand.ts` — the only file allowed a hex value |
 | The look — the tokens, the type, the components | `src/theme/brand.ts`, `src/theme/theme.ts`; see them drawn at `/admin/design` (§692) |
 | The facelift («Aspectul nou», off by default): the pink, Inter 800, the pill with its arrow, «Vino cu noi», the mountains | the scope `src/theme/look.ts` (write a new-look rule under `UNDER_LOOK`, never test the setting in a page); the pink `src/modules/appearance/domain/site-look.ts`; the parts `src/shared/ui/ArrowButtonLink.tsx`, `HeaderCta.tsx`, `HeaderSocials.tsx`, `MountainMark.tsx`, `LookWatermark.tsx`; both looks side by side at `/admin/design` → «Aspectul nou»; the plan `docs/REDESIGN.md` |
+| The home page's sections — «Prima dată», «De ce» and the quote, the photo strip, the numbers band | one Server Component each in `src/modules/home/ui/` (`StepsBand`, `WhyList`, `PhotoStrip`, `NumbersBand`), typed props, glyphs by name from `home-glyphs.ts`, fills from `home-surfaces.ts`; what the club types and the figures in `src/modules/home/domain/` (both languages or neither; a figure without its fact is left out); the strip's `<img>` sources in `src/modules/home/strip-pictures.ts`; drawn with fixtures on `/admin/design` → «Mostre» |
 | What `/devs` and `/admin/tasks` say | `src/modules/diagnostics/` |
 | A scheduled job | `src/modules/jobs/` (retention) and `src/modules/registrations/maintenance.ts` |
 

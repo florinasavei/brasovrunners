@@ -42,6 +42,12 @@ export const LOOK_PREVIEW_DARK = `[data-dark] [${LOOK_PREVIEW_ATTRIBUTE}="${LOOK
 export const UNDER_LOOK = `${LOOK_ROOT} &, ${LOOK_PREVIEW} &`;
 
 /**
+ * The same after dark, for a fill that has a dark twin (`COLOR_DARK`): more specific than
+ * `UNDER_LOOK` (one attribute more), so it wins wherever both match, whatever the order.
+ */
+export const UNDER_LOOK_DARK = `${LOOK_ROOT_DARK} &, ${LOOK_PREVIEW_DARK} &`;
+
+/**
  * The elements a page draws only under the new look — the header's «Vino cu noi» and socials, the
  * mountain watermark — are hidden by default and shown inside the scope, so the backoffice, which
  * renders inside the same header and layout, never shows them even while the setting is on.
