@@ -21,7 +21,6 @@
     "themeDark": "Dark theme",
     "themeLight": "Light theme",
     "skipToContent": "Skip to content",
-    "cta": { "join": "Join us" },
     "followUs": "Follow us",
     "followOn": {
       "instagram": "{club} on Instagram",
@@ -572,7 +571,7 @@
         },
         "idDocumentHelp": "Your identity card (e.g. “BV 123456”) or your passport. It is masked in the copies sent by email; the platform deletes it {days} after the run and keeps no copy of the document.",
         "emailHelp": "We send the signed declaration here, as a PDF.",
-        "languageNote": "The declaration is signed in this page's language, and the PDF and the email are in it too. For the other language, switch the language in the header before you sign.",
+        "languageNote": "The declaration is signed in this page's language, and the PDF and the email are in it too. For the other language, switch the language (RO / EN) before you sign.",
         "adultsOnly": "Sign it only for yourself, if you are at least {age} old on the day of the run; never on behalf of someone else, nor of a minor.",
         "accept": "I am at least {age} old, I have read the declaration above and sign it on my own responsibility",
         "acceptInline": "Tick this box so you can sign.",
@@ -1825,11 +1824,11 @@
       "special": "A special edition",
       "specialHelp": "An edition apart, such as an anniversary or a charity run, with a badge on the card and the page. In a series, the badge stays on this date only.",
       "cover": {
-        "intro": "The photo at the top of the event's card, in the site's new look. Real photos of the club only, from the gallery or uploaded now. In a series, you also choose at Save which dates get it.",
+        "intro": "The event's top photo, kept for the new look; no page shows it yet. Real photos of the club only. In a series, you also choose at Save which dates get it.",
         "legend": "Cover photo",
-        "help": "Once you choose the photo, you choose the part the card shows. It is kept when you save the event.",
-        "cropTitle": "Crop — what the card shows",
-        "cropHelp": "It starts at the largest 16:9 rectangle, the card's shape. You can choose another shape or drag a rectangle over the photo.",
+        "help": "Once you choose the photo, you choose the part of it for the new look. It is kept when you save the event.",
+        "cropTitle": "Crop — the part for the new look",
+        "cropHelp": "It starts at the largest 16:9 rectangle. You can choose another shape or drag a rectangle over the photo.",
         "set": "chosen",
         "missing": "missing",
         "noStorage": "Picture storage is not configured here, so no cover can be chosen."
@@ -4789,7 +4788,7 @@
     },
     "look": {
       "title": "The new look",
-      "intro": "The public pages' new look: an accent colour beside the logo blue (pink, unless you choose another), bolder headings, rounded buttons, «Join us» in the header.",
+      "intro": "The public pages' new look: an accent colour beside the logo blue (pink, unless you choose another), bolder headings, rounded buttons, «Follow us» with the socials in the header.",
       "introMore": "Off until the club approves it on QA; then it is the one-press way back. The page tint and the text size stay as you chose them, under both looks.",
       "current": "Now: {look}",
       "updatedAt": "Set {when}.",
@@ -4808,7 +4807,7 @@
         },
         "on": {
           "name": "The new look",
-          "help": "The accent colour below and Inter headings, rounded buttons with an arrow, «Join us» and the socials in the header, the mountains at the foot of the page."
+          "help": "The accent colour below and Inter headings, rounded buttons with an arrow, «Follow us» and the socials in the header, both languages in the footer, the mountains at the foot of the page."
         }
       },
       "accent": {
@@ -6006,9 +6005,7 @@
         "link": "a link",
         "primary": "See the runs",
         "secondary": "How it works",
-        "cta": "The header's button:",
         "socials": "The header's right end, on a computer:",
-        "language": "The language, in the bottom-right corner:",
         "primaryTitle": "The primary colour under the new look",
         "primaryNote": "MUI's primary colour variables, redefined on the public pages only while the new look is on.",
         "variable": "Variable",
@@ -6143,8 +6140,8 @@
         "cardsNote": "A single-date event and a series; the data is made up and names nobody.",
         "calendarLook": "The calendar, under the new look",
         "calendarLookNote": "KindChips, the colours' legend, NextEventPanel and SubscribeBox, with made-up data, drawn under the new look.",
-        "homeTop": "Home page · Hero, NextRunCard, RunCardGrid",
-        "homeTopNote": "The home page's sections, from sample data: the headline with its photograph (here the empty slot), the next run and a section's cards.",
+        "homeTop": "Home page · Hero, RunSection",
+        "homeTopNote": "The home page from sample data: the headline with its photograph (here the empty slot), then the run sections, drawn with the cards of «Alergări» (ListingCard).",
         "featured": "The featured event · featuredCard",
         "featuredNote": "The listing's first card, at the others' width, told apart by its frame and background.",
         "team": "The team card",
@@ -6242,7 +6239,7 @@
           "7": { "title": "The Instagram block", "default": "A static strip of six gallery pictures with a link; no live feed." },
           "8": { "title": "The numbers band", "default": "Typed under «Aspect» → «Pagina principală»: the founding date and the active runners; the rest computed from the events." },
           "9": { "title": "What «Evenimente speciale» means", "default": "Everything that is not a weekly series; the chip «Ediție specială» keeps its meaning." },
-          "10": { "title": "The round arrow on cards", "default": "Only on the home page's cards, keeping the whole-card tap; the listing keeps its text door." },
+          "10": { "title": "The round arrow on cards", "default": "None: the home page shows the very cards of «Alergări», with their text door, «Descrierea completă a evenimentului»." },
           "11": { "title": "Icons", "default": "The filled Material family stays; the lighter look comes from colour, weight and spacing." },
           "12": { "title": "How it ships", "default": "Behind one setting, «Aspectul nou»: on for QA, off on production until the club approves; the old look deleted one release after the flip." }
         },
@@ -10204,13 +10201,11 @@
       "how": "How it works"
     },
     "nextRun": {
-      "title": "Next run",
-      "sunset": "Sunset at {time}"
+      "title": "Next run"
     },
     "weekly": {
       "title": "Weekly runs",
-      "intro": "The same place and the same time every week: come when you can.",
-      "next": "Next: {when}"
+      "intro": "The same place and the same time every week: come when you can."
     },
     "special": {
       "title": "Special events",

@@ -22,6 +22,7 @@ import {
   NO_FILTER,
   offersAnything,
   scopedName,
+  SPECIAL_TYPE,
   withoutValue,
   type FilterFlag,
   type FilterGroup,
@@ -92,6 +93,8 @@ export default async function ListingFilterPanel({
   carry = {},
   shared = [],
   lookChips = [],
+  lookChipValues = [],
+  lookChipTicks = true,
 }: {
   locale: Locale;
   pathname: "/events" | "/calendar";
@@ -105,6 +108,10 @@ export default async function ListingFilterPanel({
   shared?: { group: FilterGroup; value: string }[];
   /** The groups the calendar's chips carry under the new look (`KindChips`), hidden here under it. */
   lookChips?: readonly FilterGroup[];
+  /** Single values the chips carry under the look (`LOOK_HIDDEN_VALUES`): their box and active chip are hidden there, the input stays. */
+  lookChipValues?: readonly { group: FilterGroup; value: string }[];
+  /** Whether the chips say those values' ticks (`specialOnChip`): false shows their active chip under the look too, and counts it. */
+  lookChipTicks?: boolean;
 }) {
   const t = await getTranslations("Events");
   const formatter = await getFormatter();
@@ -125,7 +132,8 @@ export default async function ListingFilterPanel({
   const label = (group: FilterGroup | FilterFlag, value: string): string => {
     switch (group) {
       case "type":
-        return tEvent(`type.${value}`);
+        // «Eveniment special» is the kind's own word (§709's photo tag), not a type's (§725).
+        return value === SPECIAL_TYPE ? tEvent("kind.special") : tEvent(`type.${value}`);
       case "surface":
         return tEvent(`surface.${value}`);
       case "difficulty":
@@ -153,6 +161,9 @@ export default async function ListingFilterPanel({
         return "night";
       case "registration":
         return "registration";
+      case "type":
+        // The calendar's «Evenimente speciale» chip's sparkle (`KindChips`), so one kind wears one glyph.
+        return value === SPECIAL_TYPE ? "special" : (`type:${value}` as GlyphName);
       default:
         return `${group}:${value}` as GlyphName;
     }
@@ -168,8 +179,12 @@ export default async function ListingFilterPanel({
   ];
 
   // Under the look, what the chips do not carry: the button's count, and whether the active row has anything left to say.
-  const onChips = (group: FilterGroup | FilterFlag) => (lookChips as readonly string[]).includes(group);
-  const panelCount = ticked.filter(({ group }) => !onChips(group)).length;
+  const onChips = (group: FilterGroup | FilterFlag, value?: string) =>
+    (lookChips as readonly string[]).includes(group) || lookChipValues.some((one) => one.group === group && one.value === value);
+  // The active chip and the count: a single value's tick is the chips' only when they say it (`lookChipTicks`).
+  const tickOnChips = (group: FilterGroup | FilterFlag, value?: string) =>
+    (lookChips as readonly string[]).includes(group) || (lookChipTicks && onChips(group, value));
+  const panelCount = ticked.filter(({ group, value }) => !tickOnChips(group, value)).length;
   const countWords = (n: number) => (n > 0 ? t("filter.buttonCount", { count: n }) : t("filter.button"));
 
   const option = (group: FilterGroup | FilterFlag, value: string, checked: boolean) => {
@@ -179,7 +194,7 @@ export default async function ListingFilterPanel({
     // a script; the band's word is what a screen reader hears, as before.
     const title = group === "difficulty" && isDifficultyBand(value) ? bandTitle(value) : undefined;
     return (
-      <Box component="label" key={`${group}=${value}`} sx={FILTER_OPTION_SX} title={title}>
+      <Box component="label" key={`${group}=${value}`} sx={onChips(group, value) ? { ...FILTER_OPTION_SX, [UNDER_LOOK]: { display: "none" } } : FILTER_OPTION_SX} title={title}>
         <span>
           <input type="checkbox" name={scopedName(group, scope)} value={value} defaultChecked={checked} />
           <Icon aria-hidden="true" />
@@ -248,7 +263,7 @@ export default async function ListingFilterPanel({
             (Array.isArray(value) ? value : [value]).map((one) => <input key={`${name}=${one}`} type="hidden" name={name} value={one} />),
           )}
           {offer.groups.map(({ group, values }) => (
-            <Box component="fieldset" key={group} data-filter-group={group} sx={onChips(group) ? { ...FIELDSET_SX, [UNDER_LOOK]: { display: "none" } } : FIELDSET_SX}>
+            <Box component="fieldset" key={group} data-filter-group={group} sx={values.every((value) => onChips(group, value)) ? { ...FIELDSET_SX, [UNDER_LOOK]: { display: "none" } } : FIELDSET_SX}>
               <Typography component="legend" variant="subtitle2" sx={{ p: 0 }}>
                 {t(`filter.groups.${group}`)}
               </Typography>
@@ -301,7 +316,7 @@ export default async function ListingFilterPanel({
             />
             );
             // A tick the chips carry under the look is said there, not twice.
-            return onChips(group) ? (
+            return tickOnChips(group, value) ? (
               <Box component="span" key={`${group}=${value}`} sx={{ display: "contents", [UNDER_LOOK]: { display: "none" } }}>
                 {chip}
               </Box>

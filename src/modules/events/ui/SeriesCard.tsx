@@ -37,6 +37,7 @@ export default async function SeriesCard({
   index,
   now,
   weather = null,
+  titleAs = "h2",
 }: {
   /** Soonest first; at least two. */
   members: readonly PublicEvent[];
@@ -44,6 +45,8 @@ export default async function SeriesCard({
   now: Date;
   /** The forecast at the next date's start (§416) — the date whose facts the card shows; null outside the seven days. */
   weather?: WeatherReading | null;
+  /** The title's heading level: `h2` on the listing; a page that puts its own `h2` over the cards passes `h3`. */
+  titleAs?: "h2" | "h3";
 }) {
   const t = await getTranslations("Event");
   const locale = (await getLocale()) as Locale;
@@ -95,7 +98,7 @@ export default async function SeriesCard({
         {/* The title in the one style every card's title has (`CARD_TITLE_SX`): the club's blue,
             visited or not, underlined under a pointer or the keyboard — no longer the browser's
             blue-then-purple underlined link beside a black heading (§366). */}
-        <Typography variant="h2" sx={CARD_TITLE_SX}>
+        <Typography variant="h2" component={titleAs} sx={CARD_TITLE_SX}>
           <Link href={{ pathname: "/events/[slug]", params: { slug: next.slug } }}>{next.title}</Link>
         </Typography>
 

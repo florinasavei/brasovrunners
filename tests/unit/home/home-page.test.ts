@@ -1,24 +1,51 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { createElement, type ReactNode } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
+import { createElement, type ReactElement, type ReactNode } from "react";
+import { renderToReadableStream, renderToStaticMarkup } from "react-dom/server";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 /**
  * §714 — the home page, phase 3 part A (`docs/REDESIGN.md`, decision 3): what it shows from the
  * upcoming events, the hero's two lines, and the components drawn from the design page's fixture —
- * one `h1`, one `main`, the hero's picture the one eager one, empty photo slots and never a stock
- * picture, the kind told in words, the round arrow inside the card's one link.
+ * one `h1`, one `main`, the hero's picture the one eager one and its empty slot, never a stock
+ * picture. Since §726 the run sections draw the listing's own cards (`home-listing-cards.test.ts`
+ * holds that they are the very same markup); here, that the page around them still holds.
  */
+let currentLocale: "ro" | "en" = "ro";
+
 vi.mock("@/i18n/navigation", () => ({
-  Link: ({ href, children, ...rest }: { href: unknown; children: ReactNode } & Record<string, unknown>) =>
-    createElement("a", { href: typeof href === "string" ? href : `${(href as { pathname: string }).pathname}|${JSON.stringify((href as { params?: unknown }).params ?? {})}`, ...rest }, children),
+  Link: ({ href, children, ...rest }: { href: unknown; children: ReactNode } & Record<string, unknown>) => {
+    delete rest.prefetch;
+    return createElement("a", { href: typeof href === "string" ? href : `${(href as { pathname: string }).pathname}|${JSON.stringify((href as { params?: unknown }).params ?? {})}`, ...rest }, children);
+  },
+  getPathname: ({ href }: { href: { params?: { slug?: string } } }) => `/${currentLocale}/evenimente/${href.params?.slug ?? ""}`,
 }));
 vi.mock("@/shared/ui/ButtonLink", () => ({
   default: ({ href, children, ...rest }: { href: unknown; children: ReactNode } & Record<string, unknown>) =>
     createElement("a", { href: typeof href === "string" ? href : (href as { pathname: string }).pathname, "data-testid": rest["data-testid"] }, children),
 }));
-vi.mock("next-intl/server", () => ({ getLocale: async () => "ro", getTranslations: async () => (key: string) => key }));
+vi.mock("next-intl/server", async () => {
+  const { createFormatter, createTranslator } = await import("next-intl");
+  const ro = (await import("../../../messages/ro.json")).default;
+  const en = (await import("../../../messages/en.json")).default;
+  return {
+    getTranslations: async (arg: string | { namespace: string }) =>
+      createTranslator({ locale: currentLocale, messages: currentLocale === "ro" ? ro : en, namespace: (typeof arg === "string" ? arg : arg.namespace) as "Event" }),
+    getFormatter: async () => createFormatter({ locale: currentLocale, timeZone: "Europe/Bucharest" }),
+    getLocale: async () => currentLocale,
+  };
+});
+
+afterEach(() => {
+  currentLocale = "ro";
+});
+
+/** A Server Component tree with async parts (the listing's cards), as the page renders it; Emotion's own `<style>` elements out. */
+async function render(element: ReactElement): Promise<string> {
+  const stream = await renderToReadableStream(element);
+  await stream.allReady;
+  return (await new Response(stream).text()).replace(/<style[^>]*>[^<]*<\/style>/g, "");
+}
 
 const { homeSections, HOME_SECTION_LIMIT, RUN_TYPES } = await import("@/modules/home/domain/sections");
 const { DEFAULT_HOME_PAGE_SETTING, heroLines, parseHomePage, postedPair, splitHeadline } = await import("@/modules/appearance/domain/home-page");
@@ -109,41 +136,42 @@ describe("§714 the home page's components, drawn from the design page's fixture
     const text = key.split(".").reduce<unknown>((node, part) => (node as Record<string, unknown>)[part], catalogue) as string;
     return text.replace(/\{(\w+)\}/g, (_, name: string) => values[name] ?? `{${name}}`);
   };
-  const markup = (locale: "ro" | "en") => {
+  const markup = async (locale: "ro" | "en") => {
+    currentLocale = locale;
     const catalogue = locale === "ro" ? ro : en;
-    // Emotion's own `<style>` elements out, so the assertions read the markup a visitor's DOM holds.
-    return renderToStaticMarkup(createElement(HomePage, sampleHome(locale, words(catalogue.Home), words(catalogue.Event)))).replace(/<style[^>]*>[^<]*<\/style>/g, "");
+    return render(createElement(HomePage, sampleHome(locale, words(catalogue.Home))));
   };
 
-  it("has one main and one h1, the hero's, with its last word in the accent", () => {
-    const html = markup("ro");
+  it("has one main and one h1, the hero's, with its last word in the accent", async () => {
+    const html = await markup("ro");
     expect(html.match(/<main\b/g)).toHaveLength(1);
     expect(html.match(/<h1\b/g)).toHaveLength(1);
-    expect(html).toMatch(/<h1[^>]*id="home-hero-title"[^>]*>Alergăm împreună prin <span[^>]*data-testid="home-hero-accent"[^>]*>Brașov<\/span><\/h1>/);
-    expect(html.match(/<h2\b/g)).toHaveLength(3);
+    // A streamed render marks the text's two pieces with an empty comment; a browser's DOM holds no such node.
+    expect(html.replace(/<!-- -->/g, "")).toMatch(/<h1[^>]*id="home-hero-title"[^>]*>Alergăm împreună prin <span[^>]*data-testid="home-hero-accent"[^>]*>Brașov<\/span><\/h1>/);
+    // The three run sections' headings, each naming its section; the cards' titles are the listing's own.
+    for (const id of ["next-run", "weekly", "special"]) expect(html, id).toMatch(new RegExp(`<h2[^>]*id="home-${id}-title"`));
   });
 
-  it("leads «Vino cu noi» and the calendar as pill links with their arrows, in both languages", () => {
-    expect(markup("ro")).toMatch(/data-testid="home-hero-primary">Vino cu noi<svg/);
-    expect(markup("en")).toMatch(/data-testid="home-hero-secondary">See the calendar<svg/);
+  it("leads «Vino cu noi» and the calendar as pill links with their arrows, in both languages", async () => {
+    expect(await markup("ro")).toMatch(/data-testid="home-hero-primary">Vino cu noi<svg/);
+    expect(await markup("en")).toMatch(/data-testid="home-hero-secondary">See the calendar<svg/);
   });
 
-  it("starts from empty photo slots: the mountain mark, no picture, nothing eager", () => {
-    const html = markup("ro");
+  it("starts from the hero's empty photo slot: the mountain mark, no picture, nothing eager", async () => {
+    const html = await markup("ro");
     expect(html).not.toContain("<img");
     expect(html).toContain('data-testid="home-hero-picture-empty"');
-    expect(html.match(/data-testid="mountain-mark"/g)?.length).toBeGreaterThanOrEqual(4);
+    // The hero's slot alone: the cards are the listing's, with no slot of the home page's (§726).
+    expect(html.match(/data-testid="mountain-mark"/g)).toHaveLength(1);
   });
 
-  it("tells each card's kind in words beside its glyph, and its one link is the title over the whole card", () => {
-    const html = markup("ro");
-    expect(html).toContain('data-kind="weekly"');
-    expect(html).toContain(">Săptămânal</span>");
-    expect(html).toContain('data-kind="special"');
-    expect(html).toContain(">Eveniment special</span>");
-    // The round arrow is a picture inside the press, never a second link.
-    expect(html).toMatch(/<span class="[^"]*" aria-hidden="true" data-testid="round-arrow">/);
-    expect(html).not.toMatch(/<a [^>]*data-testid="round-arrow"/);
+  it("draws the run sections with the listing's cards, each a list item of the listing's grid, and the link to the listing", async () => {
+    const html = await markup("ro");
+    for (const id of ["next-run", "weekly", "special"]) expect(html, id).toMatch(new RegExp(`<ul[^>]*data-testid="home-${id}-cards"[^>]*><li`));
+    // Every card's door, as on «Alergări»; no round arrow and no kind tag of the home page's own.
+    expect(html.match(new RegExp(ro.Event.series.fullDescription, "g"))).toHaveLength(3);
+    expect(html).not.toContain('data-testid="round-arrow"');
+    expect(html).not.toContain("data-kind=");
     expect(html).toContain('href="/events/[slug]|{&quot;slug&quot;:&quot;sample-run-0&quot;}"');
     expect(html).toContain('data-testid="home-special-more"');
   });
@@ -165,7 +193,7 @@ describe("§714 the home page's components, drawn from the design page's fixture
 describe("§714 «Mostre» draws the same components", () => {
   it("draws the hero, the next run and both sections, the hero's heading a paragraph so the design page keeps its one h1", async () => {
     const { default: HomePageSamples } = await import("@/modules/design/ui/HomePageSamples");
-    const html = renderToStaticMarkup(await HomePageSamples({ locale: "ro" }));
+    const html = await render(await HomePageSamples({ locale: "ro" }));
     expect(html).not.toMatch(/<h1\b/);
     expect(html).toMatch(/<p [^>]*id="home-hero-title"/);
     for (const testId of ["home-hero", "home-next-run", "home-weekly", "home-special"]) expect(html, testId).toContain(`data-testid="${testId}"`);
@@ -177,23 +205,29 @@ describe("§714 the sections are components of their own, with typed props", () 
   const source = (file: string) => readFileSync(path.join(ROOT, file), "utf8");
 
   it("are Server Components with no element-valued prop and no colour of their own", () => {
-    for (const name of ["HomePage", "Hero", "NextRunCard", "RunCardGrid", "HomePicture", "RunTag", "RoundArrow"]) {
+    for (const name of ["HomePage", "Hero", "RunSection", "HomePicture"]) {
       const text = source(`src/modules/home/ui/${name}.tsx`);
       expect(text, name).not.toMatch(/^["']use client["']/m);
       expect(text, name).not.toMatch(/:\s*(ReactNode|ReactElement|JSX\.Element)\b/);
       expect(text, name).not.toMatch(/#[0-9a-f]{3,8}\b|rgba?\(/i);
     }
   });
+
+  it("has no card of its own any more: the run sections draw the listing's (§726)", () => {
+    for (const gone of ["NextRunCard.tsx", "RunCardGrid.tsx", "RunTag.tsx", "RoundArrow.tsx", "card-sx.ts"]) {
+      expect(existsSync(path.join(ROOT, "src/modules/home/ui", gone)), gone).toBe(false);
+    }
+    expect(source("src/modules/home/ui/RunSection.tsx")).toContain('import ListingCard, { type ListingCardProps } from "@/modules/events/ui/ListingCard";');
+  });
 });
 
-describe("§714 the sections the club switches, the third button, the empty section and the tag's colours", () => {
+describe("§714 the sections the club switches, the third button and the empty section", () => {
   const words = (catalogue: Record<string, unknown>) => (key: string, values: Record<string, string> = {}) => {
     const text = key.split(".").reduce<unknown>((node, part) => (node as Record<string, unknown>)[part], catalogue) as string;
     return text.replace(/\{(\w+)\}/g, (_, name: string) => values[name] ?? `{${name}}`);
   };
-  const props = () => sampleHome("ro", words(ro.Home), words(ro.Event));
-  const draw = (override: Record<string, unknown>) =>
-    renderToStaticMarkup(createElement(HomePage, { ...props(), ...override })).replace(/<style[^>]*>[^<]*<\/style>/g, "");
+  const props = () => sampleHome("ro", words(ro.Home));
+  const draw = (override: Record<string, unknown>) => render(createElement(HomePage, { ...props(), ...override }));
 
   it("defaults the first four sections on and the four reserved slots off", async () => {
     const { sectionShown, HOME_SECTION_KEYS } = await import("@/modules/appearance/domain/home-page");
@@ -203,40 +237,32 @@ describe("§714 the sections the club switches, the third button, the empty sect
     expect(DEFAULT_HOME_PAGE_SETTING.buttons).toEqual({ join: null, calendar: null, how: null });
   });
 
-  it("does not draw a section the club left off", () => {
-    const html = draw({ show: { weekly: false, special: false, nextRun: false } });
+  it("does not draw a section the club left off", async () => {
+    const html = await draw({ show: { weekly: false, special: false, nextRun: false } });
     expect(html).toContain('data-testid="home-hero"');
     for (const testId of ["home-next-run", "home-weekly", "home-special"]) expect(html, testId).not.toContain(`data-testid="${testId}"`);
   });
 
-  it("keeps the page's one h1 with the hero off: visually hidden, first in main, the headline's own words", () => {
-    const html = draw({ show: { hero: false } });
+  it("keeps the page's one h1 with the hero off: visually hidden, first in main, the headline's own words", async () => {
+    const html = await draw({ show: { hero: false } });
     expect(html).not.toContain('data-testid="home-hero"');
     expect(html.match(/<h1\b/g)).toHaveLength(1);
     expect(html).toMatch(/<main[^>]*><h1[^>]*data-testid="home-h1-hidden"[^>]*>Alergăm împreună prin Brașov<\/h1>/);
-    expect(draw({})).not.toContain("home-h1-hidden");
+    expect(await draw({})).not.toContain("home-h1-hidden");
   });
 
-  it("does not draw a section with no cards: no heading, no sentence", () => {
-    const html = draw({ weekly: { ...props().weekly, cards: [] } });
+  it("does not draw a section with no cards: no heading, no sentence", async () => {
+    const html = await draw({ weekly: { ...props().weekly, cards: [] } });
     expect(html).not.toContain('data-testid="home-weekly"');
     expect(html).toContain('data-testid="home-special"');
     expect(html).not.toContain("home-weekly-empty");
   });
 
-  it("draws the third button only when its page is named", () => {
-    expect(draw({})).not.toContain("home-hero-tertiary");
+  it("draws the third button only when its page is named", async () => {
+    expect(await draw({})).not.toContain("home-hero-tertiary");
     const hero = { ...props().hero, tertiary: { label: "Cum funcționează", href: { pathname: "/pages/[slug]", params: { slug: "cum-functioneaza" } } } };
-    const html = draw({ hero });
+    const html = await draw({ hero });
     expect(html).toMatch(/data-testid="home-hero-tertiary">Cum funcționează<svg/);
     expect(html).toContain("/pages/[slug]");
-  });
-
-  it("gives the tag its pink and green only under «Aspectul nou»: today's neutral otherwise", () => {
-    const text = readFileSync(path.resolve(__dirname, "../../../src/modules/home/ui/RunTag.tsx"), "utf8");
-    expect(text).toContain("UNDER_LOOK");
-    expect(text).toMatch(/bgcolor: "action\.selected"/);
-    // The plain (look-off) rule has no brand colour of its own: the tokens sit only inside the scope's selectors.
-    expect(text).not.toMatch(/^\s*bgcolor: COLOR\./m);
   });
 });

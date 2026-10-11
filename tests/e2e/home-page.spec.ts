@@ -12,7 +12,8 @@ import { openFold } from "./support/fold";
  * its two pill buttons, the next run, the weekly runs and the special events, then the four lower
  * sections once switched on in their fold (part C: «Prima dată», «De ce», the numbers; the strip not
  * drawn with no picture) — canonical to itself, in the sitemap, the logo leading to it, and at 320
- * pixels nothing sideways and every button 44 pixels.
+ * pixels nothing sideways and every button 44 pixels. Since §726 the run sections' cards are the
+ * listing's own (`ListingCard`), title and door at 44 pixels.
  *
  * The setting is switched through «Setări» → «Aspect», as the club does (a direct write would not
  * expire the static root the CDN keeps), and put back off whatever happens. Serial, desktop project
@@ -120,8 +121,23 @@ test.describe("§714 the site's root and «Pagina principală»", () => {
       expect(at("home-special")).toBeLessThan(at("home-steps"));
       expect(at("home-steps")).toBeLessThan(at("home-why"));
       expect(at("home-why")).toBeLessThan(at("home-numbers"));
-      // Every card's title is a link at least 44 pixels tall (BR-REQ-041-01 criterion 6).
-      for (const link of await page.locator("main h3 a").all()) expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+      /*
+        The run sections draw the listing's own cards (§726): each a list item of the listing's grid with its
+        title link and its door «Descrierea completă a evenimentului», no round arrow and no kind tag of the
+        home page's own — and every title and door at least 44 pixels tall (BR-REQ-041-01 criterion 6).
+      */
+      const cards = page.locator("main [data-testid^='home-'][data-testid$='-cards'] > li");
+      expect(await cards.count()).toBeGreaterThan(0);
+      for (const card of await cards.all()) {
+        const title = card.locator("h3 a");
+        await expect(title).toHaveCount(1);
+        expect(Math.round(((await title.boundingBox())?.height ?? 0) * 10) / 10).toBeGreaterThanOrEqual(44);
+        const door = card.getByRole("link", { name: "Descrierea completă a evenimentului" });
+        await expect(door).toBeVisible();
+        expect(Math.round(((await door.boundingBox())?.height ?? 0) * 10) / 10).toBeGreaterThanOrEqual(44);
+      }
+      await expect(page.getByTestId("round-arrow")).toHaveCount(0);
+      await expect(page.locator("main [data-kind]")).toHaveCount(0);
 
       const overflow = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
       expect(overflow.scroll).toBeLessThanOrEqual(overflow.client + 1);

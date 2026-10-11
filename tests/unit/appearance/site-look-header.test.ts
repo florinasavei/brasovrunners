@@ -4,15 +4,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
  * §708 — «Aspectul nou» in the header, rendered: with the setting off (or no row at all) the header
- * is the markup it was, with no button, no social marks and no watermark; with it on, «Vino cu noi»
- * leads to the next weekly run (else the listing) from the nav's children (its trailing group), and
- * «Urmărește-ne» with the footer's three marks is the row's last item after the nav (§722). The client islands and the
+ * is the markup it was, with no button, no social marks and no watermark; with it on, «Urmărește-ne»
+ * with the footer's three marks is the row's last item after the nav (§722), its words a label, and the
+ * header carries no «Vino cu noi» at any width (§724, amending §708 and §722). The client islands and the
  * data reads are stubbed; the Server Components under test render for real.
  */
 const state = vi.hoisted(() => ({
   look: { on: false } as { on: boolean },
   home: { on: false } as { on: boolean },
   upcoming: [] as unknown[],
+  upcomingReads: 0,
 }));
 
 vi.mock("next-intl/server", () => ({
@@ -28,7 +29,10 @@ vi.mock("@/modules/public-cache/reads", () => ({
   cachedPublishedPages: async () => [],
   cachedSiteLook: async () => state.look,
   cachedHomePage: async () => state.home,
-  cachedUpcomingEvents: async () => state.upcoming,
+  cachedUpcomingEvents: async () => {
+    state.upcomingReads += 1;
+    return state.upcoming;
+  },
 }));
 vi.mock("@/modules/resilience/last-good", () => ({
   readWithLastGood: async (_key: string, read: () => Promise<unknown>) => ({ value: await read() }),
@@ -91,6 +95,7 @@ beforeEach(() => {
   state.look = { on: false };
   state.home = { on: false };
   state.upcoming = [];
+  state.upcomingReads = 0;
 });
 
 describe("§714 the logo leads to the home page while «Pagina principală» is on", () => {
@@ -121,18 +126,33 @@ describe("§708 the header while «Aspectul nou» is off", () => {
 });
 
 describe("§708 the header while «Aspectul nou» is on", () => {
-  it("draws «Vino cu noi» to the next weekly run inside the nav's trailing group", async () => {
+  it("§724 draws no «Vino cu noi» at any width, the phone too: the nav is handed nothing and no weekly run is read", async () => {
     state.look = { on: true };
     state.upcoming = [weekly("2026-10-20T16:00:00.000Z"), weekly("2026-10-13T16:00:00.000Z")];
     const on = await header();
-    expect(on).toContain('data-testid="header-cta"');
-    expect(on).toContain("cta.join");
-    expect(on).toContain("/events/[slug]");
-    expect(on).toContain("alergare-2026-10-13");
-    // Inside the nav, so it sits before the ☰ the nav draws last.
-    const nav = on.slice(on.indexOf('<nav data-testid="nav">'), on.indexOf("</nav>"));
-    expect(nav).toContain('data-testid="header-cta"');
-    expect(nav).not.toContain('data-testid="header-socials"');
+    expect(on).not.toContain("header-cta");
+    expect(on).not.toContain("cta.join");
+    expect(on).not.toContain("/events/[slug]");
+    // No child for the nav's trailing group, so the ☰ keeps `ml: auto` and is the phone's right edge (§699).
+    expect(on).toContain('<nav data-testid="nav"></nav>');
+    // The header no longer asks for the listing to find a weekly run: no read the look adds to every page.
+    expect(state.upcomingReads).toBe(0);
+  });
+
+  it("§724 draws «Urmărește-ne» as a label: a span hidden from a screen reader, never a link, a button or a focusable element", async () => {
+    state.look = { on: true };
+    const on = await header();
+    const label = /<span[^>]*data-testid="header-socials-label"[^>]*>followUs<\/span>/.exec(on);
+    expect(label, "the words, drawn").not.toBeNull();
+    expect(label![0]).toContain('aria-hidden="true"');
+    expect(label![0]).not.toMatch(/tabindex|role=|href=/i);
+    // Not inside a mark: the words close before the first link opens.
+    const socials = on.slice(on.indexOf('data-testid="header-socials"'));
+    expect(socials.indexOf("followUs</span>")).toBeLessThan(socials.indexOf("<a "));
+    // Every link of the group is a mark of a network: the words are not one of them.
+    const links = [...socials.slice(0, socials.indexOf("</nav>")).matchAll(/<a [^>]*>/g)].map((match) => match[0]);
+    expect(links).toHaveLength(HEADER_SOCIAL_ORDER.length);
+    for (const link of links) expect(link).toMatch(/data-network="(instagram|facebook|strava)"/);
   });
 
   it("§722 draws «Urmărește-ne» with Instagram, Facebook and Strava, in that order, after the nav — the row's last item", async () => {
@@ -155,7 +175,7 @@ describe("§708 the header while «Aspectul nou» is on", () => {
       expect(group).toContain(`title="followOn.${network}:${CLUB_NAME}"`);
     }
     // The language switcher's header copy is still rendered — the backoffice, outside the look's scope, shows it from `sm` —
-    // and its box is hidden inside the scope (`notUnderLook`): a public page's one «Limbă» is the floating button.
+    // and its box is hidden inside the scope (`notUnderLook`): a public page's one «Limbă» is the footer's bar (§724).
     expect(on).toContain('<span data-testid="locale-switcher">locale</span>');
     const { className, css } = boxAround(on, 'data-testid="locale-switcher"');
     expect(className, "the switcher sits in a styled box").not.toBe("");
@@ -172,13 +192,6 @@ describe("§708 the header while «Aspectul nou» is on", () => {
       expect(ro(`followOn.${network}`, { club: CLUB_NAME })).toBe(`${CLUB_NAME} pe ${name}`);
       expect(en(`followOn.${network}`, { club: CLUB_NAME })).toBe(`${CLUB_NAME} on ${name}`);
     }
-  });
-
-  it("leads to the listing when no weekly run is ahead", async () => {
-    state.look = { on: true };
-    const on = await header();
-    expect(on).toContain('href="/events"');
-    expect(on).not.toContain("/events/[slug]");
   });
 
   it("§722 gives each Instagram mark a gradient of its own, so the footer's never points at the header's hidden one", () => {

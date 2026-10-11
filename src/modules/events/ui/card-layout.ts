@@ -111,7 +111,7 @@ export const ROW_ICON_SX = { fontSize: 20, color: "text.secondary", verticalAlig
  *   this rule lifts like a control, so every press on the film is the film's; a press beside it
  *   still opens the page. Anything else that must keep its presses on a card wears the same mark.
  * - **The focus ring is the card's** (§486): the title's link now targets the whole card, so while
- *   the keyboard is on that link the card wears the ring (`:has(h2 a:focus-visible)`) and the title
+ *   the keyboard is on that link the card wears the ring (`:has(:is(h2, h3) a:focus-visible)`, the title being an `h3` under the home page's section headings) and the title
  *   keeps only its underline. A focused map link, date or door keeps its own ring. A browser without
  *   `:has` keeps the title's own ring (`CARD_TITLE_SX` removes it only under `@supports selector(:has(a))`).
  * - Anything else positioned on the card (the weather pill, a picture's frame) stays under the
@@ -125,7 +125,7 @@ export const CARD_TAP_SX = {
   position: "relative",
   isolation: "isolate",
   "& :where(a, button, summary, [data-has-tooltip], [data-lifted])": { position: "relative", zIndex: 2 },
-  "&:has(h2 a:focus-visible)": { outline: "2px solid", outlineColor: "primary.main", outlineOffset: 2 },
+  "&:has(:is(h2, h3) a:focus-visible)": { outline: "2px solid", outlineColor: "primary.main", outlineOffset: 2 },
 } as const;
 
 /** The chips at the top of a card: one wrapping row, six pixels apart. */

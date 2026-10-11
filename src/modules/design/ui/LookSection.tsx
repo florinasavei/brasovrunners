@@ -13,8 +13,6 @@ import AccentPreview from "@/modules/appearance/ui/AccentPreview";
 import { LOOK_ACCENT } from "@/theme/brand";
 import ArrowButtonLink from "@/shared/ui/ArrowButtonLink";
 import { clubSocialLinks } from "@/shared/ui/club-socials";
-import FloatingLocaleSwitch from "@/shared/ui/FloatingLocaleSwitch";
-import HeaderCta from "@/shared/ui/HeaderCta";
 import HeaderSocials, { headerSocials } from "@/shared/ui/HeaderSocials";
 import MountainMark from "@/shared/ui/MountainMark";
 import { LOOK_PREVIEW_ATTRIBUTE, LOOK_VALUE } from "@/theme/look";
@@ -23,7 +21,7 @@ import DesignSection, { Block, Code } from "./section";
 /**
  * One look's sample, drawn by the components the site renders: a heading as the theme draws an `h2`,
  * a sentence, a link in the primary, the pink pill and the ink one with their arrows, the header's
- * «Vino cu noi», and the mountain mark. The same markup twice; only the box around the second one
+ * «Urmărește-ne», and the mountain mark. The same markup twice; only the box around the second one
  * carries `data-look-preview`, so every difference between the two is a rule of the new look.
  */
 async function Sample({ preview }: { preview: boolean }) {
@@ -52,14 +50,7 @@ async function Sample({ preview }: { preview: boolean }) {
         <ArrowButtonLink href="/events" label={t("design.look.primary")} />
         <ArrowButtonLink href="/events" label={t("design.look.secondary")} variant="outlined" />
       </Box>
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "center" }}>
-        <Typography variant="body2" color="text.secondary">
-          {t("design.look.cta")}
-        </Typography>
-        {/* The header's own component: drawn only under the look's scope, so the left column shows the gap it leaves. */}
-        <HeaderCta href="/events" label={site("cta.join")} />
-      </Box>
-      {/* «Urmărește-ne» (§722): the header's own group, from `md` up and under the look's scope only. */}
+      {/* «Urmărește-ne» (§722): the header's own group, from `md` up and under the look's scope only — its words a label (§724). */}
       {socials.length > 0 && (
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "center" }}>
           <Typography variant="body2" color="text.secondary">
@@ -68,13 +59,6 @@ async function Sample({ preview }: { preview: boolean }) {
           <HeaderSocials links={socials} label={site("followUs")} />
         </Box>
       )}
-      {/* The floating language button (§722), drawn in the flow here rather than in the screen's corner. */}
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "center" }}>
-        <Typography variant="body2" color="text.secondary">
-          {t("design.look.language")}
-        </Typography>
-        <FloatingLocaleSwitch inline />
-      </Box>
       <Box sx={{ color: "primary.light" }}>
         <MountainMark width={96} />
       </Box>
@@ -196,7 +180,7 @@ export default async function LookSection() {
           ))}
         </Box>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          <Code>MountainMark</Code> · <Code>LookWatermark</Code> · <Code>ArrowButtonLink</Code> · <Code>HeaderCta</Code> · <Code>HeaderSocials</Code> · <Code>FloatingLocaleSwitch</Code>
+          <Code>MountainMark</Code> · <Code>LookWatermark</Code> · <Code>ArrowButtonLink</Code> · <Code>HeaderSocials</Code>
         </Typography>
       </Block>
     </DesignSection>

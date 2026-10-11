@@ -1,19 +1,15 @@
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import { getLocale, getTranslations } from "next-intl/server";
-import type { ComponentProps } from "react";
-import type { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { menuOrderOnSite, menuSectionsOnSite } from "@/modules/content/menu/on-site";
-import { nextWeeklyRun } from "@/modules/events/domain/next-weekly-run";
-import { cachedHomePage, cachedPublishedPages, cachedSiteLook, cachedUpcomingEvents } from "@/modules/public-cache/reads";
+import { cachedHomePage, cachedPublishedPages, cachedSiteLook } from "@/modules/public-cache/reads";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import { buildInfo } from "@/shared/config/build-info";
 import { CLUB_NAME, HEADER_MARK_HEIGHT, HEADER_MARK_HEIGHT_PX, LOGO, PAGE_WIDTH } from "@/theme/brand";
 import { notUnderLook, onlyUnderLook } from "@/theme/look";
 import { KEYFRAMES, MOTION_OK } from "@/theme/motion";
 import { clubSocialLinks } from "./club-socials";
-import HeaderCta from "./HeaderCta";
 import HeaderSocials, { headerSocials } from "./HeaderSocials";
 import LocaleSwitcher from "./LocaleSwitcher";
 import LogoLink from "./LogoLink";
@@ -64,23 +60,6 @@ async function navigationPages(locale: Locale) {
 }
 
 /**
- * Where «Vino cu noi» goes (§708, the redesign's decision 5): the next weekly run's page, read from
- * the listing's own cached read — no query of its own, and the static page is held no longer than
- * the listing's clock window, as the listing is (§549) — or the listing itself when no weekly run is
- * ahead, and whatever goes wrong (a build with no database, an outage): a button that always leads
- * somewhere.
- */
-async function joinTarget(locale: Locale): Promise<ComponentProps<typeof Link>["href"]> {
-  try {
-    const run = nextWeeklyRun(await cachedUpcomingEvents(locale, new Date()));
-    if (run) return { pathname: "/events/[slug]", params: { slug: run.slug } };
-  } catch {
-    // The listing, below.
-  }
-  return "/events";
-}
-
-/**
  * The site header: the club's logo, whole, and a way back to the first page.
  *
  * A Server Component — nothing here is interactive except the link, and that lives in
@@ -123,17 +102,15 @@ export default async function SiteHeader() {
    */
   const [sections, order] = await Promise.all([menuSectionsOnSite(locale as Locale), menuOrderOnSite()]);
   /*
-    «Aspectul nou» (§708): the header's call to action and the socials, only while the club's setting
-    is on — off, nothing is read and nothing is drawn, so the header is what it was. On a backoffice
-    page (which shares this header) the listing's cached read still runs, since this layout-level
-    component cannot know the route without making every static public page dynamic; it is the
-    public cache's, so no query on a warm cache (the socials are environment values), and `SiteNav`
-    draws none of it there.
+    «Aspectul nou» (§708): the socials, only while the club's setting is on — off, nothing is drawn,
+    so the header is what it was. The header carries no call to action under the look (§724, amending
+    §708 and §722): «Vino cu noi» left it at every width, the phone too, so the next weekly run is no
+    longer read here and the ☰ is the phone's right edge again. The socials are environment values,
+    so the look costs the header no query.
   */
   const look = await cachedSiteLook();
   // «Pagina principală» (§714): while it is on, the logo leads to it — the home page is never a menu entry.
   const home = await cachedHomePage();
-  const joinHref = look.on ? await joinTarget(locale as Locale) : null;
   const site = await getTranslations("Site");
   // «Urmărește-ne» (§722): Instagram, Facebook and Strava, from the footer's one list, in the owner's order,
   // each named «{club} pe …» (`Site.followOn`).
@@ -264,23 +241,17 @@ export default async function SiteHeader() {
             showFaq={sections.faq}
             showContact={sections.contact}
             order={order}
-          >
-            {joinHref && <HeaderCta href={joinHref} label={site("cta.join")} />}
-          </SiteNav>
+          />
         </Box>
 
         {/*
-          «Vino cu noi», under «Aspectul nou» only (§708): passed to the nav as its child (the trailing
-          group), so it sits before the ☰, and the nav measures what is left and folds the rest into
-          it, so the row stays one row at every width. Drawn only inside the look's scope, so the
-          backoffice never shows it.
-
           «Urmărește-ne» with Instagram, Facebook and Strava (§722, amending §708): the row's last item
-          from `md` up — the top right the owner asked for — after the nav and its ☰. Outside the nav,
+          from `md` up — the top right the owner asked for — after the nav and its ☰. The words are a
+          label, never a link or a button (§724): the three marks are the only targets. Outside the nav,
           in the place the language switcher leaves under the look, so the nav measures its own box
-          without it and folds a section into the ☰ before the row would ever wrap. The language is
-          the floating round button above the footer's bar there (`FloatingLocaleSwitch`). The box
-          shows only where its content does, so it takes no room in the backoffice or on a phone.
+          without it and folds a section into the ☰ before the row would ever wrap. The language is on
+          the footer's bar there, both languages at every width (§724). The box shows only where its
+          content does, so it takes no room in the backoffice or on a phone.
         */}
         {socials.length > 0 && (
           <Box sx={{ order: 4, flexShrink: 0, ...onlyUnderLook({ xs: "none", md: "flex" }), ml: 1 }}>
@@ -302,9 +273,9 @@ export default async function SiteHeader() {
           and the hidden one is out of the accessibility tree, so exactly one "Limbă" navigation
           is announced at every width.
 
-          Under «Aspectul nou» (§722) this copy is not drawn at any width: the language is the
-          floating round button in the bottom-right corner (`FloatingLocaleSwitch`, drawn by the
-          footer), and «Urmărește-ne» takes the far end of the row.
+          Under «Aspectul nou» (§722, §724) this copy is not drawn at any width: the language is the
+          footer's two flags with their codes, on its bar at every width, and «Urmărește-ne» takes the
+          far end of the row.
         */}
         <Box sx={{ order: 3, ml: "auto", flexShrink: 0, ...notUnderLook({ xs: "none", sm: "flex" }), alignItems: "center", gap: { xs: 0, sm: 0.5 } }}>
           <LocaleSwitcher />

@@ -39,7 +39,7 @@ SETUP, in this order:
 2. \`yarn install --immutable\`.
 3. Read docs/VIBECODING.md, then what the brief names.
 
-THE MACHINE IS SHARED (several agents at once): run at most ONE \`next build\`/\`next dev\` and ONE Playwright process at a time; never the whole e2e suite unless the brief asks; use your OWN database — a \`DATABASE_URL\` to \`brasov_runners_<your worktree name>\` in the worktree's git-ignored \`.env.local\` (copied from the main checkout's), created and migrated by you; never \`yarn db:seed\` or reset the shared \`brasov_runners\` database. Pick a free port.
+THE MACHINE IS SHARED (several agents at once): run at most ONE \`next build\`/\`next dev\` and ONE Playwright process at a time; never the whole e2e suite unless the brief asks; use your OWN database — a \`DATABASE_URL\` to \`brasov_runners_<your worktree name>\` in the worktree's git-ignored \`.env.local\` (made from the secret-free template the brief or the build list names — NEVER a copy of the main checkout's file, which holds real keys), created and migrated by you; never \`yarn db:seed\` or reset the shared \`brasov_runners\` database. Pick a free port.
 
 RULES THAT BITE (always):
 - The repository is PUBLIC: never write a secret, a key, a token, a database URL, a personal email, an account or organisation id, or a local path with a user name into any tracked file, commit message or PR text.
@@ -57,6 +57,9 @@ RULES THAT BITE (always):
 
 THE BRIEF.
 ${A.brief}
+
+THE BUILD LIST — do every item; the reviewer checks each one, citing file:line:
+${A.checklist}
 
 VERIFY: \`yarn typecheck\`, \`yarn lint\`, \`yarn docs:check\`, \`yarn vitest run <your test files> tests/unit/i18n\` plus the existing tests of what you touched; the e2e specs you changed, on both projects, against a production build (\`yarn build && yarn start\`). Report honestly what ran.
 
@@ -138,6 +141,9 @@ Fix ONE branch after review. \`cd "${impl.worktree}"\` (branch ${impl.branch} is
 Findings, most severe first — fix every blocker and should-fix:
 ${review.findings.map((f, i) => `${i + 1}. [${f.severity}] ${f.file}${f.line ? ':' + f.line : ''} — ${f.summary}\n   Fix: ${f.fix}`).join('\n')}
 ${review.intentMet ? '' : `\nIntent NOT fully met per the reviewer: ${review.notes}. Close that gap.`}
+
+THE BUILD LIST this branch is judged against — keep every item true while you fix:
+${A.checklist}
 
 Same rules as the implementer (public repository; no DECISIONS/CHANGELOG/SPECS/baseline edits; both message files; no t-helper; icons by name across the boundary; Write/Edit tools; cite §NNN). Verify: typecheck, lint, docs:check, the touched vitest files, the touched e2e specs. Commit on the branch (--no-verify, Conventional Commits, body naming the findings answered, the Co-Authored-By line your session's instructions give). Do NOT push.
 

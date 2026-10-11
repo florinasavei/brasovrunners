@@ -24,6 +24,7 @@ const event = (id: string, type: string, featured = false, hasPartner = false) =
   coHosts: hasPartner ? [{ name: "Brașov Running Festival" }] : null,
   coHostName: null,
   coHostUrl: null,
+  seriesCadence: null,
   // The registration window (§413): open throughout, since none of these tests are about it —
   // `listing-filter.test.ts` covers the "Înscrieri deschise" flag itself.
   registrationMode: "INTERNAL" as const,
