@@ -11,7 +11,10 @@ the owner approved starting phase 1 with the plan's defaults, so decisions 1, 2 
 their defaults and phase 1 is built behind the setting, off (§ Phase 1, as built). Later the same day he
 asked for the home page — «start the homepage now, with empty photo slots and the plan's defaults» — so
 decisions 5, 6 and 10 and open questions 6 and 7 are taken by their defaults too, and phase 3's part A is
-built behind its own setting, off (§ Phase 3, part A, as built).
+built behind its own setting, off (§ Phase 3, part A, as built); parts B and C then built the four lower
+sections and wired them into the page and its setting, taking decisions 7 and 8 by their defaults
+(§ Phase 3, parts B and C, as built). The home page is complete behind its switch, waiting for the
+club's photographs and words on QA.
 
 ## Decisions only the club can make
 
@@ -26,8 +29,8 @@ objects; a different answer changes the phases, not the rules.
 | 4 | The four menu words | «Alergări» = the listing; «Calendar»; «Comunitatea» = a club page linking «Echipa», «Galerie», «Întrebări» and the members' zone; «Despre noi» = a club page | the club decides what each word points to |
 | 5 | Where «Vino cu noi» goes — **decided by default (2026-10-11)** | the next weekly run's page; the band's «Cum funcționează» opens a club page | there is no sign-up for runners |
 | 6 | Photographs — **decided by default (2026-10-11)** | real club photos only, from the gallery; no stock or generated pictures; people in a home-page photo have agreed | consent and the club's own face |
-| 7 | The Instagram block | a static strip of six gallery pictures with a link; no live feed | an embed is forbidden (AGENTS.md §18.3); a feed needs a Meta app and a token |
-| 8 | The numbers band | typed in «Aspect» → «Pagina principală»: the founding date (years computed), «alergători activi»; «2×/săptămână» and «100% gratuit» computed from the events | invented figures are forbidden (BUSINESS.md §7) |
+| 7 | The Instagram block — **decided by default (2026-10-11)** | a static strip of six gallery pictures with a link; no live feed | an embed is forbidden (AGENTS.md §18.3); a feed needs a Meta app and a token |
+| 8 | The numbers band — **decided by default (2026-10-11)** | typed in «Aspect» → «Pagina principală»: the founding date (years computed), «alergători activi»; «2×/săptămână» and «100% gratuit» computed from the events | invented figures are forbidden (BUSINESS.md §7) |
 | 9 | What «Evenimente speciale» means — **decided by default (2026-10-11)** | everything that is not a weekly series; the chip «Ediție specială» keeps its meaning (§168) | the mock-up's word and today's flag differ |
 | 10 | The round arrow on cards — **decided by default (2026-10-11)** | only on the home page's cards, keeping the whole-card tap; the listing keeps its text door | it reverses §319 |
 | 11 | Icons | the filled Material family stays; the lighter look comes from colour, weight and spacing | a second family touches every glyph (§318) |
@@ -104,7 +107,7 @@ side.
 | 0 | Decisions and assets — no code: the twelve answers; the hero, one cover per run and race, six strip pictures in the gallery; the numbers | answers in writing, photos uploaded |
 | 1 | Tokens and the public shell: the pink pair, Inter 800, the public scope, the setting «Aspectul nou», the header CTA and socials, the watermark; the design-system page shows both looks — **built behind the setting, off (2026-10-11)** | brand and font tests green, header one row at 320 px, the club's yes on QA |
 | 2 | Cover photos on events, and the event kind: a cover column with its crop, the editor's picker, the ladder; weekly or special derived from the series; the photo tag — **built on `feat/facelift-phase-2`, awaiting release** | listing specs green; every weekly run and the race carry a cover |
-| 3 | The home page: the root becomes a page; hero, next run, weekly and special, the band, why, the strip, the numbers; redirect, canonicals, sitemap. Every part a setting: «Pagina principală activă»; the hero picture with its crop and two lines and the three buttons' targets; N gallery pictures per strip or carousel, in order; the founding date and the runners figure; an unset strip is not drawn — **part A (the page, its setting, the hero, the next run, the run sections) built behind «Pagina principală», off (2026-10-11)** | LCP under 2.5 s on a 320 px phone, root tests rewritten, the club's yes on QA |
+| 3 | The home page: the root becomes a page; hero, next run, weekly and special, the band, why, the strip, the numbers; redirect, canonicals, sitemap. Every part a setting: «Pagina principală activă»; the hero picture with its crop and two lines and the three buttons' targets; N gallery pictures per strip or carousel, in order; the founding date and the runners figure; an unset strip is not drawn — **built behind «Pagina principală», off (2026-10-11): part A the page, its setting, the hero, the next run and the run sections; part B the four lower sections; part C their wiring and the panel in folds** | LCP under 2.5 s on a 320 px phone, root tests rewritten, the club's yes on QA |
 | 4 | The calendar: filter chips with the kind, three colours and a legend, the next-event panel, the subscribe box, the title block | first week above the fold at 320 px, filters work with scripts off |
 | 5 | The listing and the event page: cards with their photo and pills, the arrow if approved, the event page's head | listing and event specs green |
 | 6 | The flip and the clean-up: «Aspectul nou» on in production; one release later the old look's code goes; the decisions amended | a week on production without the way back being used |
@@ -156,17 +159,35 @@ switch, independent of «Aspectul nou»: the page wears whichever look is in for
 | What they show | `src/modules/home/home-content.ts`, `domain/sections.ts` | read from the listing's cached upcoming events and the forecast's cached hour: nothing new asked of the database |
 | The samples | `/admin/design` → «Mostre» → «Pagina principală» | the same components from `design/home-fixtures.ts#sampleHome` |
 
-**Turning it on, on QA:** «Setări» → «Aspect» → «Pagina principală» → choose «Pagina principală» →
-optionally a photograph («Din galerie» or an upload, then the crop) and the two lines in Romanian and
-English → «Salvează pagina principală» → confirm (an Administrator). The way back is the same card,
-«Lista de alergări».
+### Phase 3, parts B and C, as built
 
-**What part B adds next:** the band «Prima dată» with its five steps and «Cum funcționează» to a club
-page, «De ce» and the quote, the photo strip (six gallery pictures, in order) and the numbers band (the
-founding date and «alergători activi» typed, the other two computed), each a component under
-`src/modules/home/ui/` with its fixture, and the hero's three buttons' targets as settings — all in
-the same `homePage` row. Then the gate: LCP under 2.5 s on a 320-pixel phone, measured on QA with the
-club's photograph, and the club's yes on QA.
+Part B (`feat/home-sections`) built the four lower sections as components with their domain and
+fixtures; part C wired them into the page and the setting and folded the panel, on `feat/home-page`
+(2026-10-11), with decisions 7 and 8 at their defaults. Each is drawn only while its switch is on — off
+by default — and, under it, only with something true to show.
+
+| Part | Where | Notes |
+| --- | --- | --- |
+| «Prima dată» | `src/modules/home/ui/StepsBand.tsx`, `domain/steps.ts` | a heading, one sentence, five numbered steps (an `<ol>`), «Cum funcționează» as an outlined arrow pill to a club page — not drawn until one is chosen and published |
+| «De ce» and the quote | `src/modules/home/ui/WhyList.tsx`, `domain/why.ts` | four reasons with their glyphs; the quote in Caveat, drawn only when the club wrote it in both languages, its author only beside it |
+| The photo strip | `src/modules/home/ui/PhotoStrip.tsx`, `domain/photo-strip.ts`, `strip-pictures.ts` | up to twelve of the club's stored pictures in its order, square tiles in a CSS scroll-snap row, lazy, with the ladder's `srcset` (a `strip` column in `media/ladder.ts`); the gallery's door and the club's Instagram as a link, never a feed; no picture, no section |
+| The numbers | `src/modules/home/ui/NumbersBand.tsx`, `domain/numbers.ts` | the years from the founding day and «alergători activi» as typed; the runs a week and «100%» free computed from the weekly series ahead; a figure without its fact is left out, no figure no band |
+| Their words and glyphs | `domain/home-text.ts`, `ui/home-glyphs.ts`, `ui/home-surfaces.ts` | every box both languages or neither, an empty one the platform's sentence (`HomeSections.*`); the glyphs a registry of their own; the band's fill the hero's tint, the pale pink under «Aspectul nou» |
+| The setting | `src/modules/appearance/domain/home-page.ts`, `domain/home-sections-form.ts`, `home-page.ts` | the same `homePage` row gains `steps`, `why`, `strip` and `numbers`; a section that no longer reads is its empty value, never the page off; each box a pair `<stem>Ro` / `<stem>En`, a refusal naming the box |
+| The strip's pictures | `changeStripPicture` in `home-page.ts`; the actions in `app/[locale]/admin/settings/appearance/actions.ts` | added, moved a place and taken out by small forms of their own, like a product's pictures; each keeps its key prefix and size beside its id, so the public read asks the store nothing and the pictures page lists it «Pe pagina principală» |
+| «Cum funcționează» | the hero's third button and the band's | a club page chosen by its id from «Pagini personalizate», opened at its own address in each language; a page not published there is no button |
+| The panel | `src/modules/appearance/ui/HomePagePanel.tsx` | the choice, then one fold per part — the sections' switches, the hero, «Prima dată», «De ce», the strip's heading, the numbers — closed on arrival with a line saying what is in it, each box showing the platform's sentence as its placeholder; «Copiază și tradu tot» over all of it; the strip's pictures in a fold of their own after the form |
+| The page | `src/modules/home/ui/HomePage.tsx`, `home-content.ts` | the eight sections in the plan's order; the club page and the Instagram read from what the site already caches |
+| The samples | `/admin/design` → «Mostre» | the four from `design/fixtures.ts` inside the new look's preview box, beside part A's |
+
+**Turning it on, on QA:** «Setări» → «Aspect» → «Pagina principală». Fill each fold you want (an empty box
+is the platform's sentence, shown in grey), choose the club page for «Cum funcționează», add the strip's
+pictures under «Fotografiile benzii», then open «Ce secțiuni arată pagina» and tick the four lower
+sections, choose «Pagina principală» → «Salvează pagina principală» → confirm (an Administrator). The way
+back is the same card, «Lista de alergări».
+
+**The gate:** LCP under 2.5 s on a 320-pixel phone, measured on QA with the club's photograph in the
+hero, and the club's yes on QA.
 
 ## Content and assets the club must provide
 

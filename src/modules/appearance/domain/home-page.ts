@@ -100,7 +100,7 @@ const sectionsSchema = z.object({
 const DEFAULT_BUTTONS = { join: null, calendar: null, how: null } as const;
 const DEFAULT_SECTIONS = { hero: true, nextRun: true, weekly: true, special: true, steps: false, why: false, strip: false, numbers: false } as const;
 
-// Read loosely: a row written by a later release (part B, or a rollback from one) keeps what this
+// Read loosely: a row written by a later release (or read after a rollback from one) keeps what this
 // code understands and carries what it does not, so an unknown key never turns the page off.
 export const homePageSchema = z.looseObject({
   on: z.boolean(),

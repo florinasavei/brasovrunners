@@ -27,13 +27,15 @@ type Props = { params: Promise<{ locale: string }> };
  * address): this page does, and since it is static the redirect is decided once, kept by the CDN as
  * a redirect with an empty page, and made again when the setting is saved.
  *
- * **On** — the home page: the hero, the next run, the weekly runs and the special events
+ * **On** — the home page: the hero, the next run, the weekly runs and the special events, then the
+ * four lower sections the club switched on («Prima dată», «De ce», the photo strip, the numbers)
  * (`modules/home/ui/`), reached from the logo and never from a menu entry. It is canonical to itself
  * in each language, and the sitemap lists it first (`app/sitemap.ts`).
  *
  * Static, made on its first visit and kept by the CDN (§549): the same for every visitor. It reads the
  * setting and the listing's own upcoming events from the public cache, so it is made again when the
- * setting is saved, when an event is written or ends (the listing's clock window), at the forecast's
+ * setting is saved, when an event is written or ends (the listing's clock window), when a club page is
+ * published or withdrawn (the navigation's list, which «Cum funcționează» reads), at the forecast's
  * hour, and at the latest after a day. It reads no `searchParams`: `?utm_…` and every other query is
  * the same static page. A literal, as Next requires: `PUBLIC_PAGE_CEILING_SECONDS`.
  */
