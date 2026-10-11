@@ -2,6 +2,7 @@ import { type AnyColumn, and, asc, desc, eq, gte, inArray, isNull, lt, or, type 
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type { PgliteDatabase } from "drizzle-orm/pglite";
 import { eventTranslations, events } from "@/db/schema/events";
+import { mediaAssets } from "@/db/schema/gallery";
 import type { EventType } from "@/modules/events/domain/event-type";
 import type { Database as GenericDatabase } from "@/db/types";
 
@@ -84,6 +85,28 @@ export type Database = NodePgDatabase<Schema> | PgliteDatabase<Schema>;
 export const OFFERS_MEMBER_BIB = sql<boolean>`coalesce((${events.bibDesign} #> '{member,enabled}') = 'true'::jsonb, false)`.mapWith(Boolean);
 
 /**
+ * «Copertă» (the facelift's phase 2, §NNN) as a page draws it: the stored picture's key prefix and
+ * size, and the crop — one JSON value, null when the event has none or its picture left the store,
+ * and never a film's poster (§485). A scalar subquery on the picture's primary key, so it costs one
+ * index probe per row and adds no join that could multiply rows. Read only through
+ * `domain/cover.ts#readPublicCover` (and `cover.ts#coverSources`, which builds the ladder from it).
+ */
+const PUBLIC_COVER = sql<unknown>`(SELECT json_build_object('keyPrefix', ${mediaAssets.keyPrefix}, 'width', ${mediaAssets.width}, 'height', ${mediaAssets.height}, 'crop', ${events.coverCrop})
+  FROM ${mediaAssets}
+  WHERE ${mediaAssets.id} = ${events.coverMediaAssetId} AND ${mediaAssets.keyPrefix} NOT LIKE 'yt-%')`;
+
+/**
+ * The cadence of the standing series this date belongs to (§122), or null for a date of none — the
+ * one fact the event's kind is derived from (`domain/event-kind.ts#eventKind`, the plan's decision
+ * 9): the source's own rule for the source, the source's rule through `repeat_of` for every date it
+ * made. A stopped series has no rule and reads null, as its source already reads as a one-off
+ * (§275). The inner `events` is aliased, so the outer row's columns are the ones named.
+ */
+const SERIES_CADENCE = sql<string | null>`(SELECT series_source.repeat_rule ->> 'cadence'
+  FROM ${events} AS series_source
+  WHERE series_source.id = COALESCE(${events.repeatOf}, ${events.id}))`;
+
+/**
  * Exactly the columns a public page may show.
  *
  * Written out rather than `select()`-ing the whole row on purpose. When registrations and
@@ -135,6 +158,10 @@ const PUBLIC_COLUMNS = {
   featured: events.featured,
   // A special edition (§168): a badge on the card and the page, and a tie-break below.
   isSpecial: events.isSpecial,
+  // «Copertă» and the kind (the facelift's phase 2, §NNN), for phases 3–5 to draw: the cover's
+  // stored picture and crop, and the cadence of the series the kind is derived from.
+  cover: PUBLIC_COVER,
+  seriesCadence: SERIES_CADENCE,
   distanceMeters: events.distanceMeters,
   // «Aproximativ» (§598): the distance is approximate, and every surface says «≈» (`distanceWords`).
   distanceEstimated: events.distanceEstimated,

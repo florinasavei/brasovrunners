@@ -230,6 +230,10 @@
     },
     "coHost": "Together with",
     "special": "Special edition",
+    "kind": {
+      "weekly": "Weekly",
+      "special": "Special event"
+    },
     "partner": {
       "marker": "Partnership"
     },
@@ -1317,6 +1321,7 @@
       "empty": "There is no event in the database.",
       "featured": "Featured",
       "placeToBeAnnounced": "Location not announced",
+      "noCover": "No cover",
       "dateToBeAnnounced": "Date not announced",
       "timeToBeAnnounced": "Time not announced",
       "preview": "Preview",
@@ -1755,6 +1760,16 @@
       "featuredHelp": "Only one event can be featured. The previously featured one loses the flag automatically.",
       "special": "A special edition",
       "specialHelp": "An edition apart, such as an anniversary or a charity run, with a badge on the card and the page. In a series, the badge stays on this date only.",
+      "cover": {
+        "intro": "The photo at the top of the event's card, in the site's new look. Real photos of the club only, from the gallery or uploaded now. In a series, you also choose at Save which dates get it.",
+        "legend": "Cover photo",
+        "help": "Once you choose the photo, you choose the part the card shows. It is kept when you save the event.",
+        "cropTitle": "Crop — what the card shows",
+        "cropHelp": "It starts at the largest 16:9 rectangle, the card's shape. You can choose another shape or drag a rectangle over the photo.",
+        "set": "chosen",
+        "missing": "missing",
+        "noStorage": "Picture storage is not configured here, so no cover can be chosen."
+      },
       "saveEvent": "Save the event details",
       "readOnly": "The Administrator changes the event; here you can read it. Tell them what you want changed.",
       "version": "version {version}",
@@ -2377,6 +2392,9 @@
         },
         "promotion": {
           "title": "Promotion on the site"
+        },
+        "cover": {
+          "title": "Cover"
         },
         "address": {
           "title": "Page address and search engines"

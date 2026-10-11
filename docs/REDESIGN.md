@@ -38,7 +38,7 @@ a handful of settings and the look.
 | Header | `SiteHeader` + `SiteNav`: logo, six entries, language switch; socials in the footer | a CTA slot and the two social icons, inside the one-row-at-320-px rule |
 | Hero | nothing: the root answers a 308 to `/events` (§353) | the route, a hero component, a setting for the picture, its crop and two lines; redirect, canonicals and sitemap move |
 | «Următoarea alergare» | the featured card (§470), the weather pill (§402), sunset computed (`sun.ts`) | the «soonest run» rule, weather words, an «Apus» line, the photo tag |
-| Weekly and special sections | a series is one card (§113); the pills | the split rule, the short weekday line, **a cover photo per event** (events have no picture field) |
+| Weekly and special sections | a series is one card (§113); the pills; since phase 2 a cover per event (`events.cover_media_asset_id` and its crop, the editor's «Copertă») and the kind (`eventKind`) | the split rule, the short weekday line, the cover drawn on each card |
 | «Prima dată» band | nothing | the words (a setting), five icons, a target page |
 | «De ce» items and the quote | Caveat is self-hosted | the words, four icons; Caveat on the home page |
 | Photo strip and Instagram | the gallery and its R2 ladder; social addresses as environment values | six chosen pictures and the strip; no feed |
@@ -52,7 +52,10 @@ a handful of settings and the look.
 
 The four data gaps, in order of size: a cover photo per event; the home page's words, pictures and
 numbers as settings; an event kind derived from the series and the type; the founding date and the
-active-runners figure.
+active-runners figure. Phase 2 closed the first and the third: a cover column with its crop, carried
+by a series, and `events/domain/event-kind.ts` — weekly for a date of a standing weekly series,
+special for everything else, the type giving the photo tag its glyph — both on the public read
+(`cover`, `seriesCadence`) for phases 3–5 to draw.
 
 ## The visual system
 

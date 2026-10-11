@@ -230,6 +230,10 @@
     },
     "coHost": "Împreună cu",
     "special": "Ediție specială",
+    "kind": {
+      "weekly": "Săptămânal",
+      "special": "Eveniment special"
+    },
     "partner": {
       "marker": "Colaborare"
     },
@@ -1317,6 +1321,7 @@
       "empty": "Nu există niciun eveniment în baza de date.",
       "featured": "Principal",
       "placeToBeAnnounced": "Locație neanunțată",
+      "noCover": "Fără copertă",
       "dateToBeAnnounced": "Dată neanunțată",
       "timeToBeAnnounced": "Oră neanunțată",
       "preview": "Previzualizare",
@@ -1755,6 +1760,16 @@
       "featuredHelp": "Un singur eveniment poate fi principal. Cel marcat anterior își pierde automat marcajul.",
       "special": "Ediție specială",
       "specialHelp": "O ediție aparte, de exemplu aniversară sau caritabilă, cu un marcaj pe card și pe pagină. Într-o serie, marcajul rămâne doar pe data aceasta.",
+      "cover": {
+        "intro": "Fotografia de sus de pe cardul evenimentului, în noul aspect al site-ului. Doar fotografii adevărate ale clubului, din galerie sau urcate acum. Într-o serie, la salvare alegi și datele care o primesc.",
+        "legend": "Fotografia de copertă",
+        "help": "După ce alegi fotografia, alegi partea care se vede pe card. Se păstrează când salvezi evenimentul.",
+        "cropTitle": "Decupaj — ce se vede pe card",
+        "cropHelp": "Pornește de la cel mai mare dreptunghi 16:9, forma cardului. Poți alege alt format sau trage un dreptunghi peste fotografie.",
+        "set": "aleasă",
+        "missing": "lipsește",
+        "noStorage": "Stocarea imaginilor nu este configurată aici, așa că nu se poate alege o copertă."
+      },
       "saveEvent": "Salvează detaliile evenimentului",
       "readOnly": "Evenimentul îl modifică Administratorul; aici îl poți citi. Ce vrei schimbat îi spui Administratorului.",
       "version": "versiunea {version}",
@@ -2377,6 +2392,9 @@
         },
         "promotion": {
           "title": "Evidențiere pe site"
+        },
+        "cover": {
+          "title": "Copertă"
         },
         "address": {
           "title": "Adresa paginii și motoarele de căutare"

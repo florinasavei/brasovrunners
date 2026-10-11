@@ -6,7 +6,7 @@
  * the dispatcher — a typed list and a document, never a Markdown renderer in the page.
  *
  * Today decision 3 is `decided` (2026-10-10) and the others are `default` (the dispatcher's default stands until the club answers) and
- * every phase `planned`. `decided` is the club's answer in writing, `open` a question the club
+ * every phase `planned` but phase 2, `building`. `decided` is the club's answer in writing, `open` a question the club
  * reopened; `building` a phase whose chains run, `released` one on production.
  */
 export type DecisionStatus = "default" | "decided" | "open";
@@ -33,7 +33,8 @@ export const REDESIGN_DECISIONS: readonly RedesignDecision[] = [
 export const REDESIGN_PHASES: readonly RedesignPhase[] = [
   { id: 0, status: "planned" },
   { id: 1, status: "planned" },
-  { id: 2, status: "planned" },
+  // Phase 2 (§NNN): the cover per event, the editor's «Copertă», the kind — built; the club's photos are its gate.
+  { id: 2, status: "building" },
   { id: 3, status: "planned" },
   { id: 4, status: "planned" },
   { id: 5, status: "planned" },

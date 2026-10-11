@@ -1,8 +1,10 @@
 import { and, asc, count, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { eventTranslations, events } from "@/db/schema/events";
+import { mediaAssets } from "@/db/schema/gallery";
 import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import { type Locale, routing } from "@/i18n/routing";
+import { getStorage, objectKey } from "@/modules/media/storage";
 
 /**
  * Backoffice reads (BR-REQ-050-01, BR-REQ-051-01, BR-REQ-051-02).
@@ -289,4 +291,27 @@ export async function findEventTitle<T extends Record<string, unknown>>(
     .from(eventTranslations)
     .where(eq(eventTranslations.eventId, eventId));
   return rows.find((row) => row.locale === locale)?.title ?? rows[0]?.title ?? null;
+}
+
+/**
+ * «Copertă»'s stored picture (the facelift's phase 2, §NNN), for the editor's box and the save: its
+ * key prefix (a film's poster, `yt-…`, is no picture to cover an event with, §485), its size for the
+ * crop box, and its two addresses — the master the crop box draws over and the small file the box's
+ * preview shows. Null when the id names no stored picture.
+ */
+export type CoverPicture = { id: string; keyPrefix: string; width: number; height: number; webUrl: string; thumbUrl: string };
+
+export async function findCoverPicture<T extends Record<string, unknown>>(db: Database<T>, assetId: string): Promise<CoverPicture | null> {
+  const [row] = await db
+    .select({ id: mediaAssets.id, keyPrefix: mediaAssets.keyPrefix, width: mediaAssets.width, height: mediaAssets.height })
+    .from(mediaAssets)
+    .where(eq(mediaAssets.id, assetId))
+    .limit(1);
+  if (!row || row.keyPrefix.startsWith("yt-")) return null;
+  const storage = getStorage();
+  return {
+    ...row,
+    webUrl: storage.publicUrl(objectKey(row.keyPrefix, "web")),
+    thumbUrl: storage.publicUrl(objectKey(row.keyPrefix, "thumb")),
+  };
 }
