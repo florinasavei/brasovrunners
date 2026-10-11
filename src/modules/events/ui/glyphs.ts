@@ -153,12 +153,14 @@ export const GLYPHS = {
   // «Mai multe» on a team card's fold (§701): the person, what the fold holds more of — the fold's
   // own arrow already says "this opens" (`disclosure.ts`), so never a second chevron here.
   person: PersonOutlinedIcon,
-  // Held here only while the shop's own files (members' zone order chip, orders card, product list)
-  // still draw them through `GlyphChip`: they are the one deviation `tests/unit/design/status-chip.test.ts`
-  // lists as PENDING_SHOP, to leave when a later change moves those chips to `StatusChip` (§NNN).
+  // The members' zone's order chip (`members-area/MembersShop.tsx`, public) draws these three; the
+  // backoffice draws them through `StatusChip` from its own table (BOTH_SURFACES in the tripwire, §NNN).
   done: CheckCircleIcon,
   cancelled: EventBusyIcon,
   planned: ScheduleIcon,
+  // Held here only while the backoffice shop's orders card and product list still draw them through
+  // `GlyphChip`: `tests/unit/design/status-chip.test.ts` lists them as PENDING_SHOP, to leave when a
+  // later change moves those two files to `StatusChip` (with `orders` and `club` in its table, §NNN).
   visible: VisibilityIcon,
   hidden: VisibilityOffIcon,
   language: TranslateIcon,
