@@ -5,8 +5,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 /**
  * §708 — «Aspectul nou» in the header, rendered: with the setting off (or no row at all) the header
  * is the markup it was, with no button, no social marks and no watermark; with it on, «Vino cu noi»
- * leads to the next weekly run (else the listing), the socials are the footer's two, and both sit in
- * the nav's children (its trailing group) so the ☰ stays the row's last item (§699). The client islands and the
+ * leads to the next weekly run (else the listing) from the nav's children (its trailing group), and
+ * «Urmărește-ne» with the footer's three marks is the row's last item after the nav (§NNN). The client islands and the
  * data reads are stubbed; the Server Components under test render for real.
  */
 const state = vi.hoisted(() => ({
@@ -101,7 +101,7 @@ describe("§708 the header while «Aspectul nou» is off", () => {
 });
 
 describe("§708 the header while «Aspectul nou» is on", () => {
-  it("draws «Vino cu noi» to the next weekly run and the footer's Facebook and Instagram, inside the nav's trailing group", async () => {
+  it("draws «Vino cu noi» to the next weekly run inside the nav's trailing group", async () => {
     state.look = { on: true };
     state.upcoming = [weekly("2026-10-20T16:00:00.000Z"), weekly("2026-10-13T16:00:00.000Z")];
     const on = await header();
@@ -109,14 +109,28 @@ describe("§708 the header while «Aspectul nou» is on", () => {
     expect(on).toContain("cta.join");
     expect(on).toContain("/events/[slug]");
     expect(on).toContain("alergare-2026-10-13");
-    expect(on).toContain('data-testid="header-socials"');
-    expect(on).toContain("Facebook");
-    expect(on).toContain("Instagram");
-    expect(on).not.toContain("Strava");
-    // Inside the nav, so the ☰ the nav draws last stays the row's right edge.
+    // Inside the nav, so it sits before the ☰ the nav draws last.
     const nav = on.slice(on.indexOf('<nav data-testid="nav">'), on.indexOf("</nav>"));
     expect(nav).toContain('data-testid="header-cta"');
-    expect(nav).toContain('data-testid="header-socials"');
+    expect(nav).not.toContain('data-testid="header-socials"');
+  });
+
+  it("§NNN draws «Urmărește-ne» with Instagram, Facebook and Strava, in that order, after the nav — the row's last item", async () => {
+    state.look = { on: true };
+    const on = await header();
+    const navEnd = on.indexOf("</nav>");
+    const socials = on.indexOf('data-testid="header-socials"');
+    expect(socials).toBeGreaterThan(navEnd);
+    // A navigation named by the indicator's words, which are drawn too (hidden from a screen reader, which hears the name).
+    const tag = on.slice(on.lastIndexOf("<nav", socials), on.indexOf(">", socials));
+    expect(tag).toContain('aria-label="followUs"');
+    expect(on).toContain('data-testid="header-socials-label">followUs</span>');
+    const group = on.slice(socials);
+    const order = ["instagram", "facebook", "strava"].map((network) => group.indexOf(`data-network="${network}"`));
+    for (const at of order) expect(at).toBeGreaterThan(-1);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+    // The language switcher's header copy is still rendered (the backoffice shows it); the look's scope hides it on a public page.
+    expect(on).toContain("locale");
   });
 
   it("leads to the listing when no weekly run is ahead", async () => {

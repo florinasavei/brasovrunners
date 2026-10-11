@@ -70,6 +70,18 @@ describe("§708 the scope stops at the backoffice", () => {
     for (const file of ["src/shared/ui/HeaderCta.tsx", "src/shared/ui/LookWatermark.tsx"]) expect(source(file), file).toContain('onlyUnderLook("flex")');
     expect(source("src/shared/ui/HeaderSocials.tsx")).toContain('display: "none", [UNDER_LOOK]: { display: { xs: "none", md: "flex" } }');
   });
+
+  it("§NNN moves the language to one floating button under the look, and leaves today's two copies alone while off", () => {
+    const layout = source("src/app/[locale]/layout.tsx");
+    expect(layout).toContain("<SiteFooter newLook={look.on} />");
+    const footer = source("src/shared/ui/SiteFooter.tsx");
+    // Drawn only while the setting is on, and then only inside the scope (the backoffice renders the same footer).
+    expect(footer).toContain("{newLook && <FloatingLocaleSwitch />}");
+    expect(source("src/shared/ui/FloatingLocaleSwitch.tsx")).toContain('...onlyUnderLook("flex")');
+    // The phone's flags on the footer's bar and the header's copy from `sm`: hidden under the scope, untouched off it.
+    expect(footer).toContain('display: { xs: "flex", sm: "none" }, [UNDER_LOOK]: { display: "none" }');
+    expect(source("src/shared/ui/SiteHeader.tsx")).toContain('display: { xs: "none", sm: "flex" }, [UNDER_LOOK]: { display: "none" }');
+  });
 });
 
 describe("§708 the pink primary", () => {

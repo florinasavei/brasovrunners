@@ -22,6 +22,7 @@
     "themeLight": "Temă luminoasă",
     "skipToContent": "Sari la conținut",
     "cta": { "join": "Vino cu noi" },
+    "followUs": "Urmărește-ne",
     "nav": {
       "label": "Navigare principală",
       "events": "Alergări",
@@ -5930,6 +5931,8 @@
         "primary": "Vezi alergările",
         "secondary": "Cum funcționează",
         "cta": "Butonul din antet:",
+        "socials": "Dreapta antetului, pe calculator:",
+        "language": "Limba, în colțul din dreapta jos:",
         "primaryTitle": "Culoarea principală sub aspectul nou",
         "primaryNote": "Variabilele MUI ale culorii principale, redefinite numai pe paginile publice cât timp aspectul nou e pornit.",
         "variable": "Variabila",
