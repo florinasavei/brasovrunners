@@ -18,8 +18,9 @@ import { importFacts, SOURCES, type Source } from "./scan";
  */
 
 /**
- * The names in both tables for good: the members' zone's order chip (`members-area/MembersShop.tsx`, and the calendar's kind chips, `KindChips.tsx` for `club`,
- * public) draws them through `GlyphChip`, and the backoffice's states draw them through `StatusChip`.
+ * The names in both tables for good: the members' zone's order chip (`members-area/MembersShop.tsx`,
+ * public) draws `done`/`cancelled`/`planned` and the calendar's kind chips (`KindChips.tsx`, public)
+ * draw `club`, through `GlyphChip`; the backoffice draws them through `StatusChip`.
  * Each table imports its own icon file, so a visitor still downloads only the public table.
  */
 const BOTH_SURFACES = ["done", "cancelled", "planned", "club"];
