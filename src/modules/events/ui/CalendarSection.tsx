@@ -40,6 +40,19 @@ const CALENDAR_BUTTON_SX = {
   fontSize: { sm: "0.78rem" },
 } as const;
 
+/** The month's card under the look, from `sm`: paper, a 16-pixel radius, the grid inset by its padding. */
+const MONTH_CARD_SX = {
+  [UNDER_LOOK]: {
+    p: { sm: 2 },
+    border: { sm: 1 },
+    borderColor: { sm: "divider" },
+    borderRadius: { sm: "16px" },
+    bgcolor: { sm: "background.paper" },
+    // The grid inside: its own edge quieter, its radius the card's less the padding.
+    "& [role='table']": { borderRadius: { sm: "12px" } },
+  },
+} as const;
+
 export default async function CalendarSection({
   locale,
   view,
@@ -66,11 +79,16 @@ export default async function CalendarSection({
     // Under «Aspectul nou» a phone gives this gap and the filter slot's back to the first week, under the chips row (phase 4, §569).
     <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 2 }, mb: { xs: DENSITY.sectionGapLg, sm: 4 }, [UNDER_LOOK]: { mt: { xs: 0, sm: 2 } } }}>
       <Box component="section" aria-labelledby="calendar-title" id="calendar">
-        <CalendarHeader view={view} now={now} query={query} layout={layout} />
-        {/* A sideways swipe on a touch screen goes where the arrows go (§475). */}
-        <CalendarSwipe previousHref={steps.previous} nextHref={steps.next}>
-          <EventCalendar view={view} events={events} now={now} query={query} layout={layout} />
-        </CalendarSwipe>
+        {/* Under «Aspectul nou», from `sm`, the period's controls and the month are one card (the
+            mock-up's): its top meets the next-event card's beside it, and the heading lines up
+            with the grid's edges. Off, and on a phone, no card: the controls and the grid as before. */}
+        <Box sx={MONTH_CARD_SX} data-testid="calendar-month-card">
+          <CalendarHeader view={view} now={now} query={query} layout={layout} />
+          {/* A sideways swipe on a touch screen goes where the arrows go (§475). */}
+          <CalendarSwipe previousHref={steps.previous} nextHref={steps.next}>
+            <EventCalendar view={view} events={events} now={now} query={query} layout={layout} />
+          </CalendarSwipe>
+        </Box>
         {/* What the three colours mean, under «Aspectul nou» only (phase 4): a word beside every colour. */}
         <CalendarLegend {...calendarLegendWords(t)} />
       </Box>
