@@ -49,7 +49,7 @@ const render = (props: { routeMaps?: unknown; routeGpx?: unknown; routeUrl?: str
   );
 
 /** Every iframe tag. */
-// The frames drawn for a script-running browser: the `<noscript>` copy of Strava's frame (§NNN) is not one.
+// The frames drawn for a script-running browser: the `<noscript>` copy of Strava's frame (§742) is not one.
 const iframes = (html: string) => [...html.replace(/<noscript>[^]*?<\/noscript>/g, "").matchAll(/<iframe\b[^>]*>/g)].map((match) => match[0]);
 
 describe("BR-REQ-011-01 the maps on the page (§718)", () => {

@@ -294,7 +294,7 @@ export function routeMapLink(map: RouteMap): string {
 }
 
 /**
- * The namespace of one Strava frame's height messages (§NNN): `embed.js` uses a random UUID, which a
+ * The namespace of one Strava frame's height messages (§742): `embed.js` uses a random UUID, which a
  * server-rendered page cannot (it would differ between server and browser); this is the frame's own
  * name, from the route's id alone — never a user's data — and the origin is what is trusted.
  */

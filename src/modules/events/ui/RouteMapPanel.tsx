@@ -37,13 +37,13 @@ export type RouteMapProviderWords = {
  * The iframe is sandboxed to what a map needs — its own scripts, its own origin for the tiles, and
  * a new tab for the service's own links — and sends Strava or Garmin this site's origin, never the
  * page's path. Strava's frame takes its height from the message the frame posts, read by a tiny
- * island (`StravaFrameHeight`, §NNN), never from Strava's script.
+ * island (`StravaFrameHeight`, §742), never from Strava's script.
  *
  * Under the map, always visible: the sentence that says where the map comes from, and the link to the
  * route on the service (built from the id), with the service's mark, 44 pixels tall.
  */
 /**
- * The frames' fallback heights by service (§738, §NNN): what a frame is until Strava's height message
+ * The frames' fallback heights by service (§738, §742): what a frame is until Strava's height message
  * arrives (`StravaFrameHeight`), and for good with scripts off. Strava's card is its title and figures,
  * the map, the elevation profile and its footer, and its height follows its own width: measured on a
  * real public route on 2026-10-12 (`document.body.scrollHeight + 1`, the number the frame posts), 303 px
@@ -53,7 +53,7 @@ export type RouteMapProviderWords = {
  * plain 600. Garmin's map fills its frame, with no card around it and no height message (its embed's
  * scripts post nothing, read 2026-10-12), so its number is the size Garmin's own embed code gives.
  */
-const GARMIN_HEIGHT = { xs: 548, sm: 600 } as const;
+const GARMIN_HEIGHT = { xs: 600, sm: 720 } as const;
 const STRAVA_FRAME_SX = {
   display: "block",
   width: "100%",
@@ -133,7 +133,7 @@ export default function RouteMapPanel({
             <>
               {/* Strava posts its height once, when its own page is ready: the island must be listening before
                   the frame can load, so the server draws no `src`; the island sets it after its listener is on
-                  (§NNN). Without scripts the `<noscript>` copy loads the frame as before. */}
+                  (§742). Without scripts the `<noscript>` copy loads the frame as before. */}
               <Box component="iframe" {...frameProps} data-src={routeMapEmbedSrc(map, origin)} data-strava-ns={stravaFrameNamespace(map)} sx={STRAVA_FRAME_SX} />
               <noscript>
                 <Box component="iframe" {...frameProps} src={routeMapEmbedSrc(map, origin)} sx={STRAVA_FRAME_SX} />

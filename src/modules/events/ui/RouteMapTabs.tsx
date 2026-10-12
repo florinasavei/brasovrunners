@@ -17,8 +17,8 @@ export type RouteMapTab = { provider: RouteMapProvider; label: string; tabId: st
  * The one client island of the section, and a small one: the panels are the server's, passed as
  * `children` (each a `role="tabpanel"` carrying `data-route-map-panel` with its provider), and this
  * only chooses which one shows — by CSS on that attribute, so nothing is re-rendered and neither map
- * is touched. A tab switch never loads a map: each panel's map waits behind its own press (the
- * `<details>` of `RouteMapPanel`). Rendered on the server with the first tab chosen, so with scripts
+ * is touched. Since §739 the chosen tab's map loads with the page and a hidden tab's frame is lazy, so
+ * a tab switch is what loads the other map (the open `<details>` of `RouteMapPanel`). Rendered on the server with the first tab chosen, so with scripts
  * off the first panel shows with its link, and the GPX below the tabs still downloads.
  *
  * The WAI-ARIA tabs pattern: `role="tablist"` named by the section's words, `role="tab"` with

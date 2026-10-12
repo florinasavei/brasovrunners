@@ -165,7 +165,7 @@ test.describe.serial("BR-REQ-011-01 «Traseul»'s maps and GPX (§718)", () => {
     expect(overflow).toBeLessThanOrEqual(0);
   });
 
-  test("Strava's frame before any message is a phone-sized fallback that follows its width (§NNN)", async ({ page }) => {
+  test("Strava's frame before any message is a phone-sized fallback that follows its width (§742)", async ({ page }) => {
     // Strava's host answered with a card that never posts: the frame stays what the server gave it.
     // Measured on a real public route (2026-10-12): the card is 303 px tall at 288 wide, 345 at 343,
     // 377 at 382, 495 at 520, 639 at 700, 767 at 860: about 0.81 * width + 69. The fallback sits a few
@@ -183,7 +183,7 @@ test.describe.serial("BR-REQ-011-01 «Traseul»'s maps and GPX (§718)", () => {
     if ((page.viewportSize()?.width ?? 0) <= 400) expect(box?.height ?? 0).toBeLessThan(400);
   });
 
-  test("Strava's frame takes its card's height the way the real frame posts it: at once, and again on a width change (§NNN)", async ({ page }) => {
+  test("Strava's frame takes its card's height the way the real frame posts it: at once, and again on a width change (§742)", async ({ page }) => {
     // The stand-in card posts as soon as its document is ready, with no delay, exactly as Strava's own
     // frame does (`[ns, "BROADCAST_IFRAME_HEIGHT", pixels]`, ns from its fragment): the page's listener
     // must already be on, or the one message is lost. It posts again when its width changes. A message

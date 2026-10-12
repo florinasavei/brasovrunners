@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
 
 /**
- * §NNN (amends §739, §718) — the notice's template says what the site does: an event's Strava map
+ * §741 (amends §739, §718) — the notice's template says what the site does: an event's Strava map
  * loads with the page (with both providers' maps, the chosen tab's first), each provider then seeing the
  * visitor's IP address; only a YouTube film still waits for a press.
  */
@@ -13,7 +13,7 @@ const cookies = (body: typeof privacyNoticeRo, marker: string) => {
   return found[0]!;
 };
 
-describe("§NNN the notice's route-map sentence", () => {
+describe("§741 the notice's route-map sentence", () => {
   it("ro: names Strava and Garmin Connect as receiving the IP address, and no map waits for a press", () => {
     const p = cookies(privacyNoticeRo, "YouTube");
     expect(p).toMatch(/Strava/);

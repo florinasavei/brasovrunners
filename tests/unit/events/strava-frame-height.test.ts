@@ -6,7 +6,7 @@ import { STRAVA_EMBED_ORIGIN, STRAVA_HEIGHT_MAX, STRAVA_HEIGHT_MIN, stravaFrameH
 import RouteMapPanel from "@/modules/events/ui/RouteMapPanel";
 
 /**
- * BR-REQ-011-01 (§NNN) — Strava's frame is as tall as its card: the height message is believed only
+ * BR-REQ-011-01 (§742) — Strava's frame is as tall as its card: the height message is believed only
  * from Strava's origin, for this frame's namespace, under its name, as a number kept in a sane range.
  */
 const MAP: StravaRouteMap = { provider: "strava", id: "1111222233334444555" };
@@ -14,7 +14,7 @@ const NS = stravaFrameNamespace(MAP);
 const NAME = "BROADCAST_IFRAME_HEIGHT";
 const ORIGIN = "https://example.test";
 
-describe("BR-REQ-011-01 stravaFrameHeight (§NNN)", () => {
+describe("BR-REQ-011-01 stravaFrameHeight (§742)", () => {
   it("reads the height from Strava's origin, our namespace and the message's name", () => {
     expect(stravaFrameHeight({ origin: STRAVA_EMBED_ORIGIN, data: [NS, NAME, 512] }, NS)).toBe(512);
     expect(stravaFrameHeight({ origin: STRAVA_EMBED_ORIGIN, data: [NS, NAME, 511.6] }, NS)).toBe(512);
@@ -45,7 +45,7 @@ describe("BR-REQ-011-01 stravaFrameHeight (§NNN)", () => {
   });
 });
 
-describe("BR-REQ-011-01 the Strava frame carries its namespace (§NNN)", () => {
+describe("BR-REQ-011-01 the Strava frame carries its namespace (§742)", () => {
   const words = { tab: "Strava", show: "Arată harta pe Strava", notice: "Harta vine de la Strava; Strava vede adresa ta IP.", open: "Deschide în Strava", frame: "Harta" };
 
   it("puts the namespace in the address and beside the frame, with a fallback that is not 760", () => {

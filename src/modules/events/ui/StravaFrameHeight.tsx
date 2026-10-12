@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { stravaFrameHeight } from "../domain/strava-frame-height";
 
 /**
- * Makes Strava's frame as tall as its card (§NNN): listens for the height message the frame posts
+ * Makes Strava's frame as tall as its card (§742): listens for the height message the frame posts
  * (see `strava-frame-height.ts`) and sets the height of the frame beside it. Strava's card posts it
  * once, as soon as its own page is ready, so the listener goes on BEFORE the frame has an address:
  * the server draws the frame with `data-src` only, and this sets `src` after `addEventListener`.

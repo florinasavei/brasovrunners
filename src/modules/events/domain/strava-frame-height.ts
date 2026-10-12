@@ -1,5 +1,5 @@
 /**
- * The height Strava's route card reports about itself (§NNN; amends §738).
+ * The height Strava's route card reports about itself (§742; amends §738).
  *
  * Strava's `embed.js` builds the iframe, puts a namespace in its address fragment (`#ns=<uuid>`) and
  * listens for `[ns, "BROADCAST_IFRAME_HEIGHT", <pixels>]` posted by the frame to the page, which it
