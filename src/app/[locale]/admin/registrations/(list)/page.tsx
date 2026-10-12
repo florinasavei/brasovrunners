@@ -34,7 +34,7 @@ import { declarationAsksMinorToSignByEvent } from "@/modules/legal-documents/rep
 import { registrationStatus } from "@/db/schema/registrations";
 import { journeyOf } from "@/modules/registrations/domain/journey";
 import { canTransition } from "@/modules/registrations/domain/state-machine";
-import { printedNumbersACancelWouldVoid, raceNumberOf } from "@/modules/registrations/domain/race-number";
+import { formatRaceNumber, printedNumbersACancelWouldVoid, raceNumberOf, raceNumberTextOf } from "@/modules/registrations/domain/race-number";
 import { deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
 import FamilyChip from "@/modules/registrations/ui/FamilyChip";
@@ -502,7 +502,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       // "3/6" cannot say what the six are (§200).
       hint: t("registrations.journey.legend"),
       // The number once the registration is confirmed (§548): the chip says "nr. 42".
-      render: (row) => <StaffJourney journey={journeyOf(row)} bibNumber={raceNumberOf(row)} variant="compact" />,
+      render: (row) => <StaffJourney journey={journeyOf(row)} bibNumber={raceNumberTextOf(row)} variant="compact" />,
     },
     {
       /*
@@ -546,7 +546,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         }
         return (
           <Box component="span" sx={{ fontVariantNumeric: "tabular-nums", fontWeight: 700, color: "text.primary" }}>
-            {number}
+            {formatRaceNumber(number, row.raceNumberFormat)}
             {/*
               Whether this bib is on paper (§264). A tick rather than a printer glyph, for the
               reason the editor's toolbar has words on it: the printer emoji renders as a broken
@@ -986,7 +986,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 >
                   <Link href={{ pathname: "/admin/registrations/[id]", params: { id: bib.id } }}>
                     {t(bib.status === "CANCELLED" ? "registrations.bibsVoidCancelled" : "registrations.bibsVoidExpired", {
-                      number: bib.bibNumber,
+                      number: formatRaceNumber(bib.bibNumber, bib.raceNumberFormat),
                       name: bib.registeredName,
                       date: formatDay(bib.voidedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline" }),
                     })}
@@ -1757,7 +1757,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                         title: t("registrations.cancel"),
                         // A printed bib is named before the press (§311): after this the number stays
                         // retired and the paper has to come out of the pile.
-                        body: `${row.bibPrintedAt !== null && row.bibNumber !== null ? `${t("confirm.cancelRegistrationPrintedBody", { number: row.bibNumber })} ` : ""}${t("registrations.cancelBody")}`,
+                        body: `${row.bibPrintedAt !== null && row.bibNumber !== null ? `${t("confirm.cancelRegistrationPrintedBody", { number: formatRaceNumber(row.bibNumber, row.raceNumberFormat) })} ` : ""}${t("registrations.cancelBody")}`,
                         ...(row.kind === "TEST" ? {} : { email: words.email(1) }),
                         confirmLabel: t("registrations.cancel"),
                         cancelLabel: words.cancel,

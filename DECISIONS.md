@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.99-2026-10-12 -->
+<!-- PROJECT_BASELINE: BR-V3.00-2026-10-12 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.99-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.00-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -25736,3 +25736,17 @@ Baseline `BR-V2.98-2026-10-12`.
 **Refused.** The mock-up drops the month and year selects; they stay, the only way to jump a year on a phone. The kind chips as larger buttons (built first, then dropped for §733's smaller pills, the owner's later word). The next-event panel's pills were left as they are: they already carry what the event has.
 
 Baseline `BR-V2.99-2026-10-12`.
+
+## 735. «Cum arată numărul»: race numbers with leading zeros, on the bib and everywhere the number is written
+
+**The owner, 2026-10-12:** «on the BIB designer I need to be able to set how the numbers look so that they always have 3 digits, eg: 001, 002, 003, etc, also on the website and emails they should look like that».
+
+**Decision.** The bib designer («Cum arată numărul de concurs») gains «Cum arată numărul»: «1, 2, 3 — așa cum e» (`plain`, the default), «001, 002, 003 — trei cifre» (`pad3`), «0001, 0002, 0003 — patru cifre» (`pad4`). Stored as `numberFormat` inside `events.bib_design` (no migration); a design saved before reads `plain`, so every event prints as it did until the club chooses. A number already as long as the width is written as it is, never cut (1234 under `pad3` is «1234»).
+
+**One formatter.** `registrations/domain/race-number.ts#formatRaceNumber(number, format)` and `raceNumberTextOf(row)` (`raceNumberOf`, written); the SQL reader `events/repository.ts#RACE_NUMBER_FORMAT` (`bib_design ->> 'numberFormat'`, read by `readRaceNumberFormat`, `plain` for anything unknown) lets each query select the event's choice beside the number. Written through it: the A5 bib (`bibs-pdf.ts`) and its picture (`bib-image.tsx`, so the designer's preview shows «007»; the number's size is still chosen by its written length); every email that carries the number (`render.ts`: the confirmation, the reminder, «Numărul tău de concurs», the family's confirmation, the club's notice, the organizer's message's `{bibNumber}`); the public list's «BIB» column; the number beside the QR on «Înscrierile mele», «Gestionează înscrierea» and the family's signing steps; and in the backoffice the registrations list, a registration's page (its number, the journey line, «ce îi spui», the void chip, the cancel dialog), the desk row, the list of printed bibs to pull, «Urgențe» and the bibs page.
+
+**What stays an integer.** The stored number, its order in the band, every comparison, the numbers typed by hand (the desk's box reads «007» as 7), the bib links' `from`/`to`, and the CSV and spreadsheet exports, which keep a numeric column so a spreadsheet sorts and sums them.
+
+**Refused.** A club-wide setting: the designer is the event's, as the owner put it. Storing the written text: the band's order and the uniqueness check stay numeric.
+
+Baseline `BR-V3.00-2026-10-12`.

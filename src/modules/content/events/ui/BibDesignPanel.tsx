@@ -1,3 +1,4 @@
+import { RACE_NUMBER_FORMATS } from "@/modules/registrations/domain/race-number";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -244,6 +245,22 @@ export default async function BibDesignPanel({
             {BIB_NUMBER_SCALES.map((scale) => (
               <option key={scale} value={scale}>
                 {t(`editor.bibDesign.scales.${scale}`)}
+              </option>
+            ))}
+          </RecallField>
+          {/* «Cum arată numărul» (§735): the zeros in front, on the bib and everywhere the number is written. */}
+          <RecallField
+            select
+            name="event.bibDesign.numberFormat"
+            label={t("editor.bibDesign.numberFormat")}
+            helperText={t("editor.bibDesign.numberFormatHelp")}
+            defaultValue={design.numberFormat}
+            slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+            sx={{ width: { sm: 260 } }}
+          >
+            {RACE_NUMBER_FORMATS.map((format) => (
+              <option key={format} value={format}>
+                {t(`editor.bibDesign.numberFormats.${format}`)}
               </option>
             ))}
           </RecallField>

@@ -423,7 +423,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
               */}
               {item.status === "CONFIRMED" && item.checkinCode && !item.eventCancelled && (
                 <Box sx={{ mb: 1.5 }}>
-                  <QrWithName checkinCode={item.checkinCode} registeredName={item.registeredName} status={item.status} bibNumber={item.bibNumber} size={160} words={qrWords} />
+                  <QrWithName checkinCode={item.checkinCode} registeredName={item.registeredName} status={item.status} bibNumber={item.bibNumber} raceNumberFormat={item.raceNumberFormat} size={160} words={qrWords} />
                 </Box>
               )}
 
