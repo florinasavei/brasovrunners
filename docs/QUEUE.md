@@ -142,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.01` | «Invită pe email» on the registrations page; a new race reachable before its first registration (§736) |
 | `BR-V3.00` | race numbers with leading zeros (001) from the bib designer (§735) |
 | `BR-V2.99` | the calendar closer to the mock-up under «Aspectul nou» (§734) |
 | `BR-V2.98` | the shop's chips on StatusChip (§728) · the picture field's words in one place (§729) · the smoke accepts the old root redirect (§730) · the members' current tab in view (§731) · home: the special events first, a setting (§732) · calendar chips smaller and scrollable; Outlook for personal and work accounts (§733) |

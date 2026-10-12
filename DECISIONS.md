@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.00-2026-10-12 -->
+<!-- PROJECT_BASELINE: BR-V3.01-2026-10-12 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.00-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.01-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -25750,3 +25750,18 @@ Baseline `BR-V2.99-2026-10-12`.
 **Refused.** A club-wide setting: the designer is the event's, as the owner put it. Storing the written text: the band's order and the uniqueness check stay numeric.
 
 Baseline `BR-V3.00-2026-10-12`.
+
+## 736. «Invită pe email» beside «Adaugă o înscriere», and a new race's invitations reachable before its first registration
+
+**The owner, 2026-10-12** (amends §647): «totuși partea aia de invitații nu e super clară și bine definită în partea de înscrieri, cumva era ascunsă».
+
+**What was wrong.** «Invitații» (§647) is a folded section in the middle of the registrations page — between «Cine s-a înscris» and «Emailuri de trimis» — drawn only on a list about one event, and opened by itself only once an invitation is pending. Nothing at the top of the page named it. Worse, the list's event filter (`listEventsWithRegistrations`) offered only events with at least one registration: a new race nobody had registered for yet could not be chosen, so its invitations could not be reached from the page at all, and the editor's «Trimite invitații» link (`?eventId=`) fell back to every event, where the section is not drawn.
+
+**Decision.**
+
+- **«Invită pe email» / "Invite by email"** beside «Adaugă o înscriere» in the page's toolbar, for the Administrator (who alone sends, §647), with the send glyph. On a list about one event it is an in-page link to `#registrations-invitations`, which the backoffice's `OpenFoldFromHash` answers by opening the section and scrolling to it — no script of its own, and a plain anchor without one. On «toate evenimentele» it opens «Caută și filtrează» (`#registrations-filters`), where the event is chosen, and its accessible name says so («Invită pe email: alege întâi evenimentul»).
+- **The filter offers every event that takes registrations here** (`INTERNAL`), with or without registrations, beside every event that has some, as before. Events registered elsewhere or not at all, with nobody registered here, stay out; the CMS lists them. The title is in the language of the event's registrations as before, in Romanian for an event nobody has registered for yet.
+
+**Refused.** Moving «Invitații» above the counts: the counts are what the page is first read for. A tab of its own in the event's menu: one more address for one panel, and the section's verbs act on the list beside it.
+
+Baseline `BR-V3.01-2026-10-12`.

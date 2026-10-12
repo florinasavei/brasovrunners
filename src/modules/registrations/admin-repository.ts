@@ -1415,8 +1415,17 @@ export async function listOutboxHistory<T extends Record<string, unknown>>(
   });
 }
 
-/** Events with at least one registration, for the list page's filter — Admin has no reason to
- * see events nobody has registered for on this screen; the CMS already lists all of them. */
+/**
+ * The events the list page's filter offers: every event with at least one registration, and every
+ * event that takes registrations on this site (`INTERNAL`) even before its first (§736, amending §647;
+ * the owner: «partea de invitații nu e super clară… era ascunsă»). «Invitații» is drawn only on a list
+ * about one event, and a new race with nobody registered yet was not in this list — so the club could
+ * not reach its invitations, and the editor's «Trimite invitații» link fell back to every event.
+ * Events registered elsewhere or not at all, with nobody here, stay out: the CMS lists those.
+ *
+ * The title in the language of the event's registrations, as before; in Romanian for an event
+ * nobody registered for yet.
+ */
 export async function listEventsWithRegistrations<T extends Record<string, unknown>>(
   db: Database<T>,
 ): Promise<Array<{ id: string; title: string | null; featured: boolean; membersOnly: boolean }>> {
@@ -1424,11 +1433,12 @@ export async function listEventsWithRegistrations<T extends Record<string, unkno
     // `membersOnly` (§552): the list's «Membri» chip on an event for the members alone.
     .selectDistinct({ id: events.id, title: eventTranslations.title, featured: events.featured, membersOnly: events.membersOnly })
     .from(events)
-    .innerJoin(registrations, eq(registrations.eventId, events.id))
+    .leftJoin(registrations, eq(registrations.eventId, events.id))
     .leftJoin(
       eventTranslations,
-      and(eq(eventTranslations.eventId, events.id), eq(eventTranslations.locale, registrations.locale)),
+      and(eq(eventTranslations.eventId, events.id), eq(eventTranslations.locale, sql`coalesce(${registrations.locale}, 'ro')`)),
     )
+    .where(sql`${registrations.id} is not null or ${events.registrationMode} = 'INTERNAL'`)
     .orderBy(asc(eventTranslations.title));
 }
 
