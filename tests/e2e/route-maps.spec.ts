@@ -120,7 +120,7 @@ test.describe.serial("BR-REQ-011-01 «Traseul»'s maps and GPX (§718)", () => {
     await page.waitForURL(/saved=PUBLISHED/);
   });
 
-  test("open from the start (§NNN): the chosen tab's map loads with the page, the other one only when its tab is chosen", async ({ page }) => {
+  test("open from the start (§739): the chosen tab's map loads with the page, the other one only when its tab is chosen", async ({ page }) => {
     const seen = await watchProviders(page);
     const stravaLoaded = page.waitForRequest((request) => new URL(request.url()).hostname === "strava-embeds.com");
     await page.goto(`/ro/evenimente/${slug}`);

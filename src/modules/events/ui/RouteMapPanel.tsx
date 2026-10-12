@@ -22,9 +22,9 @@ export type RouteMapProviderWords = {
 };
 
 /**
- * One service's map in «Traseul» (§718), open from the start (§NNN), and its link.
+ * One service's map in «Traseul» (§718), open from the start (§739), and its link.
  *
- * Since §NNN the disclosure is drawn open: the owner chose the map with the page over the press, knowing
+ * Since §739 the disclosure is drawn open: the owner chose the map with the page over the press, knowing
  * the service then sees the visitor's address. Before, the press was the house's facade for a third party (§69, §110, §266, §403): a native `<details>`,
  * rendered here on the server, whose closed state is the line «Arată harta pe …» — and a closed
  * disclosure keeps its contents out of the page (`content-visibility: hidden`), so the lazy iframe
@@ -71,7 +71,7 @@ export default function RouteMapPanel({
     >
       <Box
         component="details"
-        // Open from the start (the owner, 2026-10-12: «yes I want it always opened», §NNN): the visible tab's
+        // Open from the start (the owner, 2026-10-12: «yes I want it always opened», §739): the visible tab's
         // map loads with the page; a hidden tab's lazy frame waits until its tab is chosen.
         open
         sx={{

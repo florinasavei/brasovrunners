@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.03-2026-10-12 -->
+<!-- PROJECT_BASELINE: BR-V3.04-2026-10-12 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.03-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.04-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -25795,3 +25795,16 @@ Baseline `BR-V3.02-2026-10-12`.
 - **Garmin in kilometres — not done.** Garmin Connect's course embed documents no units option: it shows the units of the viewer's own Garmin account, or Garmin's default for a visitor signed out.
 
 Baseline `BR-V3.03-2026-10-12`.
+
+## 739. Route maps open from the start
+
+**The owner, 2026-10-12** (amends §718's facade): asked whether the embedded map must be closed by default, and told that loading it gives Strava or Garmin the visitor's IP address without a press and slows the page, answered «yes I want it always opened».
+
+**Decision.**
+
+- **Open from the start.** Each map's disclosure is drawn open (`<details open>`), so the chosen tab's map loads with the page, no press. A hidden tab's frame is lazy and waits until its tab is chosen: opening an event with both maps asks Strava (the first tab) and not Garmin.
+- **The notice says where the map comes from**, no longer that it loads on a press: «Harta vine de la Strava; Strava vede adresa ta IP.» / «Harta vine de la Garmin Connect; Garmin vede adresa ta IP.», and in English the same.
+- **Still no provider script** on our page (§61): the frame's address is built on the server, as before.
+- **The privacy notice.** The notice in force does not name Strava or Garmin as recipients of a visitor's address on an event page; the owner was told so and decided to open the maps now. A notice that names them is the club's to approve (`/admin/legal`), ideally after a Romanian lawyer reads it.
+
+Baseline `BR-V3.04-2026-10-12`.

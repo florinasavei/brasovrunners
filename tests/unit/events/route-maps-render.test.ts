@@ -15,7 +15,7 @@ import { withClientWords } from "../../helpers/client-words";
  * BR-REQ-011-01 (§718) — «Traseul» on the page: Garmin Connect and Strava in tabs, Strava first (§738), each
  * map behind its own press and its link beside it; one service alone with no tabs; the GPX below,
  * with or without a map. The page draws the links and the iframes from the stored ids only, and an
- * iframe sits inside a `<details>` open from the start (the owner, 2026-10-12, §NNN, replacing the press of
+ * iframe sits inside a `<details>` open from the start (the owner, 2026-10-12, §739, replacing the press of
  * §718): the visible tab's map loads with the page, a hidden tab's lazy frame only once chosen.
  */
 const STRAVA_ID = "1111222233334444555";
@@ -68,7 +68,7 @@ describe("BR-REQ-011-01 the maps on the page (§718)", () => {
     expect(html).toContain('role="tabpanel" id="route-map-panel-strava" aria-labelledby="route-map-tab-strava"');
   });
 
-  it("puts every map's iframe inside an open disclosure (§NNN), lazy, sandboxed, built from the stored ids", () => {
+  it("puts every map's iframe inside an open disclosure (§739), lazy, sandboxed, built from the stored ids", () => {
     const html = render({ routeMaps: BOTH });
     expect([...html.matchAll(/<details[^>]*\bopen\b/g)]).toHaveLength(2);
     const frames = iframes(html);
