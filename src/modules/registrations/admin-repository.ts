@@ -1480,6 +1480,33 @@ export async function listEventsAcceptingRegistrations<T extends Record<string, 
     .orderBy(asc(events.startsAt));
 }
 
+/**
+ * The events an invitation can be sent to now (§740): the send's own conditions (`sendInvitations`,
+ * `INVITATION_EVENT_CLOSED`) — registered here, scheduled, published, its start announced and still to
+ * come — so the registrations page's «Invită pe email» menu never offers an event whose send is refused.
+ */
+export async function listEventsTakingInvitations<T extends Record<string, unknown>>(
+  db: Database<T>,
+  locale: "ro" | "en",
+  now: Date,
+): Promise<Array<{ id: string; title: string | null; startsAt: Date }>> {
+  return db
+    .select({ id: events.id, title: eventTranslations.title, startsAt: events.startsAt })
+    .from(events)
+    .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, events.id), eq(eventTranslations.locale, locale)))
+    .where(
+      and(
+        eq(events.registrationMode, "INTERNAL"),
+        eq(events.eventStatus, "SCHEDULED"),
+        eq(events.editorialStatus, "PUBLISHED"),
+        eq(events.dateToBeAnnounced, false),
+        eq(events.timeToBeAnnounced, false),
+        sql`${events.startsAt} > ${now}`,
+      ),
+    )
+    .orderBy(asc(events.startsAt));
+}
+
 /** Whether the chosen event is over (§82): the desk then shows the rows and no buttons. */
 export async function isEventCompleted<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<boolean> {
   const [row] = await db.select({ eventStatus: events.eventStatus }).from(events).where(eq(events.id, eventId)).limit(1);

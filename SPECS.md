@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.04-2026-10-12 -->
+<!-- PROJECT_BASELINE: BR-V3.05-2026-10-12 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V3.04-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.05-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -1735,6 +1735,8 @@ way through every step, and none of them is a way around the allocator.
 31. The registration page's «Lista de invitați speciali» block explains itself to every role that reads it: the heading's «i» (`InfoTip`, a 44-pixel button beside the heading, outside the radio group's name) holds three lines — «Pentru organizatori, voluntari, pacemakeri și sportivi invitați: sunt la start fără să ocupe unul dintre locurile anunțate.», what they keep and when the public count includes them, and «Un participant obișnuit nu se pune aici.» — and the caption under the radios says in one line that the person takes no announced place, keeps the declaration and the race number, stays on the public list if they ticked it and enters the public count only with the event's tick, each under 200 characters, in both languages (2026-10-03, `DECISIONS.md` §649).
 32. The registrations page's toolbar carries «Invită pe email» for the Administrator, which opens the event's «Invitații» section (or, on every event, the filter where the event is chosen); the page's event filter offers every event that takes registrations on the site before its first registration (2026-10-12, `DECISIONS.md` §736).
 33. The invitation form takes one row per person, a name and an email address, refusing before the send a row with only one of them by its row number; «Invitații» lists the invitations before the form, with counts by state and each one's origin (a member, or added by hand); on the first page of one event's registrations list with no other filter, the invitations not accepted yet are rows above the registrations, not counted in the results; and the registrations list marks a registration accepted from an invitation «Invitat» (2026-10-12, `DECISIONS.md` §737).
+34. Pressing «Invită pe email» on one event's list opens «Invitații» and brings it into view every time, including a second press on the same address after the panel was closed, and on all events it leads to the event's panel — straight when one upcoming event the send accepts takes invitations, by a menu when several do, each event named by its title and start (2026-10-12, `DECISIONS.md` §740).
+35. «Invitații» is open on arrival while an invitation is sent and waiting or ran out unanswered while the event is still to come; every invited person is seen with the invitation's state — a row above the registrations on the event's list, and on all events a line naming each upcoming event's unanswered invitations — and no invitation is counted as a registration or changes the capacity formula (2026-10-12, `DECISIONS.md` §740).
 
 **Verification:** integration `registrations/race-day.test.ts`, `registrations/staff-crud.test.ts`
 

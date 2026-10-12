@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.05-2026-10-12
+
+- **«Invită pe email» works from anywhere, and every invited person is seen with their state** — pressing it again on the same address reopens «Invitații»; on all events it leads to the event's panel (a menu when several take invitations); «Invitații» opens while one is sent or unanswered; all events name each event's unanswered invitations. §740.
 ## BR-V3.04-2026-10-12
 
 - **Route maps open by themselves** — an event's Strava or Garmin Connect map shows with the page, no press; the other tab's map loads when it is chosen. §739.
