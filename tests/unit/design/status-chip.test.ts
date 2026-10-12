@@ -18,20 +18,11 @@ import { importFacts, SOURCES, type Source } from "./scan";
  */
 
 /**
- * The names the public table still holds although only the backoffice's shop draws them, through
- * `GlyphChip`: the orders card and the product list (`src/modules/content/shop/ui/OrdersCard.tsx`,
- * `ProductList.tsx`, rendered by `/admin/shop` alone), which another change owns. They leave this list,
- * and the public table, when those two move to `StatusChip` (`orders` and `club` join `status-glyphs.ts`
- * then) — the test below fails the day the shop stops drawing one, so the list cannot rot.
- */
-const PENDING_SHOP = ["visible", "hidden", "language", "orders", "club"];
-
-/**
- * The names in both tables for good: the members' zone's order chip (`members-area/MembersShop.tsx`,
+ * The names in both tables for good: the members' zone's order chip (`members-area/MembersShop.tsx`, and the calendar's kind chips, `KindChips.tsx` for `club`,
  * public) draws them through `GlyphChip`, and the backoffice's states draw them through `StatusChip`.
  * Each table imports its own icon file, so a visitor still downloads only the public table.
  */
-const BOTH_SURFACES = ["done", "cancelled", "planned"];
+const BOTH_SURFACES = ["done", "cancelled", "planned", "club"];
 
 /**
  * Public files under a backoffice prefix of the house's classifier (`isBackoffice`): the team page's
@@ -165,8 +156,8 @@ const publicNames = (sources: Source[]): Set<string> => new Set(sources.filter((
 const sourceOf = (file: string, text: string): Source => ({ file, text, tree: ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, file.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS) });
 
 describe("§694 the status chip keeps the public glyph table public", () => {
-  it("the two tables share no name, but the members' zone's and the shop's pending ones", () => {
-    const shared = Object.keys(STATUS_GLYPHS).filter((name) => name in GLYPHS && !PENDING_SHOP.includes(name) && !BOTH_SURFACES.includes(name));
+  it("the two tables share no name, but the names of both surfaces", () => {
+    const shared = Object.keys(STATUS_GLYPHS).filter((name) => name in GLYPHS && !BOTH_SURFACES.includes(name));
     expect(shared).toEqual([]);
     for (const name of BOTH_SURFACES) expect(name in GLYPHS && name in STATUS_GLYPHS, `${name} is listed in both surfaces but is not in both tables`).toBe(true);
   });
@@ -181,16 +172,10 @@ describe("§694 the status chip keeps the public glyph table public", () => {
     for (const name of Object.keys(STATUS_GLYPHS)) expect(names.has(name), `status glyph ${name} is drawn nowhere`).toBe(true);
   });
 
-  it("every plain public name is drawn by a public file, bar the shop's pending ones", () => {
+  it("every plain public name is drawn by a public file", () => {
     const names = new Set([...publicNames(SOURCES), ...DYNAMIC_PUBLIC]);
-    const plain = Object.keys(GLYPHS).filter((name) => !name.includes(":") && !PENDING_SHOP.includes(name));
+    const plain = Object.keys(GLYPHS).filter((name) => !name.includes(":"));
     for (const name of plain) expect(names.has(name), `public glyph ${name} is drawn by no public file`).toBe(true);
-  });
-
-  it("the shop's pending names are still drawn by the backoffice's shop through GlyphChip, so the list is true", () => {
-    const shop = SOURCES.filter((source) => source.file.startsWith("src/modules/content/shop/") && !usesStatusChip(source));
-    const names = new Set(shop.flatMap((source) => [...drawn(source)]));
-    for (const name of PENDING_SHOP) expect(names.has(name), `${name} is no longer drawn by the shop: drop it from PENDING_SHOP and the public table`).toBe(true);
   });
 
   it("today, a backoffice-only name (`series`) is in no public file and not in the public table", () => {

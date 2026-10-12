@@ -2,8 +2,10 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ConstructionIcon from "@mui/icons-material/Construction";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
+import GroupsIcon from "@mui/icons-material/Groups";
 import HelpIcon from "@mui/icons-material/Help";
 import LinkIcon from "@mui/icons-material/Link";
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import TranslateIcon from "@mui/icons-material/Translate";
@@ -30,6 +32,9 @@ export const STATUS_GLYPHS = {
   visible: VisibilityIcon,
   hidden: VisibilityOffIcon,
   language: TranslateIcon,
+  // An order's count on a product, an order the club placed for a member (§707).
+  orders: ReceiptLongIcon,
+  club: GroupsIcon,
   // The shop's product page, a team member's links, a repeated event's count (§113).
   shop: StorefrontIcon,
   link: LinkIcon,
