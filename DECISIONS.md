@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.98-2026-10-12 -->
+<!-- PROJECT_BASELINE: BR-V2.99-2026-10-12 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.98-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.99-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -25717,3 +25717,22 @@ Baseline `BR-V2.98-2026-10-12`.
 **Refused:** wrapping the chips onto two rows (§487's one row stands: the first week stays above the fold); hiding chips behind a «Mai multe» menu; one Outlook row that guesses the account; sending visitors to Microsoft's instructions instead of a link.
 
 Baseline `BR-V2.98-2026-10-12`.
+
+## 734. The calendar under «Aspectul nou» closer to the mock-up, and the chips smaller on a phone with a scrollbar in sight
+
+**The owner, 2026-10-12, beside a screenshot of the mock-up and of QA** (amends §720, and §733 where it touches the subscribe box): "have arrows on the month; have that «Alergăm împreună în Brașov» nice text on the right; have nicer buttons; have more details on the calendar card; have better icons on the apps links (Google, Apple, Outlook); overall match the aesthetics of the proposed one" — and then: "the alignment on the mock is better."
+
+**Decision.** Under «Aspectul nou» only — off, the calendar is drawn as before:
+
+- **‹ Month ›.** From `sm` the previous and next arrows stand either side of the month's name, which is set in the display face; the period row's pair is not drawn there. A phone, where the heading is not drawn (§487), keeps the row's pair beside «Azi». Both pairs are the same `CalendarStepLink` (it takes an `sx`), so the swipe and the arrows still go to one address.
+- **The motto (reverses §720's refusal).** «Alergăm împreună în Brașov.» / "We run together in Brașov." in the handwriting face (Caveat, already in the repository, §460, never preloaded), tilted, a stroke of the accent under it, at the title block's right from `lg`, where the line beside it leaves room. Real text, read by a screen reader. §720 left it out because Caveat was the home page's; the owner asked for it by name.
+- **Buttons.** The kind and surface chips stay §733's small pills. «Lună / An» and «Calendar / Listă» are two segmented controls (a pale track, the chosen segment a raised card in `primary.main`), «Azi» a small outlined button. Every target stays 44 pixels on a phone.
+- **The entry in the grid.** From `sm` an entry is the dot, the glyphs and the time on its first line, then the whole title on up to two lines (it was cut after a letter or two); the cells are taller to hold it. A phone's 40-pixel column is unchanged.
+- **The apps' logos (reverses §720's refusal of brand marks).** Google's «G» in its four colours, Apple's apple in the text's ink, an Outlook mark in its blues on both of §733's Outlook rows, and a chevron at each row's end. The marks are drawn small and plain as the apps' own identification, the use the companies allow for a link to their service; their colours are tokens of their own in `brand.ts` (`PROVIDER_LOGO`), not the club's palette. The Outlook mark is drawn for the site, not Microsoft's file.
+- **One card.** From `sm` the period's controls and the grid are one card, so the month's heading lines up with the grid's edges and the card's top meets the next-event card's beside it. A phone has no card and is unchanged.
+
+- **The chips on a phone (amends §733).** The owner, the same day, on a phone: «chipurile trebuie să fie mult mai mici pe telefon și trebuie să văd scrollbar». Below `sm` the kind and surface pills are 20 pixels (MUI's small is 24), the word 11 pixels, the glyph 13, the sides 6; every value names its `sm` as MUI's small chip, so from `sm` they are §733's pills. Each link stays 44 pixels tall (BR-REQ-041-01 criterion 6). §733's thin scrollbar was in the style but a phone's browser draws a scrollbar only while a finger scrolls, so it was never seen where the chips overflow: `ScrollRow` now draws a bar of its own under the row (`SCROLL_BAR_SX` in `shared/ui/scroll-row.ts`): a 4-pixel track in `divider`, a thumb in `text.secondary` whose width is the share of the row on screen and whose place is the scroll's, written by `watchScrollRow` as two CSS variables (no state, no re-render). It is shown only while the row overflows; while it is up the browser's own bar is hidden (`data-drawn-bar`), so a desktop never shows two. With scripts off the browser's bar is the cue, as in §733. The edge fade stays.
+
+**Refused.** The mock-up drops the month and year selects; they stay, the only way to jump a year on a phone. The kind chips as larger buttons (built first, then dropped for §733's smaller pills, the owner's later word). The next-event panel's pills were left as they are: they already carry what the event has.
+
+Baseline `BR-V2.99-2026-10-12`.

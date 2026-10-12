@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.99-2026-10-12
+
+- **The calendar closer to the mock-up, under «Aspectul nou»** — arrows either side of the month's name, «Alergăm împreună în Brașov.» handwritten at the right of the title, segmented «Lună / An» and «Calendar / Listă», each entry in the grid showing its time and then its whole title, the month's controls and grid in one card level with the next event, and the Google, Apple and Outlook rows with each app's own logo. On a phone the kind and surface chips are smaller and a scrollbar under them stays in sight while there are more to see. Off, nothing changes. §734.
 ## BR-V2.98-2026-10-12
 
 - **The shop's backoffice chips use `StatusChip`** — internal: four icons leave the public glyph table, so visitors download fewer. §728.

@@ -3,6 +3,7 @@
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import IconButton from "@mui/material/IconButton";
+import type { SxProps, Theme } from "@mui/material/styles";
 import Link, { useLinkStatus } from "next/link";
 import RunnerLoader, { RunnerLoaderStyles } from "@/shared/ui/RunnerLoader";
 
@@ -34,14 +35,17 @@ export default function CalendarStepLink({
   href,
   label,
   direction,
+  sx,
 }: {
   /** Already localized, already carrying the month and every filter it keeps. */
   href: string;
   label: string;
   direction: "previous" | "next";
+  /** Where the arrow is drawn: the period row's pair and the title's pair under «Aspectul nou» show at different widths. A plain object, so it crosses from the server. */
+  sx?: SxProps<Theme>;
 }) {
   return (
-    <IconButton component={Link} href={href} prefetch={false} aria-label={label} sx={{ minHeight: 44, minWidth: 44 }}>
+    <IconButton component={Link} href={href} prefetch={false} aria-label={label} sx={[{ minHeight: 44, minWidth: 44 }, ...(Array.isArray(sx) ? sx : [sx])]}>
       <StepGlyph direction={direction} />
       {/* The runner's styles, drawn with the page, so the press adds none (§371). */}
       <RunnerLoaderStyles size={24} color="inherit" />
