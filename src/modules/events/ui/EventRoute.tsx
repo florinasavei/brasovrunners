@@ -35,7 +35,7 @@ export type RouteMapWords = {
  * "Linkuri și fișiere" (§332), drawn exactly as that section draws them.
  *
  * Since §718, the event's own maps and file under them: Garmin Connect and Strava in tabs (the
- * owner's layout, Strava first since §NNN; one service alone needs no tabs), each map behind its own press
+ * owner's layout, Strava first since §738; one service alone needs no tabs), each map behind its own press
  * (`RouteMapPanel`), then the GPX the club uploaded, «Descarcă traseul (GPX)», whether or not there
  * is a map. The route link is not drawn when it is the very Strava route the Strava tab opens.
  *

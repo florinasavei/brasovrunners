@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.03-2026-10-12
+
+- **Route maps** — the Strava tab comes first; Strava's map keeps what the club chose in Strava's embed builder (3D terrain, kilometres, the elevation profile, the surface), opens on the hybrid view when nothing is chosen, and every route map is tall enough to show its whole card. §738.
 ## BR-V3.02-2026-10-12
 
 - **Invitations, clearer** — invite people one row each, a name and an email, with «Adaugă încă o persoană»; «Invitații» shows the people invited first, in a table with counts by state; the registrations table itself lists the event's invitations not accepted yet above the registrations; and whoever registered from an invitation is marked «Invitat». §737.

@@ -12,7 +12,7 @@ import EventRoute, { type RouteMapWords } from "@/modules/events/ui/EventRoute";
 import { withClientWords } from "../../helpers/client-words";
 
 /**
- * BR-REQ-011-01 (§718) — «Traseul» on the page: Garmin Connect and Strava in tabs, Strava first (§NNN), each
+ * BR-REQ-011-01 (§718) — «Traseul» on the page: Garmin Connect and Strava in tabs, Strava first (§738), each
  * map behind its own press and its link beside it; one service alone with no tabs; the GPX below,
  * with or without a map. The page draws the links and the iframes from the stored ids only, and an
  * iframe sits inside a closed `<details>` — the facade that keeps the browser from asking Strava or
@@ -52,7 +52,7 @@ const render = (props: { routeMaps?: unknown; routeGpx?: unknown; routeUrl?: str
 const iframes = (html: string) => [...html.matchAll(/<iframe\b[^>]*>/g)].map((match) => match[0]);
 
 describe("BR-REQ-011-01 the maps on the page (§718)", () => {
-  it("draws Garmin Connect and Strava as tabs, Strava first (§NNN), with the right roles, and the first one chosen", () => {
+  it("draws Garmin Connect and Strava as tabs, Strava first (§738), with the right roles, and the first one chosen", () => {
     const html = render({ routeMaps: BOTH });
     expect(html).toContain('role="tablist"');
     expect(html).toContain(`aria-label="${ro.Event.routeMaps.tabs}"`);

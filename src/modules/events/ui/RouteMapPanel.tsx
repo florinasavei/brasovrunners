@@ -41,7 +41,7 @@ export type RouteMapProviderWords = {
  * route on the service (built from the id), with the service's mark, 44 pixels tall.
  */
 /**
- * The frame's height by service (§NNN). Strava's card is its title and figures, the map, the elevation
+ * The frame's height by service (§738). Strava's card is its title and figures, the map, the elevation
  * profile and its footer, one under another; it would tell its height by a message, which needs a
  * script here, so the frame is tall enough for the whole card instead of scrolling inside itself.
  */

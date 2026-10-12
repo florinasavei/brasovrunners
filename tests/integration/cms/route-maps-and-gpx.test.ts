@@ -111,7 +111,7 @@ async function refusal(operation: Promise<unknown>): Promise<string> {
 const upload = () => storeRouteGpx(getStorage(), { bytes: TRACK, name: "Traseu Tâmpa.gpx", environment: "test", now: NOW });
 
 describe("BR-REQ-050-02 the maps are saved from what the club pasted (§718)", () => {
-  it("stores the ids and Strava's three values — never the pasted HTML — Strava first (§NNN), and the public page reads them", async () => {
+  it("stores the ids and Strava's three values — never the pasted HTML — Strava first (§738), and the public page reads them", async () => {
     const event = await createDraft();
     await save(event.id, event.version, { ...FIELDS, routeStrava: STRAVA_EMBED, routeGarmin: GARMIN_LINK });
     const row = await reload(event.id);

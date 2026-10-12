@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.02-2026-10-12 -->
+<!-- PROJECT_BASELINE: BR-V3.03-2026-10-12 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.02-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.03-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -25780,3 +25780,18 @@ Baseline `BR-V3.01-2026-10-12`.
 Also: `InviteForm` now uses the house primitives (`GlyphButton` by an action-icons name) for its buttons, so its two design-guard exceptions are gone (§694).
 
 Baseline `BR-V3.02-2026-10-12`.
+
+## 738. Route maps: Strava first, its builder's 3D, units and elevation kept, hybrid by default, and frames tall enough for the whole card
+
+**The owner, 2026-10-12**: «the map type for strava should be hybrid», «the area for the map should be larger», then, with Strava's «Create your custom embed» on screen: «on the strava map I should be able to see the 3D stuff and the elevation profiles as here … Ideally people should be able to change these settings».
+
+**Decision.**
+
+- **The builder's choices are kept.** Strava's embed builder now writes `data-units`, `data-terrain` (`auto`/`2d`/`3d`), `data-surface-type`, the elevation profile's choice, and a map hash with a bearing and a pitch for 3D. The parser used to refuse any attribute it did not list, so that code was refused; now every other `data-*` attribute is kept as a display choice — at most eight, the name a `data-*` word, the value one short word (`[A-Za-z0-9._-]`, at most 32), never one of the page's own (`style`, `fromEmbed`, `token`, the id, the hash) — and passed to the iframe as its query under `embed.js`'s name (`data-surface-type` → `surfaceType`). The editor's field rebuilds them, so a second save keeps them; a stored value off its pattern is dropped alone.
+- **Hybrid by default.** A route whose pasted code names no style opens on the hybrid map (`STRAVA_MAP_STYLE`); one that names a style keeps it — the club chooses it in Strava's builder.
+- **Who changes the settings.** The club, in Strava's builder, then pastes the code in «Traseul». Visitors keep the map's own controls inside Strava's frame (the layers button, Ctrl + drag to turn a 3D map); the page adds no switch of its own — that would need a script, and the facade loads nothing before the press (§69).
+- **Strava first.** The owner, on the page: «Strava tab should show before Garmin Connect tab» — the tabs, the stored order and the editor's closed line name Strava first (`ROUTE_MAP_PROVIDERS`).
+- **A larger map, never cut.** «there is a scroll on these containers but it's not visible… This is cropped»: Strava's card — title and figures, the map, the elevation profile, its footer — scrolled inside a frame shorter than itself. Strava would tell its height by a message, which needs a script on our page; instead each service has its own height, Strava 760 pixels on a phone and 880 from `sm` up, Garmin 600 and 720 (was 420 and 548 for both).
+- **Garmin in kilometres — not done.** Garmin Connect's course embed documents no units option: it shows the units of the viewer's own Garmin account, or Garmin's default for a visitor signed out.
+
+Baseline `BR-V3.03-2026-10-12`.

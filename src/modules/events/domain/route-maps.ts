@@ -31,12 +31,12 @@ export type StravaRouteMap = Extract<RouteMap, { provider: "strava" }>;
 const ROUTE_ID = /^[0-9]{1,20}$/;
 /** Strava's map styles are words: `standard`, `hybrid`, `satellite`. */
 const STRAVA_STYLE = /^[a-z]{1,16}$/;
-/** The map style a Strava route opens in when the pasted code names none (§NNN). */
+/** The map style a Strava route opens in when the pasted code names none (§738). */
 export const STRAVA_MAP_STYLE = "hybrid";
 /** `<zoom>/<lat>/<lon>`, each a decimal number — where the map opens — then, for a 3D map, its bearing and pitch. */
 const STRAVA_MAP_HASH = /^[0-9]{1,2}(?:\.[0-9]{1,4})?\/-?[0-9]{1,3}(?:\.[0-9]{1,10})?\/-?[0-9]{1,3}(?:\.[0-9]{1,10})?(?:\/-?[0-9]{1,3}(?:\.[0-9]{1,4})?){0,2}$/;
 /**
- * The builder's other display choices (§NNN) — `data-units`, `data-terrain`, `data-surface-type`, the
+ * The builder's other display choices (§738) — `data-units`, `data-terrain`, `data-surface-type`, the
  * elevation profile, and whatever Strava adds next — kept as the iframe's query under the name
  * `embed.js` gives them (`data-surface-type` → `surfaceType`): a `data-*` name, a short word as the value.
  */
@@ -252,7 +252,7 @@ function readStravaOptions(stored: unknown): Record<string, string> | null {
 }
 
 /**
- * The stored column as maps, Strava first (the owner, 2026-10-12: «Strava tab should show before Garmin Connect tab», §NNN).
+ * The stored column as maps, Strava first (the owner, 2026-10-12: «Strava tab should show before Garmin Connect tab», §738).
  * Anything that is not a map this release can draw — another provider, an id with a letter, a
  * value off its pattern — is dropped rather than rendered; a value off its pattern on an otherwise
  * good Strava map is dropped alone. At most one per provider; null and anything not an array is "none".
@@ -302,7 +302,7 @@ export function garminEmbedSrc(id: string): string {
  * The address Strava's `embed.js` would have given its iframe (read from the script on 2026-10-11),
  * built here so the script never runs on our page: `/<type>/<id>`, the placeholder's other `data-*`
  * values as the query (`style`, `fromEmbed`, `token`, and the builder's display choices: units, 3D terrain,
- * surface, elevation profile — §NNN), and in the fragment — never sent to Strava's
+ * surface, elevation profile — §738), and in the fragment — never sent to Strava's
  * server — a namespace for its height messages, this site's origin, and where the map opens. The
  * page's own path and title, which the script also passes, are left out: Strava has no need of them.
  */
