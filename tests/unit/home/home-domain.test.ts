@@ -201,5 +201,6 @@ describe("§NNN the special events first, a top-level switch", () => {
     expect(parseHomePage({ on: true, specialFirst: true }).specialFirst).toBe(true);
     expect(parseHomePage({ on: true, specialFirst: "yes" }).specialFirst).toBe(false);
     expect(parseHomePage({ on: true, specialFirst: 1 }).on).toBe(true);
+    expect(parseHomePage({ on: true, specialFirst: 1 }).specialFirst).toBe(false);
   });
 });
