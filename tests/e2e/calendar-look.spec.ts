@@ -62,11 +62,27 @@ test.describe("phase 4: the calendar under «Aspectul nou»", () => {
       await expect(chips).toBeVisible();
       for (const name of ["Toate evenimentele", "Alergări săptămânale", "Evenimente speciale"]) await expect(chips.getByRole("link", { name })).toHaveCount(1);
       const row = await chips.boundingBox();
-      expect(row?.height ?? 0, "one row of chips").toBeLessThanOrEqual(48);
+      expect(row?.height ?? 0, "one row of chips").toBeLessThanOrEqual(60);
       for (const link of await chips.getByRole("link").all()) {
         const box = await link.boundingBox();
         expect(box?.height ?? 0, "a chip is a thumb's target").toBeGreaterThanOrEqual(44);
+        // The pill inside the link is ChipLink's own small one (§720 amended), not the look's 32 pixels.
+        const pill = (await link.locator(".MuiChip-root").boundingBox())?.height ?? 0;
+        expect(pill, "the pill is small").toBeGreaterThanOrEqual(22);
+        expect(pill, "the pill is small").toBeLessThanOrEqual(26);
       }
+      // The row shows that it scrolls: a visible scrollbar, and an edge cue while there is more to see.
+      const scroller = await chips.evaluate((el) => ({ over: el.scrollWidth > el.clientWidth, bar: getComputedStyle(el).scrollbarWidth, more: el.hasAttribute("data-more-end") }));
+      expect(scroller.over, "at 320 pixels the chips overflow").toBe(true);
+      expect(scroller.bar, "the scrollbar is not hidden").not.toBe("none");
+      expect(scroller.more, "the edge cue is on while it can scroll").toBe(true);
+      await chips.evaluate((el) => {
+        el.scrollLeft = el.scrollWidth;
+      });
+      await expect(chips).not.toHaveAttribute("data-more-end", "");
+      await chips.evaluate((el) => {
+        el.scrollLeft = 0;
+      });
 
       const grid = page.locator("#main").getByRole("table");
       await expect(grid).toBeVisible();
@@ -130,10 +146,11 @@ test.describe("phase 4: the calendar under «Aspectul nou»", () => {
       }
       const box = page.getByTestId("calendar-subscribe");
       await expect(box.getByRole("heading", { name: "Vrei să nu ratezi alergările?" })).toBeVisible();
-      await expect(box.getByTestId("subscribe-outlook")).toHaveAttribute("href", /^https:\/\/outlook\.live\.com\/calendar\/0\/addfromweb\?url=https?%3A%2F%2F/);
+      await expect(box.getByTestId("subscribe-outlook")).toHaveAttribute("href", /^https:\/\/outlook\.live\.com\/calendar\/0\/addfromweb\/\?url=webcal%3A%2F%2F/);
+      await expect(box.getByTestId("subscribe-outlook-work")).toHaveAttribute("href", /^https:\/\/outlook\.office\.com\/calendar\/0\/addfromweb\/\?url=webcal%3A%2F%2F/);
       await expect(box.getByTestId("subscribe-apple")).toHaveAttribute("href", /^webcal:\/\//);
       await expect(box.getByTestId("subscribe-ics")).toHaveAttribute("href", "/ro/events/calendar.ics");
-      for (const row of ["subscribe-google", "subscribe-apple", "subscribe-outlook", "subscribe-ics"]) {
+      for (const row of ["subscribe-google", "subscribe-apple", "subscribe-outlook", "subscribe-outlook-work", "subscribe-ics"]) {
         expect((await box.getByTestId(row).boundingBox())?.height ?? 0, row).toBeGreaterThanOrEqual(44);
       }
       // Today's row gives way to the box under the look.
