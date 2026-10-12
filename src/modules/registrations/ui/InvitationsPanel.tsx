@@ -149,7 +149,8 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
       intro={t("invitations.intro")}
       aside={t(`invitations.aside.${countForm(pending, locale)}`, { count: pending })}
       collapsible
-      openWhen={{ inUse: pending > 0 }}
+      // Open while any invitation still needs the Administrator's eye (§738): one sent and waiting, or one that ran out unanswered.
+      openWhen={{ attention: byState.sent + byState.expired > 0 }}
       id="registrations-invitations"
       data-testid="registrations-invitations"
     >

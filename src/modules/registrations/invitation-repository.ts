@@ -158,3 +158,25 @@ export async function listEventInvitations<T extends Record<string, unknown>>(db
     .orderBy(desc(eventInvitations.createdAt), asc(eventInvitations.id));
   return rows.map((row) => ({ ...row.invitation, invitedByName: row.invitedByName ?? null }));
 }
+
+/**
+ * Per event, the invitations not answered and not withdrawn (§738): sent and still before their
+ * deadline, or past it without an answer. The registrations list on «toate evenimentele» names them,
+ * so an invited person is never nowhere. A display read only: no figure the club is given and no part
+ * of the capacity formula (`invitationHoldsCount` is that) counts from it.
+ */
+export async function listOpenInvitationCountsByEvent<T extends Record<string, unknown>>(
+  db: Database<T>,
+  now: Date,
+): Promise<Array<{ eventId: string; sent: number; expired: number }>> {
+  const rows = await db
+    .select({
+      eventId: eventInvitations.eventId,
+      sent: sql<number>`count(*) filter (where ${eventInvitations.expiredAt} is null and ${eventInvitations.expiresAt} > ${now})::int`,
+      expired: sql<number>`count(*) filter (where ${eventInvitations.expiredAt} is not null or ${eventInvitations.expiresAt} <= ${now})::int`,
+    })
+    .from(eventInvitations)
+    .where(and(sql`${eventInvitations.acceptedAt} is null`, sql`${eventInvitations.withdrawnAt} is null`))
+    .groupBy(eventInvitations.eventId);
+  return rows.map((row) => ({ eventId: row.eventId, sent: Number(row.sent), expired: Number(row.expired) }));
+}
