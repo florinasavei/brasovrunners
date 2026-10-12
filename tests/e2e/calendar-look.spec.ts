@@ -66,7 +66,7 @@ test.describe("phase 4: the calendar under «Aspectul nou»", () => {
       for (const link of await chips.getByRole("link").all()) {
         const box = await link.boundingBox();
         expect(box?.height ?? 0, "a chip is a thumb's target").toBeGreaterThanOrEqual(44);
-        // On a phone the pill is smaller than ChipLink's own 24 pixels (§NNN, amending §733), inside the same 44-pixel link.
+        // On a phone the pill is smaller than ChipLink's own 24 pixels (§734, amending §733), inside the same 44-pixel link.
         const pill = (await link.locator(".MuiChip-root").boundingBox())?.height ?? 0;
         expect(pill, "the pill is small on a phone").toBeGreaterThanOrEqual(18);
         expect(pill, "the pill is small on a phone").toBeLessThanOrEqual(22);
