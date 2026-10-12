@@ -40,6 +40,13 @@ export type RouteMapProviderWords = {
  * Under the press, always visible: the sentence that says what pressing does, and the link to the
  * route on the service (built from the id), with the service's mark, 44 pixels tall.
  */
+/**
+ * The frame's height by service (§738). Strava's card is its title and figures, the map, the elevation
+ * profile and its footer, one under another; it would tell its height by a message, which needs a
+ * script here, so the frame is tall enough for the whole card instead of scrolling inside itself.
+ */
+const FRAME_HEIGHT = { strava: { xs: 760, sm: 880 }, garmin: { xs: 600, sm: 720 } } as const;
+
 export default function RouteMapPanel({
   map,
   words,
@@ -96,7 +103,7 @@ export default function RouteMapPanel({
           <MapIcon aria-hidden="true" sx={{ fontSize: 22, flexShrink: 0 }} />
           {words.show}
         </Box>
-        <Box sx={{ position: "relative", width: "100%", height: { xs: 420, sm: 548 }, borderRadius: 1, overflow: "hidden", bgcolor: "action.hover" }}>
+        <Box sx={{ position: "relative", width: "100%", height: FRAME_HEIGHT[map.provider], borderRadius: 1, overflow: "hidden", bgcolor: "action.hover" }}>
           <Box
             component="iframe"
             src={routeMapEmbedSrc(map, origin)}
