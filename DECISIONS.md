@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.97-2026-10-12 -->
+<!-- PROJECT_BASELINE: BR-V2.98-2026-10-12 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.97-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.98-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -25639,3 +25639,81 @@ Baseline `BR-V2.97-2026-10-12`.
 **Refused.** A second argument for the builder (a «recipes» or «buildList» beside `checklist`): the dispatcher would write the same lines twice, the two lists could drift, and the reviewer would judge a list the builder never saw. One `checklist`, read by the builder, the fixer and the reviewer, is what «the reviewer checks each one» already promised.
 
 Baseline `BR-V2.97-2026-10-12`.
+
+## 728. The shop's backoffice chips use `StatusChip`; four names leave the public glyph table
+
+**Amends §707.** §707 gave the backoffice its own `StatusChip` and registry (`src/shared/ui/status-glyphs.ts`) so a visitor never downloads an icon only the backoffice draws, and left two files on the public `GlyphChip`: the orders card and the product list of `/admin/shop` (`src/modules/content/shop/ui/OrdersCard.tsx`, `ProductList.tsx`). This change finishes it.
+
+**Decision.** Every chip in those two files is a `StatusChip`, same look and words. `orders` and `club` join `status-glyphs.ts` (one file per glyph, the same icons the public table used). `visible`, `hidden` and `language` were already in the status registry; they and `orders` leave the public table (`src/modules/events/ui/glyphs.ts`), with their icon imports. **`club` stays public as well**: the calendar's kind chips draw it for «Toate evenimentele» (`src/modules/events/ui/KindChips.tsx`), and a public file must not lose a glyph it draws; it joins `done`, `cancelled` and `planned` in `BOTH_SURFACES`, each table importing its own icon file. The tripwire `tests/unit/design/status-chip.test.ts` loses `PENDING_SHOP` and its test, since nothing is pending; every other guard is unchanged, and `guards-allowlist.ts` does not move.
+
+**Refused.** Moving `club` out of the public table (the calendar would lose its glyph); a second name for the same icon.
+
+Baseline `BR-V2.98-2026-10-12`.
+
+## 729. One set of words for the picture field, built in one place
+
+**Amends §541** (and the reuses of §705, §709, §717). The owner's standing rule since 2026-10-11, after the home page had to be re-pointed at the listing's cards: «trebuie să încercăm să refolosim, man!» — reuse first. The house's picture field (`TeamPhotoField`, §541) was already reused by «Echipa», the shop's pictures and size guide (§705), the event cover (§709) and the home page's hero (§717), but «Echipa»'s page, `shopPhotoLabels` and `coverPhotoLabels` each hand-built the same ~50 words.
+
+**Decided.** One builder beside the field, `photoFieldLabels(t, rich, { legend, help, cropTitle, cropHelp })` in `src/modules/content/team/ui/photo-field-labels.ts`, reads the house's one set — upload, «Din galerie» and its picker, the quality choice, the crop box's reset, position and shapes, the chosen and stored facts, «Scoate», the errors — and only the four captions a field owns come from its caller. «Echipa»'s page, `shopPhotoLabels` (product pictures and the size guide) and `coverPhotoLabels` (the event cover and the home page's hero and strip) all call it; a new picture field is one call with four captions.
+
+**No catalogue change.** The common words already lived once in `Admin.team.photo*`, `Admin.richText.*` and `Admin.gallery.*`; what was duplicated was the code that gathered them, so no message key moved and no visible word changed, and the e2e specs that read «Din galerie» and «Scoate» are untouched. A unit test pins that the three callers receive identical common words and each its own four captions.
+
+**Refused.** Moving the keys into a new namespace: it would rename strings the editor, the gallery picker and the e2e specs already read, for no visible gain.
+
+Baseline `BR-V2.98-2026-10-12`.
+
+## 730. The smoke check accepts the previous build's root redirect
+
+**Amends §717 (the smoke's root check).** `migrate.yml` migrates and then runs `yarn smoke --allow-degraded` against a deployment that, at that moment, still serves the previous build. On 2026-10-11 the root's answer changed from a 308 (§353) to a 307 (§717), and the new smoke refused the old build's 308 — twice, on QA and on production, each cured only by re-running the job once the new build was live.
+
+**Decision.** The root check passes a 308 or a 307 to that locale's listing (`/ro/evenimente`, `/en/events`), or a 200 that carries `data-testid="home-page"` and no `__next_error__`; anything else fails as before. The smoke tests the site's health, not which build answers during the release's migration window.
+
+**Refused.** Skipping the root check under `--allow-degraded` (the check is what caught the error-document 200 of §353); re-running the job by hand (it cost two releases a red run each).
+
+Baseline `BR-V2.98-2026-10-12`.
+
+## 731. The members' current tab is in view at 320 pixels
+
+Amends §715 (the three tabs) and §360 (`SubNav`).
+
+**The defect.** §715 drew the zone's three tabs, with their glyphs, in `SubNav`'s row that scrolls sideways rather than wraps. At 320 px the three entries needed about 350 px in a 288-px row, so on «Alergări» the current tab sat mostly past the edge and a member on a phone did not see where they were. §79 had learned the same of the backoffice's bar: the current tab must be in view.
+
+**Decision, first: words that fit.** `SubNavItem` gains an optional `short`: below `sm` the entry draws it, from `sm` up it draws the full label; both are in the one link and the other is `display: none`, so the accessible name is never both. The zone gives each tab a short word from the catalogue (`Members.tabsShort`): «Coduri», «Magazin», «Alergări» and «Codes», «Shop», «Runs»; the full words («Coduri de reducere», «Discount codes») stay from `sm` up. The three entries with their glyphs then need about 265 px of the 288, the 44-px height and the glyphs kept, so the members' row does not scroll at all.
+
+**Decision, second: rows that cannot fit bring the current entry into view.** Short words cannot help a long row. Measured at 320 px on the dev build (the row's scroll width in its 288 px): «Setări» 409 px (six entries; «Configurație», the widest, is last), «Pagini» 783 px (two captions, five entries with glyphs); the gallery's two halves, `/admin/tasks`'s row and the shop's three one-word tabs measure 288 in 288, they fit. For the two that overflow, the current entry loaded past the edge exactly as the members' did (on «Anti-robot» of «Setări» the row had to be at scrollLeft 121 to show it, on «Membri» of «Pagini» at 332). `SubNav` therefore renders `SubNavCurrent`, a client island that draws only a hidden `<span>`: once hydrated it sets the row's own `scrollLeft` so the `aria-current` entry is centred, never `scrollIntoView` (which also scrolls the page; `AdminTabs` does the same), and only when the row overflows and the entry is not already inside it, so a swipe is never undone. **It measures against the row, not the page:** the in-view test and the centring use client rects (`currentInView`, `centredScrollLeft` in `subnav-scroll.ts`, pure and unit-tested with a page gutter in the numbers), as `AdminTabs` does, because `offsetLeft` is measured from the entry's `offsetParent` and the row is not positioned, so it would include the gutter (16 px at 320, 24 px from `sm`). Chosen over `position: relative` on the row because it cannot depend on an ancestor's position. **It re-centres when the row's size changes** (a `ResizeObserver` on the row and on the current entry, disconnected on unmount: a rotation resizes the row, a late font swap the entry), still returning early when the entry is inside, so a member's swipe is not undone. It is a few lines and the only script `SubNav` carries; the row still works with JavaScript off, only without the jump. The participants' email previews' language switch is the same component and fits.
+
+**Refused.** CSS `scroll-snap` on the current entry, with no script: a page that loads positioned at the start is not reliably re-snapped to the entry marked, and a measured row (783 px) could not be trusted to land on it. Short words for «Setări» alone: six entries still need about 420 px of 288, so they would not fit.
+
+**Tests.** A unit test pins the short word beside the full one in a single link, the plain word when none is given, the catalogue in both languages and the island inside the nav; the e2e `members-zone.spec.ts` checks, on the phone and on desktop, that the row has three links, that on the phone the codes link's name is exactly «Coduri», and that the current tab's box is inside the row's on each of the three tab pages, and that the current entry of «Setări» (two tabs), «Pagini» and «Galerie» is inside its row.
+
+**Left as is.** `short` is passed for every members' tab although «Magazin»/«Alergări» (and «Shop»/«Runs») equal their full words: each such link draws the same word in two spans, one `display: none`, harmless, and uniform; the catalogue's four duplicate strings are kept (no checker objects).
+
+Baseline `BR-V2.98-2026-10-12`.
+
+## 732. The home page can draw the special events before the weekly runs
+
+**The owner, 2026-10-12:** «Pe homepage aș vrea o setare dacă evenimentele speciale să apară primele».
+
+**Decision.** Amends §717 (the home page's order) and §726 (the run sections). «Setări» → «Aspect» → «Pagina principală», the sections card, gains one checkbox, «Evenimentele speciale înaintea alergărilor săptămânale». On, the page draws «Evenimente speciale» before «Alergările săptămânale»; «Următoarea alergare» stays first under the photo either way (one date, whichever comes first). The switch is a top-level `specialFirst` boolean of the `homePage` row, not a key of `sections` (whose keys are the sections shown): a row from before reads `false`, a non-boolean reads `false`, and after a rollback the key is carried. The form posts it only with the sections card (`sectionsPosted`), so a form without that card never resets it; it counts in the audit row's `sectionsChanged`. `HomePage` takes a typed `specialFirst` (default `false`) and draws the same `RunSection`s in the other order; each keeps its id, heading and «Vezi toate alergările». The design page's «Mostre» keeps today's order. Off by default, so nothing moves until the club ticks it, and the page itself is behind «Pagina principală».
+
+**Refused.** A drag-to-reorder of every section (more than asked); moving «Următoarea alergare» (one date, already whichever comes first); turning it on by default (the page keeps today's order until the club ticks it).
+
+Baseline `BR-V2.98-2026-10-12`.
+
+## 733. The calendar's chips: smaller pills in a row that shows it scrolls, and Outlook for personal and work accounts
+
+**The owner, 2026-10-12, on QA under «Aspectul nou»** (amends §720 and §487): «I need to show a scrollbars here so user knows there are multiple options here» — at his width the third kind chip sat wholly past the edge and nothing said so; «And the pills need to be smaller»; «The outlook calendar links does not work, what is it supposed to do?»
+
+**Decision.**
+
+1. **A row that shows it scrolls, one shared style.** `src/shared/ui/scroll-row.ts` (`SCROLL_ROW_SX`) is the house style for a sideways-scrolling row of chips: `overflowX: auto`, a thin visible scrollbar (`scrollbar-width: thin`, `scrollbar-color` and the `::-webkit-scrollbar` twin, thumb `text.secondary` on `divider`, through MUI's own palette variables, so light and dark and no colour literal), a half-step of padding under the chips. `src/shared/ui/ScrollRow.tsx` is the small client island that adds the edge cue: a fade (a `mask-image` gradient with `currentColor`, so no literal) at the edge that still has more to see, driven by `data-more-start` / `data-more-end`, which it writes onto the scroller from `scrollLeft` and `scrollWidth` (`watchScrollRow` in `scroll-row.ts`: a scroll listener, a `ResizeObserver` on the row and its children, and a `MutationObserver` on its child list that re-observes the children and recomputes, so the cue follows a changed set of chips too, a soft navigation to a month with other surface chips keeping the instance and its scroll position (`KindChips` is deliberately not keyed to force a remount); no state, no re-render, only strings and children cross the boundary, §370). Nothing fades when everything fits (a laptop); with scripts off the scrollbar alone carries the cue. **Why an island and not CSS scroll-driven animations:** a mask's gradient stop cannot be animated without a registered custom property, scroll timelines are not in Safari 17 or Firefox, and iOS shows no scrollbar until one scrolls, so the cue is the one thing that must work there. `KindChips` uses it. Rows looked at and left: `SiteNav` (a nav, not chips, hides its bar on purpose and folds what does not fit), `PhotoStrip` (pictures, already `scrollbar-width: thin`), the product picture strip, tables (`AdminTable`, size charts) — none is a chip row; `SubNav` is edited by a sibling change and adopts the shared style later.
+
+2. **Smaller pills.** The `[UNDER_LOOK]` override that grew the kind and surface chips to 32 px is gone: they are `ChipLink`'s own small pill (MUI small, 24 px, the 0.8125rem word) like the listing's active filters and the «Filtre» button (§424), inside the same 44-pixel link (BR-REQ-041-01 criterion 6). The pressed chip keeps its filled primary look. The e2e that pinned the row at 48 px now allows the scrollbar's few pixels and also pins the pill at 22–26 px.
+
+3. **Outlook, both kinds of account.** The one Outlook row is two: «Outlook.com (cont personal)» (`outlook.live.com`, testid `subscribe-outlook`) and «Outlook la serviciu sau la școală» (`outlook.office.com`, Microsoft 365, `subscribe-outlook-work`). `outlookSubscribeUrl(feed, account, name)` builds `https://<host>/calendar/0/addfromweb/?url=<webcal feed>&name=<club>`: the slash after `addfromweb` and the feed as `webcal://` are the format the widely used add-to-calendar-button library sends (`src/generators/outlook.ts`, `subscribe_microsoft`; its `src/generators/index.ts` turns `https://` into `webcal://` first). Microsoft documents no such link and outlook.com refuses automated requests (HTTP 417), so **no test can open it**: the unit test pins the format exactly, the e2e checks the two hrefs and never navigates to Microsoft. `outlook.office.com` joins `PROVIDER_HOSTS` beside `outlook.live.com`.
+
+4. **The box's hints name the box's own rows.** Under the feed's address the box passed the old fold's sentences, which speak of an «Apple / Outlook» button this box does not have. It now has its own (`Events.calendar.look.subscribe.hintAuto`, `hintPhone`, `hintOutlook`) plus the Google steps and the Android sync step it shares. They say, in Microsoft's words, that a subscribed calendar updates on its own, sometimes after more than a day (not «cât de des le setezi tu»); that the Outlook phone app cannot add a calendar by its address — subscribe once in a browser (outlook.com, or Microsoft 365 for a work account) and it shows in the app too; and, when the window does not open, the steps by hand in Outlook on the web (add a calendar, subscribe from web, paste the address — the step is described, not quoted, because Microsoft's Romanian page spells it differently for a personal account and for a work one). The work row reuses the personal row's calendar glyph. The old fold's keys stay: with the look off its button still exists.
+
+**Refused:** wrapping the chips onto two rows (§487's one row stands: the first week stays above the fold); hiding chips behind a «Mai multe» menu; one Outlook row that guesses the account; sending visitors to Microsoft's instructions instead of a link.
+
+Baseline `BR-V2.98-2026-10-12`.

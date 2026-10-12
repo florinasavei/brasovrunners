@@ -9,7 +9,7 @@ import SubNavCurrent from "./SubNavCurrent";
  * an element, which is safe here because `SubNav` is a Server Component end to end: nothing it
  * renders crosses into a client island.
  *
- * `short` (§NNN) is the entry's word on a phone: a row whose entries with their glyphs would not
+ * `short` (§731) is the entry's word on a phone: a row whose entries with their glyphs would not
  * fit in 288 px (the members' zone's three) gives each a shorter word, drawn below `sm` while the
  * full one is drawn from `sm` up. The other is `display: none`, so the link's accessible name is
  * never both.
@@ -21,7 +21,7 @@ export type SubNavItem = { href: string; label: string; active?: boolean; glyph?
  * and on a phone it scrolls sideways rather than wrapping (§360).
  *
  * A row wider than the screen scrolls its current entry into view once hydrated (`SubNavCurrent`,
- * §NNN): «Setări» and «Pagini» are longer than 320 px by design, and a current entry past the edge
+ * §731): «Setări» and «Pagini» are longer than 320 px by design, and a current entry past the edge
  * is the defect §79 named. The scrollbar is hidden, as MUI hides the main tab bar's: the entry cut off at the edge is what
  * says there is more, and a focused entry is scrolled into view by the browser. `overflow-y` is
  * stated because `overflow-x: auto` alone turns the other axis to `auto` as well, and a stray

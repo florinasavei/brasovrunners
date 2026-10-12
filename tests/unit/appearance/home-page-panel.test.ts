@@ -90,7 +90,7 @@ describe("§717 the home page panel's folds", () => {
   });
 });
 
-describe("§NNN the special-events-first checkbox", () => {
+describe("§732 the special-events-first checkbox", () => {
   it("renders with its saved state, off by default", async () => {
     const off = await draw(DEFAULT_HOME_PAGE_SETTING);
     expect(off).toContain("Evenimentele speciale înaintea alergărilor săptămânale");

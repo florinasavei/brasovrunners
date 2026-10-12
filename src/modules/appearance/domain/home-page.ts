@@ -27,7 +27,7 @@ import { isWrittenText, missingLanguage, type TextLanguage } from "@/shared/form
  * - `sections` — which sections the page draws: the hero, the next run, the weekly runs and the
  *   special events (on), and «Prima dată», «De ce», the photo strip and the numbers (off until the
  *   club switches each on, once it has its words, its pictures or its figures).
- * - `specialFirst` — whether the special events are drawn before the weekly runs (§NNN); off by default,
+ * - `specialFirst` — whether the special events are drawn before the weekly runs (§732); off by default,
  *   and a row from before reads `false`. «Următoarea alergare» stays first under the photo either way.
  * - `steps`, `why`, `strip`, `numbers` — what the club typed or chose for those four
  *   (`modules/home/domain/`): every box both languages or neither, an empty one the platform's words;

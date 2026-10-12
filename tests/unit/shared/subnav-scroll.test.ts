@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { centredScrollLeft, currentInView } from "@/shared/ui/subnav-scroll";
 
-/** §NNN — the measurement is against the row's own rect, so a page gutter cannot move it. */
-describe("SubNav current entry measurement (§NNN)", () => {
+/** §731 — the measurement is against the row's own rect, so a page gutter cannot move it. */
+describe("SubNav current entry measurement (§731)", () => {
   // A 288-px row at x=16 (the page gutter), its content 783 px wide, scrolled 0.
   const row = { left: 16, right: 304 };
 

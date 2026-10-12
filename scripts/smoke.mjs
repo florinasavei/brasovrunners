@@ -29,7 +29,7 @@ export const LISTING_PATH = { ro: "/evenimente", en: "/events" };
  * build answers 307, not §353's 308, and never a 200 that is an error document (a redirect thrown from a page once
  * reached production that way): a 200 must carry the home page's own marker and no Next error
  * marker. A 307 to the listing passes while the setting is off, which is the default. A 308 to the
- * listing passes too (§NNN): `migrate.yml` smokes the deployment while it still serves the PREVIOUS
+ * listing passes too (§730): `migrate.yml` smokes the deployment while it still serves the PREVIOUS
  * build, and the builds before §717 answered 308 — refusing it failed two migrations, each cured only
  * by a re-run. The smoke tests the site's health, not which build answers in that window. Asked
  * twice, so the second answer shows whether the CDN holds it.

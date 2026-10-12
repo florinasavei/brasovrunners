@@ -119,7 +119,7 @@ test.describe("§714 the site's root and «Pagina principală»", () => {
       // In the plan's order, under the run sections.
       const order = await page.locator("main [data-testid^='home-']").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-testid")));
       const at = (testId: string) => order.indexOf(testId);
-      // «Evenimentele speciale înaintea alergărilor săptămânale» saved ticked (§NNN): special first, the next run before both.
+      // «Evenimentele speciale înaintea alergărilor săptămânale» saved ticked (§732): special first, the next run before both.
       if (at("home-weekly") >= 0) expect(at("home-special")).toBeLessThan(at("home-weekly"));
       if (at("home-next-run") >= 0) expect(at("home-next-run")).toBeLessThan(at("home-special"));
       expect(at("home-special")).toBeLessThan(at("home-steps"));

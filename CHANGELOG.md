@@ -8,6 +8,14 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.98-2026-10-12
+
+- **The shop's backoffice chips use `StatusChip`** — internal: four icons leave the public glyph table, so visitors download fewer. §728.
+- **Internal: the picture field's words are built in one place.** «Echipa», the shop and the event cover (and so the home hero) share one builder; nothing a person sees changes. §729.
+- **The smoke accepts the old root redirect** — a 308 to the listing passes beside the 307, so a release's migration run no longer fails while the previous build still answers. §730.
+- **The current tab is always in view on a phone** — the members' three tabs say «Coduri», «Magazin» and «Alergări» below the tablet width so they fit 320 px, and a longer row («Setări», «Pagini») scrolls its current entry into view. §731.
+- **The special events can come first on the home page** — a checkbox in «Pagina principală» draws them before the weekly runs; off by default. §732.
+- **Calendar chips: smaller pills in a row that shows it scrolls, and Outlook for personal and work accounts** — the kind chips are the house's small pill with a visible scrollbar and an edge fade while there is more to see; the subscribe box has an Outlook row for outlook.com and one for work or school (Microsoft 365), and hints that describe its own rows. §733.
 ## BR-V2.97-2026-10-12
 
 - **«Urmărește-ne» is a label, «Vino cu noi» leaves the header, both languages back on the footer** — under «Aspectul nou» the header carries no call to action at any width, the phone too; «Urmărește-ne» is a plain indicator beside Instagram, Facebook and Strava; and the language is the footer's own switcher again, RO and EN on its bar at every width, in place of the floating round button. §724.

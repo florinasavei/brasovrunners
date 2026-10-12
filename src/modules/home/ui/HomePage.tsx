@@ -36,7 +36,7 @@ export type HomePageProps = {
    * setting's default: the first four on, the four lower ones off.
    */
   show?: Partial<Record<HomeSectionKey, boolean>>;
-  /** The special events before the weekly runs (§NNN, the club's switch); «Următoarea alergare» stays first under the hero. Default off. */
+  /** The special events before the weekly runs (§732, the club's switch); «Următoarea alergare» stays first under the hero. Default off. */
   specialFirst?: boolean;
   /** How fresh the events are (§281): a last good copy says so above the hero. A fixture leaves it out. */
   freshness?: Pick<Resilient<unknown>, "freshness" | "takenAt" | "restingUntil">;

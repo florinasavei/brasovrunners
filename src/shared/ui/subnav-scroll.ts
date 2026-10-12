@@ -1,5 +1,5 @@
 /**
- * The measurement behind `SubNavCurrent` (§NNN), pure so a test can feed it numbers.
+ * The measurement behind `SubNavCurrent` (§731), pure so a test can feed it numbers.
  *
  * Both take client rects (`getBoundingClientRect()`), so they are right wherever the row sits on
  * the page: a page gutter, a padded container or any positioned ancestor cancels out. Never

@@ -14,7 +14,7 @@ describe("§717 the smoke's verdict on the root", () => {
     expect(judgeRoot("ro", 200, "", '<main data-testid="home-page">…</main>')).toMatchObject({ ok: true });
   });
 
-  it("accepts the previous build's 308 to the listing (§NNN: the migration window)", () => {
+  it("accepts the previous build's 308 to the listing (§730: the migration window)", () => {
     expect(judgeRoot("ro", 308, "/ro/evenimente", "")).toMatchObject({ ok: true });
     expect(judgeRoot("en", 308, "https://club.example/en/events", "")).toMatchObject({ ok: true });
   });

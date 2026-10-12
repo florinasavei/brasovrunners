@@ -195,7 +195,7 @@ describe("§714 the numbers band reads its figures, never invents one", () => {
 
 import { parseHomePage } from "@/modules/appearance/domain/home-page";
 
-describe("§NNN the special events first, a top-level switch", () => {
+describe("§732 the special events first, a top-level switch", () => {
   it("reads a row from before as false, keeps true, and reads a non-boolean as false", () => {
     expect(parseHomePage({ on: true }).specialFirst).toBe(false);
     expect(parseHomePage({ on: true, specialFirst: true }).specialFirst).toBe(true);

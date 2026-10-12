@@ -282,7 +282,7 @@ describe("§714 the sections stay Server Components on the house's primitives", 
   });
 });
 
-describe("§NNN the special events can come before the weekly runs", () => {
+describe("§732 the special events can come before the weekly runs", () => {
   const props = () => {
     const translate = createTranslator({ locale: "ro", messages: ro, namespace: "Home" });
     return sampleHome("ro", (key: string, values?: Record<string, string>) => translate(key as never, values as never));

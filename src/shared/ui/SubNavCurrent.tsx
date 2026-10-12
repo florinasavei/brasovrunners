@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { centredScrollLeft, currentInView } from "./subnav-scroll";
 
 /**
- * Brings `SubNav`'s current entry into view when the row is wider than the screen (§NNN).
+ * Brings `SubNav`'s current entry into view when the row is wider than the screen (§731).
  *
  * It draws nothing: it sits inside the row's `<nav>`, and once the page has hydrated it sets the
  * scroller's own `scrollLeft` so the `aria-current` entry is centred. Never `scrollIntoView`, which

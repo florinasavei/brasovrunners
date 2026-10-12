@@ -74,7 +74,7 @@ export type HomePageInput = {
   buttonHowPageId?: unknown;
   /** Which sections are drawn, by key; `undefined`: kept as they were. A key left out keeps its value. */
   sections?: Partial<Record<HomeSectionKey, boolean>>;
-  /** The special events before the weekly runs (§NNN); `undefined`: kept as it was (a form without the sections' card). */
+  /** The special events before the weekly runs (§732); `undefined`: kept as it was (a form without the sections' card). */
   specialFirst?: boolean;
   /**
    * The four lower sections' boxes, each a reader of the posted form by name (`home-sections-form.ts`),

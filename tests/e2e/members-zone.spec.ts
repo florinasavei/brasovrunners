@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN — the current tab's box is inside the row's box (the row scrolls sideways, so a tab past the edge is
+ * §731 — the current tab's box is inside the row's box (the row scrolls sideways, so a tab past the edge is
  * cut off), on the 320-px phone and on desktop alike.
  */
 async function expectCurrentInRow(page: Page, row = page.getByTestId("members-tabs").locator("nav")) {
@@ -37,7 +37,7 @@ test.describe("§524 the members' zone", () => {
     // The tabs (§715), in the owner's order, each an address of its own; «Coduri de reducere» is the zone's own,
     // and «Magazin» is drawn only once the privacy notice in force names the shop (BR-REQ-053-01).
     const tabs = page.getByTestId("members-tabs");
-    // Below `sm` a tab says its short word (§NNN), so the names are matched by their first word.
+    // Below `sm` a tab says its short word (§731), so the names are matched by their first word.
     const codes = tabs.getByRole("link", { name: /^Coduri/ });
     const runs = tabs.getByRole("link", { name: /^Alergări/ });
     await expect(codes).toHaveAttribute("aria-current", "page");
@@ -69,11 +69,11 @@ test.describe("§524 the members' zone", () => {
 });
 
 /**
- * §NNN — the backoffice's own rows: on the 320-px phone the current entry of «Setări» (six entries, the last
+ * §731 — the backoffice's own rows: on the 320-px phone the current entry of «Setări» (six entries, the last
  * one the widest) and of «Pagini» (grouped, with glyphs) is inside the row's box, scrolled there by
  * `SubNavCurrent` when the row is wider than the screen.
  */
-test.describe("§NNN the backoffice's rows keep the current entry in view", () => {
+test.describe("§731 the backoffice's rows keep the current entry in view", () => {
   for (const path of ["/ro/admin/settings/platform", "/ro/admin/settings/costs", "/ro/admin/pages/members", "/ro/admin/gallery/pictures"]) {
     test(`${path}`, async ({ page }) => {
       await signIn(page, "Dev Administrator");
