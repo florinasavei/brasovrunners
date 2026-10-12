@@ -14,30 +14,30 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V2.97`** (released 2026-10-12 at night: §724–§727, no migration). Waiting for «prod»:
-  `BR-V2.98` (§728–§733, below) — no migration.
-- **QA: `BR-V2.98`** — under «Aspectul nou»: the calendar's kind and surface chips are the house's small pills
-  again, in a row that shows it scrolls (a thin scrollbar, and an edge fade while there is more to see), and the
-  subscribe box offers Outlook twice, for a personal account and for work or school (Microsoft 365), with hints that
-  name its own rows; «Pagina principală» gains «Evenimentele speciale înaintea alergărilor săptămânale» (off by
-  default). For everyone: on a phone the members' zone's tabs are short words that fit, and «Setări» and «Pagini»
-  bring their current entry into view. Internal: the smoke accepts the previous build's 308 to the listing, in each
-  language's own word; the picture field's words are built once; the shop's backoffice chips are `StatusChip`s, so
-  four icons leave the public table.
-- **Nothing is building.**
-- **Next, on QA, the owner's:** «Aspectul nou» and «Pagina principală» on; the accent; the calendar on a phone (the
-  chips' row, Outlook with each kind of account); then phase 5 (the listing and the event page) per `docs/REDESIGN.md`.
-- **Waiting on the owner:** a look at QA before «Aspectul nou» or the home page goes on in production; the photographs;
-  the privacy notice from the new template (the maps, the shop); «Tot numărul»'s default background; `shopNotice`; the
-  Google calendar.
+- **Production: `BR-V3.05`** (2026-10-12: `BR-V2.99`–`BR-V3.04` from the phone session — the calendar's chips §734, race
+  numbers 001 §735, «Invită pe email» §736, invitations as rows and a table §737, route maps Strava first §738 and open
+  with the page §739 — and `BR-V3.05` §740 from the laptop: «Invită pe email» answers every press and leads to the event
+  from «toate evenimentele», every invited person seen with the invitation's state). No migration. Waiting for «prod»:
+  `BR-V3.06` (§741–§742, below) — no migration.
+- **QA: `BR-V3.06`** — the privacy notice's template says an event's route map loads with the page (Strava's, and
+  Garmin's when it is the only one or its tab is chosen), each provider seeing the visitor's IP address, and `AGENTS.md`
+  §18.3 says the same; the Strava frame takes its height from the message Strava's card posts (our own listener, never
+  its script), with a fallback that follows the width, so no gap under the map on a phone; Garmin keeps §738's frame.
+- **Nothing is building.** Releases by the label `ship` reach production by themselves again: `SHIP_TOKEN` was given
+  «Pull requests: Read and write» on 2026-10-12, and `BR-V3.05`'s run opened its `qa → main` pull request itself.
+- **Lanes:** the phone session took the calendar on 2026-10-12; one release at a time between
+  sessions — no label `ship` while a `release.yml` or `migrate.yml` run is in progress.
+- **Waiting on the owner:** the privacy notice from the new template, approved in `/admin/legal` after a lawyer reads
+  the paragraph on what the site loads (its first sentence says what is used is strictly necessary and needs no consent,
+  art. 4(6) of Legea nr. 506/2004, while the same paragraph says Strava may set its own cookies without a press — the
+  lawyer's question, art. 4(5)); on production, whether Strava reads the pasted 3D and km options; whether the chip
+  «Membru (declarat)» should be pressable; a look at QA («Aspectul nou», «Pagina principală», the accent, both Outlook
+  rows) before phase 5; the photographs; «Tot numărul»'s default background; `shopNotice`; the Google calendar.
 - **Later:** the e2e specs on written 2027 dates want a dates-from-today helper; pass `now` through
   `readRegistrationTokenContext`, `openRefusalsWhere` and the guardian rule; the concurrency suite fails on a seeded
-  database; a nightly `yarn test:clock`; the cards' titles under the new look (phase 5); the calendar's first week
-  clears the fold by 5 px; a guard for computed `COLOR[...]` keys; `calendar-look.spec.ts` and `header-nav.spec.ts`
-  share the one «Aspectul nou» row (one worker only); `SubNav`'s `SubNavCurrent` and the calendar's `ScrollRow` both
-  watch a scrolling row — one helper later; Outlook's subscribe address follows a widely used library's format and no
-  test can open it (Microsoft refuses automated requests), so try it by hand with each kind of account; about 170
-  throwaway databases in the local Docker PostgreSQL.
+  database; a nightly `yarn test:clock`; a guard for computed `COLOR[...]` keys; the «Invitații fără răspuns» line has
+  no order and takes its titles from the registrations' locale; `SubNavCurrent` and `ScrollRow` both watch a scrolling
+  row (one helper later); about 30 test files keep a `§NNN` from older batches; about 170 throwaway local test databases.
 
 ### How a change is made here (the owner's standing rules, all still in force)
 
@@ -142,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.06` | the privacy template and AGENTS say the maps open with the page (§741) · the Strava map's frame fits its card (§742) |
 | `BR-V3.05` | the invite button works; invited people seen with their state (§740) |
 | `BR-V3.04` | route maps open from the start (§739) |
 | `BR-V3.03` | route maps: Strava first, its 3D, units and elevation kept, hybrid by default, taller frames (§738) |
