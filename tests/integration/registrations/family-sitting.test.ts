@@ -818,7 +818,8 @@ describe("§519 the fix round of 2026-09-27", () => {
     const [participant] = await db.select().from(participants);
     const steps = familySigningSteps(await listFamilySigningRows(db, participant.id, event.id), { originId: null, originSignable: false, signedIds: [] });
     expect(steps.map((step) => step.registeredName)).toEqual(["Ana Pop", "Ion Pop", "Radu Pop"]);
-    expect(steps.map((step) => step.raceNumber)).toEqual(inOrder.map((row) => row.bibNumber));
+    // Written as the event writes it (§NNN): as the number is, by default.
+    expect(steps.map((step) => step.raceNumber)).toEqual(inOrder.map((row) => String(row.bibNumber)));
   });
   it("a person who signs after the family's confirmation has left gets their own, as before", async () => {
     const event = await createEvent();

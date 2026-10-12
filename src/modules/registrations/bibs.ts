@@ -857,7 +857,7 @@ export async function voidBibsFor<T extends Record<string, unknown>>(
       cancelledAt: registrations.cancelledAt,
       expiredAt: registrations.expiredAt,
       // Qualified by hand: inside a one-table select Drizzle prints a column bare.
-      raceNumberFormat: sql<string | null>`(select e."bib_design" ->> 'numberFormat' from ${events} e where e."id" = ${registrations}."event_id")`.mapWith(readRaceNumberFormat),
+      raceNumberFormat: sql<string>`coalesce((select e."bib_design" ->> 'numberFormat' from ${events} e where e."id" = ${registrations}."event_id"), 'plain')`.mapWith(readRaceNumberFormat),
     })
     .from(registrations)
     .where(

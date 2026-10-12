@@ -90,7 +90,7 @@ export const OFFERS_MEMBER_BIB = sql<boolean>`coalesce((${events.bibDesign} #> '
  * `race-number.ts#readRaceNumberFormat` reads it — `plain` for nothing or anything unknown. Every
  * page and the email renderer select it beside the number and write it with `formatRaceNumber`.
  */
-export const RACE_NUMBER_FORMAT = sql<RaceNumberFormat>`(${events.bibDesign} ->> 'numberFormat')`.mapWith(readRaceNumberFormat);
+export const RACE_NUMBER_FORMAT = sql<RaceNumberFormat>`coalesce(${events.bibDesign} ->> 'numberFormat', 'plain')`.mapWith(readRaceNumberFormat);
 
 /**
  * «Copertă» (the facelift's phase 2, §709) as a page draws it: the stored picture's key prefix and
