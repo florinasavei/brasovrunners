@@ -21,7 +21,7 @@ import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import { readInvitationForecast } from "../admin-service";
 import { HIDDEN_LIST_OFF } from "../domain/hidden-list";
-import { INVITATION_DAYS_DEFAULT, INVITATION_DAYS_MAX, INVITATION_REFUSALS, invitationState } from "../domain/invitations";
+import { INVITATION_DAYS_DEFAULT, INVITATION_DAYS_MAX, INVITATION_REFUSALS, invitationState, invitationsNeedAttention } from "../domain/invitations";
 import { listEventInvitations } from "../invitation-repository";
 import HiddenListChip from "./HiddenListChip";
 import InviteForm, { type InviteFormState, type InviteFormWords } from "./InviteForm";
@@ -152,7 +152,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
       aside={t(`invitations.aside.${countForm(pending, locale)}`, { count: pending })}
       collapsible
       // Open while any invitation still needs the Administrator's eye (§NNN): one sent and waiting, or — while the event is still to come — one that ran out unanswered.
-      openWhen={{ attention: byState.sent + (upcoming ? byState.expired : 0) > 0 }}
+      openWhen={{ attention: invitationsNeedAttention(byState, upcoming) }}
       id="registrations-invitations"
       data-testid="registrations-invitations"
     >

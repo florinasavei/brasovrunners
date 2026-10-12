@@ -168,10 +168,11 @@ export async function listEventInvitations<T extends Record<string, unknown>>(db
 export async function listOpenInvitationCountsByEvent<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,
-): Promise<Array<{ eventId: string; sent: number; expired: number }>> {
+): Promise<Array<{ eventId: string; startsAt: Date; sent: number; expired: number }>> {
   const rows = await db
     .select({
       eventId: eventInvitations.eventId,
+      startsAt: events.startsAt,
       sent: sql<number>`count(*) filter (where ${eventInvitations.expiredAt} is null and ${eventInvitations.expiresAt} > ${now})::int`,
       expired: sql<number>`count(*) filter (where ${eventInvitations.expiredAt} is not null or ${eventInvitations.expiresAt} <= ${now})::int`,
     })
@@ -179,6 +180,6 @@ export async function listOpenInvitationCountsByEvent<T extends Record<string, u
     .innerJoin(events, eq(events.id, eventInvitations.eventId))
     // Only while the event can still be invited to: after its start, or cancelled, an unanswered invitation is history.
     .where(and(sql`${eventInvitations.acceptedAt} is null`, sql`${eventInvitations.withdrawnAt} is null`, eq(events.eventStatus, "SCHEDULED"), gt(events.startsAt, now)))
-    .groupBy(eventInvitations.eventId);
-  return rows.map((row) => ({ eventId: row.eventId, sent: Number(row.sent), expired: Number(row.expired) }));
+    .groupBy(eventInvitations.eventId, events.startsAt);
+  return rows.map((row) => ({ eventId: row.eventId, startsAt: row.startsAt, sent: Number(row.sent), expired: Number(row.expired) }));
 }

@@ -74,8 +74,8 @@ describe("§NNN the open invitations per event", () => {
     await invite(second);
 
     const counts = await listOpenInvitationCountsByEvent(db, NOW);
-    expect(counts.find((row) => row.eventId === first)).toEqual({ eventId: first, sent: 2, expired: 2 });
-    expect(counts.find((row) => row.eventId === second)).toEqual({ eventId: second, sent: 1, expired: 0 });
+    expect(counts.find((row) => row.eventId === first)).toMatchObject({ eventId: first, startsAt: expect.any(Date), sent: 2, expired: 2 });
+    expect(counts.find((row) => row.eventId === second)).toMatchObject({ eventId: second, startsAt: expect.any(Date), sent: 1, expired: 0 });
     expect(counts).toHaveLength(2);
   });
 

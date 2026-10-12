@@ -60,7 +60,7 @@ import {
   pageCount,
 } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn, type AdminLeadRow } from "@/modules/staff-identity/ui/AdminTable";
-import { invitationState } from "@/modules/registrations/domain/invitations";
+import { invitationState, inviteTarget } from "@/modules/registrations/domain/invitations";
 import { listEventInvitations, listOpenInvitationCountsByEvent } from "@/modules/registrations/invitation-repository";
 import Panel from "@/shared/ui/Panel";
 import InvitationsPanel from "@/modules/registrations/ui/InvitationsPanel";
@@ -666,6 +666,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const inviteEvents =
     mayManage && !filters.eventId ? await listEventsTakingInvitations(db, locale, leadNow) : [];
   const openInvitations = filters.eventId ? [] : await listOpenInvitationCountsByEvent(db, leadNow);
+  const inviteWhere = inviteTarget(filters.eventId, inviteEvents);
   const invitationsHref = (id: string) => `${basePath}?eventId=${encodeURIComponent(id)}#registrations-invitations`;
   const leadTitle = leadEvent ? (events.find((event) => event.id === leadEvent)?.title ?? null) : null;
   const leadWhen = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });
@@ -927,19 +928,19 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             drawn only for a list about one: on «toate evenimentele» the button leads to the event's panel (§NNN),
             straight when one upcoming event takes invitations, by a menu when several do.
           */}
-          {mayManage && filters.eventId && (
+          {mayManage && inviteWhere.kind === "panel" && (
             <GlyphButton icon="send" href="#registrations-invitations" variant="outlined" size="small" sx={TAP_TARGET} data-testid="registrations-invite-link">
               {t("invitations.toolbar")}
             </GlyphButton>
           )}
           {/* One upcoming event takes invitations: straight to its panel. */}
-          {mayManage && !filters.eventId && inviteEvents.length === 1 && (
-            <GlyphButton icon="send" href={invitationsHref(inviteEvents[0].id)} variant="outlined" size="small" sx={TAP_TARGET} data-testid="registrations-invite-link">
+          {mayManage && inviteWhere.kind === "link" && (
+            <GlyphButton icon="send" href={invitationsHref(inviteWhere.eventId)} variant="outlined" size="small" sx={TAP_TARGET} data-testid="registrations-invite-link">
               {t("invitations.toolbar")}
             </GlyphButton>
           )}
           {/* Several: a menu of them, each a link to that event's panel — a disclosure that works without a script. */}
-          {mayManage && !filters.eventId && inviteEvents.length > 1 && (
+          {mayManage && inviteWhere.kind === "menu" && (
             <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, minWidth: { sm: 280 }, flexGrow: { xs: 1, sm: 0 } }} data-testid="registrations-invite-menu">
               <Box component="summary" aria-label={t("invitations.toolbarChooseEvent")} data-testid="registrations-invite-link">
                 <SendIcon aria-hidden sx={FOLD_GLYPH_SX} />
@@ -954,7 +955,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       data-testid="registrations-invite-event"
                       sx={{ display: "flex", alignItems: "center", minHeight: 44, color: "primary.main", wordBreak: "break-word" }}
                     >
-                      {event.title ?? event.id}
+                      {`${event.title ?? event.id} · ${leadWhen(event.startsAt)}`}
                     </Box>
                   </li>
                 ))}
@@ -962,7 +963,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             </Box>
           )}
           {/* No upcoming event takes invitations: «Caută și filtrează», where one is chosen, as before. */}
-          {mayManage && !filters.eventId && inviteEvents.length === 0 && (
+          {mayManage && inviteWhere.kind === "filters" && (
             <GlyphButton
               icon="send"
               href="#registrations-filters"
@@ -1245,7 +1246,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   data-testid="registrations-invitations-open-link"
                   sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, color: "primary.main" }}
                 >
-                  {`${events.find((event) => event.id === open.eventId)?.title ?? open.eventId} — ${[
+                  {`${events.find((event) => event.id === open.eventId)?.title ?? open.eventId} · ${leadWhen(open.startsAt)} — ${[
                     open.sent > 0 ? `${t("invitations.state.sent")}: ${open.sent}` : null,
                     open.expired > 0 ? `${t("invitations.state.expired")}: ${open.expired}` : null,
                   ]

@@ -119,13 +119,14 @@ test.describe("§NNN «Invită pe email»: the button, and every invited person 
     const lead = page.getByTestId("registrations-invite-link");
     await expect(lead).toBeVisible();
     await lead.click();
-    const choice = page.getByTestId("registrations-invite-event");
-    if (await choice.count()) await choice.first().click();
+    // One event takes invitations: the press went straight there. Several: the menu is open, press the featured event's entry.
+    const choice = page.locator(`[data-testid="registrations-invite-event"][href*="eventId=${eventId}"]`);
+    if (await choice.count()) await choice.click();
     await expect(page).toHaveURL(new RegExp(`eventId=${eventId}.*#registrations-invitations`));
-    // Wait until the page left behind is gone, so the panel is one element (a transition holds both for a moment).
-    await expect(page.getByTestId("registrations-invitations")).toHaveCount(1);
-    await expect(page.getByTestId("registrations-invitations")).toHaveAttribute("open", "");
-    await expect.poll(() => inView(page.getByTestId("registrations-invitations"))).toBe(true);
+    // A page transition may hold the page left behind and the new one for a moment: the open panel is the new one, and one.
+    const opened = page.locator('[data-testid="registrations-invitations"][open]');
+    await expect(opened).toHaveCount(1);
+    await expect.poll(() => inView(opened)).toBe(true);
     expect(await page.evaluate(fitsTheWidth)).toBe(true);
   });
 
@@ -159,6 +160,7 @@ test.describe("§NNN «Invită pe email»: the button, and every invited person 
     await page.goto("/ro/admin/registrations?eventId=all");
     await hydrated(page);
     await expect(page.getByTestId("registrations-invitations-open")).toBeVisible();
+    await expect(page.locator(`[data-testid="registrations-invitations-open-link"][href*="eventId=${eventId}"]`)).toBeVisible();
     expect(await page.evaluate(fitsTheWidth)).toBe(true);
 
     // Accepted through its link: the registration wears «Invitat», the invitation says accepted.
@@ -182,6 +184,8 @@ test.describe("§NNN «Invită pe email»: the button, and every invited person 
     await openList(page, eventId);
     await expect(page.getByTestId("invitation-row").filter({ hasText: email })).toContainText("Acceptată");
     await expect(page.getByTestId("registrations-invitation-row").filter({ hasText: email }).filter({ visible: true })).toHaveCount(0);
-    await expect(page.getByTestId("invited-chip").filter({ visible: true }).first()).toBeVisible();
+    // The chip is on the registration of the invited person, found by the made-up address, not just anywhere.
+    const registered = page.locator("tr, li").filter({ hasText: email }).filter({ has: page.getByTestId("invited-chip") }).filter({ visible: true });
+    await expect(registered.first()).toBeVisible();
   });
 });

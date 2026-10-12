@@ -18,7 +18,7 @@ import { fragmentId, openFoldsAround } from "./fold";
  * as it was and «Invită pe email» «nu merge». It reads no query (`useSearchParams` would make the
  * public pages that render it wait for the client): a link to another address of the same page is a plain
  * `<a>`, a full load the arrival run answers. The two delayed re-runs after arrival stop at the reader's
- * first wheel, touch or key, so a reader who scrolls on is never pulled back. Everything else about a fold
+ * first wheel, touch, pointer press or key, so a reader who scrolls on is never pulled back. Everything else about a fold
  * stays a `<details>` that works with JavaScript off.
  */
 export default function OpenFoldFromHash() {
@@ -57,7 +57,7 @@ export default function OpenFoldFromHash() {
     const later = [window.setTimeout(() => reveal(false), 300), window.setTimeout(() => reveal(false), 1000)];
     const stopLater = () => later.forEach((timer) => window.clearTimeout(timer));
     // A reader who scrolls or touches the page within that second keeps their place: the re-runs stop.
-    const reader = ["wheel", "touchstart", "keydown"] as const;
+    const reader = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
     reader.forEach((type) => window.addEventListener(type, stopLater, { once: true, passive: true }));
     window.addEventListener("hashchange", onHashChange);
     document.addEventListener("click", onClick);
