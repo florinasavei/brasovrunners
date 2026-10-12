@@ -1,0 +1,8 @@
+{
+  "branch": "feat/route-map-open",
+  "decisionsTitle": "Route maps open from the start",
+  "decisionsSection": "**The owner, 2026-10-12** (amends §718's facade): asked whether the embedded map must be closed by default, and told that loading it gives Strava or Garmin the visitor's IP address without a press and slows the page, answered «yes I want it always opened».\n\n**Decision.**\n\n- **Open from the start.** Each map's disclosure is drawn open (`<details open>`), so the chosen tab's map loads with the page, no press. A hidden tab's frame is lazy and waits until its tab is chosen: opening an event with both maps asks Strava (the first tab) and not Garmin.\n- **The notice says where the map comes from**, no longer that it loads on a press: «Harta vine de la Strava; Strava vede adresa ta IP.» / «Harta vine de la Garmin Connect; Garmin vede adresa ta IP.», and in English the same.\n- **Still no provider script** on our page (§61): the frame's address is built on the server, as before.\n- **The privacy notice.** The notice in force does not name Strava or Garmin as recipients of a visitor's address on an event page; the owner was told so and decided to open the maps now. A notice that names them is the club's to approve (`/admin/legal`), ideally after a Romanian lawyer reads it.",
+  "changelogLine": "- **Route maps open by themselves** — an event's Strava or Garmin Connect map shows with the page, no press; the other tab's map loads when it is chosen. §NNN.",
+  "specsCriteria": [],
+  "batchLine": "route maps open from the start"
+}

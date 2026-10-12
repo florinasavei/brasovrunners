@@ -120,14 +120,15 @@ test.describe.serial("BR-REQ-011-01 «Traseul»'s maps and GPX (§718)", () => {
     await page.waitForURL(/saved=PUBLISHED/);
   });
 
-  test("ask nothing of Strava or Garmin until pressed; a press loads that one map, in its own tab", async ({ page }) => {
+  test("open from the start (§NNN): the chosen tab's map loads with the page, the other one only when its tab is chosen", async ({ page }) => {
     const seen = await watchProviders(page);
+    const stravaLoaded = page.waitForRequest((request) => new URL(request.url()).hostname === "strava-embeds.com");
     await page.goto(`/ro/evenimente/${slug}`);
     await hydrated(page);
     const section = page.locator("section#route");
     await expect(section.getByRole("heading", { name: "Traseul", exact: true })).toBeVisible();
 
-    // Strava first, chosen (§NNN); Garmin beside it. Both links are there, built from the ids.
+    // Strava first, chosen; Garmin beside it. Both links are there, built from the ids.
     const tabs = section.getByRole("tab");
     await expect(tabs).toHaveText(["Strava", "Garmin Connect"]);
     await expect(tabs.first()).toHaveAttribute("aria-selected", "true");
@@ -136,40 +137,28 @@ test.describe.serial("BR-REQ-011-01 «Traseul»'s maps and GPX (§718)", () => {
     const strava = section.getByTestId("route-map-strava");
     await expect(strava).toBeVisible();
     await expect(garmin).toBeHidden();
-    // Garmin's panel is the hidden tab now: its link is read by address, not by role.
     await expect(garmin.locator(`a[href="${GARMIN_LINK}"]`)).toContainText("Deschide în Garmin Connect");
-    await expect(garmin).toContainText("Harta se încarcă de la Garmin când apeși; Garmin vede adresa ta IP.");
+    await expect(strava).toContainText("Harta vine de la Strava; Strava vede adresa ta IP.");
 
-    // Scrolled through, waited on: nothing has been asked of either service, and no script of theirs is on the page.
-    await page.mouse.wheel(0, 2000);
-    await page.waitForTimeout(1_000);
-    expect(seen.map((request) => request.url())).toEqual([]);
+    // Strava's map loads with the page, no press; never a script of theirs on ours.
+    const request = await stravaLoaded;
+    expect(new URL(request.url()).pathname).toBe(`/route/${STRAVA_ID}`);
+    expect(new URL(request.url()).searchParams.get("token")).toBe(TOKEN);
+    await expect(strava.getByTestId("route-map-frame-strava")).toBeVisible();
     expect(await page.locator("script[src*='strava'], script[src*='garmin']").count()).toBe(0);
+    await page.waitForTimeout(500);
+    expect(seen.some((made) => /garmin/.test(new URL(made.url()).hostname))).toBe(false);
 
-    // To the Garmin tab with the keyboard and back to Strava: still nothing loads.
+    // To the Garmin tab with the keyboard: now, and only now, Garmin's map loads.
+    const garminLoaded = page.waitForRequest((made) => /garmin/.test(new URL(made.url()).hostname));
     await tabs.first().focus();
     await page.keyboard.press("ArrowRight");
     await expect(tabs.nth(1)).toHaveAttribute("aria-selected", "true");
     await expect(tabs.nth(1)).toBeFocused();
     await expect(garmin).toBeVisible();
     await expect(strava).toBeHidden();
-    await page.keyboard.press("ArrowLeft");
-    await expect(tabs.first()).toHaveAttribute("aria-selected", "true");
-    await expect(strava).toBeVisible();
-    await page.waitForTimeout(500);
-    expect(seen).toHaveLength(0);
-
-    // The press: Strava's map, from Strava's embed host, and nothing from Garmin.
-    const press = strava.getByTestId("route-map-show-strava");
-    expect(await heightOf(press)).toBeGreaterThanOrEqual(44);
-    const loaded = page.waitForRequest((request) => new URL(request.url()).hostname === "strava-embeds.com");
-    await press.click();
-    const request = await loaded;
-    expect(new URL(request.url()).pathname).toBe(`/route/${STRAVA_ID}`);
-    expect(new URL(request.url()).searchParams.get("token")).toBe(TOKEN);
-    await expect(strava.getByTestId("route-map-frame-strava")).toBeVisible();
-    expect(seen.every((made) => new URL(made.url()).hostname === "strava-embeds.com")).toBe(true);
-    expect(seen.some((made) => /garmin/.test(new URL(made.url()).hostname))).toBe(false);
+    expect(new URL((await garminLoaded).url()).pathname).toBe(`/embed/course/${GARMIN_ID}`);
+    await expect(garmin.getByTestId("route-map-frame-garmin")).toBeVisible();
 
     // A 320-pixel phone never scrolls sideways for it.
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -182,7 +171,7 @@ test.describe.serial("BR-REQ-011-01 «Traseul»'s maps and GPX (§718)", () => {
     const section = page.locator("section#route");
     await expect(section.getByRole("heading", { name: "The route", exact: true })).toBeVisible();
     await expect(section.getByRole("tab")).toHaveText(["Strava", "Garmin Connect"]);
-    await expect(section.getByTestId("route-map-garmin")).toContainText("The map loads from Garmin when you press; Garmin sees your IP address.");
+    await expect(section.getByTestId("route-map-garmin")).toContainText("The map comes from Garmin Connect; Garmin sees your IP address.");
 
     const download = section.getByTestId("route-gpx-download");
     await expect(download).toContainText("Download the route (GPX)");
@@ -199,6 +188,7 @@ test.describe.serial("BR-REQ-011-01 «Traseul»'s maps and GPX (§718)", () => {
     expect(answer.headers()["content-type"]).toBe("application/gpx+xml");
     expect(answer.headers()["content-disposition"]).toBe('attachment; filename="traseu-tampa.gpx"');
     expect(Buffer.from(await answer.body()).equals(TRACK)).toBe(true);
-    expect(seen).toHaveLength(0);
+    // Garmin's tab was never chosen: nothing was asked of Garmin.
+    expect(seen.some((made) => /garmin/.test(new URL(made.url()).hostname))).toBe(false);
   });
 });

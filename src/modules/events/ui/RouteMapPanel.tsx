@@ -13,7 +13,7 @@ export type RouteMapProviderWords = {
   tab: string;
   /** The press that loads the map: «Arată harta pe Strava». */
   show: string;
-  /** What pressing does: «Harta se încarcă de la Strava când apeși; Strava vede adresa ta IP.» */
+  /** Where the map comes from: «Harta vine de la Strava; Strava vede adresa ta IP.» */
   notice: string;
   /** The link to the route on the service: «Deschide în Strava». */
   open: string;
@@ -22,9 +22,10 @@ export type RouteMapProviderWords = {
 };
 
 /**
- * One service's map in «Traseul» (§718), behind one press, and its link.
+ * One service's map in «Traseul» (§718), open from the start (§NNN), and its link.
  *
- * The press is the house's facade for a third party (§69, §110, §266, §403): a native `<details>`,
+ * Since §NNN the disclosure is drawn open: the owner chose the map with the page over the press, knowing
+ * the service then sees the visitor's address. Before, the press was the house's facade for a third party (§69, §110, §266, §403): a native `<details>`,
  * rendered here on the server, whose closed state is the line «Arată harta pe …» — and a closed
  * disclosure keeps its contents out of the page (`content-visibility: hidden`), so the lazy iframe
  * inside asks Strava or Garmin for nothing, sets no cookie and runs no script until the visitor
@@ -37,7 +38,7 @@ export type RouteMapProviderWords = {
  * page's path. A fixed height rather than Strava's height messages: those would need a script on our
  * page, and a map does not need to fit its content.
  *
- * Under the press, always visible: the sentence that says what pressing does, and the link to the
+ * Under the map, always visible: the sentence that says where the map comes from, and the link to the
  * route on the service (built from the id), with the service's mark, 44 pixels tall.
  */
 /**
@@ -70,6 +71,9 @@ export default function RouteMapPanel({
     >
       <Box
         component="details"
+        // Open from the start (the owner, 2026-10-12: «yes I want it always opened», §NNN): the visible tab's
+        // map loads with the page; a hidden tab's lazy frame waits until its tab is chosen.
+        open
         sx={{
           "& summary::-webkit-details-marker": { display: "none" },
           // Open, the map takes the press's place: one box, never the line and the map stacked.

@@ -15,8 +15,8 @@ import { withClientWords } from "../../helpers/client-words";
  * BR-REQ-011-01 (§718) — «Traseul» on the page: Garmin Connect and Strava in tabs, Strava first (§738), each
  * map behind its own press and its link beside it; one service alone with no tabs; the GPX below,
  * with or without a map. The page draws the links and the iframes from the stored ids only, and an
- * iframe sits inside a closed `<details>` — the facade that keeps the browser from asking Strava or
- * Garmin for anything until the visitor presses (the e2e spec proves the network side).
+ * iframe sits inside a `<details>` open from the start (the owner, 2026-10-12, §NNN, replacing the press of
+ * §718): the visible tab's map loads with the page, a hidden tab's lazy frame only once chosen.
  */
 const STRAVA_ID = "1111222233334444555";
 const GARMIN_ID = "987654321";
@@ -48,7 +48,7 @@ const render = (props: { routeMaps?: unknown; routeGpx?: unknown; routeUrl?: str
     ),
   );
 
-/** Every iframe, with whether it sits inside a `<details>` that is not open. */
+/** Every iframe tag. */
 const iframes = (html: string) => [...html.matchAll(/<iframe\b[^>]*>/g)].map((match) => match[0]);
 
 describe("BR-REQ-011-01 the maps on the page (§718)", () => {
@@ -68,9 +68,9 @@ describe("BR-REQ-011-01 the maps on the page (§718)", () => {
     expect(html).toContain('role="tabpanel" id="route-map-panel-strava" aria-labelledby="route-map-tab-strava"');
   });
 
-  it("puts every map's iframe inside a closed disclosure, lazy, sandboxed, built from the stored ids", () => {
+  it("puts every map's iframe inside an open disclosure (§NNN), lazy, sandboxed, built from the stored ids", () => {
     const html = render({ routeMaps: BOTH });
-    expect(html).not.toMatch(/<details[^>]*\bopen\b/);
+    expect([...html.matchAll(/<details[^>]*\bopen\b/g)]).toHaveLength(2);
     const frames = iframes(html);
     expect(frames).toHaveLength(2);
     for (const frame of frames) {
@@ -92,7 +92,7 @@ describe("BR-REQ-011-01 the maps on the page (§718)", () => {
     expect(html).not.toContain("embed.js");
   });
 
-  it("says what the press loads and links to each route on the service, in both languages", () => {
+  it("says where the map comes from and links to each route on the service, in both languages", () => {
     for (const locale of ["ro", "en"] as const) {
       const html = render({ routeMaps: BOTH }, locale);
       const w = words(locale).routeMaps;
