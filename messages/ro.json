@@ -142,9 +142,13 @@
           "rows": "Unde îl adaugi",
           "google": "Google Calendar",
           "apple": "Apple Calendar",
-          "outlook": "Outlook Calendar",
+          "outlook": "Outlook.com (cont personal)",
+          "outlookWork": "Outlook la serviciu sau la școală",
           "ics": "Descarcă fișierul .ics",
-          "feed": "Adresa calendarului, pentru orice aplicație"
+          "feed": "Adresa calendarului, pentru orice aplicație",
+          "hintAuto": "Abonează-te: calendarul se actualizează singur când clubul schimbă ceva, uneori abia după mai bine de o zi. Fișierul .ics e o copie de azi; o schimbare nu ajunge în el.",
+          "hintPhone": "Pe Android, aplicația Google Calendar nu adaugă un calendar după adresă: folosește calendar.google.com în browser, „Din URL”.",
+          "hintOutlook": "Aplicația Outlook de pe telefon nu adaugă un calendar după adresă. Abonează-te o dată în browser, pe outlook.com (sau pe Microsoft 365, la un cont de serviciu sau de școală): apoi apare și în aplicație. Dacă fereastra nu se deschide, în Outlook pe web adaugă un calendar, alege abonarea de pe web și lipește adresa de mai sus."
         }
       }
     },

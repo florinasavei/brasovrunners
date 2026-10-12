@@ -17,7 +17,7 @@ import { LOOK_ACCENT_TINT, UNDER_LOOK, UNDER_LOOK_DARK } from "@/theme/look";
  * The facelift's phase 4 — the calendar under «Aspectul nou» (`docs/REDESIGN.md`): the kind as a
  * filter of the address, the three colours by kind and their tokens, the next-event panel's date,
  * the live twin for a kind, the chips as GET links that keep every other filter, the subscribe
- * box's Outlook row, and the page's rule that with the setting off nothing new is read or drawn.
+ * box's two Outlook rows, and the page's rule that with the setting off nothing new is read or drawn.
  */
 let currentLocale: "ro" | "en" = "ro";
 
@@ -181,6 +181,15 @@ describe("KindChips: GET links that keep every other filter", () => {
     for (const word of ["Toate evenimentele", "Alergări săptămânale", "Evenimente speciale", "Asfalt", "Trail"]) expect(html).toContain(word);
   });
 
+  it("is one scrolling row with its scrollbar shown, and the chips are ChipLink's own small pills (§720 amended)", async () => {
+    const html = renderToStaticMarkup(await KindChips({ path: "/ro/calendar/2026-10", kind: null, filter: NO_FILTER, surfaces: ["TRAIL"] }));
+    expect(html).toContain('data-testid="calendar-kind-chips"');
+    expect(html).toContain('role="group"');
+    const source = readFileSync(path.join(ROOT, "src/modules/events/ui/KindChips.tsx"), "utf8");
+    expect(source).toContain("<ScrollRow");
+    expect(source).not.toMatch(/scrollbarWidth: "none"|height: 32|MuiChip-root/);
+  });
+
   it("is the bare period's path when nothing is chosen", async () => {
     currentLocale = "en";
     const html = renderToStaticMarkup(await KindChips({ path: "/en/calendar/2026-10", kind: "special", filter: NO_FILTER, surfaces: [] }));
@@ -190,18 +199,49 @@ describe("KindChips: GET links that keep every other filter", () => {
 });
 
 describe("SubscribeBox", () => {
-  it("has a row each for Google, Apple, Outlook and the .ics, and the address to copy, all from APP_BASE_URL", async () => {
-    const base = "http://localhost:3000";
+  const base = "http://localhost:3000";
+  const feed = `${base}/ro/events/calendar.ics`;
+
+  it("has a row each for Google, Apple, Outlook (both kinds of account) and the .ics, and the address to copy, all from APP_BASE_URL", async () => {
     const html = unescape(renderToStaticMarkup(await SubscribeBox({ locale: "ro", baseUrl: base })));
-    const feed = `${base}/ro/events/calendar.ics`;
     expect(html).toContain("Vrei să nu ratezi alergările?");
     expect(html).toContain("https://calendar.google.com/calendar/r?cid=");
     expect(html).toContain('href="webcal://localhost:3000/ro/events/calendar.ics"');
-    expect(html).toContain(`href="${outlookSubscribeUrl(feed)}"`);
-    expect(outlookSubscribeUrl(feed)).toBe(`https://outlook.live.com/calendar/0/addfromweb?url=${encodeURIComponent(feed)}&name=Bra%C8%99ov%20Runners`);
+    expect(html).toContain(`href="${outlookSubscribeUrl(feed, "personal")}"`);
+    expect(html).toContain(`href="${outlookSubscribeUrl(feed, "work")}"`);
+    expect(html).toContain('data-testid="subscribe-outlook"');
+    expect(html).toContain('data-testid="subscribe-outlook-work"');
     expect(html).toContain('href="/ro/events/calendar.ics"');
     expect(html).toContain(`value="${feed}"`);
-    for (const word of ["Google Calendar", "Apple Calendar", "Outlook Calendar", "Descarcă fișierul .ics"]) expect(html).toContain(word);
+    for (const word of ["Google Calendar", "Apple Calendar", "Outlook.com (cont personal)", "Outlook la serviciu sau la școală", "Descarcă fișierul .ics"]) expect(html).toContain(word);
+  });
+
+  it("sends Outlook on the web the feed as webcal://, with the slash after addfromweb (the add-to-calendar-button format; no test can open it: outlook.com refuses robots)", () => {
+    for (const [account, host] of [
+      ["personal", "outlook.live.com"],
+      ["work", "outlook.office.com"],
+    ] as const) {
+      const url = new URL(outlookSubscribeUrl(feed, account));
+      expect(url.host).toBe(host);
+      expect(url.pathname).toBe("/calendar/0/addfromweb/");
+      expect(url.searchParams.get("url")).toBe("webcal://localhost:3000/ro/events/calendar.ics");
+      expect(url.searchParams.get("name")).toBe("Brașov Runners");
+    }
+    expect(outlookSubscribeUrl(feed, "personal")).toBe(
+      "https://outlook.live.com/calendar/0/addfromweb/?url=webcal%3A%2F%2Flocalhost%3A3000%2Fro%2Fevents%2Fcalendar.ics&name=Bra%C8%99ov%20Runners",
+    );
+  });
+
+  it("speaks of its own rows under the address, never of an «Apple / Outlook» button it does not have", async () => {
+    for (const [locale, hint] of [
+      ["ro", "Aplicația Outlook de pe telefon nu adaugă"],
+      ["en", "The Outlook phone app cannot add"],
+    ] as const) {
+      currentLocale = locale;
+      const html = renderToStaticMarkup(await SubscribeBox({ locale, baseUrl: base }));
+      expect(html).toContain(hint);
+      expect(html).not.toContain("Apple / Outlook");
+    }
   });
 });
 

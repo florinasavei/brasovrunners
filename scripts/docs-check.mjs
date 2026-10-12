@@ -283,6 +283,8 @@ const PROVIDER_HOSTS = [
   "calendar.google.com",
   // Outlook's "add a calendar from the web" address, a row of the calendar's subscribe box (the facelift's phase 4): Microsoft's, fixed.
   "outlook.live.com",
+  // The same window for a work or school account (Microsoft 365), the box's second Outlook row (§720 amended): Microsoft's, fixed, nothing loaded from it.
+  "outlook.office.com",
   // YouTube's thumbnail host, shown inside the editor only for a film an organizer placed (§110).
   "i.ytimg.com",
   // Cloudflare Turnstile's widget and its verification endpoint (§97): fixed, Cloudflare's own.
