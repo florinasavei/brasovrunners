@@ -182,7 +182,7 @@ describe("§524 a member signs in and is no staff", () => {
       const html = await markup(await Page(params));
       const nav = hrefsOf(html);
       expect([...nav.matchAll(/href="([^"]+)"/g)].map((m) => m[1])).toEqual(["/ro/zona-membri", "/ro/zona-membri/magazin", "/ro/zona-membri/alergari"]);
-      expect(nav.replace(/<style[\s\S]*?<\/style>/g, "").replace(/<[^>]+>/g, "|").split("|").filter(Boolean)).toEqual([ro.Members.tabs.codes, ro.Members.tabs.shop, ro.Members.tabs.runs]);
+      expect(nav.replace(/<style[\s\S]*?<\/style>/g, "").replace(/<[^>]+>/g, "|").split("|").filter(Boolean)).toEqual([ro.Members.tabs.codes, ro.Members.tabsShort.codes, ro.Members.tabs.shop, ro.Members.tabsShort.shop, ro.Members.tabs.runs, ro.Members.tabsShort.runs]); // the full word and the short one (§NNN)
       const current = [...nav.matchAll(/<a [^>]*aria-current="page"[^>]*>/g)].map((m) => m[0]);
       expect(current).toHaveLength(1);
       expect(current[0]).toContain(`href="${active}"`);

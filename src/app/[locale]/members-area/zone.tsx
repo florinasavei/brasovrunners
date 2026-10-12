@@ -35,7 +35,9 @@ import { signOutAction } from "../admin/actions";
  * the runs. The zone drew all of it on one long page, and a member after the shop scrolled past the
  * codes and the runs. «Coduri de reducere» is the zone's own address (`/members-area`), drawn
  * directly: every link made before the tabs — the sign-in's landing, the members' page's button —
- * arrives at the first tab, and the runs have an address of their own.
+ * arrives at the first tab, and the runs have an address of their own. Below `sm` each tab says a
+ * shorter word (`tabsShort`, §NNN): the three full ones with their glyphs need about 350 px in a
+ * 288-px row, and the current tab sat past the edge, so a member did not see where they were.
  */
 export const ZONE_TABS = ["codes", "shop", "runs"] as const;
 export type ZoneTab = (typeof ZONE_TABS)[number];
@@ -161,6 +163,7 @@ export default function ZoneFrame({
           items={tabs.map((tab) => ({
             href: getPathname({ locale, href: TAB_ROUTE[tab] }),
             label: t(`tabs.${tab}`),
+            short: t(`tabsShort.${tab}`),
             active: tab === active,
             glyph: glyphs[tab],
           }))}

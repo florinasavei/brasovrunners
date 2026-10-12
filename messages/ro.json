@@ -10343,6 +10343,11 @@
       "shop": "Magazin",
       "runs": "Alergări"
     },
+    "tabsShort": {
+      "codes": "Coduri",
+      "shop": "Magazin",
+      "runs": "Alergări"
+    },
     "codesEmpty": "Niciun cod de reducere deocamdată. Clubul le pune aici când are unul de la un partener.",
     "shopEmpty": "Magazinul clubului nu are produse acum și nu ai nicio comandă.",
     "copyCode": "Copiază codul",
