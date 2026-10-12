@@ -78,7 +78,7 @@ import {
   sittingStillOpen,
 } from "@/modules/registrations/family-sitting";
 import { compareFamilyOrder, SITTING_HELD, withFamilyRank } from "@/modules/registrations/domain/family-sitting";
-import { raceNumberOf } from "@/modules/registrations/domain/race-number";
+import { formatRaceNumber, raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { readAddressCap } from "@/modules/registrations/address-cap";
 import { SIGNABLE_STATUSES } from "@/modules/registrations/domain/family-signing";
 import { confirmationDueMoment, participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
@@ -345,6 +345,8 @@ async function renderRow(
   // Every language's texts of the event, from the batch's one read of it (`createOutboxRenderer`).
   const eventTexts = eventId ? await eventRows(db, eventId) : [];
   const eventDetails = eventId ? eventNotificationDetailsIn(eventTexts, locale) : undefined;
+  // A race number as the event writes it (§NNN): «007» in the email when the bib says «007».
+  const writtenNumber = (number: number | null) => (number === null ? undefined : formatRaceNumber(number, eventDetails?.raceNumberFormat));
   /*
     The other language's own row, for the second half (§373, email follow-up). None when the event
     has no text in that language — then the row this message reads may itself be the other
@@ -613,7 +615,7 @@ async function renderRow(
       data.organizerBodyOther = words.body[other];
     }
     // A confirmed registration's number only (`ORGANIZER_MESSAGE_PLACEHOLDERS`, §548).
-    if (registration?.status === "CONFIRMED" && registration.bibNumber !== null) data.bibNumber = registration.bibNumber;
+    if (registration?.status === "CONFIRMED" && registration.bibNumber !== null) data.bibNumber = writtenNumber(registration.bibNumber);
   }
   /*
     "Înscrierile mele" by address, not by token: neither message mints anything (§77). On the
@@ -911,7 +913,7 @@ async function renderRow(
   // The club's own notice (§245) needs the number and nothing else the runner's copy carries:
   // no check-in code and no QR, because neither means anything in a club mailbox.
   if (row.messageType === "CLUB_CONFIRMATION_NOTICE" && registration) {
-    data.bibNumber = raceNumberOf(registration) ?? undefined;
+    data.bibNumber = writtenNumber(raceNumberOf(registration));
   }
 
   if (
@@ -936,7 +938,7 @@ async function renderRow(
       it, and it never moves afterwards. Only these messages of a confirmed registration carry a
       number; the verification link and the declaration request say nothing about one.
     */
-    data.bibNumber = raceNumberOf(registration) ?? undefined;
+    data.bibNumber = writtenNumber(raceNumberOf(registration));
   }
 
   /*
@@ -960,7 +962,7 @@ async function renderRow(
         // The greeting's word for this person (§519): the first word of the first name typed.
         ...(person.firstName?.trim() ? { firstName: person.firstName.trim().split(/\s+/)[0] } : {}),
         ...(clubCopy || !code ? {} : { checkinCode: code, qrUrl: `${env.APP_BASE_URL}/api/registrations/qr/${code}.png` }),
-        raceNumber: number,
+        raceNumber: writtenNumber(number) ?? null,
       });
     }
     data.familyConfirmed = people;

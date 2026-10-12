@@ -4,6 +4,7 @@ import Typography from "@mui/material/Typography";
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { env } from "@/shared/config/env";
 import { qrIdentity } from "../domain/qr-identity";
+import type { RaceNumberFormat } from "../domain/race-number";
 
 /** The words beside the QR, from the «Registrations» catalogue (`qr.*`, `manage.qrTitle`), filled by the page. */
 export type QrWords = {
@@ -21,6 +22,8 @@ type Props = {
   /** With the number, what `raceNumberOf` asks (§548): a number is shown once confirmed, and never before. */
   status: RegistrationStatus;
   bibNumber: number | null;
+  /** How the event writes the number (§NNN); absent, as the number is. */
+  raceNumberFormat?: RaceNumberFormat | null;
   /** The picture's side in pixels: 200 on «Gestionează înscrierea», 160 on «Înscrierile mele». */
   size: number;
   words: QrWords;
@@ -36,8 +39,8 @@ type Props = {
  * A Server Component, synchronous: the page hands it its words, so the page renders as one tree.
  * Strings in, the picture a hosted PNG from `APP_BASE_URL` (AGENTS.md §8).
  */
-export default function QrWithName({ checkinCode, registeredName, status, bibNumber, size, words }: Props) {
-  const who = qrIdentity({ registeredName, status, bibNumber });
+export default function QrWithName({ checkinCode, registeredName, status, bibNumber, raceNumberFormat, size, words }: Props) {
+  const who = qrIdentity({ registeredName, status, bibNumber, raceNumberFormat });
   return (
     <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { xs: "flex-start", sm: "center" } }} data-testid="qr-with-name">
       <Box

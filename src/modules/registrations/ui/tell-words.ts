@@ -11,6 +11,7 @@ import { callInstead, type RegistrationEmailState } from "../domain/email-state"
 import { rowDeadlineOf } from "../domain/row-deadline";
 import { shortEmailName } from "./rejected-email-words";
 import { waitlistStandingPhrase } from "./waitlist-position-words";
+import { formatRaceNumber, type RaceNumberFormat } from "@/modules/registrations/domain/race-number";
 
 type Say = (key: string, values?: Record<string, string | number>) => string;
 
@@ -32,6 +33,8 @@ export type TellFacts = {
   liveLinkExpiresAt: Date | null;
   /** The row's race number: said only on a confirmed row. */
   bibNumber: number | null;
+  /** How the event writes it (§NNN): «007» said as the bib shows it. */
+  raceNumberFormat?: RaceNumberFormat | null;
   checkedInAt: Date | null;
   /** Why an expired row expired: a lapsed declaration hold says what its email said (§638). */
   expiryReason?: string | null;
@@ -150,7 +153,7 @@ export function tellLines(say: Say, ours: Say, locale: string, facts: TellFacts,
       break;
     case "CONFIRMED":
       lines.push(ours("CONFIRMED"));
-      if (facts.bibNumber !== null) lines.push(ours("bib", { number: facts.bibNumber }));
+      if (facts.bibNumber !== null) lines.push(ours("bib", { number: formatRaceNumber(facts.bibNumber, facts.raceNumberFormat) }));
       // Checked in at the desk or by the person (BR-REQ-037-08): the participant page's own words.
       if (facts.checkedInAt) lines.push(say("manage.selfCheckInDone"));
       break;

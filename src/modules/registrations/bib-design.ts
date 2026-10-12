@@ -4,6 +4,7 @@ import { contrastRatio, MIN_TEXT_CONTRAST } from "@/modules/appearance/domain/ti
 import { COLOR, GRADIENT } from "@/theme/brand";
 import { bibDesignValuesFromQuery } from "./bib-design-query";
 import { bibFooterText } from "./bib-footer";
+import { RACE_NUMBER_FORMATS } from "./domain/race-number";
 
 /**
  * What a race number looks like, decided once for both renderers (`DECISIONS.md` §173, §180).
@@ -280,6 +281,12 @@ export const bibDesignSchema = z
     showDate: z.boolean().catch(true),
     showLogo: z.boolean().catch(true),
     numberScale: z.enum(BIB_NUMBER_SCALES).catch("medium"),
+    /**
+     * «Cum arată numărul» (§NNN): `plain` (7), `pad3` (007) or `pad4` (0007) — on the bib and
+     * everywhere else the number is written (`race-number.ts#formatRaceNumber`). A design saved
+     * before this key existed reads `plain` and prints as it did.
+     */
+    numberFormat: z.enum(RACE_NUMBER_FORMATS).catch("plain"),
     namePosition: z.enum(BIB_NAME_POSITIONS).catch("below"),
     /** A picture across the top instead of the coloured band, or null for the band (§249). */
     headerImageSrc: storedPicture,
@@ -330,6 +337,7 @@ export const DEFAULT_BIB_DESIGN: BibDesign = {
   showDate: true,
   showLogo: true,
   numberScale: "medium",
+  numberFormat: "plain",
   namePosition: "below",
   headerImageSrc: null,
   sponsorImageSrc: null,

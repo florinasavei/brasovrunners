@@ -29,6 +29,7 @@ import {
 } from "./domain/spare-bibs";
 import { TERMINAL_STATUSES } from "./domain/state-machine";
 import { hiddenListBibStartOf, SPARES_BEFORE_HIDDEN_LIST } from "./domain/hidden-list";
+import { readRaceNumberFormat, type RaceNumberFormat } from "./domain/race-number";
 
 type Actor = Pick<StaffUser, "id" | "role">;
 
@@ -806,6 +807,8 @@ export async function countBibs<T extends Record<string, unknown>>(
 export type VoidBib = {
   id: string;
   bibNumber: number;
+  /** How the event writes the number (§NNN): «007» in the list of bibs to pull when the paper says «007». */
+  raceNumberFormat: RaceNumberFormat;
   registeredName: string;
   status: "CANCELLED" | "EXPIRED";
   /** When the registration left the live states: `cancelled_at` or `expired_at`, whichever the status names. */
@@ -853,6 +856,8 @@ export async function voidBibsFor<T extends Record<string, unknown>>(
       status: registrations.status,
       cancelledAt: registrations.cancelledAt,
       expiredAt: registrations.expiredAt,
+      // Qualified by hand: inside a one-table select Drizzle prints a column bare.
+      raceNumberFormat: sql<string | null>`(select e."bib_design" ->> 'numberFormat' from ${events} e where e."id" = ${registrations}."event_id")`.mapWith(readRaceNumberFormat),
     })
     .from(registrations)
     .where(
@@ -869,6 +874,7 @@ export async function voidBibsFor<T extends Record<string, unknown>>(
   return rows.map((row) => ({
     id: row.id,
     bibNumber: row.bibNumber as number,
+    raceNumberFormat: row.raceNumberFormat,
     registeredName: row.registeredName,
     status: row.status as "CANCELLED" | "EXPIRED",
     // The pair the status names, and nothing else: non-null by construction (the docblock says

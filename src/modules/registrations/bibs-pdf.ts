@@ -18,6 +18,7 @@ import { bibFooterLines, bibFooterParts } from "./bib-footer";
 import { BIB_PICTURE_BOX, type BibPictureSlot, bibPictureDrawing } from "./bib-picture-frame";
 import { A4_PAGE, BIB_CARD, BIB_FOOTER_LINE, BIB_LAYOUT, BIB_MARGIN, BIB_PAPER, bibNumberPoints } from "./bib-geometry";
 import type { BibRow } from "./bibs";
+import { formatRaceNumber } from "./domain/race-number";
 
 /**
  * Race numbers as a sheet to print (BR-REQ-038-01, `DECISIONS.md` §180, §338): **every bib is an
@@ -474,7 +475,8 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     */
     const nameBlock = design.showName ? L.nameBlock : 0;
     const nameAbove = design.showName && design.namePosition === "above";
-    const digits = String(row.bibNumber);
+    // As the event writes it (§NNN): «007» under «Trei cifre»; its length sizes it, as ever.
+    const digits = formatRaceNumber(row.bibNumber, design.numberFormat);
     const numberSize = bibNumberPoints(digits, numberScaleFactor(design));
     const sponsorTop = bottom - footerHeight - sponsorHeight;
     const numberArea = BIB_CARD.height - L.bandHeight - footerHeight - nameBlock - sponsorHeight - stripeHeight;

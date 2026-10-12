@@ -56,6 +56,8 @@ export type BibDesignFormValues = {
   showDate: boolean;
   showLogo: boolean;
   numberScale: string;
+  /** «Cum arată numărul» (§NNN): `plain`, `pad3` or `pad4`; anything else is the schema's to refuse. */
+  numberFormat: string;
   namePosition: string;
   headerImageSrc: string | null;
   sponsorImageSrc: string | null;
@@ -104,7 +106,7 @@ const SWITCHES = [
   "showEventInFooter",
   "showWebsite",
 ] as const;
-const CHOICES = ["numberScale", "namePosition"] as const;
+const CHOICES = ["numberScale", "numberFormat", "namePosition"] as const;
 const PICTURES = ["headerImageSrc", "sponsorImageSrc"] as const;
 /** Each picture's crop, beside the picture it belongs to: absent with no picture or no crop (§560). */
 const CROPS = [
@@ -130,6 +132,7 @@ export function readBibDesignForm(get: (name: string) => string | null): BibDesi
     showDate: field("showDate") === "on",
     showLogo: field("showLogo") === "on",
     numberScale: field("numberScale")?.trim() || "medium",
+    numberFormat: field("numberFormat")?.trim() || "plain",
     namePosition: field("namePosition")?.trim() || "below",
     headerImageSrc: field("headerImageSrc")?.trim() || null,
     sponsorImageSrc: field("sponsorImageSrc")?.trim() || null,

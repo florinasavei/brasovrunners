@@ -1,6 +1,6 @@
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { compareFamilyOrder } from "./family-sitting";
-import { raceNumberOf } from "./race-number";
+import { formatRaceNumber, raceNumberOf, type RaceNumberFormat } from "./race-number";
 
 /**
  * The declarations of a family on one address, signed as a wizard (§471, over §389 and §446).
@@ -37,6 +37,8 @@ export type FamilySigningRow = {
   declared?: boolean;
   /** The race number (§548), for the number beside the desk code (`raceNumberOf`). */
   bibNumber?: number | null;
+  /** How the event writes the number (§NNN): «007» beside the code when the bib says «007». */
+  raceNumberFormat?: RaceNumberFormat | null;
   /** The place in the family's order (§519, `compareFamilyOrder`), when the family's one button confirmed it. */
   familyRank?: number | null;
 };
@@ -72,7 +74,7 @@ export type FamilyStep = {
    * person of a family gets theirs at their own confirmation. The slot beside the QR a later change
    * fills with the name and the number on every QR.
    */
-  raceNumber: number | null;
+  raceNumber: string | null;
 };
 
 export type FamilyStepsInput = {
@@ -132,7 +134,7 @@ export function familySigningSteps(rows: readonly FamilySigningRow[], input: Fam
       state,
       holdExpiresAt: row.holdExpiresAt ?? null,
       checkinCode: row.checkinCode ?? null,
-      raceNumber: raceNumberOf({ status: row.status, bibNumber: row.bibNumber ?? null }),
+      raceNumber: writtenRaceNumber(raceNumberOf({ status: row.status, bibNumber: row.bibNumber ?? null }), row.raceNumberFormat),
     };
   });
 }
@@ -226,4 +228,9 @@ export function familyPassExpiresAt(steps: readonly FamilyStep[], now: Date): Da
     if (hold !== undefined && hold > now.getTime()) at = Math.min(at, hold);
   }
   return new Date(at);
+}
+
+/** A number as the event writes it (§NNN), or null while there is none. */
+function writtenRaceNumber(number: number | null, format: RaceNumberFormat | null | undefined): string | null {
+  return number === null ? null : formatRaceNumber(number, format);
 }

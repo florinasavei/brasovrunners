@@ -21,6 +21,8 @@ import { checkIn, type EventForRegistration, looksLikeSpam, unregister } from ".
 import type { CancelReason } from "./domain/cancel-reason";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { selfCheckinOpensAt } from "@/modules/deadlines/domain/deadlines";
+import { RACE_NUMBER_FORMAT } from "@/modules/events/repository";
+import type { RaceNumberFormat } from "./domain/race-number";
 
 /**
  * "My registrations" — one link, every active registration for an address (BR-REQ-036-04;
@@ -95,6 +97,8 @@ export type MyRegistration = {
   holdExpiresAt: Date | null;
   /** The race number, given at the confirmation (§87, §548); shown through `raceNumberOf`. */
   bibNumber: number | null;
+  /** How the event writes the number (§NNN): «007» when its bib says «007». */
+  raceNumberFormat: RaceNumberFormat;
   /** "I am here" is offered from the club's check-in lead before the start ("Termene", §377), confirmed registrations only — never at a cancelled event. */
   selfCheckinOpen: boolean;
   /**
@@ -158,6 +162,7 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
       checkedInAt: registrations.checkedInAt,
       holdExpiresAt: registrations.holdExpiresAt,
       bibNumber: registrations.bibNumber,
+      raceNumberFormat: RACE_NUMBER_FORMAT,
       listOptOut: registrations.listOptOut,
       // Whether each is set, computed in SQL so the values never leave the database (§322).
       holdsHealthNote: sql<boolean>`(${registrations.healthNotes} IS NOT NULL OR ${registrations.healthConsentAt} IS NOT NULL)`.mapWith(Boolean),

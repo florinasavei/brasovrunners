@@ -263,6 +263,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                       registeredName={one.registeredName}
                       status={one.status}
                       bibNumber={one.bibNumber}
+                      raceNumberFormat={details?.raceNumberFormat}
                       size={200}
                       words={qrWords}
                     />

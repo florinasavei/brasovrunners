@@ -28,6 +28,7 @@ import {
   BIB_MARGIN,
   bibNumberPoints,
 } from "./bib-geometry";
+import { formatRaceNumber } from "./domain/race-number";
 
 /**
  * One race number as a picture (`DECISIONS.md` §94, §180; the owner: "I should be able to
@@ -173,7 +174,8 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const { width, height } = BIB_IMAGE;
   const L = BIB_LAYOUT;
   const design = input.design ?? DEFAULT_BIB_DESIGN;
-  const digits = String(input.bibNumber);
+  // As the event writes it (§NNN): «007» under «Trei cifre»; its length sizes it, as ever.
+  const digits = formatRaceNumber(input.bibNumber, design.numberFormat);
   // The sheet's size in points, the club's scale included, then to pixels (§249).
   const numberSize = px(bibNumberPoints(digits, numberScaleFactor(design)));
   // The members' header (§664) only while the switch is on; everything under it is the one design.

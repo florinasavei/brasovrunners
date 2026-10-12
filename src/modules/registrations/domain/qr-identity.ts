@@ -1,5 +1,5 @@
 import type { RegistrationStatus } from "@/db/schema/registrations";
-import { raceNumberOf } from "./race-number";
+import { formatRaceNumber, raceNumberOf, type RaceNumberFormat } from "./race-number";
 
 /**
  * Whose QR code this is (§547; the owner, 2026-09-28, walking a family of three on QA: three
@@ -20,10 +20,16 @@ export type QrIdentity = {
 /** The dash a missing number reads as, on the pages and in the email alike. */
 export const NO_RACE_NUMBER = "—";
 
-export function qrIdentity(row: { registeredName: string; status: RegistrationStatus; bibNumber: number | null }): QrIdentity {
+export function qrIdentity(row: {
+  registeredName: string;
+  status: RegistrationStatus;
+  bibNumber: number | null;
+  /** How the event writes the number (§NNN): «007» beside the code when the bib says «007». */
+  raceNumberFormat?: RaceNumberFormat | null;
+}): QrIdentity {
   const raceNumber = raceNumberOf({ status: row.status, bibNumber: row.bibNumber });
   return {
     name: row.registeredName.trim(),
-    number: raceNumber !== null ? String(raceNumber) : NO_RACE_NUMBER,
+    number: raceNumber !== null ? formatRaceNumber(raceNumber, row.raceNumberFormat) : NO_RACE_NUMBER,
   };
 }
