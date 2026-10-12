@@ -9,8 +9,8 @@ type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 export type PhotoFieldOverrides = { legend: string; help: string; cropTitle: string; cropHelp: string };
 
 /**
- * The words `TeamPhotoField` needs, built in one place (§541; amended by the one-builder refactor,
- * after §705, §709, §717): the upload, «Din galerie» and its picker, the quality choice and the crop
+ * The words `TeamPhotoField` needs, built in one place (§541, §NNN; the field as §705, §709
+ * and §717 reuse it): the upload, «Din galerie» and its picker, the quality choice and the crop
  * box's captions are the house's one set — `Admin.team.photo*`, `Admin.richText.*`, `Admin.gallery.*`
  * and the text editor's own labels — and only the four captions in `overrides` are the caller's.
  * Translated once on the server and handed to the island as strings (AGENTS.md §14.5).
