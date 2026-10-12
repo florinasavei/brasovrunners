@@ -426,7 +426,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           )}
           {/* On the hidden list (§643, §647): counted in no place, for every role that reads the list. */}
           {row.outsideCapacity && <HiddenListChip label={t("registrations.outside.chip")} hint={t("registrations.outside.hint")} testId="outside-chip" />}
-          {/* Registered from an invitation by email (§NNN, amending §647): who came in that way, at a glance. */}
+          {/* Registered from an invitation by email (§737, amending §647): who came in that way, at a glance. */}
           {row.invited && <Chip size="small" variant="outlined" color="info" label={t("registrations.invitedChip")} data-testid="invited-chip" />}
           {/* A family on one address (§543): who else is registered with it, each a link to their row. */}
           <FamilyChip
@@ -640,7 +640,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   ];
 
   /*
-    The event's invitations in the table itself (§NNN; the owner, on this list: «și aici ar trebui să văd
+    The event's invitations in the table itself (§737; the owner, on this list: «și aici ar trebui să văd
     cumva lista de invitații»): every invitation not accepted yet — sent, expired or withdrawn — as a row
     above the registrations, in the same columns, on a quiet fill. An accepted one is a registration
     already, marked «Invitat» in its own row. Only on the first page of one event's list with no other

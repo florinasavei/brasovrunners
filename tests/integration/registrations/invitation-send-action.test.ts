@@ -132,7 +132,7 @@ describe("§647 a refused send hands the next dialog the server's numbers", () =
     expect(await db.execute(sql`select count(*)::int as n from event_invitations`)).toMatchObject({ rows: [{ n: 0 }] });
   });
 
-  it("the form's rows (§NNN): a name and an address per row are sent; a half-filled row is refused by its number, nothing written", async () => {
+  it("the form's rows (§737): a name and an address per row are sent; a half-filled row is refused by its number, nothing written", async () => {
     const eventId = await createEvent(5);
     const rows = (pairs: [string, string][]) => {
       const form = press(eventId, "", null);

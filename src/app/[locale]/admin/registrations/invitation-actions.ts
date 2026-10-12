@@ -67,7 +67,7 @@ export async function inviteAction(_previous: InvitationSendState, form: FormDat
   const eventId = text(form, "eventId");
   const typed = parseInvitationLines(text(form, "typed"));
   if (typed.unread.length > 0) return { error: "INVITATION_UNREAD_LINE", lines: typed.unread.join(", ") };
-  // The form's rows (§NNN): «Nume» and «Email» per person, two lists in the same order.
+  // The form's rows (§737): «Nume» and «Email» per person, two lists in the same order.
   const strings = (name: string) => form.getAll(name).map((value) => (typeof value === "string" ? value : ""));
   const rows = readInviteeRows(strings("inviteeName"), strings("inviteeEmail"));
   if (rows.unread.length > 0) return { error: "INVITATION_UNREAD_ROW", lines: rows.unread.join(", ") };

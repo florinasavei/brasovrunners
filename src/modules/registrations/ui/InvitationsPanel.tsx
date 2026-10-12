@@ -154,7 +154,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
       data-testid="registrations-invitations"
     >
       <Stack spacing={3}>
-        {/* Who was invited first (§NNN; the owner: «I need to see the people that were added via manual
+        {/* Who was invited first (§737; the owner: «I need to see the people that were added via manual
             invitations»), then the form that sends more, under a heading of its own. */}
         {invitations.length === 0 ? (
           <Typography variant="body2" color="text.secondary">
@@ -162,7 +162,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
           </Typography>
         ) : (
           <>
-            {/* How many in each state, at a glance (§NNN): the list below names every one. */}
+            {/* How many in each state, at a glance (§737): the list below names every one. */}
             <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", rowGap: 1 }} data-testid="invitations-counts">
               {INVITATION_STATES.map((one) => {
                 const count = byState[one];
@@ -209,7 +209,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                     <Typography variant="body2" sx={{ wordBreak: "break-all" }}>
                       {row.email}
                     </Typography>
-                    {/* Whom the club picked from its members, and whom it typed by hand (§NNN). */}
+                    {/* Whom the club picked from its members, and whom it typed by hand (§737). */}
                     <Stack direction="row" spacing={0.5} sx={{ mt: 0.5, flexWrap: "wrap", rowGap: 0.5 }}>
                       <Chip size="small" variant="outlined" label={t(row.memberStaffUserId ? "invitations.origin.member" : "invitations.origin.typed")} data-testid="invitation-origin" />
                       {/* «Invitat special» (§649): the registrations' own chip, glyph and hint, not a bare word. */}

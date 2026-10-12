@@ -154,7 +154,7 @@ type Props<Row> = {
   /** Shown instead of the table when nothing matches. Says what to do, not just "nothing". */
   empty: ReactNode;
   /**
-   * Rows of another kind drawn above the page's rows, in the same columns (§NNN; the registrations
+   * Rows of another kind drawn above the page's rows, in the same columns (§737; the registrations
    * list draws the event's open invitations here): each a cell per column key — a key left out is an
    * empty cell — and its own verbs. Not counted in `total`, not sorted, not paged: the caller decides
    * when they belong (the first page of one event's list). Marked `data-row-kind="lead"`.
@@ -386,7 +386,7 @@ export default function AdminTable<Row>({
             </TableRow>
           </TableHead>
           <TableBody>
-            {/* Rows of another kind first (§NNN), on a quiet fill so they never read as the page's own. */}
+            {/* Rows of another kind first (§737), on a quiet fill so they never read as the page's own. */}
             {leadRows.map((lead) => (
               <TableRow key={`lead-${lead.key}`} data-row-kind="lead" data-testid={lead.testId} sx={{ ...ROW_SEPARATOR, bgcolor: "action.hover" }}>
                 {columns.map((column) => (

@@ -129,7 +129,7 @@ export default function InviteForm({
   const [search, setSearch] = useState("");
   const [ticked, setTicked] = useState<ReadonlySet<string>>(new Set());
   /*
-    The people typed (§NNN; the owner: «I need to be able to add by name and email not just a simple
+    The people typed (§737; the owner: «I need to be able to add by name and email not just a simple
     input»): one row each, a name and an address, posted as `inviteeName` / `inviteeEmail` in order.
     One empty row to start; a row is added by the button and removed by its own. Each row keeps a key of
     its own, so removing one never moves another's typing into it.

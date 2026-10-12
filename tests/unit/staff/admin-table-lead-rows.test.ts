@@ -5,7 +5,7 @@ import AdminTable from "@/modules/staff-identity/ui/AdminTable";
 import { withClientWords } from "../../helpers/client-words";
 
 /**
- * BR-REQ-037-07, `DECISIONS.md` §NNN — the registrations list draws an event's open invitations as
+ * BR-REQ-037-07, `DECISIONS.md` §737 — the registrations list draws an event's open invitations as
  * rows of another kind above its registrations: in the same columns, drawn even when no registration
  * matches, and never counted in the page's own rows.
  */
@@ -35,7 +35,7 @@ function render(rows: Row[], leadRows: { key: string; cells: Record<string, stri
   );
 }
 
-describe("§NNN rows of another kind above the table's own", () => {
+describe("§737 rows of another kind above the table's own", () => {
   it("draws the lead rows first, in the table and in the phone's blocks, with their own cells", () => {
     const html = render([{ id: "a", name: "Alpha" }], [{ key: "i1", cells: { name: "Ana Pop", status: "Invitație trimisă" }, testId: "registrations-invitation-row" }]);
     // Once in the table and once in the phone's list.

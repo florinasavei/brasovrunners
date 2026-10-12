@@ -156,7 +156,7 @@ export function parseInvitationLines(text: string): { people: TypedInvitee[]; un
 }
 
 /**
- * The people typed in the form's rows (§NNN, amending §647; the owner: «I need to be able to add by name
+ * The people typed in the form's rows (§737, amending §647; the owner: «I need to be able to add by name
  * and email not just a simple input»): one «Nume» and one «Email» box per row, posted as two lists in the
  * same order. A row with both boxes empty is ignored (the empty row the form always offers); a row with
  * only one of them, or an address that is not one word with an «@», is unread and named by its number —

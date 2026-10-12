@@ -101,7 +101,7 @@ describe("§647 «Nume <adresă>, una pe rând»", () => {
   });
 });
 
-describe("§NNN «Nume» and «Email», one row per person", () => {
+describe("§737 «Nume» and «Email», one row per person", () => {
   it("reads each row's name and address, skips an empty row, and names the rows it cannot read", () => {
     const rows = readInviteeRows(
       ["Ana  Pop", "", "Bogdan", "", "Carmen Dobre", "Dan Pop"],

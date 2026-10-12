@@ -440,7 +440,7 @@ describe("§647 BR-REQ-036-02 the link: the GET reads, the press spends it once 
     // The invitation is accepted, and the place moved: two occupied before, two after, nobody offered.
     const [invitation] = await invitationsOf(event.id);
     expect(invitation).toMatchObject({ acceptedAt: at(6), acceptedRegistrationId: registration!.id });
-    // The registrations list marks it «Invitat» (§NNN), and only it: Ioana registered on the form.
+    // The registrations list marks it «Invitat» (§737), and only it: Ioana registered on the form.
     const listed = await listRegistrationsForAdmin(db, { eventId: event.id });
     expect(listed.filter((row) => row.invited).map((row) => row.id)).toEqual([registration!.id]);
     // Ioana's hold and Ana's now: the invitation's bucket empty.
