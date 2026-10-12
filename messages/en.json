@@ -142,9 +142,13 @@
           "rows": "Where to add it",
           "google": "Google Calendar",
           "apple": "Apple Calendar",
-          "outlook": "Outlook Calendar",
+          "outlook": "Outlook.com (personal account)",
+          "outlookWork": "Outlook for work or school",
           "ics": "Download the .ics file",
-          "feed": "The calendar's address, for any app"
+          "feed": "The calendar's address, for any app",
+          "hintAuto": "Subscribe: the calendar updates by itself when the club changes something, sometimes only after more than a day. The .ics file is a copy from today; a change never reaches it.",
+          "hintPhone": "On Android, the Google Calendar app cannot add a calendar by its address: use calendar.google.com in a browser, “From URL”.",
+          "hintOutlook": "The Outlook phone app cannot add a calendar by its address. Subscribe once in a browser, on outlook.com (or on Microsoft 365 for a work or school account): it then shows in the app too. If the window does not open, in Outlook on the web add a calendar, choose “Subscribe from web” and paste the address above."
         }
       }
     },
@@ -4696,6 +4700,8 @@
       "buttonHowRo": "«How it works» (Romanian)",
       "buttonHowEn": "«How it works» (English)",
       "buttonHowHelp": "A club page from «Custom pages». With no page the button is not drawn; an unpublished page appears once you publish it. The label is optional: empty, «How it works».",
+      "specialFirst": "Special events before the weekly runs",
+      "specialFirstHelp": "Ticked, it changes the order above; «The next run» stays first, under the photograph.",
       "sectionsHelp": "Tick the sections that appear, in the order below. The last four start off: fill them in first, then tick them.",
       "sections": {
         "hero": "The photograph, the headline and the buttons",
@@ -10334,6 +10340,11 @@
     "tabsLabel": "Parts of the members' zone",
     "tabs": {
       "codes": "Discount codes",
+      "shop": "Shop",
+      "runs": "Runs"
+    },
+    "tabsShort": {
+      "codes": "Codes",
       "shop": "Shop",
       "runs": "Runs"
     },

@@ -142,9 +142,13 @@
           "rows": "Unde îl adaugi",
           "google": "Google Calendar",
           "apple": "Apple Calendar",
-          "outlook": "Outlook Calendar",
+          "outlook": "Outlook.com (cont personal)",
+          "outlookWork": "Outlook la serviciu sau la școală",
           "ics": "Descarcă fișierul .ics",
-          "feed": "Adresa calendarului, pentru orice aplicație"
+          "feed": "Adresa calendarului, pentru orice aplicație",
+          "hintAuto": "Abonează-te: calendarul se actualizează singur când clubul schimbă ceva, uneori abia după mai bine de o zi. Fișierul .ics e o copie de azi; o schimbare nu ajunge în el.",
+          "hintPhone": "Pe Android, aplicația Google Calendar nu adaugă un calendar după adresă: folosește calendar.google.com în browser, „Din URL”.",
+          "hintOutlook": "Aplicația Outlook de pe telefon nu adaugă un calendar după adresă. Abonează-te o dată în browser, pe outlook.com (sau pe Microsoft 365, la un cont de serviciu sau de școală): apoi apare și în aplicație. Dacă fereastra nu se deschide, în Outlook pe web adaugă un calendar, alege abonarea de pe web și lipește adresa de mai sus."
         }
       }
     },
@@ -4696,6 +4700,8 @@
       "buttonHowRo": "«Cum funcționează» (română)",
       "buttonHowEn": "«Cum funcționează» (engleză)",
       "buttonHowHelp": "O pagină a clubului din «Pagini personalizate». Fără pagină, butonul nu apare; o pagină nepublicată apare abia după ce o publici. Eticheta e opțională: goală, «Cum funcționează».",
+      "specialFirst": "Evenimentele speciale înaintea alergărilor săptămânale",
+      "specialFirstHelp": "Bifată, schimbă ordinea de mai sus; «Următoarea alergare» rămâne prima, sub fotografie.",
       "sectionsHelp": "Bifează secțiunile care apar, în ordinea de mai jos. Ultimele patru pornesc oprite: completează-le întâi, apoi bifează-le.",
       "sections": {
         "hero": "Fotografia, titlul și butoanele",
@@ -10334,6 +10340,11 @@
     "tabsLabel": "Părțile zonei membrilor",
     "tabs": {
       "codes": "Coduri de reducere",
+      "shop": "Magazin",
+      "runs": "Alergări"
+    },
+    "tabsShort": {
+      "codes": "Coduri",
       "shop": "Magazin",
       "runs": "Alergări"
     },

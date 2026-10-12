@@ -8,19 +8,26 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import CalendarAddress from "@/modules/events/ui/CalendarAddress";
-import { calendarFeedLinks, feedAddressHints } from "@/modules/events/ui/CalendarIntroFold";
+import { webcalUrl } from "@/modules/events/ical";
+import { calendarFeedLinks } from "@/modules/events/ui/CalendarIntroFold";
 import { DISCLOSURE_SUMMARY_SX, DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { CLUB_NAME } from "@/theme/brand";
 import { LOOK_ACCENT_TINT, UNDER_LOOK, UNDER_LOOK_DARK } from "@/theme/look";
 
 /**
- * Outlook's own "add a calendar from the web" address (the facelift's phase 4; `docs/REDESIGN.md`
- * § Open questions: a separate Outlook row): outlook.com opens its subscribe dialog on the feed's
- * plain `https://` address and the name it should carry. Its host is in `PROVIDER_HOSTS`
- * (`scripts/docs-check.mjs`): Microsoft's, fixed, nothing loaded from it.
+ * Outlook on the web's "subscribe from web" window with the feed filled in (§720 amended; the
+ * facelift's phase 4: a separate Outlook row, now one per kind of account). A personal account
+ * (outlook.com, hotmail, live) is on outlook.live.com, a work or school one (Microsoft 365) on
+ * outlook.office.com. The format — the slash after `addfromweb` and the feed as `webcal://` — is the
+ * one the add-to-calendar-button library sends (`src/generators/outlook.ts`, `subscribe_microsoft`;
+ * its index turns `https://` into `webcal://` first). Microsoft documents no such link and
+ * outlook.com refuses automated requests (HTTP 417), so no test can open it: the unit test pins the
+ * format. Both hosts are in `PROVIDER_HOSTS` (`scripts/docs-check.mjs`): Microsoft's, fixed, nothing
+ * loaded from them.
  */
-export function outlookSubscribeUrl(feed: string, name: string = CLUB_NAME): string {
-  return `https://outlook.live.com/calendar/0/addfromweb?url=${encodeURIComponent(feed)}&name=${encodeURIComponent(name)}`;
+export function outlookSubscribeUrl(feed: string, account: "personal" | "work", name: string = CLUB_NAME): string {
+  const host = account === "work" ? "outlook.office.com" : "outlook.live.com";
+  return `https://${host}/calendar/0/addfromweb/?url=${encodeURIComponent(webcalUrl(feed))}&name=${encodeURIComponent(name)}`;
 }
 
 export type SubscribeBoxProps = {
@@ -55,7 +62,7 @@ const ROW_SX = {
  * «Vrei să nu ratezi alergările?» — the calendar's subscribe box under «Aspectul nou» (the
  * facelift's phase 4). The same doors as today's «Adaugă în calendarul tău» row (§107, §139, §674),
  * each a row of its own: Google Calendar's add link, Apple's `webcal://`, Outlook's own add link
- * (new: today's one «Apple / Outlook» button is a `webcal://` that a browser on a PC hands to no
+ * for a personal and for a work or school account (§720 amended; today's one «Apple / Outlook» button is a `webcal://` that a browser on a PC hands to no
  * one), the `.ics` file, and the feed's address to copy in a fold, with the sentences that say when
  * a person needs it. Every address from `calendarFeedLinks`, so the box and the page head's «?»
  * never differ.
@@ -108,9 +115,15 @@ export default async function SubscribeBox({ locale, baseUrl, addressId = "calen
           </Box>
         </li>
         <li>
-          <Box component="a" href={outlookSubscribeUrl(links.feed)} target="_blank" rel="noopener noreferrer" sx={ROW_SX} data-testid="subscribe-outlook">
+          <Box component="a" href={outlookSubscribeUrl(links.feed, "personal")} target="_blank" rel="noopener noreferrer" sx={ROW_SX} data-testid="subscribe-outlook">
             <CalendarTodayIcon aria-hidden="true" />
             {t("calendar.look.subscribe.outlook")}
+          </Box>
+        </li>
+        <li>
+          <Box component="a" href={outlookSubscribeUrl(links.feed, "work")} target="_blank" rel="noopener noreferrer" sx={ROW_SX} data-testid="subscribe-outlook-work">
+            <CalendarTodayIcon aria-hidden="true" />
+            {t("calendar.look.subscribe.outlookWork")}
           </Box>
         </li>
         <li>
@@ -136,7 +149,14 @@ export default async function SubscribeBox({ locale, baseUrl, addressId = "calen
           label={t("calendar.addressLabel")}
           copyLabel={t("calendar.copy")}
           copiedLabel={t("calendar.copied")}
-          hints={[t("calendar.twoWays"), ...feedAddressHints(t)]}
+          hints={[
+            t("calendar.look.subscribe.hintAuto"),
+            t("calendar.googleHintWhy"),
+            t("calendar.googleHintHow"),
+            t("calendar.look.subscribe.hintPhone"),
+            t("calendar.look.subscribe.hintOutlook"),
+            t("calendar.androidSync"),
+          ]}
         />
       </Box>
     </Box>

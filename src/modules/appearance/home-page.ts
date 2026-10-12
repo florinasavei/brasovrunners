@@ -74,6 +74,8 @@ export type HomePageInput = {
   buttonHowPageId?: unknown;
   /** Which sections are drawn, by key; `undefined`: kept as they were. A key left out keeps its value. */
   sections?: Partial<Record<HomeSectionKey, boolean>>;
+  /** The special events before the weekly runs (§732); `undefined`: kept as it was (a form without the sections' card). */
+  specialFirst?: boolean;
   /**
    * The four lower sections' boxes, each a reader of the posted form by name (`home-sections-form.ts`),
    * or `undefined` when the form did not carry that section's fold — which keeps it as it was.
@@ -223,7 +225,8 @@ export async function updateHomePage<T extends Record<string, unknown>>(
     const strip = section(input.strip, before.setting.strip, (read) => postedStripTitle(read, before.setting.strip));
     const numbers = section(input.numbers, before.setting.numbers, postedNumbers);
     // The previous row first: a field a later release wrote is carried, never dropped by this save.
-    const next: HomePageSetting = { ...before.setting, on, hero, headline, subline, buttons, sections, steps, why, strip, numbers };
+    const specialFirst = typeof input.specialFirst === "boolean" ? input.specialFirst : before.setting.specialFirst;
+    const next: HomePageSetting = { ...before.setting, on, hero, headline, subline, buttons, sections, specialFirst, steps, why, strip, numbers };
     const changed = (pick: (setting: HomePageSetting) => unknown) => JSON.stringify(pick(before.setting)) !== JSON.stringify(pick(next));
 
     await writeHomePage(tx, actor, next, now, {
@@ -234,7 +237,7 @@ export async function updateHomePage<T extends Record<string, unknown>>(
       heroTo: next.hero?.assetId ?? null,
       heroCropped: next.hero?.crop !== null && next.hero !== null,
       wordsChanged: changed((setting) => [setting.headline, setting.subline, setting.buttons]),
-      sectionsChanged: changed((setting) => setting.sections),
+      sectionsChanged: changed((setting) => [setting.sections, setting.specialFirst]),
       contentChanged: changed((setting) => [setting.steps, setting.why, setting.strip.title, setting.numbers]),
     });
     return { setting: next, updatedAt: now };

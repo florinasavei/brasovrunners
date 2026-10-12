@@ -29,9 +29,9 @@ import { type AdminTeamMember, listTeamBoxesForAdmin, listTeamMembersForAdmin } 
 import PagesSubNav from "@/modules/content/pages/ui/PagesSubNav";
 import TeamLinkRowsEditor, { type TeamLinkRowsLabels } from "@/modules/content/team/ui/TeamLinkRowsEditor";
 import TeamPhotoField, { type TeamPhotoLabels } from "@/modules/content/team/ui/TeamPhotoField";
+import { photoFieldLabels } from "@/modules/content/team/ui/photo-field-labels";
 import TeamPhotoImage from "@/modules/content/team/ui/TeamPhotoImage";
 import TranslateAllButton from "@/modules/translate/ui/TranslateAllButton";
-import { HIGH_WEB_MAX, LOW_WEB_MAX, ORIGINAL_WEB_MAX, WEB_MAX } from "@/modules/media/limits";
 import { isStorageConfigured } from "@/modules/media/storage";
 import { noticeDescribesTeamPage } from "@/modules/legal-documents/repository";
 import { canEditTeamPage, canReadContent, canShowTeamMember } from "@/modules/staff-identity/domain/roles";
@@ -159,59 +159,13 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
     bodyRoBody: t("team.boxes.bodyRo"),
     bodyEnBody: t("team.boxes.bodyEn"),
   });
-  const photoLabels: TeamPhotoLabels = {
+  // The upload, «Din galerie», quality and crop words are the house's one set (§541); the card's own four captions are this page's.
+  const photoLabels: TeamPhotoLabels = photoFieldLabels(t, editing.rich, {
     legend: t("team.photo"),
-    choose: t("team.photoChoose"),
-    replace: t("team.photoReplace"),
-    remove: t("team.photoRemove"),
-    uploading: t("team.photoUploading"),
-    failed: t("team.photoFailed"),
-    none: t("team.photoNone"),
     help: t("team.photoHelp"),
-    // A picture the club already stored (§485), in the editor's own picker words.
-    fromGallery: t("team.photoFromGallery"),
-    gallery: {
-      loading: t("richText.imageGalleryLoading"),
-      empty: t("richText.imageGalleryEmpty"),
-      close: t("richText.linkCancel"),
-      filter: t("richText.imageGalleryFilter"),
-      noMatch: t("richText.imageGalleryNoMatch"),
-      sourceLegend: t("richText.imageGallerySourceLegend"),
-      sources: {
-        all: t("richText.imageGallerySourceAll"),
-        event: t("richText.imageGallerySourceEvent"),
-        album: t("richText.imageGallerySourceAlbum"),
-        page: t("richText.imageGallerySourcePage"),
-        team: t("richText.imageGallerySourceTeam"),
-      },
-    },
-    // The gallery's words for the same choice (§414), one set for every upload — four levels (§437).
-    quality: {
-      legend: t("gallery.qualityLegend"),
-      low: t("gallery.qualityLow"),
-      normal: t("gallery.qualityNormal"),
-      high: t("gallery.qualityHigh"),
-      original: t("gallery.qualityOriginal"),
-      help: t("gallery.qualityHelp", {
-        lowMax: String(LOW_WEB_MAX),
-        normalMax: String(WEB_MAX),
-        highMax: String(HIGH_WEB_MAX),
-        originalMax: String(ORIGINAL_WEB_MAX),
-      }),
-    },
-    // The upload every other picture has (§541): the crop box, the chosen file and what it became —
-    // the text editor's own words, the card's title and help beside them.
-    crop: {
-      title: t("team.photoCrop"),
-      help: t("team.photoCropHelp"),
-      reset: editing.rich.imageCropReset,
-      position: editing.rich.imageCropPosition,
-      ...editing.rich.imageShapes,
-    },
-    chosen: editing.rich.imageChosen,
-    stored: editing.rich.imageStored,
-    picked: editing.rich.imageFromGalleryPicked,
-  };
+    cropTitle: t("team.photoCrop"),
+    cropHelp: t("team.photoCropHelp"),
+  });
 
   return (
     <Stack spacing={3}>
