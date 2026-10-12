@@ -66,16 +66,21 @@ test.describe("phase 4: the calendar under «Aspectul nou»", () => {
       for (const link of await chips.getByRole("link").all()) {
         const box = await link.boundingBox();
         expect(box?.height ?? 0, "a chip is a thumb's target").toBeGreaterThanOrEqual(44);
-        // The pill inside the link is ChipLink's own small one (§720 amended), not the look's 32 pixels.
+        // On a phone the pill is smaller than ChipLink's own 24 pixels (§NNN, amending §733), inside the same 44-pixel link.
         const pill = (await link.locator(".MuiChip-root").boundingBox())?.height ?? 0;
-        expect(pill, "the pill is small").toBeGreaterThanOrEqual(22);
-        expect(pill, "the pill is small").toBeLessThanOrEqual(26);
+        expect(pill, "the pill is small on a phone").toBeGreaterThanOrEqual(18);
+        expect(pill, "the pill is small on a phone").toBeLessThanOrEqual(22);
       }
-      // The row shows that it scrolls: a visible scrollbar, and an edge cue while there is more to see.
+      // The row shows that it scrolls: a drawn scrollbar always in sight (a phone's own shows only mid-scroll), and an edge cue.
       await expect(chips, "the edge cue is on while it can scroll").toHaveAttribute("data-more-end", "");
-      const scroller = await chips.evaluate((el) => ({ over: el.scrollWidth > el.clientWidth, bar: getComputedStyle(el).scrollbarWidth }));
+      const scroller = await chips.evaluate((el) => ({ over: el.scrollWidth > el.clientWidth }));
       expect(scroller.over, "at 320 pixels the chips overflow").toBe(true);
-      expect(scroller.bar, "the scrollbar is not hidden").not.toBe("none");
+      const bar = page.getByTestId("calendar-kind-chips-bar");
+      await expect(bar, "the drawn scrollbar is in sight").toBeVisible();
+      const barWidth = (await bar.boundingBox())?.width ?? 0;
+      const thumbWidth = (await bar.locator("span").boundingBox())?.width ?? 0;
+      expect(thumbWidth, "the thumb is the share on screen").toBeGreaterThan(0);
+      expect(thumbWidth, "the thumb is the share on screen").toBeLessThan(barWidth);
       await chips.evaluate((el) => {
         el.scrollLeft = el.scrollWidth;
       });
@@ -85,10 +90,14 @@ test.describe("phase 4: the calendar under «Aspectul nou»", () => {
         el.scrollLeft = 0;
       });
 
-      // A laptop: everything fits, so nothing fades (the polling negation waits for the resize).
+      // A laptop: everything fits, so nothing fades and no bar is drawn (the polling negation waits for the resize).
       await page.setViewportSize({ width: 1280, height: 900 });
       await expect(chips).not.toHaveAttribute("data-more-end", "");
       await expect(chips).not.toHaveAttribute("data-more-start", "");
+      await expect(bar).toBeHidden();
+      const desktopPill = (await chips.getByRole("link").first().locator(".MuiChip-root").boundingBox())?.height ?? 0;
+      expect(desktopPill, "ChipLink's own small pill from sm").toBeGreaterThanOrEqual(22);
+      expect(desktopPill, "ChipLink's own small pill from sm").toBeLessThanOrEqual(26);
       await page.setViewportSize({ width: 320, height: 568 });
 
       const grid = page.locator("#main").getByRole("table");

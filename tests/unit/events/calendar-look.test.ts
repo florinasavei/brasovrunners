@@ -187,7 +187,9 @@ describe("KindChips: GET links that keep every other filter", () => {
     expect(html).toContain('role="group"');
     const source = readFileSync(path.join(ROOT, "src/modules/events/ui/KindChips.tsx"), "utf8");
     expect(source).toContain("<ScrollRow");
-    expect(source).not.toMatch(/scrollbarWidth: "none"|height: 32|MuiChip-root/);
+    expect(source).not.toMatch(/scrollbarWidth: "none"|height: 32/);
+    // Smaller on a phone only (§NNN, amending §733): every pill value names `sm` as MUI's small chip, 24 pixels.
+    expect(source).toContain('height: { xs: "20px", sm: "24px" }');
   });
 
   it("is the bare period's path when nothing is chosen", async () => {

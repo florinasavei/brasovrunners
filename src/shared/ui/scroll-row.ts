@@ -29,7 +29,43 @@ export const SCROLL_ROW_SX = {
   "&[data-more-start][data-more-end]": {
     maskImage: `linear-gradient(to right, transparent, currentColor ${FADE_PX}px, currentColor calc(100% - ${FADE_PX}px), transparent)`,
   },
+  // While `ScrollRow` draws its own bar (below), the browser's is not drawn too, nor its room kept.
+  "&[data-drawn-bar]": { scrollbarWidth: "none", pb: 0, "&::-webkit-scrollbar": { display: "none" } },
 } as const;
+
+/**
+ * The bar `ScrollRow` draws under the row (the owner, 2026-10-12, on a phone: «trebuie să văd
+ * scrollbar»): a phone's browser shows its own scrollbar only while a finger scrolls, so the row's
+ * one cue was invisible exactly where the chips overflow. A track in the divider's colour, a thumb
+ * in the muted text's, the thumb's width the share of the row on screen and its place the scroll's
+ * (`--scroll-thumb-size`, `--scroll-thumb-pos`, written by `watchScrollRow`). Drawn only while the
+ * row overflows (`data-shown`); decoration, since the row itself is what a finger scrolls.
+ */
+export const SCROLL_BAR_SX = {
+  display: "none",
+  position: "relative",
+  height: 4,
+  mt: 0.25,
+  borderRadius: "2px",
+  bgcolor: "divider",
+  overflow: "hidden",
+  "&[data-shown]": { display: "block" },
+  "& > span": {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: "var(--scroll-thumb-pos, 0%)",
+    width: "var(--scroll-thumb-size, 100%)",
+    borderRadius: "2px",
+    bgcolor: "text.secondary",
+  },
+} as const;
+
+/** The drawn bar, as `watchScrollRow` writes it; a real element satisfies it, and so does a fake in a test. */
+export type ScrollBarElement = {
+  toggleAttribute(name: string, force?: boolean): boolean;
+  style: { setProperty(name: string, value: string): void };
+};
 
 /** What `watchScrollRow` needs from a scroller; a real element satisfies it, and so does a fake in a test. */
 export type ScrollRowElement = {
@@ -49,13 +85,26 @@ type Watcher = new (callback: () => void) => { observe(target: never, options?: 
  * scroll, on a size change of the row or of any child, and, through a `MutationObserver` on the
  * child list, whenever a child is added or removed (a soft navigation to a month with other
  * surface chips keeps the instance, so the row's scroll position survives and the cue must follow).
- * The observers are constructors passed in, so a test can drive it without a browser. Returns the cleanup.
+ * With `bar`, it also shows and moves the drawn scrollbar (`SCROLL_BAR_SX`) and hides the
+ * browser's own while the drawn one is up. The observers are constructors passed in, so a test can
+ * drive it without a browser. Returns the cleanup.
  */
-export function watchScrollRow(el: ScrollRowElement, Resize?: Watcher, Mutation?: Watcher): () => void {
+export function watchScrollRow(el: ScrollRowElement, Resize?: Watcher, Mutation?: Watcher, bar?: ScrollBarElement): () => void {
   const update = () => {
     const left = Math.abs(el.scrollLeft);
+    const room = el.scrollWidth - el.clientWidth;
     el.toggleAttribute("data-more-start", left > 1);
-    el.toggleAttribute("data-more-end", el.scrollWidth - el.clientWidth - left > 1);
+    el.toggleAttribute("data-more-end", room - left > 1);
+    if (!bar) return;
+    // The drawn bar: shown while the row overflows, its thumb the share on screen at the scroll's place.
+    const overflows = room > 1;
+    el.toggleAttribute("data-drawn-bar", overflows);
+    bar.toggleAttribute("data-shown", overflows);
+    if (!overflows) return;
+    const size = el.clientWidth / el.scrollWidth;
+    const pos = Math.min(1, left / room) * (1 - size);
+    bar.style.setProperty("--scroll-thumb-size", `${(size * 100).toFixed(2)}%`);
+    bar.style.setProperty("--scroll-thumb-pos", `${(pos * 100).toFixed(2)}%`);
   };
   const resize = Resize ? new Resize(update) : null;
   const observeChildren = () => {
