@@ -387,7 +387,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   */
   const printedBib = registration.bibPrintedAt !== null && registration.bibNumber !== null ? registration.bibNumber : null;
   const voidBib = printedBib !== null && isTerminalStatus(registration.status) ? printedBib : null;
-  // A number as the event writes it (§NNN): «007» here when the bib says «007».
+  // A number as the event writes it (§735): «007» here when the bib says «007».
   const written = (number: number) => formatRaceNumber(number, registration.raceNumberFormat);
   const voidSuffix = voidBib !== null ? ` · ${tr("registrations.bibVoid", { number: written(voidBib) })}` : "";
   // The desk verbs (BR-REQ-037-07, -08), here too, so an Administrator at a laptop has them.

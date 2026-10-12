@@ -23,7 +23,7 @@ export function raceNumberOf(row: { status: RegistrationStatus; bibNumber: numbe
 }
 
 /**
- * How a race number is written (§NNN; the owner, 2026-10-12: «on the BIB designer I need to be able
+ * How a race number is written (§735; the owner, 2026-10-12: «on the BIB designer I need to be able
  * to set how the numbers look so that they always have 3 digits, eg: 001, 002, 003, also on the
  * website and emails they should look like that»): `plain` as the number is (7, 42, 150), the
  * default and what every event printed before; `pad3` and `pad4` with leading zeros up to three or
@@ -55,7 +55,7 @@ export function readRaceNumberFormat(value: unknown): RaceNumberFormat {
 }
 
 /**
- * `raceNumberOf`, written as the row's event writes it (§NNN) — what a screen shows beside a name —
+ * `raceNumberOf`, written as the row's event writes it (§735) — what a screen shows beside a name —
  * or null while the registration has no number to show.
  */
 export function raceNumberTextOf(row: {

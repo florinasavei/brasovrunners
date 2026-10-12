@@ -97,7 +97,7 @@ export type MyRegistration = {
   holdExpiresAt: Date | null;
   /** The race number, given at the confirmation (§87, §548); shown through `raceNumberOf`. */
   bibNumber: number | null;
-  /** How the event writes the number (§NNN): «007» when its bib says «007». */
+  /** How the event writes the number (§735): «007» when its bib says «007». */
   raceNumberFormat: RaceNumberFormat;
   /** "I am here" is offered from the club's check-in lead before the start ("Termene", §377), confirmed registrations only — never at a cancelled event. */
   selfCheckinOpen: boolean;

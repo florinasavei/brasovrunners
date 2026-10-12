@@ -807,7 +807,7 @@ export async function countBibs<T extends Record<string, unknown>>(
 export type VoidBib = {
   id: string;
   bibNumber: number;
-  /** How the event writes the number (§NNN): «007» in the list of bibs to pull when the paper says «007». */
+  /** How the event writes the number (§735): «007» in the list of bibs to pull when the paper says «007». */
   raceNumberFormat: RaceNumberFormat;
   registeredName: string;
   status: "CANCELLED" | "EXPIRED";

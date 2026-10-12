@@ -24,7 +24,7 @@ export function qrIdentity(row: {
   registeredName: string;
   status: RegistrationStatus;
   bibNumber: number | null;
-  /** How the event writes the number (§NNN): «007» beside the code when the bib says «007». */
+  /** How the event writes the number (§735): «007» beside the code when the bib says «007». */
   raceNumberFormat?: RaceNumberFormat | null;
 }): QrIdentity {
   const raceNumber = raceNumberOf({ status: row.status, bibNumber: row.bibNumber });

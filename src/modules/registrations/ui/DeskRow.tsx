@@ -111,7 +111,7 @@ export default async function DeskRow({
 
   // The number once the registration is confirmed (§548), a dash before; a row that is over keeps its own, retired.
   const number = raceNumberOf(row);
-  // As the event writes it (§NNN): «007» on the desk when the bib in the volunteer's hand says «007».
+  // As the event writes it (§735): «007» on the desk when the bib in the volunteer's hand says «007».
   const written = (value: number) => formatRaceNumber(value, row.raceNumberFormat);
 
   /*

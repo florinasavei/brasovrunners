@@ -248,7 +248,7 @@ export default async function BibDesignPanel({
               </option>
             ))}
           </RecallField>
-          {/* «Cum arată numărul» (§NNN): the zeros in front, on the bib and everywhere the number is written. */}
+          {/* «Cum arată numărul» (§735): the zeros in front, on the bib and everywhere the number is written. */}
           <RecallField
             select
             name="event.bibDesign.numberFormat"

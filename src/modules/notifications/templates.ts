@@ -790,7 +790,7 @@ export type TemplateData = {
   /** The desk code and the address of its QR image, on the confirmation and the reminder (BR-REQ-037-08). */
   checkinCode?: string;
   checkinQrUrl?: string;
-  /** The race number, given at the confirmation (§87, §548) — on the confirmation and the reminder, never before — as the event writes it («007», §NNN). */
+  /** The race number, given at the confirmation (§87, §548) — on the confirmation and the reminder, never before — as the event writes it («007», §735). */
   bibNumber?: number | string;
   /** The event's map link and Strava event link, when set (§81). */
   eventMapUrl?: string;

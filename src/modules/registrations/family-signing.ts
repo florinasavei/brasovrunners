@@ -323,7 +323,7 @@ export async function listFamilySigningRows<T extends Record<string, unknown>>(
       checkinCode: registrations.checkinCode,
       // The race number beside the desk code (§87, §94, §173; the owner: «aici vreau să văd și BIB-urile»).
       bibNumber: registrations.bibNumber,
-      // How the event writes it (§NNN), read as `RACE_NUMBER_FORMAT` reads it; qualified by hand for the reason below.
+      // How the event writes it (§735), read as `RACE_NUMBER_FORMAT` reads it; qualified by hand for the reason below.
       raceNumberFormat: sql<string>`coalesce((select e."bib_design" ->> 'numberFormat' from ${events} e where e."id" = ${registrations}."event_id"), 'plain')`.mapWith(readRaceNumberFormat),
       // Qualified by hand: inside a one-table select Drizzle prints a column bare, and a bare "id"
       // in the subquery would be the acceptance's own.

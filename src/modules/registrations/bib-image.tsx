@@ -174,7 +174,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const { width, height } = BIB_IMAGE;
   const L = BIB_LAYOUT;
   const design = input.design ?? DEFAULT_BIB_DESIGN;
-  // As the event writes it (§NNN): «007» under «Trei cifre»; its length sizes it, as ever.
+  // As the event writes it (§735): «007» under «Trei cifre»; its length sizes it, as ever.
   const digits = formatRaceNumber(input.bibNumber, design.numberFormat);
   // The sheet's size in points, the club's scale included, then to pixels (§249).
   const numberSize = px(bibNumberPoints(digits, numberScaleFactor(design)));

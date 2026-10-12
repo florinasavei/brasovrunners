@@ -10,10 +10,10 @@ import {
 } from "@/modules/registrations/domain/race-number";
 
 /**
- * BR-REQ-038-01, `DECISIONS.md` §NNN — «Cum arată numărul»: the bib designer's choice of leading
+ * BR-REQ-038-01, `DECISIONS.md` §735 — «Cum arată numărul»: the bib designer's choice of leading
  * zeros, and the one formatter the bib, the emails, the pages and the desk write a number with.
  */
-describe("§NNN how a race number is written", () => {
+describe("§735 how a race number is written", () => {
   it("pads to three or four digits, never cuts a longer number, and writes it as it is by default", () => {
     expect(formatRaceNumber(7, "plain")).toBe("7");
     expect(formatRaceNumber(7, "pad3")).toBe("007");

@@ -345,7 +345,7 @@ async function renderRow(
   // Every language's texts of the event, from the batch's one read of it (`createOutboxRenderer`).
   const eventTexts = eventId ? await eventRows(db, eventId) : [];
   const eventDetails = eventId ? eventNotificationDetailsIn(eventTexts, locale) : undefined;
-  // A race number as the event writes it (§NNN): «007» in the email when the bib says «007».
+  // A race number as the event writes it (§735): «007» in the email when the bib says «007».
   const writtenNumber = (number: number | null) => (number === null ? undefined : formatRaceNumber(number, eventDetails?.raceNumberFormat));
   /*
     The other language's own row, for the second half (§373, email follow-up). None when the event

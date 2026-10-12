@@ -37,7 +37,7 @@ export type FamilySigningRow = {
   declared?: boolean;
   /** The race number (§548), for the number beside the desk code (`raceNumberOf`). */
   bibNumber?: number | null;
-  /** How the event writes the number (§NNN): «007» beside the code when the bib says «007». */
+  /** How the event writes the number (§735): «007» beside the code when the bib says «007». */
   raceNumberFormat?: RaceNumberFormat | null;
   /** The place in the family's order (§519, `compareFamilyOrder`), when the family's one button confirmed it. */
   familyRank?: number | null;
@@ -230,7 +230,7 @@ export function familyPassExpiresAt(steps: readonly FamilyStep[], now: Date): Da
   return new Date(at);
 }
 
-/** A number as the event writes it (§NNN), or null while there is none. */
+/** A number as the event writes it (§735), or null while there is none. */
 function writtenRaceNumber(number: number | null, format: RaceNumberFormat | null | undefined): string | null {
   return number === null ? null : formatRaceNumber(number, format);
 }

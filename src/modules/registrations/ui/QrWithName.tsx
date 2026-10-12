@@ -22,7 +22,7 @@ type Props = {
   /** With the number, what `raceNumberOf` asks (§548): a number is shown once confirmed, and never before. */
   status: RegistrationStatus;
   bibNumber: number | null;
-  /** How the event writes the number (§NNN); absent, as the number is. */
+  /** How the event writes the number (§735); absent, as the number is. */
   raceNumberFormat?: RaceNumberFormat | null;
   /** The picture's side in pixels: 200 on «Gestionează înscrierea», 160 on «Înscrierile mele». */
   size: number;

@@ -111,7 +111,7 @@ export type RegistrationListRow = {
   confirmedAt: Date | null;
   /** The race number, drawn at the confirmation (BR-REQ-038-01, §548); shown through `raceNumberOf`. */
   bibNumber: number | null;
-  /** How the event writes the number (§NNN): «007» when its bib says «007». */
+  /** How the event writes the number (§735): «007» when its bib says «007». */
   raceNumberFormat: RaceNumberFormat;
   /** When the club last said this bib is on paper (§264); null while it is not. */
   bibPrintedAt: Date | null;
@@ -509,7 +509,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       submittedAt: registrations.submittedAt,
       confirmedAt: registrations.confirmedAt,
       bibNumber: registrations.bibNumber,
-      // How the event writes it (§NNN): «007» when its bib says «007».
+      // How the event writes it (§735): «007» when its bib says «007».
       raceNumberFormat: RACE_NUMBER_FORMAT,
       bibPrintedAt: registrations.bibPrintedAt,
       checkedInAt: registrations.checkedInAt,
@@ -783,7 +783,7 @@ export type RegistrationDetail = {
   expiryReason: string | null;
   /** Race day (BR-REQ-037-07, BR-REQ-037-08, BR-REQ-038-01). */
   bibNumber: number | null;
-  /** How the event writes the number (§NNN): «007» when its bib says «007». */
+  /** How the event writes the number (§735): «007» when its bib says «007». */
   raceNumberFormat: RaceNumberFormat;
   /** Whether the settled number is on paper (§264): what the cancel confirmation warns about, and what a cancelled row's chip says (§311). */
   bibPrintedAt: Date | null;
@@ -841,7 +841,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
   const [row] = await db
     .select({
       bibNumber: registrations.bibNumber,
-      // How the event writes it (§NNN): «007» when its bib says «007».
+      // How the event writes it (§735): «007» when its bib says «007».
       raceNumberFormat: RACE_NUMBER_FORMAT,
       bibPrintedAt: registrations.bibPrintedAt,
       checkinCode: registrations.checkinCode,
@@ -997,7 +997,7 @@ export type EmergencySheetRow = EmergencyDetails & {
   id: string;
   registeredName: string;
   bibNumber: number | null;
-  /** How the event writes the number (§NNN): «007» when its bib says «007». */
+  /** How the event writes the number (§735): «007» when its bib says «007». */
   raceNumberFormat: RaceNumberFormat;
   checkedInAt: Date | null;
 };
@@ -1011,7 +1011,7 @@ export async function listEmergencySheet<T extends Record<string, unknown>>(
       id: registrations.id,
       registeredName: registrations.registeredName,
       bibNumber: registrations.bibNumber,
-      // How the event writes it (§NNN): «007» when its bib says «007».
+      // How the event writes it (§735): «007» when its bib says «007».
       raceNumberFormat: RACE_NUMBER_FORMAT,
       checkedInAt: registrations.checkedInAt,
       phone: registrations.phone,
@@ -1133,7 +1133,7 @@ export type DeskRegistration = {
   /** The event's own zone, which the desk reads its date in (§349). */
   eventTimezone: string;
   bibNumber: number | null;
-  /** How the event writes the number (§NNN): «007» when its bib says «007». */
+  /** How the event writes the number (§735): «007» when its bib says «007». */
   raceNumberFormat: RaceNumberFormat;
   /**
    * Whether the settled number is on paper (§264), and when the row left the live states
@@ -1174,7 +1174,7 @@ const DESK_COLUMNS = {
   eventStartsAt: events.startsAt,
   eventTimezone: events.timezone,
   bibNumber: registrations.bibNumber,
-  // How the event writes it (§NNN): «007» when its bib says «007».
+  // How the event writes it (§735): «007» when its bib says «007».
   raceNumberFormat: RACE_NUMBER_FORMAT,
   bibPrintedAt: registrations.bibPrintedAt,
   cancelledAt: registrations.cancelledAt,

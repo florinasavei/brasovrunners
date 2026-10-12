@@ -29,7 +29,7 @@ const EVERYTHING_OFF: BibDesign = {
   showDate: false,
   showLogo: false,
   numberScale: "large",
-  // «Trei cifre» (§NNN): a choice the round trip must carry like the size.
+  // «Trei cifre» (§735): a choice the round trip must carry like the size.
   numberFormat: "pad3",
   namePosition: "above",
   headerImageSrc: OURS,
@@ -240,7 +240,7 @@ describe("§249 the form, read the same way for the save and for the preview", (
       showDate: false,
       showLogo: true,
       numberScale: "small",
-      // Nothing posted for «Cum arată numărul» (§NNN): today's numbers.
+      // Nothing posted for «Cum arată numărul» (§735): today's numbers.
       numberFormat: "plain",
       namePosition: "above",
       headerImageSrc: null,

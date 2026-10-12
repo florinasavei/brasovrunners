@@ -475,7 +475,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     */
     const nameBlock = design.showName ? L.nameBlock : 0;
     const nameAbove = design.showName && design.namePosition === "above";
-    // As the event writes it (§NNN): «007» under «Trei cifre»; its length sizes it, as ever.
+    // As the event writes it (§735): «007» under «Trei cifre»; its length sizes it, as ever.
     const digits = formatRaceNumber(row.bibNumber, design.numberFormat);
     const numberSize = bibNumberPoints(digits, numberScaleFactor(design));
     const sponsorTop = bottom - footerHeight - sponsorHeight;

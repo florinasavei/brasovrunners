@@ -22,7 +22,7 @@ import { JOURNEY_STEP_LABEL } from "@/modules/staff-identity/domain/staff-labels
  */
 type Props = {
   journey: Journey;
-  /** The race number as the event writes it (§NNN), for "nr. 042" and "a ridicat nr. 042". */
+  /** The race number as the event writes it (§735), for "nr. 042" and "a ridicat nr. 042". */
   bibNumber: number | string | null;
   variant: "full" | "compact";
 };

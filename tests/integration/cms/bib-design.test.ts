@@ -171,7 +171,7 @@ describe("§249 the bib's design, saved and read back", () => {
     const event = await existingEvent();
     // What a save from the previous release wrote: every key but the footer's — and, older still
     // than the crops (§560), none of theirs either.
-    // Nor the members' bib (§664), younger still, nor «Cum arată numărul» (§NNN), which reads `plain`.
+    // Nor the members' bib (§664), younger still, nor «Cum arată numărul» (§735), which reads `plain`.
     const footerKeys = ["showEmail", "showPartners", "showEventInFooter", "showWebsite", "footerText", "headerImageCrop", "sponsorImageCrop", "member", "numberFormat"];
     const before = Object.fromEntries(
       Object.entries({ ...DEFAULT_BIB_DESIGN, numberScale: "large" }).filter(([key]) => !footerKeys.includes(key)),

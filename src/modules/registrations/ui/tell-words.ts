@@ -33,7 +33,7 @@ export type TellFacts = {
   liveLinkExpiresAt: Date | null;
   /** The row's race number: said only on a confirmed row. */
   bibNumber: number | null;
-  /** How the event writes it (§NNN): «007» said as the bib shows it. */
+  /** How the event writes it (§735): «007» said as the bib shows it. */
   raceNumberFormat?: RaceNumberFormat | null;
   checkedInAt: Date | null;
   /** Why an expired row expired: a lapsed declaration hold says what its email said (§638). */

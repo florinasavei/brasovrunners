@@ -56,7 +56,7 @@ export type BibDesignFormValues = {
   showDate: boolean;
   showLogo: boolean;
   numberScale: string;
-  /** «Cum arată numărul» (§NNN): `plain`, `pad3` or `pad4`; anything else is the schema's to refuse. */
+  /** «Cum arată numărul» (§735): `plain`, `pad3` or `pad4`; anything else is the schema's to refuse. */
   numberFormat: string;
   namePosition: string;
   headerImageSrc: string | null;

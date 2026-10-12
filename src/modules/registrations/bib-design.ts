@@ -282,7 +282,7 @@ export const bibDesignSchema = z
     showLogo: z.boolean().catch(true),
     numberScale: z.enum(BIB_NUMBER_SCALES).catch("medium"),
     /**
-     * «Cum arată numărul» (§NNN): `plain` (7), `pad3` (007) or `pad4` (0007) — on the bib and
+     * «Cum arată numărul» (§735): `plain` (7), `pad3` (007) or `pad4` (0007) — on the bib and
      * everywhere else the number is written (`race-number.ts#formatRaceNumber`). A design saved
      * before this key existed reads `plain` and prints as it did.
      */
