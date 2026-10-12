@@ -1,0 +1,11 @@
+{
+  "branch": "fix/smoke-accepts-the-old-root-redirect",
+  "decisionsTitle": "The smoke check accepts the previous build's root redirect",
+  "decisionsSection": "**Amends §717 (the smoke's root check).** `migrate.yml` migrates and then runs `yarn smoke --allow-degraded` against a deployment that, at that moment, still serves the previous build. On 2026-10-11 the root's answer changed from a 308 (§353) to a 307 (§717), and the new smoke refused the old build's 308 — twice, on QA and on production, each cured only by re-running the job once the new build was live.\n\n**Decision.** The root check passes a 308 or a 307 to that locale's listing (`/ro/evenimente`, `/en/events`), or a 200 that carries `data-testid=\"home-page\"` and no `__next_error__`; anything else fails as before. The smoke tests the site's health, not which build answers during the release's migration window.\n\n**Refused.** Skipping the root check under `--allow-degraded` (the check is what caught the error-document 200 of §353); re-running the job by hand (it cost two releases a red run each).",
+  "changelogLine": "- **The smoke accepts the old root redirect** — a 308 to the listing passes beside the 307, so a release's migration run no longer fails while the previous build still answers. §NNN.",
+  "specsCriteria": [
+    { "requirement": "BR-REQ-040-01", "text": "Given the deployment's smoke check run while the previous build still answers (the migration window), then a root answering a 308 or a 307 to that locale's listing passes, a 308 elsewhere fails, and a 200 passes only with the home page's marker and no `__next_error__` (2026-10-12, `DECISIONS.md` §NNN, amending §717). Verification: unit `scripts/smoke-root.test.ts`." }
+  ],
+  "docsNotes": "",
+  "batchLine": "the smoke accepts the old root redirect"
+}
