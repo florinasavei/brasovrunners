@@ -281,3 +281,18 @@ describe("§714 the sections stay Server Components on the house's primitives", 
     }
   });
 });
+
+describe("§NNN the special events can come before the weekly runs", () => {
+  const props = () => {
+    const translate = createTranslator({ locale: "ro", messages: ro, namespace: "Home" });
+    return sampleHome("ro", (key: string, values?: Record<string, string>) => translate(key as never, values as never));
+  };
+  const order = (markup: string) => [...markup.matchAll(/data-testid="(home-hero|home-next-run|home-weekly|home-special)"/g)].map((match) => match[1]);
+
+  it("draws special before weekly when on, after when off, and the next run first under the hero both ways", async () => {
+    currentLocale = "ro";
+    expect(order(await html(createElement(HomePage, { ...props(), specialFirst: true })))).toEqual(["home-hero", "home-next-run", "home-special", "home-weekly"]);
+    expect(order(await html(createElement(HomePage, { ...props(), specialFirst: false })))).toEqual(["home-hero", "home-next-run", "home-weekly", "home-special"]);
+    expect(order(await html(createElement(HomePage, props())))).toEqual(["home-hero", "home-next-run", "home-weekly", "home-special"]);
+  });
+});

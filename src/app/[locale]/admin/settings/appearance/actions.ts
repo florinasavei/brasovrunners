@@ -137,6 +137,8 @@ export async function updateHomePageAction(_previous: FormOutcome | null, form: 
         buttonHowPageId: field("buttonHowPageId"),
         // A checkbox that is off posts nothing, so the form says it carried the switches at all.
         sections: form.has("sectionsPosted") ? Object.fromEntries(HOME_SECTION_KEYS.map((key) => [key, form.has(`section_${key}`)])) : undefined,
+        // The order is the same card's: a form without it never resets it.
+        specialFirst: form.has("sectionsPosted") ? form.has("specialFirst") : undefined,
         // Each lower section's fold says it was carried, so an older form keeps what it did not show.
         steps: form.has("stepsPosted") ? field : undefined,
         why: form.has("whyPosted") ? field : undefined,

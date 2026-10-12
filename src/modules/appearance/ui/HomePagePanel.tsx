@@ -301,6 +301,15 @@ export default async function HomePagePanel({ locale, state, mayEdit, pages, sav
                     </Typography>
                   </Box>
                 ))}
+                <Box component="label" sx={{ display: "flex", alignItems: "center", gap: 1.25, minHeight: 44, cursor: "pointer", mt: 1 }} data-testid="home-page-special-first">
+                  <RecallCheckbox name="specialFirst" defaultChecked={setting.specialFirst} style={{ width: 20, height: 20, flexShrink: 0 }} />
+                  <Typography component="span" variant="body2">
+                    {t("homePage.specialFirst")}
+                  </Typography>
+                </Box>
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                  {t("homePage.specialFirstHelp")}
+                </Typography>
               </Panel>
 
               <Panel
