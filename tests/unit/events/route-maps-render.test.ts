@@ -12,7 +12,7 @@ import EventRoute, { type RouteMapWords } from "@/modules/events/ui/EventRoute";
 import { withClientWords } from "../../helpers/client-words";
 
 /**
- * BR-REQ-011-01 (§718) — «Traseul» on the page: Garmin Connect and Strava in tabs, Garmin first, each
+ * BR-REQ-011-01 (§718) — «Traseul» on the page: Garmin Connect and Strava in tabs, Strava first (§NNN), each
  * map behind its own press and its link beside it; one service alone with no tabs; the GPX below,
  * with or without a map. The page draws the links and the iframes from the stored ids only, and an
  * iframe sits inside a closed `<details>` — the facade that keeps the browser from asking Strava or
@@ -52,16 +52,16 @@ const render = (props: { routeMaps?: unknown; routeGpx?: unknown; routeUrl?: str
 const iframes = (html: string) => [...html.matchAll(/<iframe\b[^>]*>/g)].map((match) => match[0]);
 
 describe("BR-REQ-011-01 the maps on the page (§718)", () => {
-  it("draws Garmin Connect and Strava as tabs, Garmin first, with the right roles, and the first one chosen", () => {
+  it("draws Garmin Connect and Strava as tabs, Strava first (§NNN), with the right roles, and the first one chosen", () => {
     const html = render({ routeMaps: BOTH });
     expect(html).toContain('role="tablist"');
     expect(html).toContain(`aria-label="${ro.Event.routeMaps.tabs}"`);
     const tabs = [...html.matchAll(/<button[^>]*role="tab"[^>]*>/g)].map((match) => match[0]);
     expect(tabs).toHaveLength(2);
-    expect(tabs[0]).toContain('data-route-map-tab="garmin"');
+    expect(tabs[0]).toContain('data-route-map-tab="strava"');
     expect(tabs[0]).toContain('aria-selected="true"');
-    expect(tabs[0]).toContain('aria-controls="route-map-panel-garmin"');
-    expect(tabs[1]).toContain('data-route-map-tab="strava"');
+    expect(tabs[0]).toContain('aria-controls="route-map-panel-strava"');
+    expect(tabs[1]).toContain('data-route-map-tab="garmin"');
     expect(tabs[1]).toContain('aria-selected="false"');
     expect(tabs[1]).toContain('tabindex="-1"');
     expect(html).toContain('role="tabpanel" id="route-map-panel-garmin" aria-labelledby="route-map-tab-garmin"');
@@ -159,7 +159,7 @@ describe("BR-REQ-050-02 the editor's «Traseul» card (§718)", () => {
     const line = courseSummary(summary, { distanceMeters: null, elevationGainMeters: null, routeUrl: null, nightOverride: false, routeMaps: BOTH }, { surface: null });
     expect(line).toContain("Garmin");
     expect(line).toContain("Strava");
-    expect(line.indexOf("Garmin")).toBeLessThan(line.indexOf("Strava"));
+    expect(line.indexOf("Strava")).toBeLessThan(line.indexOf("Garmin"));
     // The file is said as «GPX încărcat» / "GPX uploaded", never a bare «GPX» that reads like a link's kind.
     expect(linksSummary(summary, { stravaEventUrl: null, facebookEventUrl: null, links: null, routeGpx: GPX }, {}, "ro")).toBe("GPX încărcat");
     const summaryEn = en.Admin.editor.boxes.summary as unknown as SummaryWords;

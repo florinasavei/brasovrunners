@@ -17,7 +17,7 @@
  * the club's own); each is in `PROVIDER_HOSTS` in `scripts/docs-check.mjs`.
  */
 
-export const ROUTE_MAP_PROVIDERS = ["garmin", "strava"] as const;
+export const ROUTE_MAP_PROVIDERS = ["strava", "garmin"] as const;
 export type RouteMapProvider = (typeof ROUTE_MAP_PROVIDERS)[number];
 
 /** A stored map: the provider, the route's id, and for Strava the embed's own three values. */
@@ -252,7 +252,7 @@ function readStravaOptions(stored: unknown): Record<string, string> | null {
 }
 
 /**
- * The stored column as maps, Garmin first (the owner's order, «Garmin Connect / Strava in tabs»).
+ * The stored column as maps, Strava first (the owner, 2026-10-12: «Strava tab should show before Garmin Connect tab», §NNN).
  * Anything that is not a map this release can draw — another provider, an id with a letter, a
  * value off its pattern — is dropped rather than rendered; a value off its pattern on an otherwise
  * good Strava map is dropped alone. At most one per provider; null and anything not an array is "none".

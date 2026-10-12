@@ -206,7 +206,7 @@ describe("BR-REQ-011-01 what the page builds from the stored ids (§718)", () =>
     expect(routeMapFieldValue(undefined)).toBe("");
   });
 
-  it("reads the stored column leniently: Garmin first, one per service, a bad entry dropped, a bad value dropped alone", () => {
+  it("reads the stored column leniently: Strava first (§NNN), one per service, a bad entry dropped, a bad value dropped alone", () => {
     expect(
       readRouteMaps([
         { provider: "strava", id: STRAVA_ID, token: "bad token", style: "hybrid" },
@@ -217,8 +217,8 @@ describe("BR-REQ-011-01 what the page builds from the stored ids (§718)", () =>
         "nonsense",
       ]),
     ).toEqual([
-      { provider: "garmin", id: GARMIN_ID },
       { provider: "strava", id: STRAVA_ID, style: "hybrid" },
+      { provider: "garmin", id: GARMIN_ID },
     ]);
     expect(readRouteMaps(null)).toEqual([]);
     expect(readRouteMaps({ provider: "garmin", id: GARMIN_ID })).toEqual([]);

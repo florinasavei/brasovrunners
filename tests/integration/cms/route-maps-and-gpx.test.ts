@@ -111,13 +111,13 @@ async function refusal(operation: Promise<unknown>): Promise<string> {
 const upload = () => storeRouteGpx(getStorage(), { bytes: TRACK, name: "Traseu Tâmpa.gpx", environment: "test", now: NOW });
 
 describe("BR-REQ-050-02 the maps are saved from what the club pasted (§718)", () => {
-  it("stores the ids and Strava's three values — never the pasted HTML — Garmin first, and the public page reads them", async () => {
+  it("stores the ids and Strava's three values — never the pasted HTML — Strava first (§NNN), and the public page reads them", async () => {
     const event = await createDraft();
     await save(event.id, event.version, { ...FIELDS, routeStrava: STRAVA_EMBED, routeGarmin: GARMIN_LINK });
     const row = await reload(event.id);
     expect(row.routeMaps).toEqual([
-      { provider: "garmin", id: GARMIN_ID },
       { provider: "strava", id: STRAVA_ID, style: "hybrid", mapHash: "11.66/45.6375/25.5935", token: TOKEN },
+      { provider: "garmin", id: GARMIN_ID },
     ]);
     expect(JSON.stringify(row.routeMaps)).not.toMatch(/[<>]|script|embed\.js/);
 
@@ -184,8 +184,8 @@ describe("BR-REQ-050-02 the maps are saved from what the club pasted (§718)", (
     await save(source.id, source.version, { ...FIELDS, routeGarmin: GARMIN_LINK, routeStrava: `https://www.strava.com/routes/${STRAVA_ID}`, routeGpx: JSON.stringify(gpx) }, "all");
     for (const date of await db.select().from(events).where(eq(events.repeatOf, event.id))) {
       expect(date.routeMaps).toEqual([
-        { provider: "garmin", id: GARMIN_ID },
         { provider: "strava", id: STRAVA_ID },
+        { provider: "garmin", id: GARMIN_ID },
       ]);
     }
 
