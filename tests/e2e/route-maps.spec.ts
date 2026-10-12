@@ -165,6 +165,42 @@ test.describe.serial("BR-REQ-011-01 «Traseul»'s maps and GPX (§718)", () => {
     expect(overflow).toBeLessThanOrEqual(0);
   });
 
+  test("Strava's frame is as tall as its card (§NNN): a phone fallback before the message, the card's own height after it", async ({ page }) => {
+    // Strava's host is answered by the test: a card that posts the height message exactly as the real
+    // frame does (`[ns, "BROADCAST_IFRAME_HEIGHT", pixels]` to the parent, ns from its own fragment),
+    // 2.5 seconds after it loads — so the run needs no network. The real card's height is Strava's to
+    // say; what is checked is that the frame takes it, and that nothing but the page's own height
+    // message from Strava's origin moves it.
+    const CARD = 333;
+    await page.route(PROVIDER_ROUTE, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "text/html",
+        body: `<!doctype html><title>card</title><body style="margin:0"><script>
+          const ns = new URLSearchParams(location.hash.slice(1)).get("ns");
+          setTimeout(() => {
+            parent.postMessage(["other", "BROADCAST_IFRAME_HEIGHT", 900], "*");
+            parent.postMessage([ns, "BROADCAST_IFRAME_HEIGHT", ${CARD}], "*");
+          }, 2500);
+        </script><p>card</p></body>`,
+      });
+    });
+    await page.goto(`/ro/evenimente/${slug}`);
+    await hydrated(page);
+    const frame = page.getByTestId("route-map-frame-strava");
+    await expect(frame).toBeVisible();
+    // Before any message: the fallback, which fits a phone, never the old 760.
+    const fallback = await heightOf(frame);
+    expect(fallback).toBeGreaterThan(300);
+    expect(fallback).toBeLessThan(700);
+    const viewport = page.viewportSize()?.width ?? 0;
+    if (viewport <= 400) expect(fallback).toBeLessThanOrEqual(600);
+    await expect.poll(async () => Math.abs((await heightOf(frame)) - CARD), { timeout: 15_000 }).toBeLessThanOrEqual(2);
+    // The card around it ends where the frame ends: no gap under the map.
+    const around = await frame.locator("xpath=..").boundingBox();
+    expect(Math.abs((around?.height ?? 0) - CARD)).toBeLessThanOrEqual(2);
+  });
+
   test("downloads the GPX under the maps, as a file, in either language", async ({ page }) => {
     const seen = await watchProviders(page);
     await page.goto(`/en/events/${slugEn}`);

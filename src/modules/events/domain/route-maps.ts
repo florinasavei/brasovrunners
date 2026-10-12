@@ -293,6 +293,15 @@ export function routeMapLink(map: RouteMap): string {
   return map.provider === "strava" ? `https://www.strava.com/routes/${map.id}` : `https://connect.garmin.com/modern/course/${map.id}`;
 }
 
+/**
+ * The namespace of one Strava frame's height messages (§NNN): `embed.js` uses a random UUID, which a
+ * server-rendered page cannot (it would differ between server and browser); this is the frame's own
+ * name, from the route's id alone — never a user's data — and the origin is what is trusted.
+ */
+export function stravaFrameNamespace(map: StravaRouteMap): string {
+  return `route-map-strava-${map.id}`;
+}
+
 /** Garmin Connect's embed address for a course: the id, nothing the club typed. */
 export function garminEmbedSrc(id: string): string {
   return `https://connect.garmin.com/embed/course/${id}`;
@@ -307,12 +316,13 @@ export function garminEmbedSrc(id: string): string {
  * page's own path and title, which the script also passes, are left out: Strava has no need of them.
  */
 export function stravaEmbedSrc(map: StravaRouteMap, origin: string): string {
+  const namespace = stravaFrameNamespace(map);
   const query = new URLSearchParams();
   query.set("style", map.style ?? STRAVA_MAP_STYLE);
   for (const [key, value] of Object.entries(map.options ?? {})) query.set(key, value);
   query.set("fromEmbed", "false");
   if (map.token) query.set("token", map.token);
-  const fragment = new URLSearchParams({ ns: "route-map", hostOrigin: origin });
+  const fragment = new URLSearchParams({ ns: namespace, hostOrigin: origin });
   return `https://strava-embeds.com/route/${map.id}?${query.toString()}#${fragment.toString()}${map.mapHash ? `&mapHash=${map.mapHash}` : ""}`;
 }
 
