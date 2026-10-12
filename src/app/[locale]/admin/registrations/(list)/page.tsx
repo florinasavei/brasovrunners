@@ -848,7 +848,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             {t("registrations.new")}
           </GlyphButton>
           {/*
-            «Invită pe email» (§NNN, amending §647; the owner: «partea de invitații nu e super clară… era
+            «Invită pe email» (§736, amending §647; the owner: «partea de invitații nu e super clară… era
             ascunsă»): the way to the folded «Invitații» section below, beside «Adaugă o înscriere» — an
             in-page link the backoffice's `OpenFoldFromHash` answers by opening the section and scrolling
             to it. The Administrator's, as the send is. An invitation is to one event and the section is

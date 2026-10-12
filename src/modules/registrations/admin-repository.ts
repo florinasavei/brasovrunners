@@ -1417,7 +1417,7 @@ export async function listOutboxHistory<T extends Record<string, unknown>>(
 
 /**
  * The events the list page's filter offers: every event with at least one registration, and every
- * event that takes registrations on this site (`INTERNAL`) even before its first (§NNN, amending §647;
+ * event that takes registrations on this site (`INTERNAL`) even before its first (§736, amending §647;
  * the owner: «partea de invitații nu e super clară… era ascunsă»). «Invitații» is drawn only on a list
  * about one event, and a new race with nobody registered yet was not in this list — so the club could
  * not reach its invitations, and the editor's «Trimite invitații» link fell back to every event.

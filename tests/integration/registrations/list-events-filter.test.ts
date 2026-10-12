@@ -6,11 +6,11 @@ import { listEventsWithRegistrations } from "@/modules/registrations/admin-repos
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-037-07, `DECISIONS.md` §NNN (amending §647) — the registrations list's event filter offers
+ * BR-REQ-037-07, `DECISIONS.md` §736 (amending §647) — the registrations list's event filter offers
  * an event that takes registrations here before its first registration, so its «Invitații» can be
  * reached; an event registered elsewhere or not at all, with nobody registered here, stays out.
  */
-describe("§NNN the events the registrations list offers", () => {
+describe("§736 the events the registrations list offers", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 

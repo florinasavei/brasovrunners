@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.00-2026-10-12 -->
+<!-- PROJECT_BASELINE: BR-V3.01-2026-10-12 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V3.00-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.01-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -1733,6 +1733,7 @@ way through every step, and none of them is a way around the allocator.
 29. A send of invitations «Pe lista de invitați speciali» to an event whose «Folosește lista de invitați speciali» is off is refused under the event lock with `HIDDEN_LIST_OFF` — the registration page's own sentence — before any invitation is written or any email queued, and the invitation form draws the tick only while the switch is on; the same send goes through once the switch is on (2026-10-03, `DECISIONS.md` §647, §649).
 30. «Lista de invitați speciali» on a registration's page is two radios, «Se numără între locurile evenimentului» and «Invitat special — nu ocupă un loc», the stored state checked, under a heading with the incognito glyph and, beside it, a 44-pixel «i» whose three lines say who the list is for, what the person keeps and that an ordinary participant does not go there, a one-line caption under the radios, drawn while the event's «Folosește lista de invitați speciali» is on or for a row already on the list — then with the line «Lista de invitați speciali e oprită la acest eveniment: înscrierea poate doar ieși de pe ea.»; the Administrator's form posts the hidden `outside` value opposite to the stored state, a change opens the existing per-state dialog, «Da» posts it to `setOutsideCapacityAction`, «Anulează» sends nothing and shows the stored state again, and the Organizer sees both radios disabled, with no form (2026-10-03, `DECISIONS.md` §648, §649).
 31. The registration page's «Lista de invitați speciali» block explains itself to every role that reads it: the heading's «i» (`InfoTip`, a 44-pixel button beside the heading, outside the radio group's name) holds three lines — «Pentru organizatori, voluntari, pacemakeri și sportivi invitați: sunt la start fără să ocupe unul dintre locurile anunțate.», what they keep and when the public count includes them, and «Un participant obișnuit nu se pune aici.» — and the caption under the radios says in one line that the person takes no announced place, keeps the declaration and the race number, stays on the public list if they ticked it and enters the public count only with the event's tick, each under 200 characters, in both languages (2026-10-03, `DECISIONS.md` §649).
+32. The registrations page's toolbar carries «Invită pe email» for the Administrator, which opens the event's «Invitații» section (or, on every event, the filter where the event is chosen); the page's event filter offers every event that takes registrations on the site before its first registration (2026-10-12, `DECISIONS.md` §736).
 
 **Verification:** integration `registrations/race-day.test.ts`, `registrations/staff-crud.test.ts`
 
