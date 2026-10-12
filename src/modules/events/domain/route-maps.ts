@@ -31,6 +31,8 @@ export type StravaRouteMap = Extract<RouteMap, { provider: "strava" }>;
 const ROUTE_ID = /^[0-9]{1,20}$/;
 /** Strava's map styles are words: `standard`, `hybrid`, `satellite`. */
 const STRAVA_STYLE = /^[a-z]{1,16}$/;
+/** The map style every Strava route is shown in, whatever the pasted code chose (§NNN). */
+export const STRAVA_MAP_STYLE = "hybrid";
 /** `<zoom>/<lat>/<lon>`, each a decimal number — where the map opens. */
 const STRAVA_MAP_HASH = /^[0-9]{1,2}(?:\.[0-9]{1,4})?\/-?[0-9]{1,3}(?:\.[0-9]{1,10})?\/-?[0-9]{1,3}(?:\.[0-9]{1,10})?$/;
 /** The embed's share token: letters and digits, never longer than a long hash. */
@@ -268,7 +270,8 @@ export function garminEmbedSrc(id: string): string {
  */
 export function stravaEmbedSrc(map: StravaRouteMap, origin: string): string {
   const query = new URLSearchParams();
-  if (map.style) query.set("style", map.style);
+  // Always the satellite view with roads and names (§NNN): the trails read better on it than on the plain map.
+  query.set("style", STRAVA_MAP_STYLE);
   query.set("fromEmbed", "false");
   if (map.token) query.set("token", map.token);
   const fragment = new URLSearchParams({ ns: "route-map", hostOrigin: origin });

@@ -96,7 +96,7 @@ export default function RouteMapPanel({
           <MapIcon aria-hidden="true" sx={{ fontSize: 22, flexShrink: 0 }} />
           {words.show}
         </Box>
-        <Box sx={{ position: "relative", width: "100%", height: { xs: 420, sm: 548 }, borderRadius: 1, overflow: "hidden", bgcolor: "action.hover" }}>
+        <Box sx={{ position: "relative", width: "100%", height: { xs: 520, sm: 720 }, borderRadius: 1, overflow: "hidden", bgcolor: "action.hover" }}>
           <Box
             component="iframe"
             src={routeMapEmbedSrc(map, origin)}

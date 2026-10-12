@@ -165,6 +165,13 @@ describe("BR-REQ-011-01 what the page builds from the stored ids (§718)", () =>
     expect(src).not.toContain("embed.js");
   });
 
+  it("shows every Strava route on the hybrid map, whatever style the pasted code chose (§NNN)", () => {
+    const standard = new URL(stravaEmbedSrc({ provider: "strava", id: STRAVA_ID, style: "standard" }, ORIGIN));
+    expect(standard.searchParams.get("style")).toBe("hybrid");
+    const none = new URL(stravaEmbedSrc({ provider: "strava", id: STRAVA_ID }, ORIGIN));
+    expect(none.searchParams.get("style")).toBe("hybrid");
+  });
+
   it("gives the editor back a value that saves to the same map, so a second save never drops the token", () => {
     for (const map of [strava, { provider: "strava" as const, id: STRAVA_ID }, { provider: "garmin" as const, id: GARMIN_ID }]) {
       const value = routeMapFieldValue(map);

@@ -1,0 +1,8 @@
+{
+  "branch": "feat/route-map-hybrid",
+  "decisionsTitle": "Route maps: Strava on the hybrid map, and a larger map frame",
+  "decisionsSection": "**The owner, 2026-10-12**: «the map type for strava should be hybrid», «the area for the map should be larger».\n\n**Decision.**\n\n- **Strava always hybrid.** The iframe address (`stravaEmbedSrc`) asks Strava for `style=hybrid` — the satellite view with roads and names — whatever style the pasted embed code chose; the stored value is kept as pasted, so nothing is migrated (`STRAVA_MAP_STYLE`).\n- **A larger map.** The route map's frame is 520 pixels tall on a phone (was 420) and 720 from `sm` up (was 548), so more of the route shows at the zoom the club chose.\n- **Garmin in kilometres — not done here.** Garmin Connect's course embed documents no units option: it shows the units of the viewer's own Garmin account, or Garmin's default for a visitor signed out. Nothing on our side can choose them without a documented parameter.",
+  "changelogLine": "- **Route maps** — Strava's map now opens on the hybrid view, and the route map is taller on every screen. §NNN.",
+  "specsCriteria": [],
+  "batchLine": "route maps: Strava hybrid, a taller frame"
+}
