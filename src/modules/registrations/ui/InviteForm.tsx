@@ -1,9 +1,7 @@
 "use client";
 
-import SendIcon from "@mui/icons-material/Send";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Radio from "@mui/material/Radio";
@@ -15,8 +13,9 @@ import { type FormEvent, useActionState, useMemo, useRef, useState } from "react
 import { countForm } from "@/i18n/count-form";
 import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
 import type { ConfirmSpec } from "@/shared/feedback/notice";
+import GlyphButton from "@/shared/ui/GlyphButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
-import { parseInvitationLines } from "../domain/invitations";
+import { readInviteeRows } from "../domain/invitations";
 
 type Counted = { one: string; few: string; other: string };
 
@@ -25,8 +24,17 @@ export type InviteFormWords = {
   membersLegend: string;
   membersSearch: string;
   membersNone: string;
+  /** «Alte persoane» and the sentence under it: whom the rows are for. */
   typedLabel: string;
   typedHelp: string;
+  /** One row's two boxes, «Nume» and «Email», and its remove button («Scoate rândul {row}»). */
+  nameLabel: string;
+  emailLabel: string;
+  removeRow: string;
+  /** The remove button's visible word, «Scoate». */
+  removeShort: string;
+  /** «Adaugă încă o persoană». */
+  addRow: string;
   daysLabel: string;
   daysHelp: string;
   outsideLabel: string;
@@ -120,7 +128,14 @@ export default function InviteForm({
   const confirmed = useRef(false);
   const [search, setSearch] = useState("");
   const [ticked, setTicked] = useState<ReadonlySet<string>>(new Set());
-  const [typed, setTyped] = useState("");
+  /*
+    The people typed (§NNN; the owner: «I need to be able to add by name and email not just a simple
+    input»): one row each, a name and an address, posted as `inviteeName` / `inviteeEmail` in order.
+    One empty row to start; a row is added by the button and removed by its own. Each row keeps a key of
+    its own, so removing one never moves another's typing into it.
+  */
+  const nextKey = useRef(1);
+  const [rows, setRows] = useState<readonly { key: number; name: string; email: string }[]>([{ key: 0, name: "", email: "" }]);
   const [outside, setOutside] = useState(false);
   /*
     Controlled, as the ticks and the lines are: React resets an uncontrolled field of a form once its
@@ -162,9 +177,12 @@ export default function InviteForm({
       return;
     }
     event.preventDefault();
-    const lines = parseInvitationLines(typed);
+    const lines = readInviteeRows(
+      rows.map((row) => row.name),
+      rows.map((row) => row.email),
+    );
     if (lines.unread.length > 0) {
-      setLocalError(fill(words.errors.INVITATION_UNREAD_LINE ?? words.errorGeneric, { lines: lines.unread.join(", ") }));
+      setLocalError(fill(words.errors.INVITATION_UNREAD_ROW ?? words.errorGeneric, { lines: lines.unread.join(", ") }));
       return;
     }
     const count = ticked.size + lines.people.length;
@@ -267,17 +285,67 @@ export default function InviteForm({
             </>
           )}
         </Box>
-        <TextField
-          name="typed"
-          label={words.typedLabel}
-          helperText={words.typedHelp}
-          value={typed}
-          onChange={(event) => setTyped(event.target.value)}
-          multiline
-          minRows={3}
-          fullWidth
-          slotProps={{ htmlInput: { spellCheck: false, autoCapitalize: "off" } }}
-        />
+        <Box component="fieldset" sx={{ border: 0, m: 0, p: 0, minWidth: 0 }} data-testid="invite-rows">
+          <Typography component="legend" variant="subtitle2" sx={{ mb: 0.5 }}>
+            {words.typedLabel}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            {words.typedHelp}
+          </Typography>
+          <Stack spacing={1}>
+            {rows.map((row, index) => (
+              <Stack key={row.key} direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ alignItems: { sm: "flex-start" } }} data-testid="invite-row">
+                <TextField
+                  name="inviteeName"
+                  label={words.nameLabel}
+                  value={row.name}
+                  onChange={(event) => setRows(rows.map((other) => (other.key === row.key ? { ...other, name: event.target.value } : other)))}
+                  size="small"
+                  autoComplete="off"
+                  sx={{ flex: { sm: "1 1 0" } }}
+                  slotProps={{ htmlInput: { "aria-label": `${words.nameLabel} ${index + 1}` } }}
+                />
+                <TextField
+                  name="inviteeEmail"
+                  label={words.emailLabel}
+                  type="email"
+                  value={row.email}
+                  onChange={(event) => setRows(rows.map((other) => (other.key === row.key ? { ...other, email: event.target.value } : other)))}
+                  size="small"
+                  autoComplete="off"
+                  sx={{ flex: { sm: "1 1 0" } }}
+                  slotProps={{ htmlInput: { spellCheck: false, autoCapitalize: "off", inputMode: "email", "aria-label": `${words.emailLabel} ${index + 1}` } }}
+                />
+                {/* The only row stays, emptied rather than removed: there is always one to type in. */}
+                <GlyphButton
+                  icon="delete"
+                  variant="text"
+                  color="inherit"
+                  size="small"
+                  aria-label={fill(words.removeRow, { row: index + 1 })}
+                  onClick={() => setRows(rows.length > 1 ? rows.filter((other) => other.key !== row.key) : [{ key: row.key, name: "", email: "" }])}
+                  sx={{ ...TAP_TARGET, alignSelf: { xs: "flex-start", sm: "center" } }}
+                  data-testid="invite-row-remove"
+                >
+                  {words.removeShort}
+                </GlyphButton>
+              </Stack>
+            ))}
+          </Stack>
+          <GlyphButton
+            icon="addPerson"
+            variant="outlined"
+            size="small"
+            onClick={() => {
+              setRows([...rows, { key: nextKey.current, name: "", email: "" }]);
+              nextKey.current += 1;
+            }}
+            sx={{ ...TAP_TARGET, mt: 1 }}
+            data-testid="invite-row-add"
+          >
+            {words.addRow}
+          </GlyphButton>
+        </Box>
         <TextField
           name="days"
           label={words.daysLabel}
@@ -313,9 +381,9 @@ export default function InviteForm({
           </Box>
         )}
         <Box>
-          <Button type="submit" variant="contained" startIcon={<SendIcon fontSize="small" />} disabled={pending} sx={{ minHeight: TAP_TARGET.minHeight }} data-testid="invite-submit">
+          <GlyphButton icon="send" type="submit" variant="contained" disabled={pending} sx={{ minHeight: TAP_TARGET.minHeight }} data-testid="invite-submit">
             {words.submit}
-          </Button>
+          </GlyphButton>
         </Box>
       </Stack>
       <ConfirmDialog spec={dialog?.spec ?? null} open={dialog !== null} onCancel={() => setDialog(null)} onConfirm={onConfirm} />

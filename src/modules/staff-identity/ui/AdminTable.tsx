@@ -153,6 +153,21 @@ type Props<Row> = {
   rowActions?: (row: Row) => ReactNode;
   /** Shown instead of the table when nothing matches. Says what to do, not just "nothing". */
   empty: ReactNode;
+  /**
+   * Rows of another kind drawn above the page's rows, in the same columns (§NNN; the registrations
+   * list draws the event's open invitations here): each a cell per column key — a key left out is an
+   * empty cell — and its own verbs. Not counted in `total`, not sorted, not paged: the caller decides
+   * when they belong (the first page of one event's list). Marked `data-row-kind="lead"`.
+   */
+  leadRows?: readonly AdminLeadRow[];
+};
+
+/** One row of `leadRows`: its cells by column key, its verbs, its test id. */
+export type AdminLeadRow = {
+  key: string;
+  cells: Readonly<Partial<Record<string, ReactNode>>>;
+  actions?: ReactNode;
+  testId?: string;
 };
 
 /**
@@ -248,10 +263,11 @@ export default function AdminTable<Row>({
   labels,
   rowActions,
   empty,
+  leadRows = [],
 }: Props<Row>) {
   // It becomes part of a storage key and a CSS selector, so its shape is checked, not trusted.
   if (!TABLE_ID_PATTERN.test(tableId)) throw new Error(`AdminTable: tableId "${tableId}" is not lowercase-hyphenated`);
-  if (rows.length === 0) return <>{empty}</>;
+  if (rows.length === 0 && leadRows.length === 0) return <>{empty}</>;
 
   const pages = pageCount(total, query.perPage);
   const primary = columns.find((column) => column.primary) ?? columns[0];
@@ -370,6 +386,17 @@ export default function AdminTable<Row>({
             </TableRow>
           </TableHead>
           <TableBody>
+            {/* Rows of another kind first (§NNN), on a quiet fill so they never read as the page's own. */}
+            {leadRows.map((lead) => (
+              <TableRow key={`lead-${lead.key}`} data-row-kind="lead" data-testid={lead.testId} sx={{ ...ROW_SEPARATOR, bgcolor: "action.hover" }}>
+                {columns.map((column) => (
+                  <TableCell key={column.key} align={column.align} sx={column.hideBelow ? HIDE[column.hideBelow] : undefined}>
+                    {lead.cells[column.key] ?? null}
+                  </TableCell>
+                ))}
+                {rowActions && <TableCell align="right">{lead.actions ?? null}</TableCell>}
+              </TableRow>
+            ))}
             {rows.map((row, index) => (
               <TableRow
                 key={rowKey(row)}
@@ -422,6 +449,26 @@ export default function AdminTable<Row>({
         spacing={1.5}
         sx={{ display: { xs: "flex", md: "none" }, listStyle: "none", p: 0, m: 0 }}
       >
+        {leadRows.map((lead) => (
+          <Box key={`lead-${lead.key}`} component="li" data-row-kind="lead" data-testid={lead.testId} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2, bgcolor: "action.hover" }}>
+            <Typography component="div" sx={{ fontWeight: 700, fontSize: "1rem", mb: 1 }}>
+              {lead.cells[primary.key] ?? null}
+            </Typography>
+            <Stack spacing={0.5}>
+              {secondary
+                .filter((column) => lead.cells[column.key] !== undefined && lead.cells[column.key] !== null)
+                .map((column) => (
+                  <Stack key={column.key} direction="row" sx={{ justifyContent: "space-between", alignItems: "baseline", gap: 1 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0 }}>
+                      {column.label}
+                    </Typography>
+                    <Box sx={{ textAlign: "right", minWidth: 0 }}>{lead.cells[column.key]}</Box>
+                  </Stack>
+                ))}
+            </Stack>
+            {lead.actions && <Box sx={{ mt: 1.5 }}>{lead.actions}</Box>}
+          </Box>
+        ))}
         {rows.map((row) => (
           <Box
             key={rowKey(row)}

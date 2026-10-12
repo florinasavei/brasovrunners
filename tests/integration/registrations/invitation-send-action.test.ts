@@ -132,6 +132,27 @@ describe("§647 a refused send hands the next dialog the server's numbers", () =
     expect(await db.execute(sql`select count(*)::int as n from event_invitations`)).toMatchObject({ rows: [{ n: 0 }] });
   });
 
+  it("the form's rows (§NNN): a name and an address per row are sent; a half-filled row is refused by its number, nothing written", async () => {
+    const eventId = await createEvent(5);
+    const rows = (pairs: [string, string][]) => {
+      const form = press(eventId, "", null);
+      for (const [name, email] of pairs) {
+        form.append("inviteeName", name);
+        form.append("inviteeEmail", email);
+      }
+      return form;
+    };
+    // The second row has a name and no address: refused, by its row.
+    expect(await inviteAction(null, rows([["Ana Pop", "ana@example.invalid"], ["Bogdan Pop", ""]]))).toMatchObject({ error: "INVITATION_UNREAD_ROW", lines: "2" });
+    expect(await db.execute(sql`select count(*)::int as n from event_invitations`)).toMatchObject({ rows: [{ n: 0 }] });
+    // An empty row (the one the form always offers) is ignored; two people are invited.
+    await expect(inviteAction(null, rows([["Ana Pop", "ana@example.invalid"], ["", ""], ["Bogdan Pop", "bogdan@example.invalid"]]))).rejects.toThrow(
+      /REDIRECT .*saved=invitationsSent&count=2/,
+    );
+    const sent = await db.select({ name: eventInvitations.name, email: eventInvitations.email }).from(eventInvitations).where(eq(eventInvitations.eventId, eventId));
+    expect(sent.map((row) => row.name).sort()).toEqual(["Ana Pop", "Bogdan Pop"]);
+  });
+
   it("«Pe lista ascunsă» posted on an event whose «Folosește lista ascunsă» is off: refused with HIDDEN_LIST_OFF, the registration page's sentence", async () => {
     const eventId = await createEvent(3);
     const form = press(eventId, "Ana Pop <ana@example.invalid>", null);

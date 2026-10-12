@@ -64,7 +64,6 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[] } 
     { path: "src/modules/newsletter/ui/SubscriberListFields.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 3 },
     { path: "src/modules/notifications/ui/DeliveryTimingSwitch.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
     { path: "src/modules/registrations/ui/DeskRow.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
-    { path: "src/modules/registrations/ui/InviteForm.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
     { path: "src/modules/registrations/ui/QueuePanel.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
     { path: "src/modules/registrations/ui/RegistrationRowMenu.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
     { path: "src/modules/staff-identity/ui/AdminTabs.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 12 },
@@ -149,7 +148,6 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[] } 
     { path: "src/modules/registrations/ui/EmailTwice.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
     { path: "src/modules/registrations/ui/HiddenListChip.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/modules/registrations/ui/InvitationsPanel.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
-    { path: "src/modules/registrations/ui/InviteForm.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
     { path: "src/modules/registrations/ui/MemberChip.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
     { path: "src/modules/registrations/ui/QrScanButton.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
     { path: "src/modules/registrations/ui/QueuePanel.tsx", reason: "a bare MUI Chip: GlyphChip (glyph by name) when next touched", count: 1 },
@@ -165,8 +163,8 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[] } 
 /** Per rule, the entries and the hits (the sum of the counts): lower them in the same edit that removes an entry or a count. */
 export const PINNED = {
   colours: { entries: 13, hits: 28 },
-  icons: { entries: 40, hits: 143 },
-  primitives: { entries: 88, hits: 95 },
+  icons: { entries: 39, hits: 142 },
+  primitives: { entries: 87, hits: 94 },
 } as const;
 
 /**

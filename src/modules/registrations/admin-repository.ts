@@ -30,6 +30,7 @@ import { isClubCopy } from "@/modules/notifications/domain/club-notices";
 import type { DeskEmailState, RegistrationEmailState, RegistrationEmailStateDetail } from "./domain/email-state";
 import { deskEmailStateSql, needsEmailActionSql, registrationEmailStateDetailSql, registrationEmailStateSql } from "./email-state";
 import type { PlaceDeadlineCounts, PlaceDeadlineEvent } from "./domain/place-deadlines";
+import { eventInvitations } from "@/db/schema/event-invitations";
 
 /**
  * Read queries for the Administrator-only backoffice (AGENTS.md §15.8, §15.10; BR-REQ-060-01,
@@ -47,6 +48,8 @@ export type RegistrationListRow = {
   kind: RegistrationKind;
   /** «În afara locurilor» (§643): seated outside the event's places — the row's chip and the export's column. */
   outsideCapacity: boolean;
+  /** Registered through an invitation by email (§NNN): the list marks it «Invitat». */
+  invited: boolean;
   /** PUBLIC when the participant submitted it, STAFF when an organizer entered it for them. */
   source: RegistrationSource;
   registeredName: string;
@@ -473,6 +476,8 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       status: registrations.status,
       kind: registrations.kind,
       outsideCapacity: registrations.outsideCapacity,
+      // Registered through an invitation by email (§NNN, amending §647): the list's «Invitat» mark.
+      invited: sql<boolean>`exists (select 1 from ${eventInvitations} i where i."accepted_registration_id" = ${registrations}."id")`.mapWith(Boolean),
       source: registrations.source,
       registeredName: registrations.registeredName,
       firstName: registrations.firstName,

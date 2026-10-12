@@ -16,6 +16,7 @@ import { InvitationRefusal } from "@/modules/registrations/domain/invitations";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { listRegistrationsForAdmin } from "@/modules/registrations/admin-repository";
 
 /**
  * §647 — invitations by email (the owner, 2026-10-02: «vreau să trimit „invitații speciale” pe email
@@ -439,6 +440,9 @@ describe("§647 BR-REQ-036-02 the link: the GET reads, the press spends it once 
     // The invitation is accepted, and the place moved: two occupied before, two after, nobody offered.
     const [invitation] = await invitationsOf(event.id);
     expect(invitation).toMatchObject({ acceptedAt: at(6), acceptedRegistrationId: registration!.id });
+    // The registrations list marks it «Invitat» (§NNN), and only it: Ioana registered on the form.
+    const listed = await listRegistrationsForAdmin(db, { eventId: event.id });
+    expect(listed.filter((row) => row.invited).map((row) => row.id)).toEqual([registration!.id]);
     // Ioana's hold and Ana's now: the invitation's bucket empty.
     expect(await countOccupied(db, event.id, at(6))).toMatchObject({ invitationHolds: 0, pendingDeclarationHolds: 2, confirmed: 0 });
     expect(await occupied(event.id, at(6))).toBe(2);

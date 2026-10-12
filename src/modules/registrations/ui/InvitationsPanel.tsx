@@ -29,6 +29,8 @@ import InviteForm, { type InviteFormState, type InviteFormWords } from "./Invite
 type RowAction = (state: FormOutcome | null, form: FormData) => Promise<FormOutcome | null>;
 
 const STATE_COLOR = { sent: "info", accepted: "success", expired: "default", withdrawn: "default" } as const;
+/** The states in the order the counts above the table name them. */
+const INVITATION_STATES = ["sent", "accepted", "expired", "withdrawn"] as const;
 
 /**
  * «Invitații» (§647) on an event's registrations list: who the club invited, where each invitation
@@ -70,7 +72,9 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
     .limit(1);
   if (!event) return null;
   const invitations = await listEventInvitations(db, eventId);
-  const pending = invitations.filter((row) => invitationState(row, now) === "sent").length;
+  const byState = { sent: 0, accepted: 0, expired: 0, withdrawn: 0 };
+  for (const row of invitations) byState[invitationState(row, now)] += 1;
+  const pending = byState.sent;
   const deadline = (at: Date) => formatDay(at, { locale, timeZone: event.timezone, style: "short", withTime: true });
 
   let form: ReactNode = null;
@@ -88,6 +92,11 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
       membersNone: t("invitations.membersNone"),
       typedLabel: t("invitations.typedLabel"),
       typedHelp: t("invitations.typedHelp"),
+      nameLabel: t("invitations.nameLabel"),
+      emailLabel: t("invitations.emailLabel"),
+      removeRow: t.raw("invitations.removeRow") as string,
+      removeShort: t("invitations.removeShort"),
+      addRow: t("invitations.addRow"),
       daysLabel: t("invitations.daysLabel"),
       daysHelp: t("invitations.daysHelp", { max: INVITATION_DAYS_MAX }),
       outsideLabel: t("invitations.outsideLabel"),
@@ -145,13 +154,46 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
       data-testid="registrations-invitations"
     >
       <Stack spacing={3}>
-        {form}
+        {/* Who was invited first (§NNN; the owner: «I need to see the people that were added via manual
+            invitations»), then the form that sends more, under a heading of its own. */}
         {invitations.length === 0 ? (
           <Typography variant="body2" color="text.secondary">
             {t("invitations.empty")}
           </Typography>
         ) : (
-          <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }} data-testid="invitations-list">
+          <>
+            {/* How many in each state, at a glance (§NNN): the list below names every one. */}
+            <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", rowGap: 1 }} data-testid="invitations-counts">
+              {INVITATION_STATES.map((one) => {
+                const count = byState[one];
+                return count > 0 ? <Chip key={one} size="small" variant="outlined" color={STATE_COLOR[one]} label={`${t(`invitations.state.${one}`)}: ${count}`} /> : null;
+              })}
+            </Stack>
+            <Box
+              component="table"
+              aria-label={t("invitations.tableCaption")}
+              data-testid="invitations-list"
+              sx={{
+                width: "100%",
+                borderCollapse: "collapse",
+                "& th": { textAlign: "left", fontSize: "0.8125rem", fontWeight: 600, color: "text.secondary", py: 1, pr: 2, borderBottom: 1, borderColor: "divider" },
+                "& td": { verticalAlign: "top", py: 1.5, pr: 2, borderTop: 1, borderColor: "divider" },
+                // A phone reads each person as a block, the columns one under another (no sideways scroll).
+                "& thead": { display: { xs: "none", sm: "table-header-group" } },
+                "& tr, & td": { display: { xs: "block", sm: "revert" } },
+                // Only the width changes on a phone: the shorthand would reset the colour to the text's.
+                "& td + td": { borderTopWidth: { xs: 0, sm: "1px" }, pt: { xs: 0.5, sm: 1.5 } },
+              }}
+            >
+              <thead>
+                <tr>
+                  <th scope="col">{t("invitations.columns.person")}</th>
+                  <th scope="col">{t("invitations.columns.state")}</th>
+                  <th scope="col">{t("invitations.columns.by")}</th>
+                  {mayManage && <th scope="col">{t("invitations.columns.actions")}</th>}
+                </tr>
+              </thead>
+              <tbody>
             {invitations.map((row) => {
               const state = invitationState(row, now);
               /*
@@ -161,101 +203,128 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
               */
               const deadlineFixed = !row.outsideCapacity && waiting > 0;
               return (
-                <Box component="li" key={row.id} sx={{ py: 1.5, borderTop: 1, borderColor: "divider" }} data-testid="invitation-row">
-                  <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ alignItems: { sm: "center" }, flexWrap: "wrap" }}>
+                <tr key={row.id} data-testid="invitation-row">
+                  <td>
                     <Typography sx={{ fontWeight: 600 }}>{row.name}</Typography>
                     <Typography variant="body2" sx={{ wordBreak: "break-all" }}>
                       {row.email}
                     </Typography>
-                    <Chip size="small" color={STATE_COLOR[state]} label={t(`invitations.state.${state}`)} />
-                    {/* «Invitat special» (§649): the registrations' own chip, glyph and hint, not a bare word. */}
-                    {row.outsideCapacity && <HiddenListChip label={t("registrations.outside.chip")} hint={t("registrations.outside.hint")} testId="invitation-outside-chip" />}
-                  </Stack>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                    {state === "sent"
-                      ? t("invitations.until", { deadline: deadline(row.expiresAt) })
-                      : state === "accepted" && row.acceptedAt
-                        ? t("invitations.acceptedAt", { at: deadline(row.acceptedAt) })
-                        : state === "withdrawn" && row.withdrawnAt
-                          ? t("invitations.withdrawnAt", { at: deadline(row.withdrawnAt) })
-                          : t("invitations.expiredAt", { at: deadline(row.expiredAt ?? row.expiresAt) })}
-                    {" · "}
-                    {t("invitations.by", { name: row.invitedByName ?? t("invitations.byNobody") })}
-                    {row.resendCount > 0 && ` · ${t(`invitations.resent.${countForm(row.resendCount, locale)}`, { count: row.resendCount })}`}
-                    {row.supplementaryRaise && ` · ${t("invitations.raised")}`}
-                  </Typography>
-                  {state === "accepted" && row.acceptedRegistrationId && (
-                    <Link href={getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: row.acceptedRegistrationId } } })} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}>
-                      {t("invitations.openRegistration")}
-                    </Link>
-                  )}
-                  {mayManage && state === "sent" && (
-                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mt: 1, alignItems: { sm: "flex-end" } }}>
-                      <ActionForm
-                        action={resendAction}
-                        confirm={deadlineFixed ? {
-                          title: t("invitations.resendTitle"),
-                          body: t("invitations.resendBodyWaiting", { name: row.name }),
-                          email: dialog.email(1),
-                          confirmLabel: t("invitations.resend"),
-                          cancelLabel: dialog.cancel,
-                        } : [
-                          // The box left empty keeps the deadline: only a number typed in it moves it, and the dialog says which.
-                          {
-                            title: t("invitations.resendTitle"),
-                            body: t("invitations.resendBodyKept", { name: row.name }),
-                            when: [{ field: "days", equals: "" }],
-                            email: dialog.email(1),
-                            confirmLabel: t("invitations.resend"),
-                            cancelLabel: dialog.cancel,
-                          },
-                          {
-                            title: t("invitations.resendTitle"),
-                            body: t.raw("invitations.resendBody").replace("{name}", row.name) as string,
-                            fillFrom: ["days"],
-                            email: dialog.email(1),
-                            confirmLabel: t("invitations.resend"),
-                            cancelLabel: dialog.cancel,
-                          },
-                        ]}
-                        data-testid="invitation-resend-form"
-                      >
-                        <input type="hidden" name="uiLocale" value={locale} />
-                        <input type="hidden" name="eventId" value={eventId} />
-                        <input type="hidden" name="invitationId" value={row.id} />
-                        <Stack direction="row" spacing={1} sx={{ alignItems: "flex-end" }}>
-                          {!deadlineFixed && <TextField
-                            name="days"
-                            label={t("invitations.resendDays")}
-                            type="number"
-                            size="small"
-                            slotProps={{ htmlInput: { min: 1, max: INVITATION_DAYS_MAX, step: 1, inputMode: "numeric" } }}
-                            sx={{ width: 150 }}
-                          />}
-                          <GlyphSubmitButton icon="resend" label={t("invitations.resend")} pendingLabel={t("invitations.resending")} variant="outlined" size="small" />
-                        </Stack>
-                      </ActionForm>
-                      <ActionForm
-                        action={withdrawAction}
-                        confirm={{
-                          title: t("invitations.withdrawTitle"),
-                          body: t("invitations.withdrawBody", { name: row.name }),
-                          destructive: true,
-                          confirmLabel: t("invitations.withdraw"),
-                          cancelLabel: dialog.cancel,
-                        }}
-                        data-testid="invitation-withdraw-form"
-                      >
-                        <input type="hidden" name="uiLocale" value={locale} />
-                        <input type="hidden" name="eventId" value={eventId} />
-                        <input type="hidden" name="invitationId" value={row.id} />
-                        <GlyphSubmitButton icon="revoke" label={t("invitations.withdraw")} pendingLabel={t("invitations.withdrawing")} variant="text" color="error" size="small" />
-                      </ActionForm>
+                    {/* Whom the club picked from its members, and whom it typed by hand (§NNN). */}
+                    <Stack direction="row" spacing={0.5} sx={{ mt: 0.5, flexWrap: "wrap", rowGap: 0.5 }}>
+                      <Chip size="small" variant="outlined" label={t(row.memberStaffUserId ? "invitations.origin.member" : "invitations.origin.typed")} data-testid="invitation-origin" />
+                      {/* «Invitat special» (§649): the registrations' own chip, glyph and hint, not a bare word. */}
+                      {row.outsideCapacity && <HiddenListChip label={t("registrations.outside.chip")} hint={t("registrations.outside.hint")} testId="invitation-outside-chip" />}
                     </Stack>
+                  </td>
+                  <td>
+                    <Chip size="small" color={STATE_COLOR[state]} label={t(`invitations.state.${state}`)} />
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                      {state === "sent"
+                        ? t("invitations.until", { deadline: deadline(row.expiresAt) })
+                        : state === "accepted" && row.acceptedAt
+                          ? t("invitations.acceptedAt", { at: deadline(row.acceptedAt) })
+                          : state === "withdrawn" && row.withdrawnAt
+                            ? t("invitations.withdrawnAt", { at: deadline(row.withdrawnAt) })
+                            : t("invitations.expiredAt", { at: deadline(row.expiredAt ?? row.expiresAt) })}
+                      {row.resendCount > 0 && ` · ${t(`invitations.resent.${countForm(row.resendCount, locale)}`, { count: row.resendCount })}`}
+                      {row.supplementaryRaise && ` · ${t("invitations.raised")}`}
+                    </Typography>
+                    {state === "accepted" && row.acceptedRegistrationId && (
+                      <Link href={getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: row.acceptedRegistrationId } } })} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}>
+                        {t("invitations.openRegistration")}
+                      </Link>
+                    )}
+                  </td>
+                  <td>
+                    {/* The column's heading says «Trimisă de»; a phone, which hides it, reads the sentence. */}
+                    <Typography variant="body2" sx={{ display: { xs: "none", sm: "block" } }}>
+                      {row.invitedByName ?? t("invitations.byNobody")}
+                    </Typography>
+                    <Typography variant="body2" sx={{ display: { xs: "block", sm: "none" } }}>
+                      {t("invitations.by", { name: row.invitedByName ?? t("invitations.byNobody") })}
+                    </Typography>
+                  </td>
+                  {mayManage && (
+                    <td>
+                  {mayManage && state === "sent" && (
+                        <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mt: 1, alignItems: { sm: "flex-end" } }}>
+                          <ActionForm
+                            action={resendAction}
+                            confirm={deadlineFixed ? {
+                              title: t("invitations.resendTitle"),
+                              body: t("invitations.resendBodyWaiting", { name: row.name }),
+                              email: dialog.email(1),
+                              confirmLabel: t("invitations.resend"),
+                              cancelLabel: dialog.cancel,
+                            } : [
+                              // The box left empty keeps the deadline: only a number typed in it moves it, and the dialog says which.
+                              {
+                                title: t("invitations.resendTitle"),
+                                body: t("invitations.resendBodyKept", { name: row.name }),
+                                when: [{ field: "days", equals: "" }],
+                                email: dialog.email(1),
+                                confirmLabel: t("invitations.resend"),
+                                cancelLabel: dialog.cancel,
+                              },
+                              {
+                                title: t("invitations.resendTitle"),
+                                body: t.raw("invitations.resendBody").replace("{name}", row.name) as string,
+                                fillFrom: ["days"],
+                                email: dialog.email(1),
+                                confirmLabel: t("invitations.resend"),
+                                cancelLabel: dialog.cancel,
+                              },
+                            ]}
+                            data-testid="invitation-resend-form"
+                          >
+                            <input type="hidden" name="uiLocale" value={locale} />
+                            <input type="hidden" name="eventId" value={eventId} />
+                            <input type="hidden" name="invitationId" value={row.id} />
+                            <Stack direction="row" spacing={1} sx={{ alignItems: "flex-end" }}>
+                              {!deadlineFixed && <TextField
+                                name="days"
+                                label={t("invitations.resendDays")}
+                                type="number"
+                                size="small"
+                                slotProps={{ htmlInput: { min: 1, max: INVITATION_DAYS_MAX, step: 1, inputMode: "numeric" } }}
+                                sx={{ width: 150 }}
+                              />}
+                              <GlyphSubmitButton icon="resend" label={t("invitations.resend")} pendingLabel={t("invitations.resending")} variant="outlined" size="small" />
+                            </Stack>
+                          </ActionForm>
+                          <ActionForm
+                            action={withdrawAction}
+                            confirm={{
+                              title: t("invitations.withdrawTitle"),
+                              body: t("invitations.withdrawBody", { name: row.name }),
+                              destructive: true,
+                              confirmLabel: t("invitations.withdraw"),
+                              cancelLabel: dialog.cancel,
+                            }}
+                            data-testid="invitation-withdraw-form"
+                          >
+                            <input type="hidden" name="uiLocale" value={locale} />
+                            <input type="hidden" name="eventId" value={eventId} />
+                            <input type="hidden" name="invitationId" value={row.id} />
+                            <GlyphSubmitButton icon="revoke" label={t("invitations.withdraw")} pendingLabel={t("invitations.withdrawing")} variant="text" color="error" size="small" />
+                          </ActionForm>
+                        </Stack>
+                      )}
+                    </td>
                   )}
-                </Box>
+                </tr>
               );
             })}
+              </tbody>
+            </Box>
+          </>
+        )}
+        {form && (
+          <Box component="section" aria-labelledby="invitations-send-title" sx={{ pt: 2, borderTop: 1, borderColor: "divider" }}>
+            <Typography id="invitations-send-title" component="h3" variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5 }}>
+              {t("invitations.sendTitle")}
+            </Typography>
+            {form}
           </Box>
         )}
       </Stack>

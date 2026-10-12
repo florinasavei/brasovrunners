@@ -27,6 +27,7 @@ export const INVITATION_REFUSALS = [
   "INVITATION_NOT_OPEN",
   "INVITATION_BAD_DAYS",
   "INVITATION_UNREAD_LINE",
+  "INVITATION_UNREAD_ROW",
 ] as const;
 export type InvitationRefusalCode = (typeof INVITATION_REFUSALS)[number];
 
@@ -151,6 +152,30 @@ export function parseInvitationLines(text: string): { people: TypedInvitee[]; un
     }
     people.push({ name, email: email.trim(), line: index + 1 });
   });
+  return { people, unread };
+}
+
+/**
+ * The people typed in the form's rows (§NNN, amending §647; the owner: «I need to be able to add by name
+ * and email not just a simple input»): one «Nume» and one «Email» box per row, posted as two lists in the
+ * same order. A row with both boxes empty is ignored (the empty row the form always offers); a row with
+ * only one of them, or an address that is not one word with an «@», is unread and named by its number —
+ * refused before anything is sent, as a typed line was.
+ */
+export function readInviteeRows(names: readonly string[], emails: readonly string[]): { people: TypedInvitee[]; unread: number[] } {
+  const people: TypedInvitee[] = [];
+  const unread: number[] = [];
+  const rows = Math.max(names.length, emails.length);
+  for (let index = 0; index < rows; index += 1) {
+    const name = (names[index] ?? "").replace(/\s+/g, " ").trim();
+    const email = (emails[index] ?? "").trim();
+    if (name === "" && email === "") continue;
+    if (name === "" || !/^[^\s@<>,;]+@[^\s@<>,;]+$/.test(email)) {
+      unread.push(index + 1);
+      continue;
+    }
+    people.push({ name, email, line: index + 1 });
+  }
   return { people, unread };
 }
 
