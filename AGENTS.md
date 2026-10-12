@@ -3391,8 +3391,11 @@ Target WCAG 2.2 AA:
 - limited third-party scripts;
 - indexed queries/server pagination;
 - no full participant dataset to client;
-- no external social embeds; a third party's film or map only behind a press, as a native
-  `<details>` that loads nothing until opened, and never the provider's script (§69, §718);
+- no external social embeds; a third party's film only behind a press, as a native `<details>`
+  that loads nothing until opened; a route map from Strava or Garmin Connect is drawn open
+  (§739: the chosen tab's frame loads with the page, a hidden tab's frame waits until its tab is
+  chosen) and the privacy notice names both providers as seeing the visitor's IP address; never
+  the provider's script (§61, §69, §718, §739);
 - measure before optimizing;
 - capacity correctness over cache cleverness;
 - Core Web Vitals targets at p75 mobile: LCP 2.5 s, INP 200 ms, CLS 0.1;
