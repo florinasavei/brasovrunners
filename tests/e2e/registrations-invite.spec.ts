@@ -7,7 +7,7 @@ import { ensureRegistrationIsOpen, FEATURED, HUMAN_PAUSE_MS, hydrated, signIn } 
 import { chooseSex } from "./support/sex-choice";
 
 /**
- * §738 — «Invită pe email» on the registrations page, pressed in a real browser: on a list about one
+ * §NNN — «Invită pe email» on the registrations page, pressed in a real browser: on a list about one
  * event it opens «Invitații» and brings it into view, however many times it is pressed; on «toate
  * evenimentele» it leads to the event's panel; an invitation sent to a made-up person is seen with its
  * state in the panel and in the list after a reload, and the state changes once the link is accepted.
@@ -80,10 +80,17 @@ async function openList(page: Page, eventId: string) {
   await hydrated(page);
 }
 
-test.describe("§738 «Invită pe email»: the button, and every invited person with their state", () => {
+test.describe("§NNN «Invită pe email»: the button, and every invited person with their state", () => {
   test.describe.configure({ timeout: 180_000 });
 
-  test.afterAll(async ({}, testInfo) => cancelRegistrationsByEmailPrefix(`${PREFIX}${testInfo.project.name}-`));
+  test.afterAll(async ({}, testInfo) => {
+    const prefix = `${PREFIX}${testInfo.project.name}-`;
+    // A live counted invitation would hold a place on the featured race across runs: withdraw ours.
+    await withDatabase((client) =>
+      client.query(`UPDATE event_invitations SET withdrawn_at = now() WHERE canonical_email LIKE $1 AND accepted_at IS NULL AND withdrawn_at IS NULL`, [`${prefix}%`]),
+    );
+    await cancelRegistrationsByEmailPrefix(prefix);
+  });
 
   test("opens «Invitații» on one event's list, again and again, and leads there from all events", async ({ page }) => {
     await signIn(page, "Dev Administrator");
@@ -115,6 +122,8 @@ test.describe("§738 «Invită pe email»: the button, and every invited person 
     const choice = page.getByTestId("registrations-invite-event");
     if (await choice.count()) await choice.first().click();
     await expect(page).toHaveURL(new RegExp(`eventId=${eventId}.*#registrations-invitations`));
+    // Wait until the page left behind is gone, so the panel is one element (a transition holds both for a moment).
+    await expect(page.getByTestId("registrations-invitations")).toHaveCount(1);
     await expect(page.getByTestId("registrations-invitations")).toHaveAttribute("open", "");
     await expect.poll(() => inView(page.getByTestId("registrations-invitations"))).toBe(true);
     expect(await page.evaluate(fitsTheWidth)).toBe(true);

@@ -160,8 +160,8 @@ export async function listEventInvitations<T extends Record<string, unknown>>(db
 }
 
 /**
- * Per event, the invitations not answered and not withdrawn (§738): sent and still before their
- * deadline, or past it without an answer. The registrations list on «toate evenimentele» names them,
+ * Per event, the invitations not answered and not withdrawn (§NNN): sent and still before their
+ * deadline, or past it without an answer, of an event not yet started and not cancelled. The registrations list on «toate evenimentele» names them,
  * so an invited person is never nowhere. A display read only: no figure the club is given and no part
  * of the capacity formula (`invitationHoldsCount` is that) counts from it.
  */
@@ -176,7 +176,9 @@ export async function listOpenInvitationCountsByEvent<T extends Record<string, u
       expired: sql<number>`count(*) filter (where ${eventInvitations.expiredAt} is not null or ${eventInvitations.expiresAt} <= ${now})::int`,
     })
     .from(eventInvitations)
-    .where(and(sql`${eventInvitations.acceptedAt} is null`, sql`${eventInvitations.withdrawnAt} is null`))
+    .innerJoin(events, eq(events.id, eventInvitations.eventId))
+    // Only while the event can still be invited to: after its start, or cancelled, an unanswered invitation is history.
+    .where(and(sql`${eventInvitations.acceptedAt} is null`, sql`${eventInvitations.withdrawnAt} is null`, eq(events.eventStatus, "SCHEDULED"), gt(events.startsAt, now)))
     .groupBy(eventInvitations.eventId);
   return rows.map((row) => ({ eventId: row.eventId, sent: Number(row.sent), expired: Number(row.expired) }));
 }

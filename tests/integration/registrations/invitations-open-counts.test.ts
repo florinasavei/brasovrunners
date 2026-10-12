@@ -6,7 +6,7 @@ import { participants } from "@/db/schema/participants";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §738 — the registrations list on «toate evenimentele» names, per event, the invitations nobody has
+ * §NNN — the registrations list on «toate evenimentele» names, per event, the invitations nobody has
  * answered (`listOpenInvitationCountsByEvent`): sent and still before their deadline, or past it
  * without an answer; an accepted or withdrawn one is not in it. A display read: it never touches the
  * capacity formula, whose own invitation count (§647, `invitationHoldsCount`) is tested with the send.
@@ -20,6 +20,7 @@ let close: () => Promise<void>;
 vi.mock("@/db/client", () => ({ getDb: () => db }));
 
 const { listOpenInvitationCountsByEvent, invitationHoldsCount } = await import("@/modules/registrations/invitation-repository");
+const { listEventsTakingInvitations } = await import("@/modules/registrations/admin-repository");
 
 beforeAll(async () => {
   ({ db, close } = await createTestDatabase());
@@ -29,10 +30,10 @@ beforeEach(async () => {
   await resetTables(db);
 });
 
-async function event(): Promise<string> {
+async function event(patch: Partial<typeof events.$inferInsert> = {}): Promise<string> {
   const [row] = await db
     .insert(events)
-    .values({ type: "RACE", startsAt: new Date(NOW.getTime() + 30 * DAY), registrationMode: "INTERNAL", capacity: 10, eventStatus: "SCHEDULED", locationName: "Parcul", editorialStatus: "PUBLISHED", publishedAt: NOW })
+    .values({ type: "RACE", startsAt: new Date(NOW.getTime() + 30 * DAY), registrationMode: "INTERNAL", capacity: 10, eventStatus: "SCHEDULED", locationName: "Parcul", editorialStatus: "PUBLISHED", publishedAt: NOW, ...patch })
     .returning({ id: events.id });
   return row.id;
 }
@@ -59,7 +60,7 @@ async function invite(eventId: string, patch: Partial<typeof eventInvitations.$i
   });
 }
 
-describe("§738 the open invitations per event", () => {
+describe("§NNN the open invitations per event", () => {
   it("counts sent and unanswered-expired ones apart, per event, and leaves accepted and withdrawn out", async () => {
     const first = await event();
     const second = await event();
@@ -76,6 +77,26 @@ describe("§738 the open invitations per event", () => {
     expect(counts.find((row) => row.eventId === first)).toEqual({ eventId: first, sent: 2, expired: 2 });
     expect(counts.find((row) => row.eventId === second)).toEqual({ eventId: second, sent: 1, expired: 0 });
     expect(counts).toHaveLength(2);
+  });
+
+  it("leaves out an event that has started or been cancelled: its unanswered invitations are history", async () => {
+    const past = await event({ startsAt: new Date(NOW.getTime() - DAY) });
+    const cancelled = await event({ eventStatus: "CANCELLED" });
+    await invite(past);
+    await invite(cancelled, { expiresAt: new Date(NOW.getTime() - DAY) });
+    expect(await listOpenInvitationCountsByEvent(db, NOW)).toEqual([]);
+  });
+
+  it("offers «Invită pe email» only the events the send accepts: published, announced, scheduled, still to come", async () => {
+    const open = await event();
+    await event({ editorialStatus: "DRAFT", publishedAt: null });
+    await event({ dateToBeAnnounced: true });
+    await event({ timeToBeAnnounced: true });
+    await event({ startsAt: new Date(NOW.getTime() - DAY) });
+    await event({ eventStatus: "CANCELLED" });
+    await event({ registrationMode: "NONE", capacity: null });
+    const listed = await listEventsTakingInvitations(db, "ro", NOW);
+    expect(listed.map((row) => row.id)).toEqual([open]);
   });
 
   it("is a display read: the places an event's invitations hold are still only the live, counted ones", async () => {
