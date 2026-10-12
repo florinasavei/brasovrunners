@@ -20,10 +20,13 @@ function fail(message) {
   process.exit(1);
 }
 
+/** The listing's path in each language, as `src/i18n/routing.ts` maps `/events` (its unit test holds the two equal). */
+export const LISTING_PATH = { ro: "/evenimente", en: "/events" };
+
 /**
  * The site's root in each language (§714, amending §353): with «Pagina principală» off it is a static
- * page that redirects — a 307 to the listing — and with it on it is the home page, a 200. Never the
- * 308 §353 had, and never a 200 that is an error document (a redirect thrown from a page once
+ * page that redirects — a 307 to the listing — and with it on it is the home page, a 200. The current
+ * build answers 307, not §353's 308, and never a 200 that is an error document (a redirect thrown from a page once
  * reached production that way): a 200 must carry the home page's own marker and no Next error
  * marker. A 307 to the listing passes while the setting is off, which is the default. A 308 to the
  * listing passes too (§NNN): `migrate.yml` smokes the deployment while it still serves the PREVIOUS
@@ -32,7 +35,8 @@ function fail(message) {
  * twice, so the second answer shows whether the CDN holds it.
  */
 export function judgeRoot(locale, status, location, body) {
-  const listing = new RegExp(`^(https?://[^/]+)?/${locale}/(evenimente|events)/?$`).test(location);
+  const path = LISTING_PATH[locale];
+  const listing = path !== undefined && new RegExp(`^(https?://[^/]+)?/${locale}${path}/?$`).test(location);
   if ((status === 307 || status === 308) && listing) return { ok: true, what: `${status} to ${location}` };
   if (status === 200) {
     if (body.includes("__next_error__")) return { ok: false, reason: "answered 200 but the page is Next's error document (__next_error__)" };
