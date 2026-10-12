@@ -44,6 +44,7 @@ export default function ScrollRow({
     el.addEventListener("scroll", update, { passive: true });
     const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(update);
     observer?.observe(el);
+    for (const child of Array.from(el.children)) observer?.observe(child);
     return () => {
       el.removeEventListener("scroll", update);
       observer?.disconnect();

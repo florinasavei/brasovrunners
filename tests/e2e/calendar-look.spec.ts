@@ -72,13 +72,14 @@ test.describe("phase 4: the calendar under «Aspectul nou»", () => {
         expect(pill, "the pill is small").toBeLessThanOrEqual(26);
       }
       // The row shows that it scrolls: a visible scrollbar, and an edge cue while there is more to see.
-      const scroller = await chips.evaluate((el) => ({ over: el.scrollWidth > el.clientWidth, bar: getComputedStyle(el).scrollbarWidth, more: el.hasAttribute("data-more-end") }));
+      await expect(chips, "the edge cue is on while it can scroll").toHaveAttribute("data-more-end", "");
+      const scroller = await chips.evaluate((el) => ({ over: el.scrollWidth > el.clientWidth, bar: getComputedStyle(el).scrollbarWidth }));
       expect(scroller.over, "at 320 pixels the chips overflow").toBe(true);
       expect(scroller.bar, "the scrollbar is not hidden").not.toBe("none");
-      expect(scroller.more, "the edge cue is on while it can scroll").toBe(true);
       await chips.evaluate((el) => {
         el.scrollLeft = el.scrollWidth;
       });
+      await expect(chips).toHaveAttribute("data-more-start", "");
       await expect(chips).not.toHaveAttribute("data-more-end", "");
       await chips.evaluate((el) => {
         el.scrollLeft = 0;

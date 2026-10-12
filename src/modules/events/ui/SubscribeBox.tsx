@@ -1,5 +1,4 @@
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import BusinessIcon from "@mui/icons-material/Business";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import DownloadIcon from "@mui/icons-material/Download";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
@@ -123,7 +122,7 @@ export default async function SubscribeBox({ locale, baseUrl, addressId = "calen
         </li>
         <li>
           <Box component="a" href={outlookSubscribeUrl(links.feed, "work")} target="_blank" rel="noopener noreferrer" sx={ROW_SX} data-testid="subscribe-outlook-work">
-            <BusinessIcon aria-hidden="true" />
+            <CalendarTodayIcon aria-hidden="true" />
             {t("calendar.look.subscribe.outlookWork")}
           </Box>
         </li>

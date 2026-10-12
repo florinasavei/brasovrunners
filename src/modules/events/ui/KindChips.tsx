@@ -93,7 +93,7 @@ export default async function KindChips({ path, kind, filter, surfaces }: KindCh
           />
         );
       })}
-      {surfaces.length > 0 && <Box aria-hidden="true" sx={{ width: "1px", alignSelf: "stretch", minHeight: 20, bgcolor: "divider", mx: 0.25, flexShrink: 0 }} />}
+      {surfaces.length > 0 && <Box aria-hidden="true" sx={{ width: "1px", height: 20, alignSelf: "center", bgcolor: "divider", mx: 0.25, flexShrink: 0 }} />}
       {surfaces.map((surface) => {
         const on = filter.surface.includes(surface);
         return (
