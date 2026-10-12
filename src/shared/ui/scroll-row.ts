@@ -30,3 +30,52 @@ export const SCROLL_ROW_SX = {
     maskImage: `linear-gradient(to right, transparent, currentColor ${FADE_PX}px, currentColor calc(100% - ${FADE_PX}px), transparent)`,
   },
 } as const;
+
+/** What `watchScrollRow` needs from a scroller; a real element satisfies it, and so does a fake in a test. */
+export type ScrollRowElement = {
+  scrollLeft: number;
+  scrollWidth: number;
+  clientWidth: number;
+  children: ArrayLike<unknown>;
+  toggleAttribute(name: string, force?: boolean): boolean;
+  addEventListener(type: "scroll", listener: () => void, options?: { passive: boolean }): void;
+  removeEventListener(type: "scroll", listener: () => void): void;
+};
+
+type Watcher = new (callback: () => void) => { observe(target: never, options?: never): void; disconnect(): void };
+
+/**
+ * Keeps `data-more-start` / `data-more-end` true to the scroller (§720 amended): recomputed on
+ * scroll, on a size change of the row or of any child, and, through a `MutationObserver` on the
+ * child list, whenever a child is added or removed (a soft navigation to a month with other
+ * surface chips keeps the instance, so the row's scroll position survives and the cue must follow).
+ * The observers are constructors passed in, so a test can drive it without a browser. Returns the cleanup.
+ */
+export function watchScrollRow(el: ScrollRowElement, Resize?: Watcher, Mutation?: Watcher): () => void {
+  const update = () => {
+    const left = Math.abs(el.scrollLeft);
+    el.toggleAttribute("data-more-start", left > 1);
+    el.toggleAttribute("data-more-end", el.scrollWidth - el.clientWidth - left > 1);
+  };
+  const resize = Resize ? new Resize(update) : null;
+  const observeChildren = () => {
+    resize?.disconnect();
+    resize?.observe(el as never);
+    for (const child of Array.from(el.children)) resize?.observe(child as never);
+  };
+  const mutation = Mutation
+    ? new Mutation(() => {
+        observeChildren();
+        update();
+      })
+    : null;
+  update();
+  el.addEventListener("scroll", update, { passive: true });
+  observeChildren();
+  mutation?.observe(el as never, { childList: true } as never);
+  return () => {
+    el.removeEventListener("scroll", update);
+    resize?.disconnect();
+    mutation?.disconnect();
+  };
+}

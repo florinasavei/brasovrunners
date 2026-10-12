@@ -85,6 +85,12 @@ test.describe("phase 4: the calendar under «Aspectul nou»", () => {
         el.scrollLeft = 0;
       });
 
+      // A laptop: everything fits, so nothing fades (the polling negation waits for the resize).
+      await page.setViewportSize({ width: 1280, height: 900 });
+      await expect(chips).not.toHaveAttribute("data-more-end", "");
+      await expect(chips).not.toHaveAttribute("data-more-start", "");
+      await page.setViewportSize({ width: 320, height: 568 });
+
       const grid = page.locator("#main").getByRole("table");
       await expect(grid).toBeVisible();
       const firstRowBottom = await grid.getByRole("cell").first().evaluate((el) => el.getBoundingClientRect().bottom + window.scrollY);

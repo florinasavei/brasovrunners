@@ -146,9 +146,9 @@
           "outlookWork": "Outlook for work or school",
           "ics": "Download the .ics file",
           "feed": "The calendar's address, for any app",
-          "hintAuto": "Subscribe: the calendar updates by itself when the club changes something, sometimes only after more than 24 hours. The .ics file is a copy from today; a change never reaches it.",
+          "hintAuto": "Subscribe: the calendar updates by itself when the club changes something, sometimes only after more than a day. The .ics file is a copy from today; a change never reaches it.",
           "hintPhone": "On Android, the Google Calendar app cannot add a calendar by its address: use calendar.google.com in a browser, “From URL”.",
-          "hintOutlook": "The Outlook phone app cannot add a calendar by its address. Subscribe once in a browser, on outlook.com (or on Microsoft 365 for a work account): it then shows in the app too. If the window does not open, in Outlook on the web add a calendar, choose “Subscribe from web” and paste the address above."
+          "hintOutlook": "The Outlook phone app cannot add a calendar by its address. Subscribe once in a browser, on outlook.com (or on Microsoft 365 for a work or school account): it then shows in the app too. If the window does not open, in Outlook on the web add a calendar, choose “Subscribe from web” and paste the address above."
         }
       }
     },

@@ -3,7 +3,7 @@
 import Box from "@mui/material/Box";
 import type { SxProps, Theme } from "@mui/material/styles";
 import { useEffect, useRef, type ReactNode } from "react";
-import { SCROLL_ROW_SX } from "@/shared/ui/scroll-row";
+import { SCROLL_ROW_SX, watchScrollRow } from "@/shared/ui/scroll-row";
 
 /**
  * A row that scrolls sideways and shows it (§720 amended): `SCROLL_ROW_SX`'s visible scrollbar,
@@ -35,20 +35,11 @@ export default function ScrollRow({
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const update = () => {
-      const left = Math.abs(el.scrollLeft);
-      el.toggleAttribute("data-more-start", left > 1);
-      el.toggleAttribute("data-more-end", el.scrollWidth - el.clientWidth - left > 1);
-    };
-    update();
-    el.addEventListener("scroll", update, { passive: true });
-    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(update);
-    observer?.observe(el);
-    for (const child of Array.from(el.children)) observer?.observe(child);
-    return () => {
-      el.removeEventListener("scroll", update);
-      observer?.disconnect();
-    };
+    return watchScrollRow(
+      el,
+      typeof ResizeObserver === "undefined" ? undefined : ResizeObserver,
+      typeof MutationObserver === "undefined" ? undefined : MutationObserver,
+    );
   }, []);
   return (
     <Box ref={ref} role={role} aria-label={ariaLabel} data-testid={testId} sx={[SCROLL_ROW_SX, ...(Array.isArray(sx) ? sx : [sx])]}>
