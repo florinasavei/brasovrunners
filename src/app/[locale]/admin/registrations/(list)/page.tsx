@@ -58,7 +58,9 @@ import {
   parseListQuery,
   pageCount,
 } from "@/modules/staff-identity/domain/admin-list-query";
-import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
+import AdminTable, { type AdminColumn, type AdminLeadRow } from "@/modules/staff-identity/ui/AdminTable";
+import { invitationState } from "@/modules/registrations/domain/invitations";
+import { listEventInvitations } from "@/modules/registrations/invitation-repository";
 import Panel from "@/shared/ui/Panel";
 import InvitationsPanel from "@/modules/registrations/ui/InvitationsPanel";
 import { inviteAction, resendInvitationAction, withdrawInvitationAction } from "../invitation-actions";
@@ -424,6 +426,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           )}
           {/* On the hidden list (§643, §647): counted in no place, for every role that reads the list. */}
           {row.outsideCapacity && <HiddenListChip label={t("registrations.outside.chip")} hint={t("registrations.outside.hint")} testId="outside-chip" />}
+          {/* Registered from an invitation by email (§737, amending §647): who came in that way, at a glance. */}
+          {row.invited && <Chip size="small" variant="outlined" color="info" label={t("registrations.invitedChip")} data-testid="invited-chip" />}
           {/* A family on one address (§543): who else is registered with it, each a link to their row. */}
           <FamilyChip
             label={t("registrations.familyChip")}
@@ -634,6 +638,58 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       render: (row) => formatDay(row.submittedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }),
     },
   ];
+
+  /*
+    The event's invitations in the table itself (§737; the owner, on this list: «și aici ar trebui să văd
+    cumva lista de invitații»): every invitation not accepted yet — sent, expired or withdrawn — as a row
+    above the registrations, in the same columns, on a quiet fill. An accepted one is a registration
+    already, marked «Invitat» in its own row. Only on the first page of one event's list with no other
+    filter: an invitation has no state, number or city a filter could ask about, and it is not counted in
+    the results.
+  */
+  const otherFilters = Boolean(status || clubMember || bounced || promo === "1" || outside === "1" || memberBib === "asked" || q);
+  const leadEvent = filters.eventId && query.page === 1 && !otherFilters ? filters.eventId : null;
+  const leadNow = new Date();
+  const leadInvitations = leadEvent ? (await listEventInvitations(db, leadEvent)).filter((row) => invitationState(row, leadNow) !== "accepted") : [];
+  const leadTitle = leadEvent ? (events.find((event) => event.id === leadEvent)?.title ?? null) : null;
+  const leadWhen = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });
+  const leadRows: AdminLeadRow[] = leadInvitations.map((row) => {
+    const state = invitationState(row, leadNow);
+    return {
+      key: row.id,
+      testId: "registrations-invitation-row",
+      cells: {
+        name: (
+          <Stack spacing={0.5} sx={{ alignItems: "flex-start" }}>
+            <Box component="span" sx={{ fontWeight: 600 }}>
+              {row.name}
+            </Box>
+            <Chip size="small" variant="outlined" color="info" label={t("registrations.invitationRow.chip")} />
+          </Stack>
+        ),
+        status: <Chip size="small" color={state === "sent" ? "info" : "default"} label={t(`registrations.invitationRow.state.${state}`)} />,
+        untilWhen:
+          state === "sent"
+            ? t("invitations.until", { deadline: leadWhen(row.expiresAt) })
+            : state === "withdrawn" && row.withdrawnAt
+              ? t("invitations.withdrawnAt", { at: leadWhen(row.withdrawnAt) })
+              : t("invitations.expiredAt", { at: leadWhen(row.expiredAt ?? row.expiresAt) }),
+        event: leadTitle ?? "",
+        email: (
+          <Box component="span" sx={{ wordBreak: "break-all" }}>
+            {row.email}
+          </Box>
+        ),
+        submitted: leadWhen(row.sentAt),
+      },
+      // To the invitation itself, where «Retrimite» and «Retrage» are.
+      actions: (
+        <GlyphButton icon="send" href="#registrations-invitations" variant="text" size="small" sx={TAP_TARGET}>
+          {t("registrations.invitationRow.open")}
+        </GlyphButton>
+      ),
+    };
+  });
 
   return (
     <Stack spacing={3}>
@@ -1479,6 +1535,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         tableId="registrations"
         columns={columns}
         rows={rows}
+        leadRows={leadRows}
         rowKey={(row) => row.id}
         basePath={basePath}
         currentParams={listParams}

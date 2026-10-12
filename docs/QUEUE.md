@@ -142,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.02` | invitations: name and email rows, the invited people in a table, «Invitat» on the list (§737) |
 | `BR-V3.01` | «Invită pe email» on the registrations page; a new race reachable before its first registration (§736) |
 | `BR-V3.00` | race numbers with leading zeros (001) from the bib designer (§735) |
 | `BR-V2.99` | the calendar closer to the mock-up under «Aspectul nou» (§734) |

@@ -16,6 +16,7 @@ import {
   invitationRaises,
   invitationState,
   parseInvitationLines,
+  readInviteeRows,
   validInvitationDays,
 } from "@/modules/registrations/domain/invitations";
 import { eventInvitationsClause } from "@/modules/registrations/invitation-words";
@@ -97,6 +98,22 @@ describe("§647 «Nume <adresă>, una pe rând»", () => {
       { name: "Dan Pop", email: "dan@example.invalid", line: 5 },
     ]);
     expect(parsed.unread).toEqual([6, 7, 8]);
+  });
+});
+
+describe("§737 «Nume» and «Email», one row per person", () => {
+  it("reads each row's name and address, skips an empty row, and names the rows it cannot read", () => {
+    const rows = readInviteeRows(
+      ["Ana  Pop", "", "Bogdan", "", "Carmen Dobre", "Dan Pop"],
+      ["ana@example.invalid", "", "", "solo@example.invalid", "not an address", " dan@example.invalid "],
+    );
+    expect(rows.people).toEqual([
+      { name: "Ana Pop", email: "ana@example.invalid", line: 1 },
+      { name: "Dan Pop", email: "dan@example.invalid", line: 6 },
+    ]);
+    // A name with no address, an address with no name, an address that is not one.
+    expect(rows.unread).toEqual([3, 4, 5]);
+    expect(readInviteeRows([], [])).toEqual({ people: [], unread: [] });
   });
 });
 
