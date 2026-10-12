@@ -110,7 +110,7 @@ describe("§311 the printed bibs of cancelled registrations", () => {
 
     const voided = await voidBibsFor(db, eventId);
     expect(voided).toHaveLength(1);
-    expect(voided[0]).toMatchObject({ id: gone.id, bibNumber: 27, registeredName: "Plecată", status: "CANCELLED", voidedAt: NOW });
+    expect(voided[0]).toMatchObject({ id: gone.id, bibNumber: 27, raceNumberFormat: "plain", registeredName: "Plecată", status: "CANCELLED", voidedAt: NOW });
   });
 
   /**
@@ -135,7 +135,7 @@ describe("§311 the printed bibs of cancelled registrations", () => {
     expect(result.ok && result.registration.bibPrintedAt).toEqual(printed);
 
     expect(await voidBibsFor(db, eventId)).toEqual([
-      { id: gone.id, bibNumber: 27, registeredName: "Din link", status: "CANCELLED", voidedAt: NOW },
+      { id: gone.id, bibNumber: 27, raceNumberFormat: "plain", registeredName: "Din link", status: "CANCELLED", voidedAt: NOW },
     ]);
   });
 

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.99-2026-10-12 -->
+<!-- PROJECT_BASELINE: BR-V3.00-2026-10-12 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.99-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.00-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -1873,6 +1873,7 @@ way through every step, and none of them is a way around the allocator.
 68. Given the sheet's route with `part=members` or `part=others`, then the file holds only the members' bibs or every bib but theirs, named `-members` or `-without-members`; any other value is the whole sheet; the role check is unchanged; and no download, whole or part, marks a bib printed — the bibs page shows «Doar numerele membrilor (PDF)» and «Fără numerele membrilor (PDF)» only while the sheet holds a member's bib (2026-10-09, `DECISIONS.md` §681).
 69. A members' design drawn «Tot numărul» fills the card above the sponsors' strip and the small print with the members' background: their photograph under the kit's navy at 0.7, else their colour when white reads on it at 4.5 : 1 or more, else the kit's gradient `GRADIENT.deep` → `GRADIENT.mid`. The lockup, the race, the number and the name are white on it, and the label is an orange stripe in capitals with the body ink, its foot on the background's foot. The sheet and the picture draw it at the same points, and the ordinary bib is unchanged (2026-10-10, `DECISIONS.md` §695).
 70. A design saved before the members' style existed reads as «Doar banda de sus» and prints as it did. A photograph that could not be fetched prints the colour or the gradient. A colour on which white does not read at AA prints the gradient, and the editor marks it «doar pentru bandă» (2026-10-10, `DECISIONS.md` §695).
+71. An event's bib design may write race numbers with leading zeros to three or four digits («Cum arată numărul»; default as the number is); the bib, its preview, every email and page that shows the number, the desk and the backoffice write it the same way, while the stored number, typed numbers and the exports stay integers (2026-10-12, `DECISIONS.md` §735).
 
 **Verification:** integration `registrations/bibs.test.ts`, `registrations/race-day.test.ts`, `cms/bib-design.test.ts`; unit `registrations/bibs-pdf.test.ts`, `registrations/bib-design.test.ts`; integration `registrations/void-bibs.test.ts` (16, 17); unit `registrations/race-number.test.ts` (16); unit `registrations/bib-footer.test.ts` (19); e2e `bib-design.spec.ts` (19)
 

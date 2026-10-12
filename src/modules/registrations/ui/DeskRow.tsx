@@ -10,7 +10,7 @@ import type { Locale } from "@/i18n/routing";
 import type { DeskRegistration } from "@/modules/registrations/admin-repository";
 import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
 import { identityDocumentsOf } from "@/modules/registrations/domain/identity-documents";
-import { raceNumberOf } from "@/modules/registrations/domain/race-number";
+import { formatRaceNumber, raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { isTerminalStatus } from "@/modules/registrations/domain/state-machine";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
@@ -111,6 +111,8 @@ export default async function DeskRow({
 
   // The number once the registration is confirmed (§548), a dash before; a row that is over keeps its own, retired.
   const number = raceNumberOf(row);
+  // As the event writes it (§735): «007» on the desk when the bib in the volunteer's hand says «007».
+  const written = (value: number) => formatRaceNumber(value, row.raceNumberFormat);
 
   /*
     A registration that is over (§311). The state machine offers it nothing here — `canConfirm`
@@ -162,7 +164,7 @@ export default async function DeskRow({
             })}
           </Typography>
           {printedVoid && (
-            <Typography variant="body2">{t("desk.voidPrinted", { number: row.bibNumber as number })}</Typography>
+            <Typography variant="body2">{t("desk.voidPrinted", { number: written(row.bibNumber as number) })}</Typography>
           )}
         </Alert>
       )}
@@ -187,7 +189,7 @@ export default async function DeskRow({
                 textDecoration: terminal && number !== null ? "line-through" : "none",
               }}
             >
-              {number ?? "—"}
+              {number !== null ? written(number) : "—"}
             </Typography>
             <Typography component="span" sx={{ fontWeight: 600, fontSize: "1.05rem" }}>
               {row.registeredName}
@@ -255,7 +257,7 @@ export default async function DeskRow({
               {/* eslint-disable-next-line @next/next/no-img-element -- our own PNG, drawn at a fixed size */}
               <img
                 src={`/api/admin/events/${row.eventId}/bibs/preview?registration=${row.id}&locale=${locale}`}
-                alt={t("desk.bibAlt", { number })}
+                alt={t("desk.bibAlt", { number: written(number) })}
                 width={BIB_IMAGE.width}
                 height={BIB_IMAGE.height}
                 loading="lazy"

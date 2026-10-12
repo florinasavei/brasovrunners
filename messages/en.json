@@ -2201,6 +2201,13 @@
         "showLogo": "The club's logo",
         "cutMarks": "Cut marks on the sheet",
         "numberScale": "The number's size",
+        "numberFormat": "How the number is written",
+        "numberFormatHelp": "The same on the bib, in the emails, on the website and at the desk.",
+        "numberFormats": {
+          "plain": "1, 2, 3 — as it is",
+          "pad3": "001, 002, 003 — three digits",
+          "pad4": "0001, 0002, 0003 — four digits"
+        },
         "namePosition": "Where the name sits",
         "scales": {
           "small": "Small",

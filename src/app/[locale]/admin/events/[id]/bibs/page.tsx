@@ -16,6 +16,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { isUuid } from "@/shared/ids";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import QuietHelp from "@/shared/ui/QuietHelp";
+import { formatRaceNumber } from "@/modules/registrations/domain/race-number";
 
 type Props = { params: Promise<{ locale: string; id: string }> };
 
@@ -173,7 +174,7 @@ export default async function EventBibsPage({ params }: Props) {
               <Box
                 component="img"
                 src={`/api/admin/events/${id}/bibs/preview?registration=${bib.id}&locale=${locale}${bib.member ? "&m=1" : ""}`}
-                alt={t("bibs.previewAlt", { number: bib.bibNumber, name: bib.registeredName })}
+                alt={t("bibs.previewAlt", { number: formatRaceNumber(bib.bibNumber, event?.design.numberFormat), name: bib.registeredName })}
                 width={BIB_IMAGE.width}
                 height={BIB_IMAGE.height}
                 loading="lazy"
