@@ -2212,6 +2212,13 @@
         "showLogo": "Sigla clubului",
         "cutMarks": "Repere de tăiere pe foaie",
         "numberScale": "Mărimea numărului",
+        "numberFormat": "Cum arată numărul",
+        "numberFormatHelp": "La fel pe număr, în emailuri, pe site și la masă.",
+        "numberFormats": {
+          "plain": "1, 2, 3 — așa cum e",
+          "pad3": "001, 002, 003 — trei cifre",
+          "pad4": "0001, 0002, 0003 — patru cifre"
+        },
         "namePosition": "Unde stă numele",
         "scales": {
           "small": "Mic",
@@ -8127,6 +8134,8 @@
       }
     },
     "invitations": {
+      "toolbar": "Invită pe email",
+      "toolbarChooseEvent": "Invită pe email: alege întâi evenimentul",
       "link": "Trimite invitații",
       "title": "Invitații",
       "intro": "Un loc păstrat pentru o persoană aleasă, până la un termen: primește un email cu un link spre formular.",

@@ -45,7 +45,7 @@ import SexAndShirtLine from "@/modules/registrations/ui/SexAndShirtLine";
 import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
 import { isMinorOn } from "@/modules/registrations/domain/age";
 import { fieldId } from "@/shared/forms/outcome";
-import { raceNumberOf } from "@/modules/registrations/domain/race-number";
+import { formatRaceNumber, raceNumberTextOf } from "@/modules/registrations/domain/race-number";
 import { memberBibOf } from "@/modules/registrations/domain/member-bib";
 import { canResendReminder, deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import { canTransition, isTerminalStatus } from "@/modules/registrations/domain/state-machine";
@@ -387,7 +387,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   */
   const printedBib = registration.bibPrintedAt !== null && registration.bibNumber !== null ? registration.bibNumber : null;
   const voidBib = printedBib !== null && isTerminalStatus(registration.status) ? printedBib : null;
-  const voidSuffix = voidBib !== null ? ` · ${tr("registrations.bibVoid", { number: voidBib })}` : "";
+  // A number as the event writes it (§735): «007» here when the bib says «007».
+  const written = (number: number) => formatRaceNumber(number, registration.raceNumberFormat);
+  const voidSuffix = voidBib !== null ? ` · ${tr("registrations.bibVoid", { number: written(voidBib) })}` : "";
   // The desk verbs (BR-REQ-037-07, -08), here too, so an Administrator at a laptop has them.
   const canConfirmNow =
     registration.status === "PENDING_EMAIL_CONFIRMATION" ||
@@ -445,7 +447,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         <Chip size="small" label={REGISTRATION_STATUS_LABEL[registration.status]} />
         {/* A printed bib nobody may wear (§311): the number stays retired, the paper comes out of the pile. */}
         {voidBib !== null && (
-          <Chip size="small" color="error" variant="outlined" label={tr("registrations.bibVoid", { number: voidBib })} data-testid="void-bib" />
+          <Chip size="small" color="error" variant="outlined" label={tr("registrations.bibVoid", { number: written(voidBib) })} data-testid="void-bib" />
         )}
         {registration.kind === "TEST" && (
           <Chip size="small" color="warning" label={tr("registrations.testKind")} />
@@ -470,7 +472,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       </Stack>
       {/* Where this person is, as steps (§145): the same derivation the list's "Etapă"
           column uses, so the page never contradicts the row that led here. */}
-      <StaffJourney journey={journeyOf(registration)} bibNumber={raceNumberOf(registration)} variant="full" />
+      <StaffJourney journey={journeyOf(registration)} bibNumber={raceNumberTextOf(registration)} variant="full" />
       <Typography variant="body2" color="text.secondary">
         {registration.participantEmail} · {registration.eventTitle ?? registration.eventId}
       </Typography>
@@ -944,8 +946,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   {registration.bibNumber === null
                     ? tr("registrations.bibNone")
                     : registration.bibPrintedAt !== null
-                      ? tr("registrations.bibSettledPrinted", { number: registration.bibNumber })
-                      : tr("registrations.bibSettled", { number: registration.bibNumber })}
+                      ? tr("registrations.bibSettledPrinted", { number: written(registration.bibNumber) })
+                      : tr("registrations.bibSettled", { number: written(registration.bibNumber) })}
                 </Typography>
                 {/* The members' race number (§664), beside the number: which bib the sheet prints for this row. */}
                 {memberBib && (
@@ -1288,7 +1290,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               // The printed bib is named before the press (§311), not discovered in the pile.
               body:
                 printedBib !== null
-                  ? `${tr("confirm.cancelRegistrationPrintedBody", { number: printedBib })} ${tr("confirm.cancelRegistrationBody")}`
+                  ? `${tr("confirm.cancelRegistrationPrintedBody", { number: written(printedBib) })} ${tr("confirm.cancelRegistrationBody")}`
                   : tr("confirm.cancelRegistrationBody"),
               ...(registration.kind === "TEST" ? {} : { email: words.email(1) }),
               confirmLabel: tr("registrations.cancelAction"),

@@ -22,7 +22,7 @@ import { awaitingItsFirstEmail, familyEmailQueued, familyReservationHolds, offer
 import { promoListed } from "./sponsor-list";
 import { healthNoteShown } from "./domain/health-note";
 import { memberCanonicalEmails } from "./member-ticks";
-import { OFFERS_MEMBER_BIB } from "@/modules/events/repository";
+import { OFFERS_MEMBER_BIB, RACE_NUMBER_FORMAT } from "@/modules/events/repository";
 import type { QueueOrder } from "./domain/waitlist";
 import { isRejectionCause, rejectionCause, type RejectionCause } from "@/modules/notifications/domain/rejection-cause";
 import { recipientRoleOf, type RecipientRole } from "@/modules/notifications/domain/email-audience";
@@ -31,6 +31,7 @@ import type { DeskEmailState, RegistrationEmailState, RegistrationEmailStateDeta
 import { deskEmailStateSql, needsEmailActionSql, registrationEmailStateDetailSql, registrationEmailStateSql } from "./email-state";
 import type { PlaceDeadlineCounts, PlaceDeadlineEvent } from "./domain/place-deadlines";
 import { eventInvitations } from "@/db/schema/event-invitations";
+import type { RaceNumberFormat } from "./domain/race-number";
 
 /**
  * Read queries for the Administrator-only backoffice (AGENTS.md §15.8, §15.10; BR-REQ-060-01,
@@ -113,6 +114,8 @@ export type RegistrationListRow = {
   confirmedAt: Date | null;
   /** The race number, drawn at the confirmation (BR-REQ-038-01, §548); shown through `raceNumberOf`. */
   bibNumber: number | null;
+  /** How the event writes the number (§735): «007» when its bib says «007». */
+  raceNumberFormat: RaceNumberFormat;
   /** When the club last said this bib is on paper (§264); null while it is not. */
   bibPrintedAt: Date | null;
   checkedInAt: Date | null;
@@ -511,6 +514,8 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       submittedAt: registrations.submittedAt,
       confirmedAt: registrations.confirmedAt,
       bibNumber: registrations.bibNumber,
+      // How the event writes it (§735): «007» when its bib says «007».
+      raceNumberFormat: RACE_NUMBER_FORMAT,
       bibPrintedAt: registrations.bibPrintedAt,
       checkedInAt: registrations.checkedInAt,
       emailState: registrationEmailStateSql(),
@@ -783,6 +788,8 @@ export type RegistrationDetail = {
   expiryReason: string | null;
   /** Race day (BR-REQ-037-07, BR-REQ-037-08, BR-REQ-038-01). */
   bibNumber: number | null;
+  /** How the event writes the number (§735): «007» when its bib says «007». */
+  raceNumberFormat: RaceNumberFormat;
   /** Whether the settled number is on paper (§264): what the cancel confirmation warns about, and what a cancelled row's chip says (§311). */
   bibPrintedAt: Date | null;
   checkinCode: string | null;
@@ -839,6 +846,8 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
   const [row] = await db
     .select({
       bibNumber: registrations.bibNumber,
+      // How the event writes it (§735): «007» when its bib says «007».
+      raceNumberFormat: RACE_NUMBER_FORMAT,
       bibPrintedAt: registrations.bibPrintedAt,
       checkinCode: registrations.checkinCode,
   idDocument: latestIdDocument,
@@ -993,6 +1002,8 @@ export type EmergencySheetRow = EmergencyDetails & {
   id: string;
   registeredName: string;
   bibNumber: number | null;
+  /** How the event writes the number (§735): «007» when its bib says «007». */
+  raceNumberFormat: RaceNumberFormat;
   checkedInAt: Date | null;
 };
 
@@ -1005,6 +1016,8 @@ export async function listEmergencySheet<T extends Record<string, unknown>>(
       id: registrations.id,
       registeredName: registrations.registeredName,
       bibNumber: registrations.bibNumber,
+      // How the event writes it (§735): «007» when its bib says «007».
+      raceNumberFormat: RACE_NUMBER_FORMAT,
       checkedInAt: registrations.checkedInAt,
       phone: registrations.phone,
       emergencyContactName: registrations.emergencyContactName,
@@ -1125,6 +1138,8 @@ export type DeskRegistration = {
   /** The event's own zone, which the desk reads its date in (§349). */
   eventTimezone: string;
   bibNumber: number | null;
+  /** How the event writes the number (§735): «007» when its bib says «007». */
+  raceNumberFormat: RaceNumberFormat;
   /**
    * Whether the settled number is on paper (§264), and when the row left the live states
    * (§311). Together they are what the desk says in red about a cancelled or expired runner
@@ -1164,6 +1179,8 @@ const DESK_COLUMNS = {
   eventStartsAt: events.startsAt,
   eventTimezone: events.timezone,
   bibNumber: registrations.bibNumber,
+  // How the event writes it (§735): «007» when its bib says «007».
+  raceNumberFormat: RACE_NUMBER_FORMAT,
   bibPrintedAt: registrations.bibPrintedAt,
   cancelledAt: registrations.cancelledAt,
   expiredAt: registrations.expiredAt,
@@ -1403,8 +1420,17 @@ export async function listOutboxHistory<T extends Record<string, unknown>>(
   });
 }
 
-/** Events with at least one registration, for the list page's filter — Admin has no reason to
- * see events nobody has registered for on this screen; the CMS already lists all of them. */
+/**
+ * The events the list page's filter offers: every event with at least one registration, and every
+ * event that takes registrations on this site (`INTERNAL`) even before its first (§736, amending §647;
+ * the owner: «partea de invitații nu e super clară… era ascunsă»). «Invitații» is drawn only on a list
+ * about one event, and a new race with nobody registered yet was not in this list — so the club could
+ * not reach its invitations, and the editor's «Trimite invitații» link fell back to every event.
+ * Events registered elsewhere or not at all, with nobody here, stay out: the CMS lists those.
+ *
+ * The title in the language of the event's registrations, as before; in Romanian for an event
+ * nobody registered for yet.
+ */
 export async function listEventsWithRegistrations<T extends Record<string, unknown>>(
   db: Database<T>,
 ): Promise<Array<{ id: string; title: string | null; featured: boolean; membersOnly: boolean }>> {
@@ -1412,11 +1438,12 @@ export async function listEventsWithRegistrations<T extends Record<string, unkno
     // `membersOnly` (§552): the list's «Membri» chip on an event for the members alone.
     .selectDistinct({ id: events.id, title: eventTranslations.title, featured: events.featured, membersOnly: events.membersOnly })
     .from(events)
-    .innerJoin(registrations, eq(registrations.eventId, events.id))
+    .leftJoin(registrations, eq(registrations.eventId, events.id))
     .leftJoin(
       eventTranslations,
-      and(eq(eventTranslations.eventId, events.id), eq(eventTranslations.locale, registrations.locale)),
+      and(eq(eventTranslations.eventId, events.id), eq(eventTranslations.locale, sql`coalesce(${registrations.locale}, 'ro')`)),
     )
+    .where(sql`${registrations.id} is not null or ${events.registrationMode} = 'INTERNAL'`)
     .orderBy(asc(eventTranslations.title));
 }
 
