@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.04-2026-10-12
+
+- **Route maps open by themselves** — an event's Strava or Garmin Connect map shows with the page, no press; the other tab's map loads when it is chosen. §739.
 ## BR-V3.03-2026-10-12
 
 - **Route maps** — the Strava tab comes first; Strava's map keeps what the club chose in Strava's embed builder (3D terrain, kilometres, the elevation profile, the surface), opens on the hybrid view when nothing is chosen, and every route map is tall enough to show its whole card. §738.

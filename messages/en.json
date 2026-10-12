@@ -503,14 +503,14 @@
       "garmin": {
         "tab": "Garmin Connect",
         "show": "Show the map on Garmin Connect",
-        "notice": "The map loads from Garmin when you press; Garmin sees your IP address.",
+        "notice": "The map comes from Garmin Connect; Garmin sees your IP address.",
         "open": "Open in Garmin Connect",
         "frame": "The route's map on Garmin Connect"
       },
       "strava": {
         "tab": "Strava",
         "show": "Show the map on Strava",
-        "notice": "The map loads from Strava when you press; Strava sees your IP address.",
+        "notice": "The map comes from Strava; Strava sees your IP address.",
         "open": "Open in Strava",
         "frame": "The route's map on Strava"
       },
