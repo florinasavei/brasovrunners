@@ -254,6 +254,16 @@ export default async function CalendarPage({ params, query: asked, period: segme
         <Typography variant="body1" color="text.secondary" sx={{ mt: 0.75, fontSize: "1.125rem" }}>
           {t("calendar.look.subline")}
         </Typography>
+        {/* «Alergăm împreună în Brașov.» in the handwriting face (Caveat, §460), tilted, a stroke of
+            the accent under it — the mock-up's signature at the block's right, from `lg` where the
+            line beside it leaves room. Decoration that is also words, so it is read, not hidden. */}
+        <Box component="p" data-testid="calendar-motto" sx={MOTTO_SX}>
+          <Box component="span" sx={{ display: "block" }}>{t("calendar.look.mottoLead")}</Box>
+          <Box component="span" sx={{ display: "block", pl: "1.25em" }}>{t("calendar.look.mottoRest")}</Box>
+          <Box component="svg" viewBox="0 0 200 16" aria-hidden="true" focusable="false" sx={MOTTO_STROKE_SX}>
+            <path d="M4 12 C 50 4, 120 2, 196 6" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+          </Box>
+        </Box>
       </Box>
 
       {/* The "last copy" line (§281). */}
@@ -344,6 +354,29 @@ const MOUNTAIN_SX = {
   pointerEvents: "none",
   [UNDER_LOOK_DARK]: { opacity: 0.09 },
 } as const;
+
+/**
+ * The motto: the handwriting face, never preloaded (§460) — only a page that draws it fetches the
+ * file — tilted a little and set at the block's right, over the ridge, from `lg`, where the line beside it leaves room.
+ */
+const MOTTO_SX = {
+  display: { xs: "none", lg: "block" },
+  position: "absolute",
+  right: 56,
+  top: "50%",
+  m: 0,
+  transform: "translateY(-50%) rotate(-6deg)",
+  fontFamily: "var(--font-signature), cursive",
+  fontWeight: 500,
+  fontSize: "2rem",
+  lineHeight: 1.05,
+  color: COLOR.inkStrong,
+  pointerEvents: "none",
+  [UNDER_LOOK_DARK]: { color: COLOR_DARK.inkStrong },
+} as const;
+
+/** The stroke under the motto, in the club's hot accent shade. */
+const MOTTO_STROKE_SX = { display: "block", width: "100%", height: 12, mt: 0.5, color: "primary.light" } as const;
 
 /** The title block's line: the display face at 800, set tight, in the stronger ink. */
 const TAGLINE_SX = {

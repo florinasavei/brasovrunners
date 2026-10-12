@@ -43,6 +43,14 @@ export type KindChipsProps = {
  * reached from nowhere. A Server Component with typed props; every chip is strings and a glyph's
  * name.
  */
+/** The pill on a phone, under the look; every value names its `sm` too, MUI's small chip, so nothing reaches a wider screen. */
+const PHONE_PILL_SX = {
+  height: { xs: "20px", sm: "24px" },
+  fontSize: { xs: "0.6875rem", sm: "0.8125rem" },
+  "& .MuiChip-label": { px: { xs: "6px", sm: "8px" } },
+  "& .MuiChip-icon": { fontSize: { xs: "13px", sm: "18px" }, ml: { xs: "5px", sm: "4px" }, mr: { xs: "-3px", sm: "-4px" } },
+} as const;
+
 export default async function KindChips({ path, kind, filter, surfaces }: KindChipsProps) {
   const t = await getTranslations("Events");
   const tEvent = await getTranslations("Event");
@@ -75,7 +83,10 @@ export default async function KindChips({ path, kind, filter, surfaces }: KindCh
         scrollSnapType: "x proximity",
         "& > a": { scrollSnapAlign: "start", flexShrink: 0 },
         // Drawn only under the look (onlyUnderLook rule); the pills are ChipLink own small ones, inside its 44-pixel links.
-        [UNDER_LOOK]: { display: "flex" },
+        // On a phone they are smaller still (the owner, 2026-10-12: «chipurile trebuie să fie mult mai mici pe telefon»):
+        // a 20-pixel pill, the 11-pixel word, a 13-pixel glyph and tighter sides, so three or four show at 360 pixels.
+        // The link around each stays 44 pixels tall (BR-REQ-041-01 criterion 6). From `sm`, MUI's small pill as before.
+        [UNDER_LOOK]: { display: "flex", columnGap: { xs: "4px", sm: "6px" }, "& .MuiChip-root": PHONE_PILL_SX },
       }}
     >
       {([null, ...EVENT_KINDS] as const).map((option) => {

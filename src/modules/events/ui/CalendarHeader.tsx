@@ -7,6 +7,8 @@ import Link from "next/link";
 import { getPathname } from "@/i18n/navigation";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { DENSITY } from "@/theme/density";
+import { FONT } from "@/theme/brand";
+import { LOOK_HEADING, UNDER_LOOK } from "@/theme/look";
 import { currentMonth, shiftMonth, type YearMonth, yearsAround } from "../domain/calendar";
 import { calendarAddress } from "../domain/calendar-path";
 import CalendarPicker from "./CalendarPicker";
@@ -76,6 +78,61 @@ export const TITLE_ON_A_PHONE_SX = {
   margin: { xs: "-1px", sm: 0 },
 } as const;
 
+/** The arrows beside the month's name: drawn only under the look, from `sm`. */
+const TITLE_ARROW_SX = {
+  display: "none",
+  color: "text.primary",
+  [UNDER_LOOK]: { display: { xs: "none", sm: "inline-flex" } },
+} as const;
+
+/** The period row's arrows: everywhere off the look; under it on a phone only, where the title's pair is not drawn. */
+const ROW_ARROW_SX = { [UNDER_LOOK]: { display: { xs: "inline-flex", sm: "none" } } } as const;
+
+/** «Azi» under the look: a small outlined button rather than a bare link, its 44-pixel target kept. */
+const TODAY_SX = {
+  display: "inline-flex",
+  [UNDER_LOOK]: {
+    "& > a": {
+      minHeight: { xs: 44, sm: "34px !important" },
+      px: 1.5,
+      border: 1,
+      borderColor: "divider",
+      borderRadius: "10px",
+      bgcolor: "background.paper",
+      color: "text.primary",
+      fontWeight: 600,
+      textDecoration: "none",
+      "&:hover": { borderColor: "primary.main", color: "primary.main" },
+    },
+  },
+} as const;
+
+/** The month's name under the look: the display face, larger, set tight. */
+const TITLE_UNDER_LOOK = {
+  [UNDER_LOOK]: { fontFamily: `${FONT.lookDisplay}, ${FONT.fallback}`, ...LOOK_HEADING, fontSize: { sm: "1.5rem", md: "1.75rem" }, minWidth: { sm: "11ch" }, textAlign: "center" },
+} as const;
+
+/**
+ * A pair of period chips under the look: one segmented control — a pale track, the chosen segment
+ * a raised card in the accent's ink (the mock-up's «Lună | An | Listă»). Off, the pills as before.
+ */
+const SEGMENTED_SX = {
+  [UNDER_LOOK]: {
+    alignItems: "center",
+    // The track's padding and border from `sm` only: on a phone they put the chip row 8 pixels taller than its 44-pixel links.
+    p: { sm: "3px" },
+    borderRadius: "12px",
+    bgcolor: "action.hover",
+    border: { sm: 1 },
+    // In the same `sm` rule as the shorthand, after it: a base value would be reset to `currentColor` by it.
+    borderColor: { sm: "divider" },
+    "& > a": { minHeight: { xs: 44, sm: 36 }, ml: "0 !important" },
+    "& .MuiChip-root": { height: 30, borderRadius: "9px", px: 0.75, fontWeight: 600, border: 0, bgcolor: "transparent", color: "text.secondary" },
+    "& .MuiChip-root:hover": { color: "text.primary" },
+    "& a[aria-current='page'] .MuiChip-root": { bgcolor: "background.paper", color: "primary.main", boxShadow: "0 1px 3px var(--mui-palette-divider), 0 1px 1px var(--mui-palette-divider)" },
+  },
+} as const;
+
 export default async function CalendarHeader({
   view,
   now,
@@ -104,6 +161,8 @@ export default async function CalendarHeader({
   const thisMonth = currentMonth(now, CLUB_TIME_ZONE);
   const href = (period: CalendarView, periodLayout: CalendarLayout) => calendarAddress(basePath, { view: period, layout: periodLayout, query, thisMonth });
   const { previous: previousHref, next: nextHref } = calendarStepHrefs({ view, layout, query, locale, now });
+  const previousLabel = view.kind === "month" ? t("calendar.previous") : t("calendar.previousYear");
+  const nextLabel = view.kind === "month" ? t("calendar.next") : t("calendar.nextYear");
 
   // The months from any year, in the reader's language.
   const monthNames = Array.from({ length: 12 }, (_, i) =>
@@ -114,9 +173,18 @@ export default async function CalendarHeader({
     <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1, mb: { xs: DENSITY.gapSm, sm: 1.5 } }}>
       {/* On a phone the selects already say the month and the year (§487), so the heading is
           there for assistive technology and for the section's name, not drawn a second time. */}
-      <Typography id="calendar-title" component="h2" variant="h2" sx={{ fontSize: "1.25rem", textTransform: "capitalize", ...TITLE_ON_A_PHONE_SX }}>
-        {title}
-      </Typography>
+      {/* Under «Aspectul nou», from `sm`, the arrows stand either side of the month's name (the
+          mock-up's ‹ Octombrie 2026 ›) and the period row's pair is not drawn; on a phone the row
+          keeps them, beside «Azi», where the heading is not drawn (§487). Off, as before. */}
+      {/* `contents` on a phone: the heading is out of flow there (§487) and the arrows are not drawn,
+          so the box must not take a line of the wrapping row (it cost the first week 8 pixels). */}
+      <Box sx={{ display: { xs: "contents", sm: "flex" }, alignItems: "center", gap: 0.5 }}>
+        <CalendarStepLink href={previousHref} label={previousLabel} direction="previous" sx={TITLE_ARROW_SX} />
+        <Typography id="calendar-title" component="h2" variant="h2" sx={{ fontSize: "1.25rem", textTransform: "capitalize", ...TITLE_ON_A_PHONE_SX, ...TITLE_UNDER_LOOK }}>
+          {title}
+        </Typography>
+        <CalendarStepLink href={nextHref} label={nextLabel} direction="next" sx={TITLE_ARROW_SX} />
+      </Box>
       <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", columnGap: 1, rowGap: { xs: 0, sm: 1 }, width: { xs: "100%", sm: "auto" } }}>
         {/* Month or year, by select (§116) — the arrows step one at a time, "today" resets.
             One row that never wraps (§487): on a phone the selects give up their width to the
@@ -136,17 +204,19 @@ export default async function CalendarHeader({
           labels={{ month: t("calendar.pickMonth"), year: t("calendar.pickYear") }}
         />
         <Stack direction="row" spacing={{ xs: 0, sm: 0.5 }} sx={{ alignItems: "center", flexShrink: 0 }}>
-          <CalendarStepLink href={previousHref} label={view.kind === "month" ? t("calendar.previous") : t("calendar.previousYear")} direction="previous" />
-          <Link href={href({ kind: "month", month: thisMonth }, layout)} prefetch={false} style={{ fontSize: "0.875rem", minHeight: 44, display: "inline-flex", alignItems: "center" }}>
-            {t("calendar.today")}
-          </Link>
-          <CalendarStepLink href={nextHref} label={view.kind === "month" ? t("calendar.next") : t("calendar.nextYear")} direction="next" />
+          <CalendarStepLink href={previousHref} label={previousLabel} direction="previous" sx={ROW_ARROW_SX} />
+          <Box component="span" sx={TODAY_SX}>
+            <Link href={href({ kind: "month", month: thisMonth }, layout)} prefetch={false} style={{ fontSize: "0.875rem", minHeight: 44, display: "inline-flex", alignItems: "center" }}>
+              {t("calendar.today")}
+            </Link>
+          </Box>
+          <CalendarStepLink href={nextHref} label={nextLabel} direction="next" sx={ROW_ARROW_SX} />
         </Stack>
         </Box>
         {/* The two chip pairs on one row of their own on a phone (§487), the rule between them. */}
         <Box data-testid="calendar-chip-row" sx={{ display: "flex", alignItems: "center", flexWrap: "nowrap", columnGap: 1 }}>
         {/* The view: one month, or the whole year — small pills in 44px links (§158). */}
-        <Stack direction="row" spacing={0.5} role="group" aria-label={`${t("calendar.viewMonth")} / ${t("calendar.viewYear")}`}>
+        <Stack direction="row" spacing={0.5} role="group" aria-label={`${t("calendar.viewMonth")} / ${t("calendar.viewYear")}`} sx={SEGMENTED_SX}>
           <ChipLink href={href({ kind: "month", month }, layout)} label={t("calendar.viewMonth")} active={view.kind === "month"} current={view.kind === "month" ? "page" : undefined} />
           <ChipLink href={href({ kind: "year", year: month.year }, "grid")} label={t("calendar.viewYear")} active={view.kind === "year"} current={view.kind === "year" ? "page" : undefined} />
         </Stack>
@@ -156,10 +226,10 @@ export default async function CalendarHeader({
             set of four answers. The two pairs share a row on a phone too now (§487), so the rule
             stays on every width. */}
         {view.kind === "month" && (
-          <Box aria-hidden="true" sx={{ width: "1px", alignSelf: "stretch", minHeight: 20, bgcolor: "divider", mx: 0.5 }} />
+          <Box aria-hidden="true" sx={{ width: "1px", alignSelf: "stretch", minHeight: 20, bgcolor: "divider", mx: 0.5, [UNDER_LOOK]: { bgcolor: "transparent", mx: 0 } }} />
         )}
         {view.kind === "month" && (
-          <Stack direction="row" spacing={0.5} role="group" aria-label={`${t("calendar.layoutGrid")} / ${t("calendar.layoutList")}`}>
+          <Stack direction="row" spacing={0.5} role="group" aria-label={`${t("calendar.layoutGrid")} / ${t("calendar.layoutList")}`} sx={SEGMENTED_SX}>
             <ChipLink href={href(view, "grid")} label={t("calendar.layoutGrid")} active={layout === "grid"} current={layout === "grid" ? "page" : undefined} />
             <ChipLink href={href(view, "list")} label={t("calendar.layoutList")} active={layout === "list"} current={layout === "list" ? "page" : undefined} />
           </Stack>

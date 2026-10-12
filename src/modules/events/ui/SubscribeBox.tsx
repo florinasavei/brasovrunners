@@ -1,13 +1,12 @@
-import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import DownloadIcon from "@mui/icons-material/Download";
-import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import RssFeedIcon from "@mui/icons-material/RssFeed";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import CalendarAddress from "@/modules/events/ui/CalendarAddress";
+import { AppleLogo, GoogleLogo, OutlookLogo } from "@/modules/events/ui/calendar-app-logos";
 import { webcalUrl } from "@/modules/events/ical";
 import { calendarFeedLinks } from "@/modules/events/ui/CalendarIntroFold";
 import { DISCLOSURE_SUMMARY_SX, DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
@@ -38,12 +37,15 @@ export type SubscribeBoxProps = {
   addressId?: string;
 };
 
-/** One row: a 44-pixel link on a card, the glyph before the words. */
+/**
+ * One row: a 44-pixel link on a card, the app's own logo before the words and a chevron at the end
+ * (the mock-up's rows). The logo keeps its colours; the chevron is the quiet ink.
+ */
 const ROW_SX = {
   display: "flex",
   alignItems: "center",
   gap: 1.25,
-  minHeight: 44,
+  minHeight: 48,
   px: 1.5,
   border: 1,
   borderColor: "divider",
@@ -53,8 +55,12 @@ const ROW_SX = {
   textDecoration: "none",
   fontSize: "0.9375rem",
   fontWeight: 500,
-  "& > svg": { fontSize: 20, color: "text.secondary", flexShrink: 0 },
-  "&:hover": { borderColor: "text.secondary" },
+  boxShadow: "0 1px 2px var(--mui-palette-divider)",
+  transition: "border-color 120ms",
+  "& > svg": { width: 20, height: 20, fontSize: 20, flexShrink: 0 },
+  "& > svg[data-row-glyph]": { color: "text.secondary" },
+  "& > svg[data-row-end]": { ml: "auto", color: "text.secondary", fontSize: 18, width: 18, height: 18 },
+  "&:hover": { borderColor: "primary.main", "& > svg[data-row-end]": { color: "primary.main" } },
   "&:focus-visible": { outline: "2px solid", outlineColor: "primary.main", outlineOffset: 2 },
 } as const;
 
@@ -104,32 +110,37 @@ export default async function SubscribeBox({ locale, baseUrl, addressId = "calen
       <Box component="ul" aria-label={t("calendar.look.subscribe.rows")} sx={{ listStyle: "none", m: 0, p: 0, display: "grid", gap: 1 }}>
         <li>
           <Box component="a" href={links.google} target="_blank" rel="noopener noreferrer" sx={ROW_SX} data-testid="subscribe-google">
-            <EventAvailableIcon aria-hidden="true" />
+            <GoogleLogo />
             {t("calendar.look.subscribe.google")}
+            <ChevronRightIcon data-row-end aria-hidden="true" />
           </Box>
         </li>
         <li>
           <Box component="a" href={links.webcal} sx={ROW_SX} data-testid="subscribe-apple">
-            <CalendarMonthIcon aria-hidden="true" />
+            <AppleLogo />
             {t("calendar.look.subscribe.apple")}
+            <ChevronRightIcon data-row-end aria-hidden="true" />
           </Box>
         </li>
         <li>
           <Box component="a" href={outlookSubscribeUrl(links.feed, "personal")} target="_blank" rel="noopener noreferrer" sx={ROW_SX} data-testid="subscribe-outlook">
-            <CalendarTodayIcon aria-hidden="true" />
+            <OutlookLogo />
             {t("calendar.look.subscribe.outlook")}
+            <ChevronRightIcon data-row-end aria-hidden="true" />
           </Box>
         </li>
         <li>
           <Box component="a" href={outlookSubscribeUrl(links.feed, "work")} target="_blank" rel="noopener noreferrer" sx={ROW_SX} data-testid="subscribe-outlook-work">
-            <CalendarTodayIcon aria-hidden="true" />
+            <OutlookLogo />
             {t("calendar.look.subscribe.outlookWork")}
+            <ChevronRightIcon data-row-end aria-hidden="true" />
           </Box>
         </li>
         <li>
           <Box component="a" href={`/${locale}/events/calendar.ics`} sx={ROW_SX} data-testid="subscribe-ics">
-            <DownloadIcon aria-hidden="true" />
+            <DownloadIcon data-row-glyph aria-hidden="true" />
             {t("calendar.look.subscribe.ics")}
+            <ChevronRightIcon data-row-end aria-hidden="true" />
           </Box>
         </li>
       </Box>

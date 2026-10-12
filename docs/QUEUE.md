@@ -142,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.99` | the calendar closer to the mock-up under «Aspectul nou» (§734) |
 | `BR-V2.98` | the shop's chips on StatusChip (§728) · the picture field's words in one place (§729) · the smoke accepts the old root redirect (§730) · the members' current tab in view (§731) · home: the special events first, a setting (§732) · calendar chips smaller and scrollable; Outlook for personal and work accounts (§733) |
 | `BR-V2.97` | the header's label and the footer's two languages (§724) · «Eveniment special» in the filter (§725) · the home page reuses the listing's cards (§726) · the chains' build list reaches the builder (§727) |
 | `BR-V2.96` | the facelift's phase 4: the calendar (§720) · «Contact direct» after «Spune-ne ceva», right before the newsletter (§721) (§721) · the floating language switch and «Urmărește-ne» (§722) · the accent colour as a setting (§723) |

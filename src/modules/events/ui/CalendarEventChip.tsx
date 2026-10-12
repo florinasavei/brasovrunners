@@ -128,6 +128,11 @@ export default function CalendarEventChip({
           textDecoration: cancelled ? "line-through" : "none",
           "&:hover": { filter: "brightness(0.95)" },
           ...toneEntrySx(tone),
+          // Under the look, a grid entry from `sm` is two parts (the mock-up's): the dot, the glyphs
+          // and the time on the first line, the marks at its end, and the whole title under them on
+          // up to two lines — the title used to be cut after a letter or two. A phone's 40-pixel
+          // column keeps the stack of glyphs over the time.
+          ...(dense ? { [UNDER_LOOK]: { ...toneEntrySx(tone)[UNDER_LOOK], ...DENSE_UNDER_LOOK } } : {}),
         }}
         data-tone={tone}
       >
@@ -143,15 +148,15 @@ export default function CalendarEventChip({
             return <Glyph key={glyphName} sx={{ fontSize: dense ? 14 : 18 }} />;
           })}
         </Box>
-        <Box component="span" sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: dense ? "nowrap" : "normal", minWidth: 0 }}>
-          <Box component="span" sx={{ fontWeight: 600, mr: { xs: 0, sm: 0.5 } }}>
+        <Box component="span" data-entry-text sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: dense ? "nowrap" : "normal", minWidth: 0 }}>
+          <Box component="span" data-entry-time sx={{ fontWeight: 600, mr: { xs: 0, sm: 0.5 } }}>
             {time}
           </Box>
-          <Box component="span" sx={dense ? { display: { xs: "none", sm: "inline" } } : undefined}>{title}</Box>
+          <Box component="span" data-entry-title sx={dense ? { display: { xs: "none", sm: "inline" } } : undefined}>{title}</Box>
         </Box>
         {(partner || note) && (
           // The marks at the end, where the ⚠ always was: the partner, then the date's note.
-          <Box component="span" data-testid="calendar-entry-marks" sx={{ display: "inline-flex", alignItems: "center", gap: 0.25, flexShrink: 0 }}>
+          <Box component="span" data-testid="calendar-entry-marks" data-entry-marks sx={{ display: "inline-flex", alignItems: "center", gap: 0.25, flexShrink: 0 }}>
             {partner && (dense ? <PartnerGlyph size={markSize} /> : <PartnerMark text={partner} size={markSize} />)}
             {note && (dense ? <EditionGlyph note={note} size={markSize} /> : <EditionMark note={note} size={markSize} />)}
           </Box>
@@ -180,6 +185,34 @@ export default function CalendarEventChip({
     </Tooltip>
   );
 }
+
+/**
+ * A grid entry under the look, from `sm`: the text's span steps aside (`display: contents`) so the
+ * time and the title are the row's own items; the row wraps, the title takes a line of its own and
+ * keeps two lines of the name before an ellipsis. Every rule starts at `sm` (or names its `xs` value), so a
+ * phone's column is drawn exactly as before.
+ */
+const DENSE_UNDER_LOOK = {
+  flexWrap: { xs: "nowrap", sm: "wrap" },
+  rowGap: { sm: 0.125 },
+  py: { sm: 0.625 },
+  px: { sm: 0.875 },
+  lineHeight: { sm: 1.25 },
+  "& [data-entry-text]": { display: { xs: "block", sm: "contents" } },
+  "& [data-entry-time]": { fontSize: { sm: "0.78rem" }, fontWeight: 700 },
+  "& [data-entry-marks]": { ml: { sm: "auto" } },
+  "& [data-entry-title]": {
+    display: { xs: "none", sm: "-webkit-box" },
+    flexBasis: { sm: "100%" },
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: "vertical",
+    overflow: "hidden",
+    whiteSpace: "normal",
+    fontWeight: 500,
+    fontSize: { sm: "0.75rem" },
+    wordBreak: "break-word",
+  },
+} as const;
 
 /**
  * The handshake with no tooltip of its own, inside the grid chip whose tooltip says "Colaborare" /

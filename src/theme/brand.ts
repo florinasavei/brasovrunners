@@ -131,6 +131,21 @@ export const COLOR_DARK = {
 } as const;
 
 /**
+ * The calendar apps' own marks in the subscribe box (`SubscribeBox`): Google's four colours and
+ * Outlook's two blues, as each company draws them, so a reader finds their app by its logo. Not the
+ * club's palette and never a surface: a logo keeps its colours in both schemes, as the companies ask.
+ */
+export const PROVIDER_LOGO = {
+  googleBlue: "#4285F4",
+  googleGreen: "#34A853",
+  googleYellow: "#FBBC05",
+  googleRed: "#EA4335",
+  outlookBlue: "#0078D4",
+  outlookLight: "#28A8EA",
+  outlookInk: "#FFFFFF",
+} as const;
+
+/**
  * The public pages' background tints the club may choose from (§488, «Aspectul site-ului» under
  * Pagini → «Aspect»). Light scheme only: after dark the page stays `COLOR_DARK.paper`.
  *
