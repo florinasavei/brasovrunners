@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { judgeRoot } from "../../../scripts/smoke.mjs";
+import { LISTING_PATH, judgeRoot } from "../../../scripts/smoke.mjs";
+import { routing } from "@/i18n/routing";
 
 /**
  * BR-REQ-040-01 — the smoke's verdict on the site's root (§717, amending §353): a 307 to the listing
@@ -13,11 +14,24 @@ describe("§717 the smoke's verdict on the root", () => {
     expect(judgeRoot("ro", 200, "", '<main data-testid="home-page">…</main>')).toMatchObject({ ok: true });
   });
 
-  it("refuses a 308, a 307 elsewhere, a 200 that is an error document and a 200 that is not the home page", () => {
-    expect(judgeRoot("ro", 308, "/ro/evenimente", "")).toMatchObject({ ok: false });
+  it("accepts the previous build's 308 to the listing (§730: the migration window)", () => {
+    expect(judgeRoot("ro", 308, "/ro/evenimente", "")).toMatchObject({ ok: true });
+    expect(judgeRoot("en", 308, "https://club.example/en/events", "")).toMatchObject({ ok: true });
+  });
+
+  it("refuses a 308 elsewhere, a 307 elsewhere, a 200 that is an error document and a 200 that is not the home page", () => {
+    expect(judgeRoot("ro", 308, "/ro/contact", "")).toMatchObject({ ok: false });
+    expect(judgeRoot("ro", 308, "/en/events", "")).toMatchObject({ ok: false });
+    // The other language's word under this language's prefix is a page that does not exist.
+    expect(judgeRoot("ro", 308, "/ro/events", "")).toMatchObject({ ok: false });
+    expect(judgeRoot("en", 307, "/en/evenimente", "")).toMatchObject({ ok: false });
     expect(judgeRoot("ro", 307, "/ro/contact", "")).toMatchObject({ ok: false });
     expect(judgeRoot("ro", 200, "", '<div id="__next_error__"></div><main data-testid="home-page"></main>')).toMatchObject({ ok: false });
     expect(judgeRoot("ro", 200, "", "<html><body>hello</body></html>")).toMatchObject({ ok: false });
     expect(judgeRoot("ro", 500, "", "")).toMatchObject({ ok: false });
+  });
+
+  it("reads the listing's path per language exactly as the routing maps it", () => {
+    expect(LISTING_PATH).toEqual(routing.pathnames["/events"]);
   });
 });

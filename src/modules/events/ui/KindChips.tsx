@@ -5,6 +5,7 @@ import { EVENT_SURFACES, type EventSurface } from "@/modules/events/domain/event
 import { kindChipActive, kindFilter, kindQuery } from "@/modules/events/domain/calendar-kind";
 import { listingFilterQuery, type ListingFilter } from "@/modules/events/domain/listing-filter";
 import ChipLink from "@/shared/ui/ChipLink";
+import ScrollRow from "@/shared/ui/ScrollRow";
 import { UNDER_LOOK } from "@/theme/look";
 import type { GlyphName } from "./glyphs";
 
@@ -35,7 +36,7 @@ export type KindChipsProps = {
  * filters by following it, and with one the press is a soft navigation that keeps the scroll.
  *
  * **One row.** The chips are a sideways strip that scrolls where it does not fit (CSS scroll-snap,
- * no island), so the row stays one 44-pixel line at every width: at 320 pixels the first week stays
+ * a visible scrollbar and an edge fade from `ScrollRow`, §720 amended), so the row stays one 44-pixel line at every width: at 320 pixels the first week stays
  * above the fold (§569), and a month with another surface never moves the arrows (§575).
  *
  * Drawn only under the look (`onlyUnderLook`): off, the calendar is today's, and the kind is
@@ -59,25 +60,22 @@ export default async function KindChips({ path, kind, filter, surfaces }: KindCh
   });
 
   return (
-    <Box
+    <ScrollRow
       role="group"
-      aria-label={t("calendar.look.kinds.label")}
-      data-testid="calendar-kind-chips"
+      ariaLabel={t("calendar.look.kinds.label")}
+      testId="calendar-kind-chips"
       sx={{
         display: "none",
         alignItems: "center",
         columnGap: 0.75,
         // One row at every width, scrolled sideways where it does not fit: a month with one more
         // surface never wraps a second line and moves the arrows under it (BR-REQ-041-01 criterion 12).
+        // The shared scroll style shows the scrollbar and fades the edge with more to see (§720 amended).
         flexWrap: "nowrap",
-        overflowX: "auto",
         scrollSnapType: "x proximity",
-        scrollbarWidth: "none",
-        "&::-webkit-scrollbar": { display: "none" },
         "& > a": { scrollSnapAlign: "start", flexShrink: 0 },
-        // A little larger than the panel's 24-pixel pills: these are the page's first controls.
-        // Drawn only under the look (`onlyUnderLook`'s rule, merged with the chips' size here).
-        [UNDER_LOOK]: { display: "flex", "& .MuiChip-root": { height: 32, borderRadius: "16px", px: 0.5, fontWeight: 600 } },
+        // Drawn only under the look (onlyUnderLook rule); the pills are ChipLink own small ones, inside its 44-pixel links.
+        [UNDER_LOOK]: { display: "flex" },
       }}
     >
       {([null, ...EVENT_KINDS] as const).map((option) => {
@@ -95,7 +93,7 @@ export default async function KindChips({ path, kind, filter, surfaces }: KindCh
           />
         );
       })}
-      {surfaces.length > 0 && <Box aria-hidden="true" sx={{ width: "1px", alignSelf: "stretch", minHeight: 20, bgcolor: "divider", mx: 0.25, flexShrink: 0 }} />}
+      {surfaces.length > 0 && <Box aria-hidden="true" sx={{ width: "1px", height: 20, alignSelf: "center", bgcolor: "divider", mx: 0.25, flexShrink: 0 }} />}
       {surfaces.map((surface) => {
         const on = filter.surface.includes(surface);
         return (
@@ -110,6 +108,6 @@ export default async function KindChips({ path, kind, filter, surfaces }: KindCh
           />
         );
       })}
-    </Box>
+    </ScrollRow>
   );
 }

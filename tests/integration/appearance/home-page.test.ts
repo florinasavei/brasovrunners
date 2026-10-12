@@ -153,6 +153,19 @@ describe("the home page setting", () => {
     expect((await readHomePage(db)).setting).toMatchObject({ on: false, buttons: saved.buttons, sections: saved.sections });
   });
 
+  it("saves the special-events-first switch only when the save carries it, and keeps a later release's keys", async () => {
+    expect((await readHomePage(db)).setting.specialFirst).toBe(false);
+    await updateHomePage(db, admin, { page: "on", specialFirst: true }, NOW);
+    expect((await readHomePage(db)).setting.specialFirst).toBe(true);
+    const [audit] = await auditRows();
+    expect(audit.metadataJson).toMatchObject({ sectionsChanged: true });
+    // A save from a form without the sections' card never resets it.
+    await updateHomePage(db, admin, { page: "on" }, NOW);
+    expect((await readHomePage(db)).setting.specialFirst).toBe(true);
+    await updateHomePage(db, admin, { page: "on", specialFirst: false }, NOW);
+    expect((await readHomePage(db)).setting.specialFirst).toBe(false);
+  });
+
   it("refuses a third button with words and no page, a page that is not the club's, and a label in one language only", async () => {
     await expect(updateHomePage(db, admin, { page: "on", buttonHowRo: "Cum", buttonHowEn: "How", buttonHowPageId: "" }, NOW)).rejects.toMatchObject({ fields: ["buttonHowPageId"] });
     await expect(updateHomePage(db, admin, { page: "on", buttonHowPageId: "../admin" }, NOW)).rejects.toMatchObject({ fields: ["buttonHowPageId"] });

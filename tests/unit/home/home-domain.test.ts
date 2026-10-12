@@ -192,3 +192,15 @@ describe("§714 the numbers band reads its figures, never invents one", () => {
     expect(numbersContentSchema.parse({ foundedOn: "2016-02-29", activeRunners: 80 })).toEqual({ foundedOn: "2016-02-29", activeRunners: 80 });
   });
 });
+
+import { parseHomePage } from "@/modules/appearance/domain/home-page";
+
+describe("§732 the special events first, a top-level switch", () => {
+  it("reads a row from before as false, keeps true, and reads a non-boolean as false", () => {
+    expect(parseHomePage({ on: true }).specialFirst).toBe(false);
+    expect(parseHomePage({ on: true, specialFirst: true }).specialFirst).toBe(true);
+    expect(parseHomePage({ on: true, specialFirst: "yes" }).specialFirst).toBe(false);
+    expect(parseHomePage({ on: true, specialFirst: 1 }).on).toBe(true);
+    expect(parseHomePage({ on: true, specialFirst: 1 }).specialFirst).toBe(false);
+  });
+});

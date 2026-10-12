@@ -89,3 +89,14 @@ describe("§717 the home page panel's folds", () => {
     expect(fold(html, "home-page-numbers")).toContain("1 din 2 completate");
   });
 });
+
+describe("§732 the special-events-first checkbox", () => {
+  it("renders with its saved state, off by default", async () => {
+    const off = await draw(DEFAULT_HOME_PAGE_SETTING);
+    expect(off).toContain("Evenimentele speciale înaintea alergărilor săptămânale");
+    const box = (markup: string) => markup.match(/<input[^>]*name="specialFirst"[^>]*>/)?.[0] ?? "";
+    expect(box(off)).toContain('name="specialFirst"');
+    expect(box(off)).not.toContain("checked");
+    expect(box(await draw({ ...DEFAULT_HOME_PAGE_SETTING, specialFirst: true }))).toContain("checked");
+  });
+});

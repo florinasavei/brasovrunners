@@ -14,28 +14,30 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V2.96`** (released 2026-10-11 late: §720–§723, no migration). Waiting for «prod»:
-  `BR-V2.97` (§724–§727, below) — no migration.
-- **QA: `BR-V2.97`** — under «Aspectul nou»: «Urmărește-ne» is a label you cannot press, «Vino cu noi» left the
-  header at every width, and both languages are back on the footer's bar (the floating round button is gone); the home
-  page draws the listing's own cards («Următoarea alergare» a series' card for a weekly date). For everyone: «Eveniment
-  special» in the filters' «Tipul» (every date that is not of a weekly series). For the dispatcher: the chains hand the
-  checklist to the builder and the fixer, and the builder's preamble no longer says its `.env.local` is a copy of the main
-  checkout's.
+- **Production: `BR-V2.97`** (released 2026-10-12 at night: §724–§727, no migration). Waiting for «prod»:
+  `BR-V2.98` (§728–§733, below) — no migration.
+- **QA: `BR-V2.98`** — under «Aspectul nou»: the calendar's kind and surface chips are the house's small pills
+  again, in a row that shows it scrolls (a thin scrollbar, and an edge fade while there is more to see), and the
+  subscribe box offers Outlook twice, for a personal account and for work or school (Microsoft 365), with hints that
+  name its own rows; «Pagina principală» gains «Evenimentele speciale înaintea alergărilor săptămânale» (off by
+  default). For everyone: on a phone the members' zone's tabs are short words that fit, and «Setări» and «Pagini»
+  bring their current entry into view. Internal: the smoke accepts the previous build's 308 to the listing, in each
+  language's own word; the picture field's words are built once; the shop's backoffice chips are `StatusChip`s, so
+  four icons leave the public table.
 - **Nothing is building.**
-- **Next, on QA, the owner's:** «Aspectul nou» and «Pagina principală» on; the accent; the calendar; then phase 5 (the
-  listing and the event page) per `docs/REDESIGN.md`.
+- **Next, on QA, the owner's:** «Aspectul nou» and «Pagina principală» on; the accent; the calendar on a phone (the
+  chips' row, Outlook with each kind of account); then phase 5 (the listing and the event page) per `docs/REDESIGN.md`.
 - **Waiting on the owner:** a look at QA before «Aspectul nou» or the home page goes on in production; the photographs;
   the privacy notice from the new template (the maps, the shop); «Tot numărul»'s default background; `shopNotice`; the
   Google calendar.
-- **Later:** `yarn smoke` should accept a 308 to the listing too (a root-behaviour change raced its own migration on
-  2026-10-11); the e2e specs on written 2027 dates want a dates-from-today helper; pass `now` through
+- **Later:** the e2e specs on written 2027 dates want a dates-from-today helper; pass `now` through
   `readRegistrationTokenContext`, `openRefusalsWhere` and the guardian rule; the concurrency suite fails on a seeded
-  database; a nightly `yarn test:clock`; `OrdersCard` and `ProductList` to `StatusChip`; the members' current tab past
-  the row's edge at 320 px; the cards' titles under the new look (phase 5); `TeamPhotoLabels` copied in three editors;
-  the calendar's first week clears the fold by 5 px; a guard for computed `COLOR[...]` keys; `calendar-look.spec.ts` and
-  `header-nav.spec.ts` share the one «Aspectul nou» row (one worker only); about a dozen orphaned folders under
-  `.claude/worktrees/` (Windows long paths) to delete with a long-path-aware command.
+  database; a nightly `yarn test:clock`; the cards' titles under the new look (phase 5); the calendar's first week
+  clears the fold by 5 px; a guard for computed `COLOR[...]` keys; `calendar-look.spec.ts` and `header-nav.spec.ts`
+  share the one «Aspectul nou» row (one worker only); `SubNav`'s `SubNavCurrent` and the calendar's `ScrollRow` both
+  watch a scrolling row — one helper later; Outlook's subscribe address follows a widely used library's format and no
+  test can open it (Microsoft refuses automated requests), so try it by hand with each kind of account; about 170
+  throwaway databases in the local Docker PostgreSQL.
 
 ### How a change is made here (the owner's standing rules, all still in force)
 
@@ -140,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.98` | the shop's chips on StatusChip (§728) · the picture field's words in one place (§729) · the smoke accepts the old root redirect (§730) · the members' current tab in view (§731) · home: the special events first, a setting (§732) · calendar chips smaller and scrollable; Outlook for personal and work accounts (§733) |
 | `BR-V2.97` | the header's label and the footer's two languages (§724) · «Eveniment special» in the filter (§725) · the home page reuses the listing's cards (§726) · the chains' build list reaches the builder (§727) |
 | `BR-V2.96` | the facelift's phase 4: the calendar (§720) · «Contact direct» after «Spune-ne ceva», right before the newsletter (§721) (§721) · the floating language switch and «Urmărește-ne» (§722) · the accent colour as a setting (§723) |
 | `BR-V2.95` | the move buttons say what they do (§710) · the logo stays blue under the new look (§711) · tests read their fixture's calendar: `yarn test:clock` (§712) · arrows on the tab bars (§713) · the home page's four lower sections, as components (§714) · the members' zone in tabs (§715) · «Spune-ne ceva»: the event in the address, the forms separated (§716) · a home page at the site's root behind «Pagina principală», off, with its eight sections and the panel in folds (phase 3, parts A and C) (§717) · the route's maps, links and GPX (§718) · the concurrency suite past 1 December (§719) |

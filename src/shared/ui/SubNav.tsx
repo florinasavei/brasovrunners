@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import type { ReactNode } from "react";
+import SubNavCurrent from "./SubNavCurrent";
 
 /**
  * One entry: where it goes, what it says, and whether it is the panel being shown. `glyph` and
@@ -7,14 +8,21 @@ import type { ReactNode } from "react";
  * personalizate» — gives each entry its picture and each run of entries its caption. The glyph is
  * an element, which is safe here because `SubNav` is a Server Component end to end: nothing it
  * renders crosses into a client island.
+ *
+ * `short` (§731) is the entry's word on a phone: a row whose entries with their glyphs would not
+ * fit in 288 px (the members' zone's three) gives each a shorter word, drawn below `sm` while the
+ * full one is drawn from `sm` up. The other is `display: none`, so the link's accessible name is
+ * never both.
  */
-export type SubNavItem = { href: string; label: string; active?: boolean; glyph?: ReactNode; group?: string };
+export type SubNavItem = { href: string; label: string; active?: boolean; glyph?: ReactNode; group?: string; short?: string };
 
 /**
  * The row the sub-navigation sits in: a thin rule under it like the backoffice's own tab bar,
  * and on a phone it scrolls sideways rather than wrapping (§360).
  *
- * The scrollbar is hidden, as MUI hides the main tab bar's: the entry cut off at the edge is what
+ * A row wider than the screen scrolls its current entry into view once hydrated (`SubNavCurrent`,
+ * §731): «Setări» and «Pagini» are longer than 320 px by design, and a current entry past the edge
+ * is the defect §79 named. The scrollbar is hidden, as MUI hides the main tab bar's: the entry cut off at the edge is what
  * says there is more, and a focused entry is scrolled into view by the browser. `overflow-y` is
  * stated because `overflow-x: auto` alone turns the other axis to `auto` as well, and a stray
  * pixel of the underline would then make the row scroll up and down.
@@ -121,6 +129,7 @@ const GLYPH_SX = { display: "inline-flex", mr: 0.75, "& svg": { fontSize: 18 } }
 export default function SubNav({ items, label }: { items: readonly SubNavItem[]; label: string }) {
   return (
     <Box component="nav" aria-label={label} sx={ROW_SX}>
+      <SubNavCurrent />
       <Box component="ul" sx={LIST_SX}>
         {items.map((item, index) => {
           const opensGroup = item.group !== undefined && item.group !== items[index - 1]?.group;
@@ -137,7 +146,18 @@ export default function SubNav({ items, label }: { items: readonly SubNavItem[];
                     {item.glyph}
                   </Box>
                 ) : null}
-                {item.label}
+                {item.short ? (
+                  <>
+                    <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                      {item.label}
+                    </Box>
+                    <Box component="span" sx={{ display: { xs: "inline", sm: "none" } }}>
+                      {item.short}
+                    </Box>
+                  </>
+                ) : (
+                  item.label
+                )}
               </Box>
             </Box>,
           ];
