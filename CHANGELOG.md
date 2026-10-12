@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.06-2026-10-12
+
+- **The privacy notice's template says the route maps open with the page** — the map loads with the page, and when an event has both a Strava and a Garmin Connect map only the chosen tab's loads (Strava first), the other when its tab is chosen, each provider seeing the visitor's IP address; `AGENTS.md` §18.3 says the same. Approve the notice from the new template. §741.
+- **The Strava map's frame is as tall as its card** — no empty gap under the map on a phone: the frame takes the height Strava's card reports, and until then a height that follows its width. §742.
 ## BR-V3.05-2026-10-12
 
 - **«Invită pe email» works from anywhere, and every invited person is seen with their state** — pressing it again on the same address reopens «Invitații»; on all events it leads to the event's panel (a menu when several take invitations); «Invitații» opens while one is sent or unanswered; all events name each event's unanswered invitations. §740.

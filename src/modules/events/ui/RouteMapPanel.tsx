@@ -5,7 +5,8 @@ import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import SocialIcon from "@/shared/ui/SocialIcon";
 import WatchIcon from "@mui/icons-material/Watch";
-import { type RouteMap, routeMapEmbedSrc, routeMapLink } from "../domain/route-maps";
+import { type RouteMap, routeMapEmbedSrc, routeMapLink, stravaFrameNamespace } from "../domain/route-maps";
+import StravaFrameHeight from "./StravaFrameHeight";
 
 /** One service's words in «Traseul» (§718), in the reader's language. */
 export type RouteMapProviderWords = {
@@ -35,18 +36,31 @@ export type RouteMapProviderWords = {
  *
  * The iframe is sandboxed to what a map needs — its own scripts, its own origin for the tiles, and
  * a new tab for the service's own links — and sends Strava or Garmin this site's origin, never the
- * page's path. A fixed height rather than Strava's height messages: those would need a script on our
- * page, and a map does not need to fit its content.
+ * page's path. Strava's frame takes its height from the message the frame posts, read by a tiny
+ * island (`StravaFrameHeight`, §742), never from Strava's script.
  *
  * Under the map, always visible: the sentence that says where the map comes from, and the link to the
  * route on the service (built from the id), with the service's mark, 44 pixels tall.
  */
 /**
- * The frame's height by service (§738). Strava's card is its title and figures, the map, the elevation
- * profile and its footer, one under another; it would tell its height by a message, which needs a
- * script here, so the frame is tall enough for the whole card instead of scrolling inside itself.
+ * The frames' fallback heights by service (§738, §742): what a frame is until Strava's height message
+ * arrives (`StravaFrameHeight`), and for good with scripts off. Strava's card is its title and figures,
+ * the map, the elevation profile and its footer, and its height follows its own width: measured on a
+ * real public route on 2026-10-12 (`document.body.scrollHeight + 1`, the number the frame posts), 303 px
+ * at 288 px wide, 345 at 343, 377 at 382, 495 at 520, 533 at 568, 639 at 700 and 767 at 860. The
+ * fallback is that line a few pixels above, `82% of the frame's width + 74 px` (the panel is the size
+ * container, `cqw`): 310, 355, 387, 500, 540, 648, 779. A browser without container units keeps the
+ * plain 600. Garmin's map fills its frame, with no card around it and no height message (its embed's
+ * scripts post nothing, read 2026-10-12), so its number is the size Garmin's own embed code gives.
  */
-const FRAME_HEIGHT = { strava: { xs: 760, sm: 880 }, garmin: { xs: 600, sm: 720 } } as const;
+const GARMIN_HEIGHT = { xs: 600, sm: 720 } as const;
+const STRAVA_FRAME_SX = {
+  display: "block",
+  width: "100%",
+  height: 600,
+  border: 0,
+  "@supports (width: 1cqw)": { height: "calc(82cqw + 74px)" },
+} as const;
 
 export default function RouteMapPanel({
   map,
@@ -63,6 +77,13 @@ export default function RouteMapPanel({
 }) {
   const mark =
     map.provider === "strava" ? <SocialIcon network="strava" size={22} /> : <WatchIcon aria-hidden="true" sx={{ fontSize: 22, flexShrink: 0 }} />;
+  const frameProps = {
+    title: words.frame,
+    loading: "lazy",
+    referrerPolicy: "strict-origin",
+    sandbox: "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox",
+    "data-testid": `route-map-frame-${map.provider}`,
+  } as const;
   return (
     <Box
       data-route-map-panel={map.provider}
@@ -107,17 +128,26 @@ export default function RouteMapPanel({
           <MapIcon aria-hidden="true" sx={{ fontSize: 22, flexShrink: 0 }} />
           {words.show}
         </Box>
-        <Box sx={{ position: "relative", width: "100%", height: FRAME_HEIGHT[map.provider], borderRadius: 1, overflow: "hidden", bgcolor: "action.hover" }}>
-          <Box
-            component="iframe"
-            src={routeMapEmbedSrc(map, origin)}
-            title={words.frame}
-            loading="lazy"
-            referrerPolicy="strict-origin"
-            sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
-            data-testid={`route-map-frame-${map.provider}`}
-            sx={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }}
-          />
+        <Box sx={{ width: "100%", borderRadius: 1, overflow: "hidden", bgcolor: "action.hover", lineHeight: 0, containerType: "inline-size" }}>
+          {map.provider === "strava" ? (
+            <>
+              {/* Strava posts its height once, when its own page is ready: the island must be listening before
+                  the frame can load, so the server draws no `src`; the island sets it after its listener is on
+                  (§742). Without scripts the `<noscript>` copy loads the frame as before. */}
+              <Box component="iframe" {...frameProps} data-src={routeMapEmbedSrc(map, origin)} data-strava-ns={stravaFrameNamespace(map)} sx={STRAVA_FRAME_SX} />
+              <noscript>
+                <Box component="iframe" {...frameProps} src={routeMapEmbedSrc(map, origin)} sx={STRAVA_FRAME_SX} />
+              </noscript>
+              <StravaFrameHeight namespace={stravaFrameNamespace(map)} />
+            </>
+          ) : (
+            <Box
+              component="iframe"
+              {...frameProps}
+              src={routeMapEmbedSrc(map, origin)}
+              sx={{ display: "block", width: "100%", height: { xs: GARMIN_HEIGHT.xs, sm: GARMIN_HEIGHT.sm }, border: 0 }}
+            />
+          )}
         </Box>
       </Box>
       <Typography variant="caption" color="text.secondary" component="p" sx={{ mt: 0.5 }}>

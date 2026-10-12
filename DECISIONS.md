@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.05-2026-10-12 -->
+<!-- PROJECT_BASELINE: BR-V3.06-2026-10-12 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.05-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.06-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -25835,3 +25835,45 @@ Baseline `BR-V3.04-2026-10-12`.
 Baseline: set at landing.
 
 Baseline `BR-V3.05-2026-10-12`.
+
+## 741. The privacy notice's template and the rule say the route maps open with the page
+
+**The owner, 2026-10-12** (amends §739 and §718): «yes I want it always opened» to the route maps drawn open, told that the provider then sees the visitor's IP address; and «da» to the fix that follows from it.
+
+**The gap.** §739 opened an event's route maps with the page, but the privacy notice's template still said a Strava or Garmin Connect map loads only on a press, and `AGENTS.md` §18.3 still required a press for a third party's map. The owner is about to approve a notice from that template; it must not say something false.
+
+**Decision.**
+
+- **The template, both languages.** The paragraph on what the site stores and loads keeps the YouTube sentence (a film still loads only on a press) and now says: on an event page the route map loads with the page, and when the event has both a Strava and a Garmin Connect map only the chosen tab's loads (Strava first), the other when its tab is chosen; Strava, or Garmin, receives the visitor's IP address and may set its own cookies the moment its map loads, and not before. The terms' template promises nothing about maps and is unchanged.
+- **The rule.** `AGENTS.md` §18.3: a third party's film only behind a press, as a native `<details>` that loads nothing until opened; a route map from Strava or Garmin Connect drawn open (§739: the chosen tab's frame loads with the page, a hidden tab's frame waits until chosen), named in the privacy notice; never the provider's script (§61, §69, §718, §739).
+- **No behaviour changes**; the route-map components are untouched.
+- **Approval stays the club's.** A notice carrying the new sentence is approved in `/admin/legal` (a change to a template raises the §639 reminder), a lawyer reading that paragraph first. Whether loading a provider's frame that may set cookies without a press needs the visitor's consent under Legea nr. 506/2004 art. 4(5) is the lawyer's question, named in CLAUDE.md «Still owed» item 16 and not decided here.
+
+**Refused:** going back to a press (the owner's choice, §739); a cookie banner (not asked; the lawyer's question is named instead); editing any approved text.
+
+Baseline `BR-V3.06-2026-10-12`.
+
+## 742. The Strava map's frame is as tall as its card, on a phone too
+
+**The owner, 2026-10-12** (amends §738's frame heights and §739): «But on mobile, there is a big gap below the strava map, this should be responsive».
+
+**What was wrong.** §738 gave Strava's frame a fixed 760 pixels on a phone and 880 from `sm`, so the card (title and figures, the map, the elevation profile, the footer) ended about 500 pixels down and left an empty gap under the map. The card's height follows its own width and changes with the builder's options (the elevation profile on or off), so no fixed number per breakpoint is right.
+
+**What Strava's `embed.js` does** (read whole on 2026-10-12, about 5 KB): for each placeholder it builds an iframe at `https://strava-embeds.com/route/<id>?<options>#ns=<prefix>&hostOrigin=…&hostPath=…&hostTitle=…&mapHash=…`, the prefix a `crypto.randomUUID()`. It listens on `window` for `message` events whose `data[0]` is that prefix (it never checks the origin), reads `data = [prefix, name, payload]`, and for `BROADCAST_IFRAME_HEIGHT` writes `payload` (a bare number of pixels) to the iframe's `style.height`; until the first message the frame is 650 px. The script sends the frame nothing first (only `BROADCAST_HOST_FOCUS` on window focus): there is no handshake.
+
+**When the frame posts** (read from its own `iframe-*.js`): `document.body.scrollHeight + 1`, sent once as soon as its own DOM is ready, again when its `innerWidth` changes (200 ms trailing debounce) and when a `picture img` loads. It never answers a request from the host, and the map chunk posts only `BROADCAST_SETTINGS_CHANGE`. So the one message at load is easily lost: embed.js attaches its listener before the frame starts loading, whereas an island listens only after React hydrates (the review's blocker: the frame stayed at its fallback on a real phone).
+
+**Decision.**
+
+- **We listen ourselves, and before the frame can post.** `stravaEmbedSrc` builds the address on the server; its `ns` is a per-frame string of our own (`route-map-strava-<route id>`, `stravaFrameNamespace`: never a user's data, the same on the server and in the browser). The server draws the Strava iframe with `data-src`, not `src`, plus a `<noscript>` copy with the real `src` (scripts off: the map shows as before). One tiny client island, `StravaFrameHeight` (strings across the boundary, §370), adds its `message` listener first and only then sets `src` from `data-src`; `loading="lazy"` stays, so a hidden tab's frame still waits until its tab is chosen (§739). Re-assigning an identical `src` would be a fragment navigation and not reload, which is why the address is withheld rather than re-set; a width nudge was the refused alternative (it needs the frame's resize handler to be there). `stravaFrameHeight` (`domain/strava-frame-height.ts`) believes only `event.origin === https://strava-embeds.com`, the sender being that frame, our namespace, the name `BROADCAST_IFRAME_HEIGHT` and a finite number, rounded and clamped to 240-1400 px; the island sets that frame's `style.height`. The island finds its frame beside its own marker, never by searching the document, so the same route twice on a page is two frames. No `eval`, no `innerHTML`, never Strava's script.
+- **A fallback that follows the frame's width**, until the message arrives and for good with scripts off. Measured on a real public Strava route on 2026-10-12 (`document.body.scrollHeight + 1`, the number the frame posts): 303 px at 288 px wide, 345 at 343, 377 at 382, 495 at 520, 533 at 568, 639 at 700, 767 at 860 — about 0.81 x width + 69. The panel is a size container and the frame is `calc(82cqw + 74px)`, a few pixels above that line: 310, 355, 387, 500, 540, 648, 779 (a browser without container units keeps 600). Never the 760/880 that left the gap. The box around the frame takes the frame's height, so nothing is left under the map.
+- **Garmin.** Its course embed (`connect.garmin.com/embed/course/<id>`) is a map that fills its frame, with no card around it; its scripts post nothing about a height (the only `postMessage` in them are React's scheduler and core-js), so there is no gap to close and no island: it keeps the frame §738 gave it at the owner's «the area for the map should be larger» (600 px on a phone, 720 from `sm`).
+- **Unchanged (§739):** the chosen tab's frame loads with the page, a hidden tab's lazily when chosen; «Harta vine de la Strava; Strava vede adresa ta IP.» stays under it; 44 px tabs; both languages.
+
+**Refused.** Loading Strava's `embed.js` (§61: a mark, never a script; it would also run a third party's code on every event page). A fixed height per breakpoint alone, because the card's height follows its width and its options. The frame's undocumented `useFitToHeightMode` parameter (not documented by Strava, could change without notice).
+
+**Tests.** A unit test of the handler (origin, namespace, name, payload, sender, clamp) and of the render (`data-src` without `src`, the `<noscript>` copy, the marker). The e2e has a stand-in card that posts at once on DOM ready and again on a width change, as the real frame does, and shows the frame and its box end at the card's height (260 px, outside the fallback window); a separate run where the card never posts shows the fallback within a few pixels of the measured line at 320 px and on desktop.
+
+**The cost of listening first.** With scripts on, the Strava frame gets its address only once the island has hydrated, so a script error that stops hydration leaves that map unloaded (the `<noscript>` copy covers scripts off, not a broken script). Accepted: without it the frame's one height message is usually lost, and the gap the owner reported comes back.
+
+Baseline `BR-V3.06-2026-10-12`.
