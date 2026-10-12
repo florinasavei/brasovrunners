@@ -920,6 +920,17 @@
         }
       },
       "testKind": "Test",
+      "invitedChip": "Invited",
+      "invitationRow": {
+        "chip": "Invitation",
+        "open": "See the invitation",
+        "state": {
+          "sent": "Invitation sent",
+          "expired": "Invitation expired",
+          "withdrawn": "Invitation withdrawn",
+          "accepted": "Invitation accepted"
+        }
+      },
       "enteredByStaff": "Entered by staff",
       "livesIn": "Lives in: {place}",
       "sexLine": "Sex: {sex}",
@@ -2201,6 +2212,13 @@
         "showLogo": "The club's logo",
         "cutMarks": "Cut marks on the sheet",
         "numberScale": "The number's size",
+        "numberFormat": "How the number is written",
+        "numberFormatHelp": "The same on the bib, in the emails, on the website and at the desk.",
+        "numberFormats": {
+          "plain": "1, 2, 3 — as it is",
+          "pad3": "001, 002, 003 — three digits",
+          "pad4": "0001, 0002, 0003 — four digits"
+        },
         "namePosition": "Where the name sits",
         "scales": {
           "small": "Small",
@@ -8116,6 +8134,8 @@
       }
     },
     "invitations": {
+      "toolbar": "Invite by email",
+      "toolbarChooseEvent": "Invite by email: choose the event first",
       "link": "Send invitations",
       "title": "Invitations",
       "intro": "A place kept for a chosen person until a deadline: they get an email with a link to the form.",
@@ -8128,8 +8148,25 @@
       "membersLegend": "Members from the members' area",
       "membersSearch": "Search by name or address",
       "membersNone": "No member account yet.",
-      "typedLabel": "Other people: name and address, one per line",
-      "typedHelp": "One person per line: the name, then the email address. Blank lines are skipped.",
+      "typedLabel": "Other people",
+      "typedHelp": "One row each: the name as it should appear in the invitation, and the email address. An empty row does not count.",
+      "nameLabel": "Full name",
+      "emailLabel": "Email",
+      "removeRow": "Remove row {row}",
+      "removeShort": "Remove",
+      "addRow": "Add another person",
+      "tableCaption": "The invitations sent for this event",
+      "sendTitle": "Send new invitations",
+      "columns": {
+        "person": "Person",
+        "state": "Status",
+        "by": "Sent by",
+        "actions": "What you can do"
+      },
+      "origin": {
+        "member": "Member",
+        "typed": "Added by hand"
+      },
       "daysLabel": "Days until it expires",
       "daysHelp": "The place is kept this many days, at most until the start; from 1 to {max}.",
       "outsideLabel": "On the special guests list (takes no place)",
@@ -8209,6 +8246,7 @@
         "INVITATION_NOT_OPEN": "The invitation is no longer waiting: it was accepted, withdrawn or has expired.",
         "INVITATION_BAD_DAYS": "Days until it expires: a whole number from 1 to 60.",
         "INVITATION_UNREAD_LINE": "Lines {lines} are not a name and an address: no invitation was sent.",
+        "INVITATION_UNREAD_ROW": "The people on rows {lines} lack a name or a valid email address: no invitation was sent.",
         "SUPPLEMENTARY_PLACE_UNCONFIRMED": "Nothing was sent: the places changed since you opened the page. Press again: the question now says how many places are added.",
         "FORBIDDEN": "Only an administrator sends invitations.",
         "NOT_FOUND": "The event no longer exists.",

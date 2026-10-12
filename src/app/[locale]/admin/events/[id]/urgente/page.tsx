@@ -21,6 +21,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import PrintButton from "@/shared/ui/PrintButton";
+import { formatRaceNumber } from "@/modules/registrations/domain/race-number";
 
 type Props = { params: Promise<{ locale: string; id: string }> };
 
@@ -112,7 +113,7 @@ export default async function EmergencySheetPage({ params }: Props) {
               <TableBody>
                 {rows.map((row) => (
                   <TableRow key={row.id} data-testid="emergency-row">
-                    <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>{row.bibNumber ?? ""}</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>{row.bibNumber !== null ? formatRaceNumber(row.bibNumber, row.raceNumberFormat) : ""}</TableCell>
                     <TableCell>
                       {row.registeredName}
                       {row.checkedInAt && (

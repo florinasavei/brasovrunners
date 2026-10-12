@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.99-2026-10-12 -->
+<!-- PROJECT_BASELINE: BR-V3.03-2026-10-12 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.99-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.03-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -25736,3 +25736,62 @@ Baseline `BR-V2.98-2026-10-12`.
 **Refused.** The mock-up drops the month and year selects; they stay, the only way to jump a year on a phone. The kind chips as larger buttons (built first, then dropped for §733's smaller pills, the owner's later word). The next-event panel's pills were left as they are: they already carry what the event has.
 
 Baseline `BR-V2.99-2026-10-12`.
+
+## 735. «Cum arată numărul»: race numbers with leading zeros, on the bib and everywhere the number is written
+
+**The owner, 2026-10-12:** «on the BIB designer I need to be able to set how the numbers look so that they always have 3 digits, eg: 001, 002, 003, etc, also on the website and emails they should look like that».
+
+**Decision.** The bib designer («Cum arată numărul de concurs») gains «Cum arată numărul»: «1, 2, 3 — așa cum e» (`plain`, the default), «001, 002, 003 — trei cifre» (`pad3`), «0001, 0002, 0003 — patru cifre» (`pad4`). Stored as `numberFormat` inside `events.bib_design` (no migration); a design saved before reads `plain`, so every event prints as it did until the club chooses. A number already as long as the width is written as it is, never cut (1234 under `pad3` is «1234»).
+
+**One formatter.** `registrations/domain/race-number.ts#formatRaceNumber(number, format)` and `raceNumberTextOf(row)` (`raceNumberOf`, written); the SQL reader `events/repository.ts#RACE_NUMBER_FORMAT` (`bib_design ->> 'numberFormat'`, read by `readRaceNumberFormat`, `plain` for anything unknown) lets each query select the event's choice beside the number. Written through it: the A5 bib (`bibs-pdf.ts`) and its picture (`bib-image.tsx`, so the designer's preview shows «007»; the number's size is still chosen by its written length); every email that carries the number (`render.ts`: the confirmation, the reminder, «Numărul tău de concurs», the family's confirmation, the club's notice, the organizer's message's `{bibNumber}`); the public list's «BIB» column; the number beside the QR on «Înscrierile mele», «Gestionează înscrierea» and the family's signing steps; and in the backoffice the registrations list, a registration's page (its number, the journey line, «ce îi spui», the void chip, the cancel dialog), the desk row, the list of printed bibs to pull, «Urgențe» and the bibs page.
+
+**What stays an integer.** The stored number, its order in the band, every comparison, the numbers typed by hand (the desk's box reads «007» as 7), the bib links' `from`/`to`, and the CSV and spreadsheet exports, which keep a numeric column so a spreadsheet sorts and sums them.
+
+**Refused.** A club-wide setting: the designer is the event's, as the owner put it. Storing the written text: the band's order and the uniqueness check stay numeric.
+
+Baseline `BR-V3.00-2026-10-12`.
+
+## 736. «Invită pe email» beside «Adaugă o înscriere», and a new race's invitations reachable before its first registration
+
+**The owner, 2026-10-12** (amends §647): «totuși partea aia de invitații nu e super clară și bine definită în partea de înscrieri, cumva era ascunsă».
+
+**What was wrong.** «Invitații» (§647) is a folded section in the middle of the registrations page — between «Cine s-a înscris» and «Emailuri de trimis» — drawn only on a list about one event, and opened by itself only once an invitation is pending. Nothing at the top of the page named it. Worse, the list's event filter (`listEventsWithRegistrations`) offered only events with at least one registration: a new race nobody had registered for yet could not be chosen, so its invitations could not be reached from the page at all, and the editor's «Trimite invitații» link (`?eventId=`) fell back to every event, where the section is not drawn.
+
+**Decision.**
+
+- **«Invită pe email» / "Invite by email"** beside «Adaugă o înscriere» in the page's toolbar, for the Administrator (who alone sends, §647), with the send glyph. On a list about one event it is an in-page link to `#registrations-invitations`, which the backoffice's `OpenFoldFromHash` answers by opening the section and scrolling to it — no script of its own, and a plain anchor without one. On «toate evenimentele» it opens «Caută și filtrează» (`#registrations-filters`), where the event is chosen, and its accessible name says so («Invită pe email: alege întâi evenimentul»).
+- **The filter offers every event that takes registrations here** (`INTERNAL`), with or without registrations, beside every event that has some, as before. Events registered elsewhere or not at all, with nobody registered here, stay out; the CMS lists them. The title is in the language of the event's registrations as before, in Romanian for an event nobody has registered for yet.
+
+**Refused.** Moving «Invitații» above the counts: the counts are what the page is first read for. A tab of its own in the event's menu: one more address for one panel, and the section's verbs act on the list beside it.
+
+Baseline `BR-V3.01-2026-10-12`.
+
+## 737. Invitations: a name and an email per row, the invited people first in a table, and in the registrations list itself
+
+**The owner, 2026-10-12** (amends §647): «that invitation list needs to be better presented, I need to be able to add by name and email not just a simple input, and I need to see the people that were added via manual invitations».
+
+**Decision.**
+
+- **One row per person.** «Alte persoane» is no longer one text box of lines «Nume <adresă>»: each person is a row with «Nume și prenume» and «Email» (an email field), «Scoate» on each row and «Adaugă încă o persoană» under them; one empty row to start, and the only row is emptied rather than removed. The rows post `inviteeName` / `inviteeEmail` in order, read by `domain/invitations.ts#readInviteeRows`: an empty row is ignored; a row with only one box, or an address that is not one word with an «@», is refused before anything is sent, named by its row number (`INVITATION_UNREAD_ROW`), as an unread line was. The server still reads a posted `typed` the old way, so nothing that posted it breaks; the form no longer draws it. Every other check (the address canonicalised, a person already registered or invited, the places) is the service's as before.
+- **The people invited first.** In «Invitații» the invitations come before the form: counts by state above them («Trimisă: 2», «Acceptată: 1» …), then a table — the person (name, address, and whether the club picked a member or added the person by hand, «Membru» / «Adăugat de mână», from the invitation's member account), the state with its date (deadline, accepted, withdrawn, expired; resends; a place added), who sent it, and «Retrimite» / «Retrage» on an open one. On a phone each invitation reads as a block, the columns one under another, nothing scrolling sideways. Then «Trimite invitații noi», the form, under its own heading. A plain table rather than `AdminTable`, whose paging and sorting live in the address the registrations' own table already uses on this page.
+- **«Invitat» on the registrations list.** A registration whose invitation was accepted (by its link, or taken over, §647) wears an «Invitat» chip beside the name, for every role that reads the list (`listRegistrationsForAdmin`'s `invited`).
+- **The invitations in the registrations table** — the owner, on the list itself: «și aici ar trebui să văd cumva lista de invitații». On the first page of one event's list with no other filter, every invitation not accepted yet (sent, expired, withdrawn) is a row above the registrations, in the same columns on a quiet fill: the name with an «Invitație» chip, «Invitație trimisă / expirată / retrasă», the deadline (or when it was withdrawn or expired), the event, the address, when it was sent, and «Vezi invitația» to the «Invitații» section's verbs. They are not counted in the results and not sorted or paged; an accepted invitation is a registration already, marked «Invitat». `AdminTable` gains `leadRows` for this — cells by column key, drawn in the table and in the phone's blocks, and the table is drawn for them even when no registration matches.
+
+Also: `InviteForm` now uses the house primitives (`GlyphButton` by an action-icons name) for its buttons, so its two design-guard exceptions are gone (§694).
+
+Baseline `BR-V3.02-2026-10-12`.
+
+## 738. Route maps: Strava first, its builder's 3D, units and elevation kept, hybrid by default, and frames tall enough for the whole card
+
+**The owner, 2026-10-12**: «the map type for strava should be hybrid», «the area for the map should be larger», then, with Strava's «Create your custom embed» on screen: «on the strava map I should be able to see the 3D stuff and the elevation profiles as here … Ideally people should be able to change these settings».
+
+**Decision.**
+
+- **The builder's choices are kept.** Strava's embed builder now writes `data-units`, `data-terrain` (`auto`/`2d`/`3d`), `data-surface-type`, the elevation profile's choice, and a map hash with a bearing and a pitch for 3D. The parser used to refuse any attribute it did not list, so that code was refused; now every other `data-*` attribute is kept as a display choice — at most eight, the name a `data-*` word, the value one short word (`[A-Za-z0-9._-]`, at most 32), never one of the page's own (`style`, `fromEmbed`, `token`, the id, the hash) — and passed to the iframe as its query under `embed.js`'s name (`data-surface-type` → `surfaceType`). The editor's field rebuilds them, so a second save keeps them; a stored value off its pattern is dropped alone.
+- **Hybrid by default.** A route whose pasted code names no style opens on the hybrid map (`STRAVA_MAP_STYLE`); one that names a style keeps it — the club chooses it in Strava's builder.
+- **Who changes the settings.** The club, in Strava's builder, then pastes the code in «Traseul». Visitors keep the map's own controls inside Strava's frame (the layers button, Ctrl + drag to turn a 3D map); the page adds no switch of its own — that would need a script, and the facade loads nothing before the press (§69).
+- **Strava first.** The owner, on the page: «Strava tab should show before Garmin Connect tab» — the tabs, the stored order and the editor's closed line name Strava first (`ROUTE_MAP_PROVIDERS`).
+- **A larger map, never cut.** «there is a scroll on these containers but it's not visible… This is cropped»: Strava's card — title and figures, the map, the elevation profile, its footer — scrolled inside a frame shorter than itself. Strava would tell its height by a message, which needs a script on our page; instead each service has its own height, Strava 760 pixels on a phone and 880 from `sm` up, Garmin 600 and 720 (was 420 and 548 for both).
+- **Garmin in kilometres — not done.** Garmin Connect's course embed documents no units option: it shows the units of the viewer's own Garmin account, or Garmin's default for a visitor signed out.
+
+Baseline `BR-V3.03-2026-10-12`.

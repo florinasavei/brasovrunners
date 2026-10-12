@@ -34,7 +34,7 @@ import { declarationAsksMinorToSignByEvent } from "@/modules/legal-documents/rep
 import { registrationStatus } from "@/db/schema/registrations";
 import { journeyOf } from "@/modules/registrations/domain/journey";
 import { canTransition } from "@/modules/registrations/domain/state-machine";
-import { printedNumbersACancelWouldVoid, raceNumberOf } from "@/modules/registrations/domain/race-number";
+import { formatRaceNumber, printedNumbersACancelWouldVoid, raceNumberOf, raceNumberTextOf } from "@/modules/registrations/domain/race-number";
 import { deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
 import FamilyChip from "@/modules/registrations/ui/FamilyChip";
@@ -58,7 +58,9 @@ import {
   parseListQuery,
   pageCount,
 } from "@/modules/staff-identity/domain/admin-list-query";
-import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
+import AdminTable, { type AdminColumn, type AdminLeadRow } from "@/modules/staff-identity/ui/AdminTable";
+import { invitationState } from "@/modules/registrations/domain/invitations";
+import { listEventInvitations } from "@/modules/registrations/invitation-repository";
 import Panel from "@/shared/ui/Panel";
 import InvitationsPanel from "@/modules/registrations/ui/InvitationsPanel";
 import { inviteAction, resendInvitationAction, withdrawInvitationAction } from "../invitation-actions";
@@ -424,6 +426,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           )}
           {/* On the hidden list (§643, §647): counted in no place, for every role that reads the list. */}
           {row.outsideCapacity && <HiddenListChip label={t("registrations.outside.chip")} hint={t("registrations.outside.hint")} testId="outside-chip" />}
+          {/* Registered from an invitation by email (§737, amending §647): who came in that way, at a glance. */}
+          {row.invited && <Chip size="small" variant="outlined" color="info" label={t("registrations.invitedChip")} data-testid="invited-chip" />}
           {/* A family on one address (§543): who else is registered with it, each a link to their row. */}
           <FamilyChip
             label={t("registrations.familyChip")}
@@ -502,7 +506,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       // "3/6" cannot say what the six are (§200).
       hint: t("registrations.journey.legend"),
       // The number once the registration is confirmed (§548): the chip says "nr. 42".
-      render: (row) => <StaffJourney journey={journeyOf(row)} bibNumber={raceNumberOf(row)} variant="compact" />,
+      render: (row) => <StaffJourney journey={journeyOf(row)} bibNumber={raceNumberTextOf(row)} variant="compact" />,
     },
     {
       /*
@@ -546,7 +550,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         }
         return (
           <Box component="span" sx={{ fontVariantNumeric: "tabular-nums", fontWeight: 700, color: "text.primary" }}>
-            {number}
+            {formatRaceNumber(number, row.raceNumberFormat)}
             {/*
               Whether this bib is on paper (§264). A tick rather than a printer glyph, for the
               reason the editor's toolbar has words on it: the printer emoji renders as a broken
@@ -634,6 +638,58 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       render: (row) => formatDay(row.submittedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }),
     },
   ];
+
+  /*
+    The event's invitations in the table itself (§737; the owner, on this list: «și aici ar trebui să văd
+    cumva lista de invitații»): every invitation not accepted yet — sent, expired or withdrawn — as a row
+    above the registrations, in the same columns, on a quiet fill. An accepted one is a registration
+    already, marked «Invitat» in its own row. Only on the first page of one event's list with no other
+    filter: an invitation has no state, number or city a filter could ask about, and it is not counted in
+    the results.
+  */
+  const otherFilters = Boolean(status || clubMember || bounced || promo === "1" || outside === "1" || memberBib === "asked" || q);
+  const leadEvent = filters.eventId && query.page === 1 && !otherFilters ? filters.eventId : null;
+  const leadNow = new Date();
+  const leadInvitations = leadEvent ? (await listEventInvitations(db, leadEvent)).filter((row) => invitationState(row, leadNow) !== "accepted") : [];
+  const leadTitle = leadEvent ? (events.find((event) => event.id === leadEvent)?.title ?? null) : null;
+  const leadWhen = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });
+  const leadRows: AdminLeadRow[] = leadInvitations.map((row) => {
+    const state = invitationState(row, leadNow);
+    return {
+      key: row.id,
+      testId: "registrations-invitation-row",
+      cells: {
+        name: (
+          <Stack spacing={0.5} sx={{ alignItems: "flex-start" }}>
+            <Box component="span" sx={{ fontWeight: 600 }}>
+              {row.name}
+            </Box>
+            <Chip size="small" variant="outlined" color="info" label={t("registrations.invitationRow.chip")} />
+          </Stack>
+        ),
+        status: <Chip size="small" color={state === "sent" ? "info" : "default"} label={t(`registrations.invitationRow.state.${state}`)} />,
+        untilWhen:
+          state === "sent"
+            ? t("invitations.until", { deadline: leadWhen(row.expiresAt) })
+            : state === "withdrawn" && row.withdrawnAt
+              ? t("invitations.withdrawnAt", { at: leadWhen(row.withdrawnAt) })
+              : t("invitations.expiredAt", { at: leadWhen(row.expiredAt ?? row.expiresAt) }),
+        event: leadTitle ?? "",
+        email: (
+          <Box component="span" sx={{ wordBreak: "break-all" }}>
+            {row.email}
+          </Box>
+        ),
+        submitted: leadWhen(row.sentAt),
+      },
+      // To the invitation itself, where «Retrimite» and «Retrage» are.
+      actions: (
+        <GlyphButton icon="send" href="#registrations-invitations" variant="text" size="small" sx={TAP_TARGET}>
+          {t("registrations.invitationRow.open")}
+        </GlyphButton>
+      ),
+    };
+  });
 
   return (
     <Stack spacing={3}>
@@ -848,6 +904,27 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             {t("registrations.new")}
           </GlyphButton>
           {/*
+            «Invită pe email» (§736, amending §647; the owner: «partea de invitații nu e super clară… era
+            ascunsă»): the way to the folded «Invitații» section below, beside «Adaugă o înscriere» — an
+            in-page link the backoffice's `OpenFoldFromHash` answers by opening the section and scrolling
+            to it. The Administrator's, as the send is. An invitation is to one event and the section is
+            drawn only for a list about one: on «toate evenimentele» the button opens «Caută și filtrează»
+            instead, where the event is chosen, and says so in its accessible name.
+          */}
+          {mayManage && (
+            <GlyphButton
+              icon="send"
+              href={filters.eventId ? "#registrations-invitations" : "#registrations-filters"}
+              variant="outlined"
+              size="small"
+              sx={TAP_TARGET}
+              aria-label={filters.eventId ? undefined : t("invitations.toolbarChooseEvent")}
+              data-testid="registrations-invite-link"
+            >
+              {t("invitations.toolbar")}
+            </GlyphButton>
+          )}
+          {/*
             The export takes the filters and not the page: a spreadsheet of whichever 25 rows
             happened to be on screen would be a quietly wrong file (§15.10). Set the event
             filter and the file is that race's start list, named after it (§172).
@@ -965,7 +1042,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 >
                   <Link href={{ pathname: "/admin/registrations/[id]", params: { id: bib.id } }}>
                     {t(bib.status === "CANCELLED" ? "registrations.bibsVoidCancelled" : "registrations.bibsVoidExpired", {
-                      number: bib.bibNumber,
+                      number: formatRaceNumber(bib.bibNumber, bib.raceNumberFormat),
                       name: bib.registeredName,
                       date: formatDay(bib.voidedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline" }),
                     })}
@@ -1458,6 +1535,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         tableId="registrations"
         columns={columns}
         rows={rows}
+        leadRows={leadRows}
         rowKey={(row) => row.id}
         basePath={basePath}
         currentParams={listParams}
@@ -1736,7 +1814,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                         title: t("registrations.cancel"),
                         // A printed bib is named before the press (§311): after this the number stays
                         // retired and the paper has to come out of the pile.
-                        body: `${row.bibPrintedAt !== null && row.bibNumber !== null ? `${t("confirm.cancelRegistrationPrintedBody", { number: row.bibNumber })} ` : ""}${t("registrations.cancelBody")}`,
+                        body: `${row.bibPrintedAt !== null && row.bibNumber !== null ? `${t("confirm.cancelRegistrationPrintedBody", { number: formatRaceNumber(row.bibNumber, row.raceNumberFormat) })} ` : ""}${t("registrations.cancelBody")}`,
                         ...(row.kind === "TEST" ? {} : { email: words.email(1) }),
                         confirmLabel: t("registrations.cancel"),
                         cancelLabel: words.cancel,

@@ -30,6 +30,7 @@ import { listStateLegend } from "./list-state-legend";
 import ListStateLabel from "./ListStateLabel";
 import StartListSocials from "./StartListSocials";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
+import { formatRaceNumber } from "@/modules/registrations/domain/race-number";
 
 /** What the «BIB» column says for a listed runner with no number: the backoffice's own dash (§548). */
 const NO_NUMBER = "—";
@@ -306,7 +307,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   const numberCell = (bibNumber: number | null | undefined) =>
     numbersShown ? (
       <Box component="td" data-col="number" data-testid="start-list-number">
-        {typeof bibNumber === "number" ? bibNumber : NO_NUMBER}
+        {typeof bibNumber === "number" ? formatRaceNumber(bibNumber, event.raceNumberFormat) : NO_NUMBER}
       </Box>
     ) : null;
   // The caption names the number only when the column is there (§613), and the waiting list only

@@ -11,7 +11,7 @@ export type RouteMapTab = { provider: RouteMapProvider; label: string; tabId: st
 
 /**
  * The tabs of «Traseul»'s maps (§718; the owner, 2026-10-11: «so I will have Garmin Connect / Strava
- * in tabs and GPX file at the bottom of them»): one tab per service, Garmin first, each with its
+ * in tabs and GPX file at the bottom of them»): one tab per service, Strava first (§738), each with its
  * mark, 44 pixels tall (BR-REQ-041-01 criterion 6).
  *
  * The one client island of the section, and a small one: the panels are the server's, passed as

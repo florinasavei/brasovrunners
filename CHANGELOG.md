@@ -8,6 +8,18 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.03-2026-10-12
+
+- **Route maps** — the Strava tab comes first; Strava's map keeps what the club chose in Strava's embed builder (3D terrain, kilometres, the elevation profile, the surface), opens on the hybrid view when nothing is chosen, and every route map is tall enough to show its whole card. §738.
+## BR-V3.02-2026-10-12
+
+- **Invitations, clearer** — invite people one row each, a name and an email, with «Adaugă încă o persoană»; «Invitații» shows the people invited first, in a table with counts by state; the registrations table itself lists the event's invitations not accepted yet above the registrations; and whoever registered from an invitation is marked «Invitat». §737.
+## BR-V3.01-2026-10-12
+
+- **«Invită pe email» on the registrations page** — a button beside «Adaugă o înscriere» opens the «Invitații» section and scrolls to it; and a new race appears in the page's event filter before its first registration, so it can be invited to from the start. §736.
+## BR-V3.00-2026-10-12
+
+- **Race numbers with leading zeros** — the bib designer's new «Cum arată numărul» writes the numbers 001, 002, 003 (or 0001…) on the bib, in the emails, on the public list, on «Înscrierile mele», at the desk and in the backoffice; «1, 2, 3» stays the default, so nothing changes until the club chooses. The exports keep plain numbers. §735.
 ## BR-V2.99-2026-10-12
 
 - **The calendar closer to the mock-up, under «Aspectul nou»** — arrows either side of the month's name, «Alergăm împreună în Brașov.» handwritten at the right of the title, segmented «Lună / An» and «Calendar / Listă», each entry in the grid showing its time and then its whole title, the month's controls and grid in one card level with the next event, and the Google, Apple and Outlook rows with each app's own logo. On a phone the kind and surface chips are smaller and a scrollbar under them stays in sight while there are more to see. Off, nothing changes. §734.

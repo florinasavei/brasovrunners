@@ -7,7 +7,7 @@ import type { Locale } from "@/i18n/routing";
 import { inviteToEvent, readInvitationForecast, resendInvitation, withdrawInvitation } from "@/modules/registrations/admin-service";
 import { confirmedCapacityOf, SUPPLEMENTARY_PLACE_UNCONFIRMED, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
 import { HIDDEN_LIST_OFF } from "@/modules/registrations/domain/hidden-list";
-import { INVITATION_DAYS_DEFAULT, InvitationRefusal, parseInvitationLines } from "@/modules/registrations/domain/invitations";
+import { INVITATION_DAYS_DEFAULT, InvitationRefusal, parseInvitationLines, readInviteeRows } from "@/modules/registrations/domain/invitations";
 import type { InvitationInvitee } from "@/modules/registrations/service";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
@@ -67,11 +67,16 @@ export async function inviteAction(_previous: InvitationSendState, form: FormDat
   const eventId = text(form, "eventId");
   const typed = parseInvitationLines(text(form, "typed"));
   if (typed.unread.length > 0) return { error: "INVITATION_UNREAD_LINE", lines: typed.unread.join(", ") };
+  // The form's rows (§737): «Nume» and «Email» per person, two lists in the same order.
+  const strings = (name: string) => form.getAll(name).map((value) => (typeof value === "string" ? value : ""));
+  const rows = readInviteeRows(strings("inviteeName"), strings("inviteeEmail"));
+  if (rows.unread.length > 0) return { error: "INVITATION_UNREAD_ROW", lines: rows.unread.join(", ") };
   const people: InvitationInvitee[] = [
     ...form
       .getAll("member")
       .filter((value): value is string => typeof value === "string" && value !== "")
       .map((memberStaffUserId) => ({ name: "", email: "", memberStaffUserId })),
+    ...rows.people.map((person) => ({ name: person.name, email: person.email })),
     ...typed.people.map((person) => ({ name: person.name, email: person.email })),
   ];
   const days = wholeDigits(text(form, "days")) ?? INVITATION_DAYS_DEFAULT;

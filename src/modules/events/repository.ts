@@ -1,3 +1,4 @@
+import { readRaceNumberFormat, type RaceNumberFormat } from "@/modules/registrations/domain/race-number";
 import { type AnyColumn, and, asc, desc, eq, gte, inArray, isNull, lt, or, type SQL, sql } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type { PgliteDatabase } from "drizzle-orm/pglite";
@@ -83,6 +84,13 @@ export type Database = NodePgDatabase<Schema> | PgliteDatabase<Schema>;
  * again off the locked row.
  */
 export const OFFERS_MEMBER_BIB = sql<boolean>`coalesce((${events.bibDesign} #> '{member,enabled}') = 'true'::jsonb, false)`.mapWith(Boolean);
+
+/**
+ * How the event writes a race number (§735): its bib design's `numberFormat`, read as
+ * `race-number.ts#readRaceNumberFormat` reads it — `plain` for nothing or anything unknown. Every
+ * page and the email renderer select it beside the number and write it with `formatRaceNumber`.
+ */
+export const RACE_NUMBER_FORMAT = sql<RaceNumberFormat>`coalesce(${events.bibDesign} ->> 'numberFormat', 'plain')`.mapWith(readRaceNumberFormat);
 
 /**
  * «Copertă» (the facelift's phase 2, §709) as a page draws it: the stored picture's key prefix and
@@ -191,6 +199,8 @@ const PUBLIC_COLUMNS = {
     the service decides again off the locked row whatever this said.
   */
   offersMemberBib: OFFERS_MEMBER_BIB,
+  /** How a race number is written on this event (§735): the public list's numbers through `formatRaceNumber`. */
+  raceNumberFormat: RACE_NUMBER_FORMAT,
   confirmationOpensDaysBefore: events.confirmationOpensDaysBefore,
   confirmationDeadlineDaysBefore: events.confirmationDeadlineDaysBefore,
   // Who may enter (§329): the page says it, the form's picker is bounded by it, and the
@@ -664,6 +674,8 @@ export async function findEventNotificationRows<T extends Record<string, unknown
       locationAddress: unlessToBeAnnounced<string | null>(events.locationAddress),
       locationToBeAnnounced: events.locationToBeAnnounced,
       stravaEventUrl: events.stravaEventUrl,
+      // How the event writes a race number (§735): «007» in the email when the bib says «007».
+      raceNumberFormat: RACE_NUMBER_FORMAT,
       facebookEventUrl: events.facebookEventUrl,
       // The route's facts and the cost, as the page's pills say them (§392, `eventFactsBlock`):
       // the same public columns `PUBLIC_COLUMNS` reads, nothing a public page does not show.

@@ -920,6 +920,17 @@
         }
       },
       "testKind": "Test",
+      "invitedChip": "Invitat",
+      "invitationRow": {
+        "chip": "Invitație",
+        "open": "Vezi invitația",
+        "state": {
+          "sent": "Invitație trimisă",
+          "expired": "Invitație expirată",
+          "withdrawn": "Invitație retrasă",
+          "accepted": "Invitație acceptată"
+        }
+      },
       "enteredByStaff": "Adăugată de echipă",
       "livesIn": "Locuiește în: {place}",
       "sexLine": "Sex: {sex}",
@@ -2201,6 +2212,13 @@
         "showLogo": "Sigla clubului",
         "cutMarks": "Repere de tăiere pe foaie",
         "numberScale": "Mărimea numărului",
+        "numberFormat": "Cum arată numărul",
+        "numberFormatHelp": "La fel pe număr, în emailuri, pe site și la masă.",
+        "numberFormats": {
+          "plain": "1, 2, 3 — așa cum e",
+          "pad3": "001, 002, 003 — trei cifre",
+          "pad4": "0001, 0002, 0003 — patru cifre"
+        },
         "namePosition": "Unde stă numele",
         "scales": {
           "small": "Mic",
@@ -8116,6 +8134,8 @@
       }
     },
     "invitations": {
+      "toolbar": "Invită pe email",
+      "toolbarChooseEvent": "Invită pe email: alege întâi evenimentul",
       "link": "Trimite invitații",
       "title": "Invitații",
       "intro": "Un loc păstrat pentru o persoană aleasă, până la un termen: primește un email cu un link spre formular.",
@@ -8128,8 +8148,25 @@
       "membersLegend": "Membri din zona membrilor",
       "membersSearch": "Caută după nume sau adresă",
       "membersNone": "Niciun cont de membru încă.",
-      "typedLabel": "Alte persoane: nume și adresă, una pe rând",
-      "typedHelp": "Câte o persoană pe rând: numele, apoi adresa de email. Rândurile goale nu contează.",
+      "typedLabel": "Alte persoane",
+      "typedHelp": "Câte un rând pentru fiecare: numele, cum vrei să apară în invitație, și adresa de email. Un rând gol nu contează.",
+      "nameLabel": "Nume și prenume",
+      "emailLabel": "Email",
+      "removeRow": "Scoate rândul {row}",
+      "removeShort": "Scoate",
+      "addRow": "Adaugă încă o persoană",
+      "tableCaption": "Invitațiile trimise la acest eveniment",
+      "sendTitle": "Trimite invitații noi",
+      "columns": {
+        "person": "Persoana",
+        "state": "Stare",
+        "by": "Trimisă de",
+        "actions": "Ce poți face"
+      },
+      "origin": {
+        "member": "Membru",
+        "typed": "Adăugat de mână"
+      },
       "daysLabel": "Zile până expiră",
       "daysHelp": "Locul e păstrat atâtea zile, cel mult până la start; între 1 și {max}.",
       "outsideLabel": "Pe lista de invitați speciali (nu ocupă un loc)",
@@ -8209,6 +8246,7 @@
         "INVITATION_NOT_OPEN": "Invitația nu mai e în așteptare: a fost acceptată, retrasă sau a expirat.",
         "INVITATION_BAD_DAYS": "Zilele până expiră: un număr întreg de la 1 la 60.",
         "INVITATION_UNREAD_LINE": "Rândurile {lines} nu au un nume și o adresă: nu s-a trimis nicio invitație.",
+        "INVITATION_UNREAD_ROW": "Persoanele de pe rândurile {lines} nu au și un nume, și o adresă de email bună: nu s-a trimis nicio invitație.",
         "SUPPLEMENTARY_PLACE_UNCONFIRMED": "Nu s-a trimis nimic: locurile s-au schimbat de când ai deschis pagina. Apasă din nou: întrebarea spune acum câte locuri se adaugă.",
         "FORBIDDEN": "Doar un administrator trimite invitații.",
         "NOT_FOUND": "Evenimentul nu mai există.",

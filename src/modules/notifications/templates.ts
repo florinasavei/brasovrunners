@@ -790,8 +790,8 @@ export type TemplateData = {
   /** The desk code and the address of its QR image, on the confirmation and the reminder (BR-REQ-037-08). */
   checkinCode?: string;
   checkinQrUrl?: string;
-  /** The race number, given at the confirmation (§87, §548) — on the confirmation and the reminder, never before. */
-  bibNumber?: number;
+  /** The race number, given at the confirmation (§87, §548) — on the confirmation and the reminder, never before — as the event writes it («007», §735). */
+  bibNumber?: number | string;
   /** The event's map link and Strava event link, when set (§81). */
   eventMapUrl?: string;
   eventStravaEventUrl?: string;
@@ -1101,7 +1101,7 @@ export type TemplateData = {
     firstName?: string;
     checkinCode?: string;
     qrUrl?: string;
-    raceNumber: number | null;
+    raceNumber: number | string | null;
   }>;
   /**
    * A message re-sent because the form came back with a registration's name or birth date but not
@@ -1974,7 +1974,7 @@ const T = {
      * because that is the fact somebody is hunting for; it is safe here and nowhere else, since
      * only the owner of the address reads it (§19.4).
      */
-    alreadyRegistered: (bib?: number | null) =>
+    alreadyRegistered: (bib?: number | string | null) =>
       bib
         ? `Ne bucurăm că ești nerăbdător! __Ești deja înscris__ la acest eveniment, cu numărul **${bib}** — nu s-a creat o a doua înscriere. Mai jos este înscrierea pe care o ai.`
         : "Ne bucurăm că ești nerăbdător! __Ești deja înscris__ la acest eveniment, așa că nu s-a creat o a doua înscriere — mai jos este înscrierea pe care o ai deja.",
@@ -2662,7 +2662,7 @@ const T = {
     },
     closing: "Happy running,",
     /** In front of a message re-sent because the form was filled in again (§235, §286). */
-    alreadyRegistered: (bib?: number | null) =>
+    alreadyRegistered: (bib?: number | string | null) =>
       bib
         ? `We are glad you are keen! __You are already registered__ for this event, with number **${bib}** — no second registration was created. Below is the one you have.`
         : "We are glad you are keen! __You are already registered__ for this event, so no second registration was created — below is the registration you already have.",
