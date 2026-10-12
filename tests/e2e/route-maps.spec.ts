@@ -136,7 +136,8 @@ test.describe.serial("BR-REQ-011-01 «Traseul»'s maps and GPX (§718)", () => {
     const strava = section.getByTestId("route-map-strava");
     await expect(strava).toBeVisible();
     await expect(garmin).toBeHidden();
-    await expect(garmin.getByRole("link", { name: /Deschide în Garmin Connect/ })).toHaveAttribute("href", GARMIN_LINK);
+    // Garmin's panel is the hidden tab now: its link is read by address, not by role.
+    await expect(garmin.locator(`a[href="${GARMIN_LINK}"]`)).toContainText("Deschide în Garmin Connect");
     await expect(garmin).toContainText("Harta se încarcă de la Garmin când apeși; Garmin vede adresa ta IP.");
 
     // Scrolled through, waited on: nothing has been asked of either service, and no script of theirs is on the page.
