@@ -119,11 +119,13 @@ const TITLE_UNDER_LOOK = {
 const SEGMENTED_SX = {
   [UNDER_LOOK]: {
     alignItems: "center",
-    p: "3px",
+    // The track's padding and border from `sm` only: on a phone they put the chip row 8 pixels taller than its 44-pixel links.
+    p: { sm: "3px" },
     borderRadius: "12px",
     bgcolor: "action.hover",
-    border: 1,
-    borderColor: "divider",
+    border: { sm: 1 },
+    // In the same `sm` rule as the shorthand, after it: a base value would be reset to `currentColor` by it.
+    borderColor: { sm: "divider" },
     "& > a": { minHeight: { xs: 44, sm: 36 }, ml: "0 !important" },
     "& .MuiChip-root": { height: 30, borderRadius: "9px", px: 0.75, fontWeight: 600, border: 0, bgcolor: "transparent", color: "text.secondary" },
     "& .MuiChip-root:hover": { color: "text.primary" },
@@ -174,7 +176,9 @@ export default async function CalendarHeader({
       {/* Under «Aspectul nou», from `sm`, the arrows stand either side of the month's name (the
           mock-up's ‹ Octombrie 2026 ›) and the period row's pair is not drawn; on a phone the row
           keeps them, beside «Azi», where the heading is not drawn (§487). Off, as before. */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+      {/* `contents` on a phone: the heading is out of flow there (§487) and the arrows are not drawn,
+          so the box must not take a line of the wrapping row (it cost the first week 8 pixels). */}
+      <Box sx={{ display: { xs: "contents", sm: "flex" }, alignItems: "center", gap: 0.5 }}>
         <CalendarStepLink href={previousHref} label={previousLabel} direction="previous" sx={TITLE_ARROW_SX} />
         <Typography id="calendar-title" component="h2" variant="h2" sx={{ fontSize: "1.25rem", textTransform: "capitalize", ...TITLE_ON_A_PHONE_SX, ...TITLE_UNDER_LOOK }}>
           {title}

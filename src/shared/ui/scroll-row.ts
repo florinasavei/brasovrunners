@@ -45,7 +45,8 @@ export const SCROLL_BAR_SX = {
   display: "none",
   position: "relative",
   height: 4,
-  mt: 0.25,
+  // Up into the room the 44-pixel links leave under their small pills: nearer the chips, and no taller a row.
+  mt: "-6px",
   borderRadius: "2px",
   bgcolor: "divider",
   overflow: "hidden",

@@ -261,7 +261,8 @@ export default async function EventCalendar({
               borderBottom: 1,
               borderColor: "divider",
               // Under the look the weekdays are a quiet, spaced line over the paper (the mock-up's).
-              [UNDER_LOOK]: { bgcolor: "transparent", letterSpacing: "0.06em", py: 1.25, textAlign: { sm: "center" } },
+              // The taller row from `sm` only, so a phone's first week stays above the fold (§569).
+              [UNDER_LOOK]: { bgcolor: "transparent", letterSpacing: "0.06em", py: { sm: 1.25 }, textAlign: { sm: "center" } },
             }}
           >
             {name}
