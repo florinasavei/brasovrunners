@@ -7,7 +7,7 @@ import type { getTranslations } from "next-intl/server";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { countForm } from "@/i18n/count-form";
 import type { Locale } from "@/i18n/routing";
-import GlyphChip from "@/modules/events/ui/GlyphChip";
+import StatusChip from "@/shared/ui/StatusChip";
 import type { ShopOrderStatus } from "@/db/schema/shop";
 import { clubVerbsFor, formatPrice, ORDER_NOTE_MAX, ORDER_QUANTITY_MAX, orderTotalBani, type OrderVerb } from "@/modules/content/shop/domain";
 import type { AdminOrder, OrderableItem, OrdersQuery, ZoneAccount } from "@/modules/content/shop/repository";
@@ -306,13 +306,13 @@ function OrderRow({
         <Typography variant="subtitle2" component="p" sx={{ fontWeight: 700 }}>
           {t("members.shop.orderNumber", { number: order.number })}
         </Typography>
-        <GlyphChip
+        <StatusChip
           glyph={order.status === "CANCELLED" ? "cancelled" : order.status === "PLACED" ? "planned" : "done"}
           color={order.status === "CANCELLED" ? "default" : order.status === "PLACED" ? "warning" : "success"}
           label={t(`members.shop.status.${order.status}`)}
         />
         {/* Placed by the club in the member's name (§690): said on the row, as the CSV says it in its column. */}
-        {order.placedBy === "CLUB" && <GlyphChip glyph="club" variant="outlined" label={t("members.shop.forMember.placedByClub")} testId="order-placed-by-club" />}
+        {order.placedBy === "CLUB" && <StatusChip glyph="club" variant="outlined" label={t("members.shop.forMember.placedByClub")} testId="order-placed-by-club" />}
       </Stack>
       <Typography variant="body2" sx={{ overflowWrap: "anywhere" }}>
         {order.memberName}

@@ -16,7 +16,6 @@ import MoneyOffIcon from "@mui/icons-material/MoneyOff";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PaidIcon from "@mui/icons-material/Paid";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
-import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import ScienceIcon from "@mui/icons-material/Science";
 import SportsScoreIcon from "@mui/icons-material/SportsScore";
@@ -24,10 +23,7 @@ import StarIcon from "@mui/icons-material/Star";
 import StraightenIcon from "@mui/icons-material/Straighten";
 import TerrainIcon from "@mui/icons-material/Terrain";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import TranslateIcon from "@mui/icons-material/Translate";
 import TuneIcon from "@mui/icons-material/Tune";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import type { ComponentType } from "react";
@@ -158,13 +154,7 @@ export const GLYPHS = {
   done: CheckCircleIcon,
   cancelled: EventBusyIcon,
   planned: ScheduleIcon,
-  // Held here only while the backoffice shop's orders card and product list still draw them through
-  // `GlyphChip`: `tests/unit/design/status-chip.test.ts` lists them as PENDING_SHOP, to leave when a
-  // later change moves those two files to `StatusChip` (with `orders` and `club` in its table, §707).
-  visible: VisibilityIcon,
-  hidden: VisibilityOffIcon,
-  language: TranslateIcon,
-  orders: ReceiptLongIcon,
+  // «Toate evenimentele» on the calendar's kind chips (`KindChips.tsx`, public); the backoffice's «placed by the club» chip draws it through `StatusChip` (§707).
   club: GroupsIcon,
 };
 
