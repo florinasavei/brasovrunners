@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.01-2026-10-12 -->
+<!-- PROJECT_BASELINE: BR-V3.02-2026-10-12 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.01-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.02-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -25765,3 +25765,18 @@ Baseline `BR-V3.00-2026-10-12`.
 **Refused.** Moving «Invitații» above the counts: the counts are what the page is first read for. A tab of its own in the event's menu: one more address for one panel, and the section's verbs act on the list beside it.
 
 Baseline `BR-V3.01-2026-10-12`.
+
+## 737. Invitations: a name and an email per row, the invited people first in a table, and in the registrations list itself
+
+**The owner, 2026-10-12** (amends §647): «that invitation list needs to be better presented, I need to be able to add by name and email not just a simple input, and I need to see the people that were added via manual invitations».
+
+**Decision.**
+
+- **One row per person.** «Alte persoane» is no longer one text box of lines «Nume <adresă>»: each person is a row with «Nume și prenume» and «Email» (an email field), «Scoate» on each row and «Adaugă încă o persoană» under them; one empty row to start, and the only row is emptied rather than removed. The rows post `inviteeName` / `inviteeEmail` in order, read by `domain/invitations.ts#readInviteeRows`: an empty row is ignored; a row with only one box, or an address that is not one word with an «@», is refused before anything is sent, named by its row number (`INVITATION_UNREAD_ROW`), as an unread line was. The server still reads a posted `typed` the old way, so nothing that posted it breaks; the form no longer draws it. Every other check (the address canonicalised, a person already registered or invited, the places) is the service's as before.
+- **The people invited first.** In «Invitații» the invitations come before the form: counts by state above them («Trimisă: 2», «Acceptată: 1» …), then a table — the person (name, address, and whether the club picked a member or added the person by hand, «Membru» / «Adăugat de mână», from the invitation's member account), the state with its date (deadline, accepted, withdrawn, expired; resends; a place added), who sent it, and «Retrimite» / «Retrage» on an open one. On a phone each invitation reads as a block, the columns one under another, nothing scrolling sideways. Then «Trimite invitații noi», the form, under its own heading. A plain table rather than `AdminTable`, whose paging and sorting live in the address the registrations' own table already uses on this page.
+- **«Invitat» on the registrations list.** A registration whose invitation was accepted (by its link, or taken over, §647) wears an «Invitat» chip beside the name, for every role that reads the list (`listRegistrationsForAdmin`'s `invited`).
+- **The invitations in the registrations table** — the owner, on the list itself: «și aici ar trebui să văd cumva lista de invitații». On the first page of one event's list with no other filter, every invitation not accepted yet (sent, expired, withdrawn) is a row above the registrations, in the same columns on a quiet fill: the name with an «Invitație» chip, «Invitație trimisă / expirată / retrasă», the deadline (or when it was withdrawn or expired), the event, the address, when it was sent, and «Vezi invitația» to the «Invitații» section's verbs. They are not counted in the results and not sorted or paged; an accepted invitation is a registration already, marked «Invitat». `AdminTable` gains `leadRows` for this — cells by column key, drawn in the table and in the phone's blocks, and the table is drawn for them even when no registration matches.
+
+Also: `InviteForm` now uses the house primitives (`GlyphButton` by an action-icons name) for its buttons, so its two design-guard exceptions are gone (§694).
+
+Baseline `BR-V3.02-2026-10-12`.
