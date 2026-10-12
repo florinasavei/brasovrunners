@@ -250,7 +250,19 @@ export default async function EventCalendar({
           <Box
             key={name}
             role="columnheader"
-            sx={{ px: 1, py: 0.75, fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", color: "text.secondary", bgcolor: "action.hover", borderBottom: 1, borderColor: "divider" }}
+            sx={{
+              px: 1,
+              py: 0.75,
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              textTransform: "uppercase",
+              color: "text.secondary",
+              bgcolor: "action.hover",
+              borderBottom: 1,
+              borderColor: "divider",
+              // Under the look the weekdays are a quiet, spaced line over the paper (the mock-up's).
+              [UNDER_LOOK]: { bgcolor: "transparent", letterSpacing: "0.06em", py: 1.25, textAlign: { sm: "center" } },
+            }}
           >
             {name}
           </Box>
@@ -272,6 +284,8 @@ export default async function EventCalendar({
                   bgcolor: day.inMonth ? "background.paper" : "action.hover",
                   opacity: day.inMonth ? 1 : 0.6,
                   "&:nth-of-type(7n)": { borderRight: 0 },
+                  // Room for an entry's two lines under the look (its time, then its title).
+                  [UNDER_LOOK]: { minHeight: { sm: 104 }, p: { sm: 0.75 } },
                 }}
               >
                 <Box
