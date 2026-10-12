@@ -8136,6 +8136,7 @@
     "invitations": {
       "toolbar": "Invită pe email",
       "toolbarChooseEvent": "Invită pe email: alege întâi evenimentul",
+      "openTitle": "Invitații fără răspuns, pe evenimente:",
       "link": "Trimite invitații",
       "title": "Invitații",
       "intro": "Un loc păstrat pentru o persoană aleasă, până la un termen: primește un email cu un link spre formular.",

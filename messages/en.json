@@ -8136,6 +8136,7 @@
     "invitations": {
       "toolbar": "Invite by email",
       "toolbarChooseEvent": "Invite by email: choose the event first",
+      "openTitle": "Invitations not answered, by event:",
       "link": "Send invitations",
       "title": "Invitations",
       "intro": "A place kept for a chosen person until a deadline: they get an email with a link to the form.",

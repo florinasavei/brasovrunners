@@ -142,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.05` | the invite button works; invited people seen with their state (§740) |
 | `BR-V3.04` | route maps open from the start (§739) |
 | `BR-V3.03` | route maps: Strava first, its 3D, units and elevation kept, hybrid by default, taller frames (§738) |
 | `BR-V3.02` | invitations: name and email rows, the invited people in a table, «Invitat» on the list (§737) |

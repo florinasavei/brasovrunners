@@ -21,6 +21,7 @@ import {
   countNeedingEmailActionForAdmin,
   countRegistrationsForAdmin,
   summariseRegistrationsForAdmin,
+  listEventsTakingInvitations,
   listEventsWithRegistrations,
   listRegistrationsForAdmin,
   listResubmissionMarks,
@@ -59,8 +60,8 @@ import {
   pageCount,
 } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn, type AdminLeadRow } from "@/modules/staff-identity/ui/AdminTable";
-import { invitationState } from "@/modules/registrations/domain/invitations";
-import { listEventInvitations } from "@/modules/registrations/invitation-repository";
+import { invitationState, inviteTarget } from "@/modules/registrations/domain/invitations";
+import { listEventInvitations, listOpenInvitationCountsByEvent } from "@/modules/registrations/invitation-repository";
 import Panel from "@/shared/ui/Panel";
 import InvitationsPanel from "@/modules/registrations/ui/InvitationsPanel";
 import { inviteAction, resendInvitationAction, withdrawInvitationAction } from "../invitation-actions";
@@ -68,6 +69,7 @@ import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { countBibs, voidBibsFor } from "@/modules/registrations/bibs";
@@ -112,6 +114,9 @@ type Props = {
   params: Promise<{ locale: string }>;
   searchParams: Promise<Record<string, string | undefined>>;
 };
+
+/** «Invită pe email»'s glyph, from the one registry by name (§694). */
+const SendIcon = ACTION_ICONS.send;
 
 export const dynamic = "force-dynamic";
 
@@ -651,6 +656,18 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const leadEvent = filters.eventId && query.page === 1 && !otherFilters ? filters.eventId : null;
   const leadNow = new Date();
   const leadInvitations = leadEvent ? (await listEventInvitations(db, leadEvent)).filter((row) => invitationState(row, leadNow) !== "accepted") : [];
+  /*
+    «Invită pe email» from anywhere, and every invited person seen (§740). On a list about one event the
+    button goes to that event's panel. On «toate evenimentele» it leads to a panel by the event: the
+    upcoming events the send accepts (registered here, scheduled, published, an announced start still to come), straight to it when
+    there is one, a menu when there are several — and the list names, per event, the invitations nobody has
+    answered, so an invited person is never nowhere. Display only: no count of the club's, no place.
+  */
+  const inviteEvents =
+    mayManage && !filters.eventId ? await listEventsTakingInvitations(db, locale, leadNow) : [];
+  const openInvitations = filters.eventId ? [] : await listOpenInvitationCountsByEvent(db, leadNow);
+  const inviteWhere = inviteTarget(filters.eventId, inviteEvents);
+  const invitationsHref = (id: string) => `${basePath}?eventId=${encodeURIComponent(id)}#registrations-invitations`;
   const leadTitle = leadEvent ? (events.find((event) => event.id === leadEvent)?.title ?? null) : null;
   const leadWhen = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });
   const leadRows: AdminLeadRow[] = leadInvitations.map((row) => {
@@ -908,17 +925,52 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             ascunsă»): the way to the folded «Invitații» section below, beside «Adaugă o înscriere» — an
             in-page link the backoffice's `OpenFoldFromHash` answers by opening the section and scrolling
             to it. The Administrator's, as the send is. An invitation is to one event and the section is
-            drawn only for a list about one: on «toate evenimentele» the button opens «Caută și filtrează»
-            instead, where the event is chosen, and says so in its accessible name.
+            drawn only for a list about one: on «toate evenimentele» the button leads to the event's panel (§740),
+            straight when one upcoming event takes invitations, by a menu when several do.
           */}
-          {mayManage && (
+          {mayManage && inviteWhere.kind === "panel" && (
+            <GlyphButton icon="send" href="#registrations-invitations" variant="outlined" size="small" sx={TAP_TARGET} data-testid="registrations-invite-link">
+              {t("invitations.toolbar")}
+            </GlyphButton>
+          )}
+          {/* One upcoming event takes invitations: straight to its panel. */}
+          {mayManage && inviteWhere.kind === "link" && (
+            <GlyphButton icon="send" href={invitationsHref(inviteWhere.eventId)} variant="outlined" size="small" sx={TAP_TARGET} data-testid="registrations-invite-link">
+              {t("invitations.toolbar")}
+            </GlyphButton>
+          )}
+          {/* Several: a menu of them, each a link to that event's panel — a disclosure that works without a script. */}
+          {mayManage && inviteWhere.kind === "menu" && (
+            <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, minWidth: { sm: 280 }, flexGrow: { xs: 1, sm: 0 } }} data-testid="registrations-invite-menu">
+              <Box component="summary" aria-label={t("invitations.toolbarChooseEvent")} data-testid="registrations-invite-link">
+                <SendIcon aria-hidden sx={FOLD_GLYPH_SX} />
+                {t("invitations.toolbar")}
+              </Box>
+              <Stack component="ul" sx={{ m: 0, p: 0, listStyle: "none" }}>
+                {inviteEvents.map((event) => (
+                  <li key={event.id}>
+                    <Box
+                      component="a"
+                      href={invitationsHref(event.id)}
+                      data-testid="registrations-invite-event"
+                      sx={{ display: "flex", alignItems: "center", minHeight: 44, color: "primary.main", wordBreak: "break-word" }}
+                    >
+                      {`${event.title ?? event.id} · ${leadWhen(event.startsAt)}`}
+                    </Box>
+                  </li>
+                ))}
+              </Stack>
+            </Box>
+          )}
+          {/* No upcoming event takes invitations: «Caută și filtrează», where one is chosen, as before. */}
+          {mayManage && inviteWhere.kind === "filters" && (
             <GlyphButton
               icon="send"
-              href={filters.eventId ? "#registrations-invitations" : "#registrations-filters"}
+              href="#registrations-filters"
               variant="outlined"
               size="small"
               sx={TAP_TARGET}
-              aria-label={filters.eventId ? undefined : t("invitations.toolbarChooseEvent")}
+              aria-label={t("invitations.toolbarChooseEvent")}
               data-testid="registrations-invite-link"
             >
               {t("invitations.toolbar")}
@@ -1175,6 +1227,37 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         everything still to come (§626, §632); this list opens on one event, in every state. Both are right and the pair
         reads as a contradiction, so the screen says which it is showing and offers the other.
       */}
+      {/*
+        «Invitații fără răspuns» on «toate evenimentele» (§740; the owner: «am invitat o persoană și nu văd
+        statusul ei»): per event, how many invitations are sent and waiting and how many ran out unanswered,
+        each a link to that event's panel. Not registrations, and in no count above.
+      */}
+      {!filters.eventId && openInvitations.length > 0 && (
+        <Stack spacing={0.5} sx={{ mt: 1.5 }} data-testid="registrations-invitations-open">
+          <Typography variant="body2" color="text.secondary">
+            {t("invitations.openTitle")}
+          </Typography>
+          <Stack component="ul" direction="row" sx={{ flexWrap: "wrap", gap: 1, m: 0, p: 0, listStyle: "none" }}>
+            {openInvitations.map((open) => (
+              <li key={open.eventId}>
+                <Box
+                  component="a"
+                  href={invitationsHref(open.eventId)}
+                  data-testid="registrations-invitations-open-link"
+                  sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, color: "primary.main" }}
+                >
+                  {`${events.find((event) => event.id === open.eventId)?.title ?? open.eventId} · ${leadWhen(open.startsAt)} — ${[
+                    open.sent > 0 ? `${t("invitations.state.sent")}: ${open.sent}` : null,
+                    open.expired > 0 ? `${t("invitations.state.expired")}: ${open.expired}` : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}`}
+                </Box>
+              </li>
+            ))}
+          </Stack>
+        </Stack>
+      )}
       {filters.eventId && (
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
           {t("registrations.summaryScopeHelp")}{" "}
