@@ -165,11 +165,36 @@ describe("BR-REQ-011-01 what the page builds from the stored ids (§718)", () =>
     expect(src).not.toContain("embed.js");
   });
 
-  it("shows every Strava route on the hybrid map, whatever style the pasted code chose (§NNN)", () => {
-    const standard = new URL(stravaEmbedSrc({ provider: "strava", id: STRAVA_ID, style: "standard" }, ORIGIN));
-    expect(standard.searchParams.get("style")).toBe("hybrid");
+  it("opens a Strava route on the hybrid map when the pasted code names no style, and on its own style otherwise (§NNN)", () => {
     const none = new URL(stravaEmbedSrc({ provider: "strava", id: STRAVA_ID }, ORIGIN));
     expect(none.searchParams.get("style")).toBe("hybrid");
+    const standard = new URL(stravaEmbedSrc({ provider: "strava", id: STRAVA_ID, style: "standard" }, ORIGIN));
+    expect(standard.searchParams.get("style")).toBe("standard");
+  });
+
+  it("keeps the builder's display choices — units, 3D terrain, surface — and passes them to the map (§NNN)", () => {
+    const code = `<div class="strava-embed-placeholder" data-embed-type="route" data-embed-id="${STRAVA_ID}" data-units="metric" data-style="hybrid" data-terrain="3d" data-surface-type="dirt" data-map-hash="13.5/45.60984/25.63961/12.5/60" data-from-embed="true" data-token="${TOKEN}"></div><script src="https://strava-embeds.com/embed.js"></script>`;
+    const parsed = parseStravaRoute(code);
+    expect(parsed).toEqual({
+      ok: true,
+      map: { provider: "strava", id: STRAVA_ID, style: "hybrid", mapHash: "13.5/45.60984/25.63961/12.5/60", token: TOKEN, options: { units: "metric", terrain: "3d", surfaceType: "dirt" } },
+    });
+    if (!parsed.ok || !parsed.map) throw new Error("unreachable");
+    const url = new URL(stravaEmbedSrc(parsed.map, ORIGIN));
+    expect(url.searchParams.get("terrain")).toBe("3d");
+    expect(url.searchParams.get("units")).toBe("metric");
+    expect(url.searchParams.get("surfaceType")).toBe("dirt");
+    expect(parseStravaRoute(routeMapFieldValue(parsed.map))).toEqual(parsed);
+    expect(readRouteMaps([parsed.map])).toEqual([parsed.map]);
+  });
+
+  it("refuses a display choice that would set the page's own values or carries more than a word (§NNN)", () => {
+    const base = `class="strava-embed-placeholder" data-embed-type="route" data-embed-id="${STRAVA_ID}"`;
+    expect(parseStravaRoute(`<div ${base} data-terrain="3d&x=1"></div>`)).toEqual({ ok: false, reason: "notRecognised" });
+    expect(parseStravaRoute(`<div ${base} data-from-embed-x="a b"></div>`)).toEqual({ ok: false, reason: "notRecognised" });
+    expect(readRouteMaps([{ provider: "strava", id: STRAVA_ID, options: { token: "x", terrain: "3d", units: "a b" } }])).toEqual([
+      { provider: "strava", id: STRAVA_ID, options: { terrain: "3d" } },
+    ]);
   });
 
   it("gives the editor back a value that saves to the same map, so a second save never drops the token", () => {

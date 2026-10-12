@@ -23,7 +23,7 @@ export type RouteMapProvider = (typeof ROUTE_MAP_PROVIDERS)[number];
 /** A stored map: the provider, the route's id, and for Strava the embed's own three values. */
 export type RouteMap =
   | { provider: "garmin"; id: string }
-  | { provider: "strava"; id: string; style?: string; mapHash?: string; token?: string };
+  | { provider: "strava"; id: string; style?: string; mapHash?: string; token?: string; options?: Record<string, string> };
 
 export type StravaRouteMap = Extract<RouteMap, { provider: "strava" }>;
 
@@ -31,10 +31,21 @@ export type StravaRouteMap = Extract<RouteMap, { provider: "strava" }>;
 const ROUTE_ID = /^[0-9]{1,20}$/;
 /** Strava's map styles are words: `standard`, `hybrid`, `satellite`. */
 const STRAVA_STYLE = /^[a-z]{1,16}$/;
-/** The map style every Strava route is shown in, whatever the pasted code chose (§NNN). */
+/** The map style a Strava route opens in when the pasted code names none (§NNN). */
 export const STRAVA_MAP_STYLE = "hybrid";
-/** `<zoom>/<lat>/<lon>`, each a decimal number — where the map opens. */
-const STRAVA_MAP_HASH = /^[0-9]{1,2}(?:\.[0-9]{1,4})?\/-?[0-9]{1,3}(?:\.[0-9]{1,10})?\/-?[0-9]{1,3}(?:\.[0-9]{1,10})?$/;
+/** `<zoom>/<lat>/<lon>`, each a decimal number — where the map opens — then, for a 3D map, its bearing and pitch. */
+const STRAVA_MAP_HASH = /^[0-9]{1,2}(?:\.[0-9]{1,4})?\/-?[0-9]{1,3}(?:\.[0-9]{1,10})?\/-?[0-9]{1,3}(?:\.[0-9]{1,10})?(?:\/-?[0-9]{1,3}(?:\.[0-9]{1,4})?){0,2}$/;
+/**
+ * The builder's other display choices (§NNN) — `data-units`, `data-terrain`, `data-surface-type`, the
+ * elevation profile, and whatever Strava adds next — kept as the iframe's query under the name
+ * `embed.js` gives them (`data-surface-type` → `surfaceType`): a `data-*` name, a short word as the value.
+ */
+const STRAVA_OPTION_NAME = /^data-[a-z][a-z0-9]*(?:-[a-z0-9]+){0,3}$/;
+const STRAVA_OPTION_KEY = /^[a-z][a-zA-Z0-9]{0,31}$/;
+const STRAVA_OPTION_VALUE = /^[A-Za-z0-9._-]{1,32}$/;
+const MAX_STRAVA_OPTIONS = 8;
+/** The query names the page sets itself, never taken from an option. */
+const STRAVA_RESERVED_KEYS = new Set(["style", "fromEmbed", "token", "embedType", "embedId", "mapHash"]);
 /** The embed's share token: letters and digits, never longer than a long hash. */
 const STRAVA_TOKEN = /^[A-Za-z0-9]{1,64}$/;
 /** The longest paste either field accepts: the embed code is a few hundred characters. */
@@ -102,26 +113,38 @@ const STRAVA_PLACEHOLDER_ATTRIBUTES = new Set([
   "data-map-hash",
   "data-from-embed",
   "data-token",
-  "data-units",
-  "data-full-width",
 ]);
+
+/** `data-surface-type` → `surfaceType`, as the browser's `dataset` names it. */
+function stravaOptionKey(name: string): string {
+  return name.slice(5).replace(/-([a-z0-9])/g, (_, c: string) => c.toUpperCase());
+}
+
+/** `surfaceType` → `data-surface-type`, for the editor's rebuilt embed code. */
+function stravaOptionName(key: string): string {
+  return `data-${key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`;
+}
 
 function stravaFromEmbed(text: string): StravaRouteMap | null {
   const match = /^<div(\s[^<>]*)?>\s*<\/div>\s*(?:<script(\s[^<>]*)?>\s*<\/script>)?$/i.exec(text);
   if (!match) return null;
   const attributes = readAttributes(match[1] ?? "");
   if (!attributes) return null;
-  for (const name of attributes.keys()) if (!STRAVA_PLACEHOLDER_ATTRIBUTES.has(name)) return null;
+  const options: Record<string, string> = {};
+  for (const [name, value] of attributes) {
+    if (STRAVA_PLACEHOLDER_ATTRIBUTES.has(name)) continue;
+    if (!STRAVA_OPTION_NAME.test(name)) return null;
+    const key = stravaOptionKey(name);
+    if (STRAVA_RESERVED_KEYS.has(key) || !STRAVA_OPTION_VALUE.test(value)) return null;
+    options[key] = value;
+  }
+  if (Object.keys(options).length > MAX_STRAVA_OPTIONS) return null;
   if (attributes.get("class") !== "strava-embed-placeholder") return null;
   if (attributes.get("data-embed-type") !== "route") return null;
   const id = attributes.get("data-embed-id") ?? "";
   if (!ROUTE_ID.test(id)) return null;
   const fromEmbed = attributes.get("data-from-embed");
   if (fromEmbed !== undefined && fromEmbed !== "true" && fromEmbed !== "false") return null;
-  const units = attributes.get("data-units");
-  if (units !== undefined && units !== "metric" && units !== "imperial") return null;
-  const fullWidth = attributes.get("data-full-width");
-  if (fullWidth !== undefined && fullWidth !== "true" && fullWidth !== "false") return null;
   if (match[2] !== undefined) {
     const script = readAttributes(match[2]);
     if (!script || script.size !== 1 || script.get("src") !== STRAVA_EMBED_SCRIPT) return null;
@@ -142,6 +165,7 @@ function stravaFromEmbed(text: string): StravaRouteMap | null {
     if (!STRAVA_TOKEN.test(token)) return null;
     map.token = token;
   }
+  if (Object.keys(options).length > 0) map.options = options;
   return map;
 }
 
@@ -216,6 +240,17 @@ export function parseGarminCourse(input: string | null | undefined): ParsedRoute
   return id ? { ok: true, map: { provider: "garmin", id } } : { ok: false, reason: "notRecognised" };
 }
 
+/** A stored map's display choices, each against its pattern; one off its pattern is dropped alone. */
+function readStravaOptions(stored: unknown): Record<string, string> | null {
+  if (!stored || typeof stored !== "object" || Array.isArray(stored)) return null;
+  const kept: Record<string, string> = {};
+  for (const [key, value] of Object.entries(stored).slice(0, MAX_STRAVA_OPTIONS)) {
+    if (!STRAVA_OPTION_KEY.test(key) || STRAVA_RESERVED_KEYS.has(key)) continue;
+    if (typeof value === "string" && STRAVA_OPTION_VALUE.test(value)) kept[key] = value;
+  }
+  return Object.keys(kept).length > 0 ? kept : null;
+}
+
 /**
  * The stored column as maps, Garmin first (the owner's order, «Garmin Connect / Strava in tabs»).
  * Anything that is not a map this release can draw — another provider, an id with a letter, a
@@ -227,7 +262,7 @@ export function readRouteMaps(stored: unknown): RouteMap[] {
   const found = new Map<RouteMapProvider, RouteMap>();
   for (const entry of stored) {
     if (!entry || typeof entry !== "object") continue;
-    const { provider, id, style, mapHash, token } = entry as Record<string, unknown>;
+    const { provider, id, style, mapHash, token, options } = entry as Record<string, unknown>;
     if (typeof id !== "string" || !ROUTE_ID.test(id)) continue;
     if (provider === "garmin" && !found.has("garmin")) {
       found.set("garmin", { provider: "garmin", id });
@@ -236,6 +271,8 @@ export function readRouteMaps(stored: unknown): RouteMap[] {
       if (typeof style === "string" && STRAVA_STYLE.test(style)) map.style = style;
       if (typeof mapHash === "string" && STRAVA_MAP_HASH.test(mapHash)) map.mapHash = mapHash;
       if (typeof token === "string" && STRAVA_TOKEN.test(token)) map.token = token;
+      const kept = readStravaOptions(options);
+      if (kept) map.options = kept;
       found.set("strava", map);
     }
   }
@@ -264,14 +301,15 @@ export function garminEmbedSrc(id: string): string {
 /**
  * The address Strava's `embed.js` would have given its iframe (read from the script on 2026-10-11),
  * built here so the script never runs on our page: `/<type>/<id>`, the placeholder's other `data-*`
- * values as the query (`style`, `fromEmbed`, `token`), and in the fragment — never sent to Strava's
+ * values as the query (`style`, `fromEmbed`, `token`, and the builder's display choices: units, 3D terrain,
+ * surface, elevation profile — §NNN), and in the fragment — never sent to Strava's
  * server — a namespace for its height messages, this site's origin, and where the map opens. The
  * page's own path and title, which the script also passes, are left out: Strava has no need of them.
  */
 export function stravaEmbedSrc(map: StravaRouteMap, origin: string): string {
   const query = new URLSearchParams();
-  // Always the satellite view with roads and names (§NNN): the trails read better on it than on the plain map.
-  query.set("style", STRAVA_MAP_STYLE);
+  query.set("style", map.style ?? STRAVA_MAP_STYLE);
+  for (const [key, value] of Object.entries(map.options ?? {})) query.set(key, value);
   query.set("fromEmbed", "false");
   if (map.token) query.set("token", map.token);
   const fragment = new URLSearchParams({ ns: "route-map", hostOrigin: origin });
@@ -290,13 +328,14 @@ export function routeMapEmbedSrc(map: RouteMap, origin: string): string {
  */
 export function routeMapFieldValue(map: RouteMap | undefined): string {
   if (!map) return "";
-  if (map.provider === "garmin" || (!map.style && !map.mapHash && !map.token)) return routeMapLink(map);
+  if (map.provider === "garmin" || (!map.style && !map.mapHash && !map.token && !map.options)) return routeMapLink(map);
   const attributes = [
     `class="strava-embed-placeholder"`,
     `data-embed-type="route"`,
     `data-embed-id="${map.id}"`,
     ...(map.style ? [`data-style="${map.style}"`] : []),
     ...(map.mapHash ? [`data-map-hash="${map.mapHash}"`] : []),
+    ...Object.entries(map.options ?? {}).map(([key, value]) => `${stravaOptionName(key)}="${value}"`),
     `data-from-embed="false"`,
     ...(map.token ? [`data-token="${map.token}"`] : []),
   ];
