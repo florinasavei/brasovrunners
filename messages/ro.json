@@ -503,14 +503,14 @@
       "garmin": {
         "tab": "Garmin Connect",
         "show": "Arată harta pe Garmin Connect",
-        "notice": "Harta se încarcă de la Garmin când apeși; Garmin vede adresa ta IP.",
+        "notice": "Harta vine de la Garmin Connect; Garmin vede adresa ta IP.",
         "open": "Deschide în Garmin Connect",
         "frame": "Harta traseului pe Garmin Connect"
       },
       "strava": {
         "tab": "Strava",
         "show": "Arată harta pe Strava",
-        "notice": "Harta se încarcă de la Strava când apeși; Strava vede adresa ta IP.",
+        "notice": "Harta vine de la Strava; Strava vede adresa ta IP.",
         "open": "Deschide în Strava",
         "frame": "Harta traseului pe Strava"
       },
