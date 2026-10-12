@@ -49,7 +49,8 @@ const render = (props: { routeMaps?: unknown; routeGpx?: unknown; routeUrl?: str
   );
 
 /** Every iframe tag. */
-const iframes = (html: string) => [...html.matchAll(/<iframe\b[^>]*>/g)].map((match) => match[0]);
+// The frames drawn for a script-running browser: the `<noscript>` copy of Strava's frame (§NNN) is not one.
+const iframes = (html: string) => [...html.replace(/<noscript>[^]*?<\/noscript>/g, "").matchAll(/<iframe\b[^>]*>/g)].map((match) => match[0]);
 
 describe("BR-REQ-011-01 the maps on the page (§718)", () => {
   it("draws Garmin Connect and Strava as tabs, Strava first (§738), with the right roles, and the first one chosen", () => {

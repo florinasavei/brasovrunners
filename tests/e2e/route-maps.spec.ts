@@ -165,23 +165,42 @@ test.describe.serial("BR-REQ-011-01 «Traseul»'s maps and GPX (§718)", () => {
     expect(overflow).toBeLessThanOrEqual(0);
   });
 
-  test("Strava's frame is as tall as its card (§NNN): a phone fallback before the message, the card's own height after it", async ({ page }) => {
-    // Strava's host is answered by the test: a card that posts the height message exactly as the real
-    // frame does (`[ns, "BROADCAST_IFRAME_HEIGHT", pixels]` to the parent, ns from its own fragment),
-    // 2.5 seconds after it loads — so the run needs no network. The real card's height is Strava's to
-    // say; what is checked is that the frame takes it, and that nothing but the page's own height
-    // message from Strava's origin moves it.
-    const CARD = 333;
+  test("Strava's frame before any message is a phone-sized fallback that follows its width (§NNN)", async ({ page }) => {
+    // Strava's host answered with a card that never posts: the frame stays what the server gave it.
+    // Measured on a real public route (2026-10-12): the card is 303 px tall at 288 wide, 345 at 343,
+    // 377 at 382, 495 at 520, 639 at 700, 767 at 860: about 0.81 * width + 69. The fallback sits a few
+    // pixels above that line, never the old 760 on a phone.
+    await page.route(PROVIDER_ROUTE, (route) => route.fulfill({ status: 200, contentType: "text/html", body: "<!doctype html><title>card</title><p>card</p>" }));
+    await page.goto(`/ro/evenimente/${slug}`);
+    await hydrated(page);
+    const frame = page.getByTestId("route-map-frame-strava");
+    await expect(frame).toBeVisible();
+    const box = await frame.boundingBox();
+    const width = box?.width ?? 0;
+    const card = 0.811 * width + 69;
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(card);
+    expect(box?.height ?? 0).toBeLessThanOrEqual(card + 40);
+    if ((page.viewportSize()?.width ?? 0) <= 400) expect(box?.height ?? 0).toBeLessThan(400);
+  });
+
+  test("Strava's frame takes its card's height the way the real frame posts it: at once, and again on a width change (§NNN)", async ({ page }) => {
+    // The stand-in card posts as soon as its document is ready, with no delay, exactly as Strava's own
+    // frame does (`[ns, "BROADCAST_IFRAME_HEIGHT", pixels]`, ns from its fragment): the page's listener
+    // must already be on, or the one message is lost. It posts again when its width changes. A message
+    // under another namespace, in the same burst, moves nothing.
+    const CARD = 260;
     await page.route(PROVIDER_ROUTE, async (route) => {
       await route.fulfill({
         status: 200,
         contentType: "text/html",
         body: `<!doctype html><title>card</title><body style="margin:0"><script>
           const ns = new URLSearchParams(location.hash.slice(1)).get("ns");
-          setTimeout(() => {
+          const post = () => {
             parent.postMessage(["other", "BROADCAST_IFRAME_HEIGHT", 900], "*");
             parent.postMessage([ns, "BROADCAST_IFRAME_HEIGHT", ${CARD}], "*");
-          }, 2500);
+          };
+          post();
+          addEventListener("resize", () => setTimeout(post, 200));
         </script><p>card</p></body>`,
       });
     });
@@ -189,12 +208,6 @@ test.describe.serial("BR-REQ-011-01 «Traseul»'s maps and GPX (§718)", () => {
     await hydrated(page);
     const frame = page.getByTestId("route-map-frame-strava");
     await expect(frame).toBeVisible();
-    // Before any message: the fallback, which fits a phone, never the old 760.
-    const fallback = await heightOf(frame);
-    expect(fallback).toBeGreaterThan(300);
-    expect(fallback).toBeLessThan(700);
-    const viewport = page.viewportSize()?.width ?? 0;
-    if (viewport <= 400) expect(fallback).toBeLessThanOrEqual(600);
     await expect.poll(async () => Math.abs((await heightOf(frame)) - CARD), { timeout: 15_000 }).toBeLessThanOrEqual(2);
     // The card around it ends where the frame ends: no gap under the map.
     const around = await frame.locator("xpath=..").boundingBox();

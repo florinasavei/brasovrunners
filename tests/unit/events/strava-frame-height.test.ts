@@ -54,6 +54,12 @@ describe("BR-REQ-011-01 the Strava frame carries its namespace (§NNN)", () => {
     const html = renderToStaticMarkup(createElement(RouteMapPanel, { map: MAP, words, origin: ORIGIN }));
     expect(html).toContain(`data-strava-ns="${NS}"`);
     expect(html).toContain(encodeURIComponent(NS));
+    // The listener goes on before the frame has an address: the frame has `data-src` only, the
+    // `<noscript>` copy carries the real `src`, and the island's marker sits beside the frame.
+    expect(html).toMatch(/<iframe[^>]*data-src="https:\/\/strava-embeds\.com\/route\//);
+    expect(html.match(/<iframe[^>]*data-strava-ns[^>]*>/)?.[0]).not.toMatch(/ src=/);
+    expect(html).toMatch(/<noscript>[^]*<iframe[^>]* src="https:\/\/strava-embeds\.com\/route\//);
+    expect(html).toContain("<span hidden");
     expect(html).not.toContain("760px");
     expect(html).toContain(words.notice);
   });
