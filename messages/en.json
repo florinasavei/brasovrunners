@@ -10337,6 +10337,11 @@
       "shop": "Shop",
       "runs": "Runs"
     },
+    "tabsShort": {
+      "codes": "Codes",
+      "shop": "Shop",
+      "runs": "Runs"
+    },
     "codesEmpty": "No discount codes yet. The club puts them here when a partner gives one.",
     "shopEmpty": "The club's shop has no products right now, and you have no orders.",
     "copyCode": "Copy the code",

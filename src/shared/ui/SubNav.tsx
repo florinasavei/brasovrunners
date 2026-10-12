@@ -7,8 +7,13 @@ import type { ReactNode } from "react";
  * personalizate» — gives each entry its picture and each run of entries its caption. The glyph is
  * an element, which is safe here because `SubNav` is a Server Component end to end: nothing it
  * renders crosses into a client island.
+ *
+ * `short` (§729) is the entry's word on a phone: a row whose entries with their glyphs would not
+ * fit in 288 px (the members' zone's three) gives each a shorter word, drawn below `sm` while the
+ * full one is drawn from `sm` up. The other is `display: none`, so the link's accessible name is
+ * never both.
  */
-export type SubNavItem = { href: string; label: string; active?: boolean; glyph?: ReactNode; group?: string };
+export type SubNavItem = { href: string; label: string; active?: boolean; glyph?: ReactNode; group?: string; short?: string };
 
 /**
  * The row the sub-navigation sits in: a thin rule under it like the backoffice's own tab bar,
@@ -137,7 +142,18 @@ export default function SubNav({ items, label }: { items: readonly SubNavItem[];
                     {item.glyph}
                   </Box>
                 ) : null}
-                {item.label}
+                {item.short ? (
+                  <>
+                    <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                      {item.label}
+                    </Box>
+                    <Box component="span" sx={{ display: { xs: "inline", sm: "none" } }}>
+                      {item.short}
+                    </Box>
+                  </>
+                ) : (
+                  item.label
+                )}
               </Box>
             </Box>,
           ];

@@ -1,0 +1,14 @@
+{
+  "branch": "fix/members-tabs-current-in-view",
+  "decisionsTitle": "The members' current tab is in view at 320 pixels",
+  "decisionsSection": "Amends §715 (the three tabs) and §360 (`SubNav`).\n\n**The defect.** §715 drew the zone's three tabs, with their glyphs, in `SubNav`'s row that scrolls sideways rather than wraps. At 320 px the three entries needed about 350 px in a 288-px row, so on «Alergări» the current tab sat mostly past the edge and a member on a phone did not see where they were. §79 had learned the same of the backoffice's bar: the current tab must be in view.\n\n**Decision: words that fit, not a script.** `SubNavItem` gains an optional `short`: below `sm` the entry draws it, from `sm` up it draws the full label; both are in the one link and the other is `display: none`, so the accessible name is never both and nothing needs JavaScript. The zone gives each tab a short word from the catalogue (`Members.tabsShort`): «Coduri», «Magazin», «Alergări» and «Codes», «Shop», «Runs»; the full words («Coduri de reducere», «Discount codes») stay from `sm` up. The three entries with their glyphs then need about 265 px of the 288, the 44-px height and the glyphs kept, so the row does not scroll at all and the current tab is always inside it. `SubNav` stays a Server Component with no island.\n\n**Other rows checked.** The shop's `ShopTabs` («Produse», «Comenzi», «Setări», one-word labels, three entries) fits at 320 px by the same arithmetic and is left as it is; «Setări» and «Pagini» are longer rows by design (§360, §524), scroll sideways, and their current entry is reached by the swipe the cut-off edge invites — they are not changed here, and any of them can give its entries a `short` the same way if it proves needed.\n\n**Refused.** A client island that sets `scrollLeft` (as `AdminTabs` does): it is for a row that cannot fit, and this one can. CSS `scroll-snap` on the current entry: it does not scroll a page that loads already positioned at the start, so it would not bring the tab into view.",
+  "changelogLine": "- **The members' current tab is always in view on a phone** — «Coduri», «Magazin» and «Alergări» are short words below the tablet width, so the three tabs fit 320 px without scrolling. §NNN.",
+  "specsCriteria": [
+    {
+      "requirement": "BR-REQ-041-01",
+      "text": "At 320 px the members' zone's tab row fits its three entries, each 44 px tall with its glyph, drawing a short word (`SubNavItem.short`, «Coduri», «Magazin», «Alergări») below `sm` and the full word from `sm` up, in one link whose accessible name is only one of them; on each tab page the current tab's box is inside the row's box (2026-10-12, `DECISIONS.md` §NNN)."
+    }
+  ],
+  "docsNotes": "",
+  "batchLine": "the members' current tab in view"
+}
