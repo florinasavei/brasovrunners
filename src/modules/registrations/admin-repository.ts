@@ -1481,7 +1481,7 @@ export async function listEventsAcceptingRegistrations<T extends Record<string, 
 }
 
 /**
- * The events an invitation can be sent to now (§NNN): the send's own conditions (`sendInvitations`,
+ * The events an invitation can be sent to now (§740): the send's own conditions (`sendInvitations`,
  * `INVITATION_EVENT_CLOSED`) — registered here, scheduled, published, its start announced and still to
  * come — so the registrations page's «Invită pe email» menu never offers an event whose send is refused.
  */

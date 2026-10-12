@@ -160,7 +160,7 @@ export async function listEventInvitations<T extends Record<string, unknown>>(db
 }
 
 /**
- * Per event, the invitations not answered and not withdrawn (§NNN): sent and still before their
+ * Per event, the invitations not answered and not withdrawn (§740): sent and still before their
  * deadline, or past it without an answer, of an event not yet started and not cancelled. The registrations list on «toate evenimentele» names them,
  * so an invited person is never nowhere. A display read only: no figure the club is given and no part
  * of the capacity formula (`invitationHoldsCount` is that) counts from it.

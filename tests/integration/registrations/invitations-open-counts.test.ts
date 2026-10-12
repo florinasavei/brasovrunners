@@ -6,7 +6,7 @@ import { participants } from "@/db/schema/participants";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the registrations list on «toate evenimentele» names, per event, the invitations nobody has
+ * §740 — the registrations list on «toate evenimentele» names, per event, the invitations nobody has
  * answered (`listOpenInvitationCountsByEvent`): sent and still before their deadline, or past it
  * without an answer; an accepted or withdrawn one is not in it. A display read: it never touches the
  * capacity formula, whose own invitation count (§647, `invitationHoldsCount`) is tested with the send.
@@ -60,7 +60,7 @@ async function invite(eventId: string, patch: Partial<typeof eventInvitations.$i
   });
 }
 
-describe("§NNN the open invitations per event", () => {
+describe("§740 the open invitations per event", () => {
   it("counts sent and unanswered-expired ones apart, per event, and leaves accepted and withdrawn out", async () => {
     const first = await event();
     const second = await event();

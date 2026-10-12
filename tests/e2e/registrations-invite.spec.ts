@@ -7,7 +7,7 @@ import { ensureRegistrationIsOpen, FEATURED, HUMAN_PAUSE_MS, hydrated, signIn } 
 import { chooseSex } from "./support/sex-choice";
 
 /**
- * §NNN — «Invită pe email» on the registrations page, pressed in a real browser: on a list about one
+ * §740 — «Invită pe email» on the registrations page, pressed in a real browser: on a list about one
  * event it opens «Invitații» and brings it into view, however many times it is pressed; on «toate
  * evenimentele» it leads to the event's panel; an invitation sent to a made-up person is seen with its
  * state in the panel and in the list after a reload, and the state changes once the link is accepted.
@@ -80,7 +80,7 @@ async function openList(page: Page, eventId: string) {
   await hydrated(page);
 }
 
-test.describe("§NNN «Invită pe email»: the button, and every invited person with their state", () => {
+test.describe("§740 «Invită pe email»: the button, and every invited person with their state", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test.afterAll(async ({}, testInfo) => {

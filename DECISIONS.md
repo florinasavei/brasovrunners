@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.04-2026-10-12 -->
+<!-- PROJECT_BASELINE: BR-V3.05-2026-10-12 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.04-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.05-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -25808,3 +25808,30 @@ Baseline `BR-V3.03-2026-10-12`.
 - **The privacy notice.** The notice in force does not name Strava or Garmin as recipients of a visitor's address on an event page; the owner was told so and decided to open the maps now. A notice that names them is the club's to approve (`/admin/legal`), ideally after a Romanian lawyer reads it.
 
 Baseline `BR-V3.04-2026-10-12`.
+
+## 740. «Invită pe email» works from anywhere, and every invited person is seen with their state
+
+**The owner, 2026-10-12, on production's registrations page** (amends §736 and §737): «Butonul acela de Invită pe email nu merge», and «nu văd oamenii care au fost invitați: am invitat o persoană și nu văd statusul ei».
+
+**What was reproduced** (Playwright, desktop and 320 px, a made-up person, on a database of its own):
+
+- (a) On a list about one event the first press of «Invită pe email» opened «Invitații» and showed it. Pressed again on the same address — after the panel was closed by hand, or the page scrolled away — nothing happened: the link is to the fragment the address already carries, the browser fires no `hashchange` for that, and `OpenFoldFromHash` listened to nothing else. That is the button that «nu merge».
+- (b) On «toate evenimentele» the button opened «Caută și filtrează», where the event is chosen, and no more; the event's panel was two more steps away. And arriving on `?eventId=…#registrations-invitations` from it, on a phone, left the page at the top with the panel off the screen (the island scrolled only when it had opened something).
+- (c) An invitation sent from the panel to a made-up person was, after a reload, in «Invitații» (name, address, «Trimisă», deadline) and, on the one event's list, a row above the registrations («Invitație trimisă»). On «toate evenimentele» it was nowhere: the list counts registrations, and an invitation not yet accepted is none. The panel itself opened by itself only for a `sent` invitation.
+- (d) Accepted through its link, the invitation read «Acceptată» in the panel, its lead row left the list and the registration wore «Invitat» — as §737 says; nothing failed there.
+
+**Decision.**
+
+- **The shared island answers every press.** `OpenFoldFromHash` (the backoffice shell's) answers a press on an in-page link to the very fragment on screen: it opens the folds around the target and scrolls it into view. A target off the screen after a load is scrolled to too; one already in view is left alone. The two delayed re-runs after arrival (300 ms and 1 s, for a phone's late layout) stop at the reader's first wheel, touch, pointer press or key, so a reader who scrolls on is not pulled back. Every other in-page link here is a plain `<a>`, a full load the arrival run answers. The island reads no query (`useSearchParams` would make the public pages that render it wait for the client).
+- **«Invită pe email» on «toate evenimentele» leads to the event's panel.** It lists the events the send accepts (`listEventsTakingInvitations`: registered on the site, scheduled, published, a start announced and still to come — the send's own conditions, so a draft or a held-back event is never offered). One event: the button is a link straight to `?eventId=<id>#registrations-invitations` — one press. Several: a `<details>` menu of them (a disclosure that works without a script), each event a link to its panel, named by its title and its start (`leadWhen`: «Titlu · 21.11, 09:00») because a weekly series is one event row per date and a title alone names eight the same — two presses, and the second chooses the event. None: the old behaviour, «Caută și filtrează». Administrator only, drawn for `canManageRegistrations` and asserted on the server by every verb as before.
+- **«Invitații» opens by itself while an invitation needs the Administrator's eye:** one sent and waiting, or, while the event is still to come, one that ran out unanswered (`expired`) — the person who did not answer is whom the club may invite again, and an expired one hidden behind a closed fold was an invited person nobody saw. After the event's start, or when it is cancelled, an unanswered invitation is history: it opens nothing and is left out of «toate evenimentele». Accepted and withdrawn ones are history and leave it closed.
+- **Every invited person is seen.** On one event's list, the lead rows of §737 stay: each unanswered invitation is a row above the registrations, with its name, an «Invitație» chip, its state and its deadline — on a phone they are the same blocks the registrations are, so no second layout to read at 320 px; a line above the list would only count them and send the reader to the panel. On «toate evenimentele», a line under the counts, «Invitații fără răspuns, pe evenimente:», names per event — only events still to come and scheduled — how many are sent and how many ran out, each a link to that event's panel, named by title and start the same way (`listOpenInvitationCountsByEvent`, which returns the event's `startsAt`). An accepted invitation is the registration with «Invitat», as before.
+- **The two decisions are pure functions, tested branch by branch.** `invitationsNeedAttention(byState, upcoming)` (the panel's opening rule) and `inviteTarget(eventId, inviteEvents)` (`panel` / `link` / `menu` / `filters`) live in `domain/invitations.ts`; the panel and the page call them (`tests/unit/registrations/invitations-attention.test.ts`).
+
+**Display only.** No figure the club is given counts an invitation as a registration, and the capacity formula and the allocator are untouched (§647 holds: a live counted invitation holds one place, by `invitationHoldsCount`, which this does not use).
+
+**Refused.** A fold of the filters as the place to choose the event on «toate evenimentele»: it is what made the button seem broken. Showing the invitations as registrations in the counts: they are not (§737).
+
+Baseline: set at landing.
+
+Baseline `BR-V3.05-2026-10-12`.

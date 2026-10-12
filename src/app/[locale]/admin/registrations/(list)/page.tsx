@@ -657,7 +657,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const leadNow = new Date();
   const leadInvitations = leadEvent ? (await listEventInvitations(db, leadEvent)).filter((row) => invitationState(row, leadNow) !== "accepted") : [];
   /*
-    «Invită pe email» from anywhere, and every invited person seen (§NNN). On a list about one event the
+    «Invită pe email» from anywhere, and every invited person seen (§740). On a list about one event the
     button goes to that event's panel. On «toate evenimentele» it leads to a panel by the event: the
     upcoming events the send accepts (registered here, scheduled, published, an announced start still to come), straight to it when
     there is one, a menu when there are several — and the list names, per event, the invitations nobody has
@@ -925,7 +925,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             ascunsă»): the way to the folded «Invitații» section below, beside «Adaugă o înscriere» — an
             in-page link the backoffice's `OpenFoldFromHash` answers by opening the section and scrolling
             to it. The Administrator's, as the send is. An invitation is to one event and the section is
-            drawn only for a list about one: on «toate evenimentele» the button leads to the event's panel (§NNN),
+            drawn only for a list about one: on «toate evenimentele» the button leads to the event's panel (§740),
             straight when one upcoming event takes invitations, by a menu when several do.
           */}
           {mayManage && inviteWhere.kind === "panel" && (
@@ -1228,7 +1228,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         reads as a contradiction, so the screen says which it is showing and offers the other.
       */}
       {/*
-        «Invitații fără răspuns» on «toate evenimentele» (§NNN; the owner: «am invitat o persoană și nu văd
+        «Invitații fără răspuns» on «toate evenimentele» (§740; the owner: «am invitat o persoană și nu văd
         statusul ei»): per event, how many invitations are sent and waiting and how many ran out unanswered,
         each a link to that event's panel. Not registrations, and in no count above.
       */}

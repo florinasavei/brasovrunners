@@ -3,7 +3,7 @@ import { invitationsNeedAttention, inviteTarget } from "@/modules/registrations/
 
 const none = { sent: 0, accepted: 0, expired: 0, withdrawn: 0 };
 
-describe("§NNN BR-REQ-037-07 «Invitații» opens by itself while an invitation needs the Administrator's eye", () => {
+describe("§740 BR-REQ-037-07 «Invitații» opens by itself while an invitation needs the Administrator's eye", () => {
   it("opens for a sent invitation, whether or not the event is upcoming", () => {
     expect(invitationsNeedAttention({ ...none, sent: 1 }, true)).toBe(true);
     expect(invitationsNeedAttention({ ...none, sent: 2 }, false)).toBe(true);
@@ -18,7 +18,7 @@ describe("§NNN BR-REQ-037-07 «Invitații» opens by itself while an invitation
   });
 });
 
-describe("§NNN BR-REQ-037-07 where «Invită pe email» leads", () => {
+describe("§740 BR-REQ-037-07 where «Invită pe email» leads", () => {
   it("a list about one event: the panel on the page", () => {
     expect(inviteTarget("e1", [])).toEqual({ kind: "panel" });
     expect(inviteTarget("e1", [{ id: "a" }, { id: "b" }])).toEqual({ kind: "panel" });

@@ -13,7 +13,7 @@ import { fragmentId, openFoldsAround } from "./fold";
  * is a client island with nothing to draw, rendered once by the backoffice shell. It runs on
  * arrival, on every navigation between backoffice pages (the shell stays mounted, so the
  * pathname is what re-runs it), on `hashchange`, which a plain in-page `<a href="#…">` fires, and
- * on a press of an in-page link to the fragment the address already carries (§NNN) — the browser
+ * on a press of an in-page link to the fragment the address already carries (§740) — the browser
  * fires no `hashchange` for that, so a fold the reader had closed, or a page scrolled away, stayed
  * as it was and «Invită pe email» «nu merge». It reads no query (`useSearchParams` would make the
  * public pages that render it wait for the client): a link to another address of the same page is a plain
@@ -32,7 +32,7 @@ export default function OpenFoldFromHash() {
       if (!target) return;
       // Scrolled when something opened (a fold that opened above the target may have moved it), when a
       // link to it was pressed, or when it is off the screen — a load of `?eventId=…#panel`
-      // can leave the page at the top on a phone (§NNN). A target already in view is left alone.
+      // can leave the page at the top on a phone (§740). A target already in view is left alone.
       const opened = openFoldsAround(target) > 0;
       const box = target.getBoundingClientRect();
       if (opened || pressed || box.top < 0 || box.top >= window.innerHeight) target.scrollIntoView({ block: "start" });
@@ -53,7 +53,7 @@ export default function OpenFoldFromHash() {
     };
     reveal(false);
     // Once more shortly after: a phone's page is still taking its shape (fonts, the sticky header) and
-    // the browser's own scroll to the fragment may have run before it, or been undone by it (§NNN).
+    // the browser's own scroll to the fragment may have run before it, or been undone by it (§740).
     const later = [window.setTimeout(() => reveal(false), 300), window.setTimeout(() => reveal(false), 1000)];
     const stopLater = () => later.forEach((timer) => window.clearTimeout(timer));
     // A reader who scrolls or touches the page within that second keeps their place: the re-runs stop.
