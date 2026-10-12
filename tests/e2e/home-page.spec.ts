@@ -22,7 +22,7 @@ import { openFold } from "./support/fold";
 /** The four lower sections' switches (§714), off by default. */
 const LOWER = ["steps", "why", "strip", "numbers"] as const;
 
-async function setHome(browser: Browser, choice: "on" | "off", lower = false): Promise<void> {
+async function setHome(browser: Browser, choice: "on" | "off", lower = false, specialFirst = false): Promise<void> {
   const context = await browser.newContext();
   const page = await context.newPage();
   try {
@@ -35,6 +35,7 @@ async function setHome(browser: Browser, choice: "on" | "off", lower = false): P
     const sections = panel.getByTestId("home-page-sections");
     await openFold(sections);
     for (const key of LOWER) await sections.getByTestId(`home-page-section-${key}`).locator("input").setChecked(lower);
+    await sections.getByTestId("home-page-special-first").locator("input").setChecked(specialFirst);
     const numbers = panel.getByTestId("home-page-numbers");
     await openFold(numbers);
     await numbers.locator('input[name="foundedOn"]').fill(lower ? "2015-04-01" : "");
@@ -82,7 +83,7 @@ test.describe("§714 the site's root and «Pagina principală»", () => {
 
   test("on: the root is the home page, canonical, in the sitemap, the logo's; one h1; nothing sideways at 320px", async ({ page, browser, request }) => {
     test.slow();
-    await setHome(browser, "on", true);
+    await setHome(browser, "on", true, true);
     try {
       const answer = await request.get("/ro", { maxRedirects: 0 });
       expect(answer.status()).toBe(200);
@@ -118,6 +119,9 @@ test.describe("§714 the site's root and «Pagina principală»", () => {
       // In the plan's order, under the run sections.
       const order = await page.locator("main [data-testid^='home-']").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-testid")));
       const at = (testId: string) => order.indexOf(testId);
+      // «Evenimentele speciale înaintea alergărilor săptămânale» saved ticked (§NNN): special first, the next run before both.
+      if (at("home-weekly") >= 0) expect(at("home-special")).toBeLessThan(at("home-weekly"));
+      if (at("home-next-run") >= 0) expect(at("home-next-run")).toBeLessThan(at("home-special"));
       expect(at("home-special")).toBeLessThan(at("home-steps"));
       expect(at("home-steps")).toBeLessThan(at("home-why"));
       expect(at("home-why")).toBeLessThan(at("home-numbers"));

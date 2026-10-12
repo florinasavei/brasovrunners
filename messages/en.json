@@ -4696,6 +4696,8 @@
       "buttonHowRo": "«How it works» (Romanian)",
       "buttonHowEn": "«How it works» (English)",
       "buttonHowHelp": "A club page from «Custom pages». With no page the button is not drawn; an unpublished page appears once you publish it. The label is optional: empty, «How it works».",
+      "specialFirst": "Special events before the weekly runs",
+      "specialFirstHelp": "Ticked, it changes the order above; «The next run» stays first, under the photograph.",
       "sectionsHelp": "Tick the sections that appear, in the order below. The last four start off: fill them in first, then tick them.",
       "sections": {
         "hero": "The photograph, the headline and the buttons",

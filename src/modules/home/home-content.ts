@@ -129,6 +129,7 @@ export async function readHomeContent(locale: Locale, now: Date, setting: HomePa
       tertiary: howHref ? { label: buttonLabelIn(setting.buttons.how?.label ?? null, locale) ?? t("hero.how"), href: howHref } : null,
     },
     show: setting.sections,
+    specialFirst: setting.specialFirst,
     nextRun,
     weekly: {
       id: "weekly",

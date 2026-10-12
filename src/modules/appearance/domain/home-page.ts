@@ -27,6 +27,8 @@ import { isWrittenText, missingLanguage, type TextLanguage } from "@/shared/form
  * - `sections` — which sections the page draws: the hero, the next run, the weekly runs and the
  *   special events (on), and «Prima dată», «De ce», the photo strip and the numbers (off until the
  *   club switches each on, once it has its words, its pictures or its figures).
+ * - `specialFirst` — whether the special events are drawn before the weekly runs (§NNN); off by default,
+ *   and a row from before reads `false`. «Următoarea alergare» stays first under the photo either way.
  * - `steps`, `why`, `strip`, `numbers` — what the club typed or chose for those four
  *   (`modules/home/domain/`): every box both languages or neither, an empty one the platform's words;
  *   the strip's pictures with their facts; the founding day and the runners' count.
@@ -109,6 +111,8 @@ export const homePageSchema = z.looseObject({
   subline: bilingual(HOME_SUBLINE_MAX).nullable().default(null),
   buttons: buttonsSchema.default(DEFAULT_BUTTONS),
   sections: sectionsSchema.default(DEFAULT_SECTIONS),
+  // Top level, not inside `sections` (whose keys are the sections shown): a non-boolean reads false.
+  specialFirst: z.boolean().default(false).catch(false),
   // The four lower sections' contents: absent or unreadable, the empty section (the platform's words, no picture, no figure).
   steps: stepsContentSchema.catch(EMPTY_STEPS),
   why: whyContentSchema.catch(EMPTY_WHY),
@@ -128,6 +132,7 @@ export const DEFAULT_HOME_PAGE_SETTING: HomePageSetting = {
   subline: null,
   buttons: { ...DEFAULT_BUTTONS },
   sections: { ...DEFAULT_SECTIONS },
+  specialFirst: false,
   steps: EMPTY_STEPS,
   why: EMPTY_WHY,
   strip: EMPTY_STRIP,

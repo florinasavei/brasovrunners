@@ -36,6 +36,8 @@ export type HomePageProps = {
    * setting's default: the first four on, the four lower ones off.
    */
   show?: Partial<Record<HomeSectionKey, boolean>>;
+  /** The special events before the weekly runs (§NNN, the club's switch); «Următoarea alergare» stays first under the hero. Default off. */
+  specialFirst?: boolean;
   /** How fresh the events are (§281): a last good copy says so above the hero. A fixture leaves it out. */
   freshness?: Pick<Resilient<unknown>, "freshness" | "takenAt" | "restingUntil">;
 };
@@ -57,7 +59,7 @@ export type HomePageProps = {
 /** Out of sight, still read aloud and still in the outline (the usual clip, no `display: none`). */
 const VISUALLY_HIDDEN = { position: "absolute", width: "1px", height: "1px", p: 0, m: "-1px", overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 } as const;
 
-export default function HomePage({ hero, nextRun, weekly, special, steps, why, strip, numbers, show = {}, freshness }: HomePageProps) {
+export default function HomePage({ hero, nextRun, weekly, special, steps, why, strip, numbers, show = {}, specialFirst = false, freshness }: HomePageProps) {
   const shown = (key: HomeSectionKey) => show[key] ?? DEFAULT_SECTION_SHOWN[key];
   const headline = [hero.headline.lead, hero.headline.accent].filter(Boolean).join(" ").trim() || CLUB_NAME;
   return (
@@ -71,8 +73,9 @@ export default function HomePage({ hero, nextRun, weekly, special, steps, why, s
       <Stack spacing={{ xs: 4, md: 6 }}>
         {shown("hero") && <Hero {...hero} />}
         {shown("nextRun") && nextRun && <RunSection {...nextRun} />}
+        {specialFirst && shown("special") && <RunSection {...special} />}
         {shown("weekly") && <RunSection {...weekly} />}
-        {shown("special") && <RunSection {...special} />}
+        {!specialFirst && shown("special") && <RunSection {...special} />}
         {shown("steps") && <StepsBand {...steps} />}
         {shown("why") && <WhyList {...why} />}
         {shown("strip") && <PhotoStrip {...strip} />}
