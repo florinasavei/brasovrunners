@@ -1,7 +1,7 @@
 import { checkpointBox, type PostedCheckpoint } from "./domain/checkpoint";
 
 /**
- * The rows the editor's card posted, from the boxes' own names (`cp[3].km`, §NNN): every row number
+ * The rows the editor's card posted, from the boxes' own names (`cp[3].km`, §757): every row number
  * that has any box, in the order of the numbers. Strings as typed — the service holds them to the
  * rules. Not in the actions' file: a `"use server"` file exports only actions.
  */

@@ -128,7 +128,7 @@ export const PANEL_GLYPHS = {
   add: AddIcon,
   // «Voluntari» on an event's editor (§754): the roles and the people.
   volunteers: VolunteerActivismIcon,
-  // «Puncte de control» (§NNN): the points of the route, a pin on the ground.
+  // «Puncte de control» (§757): the points of the route, a pin on the ground.
   checkpoints: PinDropIcon,
   // What an event's registrations are, once it has them.
   registrations: ListAltIcon,

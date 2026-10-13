@@ -229,7 +229,7 @@ export async function cachedPublishedEventBySlug(locale: Locale, slug: string) {
 }
 
 /**
- * `listCheckpoints`: the table «Puncte de control» under the event's route (§NNN). By the event's id,
+ * `listCheckpoints`: the table «Puncte de control» under the event's route (§757). By the event's id,
  * under the `events` tag the editor's saves already expire, so a new cut-off is on the page at once.
  */
 export async function cachedEventCheckpoints(eventId: string) {

@@ -133,7 +133,7 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   // An event's volunteers (§754) cascade from it, and their role is `RESTRICT`: the people first, then the roles.
   await db.delete(eventVolunteers);
   await db.delete(eventVolunteerRoles);
-  // The route's checkpoints (§NNN) cascade from the event too.
+  // The route's checkpoints (§757) cascade from the event too.
   await db.delete(eventCheckpoints);
   await db.delete(eventTranslations);
   // `registrations` references `events`, and `events.declaration_document_id` references

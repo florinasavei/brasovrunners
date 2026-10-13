@@ -72,7 +72,7 @@ function sampleConfig(): EventConfig {
       url: null,
       maps: [{ provider: "garmin", id: "987654321" }],
       gpx: { name: "traseu.gpx", url: GPX },
-      // The route's checkpoints (§NNN): one with a cut-off and a note, one without either.
+      // The route's checkpoints (§757): one with a cut-off and a note, one without either.
       checkpoints: [
         { km: 7.5, name: { ro: "Apă la cabană", en: "Water at the hut" }, kinds: ["WATER", "FOOD"], cutoff: "10:45", note: { ro: "Și banane", en: "Bananas too" } },
         { km: 15, name: { ro: "Cronometrare", en: "Timing" }, kinds: ["TIMING"], cutoff: null, note: { ro: null, en: null } },
@@ -119,7 +119,7 @@ function sampleFile(): EventFile {
     format: EVENT_FILE_FORMAT,
     version: EVENT_FILE_VERSION,
     exportedAt: "2026-10-13T10:00:00.000Z",
-    exportedFrom: { environment: "production", baseline: "BR-V3.16-2026-10-14" },
+    exportedFrom: { environment: "production", baseline: "BR-V3.17-2026-10-14" },
     series: { partOfASeries: false, rule: null },
     event: sampleConfig(),
     media: [{ role: "cover", url: PICTURE, contentType: "image/webp", size: 10, sha256: "a".repeat(64) }],
@@ -149,7 +149,7 @@ describe("the event file's reader", () => {
   });
 
   /*
-    §NNN: version 2 counts a race's `durationMinutes` from its gun. A version 1 file — what production
+    §757: version 2 counts a race's `durationMinutes` from its gun. A version 1 file — what production
     exported before this release — counted from the event's start, and must import with the end it had.
   */
   it("reads a version 1 file with its race's end kept: the minutes from the start become minutes from the gun", () => {

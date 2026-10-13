@@ -855,7 +855,7 @@ describe("an event's volunteers are not the file's", () => {
   });
 });
 
-// --- The route's checkpoints (§NNN) ---------------------------------------------------------------
+// --- The route's checkpoints (§757) ---------------------------------------------------------------
 
 /** Two checkpoints on the seeded race (start 09:00, gun 10:00, «Timp limită» 2 h 30 min — the finish closes at 12:30, 21 km). */
 async function seedCheckpoints(eventId: string) {
@@ -887,7 +887,7 @@ async function seedCheckpoints(eventId: string) {
   );
 }
 
-describe("§NNN the route's checkpoints travel in the file", () => {
+describe("§757 the route's checkpoints travel in the file", () => {
   it("are exported by distance with no id, imported as new as they were, and the round trip is the same", async () => {
     const { event } = await seedRace({}, {}, false);
     await seedCheckpoints(event.id);
@@ -923,7 +923,7 @@ describe("§NNN the route's checkpoints travel in the file", () => {
     expect((await reload(created.eventId)).endsAt?.toISOString()).toBe("2026-11-21T10:30:00.000Z");
   });
 
-  it("imports a version 1 file — production's, before this release — with the race's end it had (§NNN)", async () => {
+  it("imports a version 1 file — production's, before this release — with the race's end it had (§757)", async () => {
     const { event } = await seedRace({}, {}, false);
     const file = await fileOf(event.id);
     // Version 1 counted from the 09:00 start: the same 12:30 finish was 210 minutes there, 150 from the 10:00 gun here.
@@ -935,7 +935,7 @@ describe("§NNN the route's checkpoints travel in the file", () => {
     expect((await reload(created.eventId)).endsAt?.toISOString()).toBe("2026-11-21T10:30:00.000Z");
   });
 
-  it("refuses an import over an event that would move its gun past a saved cut-off while the file leaves the list as it is (§NNN)", async () => {
+  it("refuses an import over an event that would move its gun past a saved cut-off while the file leaves the list as it is (§757)", async () => {
     const { event } = await seedRace({}, {}, false);
     await seedCheckpoints(event.id);
     const { target } = await seedTarget();

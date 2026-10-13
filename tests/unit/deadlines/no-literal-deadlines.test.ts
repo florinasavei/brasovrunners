@@ -84,7 +84,7 @@ describe("§377 no sentence states a deadline the setting cannot change", () => 
     // Quotes "48 de ore" as what the four deadline placeholders fill in.
     "Admin.emails.copy.placeholders",
     "Admin.emails.copy.placeholdersUsed",
-    // «Timp limită»'s help (§NNN, the owner's own words): «2 ore și 30 de minute» is an example of what to type in the box.
+    // «Timp limită»'s help (§757, the owner's own words): «2 ore și 30 de minute» is an example of what to type in the box.
     "Admin.editor.durationRaceHelp",
   ]);
 

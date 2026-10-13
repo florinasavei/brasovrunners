@@ -19,7 +19,7 @@ const SR_ONLY = {
 } as const;
 
 /**
- * «Puncte de control» / "Checkpoints" under `#checkpoints` (§NNN; the owner, 2026-10-13: «I need to put
+ * «Puncte de control» / "Checkpoints" under `#checkpoints` (§757; the owner, 2026-10-13: «I need to put
  * checkpoints and limit times»): a table under the route's maps — the kilometre, the point, what
  * there is (a chip with a glyph **and** its word, never the glyph alone) and the cut-off in words,
  * «Ora limită 11:30». **The finish is the last row when the event has a time limit** — the event's

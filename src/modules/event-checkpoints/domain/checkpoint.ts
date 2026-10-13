@@ -3,7 +3,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 
 /**
- * The checkpoints of a route (§NNN; the owner, 2026-10-13: «other things for the route: I need to put
+ * The checkpoints of a route (§757; the owner, 2026-10-13: «other things for the route: I need to put
  * checkpoints and limit times») — the pure part: the closed set of what a point offers, what a form
  * may post, what is refused and why, the order the list is read in, the cut-offs measured from the
  * start, and the rows the event page draws.
@@ -81,7 +81,7 @@ export function canReadCheckpoints(role: StaffRole): boolean {
  * Writing it: the Organizer, the Administrator and the Superadministrator. The Organizer prepares
  * the race on the ground — where the water is, by when the last runner has to pass — which is the
  * preparation §542 left with them rather than the event's settings it took away; the Tehnic and the
- * Redactor read it and ask. §NNN amends §542 for this one list, and `roles.ts#canEditEventFields`
+ * Redactor read it and ask. §757 amends §542 for this one list, and `roles.ts#canEditEventFields`
  * names it as the exception: the list reaches the public page and the bib, and every change is audited.
  */
 export function canEditCheckpoints(role: StaffRole): boolean {
@@ -225,7 +225,7 @@ export function checkpointContext(input: {
     /*
       On the clock, not in elapsed minutes: the cut-offs are times of the day, so the end is too. On
       the night the clocks go back (or forward) the two differ by the hour moved, and a cut-off after
-      the finish closes would otherwise pass (§NNN). The wall-clock span is the one nearest the real
+      the finish closes would otherwise pass (§757). The wall-clock span is the one nearest the real
       one whose minute of the day is the end's.
     */
     const drift = (((input.wallMinutesOf(input.endsAt) - startMinutes - real) % 1440) + 1440 + 720) % 1440 - 720;
@@ -401,7 +401,7 @@ export type CheckpointRow =
   | { kind: "finish"; km: number | null; cutoff: string };
 
 /**
- * The table «Puncte de control» as rows (§NNN): the checkpoints by distance and — **the finish as the
+ * The table «Puncte de control» as rows (§757): the checkpoints by distance and — **the finish as the
  * last row when the event has a time limit**, its limit being the event's end on the event's clock
  * (the `HH:MM` the caller formats from `endsAt`), at the route's length when the event has one.
  * Nothing at all with no checkpoints: the section is not drawn for a finish alone.

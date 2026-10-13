@@ -34,7 +34,7 @@ export const EVENT_FILE_FORMAT = "brasovrunners-event";
 
 /**
  * The version this release writes. A later release that changes the shape or a value's meaning raises
- * it. **2** (§NNN): a race's `durationMinutes` is its «Timp limită», counted from the gun when it has
+ * it. **2** (§757): a race's `durationMinutes` is its «Timp limită», counted from the gun when it has
  * one (`duration.ts#durationBase`); in a version 1 file it counts from the event's start. A version 1
  * file is still read, and upgraded as it is read (`upgradeVersion1`), so a file exported by the
  * release before this one — production's, during a release — imports with the end it had.
@@ -124,7 +124,7 @@ const programmeRowSchema = z
   .strict();
 
 /**
- * One of the route's checkpoints (§NNN): where, its name and note in both languages, what is there and
+ * One of the route's checkpoints (§757): where, its name and note in both languages, what is there and
  * its cut-off as a time of the day on the event's own clock — the shape `event_checkpoints` holds, with
  * no id. The rules that need the event (a kilometre within the route, cut-offs after the start and in
  * order) are the import's to apply, as the editor's card applies them.
@@ -176,7 +176,7 @@ export const eventConfigSchema = z
         maps: z.array(z.record(z.string(), z.unknown())).max(2),
         /** The GPX the club uploaded: its name, and its address among `media` (role `route.gpx`). */
         gpx: z.object({ name: text(120), url: text(2048) }).strict().nullable(),
-        /** The checkpoints along the route, by distance (§NNN): a file made before they existed has none. */
+        /** The checkpoints along the route, by distance (§757): a file made before they existed has none. */
         checkpoints: z.array(checkpointSchema).max(CHECKPOINTS_MAX).default([]),
       })
       .strict(),
@@ -284,7 +284,7 @@ const eventFileVersion1Schema = eventFileSchema.extend({ version: z.literal(1) }
 type EventFileVersion1 = z.infer<typeof eventFileVersion1Schema>;
 
 /**
- * A version 1 file as this release's version (§NNN): a race with a gun and a start whose hour is in
+ * A version 1 file as this release's version (§757): a race with a gun and a start whose hour is in
  * the file gets its `durationMinutes` counted from the gun — the minutes from the start less the
  * minutes from the start to the gun — so the import stores the same end the file's event had. Null
  * when that leaves no time limit at all (the old end at or before the gun): such a file is refused

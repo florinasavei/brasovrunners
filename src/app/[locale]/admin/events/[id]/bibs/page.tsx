@@ -65,7 +65,7 @@ export default async function EventBibsPage({ params }: Props) {
   */
   const memberBibs = memberBibOn ? bibs.filter((bib) => bib.member).length : 0;
   // What the pictures are drawn from, in their address: the browser keeps each an hour, so a new «Cum arată numărul» must be a new address (§748).
-  // The route's checkpoints are drawn from (§NNN): a point added, moved or retimed is a new address too.
+  // The route's checkpoints are drawn from (§757): a point added, moved or retimed is a new address too.
   const checkpointsPart = event ? checkpointsStampPart(await listCheckpoints(db, id)) : "";
   const pictureStamp = event ? bibPictureStamp([event.design, event.bibColour, event.title, bibEventDate(event, locale), event.coHosts, event.routeGpx?.key ?? null, event.distanceMeters, event.elevationGainMeters, ...(checkpointsPart ? [checkpointsPart] : [])]) : "";
   const shown = memberBibs > 0 ? [...bibs.filter((bib) => bib.member), ...bibs.filter((bib) => !bib.member)] : bibs;

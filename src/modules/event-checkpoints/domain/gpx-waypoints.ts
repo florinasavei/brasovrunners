@@ -1,7 +1,7 @@
 import { CHECKPOINT_KM_MAX, CHECKPOINT_NAME_MAX, type CheckpointKind } from "./checkpoint";
 
 /**
- * The checkpoints a route's GPX already has (§NNN): the file's `<wpt>` waypoints — a drinking
+ * The checkpoints a route's GPX already has (§757): the file's `<wpt>` waypoints — a drinking
  * water, an aid station, the timing mat, as the watch or the mapping tool named them — each with
  * the kilometre it stands at **along the track**, computed by projecting the waypoint on the track.
  *
@@ -125,7 +125,7 @@ export type GpxWaypoints = {
 };
 
 /**
- * The waypoints of a GPX document's text, each placed along its track (§NNN). A waypoint is
+ * The waypoints of a GPX document's text, each placed along its track (§757). A waypoint is
  * projected on the nearest stretch of the track (in a plane through the waypoint, accurate to
  * metres at this scale); its distance is that stretch's start plus the share of the stretch up to
  * the foot of the perpendicular. A route that comes back along itself puts a waypoint at the nearer
@@ -174,7 +174,7 @@ export function parseGpxWaypoints(text: string): GpxWaypoints {
 }
 
 /**
- * How far past the route's end a waypoint may sit and still be the finish (§NNN): a watch's track
+ * How far past the route's end a waypoint may sit and still be the finish (§757): a watch's track
  * often runs a few tens of metres longer than the distance the club typed (21.13 km against 21 097 m),
  * and the «Sosire» waypoint at its end must not refuse the whole «Adaugă punctele alese».
  */

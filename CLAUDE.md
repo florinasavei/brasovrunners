@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.16-2026-10-14 -->
+<!-- PROJECT_BASELINE: BR-V3.17-2026-10-14 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V3.16-2026-10-14`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V3.17-2026-10-14`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -267,7 +267,7 @@ it is the authority, this is the summary):
     The steps are `SETUP.md` §43; `/admin/tasks` carries the row `shopNotice` while a product is visible.
     A colleague who is not an Administrator runs it once given «Gestionează magazinul» on «Echipa».
 21. **Confirm every upcoming race's «Timp limită»** — the duration box of a race is «Timp limită»
-    since the checkpoints release (§NNN), counted from the gun, and the race's page shows «Timp limită:
+    since the checkpoints release (§757), counted from the gun, and the race's page shows «Timp limită:
     2 h 30 min» (with checkpoints, also «Sosire · se închide la 12:30») from the end saved under the
     old «Durata» meaning. No end moved; what the page says is the minutes from the gun to that end,
     and a race whose gun is after its meeting time now reads shorter than the box said. Before the

@@ -239,7 +239,7 @@ export default async function CourseBox({
           maxRows={4}
           {...textFieldConstraints(eventInputConstraints("routeStrava"), { spellCheck: false, autoCapitalize: "off", autoCorrect: "off" })}
         />
-        {/* «Puncte de control» (§NNN) are their own card, beside this form and not in it (HTML forms cannot nest): the
+        {/* «Puncte de control» (§757) are their own card, beside this form and not in it (HTML forms cannot nest): the
             house's in-page link (MUI Link, as `MissingForPublish`), which the browser's own hash change opens the folds
             around (`OpenFoldFromHash`, §336). */}
         {event && (

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { type GpxProposal, kindsFromWords, MAX_OFF_TRACK_METERS, offerableProposals, PAST_FINISH_TOLERANCE_KM, parseGpxWaypoints } from "@/modules/event-checkpoints/domain/gpx-waypoints";
 
 /**
- * §NNN — the waypoints of a route's GPX, each placed along its track by projecting it on the track:
+ * §757 — the waypoints of a route's GPX, each placed along its track by projecting it on the track:
  * the kilometre, the distance off the track, the guess at what is there. A straight track along a
  * parallel makes the answer checkable by hand: at 45.6° north a thousandth of a degree of longitude is
  * 77.9 m, so 41 points 0.001° apart are a 3.1 km line.
@@ -22,7 +22,7 @@ function gpx(waypoints: string, options: { track?: "trkpt" | "rtept" | "none"; p
 
 const wpt = (lat: number, lon: number, inner: string) => `<wpt lat="${lat}" lon="${lon}">${inner}</wpt>`;
 
-describe("§NNN a waypoint placed on its track", () => {
+describe("§757 a waypoint placed on its track", () => {
   it("gives the kilometre along the track, computed by projecting the waypoint on it", () => {
     // Over the middle of the 21st point, ten metres north of the line: 20 steps along.
     const parsed = parseGpxWaypoints(gpx(wpt(LAT + 0.0001, 25.52, "<name>Vârf</name>")));
@@ -110,7 +110,7 @@ describe("§NNN a waypoint placed on its track", () => {
   });
 });
 
-describe("§NNN what the preview offers, against the route's length", () => {
+describe("§757 what the preview offers, against the route's length", () => {
   const proposal = (name: string, km: number, tooFar = false): GpxProposal => ({ name, km, kinds: [], offMeters: tooFar ? 900 : 5, tooFar });
 
   it("places a finish waypoint just past the typed distance at the route's end, so one press adds it", () => {
@@ -134,7 +134,7 @@ describe("§NNN what the preview offers, against the route's length", () => {
   });
 });
 
-describe("§NNN what a waypoint's words say it offers", () => {
+describe("§757 what a waypoint's words say it offers", () => {
   it.each([
     ["Fântână", ["WATER"]],
     ["Apă potabilă", ["WATER"]],

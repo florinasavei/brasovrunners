@@ -235,7 +235,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
   // `SportsEvent` requires its `startDate`), no calendar entry and no countdown: `dated` is null.
   const dated = datedOrNull(event);
   const weather = dated ? await forecastForEvent(dated, now) : null;
-  // The route's checkpoints (§NNN): a part of the page, never its content — left out while the database is away.
+  // The route's checkpoints (§757): a part of the page, never its content — left out while the database is away.
   const checkpoints = await readOrWhileAway(() => cachedEventCheckpoints(event.id), []);
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>

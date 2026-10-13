@@ -168,7 +168,7 @@ export default async function WhenBox({
             />
           </OnlyForType>
           {/* How long, not when it ends: the end is derived (§71) — asked as hours and minutes (§433). Its words
-              follow the type (§NNN): «Timp limită» for a race, counted from the gun when it has one, else
+              follow the type (§757): «Timp limită» for a race, counted from the gun when it has one, else
               «Cât durează evenimentul» — the same two boxes and the same column. */}
           <Stack component="fieldset" spacing={0.5} sx={{ border: 0, m: 0, p: 0, minWidth: 0 }} data-testid="duration-fieldset">
             <Typography component="legend" variant="body2" sx={{ mb: 1, p: 0, display: "inline-flex", alignItems: "center", gap: 0.75 }}>

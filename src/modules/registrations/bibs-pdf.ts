@@ -648,7 +648,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       doc.stroke();
       doc.circle(first[0], first[1], 1.8).fill(ink);
       doc.circle(last[0], last[1], 1.8).fill(ink);
-      // The route's checkpoints (§NNN, `bib-checkpoints.ts`): a tick down to the chart's foot, and an aid
+      // The route's checkpoints (§757, `bib-checkpoints.ts`): a tick down to the chart's foot, and an aid
       // station's cup or fork beside the line — any other point a dot on it — at the picture's points.
       for (const mark of profile.checkpoints?.marks ?? []) {
         const markX = chartLeft + mark.x * L.profileChartWidth;

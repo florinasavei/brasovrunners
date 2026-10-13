@@ -3,7 +3,7 @@ import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 
 /**
  * Where a checkpoint's cut-off is counted from, where the finish stands and how long a race's time
- * limit is (§NNN) — pure, so the writer (`checkpoints.ts`), the event page and the bib read one answer.
+ * limit is (§757) — pure, so the writer (`checkpoints.ts`), the event page and the bib read one answer.
  */
 
 /**
@@ -18,7 +18,7 @@ export function checkpointStart(event: { startsAt: Date; raceStartsAt: Date | nu
 }
 
 /**
- * A race's «Timp limită» in whole minutes (§NNN; the owner, 2026-10-13: «trebuie să pot pune timp
+ * A race's «Timp limită» in whole minutes (§757; the owner, 2026-10-13: «trebuie să pot pune timp
  * limită»): from the gun — else the event's start — to the event's end, the instant the editor's box
  * stores (`content/events/duration.ts#durationBase`). Null for any other type, whose «Durata» is how
  * long it lasts and no limit, and for a race with no end. The length is said even while the start's

@@ -77,9 +77,9 @@ export type BibDesignFormValues = {
   footerText: string;
   /** «Profilul traseului» and «Telefon pentru urgențe» (§750): the ticks, and the phone as typed. */
   showProfile: boolean;
-  /** «Punctele de control pe profil» (§NNN): on by default, drawn only with the profile and the event's checkpoints. */
+  /** «Punctele de control pe profil» (§757): on by default, drawn only with the profile and the event's checkpoints. */
   showCheckpoints: boolean;
-  /** «…cu orele limită» (§NNN): the cut-offs beside the points; off by default. */
+  /** «…cu orele limită» (§757): the cut-offs beside the points; off by default. */
   showCheckpointTimes: boolean;
   showEmergency: boolean;
   emergencyPhone: string;
@@ -321,7 +321,7 @@ export function bibPreviewUrl(input: {
   member?: boolean;
   /**
    * A stamp of what the sample is drawn from that is not in the form — the route's saved checkpoints
-   * (§NNN) — so saving them is a new address (`v=`), as the bibs page's pictures carry theirs. The
+   * (§757) — so saving them is a new address (`v=`), as the bibs page's pictures carry theirs. The
    * route ignores it; absent with nothing to say, so the ordinary address stays as it was.
    */
   version?: string;

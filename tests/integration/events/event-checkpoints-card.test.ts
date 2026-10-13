@@ -8,7 +8,7 @@ import type { GpxProposal } from "@/modules/event-checkpoints/domain/gpx-waypoin
 import { withClientWords } from "../../helpers/client-words";
 
 /**
- * §NNN — the card «Puncte de control» as the editor draws it (BR-REQ-050-02, BR-REQ-041-01 criterion 6):
+ * §757 — the card «Puncte de control» as the editor draws it (BR-REQ-050-02, BR-REQ-041-01 criterion 6):
  * its closed line and when it opens by itself, one block per saved point with every box named
  * `cp[i].…`, the spare rows for new ones, «Scoate» on a saved point only, the GPX's offer and its
  * preview with what is ticked, a reader's list with no form, both languages. The forms are plain
@@ -58,7 +58,7 @@ async function render(props: Partial<Parameters<typeof CheckpointsCard>[0]> = {}
   return renderToStaticMarkup(withClientWords(await CheckpointsCard({ ...base, ...props }), language));
 }
 
-describe("§NNN the card «Puncte de control»", () => {
+describe("§757 the card «Puncte de control»", () => {
   it("opens by itself while the event has none, for a role that writes, and says so on its closed line", async () => {
     const html = await render();
     expect(html).toContain("Puncte de control");
@@ -168,7 +168,7 @@ describe("§NNN the card «Puncte de control»", () => {
   });
 });
 
-describe("§NNN «Ia punctele din GPX» on the card", () => {
+describe("§757 «Ia punctele din GPX» on the card", () => {
   const gpx = (offered: GpxProposal[], ignored = 0) => ({ key: "test/route-gpx/00000000-0000-4000-8000-000000000000/t.gpx", offered, ignored });
 
   it("offers a link to the preview only when the file has points that sit on the track, and only to a role that writes", async () => {

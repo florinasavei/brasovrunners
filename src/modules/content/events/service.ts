@@ -264,7 +264,7 @@ function resolveTimes(fields: EventFieldsInput, switches: StartSwitches): Resolv
   // needs the start's date and hour, like the race's start below.
   // A gun time is a race's (§71): on any other type the field is hidden and its value ignored.
   const raceStartsAt = fields.type === "RACE" ? optional(fields.raceStartsAtWallTime, "raceStartsAt") : null;
-  // For a race «Durata» is «Timp limită» (§NNN): counted from the gun when it has one (`durationBase`).
+  // For a race «Durata» is «Timp limită» (§757): counted from the gun when it has one (`durationBase`).
   const endsAt =
     fields.durationMinutes != null
       ? new Date(durationBase({ type: fields.type, startsAt, raceStartsAt }).getTime() + fields.durationMinutes * 60_000)
@@ -1821,7 +1821,7 @@ export type SaveEventAndTranslationsInput = {
   placeNamesAsTyped?: boolean;
   /**
    * The caller writes the event's «Puncte de control» itself right after this save (an import over an
-   * event whose file's list differs, §751, §NNN), having held that list to the rules: the saved list,
+   * event whose file's list differs, §751, §757), having held that list to the rules: the saved list,
    * about to be replaced, is then not held to them against the new start, end and length.
    */
   checkpointsReplaced?: boolean;
@@ -2015,7 +2015,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
      * box is not on screen, so nothing is refused and nobody is told).
      */
     discountNoteCleared?: boolean;
-    /** Each written date's saved «Puncte de control» held to the rules against the date as written (§NNN). */
+    /** Each written date's saved «Puncte de control» held to the rules against the date as written (§757). */
     checkpointsHold?: (member: EditableEvent, date: string) => Promise<void>;
   },
 ): Promise<{
@@ -2699,7 +2699,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   const deadlines = await currentDeadlines(db);
   /*
     The saved «Puncte de control» are held to the card's rules again against the event as this save
-    leaves it (§NNN) — a moved start or gun, a shorter «Timp limită», a shorter route or another GPX —
+    leaves it (§757) — a moved start or gun, a shorter «Timp limită», a shorter route or another GPX —
     inside the transaction. The GPX's length they are measured against when no distance is typed is
     read here, before the transaction opens and its lock is taken (§403).
   */
@@ -3518,7 +3518,7 @@ export async function duplicateEvent<T extends Record<string, unknown>>(
         copiedTranslationValues(translation, copy.id, slugs.get(translation.id) as string, input.actor, now),
       ),
     );
-    // The route's checkpoints go with the route (§NNN): its cut-offs are times of the day, so they hold on the copy's date.
+    // The route's checkpoints go with the route (§757): its cut-offs are times of the day, so they hold on the copy's date.
     await copyCheckpoints(tx, source.id, copy.id, now);
 
     return copy;
@@ -3887,7 +3887,7 @@ async function materializeSeries<T extends Record<string, unknown>>(
           authorStaffUserId: by,
         })),
       );
-      // A new date carries the source's checkpoints (§NNN), like its route: the cut-offs are times of the day.
+      // A new date carries the source's checkpoints (§757), like its route: the cut-offs are times of the day.
       await copyCheckpoints(tx, source.id, copy.id, now);
     }
   });

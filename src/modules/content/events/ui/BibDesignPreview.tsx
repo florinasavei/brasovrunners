@@ -47,7 +47,7 @@ export default function BibDesignPreview({
   labels: { alt: string; caption: string; pending: string };
   /** A member's bib (§664): the same sample with the members' header and label. */
   member?: boolean;
-  /** What the sample is drawn from beside the form — the saved checkpoints (§NNN) — in every address this rebuilds. */
+  /** What the sample is drawn from beside the form — the saved checkpoints (§757) — in every address this rebuilds. */
   version?: string;
 }) {
   const root = useRef<HTMLElement>(null);

@@ -2,7 +2,7 @@ import { BIB_LAYOUT } from "./bib-geometry";
 import type { BibProfile } from "./bib-profile";
 
 /**
- * The route's checkpoints on a race number's profile strip (§NNN, amending §750; the owner, 2026-10-13:
+ * The route's checkpoints on a race number's profile strip (§757, amending §750; the owner, 2026-10-13:
  * «I need to put checkpoints and limit times», and on the bib: «nu pot să văd unde e punctul de
  * alimentare pe acel număr»).
  *

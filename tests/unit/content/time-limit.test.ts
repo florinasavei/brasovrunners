@@ -10,7 +10,7 @@ import { gunOffsetMinutes } from "@/modules/content/events/ui/NightEventField";
 import { checkpointFinish, raceTimeLimitMinutes } from "@/modules/event-checkpoints/domain/start";
 
 /**
- * §NNN (amending §71, §433) — «Durata» becomes «Timp limită» for a race (the owner, 2026-10-13: «Aici nu
+ * §757 (amending §71, §433) — «Durata» becomes «Timp limită» for a race (the owner, 2026-10-13: «Aici nu
  * e clar „cât durează” ce? trebuie să pot pune timp limită»): the words by the event's type, the minutes
  * counted from the race's gun, the page's «Timp limită: 2 h 30 min» and the finish row's closing time.
  */
@@ -20,7 +20,7 @@ const at = (iso: string) => new Date(iso);
 const START = at("2026-11-21T07:00:00.000Z");
 const GUN = at("2026-11-21T08:00:00.000Z");
 
-describe("§NNN the box's words follow the type", () => {
+describe("§757 the box's words follow the type", () => {
   const words = (initialType: string) =>
     renderToStaticMarkup(createElement(DurationWords, { selectName: "event.type", initialType, race: ro.Admin.editor.durationRace, other: ro.Admin.editor.durationOther }));
 
@@ -53,7 +53,7 @@ describe("§NNN the box's words follow the type", () => {
   });
 });
 
-describe("§NNN a race's minutes count from the gun", () => {
+describe("§757 a race's minutes count from the gun", () => {
   it("counts from the gun on a race that has one, else from the event's start", () => {
     expect(durationBase({ type: "RACE", startsAt: START, raceStartsAt: GUN })).toBe(GUN);
     expect(durationBase({ type: "RACE", startsAt: START, raceStartsAt: null })).toBe(START);
@@ -86,7 +86,7 @@ describe("§NNN a race's minutes count from the gun", () => {
   });
 });
 
-describe("§NNN the page's «Timp limită» and the finish row", () => {
+describe("§757 the page's «Timp limită» and the finish row", () => {
   const race = { type: "RACE", startsAt: START, raceStartsAt: GUN, endsAt: at("2026-11-21T10:30:00.000Z"), timezone: "Europe/Bucharest", distanceMeters: 21000 };
 
   it("says a race's time limit from the gun, and nothing for any other event", () => {

@@ -200,7 +200,7 @@ async function resolveMedia<T extends Record<string, unknown>>(
 // --- The route's checkpoints ------------------------------------------------------------------
 
 /**
- * The file's checkpoints as rows to write (§NNN), held to the editor's card's own rules against the
+ * The file's checkpoints as rows to write (§757), held to the editor's card's own rules against the
  * file's event — a kilometre within the typed distance, cut-offs after the start (the gun's on a race,
  * else the event's), not after the end and in order along the route — **before anything is written**,
  * so a file whose list the card would refuse is refused whole, naming the rule, and no half-imported
@@ -344,7 +344,7 @@ export async function importEventAsNew<T extends Record<string, unknown>>(db: Da
     now,
     fetchImpl: input.fetchImpl,
   });
-  // The route's checkpoints (§NNN): their own table, written after the event exists, as the card writes them.
+  // The route's checkpoints (§757): their own table, written after the event exists, as the card writes them.
   if (checkpoints.length > 0) await replaceCheckpoints(db, input.actor, created.id, checkpoints, now);
 
   await recordAuditEvent(db, {
@@ -590,7 +590,7 @@ export async function importEventOver<T extends Record<string, unknown>>(db: Dat
   const refusal = publicationRefusal(target.event, file.event, slugs);
   if (refusal) throw new DomainError("VALIDATION_ERROR", refusal, ["editorialStatus"]);
   await assertSlugsFree(db, input.eventId, slugs);
-  // The checkpoints, where the diff showed them changed (§NNN): held to the card's rules before anything is copied or written.
+  // The checkpoints, where the diff showed them changed (§757): held to the card's rules before anything is copied or written.
   const checkpointsChanged = changes.some((change) => change.key === "route.checkpoints");
   const checkpoints = checkpointsChanged ? importedCheckpoints(file.event) : [];
 
@@ -641,7 +641,7 @@ export async function importEventOver<T extends Record<string, unknown>>(db: Dat
     scope: "this",
     // The names are the file's, exactly: an older event's English must not follow its Romanian (§362).
     placeNamesAsTyped: true,
-    // The file's list replaces the saved one below, held to the rules already; else the saved list is held to them against the file's event (§NNN).
+    // The file's list replaces the saved one below, held to the rules already; else the saved list is held to them against the file's event (§757).
     checkpointsReplaced: checkpointsChanged,
     now,
     fetchImpl: input.fetchImpl,

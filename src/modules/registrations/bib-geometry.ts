@@ -154,7 +154,7 @@ export const BIB_LAYOUT = {
   profileDistanceTop: 9,
   profileGainTop: 20,
   /**
-   * The checkpoints on the profile (§NNN, `bib-checkpoints.ts`): at each one's kilometre an aid
+   * The checkpoints on the profile (§757, `bib-checkpoints.ts`): at each one's kilometre an aid
    * station's glyph — a cup, a fork — `checkpointGlyphWidth` × `checkpointGlyphHeight` points, stroked
    * `checkpointGlyphWeight`, `checkpointGlyphGap` points above the line (under it where the line runs
    * too high), or for any other point a dot `checkpointDot` points in radius on the line; a tick down to

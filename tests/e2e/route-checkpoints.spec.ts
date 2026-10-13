@@ -5,7 +5,7 @@ import { fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { openEditorBox, openFold } from "./support/fold";
 
 /**
- * §NNN (amending §718 and §750), BR-REQ-011-01, BR-REQ-050-02, BR-REQ-038-01 — the route's checkpoints and
+ * §757 (amending §718 and §750), BR-REQ-011-01, BR-REQ-050-02, BR-REQ-038-01 — the route's checkpoints and
  * the race's time limit (the owner, 2026-10-13: «I need to put checkpoints and limit times»; «trebuie să
  * pot pune timp limită»; «nu pot să văd unde e punctul de alimentare pe acel număr»).
  *
@@ -73,7 +73,7 @@ async function fillRow(row: Locator, values: { km: string; ro: string; en: strin
   await fillTimeField(row, "Ora limită", values.cutoff);
 }
 
-test.describe("§NNN the route's checkpoints and the race's time limit", () => {
+test.describe("§757 the route's checkpoints and the race's time limit", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test("an Administrator sets the time limit and two checkpoints; the page and the bib's address follow", async ({ page }) => {

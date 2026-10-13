@@ -23,7 +23,7 @@ import { checkpointFinish, checkpointStart } from "@/modules/event-checkpoints/d
 import { STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 
 /**
- * §NNN, BR-REQ-011-01 — the checkpoints' rules, with no database: a kilometre read as typed and held
+ * §757, BR-REQ-011-01 — the checkpoints' rules, with no database: a kilometre read as typed and held
  * to the route's length, the cut-offs measured from the start and against each other, a note in both
  * languages or neither, the order a runner meets the points, the page's rows with the finish last.
  */
@@ -55,7 +55,7 @@ function refusal(posted: PostedCheckpoint[], context = CONTEXT): CheckpointRefus
   throw new Error("expected a refusal");
 }
 
-describe("§NNN a kilometre and a time of the day, as typed", () => {
+describe("§757 a kilometre and a time of the day, as typed", () => {
   it.each([
     ["12", 12],
     ["12,5", 12.5],
@@ -93,7 +93,7 @@ describe("§NNN a kilometre and a time of the day, as typed", () => {
   });
 });
 
-describe("§NNN the rules a checkpoint is held to", () => {
+describe("§757 the rules a checkpoint is held to", () => {
   it("drops the spare rows nobody typed in and the rows ticked «Scoate»", () => {
     const blank = row(5, { nameRo: "", nameEn: "", km: "" });
     expect(isBlankPosted(blank)).toBe(true);
@@ -221,7 +221,7 @@ describe("§NNN the rules a checkpoint is held to", () => {
   });
 });
 
-describe("§NNN what the event says the points are measured against", () => {
+describe("§757 what the event says the points are measured against", () => {
   const at = (hours: number, minutes = 0) => new Date(Date.UTC(2026, 10, 21, hours, minutes));
   const wall = (instant: Date) => instant.getUTCHours() * 60 + instant.getUTCMinutes();
 
@@ -233,7 +233,7 @@ describe("§NNN what the event says the points are measured against", () => {
     expect(checkpointContext({ ...base, distanceMeters: 0, gpxMeters: null }).routeKm).toBeNull();
   });
 
-  it("counts the limit on the event's clock across the night the clocks go back (§NNN)", () => {
+  it("counts the limit on the event's clock across the night the clocks go back (§757)", () => {
     // 24 October 2026, 22:00 summer time (19:00Z), six real hours: the finish closes at 03:00 winter time, five hours on the clock.
     const bucharest = (instant: Date) => {
       const [hours, minutes] = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Bucharest", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
@@ -289,7 +289,7 @@ describe("§NNN what the event says the points are measured against", () => {
   });
 });
 
-describe("§NNN the table the event page draws", () => {
+describe("§757 the table the event page draws", () => {
   const point = (id: string, km: number, cutoff: string | null = null): Checkpoint => ({
     id,
     nameRo: id,
@@ -320,7 +320,7 @@ describe("§NNN the table the event page draws", () => {
   });
 });
 
-describe("§NNN the picture stamp covers the checkpoints", () => {
+describe("§757 the picture stamp covers the checkpoints", () => {
   const base: Checkpoint = { id: "a", nameRo: "Apă", nameEn: "Water", km: 5, kinds: ["WATER"], cutoff: "10:00", noteRo: null, noteEn: null };
 
   it("changes with a kilometre, a kind or a cut-off, and not with a name or an id", () => {
@@ -340,7 +340,7 @@ describe("§NNN the picture stamp covers the checkpoints", () => {
   });
 });
 
-describe("§NNN who may read and who may write", () => {
+describe("§757 who may read and who may write", () => {
   it("lets the Organizer and the Administrators write, and every role that opens the editor read", () => {
     const writers = STAFF_ROLES.filter((role) => canEditCheckpoints(role));
     expect(writers.sort()).toEqual(["ADMIN", "MODERATOR", "SUPERADMIN"]);

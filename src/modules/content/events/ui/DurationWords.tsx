@@ -3,7 +3,7 @@
 import { useSelectedValue } from "./OnlyForType";
 
 /**
- * «Durata»'s label and help by the event's type, as the type select says right now (§NNN; the owner,
+ * «Durata»'s label and help by the event's type, as the type select says right now (§757; the owner,
  * 2026-10-13, on «Ore / Minute» and «Cât durează — de exemplu 1 oră și 45 de minute…»: «Aici nu e clar
  * „cât durează” ce? trebuie să pot pune timp limită»). A race asks «Timp limită» — how long the runners
  * have from the start (the gun, when it has one: `duration.ts#durationBase`) until the finish closes —

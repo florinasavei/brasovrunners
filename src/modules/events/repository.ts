@@ -94,7 +94,7 @@ export const OFFERS_MEMBER_BIB = sql<boolean>`coalesce((${events.bibDesign} #> '
 export const RACE_NUMBER_FORMAT = sql<RaceNumberFormat>`coalesce(${events.bibDesign} ->> 'numberFormat', 'plain')`.mapWith(readRaceNumberFormat);
 
 /**
- * The route's checkpoints as one string (§NNN), for the stamp below: each one's kilometre, kinds and
+ * The route's checkpoints as one string (§757), for the stamp below: each one's kilometre, kinds and
  * cut-off in distance order — the same facts `domain/checkpoint.ts#checkpointsStampPart` joins for the
  * bibs page — so a point added, moved or retimed is a new picture address. Null with none, which
  * `concat_ws` leaves out, so an event without checkpoints keeps the stamp it had.

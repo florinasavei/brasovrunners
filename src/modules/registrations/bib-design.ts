@@ -372,7 +372,7 @@ export const bibDesignSchema = z
      */
     showProfile: z.boolean().catch(false),
     /**
-     * «Punctele de control pe profil» (§NNN): a small mark at each checkpoint's kilometre on the
+     * «Punctele de control pe profil» (§757): a small mark at each checkpoint's kilometre on the
      * profile's strip, with its cut-off in small type where it fits (`bib-checkpoints.ts`). **On by
      * default**, whatever a design saved before this key says: it draws only when the strip itself is
      * drawn and the event has checkpoints, so ticking «Profilul traseului» on an event with
@@ -380,7 +380,7 @@ export const bibDesignSchema = z
      */
     showCheckpoints: z.boolean().catch(true),
     /**
-     * «…cu orele limită» (§NNN): beside each checkpoint on the strip, its cut-off — «km 12 · 11:30» —
+     * «…cu orele limită» (§757): beside each checkpoint on the strip, its cut-off — «km 12 · 11:30» —
      * where **every** one fits (the crowding rule, `bib-checkpoints.ts`). Off by default: a time printed
      * on a number is a promise the club cannot change after the sheet is printed.
      */

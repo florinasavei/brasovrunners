@@ -49,9 +49,9 @@ const EVERYTHING_OFF: BibDesign = {
   footerText: "Cronometraj: Start & Go + 50% · Urgențe organizator 0722 000 000",
   // The profile and the emergency phone (§750): the ticks on, the phone with the spaces a URL escapes.
   showProfile: true,
-  // «Punctele de control pe profil» (§NNN): off, the other way from its default (on).
+  // «Punctele de control pe profil» (§757): off, the other way from its default (on).
   showCheckpoints: false,
-  // «…cu timpii limită» (§NNN): on, the other way from its default (off).
+  // «…cu timpii limită» (§757): on, the other way from its default (off).
   showCheckpointTimes: true,
   showEmergency: true,
   emergencyPhone: "+40 722 000 000",
@@ -208,7 +208,7 @@ describe("§249 the form, read the same way for the save and for the preview", (
       showLogo: false,
       showEmail: false,
       showPartners: false,
-      // The unticked upside-down box posts nothing, which reads off (§750); so does the checkpoints' (§NNN).
+      // The unticked upside-down box posts nothing, which reads off (§750); so does the checkpoints' (§757).
       emergencyUpsideDown: false,
       showCheckpoints: false,
     });
@@ -266,7 +266,7 @@ describe("§249 the form, read the same way for the save and for the preview", (
       // Nothing posted for the sponsors' place (§750): «Jos de tot», the default; and no profile, no phone.
       sponsorPlace: "bottom",
       showProfile: false,
-      // An unposted box is an unticked one, the checkpoints' too (§NNN).
+      // An unposted box is an unticked one, the checkpoints' too (§757).
       showCheckpoints: false,
       showCheckpointTimes: false,
       showEmergency: false,

@@ -95,7 +95,7 @@ export type ConfigContext = {
   gpxUrl: string | null;
   /** Turns a site-relative picture address (`/api/media/…`, the developer's modes) into an absolute one. */
   absolute: (src: string) => string;
-  /** The route's checkpoints (§NNN), a table of their own; none when the caller read none. */
+  /** The route's checkpoints (§757), a table of their own; none when the caller read none. */
   checkpoints?: readonly Checkpoint[];
 };
 
@@ -111,7 +111,7 @@ export function configFromRows(event: EditableEvent, rows: readonly EditableTran
     surface: event.surface,
     timezone: event.timezone,
     start: { date: start.date || null, time: start.time || null },
-    // From the gun on a race that has one (§NNN, `durationBase`): the box the import posts back, so the end comes back the same.
+    // From the gun on a race that has one (§757, `durationBase`): the box the import posts back, so the end comes back the same.
     durationMinutes: eventDurationMinutes(event),
     raceStartsAt: event.raceStartsAt?.toISOString() ?? null,
     dateToBeAnnounced: event.dateToBeAnnounced,

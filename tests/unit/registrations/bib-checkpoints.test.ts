@@ -26,7 +26,7 @@ import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
 import { drawnRuns } from "../../helpers/pdf-drawn";
 
 /**
- * §NNN (amending §750), BR-REQ-011-01 — the route's checkpoints on the bib's profile strip: where each
+ * §757 (amending §750), BR-REQ-011-01 — the route's checkpoints on the bib's profile strip: where each
  * mark stands, an aid station's glyph (a cup for water, a fork for food) and every other point's dot,
  * the words under the ticks («km 12», «km 12 · 11:30» with the second tick), and the crowding rule —
  * the times go first, all of them; then the kilometres that do not fit; the marks stay (a mark too
@@ -44,7 +44,7 @@ const width = BIB_LAYOUT.profileChartWidth;
 /** The kilometre `points` points along the strip of a 21.1 km route. */
 const kmAt = (points: number) => (points / width) * 21.1;
 
-describe("§NNN the marks on the strip", () => {
+describe("§757 the marks on the strip", () => {
   it("places each point by its share of the route's distance, on the profile's own line", () => {
     const drawing = bibCheckpointMarks({ ...base, checkpoints: [at(5), at(10.55)] })!;
     expect(drawing.marks).toHaveLength(2);
@@ -70,7 +70,7 @@ describe("§NNN the marks on the strip", () => {
   });
 });
 
-describe("§NNN an aid station is a glyph, every other point a dot", () => {
+describe("§757 an aid station is a glyph, every other point a dot", () => {
   it("gives water a cup, food alone a fork, and first aid, timing or nothing a dot", () => {
     expect(checkpointGlyph(["WATER"])).toBe("water");
     expect(checkpointGlyph(["WATER", "FOOD"])).toBe("water");
@@ -123,7 +123,7 @@ describe("§NNN an aid station is a glyph, every other point a dot", () => {
   });
 });
 
-describe("§NNN the words under the ticks, and the crowding rule", () => {
+describe("§757 the words under the ticks, and the crowding rule", () => {
   it("says «km» under each point, and the cut-off beside it only with the second tick", () => {
     const checkpoints = [at(5, "09:45"), at(12, "10:30"), at(16)];
     expect(bibCheckpointMarks({ ...base, checkpoints })!.marks.map((m) => m.label)).toEqual(["km 5", "km 12", "km 16"]);
@@ -191,7 +191,7 @@ describe("§NNN the words under the ticks, and the crowding rule", () => {
   });
 });
 
-describe("§NNN the profile's height at a distance", () => {
+describe("§757 the profile's height at a distance", () => {
   it("interpolates between the points, and holds the ends", () => {
     const points = [
       [0, 0],
@@ -271,7 +271,7 @@ const picture = async (profile: BibProfileDrawing, overrides: Partial<BibDesign>
 
 afterEach(() => vi.restoreAllMocks());
 
-describe("§NNN the sheet draws the marks and their words", () => {
+describe("§757 the sheet draws the marks and their words", () => {
   it("draws a cup for the water and a dot for the mat, a tick under each, and «km» under the ticks", async () => {
     const marks = marksOf(AID_AND_MAT, false)!;
     const plain = await sheet(PROFILE);
@@ -295,7 +295,7 @@ describe("§NNN the sheet draws the marks and their words", () => {
   });
 });
 
-describe("§NNN the picture draws them too", () => {
+describe("§757 the picture draws them too", () => {
   it("is a different picture with the marks, and the same with the marks empty", async () => {
     const plain = await picture(PROFILE);
     expect((await picture(withMarks(marksOf(AID_AND_MAT, false)))).equals(plain)).toBe(false);
@@ -326,7 +326,7 @@ describe("§NNN the picture draws them too", () => {
   });
 });
 
-describe("§NNN the extras read the checkpoints only where the design asks", () => {
+describe("§757 the extras read the checkpoints only where the design asks", () => {
   beforeEach(() => {
     clearBibProfileCache();
     stored.get.mockReset();

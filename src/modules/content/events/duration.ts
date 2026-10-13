@@ -67,7 +67,7 @@ export function savedDurationMinutes(startsAt: Date | null | undefined, endsAt: 
 }
 
 /**
- * Where «Durata» counts from (§NNN, amending §71 and §433): **a race's gun when it has one** — for a
+ * Where «Durata» counts from (§757, amending §71 and §433): **a race's gun when it has one** — for a
  * race the box is «Timp limită», how long the runners have from the start until the finish closes,
  * and a runner's start is the gun, not the meeting time before it — else the event's own start. The
  * service adds the box's minutes to this instant to store `ends_at`, and the editor, its summary and

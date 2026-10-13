@@ -380,7 +380,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
           r={1.8}
           fill={ink}
         />
-        {/* The route's checkpoints (§NNN, `bib-checkpoints.ts`), at the sheet's points: a tick to the chart's foot, and
+        {/* The route's checkpoints (§757, `bib-checkpoints.ts`), at the sheet's points: a tick to the chart's foot, and
             an aid station's cup or fork beside the line — any other point a dot on it. */}
         {(profile.checkpoints?.marks ?? []).map((mark) => {
           const markX = mark.x * L.profileChartWidth;
@@ -421,7 +421,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
         <div style={{ display: "flex" }}>{profile.start}</div>
         <div style={{ display: "flex" }}>{profile.finish}</div>
       </div>
-      {/* Their words (§NNN), «km 12» or «km 12 · 11:30», centred under the ticks in the labels' row — where the crowding rule kept them. */}
+      {/* Their words (§757), «km 12» or «km 12 · 11:30», centred under the ticks in the labels' row — where the crowding rule kept them. */}
       {(profile.checkpoints?.marks ?? []).map((mark) =>
         mark.label ? (
           <div

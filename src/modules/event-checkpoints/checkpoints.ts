@@ -26,7 +26,7 @@ import { checkpointStart } from "./domain/start";
 import { loadGpxWaypoints } from "./gpx-file";
 
 /**
- * An event's checkpoints (§NNN): read by the editor's «Puncte de control» card, the event page's table
+ * An event's checkpoints (§757): read by the editor's «Puncte de control» card, the event page's table
  * and the bib's profile strip; written by the card's two forms. The role is asserted here and not only
  * by the hidden buttons (BR-REQ-060-01); every change that changes something writes one audit row
  * naming who did it and the list before and after (`AGENTS.md` §12.12 allows what somebody typed about
@@ -142,7 +142,7 @@ function sameWords(a: Omit<CheckpointInput, "id">, b: Omit<Checkpoint, "id">): b
 }
 
 /**
- * The event's saved list no longer holds against the event as a save leaves it (§NNN): a moved start
+ * The event's saved list no longer holds against the event as a save leaves it (§757): a moved start
  * or gun, a shorter «Timp limită», a shorter route. The event save is refused naming «Puncte de
  * control» and the rule's own sentence (`refusal`), so the page and the bib never publish a cut-off
  * before the start or after the finish, nor a point past the route. `date` names another date of a
@@ -183,7 +183,7 @@ export async function assertSavedCheckpointsHold<T extends Record<string, unknow
 }
 
 /**
- * Every checkpoint of one event copied onto another (§NNN) — «Duplică» and a series' new dates: the
+ * Every checkpoint of one event copied onto another (§757) — «Duplică» and a series' new dates: the
  * cut-offs are times of the day, so they follow the new date. Run in the caller's transaction; no
  * audit row of its own, the copy's own row («event.duplicated», a series' date) says it.
  */
@@ -208,7 +208,7 @@ export async function copyCheckpoints<T extends Record<string, unknown>>(db: Dat
 
 /**
  * An event's whole list replaced by `rows` — already held to the rules (`prepareCheckpoints`) by the
- * caller — for the event's JSON file (§751, §NNN): an import as a new event writes the file's list, an
+ * caller — for the event's JSON file (§751, §757): an import as a new event writes the file's list, an
  * import over an event writes it where the diff showed the list as changed. The role is asserted here
  * too; one audit row names the list before and after, `source: "import"`. Nothing written, nothing
  * recorded, when the list is already the same.
@@ -333,7 +333,7 @@ export async function changeCheckpoints<T extends Record<string, unknown>>(
         .map((pick) => ({ pick, proposal: proposals[pick.at] }))
         // A waypoint already on the list — the same words at the same kilometre — is not added twice.
         .filter(({ proposal }) => !current.some((row) => row.km === proposal.km && (row.nameRo === proposal.name || row.nameEn === proposal.name)))
-        // The names the club gave in the preview, one box per language: never the file's one name copied into both (§NNN).
+        // The names the club gave in the preview, one box per language: never the file's one name copied into both (§757).
         .map(({ pick, proposal }) => ({
           id: "",
           nameRo: pick.nameRo,

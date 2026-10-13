@@ -2,7 +2,7 @@ import { getStorage, isStorageConfigured } from "@/modules/media/storage";
 import { parseGpxWaypoints, type GpxWaypoints } from "./domain/gpx-waypoints";
 
 /**
- * The waypoints of an event's route file, read from the site's store (§NNN) — the one place that
+ * The waypoints of an event's route file, read from the site's store (§757) — the one place that
  * fetches the GPX for the checkpoints (the bib's profile has its own reader, `bib-extras.ts`, of the
  * same object).
  *

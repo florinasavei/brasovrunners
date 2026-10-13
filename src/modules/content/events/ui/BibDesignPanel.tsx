@@ -99,7 +99,7 @@ export default async function BibDesignPanel({
   const t = await getTranslations("Admin");
   // The reader's own language, for the picture list's titles; the form has no locale prop.
   const locale = (await getLocale()) as Locale;
-  // The route's saved checkpoints (§NNN): the strip draws them, so what is saved is part of the sample's address (`v=`), and the tick below is offered only when there are some.
+  // The route's saved checkpoints (§757): the strip draws them, so what is saved is part of the sample's address (`v=`), and the tick below is offered only when there are some.
   const checkpoints = eventId ? await listCheckpoints(getDb(), eventId) : [];
   const hasCheckpoints = checkpoints.length > 0;
   const version = hasCheckpoints ? bibPictureStamp(checkpointsStampPart(checkpoints)) : undefined;
@@ -328,7 +328,7 @@ export default async function BibDesignPanel({
           >
             {t("editor.bibDesign.showProfile")}
           </CheckboxField>
-          {/* «Punctele de control pe profil» (§NNN): on by default, drawn only with the profile and the event's checkpoints.
+          {/* «Punctele de control pe profil» (§757): on by default, drawn only with the profile and the event's checkpoints.
               Greyed — and says why — while the event has none; a greyed box posts nothing, so its stored tick is carried
               in a hidden field and adding checkpoints later finds it as it was (on, unless the club turned it off). */}
           <CheckboxField
@@ -340,7 +340,7 @@ export default async function BibDesignPanel({
             {t("editor.bibDesign.showCheckpoints")}
           </CheckboxField>
           {!hasCheckpoints && design.showCheckpoints && <input type="hidden" name="event.bibDesign.showCheckpoints" value="on" />}
-          {/* «…cu orele limită» (§NNN): off by default; the cut-offs beside the points where every one fits. Greyed with
+          {/* «…cu orele limită» (§757): off by default; the cut-offs beside the points where every one fits. Greyed with
               the tick above while the event has no checkpoints, its stored tick carried the same way. */}
           <CheckboxField
             name="event.bibDesign.showCheckpointTimes"

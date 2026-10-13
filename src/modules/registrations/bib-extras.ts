@@ -32,7 +32,7 @@ export type BibProfileSource = {
   distanceMeters: number | null;
   elevationGainMeters: number | null;
   /**
-   * The route's checkpoints (§NNN), read by the caller only when the design asks for the profile and
+   * The route's checkpoints (§757), read by the caller only when the design asks for the profile and
    * for them (`bibNeedsCheckpoints`); absent draws the strip as it was.
    */
   checkpoints?: readonly BibCheckpointSource[];
@@ -44,7 +44,7 @@ export function bibNeedsCheckpoints(design: Pick<BibDesign, "showProfile" | "sho
 }
 
 /**
- * The event's profile source with its checkpoints (§NNN), for the routes that draw a number: read from
+ * The event's profile source with its checkpoints (§757), for the routes that draw a number: read from
  * the database only when the design ticks the profile and the checkpoints and the event has a route
  * to draw them on, one query — otherwise the source as it was.
  */
@@ -111,7 +111,7 @@ export async function loadBibExtras(
                 ? admin("bibs.profileDistance", { km: values?.km ?? "" })
                 : admin("bibs.profileGain", { m: values?.m ?? "" }),
         );
-        // The route's checkpoints (§NNN) on the strip, where the design asks and the event has some:
+        // The route's checkpoints (§757) on the strip, where the design asks and the event has some:
         // placed by the figure the bib prints, the club's own distance first, as the strip's right end is;
         // «km 12» in the sheet's language, «km 12 · 11:30» with «…cu orele limită».
         const kmWords = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });

@@ -366,7 +366,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     approvedDeclarationIds: new Set(declarations.map((declaration) => declaration.id)),
   });
   /*
-    «Puncte de control» (§NNN): the route's points as saved, the route's length they are measured
+    «Puncte de control» (§757): the route's points as saved, the route's length they are measured
     against, and the GPX's waypoints when the file has some that sit on its track. Read for every
     role that opens the editor; the forms ask the service for the role again.
   */
@@ -491,7 +491,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     texts: orderedTranslations,
     night: clubNightEvent(event).night,
     storageConfigured: isStorageConfigured(),
-    // «Puncte de control» (§NNN): «Traseul»'s card reads as drawn while the table is.
+    // «Puncte de control» (§757): «Traseul»'s card reads as drawn while the table is.
     checkpointCount: checkpoints.length,
   });
   /*
@@ -1004,7 +1004,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   error={volunteerErrorCode ? t(`errors.${volunteerErrorCode}`) : undefined}
                 />
               )}
-              {/* «Puncte de control» (§NNN), part of «Traseul» in the page's sections (nested, no number): its forms are its own, beside the save form like the card above; «Traseul» links to it. */}
+              {/* «Puncte de control» (§757), part of «Traseul» in the page's sections (nested, no number): its forms are its own, beside the save form like the card above; «Traseul» links to it. */}
               <CheckpointsCard
                 locale={locale}
                 eventId={event.id}

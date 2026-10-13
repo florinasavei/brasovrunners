@@ -15,7 +15,7 @@ import type { Checkpoint } from "@/modules/event-checkpoints/domain/checkpoint";
 import EventCheckpoints from "@/modules/events/ui/EventCheckpoints";
 
 /**
- * §NNN, BR-REQ-011-01 — the table «Puncte de control» on the event page: the kilometre, the point,
+ * §757, BR-REQ-011-01 — the table «Puncte de control» on the event page: the kilometre, the point,
  * what is there (a glyph with its word), the cut-off in words, the finish last when the event has a
  * time limit; both languages; nothing without checkpoints; every cell carries its column's word so the
  * table reads as a stack at 320 pixels.
@@ -39,7 +39,7 @@ async function render(checkpoints: Checkpoint[], finish: { km: number | null; li
 
 const rowsOf = (html: string) => [...html.matchAll(/<tr data-testid="checkpoint-(?:row|finish)">[^]*?<\/tr>/g)].map((match) => match[0]);
 
-describe("§NNN the checkpoints' table on the event page", () => {
+describe("§757 the checkpoints' table on the event page", () => {
   it("is nothing at all with no checkpoints, even with a time limit", async () => {
     expect(await render([], { km: 21.1, limit: "12:00" })).toBe("");
   });

@@ -476,7 +476,7 @@ export type AuditAction =
   | "volunteer.signed_up"
   | "volunteer.exported"
   /**
-   * An event's checkpoints saved on its editor's «Puncte de control» card (§NNN), or taken from the
+   * An event's checkpoints saved on its editor's «Puncte de control» card (§757), or taken from the
    * route's GPX: how many were added, changed and removed, and the list before and after — each
    * point's kilometre, its name and its cut-off. Entity `event`. The club's own work about a route,
    * never a participant.

@@ -166,7 +166,7 @@ function hiddenListOutcome(error: unknown, locale: Locale): { error: string; err
 }
 
 /**
- * The saved «Puncte de control» would no longer hold against the event as this save leaves it (§NNN):
+ * The saved «Puncte de control» would no longer hold against the event as this save leaves it (§757):
  * a moved start or gun, a shorter «Timp limită» or route. The card's own sentence about the point, in
  * the page's language, inside one that names the card (and the date, on another date of a series);
  * no box of this form is linked — the point is changed in its own card.

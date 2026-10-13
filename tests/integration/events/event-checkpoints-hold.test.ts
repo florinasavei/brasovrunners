@@ -8,7 +8,7 @@ import type { PostedCheckpoint } from "@/modules/event-checkpoints/domain/checkp
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-050-02 — the checkpoints' rules hold after every save, not only their own card's: an
+ * §757, BR-REQ-050-02 — the checkpoints' rules hold after every save, not only their own card's: an
  * event save that moves the gun past a saved cut-off, shortens «Timp limită» under one or shortens the
  * route under a point is refused naming «Puncte de control» and the rule, writing nothing; a save that
  * keeps them true goes through. On a series the other dates the save reaches are held to the same rules,
@@ -140,7 +140,7 @@ async function refusalOf(operation: Promise<unknown>): Promise<SavedCheckpointsR
   throw new Error(`expected the saved checkpoints to refuse the save, got ${String(error)}`);
 }
 
-describe("§NNN an event save holds the saved checkpoints to their rules", () => {
+describe("§757 an event save holds the saved checkpoints to their rules", () => {
   it("refuses moving the gun past a saved cut-off, naming «Puncte de control» and the point, and writes nothing", async () => {
     const event = await raceWithCheckpoints();
     const before = await reload(event.id);
@@ -181,7 +181,7 @@ describe("§NNN an event save holds the saved checkpoints to their rules", () =>
   });
 });
 
-describe("§NNN the checkpoints on a copy and on a series", () => {
+describe("§757 the checkpoints on a copy and on a series", () => {
   it("«Duplică» copies the checkpoints with the route", async () => {
     const event = await raceWithCheckpoints();
     const copy = await duplicateEvent(db, { actor: admin, eventId: event.id, now: NOW });

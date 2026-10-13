@@ -3,14 +3,14 @@ import { check, index, integer, numeric, pgEnum, pgTable, text, time, timestamp,
 import { events } from "./events";
 
 /**
- * What a checkpoint has to give a runner (§NNN): a small closed set — water, food, first aid, timing
+ * What a checkpoint has to give a runner (§757): a small closed set — water, food, first aid, timing
  * — in the backoffice's words «Apă», «Mâncare», «Prim ajutor», «Cronometrare». A fifth is a migration,
  * like every other state here; the page and the bib draw each with its glyph and its word.
  */
 export const eventCheckpointKind = pgEnum("event_checkpoint_kind", ["WATER", "FOOD", "FIRST_AID", "TIMING"]);
 
 /**
- * The checkpoints of one event's route (§NNN; the owner, 2026-10-13: «other things for the route: I
+ * The checkpoints of one event's route (§757; the owner, 2026-10-13: «other things for the route: I
  * need to put checkpoints and limit times»): a point at a distance along the route, where something
  * is — water, food, first aid, the timing mat — and, optionally, the time by which a runner has to
  * be there. They are the list under «Traseul» in the editor, the table «Puncte de control» on the

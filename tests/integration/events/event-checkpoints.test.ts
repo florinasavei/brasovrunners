@@ -10,7 +10,7 @@ import { expectViolation, SQLSTATE } from "../../helpers/constraints";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-011-01 and BR-REQ-060-01 — an event's checkpoints, through the real Server Actions:
+ * §757, BR-REQ-011-01 and BR-REQ-060-01 — an event's checkpoints, through the real Server Actions:
  * saved as the card posts them (added, changed, ticked «Scoate»), a kilometre beyond the route and a
  * cut-off before the start or after a later point's refused naming the box with the sentence's own
  * numbers, every change audited, a save that never deletes a point it was not told about, the role
@@ -129,7 +129,7 @@ const save = (rows: Row[], extra: Record<string, string> = {}) => post(saveCheck
 const trail = () => db.select().from(auditLogs).where(eq(auditLogs.entityId, eventId)).orderBy(auditLogs.createdAt);
 const actions = async () => (await trail()).map((row) => row.action);
 
-describe("§NNN an event's checkpoints", () => {
+describe("§757 an event's checkpoints", () => {
   it("adds two points with a cut-off each, in distance order, and audits it", async () => {
     // Typed out of order, with a comma and spare blank rows at the foot, as the card posts them.
     expect(await save([FOOD, WATER, {}, {}])).toBe("redirected");
@@ -367,7 +367,7 @@ const WAYPOINTS =
   `<wpt lat="45.6" lon="25.52"><name>Cabana</name></wpt>` +
   `<wpt lat="45.64" lon="25.52"><name>Parcare</name></wpt>`;
 
-describe("§NNN «Ia punctele din GPX»", () => {
+describe("§757 «Ia punctele din GPX»", () => {
   it("reads the file's waypoints once and offers the ones that sit on the track", async () => {
     const gpx = await uploadTrack(WAYPOINTS);
     const parsed = await loadGpxWaypoints(gpx.key);
@@ -487,7 +487,7 @@ describe("§NNN «Ia punctele din GPX»", () => {
   });
 });
 
-describe("§NNN the picture stamp covers the checkpoints", () => {
+describe("§757 the picture stamp covers the checkpoints", () => {
   const stamp = async () => {
     const [row] = await db
       .select({ stamp: BIB_STAMP })

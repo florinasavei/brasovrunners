@@ -147,7 +147,7 @@ export default async function PreviewEventPage({ params }: Props) {
         kindLabels={linkKindLabels}
         mapWords={tEvent.raw("routeMaps") as RouteMapWords}
       />
-      {/* «Puncte de control» (§NNN), under the route as on the public page. */}
+      {/* «Puncte de control» (§757), under the route as on the public page. */}
       <EventCheckpoints
         checkpoints={await listCheckpoints(getDb(), event.id)}
         finish={datedPreview ? checkpointFinish(datedPreview) : { km: null, limit: null }}

@@ -220,7 +220,7 @@ export default function NightEventField({
         series: inSeries || (seriesToggleName ? data.get(seriesToggleName) === "on" : false),
         // "Cât durează" (§71), added to the start (§394): a run that finishes after dusk is a
         // night run even from a daylight start. No box, or not a number, means no end to name.
-        // A race's «Timp limită» counts from its gun (§NNN, `duration.ts#durationBase`): the span from the
+        // A race's «Timp limită» counts from its gun (§757, `duration.ts#durationBase`): the span from the
         // event's start is the box's minutes plus the gun's distance from that start, as the save stores it.
         durationMinutes: Number.isFinite(duration) && duration > 0 ? duration + gunOffsetMinutes(data, at) : null,
         // The programme's rows (§117), the end when «Durata» is empty — the server's own order

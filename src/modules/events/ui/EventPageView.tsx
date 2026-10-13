@@ -131,7 +131,7 @@ export default async function EventPageView({
   checkpoints = [],
 }: {
   event: PublicEventPage;
-  /** The route's checkpoints (§NNN), read by the caller through the public cache; none draws no section. */
+  /** The route's checkpoints (§757), read by the caller through the public cache; none draws no section. */
   checkpoints?: readonly Checkpoint[];
   locale: "ro" | "en";
   slug: string;
@@ -308,7 +308,7 @@ export default async function EventPageView({
         mapWords={t.raw("routeMaps") as RouteMapWords}
       />
 
-      {/* «Puncte de control» (§NNN), under `#checkpoints`: right under the route's maps, the kilometre,
+      {/* «Puncte de control» (§757), under `#checkpoints`: right under the route's maps, the kilometre,
           what there is and the cut-off of each point, and the finish when the event has a time limit.
           Nothing at all when the club has put none. */}
       <EventCheckpoints

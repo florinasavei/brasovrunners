@@ -50,7 +50,7 @@ type Props = {
 };
 
 /**
- * «Puncte de control» (§NNN; the owner, 2026-10-13: «other things for the route: I need to put
+ * «Puncte de control» (§757; the owner, 2026-10-13: «other things for the route: I need to put
  * checkpoints and limit times»): the card of the event editor where the route's points are kept —
  * a name in both languages, the kilometre, what is there (water, food, first aid, timing), an
  * optional cut-off and an optional note — and, when the route's GPX has waypoints, the one press

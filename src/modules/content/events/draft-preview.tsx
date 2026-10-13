@@ -115,7 +115,7 @@ export async function renderEventDraftPreview<T extends Record<string, unknown>>
   const seriesDates = series.length > 1 ? series.map((date) => ({ startsAt: date.id === current?.id && view.startsAt ? view.startsAt : date.startsAt })) : undefined;
   // «Formular» (amending §579, §586): the register page's own form, drawn from the draft, sending nothing.
   const form = await renderDraftForm(db, { view, door: previewDoor.door, locale: input.locale, now, word: previewDoor.word, steps });
-  // The route's checkpoints as saved (§NNN): they have a card and a save of their own, so the draft shows what is stored.
+  // The route's checkpoints as saved (§757): they have a card and a save of their own, so the draft shows what is stored.
   const checkpoints = input.eventId ? await listCheckpoints(db, input.eventId) : [];
 
   return {

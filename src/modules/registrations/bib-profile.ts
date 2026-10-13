@@ -123,7 +123,7 @@ export type BibProfileDrawing = {
   distance: string;
   gain: string;
   /**
-   * The route's checkpoints on the strip (§NNN, `bib-checkpoints.ts`): the marks and whether their
+   * The route's checkpoints on the strip (§757, `bib-checkpoints.ts`): the marks and whether their
    * cut-offs fit, decided once by `bib-extras.ts` for both renderers. Absent or null: none drawn.
    */
   checkpoints?: BibCheckpointsDrawing | null;
