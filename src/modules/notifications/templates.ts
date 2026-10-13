@@ -1771,7 +1771,7 @@ const T = {
       body: (d: TemplateData) => [
         `Mulțumim! Am primit oferta ta de a ajuta ca voluntar la ${d.eventTitle ?? "eveniment"}; rolul ales e scris mai sus, lângă data și locul.`,
         "Un organizator o confirmă și te caută pe email sau la telefon dacă mai trebuie ceva. Până atunci nu ai nimic de făcut: oferta nu e o înscriere la cursă și nu ține loc.",
-        `Dacă nu tu ai trimis oferta, scrie-ne din pagina de contact și o ștergem; altfel rămâne la organizatori cel mult ${volunteerDays("ro")} de la începutul evenimentului.`,
+        `Dacă nu tu ai trimis oferta, scrie-ne din pagina de contact și o ștergem; altfel rămâne la organizatori cel mult ${volunteerDays("ro")} de la începutul evenimentului sau de la trimiterea ofertei, dacă e mai târziu.`,
       ],
     },
     // To each Organizer and Administrator (§NNN): who offered for which role; the card «Voluntari» has the rest.
@@ -2498,7 +2498,7 @@ const T = {
       body: (d: TemplateData) => [
         `Thank you! We received your offer to help as a volunteer at ${d.eventTitle ?? "the event"}; the role you chose is written above, with the date and place.`,
         "An organizer will confirm it and get in touch by email or phone if anything else is needed. Until then there is nothing for you to do: the offer is not a race registration and holds no place.",
-        `If you did not send the offer, write to us from the contact page and we will delete it; otherwise the organizers keep it at most ${volunteerDays("en")} from the event's start.`,
+        `If you did not send the offer, write to us from the contact page and we will delete it; otherwise the organizers keep it at most ${volunteerDays("en")} from the event's start or from the offer, whichever is later.`,
       ],
     },
     volunteerClubNotice: {

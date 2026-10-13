@@ -251,7 +251,11 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
   const result = await db.transaction(async (tx) => {
     // The event's own row is locked first: on an event with no roles yet there is no role row to lock, and two
     // «Adaugă rolul» presses would both take position 0 — or, at twenty-nine roles, both pass the cap.
-    const [event] = await tx.select({ id: events.id }).from(events).where(eq(events.id, request.eventId)).for("update").limit(1);
+    // NO KEY UPDATE, never UPDATE: it still queues a second press (the lock conflicts with itself), but not the
+    // KEY SHARE a sign-up's insert takes on this row for its foreign key. With FOR UPDATE a sign-up holding its
+    // role's lock and waiting on the event, against this press holding the event and waiting on the roles, is a
+    // deadlock — one side aborted, a visitor's typing lost.
+    const [event] = await tx.select({ id: events.id }).from(events).where(eq(events.id, request.eventId)).for("no key update").limit(1);
     if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
     const audit = (action: AuditAction, metadata: Record<string, unknown>) =>
       recordAuditEvent(tx, { actorStaffUserId: actor.id, action, entityType: "event", entityId: request.eventId, metadata, now });
@@ -351,7 +355,8 @@ export async function setAcceptsVolunteers<T extends Record<string, unknown>>(
   assertMayManage(actor);
   assertIds(request.eventId);
   const result = await db.transaction(async (tx) => {
-    const [event] = await tx.select({ on: events.acceptsVolunteers }).from(events).where(eq(events.id, request.eventId)).for("update").limit(1);
+    // NO KEY UPDATE, the strength the UPDATE below takes anyway: a sign-up's foreign-key check is not made to wait.
+    const [event] = await tx.select({ on: events.acceptsVolunteers }).from(events).where(eq(events.id, request.eventId)).for("no key update").limit(1);
     if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
     if (event.on === request.on) return { changed: false };
     // Not `events.version`: the tick is no edit of the page's text and must not make an open editor's save stale.

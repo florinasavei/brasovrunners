@@ -336,8 +336,10 @@ describe("§NNN the volunteers' public sign-up", () => {
     // The privacy line names the reason in the volunteer's own words, not «a registration».
     expect(message.text).toContain("te-ai oferit, pe site-ul clubului, să ajuți ca voluntar");
     // A stranger's typing is not «nothing»: the not-you line says how long the organizers keep it, from the sweep's constant.
-    expect(message.text).toContain("cel mult 30 de zile de la începutul evenimentului");
-    expect(message.text).toContain("at most 30 days from the event's start");
+    // The form stays open until the event's end, and an offer made after the start stays thirty days from its entry
+    // (the sweep, section 7 of the notice): the receipt says both.
+    expect(message.text).toContain("cel mult 30 de zile de la începutul evenimentului sau de la trimiterea ofertei, dacă e mai târziu");
+    expect(message.text).toContain("at most 30 days from the event's start or from the offer, whichever is later");
     // Bold is no fact in the text part, nor to a screen reader: the line is named by what it holds.
     expect(message.text).not.toMatch(/îngroșat|bold line/);
   });

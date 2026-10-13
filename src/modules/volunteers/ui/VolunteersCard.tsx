@@ -408,7 +408,7 @@ export default async function VolunteersCard({ locale, eventId, acceptsVolunteer
         </Typography>
         {error && <Alert severity="error">{error}</Alert>}
 
-        {/* The tick, and what keeps the public form off the page: its three conditions in words. */}
+        {/* The tick, and what keeps the public form off the page, named in words. */}
         <Stack spacing={1} data-testid="volunteer-switch">
           <Alert severity={offerClosed === null ? "success" : "info"} data-testid="volunteer-offer-state">
             {offerClosed === null ? t("volunteers.offer.open") : t(`volunteers.offer.closed.${offerClosed}`)}

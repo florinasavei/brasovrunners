@@ -165,4 +165,28 @@ describe("§NNN BR-REQ-031-01 ten people offer for a role's last place at once",
     const positions = (await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, event.id))).map((row) => row.position).sort();
     expect(positions).toEqual([0, 1]);
   });
+
+  it("a role edited and moved while the page posts a sign-up and an organizer adds one by hand: all four settle, no deadlock", async () => {
+    // The event's row is locked NO KEY UPDATE by a role change, never FOR UPDATE: a sign-up holding its role's lock
+    // takes KEY SHARE on the event for its foreign key, and FOR UPDATE there closed a cycle (40P01, one side aborted).
+    const { event, role } = await eventWithRole(50);
+    const [other] = await db.insert(eventVolunteerRoles).values({ eventId: event.id, nameRo: "Start", nameEn: "Start", needed: 50, position: 1 }).returning();
+    const edit = (needed: number) => ({ nameRo: "Punct de apă", nameEn: "Water point", needed: String(needed), descriptionRo: "", descriptionEn: "" });
+    for (let round = 0; round < 8; round++) {
+      const results = await Promise.allSettled([
+        offer(event.id, role.id, `lock-${round}`),
+        changeVolunteerRole(db, admin!, { kind: "edit", eventId: event.id, id: role.id, fields: edit(50 + (round % 2)) }, NOW),
+        changeVolunteerRole(db, admin!, { kind: "move", eventId: event.id, id: other.id, direction: round % 2 === 0 ? "up" : "down" }, NOW),
+        changeVolunteer(
+          db,
+          admin!,
+          { kind: "add", eventId: event.id, fields: { roleId: role.id, name: "Ion Pop", email: `voluntar.${stamp}.hand-${round}@example.test`, phone: "+40712345678", note: "" } },
+          NOW,
+        ),
+      ]);
+      expect(results.map((result) => (result.status === "rejected" ? String(result.reason) : "ok"))).toEqual(["ok", "ok", "ok", "ok"]);
+      expect((results[0] as PromiseFulfilledResult<{ outcome: string }>).value.outcome).toBe("done");
+    }
+    expect(await db.select().from(eventVolunteers).where(eq(eventVolunteers.eventId, event.id))).toHaveLength(16);
+  });
 });
