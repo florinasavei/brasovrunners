@@ -17,7 +17,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * drew (the Administrator and the Organizer write, the Tehnic is refused); a to-do belongs to one
  * date. The session and navigation stand-ins are `event-cover.test.ts`'s.
  */
-const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, redirected: [] as string[] }));
+const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, redirected: [] as string[], revalidated: [] as string[] }));
 
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
@@ -27,7 +27,7 @@ vi.mock("next/navigation", async (importOriginal) => ({
   },
 }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined, set: () => {}, delete: () => {} }) }));
-vi.mock("next/cache", () => ({ revalidatePath: () => {}, revalidateTag: () => {}, unstable_cache: (fn: unknown) => fn }));
+vi.mock("next/cache", () => ({ revalidatePath: (path: string) => state.revalidated.push(path), revalidateTag: () => {}, unstable_cache: (fn: unknown) => fn }));
 vi.mock("@/db/client", () => ({ getDb: () => state.db }));
 vi.mock("@/modules/staff-identity/session", () => ({
   DEV_STAFF_COOKIE: "dev-staff",
@@ -72,6 +72,7 @@ beforeEach(async () => {
   otherEventId = second.id;
   state.actor = staff.ADMIN;
   state.redirected.length = 0;
+  state.revalidated.length = 0;
 });
 
 function form(fields: Record<string, string>): FormData {
@@ -82,25 +83,30 @@ function form(fields: Record<string, string>): FormData {
   return data;
 }
 
-/** Runs an action that redirects on success and returns its refusal otherwise. */
+/**
+ * Runs an action: a press that worked answers with the toast's notice and stays on the page («saved»,
+ * §NNN: no redirect, so no second render replaces what the reader opened); a refusal that is not a box's
+ * redirects to the card's banner («redirected»); a box's refusal is returned.
+ */
 async function post(action: (previous: FormOutcome | null, form: FormData) => Promise<FormOutcome | null>, data: FormData) {
-  return action(null, data).catch((error: unknown) => {
+  try {
+    const outcome = await action(null, data);
+    return outcome && !outcome.error && outcome.notice ? ("saved" as const) : outcome;
+  } catch (error: unknown) {
     if (error instanceof Error && error.message === "NEXT_REDIRECT") return "redirected" as const;
     throw error;
-  });
+  }
 }
 
 async function tick(itemId: string, done: boolean) {
-  await setEventTodoDoneAction(form({ itemId, done: done ? "1" : "0" })).catch((error: unknown) => {
-    if (!(error instanceof Error && error.message === "NEXT_REDIRECT")) throw error;
-  });
+  return post(setEventTodoDoneAction, form({ itemId, done: done ? "1" : "0" }));
 }
 
 const trail = () => db.select().from(auditLogs).where(eq(auditLogs.entityId, eventId)).orderBy(auditLogs.createdAt);
 const actions = async () => (await trail()).map((row) => row.action);
 
 async function addOne(fields: Record<string, string> = {}) {
-  expect(await post(addEventTodoAction, form({ text: "Pune harta Strava", priority: "NORMAL", assignee: "", due: "", ...fields }))).toBe("redirected");
+  expect(await post(addEventTodoAction, form({ text: "Pune harta Strava", priority: "NORMAL", assignee: "", due: "", ...fields }))).toBe("saved");
   const items = await listEventTodos(db, eventId);
   return items[items.length - 1];
 }
@@ -116,7 +122,10 @@ describe("§749 an event's own to-dos", () => {
       dueOn: "2026-11-10",
       doneAt: null,
     });
-    expect(state.redirected[0]).toContain("#box-todos");
+    // Nothing navigates: the page is read again in place, so a fold the reader opened is not replaced (§NNN).
+    expect(state.redirected).toEqual([]);
+    expect(state.revalidated).toHaveLength(1);
+    expect(state.revalidated[0]).toContain(`/admin/events/${eventId}`);
     const [row] = await trail();
     expect(row).toMatchObject({ action: "event_todo.added", entityType: "event", actorStaffUserId: staff.ADMIN!.id });
     expect(row.metadataJson).toMatchObject({ itemId: item.id, text: "Confirmă barierele", priority: "URGENT" });
@@ -148,7 +157,7 @@ describe("§749 an event's own to-dos", () => {
     forged.set("eventId", eventId);
     forged.set("itemId", "x");
     forged.set("done", "1");
-    await expect(setEventTodoDoneAction(forged)).rejects.toThrow("NEXT_REDIRECT");
+    await expect(setEventTodoDoneAction(null, forged)).rejects.toThrow("NEXT_REDIRECT");
     expect(state.redirected.at(-1)).toContain("todoError=NOT_FOUND");
     // A malformed event id is refused the same way.
     const noEvent = form({ text: "ok" });
@@ -200,6 +209,25 @@ describe("§749 an event's own to-dos", () => {
     expect(await actions()).toEqual(["event_todo.added", "event_todo.done", "event_todo.reopened"]);
   });
 
+  it("answers every press that worked with the toast's notice and no redirect: the owner could not change a row because the editor was replaced after it (§NNN)", async () => {
+    const added = await addEventTodoAction(null, form({ text: "Pune harta Strava", priority: "NORMAL", assignee: "", due: "" }));
+    expect(added).toMatchObject({ notice: { kind: "success", key: "eventTodoAdded" }, fields: [] });
+    const [item] = await listEventTodos(db, eventId);
+
+    const saved = await editEventTodoAction(null, form({ itemId: item.id, text: "Pune harta Garmin", priority: "HIGH", assignee: "", due: "" }));
+    expect(saved?.notice?.key).toBe("eventTodoSaved");
+    const unchanged = await editEventTodoAction(null, form({ itemId: item.id, text: "Pune harta Garmin", priority: "HIGH", assignee: "", due: "" }));
+    expect(unchanged?.notice?.key).toBe("eventTodoUnchanged");
+    expect((await setEventTodoDoneAction(null, form({ itemId: item.id, done: "1" })))?.notice?.key).toBe("eventTodoDone");
+    expect((await setEventTodoDoneAction(null, form({ itemId: item.id, done: "0" })))?.notice?.key).toBe("eventTodoReopened");
+    expect((await deleteEventTodoAction(null, form({ itemId: item.id })))?.notice?.key).toBe("eventTodoDeleted");
+
+    // Not one navigation; the page is read again in place, six times, at the editor's own address.
+    expect(state.redirected).toEqual([]);
+    expect(state.revalidated).toHaveLength(6);
+    expect(new Set(state.revalidated)).toEqual(new Set([state.revalidated[0]]));
+  });
+
   it("deletes a line and keeps its words in the trail", async () => {
     const item = await addOne({ text: "Scrie programul" });
     await post(deleteEventTodoAction, form({ itemId: item.id }));
@@ -223,7 +251,7 @@ describe("§749 an event's own to-dos", () => {
       expect(await post(deleteEventTodoAction, form({ itemId: mine.id }))).toBe("redirected");
       await tick(mine.id, true);
     }
-    // The three one-button forms redirect back with the refusal's code, and changed nothing.
+    // The three other forms redirect back with the refusal's code, and changed nothing.
     expect(state.redirected.filter((url) => url.includes("todoError=FORBIDDEN"))).toHaveLength(9);
     const after = await listEventTodos(db, eventId);
     expect(after).toHaveLength(2);
