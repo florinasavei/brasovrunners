@@ -38,6 +38,7 @@ export default function BibDesignPreview({
   initialSrc,
   labels,
   member = false,
+  version,
 }: {
   eventId: string;
   locale: string;
@@ -46,6 +47,8 @@ export default function BibDesignPreview({
   labels: { alt: string; caption: string; pending: string };
   /** A member's bib (§664): the same sample with the members' header and label. */
   member?: boolean;
+  /** What the sample is drawn from beside the form — the saved checkpoints (§NNN) — in every address this rebuilds. */
+  version?: string;
 }) {
   const root = useRef<HTMLElement>(null);
   const [src, setSrc] = useState(initialSrc);
@@ -70,6 +73,7 @@ export default function BibDesignPreview({
         colour: get("event.bibColour"),
         design: readBibDesignForm(get),
         member,
+        version,
       });
       // The same address loads nothing, so nothing would ever say it arrived.
       if (next === shown.current) setPending(false);
@@ -91,7 +95,7 @@ export default function BibDesignPreview({
       form.removeEventListener("input", onChange);
       form.removeEventListener("change", onChange);
     };
-  }, [eventId, locale, member]);
+  }, [eventId, locale, member, version]);
 
   return (
     <Box ref={root} component="figure" sx={{ m: 0, maxWidth: 320 }} data-testid={member ? "bib-design-preview-member" : "bib-design-preview"} aria-busy={pending || undefined}>

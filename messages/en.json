@@ -176,6 +176,7 @@
     "eventStartAtBold": "<strong>{time}</strong> (event start)",
     "raceStartFlag": "race start",
     "raceStartLater": "The race start time is announced later.",
+    "timeLimit": "Time limit",
     "when": "When",
     "where": "Where",
     "meetingPoint": "Meeting point",
@@ -500,6 +501,28 @@
     "age": "Age",
     "openRoute": "View the route",
     "routeJump": "About the route",
+    "checkpoints": {
+      "heading": "Checkpoints",
+      "columns": {
+        "km": "Km",
+        "name": "Point",
+        "kinds": "What is there",
+        "cutoff": "Cut-off"
+      },
+      "km": "{km} km",
+      "kinds": {
+        "WATER": "Water",
+        "FOOD": "Food",
+        "FIRST_AID": "First aid",
+        "TIMING": "Timing"
+      },
+      "cutoff": "Cut-off {time}",
+      "noCutoff": "no cut-off",
+      "noKinds": "nothing marked",
+      "kmUnknown": "distance not given",
+      "finish": "Finish",
+      "finishCloses": "closes at {time}"
+    },
     "routeMaps": {
       "tabs": "Route maps",
       "garmin": {
@@ -1733,6 +1756,18 @@
       "memberSetBody": "You set the member tick on {name}; their club on the list becomes {club}. Nothing else changes, no email."
     },
     "errors": {
+      "CHECKPOINT_NAME_MISSING": "The point “{name}” needs a name in Romanian and in English, at most {max} characters.",
+      "CHECKPOINT_KM_INVALID": "The kilometre of the point “{name}” is not a number: write from 0, with at most two decimals.",
+      "CHECKPOINT_KM_BEYOND_ROUTE": "The point “{name}” is at {km} km, but the route is only {max} km long. Choose a kilometre up to {max}.",
+      "CHECKPOINT_KIND_UNKNOWN": "At the point “{name}”, what is there is not one of the options.",
+      "CHECKPOINT_CUTOFF_INVALID": "The cut-off of the point “{name}” is not a time: write, for example, 11:30.",
+      "CHECKPOINT_CUTOFF_BEFORE_START": "The cut-off {cutoff} of the point “{name}” is not after the start, at {start}. Choose a time after {start}.",
+      "CHECKPOINT_CUTOFF_AFTER_LATER": "The cut-off of the point “{name}” is after the one of “{later}” ({laterCutoff}), which is further along the route. Runners reach “{name}” first: its cut-off has to be earlier.",
+      "CHECKPOINT_CUTOFF_AFTER_END": "The cut-off {cutoff} of the point “{name}” is after {finishTime}, when the finish closes. Choose a time up to {finishTime} or lengthen “Time limit”.",
+      "CHECKPOINTS_NO_LONGER_HOLD": "This save would break “Checkpoints”: {detail} Change the point in its card first, then save again. Nothing was saved.",
+      "CHECKPOINTS_NO_LONGER_HOLD_DATED": "On one of the dates ({date}), this save would break “Checkpoints”: {detail} Change the point on that date first, or save without it. Nothing was saved, on any date.",
+      "CHECKPOINT_NOTE_ONE_LANGUAGE": "The note of the point “{name}” is written in both languages or in neither, at most {max} characters.",
+      "CHECKPOINT_TOO_MANY": "Too many points: at most {max} on a route.",
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
       "NOTHING_SELECTED": "You did not tick any registration.",
       "UNAUTHENTICATED": "Your session has ended. Sign in again.",
@@ -2156,9 +2191,13 @@
       },
       "createdWithSeries": "The event and {dates} were created, as drafts. Tick them in the events list and publish them together.",
       "duration": "Duration",
+      "durationLabel": "Duration or time limit",
       "durationHours": "Hours",
       "durationMinutesPart": "Minutes",
-      "durationHelp": "How long it lasts — 1 hour 45 minutes, say. The end is worked out from it. Leave both empty if none was announced.",
+      "durationRace": "Time limit",
+      "durationRaceHelp": "How long the runners have from the start until the finish closes — 2 hours 30 minutes, say. Leave empty if there is none.",
+      "durationOther": "How long the event lasts",
+      "durationOtherHelp": "From the start to the end — 1 hour 45 minutes, say. The end is worked out from it. Leave empty if none was announced.",
       "coHostRows": {
         "add": "Add a partner",
         "remove": "Remove partner",
@@ -2282,6 +2321,11 @@
         "showProfile": "The route's profile",
         "showProfileHelp": "Ticked: every number carries a full-width strip of elevation over distance, with the distance and gain at its side. Those typed on the event win; otherwise, the GPX's.",
         "showProfileNoGpx": "Upload the route's GPX in \"The route\".",
+        "showCheckpoints": "Checkpoints on the profile",
+        "showCheckpointsHelp": "Ticked: on the profile, at each point, a cup for water, a fork for food, a dot for the rest. Under it, “km 12” where it fits. Drawn only with the route's profile.",
+        "showCheckpointTimes": "…with the cut-off times",
+        "showCheckpointTimesHelp": "Ticked: beside each point, its cut-off too, “km 12 · 11:30”. If not every time fits, none is printed; then the kilometres that do not fit go. The marks always stay.",
+        "showCheckpointsNone": "The event has no checkpoints: add them in the “Checkpoints” card.",
         "showEmergency": "Emergency phone",
         "showEmergencyHelp": "Ticked: every number carries a small \"Emergency: …\" line with the phone below. Unticked: no line. Type the organizers' number, never a participant's.",
         "emergencyPhone": "The organizers' phone",
@@ -4579,6 +4623,72 @@
         "message": "Message",
         "note": "Note",
         "signedUpAt": "Date"
+        }
+      },
+    "checkpoints": {
+      "title": "Checkpoints",
+      "intro": "Where there is water, food, first aid or timing, and by when the last runner passes. Shown as a table on the event's page and on the number's profile, by kilometre.",
+      "routeLength": "The route is {km} km long. No point can be beyond it.",
+      "summaryNone": "no points",
+      "summary": {
+        "one": "{count} point",
+        "few": "{count} points",
+        "other": "{count} points"
+      },
+      "empty": "No checkpoints.",
+      "readOnly": "You can read the list; the Organizer, the Administrator and the Superadministrator write it. Ask them for any change.",
+      "rowTitle": "{km} km — {name}",
+      "cutoffAside": "cut-off {time}",
+      "noCutoff": "no cut-off",
+      "field": {
+        "km": "Kilometre",
+        "kmHelp": "From the start, up to {max} km (the route's length). A comma works too.",
+        "kmHelpNoRoute": "From the start, in kilometres. Type the route's distance or upload the GPX so the kilometre can be checked.",
+        "nameRo": "Name (Romanian)",
+        "nameEn": "Name (English)",
+        "kinds": "What is there",
+        "cutoff": "Cut-off",
+        "cutoffHelp": "The time of the day, on the event's clock: the last runner has to pass by then. Leave empty for no limit.",
+        "noteRo": "Note (Romanian)",
+        "noteEn": "Note (English)",
+        "noteHelp": "Optional, in both languages or neither; at most {max} characters."
+      },
+      "kinds": {
+        "WATER": "Water",
+        "FOOD": "Food",
+        "FIRST_AID": "First aid",
+        "TIMING": "Timing"
+      },
+      "remove": "Remove this point",
+      "removeHelp": "It is deleted at “Save the points”.",
+      "add": {
+        "title": "Add points"
+      },
+      "full": "There are already {max} points, as many as fit on a route.",
+      "save": "Save the points",
+      "saving": "Saving…",
+      "courseNote": "Checkpoints and their cut-offs are written in the “Checkpoints” card.",
+      "courseLink": "Open the checkpoints",
+      "gpx": {
+        "take": "Take the points from the GPX",
+        "title": "The points in the GPX file",
+        "intro": "The file's points, each with its kilometre along the track. The file's name goes in the Romanian box: write the English one for every ticked point. What is already listed is not added again.",
+        "row": "{km} km — {name} ({kinds})",
+        "noKinds": "no type",
+        "already": "{km} km — {name}: already on the list",
+        "ignored": {
+          "one": "{count} point in the file is more than {meters} m from the track and is left out.",
+          "few": "{count} points in the file are more than {meters} m from the track and are left out.",
+          "other": "{count} points in the file are more than {meters} m from the track and are left out."
+        },
+        "beyond": {
+          "one": "{count} point in the file is past the route's end ({km} km) and is left out.",
+          "few": "{count} points in the file are past the route's end ({km} km) and are left out.",
+          "other": "{count} points in the file are past the route's end ({km} km) and are left out."
+        },
+        "add": "Add the chosen points",
+        "adding": "Adding…",
+        "close": "Close the preview"
       }
     },
     "eventTodos": {
@@ -5373,6 +5483,8 @@
       "memberLabelDefault": "{club} member",
       "profileStart": "Start",
       "profileFinish": "Finish",
+      "checkpointKm": "km {km}",
+      "checkpointKmTime": "km {km} · {time}",
       "profileDistance": "Distance: {km} km",
       "profileGain": "Elevation gain: +{m} m",
       "emergencyLabel": "Emergency",
@@ -7700,7 +7812,7 @@
           "date": "Start date",
           "time": "Start time"
         },
-        "durationMinutes": "Duration (minutes)",
+        "durationMinutes": "Duration or time limit (minutes)",
         "raceStartsAt": "Race start",
         "dateToBeAnnounced": "Date to be announced",
         "timeToBeAnnounced": "Time to be announced",
@@ -7724,7 +7836,8 @@
           "gpx": {
             "name": "GPX file name",
             "url": "GPX file"
-          }
+          },
+          "checkpoints": "Checkpoints"
         },
         "links": "Links and files",
         "partners": "Partners",
@@ -7810,6 +7923,8 @@
             "showWebsite": "Bib: website address",
             "footerText": "Bib: the club's own line",
             "showProfile": "Bib: route profile",
+            "showCheckpoints": "Bib: checkpoints on the profile",
+            "showCheckpointTimes": "Bib: cut-off times on the profile",
             "showDistance": "Bib: distance badge",
             "showEmergency": "Bib: emergency phone",
             "emergencyPhone": "Bib: emergency number",
@@ -10279,6 +10394,9 @@
       "familyWithdrawn": "Done: the registration is cancelled, and the address gets a confirmation email."
     },
     "toast": {
+      "checkpointsSaved": "The checkpoints were saved.",
+      "checkpointsAdded": "The points from the GPX were added.",
+      "checkpointsUnchanged": "Nothing to change in the checkpoints.",
       "saved": "Saved.",
       "event": "The event was saved.",
       "eventSeries": {

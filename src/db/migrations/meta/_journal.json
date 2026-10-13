@@ -1009,6 +1009,13 @@
       "when": 1791908339017,
       "tag": "0146_event_volunteers",
       "breakpoints": true
+    },
+    {
+      "idx": 144,
+      "version": "7",
+      "when": 1791910952984,
+      "tag": "0147_event_checkpoints",
+      "breakpoints": true
     }
   ]
 }

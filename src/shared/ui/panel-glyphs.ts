@@ -42,6 +42,7 @@ import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import NotesIcon from "@mui/icons-material/Subject";
 import OutboxIcon from "@mui/icons-material/Outbox";
 import PaidIcon from "@mui/icons-material/Paid";
+import PinDropIcon from "@mui/icons-material/PinDrop";
 import FormatSizeIcon from "@mui/icons-material/FormatSize";
 import PaletteIcon from "@mui/icons-material/Palette";
 import PaymentsIcon from "@mui/icons-material/Payments";
@@ -127,6 +128,8 @@ export const PANEL_GLYPHS = {
   add: AddIcon,
   // «Voluntari» on an event's editor (§754): the roles and the people.
   volunteers: VolunteerActivismIcon,
+  // «Puncte de control» (§NNN): the points of the route, a pin on the ground.
+  checkpoints: PinDropIcon,
   // What an event's registrations are, once it has them.
   registrations: ListAltIcon,
   queue: HourglassTopIcon,

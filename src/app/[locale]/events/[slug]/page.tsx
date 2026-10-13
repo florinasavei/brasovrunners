@@ -12,6 +12,7 @@ import { datedOrNull } from "@/modules/events/domain/dated";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import {
   cachedCurrentApprovedDocument,
+  cachedEventCheckpoints,
   cachedPublishedEventBySlug,
   cachedPublishedTranslations,
   cachedVolunteerRoles,
@@ -234,6 +235,8 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
   // `SportsEvent` requires its `startDate`), no calendar entry and no countdown: `dated` is null.
   const dated = datedOrNull(event);
   const weather = dated ? await forecastForEvent(dated, now) : null;
+  // The route's checkpoints (§NNN): a part of the page, never its content — left out while the database is away.
+  const checkpoints = await readOrWhileAway(() => cachedEventCheckpoints(event.id), []);
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       {/* No structured data for a members' event (§552): nothing on its page is for a search engine. */}
@@ -260,6 +263,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
         now={now}
         weather={weather}
         membersOnly={membersOnly}
+        checkpoints={checkpoints}
         editHref={editHref}
         visit={{
           interestBox,

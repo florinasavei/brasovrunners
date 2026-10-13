@@ -1,0 +1,221 @@
+import { createTranslator } from "next-intl";
+import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it, vi } from "vitest";
+import en from "../../../messages/en.json";
+import ro from "../../../messages/ro.json";
+import type { Checkpoint } from "@/modules/event-checkpoints/domain/checkpoint";
+import type { GpxProposal } from "@/modules/event-checkpoints/domain/gpx-waypoints";
+import { withClientWords } from "../../helpers/client-words";
+
+/**
+ * §NNN — the card «Puncte de control» as the editor draws it (BR-REQ-050-02, BR-REQ-041-01 criterion 6):
+ * its closed line and when it opens by itself, one block per saved point with every box named
+ * `cp[i].…`, the spare rows for new ones, «Scoate» on a saved point only, the GPX's offer and its
+ * preview with what is ticked, a reader's list with no form, both languages. The forms are plain
+ * posts — nothing here needs a script.
+ */
+const messages = { ro, en };
+let language: "ro" | "en" = "ro";
+
+vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined, set: () => {}, delete: () => {} }), headers: async () => new Headers() }));
+vi.mock("@/auth", () => ({ auth: async () => null, signIn: async () => {}, signOut: async () => {} }));
+vi.mock("@/app/[locale]/admin/events/[id]/checkpoint-actions", () => ({
+  saveCheckpointsAction: async () => null,
+  addGpxCheckpointsAction: async () => null,
+}));
+vi.mock("next-intl/server", () => ({
+  setRequestLocale: () => {},
+  getLocale: async () => language,
+  getMessages: async () => messages[language],
+  getTranslations: async (namespace: string | { namespace: string }) => {
+    const path = typeof namespace === "string" ? namespace : namespace.namespace;
+    const scoped = path.split(".").reduce<unknown>((node, key) => (node as Record<string, unknown>)[key], messages[language]) as Record<string, string>;
+    return createTranslator({ locale: language, messages: scoped, namespace: undefined });
+  },
+}));
+
+const { default: CheckpointsCard } = await import("@/modules/content/events/ui/CheckpointsCard");
+
+const EVENT = "11111111-1111-4111-8111-111111111111";
+
+const point = (id: string, km: number, over: Partial<Checkpoint> = {}): Checkpoint => ({
+  id,
+  nameRo: `Punct ${id}`,
+  nameEn: `Point ${id}`,
+  km,
+  kinds: ["WATER"],
+  cutoff: null,
+  noteRo: null,
+  noteEn: null,
+  ...over,
+});
+
+const proposal = (name: string, km: number, over: Partial<GpxProposal> = {}): GpxProposal => ({ name, km, kinds: [], offMeters: 4, tooFar: false, ...over });
+
+const base = { locale: "ro" as const, eventId: EVENT, checkpoints: [] as Checkpoint[], mayEdit: true, routeKm: 21.1 as number | null, gpx: null, previewOpen: false };
+
+async function render(props: Partial<Parameters<typeof CheckpointsCard>[0]> = {}) {
+  return renderToStaticMarkup(withClientWords(await CheckpointsCard({ ...base, ...props }), language));
+}
+
+describe("§NNN the card «Puncte de control»", () => {
+  it("opens by itself while the event has none, for a role that writes, and says so on its closed line", async () => {
+    const html = await render();
+    expect(html).toContain("Puncte de control");
+    expect(html).toContain("niciun punct");
+    expect(html).toMatch(/<details[^>]*id="box-checkpoints"[^>]*open/);
+  });
+
+  it("stays closed with points saved, counting them in Romanian's three forms", async () => {
+    for (const [count, words] of [
+      [1, "1 punct"],
+      [2, "2 puncte"],
+      [20, "20 de puncte"],
+    ] as const) {
+      const checkpoints = Array.from({ length: count }, (_, i) => point(`p${i}`, i + 1));
+      const html = await render({ checkpoints });
+      expect(html).toContain(words);
+      expect(html).not.toMatch(/<details[^>]*id="box-checkpoints"[^>]*open/);
+    }
+  });
+
+  it("says the route's length, the limit a kilometre is held to", async () => {
+    expect(await render()).toContain("Lungimea traseului: 21,1 km");
+    expect(await render({ routeKm: null })).not.toContain("Lungimea traseului");
+  });
+
+  it("draws one block per saved point and every box under its own name, the saved id carried", async () => {
+    const html = await render({ checkpoints: [point("a", 5, { cutoff: "10:15", kinds: ["WATER", "FOOD"] }), point("b", 12.5)] });
+    expect(html.match(/data-testid="checkpoint-edit-row"/g)).toHaveLength(2);
+    for (const index of [0, 1]) {
+      for (const field of ["km", "nameRo", "nameEn", "cutoff", "noteRo", "noteEn"]) expect(html).toContain(`name="cp[${index}].${field}"`);
+      expect(html).toContain(`name="cp[${index}].kinds"`);
+      expect(html).toContain(`name="cp[${index}].remove"`);
+    }
+    expect(html).toContain('name="cp[0].id" value="a"');
+    expect(html).toContain('name="cp[1].id" value="b"');
+    // The saved values, as typed back: the kilometre with its point, the cut-off as a time.
+    expect(html).toMatch(/name="cp\[0\]\.km"[^>]*value="5"/);
+    expect(html).toMatch(/name="cp\[0\]\.cutoff"[^>]*value="10:15"/);
+    expect(html).toMatch(/name="cp\[1\]\.km"[^>]*value="12.5"/);
+  });
+
+  it("offers the four kinds as words, ticks the saved ones, and posts them under one name", async () => {
+    const html = await render({ checkpoints: [point("a", 5, { kinds: ["WATER", "TIMING"] })] });
+    const first = html.slice(html.indexOf('data-testid="checkpoint-edit-row"'), html.indexOf('data-testid="checkpoint-add"'));
+    for (const word of ["Apă", "Mâncare", "Prim ajutor", "Cronometrare"]) expect(first).toContain(word);
+    const box = (kind: string) => first.match(new RegExp(`<input[^>]*name="cp\\[0\\]\\.kinds"[^>]*value="${kind}"[^>]*>`))?.[0] ?? "";
+    expect(box("WATER")).toContain("checked");
+    expect(box("TIMING")).toContain("checked");
+    expect(box("FOOD")).not.toContain("checked");
+    expect(box("FIRST_AID")).not.toContain("checked");
+  });
+
+  it("draws three spare rows for new points under «Adaugă puncte», numbered after the saved ones, with no «Scoate»", async () => {
+    const html = await render({ checkpoints: [point("a", 5)] });
+    const add = html.slice(html.indexOf('data-testid="checkpoint-add"'));
+    expect(add.match(/data-testid="checkpoint-new-row"/g)).toHaveLength(3);
+    for (const index of [1, 2, 3]) expect(add).toContain(`name="cp[${index}].km"`);
+    // No «Scoate» box on a spare row (React's own inline script says `removeChild`, so the box's name is what is looked for).
+    expect(add).not.toMatch(/name="cp\[\d+\]\.remove"/);
+    expect(add).toContain('name="cp[1].id" value=""');
+  });
+
+  it("opens the add panel by itself while there are no points, and fills the whole sheet's worth when full", async () => {
+    expect(await render()).toMatch(/<details[^>]*data-testid="checkpoint-add"[^>]*open|<details[^>]*open[^>]*data-testid="checkpoint-add"/);
+    const full = Array.from({ length: 30 }, (_, i) => point(`p${i}`, i + 1));
+    const html = await render({ checkpoints: full });
+    expect(html).not.toContain('data-testid="checkpoint-add"');
+    expect(html).toContain("Sunt deja 30 de puncte");
+  });
+
+  it("has a save button with its glyph and its words, tall enough for a thumb", async () => {
+    const html = await render();
+    expect(html).toContain("Salvează punctele");
+    expect(html).toMatch(/<button[^>]*type="submit"[^>]*>[^]*Salvează punctele/);
+  });
+
+  it("is a reader's list with no form for a role that cannot write", async () => {
+    const html = await render({ mayEdit: false, checkpoints: [point("a", 5, { cutoff: "10:15", kinds: ["WATER", "FOOD"] })] });
+    expect(html).toContain("Poți citi lista");
+    expect(html).toContain('data-testid="checkpoints-read-only"');
+    expect(html).toContain("5 km — Punct a · Apă, Mâncare · ora limită 10:15");
+    expect(html).not.toContain("<form");
+    expect(html).not.toContain("Salvează punctele");
+    expect(html).not.toMatch(/<details[^>]*id="box-checkpoints"[^>]*open/);
+  });
+
+  it("leaves out of a reader's line what a point does not have: no bare dash, «fără oră limită» as the page says it", async () => {
+    const html = await render({ mayEdit: false, checkpoints: [point("a", 5, { kinds: [] })] });
+    expect(html).toContain("5 km — Punct a · fără oră limită");
+    expect(html).not.toContain("· —");
+    expect(html).not.toContain("ora limită —");
+  });
+
+  it("is in both languages", async () => {
+    language = "en";
+    try {
+      const html = await render({ locale: "en", checkpoints: [point("a", 5, { cutoff: "10:15" })] });
+      expect(html).toContain("Checkpoints");
+      expect(html).toContain("Save the points");
+      expect(html).toContain("Name (Romanian)");
+      expect(html).toContain("Name (English)");
+      expect(html).toContain("1 point");
+      expect(html).toContain("The route is 21.1 km long");
+    } finally {
+      language = "ro";
+    }
+  });
+});
+
+describe("§NNN «Ia punctele din GPX» on the card", () => {
+  const gpx = (offered: GpxProposal[], ignored = 0) => ({ key: "test/route-gpx/00000000-0000-4000-8000-000000000000/t.gpx", offered, ignored });
+
+  it("offers a link to the preview only when the file has points that sit on the track, and only to a role that writes", async () => {
+    expect(await render()).not.toContain('data-testid="checkpoints-gpx-offer"');
+    const html = await render({ gpx: gpx([proposal("Izvor", 0.8)]) });
+    expect(html).toContain('data-testid="checkpoints-gpx-offer"');
+    expect(html).toContain("Ia punctele din GPX");
+    expect(html).toContain("checkpointsGpx=1");
+    expect(html).not.toContain('data-testid="checkpoints-gpx-preview"');
+    expect(await render({ mayEdit: false, gpx: gpx([proposal("Izvor", 0.8)]) })).not.toContain("Ia punctele din GPX");
+  });
+
+  it("previews the points with their kilometre and guessed kinds, each ticked to be added, in a form of its own", async () => {
+    const html = await render({ previewOpen: true, gpx: gpx([proposal("Izvor", 0.8, { kinds: ["WATER"] }), proposal("Cabana", 1.56)], 1) });
+    expect(html).toContain('data-testid="checkpoints-gpx-preview"');
+    expect(html.match(/data-testid="checkpoints-gpx-row"/g)).toHaveLength(2);
+    expect(html).toContain("0,8 km — Izvor (Apă)");
+    expect(html).toContain("1,56 km — Cabana (fără tip)");
+    expect(html).toMatch(/name="pick"[^>]*value="0"[^>]*checked|name="pick"[^>]*checked[^>]*value="0"|checked[^>]*name="pick"[^>]*value="0"/);
+    expect(html).toContain('name="gpxKey" value="test/route-gpx/');
+    expect(html).toContain("Adaugă punctele alese");
+    expect(html).toContain("Închide previzualizarea");
+    // The ones too far from the track are counted, not offered.
+    expect(html).toContain("1 punct din fișier e la peste 300 m de traseu");
+    // The preview's form is its own, apart from the list's.
+    expect(html.match(/<form/g)!.length).toBe(2);
+  });
+
+  it("asks a name in each language for every point: the file's name in the Romanian box, the English box empty for the club", async () => {
+    const html = await render({ previewOpen: true, gpx: gpx([proposal("Izvor", 0.8)]) });
+    expect(html).toMatch(/name="cp\[0\]\.nameRo"[^>]*value="Izvor"|value="Izvor"[^>]*name="cp\[0\]\.nameRo"/);
+    expect(html).toMatch(/name="cp\[0\]\.nameEn"/);
+    expect(html).not.toMatch(/name="cp\[0\]\.nameEn"[^>]*value="Izvor"|value="Izvor"[^>]*name="cp\[0\]\.nameEn"/);
+    expect(html).toContain("scrie-l și în engleză");
+  });
+
+  it("counts the points past the route's end, with the route's length, apart from the ones off the track", async () => {
+    const html = await render({ previewOpen: true, gpx: { ...gpx([proposal("Izvor", 0.8)], 0), beyondRoute: 2 } });
+    expect(html).toContain("2 puncte din fișier sunt dincolo de sfârșitul traseului (21,1 km)");
+    expect(html).not.toContain("la peste 300 m de traseu");
+  });
+
+  it("does not offer a point that is already on the list, and says so", async () => {
+    const html = await render({ previewOpen: true, checkpoints: [point("Izvor", 0.8, { nameRo: "Izvor", nameEn: "Izvor" })], gpx: gpx([proposal("Izvor", 0.8), proposal("Cabana", 1.56)]) });
+    expect(html).toContain("0,8 km — Izvor: deja pe listă");
+    expect(html).not.toMatch(/name="pick"[^>]*value="0"/);
+    // The second keeps its place in the offered list: the index posted is the proposal's own.
+    expect(html).toMatch(/name="pick"[^>]*value="1"/);
+  });
+});

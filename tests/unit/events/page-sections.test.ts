@@ -47,6 +47,7 @@ function pageSequence(): PageSectionId[] {
     ["<RegistrationCta ", "registration"],
     ["<ShareLinks", "share"],
     ["<EventRoute", "course"],
+    ["<EventCheckpoints", "checkpoints"],
     ["<EventLinks", "links"],
     ["<EventProgramme ", "programme"],
     ['id="rules"', "rules"],
@@ -119,6 +120,8 @@ describe("§406 the page's sections, one list", () => {
   it("gives every card section the id of the card the editor draws for it", () => {
     const boxes = ["KindBox", "TextBoxes", "WhenBox", "PlaceBox", "CourseBox", "CostBox", "RegistrationBox", "CoHostsBox", "LinksBox", "ProgrammeRulesBox", "ProgrammeBox", "StartListBox"]
       .map((file) => read(`src/modules/content/events/ui/boxes/${file}.tsx`))
+      // «Puncte de control» (§NNN) is a card of its own forms, beside the save form, not one of its boxes.
+      .concat(read("src/modules/content/events/ui/CheckpointsCard.tsx"))
       .join("\n");
     for (const section of PAGE_SECTIONS) {
       if (section.card === null) continue;
@@ -159,7 +162,8 @@ describe("§406 the editor lays its cards out in the page's order, on both pages
       // The cost's card is inside the first box since §466, the place inside «Când și unde» and the
       // rules inside «Program, regulament și declarație» since §481: the page still draws each in its place.
       // The public list inside the same card since §512.
-      expect(NESTED).toEqual(["place", "cost", "rules", "startList"]);
+      // «Puncte de control» inside «Traseul» (§NNN): its own forms, linked from the course card.
+      expect(NESTED).toEqual(["place", "cost", "checkpoints", "rules", "startList"]);
       expect(positions.sort((a, b) => a.index - b.index).map((entry) => entry.id)).toEqual(ids.filter((id) => !NESTED.includes(id)));
       for (const gone of [
         "<CostBox",
@@ -234,8 +238,18 @@ describe("§406 whether the page draws each section", () => {
       participantListVisibility: "NAMES",
     };
     data.texts = [{ ...data.texts[0], bodyJson: doc("Despre"), rulesJson: doc("Reguli") }];
+    // The checkpoints are a table of their own (§NNN): the caller counts them.
+    data.checkpointCount = 2;
     const states = drawn(data);
     for (const id of PAGE_SECTION_IDS) expect(states[id], id).toBe(true);
+  });
+
+  it("draws «Puncte de control» only while the event has a checkpoint, and «Traseul»'s card with it (§NNN)", () => {
+    expect(drawn(bare()).checkpoints).toBe(false);
+    const withPoints = bare();
+    withPoints.checkpointCount = 1;
+    expect(drawn(withPoints)).toMatchObject({ checkpoints: true, course: false });
+    expect(cardStates(withPoints).find((card) => card.id === "course")?.isDrawn).toBe(true);
   });
 
   it("draws the course from the night pill alone: a bare event that is only a night event still shows the row", () => {
@@ -300,7 +314,7 @@ describe("§406 whether the page draws each section", () => {
     expect(cards(withRules)).toMatchObject({ programme: true });
     // A nested section has no card of its own.
     expect(cards(withRules)).not.toHaveProperty("place");
-    expect(cardStates(withRules).map((card) => card.id)).toEqual(ids.filter((id) => !["place", "cost", "rules", "startList"].includes(id)));
+    expect(cardStates(withRules).map((card) => card.id)).toEqual(ids.filter((id) => !["place", "cost", "checkpoints", "rules", "startList"].includes(id)));
   });
 
   it("draws «Program, regulament și declarație» from the public list alone (§512)", () => {

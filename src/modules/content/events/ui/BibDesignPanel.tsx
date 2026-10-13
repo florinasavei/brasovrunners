@@ -9,6 +9,9 @@ import { getDb } from "@/db/client";
 import type { Locale } from "@/i18n/routing";
 import { shownContactAddressesOrDefault } from "@/modules/contact/shown-address";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
+import { listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
+import { checkpointsStampPart } from "@/modules/event-checkpoints/domain/checkpoint";
+import { bibPictureStamp } from "@/modules/registrations/domain/bib-stamp";
 import { isStorageConfigured } from "@/modules/media/storage";
 import {
   BIB_EMERGENCY_PHONE_MAX,
@@ -96,9 +99,13 @@ export default async function BibDesignPanel({
   const t = await getTranslations("Admin");
   // The reader's own language, for the picture list's titles; the form has no locale prop.
   const locale = (await getLocale()) as Locale;
-  const initialSrc = eventId ? bibPreviewUrl({ eventId, locale, number: String(bibStartNumber), colour: bibColour, design }) : null;
+  // The route's saved checkpoints (§NNN): the strip draws them, so what is saved is part of the sample's address (`v=`), and the tick below is offered only when there are some.
+  const checkpoints = eventId ? await listCheckpoints(getDb(), eventId) : [];
+  const hasCheckpoints = checkpoints.length > 0;
+  const version = hasCheckpoints ? bibPictureStamp(checkpointsStampPart(checkpoints)) : undefined;
+  const initialSrc = eventId ? bibPreviewUrl({ eventId, locale, number: String(bibStartNumber), colour: bibColour, design, version }) : null;
   const memberSrc = eventId
-    ? bibPreviewUrl({ eventId, locale, number: String(bibStartNumber), colour: bibColour, design, member: true })
+    ? bibPreviewUrl({ eventId, locale, number: String(bibStartNumber), colour: bibColour, design, member: true, version })
     : null;
   /*
     The two stored pictures' facts — the asset, its small file, its size for the crop box (§560) —
@@ -224,6 +231,7 @@ export default async function BibDesignPanel({
             eventId={eventId}
             locale={locale}
             initialSrc={initialSrc}
+            version={version}
             labels={{
               alt: t("editor.bibDesign.previewAlt"),
               caption: t("editor.bibDesign.previewCaption"),
@@ -320,6 +328,29 @@ export default async function BibDesignPanel({
           >
             {t("editor.bibDesign.showProfile")}
           </CheckboxField>
+          {/* «Punctele de control pe profil» (§NNN): on by default, drawn only with the profile and the event's checkpoints.
+              Greyed — and says why — while the event has none; a greyed box posts nothing, so its stored tick is carried
+              in a hidden field and adding checkpoints later finds it as it was (on, unless the club turned it off). */}
+          <CheckboxField
+            name="event.bibDesign.showCheckpoints"
+            defaultChecked={design.showCheckpoints}
+            disabled={!hasCheckpoints}
+            help={hasCheckpoints ? t("editor.bibDesign.showCheckpointsHelp") : t("editor.bibDesign.showCheckpointsNone")}
+          >
+            {t("editor.bibDesign.showCheckpoints")}
+          </CheckboxField>
+          {!hasCheckpoints && design.showCheckpoints && <input type="hidden" name="event.bibDesign.showCheckpoints" value="on" />}
+          {/* «…cu orele limită» (§NNN): off by default; the cut-offs beside the points where every one fits. Greyed with
+              the tick above while the event has no checkpoints, its stored tick carried the same way. */}
+          <CheckboxField
+            name="event.bibDesign.showCheckpointTimes"
+            defaultChecked={design.showCheckpointTimes}
+            disabled={!hasCheckpoints}
+            help={hasCheckpoints ? t("editor.bibDesign.showCheckpointTimesHelp") : t("editor.bibDesign.showCheckpointsNone")}
+          >
+            {t("editor.bibDesign.showCheckpointTimes")}
+          </CheckboxField>
+          {!hasCheckpoints && design.showCheckpointTimes && <input type="hidden" name="event.bibDesign.showCheckpointTimes" value="on" />}
           <CheckboxField name="event.bibDesign.showDistance" defaultChecked={design.showDistance} help={t("editor.bibDesign.showDistanceHelp")}>
             {t("editor.bibDesign.showDistance")}
           </CheckboxField>
@@ -399,6 +430,7 @@ export default async function BibDesignPanel({
                     eventId={eventId}
                     locale={locale}
                     initialSrc={memberSrc}
+                    version={version}
                     member
                     labels={{
                       alt: t("editor.bibDesign.member.previewAlt"),

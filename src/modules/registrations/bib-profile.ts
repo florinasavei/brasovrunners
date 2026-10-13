@@ -14,6 +14,8 @@
  * `MIN_TRACK_METERS`, has no profile.
  */
 
+import type { BibCheckpointsDrawing } from "./bib-checkpoints";
+
 /** A track shorter than this has no profile worth drawing. */
 export const MIN_TRACK_METERS = 50;
 
@@ -120,6 +122,11 @@ export type BibProfileDrawing = {
   /** «Distanță: 12,4 km» and «Diferență de nivel: +640 m». */
   distance: string;
   gain: string;
+  /**
+   * The route's checkpoints on the strip (§NNN, `bib-checkpoints.ts`): the marks and whether their
+   * cut-offs fit, decided once by `bib-extras.ts` for both renderers. Absent or null: none drawn.
+   */
+  checkpoints?: BibCheckpointsDrawing | null;
 };
 
 /** The words a drawing is made of, from the caller's catalogue (`Admin.bibs.profile*`). */

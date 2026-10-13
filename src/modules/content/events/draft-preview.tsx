@@ -6,6 +6,7 @@ import type { Database } from "@/db/types";
 import { type Locale, routing } from "@/i18n/routing";
 import { readDeadlines } from "@/modules/deadlines/deadlines";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
+import { listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
 import { familyRegistrationOpen } from "@/modules/registrations/family-gate";
 import { termsDescribeRefusal } from "@/modules/legal-documents/repository";
 import { CARD_GRID_SX } from "@/modules/events/ui/card-layout";
@@ -114,6 +115,8 @@ export async function renderEventDraftPreview<T extends Record<string, unknown>>
   const seriesDates = series.length > 1 ? series.map((date) => ({ startsAt: date.id === current?.id && view.startsAt ? view.startsAt : date.startsAt })) : undefined;
   // «Formular» (amending §579, §586): the register page's own form, drawn from the draft, sending nothing.
   const form = await renderDraftForm(db, { view, door: previewDoor.door, locale: input.locale, now, word: previewDoor.word, steps });
+  // The route's checkpoints as saved (§NNN): they have a card and a save of their own, so the draft shows what is stored.
+  const checkpoints = input.eventId ? await listCheckpoints(db, input.eventId) : [];
 
   return {
     outcome: "ready",
@@ -125,7 +128,7 @@ export async function renderEventDraftPreview<T extends Record<string, unknown>>
     ),
     page: (
       <Box data-testid="draft-preview-page">
-        <EventPageView event={view} locale={input.locale} slug={view.slug} now={now} weather={null} membersOnly={view.membersOnly} preview={{ door: previewDoor, steps }} />
+        <EventPageView event={view} locale={input.locale} slug={view.slug} now={now} weather={null} membersOnly={view.membersOnly} checkpoints={checkpoints} preview={{ door: previewDoor, steps }} />
       </Box>
     ),
     form,

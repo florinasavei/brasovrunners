@@ -6,6 +6,7 @@ import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventInvitations } from "@/db/schema/event-invitations";
+import { eventCheckpoints } from "@/db/schema/event-checkpoints";
 import { eventTodos } from "@/db/schema/event-todos";
 import { eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
@@ -132,6 +133,8 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   // An event's volunteers (§754) cascade from it, and their role is `RESTRICT`: the people first, then the roles.
   await db.delete(eventVolunteers);
   await db.delete(eventVolunteerRoles);
+  // The route's checkpoints (§NNN) cascade from the event too.
+  await db.delete(eventCheckpoints);
   await db.delete(eventTranslations);
   // `registrations` references `events`, and `events.declaration_document_id` references
   // `legal_documents`, so registrations must go before events, and events before legal
