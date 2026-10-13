@@ -214,10 +214,11 @@ async function sendOrdinary<T extends Record<string, unknown>>(
     message: input.message,
     honeypot: input.honeypot,
   });
-  // The contact form's tick (§310 as amended): counted, not emailed, answered «trimis». The safety
+  // The contact form's tick (§NNN (amends §310)): counted, not emailed, answered «trimis». The safety
   // branch is never held back — a lost report costs more than a marked one.
   if (input.branch !== "safety" && suspicion.suspicious && shouldHoldBack(suspicion, await holdBackIsOn(db))) {
     await recordHeldBack(db, input.branch, now);
+    console.info("[feedback] held back as possible spam:", suspicion.reasons.map((reason) => reason.kind).join(","));
     return true;
   }
   const marked = suspicion.suspicious ? suspicionFooter(suspicion) : null;

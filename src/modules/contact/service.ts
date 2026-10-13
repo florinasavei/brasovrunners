@@ -128,7 +128,7 @@ export async function submitContactMessage<T extends Record<string, unknown>>(
     honeypot: input.honeypot,
   });
 
-  // The Administrator's tick (§310 as amended): a message the check marks is counted and not
+  // The Administrator's tick (§NNN (amends §310)): a message the check marks is counted and not
   // emailed. The sender's answer is the same "sent" — a script learns nothing. Unticked, the
   // code below is exactly what it was.
   if (suspicion.suspicious && shouldHoldBack(suspicion, await holdBackIsOn(db))) {

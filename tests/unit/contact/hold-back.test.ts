@@ -7,7 +7,7 @@ import { contactRecipientsSchema, DEFAULT_CONTACT_RECIPIENTS } from "@/modules/c
 import { shouldHoldBack } from "@/modules/contact/held-back";
 
 /**
- * BR-REQ-070-04, `DECISIONS.md` §310 as amended — the tick that stops «[posibil spam]» messages
+ * BR-REQ-070-04, `DECISIONS.md` §NNN (amends §310) — the tick that stops «[posibil spam]» messages
  * from being emailed: the decision, its default, and the card's words.
  */
 describe("BR-REQ-070-04 the tick that holds back suspected spam", () => {

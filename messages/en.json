@@ -5771,11 +5771,13 @@
         "copiesHelp": "CC: the addresses appear in the email; BCC: they get a copy without appearing.",
         "repeats": "An address typed twice, or already under “To”, is kept once.",
         "holdBack": "Don't send me messages that look like spam",
-        "holdBackHelp": "Ticked: a message the form judges “possible spam” no longer reaches you; here you only see how many were stopped. Unticked: it arrives marked “[posibil spam]”, as now.",
+        "holdBackHelp": "Ticked: a message judged “possible spam” is not sent to you, even a real person’s whose browser skipped the anti-bot check. Unticked: it arrives marked “[posibil spam]”.",
+        "holdBackOn": "The tick is on: a message the form judges “possible spam” is not emailed.",
+        "holdBackOff": "The tick is off: such a message arrives marked “[posibil spam]”.",
         "heldBack": {
-          "one": "In the last 30 days {count} message that looked like spam was stopped (nothing of it is kept).",
-          "few": "In the last 30 days {count} messages that looked like spam were stopped (nothing of them is kept).",
-          "other": "In the last 30 days {count} messages that looked like spam were stopped (nothing of them is kept)."
+          "one": "In the last 30 days {count} message that looked like spam was stopped (none of it is kept).",
+          "few": "In the last 30 days {count} messages that looked like spam were stopped (none of them is kept).",
+          "other": "In the last 30 days {count} messages that looked like spam were stopped (none of them is kept)."
         },
         "save": "Save the recipients",
         "readOnly": "Who receives the contact messages is the Administrator’s to set; you see the list in force.",

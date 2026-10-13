@@ -12,7 +12,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-070-04, `DECISIONS.md` §310 as amended — the tick «Nu-mi trimite mesajele care par spam»
+ * BR-REQ-070-04, `DECISIONS.md` §NNN (amends §310) — the tick «Nu-mi trimite mesajele care par spam»
  * through the contact service with the SMTP capture: off, it is today's marked delivery; on, a
  * marked message is counted and not emailed, a clean one is delivered, the sender's answer is the
  * same, and only a timestamp and the form's name are kept. Every address is made up.
