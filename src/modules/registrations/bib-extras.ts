@@ -5,7 +5,17 @@ import type { RouteGpx } from "@/modules/events/domain/route-gpx";
 import { getStorage } from "@/modules/media/storage";
 import { type BibDesign, bibDistanceBadge } from "./bib-design";
 import { type BibCheckpointSource, bibCheckpointMarks } from "./bib-checkpoints";
-import { type BibProfile, type BibProfileDrawing, bibProfileDrawing, bibProfileFigures, parseGpxProfile } from "./bib-profile";
+import { bibProfileChartWidth } from "./bib-geometry";
+import {
+  type BibProfile,
+  type BibProfileDrawing,
+  type BibProfileFigureLines,
+  type BibProfileSay,
+  bibProfileDrawing,
+  bibProfileFigures,
+  bibProfileFigureWords,
+  parseGpxProfile,
+} from "./bib-profile";
 
 /**
  * What a race number prints beyond the design's own switches, read once per request (§750): the
@@ -20,7 +30,13 @@ import { type BibProfile, type BibProfileDrawing, bibProfileDrawing, bibProfileF
  */
 export type BibExtras = {
   profile: BibProfileDrawing | null;
-  /** «Urgențe» / "Emergency": the word before the phone, in the picture's language; empty while the tick is off. */
+  /**
+   * The figures beside the club's picture of the profile (§NNN, «O poză încărcată»): the event's typed
+   * distance and gain, else the GPX's, in the sheet's language; null when neither is known or the club
+   * turned them off — then the picture takes the strip's whole width.
+   */
+  profileFigures: BibProfileFigureLines | null;
+  /** «Urgențe» / "Emergency": the word before the phone when the club typed none (§NNN), in the picture's language; empty while the tick is off. */
   emergencyLabel: string;
   /** «21K»: the event's distance for the header's badge (§750); null while the tick is off or the event has no distance. */
   distanceBadge: string | null;
@@ -38,9 +54,12 @@ export type BibProfileSource = {
   checkpoints?: readonly BibCheckpointSource[];
 };
 
-/** Whether a design's strip carries the checkpoints, so a caller reads them from the database only then. */
-export function bibNeedsCheckpoints(design: Pick<BibDesign, "showProfile" | "showCheckpoints">): boolean {
-  return design.showProfile && design.showCheckpoints;
+/**
+ * Whether a design's strip carries the checkpoints, so a caller reads them from the database only then:
+ * a profile drawn from the GPX — never the club's picture of it (§NNN) — with the tick on.
+ */
+export function bibNeedsCheckpoints(design: Pick<BibDesign, "showProfile" | "showCheckpoints"> & Partial<Pick<BibDesign, "profileSource">>): boolean {
+  return design.showProfile && design.showCheckpoints && design.profileSource !== "picture";
 }
 
 /**
@@ -52,7 +71,7 @@ export async function withBibCheckpoints<T extends Record<string, unknown>, E ex
   db: Database<T>,
   eventId: string,
   event: E,
-  design: Pick<BibDesign, "showProfile" | "showCheckpoints">,
+  design: Pick<BibDesign, "showProfile" | "showCheckpoints"> & Partial<Pick<BibDesign, "profileSource">>,
 ): Promise<E> {
   if (!bibNeedsCheckpoints(design) || !event.routeGpx) return event;
   return { ...event, checkpoints: await listCheckpoints(db, eventId) };
@@ -91,26 +110,50 @@ async function profileOf(key: string): Promise<BibProfile | null> {
 
 export async function loadBibExtras(
   event: BibProfileSource,
-  design: Pick<BibDesign, "showProfile" | "showEmergency" | "showDistance"> & Partial<Pick<BibDesign, "showCheckpoints" | "showCheckpointTimes">>,
+  design: Pick<BibDesign, "showProfile" | "showEmergency" | "showDistance"> &
+    Partial<Pick<BibDesign, "showCheckpoints" | "showCheckpointTimes" | "profileSource" | "showProfileFigures">>,
   locale: string,
 ): Promise<BibExtras> {
   const distanceBadge = design.showDistance ? bibDistanceBadge(event.distanceMeters) : null;
-  if (!design.showProfile && !design.showEmergency) return { profile: null, emergencyLabel: "", distanceBadge };
+  if (!design.showProfile && !design.showEmergency) return { profile: null, profileFigures: null, emergencyLabel: "", distanceBadge };
   const admin = await getTranslations({ locale, namespace: "Admin" });
+  const say: BibProfileSay = (key, values) =>
+    key === "start"
+      ? admin("bibs.profileStart")
+      : key === "finish"
+        ? admin("bibs.profileFinish")
+        : key === "distance"
+          ? admin("bibs.profileDistance", { km: values?.km ?? "" })
+          : admin("bibs.profileGain", { m: values?.m ?? "" });
   let profile: BibProfileDrawing | null = null;
+  let profileFigures: BibProfileFigureLines | null = null;
+  /*
+    «O poză încărcată» (§NNN): no line to draw, only the figures beside the picture, while the club wants
+    them — the event's own first (§750), the GPX's filling what it left empty when there is a GPX.
+  */
+  if (design.showProfile && design.profileSource === "picture") {
+    if (design.showProfileFigures !== false) {
+      let parsed: BibProfile | null = null;
+      if (event.routeGpx) {
+        try {
+          parsed = await profileOf(event.routeGpx.key);
+        } catch {
+          parsed = null;
+        }
+      }
+      const figures = parsed
+        ? bibProfileFigures(parsed, event)
+        : { distanceMeters: event.distanceMeters ?? null, gainMeters: event.elevationGainMeters ?? null };
+      const words = bibProfileFigureWords(figures, locale, say);
+      profileFigures = words.distance !== null || words.gain !== null ? words : null;
+    }
+    return { profile: null, profileFigures, emergencyLabel: design.showEmergency ? admin("bibs.emergencyLabel") : "", distanceBadge };
+  }
   if (design.showProfile && event.routeGpx) {
     try {
       const parsed = await profileOf(event.routeGpx.key);
       if (parsed) {
-        const drawing = bibProfileDrawing(parsed, event, locale, (key, values) =>
-          key === "start"
-            ? admin("bibs.profileStart")
-            : key === "finish"
-              ? admin("bibs.profileFinish")
-              : key === "distance"
-                ? admin("bibs.profileDistance", { km: values?.km ?? "" })
-                : admin("bibs.profileGain", { m: values?.m ?? "" }),
-        );
+        const drawing = bibProfileDrawing(parsed, event, locale, say);
         // The route's checkpoints (§NNN) on the strip, where the design asks and the event has some:
         // placed by the figure the bib prints, the club's own distance first, as the strip's right end is;
         // «km 12» in the sheet's language, «km 12 · 11:30» with «…cu orele limită».
@@ -121,6 +164,8 @@ export async function loadBibExtras(
                 checkpoints: event.checkpoints,
                 routeKm: bibProfileFigures(parsed, event).distanceMeters / 1000,
                 points: parsed.points,
+                // Measured in the chart's own width: the whole strip with the figures off (§NNN).
+                chartWidth: bibProfileChartWidth(design.showProfileFigures !== false),
                 showTimes: design.showCheckpointTimes === true,
                 startWord: drawing.start,
                 finishWord: drawing.finish,
@@ -136,5 +181,5 @@ export async function loadBibExtras(
       profile = null;
     }
   }
-  return { profile, emergencyLabel: design.showEmergency ? admin("bibs.emergencyLabel") : "", distanceBadge };
+  return { profile, profileFigures: null, emergencyLabel: design.showEmergency ? admin("bibs.emergencyLabel") : "", distanceBadge };
 }

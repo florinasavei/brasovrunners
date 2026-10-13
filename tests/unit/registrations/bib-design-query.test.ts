@@ -53,8 +53,18 @@ const EVERYTHING_OFF: BibDesign = {
   showCheckpoints: false,
   // «…cu timpii limită» (§NNN): on, the other way from its default (off).
   showCheckpointTimes: true,
+  // The profile from the club's picture, the figures off and the strip turned (§NNN): each away from its default.
+  profileSource: "picture",
+  profileImageSrc: OURS,
+  showProfileFigures: false,
+  profileOrientation: "turned",
   showEmergency: true,
   emergencyPhone: "+40 722 000 000",
+  // The phone's label and a second number, each with a name (§NNN): the characters a URL escapes.
+  emergencyLabel: "Urgențe & ambulanță",
+  emergencyPhoneLabel: "Coordonator",
+  emergencyPhone2: "0722 111 222",
+  emergencyPhone2Label: "Medic + cort",
   // The trail practice off, the badge and the stubs on: each the other way from its default (§750).
   emergencyUpsideDown: false,
   showDistance: true,
@@ -71,6 +81,8 @@ const EVERYTHING_OFF: BibDesign = {
     cardImageCrop: { x: 0.1, y: 0.05, w: 0.8, h: 0.6 },
     label: "Membru Brașov & co",
     mark: true,
+    // «Semnul de membru» (§NNN): a registry glyph, away from the star.
+    markShape: "runner",
   },
 };
 
@@ -167,10 +179,12 @@ describe("§249 the design on the wire: encode, then parse", () => {
       showName: true,
       headerImageSrc: null,
       sponsorImageSrc: null,
+      // The profile's picture (§NNN), absent like the others.
+      profileImageSrc: null,
       headerImageCrop: null,
       sponsorImageCrop: null,
       // The members' design (§664): off, nothing chosen, as a query that says nothing about it.
-      member: { enabled: false, style: "band", bandColour: null, headerImageSrc: null, headerImageCrop: null, cardImageSrc: null, cardImageCrop: null, label: "", mark: false },
+      member: { enabled: false, style: "band", bandColour: null, headerImageSrc: null, headerImageCrop: null, cardImageSrc: null, cardImageCrop: null, label: "", mark: false, markShape: "star" },
     });
   });
 
@@ -192,7 +206,7 @@ describe("§249 the design on the wire: encode, then parse", () => {
 
   it("§664 drops the members' crop with its picture, and a colour that is not a hex triplet", () => {
     const params = new URLSearchParams({ memberEnabled: "1", memberBandColour: "red; background: url(x)", memberHeaderImageCrop: '{"x":0,"y":0,"w":1,"h":0.5}' });
-    expect(bibDesignFromQuery(params).member).toEqual({ enabled: true, style: "band", bandColour: null, headerImageSrc: null, headerImageCrop: null, cardImageSrc: null, cardImageCrop: null, label: "", mark: false });
+    expect(bibDesignFromQuery(params).member).toEqual({ enabled: true, style: "band", bandColour: null, headerImageSrc: null, headerImageCrop: null, cardImageSrc: null, cardImageCrop: null, label: "", mark: false, markShape: "star" });
   });
 });
 
@@ -211,6 +225,8 @@ describe("§249 the form, read the same way for the save and for the preview", (
       // The unticked upside-down box posts nothing, which reads off (§750); so does the checkpoints' (§NNN).
       emergencyUpsideDown: false,
       showCheckpoints: false,
+      // «Arată distanța și diferența de nivel lângă profil» unposted is off too (§NNN).
+      showProfileFigures: false,
     });
   });
 
@@ -236,8 +252,10 @@ describe("§249 the form, read the same way for the save and for the preview", (
       cardImageCrop: '{"x":0.1,"y":0,"w":0.8,"h":0.7}',
       label: " Membru BVR ",
       mark: true,
+      // No shape posted (§NNN): the star.
+      markShape: "star",
     });
-    expect(readBibDesignForm(posted({})).member).toEqual({ enabled: false, style: "band", bandColour: null, headerImageSrc: null, headerImageCrop: null, cardImageSrc: null, cardImageCrop: null, label: "", mark: false });
+    expect(readBibDesignForm(posted({})).member).toEqual({ enabled: false, style: "band", bandColour: null, headerImageSrc: null, headerImageCrop: null, cardImageSrc: null, cardImageCrop: null, label: "", mark: false, markShape: "star" });
     expect(isBibDesignInput("event.bibDesign.member.enabled")).toBe(true);
   });
 
@@ -266,11 +284,20 @@ describe("§249 the form, read the same way for the save and for the preview", (
       // Nothing posted for the sponsors' place (§750): «Jos de tot», the default; and no profile, no phone.
       sponsorPlace: "bottom",
       showProfile: false,
+      // No source, no picture, no orientation posted (§NNN): the GPX, none, normal; the figures' box unticked.
+      profileSource: "gpx",
+      profileImageSrc: null,
+      showProfileFigures: false,
+      profileOrientation: "normal",
       // An unposted box is an unticked one, the checkpoints' too (§NNN).
       showCheckpoints: false,
       showCheckpointTimes: false,
       showEmergency: false,
       emergencyPhone: "",
+      emergencyLabel: "",
+      emergencyPhoneLabel: "",
+      emergencyPhone2: "",
+      emergencyPhone2Label: "",
       // An unposted box is an unticked one: no upside-down phone, no badge, no stubs (§750).
       emergencyUpsideDown: false,
       showDistance: false,
@@ -289,7 +316,7 @@ describe("§249 the form, read the same way for the save and for the preview", (
       // As typed; the schema trims it, for the save and the preview alike.
       footerText: " Cronometraj: StartTime ",
       // Nothing posted for the members' section (§664): off.
-      member: { enabled: false, style: "band", bandColour: null, headerImageSrc: null, headerImageCrop: null, cardImageSrc: null, cardImageCrop: null, label: "", mark: false },
+      member: { enabled: false, style: "band", bandColour: null, headerImageSrc: null, headerImageCrop: null, cardImageSrc: null, cardImageCrop: null, label: "", mark: false, markShape: "star" },
     });
   });
 

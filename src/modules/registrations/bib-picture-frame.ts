@@ -14,6 +14,9 @@ import { BIB_CARD, BIB_LAYOUT } from "./bib-geometry";
  * - **memberCard** — a member's bib drawn «Tot numărul» (§NNN): the card's whole width by its height
  *   less the small print's one line, 559.28 × 362.95 points, about 1.54 : 1. A footer of two lines or
  *   a sponsors' strip covers the photograph's foot in white; the shape stays the same.
+ * - **profile** — «O poză încărcată» for the route's profile (§NNN): the strip's whole width by the
+ *   picture's height, 523.28 × 36 points. Never cropped: the picture is fitted whole, across the strip
+ *   or beside the figures (`bibProfileChartWidth`), so the place's shape is only its largest box.
  *
  * Each place has one fixed shape: the crop box draws only rectangles of it, and what is stored is
  * §241's four fractions of the photograph, like every other crop. The sheet (`bibs-pdf.ts`), the
@@ -23,7 +26,7 @@ import { BIB_CARD, BIB_LAYOUT } from "./bib-geometry";
  * Pure, importing only pure modules: the client's crop box reads the shapes from here too.
  */
 
-export const BIB_PICTURE_SLOTS = ["header", "sponsors", "memberCard"] as const;
+export const BIB_PICTURE_SLOTS = ["header", "sponsors", "memberCard", "profile"] as const;
 export type BibPictureSlot = (typeof BIB_PICTURE_SLOTS)[number];
 
 /** Each place's box on the paper, in points (`bib-geometry.ts`). */
@@ -31,6 +34,7 @@ export const BIB_PICTURE_BOX: Record<BibPictureSlot, { width: number; height: nu
   header: { width: BIB_CARD.width, height: BIB_LAYOUT.bandHeight },
   sponsors: { width: BIB_CARD.width - 2 * BIB_LAYOUT.inset, height: BIB_LAYOUT.sponsorPicture },
   memberCard: { width: BIB_CARD.width, height: BIB_CARD.height - BIB_LAYOUT.footerHeight },
+  profile: { width: BIB_CARD.width - 2 * BIB_LAYOUT.inset, height: BIB_LAYOUT.profilePictureHeight },
 };
 
 /** Each place's shape, width over height: about 9.02 for the header, 21.8 for the sponsors, 1.54 for a member's card. */
@@ -38,6 +42,7 @@ export const BIB_PICTURE_RATIO: Record<BibPictureSlot, number> = {
   header: BIB_PICTURE_BOX.header.width / BIB_PICTURE_BOX.header.height,
   sponsors: BIB_PICTURE_BOX.sponsors.width / BIB_PICTURE_BOX.sponsors.height,
   memberCard: BIB_PICTURE_BOX.memberCard.width / BIB_PICTURE_BOX.memberCard.height,
+  profile: BIB_PICTURE_BOX.profile.width / BIB_PICTURE_BOX.profile.height,
 };
 
 /**
@@ -45,7 +50,7 @@ export const BIB_PICTURE_RATIO: Record<BibPictureSlot, number> = {
  * the sponsors' «Toată imaginea»: the header covers its strip from the middle, as it always did;
  * the sponsors' strip fits the whole picture inside itself, undistorted, as it always did.
  */
-export const BIB_PICTURE_UNCROPPED: Record<BibPictureSlot, "cover" | "fit"> = { header: "cover", sponsors: "fit", memberCard: "cover" };
+export const BIB_PICTURE_UNCROPPED: Record<BibPictureSlot, "cover" | "fit"> = { header: "cover", sponsors: "fit", memberCard: "cover", profile: "fit" };
 
 /**
  * How a renderer draws a place's picture inside a box of the place's shape (in the renderer's own

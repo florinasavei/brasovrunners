@@ -129,6 +129,9 @@ export type BibProfileDrawing = {
   checkpoints?: BibCheckpointsDrawing | null;
 };
 
+/** The two lines beside the profile, each `null` when its figure is not known (§NNN). */
+export type BibProfileFigureLines = { distance: string | null; gain: string | null };
+
 /** The words a drawing is made of, from the caller's catalogue (`Admin.bibs.profile*`). */
 export type BibProfileSay = (key: "start" | "finish" | "distance" | "gain", values?: { km?: string; m?: string }) => string;
 
@@ -138,15 +141,31 @@ export function bibProfileDrawing(
   locale: string,
   say: BibProfileSay,
 ): BibProfileDrawing {
-  const figures = bibProfileFigures(profile, own);
-  const km = new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(figures.distanceMeters / 1000);
-  const metres = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(figures.gainMeters);
+  const words = bibProfileFigureWords(bibProfileFigures(profile, own), locale, say);
   return {
     points: profile.points,
     start: say("start"),
     finish: say("finish"),
-    distance: say("distance", { km }),
-    gain: say("gain", { m: metres }),
+    distance: words.distance ?? "",
+    gain: words.gain ?? "",
+  };
+}
+
+/**
+ * The two lines beside the profile — «Distanță: 12,4 km», «Diferență de nivel: +640 m» — for whichever
+ * figures are known (§750; for a picture of the profile, §NNN, they may be the club's typed figures
+ * alone): a figure that is not known is `null`, its line not printed.
+ */
+export function bibProfileFigureWords(
+  figures: { distanceMeters: number | null; gainMeters: number | null },
+  locale: string,
+  say: BibProfileSay,
+): BibProfileFigureLines {
+  const km = new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const metres = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 });
+  return {
+    distance: figures.distanceMeters !== null && figures.distanceMeters > 0 ? say("distance", { km: km.format(figures.distanceMeters / 1000) }) : null,
+    gain: figures.gainMeters !== null && figures.gainMeters >= 0 ? say("gain", { m: metres.format(figures.gainMeters) }) : null,
   };
 }
 

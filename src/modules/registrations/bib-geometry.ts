@@ -118,18 +118,18 @@ export const BIB_LAYOUT = {
   memberStripeSize: 10,
   memberStripeSpacing: 1.2,
   /**
-   * The member mark (§750): a ring `memberMarkSize` points across with a check mark in it, stroked
-   * `memberMarkWeight` thick, at the card's left inset, `memberMarkTop` under the header's foot —
-   * clear of the number below it (a number of up to five digits at the largest size still reaches
-   * about 44 points from the card's edge, 26 from the inset, so the number sits lower than the mark
-   * only by its own centring, never by width) and of the name set above the number, whose box is
-   * narrowed on both sides by `memberMarkSize + memberMarkGap` while the mark is drawn
-   * (`bibNameReserve`). Large enough to read at A5 and at a half of it.
+   * The member mark (§750; its shape the club's choice since §NNN, `bib-member-mark.ts`): a box
+   * `memberMarkSize` points tall — square for a star or another glyph, the lockup's proportion for the
+   * club's logo — at the card's left inset, `memberMarkTop` under the header's foot, clear of the number
+   * below it (a number of up to five digits at the largest size still reaches about 44 points from the
+   * card's edge, 26 from the inset, so the number sits lower than the mark only by its own centring,
+   * never by width) and of the name set above the number, whose box is narrowed on both sides by the
+   * mark's width plus `memberMarkGap` while the mark is drawn (`bibNameReserve`). Large enough to read
+   * at A5 and at a half of it.
    */
   memberMarkSize: 26,
   memberMarkGap: 10,
   memberMarkTop: 12,
-  memberMarkWeight: 2.4,
   /**
    * The route's profile (§750): a full-width strip `profileHeight` points tall across the card less its
    * inset, between the name under the number and the small print — a row of its own, so it can never
@@ -154,6 +154,13 @@ export const BIB_LAYOUT = {
   profileDistanceTop: 9,
   profileGainTop: 20,
   /**
+   * «O poză încărcată» (§NNN): the club's own picture of the profile, fitted whole (never cropped) in a
+   * box `profilePictureHeight` points tall, `profilePictureTop` into the row, as wide as the chart would
+   * be (`bibProfileChartWidth`) — so the figures beside it stand where they stand beside a drawn chart.
+   */
+  profilePictureTop: 1,
+  profilePictureHeight: 36,
+  /**
    * The checkpoints on the profile (§NNN, `bib-checkpoints.ts`): at each one's kilometre an aid
    * station's glyph — a cup, a fork — `checkpointGlyphWidth` × `checkpointGlyphHeight` points, stroked
    * `checkpointGlyphWeight`, `checkpointGlyphGap` points above the line (under it where the line runs
@@ -174,10 +181,14 @@ export const BIB_LAYOUT = {
   /**
    * The emergency phone (§750): one centred line `emergencyHeight` points tall under the profile's
    * row (or where it would be), `emergencySize` points — a fixed place on every number, never over
-   * the number or the name, which keep the area that is left.
+   * the number or the name, which keep the area that is left. With its label and two numbers (§NNN)
+   * a line may be long: it shrinks by `emergencySizeStep` down to `emergencyMinSize` until it fits the
+   * card less its inset, and only past that is it cut with «…» (`bibEmergencyFit`).
    */
   emergencyHeight: 14,
   emergencySize: 9,
+  emergencyMinSize: 6.5,
+  emergencySizeStep: 0.5,
   /**
    * The distance badge (§750), in the header's right corner like the owner's marathon example: a
    * rounded tag `badgeWidth` × `badgeHeight` at the card's right inset, centred on the band — or, while
@@ -206,6 +217,54 @@ export const BIB_LAYOUT = {
  */
 export function bibExtrasHeight(profileDrawn: boolean, emergencyDrawn: boolean): number {
   return (profileDrawn ? BIB_LAYOUT.profileHeight : 0) + (emergencyDrawn ? BIB_LAYOUT.emergencyHeight : 0);
+}
+
+/**
+ * How wide the profile's chart — or the club's picture of it — is (§NNN): beside the figures, the
+ * chart's own `profileChartWidth`; with «Arată distanța și diferența de nivel lângă profil» off, or
+ * nothing to say there, the strip's whole width, the card less its inset on each side.
+ */
+export function bibProfileChartWidth(figuresShown: boolean): number {
+  return figuresShown ? BIB_LAYOUT.profileChartWidth : BIB_CARD.width - 2 * BIB_LAYOUT.inset;
+}
+
+/**
+ * What is turned half a circle under the number (§NNN, amending §750; the owner's trail example, «I should
+ * also be able to rotate the race profile»): the runner reads what is turned by looking down at the chest.
+ *
+ * - `block` — the profile and the phone are both drawn and both turned: **one** block, the two rows
+ *   turned together about the block's centre, so the phone line comes out above the profile on the paper
+ *   and, read from above, right under it — the two read together, as in the owner's example.
+ * - `profile` / `phone` — only that row, about its own centre; the other reads the right way up.
+ *
+ * Whatever is not drawn is never turned.
+ */
+export function bibExtrasTurn(rows: { profile: boolean; profileTurned: boolean; phone: boolean; phoneTurned: boolean }): {
+  block: boolean;
+  profile: boolean;
+  phone: boolean;
+} {
+  const block = rows.profile && rows.phone && rows.profileTurned && rows.phoneTurned;
+  return { block, profile: !block && rows.profile && rows.profileTurned, phone: !block && rows.phone && rows.phoneTurned };
+}
+
+/** The room the emergency line may take: the card less its inset on each side. */
+export const BIB_EMERGENCY_WIDTH = BIB_CARD.width - 2 * BIB_LAYOUT.inset;
+
+/**
+ * The emergency line as both renderers set it (§NNN): its own `emergencySize` when it fits the card less
+ * its inset, else the first size down to `emergencyMinSize`, by `emergencySizeStep`, at which it fits —
+ * and past that the minimum, cut with «…». `measure` is the line's width in ems of its type (Roboto
+ * Regular's table, `bib-footer.ts#bibFooterWidth`), never narrower than either renderer sets it.
+ */
+export function bibEmergencyFit(text: string, measure: (text: string) => number): { text: string; size: number } {
+  const L = BIB_LAYOUT;
+  const steps = Math.round((L.emergencySize - L.emergencyMinSize) / L.emergencySizeStep);
+  for (let step = 0; step <= steps; step++) {
+    const size = L.emergencySize - step * L.emergencySizeStep;
+    if (measure(text) * size <= BIB_EMERGENCY_WIDTH) return { text, size };
+  }
+  return { text: oneLine(text, measure, BIB_EMERGENCY_WIDTH / L.emergencyMinSize), size: L.emergencyMinSize };
 }
 
 /** What the header's race and date give up on their right while the distance badge is drawn (§750). */
@@ -450,23 +509,14 @@ export function bibNumberFit(digits: string, scale: number, areaHeight: number):
 
 /**
  * What the name set above the number gives up on each side while the member mark is drawn (§750):
- * the mark's width and a gap, so a long name is cut (ellipsis) at the mark's right edge plus the
- * gap rather than running over the ring. 0 when no mark is drawn; the name below the number is
- * nowhere near the mark and keeps the whole inset-to-inset box.
+ * the mark's width (`bib-member-mark.ts#bibMemberMarkBox`: a star's square, the logo's wider box) and
+ * a gap, so a long name is cut (ellipsis) at the mark's right edge plus the gap rather than running
+ * over it. 0 when no mark is drawn (`null`); the name below the number is nowhere near the mark and
+ * keeps the whole inset-to-inset box.
  */
-export function bibNameReserve(markDrawn: boolean, nameAbove: boolean): number {
-  return markDrawn && nameAbove ? BIB_LAYOUT.memberMarkSize + BIB_LAYOUT.memberMarkGap : 0;
+export function bibNameReserve(markWidth: number | null, nameAbove: boolean): number {
+  return markWidth !== null && nameAbove ? markWidth + BIB_LAYOUT.memberMarkGap : 0;
 }
-
-/**
- * The check inside the member mark, as fractions of the mark's box: three points of one stroke,
- * drawn by the sheet with lines and by the picture with an SVG path, so the two cannot differ.
- */
-export const MEMBER_MARK_CHECK = [
-  [0.27, 0.53],
-  [0.43, 0.69],
-  [0.74, 0.33],
-] as const;
 
 /**
  * The small print's line (§317): across the card less the inset on each side — 595.28 − 2 × 18 −

@@ -4,10 +4,12 @@ import { fnv1a } from "@/shared/hash";
  * The version of the bib's drawing (§755): raised whenever the renderers draw the same design
  * differently, so every stamped picture address changes with it. The design, the colour and the
  * title are what the club changes; this is what the platform changes. 2: the header's title in up to
- * two lines beside the badge, the date under its real height, the badge centred (§755). The bibs
- * page's stamp (`bibPictureStamp`) and the desk's (`events/repository.ts#BIB_STAMP`) both carry it.
+ * two lines beside the badge, the date under its real height, the badge centred (§755). 3: the member
+ * mark a star by default where §750 drew a ring and a check, and the emergency line fitted to the card
+ * (§NNN). The bibs page's stamp (`bibPictureStamp`) and the desk's (`events/repository.ts#BIB_STAMP`)
+ * both carry it.
  */
-export const BIB_DRAWING_VERSION = 2;
+export const BIB_DRAWING_VERSION = 3;
 
 /**
  * A short, stable stamp of what a bib's picture is drawn from (§748, amending §735).
