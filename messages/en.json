@@ -4090,7 +4090,7 @@
           "done": "The volunteer agreement is in force: whoever offers on a page accepts it, and people entered by hand get it by link or sign it on paper.",
           "how": [
             "/admin/legal → the “Volunteer agreement” card → “Regenerate from the template” → confirm. Or the button that approves the missing texts in one step.",
-            "A lawyer should read the text first, against Romanian Law no. 78/2014: the written form and the electronic acceptance, the age of 18, the role's task sheet, the volunteers' insurance and their register.",
+            "A lawyer should read the text first, against Law no. 78/2014: the written form and the electronic acceptance, the age of 18, the role's task sheet, the volunteers' insurance and register.",
             "Open the draft, fill in what is left, “Save draft”, then “Approve and publish”. Once in force in both languages, the form appears on the pages of the events that take volunteers."
           ]
         }

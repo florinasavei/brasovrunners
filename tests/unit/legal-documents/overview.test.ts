@@ -46,8 +46,9 @@ function row(key: LegalDocumentKey, version: number, extra: Partial<OverviewVers
 }
 
 describe("the texts' groups", () => {
-  it("are the catalogue's six texts in three groups, in the catalogue's own order", () => {
-    expect(LEGAL_KIND_GROUPS.map((group) => group.id)).toEqual(["general", "race", "groupRun"]);
+  it("are the catalogue's seven texts in four groups, in the catalogue's own order", () => {
+    // The volunteer agreement in a group of its own, last (§NNN).
+    expect(LEGAL_KIND_GROUPS.map((group) => group.id)).toEqual(["general", "race", "groupRun", "volunteers"]);
     expect(LEGAL_KIND_GROUPS.flatMap((group) => group.keys)).toEqual([...LEGAL_DOCUMENT_KEYS]);
   });
 
@@ -61,6 +62,7 @@ describe("the texts' groups", () => {
       general: "Documente generale",
       race: "Declarații de cursă",
       groupRun: "Declarații pentru alergările de grup",
+      volunteers: "Contractul voluntarilor",
     });
   });
 });
@@ -190,7 +192,7 @@ describe("a text's card", () => {
       pending: "Ciornă în așteptare: versiunea 4",
       dialog: "O ciornă nouă pentru GDPR, din șablon, versiunea 4; textul în vigoare nu se schimbă până nu o aprobi.",
       count: "4 versiuni din 11",
-      regenerate: "Regenerează din șabloane (4 din 6)",
+      regenerate: "Regenerează din șabloane (4 din 7)",
       rule: "Doar textele cu «Șablon nou» se regenerează; celelalte au deja cuvintele șablonului.",
     });
     expect(format("en")).toEqual({
@@ -200,7 +202,7 @@ describe("a text's card", () => {
       pending: "Draft waiting: version 4",
       dialog: "A new draft of GDPR, from the template, version 4; the text in force does not change until you approve it.",
       count: "4 versions of 11",
-      regenerate: "Regenerate from the templates (4 of 6)",
+      regenerate: "Regenerate from the templates (4 of 7)",
       rule: "Only the texts marked «New template» are regenerated; the others already have the template's words.",
     });
   });

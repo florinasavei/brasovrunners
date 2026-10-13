@@ -39,6 +39,7 @@ const LAUNCHED: OwnerTaskInputs = {
   visibleShopProducts: 1,
   volunteersDescribed: true,
   volunteeringEvents: 1,
+  volunteerAgreementInForce: true,
   gmailFallbackDescribed: true,
   refusalDescribed: true,
   teamPageDescribed: true,
@@ -150,6 +151,24 @@ describe("owner tasks", () => {
       const item = catalogue.Admin.tasks.items.volunteersNotice;
       expect(item.title && item.todo && item.done).toBeTruthy();
       expect(item.how.join("\n")).toContain("/admin/legal");
+    }
+  });
+
+  it("§NNN: the volunteer agreement's row is open while an event ahead takes volunteers and none is in force, done once one is, absent otherwise", () => {
+    expect(stateOf({ ...LAUNCHED, volunteerAgreementInForce: false }, "volunteerAgreement")).toBe("open");
+    expect(stateOf(LAUNCHED, "volunteerAgreement")).toBe("done");
+    expect(stateOf({ ...LAUNCHED, volunteeringEvents: 0 }, "volunteerAgreement")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, volunteerAgreementInForce: false, volunteeringEvents: 0 }).some((task) => task.id === "volunteerAgreement")).toBe(false);
+    // Its own gate, not the notice's: without a privacy notice the agreement's row still says what is missing.
+    expect(stateOf({ ...LAUNCHED, hasApprovedPrivacyNotice: false, volunteerAgreementInForce: false }, "volunteerAgreement")).toBe("open");
+    // Never blocking: nothing a runner does waits on it.
+    expect(ownerTasks({ ...LAUNCHED, volunteerAgreementInForce: false }).find((task) => task.id === "volunteerAgreement")?.state).not.toBe("blocking");
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.volunteerAgreement;
+      expect(item.title && item.todo && item.done).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+      // The lawyer reads it first, against the volunteering law (the owner's brief).
+      expect(item.how.join("\n")).toContain("78/2014");
     }
   });
 
@@ -425,6 +444,7 @@ describe("owner tasks", () => {
       "shopNotice",
       "volunteersNotice",
       "gmailFallbackNotice",
+      "volunteerAgreement",
       "refusalTerms",
       "teamPageNotice",
       "raceDeclarations",

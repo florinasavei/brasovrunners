@@ -119,8 +119,8 @@ describe("§515 the editor's start for a race's declaration", () => {
 });
 
 describe("§515 the one press approves every text of the catalogue", () => {
-  it("covers exactly the catalogue's keys: the registration's three, the road declaration and the group runs' two", () => {
-    expect([...PLATFORM_APPROVAL_KEYS]).toEqual(["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION", "EVENT_DECLARATION_ROAD", "GROUP_RUN_DECLARATION_ASPHALT", "GROUP_RUN_DECLARATION_TRAIL"]);
+  it("covers exactly the catalogue's keys: the registration's three, the road declaration, the group runs' two and the volunteer agreement", () => {
+    expect([...PLATFORM_APPROVAL_KEYS]).toEqual(["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION", "EVENT_DECLARATION_ROAD", "GROUP_RUN_DECLARATION_ASPHALT", "GROUP_RUN_DECLARATION_TRAIL", "VOLUNTEER_AGREEMENT"]);
     expect([...PLATFORM_APPROVAL_KEYS].sort()).toEqual(Object.keys(LEGAL_TEMPLATES).sort());
   });
 

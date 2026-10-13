@@ -91,7 +91,7 @@ describe("§754 a person, entered by hand or offering on the page", () => {
     }
   });
 
-  const pub = { ...staff, message: "", locale: "ro", consent: true };
+  const pub = { ...staff, message: "", locale: "ro", consent: true, agreement: true, adult: true };
 
   it("requires the consent tick on the public form — the person's own act, literally true", () => {
     expect(volunteerPublicInputSchema.safeParse(pub).success).toBe(true);
@@ -100,6 +100,19 @@ describe("§754 a person, entered by hand or offering on the page", () => {
       expect(verdict.success, String(consent)).toBe(false);
       if (!verdict.success) expect(refusedFields(verdict.error)).toEqual(["consent"]);
     }
+  });
+
+  it("§NNN requires the agreement's tick and the age's, each literally true and each named in the refusal", () => {
+    for (const tick of ["agreement", "adult"] as const) {
+      for (const value of [false, undefined, "on"]) {
+        const verdict = volunteerPublicInputSchema.safeParse({ ...pub, [tick]: value });
+        expect(verdict.success, `${tick} ${String(value)}`).toBe(false);
+        if (!verdict.success) expect(refusedFields(verdict.error)).toEqual([tick]);
+      }
+    }
+    const neither = volunteerPublicInputSchema.safeParse({ ...pub, agreement: false, adult: false });
+    expect(neither.success).toBe(false);
+    if (!neither.success) expect(refusedFields(neither.error).sort()).toEqual(["adult", "agreement"]);
   });
 
   it("holds the message to 300 characters and the language to the two the site has", () => {
@@ -178,7 +191,7 @@ describe("§754 how a role stands: «N din M»", () => {
 });
 
 describe("§754 the three conditions of the public form", () => {
-  const open = { acceptsVolunteers: true, standings: [{ free: 2 }], noticeDescribes: true, eventAhead: true, published: true, membersOnly: false };
+  const open = { acceptsVolunteers: true, standings: [{ free: 2 }], noticeDescribes: true, agreementInForce: true, eventAhead: true, published: true, membersOnly: false };
 
   it("is offered only when the event takes volunteers, a role still needs people and the notice describes them", () => {
     expect(volunteerOfferClosedFor(open)).toBeNull();
@@ -186,6 +199,13 @@ describe("§754 the three conditions of the public form", () => {
     expect(volunteerOfferClosedFor({ ...open, standings: [{ free: 0 }] })).toBe("noRoleNeeds");
     expect(volunteerOfferClosedFor({ ...open, standings: [] })).toBe("noRoleNeeds");
     expect(volunteerOfferClosedFor({ ...open, noticeDescribes: false })).toBe("noNotice");
+  });
+
+  it("§NNN is not offered while no volunteer agreement is in force — named after the notice, the card's last reason", () => {
+    expect(volunteerOfferClosedFor({ ...open, agreementInForce: false })).toBe("noAgreement");
+    // The notice is asked first: both missing, the card names the notice, which the club approves first.
+    expect(volunteerOfferClosedFor({ ...open, agreementInForce: false, noticeDescribes: false })).toBe("noNotice");
+    expect(volunteerOfferClosedFor({ ...open, agreementInForce: false, acceptsVolunteers: false })).toBe("off");
   });
 
   it("is not offered for an event that is cancelled or over, whatever else is true", () => {
@@ -201,7 +221,7 @@ describe("§754 the three conditions of the public form", () => {
     expect(volunteerOfferClosedFor({ ...open, published: false, acceptsVolunteers: false })).toBe("off");
     expect(volunteerOfferClosedFor({ ...open, membersOnly: true, eventAhead: false, noticeDescribes: false })).toBe("membersOnly");
     // Every reason has its line on the card, in both languages.
-    for (const reason of ["off", "notPublished", "membersOnly", "eventOver", "noRoleNeeds", "noNotice"] as const) {
+    for (const reason of ["off", "notPublished", "membersOnly", "eventOver", "noRoleNeeds", "noNotice", "noAgreement"] as const) {
       expect(ro.Admin.volunteers.offer.closed[reason], reason).toBeTruthy();
       expect(en.Admin.volunteers.offer.closed[reason], reason).toBeTruthy();
     }
