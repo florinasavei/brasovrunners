@@ -21,6 +21,7 @@ import { emailMessageType } from "@/db/schema/email-outbox";
 import { registrationStatus } from "@/db/schema/registrations";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { specialListVerb } from "@/modules/registrations/domain/row-verbs";
 import { noFreePlaceValues, type PlacesTaken } from "@/modules/registrations/domain/capacity";
 import { listAuditTrail, listPartnerShares } from "@/modules/audit/repository";
 import { declarationAsksMinorToSign, noticeDescribesPromotionalMaterials } from "@/modules/legal-documents/repository";
@@ -782,7 +783,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       */}
       {(registration.eventHiddenListEnabled || registration.outsideCapacity) && (
         <Box component="section" data-testid="outside-capacity" sx={{ minWidth: 0, maxWidth: "100%" }}>
-          {mayManage && !isTerminalStatus(registration.status) ? (
+          {specialListVerb(registration.status, actor.role, { onList: registration.outsideCapacity, enabled: registration.eventHiddenListEnabled }) !== null ? (
             <ActionForm
               action={setOutsideCapacityAction}
               confirm={

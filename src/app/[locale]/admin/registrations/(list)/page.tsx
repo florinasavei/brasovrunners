@@ -99,6 +99,7 @@ import { countForm, type CountForm } from "@/i18n/count-form";
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
 import { givePlaceRefusalAhead } from "@/modules/registrations/give-place-tip";
+import { noFreePlaceValues } from "@/modules/registrations/domain/capacity";
 import { outsideMarkBody } from "@/modules/registrations/ui/outside-mark-body";
 import { paperConfirmationText } from "@/modules/registrations/ui/PaperConfirmationTip";
 import RegistrationRowMenu, { type RegistrationMenuItem } from "@/modules/registrations/ui/RegistrationRowMenu";
@@ -718,7 +719,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {error && (
           <Alert severity="error">
-            {t(`errors.${error}`)}
+            {t(`errors.${error}`, noFreePlaceValues(error, current))}
             {untilAt && ` ${resumesWords(untilAt, stopNow, locale, (key, values) => t(key, values))}`}
           </Alert>
         )}

@@ -11,7 +11,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-037-06 (§648, §743): the registrations list's «⋮» offers «Pune pe lista de invitați speciali» /
+ * BR-REQ-037-07 (§648, §743): the registrations list's «⋮» offers «Pune pe lista de invitați speciali» /
  * «Scoate de pe lista de invitați speciali» by the registration page's own predicate: the Administrator's,
  * an active row, putting on only while the event's switch is on, taking off for any row on the list. The
  * hidden form posts the same action with the page's dialog and the list's query; the Organizer sees nothing.
@@ -162,7 +162,7 @@ beforeEach(async () => {
   await resetTables(db);
 });
 
-describe("BR-REQ-037-06: the list's «⋮» and the special guests list (§743)", () => {
+describe("BR-REQ-037-07: the list's «⋮» and the special guests list (§743)", () => {
   it("offers «Pune pe lista…» only while the event's switch is on, and «Scoate de pe…» for a row on the list even with it off", async () => {
     const on = await createRace("Cu lista", true);
     const off = await createRace("Fara lista", false);
@@ -219,6 +219,16 @@ describe("BR-REQ-037-06: the list's «⋮» and the special guests list (§743)"
     expect(confirmOf(waiting).body).toContain("primește acum un loc ca invitat special");
     expect(confirmOf(waiting).email).toBeDefined();
     expect(confirmOf(waitingTest).email).toBeUndefined();
+  });
+
+  it("renders the refusal from the «⋮» as today's sentence naming who holds the places, not a message key", async () => {
+    const race = await createRace("Crosul", true);
+    state.actor = await staff("ADMIN");
+    const tree = await listPage({ eventId: race.id, error: "NO_FREE_PLACE", capacity: "1", confirmed: "1", declaration: "0", offered: "0", family: "0", invited: "0" });
+    const alerts = elements(tree).filter((element) => element.props.severity === "error");
+    const shown = JSON.stringify(alerts.map((alert) => alert.props.children));
+    expect(shown).toContain("Cursa e plină: locuri 1, confirmați 1, declarații de semnat 0");
+    expect(shown).not.toContain("Admin.errors");
   });
 
   it("shows the Organizer no entry and no form", async () => {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { registrationStatus, type RegistrationStatus } from "@/db/schema/registrations";
 import { deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
-import { rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
+import { rowVerbsFor, specialListVerb } from "@/modules/registrations/domain/row-verbs";
 import { canTransition } from "@/modules/registrations/domain/state-machine";
 
 /**
@@ -315,5 +315,15 @@ describe("BR-REQ-037-03 the member tick on the row", () => {
         expect(rowVerbsFor(status, role, { checkedIn: false }), `${role}/${status}`).not.toContain("memberTick");
       }
     }
+  });
+});
+
+describe("BR-REQ-037-07 the special guests list's one predicate (§648)", () => {
+  it("marks while the switch is on, unmarks for any row on the list, only for an active row and the Administrator", () => {
+    expect(specialListVerb("CONFIRMED", "ADMIN", { onList: false, enabled: true })).toBe("mark");
+    expect(specialListVerb("CONFIRMED", "ADMIN", { onList: false, enabled: false })).toBeNull();
+    expect(specialListVerb("WAITLISTED", "ADMIN", { onList: true, enabled: false })).toBe("unmark");
+    expect(specialListVerb("CANCELLED", "ADMIN", { onList: true, enabled: true })).toBeNull();
+    expect(specialListVerb("CONFIRMED", "MODERATOR", { onList: false, enabled: true })).toBeNull();
   });
 });

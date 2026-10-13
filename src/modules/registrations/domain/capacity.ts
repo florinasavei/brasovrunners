@@ -120,7 +120,7 @@ export type PlacesTaken = {
   invited: number;
 };
 
-const PLACES_TAKEN_KEYS = ["capacity", "confirmed", "declaration", "offered", "family", "invited"] as const satisfies ReadonlyArray<keyof PlacesTaken>;
+export const PLACES_TAKEN_KEYS = ["capacity", "confirmed", "declaration", "offered", "family", "invited"] as const satisfies ReadonlyArray<keyof PlacesTaken>;
 
 export class NoFreePlaceError extends DomainError {
   readonly places: PlacesTaken;

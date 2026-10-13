@@ -32,7 +32,7 @@ import { UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
 import { ANSWER_MARKERS, ANSWERS_UNCHANGED, answersRefusalCode, EDITABLE_ANSWERS } from "@/modules/registrations/answers";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
 import { waitlistRefusalCode } from "@/modules/registrations/domain/waitlist";
-import { confirmedCapacityOf, noFreePlaceOutcome, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
+import { PLACES_TAKEN_KEYS, confirmedCapacityOf, noFreePlaceOutcome, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { SendNowRefused, sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
@@ -493,7 +493,7 @@ export async function editRegistrationAnswersAction(_previous: FormOutcome | nul
  */
 async function backToList(locale: Locale, listQuery: string, outcome: Record<string, string>): Promise<never> {
   const params = new URLSearchParams(listQuery);
-  for (const key of ["erase", "memberSweep", "error", "saved", "count", "cancelled", "erased", "failed", "test", "voided"]) params.delete(key);
+  for (const key of ["erase", "memberSweep", "error", "saved", "count", "cancelled", "erased", "failed", "test", "voided", ...PLACES_TAKEN_KEYS]) params.delete(key);
   for (const [key, value] of Object.entries(outcome)) params.set(key, value);
   await flashOutcome(outcome);
   redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${params.toString()}#admin-alert`);
