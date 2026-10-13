@@ -110,6 +110,22 @@ export const participantListVisibility = pgEnum("participant_list_visibility", [
 export type ParticipantListVisibility = (typeof participantListVisibility.enumValues)[number];
 
 /**
+ * «Clubul pe lista publică» (§753, amending §32, §143 and §396): what the public list's «Club» column
+ * says. The club is free text the person typed, and a public list is a disclosure — so the default shows
+ * only the club's own name, and only for a verified member who typed it.
+ *
+ * - `members_only` — «Doar Brașov Runners»: the cell holds the club's name for a registration whose
+ *   person is on the club's members list AND whose typed club names the club; blank for every other row.
+ * - `as_typed` — «Cum l-au scris»: the typed club, as before this setting existed.
+ * - `hidden` — «Nu arăta clubul»: no column at all.
+ *
+ * Display only: the backoffice, the exports, the desk and the bibs keep the typed club.
+ */
+export const publicListClub = pgEnum("public_list_club", ["members_only", "as_typed", "hidden"]);
+
+export type PublicListClub = (typeof publicListClub.enumValues)[number];
+
+/**
  * Events.
  *
  * The full M1 column set from AGENTS.md §12.3 is present even though the pilot reads only a
@@ -766,6 +782,14 @@ export const events = pgTable(
      * the allocator and the numbers never read it.
      */
     hiddenListPublic: boolean("hidden_list_public").notNull().default(false),
+
+    /**
+     * `public_list_club` — «Clubul pe lista publică» (§753): what the list's «Club» column shows. The
+     * default `members_only` is the rule, not a convenience: every event that exists and every one created
+     * after this column shows less than before — the club's own name for a verified member who typed it,
+     * nothing else. Display only (see `publicListClub`).
+     */
+    publicListClub: publicListClub("public_list_club").notNull().default("members_only"),
 
     // AGENTS.md §12.3. Nullable because every row that exists today was written by a seed
     // rather than by a person, and inventing an author for it would be a lie in the trail.

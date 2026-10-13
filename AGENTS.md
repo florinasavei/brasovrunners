@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.13-2026-10-13 -->
+<!-- PROJECT_BASELINE: BR-V3.14-2026-10-13 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V3.13-2026-10-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.14-2026-10-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1489,6 +1489,16 @@ below exists because of that (BR-BUS-039, BR-REQ-039-01).
   For `NONE` there is nobody to list; for `EXTERNAL` the entrants are another organizer's;
 - the published set is exactly `status = CONFIRMED AND kind = 'REAL' AND list_opt_out = false`,
   ordered by `confirmed_at` then `id`. The public list shows the display name and club of registrations that ticked «Vreau să apar»: the confirmed always. Only while the privacy notice in force names `{{participantListStates}}` in every language (`describesListStates`, §396) does it also show the pending (`PENDING_DECLARATION`, `WAITLIST_OFFERED`) and the waiting list, each with its state word and without a position. The waiting list shows only when the event's «Lista de așteptare e publică» (`events.waitlist_public`, off by default, stored true only beside `NAMES`; §628) is on as well — a narrowing on top of the notice's gates, never a way round them. How many wait is a separate switch, «Arată public câți așteaptă» (`events.waitlist_count_public`, on by default; §634): off, the card, the page and each waiting person's own page and email say no count of the line and no place in it; it hides a number, never a name, and opens nothing of the list. «Arată public numărătoarea» (`events.participant_count_public`, on by default; §648, §668) hides every number at once: off, «Cine vine» says only the names, and the event's public pages — the page, its card, hero, calendar and series card, the register page — say no number derived from its capacity or its registrations: no places line, no free places, no capacity, no room, no offered or waiting count; only whether places are left, the race is full, the waiting list is open or full, or places are given from it. The waiting count's switch sits under it in the editor (§669): off, each waiting person's own page, «Toate înscrierile mele», email and «Ce îi spui» say no count of the line and no place in it either, whatever «Arată public câți așteaptă» says (`waitlistCountShown`). It never shows `PENDING_EMAIL_CONFIRMATION`, `CANCELLED`, `EXPIRED` or `TEST` rows, and never the raw lifecycle state;
+- the club column is free text the person typed, so it is shown by the event's `public_list_club`
+  («Clubul pe lista publică», `DECISIONS.md` §753, amending §32/§143/§396): `members_only` (the
+  default for every event, existing ones included) fills the cell with the club's own name
+  (`CLUB_NAME`) only when the registration's person is on the members list (the bibs' own test,
+  `member-ticks.ts#memberCanonicalEmails`) AND the typed club names the club (`namesTheClub`);
+  every other cell is blank, and the column is not drawn when no row holds a value. A member who
+  typed nothing or another club shows nothing: showing membership the person did not claim on the
+  form would be a disclosure the privacy notice does not describe. `as_typed` is the list as it was;
+  `hidden` draws no column. The query selects the typed text only for a member, so a non-member's
+  text never leaves the database. The backoffice, the exports, the desk and the bibs keep the typed club;
 - `registrations.list_opt_out` is the participant's own answer, the opposite of the tick "I want
   to appear on the participants & results list" (`DECISIONS.md` §143, §570: one tick for the list
   and, once they are published, the results): no tick, no listing. Asked on the
@@ -1788,6 +1798,7 @@ events
 - waitlist_public boolean NOT NULL DEFAULT false  -- §10.10; «Lista de așteptare e publică», true only beside NAMES
 - waitlist_count_public boolean NOT NULL DEFAULT true  -- §10.10; «Arată public câți așteaptă», the line's count on public surfaces; under participant_count_public (§669)
 - participant_count_public boolean NOT NULL DEFAULT true  -- §10.10; «Arată public numărătoarea», every public number of the event (§668)
+- public_list_club members_only|as_typed|hidden NOT NULL DEFAULT members_only  -- §10.10; «Clubul pe lista publică», what the list's «Club» column says
 - cover_media_asset_id uuid null
 - created_by_staff_user_id uuid
 - updated_by_staff_user_id uuid

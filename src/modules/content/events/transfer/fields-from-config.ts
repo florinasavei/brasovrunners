@@ -140,6 +140,7 @@ export function eventFieldsFromConfig(context: PostedFieldsContext): Record<stri
     waitlistPublic: context.participantListNames && config.publicList.waitlist,
     waitlistCountPublic: config.publicList.waitlistCount,
     participantCountPublic: config.publicList.count,
+    publicListClub: config.publicList.club,
     hiddenListEnabled: config.hiddenList.enabled,
     hiddenListBibStart: asNumber(config.hiddenList.bibStart),
     hiddenListCounted: config.hiddenList.counted,
