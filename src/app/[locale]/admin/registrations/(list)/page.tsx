@@ -92,12 +92,15 @@ import {
   promoteRegistrationAction,
   setBibPrintedAction,
   setClubMemberDeclaredAction,
+  setOutsideCapacityAction,
 } from "../actions";
 import { previewMemberTickSweep } from "@/modules/registrations/admin-service";
 import { countForm, type CountForm } from "@/i18n/count-form";
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
 import { givePlaceRefusalAhead } from "@/modules/registrations/give-place-tip";
+import { noFreePlaceValues } from "@/modules/registrations/domain/capacity";
+import { outsideMarkConfirm } from "@/modules/registrations/ui/outside-mark-body";
 import { paperConfirmationText } from "@/modules/registrations/ui/PaperConfirmationTip";
 import RegistrationRowMenu, { type RegistrationMenuItem } from "@/modules/registrations/ui/RegistrationRowMenu";
 import HiddenListChip from "@/modules/registrations/ui/HiddenListChip";
@@ -324,6 +327,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     perPage: current.perPage,
   };
   const listQueryString = buildListHref("", listParams, {}).replace(/^\?/, "");
+  // A press on a row comes back to the row's page (§747), every filter kept, so the row's new chip is in view.
+  const rowReturnQueryString = buildListHref("", listParams, { page: current.page }).replace(/^\?/, "");
   /*
     The export's query names the scope the screen resolved, never the automatic one (§312,
     §15.10): the file is the set that was on screen when the button was pressed, even if the
@@ -716,7 +721,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {error && (
           <Alert severity="error">
-            {t(`errors.${error}`)}
+            {t(`errors.${error}`, noFreePlaceValues(error, current))}
             {untilAt && ` ${resumesWords(untilAt, stopNow, locale, (key, values) => t(key, values))}`}
           </Alert>
         )}
@@ -1760,6 +1765,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 checkedIn: row.checkedInAt !== null,
                 // A number is printable once the registration is confirmed (§264, §548).
                 bib: { settled: row.bibNumber !== null, printed: row.bibPrintedAt !== null },
+                // The special guests list (§648, §747): the registration page's predicate, in `rowVerbsFor`.
+                outside: { onList: row.outsideCapacity, enabled: row.eventHiddenListEnabled },
               });
               const hidden = (
                 <>
@@ -1818,6 +1825,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                     ? { kind: "submit", icon: "memberOff", label: t("registrations.memberTick.clear"), formId: `member-${row.id}` }
                     : { kind: "submit", icon: "memberOn", label: t("registrations.memberTick.set"), formId: `member-${row.id}` },
                 );
+              }
+              if (verbs.includes("outsideMark")) {
+                items.push({ kind: "submit", icon: "hiddenList", label: t("registrations.outside.mark"), formId: `outside-${row.id}` });
+              }
+              if (verbs.includes("outsideUnmark")) {
+                items.push({ kind: "submit", icon: "hiddenList", label: t("registrations.outside.unmark"), formId: `outside-${row.id}` });
               }
               if (verbs.includes("cancel")) {
                 items.push({
@@ -1886,6 +1899,19 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                     >
                       {hidden}
                       <input type="hidden" name="direction" value={row.checkedInAt ? "undo" : "in"} />
+                    </ActionForm>
+                  )}
+                  {(verbs.includes("outsideMark") || verbs.includes("outsideUnmark")) && (
+                    <ActionForm
+                      id={`outside-${row.id}`}
+                      action={setOutsideCapacityAction}
+                      hidden
+                      // The registration page's dialog, word for word (§643, §648, §747): one function for both screens.
+                      confirm={outsideMarkConfirm(t, row, { cancel: words.cancel, emailLine: words.email(1) })}
+                    >
+                      {hidden}
+                      <input type="hidden" name="outside" value={row.outsideCapacity ? "false" : "true"} />
+                      <input type="hidden" name="listQuery" value={rowReturnQueryString} />
                     </ActionForm>
                   )}
                   {verbs.includes("cancel") && (

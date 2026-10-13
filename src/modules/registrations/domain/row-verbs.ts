@@ -2,7 +2,7 @@ import type { RegistrationStatus } from "@/db/schema/registrations";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { deriveAllowedResendMessageType } from "./resend";
-import { canTransition } from "./state-machine";
+import { canTransition, isTerminalStatus } from "./state-machine";
 
 /**
  * Which verbs a registration row offers, given its status and who is looking (§178).
@@ -48,6 +48,14 @@ export type RowVerb =
    */
   | "memberTick"
   /**
+   * «Pune pe lista de invitați speciali» / «Scoate de pe lista de invitați speciali» (§648, §747 amends where it is
+   * offered): the registration page's verb, from the list's «⋮». Same predicate as the page: the Administrator's, an
+   * active row, drawn to put on only while the event's «Folosește lista de invitați speciali» is on, and to take off
+   * for any row already on it. The action and the service refuse again.
+   */
+  | "outsideMark"
+  | "outsideUnmark"
+  /**
    * Erase the registration, and the person behind it when it was their last (BR-REQ-037-06, §180).
    *
    * Last, always, and the only verb here that offers itself in *every* state. That is the point
@@ -63,10 +71,25 @@ export type RowVerb =
    */
   | "erase";
 
+/**
+ * The special guests list's verb (§648), decided once for the registration's page and the list's «⋮»:
+ * the Administrator's, an active row only; "mark" while the event's switch is on and the row is off the
+ * list, "unmark" for any row on it (even with the switch off), nothing otherwise.
+ */
+export function specialListVerb(
+  status: RegistrationStatus,
+  role: StaffRole,
+  outside: { onList: boolean; enabled: boolean },
+): "mark" | "unmark" | null {
+  if (!canManageRegistrations(role) || isTerminalStatus(status)) return null;
+  if (outside.onList) return "unmark";
+  return outside.enabled ? "mark" : null;
+}
+
 export function rowVerbsFor(
   status: RegistrationStatus,
   role: StaffRole,
-  options: { checkedIn: boolean; bib?: { settled: boolean; printed: boolean } },
+  options: { checkedIn: boolean; bib?: { settled: boolean; printed: boolean }; outside?: { onList: boolean; enabled: boolean } },
 ): RowVerb[] {
   /*
     The desk's own verbs are every staff session's (§103). `canManageRegistrations` is what
@@ -115,6 +138,11 @@ export function rowVerbsFor(
 
   // The member tick (§645): changes no state and no place, so every state offers it.
   if (mayManage) verbs.push("memberTick");
+
+  // The special guests list (§648): `specialListVerb`, the same call the registration's page makes.
+  const special = options.outside ? specialListVerb(status, role, options.outside) : null;
+  if (special === "unmark") verbs.push("outsideUnmark");
+  else if (special === "mark") verbs.push("outsideMark");
 
   // Cancelling releases the place through the allocator and leaves an audit row (§67, §88).
   if (mayManage && canTransition(status, "CANCELLED")) verbs.push("cancel");

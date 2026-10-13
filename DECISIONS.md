@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.08-2026-10-13 -->
+<!-- PROJECT_BASELINE: BR-V3.09-2026-10-13 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.08-2026-10-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.09-2026-10-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -25964,3 +25964,37 @@ Baseline `BR-V3.08-2026-10-13`.
 **Tests.** `contact-page-feedback-first.test.ts` renders the page with and without the forms offered, in both languages; `contact-page-order.test.ts` pins the source order and the rule; `feedback.spec.ts` reads the door above the form.
 
 Baseline `BR-V3.08-2026-10-13`.
+
+## 747. The special guests list from the registrations list's «⋮», both ways
+
+**The owner, 2026-10-13:** «also I should be able to move people from and into that private list», and «DA pt toate» to a shortcut in the registrations list.
+
+This amends §648 (and §643) in one place only: where the verb is offered. Until now an Administrator put a registration on «Lista de invitați speciali», or took it off, only on that registration's own page. The list's row menu «⋮» now carries both entries, «Pune pe lista de invitați speciali» and «Scoate de pe lista de invitați speciali», each with the house's incognito glyph and a 44-pixel target.
+
+**One verb, one allocator.** The entries post the same Server Action as the page, `setOutsideCapacityAction` (→ `setOutsideCapacity`, the one allocator, audited), through a hidden form per row like every other verb of the menu; nothing about places is new. The server still asserts the Administrator's role, refuses putting anybody on the list of an event whose «Folosește lista de invitați speciali» is off, and refuses taking somebody off when no counted place is free, naming who holds the places. The action only learned where to go back: a form that carries the list's query returns to the list, as it stands, with the outcome; the page's form, which carries none, still returns to the registration's page.
+
+**One predicate.** What decides the verb is one pure function, `specialListVerb(status, role, { onList, enabled })` in `domain/row-verbs.ts`: the Administrator's, an active row only, «mark» while the event's switch is on and the row is off the list, «unmark» for any row on it. The registration's page calls it for its form and `rowVerbsFor` calls it for the menu's `outsideMark` / `outsideUnmark` (fed by the row's `outsideCapacity` and the event's switch, `eventHiddenListEnabled`, added to the list row). The confirmation is the page's, word for word: the body by the row's state (a waiting runner or an open offer is seated now, with the declaration's email; a test row names no email) moved into one function, `outsideMarkConfirm` (with `outsideMarkBody` under it), which both screens call: the titles, both bodies and the bold email line, gated on a real waiting or offered row, are written once. Organizer and Tehnic see no entry: the verb is the Administrator's.
+
+**A refusal on the list** says today's sentence: the list renders `NO_FREE_PLACE` with the six numbers the action put in its query (`noFreePlaceValues`, as the page does), and the list's return path drops those numbers before the next press.
+
+**After the press** the list comes back to the row's own page, the page number and every filter kept (the press from page 2 does not land on page 1, where the row's new chip would not be seen); it shows the row's chip «Invitat special» (or none) and the pills follow; the public cache is expired by the verb, as before.
+
+Refused: a second write path (a toggle on the row), a copy of the page's predicate or dialog, and a new transaction.
+
+Baseline `BR-V3.09-2026-10-13`.
+
+## 748. The printed race numbers follow «Cum arată numărul» too
+
+**The owner, 2026-10-13** (amends §735): «Mai am un bug la generarea de BIB, aparent când printez nu apare faza cu numerele cu 001 002».
+
+**What was wrong.** §735 writes the number through one formatter, and every path to paper already called it: the A4 sheet's PDF (`bibs-pdf.ts`, which also prints the desk's spares, the single bib of a registration's page and the members' pile), the bib picture (`bib-image.tsx`, both its sample and its per-registration answer), the bibs page's alt text, the start list, the urgent list, the desk, the emails. A test now proves the PDF's own text: «001» under «trei cifre», «0001» under «patru», «1» when the setting is off. What did not follow the setting — inferred from the code, not reproduced in a browser — was the bibs page the club prints from the browser: each bib is a picture asked of `/api/admin/events/<id>/bibs/preview?registration=…`, whose answer the browser keeps for an hour (`max-age=3600`) under an address that named the registration and nothing else. Choosing «001, 002, 003 — trei cifre» in the designer changed the event's design but not the address, so the page — and the paper printed from it — kept showing the bare numbers drawn before the change.
+
+**Decision.** The bibs page puts a stamp of what the pictures are drawn from into each address (`v=`, `domain/bib-stamp.ts#bibPictureStamp`, the shared `fnv1a` of `shared/hash.ts`, over the design, the band's colour, the title, the date and the partners): a changed «Cum arată numărul» — or colour, title, date or partner — is a new address and a fresh picture, an unchanged one is still served from the browser's cache. The route's cache header is unchanged, and no second formatter exists: the stamp only changes the address.
+
+**Printing paths checked.** The sheet's PDF route (all, members, others, spares, one per page): formatted, now tested. The bib picture route, sample and per-registration: formatted; stale by cache, fixed. The registration page's «Tipărește numărul» link: the sheet's route with one number, so the PDF. The desk's «Arată numărul» picture asked the same route with no stamp, so it could show a bare «1» for an hour too: its address now carries the event's number format (`v=`). The start list, the urgent list and the desk's alt text: formatted. The CSV and the spreadsheet: the stored integer, as §735 decided.
+
+**Open question for the owner.** Every PDF path already formatted on the branch's base; if he printed from «Descarcă» or «Tipărește numărul» rather than from the browser's page, this change does not alter what he saw — which button was it?
+
+**Not changed.** The numbers' assignment and their stored integer; the exports.
+
+Baseline `BR-V3.09-2026-10-13`.

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { registrationStatus, type RegistrationStatus } from "@/db/schema/registrations";
 import { deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
-import { rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
+import { rowVerbsFor, specialListVerb } from "@/modules/registrations/domain/row-verbs";
 import { canTransition } from "@/modules/registrations/domain/state-machine";
 
 /**
@@ -280,11 +280,50 @@ describe("BR-REQ-037-03 the member tick on the row", () => {
     }
   });
 
+  // The special guests list from the «⋮» (§648, §747): the registration page's predicate, in one function.
+  it("offers the special guests list by the page's predicate: an active row, putting on only with the event's switch on", () => {
+    const outside = (onList: boolean, enabled: boolean) => ({ checkedIn: false, outside: { onList, enabled } });
+    for (const status of ALL) {
+      const mark = rowVerbsFor(status, "ADMIN", outside(false, true));
+      const markOff = rowVerbsFor(status, "ADMIN", outside(false, false));
+      const unmark = rowVerbsFor(status, "ADMIN", outside(true, false));
+      if (status === "CANCELLED" || status === "EXPIRED") {
+        expect(mark, status).not.toContain("outsideMark");
+        expect(unmark, status).not.toContain("outsideUnmark");
+        continue;
+      }
+      expect(mark, status).toContain("outsideMark");
+      expect(markOff, status).not.toContain("outsideMark");
+      expect(markOff, status).not.toContain("outsideUnmark");
+      expect(unmark, status).toContain("outsideUnmark");
+      expect(unmark, status).not.toContain("outsideMark");
+    }
+  });
+
+  it("offers the special guests list to no role that may not manage registrations, and nowhere without the row's facts", () => {
+    for (const role of ["MEMBER", "CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV"] as const) {
+      const verbs = rowVerbsFor("CONFIRMED", role, { checkedIn: false, outside: { onList: true, enabled: true } });
+      expect(verbs, role).not.toContain("outsideMark");
+      expect(verbs, role).not.toContain("outsideUnmark");
+    }
+    expect(rowVerbsFor("CONFIRMED", "ADMIN", { checkedIn: false })).not.toContain("outsideMark");
+  });
+
   it("is never offered to a role that may not manage registrations — the Organizer reads the chip", () => {
     for (const role of ["MEMBER", "CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV"] as const) {
       for (const status of ALL) {
         expect(rowVerbsFor(status, role, { checkedIn: false }), `${role}/${status}`).not.toContain("memberTick");
       }
     }
+  });
+});
+
+describe("BR-REQ-037-07 the special guests list's one predicate (§648)", () => {
+  it("marks while the switch is on, unmarks for any row on the list, only for an active row and the Administrator", () => {
+    expect(specialListVerb("CONFIRMED", "ADMIN", { onList: false, enabled: true })).toBe("mark");
+    expect(specialListVerb("CONFIRMED", "ADMIN", { onList: false, enabled: false })).toBeNull();
+    expect(specialListVerb("WAITLISTED", "ADMIN", { onList: true, enabled: false })).toBe("unmark");
+    expect(specialListVerb("CANCELLED", "ADMIN", { onList: true, enabled: true })).toBeNull();
+    expect(specialListVerb("CONFIRMED", "MODERATOR", { onList: false, enabled: true })).toBeNull();
   });
 });
