@@ -2593,7 +2593,7 @@
         },
         "copyDelete": {
           "title": "Duplicate or delete the event",
-          "summary": "Duplicate as a draft · delete only without registrations"
+          "summary": "Duplicate as a draft · export as JSON · delete only without registrations"
         },
         "recurrence": {
           "title": "Recurrence",
@@ -2842,7 +2842,12 @@
       "hiddenListCounted": "Count the special guests too",
       "hiddenListCountedHelp": "Ticked: “Who's coming” and “confirmed” count the special guests too. Unticked: the numbers count only the race's places; the special guests come on top.",
       "hiddenListPublic": "Show special guests on the public list",
-      "hiddenListPublicHelp": "Ticked: a special guest who ticked “I want to appear” appears under “Who's coming”, with their number. Unticked: they appear on no public list; their place and number stay."
+      "hiddenListPublicHelp": "Ticked: a special guest who ticked “I want to appear” appears under “Who's coming”, with their number. Unticked: they appear on no public list; their place and number stay.",
+      "publicListClub": "Club on the public list",
+      "publicListClubHelp": "People type their club however they like. “Only {club}” shows it only for club members who typed it, as {club}; everyone else is left without a club.",
+      "publicListClubMembersOnly": "Only {club}",
+      "publicListClubAsTyped": "As they typed it",
+      "publicListClubHidden": "Don't show the club"
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -4529,18 +4534,21 @@
     },
     "eventTodos": {
       "title": "To do for the event's page",
-      "intro": "What the page still lacks; a row goes away when you fill its field. Plus the club's own rows for this date. Order: priority, due day, age.",
+      "intro": "What the page still lacks and what the team has to do.",
+      "introMore": "A row under “Missing from the page” goes away when you fill its field; press it to reach it. “Tasks” are the club's rows, at most {max} characters. Order: priority, due day, age.",
       "readOnly": "You can read the list; the Organizer, the Administrator and the Superadministrator write it. Ask them for any change.",
       "summary": "{count} to do",
       "summaryNone": "nothing to do",
-      "fromPage": "from the page",
+      "groupPage": "Missing from the page",
+      "groupOwn": "Tasks",
       "fill": "Open the field",
+      "fillRow": "Open the field: {text}",
       "filterLabel": "Which rows to show",
       "filterAll": "All",
       "filterMine": "Mine",
-      "listLabel": "To do for the event's page",
       "empty": "Nothing to do: the page has all it needs and the club has written nothing here.",
       "emptyMine": "Nothing open in your name.",
+      "noTasks": "No open tasks. Write one above.",
       "tick": "Tick: {text}",
       "untick": "Untick: {text}",
       "tickWord": "Tick",
@@ -4558,7 +4566,8 @@
       "deleteTitle": "Delete the row?",
       "deleteBody": "“{text}” leaves this event's list and this cannot be undone. The trail keeps who deleted it and what it said. If it is merely done, tick it instead of deleting it.",
       "add": {
-        "title": "Add a row",
+        "label": "Add a task",
+        "more": "More: who, due date",
         "save": "Add",
         "saving": "Adding…"
       },
@@ -7496,6 +7505,288 @@
       "familyPending": "Not switched on on this environment yet: the database keeps one registration per address per event. Until then, sending the form for another person only re-sends the first registration's email.",
       "network": "A save fails on an office laptop?",
       "networkLink": "Check the network"
+    },
+    "eventJson": {
+      "title": "Import an event (JSON)",
+      "intro": "Bring in an event from another site, from a file made with «Export the event (JSON)». The file holds only its configuration and its pictures' addresses, never registrations or people.",
+      "back": "Back to the events",
+      "listLink": "Import an event (JSON)",
+      "export": {
+        "button": "Export the event (JSON)",
+        "help": "Downloads the event's configuration as a JSON file, with no registrations or personal data. Bring it to another site from the events list. The export is recorded in the trail."
+      },
+      "choose": "Choose the .json file",
+      "chooseAgain": "Choose another file",
+      "chooseHelp": "A file made with «Export the event (JSON)», at most {size} KB.",
+      "reading": "Reading…",
+      "failed": "That did not work. Try again; if it repeats, check the file.",
+      "summary": {
+        "heading": "What the file holds",
+        "from": "Made in {environment}, version {baseline}, on {date}",
+        "when": "{day} ({zone})",
+        "whenNone": "Date to be announced",
+        "media": {
+          "one": "{count} picture or file",
+          "few": "{count} pictures or files",
+          "other": "{count} pictures or files"
+        },
+        "series": "The event was a date of a series, or its source. The series' rule is not applied: the copy is one date; you start the series yourself, in the editor."
+      },
+      "mode": {
+        "heading": "What do you want to do with it?"
+      },
+      "asNew": {
+        "title": "As a new event",
+        "help": "Creates a new draft, never published, with the same settings. The pictures are copied into this site's storage; whatever cannot be copied is left empty and listed afterwards.",
+        "slugs": "Page addresses: {ro} (RO) · {en} (EN)",
+        "suffixed": "One of the addresses was taken, so it ends in a number.",
+        "action": "Create the draft",
+        "working": "Creating…",
+        "done": "The draft was created."
+      },
+      "over": {
+        "title": "Over an existing event",
+        "help": "You first see what would change, then you confirm. It is applied through the editor's own save; registrations, invitations, numbers given and the publication state are not touched.",
+        "pick": "The event to write over",
+        "pickNone": "Choose an event…",
+        "option": "{title} — {day} — {status} — {registrations}",
+        "status": {
+          "DRAFT": "draft",
+          "IN_REVIEW": "in review",
+          "PUBLISHED": "published",
+          "ARCHIVED": "archived"
+        },
+        "registrations": {
+          "one": "{count} registration",
+          "few": "{count} registrations",
+          "other": "{count} registrations"
+        },
+        "diffHeading": "What changes ({count})",
+        "nothing": "The file and the event are the same: nothing changes.",
+        "now": "Now",
+        "incoming": "From the file",
+        "slugsKept": "The event has been public: its page addresses stay as they are, whatever the file's are.",
+        "mediaHeading": "Pictures and files",
+        "media": {
+          "same": "the same as the event's, not copied",
+          "copy": "will be copied",
+          "unverifiable": "cannot be verified (not copied)"
+        },
+        "published": "The event is published and stays published.",
+        "people": "The event has {count}; the registrations are not touched.",
+        "confirm": "I have read the differences above and I want to apply them.",
+        "production": {
+          "heading": "This is production",
+          "body": "The event «{title}» has {count}. Type its title below to confirm that you want to write over it.",
+          "label": "The event's title"
+        },
+        "action": "Apply over the event",
+        "working": "Applying…",
+        "done": {
+          "one": "Done: {count} field changed.",
+          "few": "Done: {count} fields changed.",
+          "other": "Done: {count} fields changed."
+        },
+        "offered": "The places added were offered to the waiting list: {count}."
+      },
+      "open": "Open the event",
+      "problems": {
+        "heading": "These could not be copied:",
+        "refused": "the address is not a picture or file of one of our sites",
+        "unverifiable": "the file gives no size and hash, so it cannot be verified",
+        "unreachable": "the address does not answer",
+        "tooLarge": "it is too large",
+        "sizeMismatch": "the size is not the one in the file",
+        "hashMismatch": "the hash is not the one in the file",
+        "notAPicture": "it is not a valid picture or GPX",
+        "noStorage": "this site has no storage for pictures yet"
+      },
+      "notes": {
+        "slugSuffixed": "The page address in {language} was taken: {slug} was used.",
+        "publicListOff": "The public participant list stayed off: the privacy notice that describes it is not yet in force here.",
+        "seriesNotApplied": "The series' rule in the file was not applied: the event is a single date."
+      },
+      "refusals": {
+        "tooLarge": "The file is too large for an event file.",
+        "notJson": "The file is not JSON.",
+        "notAnEventFile": "The file is not an event file made with «Export the event (JSON)».",
+        "unknownVersion": "The file is of a version this site does not read. Make it again with «Export the event (JSON)» from an up-to-date site.",
+        "invalid": "The file is ours, but some parts do not fit. The fields:"
+      },
+      "values": {
+        "empty": "—",
+        "yes": "yes",
+        "no": "no",
+        "picture": "a picture",
+        "pictureLoose": "a picture (to be checked)",
+        "pictures": {
+          "one": "{count} picture",
+          "few": "{count} pictures",
+          "other": "{count} pictures"
+        }
+      },
+      "roles": {
+        "cover": "The cover",
+        "bibHeader": "Race number: the header picture",
+        "bibSponsors": "Race number: the sponsors' strip",
+        "bibMemberHeader": "Member's number: the header picture",
+        "bibMemberCard": "Member's number: the background",
+        "text": "A picture in a text",
+        "gpx": "The GPX file"
+      },
+      "fields": {
+        "type": "Event type",
+        "surface": "Surface",
+        "timezone": "Time zone",
+        "start": {
+          "date": "Start date",
+          "time": "Start time"
+        },
+        "durationMinutes": "Duration (minutes)",
+        "raceStartsAt": "Race start",
+        "dateToBeAnnounced": "Date to be announced",
+        "timeToBeAnnounced": "Time to be announced",
+        "programme": "Programme (rows)",
+        "place": {
+          "name": "Place name",
+          "address": "Address",
+          "toBeAnnounced": "Place to be announced",
+          "mapUrl": "Map link",
+          "coordinates": {
+            "latitude": "Latitude",
+            "longitude": "Longitude"
+          }
+        },
+        "weather": {
+          "mode": "Weather"
+        },
+        "route": {
+          "url": "Route link",
+          "maps": "Strava and Garmin Connect maps",
+          "gpx": {
+            "name": "GPX file name",
+            "url": "GPX file"
+          }
+        },
+        "links": "Links and files",
+        "partners": "Partners",
+        "stravaEventUrl": "Strava event",
+        "facebookEventUrl": "Facebook event",
+        "measures": {
+          "distanceMeters": "Distance (m)",
+          "distanceEstimated": "Distance is approximate",
+          "elevationGainMeters": "Elevation gain (m)",
+          "elevationGainEstimated": "Elevation gain is estimated"
+        },
+        "difficultyLevel": "Difficulty (level 1 to 15)",
+        "nightOverride": "Night event",
+        "cost": {
+          "type": "Cost: kind",
+          "amount": "Cost: amount",
+          "url": "Cost: link"
+        },
+        "offersGroupRunDeclaration": "Optional declaration for the group run",
+        "isSpecial": "Special event",
+        "membersOnly": "Members only",
+        "cover": {
+          "url": "Cover (picture)",
+          "crop": "Cover (crop)"
+        },
+        "registration": {
+          "mode": "Registration mode",
+          "capacity": "Places",
+          "waitlist": {
+            "choice": "Waiting list",
+            "limit": "Waiting-list length"
+          },
+          "waitlistAutoOffer": "Free places offered automatically",
+          "opensAt": "Registration opens",
+          "opensSoon": "Registration opens soon",
+          "closesAt": "Registration closes",
+          "confirmationOpensDaysBefore": "Confirmation asked (days before)",
+          "confirmationDeadlineDaysBefore": "Confirmation owed (days before)",
+          "minAge": "Minimum age",
+          "reminderHoursBefore": "Reminder (hours before)",
+          "declaration": {
+            "key": "Declaration"
+          },
+          "external": {
+            "provider": "External organizer",
+            "url": "External registration link"
+          },
+          "kitShirt": "T-shirt in the kit",
+          "askHealthNote": "Health note asked"
+        },
+        "publicList": {
+          "names": "Public participant list",
+          "waitlist": "Waiting list is public",
+          "waitlistCount": "Waiting count shown publicly",
+          "count": "Count shown publicly",
+          "club": "Club on the public list"
+        },
+        "hiddenList": {
+          "enabled": "Special guests list",
+          "bibStart": "Special guests' numbers start at",
+          "counted": "Count the special guests list too",
+          "public": "Show special guests on the public list"
+        },
+        "bib": {
+          "startNumber": "First race number",
+          "colour": "Number colour",
+          "design": {
+            "showName": "Bib: participant's name",
+            "showEventTitle": "Bib: event title",
+            "showDate": "Bib: date",
+            "showLogo": "Bib: logo",
+            "numberScale": "Bib: number size",
+            "numberFormat": "Bib: number format",
+            "namePosition": "Bib: name position",
+            "headerImageSrc": "Bib: header picture",
+            "sponsorImageSrc": "Bib: sponsors' strip",
+            "headerImageCrop": "Bib: header picture crop",
+            "sponsorImageCrop": "Bib: strip crop",
+            "cutMarks": "Bib: cut marks",
+            "showEmail": "Bib: club email",
+            "showPartners": "Bib: partners",
+            "showEventInFooter": "Bib: event in the footer",
+            "showWebsite": "Bib: website address",
+            "footerText": "Bib: the club's own line",
+            "showProfile": "Bib: route profile",
+            "showDistance": "Bib: distance badge",
+            "showEmergency": "Bib: emergency phone",
+            "emergencyPhone": "Bib: emergency number",
+            "emergencyUpsideDown": "Bib: phone upside down",
+            "numberStubs": "Bib: number on the footer's ends",
+            "sponsorPlace": "Bib: sponsors' band place",
+            "member": {
+              "enabled": "Member's bib: on",
+              "style": "Member's bib: style",
+              "bandColour": "Member's bib: colour",
+              "headerImageSrc": "Member's bib: header picture",
+              "headerImageCrop": "Member's bib: header crop",
+              "cardImageSrc": "Member's bib: background picture",
+              "cardImageCrop": "Member's bib: background crop",
+              "label": "Member's bib: the line on the band",
+              "mark": "Member's bib: the mark"
+            }
+          }
+        },
+        "translations": {
+          "slug": "Page address",
+          "title": "Title",
+          "excerpt": "Summary (plain text)",
+          "excerptBody": "Summary",
+          "checklist": "What to bring",
+          "body": "Description",
+          "rules": "Rules",
+          "schedule": "Programme notes",
+          "routeDescription": "Route description",
+          "seoTitle": "Search title",
+          "seoDescription": "Search description",
+          "discountNote": "The club's discount",
+          "weatherNote": "Weather text"
+        }
+      }
     },
     "erase": {
       "backToEvent": "Back to the event",

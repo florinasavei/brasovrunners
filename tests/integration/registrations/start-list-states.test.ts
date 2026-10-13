@@ -91,7 +91,7 @@ async function createEvent(waitlistPublic = true): Promise<PublicEvent> {
     { eventId: event.id, locale: "en", slug: "cross-states", title: "Cross" },
   ]);
   // The two dates the list's period counts from (§421), beside what the list itself reads.
-  return { id: event.id, participantListVisibility: "NAMES", waitlistPublic: event.waitlistPublic, startsAt: event.startsAt, endsAt: event.endsAt } as unknown as PublicEvent;
+  return { id: event.id, participantListVisibility: "NAMES", publicListClub: "as_typed", waitlistPublic: event.waitlistPublic, startsAt: event.startsAt, endsAt: event.endsAt } as unknown as PublicEvent;
 }
 
 async function register(
