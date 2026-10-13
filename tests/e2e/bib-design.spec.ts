@@ -151,6 +151,14 @@ test.describe("§664 the members' number, designed in the panel", () => {
     await expect(page.getByTestId("bib-member-label-count")).toHaveText("3/24");
     await expect(preview).toHaveAttribute("src", /[?&]memberLabel=BVR(&|$)/, { timeout: 10_000 });
 
+    // «Semn de membru pe număr» (§NNN): off until ticked, then it travels in the preview's address.
+    const mark = members.getByRole("checkbox", { name: "Semn de membru pe număr" });
+    expect((await mark.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await expect(mark).not.toBeChecked();
+    await expect(preview).toHaveAttribute("src", /[?&]memberMark=0(&|$)/, { timeout: 10_000 });
+    await mark.check();
+    await expect(preview).toHaveAttribute("src", /[?&]memberMark=1(&|$)/, { timeout: 10_000 });
+
     const picture = await page.request.get((await preview.getAttribute("src")) as string);
     expect(picture.status()).toBe(200);
     expect(picture.headers()["content-type"]).toBe("image/png");

@@ -29,6 +29,7 @@ import Panel from "@/shared/ui/Panel";
 import BibDesignPreview from "./BibDesignPreview";
 import BibPictureField, { type BibPictureLabels } from "./BibPictureField";
 import BibFooterTextField from "./BibFooterTextField";
+import OnlyWhenTicked from "./OnlyWhenTicked";
 import { BIB_COLOURS } from "./bib-colours";
 
 /**
@@ -326,6 +327,10 @@ export default async function BibDesignPanel({
             >
               {t("editor.bibDesign.member.enabled")}
             </CheckboxField>
+            {/* Everything the members' number decides shows only while it is on (the house's
+                OnlyWhenTicked: hidden, still posted), the preview with it. */}
+            <OnlyWhenTicked name="event.bibDesign.member.enabled" initiallyTicked={design.member.enabled}>
+            <Stack spacing={1}>
             {eventId && memberSrc && (
               <BibDesignPreview
                 eventId={eventId}
@@ -339,7 +344,8 @@ export default async function BibDesignPanel({
                 }}
               />
             )}
-            {/* «Fundalul» (§NNN): the whole card, or the header alone. While the members' bib is off the
+            {/* «Fundalul» (§NNN): the whole card, or «Același fundal ca restul numerelor» — the header
+                alone, the race's own background kept. While the members' bib is off the
                 select starts on the whole card, whatever was stored; once it is on, the stored choice. */}
             <RecallField
               select
@@ -389,6 +395,16 @@ export default async function BibDesignPanel({
               help={t("editor.bibDesign.member.labelHelp", { max: BIB_MEMBER_LABEL_MAX, club: CLUB_NAME })}
               countTestId="bib-member-label-count"
             />
+            {/* «Semn de membru pe număr» (§NNN): a check mark on every member's number, off until ticked. */}
+            <CheckboxField
+              name="event.bibDesign.member.mark"
+              defaultChecked={design.member.mark}
+              help={t("editor.bibDesign.member.markHelp")}
+            >
+              {t("editor.bibDesign.member.mark")}
+            </CheckboxField>
+            </Stack>
+            </OnlyWhenTicked>
           </Stack>
         </Box>
 

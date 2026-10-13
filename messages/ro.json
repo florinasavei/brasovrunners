@@ -2282,11 +2282,13 @@
           "enabledHelp": "Formularul întreabă „Vreau numărul de membru” sub bifa de membru {club}. Se tipărește doar pentru o adresă a unui cont din «Echipa». Numărul rămâne în aceeași ordine.",
           "previewAlt": "Numărul de concurs al unui membru, cu designul membrilor, pentru un alergător cu numele „Nume Prenume”",
           "previewCaption": "Previzualizare — numărul unui membru",
+          "mark": "Semn de membru pe număr",
+          "markHelp": "Bifat: fiecare număr de membru poartă o bifă ✓ sub antet. Debifat: fără bifă.",
           "style": "Fundalul numărului de membru",
-          "styleHelp": "„Tot numărul”: fundal pe tot numărul, cifre și nume albe, eticheta pe o bandă portocalie. „Doar banda de sus”: numărul obișnuit, cu altă bandă sus.",
+          "styleHelp": "„Tot numărul”: fundal pe tot numărul, cifre albe. „Același fundal ca restul numerelor”: numărul obișnuit, doar cu antet propriu și etichetă.",
           "styles": {
             "card": "Tot numărul — degradeul clubului, o culoare sau o fotografie",
-            "band": "Doar banda de sus"
+            "band": "Același fundal ca restul numerelor — doar antet propriu"
           },
           "bandOnly": "{colour} — doar pe bandă",
           "cardImageSrc": "Fotografie pe tot numărul, pentru membri",

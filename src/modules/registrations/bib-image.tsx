@@ -27,6 +27,7 @@ import {
   BIB_LAYOUT,
   BIB_MARGIN,
   bibNumberPoints,
+  MEMBER_MARK_CHECK,
 } from "./bib-geometry";
 import { formatRaceNumber } from "./domain/race-number";
 
@@ -418,6 +419,38 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
           >
             {memberLabel}
           </div>
+        ) : null}
+        {/* The member mark (§NNN), the sheet's ring and check at the sheet's points: an SVG in the
+            number's own ink, absolute at the card's left inset under the header. */}
+        {asMember && design.member.mark ? (
+          <svg
+            width={px(L.memberMarkSize)}
+            height={px(L.memberMarkSize)}
+            viewBox={`0 0 ${L.memberMarkSize} ${L.memberMarkSize}`}
+            data-testid="bib-member-mark"
+            style={{
+              position: "absolute",
+              top: px(BIB_MARGIN + L.bandHeight + L.memberMarkTop) - PAPER_EDGE,
+              left: px(BIB_MARGIN + L.inset) - PAPER_EDGE,
+            }}
+          >
+            <circle
+              cx={L.memberMarkSize / 2}
+              cy={L.memberMarkSize / 2}
+              r={L.memberMarkSize / 2 - L.memberMarkWeight / 2}
+              fill="none"
+              stroke={ink}
+              strokeWidth={L.memberMarkWeight}
+            />
+            <path
+              d={MEMBER_MARK_CHECK.map(([x, y], index) => `${index === 0 ? "M" : "L"}${x * L.memberMarkSize} ${y * L.memberMarkSize}`).join(" ")}
+              fill="none"
+              stroke={ink}
+              strokeWidth={L.memberMarkWeight}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         ) : null}
         {design.namePosition === "above" ? name : null}
         {/* The number, centred on what the card has left, as the sheet centres it. */}

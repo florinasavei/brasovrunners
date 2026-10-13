@@ -208,6 +208,7 @@ describe("§249 the bib's design, saved and read back", () => {
       cardImageSrc: PICTURE,
       cardImageCrop: crop,
       label: `Membru ${"B".repeat(17)}`,
+      mark: false,
     });
   });
 

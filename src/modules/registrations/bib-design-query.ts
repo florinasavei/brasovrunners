@@ -41,6 +41,7 @@ const MEMBER_QUERY = {
   cardImageSrc: "memberCardImageSrc",
   cardImageCrop: "memberCardImageCrop",
   label: "memberLabel",
+  mark: "memberMark",
 } as const;
 
 /**
@@ -90,6 +91,8 @@ export type BibMemberFormValues = {
   cardImageCrop: BibCropValue;
   /** As typed: the schema keeps it to one line and `BIB_MEMBER_LABEL_MAX`. */
   label: string;
+  /** «Semn de membru pe număr» (§NNN). */
+  mark: boolean;
 };
 
 /** The members' fields' prefix inside the panel's (§664): `event.bibDesign.member.*`. */
@@ -155,6 +158,7 @@ export function readBibDesignForm(get: (name: string) => string | null): BibDesi
       cardImageSrc: field("member.cardImageSrc")?.trim() || null,
       cardImageCrop: field("member.cardImageCrop")?.trim() || null,
       label: field("member.label") ?? "",
+      mark: field("member.mark") === "on",
     },
   };
 }
@@ -201,6 +205,7 @@ export function bibDesignSearchParams(values: BibDesignFormValues, into = new UR
     if (crop) into.set(MEMBER_QUERY.cardImageCrop, typeof crop === "string" ? crop : JSON.stringify({ x: crop.x, y: crop.y, w: crop.w, h: crop.h }));
   }
   if (member.label.trim()) into.set(MEMBER_QUERY.label, member.label);
+  into.set(MEMBER_QUERY.mark, member.mark ? "1" : "0");
   return into;
 }
 
@@ -247,6 +252,7 @@ export function bibDesignValuesFromQuery(params: URLSearchParams): Partial<BibDe
     cardImageSrc: params.get(MEMBER_QUERY.cardImageSrc) || null,
     cardImageCrop: params.get(MEMBER_QUERY.cardImageCrop) || null,
     label: params.get(MEMBER_QUERY.label) ?? "",
+    mark: params.get(MEMBER_QUERY.mark) === "1",
   };
   return values;
 }

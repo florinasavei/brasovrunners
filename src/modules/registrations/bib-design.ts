@@ -177,6 +177,8 @@ export const bibMemberSchema = z
       .string()
       .transform((value) => bibFooterText(value, BIB_MEMBER_LABEL_MAX))
       .catch(""),
+    /** «Semn de membru pe număr» (§NNN): a check mark on every member's number; off until the club ticks it. */
+    mark: z.boolean().catch(false),
   })
   .strict()
   // A crop belongs to its picture (§560), here as in the main header.
@@ -197,6 +199,7 @@ export const DEFAULT_BIB_MEMBER_DESIGN: BibMemberDesign = {
   cardImageSrc: null,
   cardImageCrop: null,
   label: "",
+  mark: false,
 };
 
 /**

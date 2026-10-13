@@ -16,7 +16,7 @@ import {
 } from "./bib-design";
 import { bibFooterLines, bibFooterParts } from "./bib-footer";
 import { BIB_PICTURE_BOX, type BibPictureSlot, bibPictureDrawing } from "./bib-picture-frame";
-import { A4_PAGE, BIB_CARD, BIB_FOOTER_LINE, BIB_LAYOUT, BIB_MARGIN, BIB_PAPER, bibNumberPoints } from "./bib-geometry";
+import { A4_PAGE, BIB_CARD, BIB_FOOTER_LINE, BIB_LAYOUT, BIB_MARGIN, BIB_PAPER, bibNumberPoints, MEMBER_MARK_CHECK } from "./bib-geometry";
 import type { BibRow } from "./bibs";
 import { formatRaceNumber } from "./domain/race-number";
 
@@ -456,6 +456,25 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       doc
         .fillColor(header.bandText)
         .text(header.label, right - labelWidth, top + L.memberTagTop + (L.memberTagHeight - labelHeight) / 2, { lineBreak: false });
+    }
+
+    /*
+      The member mark (§NNN): a ring with a check in it, in the number's own ink, at the card's left
+      inset under the header (`BIB_LAYOUT.memberMark*`) — only on a member's number, only when ticked.
+    */
+    if (row.member === true && design.member.enabled && design.member.mark) {
+      const size = L.memberMarkSize;
+      const markLeft = left + L.inset;
+      const markTop = top + L.bandHeight + L.memberMarkTop;
+      doc.save();
+      doc.lineWidth(L.memberMarkWeight).strokeColor(ink).lineJoin("round").lineCap("round");
+      doc.circle(markLeft + size / 2, markTop + size / 2, size / 2 - L.memberMarkWeight / 2).stroke();
+      MEMBER_MARK_CHECK.forEach(([x, y], index) => {
+        if (index === 0) doc.moveTo(markLeft + x * size, markTop + y * size);
+        else doc.lineTo(markLeft + x * size, markTop + y * size);
+      });
+      doc.stroke();
+      doc.restore();
     }
 
     /*

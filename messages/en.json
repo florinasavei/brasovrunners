@@ -2282,11 +2282,13 @@
           "enabledHelp": "The form asks “I want the members' number” under the {club} member tick. It prints only for an address of an account on «Staff». The number keeps its order.",
           "previewAlt": "A member's race number, in the members' design, for a runner named “Nume Prenume”",
           "previewCaption": "Preview — a member's number",
+          "mark": "Member mark on the number",
+          "markHelp": "Ticked: every member's number carries a check mark ✓ under the header. Unticked: no mark.",
           "style": "The members' number background",
-          "styleHelp": "\"The whole card\": a background across the number, white digits and name, the label on an orange stripe. \"Top band only\": the ordinary number with another top band.",
+          "styleHelp": "\"The whole card\": a background across the number, white digits. \"Same background as the other numbers\": the ordinary number, only its own header and label.",
           "styles": {
             "card": "The whole card — the club's gradient, a colour or a photograph",
-            "band": "Top band only"
+            "band": "Same background as the other numbers — own header only"
           },
           "bandOnly": "{colour} — band only",
           "cardImageSrc": "Photograph across the whole card, for members",

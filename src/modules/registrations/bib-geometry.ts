@@ -108,7 +108,26 @@ export const BIB_LAYOUT = {
   memberStripeHeight: 20,
   memberStripeSize: 10,
   memberStripeSpacing: 1.2,
+  /**
+   * The member mark (§NNN): a ring `memberMarkSize` points across with a check mark in it, stroked
+   * `memberMarkWeight` thick, at the card's left inset, `memberMarkTop` under the header's foot —
+   * clear of the number (centred, at least 100 points from each side even at five digits' widest) and
+   * of the name (centred, cut well before the inset). Large enough to read at A5 and at a half of it.
+   */
+  memberMarkSize: 26,
+  memberMarkTop: 12,
+  memberMarkWeight: 2.4,
 } as const;
+
+/**
+ * The check inside the member mark, as fractions of the mark's box: three points of one stroke,
+ * drawn by the sheet with lines and by the picture with an SVG path, so the two cannot differ.
+ */
+export const MEMBER_MARK_CHECK = [
+  [0.27, 0.53],
+  [0.43, 0.69],
+  [0.74, 0.33],
+] as const;
 
 /**
  * The small print's line (§317): across the card less the inset on each side — 595.28 − 2 × 18 −
