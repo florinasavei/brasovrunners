@@ -7443,7 +7443,7 @@
           "unverifiable": "cannot be verified (not copied)"
         },
         "published": "The event is published and stays published.",
-        "people": "The event has {count}; they are not touched.",
+        "people": "The event has {count}; the registrations are not touched.",
         "confirm": "I have read the differences above and I want to apply them.",
         "production": {
           "heading": "This is production",
@@ -7452,7 +7452,11 @@
         },
         "action": "Apply over the event",
         "working": "Applying…",
-        "done": "Done: {count} fields changed.",
+        "done": {
+          "one": "Done: {count} field changed.",
+          "few": "Done: {count} fields changed.",
+          "other": "Done: {count} fields changed."
+        },
         "offered": "The places added were offered to the waiting list: {count}."
       },
       "open": "Open the event",

@@ -7443,7 +7443,7 @@
           "unverifiable": "nu pot fi verificate (nu se copiază)"
         },
         "published": "Evenimentul este publicat și rămâne publicat.",
-        "people": "Evenimentul are {count}; ele nu se ating.",
+        "people": "Evenimentul are {count}; înscrierile nu se ating.",
         "confirm": "Am citit diferențele de mai sus și vreau să le aplic.",
         "production": {
           "heading": "Aceasta este producția",
@@ -7452,7 +7452,11 @@
         },
         "action": "Aplică peste eveniment",
         "working": "Se aplică…",
-        "done": "Gata: {count} câmpuri schimbate.",
+        "done": {
+          "one": "Gata: {count} câmp schimbat.",
+          "few": "Gata: {count} câmpuri schimbate.",
+          "other": "Gata: {count} de câmpuri schimbate."
+        },
         "offered": "Locurile adăugate au fost oferite listei de așteptare: {count}."
       },
       "open": "Deschide evenimentul",

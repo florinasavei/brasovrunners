@@ -238,6 +238,9 @@ export const eventFileSchema = z
 
 export type EventFile = z.infer<typeof eventFileSchema>;
 
+/** The file as it is downloaded: readable, two spaces, a newline at the end. The size the reader measures is this one's. */
+export const serializeEventFile = (file: EventFile): string => `${JSON.stringify(file, null, 2)}\n`;
+
 /** Why a file was refused, as a code the page says in words (`Admin.eventJson.refusals.<code>`). */
 export type EventFileRefusal = "tooLarge" | "notJson" | "notAnEventFile" | "unknownVersion" | "invalid";
 

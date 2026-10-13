@@ -102,7 +102,7 @@ test.describe.serial("An event as a JSON file", () => {
     await expect(apply).toBeEnabled();
     expect((await apply.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(43.5);
     await apply.click();
-    await expect(page.getByTestId("event-json-result")).toContainText("Gata: 1 câmpuri schimbate");
+    await expect(page.getByTestId("event-json-result")).toContainText("Gata: 1 câmp schimbat");
     await page.getByTestId("event-json-open").click();
     await expect(page).toHaveURL(new RegExp(`/admin/events/${importedId}`));
     await hydrated(page);

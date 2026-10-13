@@ -1144,6 +1144,11 @@ does not know, so nothing of the kind can be added by hand either.
 | The pictures and the GPX that differ, by the hash of their bytes (the same photograph is not copied again) | The publication state (a published event stays published), the status (a cancellation is its own act), the featured mark |
 | The cover, the bib design and the texts of both languages | A published event's page addresses, and a series' rule |
 
+**It tells nobody.** A change that reaches people already registered — a new date, another place — is
+announced from the editor's «Anunță participanții despre schimbare», which an import never presses.
+The pictures an import copied for a save that was then refused are stored pictures nothing names; the
+pictures' sweep takes them after a week.
+
 ### When it refuses, and what to do
 
 - **«Fișierul nu e un fișier de eveniment…» / an unknown version** — make the file again from a site that is

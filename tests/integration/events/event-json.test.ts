@@ -321,6 +321,24 @@ describe("the file an event is exported as", () => {
     expect(Object.keys(file.event.registration)).not.toContain("participants");
   });
 
+  it("is not made when this release could not read it back: too many pictures, or too large", async () => {
+    const { event } = await seedRace({}, {}, false);
+    const picture = (index: number) => ({ type: "image", attrs: { src: `/api/media/test/${(index + 10).toString(16).padStart(8, "0")}-0a1b-4c3d-8a1b-0a1b2c3d4e5f/web.webp` } });
+    await db
+      .update(eventTranslations)
+      .set({ bodyJson: { type: "doc", content: Array.from({ length: 61 }, (_, index) => picture(index)) } })
+      .where(and(eq(eventTranslations.eventId, event.id), eq(eventTranslations.locale, "ro")));
+    expect(await codeOf(exportEvent(db, { actor: admin, eventId: event.id }))).toBe("VALIDATION_ERROR");
+
+    await db
+      .update(eventTranslations)
+      .set({ bodyJson: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "x".repeat(800_000) }] }] } })
+      .where(and(eq(eventTranslations.eventId, event.id), eq(eventTranslations.locale, "ro")));
+    expect(await codeOf(exportEvent(db, { actor: admin, eventId: event.id }))).toBe("VALIDATION_ERROR");
+    // Nothing was recorded for a file that was not made.
+    expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "event.exported"))).toHaveLength(0);
+  });
+
   it("is refused for a role below Administrator, and for an event that does not exist", async () => {
     const { event } = await seedRace();
     for (const role of ["MEMBER", "CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV"] as const) {

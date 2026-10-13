@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { exportEvent } from "@/modules/content/events/transfer/export";
+import { serializeEventFile } from "@/modules/content/events/transfer/file-format";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
@@ -28,7 +29,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 
   try {
     const { file, fileName } = await exportEvent(getDb(), { actor, eventId: id });
-    return new NextResponse(`${JSON.stringify(file, null, 2)}\n`, {
+    return new NextResponse(serializeEventFile(file), {
       headers: {
         "Content-Type": "application/json; charset=utf-8",
         "Content-Disposition": `attachment; filename="${fileName}"`,

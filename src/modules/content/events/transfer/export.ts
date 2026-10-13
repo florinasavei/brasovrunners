@@ -27,7 +27,16 @@ import { getStorage, type Storage } from "@/modules/media/storage";
 import { waitlistChoiceOf } from "../waitlist-choice";
 import { savedDurationMinutes } from "../duration";
 import { type EditableEvent, type EditableTranslation, findCoverPicture, listTranslationsForEvent } from "../repository";
-import { EVENT_FILE_FORMAT, EVENT_FILE_VERSION, type EventConfig, type EventFile, type TranslationConfig } from "./file-format";
+import {
+  EVENT_FILE_FORMAT,
+  EVENT_FILE_VERSION,
+  type EventConfig,
+  type EventFile,
+  MAX_EVENT_FILE_BYTES,
+  MAX_EVENT_FILE_MEDIA,
+  serializeEventFile,
+  type TranslationConfig,
+} from "./file-format";
 import { collectMediaRefs, describeMedia, mapMediaUrls, readStoredMedium } from "./media";
 
 /**
@@ -226,6 +235,10 @@ export async function exportEvent<T extends Record<string, unknown>>(
   const storage = storageOrNull();
   const refs = collectMediaRefs(read.config);
   const media = await describeMedia(refs, async (ref) => (storage ? readStoredMedium(storage, ref) : null));
+  // A file this release could not read back is not made: said now, not at the other site.
+  if (media.length > MAX_EVENT_FILE_MEDIA) {
+    throw new DomainError("VALIDATION_ERROR", `the event names ${media.length} pictures and files; a file takes at most ${MAX_EVENT_FILE_MEDIA}`);
+  }
   const rule = readRepeatRule(read.event.repeatRule);
   const file: EventFile = {
     format: EVENT_FILE_FORMAT,
@@ -239,6 +252,10 @@ export async function exportEvent<T extends Record<string, unknown>>(
     event: read.config,
     media,
   };
+  const bytes = Buffer.byteLength(serializeEventFile(file));
+  if (bytes > MAX_EVENT_FILE_BYTES) {
+    throw new DomainError("VALIDATION_ERROR", `the event's file would be ${Math.round(bytes / 1000)} KB; a file takes at most ${Math.round(MAX_EVENT_FILE_BYTES / 1000)} KB`);
+  }
 
   await recordAuditEvent(db, {
     actorStaffUserId: input.actor.id,

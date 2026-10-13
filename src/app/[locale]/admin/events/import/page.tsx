@@ -16,6 +16,8 @@ import { env } from "@/shared/config/env";
 type Props = { params: Promise<{ locale: string }> };
 
 export const dynamic = "force-dynamic";
+/** The Server Actions this page calls fetch, check and store a handful of pictures; the platform's ten seconds are not enough (the pictures' upload routes ask the same). */
+export const maxDuration = 60;
 
 const FORMS = ["one", "few", "other"] as const;
 
@@ -85,7 +87,7 @@ export default async function ImportEventPage({ params }: Props) {
     overProductionLabel: t("eventJson.over.production.label"),
     overAction: t("eventJson.over.action"),
     overWorking: t("eventJson.over.working"),
-    overDone: raw("eventJson.over.done"),
+    overDone: counted("eventJson.over.done"),
     overOffered: raw("eventJson.over.offered"),
     open: t("eventJson.open"),
     mediaProblemsHeading: t("eventJson.problems.heading"),

@@ -69,7 +69,7 @@ export type EventImportWords = {
   overProductionLabel: string;
   overAction: string;
   overWorking: string;
-  overDone: string;
+  overDone: Record<"one" | "few" | "other", string>;
   overOffered: string;
   open: string;
   mediaProblemsHeading: string;
@@ -483,7 +483,7 @@ export default function EventImportPanel({
       {applied && (
         <Stack spacing={1.5} data-testid="event-json-result">
           <Alert severity="success">
-            {fill(words.overDone, { count: applied.changed.length })}
+            {form(applied.changed.length, words.overDone)}
             {applied.offered > 0 ? ` ${fill(words.overOffered, { count: applied.offered })}` : ""}
           </Alert>
           {mediaProblems(applied)}
