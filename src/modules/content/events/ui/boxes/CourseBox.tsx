@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import { getLocale, getTranslations } from "next-intl/server";
 import { calendarDayWords } from "@/i18n/dates";
@@ -13,6 +14,7 @@ import { env } from "@/shared/config/env";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
 import CheckboxField from "@/shared/ui/CheckboxField";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import Panel from "@/shared/ui/Panel";
 import { eventInputConstraints } from "../../constraints";
 import { savedDurationMinutes } from "../../duration";
@@ -24,6 +26,9 @@ import { DEFAULT_TIMEZONE } from "./WhenBox";
 import { RouteDescriptionFields } from "../TranslationFields";
 import { BoxNote, type BoxProps, type LanguageEntry, summaryWords } from "./box-kit";
 import { LanguageTabs } from "./TextBoxes";
+
+/** The glyph before «Deschide puncte de control»: the edit verb's, as the to-do card's «Deschide câmpul» wears it (§318). */
+const CheckpointsGlyph = ACTION_ICONS.edit;
 
 /**
  * "Traseul" (§350, §358, §406): its own card, where the page first draws what it holds — the
@@ -234,6 +239,18 @@ export default async function CourseBox({
           maxRows={4}
           {...textFieldConstraints(eventInputConstraints("routeStrava"), { spellCheck: false, autoCapitalize: "off", autoCorrect: "off" })}
         />
+        {/* «Puncte de control» (§NNN) are their own card, beside this form and not in it (HTML forms cannot nest): the
+            house's in-page link (MUI Link, as `MissingForPublish`), which the browser's own hash change opens the folds
+            around (`OpenFoldFromHash`, §336). */}
+        {event && (
+          <Box>
+            <BoxNote>{t("checkpoints.courseNote")}</BoxNote>
+            <Link href="#box-checkpoints" variant="body2" data-testid="course-checkpoints-link" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minHeight: 44 }}>
+              <CheckpointsGlyph aria-hidden fontSize="small" />
+              {t("checkpoints.courseLink")}
+            </Link>
+          </Box>
+        )}
         {routeDescription}
       </Stack>
     </Panel>

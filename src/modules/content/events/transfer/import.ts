@@ -11,6 +11,9 @@ import { countRegistrationsForEvent } from "@/modules/registrations/repository";
 import { canTransferEvents } from "@/modules/staff-identity/domain/roles";
 import { getStorage, type Storage } from "@/modules/media/storage";
 import { readRouteGpx, type RouteGpx } from "@/modules/events/domain/route-gpx";
+import { fromWallTimeInput, toWallTimeInput } from "@/modules/events/domain/zoned-time";
+import { replaceCheckpoints } from "@/modules/event-checkpoints/checkpoints";
+import { type CheckpointInput, CheckpointRefusal, checkpointContext, clockMinutes, prepareCheckpoints } from "@/modules/event-checkpoints/domain/checkpoint";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import { missingPublicFields, translationFieldsSchema } from "../fields";
@@ -194,6 +197,64 @@ async function resolveMedia<T extends Record<string, unknown>>(
   };
 }
 
+// --- The route's checkpoints ------------------------------------------------------------------
+
+/**
+ * The file's checkpoints as rows to write (§NNN), held to the editor's card's own rules against the
+ * file's event — a kilometre within the typed distance, cut-offs after the start (the gun's on a race,
+ * else the event's), not after the end and in order along the route — **before anything is written**,
+ * so a file whose list the card would refuse is refused whole, naming the rule, and no half-imported
+ * event is left behind. The GPX's own length is not read here (the store is not asked before the copy);
+ * the typed distance is the length the card measures against first anyway.
+ */
+export function importedCheckpoints(config: EventConfig): Omit<CheckpointInput, "id">[] {
+  if (config.route.checkpoints.length === 0) return [];
+  const zone = config.timezone;
+  const eventStart = config.start.date && config.start.time ? fromWallTimeInput(`${config.start.date}T${config.start.time}`, zone) : null;
+  const gun = config.type === "RACE" && config.raceStartsAt ? new Date(config.raceStartsAt) : null;
+  const start = gun ?? eventStart;
+  // «Durata» counts from the gun on a race that has one (`duration.ts#durationBase`), as the save stores the end.
+  const endsAt = start && config.durationMinutes ? new Date(start.getTime() + config.durationMinutes * 60_000) : null;
+  const context = checkpointContext({
+    distanceMeters: config.measures.distanceMeters,
+    gpxMeters: null,
+    start,
+    endsAt,
+    wallMinutesOf: (instant) => clockMinutes(toWallTimeInput(instant, zone).slice(11, 16)),
+  });
+  try {
+    return prepareCheckpoints(
+      config.route.checkpoints.map((row, index) => ({
+        id: "",
+        nameRo: row.name.ro,
+        nameEn: row.name.en,
+        km: String(row.km),
+        kinds: row.kinds,
+        cutoff: row.cutoff ?? "",
+        noteRo: row.note.ro ?? "",
+        noteEn: row.note.en ?? "",
+        remove: false,
+        index,
+      })),
+      context,
+    ).map((row) => ({
+      nameRo: row.nameRo,
+      nameEn: row.nameEn,
+      km: row.km,
+      kinds: row.kinds,
+      cutoff: row.cutoff,
+      noteRo: row.noteRo,
+      noteEn: row.noteEn,
+    }));
+  } catch (error) {
+    if (!(error instanceof CheckpointRefusal)) throw error;
+    const said = Object.entries(error.values)
+      .map(([key, value]) => `${key} ${value}`)
+      .join(", ");
+    throw new DomainError("VALIDATION_ERROR", `route.checkpoints: the file's checkpoints break the editor's rule ${error.reason} (${said})`, ["route.checkpoints"]);
+  }
+}
+
 // --- What the declaration, the slugs and the public list become here ---------------------------
 
 async function declarationIdFor<T extends Record<string, unknown>>(db: Database<T>, key: RaceDeclarationKey | null, now: Date): Promise<string | null> {
@@ -255,6 +316,8 @@ export async function importEventAsNew<T extends Record<string, unknown>>(db: Da
   const noticeInForce = names ? Boolean(await findCurrentApprovedVersionId(db, "PRIVACY_NOTICE", now)) : true;
   if (names && !noticeInForce) notes.push({ code: "publicListOff" });
 
+  // The checkpoints are held to the card's rules first: a list the card would refuse refuses the file, before any copy.
+  const checkpoints = importedCheckpoints(file.event);
   const resolved = await resolveMedia(db, { actor: input.actor, file, fetchImpl: input.fetchImpl, now });
   const declarationDocumentId = await declarationIdFor(db, file.event.registration.declaration?.key ?? null, now);
   const design = readBibDesign(resolved.config.bib.design);
@@ -281,6 +344,8 @@ export async function importEventAsNew<T extends Record<string, unknown>>(db: Da
     now,
     fetchImpl: input.fetchImpl,
   });
+  // The route's checkpoints (§NNN): their own table, written after the event exists, as the card writes them.
+  if (checkpoints.length > 0) await replaceCheckpoints(db, input.actor, created.id, checkpoints, now);
 
   await recordAuditEvent(db, {
     actorStaffUserId: input.actor.id,
@@ -525,6 +590,9 @@ export async function importEventOver<T extends Record<string, unknown>>(db: Dat
   const refusal = publicationRefusal(target.event, file.event, slugs);
   if (refusal) throw new DomainError("VALIDATION_ERROR", refusal, ["editorialStatus"]);
   await assertSlugsFree(db, input.eventId, slugs);
+  // The checkpoints, where the diff showed them changed (§NNN): held to the card's rules before anything is copied or written.
+  const checkpointsChanged = changes.some((change) => change.key === "route.checkpoints");
+  const checkpoints = checkpointsChanged ? importedCheckpoints(file.event) : [];
 
   const resolved = await resolveMedia(db, { actor: input.actor, file, reuse: await reusableOf(storage, target.event, target.config, targetDigests), fetchImpl: input.fetchImpl, now });
   if (resolved.outcome.problems.length > 0) {
@@ -573,9 +641,14 @@ export async function importEventOver<T extends Record<string, unknown>>(db: Dat
     scope: "this",
     // The names are the file's, exactly: an older event's English must not follow its Romanian (§362).
     placeNamesAsTyped: true,
+    // The file's list replaces the saved one below, held to the rules already; else the saved list is held to them against the file's event (§NNN).
+    checkpointsReplaced: checkpointsChanged,
     now,
     fetchImpl: input.fetchImpl,
   });
+
+  // The whole list as the file has it — none for a file that has none, as the diff said.
+  if (checkpointsChanged) await replaceCheckpoints(db, input.actor, input.eventId, checkpoints, now);
 
   const changed = changes.map((change) => change.key);
   await recordAuditEvent(db, {

@@ -13,6 +13,12 @@ import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventForEditing, findEventTitle, listSeriesDates } from "@/modules/content/events/repository";
 import { eventPageTodos } from "@/modules/content/events/domain/page-todos";
+import { eventCheckpointContext, listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
+import { offerableProposals } from "@/modules/event-checkpoints/domain/gpx-waypoints";
+import { canEditCheckpoints } from "@/modules/event-checkpoints/domain/checkpoint";
+import { loadGpxWaypoints } from "@/modules/event-checkpoints/gpx-file";
+import { readRouteGpx } from "@/modules/events/domain/route-gpx";
+import CheckpointsCard from "@/modules/content/events/ui/CheckpointsCard";
 import { canEditEventTodos, canReadEventTodos } from "@/modules/event-todos/domain/event-todo";
 import { listEventTodos } from "@/modules/event-todos/event-todos";
 import EventTodoCard from "@/modules/event-todos/ui/EventTodoCard";
@@ -151,7 +157,7 @@ import { startBoxValues, typedStartOrNull } from "@/modules/events/domain/provis
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string; announced?: string; notice?: string; queued?: string; moved?: string; movedTo?: string; movedSent?: string; count?: string; from?: string; to?: string; erased?: string; recent?: string; limited?: string; testQueued?: string; mine?: string; todoError?: string; volunteerError?: string } & Partial<Record<keyof PlacesTaken, string>>>;
+  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string; announced?: string; notice?: string; queued?: string; moved?: string; movedTo?: string; movedSent?: string; count?: string; from?: string; to?: string; erased?: string; recent?: string; limited?: string; testQueued?: string; mine?: string; todoError?: string; volunteerError?: string; checkpointsGpx?: string } & Partial<Record<keyof PlacesTaken, string>>>;
 };
 
 export const dynamic = "force-dynamic";
@@ -359,6 +365,20 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     storageConfigured: isStorageConfigured(),
     approvedDeclarationIds: new Set(declarations.map((declaration) => declaration.id)),
   });
+  /*
+    «Puncte de control» (§NNN): the route's points as saved, the route's length they are measured
+    against, and the GPX's waypoints when the file has some that sit on its track. Read for every
+    role that opens the editor; the forms ask the service for the role again.
+  */
+  const checkpoints = await listCheckpoints(db, event.id);
+  const gpxWaypoints = await loadGpxWaypoints(readRouteGpx(event.routeGpx)?.key);
+  const checkpointRouteKm = eventCheckpointContext(event, gpxWaypoints?.trackMeters ?? null).routeKm;
+  // The service offers the same list by the same function, so the `pick` indexes the preview posts mean the same rows.
+  const gpxPlaced = gpxWaypoints ? offerableProposals(gpxWaypoints.proposals, checkpointRouteKm) : null;
+  const checkpointsGpx =
+    gpxPlaced && gpxPlaced.offered.length > 0
+      ? { key: readRouteGpx(event.routeGpx)?.key ?? "", offered: gpxPlaced.offered, ignored: gpxPlaced.tooFar, beyondRoute: gpxPlaced.beyondRoute }
+      : null;
   // A refused one-button form's code (`?todoError=`), matched against the codes there are — a query string is typed by anybody.
   const todoErrorCode = (["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND"] as const).find((code) => code === query.todoError);
 
@@ -466,7 +486,14 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   // The page this event makes, section by section (§406): the cards' numbers and states, the map.
   // Night (§394) is the occurrence's own start against the sun, the same answer the headlamp pill
   // and the card's closed line draw — not a stored column, so it is read here, not in the data.
-  const flow = await pageFlow({ event, texts: orderedTranslations, night: clubNightEvent(event).night, storageConfigured: isStorageConfigured() });
+  const flow = await pageFlow({
+    event,
+    texts: orderedTranslations,
+    night: clubNightEvent(event).night,
+    storageConfigured: isStorageConfigured(),
+    // «Puncte de control» (§NNN): «Traseul»'s card reads as drawn while the table is.
+    checkpointCount: checkpoints.length,
+  });
   /*
     And what publication does not refuse but a reader would notice (§354, bilingual everywhere):
     a long text whose English says the Romanian word for word — the English "Happy Monday" date
@@ -977,6 +1004,16 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   error={volunteerErrorCode ? t(`errors.${volunteerErrorCode}`) : undefined}
                 />
               )}
+              {/* «Puncte de control» (§NNN), part of «Traseul» in the page's sections (nested, no number): its forms are its own, beside the save form like the card above; «Traseul» links to it. */}
+              <CheckpointsCard
+                locale={locale}
+                eventId={event.id}
+                checkpoints={checkpoints}
+                mayEdit={canEditCheckpoints(staffUser.role)}
+                routeKm={checkpointRouteKm}
+                gpx={checkpointsGpx}
+                previewOpen={query.checkpointsGpx === "1"}
+              />
               {/* Settings and texts: one form, one save — and a refusal that keeps every box (§315). */}
               <ActionForm action={saveEventAndTranslationsAction} messages={refusal} confirm={saveConfirm} id="event-save-form" data-testid="event-save-form">
                 <input type="hidden" name="uiLocale" value={locale} />

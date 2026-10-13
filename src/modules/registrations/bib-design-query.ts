@@ -77,6 +77,10 @@ export type BibDesignFormValues = {
   footerText: string;
   /** «Profilul traseului» and «Telefon pentru urgențe» (§750): the ticks, and the phone as typed. */
   showProfile: boolean;
+  /** «Punctele de control pe profil» (§NNN): on by default, drawn only with the profile and the event's checkpoints. */
+  showCheckpoints: boolean;
+  /** «…cu orele limită» (§NNN): the cut-offs beside the points; off by default. */
+  showCheckpointTimes: boolean;
   showEmergency: boolean;
   emergencyPhone: string;
   /** «Tipărit invers», «Distanța pe număr» and «Numărul și pe capete» (§750). */
@@ -119,6 +123,8 @@ const SWITCHES = [
   "showEventInFooter",
   "showWebsite",
   "showProfile",
+  "showCheckpoints",
+  "showCheckpointTimes",
   "showEmergency",
   "emergencyUpsideDown",
   "showDistance",
@@ -166,6 +172,8 @@ export function readBibDesignForm(get: (name: string) => string | null): BibDesi
     // A text box always posts, empty or not; what it may say is the schema's to decide.
     footerText: field("footerText") ?? "",
     showProfile: field("showProfile") === "on",
+    showCheckpoints: field("showCheckpoints") === "on",
+    showCheckpointTimes: field("showCheckpointTimes") === "on",
     showEmergency: field("showEmergency") === "on",
     emergencyPhone: field("emergencyPhone") ?? "",
     emergencyUpsideDown: field("emergencyUpsideDown") === "on",
@@ -311,8 +319,15 @@ export function bibPreviewUrl(input: {
   design: BibDesignFormValues;
   /** Draw a member's bib (§664): the members' header and label over the same sample. */
   member?: boolean;
+  /**
+   * A stamp of what the sample is drawn from that is not in the form — the route's saved checkpoints
+   * (§NNN) — so saving them is a new address (`v=`), as the bibs page's pictures carry theirs. The
+   * route ignores it; absent with nothing to say, so the ordinary address stays as it was.
+   */
+  version?: string;
 }): string {
   const params = new URLSearchParams({ sample: "1", locale: input.locale });
+  if (input.version) params.set("v", input.version);
   if (input.member) params.set("member", "1");
   if (input.number?.trim()) params.set("number", input.number.trim());
   if (input.colour?.trim()) params.set("colour", input.colour.trim());

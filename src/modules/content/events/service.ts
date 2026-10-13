@@ -58,6 +58,9 @@ import {
   isLiveContent,
 } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
+import { durationBase } from "./duration";
+import { assertSavedCheckpointsHold, copyCheckpoints, hasTypedDistance, listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
+import { loadGpxWaypoints } from "@/modules/event-checkpoints/gpx-file";
 import { resolveStart, type StartSwitches } from "./start";
 import { isWaitlistChoice, waitlistLengthPosted } from "./waitlist-choice";
 import { isBlankValue } from "@/shared/forms/blank-value";
@@ -259,12 +262,13 @@ function resolveTimes(fields: EventFieldsInput, switches: StartSwitches): Resolv
   // needs no hour, so it is kept whatever was left blank — it is the end that has no public reader
   // while the start is held back (§533). An end typed on the clock is compared with the start, so it
   // needs the start's date and hour, like the race's start below.
-  const endsAt =
-    fields.durationMinutes != null
-      ? new Date(startsAt.getTime() + fields.durationMinutes * 60_000)
-      : optional(fields.endsAtWallTime, "endsAt");
   // A gun time is a race's (§71): on any other type the field is hidden and its value ignored.
   const raceStartsAt = fields.type === "RACE" ? optional(fields.raceStartsAtWallTime, "raceStartsAt") : null;
+  // For a race «Durata» is «Timp limită» (§NNN): counted from the gun when it has one (`durationBase`).
+  const endsAt =
+    fields.durationMinutes != null
+      ? new Date(durationBase({ type: fields.type, startsAt, raceStartsAt }).getTime() + fields.durationMinutes * 60_000)
+      : optional(fields.endsAtWallTime, "endsAt");
   // «Startul cursei» is checked against the event's start, so it waits for the start's own date and
   // hour (§545): typed beside a blank one, it is refused naming its box rather than compared with the
   // provisional value.
@@ -1815,6 +1819,12 @@ export type SaveEventAndTranslationsInput = {
    * English follows its Romanian on the server instead (`place.ts#englishNameAfterSave`).
    */
   placeNamesAsTyped?: boolean;
+  /**
+   * The caller writes the event's «Puncte de control» itself right after this save (an import over an
+   * event whose file's list differs, §751, §NNN), having held that list to the rules: the saved list,
+   * about to be replaced, is then not held to them against the new start, end and length.
+   */
+  checkpointsReplaced?: boolean;
   now?: Date;
   /** Only for tests: a `fetch` stand-in for the YouTube poster fetches, never a live default. */
   fetchImpl?: typeof fetch;
@@ -2005,6 +2015,8 @@ async function applyToSeries<T extends Record<string, unknown>>(
      * box is not on screen, so nothing is refused and nobody is told).
      */
     discountNoteCleared?: boolean;
+    /** Each written date's saved «Puncte de control» held to the rules against the date as written (§NNN). */
+    checkpointsHold?: (member: EditableEvent, date: string) => Promise<void>;
   },
 ): Promise<{
   applied: number;
@@ -2192,6 +2204,10 @@ async function applyToSeries<T extends Record<string, unknown>>(
         .set({ ...changes, version: sql`${events.version} + 1`, updatedAt: now, updatedByStaffUserId: input.actor.id })
         .where(eq(events.id, member.id));
       touched = true;
+      if (input.checkpointsHold) {
+        const written = { ...member, ...changes, id: member.id } as EditableEvent;
+        await input.checkpointsHold(written, toWallTimeInput(written.startsAt, zone).slice(0, 10));
+      }
       if (changes.waitlistAutoOffer !== undefined) {
         await auditWaitlistAutoOffer(tx, input.actor, member, { id: member.id, waitlistAutoOffer: changes.waitlistAutoOffer }, now);
       }
@@ -2681,6 +2697,20 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     `platform_settings` while that lock is held.
   */
   const deadlines = await currentDeadlines(db);
+  /*
+    The saved «Puncte de control» are held to the card's rules again against the event as this save
+    leaves it (§NNN) — a moved start or gun, a shorter «Timp limită», a shorter route or another GPX —
+    inside the transaction. The GPX's length they are measured against when no distance is typed is
+    read here, before the transaction opens and its lock is taken (§403).
+  */
+  const checkCheckpoints = parsedEventFields !== undefined && !input.checkpointsReplaced;
+  const gpxKeyAfter = parsedEventFields?.routeGpx === undefined ? routeGpxKeyOf(current.routeGpx) : (parsedEventFields.routeGpx?.key ?? null);
+  const gpxMetersAfter =
+    checkCheckpoints && parsedEventFields && !hasTypedDistance(parsedEventFields) && (await listCheckpoints(db, input.eventId)).length > 0
+      ? ((await loadGpxWaypoints(gpxKeyAfter))?.trackMeters ?? null)
+      : null;
+  // A date's GPX length is known only for the file read above; another file's leaves the kilometre rule unapplied, never guessed.
+  const gpxMetersOf = (routeGpx: unknown) => (routeGpxKeyOf(routeGpx) === gpxKeyAfter ? gpxMetersAfter : null);
 
   // The GPX keys a series save wrote over on the other dates (§718), released after the commit.
   const seriesGpxKeys: string[] = [];
@@ -2753,6 +2783,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       // and a series save (scope `following`/`all`) would leave every other date's note in
       // place (`DECISIONS.md` §394).
       discountNoteCleared = await clearDiscountNoteIfNotAllowed(tx, input.eventId, savedEvent);
+      if (checkCheckpoints) await assertSavedCheckpointsHold(tx, savedEvent, gpxMetersOf(savedEvent.routeGpx));
     }
 
     for (const submitted of enrichedTranslations) {
@@ -2830,6 +2861,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
         now,
         deadlines,
         discountNoteCleared,
+        checkpointsHold: checkCheckpoints ? (member, date) => assertSavedCheckpointsHold(tx, member, gpxMetersOf(member.routeGpx), date) : undefined,
       });
       appliedTo = series.applied;
       holdMoves.push(...series.holds);
@@ -3486,6 +3518,8 @@ export async function duplicateEvent<T extends Record<string, unknown>>(
         copiedTranslationValues(translation, copy.id, slugs.get(translation.id) as string, input.actor, now),
       ),
     );
+    // The route's checkpoints go with the route (§NNN): its cut-offs are times of the day, so they hold on the copy's date.
+    await copyCheckpoints(tx, source.id, copy.id, now);
 
     return copy;
   });
@@ -3853,6 +3887,8 @@ async function materializeSeries<T extends Record<string, unknown>>(
           authorStaffUserId: by,
         })),
       );
+      // A new date carries the source's checkpoints (§NNN), like its route: the cut-offs are times of the day.
+      await copyCheckpoints(tx, source.id, copy.id, now);
     }
   });
 

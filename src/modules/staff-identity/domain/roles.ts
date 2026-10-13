@@ -475,6 +475,12 @@ export function canTransitionEvent(
  *
  * Pages and albums borrowed this gate for their own settings; they ask `isEditorial` now, so
  * nothing about them moved.
+ *
+ * **One exception, §NNN amending this one:** an event's «Puncte de control» — where the water is,
+ * by when the last runner passes — are the Organizer's to write too, through their own card and
+ * service (`event-checkpoints/domain/checkpoint.ts#canEditCheckpoints`): the preparation on the
+ * ground this section left with the Organizer, not the event's settings it took away. The
+ * checkpoints reach the public page and the bib, and every change is audited.
  */
 export function canEditEventFields(subject: StaffSubject): boolean {
   const role = roleOf(subject);

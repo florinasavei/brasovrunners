@@ -11,22 +11,27 @@ import HandshakeIcon from "@mui/icons-material/Handshake";
 import HikingIcon from "@mui/icons-material/Hiking";
 import LocalCafeIcon from "@mui/icons-material/LocalCafe";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import ModeNightIcon from "@mui/icons-material/ModeNight";
 import MoneyOffIcon from "@mui/icons-material/MoneyOff";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PaidIcon from "@mui/icons-material/Paid";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
+import RestaurantIcon from "@mui/icons-material/Restaurant";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import ScienceIcon from "@mui/icons-material/Science";
 import SportsScoreIcon from "@mui/icons-material/SportsScore";
 import StarIcon from "@mui/icons-material/Star";
 import StraightenIcon from "@mui/icons-material/Straighten";
 import TerrainIcon from "@mui/icons-material/Terrain";
+import TimerIcon from "@mui/icons-material/Timer";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import TuneIcon from "@mui/icons-material/Tune";
 import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
+import WaterDropIcon from "@mui/icons-material/WaterDrop";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import type { ComponentType } from "react";
+import type { CheckpointKind } from "@/modules/event-checkpoints/domain/checkpoint";
 import type { EventSurface, EventType } from "../domain/event-type";
 import { DIFFICULTY_ICONS, DIFFICULTY_LEVEL_ICONS } from "./difficulty-glyphs";
 import type { DifficultyBand } from "../domain/difficulty";
@@ -80,6 +85,18 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
 };
 
 /**
+ * What a checkpoint has (§NNN), one metaphor each, written down: water is a drop, food the cutlery,
+ * first aid the medical case, timing the stopwatch. Always beside the word — «Apă», «Mâncare» —
+ * on the event page's table (`EventCheckpoints`); never the glyph alone.
+ */
+export const CHECKPOINT_GLYPH: Record<CheckpointKind, Glyph> = {
+  WATER: WaterDropIcon,
+  FOOD: RestaurantIcon,
+  FIRST_AID: MedicalServicesIcon,
+  TIMING: TimerIcon,
+};
+
+/**
  * Every glyph by a name a Server Component can hand to `GlyphChip`: `type:RACE`,
  * `surface:TRAIL`, `difficulty:EASY`, `cost:FREE`, `featured` for the hero's star,
  * `special` for an edition apart (§168), and
@@ -126,6 +143,7 @@ export const GLYPHS = {
   ...prefixed("difficulty", DIFFICULTY_GLYPH),
   ...prefixed("difficulty", DIFFICULTY_LEVEL_ICONS),
   ...prefixed("cost", COST_GLYPH),
+  ...prefixed("checkpoint", CHECKPOINT_GLYPH),
   featured: StarIcon,
   special: AutoAwesomeIcon,
   // The repeat chip on a listing card (§486) — the single date of a series, the series card and

@@ -9,7 +9,7 @@ import { type BibSheetPart, type BibSheetRow, renderBibSheet } from "@/modules/r
 import { bibEventDate, findEventForBibs, freeSpareBibNumbers, listBibs } from "@/modules/registrations/bibs";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
-import { loadBibExtras } from "@/modules/registrations/bib-extras";
+import { loadBibExtras, withBibCheckpoints } from "@/modules/registrations/bib-extras";
 import { BIB_PICTURE_WIDTH, loadBibPictures } from "@/modules/registrations/bib-pictures";
 import { env } from "@/shared/config/env";
 import { CLUB_NAME } from "@/theme/brand";
@@ -143,7 +143,7 @@ export async function GET(
     design: event.design,
     pictures: { header, sponsors, memberHeader, memberCard },
     // The route's profile and the emergency phone's word (§750), when the design ticks them.
-    ...(await loadBibExtras(event, event.design, locale)),
+    ...(await loadBibExtras(await withBibCheckpoints(db, id, event, event.design), event.design, locale)),
     // The members' label when the club typed none (§664), in the sheet's language.
     ...(anyMember && admin ? { memberLabelDefault: admin("bibs.memberLabelDefault", { club: CLUB_NAME }) } : {}),
     // Under a spare's empty line (§444), in the sheet's language.
