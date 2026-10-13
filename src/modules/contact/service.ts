@@ -7,6 +7,7 @@ import { looksLikeSpam } from "@/modules/registrations/service";
 import type { TurnstileVerdict } from "@/modules/registrations/turnstile";
 import { DomainError } from "@/shared/errors/domain-error";
 import { contactSuspicion } from "./domain/suspicion";
+import { holdBackIsOn, recordHeldBack, shouldHoldBack } from "./held-back";
 import { contactFields, type ContactInput } from "./fields";
 import { type ContactMessageRoute, renderContactMessage } from "./message";
 
@@ -126,6 +127,15 @@ export async function submitContactMessage<T extends Record<string, unknown>>(
     message: input.message,
     honeypot: input.honeypot,
   });
+
+  // The Administrator's tick (§310 as amended): a message the check marks is counted and not
+  // emailed. The sender's answer is the same "sent" — a script learns nothing. Unticked, the
+  // code below is exactly what it was.
+  if (suspicion.suspicious && shouldHoldBack(suspicion, await holdBackIsOn(db))) {
+    await recordHeldBack(db, "contact", now);
+    console.info("[contact] held back as possible spam:", suspicion.reasons.map((reason) => reason.kind).join(","));
+    return { outcome: "sent" };
+  }
 
   const message = renderContactMessage(
     { name: input.name, email: input.email, message: input.message, locale: input.locale, pageUrl },

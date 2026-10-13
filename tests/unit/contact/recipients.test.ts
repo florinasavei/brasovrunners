@@ -42,6 +42,7 @@ describe("BR-REQ-070-04 the contact form's recipients", () => {
       to: ["club@example.com"],
       cc: ["ioana@example.org"],
       bcc: [],
+      holdBackSuspected: false,
     });
   });
 
@@ -78,7 +79,7 @@ describe("BR-REQ-070-04 the contact form's recipients", () => {
       cc: ["CLUB@example.com", "ioana@example.org", "ioana@example.org"],
       bcc: ["IOANA@example.org", "club@EXAMPLE.com", "arhiva@example.org", "Arhiva@example.org"],
     });
-    expect(parsed).toEqual({ to: ["club@example.com"], cc: ["ioana@example.org"], bcc: ["arhiva@example.org"] });
+    expect(parsed).toEqual({ to: ["club@example.com"], cc: ["ioana@example.org"], bcc: ["arhiva@example.org"], holdBackSuspected: false });
 
     // And against the environment's list too, for a deployment that has not moved it yet.
     expect(

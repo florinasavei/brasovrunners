@@ -1408,7 +1408,11 @@ club names — which is why a colleague's Yahoo can be on the list.
    and "Reply" still answers them. The mark is fixed text (`SUSPICIOUS_SUBJECT_PREFIX` in
    `src/modules/contact/message.ts`); changing it breaks this filter in every mailbox that has one.
    Do the same in any mailbox that is on "Către" or "Copie (Cc)" and wants it. (`DECISIONS.md`
-   §310)
+   §310) **Or stop them at the source:** «Pagini» → «Contact» → «Cine primește mesajele de contact»
+   has a tick, «Nu-mi trimite mesajele care par spam», off by default; ticked, such a message is
+   not emailed and the card only counts how many were stopped in the last 30 days (the sender
+   still sees «mesaj trimis»; nothing of the message is kept). It covers the contact form and
+   «Spune-ne ceva» except its safety branch.
 8. **Optional: let the calendar entry ask «Da / Nu / Poate», and file the answers.** Off until
    somebody types an address; then a race's confirmation, reminder, «Detalii actualizate» about
    the time or the place and cancellation carry an invitation the runner's calendar app (Gmail,

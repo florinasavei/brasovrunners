@@ -31,7 +31,7 @@ describe("the contact recipients setting", () => {
   });
 
   it("is nobody until the club says otherwise, and reads back all three lists", async () => {
-    expect(await readContactRecipients(db)).toEqual({ to: [], cc: [], bcc: [], updatedAt: null });
+    expect(await readContactRecipients(db)).toEqual({ to: [], cc: [], bcc: [], holdBackSuspected: false, updatedAt: null });
 
     const saved = await updateContactRecipients(
       db,
@@ -39,7 +39,7 @@ describe("the contact recipients setting", () => {
       { to: ["club@example.com"], cc: ["ioana@example.org"], bcc: ["arhiva@example.org"] },
       NOW,
     );
-    expect(saved).toEqual({ to: ["club@example.com"], cc: ["ioana@example.org"], bcc: ["arhiva@example.org"], updatedAt: NOW });
+    expect(saved).toEqual({ to: ["club@example.com"], cc: ["ioana@example.org"], bcc: ["arhiva@example.org"], holdBackSuspected: false, updatedAt: NOW });
     expect(await readContactRecipients(db)).toMatchObject({
       to: ["club@example.com"],
       cc: ["ioana@example.org"],
@@ -89,7 +89,7 @@ describe("the contact recipients setting", () => {
 
   it("reads a value it can no longer understand as nobody, which hands the answer to the environment", async () => {
     await db.insert(platformSettings).values({ key: "contactRecipients", value: { to: "club@example.com" }, updatedAt: NOW });
-    expect(await readContactRecipients(db)).toEqual({ to: [], cc: [], bcc: [], updatedAt: NOW });
+    expect(await readContactRecipients(db)).toEqual({ to: [], cc: [], bcc: [], holdBackSuspected: false, updatedAt: NOW });
   });
 
   it("reads a row saved before the hidden copies existed as having none (2026-09-22)", async () => {
@@ -99,6 +99,6 @@ describe("the contact recipients setting", () => {
       value: { to: ["club@example.com"], cc: ["ioana@example.org"] },
       updatedAt: NOW,
     });
-    expect(await readContactRecipients(db)).toEqual({ to: ["club@example.com"], cc: ["ioana@example.org"], bcc: [], updatedAt: NOW });
+    expect(await readContactRecipients(db)).toEqual({ to: ["club@example.com"], cc: ["ioana@example.org"], bcc: [], holdBackSuspected: false, updatedAt: NOW });
   });
 });

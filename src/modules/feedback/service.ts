@@ -4,6 +4,7 @@ import type { OutgoingEmail, SendResult } from "@/infrastructure/email/adapter";
 import { type AppEnvironment, QA_SUBJECT_PREFIX } from "@/infrastructure/email/delivery";
 import type { SmtpAddress, SmtpTransport } from "@/infrastructure/email/smtp-adapter";
 import { contactSuspicion } from "@/modules/contact/domain/suspicion";
+import { holdBackIsOn, recordHeldBack, shouldHoldBack } from "@/modules/contact/held-back";
 import { SUSPICIOUS_SUBJECT_PREFIX, suspicionFooter } from "@/modules/contact/message";
 import type { ContactScreening } from "@/modules/contact/service";
 import { consumeRateLimit, refundRateLimit } from "@/modules/rate-limit/service";
@@ -155,7 +156,7 @@ export async function submitFeedback<T extends Record<string, unknown>>(
   const sent =
     audience === "person"
       ? await sendSafety(deps.mailgun as FeedbackMailgunRoad, recipients[0], email, input.locale)
-      : await sendOrdinary(deps.smtp as FeedbackSmtpRoad, recipients, email, input, deps.screening, now);
+      : await sendOrdinary(db, deps.smtp as FeedbackSmtpRoad, recipients, email, input, deps.screening, now);
   if (sent) return logged(branch, audience === defaultAudience(branch) ? { outcome: "sent" } : { outcome: "sent", audience }, audience);
 
   // A message that reached nobody is not one of the branch's thirty.
@@ -195,7 +196,8 @@ async function sendSafety(road: FeedbackMailgunRoad, to: string, email: { subjec
  * looks automated. A named safety report the sender sent to «Clubul» (§678) takes it too, with its
  * neutral subject and no `Reply-To` — its way back may be a telephone, and it is in the body.
  */
-async function sendOrdinary(
+async function sendOrdinary<T extends Record<string, unknown>>(
+  db: Database<T>,
   road: FeedbackSmtpRoad,
   to: readonly string[],
   email: { subject: string; text: string; html: string },
@@ -212,6 +214,12 @@ async function sendOrdinary(
     message: input.message,
     honeypot: input.honeypot,
   });
+  // The contact form's tick (§310 as amended): counted, not emailed, answered «trimis». The safety
+  // branch is never held back — a lost report costs more than a marked one.
+  if (input.branch !== "safety" && suspicion.suspicious && shouldHoldBack(suspicion, await holdBackIsOn(db))) {
+    await recordHeldBack(db, input.branch, now);
+    return true;
+  }
   const marked = suspicion.suspicious ? suspicionFooter(suspicion) : null;
   const text = marked ? [email.text, "", "---", marked.heading, ...marked.reasons.map((line) => `• ${line}`), marked.signals].join("\n") : email.text;
   const html = marked
