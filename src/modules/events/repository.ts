@@ -226,6 +226,9 @@ const PUBLIC_COLUMNS = {
   hiddenListEnabled: events.hiddenListEnabled,
   participantCountPublic: events.participantCountPublic,
   hiddenListCounted: events.hiddenListCounted,
+  // «Arată invitații speciali pe lista publică» (§743): whether the hidden list's rows may be drawn on the
+  // public lists at all — read by `StartList` through `hiddenListShownPublicly`.
+  hiddenListPublic: events.hiddenListPublic,
   // The meeting point is one fact on the event row (`DECISIONS.md` §36); its *name* is read in
   // the page's language when the club gave it one (migration `0058`), else in the club's own
   // words as before. Never the other language's: a blank name reads the event, not the other

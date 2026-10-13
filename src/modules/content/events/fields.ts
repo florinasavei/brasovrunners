@@ -1048,6 +1048,8 @@ export const eventFieldsSchema = z
     hiddenListBibStart: optionalWholeNumber({ min: 1, max: 99_000 }).optional(),
     participantCountPublic: z.boolean().optional(),
     hiddenListCounted: z.boolean().optional(),
+    // «Arată invitații speciali pe lista publică» (§743): the group's fourth, by the same discipline.
+    hiddenListPublic: z.boolean().optional(),
     externalProvider: optionalText(120),
     externalRegistrationUrl: httpsUrl("an external registration link must start with https://"),
   })

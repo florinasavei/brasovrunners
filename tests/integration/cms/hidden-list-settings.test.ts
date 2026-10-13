@@ -142,7 +142,7 @@ const trail = trailOf("event.hidden_list_changed");
 /** «Arată public numărătoarea», on every event: its own action (§647), never the hidden list's. */
 const countTrail = trailOf("event.participant_count_public_changed");
 
-type Group = { enabled?: boolean; start?: string; countPublic?: boolean; counted?: boolean } | "absent";
+type Group = { enabled?: boolean; start?: string; countPublic?: boolean; counted?: boolean; shown?: boolean } | "absent";
 
 /** The editor's settings as they post, plus the «Lista ascunsă» group (one marker for the three) and the count's tick. */
 function settingsForm(eventId: string, expectedVersion: number, group: Group): FormData {
@@ -158,6 +158,7 @@ function settingsForm(eventId: string, expectedVersion: number, group: Group): F
     if (group.enabled) form.set("event.hiddenListEnabled", "on");
     form.set("event.hiddenListBibStart", group.start ?? "");
     if (group.counted) form.set("event.hiddenListCounted", "on");
+    if (group.shown) form.set("event.hiddenListPublic", "on");
     // «Arată public numărătoarea» (§647) is outside the group, with its own marker, as the editor posts it.
     form.set("event.participantCountPublic.present", "1");
     if (group.countPublic) form.set("event.participantCountPublic", "on");
@@ -228,6 +229,25 @@ describe("§647 «Lista ascunsă» on the event", () => {
     expect(await postSave(settingsForm(source.id, (await reloadEvent(source.id)).version, { enabled: false, start: "900", countPublic: false, counted: true }))).toBe("redirected");
     expect(settled(await reloadEvent(source.id))).toEqual({ enabled: false, start: 900, countPublic: false, counted: true });
     expect((await trail(source.id)).at(-1)?.metadataJson).toEqual({ from: { hiddenListEnabled: true }, to: { hiddenListEnabled: false } });
+  });
+
+  it("§743 «Arată invitații speciali pe lista publică»: off by default, saved with the group, stored as posted, audited, and read by the public query", async () => {
+    const sql = readFileSync(join(process.cwd(), "src/db/migrations/0143_hidden_list_public.sql"), "utf8");
+    expect(sql.trim()).toBe('ALTER TABLE "events" ADD COLUMN "hidden_list_public" boolean DEFAULT false NOT NULL;');
+    const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
+    expect((await reloadEvent(source.id)).hiddenListPublic).toBe(false);
+
+    expect(await postSave(settingsForm(source.id, (await reloadEvent(source.id)).version, { enabled: true, start: "", countPublic: true, shown: true }))).toBe("redirected");
+    expect((await reloadEvent(source.id)).hiddenListPublic).toBe(true);
+    expect((await trail(source.id)).at(-1)?.metadataJson).toMatchObject({ from: { hiddenListPublic: false }, to: { hiddenListPublic: true } });
+    await db.update(events).set({ editorialStatus: "PUBLISHED", publishedAt: NOW }).where(eq(events.id, source.id));
+    expect(await findPublishedEventBySlug(db, "ro", "crosul-ascuns")).toMatchObject({ hiddenListEnabled: true, hiddenListPublic: true });
+
+    // A form without the group leaves it alone; the switch off keeps the tick as posted.
+    expect(await postSave(settingsForm(source.id, (await reloadEvent(source.id)).version, "absent"))).toBe("redirected");
+    expect((await reloadEvent(source.id)).hiddenListPublic).toBe(true);
+    expect(await postSave(settingsForm(source.id, (await reloadEvent(source.id)).version, { enabled: false, start: "", countPublic: true, shown: true }))).toBe("redirected");
+    expect((await reloadEvent(source.id)).hiddenListPublic).toBe(true);
   });
 
   it("«Arată public numărătoarea» is saved by its own marker, on an event whose hidden list stays off", async () => {

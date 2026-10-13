@@ -386,13 +386,15 @@ export type PublicAvailability = {
  */
 export async function cachedStartListCounts(
   eventId: string,
+  /** The event's «Arată invitații speciali pe lista publică» (§743), in the key: a count made without them is never served with them. */
+  hiddenShown = false,
 ): Promise<{ named: number; anonymous: number; outsideNamed: number; hidden: { confirmed: number; held: number } }> {
-  return publicRead(["places.start-list-counts", eventId, "outside", "hidden-list"], ["places", "events"], async () => {
+  return publicRead(["places.start-list-counts", eventId, "outside", "hidden-list", hiddenShown ? "guests-shown" : "guests-off"], ["places", "events"], async () => {
     const db = getDb();
     const [named, anonymous, outsideNamed, hidden] = await Promise.all([
-      countPublicStartList(db, eventId),
+      countPublicStartList(db, eventId, hiddenShown),
       countAnonymousStartListEntries(db, eventId),
-      countOutsideOnPublicStartList(db, eventId),
+      countOutsideOnPublicStartList(db, eventId, hiddenShown),
       countHiddenListWithPlace(db, eventId),
     ]);
     return { named, anonymous, outsideNamed, hidden };
@@ -407,11 +409,11 @@ export async function cachedStartListCounts(
  * is a change of state and expires "places" (`transitionRegistration`), and by the hand-typed
  * change and «Alocă numerele» (`setBibNumberByStaff`, `assignBibNumbers`), which expire it too.
  */
-export async function cachedStartListPage(eventId: string, offset: number, limit: number, socials = false, numbers = false) {
+export async function cachedStartListPage(eventId: string, offset: number, limit: number, socials = false, numbers = false, hiddenShown = false) {
   return publicRead(
-    ["places.start-list", eventId, offset, limit, socials ? "socials" : "names", numbers ? "numbered" : "unnumbered"],
+    ["places.start-list", eventId, offset, limit, socials ? "socials" : "names", numbers ? "numbered" : "unnumbered", hiddenShown ? "guests-shown" : "guests-off"],
     ["places", "events"],
-    () => listPublicStartList(getDb(), eventId, { offset, limit }, { socials, numbers }),
+    () => listPublicStartList(getDb(), eventId, { offset, limit }, { socials, numbers, hiddenShown }),
   );
 }
 
@@ -427,12 +429,14 @@ export async function cachedStartListOthersCounts(
   firstStatesNoticeVersion: number,
   /** The event's «Lista de așteptare e publică» (§628): in the key, so a count with the waiting list is never served without it. */
   includeWaitlisted: boolean,
+  /** «Arată invitații speciali pe lista publică» (§743), in the key like the rest. */
+  hiddenShown = false,
 ): Promise<{ pending: number; waitlisted: number; outsidePending: number }> {
   return publicRead(
     // `"outside"`: the entry carries `outsidePending` (§643), so none written without it is read.
-    ["places.start-list-others-counts", eventId, firstStatesNoticeVersion, includeWaitlisted ? "waitlist" : "no-waitlist", "outside"],
+    ["places.start-list-others-counts", eventId, firstStatesNoticeVersion, includeWaitlisted ? "waitlist" : "no-waitlist", "outside", hiddenShown ? "guests-shown" : "guests-off"],
     ["places", "events"],
-    () => countPublicStartListOthers(getDb(), eventId, firstStatesNoticeVersion, includeWaitlisted),
+    () => countPublicStartListOthers(getDb(), eventId, firstStatesNoticeVersion, includeWaitlisted, hiddenShown),
   );
 }
 
@@ -447,6 +451,8 @@ export async function cachedStartListOthersPage(
   offset: number,
   limit: number,
   socials = false,
+  /** «Arată invitații speciali pe lista publică» (§743), in the key like the rest. */
+  hiddenShown = false,
 ) {
   return publicRead(
     [
@@ -457,9 +463,10 @@ export async function cachedStartListOthersPage(
       offset,
       limit,
       socials ? "socials" : "names",
+      hiddenShown ? "guests-shown" : "guests-off",
     ],
     ["places", "events"],
-    () => listPublicStartListOthers(getDb(), eventId, firstStatesNoticeVersion, includeWaitlisted, { offset, limit }, { socials }),
+    () => listPublicStartListOthers(getDb(), eventId, firstStatesNoticeVersion, includeWaitlisted, { offset, limit }, { socials, hiddenShown }),
   );
 }
 

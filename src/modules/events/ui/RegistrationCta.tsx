@@ -11,6 +11,7 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import type { PublicEventPage } from "../repository";
 import { cachedDeadlines, cachedStartListCounts } from "@/modules/public-cache/reads";
+import { hiddenListShownPublicly } from "@/modules/registrations/domain/hidden-list";
 import { emailDelayNotice } from "@/modules/registrations/ui/email-delay-notice";
 import { fillPhrase, fullThanksPhrase, offeredPhrase, waitingPhrase, waitlistOfferPhrase, waitlistRoomPhrase } from "./counted-phrases";
 import { type PreviewDoor, readRegistrationDoor } from "./registration-door";
@@ -78,7 +79,7 @@ export default async function RegistrationCta({
     start list's cached one (`places` expires it with every registration change); the editor's preview,
     which neither fills nor reads the public cache (§579), says it by the switch alone.
   */
-  const outsidePlaces = fill !== null && (event.hiddenListEnabled === true || (!previewDoor && (await hiddenListHoldsPlaces(event.id))));
+  const outsidePlaces = fill !== null && (event.hiddenListEnabled === true || (!previewDoor && (await hiddenListHoldsPlaces(event.id, hiddenListShownPublicly(event)))));
   const outsidePlacesNote = outsidePlaces ? (
     <Typography variant="body2" color="text.secondary" data-testid="registration-outside-places">
       {t("cta.outsidePlacesNote")}
@@ -293,9 +294,9 @@ async function CapacityUnknown({ slug }: { slug: string }) {
  * the start list's cached counts, keyed `"hidden-list"`. A read that cannot be answered says no — the
  * sentence is a courtesy beside the places line, never a reason for the page to fail (§281).
  */
-async function hiddenListHoldsPlaces(eventId: string): Promise<boolean> {
+async function hiddenListHoldsPlaces(eventId: string, hiddenShown: boolean): Promise<boolean> {
   try {
-    const { hidden } = await cachedStartListCounts(eventId);
+    const { hidden } = await cachedStartListCounts(eventId, hiddenShown);
     return hidden.confirmed + hidden.held > 0;
   } catch {
     return false;

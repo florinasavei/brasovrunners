@@ -2774,7 +2774,7 @@
       "hiddenListEnabled": "Use the special guests list",
       "hiddenListEnabledHelp": "Ticked: registrations offer «Special guest — takes no place». Unticked: nobody new goes on the list; those on it stay, and the page mentions them while they hold a place.",
       "hiddenListEnabledMoreFor": "For organizers, volunteers, pacemakers and invited runners: they are at the start without taking one of the announced places. An ordinary participant does not go here.",
-      "hiddenListEnabledMoreSettings": "Ticked, the list has two more settings: its own series of race numbers, and «Count the special guests too» for the public numbers. Unticked, both stop.",
+      "hiddenListEnabledMoreSettings": "Ticked, the list has three more settings: its own number series, «Count the special guests too» and «Show special guests on the public list». Unticked, all stop.",
       "hiddenListEnabledMoreEmail": "An invitation by email is how somebody receives a link to register.",
       "hiddenListEnabledMoreDifference": "The special guests list only says whether the registration takes one of the announced places; an invitation by email can also be sent «On the special guests list».",
       "hiddenListBibStart": "The special guests' numbers start at",
@@ -2783,7 +2783,9 @@
       "participantCountPublic": "Show the count publicly",
       "participantCountPublicHelp": "Ticked: the page says how many places, how many are coming and how many are confirmed. Unticked: no number on the public pages, not even how many wait — only whether places are left.",
       "hiddenListCounted": "Count the special guests too",
-      "hiddenListCountedHelp": "Ticked: “Who's coming” and “confirmed” count the special guests too. Unticked: the numbers count only the race's places; the special guests come on top."
+      "hiddenListCountedHelp": "Ticked: “Who's coming” and “confirmed” count the special guests too. Unticked: the numbers count only the race's places; the special guests come on top.",
+      "hiddenListPublic": "Show special guests on the public list",
+      "hiddenListPublicHelp": "Ticked: a special guest who ticked “I want to appear” appears under “Who's coming”, with their number. Unticked: they appear on no public list; their place and number stay."
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",

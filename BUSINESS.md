@@ -321,7 +321,7 @@ For a capped event:
   §647, «în afara locurilor» before it) consumes no place in any state: the club's organizers, pacemakers and invited runners run
   without taking one of the announced places. It still has a declaration, a race number — from the
   special guests' own series when the event sets one — and, if the person ticked, a row on the public
-  list. It enters no public number unless the event ticks «Numără și invitații speciali», and never the
+  list — only if the event ticks «Arată invitații speciali pe lista publică», off by default (§743). It enters no public number unless the event ticks «Numără și invitații speciali», and never the
   places line or the free places. Only an Administrator puts somebody on it or takes them off, only
   while the event's «Folosește lista de invitați speciali» is on (taking off always), and every change is written
   to the journal (`DECISIONS.md` §643, §647). «Lista de invitați speciali» is the backoffice's word —
