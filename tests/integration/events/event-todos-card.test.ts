@@ -8,11 +8,12 @@ import type { EventTodoItem } from "@/modules/event-todos/event-todos";
 import { withClientWords } from "../../helpers/client-words";
 
 /**
- * §749 — the card «De făcut pentru pagina evenimentului» as the editor draws it (BR-REQ-050-01,
- * BR-REQ-041-01 criterion 6): the closed line and when it opens by itself, the computed rows marked
- * «din pagină» with a link to the card that fills them, the club's rows with their priority as a
- * word (not the colour alone), the order, «Gata» apart, «Ale mele», the role's forms and a reader's
- * none. The forms are plain posts — nothing here needs a script.
+ * §749, amended by §NNN — the card «De făcut pentru pagina evenimentului» as the editor draws it
+ * (BR-REQ-050-01, BR-REQ-041-01 criterion 6): the closed line and when it opens by itself, two lists
+ * — «Lipsește pe pagină», each row one link to the card that fills it, and «Sarcini», each row a tick
+ * box, the words, the priority as a word (not the colour alone), who, by when and a pencil — the order,
+ * «Gata» apart, «Ale mele», the role's forms and a reader's none. The forms are plain posts — nothing
+ * here needs a script.
  */
 const messages = { ro, en };
 let language: "ro" | "en" = "ro";
@@ -23,7 +24,7 @@ vi.mock("@/app/[locale]/admin/events/[id]/todo-actions", () => ({
   addEventTodoAction: async () => null,
   editEventTodoAction: async () => null,
   deleteEventTodoAction: async () => null,
-  setEventTodoDoneAction: async () => {},
+  setEventTodoDoneAction: async () => null,
 }));
 vi.mock("next-intl/server", () => ({
   setRequestLocale: () => {},
@@ -92,13 +93,50 @@ describe("§749 the card «De făcut pentru pagina evenimentului»", () => {
     expect(html).toContain("Gata (1)");
   });
 
-  it("marks a computed row «din pagină», links it to the card that fills it and offers it no edit or delete", async () => {
+  it("puts a computed row under «Lipsește pe pagină» as one link to the card that fills it, with no tick, edit or delete", async () => {
     const html = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: [] });
+    expect(html).toContain("Lipsește pe pagină");
     expect(html).toContain('data-testid="event-todo-page-row"');
-    expect(html).toContain("din pagină");
     expect(html).toContain("Evenimentul nu are fotografie de copertă.");
-    expect(html).toMatch(/data-testid="event-todo-fill"[^>]*href="[^"]*#box-cover"|href="[^"]*#box-cover"[^>]*data-testid="event-todo-fill"/);
+    // The row is the link: the words are inside the `<a>`, and its name says what it does.
+    expect(html).toMatch(/<a [^>]*href="#box-cover"[^>]*data-testid="event-todo-fill"|<a [^>]*data-testid="event-todo-fill"[^>]*href="#box-cover"/);
+    expect(html).toContain("Deschide câmpul: Evenimentul nu are fotografie de copertă.");
+    expect(html).not.toContain("din pagină");
     expect(html).not.toContain("Șterge");
+    expect(html).not.toContain('role="checkbox"');
+  });
+
+  it("draws a typed row as a tick box, the words, and the small facts on its line — no «Bifează» button, no panel", async () => {
+    const html = await render({ computed: [], items: [item("a", "Banda cu sponsori", { priority: "HIGH", assigneeStaffUserId: ME, assigneeName: "Dani", dueOn: "2026-10-30" })] });
+    expect(html).toContain("Sarcini");
+    // A real tick box: a submit that carries the state it wants, in a form of its own.
+    expect(html).toMatch(/<button[^>]*role="checkbox"[^>]*aria-checked="false"/);
+    expect(html).toContain('aria-label="Bifează: Banda cu sponsori"');
+    expect(html).toContain('name="done" value="1"');
+    expect(html).not.toContain(">Bifează<");
+    // The facts: the priority's word, who, the day.
+    expect(html).toContain(">Mare<");
+    expect(html).toContain("Pentru Dani");
+    expect(html).toMatch(/Termen: [^<]*30 oct/);
+    // The pencil: the line is the summary of the row's edit form, named for a screen reader.
+    expect(html).toContain('data-testid="event-todo-edit-toggle"');
+    expect(html).toContain('aria-label="Modifică: Banda cu sponsori"');
+    expect(html).toContain('title="Modifică"');
+  });
+
+  it("adds in one line — the words, the priority, «Adaugă» — and keeps who and the day behind «Mai multe»", async () => {
+    const html = await render({ computed: [], items: [] });
+    const add = html.slice(html.indexOf('data-testid="event-todo-add"'));
+    expect(add).toContain("Adaugă o sarcină");
+    expect(add).toContain('name="text"');
+    expect(add).toContain('name="priority"');
+    expect(add).toContain("Mai multe: cine, termen");
+    // «Cine» and «Termen» are inside the «Mai multe» fold, after the add button.
+    expect(add.indexOf('name="assignee"')).toBeGreaterThan(add.indexOf("Mai multe: cine, termen"));
+    expect(add.indexOf('name="due"')).toBeGreaterThan(add.indexOf("Mai multe: cine, termen"));
+    // A short line, not a paragraph: the long explanation is behind the «?».
+    expect(html).toContain("Ce lipsește paginii și ce are echipa de făcut.");
+    expect(html).toContain('data-testid="quiet-help"');
   });
 
   it("names the language of a per-language row", async () => {
@@ -114,7 +152,7 @@ describe("§749 the card «De făcut pentru pagina evenimentului»", () => {
     for (const word of ["Urgentă", "Mare", "Normală", "Mică"]) expect(html).toContain(`>${word}<`);
   });
 
-  it("lists everything in one order: priority, then the due day, then age — computed and typed together", async () => {
+  it("lists each list in one order: priority, then the due day, then age — «Lipsește pe pagină» first, then «Sarcini»", async () => {
     const html = await render({
       computed: [page("declaration", "declaration", "URGENT", "box-declaration"), page("cover", "cover", "NORMAL", "box-cover")],
       items: [
@@ -124,7 +162,7 @@ describe("§749 the card «De făcut pentru pagina evenimentului»", () => {
         item("normal-sooner", "normal sooner", { dueOn: "2026-10-15" }),
       ],
     });
-    expect(order(html)).toEqual(["urgent-dated", "declaration", "normal-sooner", "cover", "normal-old", "low"]);
+    expect(order(html)).toEqual(["declaration", "cover", "urgent-dated", "normal-sooner", "normal-old", "low"]);
   });
 
   it("puts a ticked line under «Gata» with who ticked it, and an overdue day says so", async () => {
@@ -135,7 +173,8 @@ describe("§749 the card «De făcut pentru pagina evenimentului»", () => {
         item("late", "Întârziat", { dueOn: "2026-10-01" }),
       ],
     });
-    expect(html).toContain("Termen depășit");
+    expect(html).toMatch(/Întârziat: [^<]*1 oct/);
+    expect(html).toContain('data-testid="event-todo-overdue"');
     expect(html).toContain("Bifat de Oana Organizator");
     expect(html.indexOf("Gata (1)")).toBeGreaterThan(html.indexOf("Întârziat"));
   });
@@ -158,7 +197,7 @@ describe("§749 the card «De făcut pentru pagina evenimentului»", () => {
     expect(html).toContain('name="done"');
     expect(html).toContain("Bifează: Un rând");
     expect(html).toContain("Modifică");
-    expect(html).toContain("Adaugă un rând");
+    expect(html).toContain("Adaugă o sarcină");
   });
 
   it("gives a role that only reads the list and no form at all", async () => {
@@ -166,7 +205,8 @@ describe("§749 the card «De făcut pentru pagina evenimentului»", () => {
     expect(html).toContain("o scriu Organizatorul, Administratorul și Superadministratorul");
     expect(html).not.toContain('name="priority"');
     expect(html).not.toContain('name="done"');
-    expect(html).not.toContain("Adaugă un rând");
+    expect(html).not.toContain("Adaugă o sarcină");
+    expect(html).not.toContain('role="checkbox"');
     expect(html).toContain("Un rând");
   });
 
@@ -176,7 +216,8 @@ describe("§749 the card «De făcut pentru pagina evenimentului»", () => {
       const html = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: [item("a", "A line", { priority: "URGENT" })], locale: "en" as never });
       expect(html).toContain("To do for the event");
       expect(html).toContain("2 to do");
-      expect(html).toContain("from the page");
+      expect(html).toContain("Missing from the page");
+      expect(html).toContain("Tasks");
       expect(html).toContain(">Urgent<");
       expect(html).toContain("The event has no cover photo.");
     } finally {
