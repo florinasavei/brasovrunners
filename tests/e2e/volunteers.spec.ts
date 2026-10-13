@@ -190,6 +190,16 @@ test.describe("§NNN volunteers for a race", () => {
       await hydrated(page);
       await expect(page.getByTestId("volunteer-row")).toHaveCount(2);
       await expect(page.getByTestId("volunteer-name")).toHaveText(["Maria Test", "Ion Test"]);
+
+      // The very last place: the person who takes it is still thanked in the box, and then the page offers no form.
+      await guest.goto(`/ro/evenimente/${event.slug}`);
+      await hydrated(guest);
+      await guest.getByTestId("volunteer-box").getByRole("heading", { name: "Vreau să fiu voluntar" }).click();
+      await offer(guest, "Dana Test", `dana.${tag}@example.test`, "Punct de apă");
+      await expect(guest.getByTestId("volunteer-form")).toHaveCount(0);
+      await guest.goto(`/ro/evenimente/${event.slug}`);
+      await hydrated(guest);
+      await expect(guest.getByTestId("volunteer-box")).toHaveCount(0);
     } finally {
       await visitor.close();
     }
