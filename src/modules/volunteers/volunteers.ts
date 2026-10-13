@@ -56,8 +56,9 @@ import {
  * bound; the group runs' self-declaration (§393) takes an unconfirmed address the same way.
  *
  * **A repeated sign-up** (the same address for the same event, whatever the role and whatever the row's
- * state — an organizer's «Anulat» included) changes nothing, sends nothing, and gets the same «am primit»
- * a new one gets, so the form is no oracle for who volunteers (BR-REQ-031-01 criterion 3).
+ * state — an organizer's «Anulat» included) changes nothing, sends nothing, and gets the answer a new one
+ * gets — «am primit», or «full» when the role it names has filled, judged first for everybody — so the
+ * form is no oracle for who volunteers (BR-REQ-031-01 criterion 3).
  */
 
 // ---------------------------------------------------------------------------------------------
@@ -635,19 +636,21 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
       .limit(1);
     if (!role) throw new DomainError("VALIDATION_ERROR", "that role is not this event's", ["roleId"]);
 
-    // A repeat of the same person: the same answer, nothing changed, nothing sent — whatever the row's state is.
+    // A full role first, for everybody: asked after the repeat, a forged post naming a full role would answer
+    // «full» to a stranger and «am primit» to a person already listed — an oracle. This way both hear «full».
+    const people = await tx
+      .select({ roleId: eventVolunteers.roleId, state: eventVolunteers.state })
+      .from(eventVolunteers)
+      .where(eq(eventVolunteers.roleId, role.id));
+    if (standingOf(role, people).free === 0) return { outcome: "full" };
+
+    // A repeat of the same person: the same answer a new one gets, nothing changed, nothing sent — whatever the row's state is.
     const [existing] = await tx
       .select({ id: eventVolunteers.id })
       .from(eventVolunteers)
       .where(and(eq(eventVolunteers.eventId, eventId), eq(eventVolunteers.canonicalEmail, identity.canonicalEmail)))
       .limit(1);
     if (existing) return { outcome: "done" };
-
-    const people = await tx
-      .select({ roleId: eventVolunteers.roleId, state: eventVolunteers.state })
-      .from(eventVolunteers)
-      .where(eq(eventVolunteers.roleId, role.id));
-    if (standingOf(role, people).free === 0) return { outcome: "full" };
 
     const [row] = await tx
       .insert(eventVolunteers)

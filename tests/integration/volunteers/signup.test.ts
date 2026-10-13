@@ -184,6 +184,18 @@ describe("§NNN the volunteers' public sign-up", () => {
     expect(await people(event.id)).toHaveLength(2);
   });
 
+  it("is no oracle on a full role: a forged post naming it answers «full» to a person already listed and to a stranger alike", async () => {
+    const event = await seedEvent();
+    const water = await seedRole(event.id);
+    const finish = await seedRole(event.id, { nameRo: "Sosire", nameEn: "Finish", position: 1, needed: 1 });
+    expect(await submitVolunteer(db, event.id, form(water.id), NOW)).toEqual({ outcome: "done" });
+    expect(await submitVolunteer(db, event.id, form(finish.id, { email: "ion@example.test", name: "Ion Test" }), NOW)).toEqual({ outcome: "done" });
+    // «Sosire» is full now. Maria is listed (on another role), the stranger is nobody: the same answer.
+    expect(await submitVolunteer(db, event.id, form(finish.id), NOW)).toEqual({ outcome: "full" });
+    expect(await submitVolunteer(db, event.id, form(finish.id, { email: "stranger@example.test", name: "Străin" }), NOW)).toEqual({ outcome: "full" });
+    expect(await people(event.id)).toHaveLength(2);
+  });
+
   it("refuses a role of another event as the person's own fix, naming the box", async () => {
     const event = await seedEvent();
     const other = await seedEvent();
