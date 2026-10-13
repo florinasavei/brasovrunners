@@ -56,7 +56,7 @@ type Props = {
  * optional cut-off and an optional note — and, when the route's GPX has waypoints, the one press
  * that takes them («Ia punctele din GPX»: a preview first, then what the club ticks is added).
  *
- * It is the second card of «Traseul»'s group and it sits **beside the editor's save form, never
+ * It belongs to «Traseul» (the page's sections list it nested there, and «Traseul» links to it) and it sits **beside the editor's save form, never
  * inside it**: HTML forms cannot nest, and a refusal here (a kilometre beyond the route, a cut-off
  * before the start or after a later point's) must keep what was typed here and nothing of the
  * event's other boxes — the same shape as «De făcut pentru pagina evenimentului» (§749). Its own

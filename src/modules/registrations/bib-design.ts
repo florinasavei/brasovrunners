@@ -380,7 +380,7 @@ export const bibDesignSchema = z
      */
     showCheckpoints: z.boolean().catch(true),
     /**
-     * «…cu timpii limită» (§NNN): beside each checkpoint on the strip, its cut-off — «km 12 · 11:30» —
+     * «…cu orele limită» (§NNN): beside each checkpoint on the strip, its cut-off — «km 12 · 11:30» —
      * where **every** one fits (the crowding rule, `bib-checkpoints.ts`). Off by default: a time printed
      * on a number is a promise the club cannot change after the sheet is printed.
      */

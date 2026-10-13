@@ -15,7 +15,7 @@ import type { BibProfile } from "./bib-profile";
  * - **any other point** (first aid, timing, or nothing said) is a small dot on the line;
  * - every point has a thin tick from the line (or from its glyph) down to the chart's foot;
  * - under the tick, in the labels' row of «Start» and «Sosire», **«km 12»** where there is room, and
- *   with the second tick «…cu timpii limită» **«km 12 · 11:30»** — the cut-off beside the point.
+ *   with the second tick «…cu orele limită» **«km 12 · 11:30»** — the cut-off beside the point.
  *
  * Pure and importing nothing but the geometry: no storage, no React. Every decision — which marks are
  * drawn, where each glyph stands, which words fit — is made **once, here**, and both renderers draw what
@@ -138,7 +138,7 @@ export function bibCheckpointMarks(input: {
   checkpoints: readonly BibCheckpointSource[];
   routeKm: number;
   points: BibProfile["points"];
-  /** «…cu timpii limită»: print the cut-offs beside the points, where every one fits. */
+  /** «…cu orele limită»: print the cut-offs beside the points, where every one fits. */
   showTimes: boolean;
   /** The words under the strip's two ends, whose room the labels must not take. */
   startWord: string;

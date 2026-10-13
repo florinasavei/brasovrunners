@@ -81,7 +81,8 @@ export function canReadCheckpoints(role: StaffRole): boolean {
  * Writing it: the Organizer, the Administrator and the Superadministrator. The Organizer prepares
  * the race on the ground — where the water is, by when the last runner has to pass — which is the
  * preparation §542 left with them rather than the event's settings it took away; the Tehnic and the
- * Redactor read it and ask.
+ * Redactor read it and ask. §NNN amends §542 for this one list, and `roles.ts#canEditEventFields`
+ * names it as the exception: the list reaches the public page and the bib, and every change is audited.
  */
 export function canEditCheckpoints(role: StaffRole): boolean {
   return canEditClubTodo(role);

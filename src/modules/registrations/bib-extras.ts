@@ -113,7 +113,7 @@ export async function loadBibExtras(
         );
         // The route's checkpoints (§NNN) on the strip, where the design asks and the event has some:
         // placed by the figure the bib prints, the club's own distance first, as the strip's right end is;
-        // «km 12» in the sheet's language, «km 12 · 11:30» with «…cu timpii limită».
+        // «km 12» in the sheet's language, «km 12 · 11:30» with «…cu orele limită».
         const kmWords = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
         const marks =
           design.showCheckpoints !== false && event.checkpoints && event.checkpoints.length > 0

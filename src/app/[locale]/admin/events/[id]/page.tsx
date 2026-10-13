@@ -953,7 +953,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 today={dayIn(now, CLUB_TIME_ZONE)}
                 error={todoErrorCode ? t(`errors.${todoErrorCode}`) : undefined}
               />
-              {/* «Puncte de control» (§NNN), «Traseul»'s second card: its forms are its own, beside the save form like the card above. */}
+              {/* «Puncte de control» (§NNN), part of «Traseul» in the page's sections (nested, no number): its forms are its own, beside the save form like the card above; «Traseul» links to it. */}
               <CheckpointsCard
                 locale={locale}
                 eventId={event.id}

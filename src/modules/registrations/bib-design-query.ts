@@ -79,7 +79,7 @@ export type BibDesignFormValues = {
   showProfile: boolean;
   /** «Punctele de control pe profil» (§NNN): on by default, drawn only with the profile and the event's checkpoints. */
   showCheckpoints: boolean;
-  /** «…cu timpii limită» (§NNN): the cut-offs beside the points; off by default. */
+  /** «…cu orele limită» (§NNN): the cut-offs beside the points; off by default. */
   showCheckpointTimes: boolean;
   showEmergency: boolean;
   emergencyPhone: string;
