@@ -4461,7 +4461,6 @@
       "doneBy": "Ticked by {by}, {when}",
       "doneTitle": "Done ({count})",
       "edit": "Edit",
-      "editRow": "Edit: {text}",
       "save": "Save",
       "saving": "Saving…",
       "delete": "Delete",

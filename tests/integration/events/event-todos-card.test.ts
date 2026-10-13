@@ -8,7 +8,7 @@ import type { EventTodoItem } from "@/modules/event-todos/event-todos";
 import { withClientWords } from "../../helpers/client-words";
 
 /**
- * §749, amended by §NNN — the card «De făcut pentru pagina evenimentului» as the editor draws it
+ * §749, amended by §752 — the card «De făcut pentru pagina evenimentului» as the editor draws it
  * (BR-REQ-050-01, BR-REQ-041-01 criterion 6): the closed line and when it opens by itself, two lists
  * — «Lipsește pe pagină», each row one link to the card that fills it, and «Sarcini», each row a tick
  * box, the words, the priority as a word (not the colour alone), who, by when and a pencil — the order,
@@ -120,7 +120,9 @@ describe("§749 the card «De făcut pentru pagina evenimentului»", () => {
     expect(html).toMatch(/Termen: [^<]*30 oct/);
     // The pencil: the line is the summary of the row's edit form, named for a screen reader.
     expect(html).toContain('data-testid="event-todo-edit-toggle"');
-    expect(html).toContain('aria-label="Modifică: Banda cu sponsori"');
+    // The edit line is named by what it shows (the words, the priority, who, the day, «Întârziat»), «Modifică» its description.
+    expect(html).toContain('title="Modifică"');
+    expect(html).not.toContain('aria-label="Modifică: ');
     expect(html).toContain('title="Modifică"');
   });
 

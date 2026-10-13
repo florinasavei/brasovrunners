@@ -5,7 +5,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox, openFold } from "./support/fold";
 
 /**
- * §749, amended by §NNN — «De făcut pentru pagina evenimentului» (BR-REQ-050-01, BR-REQ-060-01): an
+ * §749, amended by §752 — «De făcut pentru pagina evenimentului» (BR-REQ-050-01, BR-REQ-060-01): an
  * Administrator and a Superadministrator open an event whose page lacks its cover, see the computed row
  * under «Lipsește pe pagină» and follow its link to the cover's card, add a task with Enter, change every
  * one of its fields through the pencil, tick it from its box and find it under «Gata», untick it, and

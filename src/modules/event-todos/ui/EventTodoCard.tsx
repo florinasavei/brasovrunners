@@ -104,7 +104,7 @@ const SUMMARY_SX = {
 const TICK_SX = { minWidth: 44, width: 44, height: 44, p: 0, borderRadius: 1, "& .MuiButton-startIcon": { m: 0 }, "& .MuiButton-startIcon > *:nth-of-type(1)": { fontSize: 24 } } as const;
 
 /**
- * «De făcut pentru pagina evenimentului» (§749, drawn as a plain list by §NNN): one card in the event
+ * «De făcut pentru pagina evenimentului» (§749, drawn as a plain list by §752): one card in the event
  * editor, folded, with a summary line «N de făcut» and open on arrival while anything is left. Two
  * short lists under it — «Lipsește pe pagină» (computed from the event, each row a link to the card
  * that fills it, gone once filled) and «Sarcini» (the club's own, each a tick box, the words and, small
@@ -245,8 +245,9 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
       <Box sx={{ gridArea: "words", minWidth: 0 }}>
         <Typography
           variant="body2"
+          component="span"
           data-testid="event-todo-text"
-          sx={{ wordBreak: "break-word", ...(done ? { textDecoration: "line-through", color: "text.secondary" } : {}) }}
+          sx={{ display: "block", wordBreak: "break-word", ...(done ? { textDecoration: "line-through", color: "text.secondary" } : {}) }}
         >
           {item.text}
         </Typography>
@@ -298,7 +299,7 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
           data-testid="event-todo-edit"
           sx={{ flex: 1, minWidth: 0 }}
         >
-          <Box component="summary" aria-label={t("eventTodos.editRow", { text: label })} title={t("eventTodos.edit")} data-testid="event-todo-edit-toggle" sx={SUMMARY_SX}>
+          <Box component="summary" title={t("eventTodos.edit")} data-testid="event-todo-edit-toggle" sx={SUMMARY_SX}>
             {wordsBlock}
             {facts(item, done)}
             <PencilIcon aria-hidden fontSize="small" sx={{ gridArea: "pen", color: "text.secondary", justifySelf: "end" }} />
@@ -433,7 +434,7 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
             </Box>
           ) : (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }} data-testid="event-todos-empty">
-              {mine ? t("eventTodos.emptyMine") : nothing ? t("eventTodos.empty") : t("eventTodos.noTasks")}
+              {mine ? t("eventTodos.emptyMine") : nothing || !mayEdit ? t("eventTodos.empty") : t("eventTodos.noTasks")}
             </Typography>
           )}
         </Box>
