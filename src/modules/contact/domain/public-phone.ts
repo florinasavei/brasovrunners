@@ -27,6 +27,11 @@ function digitCount(value: string): number {
   return value.replace(/\D/g, "").length;
 }
 
+/** Whether a typed value is written like a telephone number — the check «Telefon public» and the bib's emergency phone share (§750). */
+export function isPhoneNumberShaped(value: string): boolean {
+  return PHONE_SHAPE.test(value) && digitCount(value) >= MIN_DIGITS && digitCount(value) <= MAX_DIGITS;
+}
+
 /** The stored value's shape: a number as typed (trimmed, inner runs of spaces made one), or null. */
 export const publicPhoneSchema = z
   .object({
@@ -38,7 +43,7 @@ export const publicPhoneSchema = z
       .default(null)
       .transform((value) => (value ? value.replace(/\s+/g, " ") : null))
       .refine(
-        (value) => value === null || (PHONE_SHAPE.test(value) && digitCount(value) >= MIN_DIGITS && digitCount(value) <= MAX_DIGITS),
+        (value) => value === null || isPhoneNumberShaped(value),
         { message: "not a telephone number" },
       ),
   })
