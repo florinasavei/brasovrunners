@@ -208,6 +208,26 @@ test.describe("§NNN the sponsors' place, the profile, the emergency phone and t
     await phone.fill("0722 000 000");
     await expect(preview).toHaveAttribute("src", /[?&]showEmergency=1(&|$)/, { timeout: 10_000 });
     await expect(preview).toHaveAttribute("src", /[?&]emergencyPhone=0722\+000\+000(&|$)/, { timeout: 10_000 });
+
+    // «Tipărit invers»: ticked by default while the phone shows (the trail practice), and it travels too.
+    const upsideDown = extras.getByRole("checkbox", { name: "Tipărit invers" });
+    await expect(upsideDown).toBeChecked();
+    await expect(preview).toHaveAttribute("src", /[?&]emergencyUpsideDown=1(&|$)/);
+    await upsideDown.uncheck();
+    await expect(preview).toHaveAttribute("src", /[?&]emergencyUpsideDown=0(&|$)/, { timeout: 10_000 });
+    await upsideDown.check();
+
+    // The distance badge and the footer's two stubs: off until ticked, each in the address.
+    const badge = extras.getByRole("checkbox", { name: "Distanța pe număr" });
+    const stubs = extras.getByRole("checkbox", { name: "Numărul și pe capetele subsolului" });
+    await expect(badge).not.toBeChecked();
+    await expect(stubs).not.toBeChecked();
+    await expect(preview).toHaveAttribute("src", /[?&]showDistance=0(&|$)/);
+    await badge.check();
+    await stubs.check();
+    await expect(preview).toHaveAttribute("src", /[?&]showDistance=1(&|$)/, { timeout: 10_000 });
+    await expect(preview).toHaveAttribute("src", /[?&]numberStubs=1(&|$)/, { timeout: 10_000 });
+
     const drawn = await page.request.get((await preview.getAttribute("src")) as string);
     expect(drawn.status()).toBe(200);
     expect(drawn.headers()["content-type"]).toBe("image/png");

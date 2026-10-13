@@ -3,7 +3,7 @@ import { vi } from "vitest";
 import { DECLARATION_FOOTER, DECLARATION_MARGIN, DECLARATION_PAGE } from "@/modules/registrations/declaration-pdf";
 
 /** One `text()` call of a rendered declaration: the page it landed on (0-based), the words, and its `y` when the call named one. */
-export type DrawnRun = { page: number; text: string; x: number | undefined; y: number | undefined; width: number | undefined };
+export type DrawnRun = { page: number; text: string; x: number | undefined; y: number | undefined; width: number | undefined; size: number | undefined };
 
 /** The `y` every footer line of a declaration is drawn at — `declaration-pdf.ts`'s own geometry. */
 export const DECLARATION_FOOTER_Y = DECLARATION_PAGE.height - DECLARATION_MARGIN.bottom + DECLARATION_FOOTER.gap;
@@ -28,6 +28,8 @@ export async function drawnRuns(render: () => Promise<unknown>): Promise<DrawnRu
         x: typeof args[1] === "number" ? args[1] : undefined,
         y: typeof args[2] === "number" ? args[2] : undefined,
         width: options?.width,
+        // The font size the run was set at: pdfkit's own `_fontSize`, undeclared in its types.
+        size: (this as unknown as { _fontSize?: number })._fontSize,
       });
     }
     return (original as (...a: unknown[]) => PDFKit.PDFDocument).apply(this, args);

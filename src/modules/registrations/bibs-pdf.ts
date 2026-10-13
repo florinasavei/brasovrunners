@@ -26,8 +26,11 @@ import {
   BIB_MARGIN,
   BIB_PAPER,
   bibExtrasHeight,
+  bibHeaderReserve,
   bibNameReserve,
-  bibNumberPoints,
+  bibNumberArea,
+  bibNumberFit,
+  bibStubScale,
   MEMBER_MARK_CHECK,
 } from "./bib-geometry";
 import type { BibRow } from "./bibs";
@@ -112,6 +115,8 @@ export type BibSheetInput = {
   profile?: BibProfileDrawing | null;
   /** The word before the emergency phone (§NNN) — «Urgențe» — in the sheet's language; the phone is the design's. */
   emergencyLabel?: string;
+  /** «21K» for the header's badge (§NNN), from `bib-extras.ts`; drawn only while the design's tick is on. */
+  distanceBadge?: string | null;
   /**
    * The platform's words for the members' label when the club typed none (§664) — «Membru {club}» —
    * in the sheet's language, from the caller's catalogue. Absent, a member's bib carries no label
@@ -315,7 +320,10 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     doc.image(picture, x, y, { ...(drawing.kind === "cover" ? { cover: frame } : { fit: frame }), align: "center", valign: "center" });
   };
   /** The strip of sponsors takes this much above the small print, when there is one. */
-  const sponsorHeight = sponsorPicture ? L.sponsorHeight : 0;
+  // The row is also there, for its two stubs, with the number repeated and no picture (§NNN).
+  const stubs = design.numberStubs;
+  const sponsorHeight = sponsorPicture || stubs ? L.sponsorHeight : 0;
+  const badge = design.showDistance ? (input.distanceBadge ?? null) : null;
   // The same on every bib of the sheet, so laid out once (§317), and told which header the sheet
   // really draws. A second line takes its height from the number's area, never from the small
   // print's size.
@@ -392,12 +400,21 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     */
     // The lockup at the left of the band, white on whatever colour the band is; the race and its
     // date at the right, in whichever of white and ink can be read on it.
-    const drawHeaderWords = (textColour: string) => {
+    const drawHeaderWords = (textColour: string, badgeInk: string) => {
       if (design.showLogo) {
         doc.image(lockup, left + L.inset, top + (L.bandHeight - L.logoWidth / L.logoRatio) / 2, { width: L.logoWidth });
       }
       const headerLeft = left + (design.showLogo ? L.logoWidth + 2 * L.inset : L.inset);
-      const headerWidth = BIB_CARD.width - (design.showLogo ? L.logoWidth + 3 * L.inset : 2 * L.inset);
+      const headerWidth = BIB_CARD.width - (design.showLogo ? L.logoWidth + 3 * L.inset : 2 * L.inset) - bibHeaderReserve(badge !== null);
+      // The distance badge (§NNN): a rounded tag in the header's text colour at the right inset, the
+      // distance in the band's colour on it; the race and its date end `badgeGap` short of it.
+      if (badge) {
+        const badgeLeft = left + BIB_CARD.width - L.inset - L.badgeWidth;
+        doc.roundedRect(badgeLeft, top + L.badgeTop, L.badgeWidth, L.badgeHeight, L.badgeRadius).fill(textColour);
+        doc.font("bold").fontSize(L.badgeSize).fillColor(badgeInk);
+        const badgeTextHeight = doc.heightOfString(badge, { lineBreak: false });
+        doc.text(badge, badgeLeft + (L.badgeWidth - doc.widthOfString(badge)) / 2, top + L.badgeTop + (L.badgeHeight - badgeTextHeight) / 2, { lineBreak: false });
+      }
       if (design.showEventTitle) {
         doc
           .font("bold")
@@ -440,7 +457,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
         ramp.stop(0, background.stops[0]).stop(1, background.stops[1]);
         doc.rect(left, top, BIB_CARD.width, cardHeight).fill(ramp);
       }
-      drawHeaderWords(BIB_MEMBER_CARD.text);
+      drawHeaderWords(BIB_MEMBER_CARD.text, COLOR.ink);
       /*
         The stripe across the card, its foot on the background's foot, the label in capitals, bold,
         letter-spaced and centred by hand without a width so pdfkit cannot wrap it (§317's lesson).
@@ -460,7 +477,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       // The band first, across the card: it is what says which race this is before anybody is
       // close enough to read a word of it.
       doc.rect(left, top, BIB_CARD.width, L.bandHeight).fill(header.band);
-      drawHeaderWords(header.bandText);
+      drawHeaderWords(header.bandText, header.band);
     }
 
     /*
@@ -521,14 +538,15 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     const nameAbove = design.showName && design.namePosition === "above";
     // As the event writes it (§735): «007» under «Trei cifre»; its length sizes it, as ever.
     const digits = formatRaceNumber(row.bibNumber, design.numberFormat);
-    const numberSize = bibNumberPoints(digits, numberScaleFactor(design));
     // The foot of everything above the sponsors' strip and the small print: the number's region (§NNN).
     const regionFoot = bottom - footerHeight - sponsorHeight;
     // «Jos de tot» (§NNN): the strip is the card's last row under the small print; «Deasupra subsolului», above it.
     const sponsorsAtBottom = design.sponsorPlace === "bottom";
     const sponsorTop = sponsorsAtBottom ? bottom - sponsorHeight : regionFoot;
     const footerFoot = sponsorsAtBottom ? bottom - sponsorHeight : bottom;
-    const numberArea = BIB_CARD.height - L.bandHeight - footerHeight - nameBlock - sponsorHeight - stripeHeight - extrasHeight;
+    const numberArea = bibNumberArea({ footer: footerHeight, name: nameBlock, sponsors: sponsorHeight, stripe: stripeHeight, extras: extrasHeight });
+    // Never taller than the area the rows under the band leave it, nor wider than the card (§NNN).
+    const numberSize = bibNumberFit(digits, numberScaleFactor(design), numberArea);
     const numberTop = top + L.bandHeight + (nameAbove ? nameBlock : 0);
 
     /*
@@ -628,12 +646,39 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       doc.font("body").fontSize(L.emergencySize).fillColor(ink);
       const width = doc.widthOfString(emergency);
       const height = doc.heightOfString(emergency, { lineBreak: false });
+      // Upside down (§NNN): turned half a circle about the line's own centre, so the runner reads it looking down at the chest.
+      doc.save();
+      if (design.emergencyUpsideDown) doc.rotate(180, { origin: [left + BIB_CARD.width / 2, emergencyTop + L.emergencyHeight / 2] });
       doc.text(emergency, left + (BIB_CARD.width - width) / 2, emergencyTop + (L.emergencyHeight - height) / 2, { lineBreak: false });
+      doc.restore();
     }
 
     // The sponsors' strip above the small print (§249): the club's crop in the strip's shape, or
     // the whole picture with its own proportion kept (§560).
-    if (sponsorPicture) drawPicture("sponsors", sponsorPicture, left + L.inset, sponsorTop + L.sponsorTop);
+    if (sponsorPicture) {
+      // With the stubs the picture is scaled whole, about its centre, to what is left between them (§NNN).
+      const scale = bibStubScale(stubs);
+      doc.save();
+      if (stubs) {
+        const centreX = left + BIB_CARD.width / 2;
+        const centreY = sponsorTop + L.sponsorTop + L.sponsorPicture / 2;
+        doc.translate(centreX, centreY).scale(scale).translate(-centreX, -centreY);
+      }
+      drawPicture("sponsors", sponsorPicture, left + L.inset, sponsorTop + L.sponsorTop);
+      doc.restore();
+    }
+    /*
+      The number repeated on the footer's two ends (§NNN), the owner's tear-off stubs: small and bold at
+      each end of the sponsors' row, inside the inset, in the body ink on the paper's white.
+    */
+    if (stubs) {
+      doc.font("bold").fontSize(L.stubSize).fillColor(COLOR.ink);
+      const stubWidth = doc.widthOfString(digits);
+      const stubHeight = doc.heightOfString(digits, { lineBreak: false });
+      const stubY = sponsorTop + L.sponsorTop + (L.sponsorPicture - stubHeight) / 2;
+      doc.text(digits, left + L.inset, stubY, { lineBreak: false });
+      doc.text(digits, left + BIB_CARD.width - L.inset - stubWidth, stubY, { lineBreak: false });
+    }
 
     /*
       The small print, as the club composed it (§317): one line, or two with the last where the

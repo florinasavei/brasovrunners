@@ -1,8 +1,8 @@
 import { getTranslations } from "next-intl/server";
 import type { RouteGpx } from "@/modules/events/domain/route-gpx";
 import { getStorage } from "@/modules/media/storage";
-import type { BibDesign } from "./bib-design";
-import { type BibProfileDrawing, bibProfileDrawing, parseGpxProfile } from "./bib-profile";
+import { type BibDesign, bibDistanceBadge } from "./bib-design";
+import { type BibProfile, type BibProfileDrawing, bibProfileDrawing, parseGpxProfile } from "./bib-profile";
 
 /**
  * What a race number prints beyond the design's own switches, read once per request (§NNN): the
@@ -19,6 +19,8 @@ export type BibExtras = {
   profile: BibProfileDrawing | null;
   /** «Urgențe» / "Emergency": the word before the phone, in the picture's language; empty while the tick is off. */
   emergencyLabel: string;
+  /** «21K»: the event's distance for the header's badge (§NNN); null while the tick is off or the event has no distance. */
+  distanceBadge: string | null;
 };
 
 /** The event's facts the profile reads: its GPX, and the figures the club may have typed (they win). */
@@ -28,18 +30,49 @@ export type BibProfileSource = {
   elevationGainMeters: number | null;
 };
 
+/**
+ * The parsed profiles by the GPX's store key (§NNN): a new upload gets a new key, so an entry never goes
+ * stale, and the 64 points are small. Without it every picture on the bibs page and the desk, and
+ * every redraw of the editor's preview, downloaded the whole file (up to 4 MB) and parsed it again.
+ * Only an answer is kept — a file that was read, with or without a profile in it — never a failed read,
+ * which may be the store's bad moment. Oldest out beyond `PROFILE_CACHE_SIZE`.
+ */
+const PROFILE_CACHE_SIZE = 16;
+const profileCache = new Map<string, BibProfile | null>();
+
+/** Forgets every cached profile — for the tests, which count the store's reads. */
+export function clearBibProfileCache(): void {
+  profileCache.clear();
+}
+
+async function profileOf(key: string): Promise<BibProfile | null> {
+  if (profileCache.has(key)) {
+    const kept = profileCache.get(key) ?? null;
+    // Most recently used goes last.
+    profileCache.delete(key);
+    profileCache.set(key, kept);
+    return kept;
+  }
+  const bytes = await getStorage().get(key);
+  if (!bytes) return null;
+  const parsed = parseGpxProfile(new TextDecoder().decode(bytes));
+  profileCache.set(key, parsed);
+  if (profileCache.size > PROFILE_CACHE_SIZE) profileCache.delete(profileCache.keys().next().value as string);
+  return parsed;
+}
+
 export async function loadBibExtras(
   event: BibProfileSource,
-  design: Pick<BibDesign, "showProfile" | "showEmergency">,
+  design: Pick<BibDesign, "showProfile" | "showEmergency" | "showDistance">,
   locale: string,
 ): Promise<BibExtras> {
-  if (!design.showProfile && !design.showEmergency) return { profile: null, emergencyLabel: "" };
+  const distanceBadge = design.showDistance ? bibDistanceBadge(event.distanceMeters) : null;
+  if (!design.showProfile && !design.showEmergency) return { profile: null, emergencyLabel: "", distanceBadge };
   const admin = await getTranslations({ locale, namespace: "Admin" });
   let profile: BibProfileDrawing | null = null;
   if (design.showProfile && event.routeGpx) {
     try {
-      const bytes = await getStorage().get(event.routeGpx.key);
-      const parsed = bytes ? parseGpxProfile(new TextDecoder().decode(bytes)) : null;
+      const parsed = await profileOf(event.routeGpx.key);
       if (parsed) {
         profile = bibProfileDrawing(parsed, event, locale, (key, values) =>
           key === "start"
@@ -55,5 +88,5 @@ export async function loadBibExtras(
       profile = null;
     }
   }
-  return { profile, emergencyLabel: design.showEmergency ? admin("bibs.emergencyLabel") : "" };
+  return { profile, emergencyLabel: design.showEmergency ? admin("bibs.emergencyLabel") : "", distanceBadge };
 }

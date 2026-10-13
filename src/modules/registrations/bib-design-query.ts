@@ -79,6 +79,10 @@ export type BibDesignFormValues = {
   showProfile: boolean;
   showEmergency: boolean;
   emergencyPhone: string;
+  /** «Tipărit invers», «Distanța pe număr» and «Numărul și pe capete» (§NNN). */
+  emergencyUpsideDown: boolean;
+  showDistance: boolean;
+  numberStubs: boolean;
   /** The members' race number (§664): its switch, its header and its label, as posted. */
   member: BibMemberFormValues;
 };
@@ -116,6 +120,9 @@ const SWITCHES = [
   "showWebsite",
   "showProfile",
   "showEmergency",
+  "emergencyUpsideDown",
+  "showDistance",
+  "numberStubs",
 ] as const;
 const CHOICES = ["numberScale", "numberFormat", "namePosition", "sponsorPlace"] as const;
 const PICTURES = ["headerImageSrc", "sponsorImageSrc"] as const;
@@ -161,6 +168,9 @@ export function readBibDesignForm(get: (name: string) => string | null): BibDesi
     showProfile: field("showProfile") === "on",
     showEmergency: field("showEmergency") === "on",
     emergencyPhone: field("emergencyPhone") ?? "",
+    emergencyUpsideDown: field("emergencyUpsideDown") === "on",
+    showDistance: field("showDistance") === "on",
+    numberStubs: field("numberStubs") === "on",
     member: {
       enabled: field("member.enabled") === "on",
       style: field("member.style")?.trim() || "band",

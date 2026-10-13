@@ -306,6 +306,16 @@ export function bibEmergencyLine(design: Pick<BibDesign, "showEmergency" | "emer
   return label ? `${label}: ${design.emergencyPhone}` : design.emergencyPhone;
 }
 
+/**
+ * The distance badge's words (§NNN; the owner's marathon example): the event's distance in whole
+ * kilometres with a K — «21K» for a half marathon — or null when the event has none or it is under half
+ * a kilometre. Typed by the club on the event, never read from the GPX: the badge says what the page says.
+ */
+export function bibDistanceBadge(distanceMeters: number | null | undefined): string | null {
+  if (!distanceMeters || !(distanceMeters >= 500)) return null;
+  return `${Math.round(distanceMeters / 1000)}K`;
+}
+
 export const bibDesignSchema = z
   .object({
     showName: z.boolean().catch(true),
@@ -364,6 +374,12 @@ export const bibDesignSchema = z
     /** «Telefon pentru urgențe» (§NNN): the tick, and the number the club types (`bibEmergencyPhone`). */
     showEmergency: z.boolean().catch(false),
     emergencyPhone: z.string().transform(bibEmergencyPhone).catch(""),
+    /** «Tipărit invers» (§NNN): the phone printed upside down, to be read looking down at the chest; on by default, the trail practice. */
+    emergencyUpsideDown: z.boolean().catch(true),
+    /** «Distanța pe număr» (§NNN): the event's distance as a badge in the header's right corner («21K»). */
+    showDistance: z.boolean().catch(false),
+    /** «Numărul și pe capete» (§NNN): the number again, small, at both ends of the sponsors' row — tear-off stubs. */
+    numberStubs: z.boolean().catch(false),
     /** The members' race number (§664): off, or the members' own header and label. */
     member: bibMemberSchemaWithDefault,
   })
@@ -399,6 +415,9 @@ export const DEFAULT_BIB_DESIGN: BibDesign = {
   showProfile: false,
   showEmergency: false,
   emergencyPhone: "",
+  emergencyUpsideDown: true,
+  showDistance: false,
+  numberStubs: false,
   member: DEFAULT_BIB_MEMBER_DESIGN,
 };
 

@@ -320,6 +320,12 @@ export default async function BibDesignPanel({
           >
             {t("editor.bibDesign.showProfile")}
           </CheckboxField>
+          <CheckboxField name="event.bibDesign.showDistance" defaultChecked={design.showDistance} help={t("editor.bibDesign.showDistanceHelp")}>
+            {t("editor.bibDesign.showDistance")}
+          </CheckboxField>
+          <CheckboxField name="event.bibDesign.numberStubs" defaultChecked={design.numberStubs} help={t("editor.bibDesign.numberStubsHelp")}>
+            {t("editor.bibDesign.numberStubs")}
+          </CheckboxField>
           <CheckboxField name="event.bibDesign.showEmergency" defaultChecked={design.showEmergency} help={t("editor.bibDesign.showEmergencyHelp")}>
             {t("editor.bibDesign.showEmergency")}
           </CheckboxField>
@@ -335,6 +341,9 @@ export default async function BibDesignPanel({
               slotProps={{ htmlInput: { maxLength: BIB_EMERGENCY_PHONE_MAX, inputMode: "tel" }, inputLabel: { shrink: true } }}
               sx={{ width: { sm: 280 } }}
             />
+            <CheckboxField name="event.bibDesign.emergencyUpsideDown" defaultChecked={design.emergencyUpsideDown} help={t("editor.bibDesign.emergencyUpsideDownHelp")}>
+              {t("editor.bibDesign.emergencyUpsideDown")}
+            </CheckboxField>
           </OnlyWhenTicked>
         </Stack>
 

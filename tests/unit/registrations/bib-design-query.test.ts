@@ -51,6 +51,10 @@ const EVERYTHING_OFF: BibDesign = {
   showProfile: true,
   showEmergency: true,
   emergencyPhone: "+40 722 000 000",
+  // The trail practice off, the badge and the stubs on: each the other way from its default (§NNN).
+  emergencyUpsideDown: false,
+  showDistance: true,
+  numberStubs: true,
   // The members' bib (§664): on, the whole card (§NNN), a colour, both pictures with their crops and a
   // label with a diacritic and an ampersand.
   member: {
@@ -200,6 +204,8 @@ describe("§249 the form, read the same way for the save and for the preview", (
       showLogo: false,
       showEmail: false,
       showPartners: false,
+      // The unticked upside-down box posts nothing, which reads off (§NNN).
+      emergencyUpsideDown: false,
     });
   });
 
@@ -257,6 +263,10 @@ describe("§249 the form, read the same way for the save and for the preview", (
       showProfile: false,
       showEmergency: false,
       emergencyPhone: "",
+      // An unposted box is an unticked one: no upside-down phone, no badge, no stubs (§NNN).
+      emergencyUpsideDown: false,
+      showDistance: false,
+      numberStubs: false,
       headerImageSrc: null,
       sponsorImageSrc: OURS,
       // No crop posted (§560): each picture as the bib drew it before crops.
