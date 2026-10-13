@@ -252,6 +252,8 @@ export async function setOutsideCapacityAction(_previous: FormOutcome | null, fo
     // «Folosește lista ascunsă» off (§647): its own sentence, naming the switch, not "check the data".
     outcome = isDomainError(error) && error.fields.includes(HIDDEN_LIST_OFF) ? { error: HIDDEN_LIST_OFF } : (noFreePlaceOutcome(error) ?? outcomeOf(error));
   }
+  // From the list's «⋮» (§743) the form carries the list's query: back to the list, as it stands.
+  if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), outcome as Record<string, string>);
   return backTo(detailPath(locale, registrationId), outcome);
 }
 

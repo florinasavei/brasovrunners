@@ -1,3 +1,4 @@
+import { outsideMarkBody } from "@/modules/registrations/ui/outside-mark-body";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import Alert from "@mui/material/Alert";
@@ -798,18 +799,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                         A waiting runner, or an open offer (the review of 2026-10-02), is seated now with the
                         declaration's email; a TEST row's dialog names no email, in its body as in its bold line (§384).
                       */
-                      body:
-                        registration.status === "WAITLISTED"
-                          ? registration.kind === "TEST"
-                            ? tr("confirm.outsideMarkBodyWaitlistedTest", { name: registration.registeredName })
-                            : tr("confirm.outsideMarkBodyWaitlisted", { name: registration.registeredName, message: tr("emails.types.COMPLETE_DECLARATION") })
-                          : registration.status === "WAITLIST_OFFERED"
-                            ? registration.kind === "TEST"
-                              ? tr("confirm.outsideMarkBodyOfferedTest", { name: registration.registeredName })
-                              : tr("confirm.outsideMarkBodyOffered", { name: registration.registeredName, message: tr("emails.types.COMPLETE_DECLARATION") })
-                            : registration.status === "PENDING_EMAIL_CONFIRMATION"
-                              ? tr("confirm.outsideMarkBodyPendingEmail", { name: registration.registeredName })
-                              : tr("confirm.outsideMarkBody", { name: registration.registeredName }),
+                      body: outsideMarkBody(tr, registration),
                       ...(registration.status !== "WAITLISTED" && registration.status !== "WAITLIST_OFFERED"
                         ? {}
                         : registration.kind === "TEST" ? {} : { email: words.email(1) }),

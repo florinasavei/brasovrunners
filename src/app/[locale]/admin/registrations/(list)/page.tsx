@@ -92,12 +92,14 @@ import {
   promoteRegistrationAction,
   setBibPrintedAction,
   setClubMemberDeclaredAction,
+  setOutsideCapacityAction,
 } from "../actions";
 import { previewMemberTickSweep } from "@/modules/registrations/admin-service";
 import { countForm, type CountForm } from "@/i18n/count-form";
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
 import { givePlaceRefusalAhead } from "@/modules/registrations/give-place-tip";
+import { outsideMarkBody } from "@/modules/registrations/ui/outside-mark-body";
 import { paperConfirmationText } from "@/modules/registrations/ui/PaperConfirmationTip";
 import RegistrationRowMenu, { type RegistrationMenuItem } from "@/modules/registrations/ui/RegistrationRowMenu";
 import HiddenListChip from "@/modules/registrations/ui/HiddenListChip";
@@ -1760,6 +1762,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 checkedIn: row.checkedInAt !== null,
                 // A number is printable once the registration is confirmed (§264, §548).
                 bib: { settled: row.bibNumber !== null, printed: row.bibPrintedAt !== null },
+                // The special guests list (§648, §743): the registration page's predicate, in `rowVerbsFor`.
+                outside: { onList: row.outsideCapacity, enabled: row.eventHiddenListEnabled },
               });
               const hidden = (
                 <>
@@ -1818,6 +1822,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                     ? { kind: "submit", icon: "memberOff", label: t("registrations.memberTick.clear"), formId: `member-${row.id}` }
                     : { kind: "submit", icon: "memberOn", label: t("registrations.memberTick.set"), formId: `member-${row.id}` },
                 );
+              }
+              if (verbs.includes("outsideMark")) {
+                items.push({ kind: "submit", icon: "hiddenList", label: t("registrations.outside.mark"), formId: `outside-${row.id}` });
+              }
+              if (verbs.includes("outsideUnmark")) {
+                items.push({ kind: "submit", icon: "hiddenList", label: t("registrations.outside.unmark"), formId: `outside-${row.id}` });
               }
               if (verbs.includes("cancel")) {
                 items.push({
@@ -1886,6 +1896,29 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                     >
                       {hidden}
                       <input type="hidden" name="direction" value={row.checkedInAt ? "undo" : "in"} />
+                    </ActionForm>
+                  )}
+                  {(verbs.includes("outsideMark") || verbs.includes("outsideUnmark")) && (
+                    <ActionForm
+                      id={`outside-${row.id}`}
+                      action={setOutsideCapacityAction}
+                      hidden
+                      // The registration page's dialog, word for word (§643, §648): what happens to the place.
+                      confirm={
+                        row.outsideCapacity
+                          ? { title: t("confirm.outsideUnmarkTitle"), body: t("confirm.outsideUnmarkBody", { name: row.registeredName }), confirmLabel: t("registrations.outside.unmark"), cancelLabel: words.cancel }
+                          : {
+                              title: t("confirm.outsideMarkTitle"),
+                              body: outsideMarkBody(t, row),
+                              ...(row.status !== "WAITLISTED" && row.status !== "WAITLIST_OFFERED" ? {} : row.kind === "TEST" ? {} : { email: words.email(1) }),
+                              confirmLabel: t("registrations.outside.mark"),
+                              cancelLabel: words.cancel,
+                            }
+                      }
+                    >
+                      {hidden}
+                      <input type="hidden" name="outside" value={row.outsideCapacity ? "false" : "true"} />
+                      <input type="hidden" name="listQuery" value={listQueryString} />
                     </ActionForm>
                   )}
                   {verbs.includes("cancel") && (

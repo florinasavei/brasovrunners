@@ -41,7 +41,7 @@ describe("§384 a TEST row's dialog names no participant email", () => {
     const list = read("src/app/[locale]/admin/registrations/(list)/page.tsx");
     expect(singleEmailCalls(list).every((call) => call.includes('row.kind === "TEST"'))).toBe(true);
     const gated = (list.match(/row\.kind === "TEST" \? \{\} : \{ email: words\.email\(1\) \}/g) ?? []).length;
-    expect(gated).toBe(5); // resend, resend to the family (§588), row-menu confirm-on-paper, give-a-place, cancel
+    expect(gated).toBe(6); // resend, resend to the family (§588), row-menu confirm-on-paper, give-a-place, cancel, a waiting row or an open offer seated outside the places (§743)
   });
 
   it("gates every single-row email line on the registration page", () => {
@@ -57,9 +57,10 @@ describe("§384 a TEST row's dialog names no participant email", () => {
     email line was dropped — the dialog contradicting itself. A TEST row gets a body that names none.
   */
   it("a TEST row seated outside the places is told of no email in the dialog's body either", () => {
-    const page = read("src/app/[locale]/admin/registrations/[id]/page.tsx");
+    // One function since §743: the registration's page and the list's «⋮» both call it.
+    const helper = read("src/modules/registrations/ui/outside-mark-body.ts");
     for (const key of ["outsideMarkBodyWaitlistedTest", "outsideMarkBodyOfferedTest"] as const) {
-      expect(page).toMatch(new RegExp(`registration\\.kind === "TEST"\\s*\\?\\s*tr\\("confirm\\.${key}"`));
+      expect(helper).toMatch(new RegExp(`row\\.kind === "TEST"\\s*\\?\\s*t\\("confirm\\.${key}"`));
       for (const catalogue of [ro, en]) {
         const body = catalogue.Admin.confirm[key];
         expect(body).not.toMatch(/email|\{message\}/i);
