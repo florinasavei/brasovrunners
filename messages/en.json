@@ -566,11 +566,13 @@
       "captcha": "The anti-bot check did not pass. Tick the “I am not a robot” box again and resend.",
       "limited": "That is a lot of attempts for one address or one event in an hour. Wait a little and try again.",
       "full": "The role you chose has just been filled. Pick another one below, or come back later.",
+      "allFull": "Thank you! Every role has been filled in the meantime, so your offer was not kept. If you want to help, write to us from the contact page.",
       "errors": {
         "name": "Write your name.",
         "email": "That email address does not look valid.",
         "phone": "That telephone number is not valid.",
         "roleId": "Pick one of the roles.",
+        "message": "The message is too long: shorten it.",
         "consent": "Tick the box to agree, or we cannot keep your offer."
       }
     },

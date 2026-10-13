@@ -10,7 +10,7 @@ import { refuseOneLanguage } from "@/shared/forms/both-languages";
  * stands («N din M»), and the three conditions that open the public form.
  *
  * Pure and free of the database, so every rule here is unit-tested without one; `volunteers.ts`
- * beside this folder is the writer and `public-offer.ts` the public read.
+ * beside this folder is the writer, the public read (`readPublicVolunteerRoles`) and the public sign-up.
  */
 
 export const VOLUNTEER_STATES = ["REGISTERED", "CONFIRMED", "CANCELLED"] as const satisfies readonly EventVolunteerState[];
@@ -199,6 +199,21 @@ export function volunteerOfferClosedFor(inputs: VolunteerOfferInputs): Volunteer
   if (!someRoleNeedsPeople(inputs.standings)) return "noRoleNeeds";
   if (!inputs.noticeDescribes) return "noNotice";
   return null;
+}
+
+/**
+ * Which roles the page's box lists, or null for no box at all: the roles that still need people while the form
+ * is open; and, when the form closed only because the last place has just gone, an empty list for a person
+ * whose page is the answer to their own post («am primit», or «the role filled») — that answer is still owed to
+ * them, with no form to fill. Every other closed form draws nothing.
+ */
+export function volunteerBoxRoles<R extends Pick<RoleStanding, "free">>(
+  closed: VolunteerOfferClosed | null,
+  roles: readonly R[],
+  answer: "done" | "full" | "invalid" | "captcha" | "limited" | null,
+): R[] | null {
+  if (closed === null) return roles.filter((role) => role.free > 0);
+  return closed === "noRoleNeeds" && (answer === "done" || answer === "full") ? [] : null;
 }
 
 /**

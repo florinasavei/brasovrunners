@@ -104,6 +104,11 @@ export default async function VolunteerBox({
           <Alert severity="success" role="status" data-testid="volunteer-done" sx={{ mt: 1 }}>
             {t("volunteers.done")}
           </Alert>
+        ) : roles.length === 0 ? (
+          // Every role filled while the person typed: thanked, and no form with nothing to choose from.
+          <Alert severity="info" role="status" data-testid="volunteer-all-full" sx={{ mt: 1 }}>
+            {t("volunteers.allFull")}
+          </Alert>
         ) : (
           <Stack component="form" action={submitVolunteerAction} spacing={2} data-testid="volunteer-form" sx={{ mt: 1, maxWidth: 560 }}>
             <input type="hidden" name="locale" value={locale} />
@@ -217,6 +222,7 @@ export default async function VolunteerBox({
               multiline
               minRows={2}
               defaultValue={typed.message}
+              error={invalid.has("message")}
               slotProps={{ htmlInput: { maxLength: VOLUNTEER_MESSAGE_MAX } }}
             />
 

@@ -9,7 +9,7 @@ import { csvCell } from "@/modules/registrations/csv";
  * through the one `csvCell`, so a name or a message starting with `=`, `+`, `-` or `@` opens as text and
  * never as a formula, and a comma, a quote or a line break is quoted; CRLF between lines (RFC 4180) and a
  * **BOM** first, because the club opens the file in Excel on Windows (`subscribers-csv.ts` says why).
- * Dates are ISO 8601 with the offset, as the registrations export writes them.
+ * The sign-up's moment is ISO 8601 in UTC (`toISOString`), one unambiguous value whatever the reader's zone.
  */
 
 export type VolunteerCsvRow = {

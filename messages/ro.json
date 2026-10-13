@@ -566,11 +566,13 @@
       "captcha": "Verificarea anti-bot nu a reușit. Bifează din nou căsuța „Nu sunt robot” și retrimite.",
       "limited": "Sunt multe încercări pentru o adresă sau pentru un eveniment într-o oră. Așteaptă puțin și încearcă din nou.",
       "full": "Rolul ales tocmai s-a umplut. Alege altul mai jos sau revino mai târziu.",
+      "allFull": "Mulțumim! Între timp toate rolurile s-au umplut, așa că oferta ta nu a fost păstrată. Dacă vrei să ajuți, scrie-ne din pagina de contact.",
       "errors": {
         "name": "Scrie-ți numele.",
         "email": "Adresa de email nu pare validă.",
         "phone": "Numărul de telefon nu este valid.",
         "roleId": "Alege unul dintre roluri.",
+        "message": "Mesajul are prea multe caractere: scurtează-l.",
         "consent": "Bifează căsuța de acord, altfel nu putem păstra oferta ta."
       }
     },

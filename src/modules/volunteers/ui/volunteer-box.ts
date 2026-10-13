@@ -15,7 +15,7 @@ export function parseVolunteerOutcome(value: string | undefined): VolunteerOutco
 }
 
 /** The boxes a refusal can name, in the order the form draws them (the service's own field names). */
-export const VOLUNTEER_BOXES = ["name", "email", "phone", "roleId", "consent"] as const;
+export const VOLUNTEER_BOXES = ["roleId", "name", "email", "phone", "message", "consent"] as const;
 export type VolunteerBox = (typeof VOLUNTEER_BOXES)[number];
 
 /** The boxes `?vfields=` names — names only, never a value (§14.5); a query string is typed by anybody. */

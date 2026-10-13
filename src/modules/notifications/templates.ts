@@ -2239,7 +2239,7 @@ const T = {
       `Primești acest mesaj pentru că ${club} ți-a trecut numele și adresa ca să te invite la acest eveniment. Cum folosim datele tale:`,
     /** A volunteer's sign-up (§NNN): the person offered on the event's page; no registration behind it. */
     privacyFooterVolunteer: (club: string) =>
-      `Primești acest mesaj de la ${club} pentru că ai oferit pe site-ul clubului să ajuți ca voluntar. Cum folosim datele tale:`,
+      `Primești acest mesaj de la ${club} pentru că te-ai oferit, pe site-ul clubului, să ajuți ca voluntar. Cum folosim datele tale:`,
     /** The same for a group run's self-declaration (§393): signed on a page, no registration behind it. */
     privacyFooterDeclaration: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că ai semnat o declarație pe site-ul clubului. Cum folosim datele tale:`,

@@ -2,6 +2,7 @@ import { and, asc, eq } from "drizzle-orm";
 import sharp from "sharp";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
+import { eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
 import { mediaAssets } from "@/db/schema/gallery";
 import { legalDocuments } from "@/db/schema/legal-documents";
@@ -789,5 +790,65 @@ describe("import over an existing event", () => {
     expect(read?.config.registration.capacity).toBe(100);
     const after = await diffEventImport(db, { actor: admin, file, eventId: target.id });
     expect(after.changes).toEqual([]);
+  });
+});
+
+// --- An event's volunteers are not the file's (§NNN) -------------------------------------------
+
+/**
+ * The volunteers' card (§NNN) is no part of what an event *is* for the file: the people are personal data,
+ * and the roles and the tick «Primește voluntari» belong to one date — the same rule as a copy of an event
+ * (`copyEvent` starts with no role and the tick off) and as the to-dos (§749). The file carries none of them,
+ * an import as new starts with none, and an import over an event leaves its own untouched.
+ */
+describe("an event's volunteers are not the file's", () => {
+  async function withVolunteers(eventId: string) {
+    await db.update(events).set({ acceptsVolunteers: true }).where(eq(events.id, eventId));
+    const [role] = await db
+      .insert(eventVolunteerRoles)
+      .values({ eventId, nameRo: "Punct de apă Zmeură", nameEn: "Water point Raspberry", needed: 3, descriptionRo: "Pahare la km 5", descriptionEn: "Cups at km 5" })
+      .returning();
+    await db.insert(eventVolunteers).values({
+      eventId,
+      roleId: role.id,
+      name: "Vlad Voluntarescu",
+      email: "vlad.voluntarescu@example.test",
+      canonicalEmail: "vlad.voluntarescu@example.test",
+      canonicalizationVersion: 1,
+      phone: "+40712345678",
+      source: "PUBLIC",
+      message: "Am mai ajutat la cursă",
+    });
+    return role;
+  }
+
+  it("carries no role, no person and no tick", async () => {
+    const { event } = await seedRace();
+    const role = await withVolunteers(event.id);
+    const file = await fileOf(event.id);
+    const text = JSON.stringify(file);
+    for (const needle of ["Zmeură", "Raspberry", "Pahare la km 5", "Voluntarescu", "vlad.voluntarescu", "+40712345678", "Am mai ajutat", role.id]) {
+      expect(text, needle).not.toContain(needle);
+    }
+    expect(text).not.toMatch(/volunteer/i);
+  });
+
+  it("starts an event imported as new with no role and the tick off, and leaves the target's own alone on an import over it", async () => {
+    const { event } = await seedRace();
+    await withVolunteers(event.id);
+    const file = await fileOf(event.id);
+
+    const created = await importEventAsNew(db, { actor: admin, file, fetchImpl: serving(), now: NOW });
+    expect((await reload(created.eventId)).acceptsVolunteers).toBe(false);
+    expect(await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, created.eventId))).toEqual([]);
+
+    const { target } = await seedTarget();
+    const targetRole = await withVolunteers(target.id);
+    const diff = await diffEventImport(db, { actor: admin, file, eventId: target.id });
+    expect(diff.changes.map((change) => change.key).filter((key) => /volunteer/i.test(key))).toEqual([]);
+    await importEventOver(db, await overInput(file, target.id));
+    expect((await reload(target.id)).acceptsVolunteers).toBe(true);
+    expect((await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, target.id))).map((row) => row.id)).toEqual([targetRole.id]);
+    expect(await db.select().from(eventVolunteers).where(eq(eventVolunteers.eventId, target.id))).toHaveLength(1);
   });
 });

@@ -18,7 +18,7 @@ import {
   cachedVolunteersDescribed,
 } from "@/modules/public-cache/reads";
 import { parseInterestOutcome, parseInterestSince } from "@/modules/registrations/interest-box";
-import { volunteerEventAhead, volunteerOfferClosedFor } from "@/modules/volunteers/domain/volunteer";
+import { volunteerBoxRoles, volunteerEventAhead, volunteerOfferClosedFor } from "@/modules/volunteers/domain/volunteer";
 import { parseVolunteerBoxes, parseVolunteerOutcome, type VolunteerTyped } from "@/modules/volunteers/ui/volunteer-box";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { nextWallMidnight } from "@/modules/events/domain/page-clock";
@@ -212,7 +212,9 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
           noticeDescribes: await cachedVolunteersDescribed(now),
           eventAhead: volunteerEventAhead(event, now),
         });
-        return closed ? null : roles.filter((role) => role.free > 0);
+        // The last place just taken — by this very person, or by someone else while they typed — still owes them
+        // the answer: the box stays, with no role and no form (`volunteerBoxRoles`).
+        return volunteerBoxRoles(closed, roles, parseVolunteerOutcome(one(asked.volunteer)));
       }, null);
   const volunteerOutcome = volunteerRoles ? parseVolunteerOutcome(one(asked.volunteer)) : null;
   // What was typed before a refusal (§142), read only when the page is the answer to one — by the twin, which may read the cookie.

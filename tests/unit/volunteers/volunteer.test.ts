@@ -14,6 +14,7 @@ import {
   refusedFields,
   someRoleNeedsPeople,
   standingOf,
+  volunteerBoxRoles,
   volunteerEventAhead,
   volunteerOfferClosedFor,
   volunteerPublicInputSchema,
@@ -188,6 +189,22 @@ describe("§NNN the three conditions of the public form", () => {
     expect(volunteerEventAhead({ eventStatus: "COMPLETED", startsAt: day(10), endsAt: null }, now)).toBe(false);
     expect(volunteerEventAhead({ eventStatus: "SCHEDULED", startsAt: null, endsAt: null }, now)).toBe(true);
   });
+
+  it("lists only the roles that still need people, and keeps the box — empty — for the answer a person whose post took the last place is owed", () => {
+    const roles = [
+      { id: "a", free: 0 },
+      { id: "b", free: 2 },
+    ];
+    expect(volunteerBoxRoles(null, roles, null)).toEqual([{ id: "b", free: 2 }]);
+    expect(volunteerBoxRoles(null, roles, "done")).toEqual([{ id: "b", free: 2 }]);
+    // The last place gone: the thank-you, or «the role filled», still shows; a plain visit gets no box.
+    expect(volunteerBoxRoles("noRoleNeeds", [], "done")).toEqual([]);
+    expect(volunteerBoxRoles("noRoleNeeds", [], "full")).toEqual([]);
+    expect(volunteerBoxRoles("noRoleNeeds", [], null)).toBeNull();
+    expect(volunteerBoxRoles("noRoleNeeds", [], "invalid")).toBeNull();
+    // Any other closed form draws nothing, whatever the address asks.
+    for (const closed of ["off", "eventOver", "noNotice"] as const) expect(volunteerBoxRoles(closed, roles, "done")).toBeNull();
+  });
 });
 
 describe("§NNN the privacy notice's marker {{volunteers}}", () => {
@@ -239,6 +256,7 @@ describe("§NNN the public form's address and answer", () => {
 
   it("reads the refused boxes as names only, in the form's order, dropping anything else", () => {
     expect(parseVolunteerBoxes("email,name,<b>,consent,email")).toEqual(["name", "email", "consent"]);
+    expect(parseVolunteerBoxes("message,roleId")).toEqual(["roleId", "message"]);
     expect(parseVolunteerBoxes(undefined)).toEqual([]);
   });
 });

@@ -320,7 +320,7 @@ describe("§NNN the volunteers' public sign-up", () => {
     expect(message.text).not.toContain(admin.email);
     expect(message.html).toContain("Salut, Maria Test");
     // The privacy line names the reason in the volunteer's own words, not «a registration».
-    expect(message.text).toContain("ai oferit pe site-ul clubului să ajuți ca voluntar");
+    expect(message.text).toContain("te-ai oferit, pe site-ul clubului, să ajuți ca voluntar");
   });
 
   it("renders the organizers' notice with who and which role — and neither the address nor the telephone number — and a button to the card", async () => {
