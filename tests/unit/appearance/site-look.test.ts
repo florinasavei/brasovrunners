@@ -18,14 +18,14 @@ import { accentOnHover } from "@/theme/surfaces";
 import { theme } from "@/theme/theme";
 
 /**
- * §708 — «Aspectul nou»: the facelift's look behind one setting, off by default. Off, nothing is
+ * §708 — «Tema v2»: the facelift's look behind one setting, off by default. Off, nothing is
  * drawn and no rule can match, so every public page is what it was; on, the look is drawn on the
  * public pages only, never in the backoffice, which shares the layout and the header.
  */
 const ROOT = path.resolve(__dirname, "../../..");
 const source = (file: string) => readFileSync(path.join(ROOT, file), "utf8").replace(/\r\n/g, "\n");
 
-describe("§708 the setting «Aspectul nou»", () => {
+describe("§708 the setting «Tema v2»", () => {
   it("is off until the club switches it on, and reads anything else as off", () => {
     expect(DEFAULT_SITE_LOOK_SETTING).toEqual({ on: false });
     expect(parseSiteLook({ on: true })).toEqual({ on: true });

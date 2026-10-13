@@ -93,11 +93,11 @@ const TODAY_SX = {
   display: "inline-flex",
   [UNDER_LOOK]: {
     "& > a": {
-      minHeight: { xs: 44, sm: "34px !important" },
+      minHeight: 44,
       px: 1.5,
       border: 1,
       borderColor: "divider",
-      borderRadius: "10px",
+      borderRadius: "12px",
       bgcolor: "background.paper",
       color: "text.primary",
       fontWeight: 600,

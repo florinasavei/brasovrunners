@@ -353,6 +353,10 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await page.goto("/ro/contact", { waitUntil: "networkidle" });
       const door = page.getByTestId("feedback-door");
       await expect(page.getByTestId("feedback-section")).toBeVisible();
+      // «Spune-ne ceva» first when it is offered (§746, amending §721): above the message form.
+      const doorTop = (await page.getByTestId("feedback-section").boundingBox())!;
+      const formTop = (await page.getByTestId("contact-form-section").boundingBox())!;
+      expect(formTop.y).toBeGreaterThanOrEqual(doorTop.y + doorTop.height);
       const newsletterSection = page.getByTestId("newsletter-section");
       if ((await newsletterSection.count()) > 0) {
         const doorBox = await page.getByTestId("feedback-section").boundingBox();

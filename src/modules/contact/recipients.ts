@@ -106,8 +106,8 @@ export async function updateContactRecipients<T extends Record<string, unknown>>
       entityType: "platform_setting",
       entityId: CONTACT_RECIPIENTS_SETTING_ENTITY_ID,
       metadata: {
-        from: { to: before.to, cc: before.cc, bcc: before.bcc },
-        to: { to: next.to, cc: next.cc, bcc: next.bcc },
+        from: { to: before.to, cc: before.cc, bcc: before.bcc, holdBackSuspected: before.holdBackSuspected },
+        to: { to: next.to, cc: next.cc, bcc: next.bcc, holdBackSuspected: next.holdBackSuspected },
       },
       now,
     });

@@ -4,6 +4,7 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import { useRouter } from "next/navigation";
 import { DENSITY } from "@/theme/density";
+import { UNDER_LOOK } from "@/theme/look";
 import type { YearMonth } from "../domain/calendar";
 import { calendarAddress, type CalendarLayoutName, type CalendarPeriod } from "../domain/calendar-path";
 
@@ -20,6 +21,27 @@ export const PHONE_SELECT_SX = {
   fontSize: { xs: "0.8125rem", sm: "inherit" },
   pl: { xs: 1, sm: "14px" },
   pr: { xs: "24px !important", sm: "32px !important" },
+} as const;
+
+/**
+ * The two selects under «Tema v2» (§708, amending §720 and §734): members of the family of the
+ * segmented «Lună | An» and «Azi» beside them — the same 44-pixel height, the same 12-pixel radius,
+ * the same border (`divider`, `primary.main` on hover, and 2px on focus) on the paper surface — and no
+ * floating legend: the label stays the select's accessible name, visually hidden, and the notch it
+ * cut in the outline is gone. The caret is in the text's colour. Off the look
+ * none of it matches: the head is today's, pixel for pixel.
+ */
+export const PICKER_UNDER_LOOK = {
+  [UNDER_LOOK]: {
+    "& .MuiInputLabel-root": { position: "absolute", width: "1px", height: "1px", overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", p: 0, m: "-1px" },
+    "& .MuiOutlinedInput-root": { borderRadius: "12px", bgcolor: "background.paper", color: "text.primary", fontWeight: 600 },
+    "& .MuiOutlinedInput-notchedOutline": { top: 0, borderColor: "divider", borderWidth: 1 },
+    "& .MuiOutlinedInput-notchedOutline legend": { display: "none" },
+    "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": { borderColor: "primary.main", borderWidth: 1 },
+    "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "primary.main", borderWidth: 2 },
+    "& select": { minHeight: 44 },
+    "& .MuiNativeSelect-icon": { color: "text.primary", right: { xs: 0, sm: 4 } },
+  },
 } as const;
 
 /**
@@ -84,7 +106,7 @@ export default function CalendarPicker({
           value={month}
           onChange={(event) => go({ year, month: Number(event.target.value) })}
           slotProps={select}
-          sx={{ flex: { xs: "1 1 0", sm: "0 0 auto" }, minWidth: { xs: 0, sm: 118 }, "& select": { ...PHONE_SELECT_SX, minHeight: { xs: 44, sm: 34 }, py: { sm: 0.5 }, boxSizing: "border-box", textTransform: "capitalize" } }}
+          sx={{ ...PICKER_UNDER_LOOK, flex: { xs: "1 1 0", sm: "0 0 auto" }, minWidth: { xs: 0, sm: 118 }, "& select": { ...PHONE_SELECT_SX, minHeight: { xs: 44, sm: 34 }, py: { sm: 0.5 }, boxSizing: "border-box", textTransform: "capitalize" } }}
         >
           {monthNames.map((name, index) => (
             <option key={name} value={index + 1}>
@@ -100,7 +122,7 @@ export default function CalendarPicker({
         value={year}
         onChange={(event) => go({ year: Number(event.target.value), month })}
         slotProps={select}
-        sx={{ flex: { xs: "0 0 66px", sm: "0 0 auto" }, minWidth: { xs: 0, sm: 88 }, "& select": { ...PHONE_SELECT_SX, minHeight: { xs: 44, sm: 34 }, py: { sm: 0.5 }, boxSizing: "border-box" } }}
+        sx={{ ...PICKER_UNDER_LOOK, flex: { xs: "0 0 66px", sm: "0 0 auto" }, minWidth: { xs: 0, sm: 88 }, "& select": { ...PHONE_SELECT_SX, minHeight: { xs: 44, sm: 34 }, py: { sm: 0.5 }, boxSizing: "border-box" } }}
       >
         {years.map((candidate) => (
           <option key={candidate} value={candidate}>

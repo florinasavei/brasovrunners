@@ -6,7 +6,7 @@ import { SOURCES, type Source } from "./scan";
  * BR-REQ-070-02, §723 (amending §708 and §694) — a page never names the pink, or a preset: the
  * accent is the club's setting.
  *
- * Under «Aspectul nou» the accent is the club's choice (pink, blue, orange, or a colour it types).
+ * Under «Tema v2» the accent is the club's choice (pink, blue, orange, or a colour it types).
  * The locale layout writes it into MUI's `--mui-palette-primary-*` variables and into one variable
  * of ours, `--br-accent-tint`, so a public page wears it by asking for `primary.main`,
  * `primary.light` or `primary.dark` in `sx`, or for `LOOK_ACCENT_TINT` (`theme/look.ts`). A page that

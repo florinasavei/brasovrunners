@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.07-2026-10-13 -->
+<!-- PROJECT_BASELINE: BR-V3.08-2026-10-13 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.07-2026-10-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.08-2026-10-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -25897,3 +25897,70 @@ Baseline `BR-V3.06-2026-10-12`.
 **Refused.** Removing the special guests from the list itself or from the counts (§648 stands for that); a different default for events that exist today (the owner wants them off); showing the guest anywhere the tick is off when the switch is off.
 
 Baseline `BR-V3.07-2026-10-13`.
+
+## 744. A tick to stop messages that look like spam, off by default
+
+**Amends §310.** **The owner, 2026-10-13, after two «[posibil spam]» messages reached the club:** «aș vrea o bifă ca să nu le mai primesc pe viitor, dar momentan ține-o debifată».
+
+**Context.** Since §310 a contact message that passes every gate but looks automated is delivered marked, never refused, so that no person is lost. The mark is useful and the club files on it, but it still costs a read each time.
+
+**Decision.** «Pagini» → «Contact» → «Cine primește mesajele de contact» gets one tick beside the three address boxes, in the same form and the same save: RO «Nu-mi trimite mesajele care par spam», EN "Don't send me messages that look like spam", with the box's own help line, and a read-only «Bifat: … / Debifat: …» line for whoever may not save. It is **off by default**, and a row saved before it existed reads as off, so nothing changes on release. It is stored as a field of the existing `contactRecipients` JSON row in `platform_settings`: no migration, and the audit row of the save names it. Only an Administrator saves it; the service asserts the role as for the addresses.
+
+*Ticked,* a message that the **existing** suspicion rule (`contactSuspicion`: no token while the challenge is on, a sender domain imitating the club's) marks is not emailed. It covers the contact form and the «Spune-ne ceva» forms that mark the same way (the three ordinary branches). The sender's answer is the same «mesaj trimis», to the byte, so a script learns nothing (§39, AGENTS.md §19.4). A message that is not suspicious is never affected. The safety branch is never held back: a lost report costs more than a marked one, and its bot answer is already its own (§676).
+
+*Unticked,* the code path is exactly §310's: the same marked delivery, pinned by the existing tests and a new one.
+
+**What is kept, and why only that.** The cost of holding back must stay visible, so the card says how many were stopped in the last 30 days. That is one timestamp and the form's name per held message, in one `platform_settings` row (`contactHeldBack`), pruned at every write and capped; never the text, the name, the address, the reasons or an IP. The repository is public and the privacy notice promises as little kept as possible: a timestamp and a form name are not personal data, so the privacy notice's template needs no word (it does not describe the marking today either).
+
+**Refused.**
+- Dropping a suspicious message without a trace: the owner could not tell the tick is working, nor notice a real person held back by mistake; the count is that signal.
+- New heuristics: the same rule, because a second rule is a second thing to explain and to get wrong.
+- Storing the held messages (even for a week): it would make the club hold exactly the data the tick exists to avoid, and a held message is only recoverable if someone reads it.
+- Telling the sender: that is the oracle §310 already refused.
+- Holding back the safety branch: see above.
+
+**Who is stopped too.** §205 promised that a person with JavaScript off, or a blocked widget, still reaches the club: that person posts no token and is marked «fără token». Ticked, that real person is stopped as well, is told «trimis», and is not delivered; the 30-day count is the only trace, and the tick's help line says so. The owner should weigh that before ticking: it is the price of the tick, and the reason it stays off by default.
+
+**The branch's thirty an hour.** A held-back «Spune-ne ceva» post is refunded from the branch's thirty (`refundRateLimit`, as a post the road refused is): the bucket is keyed on the branch alone, and a bot flood held back in silence must not lock real people out of it. It reached nobody, so it is not one of the thirty; the flood is still bounded by the count's ceiling of 1000 entries and by the platform's own brakes (§333). The contact form's bucket is per sender and keeps counting. The log says «held back», never «sent»; the sender's answer is unchanged, byte for byte.
+
+**Consequences.** `recordHeldBack` writes under an advisory lock in one transaction, so a flood of posts is counted one by one; a held feedback message logs a «held back as possible spam» line with the reasons' names only, as the contact form does; the card shows the count beside the tick (when the tick is on or the count is above 0) and the read-only view says whether the tick is on; `modules/contact/held-back.ts` (new: the pure `shouldHoldBack`, `recordHeldBack`, `countHeldBack`); `contactRecipientsSchema` gains `holdBackSuspected` (default false); the two actions read the tick with the recipients row they already read and hand it on in `ContactScreening.holdBack`, and `contact/service.ts` and `feedback/service.ts` check it after the suspicion is read, with no second read; `ContactRecipientsPanel` draws the tick and the count; `SETUP.md` §38 step 7 mentions it. Tests: `tests/unit/contact/hold-back.test.ts`, `tests/unit/contact/hold-back-panel.test.ts` (the card rendered), `tests/integration/contact/hold-back.test.ts` (the safety branch is delivered and not counted with the tick on; a held post does not use the branch's thirty). No migration, no dependency.
+
+Baseline `BR-V3.08-2026-10-13`.
+
+## 745. «Tema v1» and «Tema v2» instead of «Aspectul nou», the calendar's selectors in the family of its other controls, and the calendar's head under Tema v2
+
+**The owner, 2026-10-13:** «Mai e o chestie de design legat de aspectul nou (care ar trebui să se numească „temă” btw, și să avem tema v1 și tema v2), primele 2 selectoare arată diferit».
+
+**Decision (amending §708, §720, §734).**
+
+1. **The name.** The setting the club read as «Aspectul nou» is now «Tema», one choice of two in «Setări» → «Aspect»: **«Tema v1»** (EN "Theme v1"), the site as it has been, and **«Tema v2»** ("Theme v2"), the facelift. It is the same two-radio form as before — the same field `look`, the same stored value (`off` | `on`), the same `data-look="2026"` scope, no migration, no change to `src/theme/look.ts`'s selectors — with new words everywhere the club or a visitor reads them: the card's title and legend («Alege tema»), the save button («Salvează tema»), the confirmation, the saved alert, the design page's «Mostre» and its comparison, the cover photo's help, and `docs/REDESIGN.md` and `docs/VIBECODING.md` (which say once that Tema v2 was «Aspectul nou» until 2026-10-13). The old names in `DECISIONS.md`, `CHANGELOG.md` and `SPECS.md` stay as they were written; identifiers and code comments keep the old name. «Temă» had a second meaning on the same «Aspect» page — light against dark — and it is now «varianta deschisă» / «varianta întunecată» (EN light / dark mode) in «Mărimea textului», «Nuanța fundalului», «Culoarea de accent», the confirmations and the design page's two schemes, in both catalogues, so «ambele teme» no longer exists and «Tema» means only Tema v1 or Tema v2 (a unit test reads every `Admin` string for it). The public toggle's «Temă întunecată» / «Temă luminoasă» (`Site.themeDark`, `Site.themeLight`) stays: a visitor never sees «Tema v1» or «Tema v2», so for them «temă» has the one meaning.
+
+2. **The calendar's two selectors under Tema v2.** «Luna» and «Anul» were outlined MUI selects with floating legends beside the soft segmented «Lună | An» / «Calendar | Listă» and «Azi». Under the look only (`UNDER_LOOK`, in `CalendarPicker.tsx`) they are now of one family with them: the same 44-pixel height (from `sm` too, where they were 34), the same 12-pixel radius ("Azi" moved from 10 to 12), the `divider` border on the paper surface, `primary.main` on hover and a 2-pixel `primary.main` border on focus (the only focus indicator a native select has; mouse and touch focus show it too), the caret in the text's colour, and no floating legend — the label stays the select's accessible name, visually hidden, and the notch it cut in the outline is gone. Still the same island and `router.push`, so it works as before; at 320 pixels the period row is one 44-pixel row and the first week stays above the fold (§569). No colour literal: `background.paper`, `divider`, `primary.main` and `text.primary` only. With Tema v1 the head is drawn exactly as before.
+
+3. **The head of the calendar under Tema v2** (2026-10-13; amending §292, §413, §487 and §569). The owner: «textul… „Calendar” ar trebui să dispară pentru că e redundant și tooltipul cu semnul întrebării să vină în partea de jos chiar sub opțiunile de calendar»; «evenimentele deja trecute ar trebui să fie un pic blurred, ca să semene cu Google Calendar»; «filtrele pot apărea aici inline ca să mai putem economisi spațiu»; «textul ăsta de „calendar” e redundant acum». Under Tema v2 only — the page reads the setting itself, as it already did for the next event, so Tema v1 is drawn exactly as before:
+
+   a. **No visible «Calendar».** The page keeps its one `h1` «Calendar», visually hidden (the house's clipped style, as the home page's is without its hero), and draws neither the eyebrow nor the sentence. The wordmark stays as Tema v2 draws it, in the accent (`primary.light`), above the `h1` (the owner's «logo stays blue» rule is about the logo image, which this change never touches); the «CALENDAR» band under it was that eyebrow, so it goes with it — there is one `h1` in the document and the wordmark was never it (§292).
+
+   b. **The «?» under the controls.** The fold (§487; its panel carries the sentence, the two doors and the feed's address, §674) stands in `calendar-help-row`, a row of its own under the controls and before the month, at its end, 44 px, the panel hanging from the row over the month; scripts off as before (a native `<details>`). From `sm` too, where it had no desktop form under the look. At 320 px the row takes the place of the head's row it replaces, so the first week stays above the fold (§569). Off the look the fold is where it was, in the head, on a phone only; the page draws it once, never both.
+
+   c. **«Filtre» on the chips' line.** The summary is the line's last item, outside `ScrollRow`, so on a phone it stays in sight while the chips scroll; the chips take the rest of the line. The slot (`CalendarFilterSlot`) and the panel's box are `display: contents` under the look, so the `<details>` is the line's own flex item (`visibility` is inherited, so a held slot keeps its place and the controls still do not move, §575) and the panel — the form — hangs from the line's bottom edge, full width, over the month, as the «?»'s does; the ticked-filters row wraps to a line of its own. Scripts off as before (§413). The listing's «Filtre» is untouched (phase 5). Off the look: the chips are not drawn and «Filtre» is the block it was.
+
+   d. **Past dates faded.** A date whose last day (its end, or its start when it has none, in the club's zone) is before the page's own day is drawn like Google Calendar draws one: the lighter fill (`action.hover`) and the softer words (`text.secondary`) in place of its kind's colours, light and dark, from the theme's tokens, never a colour literal and **never a blur** (a blur is unreadable and the owner's «blurred» meant Google's look); the words stay at least 3 : 1 on the fill (AA for large text, unit-tested for both schemes), the dot is dimmed, the entry is still the link it was (grid and list share the entry). It is decided on the server by the day (`onPastDay`): the period pages are static for the day, held to Brașov's midnight (§549, §574), so an hour is not a rule they could keep, and **past means ended, not started**: a camp of several days (§71) that began yesterday and runs today is not past, and an event earlier today is not past either — it fades from tomorrow's page. Under Tema v2 a visually-hidden «a trecut» / "past" follows the entry's sentence for a screen reader (`Events.calendar.past`); under Tema v1 nothing is marked.
+
+**Refused:** swapping the select's caret glyph for a chevron (it would change Tema v1's pixels, and the two controls share one component); a new select component (the existing one is styled under the look); renaming the stored value or the `data-look` scope (a migration and a flip for nothing the visitor sees). A past rule by the start day (a multi-day event still running would be faded and read «a trecut»); a past rule by the hour (stale within the hour on a static page); `opacity` or `filter: blur` for the fade (the words fall below AA, and the owner's model is Google Calendar's flat fade); a second «?» in the head under the look (two ids, and the two places contradicting the owner's «chiar sub opțiunile»); moving «Filtre» into `ScrollRow` (it would scroll away on a phone); in-flow panel under the chips line (it would push the month down 44 px a press).
+
+Baseline `BR-V3.08-2026-10-13`.
+
+## 746. On the contact page, «Spune-ne ceva» first when it is offered
+
+**The owner, 2026-10-13:** «on the contact page the feedback form (if active) should come first».
+
+**Decision.** When the feedback forms are offered (`offeredBranches` is not empty: a branch on, with a recipient, the notice in force describing the forms), `/contact` draws, after the intro: «Spune-ne ceva», «Trimite-ne un mesaj» with the form, «Contact direct», the newsletter, the identity line. When they are not offered the page is what §721 made it: the form first, no «Spune-ne ceva». This amends §721 (which put «Spune-ne ceva» under the form) and §698.
+
+- **The rule follows the position.** The first section draws no rule, as the page's head; the section after it opens with the rule every later section has. So «Spune-ne ceva» has none when it is first, and the form's section takes the rule only while «Spune-ne ceva» is above it. Headings and glyphs are unchanged.
+- **The intro «Scrie-ne»** does not name an order, so its words are unchanged.
+- **What does not change.** `FEEDBACK_SECTION_ID`, the chosen event in `?about=` (§716), the flashes and scroll targets of the form and the newsletter, the one `h1`, the page working with scripts off, the public cache's reads, and every state in which «Contact direct» is drawn.
+
+**Tests.** `contact-page-feedback-first.test.ts` renders the page with and without the forms offered, in both languages; `contact-page-order.test.ts` pins the source order and the rule; `feedback.spec.ts` reads the door above the form.
+
+Baseline `BR-V3.08-2026-10-13`.

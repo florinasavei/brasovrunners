@@ -99,6 +99,7 @@
       "pageTitle": "Calendar",
       "pageIntro": "Luna clubului: alergările săptămânale și cursele, pe zile. Poți lua tot calendarul în telefon sau în Google Calendar.",
       "introHelp": "Despre calendar și cum îl iei în telefon",
+      "past": "a trecut",
       "addTitle": "Adaugă în calendarul tău",
       "feedAddress": "Adresa calendarului, de copiat",
       "subscribeGoogle": "Google Calendar",
@@ -1642,11 +1643,11 @@
       "feedbackFormsTitle": "Salvezi formularele „Spune-ne ceva”?",
       "feedbackFormsBody": "Formularele pornite apar pe pagina de contact cât timp nota de confidențialitate în vigoare le descrie.",
       "siteTintTitle": "Schimbi fundalul site-ului?",
-      "siteTintBody": "Fiecare pagină publică a site-ului se deschide de acum cu fundalul ales, pentru toți vizitatorii. Tema întunecată și backoffice-ul rămân cum sunt. Poți reveni oricând la «Alb».",
+      "siteTintBody": "Fiecare pagină publică a site-ului se deschide de acum cu fundalul ales, pentru toți vizitatorii. Varianta întunecată și backoffice-ul rămân cum sunt. Poți reveni oricând la «Alb».",
       "siteFontSizeTitle": "Schimbi mărimea textului?",
-      "siteFontSizeBody": "Fiecare pagină publică a site-ului se deschide de acum cu textul la mărimea aleasă, pentru toți vizitatorii, în ambele teme. Backoffice-ul rămâne cum e. Poți reveni oricând la «Normal».",
-      "siteLookTitle": "Schimbi aspectul site-ului?",
-      "siteLookBody": "Fiecare pagină publică se deschide de acum în aspectul ales, pentru toți vizitatorii. Backoffice-ul, emailurile și PDF-urile rămân cum sunt. Poți reveni oricând la «Aspectul de azi».",
+      "siteFontSizeBody": "Fiecare pagină publică a site-ului se deschide de acum cu textul la mărimea aleasă, pentru toți vizitatorii, în ambele variante. Backoffice-ul rămâne cum e. Poți reveni oricând la «Normal».",
+      "siteLookTitle": "Schimbi tema site-ului?",
+      "siteLookBody": "Fiecare pagină publică se deschide de acum în tema aleasă, pentru toți vizitatorii. Backoffice-ul, emailurile și PDF-urile rămân cum sunt. Poți reveni oricând la «Tema v1».",
       "homePageTitle": "Salvezi pagina principală?",
       "homePageBody": "Adresa site-ului deschide de acum ce ai ales, pentru toți vizitatorii: pagina principală sau lista de alergări. Poți reveni oricând.",
       "translationBudgetTitle": "Salvezi bugetul de traduceri?",
@@ -1721,7 +1722,7 @@
       "LEGAL_TERMS_ACCEPTED": "Nu s-a șters nimic: cineva s-a înscris sau a semnat cât a fost în vigoare această versiune. O poți retrage — rămâne în evidență și nu se mai oferă.",
       "SITE_TINT_UNREADABLE": "Culoarea nu s-a salvat: pe ea, textul paginii sau textul secundar ar avea un contrast sub 4,5 : 1 (nivelul AA). Alege o culoare mai deschisă.",
       "SITE_TINT_TOO_DARK": "Culoarea nu s-a salvat: e prea închisă pentru o pagină deschisă, iar cardurile albe n-ar mai ieși în evidență. Alege o culoare mai deschisă.",
-      "SITE_ACCENT_TOO_GREY": "Aspectul nu s-a salvat: culoarea de accent e prea aproape de gri, iar butoanele și linkurile n-ar ieși în evidență față de text. Alege o culoare.",
+      "SITE_ACCENT_TOO_GREY": "Tema nu s-a salvat: culoarea de accent e prea aproape de gri, iar butoanele și linkurile n-ar ieși în evidență față de text. Alege o culoare.",
       "UNDER_MINIMUM_AGE": "Nu s-a înscris nimic: după data nașterii scrise, persoana nu are {age} împliniți în ziua cursei, iar aceasta este vârsta minimă de participare la eveniment. Verifică data cu persoana.",
       "NEON_QUOTA_BELOW_USAGE": "Limita nu a fost trimisă: trebuie să fie peste consumul de până acum, altfel ar opri baza chiar la salvare.",
       "NEON_QUOTA_UNCONFIRMED": "Nu s-a schimbat nimic: o limită nouă sau schimbată pe producție cere bifa de confirmare — când e atinsă, site-ul se oprește până la perioada următoare.",
@@ -1842,10 +1843,10 @@
       "special": "Ediție specială",
       "specialHelp": "O ediție aparte, de exemplu aniversară sau caritabilă, cu un marcaj pe card și pe pagină. Într-o serie, marcajul rămâne doar pe data aceasta.",
       "cover": {
-        "intro": "Fotografia de sus a evenimentului, păstrată pentru noul aspect; deocamdată nicio pagină nu o afișează. Doar fotografii adevărate ale clubului. Într-o serie, la salvare alegi și datele care o primesc.",
+        "intro": "Fotografia de sus a evenimentului, păstrată pentru Tema v2; deocamdată nicio pagină nu o afișează. Doar fotografii adevărate ale clubului. Într-o serie, la salvare alegi și datele care o primesc.",
         "legend": "Fotografia de copertă",
-        "help": "După ce alegi fotografia, alegi partea din ea pentru noul aspect. Se păstrează când salvezi evenimentul.",
-        "cropTitle": "Decupaj — partea pentru noul aspect",
+        "help": "După ce alegi fotografia, alegi partea din ea pentru Tema v2. Se păstrează când salvezi evenimentul.",
+        "cropTitle": "Decupaj — partea pentru Tema v2",
         "cropHelp": "Pornește de la cel mai mare dreptunghi 16:9. Poți alege alt format sau trage un dreptunghi peste fotografie.",
         "set": "aleasă",
         "missing": "lipsește",
@@ -4816,32 +4817,32 @@
       }
     },
     "look": {
-      "title": "Aspectul nou",
-      "intro": "Noul aspect al paginilor publice: o culoare de accent lângă albastrul siglei (roz, dacă nu alegi alta), titluri mai apăsate, butoane rotunjite, «Urmărește-ne» cu rețelele sociale în antet.",
-      "introMore": "Oprit până aprobă clubul pe QA; apoi e calea înapoi dintr-o apăsare. Nuanța fundalului și mărimea textului rămân cum le-ai ales, în ambele aspecte.",
+      "title": "Tema",
+      "intro": "Tema v2 a paginilor publice: o culoare de accent lângă albastrul siglei (roz, dacă nu alegi alta), titluri mai apăsate, butoane rotunjite, «Urmărește-ne» cu rețelele sociale în antet.",
+      "introMore": "Oprită până aprobă clubul pe QA; apoi e calea înapoi dintr-o apăsare. Nuanța fundalului și mărimea textului rămân cum le-ai ales, în varianta deschisă și în cea întunecată.",
       "current": "Acum: {look}",
       "updatedAt": "Setat {when}.",
-      "legend": "Aspectul paginilor publice",
+      "legend": "Alege tema",
       "default": "implicit",
-      "save": "Salvează aspectul",
+      "save": "Salvează tema",
       "saving": "Se salvează…",
-      "saved": "Aspectul site-ului a fost salvat.",
-      "readOnly": "Aspectul îl alege Administratorul; vezi aici alegerea în vigoare.",
+      "saved": "Tema site-ului a fost salvată.",
+      "readOnly": "Tema o alege Administratorul; vezi aici alegerea în vigoare.",
       "compare": "Vezi-le una lângă alta",
       "scope": "Doar paginile publice. Backoffice-ul, emailurile, PDF-urile, numerele de concurs și imaginile de distribuire rămân albastre.",
       "choices": {
         "off": {
-          "name": "Aspectul de azi",
-          "help": "Albastrul siglei, titlurile de acum, butoanele de acum."
+          "name": "Tema v1",
+          "help": "Site-ul așa cum a fost: albastrul siglei, titlurile de acum, butoanele de acum."
         },
         "on": {
-          "name": "Aspectul nou",
-          "help": "Culoarea de accent de mai jos și titluri Inter, butoane rotunjite cu săgeată, «Urmărește-ne» și rețelele sociale în antet, ambele limbi în subsol, munții în josul paginii."
+          "name": "Tema v2",
+          "help": "Facelift-ul: culoarea de accent de mai jos, titluri Inter, antet, pagină principală și calendar noi."
         }
       },
       "accent": {
         "legend": "Culoarea de accent",
-        "intro": "Culoarea butoanelor, a linkurilor și a benzilor sub aspectul nou. Sigla rămâne albastră.",
+        "intro": "Culoarea butoanelor, a linkurilor și a benzilor sub Tema v2. Sigla rămâne albastră.",
         "current": "Culoarea de accent: {accent}",
         "presets": {
           "pink": {
@@ -4850,7 +4851,7 @@
           },
           "blue": {
             "name": "Albastru",
-            "help": "Albastrul clubului, cel din aspectul de azi."
+            "help": "Albastrul clubului, cel din Tema v1."
           },
           "orange": {
             "name": "Portocaliu",
@@ -4863,7 +4864,7 @@
         },
         "hexLabel": "Culoarea",
         "pickerLabel": "Alege culoarea de accent",
-        "rule": "Orice culoare care nu e gri. Butoanele, linkurile și benzile primesc nuanțe mai închise sau mai deschise, cu un contrast de cel puțin 4,5 : 1 (nivelul AA), pe tema deschisă și pe cea întunecată.",
+        "rule": "Orice culoare care nu e gri. Butoanele, linkurile și benzile primesc nuanțe mai închise sau mai deschise, cu un contrast de cel puțin 4,5 : 1 (nivelul AA), în varianta deschisă și în cea întunecată.",
         "shades": "Nuanțele, ziua și noaptea:",
         "verdict": {
           "ok": "Se poate. Așa arată, ziua și noaptea.",
@@ -4888,7 +4889,7 @@
       "saving": "Se salvează…",
       "saved": "Mărimea textului a fost salvată.",
       "readOnly": "Mărimea o alege Administratorul; vezi aici alegerea în vigoare.",
-      "scope": "Se aplică în ambele teme. Backoffice-ul rămâne mereu la mărimea lui.",
+      "scope": "Se aplică în varianta deschisă și în cea întunecată. Backoffice-ul rămâne mereu la mărimea lui.",
       "sample": "Alergare de grup în Pădurea Noua, sâmbătă la 9:00",
       "sizes": {
         "small": {
@@ -4920,7 +4921,7 @@
       "saving": "Se salvează…",
       "saved": "Fundalul site-ului a fost salvat.",
       "readOnly": "Fundalul îl alege Administratorul; vezi aici alegerea în vigoare.",
-      "scope": "Doar în tema deschisă: cine apasă comutatorul pentru tema întunecată vede fundalul întunecat al site-ului. Backoffice-ul rămâne mereu pe fundalul neutru.",
+      "scope": "Doar în varianta deschisă: cine apasă comutatorul pentru varianta întunecată vede fundalul întunecat al site-ului. Backoffice-ul rămâne mereu pe fundalul neutru.",
       "tints": {
         "paper": {
           "name": "Alb",
@@ -5773,6 +5774,15 @@
         "bccHelp": "Adrese despărțite prin virgulă, spațiu sau pe rânduri. Gol: fără BCC.",
         "copiesHelp": "CC: adresele apar în email; BCC: primesc o copie fără să apară.",
         "repeats": "O adresă scrisă de două ori, sau deja la „Către”, se păstrează o singură dată.",
+        "holdBack": "Nu-mi trimite mesajele care par spam",
+        "holdBackHelp": "Bifat: un mesaj socotit „posibil spam” nu mai ajunge la voi, nici dacă e al unui om al cărui browser n-a rulat verificarea anti-bot. Debifat: vine marcat „[posibil spam]”.",
+        "holdBackOn": "Bifat: un mesaj pe care formularul îl socotește „posibil spam” nu e trimis pe email.",
+        "holdBackOff": "Debifat: un astfel de mesaj vine marcat „[posibil spam]”.",
+        "heldBack": {
+          "one": "În ultimele 30 de zile a fost oprit {count} mesaj care părea spam (nu se păstrează nimic din el).",
+          "few": "În ultimele 30 de zile au fost oprite {count} mesaje care păreau spam (nu se păstrează nimic din ele).",
+          "other": "În ultimele 30 de zile au fost oprite {count} de mesaje care păreau spam (nu se păstrează nimic din ele)."
+        },
         "save": "Salvează destinatarii",
         "readOnly": "Cine primește mesajele de contact stabilește Administratorul; tu vezi lista în vigoare.",
         "saving": "Se salvează…",
@@ -5941,7 +5951,7 @@
       },
       "feedbackForms": {
         "title": "Spune-ne ceva",
-        "intro": "Patru formulare anonime pe pagina de contact, sub formularul de contact, înaintea lui „Contact direct” și a newsletterului. Fiecare e oprit până îl pornești aici și primește la o singură adresă.",
+        "intro": "Patru formulare anonime pe pagina de contact, deasupra formularului de contact, a lui „Contact direct” și a newsletterului. Fiecare e oprit până îl pornești aici și primește la o singură adresă.",
         "aside": "Pornite: {on} din {all}",
         "noticeMissing": "Nota de confidențialitate în vigoare nu descrie încă formularele: pe site nu apare nimic până nu aprobi o notă nouă (vezi „Sarcini”).",
         "updatedAt": "Setat {when}.",
@@ -6021,33 +6031,33 @@
     "design": {
       "title": "Sistemul de design",
       "intro": "Culorile, literele, formele, butoanele, pastilele și glifele site-ului, citite din cod la fiecare afișare — pagina nu poate rămâne în urma lui. Pentru oricine citește conținutul clubului.",
-      "sideBySide": "Aspectul de azi și cel nou sunt desenate unul lângă altul, la «Aspectul nou», de aceleași componente.",
+      "sideBySide": "Tema v1 și Tema v2 sunt desenate una lângă alta, la «Tema v2», de aceleași componente.",
       "contents": "Cuprinsul paginii",
       "look": {
-        "intro": "Aspectul de azi și cel nou, desenate de aceleași componente: diferența dintre ele e numai ce schimbă aspectul nou. Pe site îl pornește «Setări» → «Aspect» → «Aspectul nou».",
+        "intro": "Tema v1 și Tema v2, desenate de aceleași componente: diferența dintre ele e numai ce schimbă Tema v2. Pe site o alege «Setări» → «Aspect» → «Tema».",
         "sideBySide": "Unul lângă altul",
-        "sideBySideNote": "Același cod de două ori; doar caseta din dreapta poartă aspectul nou.",
-        "today": "Aspectul de azi",
-        "new": "Aspectul nou",
+        "sideBySideNote": "Același cod de două ori; doar caseta din dreapta poartă Tema v2.",
+        "today": "Tema v1",
+        "new": "Tema v2",
         "heading": "Alergăm împreună prin Brașov",
         "body": "Un paragraf al site-ului, la mărimea textului, cu",
         "link": "un link",
         "primary": "Vezi alergările",
         "secondary": "Cum funcționează",
         "socials": "Dreapta antetului, pe calculator:",
-        "primaryTitle": "Culoarea principală sub aspectul nou",
-        "primaryNote": "Variabilele MUI ale culorii principale, redefinite numai pe paginile publice cât timp aspectul nou e pornit.",
+        "primaryTitle": "Culoarea principală sub Tema v2",
+        "primaryNote": "Variabilele MUI ale culorii principale, redefinite numai pe paginile publice cât timp Tema v2 e pornită.",
         "variable": "Variabila",
-        "lightScheme": "Tema deschisă",
-        "darkScheme": "Tema întunecată",
+        "lightScheme": "Varianta deschisă",
+        "darkScheme": "Varianta întunecată",
         "markTitle": "Munții",
-        "markNote": "Un desen în linie, sub 2 KB, în culoarea textului din jur: semnul de la baza paginilor publice sub aspectul nou.",
+        "markNote": "Un desen în linie, sub 2 KB, în culoarea textului din jur: semnul de la baza paginilor publice sub Tema v2.",
         "accentsTitle": "Culorile de accent",
-        "accentsNote": "Clubul alege în «Setări» → «Aspect» → «Aspectul nou» → «Culoarea de accent»: patru nuanțe, ziua și noaptea; și o culoare scrisă. Caseta de mai sus arată rozul.",
+        "accentsNote": "Clubul alege în «Setări» → «Aspect» → «Tema» → «Culoarea de accent»: patru nuanțe, ziua și noaptea; și o culoare scrisă. Caseta de mai sus arată rozul.",
         "shade": "Nuanța"
       },
       "sections": {
-        "look": "Aspectul nou",
+        "look": "Tema v2",
         "colours": "Culori",
         "type": "Tipografie",
         "shape": "Forme și umbre",
@@ -6060,21 +6070,21 @@
       },
       "colours": {
         "intro": "Fiecare valoare de aici e citită din fișierul mărcii, singurul care are voie să scrie o culoare; pagina nu copiază nimic.",
-        "light": "Tema deschisă · COLOR",
-        "dark": "Tema întunecată · COLOR_DARK",
+        "light": "Varianta deschisă · COLOR",
+        "dark": "Varianta întunecată · COLOR_DARK",
         "tints": "Fundalurile paginilor publice · SITE_TINT",
         "tintsNote": "Nuanțele dintre care alege clubul la «Aspectul site-ului»; fiecare ține textul la AA și cardurile albe vizibile.",
         "gradients": "Gradientele · GRADIENT, SURFACE_GRADIENT",
         "gradientsNote": "Trei gradiente pe site, atât; cel al tricoului nu poartă niciodată text.",
         "pairs": "Perechile text / fundal",
         "pairsNote": "Perechile pe care le desenează paginile, cu raportul de contrast WCAG 2.1 — același calcul care refuză o culoare «Personalizat»; testul `brand.test.ts` le ține pe toate la AA (4,5 : 1).",
-        "pairsLight": "Tema deschisă",
-        "pairsDark": "Tema întunecată",
+        "pairsLight": "Varianta deschisă",
+        "pairsDark": "Varianta întunecată",
         "pairsHero": "Peste gradientul evenimentului principal",
         "pairsAccent": "Peste gradientul butonului apăsat",
-        "pairsLook": "Aspectul nou, tema deschisă",
-        "pairsLookDark": "Aspectul nou, tema întunecată",
-        "pairsLookAccents": "Aspectul nou, celelalte culori de accent (albastru, portocaliu), ziua și noaptea",
+        "pairsLook": "Tema v2, varianta deschisă",
+        "pairsLookDark": "Tema v2, varianta întunecată",
+        "pairsLookAccents": "Tema v2, celelalte culori de accent (albastru, portocaliu), ziua și noaptea",
         "sample": "Mostră",
         "foreground": "Text",
         "background": "Fundal",
@@ -6096,7 +6106,7 @@
         "faceNames": {
           "roboto": "Roboto — textul și titlurile",
           "inter": "Inter — laboratorul temei",
-          "interHeading": "Inter 800 — titlurile aspectului nou",
+          "interHeading": "Inter 800 — titlurile din Tema v2",
           "nunito": "Nunito — laboratorul temei",
           "signature": "Caveat — semnătura declarației",
           "facon": "Facón — logotipul de pe echipament"
@@ -6105,7 +6115,7 @@
         "rolesNote": "Două roluri, nu o familie: un font al clubului schimbă titlurile și lasă textul în pace.",
         "display": "Titluri (display)",
         "body": "Text (body)",
-        "lookDisplay": "Titluri, aspectul nou (lookDisplay)",
+        "lookDisplay": "Titluri, Tema v2 (lookDisplay)",
         "wordmark": "Logotip (wordmark)",
         "fallback": "Rezerva (fallback)"
       },
@@ -6167,8 +6177,8 @@
         "intro": "Componentele site-ului, desenate din rândurile de probă — exact codul care le desenează și pe site.",
         "cards": "Cardurile listei · EventCard, SeriesCard",
         "cardsNote": "Un eveniment cu o singură dată și o serie; datele sunt inventate și nu numesc pe nimeni.",
-        "calendarLook": "Calendarul, sub aspectul nou",
-        "calendarLookNote": "KindChips, legenda culorilor, NextEventPanel și SubscribeBox, cu date inventate, desenate sub aspectul nou.",
+        "calendarLook": "Calendarul, sub Tema v2",
+        "calendarLookNote": "KindChips, legenda culorilor, NextEventPanel și SubscribeBox, cu date inventate, desenate sub Tema v2.",
         "homeTop": "Pagina principală · Hero, RunSection",
         "homeTopNote": "Pagina principală din date de probă: titlul cu fotografia (aici locul gol), apoi secțiunile de alergări, desenate cu cardurile din «Alergări» (ListingCard).",
         "featured": "Evenimentul principal · featuredCard",
@@ -6197,7 +6207,7 @@
         "foldSummary": "Un pliu închis",
         "foldBody": "Ce e înăuntru se vede după o apăsare pe bară.",
         "home": "Pagina principală · StepsBand, WhyList, PhotoStrip, NumbersBand",
-        "homeNote": "Cele patru secțiuni, în aspectul nou, cu textele de pornire și cifre de probă. Locurile goale ale fâșiei apar doar aici: pe site, fâșia fără fotografii nu se desenează."
+        "homeNote": "Cele patru secțiuni, în Tema v2, cu textele de pornire și cifre de probă. Locurile goale ale fâșiei apar doar aici: pe site, fâșia fără fotografii nu se desenează."
       },
       "icons": {
         "intro": "Cele două registre de glife, citite întregi; un nume adăugat acolo apare aici.",
@@ -6229,7 +6239,7 @@
           "lightDefault": "Site-ul pornește deschis la culoare; întunecat doar din butonul din subsol, niciodată din setarea telefonului.",
           "pageTint": "Nuanța paginilor publice e setarea clubului, cu o gardă de contrast: text citibil pe orice nuanță.",
           "fontSize": "Mărimea textului pe paginile publice e o setare a clubului, dintr-o scară cu limite.",
-          "newLook": "Aspectul nou se desenează doar sub atributul lui, pe paginile publice; oprit, nicio regulă nu se potrivește.",
+          "newLook": "Tema v2 se desenează doar sub atributul ei, pe paginile publice; oprită, nicio regulă nu se potrivește.",
           "colourLiterals": "Nicio culoare scrisă direct în cod: culorile vin din temă, iar excepțiile sunt într-o listă care doar se scurtează.",
           "iconImports": "Pictogramele vin din registre, după nume; în backoffice nu se importă direct, iar pe paginile publice doar un fișier pe pictogramă, niciodată pachetul întreg.",
           "primitives": "Un buton sau o pastilă e a casei (GlyphButton, ButtonLink, GlyphChip, StatusChip), nu un Button, IconButton sau Chip MUI pe care l-a scris cineva din nou.",
@@ -6239,7 +6249,7 @@
       },
       "plan": {
         "intro1": "Textul complet al planului, în engleză, e ținut de dispecer în depozit:",
-        "intro2": "Comparația dintre aspectul de azi și cel nou e acum în capul paginii, la «Aspectul nou».",
+        "intro2": "Comparația dintre Tema v1 și Tema v2 e acum în capul paginii, la «Tema v2».",
         "decisionsTitle": "Deciziile clubului",
         "decisionsNote": "Douăsprezece alegeri; fiecare are implicitul pe care îl construiește dispecerul dacă nimeni nu se opune.",
         "phasesTitle": "Fazele",
@@ -6259,7 +6269,7 @@
           "released": "lansat"
         },
         "decisions": {
-          "1": { "title": "Culoarea de accent", "default": "Un roz aprins lângă albastrul siglei, sau albastrul, portocaliul ori o culoare aleasă de club în «Aspectul nou»; emailurile, PDF-urile, numerele și cardurile de distribuire rămân albastre." },
+          "1": { "title": "Culoarea de accent", "default": "Un roz aprins lângă albastrul siglei, sau albastrul, portocaliul ori o culoare aleasă de club în «Tema v2»; emailurile, PDF-urile, numerele și cardurile de distribuire rămân albastre." },
           "2": { "title": "Fontul titlurilor", "default": "Inter 800 pentru titluri, găzduit de noi, cu ș ț ă â î; textul rămâne Roboto." },
           "3": { "title": "O pagină principală adevărată", "default": "O pagină principală adevărată la `/ro` și `/en`, la care duce sigla, niciodată o intrare de meniu; se pornește și se oprește în «Aspect» → «Pagina principală»." },
           "4": { "title": "Cele patru cuvinte din meniu", "default": "«Alergări», «Calendar», «Comunitatea» — o pagină a clubului care leagă echipa, galeria, întrebările și zona membrilor — și «Despre noi»." },
@@ -6270,7 +6280,7 @@
           "9": { "title": "Ce înseamnă «Evenimente speciale»", "default": "Tot ce nu e o serie săptămânală; pastila «Ediție specială» își păstrează sensul." },
           "10": { "title": "Săgeata rotundă de pe carduri", "default": "Niciuna: prima pagină arată chiar cardurile din «Alergări», cu ușa lor cu text, «Descrierea completă a evenimentului»." },
           "11": { "title": "Iconițele", "default": "Rămâne familia Material plină; aerul mai ușor vine din culoare, grosime și spațiere." },
-          "12": { "title": "Cum se lansează", "default": "În spatele unei singure setări, «Aspectul nou»: pornită pe QA, oprită în producție până aprobă clubul; aspectul vechi e șters la o lansare după comutare." }
+          "12": { "title": "Cum se lansează", "default": "În spatele unei singure setări, «Tema v2»: pornită pe QA, oprită în producție până aprobă clubul; Tema v1 e ștearsă la o lansare după comutare." }
         },
         "phases": {
           "0": { "title": "Deciziile și materialele — fără cod", "gate": "Răspunsurile în scris, fotografiile urcate." },
@@ -9922,7 +9932,7 @@
       "feedbackForms": "Formularele „Spune-ne ceva” au fost salvate.",
       "siteTint": "Fundalul site-ului a fost salvat.",
       "siteFontSize": "Mărimea textului a fost salvată.",
-      "siteLook": "Aspectul site-ului a fost salvat.",
+      "siteLook": "Tema site-ului a fost salvată.",
       "homePage": "Pagina principală a fost salvată.",
       "homeStrip": "Banda de fotografii a fost salvată.",
       "clubTodoAdded": "Adăugat pe listă.",

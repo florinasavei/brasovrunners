@@ -14,7 +14,7 @@ import { CALENDAR_TONE_TOKENS } from "@/theme/brand-pairs";
 import { LOOK_ACCENT_TINT, UNDER_LOOK, UNDER_LOOK_DARK } from "@/theme/look";
 
 /**
- * The facelift's phase 4 — the calendar under «Aspectul nou» (`docs/REDESIGN.md`): the kind as a
+ * The facelift's phase 4 — the calendar under «Tema v2» (`docs/REDESIGN.md`): the kind as a
  * filter of the address, the three colours by kind and their tokens, the next-event panel's date,
  * the live twin for a kind, the chips as GET links that keep every other filter, the subscribe
  * box's two Outlook rows, and the page's rule that with the setting off nothing new is read or drawn.
@@ -250,14 +250,16 @@ describe("SubscribeBox", () => {
 describe("the calendar page under the look", () => {
   const page = readFileSync(path.join(ROOT, "src/app/[locale]/calendar/page.tsx"), "utf8");
 
-  it("reads the next event only while «Aspectul nou» is on", () => {
+  it("reads the next event only while «Tema v2» is on", () => {
     expect(page).toMatch(/const next = look\.on \? await readNextEvent\(/);
   });
 
-  it("keeps one h1, the wordmark before it, and today's intro hidden only under the look", () => {
+  it("keeps one h1, the wordmark before it, and today's intro drawn only off the look (§745)", () => {
     expect(page.match(/variant="h1"/g)).toHaveLength(1);
     expect(page.indexOf("<Wordmark />")).toBeLessThan(page.indexOf('variant="h1"'));
-    expect(page).toContain("OFF_UNDER_LOOK");
+    // Under the look the title is hidden and the sentence not drawn, by the page's own reading of the setting.
+    expect(page).toContain("sx={look.on ? VISUALLY_HIDDEN : headingRule}");
+    expect(page).toMatch(/\{!look\.on && \(\s*<Typography variant="body1"[^>]*>\s*\{t\("calendar\.pageIntro"\)\}/);
   });
 
   it("hands the panel the kind as carried ticks and moves the surface to the chips", () => {

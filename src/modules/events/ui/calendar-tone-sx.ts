@@ -76,3 +76,16 @@ export function legendDotSx(tone: CalendarTone) {
     [UNDER_LOOK_DARK]: { bgcolor: drawn(dot, COLOR_DARK) },
   } as const;
 }
+
+/**
+ * A past entry under the look (§745), faded the way Google Calendar fades a day gone: the lighter
+ * fill (`action.hover`, a few percent of the ink over the cell) and the softer words
+ * (`text.secondary`), whatever the entry's kind. Tokens of the theme only, never a colour literal,
+ * and never a blur or an opacity on the words — they stay readable and the link stays a link.
+ * Both schemes are written, since the dark rule would otherwise keep the kind's own fill.
+ * `tests/unit/events/calendar-theme-v2-head.test.ts` holds the words at AA for large text on the fill.
+ */
+export const PAST_ENTRY_SX = {
+  [UNDER_LOOK]: { bgcolor: "action.hover", color: "text.secondary", borderRadius: "8px", "& [data-entry-dot]": { opacity: 0.45 } },
+  [UNDER_LOOK_DARK]: { bgcolor: "action.hover", color: "text.secondary" },
+} as const;
