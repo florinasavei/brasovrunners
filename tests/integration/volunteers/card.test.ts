@@ -5,7 +5,7 @@ import { auditLogs } from "@/db/schema/audit-logs";
 import { eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import { duplicateEvent } from "@/modules/content/events/service";
+import { deleteEvent, duplicateEvent } from "@/modules/content/events/service";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { changeVolunteer, changeVolunteerRole, listVolunteerRoles, listVolunteers, setAcceptsVolunteers } from "@/modules/volunteers/volunteers";
 import type { FormOutcome } from "@/shared/forms/outcome";
@@ -465,5 +465,17 @@ describe("§NNN a copy of an event is not its volunteers", () => {
     expect(await listVolunteerRoles(db, copyId)).toHaveLength(0);
     expect(await listVolunteers(db, copyId)).toHaveLength(0);
     expect((await db.select().from(events).where(eq(events.id, copyId)))[0].acceptsVolunteers).toBe(false);
+  });
+});
+
+describe("§NNN deleting an event", () => {
+  it("takes its roles and its people with it — the role's RESTRICT never stands in the way of the event's cascade", async () => {
+    const role = await addRole();
+    await addPerson(role.id);
+    await addPerson(role.id, { email: "ion@example.test", name: "Ion Test" });
+    await deleteEvent(db, { actor: staff.ADMIN!, eventId });
+    expect(await db.select().from(events).where(eq(events.id, eventId))).toEqual([]);
+    expect(await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, eventId))).toEqual([]);
+    expect(await db.select().from(eventVolunteers).where(eq(eventVolunteers.eventId, eventId))).toEqual([]);
   });
 });
