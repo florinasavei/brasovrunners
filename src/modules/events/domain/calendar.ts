@@ -121,6 +121,20 @@ export function dayKey(at: Date, timeZone: string): string {
   return toWallTimeInput(at, timeZone).slice(0, 10);
 }
 
+/**
+ * Whether an event stands on a day already gone, for the calendar's faded entries under «Tema v2»
+ * (§NNN). Decided by the day, never by the hour: `today` is the page's own day in the club's time
+ * zone (`dayKey(now, CLUB_TIME_ZONE)`), and the period pages are static for that day (§574, held
+ * to Brașov's midnight, §549), so a finer rule would be stale within the hour it was drawn. An
+ * event earlier today is therefore not past: it is faded from tomorrow's page, never this one's.
+ * Past means ended, not started: a date is past only when its LAST day (the end, or the start when
+ * there is no end) is before `today`, so a camp of several days (§71) that began yesterday and runs
+ * today is not past.
+ */
+export function onPastDay(event: { startsAt: Date; endsAt?: Date | null; timezone: string }, today: string): boolean {
+  return dayKey(event.endsAt ?? event.startsAt, event.timezone) < today;
+}
+
 /** Events grouped by the day they start, each group in start order (the input's order). */
 export function groupByDay<T extends { startsAt: Date; timezone: string }>(items: T[]): Map<string, T[]> {
   const byDay = new Map<string, T[]>();

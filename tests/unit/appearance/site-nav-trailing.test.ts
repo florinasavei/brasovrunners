@@ -3,7 +3,7 @@ import { renderToReadableStream } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * §708 — the nav's trailing group, where «Aspectul nou» puts «Vino cu noi» and the socials: drawn
+ * §708 — the nav's trailing group, where «Tema v2» puts «Vino cu noi» and the socials: drawn
  * before the ☰ on a public page, and not drawn at all inside the backoffice shell (`/admin`,
  * `/devs`), so a staff page carries none of the look's hidden markup and its ☰ keeps `ml: auto`.
  */

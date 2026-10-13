@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * §708 — «Aspectul nou» in the header, rendered: with the setting off (or no row at all) the header
+ * §708 — «Tema v2» in the header, rendered: with the setting off (or no row at all) the header
  * is the markup it was, with no button, no social marks and no watermark; with it on, «Urmărește-ne»
  * with the footer's three marks is the row's last item after the nav (§722), its words a label, and the
  * header carries no «Vino cu noi» at any width (§724, amending §708 and §722). The client islands and the
@@ -109,7 +109,7 @@ describe("§714 the logo leads to the home page while «Pagina principală» is 
   });
 });
 
-describe("§708 the header while «Aspectul nou» is off", () => {
+describe("§708 the header while «Tema v2» is off", () => {
   it("draws no button, no social marks and nothing else new, and hands the nav no children at all", async () => {
     state.upcoming = [weekly("2026-10-13T16:00:00.000Z"), weekly("2026-10-20T16:00:00.000Z")];
     const off = await header();
@@ -125,7 +125,7 @@ describe("§708 the header while «Aspectul nou» is off", () => {
   });
 });
 
-describe("§708 the header while «Aspectul nou» is on", () => {
+describe("§708 the header while «Tema v2» is on", () => {
   it("§724 draws no «Vino cu noi» at any width, the phone too: the nav is handed nothing and no weekly run is read", async () => {
     state.look = { on: true };
     state.upcoming = [weekly("2026-10-20T16:00:00.000Z"), weekly("2026-10-13T16:00:00.000Z")];

@@ -95,7 +95,7 @@ test.describe("§262 the sections on a phone's header row", () => {
 });
 
 /**
- * §708, the facelift's phase 1 gate — the header with «Aspectul nou» on, measured. Since §724
+ * §708, the facelift's phase 1 gate — the header with «Tema v2» on, measured. Since §724
  * (amending §708 and §722) the header carries no «Vino cu noi» at any width, the phone too: the ☰
  * is the row's right edge on a phone (§699), «Urmărește-ne» — a label, then Instagram, Facebook
  * and Strava — the row's last item on a computer, and the row must still be one row at 320px with
@@ -114,16 +114,20 @@ async function setLook(browser: Browser, choice: "on" | "off"): Promise<void> {
     // The tab's cards are plain sections today (a `<section>` has no summary to press); a fold is opened.
     if (await panel.evaluate((element) => element.tagName === "DETAILS")) await openFold(panel);
     await panel.getByTestId(`site-look-option-${choice}`).click();
-    await panel.getByRole("button", { name: "Salvează aspectul" }).click();
-    await confirmDialog(page, "Schimbi aspectul site-ului?");
+    await panel.getByRole("button", { name: "Salvează tema" }).click();
+    await confirmDialog(page, "Schimbi tema site-ului?");
     // The page's own alert (the toast repeats the same words).
-    await expect(page.locator("#admin-alert").getByText("Aspectul site-ului a fost salvat", { exact: false })).toBeVisible();
+    await expect(page.locator("#admin-alert").getByText("Tema site-ului a fost salvată", { exact: false })).toBeVisible();
+    // The public pages' cached copy follows the save a moment after the alert: wait for it, or the first visit meets the old theme.
+    await expect
+      .poll(async () => /<html[^>]*data-look="2026"/.test(await (await page.request.get("/ro/evenimente")).text()), { timeout: 20_000 })
+      .toBe(choice === "on");
   } finally {
     await context.close();
   }
 }
 
-test.describe("§708 the header under «Aspectul nou»", () => {
+test.describe("§708 the header under «Tema v2»", () => {
   // One shared `platform_settings` row: 'off' must never run while 'on' has it switched on.
   test.describe.configure({ mode: "serial" });
   test.beforeEach(() => {
@@ -239,7 +243,7 @@ test.describe("§708 the header under «Aspectul nou»", () => {
 });
 
 /**
- * §724 (amending §722) — under «Aspectul nou» the language is the footer's own switcher, both
+ * §724 (amending §722) — under «Tema v2» the language is the footer's own switcher, both
  * languages on the bar at every width: the only «Limbă» navigation (the header's copy is hidden,
  * §722's floating button is gone), Romanian stated as the current one and English a link through
  * `/api/locale`, the bar's last item at its bottom right, on screen after a scroll to the page's end,

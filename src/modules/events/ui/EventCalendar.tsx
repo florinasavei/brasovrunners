@@ -16,6 +16,7 @@ import {
   groupByMonth,
   monthGrid,
   monthParam,
+  onPastDay,
   type YearMonth,
 } from "../domain/calendar";
 import { calendarAddress, type CalendarLayoutName, type CalendarPeriod } from "../domain/calendar-path";
@@ -66,6 +67,7 @@ export default async function EventCalendar({
   now,
   query = {},
   layout = "grid",
+  fadePast = false,
 }: {
   view: CalendarView;
   /** The period's rows, already read and filtered by the page (§413). */
@@ -74,6 +76,8 @@ export default async function EventCalendar({
   /** What the month links keep — the filters (§89, §413; a group ticked twice is an array). A month's own link goes to its path on the calendar (§251, §574). */
   query?: Record<string, string | string[]>;
   layout?: CalendarLayout;
+  /** «Tema v2» is on (§NNN): a date on a day gone is marked past — faded by the look's rule, said to a screen reader. Off, nothing is marked. */
+  fadePast?: boolean;
 }) {
   const t = await getTranslations("Events");
   const tEvent = await getTranslations("Event");
@@ -137,6 +141,8 @@ export default async function EventCalendar({
         partner={partnerPhrase(tEvent, readCoHosts(event).length > 0)}
         dense={dense}
         tone={calendarTone(event)}
+        // A date on a day already gone, faded under «Tema v2» (§NNN): by the day in the club's zone, so earlier today is not past.
+        past={fadePast && onPastDay(event, today) ? t("calendar.past") : null}
       />
     );
   };
