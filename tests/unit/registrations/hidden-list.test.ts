@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
-import { hiddenListBibStartOf, hiddenListCounting } from "@/modules/registrations/domain/hidden-list";
+import { hiddenListBibStartOf, hiddenListCounting, hiddenListShownPublicly } from "@/modules/registrations/domain/hidden-list";
 import HiddenListChip from "@/modules/registrations/ui/HiddenListChip";
 import HiddenListRadio from "@/modules/registrations/ui/HiddenListRadio";
 import IncognitoIcon from "@/shared/ui/IncognitoIcon";
@@ -35,6 +35,29 @@ describe("§647 the event's settings, as read", () => {
   });
 });
 
+describe("§743 «Arată invitații speciali pe lista publică»", () => {
+  it("shows the special guests only while the switch is on AND the tick is on; anything else is off", () => {
+    expect(hiddenListShownPublicly({ hiddenListEnabled: true, hiddenListPublic: true })).toBe(true);
+    expect(hiddenListShownPublicly({ hiddenListEnabled: true, hiddenListPublic: false })).toBe(false);
+    expect(hiddenListShownPublicly({ hiddenListEnabled: false, hiddenListPublic: true })).toBe(false);
+    expect(hiddenListShownPublicly({ hiddenListEnabled: true })).toBe(false);
+    expect(hiddenListShownPublicly(null)).toBe(false);
+    expect(hiddenListShownPublicly(undefined)).toBe(false);
+  });
+
+  it("is off by default and never changes what the counts say", () => {
+    expect(hiddenListCounting({ hiddenListEnabled: true, participantCountPublic: true, hiddenListCounted: true, hiddenListPublic: false })).toEqual({ countPublic: true, countHidden: true });
+  });
+
+  it("says the tick in both languages, with its «Bifat … Debifat» line", () => {
+    expect(ro.Admin.editor.hiddenListPublic).toBe("Arată invitații speciali pe lista publică");
+    expect(en.Admin.editor.hiddenListPublic).toBe("Show special guests on the public list");
+    expect(ro.Admin.editor.hiddenListPublicHelp).toMatch(/^Bifat: .* Debifat: /);
+    expect(en.Admin.editor.hiddenListPublicHelp).toMatch(/^Ticked: .* Unticked: /);
+    for (const text of [ro.Admin.editor.hiddenListPublicHelp, en.Admin.editor.hiddenListPublicHelp]) expect(text.length).toBeLessThan(200);
+  });
+});
+
 describe("§649 the name, in both languages: «Lista de invitați speciali»", () => {
   it("says «Invitat special» / «Lista de invitați speciali» on the chip, the pill, the radio, the verbs, the column, the audit label and the guide", () => {
     expect(ro.Admin.registrations.outside.title).toBe("Lista de invitați speciali");
@@ -54,13 +77,11 @@ describe("§649 the name, in both languages: «Lista de invitați speciali»", (
     expect(ro.Admin.registrations.outside.hint).toBe("Invitat special: nu ocupă unul dintre locurile anunțate");
     expect(en.Admin.registrations.outside.hint).toBe("Special guest: takes none of the announced places");
     // The caption under the radios says all three facts, not only the place: the declaration and number kept,
-    // the public list unchanged, the public count only with the event's tick.
+    // the public list and the public count only with the event's ticks.
     expect(ro.Admin.registrations.outside.help).toContain("își păstrează declarația și numărul");
-    expect(ro.Admin.registrations.outside.help).toContain("rămâne pe lista publică dacă a bifat");
-    expect(ro.Admin.registrations.outside.help).toContain("intră în numărătoarea publică doar cu bifa evenimentului");
+    expect(ro.Admin.registrations.outside.help).toContain("Pe lista publică și în numărătoare apare doar cu bifele evenimentului");
     expect(en.Admin.registrations.outside.help).toContain("keeps the declaration and the race number");
-    expect(en.Admin.registrations.outside.help).toContain("stays on the public list if they ticked it");
-    expect(en.Admin.registrations.outside.help).toContain("enters the public count only with the event's tick");
+    expect(en.Admin.registrations.outside.help).toContain("The public list and the count show them only with the event's ticks");
     for (const help of [ro.Admin.registrations.outside.help, en.Admin.registrations.outside.help]) expect(help.length).toBeLessThan(200);
     expect(ro.Admin.editor.boxes.received.outside).toBe("invitați speciali: {count}");
     expect(ro.Admin.guide.sections[4].tasks[10].title).toBe("Invitați speciali: organizatori, pacemakeri, voluntari");

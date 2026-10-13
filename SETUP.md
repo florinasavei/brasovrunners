@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.06-2026-10-12 -->
+<!-- PROJECT_BASELINE: BR-V3.07-2026-10-13 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.06-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.07-2026-10-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1554,7 +1554,10 @@ languages go live together; that is the rule, not a setting.
      series with no free number left draws the next free number after it, in the other series if
      need be; no number is ever given twice;
    - **«Numără și invitații speciali»** — unticked by default, «Cine vine» counts the race's places only;
-     ticked, it counts the special guests list too. The places line and the free places never do.
+     ticked, it counts the special guests list too. The places line and the free places never do;
+   - **«Arată invitații speciali pe lista publică»** — unticked by default (§743): no special guest is on any
+     public list, whether or not they ticked «Vreau să apar»; ticked, one who ticked appears on «Cine vine»
+     with their number. It changes no count and takes effect only while the switch above is on.
 
    Above «Arată public câți așteaptă», which sits under it (§669), on this and every event whether or not the
    special guests list is on, **«Arată public numărătoarea»** — ticked by default; unticked, «Arată public

@@ -675,6 +675,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     ...(fields.hiddenListBibStart === undefined ? {} : { hiddenListBibStart: fields.hiddenListBibStart }),
     ...(fields.participantCountPublic === undefined ? {} : { participantCountPublic: fields.participantCountPublic }),
     ...(fields.hiddenListCounted === undefined ? {} : { hiddenListCounted: fields.hiddenListCounted }),
+    ...(fields.hiddenListPublic === undefined ? {} : { hiddenListPublic: fields.hiddenListPublic }),
     externalProvider: fields.externalProvider,
     externalRegistrationUrl: fields.externalRegistrationUrl,
   };
@@ -1916,6 +1917,7 @@ const SERIES_COLUMNS = [
   "hiddenListBibStart",
   "participantCountPublic",
   "hiddenListCounted",
+  "hiddenListPublic",
   "externalProvider",
   "externalRegistrationUrl",
   // A recurring Strava club event and a Facebook event with several dates each keep one address
@@ -2372,6 +2374,7 @@ type HiddenListColumns = {
   hiddenListBibStart: number | null;
   participantCountPublic: boolean;
   hiddenListCounted: boolean;
+  hiddenListPublic: boolean;
 };
 
 function hiddenListOf(row: HiddenListColumns): HiddenListColumns {
@@ -2380,6 +2383,7 @@ function hiddenListOf(row: HiddenListColumns): HiddenListColumns {
     hiddenListBibStart: row.hiddenListBibStart,
     participantCountPublic: row.participantCountPublic,
     hiddenListCounted: row.hiddenListCounted,
+    hiddenListPublic: row.hiddenListPublic,
   };
 }
 
@@ -2390,6 +2394,7 @@ function hiddenListChanges(changes: Partial<HiddenListColumns>): Partial<HiddenL
   if (changes.hiddenListBibStart !== undefined) out.hiddenListBibStart = changes.hiddenListBibStart;
   if (changes.participantCountPublic !== undefined) out.participantCountPublic = changes.participantCountPublic;
   if (changes.hiddenListCounted !== undefined) out.hiddenListCounted = changes.hiddenListCounted;
+  if (changes.hiddenListPublic !== undefined) out.hiddenListPublic = changes.hiddenListPublic;
   return out;
 }
 
@@ -2398,7 +2403,7 @@ function hiddenListChanges(changes: Partial<HiddenListColumns>): Partial<HiddenL
  * numărătoarea» acts on every event, so it has its own action, `event.participant_count_public_changed`,
  * and an event that never uses the hidden list does not read in its trail as if the hidden list had moved.
  */
-const HIDDEN_LIST_GROUP: ReadonlyArray<keyof HiddenListColumns> = ["hiddenListEnabled", "hiddenListBibStart", "hiddenListCounted"];
+const HIDDEN_LIST_GROUP: ReadonlyArray<keyof HiddenListColumns> = ["hiddenListEnabled", "hiddenListBibStart", "hiddenListCounted", "hiddenListPublic"];
 
 /**
  * The trail of «Lista ascunsă» and «Arată public numărătoarea» (§647): who changed the event's switch, the
@@ -2946,6 +2951,7 @@ function blankEventRow(now: Date): EditableEvent {
     hiddenListBibStart: null,
     participantCountPublic: true,
     hiddenListCounted: false,
+    hiddenListPublic: false,
     createdByStaffUserId: null,
     updatedByStaffUserId: null,
     createdAt: now,
@@ -3581,6 +3587,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     hiddenListBibStart: source.hiddenListBibStart,
     participantCountPublic: source.participantCountPublic,
     hiddenListCounted: source.hiddenListCounted,
+    hiddenListPublic: source.hiddenListPublic,
     externalProvider: source.externalProvider,
     externalRegistrationUrl: source.externalRegistrationUrl,
     editorialStatus: "DRAFT" as const,
