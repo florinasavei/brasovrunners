@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.13-2026-10-13
+
+- **«De făcut» on the event as a plain to-do list** — «Lipsește pe pagină» as links to the field, «Sarcini» with a one-line add, a tick box on each row, its priority, who and day small beside it and a pencil that opens its edit form in place, the ticked ones folded under «Gata»; «Toate» / «Ale mele» on the card's corner. §752.
 ## BR-V3.12-2026-10-13
 
 - **An event as a JSON file** — «Exportă evenimentul (JSON)» in the editor and «Importă un eveniment (JSON)» on the events list: the event's configuration alone, brought into another site as a new draft or over an event after a field-by-field diff, through the editor's own save; pictures copied under a hash check, never a registration or a person. §751.
