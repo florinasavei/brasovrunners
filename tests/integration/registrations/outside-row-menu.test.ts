@@ -11,7 +11,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-037-07 (§648, §743): the registrations list's «⋮» offers «Pune pe lista de invitați speciali» /
+ * BR-REQ-037-07 (§648, §NNN): the registrations list's «⋮» offers «Pune pe lista de invitați speciali» /
  * «Scoate de pe lista de invitați speciali» by the registration page's own predicate: the Administrator's,
  * an active row, putting on only while the event's switch is on, taking off for any row on the list. The
  * hidden form posts the same action with the page's dialog and the list's query; the Organizer sees nothing.
@@ -162,7 +162,7 @@ beforeEach(async () => {
   await resetTables(db);
 });
 
-describe("BR-REQ-037-07: the list's «⋮» and the special guests list (§743)", () => {
+describe("BR-REQ-037-07: the list's «⋮» and the special guests list (§NNN)", () => {
   it("offers «Pune pe lista…» only while the event's switch is on, and «Scoate de pe…» for a row on the list even with it off", async () => {
     const on = await createRace("Cu lista", true);
     const off = await createRace("Fara lista", false);
@@ -207,6 +207,19 @@ describe("BR-REQ-037-07: the list's «⋮» and the special guests list (§743)"
     expect(field(take, "outside")).toBe("false");
     expect(field(put, "registrationId")).toBe(counted);
     expect(elements(put).some((element) => element.props.name === "listQuery")).toBe(true);
+  });
+
+  it("returns to the row's own page: the page and the filters stay in the form's return address", async () => {
+    const race = await createRace("Crosul", true);
+    state.actor = await staff("ADMIN");
+    const first = await register(race.id);
+    const second = await register(race.id);
+    const tree = await listPage({ eventId: race.id, status: "CONFIRMED", page: "2", perPage: "1" });
+    const form = outsideForm(tree, first) ?? outsideForm(tree, second);
+    const query = new URLSearchParams(String(elements(form).find((element) => element.props.name === "listQuery")?.props.value));
+    expect(query.get("page")).toBe("2");
+    expect(query.get("status")).toBe("CONFIRMED");
+    expect(query.get("eventId")).toBe(race.id);
   });
 
   it("names the email in a waiting runner's question, and none in a test row's", async () => {

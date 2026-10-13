@@ -185,7 +185,7 @@ test.describe("§647 «Lista de invitați speciali» (named so since) as a radio
     await expect(page.getByTestId("outside-capacity").getByRole("radio", { name: "Invitat special — nu ocupă un loc" })).toBeChecked();
   });
 
-  test("from the registrations list's «⋮»: put on the list (the chip appears), then take off (the chip goes) — §743", async ({ page }) => {
+  test("from the registrations list's «⋮»: put on the list (the chip appears), then take off (the chip goes) — §NNN", async ({ page }) => {
     const tag = `${test.info().project.name}-menu-${Date.now().toString(36)}`;
     const { eventId } = await seed(tag);
     const name = `Pacemaker ${tag}`;

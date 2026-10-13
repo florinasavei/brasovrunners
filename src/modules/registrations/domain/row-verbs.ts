@@ -48,7 +48,7 @@ export type RowVerb =
    */
   | "memberTick"
   /**
-   * «Pune pe lista de invitați speciali» / «Scoate de pe lista de invitați speciali» (§648, §743 amends where it is
+   * «Pune pe lista de invitați speciali» / «Scoate de pe lista de invitați speciali» (§648, §NNN amends where it is
    * offered): the registration page's verb, from the list's «⋮». Same predicate as the page: the Administrator's, an
    * active row, drawn to put on only while the event's «Folosește lista de invitați speciali» is on, and to take off
    * for any row already on it. The action and the service refuse again.

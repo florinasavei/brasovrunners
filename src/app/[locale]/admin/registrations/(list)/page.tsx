@@ -100,7 +100,7 @@ import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registratio
 import { rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
 import { givePlaceRefusalAhead } from "@/modules/registrations/give-place-tip";
 import { noFreePlaceValues } from "@/modules/registrations/domain/capacity";
-import { outsideMarkBody } from "@/modules/registrations/ui/outside-mark-body";
+import { outsideMarkConfirm } from "@/modules/registrations/ui/outside-mark-body";
 import { paperConfirmationText } from "@/modules/registrations/ui/PaperConfirmationTip";
 import RegistrationRowMenu, { type RegistrationMenuItem } from "@/modules/registrations/ui/RegistrationRowMenu";
 import HiddenListChip from "@/modules/registrations/ui/HiddenListChip";
@@ -327,6 +327,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     perPage: current.perPage,
   };
   const listQueryString = buildListHref("", listParams, {}).replace(/^\?/, "");
+  // A press on a row comes back to the row's page (§NNN), every filter kept, so the row's new chip is in view.
+  const rowReturnQueryString = buildListHref("", listParams, { page: current.page }).replace(/^\?/, "");
   /*
     The export's query names the scope the screen resolved, never the automatic one (§312,
     §15.10): the file is the set that was on screen when the button was pressed, even if the
@@ -1763,7 +1765,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 checkedIn: row.checkedInAt !== null,
                 // A number is printable once the registration is confirmed (§264, §548).
                 bib: { settled: row.bibNumber !== null, printed: row.bibPrintedAt !== null },
-                // The special guests list (§648, §743): the registration page's predicate, in `rowVerbsFor`.
+                // The special guests list (§648, §NNN): the registration page's predicate, in `rowVerbsFor`.
                 outside: { onList: row.outsideCapacity, enabled: row.eventHiddenListEnabled },
               });
               const hidden = (
@@ -1904,22 +1906,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       id={`outside-${row.id}`}
                       action={setOutsideCapacityAction}
                       hidden
-                      // The registration page's dialog, word for word (§643, §648): what happens to the place.
-                      confirm={
-                        row.outsideCapacity
-                          ? { title: t("confirm.outsideUnmarkTitle"), body: t("confirm.outsideUnmarkBody", { name: row.registeredName }), confirmLabel: t("registrations.outside.unmark"), cancelLabel: words.cancel }
-                          : {
-                              title: t("confirm.outsideMarkTitle"),
-                              body: outsideMarkBody(t, row),
-                              ...(row.status !== "WAITLISTED" && row.status !== "WAITLIST_OFFERED" ? {} : row.kind === "TEST" ? {} : { email: words.email(1) }),
-                              confirmLabel: t("registrations.outside.mark"),
-                              cancelLabel: words.cancel,
-                            }
-                      }
+                      // The registration page's dialog, word for word (§643, §648, §NNN): one function for both screens.
+                      confirm={outsideMarkConfirm(t, row, { cancel: words.cancel, emailLine: words.email(1) })}
                     >
                       {hidden}
                       <input type="hidden" name="outside" value={row.outsideCapacity ? "false" : "true"} />
-                      <input type="hidden" name="listQuery" value={listQueryString} />
+                      <input type="hidden" name="listQuery" value={rowReturnQueryString} />
                     </ActionForm>
                   )}
                   {verbs.includes("cancel") && (

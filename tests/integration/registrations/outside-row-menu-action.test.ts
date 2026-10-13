@@ -9,7 +9,7 @@ import { resolveDisplayName } from "@/modules/registrations/names";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-037-07 (§648, §743): the list's «⋮» posts the registration page's own action, so a press from
+ * BR-REQ-037-07 (§648, §NNN): the list's «⋮» posts the registration page's own action, so a press from
  * the list puts a registration on the special guests list, takes it off, and is refused when no counted
  * place is free, exactly as the page's — through the one allocator, audited — and comes back to the
  * list with its query. The action asserts the Administrator's role itself.
@@ -101,7 +101,18 @@ beforeEach(async () => {
   state.actor = admin;
 });
 
-describe("BR-REQ-037-07: the special guests list from the list's «⋮» (§743)", () => {
+describe("BR-REQ-037-07: the special guests list from the list's «⋮» (§NNN)", () => {
+  it("keeps the page of the list in the address it comes back to", async () => {
+    const eventId = await race(10);
+    const id = await register(eventId);
+    const form = new FormData();
+    form.set("uiLocale", "ro");
+    form.set("registrationId", id);
+    form.set("outside", "true");
+    form.set("listQuery", "eventId=abc&page=3");
+    await expect(setOutsideCapacityAction(null, form)).rejects.toThrow(/page=3/);
+  });
+
   it("puts a registration on the list and comes back to the list with its query, audited", async () => {
     const eventId = await race(10);
     const id = await register(eventId);

@@ -280,7 +280,7 @@ describe("BR-REQ-037-03 the member tick on the row", () => {
     }
   });
 
-  // The special guests list from the «⋮» (§648, §743): the registration page's predicate, in one function.
+  // The special guests list from the «⋮» (§648, §NNN): the registration page's predicate, in one function.
   it("offers the special guests list by the page's predicate: an active row, putting on only with the event's switch on", () => {
     const outside = (onList: boolean, enabled: boolean) => ({ checkedIn: false, outside: { onList, enabled } });
     for (const status of ALL) {

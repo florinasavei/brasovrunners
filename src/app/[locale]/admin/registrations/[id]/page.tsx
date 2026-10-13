@@ -1,4 +1,3 @@
-import { outsideMarkBody } from "@/modules/registrations/ui/outside-mark-body";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import Alert from "@mui/material/Alert";
@@ -22,6 +21,7 @@ import { registrationStatus } from "@/db/schema/registrations";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { specialListVerb } from "@/modules/registrations/domain/row-verbs";
+import { outsideMarkConfirm } from "@/modules/registrations/ui/outside-mark-body";
 import { noFreePlaceValues, type PlacesTaken } from "@/modules/registrations/domain/capacity";
 import { listAuditTrail, listPartnerShares } from "@/modules/audit/repository";
 import { declarationAsksMinorToSign, noticeDescribesPromotionalMaterials } from "@/modules/legal-documents/repository";
@@ -786,28 +786,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           {specialListVerb(registration.status, actor.role, { onList: registration.outsideCapacity, enabled: registration.eventHiddenListEnabled }) !== null ? (
             <ActionForm
               action={setOutsideCapacityAction}
-              confirm={
-                registration.outsideCapacity
-                  ? {
-                      title: tr("confirm.outsideUnmarkTitle"),
-                      body: tr("confirm.outsideUnmarkBody", { name: registration.registeredName }),
-                      confirmLabel: tr("registrations.outside.unmark"),
-                      cancelLabel: words.cancel,
-                    }
-                  : {
-                      title: tr("confirm.outsideMarkTitle"),
-                      /*
-                        A waiting runner, or an open offer (the review of 2026-10-02), is seated now with the
-                        declaration's email; a TEST row's dialog names no email, in its body as in its bold line (§384).
-                      */
-                      body: outsideMarkBody(tr, registration),
-                      ...(registration.status !== "WAITLISTED" && registration.status !== "WAITLIST_OFFERED"
-                        ? {}
-                        : registration.kind === "TEST" ? {} : { email: words.email(1) }),
-                      confirmLabel: tr("registrations.outside.mark"),
-                      cancelLabel: words.cancel,
-                    }
-              }
+              confirm={outsideMarkConfirm(tr, registration, { cancel: words.cancel, emailLine: words.email(1) })}
               data-testid="outside-capacity-form"
             >
               {deskHidden}
