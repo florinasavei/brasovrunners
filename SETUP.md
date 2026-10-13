@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.15-2026-10-14 -->
+<!-- PROJECT_BASELINE: BR-V3.16-2026-10-14 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.15-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.16-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1513,7 +1513,7 @@ else's: they are marked **YOURS**. Everything else below is a value, not a place
 | Înscrieri | Culoarea numerelor de concurs (BIB) | the band colour on the printed bib; any of the palette's |
 | Înscrieri | Declarația pe care o semnează participantul | the approved **EVENT_DECLARATION** — the only entry in the list on production |
 | Înscrieri | Publică lista participanților | leave **off**. It goes on only once the privacy notice describes it |
-| Înscrieri | Clubul pe lista publică | **«Doar» the club's name** (the default, §753): the «Club» column shows the club's own name for an account on the team's list (Echipa, members included) who typed the club (BVR, the full name, any usual spelling); every other cell is blank, and the column is not drawn when none has a value. «Cum l-au scris» shows what people typed, silly text included; «Nu arăta clubul» draws no column. Display only: the backoffice, the exports, the desk and the bibs keep the typed club |
+| Înscrieri | Clubul pe lista publică | **«Doar» the club's name** (the default, §753, §756): the «Club» column shows the club's own name for everyone who typed the club (BVR, the full name, any usual spelling, «.ro» after it, one typo in a word forgiven, a digit never), with or without an account on «Echipa»; every other cell is blank, and the column is not drawn when none has a value. «Cum l-au scris» shows what people typed, silly text included; «Nu arăta clubul» draws no column. Display only: the backoffice, the exports, the desk and the bibs keep the typed club |
 | Înscrieri | Arată public câți așteaptă | under «Arată public numărătoarea», shown while that one is ticked (§669); unticking the count makes the line's count private too. Suggested for the race: **untick it**. The card, the page and each person on the list then learn only that a waiting list exists and how to join it — no count and no place in the line (the newest is always last, so a place would be the count); you still see every number in the backoffice (§634) |
 | Traseu și detalii | Distanță, Denivelare, Dificultate, Suprafață, Cost | as the race is |
 | Română / English | Titlu, Adresa paginii, Rezumat | both languages — the event cannot be published with either missing |
