@@ -1,3 +1,5 @@
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ConstructionIcon from "@mui/icons-material/Construction";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
@@ -5,7 +7,9 @@ import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HelpIcon from "@mui/icons-material/Help";
 import LinkIcon from "@mui/icons-material/Link";
+import PriorityHighIcon from "@mui/icons-material/PriorityHigh";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import RemoveIcon from "@mui/icons-material/Remove";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import TranslateIcon from "@mui/icons-material/Translate";
@@ -39,6 +43,11 @@ export const STATUS_GLYPHS = {
   shop: StorefrontIcon,
   link: LinkIcon,
   series: EventRepeatIcon,
+  // An event's own to-do's priority (§749): a word and a glyph, never the colour alone.
+  priorityUrgent: PriorityHighIcon,
+  priorityHigh: ArrowUpwardIcon,
+  priorityNormal: RemoveIcon,
+  priorityLow: ArrowDownwardIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 
 export type StatusGlyphName = keyof typeof STATUS_GLYPHS;

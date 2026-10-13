@@ -21,6 +21,10 @@ import {
   listEventsForBackoffice,
 } from "@/modules/content/events/repository";
 import { canReadContent, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
+import { eventPageTodos } from "@/modules/content/events/domain/page-todos";
+import { countOpenEventTodos } from "@/modules/event-todos/event-todos";
+import { listApprovedRaceDeclarations } from "@/modules/legal-documents/repository";
+import { isStorageConfigured } from "@/modules/media/storage";
 import { eventListVerbs } from "@/modules/content/events/event-list-verbs";
 import {
   EDITORIAL_STATUS_LABEL,
@@ -164,11 +168,26 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   // How far ahead a series keeps its dates — the club's number (§377) — for the lines that say so.
   const deadlines = await deadlinesForThisRequest();
   const horizon = daysPhrase(locale, deadlines.seriesHorizonDays);
-  const [events, entriesByEvent, deskByEvent] = await Promise.all([
-    listEventsForBackoffice(db),
+  const [eventsAndTodos, entriesByEvent, deskByEvent, approvedDeclarations] = await Promise.all([
+    // The typed lines are counted for the events just read, so that read and its count are one step beside the others.
+    listEventsForBackoffice(db).then(async (rows) => ({ rows, typed: await countOpenEventTodos(db, rows.map((row) => row.event.id)) })),
     countRegistrationsByEvent(db),
     countConfirmedAndCheckedInByEvent(db),
+    listApprovedRaceDeclarations(db, locale),
   ]);
+  const events = eventsAndTodos.rows;
+
+  /*
+    How many to-dos an event's page still has (§749): what it lacks, computed from the row as the
+    editor's card computes it, and the lines the club typed that are not ticked — one grouped query
+    for the lines, no query for the rest. Drawn beside the next date's title as a small chip.
+  */
+  const approvedDeclarationIds = new Set(approvedDeclarations.map((declaration) => declaration.id));
+  const typedTodos = eventsAndTodos.typed;
+  const storageConfigured = isStorageConfigured();
+  const todoCount = (row: (typeof events)[number]) =>
+    eventPageTodos(row.event, row.translations, { now, locales: routing.locales, storageConfigured, approvedDeclarationIds }).length +
+    (typedTodos.get(row.event.id) ?? 0);
 
   // Race day, give or take: from the day before the start to the day after (§83).
   const DAY = 24 * 60 * 60_000;
@@ -307,6 +326,10 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                   run and the race carry one before the new look goes live (the plan's gate). */}
               {next.event.coverMediaAssetId === null && (next.event.endsAt ?? next.event.startsAt).getTime() >= now.getTime() && (
                 <Chip size="small" variant="outlined" color="warning" label={t("events.noCover")} data-testid="no-cover-chip" />
+              )}
+              {/* What the next date's page still lacks and the club's own open lines (§749): the card «De făcut» in its editor lists them. */}
+              {todoCount(next) > 0 && (
+                <StatusChip glyph="open" variant="outlined" color="warning" label={t("eventTodos.chip", { count: todoCount(next) })} testId="event-todos-chip" />
               )}
               {/* For the members alone (§552): on no public surface, so the list says so beside the type. */}
               {next.event.membersOnly && (

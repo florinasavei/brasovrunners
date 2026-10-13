@@ -422,6 +422,17 @@ export type AuditAction =
   | "club_todo.reopened"
   | "club_todo.moved"
   | "club_todo.deleted"
+  /**
+   * An event's own to-do on its editor's «De făcut pentru pagina evenimentului» card (§749): a line
+   * added, changed (words, priority, who, day), ticked, unticked or deleted. Entity `event`; the
+   * metadata is the line's id, its words, its priority and — an edit — what each changed field was
+   * and became. The club's own work, never a participant.
+   */
+  | "event_todo.added"
+  | "event_todo.edited"
+  | "event_todo.done"
+  | "event_todo.reopened"
+  | "event_todo.deleted"
   /** A message's own words, rewritten by the club (§247). */
   | "email_copy.changed"
   /** Who at the club receives the declaration copies and the confirmation notices (§244, §245). */
