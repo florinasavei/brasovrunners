@@ -214,7 +214,7 @@ describe("§NNN the privacy notice's marker {{volunteers}}", () => {
       [privacyNoticeRo, "Ofertele de voluntar"],
       [privacyNoticeEn, "Volunteer offers"],
     ] as const) {
-      const retention = body.sections.find((section) => section.heading.startsWith("7."));
+      const retention = body.sections.find((section) => section.heading?.startsWith("7."));
       const paragraph = retention?.paragraphs.find((candidate) => candidate.startsWith(words)) ?? "";
       expect(paragraph, words).toContain(days);
     }
