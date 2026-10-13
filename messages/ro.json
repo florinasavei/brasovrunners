@@ -176,6 +176,7 @@
     "eventStartAtBold": "<strong>{time}</strong> (start eveniment)",
     "raceStartFlag": "start cursă",
     "raceStartLater": "Ora startului cursei se anunță.",
+    "timeLimit": "Timp limită",
     "when": "Când",
     "where": "Unde",
     "meetingPoint": "Punct de întâlnire",
@@ -517,7 +518,8 @@
       },
       "cutoff": "Ora limită {time}",
       "noCutoff": "fără oră limită",
-      "finish": "Sosire"
+      "finish": "Sosire",
+      "finishCloses": "se închide la {time}"
     },
     "routeMaps": {
       "tabs": "Hărțile traseului",
@@ -2150,7 +2152,10 @@
       "duration": "Durata",
       "durationHours": "Ore",
       "durationMinutesPart": "Minute",
-      "durationHelp": "Cât durează — de exemplu 1 oră și 45 de minute. Sfârșitul se calculează singur. Lasă ambele goale dacă nu s-a anunțat.",
+      "durationRace": "Timp limită",
+      "durationRaceHelp": "Cât au alergătorii de la start până se închide sosirea — de exemplu 2 ore și 30 de minute. Lasă gol dacă nu există.",
+      "durationOther": "Cât durează evenimentul",
+      "durationOtherHelp": "De la start până la final — de exemplu 1 oră și 45 de minute. Sfârșitul se calculează singur. Lasă gol dacă nu s-a anunțat.",
       "coHostRows": {
         "add": "Adaugă un partener",
         "remove": "Șterge partenerul",

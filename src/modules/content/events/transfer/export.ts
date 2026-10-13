@@ -25,7 +25,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import { readWeatherMode } from "@/modules/weather/domain/mode";
 import { getStorage, type Storage } from "@/modules/media/storage";
 import { waitlistChoiceOf } from "../waitlist-choice";
-import { savedDurationMinutes } from "../duration";
+import { eventDurationMinutes } from "../duration";
 import { type EditableEvent, type EditableTranslation, findCoverPicture, listTranslationsForEvent } from "../repository";
 import {
   EVENT_FILE_FORMAT,
@@ -105,7 +105,8 @@ export function configFromRows(event: EditableEvent, rows: readonly EditableTran
     surface: event.surface,
     timezone: event.timezone,
     start: { date: start.date || null, time: start.time || null },
-    durationMinutes: savedDurationMinutes(event.startsAt, event.endsAt),
+    // From the gun on a race that has one (§NNN, `durationBase`): the box the import posts back, so the end comes back the same.
+    durationMinutes: eventDurationMinutes(event),
     raceStartsAt: event.raceStartsAt?.toISOString() ?? null,
     dateToBeAnnounced: event.dateToBeAnnounced,
     timeToBeAnnounced: event.timeToBeAnnounced,

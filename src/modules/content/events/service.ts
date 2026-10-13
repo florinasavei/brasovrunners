@@ -58,6 +58,7 @@ import {
   isLiveContent,
 } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
+import { durationBase } from "./duration";
 import { resolveStart, type StartSwitches } from "./start";
 import { isWaitlistChoice, waitlistLengthPosted } from "./waitlist-choice";
 import { isBlankValue } from "@/shared/forms/blank-value";
@@ -259,12 +260,13 @@ function resolveTimes(fields: EventFieldsInput, switches: StartSwitches): Resolv
   // needs no hour, so it is kept whatever was left blank — it is the end that has no public reader
   // while the start is held back (§533). An end typed on the clock is compared with the start, so it
   // needs the start's date and hour, like the race's start below.
-  const endsAt =
-    fields.durationMinutes != null
-      ? new Date(startsAt.getTime() + fields.durationMinutes * 60_000)
-      : optional(fields.endsAtWallTime, "endsAt");
   // A gun time is a race's (§71): on any other type the field is hidden and its value ignored.
   const raceStartsAt = fields.type === "RACE" ? optional(fields.raceStartsAtWallTime, "raceStartsAt") : null;
+  // For a race «Durata» is «Timp limită» (§NNN): counted from the gun when it has one (`durationBase`).
+  const endsAt =
+    fields.durationMinutes != null
+      ? new Date(durationBase({ type: fields.type, startsAt, raceStartsAt }).getTime() + fields.durationMinutes * 60_000)
+      : optional(fields.endsAtWallTime, "endsAt");
   // «Startul cursei» is checked against the event's start, so it waits for the start's own date and
   // hour (§545): typed beside a blank one, it is refused naming its box rather than compared with the
   // provisional value.

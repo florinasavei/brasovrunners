@@ -176,6 +176,7 @@
     "eventStartAtBold": "<strong>{time}</strong> (event start)",
     "raceStartFlag": "race start",
     "raceStartLater": "The race start time is announced later.",
+    "timeLimit": "Time limit",
     "when": "When",
     "where": "Where",
     "meetingPoint": "Meeting point",
@@ -517,7 +518,8 @@
       },
       "cutoff": "Cut-off {time}",
       "noCutoff": "no cut-off",
-      "finish": "Finish"
+      "finish": "Finish",
+      "finishCloses": "closes at {time}"
     },
     "routeMaps": {
       "tabs": "Route maps",
@@ -2150,7 +2152,10 @@
       "duration": "Duration",
       "durationHours": "Hours",
       "durationMinutesPart": "Minutes",
-      "durationHelp": "How long it lasts — 1 hour 45 minutes, say. The end is worked out from it. Leave both empty if none was announced.",
+      "durationRace": "Time limit",
+      "durationRaceHelp": "How long the runners have from the start until the finish closes — 2 hours 30 minutes, say. Leave empty if there is none.",
+      "durationOther": "How long the event lasts",
+      "durationOtherHelp": "From the start to the end — 1 hour 45 minutes, say. The end is worked out from it. Leave empty if none was announced.",
       "coHostRows": {
         "add": "Add a partner",
         "remove": "Remove partner",

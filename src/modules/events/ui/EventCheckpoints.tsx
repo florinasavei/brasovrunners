@@ -164,7 +164,10 @@ export default async function EventCheckpoints({
                 </td>
                 <td data-label={t("checkpoints.columns.cutoff")}>
                   {view.cutoff ? (
-                    <span data-testid="checkpoint-cutoff">{t("checkpoints.cutoff", { time: view.cutoff })}</span>
+                    <span data-testid="checkpoint-cutoff">
+                      {/* The finish closes; a checkpoint has a time a runner must be there by. */}
+                      {view.finish ? t("checkpoints.finishCloses", { time: view.cutoff }) : t("checkpoints.cutoff", { time: view.cutoff })}
+                    </span>
                   ) : (
                     <>
                       <span aria-hidden="true">—</span>

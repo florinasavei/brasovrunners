@@ -5,13 +5,15 @@ import PlaceIcon from "@mui/icons-material/Place";
 import RouteIcon from "@mui/icons-material/Route";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import SportsScoreIcon from "@mui/icons-material/SportsScore";
+import TimerIcon from "@mui/icons-material/Timer";
 import WaterDropIcon from "@mui/icons-material/WaterDrop";
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { Fragment, type ReactNode } from "react";
-import { formatDay, formatTime } from "@/i18n/dates";
+import { durationShort, formatDay, formatTime } from "@/i18n/dates";
+import { raceTimeLimitMinutes } from "@/modules/event-checkpoints/domain/start";
 import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import { forecastPlaceName, rainLikely, type EventForecast, type WeatherReading } from "@/modules/weather/domain/forecast";
@@ -1069,6 +1071,17 @@ export default async function EventFacts({
       ),
     },
   ];
+
+  /*
+    «Timp limită» (§NNN; the owner, 2026-10-13: «trebuie să pot pune timp limită»): a race's time limit,
+    the editor's «Durata» box, said under «Când» as «2 h 30 min» — how long the runners have from the
+    gun until the finish closes. Only a race's: every other event's length is when it ends, not a limit.
+    The time the finish closes is the checkpoints table's last row (`EventCheckpoints`).
+  */
+  const timeLimit = startsAt ? raceTimeLimitMinutes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt, endsAt: event.endsAt }) : null;
+  if (timeLimit) {
+    rows.push({ key: "timeLimit", label: t("timeLimit"), icon: TimerIcon, value: <span data-testid="race-time-limit">{durationShort(timeLimit)}</span> });
+  }
 
   /*
     Where: the place's name — the map link when the organizer pasted one — and its address on the
