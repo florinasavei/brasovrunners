@@ -3,7 +3,6 @@ import { platformSettings } from "@/db/schema/platform-settings";
 import type { Database } from "@/db/types";
 import { z } from "zod";
 import type { ContactSuspicion } from "./domain/suspicion";
-import { readContactRecipients } from "./recipients";
 
 /**
  * «Nu-mi trimite mesajele care par spam» (`DECISIONS.md` §NNN (amends §310)): what happens to a
@@ -37,15 +36,6 @@ export function shouldHoldBack(suspicion: Pick<ContactSuspicion, "suspicious">, 
 function recent(entries: readonly { at: string; form: string }[], now: Date): { at: string; form: string }[] {
   const since = now.getTime() - HELD_BACK_DAYS * 24 * 60 * 60 * 1000;
   return entries.filter((entry) => Date.parse(entry.at) >= since);
-}
-
-/** Whether the tick is on. A database that does not answer reads as off: the message is delivered, marked, as ever. */
-export async function holdBackIsOn<T extends Record<string, unknown>>(db: Database<T>): Promise<boolean> {
-  try {
-    return (await readContactRecipients(db)).holdBackSuspected;
-  } catch {
-    return false;
-  }
 }
 
 async function readEntries<T extends Record<string, unknown>>(db: Pick<Database<T>, "select">): Promise<{ at: string; form: string }[]> {

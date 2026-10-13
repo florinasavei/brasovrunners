@@ -213,6 +213,8 @@ async function sendOrRefuse(form: FormData, locale: Locale, path: string): Promi
         tokenPresent: token.length > 0,
         turnstileVerdict: verdict,
         clubHost: new URL(env.APP_BASE_URL).hostname,
+        // The tick is read with the recipients above: a database that did not answer reads as off.
+        holdBack: recipients?.holdBackSuspected ?? false,
       },
     );
   } catch (error) {

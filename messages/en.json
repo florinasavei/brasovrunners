@@ -5772,8 +5772,8 @@
         "repeats": "An address typed twice, or already under “To”, is kept once.",
         "holdBack": "Don't send me messages that look like spam",
         "holdBackHelp": "Ticked: a message judged “possible spam” is not sent to you, even a real person’s whose browser skipped the anti-bot check. Unticked: it arrives marked “[posibil spam]”.",
-        "holdBackOn": "The tick is on: a message the form judges “possible spam” is not emailed.",
-        "holdBackOff": "The tick is off: such a message arrives marked “[posibil spam]”.",
+        "holdBackOn": "Ticked: a message the form judges “possible spam” is not emailed.",
+        "holdBackOff": "Unticked: such a message arrives marked “[posibil spam]”.",
         "heldBack": {
           "one": "In the last 30 days {count} message that looked like spam was stopped (none of it is kept).",
           "few": "In the last 30 days {count} messages that looked like spam were stopped (none of them is kept).",

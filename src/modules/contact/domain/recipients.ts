@@ -65,7 +65,7 @@ export const contactRecipientsSchema = z
     // Absent on a row saved before the list existed, and read as empty then — a stored setting
     // never needs a migration to grow a list (`platform_settings` is one JSON row per key).
     bcc: z.array(address).max(CONTACT_RECIPIENTS_MAX).default([]),
-    // §310's tick (amended): a message the form marks «[posibil spam]» is not emailed, only
+    // §NNN (amends §310): a message the form marks «[posibil spam]» is not emailed, only
     // counted. Off on a row saved before it existed — nothing changes on release.
     holdBackSuspected: z.boolean().default(false),
   })

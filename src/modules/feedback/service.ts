@@ -4,7 +4,7 @@ import type { OutgoingEmail, SendResult } from "@/infrastructure/email/adapter";
 import { type AppEnvironment, QA_SUBJECT_PREFIX } from "@/infrastructure/email/delivery";
 import type { SmtpAddress, SmtpTransport } from "@/infrastructure/email/smtp-adapter";
 import { contactSuspicion } from "@/modules/contact/domain/suspicion";
-import { holdBackIsOn, recordHeldBack, shouldHoldBack } from "@/modules/contact/held-back";
+import { recordHeldBack, shouldHoldBack } from "@/modules/contact/held-back";
 import { SUSPICIOUS_SUBJECT_PREFIX, suspicionFooter } from "@/modules/contact/message";
 import type { ContactScreening } from "@/modules/contact/service";
 import { consumeRateLimit, refundRateLimit } from "@/modules/rate-limit/service";
@@ -155,9 +155,18 @@ export async function submitFeedback<T extends Record<string, unknown>>(
 
   const sent =
     audience === "person"
-      ? await sendSafety(deps.mailgun as FeedbackMailgunRoad, recipients[0], email, input.locale)
+      ? (await sendSafety(deps.mailgun as FeedbackMailgunRoad, recipients[0], email, input.locale))
+        ? "sent"
+        : "failed"
       : await sendOrdinary(db, deps.smtp as FeedbackSmtpRoad, recipients, email, input, deps.screening, now);
-  if (sent) return logged(branch, audience === defaultAudience(branch) ? { outcome: "sent" } : { outcome: "sent", audience }, audience);
+  if (sent === "held") {
+    // Held back by the Administrator's tick (§NNN): it reached nobody, so it is not one of the branch's
+    // thirty an hour either. The bucket is keyed on the branch, and a bot flood held back in silence
+    // must not lock real people out of it. The sender is answered «trimis», as ever; the log says «held».
+    await refundRateLimit(db, "feedback", branch, now);
+    return audience === defaultAudience(branch) ? { outcome: "sent" } : { outcome: "sent", audience };
+  }
+  if (sent === "sent") return logged(branch, audience === defaultAudience(branch) ? { outcome: "sent" } : { outcome: "sent", audience }, audience);
 
   // A message that reached nobody is not one of the branch's thirty.
   await refundRateLimit(db, "feedback", branch, now);
@@ -204,7 +213,7 @@ async function sendOrdinary<T extends Record<string, unknown>>(
   input: FeedbackInput,
   screening: ContactScreening,
   now: Date,
-): Promise<boolean> {
+): Promise<"sent" | "held" | "failed"> {
   const rendered = Date.parse(input.renderedAt ?? "");
   const replyAddress = input.branch === "safety" ? null : input.email;
   const suspicion = contactSuspicion({
@@ -216,10 +225,10 @@ async function sendOrdinary<T extends Record<string, unknown>>(
   });
   // The contact form's tick (§NNN (amends §310)): counted, not emailed, answered «trimis». The safety
   // branch is never held back — a lost report costs more than a marked one.
-  if (input.branch !== "safety" && suspicion.suspicious && shouldHoldBack(suspicion, await holdBackIsOn(db))) {
+  if (input.branch !== "safety" && suspicion.suspicious && shouldHoldBack(suspicion, screening.holdBack === true)) {
     await recordHeldBack(db, input.branch, now);
     console.info("[feedback] held back as possible spam:", suspicion.reasons.map((reason) => reason.kind).join(","));
-    return true;
+    return "held";
   }
   const marked = suspicion.suspicious ? suspicionFooter(suspicion) : null;
   const text = marked ? [email.text, "", "---", marked.heading, ...marked.reasons.map((line) => `• ${line}`), marked.signals].join("\n") : email.text;
@@ -238,7 +247,7 @@ async function sendOrdinary<T extends Record<string, unknown>>(
     html,
   });
   if (result.outcome !== "sent") console.error("[feedback] delivery failed", result.error);
-  return result.outcome === "sent";
+  return result.outcome === "sent" ? "sent" : "failed";
 }
 
 function markAfterEnvironment(subject: string): string {
