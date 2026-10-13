@@ -78,6 +78,7 @@ describe("BR-REQ-070-04 CC and BCC on the contact page's messages", () => {
       cc: ["ioana@example.org", "mihai@example.org"],
       bcc: ["arhiva@example.org", "presedinte@example.org"],
       updatedAt: NOW,
+      holdBackSuspected: false,
     });
 
     // One audit row under the setting's own id, from nothing to the lists (§483).

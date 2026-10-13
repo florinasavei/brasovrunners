@@ -209,7 +209,7 @@ export default async function ListingFilterPanel({
   const nothingToNarrow = past && count === 0 && !offersAnything(offer);
 
   return (
-    <Box sx={{ "& > details[open] + [data-active-filters]": { display: "none" } }}>
+    <Box sx={{ "& > details[open] + [data-active-filters]": { display: "none" }, ...(lookChips.length > 0 ? { [UNDER_LOOK]: { display: "contents" } } : {}) }}>
       <Box component="details" data-testid={past ? "past-filters" : "listing-filters"} data-filter-scope={scope} sx={{ "&[open] > summary .filters-caret": { transform: "rotate(180deg)" } }}>
         <Box component="summary" sx={FILTER_BUTTON_SX}>
           <span>

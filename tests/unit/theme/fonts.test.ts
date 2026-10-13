@@ -153,7 +153,7 @@ describe("the fonts are files in the repository, never a download at build (§46
     }
   });
 
-  it("BR-REQ-101-01: Inter 800 (the heading face of «Aspectul nou», §708) is in the Inter family and, like Caveat, never preloaded", () => {
+  it("BR-REQ-101-01: Inter 800 (the heading face of «Tema v2», §708) is in the Inter family and, like Caveat, never preloaded", () => {
     const source = readFileSync(LAYOUT, "utf8");
     /** One `const <name> = localFont({ … });` declaration of the layout, whole. */
     const declaration = (name: string) => {

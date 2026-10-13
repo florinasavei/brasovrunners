@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * §723 — «Aspectul nou»'s card as the Administrator opens it: beside the switch, «Culoarea de accent»
+ * §723 — «Tema v2»'s card as the Administrator opens it: beside the switch, «Culoarea de accent»
  * with a radio per preset, each drawn in miniature by day and after dark, and «Personalizat» with its
  * box, its picker and the derived shades; the accent in force is the one ticked and named. A role that
  * may not change it reads the accent in force and no form. Drawn from the real catalogues.

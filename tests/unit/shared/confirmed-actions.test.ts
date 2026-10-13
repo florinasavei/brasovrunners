@@ -185,7 +185,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   updateSiteTintAction: [],
   // The public pages' text size (§530): every visitor reads at the new size from the next page view.
   updateSiteFontSizeAction: [],
-  // «Aspectul nou» (§708): every visitor sees the chosen look from the next page view.
+  // «Tema v2» (§708): every visitor sees the chosen look from the next page view.
   updateSiteLookAction: [],
   // «Pagina principală» (§714): the site's address opens the home page or the listing, for every visitor, from the next visit.
   updateHomePageAction: [],

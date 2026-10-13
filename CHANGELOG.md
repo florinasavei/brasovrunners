@@ -8,6 +8,11 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.08-2026-10-13
+
+- **A tick to stop messages that look like spam** — «Pagini» → «Contact» → «Nu-mi trimite mesajele care par spam», off by default; ticked, a message the form marks «[posibil spam]» is not emailed (contact and «Spune-ne ceva», not the safety branch) and the card only counts how many were stopped in 30 days; nothing of the message is kept. §744.
+- **«Tema v1» and «Tema v2»** — the setting «Aspectul nou» is now the choice «Tema» (Tema v1: the site as it has been; Tema v2: the facelift), light and dark are «varianta deschisă» / «varianta întunecată» beside it; and under Tema v2 the calendar's «Luna» and «Anul» selectors are drawn like the segmented controls and «Azi» beside them, the visible «Calendar» title and the wordmark's band are gone (one hidden `h1`), the «?» stands under the controls, «Filtre» sits at the end of the chips' line, and dates that ended on a day gone are faded like Google Calendar's. §745.
+- **Contact: «Spune-ne ceva» comes first when it is offered.** The feedback form's section moves above «Trimite-ne un mesaj»; when the forms are not offered the page is unchanged. §746.
 ## BR-V3.07-2026-10-13
 
 - **Special guests stay off the public list** — the event's new «Arată invitații speciali pe lista publică» is off by default, so «Cine vine» no longer names a special guest; tick it to show them as before. Counts follow «Numără și invitații speciali», as before. §743.

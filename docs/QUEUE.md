@@ -14,13 +14,15 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.06`** (2026-10-13 just after midnight: §741 the privacy template and `AGENTS.md` §18.3 say the
-  route maps open with the page, §742 the Strava frame fits its card). Waiting for «prod»: `BR-V3.07` (§743, below),
-  migration `0143` (expand only).
-- **QA: `BR-V3.07`** — special guests stay off every public list unless the event ticks «Arată invitații speciali pe
-  lista publică» (off by default); the counts still follow «Numără și invitații speciali». Next on the laptop: «Tema v1»
-  / «Tema v2» instead of «Aspectul nou» with the calendar's head (selectors, the title, «?», faded past events, «Filtre»
-  inline, the wordmark's band), the tick that stops suspected spam (off), and the feedback form first on the contact page.
+- **Production: `BR-V3.07`** (2026-10-13 morning: §743, special guests off the public list unless the event ticks
+  «Arată invitații speciali pe lista publică», migration `0143`). Waiting for «prod»: `BR-V3.08` (§744–§746, below) — no
+  migration.
+- **QA: `BR-V3.08`** — a tick «Nu-mi trimite mesajele care par spam» beside «Cine primește mesajele de contact», off;
+  «Tema v1» / «Tema v2» instead of «Aspectul nou» (light and dark are «varianta deschisă/întunecată»), and under Tema v2
+  the calendar's head: «Luna»/«Anul» like the segmented controls, no visible «Calendar» title (one hidden `h1`), the «?»
+  under the controls, «Filtre» at the end of the chips' line, the wordmark's band gone, dates that ended on a day gone
+  faded; on the contact page «Spune-ne ceva» first when it is offered. Building: the special guests list from the
+  registrations list's «⋮», both ways; the printed race numbers with their leading zeros (§735).
 - **Nothing is building.** Releases by the label `ship` reach production by themselves again: `SHIP_TOKEN` was given
   «Pull requests: Read and write» on 2026-10-12, and `BR-V3.05`'s run opened its `qa → main` pull request itself.
 - **Lanes:** the phone session took the calendar on 2026-10-12; one release at a time between
@@ -140,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.08` | a tick to stop suspected spam, off (§744) · Tema v1 / Tema v2; the calendar's selectors match; the calendar's head under Tema v2 (§745) · contact: the feedback form first when offered (§746) |
 | `BR-V3.07` | special guests off the public list, a tick to show them (§743) |
 | `BR-V3.06` | the privacy template and AGENTS say the maps open with the page (§741) · the Strava map's frame fits its card (§742) |
 | `BR-V3.05` | the invite button works; invited people seen with their state (§740) |

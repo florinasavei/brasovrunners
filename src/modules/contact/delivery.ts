@@ -46,7 +46,7 @@ export type ContactConfig = Pick<
 type ContactRoute = Omit<ContactDelivery, "transport">;
 
 /** The addresses and the envelope, with no transport attached — what both callers below need. */
-function contactRoute(config: ContactConfig, recipients: ContactRecipients | null): ContactRoute | null {
+function contactRoute(config: ContactConfig, recipients: Pick<ContactRecipients, "to" | "cc" | "bcc"> | null): ContactRoute | null {
   if (config.CONTACT_FORM_MODE === "off") return null;
 
   const resolved = resolveContactRecipients(recipients, config.CONTACT_FORM_TO);
@@ -63,13 +63,13 @@ function contactRoute(config: ContactConfig, recipients: ContactRecipients | nul
 }
 
 /** Can a message posted on this deployment reach anybody? The page asks before it shows a form. */
-export function contactFormReaches(config: ContactConfig, recipients: ContactRecipients | null): boolean {
+export function contactFormReaches(config: ContactConfig, recipients: Pick<ContactRecipients, "to" | "cc" | "bcc"> | null): boolean {
   return contactRoute(config, recipients) !== null;
 }
 
 export function contactDeliveryFor(
   config: ContactConfig,
-  recipients: ContactRecipients | null,
+  recipients: Pick<ContactRecipients, "to" | "cc" | "bcc"> | null,
 ): ContactDelivery | null {
   const route = contactRoute(config, recipients);
   if (!route) return null;
@@ -117,6 +117,6 @@ export function contactSmtpRoad(): ContactSmtpRoad | null {
 }
 
 /** This process's delivery, from its environment and the club's own recipient list. */
-export function contactDelivery(recipients: ContactRecipients | null): ContactDelivery | null {
+export function contactDelivery(recipients: Pick<ContactRecipients, "to" | "cc" | "bcc"> | null): ContactDelivery | null {
   return contactDeliveryFor(env, recipients);
 }

@@ -12,7 +12,7 @@ import type { PublicEvent } from "@/modules/events/repository";
 import CalendarHeader, { calendarStepHrefs } from "@/modules/events/ui/CalendarHeader";
 import CalendarAddress from "@/modules/events/ui/CalendarAddress";
 import CalendarLegend, { calendarLegendWords } from "@/modules/events/ui/CalendarLegend";
-import { calendarFeedLinks, feedAddressHints } from "@/modules/events/ui/CalendarIntroFold";
+import CalendarIntroFold, { calendarFeedLinks, feedAddressHints } from "@/modules/events/ui/CalendarIntroFold";
 import CalendarSwipe from "@/modules/events/ui/CalendarSwipe";
 import EventCalendar, { type CalendarLayout, type CalendarView } from "@/modules/events/ui/EventCalendar";
 import InfoTip from "@/shared/ui/InfoTip";
@@ -60,6 +60,7 @@ export default async function CalendarSection({
   query,
   now,
   events,
+  lookOn = false,
 }: {
   locale: Locale;
   view: CalendarView;
@@ -69,6 +70,12 @@ export default async function CalendarSection({
   now: Date;
   /** The period's rows, already read and narrowed by the page (§413). */
   events: PublicEvent[];
+  /**
+   * «Tema v2» is on (§745): the «?» help stands here, at the end of a row of its own under the
+   * controls, instead of in the page's head, and the dates on days gone are faded. Off, neither:
+   * the page draws the head's fold on a phone, and nothing is marked.
+   */
+  lookOn?: boolean;
 }) {
   const t = await getTranslations("Events");
   // The same two doors the page head's «?» carries on a phone (§487), built in one place.
@@ -84,9 +91,17 @@ export default async function CalendarSection({
             with the grid's edges. Off, and on a phone, no card: the controls and the grid as before. */}
         <Box sx={MONTH_CARD_SX} data-testid="calendar-month-card">
           <CalendarHeader view={view} now={now} query={query} layout={layout} />
+          {/* Under «Tema v2» the «?» (§487, §745): just under the controls, at the row's end, its
+              panel opening from here over the month. The page's head carries it off the look, on a
+              phone only; never both. A native fold, so it opens with scripts off. */}
+          {lookOn && (
+            <Box data-testid="calendar-help-row" sx={{ position: "relative", display: "flex", justifyContent: "flex-end" }}>
+              <CalendarIntroFold locale={locale} baseUrl={env.APP_BASE_URL} />
+            </Box>
+          )}
           {/* A sideways swipe on a touch screen goes where the arrows go (§475). */}
           <CalendarSwipe previousHref={steps.previous} nextHref={steps.next}>
-            <EventCalendar view={view} events={events} now={now} query={query} layout={layout} />
+            <EventCalendar view={view} events={events} now={now} query={query} layout={layout} fadePast={lookOn} />
           </CalendarSwipe>
         </Box>
         {/* What the three colours mean, under «Aspectul nou» only (phase 4): a word beside every colour. */}
