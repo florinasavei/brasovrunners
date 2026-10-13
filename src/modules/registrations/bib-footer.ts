@@ -1,5 +1,6 @@
 import type { BibDesign } from "./bib-design";
 import { BIB_FOOTER_LINE } from "./bib-geometry";
+import { fontWidth, longestPrefix, withEllipsis } from "./bib-type";
 
 /**
  * The small print at the foot of a race number, composed by the club and laid out once for both
@@ -36,8 +37,9 @@ import { BIB_FOOTER_LINE } from "./bib-geometry";
  * the font, glyph by glyph and pair by pair, and holds random lines rich in the widening pairs to
  * pdfkit's own measurement — measured, not guessed.
  *
- * Pure, and importing nothing but a type and the geometry beside it (`bib-geometry.ts`, which
- * imports nothing): the same discipline as `bib-design.ts`.
+ * Pure, and importing nothing but a type, the geometry beside it and the measure and the cut it
+ * shares with the header (`bib-geometry.ts` and `bib-type.ts`, which import nothing outside the
+ * two of them): the same discipline as `bib-design.ts`.
  */
 
 /** Between two pieces of the footer: two spaces, a middle dot, two spaces — today's separator. */
@@ -155,13 +157,7 @@ export function bibFooterText(raw: string, max: number = BIB_FOOTER_TEXT_MAX): s
  * a kern on either side, so an unknown character can make a line wrap early but never overflow.
  */
 export function bibFooterWidth(text: string): number {
-  let units = 0;
-  let previous = "";
-  for (const character of text) {
-    units += (BIB_FOOTER_ADVANCES.get(character) ?? UNKNOWN_UNITS) + (BIB_FOOTER_KERNING.get(previous + character) ?? 0);
-    previous = character;
-  }
-  return units / UNITS_PER_EM;
+  return footerWidth(text);
 }
 
 /**
@@ -219,30 +215,6 @@ function breakPiece(piece: string, fits: (text: string) => boolean): [string, st
   const at = Math.max(cut, 1);
   return [characters.slice(0, at).join(""), characters.slice(at).join("").trim()];
 }
-
-const ELLIPSIS = "…";
-
-/** As much of `text` as fits with an ellipsis after it, without a dangling separator. */
-function withEllipsis(text: string, fits: (text: string) => boolean): string {
-  const characters = Array.from(text);
-  const shortened = (length: number) => `${characters.slice(0, length).join("").replace(/[\s·]+$/u, "")}${ELLIPSIS}`;
-  return shortened(longestPrefix(characters.length, (length) => fits(shortened(length))));
-}
-
-/** The largest length in 0…`max` for which `ok` holds, by halving: `ok` shrinks as length grows. */
-function longestPrefix(max: number, ok: (length: number) => boolean): number {
-  let low = 0;
-  let high = max;
-  while (low < high) {
-    const middle = Math.ceil((low + high) / 2);
-    if (ok(middle)) low = middle;
-    else high = middle - 1;
-  }
-  return low;
-}
-
-/** Roboto's design grid: its advance widths below are in 2048ths of an em. */
-const UNITS_PER_EM = 2048;
 
 /**
  * What a character outside the table counts as: 1.125 em. The widest glyph anywhere in the font
@@ -348,3 +320,6 @@ export const BIB_FOOTER_KERNING: ReadonlyMap<string, number> = new Map(
     Array.from(firsts).flatMap((first) => Array.from(seconds, (second) => [`${first}${second}`, units] as const)),
   ),
 );
+
+/** `bibFooterWidth`'s measure (`bib-type.ts`, shared with the header's): the tables above, in ems. */
+const footerWidth = fontWidth(BIB_FOOTER_ADVANCES, BIB_FOOTER_KERNING, UNKNOWN_UNITS);

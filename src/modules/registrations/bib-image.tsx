@@ -28,14 +28,16 @@ import {
   BIB_IMAGE_SCALE,
   BIB_LAYOUT,
   BIB_MARGIN,
+  BIB_TEXT_LINE,
+  type BibHeaderLayout,
   bibExtrasHeight,
-  bibHeaderReserve,
   bibNameReserve,
   bibNumberArea,
   bibNumberFit,
   bibStubScale,
   MEMBER_MARK_CHECK,
 } from "./bib-geometry";
+import { bibHeader } from "./bib-header";
 import { formatRaceNumber } from "./domain/race-number";
 
 /**
@@ -187,6 +189,41 @@ const PROFILE_PAD = 2;
 /** One line of text that never wraps and is cut with "…" where the sheet's would be. */
 const ONE_LINE = { display: "flex", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } as const;
 
+/**
+ * The race and its date on the band (§NNN): each line `bibHeader` laid out, as its own one-line box at
+ * the layout's top, right-aligned on the column's right edge — the sheet's points — at the line's own
+ * height (`BIB_TEXT_LINE`, the height pdfkit gives it and Satori's own normal line for Roboto, so a
+ * title on one line draws pixel for pixel where it did). Nothing here wraps: the layout decided the
+ * lines, measured never narrower than Satori sets them, and the box's width is only a safety net.
+ * Exported so the test can hold the markup to the layout without reading pixels.
+ */
+export function bibHeaderLines(words: BibHeaderLayout, colour: string) {
+  const L = BIB_LAYOUT;
+  const box = { position: "absolute", right: px(BIB_CARD.width - words.right), maxWidth: px(words.right - words.left), color: colour } as const;
+  return [
+    ...(words.title?.lines ?? []).map((line, index) => (
+      <div
+        key={`title-${index}`}
+        data-testid="bib-header-title"
+        style={{ ...ONE_LINE, ...box, top: px(line.top), fontWeight: 700, fontSize: px(words.title!.size), lineHeight: `${px(BIB_TEXT_LINE * words.title!.size)}px` }}
+      >
+        {line.text}
+      </div>
+    )),
+    ...(words.date
+      ? [
+          <div
+            key="date"
+            data-testid="bib-header-date"
+            style={{ ...ONE_LINE, ...box, top: px(words.date.top), fontSize: px(L.dateSize), lineHeight: `${px(BIB_TEXT_LINE * L.dateSize)}px` }}
+          >
+            {words.date.text}
+          </div>,
+        ]
+      : []),
+  ];
+}
+
 export async function renderBibImage(input: BibImageInput): Promise<ImageResponse> {
   const { width, height } = BIB_IMAGE;
   const L = BIB_LAYOUT;
@@ -264,8 +301,15 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   // The number and the name: white on a member's card, the body ink on the white paper.
   const ink = asCard ? BIB_MEMBER_CARD.text : COLOR.ink;
   const headerText = asCard ? BIB_MEMBER_CARD.text : bandText;
-  // The race and its date at the right of the band, in what the lockup leaves — the sheet's width.
-  const headerTextWidth = BIB_CARD.width - (design.showLogo ? L.logoWidth + 3 * L.inset : 2 * L.inset) - bibHeaderReserve(badge !== null);
+  // The race and its date at the right of the band, laid out as the sheet lays them out (§NNN): the
+  // members' label on the band under them stops the column above it.
+  const headerWords = bibHeader({
+    title: design.showEventTitle ? input.eventTitle : null,
+    date: design.showDate ? input.eventDate : null,
+    logo: design.showLogo,
+    badge: badge !== null,
+    label: memberLabel !== "" && !asCard && header === null,
+  });
   // The badge: the header's text colour as the tag, the band's colour on it (the card's white tag takes the body ink).
   const badgeInk = asCard ? COLOR.ink : band;
   /**
@@ -520,19 +564,13 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
                 }}
               />
             ) : null}
-            {/*
-              The race and its date, each at the same fixed offset from the card's top the sheet
-              draws them at (`BIB_LAYOUT.titleTop`/`dateTop`/`dateTopAlone`) — not centred on the
-              band as a group, which is what let the preview drift from the paper it is meant to
-              be a picture of.
-            */}
             {badge ? (
               <div
                 data-testid="bib-badge"
                 style={{
                   display: "flex",
                   position: "absolute",
-                  top: px(L.badgeTop),
+                  top: px(headerWords.badgeTop),
                   right: px(L.inset),
                   width: px(L.badgeWidth),
                   height: px(L.badgeHeight),
@@ -549,37 +587,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
                 {badge}
               </div>
             ) : null}
-            {design.showEventTitle && (
-              <div
-                style={{
-                  ...ONE_LINE,
-                  position: "absolute",
-                  top: px(L.titleTop),
-                  right: px(L.inset + bibHeaderReserve(badge !== null)),
-                  maxWidth: px(headerTextWidth),
-                  color: headerText,
-                  fontWeight: 700,
-                  fontSize: px(L.titleSize),
-                }}
-              >
-                {input.eventTitle}
-              </div>
-            )}
-            {design.showDate && (
-              <div
-                style={{
-                  ...ONE_LINE,
-                  position: "absolute",
-                  top: px(design.showEventTitle ? L.dateTop : L.dateTopAlone),
-                  right: px(L.inset + bibHeaderReserve(badge !== null)),
-                  maxWidth: px(headerTextWidth),
-                  color: headerText,
-                  fontSize: px(L.dateSize),
-                }}
-              >
-                {input.eventDate}
-              </div>
-            )}
+            {bibHeaderLines(headerWords, headerText)}
           </div>
         )}
         {/* The members' label (§664), at the sheet's points (`BIB_LAYOUT.memberTag*`): absolute over

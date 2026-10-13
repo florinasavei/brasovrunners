@@ -25,14 +25,15 @@ import {
   BIB_LAYOUT,
   BIB_MARGIN,
   BIB_PAPER,
+  type BibHeaderLayout,
   bibExtrasHeight,
-  bibHeaderReserve,
   bibNameReserve,
   bibNumberArea,
   bibNumberFit,
   bibStubScale,
   MEMBER_MARK_CHECK,
 } from "./bib-geometry";
+import { bibHeader } from "./bib-header";
 import type { BibRow } from "./bibs";
 import { formatRaceNumber } from "./domain/race-number";
 
@@ -338,7 +339,25 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     A members' picture that could not be fetched draws the members' colour, else the event's band —
     never a failed sheet, and never the event's own picture, which would hide whose bib it is.
   */
-  const eventHeader = { picture: headerPicture, crop: design.headerImageCrop, band, bandText, label: null as string | null, footer: footerFor(headerPicture !== null) };
+  // The race and its date as this header lays them out (§NNN): the same on every bib of a header, so
+  // laid out once; `label` while the members' label sits on the band under them.
+  const headerWords = (label: boolean) =>
+    bibHeader({
+      title: design.showEventTitle ? input.eventTitle : null,
+      date: design.showDate ? input.eventDate : null,
+      logo: design.showLogo,
+      badge: badge !== null,
+      label,
+    });
+  const eventHeader = {
+    picture: headerPicture,
+    crop: design.headerImageCrop,
+    band,
+    bandText,
+    label: null as string | null,
+    footer: footerFor(headerPicture !== null),
+    words: headerWords(false),
+  };
   const memberPicture = design.member.enabled && input.pictures?.memberHeader ? embed(input.pictures.memberHeader) : null;
   const memberBand = bibMemberBandColour(design.member, input.bandColour);
   const memberLabel = bibMemberLabel(design.member, input.memberLabelDefault ?? "");
@@ -349,6 +368,8 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     bandText: bandTextColour(memberBand),
     label: memberLabel || null,
     footer: footerFor(memberPicture !== null),
+    // On a band the label sits under the race and its date, so the column stops above it; on the members' picture no words are drawn.
+    words: headerWords(memberLabel !== "" && memberPicture === null),
   };
   /*
     «Tot numărul» (§NNN): the members' background over the whole card above the small print — their
@@ -366,6 +387,8 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
           picture: memberCardPicture,
           stripe: memberLabel ? bibMemberStripeText(memberLabel) : null,
           footer: footerFor(false),
+          // The label is the card's stripe, far below: the header's column has the band's whole height.
+          words: headerWords(false),
         }
       : null;
 
@@ -398,41 +421,37 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       and it is drawn to cover the strip, so a photograph of any proportion fills it without
       being squashed: the club's crop in the strip's 9.02:1 (§560), or centred and cut to it.
     */
-    // The lockup at the left of the band, white on whatever colour the band is; the race and its
-    // date at the right, in whichever of white and ink can be read on it.
-    const drawHeaderWords = (textColour: string, badgeInk: string) => {
+    /*
+      The lockup at the left of the band, white on whatever colour the band is; the race and its
+      date at the right, in whichever of white and ink can be read on it — at the lines and points
+      `bibHeader` laid out for this header (§NNN). Each line is right-aligned by hand on the column's
+      right edge and handed to pdfkit with **no width**: given one, pdfkit wraps at its own leading
+      and after a hyphen, which is how a long race's second line once fell on its date. Without a
+      width it cannot wrap at all, and the layout measured every line no narrower than pdfkit sets it.
+    */
+    const drawHeaderWords = (textColour: string, badgeInk: string, words: BibHeaderLayout) => {
       if (design.showLogo) {
         doc.image(lockup, left + L.inset, top + (L.bandHeight - L.logoWidth / L.logoRatio) / 2, { width: L.logoWidth });
       }
-      const headerLeft = left + (design.showLogo ? L.logoWidth + 2 * L.inset : L.inset);
-      const headerWidth = BIB_CARD.width - (design.showLogo ? L.logoWidth + 3 * L.inset : 2 * L.inset) - bibHeaderReserve(badge !== null);
       // The distance badge (§750): a rounded tag in the header's text colour at the right inset, the
       // distance in the band's colour on it; the race and its date end `badgeGap` short of it.
       if (badge) {
         const badgeLeft = left + BIB_CARD.width - L.inset - L.badgeWidth;
-        doc.roundedRect(badgeLeft, top + L.badgeTop, L.badgeWidth, L.badgeHeight, L.badgeRadius).fill(textColour);
+        doc.roundedRect(badgeLeft, top + words.badgeTop, L.badgeWidth, L.badgeHeight, L.badgeRadius).fill(textColour);
         doc.font("bold").fontSize(L.badgeSize).fillColor(badgeInk);
         const badgeTextHeight = doc.heightOfString(badge, { lineBreak: false });
-        doc.text(badge, badgeLeft + (L.badgeWidth - doc.widthOfString(badge)) / 2, top + L.badgeTop + (L.badgeHeight - badgeTextHeight) / 2, { lineBreak: false });
+        doc.text(badge, badgeLeft + (L.badgeWidth - doc.widthOfString(badge)) / 2, top + words.badgeTop + (L.badgeHeight - badgeTextHeight) / 2, { lineBreak: false });
       }
-      if (design.showEventTitle) {
-        doc
-          .font("bold")
-          .fontSize(L.titleSize)
-          .fillColor(textColour)
-          .text(input.eventTitle, headerLeft, top + L.titleTop, { width: headerWidth, align: "right", lineBreak: false, ellipsis: true });
+      const columnRight = left + words.right;
+      if (words.title) {
+        doc.font("bold").fontSize(words.title.size).fillColor(textColour);
+        for (const line of words.title.lines) {
+          doc.text(line.text, columnRight - doc.widthOfString(line.text), top + line.top, { lineBreak: false });
+        }
       }
-      if (design.showDate) {
-        doc
-          .font("body")
-          .fontSize(L.dateSize)
-          .fillColor(textColour)
-          .text(input.eventDate, headerLeft, top + (design.showEventTitle ? L.dateTop : L.dateTopAlone), {
-            width: headerWidth,
-            align: "right",
-            lineBreak: false,
-            ellipsis: true,
-          });
+      if (words.date) {
+        doc.font("body").fontSize(L.dateSize).fillColor(textColour);
+        doc.text(words.date.text, columnRight - doc.widthOfString(words.date.text), top + words.date.top, { lineBreak: false });
       }
     };
 
@@ -457,7 +476,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
         ramp.stop(0, background.stops[0]).stop(1, background.stops[1]);
         doc.rect(left, top, BIB_CARD.width, cardHeight).fill(ramp);
       }
-      drawHeaderWords(BIB_MEMBER_CARD.text, COLOR.ink);
+      drawHeaderWords(BIB_MEMBER_CARD.text, COLOR.ink, card.words);
       /*
         The stripe across the card, its foot on the background's foot, the label in capitals, bold,
         letter-spaced and centred by hand without a width so pdfkit cannot wrap it (§317's lesson).
@@ -477,7 +496,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       // The band first, across the card: it is what says which race this is before anybody is
       // close enough to read a word of it.
       doc.rect(left, top, BIB_CARD.width, L.bandHeight).fill(header.band);
-      drawHeaderWords(header.bandText, header.band);
+      drawHeaderWords(header.bandText, header.band, header.words);
     }
 
     /*
