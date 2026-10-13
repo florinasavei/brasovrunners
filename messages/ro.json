@@ -7651,7 +7651,7 @@
           "date": "Data de start",
           "time": "Ora de start"
         },
-        "durationMinutes": "Durata (minute)",
+        "durationMinutes": "Durata sau timpul limită (minute)",
         "raceStartsAt": "Startul cursei",
         "dateToBeAnnounced": "Data se anunță mai târziu",
         "timeToBeAnnounced": "Ora se anunță mai târziu",
@@ -7675,7 +7675,8 @@
           "gpx": {
             "name": "Numele fișierului GPX",
             "url": "Fișierul GPX"
-          }
+          },
+          "checkpoints": "Punctele de control"
         },
         "links": "Linkuri și fișiere",
         "partners": "Parteneri",
@@ -7761,6 +7762,8 @@
             "showWebsite": "Număr: adresa site-ului",
             "footerText": "Număr: rândul clubului",
             "showProfile": "Număr: profilul traseului",
+            "showCheckpoints": "Număr: punctele de control pe profil",
+            "showCheckpointTimes": "Număr: timpii limită pe profil",
             "showDistance": "Număr: insigna distanței",
             "showEmergency": "Număr: telefonul de urgență",
             "emergencyPhone": "Număr: numărul de urgență",

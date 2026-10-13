@@ -123,6 +123,56 @@ function sameWords(a: Omit<CheckpointInput, "id">, b: Omit<Checkpoint, "id">): b
 export const offerable = (proposals: readonly GpxProposal[]): GpxProposal[] => proposals.filter((proposal) => !proposal.tooFar);
 
 /**
+ * An event's whole list replaced by `rows` — already held to the rules (`prepareCheckpoints`) by the
+ * caller — for the event's JSON file (§751, §NNN): an import as a new event writes the file's list, an
+ * import over an event writes it where the diff showed the list as changed. The role is asserted here
+ * too; one audit row names the list before and after, `source: "import"`. Nothing written, nothing
+ * recorded, when the list is already the same.
+ */
+export async function replaceCheckpoints<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  eventId: string,
+  rows: readonly Omit<CheckpointInput, "id">[],
+  now: Date,
+): Promise<{ changed: boolean }> {
+  if (!canEditCheckpoints(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may read an event's checkpoints but not change them`);
+  }
+  return db.transaction(async (tx) => {
+    const [event] = await tx.select({ id: events.id }).from(events).where(eq(events.id, eventId)).for("update");
+    if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
+    const current = await listCheckpoints(tx, event.id);
+    const wanted = sortedByKm(rows);
+    if (current.length === wanted.length && wanted.every((row, at) => sameWords(row, current[at]))) return { changed: false };
+    await tx.delete(eventCheckpoints).where(eq(eventCheckpoints.eventId, event.id));
+    for (const [position, row] of wanted.entries()) {
+      await tx.insert(eventCheckpoints).values({
+        eventId: event.id,
+        position,
+        nameRo: row.nameRo,
+        nameEn: row.nameEn,
+        km: row.km.toFixed(2),
+        kinds: [...row.kinds],
+        cutoffTime: row.cutoff,
+        noteRo: row.noteRo,
+        noteEn: row.noteEn,
+        createdAt: now,
+      });
+    }
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "event_checkpoints.changed" satisfies AuditAction,
+      entityType: "event",
+      entityId: event.id,
+      metadata: { added: wanted.length, edited: 0, removed: current.length, from: summary(sortedByKm(current)), to: summary(wanted), source: "import" },
+      now,
+    });
+    return { changed: true };
+  });
+}
+
+/**
  * One change to one event's checkpoints, by one staff member. Refuses a role that may only read the
  * list (FORBIDDEN), a row typed wrong (a `CheckpointRefusal`, a VALIDATION_ERROR naming the box and
  * carrying the sentence's own code), an event that is not there (NOT_FOUND) and a GPX that is not the

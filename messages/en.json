@@ -7651,7 +7651,7 @@
           "date": "Start date",
           "time": "Start time"
         },
-        "durationMinutes": "Duration (minutes)",
+        "durationMinutes": "Duration or time limit (minutes)",
         "raceStartsAt": "Race start",
         "dateToBeAnnounced": "Date to be announced",
         "timeToBeAnnounced": "Time to be announced",
@@ -7675,7 +7675,8 @@
           "gpx": {
             "name": "GPX file name",
             "url": "GPX file"
-          }
+          },
+          "checkpoints": "Checkpoints"
         },
         "links": "Links and files",
         "partners": "Partners",
@@ -7761,6 +7762,8 @@
             "showWebsite": "Bib: website address",
             "footerText": "Bib: the club's own line",
             "showProfile": "Bib: route profile",
+            "showCheckpoints": "Bib: checkpoints on the profile",
+            "showCheckpointTimes": "Bib: cut-off times on the profile",
             "showDistance": "Bib: distance badge",
             "showEmergency": "Bib: emergency phone",
             "emergencyPhone": "Bib: emergency number",

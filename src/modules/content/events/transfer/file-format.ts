@@ -4,6 +4,7 @@ import { EVENT_SURFACES, EVENT_TYPES } from "@/modules/events/domain/event-type"
 import { WEATHER_MODES } from "@/modules/weather/domain/mode";
 import { DEFAULT_PUBLIC_LIST_CLUB, PUBLIC_LIST_CLUBS } from "@/modules/registrations/domain/public-list-club";
 import { RACE_DECLARATION_KEYS } from "@/modules/legal-documents/domain/keys";
+import { CHECKPOINT_KINDS, CHECKPOINT_KM_MAX, CHECKPOINT_NAME_MAX, CHECKPOINT_NOTE_MAX, CHECKPOINTS_MAX } from "@/modules/event-checkpoints/domain/checkpoint";
 import { WAITLIST_CHOICES } from "../waitlist-choice";
 
 /**
@@ -113,6 +114,24 @@ const programmeRowSchema = z
   .strict();
 
 /**
+ * One of the route's checkpoints (§NNN): where, its name and note in both languages, what is there and
+ * its cut-off as a time of the day on the event's own clock — the shape `event_checkpoints` holds, with
+ * no id. The rules that need the event (a kilometre within the route, cut-offs after the start and in
+ * order) are the import's to apply, as the editor's card applies them.
+ */
+const checkpointSchema = z
+  .object({
+    km: z.number().min(0).max(CHECKPOINT_KM_MAX),
+    name: z.object({ ro: text(CHECKPOINT_NAME_MAX).min(1), en: text(CHECKPOINT_NAME_MAX).min(1) }).strict(),
+    kinds: z.array(z.enum(CHECKPOINT_KINDS)).max(CHECKPOINT_KINDS.length),
+    cutoff: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).nullable(),
+    note: z.object({ ro: nullableText(CHECKPOINT_NOTE_MAX), en: nullableText(CHECKPOINT_NOTE_MAX) }).strict(),
+  })
+  .strict();
+
+export type CheckpointConfig = z.infer<typeof checkpointSchema>;
+
+/**
  * The configuration, in a shape that means the same in every environment: instants in ISO with the
  * event's own zone beside them, the start as its two boxes (a date or an hour may be left empty while
  * it is to be announced, §545), switches as booleans, lists as lists.
@@ -147,6 +166,8 @@ export const eventConfigSchema = z
         maps: z.array(z.record(z.string(), z.unknown())).max(2),
         /** The GPX the club uploaded: its name, and its address among `media` (role `route.gpx`). */
         gpx: z.object({ name: text(120), url: text(2048) }).strict().nullable(),
+        /** The checkpoints along the route, by distance (§NNN): a file made before they existed has none. */
+        checkpoints: z.array(checkpointSchema).max(CHECKPOINTS_MAX).default([]),
       })
       .strict(),
     links: z.array(linkSchema).max(12),
