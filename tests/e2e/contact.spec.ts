@@ -84,7 +84,7 @@ test.describe("BR-REQ-070-04 the contact form", () => {
     }
     await expect(line).toBeVisible();
     await expect(line).toContainText("(");
-    // The page's last line: under the contact form, «Spune-ne ceva» and the newsletter's box alike.
+    // The page's last line: under every section of the page, the contact form, «Spune-ne ceva» and the newsletter's box alike.
     // One snapshot of the layout per try, polled: the form grows as it hydrates (the anti-bot box),
     // and a line measured before that growth and the form after it would lie. The newsletter's own
     // forms live in a pop-up (`<dialog>`), so its section is what the line must follow, not they.
