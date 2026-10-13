@@ -60,6 +60,11 @@ describe("§NNN namesTheClub — what is the club's own name", () => {
     "Brasov Runnres", // two letters swapped
     "Brasob Runners", // one letter changed
     "brasovruners", // glued, with a typo
+    "Brasov  R unners", // the club's exact word, only cut
+    "Brasov Runners Romania",
+    "Brasovrunners.ro",
+    "brasovrunners.com",
+    "Brașov Runners RO",
   ];
 
   for (const typed of SPELLED_IN) {
@@ -84,6 +89,14 @@ describe("§NNN namesTheClub — what is the club's own name", () => {
     "Super Brașov Runners Fans",
     "Not Brasov Runners",
     "Brasov Runners 2",
+    "Brasov Runners 2024", // a digit is never a letter of the name
+    // A typo stays inside one typed word: a stray letter beside the name is not an «added letter».
+    "Brasov Runners A",
+    "Brasov Runners X",
+    "brasov runners e",
+    "B Brasov Runners",
+    "Romania",
+    "ro",
     "Brasil Runners",
     "Bravo Runners",
     "BVRS",
@@ -117,15 +130,22 @@ describe("§NNN namesTheClub — what is the club's own name", () => {
     expect(namesTheClub(undefined)).toBe(false);
   });
 
-  it("derives the vocabulary from the configured name, never from a literal in the code", () => {
+  it("derives the vocabulary from the configured name, and the short forms from the club's constants beside it", () => {
     const vocabulary = clubVocabulary("Alba Joggers");
     expect(namesTheClub("Alba Joggers", vocabulary)).toBe(true);
     expect(namesTheClub("alba jogger", vocabulary)).toBe(true);
     expect(namesTheClub("AJ Alba", vocabulary)).toBe(true);
     expect(namesTheClub("Alba Jogers", vocabulary)).toBe(true);
     expect(namesTheClub("Joggers", vocabulary)).toBe(false);
-    // The platform's own club is another club under that configuration.
+    // The platform's own club is another club under that configuration, its short forms too.
     expect(namesTheClub(CLUB_NAME, vocabulary)).toBe(false);
+    expect(namesTheClub("BVR", vocabulary)).toBe(false);
+    expect(namesTheClub("BV Joggers", vocabulary)).toBe(false);
+    // Another club's short forms are given, never assumed.
+    const withOwn = clubVocabulary("Alba Joggers", { city: "ab", nicknames: ["abj"] });
+    expect(namesTheClub("ABJ", withOwn)).toBe(true);
+    expect(namesTheClub("AB Joggers", withOwn)).toBe(true);
+    expect(namesTheClub("AB", withOwn)).toBe(false);
     // A name of nothing but filler names nothing.
     expect(namesTheClub("Club", clubVocabulary("Club"))).toBe(false);
   });

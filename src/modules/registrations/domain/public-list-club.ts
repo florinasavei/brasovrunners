@@ -17,7 +17,7 @@
  * name comes from the platform's one constant (§357), never written here.
  */
 
-import { CLUB_NAME } from "@/theme/brand";
+import { CLUB_NAME, CLUB_SHORT_FORMS } from "@/theme/brand";
 
 /** The three modes, in the order the editor offers them; the first is the default. */
 export const PUBLIC_LIST_CLUBS = ["members_only", "as_typed", "hidden"] as const;
@@ -65,15 +65,16 @@ const FILLER = new Set([
   "of",
   "membru",
   "member",
+  // Where the club is, or its site's ending: «Brasov Runners Romania», «brasovrunners.ro».
+  "romania",
+  "ro",
+  "com",
 ]);
 
-/**
- * The club's usual short forms that no rule derives from its name. `CITY_SHORT` is the county's plate code,
- * which stands for the first word beside the rest of the name («BV Runners»); `NICKNAMES` name the club on
- * their own («BVR»). Nothing else: a bare «BR» or «BV» would name any club.
- */
-const CITY_SHORT = "bv";
-const NICKNAMES = ["bvr"] as const;
+/** The short forms a configured name has: none, unless it is the platform's own (`CLUB_SHORT_FORMS`). */
+export type ClubShortForms = { readonly city: string | null; readonly nicknames: readonly string[] };
+
+const NO_SHORT_FORMS: ClubShortForms = { city: null, nicknames: [] };
 
 /** A cell longer than this, folded, is not a club's name: refused before any search. */
 const LONGEST_CELL = 80;
@@ -105,10 +106,15 @@ export type ClubVocabulary = { readonly pieces: readonly Piece[]; readonly words
 
 /**
  * The club's vocabulary, derived from its configured name (§357): its words (the last one singular too),
- * their initials, the city's short form, the nicknames above, and the longer filler words (a glued
- * «clubbrasovrunners» still splits). Never a literal of the name in the code.
+ * their initials, the longer filler words (a glued «clubbrasovrunners» still splits), and the short forms
+ * no rule derives — the city's plate code and the nicknames, which belong to one club and so live beside
+ * its name in `theme/brand.ts` (`CLUB_SHORT_FORMS`). Another configured name gets none unless it is given
+ * its own: «BVR» never names «Alba Joggers». Nothing of the club's is written in this file.
  */
-export function clubVocabulary(clubName: string = CLUB_NAME): ClubVocabulary {
+export function clubVocabulary(
+  clubName: string = CLUB_NAME,
+  shortForms: ClubShortForms = clubName === CLUB_NAME ? CLUB_SHORT_FORMS : NO_SHORT_FORMS,
+): ClubVocabulary {
   const words = wordsOf(clubName).filter((word) => !FILLER.has(word));
   const pieces: Piece[] = [];
   if (words.length === 0) return { pieces, words: 0 };
@@ -121,9 +127,10 @@ export function clubVocabulary(clubName: string = CLUB_NAME): ClubVocabulary {
   }
   if (words.length > 1) {
     pieces.push({ text: words.map((word) => word[0]).join(""), typo: false, is: { kind: "initials" } });
-    pieces.push({ text: CITY_SHORT, typo: false, is: { kind: "city" } });
+    // A bare plate code would name any club: it only ever stands for the first word beside the rest.
+    if (shortForms.city) pieces.push({ text: shortForms.city, typo: false, is: { kind: "city" } });
   }
-  for (const nickname of NICKNAMES) pieces.push({ text: nickname, typo: false, is: { kind: "nickname" } });
+  for (const nickname of shortForms.nicknames) pieces.push({ text: nickname, typo: false, is: { kind: "nickname" } });
   for (const filler of FILLER) if (filler.length >= 3) pieces.push({ text: filler, typo: false, is: { kind: "filler" } });
   return { pieces, words: words.length };
 }
@@ -145,13 +152,25 @@ function withinOneTypo(typed: string, target: string): boolean {
   return typed.length > target.length ? rest(i + 1, i) : rest(i, i + 1);
 }
 
-/** Every length of the cell from `start` that `piece` may cover. A typo is a letter: «Runners 2» is not «Runners». */
-function coverings(cell: string, start: number, piece: Piece): number[] {
+/**
+ * Every length of the cell from `start` that `piece` may cover. A typo is a letter: «Runners 2» is not
+ * «Runners». And a typo stays inside one typed word: `boundaries` are the offsets in the glued cell where the
+ * person's words met, and a covering that is not the piece's exact text may not straddle one — «Brasov
+ * Runners A» is not «Runners» with a letter added, «B Brasov» is not «Brasov» with one. The exact text may
+ * («Brașov Runner's», «Brasov R unners»): that is the club's word, only cut.
+ */
+function coverings(cell: string, start: number, piece: Piece, boundaries: readonly number[]): number[] {
   if (!piece.typo) return cell.startsWith(piece.text, start) ? [piece.text.length] : [];
   const lengths: number[] = [];
   for (const length of [piece.text.length - 1, piece.text.length, piece.text.length + 1]) {
-    if (start + length > cell.length) continue;
-    const slice = cell.slice(start, start + length);
+    const end = start + length;
+    if (end > cell.length) continue;
+    const slice = cell.slice(start, end);
+    if (slice === piece.text) {
+      lengths.push(length);
+      continue;
+    }
+    if (boundaries.some((boundary) => boundary > start && boundary < end)) continue;
     if (/^\p{L}+$/u.test(slice) && withinOneTypo(slice, piece.text)) lengths.push(length);
   }
   return lengths;
@@ -164,18 +183,23 @@ const DEFAULT_VOCABULARY = clubVocabulary();
  *
  * Case, diacritics, punctuation, spaces and filler words («Clubul», «Asociația», «ACS», «Team») are folded
  * away; what is left must split, glued or not, into pieces of the club's own vocabulary — its words (one
- * typo allowed in a word of six letters or more), their initials with the first word, the city's short
- * form, a nickname — with nothing else in the cell, and the pieces must name the club somewhere: the
+ * typo allowed in a word of six letters or more, inside one typed word), their initials with the first
+ * word, the city's short form, a nickname — with nothing else in the cell, and the pieces must name the club somewhere: the
  * name's words in order («Brașov Runners», «BV Runners»), the initials beside the first word («BR Brașov»),
  * or a nickname («BVR»). So «Brașov Runners (BVR)» and «brasovrunners» are the club, and «Brașov Runners
  * Cluj», «Cluj Runners», «Runners», «BR» and «Brașov» alone are not.
  */
 export function namesTheClub(typed: string | null | undefined, vocabulary: ClubVocabulary = DEFAULT_VOCABULARY): boolean {
   if (typeof typed !== "string" || vocabulary.words === 0) return false;
-  const cell = wordsOf(typed)
-    .filter((word) => !FILLER.has(word))
-    .join("");
+  const kept = wordsOf(typed).filter((word) => !FILLER.has(word));
+  const cell = kept.join("");
   if (cell === "" || cell.length > LONGEST_CELL) return false;
+  // Where the typed words met in the glued cell, so a forgiven typo never spans two of them (`coverings`).
+  const boundaries: number[] = [];
+  kept.reduce((offset, word) => {
+    if (offset > 0) boundaries.push(offset);
+    return offset + word.length;
+  }, 0);
 
   /*
     A search over the ways to cut the cell, remembered by where it stands: `previous` is the last piece that
@@ -190,7 +214,7 @@ export function namesTheClub(typed: string | null | undefined, vocabulary: ClubV
     if (known !== undefined) return known;
     let found = false;
     for (const piece of vocabulary.pieces) {
-      for (const length of coverings(cell, at, piece)) {
+      for (const length of coverings(cell, at, piece, boundaries)) {
         let next: typeof previous = previous;
         let nextRun = run;
         let nextNamed = named;
