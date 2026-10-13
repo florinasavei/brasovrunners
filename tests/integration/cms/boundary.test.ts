@@ -191,6 +191,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/events/[id]/mesaje",
       // The emergency sheet (§322), printed and carried on race day: by hand, like the rest.
       "/admin/events/[id]/urgente",
+      "/admin/events/import",
       "/admin/events/new",
       "/admin/gallery",
       "/admin/gallery/[id]",

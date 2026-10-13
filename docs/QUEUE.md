@@ -14,13 +14,13 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.10`** (2026-10-13 early afternoon: §749 each event's «De făcut» with priorities, migration
-  `0144`). Waiting for «prod»: `BR-V3.11` (§750, below) — no migration.
-- **QA: `BR-V3.11`** — the bib designer: a member's number on the race's background with its own header and a member
-  mark; the sponsors' band «Jos de tot, în subsol» by default and a warning when the header picture hides the event's
-  name; the route's profile as a full-width strip from the GPX (read once, cached by its key); an emergency phone printed
-  upside down; a «21K» distance badge; the number on the footer's two ends; the number's size capped to its area. Left:
-  sponsor tiers (Platinum, Gold…) need a model of sponsors — a question for the owner.
+- **Production: `BR-V3.11`** (2026-10-13 afternoon: §750 the bib designer — members' numbers, the sponsors' band at
+  the bottom, the route's profile, an emergency phone). Waiting for «prod»: `BR-V3.12` (§751, below) — no migration.
+- **QA: `BR-V3.12`** — an event as a JSON file: «Exportă evenimentul (JSON)» in the editor and «Importă un eveniment
+  (JSON)» on the events list, as a new draft or over an event after a field-by-field diff, through the editor's own
+  save; pictures copied under a hash check; never a registration or a person. The runbook: «Copy an event from
+  production to QA and back». Stopped at the account's weekly limit and resumed one at a time: the to-do list's
+  redraw and fix, volunteers (migration 0145), route checkpoints (0146), the bib designer's next round.
 - **Nothing is building.** Releases by the label `ship` reach production by themselves again: `SHIP_TOKEN` was given
   «Pull requests: Read and write» on 2026-10-12, and `BR-V3.05`'s run opened its `qa → main` pull request itself.
 - **Lanes:** the phone session took the calendar on 2026-10-12; one release at a time between
@@ -140,6 +140,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.12` | export and import an event as JSON (§751) |
 | `BR-V3.11` | the bib designer: members, sponsors at the bottom, the profile strip, an emergency phone, a distance badge, stubs (§750) |
 | `BR-V3.10` | each event's to-do list, with priorities (§749) |
 | `BR-V3.09` | the special list from the row menu (§747) · printed race numbers with their leading zeros (§748) |

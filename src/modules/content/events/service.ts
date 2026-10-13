@@ -1066,7 +1066,7 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
  * the caller did not post at all is `undefined` here, which a save leaves as it is and an
  * insert leaves at the column's default.
  */
-function translationColumnsFrom(fields: TranslationFields, eventType: EditableEvent["type"], discountAllowed: boolean) {
+export function translationColumnsFrom(fields: TranslationFields, eventType: EditableEvent["type"], discountAllowed: boolean) {
   const { body, rules, schedule, routeDescription, excerptBody, ...columns } = fields;
   const excerptJson = hasRichTextContent(excerptBody) ? excerptBody : null;
   return {
