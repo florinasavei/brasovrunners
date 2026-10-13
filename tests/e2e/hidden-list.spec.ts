@@ -185,6 +185,38 @@ test.describe("§647 «Lista de invitați speciali» (named so since) as a radio
     await expect(page.getByTestId("outside-capacity").getByRole("radio", { name: "Invitat special — nu ocupă un loc" })).toBeChecked();
   });
 
+  test("from the registrations list's «⋮»: put on the list (the chip appears), then take off (the chip goes) — §NNN", async ({ page }) => {
+    const tag = `${test.info().project.name}-menu-${Date.now().toString(36)}`;
+    const { eventId } = await seed(tag);
+    const name = `Pacemaker ${tag}`;
+    await signIn(page, "Dev Administrator");
+    await page.goto(`/ro/admin/registrations?eventId=${eventId}`);
+    await hydrated(page);
+
+    await expect(page.getByTestId("outside-chip")).toHaveCount(0);
+    await page.getByRole("button", { name: `Acțiuni pentru ${name}` }).click();
+    const put = page.getByRole("menuitem", { name: "Pune pe lista de invitați speciali" });
+    // Polled: the menu grows in, so its first box is still scaled.
+    await expect.poll(async () => (await put.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await expect(page.getByRole("menuitem", { name: "Scoate de pe lista de invitați speciali" })).toHaveCount(0);
+    await put.click();
+    await confirmDialog(page, "Pui înscrierea pe lista de invitați speciali?");
+    await expect(page).toHaveURL(/[?&]saved=outsideMarked/, { timeout: 15_000 });
+    // Back on the list, its query kept, the row wearing the chip.
+    await expect(page).toHaveURL(new RegExp(`eventId=${eventId}`));
+    await hydrated(page);
+    // The row is drawn twice (table and phone list), each with its chip.
+    await expect(page.getByTestId("outside-chip").first()).toContainText("Invitat special");
+
+    await page.getByRole("button", { name: `Acțiuni pentru ${name}` }).click();
+    await expect(page.getByRole("menuitem", { name: "Pune pe lista de invitați speciali" })).toHaveCount(0);
+    await page.getByRole("menuitem", { name: "Scoate de pe lista de invitați speciali" }).click();
+    await confirmDialog(page, "Scoți înscrierea de pe lista de invitați speciali?");
+    await expect(page).toHaveURL(/[?&]saved=outsideUnmarked/, { timeout: 15_000 });
+    await hydrated(page);
+    await expect(page.getByTestId("outside-chip")).toHaveCount(0);
+  });
+
   test("the event's group: the two settings under «Folosește lista de invitați speciali» show only while it is ticked, «Arată public numărătoarea» always", async ({ page }) => {
     const tag = `${test.info().project.name}-editor-${Date.now().toString(36)}`;
     const { eventId } = await seed(tag);

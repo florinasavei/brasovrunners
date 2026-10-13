@@ -49,6 +49,8 @@ export type RegistrationListRow = {
   kind: RegistrationKind;
   /** «În afara locurilor» (§643): seated outside the event's places — the row's chip and the export's column. */
   outsideCapacity: boolean;
+  /** «Folosește lista de invitați speciali» of the row's event (§647): the «⋮» offers «Pune pe listă» only while it is on (§NNN). */
+  eventHiddenListEnabled: boolean;
   /** Registered through an invitation by email (§737): the list marks it «Invitat». */
   invited: boolean;
   /** PUBLIC when the participant submitted it, STAFF when an organizer entered it for them. */
@@ -479,6 +481,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       status: registrations.status,
       kind: registrations.kind,
       outsideCapacity: registrations.outsideCapacity,
+      eventHiddenListEnabled: events.hiddenListEnabled,
       // Registered through an invitation by email (§737, amending §647): the list's «Invitat» mark.
       invited: sql<boolean>`exists (select 1 from ${eventInvitations} i where i."accepted_registration_id" = ${registrations}."id")`.mapWith(Boolean),
       source: registrations.source,
