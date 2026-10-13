@@ -555,6 +555,18 @@ export function canDeleteEvent(subject: StaffSubject): boolean {
 }
 
 /**
+ * **An event as a JSON file — taking one out and bringing one in (§NNN).** Exporting reads a whole
+ * event's configuration out of the database, importing writes one in, as a draft or over an event:
+ * both are the Administrator's, the rung that creates and configures events (`canCreateEvent`,
+ * `canEditEventFields`). Written as the conjunction of the two so that if either boundary ever moves,
+ * this moves with it rather than keeping the old one, as `canHardDeleteEvent` does.
+ */
+export function canTransferEvents(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
+  return canCreateEvent(role) && canEditEventFields(role);
+}
+
+/**
  * Erasing an event **and everyone registered for it** — the hard delete (BR-REQ-037-06,
  * BR-REQ-060-01).
  *

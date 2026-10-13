@@ -62,6 +62,8 @@ test.describe("§353 every island finds its words, and a public page carries onl
     for (const path of [
       "/ro/admin",
       "/ro/admin/events/new",
+      // «Importă un eveniment (JSON)» (§NNN): the one island whose words arrive as props.
+      "/ro/admin/events/import",
       "/ro/admin/registrations",
       "/ro/admin/registrations/new",
       "/ro/admin/checkin",
@@ -99,7 +101,7 @@ test.describe("§353 every island finds its words, and a public page carries onl
     }
     // An existing event's editor too — the date and time boxes' words come from the nested provider.
     await page.goto("/ro/admin");
-    const editor = page.locator('a[href^="/ro/admin/events/"]:not([href$="/new"])').first();
+    const editor = page.locator('a[href^="/ro/admin/events/"]:not([href$="/new"]):not([href$="/import"])').first();
     const href = await editor.getAttribute("href");
     expect(href).toBeTruthy();
     await expectWords(page, href as string);
