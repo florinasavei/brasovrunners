@@ -680,6 +680,22 @@ export function canExportSponsorList(subject: StaffSubject): boolean {
 }
 
 /**
+ * **An event's volunteers (§NNN)** — the roles the club defines for one race and the people who offered
+ * to help or whom the club entered, with their name, address and telephone number: reading and writing
+ * are one set, **the Organizer, the Administrator and the Superadministrator** — whoever reads the
+ * participant list (`canReadRegistrations`), written as that function so moving the line moves both.
+ * The Tehnic role is out (a volunteer's address is personal data, and `DEV` never receives it, §289), and
+ * so are the Redactor, the desk Volunteer (`CONTRIBUTOR` — an account, not one of the event's volunteers,
+ * who have none) and a member. Unlike a registration (§289), the Organizer writes here too: a volunteer
+ * holds no place and binds no declaration. Asserted in the service, the actions and the export
+ * route, never by hiding the card.
+ */
+export function canManageVolunteers(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
+  return canReadRegistrations(role);
+}
+
+/**
  * «Tradu din română» (§464): whoever writes words the club publishes or sends — the Redactor's
  * texts (`canEditTexts`) and the Organizer's notes, reasons and messages to the participants
  * (`canMessageParticipants`). So the Redactor, the Organizer, the Administrator and the

@@ -2004,3 +2004,43 @@ with its cards in the order you fill them.
    «Comenzile mele» like any order, marked «adăugată de club» in the list and «club» in the CSV's
    column «Adăugată de». Whoever runs the shop may do it: an Administrator, or the colleague given
    «Gestionează magazinul» in step 6.
+
+## 44. Voluntari — register the people who help at a race
+
+The event's volunteers (`DECISIONS.md` §NNN) are built and closed: no event page offers «Vreau să fiu
+voluntar» until the steps below are done. A volunteer is not a registration — no place of the race, no
+declaration, no row on the public list, no account — and the Organizer and the Administrators are the
+only ones who see the names, addresses and telephone numbers.
+
+1. **Define the roles.** The event's editor → the card **«Voluntari»** → «Roluri» → «Adaugă un rol»:
+   the name in Română **and** English (both or neither, like every text the club types), how many
+   people the role needs, and optionally a line saying what the person does (also in both languages).
+   Roles belong to **one date**: a weekly run's dates, and a copy of an event, start with none. ↑ / ↓
+   set the order the page lists them in; a role with people on it — cancelled ones too — cannot be
+   deleted: move them to another role or delete them first. An event's volunteers are not accounts:
+   whoever works the race-day desk also needs an account on «Echipa», with the role Voluntar (§34) — the
+   staff role of the same name, which this card neither gives nor needs.
+2. **Approve the privacy notice that names volunteers** — before the form can show. `/admin/legal` →
+   the «GDPR» card → «Regenerează din șablon» → confirm. Section 5 gains the volunteers' paragraph (what
+   an offer keeps, why — consent for the public form, the club's legitimate interest for a person an
+   organizer enters — who sees it) and section 7 the period: **30 days after the event's start** (an offer
+   entered after the start, 30 days after its entry), then the maintenance job deletes the offers. A lawyer should read both. Open the draft, fill in what is
+   left, «Salvează ciorna», «Aprobă și publică». Until a notice naming `{{volunteers}}` is in force in
+   **both** languages the page shows no form and a post is refused; `/admin/tasks` shows the row
+   «Nota de confidențialitate: voluntarii evenimentelor» while an event ahead takes volunteers. Your
+   own list on the card works without it.
+3. **Take volunteers on the page.** The same card → «Primește voluntari pe pagină». The card says in a
+   line whether the form is on the page now and, if not, which of the conditions is missing: the event
+   takes volunteers, the event is published and not for the members alone (the form is public), the
+   event is not cancelled or over, a role still needs people, and the notice describes them. The form is a fold, «Vreau să fiu voluntar», under the programme; it asks the name,
+   the address, the telephone number, the role (only roles that still need people), an optional
+   message and one consent tick, behind the same anti-bot checks as the registration form.
+4. **Answer the offers.** Each sign-up is «Înscris»; the person gets one email, «Ți-am primit oferta de
+   voluntar», with nothing to press, and each Organizer, Administrator and Superadministrator gets a
+   notice with who and which role (never the address or the number). On the card: «Confirmă» when you
+   have spoken to the person, «Anulează», «Modifică» (the role included, and your own note — never shown
+   publicly), «Șterge voluntarul» (the address and the telephone number go with it). «N din M» beside
+   each role counts «Înscris» and «Confirmat». «Adaugă un voluntar de mână» enters a person yourself —
+   a role may take more people than it asked. «Descarcă CSV» downloads the list, grouped by role.
+5. **A person who asks for their data** is found by address on «Toate datele unei persoane»: the offers
+   are listed there with every column, and deleted from this card.

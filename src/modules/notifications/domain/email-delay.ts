@@ -68,6 +68,10 @@ const NOT_WAITED_FOR: ReadonlySet<EmailMessageType> = new Set<EmailMessageType>(
   "SHOP_ORDER_PLACED",
   "SHOP_ORDER_PAID",
   "SHOP_ORDER_CLUB_NOTICE",
+  // A volunteer's sign-up (§NNN): the answer page says thank you and that the organizers will confirm — it
+  // promises no email, so nobody on a public page waits for the «am primit».
+  "VOLUNTEER_RECEIVED",
+  "VOLUNTEER_CLUB_NOTICE",
 ]);
 
 /** Whether somebody on a public page may be waiting for a message of this type (not a club copy). */

@@ -3,6 +3,7 @@ import { auditLogs } from "@/db/schema/audit-logs";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { eventInvitations } from "@/db/schema/event-invitations";
+import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
@@ -142,6 +143,8 @@ export const RETENTION = {
    * `group-run-declarations/domain.ts`, where the signing page reads it too.
    */
   groupRunIdDocumentDaysAfterEvent: GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS,
+  /** A volunteer's offer goes thirty days after the event's start (§NNN); the privacy notice says exactly this. */
+  volunteerDaysAfterEvent: RETENTION_PERIODS.volunteerDaysAfterEvent,
   /** The log of staff actions: three years, as the notice says. */
   auditLogYears: 3,
 } as const;
@@ -170,6 +173,8 @@ export type PruneCounts = {
   newsletter: number;
   /** Invitations that ended unaccepted, gone after `endedInvitationDays` (§647). */
   invitations: number;
+  /** Volunteer offers, gone thirty days after the event started (§NNN). */
+  volunteers: number;
 };
 
 /**
@@ -190,6 +195,7 @@ export const PRUNE_STEPS = [
   "audit-log",
   "newsletter",
   "invitations",
+  "volunteers",
 ] as const;
 export type PruneStep = (typeof PRUNE_STEPS)[number];
 
@@ -266,6 +272,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     auditLogs: 0,
     newsletter: 0,
     invitations: 0,
+    volunteers: 0,
   };
   const failures: PruneFailure[] = [];
 
@@ -585,6 +592,24 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     if (deleted.length > 0) counts.participants += await deleteOrphanParticipants(tx);
   });
 
+  /*
+    A volunteer's offer (§NNN): a name, an address and a telephone number given to organize the help at one
+    event, with no claim behind it. Deleted thirty days after the event's start — whatever its state,
+    «Anulat» included — and the privacy notice's section 7 says so; an offer entered after the start, thirty
+    days after its entry. The row's own age is asked too, so one wrong year typed in the editor (2025 for
+    2026) never takes a whole list at the next run, offers made yesterday among them. The roles stay with the
+    event: they hold no name. Nothing public showed a volunteer, so no cache needs telling.
+  */
+  await step("volunteers", async (tx) => {
+    const cutoff = daysBefore(now, RETENTION.volunteerDaysAfterEvent);
+    const over = tx.select({ id: events.id }).from(events).where(lt(events.startsAt, cutoff));
+    const deleted = await tx
+      .delete(eventVolunteers)
+      .where(and(inArray(eventVolunteers.eventId, over), lt(eventVolunteers.createdAt, cutoff)))
+      .returning({ id: eventVolunteers.id });
+    counts.volunteers = deleted.length;
+  });
+
   return { ...counts, failures };
 }
 
@@ -606,7 +631,8 @@ export function totalPruned(counts: PruneCounts): number {
     counts.groupRunIdDocuments +
     counts.auditLogs +
     counts.newsletter +
-    counts.invitations
+    counts.invitations +
+    counts.volunteers
   );
 }
 

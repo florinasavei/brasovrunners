@@ -515,6 +515,8 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     canSendNewsletter: /*     */ [false, false, false, true, false, true, true],
     // §570: the list for sponsors — the Organizer, the Administrator, the Superadministrator; never Tehnic.
     canExportSponsorList: /*  */ [false, false, false, true, false, true, true],
+    // §NNN: an event's volunteers, with their addresses and telephone numbers — read and written by the Organizer and the Administrators; never Tehnic.
+    canManageVolunteers: /*   */ [false, false, false, true, false, true, true],
     canTranslateTexts: /*     */ [false, false, true, true, false, true, true],
     canManageRegistrations: /**/ [false, false, false, false, false, true, true],
     canWorkTheDesk: /*        */ [false, true, true, true, true, true, true],

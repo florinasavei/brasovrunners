@@ -155,6 +155,9 @@ describe("BR-REQ-033-02 criterion 12 the club's hidden copy of every participant
       "SHOP_ORDER_PLACED",
       "SHOP_ORDER_PAID",
       "SHOP_ORDER_CLUB_NOTICE",
+      // A volunteer's sign-up (§NNN): to an address nobody confirmed and to the organizers; no registration behind it.
+      "VOLUNTEER_RECEIVED",
+      "VOLUNTEER_CLUB_NOTICE",
       "REGISTRATION_OPENED",
       // An invitation (§647): to an address the club named, before any registration.
       "EVENT_INVITATION",

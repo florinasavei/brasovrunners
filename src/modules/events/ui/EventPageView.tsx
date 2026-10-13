@@ -26,6 +26,9 @@ import DeclarationOffer from "@/modules/group-run-declarations/ui/DeclarationOff
 import GroupRunSafetyRules from "@/modules/group-run-declarations/ui/GroupRunSafetyRules";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import type { parseInterestOutcome } from "@/modules/registrations/interest-box";
+import type { parseVolunteerBoxes, parseVolunteerOutcome, VolunteerTyped } from "@/modules/volunteers/ui/volunteer-box";
+import VolunteerBox from "@/modules/volunteers/ui/VolunteerBox";
+import type { PublicVolunteerRole } from "@/modules/volunteers/volunteers";
 import RegistrationInterestForm from "@/modules/registrations/ui/RegistrationInterestForm";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import type { EventForecast } from "@/modules/weather/domain/forecast";
@@ -64,6 +67,19 @@ export type EventPageVisit = {
   interestRenderedAt: Date;
   declaratie?: string;
   lista?: string;
+  /**
+   * «Vreau să fiu voluntar» (§NNN): the roles that still need people and how the form answered, or null
+   * when the form is not offered (the event takes no volunteers, every role is full, or the privacy
+   * notice in force does not describe them).
+   */
+  volunteers?: {
+    roles: readonly PublicVolunteerRole[];
+    outcome: ReturnType<typeof parseVolunteerOutcome>;
+    refused: ReturnType<typeof parseVolunteerBoxes>;
+    typed: VolunteerTyped;
+    /** When the render a corrected form is timed from was made (§146). */
+    renderedAt: Date;
+  } | null;
 };
 
 /**
@@ -300,6 +316,22 @@ export default async function EventPageView({
 
       {/* The programme (§96, §117), under `#schedule`: the timed rows, then the text. */}
       <EventProgramme scheduleItems={event.scheduleItems} scheduleJson={event.scheduleJson} timeZone={event.timezone} heading={t("schedule")} />
+
+      {/* «Vreau să fiu voluntar» (§NNN), after the programme and before the rules: a fold, closed on arrival
+          unless the person has just answered. A visit's page only, and only while the three conditions
+          hold (the page decides) — the preview before saving reads no public cache and takes no name. */}
+      {visit?.volunteers && !membersOnly && (
+        <VolunteerBox
+          locale={locale}
+          slug={slug}
+          roles={visit.volunteers.roles}
+          outcome={visit.volunteers.outcome}
+          refused={visit.volunteers.refused}
+          typed={visit.volunteers.typed}
+          renderedAt={visit.volunteers.renderedAt}
+          attempt={now.toISOString()}
+        />
+      )}
 
       {/*
         «Condiții de participare» / "Participation rules" (§498; the owner, 2026-09-27): the

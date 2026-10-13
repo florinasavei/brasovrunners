@@ -7,6 +7,7 @@ import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventInvitations } from "@/db/schema/event-invitations";
 import { eventTodos } from "@/db/schema/event-todos";
+import { eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
 import { pendingFamilyEntries } from "@/db/schema/family-entries";
 import { jobRuns } from "@/db/schema/job-runs";
@@ -128,6 +129,9 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(mediaAssets);
   // An event's own to-dos (§749) cascade from it; deleted first like the translations.
   await db.delete(eventTodos);
+  // An event's volunteers (§NNN) cascade from it, and their role is `RESTRICT`: the people first, then the roles.
+  await db.delete(eventVolunteers);
+  await db.delete(eventVolunteerRoles);
   await db.delete(eventTranslations);
   // `registrations` references `events`, and `events.declaration_document_id` references
   // `legal_documents`, so registrations must go before events, and events before legal
