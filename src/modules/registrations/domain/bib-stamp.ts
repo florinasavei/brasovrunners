@@ -1,21 +1,19 @@
+import { fnv1a } from "@/shared/hash";
+
 /**
  * A short, stable stamp of what a bib's picture is drawn from (§NNN, amending §735).
  *
- * The bibs page asks the preview route for each registration's picture, and the route lets the
- * browser keep an answer for an hour. The address named the registration and nothing else, so a
- * change of the event's design — «Cum arată numărul» from «1» to «001» above all — left the old
- * picture under the same address: the club printed the page and got the bare numbers. The stamp
- * goes into the address (`v=`), so a changed design, colour, title, date or partner is a new address
- * and a fresh picture, while an unchanged one is still served from the browser's cache.
- *
- * FNV-1a over the JSON: no secret, no security claim, only a change detector.
+ * The preview route lets the browser keep an answer for an hour, and the address used to name the
+ * registration and nothing else, so a change of the event's design — «Cum arată numărul» from «1»
+ * to «001» above all — left the old picture under the same address. The stamp goes into the
+ * address (`v=`): a changed design is a new address and a fresh picture, an unchanged one is still
+ * served from the cache. A change detector, no security claim.
  */
 export function bibPictureStamp(parts: unknown): string {
-  const text = JSON.stringify(parts) ?? "";
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < text.length; i += 1) {
-    hash ^= text.charCodeAt(i);
-    hash = Math.imul(hash, 0x01000193) >>> 0;
-  }
-  return hash.toString(36);
+  return fnv1a(JSON.stringify(parts) ?? "");
+}
+
+/** The address of one registration's bib picture, stamped with what it is drawn from. */
+export function bibPictureSrc(input: { eventId: string; registrationId: string; locale: string; stamp: string; member?: boolean }): string {
+  return `/api/admin/events/${input.eventId}/bibs/preview?registration=${input.registrationId}&locale=${input.locale}${input.member ? "&m=1" : ""}&v=${input.stamp}`;
 }

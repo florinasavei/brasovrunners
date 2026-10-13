@@ -17,7 +17,7 @@ import { isUuid } from "@/shared/ids";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import { formatRaceNumber } from "@/modules/registrations/domain/race-number";
-import { bibPictureStamp } from "@/modules/registrations/domain/bib-stamp";
+import { bibPictureSrc, bibPictureStamp } from "@/modules/registrations/domain/bib-stamp";
 
 type Props = { params: Promise<{ locale: string; id: string }> };
 
@@ -176,7 +176,7 @@ export default async function EventBibsPage({ params }: Props) {
                   grid asks, or it shows the ordinary bib the sheet no longer prints (§664). */}
               <Box
                 component="img"
-                src={`/api/admin/events/${id}/bibs/preview?registration=${bib.id}&locale=${locale}${bib.member ? "&m=1" : ""}&v=${pictureStamp}`}
+                src={bibPictureSrc({ eventId: id, registrationId: bib.id, locale, stamp: pictureStamp, member: bib.member })}
                 alt={t("bibs.previewAlt", { number: formatRaceNumber(bib.bibNumber, event?.design.numberFormat), name: bib.registeredName })}
                 width={BIB_IMAGE.width}
                 height={BIB_IMAGE.height}

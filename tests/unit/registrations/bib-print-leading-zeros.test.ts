@@ -2,7 +2,7 @@ import PDFDocument from "pdfkit";
 import { describe, expect, it, vi } from "vitest";
 import { DEFAULT_BIB_DESIGN } from "@/modules/registrations/bib-design";
 import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
-import { bibPictureStamp } from "@/modules/registrations/domain/bib-stamp";
+import { bibPictureSrc, bibPictureStamp } from "@/modules/registrations/domain/bib-stamp";
 
 /** §735 amended: the printed sheet writes the number as the event's «Cum arată numărul» asks. */
 async function printedTexts(numberFormat: "plain" | "pad3" | "pad4"): Promise<string[]> {
@@ -37,5 +37,19 @@ describe("§735 the bibs page's pictures follow the design", () => {
     const pad3 = bibPictureStamp([{ ...DEFAULT_BIB_DESIGN, numberFormat: "pad3" }, "#112233", "Cros"]);
     expect(pad3).not.toBe(plain);
     expect(bibPictureStamp([{ ...DEFAULT_BIB_DESIGN, numberFormat: "pad3" }, "#112233", "Cros"])).toBe(pad3);
+  });
+});
+
+describe("§735 the picture's address", () => {
+  const stampOf = (numberFormat: "plain" | "pad3") => bibPictureStamp([{ ...DEFAULT_BIB_DESIGN, numberFormat }, "#112233", "Cros"]);
+  const srcOf = (numberFormat: "plain" | "pad3", member = false) =>
+    bibPictureSrc({ eventId: "e1", registrationId: "r1", locale: "ro", stamp: stampOf(numberFormat), member });
+  it("carries the stamp as v= and differs between pad3 and plain", () => {
+    expect(srcOf("pad3")).toContain(`&v=${stampOf("pad3")}`);
+    expect(srcOf("pad3")).not.toBe(srcOf("plain"));
+  });
+  it("keeps the member mark and is stable for an unchanged design", () => {
+    expect(srcOf("pad3", true)).toContain("&m=1");
+    expect(srcOf("pad3")).toBe(srcOf("pad3"));
   });
 });
