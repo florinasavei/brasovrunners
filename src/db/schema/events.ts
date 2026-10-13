@@ -110,7 +110,7 @@ export const participantListVisibility = pgEnum("participant_list_visibility", [
 export type ParticipantListVisibility = (typeof participantListVisibility.enumValues)[number];
 
 /**
- * «Clubul pe lista publică» (§NNN, amending §32, §143 and §396): what the public list's «Club» column
+ * «Clubul pe lista publică» (§753, amending §32, §143 and §396): what the public list's «Club» column
  * says. The club is free text the person typed, and a public list is a disclosure — so the default shows
  * only the club's own name, and only for a verified member who typed it.
  *
@@ -784,7 +784,7 @@ export const events = pgTable(
     hiddenListPublic: boolean("hidden_list_public").notNull().default(false),
 
     /**
-     * `public_list_club` — «Clubul pe lista publică» (§NNN): what the list's «Club» column shows. The
+     * `public_list_club` — «Clubul pe lista publică» (§753): what the list's «Club» column shows. The
      * default `members_only` is the rule, not a convenience: every event that exists and every one created
      * after this column shows less than before — the club's own name for a verified member who typed it,
      * nothing else. Display only (see `publicListClub`).

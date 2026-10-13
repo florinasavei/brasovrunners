@@ -260,7 +260,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   const hiddenHeldCounted = door.kind === "KNOWN" && door.fill?.confirmed !== undefined ? hidden.held : 0;
   const countedNotListed = countPublic && countHidden && hidden.confirmed + hiddenHeldCounted > 0;
   /*
-    «Clubul pe lista publică» (§NNN): what the «Club» column says. The rows below already carry what the mode
+    «Clubul pe lista publică» (§753): what the «Club» column says. The rows below already carry what the mode
     lets through — the club's own name for a verified member who typed it, the typed text, or nothing — so
     the table only decides whether the column is there at all.
   */

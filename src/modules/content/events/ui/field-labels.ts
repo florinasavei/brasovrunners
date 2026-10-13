@@ -78,7 +78,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.participantListVisibility": inProgrammeRules("startList", t("editor.participantList")),
     // «Lista de așteptare e publică» (§628), under the list it narrows.
     "event.waitlistPublic": inProgrammeRules("startList", t("editor.waitlistPublic")),
-    // «Clubul pe lista publică» (§NNN), in the same card.
+    // «Clubul pe lista publică» (§753), in the same card.
     "event.publicListClub": inProgrammeRules("startList", t("editor.publicListClub")),
     // «Arată public câți așteaptă» (§634), under it, in the same card.
     "event.waitlistCountPublic": inProgrammeRules("startList", t("editor.waitlistCountPublic")),

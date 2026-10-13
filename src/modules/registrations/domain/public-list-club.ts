@@ -1,5 +1,5 @@
 /**
- * «Clubul pe lista publică» (§NNN, amending §32, §143 and §396): what the public list's «Club» column says.
+ * «Clubul pe lista publică» (§753, amending §32, §143 and §396): what the public list's «Club» column says.
  *
  * The owner, 2026-10-13: «people type stupid things there, I just want to show Brașov Runners members and
  * ignore the other clubs … but I still want to show the BVR ones». The club is free text, a public list is a

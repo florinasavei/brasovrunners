@@ -7,7 +7,7 @@ import type { EditableEvent } from "@/modules/content/events/repository";
 import { CLUB_NAME } from "@/theme/brand";
 
 /**
- * §NNN — «Clubul pe lista publică» in the public list's card: three native radios (one `name`, the
+ * §753 — «Clubul pe lista publică» in the public list's card: three native radios (one `name`, the
  * stored mode checked, each a 44-pixel row), the help in plain words, the club's name from the platform's
  * constant — and both languages carry every word.
  */
@@ -47,7 +47,7 @@ async function render(event: EditableEvent | null) {
 
 const radios = (html: string) => [...html.matchAll(/<input[^>]*type="radio"[^>]*name="event\.publicListClub"[^>]*>/g)].map((match) => match[0]);
 
-describe("§NNN «Clubul pe lista publică» in the editor", () => {
+describe("§753 «Clubul pe lista publică» in the editor", () => {
   it("offers the three modes as one radio group, «Doar» the club checked when the event has none stored", async () => {
     for (const event of [RACE, null]) {
       const html = await render(event);

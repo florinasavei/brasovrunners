@@ -197,7 +197,7 @@ export const eventConfigSchema = z
         waitlist: z.boolean(),
         waitlistCount: z.boolean(),
         count: z.boolean(),
-        /** «Clubul pe lista publică» (§NNN): a file made before the setting existed has none, and takes the default. */
+        /** «Clubul pe lista publică» (§753): a file made before the setting existed has none, and takes the default. */
         club: z.enum(PUBLIC_LIST_CLUBS).default(DEFAULT_PUBLIC_LIST_CLUB),
       })
       .strict(),

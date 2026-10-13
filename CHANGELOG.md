@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.14-2026-10-13
+
+- **The public list shows only the club's own club** — the new «Clubul pe lista publică» of each event is «Doar Brașov Runners» by default: the «Club» column shows the club's name for a member who typed it (BVR, the full name, any usual spelling) and nothing else, and is not drawn when empty; «Cum l-au scris» keeps today's list, «Nu arăta clubul» removes the column. The backoffice and the exports keep what was typed. §753.
 ## BR-V3.13-2026-10-13
 
 - **«De făcut» on the event as a plain to-do list** — «Lipsește pe pagină» as links to the field, «Sarcini» with a one-line add, a tick box on each row, its priority, who and day small beside it and a pencil that opens its edit form in place, the ticked ones folded under «Gata»; «Toate» / «Ale mele» on the card's corner. §752.

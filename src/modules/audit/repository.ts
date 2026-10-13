@@ -354,7 +354,7 @@ export type AuditAction =
    */
   | "event.participant_count_public_changed"
   /**
-   * «Clubul pe lista publică» changed on an event (§NNN): `from` and `to` are the two modes
+   * «Clubul pe lista publică» changed on an event (§753): `from` and `to` are the two modes
    * (`members_only`, `as_typed`, `hidden`), on every date a save changed it.
    */
   | "event.public_list_club_changed"

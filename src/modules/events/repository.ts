@@ -239,7 +239,7 @@ const PUBLIC_COLUMNS = {
   // «Arată invitații speciali pe lista publică» (§743): whether the hidden list's rows may be drawn on the
   // public lists at all — read by `StartList` through `hiddenListShownPublicly`.
   hiddenListPublic: events.hiddenListPublic,
-  // «Clubul pe lista publică» (§NNN): what the list's «Club» column says — read by `StartList` through
+  // «Clubul pe lista publică» (§753): what the list's «Club» column says — read by `StartList` through
   // `publicListClubOf`, and by the cached reads that make its rows.
   publicListClub: events.publicListClub,
   // The meeting point is one fact on the event row (`DECISIONS.md` §36); its *name* is read in

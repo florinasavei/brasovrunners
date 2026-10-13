@@ -1921,7 +1921,7 @@ const SERIES_COLUMNS = [
   "participantCountPublic",
   "hiddenListCounted",
   "hiddenListPublic",
-  // «Clubul pe lista publică» (§NNN) travels with the list it qualifies, like the waiting list's switch above.
+  // «Clubul pe lista publică» (§753) travels with the list it qualifies, like the waiting list's switch above.
   "publicListClub",
   "externalProvider",
   "externalRegistrationUrl",
@@ -2310,7 +2310,7 @@ async function auditWaitlistCountPublic<T extends Record<string, unknown>>(
 }
 
 /**
- * The trail of «Clubul pe lista publică» (§NNN): who changed what the public list's «Club» column says, on
+ * The trail of «Clubul pe lista publică» (§753): who changed what the public list's «Club» column says, on
  * which date, from and to — in the save's transaction, only when the value moved. A display setting, but
  * one over what the public is told about a person, so the trail says who decided it.
  */

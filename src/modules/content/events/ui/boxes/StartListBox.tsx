@@ -37,7 +37,7 @@ import { BoxNote, type BoxProps, summaryWords } from "./box-kit";
 export default async function StartListBox({ event, mayEditSettings }: Pick<BoxProps, "event" | "mayEditSettings">) {
   const t = await getTranslations("Admin");
   const { words } = await summaryWords();
-  // The words of each mode of «Clubul pe lista publică» (§NNN); the club's name is the platform's constant.
+  // The words of each mode of «Clubul pe lista publică» (§753); the club's name is the platform's constant.
   const clubChoices = {
     members_only: t("editor.publicListClubMembersOnly", { club: CLUB_NAME }),
     as_typed: t("editor.publicListClubAsTyped"),
@@ -75,7 +75,7 @@ export default async function StartListBox({ event, mayEditSettings }: Pick<BoxP
                 <BoxNote more={t("editor.waitlistPublicHelpMore")}>{t("editor.waitlistPublicHelp")}</BoxNote>
               </Box>
               {/*
-                «Clubul pe lista publică» (§NNN; the owner, 2026-10-13: «people type stupid things there, I just want
+                «Clubul pe lista publică» (§753; the owner, 2026-10-13: «people type stupid things there, I just want
                 to show the club's members and ignore the other clubs»): what the list's «Club» column says — the
                 club's own name for a member who typed it (the default), the text as typed, or no column. A card of
                 its own under the list's switches, three native radios; the service keeps the stored mode when a

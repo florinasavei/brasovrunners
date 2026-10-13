@@ -418,7 +418,7 @@ export async function cachedStartListPage(
   socials = false,
   numbers = false,
   hiddenShown = false,
-  /** «Clubul pe lista publică» (§NNN): in the key, so a page made for one mode is never served for another. The default is the safe one. */
+  /** «Clubul pe lista publică» (§753): in the key, so a page made for one mode is never served for another. The default is the safe one. */
   club: PublicListClub = DEFAULT_PUBLIC_LIST_CLUB,
 ) {
   return publicRead(
@@ -464,7 +464,7 @@ export async function cachedStartListOthersPage(
   socials = false,
   /** «Arată invitații speciali pe lista publică» (§743), in the key like the rest. */
   hiddenShown = false,
-  /** «Clubul pe lista publică» (§NNN), in the key like the rest. */
+  /** «Clubul pe lista publică» (§753), in the key like the rest. */
   club: PublicListClub = DEFAULT_PUBLIC_LIST_CLUB,
 ) {
   return publicRead(

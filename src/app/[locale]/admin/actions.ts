@@ -410,7 +410,7 @@ function eventFieldsFrom(form: FormData) {
     // «Arată public numărătoarea» (§647): on by default, so an unticked box is `false` only beside its marker.
     participantCountPublic:
       form.get("event.participantCountPublic.present") === "1" ? form.get("event.participantCountPublic") === "on" : undefined,
-    // «Clubul pe lista publică» (§NNN): the posted mode, or absent — a form without the box leaves it as stored; a value that is no mode is refused by the fields' schema.
+    // «Clubul pe lista publică» (§753): the posted mode, or absent — a form without the box leaves it as stored; a value that is no mode is refused by the fields' schema.
     publicListClub: typeof form.get("event.publicListClub") === "string" ? (form.get("event.publicListClub") as string) : undefined,
     // «Lista ascunsă» (§647): the group's three, read only when the form carried its marker — a form
     // without the group is "not editing it", never "switched off" or "no series".

@@ -13,7 +13,7 @@ import { deleteStaffUser, insertStaffUser } from "@/modules/staff-identity/repos
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Clubul pe lista publică» on the event (`events.public_list_club`, migration 0145): saved through
+ * §753 — «Clubul pe lista publică» on the event (`events.public_list_club`, migration 0145): saved through
  * the editor's action, stored as posted, a form without the box leaves it as stored, a value that is no mode
  * is refused, every change is written to the trail with from and to, the public cache is told on the save,
  * a copy carries it, and the preview and the public read carry it. A new or removed account (a member) tells
@@ -140,7 +140,7 @@ async function postSave(form: FormData): Promise<unknown> {
   });
 }
 
-describe("§NNN «Clubul pe lista publică» on the event", () => {
+describe("§753 «Clubul pe lista publică» on the event", () => {
   it("starts as «Doar» the club's members on a new event", async () => {
     const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
     expect((await reloadEvent(source.id)).publicListClub).toBe("members_only");

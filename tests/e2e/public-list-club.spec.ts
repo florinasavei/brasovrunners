@@ -5,7 +5,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox } from "./support/fold";
 
 /**
- * §NNN (amending §32, §143 and §396; the owner, 2026-10-13: «people type stupid things there, I just want
+ * §753 (amending §32, §143 and §396; the owner, 2026-10-13: «people type stupid things there, I just want
  * to show Brașov Runners members and ignore the other clubs … but I still want to show the BVR ones») —
  * «Clubul pe lista publică»: under the default only a verified member who typed the club shows the club's
  * name in «Cine vine»; a member who typed nonsense and a stranger who typed the club's name show nothing.
@@ -80,7 +80,7 @@ async function seedRace(tag: string): Promise<Seeded> {
 
 const rowOf = (page: import("@playwright/test").Page, name: string) => page.getByTestId("start-list-named").filter({ hasText: name });
 
-test.describe("§NNN «Clubul pe lista publică»: only the club's own members' club shows by default", () => {
+test.describe("§753 «Clubul pe lista publică»: only the club's own members' club shows by default", () => {
   test.describe.configure({ timeout: 90_000 });
 
   test("the default names the club for the member who typed BVR and for nobody else; the editor's radios switch it", async ({ page }) => {

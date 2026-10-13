@@ -10,11 +10,11 @@ import {
 import { CLUB_NAME } from "@/theme/brand";
 
 /**
- * §NNN (amending §32, §143 and §396) — «Clubul pe lista publică»: the matcher that decides whether a typed
+ * §753 (amending §32, §143 and §396) — «Clubul pe lista publică»: the matcher that decides whether a typed
  * club names the club itself. Case, diacritics, punctuation and spaces are folded; the club's usual short
  * forms count; a substring of another club's name never does.
  */
-describe("§NNN namesTheClub — what is the club's own name", () => {
+describe("§753 namesTheClub — what is the club's own name", () => {
   const SPELLED_IN = [
     CLUB_NAME,
     "brasov runners",
@@ -97,7 +97,7 @@ describe("§NNN namesTheClub — what is the club's own name", () => {
   });
 });
 
-describe("§NNN the event's mode", () => {
+describe("§753 the event's mode", () => {
   it("offers three modes, the first the default", () => {
     expect(PUBLIC_LIST_CLUBS).toEqual(["members_only", "as_typed", "hidden"]);
     expect(DEFAULT_PUBLIC_LIST_CLUB).toBe("members_only");

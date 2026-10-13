@@ -133,7 +133,7 @@ export async function insertStaffUser<T extends Record<string, unknown>>(
     .returning();
   /*
     An account is a club member (`member-ticks.ts#memberCanonicalEmails`), and the public list's «Club»
-    column shows the club's name for a member (§NNN): a new account changes the cached lists, so they expire
+    column shows the club's name for a member (§753): a new account changes the cached lists, so they expire
     with the rows (a no-op outside a Next server).
   */
   revalidatePublicContent("places");
@@ -158,7 +158,7 @@ export async function deleteStaffUser<T extends Record<string, unknown>>(
   id: string,
 ): Promise<void> {
   await db.delete(staffUsers).where(eq(staffUsers.id, id));
-  // A removed account is no longer a member: the public list stops showing the club for it at once (§NNN).
+  // A removed account is no longer a member: the public list stops showing the club for it at once (§753).
   revalidatePublicContent("places");
 }
 

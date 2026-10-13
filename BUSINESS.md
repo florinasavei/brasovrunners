@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.13-2026-10-13 -->
+<!-- PROJECT_BASELINE: BR-V3.14-2026-10-13 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V3.13-2026-10-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.14-2026-10-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -231,7 +231,7 @@ What is asked, and why each one is there:
 - **legal name** — first and last. This is the name the declaration is signed with and the name
   on any list the club must hand to an authority;
 - **club** — free text the person types (or the club's own name, filled in by the member tick). The
-  public list shows it only as the event's «Clubul pe lista publică» says (`DECISIONS.md` §NNN): by
+  public list shows it only as the event's «Clubul pe lista publică» says (`DECISIONS.md` §753): by
   default the club's own name for a verified member who typed it, and nothing for anyone else, so a
   stranger's typing never appears on a page and a member's membership is never shown unless they
   claimed it on the form. The backoffice and the exports keep what was typed;

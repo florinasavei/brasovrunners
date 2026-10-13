@@ -17,7 +17,7 @@ import { atTheClock } from "../../helpers/clock";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (amending §32, §143 and §396) — «Clubul pe lista publică»: the public list's «Club» column, by the
+ * §753 (amending §32, §143 and §396) — «Clubul pe lista publică»: the public list's «Club» column, by the
  * event's mode. The default shows the club's own name only for a verified member (a live account on the
  * team's allowlist, the bibs' own test) whose typed club names the club; every other cell is blank, and the
  * column is not drawn when no row holds a value. «Cum l-au scris» is the list as it was; «Nu arăta clubul»
@@ -129,7 +129,7 @@ beforeAll(async () => {
 afterAll(async () => close());
 beforeEach(async () => resetTables(db));
 
-describe("§NNN «Clubul pe lista publică» — the migration", () => {
+describe("§753 «Clubul pe lista publică» — the migration", () => {
   it("is expand only, and an event written without the column reads «Doar» the club's own members: less than before", async () => {
     const sql = readFileSync(join(process.cwd(), "src/db/migrations/0145_public_list_club.sql"), "utf8");
     expect(sql).toContain(`CREATE TYPE "public"."public_list_club" AS ENUM('members_only', 'as_typed', 'hidden')`);
@@ -141,7 +141,7 @@ describe("§NNN «Clubul pe lista publică» — the migration", () => {
   });
 });
 
-describe("§NNN «Clubul pe lista publică» — the query", () => {
+describe("§753 «Clubul pe lista publică» — the query", () => {
   it("under the default, selects the typed text only for a verified member and returns the club's own name only when it names the club", async () => {
     const { id } = await createEvent();
     await seed(id);
@@ -195,7 +195,7 @@ describe("§NNN «Clubul pe lista publică» — the query", () => {
   });
 });
 
-describe("§NNN «Clubul pe lista publică» — the rendered list", () => {
+describe("§753 «Clubul pe lista publică» — the rendered list", () => {
   it("«Doar» the club: one cell holds the club's name, the others are blank, and the header is there", async () => {
     const { publicEvent, id } = await createEvent("members_only");
     await seed(id);

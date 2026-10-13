@@ -433,7 +433,7 @@ describe("import as a new event", () => {
     expect(created.dateToBeAnnounced).toBe((await reload(event.id)).dateToBeAnnounced);
   });
 
-  it("§NNN carries «Clubul pe lista publică» in the file (publicList.club); a file made before it existed imports with the default", async () => {
+  it("§753 carries «Clubul pe lista publică» in the file (publicList.club); a file made before it existed imports with the default", async () => {
     const { event } = await seedRace({ publicListClub: "hidden" }, {}, false);
     expect((await reload(event.id)).publicListClub).toBe("hidden");
     const file = await fileOf(event.id);

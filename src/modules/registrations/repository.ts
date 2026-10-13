@@ -493,7 +493,7 @@ function publicSocialColumns(socials: boolean | undefined): Record<string, SQL<s
 }
 
 /**
- * What the «Club» column reads (§NNN, amending §32, §143 and §396), by the event's «Clubul pe lista publică».
+ * What the «Club» column reads (§753, amending §32, §143 and §396), by the event's «Clubul pe lista publică».
  *
  * `column` is the select's club expression and `shown` finishes each row's value in code:
  *

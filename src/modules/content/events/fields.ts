@@ -1051,7 +1051,7 @@ export const eventFieldsSchema = z
     hiddenListCounted: z.boolean().optional(),
     // «Arată invitații speciali pe lista publică» (§743): the group's fourth, by the same discipline.
     hiddenListPublic: z.boolean().optional(),
-    // «Clubul pe lista publică» (§NNN): absent leaves it as stored (a form without the box, an older client).
+    // «Clubul pe lista publică» (§753): absent leaves it as stored (a form without the box, an older client).
     publicListClub: z.enum(PUBLIC_LIST_CLUBS).optional(),
     externalProvider: optionalText(120),
     externalRegistrationUrl: httpsUrl("an external registration link must start with https://"),
