@@ -1,0 +1,186 @@
+import { createTranslator } from "next-intl";
+import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it, vi } from "vitest";
+import en from "../../../messages/en.json";
+import ro from "../../../messages/ro.json";
+import type { PageTodo } from "@/modules/content/events/domain/page-todos";
+import type { EventTodoItem } from "@/modules/event-todos/event-todos";
+import { withClientWords } from "../../helpers/client-words";
+
+/**
+ * §NNN — the card «De făcut pentru pagina evenimentului» as the editor draws it (BR-REQ-050-01,
+ * BR-REQ-041-01 criterion 6): the closed line and when it opens by itself, the computed rows marked
+ * «din pagină» with a link to the card that fills them, the club's rows with their priority as a
+ * word (not the colour alone), the order, «Gata» apart, «Ale mele», the role's forms and a reader's
+ * none. The forms are plain posts — nothing here needs a script.
+ */
+const messages = { ro, en };
+let language: "ro" | "en" = "ro";
+
+vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined, set: () => {}, delete: () => {} }), headers: async () => new Headers() }));
+vi.mock("@/auth", () => ({ auth: async () => null, signIn: async () => {}, signOut: async () => {} }));
+vi.mock("@/app/[locale]/admin/events/[id]/todo-actions", () => ({
+  addEventTodoAction: async () => null,
+  editEventTodoAction: async () => null,
+  deleteEventTodoAction: async () => null,
+  setEventTodoDoneAction: async () => {},
+}));
+vi.mock("next-intl/server", () => ({
+  setRequestLocale: () => {},
+  getLocale: async () => language,
+  getMessages: async () => messages[language],
+  getTranslations: async (namespace: string | { namespace: string }) => {
+    const path = typeof namespace === "string" ? namespace : namespace.namespace;
+    const scoped = path.split(".").reduce<unknown>((node, key) => (node as Record<string, unknown>)[key], messages[language]) as Record<string, string>;
+    return createTranslator({ locale: language, messages: scoped, namespace: undefined });
+  },
+}));
+
+const { default: EventTodoCard } = await import("@/modules/event-todos/ui/EventTodoCard");
+
+const EVENT = "11111111-1111-4111-8111-111111111111";
+const ME = "22222222-2222-4222-8222-222222222222";
+
+const page = (id: string, rule: PageTodo["rule"], priority: PageTodo["priority"], anchor: PageTodo["anchor"], locale: string | null = null): PageTodo => ({ id, rule, locale, priority, anchor });
+const item = (id: string, text: string, overrides: Partial<EventTodoItem> = {}): EventTodoItem => ({
+  id,
+  eventId: EVENT,
+  text,
+  priority: "NORMAL",
+  assigneeStaffUserId: null,
+  assigneeName: null,
+  dueOn: null,
+  doneAt: null,
+  doneByName: null,
+  createdAt: new Date("2026-10-05T10:00:00.000Z"),
+  ...overrides,
+});
+
+const base = {
+  locale: "ro" as const,
+  eventId: EVENT,
+  staff: [
+    { id: ME, name: "Ana Admin" },
+    { id: "33333333-3333-4333-8333-333333333333", name: "Oana Organizator" },
+  ],
+  languageNames: { ro: "Română", en: "English" },
+  mayEdit: true,
+  currentStaffId: ME,
+  mine: false,
+  today: "2026-10-13",
+};
+
+async function render(props: Partial<Parameters<typeof EventTodoCard>[0]> & Pick<Parameters<typeof EventTodoCard>[0], "computed" | "items">) {
+  return renderToStaticMarkup(withClientWords(await EventTodoCard({ ...base, ...props }), language));
+}
+
+/** The text of every row of the open list, in the order it is drawn. */
+const order = (html: string) => [...html.matchAll(/data-testid="(event-todo-page-row|event-todo-item)"[^>]*?(?:data-rule="([^"]*)"|data-item-id="([^"]*)")/g)].map((match) => match[2] ?? match[3]);
+
+describe("§NNN the card «De făcut pentru pagina evenimentului»", () => {
+  it("says «N de făcut» on its closed line and opens by itself while anything is left", async () => {
+    const html = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: [item("a", "Sună la primărie")] });
+    expect(html).toContain("De făcut pentru pagina evenimentului");
+    expect(html).toContain("2 de făcut");
+    expect(html).toMatch(/<details[^>]*id="box-todos"[^>]*open/);
+  });
+
+  it("stays closed, saying nothing is left, when there is nothing to do", async () => {
+    const html = await render({ computed: [], items: [item("done", "Gata de mult", { doneAt: new Date("2026-10-10T08:00:00.000Z"), doneByName: "Ana Admin" })] });
+    expect(html).toContain("nimic de făcut");
+    expect(html).not.toMatch(/<details[^>]*id="box-todos"[^>]*open/);
+    expect(html).toContain("Gata (1)");
+  });
+
+  it("marks a computed row «din pagină», links it to the card that fills it and offers it no edit or delete", async () => {
+    const html = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: [] });
+    expect(html).toContain('data-testid="event-todo-page-row"');
+    expect(html).toContain("din pagină");
+    expect(html).toContain("Evenimentul nu are fotografie de copertă.");
+    expect(html).toMatch(/data-testid="event-todo-fill"[^>]*href="[^"]*#box-cover"|href="[^"]*#box-cover"[^>]*data-testid="event-todo-fill"/);
+    expect(html).not.toContain("Șterge");
+  });
+
+  it("names the language of a per-language row", async () => {
+    const html = await render({ computed: [page("title:en", "title", "HIGH", "box-title", "en")], items: [] });
+    expect(html).toContain("Titlul lipsește în English.");
+  });
+
+  it("draws each priority as a word, never the colour alone", async () => {
+    const html = await render({
+      computed: [],
+      items: [item("u", "u", { priority: "URGENT" }), item("h", "h", { priority: "HIGH" }), item("n", "n"), item("l", "l", { priority: "LOW" })],
+    });
+    for (const word of ["Urgentă", "Mare", "Normală", "Mică"]) expect(html).toContain(`>${word}<`);
+  });
+
+  it("lists everything in one order: priority, then the due day, then age — computed and typed together", async () => {
+    const html = await render({
+      computed: [page("declaration", "declaration", "URGENT", "box-declaration"), page("cover", "cover", "NORMAL", "box-cover")],
+      items: [
+        item("low", "low", { priority: "LOW" }),
+        item("urgent-dated", "urgent dated", { priority: "URGENT", dueOn: "2026-10-20" }),
+        item("normal-old", "normal old", { createdAt: new Date("2026-10-01T10:00:00.000Z") }),
+        item("normal-sooner", "normal sooner", { dueOn: "2026-10-15" }),
+      ],
+    });
+    expect(order(html)).toEqual(["urgent-dated", "declaration", "normal-sooner", "cover", "normal-old", "low"]);
+  });
+
+  it("puts a ticked line under «Gata» with who ticked it, and an overdue day says so", async () => {
+    const html = await render({
+      computed: [],
+      items: [
+        item("done", "Terminat", { doneAt: new Date("2026-10-10T08:00:00.000Z"), doneByName: "Oana Organizator" }),
+        item("late", "Întârziat", { dueOn: "2026-10-01" }),
+      ],
+    });
+    expect(html).toContain("Termen depășit");
+    expect(html).toContain("Bifat de Oana Organizator");
+    expect(html.indexOf("Gata (1)")).toBeGreaterThan(html.indexOf("Întârziat"));
+  });
+
+  it("filters to «Ale mele» through the address, with no script", async () => {
+    const mine = item("mine", "al meu", { assigneeStaffUserId: ME, assigneeName: "Ana Admin" });
+    const theirs = item("theirs", "al lor", { assigneeStaffUserId: "someone" });
+    const html = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: [mine, theirs], mine: true });
+    expect(order(html)).toEqual(["mine"]);
+    expect(html).toContain("?mine=1#box-todos");
+    expect(html).toContain("Ale mele");
+  });
+
+  it("gives a role that may write the add form with a priority and a person, and the tick and edit of each line", async () => {
+    const html = await render({ computed: [], items: [item("a", "Un rând")] });
+    expect(html).toContain('name="priority"');
+    expect(html).toContain('name="assignee"');
+    expect(html).toContain('name="due"');
+    expect(html).toContain("Oana Organizator");
+    expect(html).toContain('name="done"');
+    expect(html).toContain("Bifează: Un rând");
+    expect(html).toContain("Modifică");
+    expect(html).toContain("Adaugă un rând");
+  });
+
+  it("gives a role that only reads the list and no form at all", async () => {
+    const html = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: [item("a", "Un rând")], mayEdit: false });
+    expect(html).toContain("o scriu Organizatorul, Administratorul și Superadministratorul");
+    expect(html).not.toContain('name="priority"');
+    expect(html).not.toContain('name="done"');
+    expect(html).not.toContain("Adaugă un rând");
+    expect(html).toContain("Un rând");
+  });
+
+  it("speaks English in English", async () => {
+    language = "en";
+    try {
+      const html = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: [item("a", "A line", { priority: "URGENT" })], locale: "en" as never });
+      expect(html).toContain("To do for the event");
+      expect(html).toContain("2 to do");
+      expect(html).toContain("from the page");
+      expect(html).toContain(">Urgent<");
+      expect(html).toContain("The event has no cover photo.");
+    } finally {
+      language = "ro";
+    }
+  });
+});

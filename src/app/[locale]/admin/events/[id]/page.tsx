@@ -12,6 +12,12 @@ import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventForEditing, findEventTitle, listSeriesDates } from "@/modules/content/events/repository";
+import { eventPageTodos } from "@/modules/content/events/domain/page-todos";
+import { canEditEventTodos } from "@/modules/event-todos/domain/event-todo";
+import { listEventTodos } from "@/modules/event-todos/event-todos";
+import EventTodoCard from "@/modules/event-todos/ui/EventTodoCard";
+import { listStaffUsers } from "@/modules/staff-identity/repository";
+import { dayIn } from "@/modules/registrations/domain/age";
 import { editionDifference, usualOf } from "@/modules/events/domain/series";
 import { type ScopeDate, SeriesScopeBox, SeriesScopeProvider } from "@/modules/content/events/ui/SeriesScope";
 import { editionNote, ruleSentence } from "@/modules/events/ui/series-sentence";
@@ -58,6 +64,7 @@ import {
   canReadRegistrations,
   canManageTestRegistrations,
   canPreviewEventDraft,
+  isBackofficeRole,
   isLiveContent,
 } from "@/modules/staff-identity/domain/roles";
 import {
@@ -138,7 +145,7 @@ import { startBoxValues, typedStartOrNull } from "@/modules/events/domain/provis
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string; announced?: string; notice?: string; queued?: string; moved?: string; movedTo?: string; movedSent?: string; count?: string; from?: string; to?: string; erased?: string; recent?: string; limited?: string; testQueued?: string } & Partial<Record<keyof PlacesTaken, string>>>;
+  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string; announced?: string; notice?: string; queued?: string; moved?: string; movedTo?: string; movedSent?: string; count?: string; from?: string; to?: string; erased?: string; recent?: string; limited?: string; testQueued?: string; mine?: string; todoError?: string } & Partial<Record<keyof PlacesTaken, string>>>;
 };
 
 export const dynamic = "force-dynamic";
@@ -328,6 +335,25 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   }));
   const mayEditSomeText = languages.some((entry) => entry.mayEdit);
   const maySaveAnything = maySaveSettings || mayEditSomeText;
+
+  /*
+    «De făcut pentru pagina evenimentului» (§NNN): what the page still lacks, computed from the saved
+    event on this read, and the lines the club typed for this date — a series' dates each have their
+    own. Read for every role that opens the editor; the verbs ask the service for the role again.
+  */
+  const todoItems = await listEventTodos(db, event.id);
+  const todoStaff = (await listStaffUsers(db))
+    .filter((person) => isBackofficeRole(person.role))
+    .map((person) => ({ id: person.id, name: person.displayName }))
+    .sort((a, b) => a.name.localeCompare(b.name, locale));
+  const pageTodos = eventPageTodos(event, orderedTranslations, {
+    now,
+    locales: routing.locales,
+    storageConfigured: isStorageConfigured(),
+    approvedDeclarationIds: new Set(declarations.map((declaration) => declaration.id)),
+  });
+  // A refused one-button form's code (`?todoError=`), matched against the codes there are — a query string is typed by anybody.
+  const todoErrorCode = (["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND"] as const).find((code) => code === query.todoError);
 
   // A standing series (§122): the rule on the source, and every date of it.
   const source = event.repeatOf ? ((await findEventForEditing(db, event.repeatOf))?.event ?? null) : event;
@@ -884,6 +910,20 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           }
           main={
             <>
+              {/* «De făcut pentru pagina evenimentului» (§NNN): near the top, beside the save form — it has forms of its own, and HTML forms cannot nest. */}
+              <EventTodoCard
+                locale={locale}
+                eventId={event.id}
+                computed={pageTodos}
+                items={todoItems}
+                staff={todoStaff}
+                languageNames={Object.fromEntries(routing.locales.map((code) => [code, languageName(code)]))}
+                mayEdit={canEditEventTodos(staffUser.role)}
+                currentStaffId={staffUser.id}
+                mine={query.mine === "1"}
+                today={dayIn(now, CLUB_TIME_ZONE)}
+                error={todoErrorCode ? t(`errors.${todoErrorCode}`) : undefined}
+              />
               {/* Settings and texts: one form, one save — and a refusal that keeps every box (§315). */}
               <ActionForm action={saveEventAndTranslationsAction} messages={refusal} confirm={saveConfirm} id="event-save-form" data-testid="event-save-form">
                 <input type="hidden" name="uiLocale" value={locale} />
