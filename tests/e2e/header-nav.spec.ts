@@ -118,6 +118,10 @@ async function setLook(browser: Browser, choice: "on" | "off"): Promise<void> {
     await confirmDialog(page, "Schimbi tema site-ului?");
     // The page's own alert (the toast repeats the same words).
     await expect(page.locator("#admin-alert").getByText("Tema site-ului a fost salvată", { exact: false })).toBeVisible();
+    // The public pages' cached copy follows the save a moment after the alert: wait for it, or the first visit meets the old theme.
+    await expect
+      .poll(async () => /<html[^>]*data-look="2026"/.test(await (await page.request.get("/ro/evenimente")).text()), { timeout: 20_000 })
+      .toBe(choice === "on");
   } finally {
     await context.close();
   }

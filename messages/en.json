@@ -99,6 +99,7 @@
       "pageTitle": "Calendar",
       "pageIntro": "The club's month: the weekly runs and the races, day by day. You can take the whole calendar into your phone or your Google Calendar.",
       "introHelp": "About the calendar and how to take it into your phone",
+      "past": "past",
       "addTitle": "Add to your calendar",
       "feedAddress": "The calendar's address, to copy",
       "subscribeGoogle": "Google Calendar",
@@ -1641,9 +1642,9 @@
       "feedbackFormsTitle": "Save the “Tell us something” forms?",
       "feedbackFormsBody": "The forms switched on appear on the contact page while the privacy notice in force describes them.",
       "siteTintTitle": "Change the site's background?",
-      "siteTintBody": "Every public page of the site opens with the chosen background from now on, for every visitor. The dark theme and the backoffice stay as they are. You can go back to “White” at any time.",
+      "siteTintBody": "Every public page of the site opens with the chosen background from now on, for every visitor. Dark mode and the backoffice stay as they are. You can go back to “White” at any time.",
       "siteFontSizeTitle": "Change the text size?",
-      "siteFontSizeBody": "Every public page of the site now opens with its text at the chosen size, for every visitor, in both themes. The backoffice stays as it is. You can go back to «Normal» at any time.",
+      "siteFontSizeBody": "Every public page of the site now opens with its text at the chosen size, for every visitor, in light and dark mode. The backoffice stays as it is. You can go back to «Normal» at any time.",
       "siteLookTitle": "Change the site's theme?",
       "siteLookBody": "Every public page now opens in the chosen theme, for every visitor. The backoffice, the emails and the PDFs stay as they are. You can go back to «Theme v1» at any time.",
       "homePageTitle": "Save the home page?",
@@ -4815,7 +4816,7 @@
     "look": {
       "title": "Theme",
       "intro": "Theme v2 of the public pages: an accent colour beside the logo blue (pink, unless you choose another), bolder headings, rounded buttons, «Follow us» with the socials in the header.",
-      "introMore": "Off until the club approves it on QA; then it is the one-press way back. The page tint and the text size stay as you chose them, under both themes.",
+      "introMore": "Off until the club approves it on QA; then it is the one-press way back. The page tint and the text size stay as you chose them, in light and dark mode.",
       "current": "Now: {look}",
       "updatedAt": "Set {when}.",
       "legend": "Choose the theme",
@@ -4860,7 +4861,7 @@
         },
         "hexLabel": "Colour",
         "pickerLabel": "Pick the accent colour",
-        "rule": "Any colour that is not a grey. The buttons, the links and the bands get darker or lighter shades of it, with a contrast of at least 4.5 : 1 (level AA), in the light theme and the dark one.",
+        "rule": "Any colour that is not a grey. The buttons, the links and the bands get darker or lighter shades of it, with a contrast of at least 4.5 : 1 (level AA), in light mode and in dark mode.",
         "shades": "The shades, by day and at night:",
         "verdict": {
           "ok": "That works. This is how it looks, by day and at night.",
@@ -4885,7 +4886,7 @@
       "saving": "Saving…",
       "saved": "The site's text size was saved.",
       "readOnly": "The Administrator chooses the size; this is the choice in force.",
-      "scope": "Applies in both themes. The backoffice always stays at its own size.",
+      "scope": "Applies in light and dark mode. The backoffice always stays at its own size.",
       "sample": "Group run in Noua forest, Saturday at 9:00",
       "sizes": {
         "small": {
@@ -4917,7 +4918,7 @@
       "saving": "Saving…",
       "saved": "The site's background was saved.",
       "readOnly": "The Administrator chooses the background; you see the choice in force here.",
-      "scope": "Light theme only: whoever presses the dark-theme switch sees the site's dark background. The backoffice always stays on the neutral background.",
+      "scope": "Light mode only: whoever presses the dark-mode switch sees the site's dark background. The backoffice always stays on the neutral background.",
       "tints": {
         "paper": {
           "name": "White",
@@ -6035,8 +6036,8 @@
         "primaryTitle": "The primary colour under Theme v2",
         "primaryNote": "MUI's primary colour variables, redefined on the public pages only while Theme v2 is on.",
         "variable": "Variable",
-        "lightScheme": "Light theme",
-        "darkScheme": "Dark theme",
+        "lightScheme": "Light mode",
+        "darkScheme": "Dark mode",
         "markTitle": "The mountains",
         "markNote": "An inline drawing under 2 KB, in the colour of the text around it: the mark at the foot of the public pages under Theme v2.",
         "accentsTitle": "The accent colours",

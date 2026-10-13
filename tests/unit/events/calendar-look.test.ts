@@ -254,10 +254,12 @@ describe("the calendar page under the look", () => {
     expect(page).toMatch(/const next = look\.on \? await readNextEvent\(/);
   });
 
-  it("keeps one h1, the wordmark before it, and today's intro hidden only under the look", () => {
+  it("keeps one h1, the wordmark before it, and today's intro drawn only off the look (§NNN)", () => {
     expect(page.match(/variant="h1"/g)).toHaveLength(1);
     expect(page.indexOf("<Wordmark />")).toBeLessThan(page.indexOf('variant="h1"'));
-    expect(page).toContain("OFF_UNDER_LOOK");
+    // Under the look the title is hidden and the sentence not drawn, by the page's own reading of the setting.
+    expect(page).toContain("sx={look.on ? VISUALLY_HIDDEN : headingRule}");
+    expect(page).toMatch(/\{!look\.on && \(\s*<Typography variant="body1"[^>]*>\s*\{t\("calendar\.pageIntro"\)\}/);
   });
 
   it("hands the panel the kind as carried ticks and moves the surface to the chips", () => {

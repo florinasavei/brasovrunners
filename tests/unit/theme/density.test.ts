@@ -58,17 +58,7 @@ const XS_DENSITY = new RegExp(`${PROP_THEN_XS}DENSITY\\.(\\w+),\\s*sm:\\s*(-?[\\
  * never excuses a literal in another.
  */
 const ALLOWED: Array<{ file: string; line: string; reason: string }> = [
-  // The facelift's phase 4: under «Tema v2» the chips row takes 44 pixels on a phone, and these three zeros give it back so the first week stays above the fold (§569).
-  {
-    file: "src/app/[locale]/calendar/page.tsx",
-    line: "mb: { xs: 0, sm: 0.5 },",
-    reason: "zero on a phone: the H1's gutter under the new look, the chips row right under it",
-  },
-  {
-    file: "src/modules/events/ui/CalendarFilterSlot.tsx",
-    line: "[UNDER_LOOK]: { mb: { xs: 0, sm: 1 }",
-    reason: "zero on a phone: the filter slot's gap under the new look, given back to the first week",
-  },
+  // The facelift's phase 4: under «Tema v2» the chips row takes 44 pixels on a phone, and this zero gives it back so the first week stays above the fold (§569).
   {
     file: "src/modules/events/ui/CalendarSection.tsx",
     line: "[UNDER_LOOK]: { mt: { xs: 0, sm: 2 } }",

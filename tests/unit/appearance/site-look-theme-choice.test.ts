@@ -57,6 +57,23 @@ describe("§708 «Tema»: Tema v1 or Tema v2", () => {
     expect(en.Admin.look.choices.on.help).toMatch(/accent/i);
   });
 
+  it("says «ambele teme» of nothing but Tema v1 and Tema v2: light and dark are «varianta deschisă» / «varianta întunecată» (EN light / dark mode)", () => {
+    // «Temă» had two meanings on the one «Aspect» page — the choice between the looks and light against dark — so the second
+    // is a «variantă» now. The public toggle (`Site.themeDark`, `Site.themeLight`) keeps «Temă întunecată» / «Temă luminoasă»:
+    // a visitor never sees «Tema v1» or «Tema v2», so for them «temă» has the one meaning.
+    const lightDark = { ro: /ambele teme|tema (deschis|întunecat)|temele (deschis|întunecat)|pe cea întunecată/i, en: /both themes|(light|dark) theme|dark-theme/i } as const;
+    for (const [name, catalogue] of [["ro", ro], ["en", en]] as const) {
+      expect(JSON.stringify(catalogue.Admin), `${name}: Admin`).not.toMatch(lightDark[name]);
+    }
+    expect(ro.Site.themeDark).toBe("Temă întunecată");
+    expect(en.Site.themeLight).toBe("Light theme");
+    expect(ro.Admin.look.introMore).toContain("în varianta deschisă și în cea întunecată");
+    expect(en.Admin.look.introMore).toContain("in light and dark mode");
+    expect(ro.Admin.fontSize.scope).toContain("varianta deschisă");
+    expect(ro.Admin.appearance.scope).toContain("varianta întunecată");
+    expect(en.Admin.appearance.scope).toContain("dark-mode switch");
+  });
+
   it("leaves no «Aspectul nou» / «the new look» in either catalogue", () => {
     for (const [name, catalogue] of [["ro", ro], ["en", en]] as const) {
       expect(JSON.stringify(catalogue), name).not.toMatch(/[Aa]spectul(ui)? nou|[Nn]oul aspect|[Tt]he new look/);

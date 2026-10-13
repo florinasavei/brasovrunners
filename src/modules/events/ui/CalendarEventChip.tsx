@@ -5,7 +5,7 @@ import Tooltip from "@mui/material/Tooltip";
 import NextLink from "next/link";
 import { UNDER_LOOK } from "@/theme/look";
 import type { CalendarTone } from "../domain/calendar-kind";
-import { toneDotSx, toneEntrySx } from "./calendar-tone-sx";
+import { PAST_ENTRY_SX, toneDotSx, toneEntrySx } from "./calendar-tone-sx";
 import EditionMark, { EditionGlyph, type EditionNote } from "./EditionMark";
 import { GLYPHS, type GlyphName } from "./glyphs";
 import PartnerMark from "./PartnerMark";
@@ -75,6 +75,7 @@ export default function CalendarEventChip({
   partner,
   dense,
   tone = "other",
+  past = null,
 }: {
   href: string;
   time: string;
@@ -97,14 +98,24 @@ export default function CalendarEventChip({
    * word. Off, nothing reads it. A string, so it crosses from the Server Component as data; the grey when unsaid.
    */
   tone?: CalendarTone;
+  /**
+   * The word for a date on a day already gone ("a trecut" / "past", §NNN), or null for today and
+   * the days ahead. Under «Tema v2» the entry is drawn faded (`PAST_ENTRY_SX`); the word is said
+   * after the name to a screen reader, in both themes, and never drawn.
+   */
+  past?: string | null;
 }) {
   const lines = calendarEntryLines({ time, title, note, night, partner });
   const name = calendarEntryName(lines);
+  // A date on a day gone says so after its sentence, for a screen reader (§NNN): one more, ended like the others.
+  const label = past ? calendarEntryName([...lines, past]) : name;
+  // A past date wears the faded look in place of its kind's colours; a date from today on, its kind's.
+  const lookSx = past ? PAST_ENTRY_SX : toneEntrySx(tone);
   const markSize = dense ? 16 : 18;
   const chip = (
     <NextLink
       href={href}
-      aria-label={name}
+      aria-label={label}
       // The link's own name, never the tooltip's (see above).
       aria-labelledby={undefined}
       style={{ textDecoration: "none", color: "inherit", display: "block" }}
@@ -127,19 +138,21 @@ export default function CalendarEventChip({
           color: filled ? "primary.contrastText" : "text.primary",
           textDecoration: cancelled ? "line-through" : "none",
           "&:hover": { filter: "brightness(0.95)" },
-          ...toneEntrySx(tone),
+          ...lookSx,
           // Under the look, a grid entry from `sm` is two parts (the mock-up's): the dot, the glyphs
           // and the time on the first line, the marks at its end, and the whole title under them on
           // up to two lines — the title used to be cut after a letter or two. A phone's 40-pixel
           // column keeps the stack of glyphs over the time.
-          ...(dense ? { [UNDER_LOOK]: { ...toneEntrySx(tone)[UNDER_LOOK], ...DENSE_UNDER_LOOK } } : {}),
+          ...(dense ? { [UNDER_LOOK]: { ...lookSx[UNDER_LOOK], ...DENSE_UNDER_LOOK } } : {}),
         }}
         data-tone={tone}
+        data-past={past ? "" : undefined}
       >
         {/* The kind's dot, under the new look only; in a phone's 40-pixel column the fill says it alone. */}
         <Box
           component="span"
           aria-hidden="true"
+          data-entry-dot
           sx={dense ? { ...toneDotSx(tone), [UNDER_LOOK]: { ...toneDotSx(tone)[UNDER_LOOK], display: { xs: "none", sm: "inline-block" } } } : toneDotSx(tone)}
         />
         <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.25, flexShrink: 0 }} aria-hidden="true">

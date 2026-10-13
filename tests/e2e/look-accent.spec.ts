@@ -48,6 +48,10 @@ async function setLook(browser: Browser, look: "on" | "off", accent: "pink" | "b
     await panel.getByTestId(`site-look-accent-option-${accent}`).click();
     await save(page, panel);
     await expect(page.locator("#admin-alert").getByText("Tema site-ului a fost salvată", { exact: false })).toBeVisible();
+    // The public pages' cached copy follows the save a moment after the alert: wait for it, or the first visit meets the old theme.
+    await expect
+      .poll(async () => /<html[^>]*data-look="2026"/.test(await (await page.request.get("/ro/evenimente")).text()), { timeout: 20_000 })
+      .toBe(look === "on");
   } finally {
     await context.close();
   }

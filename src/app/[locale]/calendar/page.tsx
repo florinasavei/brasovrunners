@@ -37,7 +37,7 @@ import NextEventPanel from "@/modules/events/ui/NextEventPanel";
 import SubscribeBox from "@/modules/events/ui/SubscribeBox";
 import { forecastForEvent } from "@/modules/weather/source";
 import { COLOR, COLOR_DARK, FONT } from "@/theme/brand";
-import { OFF_UNDER_LOOK, UNDER_LOOK, UNDER_LOOK_DARK } from "@/theme/look";
+import { UNDER_LOOK, UNDER_LOOK_DARK } from "@/theme/look";
 import { holdPageUntil } from "@/modules/public-cache/page-lifetime";
 import { nextWallMidnight } from "@/modules/events/domain/page-clock";
 import CalendarIntroFold from "@/modules/events/ui/CalendarIntroFold";
@@ -225,17 +225,25 @@ export default async function CalendarPage({ params, query: asked, period: segme
           The fold's panel is anchored to this row (`position: relative`). From `sm` the sentence
           stands under the heading as before and the «?» is not drawn — never both. Half the room
           above it on a phone (§569), where the wordmark is not drawn. */}
-      <Box sx={{ position: "relative", display: "flex", alignItems: "flex-start", gap: 0.5, mt: { xs: DENSITY.headGap, sm: 1 } }}>
-        <Typography variant="h1" gutterBottom sx={{ ...headingRule, ...TITLE_UNDER_LOOK }}>
+      {/* «Tema v2» (§NNN, amending §292, §487): «Calendar» is redundant beside the wordmark and the month's name, so no
+          title is drawn — the page keeps its one `h1`, visually hidden as the home page's is without its hero, and the
+          «?» stands under the calendar's controls (`CalendarSection`), not here; the intro sentence is not drawn either,
+          as before. Tema v1: the title, with the «?» beside it on a phone, as ever. */}
+      <Box sx={look.on ? undefined : { position: "relative", display: "flex", alignItems: "flex-start", gap: 0.5, mt: { xs: DENSITY.headGap, sm: 1 } }}>
+        <Typography variant="h1" gutterBottom={!look.on} sx={look.on ? VISUALLY_HIDDEN : headingRule}>
           {t("calendar.pageTitle")}
         </Typography>
-        <Box sx={{ display: { xs: "block", sm: "none" } }}>
-          <CalendarIntroFold locale={locale} baseUrl={env.APP_BASE_URL} />
-        </Box>
+        {!look.on && (
+          <Box sx={{ display: { xs: "block", sm: "none" } }}>
+            <CalendarIntroFold locale={locale} baseUrl={env.APP_BASE_URL} />
+          </Box>
+        )}
       </Box>
-      <Typography variant="body1" color="text.secondary" sx={{ display: { xs: "none", sm: "block" }, mb: { xs: DENSITY.gapSm, sm: 2 }, ...OFF_UNDER_LOOK }}>
-        {t("calendar.pageIntro")}
-      </Typography>
+      {!look.on && (
+        <Typography variant="body1" color="text.secondary" sx={{ display: { xs: "none", sm: "block" }, mb: { xs: DENSITY.gapSm, sm: 2 } }}>
+          {t("calendar.pageIntro")}
+        </Typography>
+      )}
       {/* The title block under «Aspectul nou» (phase 4): the H1 above becomes the eyebrow, and the
           line the mock-up leads with, its last word in the accent, stands under it with the subline —
           from `sm` only, so a phone's first week stays above the fold (§569). Off, not drawn. */}
@@ -275,26 +283,33 @@ export default async function CalendarPage({ params, query: asked, period: segme
           (§575): the arrows under it must not move when the next month has something to offer.
           The period is the path's (§574), so the panel posts to it and keeps nothing else. */}
       {/* The always-visible chips under «Aspectul nou» (phase 4): the kind and the surface, GET links. */}
-      <KindChips path={periodPath} kind={kind} filter={filter} surfaces={offeredSurfaces} />
-
-      <CalendarFilterSlot shown={offersAnything(offer) || activeFilterCount(filter) > 0} shownUnderLook={panelUnderLook}>
-        <ListingFilterPanel
-          locale={locale}
-          pathname="/calendar"
-          path={periodPath}
-          filter={filter}
-          offer={offer}
-          carry={kindQuery(kind)}
-          lookChips={["surface"]}
-          lookChipValues={LOOK_HIDDEN_VALUES}
-          lookChipTicks={specialOnChip(kind, filter)}
-        />
-      </CalendarFilterSlot>
+      {/* Under «Tema v2» (§NNN, amending §413) the chips and «Filtre» are one line: «Filtre» at its end, outside the
+          sideways scroller so it stays in sight while the chips scroll, its panel opening under the whole line, full
+          width. The slot and the panel's own box step aside (`display: contents`) so the fold is the line's item, and
+          the panel is positioned from the line. Off, two blocks one under the other, as before. */}
+      <Box data-testid="calendar-chips-line" sx={CHIPS_LINE_SX}>
+        <Box sx={{ [UNDER_LOOK]: { flex: "1 1 0", minWidth: 0 } }}>
+          <KindChips path={periodPath} kind={kind} filter={filter} surfaces={offeredSurfaces} />
+        </Box>
+        <CalendarFilterSlot shown={offersAnything(offer) || activeFilterCount(filter) > 0} shownUnderLook={panelUnderLook}>
+          <ListingFilterPanel
+            locale={locale}
+            pathname="/calendar"
+            path={periodPath}
+            filter={filter}
+            offer={offer}
+            carry={kindQuery(kind)}
+            lookChips={["surface"]}
+            lookChipValues={LOOK_HIDDEN_VALUES}
+            lookChipTicks={specialOnChip(kind, filter)}
+          />
+        </CalendarFilterSlot>
+      </Box>
 
       {/* Two columns from `md` under the look: the month, then the next event and the subscribe box. Off, one block as before. */}
       <Box sx={{ [UNDER_LOOK]: { display: { md: "grid" }, gridTemplateColumns: { md: "minmax(0, 1fr) 340px" }, columnGap: 3, alignItems: "start" } }}>
         <Box sx={{ minWidth: 0 }}>
-          <CalendarSection locale={locale} view={view} layout={layout} query={query} now={now} events={events} />
+          <CalendarSection locale={locale} view={view} layout={layout} query={query} now={now} events={events} lookOn={look.on} />
         </Box>
         <Box component="aside" aria-label={t("calendar.look.nextEvent.title")} sx={{ display: "none", [UNDER_LOOK]: { display: "grid", gap: 2, mt: { md: 2 }, mb: 4 } }} data-testid="calendar-aside">
           {next && <NextEventPanel event={next.event} locale={locale} weather={next.weather} />}
@@ -323,23 +338,26 @@ async function readNextEvent(locale: Locale, now: Date, filter: ListingFilter, k
   }
 }
 
+/** The `h1` kept for the page's name and assistive technology, not drawn (the house's visually-hidden style, as the home page's). */
+const VISUALLY_HIDDEN = { position: "absolute", width: "1px", height: "1px", p: 0, m: "-1px", overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 } as const;
+
 /**
- * Under the look: from `sm` the H1 drawn as the eyebrow over the title block's line (the mock-up's
- * «CALENDAR»); at every width without today's gradient rule under it and its gutter, the room the
- * always-visible chips take back on a phone, so the first week stays above the fold (§569).
- *
- * The club's accent («Culoarea de accent») reaches the title block through the layout's variables,
- * which follow the scheme: the eyebrow in `primary.main` (the words' shade), the wordmark and the
- * tagline's last word in `primary.light` (the hot one) — pink by default, exactly as before.
+ * The chips' line under «Tema v2» (§NNN): the chips take what is left, «Filtre» sits at the end. The slot
+ * and the panel's box are `display: contents` there (`CalendarFilterSlot`, `ListingFilterPanel`), so the fold
+ * and the ticked-filters row are the line's own items: the fold never shrinks, the ticked row wraps to a line of
+ * its own, and the open panel hangs from the line's bottom edge, over the month, as the «?»'s does.
  */
-const TITLE_UNDER_LOOK = {
+const CHIPS_LINE_SX = {
   [UNDER_LOOK]: {
-    fontSize: { sm: "0.875rem" },
-    letterSpacing: { sm: "0.2em" },
-    textTransform: { sm: "uppercase" },
-    color: { sm: "primary.main" },
-    mb: { xs: 0, sm: 0.5 },
-    "&::after": { display: "none" },
+    position: "relative",
+    display: "flex",
+    flexWrap: "wrap",
+    alignItems: "flex-start",
+    columnGap: 0.5,
+    mb: { sm: 1 },
+    "& [data-testid='listing-filters']": { flexShrink: 0 },
+    "& [data-testid='listing-filters'] > form": { position: "absolute", left: 0, right: 0, top: "100%", zIndex: 3, mt: 0.5, boxShadow: 2 },
+    "& [data-active-filters]": { flex: "1 1 100%" },
   },
 } as const;
 
