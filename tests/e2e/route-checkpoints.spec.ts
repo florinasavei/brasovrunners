@@ -89,7 +89,7 @@ test.describe("§NNN the route's checkpoints and the race's time limit", () => {
 
     // «Timp limită» — the duration box's words on a race, with its glyph, and 2 h 30 min typed and saved.
     const when = await openEditorBox(page, "Când și unde");
-    const legend = when.getByTestId("duration-fieldset").locator("legend");
+    const legend = when.getByTestId("duration-fieldset").locator(":scope > legend");
     await expect(legend).toContainText("Timp limită");
     await expect(legend.locator("svg")).toHaveCount(1);
     await expect(when.getByTestId("duration-fieldset")).toContainText("Cât au alergătorii de la start până se închide sosirea");
