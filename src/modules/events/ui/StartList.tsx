@@ -17,7 +17,7 @@ import {
   cachedStartListOthersPage,
   cachedStartListPage,
 } from "@/modules/public-cache/reads";
-import { hiddenListCounting } from "@/modules/registrations/domain/hidden-list";
+import { hiddenListCounting, hiddenListShownPublicly } from "@/modules/registrations/domain/hidden-list";
 import { LIST_STATE_KEYS, type PublicListGroup } from "@/modules/registrations/domain/public-list-states";
 import { START_LIST_PAGE_SIZE, startListPage } from "@/modules/registrations/domain/start-list-page";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
@@ -187,7 +187,9 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   // leaving the list expires them, so a name is never shown after its owner withdrew it. The
   // hidden rows (§346) are drawn from the anonymous count alone — the cache holds a number for
   // them, never a row, a position or an initial.
-  const { named, anonymous, outsideNamed, hidden } = await cachedStartListCounts(event.id);
+  // «Arată invitații speciali pe lista publică» (§743): off, no row on the hidden list is on any list below.
+  const hiddenShown = hiddenListShownPublicly(event);
+  const { named, anonymous, outsideNamed, hidden } = await cachedStartListCounts(event.id, hiddenShown);
   /*
     «Lista ascunsă» (§647): whether the list says its numbers at all («Arată public numărătoarea»), and
     whether they count the hidden list («Numără și lista ascunsă») — the first on every event, the second
@@ -215,7 +217,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   */
   const waitlistOn = event.waitlistPublic === true;
   const others =
-    firstStatesNotice !== null ? await cachedStartListOthersCounts(event.id, firstStatesNotice, waitlistOn) : { pending: 0, waitlisted: 0, outsidePending: 0 };
+    firstStatesNotice !== null ? await cachedStartListOthersCounts(event.id, firstStatesNotice, waitlistOn, hiddenShown) : { pending: 0, waitlisted: 0, outsidePending: 0 };
   const view = startListPage(named, anonymous, requestedPage, START_LIST_PAGE_SIZE, others.pending + others.waitlisted);
   /*
     The title's number and the line under it (§632): the confirmed, plus — on a capped event — those the
@@ -257,9 +259,9 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   const hiddenHeldCounted = door.kind === "KNOWN" && door.fill?.confirmed !== undefined ? hidden.held : 0;
   const countedNotListed = countPublic && countHidden && hidden.confirmed + hiddenHeldCounted > 0;
   const [participants, otherRows] = await Promise.all([
-    view.namedLimit > 0 ? cachedStartListPage(event.id, view.namedOffset, view.namedLimit, socialsOn, numbersOn) : [],
+    view.namedLimit > 0 ? cachedStartListPage(event.id, view.namedOffset, view.namedLimit, socialsOn, numbersOn, hiddenShown) : [],
     firstStatesNotice !== null && view.othersLimit > 0
-      ? cachedStartListOthersPage(event.id, firstStatesNotice, waitlistOn, view.othersOffset, view.othersLimit, socialsOn)
+      ? cachedStartListOthersPage(event.id, firstStatesNotice, waitlistOn, view.othersOffset, view.othersLimit, socialsOn, hiddenShown)
       : [],
   ]);
   /** The marks beside a name — only behind the gate, and only what the row carries. */
@@ -550,7 +552,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
             {/* Only while the table holds somebody seated outside the places (§643): one sentence, no row marked. */}
             {outsideShown ? ` ${t("startList.outsideNote")}` : null}
             {/* Counted, and not every one of them listed (§647): one sentence, no row marked. */}
-            {countedNotListed ? ` ${t("startList.outsideCountedNote")}` : null}
+            {countedNotListed ? ` ${t(hiddenShown ? "startList.outsideCountedNote" : "startList.outsideCountedNoteNoRows")}` : null}
           </Typography>
         </>
       )}

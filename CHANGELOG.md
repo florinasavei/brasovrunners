@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.07-2026-10-13
+
+- **Special guests stay off the public list** — the event's new «Arată invitații speciali pe lista publică» is off by default, so «Cine vine» no longer names a special guest; tick it to show them as before. Counts follow «Numără și invitații speciali», as before. §743.
 ## BR-V3.06-2026-10-12
 
 - **The privacy notice's template says the route maps open with the page** — the map loads with the page, and when an event has both a Strava and a Garmin Connect map only the chosen tab's loads (Strava first), the other when its tab is chosen, each provider seeing the visitor's IP address; `AGENTS.md` §18.3 says the same. Approve the notice from the new template. §741.

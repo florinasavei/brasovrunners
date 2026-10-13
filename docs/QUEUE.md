@@ -14,15 +14,13 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.05`** (2026-10-12: `BR-V2.99`–`BR-V3.04` from the phone session — the calendar's chips §734, race
-  numbers 001 §735, «Invită pe email» §736, invitations as rows and a table §737, route maps Strava first §738 and open
-  with the page §739 — and `BR-V3.05` §740 from the laptop: «Invită pe email» answers every press and leads to the event
-  from «toate evenimentele», every invited person seen with the invitation's state). No migration. Waiting for «prod»:
-  `BR-V3.06` (§741–§742, below) — no migration.
-- **QA: `BR-V3.06`** — the privacy notice's template says an event's route map loads with the page (Strava's, and
-  Garmin's when it is the only one or its tab is chosen), each provider seeing the visitor's IP address, and `AGENTS.md`
-  §18.3 says the same; the Strava frame takes its height from the message Strava's card posts (our own listener, never
-  its script), with a fallback that follows the width, so no gap under the map on a phone; Garmin keeps §738's frame.
+- **Production: `BR-V3.06`** (2026-10-13 just after midnight: §741 the privacy template and `AGENTS.md` §18.3 say the
+  route maps open with the page, §742 the Strava frame fits its card). Waiting for «prod»: `BR-V3.07` (§743, below),
+  migration `0143` (expand only).
+- **QA: `BR-V3.07`** — special guests stay off every public list unless the event ticks «Arată invitații speciali pe
+  lista publică» (off by default); the counts still follow «Numără și invitații speciali». Next on the laptop: «Tema v1»
+  / «Tema v2» instead of «Aspectul nou» with the calendar's head (selectors, the title, «?», faded past events, «Filtre»
+  inline, the wordmark's band), the tick that stops suspected spam (off), and the feedback form first on the contact page.
 - **Nothing is building.** Releases by the label `ship` reach production by themselves again: `SHIP_TOKEN` was given
   «Pull requests: Read and write» on 2026-10-12, and `BR-V3.05`'s run opened its `qa → main` pull request itself.
 - **Lanes:** the phone session took the calendar on 2026-10-12; one release at a time between
@@ -142,6 +140,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.07` | special guests off the public list, a tick to show them (§743) |
 | `BR-V3.06` | the privacy template and AGENTS say the maps open with the page (§741) · the Strava map's frame fits its card (§742) |
 | `BR-V3.05` | the invite button works; invited people seen with their state (§740) |
 | `BR-V3.04` | route maps open from the start (§739) |

@@ -7,6 +7,7 @@ import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { findPublishedEventBySlug, type PublicEvent } from "@/modules/events/repository";
+import { listPublicStartList, listPublicStartListOthers, countPublicStartList, countPublicStartListOthers } from "@/modules/registrations/repository";
 import { resolveDisplayName } from "@/modules/registrations/names";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
@@ -47,7 +48,7 @@ const StartList = (props: Parameters<typeof StartListNow>[0]) => atTheClock(NOW,
 
 const NOW = new Date("2026-09-24T10:00:00.000Z");
 
-type Ticks = { hiddenListEnabled: boolean; participantCountPublic: boolean; hiddenListCounted: boolean };
+type Ticks = { hiddenListEnabled: boolean; participantCountPublic: boolean; hiddenListCounted: boolean; hiddenListPublic?: boolean };
 
 async function createEvent(): Promise<string> {
   const [event] = await db
@@ -70,7 +71,7 @@ async function createEvent(): Promise<string> {
 
 /** The fields `StartList` reads, the ticks as given: a cast stands in for the full public query. */
 const asPublic = (id: string, ticks: Ticks) =>
-  ({ id, participantListVisibility: "NAMES", startsAt: new Date("2026-11-21T07:00:00.000Z"), endsAt: null, ...ticks }) as unknown as PublicEvent;
+  ({ id, participantListVisibility: "NAMES", startsAt: new Date("2026-11-21T07:00:00.000Z"), endsAt: null, hiddenListPublic: true, ...ticks }) as unknown as PublicEvent;
 
 let counter = 0;
 async function register(eventId: string, name: string, input: { listOptOut?: boolean; hidden?: boolean; status?: "CONFIRMED" | "PENDING_DECLARATION" } = {}) {
@@ -202,8 +203,8 @@ describe("§647 «Cine vine» and the hidden list's two ticks", () => {
     // Ana, and Elena's hold among «în curs de confirmare», which only a capped event's known counts add.
     expect(html).toContain("Cine vine (2)");
     expect(summary(html)).toMatch(/^2 înscriși — 1 confirma\S* \(1 cu numele afișat\), 1 în curs de confirmare$/);
-    // The title counts somebody the table does not show, so the note says so.
-    expect(html).toContain(ro.Event.startList.outsideCountedNote);
+    // The title counts somebody the table does not show (the event's guests tick is off: none of them), so the note says so.
+    expect(html).toContain(ro.Event.startList.outsideCountedNoteNoRows);
     expect(html).not.toContain(ro.Event.startList.outsideNote);
     expect(html).not.toContain("Elena Organizator");
     expect(rows(html)).toBe(1);
@@ -233,7 +234,8 @@ describe("§647 «Cine vine» and the hidden list's two ticks", () => {
     expect(html).toContain("Cine vine (2)");
     expect(html).toContain("2 participanți confirmați");
     expect(html).toContain(`>${ro.Event.startList.columnPosition}<`);
-    expect(rows(html)).toBe(3);
+    // With the switch off no row of the hidden list is on the public list (§743), whatever it is still holding.
+    expect(rows(html)).toBe(2);
   });
 
   it("«Arată public numărătoarea» acts on every event: the hidden list off and the tick off leave only the names", async () => {
@@ -245,8 +247,9 @@ describe("§647 «Cine vine» and the hidden list's two ticks", () => {
     expect(html).not.toContain("participanți confirmați");
     expect(html).not.toContain(`>${ro.Event.startList.columnPosition}<`);
     expect(html).toContain("Ana Popescu");
-    expect(html).toContain("Ioana Pacemaker");
-    expect(rows(html)).toBe(3);
+    // …and the switch being off, the guest is on no public list either (§743).
+    expect(html).not.toContain("Ioana Pacemaker");
+    expect(rows(html)).toBe(2);
   });
 
   it("names the hidden list in no public string: only the backoffice's namespaces say it", () => {
@@ -269,6 +272,68 @@ describe("§647 «Cine vine» and the hidden list's two ticks", () => {
 
   it("the cached counts are keyed for the hidden list's shape", () => {
     const reads = readFileSync(path.resolve(__dirname, "../../../src/modules/public-cache/reads.ts"), "utf8");
-    expect(reads).toContain('["places.start-list-counts", eventId, "outside", "hidden-list"]');
+    expect(reads).toContain('["places.start-list-counts", eventId, "outside", "hidden-list", hiddenShown ? "guests-shown" : "guests-off"]');
+  });
+});
+
+describe("§743 «Arată invitații speciali pe lista publică»: off by default, no row of the hidden list is on any public list", () => {
+  it("tick off (the switch on): the ticked guest, the unticked one and the hold are on no list; the counts follow «Numără…» alone", async () => {
+    const id = await seeded();
+    const html = await render(asPublic(id, { hiddenListEnabled: true, participantCountPublic: true, hiddenListCounted: false, hiddenListPublic: false }));
+    expect(html).not.toContain("Ioana Pacemaker");
+    expect(html).not.toContain("Dan Invitat");
+    expect(html).not.toContain("Elena Organizator");
+    expect(html).toContain("Ana Popescu");
+    // The named row and the one who opted out: the guests are not among them, and the counts say the places only.
+    expect(rows(html)).toBe(2);
+    expect(html).toContain("Cine vine (2)");
+    expect(html).toContain("2 participanți confirmați");
+    expect(html).toContain("1 cu numele afișat");
+  });
+
+  it("tick off, «Numără și invitații speciali» on: the numbers still count them, no row names them", async () => {
+    const id = await seeded();
+    const html = await render(asPublic(id, { hiddenListEnabled: true, participantCountPublic: true, hiddenListCounted: true, hiddenListPublic: false }));
+    expect(html).not.toContain("Ioana Pacemaker");
+    expect(rows(html)).toBe(2);
+    expect(html).toContain("Cine vine (4)");
+    // Counted and none in the table: the note says so, not «only those who chose to appear».
+    expect(html).toContain(ro.Event.startList.outsideCountedNoteNoRows);
+    expect(html).not.toContain(ro.Event.startList.outsideCountedNote);
+  });
+
+  it("tick on: today's list — the ticked guest is a row, the unticked one is not", async () => {
+    const id = await seeded();
+    const html = await render(asPublic(id, { hiddenListEnabled: true, participantCountPublic: true, hiddenListCounted: false, hiddenListPublic: true }));
+    expect(html).toContain("Ioana Pacemaker");
+    expect(html).not.toContain("Dan Invitat");
+    expect(rows(html)).toBe(3);
+    expect(html).not.toContain(ro.Event.startList.outsideCountedNoteNoRows);
+  });
+
+  it("tick on and counted: the old note, «only those who chose to appear»", async () => {
+    const id = await seeded();
+    const html = await render(asPublic(id, { hiddenListEnabled: true, participantCountPublic: true, hiddenListCounted: true, hiddenListPublic: true }));
+    expect(html).toContain(ro.Event.startList.outsideCountedNote);
+    expect(html).not.toContain(ro.Event.startList.outsideCountedNoteNoRows);
+  });
+
+  it("the switch off: the tick does nothing, and a guest still on the list stays off the public list (the safe side of a disclosure)", async () => {
+    const id = await seeded();
+    const html = await render(asPublic(id, { hiddenListEnabled: false, participantCountPublic: true, hiddenListCounted: false, hiddenListPublic: true }));
+    expect(html).not.toContain("Ioana Pacemaker");
+    expect(rows(html)).toBe(2);
+  });
+
+  it("the queries: absent by default, present only when the event shows its guests; the pending likewise", async () => {
+    const id = await seeded();
+    expect((await listPublicStartList(db, id)).map((row) => row.displayName)).toEqual(["Ana Popescu"]);
+    expect((await listPublicStartList(db, id, undefined, { hiddenShown: true })).map((row) => row.displayName)).toEqual(["Ana Popescu", "Ioana Pacemaker"]);
+    expect(await countPublicStartList(db, id)).toBe(1);
+    expect(await countPublicStartList(db, id, true)).toBe(2);
+    expect(await listPublicStartListOthers(db, id, 1, true)).toEqual([]);
+    expect((await listPublicStartListOthers(db, id, 1, true, undefined, { hiddenShown: true })).map((row) => row.displayName)).toEqual(["Elena Organizator"]);
+    expect(await countPublicStartListOthers(db, id, 1, true)).toEqual({ pending: 0, waitlisted: 0, outsidePending: 0 });
+    expect(await countPublicStartListOthers(db, id, 1, true, true)).toEqual({ pending: 1, waitlisted: 0, outsidePending: 1 });
   });
 });

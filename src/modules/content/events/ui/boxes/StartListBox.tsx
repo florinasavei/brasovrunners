@@ -137,6 +137,10 @@ export default async function StartListBox({ event, mayEditSettings }: Pick<BoxP
                       {t("editor.hiddenListCounted")}
                     </CheckboxField>
                     <BoxNote>{t("editor.hiddenListCountedHelp")}</BoxNote>
+                    <CheckboxField name="event.hiddenListPublic" defaultChecked={event?.hiddenListPublic ?? false}>
+                      {t("editor.hiddenListPublic")}
+                    </CheckboxField>
+                    <BoxNote testId="hidden-list-public-help">{t("editor.hiddenListPublicHelp")}</BoxNote>
                   </Box>
                 </OnlyWhenTicked>
               </Box>

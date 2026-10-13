@@ -758,6 +758,14 @@ export const events = pgTable(
     hiddenListBibStart: integer("hidden_list_bib_start"),
     participantCountPublic: boolean("participant_count_public").notNull().default(true),
     hiddenListCounted: boolean("hidden_list_counted").notNull().default(false),
+    /**
+     * `hidden_list_public` — «Arată invitații speciali pe lista publică» (§743, amending §648 and §643): off
+     * by default, the special guests are on no public list — not «Cine vine», not the pending or waiting
+     * rows, not the race-number column — whether or not they ticked «Vreau să apar»; on, today's rule (the
+     * tick alone decides). Acts only while `hidden_list_enabled` is on. Display only: the capacity formula,
+     * the allocator and the numbers never read it.
+     */
+    hiddenListPublic: boolean("hidden_list_public").notNull().default(false),
 
     // AGENTS.md §12.3. Nullable because every row that exists today was written by a seed
     // rather than by a person, and inventing an author for it would be a lie in the trail.
