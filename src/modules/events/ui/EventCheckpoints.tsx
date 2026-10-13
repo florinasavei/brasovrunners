@@ -52,7 +52,8 @@ export default async function EventCheckpoints({
     if (row.kind === "finish") {
       return {
         key: "finish",
-        km: row.km === null ? "—" : km(row.km),
+        // No typed distance: the cell says so to a screen reader instead of a bare dash (below).
+        km: row.km === null ? null : km(row.km),
         name: t("checkpoints.finish"),
         note: null,
         kinds: [] as const,
@@ -137,7 +138,16 @@ export default async function EventCheckpoints({
             return (
               <tr key={view.key} data-testid={view.finish ? "checkpoint-finish" : "checkpoint-row"}>
                 <Box component="td" data-label={t("checkpoints.columns.km")} sx={{ whiteSpace: "nowrap", fontWeight: 600 }}>
-                  <span>{view.km}</span>
+                  {view.km !== null ? (
+                    <span>{view.km}</span>
+                  ) : (
+                    <>
+                      <span aria-hidden="true">—</span>
+                      <Box component="span" sx={SR_ONLY}>
+                        {t("checkpoints.kmUnknown")}
+                      </Box>
+                    </>
+                  )}
                 </Box>
                 <td data-label={t("checkpoints.columns.name")}>
                   <Box component="span" sx={{ display: "flex", flexDirection: "column" }}>
@@ -159,7 +169,12 @@ export default async function EventCheckpoints({
                       ))}
                     </Box>
                   ) : (
-                    <span>—</span>
+                    <>
+                      <span aria-hidden="true">—</span>
+                      <Box component="span" sx={SR_ONLY}>
+                        {t("checkpoints.noKinds")}
+                      </Box>
+                    </>
                   )}
                 </td>
                 <td data-label={t("checkpoints.columns.cutoff")}>

@@ -352,7 +352,7 @@ export function prepareCheckpoints(posted: readonly PostedCheckpoint[], context:
       throw new CheckpointRefusal("CHECKPOINT_CUTOFF_BEFORE_START", { name, cutoff, start: clockTimeOf(context.startMinutes) }, [checkpointBox(row.index, "cutoff")]);
     }
     if (context.startMinutes !== null && context.limitMinutes !== null && offset > context.limitMinutes) {
-      throw new CheckpointRefusal("CHECKPOINT_CUTOFF_AFTER_END", { name, cutoff, end: clockTimeOf(context.startMinutes + context.limitMinutes) }, [checkpointBox(row.index, "cutoff")]);
+      throw new CheckpointRefusal("CHECKPOINT_CUTOFF_AFTER_END", { name, cutoff, finishTime: clockTimeOf(context.startMinutes + context.limitMinutes) }, [checkpointBox(row.index, "cutoff")]);
     }
     if (previous && offset < previous.offset) {
       // The earlier point's limit is later than this one's: the earlier point's box is the one linked.

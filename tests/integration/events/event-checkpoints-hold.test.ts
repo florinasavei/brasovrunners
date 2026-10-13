@@ -168,7 +168,7 @@ describe("§NNN an event save holds the saved checkpoints to their rules", () =>
     // Two hours from the 09:30 gun: the finish would close at 11:30, before the 12:00 timing cut-off.
     const refused = await refusalOf(save(event.id, { durationMinutes: "120" }));
     expect(refused.refusal.reason).toBe("CHECKPOINT_CUTOFF_AFTER_END");
-    expect(refused.refusal.values).toMatchObject({ cutoff: "12:00", end: "11:30" });
+    expect(refused.refusal.values).toMatchObject({ cutoff: "12:00", finishTime: "11:30" });
   });
 
   it("lets every save through that keeps the points true, and never touches them", async () => {

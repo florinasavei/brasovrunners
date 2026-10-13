@@ -448,7 +448,14 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   // The page this event makes, section by section (§406): the cards' numbers and states, the map.
   // Night (§394) is the occurrence's own start against the sun, the same answer the headlamp pill
   // and the card's closed line draw — not a stored column, so it is read here, not in the data.
-  const flow = await pageFlow({ event, texts: orderedTranslations, night: clubNightEvent(event).night, storageConfigured: isStorageConfigured() });
+  const flow = await pageFlow({
+    event,
+    texts: orderedTranslations,
+    night: clubNightEvent(event).night,
+    storageConfigured: isStorageConfigured(),
+    // «Puncte de control» (§NNN): «Traseul»'s card reads as drawn while the table is.
+    checkpointCount: checkpoints.length,
+  });
   /*
     And what publication does not refuse but a reader would notice (§354, bilingual everywhere):
     a long text whose English says the Romanian word for word — the English "Happy Monday" date

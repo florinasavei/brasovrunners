@@ -85,9 +85,12 @@ describe("§NNN the checkpoints' table on the event page", () => {
     expect(rowsOf(await render([point("a", 5)], { km: 21.1, limit: null }))).toHaveLength(1);
   });
 
-  it("shows the finish without a distance as a dash", async () => {
+  it("shows the finish without a distance as a dash the eye sees and words a screen reader reads", async () => {
     const rows = rowsOf(await render([point("a", 5)], { km: null, limit: "12:00" }));
-    expect(rows[1]).toContain("—");
+    expect(rows[1]).toContain('<span aria-hidden="true">—</span>');
+    expect(rows[1]).toContain(ro.Event.checkpoints.kmUnknown);
+    // The finish has no kinds: no bare dash there either.
+    expect(rows[1]).toContain(ro.Event.checkpoints.noKinds);
     expect(rows[1]).toContain("se închide la 12:00");
   });
 
@@ -125,7 +128,7 @@ describe("§NNN the checkpoints' table on the event page", () => {
     expect(Object.keys(en.Event.checkpoints).sort()).toEqual(Object.keys(ro.Event.checkpoints).sort());
     expect(Object.keys(en.Event.checkpoints.kinds).sort()).toEqual(["FIRST_AID", "FOOD", "TIMING", "WATER"]);
     expect(Object.keys(en.Admin.checkpoints).sort()).toEqual(Object.keys(ro.Admin.checkpoints).sort());
-    for (const key of Object.keys(ro.Admin.errors).filter((name) => name.startsWith("CHECKPOINT_"))) {
+    for (const key of Object.keys(ro.Admin.errors).filter((name) => name.startsWith("CHECKPOINT"))) {
       expect(en.Admin.errors).toHaveProperty(key);
     }
   });

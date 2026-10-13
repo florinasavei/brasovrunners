@@ -169,7 +169,7 @@ describe("§NNN the rules a checkpoint is held to", () => {
     const late = refusal([row(0, { cutoff: "12:30" })]);
     expect(late.reason).toBe("CHECKPOINT_CUTOFF_AFTER_END");
     // The sentence says the time the finish closes, to choose up to.
-    expect(late.values).toMatchObject({ cutoff: "12:30", end: "12:00" });
+    expect(late.values).toMatchObject({ cutoff: "12:30", finishTime: "12:00" });
     expect(prepareCheckpoints([row(0, { cutoff: "12:00" })], CONTEXT)).toHaveLength(1);
   });
 
@@ -248,7 +248,7 @@ describe("§NNN what the event says the points are measured against", () => {
     // A 03:30 cut-off is after the 03:00 finish on the clock: refused, though under six elapsed hours.
     const late = refusal([row(0, { km: "40", cutoff: "03:30" })], context);
     expect(late.reason).toBe("CHECKPOINT_CUTOFF_AFTER_END");
-    expect(late.values.end).toBe("03:00");
+    expect(late.values.finishTime).toBe("03:00");
     expect(prepareCheckpoints([row(0, { km: "40", cutoff: "02:45" })], context)).toHaveLength(1);
   });
 

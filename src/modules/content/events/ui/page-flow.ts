@@ -23,7 +23,7 @@ import type { SectionMapEntry, SectionMapWords } from "./SectionMap";
  */
 
 /** The sections with a numbered card of their own: not the automatic share links, not a section asked inside another card. */
-type HeadedSectionId = Exclude<PageSectionId, "share" | "cost" | "place" | "rules" | "startList">;
+type HeadedSectionId = Exclude<PageSectionId, "share" | "cost" | "place" | "checkpoints" | "rules" | "startList">;
 
 /** The box title each section's card wears (`Admin.editor.boxes.<key>.title`). */
 const CARD_TITLE_KEY: Record<HeadedSectionId, string> = {
