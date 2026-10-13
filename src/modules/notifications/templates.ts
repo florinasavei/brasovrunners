@@ -1769,9 +1769,9 @@ const T = {
       subject: (d: TemplateData) => `Ți-am primit oferta de voluntar pentru ${d.eventTitle ?? "eveniment"}`,
       facts: (d: TemplateData) => volunteerFacts("ro", d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
       body: (d: TemplateData) => [
-        `Mulțumim! Am primit oferta ta de a ajuta ca voluntar la ${d.eventTitle ?? "eveniment"}; rolul ales e pe linia îngroșată de mai sus.`,
+        `Mulțumim! Am primit oferta ta de a ajuta ca voluntar la ${d.eventTitle ?? "eveniment"}; rolul ales e scris mai sus, lângă data și locul.`,
         "Un organizator o confirmă și te caută pe email sau la telefon dacă mai trebuie ceva. Până atunci nu ai nimic de făcut: oferta nu e o înscriere la cursă și nu ține loc.",
-        "Dacă nu tu ai trimis oferta, ignoră mesajul: fără confirmarea unui organizator nu se întâmplă nimic. Ne poți scrie și din pagina de contact, iar noi ștergem oferta.",
+        `Dacă nu tu ai trimis oferta, scrie-ne din pagina de contact și o ștergem; altfel rămâne la organizatori cel mult ${volunteerDays("ro")} de la începutul evenimentului.`,
       ],
     },
     // To each Organizer and Administrator (§NNN): who offered for which role; the card «Voluntari» has the rest.
@@ -1780,8 +1780,8 @@ const T = {
       greeting: () => "Salut,",
       facts: (d: TemplateData) => (d.volunteer ? { line: `${d.volunteer.name} — ${d.volunteer.roleRo}`, links: [] } : undefined),
       body: (d: TemplateData) => [
-        `O persoană s-a oferit voluntar la ${d.eventTitle ?? "eveniment"}; numele ei și rolul ales sunt pe linia îngroșată de mai sus.`,
-        "Oferta e «Înscris»: o confirmi sau o anulezi din cardul «Voluntari» al evenimentului (butonul de mai jos). Adresa și telefonul sunt acolo, nu aici.",
+        `O persoană s-a oferit voluntar la ${d.eventTitle ?? "eveniment"}; numele ei și rolul ales sunt scrise mai sus.`,
+        "Oferta are starea «Înscris»: o confirmi sau o anulezi din cardul «Voluntari» al evenimentului (butonul de mai jos). Adresa și telefonul sunt acolo, nu aici.",
       ],
       action: "Deschide «Voluntari»",
     },
@@ -2496,9 +2496,9 @@ const T = {
       subject: (d: TemplateData) => `We received your offer to volunteer for ${d.eventTitle ?? "the event"}`,
       facts: (d: TemplateData) => volunteerFacts("en", d, { map: "Map of the meeting point", strava: "The event on Strava" }),
       body: (d: TemplateData) => [
-        `Thank you! We received your offer to help as a volunteer at ${d.eventTitle ?? "the event"}; the role you chose is on the bold line above.`,
+        `Thank you! We received your offer to help as a volunteer at ${d.eventTitle ?? "the event"}; the role you chose is written above, with the date and place.`,
         "An organizer will confirm it and get in touch by email or phone if anything else is needed. Until then there is nothing for you to do: the offer is not a race registration and holds no place.",
-        "If you did not send the offer, ignore this message: nothing happens without an organizer's confirmation. You can also write to us from the contact page and we will delete the offer.",
+        `If you did not send the offer, write to us from the contact page and we will delete it; otherwise the organizers keep it at most ${volunteerDays("en")} from the event's start.`,
       ],
     },
     volunteerClubNotice: {
@@ -2506,8 +2506,8 @@ const T = {
       greeting: () => "Hello,",
       facts: (d: TemplateData) => (d.volunteer ? { line: `${d.volunteer.name} — ${d.volunteer.roleEn}`, links: [] } : undefined),
       body: (d: TemplateData) => [
-        `Someone offered to volunteer at ${d.eventTitle ?? "the event"}; their name and the role they chose are on the bold line above.`,
-        "The offer is «Registered»: confirm or cancel it on the event's «Volunteers» card (the button below). The address and the telephone number are there, not here.",
+        `Someone offered to volunteer at ${d.eventTitle ?? "the event"}; their name and the role they chose are written above.`,
+        "The offer's state is «Registered»: confirm or cancel it on the event's «Volunteers» card (the button below). The address and the telephone number are there, not here.",
       ],
       action: "Open «Volunteers»",
     },
@@ -3630,6 +3630,11 @@ function defaultLinkLifetime(locale: EmailLocale): string {
  */
 export function archivePeriod(locale: EmailLocale): string {
   return durationPhrase(locale, RETENTION_PERIODS.registrationsYearsAfterEvent, "years");
+}
+
+/** How long the organizers keep a volunteer's offer from the event's start (§NNN), from the sweep's own constant. */
+export function volunteerDays(locale: EmailLocale): string {
+  return durationPhrase(locale, RETENTION_PERIODS.volunteerDaysAfterEvent, "days");
 }
 
 /** How long the backoffice keeps the whole identity document after the event (§95), from the same constants. */

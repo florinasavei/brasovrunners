@@ -14,7 +14,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — an event's «Voluntari» card (BR-REQ-050-01, BR-REQ-060-01), through the real Server Actions:
+ * §NNN — an event's «Voluntari» card (BR-REQ-050-02, BR-REQ-060-01), through the real Server Actions:
  * the roles defined per event in both languages, ordered, edited and removed; the people entered by hand,
  * changed, confirmed, cancelled and deleted; every change audited with ids and never a name, an address or a
  * telephone number; the role asserted by the service whatever the card drew (the Organizer and the

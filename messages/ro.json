@@ -3183,7 +3183,7 @@
         "feedbackForms": "Doar în nota de confidențialitate: numele formularelor „Spune-ne ceva”, între ghilimele. Cu el în nota în vigoare, pagina de contact arată formularele pornite",
         "feedbackFormsNamed": "Doar în nota de confidențialitate: alegerea „Cu nume și prenume” din formularele „Spune-ne ceva”, între ghilimele. Fără el în nota în vigoare, formularele sunt doar anonime",
         "membersShop": "Doar în nota de confidențialitate: numele secțiunii „Magazinul clubului”, între ghilimele. Cu el în nota în vigoare, zona membrilor arată magazinul și primește comenzi",
-        "volunteers": "Doar în nota de confidențialitate: numele formularului „Vreau să fiu voluntar”, între ghilimele. Cu el în nota în vigoare, evenimentele care primesc voluntari arată formularul pe pagina lor"
+        "volunteers": "Doar în nota de confidențialitate: numele formularului „Vreau să fiu voluntar”, între ghilimele. Cu el în nota în vigoare, evenimentele care primesc voluntari arată formularul pe pagina lor și păstrează ofertele"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -4065,7 +4065,7 @@
           "todo": "Un eveniment viitor primește voluntari, dar nota în vigoare nu îi descrie încă: pagina lui nu arată formularul până când clubul aprobă o notă care îi descrie. Lista ta funcționează între timp.",
           "done": "Nota în vigoare descrie voluntarii evenimentelor: un eveniment care primește voluntari arată formularul pe pagina lui cât timp un rol mai are nevoie de oameni.",
           "how": [
-            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea 5 are paragraful despre voluntari; secțiunea 7 spune că se păstrează 30 de zile după eveniment.",
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea 5 are paragraful despre voluntari; secțiunea 7 spune că se păstrează 30 de zile de la începutul evenimentului.",
             "Un jurist ar trebui să citească paragraful: temeiul (consimțământul pentru formularul public, interesul legitim pentru o persoană trecută de un organizator) și cele 30 de zile.",
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare în ambele limbi, formularul apare pe paginile evenimentelor care primesc voluntari."
           ]

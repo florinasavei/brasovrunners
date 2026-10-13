@@ -4065,7 +4065,7 @@
           "todo": "An event ahead takes volunteers, but the notice in force does not describe them yet: its page shows no form until the club approves a notice that does. Your own list works meanwhile.",
           "done": "The notice in force describes the event volunteers: an event that takes volunteers shows the form on its page while a role still needs people.",
           "how": [
-            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 5 has the paragraph about volunteers; section 7 says they are kept thirty days after the event.",
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 5 has the paragraph about volunteers; section 7 says they are kept thirty days from the event's start.",
             "A lawyer should read the paragraph: the legal basis (consent for the public form, legitimate interest for a person an organizer enters) and the thirty days.",
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”. Once in force in both languages, the form appears on the pages of the events that take volunteers."
           ]

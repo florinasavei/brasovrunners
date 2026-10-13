@@ -216,7 +216,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                 ) : (
                   data.volunteerOffers.map((offer, index) => (
                     <Typography key={index} variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }}>
-                      {show(offer.createdAt)} · {offer.eventTitle ?? offer.eventId} · {offer.roleName} · {offer.state} · {offer.source} · {offer.name} · {offer.deliveryEmail} · {offer.phone}
+                      {show(offer.createdAt)} · {offer.eventTitle ?? offer.eventId} · {locale === "en" ? offer.roleNameEn : offer.roleNameRo} · {t(`volunteers.states.${offer.state}`)} · {t(`volunteers.sources.${offer.source}`)} · {offer.name} · {offer.deliveryEmail} · {offer.phone}
                       {offer.message ? ` · ${offer.message}` : ""}
                       {offer.note ? ` · ${offer.note}` : ""}
                     </Typography>

@@ -97,9 +97,11 @@ export type PersonData = {
   volunteerOffers: Array<{
     eventId: string;
     eventTitle: string | null;
-    roleName: string;
-    state: string;
-    source: string;
+    /** The role's name in both languages: the page shows the one of its own locale. */
+    roleNameRo: string;
+    roleNameEn: string;
+    state: (typeof eventVolunteers.$inferSelect)["state"];
+    source: (typeof eventVolunteers.$inferSelect)["source"];
     name: string;
     deliveryEmail: string;
     phone: string;
@@ -189,7 +191,8 @@ async function collectPersonData<T extends Record<string, unknown>>(
     .select({
       eventId: eventVolunteers.eventId,
       eventTitle: eventTranslations.title,
-      roleName: eventVolunteerRoles.nameRo,
+      roleNameRo: eventVolunteerRoles.nameRo,
+      roleNameEn: eventVolunteerRoles.nameEn,
       state: eventVolunteers.state,
       source: eventVolunteers.source,
       name: eventVolunteers.name,

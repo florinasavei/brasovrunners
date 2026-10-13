@@ -157,7 +157,7 @@ describe("BR-REQ-070-01 everything held about a person", () => {
     expect(data.announcementRequests).toHaveLength(1);
     // …and so is an offer to volunteer, with every column the platform keeps of it.
     expect(data.volunteerOffers).toMatchObject([
-      { roleName: "Punct de apă", state: "REGISTERED", source: "PUBLIC", name: "Ana Pop", phone: "+40712345678", message: "Sunt liberă sâmbătă", privacyNoticeVersion: 3 },
+      { roleNameRo: "Punct de apă", roleNameEn: "Water point", state: "REGISTERED", source: "PUBLIC", name: "Ana Pop", phone: "+40712345678", message: "Sunt liberă sâmbătă", privacyNoticeVersion: 3 },
     ]);
 
     // Viewing is a read of the emergency details, recorded for each registration shown.

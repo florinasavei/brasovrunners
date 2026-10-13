@@ -335,6 +335,11 @@ describe("§NNN the volunteers' public sign-up", () => {
     expect(message.html).toContain("Salut, Maria Test");
     // The privacy line names the reason in the volunteer's own words, not «a registration».
     expect(message.text).toContain("te-ai oferit, pe site-ul clubului, să ajuți ca voluntar");
+    // A stranger's typing is not «nothing»: the not-you line says how long the organizers keep it, from the sweep's constant.
+    expect(message.text).toContain("cel mult 30 de zile de la începutul evenimentului");
+    expect(message.text).toContain("at most 30 days from the event's start");
+    // Bold is no fact in the text part, nor to a screen reader: the line is named by what it holds.
+    expect(message.text).not.toMatch(/îngroșat|bold line/);
   });
 
   it("renders the organizers' notice with who and which role — and neither the address nor the telephone number — and a button to the card", async () => {
@@ -348,6 +353,8 @@ describe("§NNN the volunteers' public sign-up", () => {
     expect(message.text).toContain("Maria Test — Water point");
     expect(message.text).not.toContain("maria@example.test");
     expect(message.text).not.toContain("+40712345678");
+    expect(message.text).toContain("Oferta are starea «Înscris»");
+    expect(message.text).not.toMatch(/îngroșat|bold line/);
     expect(message.text).toContain(`${env.APP_BASE_URL}/ro/admin/events/${event.id}#box-volunteers`);
   });
 
