@@ -4815,10 +4815,10 @@
     "look": {
       "title": "Tema",
       "intro": "Tema v2 a paginilor publice: o culoare de accent lângă albastrul siglei (roz, dacă nu alegi alta), titluri mai apăsate, butoane rotunjite, «Urmărește-ne» cu rețelele sociale în antet.",
-      "introMore": "Oprit până aprobă clubul pe QA; apoi e calea înapoi dintr-o apăsare. Nuanța fundalului și mărimea textului rămân cum le-ai ales, în ambele teme.",
+      "introMore": "Oprită până aprobă clubul pe QA; apoi e calea înapoi dintr-o apăsare. Nuanța fundalului și mărimea textului rămân cum le-ai ales, în ambele teme.",
       "current": "Acum: {look}",
       "updatedAt": "Setat {when}.",
-      "legend": "Tema",
+      "legend": "Alege tema",
       "default": "implicit",
       "save": "Salvează tema",
       "saving": "Se salvează…",
@@ -4833,7 +4833,7 @@
         },
         "on": {
           "name": "Tema v2",
-          "help": "Noul aspect: culoarea de accent de mai jos, titluri Inter, antet, pagină principală și calendar noi."
+          "help": "Facelift-ul: culoarea de accent de mai jos, titluri Inter, antet, pagină principală și calendar noi."
         }
       },
       "accent": {
@@ -6033,7 +6033,7 @@
         "secondary": "Cum funcționează",
         "socials": "Dreapta antetului, pe calculator:",
         "primaryTitle": "Culoarea principală sub Tema v2",
-        "primaryNote": "Variabilele MUI ale culorii principale, redefinite numai pe paginile publice cât timp Tema v2 e pornit.",
+        "primaryNote": "Variabilele MUI ale culorii principale, redefinite numai pe paginile publice cât timp Tema v2 e pornită.",
         "variable": "Variabila",
         "lightScheme": "Tema deschisă",
         "darkScheme": "Tema întunecată",
@@ -6093,7 +6093,7 @@
         "faceNames": {
           "roboto": "Roboto — textul și titlurile",
           "inter": "Inter — laboratorul temei",
-          "interHeading": "Inter 800 — titlurile aspectului nou",
+          "interHeading": "Inter 800 — titlurile din Tema v2",
           "nunito": "Nunito — laboratorul temei",
           "signature": "Caveat — semnătura declarației",
           "facon": "Facón — logotipul de pe echipament"
@@ -6226,7 +6226,7 @@
           "lightDefault": "Site-ul pornește deschis la culoare; întunecat doar din butonul din subsol, niciodată din setarea telefonului.",
           "pageTint": "Nuanța paginilor publice e setarea clubului, cu o gardă de contrast: text citibil pe orice nuanță.",
           "fontSize": "Mărimea textului pe paginile publice e o setare a clubului, dintr-o scară cu limite.",
-          "newLook": "Tema v2 se desenează doar sub atributul lui, pe paginile publice; oprit, nicio regulă nu se potrivește.",
+          "newLook": "Tema v2 se desenează doar sub atributul ei, pe paginile publice; oprită, nicio regulă nu se potrivește.",
           "colourLiterals": "Nicio culoare scrisă direct în cod: culorile vin din temă, iar excepțiile sunt într-o listă care doar se scurtează.",
           "iconImports": "Pictogramele vin din registre, după nume; în backoffice nu se importă direct, iar pe paginile publice doar un fișier pe pictogramă, niciodată pachetul întreg.",
           "primitives": "Un buton sau o pastilă e a casei (GlyphButton, ButtonLink, GlyphChip, StatusChip), nu un Button, IconButton sau Chip MUI pe care l-a scris cineva din nou.",
@@ -6267,7 +6267,7 @@
           "9": { "title": "Ce înseamnă «Evenimente speciale»", "default": "Tot ce nu e o serie săptămânală; pastila «Ediție specială» își păstrează sensul." },
           "10": { "title": "Săgeata rotundă de pe carduri", "default": "Niciuna: prima pagină arată chiar cardurile din «Alergări», cu ușa lor cu text, «Descrierea completă a evenimentului»." },
           "11": { "title": "Iconițele", "default": "Rămâne familia Material plină; aerul mai ușor vine din culoare, grosime și spațiere." },
-          "12": { "title": "Cum se lansează", "default": "În spatele unei singure setări, «Tema v2»: pornită pe QA, oprită în producție până aprobă clubul; Tema v1 e șters la o lansare după comutare." }
+          "12": { "title": "Cum se lansează", "default": "În spatele unei singure setări, «Tema v2»: pornită pe QA, oprită în producție până aprobă clubul; Tema v1 e ștearsă la o lansare după comutare." }
         },
         "phases": {
           "0": { "title": "Deciziile și materialele — fără cod", "gate": "Răspunsurile în scris, fotografiile urcate." },

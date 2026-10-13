@@ -26,9 +26,9 @@ export const PHONE_SELECT_SX = {
 /**
  * The two selects under «Tema v2» (§708, amending §720 and §734): members of the family of the
  * segmented «Lună | An» and «Azi» beside them — the same 44-pixel height, the same 12-pixel radius,
- * the same border (`divider`, `primary.main` on hover and focus) on the paper surface — and no
+ * the same border (`divider`, `primary.main` on hover, and 2px on focus) on the paper surface — and no
  * floating legend: the label stays the select's accessible name, visually hidden, and the notch it
- * cut in the outline is gone. The caret is the arrows' size and the text's colour. Off the look
+ * cut in the outline is gone. The caret is in the text's colour. Off the look
  * none of it matches: the head is today's, pixel for pixel.
  */
 export const PICKER_UNDER_LOOK = {
@@ -37,9 +37,10 @@ export const PICKER_UNDER_LOOK = {
     "& .MuiOutlinedInput-root": { borderRadius: "12px", bgcolor: "background.paper", color: "text.primary", fontWeight: 600 },
     "& .MuiOutlinedInput-notchedOutline": { top: 0, borderColor: "divider", borderWidth: 1 },
     "& .MuiOutlinedInput-notchedOutline legend": { display: "none" },
-    "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline, & .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "primary.main", borderWidth: 1 },
+    "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": { borderColor: "primary.main", borderWidth: 1 },
+    "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "primary.main", borderWidth: 2 },
     "& select": { minHeight: 44 },
-    "& .MuiNativeSelect-icon": { fontSize: "1.5rem", color: "text.primary", right: { xs: 0, sm: 4 } },
+    "& .MuiNativeSelect-icon": { color: "text.primary", right: { xs: 0, sm: 4 } },
   },
 } as const;
 

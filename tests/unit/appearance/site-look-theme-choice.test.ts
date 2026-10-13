@@ -59,7 +59,7 @@ describe("§708 «Tema»: Tema v1 or Tema v2", () => {
 
   it("leaves no «Aspectul nou» / «the new look» in either catalogue", () => {
     for (const [name, catalogue] of [["ro", ro], ["en", en]] as const) {
-      expect(JSON.stringify(catalogue), name).not.toMatch(/[Aa]spectul nou|[Tt]he new look/);
+      expect(JSON.stringify(catalogue), name).not.toMatch(/[Aa]spectul(ui)? nou|[Nn]oul aspect|[Tt]he new look/);
     }
   });
 });
