@@ -8,7 +8,7 @@ import {
 } from "@/modules/content/events/domain/page-todos";
 
 /**
- * §NNN — what an event's page still lacks, computed from the event (BR-REQ-050-01). One test per
+ * §749 — what an event's page still lacks, computed from the event (BR-REQ-050-01). One test per
  * rule, over a race that has everything and then loses one thing at a time, so a rule that fires
  * when it should not — or stays silent when it should speak — is named by its own test.
  */
@@ -70,7 +70,7 @@ const context: PageTodoContext = {
 const rules = (todos: PageTodo[]) => todos.map((todo) => todo.id);
 const only = (todos: PageTodo[], id: string) => todos.find((todo) => todo.id === id);
 
-describe("§NNN eventPageTodos", () => {
+describe("§749 eventPageTodos", () => {
   it("lists nothing for an event whose page has everything", () => {
     expect(eventPageTodos(complete(), texts, context)).toEqual([]);
   });

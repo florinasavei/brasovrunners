@@ -178,7 +178,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   const events = eventsAndTodos.rows;
 
   /*
-    How many to-dos an event's page still has (§NNN): what it lacks, computed from the row as the
+    How many to-dos an event's page still has (§749): what it lacks, computed from the row as the
     editor's card computes it, and the lines the club typed that are not ticked — one grouped query
     for the lines, no query for the rest. Drawn beside the next date's title as a small chip.
   */
@@ -327,7 +327,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
               {next.event.coverMediaAssetId === null && (next.event.endsAt ?? next.event.startsAt).getTime() >= now.getTime() && (
                 <Chip size="small" variant="outlined" color="warning" label={t("events.noCover")} data-testid="no-cover-chip" />
               )}
-              {/* What the next date's page still lacks and the club's own open lines (§NNN): the card «De făcut» in its editor lists them. */}
+              {/* What the next date's page still lacks and the club's own open lines (§749): the card «De făcut» in its editor lists them. */}
               {todoCount(next) > 0 && (
                 <StatusChip glyph="open" variant="outlined" color="warning" label={t("eventTodos.chip", { count: todoCount(next) })} testId="event-todos-chip" />
               )}

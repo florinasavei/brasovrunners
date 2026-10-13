@@ -3,7 +3,7 @@ import { canEditClubTodo, canReadClubTodo, isCalendarDay } from "@/modules/club-
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 
 /**
- * An event's own to-dos (§NNN; the owner, 2026-10-13: «aș vrea ca acest tasklist să fie în
+ * An event's own to-dos (§749; the owner, 2026-10-13: «aș vrea ca acest tasklist să fie în
  * aplicație, practic eu vreau doar TODOs pt site-ul evenimentului, nu pt tot», «și trebuie să pot
  * seta și un prio») — the pure part: the priorities, what a form may post, who may do what, and
  * the one order the card lists its rows in.

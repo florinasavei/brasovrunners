@@ -3,7 +3,7 @@ import { type SortableTodo, sortTodos } from "./domain/event-todo";
 import type { EventTodoItem } from "./event-todos";
 
 /**
- * The card's one list (§NNN): what the page still lacks (computed, `page`) and the lines the club
+ * The card's one list (§749): what the page still lacks (computed, `page`) and the lines the club
  * typed (`own`) in a single order — priority, then the due day, then age — with the ticked lines
  * apart, under «Gata». A computed row is never done: it is gone when its field is filled.
  *

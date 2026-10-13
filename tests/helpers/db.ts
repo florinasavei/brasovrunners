@@ -126,7 +126,7 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(galleryAlbumTranslations);
   await db.delete(galleryAlbums);
   await db.delete(mediaAssets);
-  // An event's own to-dos (§NNN) cascade from it; deleted first like the translations.
+  // An event's own to-dos (§749) cascade from it; deleted first like the translations.
   await db.delete(eventTodos);
   await db.delete(eventTranslations);
   // `registrations` references `events`, and `events.declaration_document_id` references

@@ -11,7 +11,7 @@ import type { FormOutcome } from "@/shared/forms/outcome";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — an event's own to-dos (BR-REQ-050-01, BR-REQ-060-01), through the real Server Actions:
+ * §749 — an event's own to-dos (BR-REQ-050-01, BR-REQ-060-01), through the real Server Actions:
  * add with a priority, change it, assign, tick and untick, delete; every change that changes
  * something audited with who and the words; the role asserted by the service whatever the card
  * drew (the Administrator and the Organizer write, the Tehnic is refused); a to-do belongs to one
@@ -105,7 +105,7 @@ async function addOne(fields: Record<string, string> = {}) {
   return items[items.length - 1];
 }
 
-describe("§NNN an event's own to-dos", () => {
+describe("§749 an event's own to-dos", () => {
   it("adds a line with its priority, who takes it and the day, and audits it", async () => {
     const item = await addOne({ text: "  Confirmă   barierele  ", priority: "URGENT", assignee: staff.MODERATOR!.id, due: "2026-11-10" });
     expect(item).toMatchObject({

@@ -11,7 +11,7 @@ import { isUuid } from "@/shared/ids";
 import { canEditEventTodos, canReadEventTodos, type EventTodoInput, eventTodoInputSchema, type EventTodoPriority } from "./domain/event-todo";
 
 /**
- * An event's own to-dos (§NNN): read by the editor's «De făcut pentru pagina evenimentului» card,
+ * An event's own to-dos (§749): read by the editor's «De făcut pentru pagina evenimentului» card,
  * written one line at a time. The role is asserted here and not only by the hidden buttons
  * (BR-REQ-060-01); every change that changes something writes one audit row naming who did it and
  * the line's words — §12.12 allows what somebody typed about the club's own work, and nothing here

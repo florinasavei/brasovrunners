@@ -120,9 +120,9 @@ export const PANEL_GLYPHS = {
   startList: GroupsIcon,
   promotion: ShareIcon,
   save: SaveIcon,
-  // «De făcut pentru pagina evenimentului» (§NNN): what the page still lacks and the club's own lines.
+  // «De făcut pentru pagina evenimentului» (§749): what the page still lacks and the club's own lines.
   todo: ChecklistIcon,
-  // «Adaugă un rând» on that card (§NNN).
+  // «Adaugă un rând» on that card (§749).
   add: AddIcon,
   // What an event's registrations are, once it has them.
   registrations: ListAltIcon,

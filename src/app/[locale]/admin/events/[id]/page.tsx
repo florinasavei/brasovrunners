@@ -337,7 +337,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const maySaveAnything = maySaveSettings || mayEditSomeText;
 
   /*
-    «De făcut pentru pagina evenimentului» (§NNN): what the page still lacks, computed from the saved
+    «De făcut pentru pagina evenimentului» (§749): what the page still lacks, computed from the saved
     event on this read, and the lines the club typed for this date — a series' dates each have their
     own. Read for every role that opens the editor; the verbs ask the service for the role again.
   */
@@ -911,7 +911,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           }
           main={
             <>
-              {/* «De făcut pentru pagina evenimentului» (§NNN): near the top, beside the save form — it has forms of its own, and HTML forms cannot nest. */}
+              {/* «De făcut pentru pagina evenimentului» (§749): near the top, beside the save form — it has forms of its own, and HTML forms cannot nest. */}
               <EventTodoCard
                 locale={locale}
                 eventId={event.id}

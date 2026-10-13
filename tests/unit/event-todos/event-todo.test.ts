@@ -17,7 +17,7 @@ import { eventTodoRows } from "@/modules/event-todos/rows";
 import { STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 
 /**
- * §NNN — an event's own to-dos (BR-REQ-050-01): the priority scale, what a form may post, who
+ * §749 — an event's own to-dos (BR-REQ-050-01): the priority scale, what a form may post, who
  * may read and write, and the one order the card lists its rows in.
  */
 const row = (key: string, priority: SortableTodo["priority"], dueOn: string | null = null, createdAt: string | null = "2026-10-01T00:00:00.000Z"): SortableTodo => ({
@@ -27,7 +27,7 @@ const row = (key: string, priority: SortableTodo["priority"], dueOn: string | nu
   createdAt,
 });
 
-describe("§NNN the order of the list", () => {
+describe("§749 the order of the list", () => {
   it("puts urgent before high before normal before low", () => {
     const sorted = sortTodos([row("low", "LOW"), row("normal", "NORMAL"), row("urgent", "URGENT"), row("high", "HIGH")]);
     expect(sorted.map((item) => item.key)).toEqual(["urgent", "high", "normal", "low"]);
@@ -60,7 +60,7 @@ describe("§NNN the order of the list", () => {
   });
 });
 
-describe("§NNN the priority", () => {
+describe("§749 the priority", () => {
   it("is a closed set of four, normal when a posted value is none of them", () => {
     expect(EVENT_TODO_PRIORITIES).toEqual(["URGENT", "HIGH", "NORMAL", "LOW"]);
     expect(readEventTodoPriority("HIGH")).toBe("HIGH");
@@ -69,7 +69,7 @@ describe("§NNN the priority", () => {
   });
 });
 
-describe("§NNN what a form posts", () => {
+describe("§749 what a form posts", () => {
   const ASSIGNEE = "7b2c1f0e-3d4a-4b5c-8d6e-0f1a2b3c4d5e";
 
   it("reads the line, the priority, who and the day, folding whitespace and blanks", () => {
@@ -91,7 +91,7 @@ describe("§NNN what a form posts", () => {
   });
 });
 
-describe("§NNN who may do what", () => {
+describe("§749 who may do what", () => {
   it("lets the Organizer and the Administrators write and every role that reads the content read; the Tehnic only reads", () => {
     const writers = STAFF_ROLES.filter((role) => canEditEventTodos(role));
     expect(writers).toEqual(["MODERATOR", "ADMIN", "SUPERADMIN"]);
@@ -111,7 +111,7 @@ describe("§NNN who may do what", () => {
   });
 });
 
-describe("§NNN the card's rows", () => {
+describe("§749 the card's rows", () => {
   const ME = "00000000-0000-4000-8000-00000000aaaa";
   const page: PageTodo[] = [
     { id: "cover", rule: "cover", locale: null, priority: "NORMAL", anchor: "box-cover" },

@@ -13,7 +13,7 @@ import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { isUuid } from "@/shared/ids";
 
 /*
-  An event's own to-dos (§NNN): the Server Actions behind the editor's «De făcut pentru pagina
+  An event's own to-dos (§749): the Server Actions behind the editor's «De făcut pentru pagina
   evenimentului» card. Each is a plain form that works with scripts off; every one asks
   `changeEventTodo`, which asserts the role again (the Organizer and the Administrators write, the
   Tehnic and the Redactor read — BR-REQ-060-01), so the buttons the card draws are a courtesy.

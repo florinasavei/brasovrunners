@@ -4,14 +4,14 @@ import { events } from "./events";
 import { staffUsers } from "./staff-users";
 
 /**
- * How soon an event's own to-do is wanted (§NNN): four steps, in the order the list sorts them.
+ * How soon an event's own to-do is wanted (§749): four steps, in the order the list sorts them.
  * A closed set at the database, like every other state here — «Urgentă», «Mare», «Normală»,
  * «Mică» in the backoffice's words; a fifth is a migration.
  */
 export const eventTodoPriority = pgEnum("event_todo_priority", ["URGENT", "HIGH", "NORMAL", "LOW"]);
 
 /**
- * The club's own to-dos for one event's page (§NNN; the owner, 2026-10-13: «aș vrea ca acest
+ * The club's own to-dos for one event's page (§749; the owner, 2026-10-13: «aș vrea ca acest
  * tasklist să fie în aplicație, practic eu vreau doar TODOs pt site-ul evenimentului, nu pt tot»,
  * and «și trebuie să pot seta și un prio»).
  *

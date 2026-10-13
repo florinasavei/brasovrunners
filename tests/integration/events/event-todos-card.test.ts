@@ -8,7 +8,7 @@ import type { EventTodoItem } from "@/modules/event-todos/event-todos";
 import { withClientWords } from "../../helpers/client-words";
 
 /**
- * §NNN — the card «De făcut pentru pagina evenimentului» as the editor draws it (BR-REQ-050-01,
+ * §749 — the card «De făcut pentru pagina evenimentului» as the editor draws it (BR-REQ-050-01,
  * BR-REQ-041-01 criterion 6): the closed line and when it opens by itself, the computed rows marked
  * «din pagină» with a link to the card that fills them, the club's rows with their priority as a
  * word (not the colour alone), the order, «Gata» apart, «Ale mele», the role's forms and a reader's
@@ -77,7 +77,7 @@ async function render(props: Partial<Parameters<typeof EventTodoCard>[0]> & Pick
 /** The text of every row of the open list, in the order it is drawn. */
 const order = (html: string) => [...html.matchAll(/data-testid="(event-todo-page-row|event-todo-item)"[^>]*?(?:data-rule="([^"]*)"|data-item-id="([^"]*)")/g)].map((match) => match[2] ?? match[3]);
 
-describe("§NNN the card «De făcut pentru pagina evenimentului»", () => {
+describe("§749 the card «De făcut pentru pagina evenimentului»", () => {
   it("says «N de făcut» on its closed line and opens by itself while anything is left", async () => {
     const html = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: [item("a", "Sună la primărie")] });
     expect(html).toContain("De făcut pentru pagina evenimentului");

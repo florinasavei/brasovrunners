@@ -43,7 +43,7 @@ export const STATUS_GLYPHS = {
   shop: StorefrontIcon,
   link: LinkIcon,
   series: EventRepeatIcon,
-  // An event's own to-do's priority (§NNN): a word and a glyph, never the colour alone.
+  // An event's own to-do's priority (§749): a word and a glyph, never the colour alone.
   priorityUrgent: PriorityHighIcon,
   priorityHigh: ArrowUpwardIcon,
   priorityNormal: RemoveIcon,

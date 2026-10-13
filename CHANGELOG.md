@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.10-2026-10-13
+
+- **«De făcut pentru pagina evenimentului»** — each event's editor lists what its page still lacks (title, description, place, start, programme, cover, route, difficulty, places, bibs, declaration — each a link to the field, gone once filled) and the club's own to-dos with a priority (Urgentă, Mare, Normală, Mică), who takes it, a due day and a tick, sorted by priority, then day, then age; «Ale mele» filters your own; a chip with the count beside the event in the list. Backoffice only. §749.
 ## BR-V3.09-2026-10-13
 
 - **«Pune pe» / «Scoate de pe lista de invitați speciali» in the registrations list's «⋮»** — the registration page's verb, its question and its refusals, from the row menu; the Administrator's alone. §747.

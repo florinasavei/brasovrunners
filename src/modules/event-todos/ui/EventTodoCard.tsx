@@ -67,7 +67,7 @@ function shortText(text: string): string {
 }
 
 /**
- * «De făcut pentru pagina evenimentului» (§NNN): one card in the event editor, folded, with a
+ * «De făcut pentru pagina evenimentului» (§749): one card in the event editor, folded, with a
  * summary line «N de făcut» and open on arrival while anything is left. It lists, in one order —
  * priority, then the due day, then age — what the event's page still lacks (computed, marked «din
  * pagină», each a link to the card that fills it, gone once filled) and the club's own lines (a

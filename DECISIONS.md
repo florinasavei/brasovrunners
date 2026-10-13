@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.09-2026-10-13 -->
+<!-- PROJECT_BASELINE: BR-V3.10-2026-10-13 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.09-2026-10-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.10-2026-10-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -25998,3 +25998,23 @@ Baseline `BR-V3.09-2026-10-13`.
 **Not changed.** The numbers' assignment and their stored integer; the exports.
 
 Baseline `BR-V3.09-2026-10-13`.
+
+## 749. Each event's «De făcut»: what its page still lacks, and the club's own to-dos with a priority
+
+**The owner, 2026-10-13:** «aș vrea ca acest tasklist să fie în aplicație, practic eu vreau doar TODOs pt site-ul evenimentului, nu pt tot», and then «și trebuie să pot seta și un prio».
+
+**Decision.** The event editor (§406) gets one card, «De făcut pentru pagina evenimentului», near the top of the main column: folded, its closed line «N de făcut» (or «nimic de făcut»), and open on arrival while anything is left (`openWhen`, §336). It sits beside the save form and not inside it, because it has forms of its own and HTML forms cannot nest. It is backoffice only: no public page, no email, no notification draws or sends anything from it. `/admin/tasks` stays the club-wide list (§438); this one is per event, and per date.
+
+It lists two kinds of row in one order — **priority, then the due day, then age** (`compareTodos`; a row with no day after every row with one; a computed row has no age and goes before a typed row of the same priority and day):
+
+- **What the page still lacks — computed, never stored** (`content/events/domain/page-todos.ts`, `eventPageTodos`). Each row is marked «din pagină», carries its own priority and a plain in-page link to the card that fills it (opened by `OpenFoldFromHash`, §336), and is gone the moment the field is filled; it cannot be edited, ticked or deleted. The rules: the title, the summary, the meeting point and the page address in each language — the same check publication runs (`missingForPublish`, §315, §350), high; the long description per language, normal; the place still «se anunță» (§328), high; the date or the time still «se anunță» (§533), high; a race with no timed programme and no programme text (§117), normal; no cover (§709), normal, only where storage is configured; a run or race with no Strava or Garmin Connect map, no GPX file, no route link and no GPX or map link (§718), normal; no difficulty level chosen (§526), low; a race registered on the site with no capacity or with the bibs' design never saved (§735), normal and low; an event registered on the site whose declaration is missing or no longer approved, urgent. An event that is over, cancelled or archived has no computed rows.
+- **The club's own rows** — the table `event_todos` (migration `0144`, expand only): one line of at most 200 characters (checked at the database too), a **priority** (the enum `event_todo_priority`: «Urgentă», «Mare», «Normală» — the default — and «Mică»), who takes it (a backoffice staff account, or nobody), a due day, and the tick (who and when). Add, edit (words, priority, who, day), tick and untick, delete — Server Actions, plain forms that work with scripts off, the tick posting the state it wants and never a toggle. Each change that changes something writes one audit row (`event_todo.added|edited|done|reopened|deleted`, entity `event`) with the line's words and, for an edit, each field's from and to; a press that changes nothing records nothing. The ticked rows go under «Gata», folded. «Ale mele» (`?mine=1`, a link, no script) keeps the rows given to the reader; a computed row has nobody, so it is not in anybody's own list, and the filter survives a press.
+- **Who.** The same sets as the club's checklist (§438), by the same functions: the Organizer, the Administrator and the Superadministrator write; every role that reads the content (`canReadContent`) reads, so the Tehnic and the Redactor see the card and no form; the volunteer never opens the editor. The role is asserted in `changeEventTodo`, not by the hidden buttons (BR-REQ-060-01). A person a line is given to must be able to open the card (`canReadEventTodos`, the editor's «Cine» list and the service's check agree): a member of the club's zone and the volunteer have no screen to read it on, so neither is offered nor accepted. A malformed event or line id is the service's own NOT_FOUND, never a database error; a refused edit names the box like «Adaugă» does.
+- **Priority is a word, a glyph and a tone** — `StatusChip` with a glyph per step and the palette's colours, never a colour literal and never the colour alone. The events list (`/admin`) draws a small «N de făcut» chip beside the next date's title: the computed rows plus the open typed ones (one grouped query for the typed ones, none for the computed).
+- **One date, one list.** `event_todos.event_id` is the date's own id: each date of a weekly series has its own list, a hand-typed row is never copied to the following dates, and a duplicate starts with none. The rows cascade with their event.
+
+**Left out of the computed rows, because the data cannot be read reliably.** «The difficulty is still the migrated default» (§526): migration `0104` put each old word on the middle step of its band (1, 2, 5, 11, 14), which a level the club chose by hand shares — only a level never chosen (`null`) is a row. «No partners on the bib design» (§735): the partners come from the event's co-hosts and a design showing none is as likely a choice as an omission. A programme for a hike, a coffee or a meetup: only a race is expected to have timed rows.
+
+**Refused.** A club-wide task board inside the editor — the owner: «nu pt tot»; `/admin/tasks` stays the club's. A notification, an email or a reminder from a row: not asked. Any public visibility of a row. A row type per event type. Storing the computed rows (a stored copy goes stale the moment a field is filled, and then someone has to tick a row the page no longer needs). A «prio» of free text or a number: four named steps, so the sort and the words are the same everywhere.
+
+Baseline `BR-V3.10-2026-10-13`.

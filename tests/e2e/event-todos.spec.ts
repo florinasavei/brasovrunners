@@ -5,7 +5,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox } from "./support/fold";
 
 /**
- * §NNN — «De făcut pentru pagina evenimentului» (BR-REQ-050-01, BR-REQ-060-01): an Administrator
+ * §749 — «De făcut pentru pagina evenimentului» (BR-REQ-050-01, BR-REQ-060-01): an Administrator
  * opens an event whose page lacks its cover, sees the computed row marked «din pagină» and follows
  * its link to the cover's card, adds a row with the priority «Urgentă» and sees it first, gives it
  * to herself and sees it under «Ale mele», ticks it and finds it under «Gata».
@@ -39,7 +39,7 @@ async function seedEvent(tag: string): Promise<string> {
   }
 }
 
-test.describe("§NNN the event's «De făcut»", () => {
+test.describe("§749 the event's «De făcut»", () => {
   test.describe.configure({ timeout: 90_000 });
 
   test("shows what the page lacks, links to the field, takes a row with a priority first, assigns it and ticks it", async ({ page }) => {

@@ -9,7 +9,7 @@ import type { EventTodoPriority } from "@/modules/event-todos/domain/event-todo"
 import { missingForPublish, storedPublishReader, type StoredPublishTranslation } from "../ui/publish-check";
 
 /**
- * What an event's page still lacks (§NNN; the owner, 2026-10-13: «eu vreau doar TODOs pt site-ul
+ * What an event's page still lacks (§749; the owner, 2026-10-13: «eu vreau doar TODOs pt site-ul
  * evenimentului») — **computed from the event on every read, never stored**, so a row is gone the
  * moment its field is filled and nobody has to tick it. The card «De făcut pentru pagina
  * evenimentului» in the editor lists these beside the club's own typed lines
