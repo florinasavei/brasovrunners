@@ -10,13 +10,26 @@ import {
   bibMemberBandColour,
   bibMemberCardBackground,
   bibMemberLabel,
+  bibEmergencyLine,
   bibMemberStripeText,
   DEFAULT_BIB_DESIGN,
   numberScaleFactor,
 } from "./bib-design";
+import type { BibProfileDrawing } from "./bib-profile";
 import { bibFooterLines, bibFooterParts } from "./bib-footer";
 import { BIB_PICTURE_BOX, type BibPictureSlot, bibPictureDrawing } from "./bib-picture-frame";
-import { A4_PAGE, BIB_CARD, BIB_FOOTER_LINE, BIB_LAYOUT, BIB_MARGIN, BIB_PAPER, bibNameReserve, bibNumberPoints, MEMBER_MARK_CHECK } from "./bib-geometry";
+import {
+  A4_PAGE,
+  BIB_CARD,
+  BIB_FOOTER_LINE,
+  BIB_LAYOUT,
+  BIB_MARGIN,
+  BIB_PAPER,
+  bibExtrasHeight,
+  bibNameReserve,
+  bibNumberPoints,
+  MEMBER_MARK_CHECK,
+} from "./bib-geometry";
 import type { BibRow } from "./bibs";
 import { formatRaceNumber } from "./domain/race-number";
 
@@ -92,6 +105,13 @@ export type BibSheetInput = {
    * coloured band exactly as before (§249).
    */
   pictures?: { header?: Buffer | null; sponsors?: Buffer | null; memberHeader?: Buffer | null; memberCard?: Buffer | null };
+  /**
+   * «Profilul traseului» (§NNN): the route's profile with its words, already read from the event's
+   * GPX by the caller (`bib-extras.ts`). Drawn only while the design's tick is on; absent, none is.
+   */
+  profile?: BibProfileDrawing | null;
+  /** The word before the emergency phone (§NNN) — «Urgențe» — in the sheet's language; the phone is the design's. */
+  emergencyLabel?: string;
   /**
    * The platform's words for the members' label when the club typed none (§664) — «Membru {club}» —
    * in the sheet's language, from the caller's catalogue. Absent, a member's bib carries no label
@@ -232,6 +252,10 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   const bandText = bandTextColour(band);
   const design = input.design ?? DEFAULT_BIB_DESIGN;
   const L = BIB_LAYOUT;
+  // The two lines under the number (§NNN): the route's profile when ticked and read, the emergency phone when ticked and typed.
+  const profile = design.showProfile ? (input.profile ?? null) : null;
+  const emergency = bibEmergencyLine(design, input.emergencyLabel ?? "");
+  const extrasHeight = bibExtrasHeight(profile !== null, emergency !== null);
 
   const doc = new PDFDocument({
     size: "A4",
@@ -498,8 +522,13 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     // As the event writes it (§735): «007» under «Trei cifre»; its length sizes it, as ever.
     const digits = formatRaceNumber(row.bibNumber, design.numberFormat);
     const numberSize = bibNumberPoints(digits, numberScaleFactor(design));
-    const sponsorTop = bottom - footerHeight - sponsorHeight;
-    const numberArea = BIB_CARD.height - L.bandHeight - footerHeight - nameBlock - sponsorHeight - stripeHeight;
+    // The foot of everything above the sponsors' strip and the small print: the number's region (§NNN).
+    const regionFoot = bottom - footerHeight - sponsorHeight;
+    // «Jos de tot» (§NNN): the strip is the card's last row under the small print; «Deasupra subsolului», above it.
+    const sponsorsAtBottom = design.sponsorPlace === "bottom";
+    const sponsorTop = sponsorsAtBottom ? bottom - sponsorHeight : regionFoot;
+    const footerFoot = sponsorsAtBottom ? bottom - sponsorHeight : bottom;
+    const numberArea = BIB_CARD.height - L.bandHeight - footerHeight - nameBlock - sponsorHeight - stripeHeight - extrasHeight;
     const numberTop = top + L.bandHeight + (nameAbove ? nameBlock : 0);
 
     /*
@@ -555,7 +584,52 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     });
 
     // The name under the number, large enough to read at a finish line.
-    if (design.showName && !nameAbove) drawName(sponsorTop - stripeHeight - L.nameBlock);
+    if (design.showName && !nameAbove) drawName(regionFoot - stripeHeight - extrasHeight - L.nameBlock);
+
+    /*
+      The route's profile (§NNN): a row of its own under the name, `profileHeight` points, so it cannot
+      cover the number or the name. The area under the line at a faint opacity and the line itself are
+      vector paths in the number's own ink; «Start» and «Sosire» under the two ends, the distance and the
+      gain in two lines beside the chart. All of it from `bib-geometry.ts`'s points, as the picture draws.
+    */
+    const emergencyTop = regionFoot - stripeHeight - (emergency !== null ? L.emergencyHeight : 0);
+    if (profile) {
+      const rowTop = emergencyTop - L.profileHeight;
+      const chartLeft = left + L.inset;
+      const chartTop = rowTop + L.profileChartTop;
+      const at = (point: readonly [number, number]) => [chartLeft + point[0] * L.profileChartWidth, chartTop + (1 - point[1]) * L.profileChartHeight] as const;
+      const first = at(profile.points[0]);
+      const last = at(profile.points[profile.points.length - 1]);
+      doc.save();
+      doc.moveTo(first[0], chartTop + L.profileChartHeight);
+      profile.points.forEach((point) => doc.lineTo(...at(point)));
+      doc.lineTo(last[0], chartTop + L.profileChartHeight).closePath().fillOpacity(L.profileAreaOpacity).fill(ink);
+      doc.fillOpacity(1);
+      doc.lineWidth(L.profileLineWeight).strokeColor(ink).lineJoin("round").lineCap("round");
+      profile.points.forEach((point, index) => (index === 0 ? doc.moveTo(...at(point)) : doc.lineTo(...at(point))));
+      doc.stroke();
+      doc.circle(first[0], first[1], 1.8).fill(ink);
+      doc.circle(last[0], last[1], 1.8).fill(ink);
+      doc.restore();
+      doc.font("body").fontSize(L.profileLabelSize).fillColor(ink);
+      doc.text(profile.start, chartLeft, rowTop + L.profileLabelTop, { lineBreak: false });
+      doc.text(profile.finish, chartLeft + L.profileChartWidth - doc.widthOfString(profile.finish), rowTop + L.profileLabelTop, { lineBreak: false });
+      doc.fontSize(L.profileTextSize);
+      const textLeft = chartLeft + L.profileChartWidth + L.profileTextGap;
+      doc.text(profile.distance, textLeft, rowTop + L.profileDistanceTop, { lineBreak: false });
+      doc.text(profile.gain, textLeft, rowTop + L.profileGainTop, { lineBreak: false });
+    }
+
+    /*
+      The emergency phone (§NNN): one centred line at a fixed place on every number, under the profile's
+      row, in the number's ink. Typed by the club — the organizers' number — never the runner's own.
+    */
+    if (emergency) {
+      doc.font("body").fontSize(L.emergencySize).fillColor(ink);
+      const width = doc.widthOfString(emergency);
+      const height = doc.heightOfString(emergency, { lineBreak: false });
+      doc.text(emergency, left + (BIB_CARD.width - width) / 2, emergencyTop + (L.emergencyHeight - height) / 2, { lineBreak: false });
+    }
 
     // The sponsors' strip above the small print (§249): the club's crop in the strip's shape, or
     // the whole picture with its own proportion kept (§560).
@@ -577,7 +651,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       doc.text(
         line,
         left + L.inset + (BIB_SHEET_FOOTER.width - doc.widthOfString(line)) / 2,
-        bottom - BIB_SHEET_FOOTER.lastLineTop - (footerLines.length - 1 - index) * BIB_SHEET_FOOTER.lineHeight,
+        footerFoot - BIB_SHEET_FOOTER.lastLineTop - (footerLines.length - 1 - index) * BIB_SHEET_FOOTER.lineHeight,
         { lineBreak: false },
       );
     });

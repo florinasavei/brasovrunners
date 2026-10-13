@@ -121,7 +121,44 @@ export const BIB_LAYOUT = {
   memberMarkGap: 10,
   memberMarkTop: 12,
   memberMarkWeight: 2.4,
+  /**
+   * The route's profile (§NNN): a row `profileHeight` points tall across the card less its inset,
+   * between the name under the number and the small print — a row of its own, so it can never cover
+   * the number (which keeps the area that is left) or the name. At the left, the chart: a box
+   * `profileChartWidth` × `profileChartHeight`, `profileChartTop` into the row, the line stroked
+   * `profileLineWeight` thick over a faint area, with «Start» and «Sosire» under its two ends at
+   * `profileLabelSize` points, `profileLabelTop` into the row. At its right, `profileTextGap` away,
+   * the distance and the elevation gain in two lines of `profileTextSize` points, their tops
+   * `profileDistanceTop` and `profileGainTop` into the row. Both renderers place them at these points.
+   */
+  profileHeight: 38,
+  profileChartWidth: 250,
+  profileChartHeight: 24,
+  profileChartTop: 3,
+  profileLineWeight: 1.2,
+  profileAreaOpacity: 0.14,
+  profileLabelSize: 6.5,
+  profileLabelTop: 28.5,
+  profileTextSize: 8,
+  profileTextGap: 18,
+  profileDistanceTop: 9,
+  profileGainTop: 20,
+  /**
+   * The emergency phone (§NNN): one centred line `emergencyHeight` points tall under the profile's
+   * row (or where it would be), `emergencySize` points — a fixed place on every number, never over
+   * the number or the name, which keep the area that is left.
+   */
+  emergencyHeight: 14,
+  emergencySize: 9,
 } as const;
+
+/**
+ * What the profile's row and the emergency line take from the number's area (§NNN): their heights
+ * when drawn, nothing when not — so a design with neither keeps every number as it was.
+ */
+export function bibExtrasHeight(profileDrawn: boolean, emergencyDrawn: boolean): number {
+  return (profileDrawn ? BIB_LAYOUT.profileHeight : 0) + (emergencyDrawn ? BIB_LAYOUT.emergencyHeight : 0);
+}
 
 /**
  * What the name set above the number gives up on each side while the member mark is drawn (§NNN):

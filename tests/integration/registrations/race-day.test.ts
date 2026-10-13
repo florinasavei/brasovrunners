@@ -368,6 +368,24 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
   });
 
   /**
+   * §748, §NNN — the desk's picture address is stamped with the whole design, so a ticked mark or a
+   * new element is never served from the browser's hour of cache.
+   */
+  it("stamps the desk's bib picture with the event's whole design", async () => {
+    const event = await createInternalEvent(10);
+    await enter(event, "ana@example.org", { fastTrack: true });
+    const stampOf = async () => (await listDeskRegistrations(db, { eventId: event.id, query: "", locale: "ro" }))[0].bibStamp;
+    const before = await stampOf();
+    expect(before).toMatch(/^[0-9a-f]{32}$/);
+    expect(await stampOf()).toBe(before);
+    await db.update(events).set({ bibDesign: { member: { enabled: true, mark: true } } }).where(eq(events.id, event.id));
+    const marked = await stampOf();
+    expect(marked).not.toBe(before);
+    await db.update(events).set({ bibDesign: { member: { enabled: true, mark: true }, sponsorPlace: "above" } }).where(eq(events.id, event.id));
+    expect(await stampOf()).not.toBe(marked);
+  });
+
+  /**
    * §311 — a cancelled runner is found by their number, and by nothing else.
    *
    * A settled number is never reused (§173), so "who is 27" has one answer at the event after

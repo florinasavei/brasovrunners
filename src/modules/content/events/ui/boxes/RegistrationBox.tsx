@@ -9,6 +9,7 @@ import { capitalizeFirst } from "@/i18n/dates";
 import { hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { EVENT_TYPES, takesRegistrations } from "@/modules/events/domain/event-type";
 import { typedStartOrNull } from "@/modules/events/domain/provisional-start";
+import { readRouteGpx } from "@/modules/events/domain/route-gpx";
 import { readBibDesign } from "@/modules/registrations/bib-design";
 import type { RaceDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import { spareBandOf } from "@/modules/registrations/domain/spare-bibs";
@@ -501,6 +502,7 @@ export default async function RegistrationBox({
                         design={design}
                         bibStartNumber={event?.bibStartNumber ?? 1}
                         bibColour={event?.bibColour ?? null}
+                        hasRouteGpx={readRouteGpx(event?.routeGpx) !== null}
                         summary={bibDesignSummary(words, designOn, footerOn)}
                       />
                       {bibPrint}

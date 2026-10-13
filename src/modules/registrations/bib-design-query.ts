@@ -60,6 +60,8 @@ export type BibDesignFormValues = {
   /** «Cum arată numărul» (§735): `plain`, `pad3` or `pad4`; anything else is the schema's to refuse. */
   numberFormat: string;
   namePosition: string;
+  /** «Locul benzii cu sponsori» (§NNN): `bottom` or `above`; anything else is the schema's to refuse. */
+  sponsorPlace: string;
   headerImageSrc: string | null;
   sponsorImageSrc: string | null;
   /** The part of each picture the bib shows (§560), in the place's own shape. */
@@ -73,6 +75,10 @@ export type BibDesignFormValues = {
   showWebsite: boolean;
   /** As typed: the schema trims it, keeps it to one line and to `BIB_FOOTER_TEXT_MAX`. */
   footerText: string;
+  /** «Profilul traseului» and «Telefon pentru urgențe» (§NNN): the ticks, and the phone as typed. */
+  showProfile: boolean;
+  showEmergency: boolean;
+  emergencyPhone: string;
   /** The members' race number (§664): its switch, its header and its label, as posted. */
   member: BibMemberFormValues;
 };
@@ -108,8 +114,10 @@ const SWITCHES = [
   "showPartners",
   "showEventInFooter",
   "showWebsite",
+  "showProfile",
+  "showEmergency",
 ] as const;
-const CHOICES = ["numberScale", "numberFormat", "namePosition"] as const;
+const CHOICES = ["numberScale", "numberFormat", "namePosition", "sponsorPlace"] as const;
 const PICTURES = ["headerImageSrc", "sponsorImageSrc"] as const;
 /** Each picture's crop, beside the picture it belongs to: absent with no picture or no crop (§560). */
 const CROPS = [
@@ -117,7 +125,7 @@ const CROPS = [
   ["sponsorImageCrop", "sponsorImageSrc"],
 ] as const;
 /** Free text: absent from the address when empty, so the platform's design has no such key. */
-const TEXTS = ["footerText"] as const;
+const TEXTS = ["footerText", "emergencyPhone"] as const;
 
 /**
  * The panel's boxes as the browser would post them, read through one `get`.
@@ -137,6 +145,7 @@ export function readBibDesignForm(get: (name: string) => string | null): BibDesi
     numberScale: field("numberScale")?.trim() || "medium",
     numberFormat: field("numberFormat")?.trim() || "plain",
     namePosition: field("namePosition")?.trim() || "below",
+    sponsorPlace: field("sponsorPlace")?.trim() || "bottom",
     headerImageSrc: field("headerImageSrc")?.trim() || null,
     sponsorImageSrc: field("sponsorImageSrc")?.trim() || null,
     // The crop box's hidden fields (§560): the JSON as it was written, or nothing for no crop.
@@ -149,6 +158,9 @@ export function readBibDesignForm(get: (name: string) => string | null): BibDesi
     showWebsite: field("showWebsite") === "on",
     // A text box always posts, empty or not; what it may say is the schema's to decide.
     footerText: field("footerText") ?? "",
+    showProfile: field("showProfile") === "on",
+    showEmergency: field("showEmergency") === "on",
+    emergencyPhone: field("emergencyPhone") ?? "",
     member: {
       enabled: field("member.enabled") === "on",
       style: field("member.style")?.trim() || "band",
@@ -205,7 +217,8 @@ export function bibDesignSearchParams(values: BibDesignFormValues, into = new UR
     if (crop) into.set(MEMBER_QUERY.cardImageCrop, typeof crop === "string" ? crop : JSON.stringify({ x: crop.x, y: crop.y, w: crop.w, h: crop.h }));
   }
   if (member.label.trim()) into.set(MEMBER_QUERY.label, member.label);
-  into.set(MEMBER_QUERY.mark, member.mark ? "1" : "0");
+  // Only when ticked: a missing key reads false, so the ordinary preview's address stays as it was.
+  if (member.mark) into.set(MEMBER_QUERY.mark, "1");
   return into;
 }
 

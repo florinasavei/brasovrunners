@@ -34,6 +34,8 @@ const EVERYTHING_OFF: BibDesign = {
   namePosition: "above",
   headerImageSrc: OURS,
   sponsorImageSrc: LOCAL,
+  // «Deasupra subsolului» (§NNN): the choice away from the default «Jos de tot».
+  sponsorPlace: "above",
   // Each picture's crop (§560), carried as its JSON and read back as the same four fractions.
   headerImageCrop: { x: 0, y: 0.3125, w: 1, h: 0.1478 },
   sponsorImageCrop: { x: 0.1, y: 0.4, w: 0.8, h: 0.05 },
@@ -45,6 +47,10 @@ const EVERYTHING_OFF: BibDesign = {
   showEventInFooter: true,
   showWebsite: true,
   footerText: "Cronometraj: Start & Go + 50% · Urgențe organizator 0722 000 000",
+  // The profile and the emergency phone (§NNN): the ticks on, the phone with the spaces a URL escapes.
+  showProfile: true,
+  showEmergency: true,
+  emergencyPhone: "+40 722 000 000",
   // The members' bib (§664): on, the whole card (§NNN), a colour, both pictures with their crops and a
   // label with a diacritic and an ampersand.
   member: {
@@ -246,6 +252,11 @@ describe("§249 the form, read the same way for the save and for the preview", (
       // Nothing posted for «Cum arată numărul» (§735): today's numbers.
       numberFormat: "plain",
       namePosition: "above",
+      // Nothing posted for the sponsors' place (§NNN): «Jos de tot», the default; and no profile, no phone.
+      sponsorPlace: "bottom",
+      showProfile: false,
+      showEmergency: false,
+      emergencyPhone: "",
       headerImageSrc: null,
       sponsorImageSrc: OURS,
       // No crop posted (§560): each picture as the bib drew it before crops.

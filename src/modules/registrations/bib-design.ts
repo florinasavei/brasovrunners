@@ -2,6 +2,7 @@ import { z } from "zod";
 import { imageCropSchema, meaningfulCrop } from "@/modules/content/rich-text/domain/schema";
 import { contrastRatio, MIN_TEXT_CONTRAST } from "@/modules/appearance/domain/tint-contrast";
 import { COLOR, GRADIENT } from "@/theme/brand";
+import { isPhoneNumberShaped } from "@/modules/contact/domain/public-phone";
 import { bibDesignValuesFromQuery } from "./bib-design-query";
 import { bibFooterText } from "./bib-footer";
 import { RACE_NUMBER_FORMATS } from "./domain/race-number";
@@ -277,6 +278,34 @@ export function bibMemberStripeText(label: string, locale = "ro"): string {
   return label.toLocaleUpperCase(locale);
 }
 
+/** «Locul benzii cu sponsori» (§NNN): under the small print, the number's last row, or above it as it was. */
+export const BIB_SPONSOR_PLACES = ["bottom", "above"] as const;
+export type BibSponsorPlace = (typeof BIB_SPONSOR_PLACES)[number];
+
+/** The longest emergency phone the bib prints: the public phone's own ceiling (§565). */
+export const BIB_EMERGENCY_PHONE_MAX = 30;
+
+/**
+ * The emergency phone as the bib keeps it (§NNN): trimmed, runs of spaces made one, and only a value
+ * written like a telephone number (`isPhoneNumberShaped`, the check «Telefon public» applies) — anything
+ * else reads as none, never a bib that fails to print, like every field here.
+ */
+export function bibEmergencyPhone(value: string): string {
+  const typed = value.trim().replace(/\s+/g, " ");
+  return typed.length <= BIB_EMERGENCY_PHONE_MAX && isPhoneNumberShaped(typed) ? typed : "";
+}
+
+/**
+ * The line printed on every number (§NNN): «Urgențe: 07xx xxx xxx» / "Emergency: …" — `label` is the
+ * sheet's language's word — or null while the tick is off or no valid number was typed. The club's
+ * organizers' number, typed here: never a participant's own emergency contact, which is personal
+ * data on a visible bib that the privacy notice does not describe.
+ */
+export function bibEmergencyLine(design: Pick<BibDesign, "showEmergency" | "emergencyPhone">, label: string): string | null {
+  if (!design.showEmergency || design.emergencyPhone === "") return null;
+  return label ? `${label}: ${design.emergencyPhone}` : design.emergencyPhone;
+}
+
 export const bibDesignSchema = z
   .object({
     showName: z.boolean().catch(true),
@@ -293,8 +322,14 @@ export const bibDesignSchema = z
     namePosition: z.enum(BIB_NAME_POSITIONS).catch("below"),
     /** A picture across the top instead of the coloured band, or null for the band (§249). */
     headerImageSrc: storedPicture,
-    /** A strip of sponsors above the small print, or null. */
+    /** A strip of sponsors, or null; where it sits is `sponsorPlace`. */
     sponsorImageSrc: storedPicture,
+    /**
+     * «Locul benzii cu sponsori» (§NNN): `bottom` — «Jos de tot, în subsol», the number's last row under
+     * the small print, the default for every event (the owner: «ar trebui normal jos de tot») — or
+     * `above`, «Deasupra subsolului», where the strip sat until then.
+     */
+    sponsorPlace: z.enum(BIB_SPONSOR_PLACES).catch("bottom"),
     /**
      * The part of each picture the bib shows (§560), drawn in the place's own shape by
      * `bib-picture-frame.ts`; null draws the picture as every bib did before crops existed.
@@ -321,6 +356,14 @@ export const bibDesignSchema = z
      * `BIB_FOOTER_TEXT_MAX` characters — normalised rather than refused, like every field here.
      */
     footerText: z.string().transform((value) => bibFooterText(value)).catch(""),
+    /**
+     * «Profilul traseului» (§NNN): the route's elevation over distance on every number, with the
+     * distance and the gain; off by default, and only drawn when the event has a route GPX.
+     */
+    showProfile: z.boolean().catch(false),
+    /** «Telefon pentru urgențe» (§NNN): the tick, and the number the club types (`bibEmergencyPhone`). */
+    showEmergency: z.boolean().catch(false),
+    emergencyPhone: z.string().transform(bibEmergencyPhone).catch(""),
     /** The members' race number (§664): off, or the members' own header and label. */
     member: bibMemberSchemaWithDefault,
   })
@@ -344,6 +387,7 @@ export const DEFAULT_BIB_DESIGN: BibDesign = {
   namePosition: "below",
   headerImageSrc: null,
   sponsorImageSrc: null,
+  sponsorPlace: "bottom",
   headerImageCrop: null,
   sponsorImageCrop: null,
   cutMarks: false,
@@ -352,6 +396,9 @@ export const DEFAULT_BIB_DESIGN: BibDesign = {
   showEventInFooter: false,
   showWebsite: false,
   footerText: "",
+  showProfile: false,
+  showEmergency: false,
+  emergencyPhone: "",
   member: DEFAULT_BIB_MEMBER_DESIGN,
 };
 
