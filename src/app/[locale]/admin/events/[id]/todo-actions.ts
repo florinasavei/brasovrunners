@@ -29,7 +29,7 @@ function field(form: FormData, name: string): string {
   return typeof value === "string" ? value : "";
 }
 
-/** The event the form is about — a malformed id is the same refusal an unknown one gets. */
+/** The event the form is about — a malformed id is passed on and `changeEventTodo` refuses it (NOT_FOUND). */
 function eventIdOf(form: FormData): string {
   const id = field(form, "eventId");
   return isUuid(id) ? id : "";
@@ -90,6 +90,7 @@ export async function editEventTodoAction(_previous: FormOutcome | null, form: F
     });
     changed = result.changed;
   } catch (error) {
+    if (isDomainError(error) && error.code === "VALIDATION_ERROR") return refused(error, form);
     if (!isDomainError(error)) throw error;
     return backToCard(form, { error: error.code });
   }

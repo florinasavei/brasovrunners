@@ -88,6 +88,13 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
   const openCount = computed.length + items.filter((item) => item.doneAt === null).length;
   const eventPath = getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: eventId } } });
 
+  const boxMessages = await refusalMessages({
+    text: t("eventTodos.field.text"),
+    priority: t("eventTodos.field.priority"),
+    assignee: t("eventTodos.field.assignee"),
+    due: t("eventTodos.field.due"),
+  });
+
   const hidden = (
     <>
       <input type="hidden" name="uiLocale" value={locale} />
@@ -232,7 +239,7 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
             </Box>
             <Panel variant="help" title={t("eventTodos.edit")}>
               <Stack spacing={1.5} sx={{ pb: 1.5 }}>
-                <ActionForm action={editEventTodoAction} scope={`todo-${item.id}`}>
+                <ActionForm action={editEventTodoAction} scope={`todo-${item.id}`} messages={boxMessages}>
                   {hidden}
                   <input type="hidden" name="itemId" value={item.id} />
                   {fields(item)}
@@ -292,12 +299,7 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
             <ActionForm
               action={addEventTodoAction}
               scope="todo-new"
-              messages={await refusalMessages({
-                text: t("eventTodos.field.text"),
-                priority: t("eventTodos.field.priority"),
-                assignee: t("eventTodos.field.assignee"),
-                due: t("eventTodos.field.due"),
-              })}
+              messages={boxMessages}
             >
               {hidden}
               {fields(null)}

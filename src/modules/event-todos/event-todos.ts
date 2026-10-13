@@ -7,7 +7,8 @@ import type { Database } from "@/db/types";
 import { type AuditAction, recordAuditEvent } from "@/modules/audit/repository";
 import { isBackofficeRole } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
-import { canEditEventTodos, type EventTodoInput, eventTodoInputSchema, type EventTodoPriority } from "./domain/event-todo";
+import { isUuid } from "@/shared/ids";
+import { canEditEventTodos, canReadEventTodos, type EventTodoInput, eventTodoInputSchema, type EventTodoPriority } from "./domain/event-todo";
 
 /**
  * An event's own to-dos (§NNN): read by the editor's «De făcut pentru pagina evenimentului» card,
@@ -105,12 +106,12 @@ function inputOf(request: { text: unknown; priority: unknown; assignee: unknown;
   return parsed.data;
 }
 
-/** Who may be given a line: somebody with a backoffice account — a member of the club's zone has no screen to read it on. */
+/** Who may be given a line: somebody who can open the card — a member of the club's zone and the volunteer have no screen to read it on. */
 async function assertAssignable<T extends Record<string, unknown>>(db: Database<T>, staffUserId: string | null): Promise<void> {
   if (staffUserId === null) return;
   const [person] = await db.select({ role: staffUsers.role }).from(staffUsers).where(eq(staffUsers.id, staffUserId)).limit(1);
-  if (!person || !isBackofficeRole(person.role)) {
-    throw new DomainError("VALIDATION_ERROR", "the person a to-do is given to must be a backoffice account", ["assignee"]);
+  if (!person || !isBackofficeRole(person.role) || !canReadEventTodos(person.role)) {
+    throw new DomainError("VALIDATION_ERROR", "the person a to-do is given to must be able to read it", ["assignee"]);
   }
 }
 
@@ -129,6 +130,10 @@ export async function changeEventTodo<T extends Record<string, unknown>>(
 ): Promise<EventTodoResult> {
   if (!canEditEventTodos(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may read an event's to-dos but not change them`);
+  }
+  // A forged form's malformed id is the refusal an unknown one gets, not a database error.
+  if (!isUuid(request.eventId) || (request.kind !== "add" && !isUuid(request.id))) {
+    throw new DomainError("NOT_FOUND", "the event or the to-do is not there");
   }
   const input = request.kind === "add" || request.kind === "edit" ? inputOf(request) : null;
 

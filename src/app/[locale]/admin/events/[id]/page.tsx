@@ -13,7 +13,7 @@ import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventForEditing, findEventTitle, listSeriesDates } from "@/modules/content/events/repository";
 import { eventPageTodos } from "@/modules/content/events/domain/page-todos";
-import { canEditEventTodos } from "@/modules/event-todos/domain/event-todo";
+import { canEditEventTodos, canReadEventTodos } from "@/modules/event-todos/domain/event-todo";
 import { listEventTodos } from "@/modules/event-todos/event-todos";
 import EventTodoCard from "@/modules/event-todos/ui/EventTodoCard";
 import { listStaffUsers } from "@/modules/staff-identity/repository";
@@ -341,9 +341,10 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     event on this read, and the lines the club typed for this date — a series' dates each have their
     own. Read for every role that opens the editor; the verbs ask the service for the role again.
   */
-  const todoItems = await listEventTodos(db, event.id);
-  const todoStaff = (await listStaffUsers(db))
-    .filter((person) => isBackofficeRole(person.role))
+  const [todoItems, todoStaffAll] = await Promise.all([listEventTodos(db, event.id), listStaffUsers(db)]);
+  // Who a line may be given to: somebody who can open this card (the volunteer cannot), the same test the service asserts.
+  const todoStaff = todoStaffAll
+    .filter((person) => isBackofficeRole(person.role) && canReadEventTodos(person.role))
     .map((person) => ({ id: person.id, name: person.displayName }))
     .sort((a, b) => a.name.localeCompare(b.name, locale));
   const pageTodos = eventPageTodos(event, orderedTranslations, {

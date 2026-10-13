@@ -59,6 +59,7 @@ beforeEach(async () => {
   staff.ADMIN = await person("ADMIN", "Ana Admin");
   staff.MODERATOR = await person("MODERATOR", "Oana Organizator");
   staff.DEV = await person("DEV", "Tudor Tehnic");
+  staff.CONTRIBUTOR = await person("CONTRIBUTOR", "Vlad Voluntar");
   staff.MEMBER = await person("MEMBER", "Membru Club");
   const [first, second] = await db
     .insert(events)
@@ -136,6 +137,30 @@ describe("§NNN an event's own to-dos", () => {
     expect(await post(addEventTodoAction, form({ text: "ok", assignee: staff.MEMBER!.id }))).toMatchObject({ error: "VALIDATION_ERROR", fields: ["assignee"] });
     expect(await post(addEventTodoAction, form({ text: "ok", assignee: "7b2c1f0e-3d4a-4b5c-8d6e-0f1a2b3c4d5e" }))).toMatchObject({ error: "VALIDATION_ERROR" });
     expect(await listEventTodos(db, eventId)).toEqual([]);
+  });
+
+  it("refuses a person who cannot open the card, and a malformed id, as the service's own refusals", async () => {
+    // The volunteer has no screen to read the line on, so no line is given to them.
+    expect(await post(addEventTodoAction, form({ text: "ok", assignee: staff.CONTRIBUTOR!.id }))).toMatchObject({ error: "VALIDATION_ERROR", fields: ["assignee"] });
+    // A forged form's malformed line id is NOT_FOUND, not a database error and a 500.
+    const forged = new FormData();
+    forged.set("uiLocale", "ro");
+    forged.set("eventId", eventId);
+    forged.set("itemId", "x");
+    forged.set("done", "1");
+    await expect(setEventTodoDoneAction(forged)).rejects.toThrow("NEXT_REDIRECT");
+    expect(state.redirected.at(-1)).toContain("todoError=NOT_FOUND");
+    // A malformed event id is refused the same way.
+    const noEvent = form({ text: "ok" });
+    noEvent.set("eventId", "x");
+    expect(await post(addEventTodoAction, noEvent)).toMatchObject({ error: "NOT_FOUND" });
+    expect(await listEventTodos(db, eventId)).toEqual([]);
+  });
+
+  it("refuses an edit naming the box, keeping what was typed", async () => {
+    const item = await addOne();
+    expect(await post(editEventTodoAction, form({ itemId: item.id, text: "   ", priority: "HIGH", assignee: "", due: "" }))).toMatchObject({ error: "VALIDATION_ERROR", fields: expect.arrayContaining(["text"]) });
+    expect((await listEventTodos(db, eventId))[0].text).toBe("Pune harta Strava");
   });
 
   it("changes the words, the priority, who and the day in one save, audited as from and to; an unchanged save records nothing", async () => {

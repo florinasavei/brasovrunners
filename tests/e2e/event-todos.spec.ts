@@ -56,6 +56,16 @@ test.describe("§NNN the event's «De făcut»", () => {
     await expect(card.getByRole("heading", { name: "De făcut pentru pagina evenimentului" })).toBeVisible();
     await expect(card.locator("summary").first()).toContainText(/\d+ de făcut/);
 
+    // The events list says the same count beside the event: the computed rows (no typed line yet).
+    const openLine = (await card.locator("summary").first().innerText()).match(/(\d+) de făcut/);
+    expect(openLine).not.toBeNull();
+    const lacking = Number(openLine![1]);
+    await page.goto(`/ro/admin?q=${tag}`);
+    await hydrated(page);
+    await expect(page.locator('[data-testid="event-todos-chip"]:visible')).toHaveText(new RegExp(`${lacking} de făcut`));
+    await page.goto(`/ro/admin/events/${eventId}`);
+    await hydrated(page);
+
     // A computed row: no cover photo — marked «din pagină», with a priority word and no edit or delete.
     const cover = card.locator('[data-testid="event-todo-page-row"][data-rule="cover"]');
     await expect(cover).toContainText("Evenimentul nu are fotografie de copertă.");
@@ -86,6 +96,13 @@ test.describe("§NNN the event's «De făcut»", () => {
     await expect(first).toContainText("Cere aprobarea pentru traseu");
     await expect(first.getByTestId("event-todo-priority")).toHaveText("Urgentă");
     expect(await list.locator("li").count()).toBeGreaterThan(1);
+
+    // …and the list's chip counts the computed rows plus the open typed line.
+    await page.goto(`/ro/admin?q=${tag}`);
+    await hydrated(page);
+    await expect(page.locator('[data-testid="event-todos-chip"]:visible')).toHaveText(new RegExp(`${lacking + 1} de făcut`));
+    await page.goto(`/ro/admin/events/${eventId}`);
+    await hydrated(page);
 
     // Assign it: «Modifică» → «Cine».
     await first.getByText("Modifică", { exact: true }).click();
