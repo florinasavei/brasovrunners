@@ -10,13 +10,14 @@ import { routing } from "@/i18n/routing";
 import { findEventForEditing } from "@/modules/content/events/repository";
 import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
 import { bibPreviewUrl } from "@/modules/registrations/bib-design-query";
-import { countUnverifiedMemberBibs, findEventForBibs, listBibs } from "@/modules/registrations/bibs";
+import { bibEventDate, countUnverifiedMemberBibs, findEventForBibs, listBibs } from "@/modules/registrations/bibs";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isUuid } from "@/shared/ids";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import { formatRaceNumber } from "@/modules/registrations/domain/race-number";
+import { bibPictureStamp } from "@/modules/registrations/domain/bib-stamp";
 
 type Props = { params: Promise<{ locale: string; id: string }> };
 
@@ -61,6 +62,8 @@ export default async function EventBibsPage({ params }: Props) {
     when the sheet holds one, and the grid shows the paper's order — the members' pile, then the rest.
   */
   const memberBibs = memberBibOn ? bibs.filter((bib) => bib.member).length : 0;
+  // What the pictures are drawn from, in their address: the browser keeps each an hour, so a new «Cum arată numărul» must be a new address (§NNN).
+  const pictureStamp = event ? bibPictureStamp([event.design, event.bibColour, event.title, bibEventDate(event, locale), event.coHosts]) : "";
   const shown = memberBibs > 0 ? [...bibs.filter((bib) => bib.member), ...bibs.filter((bib) => !bib.member)] : bibs;
   const unverifiedHref = `${getPathname({ locale, href: "/admin/registrations" })}?${new URLSearchParams({ eventId: id, status: "CONFIRMED", memberBib: "asked" }).toString()}`;
 
@@ -173,7 +176,7 @@ export default async function EventBibsPage({ params }: Props) {
                   grid asks, or it shows the ordinary bib the sheet no longer prints (§664). */}
               <Box
                 component="img"
-                src={`/api/admin/events/${id}/bibs/preview?registration=${bib.id}&locale=${locale}${bib.member ? "&m=1" : ""}`}
+                src={`/api/admin/events/${id}/bibs/preview?registration=${bib.id}&locale=${locale}${bib.member ? "&m=1" : ""}&v=${pictureStamp}`}
                 alt={t("bibs.previewAlt", { number: formatRaceNumber(bib.bibNumber, event?.design.numberFormat), name: bib.registeredName })}
                 width={BIB_IMAGE.width}
                 height={BIB_IMAGE.height}
