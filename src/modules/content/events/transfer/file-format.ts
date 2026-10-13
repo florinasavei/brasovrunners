@@ -64,7 +64,7 @@ const crop = z.object({ x: z.number(), y: z.number(), w: z.number(), h: z.number
 /** One picture or file the event points to, by its public address (§17). */
 export const mediaEntrySchema = z
   .object({
-    /** Where it is used: `cover`, `bib.header`, `bib.sponsors`, `bib.member.header`, `bib.member.card`, `text.<locale>.<box>`, `route.gpx`. */
+    /** Where it is used: `cover`, `bib.header`, `bib.sponsors`, `bib.profile`, `bib.member.header`, `bib.member.card`, `text.<locale>.<box>`, `route.gpx`. */
     role: text(80),
     /** Its public address in the environment the file was made in. */
     url: text(2048),

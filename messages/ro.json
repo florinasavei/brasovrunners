@@ -2319,15 +2319,15 @@
         },
         "headerHidesTitle": "Imaginea din antet ascunde numele evenimentului: pe imagine nu se tipărește nimic din bandă. Pentru o bandă cu sponsori folosește „Bandă cu sponsori”.",
         "showProfile": "Profilul traseului",
-        "showProfileHelp": "Bifat: pe fiecare număr, o fâșie pe toată lățimea cu altitudinea pe distanță, cu distanța și diferența de nivel alături. Cele scrise la eveniment au prioritate; altfel, din GPX.",
-        "showProfileNoGpx": "Încarcă GPX-ul traseului în „Traseul”.",
+        "showProfileHelp": "Bifat: pe fiecare număr, sub nume, o fâșie cu profilul traseului. Alegi mai jos de unde vine și cum stă.",
+        "showProfileNoGpx": "Evenimentul nu are GPX: încarcă-l în „Traseul” sau alege o poză.",
         "showCheckpoints": "Punctele de control pe profil",
         "showCheckpointsHelp": "Bifat: pe profil, la fiecare punct, o cană unde e apă, o furculiță unde e mâncare, o bulină la celelalte. Dedesubt, „km 12” unde încape. Apare doar cu profilul traseului.",
         "showCheckpointTimes": "…cu orele limită",
         "showCheckpointTimesHelp": "Bifat: lângă fiecare punct, și ora limită, „km 12 · 11:30”. Dacă nu încap toate orele, nu se scrie niciuna; apoi pleacă kilometrii care nu încap. Semnele rămân mereu.",
         "showCheckpointsNone": "Evenimentul nu are puncte de control: adaugă-le în cardul „Puncte de control”.",
         "showEmergency": "Telefon pentru urgențe",
-        "showEmergencyHelp": "Bifat: pe fiecare număr, mic, rândul „Urgențe: …” cu telefonul de mai jos. Debifat: fără rând. Scrie numărul organizatorilor, nu al participanților.",
+        "showEmergencyHelp": "Bifat: pe fiecare număr, mic, un rând cu eticheta și unul sau două telefoane. Scrie numerele organizatorilor, nu ale participanților.",
         "emergencyPhone": "Telefonul organizatorilor",
         "emergencyPhonePlaceholder": "07xx xxx xxx",
         "emergencyPhoneHelp": "Se tipărește pe fiecare număr, purtat în public. Cifre, spații, paranteze, puncte, linii și un + la început, de la șase la cincisprezece cifre; altfel nu se tipărește nimic.",
@@ -2337,6 +2337,47 @@
         "showDistanceHelp": "Bifat: o insignă în colțul din dreapta al antetului cu distanța evenimentului în kilometri întregi, ca 21K. Debifat: fără insignă. Nu se desenează peste o imagine din antet.",
         "numberStubs": "Numărul și pe capetele subsolului",
         "numberStubsHelp": "Bifat: numărul din nou, mic, la cele două capete ale rândului cu sponsori, pentru talonul care se rupe; imaginea sponsorilor îi face loc. Debifat: rândul ca până acum.",
+        "sections": {
+          "header": "Antet",
+          "number": "Numărul",
+          "name": "Numele",
+          "footer": "Subsol și sponsori",
+          "profile": "Profilul și urgențele",
+          "members": "Membrii"
+        },
+        "sectionSummary": {
+          "headerPicture": "imagine în locul benzii",
+          "nameOff": "fără nume",
+          "sponsors": "sponsori: {place}",
+          "sponsorsNone": "fără bandă cu sponsori",
+          "phone": "telefon de urgență",
+          "nothing": "nimic",
+          "membersOn": "activ",
+          "membersOff": "oprit"
+        },
+        "profileSource": "De unde vine profilul",
+        "profileSources": {
+          "gpx": "Desenat din traseul evenimentului (GPX)",
+          "picture": "O poză încărcată"
+        },
+        "profileSourceHelp": "Desenul vine din fișierul GPX al evenimentului, nu din Strava: harta Strava nu poate fi citită de site. Cu o poză pui pe fâșie ce vrei tu, de exemplu punctele de alimentare.",
+        "profileImageSrc": "Poza profilului",
+        "profileImageSrcHelp": "Se pune întreagă în fâșia profilului, fără decupaj. Cel mai bine arată o imagine lată, pe fundal alb.",
+        "showProfileFigures": "Arată distanța și diferența de nivel lângă profil",
+        "showProfileFiguresHelp": "Bifat: cele două cifre în dreapta profilului. Debifat: profilul sau poza ocupă toată lățimea.",
+        "profileOrientation": "Orientarea profilului",
+        "profileOrientations": {
+          "normal": "Normal",
+          "turned": "Întors, ca să-l citească alergătorul"
+        },
+        "profileOrientationHelp": "Întors: profilul e cu susul în jos, ca alergătorul să-l citească privind în jos, spre piept. Dacă și telefonul e tipărit invers, se întorc împreună, ca un singur bloc.",
+        "emergencyLabel": "Eticheta telefonului",
+        "emergencyLabelHelp": "Scrisă înaintea numerelor, cel mult {max} de caractere. Goală: „Urgențe”, sau „Emergency” pe numerele în engleză.",
+        "emergencyPhoneLabel": "Numele de lângă primul telefon",
+        "emergencyPhoneLabelHelp": "Opțional, cel mult {max} de caractere: un nume sau un rol, de exemplu „Coordonator”.",
+        "emergencyPhone2": "Al doilea telefon (opțional)",
+        "emergencyPhone2Help": "Pe același rând, după primul, despărțit de „/”. Verificat la fel ca primul.",
+        "emergencyPhone2Label": "Numele de lângă al doilea telefon",
         "noPicture": "Fără imagine",
         "picture": {
           "choose": "Încarcă o imagine",
@@ -2344,21 +2385,25 @@
           "uploading": "Se încarcă…",
           "failed": "Imaginea nu s-a încărcat. Încearcă din nou.",
           "fromGallery": "Din galerie",
+          "qualityHelp": "Mare pentru sigle și text, Medie pentru fotografii.",
           "cropTitle": "Partea care se tipărește",
           "cropHelp": {
             "header": "Trage dreptunghiul peste partea care vrei să apară sus, pe toată lățimea numărului.",
             "sponsors": "Trage dreptunghiul peste sponsori. „Toată imaginea” pune imaginea întreagă în bandă.",
-            "memberCard": "Trage dreptunghiul peste partea care vrei să apară în spatele cifrelor, pe tot numărul."
+            "memberCard": "Trage dreptunghiul peste partea care vrei să apară în spatele cifrelor, pe tot numărul.",
+            "profile": "Poza se pune întreagă, fără decupaj."
           },
           "cropReset": {
             "header": "Înapoi la mijloc",
             "sponsors": "Toată imaginea",
-            "memberCard": "Înapoi la mijloc"
+            "memberCard": "Înapoi la mijloc",
+            "profile": "Toată imaginea"
           },
           "shape": {
             "header": "Forma: {ratio} la 1, cât banda de sus a numărului.",
             "sponsors": "Forma: {ratio} la 1, cât banda cu sponsori.",
-            "memberCard": "Forma: {ratio} la 1, cât numărul întreg fără rândul de jos."
+            "memberCard": "Forma: {ratio} la 1, cât numărul întreg fără rândul de jos.",
+            "profile": "Forma: {ratio} la 1, cât fâșia profilului."
           }
         },
         "footer": {
@@ -2385,7 +2430,17 @@
           "previewAlt": "Numărul de concurs al unui membru, cu designul membrilor, pentru un alergător cu numele „Nume Prenume”",
           "previewCaption": "Previzualizare — numărul unui membru",
           "mark": "Semn de membru pe număr",
-          "markHelp": "Bifat: fiecare număr de membru poartă o bifă ✓ sub antet. Debifat: fără bifă.",
+          "markHelp": "Bifat: fiecare număr de membru poartă semnul ales mai jos, sub antet. Debifat: fără semn.",
+          "markShape": "Semnul de membru",
+          "markShapes": {
+            "star": "Steluță",
+            "logo": "Sigla clubului",
+            "heart": "Inimă",
+            "bolt": "Fulger",
+            "runner": "Alergător",
+            "check": "Bifă"
+          },
+          "markShapeHelp": "Sigla rămâne albastră, pe fundalul ei alb. Celelalte semne au culoarea cifrelor.",
           "style": "Fundalul numărului de membru",
           "styleHelp": "„Tot numărul”: fundal pe tot numărul, cifre albe. „Același fundal ca restul numerelor”: numărul obișnuit, doar cu antet propriu și etichetă.",
           "styles": {
@@ -4623,8 +4678,8 @@
         "message": "Mesaj",
         "note": "Notă",
         "signedUpAt": "Data"
-        }
-      },
+      }
+    },
     "checkpoints": {
       "title": "Puncte de control",
       "intro": "Unde e apă, mâncare, prim ajutor sau cronometrare și până la ce oră trece ultimul alergător. Apar într-un tabel pe pagina evenimentului și pe profilul de pe număr, în ordinea kilometrilor.",
@@ -5450,6 +5505,10 @@
     "bibs": {
       "title": "Numere de concurs (BIB)",
       "assign": "Alocă numerele",
+      "assignHelp": "Dă un număr fiecărei înscrieri reale și confirmate care nu are încă unul, în ordinea confirmării, de la primul număr al cursei. Cine are deja un număr nu primește altul.",
+      "assignHelpMore": "Numerele se dau singure la confirmare. Butonul recuperează înscrierile rămase fără: confirmate înainte să existe numere sau după schimbarea primului număr. Testele nu primesc.",
+      "rangeTitle": "Tipărește doar numerele de la … până la …",
+      "rangeHelp": "Lasă gol ca să tipărești toate numerele.",
       "assigned": "{assigned} numere alocate ({total} în total).",
       "thanksSent": "Mulțumirile au fost trimise: {recipients} emailuri.",
       "from": "De la",
@@ -7799,6 +7858,7 @@
         "cover": "Coperta",
         "bibHeader": "Număr de concurs: imaginea de sus",
         "bibSponsors": "Număr de concurs: banda sponsorilor",
+        "bibProfile": "Număr de concurs: poza profilului",
         "bibMemberHeader": "Număr de membru: imaginea de sus",
         "bibMemberCard": "Număr de membru: fundalul",
         "text": "O imagine dintr-un text",
@@ -7923,11 +7983,19 @@
             "showWebsite": "Număr: adresa site-ului",
             "footerText": "Număr: rândul clubului",
             "showProfile": "Număr: profilul traseului",
+            "profileSource": "Număr: de unde vine profilul",
+            "profileImageSrc": "Număr: poza profilului",
+            "showProfileFigures": "Număr: distanța și diferența lângă profil",
+            "profileOrientation": "Număr: orientarea profilului",
             "showCheckpoints": "Număr: punctele de control pe profil",
             "showCheckpointTimes": "Număr: orele limită pe profil",
             "showDistance": "Număr: insigna distanței",
             "showEmergency": "Număr: telefonul de urgență",
             "emergencyPhone": "Număr: numărul de urgență",
+            "emergencyLabel": "Număr: eticheta telefonului",
+            "emergencyPhoneLabel": "Număr: numele primului telefon",
+            "emergencyPhone2": "Număr: al doilea telefon",
+            "emergencyPhone2Label": "Număr: numele celui de-al doilea telefon",
             "emergencyUpsideDown": "Număr: telefonul întors",
             "numberStubs": "Număr: numărul la capetele subsolului",
             "sponsorPlace": "Număr: locul benzii sponsorilor",
@@ -7940,7 +8008,8 @@
               "cardImageSrc": "Număr de membru: imaginea de fundal",
               "cardImageCrop": "Număr de membru: decupajul fundalului",
               "label": "Număr de membru: rândul de pe bandă",
-              "mark": "Număr de membru: semnul"
+              "mark": "Număr de membru: semnul",
+              "markShape": "Număr de membru: forma semnului"
             }
           }
         },

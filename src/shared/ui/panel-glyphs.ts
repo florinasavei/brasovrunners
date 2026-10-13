@@ -2,6 +2,7 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import AddIcon from "@mui/icons-material/Add";
 import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
 import AnnouncementIcon from "@mui/icons-material/Announcement";
+import BadgeIcon from "@mui/icons-material/Badge";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import BrushIcon from "@mui/icons-material/Brush";
 import CampaignIcon from "@mui/icons-material/Campaign";
@@ -40,6 +41,7 @@ import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import NewspaperIcon from "@mui/icons-material/Newspaper";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import NotesIcon from "@mui/icons-material/Subject";
+import NumbersIcon from "@mui/icons-material/Numbers";
 import OutboxIcon from "@mui/icons-material/Outbox";
 import PaidIcon from "@mui/icons-material/Paid";
 import PinDropIcon from "@mui/icons-material/PinDrop";
@@ -66,7 +68,10 @@ import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import TimerIcon from "@mui/icons-material/Timer";
 import TitleIcon from "@mui/icons-material/Title";
 import TranslateIcon from "@mui/icons-material/Translate";
+import TerrainIcon from "@mui/icons-material/Terrain";
 import UpdateIcon from "@mui/icons-material/Update";
+import VerticalAlignBottomIcon from "@mui/icons-material/VerticalAlignBottom";
+import VerticalAlignTopIcon from "@mui/icons-material/VerticalAlignTop";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
@@ -118,6 +123,14 @@ export const PANEL_GLYPHS = {
   // «Condiții de participare» (§557): what the form asks beyond the person — for now, the health note.
   conditions: MedicalServicesIcon,
   bibDesign: BrushIcon,
+  // The bib designer's sections (§NNN), top to bottom as the number prints: the header, the number, the
+  // name, the foot with the sponsors, the profile with the emergency phone, and the members' number.
+  bibHeader: VerticalAlignTopIcon,
+  bibNumber: NumbersIcon,
+  bibName: BadgeIcon,
+  bibFooter: VerticalAlignBottomIcon,
+  bibProfile: TerrainIcon,
+  bibMembers: CardMembershipIcon,
   print: PrintIcon,
   startList: GroupsIcon,
   promotion: ShareIcon,
