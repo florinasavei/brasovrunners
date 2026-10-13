@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { kindsFromWords, MAX_OFF_TRACK_METERS, parseGpxWaypoints } from "@/modules/event-checkpoints/domain/gpx-waypoints";
+import { type GpxProposal, kindsFromWords, MAX_OFF_TRACK_METERS, offerableProposals, PAST_FINISH_TOLERANCE_KM, parseGpxWaypoints } from "@/modules/event-checkpoints/domain/gpx-waypoints";
 
 /**
  * §NNN — the waypoints of a route's GPX, each placed along its track by projecting it on the track:
@@ -107,6 +107,30 @@ describe("§NNN a waypoint placed on its track", () => {
       ),
     );
     expect(parsed.proposals.map((p) => p.kinds)).toEqual([["WATER"], ["FOOD"], ["FIRST_AID"], ["TIMING"], []]);
+  });
+});
+
+describe("§NNN what the preview offers, against the route's length", () => {
+  const proposal = (name: string, km: number, tooFar = false): GpxProposal => ({ name, km, kinds: [], offMeters: tooFar ? 900 : 5, tooFar });
+
+  it("places a finish waypoint just past the typed distance at the route's end, so one press adds it", () => {
+    // A watch's track 21.13 km long against a typed 21 097 m: the «Sosire» waypoint sits past 21.10.
+    const placed = offerableProposals([proposal("Izvor", 5), proposal("Sosire", 21.13)], 21.097);
+    expect(placed.offered.map((p) => [p.name, p.km])).toEqual([
+      ["Izvor", 5],
+      ["Sosire", 21.1],
+    ]);
+    expect(placed).toMatchObject({ tooFar: 0, beyondRoute: 0 });
+  });
+
+  it("leaves out, and counts, a waypoint farther past the end than the tolerance, and one off the track", () => {
+    const placed = offerableProposals([proposal("Izvor", 5), proposal("Parcare", 6, true), proposal("Hotel", 21.1 + PAST_FINISH_TOLERANCE_KM + 0.05)], 21.1);
+    expect(placed.offered.map((p) => p.name)).toEqual(["Izvor"]);
+    expect(placed).toMatchObject({ tooFar: 1, beyondRoute: 1 });
+  });
+
+  it("offers every waypoint on the track while the route has no known length", () => {
+    expect(offerableProposals([proposal("A", 1), proposal("B", 90)], null).offered).toHaveLength(2);
   });
 });
 

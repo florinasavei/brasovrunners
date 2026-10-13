@@ -5,6 +5,7 @@ import { WEATHER_MODES } from "@/modules/weather/domain/mode";
 import { DEFAULT_PUBLIC_LIST_CLUB, PUBLIC_LIST_CLUBS } from "@/modules/registrations/domain/public-list-club";
 import { RACE_DECLARATION_KEYS } from "@/modules/legal-documents/domain/keys";
 import { CHECKPOINT_KINDS, CHECKPOINT_KM_MAX, CHECKPOINT_NAME_MAX, CHECKPOINT_NOTE_MAX, CHECKPOINTS_MAX } from "@/modules/event-checkpoints/domain/checkpoint";
+import { fromWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { WAITLIST_CHOICES } from "../waitlist-choice";
 
 /**
@@ -31,8 +32,17 @@ import { WAITLIST_CHOICES } from "../waitlist-choice";
  */
 export const EVENT_FILE_FORMAT = "brasovrunners-event";
 
-/** The version this release writes and reads. A later release that changes the shape raises it. */
-export const EVENT_FILE_VERSION = 1;
+/**
+ * The version this release writes. A later release that changes the shape or a value's meaning raises
+ * it. **2** (§NNN): a race's `durationMinutes` is its «Timp limită», counted from the gun when it has
+ * one (`duration.ts#durationBase`); in a version 1 file it counts from the event's start. A version 1
+ * file is still read, and upgraded as it is read (`upgradeVersion1`), so a file exported by the
+ * release before this one — production's, during a release — imports with the end it had.
+ */
+export const EVENT_FILE_VERSION = 2;
+
+/** Every version this release reads: the one it writes, and 1, upgraded on reading. */
+export const EVENT_FILE_VERSIONS_READ: readonly number[] = [1, EVENT_FILE_VERSION];
 
 /**
  * The largest file taken: the file travels from the browser to a Server Action as text, and the
@@ -269,6 +279,31 @@ export const eventFileSchema = z
 
 export type EventFile = z.infer<typeof eventFileSchema>;
 
+/** A version 1 file: the same shape, its race's `durationMinutes` counted from the event's start. */
+const eventFileVersion1Schema = eventFileSchema.extend({ version: z.literal(1) });
+type EventFileVersion1 = z.infer<typeof eventFileVersion1Schema>;
+
+/**
+ * A version 1 file as this release's version (§NNN): a race with a gun and a start whose hour is in
+ * the file gets its `durationMinutes` counted from the gun — the minutes from the start less the
+ * minutes from the start to the gun — so the import stores the same end the file's event had. Null
+ * when that leaves no time limit at all (the old end at or before the gun): such a file is refused
+ * rather than imported with a time limit nobody chose.
+ */
+export function upgradeVersion1(file: EventFileVersion1): EventFile | null {
+  const event = file.event;
+  let durationMinutes = event.durationMinutes;
+  if (event.type === "RACE" && event.raceStartsAt && event.start.date && event.start.time && durationMinutes !== null) {
+    const start = fromWallTimeInput(`${event.start.date}T${event.start.time}`, event.timezone);
+    if (start) {
+      const gunAfterStart = Math.round((new Date(event.raceStartsAt).getTime() - start.getTime()) / 60_000);
+      durationMinutes -= gunAfterStart;
+      if (durationMinutes <= 0) return null;
+    }
+  }
+  return { ...file, version: EVENT_FILE_VERSION, event: { ...event, durationMinutes } };
+}
+
 /** The file as it is downloaded: readable, two spaces, a newline at the end. The size the reader measures is this one's. */
 export const serializeEventFile = (file: EventFile): string => `${JSON.stringify(file, null, 2)}\n`;
 
@@ -293,11 +328,16 @@ export function readEventFile(raw: string): ReadEventFile {
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed) || (parsed as { format?: unknown }).format !== EVENT_FILE_FORMAT) {
     return { ok: false, refusal: "notAnEventFile" };
   }
-  if ((parsed as { version?: unknown }).version !== EVENT_FILE_VERSION) return { ok: false, refusal: "unknownVersion" };
-  const checked = eventFileSchema.safeParse(parsed);
+  const version = (parsed as { version?: unknown }).version;
+  if (typeof version !== "number" || !EVENT_FILE_VERSIONS_READ.includes(version)) return { ok: false, refusal: "unknownVersion" };
+  const checked = version === 1 ? eventFileVersion1Schema.safeParse(parsed) : eventFileSchema.safeParse(parsed);
   if (!checked.success) {
     const paths = [...new Set(checked.error.issues.map((issue) => issue.path.join(".")).filter((path) => path !== ""))].slice(0, 8);
     return { ok: false, refusal: "invalid", detail: paths.join(", ") };
+  }
+  if (checked.data.version === 1) {
+    const upgraded = upgradeVersion1(checked.data);
+    return upgraded ? { ok: true, file: upgraded } : { ok: false, refusal: "invalid", detail: "event.durationMinutes" };
   }
   return { ok: true, file: checked.data };
 }

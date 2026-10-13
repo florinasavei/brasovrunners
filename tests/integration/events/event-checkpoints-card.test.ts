@@ -145,6 +145,13 @@ describe("§NNN the card «Puncte de control»", () => {
     expect(html).not.toMatch(/<details[^>]*id="box-checkpoints"[^>]*open/);
   });
 
+  it("leaves out of a reader's line what a point does not have: no bare dash, «fără oră limită» as the page says it", async () => {
+    const html = await render({ mayEdit: false, checkpoints: [point("a", 5, { kinds: [] })] });
+    expect(html).toContain("5 km — Punct a · fără oră limită");
+    expect(html).not.toContain("· —");
+    expect(html).not.toContain("ora limită —");
+  });
+
   it("is in both languages", async () => {
     language = "en";
     try {
@@ -188,6 +195,20 @@ describe("§NNN «Ia punctele din GPX» on the card", () => {
     expect(html).toContain("1 punct din fișier e la peste 300 m de traseu");
     // The preview's form is its own, apart from the list's.
     expect(html.match(/<form/g)!.length).toBe(2);
+  });
+
+  it("asks a name in each language for every point: the file's name in the Romanian box, the English box empty for the club", async () => {
+    const html = await render({ previewOpen: true, gpx: gpx([proposal("Izvor", 0.8)]) });
+    expect(html).toMatch(/name="cp\[0\]\.nameRo"[^>]*value="Izvor"|value="Izvor"[^>]*name="cp\[0\]\.nameRo"/);
+    expect(html).toMatch(/name="cp\[0\]\.nameEn"/);
+    expect(html).not.toMatch(/name="cp\[0\]\.nameEn"[^>]*value="Izvor"|value="Izvor"[^>]*name="cp\[0\]\.nameEn"/);
+    expect(html).toContain("scrie-l și în engleză");
+  });
+
+  it("counts the points past the route's end, with the route's length, apart from the ones off the track", async () => {
+    const html = await render({ previewOpen: true, gpx: { ...gpx([proposal("Izvor", 0.8)], 0), beyondRoute: 2 } });
+    expect(html).toContain("2 puncte din fișier sunt dincolo de sfârșitul traseului (21,1 km)");
+    expect(html).not.toContain("la peste 300 m de traseu");
   });
 
   it("does not offer a point that is already on the list, and says so", async () => {

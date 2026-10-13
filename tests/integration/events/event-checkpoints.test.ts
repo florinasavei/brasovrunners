@@ -169,10 +169,14 @@ describe("§NNN an event's checkpoints", () => {
     const refusal = await save([{ ...WATER, km: "22,5", nameRo: "Dincolo" }]);
     expect(refusal).toMatchObject({
       error: "CHECKPOINT_KM_BEYOND_ROUTE",
-      errorValues: { name: "Dincolo", km: "22.5", max: "21.1" },
+      errorValues: { name: "Dincolo", km: "22,5", max: "21,1" },
       fields: ["cp[0].km"],
     });
     expect((refusal as FormOutcome).values["cp[0].km"]).toEqual(["22,5"]);
+    // The English backoffice names the point in English and writes the kilometre with a point.
+    const english = form([{ ...WATER, km: "22,5", nameRo: "Dincolo", nameEn: "Beyond" }]);
+    english.set("uiLocale", "en");
+    expect(await post(saveCheckpointsAction, english)).toMatchObject({ errorValues: { name: "Beyond", km: "22.5", max: "21.1" } });
     expect(await listCheckpoints(db, eventId)).toEqual([]);
     expect(await actions()).toEqual([]);
   });
@@ -180,7 +184,7 @@ describe("§NNN an event's checkpoints", () => {
   it("measures the kilometre against the GPX's length when the club typed no distance", async () => {
     await db.update(events).set({ distanceMeters: null, routeGpx: await uploadTrack("") }).where(eq(events.id, eventId));
     // The track is 3.11 km long.
-    expect(await save([{ ...WATER, km: "3,2", cutoff: "" }])).toMatchObject({ error: "CHECKPOINT_KM_BEYOND_ROUTE", errorValues: { max: "3.11" } });
+    expect(await save([{ ...WATER, km: "3,2", cutoff: "" }])).toMatchObject({ error: "CHECKPOINT_KM_BEYOND_ROUTE", errorValues: { max: "3,11" } });
     expect(await save([{ ...WATER, km: "3", cutoff: "" }])).toBe("redirected");
   });
 
@@ -286,13 +290,24 @@ describe("§NNN an event's checkpoints", () => {
     ]);
   });
 
-  it("belongs to one event: another event's point id posted here is not touched, and the point is added as a new one", async () => {
+  it("belongs to one event: another event's point id posted here touches nothing and adds nothing", async () => {
     await db.insert(eventCheckpoints).values({ eventId: otherEventId, nameRo: "Altul", nameEn: "Other", km: "2.00", kinds: ["WATER"] });
     const [other] = await listCheckpoints(db, otherEventId);
     expect(await save([{ ...WATER, id: other.id, nameRo: "Furat", nameEn: "Stolen" }])).toBe("redirected");
     expect((await listCheckpoints(db, otherEventId)).map((row) => row.nameRo)).toEqual(["Altul"]);
-    expect((await listCheckpoints(db, eventId)).map((row) => row.nameRo)).toEqual(["Furat"]);
-    expect((await listCheckpoints(db, eventId))[0].id).not.toBe(other.id);
+    expect(await listCheckpoints(db, eventId)).toEqual([]);
+  });
+
+  it("never brings back a point a colleague removed: a stale form's row for it is dropped, not added again", async () => {
+    await save([WATER, FOOD]);
+    const [water, food] = await listCheckpoints(db, eventId);
+    const asPosted = (row: typeof water): Row => ({ id: row.id, nameRo: row.nameRo, nameEn: row.nameEn, km: String(row.km), kinds: row.kinds, cutoff: row.cutoff ?? "", noteRo: row.noteRo, noteEn: row.noteEn });
+    // A colleague removes the food point.
+    await save([asPosted(water), { ...asPosted(food), remove: true }]);
+    expect((await listCheckpoints(db, eventId)).map((row) => row.nameRo)).toEqual(["Apă"]);
+    // This form was drawn before that, still shows the food point, and retimes the water.
+    expect(await save([{ ...asPosted(water), cutoff: "10:05" }, asPosted(food)])).toBe("redirected");
+    expect((await listCheckpoints(db, eventId)).map((row) => [row.nameRo, row.cutoff])).toEqual([["Apă", "10:05"]]);
   });
 
   it("refuses a malformed event id and an event that is not there, as the service's own refusals", async () => {
@@ -336,6 +351,17 @@ async function uploadTrack(waypoints: string) {
   return storeRouteGpx(getStorage(), { bytes, name: "Traseu.gpx", environment: "test", now: new Date("2026-10-13T10:00:00.000Z") });
 }
 
+/** The preview's form: each ticked proposal by its index, with the names typed in its two boxes. */
+function pickForm(gpxKey: string, picks: Array<[number, string, string]>): FormData {
+  const data = form([], { gpxKey });
+  for (const [at, nameRo, nameEn] of picks) {
+    data.append("pick", String(at));
+    data.set(`cp[${at}].nameRo`, nameRo);
+    data.set(`cp[${at}].nameEn`, nameEn);
+  }
+  return data;
+}
+
 const WAYPOINTS =
   `<wpt lat="45.6" lon="25.51"><name>Izvor</name><sym>Drinking Water</sym></wpt>` +
   `<wpt lat="45.6" lon="25.52"><name>Cabana</name></wpt>` +
@@ -356,17 +382,18 @@ describe("§NNN «Ia punctele din GPX»", () => {
     expect(await loadGpxWaypoints("test/route-gpx/00000000-0000-4000-8000-000000000000/none.gpx")).toBeNull();
   });
 
-  it("adds what the club ticked, the name copied into both languages, and audits it as taken from the GPX", async () => {
+  it("adds what the club ticked, with the names it gave in each language, and audits it as taken from the GPX", async () => {
     const gpx = await uploadTrack(WAYPOINTS);
     await db.update(events).set({ routeGpx: gpx }).where(eq(events.id, eventId));
-    const data = form([], { gpxKey: gpx.key });
-    data.append("pick", "0");
-    data.append("pick", "1");
+    const data = pickForm(gpx.key, [
+      [0, "Izvor", "Spring"],
+      [1, "Cabana", "The hut"],
+    ]);
     expect(await post(addGpxCheckpointsAction, data)).toBe("redirected");
     const rows = await listCheckpoints(db, eventId);
     expect(rows.map((row) => [row.nameRo, row.nameEn, row.cutoff, row.kinds])).toEqual([
-      ["Izvor", "Izvor", null, ["WATER"]],
-      ["Cabana", "Cabana", null, []],
+      ["Izvor", "Spring", null, ["WATER"]],
+      ["Cabana", "The hut", null, []],
     ]);
     expect(rows[0].km).toBeCloseTo(0.78, 1);
     const [row] = await trail();
@@ -374,19 +401,30 @@ describe("§NNN «Ia punctele din GPX»", () => {
     expect(state.flashed.join("|")).toContain("checkpointsAdded");
   });
 
+  it("never stores a GPX point with its English name silently copied from the Romanian one: an empty box is refused, naming it", async () => {
+    const gpx = await uploadTrack(WAYPOINTS);
+    await db.update(events).set({ routeGpx: gpx }).where(eq(events.id, eventId));
+    const refused = await post(addGpxCheckpointsAction, pickForm(gpx.key, [[1, "Cabana", ""]]));
+    expect(refused).toMatchObject({ error: "CHECKPOINT_NAME_MISSING", fields: ["cp[1].nameEn"] });
+    // What was typed stays in the preview's boxes.
+    expect((refused as FormOutcome).values["cp[1].nameRo"]).toEqual(["Cabana"]);
+    expect(await listCheckpoints(db, eventId)).toEqual([]);
+  });
+
   it("adds only the proposals picked, never the ones too far from the track, and nothing twice", async () => {
     const gpx = await uploadTrack(WAYPOINTS);
     await db.update(events).set({ routeGpx: gpx }).where(eq(events.id, eventId));
-    const first = form([], { gpxKey: gpx.key });
-    first.append("pick", "1");
     // Index 2 is beyond the offerable list (the parking is too far), and a repeat of 1 is one pick.
-    first.append("pick", "2");
-    first.append("pick", "1");
-    await post(addGpxCheckpointsAction, first);
+    await post(
+      addGpxCheckpointsAction,
+      pickForm(gpx.key, [
+        [1, "Cabana", "The hut"],
+        [2, "Parcare", "Car park"],
+        [1, "Cabana", "The hut"],
+      ]),
+    );
     expect((await listCheckpoints(db, eventId)).map((row) => row.nameRo)).toEqual(["Cabana"]);
-    const again = form([], { gpxKey: gpx.key });
-    again.append("pick", "1");
-    await post(addGpxCheckpointsAction, again);
+    await post(addGpxCheckpointsAction, pickForm(gpx.key, [[1, "Cabana", "The hut"]]));
     expect(await listCheckpoints(db, eventId)).toHaveLength(1);
     expect(await actions()).toEqual(["event_checkpoints.changed"]);
     expect(state.flashed.at(-1)).toContain("checkpointsUnchanged");
@@ -395,29 +433,56 @@ describe("§NNN «Ia punctele din GPX»", () => {
   it("refuses a preview made from another file than the one the event has now", async () => {
     const gpx = await uploadTrack(WAYPOINTS);
     await db.update(events).set({ routeGpx: gpx }).where(eq(events.id, eventId));
-    const data = form([], { gpxKey: "test/route-gpx/00000000-0000-4000-8000-000000000000/old.gpx" });
-    data.append("pick", "0");
+    const data = pickForm("test/route-gpx/00000000-0000-4000-8000-000000000000/old.gpx", [[0, "Izvor", "Spring"]]);
     expect(await post(addGpxCheckpointsAction, data)).toMatchObject({ error: "CONFLICT" });
     expect(await listCheckpoints(db, eventId)).toEqual([]);
   });
 
-  it("holds the GPX's points to the same rules: a kilometre beyond a typed distance is refused", async () => {
+  it("places a waypoint just past a typed distance at the route's end, and never offers one farther past it", async () => {
     const gpx = await uploadTrack(WAYPOINTS);
-    // A typed distance shorter than the track: the second waypoint is at 1.56 km.
+    // A typed 1.5 km against the second waypoint at 1.56 km: within the tolerance, it is the finish, at 1.5.
+    await db.update(events).set({ routeGpx: gpx, distanceMeters: 1500 }).where(eq(events.id, eventId));
+    expect(await post(addGpxCheckpointsAction, pickForm(gpx.key, [[1, "Sosire", "Finish"]]))).toBe("redirected");
+    expect((await listCheckpoints(db, eventId)).map((row) => [row.nameRo, row.km])).toEqual([["Sosire", 1.5]]);
+  });
+
+  it("does not offer a waypoint farther past a typed distance than the tolerance: its index adds nothing", async () => {
+    const gpx = await uploadTrack(WAYPOINTS);
+    // A typed 1 km: the waypoint at 1.56 km is past the end by more than 300 m, so only the spring is offered.
     await db.update(events).set({ routeGpx: gpx, distanceMeters: 1000 }).where(eq(events.id, eventId));
-    const data = form([], { gpxKey: gpx.key });
-    data.append("pick", "1");
-    expect(await post(addGpxCheckpointsAction, data)).toMatchObject({ error: "CHECKPOINT_KM_BEYOND_ROUTE" });
+    expect(await post(addGpxCheckpointsAction, pickForm(gpx.key, [[1, "Cabana", "The hut"]]))).toBe("redirected");
     expect(await listCheckpoints(db, eventId)).toEqual([]);
+    expect(state.flashed.at(-1)).toContain("checkpointsUnchanged");
+  });
+
+  it("refuses CONFLICT when the route's distance changed between reading the file and saving", async () => {
+    // The service reads the GPX before it locks the event (§403); a distance typed meanwhile is a route it did not measure against.
+    const gpx = await uploadTrack(WAYPOINTS);
+    await db.update(events).set({ routeGpx: gpx, distanceMeters: null }).where(eq(events.id, eventId));
+    const { changeCheckpoints } = await import("@/modules/event-checkpoints/checkpoints");
+    // The database, but a colleague types a distance just before the transaction opens.
+    let typed = false;
+    const slow = new Proxy(db, {
+      get(target, property, receiver) {
+        if (property !== "transaction") return Reflect.get(target, property, receiver);
+        return async (run: Parameters<typeof db.transaction>[0]) => {
+          if (!typed) {
+            typed = true;
+            await target.update(events).set({ distanceMeters: 2000 }).where(eq(events.id, eventId));
+          }
+          return target.transaction(run);
+        };
+      },
+    });
+    const refused = await changeCheckpoints(slow, staff.ADMIN as StaffUser, { kind: "save", eventId, rows: [] }, new Date()).catch((error: unknown) => error);
+    expect(refused).toMatchObject({ code: "CONFLICT" });
   });
 
   it("is for those who may write: the Tehnic is refused", async () => {
     const gpx = await uploadTrack(WAYPOINTS);
     await db.update(events).set({ routeGpx: gpx }).where(eq(events.id, eventId));
     state.actor = staff.DEV;
-    const data = form([], { gpxKey: gpx.key });
-    data.append("pick", "0");
-    expect(await post(addGpxCheckpointsAction, data)).toMatchObject({ error: "FORBIDDEN" });
+    expect(await post(addGpxCheckpointsAction, pickForm(gpx.key, [[0, "Izvor", "Spring"]]))).toMatchObject({ error: "FORBIDDEN" });
     expect(await listCheckpoints(db, eventId)).toEqual([]);
   });
 });

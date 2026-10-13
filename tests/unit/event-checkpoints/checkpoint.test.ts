@@ -128,7 +128,9 @@ describe("§NNN the rules a checkpoint is held to", () => {
     const beyond = refusal([row(2, { km: "21,2", nameRo: "Dincolo" })]);
     expect(beyond.reason).toBe("CHECKPOINT_KM_BEYOND_ROUTE");
     expect(beyond.fields).toEqual(["cp[2].km"]);
-    expect(beyond.values).toMatchObject({ name: "Dincolo", km: "21.2", max: "21.1" });
+    // Each language writes the kilometre its own way: a comma in Romanian, a point in English.
+    expect(beyond.values).toMatchObject({ name: "Dincolo", km: "21,2", max: "21,1" });
+    expect(beyond.valuesIn("en")).toMatchObject({ name: "Point 2", km: "21.2", max: "21.1" });
     // The route's own length is allowed, and a metres figure is rounded up to the hundredth.
     expect(prepareCheckpoints([row(0, { km: "21,1" })], CONTEXT)).toHaveLength(1);
     expect(prepareCheckpoints([row(0, { km: "21,10" })], { ...CONTEXT, routeKm: 21.097 })).toHaveLength(1);
@@ -166,7 +168,26 @@ describe("§NNN the rules a checkpoint is held to", () => {
   it("refuses a cut-off after the event's end when it has one", () => {
     const late = refusal([row(0, { cutoff: "12:30" })]);
     expect(late.reason).toBe("CHECKPOINT_CUTOFF_AFTER_END");
+    // The sentence says the time the finish closes, to choose up to.
+    expect(late.values).toMatchObject({ cutoff: "12:30", end: "12:00" });
     expect(prepareCheckpoints([row(0, { cutoff: "12:00" })], CONTEXT)).toHaveLength(1);
+  });
+
+  it("says the start a cut-off must come after", () => {
+    expect(refusal([row(0, { cutoff: "08:30" })]).values).toMatchObject({ cutoff: "08:30", start: "09:00" });
+  });
+
+  it("names a point in the page's language, and a row with no name by its kilometre, never by a number the card does not show", () => {
+    const named = refusal([row(0, { nameRo: "Cabana", nameEn: "The hut", cutoff: "08:00" })]);
+    expect(named.valuesIn("ro").name).toBe("Cabana");
+    expect(named.valuesIn("en").name).toBe("The hut");
+    const unnamed = refusal([row(4, { nameRo: "", nameEn: "", km: "12,5" })]);
+    expect(unnamed.reason).toBe("CHECKPOINT_NAME_MISSING");
+    expect(unnamed.valuesIn("ro").name).toBe("km 12,5");
+    expect(unnamed.valuesIn("en").name).toBe("km 12.5");
+    expect(JSON.stringify(unnamed.words)).not.toContain("#");
+    // One language typed: both sentences name it by that one.
+    expect(refusal([row(0, { nameRo: "", nameEn: "Hut" })]).valuesIn("ro").name).toBe("Hut");
   });
 
   it("counts a night race across midnight", () => {
@@ -210,6 +231,25 @@ describe("§NNN what the event says the points are measured against", () => {
     expect(checkpointContext({ ...base, distanceMeters: null, gpxMeters: 25000 }).routeKm).toBe(25);
     expect(checkpointContext({ ...base, distanceMeters: null, gpxMeters: null }).routeKm).toBeNull();
     expect(checkpointContext({ ...base, distanceMeters: 0, gpxMeters: null }).routeKm).toBeNull();
+  });
+
+  it("counts the limit on the event's clock across the night the clocks go back (§NNN)", () => {
+    // 24 October 2026, 22:00 summer time (19:00Z), six real hours: the finish closes at 03:00 winter time, five hours on the clock.
+    const bucharest = (instant: Date) => {
+      const [hours, minutes] = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Bucharest", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
+        .format(instant)
+        .split(":")
+        .map(Number);
+      return hours * 60 + minutes;
+    };
+    const start = new Date("2026-10-24T19:00:00Z");
+    const context = checkpointContext({ distanceMeters: 50_000, gpxMeters: null, start, endsAt: new Date("2026-10-25T01:00:00Z"), wallMinutesOf: bucharest });
+    expect(context).toMatchObject({ startMinutes: 22 * 60, limitMinutes: 300 });
+    // A 03:30 cut-off is after the 03:00 finish on the clock: refused, though under six elapsed hours.
+    const late = refusal([row(0, { km: "40", cutoff: "03:30" })], context);
+    expect(late.reason).toBe("CHECKPOINT_CUTOFF_AFTER_END");
+    expect(late.values.end).toBe("03:00");
+    expect(prepareCheckpoints([row(0, { km: "40", cutoff: "02:45" })], context)).toHaveLength(1);
   });
 
   it("reads the start's minute of the day and the span to the event's end", () => {

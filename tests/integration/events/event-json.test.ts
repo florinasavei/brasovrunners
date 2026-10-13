@@ -17,7 +17,7 @@ import { storeKeyOfUrl } from "@/modules/content/events/transfer/media";
 import { storeRouteGpx } from "@/modules/content/events/route-gpx";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
-import { changeCheckpoints, listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
+import { changeCheckpoints, listCheckpoints, SavedCheckpointsRefusal } from "@/modules/event-checkpoints/checkpoints";
 import type { PostedCheckpoint } from "@/modules/event-checkpoints/domain/checkpoint";
 import { DEFAULT_BIB_DESIGN } from "@/modules/registrations/bib-design";
 import { uploadBodyImage } from "@/modules/media/service";
@@ -264,7 +264,7 @@ describe("the file an event is exported as", () => {
     const { file, fileName } = await exportEvent(db, { actor: admin, eventId: event.id, now: NOW });
 
     expect(file.format).toBe("brasovrunners-event");
-    expect(file.version).toBe(1);
+    expect(file.version).toBe(2);
     expect(file.exportedAt).toBe(NOW.toISOString());
     expect(file.exportedFrom.environment).toBe("test");
     expect(fileName).toBe("cursa-de-toamna-2026-10-14.json");
@@ -860,6 +860,43 @@ describe("§NNN the route's checkpoints travel in the file", () => {
     expect(file.event.bib.design).toMatchObject({ showCheckpoints: false, showCheckpointTimes: true });
     const created = await importEventAsNew(db, { actor: admin, file, fetchImpl: serving(), now: NOW });
     expect((await reload(created.eventId)).endsAt?.toISOString()).toBe("2026-11-21T10:30:00.000Z");
+  });
+
+  it("imports a version 1 file — production's, before this release — with the race's end it had (§NNN)", async () => {
+    const { event } = await seedRace({}, {}, false);
+    const file = await fileOf(event.id);
+    // Version 1 counted from the 09:00 start: the same 12:30 finish was 210 minutes there, 150 from the 10:00 gun here.
+    const old = { ...file, version: 1, event: { ...file.event, durationMinutes: 210 } };
+    const read = readEventFile(JSON.stringify(old));
+    if (!read.ok) throw new Error(`a version 1 file did not read: ${read.refusal} ${read.detail ?? ""}`);
+    expect(read.file.event.durationMinutes).toBe(150);
+    const created = await importEventAsNew(db, { actor: admin, file: read.file, fetchImpl: serving(), now: NOW });
+    expect((await reload(created.eventId)).endsAt?.toISOString()).toBe("2026-11-21T10:30:00.000Z");
+  });
+
+  it("refuses an import over an event that would move its gun past a saved cut-off while the file leaves the list as it is (§NNN)", async () => {
+    const { event } = await seedRace({}, {}, false);
+    await seedCheckpoints(event.id);
+    const { target } = await seedTarget();
+    await seedCheckpoints(target.id);
+    const file = await fileOf(event.id);
+    // The gun at 11:15 on the event's clock: the hut's 11:00 cut-off would be before it.
+    const moved = { ...file, event: { ...file.event, raceStartsAt: "2026-11-21T09:15:00.000Z" } };
+    const diff = await diffEventImport(db, { actor: admin, file: moved, eventId: target.id });
+    expect(diff.changes.map((change) => change.key)).not.toContain("route.checkpoints");
+    const versionBefore = (await reload(target.id)).version;
+    const refused = await importEventOver(db, await overInput(moved, target.id)).then(
+      () => null,
+      (error: unknown) => error,
+    );
+    expect(refused).toBeInstanceOf(SavedCheckpointsRefusal);
+    expect((refused as InstanceType<typeof SavedCheckpointsRefusal>).refusal.reason).toBe("CHECKPOINT_CUTOFF_BEFORE_START");
+    expect((await reload(target.id)).version).toBe(versionBefore);
+    // The same move with a list that fits the new gun is the file's own list, written in its place.
+    const refitted = JSON.parse(JSON.stringify(moved)) as EventFile;
+    refitted.event.route.checkpoints[0].cutoff = "11:30";
+    await importEventOver(db, await overInput(refitted, target.id));
+    expect((await listCheckpoints(db, target.id)).map((row) => row.cutoff)).toEqual(["11:30", "12:00"]);
   });
 
   it("imports a file made before checkpoints existed with none", async () => {
