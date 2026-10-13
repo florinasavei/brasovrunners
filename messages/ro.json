@@ -2280,7 +2280,7 @@
         "showProfileHelp": "Bifat: pe fiecare număr, o fâșie pe toată lățimea cu altitudinea pe distanță, cu distanța și diferența de nivel alături. Cele scrise la eveniment au prioritate; altfel, din GPX.",
         "showProfileNoGpx": "Încarcă GPX-ul traseului în „Traseul”.",
         "showCheckpoints": "Punctele de control pe profil",
-        "showCheckpointsHelp": "Bifat: pe profil, un semn la kilometrul fiecărui punct: o cană unde e apă, o furculiță unde e mâncare, un punct la celelalte. Dedesubt scrie „km 12” acolo unde încape. Apare doar cu profilul traseului.",
+        "showCheckpointsHelp": "Bifat: pe profil, la fiecare punct, o cană unde e apă, o furculiță unde e mâncare, un punct la rest. Dedesubt, „km 12” unde încape. Apare doar cu profilul traseului.",
         "showCheckpointTimes": "…cu timpii limită",
         "showCheckpointTimesHelp": "Bifat: lângă fiecare punct, și ora limită, „km 12 · 11:30”. Dacă nu încap toate orele, nu se scrie niciuna; apoi pleacă kilometrii care nu încap. Semnele rămân mereu.",
         "showCheckpointsNone": "Evenimentul nu are puncte de control: adaugă-le în cardul „Puncte de control”.",
@@ -4480,7 +4480,7 @@
     },
     "checkpoints": {
       "title": "Puncte de control",
-      "intro": "Punctele de pe traseu: unde e apă, mâncare, prim ajutor sau cronometrare și până la ce oră trebuie să treacă ultimul alergător. Apar într-un tabel pe pagina evenimentului și, bifat, pe profilul de pe numărul de concurs. Ordinea e cea a kilometrilor.",
+      "intro": "Unde e apă, mâncare, prim ajutor sau cronometrare și până la ce oră trece ultimul alergător. Apar într-un tabel pe pagina evenimentului și pe profilul de pe număr, în ordinea kilometrilor.",
       "routeLength": "Lungimea traseului: {km} km. Niciun punct nu poate fi dincolo de ea.",
       "summaryNone": "niciun punct",
       "summary": {
@@ -4525,7 +4525,7 @@
       "gpx": {
         "take": "Ia punctele din GPX",
         "title": "Punctele din fișierul GPX",
-        "intro": "Fișierul traseului are aceste puncte, cu kilometrul calculat pe traseu. Numele se copiază în ambele limbi și le poți schimba după. Bifează ce vrei să adaugi; ce e deja pe listă nu se adaugă a doua oară.",
+        "intro": "Punctele din fișier, cu kilometrul calculat pe traseu. Numele intră în ambele limbi; le poți schimba după. Bifează ce adaugi; ce e deja pe listă nu se adaugă din nou.",
         "row": "{km} km — {name} ({kinds})",
         "noKinds": "fără tip",
         "already": "{km} km — {name}: deja pe listă",

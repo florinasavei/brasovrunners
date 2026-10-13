@@ -208,21 +208,21 @@ export default function NightEventField({
       const text = (field: string) => String(data.get(field) ?? "");
       // «Durata» is two boxes, hours and minutes (§433), joined the way the save joins them.
       const duration = Number(joinDuration(text("event.durationHours"), text("event.durationMinutesPart")));
-      const date = text("event.startsAtDate") || (form.querySelector('[name="event.startsAtDate"]') ? "" : start.date);
-      // The typed box as it will post («1900» → 19:00), the series sentence's own reading (§439):
-      // until it is left, the raw text would say «no time» here while the sentence says 19:00.
-      const time = readTypedTime(text("event.startsAtTime")) || (form.querySelector('[name="event.startsAtTime"]') ? "" : start.time);
-      const timeZone = text("event.timezone") || zone;
+      const at = {
+        date: text("event.startsAtDate") || (form.querySelector('[name="event.startsAtDate"]') ? "" : start.date),
+        // The typed box as it will post («1900» → 19:00), the series sentence's own reading (§439):
+        // until it is left, the raw text would say «no time» here while the sentence says 19:00.
+        time: readTypedTime(text("event.startsAtTime")) || (form.querySelector('[name="event.startsAtTime"]') ? "" : start.time),
+        timeZone: text("event.timezone") || zone,
+      };
       const next = {
-        date,
-        time,
-        timeZone,
+        ...at,
         series: inSeries || (seriesToggleName ? data.get(seriesToggleName) === "on" : false),
         // "Cât durează" (§71), added to the start (§394): a run that finishes after dusk is a
         // night run even from a daylight start. No box, or not a number, means no end to name.
         // A race's «Timp limită» counts from its gun (§NNN, `duration.ts#durationBase`): the span from the
         // event's start is the box's minutes plus the gun's distance from that start, as the save stores it.
-        durationMinutes: Number.isFinite(duration) && duration > 0 ? duration + gunOffsetMinutes(data, { date, time, timeZone }) : null,
+        durationMinutes: Number.isFinite(duration) && duration > 0 ? duration + gunOffsetMinutes(data, at) : null,
         // The programme's rows (§117), the end when «Durata» is empty — the server's own order
         // (§394). A form without the programme's boxes keeps the saved rows.
         programme: programmeRowsOf(data) ?? programme,

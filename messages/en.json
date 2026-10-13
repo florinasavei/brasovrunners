@@ -2280,7 +2280,7 @@
         "showProfileHelp": "Ticked: every number carries a full-width strip of elevation over distance, with the distance and gain at its side. Those typed on the event win; otherwise, the GPX's.",
         "showProfileNoGpx": "Upload the route's GPX in \"The route\".",
         "showCheckpoints": "Checkpoints on the profile",
-        "showCheckpointsHelp": "Ticked: on the profile, a mark at the kilometre of each point: a cup where there is water, a fork where there is food, a dot at the others. Under it, “km 12” where it fits. Drawn only with the route's profile.",
+        "showCheckpointsHelp": "Ticked: on the profile, at each point, a cup for water, a fork for food, a dot for the rest. Under it, “km 12” where it fits. Drawn only with the route's profile.",
         "showCheckpointTimes": "…with the cut-off times",
         "showCheckpointTimesHelp": "Ticked: beside each point, its cut-off too, “km 12 · 11:30”. If not every time fits, none is printed; then the kilometres that do not fit go. The marks always stay.",
         "showCheckpointsNone": "The event has no checkpoints: add them in the “Checkpoints” card.",
@@ -4480,7 +4480,7 @@
     },
     "checkpoints": {
       "title": "Checkpoints",
-      "intro": "The points along the route: where there is water, food, first aid or timing, and by what time the last runner has to pass. They show as a table on the event's page and, ticked, on the profile of the race number. The order is by kilometre.",
+      "intro": "Where there is water, food, first aid or timing, and by when the last runner passes. Shown as a table on the event's page and on the number's profile, by kilometre.",
       "routeLength": "The route is {km} km long. No point can be beyond it.",
       "summaryNone": "no points",
       "summary": {
@@ -4525,7 +4525,7 @@
       "gpx": {
         "take": "Take the points from the GPX",
         "title": "The points in the GPX file",
-        "intro": "The route's file has these points, with the kilometre worked out along the track. Names are copied into both languages and you can change them afterwards. Tick what you want to add; what is on the list already is not added twice.",
+        "intro": "The file's points, each with its kilometre along the track. Names go into both languages; you can change them later. Tick what to add; what is already listed is not added again.",
         "row": "{km} km — {name} ({kinds})",
         "noKinds": "no type",
         "already": "{km} km — {name}: already on the list",
