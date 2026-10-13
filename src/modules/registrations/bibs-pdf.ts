@@ -16,7 +16,7 @@ import {
 } from "./bib-design";
 import { bibFooterLines, bibFooterParts } from "./bib-footer";
 import { BIB_PICTURE_BOX, type BibPictureSlot, bibPictureDrawing } from "./bib-picture-frame";
-import { A4_PAGE, BIB_CARD, BIB_FOOTER_LINE, BIB_LAYOUT, BIB_MARGIN, BIB_PAPER, bibNumberPoints, MEMBER_MARK_CHECK } from "./bib-geometry";
+import { A4_PAGE, BIB_CARD, BIB_FOOTER_LINE, BIB_LAYOUT, BIB_MARGIN, BIB_PAPER, bibNameReserve, bibNumberPoints, MEMBER_MARK_CHECK } from "./bib-geometry";
 import type { BibRow } from "./bibs";
 import { formatRaceNumber } from "./domain/race-number";
 
@@ -462,7 +462,8 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       The member mark (§NNN): a ring with a check in it, in the number's own ink, at the card's left
       inset under the header (`BIB_LAYOUT.memberMark*`) — only on a member's number, only when ticked.
     */
-    if (row.member === true && design.member.enabled && design.member.mark) {
+    const markDrawn = row.member === true && design.member.enabled && design.member.mark;
+    if (markDrawn) {
       const size = L.memberMarkSize;
       const markLeft = left + L.inset;
       const markTop = top + L.bandHeight + L.memberMarkTop;
@@ -506,6 +507,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       centred in the same strip, at the name's baseline, so the handwritten name sits where a
       printed one would. `stripTop` is the strip's top; the name is set `nameTop` into it.
     */
+    const nameReserve = bibNameReserve(markDrawn, nameAbove);
     const drawName = (stripTop: number) => {
       if (row.registeredName === null) {
         const lineY = stripTop + L.blankLineTop;
@@ -521,8 +523,8 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
             .font("body")
             .fontSize(L.blankMarkSize)
             .fillColor(COLOR.inkMuted)
-            .text(input.blankMark, left + L.inset, stripTop + L.blankMarkTop, {
-              width: BIB_CARD.width - 2 * L.inset,
+            .text(input.blankMark, left + L.inset + nameReserve, stripTop + L.blankMarkTop, {
+              width: BIB_CARD.width - 2 * (L.inset + nameReserve),
               align: "center",
               lineBreak: false,
               ellipsis: true,
@@ -534,8 +536,8 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
         .font("bold")
         .fontSize(L.nameSize)
         .fillColor(ink)
-        .text(row.registeredName, left + L.inset, stripTop + L.nameTop, {
-          width: BIB_CARD.width - 2 * L.inset,
+        .text(row.registeredName, left + L.inset + nameReserve, stripTop + L.nameTop, {
+          width: BIB_CARD.width - 2 * (L.inset + nameReserve),
           align: "center",
           lineBreak: false,
           ellipsis: true,

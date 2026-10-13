@@ -3,7 +3,7 @@ import { vi } from "vitest";
 import { DECLARATION_FOOTER, DECLARATION_MARGIN, DECLARATION_PAGE } from "@/modules/registrations/declaration-pdf";
 
 /** One `text()` call of a rendered declaration: the page it landed on (0-based), the words, and its `y` when the call named one. */
-export type DrawnRun = { page: number; text: string; y: number | undefined };
+export type DrawnRun = { page: number; text: string; x: number | undefined; y: number | undefined; width: number | undefined };
 
 /** The `y` every footer line of a declaration is drawn at — `declaration-pdf.ts`'s own geometry. */
 export const DECLARATION_FOOTER_Y = DECLARATION_PAGE.height - DECLARATION_MARGIN.bottom + DECLARATION_FOOTER.gap;
@@ -21,7 +21,14 @@ export async function drawnRuns(render: () => Promise<unknown>): Promise<DrawnRu
     if (typeof args[0] === "string") {
       // `_pageBuffer` is pdfkit's own list of buffered pages (`bufferPages: true`), undeclared in its types.
       const page = (this as unknown as { _pageBuffer: unknown[]; page: unknown })._pageBuffer.indexOf(this.page);
-      runs.push({ page, text: args[0], y: typeof args[2] === "number" ? args[2] : undefined });
+      const options = args[3] as { width?: number } | undefined;
+      runs.push({
+        page,
+        text: args[0],
+        x: typeof args[1] === "number" ? args[1] : undefined,
+        y: typeof args[2] === "number" ? args[2] : undefined,
+        width: options?.width,
+      });
     }
     return (original as (...a: unknown[]) => PDFKit.PDFDocument).apply(this, args);
   });

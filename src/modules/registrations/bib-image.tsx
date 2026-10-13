@@ -26,6 +26,7 @@ import {
   BIB_IMAGE_SCALE,
   BIB_LAYOUT,
   BIB_MARGIN,
+  bibNameReserve,
   bibNumberPoints,
   MEMBER_MARK_CHECK,
 } from "./bib-geometry";
@@ -186,6 +187,9 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const memberLabel = asMember ? bibMemberLabel(design.member, input.memberLabelDefault ?? "") : "";
   // «Tot numărul» (§NNN): the members' background over the whole card, the label a stripe.
   const asCard = asMember && design.member.style === "card";
+  // The member mark (§NNN); the name set above the number steps aside for it (`bibNameReserve`).
+  const markDrawn = asMember && design.member.mark;
+  const nameReserve = bibNameReserve(markDrawn, design.namePosition === "above");
   // A picture the club uploaded (§249): the one the route read (§560), or — when the caller read
   // none — the design's own address made absolute; the band when there is none.
   const pictureOf = (slot: BibPictureSlot, src: string | null): BibImagePicture | null => {
@@ -240,7 +244,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
         display: "flex",
         flexShrink: 0,
         height: px(L.nameBlock),
-        padding: `${px(L.nameTop)}px ${px(L.inset)}px 0 ${px(L.inset)}px`,
+        padding: `${px(L.nameTop)}px ${px(L.inset + nameReserve)}px 0 ${px(L.inset + nameReserve)}px`,
         justifyContent: "center",
       }}
     >
@@ -422,7 +426,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
         ) : null}
         {/* The member mark (§NNN), the sheet's ring and check at the sheet's points: an SVG in the
             number's own ink, absolute at the card's left inset under the header. */}
-        {asMember && design.member.mark ? (
+        {markDrawn ? (
           <svg
             width={px(L.memberMarkSize)}
             height={px(L.memberMarkSize)}

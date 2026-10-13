@@ -111,13 +111,27 @@ export const BIB_LAYOUT = {
   /**
    * The member mark (§NNN): a ring `memberMarkSize` points across with a check mark in it, stroked
    * `memberMarkWeight` thick, at the card's left inset, `memberMarkTop` under the header's foot —
-   * clear of the number (centred, at least 100 points from each side even at five digits' widest) and
-   * of the name (centred, cut well before the inset). Large enough to read at A5 and at a half of it.
+   * clear of the number below it (a number of up to five digits at the largest size still reaches
+   * about 44 points from the card's edge, 26 from the inset, so the number sits lower than the mark
+   * only by its own centring, never by width) and of the name set above the number, whose box is
+   * narrowed on both sides by `memberMarkSize + memberMarkGap` while the mark is drawn
+   * (`bibNameReserve`). Large enough to read at A5 and at a half of it.
    */
   memberMarkSize: 26,
+  memberMarkGap: 10,
   memberMarkTop: 12,
   memberMarkWeight: 2.4,
 } as const;
+
+/**
+ * What the name set above the number gives up on each side while the member mark is drawn (§NNN):
+ * the mark's width and a gap, so a long name is cut (ellipsis) at the mark's right edge plus the
+ * gap rather than running over the ring. 0 when no mark is drawn; the name below the number is
+ * nowhere near the mark and keeps the whole inset-to-inset box.
+ */
+export function bibNameReserve(markDrawn: boolean, nameAbove: boolean): number {
+  return markDrawn && nameAbove ? BIB_LAYOUT.memberMarkSize + BIB_LAYOUT.memberMarkGap : 0;
+}
 
 /**
  * The check inside the member mark, as fractions of the mark's box: three points of one stroke,

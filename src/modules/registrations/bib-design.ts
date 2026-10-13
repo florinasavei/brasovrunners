@@ -144,7 +144,7 @@ const memberColour = z
  * How a member's bib differs (§NNN, amending §664; the owner, 2026-10-10: «I do not like the BIB
  * designer of the BVR members, I need a different design for them, different background»):
  *
- * - `band` — «Doar banda de sus»: §664's look, the members' header and a small label on it.
+ * - `band` — «Același fundal ca restul numerelor — doar antet propriu»: §664's look, the members' header and a small label on it.
  * - `card` — «Tot numărul»: the whole card above the small print is the members' background — a
  *   photograph under the navy veil, one of the bib colours that carries white at AA, or the club
  *   kit's gradient — with the number, the name, the race and the lockup in white and the label a
