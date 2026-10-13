@@ -333,6 +333,20 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
           r={1.8}
           fill={ink}
         />
+        {/* The route's checkpoints (§NNN, `bib-checkpoints.ts`), at the sheet's points: a tick to the chart's foot, a ring on the line. */}
+        {(profile.checkpoints?.marks ?? []).map((mark) => (
+          <g key={mark.x}>
+            <line
+              x1={mark.x * L.profileChartWidth}
+              y1={(1 - mark.y) * L.profileChartHeight + L.checkpointRing}
+              x2={mark.x * L.profileChartWidth}
+              y2={L.profileChartHeight}
+              stroke={ink}
+              strokeWidth={L.checkpointTickWeight}
+            />
+            <circle cx={mark.x * L.profileChartWidth} cy={(1 - mark.y) * L.profileChartHeight} r={L.checkpointRing} fill="none" stroke={ink} strokeWidth={L.checkpointRingWeight} />
+          </g>
+        ))}
       </svg>
       <div
         style={{
@@ -349,6 +363,27 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
         <div style={{ display: "flex" }}>{profile.start}</div>
         <div style={{ display: "flex" }}>{profile.finish}</div>
       </div>
+      {/* Their cut-offs (§NNN), centred under the ticks in the labels' row — only when every one has room. */}
+      {(profile.checkpoints?.marks ?? [])
+        .filter((mark) => mark.time)
+        .map((mark) => (
+          <div
+            key={mark.x}
+            data-testid="bib-checkpoint-time"
+            style={{
+              display: "flex",
+              position: "absolute",
+              left: px(L.inset + mark.x * L.profileChartWidth - 20),
+              top: px(L.profileLabelTop),
+              width: px(40),
+              justifyContent: "center",
+              fontSize: px(L.profileLabelSize),
+              color: ink,
+            }}
+          >
+            {mark.time}
+          </div>
+        ))}
       <div style={{ ...ONE_LINE, position: "absolute", left: px(L.inset + L.profileChartWidth + L.profileTextGap), top: px(L.profileDistanceTop), fontSize: px(L.profileTextSize), color: ink }}>
         {profile.distance}
       </div>

@@ -33,6 +33,7 @@ import {
 import { readPublicFaqPage } from "@/modules/content/faq/repository";
 import { readPublicMembersPage } from "@/modules/content/members/page-settings";
 import { readPublicTeamPage } from "@/modules/content/team/repository";
+import { listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
 import { resolveLocaleSwitch } from "@/modules/events/locale-switch";
 import {
   findEventForRegistrationById,
@@ -221,6 +222,14 @@ export async function cachedPublishedEventsBetween(locale: Locale, from: Date, t
  */
 export async function cachedPublishedEventBySlug(locale: Locale, slug: string) {
   return readBySlug(slug, ["events.by-slug", locale, slug, "hidden-list"], ["events"], () => findPublishedEventBySlug(getDb(), locale, slug));
+}
+
+/**
+ * `listCheckpoints`: the table «Puncte de control» under the event's route (§NNN). By the event's id,
+ * under the `events` tag the editor's saves already expire, so a new cut-off is on the page at once.
+ */
+export async function cachedEventCheckpoints(eventId: string) {
+  return publicRead(["events.checkpoints", eventId], ["events"], () => listCheckpoints(getDb(), eventId));
 }
 
 /** `findPublishedTranslations`: the event page's `hreflang` alternates. */

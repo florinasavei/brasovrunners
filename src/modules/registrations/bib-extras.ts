@@ -1,8 +1,11 @@
 import { getTranslations } from "next-intl/server";
+import type { Database } from "@/db/types";
+import { listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
 import type { RouteGpx } from "@/modules/events/domain/route-gpx";
 import { getStorage } from "@/modules/media/storage";
 import { type BibDesign, bibDistanceBadge } from "./bib-design";
-import { type BibProfile, type BibProfileDrawing, bibProfileDrawing, parseGpxProfile } from "./bib-profile";
+import { bibCheckpointMarks } from "./bib-checkpoints";
+import { type BibProfile, type BibProfileDrawing, bibProfileDrawing, bibProfileFigures, parseGpxProfile } from "./bib-profile";
 
 /**
  * What a race number prints beyond the design's own switches, read once per request (§750): the
@@ -28,7 +31,32 @@ export type BibProfileSource = {
   routeGpx: RouteGpx | null;
   distanceMeters: number | null;
   elevationGainMeters: number | null;
+  /**
+   * The route's checkpoints (§NNN), read by the caller only when the design asks for the profile and
+   * for them (`bibNeedsCheckpoints`); absent draws the strip as it was.
+   */
+  checkpoints?: ReadonlyArray<{ km: number; cutoff: string | null }>;
 };
+
+/** Whether a design's strip carries the checkpoints, so a caller reads them from the database only then. */
+export function bibNeedsCheckpoints(design: Pick<BibDesign, "showProfile" | "showCheckpoints">): boolean {
+  return design.showProfile && design.showCheckpoints;
+}
+
+/**
+ * The event's profile source with its checkpoints (§NNN), for the routes that draw a number: read from
+ * the database only when the design ticks the profile and the checkpoints and the event has a route
+ * to draw them on, one query — otherwise the source as it was.
+ */
+export async function withBibCheckpoints<T extends Record<string, unknown>, E extends BibProfileSource>(
+  db: Database<T>,
+  eventId: string,
+  event: E,
+  design: Pick<BibDesign, "showProfile" | "showCheckpoints">,
+): Promise<E> {
+  if (!bibNeedsCheckpoints(design) || !event.routeGpx) return event;
+  return { ...event, checkpoints: await listCheckpoints(db, eventId) };
+}
 
 /**
  * The parsed profiles by the GPX's store key (§750): a new upload gets a new key, so an entry never goes
@@ -63,7 +91,7 @@ async function profileOf(key: string): Promise<BibProfile | null> {
 
 export async function loadBibExtras(
   event: BibProfileSource,
-  design: Pick<BibDesign, "showProfile" | "showEmergency" | "showDistance">,
+  design: Pick<BibDesign, "showProfile" | "showEmergency" | "showDistance"> & Partial<Pick<BibDesign, "showCheckpoints">>,
   locale: string,
 ): Promise<BibExtras> {
   const distanceBadge = design.showDistance ? bibDistanceBadge(event.distanceMeters) : null;
@@ -74,7 +102,7 @@ export async function loadBibExtras(
     try {
       const parsed = await profileOf(event.routeGpx.key);
       if (parsed) {
-        profile = bibProfileDrawing(parsed, event, locale, (key, values) =>
+        const drawing = bibProfileDrawing(parsed, event, locale, (key, values) =>
           key === "start"
             ? admin("bibs.profileStart")
             : key === "finish"
@@ -83,6 +111,19 @@ export async function loadBibExtras(
                 ? admin("bibs.profileDistance", { km: values?.km ?? "" })
                 : admin("bibs.profileGain", { m: values?.m ?? "" }),
         );
+        // The route's checkpoints (§NNN) on the strip, where the design asks and the event has some:
+        // placed by the figure the bib prints, the club's own distance first, as the strip's right end is.
+        const marks =
+          design.showCheckpoints !== false && event.checkpoints && event.checkpoints.length > 0
+            ? bibCheckpointMarks({
+                checkpoints: event.checkpoints,
+                routeKm: bibProfileFigures(parsed, event).distanceMeters / 1000,
+                points: parsed.points,
+                startWord: drawing.start,
+                finishWord: drawing.finish,
+              })
+            : null;
+        profile = { ...drawing, checkpoints: marks };
       }
     } catch {
       profile = null;

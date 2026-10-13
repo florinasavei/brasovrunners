@@ -628,10 +628,22 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       doc.stroke();
       doc.circle(first[0], first[1], 1.8).fill(ink);
       doc.circle(last[0], last[1], 1.8).fill(ink);
+      // The route's checkpoints (§NNN, `bib-checkpoints.ts`): a ring on the line and a tick down to the chart's foot.
+      for (const mark of profile.checkpoints?.marks ?? []) {
+        const markX = chartLeft + mark.x * L.profileChartWidth;
+        const markY = chartTop + (1 - mark.y) * L.profileChartHeight;
+        doc.lineWidth(L.checkpointTickWeight).strokeColor(ink).moveTo(markX, markY + L.checkpointRing).lineTo(markX, chartTop + L.profileChartHeight).stroke();
+        doc.lineWidth(L.checkpointRingWeight).strokeColor(ink).circle(markX, markY, L.checkpointRing).stroke();
+      }
       doc.restore();
       doc.font("body").fontSize(L.profileLabelSize).fillColor(ink);
       doc.text(profile.start, chartLeft, rowTop + L.profileLabelTop, { lineBreak: false });
       doc.text(profile.finish, chartLeft + L.profileChartWidth - doc.widthOfString(profile.finish), rowTop + L.profileLabelTop, { lineBreak: false });
+      // Their cut-offs, centred under the ticks, in the labels' row — only when every one has room (`timesShown`).
+      for (const mark of profile.checkpoints?.marks ?? []) {
+        if (!mark.time) continue;
+        doc.text(mark.time, chartLeft + mark.x * L.profileChartWidth - doc.widthOfString(mark.time) / 2, rowTop + L.profileLabelTop, { lineBreak: false });
+      }
       doc.fontSize(L.profileTextSize);
       const textLeft = chartLeft + L.profileChartWidth + L.profileTextGap;
       doc.text(profile.distance, textLeft, rowTop + L.profileDistanceTop, { lineBreak: false });

@@ -500,6 +500,25 @@
     "age": "Vârstă",
     "openRoute": "Vezi traseul",
     "routeJump": "Despre traseu",
+    "checkpoints": {
+      "heading": "Puncte de control",
+      "columns": {
+        "km": "Km",
+        "name": "Punct",
+        "kinds": "Ce găsești aici",
+        "cutoff": "Limită"
+      },
+      "km": "{km} km",
+      "kinds": {
+        "WATER": "Apă",
+        "FOOD": "Mâncare",
+        "FIRST_AID": "Prim ajutor",
+        "TIMING": "Cronometrare"
+      },
+      "cutoff": "Ora limită {time}",
+      "noCutoff": "fără oră limită",
+      "finish": "Sosire"
+    },
     "routeMaps": {
       "tabs": "Hărțile traseului",
       "garmin": {
@@ -1698,6 +1717,16 @@
       "memberSetBody": "Pui bifa de membru la {name}; pe listă clubul devine {club}. Nimic altceva nu se schimbă, niciun email."
     },
     "errors": {
+      "CHECKPOINT_NAME_MISSING": "Punctul „{name}” are nevoie de un nume în română și în engleză, de cel mult {max} de caractere.",
+      "CHECKPOINT_KM_INVALID": "Kilometrul punctului „{name}” nu e un număr: scrie de la 0, cu cel mult două zecimale.",
+      "CHECKPOINT_KM_BEYOND_ROUTE": "Punctul „{name}” e la {km} km, dar traseul are doar {max} km. Alege un kilometru până la {max}.",
+      "CHECKPOINT_KIND_UNKNOWN": "La punctul „{name}”, ce găsești aici nu e una dintre variante.",
+      "CHECKPOINT_CUTOFF_INVALID": "Ora limită a punctului „{name}” nu e o oră: scrie, de exemplu, 11:30.",
+      "CHECKPOINT_CUTOFF_BEFORE_START": "Ora limită {cutoff} a punctului „{name}” nu e după start. Alege o oră de după ora de start.",
+      "CHECKPOINT_CUTOFF_AFTER_LATER": "Ora limită a punctului „{name}” e după cea a punctului „{later}” ({laterCutoff}), care e mai departe pe traseu. Alergătorii trec pe la „{name}” înaintea celuilalt: ora limită de aici trebuie să fie mai devreme.",
+      "CHECKPOINT_CUTOFF_AFTER_END": "Ora limită {cutoff} a punctului „{name}” e după ora la care se termină evenimentul.",
+      "CHECKPOINT_NOTE_ONE_LANGUAGE": "Nota punctului „{name}” se scrie în ambele limbi sau în niciuna, de cel mult {max} de caractere.",
+      "CHECKPOINT_TOO_MANY": "Sunt prea multe puncte: cel mult {max} pe un traseu.",
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
       "NOTHING_SELECTED": "Nu ai bifat nicio înscriere.",
       "UNAUTHENTICATED": "Sesiunea a expirat. Autentifică-te din nou.",
@@ -2245,6 +2274,9 @@
         "showProfile": "Profilul traseului",
         "showProfileHelp": "Bifat: pe fiecare număr, o fâșie pe toată lățimea cu altitudinea pe distanță, cu distanța și diferența de nivel alături. Cele scrise la eveniment au prioritate; altfel, din GPX.",
         "showProfileNoGpx": "Încarcă GPX-ul traseului în „Traseul”.",
+        "showCheckpoints": "Punctele de control pe profil",
+        "showCheckpointsHelp": "Bifat: pe profil, un semn la kilometrul fiecărui punct de control, cu ora limită dedesubt acolo unde încape. Dacă nu încap toate orele, se scot toate, semnele rămân. Se desenează doar cu profilul traseului.",
+        "showCheckpointsNone": "Evenimentul nu are puncte de control: adaugă-le în cardul „Puncte de control”.",
         "showEmergency": "Telefon pentru urgențe",
         "showEmergencyHelp": "Bifat: pe fiecare număr, mic, rândul „Urgențe: …” cu telefonul de mai jos. Debifat: fără rând. Scrie numărul organizatorilor, nu al participanților.",
         "emergencyPhone": "Telefonul organizatorilor",
@@ -4433,6 +4465,67 @@
       },
       "currencyNoteMore": "Nu le transformăm în lei: niciuna nu facturează în lei, iar un curs scris azi ar fi greșit mâine.",
       "servicesIntroMore": "Pe ce plan suntem, cât costă azi, ce primim gratuit, limita pe care o vom atinge prima, cât de aproape suntem acum, ce se întâmplă când o depășim și cât costă pasul următor."
+    },
+    "checkpoints": {
+      "title": "Puncte de control",
+      "intro": "Punctele de pe traseu: unde e apă, mâncare, prim ajutor sau cronometrare și până la ce oră trebuie să treacă ultimul alergător. Apar într-un tabel pe pagina evenimentului și, bifat, pe profilul de pe numărul de concurs. Ordinea e cea a kilometrilor.",
+      "routeLength": "Lungimea traseului: {km} km. Niciun punct nu poate fi dincolo de ea.",
+      "summaryNone": "niciun punct",
+      "summary": {
+        "one": "{count} punct",
+        "few": "{count} puncte",
+        "other": "{count} de puncte"
+      },
+      "empty": "Niciun punct de control.",
+      "readOnly": "Poți citi lista; Organizatorul, Administratorul și Superadministratorul o scriu. Cere-le orice schimbare.",
+      "line": "{km} km — {name} · {kinds} · ora limită {cutoff}",
+      "rowTitle": "{km} km — {name}",
+      "cutoffAside": "ora limită {time}",
+      "field": {
+        "km": "Kilometrul",
+        "kmHelp": "De la start, până la {max} km (lungimea traseului). Poți scrie și cu virgulă.",
+        "kmHelpNoRoute": "De la start, în kilometri. Scrie distanța traseului sau încarcă GPX-ul, ca să verificăm kilometrul.",
+        "nameRo": "Numele (română)",
+        "nameEn": "Numele (engleză)",
+        "kinds": "Ce găsești aici",
+        "cutoff": "Ora limită",
+        "cutoffHelp": "Ora zilei, pe ceasul evenimentului: până atunci trebuie să treacă ultimul alergător. Lasă gol dacă nu e limită.",
+        "noteRo": "Notă (română)",
+        "noteEn": "Notă (engleză)",
+        "noteHelp": "Opțională, în ambele limbi sau în niciuna; cel mult {max} de caractere."
+      },
+      "kinds": {
+        "WATER": "Apă",
+        "FOOD": "Mâncare",
+        "FIRST_AID": "Prim ajutor",
+        "TIMING": "Cronometrare"
+      },
+      "remove": "Scoate acest punct",
+      "removeHelp": "Se șterge la „Salvează punctele”.",
+      "add": {
+        "title": "Adaugă puncte"
+      },
+      "full": "Sunt deja {max} de puncte, cât încape pe un traseu.",
+      "save": "Salvează punctele",
+      "saving": "Se salvează…",
+      "courseNote": "Punctele de control ale traseului, cu ora limită, au cardul lor, mai sus, alături de acest formular: nu sunt în el, pentru că două formulare nu încap unul în altul.",
+      "courseLink": "Deschide punctele de control",
+      "gpx": {
+        "take": "Ia punctele din GPX",
+        "title": "Punctele din fișierul GPX",
+        "intro": "Fișierul traseului are aceste puncte, cu kilometrul calculat pe traseu. Numele se copiază în ambele limbi și le poți schimba după. Bifează ce vrei să adaugi; ce e deja pe listă nu se adaugă a doua oară.",
+        "row": "{km} km — {name} ({kinds})",
+        "noKinds": "fără tip",
+        "already": "{km} km — {name}: deja pe listă",
+        "ignored": {
+          "one": "{count} punct din fișier e la peste {meters} m de traseu și e lăsat deoparte.",
+          "few": "{count} puncte din fișier sunt la peste {meters} m de traseu și sunt lăsate deoparte.",
+          "other": "{count} de puncte din fișier sunt la peste {meters} m de traseu și sunt lăsate deoparte."
+        },
+        "add": "Adaugă punctele alese",
+        "adding": "Se adaugă…",
+        "close": "Închide previzualizarea"
+      }
     },
     "eventTodos": {
       "title": "De făcut pentru pagina evenimentului",
@@ -9837,6 +9930,9 @@
       "familyWithdrawn": "Gata: înscrierea e anulată, iar adresa primește un email de confirmare."
     },
     "toast": {
+      "checkpointsSaved": "Punctele de control au fost salvate.",
+      "checkpointsAdded": "Punctele din GPX au fost adăugate.",
+      "checkpointsUnchanged": "Nimic de schimbat la punctele de control.",
       "saved": "Salvat.",
       "event": "Evenimentul a fost salvat.",
       "eventSeries": {

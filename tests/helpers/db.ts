@@ -6,6 +6,7 @@ import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventInvitations } from "@/db/schema/event-invitations";
+import { eventCheckpoints } from "@/db/schema/event-checkpoints";
 import { eventTodos } from "@/db/schema/event-todos";
 import { eventTranslations, events } from "@/db/schema/events";
 import { pendingFamilyEntries } from "@/db/schema/family-entries";
@@ -128,6 +129,8 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(mediaAssets);
   // An event's own to-dos (§749) cascade from it; deleted first like the translations.
   await db.delete(eventTodos);
+  // The route's checkpoints (§NNN) cascade from the event too.
+  await db.delete(eventCheckpoints);
   await db.delete(eventTranslations);
   // `registrations` references `events`, and `events.declaration_document_id` references
   // `legal_documents`, so registrations must go before events, and events before legal

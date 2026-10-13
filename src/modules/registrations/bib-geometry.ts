@@ -145,6 +145,19 @@ export const BIB_LAYOUT = {
   profileDistanceTop: 9,
   profileGainTop: 20,
   /**
+   * The checkpoints on the profile (§NNN, `bib-checkpoints.ts`): at each one's kilometre a ring
+   * `checkpointRing` points in radius, stroked `checkpointRingWeight`, on the line, and a tick down to
+   * the chart's foot stroked `checkpointTickWeight`; the cut-off in the labels' row, `profileLabelSize`
+   * points, centred under the tick. Two marks closer than `checkpointMinGap` points keep only the first;
+   * two cut-offs closer than `checkpointTimeGap` points — or one over «Start» or «Sosire» — and every
+   * cut-off goes (the marks stay). Both renderers place them at these points.
+   */
+  checkpointRing: 2.2,
+  checkpointRingWeight: 0.9,
+  checkpointTickWeight: 0.7,
+  checkpointMinGap: 4,
+  checkpointTimeGap: 3,
+  /**
    * The emergency phone (§750): one centred line `emergencyHeight` points tall under the profile's
    * row (or where it would be), `emergencySize` points — a fixed place on every number, never over
    * the number or the name, which keep the area that is left.

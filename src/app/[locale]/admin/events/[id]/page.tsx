@@ -13,6 +13,11 @@ import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventForEditing, findEventTitle, listSeriesDates } from "@/modules/content/events/repository";
 import { eventPageTodos } from "@/modules/content/events/domain/page-todos";
+import { eventCheckpointContext, listCheckpoints, offerable } from "@/modules/event-checkpoints/checkpoints";
+import { canEditCheckpoints } from "@/modules/event-checkpoints/domain/checkpoint";
+import { loadGpxWaypoints } from "@/modules/event-checkpoints/gpx-file";
+import { readRouteGpx } from "@/modules/events/domain/route-gpx";
+import CheckpointsCard from "@/modules/content/events/ui/CheckpointsCard";
 import { canEditEventTodos, canReadEventTodos } from "@/modules/event-todos/domain/event-todo";
 import { listEventTodos } from "@/modules/event-todos/event-todos";
 import EventTodoCard from "@/modules/event-todos/ui/EventTodoCard";
@@ -145,7 +150,7 @@ import { startBoxValues, typedStartOrNull } from "@/modules/events/domain/provis
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string; announced?: string; notice?: string; queued?: string; moved?: string; movedTo?: string; movedSent?: string; count?: string; from?: string; to?: string; erased?: string; recent?: string; limited?: string; testQueued?: string; mine?: string; todoError?: string } & Partial<Record<keyof PlacesTaken, string>>>;
+  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string; announced?: string; notice?: string; queued?: string; moved?: string; movedTo?: string; movedSent?: string; count?: string; from?: string; to?: string; erased?: string; recent?: string; limited?: string; testQueued?: string; mine?: string; todoError?: string; checkpointsGpx?: string } & Partial<Record<keyof PlacesTaken, string>>>;
 };
 
 export const dynamic = "force-dynamic";
@@ -353,6 +358,19 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     storageConfigured: isStorageConfigured(),
     approvedDeclarationIds: new Set(declarations.map((declaration) => declaration.id)),
   });
+  /*
+    «Puncte de control» (§NNN): the route's points as saved, the route's length they are measured
+    against, and the GPX's waypoints when the file has some that sit on its track. Read for every
+    role that opens the editor; the forms ask the service for the role again.
+  */
+  const checkpoints = await listCheckpoints(db, event.id);
+  const checkpointRouteKm = (await eventCheckpointContext(event)).routeKm;
+  const gpxWaypoints = await loadGpxWaypoints(readRouteGpx(event.routeGpx)?.key);
+  const gpxOffered = gpxWaypoints ? offerable(gpxWaypoints.proposals) : [];
+  const checkpointsGpx =
+    gpxWaypoints && gpxOffered.length > 0
+      ? { key: readRouteGpx(event.routeGpx)?.key ?? "", offered: gpxOffered, ignored: gpxWaypoints.proposals.length - gpxOffered.length }
+      : null;
   // A refused one-button form's code (`?todoError=`), matched against the codes there are — a query string is typed by anybody.
   const todoErrorCode = (["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND"] as const).find((code) => code === query.todoError);
 
@@ -924,6 +942,16 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 mine={query.mine === "1"}
                 today={dayIn(now, CLUB_TIME_ZONE)}
                 error={todoErrorCode ? t(`errors.${todoErrorCode}`) : undefined}
+              />
+              {/* «Puncte de control» (§NNN), «Traseul»'s second card: its forms are its own, beside the save form like the card above. */}
+              <CheckpointsCard
+                locale={locale}
+                eventId={event.id}
+                checkpoints={checkpoints}
+                mayEdit={canEditCheckpoints(staffUser.role)}
+                routeKm={checkpointRouteKm}
+                gpx={checkpointsGpx}
+                previewOpen={query.checkpointsGpx === "1"}
               />
               {/* Settings and texts: one form, one save — and a refusal that keeps every box (§315). */}
               <ActionForm action={saveEventAndTranslationsAction} messages={refusal} confirm={saveConfirm} id="event-save-form" data-testid="event-save-form">
